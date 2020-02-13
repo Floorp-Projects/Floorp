@@ -1371,7 +1371,7 @@ void nsDisplayListBuilder::SetGlassDisplayItem(nsDisplayItem* aItem) {
 
 bool nsDisplayListBuilder::NeedToForceTransparentSurfaceForItem(
     nsDisplayItem* aItem) {
-  return aItem == mGlassDisplayItem;
+  return aItem == mGlassDisplayItem || aItem->ClearsBackground();
 }
 
 AnimatedGeometryRoot* nsDisplayListBuilder::WrapAGRForFrame(
@@ -4172,6 +4172,12 @@ bool nsDisplayBackgroundImage::AppendBackgroundItemsToTop(
   }
 
   if (isThemed) {
+    nsITheme* theme = presContext->GetTheme();
+    if (theme->NeedToClearBackgroundBehindWidget(
+            aFrame, aFrame->StyleDisplay()->mAppearance) &&
+        aBuilder->IsInChromeDocumentOrPopup() && !aBuilder->IsInTransform()) {
+      bgItemList.AppendNewToTop<nsDisplayClearBackground>(aBuilder, aFrame);
+    }
     if (aSecondaryReferenceFrame) {
       nsDisplayTableThemedBackground* bgItem =
           MakeDisplayItem<nsDisplayTableThemedBackground>(
@@ -5285,6 +5291,48 @@ void nsDisplayBackgroundColor::WriteDebugInfo(std::stringstream& aStream) {
   aStream << " (rgba " << mColor.r << "," << mColor.g << "," << mColor.b << ","
           << mColor.a << ")";
   aStream << " backgroundRect" << mBackgroundRect;
+}
+
+already_AddRefed<Layer> nsDisplayClearBackground::BuildLayer(
+    nsDisplayListBuilder* aBuilder, LayerManager* aManager,
+    const ContainerLayerParameters& aParameters) {
+  RefPtr<ColorLayer> layer = static_cast<ColorLayer*>(
+      aManager->GetLayerBuilder()->GetLeafLayerFor(aBuilder, this));
+  if (!layer) {
+    layer = aManager->CreateColorLayer();
+    if (!layer) {
+      return nullptr;
+    }
+  }
+  layer->SetColor(Color());
+  layer->SetMixBlendMode(gfx::CompositionOp::OP_SOURCE);
+
+  bool snap;
+  nsRect bounds = GetBounds(aBuilder, &snap);
+  int32_t appUnitsPerDevPixel = mFrame->PresContext()->AppUnitsPerDevPixel();
+  layer->SetBounds(bounds.ToNearestPixels(appUnitsPerDevPixel));  // XXX Do we
+                                                                  // need to
+                                                                  // respect the
+                                                                  // parent
+                                                                  // layer's
+                                                                  // scale here?
+
+  return layer.forget();
+}
+
+bool nsDisplayClearBackground::CreateWebRenderCommands(
+    mozilla::wr::DisplayListBuilder& aBuilder,
+    mozilla::wr::IpcResourceUpdateQueue& aResources,
+    const StackingContextHelper& aSc,
+    mozilla::layers::RenderRootStateManager* aManager,
+    nsDisplayListBuilder* aDisplayListBuilder) {
+  LayoutDeviceRect bounds = LayoutDeviceRect::FromAppUnits(
+      nsRect(ToReferenceFrame(), mFrame->GetSize()),
+      mFrame->PresContext()->AppUnitsPerDevPixel());
+
+  aBuilder.PushClearRect(wr::ToLayoutRect(bounds));
+
+  return true;
 }
 
 nsRect nsDisplayOutline::GetBounds(nsDisplayListBuilder* aBuilder,

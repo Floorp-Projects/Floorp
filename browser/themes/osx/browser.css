@@ -74,6 +74,11 @@
   text-shadow: inherit;
 }
 
+:root {
+  -moz-appearance: none;
+  background-color: #eeeeee;
+}
+
 /** Begin titlebar **/
 
 #titlebar {
@@ -492,16 +497,9 @@
 #sidebar-box {
   /* Default font size is 11px on mac, so this is 12px */
   font-size: 1.0909rem;
-  --sidebar-background-color: -moz-mac-source-list;
 }
 
-/* Give the sidebar a vibrant -moz-appearance. Only do this when no lwtheme is
- * in use, because vibrant -moz-appearance values only work if there is no
- * background-color rendered behind the element, and we have :root:-moz-lwtheme
- * rules which set -moz-appearance: none and an opaque background color on the
- * root element. That background color would interfere with the vibrancy.
- * See bug 1594132 for fixing this. */
-#sidebar-box:not(:-moz-lwtheme) {
+#sidebar-box:not([lwt-sidebar]) {
   -moz-appearance: -moz-mac-source-list;
   -moz-font-smoothing-background-color: -moz-mac-source-list;
 }
