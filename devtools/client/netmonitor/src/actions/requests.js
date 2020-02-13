@@ -19,6 +19,9 @@ const {
   getSelectedRequest,
   getRequestById,
 } = require("devtools/client/netmonitor/src/selectors/index");
+const {
+  fetchNetworkUpdatePacket,
+} = require("devtools/client/netmonitor/src/utils/request-utils");
 
 function addRequest(id, data, batch) {
   return {
@@ -73,7 +76,7 @@ function cloneSelectedRequest() {
  * Send a new HTTP request using the data in the custom request form.
  */
 function sendCustomRequest(connector, requestId = null) {
-  return (dispatch, getState) => {
+  return async (dispatch, getState) => {
     let request;
     if (requestId) {
       request = getRequestById(getState(), requestId);
@@ -85,6 +88,15 @@ function sendCustomRequest(connector, requestId = null) {
       return;
     }
 
+    // Fetch request headers and post data from the backend.
+    await fetchNetworkUpdatePacket(connector.requestData, request, [
+      "requestHeaders",
+      "requestPostData",
+    ]);
+
+    // Reload the request from the store to get the headers.
+    request = getRequestById(getState(), request.id);
+
     // Send a new HTTP request using the data in the custom request form
     const data = {
       cause: request.cause,
@@ -92,9 +104,11 @@ function sendCustomRequest(connector, requestId = null) {
       method: request.method,
       httpVersion: request.httpVersion,
     };
+
     if (request.requestHeaders) {
       data.headers = request.requestHeaders.headers;
     }
+
     if (request.requestPostData) {
       data.body = request.requestPostData.postData.text;
     }
