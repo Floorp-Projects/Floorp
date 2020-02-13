@@ -18,7 +18,6 @@
 #include "VsyncDispatcher.h"
 #include "WinCompositorWindowThread.h"
 #include "VRShMem.h"
-#include "RemoteBackbuffer.h"
 
 #include <ddraw.h>
 
@@ -35,25 +34,23 @@ CompositorWidgetParent::CompositorWidgetParent(
                           aOptions),
       mWnd(reinterpret_cast<HWND>(
           aInitData.get_WinCompositorWidgetInitData().hWnd())),
+      mTransparentSurfaceLock("mTransparentSurfaceLock"),
       mTransparencyMode(
           aInitData.get_WinCompositorWidgetInitData().transparencyMode()),
-      mLockedBackBufferData(nullptr),
-      mRemoteBackbufferClient() {
+      mMemoryDC(nullptr),
+      mCompositeDC(nullptr),
+      mLockedBackBufferData(nullptr) {
   MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_GPU);
   MOZ_ASSERT(mWnd && ::IsWindow(mWnd));
+
+  // mNotDeferEndRemoteDrawing is set on the main thread during init,
+  // but is only accessed after on the compositor thread.
+  mNotDeferEndRemoteDrawing =
+      StaticPrefs::layers_offmainthreadcomposition_frame_rate() == 0 ||
+      gfxPlatform::IsInLayoutAsapMode() || gfxPlatform::ForceSoftwareVsync();
 }
 
 CompositorWidgetParent::~CompositorWidgetParent() {}
-
-bool CompositorWidgetParent::Initialize(
-    const RemoteBackbufferHandles& aRemoteHandles) {
-  mRemoteBackbufferClient = std::make_unique<remote_backbuffer::Client>();
-  if (!mRemoteBackbufferClient->Initialize(aRemoteHandles)) {
-    return false;
-  }
-
-  return true;
-}
 
 bool CompositorWidgetParent::PreRender(WidgetRenderingContext* aContext) {
   // This can block waiting for WM_SETTEXT to finish
@@ -77,18 +74,88 @@ LayoutDeviceIntSize CompositorWidgetParent::GetClientSize() {
 }
 
 already_AddRefed<gfx::DrawTarget> CompositorWidgetParent::StartRemoteDrawing() {
-  MOZ_ASSERT(mRemoteBackbufferClient);
+  MutexAutoLock lock(mTransparentSurfaceLock);
 
-  return mRemoteBackbufferClient->BorrowDrawTarget();
+  MOZ_ASSERT(!mCompositeDC);
+
+  RefPtr<gfxASurface> surf;
+  if (mTransparencyMode == eTransparencyTransparent) {
+    surf = EnsureTransparentSurface();
+  }
+
+  // Must call this after EnsureTransparentSurface(), since it could update
+  // the DC.
+  HDC dc = GetWindowSurface();
+  if (!surf) {
+    if (!dc) {
+      return nullptr;
+    }
+    uint32_t flags = (mTransparencyMode == eTransparencyOpaque)
+                         ? 0
+                         : gfxWindowsSurface::FLAG_IS_TRANSPARENT;
+    surf = new gfxWindowsSurface(dc, flags);
+  }
+
+  IntSize size = surf->GetSize();
+  if (size.width <= 0 || size.height <= 0) {
+    if (dc) {
+      FreeWindowSurface(dc);
+    }
+    return nullptr;
+  }
+
+  RefPtr<DrawTarget> dt =
+      mozilla::gfx::Factory::CreateDrawTargetForCairoSurface(
+          surf->CairoSurface(), size);
+  if (dt) {
+    mCompositeDC = dc;
+  } else {
+    FreeWindowSurface(dc);
+  }
+
+  return dt.forget();
 }
 
 void CompositorWidgetParent::EndRemoteDrawing() {
   MOZ_ASSERT(!mLockedBackBufferData);
 
-  Unused << mRemoteBackbufferClient->PresentDrawTarget();
+  if (mTransparencyMode == eTransparencyTransparent) {
+    MOZ_ASSERT(mTransparentSurface);
+    RedrawTransparentWindow();
+  }
+  if (mCompositeDC) {
+    FreeWindowSurface(mCompositeDC);
+  }
+  mCompositeDC = nullptr;
 }
 
-bool CompositorWidgetParent::NeedsToDeferEndRemoteDrawing() { return false; }
+bool CompositorWidgetParent::NeedsToDeferEndRemoteDrawing() {
+  if (mNotDeferEndRemoteDrawing) {
+    return false;
+  }
+
+  IDirectDraw7* ddraw = DeviceManagerDx::Get()->GetDirectDraw();
+  if (!ddraw) {
+    return false;
+  }
+
+  DWORD scanLine = 0;
+  int height = ::GetSystemMetrics(SM_CYSCREEN);
+  HRESULT ret = ddraw->GetScanLine(&scanLine);
+  if (ret == DDERR_VERTICALBLANKINPROGRESS) {
+    scanLine = 0;
+  } else if (ret != DD_OK) {
+    return false;
+  }
+
+  // Check if there is a risk of tearing with GDI.
+  if (static_cast<int>(scanLine) > height / 2) {
+    // No need to defer.
+    return false;
+  }
+
+  return true;
+}
 
 already_AddRefed<gfx::DrawTarget>
 CompositorWidgetParent::GetBackBufferDrawTarget(gfx::DrawTarget* aScreenTarget,
@@ -137,6 +204,31 @@ bool CompositorWidgetParent::InitCompositor(layers::Compositor* aCompositor) {
   return true;
 }
 
+RefPtr<gfxASurface> CompositorWidgetParent::EnsureTransparentSurface() {
+  mTransparentSurfaceLock.AssertCurrentThreadOwns();
+  MOZ_ASSERT(mTransparencyMode == eTransparencyTransparent);
+
+  IntSize size = GetClientSize().ToUnknownSize();
+  if (!mTransparentSurface || mTransparentSurface->GetSize() != size) {
+    mTransparentSurface = nullptr;
+    mMemoryDC = nullptr;
+    CreateTransparentSurface(size);
+  }
+
+  RefPtr<gfxASurface> surface = mTransparentSurface;
+  return surface.forget();
+}
+
+void CompositorWidgetParent::CreateTransparentSurface(
+    const gfx::IntSize& aSize) {
+  mTransparentSurfaceLock.AssertCurrentThreadOwns();
+  MOZ_ASSERT(!mTransparentSurface && !mMemoryDC);
+  RefPtr<gfxWindowsSurface> surface =
+      new gfxWindowsSurface(aSize, SurfaceFormat::A8R8G8B8_UINT32);
+  mTransparentSurface = surface;
+  mMemoryDC = surface->GetDC();
+}
+
 bool CompositorWidgetParent::HasGlass() const {
   MOZ_ASSERT(layers::CompositorThreadHolder::IsInCompositorThread() ||
              wr::RenderThread::IsInRenderThread());
@@ -146,13 +238,35 @@ bool CompositorWidgetParent::HasGlass() const {
          transparencyMode == eTransparencyBorderlessGlass;
 }
 
-bool CompositorWidgetParent::IsHidden() const { return ::IsIconic(mWnd); }
+bool CompositorWidgetParent::RedrawTransparentWindow() {
+  MOZ_ASSERT(mTransparencyMode == eTransparencyTransparent);
 
-mozilla::ipc::IPCResult CompositorWidgetParent::RecvInitialize(
-    const RemoteBackbufferHandles& aRemoteHandles) {
-  Unused << Initialize(aRemoteHandles);
-  return IPC_OK();
+  LayoutDeviceIntSize size = GetClientSize();
+
+  ::GdiFlush();
+
+  BLENDFUNCTION bf = {AC_SRC_OVER, 0, 255, AC_SRC_ALPHA};
+  SIZE winSize = {size.width, size.height};
+  POINT srcPos = {0, 0};
+  HWND hWnd = WinUtils::GetTopLevelHWND(mWnd, true);
+  RECT winRect;
+  ::GetWindowRect(hWnd, &winRect);
+
+  // perform the alpha blend
+  return !!::UpdateLayeredWindow(hWnd, nullptr, (POINT*)&winRect, &winSize,
+                                 mMemoryDC, &srcPos, 0, &bf, ULW_ALPHA);
 }
+
+HDC CompositorWidgetParent::GetWindowSurface() {
+  return eTransparencyTransparent == mTransparencyMode ? mMemoryDC
+                                                       : ::GetDC(mWnd);
+}
+
+void CompositorWidgetParent::FreeWindowSurface(HDC dc) {
+  if (eTransparencyTransparent != mTransparencyMode) ::ReleaseDC(mWnd, dc);
+}
+
+bool CompositorWidgetParent::IsHidden() const { return ::IsIconic(mWnd); }
 
 mozilla::ipc::IPCResult CompositorWidgetParent::RecvEnterPresentLock() {
   mPresentLock.Enter();
@@ -166,28 +280,39 @@ mozilla::ipc::IPCResult CompositorWidgetParent::RecvLeavePresentLock() {
 
 mozilla::ipc::IPCResult CompositorWidgetParent::RecvUpdateTransparency(
     const nsTransparencyMode& aMode) {
-  mTransparencyMode = aMode;
+  MutexAutoLock lock(mTransparentSurfaceLock);
+  if (mTransparencyMode == aMode) {
+    return IPC_OK();
+  }
 
+  mTransparencyMode = aMode;
+  mTransparentSurface = nullptr;
+  mMemoryDC = nullptr;
+
+  if (mTransparencyMode == eTransparencyTransparent) {
+    EnsureTransparentSurface();
+  }
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult CompositorWidgetParent::RecvClearTransparentWindow() {
-  gfx::CriticalSectionAutoEnter lock(&mPresentLock);
-
-  RefPtr<DrawTarget> drawTarget = mRemoteBackbufferClient->BorrowDrawTarget();
-  if (!drawTarget) {
+  MutexAutoLock lock(mTransparentSurfaceLock);
+  if (!mTransparentSurface) {
     return IPC_OK();
   }
 
-  IntSize size = drawTarget->GetSize();
-  if (size.IsEmpty()) {
-    return IPC_OK();
+  EnsureTransparentSurface();
+
+  IntSize size = mTransparentSurface->GetSize();
+  if (!size.IsEmpty()) {
+    RefPtr<DrawTarget> drawTarget =
+        gfxPlatform::CreateDrawTargetForSurface(mTransparentSurface, size);
+    if (!drawTarget) {
+      return IPC_OK();
+    }
+    drawTarget->ClearRect(Rect(0, 0, size.width, size.height));
+    RedrawTransparentWindow();
   }
-
-  drawTarget->ClearRect(Rect(0, 0, size.width, size.height));
-
-  Unused << mRemoteBackbufferClient->PresentDrawTarget();
-
   return IPC_OK();
 }
 
