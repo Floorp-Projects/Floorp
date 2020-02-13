@@ -583,6 +583,7 @@ async function fillGeneratedPasswordFromOpenACPopup(
   EventUtils.synthesizeMouseAtCenter(item, {});
   info("Waiting for the content input value to change");
   await inputEventPromise;
+  info("Waiting for the passwordGeneratedPromise");
   await passwordGeneratedPromise;
 }
 
