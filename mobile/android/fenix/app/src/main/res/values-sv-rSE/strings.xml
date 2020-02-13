@@ -64,6 +64,8 @@
     <string name="browser_menu_bookmark">Bokmärk</string>
     <!-- Content description (not visible, for screen readers etc.): Un-bookmark the current page -->
     <string name="browser_menu_edit_bookmark">Redigera bokmärke</string>
+    <!-- Browser menu button that opens the addon manager -->
+    <string name="browser_menu_addon_manager">Tilläggshanterare</string>
     <!-- Text displayed when there are no add-ons to be shown -->
     <string name="no_add_ons">Inga tillägg här</string>
     <!-- Browser menu button that sends a user to help articles -->
@@ -160,6 +162,8 @@
     <string name="settings">Inställningar</string>
     <!-- Preference category for basic settings -->
     <string name="preferences_category_basics">Grundläggande</string>
+    <!-- Preference category for general settings -->
+    <string name="preferences_category_general">Allmänt</string>
     <!-- Preference category for all links about Fenix -->
     <string name="preferences_category_about">Om</string>
     <!-- Preference for settings related to changing the default search engine -->
@@ -189,6 +193,8 @@
     <string name="preferences_category_advanced">Avancerat</string>
     <!-- Preference category for privacy settings -->
     <string name="preferences_category_privacy">Sekretess</string>
+    <!-- Preference category for privacy and security settings -->
+    <string name="preferences_category_privacy_security">Integritet och säkerhet</string>
     <!-- Preference for advanced site permissions -->
     <string name="preferences_site_permissions">Webbplatsbehörigheter</string>
     <!-- Preference for private browsing options -->
@@ -207,6 +213,8 @@
     <string name="preferences_toolbar">Verktygsfält</string>
     <!-- Preference for changing default theme to dark or light mode -->
     <string name="preferences_theme">Tema</string>
+    <!-- Preference for settings related to visual options -->
+    <string name="preferences_customize">Anpassa</string>
     <!-- Preference description for banner about signing in -->
     <string name="preferences_sign_in_description">Synkronisera bokmärken, historik och mer med ditt Firefox-konto</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
@@ -321,6 +329,10 @@
     <string name="preference_usage_data">Användning och tekniska data</string>
     <!-- Preference description for usage and technical data collection -->
     <string name="preferences_usage_data_description">Delar prestanda, användning, hårdvara och anpassningsdata om din webbläsare med Mozilla för att hjälpa oss att göra %1$s bättre</string>
+    <!-- Preference switch for marketing data collection -->
+    <string name="preferences_marketing_data">Marknadsföringsdata</string>
+    <!-- Preference description for marketing data collection, parameter is the app name (e.g. Firefox) -->
+    <string name="preferences_marketing_data_description">Delar data om vilka funktioner du använder i %1$s med Leanplum, vår mobila marknadsföringsleverantör.</string>
     <!-- Title for experiments preferences -->
     <string name="preference_experiments">Experiment</string>
     <!-- Summary for experiments preferences -->
@@ -666,6 +678,10 @@
     <string name="share_link_subheader">Dela en länk</string>
     <!-- Sub-header in the dialog to share a link to another sync device -->
     <string name="share_device_subheader">Skicka till enhet</string>
+    <!-- Sub-header in the dialog to share a link to an app from the full list -->
+    <string name="share_link_all_apps_subheader">Alla åtgärder</string>
+    <!-- Sub-header in the dialog to share a link to an app from the most-recent sorted list -->
+    <string name="share_link_recent_apps_subheader">Nyligen använd</string>
     <!-- An option from the share dialog to sign into sync -->
     <string name="sync_sign_in">Logga in till Sync</string>
     <!-- An option from the share dialog to send link to all other sync devices -->
@@ -720,6 +736,8 @@
     <string name="snackbar_tab_closed">Flik stängd</string>
     <!-- Text shown in snackbar when user closes all tabs -->
     <string name="snackbar_tabs_closed">Flikar stängda</string>
+    <!-- Text shown in snackbar when user adds a site to home fragment. Placeholder replaced with app name -->
+    <string name="snackbar_added_to_firefox_home">Tillagd till %s hem!</string>
     <!-- Text shown in snackbar when user closes a private tab -->
     <string name="snackbar_private_tab_closed">Privat flik stängd</string>
     <!-- Text shown in snackbar when user closes all private tabs -->
@@ -728,6 +746,8 @@
     <string name="snackbar_private_tabs_deleted">Privata flikar borttagna</string>
     <!-- Text shown in snackbar to undo deleting a tab, top site or collection -->
     <string name="snackbar_deleted_undo">ÅNGRA</string>
+    <!-- Text shown in snackbar when user removes a top site -->
+    <string name="snackbar_top_site_removed">Sida borttagen</string>
     <!-- Text for action to undo deleting a tab or collection shown in a11y dialog -->
     <string name="a11y_dialog_deleted_undo">Ångra</string>
     <!-- Text for action to confirm deleting a tab or collection shown in a11y dialog -->
@@ -749,6 +769,8 @@
     <string name="full_screen_notification">Startar fullskärmsläge</string>
     <!-- Message for copying the URL via long press on the toolbar -->
     <string name="url_copied">URL kopierad</string>
+    <!-- Sample text for accessibility font size -->
+    <string name="accessibility_text_size_sample_text_1">Detta är exempeltext. Den är här för att visa hur text kommer att visas när du ökar eller minskar text storleken med den här inställningen.</string>
     <!-- Summary for Accessibility Text Size Scaling Preference -->
     <string name="preference_accessibility_text_size_summary">Gör text på webbplatser större eller mindre</string>
     <!-- Title for Accessibility Text Size Scaling Preference -->
@@ -823,6 +845,10 @@
     <!-- text for the Firefox Preview feature section header
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_feature_section_header">Lär känna %s</string>
+    <!-- text for the "What's New" onboarding card header -->
+    <string name="onboarding_whats_new_header1">Se vad som är nytt</string>
+    <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
+    <string name="onboarding_whats_new_description_linktext">Få svar här</string>
     <!-- text for the firefox account onboarding card header
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_firefox_account_header">Få ut det mesta av %s.</string>
@@ -845,11 +871,29 @@
     <string name="onboarding_firefox_account_automatic_signin_failed">Det gick inte att logga in</string>
     <!-- text for the tracking protection onboarding card header -->
     <string name="onboarding_tracking_protection_header">Skydda dig</string>
+    <!-- text for the tracking protection card description
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_tracking_protection_description1">%s hjälper till att hindra webbplatser från att spåra dig online.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button">Standard</string>
+    <!-- text for standard blocking option button description -->
+    <string name="onboarding_tracking_protection_standard_button_description">Blockerar färre spårare men tillåter sidor att laddas normalt</string>
+    <!-- text for tracking protection radio button option for strict level of blocking -->
+    <string name="onboarding_tracking_protection_strict_button">Strikt (rekommenderas)</string>
+    <!-- text for strict blocking option button description -->
+    <string name="onboarding_tracking_protection_strict_button_description">Blockerar fler spårare för bättre skydd och prestanda, men kan orsaka att vissa webbplatser inte fungerar korrekt</string>
+    <!-- text for the toolbar position card header
+        In English this is an idiom for "choose a side as in an argument or fight"
+        but it is ok to make this more literally about "choosing a position in a physical space -->
+    <string name="onboarding_toolbar_position_header">Ta en position</string>
     <!-- text for the private browsing onboarding card header -->
     <string name="onboarding_private_browsing_header">Surfa privat</string>
 
+    <!-- text for the private browsing onboarding card description
+    The first parameter is an icon that represents private browsing -->
+    <string name="onboarding_private_browsing_description1">Öppna en privat flik en gång: Klicka på %s ikonen.</string>
+    <!-- text for the private browsing onboarding card description, explaining how to always using private browsing -->
+    <string name="onboarding_private_browsing_always_description">Öppna privata flikar varje gång: Uppdatera dina privata surfinställningar.</string>
     <!-- text for the private browsing onbording card button, that launches settings -->
     <string name="onboarding_private_browsing_button">Öppna inställningar</string>
     <!-- text for the privacy notice onboarding card header -->
@@ -1038,6 +1082,10 @@
     <string name="preferences_passwords_sync_logins_sign_in">Logga in till Sync</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins">Sparade inloggningar</string>
+    <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
+    <string name="preferences_passwords_saved_logins_description_empty_text">De inloggningar som du sparar eller synkroniserar till %s kommer att dyka upp här.</string>
+    <!-- Preference to access list of saved logins -->
+    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link">Läs mer om Sync.</string>
     <!-- Preference to access list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions">Undantag</string>
     <!-- Empty description of list of login exceptions that we never save logins for -->
@@ -1144,19 +1192,45 @@
     <!-- Text shown when a user successfully deletes a custom search engine -->
     <string name="search_delete_search_engine_success_message">%s borttagen</string>
 
+    <!-- Title text shown for the migration screen to the new browser. Placeholder replaced with app name -->
+    <string name="migration_title">Välkommen till en helt ny %s</string>
     <!-- Text on the disabled button while in progress. Placeholder replaced with app name -->
     <string name="migration_updating_app_button_text">Uppdaterar %s…</string>
     <!-- Text on the enabled button. Placeholder replaced with app name-->
     <string name="migration_update_app_button">Starta %s</string>
+    <!-- Accessibility description text for a completed migration item -->
+    <string name="migration_icon_description">Migrationen slutförd</string>
     <!--Text on list of migrated items (e.g. Settings, History, etc.)-->
     <string name="migration_text_passwords">Lösenord</string>
+
+    <!-- Heading for the instructions to allow a permission -->
+    <string name="phone_feature_blocked_intro">För att tillåta det:</string>
+
+    <!-- First step for the allowing a permission -->
+    <string name="phone_feature_blocked_step_settings">1. Gå till Android-inställningar</string>
+    <!-- Second step for the allowing a permission -->
+    <string name="phone_feature_blocked_step_permissions"><![CDATA[2. Tryck <b>Behörigheter</b>]]></string>
+    <!-- Third step for the allowing a permission (Fore example: Camera) -->
+    <string name="phone_feature_blocked_step_feature"><![CDATA[3. Växla <b>%1$s</b> till PÅ]]></string>
 
     <!-- Label that indicates a site is using a secure connection -->
     <string name="quick_settings_sheet_secure_connection">Säker anslutning</string>
     <!-- Label that indicates a site is using a insecure connection -->
     <string name="quick_settings_sheet_insecure_connection">Osäker anslutning</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for all sites-->
+    <string name="confirm_clear_permissions_on_all_sites">Är du säker på att du vill rensa alla behörigheterna för alla webbplatser?</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for a site-->
+    <string name="confirm_clear_permissions_site">Är du säker på att du vill ta bort alla behörigheter för den här webbplatsen?</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to set default value a permission for a site-->
+    <string name="confirm_clear_permission_site">Är du säker på att du vill rensa det här behörigheterna för den här webbplatsen?</string>
+    <!-- label shown when there are not site exceptions to show in the site exception settings -->
+    <string name="no_site_exceptions">Inga webbplatsundantag</string>
     <!-- Label for the Pocket default top site -->
     <string name="pocket_top_articles">Toppartiklar</string>
+    <!-- Bookmark deletion confirmation -->
+    <string name="bookmark_deletion_confirmation">Är du säker på att du vill ta bort det här bokmärket?</string>
+    <!-- Browser menu button that adds a top site to the home fragment -->
+    <string name="browser_menu_add_to_top_sites">Lägg till i mest besökta</string>
     <!-- text shown before the issuer name to indicate who its verified by, parameter is the name of
      the certificate authority that verified the ticket-->
     <string name="certificate_info_verified_by">Verifierad av: %1$s </string>

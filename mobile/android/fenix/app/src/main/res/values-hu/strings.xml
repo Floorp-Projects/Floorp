@@ -64,6 +64,10 @@
     <string name="browser_menu_bookmark">Könyvjelzőzés</string>
     <!-- Content description (not visible, for screen readers etc.): Un-bookmark the current page -->
     <string name="browser_menu_edit_bookmark">Könyvjelző szerkesztése</string>
+    <!-- Browser menu button that opens the addon manager -->
+    <string name="browser_menu_addon_manager">Kiegészítőkezelő</string>
+    <!-- Text displayed when there are no add-ons to be shown -->
+    <string name="no_add_ons">Nincsenek kiegészítők</string>
     <!-- Browser menu button that sends a user to help articles -->
     <string name="browser_menu_help">Súgó</string>
     <!-- Browser menu button that sends a to a the what's new article -->
@@ -156,6 +160,8 @@
     <string name="settings">Beállítások</string>
     <!-- Preference category for basic settings -->
     <string name="preferences_category_basics">Alapok</string>
+    <!-- Preference category for general settings -->
+    <string name="preferences_category_general">Általános</string>
     <!-- Preference category for all links about Fenix -->
     <string name="preferences_category_about">Névjegy</string>
     <!-- Preference for settings related to changing the default search engine -->
@@ -185,8 +191,12 @@
     <string name="preferences_category_advanced">Speciális</string>
     <!-- Preference category for privacy settings -->
     <string name="preferences_category_privacy">Adatvédelem</string>
+    <!-- Preference category for privacy and security settings -->
+    <string name="preferences_category_privacy_security">Adatvédelem és biztonság</string>
     <!-- Preference for advanced site permissions -->
     <string name="preferences_site_permissions">Webhely engedélyek</string>
+    <!-- Preference for private browsing options -->
+    <string name="preferences_private_browsing_options">Privát böngészés</string>
     <!-- Preference for opening links in a private tab-->
     <string name="preferences_open_links_in_a_private_tab">Hivatkozások megnyitása privát lapon</string>
     <!-- Preference for adding private browsing shortcut -->
@@ -201,6 +211,8 @@
     <string name="preferences_toolbar">Eszköztár</string>
     <!-- Preference for changing default theme to dark or light mode -->
     <string name="preferences_theme">Téma</string>
+    <!-- Preference for settings related to visual options -->
+    <string name="preferences_customize">Testreszabás</string>
     <!-- Preference description for banner about signing in -->
     <string name="preferences_sign_in_description">Könyvjelzők, előzmények és egyebek szinkronizálása a Firefox-fiókjával</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
@@ -236,6 +248,9 @@
 
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">Hivatkozások megnyitása alkalmazásokban</string>
+
+    <!-- Preference for add_ons -->
+    <string name="preferences_addons">Kiegészítők</string>
 
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
@@ -308,6 +323,10 @@
     <string name="preference_usage_data">Használati és műszaki adatok</string>
     <!-- Preference description for usage and technical data collection -->
     <string name="preferences_usage_data_description">Adatokat küld a Mozillának a böngésző teljesítményéről, a hardverről, a felhasználásról és az egyéni beállításokról, hogy a %1$s jobb lehessen</string>
+    <!-- Preference switch for marketing data collection -->
+    <string name="preferences_marketing_data">Marketing adatok</string>
+    <!-- Preference description for marketing data collection, parameter is the app name (e.g. Firefox) -->
+    <string name="preferences_marketing_data_description">Megosztja a Leanplummal, a mobil marketing szolgáltatónkkal, hogy mely funkciókat használja a %1$s böngészőben.</string>
     <!-- Title for experiments preferences -->
     <string name="preference_experiments">Kísérletek</string>
     <!-- Summary for experiments preferences -->
@@ -433,6 +452,9 @@
     <string name="collection_open_tabs">Nyitott lapok</string>
 
 
+    <!-- Text for the menu button to remove a top site -->
+    <string name="remove_top_site">Eltávolítás</string>
+
     <!-- History -->
     <!-- Text for the button to clear all history -->
     <string name="history_delete_all">Előzmények törlése</string>
@@ -506,6 +528,8 @@
     <string name="bookmark_menu_open_in_private_tab_button">Megnyitás privát lapon</string>
     <!-- Bookmark overflow menu delete button -->
     <string name="bookmark_menu_delete_button">Törlés</string>
+    <!--Bookmark overflow menu save button -->
+    <string name="bookmark_menu_save_button">Mentés</string>
     <!-- Bookmark multi select title in app bar
      The first parameter is the number of bookmarks selected -->
     <string name="bookmarks_multi_select_title">%1$d kiválasztva</string>
@@ -649,6 +673,10 @@
     <string name="share_link_subheader">Hivatkozás megosztása</string>
     <!-- Sub-header in the dialog to share a link to another sync device -->
     <string name="share_device_subheader">Küldés eszközre</string>
+    <!-- Sub-header in the dialog to share a link to an app from the full list -->
+    <string name="share_link_all_apps_subheader">Összes művelet</string>
+    <!-- Sub-header in the dialog to share a link to an app from the most-recent sorted list -->
+    <string name="share_link_recent_apps_subheader">Nemrég használt</string>
     <!-- An option from the share dialog to sign into sync -->
     <string name="sync_sign_in">Jelentkezzen be a Syncbe</string>
     <!-- An option from the share dialog to send link to all other sync devices -->
@@ -702,14 +730,18 @@
     <string name="snackbar_tab_closed">Lap bezárva</string>
     <!-- Text shown in snackbar when user closes all tabs -->
     <string name="snackbar_tabs_closed">Lapok bezárva</string>
+    <!-- Text shown in snackbar when user adds a site to home fragment. Placeholder replaced with app name -->
+    <string name="snackbar_added_to_firefox_home">Hozzáadva a %s kezdőlaphoz.</string>
     <!-- Text shown in snackbar when user closes a private tab -->
     <string name="snackbar_private_tab_closed">Privát lap bezárva</string>
     <!-- Text shown in snackbar when user closes all private tabs -->
     <string name="snackbar_private_tabs_closed">Privát lapok bezárva</string>
     <!-- Text shown in snackbar when user deletes all private tabs -->
     <string name="snackbar_private_tabs_deleted">Privát lapok törölve</string>
-    <!-- Text for action to undo deleting a tab or collection shown in snackbar -->
+    <!-- Text shown in snackbar to undo deleting a tab, top site or collection -->
     <string name="snackbar_deleted_undo">VISSZAVONÁS</string>
+    <!-- Text shown in snackbar when user removes a top site -->
+    <string name="snackbar_top_site_removed">Oldal eltávolítva</string>
     <!-- Text for action to undo deleting a tab or collection shown in a11y dialog -->
     <string name="a11y_dialog_deleted_undo">Visszavonás</string>
     <!-- Text for action to confirm deleting a tab or collection shown in a11y dialog -->
@@ -732,7 +764,7 @@
     <!-- Message for copying the URL via long press on the toolbar -->
     <string name="url_copied">URL másolva</string>
     <!-- Sample text for accessibility font size -->
-    <string name="accessibility_text_size_sample_text">A gyors barna róka átugorja a lusta kutyát. A gyors barna róka átugorja a lusta kutyát. A gyors barna róka átugorja a lusta kutyát. A gyors barna róka átugorja a lusta kutyát.</string>
+    <string name="accessibility_text_size_sample_text_1">Ez egy mintaszöveg. Itt látható, hogy miként jelenik meg a szöveg, ha ezzel a beállítással növeli vagy csökkenti a méretét.</string>
     <!-- Summary for Accessibility Text Size Scaling Preference -->
     <string name="preference_accessibility_text_size_summary">A webhelyek szövegének nagyobbra vagy kisebbre állítása</string>
     <!-- Title for Accessibility Text Size Scaling Preference -->
@@ -759,11 +791,6 @@
     <!-- Subtitle for the history items in delete browsing data, parameter will be replaced with the
         number of history pages the user has -->
     <string name="preferences_delete_browsing_data_browsing_history_subtitle">%d lap</string>
-    <!-- Title for the collections item in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_collections_title">Gyűjtemények</string>
-    <!-- Subtitle for the collections item in Delete browsing data, parameter will be replaced with the
-        number of collections that will be deleted -->
-    <string name="preferences_delete_browsing_data_collections_subtitle">%d gyűjtemény</string>
     <!-- Title for the cookies item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cookies">Sütik</string>
     <!-- Subtitle for the cookies item in Delete browsing data -->
@@ -812,10 +839,13 @@
     <!-- text for the Firefox Preview feature section header
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_feature_section_header">Ismerje meg a %s böngészőt</string>
-    <!-- text for the theme picker onboarding card header -->
-    <string name="onboarding_theme_picker_header">Válassza ki a témát</string>
-    <!-- text for the theme picker onboarding card description -->
-    <string name="onboarding_theme_picker_description">Próbálja ki a sötét témát: kíméletesebb az akkumulátorral és a szemeivel.</string>
+    <!-- text for the "What's New" onboarding card header -->
+    <string name="onboarding_whats_new_header1">Nézze meg az újdonságokat</string>
+    <!-- text for the "what's new" onboarding card description
+    The first parameter is the short name of the app (e.g. Firefox) -->
+    <string name="onboarding_whats_new_description">Kérdése van az újratervezett %s böngészőről? Tudni akarja, hogy mi változott?</string>
+    <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
+    <string name="onboarding_whats_new_description_linktext">Itt kaphat válaszokat</string>
     <!-- text for the firefox account onboarding card header
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_firefox_account_header">Hozza ki a legtöbbet a %s böngészőből.</string>
@@ -839,13 +869,30 @@
     <string name="onboarding_tracking_protection_header">Védje meg magát</string>
     <!-- text for the tracking protection card description
     The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_tracking_protection_description">A %s blokkolja a hirdetéskövetőket, amelyek követik a weben.
-    </string>
+    <string name="onboarding_tracking_protection_description1">A %s segít megakadályozni, hogy a webhelyek nyomon kövessék az online tevékenységét.</string>
+    <!-- text for tracking protection radio button option for standard level of blocking -->
+    <string name="onboarding_tracking_protection_standard_button">Szokásos</string>
+    <!-- text for standard blocking option button description -->
+    <string name="onboarding_tracking_protection_standard_button_description">Kevesebb nyomkövetőt blokkol, de lehetővé teszi az oldalak normál betöltését</string>
+    <!-- text for tracking protection radio button option for strict level of blocking -->
+    <string name="onboarding_tracking_protection_strict_button">Szigorú (ajánlott)</string>
+    <!-- text for strict blocking option button description -->
+    <string name="onboarding_tracking_protection_strict_button_description">Több nyomkövetőt blokkol a jobb védelem és teljesítmény érdekében, de előfordulhat, hogy egyes webhelyek nem fognak megfelelően működni</string>
+    <!-- text for the toolbar position card header
+        In English this is an idiom for "choose a side as in an argument or fight"
+        but it is ok to make this more literally about "choosing a position in a physical space -->
+    <string name="onboarding_toolbar_position_header">Foglaljon állást</string>
+    <!-- text for the toolbar position card description -->
+    <string name="onboarding_toolbar_position_description">Próbálja ki az egykezes böngészést a lenti eszköztárral, vagy mozgassa fentre.</string>
     <!-- text for the private browsing onboarding card header -->
     <string name="onboarding_private_browsing_header">Böngésszen privát módon</string>
     <!-- text for the private browsing onboarding card description
     The first parameter is an icon that represents private browsing -->
-    <string name="onboarding_private_browsing_description">Ha a %s ikont látja, akkor a privát böngészés csak egy érintésnyire van.</string>
+    <string name="onboarding_private_browsing_description1">Nyisson egy privát lapot: Koppintson a %s ikonra.</string>
+    <!-- text for the private browsing onboarding card description, explaining how to always using private browsing -->
+    <string name="onboarding_private_browsing_always_description">Nyisson mindig privát lapokat: Frissítse a privát böngészési beállításait.</string>
+    <!-- text for the private browsing onbording card button, that launches settings -->
+    <string name="onboarding_private_browsing_button">Beállítások megnyitása</string>
     <!-- text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header">Adatvédelem</string>
     <!-- text for the privacy notice onboarding card description
@@ -860,6 +907,10 @@
     <string name="onboarding_finish">Böngészés megkezdése</string>
 
     <!-- Onboarding theme -->
+    <!-- text for the theme picker onboarding card header -->
+    <string name="onboarding_theme_picker_header">Válassza ki a témát</string>
+    <!-- text for the theme picker onboarding card description -->
+    <string name="onboarding_theme_picker_description1">Spóroljon az akkumulátorral és kímélje a szemét a sötét mód bekapcsolásával.</string>
     <!-- Automatic theme setting (will follow device setting) -->
     <string name="onboarding_theme_automatic_title">Automatikus</string>
     <!-- Summary of automatic theme setting (will follow device setting) -->
@@ -1032,6 +1083,10 @@
     <string name="preferences_passwords_sync_logins_sign_in">Jelentkezzen be a Syncbe</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins">Mentett bejelentkezések</string>
+    <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
+    <string name="preferences_passwords_saved_logins_description_empty_text">Itt jelennek meg a mentett vagy a %s böngészővel szinkronizált bejelentkezések.</string>
+    <!-- Preference to access list of saved logins -->
+    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link">Tudjon meg többet a Syncről.</string>
     <!-- Preference to access list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions">Kivételek</string>
     <!-- Empty description of list of login exceptions that we never save logins for -->
@@ -1137,4 +1192,51 @@
     <string name="search_edit_custom_engine_success_message">%s mentve</string>
     <!-- Text shown when a user successfully deletes a custom search engine -->
     <string name="search_delete_search_engine_success_message">%s törölve</string>
+
+    <!-- Title text shown for the migration screen to the new browser. Placeholder replaced with app name -->
+    <string name="migration_title">Üdvözli a teljesen megújult %s</string>
+
+    <!-- Description text followed by a list of things migrating (e.g. Bookmarks, History). Placeholder replaced with app name-->
+    <string name="migration_description">Egy teljesen újratervezett böngésző vár Önre, továbbfejlesztett teljesítménnyel és funkciókkal, hogy több mindent tehessen online.\n\nVárjon, amíg a %s frissíti a következőket:</string>
+    <!-- Text on the disabled button while in progress. Placeholder replaced with app name -->
+    <string name="migration_updating_app_button_text">%s frissítése…</string>
+    <!-- Text on the enabled button. Placeholder replaced with app name-->
+    <string name="migration_update_app_button">%s indítása</string>
+    <!-- Accessibility description text for a completed migration item -->
+    <string name="migration_icon_description">Az áttelepítés befejeződött</string>
+    <!--Text on list of migrated items (e.g. Settings, History, etc.)-->
+    <string name="migration_text_passwords">Jelszavak</string>
+
+    <!-- Heading for the instructions to allow a permission -->
+    <string name="phone_feature_blocked_intro">Engedélyezés módja:</string>
+    <!-- First step for the allowing a permission -->
+    <string name="phone_feature_blocked_step_settings">1. Ugorjon az Android beállításokhoz</string>
+    <!-- Second step for the allowing a permission -->
+    <string name="phone_feature_blocked_step_permissions"><![CDATA[2. Koppintson az <b>Engedélyek</b> lehetőségre]]></string>
+    <!-- Third step for the allowing a permission (Fore example: Camera) -->
+    <string name="phone_feature_blocked_step_feature"><![CDATA[3. Kapcsolja BE a következőt: <b>%1$s</b>]]></string>
+
+    <!-- Label that indicates a site is using a secure connection -->
+    <string name="quick_settings_sheet_secure_connection">Biztonságos kapcsolat</string>
+    <!-- Label that indicates a site is using a insecure connection -->
+    <string name="quick_settings_sheet_insecure_connection">Nem biztonságos kapcsolat</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for all sites-->
+    <string name="confirm_clear_permissions_on_all_sites">Biztos benne, hogy törli az összes engedélyt az összes webhelyen?</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for a site-->
+    <string name="confirm_clear_permissions_site">Biztos benne, hogy törli az összes engedélyt ezen a webhelyen?</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to set default value a permission for a site-->
+    <string name="confirm_clear_permission_site">Biztos benne, hogy törli ezt az engedélyt ezen a webhelyen?</string>
+    <!-- label shown when there are not site exceptions to show in the site exception settings -->
+    <string name="no_site_exceptions">Nincsenek webhelyenkénti kivételek</string>
+    <!-- Label for the Pocket default top site -->
+    <string name="pocket_top_articles">Népszerű cikkek</string>
+    <!-- Bookmark deletion confirmation -->
+    <string name="bookmark_deletion_confirmation">Biztos, hogy törli ezt a könyvjelzőt?</string>
+    <!-- Browser menu button that adds a top site to the home fragment -->
+    <string name="browser_menu_add_to_top_sites">Hozzáadás a népszerű oldalakhoz</string>
+    <!-- text shown before the issuer name to indicate who its verified by, parameter is the name of
+     the certificate authority that verified the ticket-->
+    <string name="certificate_info_verified_by">Ellenőrizte: %1$s </string>
+    <!-- Login overflow menu delete button -->
+    <string name="login_menu_delete_button">Törlés</string>
 </resources>

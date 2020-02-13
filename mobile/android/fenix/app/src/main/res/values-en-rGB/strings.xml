@@ -62,6 +62,10 @@
     <string name="browser_menu_bookmark">Bookmark</string>
     <!-- Content description (not visible, for screen readers etc.): Un-bookmark the current page -->
     <string name="browser_menu_edit_bookmark">Edit bookmark</string>
+    <!-- Browser menu button that opens the addon manager -->
+    <string name="browser_menu_addon_manager">Add-ons Manager</string>
+    <!-- Text displayed when there are no add-ons to be shown -->
+    <string name="no_add_ons">No add-ons here</string>
     <!-- Browser menu button that sends a user to help articles -->
     <string name="browser_menu_help">Help</string>
     <!-- Browser menu button that sends a to a the what's new article -->
@@ -151,6 +155,8 @@
     <string name="settings">Settings</string>
     <!-- Preference category for basic settings -->
     <string name="preferences_category_basics">Basics</string>
+    <!-- Preference category for general settings -->
+    <string name="preferences_category_general">General</string>
     <!-- Preference category for all links about Fenix -->
     <string name="preferences_category_about">About</string>
     <!-- Preference for settings related to changing the default search engine -->
@@ -180,8 +186,12 @@
     <string name="preferences_category_advanced">Advanced</string>
     <!-- Preference category for privacy settings -->
     <string name="preferences_category_privacy">Privacy</string>
+    <!-- Preference category for privacy and security settings -->
+    <string name="preferences_category_privacy_security">Privacy and security</string>
     <!-- Preference for advanced site permissions -->
     <string name="preferences_site_permissions">Site permissions</string>
+    <!-- Preference for private browsing options -->
+    <string name="preferences_private_browsing_options">Private browsing</string>
     <!-- Preference for opening links in a private tab-->
     <string name="preferences_open_links_in_a_private_tab">Open links in a private tab</string>
     <!-- Preference for adding private browsing shortcut -->
@@ -197,6 +207,8 @@
     <!-- Preference for changing default theme to dark or light mode -->
     <string name="preferences_theme">Theme</string>
 
+    <!-- Preference for settings related to visual options -->
+    <string name="preferences_customize">Customise</string>
     <!-- Preference description for banner about signing in -->
     <string name="preferences_sign_in_description">Synchronise bookmarks, history, and more with your Firefox Account</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
@@ -231,6 +243,9 @@
     <string name="preferences_account_settings">Account settings</string>
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">Open links in apps</string>
+
+    <!-- Preference for add_ons -->
+    <string name="preferences_addons">Add-ons</string>
 
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
@@ -303,6 +318,10 @@
     <string name="preference_usage_data">Usage and technical data</string>
     <!-- Preference description for usage and technical data collection -->
     <string name="preferences_usage_data_description">Shares performance, usage, hardware and customisation data about your browser with Mozilla to help us make %1$s better</string>
+    <!-- Preference switch for marketing data collection -->
+    <string name="preferences_marketing_data">Marketing data</string>
+    <!-- Preference description for marketing data collection, parameter is the app name (e.g. Firefox) -->
+    <string name="preferences_marketing_data_description">Shares data about what features you use in %1$s with Leanplum, our mobile marketing vendor.</string>
     <!-- Title for experiments preferences -->
     <string name="preference_experiments">Experiments</string>
     <!-- Summary for experiments preferences -->
@@ -424,6 +443,9 @@
     <!-- Text for the button to open tabs of the selected collection -->
     <string name="collection_open_tabs">Open tabs</string>
 
+    <!-- Text for the menu button to remove a top site -->
+    <string name="remove_top_site">Remove</string>
+
     <!-- History -->
     <!-- Text for the button to clear all history -->
     <string name="history_delete_all">Delete history</string>
@@ -497,6 +519,8 @@
     <string name="bookmark_menu_open_in_private_tab_button">Open in private tab</string>
     <!-- Bookmark overflow menu delete button -->
     <string name="bookmark_menu_delete_button">Delete</string>
+    <!--Bookmark overflow menu save button -->
+    <string name="bookmark_menu_save_button">Save</string>
     <!-- Bookmark multi select title in app bar
      The first parameter is the number of bookmarks selected -->
     <string name="bookmarks_multi_select_title">%1$d selected</string>
@@ -638,6 +662,10 @@
     <string name="share_link_subheader">Share a link</string>
     <!-- Sub-header in the dialog to share a link to another sync device -->
     <string name="share_device_subheader">Send to device</string>
+    <!-- Sub-header in the dialog to share a link to an app from the full list -->
+    <string name="share_link_all_apps_subheader">All actions</string>
+    <!-- Sub-header in the dialog to share a link to an app from the most-recent sorted list -->
+    <string name="share_link_recent_apps_subheader">Recently used</string>
     <!-- An option from the share dialog to sign into sync -->
     <string name="sync_sign_in">Sign in to Sync</string>
     <!-- An option from the share dialog to send link to all other sync devices -->
@@ -688,14 +716,18 @@
     <string name="snackbar_tab_closed">Tab closed</string>
     <!-- Text shown in snackbar when user closes all tabs -->
     <string name="snackbar_tabs_closed">Tabs closed</string>
+    <!-- Text shown in snackbar when user adds a site to home fragment. Placeholder replaced with app name -->
+    <string name="snackbar_added_to_firefox_home">Added to %s home!</string>
     <!-- Text shown in snackbar when user closes a private tab -->
     <string name="snackbar_private_tab_closed">Private tab closed</string>
     <!-- Text shown in snackbar when user closes all private tabs -->
     <string name="snackbar_private_tabs_closed">Private tabs closed</string>
     <!-- Text shown in snackbar when user deletes all private tabs -->
     <string name="snackbar_private_tabs_deleted">Private tabs deleted</string>
-    <!-- Text for action to undo deleting a tab or collection shown in snackbar -->
+    <!-- Text shown in snackbar to undo deleting a tab, top site or collection -->
     <string name="snackbar_deleted_undo">UNDO</string>
+    <!-- Text shown in snackbar when user removes a top site -->
+    <string name="snackbar_top_site_removed">Site removed</string>
     <!-- Text for action to undo deleting a tab or collection shown in a11y dialog -->
     <string name="a11y_dialog_deleted_undo">Undo</string>
     <!-- Text for action to confirm deleting a tab or collection shown in a11y dialog -->
@@ -718,7 +750,7 @@
     <!-- Message for copying the URL via long press on the toolbar -->
     <string name="url_copied">URL copied</string>
     <!-- Sample text for accessibility font size -->
-    <string name="accessibility_text_size_sample_text">The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog.</string>
+    <string name="accessibility_text_size_sample_text_1">This is sample text. It is here to show how text will appear when you increase or decrease the size with this setting.</string>
     <!-- Summary for Accessibility Text Size Scaling Preference -->
     <string name="preference_accessibility_text_size_summary">Make text on web sites larger or smaller</string>
     <!-- Title for Accessibility Text Size Scaling Preference -->
@@ -745,11 +777,6 @@
     <!-- Subtitle for the history items in delete browsing data, parameter will be replaced with the
         number of history pages the user has -->
     <string name="preferences_delete_browsing_data_browsing_history_subtitle">%d pages</string>
-    <!-- Title for the collections item in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_collections_title">Collections</string>
-    <!-- Subtitle for the collections item in Delete browsing data, parameter will be replaced with the
-        number of collections that will be deleted -->
-    <string name="preferences_delete_browsing_data_collections_subtitle">%d collections</string>
     <!-- Title for the cookies item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cookies">Cookies</string>
     <!-- Subtitle for the cookies item in Delete browsing data -->
@@ -795,10 +822,13 @@
     <!-- text for the Firefox Preview feature section header
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_feature_section_header">Get to know %s</string>
-    <!-- text for the theme picker onboarding card header -->
-    <string name="onboarding_theme_picker_header">Choose your theme</string>
-    <!-- text for the theme picker onboarding card description -->
-    <string name="onboarding_theme_picker_description">Try dark theme: easier on your battery and your eyes.</string>
+    <!-- text for the "What's New" onboarding card header -->
+    <string name="onboarding_whats_new_header1">See what’s new</string>
+    <!-- text for the "what's new" onboarding card description
+    The first parameter is the short name of the app (e.g. Firefox) -->
+    <string name="onboarding_whats_new_description">Have questions about the redesigned %s? Want to know what’s changed?</string>
+    <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
+    <string name="onboarding_whats_new_description_linktext">Get answers here</string>
     <!-- text for the firefox account onboarding card header
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_firefox_account_header">Get the most out of %s.</string>
@@ -822,14 +852,30 @@
     <string name="onboarding_tracking_protection_header">Protect yourself</string>
     <!-- text for the tracking protection card description
     The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_tracking_protection_description">%s blocks ad trackers that follow you around the web.
-    </string>
+    <string name="onboarding_tracking_protection_description1">%s helps stop web sites from tracking you online.</string>
+    <!-- text for tracking protection radio button option for standard level of blocking -->
+    <string name="onboarding_tracking_protection_standard_button">Standard</string>
+    <!-- text for standard blocking option button description -->
+    <string name="onboarding_tracking_protection_standard_button_description">Blocks fewer trackers but allows pages to load normally</string>
+    <!-- text for tracking protection radio button option for strict level of blocking -->
+    <string name="onboarding_tracking_protection_strict_button">Strict (recommended)</string>
+    <!-- text for strict blocking option button description -->
+    <string name="onboarding_tracking_protection_strict_button_description">Blocks more trackers for better protection and performance, but may cause some sites to not work properly</string>
+    <!-- text for the toolbar position card header
+        In English this is an idiom for "choose a side as in an argument or fight"
+        but it is ok to make this more literally about "choosing a position in a physical space -->
+    <string name="onboarding_toolbar_position_header">Take a position</string>
+    <!-- text for the toolbar position card description -->
+    <string name="onboarding_toolbar_position_description">Try one-handed browsing with the bottom toolbar or move it to the top.</string>
     <!-- text for the private browsing onboarding card header -->
     <string name="onboarding_private_browsing_header">Browse privately</string>
     <!-- text for the private browsing onboarding card description
     The first parameter is an icon that represents private browsing -->
-    <string name="onboarding_private_browsing_description">When you see the %s icon, private browsing is just a tap away.
-   </string>
+    <string name="onboarding_private_browsing_description1">Open a private tab once: Tap the %s icon.</string>
+    <!-- text for the private browsing onboarding card description, explaining how to always using private browsing -->
+    <string name="onboarding_private_browsing_always_description">Open private tabs every time: Update your private browsing settings.</string>
+    <!-- text for the private browsing onbording card button, that launches settings -->
+    <string name="onboarding_private_browsing_button">Open settings</string>
     <!-- text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header">Your privacy</string>
     <!-- text for the privacy notice onboarding card description
@@ -844,6 +890,10 @@
     <string name="onboarding_finish">Start browsing</string>
 
     <!-- Onboarding theme -->
+    <!-- text for the theme picker onboarding card header -->
+    <string name="onboarding_theme_picker_header">Choose your theme</string>
+    <!-- text for the theme picker onboarding card description -->
+    <string name="onboarding_theme_picker_description1">Save some battery and your eyesight by enabling dark mode.</string>
     <!-- Automatic theme setting (will follow device setting) -->
     <string name="onboarding_theme_automatic_title">Automatic</string>
     <!-- Summary of automatic theme setting (will follow device setting) -->
@@ -1013,6 +1063,10 @@
     <string name="preferences_passwords_sync_logins_sign_in">Sign in to Sync</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins">Saved logins</string>
+    <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
+    <string name="preferences_passwords_saved_logins_description_empty_text">The logins you save or synchronise to %s will show up here.</string>
+    <!-- Preference to access list of saved logins -->
+    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link">Learn more about Sync.</string>
     <!-- Preference to access list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions">Exceptions</string>
     <!-- Empty description of list of login exceptions that we never save logins for -->
@@ -1118,4 +1172,27 @@
     <string name="search_edit_custom_engine_success_message">Saved %s</string>
     <!-- Text shown when a user successfully deletes a custom search engine -->
     <string name="search_delete_search_engine_success_message">Deleted %s</string>
-</resources>
+
+    <!-- Title text shown for the migration screen to the new browser. Placeholder replaced with app name -->
+    <string name="migration_title">Welcome to an all-new %s</string>
+    <!-- Description text followed by a list of things migrating (e.g. Bookmarks, History). Placeholder replaced with app name-->
+    <string name="migration_description">A completely redesigned browser awaits, with improved performance and features to help you do more online.\n\nPlease wait while we update %s with your</string>
+    <!-- Text on the disabled button while in progress. Placeholder replaced with app name -->
+    <string name="migration_updating_app_button_text">Updating %s…</string>
+    <!-- Text on the enabled button. Placeholder replaced with app name-->
+    <string name="migration_update_app_button">Start %s</string>
+    <!-- Accessibility description text for a completed migration item -->
+    <string name="migration_icon_description">Migration completed</string>
+    <!--Text on list of migrated items (e.g. Settings, History, etc.)-->
+    <string name="migration_text_passwords">Passwords</string>
+
+    <!-- Heading for the instructions to allow a permission -->
+    <string name="phone_feature_blocked_intro">To allow it:</string>
+    <!-- First step for the allowing a permission -->
+    <string name="phone_feature_blocked_step_settings">1. Go to Android Settings</string>
+    <!-- Second step for the allowing a permission -->
+    <string name="phone_feature_blocked_step_permissions"><![CDATA[2. Tap <b>Permissions</b>]]></string>
+    <!-- Third step for the allowing a permission (Fore example: Camera) -->
+    <string name="phone_feature_blocked_step_feature"><![CDATA[3. Toggle <b>%1$s</b> to ON]]></string>
+
+    </resources>

@@ -62,6 +62,10 @@
     <string name="browser_menu_bookmark">書籤</string>
     <!-- Content description (not visible, for screen readers etc.): Un-bookmark the current page -->
     <string name="browser_menu_edit_bookmark">編輯書籤</string>
+    <!-- Browser menu button that opens the addon manager -->
+    <string name="browser_menu_addon_manager">附加元件管理員</string>
+    <!-- Text displayed when there are no add-ons to be shown -->
+    <string name="no_add_ons">無附加元件</string>
     <!-- Browser menu button that sends a user to help articles -->
     <string name="browser_menu_help">說明</string>
     <!-- Browser menu button that sends a to a the what's new article -->
@@ -156,6 +160,8 @@
 
     <!-- Preference category for basic settings -->
     <string name="preferences_category_basics">基礎設定</string>
+    <!-- Preference category for general settings -->
+    <string name="preferences_category_general">一般</string>
     <!-- Preference category for all links about Fenix -->
     <string name="preferences_category_about">關於</string>
     <!-- Preference for settings related to changing the default search engine -->
@@ -185,8 +191,12 @@
     <string name="preferences_category_advanced">進階</string>
     <!-- Preference category for privacy settings -->
     <string name="preferences_category_privacy">隱私權</string>
+    <!-- Preference category for privacy and security settings -->
+    <string name="preferences_category_privacy_security">隱私權與安全性</string>
     <!-- Preference for advanced site permissions -->
     <string name="preferences_site_permissions">網站權限</string>
+    <!-- Preference for private browsing options -->
+    <string name="preferences_private_browsing_options">隱私瀏覽模式</string>
     <!-- Preference for opening links in a private tab-->
     <string name="preferences_open_links_in_a_private_tab">用隱私分頁開啟鏈結</string>
     <!-- Preference for adding private browsing shortcut -->
@@ -201,6 +211,8 @@
     <string name="preferences_toolbar">工具列</string>
     <!-- Preference for changing default theme to dark or light mode -->
     <string name="preferences_theme">佈景主題</string>
+    <!-- Preference for settings related to visual options -->
+    <string name="preferences_customize">自訂</string>
     <!-- Preference description for banner about signing in -->
     <string name="preferences_sign_in_description">使用您的 Firefox 帳號同步書籤、瀏覽紀錄等資料</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
@@ -237,6 +249,9 @@
 
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">用 App 開啟鏈結</string>
+
+    <!-- Preference for add_ons -->
+    <string name="preferences_addons">附加元件</string>
 
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
@@ -313,6 +328,10 @@
     <string name="preference_usage_data">使用與技術資料</string>
     <!-- Preference description for usage and technical data collection -->
     <string name="preferences_usage_data_description">分享您瀏覽器的效能、使用方式、硬體設備、與自訂功能的資料給 Mozilla 以幫助我們讓 %1$s 變得更好</string>
+    <!-- Preference switch for marketing data collection -->
+    <string name="preferences_marketing_data">行銷資料</string>
+    <!-- Preference description for marketing data collection, parameter is the app name (e.g. Firefox) -->
+    <string name="preferences_marketing_data_description">與我們的行動行銷服務供應商 Leanplum 分享您在 %1$s 使用了哪些功能。</string>
     <!-- Title for experiments preferences -->
     <string name="preference_experiments">實驗</string>
     <!-- Summary for experiments preferences -->
@@ -436,6 +455,9 @@
     <string name="collection_open_tabs">開啟分頁</string>
 
 
+    <!-- Text for the menu button to remove a top site -->
+    <string name="remove_top_site">移除</string>
+
     <!-- History -->
     <!-- Text for the button to clear all history -->
     <string name="history_delete_all">刪除瀏覽紀錄</string>
@@ -512,6 +534,8 @@
     <string name="bookmark_menu_open_in_private_tab_button">用新隱私分頁開啟</string>
     <!-- Bookmark overflow menu delete button -->
     <string name="bookmark_menu_delete_button">刪除</string>
+    <!--Bookmark overflow menu save button -->
+    <string name="bookmark_menu_save_button">儲存</string>
     <!-- Bookmark multi select title in app bar
      The first parameter is the number of bookmarks selected -->
     <string name="bookmarks_multi_select_title">已選擇 %1$d 筆書籤</string>
@@ -666,6 +690,10 @@
     <string name="share_link_subheader">使用鏈結分享</string>
     <!-- Sub-header in the dialog to share a link to another sync device -->
     <string name="share_device_subheader">傳送到裝置</string>
+    <!-- Sub-header in the dialog to share a link to an app from the full list -->
+    <string name="share_link_all_apps_subheader">所有動作</string>
+    <!-- Sub-header in the dialog to share a link to an app from the most-recent sorted list -->
+    <string name="share_link_recent_apps_subheader">最近使用</string>
     <!-- An option from the share dialog to sign into sync -->
     <string name="sync_sign_in">登入至 Sync</string>
     <!-- An option from the share dialog to send link to all other sync devices -->
@@ -720,15 +748,19 @@
     <string name="snackbar_tab_closed">已關閉分頁</string>
     <!-- Text shown in snackbar when user closes all tabs -->
     <string name="snackbar_tabs_closed">已關閉分頁</string>
+    <!-- Text shown in snackbar when user adds a site to home fragment. Placeholder replaced with app name -->
+    <string name="snackbar_added_to_firefox_home">已加到 %s 首頁！</string>
     <!-- Text shown in snackbar when user closes a private tab -->
     <string name="snackbar_private_tab_closed">已關閉隱私分頁</string>
     <!-- Text shown in snackbar when user closes all private tabs -->
     <string name="snackbar_private_tabs_closed">已關閉隱私分頁</string>
     <!-- Text shown in snackbar when user deletes all private tabs -->
     <string name="snackbar_private_tabs_deleted">已刪除隱私分頁</string>
-    <!-- Text for action to undo deleting a tab or collection shown in snackbar -->
+    <!-- Text shown in snackbar to undo deleting a tab, top site or collection -->
     <string name="snackbar_deleted_undo">還原</string>
 
+    <!-- Text shown in snackbar when user removes a top site -->
+    <string name="snackbar_top_site_removed">已移除網站</string>
     <!-- Text for action to undo deleting a tab or collection shown in a11y dialog -->
     <string name="a11y_dialog_deleted_undo">還原</string>
     <!-- Text for action to confirm deleting a tab or collection shown in a11y dialog -->
@@ -754,8 +786,9 @@
 
 
     <!-- Sample text for accessibility font size -->
-    <string name="accessibility_text_size_sample_text">The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog.
-中文字型測試：「老闆，來一杯大杯珍奶，半糖去冰！」</string>
+    <string name="accessibility_text_size_sample_text_1">This is sample text. It is here to show how text will appear when you increase or decrease the size with this setting.\n
+中文字型測試：「老闆，來一杯大杯珍奶，半糖去冰！」
+</string>
     <!-- Summary for Accessibility Text Size Scaling Preference -->
     <string name="preference_accessibility_text_size_summary">放大或縮小網站上的文字</string>
     <!-- Title for Accessibility Text Size Scaling Preference -->
@@ -783,11 +816,6 @@
     <!-- Subtitle for the history items in delete browsing data, parameter will be replaced with the
         number of history pages the user has -->
     <string name="preferences_delete_browsing_data_browsing_history_subtitle">%d 頁</string>
-    <!-- Title for the collections item in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_collections_title">收藏集</string>
-    <!-- Subtitle for the collections item in Delete browsing data, parameter will be replaced with the
-        number of collections that will be deleted -->
-    <string name="preferences_delete_browsing_data_collections_subtitle">%d 個收藏集</string>
     <!-- Title for the cookies item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cookies">Cookie</string>
     <!-- Subtitle for the cookies item in Delete browsing data -->
@@ -835,10 +863,13 @@
     <!-- text for the Firefox Preview feature section header
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_feature_section_header">了解 %s</string>
-    <!-- text for the theme picker onboarding card header -->
-    <string name="onboarding_theme_picker_header">選擇佈景主題</string>
-    <!-- text for the theme picker onboarding card description -->
-    <string name="onboarding_theme_picker_description">試試暗色主題: 更省電、眼睛更舒服。</string>
+    <!-- text for the "What's New" onboarding card header -->
+    <string name="onboarding_whats_new_header1">看看有什麼新鮮事</string>
+    <!-- text for the "what's new" onboarding card description
+    The first parameter is the short name of the app (e.g. Firefox) -->
+    <string name="onboarding_whats_new_description">對重新設計的 %s 有好奇的地方嗎？想知道哪裡變得不一樣了？</string>
+    <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
+    <string name="onboarding_whats_new_description_linktext">在此尋找答案</string>
     <!-- text for the firefox account onboarding card header
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_firefox_account_header">發揮 %s 的最大威力。</string>
@@ -863,12 +894,30 @@
     <string name="onboarding_tracking_protection_header">保護自己</string>
     <!-- text for the tracking protection card description
     The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_tracking_protection_description">%s 會封鎖在網路上跟蹤您的廣告追蹤器。</string>
+    <string name="onboarding_tracking_protection_description1">%s 可協助您避免被網站追蹤上網行為。</string>
+    <!-- text for tracking protection radio button option for standard level of blocking -->
+    <string name="onboarding_tracking_protection_standard_button">標準</string>
+    <!-- text for standard blocking option button description -->
+    <string name="onboarding_tracking_protection_standard_button_description">封鎖比較少追蹤器，讓網站可以正常開啟</string>
+    <!-- text for tracking protection radio button option for strict level of blocking -->
+    <string name="onboarding_tracking_protection_strict_button">嚴格（建議）</string>
+    <!-- text for strict blocking option button description -->
+    <string name="onboarding_tracking_protection_strict_button_description">封鎖更多追蹤器以加強保護與效能，但可能造成某些網站無法正常使用</string>
+    <!-- text for the toolbar position card header
+        In English this is an idiom for "choose a side as in an argument or fight"
+        but it is ok to make this more literally about "choosing a position in a physical space -->
+    <string name="onboarding_toolbar_position_header">表示你的立場</string>
+    <!-- text for the toolbar position card description -->
+    <string name="onboarding_toolbar_position_description">用畫面底部的工具列試試看單手上網，也可以移到畫面頂端。</string>
     <!-- text for the private browsing onboarding card header -->
     <string name="onboarding_private_browsing_header">上網變得私密</string>
     <!-- text for the private browsing onboarding card description
     The first parameter is an icon that represents private browsing -->
-    <string name="onboarding_private_browsing_description">看到 %s 圖示時，只要一點即可進入隱私瀏覽模式。</string>
+    <string name="onboarding_private_browsing_description1">一點就開啟隱私瀏覽分頁: 點擊 %s 圖示。</string>
+    <!-- text for the private browsing onboarding card description, explaining how to always using private browsing -->
+    <string name="onboarding_private_browsing_always_description">每次都使用隱私瀏覽分頁開啟: 請調整您的隱私瀏覽設定。</string>
+    <!-- text for the private browsing onbording card button, that launches settings -->
+    <string name="onboarding_private_browsing_button">開啟設定</string>
     <!-- text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header">您的隱私權</string>
     <!-- text for the privacy notice onboarding card description
@@ -881,6 +930,10 @@
     <string name="onboarding_finish">開始上網</string>
 
     <!-- Onboarding theme -->
+    <!-- text for the theme picker onboarding card header -->
+    <string name="onboarding_theme_picker_header">選擇佈景主題</string>
+    <!-- text for the theme picker onboarding card description -->
+    <string name="onboarding_theme_picker_description1">開啟暗色模式，節省電力又保護視力。</string>
     <!-- Automatic theme setting (will follow device setting) -->
     <string name="onboarding_theme_automatic_title">自動</string>
     <!-- Summary of automatic theme setting (will follow device setting) -->
@@ -1050,6 +1103,10 @@
     <string name="preferences_passwords_sync_logins_sign_in">登入至 Sync</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins">儲存的登入資訊</string>
+    <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
+    <string name="preferences_passwords_saved_logins_description_empty_text">您儲存或同步到 %s 的登入資訊將顯示於此處。</string>
+    <!-- Preference to access list of saved logins -->
+    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link">了解 Sync 的更多資訊。</string>
     <!-- Preference to access list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions">例外網站</string>
     <!-- Empty description of list of login exceptions that we never save logins for -->
@@ -1155,4 +1212,50 @@
     <string name="search_edit_custom_engine_success_message">已儲存 %s</string>
     <!-- Text shown when a user successfully deletes a custom search engine -->
     <string name="search_delete_search_engine_success_message">已刪除 %s</string>
+
+    <!-- Title text shown for the migration screen to the new browser. Placeholder replaced with app name -->
+    <string name="migration_title">歡迎使用全新 %s</string>
+    <!-- Description text followed by a list of things migrating (e.g. Bookmarks, History). Placeholder replaced with app name-->
+    <string name="migration_description">完全重新打造的瀏覽器有改善的效能與新功能，讓您在線上可以做好更多事。\n\n請稍候，我們正在更新 %s 的</string>
+    <!-- Text on the disabled button while in progress. Placeholder replaced with app name -->
+    <string name="migration_updating_app_button_text">正在更新 %s…</string>
+    <!-- Text on the enabled button. Placeholder replaced with app name-->
+    <string name="migration_update_app_button">啟動 %s</string>
+    <!-- Accessibility description text for a completed migration item -->
+    <string name="migration_icon_description">資料移轉完成</string>
+    <!--Text on list of migrated items (e.g. Settings, History, etc.)-->
+    <string name="migration_text_passwords">密碼</string>
+
+    <!-- Heading for the instructions to allow a permission -->
+    <string name="phone_feature_blocked_intro">若要允許:</string>
+    <!-- First step for the allowing a permission -->
+    <string name="phone_feature_blocked_step_settings">1. 開啟 Android 設定</string>
+    <!-- Second step for the allowing a permission -->
+    <string name="phone_feature_blocked_step_permissions"><![CDATA[2. 點擊<b>權限</b>]]></string>
+    <!-- Third step for the allowing a permission (Fore example: Camera) -->
+    <string name="phone_feature_blocked_step_feature"><![CDATA[3. 開啟<b>%1$s</b>權限]]></string>
+
+    <!-- Label that indicates a site is using a secure connection -->
+    <string name="quick_settings_sheet_secure_connection">安全連線</string>
+    <!-- Label that indicates a site is using a insecure connection -->
+    <string name="quick_settings_sheet_insecure_connection">不安全連線</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for all sites-->
+    <string name="confirm_clear_permissions_on_all_sites">您確定要清除所有網站的所有權限嗎？</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for a site-->
+    <string name="confirm_clear_permissions_site">您確定要清除此網站的所有權限嗎？</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to set default value a permission for a site-->
+    <string name="confirm_clear_permission_site">您確定要清除此網站的這個權限嗎？</string>
+    <!-- label shown when there are not site exceptions to show in the site exception settings -->
+    <string name="no_site_exceptions">無網站例外</string>
+    <!-- Label for the Pocket default top site -->
+    <string name="pocket_top_articles">熱門文章</string>
+    <!-- Bookmark deletion confirmation -->
+    <string name="bookmark_deletion_confirmation">你確定要刪除此書籤嗎？</string>
+    <!-- Browser menu button that adds a top site to the home fragment -->
+    <string name="browser_menu_add_to_top_sites">新增到熱門網站</string>
+    <!-- text shown before the issuer name to indicate who its verified by, parameter is the name of
+     the certificate authority that verified the ticket-->
+    <string name="certificate_info_verified_by">驗證機構: %1$s</string>
+    <!-- Login overflow menu delete button -->
+    <string name="login_menu_delete_button">刪除</string>
 </resources>

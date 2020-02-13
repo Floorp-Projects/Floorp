@@ -106,10 +106,14 @@
 
     <!-- Preference category for basic settings -->
     <string name="preferences_category_basics">Osnove</string>
+    <!-- Preference category for general settings -->
+    <string name="preferences_category_general">Splošno</string>
     <!-- Preference category for all links about Fenix -->
     <string name="preferences_category_about">Predstavitev</string>
     <!-- Preference for settings related to changing the default search engine -->
     <string name="preferences_default_search_engine">Privzeti iskalnik</string>
+    <!-- Preference for settings related to Search -->
+    <string name="preferences_search">Iskanje</string>
     <!-- Preference for settings related to Search address bar -->
     <string name="preferences_search_address_bar">Naslovna vrstica</string>
     <!-- Preference linking to help about Fenix -->
@@ -129,6 +133,8 @@
     <string name="preferences_category_advanced">Napredno</string>
     <!-- Preference category for privacy settings -->
     <string name="preferences_category_privacy">Zasebnost</string>
+    <!-- Preference category for privacy and security settings -->
+    <string name="preferences_category_privacy_security">Zasebnost in varnost</string>
     <!-- Preference for private browsing options -->
     <string name="preferences_private_browsing_options">Zasebno brskanje</string>
     <!-- Preference for opening links in a private tab-->
@@ -141,8 +147,6 @@
     <string name="preferences_toolbar">Orodna vrstica</string>
     <!-- Preference for changing default theme to dark or light mode -->
     <string name="preferences_theme">Tema</string>
-    <!-- Preference for settings related to visual options -->
-    <string name="preferences_customize">Prilagodi</string>
     <!-- Preference description for banner about signing in -->
     <string name="preferences_sign_in_description">Sinhronizirajte zaznamke, gesla in ostalo s Firefox Računom</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
@@ -182,6 +186,11 @@
     <!-- Label indicating that sync is in progress -->
     <string name="sync_syncing_in_progress">Sinhronizacija …</string>
 
+    <!-- Label summary the date we last synced. The first parameter is date stamp showing last time synced -->
+    <string name="sync_last_synced_summary">Zadnja sinhronizacija: %s</string>
+    <!-- Label summary showing never synced -->
+    <string name="sync_never_synced_summary">Zadnja sinhronizacija: nikoli</string>
+
     <!-- Send Tab -->
     <!-- Name of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="fxa_received_tab_channel_name">Prejeti zavihki</string>
@@ -193,6 +202,8 @@
     <string name="preferences_tracking_protection">Zaščita pred sledenjem</string>
     <!-- Preference for tracking protection exceptions -->
     <string name="preferences_tracking_protection_exceptions">Izjeme</string>
+    <!-- Button in Exceptions Preference to turn on tracking protection for all sites (remove all exceptions) -->
+    <string name="preferences_tracking_protection_exceptions_turn_on_for_all">Vklopi za vsa spletna mesta</string>
     <!-- Text displayed when there are no exceptions, with learn more link that brings users to a tracking protection SUMO page -->
     <string name="exceptions_empty_message_learn_more_link">Več o tem</string>
 
@@ -286,6 +297,12 @@
     <string name="history_clear_dialog">Počisti</string>
     <!-- Text for the button to delete a single history item -->
     <string name="history_delete_item">Izbriši</string>
+    <!-- Text for the header that groups the history for last 24 hours -->
+    <string name="history_24_hours">Zadnjih 24 ur</string>
+    <!-- Text for the header that groups the history the past 7 days -->
+    <string name="history_7_days">Zadnjih 7 dni</string>
+    <!-- Text for the header that groups the history the past 30 days -->
+    <string name="history_30_days">Zadnjih 30 dni</string>
     <!-- Text for the header that groups the history older than the last month -->
     <string name="history_older">Starejše</string>
 
@@ -368,6 +385,10 @@
 
     <!-- Collections header on home fragment -->
     <string name="collections_header">Zbirke</string>
+    <!-- No Open Tabs Message Header -->
+    <string name="no_collections_header">Ni zbirk</string>
+    <!-- No Open Tabs Message Description -->
+    <string name="no_collections_description">Tu bodo prikazane vaše zbirke.</string>
     <!-- Button to select all tabs in the "select tabs" step of the collection creator -->
     <string name="create_collection_select_all">Izberi vse</string>
     <!-- Content description (not visible, for screen readers etc.): button to close the collection creator -->

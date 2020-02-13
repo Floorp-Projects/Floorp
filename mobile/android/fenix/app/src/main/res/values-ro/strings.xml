@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- App name for private browsing mode, only the "Private" portion should be localized. -->
+    <string name="app_name_private_2">Previzualizare Firefox privată</string>
+    <!-- App name for private browsing mode, only the "Private" portion should be localized. -->
+    <string name="app_name_private_3">Previzualizare Firefox (privat)</string>
+    <!-- Home Fragment -->
+    <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
+    <string name="content_description_menu">Mai multe opțiuni</string>
+    <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
+    <string name="content_description_private_browsing_button">Activează navigarea privată</string>
+    <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
+    <string name="content_description_disable_private_browsing_button">Dezactivează navigarea privată</string>
+    <!-- Placeholder text shown in the search bar before a user enters text -->
+    <string name="search_hint">Caută sau introdu adresa</string>
+    <!-- No Open Tabs Message Header -->
+    <string name="no_open_tabs_header_2">Nicio filă deschisă</string>
+    <!-- No Open Tabs Message Description -->
+    <string name="no_open_tabs_description">Filele deschise vor fi afișate aici.</string>
+
+    <!-- Private Browsing -->
+    <!-- Title for private session option -->
+    <string name="private_browsing_title">Ești într-o sesiune privată</string>
+
+    </resources>

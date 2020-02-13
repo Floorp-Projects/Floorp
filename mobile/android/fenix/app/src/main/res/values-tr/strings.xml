@@ -63,6 +63,10 @@
     <string name="browser_menu_bookmark">Yer imlerine ekle</string>
     <!-- Content description (not visible, for screen readers etc.): Un-bookmark the current page -->
     <string name="browser_menu_edit_bookmark">Yer imini düzenle</string>
+    <!-- Browser menu button that opens the addon manager -->
+    <string name="browser_menu_addon_manager">Eklenti Yöneticisi</string>
+    <!-- Text displayed when there are no add-ons to be shown -->
+    <string name="no_add_ons">Hiç eklenti yok</string>
     <!-- Browser menu button that sends a user to help articles -->
     <string name="browser_menu_help">Yardım</string>
     <!-- Browser menu button that sends a to a the what's new article -->
@@ -154,6 +158,8 @@
     <string name="settings">Ayarlar</string>
     <!-- Preference category for basic settings -->
     <string name="preferences_category_basics">Temeller</string>
+    <!-- Preference category for general settings -->
+    <string name="preferences_category_general">Genel</string>
     <!-- Preference category for all links about Fenix -->
     <string name="preferences_category_about">Hakkında</string>
     <!-- Preference for settings related to changing the default search engine -->
@@ -183,8 +189,12 @@
     <string name="preferences_category_advanced">Gelişmiş</string>
     <!-- Preference category for privacy settings -->
     <string name="preferences_category_privacy">Gizlilik</string>
+    <!-- Preference category for privacy and security settings -->
+    <string name="preferences_category_privacy_security">Gizlilik ve güvenlik</string>
     <!-- Preference for advanced site permissions -->
     <string name="preferences_site_permissions">Site izinleri</string>
+    <!-- Preference for private browsing options -->
+    <string name="preferences_private_browsing_options">Gizli gezinti</string>
     <!-- Preference for opening links in a private tab-->
     <string name="preferences_open_links_in_a_private_tab">Bağlantıları gizli sekmede aç</string>
     <!-- Preference for adding private browsing shortcut -->
@@ -199,6 +209,8 @@
     <string name="preferences_toolbar">Araç çubuğu</string>
     <!-- Preference for changing default theme to dark or light mode -->
     <string name="preferences_theme">Tema</string>
+    <!-- Preference for settings related to visual options -->
+    <string name="preferences_customize">Özelleştir</string>
     <!-- Preference description for banner about signing in -->
     <string name="preferences_sign_in_description">Firefox hesabınızı kullanarak yer imlerini, geçmişi ve daha fazlasını eşitleyin</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
@@ -234,6 +246,9 @@
 
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">Bağlantıları uygulamalarda aç</string>
+
+    <!-- Preference for add_ons -->
+    <string name="preferences_addons">Eklentiler</string>
 
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
@@ -307,6 +322,8 @@
     <string name="preference_usage_data">Kullanım verileri ve teknik veriler</string>
     <!-- Preference description for usage and technical data collection -->
     <string name="preferences_usage_data_description">%1$s tarayıcınızı iyileştirmemize yardımcı olmak için tarayıcınızla ilgili performans, kullanım, donanım ve özelleştirme verilerini Mozilla ile paylaşır</string>
+    <!-- Preference switch for marketing data collection -->
+    <string name="preferences_marketing_data">Pazarlama verileri</string>
     <!-- Title for experiments preferences -->
     <string name="preference_experiments">Deneyler</string>
     <!-- Summary for experiments preferences -->
@@ -429,6 +446,9 @@
     <string name="collection_open_tabs">Sekmeleri aç</string>
 
 
+    <!-- Text for the menu button to remove a top site -->
+    <string name="remove_top_site">Kaldır</string>
+
     <!-- History -->
     <!-- Text for the button to clear all history -->
     <string name="history_delete_all">Geçmişi sil</string>
@@ -502,6 +522,8 @@
     <string name="bookmark_menu_open_in_private_tab_button">Gizli sekmede aç</string>
     <!-- Bookmark overflow menu delete button -->
     <string name="bookmark_menu_delete_button">Sil</string>
+    <!--Bookmark overflow menu save button -->
+    <string name="bookmark_menu_save_button">Kaydet</string>
     <!-- Bookmark multi select title in app bar
      The first parameter is the number of bookmarks selected -->
     <string name="bookmarks_multi_select_title">%1$d yer imi seçildi</string>
@@ -644,6 +666,10 @@
     <string name="share_link_subheader">Bağlantı paylaş</string>
     <!-- Sub-header in the dialog to share a link to another sync device -->
     <string name="share_device_subheader">Cihaza gönder</string>
+    <!-- Sub-header in the dialog to share a link to an app from the full list -->
+    <string name="share_link_all_apps_subheader">Tüm eylemler</string>
+    <!-- Sub-header in the dialog to share a link to an app from the most-recent sorted list -->
+    <string name="share_link_recent_apps_subheader">Son kullanılanlar</string>
     <!-- An option from the share dialog to sign into sync -->
     <string name="sync_sign_in">Sync’e giriş yap</string>
     <!-- An option from the share dialog to send link to all other sync devices -->
@@ -693,14 +719,18 @@
     <string name="snackbar_tab_closed">Sekme kapatıldı</string>
     <!-- Text shown in snackbar when user closes all tabs -->
     <string name="snackbar_tabs_closed">Sekmeler kapatıldı</string>
+    <!-- Text shown in snackbar when user adds a site to home fragment. Placeholder replaced with app name -->
+    <string name="snackbar_added_to_firefox_home">%s ana ekranına eklendi!</string>
     <!-- Text shown in snackbar when user closes a private tab -->
     <string name="snackbar_private_tab_closed">Gizli sekme kapatıldı</string>
     <!-- Text shown in snackbar when user closes all private tabs -->
     <string name="snackbar_private_tabs_closed">Gizli sekmeler kapatıldı</string>
     <!-- Text shown in snackbar when user deletes all private tabs -->
     <string name="snackbar_private_tabs_deleted">Gizli sekmeler silindi</string>
-    <!-- Text for action to undo deleting a tab or collection shown in snackbar -->
+    <!-- Text shown in snackbar to undo deleting a tab, top site or collection -->
     <string name="snackbar_deleted_undo">GERİ AL</string>
+    <!-- Text shown in snackbar when user removes a top site -->
+    <string name="snackbar_top_site_removed">Site kaldırıldı</string>
     <!-- Text for action to undo deleting a tab or collection shown in a11y dialog -->
     <string name="a11y_dialog_deleted_undo">Geri al</string>
     <!-- Text for action to confirm deleting a tab or collection shown in a11y dialog -->
@@ -722,8 +752,6 @@
     <string name="full_screen_notification">Tam ekran moduna geçiliyor</string>
     <!-- Message for copying the URL via long press on the toolbar -->
     <string name="url_copied">Adres kopyalandı</string>
-    <!-- Sample text for accessibility font size -->
-    <string name="accessibility_text_size_sample_text">Pijamalı hasta yağız şoföre çabucak güvendi. Pijamalı hasta yağız şoföre çabucak güvendi. Pijamalı hasta yağız şoföre çabucak güvendi. Pijamalı hasta yağız şoföre çabucak güvendi.</string>
     <!-- Summary for Accessibility Text Size Scaling Preference -->
     <string name="preference_accessibility_text_size_summary">Web sitelerinde metinleri büyütün veya küçültün</string>
     <!-- Title for Accessibility Text Size Scaling Preference -->
@@ -750,11 +778,6 @@
     <!-- Subtitle for the history items in delete browsing data, parameter will be replaced with the
         number of history pages the user has -->
     <string name="preferences_delete_browsing_data_browsing_history_subtitle">%d sayfa</string>
-    <!-- Title for the collections item in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_collections_title">Koleksiyonlar</string>
-    <!-- Subtitle for the collections item in Delete browsing data, parameter will be replaced with the
-        number of collections that will be deleted -->
-    <string name="preferences_delete_browsing_data_collections_subtitle">%d koleksiyon</string>
     <!-- Title for the cookies item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cookies">Çerezler</string>
     <!-- Subtitle for the cookies item in Delete browsing data -->
@@ -802,10 +825,8 @@
     <!-- text for the Firefox Preview feature section header
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_feature_section_header">%s ile tanışın</string>
-    <!-- text for the theme picker onboarding card header -->
-    <string name="onboarding_theme_picker_header">Temanızı seçin</string>
-    <!-- text for the theme picker onboarding card description -->
-    <string name="onboarding_theme_picker_description">Koyu temayı deneyin: Hem piliniz hem de gözleriniz rahatlasın.</string>
+    <!-- text for the "What's New" onboarding card header -->
+    <string name="onboarding_whats_new_header1">Yenilikleri görün</string>
     <!-- text for the firefox account onboarding card header
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_firefox_account_header">%s’dan en iyi şekilde yararlanın.</string>
@@ -827,16 +848,12 @@
     <string name="onboarding_firefox_account_automatic_signin_failed">Giriş başarısız</string>
     <!-- text for the tracking protection onboarding card header -->
     <string name="onboarding_tracking_protection_header">Kendinizi koruyun</string>
-    <!-- text for the tracking protection card description
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_tracking_protection_description">%s, web’de sizi izleyen reklam takipçilerini engeller.
-    </string>
+    <!-- text for tracking protection radio button option for standard level of blocking -->
+    <string name="onboarding_tracking_protection_standard_button">Standart</string>
+    <!-- text for tracking protection radio button option for strict level of blocking -->
+    <string name="onboarding_tracking_protection_strict_button">Sıkı (önerilen)</string>
     <!-- text for the private browsing onboarding card header -->
     <string name="onboarding_private_browsing_header">Daha gizli gezinin</string>
-    <!-- text for the private browsing onboarding card description
-    The first parameter is an icon that represents private browsing -->
-    <string name="onboarding_private_browsing_description">%s simgesini gördüğünüzde tek bir dokunuşla gizli gezintiye geçebilirsiniz.
-   </string>
     <!-- text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header">Gizliliğiniz</string>
     <!-- text for the privacy notice onboarding card description
@@ -849,6 +866,8 @@
     <string name="onboarding_finish">Gezinmeye başla</string>
 
     <!-- Onboarding theme -->
+    <!-- text for the theme picker onboarding card header -->
+    <string name="onboarding_theme_picker_header">Temanızı seçin</string>
     <!-- Automatic theme setting (will follow device setting) -->
     <string name="onboarding_theme_automatic_title">Otomatik</string>
     <!-- Summary of automatic theme setting (will follow device setting) -->
@@ -1019,6 +1038,8 @@
     <string name="preferences_passwords_sync_logins_sign_in">Sync’e giriş yap</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins">Kayıtlı hesaplar</string>
+    <!-- Preference to access list of saved logins -->
+    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link">Sync hakkında bilgi alın.</string>
     <!-- Preference to access list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions">İstisnalar</string>
     <!-- Empty description of list of login exceptions that we never save logins for -->
@@ -1125,4 +1146,36 @@
     <string name="search_edit_custom_engine_success_message">%s kaydedildi</string>
     <!-- Text shown when a user successfully deletes a custom search engine -->
     <string name="search_delete_search_engine_success_message">%s silindi</string>
+
+    <!-- Title text shown for the migration screen to the new browser. Placeholder replaced with app name -->
+    <string name="migration_title">Yepyeni %s tarayıcınıza hoş geldiniz</string>
+    <!-- Text on the disabled button while in progress. Placeholder replaced with app name -->
+    <string name="migration_updating_app_button_text">%s güncelleniyor…</string>
+    <!-- Text on the enabled button. Placeholder replaced with app name-->
+    <string name="migration_update_app_button">%s uygulamasını başlat</string>
+    <!-- Accessibility description text for a completed migration item -->
+    <string name="migration_icon_description">Taşıma tamamlandı</string>
+    <!--Text on list of migrated items (e.g. Settings, History, etc.)-->
+    <string name="migration_text_passwords">Parolalar</string>
+
+    <!-- Heading for the instructions to allow a permission -->
+    <string name="phone_feature_blocked_intro">İzin vermek için:</string>
+    <!-- First step for the allowing a permission -->
+    <string name="phone_feature_blocked_step_settings">1. Android ayarlarına gidin</string>
+    <!-- Second step for the allowing a permission -->
+    <string name="phone_feature_blocked_step_permissions"><![CDATA[2. <b>İzinler</b>’e dokunun]]></string>
+    <!-- Third step for the allowing a permission (Fore example: Camera) -->
+    <string name="phone_feature_blocked_step_feature"><![CDATA[3. <b>%1$s</b> ayarını AÇIK yapın]]></string>
+
+    <!-- Label that indicates a site is using a secure connection -->
+    <string name="quick_settings_sheet_secure_connection">Güvenli bağlantı</string>
+    <!-- Label that indicates a site is using a insecure connection -->
+    <string name="quick_settings_sheet_insecure_connection">Güvensiz bağlantı</string>
+    <!-- Browser menu button that adds a top site to the home fragment -->
+    <string name="browser_menu_add_to_top_sites">Sık kullanılanlara ekle</string>
+    <!-- text shown before the issuer name to indicate who its verified by, parameter is the name of
+     the certificate authority that verified the ticket-->
+    <string name="certificate_info_verified_by">Doğrulayan: %1$s </string>
+    <!-- Login overflow menu delete button -->
+    <string name="login_menu_delete_button">Sil</string>
 </resources>

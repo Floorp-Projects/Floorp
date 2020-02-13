@@ -67,6 +67,10 @@
     <string name="browser_menu_bookmark">북마크</string>
     <!-- Content description (not visible, for screen readers etc.): Un-bookmark the current page -->
     <string name="browser_menu_edit_bookmark">북마크 편집</string>
+    <!-- Browser menu button that opens the addon manager -->
+    <string name="browser_menu_addon_manager">부가 기능 관리자</string>
+    <!-- Text displayed when there are no add-ons to be shown -->
+    <string name="no_add_ons">부가 기능 없음</string>
     <!-- Browser menu button that sends a user to help articles -->
     <string name="browser_menu_help">도움말</string>
     <!-- Browser menu button that sends a to a the what's new article -->
@@ -162,6 +166,8 @@
 
     <!-- Preference category for basic settings -->
     <string name="preferences_category_basics">기본</string>
+    <!-- Preference category for general settings -->
+    <string name="preferences_category_general">일반</string>
     <!-- Preference category for all links about Fenix -->
     <string name="preferences_category_about">소개</string>
     <!-- Preference for settings related to changing the default search engine -->
@@ -191,8 +197,12 @@
     <string name="preferences_category_advanced">고급</string>
     <!-- Preference category for privacy settings -->
     <string name="preferences_category_privacy">개인 정보</string>
+    <!-- Preference category for privacy and security settings -->
+    <string name="preferences_category_privacy_security">개인 정보 및 보안</string>
     <!-- Preference for advanced site permissions -->
     <string name="preferences_site_permissions">사이트 권한</string>
+    <!-- Preference for private browsing options -->
+    <string name="preferences_private_browsing_options">사생활 보호 모드</string>
     <!-- Preference for opening links in a private tab-->
     <string name="preferences_open_links_in_a_private_tab">사생활 보호 탭에 링크 열기</string>
     <!-- Preference for adding private browsing shortcut -->
@@ -207,6 +217,8 @@
     <string name="preferences_toolbar">도구 모음</string>
     <!-- Preference for changing default theme to dark or light mode -->
     <string name="preferences_theme">테마</string>
+    <!-- Preference for settings related to visual options -->
+    <string name="preferences_customize">사용자 지정</string>
     <!-- Preference description for banner about signing in -->
     <string name="preferences_sign_in_description">Firefox 계정으로 북마크, 방문 기록 등을 동기화하세요</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
@@ -242,6 +254,9 @@
 
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">앱에서 링크 열기</string>
+
+    <!-- Preference for add_ons -->
+    <string name="preferences_addons">부가 기능</string>
 
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
@@ -319,6 +334,10 @@
     <string name="preference_usage_data">사용량과 기술 데이터</string>
     <!-- Preference description for usage and technical data collection -->
     <string name="preferences_usage_data_description">%1$s의 개선을 위해 브라우저의 성능, 사용량, 하드웨어 및 설정 데이터를 Mozilla와 공유</string>
+    <!-- Preference switch for marketing data collection -->
+    <string name="preferences_marketing_data">마케팅 데이터</string>
+    <!-- Preference description for marketing data collection, parameter is the app name (e.g. Firefox) -->
+    <string name="preferences_marketing_data_description">%1$s에서 사용하는 기능에 대한 데이터를 모바일 마케팅 공급업체인 Leanplum과 공유합니다.</string>
     <!-- Title for experiments preferences -->
     <string name="preference_experiments">실험</string>
     <!-- Summary for experiments preferences -->
@@ -443,6 +462,9 @@
     <string name="collection_open_tabs">열린 탭</string>
 
 
+    <!-- Text for the menu button to remove a top site -->
+    <string name="remove_top_site">삭제</string>
+
     <!-- History -->
     <!-- Text for the button to clear all history -->
     <string name="history_delete_all">방문 기록 삭제</string>
@@ -521,6 +543,8 @@
     <string name="bookmark_menu_delete_button">삭제</string>
 
 
+    <!--Bookmark overflow menu save button -->
+    <string name="bookmark_menu_save_button">저장</string>
     <!-- Bookmark multi select title in app bar
      The first parameter is the number of bookmarks selected -->
     <string name="bookmarks_multi_select_title">%1$d개 선택됨</string>
@@ -676,6 +700,10 @@
     <string name="share_link_subheader">링크 공유</string>
     <!-- Sub-header in the dialog to share a link to another sync device -->
     <string name="share_device_subheader">기기로 보내기</string>
+    <!-- Sub-header in the dialog to share a link to an app from the full list -->
+    <string name="share_link_all_apps_subheader">모든 동작</string>
+    <!-- Sub-header in the dialog to share a link to an app from the most-recent sorted list -->
+    <string name="share_link_recent_apps_subheader">최근 사용</string>
     <!-- An option from the share dialog to sign into sync -->
     <string name="sync_sign_in">Sync에 로그인</string>
     <!-- An option from the share dialog to send link to all other sync devices -->
@@ -731,15 +759,19 @@
     <string name="snackbar_tab_closed">탭 닫힘</string>
     <!-- Text shown in snackbar when user closes all tabs -->
     <string name="snackbar_tabs_closed">탭 닫힘</string>
+    <!-- Text shown in snackbar when user adds a site to home fragment. Placeholder replaced with app name -->
+    <string name="snackbar_added_to_firefox_home">%s 홈에 추가됨!</string>
     <!-- Text shown in snackbar when user closes a private tab -->
     <string name="snackbar_private_tab_closed">사생활 보호 탭 닫힘</string>
     <!-- Text shown in snackbar when user closes all private tabs -->
     <string name="snackbar_private_tabs_closed">사생활 보호 탭 닫힘</string>
     <!-- Text shown in snackbar when user deletes all private tabs -->
     <string name="snackbar_private_tabs_deleted">사생활 보호 탭 삭제됨</string>
-    <!-- Text for action to undo deleting a tab or collection shown in snackbar -->
+    <!-- Text shown in snackbar to undo deleting a tab, top site or collection -->
     <string name="snackbar_deleted_undo">실행 취소</string>
 
+    <!-- Text shown in snackbar when user removes a top site -->
+    <string name="snackbar_top_site_removed">사이트 삭제됨</string>
     <!-- Text for action to undo deleting a tab or collection shown in a11y dialog -->
     <string name="a11y_dialog_deleted_undo">실행 취소</string>
     <!-- Text for action to confirm deleting a tab or collection shown in a11y dialog -->
@@ -765,7 +797,7 @@
 
 
     <!-- Sample text for accessibility font size -->
-    <string name="accessibility_text_size_sample_text">The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog.</string>
+    <string name="accessibility_text_size_sample_text_1">샘플 텍스트입니다. 이 설정으로 크기를 늘리거나 줄일 때 텍스트가 어떻게 표시되는지 보여줍니다.</string>
     <!-- Summary for Accessibility Text Size Scaling Preference -->
     <string name="preference_accessibility_text_size_summary">웹 사이트의 텍스트를 더 크게 또는 더 작게 함</string>
     <!-- Title for Accessibility Text Size Scaling Preference -->
@@ -794,11 +826,6 @@
     <!-- Subtitle for the history items in delete browsing data, parameter will be replaced with the
         number of history pages the user has -->
     <string name="preferences_delete_browsing_data_browsing_history_subtitle">%d 페이지</string>
-    <!-- Title for the collections item in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_collections_title">모음집</string>
-    <!-- Subtitle for the collections item in Delete browsing data, parameter will be replaced with the
-        number of collections that will be deleted -->
-    <string name="preferences_delete_browsing_data_collections_subtitle">%d개 모음집</string>
     <!-- Title for the cookies item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cookies">쿠키</string>
     <!-- Subtitle for the cookies item in Delete browsing data -->
@@ -847,10 +874,13 @@
     <!-- text for the Firefox Preview feature section header
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_feature_section_header">%s에 대해 알기</string>
-    <!-- text for the theme picker onboarding card header -->
-    <string name="onboarding_theme_picker_header">테마 선택</string>
-    <!-- text for the theme picker onboarding card description -->
-    <string name="onboarding_theme_picker_description">어두운 테마를 사용: 배터리와 눈에 더 좋습니다.</string>
+    <!-- text for the "What's New" onboarding card header -->
+    <string name="onboarding_whats_new_header1">새 기능 살펴보기</string>
+    <!-- text for the "what's new" onboarding card description
+    The first parameter is the short name of the app (e.g. Firefox) -->
+    <string name="onboarding_whats_new_description">새롭게 디자인된 %s에 대해 궁금한 점이 있습니까? 변경된 사항을 알고 싶으십니까?</string>
+    <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
+    <string name="onboarding_whats_new_description_linktext">여기서 답을 얻으세요</string>
     <!-- text for the firefox account onboarding card header
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_firefox_account_header">%s를 최대한 활용하세요.</string>
@@ -872,17 +902,33 @@
     <string name="onboarding_firefox_account_automatic_signin_failed">로그인 실패</string>
     <!-- text for the tracking protection onboarding card header -->
     <string name="onboarding_tracking_protection_header">자신을 보호</string>
+
     <!-- text for the tracking protection card description
     The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_tracking_protection_description">%s는 웹에서 사용자를 추적하는 광고 추적기를 차단합니다.
-    </string>
-
+    <string name="onboarding_tracking_protection_description1">%s는 웹 사이트가 온라인에서 사용자를 추적하지 못하도록 합니다.</string>
+    <!-- text for tracking protection radio button option for standard level of blocking -->
+    <string name="onboarding_tracking_protection_standard_button">표준</string>
+    <!-- text for standard blocking option button description -->
+    <string name="onboarding_tracking_protection_standard_button_description">추적기를 적게 차단하지만 페이지를 정상적으로 로드할 수 있습니다.</string>
+    <!-- text for tracking protection radio button option for strict level of blocking -->
+    <string name="onboarding_tracking_protection_strict_button">엄격 (권장)</string>
+    <!-- text for strict blocking option button description -->
+    <string name="onboarding_tracking_protection_strict_button_description">더 나은 보호 및 성능을 위해 더 많은 추적기를 차단하지만, 일부 사이트는 제대로 작동하지 않을 수 있습니다.</string>
+    <!-- text for the toolbar position card header
+        In English this is an idiom for "choose a side as in an argument or fight"
+        but it is ok to make this more literally about "choosing a position in a physical space -->
+    <string name="onboarding_toolbar_position_header">위치를 잡으세요</string>
+    <!-- text for the toolbar position card description -->
+    <string name="onboarding_toolbar_position_description">하단 도구 모음을 사용하여 한 손으로 탐색하시거나, 상단으로 이동하세요.</string>
     <!-- text for the private browsing onboarding card header -->
     <string name="onboarding_private_browsing_header">사생활 보호 모드</string>
     <!-- text for the private browsing onboarding card description
     The first parameter is an icon that represents private browsing -->
-    <string name="onboarding_private_browsing_description">%s 아이콘이 보이면 사생활 보호 모드라는 의미입니다.
-   </string>
+    <string name="onboarding_private_browsing_description1">사생활 보호 탭을 한 번 열기: %s 아이콘을 누릅니다.</string>
+    <!-- text for the private browsing onboarding card description, explaining how to always using private browsing -->
+    <string name="onboarding_private_browsing_always_description">매번 사생활 보호 탭으로 열기: 사생활 보호 모드 설정을 변경하세요.</string>
+    <!-- text for the private browsing onbording card button, that launches settings -->
+    <string name="onboarding_private_browsing_button">설정 열기</string>
     <!-- text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header">개인 정보 보호</string>
     <!-- text for the privacy notice onboarding card description
@@ -898,6 +944,10 @@
     <string name="onboarding_finish">탐색 시작</string>
 
     <!-- Onboarding theme -->
+    <!-- text for the theme picker onboarding card header -->
+    <string name="onboarding_theme_picker_header">테마 선택</string>
+    <!-- text for the theme picker onboarding card description -->
+    <string name="onboarding_theme_picker_description1">어두운 모드를 활성화하여 배터리를 절약하고 시력을 보호하세요.</string>
     <!-- Automatic theme setting (will follow device setting) -->
     <string name="onboarding_theme_automatic_title">자동</string>
     <!-- Summary of automatic theme setting (will follow device setting) -->
@@ -1069,6 +1119,10 @@
     <string name="preferences_passwords_sync_logins_sign_in">Sync에 로그인</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins">저장된 로그인</string>
+    <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
+    <string name="preferences_passwords_saved_logins_description_empty_text">%s에 저장하거나 동기화한 로그인이 여기에 표시됩니다.</string>
+    <!-- Preference to access list of saved logins -->
+    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link">Sync에 대해 더 알아보기.</string>
     <!-- Preference to access list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions">예외 목록</string>
     <!-- Empty description of list of login exceptions that we never save logins for -->
@@ -1175,4 +1229,52 @@
     <string name="search_edit_custom_engine_success_message">%s 저장됨</string>
     <!-- Text shown when a user successfully deletes a custom search engine -->
     <string name="search_delete_search_engine_success_message">%s 삭제됨</string>
+
+    <!-- Title text shown for the migration screen to the new browser. Placeholder replaced with app name -->
+    <string name="migration_title">완전히 새로워진 %s에 오신 것을 환영합니다</string>
+
+    <!-- Description text followed by a list of things migrating (e.g. Bookmarks, History). Placeholder replaced with app name-->
+    <string name="migration_description">온라인에서 더 많은 작업을 할 수 있도록 향상된 성능과 기능으로 완전히 새롭게 디자인 된 브라우저가 기다리고 있습니다.\n\n%s를 마이그레이션 및 업데이트하는 동안 기다려주세요</string>
+    <!-- Text on the disabled button while in progress. Placeholder replaced with app name -->
+    <string name="migration_updating_app_button_text">%s 업데이트 중…</string>
+    <!-- Text on the enabled button. Placeholder replaced with app name-->
+    <string name="migration_update_app_button">%s 시작</string>
+    <!-- Accessibility description text for a completed migration item -->
+    <string name="migration_icon_description">마이그레이션 완료</string>
+    <!--Text on list of migrated items (e.g. Settings, History, etc.)-->
+    <string name="migration_text_passwords">비밀번호</string>
+
+    <!-- Heading for the instructions to allow a permission -->
+    <string name="phone_feature_blocked_intro">허용하려면:</string>
+    <!-- First step for the allowing a permission -->
+    <string name="phone_feature_blocked_step_settings">1. 안드로이드 설정으로 이동하세요</string>
+    <!-- Second step for the allowing a permission -->
+    <string name="phone_feature_blocked_step_permissions"><![CDATA[2. <b>권한<b>을 누르세요.]]></string>
+
+    <!-- Third step for the allowing a permission (Fore example: Camera) -->
+    <string name="phone_feature_blocked_step_feature"><![CDATA[3. <b>%1$s</b>을(를) 켜기로 전환하세요]]></string>
+
+    <!-- Label that indicates a site is using a secure connection -->
+    <string name="quick_settings_sheet_secure_connection">안전한 연결</string>
+    <!-- Label that indicates a site is using a insecure connection -->
+    <string name="quick_settings_sheet_insecure_connection">안전하지 않은 연결</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for all sites-->
+    <string name="confirm_clear_permissions_on_all_sites">모든 사이트에 대해 모든 권한을 지우시겠습니까?</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for a site-->
+    <string name="confirm_clear_permissions_site">이 사이트에 대해 모든 권한을 지우시겠습니까?</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to set default value a permission for a site-->
+    <string name="confirm_clear_permission_site">이 사이트에 대해 이 권한을 지우시겠습니까?</string>
+    <!-- label shown when there are not site exceptions to show in the site exception settings -->
+    <string name="no_site_exceptions">사이트 예외 없음</string>
+    <!-- Label for the Pocket default top site -->
+    <string name="pocket_top_articles">상위 글</string>
+    <!-- Bookmark deletion confirmation -->
+    <string name="bookmark_deletion_confirmation">이 북마크를 삭제하시겠습니까?</string>
+    <!-- Browser menu button that adds a top site to the home fragment -->
+    <string name="browser_menu_add_to_top_sites">상위 사이트에 추가</string>
+    <!-- text shown before the issuer name to indicate who its verified by, parameter is the name of
+     the certificate authority that verified the ticket-->
+    <string name="certificate_info_verified_by">인증 기관: %1$s</string>
+    <!-- Login overflow menu delete button -->
+    <string name="login_menu_delete_button">삭제</string>
 </resources>

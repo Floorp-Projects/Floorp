@@ -56,7 +56,7 @@
     <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
     <string name="browser_menu_stop">Parar</string>
     <!-- Content description (not visible, for screen readers etc.): Bookmark the current page -->
-    <string name="browser_menu_bookmark">Favorito</string>
+    <string name="browser_menu_bookmark">Adicionar aos favoritos</string>
     <!-- Content description (not visible, for screen readers etc.): Un-bookmark the current page -->
     <string name="browser_menu_edit_bookmark">Editar favorito</string>
     <!-- Browser menu button that opens the addon manager -->
@@ -753,7 +753,7 @@
     <string name="url_copied">URL copiada</string>
 
     <!-- Sample text for accessibility font size -->
-    <string name="accessibility_text_size_sample_text_1">Este é um texto de exemplo com todas as letras do alfabeto. Está aqui para mostrar como o texto será exibido quando usar esta configuração para aumentar ou diminuir o tamanho.</string>
+    <string name="accessibility_text_size_sample_text_1">Este é um texto de exemplo. Está aqui para mostrar como o texto será exibido quando você usar esta configuração para aumentar ou diminuir o tamanho.</string>
     <!-- Summary for Accessibility Text Size Scaling Preference -->
     <string name="preference_accessibility_text_size_summary">Aumentar ou diminuir o texto em sites</string>
     <!-- Title for Accessibility Text Size Scaling Preference -->

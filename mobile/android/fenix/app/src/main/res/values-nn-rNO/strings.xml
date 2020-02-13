@@ -133,6 +133,8 @@
 
     <!-- Preference category for basic settings -->
     <string name="preferences_category_basics">Grunnleggande</string>
+    <!-- Preference category for general settings -->
+    <string name="preferences_category_general">Generelt</string>
     <!-- Preference category for all links about Fenix -->
     <string name="preferences_category_about">Om</string>
     <!-- Preference for settings related to changing the default search engine -->
@@ -162,8 +164,14 @@
     <string name="preferences_category_advanced">Avansert</string>
     <!-- Preference category for privacy settings -->
     <string name="preferences_category_privacy">Personvern</string>
+    <!-- Preference category for privacy and security settings -->
+    <string name="preferences_category_privacy_security">Personvern og sikkerheit</string>
     <!-- Preference for advanced site permissions -->
     <string name="preferences_site_permissions">Nettstadløyve</string>
+    <!-- Preference for private browsing options -->
+    <string name="preferences_private_browsing_options">Privat nettlesing</string>
+    <!-- Preference for opening links in a private tab-->
+    <string name="preferences_open_links_in_a_private_tab">Opne lenker i ei privat fane</string>
     <!-- Preference category for account information -->
     <string name="preferences_category_account">Konto</string>
     <!-- Preference shown on banner to sign into account -->
@@ -173,6 +181,8 @@
     <string name="preferences_toolbar">Verktøylinje</string>
     <!-- Preference for changing default theme to dark or light mode -->
     <string name="preferences_theme">Tema</string>
+    <!-- Preference for settings related to visual options -->
+    <string name="preferences_customize">Tilpass</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
     <string name="preferences_account_default_name">Firefox-konto</string>
     <!-- Preference for language -->

@@ -63,6 +63,10 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="browser_menu_bookmark">Creḍ asebter-agi</string>
     <!-- Content description (not visible, for screen readers etc.): Un-bookmark the current page -->
     <string name="browser_menu_edit_bookmark">Beddel tacreḍt n usebter</string>
+    <!-- Browser menu button that opens the addon manager -->
+    <string name="browser_menu_addon_manager">Ldi amsefrak n izegrar</string>
+    <!-- Text displayed when there are no add-ons to be shown -->
+    <string name="no_add_ons">Ulac izegrar da</string>
     <!-- Browser menu button that sends a user to help articles -->
     <string name="browser_menu_help">Tallalt</string>
     <!-- Browser menu button that sends a to a the what's new article -->
@@ -152,6 +156,8 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="settings">Iɣewwaṛen</string>
     <!-- Preference category for basic settings -->
     <string name="preferences_category_basics">Iɣewwaren igejdanen</string>
+    <!-- Preference category for general settings -->
+    <string name="preferences_category_general">Amatu</string>
     <!-- Preference category for all links about Fenix -->
     <string name="preferences_category_about">Ɣef</string>
     <!-- Preference for settings related to changing the default search engine -->
@@ -182,8 +188,12 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- Preference category for privacy settings -->
     <string name="preferences_category_privacy">Tabaḍnit</string>
 
+    <!-- Preference category for privacy and security settings -->
+    <string name="preferences_category_privacy_security">Tabaḍnit  &amp; taɣellist</string>
     <!-- Preference for advanced site permissions -->
     <string name="preferences_site_permissions">Tisirag n usmel</string>
+    <!-- Preference for private browsing options -->
+    <string name="preferences_private_browsing_options">Tunigin tusligt</string>
     <!-- Preference for opening links in a private tab-->
     <string name="preferences_open_links_in_a_private_tab">Ldi iseɣwan deg iccer uslig</string>
     <!-- Preference for adding private browsing shortcut -->
@@ -198,6 +208,8 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="preferences_toolbar">Afeggag n yifecka</string>
     <!-- Preference for changing default theme to dark or light mode -->
     <string name="preferences_theme">Asentel</string>
+    <!-- Preference for settings related to visual options -->
+    <string name="preferences_customize">Sagen</string>
     <!-- Preference description for banner about signing in -->
     <string name="preferences_sign_in_description">Mtawi ticraḍ n yisebtar, azray, awalen uffiren, akked waṭas-nniḍen s umiḍan n Firefox</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
@@ -233,6 +245,9 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
 
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">Ldi iseɣwan deg isnasen</string>
+
+    <!-- Preference for add_ons -->
+    <string name="preferences_addons">Izegrar</string>
 
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
@@ -308,6 +323,10 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="preference_usage_data">Isefka itiknikanen akked useqdec</string>
     <!-- Preference description for usage and technical data collection -->
     <string name="preferences_usage_data_description">Ad yebḍu isefka ɣef timellit, aseqdec, arrum d wudem n yiminig-ik  i Mozilla akken ad aɣ-d-yefk afus i usnerni n %1$s</string>
+    <!-- Preference switch for marketing data collection -->
+    <string name="preferences_marketing_data">Isefka n uzenzi</string>
+    <!-- Preference description for marketing data collection, parameter is the app name (e.g. Firefox) -->
+    <string name="preferences_marketing_data_description">Bḍu isefka ɣef timahilin i tseqdaceḍ deg %1$s s Leanplum, Imzenzi-nneɣ n izirazen.</string>
     <!-- Title for experiments preferences -->
     <string name="preference_experiments">Tisermiyin</string>
     <!-- Summary for experiments preferences -->
@@ -431,6 +450,9 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- Text for the button to open tabs of the selected collection -->
     <string name="collection_open_tabs">Iccaren yeldin</string>
 
+    <!-- Text for the menu button to remove a top site -->
+    <string name="remove_top_site">Kkes</string>
+
     <!-- History -->
     <!-- Text for the button to clear all history -->
     <string name="history_delete_all">Kkes amazray</string>
@@ -506,6 +528,8 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="bookmark_menu_open_in_private_tab_button">Ldi deg iccer uslig</string>
     <!-- Bookmark overflow menu delete button -->
     <string name="bookmark_menu_delete_button">Kkes</string>
+    <!--Bookmark overflow menu save button -->
+    <string name="bookmark_menu_save_button">Sekles</string>
     <!-- Bookmark multi select title in app bar
      The first parameter is the number of bookmarks selected -->
     <string name="bookmarks_multi_select_title">%1$d yettwafren</string>
@@ -648,6 +672,10 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="share_link_subheader">Bḍu aseɣwen</string>
     <!-- Sub-header in the dialog to share a link to another sync device -->
     <string name="share_device_subheader">Azen ɣer yibenk</string>
+    <!-- Sub-header in the dialog to share a link to an app from the full list -->
+    <string name="share_link_all_apps_subheader">Tigawin meṛṛa</string>
+    <!-- Sub-header in the dialog to share a link to an app from the most-recent sorted list -->
+    <string name="share_link_recent_apps_subheader">Ttwasqedcen melmi kan</string>
     <!-- An option from the share dialog to sign into sync -->
     <string name="sync_sign_in">Qqen ɣer Sync</string>
     <!-- An option from the share dialog to send link to all other sync devices -->
@@ -699,15 +727,19 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="snackbar_tab_closed">Iccer imdel</string>
     <!-- Text shown in snackbar when user closes all tabs -->
     <string name="snackbar_tabs_closed">Medlen iccaren</string>
+    <!-- Text shown in snackbar when user adds a site to home fragment. Placeholder replaced with app name -->
+    <string name="snackbar_added_to_firefox_home">Rnu ɣer ugejdan %s!</string>
     <!-- Text shown in snackbar when user closes a private tab -->
     <string name="snackbar_private_tab_closed">Imdel iccer uslig</string>
     <!-- Text shown in snackbar when user closes all private tabs -->
     <string name="snackbar_private_tabs_closed">Medlen iccaren usligen</string>
     <!-- Text shown in snackbar when user deletes all private tabs -->
     <string name="snackbar_private_tabs_deleted">Ttwaksen iccaren usligen</string>
-    <!-- Text for action to undo deleting a tab or collection shown in snackbar -->
+    <!-- Text shown in snackbar to undo deleting a tab, top site or collection -->
     <string name="snackbar_deleted_undo">UƔAL</string>
 
+    <!-- Text shown in snackbar when user removes a top site -->
+    <string name="snackbar_top_site_removed">Asmel yettwakkes</string>
     <!-- Text for action to undo deleting a tab or collection shown in a11y dialog -->
     <string name="a11y_dialog_deleted_undo">Sefsex</string>
     <!-- Text for action to confirm deleting a tab or collection shown in a11y dialog -->
@@ -730,7 +762,7 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- Message for copying the URL via long press on the toolbar -->
     <string name="url_copied">Tansa URL tettwanγel</string>
     <!-- Sample text for accessibility font size -->
-    <string name="accessibility_text_size_sample_text">Yenna-as baba-s i mmi-s : A mmi, ḥader ad tettuḍ, lɛibad ur ɛdilen ara, yella walbaɛḍ yella ulac-it, yella walbaɛḍ ulac-it yella. Yenna-as : A baba, acu ay d lmeɛna n wawal-a ? Yenna-as : Yella walbaɛḍ yedder, ileḥḥu, medden akk ttwalin-t, meɛna iɛac kan yeqqim, ur t-idyettadder yiwen, ur yewi ur yerri. Yella wayeḍ yemmut lameɛna igad i d-yeggran deffir-s mazal la as-qqaren : akken i as-yenna neɣ akken yexdem leflani; ulamma iɣsan-is uɣalen d aɣebbar, mazal isem-is ttaddren-t-id medden, awal-is d lfeɛl-is ttuṣerrafen.</string>
+    <string name="accessibility_text_size_sample_text_1">Aḍris-a d amedya. akken ad tezṛeḍ amek ara d-iban u dris mi ara ad tesneɣseḍ neɣ ad ternuḍ tuɣzi deg iɣewwaṛen.</string>
     <!-- Summary for Accessibility Text Size Scaling Preference -->
     <string name="preference_accessibility_text_size_summary">Semɣer neɣ senɣes teɣzi n uḍris n yismal web</string>
     <!-- Title for Accessibility Text Size Scaling Preference -->
@@ -757,11 +789,6 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- Subtitle for the history items in delete browsing data, parameter will be replaced with the
         number of history pages the user has -->
     <string name="preferences_delete_browsing_data_browsing_history_subtitle">Isebtar %d</string>
-    <!-- Title for the collections item in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_collections_title">Tigrummiwin</string>
-    <!-- Subtitle for the collections item in Delete browsing data, parameter will be replaced with the
-        number of collections that will be deleted -->
-    <string name="preferences_delete_browsing_data_collections_subtitle">Tigrummiwin %d</string>
     <!-- Title for the cookies item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cookies">Inagan n tuqqna</string>
     <!-- Subtitle for the cookies item in Delete browsing data -->
@@ -808,10 +835,13 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- text for the Firefox Preview feature section header
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_feature_section_header">Wali %s</string>
-    <!-- text for the theme picker onboarding card header -->
-    <string name="onboarding_theme_picker_header">Fren asentel</string>
-    <!-- text for the theme picker onboarding card description -->
-    <string name="onboarding_theme_picker_description">Ɛreḍ asentel ubrik akken ad tḥ€rzeḍ aẓru-ik daɣen ur tesseɛyayeḍ ara allen-ik.</string>
+    <!-- text for the "What's New" onboarding card header -->
+    <string name="onboarding_whats_new_header1">Wali amaynut</string>
+    <!-- text for the "what's new" onboarding card description
+    The first parameter is the short name of the app (e.g. Firefox) -->
+    <string name="onboarding_whats_new_description">Tesεiḍ asteqsi ɣef %s ittwasinflen? Tebɣiḍ ad tezreḍ acu ibeddlen?</string>
+    <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
+    <string name="onboarding_whats_new_description_linktext">Awi-d tiririyen da</string>
     <!-- text for the firefox account onboarding card header
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_firefox_account_header">Faṛes tagnit seg %s.</string>
@@ -835,14 +865,30 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="onboarding_tracking_protection_header">Mmesten iman-ik</string>
     <!-- text for the tracking protection card description
     The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_tracking_protection_description">%s isewḥel ineḍfaren i k-yeṭṭafaṛen deg web.
-    </string>
+    <string name="onboarding_tracking_protection_description1">%s ad ak-d-iffek tallelt ad isewḥel ismal ad ak-ḍefren mi ara teqneḍ.</string>
+    <!-- text for tracking protection radio button option for standard level of blocking -->
+    <string name="onboarding_tracking_protection_standard_button">Tizeɣt</string>
+    <!-- text for standard blocking option button description -->
+    <string name="onboarding_tracking_protection_standard_button_description">Isewḥal ineḍfaren maca ad isireg isebtar ad d-allin s ufus</string>
+    <!-- text for tracking protection radio button option for strict level of blocking -->
+    <string name="onboarding_tracking_protection_strict_button">Uḥriṣ (yelha)</string>
+    <!-- text for strict blocking option button description -->
+    <string name="onboarding_tracking_protection_strict_button_description">Ad isewḥel ugar n ineḍfaren i ugar n taɣlist akked tilḥin iwatan, maca kra n isebtar ur teddun ara akken iwata</string>
+    <!-- text for the toolbar position card header
+        In English this is an idiom for "choose a side as in an argument or fight"
+        but it is ok to make this more literally about "choosing a position in a physical space -->
+    <string name="onboarding_toolbar_position_header">Ddem ṛṛay</string>
+    <!-- text for the toolbar position card description -->
+    <string name="onboarding_toolbar_position_description">Ɛreḍ tunigin s yiwen ufus s useqdec n ufeggag n ddaw neɣ err-it d asawen.</string>
     <!-- text for the private browsing onboarding card header -->
     <string name="onboarding_private_browsing_header">Tunigin tusligin</string>
     <!-- text for the private browsing onboarding card description
     The first parameter is an icon that represents private browsing -->
-    <string name="onboarding_private_browsing_description">Ticki twalaḍ tignit %s, tunigt tusligt tella qef afus.
-   </string>
+    <string name="onboarding_private_browsing_description1">Ldi iccer uslig tikkelt: Senned tignit %s.</string>
+    <!-- text for the private browsing onboarding card description, explaining how to always using private browsing -->
+    <string name="onboarding_private_browsing_always_description">Ldi iccaren usligen yal tikkelt: Leqqem iɣewwaṛen n iminig.</string>
+    <!-- text for the private browsing onbording card button, that launches settings -->
+    <string name="onboarding_private_browsing_button">Ldi iɣewwaren</string>
     <!-- text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header">Tabaḍnit inek/m</string>
 
@@ -858,6 +904,10 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="onboarding_finish">Bdu tunigin</string>
 
     <!-- Onboarding theme -->
+    <!-- text for the theme picker onboarding card header -->
+    <string name="onboarding_theme_picker_header">Fren asentel</string>
+    <!-- text for the theme picker onboarding card description -->
+    <string name="onboarding_theme_picker_description1">Ḥreze tabatrit d wallen-ik s usermed n usentel aberkan.</string>
     <!-- Automatic theme setting (will follow device setting) -->
     <string name="onboarding_theme_automatic_title">Awurman</string>
     <!-- Summary of automatic theme setting (will follow device setting) -->
@@ -1029,6 +1079,10 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="preferences_passwords_sync_logins_sign_in">Qqen ɣer Sync</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins">Inekcam yettwakelsen</string>
+    <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
+    <string name="preferences_passwords_saved_logins_description_empty_text">Anekcum i tḥerzeḍ ɣer %s ad d-ittwasken da.</string>
+    <!-- Preference to access list of saved logins -->
+    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link">Issin ugar ɣef umtawi.</string>
     <!-- Preference to access list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions">Tisuraf</string>
     <!-- Empty description of list of login exceptions that we never save logins for -->
@@ -1135,4 +1189,52 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="search_edit_custom_engine_success_message">%s yettwasekles</string>
     <!-- Text shown when a user successfully deletes a custom search engine -->
     <string name="search_delete_search_engine_success_message">%s yettwakkes</string>
+
+    <!-- Title text shown for the migration screen to the new browser. Placeholder replaced with app name -->
+    <string name="migration_title">Ansuf ɣer %s amaynut</string>
+    <!-- Description text followed by a list of things migrating (e.g. Bookmarks, History). Placeholder replaced with app name-->
+    <string name="migration_description">Iminig amaynut ittraǧu-ken, Iteddu akken iwata i yesεan timahalin iggerzen ara awen-ifkken tallelt i tuqqna.\n \nTtxil rǧu ad ifak lqem%s n</string>
+    <!-- Text on the disabled button while in progress. Placeholder replaced with app name -->
+    <string name="migration_updating_app_button_text">Aleqqem %s…</string>
+    <!-- Text on the enabled button. Placeholder replaced with app name-->
+    <string name="migration_update_app_button">Bdu %s</string>
+    <!-- Accessibility description text for a completed migration item -->
+    <string name="migration_icon_description">Tunnagt tedda</string>
+    <!--Text on list of migrated items (e.g. Settings, History, etc.)-->
+    <string name="migration_text_passwords">Awalen uffiren</string>
+
+    <!-- Heading for the instructions to allow a permission -->
+    <string name="phone_feature_blocked_intro">Sireg-it:</string>
+
+    <!-- First step for the allowing a permission -->
+    <string name="phone_feature_blocked_step_settings">1. Ddu ɣer iɣewwaṛen Android</string>
+
+    <!-- Second step for the allowing a permission -->
+    <string name="phone_feature_blocked_step_permissions"><![CDATA[2. Senned <b>Tisirag</b>]]></string>
+    <!-- Third step for the allowing a permission (Fore example: Camera) -->
+    <string name="phone_feature_blocked_step_feature"><![CDATA[3. Nṭew<b>%1$s</b> ɣer  IRMED]]></string>
+
+    <!-- Label that indicates a site is using a secure connection -->
+    <string name="quick_settings_sheet_secure_connection">Tuqqna taɣelsant</string>
+    <!-- Label that indicates a site is using a insecure connection -->
+    <string name="quick_settings_sheet_insecure_connection">Tuqqna taraɣelsant</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for all sites-->
+    <string name="confirm_clear_permissions_on_all_sites">Tebɣiḍ ad tekkseḍ tisirag meṛṛa i yismal meṛṛa?</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for a site-->
+    <string name="confirm_clear_permissions_site">Tebɣiḍ ad tekkseḍ tisirag meṛṛa i usmel-a?</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to set default value a permission for a site-->
+    <string name="confirm_clear_permission_site">Tebɣiḍ ad tekkseḍ tisirag-a i usmel-a?</string>
+    <!-- label shown when there are not site exceptions to show in the site exception settings -->
+    <string name="no_site_exceptions">Ulac tisuraf n ismal</string>
+    <!-- Label for the Pocket default top site -->
+    <string name="pocket_top_articles">Imagraden ifazen</string>
+    <!-- Bookmark deletion confirmation -->
+    <string name="bookmark_deletion_confirmation">Tebɣiḍ ad tekseḍ Ticraḍ-a n iccaren?</string>
+    <!-- Browser menu button that adds a top site to the home fragment -->
+    <string name="browser_menu_add_to_top_sites">Rnu ɣer ismal ifazen</string>
+    <!-- text shown before the issuer name to indicate who its verified by, parameter is the name of
+     the certificate authority that verified the ticket-->
+    <string name="certificate_info_verified_by">Isenqed-it: %1$s</string>
+    <!-- Login overflow menu delete button -->
+    <string name="login_menu_delete_button">Kkes</string>
 </resources>
