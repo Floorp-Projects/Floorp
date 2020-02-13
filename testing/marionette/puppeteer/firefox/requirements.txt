@@ -1,3 +1,0 @@
-marionette-driver >= 2.2.0
-mozinfo >= 0.8
-six
