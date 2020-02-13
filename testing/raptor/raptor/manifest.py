@@ -478,6 +478,10 @@ def get_raptor_test_list(args, oskey):
 
         if next_test.get('lower_is_better') is not None:
             next_test['lower_is_better'] = bool_from_str(next_test.get('lower_is_better'))
+        if next_test.get('subtest_lower_is_better') is not None:
+            next_test['subtest_lower_is_better'] = bool_from_str(
+                next_test.get('subtest_lower_is_better')
+            )
 
     # write out .json test setting files for the control server to read and send to web ext
     if len(tests_to_run) != 0:
