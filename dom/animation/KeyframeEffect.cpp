@@ -1788,14 +1788,11 @@ bool KeyframeEffect::ContainsAnimatedScale(const nsIFrame* aFrame) const {
     }
 
     AnimationValue baseStyle = BaseStyle(prop.mProperty);
-    if (baseStyle.IsNull()) {
-      // If we failed to get the base style, we consider it has scale value
-      // here just to be safe.
-      return true;
-    }
-    gfx::Size size = baseStyle.GetScaleValue(aFrame);
-    if (size != gfx::Size(1.0f, 1.0f)) {
-      return true;
+    if (!baseStyle.IsNull()) {
+      gfx::Size size = baseStyle.GetScaleValue(aFrame);
+      if (size != gfx::Size(1.0f, 1.0f)) {
+        return true;
+      }
     }
 
     // This is actually overestimate because there are some cases that combining
