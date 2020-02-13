@@ -43,6 +43,7 @@ class nsNativeThemeCocoa : private nsNativeTheme, public nsITheme {
     eThemeGeometryTypeVibrantTitlebarLight,
     eThemeGeometryTypeVibrantTitlebarDark,
     eThemeGeometryTypeTooltip,
+    eThemeGeometryTypeSheet,
     eThemeGeometryTypeSourceList,
     eThemeGeometryTypeSourceListSelection,
     eThemeGeometryTypeActiveSourceListSelection
@@ -419,6 +420,8 @@ class nsNativeThemeCocoa : private nsNativeTheme, public nsITheme {
   bool ThemeDrawsFocusForWidget(StyleAppearance aAppearance) override;
   bool ThemeNeedsComboboxDropmarker() override;
   virtual bool WidgetAppearanceDependsOnWindowFocus(StyleAppearance aAppearance) override;
+  virtual bool NeedToClearBackgroundBehindWidget(nsIFrame* aFrame,
+                                                 StyleAppearance aAppearance) override;
   virtual ThemeGeometryType ThemeGeometryTypeForWidget(nsIFrame* aFrame,
                                                        StyleAppearance aAppearance) override;
   virtual Transparency GetWidgetTransparency(nsIFrame* aFrame,
@@ -436,6 +439,7 @@ class nsNativeThemeCocoa : private nsNativeTheme, public nsITheme {
   LayoutDeviceIntMargin DirectionAwareMargin(const LayoutDeviceIntMargin& aMargin,
                                              nsIFrame* aFrame);
   nsIFrame* SeparatorResponsibility(nsIFrame* aBefore, nsIFrame* aAfter);
+  bool IsWindowSheet(nsIFrame* aFrame);
   ControlParams ComputeControlParams(nsIFrame* aFrame, mozilla::EventStates aEventState);
   MenuBackgroundParams ComputeMenuBackgroundParams(nsIFrame* aFrame,
                                                    mozilla::EventStates aEventState);
