@@ -23,7 +23,9 @@ import mozilla.components.support.migration.state.MigrationAction
 import mozilla.components.support.migration.state.MigrationStore
 
 private const val NOTIFICATION_CHANNEL_ID = "mozac.support.migration.generic"
+
 private const val NOTIFICATION_TAG = "mozac.support.migration.notification"
+private const val NOTIFICATION_COMPLETED_ID = 1
 
 private const val TEMPORARY_NOTIFICATION_CHANNEL_NAME = "Migration"
 
@@ -103,9 +105,12 @@ abstract class AbstractMigrationService : Service() {
         val titleRes: Int = R.string.mozac_support_migration_complete_notification_title
         val contentRes: Int = R.string.mozac_support_migration_complete_notification_text
         val builder = getNotificationBuilder(titleRes, contentRes, channel)
-        val id = SharedIdsHelper.getIdForTag(this, NOTIFICATION_TAG)
 
-        NotificationManagerCompat.from(this).notify(id, builder.build())
+        NotificationManagerCompat.from(this).notify(
+            NOTIFICATION_TAG,
+            NOTIFICATION_COMPLETED_ID,
+            builder.build()
+        )
     }
 
     private fun getNotificationBuilder(titleRes: Int, contentRes: Int, channel: String): NotificationCompat.Builder {
@@ -138,5 +143,17 @@ abstract class AbstractMigrationService : Service() {
         }
 
         return NOTIFICATION_CHANNEL_ID
+    }
+
+    companion object {
+        /**
+         * Dismisses the "migration completed" notification.
+         */
+        fun dismissNotification(context: Context) {
+            NotificationManagerCompat.from(context).cancel(
+                NOTIFICATION_TAG,
+                NOTIFICATION_COMPLETED_ID
+            )
+        }
     }
 }
