@@ -142,20 +142,10 @@ struct Pair : private detail::PairHelper<A, B> {
   Pair(AArg&& aA, BArg&& aB)
       : Base(std::forward<AArg>(aA), std::forward<BArg>(aB)) {}
 
-  Pair(Pair&& aOther)
-      : Base(std::move(aOther.first()), std::move(aOther.second())) {}
-
+  Pair(Pair&& aOther) = default;
   Pair(const Pair& aOther) = default;
 
-  Pair& operator=(Pair&& aOther) {
-    MOZ_ASSERT(this != &aOther, "Self-moves are prohibited");
-
-    first() = std::move(aOther.first());
-    second() = std::move(aOther.second());
-
-    return *this;
-  }
-
+  Pair& operator=(Pair&& aOther) = default;
   Pair& operator=(const Pair& aOther) = default;
 
   /** The A instance. */

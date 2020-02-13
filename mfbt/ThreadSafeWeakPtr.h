@@ -258,21 +258,13 @@ class ThreadSafeWeakPtr {
   typedef typename T::ThreadSafeWeakReference ThreadSafeWeakReference;
 
  public:
-  ThreadSafeWeakPtr() {}
+  ThreadSafeWeakPtr() = default;
 
-  ThreadSafeWeakPtr& operator=(const ThreadSafeWeakPtr& aOther) {
-    mRef = aOther.mRef;
-    return *this;
-  }
+  ThreadSafeWeakPtr& operator=(const ThreadSafeWeakPtr& aOther) = default;
+  ThreadSafeWeakPtr(const ThreadSafeWeakPtr& aOther) = default;
 
-  ThreadSafeWeakPtr(const ThreadSafeWeakPtr& aOther) : mRef(aOther.mRef) {}
-
-  ThreadSafeWeakPtr& operator=(ThreadSafeWeakPtr&& aOther) {
-    mRef = aOther.mRef.forget();
-    return *this;
-  }
-
-  ThreadSafeWeakPtr(ThreadSafeWeakPtr&& aOther) : mRef(aOther.mRef.forget()) {}
+  ThreadSafeWeakPtr& operator=(ThreadSafeWeakPtr&& aOther) = default;
+  ThreadSafeWeakPtr(ThreadSafeWeakPtr&& aOther) = default;
 
   ThreadSafeWeakPtr& operator=(const RefPtr<T>& aOther) {
     if (aOther) {
