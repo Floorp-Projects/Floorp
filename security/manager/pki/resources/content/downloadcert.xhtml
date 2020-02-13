@@ -5,24 +5,28 @@
 
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 
-<!DOCTYPE window SYSTEM "chrome://pippki/locale/pippki.dtd">
+<!DOCTYPE window>
 
-<window title="&downloadCert.title;"
+<window data-l10n-id="download-cert-window"
+        data-l10n-attrs="title, style"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        style="width: 46em;"
+        xmlns:html="http://www.w3.org/1999/xhtml"
         onload="onLoad();">
 <dialog id="download_cert"
         buttons="accept,cancel">
+
+<linkset>
+  <html:link rel="localization" href="security/pippki/pippki.ftl"/>
+</linkset>
 
 <stringbundle id="pippki_bundle" src="chrome://pippki/locale/pippki.properties"/>
 
 <script src="chrome://pippki/content/pippki.js"/>
 <script src="chrome://pippki/content/downloadcert.js"/>
 
-
   <!--  Let 'em know what they're doing -->
   <vbox>
-    <description>&downloadCert.message1;</description>
+    <description data-l10n-id="download-cert-message"></description>
   </vbox>
 
   <separator/>
@@ -34,22 +38,22 @@
     -->
   <vbox>
     <description id="trustHeader"/>
-    <checkbox label="&downloadCert.trustSSL;"
+    <checkbox data-l10n-id="download-cert-trust-ssl"
               id="trustSSL"/>
-    <checkbox label="&downloadCert.trustEmail;"
+    <checkbox data-l10n-id="download-cert-trust-email"
               id="trustEmail"/>
   </vbox>
 
   <separator/>
 
   <vbox>
-    <description>&downloadCert.message3;</description>
+    <description data-l10n-id="download-cert-message-desc"></description>
     <separator/>
     <hbox>
       <button id="viewC-button"
-              label="&downloadCert.viewCert.label;"
+              data-l10n-id="download-cert-view-cert"
               oncommand="viewCert();"/>
-      <description style="margin: 4px;">&downloadCert.viewCert.text;</description>
+      <description style="margin: 4px;" data-l10n-id="download-cert-view-text"></description>
     </hbox>
   </vbox>
 
