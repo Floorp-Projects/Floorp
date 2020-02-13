@@ -102,7 +102,7 @@ def create_parser_addtest():
     import addtest
     parser = argparse.ArgumentParser()
     parser.add_argument('--suite',
-                        choices=sorted(ADD_TEST_SUPPORTED_SUITES + SUITE_SYNONYMS.keys()),
+                        choices=sorted(ADD_TEST_SUPPORTED_SUITES + list(SUITE_SYNONYMS.keys())),
                         help='suite for the test. '
                         'If you pass a `test` argument this will be determined '
                         'based on the filename and the folder it is in')
