@@ -234,12 +234,6 @@ void LIRGenerator::visitNewObject(MNewObject* ins) {
   assignSafepoint(lir, ins);
 }
 
-void LIRGenerator::visitNewTypedObject(MNewTypedObject* ins) {
-  LNewTypedObject* lir = new (alloc()) LNewTypedObject(temp());
-  define(lir, ins);
-  assignSafepoint(lir, ins);
-}
-
 void LIRGenerator::visitNewNamedLambdaObject(MNewNamedLambdaObject* ins) {
   LNewNamedLambdaObject* lir = new (alloc()) LNewNamedLambdaObject(temp());
   define(lir, ins);
@@ -249,14 +243,6 @@ void LIRGenerator::visitNewNamedLambdaObject(MNewNamedLambdaObject* ins) {
 void LIRGenerator::visitNewCallObject(MNewCallObject* ins) {
   LNewCallObject* lir = new (alloc()) LNewCallObject(temp());
   define(lir, ins);
-  assignSafepoint(lir, ins);
-}
-
-void LIRGenerator::visitNewDerivedTypedObject(MNewDerivedTypedObject* ins) {
-  LNewDerivedTypedObject* lir = new (alloc()) LNewDerivedTypedObject(
-      useRegisterAtStart(ins->type()), useRegisterAtStart(ins->owner()),
-      useRegisterAtStart(ins->offset()));
-  defineReturn(lir, ins);
   assignSafepoint(lir, ins);
 }
 
@@ -2939,17 +2925,6 @@ void LIRGenerator::visitTypedArrayIndexToInt32(MTypedArrayIndexToInt32* ins) {
   }
 }
 
-void LIRGenerator::visitTypedObjectDescr(MTypedObjectDescr* ins) {
-  MOZ_ASSERT(ins->type() == MIRType::Object);
-  define(new (alloc()) LTypedObjectDescr(useRegisterAtStart(ins->object())),
-         ins);
-}
-
-void LIRGenerator::visitTypedObjectElements(MTypedObjectElements* ins) {
-  MOZ_ASSERT(ins->type() == MIRType::Elements);
-  define(new (alloc()) LTypedObjectElements(useRegister(ins->object())), ins);
-}
-
 void LIRGenerator::visitInitializedLength(MInitializedLength* ins) {
   MOZ_ASSERT(ins->elements()->type() == MIRType::Elements);
   define(new (alloc()) LInitializedLength(useRegisterAtStart(ins->elements())),
@@ -3143,37 +3118,6 @@ void LIRGenerator::visitLoadElementHole(MLoadElementHole* ins) {
   defineBox(lir, ins);
 }
 
-void LIRGenerator::visitLoadUnboxedObjectOrNull(MLoadUnboxedObjectOrNull* ins) {
-  MOZ_ASSERT(IsValidElementsType(ins->elements(), ins->offsetAdjustment()));
-  MOZ_ASSERT(ins->index()->type() == MIRType::Int32);
-
-  if (ins->type() == MIRType::Object || ins->type() == MIRType::ObjectOrNull) {
-    LLoadUnboxedPointerT* lir = new (alloc()) LLoadUnboxedPointerT(
-        useRegister(ins->elements()), useRegisterOrConstant(ins->index()));
-    if (ins->nullBehavior() == MLoadUnboxedObjectOrNull::BailOnNull) {
-      assignSnapshot(lir, Bailout_TypeBarrierO);
-    }
-    define(lir, ins);
-  } else {
-    MOZ_ASSERT(ins->type() == MIRType::Value);
-    MOZ_ASSERT(ins->nullBehavior() != MLoadUnboxedObjectOrNull::BailOnNull);
-
-    LLoadUnboxedPointerV* lir = new (alloc()) LLoadUnboxedPointerV(
-        useRegister(ins->elements()), useRegisterOrConstant(ins->index()));
-    defineBox(lir, ins);
-  }
-}
-
-void LIRGenerator::visitLoadUnboxedString(MLoadUnboxedString* ins) {
-  MOZ_ASSERT(IsValidElementsType(ins->elements(), ins->offsetAdjustment()));
-  MOZ_ASSERT(ins->index()->type() == MIRType::Int32);
-  MOZ_ASSERT(ins->type() == MIRType::String);
-
-  LLoadUnboxedPointerT* lir = new (alloc()) LLoadUnboxedPointerT(
-      useRegister(ins->elements()), useRegisterOrConstant(ins->index()));
-  define(lir, ins);
-}
-
 void LIRGenerator::visitLoadElementFromState(MLoadElementFromState* ins) {
   MOZ_ASSERT(ins->index()->type() == MIRType::Int32);
 
@@ -3343,37 +3287,6 @@ void LIRGenerator::visitFallibleStoreElement(MFallibleStoreElement* ins) {
 
   add(lir, ins);
   assignSafepoint(lir, ins);
-}
-
-void LIRGenerator::visitStoreUnboxedObjectOrNull(
-    MStoreUnboxedObjectOrNull* ins) {
-  MOZ_ASSERT(IsValidElementsType(ins->elements(), ins->offsetAdjustment()));
-  MOZ_ASSERT(ins->index()->type() == MIRType::Int32);
-  MOZ_ASSERT(ins->value()->type() == MIRType::Object ||
-             ins->value()->type() == MIRType::Null ||
-             ins->value()->type() == MIRType::ObjectOrNull);
-
-  const LUse elements = useRegister(ins->elements());
-  const LAllocation index = useRegisterOrNonDoubleConstant(ins->index());
-  const LAllocation value = useRegisterOrNonDoubleConstant(ins->value());
-
-  LInstruction* lir =
-      new (alloc()) LStoreUnboxedPointer(elements, index, value);
-  add(lir, ins);
-}
-
-void LIRGenerator::visitStoreUnboxedString(MStoreUnboxedString* ins) {
-  MOZ_ASSERT(IsValidElementsType(ins->elements(), ins->offsetAdjustment()));
-  MOZ_ASSERT(ins->index()->type() == MIRType::Int32);
-  MOZ_ASSERT(ins->value()->type() == MIRType::String);
-
-  const LUse elements = useRegister(ins->elements());
-  const LAllocation index = useRegisterOrConstant(ins->index());
-  const LAllocation value = useRegisterOrNonDoubleConstant(ins->value());
-
-  LInstruction* lir =
-      new (alloc()) LStoreUnboxedPointer(elements, index, value);
-  add(lir, ins);
 }
 
 void LIRGenerator::visitEffectiveAddress(MEffectiveAddress* ins) {

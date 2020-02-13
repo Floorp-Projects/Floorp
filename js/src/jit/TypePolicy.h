@@ -483,22 +483,6 @@ class StoreTypedArrayHolePolicy final : public StoreUnboxedScalarPolicy {
                                  MInstruction* ins) const override;
 };
 
-class StoreUnboxedObjectOrNullPolicy final : public TypePolicy {
- public:
-  constexpr StoreUnboxedObjectOrNullPolicy() {}
-  EMPTY_DATA_;
-  MOZ_MUST_USE bool adjustInputs(TempAllocator& alloc,
-                                 MInstruction* def) const override;
-};
-
-class StoreUnboxedStringPolicy final : public TypePolicy {
- public:
-  constexpr StoreUnboxedStringPolicy() {}
-  EMPTY_DATA_;
-  MOZ_MUST_USE bool adjustInputs(TempAllocator& alloc,
-                                 MInstruction* def) const override;
-};
-
 // Accepts integers and doubles. Everything else is boxed.
 class ClampPolicy final : public TypePolicy {
  public:

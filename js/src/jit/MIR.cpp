@@ -370,9 +370,6 @@ MDefinition* MInstruction::foldsToStore(TempAllocator& alloc) {
     case Opcode::StoreElement:
       value = store->toStoreElement()->value();
       break;
-    case Opcode::StoreUnboxedObjectOrNull:
-      value = store->toStoreUnboxedObjectOrNull()->value();
-      break;
     default:
       MOZ_CRASH("unknown store");
   }
@@ -5151,38 +5148,6 @@ MDefinition::AliasType MLoadElement::mightAlias(const MDefinition* def) const {
 }
 
 MDefinition* MLoadElement::foldsTo(TempAllocator& alloc) {
-  if (MDefinition* def = foldsToStore(alloc)) {
-    return def;
-  }
-
-  return this;
-}
-
-MDefinition::AliasType MLoadUnboxedObjectOrNull::mightAlias(
-    const MDefinition* def) const {
-  if (def->isStoreUnboxedObjectOrNull()) {
-    const MStoreUnboxedObjectOrNull* store = def->toStoreUnboxedObjectOrNull();
-    if (store->index() != index()) {
-      if (DefinitelyDifferentValue(store->index(), index())) {
-        return AliasType::NoAlias;
-      }
-      return AliasType::MayAlias;
-    }
-
-    if (store->elements() != elements()) {
-      return AliasType::MayAlias;
-    }
-
-    if (store->offsetAdjustment() != offsetAdjustment()) {
-      return AliasType::MayAlias;
-    }
-
-    return AliasType::MustAlias;
-  }
-  return AliasType::MayAlias;
-}
-
-MDefinition* MLoadUnboxedObjectOrNull::foldsTo(TempAllocator& alloc) {
   if (MDefinition* def = foldsToStore(alloc)) {
     return def;
   }
