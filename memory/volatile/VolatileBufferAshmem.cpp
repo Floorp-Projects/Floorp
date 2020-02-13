@@ -7,11 +7,12 @@
 #include "mozilla/mozalloc.h"
 
 #include <fcntl.h>
-#include <linux/ashmem.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
+
+#include "mozilla/Ashmem.h"
 
 #ifdef MOZ_MEMORY
 extern "C" int posix_memalign(void** memptr, size_t alignment, size_t size);
@@ -38,12 +39,8 @@ bool VolatileBuffer::Init(size_t aSize, size_t aAlignment) {
     goto heap_alloc;
   }
 
-  mFd = open("/" ASHMEM_NAME_DEF, O_RDWR);
+  mFd = mozilla::android::ashmem_create(nullptr, mSize);
   if (mFd < 0) {
-    goto heap_alloc;
-  }
-
-  if (ioctl(mFd, ASHMEM_SET_SIZE, mSize) < 0) {
     goto heap_alloc;
   }
 

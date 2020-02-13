@@ -17,7 +17,7 @@
 #include "mozilla/UniquePtr.h"
 
 #ifdef ANDROID
-#  include <linux/ashmem.h>
+#  include "mozilla/Ashmem.h"
 #endif
 #include <sys/stat.h>
 #include <errno.h>
@@ -243,19 +243,14 @@ class _MappableBuffer : public MappedPtr {
     AutoCloseFD fd;
 #ifdef ANDROID
     /* On Android, initialize an ashmem region with the given length */
-    fd = open("/" ASHMEM_NAME_DEF, O_RDWR, 0600);
-    if (fd == -1) return nullptr;
-    char str[ASHMEM_NAME_LEN];
-    strlcpy(str, name, sizeof(str));
-    ioctl(fd, ASHMEM_SET_NAME, str);
-    if (ioctl(fd, ASHMEM_SET_SIZE, length)) return nullptr;
+    fd = mozilla::android::ashmem_create(name, length);
 
-      /* The Gecko crash reporter is confused by adjacent memory mappings of
-       * the same file and chances are we're going to map from the same file
-       * descriptor right away. To avoid problems with the crash reporter,
-       * create an empty anonymous page before or after the ashmem mapping,
-       * depending on how mappings grow in the address space.
-       */
+    /* The Gecko crash reporter is confused by adjacent memory mappings of
+     * the same file and chances are we're going to map from the same file
+     * descriptor right away. To avoid problems with the crash reporter,
+     * create an empty anonymous page before or after the ashmem mapping,
+     * depending on how mappings grow in the address space.
+     */
 #  if defined(__arm__)
     // Address increases on ARM.
     void* buf = ::mmap(nullptr, length + PAGE_SIZE, PROT_READ | PROT_WRITE,
@@ -266,7 +261,7 @@ class _MappableBuffer : public MappedPtr {
              0);
       DEBUG_LOG("Decompression buffer of size 0x%" PRIxPTR
                 " in ashmem \"%s\", mapped @%p",
-                length, str, buf);
+                length, name, buf);
       return new _MappableBuffer(fd.forget(), buf, length);
     }
 #  elif defined(__i386__) || defined(__x86_64__) || defined(__aarch64__)
@@ -289,7 +284,7 @@ class _MappableBuffer : public MappedPtr {
 
       DEBUG_LOG("Decompression buffer of size 0x%" PRIxPTR
                 " in ashmem \"%s\", mapped @%p",
-                length, str, actual_buf);
+                length, name, actual_buf);
       return new _MappableBuffer(fd.forget(), actual_buf, length);
     }
 #  else

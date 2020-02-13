@@ -8,8 +8,13 @@ EXPORTS += [
     'APKOpen.h',
 ]
 
+EXPORTS.mozilla += ['Ashmem.h']
+
+OS_LIBS += ['android']
+
 SOURCES += [
     'APKOpen.cpp',
+    'Ashmem.cpp',
     'NativeCrypto.cpp',
     'nsGeckoUtils.cpp',
     'NSSBridge.cpp',
