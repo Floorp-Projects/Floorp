@@ -493,6 +493,16 @@ strong {
   padding: 0;
 }
 
+.tooltip-container[type="doorhanger"] [role="menuseparator"] {
+  border: none;
+  border-bottom: 1px solid #cacdd3;
+  width: 100%;
+  height: 2px;
+  display: block;
+  background: none;
+  pointer-events: none;
+}
+
 /* Tooltip: Events */
 
 .devtools-tooltip-events-container {

@@ -107,6 +107,7 @@ async function listWorkerTargets(args: Args) {
       installingWorker,
       evaluatingWorker,
     } = front;
+
     await maybeMarkServiceWorker(activeWorker);
     await maybeMarkServiceWorker(waitingWorker);
     await maybeMarkServiceWorker(installingWorker);

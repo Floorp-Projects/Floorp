@@ -158,9 +158,13 @@ body {
 }
 
 .webconsole-input-openEditorButton {
-  grid-column: -1 / -2;
   height: 24px;
   margin: 0;
+}
+
+.webconsole-input-buttons {
+  grid-column: -1 / -2;
+  display: flex;
 }
 
 :root:dir(rtl) .webconsole-input-openEditorButton {
