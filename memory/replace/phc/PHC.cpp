@@ -561,7 +561,14 @@ class GMut {
   // The mutex that protects the other members.
   static Mutex sMutex;
 
-  GMut() : mRNG(RandomSeed<0>(), RandomSeed<1>()), mPages() { sMutex.Init(); }
+  GMut()
+      : mRNG(RandomSeed<0>(), RandomSeed<1>()),
+        mPages(),
+        mCurrPageAllocs(0),
+        mPageAllocHits(0),
+        mPageAllocMisses(0) {
+    sMutex.Init();
+  }
 
   uint64_t Random64(GMutLock) { return mRNG.next(); }
 
@@ -603,6 +610,9 @@ class GMut {
     page.mAllocStack = Some(aAllocStack);
     page.mFreeStack = Nothing();
     page.mReuseTime = kMaxTime;
+
+    mCurrPageAllocs++;
+    MOZ_RELEASE_ASSERT(mCurrPageAllocs <= kMaxPageAllocs);
   }
 
   void ResizePageInUse(GMutLock aLock, uintptr_t aIndex,
@@ -649,6 +659,9 @@ class GMut {
 
     page.mFreeStack = Some(aFreeStack);
     page.mReuseTime = GAtomic::Now() + aReuseDelay;
+
+    MOZ_RELEASE_ASSERT(mCurrPageAllocs > 0);
+    mCurrPageAllocs--;
   }
 
   void EnsureInUse(GMutLock, void* aPtr, uintptr_t aIndex) {
@@ -734,6 +747,21 @@ class GMut {
   static void prefork() { sMutex.Lock(); }
   static void postfork() { sMutex.Unlock(); }
 
+  void IncPageAllocHits(GMutLock) { mPageAllocHits++; }
+  void IncPageAllocMisses(GMutLock) { mPageAllocMisses++; }
+
+  size_t CurrPageAllocs(GMutLock) { return mCurrPageAllocs; }
+
+  size_t PageAllocHits(GMutLock) { return mPageAllocHits; }
+  size_t PageAllocAttempts(GMutLock) {
+    return mPageAllocHits + mPageAllocMisses;
+  }
+
+  // This is an integer because FdPrintf only supports integer printing.
+  size_t PageAllocHitRate(GMutLock) {
+    return mPageAllocHits * 100 / (mPageAllocHits + mPageAllocMisses);
+  }
+
  private:
   template <int N>
   uint64_t RandomSeed() {
@@ -783,6 +811,15 @@ class GMut {
   non_crypto::XorShift128PlusRNG mRNG;
 
   PageInfo mPages[kMaxPageAllocs];
+
+  // How many page allocs are currently in use (the max is kMaxPageAllocs).
+  size_t mCurrPageAllocs;
+
+  // How many allocations that could have been page allocs actually were? As
+  // constrained kMaxPageAllocs. If the hit ratio isn't close to 100% it's
+  // likely that the global constants are poorly chosen.
+  size_t mPageAllocHits;
+  size_t mPageAllocMisses;
 };
 
 Mutex GMut::sMutex;
@@ -888,15 +925,23 @@ static void* MaybePageAlloc(const Maybe<arena_id_t>& aArenaId, size_t aReqSize,
 #endif
       }
     }
-    LOG("PageAlloc(%zu) -> %p[%zu] (%zu) (z%zu), sAllocDelay <- %zu\n",
-        aReqSize, ptr, i, usableSize, size_t(aZero), size_t(newAllocDelay));
+    gMut->IncPageAllocHits(lock);
+    LOG("PageAlloc(%zu) -> %p[%zu] (%zu) (z%zu), sAllocDelay <- %zu, "
+        "fullness %zu/%zu, hits %zu/%zu (%zu%%)\n",
+        aReqSize, ptr, i, usableSize, size_t(aZero), size_t(newAllocDelay),
+        gMut->CurrPageAllocs(lock), kMaxPageAllocs, gMut->PageAllocHits(lock),
+        gMut->PageAllocAttempts(lock), gMut->PageAllocHitRate(lock));
     break;
   }
 
   if (!ptr) {
     // No pages are available, or VirtualAlloc/mprotect failed.
-    LOG("No PageAlloc(%zu), sAllocDelay <- %zu\n", aReqSize,
-        size_t(newAllocDelay));
+    gMut->IncPageAllocMisses(lock);
+    LOG("No PageAlloc(%zu), sAllocDelay <- %zu, fullness %zu/%zu, hits %zu/%zu "
+        "(%zu%%)\n",
+        aReqSize, size_t(newAllocDelay), gMut->CurrPageAllocs(lock),
+        kMaxPageAllocs, gMut->PageAllocHits(lock),
+        gMut->PageAllocAttempts(lock), gMut->PageAllocHitRate(lock));
   }
 
   // Set the new alloc delay.
@@ -1094,8 +1139,9 @@ MOZ_ALWAYS_INLINE static void PageFree(const Maybe<arena_id_t>& aArenaId,
   Delay reuseDelay = Rnd64ToDelay<kAvgPageReuseDelay>(gMut->Random64(lock));
   FreePage(lock, *i, aArenaId, freeStack, reuseDelay);
 
-  LOG("PageFree(%p[%zu]), %zu delay, reuse at ~%zu\n", aPtr, *i,
-      size_t(reuseDelay), size_t(GAtomic::Now()) + reuseDelay);
+  LOG("PageFree(%p[%zu]), %zu delay, reuse at ~%zu, fullness %zu/%zu\n", aPtr,
+      *i, size_t(reuseDelay), size_t(GAtomic::Now()) + reuseDelay,
+      gMut->CurrPageAllocs(lock), kMaxPageAllocs);
 }
 
 static void replace_free(void* aPtr) { return PageFree(Nothing(), aPtr); }
