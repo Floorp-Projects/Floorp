@@ -5,8 +5,8 @@
 package mozilla.components.browser.engine.gecko.webpush
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import mozilla.components.concept.engine.webpush.WebPushSubscription
 import mozilla.components.support.test.any
+import mozilla.components.support.test.eq
 import mozilla.components.support.test.mock
 import org.junit.Before
 import org.junit.Test
@@ -20,35 +20,24 @@ import org.mozilla.geckoview.WebPushController
 @RunWith(AndroidJUnit4::class)
 class GeckoWebPushHandlerTest {
 
-    private val runtime: GeckoRuntime = mock()
-    private val controller: WebPushController = mock()
+    lateinit var runtime: GeckoRuntime
+    lateinit var controller: WebPushController
 
     @Before
     fun setup() {
+        controller = mock()
+        runtime = mock()
         `when`(runtime.webPushController).thenReturn(controller)
     }
 
     @Test
     fun `runtime controller is invoked`() {
         val handler = GeckoWebPushHandler(runtime)
-        val subscription = WebPushSubscription(
-            "test",
-            "https://example.com",
-            null,
-            ByteArray(65),
-            ByteArray(16)
-        )
 
         handler.onPushMessage("", null)
-
         verify(controller).onPushEvent(any(), isNull())
 
-        handler.onSubscriptionChanged(subscription)
-
-        verify(controller).onSubscriptionChanged(any())
-
-        handler.onSubscriptionChanged(any<String>())
-
-        verify(controller).onSubscriptionChanged(any())
+        handler.onSubscriptionChanged("test")
+        verify(controller).onSubscriptionChanged(eq("test"))
     }
 }
