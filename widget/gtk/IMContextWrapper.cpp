@@ -1115,6 +1115,13 @@ void IMContextWrapper::OnFocusChangeInGecko(bool aFocus) {
   // We shouldn't carry over the removed string to another editor.
   mSelectedStringRemovedByComposition.Truncate();
   mSelection.Clear();
+
+  // When the focus changes, we need to inform IM about the new cursor
+  // position. Chinese input methods generally rely on this because they
+  // usually don't start composition until a character is picked.
+  if (aFocus && EnsureToCacheSelection()) {
+    SetCursorPosition(GetActiveContext());
+  }
 }
 
 void IMContextWrapper::ResetIME() {
