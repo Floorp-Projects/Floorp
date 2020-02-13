@@ -785,97 +785,6 @@
         input1.remove();
       }
 
-      // Bug 1604140
-      function testTabbingThroughScrollableShadowHost() {
-        opener.is(document.activeElement, document.body.firstChild,
-                  "body's first child should have focus.");
-
-        let aboveFirstHost = document.createElement("div");
-        aboveFirstHost.tabIndex = 0;
-        aboveFirstHost.onfocus = focusLogger;
-        document.body.appendChild(aboveFirstHost);
-
-        let firstHost = document.createElement("div");
-        firstHost.style = "overflow: scroll";
-        document.body.appendChild(firstHost);
-
-        let firstShadow = firstHost.attachShadow({mode: "open"});
-        let divInFirstShadow = document.createElement("div");
-        divInFirstShadow.tabIndex = 0;
-        divInFirstShadow.onfocus = focusLogger;
-        firstShadow.appendChild(divInFirstShadow);
-
-        let aboveSecondHost = document.createElement("div");
-        aboveSecondHost.tabIndex = 0;
-        aboveSecondHost.onfocus = focusLogger;
-        document.body.appendChild(aboveSecondHost);
-
-        let secondHost = document.createElement("div");
-        secondHost.style = "overflow: scroll";
-        secondHost.tabIndex = 0;
-        secondHost.onfocus = focusLogger;
-        document.body.appendChild(secondHost);
-
-        let secondShadow = secondHost.attachShadow({mode: "open"});
-        let divInSecondShadow = document.createElement("div");
-        divInSecondShadow.tabIndex = 0;
-        divInSecondShadow.onfocus = focusLogger;
-        secondShadow.appendChild(divInSecondShadow);
-
-        let belowSecondHost = document.createElement("div");
-        belowSecondHost.tabIndex = 0;
-        belowSecondHost.onfocus = focusLogger;
-        document.body.appendChild(belowSecondHost);
-
-        document.body.offsetLeft;
-
-        synthesizeKey("KEY_Tab");
-        opener.is(lastFocusTarget, aboveFirstHost, "Should have focused div above first host element. (1)");
-
-        synthesizeKey("KEY_Tab");
-        opener.is(lastFocusTarget, divInFirstShadow, "Should have focused div in first shadow dom. (2)");
-
-        synthesizeKey("KEY_Tab");
-        opener.is(lastFocusTarget, aboveSecondHost, "Should have focused div above second host element. (3)");
-
-        synthesizeKey("KEY_Tab");
-        opener.is(lastFocusTarget, secondHost, "Should have focused second host element. (4)");
-
-        synthesizeKey("KEY_Tab");
-        opener.is(lastFocusTarget, divInSecondShadow, "Should have focused div in second shadow dom. (5)");
-
-        synthesizeKey("KEY_Tab");
-        opener.is(lastFocusTarget, belowSecondHost, "Should have focused div below second host. (6)");
-
-        // Backwards
-        synthesizeKey("KEY_Tab", {shiftKey: true});
-        opener.is(lastFocusTarget, divInSecondShadow, "Should have focused div in second shadow dom. (7)");
-
-        synthesizeKey("KEY_Tab", {shiftKey: true});
-        // focus is already on second host, so lastFocusTarget won't get updated.
-        opener.is(document.activeElement, secondHost, "Should have focused second host element. (8)");
-        opener.is(secondShadow.activeElement, null, "Focus should have left div in second shadow dom. (8)");
-
-        synthesizeKey("KEY_Tab", {shiftKey: true});
-        opener.is(lastFocusTarget, aboveSecondHost, "Should have focused div above second host element. (9)");
-
-        synthesizeKey("KEY_Tab", {shiftKey: true});
-        opener.is(lastFocusTarget, divInFirstShadow, "Should have focused div in first shadow dom. (10)");
-
-        synthesizeKey("KEY_Tab", {shiftKey: true});
-        opener.is(lastFocusTarget, aboveFirstHost, "Should have focused div above first host element. (11)");
-
-        synthesizeKey("KEY_Tab", {shiftKey: true});
-        opener.is(document.activeElement, document.body.firstChild,
-                  "body's first child should have focus.");
-
-        aboveFirstHost.remove();
-        firstHost.remove();
-        aboveSecondHost.remove();
-        secondHost.remove();
-        belowSecondHost.remove();
-      }
-
       function testDeeplyNestedShadowTree() {
         opener.is(document.activeElement, document.body.firstChild, "body's first child should have focus.");
         var host1 = document.createElement("test-node");
@@ -969,7 +878,6 @@
         testTabbingThroughSlotInLightDOM();
         testTabbingThroughFocusableSlotInLightDOM();
         testTabbingThroughScrollableShadowDOM();
-        testTabbingThroughScrollableShadowHost();
         testDeeplyNestedShadowTree();
         testBackwardsTabbingWithSlotsWithoutFocusableContent();
 

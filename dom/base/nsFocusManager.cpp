@@ -3282,21 +3282,19 @@ nsresult nsFocusManager::GetNextTabbableContent(
     nsIContent** aResultContent) {
   *aResultContent = nullptr;
 
-  if (!aStartContent) {
-    return NS_OK;
-  }
+  nsCOMPtr<nsIContent> startContent = aStartContent;
+  if (!startContent) return NS_OK;
 
-  nsIContent* startContent = aStartContent;
-  nsIContent* currentTopLevelScopeOwner = GetTopLevelScopeOwner(startContent);
+  nsIContent* currentTopLevelScopeOwner = GetTopLevelScopeOwner(aStartContent);
 
-  LOGCONTENTNAVIGATION("GetNextTabbable: %s", startContent);
+  LOGCONTENTNAVIGATION("GetNextTabbable: %s", aStartContent);
   LOGFOCUSNAVIGATION(("  tabindex: %d", aCurrentTabIndex));
 
-  // If startContent is a shadow host or slot in forward navigation,
-  // search in scope owned by startContent
-  if (aForward && IsHostOrSlot(startContent)) {
+  // If aStartContent is a shadow host or slot in forward navigation,
+  // search in scope owned by aStartContent
+  if (aForward && IsHostOrSlot(aStartContent)) {
     nsIContent* contentToFocus = GetNextTabbableContentInScope(
-        startContent, startContent, aOriginalStartContent, aForward,
+        aStartContent, aStartContent, aOriginalStartContent, aForward,
         aForward ? 1 : 0, aIgnoreTabIndex, aForDocumentNavigation,
         true /* aSkipOwner */);
     if (contentToFocus) {
@@ -3305,11 +3303,11 @@ nsresult nsFocusManager::GetNextTabbableContent(
     }
   }
 
-  // If startContent is in a scope owned by Shadow DOM search from scope
-  // including startContent
-  if (nsIContent* owner = FindScopeOwner(startContent)) {
+  // If aStartContent is in a scope owned by Shadow DOM search from scope
+  // including aStartContent
+  if (nsIContent* owner = FindScopeOwner(aStartContent)) {
     nsIContent* contentToFocus = GetNextTabbableContentInAncestorScopes(
-        owner, &startContent, aOriginalStartContent, aForward,
+        owner, &aStartContent, aOriginalStartContent, aForward,
         &aCurrentTabIndex, aIgnoreTabIndex, aForDocumentNavigation);
     if (contentToFocus) {
       NS_ADDREF(*aResultContent = contentToFocus);
@@ -3319,16 +3317,15 @@ nsresult nsFocusManager::GetNextTabbableContent(
 
   // If we reach here, it means no next tabbable content in shadow DOM.
   // We need to continue searching in light DOM, starting at the top level
-  // shadow host in light DOM (updated startContent) and its tabindex
+  // shadow host in light DOM (updated aStartContent) and its tabindex
   // (updated aCurrentTabIndex).
-  MOZ_ASSERT(!FindScopeOwner(startContent),
-             "startContent should not be owned by Shadow DOM at this point");
+  MOZ_ASSERT(!FindScopeOwner(aStartContent),
+             "aStartContent should not be owned by Shadow DOM at this point");
 
   nsPresContext* presContext = aPresShell->GetPresContext();
 
   bool getNextFrame = true;
-  nsCOMPtr<nsIContent> iterStartContent = startContent;
-  nsIContent* topLevelScopeStartContent = startContent;
+  nsCOMPtr<nsIContent> iterStartContent = aStartContent;
   // Iterate tab index to find corresponding contents
   while (1) {
     nsIFrame* frame = iterStartContent->GetPrimaryFrame();
@@ -3404,16 +3401,15 @@ nsresult nsFocusManager::GetNextTabbableContent(
       }
     }
 
-    nsIContent* oldTopLevelScopeOwner = nullptr;
     // Walk frames to find something tabbable matching aCurrentTabIndex
     while (frame) {
       // Try to find the topmost scope owner, since we want to skip the node
       // that is not owned by document in frame traversal.
       nsIContent* currentContent = frame->GetContent();
-      if (currentTopLevelScopeOwner) {
-        oldTopLevelScopeOwner = currentTopLevelScopeOwner;
+      nsIContent* oldTopLevelScopeOwner = currentTopLevelScopeOwner;
+      if (!aForward || currentTopLevelScopeOwner != currentContent) {
+        currentTopLevelScopeOwner = GetTopLevelScopeOwner(currentContent);
       }
-      currentTopLevelScopeOwner = GetTopLevelScopeOwner(currentContent);
       if (currentTopLevelScopeOwner &&
           currentTopLevelScopeOwner == oldTopLevelScopeOwner) {
         // We're within non-document scope, continue.
@@ -3443,7 +3439,7 @@ nsresult nsFocusManager::GetNextTabbableContent(
           // will be selected again.
           bool validPopup = true;
           if (!aForward) {
-            nsIContent* content = topLevelScopeStartContent;
+            nsIContent* content = aStartContent;
             while (content) {
               if (content == currentContent) {
                 validPopup = false;
