@@ -63,7 +63,7 @@ fuzzy(0-11,0-7155) == blur-inside-clipPath.svg blur-inside-clipPath-ref.svg
 == clip-01.svg pass.svg
 == clip-02a.svg clip-02-ref.svg
 == clip-02b.svg clip-02-ref.svg
-fuzzy-if(webrender,0-1,0-10000) == clip-surface-clone-01.svg clip-surface-clone-01-ref.svg
+== clip-surface-clone-01.svg clip-surface-clone-01-ref.svg
 == clip-use-element-01.svg pass.svg
 == clip-use-element-02.svg pass.svg
 
@@ -370,7 +370,7 @@ fuzzy-if(skiaContent,0-1,0-400) == path-06.svg path-06-ref.svg
 == pathLength-02.svg pass.svg
 
 == pattern-basic-01.svg pass.svg
-fuzzy(0-1,0-5) fuzzy-if(webrender,0-2,0-59) == pattern-big-image.html pattern-big-image-ref.html
+fuzzy(0-1,0-5) == pattern-big-image.html pattern-big-image-ref.html
 == pattern-css-transform.html pattern-css-transform-ref.html
 == pattern-invalid-01.svg pattern-invalid-01-ref.svg
 fuzzy-if(skiaContent,0-1,0-5) == pattern-live-01a.svg pattern-live-01-ref.svg
