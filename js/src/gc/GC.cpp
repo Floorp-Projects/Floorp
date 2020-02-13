@@ -2085,11 +2085,8 @@ bool MovingTracer::onShapeEdge(Shape** shapep) { return updateEdge(shapep); }
 bool MovingTracer::onStringEdge(JSString** stringp) {
   return updateEdge(stringp);
 }
-bool MovingTracer::onScriptEdge(JSScript** scriptp) {
+bool MovingTracer::onScriptEdge(js::BaseScript** scriptp) {
   return updateEdge(scriptp);
-}
-bool MovingTracer::onLazyScriptEdge(LazyScript** lazyp) {
-  return updateEdge(lazyp);
 }
 bool MovingTracer::onBaseShapeEdge(BaseShape** basep) {
   return updateEdge(basep);
@@ -8649,7 +8646,7 @@ bool js::gc::ClearEdgesTracer::onSymbolEdge(JS::Symbol** symp) {
 bool js::gc::ClearEdgesTracer::onBigIntEdge(JS::BigInt** bip) {
   return clearEdge(bip);
 }
-bool js::gc::ClearEdgesTracer::onScriptEdge(JSScript** scriptp) {
+bool js::gc::ClearEdgesTracer::onScriptEdge(js::BaseScript** scriptp) {
   return clearEdge(scriptp);
 }
 bool js::gc::ClearEdgesTracer::onShapeEdge(js::Shape** shapep) {
@@ -8663,9 +8660,6 @@ bool js::gc::ClearEdgesTracer::onBaseShapeEdge(js::BaseShape** basep) {
 }
 bool js::gc::ClearEdgesTracer::onJitCodeEdge(js::jit::JitCode** codep) {
   return clearEdge(codep);
-}
-bool js::gc::ClearEdgesTracer::onLazyScriptEdge(js::LazyScript** lazyp) {
-  return clearEdge(lazyp);
 }
 bool js::gc::ClearEdgesTracer::onScopeEdge(js::Scope** scopep) {
   return clearEdge(scopep);

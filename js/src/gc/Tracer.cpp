@@ -237,10 +237,6 @@ JS_PUBLIC_API void JS_GetTraceThingInfo(char* buf, size_t bufsize,
       name = "jitcode";
       break;
 
-    case JS::TraceKind::LazyScript:
-      name = "lazyscript";
-      break;
-
     case JS::TraceKind::Null:
       name = "null_pointer";
       break;
@@ -317,12 +313,6 @@ JS_PUBLIC_API void JS_GetTraceThingInfo(char* buf, size_t bufsize,
 
       case JS::TraceKind::Script: {
         JSScript* script = static_cast<JSScript*>(thing);
-        snprintf(buf, bufsize, " %s:%u", script->filename(), script->lineno());
-        break;
-      }
-
-      case JS::TraceKind::LazyScript: {
-        LazyScript* script = static_cast<LazyScript*>(thing);
         snprintf(buf, bufsize, " %s:%u", script->filename(), script->lineno());
         break;
       }

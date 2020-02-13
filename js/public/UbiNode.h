@@ -174,6 +174,10 @@ class StackFrame;
 }  // namespace ubi
 }  // namespace JS
 
+namespace js {
+class BaseScript;
+}  // namespace js
+
 namespace JS {
 namespace ubi {
 
@@ -1107,12 +1111,14 @@ class JS_PUBLIC_API Concrete<JS::BigInt> : TracerConcrete<JS::BigInt> {
 };
 
 template <>
-class JS_PUBLIC_API Concrete<JSScript> : TracerConcreteWithRealm<JSScript> {
+class JS_PUBLIC_API Concrete<js::BaseScript>
+    : TracerConcreteWithRealm<js::BaseScript> {
  protected:
-  explicit Concrete(JSScript* ptr) : TracerConcreteWithRealm<JSScript>(ptr) {}
+  explicit Concrete(js::BaseScript* ptr)
+      : TracerConcreteWithRealm<js::BaseScript>(ptr) {}
 
  public:
-  static void construct(void* storage, JSScript* ptr) {
+  static void construct(void* storage, js::BaseScript* ptr) {
     new (storage) Concrete(ptr);
   }
 

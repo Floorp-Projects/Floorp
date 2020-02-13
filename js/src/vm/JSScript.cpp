@@ -5722,7 +5722,7 @@ void JSScript::AutoDelazify::dropScript() {
   script_ = nullptr;
 }
 
-JS::ubi::Base::Size JS::ubi::Concrete<JSScript>::size(
+JS::ubi::Base::Size JS::ubi::Concrete<BaseScript>::size(
     mozilla::MallocSizeOf mallocSizeOf) const {
   BaseScript* base = &get();
 
@@ -5750,22 +5750,6 @@ JS::ubi::Base::Size JS::ubi::Concrete<JSScript>::size(
   return size;
 }
 
-const char* JS::ubi::Concrete<JSScript>::scriptFilename() const {
+const char* JS::ubi::Concrete<BaseScript>::scriptFilename() const {
   return get().filename();
-}
-
-JS::ubi::Node::Size JS::ubi::Concrete<js::LazyScript>::size(
-    mozilla::MallocSizeOf mallocSizeOf) const {
-  Size size = gc::Arena::thingSize(get().asTenured().getAllocKind());
-  size += get().sizeOfExcludingThis(mallocSizeOf);
-  return size;
-}
-
-const char* JS::ubi::Concrete<js::LazyScript>::scriptFilename() const {
-  auto source = get().scriptSource();
-  if (!source) {
-    return nullptr;
-  }
-
-  return source->filename();
 }

@@ -80,16 +80,11 @@ void DebuggerScript::trace(JSTracer* trc) {
   // This comes from a private pointer, so no barrier needed.
   gc::Cell* cell = getReferentCell();
   if (cell) {
-    if (cell->is<JSScript>()) {
-      JSScript* script = cell->as<JSScript>();
+    if (cell->is<BaseScript>()) {
+      BaseScript* script = cell->as<BaseScript>();
       TraceManuallyBarrieredCrossCompartmentEdge(
           trc, upcast, &script, "Debugger.Script script referent");
       setPrivateUnbarriered(script);
-    } else if (cell->is<LazyScript>()) {
-      LazyScript* lazyScript = cell->as<LazyScript>();
-      TraceManuallyBarrieredCrossCompartmentEdge(
-          trc, upcast, &lazyScript, "Debugger.Script lazy script referent");
-      setPrivateUnbarriered(lazyScript);
     } else {
       JSObject* wasm = cell->as<JSObject>();
       TraceManuallyBarrieredCrossCompartmentEdge(

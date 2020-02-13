@@ -162,7 +162,7 @@ class JS_PUBLIC_API CallbackTracer : public JSTracer {
   virtual bool onBigIntEdge(JS::BigInt** bip) {
     return onChild(JS::GCCellPtr(*bip));
   }
-  virtual bool onScriptEdge(JSScript** scriptp) {
+  virtual bool onScriptEdge(js::BaseScript** scriptp) {
     return onChild(JS::GCCellPtr(*scriptp));
   }
   virtual bool onShapeEdge(js::Shape** shapep) {
@@ -176,9 +176,6 @@ class JS_PUBLIC_API CallbackTracer : public JSTracer {
   }
   virtual bool onJitCodeEdge(js::jit::JitCode** codep) {
     return onChild(JS::GCCellPtr(*codep, JS::TraceKind::JitCode));
-  }
-  virtual bool onLazyScriptEdge(js::LazyScript** lazyp) {
-    return onChild(JS::GCCellPtr(*lazyp, JS::TraceKind::LazyScript));
   }
   virtual bool onScopeEdge(js::Scope** scopep) {
     return onChild(JS::GCCellPtr(*scopep, JS::TraceKind::Scope));
@@ -263,7 +260,9 @@ class JS_PUBLIC_API CallbackTracer : public JSTracer {
   bool dispatchToOnEdge(JSString** strp) { return onStringEdge(strp); }
   bool dispatchToOnEdge(JS::Symbol** symp) { return onSymbolEdge(symp); }
   bool dispatchToOnEdge(JS::BigInt** bip) { return onBigIntEdge(bip); }
-  bool dispatchToOnEdge(JSScript** scriptp) { return onScriptEdge(scriptp); }
+  bool dispatchToOnEdge(js::BaseScript** scriptp) {
+    return onScriptEdge(scriptp);
+  }
   bool dispatchToOnEdge(js::Shape** shapep) { return onShapeEdge(shapep); }
   bool dispatchToOnEdge(js::ObjectGroup** groupp) {
     return onObjectGroupEdge(groupp);
@@ -273,9 +272,6 @@ class JS_PUBLIC_API CallbackTracer : public JSTracer {
   }
   bool dispatchToOnEdge(js::jit::JitCode** codep) {
     return onJitCodeEdge(codep);
-  }
-  bool dispatchToOnEdge(js::LazyScript** lazyp) {
-    return onLazyScriptEdge(lazyp);
   }
   bool dispatchToOnEdge(js::Scope** scopep) { return onScopeEdge(scopep); }
   bool dispatchToOnEdge(js::RegExpShared** sharedp) {
