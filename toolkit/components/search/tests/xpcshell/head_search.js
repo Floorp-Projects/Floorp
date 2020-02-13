@@ -11,6 +11,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   PromiseUtils: "resource://gre/modules/PromiseUtils.jsm",
   RemoteSettings: "resource://services-settings/remote-settings.js",
   RemoteSettingsClient: "resource://services-settings/RemoteSettingsClient.jsm",
+  SearchEngineSelector: "resource://gre/modules/SearchEngineSelector.jsm",
   SearchTestUtils: "resource://testing-common/SearchTestUtils.jsm",
   Services: "resource://gre/modules/Services.jsm",
   setTimeout: "resource://gre/modules/Timer.jsm",
@@ -75,8 +76,17 @@ AddonTestUtils.createAppInfo(
  *   The folder name to use.
  * @param {string} [subFolder]
  *   The subfolder to use, if any.
+ * @param {array} [config]
+ *   An array which contains the configuration to set.
+ * @returns {object|null}
+ *   If this is the modern configuration, returns a stub for the method
+ *   that the configuration is obtained from.
  */
-async function useTestEngines(folder = "data", subFolder = null) {
+async function useTestEngines(
+  folder = "data",
+  subFolder = null,
+  config = null
+) {
   let url = `resource://test/${folder}/`;
   if (subFolder) {
     url += `${subFolder}/`;
@@ -85,6 +95,22 @@ async function useTestEngines(folder = "data", subFolder = null) {
     .getProtocolHandler("resource")
     .QueryInterface(Ci.nsIResProtocolHandler);
   resProt.setSubstitution("search-extensions", Services.io.newURI(url));
+  if (gModernConfig) {
+    if (config) {
+      return sinon
+        .stub(SearchEngineSelector.prototype, "getEngineConfiguration")
+        .returns(config);
+    }
+    let chan = NetUtil.newChannel({
+      uri: "resource://search-extensions/engines.json",
+      loadUsingSystemPrincipal: true,
+    });
+    let json = parseJsonFromStream(chan.open());
+    return sinon
+      .stub(SearchEngineSelector.prototype, "getEngineConfiguration")
+      .returns(json.data);
+  }
+  return null;
 }
 
 async function promiseCacheData() {
