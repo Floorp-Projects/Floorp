@@ -1375,6 +1375,9 @@ const selectors = {
   addSetWatchpoint: "#node-menu-add-set-watchpoint",
   removeWatchpoint: "#node-menu-remove-watchpoint",
   logEventsCheckbox: ".events-header input",
+  previewPopupInvokeGetterButton: ".preview-popup .invoke-getter",
+  previewPopupObjectNumber: ".preview-popup .objectBox-number",
+  previewPopupObjectObject: ".preview-popup .objectBox-object",
 };
 
 function getSelector(elementName, ...args) {
@@ -1679,6 +1682,21 @@ async function hoverAtPos(dbg, pos) {
   );
 
   InspectorUtils.addPseudoClassLock(tokenEl, ":hover");
+}
+
+async function closePreviewAtPos(dbg, line, column) {
+  const pos = { line, ch: column - 1 };
+  const tokenEl = await getTokenFromPosition(dbg, pos);
+
+  if (!tokenEl) {
+    return false;
+  }
+
+  InspectorUtils.removePseudoClassLock(tokenEl, ":hover");
+
+  const gutterEl = await getEditorLineGutter(dbg, line);
+  EventUtils.synthesizeMouseAtCenter(gutterEl, { type: "mousemove" }, dbg.win);
+  await waitUntil(() => findElement(dbg, "previewPopup") == null);
 }
 
 // tryHovering will hover at a position every second until we

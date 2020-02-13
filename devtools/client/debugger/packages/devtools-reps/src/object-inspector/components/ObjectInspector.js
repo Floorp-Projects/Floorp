@@ -23,6 +23,7 @@ const { renderRep, shouldRenderRootsInReps } = Utils;
 const {
   getChildrenWithEvaluations,
   getActor,
+  getEvaluatedItem,
   getParent,
   getValue,
   nodeIsPrimitive,
@@ -175,7 +176,21 @@ class ObjectInspector extends Component<Props> {
   }
 
   getRoots(): Array<Node> {
-    return this.props.roots;
+    const {
+      evaluations,
+      roots
+    } = this.props;
+    const length = roots.length;
+
+    for (let i = 0; i < length; i++) {
+      let rootItem = roots[i];
+
+      if (evaluations.has(rootItem.path)) {
+        roots[i] = getEvaluatedItem(rootItem, evaluations);
+      }
+    }
+
+    return roots;
   }
 
   getNodeKey(item: Node): string {

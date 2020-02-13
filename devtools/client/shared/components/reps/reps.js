@@ -2540,6 +2540,7 @@ module.exports = {
   getChildrenWithEvaluations,
   getClosestGripNode,
   getClosestNonBucketNode,
+  getEvaluatedItem,
   getFront,
   getPathExpression,
   getParent,
@@ -7660,6 +7661,7 @@ const {
 const {
   getChildrenWithEvaluations,
   getActor,
+  getEvaluatedItem,
   getParent,
   getValue,
   nodeIsPrimitive,
@@ -7792,7 +7794,21 @@ class ObjectInspector extends Component {
   }
 
   getRoots() {
-    return this.props.roots;
+    const {
+      evaluations,
+      roots
+    } = this.props;
+    const length = roots.length;
+
+    for (let i = 0; i < length; i++) {
+      let rootItem = roots[i];
+
+      if (evaluations.has(rootItem.path)) {
+        roots[i] = getEvaluatedItem(rootItem, evaluations);
+      }
+    }
+
+    return roots;
   }
 
   getNodeKey(item) {
