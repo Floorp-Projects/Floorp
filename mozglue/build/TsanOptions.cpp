@@ -178,6 +178,7 @@ extern "C" const char* __tsan_default_suppressions() {
          "race:inlinedMarkAtomInternal\n"
          "race:XDRInnerObject<js::XDR_DECODE>\n"
          "race:ScriptStencil::finishGCThings\n"
+         "race:XDRScriptGCThing<js::XDR_DECODE>\n"
 
          // Bug 1601600
          "race:SkARGB32_Blitter\n"
