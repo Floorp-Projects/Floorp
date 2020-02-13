@@ -65,14 +65,14 @@ pub enum HFrame {
 impl HFrame {
     fn get_type(&self) -> HFrameType {
         match self {
-            HFrame::Data { .. } => H3_FRAME_TYPE_DATA,
-            HFrame::Headers { .. } => H3_FRAME_TYPE_HEADERS,
-            HFrame::CancelPush { .. } => H3_FRAME_TYPE_CANCEL_PUSH,
-            HFrame::Settings { .. } => H3_FRAME_TYPE_SETTINGS,
-            HFrame::PushPromise { .. } => H3_FRAME_TYPE_PUSH_PROMISE,
-            HFrame::Goaway { .. } => H3_FRAME_TYPE_GOAWAY,
-            HFrame::MaxPushId { .. } => H3_FRAME_TYPE_MAX_PUSH_ID,
-            HFrame::DuplicatePush { .. } => H3_FRAME_TYPE_DUPLICATE_PUSH,
+            Self::Data { .. } => H3_FRAME_TYPE_DATA,
+            Self::Headers { .. } => H3_FRAME_TYPE_HEADERS,
+            Self::CancelPush { .. } => H3_FRAME_TYPE_CANCEL_PUSH,
+            Self::Settings { .. } => H3_FRAME_TYPE_SETTINGS,
+            Self::PushPromise { .. } => H3_FRAME_TYPE_PUSH_PROMISE,
+            Self::Goaway { .. } => H3_FRAME_TYPE_GOAWAY,
+            Self::MaxPushId { .. } => H3_FRAME_TYPE_MAX_PUSH_ID,
+            Self::DuplicatePush { .. } => H3_FRAME_TYPE_DUPLICATE_PUSH,
         }
     }
 
@@ -80,19 +80,19 @@ impl HFrame {
         enc.encode_varint(self.get_type());
 
         match self {
-            HFrame::Data { len } | HFrame::Headers { len } => {
+            Self::Data { len } | Self::Headers { len } => {
                 // DATA and HEADERS frames only encode the length here.
                 enc.encode_varint(*len);
             }
-            HFrame::CancelPush { push_id } => {
+            Self::CancelPush { push_id } => {
                 enc.encode_vvec_with(|enc_inner| {
                     enc_inner.encode_varint(*push_id);
                 });
             }
-            HFrame::Settings { settings } => {
+            Self::Settings { settings } => {
                 settings.encode_frame_contents(enc);
             }
-            HFrame::PushPromise {
+            Self::PushPromise {
                 push_id,
                 header_block,
             } => {
@@ -100,17 +100,17 @@ impl HFrame {
                 enc.encode_varint(*push_id);
                 enc.encode(header_block);
             }
-            HFrame::Goaway { stream_id } => {
+            Self::Goaway { stream_id } => {
                 enc.encode_vvec_with(|enc_inner| {
                     enc_inner.encode_varint(*stream_id);
                 });
             }
-            HFrame::MaxPushId { push_id } => {
+            Self::MaxPushId { push_id } => {
                 enc.encode_vvec_with(|enc_inner| {
                     enc_inner.encode_varint(*push_id);
                 });
             }
-            HFrame::DuplicatePush { push_id } => {
+            Self::DuplicatePush { push_id } => {
                 enc.encode_vvec_with(|enc_inner| {
                     enc_inner.encode_varint(*push_id);
                 });
@@ -120,14 +120,14 @@ impl HFrame {
 
     pub fn is_allowed(&self, s: HStreamType) -> bool {
         match self {
-            HFrame::Data { .. } => !(s == HStreamType::Control),
-            HFrame::Headers { .. } => !(s == HStreamType::Control),
-            HFrame::CancelPush { .. } => (s == HStreamType::Control),
-            HFrame::Settings { .. } => (s == HStreamType::Control),
-            HFrame::PushPromise { .. } => (s == HStreamType::Request),
-            HFrame::Goaway { .. } => (s == HStreamType::Control),
-            HFrame::MaxPushId { .. } => (s == HStreamType::Control),
-            HFrame::DuplicatePush { .. } => (s == HStreamType::Request),
+            Self::Data { .. } => !(s == HStreamType::Control),
+            Self::Headers { .. } => !(s == HStreamType::Control),
+            Self::CancelPush { .. } => (s == HStreamType::Control),
+            Self::Settings { .. } => (s == HStreamType::Control),
+            Self::PushPromise { .. } => (s == HStreamType::Request),
+            Self::Goaway { .. } => (s == HStreamType::Control),
+            Self::MaxPushId { .. } => (s == HStreamType::Control),
+            Self::DuplicatePush { .. } => (s == HStreamType::Request),
         }
     }
 }
@@ -158,8 +158,8 @@ impl Default for HFrameReader {
 }
 
 impl HFrameReader {
-    pub fn new() -> HFrameReader {
-        HFrameReader {
+    pub fn new() -> Self {
+        Self {
             state: HFrameReaderState::BeforeFrame,
             hframe_type: 0,
             hframe_len: 0,

@@ -27,9 +27,10 @@ impl SelfEncrypt {
     const VERSION: u8 = 1;
     const SALT_LENGTH: usize = 16;
 
+    /// # Errors
+    /// Failure to generate a new HKDF key using NSS results in an error.
     pub fn new(version: Version, cipher: Cipher) -> Res<Self> {
-        let sz = hkdf::key_size(version, cipher)?;
-        let key = hkdf::generate_key(version, cipher, sz)?;
+        let key = hkdf::generate_key(version, cipher)?;
         Ok(Self {
             version,
             cipher,
@@ -47,9 +48,11 @@ impl SelfEncrypt {
     }
 
     /// Rotate keys.  This causes any previous key that is being held to be replaced by the current key.
+    ///
+    /// # Errors
+    /// Failure to generate a new HKDF key using NSS results in an error.
     pub fn rotate(&mut self) -> Res<()> {
-        let sz = hkdf::key_size(self.version, self.cipher)?;
-        let new_key = hkdf::generate_key(self.version, self.cipher, sz)?;
+        let new_key = hkdf::generate_key(self.version, self.cipher)?;
         self.old_key = Some(mem::replace(&mut self.key, new_key));
         let (kid, _) = self.key_id.overflowing_add(1);
         self.key_id = kid;
@@ -61,6 +64,9 @@ impl SelfEncrypt {
     /// the encrypted `plaintext`, plus a version number and salt.
     /// `aad` is only used as input to the AEAD, it is not included in the output; the
     /// caller is responsible for carrying the AAD as appropriate.
+    ///
+    /// # Errors
+    /// Failure to protect using NSS AEAD APIs produces an error.
     #[allow(clippy::similar_names)] // aad is similar to aead
     pub fn seal(&self, aad: &[u8], plaintext: &[u8]) -> Res<Vec<u8>> {
         // Format is:
@@ -71,7 +77,7 @@ impl SelfEncrypt {
         //   opaque aead_encrypted(plaintext)[length as expanded];
         // };
         // AAD covers the entire header, plus the value of the AAD parameter that is provided.
-        let salt = random(Self::SALT_LENGTH)?;
+        let salt = random(Self::SALT_LENGTH);
         let aead = self.make_aead(&self.key, &salt)?;
         let encoded_len = 2 + salt.len() + plaintext.len() + aead.expansion();
 
@@ -111,6 +117,10 @@ impl SelfEncrypt {
     }
 
     /// Open the protected `ciphertext`.
+    ///
+    /// # Errors
+    /// Returns an error when the self-encrypted object is invalid;
+    /// when the keys have been rotated; or when NSS fails.
     #[allow(clippy::similar_names)] // aad is similar to aead
     pub fn open(&self, aad: &[u8], ciphertext: &[u8]) -> Res<Vec<u8>> {
         if ciphertext[0] != Self::VERSION {

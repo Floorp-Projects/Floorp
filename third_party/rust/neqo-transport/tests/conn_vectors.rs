@@ -6,11 +6,13 @@
 
 // Tests with the test vectors from the spec.
 #![cfg_attr(feature = "deny-warnings", deny(warnings))]
+#![warn(clippy::pedantic)]
+
 use neqo_common::{Datagram, Encoder};
 use neqo_transport::State;
 use test_fixture::*;
 
-const INITIAL_PACKET: &str = "c0ff000018088394c8f03e5157080000\
+const INITIAL_PACKET: &str = "c0ff000019088394c8f03e5157080000\
                               449e3b343aa8535064a4268a0d9d7b1c\
                               9d250ae355162276e9b1e3011ef6bbc0\
                               ab48ad5bcc2681e953857ca62becd752\
@@ -84,7 +86,7 @@ const INITIAL_PACKET: &str = "c0ff000018088394c8f03e5157080000\
                               d2bee680d8f41a597c262648bb18bcfc\
                               13c8b3d97b1a77b2ac3af745d61a34cc\
                               4709865bac824a94bb19058015e4e42d\
-                              0488c1b9a230f7c894193cbb54ae795e";
+                              aebe13f98ec51170a4aad0a8324bb768";
 
 #[test]
 fn process_client_initial() {
