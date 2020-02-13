@@ -17,6 +17,7 @@ if CONFIG['ENABLE_TESTS']:
 
 EXPORTS += [
     'nsFilterInstance.h',
+    'nsSVGDisplayableFrame.h',
     'nsSVGFilterInstance.h',
     'nsSVGForeignObjectFrame.h',
     'nsSVGImageFrame.h',
@@ -29,6 +30,10 @@ EXPORTS += [
 
 EXPORTS.mozilla += [
     'SVGContextPaint.h',
+]
+
+EXPORTS.mozilla.layout += [
+    'SVGGeometryFrame.h',
 ]
 
 UNIFIED_SOURCES += [
