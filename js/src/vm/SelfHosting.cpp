@@ -2621,7 +2621,6 @@ GlobalObject* JSRuntime::createSelfHostingGlobal(JSContext* cx) {
   }
 
   cx->runtime()->selfHostingGlobal_ = shg;
-  realm->zone()->setIsSelfHostingZone();
   realm->setIsSelfHostingRealm();
 
   if (!GlobalObject::initSelfHostingBuiltins(cx, shg, intrinsic_functions)) {
@@ -2784,6 +2783,10 @@ void JSRuntime::traceSelfHostingGlobal(JSTracer* trc) {
     TraceRoot(trc, const_cast<NativeObject**>(&selfHostingGlobal_.ref()),
               "self-hosting global");
   }
+}
+
+bool JSRuntime::isSelfHostingZone(const JS::Zone* zone) const {
+  return selfHostingGlobal_ && selfHostingGlobal_->zoneFromAnyThread() == zone;
 }
 
 static bool CloneValue(JSContext* cx, HandleValue selfHostedValue,

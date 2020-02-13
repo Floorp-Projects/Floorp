@@ -17,7 +17,6 @@
 #include "gc/GCRuntime.h"
 #include "gc/Zone.h"
 #include "vm/Compartment.h"
-#include "vm/Runtime.h"
 
 struct JSRuntime;
 
