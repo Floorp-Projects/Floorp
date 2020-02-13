@@ -403,15 +403,14 @@ nsresult HTMLEditor::DoInsertHTMLWithContext(
   HTMLEditor::CollectListAndTableRelatedElementsAt(
       nodeList[0], arrayOfListAndTableRelatedElementsAtStart);
   if (!arrayOfListAndTableRelatedElementsAtStart.IsEmpty()) {
-    int32_t highWaterMark = DiscoverPartialListsAndTables(
+    Element* listOrTableElement = HTMLEditor::DiscoverPartialListsAndTables(
         nodeList, arrayOfListAndTableRelatedElementsAtStart);
     // if we have pieces of tables or lists to be inserted, let's force the
     // paste to deal with table elements right away, so that it doesn't orphan
     // some table or list contents outside the table or list.
-    if (highWaterMark >= 0) {
+    if (listOrTableElement) {
       ReplaceOrphanedStructure(StartOrEnd::start, nodeList,
-                               arrayOfListAndTableRelatedElementsAtStart,
-                               highWaterMark);
+                               *listOrTableElement);
     }
   }
 
@@ -420,13 +419,11 @@ nsresult HTMLEditor::DoInsertHTMLWithContext(
   HTMLEditor::CollectListAndTableRelatedElementsAt(
       nodeList.LastElement(), arrayOfListAndTableRelatedElementsAtEnd);
   if (!arrayOfListAndTableRelatedElementsAtEnd.IsEmpty()) {
-    int32_t highWaterMark = DiscoverPartialListsAndTables(
+    Element* listOrTableElement = HTMLEditor::DiscoverPartialListsAndTables(
         nodeList, arrayOfListAndTableRelatedElementsAtEnd);
     // don't orphan partial list or table structure
-    if (highWaterMark >= 0) {
-      ReplaceOrphanedStructure(StartOrEnd::end, nodeList,
-                               arrayOfListAndTableRelatedElementsAtEnd,
-                               highWaterMark);
+    if (listOrTableElement) {
+      ReplaceOrphanedStructure(StartOrEnd::end, nodeList, *listOrTableElement);
     }
   }
 
@@ -2754,49 +2751,83 @@ void HTMLEditor::CollectListAndTableRelatedElementsAt(
   }
 }
 
-int32_t HTMLEditor::DiscoverPartialListsAndTables(
-    nsTArray<OwningNonNull<nsINode>>& aPasteNodes,
-    nsTArray<OwningNonNull<Element>>& aListsAndTables) {
-  int32_t ret = -1;
-  int32_t listAndTableParents = aListsAndTables.Length();
+// static
+Element* HTMLEditor::DiscoverPartialListsAndTables(
+    const nsTArray<OwningNonNull<nsINode>>& aArrayOfNodes,
+    const nsTArray<OwningNonNull<Element>>&
+        aArrayOfListAndTableRelatedElements) {
+  Element* lastFoundAncestorListOrTableElement = nullptr;
+  for (auto& node : aArrayOfNodes) {
+    if (HTMLEditUtils::IsTableElement(node) &&
+        !node->IsHTMLElement(nsGkAtoms::table)) {
+      Element* tableElement = nullptr;
+      for (Element* maybeTableElement = node->GetParentElement();
+           maybeTableElement;
+           maybeTableElement = maybeTableElement->GetParentElement()) {
+        if (maybeTableElement->IsHTMLElement(nsGkAtoms::table)) {
+          tableElement = maybeTableElement;
+          break;
+        }
+      }
+      if (!tableElement) {
+        continue;
+      }
+      // If we find a `<table>` element which is an ancestor of a table
+      // related element and is not an acestor of first nor last of
+      // aArrayOfNodes, return the last found list or `<table>` element.
+      // XXX Is that really expected that this returns a list element in this
+      //     case?
+      if (!aArrayOfListAndTableRelatedElements.Contains(tableElement)) {
+        return lastFoundAncestorListOrTableElement;
+      }
+      // If we find a `<table>` element which is topmost list or `<table>`
+      // element at first or last of aArrayOfNodes, return it.
+      if (aArrayOfListAndTableRelatedElements.LastElement().get() ==
+          tableElement) {
+        return tableElement;
+      }
+      // Otherwise, store the `<table>` element which is an ancestor but
+      // not topmost ancestor of first or last of aArrayOfNodes.
+      lastFoundAncestorListOrTableElement = tableElement;
+      continue;
+    }
 
-  // Scan insertion list for table elements (other than table).
-  for (auto& curNode : aPasteNodes) {
-    if (HTMLEditUtils::IsTableElement(curNode) &&
-        !curNode->IsHTMLElement(nsGkAtoms::table)) {
-      nsCOMPtr<Element> table = curNode->GetParentElement();
-      while (table && !table->IsHTMLElement(nsGkAtoms::table)) {
-        table = table->GetParentElement();
-      }
-      if (table) {
-        int32_t idx = aListsAndTables.IndexOf(table);
-        if (idx == -1) {
-          return ret;
-        }
-        ret = idx;
-        if (ret == listAndTableParents - 1) {
-          return ret;
-        }
+    if (!HTMLEditUtils::IsListItem(node)) {
+      continue;
+    }
+    Element* listElement = nullptr;
+    for (Element* maybeListElement = node->GetParentElement(); maybeListElement;
+         maybeListElement = maybeListElement->GetParentElement()) {
+      if (HTMLEditUtils::IsList(maybeListElement)) {
+        listElement = maybeListElement;
+        break;
       }
     }
-    if (HTMLEditUtils::IsListItem(curNode)) {
-      nsCOMPtr<Element> list = curNode->GetParentElement();
-      while (list && !HTMLEditUtils::IsList(list)) {
-        list = list->GetParentElement();
-      }
-      if (list) {
-        int32_t idx = aListsAndTables.IndexOf(list);
-        if (idx == -1) {
-          return ret;
-        }
-        ret = idx;
-        if (ret == listAndTableParents - 1) {
-          return ret;
-        }
-      }
+    if (!listElement) {
+      continue;
     }
+    // If we find a list element which is ancestor of a list item element and
+    // is not an acestor of first nor last of aArrayOfNodes, return the last
+    // found list or `<table>` element.
+    // XXX Is that really expected that this returns a `<table>` element in
+    //     this case?
+    if (!aArrayOfListAndTableRelatedElements.Contains(listElement)) {
+      return lastFoundAncestorListOrTableElement;
+    }
+    // If we find a list element which is topmost list or `<table>` element at
+    // first or last of aArrayOfNodes, return it.
+    if (aArrayOfListAndTableRelatedElements.LastElement().get() ==
+        listElement) {
+      return listElement;
+    }
+    // Otherwise, store the list element which is an ancestor but not topmost
+    // ancestor of first or last of aArrayOfNodes.
+    lastFoundAncestorListOrTableElement = listElement;
   }
-  return ret;
+
+  // If we find only non-topmost list or `<table>` element, returns the last
+  // found one (meaning bottommost one).  Otherwise, nullptr.
+  return lastFoundAncestorListOrTableElement;
 }
 
 // static
@@ -2883,28 +2914,26 @@ bool HTMLEditor::IsReplaceableListElement(Element& aListElement,
 
 void HTMLEditor::ReplaceOrphanedStructure(
     StartOrEnd aStartOrEnd, nsTArray<OwningNonNull<nsINode>>& aNodeArray,
-    nsTArray<OwningNonNull<Element>>& aListAndTableArray,
-    int32_t aHighWaterMark) {
+    Element& aListOrTableElement) {
   MOZ_ASSERT(!aNodeArray.IsEmpty());
 
   OwningNonNull<nsINode>& edgeNode =
       aStartOrEnd == StartOrEnd::end ? aNodeArray.LastElement() : aNodeArray[0];
-  OwningNonNull<Element> curNode = aListAndTableArray[aHighWaterMark];
 
   // Find substructure of list or table that must be included in paste.
   Element* replaceElement;
-  if (HTMLEditUtils::IsList(curNode)) {
-    if (!HTMLEditor::IsReplaceableListElement(curNode, edgeNode)) {
+  if (HTMLEditUtils::IsList(&aListOrTableElement)) {
+    if (!HTMLEditor::IsReplaceableListElement(aListOrTableElement, edgeNode)) {
       return;
     }
-    replaceElement = curNode;
-  } else if (curNode->IsHTMLElement(nsGkAtoms::table)) {
-    replaceElement = HTMLEditor::FindReplaceableTableElement(curNode, edgeNode);
+    replaceElement = &aListOrTableElement;
+  } else {
+    MOZ_ASSERT(aListOrTableElement.IsHTMLElement(nsGkAtoms::table));
+    replaceElement =
+        HTMLEditor::FindReplaceableTableElement(aListOrTableElement, edgeNode);
     if (!replaceElement) {
       return;
     }
-  } else {
-    return;
   }
 
   // If we found substructure, paste it instead of its descendants.
