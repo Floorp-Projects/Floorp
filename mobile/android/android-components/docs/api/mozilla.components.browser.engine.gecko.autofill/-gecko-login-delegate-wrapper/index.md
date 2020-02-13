@@ -2,7 +2,7 @@
 
 # GeckoLoginDelegateWrapper
 
-`class GeckoLoginDelegateWrapper : `[`Delegate`](https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/LoginStorage/Delegate.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-gecko-nightly/src/main/java/mozilla/components/browser/engine/gecko/autofill/GeckoLoginDelegateWrapper.kt#L17)
+`class GeckoLoginDelegateWrapper : `[`Delegate`](https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/LoginStorage/Delegate.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-gecko-beta/src/main/java/mozilla/components/browser/engine/gecko/autofill/GeckoLoginDelegateWrapper.kt#L17)
 
 This class exists only to convert incoming [LoginEntry](#) arguments into [Login](../../mozilla.components.concept.storage/-login/index.md)s, then forward
 them to [storageDelegate](#). This allows us to avoid duplicating [LoginStorageDelegate](../../mozilla.components.concept.storage/-login-storage-delegate/index.md) code
