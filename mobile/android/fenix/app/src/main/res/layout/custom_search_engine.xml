@@ -13,6 +13,7 @@
     android:paddingEnd="16dp"
     android:paddingTop="8dp"
     android:paddingBottom="16dp"
+    android:contentDescription="@string/search_add_custom_engine_form_description"
     android:importantForAutofill="noExcludeDescendants">
 
     <com.google.android.material.textfield.TextInputLayout
@@ -54,6 +55,7 @@
         android:layout_height="wrap_content"
         android:text="@string/search_add_custom_engine_search_string_example"
         android:lineHeight="18sp"
+        android:labelFor="@+id/edit_search_string"
         android:textColor="@android:color/tertiary_text_dark" />
 
     <TextView
@@ -63,6 +65,7 @@
         android:text="@string/exceptions_empty_message_learn_more_link"
         android:textColor="?accent"
         android:visibility="visible"
+        android:contentDescription="@string/search_add_custom_engine_learn_more_description"
         app:layout_constraintTop_toBottomOf="@id/exceptions_empty_message" />
 
     <ProgressBar
