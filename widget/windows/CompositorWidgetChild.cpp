@@ -10,6 +10,7 @@
 #include "nsBaseWidget.h"
 #include "VsyncDispatcher.h"
 #include "gfxPlatform.h"
+#include "RemoteBackbuffer.h"
 
 namespace mozilla {
 namespace widget {
@@ -24,7 +25,8 @@ CompositorWidgetChild::CompositorWidgetChild(
       mWnd(reinterpret_cast<HWND>(
           aInitData.get_WinCompositorWidgetInitData().hWnd())),
       mTransparencyMode(
-          aInitData.get_WinCompositorWidgetInitData().transparencyMode()) {
+          aInitData.get_WinCompositorWidgetInitData().transparencyMode()),
+      mRemoteBackbufferProvider() {
   MOZ_ASSERT(XRE_IsParentProcess());
   MOZ_ASSERT(!gfxPlatform::IsHeadless());
   MOZ_ASSERT(mWnd && ::IsWindow(mWnd));
@@ -32,7 +34,21 @@ CompositorWidgetChild::CompositorWidgetChild(
 
 CompositorWidgetChild::~CompositorWidgetChild() {}
 
-bool CompositorWidgetChild::Initialize() { return true; }
+bool CompositorWidgetChild::Initialize() {
+  mRemoteBackbufferProvider = std::make_unique<remote_backbuffer::Provider>();
+  if (!mRemoteBackbufferProvider->Initialize(mWnd, OtherPid())) {
+    return false;
+  }
+
+  auto maybeRemoteHandles = mRemoteBackbufferProvider->CreateRemoteHandles();
+  if (!maybeRemoteHandles) {
+    return false;
+  }
+
+  Unused << SendInitialize(*maybeRemoteHandles);
+
+  return true;
+}
 
 void CompositorWidgetChild::EnterPresentLock() {
   Unused << SendEnterPresentLock();
