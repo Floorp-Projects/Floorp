@@ -743,7 +743,7 @@ struct ImplicitEdgeHolderType {
   typedef HasNoImplicitEdgesType Type;
 };
 
-// For now, we only handle JSObject* and JSScript* keys, but the linear time
+// For now, we only handle JSObject* and BaseScript* keys, but the linear time
 // algorithm can be easily extended by adding in more types here, then making
 // GCMarker::traverse<T> call markImplicitEdges.
 template <>

@@ -1437,7 +1437,7 @@ inline AutoSweepObjectGroup::~AutoSweepObjectGroup() {
 }
 #endif
 
-inline AutoSweepJitScript::AutoSweepJitScript(JSScript* script)
+inline AutoSweepJitScript::AutoSweepJitScript(BaseScript* script)
 #ifdef DEBUG
     : zone_(script->zone()),
       jitScript_(script->maybeJitScript())

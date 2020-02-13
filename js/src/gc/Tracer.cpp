@@ -312,7 +312,7 @@ JS_PUBLIC_API void JS_GetTraceThingInfo(char* buf, size_t bufsize,
       }
 
       case JS::TraceKind::Script: {
-        JSScript* script = static_cast<JSScript*>(thing);
+        js::BaseScript* script = static_cast<js::BaseScript*>(thing);
         snprintf(buf, bufsize, " %s:%u", script->filename(), script->lineno());
         break;
       }

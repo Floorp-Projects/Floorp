@@ -23,6 +23,7 @@ class JSTracer;
 
 namespace js {
 
+class LazyScript;
 class AccessorShape;
 class FatInlineAtom;
 class NormalAtom;

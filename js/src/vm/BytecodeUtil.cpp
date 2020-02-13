@@ -184,7 +184,7 @@ static MOZ_MUST_USE bool DumpPCCounts(JSContext* cx, HandleScript script,
 
 bool js::DumpRealmPCCounts(JSContext* cx) {
   Rooted<GCVector<JSScript*>> scripts(cx, GCVector<JSScript*>(cx));
-  for (auto base = cx->zone()->cellIter<JSScript>(); !base.done();
+  for (auto base = cx->zone()->cellIter<BaseScript>(); !base.done();
        base.next()) {
     if (base->isLazyScript()) {
       continue;
@@ -2590,7 +2590,7 @@ JS_FRIEND_API void js::StopPCCountProfiling(JSContext* cx) {
   }
 
   for (ZonesIter zone(rt, SkipAtoms); !zone.done(); zone.next()) {
-    for (auto base = zone->cellIter<JSScript>(); !base.done(); base.next()) {
+    for (auto base = zone->cellIter<BaseScript>(); !base.done(); base.next()) {
       if (base->isLazyScript()) {
         continue;
       }

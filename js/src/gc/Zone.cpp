@@ -393,7 +393,7 @@ void Zone::discardJitCode(JSFreeOp* fop,
   if (discardBaselineCode || discardJitScripts) {
 #ifdef DEBUG
     // Assert no JitScripts are marked as active.
-    for (auto iter = cellIter<JSScript>(); !iter.done(); iter.next()) {
+    for (auto iter = cellIter<BaseScript>(); !iter.done(); iter.next()) {
       BaseScript* base = iter.unbarrieredGet();
       if (base->isLazyScript()) {
         continue;
@@ -412,7 +412,7 @@ void Zone::discardJitCode(JSFreeOp* fop,
   // Invalidate all Ion code in this zone.
   jit::InvalidateAll(fop, this);
 
-  for (auto base = cellIterUnsafe<JSScript>(); !base.done(); base.next()) {
+  for (auto base = cellIterUnsafe<BaseScript>(); !base.done(); base.next()) {
     if (base->isLazyScript()) {
       continue;
     }
