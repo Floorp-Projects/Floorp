@@ -268,7 +268,7 @@ l10n-conflicts:
 rustfmt:
     description: rustfmt on the Rust code
     treeherder:
-        symbol: misc(rustfmt)
+        symbol: rust(rustfmt)
     run:
         mach: lint -v -l rustfmt -f treeherder -f json:/builds/worker/mozlint.json *
     when:
@@ -279,7 +279,7 @@ rustfmt:
 clippy:
     description: clippy on the Rust code
     treeherder:
-        symbol: misc(clippy)
+        symbol: rust(clippy)
     run:
         mach: lint -v -l clippy -f treeherder -f json:/builds/worker/mozlint.json
     when:
