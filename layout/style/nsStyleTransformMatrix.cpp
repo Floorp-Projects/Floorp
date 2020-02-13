@@ -501,8 +501,7 @@ static void ProcessTranslate(Matrix4x4& aMatrix,
   }
 }
 
-static void ProcessRotate(Matrix4x4& aMatrix, const StyleRotate& aRotate,
-                          TransformReferenceBox& aRefBox) {
+static void ProcessRotate(Matrix4x4& aMatrix, const StyleRotate& aRotate) {
   switch (aRotate.tag) {
     case StyleRotate::Tag::None:
       return;
@@ -518,8 +517,7 @@ static void ProcessRotate(Matrix4x4& aMatrix, const StyleRotate& aRotate,
   }
 }
 
-static void ProcessScale(Matrix4x4& aMatrix, const StyleScale& aScale,
-                         TransformReferenceBox& aRefBox) {
+static void ProcessScale(Matrix4x4& aMatrix, const StyleScale& aScale) {
   switch (aScale.tag) {
     case StyleScale::Tag::None:
       return;
@@ -540,8 +538,8 @@ Matrix4x4 ReadTransforms(const StyleTranslate& aTranslate,
   Matrix4x4 result;
 
   ProcessTranslate(result, aTranslate, aRefBox);
-  ProcessRotate(result, aRotate, aRefBox);
-  ProcessScale(result, aScale, aRefBox);
+  ProcessRotate(result, aRotate);
+  ProcessScale(result, aScale);
 
   if (aMotion.isSome()) {
     // Create the equivalent translate and rotate function, according to the
