@@ -116,10 +116,13 @@ async function test_save_change(testData) {
         "#form-basic-username": username,
         "#form-basic-password": password,
       });
+
+      let formSubmittedPromise = listenForTestNotification("FormSubmit");
       await SpecialPowers.spawn(browser, [], async function() {
         let doc = this.content.document;
         doc.getElementById("form-basic").submit();
       });
+      await formSubmittedPromise;
 
       // Simulate the action on the notification to request the login to be
       // saved, and wait for the data to be updated or saved based on the type

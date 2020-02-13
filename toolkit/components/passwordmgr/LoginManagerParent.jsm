@@ -774,7 +774,10 @@ class LoginManagerParent extends JSWindowActorParent {
       triggeredByFillingGenerated = false,
     }
   ) {
-    log("_onPasswordEditedOrGenerated");
+    log(
+      "_onPasswordEditedOrGenerated, triggeredByFillingGenerated:",
+      triggeredByFillingGenerated
+    );
 
     // If password storage is disabled, bail out.
     if (!LoginHelper.storageEnabled) {
@@ -860,7 +863,8 @@ class LoginManagerParent extends JSWindowActorParent {
     // only used in the generated pw case where we auto-save
     let formLoginWithoutUsername;
 
-    if (generatedPW) {
+    if (triggeredByFillingGenerated && generatedPW) {
+      log("Got cached generatedPW");
       formLoginWithoutUsername = new LoginInfo(
         formOrigin,
         formActionOrigin,
