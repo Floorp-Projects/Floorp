@@ -70,7 +70,7 @@ nsresult CSSStyleRuleDeclaration::SetCSSDeclaration(
       mDecls->SetOwningRule(nullptr);
       RefPtr<DeclarationBlock> decls = aDecl;
       Servo_StyleRule_SetStyle(rule->Raw(), decls->Raw());
-      mDecls = decls.forget();
+      mDecls = std::move(decls);
       mDecls->SetOwningRule(rule);
     }
     sheet->RuleChanged(rule);

@@ -1562,7 +1562,7 @@ bool IPDLParamTraits<dom::BrowsingContext*>::Read(
     browsingContext.get()->Release();
   }
 
-  *aResult = browsingContext.forget();
+  *aResult = std::move(browsingContext);
   return true;
 }
 

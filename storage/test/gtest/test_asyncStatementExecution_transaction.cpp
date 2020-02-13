@@ -93,8 +93,8 @@ TEST(storage_asyncStatementExecution_transaction, MultipleAsyncReadStatements)
                            getter_AddRefs(stmt2));
 
   nsTArray<RefPtr<mozIStorageBaseStatement>> stmts = {
-      stmt1.forget(),
-      stmt2.forget(),
+      ToRefPtr(std::move(stmt1)),
+      ToRefPtr(std::move(stmt2)),
   };
 
   check_transaction(db, nsTArray<RefPtr<mozIStorageBaseStatement>>(stmts),
@@ -119,8 +119,8 @@ TEST(storage_asyncStatementExecution_transaction, MultipleReadStatements)
                       getter_AddRefs(stmt2));
 
   nsTArray<RefPtr<mozIStorageBaseStatement>> stmts = {
-      stmt1.forget(),
-      stmt2.forget(),
+      ToRefPtr(std::move(stmt1)),
+      ToRefPtr(std::move(stmt2)),
   };
 
   check_transaction(db, stmts, false);
@@ -146,8 +146,8 @@ TEST(storage_asyncStatementExecution_transaction,
       getter_AddRefs(stmt2));
 
   nsTArray<RefPtr<mozIStorageBaseStatement>> stmts = {
-      stmt1.forget(),
-      stmt2.forget(),
+      ToRefPtr(std::move(stmt1)),
+      ToRefPtr(std::move(stmt2)),
   };
 
   check_transaction(db, stmts, true);
@@ -171,8 +171,8 @@ TEST(storage_asyncStatementExecution_transaction, MultipleReadWriteStatements)
       getter_AddRefs(stmt2));
 
   nsTArray<RefPtr<mozIStorageBaseStatement>> stmts = {
-      stmt1.forget(),
-      stmt2.forget(),
+      ToRefPtr(std::move(stmt1)),
+      ToRefPtr(std::move(stmt2)),
   };
 
   check_transaction(db, stmts, true);
@@ -198,8 +198,8 @@ TEST(storage_asyncStatementExecution_transaction, MultipleAsyncWriteStatements)
       getter_AddRefs(stmt2));
 
   nsTArray<RefPtr<mozIStorageBaseStatement>> stmts = {
-      stmt1.forget(),
-      stmt2.forget(),
+      ToRefPtr(std::move(stmt1)),
+      ToRefPtr(std::move(stmt2)),
   };
 
   check_transaction(db, stmts, true);
@@ -225,8 +225,8 @@ TEST(storage_asyncStatementExecution_transaction, MultipleWriteStatements)
       getter_AddRefs(stmt2));
 
   nsTArray<RefPtr<mozIStorageBaseStatement>> stmts = {
-      stmt1.forget(),
-      stmt2.forget(),
+      ToRefPtr(std::move(stmt1)),
+      ToRefPtr(std::move(stmt2)),
   };
 
   check_transaction(db, stmts, true);
@@ -246,7 +246,7 @@ TEST(storage_asyncStatementExecution_transaction, SingleAsyncReadStatement)
                            getter_AddRefs(stmt));
 
   nsTArray<RefPtr<mozIStorageBaseStatement>> stmts = {
-      stmt.forget(),
+      ToRefPtr(std::move(stmt)),
   };
 
   check_transaction(db, stmts, false);
@@ -266,7 +266,7 @@ TEST(storage_asyncStatementExecution_transaction, SingleReadStatement)
                       getter_AddRefs(stmt));
 
   nsTArray<RefPtr<mozIStorageBaseStatement>> stmts = {
-      stmt.forget(),
+      ToRefPtr(std::move(stmt)),
   };
 
   check_transaction(db, stmts, false);
@@ -287,7 +287,7 @@ TEST(storage_asyncStatementExecution_transaction, SingleAsyncWriteStatement)
       getter_AddRefs(stmt));
 
   nsTArray<RefPtr<mozIStorageBaseStatement>> stmts = {
-      stmt.forget(),
+      ToRefPtr(std::move(stmt)),
   };
 
   check_transaction(db, stmts, true);
@@ -307,7 +307,7 @@ TEST(storage_asyncStatementExecution_transaction, SingleWriteStatement)
       getter_AddRefs(stmt));
 
   nsTArray<RefPtr<mozIStorageBaseStatement>> stmts = {
-      stmt.forget(),
+      ToRefPtr(std::move(stmt)),
   };
 
   check_transaction(db, stmts, true);
@@ -341,7 +341,7 @@ TEST(storage_asyncStatementExecution_transaction,
   paramsArray = nullptr;
 
   nsTArray<RefPtr<mozIStorageBaseStatement>> stmts = {
-      stmt.forget(),
+      ToRefPtr(std::move(stmt)),
   };
 
   check_transaction(db, stmts, false);
@@ -373,7 +373,7 @@ TEST(storage_asyncStatementExecution_transaction, MultipleParamsReadStatement)
   paramsArray = nullptr;
 
   nsTArray<RefPtr<mozIStorageBaseStatement>> stmts = {
-      stmt.forget(),
+      ToRefPtr(std::move(stmt)),
   };
 
   check_transaction(db, stmts, false);
@@ -415,7 +415,7 @@ TEST(storage_asyncStatementExecution_transaction,
   paramsArray = nullptr;
 
   nsTArray<RefPtr<mozIStorageBaseStatement>> stmts = {
-      stmt.forget(),
+      ToRefPtr(std::move(stmt)),
   };
 
   check_transaction(db, stmts, true);
@@ -455,7 +455,7 @@ TEST(storage_asyncStatementExecution_transaction, MultipleParamsWriteStatement)
   paramsArray = nullptr;
 
   nsTArray<RefPtr<mozIStorageBaseStatement>> stmts = {
-      stmt.forget(),
+      ToRefPtr(std::move(stmt)),
   };
 
   check_transaction(db, stmts, true);

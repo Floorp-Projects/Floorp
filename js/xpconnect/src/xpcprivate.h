@@ -1241,7 +1241,7 @@ class XPCWrappedNativeProto final {
 
   // hide ctor
   XPCWrappedNativeProto(XPCWrappedNativeScope* Scope, nsIClassInfo* ClassInfo,
-                        already_AddRefed<XPCNativeSet>&& Set);
+                        RefPtr<XPCNativeSet>&& Set);
 
   bool Init(JSContext* cx, nsIXPCScriptable* scriptable);
 
@@ -1498,13 +1498,12 @@ class XPCWrappedNative final : public nsIXPConnectWrappedNative {
   XPCWrappedNative() = delete;
 
   // This ctor is used if this object will have a proto.
-  XPCWrappedNative(already_AddRefed<nsISupports>&& aIdentity,
+  XPCWrappedNative(nsCOMPtr<nsISupports>&& aIdentity,
                    XPCWrappedNativeProto* aProto);
 
   // This ctor is used if this object will NOT have a proto.
-  XPCWrappedNative(already_AddRefed<nsISupports>&& aIdentity,
-                   XPCWrappedNativeScope* aScope,
-                   already_AddRefed<XPCNativeSet>&& aSet);
+  XPCWrappedNative(nsCOMPtr<nsISupports>&& aIdentity,
+                   XPCWrappedNativeScope* aScope, RefPtr<XPCNativeSet>&& aSet);
 
   virtual ~XPCWrappedNative();
   void Destroy();

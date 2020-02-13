@@ -220,7 +220,7 @@ void HttpChannelChild::ReleaseMainThreadOnlyReferences() {
   arrayToRelease.AppendElement(mRedirectChannelChild.forget());
 
   // To solve multiple inheritence of nsISupports in InterceptStreamListener
-  nsCOMPtr<nsIStreamListener> listener = mInterceptListener.forget();
+  nsCOMPtr<nsIStreamListener> listener = std::move(mInterceptListener);
   arrayToRelease.AppendElement(listener.forget());
 
   arrayToRelease.AppendElement(mInterceptedRedirectListener.forget());
@@ -340,7 +340,7 @@ void HttpChannelChild::OnBackgroundChildDestroyed(
     }
 
     mBgChild = nullptr;
-    callback = mBgInitFailCallback.forget();
+    callback = std::move(mBgInitFailCallback);
   }
 
   if (callback) {
@@ -1332,7 +1332,7 @@ void HttpChannelChild::CleanupBackgroundChannel() {
     return;
   }
 
-  RefPtr<HttpBackgroundChannelChild> bgChild = mBgChild.forget();
+  RefPtr<HttpBackgroundChannelChild> bgChild = std::move(mBgChild);
 
   MOZ_RELEASE_ASSERT(gSocketTransportService);
   if (!OnSocketThread()) {
@@ -2048,7 +2048,7 @@ HttpChannelChild::ConnectParent(uint32_t registrarId) {
       return rv;
     }
 
-    mBgChild = bgChild.forget();
+    mBgChild = std::move(bgChild);
   }
 
   return NS_OK;
@@ -2162,7 +2162,7 @@ HttpChannelChild::OnRedirectVerifyCallback(nsresult aResult) {
     MOZ_ASSERT(neckoTarget);
 
     nsCOMPtr<nsIInterceptedBodyCallback> callback =
-        mSynthesizedCallback.forget();
+        std::move(mSynthesizedCallback);
 
     Unused << neckoTarget->Dispatch(
         new OverrideRunnable(this, redirectedChannel, streamListener,
@@ -2788,7 +2788,7 @@ nsresult HttpChannelChild::ContinueAsyncOpen() {
     // creating the new one, to prevent receiving further notification
     // from it.
     if (mBgChild) {
-      RefPtr<HttpBackgroundChannelChild> prevBgChild = mBgChild.forget();
+      RefPtr<HttpBackgroundChannelChild> prevBgChild = std::move(mBgChild);
       gSocketTransportService->Dispatch(
           NewRunnableMethod("HttpBackgroundChannelChild::OnChannelClosed",
                             prevBgChild,
@@ -2816,7 +2816,7 @@ nsresult HttpChannelChild::ContinueAsyncOpen() {
       return rv;
     }
 
-    mBgChild = bgChild.forget();
+    mBgChild = std::move(bgChild);
   }
 
   return NS_OK;

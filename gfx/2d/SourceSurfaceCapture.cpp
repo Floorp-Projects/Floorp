@@ -182,7 +182,7 @@ RefPtr<SourceSurface> SourceSurfaceCapture::ResolveImpl(
     surf->AddUserData(reinterpret_cast<UserDataKey*>(dt.get()), data, free);
   }
 
-  return surf.forget();
+  return surf;
 }
 
 already_AddRefed<DataSourceSurface> SourceSurfaceCapture::GetDataSurface() {

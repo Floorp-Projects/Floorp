@@ -281,7 +281,7 @@ TLSServerConnectionInfo::~TLSServerConnectionInfo() {
   RefPtr<nsITLSServerSecurityObserver> observer;
   {
     MutexAutoLock lock(mLock);
-    observer = mSecurityObserver.forget();
+    observer = ToRefPtr(std::move(mSecurityObserver));
   }
 
   if (observer) {
