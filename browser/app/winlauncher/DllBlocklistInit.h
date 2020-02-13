@@ -16,6 +16,9 @@ namespace mozilla {
 LauncherVoidResultWithLineInfo InitializeDllBlocklistOOP(
     const wchar_t* aFullImagePath, HANDLE aChildProcess);
 
+LauncherVoidResultWithLineInfo InitializeDllBlocklistOOPFromLauncher(
+    const wchar_t* aFullImagePath, HANDLE aChildProcess);
+
 }  // namespace mozilla
 
 #endif  // mozilla_DllBlocklistInit_h
