@@ -40,6 +40,7 @@ sealed class CustomViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val titleView: TextView,
         val summaryView: TextView,
         val ratingView: RatingBar,
+        val ratingAccessibleView: TextView,
         val userCountView: TextView,
         val addButton: ImageView
     ) : CustomViewHolder(view)

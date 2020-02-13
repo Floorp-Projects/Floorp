@@ -98,6 +98,7 @@ class AddonsManagerAdapter(
         val titleView = view.findViewById<TextView>(R.id.add_on_name)
         val summaryView = view.findViewById<TextView>(R.id.add_on_description)
         val ratingView = view.findViewById<RatingBar>(R.id.rating)
+        val ratingAccessibleView = view.findViewById<TextView>(R.id.rating_accessibility)
         val userCountView = view.findViewById<TextView>(R.id.users_count)
         val addButton = view.findViewById<ImageView>(R.id.add_button)
         return AddonViewHolder(
@@ -106,6 +107,7 @@ class AddonsManagerAdapter(
             titleView,
             summaryView,
             ratingView,
+            ratingAccessibleView,
             userCountView,
             addButton
         )
@@ -165,9 +167,14 @@ class AddonsManagerAdapter(
         addon.rating?.let {
             val userCount = context.getString(R.string.mozac_feature_addons_user_rating_count)
             val ratingContentDescription =
-                context.getString(R.string.mozac_feature_addons_rating_content_description)
-            holder.ratingView.contentDescription =
-                String.format(ratingContentDescription, it.average)
+                String.format(
+                    context.getString(R.string.mozac_feature_addons_rating_content_description),
+                    it.average
+                )
+            holder.ratingView.contentDescription = ratingContentDescription
+            // Android RatingBar is not very accessibility-friendly, we will use non visible TextView
+            // for contentDescription for the TalkBack feature
+            holder.ratingAccessibleView.text = ratingContentDescription
             holder.ratingView.rating = it.average
             holder.userCountView.text = String.format(userCount, getFormattedAmount(it.reviews))
         }

@@ -76,7 +76,13 @@
                     android:layout_width="wrap_content"
                     android:layout_height="20dp"
                     android:isIndicator="true"
+                    android:importantForAccessibility="no"
                     android:numStars="5" />
+
+            <TextView
+                android:id="@+id/rating_accessibility"
+                android:layout_width="0dp"
+                android:layout_height="0dp" />
 
             <TextView
                     android:id="@+id/users_count"
