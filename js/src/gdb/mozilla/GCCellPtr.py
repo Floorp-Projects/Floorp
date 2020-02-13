@@ -28,12 +28,11 @@ class GCCellPtrTypeCache(object):
         kind('Object',      'JSObject')
         kind('String',      'JSString')
         kind('Symbol',      'JS::Symbol')
-        kind('Script',      'JSScript')
+        kind('Script',      'js::BaseScript')
         kind('Shape',       'js::Shape')
         kind('ObjectGroup', 'js::ObjectGroup')
         kind('BaseShape',   'js::BaseShape')
         kind('JitCode',     'js::jit::JitCode')
-        kind('LazyScript',  'js::LazyScript')
         self.kind_to_type = kind_to_type
 
         self.Null = e['JS::TraceKind::Null']
