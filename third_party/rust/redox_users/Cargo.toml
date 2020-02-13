@@ -12,7 +12,7 @@
 
 [package]
 name = "redox_users"
-version = "0.3.1"
+version = "0.3.2"
 authors = ["Jose Narvaez <goyox86@gmail.com>", "Wesley Hershberger <mggmugginsmc@gmail.com>"]
 description = "A Rust library to access Redox users and groups functionality"
 documentation = "https://docs.rs/redox_users"
@@ -20,10 +20,7 @@ readme = "README.md"
 keywords = ["redox", "auth"]
 license = "MIT"
 repository = "https://gitlab.redox-os.org/redox-os/users"
-[dependencies.failure]
-version = "0.1.1"
-
-[dependencies.rand_os]
+[dependencies.getrandom]
 version = "0.1"
 
 [dependencies.redox_syscall]
