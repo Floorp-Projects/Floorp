@@ -381,7 +381,7 @@ static void StatsCellCallback(JSRuntime* rt, void* data, JS::GCCellPtr cellptr,
       RealmStats& realmStats = script->realm()->realmStats();
       realmStats.scriptsGCHeap += thingSize;
       realmStats.scriptsMallocHeapData +=
-          script->sizeOfData(rtStats->mallocSizeOf_);
+          script->sizeOfExcludingThis(rtStats->mallocSizeOf_);
       script->addSizeOfJitScript(rtStats->mallocSizeOf_, &realmStats.jitScripts,
                                  &realmStats.baselineStubsFallback);
       jit::AddSizeOfBaselineData(script, rtStats->mallocSizeOf_,

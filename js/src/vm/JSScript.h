@@ -3047,12 +3047,6 @@ class JSScript : public js::BaseScript {
     return js::BytecodeLocation(this, offsetToPC(offset));
   }
 
-  /*
-   * sizeOfData() is the size of the block allocated to hold all the data
-   * sections (which can be larger than the in-use size).
-   */
-  size_t sizeOfData(mozilla::MallocSizeOf mallocSizeOf) const;
-
   void addSizeOfJitScript(mozilla::MallocSizeOf mallocSizeOf,
                           size_t* sizeOfJitScript,
                           size_t* sizeOfBaselineFallbackStubs) const;
