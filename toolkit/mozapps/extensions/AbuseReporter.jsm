@@ -319,6 +319,8 @@ const AbuseReporter = {
         addon.sourceURI && truncateString(addon.sourceURI.spec),
       install_date: addon.installDate && addon.installDate.toISOString(),
       addon_install_source: normalizeValue(installInfo.source),
+      addon_install_source_url:
+        installInfo.sourceURL && truncateString(installInfo.sourceURL),
       addon_install_method: normalizeValue(installInfo.method),
     };
 
