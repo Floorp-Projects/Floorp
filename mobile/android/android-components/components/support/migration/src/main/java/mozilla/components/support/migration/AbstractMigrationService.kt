@@ -83,6 +83,8 @@ abstract class AbstractMigrationService : Service() {
     private fun shutdown() {
         store.dispatch(MigrationAction.Completed)
 
+        emitCompletedFact()
+
         stopForeground(true)
 
         showMigrationCompleteNotification()

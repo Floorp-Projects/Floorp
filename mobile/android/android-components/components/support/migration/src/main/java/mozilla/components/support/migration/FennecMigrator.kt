@@ -551,6 +551,8 @@ class FennecMigrator private constructor(
             store.dispatch(MigrationAction.Started).join()
         }
         ContextCompat.startForegroundService(context, Intent(context, service))
+
+        emitStartedFact()
     }
 
     private fun getMigrationsToRun(): List<VersionedMigration> {
