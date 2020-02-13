@@ -17,39 +17,35 @@
                                    featureStatus, driverComparator,         \
                                    driverVersion, ruleId, suggestedVersion) \
   sDriverInfo->AppendElement(GfxDriverInfo(                                 \
-      os, ScreenSizeStatus::All, BatteryStatus::All,                        \
-      (nsAString&)GfxDriverInfo::GetDesktopEnvironment(DesktopAll),         \
+      os, (nsAString&)GfxDriverInfo::GetDesktopEnvironment(DesktopAll),     \
       (nsAString&)GfxDriverInfo::GetWindowProtocol(WindowingAll), vendor,   \
       (nsAString&)GfxDriverInfo::GetDriverVendor(DriverVendorAll), devices, \
       feature, featureStatus, driverComparator, driverVersion, ruleId,      \
       suggestedVersion))
 
 #define APPEND_TO_DRIVER_BLOCKLIST_EXT(                                       \
-    os, screen, battery, desktopEnv, windowProtocol, vendor, driverVendor,    \
-    devices, feature, featureStatus, driverComparator, driverVersion, ruleId, \
-    suggestedVersion)                                                         \
-  sDriverInfo->AppendElement(GfxDriverInfo(                                   \
-      os, screen, battery, desktopEnv, windowProtocol, vendor, driverVendor,  \
-      devices, feature, featureStatus, driverComparator, driverVersion,       \
-      ruleId, suggestedVersion))
+    os, desktopEnv, windowProtocol, vendor, driverVendor, devices, feature,   \
+    featureStatus, driverComparator, driverVersion, ruleId, suggestedVersion) \
+  sDriverInfo->AppendElement(                                                 \
+      GfxDriverInfo(os, desktopEnv, windowProtocol, vendor, driverVendor,     \
+                    devices, feature, featureStatus, driverComparator,        \
+                    driverVersion, ruleId, suggestedVersion))
 
 #define APPEND_TO_DRIVER_BLOCKLIST2(os, vendor, devices, feature,           \
                                     featureStatus, driverComparator,        \
                                     driverVersion, ruleId)                  \
   sDriverInfo->AppendElement(GfxDriverInfo(                                 \
-      os, ScreenSizeStatus::All, BatteryStatus::All,                        \
-      (nsAString&)GfxDriverInfo::GetDesktopEnvironment(DesktopAll),         \
+      os, (nsAString&)GfxDriverInfo::GetDesktopEnvironment(DesktopAll),     \
       (nsAString&)GfxDriverInfo::GetWindowProtocol(WindowingAll), vendor,   \
       (nsAString&)GfxDriverInfo::GetDriverVendor(DriverVendorAll), devices, \
       feature, featureStatus, driverComparator, driverVersion, ruleId))
 
 #define APPEND_TO_DRIVER_BLOCKLIST2_EXT(                                      \
-    os, screen, battery, desktopEnv, windowProtocol, vendor, driverVendor,    \
-    devices, feature, featureStatus, driverComparator, driverVersion, ruleId) \
-  sDriverInfo->AppendElement(                                                 \
-      GfxDriverInfo(os, screen, battery, desktopEnv, windowProtocol, vendor,  \
-                    driverVendor, devices, feature, featureStatus,            \
-                    driverComparator, driverVersion, ruleId))
+    os, desktopEnv, windowProtocol, vendor, driverVendor, devices, feature,   \
+    featureStatus, driverComparator, driverVersion, ruleId)                   \
+  sDriverInfo->AppendElement(GfxDriverInfo(                                   \
+      os, desktopEnv, windowProtocol, vendor, driverVendor, devices, feature, \
+      featureStatus, driverComparator, driverVersion, ruleId))
 
 #define APPEND_TO_DRIVER_BLOCKLIST_RANGE(                                     \
     os, vendor, devices, feature, featureStatus, driverComparator,            \
@@ -59,8 +55,7 @@
                (driverComparator) == DRIVER_BETWEEN_INCLUSIVE ||              \
                (driverComparator) == DRIVER_BETWEEN_INCLUSIVE_START);         \
     GfxDriverInfo info(                                                       \
-        os, ScreenSizeStatus::All, BatteryStatus::All,                        \
-        (nsAString&)GfxDriverInfo::GetDesktopEnvironment(DesktopAll),         \
+        os, (nsAString&)GfxDriverInfo::GetDesktopEnvironment(DesktopAll),     \
         (nsAString&)GfxDriverInfo::GetWindowProtocol(WindowingAll), vendor,   \
         (nsAString&)GfxDriverInfo::GetDriverVendor(DriverVendorAll), devices, \
         feature, featureStatus, driverComparator, driverVersion, ruleId,      \
@@ -69,19 +64,19 @@
     sDriverInfo->AppendElement(info);                                         \
   } while (false)
 
-#define APPEND_TO_DRIVER_BLOCKLIST_RANGE_EXT(                                \
-    os, screen, battery, desktopEnv, windowProtocol, vendor, driverVendor,   \
-    devices, feature, featureStatus, driverComparator, driverVersion,        \
-    driverVersionMax, ruleId, suggestedVersion)                              \
-  do {                                                                       \
-    MOZ_ASSERT((driverComparator) == DRIVER_BETWEEN_EXCLUSIVE ||             \
-               (driverComparator) == DRIVER_BETWEEN_INCLUSIVE ||             \
-               (driverComparator) == DRIVER_BETWEEN_INCLUSIVE_START);        \
-    GfxDriverInfo info(os, desktopEnv, windowProtocol, vendor, driverVendor, \
-                       devices, feature, featureStatus, driverComparator,    \
-                       driverVersion, ruleId, suggestedVersion);             \
-    info.mDriverVersionMax = driverVersionMax;                               \
-    sDriverInfo->AppendElement(info);                                        \
+#define APPEND_TO_DRIVER_BLOCKLIST_RANGE_EXT(                                 \
+    os, desktopEnv, windowProtocol, vendor, driverVendor, devices, feature,   \
+    featureStatus, driverComparator, driverVersion, driverVersionMax, ruleId, \
+    suggestedVersion)                                                         \
+  do {                                                                        \
+    MOZ_ASSERT((driverComparator) == DRIVER_BETWEEN_EXCLUSIVE ||              \
+               (driverComparator) == DRIVER_BETWEEN_INCLUSIVE ||              \
+               (driverComparator) == DRIVER_BETWEEN_INCLUSIVE_START);         \
+    GfxDriverInfo info(os, desktopEnv, windowProtocol, vendor, driverVendor,  \
+                       devices, feature, featureStatus, driverComparator,     \
+                       driverVersion, ruleId, suggestedVersion);              \
+    info.mDriverVersionMax = driverVersionMax;                                \
+    sDriverInfo->AppendElement(info);                                         \
   } while (false)
 
 #define APPEND_TO_DRIVER_BLOCKLIST_RANGE_GPU2(                                \
@@ -92,8 +87,7 @@
                (driverComparator) == DRIVER_BETWEEN_INCLUSIVE ||              \
                (driverComparator) == DRIVER_BETWEEN_INCLUSIVE_START);         \
     GfxDriverInfo info(                                                       \
-        os, ScreenSizeStatus::All, BatteryStatus::All,                        \
-        (nsAString&)GfxDriverInfo::GetDesktopEnvironment(DesktopAll),         \
+        os, (nsAString&)GfxDriverInfo::GetDesktopEnvironment(DesktopAll),     \
         (nsAString&)GfxDriverInfo::GetWindowProtocol(WindowingAll), vendor,   \
         (nsAString&)GfxDriverInfo::GetDriverVendor(DriverVendorAll), devices, \
         feature, featureStatus, driverComparator, driverVersion, ruleId,      \
@@ -103,17 +97,16 @@
   } while (false)
 
 #define APPEND_TO_DRIVER_BLOCKLIST_RANGE_GPU2_EXT(                            \
-    os, screen, battery, desktopEnv, windowProtocol, vendor, driverVendor,    \
-    devices, feature, featureStatus, driverComparator, driverVersion,         \
-    driverVersionMax, ruleId, suggestedVersion)                               \
+    os, desktopEnv, windowProtocol, vendor, driverVendor, devices, feature,   \
+    featureStatus, driverComparator, driverVersion, driverVersionMax, ruleId, \
+    suggestedVersion)                                                         \
   do {                                                                        \
     MOZ_ASSERT((driverComparator) == DRIVER_BETWEEN_EXCLUSIVE ||              \
                (driverComparator) == DRIVER_BETWEEN_INCLUSIVE ||              \
                (driverComparator) == DRIVER_BETWEEN_INCLUSIVE_START);         \
-    GfxDriverInfo info(os, screen, battery, desktopEnv, windowProtocol,       \
-                       vendor, driverVendor, devices, feature, featureStatus, \
-                       driverComparator, driverVersion, ruleId,               \
-                       suggestedVersion, false, true);                        \
+    GfxDriverInfo info(os, desktopEnv, windowProtocol, vendor, driverVendor,  \
+                       devices, feature, featureStatus, driverComparator,     \
+                       driverVersion, ruleId, suggestedVersion, false, true); \
     info.mDriverVersionMax = driverVersionMax;                                \
     sDriverInfo->AppendElement(info);                                         \
   } while (false)
@@ -131,7 +124,6 @@ enum class OperatingSystem {
   Windows8,
   Windows8_1,
   Windows10,
-  RecentWindows10,
   Linux,
   OSX,
   OSX10_5,
@@ -189,9 +181,6 @@ enum DeviceFamily {
   Bug1207665,
   Bug1447141,
   NvidiaBlockWebRender,
-  NvidiaRolloutWebRender,
-  IntelRolloutWebRender,
-  AtiRolloutWebRender,
   DeviceFamilyMax
 };
 
@@ -255,44 +244,13 @@ enum WindowProtocol : uint8_t {
   WindowingMax
 };
 
-enum class BatteryStatus : uint8_t { All, Present, None };
-
-enum class ScreenSizeStatus : uint8_t {
-  All,
-  Small,           // <= 1900x1200
-  SmallAndMedium,  // <= 3440x1440
-  Medium,          // <= 3440x1440 && > 1900x1200
-  MediumAndLarge,  // >1900x1200
-  Large            // > 3440x1440
-};
-
 /* Array of devices to match, or an empty array for all devices */
-class GfxDeviceFamily final {
- public:
-  GfxDeviceFamily() = default;
-
-  void Append(const nsAString& aDeviceId);
-  void AppendRange(int32_t aBeginDeviceId, int32_t aEndDeviceId);
-
-  bool IsEmpty() const { return mIds.IsEmpty() && mRanges.IsEmpty(); }
-
-  nsresult Contains(nsAString& aDeviceId) const;
-
- private:
-  struct DeviceRange {
-    int32_t mBegin;
-    int32_t mEnd;
-  };
-
-  nsTArray<nsString> mIds;
-  nsTArray<DeviceRange> mRanges;
-};
+typedef nsTArray<nsString> GfxDeviceFamily;
 
 struct GfxDriverInfo {
   // If |ownDevices| is true, you are transferring ownership of the devices
   // array, and it will be deleted when this GfxDriverInfo is destroyed.
-  GfxDriverInfo(OperatingSystem os, ScreenSizeStatus aScreen,
-                BatteryStatus aBattery, const nsAString& desktopEnv,
+  GfxDriverInfo(OperatingSystem os, const nsAString& desktopEnv,
                 const nsAString& windowProtocol, const nsAString& vendor,
                 const nsAString& driverVendor, GfxDeviceFamily* devices,
                 int32_t feature, int32_t featureStatus, VersionComparisonOp op,
@@ -306,8 +264,6 @@ struct GfxDriverInfo {
 
   OperatingSystem mOperatingSystem;
   uint32_t mOperatingSystemVersion;
-  ScreenSizeStatus mScreen;
-  BatteryStatus mBattery;
   nsString mDesktopEnvironment;
   nsString mWindowProtocol;
 

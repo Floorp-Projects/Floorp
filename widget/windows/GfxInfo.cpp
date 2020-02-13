@@ -6,10 +6,7 @@
 #include "mozilla/ArrayUtils.h"
 
 #include <windows.h>
-#include <devguid.h>   // for GUID_DEVCLASS_BATTERY
-#include <setupapi.h>  // for SetupDi*
-#include <winioctl.h>  // for IOCTL_*
-#include <batclass.h>  // for BATTERY_*
+#include <setupapi.h>
 #include "gfxConfig.h"
 #include "gfxWindowsPlatform.h"
 #include "GfxInfo.h"
@@ -37,11 +34,7 @@ NS_IMPL_ISUPPORTS_INHERITED(GfxInfo, GfxInfoBase, nsIGfxInfoDebug)
 #endif
 
 GfxInfo::GfxInfo()
-    : mWindowsVersion(0),
-      mWindowsBuildNumber(0),
-      mActiveGPUIndex(0),
-      mHasDualGPU(false),
-      mHasBattery(false) {}
+    : mWindowsVersion(0), mActiveGPUIndex(0), mHasDualGPU(false) {}
 
 /* GetD2DEnabled and GetDwriteEnabled shouldn't be called until after
  * gfxPlatform initialization has occurred because they depend on it for
@@ -69,12 +62,6 @@ nsresult GfxInfo::GetDWriteEnabled(bool* aEnabled) {
 NS_IMETHODIMP
 GfxInfo::GetDWriteVersion(nsAString& aDwriteVersion) {
   gfxWindowsPlatform::GetDLLVersion(L"dwrite.dll", aDwriteVersion);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-GfxInfo::GetHasBattery(bool* aHasBattery) {
-  *aHasBattery = mHasBattery;
   return NS_OK;
 }
 
@@ -313,106 +300,28 @@ enum {
   kWindows10 = 0xA0000
 };
 
-static bool HasBattery() {
-  // Helper classes to manage lifetimes of Windows structs.
-  class MOZ_STACK_CLASS HDevInfoHolder final {
-   public:
-    explicit HDevInfoHolder(HDEVINFO aHandle) : mHandle(aHandle) {}
+static int32_t WindowsOSVersion() {
+  static int32_t winVersion = UNINITIALIZED_VALUE;
 
-    ~HDevInfoHolder() { ::SetupDiDestroyDeviceInfoList(mHandle); }
+  OSVERSIONINFO vinfo;
 
-   private:
-    HDEVINFO mHandle;
-  };
-
-  class MOZ_STACK_CLASS HandleHolder final {
-   public:
-    explicit HandleHolder(HANDLE aHandle) : mHandle(aHandle) {}
-
-    ~HandleHolder() { ::CloseHandle(mHandle); }
-
-   private:
-    HANDLE mHandle;
-  };
-
-  HDEVINFO hdev =
-      ::SetupDiGetClassDevs(&GUID_DEVCLASS_BATTERY, nullptr, nullptr,
-                            DIGCF_PRESENT | DIGCF_DEVICEINTERFACE);
-  if (hdev == INVALID_HANDLE_VALUE) {
-    return true;
+  if (winVersion == UNINITIALIZED_VALUE) {
+    vinfo.dwOSVersionInfoSize = sizeof(vinfo);
+#ifdef _MSC_VER
+#  pragma warning(push)
+#  pragma warning(disable : 4996)
+#endif
+    if (!GetVersionEx(&vinfo)) {
+#ifdef _MSC_VER
+#  pragma warning(pop)
+#endif
+      winVersion = kWindowsUnknown;
+    } else {
+      winVersion = int32_t(vinfo.dwMajorVersion << 16) + vinfo.dwMinorVersion;
+    }
   }
 
-  HDevInfoHolder hdevHolder(hdev);
-
-  DWORD i = 0;
-  SP_DEVICE_INTERFACE_DATA did = {0};
-  did.cbSize = sizeof(did);
-
-  while (::SetupDiEnumDeviceInterfaces(hdev, nullptr, &GUID_DEVCLASS_BATTERY, i,
-                                       &did)) {
-    DWORD bufferSize = 0;
-    ::SetupDiGetDeviceInterfaceDetail(hdev, &did, nullptr, 0, &bufferSize,
-                                      nullptr);
-    if (::GetLastError() != ERROR_INSUFFICIENT_BUFFER) {
-      return true;
-    }
-
-    UniquePtr<uint8_t[]> buffer(new (std::nothrow) uint8_t[bufferSize]);
-    if (!buffer) {
-      return true;
-    }
-
-    PSP_DEVICE_INTERFACE_DETAIL_DATA pdidd =
-        reinterpret_cast<PSP_DEVICE_INTERFACE_DETAIL_DATA>(buffer.get());
-    pdidd->cbSize = sizeof(*pdidd);
-    if (!::SetupDiGetDeviceInterfaceDetail(hdev, &did, pdidd, bufferSize,
-                                           &bufferSize, nullptr)) {
-      return true;
-    }
-
-    HANDLE hbat = ::CreateFile(pdidd->DevicePath, GENERIC_READ | GENERIC_WRITE,
-                               FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr,
-                               OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
-    if (hbat == INVALID_HANDLE_VALUE) {
-      return true;
-    }
-
-    HandleHolder hbatHolder(hbat);
-
-    BATTERY_QUERY_INFORMATION bqi = {0};
-    DWORD dwWait = 0;
-    DWORD dwOut;
-
-    // We need the tag to query the information below.
-    if (!::DeviceIoControl(hbat, IOCTL_BATTERY_QUERY_TAG, &dwWait,
-                           sizeof(dwWait), &bqi.BatteryTag,
-                           sizeof(bqi.BatteryTag), &dwOut, nullptr) ||
-        !bqi.BatteryTag) {
-      return true;
-    }
-
-    BATTERY_INFORMATION bi = {0};
-    bqi.InformationLevel = BatteryInformation;
-
-    if (!::DeviceIoControl(hbat, IOCTL_BATTERY_QUERY_INFORMATION, &bqi,
-                           sizeof(bqi), &bi, sizeof(bi), &dwOut, nullptr)) {
-      return true;
-    }
-
-    // If a battery intended for general use (i.e. system use) is not a UPS
-    // (i.e. short term), then we know for certain we have a battery.
-    if ((bi.Capabilities & BATTERY_SYSTEM_BATTERY) &&
-        !(bi.Capabilities & BATTERY_IS_SHORT_TERM)) {
-      return true;
-    }
-
-    // Otherwise we check the next battery.
-    ++i;
-  }
-
-  // If we fail to enumerate because there are no more batteries to check, then
-  // we can safely say there are indeed no system batteries.
-  return ::GetLastError() != ERROR_NO_MORE_ITEMS;
+  return winVersion;
 }
 
 /* Other interesting places for info:
@@ -424,7 +333,6 @@ static bool HasBattery() {
 #define DEVICE_KEY_PREFIX L"\\Registry\\Machine\\"
 nsresult GfxInfo::Init() {
   nsresult rv = GfxInfoBase::Init();
-  mHasBattery = HasBattery();
 
   DISPLAY_DEVICEW displayDevice;
   displayDevice.cb = sizeof(displayDevice);
@@ -433,25 +341,9 @@ nsresult GfxInfo::Init() {
   const char* spoofedWindowsVersion =
       PR_GetEnv("MOZ_GFX_SPOOF_WINDOWS_VERSION");
   if (spoofedWindowsVersion) {
-    PR_sscanf(spoofedWindowsVersion, "%x,%u", &mWindowsVersion,
-              &mWindowsBuildNumber);
+    PR_sscanf(spoofedWindowsVersion, "%x", &mWindowsVersion);
   } else {
-    OSVERSIONINFO vinfo;
-    vinfo.dwOSVersionInfoSize = sizeof(vinfo);
-#ifdef _MSC_VER
-#  pragma warning(push)
-#  pragma warning(disable : 4996)
-#endif
-    if (!GetVersionEx(&vinfo)) {
-#ifdef _MSC_VER
-#  pragma warning(pop)
-#endif
-      mWindowsVersion = kWindowsUnknown;
-    } else {
-      mWindowsVersion =
-          int32_t(vinfo.dwMajorVersion << 16) + vinfo.dwMinorVersion;
-      mWindowsBuildNumber = vinfo.dwBuildNumber;
-    }
+    mWindowsVersion = WindowsOSVersion();
   }
 
   mDeviceKeyDebug = NS_LITERAL_STRING("PrimarySearch");

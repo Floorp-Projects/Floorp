@@ -113,9 +113,6 @@ GfxInfo::GetD2DEnabled(bool* aEnabled) { return NS_ERROR_FAILURE; }
 NS_IMETHODIMP
 GfxInfo::GetDWriteEnabled(bool* aEnabled) { return NS_ERROR_FAILURE; }
 
-/* readonly attribute bool HasBattery; */
-NS_IMETHODIMP GfxInfo::GetHasBattery(bool* aHasBattery) { return NS_ERROR_NOT_IMPLEMENTED; }
-
 /* readonly attribute DOMString DWriteVersion; */
 NS_IMETHODIMP
 GfxInfo::GetDWriteVersion(nsAString& aDwriteVersion) { return NS_ERROR_FAILURE; }

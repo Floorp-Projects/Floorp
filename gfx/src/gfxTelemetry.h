@@ -46,9 +46,6 @@ enum class FeatureStatus {
   BlockedReleaseChannelBattery,
   BlockedReleaseChannelAndroid,
 
-  // This feature has been blocked by the allowlist.
-  Denied,
-
   // This feature has been blocked by the graphics blacklist.
   Blacklisted,
 

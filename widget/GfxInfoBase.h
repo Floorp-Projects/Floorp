@@ -103,7 +103,6 @@ class GfxInfoBase : public nsIGfxInfo,
   virtual nsString Product() { return EmptyString(); }
   virtual nsString Manufacturer() { return EmptyString(); }
   virtual uint32_t OperatingSystemVersion() { return 0; }
-  virtual uint32_t OperatingSystemBuild() { return 0; }
 
   // Convenience to get the application version
   static const nsCString& GetApplicationVersion();
@@ -147,16 +146,10 @@ class GfxInfoBase : public nsIGfxInfo,
 
   NS_IMETHOD ControlGPUProcessForXPCShell(bool aEnable, bool* _retval) override;
 
-  // Total number of pixels for all detected screens at startup.
-  int64_t mScreenPixels;
-
  private:
   virtual int32_t FindBlocklistedDeviceInList(
       const nsTArray<GfxDriverInfo>& aDriverInfo, nsAString& aSuggestedVersion,
-      int32_t aFeature, nsACString& aFailureId, OperatingSystem os,
-      bool aForAllowing);
-
-  bool IsFeatureAllowlisted(int32_t aFeature) const;
+      int32_t aFeature, nsACString& aFailureId, OperatingSystem os);
 
   void EvaluateDownloadedBlacklist(nsTArray<GfxDriverInfo>& aDriverInfo);
 
