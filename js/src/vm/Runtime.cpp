@@ -210,12 +210,11 @@ bool JSRuntime::init(JSContext* cx, uint32_t maxbytes) {
   }
 
   UniquePtr<Zone> atomsZone = MakeUnique<Zone>(this);
-  if (!atomsZone || !atomsZone->init()) {
+  if (!atomsZone || !atomsZone->init(true)) {
     return false;
   }
 
   gc.atomsZone = atomsZone.release();
-  gc.atomsZone->setIsAtomsZone();
 
   // The garbage collector depends on everything before this point being
   // initialized.

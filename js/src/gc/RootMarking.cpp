@@ -478,7 +478,6 @@ void js::gc::GCRuntime::finishRoots() {
   rt->finishPersistentRoots();
 
   rt->finishSelfHosting();
-  selfHostingZoneFrozen = false;
 
   for (ZonesIter zone(rt, WithAtoms); !zone.done(); zone.next()) {
     zone->finishRoots();
