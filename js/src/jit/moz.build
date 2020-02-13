@@ -87,7 +87,6 @@ UNIFIED_SOURCES += [
     'Snapshots.cpp',
     'StupidAllocator.cpp',
     'TIOracle.cpp',
-    'TypedObjectPrediction.cpp',
     'TypePolicy.cpp',
     'ValueNumbering.cpp',
     'VMFunctions.cpp',
