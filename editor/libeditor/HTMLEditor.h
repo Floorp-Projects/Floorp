@@ -3946,12 +3946,23 @@ class HTMLEditor final : public TextEditor,
   int32_t DiscoverPartialListsAndTables(
       nsTArray<OwningNonNull<nsINode>>& aPasteNodes,
       nsTArray<OwningNonNull<Element>>& aListsAndTables);
-  Element* ScanForListAndTableStructure(nsINode& aNodeMaybeInListOrTable,
-                                        Element& aListOrTable);
+  Element* ScanForTableStructure(nsINode& aNodeMaybeInTable,
+                                 Element& aTableElement);
   void ReplaceOrphanedStructure(
       StartOrEnd aStartOrEnd, nsTArray<OwningNonNull<nsINode>>& aNodeArray,
       nsTArray<OwningNonNull<Element>>& aListAndTableArray,
       int32_t aHighWaterMark);
+
+  /**
+   * IsReplaceableListElement() is a helper method of
+   * ReplaceOrphanedStructure().  If aNodeMaybeInListElement is a descendant
+   * of aListElement, returns true.  Otherwise, false.
+   *
+   * @param aListElement                Must be a list element.
+   * @param aNodeMaybeInListElement     A node which may be in aListElement.
+   */
+  static bool IsReplaceableListElement(Element& aListElement,
+                                       nsINode& aNodeMaybeInListElement);
 
   /**
    * GetBetterInsertionPointFor() returns better insertion point to insert
