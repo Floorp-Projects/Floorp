@@ -5,18 +5,18 @@
 
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 
-<!DOCTYPE window [
-<!ENTITY % pippkiDTD SYSTEM "chrome://pippki/locale/pippki.dtd" >
-%pippkiDTD;
-]>
+<!DOCTYPE window>
 
-
-<window title="&clientAuthAsk.title;"
+<window data-l10n-id="client-auth-window"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   xmlns:html="http://www.w3.org/1999/xhtml"
   onload="onLoad();">
 <dialog id="certAuthAsk"
   buttons="accept,cancel">
+
+<linkset>
+  <html:link rel="localization" href="security/pippki/pippki.ftl"/>
+</linkset>
 
 <stringbundleset id="stringbundleset">
   <stringbundle id="pippki_bundle" src="chrome://pippki/locale/pippki.properties"/>
@@ -27,19 +27,19 @@
 <script src="chrome://global/content/globalOverlay.js"/>
 <script src="chrome://global/content/editMenuOverlay.js"/>
 
-<description style="font-weight: bold;">&clientAuthAsk.message1;</description>
+<description style="font-weight: bold;" data-l10n-id="client-auth-site-description"></description>
 <description id="hostname"/>
 <description id="organization"/>
 <description id="issuer"/>
 
-<description style="font-weight: bold;">&clientAuthAsk.message2;</description>
+<description style="font-weight: bold;" data-l10n-id="client-auth-choose-cert"></description>
 <!-- The items in this menulist must never be sorted,
      but remain in the order filled by the application
 -->
 <menulist id="nicknames" oncommand="onCertSelected();">
     <menupopup/>
 </menulist>
-<description>&clientAuthAsk.message3;</description>
+<description data-l10n-id="client-auth-cert-details"></description>
 <html:textarea readonly="readonly" id="details" style="height: 11em;"/>
 <checkbox id="rememberBox" checked="true"/>
 
