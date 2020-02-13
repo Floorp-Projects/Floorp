@@ -1495,16 +1495,40 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
    */
   _onFormSubmit(form) {
     log("_onFormSubmit", form);
+
+    this._maybeSendFormInteractionMessage(
+      form,
+      "PasswordManager:onFormSubmit",
+      {
+        targetField: null,
+        isSubmission: true,
+      }
+    );
+  }
+
+  _maybeSendFormInteractionMessage(
+    form,
+    messageName,
+    { targetField, isSubmission, triggeredByFillingGenerated }
+  ) {
     let doc = form.ownerDocument;
     let win = doc.defaultView;
+    let passwordField = null;
+    if (targetField && targetField.hasBeenTypePassword) {
+      passwordField = targetField;
+    }
+    let logMessagePrefix = isSubmission ? "form submission" : "field edit";
+    let dismissedPrompt = !isSubmission;
 
+    // when filling a generated password, we do still want to message the parent
     if (
+      !triggeredByFillingGenerated &&
       PrivateBrowsingUtils.isContentWindowPrivate(win) &&
       !LoginHelper.privateBrowsingCaptureEnabled
     ) {
       // We won't do anything in private browsing mode anyway,
       // so there's no need to perform further checks.
-      log("(form submission ignored in private browsing mode)");
+      log(`(${logMessagePrefix} ignored in private browsing mode)`);
       return;
     }
 
@@ -1515,7 +1539,7 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
 
     let origin = LoginHelper.getLoginOrigin(doc.documentURI);
     if (!origin) {
-      log("(form submission ignored -- invalid origin)");
+      log(`(${logMessagePrefix} ignored -- invalid origin)`);
       return;
     }
 
@@ -1529,6 +1553,15 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
       newPasswordField,
       oldPasswordField,
     ] = this._getFormFields(form, true, recipes);
+
+    // It's possible the field triggering this message isn't one of those found by _getFormFields' heuristics
+    if (
+      passwordField &&
+      passwordField != newPasswordField &&
+      passwordField != oldPasswordField
+    ) {
+      newPasswordField = passwordField;
+    }
 
     // Need at least 1 valid password field to do anything.
     if (newPasswordField == null) {
@@ -1555,7 +1588,7 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
         this._isAutocompleteDisabled(oldPasswordField)) &&
       !LoginHelper.storeWhenAutocompleteOff
     ) {
-      log("(form submission ignored -- autocomplete=off found)");
+      log(`(${logMessagePrefix} ignored -- autocomplete=off found)`);
       return;
     }
 
@@ -1572,16 +1605,15 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
       : null;
 
     let usernameValue = usernameField ? usernameField.value : null;
-    let formLikeRoot = FormLikeFactory.findRootForField(newPasswordField);
     // Dismiss prompt if the username field is a credit card number AND
     // if the password field is a three digit number. Also dismiss prompt if
     // the password is a credit card number and the password field has attribute
     // autocomplete="cc-number".
-    let dismissedPrompt = false;
     let newPasswordFieldValue = newPasswordField.value;
     if (
-      (CreditCard.isValidNumber(usernameValue) &&
-        newPasswordFieldValue.trim().match(/^[0-9]{3}$/)) ||
+      (!dismissedPrompt &&
+        (CreditCard.isValidNumber(usernameValue) &&
+          newPasswordFieldValue.trim().match(/^[0-9]{3}$/))) ||
       (CreditCard.isValidNumber(newPasswordFieldValue) &&
         newPasswordField.getAutocompleteInfo().fieldName == "cc-number")
     ) {
@@ -1590,14 +1622,14 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
 
     if (
       this._compareAndUpdatePreviouslySentValues(
-        formLikeRoot,
+        form.rootElement,
         usernameValue,
         newPasswordField.value,
         dismissedPrompt
       )
     ) {
       log(
-        "(form submission ignored -- already submitted with the same username and password)"
+        `(${logMessagePrefix} ignored -- already submitted with the same username and password)`
       );
       return;
     }
@@ -1605,9 +1637,12 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
     let docState = this.stateForDocument(doc);
     let fieldsModified = this._formHasModifiedFields(form);
     if (!fieldsModified && LoginHelper.userInputRequiredToCapture) {
+      if (targetField) {
+        throw new Error("No user input on targetField");
+      }
       // we know no fields in this form had user modifications, so don't prompt
       log(
-        "(form submission ignored -- submitting values that are not changed by the user)"
+        `(${logMessagePrefix} ignored -- submitting values that are not changed by the user)`
       );
       return;
     }
@@ -1624,12 +1659,13 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
       newPasswordField: mockPassword,
       oldPasswordField: mockOldPassword,
       dismissedPrompt,
+      triggeredByFillingGenerated,
     };
 
-    this.sendAsyncMessage("PasswordManager:onFormSubmit", detail);
+    this.sendAsyncMessage(messageName, detail);
 
     detail.form = form;
-    const evt = new CustomEvent("PasswordManager:onFormSubmit", { detail });
+    const evt = new CustomEvent(messageName, { detail });
     win.windowRoot.dispatchEvent(evt);
   }
 
@@ -1680,8 +1716,7 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
       );
     }
 
-    let win = passwordField.ownerGlobal;
-    let formLikeRoot = FormLikeFactory.findRootForField(passwordField);
+    let loginForm = LoginFormFactory.createFromField(passwordField);
     let docState = this.stateForDocument(passwordField.ownerDocument);
 
     if (triggeredByFillingGenerated) {
@@ -1704,36 +1739,15 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
       this._fieldsWithPasswordGenerationForcedOn.delete(passwordField);
     }
 
-    let loginForm = LoginFormFactory.createFromField(passwordField);
-    let formActionOrigin = LoginHelper.getFormActionOrigin(loginForm);
-    let origin = LoginHelper.getLoginOrigin(
-      passwordField.ownerDocument.documentURI
+    this._maybeSendFormInteractionMessage(
+      loginForm,
+      "PasswordManager:onPasswordEditedOrGenerated",
+      {
+        targetField: passwordField,
+        isSubmission: false,
+        triggeredByFillingGenerated,
+      }
     );
-    let recipes = LoginRecipesContent.getRecipes(this, origin, win);
-    let [usernameField] = this._getFormFields(loginForm, false, recipes);
-    let username = (usernameField && usernameField.value) || "";
-    // Avoid prompting twice for the same value,
-    // e.g. context menu fill followed by change (blur) event
-    if (
-      this._compareAndUpdatePreviouslySentValues(
-        formLikeRoot,
-        username,
-        passwordField.value,
-        true // dismissed
-      )
-    ) {
-      log(
-        "(passwordEditedOrGenerated ignored -- already messaged with the same password value)"
-      );
-      return;
-    }
-
-    this.sendAsyncMessage("PasswordManager:onPasswordEditedOrGenerated", {
-      formActionOrigin,
-      password: passwordField.value,
-      username: (usernameField && usernameField.value) || "",
-      triggeredByFillingGenerated,
-    });
   }
 
   _togglePasswordFieldMasking(passwordField, unmask) {
