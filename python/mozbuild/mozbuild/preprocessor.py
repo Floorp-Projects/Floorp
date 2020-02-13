@@ -24,14 +24,12 @@ value :
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-import errno
-import io
-from optparse import OptionParser
+import sys
 import os
 import re
 import six
-import sys
-
+from optparse import OptionParser
+import errno
 from mozbuild.makeutil import Makefile
 
 # hack around win32 mangling our line endings
@@ -494,7 +492,7 @@ class Preprocessor:
                 except OSError as error:
                     if error.errno != errno.EEXIST:
                         raise
-            return io.open(path, 'w', encoding='utf-8')
+            return open(path, 'wb')
 
         p = self.getCommandLineParser()
         options, args = p.parse_args(args=args)
@@ -516,7 +514,7 @@ class Preprocessor:
 
         if args:
             for f in args:
-                with io.open(f, 'rU', encoding='utf-8') as input:
+                with open(f, 'rU') as input:
                     self.processFile(input=input, output=out)
             if depfile:
                 mk = Makefile()
@@ -806,7 +804,7 @@ class Preprocessor:
                     args = self.applyFilters(args)
                 if not os.path.isabs(args):
                     args = os.path.join(self.curdir, args)
-                args = io.open(args, 'rU', encoding='utf-8')
+                args = open(args, 'rU')
             except Preprocessor.Error:
                 raise
             except Exception:
@@ -861,7 +859,7 @@ def preprocess(includes=[sys.stdin], defines={},
     pp = Preprocessor(defines=defines,
                       marker=marker)
     for f in includes:
-        with io.open(f, 'rU', encoding='utf-8') as input:
+        with open(f, 'rU') as input:
             pp.processFile(input=input, output=output)
     return pp.includes
 
