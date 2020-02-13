@@ -1600,7 +1600,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "e78f7440541f"
+        "revision": "b4c0c791cc26"
     },
     "zh-TW": {
         "platforms": [
@@ -1617,6 +1617,6 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "ae70c4ffea1f"
+        "revision": "dca35af2979e"
     }
 }
