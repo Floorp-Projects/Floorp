@@ -96,6 +96,12 @@ uintptr_t InProcessCompositorWidget::GetWidgetKey() {
 
 nsIWidget* InProcessCompositorWidget::RealWidget() { return mWidget; }
 
+#ifdef XP_MACOSX
+LayoutDeviceIntRegion InProcessCompositorWidget::GetOpaqueWidgetRegion() {
+  return mWidget->GetOpaqueWidgetRegion();
+}
+#endif
+
 void InProcessCompositorWidget::ObserveVsync(VsyncObserver* aObserver) {
   if (RefPtr<CompositorVsyncDispatcher> cvd =
           mWidget->GetCompositorVsyncDispatcher()) {
