@@ -151,7 +151,8 @@ def find_longest_path(graph, tasklist, duration_data):
         return md
 
     longest_paths = [find_dependency_durations(task) for task in tasklist]
-    return max(longest_paths)
+    # Default in case there are no tasks
+    return max(longest_paths, default=0)
 
 
 def determine_quantile(quantiles_file, duration):
