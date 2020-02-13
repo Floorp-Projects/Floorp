@@ -83,7 +83,7 @@ class WindowManagerMixin(object):
 
             return new_tab
 
-    def open_window(self, callback=None, focus=False):
+    def open_window(self, callback=None, focus=False, private=False):
         current_windows = self.marionette.chrome_window_handles
         current_tabs = self.marionette.window_handles
 
@@ -100,7 +100,7 @@ class WindowManagerMixin(object):
             if callable(callback):
                 callback(focus)
             else:
-                result = self.marionette.open(type="window", focus=focus)
+                result = self.marionette.open(type="window", focus=focus, private=private)
                 if result["type"] != "window":
                     raise Exception(
                         "Newly opened browsing context is of type {} and not window.".format(
