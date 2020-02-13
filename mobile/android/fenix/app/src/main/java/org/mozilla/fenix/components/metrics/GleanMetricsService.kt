@@ -494,6 +494,7 @@ private val Event.wrapper: EventWrapper<*>?
         is Event.InteractWithSearchURLArea -> null
         is Event.ClearedPrivateData -> null
         is Event.DismissedOnboarding -> null
+        is Event.FennecToFenixMigrated -> null
     }
 
 class GleanMetricsService(private val context: Context) : MetricsService {

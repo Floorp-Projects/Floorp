@@ -42,6 +42,13 @@ class MigratingFenixApplication : FenixApplication() {
         )
     }
 
+    val migrationTelemetryListener by lazy {
+        MigrationTelemetryListener(
+            components.analytics.metrics,
+            components.migrationStore
+        )
+    }
+
     override fun setupInMainProcessOnly() {
         // These migrations need to run before regular initialization happens.
         migrateBlocking()
@@ -55,6 +62,7 @@ class MigratingFenixApplication : FenixApplication() {
 
         // The rest of the migrations can happen now.
         migrationPushSubscriber.start()
+        migrationTelemetryListener.start()
         migrator.startMigrationIfNeeded(components.migrationStore, MigrationService::class.java)
     }
 

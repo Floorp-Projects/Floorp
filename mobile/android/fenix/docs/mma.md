@@ -226,6 +226,11 @@ Here is the list of current Events sent, which can be found here in the code bas
     <td>The user finished onboarding. Could be triggered by pressing "start browsing," opening settings, or invoking a search.</td>
     <td><a href="https://github.com/mozilla-mobile/fenix/pull/3459#issuecomment-502191109">#3459</a></td>
   </tr>
+  <tr>
+    <td>`E_Fennec_To_Fenix_Migrated`</td>
+    <td>The user has just migrated from Fennec to Fenix.</td>
+    <td><a href="https://github.com/mozilla-mobile/fenix/pull/8208#issuecomment-584040440">#8208</a></td>
+  </tr>
 </table>
 
 Deep links

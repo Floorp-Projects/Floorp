@@ -30,6 +30,7 @@ private val Event.name: String?
         is Event.SyncAuthSignOut -> "E_Sign_Out_FxA"
         is Event.ClearedPrivateData -> "E_Cleared_Private_Data"
         is Event.DismissedOnboarding -> "E_Dismissed_Onboarding"
+        is Event.FennecToFenixMigrated -> "E_Fennec_To_Fenix_Migrated"
 
         // Do not track other events in Leanplum
         else -> ""
