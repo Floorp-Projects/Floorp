@@ -37,6 +37,9 @@ template void DOMIterator::AppendNodesToArray(
 template void DOMIterator::AppendNodesToArray(
     BoolFunctor aFunctor, nsTArray<OwningNonNull<Element>>& aArrayOfNodes,
     void* aClosure) const;
+template void DOMIterator::AppendNodesToArray(
+    BoolFunctor aFunctor, nsTArray<OwningNonNull<Text>>& aArrayOfNodes,
+    void* aClosure) const;
 
 /******************************************************************************
  * mozilla::EditActionResult

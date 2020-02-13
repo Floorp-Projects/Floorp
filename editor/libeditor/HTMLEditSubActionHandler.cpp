@@ -457,7 +457,7 @@ nsresult HTMLEditor::OnEndHandlingTopLevelEditSubActionInternal() {
         break;
       default: {
         nsresult rv = CollapseAdjacentTextNodes(
-            MOZ_KnownLive(TopLevelEditSubActionDataRef().mChangedRange));
+            MOZ_KnownLive(*TopLevelEditSubActionDataRef().mChangedRange));
         if (NS_WARN_IF(Destroyed())) {
           return NS_ERROR_EDITOR_DESTROYED;
         }
