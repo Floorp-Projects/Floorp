@@ -241,11 +241,19 @@ nsresult HTMLEditor::DoInsertHTMLWithContext(
   // we need to recalculate various things based on potentially new offsets
   // this is work to be completed at a later date (probably by jfrancis)
 
-  // make a list of what nodes in docFrag we need to move
   AutoTArray<OwningNonNull<nsINode>, 64> nodeList;
-  CreateListOfNodesToPaste(*fragmentAsNode->AsDocumentFragment(), nodeList,
-                           streamStartParent, streamStartOffset,
-                           streamEndParent, streamEndOffset);
+  // If we have stream start point information, lets use it and end point.
+  // Otherwise, we should make a range all over the document fragment.
+  EditorRawDOMPoint streamStartPoint =
+      streamStartParent
+          ? EditorRawDOMPoint(streamStartParent, streamStartOffset)
+          : EditorRawDOMPoint(fragmentAsNode, 0);
+  EditorRawDOMPoint streamEndPoint =
+      streamStartParent ? EditorRawDOMPoint(streamEndParent, streamEndOffset)
+                        : EditorRawDOMPoint::AtEndOf(*fragmentAsNode);
+  HTMLEditor::CollectTopMostChildNodesCompletelyInRange(
+      EditorRawDOMPoint(streamStartParent, streamStartOffset),
+      EditorRawDOMPoint(streamEndParent, streamEndOffset), nodeList);
 
   if (nodeList.IsEmpty()) {
     // We aren't inserting anything, but if aDoDeleteSelection is set, we do
@@ -2714,32 +2722,24 @@ nsresult HTMLEditor::ParseFragment(const nsAString& aFragStr,
   return rv;
 }
 
-void HTMLEditor::CreateListOfNodesToPaste(
-    DocumentFragment& aFragment, nsTArray<OwningNonNull<nsINode>>& outNodeList,
-    nsINode* aStartContainer, int32_t aStartOffset, nsINode* aEndContainer,
-    int32_t aEndOffset) {
-  // If no info was provided about the boundary between context and stream,
-  // then assume all is stream.
-  if (!aStartContainer) {
-    aStartContainer = &aFragment;
-    aStartOffset = 0;
-    aEndContainer = &aFragment;
-    aEndOffset = aFragment.Length();
-  }
+// static
+void HTMLEditor::CollectTopMostChildNodesCompletelyInRange(
+    const EditorRawDOMPoint& aStartPoint, const EditorRawDOMPoint& aEndPoint,
+    nsTArray<OwningNonNull<nsINode>>& aOutArrayOfNodes) {
+  MOZ_ASSERT(aStartPoint.IsSetAndValid());
+  MOZ_ASSERT(aEndPoint.IsSetAndValid());
 
-  RefPtr<nsRange> docFragRange = nsRange::Create(
-      aStartContainer, aStartOffset, aEndContainer, aEndOffset, IgnoreErrors());
-  if (NS_WARN_IF(!docFragRange)) {
-    MOZ_ASSERT(docFragRange);
+  RefPtr<nsRange> range =
+      nsRange::Create(aStartPoint.ToRawRangeBoundary(),
+                      aEndPoint.ToRawRangeBoundary(), IgnoreErrors());
+  if (NS_WARN_IF(!range)) {
     return;
   }
-
-  // Now use a subtree iterator over the range to create a list of nodes
   DOMSubtreeIterator iter;
-  if (NS_WARN_IF(NS_FAILED(iter.Init(*docFragRange)))) {
+  if (NS_WARN_IF(NS_FAILED(iter.Init(*range)))) {
     return;
   }
-  iter.AppendAllNodesToArray(outNodeList);
+  iter.AppendAllNodesToArray(aOutArrayOfNodes);
 }
 
 // static
