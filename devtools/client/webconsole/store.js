@@ -83,6 +83,7 @@ function configureStore(webConsoleUI, options = {}) {
       editorWidth: getIntPref(PREFS.UI.EDITOR_WIDTH),
       showEditorOnboarding: getBoolPref(PREFS.UI.EDITOR_ONBOARDING),
       timestampsVisible: getBoolPref(PREFS.UI.MESSAGE_TIMESTAMP),
+      showEvaluationSelector: getBoolPref(PREFS.UI.CONTEXT_SELECTOR),
     }),
   };
 

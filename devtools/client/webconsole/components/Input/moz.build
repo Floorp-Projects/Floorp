@@ -8,6 +8,7 @@ DevToolsModules(
     'EagerEvaluation.css',
     'EagerEvaluation.js',
     'EditorToolbar.js',
+    'EvaluationSelector.js',
     'JSTerm.js',
     'ReverseSearchInput.css',
     'ReverseSearchInput.js',

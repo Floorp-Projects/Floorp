@@ -58,6 +58,18 @@ loader.lazyRequireGetter(
 );
 loader.lazyRequireGetter(
   this,
+  "registerThread",
+  "devtools/client/framework/actions/index",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "clearThread",
+  "devtools/client/framework/actions/index",
+  true
+);
+loader.lazyRequireGetter(
+  this,
   "AppConstants",
   "resource://gre/modules/AppConstants.jsm",
   true
@@ -643,6 +655,10 @@ Toolbox.prototype = {
 
     await this._attachTarget({ type, targetFront, isTopLevel });
 
+    if (this.hostType !== Toolbox.HostType.PAGE) {
+      await this.store.dispatch(registerThread(targetFront));
+    }
+
     if (isTopLevel) {
       this.emit("top-target-attached");
     }
@@ -651,6 +667,10 @@ Toolbox.prototype = {
   _onTargetDestroyed({ type, targetFront, isTopLevel }) {
     if (isTopLevel) {
       this.detachTarget();
+    }
+
+    if (this.hostType !== Toolbox.HostType.PAGE) {
+      this.store.dispatch(clearThread(targetFront));
     }
   },
 
