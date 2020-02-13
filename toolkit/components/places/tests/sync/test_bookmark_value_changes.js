@@ -11,6 +11,7 @@ add_task(async function setup() {
 
 add_task(async function test_value_combo() {
   let buf = await openMirror("value_combo");
+  let now = Date.now();
 
   info("Set up mirror with existing bookmark to update");
   await PlacesUtils.bookmarks.insertTree({
@@ -84,6 +85,7 @@ add_task(async function test_value_combo() {
         title: "Get Firefox",
         bmkUri: "http://getfirefox.com",
         tags: ["taggy", "browsers"],
+        dateAdded: now,
       },
       {
         id: "tFolder_____",
@@ -91,6 +93,7 @@ add_task(async function test_value_combo() {
         type: "folder",
         title: "Mail",
         children: ["tbBmk_______"],
+        dateAdded: now,
       },
       {
         id: "tbBmk_______",
@@ -99,13 +102,19 @@ add_task(async function test_value_combo() {
         title: "Get Thunderbird",
         bmkUri: "http://getthunderbird.com",
         keyword: "tb",
+        dateAdded: now,
       },
     ])
   );
 
   info("Apply remote");
-  let observer = expectBookmarkChangeNotifications({ skipTags: true });
+  let observer = expectBookmarkChangeNotifications({
+    skipTags: true,
+    ignoreDates: false,
+  });
+  let localTimeSeconds = Math.floor(now / 1000);
   let changesToUpload = await buf.apply({
+    localTimeSeconds,
     notifyInStableOrder: true,
   });
   deepEqual(
@@ -175,6 +184,7 @@ add_task(async function test_value_combo() {
         guid: "fxBmk_______",
         parentGuid: PlacesUtils.bookmarks.toolbarGuid,
         source: PlacesUtils.bookmarks.SOURCES.SYNC,
+        dateAdded: now,
       },
     },
     {
@@ -189,6 +199,7 @@ add_task(async function test_value_combo() {
         guid: "tFolder_____",
         parentGuid: PlacesUtils.bookmarks.toolbarGuid,
         source: PlacesUtils.bookmarks.SOURCES.SYNC,
+        dateAdded: now,
       },
     },
     {
@@ -203,6 +214,7 @@ add_task(async function test_value_combo() {
         guid: "tbBmk_______",
         parentGuid: "tFolder_____",
         source: PlacesUtils.bookmarks.SOURCES.SYNC,
+        dateAdded: now,
       },
     },
     {
@@ -234,6 +246,7 @@ add_task(async function test_value_combo() {
         parentGuid: PlacesUtils.bookmarks.menuGuid,
         oldValue: "Mozilla",
         source: PlacesUtils.bookmarks.SOURCES.SYNC,
+        lastModified: localTimeSeconds * 1000 * 1000,
       },
     },
   ]);
