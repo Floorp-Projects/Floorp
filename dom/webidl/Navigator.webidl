@@ -327,7 +327,7 @@ partial interface Navigator {
 
 // https://wicg.github.io/web-share/#navigator-interface
 partial interface Navigator {
-  [SecureContext, Throws, Pref="dom.webshare.enabled"]
+  [SecureContext, Throws, Func="Navigator::HasShareSupport"]
   Promise<void> share(optional ShareData data = {});
 };
 // https://wicg.github.io/web-share/#sharedata-dictionary

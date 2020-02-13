@@ -95,6 +95,10 @@
 #  include "mozilla/Hal.h"
 #endif
 
+#if defined(XP_WIN)
+#  include "mozilla/WindowsVersion.h"
+#endif
+
 #include "mozilla/EMEUtils.h"
 #include "mozilla/DetailedPromise.h"
 #include "mozilla/Unused.h"
@@ -1706,6 +1710,19 @@ bool Navigator::HasUserMediaSupport(JSContext* cx, JSObject* obj) {
           StaticPrefs::media_peerconnection_enabled()) &&
          (IsSecureContextOrObjectIsFromSecureContext(cx, obj) ||
           StaticPrefs::media_devices_insecure_enabled());
+}
+
+/* static */
+bool Navigator::HasShareSupport(JSContext* cx, JSObject* obj) {
+  if (!Preferences::GetBool("dom.webshare.enabled")) {
+    return false;
+  }
+#if defined(XP_WIN) && !defined(__MINGW32__)
+  // The first public build that supports ShareCanceled API
+  return IsWindows10BuildOrLater(18956);
+#else
+  return true;
+#endif
 }
 
 /* static */
