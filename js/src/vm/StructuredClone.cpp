@@ -518,7 +518,8 @@ struct JSStructuredCloneWriter {
   bool traverseSet(HandleObject obj);
   bool traverseSavedFrame(HandleObject obj);
 
-  bool reportDataCloneError(uint32_t errorId);
+  template <typename... Args>
+  bool reportDataCloneError(uint32_t errorId, Args&&... aArgs);
 
   bool parseTransferable();
   bool transferOwnership();
@@ -588,9 +589,10 @@ static_assert(SCTAG_END_OF_BUILTIN_TYPES <= JS_SCTAG_USER_MIN);
 static_assert(JS_SCTAG_USER_MIN <= JS_SCTAG_USER_MAX);
 static_assert(Scalar::Int8 == 0);
 
+template <typename... Args>
 static void ReportDataCloneError(JSContext* cx,
                                  const JSStructuredCloneCallbacks* callbacks,
-                                 uint32_t errorId) {
+                                 uint32_t errorId, Args&&... aArgs) {
   if (callbacks && callbacks->reportError) {
     callbacks->reportError(cx, errorId);
     return;
@@ -625,6 +627,18 @@ static void ReportDataCloneError(JSContext* cx,
     case JS_SCERR_WASM_NO_TRANSFER:
       JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                                 JSMSG_WASM_NO_TRANSFER);
+      break;
+
+    case JS_SCERR_NOT_CLONABLE:
+      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                JSMSG_SC_NOT_CLONABLE,
+                                std::forward<Args>(aArgs)...);
+      break;
+
+    case JS_SCERR_NOT_CLONABLE_WITH_COOP_COEP:
+      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                JSMSG_SC_NOT_CLONABLE_WITH_COOP_COEP,
+                                std::forward<Args>(aArgs)...);
       break;
 
     default:
@@ -1137,8 +1151,11 @@ bool JSStructuredCloneWriter::parseTransferable() {
   return true;
 }
 
-bool JSStructuredCloneWriter::reportDataCloneError(uint32_t errorId) {
-  ReportDataCloneError(context(), out.buf.callbacks_, errorId);
+template <typename... Args>
+bool JSStructuredCloneWriter::reportDataCloneError(uint32_t errorId,
+                                                   Args&&... aArgs) {
+  ReportDataCloneError(context(), out.buf.callbacks_, errorId,
+                       std::forward<Args>(aArgs)...);
   return false;
 }
 
@@ -1270,12 +1287,10 @@ bool JSStructuredCloneWriter::writeSharedArrayBuffer(HandleObject obj) {
   MOZ_ASSERT(obj->canUnwrapAs<SharedArrayBufferObject>());
 
   if (!cloneDataPolicy.areSharedMemoryObjectsAllowed()) {
-    auto errorMsg =
-        context()->realm()->creationOptions().getCoopAndCoepEnabled()
-            ? JSMSG_SC_NOT_CLONABLE_WITH_COOP_COEP
-            : JSMSG_SC_NOT_CLONABLE;
-    JS_ReportErrorNumberASCII(context(), GetErrorMessage, nullptr, errorMsg,
-                              "SharedArrayBuffer");
+    auto error = context()->realm()->creationOptions().getCoopAndCoepEnabled()
+                     ? JS_SCERR_NOT_CLONABLE_WITH_COOP_COEP
+                     : JS_SCERR_NOT_CLONABLE;
+    reportDataCloneError(error, "SharedArrayBuffer");
     return false;
   }
 
@@ -1316,12 +1331,10 @@ bool JSStructuredCloneWriter::writeSharedWasmMemory(HandleObject obj) {
 
   // Check the policy here so that we can report a sane error.
   if (!cloneDataPolicy.areSharedMemoryObjectsAllowed()) {
-    auto errorMsg =
-        context()->realm()->creationOptions().getCoopAndCoepEnabled()
-            ? JSMSG_SC_NOT_CLONABLE_WITH_COOP_COEP
-            : JSMSG_SC_NOT_CLONABLE;
-    JS_ReportErrorNumberASCII(context(), GetErrorMessage, nullptr, errorMsg,
-                              "WebAssembly.Memory");
+    auto error = context()->realm()->creationOptions().getCoopAndCoepEnabled()
+                     ? JS_SCERR_NOT_CLONABLE_WITH_COOP_COEP
+                     : JS_SCERR_NOT_CLONABLE;
+    reportDataCloneError(error, "WebAssembly.Memory");
     return false;
   }
 
@@ -2244,12 +2257,10 @@ bool JSStructuredCloneReader::readArrayBuffer(uint32_t nbytes,
 bool JSStructuredCloneReader::readSharedArrayBuffer(MutableHandleValue vp) {
   if (!cloneDataPolicy.areIntraClusterClonableSharedObjectsAllowed() ||
       !cloneDataPolicy.areSharedMemoryObjectsAllowed()) {
-    auto errorMsg =
-        context()->realm()->creationOptions().getCoopAndCoepEnabled()
-            ? JSMSG_SC_NOT_CLONABLE_WITH_COOP_COEP
-            : JSMSG_SC_NOT_CLONABLE;
-    JS_ReportErrorNumberASCII(context(), GetErrorMessage, nullptr, errorMsg,
-                              "SharedArrayBuffer");
+    auto error = context()->realm()->creationOptions().getCoopAndCoepEnabled()
+                     ? JS_SCERR_NOT_CLONABLE_WITH_COOP_COEP
+                     : JS_SCERR_NOT_CLONABLE;
+    ReportDataCloneError(context(), callbacks, error, "SharedArrayBuffer");
     return false;
   }
 
@@ -2309,12 +2320,10 @@ bool JSStructuredCloneReader::readSharedWasmMemory(uint32_t nbytes,
 
   if (!cloneDataPolicy.areIntraClusterClonableSharedObjectsAllowed() ||
       !cloneDataPolicy.areSharedMemoryObjectsAllowed()) {
-    auto errorMsg =
-        context()->realm()->creationOptions().getCoopAndCoepEnabled()
-            ? JSMSG_SC_NOT_CLONABLE_WITH_COOP_COEP
-            : JSMSG_SC_NOT_CLONABLE;
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, errorMsg,
-                              "WebAssembly.Memory");
+    auto error = context()->realm()->creationOptions().getCoopAndCoepEnabled()
+                     ? JS_SCERR_NOT_CLONABLE_WITH_COOP_COEP
+                     : JS_SCERR_NOT_CLONABLE;
+    ReportDataCloneError(cx, callbacks, error, "WebAssembly.Memory");
     return false;
   }
 
