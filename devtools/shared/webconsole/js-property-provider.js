@@ -131,6 +131,10 @@ function JSPropertyProvider({
     // Finding the last expression since we've sliced up until the dot.
     // If there were parse errors this won't exist.
     if (lastBody) {
+      if (!lastBody.expression) {
+        return null;
+      }
+
       astExpression = lastBody.expression;
       let matchingObject;
 
