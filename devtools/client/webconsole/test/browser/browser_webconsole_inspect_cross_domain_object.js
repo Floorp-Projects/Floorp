@@ -18,14 +18,23 @@ add_task(async function() {
   // before the test begins.
   Cu.forceShrinkingGC();
 
-  const hud = await openNewTabAndConsole(
-    "data:text/html;charset=utf8,<p>hello"
-  );
-
-  info("Wait for the 'foobar' message to be logged by the frame");
-  const onMessage = waitForMessage(hud, "foobar");
-  await loadDocument(hud.toolbox, TEST_URI, gBrowser.selectedBrowser);
-  const { node } = await onMessage;
+  let hud, node;
+  if (isFissionEnabled()) {
+    await pushPref("devtools.contenttoolbox.fission", true);
+    // When fission is enabled, we might miss the early message emitted while the target
+    // is being switched, so here we directly open the "real" test URI. See Bug 1614291.
+    hud = await openNewTabAndConsole(TEST_URI);
+    info("Wait for the 'foobar' message to be logged by the frame");
+    node = await waitFor(() => findMessage(hud, "foobar"));
+  } else {
+    hud = await openNewTabAndConsole("data:text/html;charset=utf8,<p>hello");
+    info(
+      "Navigate and wait for the 'foobar' message to be logged by the frame"
+    );
+    const onMessage = waitForMessage(hud, "foobar");
+    await loadDocument(hud.toolbox, TEST_URI);
+    ({ node } = await onMessage);
+  }
 
   const objectInspectors = [...node.querySelectorAll(".tree")];
   is(
@@ -88,7 +97,10 @@ add_task(async function() {
   info("Highlight the node by moving the cursor on it");
   // the inspector should be initialized first and then the node should
   // highlight after the hover effect.
-  const inspectorFront = await toolbox.target.getFront("inspector");
+  const objectFront = hud.currentTarget.client.getFrontByID(
+    elementNode.getAttribute("data-link-actor-id")
+  );
+  const inspectorFront = await objectFront.targetFront.getFront("inspector");
   const onNodeHighlight = inspectorFront.highlighter.once("node-highlight");
 
   EventUtils.synthesizeMouseAtCenter(elementNode, { type: "mousemove" }, view);
