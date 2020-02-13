@@ -6776,6 +6776,13 @@
   value: false
   mirror: always
 
+#if defined(XP_MACOSX)
+- name: media.macos.screenrecording.oscheck.enabled
+  type: bool
+  value: true
+  mirror: always
+#endif
+
 #---------------------------------------------------------------------------
 # Prefs starting with "mousewheel."
 #---------------------------------------------------------------------------
