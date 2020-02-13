@@ -48,7 +48,6 @@ TEST_MANIFESTS = dict(
     ANDROID_INSTRUMENTATION=('instrumentation', 'instrumentation', '.', False),
     FIREFOX_UI_FUNCTIONAL=('firefox-ui-functional', 'firefox-ui', '.', False),
     FIREFOX_UI_UPDATE=('firefox-ui-update', 'firefox-ui', '.', False),
-    PUPPETEER_FIREFOX=('firefox-ui-functional', 'firefox-ui', '.', False),
     PYTHON_UNITTEST=('python', 'python', '.', False),
     CRAMTEST=('cram', 'cram', '.', False),
     TELEMETRY_TESTS_CLIENT=(

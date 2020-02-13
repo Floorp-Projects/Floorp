@@ -310,7 +310,6 @@ class FirefoxUIFunctionalTests(FirefoxUITests):
 
     cli_script = 'cli_functional.py'
     default_tests = [
-        os.path.join('puppeteer', 'manifest.ini'),
         os.path.join('functional', 'manifest.ini'),
     ]
 
