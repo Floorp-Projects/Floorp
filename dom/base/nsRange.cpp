@@ -32,6 +32,7 @@
 #include "mozilla/dom/DOMStringList.h"
 #include "mozilla/dom/Selection.h"
 #include "mozilla/dom/Text.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/RangeUtils.h"
 #include "mozilla/Telemetry.h"
@@ -1326,7 +1327,7 @@ class MOZ_STACK_CLASS RangeSubtreeIterator {
  private:
   enum RangeSubtreeIterState { eDone = 0, eUseStart, eUseIterator, eUseEnd };
 
-  UniquePtr<ContentSubtreeIterator> mSubtreeIter;
+  Maybe<ContentSubtreeIterator> mSubtreeIter;
   RangeSubtreeIterState mIterState;
 
   nsCOMPtr<nsINode> mStart;
@@ -1395,7 +1396,7 @@ nsresult RangeSubtreeIterator::Init(nsRange* aRange) {
     // Now create a Content Subtree Iterator to be used
     // for the subtrees between the end points!
 
-    mSubtreeIter = MakeUnique<ContentSubtreeIterator>();
+    mSubtreeIter.emplace();
 
     nsresult res = mSubtreeIter->Init(aRange);
     if (NS_FAILED(res)) return res;
@@ -1405,7 +1406,7 @@ nsresult RangeSubtreeIterator::Init(nsRange* aRange) {
       // to iterate over, so just free it up so we
       // don't accidentally call into it.
 
-      mSubtreeIter = nullptr;
+      mSubtreeIter.reset();
     }
   }
 
