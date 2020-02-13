@@ -337,9 +337,11 @@ JS_FRIEND_API bool js::IsSystemRealm(JS::Realm* realm) {
   return realm->isSystem();
 }
 
-JS_FRIEND_API bool js::IsSystemZone(Zone* zone) { return zone->isSystemZone(); }
+JS_FRIEND_API bool js::IsSystemZone(Zone* zone) { return zone->isSystem; }
 
-JS_FRIEND_API bool js::IsAtomsZone(JS::Zone* zone) { return zone->isAtomsZone(); }
+JS_FRIEND_API bool js::IsAtomsZone(JS::Zone* zone) {
+  return zone->runtimeFromAnyThread()->isAtomsZone(zone);
+}
 
 JS_FRIEND_API bool js::IsFunctionObject(JSObject* obj) {
   return obj->is<JSFunction>();

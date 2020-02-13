@@ -15,8 +15,6 @@
 #include "js/TracingAPI.h"
 #include "js/TypeDecls.h"
 
-class JSRope;
-
 namespace js {
 
 class AutoAccessAtomsZone;
