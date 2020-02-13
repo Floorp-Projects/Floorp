@@ -515,6 +515,7 @@ selfhosted_inputs = [
 # Prepare self-hosted JS code for embedding
 GeneratedFile('selfhosted.out.h', 'selfhosted.js',
               script='builtin/embedjs.py',
+              py2=True,
               entry_point='generate_selfhosted',
               inputs=selfhosted_inputs)
 

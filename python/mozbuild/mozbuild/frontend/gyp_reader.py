@@ -100,6 +100,7 @@ def handle_actions(actions, context, action_overrides):
         g = context['GENERATED_FILES'][output]
         g.script = action_overrides[name]
         g.inputs = action['inputs']
+        g.py2 = True
 
 
 def handle_copies(copies, context):

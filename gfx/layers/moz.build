@@ -589,8 +589,10 @@ include('/ipc/chromium/chromium-config.mozbuild')
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
   GeneratedFile('CompositorD3D11Shaders.h', script='d3d11/genshaders.py',
+                py2=True,
                 inputs=['d3d11/shaders.manifest'])
   GeneratedFile('MLGShaders.h', script='d3d11/genshaders.py',
+                py2=True,
                 inputs=['d3d11/mlgshaders/shaders.manifest'])
 
 LOCAL_INCLUDES += [
