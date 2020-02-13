@@ -918,7 +918,7 @@ class HTMLEditor final : public TextEditor,
   /**
    * Join together any adjacent editable text nodes in the range.
    */
-  MOZ_CAN_RUN_SCRIPT nsresult CollapseAdjacentTextNodes(nsRange* aRange);
+  MOZ_CAN_RUN_SCRIPT nsresult CollapseAdjacentTextNodes(nsRange& aRange);
 
   /**
    * IsInVisibleTextFrames() returns true if all text in aText is in visible
