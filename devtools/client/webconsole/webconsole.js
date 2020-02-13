@@ -118,11 +118,20 @@ class WebConsole {
   /**
    * Initialize the Web Console instance.
    *
+   * @param {Boolean} emitCreatedEvent: Defaults to true. If false is passed,
+   *        We won't be sending the 'web-console-created' event.
+   *
    * @return object
    *         A promise for the initialization.
    */
-  init() {
-    return this.ui.init();
+  async init(emitCreatedEvent = true) {
+    await this.ui.init();
+
+    // This event needs to be fired later in the case of the BrowserConsole
+    if (emitCreatedEvent) {
+      const id = Utils.supportsString(this.hudId);
+      Services.obs.notifyObservers(id, "web-console-created");
+    }
   }
 
   /**
