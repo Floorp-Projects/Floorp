@@ -10,6 +10,8 @@
 #include "gfxContext.h"
 #include "gfxPlatform.h"
 #include "mozilla/gfx/2D.h"
+#include "mozilla/layers/RenderRootStateManager.h"
+#include "mozilla/layers/WebRenderLayerManager.h"
 #include "imgIContainer.h"
 #include "nsContainerFrame.h"
 #include "nsIImageLoadingContent.h"
@@ -31,6 +33,7 @@ using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::gfx;
 using namespace mozilla::image;
+using namespace mozilla::dom::SVGPreserveAspectRatio_Binding;
 namespace SVGT = SVGGeometryProperty::Tags;
 
 // ---------------------------------------------------------------------
@@ -380,6 +383,233 @@ void nsSVGImageFrame::PaintSVG(gfxContext& aContext,
     }
     // gfxContextAutoSaveRestore goes out of scope & cleans up our gfxContext
   }
+}
+
+bool nsSVGImageFrame::CreateWebRenderCommands(
+    mozilla::wr::DisplayListBuilder& aBuilder,
+    mozilla::wr::IpcResourceUpdateQueue& aResources,
+    const mozilla::layers::StackingContextHelper& aSc,
+    mozilla::layers::RenderRootStateManager* aManager,
+    nsDisplayListBuilder* aDisplayListBuilder, nsDisplaySVGGeometry* aItem,
+    bool aDryRun) {
+  if (!StyleVisibility()->IsVisible()) {
+    return true;
+  }
+
+  float opacity = 1.0f;
+  if (nsSVGUtils::CanOptimizeOpacity(this)) {
+    opacity = StyleEffects()->mOpacity;
+  }
+
+  if (opacity != 1.0f) {
+    // FIXME: not implemented, might be trivial
+    return false;
+  }
+  if (StyleEffects()->mMixBlendMode != NS_STYLE_BLEND_NORMAL) {
+    // FIXME: not implemented
+    return false;
+  }
+
+  // try to setup the image
+  if (!mImageContainer) {
+    nsCOMPtr<imgIRequest> currentRequest;
+    nsCOMPtr<nsIImageLoadingContent> imageLoader =
+        do_QueryInterface(GetContent());
+    if (imageLoader) {
+      imageLoader->GetRequest(nsIImageLoadingContent::CURRENT_REQUEST,
+                              getter_AddRefs(currentRequest));
+    }
+
+    if (currentRequest) {
+      currentRequest->GetImage(getter_AddRefs(mImageContainer));
+    }
+  }
+
+  if (!mImageContainer) {
+    // nothing to draw (yet)
+    return true;
+  }
+
+  uint32_t flags = imgIContainer::FLAG_ASYNC_NOTIFY;
+  if (aDisplayListBuilder->ShouldSyncDecodeImages()) {
+    flags |= imgIContainer::FLAG_SYNC_DECODE;
+  }
+  if (aDisplayListBuilder->IsPaintingToWindow()) {
+    flags |= imgIContainer::FLAG_HIGH_QUALITY_SCALING;
+  }
+
+  // Compute bounds of the image
+  nscoord appUnitsPerDevPx = PresContext()->AppUnitsPerDevPixel();
+  int32_t appUnitsPerCSSPixel = AppUnitsPerCSSPixel();
+
+  float x, y, width, height;
+  SVGImageElement* imgElem = static_cast<SVGImageElement*>(GetContent());
+  SVGGeometryProperty::ResolveAll<SVGT::X, SVGT::Y, SVGT::Width, SVGT::Height>(
+      imgElem, &x, &y, &width, &height);
+  NS_ASSERTION(width > 0 && height > 0,
+               "Should only be painting things with valid width/height");
+
+  auto toReferenceFrame = aItem->ToReferenceFrame();
+  auto appRect = nsLayoutUtils::RoundGfxRectToAppRect(Rect(0, 0, width, height),
+                                                      appUnitsPerCSSPixel);
+  appRect += toReferenceFrame;
+  auto destRect = LayoutDeviceRect::FromAppUnits(appRect, appUnitsPerDevPx);
+  auto clipRect = destRect;
+
+  if (StyleDisplay()->IsScrollableOverflow()) {
+    // Apply potential non-trivial clip
+    auto cssClip = nsSVGUtils::GetClipRectForFrame(this, 0, 0, width, height);
+    auto appClip =
+        nsLayoutUtils::RoundGfxRectToAppRect(cssClip, appUnitsPerCSSPixel);
+    appClip += toReferenceFrame;
+    clipRect = LayoutDeviceRect::FromAppUnits(appClip, appUnitsPerDevPx);
+
+    // Apply preserveAspectRatio
+    if (mImageContainer->GetType() == imgIContainer::TYPE_RASTER) {
+      int32_t nativeWidth, nativeHeight;
+      if (NS_FAILED(mImageContainer->GetWidth(&nativeWidth)) ||
+          NS_FAILED(mImageContainer->GetHeight(&nativeHeight)) ||
+          nativeWidth == 0 || nativeHeight == 0) {
+        // Image has no size; nothing to draw
+        return true;
+      }
+
+      auto preserveAspectRatio = imgElem->mPreserveAspectRatio.GetAnimValue();
+      uint16_t align = preserveAspectRatio.GetAlign();
+      uint16_t meetOrSlice = preserveAspectRatio.GetMeetOrSlice();
+
+      // default to the defaults
+      if (align == SVG_PRESERVEASPECTRATIO_UNKNOWN) {
+        align = SVG_PRESERVEASPECTRATIO_XMIDYMID;
+      }
+      if (meetOrSlice == SVG_MEETORSLICE_UNKNOWN) {
+        meetOrSlice = SVG_MEETORSLICE_MEET;
+      }
+
+      // aspect > 1 is horizontal
+      // aspect < 1 is vertical
+      float nativeAspect = ((float)nativeWidth) / ((float)nativeHeight);
+      float viewAspect = width / height;
+
+      // "Meet" is "fit image to view"; "Slice" is "cover view with image".
+      //
+      // Whether we meet or slice, one side of the destRect will always be
+      // perfectly spanned by our image. The only questions to answer are
+      // "which side won't span perfectly" and "should that side be grown
+      // or shrunk".
+      //
+      // Because we fit our image to the destRect, this all just reduces to:
+      // "if meet, shrink to fit. if slice, grow to fit."
+      if (align != SVG_PRESERVEASPECTRATIO_NONE && nativeAspect != viewAspect) {
+        // Slightly redundant bools, but they make the conditions clearer
+        bool tooTall = nativeAspect > viewAspect;
+        bool tooWide = nativeAspect < viewAspect;
+        if ((meetOrSlice == SVG_MEETORSLICE_MEET && tooTall) ||
+            (meetOrSlice == SVG_MEETORSLICE_SLICE && tooWide)) {
+          // Adjust height and realign y
+          auto oldHeight = destRect.height;
+          destRect.height = destRect.width / nativeAspect;
+          auto heightChange = oldHeight - destRect.height;
+          switch (align) {
+            case SVG_PRESERVEASPECTRATIO_XMINYMIN:
+            case SVG_PRESERVEASPECTRATIO_XMIDYMIN:
+            case SVG_PRESERVEASPECTRATIO_XMAXYMIN:
+              // align to top (no-op)
+              break;
+            case SVG_PRESERVEASPECTRATIO_XMINYMID:
+            case SVG_PRESERVEASPECTRATIO_XMIDYMID:
+            case SVG_PRESERVEASPECTRATIO_XMAXYMID:
+              // align to center
+              destRect.y += heightChange / 2.0f;
+              break;
+            case SVG_PRESERVEASPECTRATIO_XMINYMAX:
+            case SVG_PRESERVEASPECTRATIO_XMIDYMAX:
+            case SVG_PRESERVEASPECTRATIO_XMAXYMAX:
+              // align to bottom
+              destRect.y += heightChange;
+              break;
+            default:
+              MOZ_ASSERT_UNREACHABLE("Unknown value for align");
+          }
+        } else if ((meetOrSlice == SVG_MEETORSLICE_MEET && tooWide) ||
+                   (meetOrSlice == SVG_MEETORSLICE_SLICE && tooTall)) {
+          // Adjust width and realign x
+          auto oldWidth = destRect.width;
+          destRect.width = destRect.height * nativeAspect;
+          auto widthChange = oldWidth - destRect.width;
+          switch (align) {
+            case SVG_PRESERVEASPECTRATIO_XMINYMIN:
+            case SVG_PRESERVEASPECTRATIO_XMINYMID:
+            case SVG_PRESERVEASPECTRATIO_XMINYMAX:
+              // align to left (no-op)
+              break;
+            case SVG_PRESERVEASPECTRATIO_XMIDYMIN:
+            case SVG_PRESERVEASPECTRATIO_XMIDYMID:
+            case SVG_PRESERVEASPECTRATIO_XMIDYMAX:
+              // align to center
+              destRect.x += widthChange / 2.0f;
+              break;
+            case SVG_PRESERVEASPECTRATIO_XMAXYMIN:
+            case SVG_PRESERVEASPECTRATIO_XMAXYMID:
+            case SVG_PRESERVEASPECTRATIO_XMAXYMAX:
+              // align to right
+              destRect.x += widthChange;
+              break;
+            default:
+              MOZ_ASSERT_UNREACHABLE("Unknown value for align");
+          }
+        }
+      }
+    }
+  }
+
+  Maybe<SVGImageContext> svgContext;
+  if (mImageContainer->GetType() == imgIContainer::TYPE_VECTOR) {
+    // Forward preserveAspectRatio to inner SVGs
+    svgContext.emplace(Some(CSSIntSize::Truncate(width, height)),
+                       Some(imgElem->mPreserveAspectRatio.GetAnimValue()));
+  }
+
+  IntSize decodeSize = nsLayoutUtils::ComputeImageContainerDrawingParameters(
+      mImageContainer, this, destRect, aSc, flags, svgContext);
+
+  RefPtr<layers::ImageContainer> container;
+  ImgDrawResult drawResult = mImageContainer->GetImageContainerAtSize(
+      aManager->LayerManager(), decodeSize, svgContext, flags,
+      getter_AddRefs(container));
+
+  // While we got a container, it may not contain a fully decoded surface. If
+  // that is the case, and we have an image we were previously displaying which
+  // has a fully decoded surface, then we should prefer the previous image.
+  switch (drawResult) {
+    case ImgDrawResult::NOT_READY:
+    case ImgDrawResult::INCOMPLETE:
+    case ImgDrawResult::TEMPORARY_ERROR:
+      // nothing to draw (yet)
+      return true;
+    case ImgDrawResult::NOT_SUPPORTED:
+      // things we haven't implemented for WR yet
+      return false;
+    default:
+      // image is ready to draw
+      break;
+  }
+
+  // Don't do any actual mutations to state if we're doing a dry run
+  // (used to decide if we're making this into an active layer)
+  if (!aDryRun) {
+    // If the image container is empty, we don't want to fallback. Any other
+    // failure will be due to resource constraints and fallback is unlikely to
+    // help us. Hence we can ignore the return value from PushImage.
+    if (container) {
+      aManager->CommandBuilder().PushImage(aItem, container, aBuilder,
+                                           aResources, aSc, destRect, clipRect);
+    }
+
+    nsDisplayItemGenericImageGeometry::UpdateDrawResult(aItem, drawResult);
+  }
+
+  return true;
 }
 
 nsIFrame* nsSVGImageFrame::GetFrameForPoint(const gfxPoint& aPoint) {
