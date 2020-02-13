@@ -12,7 +12,15 @@ use crate::ssl;
 // for values outside of those that are defined here.
 
 pub type Alert = u8;
+
 pub type Epoch = u16;
+// TLS doesn't really have an "initial" concept that maps to QUIC so directly,
+// but this should be clear enough.
+pub const TLS_EPOCH_INITIAL: Epoch = 0 as Epoch;
+pub const TLS_EPOCH_ZERO_RTT: Epoch = 1 as Epoch;
+pub const TLS_EPOCH_HANDSHAKE: Epoch = 2 as Epoch;
+// Also, we don't use TLS epochs > 3.
+pub const TLS_EPOCH_APPLICATION_DATA: Epoch = 3 as Epoch;
 
 /// Rather than defining a type alias and a bunch of constants, which leads to a ton of repetition,
 /// use this macro.

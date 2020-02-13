@@ -1,4 +1,5 @@
 #![cfg_attr(feature = "deny-warnings", deny(warnings))]
+#![warn(clippy::pedantic)]
 
 use neqo_crypto::aead::Aead;
 use neqo_crypto::constants::*;

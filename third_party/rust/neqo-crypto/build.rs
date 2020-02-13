@@ -129,7 +129,10 @@ fn get_bash() -> PathBuf {
 }
 
 fn build_nss(dir: PathBuf) {
-    let mut build_nss = vec![String::from("./build.sh")];
+    let mut build_nss = vec![
+        String::from("./build.sh"),
+        String::from("-Ddisable_tests=1"),
+    ];
     if is_debug() {
         build_nss.push(String::from("--static"));
     } else {
@@ -167,12 +170,7 @@ fn dynamic_link_both(extra_libs: &[&str]) {
     }
 }
 
-fn static_link(nsstarget: &PathBuf) {
-    let lib_dir = nsstarget.join("lib");
-    println!(
-        "cargo:rustc-link-search=native={}",
-        lib_dir.to_str().unwrap()
-    );
+fn static_link() {
     let mut static_libs = vec![
         "certdb",
         "certhi",
@@ -299,9 +297,8 @@ fn setup_standalone() -> Vec<String> {
         "cargo:rustc-link-search=native={}",
         nsslibdir.to_str().unwrap()
     );
-
     if is_debug() {
-        static_link(&nsstarget);
+        static_link();
     } else {
         dynamic_link();
     }

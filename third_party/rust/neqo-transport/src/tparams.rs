@@ -59,15 +59,15 @@ impl TransportParameter {
     fn encode(&self, enc: &mut Encoder, tipe: u16) {
         enc.encode_uint(2, tipe);
         match self {
-            TransportParameter::Bytes(a) => {
+            Self::Bytes(a) => {
                 enc.encode_vec(2, a);
             }
-            TransportParameter::Integer(a) => {
+            Self::Integer(a) => {
                 enc.encode_vec_with(2, |enc_inner| {
                     enc_inner.encode_varint(*a);
                 });
             }
-            TransportParameter::Empty => {
+            Self::Empty => {
                 enc.encode_uint(2, 0_u64);
             }
         };
@@ -85,12 +85,12 @@ impl TransportParameter {
         qtrace!("TP {:x} length {:x}", tipe, content.len());
         let mut d = Decoder::from(content);
         let tp = match tipe {
-            ORIGINAL_CONNECTION_ID => TransportParameter::Bytes(d.decode_remainder().to_vec()), // TODO(mt) unnecessary copy
+            ORIGINAL_CONNECTION_ID => Self::Bytes(d.decode_remainder().to_vec()), // TODO(mt) unnecessary copy
             STATELESS_RESET_TOKEN => {
                 if d.remaining() != 16 {
                     return Err(Error::TransportParameterError);
                 }
-                TransportParameter::Bytes(d.decode_remainder().to_vec()) // TODO(mt) unnecessary copy
+                Self::Bytes(d.decode_remainder().to_vec()) // TODO(mt) unnecessary copy
             }
             IDLE_TIMEOUT
             | INITIAL_MAX_DATA
@@ -100,21 +100,21 @@ impl TransportParameter {
             | INITIAL_MAX_STREAMS_BIDI
             | INITIAL_MAX_STREAMS_UNI
             | MAX_ACK_DELAY => match d.decode_varint() {
-                Some(v) => TransportParameter::Integer(v),
+                Some(v) => Self::Integer(v),
                 None => return Err(Error::TransportParameterError),
             },
 
             MAX_PACKET_SIZE => match d.decode_varint() {
-                Some(v) if v >= 1200 => TransportParameter::Integer(v),
+                Some(v) if v >= 1200 => Self::Integer(v),
                 _ => return Err(Error::TransportParameterError),
             },
 
             ACK_DELAY_EXPONENT => match d.decode_varint() {
-                Some(v) if v <= 20 => TransportParameter::Integer(v),
+                Some(v) if v <= 20 => Self::Integer(v),
                 _ => return Err(Error::TransportParameterError),
             },
 
-            DISABLE_MIGRATION => TransportParameter::Empty,
+            DISABLE_MIGRATION => Self::Empty,
             // Skip.
             _ => return Ok(None),
         };
@@ -315,7 +315,7 @@ impl ExtensionHandler for TransportParametersHandler {
     }
 
     fn handle(&mut self, msg: HandshakeMessage, d: &[u8]) -> ExtensionHandlerResult {
-        qdebug!(
+        qtrace!(
             "Handling transport parameters, msg={:?} value={}",
             msg,
             hex(d),
