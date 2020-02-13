@@ -1250,6 +1250,10 @@ void HTMLImageElement::SetLazyLoading() {
     return;
   }
 
+  if (!StaticPrefs::dom_image_lazy_loading_enabled()) {
+    return;
+  }
+
   // If scripting is disabled don't do lazy load.
   // https://whatpr.org/html/3752/images.html#updating-the-image-data
   if (!OwnerDoc()->IsScriptEnabled()) {
