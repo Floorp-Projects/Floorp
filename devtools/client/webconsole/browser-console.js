@@ -7,6 +7,7 @@
 const Services = require("Services");
 const WebConsole = require("devtools/client/webconsole/webconsole");
 const { TargetList } = require("devtools/shared/resources/target-list");
+const { Utils } = require("devtools/client/webconsole/utils");
 
 loader.lazyRequireGetter(this, "Telemetry", "devtools/client/shared/telemetry");
 loader.lazyRequireGetter(
@@ -77,8 +78,13 @@ class BrowserConsole extends WebConsole {
       // Bug 1605763: Call super.init before fetching targets in order to build the
       // console UI first; have it listen for targets and be able to display first
       // targets as soon as they get available.
-      await super.init();
+      await super.init(false);
       await this.targetList.startListening();
+
+      // Reports the console as created only after everything is done,
+      // including TargetList.startListening.
+      const id = Utils.supportsString(this.hudId);
+      Services.obs.notifyObservers(id, "web-console-created");
     })();
     return this._bcInitializer;
   }
