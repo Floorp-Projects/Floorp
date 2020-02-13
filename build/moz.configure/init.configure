@@ -299,11 +299,14 @@ def virtualenv_python2(env_python, build_env, mozillabuild, mozconfig, help):
             os.path.join(virtualenvs_root, 'init'), out,
             os.path.join(topsrcdir, 'build', 'virtualenv_packages.txt'))
 
-    # If we're not in the virtualenv, we need the mozfile module for
-    # find_program.
+    # If we're not in the virtualenv, we need to update the path to include some
+    # necessary modules for find_program.
     if normsep(sys.executable) != normsep(manager.python_path):
         sys.path.insert(
             0, os.path.join(topsrcdir, 'testing', 'mozbase', 'mozfile'))
+        sys.path.insert(
+            0, os.path.join(topsrcdir, 'third_party', 'python', 'backports',
+                            'shutil_which'))
 
     if python:
         found_python = find_program(python)
@@ -311,6 +314,11 @@ def virtualenv_python2(env_python, build_env, mozillabuild, mozconfig, help):
             die('The PYTHON environment variable does not contain '
                 'a valid path. Cannot find %s', python)
         python = found_python
+        try:
+            version = python_executable_version(python).version
+        except Exception as e:
+            raise FatalCheckError(
+                'could not determine version of given PYTHON: %s' % e)
     elif mozillabuild:
         # MozillaBuild provides a Python 2.
         python = normsep('%s/python/python2.exe' % mozillabuild)
