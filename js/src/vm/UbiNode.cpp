@@ -256,8 +256,7 @@ JS::Zone* TracerConcrete<Referent>::zone() const {
   return get().zoneFromAnyThread();
 }
 
-template JS::Zone* TracerConcrete<JSScript>::zone() const;
-template JS::Zone* TracerConcrete<js::LazyScript>::zone() const;
+template JS::Zone* TracerConcrete<js::BaseScript>::zone() const;
 template JS::Zone* TracerConcrete<js::Shape>::zone() const;
 template JS::Zone* TracerConcrete<js::BaseShape>::zone() const;
 template JS::Zone* TracerConcrete<js::ObjectGroup>::zone() const;
@@ -287,9 +286,7 @@ UniquePtr<EdgeRange> TracerConcrete<Referent>::edges(JSContext* cx,
   return UniquePtr<EdgeRange>(range.release());
 }
 
-template UniquePtr<EdgeRange> TracerConcrete<JSScript>::edges(
-    JSContext* cx, bool wantNames) const;
-template UniquePtr<EdgeRange> TracerConcrete<js::LazyScript>::edges(
+template UniquePtr<EdgeRange> TracerConcrete<js::BaseScript>::edges(
     JSContext* cx, bool wantNames) const;
 template UniquePtr<EdgeRange> TracerConcrete<js::Shape>::edges(
     JSContext* cx, bool wantNames) const;
@@ -318,8 +315,8 @@ Realm* TracerConcreteWithRealm<Referent>::realm() const {
   return TracerBase::get().realm();
 }
 
-template Realm* TracerConcreteWithRealm<JSScript>::realm() const;
-template JS::Compartment* TracerConcreteWithRealm<JSScript>::compartment()
+template Realm* TracerConcreteWithRealm<js::BaseScript>::realm() const;
+template JS::Compartment* TracerConcreteWithRealm<js::BaseScript>::compartment()
     const;
 
 bool Concrete<JSObject>::hasAllocationStack() const {
@@ -372,8 +369,7 @@ Realm* Concrete<JSObject>::realm() const {
 
 const char16_t Concrete<JS::Symbol>::concreteTypeName[] = u"JS::Symbol";
 const char16_t Concrete<BigInt>::concreteTypeName[] = u"JS::BigInt";
-const char16_t Concrete<JSScript>::concreteTypeName[] = u"JSScript";
-const char16_t Concrete<js::LazyScript>::concreteTypeName[] = u"js::LazyScript";
+const char16_t Concrete<js::BaseScript>::concreteTypeName[] = u"js::BaseScript";
 const char16_t Concrete<js::jit::JitCode>::concreteTypeName[] =
     u"js::jit::JitCode";
 const char16_t Concrete<js::Shape>::concreteTypeName[] = u"js::Shape";

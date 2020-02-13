@@ -460,14 +460,6 @@ static void StatsCellCallback(JSRuntime* rt, void* data, JS::GCCellPtr cellptr,
       break;
     }
 
-    case JS::TraceKind::LazyScript: {
-      LazyScript* lazy = &cellptr.as<LazyScript>();
-      zStats->lazyScriptsGCHeap += thingSize;
-      zStats->lazyScriptsMallocHeap +=
-          lazy->sizeOfExcludingThis(rtStats->mallocSizeOf_);
-      break;
-    }
-
     case JS::TraceKind::Shape: {
       Shape* shape = &cellptr.as<Shape>();
 

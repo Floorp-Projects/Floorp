@@ -26,6 +26,7 @@ namespace js {
 class AccessorShape;
 class FatInlineAtom;
 class NormalAtom;
+class LazyScript;
 
 class Nursery;
 
