@@ -1044,6 +1044,7 @@ module.exports = {
   getChildrenWithEvaluations,
   getClosestGripNode,
   getClosestNonBucketNode,
+  getEvaluatedItem,
   getFront,
   getPathExpression,
   getParent,
