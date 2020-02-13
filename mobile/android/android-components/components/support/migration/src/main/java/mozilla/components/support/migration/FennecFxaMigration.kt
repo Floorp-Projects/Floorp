@@ -160,7 +160,7 @@ private object AuthenticatedAccountProcessor {
 
         val signInResult = accountManager.signInWithShareableAccountAsync(
             shareableAccount,
-            reuseSessionToken = false
+            reuseSessionToken = true
         ).await()
 
         return when (signInResult) {
