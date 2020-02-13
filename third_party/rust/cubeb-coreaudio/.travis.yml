@@ -11,3 +11,8 @@ before_script:
 script:
   - cargo build --verbose
   - sh run_tests.sh
+  - sh run_sanitizers.sh
+jobs:
+  allow_failures:
+    - rust: nightly
+  fast_finish: true
