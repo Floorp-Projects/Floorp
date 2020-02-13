@@ -9,6 +9,8 @@ use crate::mach_sys::*;
 use std::mem::size_of;
 use mach::mach_time::{mach_timebase_info_data_t, mach_timebase_info};
 use libc::{pthread_t, pthread_self};
+use crate::AudioThreadPriorityError;
+use log::info;
 
 extern "C" {
     fn pthread_mach_thread_np(tid: pthread_t) -> mach_port_t;
@@ -54,7 +56,7 @@ impl RtPriorityHandleInternal {
 }
 
 pub fn demote_current_thread_from_real_time_internal(rt_priority_handle: RtPriorityHandleInternal)
-                                            -> Result<(), ()> {
+                                            -> Result<(), AudioThreadPriorityError> {
     unsafe {
         let rv: kern_return_t;
         let mut h = rt_priority_handle;
@@ -64,11 +66,10 @@ pub fn demote_current_thread_from_real_time_internal(rt_priority_handle: RtPrior
                                thread_policy_t,
                                THREAD_TIME_CONSTRAINT_POLICY_COUNT!());
         if rv != KERN_SUCCESS as i32 {
-            warn!("thread demotion error: thread_policy_set: RT");
-            return Err(());
+            return Err(AudioThreadPriorityError::new("thread demotion error: thread_policy_get: RT"));
         }
 
-        warn!("thread {} priority restored.", h.tid);
+        info!("thread {} priority restored.", h.tid);
     }
 
     return Ok(());
@@ -76,7 +77,7 @@ pub fn demote_current_thread_from_real_time_internal(rt_priority_handle: RtPrior
 
 pub fn promote_current_thread_to_real_time_internal(audio_buffer_frames: u32,
                                            audio_samplerate_hz: u32)
-                                           -> Result<RtPriorityHandleInternal, ()> {
+                                           -> Result<RtPriorityHandleInternal, AudioThreadPriorityError> {
 
     let mut rt_priority_handle = RtPriorityHandleInternal::new();
 
@@ -113,8 +114,7 @@ pub fn promote_current_thread_to_real_time_internal(audio_buffer_frames: u32,
                                &mut get_default);
 
         if rv != KERN_SUCCESS as i32 {
-            error!("thread promotion error: thread_policy_get: time_constraint");
-            return Err(());
+            return Err(AudioThreadPriorityError::new("thread promotion error: thread_policy_get: time_constraint"));
         }
 
         rt_priority_handle.previous_time_constraint_policy = time_constraints;
@@ -139,8 +139,7 @@ pub fn promote_current_thread_to_real_time_internal(audio_buffer_frames: u32,
                                (&mut time_constraints) as *mut _ as thread_policy_t,
                                THREAD_TIME_CONSTRAINT_POLICY_COUNT!());
         if rv != KERN_SUCCESS as i32 {
-            warn!("thread promotion error: thread_policy_set: time_constraint");
-            return Err(());
+            return Err(AudioThreadPriorityError::new("thread promotion error: thread_policy_set: time_constraint"));
         }
 
         info!("thread {} bumped to real time priority.", tid);
