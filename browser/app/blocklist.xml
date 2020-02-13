@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1581340917940">
+<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1581545094556">
   <emItems>
     <emItem blockID="i334" id="{0F827075-B026-42F3-885D-98981EE7B1AE}">
       <prefs/>
@@ -3633,6 +3633,22 @@
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
     <emItem blockID="39473bb3-638d-4b7e-a847-f197e6320564" id="/^((\{ebba9c65-d04c-4c02-afd1-476d7c06fc2f\})|(\{117f05e4-3403-4cbe-a041-30fa60054e9f\})|(\{03417bad-eb5b-4bd4-89f8-f10d78fce082\})|(\{42f0a4e1-710d-4154-b34a-731dbbe2097b\})|(\{6a0a9103-3482-4717-aca8-f22ee2228d25\})|(\{23d5c4a6-1231-4f87-ebf9-e5800eae221b\})|(\{99a32eb1-5da4-4a35-beb6-7c3b5222ce04\}))$/">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="52b9033d-de65-48ad-9062-7c340835feb0" id="/^((\{312951c4-a455-4886-a2f1-e4fb05b9fee7\})|(traderibis@gmail\.com))$/">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="a98992d1-8a30-406f-944d-c0161d0aaa21" id="{e0a905db-294f-4e91-be75-8b5c7c5df90a}">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="d33858b8-d192-4be2-a844-b151f0f287ca" id="/^((\{0bbf5ce8-0bfb-4589-a4e8-4f1e435389d2\})|(\{820847ac-fb62-47a4-a6be-00d863584c76\})|(\{703d2caf-edff-4198-baa3-615135f97890\})|(\{f459049d-939d-432e-83c7-07ced47e629a\})|(\{0d56e009-957a-4575-a984-ecd22ccf3120\})|(\{88386103-f99d-4aab-83c2-64106a77748e\})|(\{29e30d06-1030-4a82-8e29-25706012da97\})|(\{c0d5c1cb-e676-4ff7-8189-793efc86fa2f\})|(\{aade33ec-2184-4759-8de5-5d61f1e29e72\})|(\{72dc5fd5-179b-40b6-9218-e88434939ed8\})|(\{8c9ec486-bd7b-40dd-ab49-1ca3ff452484\})|(\{67c0ce2e-2359-44e7-b9d9-1061a3c4a041\})|(\{149c0e63-b3f6-4f8d-bb1d-94b7e36d8aea\})|(\{c3a1e646-c155-4a40-b5bf-ac9252e6b632\})|(\{6876f3d2-97d6-46d6-b9bf-aa46264f6c3c\})|(\{330a08b1-d93e-48a2-9081-e93e25190eec\})|(\{443305ec-55d7-411c-bb4a-96e83b4e631e\})|(\{945964bd-5c29-48e3-9dd6-26741626c1ba\})|(\{ec8513c5-2bcc-45b0-ae77-da6685cfafd9\})|(\{57703f70-e1b7-462d-bf7e-657bac5eb30c\})|(\{8c1d6a6c-3745-429e-8ec5-2a374320e703\})|(\{2ff583b8-72a9-40bd-877b-b355ad33ce44\})|(\{f2ed910e-ab21-4ad3-a70a-8adca5e683f6\})|(\{4ae1f921-575e-4599-8b77-e8e7ab337860\})|(\{cfe7c709-6df6-4d54-9f4c-6fc3967904ce\})|(\{4e0cceff-558b-4902-9870-55ecb16f78a6\})|(\{093726f6-5907-480b-81fc-fafe4f04b5e8\})|(\{4a2650e6-fb1b-4e83-b0ad-4e991c9ac01e\})|(\{2dcd1f94-6a18-47c3-826a-d8f1044b3ade\})|(\{90e61a54-35d6-44c8-bb33-88623e6a03ae\})|(\{61389b8e-55eb-43ad-a68d-bebefe7476ad\})|(\{f8890846-fcc1-479f-a90b-dce3e486b0ba\}))$/">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="ba0f5f7c-8998-49f1-89a8-7f3a15c41cc8" id="/^((\{6e27c586-e50c-49b1-9925-5427f3e9f028\})|(\{ae6dcbb6-d0a6-494b-bdfc-ea9d7b8f7667\})|(\{14aec2a8-0289-43f3-85fb-5d52491a0538\})|(\{b541ce5d-e99a-4629-9167-e71ac65bf32f\}))$/">
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
