@@ -3,14 +3,50 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #[warn(missing_docs)]
+use cfg_if::cfg_if;
+use std::error::Error;
+use std::fmt;
 
-#[macro_use]
-extern crate cfg_if;
-#[cfg(feature = "terminal-logging")]
-extern crate simple_logger;
-#[macro_use]
-extern crate log;
+#[derive(Debug)]
+pub struct AudioThreadPriorityError {
+    message: String,
+    inner: Option<Box<dyn Error + 'static>>,
+}
 
+impl AudioThreadPriorityError {
+    fn new_with_inner(message: &str, inner: Box<dyn Error>) -> AudioThreadPriorityError {
+        AudioThreadPriorityError {
+            message: message.into(),
+            inner: Some(inner),
+        }
+    }
+    fn new(message: &str) -> AudioThreadPriorityError {
+        AudioThreadPriorityError {
+            message: message.into(),
+            inner: None,
+        }
+    }
+}
+
+impl fmt::Display for AudioThreadPriorityError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let mut rv = write!(f, "AudioThreadPriorityError: {}", &self.message);
+        if let Some(inner) = &self.inner {
+            rv = write!(f, " ({})", inner);
+        }
+        rv
+    }
+}
+
+impl Error for AudioThreadPriorityError {
+    fn description(&self) -> &str {
+        &self.message
+    }
+
+    fn source(&self) -> Option<&(dyn Error + 'static)> {
+        self.inner.as_ref().map(|e| e.as_ref())
+    }
+}
 
 cfg_if! {
     if #[cfg(target_os = "macos")] {
@@ -46,14 +82,14 @@ cfg_if! {
     } else {
         // blanket implementations for Android and other systems.
         pub struct RtPriorityHandleInternal {}
-        pub fn promote_current_thread_to_real_time_internal(_: u32, audio_samplerate_hz: u32) -> Result<RtPriorityHandle, ()> {
+        pub fn promote_current_thread_to_real_time_internal(_: u32, audio_samplerate_hz: u32) -> Result<RtPriorityHandle, AudioThreadPriorityError> {
             if audio_samplerate_hz == 0 {
-                return Err(());
+                return Err(AudioThreadPriorityError{message: "sample rate is zero".to_string(), inner: None});
             }
             // no-op
             Ok(RtPriorityHandle{})
         }
-        pub fn demote_current_thread_from_real_time_internal(_: RtPriorityHandle) -> Result<(), ()> {
+        pub fn demote_current_thread_from_real_time_internal(_: RtPriorityHandle) -> Result<(), AudioThreadPriorityError> {
             // no-op
             Ok(())
         }
@@ -84,7 +120,7 @@ pub type RtPriorityThreadInfo = RtPriorityThreadInfoInternal;
 ///
 /// Ok in case of success, with an opaque structure containing relevant info for the platform, Err
 /// otherwise.
-pub fn get_current_thread_info() -> Result<RtPriorityThreadInfo, ()> {
+pub fn get_current_thread_info() -> Result<RtPriorityThreadInfo, AudioThreadPriorityError> {
     return get_current_thread_info_internal();
 }
 
@@ -210,9 +246,9 @@ pub fn promote_thread_to_real_time(
     thread_info: RtPriorityThreadInfo,
     audio_buffer_frames: u32,
     audio_samplerate_hz: u32,
-) -> Result<RtPriorityHandle, ()> {
+) -> Result<RtPriorityHandle, AudioThreadPriorityError> {
     if audio_samplerate_hz == 0 {
-        return Err(());
+        return Err(AudioThreadPriorityError::new("sample rate is zero"));
     }
     return promote_thread_to_real_time_internal(
         thread_info,
@@ -231,7 +267,7 @@ pub fn promote_thread_to_real_time(
 /// # Return value
 ///
 /// `Ok` in case of success, `Err` otherwise.
-pub fn demote_thread_from_real_time(thread_info: RtPriorityThreadInfo) -> Result<(), ()> {
+pub fn demote_thread_from_real_time(thread_info: RtPriorityThreadInfo) -> Result<(), AudioThreadPriorityError> {
     return demote_thread_from_real_time_internal(thread_info);
 }
 
@@ -329,9 +365,9 @@ pub extern "C" fn atp_set_real_time_limit(audio_buffer_frames: u32,
 pub fn promote_current_thread_to_real_time(
     audio_buffer_frames: u32,
     audio_samplerate_hz: u32,
-) -> Result<RtPriorityHandle, ()> {
+) -> Result<RtPriorityHandle, AudioThreadPriorityError> {
     if audio_samplerate_hz == 0 {
-        return Err(());
+        return Err(AudioThreadPriorityError::new("sample rate is zero"));
     }
     return promote_current_thread_to_real_time_internal(audio_buffer_frames, audio_samplerate_hz);
 }
@@ -346,7 +382,9 @@ pub fn promote_current_thread_to_real_time(
 /// # Return value
 ///
 /// `Ok` in scase of success, `Err` otherwise.
-pub fn demote_current_thread_from_real_time(handle: RtPriorityHandle) -> Result<(), ()> {
+pub fn demote_current_thread_from_real_time(
+    handle: RtPriorityHandle,
+) -> Result<(), AudioThreadPriorityError> {
     return demote_current_thread_from_real_time_internal(handle);
 }
 
@@ -442,9 +480,11 @@ mod tests {
             match promote_current_thread_to_real_time(0, 44100) {
                 Ok(rt_prio_handle) => {
                     demote_current_thread_from_real_time(rt_prio_handle).unwrap();
+                    assert!(true);
                 }
                 Err(e) => {
-                    panic!(e);
+                    eprintln!("{}", e.description());
+                    assert!(false);
                 }
             }
         }
@@ -452,17 +492,22 @@ mod tests {
             match promote_current_thread_to_real_time(512, 44100) {
                 Ok(rt_prio_handle) => {
                     demote_current_thread_from_real_time(rt_prio_handle).unwrap();
+                    assert!(true);
                 }
                 Err(e) => {
-                    panic!(e);
+                    eprintln!("{}", e.description());
+                    assert!(false);
                 }
             }
         }
         {
             match promote_current_thread_to_real_time(512, 44100) {
-                Ok(_) => {}
+                Ok(_) => {
+                    assert!(true);
+                }
                 Err(e) => {
-                    panic!(e);
+                    eprintln!("{}", e.description());
+                    assert!(false);
                 }
             }
             // automatically deallocated, but not demoted until the thread exits.
@@ -479,9 +524,11 @@ mod tests {
                     let info = get_current_thread_info().unwrap();
                     match promote_thread_to_real_time(info, 512, 44100) {
                         Ok(_) => {
+                            assert!(true);
                         }
                         Err(e) => {
-                            panic!(e);
+                            eprintln!("{}", e);
+                            assert!(false);
                         }
                     }
                 }
@@ -516,6 +563,7 @@ mod tests {
                                     }
                                     Err(_) => {
                                         eprintln!("promotion Err");
+                                        kill(child, SIGKILL).expect("Could not kill the child?");
                                         assert!(false);
                                     }
                                 }
@@ -537,7 +585,7 @@ mod tests {
                         match write(wr, &bytes) {
                             Ok(_) => {
                                 loop {
-                                    std::thread::sleep(std::time::Duration::from_millis(100));
+                                    std::thread::sleep(std::time::Duration::from_millis(1000));
                                     eprintln!("child sleeping, waiting to be promoted...");
                                 }
                             }

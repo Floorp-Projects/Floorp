@@ -105,9 +105,9 @@ dependencies = [
 
 [[package]]
 name = "audio_thread_priority"
-version = "0.20.2"
+version = "0.22.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "197b2d259505d11c92d266e1784f01cc935eb764d2f54e16aedf4e5085197871"
+checksum = "407b1b70ad4072a4ff430679b331450166b56631091d6ba46a885cf427392055"
 dependencies = [
  "cfg-if",
  "dbus",
