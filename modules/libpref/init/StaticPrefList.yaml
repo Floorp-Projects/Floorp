@@ -7950,7 +7950,11 @@
 # for this pref means we call _exit(0) earlier during shutdown.
 - name: toolkit.shutdown.fastShutdownStage
   type: int32_t
+#if defined(NIGHTLY_BUILD) && !defined(DEBUG) && !defined(MOZ_CODE_COVERAGE) && !defined(MOZ_VALGRIND)
+  value: 1
+#else
   value: 0
+#endif
   mirror: always
 
 # Sending each remote accumulation immediately places undue strain on the IPC
