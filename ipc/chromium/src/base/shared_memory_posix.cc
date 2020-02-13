@@ -13,7 +13,7 @@
 #include <unistd.h>
 
 #ifdef ANDROID
-#  include "mozilla/Ashmem.h"
+#  include <linux/ashmem.h>
 #endif
 
 #include "base/eintr_wrapper.h"
@@ -202,9 +202,13 @@ bool SharedMemory::CreateInternal(size_t size, bool freezeable) {
 
 #ifdef ANDROID
   // Android has its own shared memory facility:
-  fd.reset(mozilla::android::ashmem_create(nullptr, size));
+  fd.reset(open("/" ASHMEM_NAME_DEF, O_RDWR, 0600));
   if (!fd) {
     CHROMIUM_LOG(WARNING) << "failed to open shm: " << strerror(errno);
+    return false;
+  }
+  if (ioctl(fd.get(), ASHMEM_SET_SIZE, size) != 0) {
+    CHROMIUM_LOG(WARNING) << "failed to set shm size: " << strerror(errno);
     return false;
   }
   needs_truncate = false;
@@ -267,7 +271,7 @@ bool SharedMemory::Freeze() {
   Unmap();
 
 #ifdef ANDROID
-  if (mozilla::android::ashmem_setProt(mapped_file_, PROT_READ) != 0) {
+  if (ioctl(mapped_file_, ASHMEM_SET_PROT_MASK, PROT_READ) != 0) {
     CHROMIUM_LOG(WARNING) << "failed to freeze shm: " << strerror(errno);
     return false;
   }

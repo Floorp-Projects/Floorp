@@ -18,7 +18,11 @@
 
 #include "SharedMemoryBasic.h"
 
-#include "mozilla/Ashmem.h"
+//
+// Temporarily go directly to the kernel interface until we can
+// interact better with libcutils.
+//
+#include <linux/ashmem.h>
 
 namespace mozilla {
 namespace ipc {
@@ -47,9 +51,15 @@ bool SharedMemoryBasic::Create(size_t aNbytes) {
   MOZ_ASSERT(-1 == mShmFd, "Already Create()d");
 
   // Carve a new instance off of /dev/ashmem
-  int shmfd = mozilla::android::ashmem_create(nullptr, aNbytes);
+  int shmfd = open("/" ASHMEM_NAME_DEF, O_RDWR, 0600);
   if (-1 == shmfd) {
     LogError("ShmemAndroid::Create():open");
+    return false;
+  }
+
+  if (ioctl(shmfd, ASHMEM_SET_SIZE, aNbytes)) {
+    LogError("ShmemAndroid::Unmap():ioctl(SET_SIZE)");
+    close(shmfd);
     return false;
   }
 
