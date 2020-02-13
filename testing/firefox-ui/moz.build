@@ -3,8 +3,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 FIREFOX_UI_FUNCTIONAL_MANIFESTS += ["tests/functional/manifest.ini"]
-# TODO: Move to testing/marionette/puppeteer/firefox
-PUPPETEER_FIREFOX_MANIFESTS += ["tests/puppeteer/manifest.ini"]
 
 with Files("**"):
     BUG_COMPONENT = ("Testing", "Firefox UI Tests")
