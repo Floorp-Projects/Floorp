@@ -23,6 +23,8 @@ nsAString* GfxDriverInfo::sDriverVendors[DriverVendorMax];
 GfxDriverInfo::GfxDriverInfo()
     : mOperatingSystem(OperatingSystem::Unknown),
       mOperatingSystemVersion(0),
+      mScreen(ScreenSizeStatus::All),
+      mBattery(BatteryStatus::All),
       mDesktopEnvironment(GfxDriverInfo::GetDesktopEnvironment(DesktopAll)),
       mWindowProtocol(GfxDriverInfo::GetWindowProtocol(WindowingAll)),
       mAdapterVendor(GfxDriverInfo::GetDeviceVendor(VendorAll)),
@@ -39,14 +41,17 @@ GfxDriverInfo::GfxDriverInfo()
       mGpu2(false) {}
 
 GfxDriverInfo::GfxDriverInfo(
-    OperatingSystem os, const nsAString& desktopEnv,
-    const nsAString& windowProtocol, const nsAString& vendor,
-    const nsAString& driverVendor, GfxDeviceFamily* devices, int32_t feature,
-    int32_t featureStatus, VersionComparisonOp op, uint64_t driverVersion,
-    const char* ruleId, const char* suggestedVersion /* = nullptr */,
-    bool ownDevices /* = false */, bool gpu2 /* = false */)
+    OperatingSystem os, ScreenSizeStatus screen, BatteryStatus battery,
+    const nsAString& desktopEnv, const nsAString& windowProtocol,
+    const nsAString& vendor, const nsAString& driverVendor,
+    GfxDeviceFamily* devices, int32_t feature, int32_t featureStatus,
+    VersionComparisonOp op, uint64_t driverVersion, const char* ruleId,
+    const char* suggestedVersion /* = nullptr */, bool ownDevices /* = false */,
+    bool gpu2 /* = false */)
     : mOperatingSystem(os),
       mOperatingSystemVersion(0),
+      mScreen(screen),
+      mBattery(battery),
       mDesktopEnvironment(desktopEnv),
       mWindowProtocol(windowProtocol),
       mAdapterVendor(vendor),
@@ -65,6 +70,8 @@ GfxDriverInfo::GfxDriverInfo(
 GfxDriverInfo::GfxDriverInfo(const GfxDriverInfo& aOrig)
     : mOperatingSystem(aOrig.mOperatingSystem),
       mOperatingSystemVersion(aOrig.mOperatingSystemVersion),
+      mScreen(aOrig.mScreen),
+      mBattery(aOrig.mBattery),
       mDesktopEnvironment(aOrig.mDesktopEnvironment),
       mWindowProtocol(aOrig.mWindowProtocol),
       mAdapterVendor(aOrig.mAdapterVendor),
