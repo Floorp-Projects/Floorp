@@ -15,6 +15,10 @@ class CompositorVsyncDispatcher;
 
 namespace widget {
 
+namespace remote_backbuffer {
+class Provider;
+}
+
 class CompositorWidgetChild final : public PCompositorWidgetChild,
                                     public PlatformCompositorWidgetDelegate {
  public:
@@ -46,6 +50,8 @@ class CompositorWidgetChild final : public PCompositorWidgetChild,
 
   HWND mWnd;
   nsTransparencyMode mTransparencyMode;
+
+  std::unique_ptr<remote_backbuffer::Provider> mRemoteBackbufferProvider;
 };
 
 }  // namespace widget
