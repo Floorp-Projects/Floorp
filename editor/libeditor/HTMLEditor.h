@@ -3946,12 +3946,23 @@ class HTMLEditor final : public TextEditor,
   int32_t DiscoverPartialListsAndTables(
       nsTArray<OwningNonNull<nsINode>>& aPasteNodes,
       nsTArray<OwningNonNull<Element>>& aListsAndTables);
-  Element* ScanForTableStructure(nsINode& aNodeMaybeInTable,
-                                 Element& aTableElement);
   void ReplaceOrphanedStructure(
       StartOrEnd aStartOrEnd, nsTArray<OwningNonNull<nsINode>>& aNodeArray,
       nsTArray<OwningNonNull<Element>>& aListAndTableArray,
       int32_t aHighWaterMark);
+
+  /**
+   * FindReplaceableTableElement() is a helper method of
+   * ReplaceOrphanedStructure().  If aNodeMaybeInTableElement is a descendant
+   * of aTableElement, returns aNodeMaybeInTableElement or its nearest ancestor
+   * whose tag name is `<td>`, `<th>`, `<tr>`, `<thead>`, `<tfoot>`, `<tbody>`
+   * or `<caption>`.
+   *
+   * @param aTableElement               Must be a `<table>` element.
+   * @param aNodeMaybeInTableElement    A node which may be in aTableElement.
+   */
+  static Element* FindReplaceableTableElement(
+      Element& aTableElement, nsINode& aNodeMaybeInTableElement);
 
   /**
    * IsReplaceableListElement() is a helper method of
