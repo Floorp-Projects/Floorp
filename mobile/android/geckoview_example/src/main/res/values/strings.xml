@@ -21,7 +21,6 @@
     <string name="crash_native">Native</string>
     <string name="crash_java">Java</string>
     <string name="crash_content_native">Content (Native)</string>
-    <string name="multiprocess">Multiprocess</string>
     <string name="tracking_protection">Tracking Protection</string>
     <string name="tracking_protection_ex">Disable TP</string>
     <string name="tracking_protection_ex2">Reenable TP</string>

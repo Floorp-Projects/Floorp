@@ -12,10 +12,10 @@
 //! let mut li: LanguageIdentifier = "en-US".parse()
 //!     .expect("Failed to parse.");
 //!
-//! assert_eq!(li.get_language(), "en");
-//! assert_eq!(li.get_script(), None);
-//! assert_eq!(li.get_region(), Some("US"));
-//! assert_eq!(li.get_variants().len(), 0);
+//! assert_eq!(li.language(), "en");
+//! assert_eq!(li.script(), None);
+//! assert_eq!(li.region(), Some("US"));
+//! assert_eq!(li.variants().len(), 0);
 //!
 //! li.set_region("GB")
 //!     .expect("Region parsing failed.");

@@ -44,13 +44,25 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
         /**
          * Set the content process hint flag.
          *
-         * @param use If true, this will reload the content process for future use.
-         *            Default is false.
+         * @param use If true, this will preload the content process for future use.
+         *            Default is true.
          * @return This Builder instance.
 
          */
         public @NonNull Builder useContentProcessHint(final boolean use) {
             getSettings().mUseContentProcess = use;
+            return this;
+        }
+
+        /**
+         * Set whether multiprocess support should be enabled.
+         *
+         * @param use A flag determining whether multiprocess should be enabled.
+         *            Default is true.
+         * @return This Builder instance.
+         */
+        public @NonNull Builder useMultiprocess(final boolean use) {
+            getSettings().mUseMultiprocess.set(use);
             return this;
         }
 
@@ -433,7 +445,7 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
     }
 
     private GeckoRuntime mRuntime;
-    /* package */ boolean mUseContentProcess;
+    /* package */ boolean mUseContentProcess = true;
     /* package */ String[] mArgs;
     /* package */ Bundle mExtras;
     /* package */ String mConfigFilePath;
@@ -478,6 +490,8 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
             "general.aboutConfig.enable", false);
     /* package */ final Pref<Boolean> mForceUserScalable = new Pref<>(
             "browser.ui.zoom.force-user-scalable", false);
+    /* package */ final Pref<Boolean> mUseMultiprocess = new Pref<>(
+            "browser.tabs.remote.autostart", true);
 
     /* package */ boolean mDebugPause;
     /* package */ boolean mUseMaxScreenDepth;
@@ -555,6 +569,16 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
     public boolean getUseContentProcessHint() {
         return mUseContentProcess;
     }
+
+    /**
+     * Whether multiprocess is enabled.
+     *
+     * @return true if multiprocess is enabled, false otherwise.
+     */
+    public boolean getUseMultiprocess() {
+        return mUseMultiprocess.get();
+    }
+
 
     /**
      * Get the custom Gecko process arguments.

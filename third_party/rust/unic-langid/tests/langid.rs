@@ -20,7 +20,7 @@ fn langid_macro_test() {
 fn langids_macro_test() {
     let langids = langids!["en-US", "pl", "de-AT", "Pl-Latn-PL"];
     assert_eq!(langids.len(), 4);
-    assert_eq!(langids.get(3).unwrap().get_language(), "pl");
+    assert_eq!(langids.get(3).unwrap().language(), "pl");
 }
 
 #[test]

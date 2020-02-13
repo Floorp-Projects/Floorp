@@ -51,7 +51,7 @@ class SharedSurface_DMABUF final : public SharedSurface {
   virtual void ProducerReadAcquireImpl() override {}
   virtual void ProducerReadReleaseImpl() override {}
 
-  virtual GLuint ProdTexture() override { return mSurface->GetGLTexture(); }
+  virtual GLuint ProdTexture() override { return mSurface->GetTexture(); }
 
   virtual bool ToSurfaceDescriptor(
       layers::SurfaceDescriptor* const out_descriptor) override;

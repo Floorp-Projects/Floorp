@@ -39,14 +39,16 @@ class ChannelMergerNode final : public AudioNode {
   virtual void SetChannelCount(uint32_t aChannelCount,
                                ErrorResult& aRv) override {
     if (aChannelCount != 1) {
-      aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+      aRv.ThrowInvalidStateError(
+          "Cannot change channel count of ChannelMergerNode");
     }
   }
 
   virtual void SetChannelCountModeValue(ChannelCountMode aMode,
                                         ErrorResult& aRv) override {
     if (aMode != ChannelCountMode::Explicit) {
-      aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+      aRv.ThrowInvalidStateError(
+          "Cannot change channel count mode of ChannelMergerNode");
     }
   }
 

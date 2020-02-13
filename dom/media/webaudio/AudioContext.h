@@ -187,7 +187,7 @@ class AudioContext final : public DOMEventTargetHelper,
 
   float SampleRate() const { return mSampleRate; }
 
-  bool ShouldSuspendNewTrack() const { return mSuspendCalled; }
+  bool ShouldSuspendNewTrack() const { return mSuspendCalled || mCloseCalled; }
 
   double CurrentTime();
 

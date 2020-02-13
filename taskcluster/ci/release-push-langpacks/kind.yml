@@ -10,7 +10,7 @@ transforms:
 
 kind-dependencies:
     - build
-    - nightly-l10n
+    - shippable-l10n
 
 
 only-for-build-platforms:

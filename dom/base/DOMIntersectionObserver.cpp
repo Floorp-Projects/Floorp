@@ -14,6 +14,7 @@
 #include "mozilla/dom/BrowserChild.h"
 #include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/DocumentInlines.h"
+#include "mozilla/dom/HTMLImageElement.h"
 #include "Units.h"
 
 namespace mozilla {
@@ -51,7 +52,10 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(DOMIntersectionObserver)
   tmp->Disconnect();
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mOwner)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocument)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mCallback)
+  if (tmp->mCallback.is<RefPtr<dom::IntersectionCallback>>()) {
+    ImplCycleCollectionUnlink(
+        tmp->mCallback.as<RefPtr<dom::IntersectionCallback>>());
+  }
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mRoot)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mQueuedEntries)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
@@ -59,7 +63,11 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(DOMIntersectionObserver)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mOwner)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDocument)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCallback)
+  if (tmp->mCallback.is<RefPtr<dom::IntersectionCallback>>()) {
+    ImplCycleCollectionTraverse(
+        cb, tmp->mCallback.as<RefPtr<dom::IntersectionCallback>>(), "mCallback",
+        0);
+  }
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mRoot)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mQueuedEntries)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
@@ -109,6 +117,25 @@ already_AddRefed<DOMIntersectionObserver> DOMIntersectionObserver::Constructor(
     }
     observer->mThresholds.AppendElement(thresh);
   }
+
+  return observer.forget();
+}
+
+already_AddRefed<DOMIntersectionObserver>
+DOMIntersectionObserver::CreateLazyLoadObserver(nsPIDOMWindowInner* aOwner) {
+  RefPtr<DOMIntersectionObserver> observer = new DOMIntersectionObserver(
+      aOwner,
+      [](const Sequence<OwningNonNull<DOMIntersectionObserverEntry>>& entries) {
+        for (const auto& entry : entries) {
+          MOZ_ASSERT(entry->Target()->IsHTMLElement(nsGkAtoms::img));
+          if (entry->IsIntersecting()) {
+            static_cast<HTMLImageElement*>(entry->Target())
+                ->StopLazyLoadingAndStartLoadIfNeeded();
+          }
+        }
+      });
+
+  observer->mThresholds.AppendElement(std::numeric_limits<double>::min());
 
   return observer.forget();
 }
@@ -605,8 +632,14 @@ void DOMIntersectionObserver::Notify() {
     }
   }
   mQueuedEntries.Clear();
-  RefPtr<dom::IntersectionCallback> callback(mCallback);
-  callback->Call(this, entries, *this);
+
+  if (mCallback.is<RefPtr<dom::IntersectionCallback>>()) {
+    RefPtr<dom::IntersectionCallback> callback(
+        mCallback.as<RefPtr<dom::IntersectionCallback>>());
+    callback->Call(this, entries, *this);
+  } else {
+    mCallback.as<NativeIntersectionObserverCallback>()(entries);
+  }
 }
 
 }  // namespace dom

@@ -11,7 +11,7 @@ transforms:
 
 kind-dependencies:
     - build-signing
-    - nightly-l10n-signing
+    - shippable-l10n-signing
 
 only-for-attributes:
     - nightly

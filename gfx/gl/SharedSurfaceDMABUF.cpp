@@ -20,8 +20,9 @@ UniquePtr<SharedSurface_DMABUF> SharedSurface_DMABUF::Create(
   }
 
   RefPtr<WaylandDMABufSurface> surface =
-      WaylandDMABufSurface::CreateDMABufSurface(size.width, size.height, flags);
-  if (!surface || !surface->CreateEGLImage(prodGL)) {
+      WaylandDMABufSurfaceRGBA::CreateDMABufSurface(size.width, size.height,
+                                                    flags);
+  if (!surface || !surface->CreateTexture(prodGL)) {
     return nullptr;
   }
 
@@ -41,7 +42,7 @@ SharedSurface_DMABUF::~SharedSurface_DMABUF() {
   if (!mGL || !mGL->MakeCurrent()) {
     return;
   }
-  mSurface->ReleaseEGLImage();
+  mSurface->ReleaseTextures();
 }
 
 void SharedSurface_DMABUF::ProducerReleaseImpl() {

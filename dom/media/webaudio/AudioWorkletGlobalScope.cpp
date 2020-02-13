@@ -81,7 +81,7 @@ void AudioWorkletGlobalScope::RegisterProcessor(
   if (!constructorUnwrapped) {
     // If the caller's compartment does not have permission to access the
     // unwrapped constructor then throw.
-    aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
+    aRv.ThrowSecurityError("Constructor cannot be called");
     return;
   }
 
@@ -302,8 +302,12 @@ bool AudioWorkletGlobalScope::ConstructProcessor(
    * 5. Let deserializedOptions be the result of
    *    StructuredDeserialize(serializedOptions, the current Realm).
    */
+  JS::CloneDataPolicy cloneDataPolicy;
+  cloneDataPolicy.allowIntraClusterClonableSharedObjects();
+  cloneDataPolicy.allowSharedMemoryObjects();
+
   JS::Rooted<JS::Value> deserializedOptions(cx);
-  aSerializedOptions->Read(this, cx, &deserializedOptions, rv);
+  aSerializedOptions->Read(this, cx, &deserializedOptions, cloneDataPolicy, rv);
   if (rv.MaybeSetPendingException(cx)) {
     return false;
   }

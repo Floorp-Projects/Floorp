@@ -95,9 +95,6 @@ open class BaseSessionTest(noErrorCollector: Boolean = false) {
             InstrumentationRegistry.getInstrumentation().targetContext.resources.assets
                     .open(path.removePrefix("/assets/")).readBytes()
 
-    val GeckoSession.isRemote
-        get() = this.settings.getUseMultiprocess()
-
     fun createTestUrl(path: String) = GeckoSessionTestRule.TEST_ENDPOINT + path
 
     fun GeckoSession.loadTestPath(path: String) =

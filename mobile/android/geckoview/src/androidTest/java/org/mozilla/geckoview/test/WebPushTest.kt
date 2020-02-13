@@ -159,7 +159,7 @@ class WebPushTest : BaseSessionTest() {
 
         val p = mainSession.evaluatePromiseJS("window.doWaitForSubscriptionChange()")
 
-        sessionRule.runtime.webPushController.onSubscriptionChanged(delegate!!.storedSubscription!!)
+        sessionRule.runtime.webPushController.onSubscriptionChanged(delegate!!.storedSubscription!!.scope)
 
         assertThat("Result should not be null", p.value, notNullValue())
     }

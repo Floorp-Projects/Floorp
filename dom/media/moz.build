@@ -371,6 +371,24 @@ DEFINES['TRACING'] = True
 if CONFIG['MOZ_ANDROID_HLS_SUPPORT']:
     DEFINES['MOZ_ANDROID_HLS_SUPPORT'] = True
 
+if CONFIG['COMPILE_ENVIRONMENT']:
+    EXPORTS += [
+        '!audioipc_client_ffi_generated.h',
+        '!audioipc_server_ffi_generated.h',
+    ]
+
+    GeneratedFile('audioipc_client_ffi_generated.h',
+                  script='/layout/style/RunCbindgen.py', entry_point='generate',
+                  inputs=[
+                      '/media/audioipc/client',
+                  ])
+
+    GeneratedFile('audioipc_server_ffi_generated.h',
+                  script='/layout/style/RunCbindgen.py', entry_point='generate',
+                  inputs=[
+                      '/media/audioipc/server',
+                  ])
+
 include('/ipc/chromium/chromium-config.mozbuild')
 
 # Suppress some GCC warnings being treated as errors:

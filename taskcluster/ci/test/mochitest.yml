@@ -66,6 +66,7 @@ mochitest:
             android-em-7.*: 4
             linux.*/debug: 16
             linux.*64-asan/opt: 10
+            linux.*64-tsan/opt: 20
             linux.*64-.*cov/opt: 10
             windows10-64-ccov/.*: 10
             macosx.*64-ccov/.*: 10
@@ -125,6 +126,7 @@ mochitest-browser-chrome:
         by-test-platform:
             linux.*/debug: 16
             linux.*64-asan/opt: 16
+            linux.*64-tsan/opt: 32
             macosx.*64/debug: 16
             windows10-64-ccov/.*: 14
             windows10.*-asan/opt: 9
@@ -181,6 +183,7 @@ mochitest-chrome:
             .*-ccov/.*: 3
             .*-qr/.*: 3
             .*-asan/opt: 3
+            .*-tsan/opt: 6
             (linux.*64|windows.*-..|macosx10..)/debug: 3
             windows10-aarch64/.*: 3
             default: 2
@@ -212,13 +215,14 @@ mochitest-devtools-chrome:
             linux.*64/debug: 12
             macosx.*64/debug: 8
             .*-asan/opt: 8
+            .*-tsan/opt: 16
             default: 5
     mozharness:
         mochitest-flavor: chrome
         chunked: true
     instance-size:
         by-test-platform:
-            linux.*64-asan/opt: xlarge  # runs out of memory on default/m3.large
+            linux.*64-[at]san/opt: xlarge  # runs out of memory on default/m3.large
             default: default
     # Bug 1296086: high number of intermittents observed with software GL and large instances
     allow-software-gl-layers: false

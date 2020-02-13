@@ -14,13 +14,11 @@ var capturedFailures = [];
 window.ok = function (cond, name) {
   if (!captureFailure) {
     SimpleTest.ok(cond, name);
-  } else {
-    if (cond) {
+  } else if (cond) {
       SimpleTest.ok(false, `Expect a failure with "${name}"`);
     } else {
       capturedFailures.push(name);
     }
-  }
 };
 
 SimpleTest.waitForExplicitFinish();

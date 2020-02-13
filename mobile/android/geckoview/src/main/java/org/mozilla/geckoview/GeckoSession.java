@@ -1433,7 +1433,7 @@ public class GeckoSession implements Parcelable {
         final String chromeUri = mSettings.getChromeUri();
         final int screenId = mSettings.getScreenId();
         final boolean isPrivate = mSettings.getUsePrivateMode();
-        final boolean isRemote = mSettings.getUseMultiprocess();
+        final boolean isRemote = runtime.getSettings().getUseMultiprocess();
 
         mWindow = new Window(runtime, this, mNativeQueue);
         mWebExtensionListener.runtime = runtime;

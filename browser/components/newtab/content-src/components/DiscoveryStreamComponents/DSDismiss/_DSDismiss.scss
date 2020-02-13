@@ -1,18 +1,9 @@
 .ds-dismiss {
   position: relative;
-  overflow: hidden;
   border-radius: 8px;
   transition-delay: 100ms;
   transition-duration: 200ms;
   transition-property: background;
-
-  &.hovering {
-    @include dark-theme-only {
-      background: $grey-90-30;
-    }
-
-    background: $grey-90-10;
-  }
 
   &:hover {
     .ds-dismiss-button {
@@ -34,10 +25,9 @@
     align-items: center;
     justify-content: center;
     position: absolute;
-    right: 0;
+    inset-inline-end: 0;
     top: 0;
     border-radius: 50%;
-    margin: 18px 18px 0 0;
     background: $grey-90-10;
 
     &:hover {

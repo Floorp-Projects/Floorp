@@ -464,12 +464,12 @@ void OscillatorNode::SendPeriodicWaveToTrack() {
 
 void OscillatorNode::Start(double aWhen, ErrorResult& aRv) {
   if (!WebAudioUtils::IsTimeValid(aWhen)) {
-    aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+    aRv.ThrowRangeError<MSG_VALUE_OUT_OF_RANGE>(u"start time");
     return;
   }
 
   if (mStartCalled) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    aRv.ThrowInvalidStateError("Can't call start() more than once");
     return;
   }
   mStartCalled = true;
@@ -488,12 +488,12 @@ void OscillatorNode::Start(double aWhen, ErrorResult& aRv) {
 
 void OscillatorNode::Stop(double aWhen, ErrorResult& aRv) {
   if (!WebAudioUtils::IsTimeValid(aWhen)) {
-    aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+    aRv.ThrowRangeError<MSG_VALUE_OUT_OF_RANGE>(u"stop time");
     return;
   }
 
   if (!mStartCalled) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    aRv.ThrowInvalidStateError("Can't call stop() without calling start()");
     return;
   }
 

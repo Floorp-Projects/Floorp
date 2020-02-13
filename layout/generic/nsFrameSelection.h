@@ -234,6 +234,13 @@ class nsFrameSelection final {
   void Init(mozilla::PresShell* aPresShell, nsIContent* aLimiter,
             bool aAccessibleCaretEnabled);
 
+  enum class FocusMode {
+    kExtendSelection,     /** Keep old anchor point. */
+    kCollapseToNewPoint,  /** Collapses the Selection to the new point. */
+    kMultiRangeSelection, /** Keeps existing non-collapsed ranges and marks them
+                             as generated. */
+  };
+
   /**
    * HandleClick will take the focus to the new frame at the new offset and
    * will either extend the selection from the old anchor, or replace the old
@@ -248,19 +255,14 @@ class nsFrameSelection final {
    * is specified different when you need to select to and include both start
    * and end points
    *
-   * @param aContinueSelection is the flag that tells the selection to keep the
-   * old anchor point or not.
-   *
-   * @param aMultipleSelection will tell the frame selector to replace /or not
-   * the old selection. cannot coexist with aContinueSelection
-   *
    * @param aHint will tell the selection which direction geometrically to
    * actually show the caret on. 1 = end of this line 0 = beginning of this line
    */
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY
-  nsresult HandleClick(nsIContent* aNewFocus, uint32_t aContentOffset,
-                       uint32_t aContentEndOffset, bool aContinueSelection,
-                       bool aMultipleSelection, CaretAssociateHint aHint);
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult HandleClick(nsIContent* aNewFocus,
+                                                   uint32_t aContentOffset,
+                                                   uint32_t aContentEndOffset,
+                                                   FocusMode aFocusMode,
+                                                   CaretAssociateHint aHint);
 
   /**
    * HandleDrag extends the selection to contain the frame closest to aPoint.
@@ -732,7 +734,7 @@ class nsFrameSelection final {
   MOZ_CAN_RUN_SCRIPT
   nsresult TakeFocus(nsIContent* aNewFocus, uint32_t aContentOffset,
                      uint32_t aContentEndOffset, CaretAssociateHint aHint,
-                     bool aContinueSelection, bool aMultipleSelection);
+                     FocusMode aFocusMode);
 
   void BidiLevelFromMove(mozilla::PresShell* aPresShell, nsIContent* aNode,
                          uint32_t aContentOffset, nsSelectionAmount aAmount,

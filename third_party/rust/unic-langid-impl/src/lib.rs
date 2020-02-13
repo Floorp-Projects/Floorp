@@ -39,10 +39,10 @@ type RawPartsTuple = (Option<u64>, Option<u32>, Option<u32>, Option<Box<[u64]>>)
 /// let li: LanguageIdentifier = "en-US".parse()
 ///     .expect("Failed to parse.");
 ///
-/// assert_eq!(li.get_language(), "en");
-/// assert_eq!(li.get_script(), None);
-/// assert_eq!(li.get_region(), Some("US"));
-/// assert_eq!(li.get_variants().len(), 0);
+/// assert_eq!(li.language(), "en");
+/// assert_eq!(li.script(), None);
+/// assert_eq!(li.region(), Some("US"));
+/// assert_eq!(li.variants().len(), 0);
 /// ```
 ///
 /// # Parsing
@@ -67,10 +67,10 @@ type RawPartsTuple = (Option<u64>, Option<u32>, Option<u32>, Option<Box<[u64]>>)
 /// let li: LanguageIdentifier = "eN_latn_Us-Valencia".parse()
 ///     .expect("Failed to parse.");
 ///
-/// assert_eq!(li.get_language(), "en");
-/// assert_eq!(li.get_script(), Some("Latn"));
-/// assert_eq!(li.get_region(), Some("US"));
-/// assert_eq!(li.get_variants().collect::<Vec<_>>(), &["valencia"]);
+/// assert_eq!(li.language(), "en");
+/// assert_eq!(li.script(), Some("Latn"));
+/// assert_eq!(li.region(), Some("US"));
+/// assert_eq!(li.variants().collect::<Vec<_>>(), &["valencia"]);
 /// ```
 #[derive(Default, Debug, PartialEq, Eq, Clone, Hash, PartialOrd, Ord)]
 pub struct LanguageIdentifier {
@@ -140,7 +140,7 @@ impl LanguageIdentifier {
                 .iter()
                 .map(|v| subtags::parse_variant_subtag(v.as_ref()))
                 .collect::<Result<Vec<TinyStr8>, parser::errors::ParserError>>()?;
-            vars.sort();
+            vars.sort_unstable();
             vars.dedup();
             Some(vars.into_boxed_slice())
         } else {
@@ -174,7 +174,7 @@ impl LanguageIdentifier {
     /// of all subtags in form of `u64`/`u32`.
     ///
     /// Primarily used for storing internal representation and restoring via
-    /// an unsafe `from_raw_parts_unchecked`.
+    /// `from_raw_parts_unchecked`.
     ///
     /// # Examples
     ///
@@ -187,12 +187,12 @@ impl LanguageIdentifier {
     ///
     /// let (lang, script, region, variants) = li.into_raw_parts();
     ///
-    /// let li2 = unsafe { LanguageIdentifier::from_raw_parts_unchecked(
-    ///     lang.map(|l| TinyStr8::new_unchecked(l)),
-    ///     script.map(|s| TinyStr4::new_unchecked(s)),
-    ///     region.map(|r| TinyStr4::new_unchecked(r)),
-    ///     variants.map(|v| v.into_iter().map(|v| TinyStr8::new_unchecked(*v)).collect()),
-    /// ) };
+    /// let li2 = LanguageIdentifier::from_raw_parts_unchecked(
+    ///     lang.map(|l| unsafe { TinyStr8::new_unchecked(l) }),
+    ///     script.map(|s| unsafe { TinyStr4::new_unchecked(s) }),
+    ///     region.map(|r| unsafe { TinyStr4::new_unchecked(r) }),
+    ///     variants.map(|v| v.into_iter().map(|v| unsafe { TinyStr8::new_unchecked(*v) }).collect()),
+    /// );
     ///
     /// assert_eq!(li2.to_string(), "en-US");
     /// ```
@@ -222,12 +222,12 @@ impl LanguageIdentifier {
     ///
     /// let (lang, script, region, variants) = li.into_raw_parts();
     ///
-    /// let li2 = unsafe { LanguageIdentifier::from_raw_parts_unchecked(
-    ///     lang.map(|l| TinyStr8::new_unchecked(l)),
-    ///     script.map(|s| TinyStr4::new_unchecked(s)),
-    ///     region.map(|r| TinyStr4::new_unchecked(r)),
-    ///     variants.map(|v| v.into_iter().map(|v| TinyStr8::new_unchecked(*v)).collect()),
-    /// ) };
+    /// let li2 =  LanguageIdentifier::from_raw_parts_unchecked(
+    ///     lang.map(|l| unsafe { TinyStr8::new_unchecked(l) }),
+    ///     script.map(|s| unsafe { TinyStr4::new_unchecked(s) }),
+    ///     region.map(|r| unsafe { TinyStr4::new_unchecked(r) }),
+    ///     variants.map(|v| v.into_iter().map(|v| unsafe { TinyStr8::new_unchecked(*v) }).collect()),
+    /// );
     ///
     /// assert_eq!(li2.to_string(), "en-US");
     /// ```
@@ -304,14 +304,14 @@ impl LanguageIdentifier {
     /// let li1: LanguageIdentifier = "de-AT".parse()
     ///     .expect("Parsing failed.");
     ///
-    /// assert_eq!(li1.get_language(), "de");
+    /// assert_eq!(li1.language(), "de");
     ///
     /// let li2: LanguageIdentifier = "und-AT".parse()
     ///     .expect("Parsing failed.");
     ///
-    /// assert_eq!(li2.get_language(), "und");
+    /// assert_eq!(li2.language(), "und");
     /// ```
-    pub fn get_language(&self) -> &str {
+    pub fn language(&self) -> &str {
         self.language.as_ref().map(|s| s.as_ref()).unwrap_or("und")
     }
 
@@ -368,14 +368,14 @@ impl LanguageIdentifier {
     /// let li1: LanguageIdentifier = "de-Latn-AT".parse()
     ///     .expect("Parsing failed.");
     ///
-    /// assert_eq!(li1.get_script(), Some("Latn"));
+    /// assert_eq!(li1.script(), Some("Latn"));
     ///
     /// let li2: LanguageIdentifier = "de-AT".parse()
     ///     .expect("Parsing failed.");
     ///
-    /// assert_eq!(li2.get_script(), None);
+    /// assert_eq!(li2.script(), None);
     /// ```
-    pub fn get_script(&self) -> Option<&str> {
+    pub fn script(&self) -> Option<&str> {
         self.script.as_ref().map(|s| s.as_ref())
     }
 
@@ -427,14 +427,14 @@ impl LanguageIdentifier {
     /// let li1: LanguageIdentifier = "de-Latn-AT".parse()
     ///     .expect("Parsing failed.");
     ///
-    /// assert_eq!(li1.get_region(), Some("AT"));
+    /// assert_eq!(li1.region(), Some("AT"));
     ///
     /// let li2: LanguageIdentifier = "de".parse()
     ///     .expect("Parsing failed.");
     ///
-    /// assert_eq!(li2.get_region(), None);
+    /// assert_eq!(li2.region(), None);
     /// ```
-    pub fn get_region(&self) -> Option<&str> {
+    pub fn region(&self) -> Option<&str> {
         self.region.as_ref().map(|s| s.as_ref())
     }
 
@@ -486,14 +486,14 @@ impl LanguageIdentifier {
     /// let li1: LanguageIdentifier = "ca-ES-valencia".parse()
     ///     .expect("Parsing failed.");
     ///
-    /// assert_eq!(li1.get_variants().collect::<Vec<_>>(), &["valencia"]);
+    /// assert_eq!(li1.variants().collect::<Vec<_>>(), &["valencia"]);
     ///
     /// let li2: LanguageIdentifier = "de".parse()
     ///     .expect("Parsing failed.");
     ///
-    /// assert_eq!(li2.get_variants().len(), 0);
+    /// assert_eq!(li2.variants().len(), 0);
     /// ```
-    pub fn get_variants(&self) -> impl ExactSizeIterator<Item = &str> {
+    pub fn variants(&self) -> impl ExactSizeIterator<Item = &str> {
         let variants: &[_] = match self.variants {
             Some(ref v) => &**v,
             None => &[],
@@ -529,7 +529,7 @@ impl LanguageIdentifier {
         if v.is_empty() {
             self.variants = None;
         } else {
-            v.sort();
+            v.sort_unstable();
             v.dedup();
             self.variants = Some(v.into_boxed_slice());
         }
@@ -587,14 +587,12 @@ impl LanguageIdentifier {
     /// let mut li: LanguageIdentifier = "en-US".parse()
     ///     .expect("Parsing failed.");
     ///
-    /// assert_eq!(li.add_likely_subtags(), true);
+    /// assert_eq!(li.maximize(), true);
     /// assert_eq!(li.to_string(), "en-Latn-US");
     /// ```
     #[cfg(feature = "likelysubtags")]
-    pub fn add_likely_subtags(&mut self) -> bool {
-        if let Some(new_li) =
-            likelysubtags::add_likely_subtags(self.language, self.script, self.region)
-        {
+    pub fn maximize(&mut self) -> bool {
+        if let Some(new_li) = likelysubtags::maximize(self.language, self.script, self.region) {
             self.language = new_li.0;
             self.script = new_li.1;
             self.region = new_li.2;
@@ -615,14 +613,12 @@ impl LanguageIdentifier {
     /// let mut li: LanguageIdentifier = "en-Latn-US".parse()
     ///     .expect("Parsing failed.");
     ///
-    /// assert_eq!(li.remove_likely_subtags(), true);
+    /// assert_eq!(li.minimize(), true);
     /// assert_eq!(li.to_string(), "en");
     /// ```
     #[cfg(feature = "likelysubtags")]
-    pub fn remove_likely_subtags(&mut self) -> bool {
-        if let Some(new_li) =
-            likelysubtags::remove_likely_subtags(self.language, self.script, self.region)
-        {
+    pub fn minimize(&mut self) -> bool {
+        if let Some(new_li) = likelysubtags::minimize(self.language, self.script, self.region) {
             self.language = new_li.0;
             self.script = new_li.1;
             self.region = new_li.2;
@@ -644,10 +640,10 @@ impl LanguageIdentifier {
     /// let li2: LanguageIdentifier = "fa".parse()
     ///     .expect("Parsing failed.");
     ///
-    /// assert_eq!(li1.get_character_direction(), CharacterDirection::LTR);
-    /// assert_eq!(li2.get_character_direction(), CharacterDirection::RTL);
+    /// assert_eq!(li1.character_direction(), CharacterDirection::LTR);
+    /// assert_eq!(li2.character_direction(), CharacterDirection::RTL);
     /// ```
-    pub fn get_character_direction(&self) -> CharacterDirection {
+    pub fn character_direction(&self) -> CharacterDirection {
         match self.language {
             Some(lang) if CHARACTER_DIRECTION_RTL.contains(&(lang.into())) => {
                 CharacterDirection::RTL

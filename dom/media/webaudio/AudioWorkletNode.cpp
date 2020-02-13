@@ -12,6 +12,7 @@
 #include "mozilla/dom/MessageChannel.h"
 #include "mozilla/dom/MessagePort.h"
 #include "PlayingRefChangeHandler.h"
+#include "nsPrintfCString.h"
 
 namespace mozilla {
 namespace dom {
@@ -430,7 +431,10 @@ already_AddRefed<AudioWorkletNode> AudioWorkletNode::Constructor(
   const AudioParamDescriptorMap* parameterDescriptors =
       aAudioContext.GetParamMapForWorkletName(aName);
   if (!parameterDescriptors) {
-    aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+    // Not using nsPrintfCString in case aName has embedded nulls.
+    aRv.ThrowNotSupportedError(
+        NS_LITERAL_CSTRING("Unknown AudioWorklet name '") +
+        NS_ConvertUTF16toUTF8(aName) + NS_LITERAL_CSTRING("'"));
     return nullptr;
   }
 
@@ -446,7 +450,8 @@ already_AddRefed<AudioWorkletNode> AudioWorkletNode::Constructor(
    * 3. Configure input, output and output channels of node with options.
    */
   if (aOptions.mNumberOfInputs == 0 && aOptions.mNumberOfOutputs == 0) {
-    aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+    aRv.ThrowNotSupportedError(
+        "Must have nonzero numbers of inputs or outputs");
     return nullptr;
   }
 
@@ -458,7 +463,10 @@ already_AddRefed<AudioWorkletNode> AudioWorkletNode::Constructor(
      */
     for (uint32_t channelCount : aOptions.mOutputChannelCount.Value()) {
       if (channelCount == 0 || channelCount > WebAudioUtils::MaxChannelCount) {
-        aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+        aRv.ThrowNotSupportedError(
+            nsPrintfCString("Channel count (%u) must be in the range [1, max "
+                            "supported channel count]",
+                            channelCount));
         return nullptr;
       }
     }
@@ -468,7 +476,11 @@ already_AddRefed<AudioWorkletNode> AudioWorkletNode::Constructor(
      */
     if (aOptions.mOutputChannelCount.Value().Length() !=
         aOptions.mNumberOfOutputs) {
-      aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
+      aRv.ThrowIndexSizeError(
+          nsPrintfCString("Length of outputChannelCount (%zu) does not match "
+                          "numberOfOutputs (%u)",
+                          aOptions.mOutputChannelCount.Value().Length(),
+                          aOptions.mNumberOfOutputs));
       return nullptr;
     }
   }
@@ -508,10 +520,18 @@ already_AddRefed<AudioWorkletNode> AudioWorkletNode::Constructor(
     aRv.NoteJSContextException(cx);
     return nullptr;
   }
+
   /**
    * 9. Let serializedOptions be the result of
    *    StructuredSerialize(optionsObject).
    */
+
+  // This context and the worklet are part of the same agent cluster and they
+  // can share memory.
+  JS::CloneDataPolicy cloneDataPolicy;
+  cloneDataPolicy.allowIntraClusterClonableSharedObjects();
+  cloneDataPolicy.allowSharedMemoryObjects();
+
   // StructuredCloneHolder does not have a move constructor.  Instead allocate
   // memory so that the pointer can be passed to the rendering thread.
   UniquePtr<StructuredCloneHolder> serializedOptions =
@@ -519,7 +539,8 @@ already_AddRefed<AudioWorkletNode> AudioWorkletNode::Constructor(
           StructuredCloneHolder::CloningSupported,
           StructuredCloneHolder::TransferringNotSupported,
           JS::StructuredCloneScope::SameProcess);
-  serializedOptions->Write(cx, optionsVal, aRv);
+  serializedOptions->Write(cx, optionsVal, JS::UndefinedHandleValue,
+                           cloneDataPolicy, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }

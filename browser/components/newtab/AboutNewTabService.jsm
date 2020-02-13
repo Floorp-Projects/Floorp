@@ -51,7 +51,6 @@ function AboutNewTabService() {
   // More initialization happens here
   this.toggleActivityStream(true);
   this.initialized = true;
-  this.alreadyRecordedTopsitesPainted = false;
 
   if (IS_MAIN_PROCESS) {
     AboutNewTab.init();
@@ -297,20 +296,6 @@ AboutNewTabService.prototype = {
     this.notifyChange();
   },
 
-  maybeRecordTopsitesPainted(timestamp) {
-    if (this.alreadyRecordedTopsitesPainted) {
-      return;
-    }
-
-    const SCALAR_KEY = "timestamps.about_home_topsites_first_paint";
-
-    let startupInfo = Services.startup.getStartupInfo();
-    let processStartTs = startupInfo.process.getTime();
-    let delta = Math.round(timestamp - processStartTs);
-    Services.telemetry.scalarSet(SCALAR_KEY, delta);
-    this.alreadyRecordedTopsitesPainted = true;
-  },
-
   uninit() {
     if (!this.initialized) {
       return;
@@ -327,4 +312,33 @@ AboutNewTabService.prototype = {
   },
 };
 
-const EXPORTED_SYMBOLS = ["AboutNewTabService"];
+/**
+ * We split out the definition of AboutNewTabStartupRecorder from
+ * AboutNewTabService to avoid initializing the AboutNewTabService
+ * unnecessarily early when we just want to record some startup
+ * data.
+ */
+const AboutNewTabStartupRecorder = {
+  _alreadyRecordedTopsitesPainted: false,
+  _nonDefaultStartup: false,
+
+  noteNonDefaultStartup() {
+    this._nonDefaultStartup = true;
+  },
+
+  maybeRecordTopsitesPainted(timestamp) {
+    if (this._alreadyRecordedTopsitesPainted || this._nonDefaultStartup) {
+      return;
+    }
+
+    const SCALAR_KEY = "timestamps.about_home_topsites_first_paint";
+
+    let startupInfo = Services.startup.getStartupInfo();
+    let processStartTs = startupInfo.process.getTime();
+    let delta = Math.round(timestamp - processStartTs);
+    Services.telemetry.scalarSet(SCALAR_KEY, delta);
+    this._alreadyRecordedTopsitesPainted = true;
+  },
+};
+
+const EXPORTED_SYMBOLS = ["AboutNewTabService", "AboutNewTabStartupRecorder"];

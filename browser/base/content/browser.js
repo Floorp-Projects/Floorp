@@ -15,6 +15,7 @@ ChromeUtils.import("resource://gre/modules/NotificationDB.jsm");
 // lazy module getters
 
 XPCOMUtils.defineLazyModuleGetters(this, {
+  AboutNewTabStartupRecorder: "resource:///modules/AboutNewTabService.jsm",
   AddonManager: "resource://gre/modules/AddonManager.jsm",
   AMTelemetry: "resource://gre/modules/AddonManager.jsm",
   NewTabPagePreloading: "resource:///modules/NewTabPagePreloading.jsm",
@@ -2344,6 +2345,8 @@ var gBrowserInit = {
 
       // If the given URI is different from the homepage, we want to load it.
       if (uri != defaultArgs) {
+        AboutNewTabStartupRecorder.noteNonDefaultStartup();
+
         if (uri instanceof Ci.nsIArray) {
           // Transform the nsIArray of nsISupportsString's into a JS Array of
           // JS strings.

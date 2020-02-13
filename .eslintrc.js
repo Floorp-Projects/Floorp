@@ -32,6 +32,7 @@ const mochitestTestPaths = [
   "**/test/mochitest/",
   "**/tests/mochitest/",
   "testing/mochitest/tests/SimpleTest/",
+  "testing/mochitest/tests/Harness_sanity/",
 ];
 
 const chromeTestPaths = [

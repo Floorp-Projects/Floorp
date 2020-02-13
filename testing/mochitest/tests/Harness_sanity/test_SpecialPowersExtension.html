@@ -54,6 +54,7 @@ async function starttest(){
 
   // Test an invalid pref
   var retVal = null;
+  // eslint-disable-next-line mozilla/use-default-preference-values
   try {
     retVal = SpecialPowers.getBoolPref('extensions.checkCompat0123456789');
   } catch (ex) {
@@ -71,7 +72,7 @@ async function starttest(){
   SpecialPowers.removeChromeEventListener("TestEvent", testEventListener2, true);
   dispatchTestEvent();
   is(eventCount, 1, "Shouldn't have got an event!");
-  
+
   // Test Complex Pref - TODO: Without chrome access, I don't know how you'd actually
   // set this preference since you have to create an XPCOM object.
   // Leaving untested for now.
@@ -79,7 +80,7 @@ async function starttest(){
   // Test a DOMWindowUtils method and property
   is(SpecialPowers.DOMWindowUtils.getClassName(window), "Proxy");
   is(SpecialPowers.DOMWindowUtils.docCharsetIsForced, false);
-  
+
   // QueryInterface and getPrivilegedProps tests
   is(SpecialPowers.can_QI(SpecialPowers), false);
   let doc = SpecialPowers.wrap(document);
@@ -91,7 +92,7 @@ async function starttest(){
   is(SpecialPowers.getPrivilegedProps(doc, "baseURIObject.fileName"),
      "test_SpecialPowersExtension.html",
      "Should have a fileName property now");
-  
+
   //try to run garbage collection
   SpecialPowers.gc();
 

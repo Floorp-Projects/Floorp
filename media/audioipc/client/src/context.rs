@@ -111,6 +111,12 @@ fn register_thread(callback: Option<extern "C" fn(*const ::std::os::raw::c_char)
     }
 }
 
+fn unregister_thread(callback: Option<extern "C" fn()>) {
+    if let Some(func) = callback {
+        func();
+    }
+}
+
 fn promote_and_register_thread(
     rpc: &rpc::ClientProxy<ServerMessage, ClientMessage>,
     callback: Option<extern "C" fn(*const ::std::os::raw::c_char)>,
@@ -197,6 +203,8 @@ impl ContextOps for ClientContext {
         let (tx_rpc, rx_rpc) = mpsc::channel();
 
         let params = AUDIOIPC_INIT_PARAMS.with(|p| p.replace(None).unwrap());
+        let thread_create_callback = params.thread_create_callback;
+        let thread_destroy_callback = params.thread_destroy_callback;
 
         let server_stream =
             unsafe { audioipc::MessageStream::from_raw_fd(params.server_connection) };
@@ -204,12 +212,13 @@ impl ContextOps for ClientContext {
         let core = core::spawn_thread("AudioIPC Client RPC", move || {
             let handle = reactor::Handle::default();
 
-            register_thread(params.thread_create_callback);
+            register_thread(thread_create_callback);
 
             server_stream
                 .into_tokio_ipc(&handle)
                 .and_then(|stream| bind_and_send_client(stream, &tx_rpc))
-        })
+        },
+        move || unregister_thread(thread_destroy_callback))
         .map_err(|_| Error::default())?;
 
         let rpc = rx_rpc.recv().map_err(|_| Error::default())?;
@@ -223,10 +232,10 @@ impl ContextOps for ClientContext {
             .unwrap_or_else(|_| "(remote error)".to_string());
         let backend_id = CString::new(backend_id).expect("backend_id query failed");
 
-        let thread_create_callback = params.thread_create_callback;
         let cpu_pool = futures_cpupool::Builder::new()
             .name_prefix("AudioIPC")
             .after_start(move || promote_and_register_thread(&rpc2, thread_create_callback))
+            .before_stop(move || unregister_thread(thread_destroy_callback))
             .pool_size(params.pool_size)
             .stack_size(params.stack_size)
             .create();

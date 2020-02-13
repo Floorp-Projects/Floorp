@@ -7,6 +7,7 @@
 #include "nsError.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/Likely.h"
+#include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StaticPrefs_network.h"
 #include "mozilla/UniquePtr.h"
 
@@ -170,18 +171,23 @@ nsIContentHandle* nsHtml5TreeBuilder::createElement(
     switch (aNamespace) {
       case kNameSpaceID_XHTML:
         if (nsGkAtoms::img == aName) {
-          nsHtml5String url =
-              aAttributes->getValue(nsHtml5AttributeName::ATTR_SRC);
-          nsHtml5String srcset =
-              aAttributes->getValue(nsHtml5AttributeName::ATTR_SRCSET);
-          nsHtml5String crossOrigin =
-              aAttributes->getValue(nsHtml5AttributeName::ATTR_CROSSORIGIN);
-          nsHtml5String referrerPolicy =
-              aAttributes->getValue(nsHtml5AttributeName::ATTR_REFERRERPOLICY);
-          nsHtml5String sizes =
-              aAttributes->getValue(nsHtml5AttributeName::ATTR_SIZES);
-          mSpeculativeLoadQueue.AppendElement()->InitImage(
-              url, crossOrigin, referrerPolicy, srcset, sizes);
+          nsHtml5String loading =
+              aAttributes->getValue(nsHtml5AttributeName::ATTR_LOADING);
+          if (!StaticPrefs::dom_image_lazy_loading_enabled() ||
+              !loading.LowerCaseEqualsASCII("lazy")) {
+            nsHtml5String url =
+                aAttributes->getValue(nsHtml5AttributeName::ATTR_SRC);
+            nsHtml5String srcset =
+                aAttributes->getValue(nsHtml5AttributeName::ATTR_SRCSET);
+            nsHtml5String crossOrigin =
+                aAttributes->getValue(nsHtml5AttributeName::ATTR_CROSSORIGIN);
+            nsHtml5String referrerPolicy = aAttributes->getValue(
+                nsHtml5AttributeName::ATTR_REFERRERPOLICY);
+            nsHtml5String sizes =
+                aAttributes->getValue(nsHtml5AttributeName::ATTR_SIZES);
+            mSpeculativeLoadQueue.AppendElement()->InitImage(
+                url, crossOrigin, referrerPolicy, srcset, sizes);
+          }
         } else if (nsGkAtoms::source == aName) {
           nsHtml5String srcset =
               aAttributes->getValue(nsHtml5AttributeName::ATTR_SRCSET);
