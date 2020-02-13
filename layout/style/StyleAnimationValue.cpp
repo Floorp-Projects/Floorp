@@ -111,23 +111,16 @@ const mozilla::StylePositionOrAuto& AnimationValue::GetOffsetAnchorProperty()
 Size AnimationValue::GetScaleValue(const nsIFrame* aFrame) const {
   using namespace nsStyleTransformMatrix;
 
-  const StyleTranslate* translate = nullptr;
-  const StyleRotate* rotate = nullptr;
-  const StyleScale* scale = nullptr;
-  const StyleTransform* transform = nullptr;
-
   switch (Servo_AnimationValue_GetPropertyId(mServo)) {
-    case eCSSProperty_scale:
-      scale = &GetScaleProperty();
-      break;
-    case eCSSProperty_translate:
-      translate = &GetTranslateProperty();
-      break;
+    case eCSSProperty_scale: {
+      const StyleScale& scale = GetScaleProperty();
+      return scale.IsNone() ? Size(1.0, 1.0)
+                            : Size(scale.AsScale()._0, scale.AsScale()._1);
+    }
     case eCSSProperty_rotate:
-      rotate = &GetRotateProperty();
-      break;
+    case eCSSProperty_translate:
+      return Size(1.0, 1.0);
     case eCSSProperty_transform:
-      transform = &GetTransformProperty();
       break;
     default:
       MOZ_ASSERT_UNREACHABLE(
@@ -137,11 +130,9 @@ Size AnimationValue::GetScaleValue(const nsIFrame* aFrame) const {
 
   TransformReferenceBox refBox(aFrame);
   Matrix4x4 t =
-      ReadTransforms(translate ? *translate : StyleTranslate::None(),
-                     rotate ? *rotate : StyleRotate::None(),
-                     scale ? *scale : StyleScale::None(), Nothing(),
-                     transform ? *transform : StyleTransform(), refBox,
-                     aFrame->PresContext()->AppUnitsPerDevPixel());
+      ReadTransforms(StyleTranslate::None(), StyleRotate::None(),
+                     StyleScale::None(), Nothing(), GetTransformProperty(),
+                     refBox, aFrame->PresContext()->AppUnitsPerDevPixel());
   Matrix transform2d;
   bool canDraw2D = t.CanDraw2D(&transform2d);
   if (!canDraw2D) {
