@@ -31,3 +31,4 @@ if CONFIG['COMPILE_ENVIRONMENT']:
     generated.inputs = [
         '/third_party/rust/mapped_hyph'
     ]
+    generated.py2 = True

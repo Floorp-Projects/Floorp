@@ -1237,10 +1237,12 @@ class GeneratedFile(ContextDerived):
         'required_during_compile',
         'localized',
         'force',
+        'py2',
     )
 
     def __init__(self, context, script, method, outputs, inputs,
-                 flags=(), localized=False, force=False):
+                 flags=(), localized=False, force=False,
+                 py2=False):
         ContextDerived.__init__(self, context)
         self.script = script
         self.method = method
@@ -1249,6 +1251,7 @@ class GeneratedFile(ContextDerived):
         self.flags = flags
         self.localized = localized
         self.force = force
+        self.py2 = py2
 
         suffixes = [
             '.h',

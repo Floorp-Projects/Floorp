@@ -17,6 +17,7 @@ else:
     ]
     GeneratedFile('../../../js/src/ctypes/libffi/include/ffi.h',
                   script='subst_header.py',
+                  py2=True,
                   inputs=['../../../js/src/ctypes/libffi/include/ffi.h.in'])
 
     LOCAL_INCLUDES += [
@@ -85,6 +86,7 @@ else:
                 '!../../../js/src/ctypes/libffi/include/ffi.h',
             ],
             script='preprocess_libffi_asm.py',
+            py2=True,
             flags=['$(DEFINES)', '$(LOCAL_INCLUDES)'])
         SOURCES += ['!win64_aarch.asm']
     elif CONFIG['FFI_TARGET'] == 'X86':
@@ -104,6 +106,7 @@ else:
                 '!../../../js/src/ctypes/libffi/fficonfig.h',
                 '!../../../js/src/ctypes/libffi/include/ffi.h',
             ], script='preprocess_libffi_asm.py',
+            py2=True,
             flags=['$(DEFINES)', '$(LOCAL_INCLUDES)'])
             SOURCES += ['!win32.asm']
             ASFLAGS += ['-safeseh']
@@ -120,6 +123,7 @@ else:
                     '!../../../js/src/ctypes/libffi/fficonfig.h',
                     '!../../../js/src/ctypes/libffi/include/ffi.h',
                 ], script='preprocess_libffi_asm.py',
+                py2=True,
                 flags=['$(DEFINES)', '$(LOCAL_INCLUDES)'])
             SOURCES += ['!win64.asm']
     elif CONFIG['FFI_TARGET'] == 'X86_DARWIN':

@@ -47,4 +47,5 @@ headers_arrays_certs = [
 
 for header, array_name, cert in headers_arrays_certs:
     GeneratedFile(header, script='gen_cert_header.py',
+                  py2=True,
                   entry_point=array_name, inputs=[cert])

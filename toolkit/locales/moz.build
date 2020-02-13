@@ -15,7 +15,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk':
 
 JAR_MANIFESTS += ['jar.mn']
 
-GeneratedFile('multilocale.txt', script='gen_multilocale.py')
+GeneratedFile('multilocale.txt', script='gen_multilocale.py', py2=True)
 FINAL_TARGET_FILES.res += [
     '!multilocale.txt',
 ]
@@ -34,4 +34,5 @@ if CONFIG['MOZ_CRASHREPORTER']:
 LOCALIZED_GENERATED_FILES += ['update.locale']
 update_locale = LOCALIZED_GENERATED_FILES['update.locale']
 update_locale.script = 'generate_update_locale.py'
+update_locale.py2 = True
 LOCALIZED_FILES += ['!update.locale']

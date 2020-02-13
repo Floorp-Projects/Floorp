@@ -14,6 +14,7 @@ def SignedAppFile(name, flags, app_directory='app/'):
     props.script = '/security/manager/ssl/tests/unit/sign_app.py'
     props.inputs = [app_directory]
     props.flags = flags
+    props.py2 = True
     # Turn RELATIVEDIR into list entry: like
     # 'security/manager/ssl/tests/unit/test_signed_apps' ->
     # TEST_HARNESS_FILES.xpcshell.security.manager.ssl.tests.unit.test_signed_apps.

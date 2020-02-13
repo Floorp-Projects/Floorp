@@ -13,6 +13,7 @@ def STHTestFile(name):
     props = GENERATED_FILES[name]
     props.script = 'createSTHTestData.py'
     props.inputs = ['%s.tbs' % name]
+    props.py2 = True
 
 STHTestFile('valid-sth.inc')
 STHTestFile('valid-with-extension-sth.inc')
