@@ -148,18 +148,15 @@ bool WeakMap<K, V>::markEntry(GCMarker* marker, K& key, V& value) {
   JSRuntime* rt = zone()->runtimeFromAnyThread();
   CellColor keyColor = gc::detail::GetEffectiveColor(rt, key);
   JSObject* delegate = gc::detail::GetDelegate(key);
-
   if (delegate) {
     CellColor delegateColor = gc::detail::GetEffectiveColor(rt, delegate);
-    // The key needs to stay alive while both the delegate and map are live.
-    CellColor proxyPreserveColor = std::min(delegateColor, mapColor);
-    if (keyColor < proxyPreserveColor) {
-      gc::AutoSetMarkColor autoColor(*marker, proxyPreserveColor);
+    if (keyColor < delegateColor) {
+      gc::AutoSetMarkColor autoColor(*marker, delegateColor);
       TraceWeakMapKeyEdge(marker, zone(), &key,
                           "proxy-preserved WeakMap entry key");
-      MOZ_ASSERT(key->color() >= proxyPreserveColor);
+      MOZ_ASSERT(key->color() >= delegateColor);
       marked = true;
-      keyColor = proxyPreserveColor;
+      keyColor = delegateColor;
     }
   }
 
