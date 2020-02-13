@@ -6399,16 +6399,6 @@ void CodeGenerator::visitNewArrayCallVM(LNewArray* lir) {
   restoreLive(lir);
 }
 
-void CodeGenerator::visitNewDerivedTypedObject(LNewDerivedTypedObject* lir) {
-  pushArg(ToRegister(lir->offset()));
-  pushArg(ToRegister(lir->owner()));
-  pushArg(ToRegister(lir->type()));
-
-  using Fn = JSObject* (*)(JSContext*, HandleObject type, HandleObject owner,
-                           int32_t offset);
-  callVM<Fn, CreateDerivedTypedObj>(lir);
-}
-
 void CodeGenerator::visitAtan2D(LAtan2D* lir) {
   Register temp = ToRegister(lir->temp());
   FloatRegister y = ToFloatRegister(lir->y());
@@ -6823,24 +6813,6 @@ void CodeGenerator::visitNewObject(LNewObject* lir) {
 void CodeGenerator::visitOutOfLineNewObject(OutOfLineNewObject* ool) {
   visitNewObjectVMCall(ool->lir());
   masm.jump(ool->rejoin());
-}
-
-void CodeGenerator::visitNewTypedObject(LNewTypedObject* lir) {
-  Register object = ToRegister(lir->output());
-  Register temp = ToRegister(lir->temp());
-  InlineTypedObject* templateObject = lir->mir()->templateObject();
-  gc::InitialHeap initialHeap = lir->mir()->initialHeap();
-
-  using Fn = InlineTypedObject* (*)(JSContext*, Handle<InlineTypedObject*>,
-                                    gc::InitialHeap);
-  OutOfLineCode* ool = oolCallVM<Fn, InlineTypedObject::createCopy>(
-      lir, ArgList(ImmGCPtr(templateObject), Imm32(initialHeap)),
-      StoreRegisterTo(object));
-
-  TemplateObject templateObj(templateObject);
-  masm.createGCObject(object, temp, templateObj, initialHeap, ool->entry());
-
-  masm.bind(ool->rejoin());
 }
 
 void CodeGenerator::visitNewNamedLambdaObject(LNewNamedLambdaObject* lir) {
@@ -7719,32 +7691,6 @@ void CodeGenerator::visitOutOfLineTypedArrayIndexToInt32(
   // Substitute the invalid index with an arbitrary out-of-bounds index.
   masm.move32(Imm32(-1), ToRegister(ool->lir()->output()));
   masm.jump(ool->rejoin());
-}
-
-void CodeGenerator::visitTypedObjectDescr(LTypedObjectDescr* lir) {
-  Register obj = ToRegister(lir->object());
-  Register out = ToRegister(lir->output());
-  masm.loadTypedObjectDescr(obj, out);
-}
-
-void CodeGenerator::visitTypedObjectElements(LTypedObjectElements* lir) {
-  Register obj = ToRegister(lir->object());
-  Register out = ToRegister(lir->output());
-
-  if (lir->mir()->definitelyOutline()) {
-    masm.loadPtr(Address(obj, OutlineTypedObject::offsetOfData()), out);
-  } else {
-    Label inlineObject, done;
-    masm.branchIfInlineTypedObject(obj, out, &inlineObject);
-
-    masm.loadPtr(Address(obj, OutlineTypedObject::offsetOfData()), out);
-    masm.jump(&done);
-
-    masm.bind(&inlineObject);
-    masm.computeEffectiveAddress(
-        Address(obj, InlineTypedObject::offsetOfDataStart()), out);
-    masm.bind(&done);
-  }
 }
 
 void CodeGenerator::visitStringLength(LStringLength* lir) {
@@ -9787,57 +9733,6 @@ void CodeGenerator::visitOutOfLineStoreElementHole(
   masm.jump(ool->rejoin());
 }
 
-template <typename T>
-static void StoreUnboxedPointer(MacroAssembler& masm, T address, MIRType type,
-                                const LAllocation* value, bool preBarrier) {
-  if (preBarrier) {
-    masm.guardedCallPreBarrier(address, type);
-  }
-  if (value->isConstant()) {
-    Value v = value->toConstant()->toJSValue();
-    if (v.isGCThing()) {
-      masm.storePtr(ImmGCPtr(v.toGCThing()), address);
-    } else {
-      MOZ_ASSERT(v.isNull());
-      masm.storePtr(ImmWord(0), address);
-    }
-  } else {
-    masm.storePtr(ToRegister(value), address);
-  }
-}
-
-void CodeGenerator::visitStoreUnboxedPointer(LStoreUnboxedPointer* lir) {
-  MIRType type;
-  int32_t offsetAdjustment;
-  bool preBarrier;
-  if (lir->mir()->isStoreUnboxedObjectOrNull()) {
-    type = MIRType::Object;
-    offsetAdjustment =
-        lir->mir()->toStoreUnboxedObjectOrNull()->offsetAdjustment();
-    preBarrier = lir->mir()->toStoreUnboxedObjectOrNull()->preBarrier();
-  } else if (lir->mir()->isStoreUnboxedString()) {
-    type = MIRType::String;
-    offsetAdjustment = lir->mir()->toStoreUnboxedString()->offsetAdjustment();
-    preBarrier = lir->mir()->toStoreUnboxedString()->preBarrier();
-  } else {
-    MOZ_CRASH();
-  }
-
-  Register elements = ToRegister(lir->elements());
-  const LAllocation* index = lir->index();
-  const LAllocation* value = lir->value();
-
-  if (index->isConstant()) {
-    Address address(elements,
-                    ToInt32(index) * sizeof(uintptr_t) + offsetAdjustment);
-    StoreUnboxedPointer(masm, address, type, value, preBarrier);
-  } else {
-    BaseIndex address(elements, ToRegister(index), ScalePointer,
-                      offsetAdjustment);
-    StoreUnboxedPointer(masm, address, type, value, preBarrier);
-  }
-}
-
 void CodeGenerator::emitArrayPopShift(LInstruction* lir,
                                       const MArrayPopShift* mir, Register obj,
                                       Register elementsTemp,
@@ -11637,68 +11532,6 @@ void CodeGenerator::visitLoadElementHole(LLoadElementHole* lir) {
   masm.moveValue(UndefinedValue(), out);
 
   masm.bind(&done);
-}
-
-void CodeGenerator::visitLoadUnboxedPointerV(LLoadUnboxedPointerV* lir) {
-  Register elements = ToRegister(lir->elements());
-  const ValueOperand out = ToOutValue(lir);
-
-  if (lir->index()->isConstant()) {
-    int32_t offset = ToInt32(lir->index()) * sizeof(uintptr_t) +
-                     lir->mir()->offsetAdjustment();
-    masm.loadPtr(Address(elements, offset), out.scratchReg());
-  } else {
-    masm.loadPtr(BaseIndex(elements, ToRegister(lir->index()), ScalePointer,
-                           lir->mir()->offsetAdjustment()),
-                 out.scratchReg());
-  }
-
-  Label notNull, done;
-  masm.branchPtr(Assembler::NotEqual, out.scratchReg(), ImmWord(0), &notNull);
-
-  masm.moveValue(NullValue(), out);
-  masm.jump(&done);
-
-  masm.bind(&notNull);
-  masm.tagValue(JSVAL_TYPE_OBJECT, out.scratchReg(), out);
-
-  masm.bind(&done);
-}
-
-void CodeGenerator::visitLoadUnboxedPointerT(LLoadUnboxedPointerT* lir) {
-  Register elements = ToRegister(lir->elements());
-  const LAllocation* index = lir->index();
-  Register out = ToRegister(lir->output());
-
-  bool bailOnNull;
-  int32_t offsetAdjustment;
-  if (lir->mir()->isLoadUnboxedObjectOrNull()) {
-    bailOnNull = lir->mir()->toLoadUnboxedObjectOrNull()->nullBehavior() ==
-                 MLoadUnboxedObjectOrNull::BailOnNull;
-    offsetAdjustment =
-        lir->mir()->toLoadUnboxedObjectOrNull()->offsetAdjustment();
-  } else if (lir->mir()->isLoadUnboxedString()) {
-    bailOnNull = false;
-    offsetAdjustment = lir->mir()->toLoadUnboxedString()->offsetAdjustment();
-  } else {
-    MOZ_CRASH();
-  }
-
-  if (index->isConstant()) {
-    Address source(elements,
-                   ToInt32(index) * sizeof(uintptr_t) + offsetAdjustment);
-    masm.loadPtr(source, out);
-  } else {
-    BaseIndex source(elements, ToRegister(index), ScalePointer,
-                     offsetAdjustment);
-    masm.loadPtr(source, out);
-  }
-
-  if (bailOnNull) {
-    Label bail;
-    masm.branchTestPtr(Assembler::Zero, out, out, &bail);
-    bailoutFrom(&bail, lir->snapshot());
-  }
 }
 
 void CodeGenerator::visitUnboxObjectOrNull(LUnboxObjectOrNull* lir) {
