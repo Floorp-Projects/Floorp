@@ -34,10 +34,7 @@ registerCleanupFunction(
     await recipeParent.then(recipeParentResult => recipeParentResult.reset());
 
     await cleanupDoorhanger();
-    let notif;
-    while ((notif = PopupNotifications.getNotification("password"))) {
-      notif.remove();
-    }
+    await cleanupPasswordNotifications();
     await closePopup(document.getElementById("contentAreaContextMenu"));
     await closePopup(document.getElementById("PopupAutoComplete"));
   }
@@ -271,7 +268,7 @@ const DONT_CHANGE_BUTTON = "secondaryButton";
  * Checks if we have a password capture popup notification
  * of the right type and with the right label.
  *
- * @param {String} aKind The desired `passwordNotificationType`
+ * @param {String} aKind The desired `passwordNotificationType` ("any" for any type)
  * @param {Object} [popupNotifications = PopupNotifications]
  * @param {Object} [browser = null] Optional browser whose notifications should be searched.
  * @return the found password popup notification.
@@ -283,7 +280,12 @@ function getCaptureDoorhanger(
 ) {
   ok(true, "Looking for " + aKind + " popup notification");
   let notification = popupNotifications.getNotification("password", browser);
-  if (notification) {
+  if (!aKind) {
+    throw new Error(
+      "getCaptureDoorhanger needs aKind to be a non-empty string"
+    );
+  }
+  if (aKind !== "any" && notification) {
     is(
       notification.options.passwordNotificationType,
       aKind,
@@ -327,7 +329,10 @@ async function waitForDoorhanger(browser, type) {
   let notif;
   await TestUtils.waitForCondition(() => {
     notif = PopupNotifications.getNotification("password", browser);
-    return notif && notif.options.passwordNotificationType == type;
+    if (notif && type !== "any") {
+      return notif.options.passwordNotificationType == type;
+    }
+    return notif;
   }, `Waiting for a ${type} notification`);
   return notif;
 }
@@ -389,6 +394,15 @@ async function cleanupDoorhanger(notif) {
     : Promise.resolve();
   PN.panel.hidePopup();
   await promiseHidden;
+}
+
+async function cleanupPasswordNotifications(
+  popupNotifications = PopupNotifications
+) {
+  let notif;
+  while ((notif = popupNotifications.getNotification("password"))) {
+    notif.remove();
+  }
 }
 
 /**
@@ -737,6 +751,7 @@ async function changeContentInputValue(browser, selector, str) {
     info("change event on " + sel + ": " + input.value);
   });
 
+  await SimpleTest.promiseFocus(browser);
   await EventUtils.synthesizeKey("KEY_Backspace");
   if (str) {
     await EventUtils.sendString(str);
