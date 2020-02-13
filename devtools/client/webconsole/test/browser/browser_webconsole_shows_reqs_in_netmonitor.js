@@ -10,8 +10,7 @@ const TEST_URI =
 
 const TEST_FILE = "test-network-request.html";
 const TEST_PATH =
-  "http://example.com/browser/devtools/client/webconsole/" +
-  "test/browser/" +
+  "http://example.com/browser/devtools/client/webconsole/test/browser/" +
   TEST_FILE;
 
 const NET_PREF = "devtools.webconsole.filter.net";
@@ -21,6 +20,7 @@ registerCleanupFunction(() => {
 });
 
 add_task(async function() {
+  await pushPref("devtools.target-switching.enabled", true);
   const toolbox = await openNewTabAndToolbox(TEST_URI, "netmonitor");
   info("Network panel is open.");
 
@@ -48,7 +48,7 @@ async function testNetmonitor(toolbox) {
     "devtools/client/netmonitor/src/selectors/index"
   );
 
-  await waitUntil(() => store.getState().requests.requests.length > 0);
+  await waitFor(() => store.getState().requests.requests.length > 0);
 
   is(
     store.getState().requests.requests.length,
