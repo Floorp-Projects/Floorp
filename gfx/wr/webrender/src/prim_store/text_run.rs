@@ -361,10 +361,15 @@ impl TextRunPrimitive {
         if self.glyph_keys_range.is_empty() || cache_dirty {
             let subpx_dir = self.used_font.get_subpx_dir();
 
+            let transform = match self.raster_space {
+                RasterSpace::Local(scale) => FontTransform::new(scale, 0.0, 0.0, scale),
+                RasterSpace::Screen => self.used_font.transform,
+            };
+
             self.glyph_keys_range = scratch.glyph_keys.extend(
                 glyphs.iter().map(|src| {
                     let src_point = src.point + prim_offset;
-                    let world_offset = self.used_font.transform.transform(&src_point);
+                    let world_offset = transform.transform(&src_point);
                     let device_offset = surface.device_pixel_scale.transform_point(world_offset);
                     GlyphKey::new(src.index, device_offset, subpx_dir)
                 }));
