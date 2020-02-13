@@ -5,12 +5,11 @@
 from __future__ import absolute_import
 import os
 
-from firefox_puppeteer import PuppeteerMixin
 from marionette_driver import Wait
 from marionette_harness import MarionetteTestCase
 
 
-class TestSafeBrowsingInitialDownload(PuppeteerMixin, MarionetteTestCase):
+class TestSafeBrowsingInitialDownload(MarionetteTestCase):
 
     v2_file_extensions = [
         'vlpset',
@@ -95,7 +94,7 @@ class TestSafeBrowsingInitialDownload(PuppeteerMixin, MarionetteTestCase):
     def tearDown(self):
         try:
             # Restart with a fresh profile
-            self.restart(clean=True)
+            self.marionette.restart(clean=True)
         finally:
             super(TestSafeBrowsingInitialDownload, self).tearDown()
 
