@@ -159,8 +159,12 @@ void DebugScript::destroyBreakpointSite(JSFreeOp* fop, JSScript* script,
 /* static */
 void DebugScript::clearBreakpointsIn(JSFreeOp* fop, Realm* realm, Debugger* dbg,
                                      JSObject* handler) {
-  for (auto script = realm->zone()->cellIter<JSScript>(); !script.done();
-       script.next()) {
+  for (auto base = realm->zone()->cellIter<JSScript>(); !base.done();
+       base.next()) {
+    if (base->isLazyScript()) {
+      continue;
+    }
+    JSScript* script = static_cast<JSScript*>(base.get());
     if (script->realm() == realm && script->hasDebugScript()) {
       clearBreakpointsIn(fop, script, dbg, handler);
     }
