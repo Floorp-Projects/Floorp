@@ -63,7 +63,7 @@ nsresult CSSPageRuleDeclaration::SetCSSDeclaration(
     mDecls->SetOwningRule(nullptr);
     RefPtr<DeclarationBlock> decls = aDecl;
     Servo_PageRule_SetStyle(rule->Raw(), decls->Raw());
-    mDecls = decls.forget();
+    mDecls = std::move(decls);
     mDecls->SetOwningRule(rule);
   }
 

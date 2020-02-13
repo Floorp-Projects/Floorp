@@ -18,9 +18,9 @@ class WrappedControlRunnable final : public WorkerControlRunnable {
 
  public:
   WrappedControlRunnable(WorkerPrivate* aWorkerPrivate,
-                         already_AddRefed<nsIRunnable>&& aInner)
+                         nsCOMPtr<nsIRunnable>&& aInner)
       : WorkerControlRunnable(aWorkerPrivate, WorkerThreadUnchangedBusyCount),
-        mInner(aInner) {}
+        mInner(std::move(aInner)) {}
 
   virtual bool PreDispatch(WorkerPrivate* aWorkerPrivate) override {
     // Silence bad assertions, this can be dispatched from any thread.
@@ -98,11 +98,11 @@ WorkerEventTarget::Dispatch(already_AddRefed<nsIRunnable> aRunnable,
       return NS_OK;
     }
 
-    runnable = r.forget();
+    runnable = std::move(r);
   }
 
   RefPtr<WorkerControlRunnable> r =
-      new WrappedControlRunnable(mWorkerPrivate, runnable.forget());
+      new WrappedControlRunnable(mWorkerPrivate, std::move(runnable));
   if (!r->Dispatch()) {
     return NS_ERROR_FAILURE;
   }

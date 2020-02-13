@@ -45,7 +45,7 @@ RefPtr<VRGPUParent> VRGPUParent::CreateForGPU(
   MessageLoop::current()->PostTask(NewRunnableMethod<Endpoint<PVRGPUParent>&&>(
       "gfx::VRGPUParent::Bind", vcp, &VRGPUParent::Bind, std::move(aEndpoint)));
 
-  return vcp.forget();
+  return vcp;
 }
 
 void VRGPUParent::Bind(Endpoint<PVRGPUParent>&& aEndpoint) {

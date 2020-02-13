@@ -269,7 +269,7 @@ void Service::unregisterConnection(Connection* aConnection) {
         // spinning a nested event loop if the connection was not properly
         // shutdown, we want to do that outside this loop so that we can finish
         // mutating the array and drop our mutex.
-        forgettingRef = mConnections[i].forget();
+        forgettingRef = std::move(mConnections[i]);
         mConnections.RemoveElementAt(i);
         break;
       }
@@ -579,7 +579,7 @@ Service::OpenAsyncDatabase(nsIVariant* aDatabaseStore,
     nsCOMPtr<nsIFile> cloned;
     rv = storageFile->Clone(getter_AddRefs(cloned));
     MOZ_ASSERT(NS_SUCCEEDED(rv));
-    storageFile = cloned.forget();
+    storageFile = std::move(cloned);
 
     if (!readOnly) {
       // Ensure that SQLITE_OPEN_CREATE is passed in for compatibility reasons.

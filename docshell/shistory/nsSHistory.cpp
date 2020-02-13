@@ -1580,7 +1580,7 @@ nsresult nsSHistory::InitiateLoad(nsISHEntry* aFrameEntry,
   nsCOMPtr<nsIContentSecurityPolicy> csp = aFrameEntry->GetCsp();
   loadState->SetCsp(csp);
 
-  aLoadResult.mLoadState = loadState.forget();
+  aLoadResult.mLoadState = std::move(loadState);
 
   return NS_OK;
 }

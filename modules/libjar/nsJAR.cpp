@@ -692,8 +692,10 @@ nsZipReaderCache::GetFd(nsIFile* zipFile, PRFileDesc** aRetVal) {
   zip->ClearReleaseTime();
   rv = zip->GetNSPRFileDesc(aRetVal);
   // Do this to avoid possible deadlock on mLock with ReleaseZip().
-  MutexAutoUnlock unlock(mLock);
-  RefPtr<nsJAR> zipTemp = zip.forget();
+  {
+    MutexAutoUnlock unlock(mLock);
+    zip = nullptr;
+  }
   return rv;
 #endif /* XP_WIN */
 }

@@ -565,10 +565,10 @@ WorkerGlobalScope::GetServiceWorkerRegistration(
       return;
     }
 
-    ref = swr.forget();
+    ref = std::move(swr);
     *aDoneOut = true;
   });
-  return ref.forget();
+  return ref;
 }
 
 RefPtr<ServiceWorkerRegistration>
@@ -581,7 +581,7 @@ WorkerGlobalScope::GetOrCreateServiceWorkerRegistration(
     ref = ServiceWorkerRegistration::CreateForWorker(mWorkerPrivate, this,
                                                      aDescriptor);
   }
-  return ref.forget();
+  return ref;
 }
 
 uint64_t WorkerGlobalScope::WindowID() const {

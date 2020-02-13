@@ -361,9 +361,9 @@ SheetLoadData::SheetLoadData(Loader* aLoader, nsIURI* aURI, StyleSheet* aSheet,
 
 SheetLoadData::~SheetLoadData() {
   // Do this iteratively to avoid blowing up the stack.
-  RefPtr<SheetLoadData> next = mNext.forget();
+  RefPtr<SheetLoadData> next = std::move(mNext);
   while (next) {
-    next = next->mNext.forget();
+    next = std::move(next->mNext);
   }
 }
 
