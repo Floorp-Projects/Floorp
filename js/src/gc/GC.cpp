@@ -2107,8 +2107,13 @@ void GCRuntime::sweepTypesAfterCompacting(Zone* zone) {
 
   AutoClearTypeInferenceStateOnOOM oom(zone);
 
-  for (auto script = zone->cellIterUnsafe<JSScript>(); !script.done();
-       script.next()) {
+  for (auto base = zone->cellIterUnsafe<JSScript>(); !base.done();
+       base.next()) {
+    if (base->isLazyScript()) {
+      continue;
+    }
+    JSScript* script = static_cast<JSScript*>(base.get());
+
     AutoSweepJitScript sweep(script);
   }
   for (auto group = zone->cellIterUnsafe<ObjectGroup>(); !group.done();
@@ -4914,8 +4919,12 @@ static void SweepCompressionTasks(GCParallelTask* task) {
 void js::gc::SweepLazyScripts(GCParallelTask* task) {
   for (SweepGroupZonesIter zone(task->gc); !zone.done(); zone.next()) {
     AutoSetThreadIsSweeping threadIsSweeping(zone);
-    for (auto i = zone->cellIter<LazyScript>(); !i.done(); i.next()) {
-      WeakHeapPtrScript* edge = &i.unbarrieredGet()->u.script_;
+    for (auto iter = zone->cellIter<LazyScript>(); !iter.done(); iter.next()) {
+      BaseScript* base = iter.unbarrieredGet();
+      if (!base->isLazyScript()) {
+        continue;
+      }
+      WeakHeapPtrScript* edge = &base->u.script_;
       if (*edge && IsAboutToBeFinalized(edge)) {
         *edge = nullptr;
       }

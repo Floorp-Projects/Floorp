@@ -2682,9 +2682,12 @@ static bool VerifyGlobalNames(JSContext* cx, Handle<GlobalObject*> shg) {
   RootedId id(cx);
   bool nameMissing = false;
 
-  for (auto iter = cx->zone()->cellIter<JSScript>();
-       !iter.done() && !nameMissing; iter.next()) {
-    JSScript* script = iter;
+  for (auto base = cx->zone()->cellIter<JSScript>();
+       !base.done() && !nameMissing; base.next()) {
+    if (base->isLazyScript()) {
+      continue;
+    }
+    JSScript* script = static_cast<JSScript*>(base.get());
 
     for (BytecodeLocation loc : AllBytecodesIterable(script)) {
       JSOp op = loc.getOp();
