@@ -33,7 +33,7 @@ add_task(async function() {
   await BrowserConsoleManager.toggleBrowserConsole();
 
   const opened = waitForBrowserConsole();
-  gDevTools.restoreDevToolsSession({
+  await gDevTools.restoreDevToolsSession({
     browserConsole: true,
   });
 

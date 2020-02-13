@@ -430,13 +430,13 @@ DevTools.prototype = {
   /**
    * Restore the devtools session state as provided by SessionStore.
    */
-  restoreDevToolsSession: function({ browserConsole, browserToolbox }) {
+  restoreDevToolsSession: async function({ browserConsole, browserToolbox }) {
     if (browserToolbox) {
       BrowserToolboxLauncher.init();
     }
 
     if (browserConsole && !BrowserConsoleManager.getBrowserConsole()) {
-      BrowserConsoleManager.toggleBrowserConsole();
+      await BrowserConsoleManager.toggleBrowserConsole();
     }
   },
 
