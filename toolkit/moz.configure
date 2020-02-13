@@ -1890,6 +1890,29 @@ with only_when(requires_wasm_sandboxing & compile_environment):
             return value
     set_config('WASM_LDFLAGS', wasm_ldflags)
 
+    # This function is returning "ldflags" that lucetc will use when invoking
+    # the linker, but really lucetc is going to be invoking the compiler, since
+    # the compiler handles lots of details for us (like finding the linker in
+    # cross-compilation scenarios).
+    @depends(target)
+    def lucetc_ldflags(target):
+        if target.kernel == 'Linux':
+            return [
+                '-Wl,-shared',
+                '-nostdlib',
+            ]
+
+        if target.kernel == 'Darwin':
+            return [
+                '-Wl,-dylib',
+                '-Wl,-dead_strip',
+                '-Wl,-export_dynamic',
+                '-Wl,-undefined,dynamic_lookup',
+                '-nostdlib',
+            ]
+
+    set_config('LUCETC_LDFLAGS', lucetc_ldflags)
+
     # Re-using the Rust target triple here is not exactly correct, but it is an
     # excellent approximation for the platforms we currently support
     set_config('LUCETC_TARGET', rust_target_triple)
