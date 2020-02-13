@@ -682,8 +682,8 @@ class SandboxedWasmLibrary(Library):
         # TODO: WASM sandboxed libraries are in a weird place: they are
         # built in a different way, but they should share some code with
         # SharedLibrary.  This is the minimal configuration needed to work
-        # with Linux, but it would need to be extended for other platforms.
-        assert context.config.substs['OS_TARGET'] == 'Linux'
+        # on the below platforms.
+        assert context.config.substs['OS_TARGET'] in ('Linux', 'Darwin')
 
         self.lib_name = '%s%s%s' % (
             context.config.dll_prefix,
