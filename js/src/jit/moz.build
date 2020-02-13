@@ -242,6 +242,7 @@ elif CONFIG['JS_CODEGEN_MIPS32'] or CONFIG['JS_CODEGEN_MIPS64']:
 # Generate jit/MOpcodes.h from jit/MIR.h
 GeneratedFile('MOpcodes.h',
               script='GenerateOpcodeFiles.py',
+              py2=True,
               entry_point='generate_mir_header',
               inputs=['MIR.h'])
 
@@ -249,5 +250,6 @@ GeneratedFile('MOpcodes.h',
 # platform-specific LIR files.
 GeneratedFile('LOpcodes.h',
               script='GenerateOpcodeFiles.py',
+              py2=True,
               entry_point='generate_lir_header',
               inputs=lir_inputs)

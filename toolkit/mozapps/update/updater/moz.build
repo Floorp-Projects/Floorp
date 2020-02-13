@@ -49,6 +49,12 @@ xpcshell_cert.script = 'gen_cert_header.py:create_header'
 dep1_cert.script = 'gen_cert_header.py:create_header'
 dep2_cert.script = 'gen_cert_header.py:create_header'
 
+primary_cert.py2 = True
+secondary_cert.py2 = True
+xpcshell_cert.py2 = True
+dep1_cert.py2 = True
+dep2_cert.py2 = True
+
 if CONFIG['MOZ_UPDATE_CHANNEL'] in ('beta', 'release', 'esr'):
     primary_cert.inputs += ['release_primary.der']
     secondary_cert.inputs += ['release_secondary.der']

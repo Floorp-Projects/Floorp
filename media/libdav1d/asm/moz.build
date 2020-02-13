@@ -126,6 +126,7 @@ if CONFIG['CPU_ARCH'] in ('x86', 'x86_64'):
         a.script = '../generate_source.py:add_define'
         a.inputs = [relative_path + f]
         a.flags = ['BITDEPTH', '16']
+        a.py2 = True
 
     GENERATED_FILES += [
         '8bd_%s' % p for p in bitdepth_basenames
@@ -140,6 +141,7 @@ if CONFIG['CPU_ARCH'] in ('x86', 'x86_64'):
         a.script = '../generate_source.py:add_define'
         a.inputs = [relative_path + f]
         a.flags = ['BITDEPTH', '8']
+        a.py2 = True
 elif CONFIG['CPU_ARCH'] == 'arm' or CONFIG['CPU_ARCH'] == 'aarch64':
     SOURCES += [
         '../../../third_party/dav1d/src/arm/cpu.c',
@@ -173,6 +175,7 @@ elif CONFIG['CPU_ARCH'] == 'arm' or CONFIG['CPU_ARCH'] == 'aarch64':
         a.script = '../generate_source.py:add_define'
         a.inputs = [relative_path + f]
         a.flags = ['BITDEPTH', '16']
+        a.py2 = True
 
     GENERATED_FILES += [
         '8bd_%s' % p for p in bitdepth_basenames
@@ -187,6 +190,7 @@ elif CONFIG['CPU_ARCH'] == 'arm' or CONFIG['CPU_ARCH'] == 'aarch64':
         a.script = '../generate_source.py:add_define'
         a.inputs = [relative_path + f]
         a.flags = ['BITDEPTH', '8']
+        a.py2 = True
 
     # BITDEPTH .S files
     if CONFIG['CPU_ARCH'] == 'aarch64':
