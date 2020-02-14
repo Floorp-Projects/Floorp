@@ -3543,19 +3543,6 @@ nsresult HttpBaseChannel::SetupReplacementChannel(nsIURI* newURI,
     }
   }
 
-  // convey the User-Agent header value
-  // since we might be setting custom user agent from DevTools.
-  {
-    nsAutoCString oldUserAgent;
-    nsresult hasHeader =
-      mRequestHead.GetHeader(nsHttp::User_Agent, oldUserAgent);
-    if (NS_SUCCEEDED(hasHeader)) {
-      rv = httpChannel->SetRequestHeader(NS_LITERAL_CSTRING("User-Agent"),
-                                         oldUserAgent, false);
-      MOZ_ASSERT(NS_SUCCEEDED(rv));
-    }
-  }
-
   // share the request context - see bug 1236650
   rv = httpChannel->SetRequestContextID(mRequestContextID);
   MOZ_ASSERT(NS_SUCCEEDED(rv));
