@@ -149,6 +149,8 @@ sealed class Event {
     object RightsTapped : Event()
     object LicensingTapped : Event()
     object LibrariesThatWeUseTapped : Event()
+    object PocketTopSiteClicked : Event()
+    object PocketTopSiteRemoved : Event()
     object FennecToFenixMigrated : Event()
 
     // Interaction events with extras

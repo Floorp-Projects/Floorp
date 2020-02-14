@@ -6,8 +6,17 @@ package org.mozilla.fenix.components
 
 import android.content.Context
 import androidx.lifecycle.LiveData
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import mozilla.components.feature.top.sites.TopSite
 import mozilla.components.feature.top.sites.TopSiteStorage
+import mozilla.components.support.locale.LocaleManager
+import org.mozilla.fenix.R
+import org.mozilla.fenix.ext.settings
+import org.mozilla.fenix.settings.SupportUtils
+import org.mozilla.fenix.settings.advanced.getSelectedLocale
 import org.mozilla.fenix.test.Mockable
 
 @Mockable
@@ -16,6 +25,10 @@ class TopSiteStorage(private val context: Context) {
 
     val storage by lazy {
         TopSiteStorage(context)
+    }
+
+    init {
+        addDefaultTopSites()
     }
 
     /**
@@ -37,5 +50,43 @@ class TopSiteStorage(private val context: Context) {
      */
     fun removeTopSite(topSite: TopSite) {
         storage.removeTopSite(topSite)
+    }
+
+    private fun addDefaultTopSites() {
+        val topSiteCandidates = mutableListOf<Pair<String, String>>()
+        if (!context.settings().defaultTopSitesAdded) {
+            if (LocaleManager.getSelectedLocale(context).language == "en") {
+                topSiteCandidates.add(
+                    Pair(
+                        context.getString(R.string.pocket_pinned_top_articles),
+                        SupportUtils.POCKET_TRENDING_URL
+                    )
+                )
+            }
+
+            topSiteCandidates.add(
+                Pair(
+                    context.getString(R.string.default_top_site_wikipedia),
+                    SupportUtils.WIKIPEDIA_URL
+                )
+            )
+
+            topSiteCandidates.add(
+                Pair(
+                    context.getString(R.string.default_top_site_youtube),
+                    SupportUtils.YOUTUBE_URL
+                )
+            )
+
+            GlobalScope.launch(Dispatchers.Main) {
+                withContext(Dispatchers.IO) {
+                    topSiteCandidates.forEach {
+                        addTopSite(it.first, it.second)
+                    }
+                }
+            }
+            context.settings().preferences.edit()
+                .putBoolean(context.getString(R.string.default_top_sites_added), true).apply()
+        }
     }
 }

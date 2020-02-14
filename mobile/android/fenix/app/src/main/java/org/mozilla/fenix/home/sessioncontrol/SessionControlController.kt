@@ -17,7 +17,6 @@ import mozilla.components.feature.media.ext.playIfPaused
 import mozilla.components.feature.media.state.MediaStateMachine
 import mozilla.components.feature.tab.collections.TabCollection
 import mozilla.components.feature.top.sites.TopSite
-import mozilla.components.feature.tab.collections.Tab as ComponentTab
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
@@ -26,9 +25,9 @@ import org.mozilla.fenix.browser.browsingmode.BrowsingModeManager
 import org.mozilla.fenix.collections.SaveCollectionStep
 import org.mozilla.fenix.components.TabCollectionStorage
 import org.mozilla.fenix.components.TopSiteStorage
-import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.sessionsOfType
 import org.mozilla.fenix.home.HomeFragment
@@ -37,6 +36,7 @@ import org.mozilla.fenix.home.HomeFragmentDirections
 import org.mozilla.fenix.home.HomeFragmentStore
 import org.mozilla.fenix.home.Tab
 import org.mozilla.fenix.settings.SupportUtils
+import mozilla.components.feature.tab.collections.Tab as ComponentTab
 
 /**
  * [HomeFragment] controller. An interface that handles the view manipulation of the Tabs triggered
@@ -294,6 +294,9 @@ class DefaultSessionControlController(
 
     override fun handleRemoveTopSiteClicked(topSite: TopSite) {
         metrics.track(Event.TopSiteRemoved)
+        if (topSite.url == SupportUtils.POCKET_TRENDING_URL) {
+            metrics.track(Event.PocketTopSiteRemoved)
+        }
 
         lifecycleScope.launch(Dispatchers.IO) {
             topSiteStorage.removeTopSite(topSite)
@@ -335,7 +338,8 @@ class DefaultSessionControlController(
         val directions = HomeFragmentDirections.actionHomeFragmentToBrowserFragment(null)
         val extras =
             FragmentNavigator.Extras.Builder()
-                .addSharedElement(tabView,
+                .addSharedElement(
+                    tabView,
                     "$TAB_ITEM_TRANSITION_NAME$sessionId"
                 )
                 .build()
@@ -344,6 +348,9 @@ class DefaultSessionControlController(
 
     override fun handleSelectTopSite(url: String) {
         metrics.track(Event.TopSiteOpenInNewTab)
+        if (url == SupportUtils.POCKET_TRENDING_URL) {
+            metrics.track(Event.PocketTopSiteClicked)
+        }
         activity.components.useCases.tabsUseCases.addTab.invoke(url, true, true)
         navController.nav(
             R.id.homeFragment,

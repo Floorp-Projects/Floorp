@@ -8,13 +8,14 @@ import android.content.Context
 import android.view.View
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.top_site_item.view.*
-import mozilla.components.feature.top.sites.TopSite
 import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.menu.item.SimpleBrowserMenuItem
+import mozilla.components.feature.top.sites.TopSite
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.loadIntoView
 import org.mozilla.fenix.home.sessioncontrol.TopSiteInteractor
+import org.mozilla.fenix.settings.SupportUtils
 
 class TopSiteItemViewHolder(
     private val view: View,
@@ -46,7 +47,14 @@ class TopSiteItemViewHolder(
     fun bind(topSite: TopSite) {
         this.topSite = topSite
         view.top_site_title.text = topSite.title
-        view.context.components.core.icons.loadIntoView(view.favicon_image, topSite.url)
+        when {
+            topSite.url == SupportUtils.POCKET_TRENDING_URL -> {
+                view.favicon_image.setImageDrawable(view.context.getDrawable(R.drawable.ic_pocket))
+            }
+            else -> {
+                view.context.components.core.icons.loadIntoView(view.favicon_image, topSite.url)
+            }
+        }
     }
 
     companion object {

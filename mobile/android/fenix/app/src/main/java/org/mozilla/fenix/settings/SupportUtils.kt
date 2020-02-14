@@ -22,7 +22,10 @@ import java.util.Locale
 object SupportUtils {
     const val RATE_APP_URL = "market://details?id=" + BuildConfig.APPLICATION_ID
     const val MOZILLA_MANIFESTO_URL = "https://www.mozilla.org/en-GB/about/manifesto/"
+    const val POCKET_TRENDING_URL = "https://getpocket.com/fenix-top-articles"
+    const val WIKIPEDIA_URL = "https://www.wikipedia.org/"
     const val FENIX_PLAY_STORE_URL = "https://play.google.com/store/apps/details?id=${BuildConfig.APPLICATION_ID}"
+    const val YOUTUBE_URL = "https://www.youtube.com/"
 
     enum class SumoTopic(internal val topicStr: String) {
         HELP("faq-android"),

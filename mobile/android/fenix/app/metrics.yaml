@@ -1765,3 +1765,27 @@ app_theme:
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-09-01"
+
+pocket:
+  pocket_top_site_clicked:
+    type: event
+    description: >
+      A user clicked on the trending Pocket top site
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/8126
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/8098
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-09-01"
+  pocket_top_site_removed:
+    type: event
+    description: >
+      A user removed the trending Pocket top site
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/8126
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/8098
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-09-01"

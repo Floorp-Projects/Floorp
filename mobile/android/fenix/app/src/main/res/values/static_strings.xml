@@ -23,4 +23,11 @@
 
     <!-- GeckoView abbreviation used in AboutFragment -->
     <string name="gecko_view_abbreviation" translatable="false">GV</string>
+
+    <!-- Default title for pinned Pocket top site that links to trending Pocket site -->
+    <string name="pocket_pinned_top_articles" translatable="false">Top Articles</string>
+    <!-- Default title for pinned Wikipedia top site that links to Wikipedia home page -->
+    <string name="default_top_site_wikipedia" translatable="false">Wikipedia</string>
+    <!-- Default title for pinned YouTube top site that links to Youtube home page  -->
+    <string name="default_top_site_youtube" translatable="false">YouTube</string>
 </resources>

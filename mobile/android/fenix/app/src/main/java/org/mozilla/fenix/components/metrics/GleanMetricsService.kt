@@ -29,6 +29,7 @@ import org.mozilla.fenix.GleanMetrics.MediaNotification
 import org.mozilla.fenix.GleanMetrics.MediaState
 import org.mozilla.fenix.GleanMetrics.Metrics
 import org.mozilla.fenix.GleanMetrics.Pings
+import org.mozilla.fenix.GleanMetrics.Pocket
 import org.mozilla.fenix.GleanMetrics.PrivateBrowsingMode
 import org.mozilla.fenix.GleanMetrics.PrivateBrowsingShortcut
 import org.mozilla.fenix.GleanMetrics.QrScanner
@@ -482,6 +483,12 @@ private val Event.wrapper: EventWrapper<*>?
         )
         is Event.LibrariesThatWeUseTapped -> EventWrapper<NoExtraKeys>(
             { AboutPage.librariesTapped.record(it) }
+        )
+        is Event.PocketTopSiteClicked -> EventWrapper<NoExtraKeys>(
+            { Pocket.pocketTopSiteClicked.record(it) }
+        )
+        is Event.PocketTopSiteRemoved -> EventWrapper<NoExtraKeys>(
+            { Pocket.pocketTopSiteRemoved.record(it) }
         )
         is Event.DarkThemeSelected -> EventWrapper(
             { AppTheme.darkThemeSelected.record(it) },
