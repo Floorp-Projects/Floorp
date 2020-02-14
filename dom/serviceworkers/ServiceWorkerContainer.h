@@ -139,9 +139,13 @@ class ServiceWorkerContainer final : public DOMEventTargetHelper {
 
   void DispatchMessage(RefPtr<ReceivedMessage> aMessage);
 
-  static bool FillInMessageEventInit(JSContext* aCx, nsIGlobalObject* aGlobal,
-                                     ReceivedMessage& aMessage,
-                                     MessageEventInit& aInit, ErrorResult& aRv);
+  // When it fails, returning boolean means whether it's because deserailization
+  // failed or not.
+  static Result<Ok, bool> FillInMessageEventInit(JSContext* aCx,
+                                                 nsIGlobalObject* aGlobal,
+                                                 ReceivedMessage& aMessage,
+                                                 MessageEventInit& aInit,
+                                                 ErrorResult& aRv);
 
   RefPtr<Inner> mInner;
 

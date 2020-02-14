@@ -473,7 +473,7 @@ class SendMessageEventRunnable final : public ExtendableEventWorkerRunnable {
     mData->Read(aCx, &messageData, rv);
 
     // If deserialization fails, we will fire a messageerror event
-    bool deserializationFailed = rv.ErrorCodeIs(NS_ERROR_DOM_DATA_CLONE_ERR);
+    bool deserializationFailed = rv.Failed();
 
     if (!deserializationFailed && NS_WARN_IF(rv.Failed())) {
       rv.SuppressException();

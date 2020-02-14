@@ -954,12 +954,7 @@ class MessageEventOp final : public ExtendableEventOp {
     mData->Read(aCx, &messageData, rv);
 
     // If deserialization fails, we will fire a messageerror event
-    bool deserializationFailed = rv.ErrorCodeIs(NS_ERROR_DOM_DATA_CLONE_ERR);
-
-    if (!deserializationFailed && NS_WARN_IF(rv.Failed())) {
-      RejectAll(rv.StealNSResult());
-      return true;
-    }
+    const bool deserializationFailed = rv.Failed();
 
     Sequence<OwningNonNull<MessagePort>> ports;
     if (!mData->TakeTransferredPortsAsSequence(ports)) {
