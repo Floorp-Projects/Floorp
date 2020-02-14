@@ -4650,7 +4650,6 @@ nsFrame::HandlePress(nsPresContext* aPresContext, WidgetGUIEvent* aEvent,
     // These methods aren't const but can't actually delete anything,
     // so no need for AutoWeakFrame.
     fc->SetDragState(true);
-    fc->SetMouseDoubleDown(true);
     return HandleMultiplePress(aPresContext, mouseEvent, aEventStatus, control);
   }
 
