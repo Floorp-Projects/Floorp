@@ -57,9 +57,8 @@ add_task(async function task() {
   info("console panel open again.");
 
   // Fire an XHR request.
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
-    // Ensure XHR request is completed
-    await new Promise(resolve => content.wrappedJSObject.testXhrGet(resolve));
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+    content.wrappedJSObject.testXhrGet();
   });
 
   const jsonUrl = TEST_PATH + JSON_TEST_URL;
