@@ -27,7 +27,7 @@ const JSClass FinalizationRecordObject::class_ = {
 
 /* static */
 FinalizationRecordObject* FinalizationRecordObject::create(
-    JSContext* cx, HandleFinalizationGroupObject group, HandleValue holdings) {
+    JSContext* cx, HandleFinalizationGroupObject group, HandleValue heldValue) {
   MOZ_ASSERT(group);
 
   auto record = NewObjectWithNullTaggedProto<FinalizationRecordObject>(cx);
@@ -36,7 +36,7 @@ FinalizationRecordObject* FinalizationRecordObject::create(
   }
 
   record->initReservedSlot(GroupSlot, ObjectValue(*group));
-  record->initReservedSlot(HoldingsSlot, holdings);
+  record->initReservedSlot(HeldValueSlot, heldValue);
 
   return record;
 }
@@ -49,19 +49,19 @@ FinalizationGroupObject* FinalizationRecordObject::group() const {
   return &value.toObject().as<FinalizationGroupObject>();
 }
 
-Value FinalizationRecordObject::holdings() const {
-  return getReservedSlot(HoldingsSlot);
+Value FinalizationRecordObject::heldValue() const {
+  return getReservedSlot(HeldValueSlot);
 }
 
 bool FinalizationRecordObject::wasCleared() const {
-  MOZ_ASSERT_IF(!group(), holdings().isUndefined());
+  MOZ_ASSERT_IF(!group(), heldValue().isUndefined());
   return !group();
 }
 
 void FinalizationRecordObject::clear() {
   MOZ_ASSERT(group());
   setReservedSlot(GroupSlot, NullValue());
-  setReservedSlot(HoldingsSlot, UndefinedValue());
+  setReservedSlot(HeldValueSlot, UndefinedValue());
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -231,9 +231,9 @@ bool FinalizationGroupObject::construct(JSContext* cx, unsigned argc,
     return false;
   }
 
-  Rooted<UniquePtr<FinalizationRecordVector>> holdings(
+  Rooted<UniquePtr<FinalizationRecordVector>> records(
       cx, cx->make_unique<FinalizationRecordVector>(cx->zone()));
-  if (!holdings) {
+  if (!records) {
     return false;
   }
 
@@ -246,7 +246,7 @@ bool FinalizationGroupObject::construct(JSContext* cx, unsigned argc,
   group->initReservedSlot(CleanupCallbackSlot, ObjectValue(*cleanupCallback));
   InitReservedSlot(group, RegistrationsSlot, registrations.release(),
                    MemoryUse::FinalizationGroupRegistrations);
-  InitReservedSlot(group, RecordsToBeCleanedUpSlot, holdings.release(),
+  InitReservedSlot(group, RecordsToBeCleanedUpSlot, records.release(),
                    MemoryUse::FinalizationGroupRecordVector);
   group->initReservedSlot(IsQueuedForCleanupSlot, BooleanValue(false));
   group->initReservedSlot(IsCleanupJobActiveSlot, BooleanValue(false));
@@ -258,8 +258,8 @@ bool FinalizationGroupObject::construct(JSContext* cx, unsigned argc,
 /* static */
 void FinalizationGroupObject::trace(JSTracer* trc, JSObject* obj) {
   auto group = &obj->as<FinalizationGroupObject>();
-  if (FinalizationRecordVector* holdings = group->recordsToBeCleanedUp()) {
-    holdings->trace(trc);
+  if (FinalizationRecordVector* records = group->recordsToBeCleanedUp()) {
+    records->trace(trc);
   }
   if (ObjectWeakMap* registrations = group->registrations()) {
     registrations->trace(trc);
@@ -326,7 +326,7 @@ void FinalizationGroupObject::setCleanupJobActive(bool value) {
   setReservedSlot(IsCleanupJobActiveSlot, BooleanValue(value));
 }
 
-// FinalizationGroup.prototype.register(target , holdings [, unregisterToken ])
+// FinalizationGroup.prototype.register(target, heldValue [, unregisterToken ])
 // https://tc39.es/proposal-weakrefs/#sec-finalization-group.prototype.register
 /* static */
 bool FinalizationGroupObject::register_(JSContext* cx, unsigned argc,
@@ -358,13 +358,14 @@ bool FinalizationGroupObject::register_(JSContext* cx, unsigned argc,
 
   RootedObject target(cx, &args[0].toObject());
 
-  // 5. If SameValue(target, holdings), throw a TypeError exception.
+  // 5. If SameValue(target, heldValue), throw a TypeError exception.
   if (args.get(1).isObject() && &args.get(1).toObject() == target) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BAD_HOLDINGS);
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_BAD_HELD_VALUE);
     return false;
   }
 
-  HandleValue holdings = args.get(1);
+  HandleValue heldValue = args.get(1);
 
   // 6. If Type(unregisterToken) is not Object,
   //    a. If unregisterToken is not undefined, throw a TypeError exception.
@@ -380,9 +381,9 @@ bool FinalizationGroupObject::register_(JSContext* cx, unsigned argc,
     unregisterToken = &args[2].toObject();
   }
 
-  // Create the finalization record representing this target and holdings.
+  // Create the finalization record representing this target and heldValue.
   Rooted<FinalizationRecordObject*> record(
-      cx, FinalizationRecordObject::create(cx, group, holdings));
+      cx, FinalizationRecordObject::create(cx, group, heldValue));
   if (!record) {
     return false;
   }
@@ -510,7 +511,7 @@ bool FinalizationGroupObject::unregister(JSContext* cx, unsigned argc,
   // 5. Let removed be false.
   bool removed = false;
 
-  // 6. For each Record { [[Target]], [[Holdings]], [[UnregisterToken]] } cell
+  // 6. For each Record { [[Target]], [[HeldValue]], [[UnregisterToken]] } cell
   //    that is an element of finalizationGroup.[[Cells]], do
   //    a. If SameValue(cell.[[UnregisterToken]], unregisterToken) is true, then
   //       i. Remove cell from finalizationGroup.[[Cells]].
@@ -780,7 +781,7 @@ bool FinalizationIteratorObject::next(JSContext* cx, unsigned argc, Value* vp) {
   //    cell.[[Target]] is empty,
   //    a. Choose any such cell.
   //    b. Remove cell from finalizationGroup.[[Cells]].
-  //    c. Return CreateIterResultObject(cell.[[Holdings]], false).
+  //    c. Return CreateIterResultObject(cell.[[HeldValue]], false).
   FinalizationRecordVector* records = group->recordsToBeCleanedUp();
   size_t index = iterator->index();
   MOZ_ASSERT(index <= records->length());
@@ -794,8 +795,8 @@ bool FinalizationIteratorObject::next(JSContext* cx, unsigned argc, Value* vp) {
 
   if (index < records->length() && index < INT32_MAX) {
     RootedFinalizationRecordObject record(cx, (*records)[index]);
-    RootedValue holdings(cx, record->holdings());
-    JSObject* result = CreateIterResultObject(cx, holdings, false);
+    RootedValue heldValue(cx, record->heldValue());
+    JSObject* result = CreateIterResultObject(cx, heldValue, false);
     if (!result) {
       return false;
     }

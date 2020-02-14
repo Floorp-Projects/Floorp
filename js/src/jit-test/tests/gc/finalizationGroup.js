@@ -2,21 +2,21 @@
 
 function checkPropertyDescriptor(obj, property, writable, enumerable,
                                  configurable) {
-    let desc = Object.getOwnPropertyDescriptor(obj, property);
-    assertEq(typeof desc, "object");
-    assertEq(desc.writable, writable);
-    assertEq(desc.enumerable, enumerable);
-    assertEq(desc.configurable, configurable);
+  let desc = Object.getOwnPropertyDescriptor(obj, property);
+  assertEq(typeof desc, "object");
+  assertEq(desc.writable, writable);
+  assertEq(desc.enumerable, enumerable);
+  assertEq(desc.configurable, configurable);
 }
 
 function assertThrowsTypeError(thunk) {
-    let error;
-    try {
-        thunk();
-    } catch (e) {
-        error = e;
-    }
-    assertEq(error instanceof TypeError, true);
+  let error;
+  try {
+    thunk();
+  } catch (e) {
+    error = e;
+  }
+  assertEq(error instanceof TypeError, true);
 }
 
 // 3.1 The FinalizationGroup Constructor
@@ -86,66 +86,66 @@ checkPropertyDescriptor(proto, Symbol.toStringTag, false, false, true);
 // 3.5.3 Properties of FinalizationGroup Cleanup Iterator Instances
 assertEq(Object.getOwnPropertyNames(iterator).length, 0);
 
-let holdings = [];
+let heldValues = [];
 group = new FinalizationGroup(iterator => {
-    for (const holding of iterator) {
-        holdings.push(holding);
-    }
+  for (const heldValue of iterator) {
+    heldValues.push(heldValue);
+  }
 });
 
 // Test a single target.
-holdings = [];
+heldValues = [];
 group.register({}, 42);
 gc();
 drainJobQueue();
-assertEq(holdings.length, 1);
-assertEq(holdings[0], 42);
+assertEq(heldValues.length, 1);
+assertEq(heldValues[0], 42);
 
 // Test multiple targets.
-holdings = [];
+heldValues = [];
 for (let i = 0; i < 100; i++) {
-    group.register({}, i);
+  group.register({}, i);
 }
 gc();
 drainJobQueue();
-assertEq(holdings.length, 100);
-holdings = holdings.sort((a, b) => a - b);
+assertEq(heldValues.length, 100);
+heldValues = heldValues.sort((a, b) => a - b);
 for (let i = 0; i < 100; i++) {
-    assertEq(holdings[i], i);
+  assertEq(heldValues[i], i);
 }
 
 // Test a single object in multiple groups
-holdings = [];
-let holdings2 = [];
+heldValues = [];
+let heldValues2 = [];
 let group2 = new FinalizationGroup(iterator => {
-    for (const holding of iterator) {
-        holdings2.push(holding);
-    }
+  for (const heldValue of iterator) {
+    heldValues2.push(heldValue);
+  }
 });
 {
-    let object = {};
-    group.register(object, 1);
-    group2.register(object, 2);
-    object = null;
+  let object = {};
+  group.register(object, 1);
+  group2.register(object, 2);
+  object = null;
 }
 gc();
 drainJobQueue();
-assertEq(holdings.length, 1);
-assertEq(holdings[0], 1);
-assertEq(holdings2.length, 1);
-assertEq(holdings2[0], 2);
+assertEq(heldValues.length, 1);
+assertEq(heldValues[0], 1);
+assertEq(heldValues2.length, 1);
+assertEq(heldValues2[0], 2);
 
 // Unregister a single target.
-holdings = [];
+heldValues = [];
 let token = {};
 group.register({}, 1, token);
 group.unregister(token);
 gc();
 drainJobQueue();
-assertEq(holdings.length, 0);
+assertEq(heldValues.length, 0);
 
 // Unregister multiple targets.
-holdings = [];
+heldValues = [];
 let token2 = {};
 group.register({}, 1, token);
 group.register({}, 2, token2);
@@ -154,61 +154,61 @@ group.register({}, 4, token2);
 group.unregister(token);
 gc();
 drainJobQueue();
-assertEq(holdings.length, 2);
-holdings = holdings.sort((a, b) => a - b);
-assertEq(holdings[0], 2);
-assertEq(holdings[1], 4);
+assertEq(heldValues.length, 2);
+heldValues = heldValues.sort((a, b) => a - b);
+assertEq(heldValues[0], 2);
+assertEq(heldValues[1], 4);
 
 // Watch object in another global.
 let other = newGlobal({newCompartment: true});
-holdings = [];
+heldValues = [];
 group.register(evalcx('({})', other), 1);
 gc();
 drainJobQueue();
-assertEq(holdings.length, 1);
-assertEq(holdings[0], 1);
+assertEq(heldValues.length, 1);
+assertEq(heldValues[0], 1);
 
-// Pass holdings from another global.
-let holding = evalcx('{}', other);
-holdings = [];
-group.register({}, holding);
+// Pass heldValues from another global.
+let heldValue = evalcx('{}', other);
+heldValues = [];
+group.register({}, heldValue);
 gc();
 drainJobQueue();
-assertEq(holdings.length, 1);
-assertEq(holdings[0], holding);
+assertEq(heldValues.length, 1);
+assertEq(heldValues[0], heldValue);
 
 // Pass unregister token from another global.
 token = evalcx('({})', other);
-holdings = [];
+heldValues = [];
 group.register({}, 1, token);
 gc();
 drainJobQueue();
-assertEq(holdings.length, 1);
-assertEq(holdings[0], 1);
-holdings = [];
+assertEq(heldValues.length, 1);
+assertEq(heldValues[0], 1);
+heldValues = [];
 group.register({}, 1, token);
 group.unregister(token);
 gc();
 drainJobQueue();
-assertEq(holdings.length, 0);
+assertEq(heldValues.length, 0);
 
 // FinalizationGroup is designed to be subclassable.
 class MyGroup extends FinalizationGroup {
-    constructor(callback) {
-        super(callback);
-    }
+  constructor(callback) {
+    super(callback);
+  }
 }
 let g2 = new MyGroup(iterator => {
-    for (const holding of iterator) {
-        holdings.push(holding);
-    }
+  for (const heldValue of iterator) {
+    heldValues.push(heldValue);
+  }
 });
-holdings = [];
+heldValues = [];
 g2.register({}, 42);
 gc();
 drainJobQueue();
-assertEq(holdings.length, 1);
-assertEq(holdings[0], 42);
+assertEq(heldValues.length, 1);
+assertEq(heldValues[0], 42);
 
 // Test trying to use iterator after the callback.
 iterator = undefined;
@@ -221,29 +221,29 @@ assertThrowsTypeError(() => iterator.next());
 
 // Test trying to use the wrong iterator inside the callback.
 let g4 = new FinalizationGroup(x => {
-    assertThrowsTypeError(() => iterator.next());
+  assertThrowsTypeError(() => iterator.next());
 });
 g4.register({}, 1);
 gc();
 drainJobQueue();
 
 // Test cleanupSome.
-holdings = [];
-let g5 = new FinalizationGroup(i => holdings = [...i]);
+heldValues = [];
+let g5 = new FinalizationGroup(i => heldValues = [...i]);
 g5.register({}, 1);
 g5.register({}, 2);
 g5.register({}, 3);
 gc();
 g5.cleanupSome();
-assertEq(holdings.length, 3);
-holdings = holdings.sort((a, b) => a - b);
-assertEq(holdings[0], 1);
-assertEq(holdings[1], 2);
-assertEq(holdings[2], 3);
+assertEq(heldValues.length, 3);
+heldValues = heldValues.sort((a, b) => a - b);
+assertEq(heldValues[0], 1);
+assertEq(heldValues[1], 2);
+assertEq(heldValues[2], 3);
 
 // Test trying to call cleanupSome in callback.
 let g6 = new FinalizationGroup(x => {
-    assertThrowsTypeError(() => g6.cleanupSome());
+  assertThrowsTypeError(() => g6.cleanupSome());
 });
 g6.register({}, 1);
 gc();
