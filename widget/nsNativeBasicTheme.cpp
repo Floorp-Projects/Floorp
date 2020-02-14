@@ -609,6 +609,19 @@ bool nsNativeBasicTheme::GetWidgetPadding(nsDeviceContext* aContext,
                                           nsIFrame* aFrame,
                                           StyleAppearance aAppearance,
                                           LayoutDeviceIntMargin* aResult) {
+  if (aAppearance == StyleAppearance::Menulist ||
+      aAppearance == StyleAppearance::MenulistTextfield ||
+      aAppearance == StyleAppearance::NumberInput ||
+      aAppearance == StyleAppearance::Textarea ||
+      aAppearance == StyleAppearance::Textfield) {
+    // If we have author-specified padding for these elements, don't do the
+    // fixups below.
+    if (aFrame->PresContext()->HasAuthorSpecifiedRules(
+            aFrame, NS_AUTHOR_SPECIFIED_PADDING)) {
+      return false;
+    }
+  }
+
   uint32_t dpi = GetDPIRatio(aFrame);
   switch (aAppearance) {
     // Radios and checkboxes return a fixed size in GetMinimumWidgetSize
