@@ -17,7 +17,6 @@ for addon in addons:
 
     GENERATED_FILES += [xpi]
     GENERATED_FILES[xpi].script = '../../../../../../toolkit/mozapps/extensions/test/create_xpi.py'
-    GENERATED_FILES[xpi].py2 = True
     GENERATED_FILES[xpi].inputs = [indir]
 
     TEST_HARNESS_FILES.testing.mochitest.tests.junit += ['!%s' % xpi]
