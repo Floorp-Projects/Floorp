@@ -293,7 +293,7 @@ public final class GeckoRuntime implements Parcelable {
             Log.d(LOGTAG, "init");
         }
         int flags = 0;
-        if (settings.getUseContentProcessHint()) {
+        if (settings.getUseMultiprocess()) {
             flags |= GeckoThread.FLAG_PRELOAD_CHILD;
         }
 
