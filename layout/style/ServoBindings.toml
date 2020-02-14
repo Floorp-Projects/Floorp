@@ -567,6 +567,7 @@ cbindgen-types = [
     { gecko = "StyleImage", servo = "values::computed::Image" },
     { gecko = "StyleShapeOutside", servo = "values::computed::basic_shape::ShapeOutside" },
     { gecko = "StyleClipPath", servo = "values::computed::basic_shape::ClipPath" },
+    { gecko = "StyleGridAutoFlow", servo = "values::computed::GridAutoFlow" },
 ]
 
 mapped-generic-types = [
