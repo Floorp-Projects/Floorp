@@ -240,6 +240,9 @@
     <!-- Preference for tracking protection exceptions -->
     <string name="preferences_tracking_protection_exceptions">Unntak</string>
 
+    <!-- Preference for account login -->
+    <string name="preferences_sync_sign_in">Logg inn</string>
+
     <!-- Button to open camera for pairing -->
     <string name="pair_open_camera">Opne kamera</string>
     <!-- Button to cancel pairing -->

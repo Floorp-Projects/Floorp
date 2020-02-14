@@ -935,6 +935,10 @@
     <string name="etp_fingerprinters_title">Kuãhũ kuaaukaha</string>
     <!-- Category of trackers (tracking content) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_title">Tapykueho retepy</string>
+    <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
+    <string name="etp_panel_on">Umi ñemo’ã oñemyandýma ko tendápe g̃uarã</string>
+    <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
+    <string name="etp_panel_off">Umi ñemo’ã ojepe’áma ko tendápe g̃uarã</string>
     <!-- About page Your rights link text -->
     <string name="about_your_rights">Nde derécho</string>
     <!-- About page link text to open open source licenses screen -->
@@ -972,6 +976,11 @@
     <!-- Paste the text in the clipboard -->
     <string name="browser_toolbar_long_press_popup_paste">Mboja</string>
 
+    <!-- Snackbar message shown after an URL has been copied to clipboard. -->
+    <string name="browser_toolbar_url_copied_to_clipboard_snackbar">URL embohasáva kuatiajokohápe</string>
+
+    <!-- Title text for the Add To Homescreen dialog -->
+    <string name="add_to_homescreen_title">Embojuaju mba’erechaha ñepyrũgua</string>
     <!-- Cancel button text for the Add to Homescreen dialog -->
     <string name="add_to_homescreen_cancel">Heja</string>
     <!-- Add button text for the Add to Homescreen dialog -->
@@ -980,31 +989,92 @@
     <!-- Placeholder text for the TextView in the Add to Homescreen dialog -->
     <string name="add_to_homescreen_text_placeholder">Jeike pya’eha réra</string>
 
+    <!-- Preference for managing the settings for logins and passwords in Fenix -->
+    <string name="preferences_passwords_logins_and_passwords">Tembiapo ñepyrũ ha ñe’ẽñemi</string>
+    <!-- Preference for managing the saving of logins and passwords in Fenix -->
+    <string name="preferences_passwords_save_logins">Eñongatu tembiapo ñepyrũ ha ñe’ẽñemi</string>
+    <!-- Preference option for asking to save passwords in Fenix -->
+    <string name="preferences_passwords_save_logins_ask_to_save">Ejerure ñemoneĩ eñongatu hag̃ua</string>
+    <!-- Preference option for never saving passwords in Fenix -->
+    <string name="preferences_passwords_save_logins_never_save">Aníke eñongatu</string>
+    <!-- Preference for autofilling saved logins in Fenix -->
+    <string name="preferences_passwords_autofill">Myanyhẽ jehegui</string>
+    <!-- Preference for syncing saved logins in Fenix -->
+    <string name="preferences_passwords_sync_logins">Embojuehe tembiapo ñepyrũ</string>
     <!-- Syncing saved logins in Fenix is on -->
     <string name="preferences_passwords_sync_logins_on">Hendypyre</string>
     <!-- Syncing saved logins in Fenix is off -->
     <string name="preferences_passwords_sync_logins_off">Mboguepyre</string>
+    <!-- Syncing saved logins in Fenix needs reconnect to sync -->
+    <string name="preferences_passwords_sync_logins_reconnect">Eikejey</string>
+    <!-- Syncing saved logins in Fenix needs login -->
+    <string name="preferences_passwords_sync_logins_sign_in">Eñepyrũ tembiapo Sync-pe</string>
+    <!-- Preference to access list of saved logins -->
+    <string name="preferences_passwords_saved_logins">Tembiapo ñepyrũ ñongatupyre</string>
+    <!-- Preference to access list of saved logins -->
+    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link">Eikuaave Sync rehegua</string>
+    <!-- Preference to access list of login exceptions that we never save logins for -->
+    <string name="preferences_passwords_exceptions">Oĩ’ỹva</string>
+    <!-- Empty description of list of login exceptions that we never save logins for -->
+    <string name="preferences_passwords_exceptions_description_empty">Ápe ojehecháta tembiapo ñepyrũ ha ñe’ẽñemi oñeñongatu’ỹva.</string>
+    <!-- Hint for search box in logins list -->
+    <string name="preferences_passwords_saved_logins_search">Eheka tembiapo ñepyrũ</string>
+    <!-- Option to sort logins list A-Z, alphabetically -->
+    <string name="preferences_passwords_saved_logins_alphabetically">Achegety rupi</string>
+    <!-- Option to sort logins list by most recently used -->
+    <string name="preferences_passwords_saved_logins_recently_used">Ojepururamovéva</string>
     <!-- The header for the site that a login is for -->
     <string name="preferences_passwords_saved_logins_site">Tenda</string>
     <!-- The header for the username for a login -->
     <string name="preferences_passwords_saved_logins_username">Puruhára réra</string>
     <!-- The header for the password for a login -->
     <string name="preferences_passwords_saved_logins_password">Ñe’ẽñemi</string>
+    <!-- Message displayed in security prompt to reenter a secret pin to access saved logins -->
+    <string name="preferences_passwords_saved_logins_enter_pin">Emoingejey pe PIN</string>
+    <!-- Message displayed in security prompt to access saved logins -->
+    <string name="preferences_passwords_saved_logins_enter_pin_description">Emyandyjey ehecha hag̃ua ne rembiapo ñepyrũ ñongatupyre</string>
     <!-- Learn more link that will link to a page with more information displayed when a connection is insecure and we detect the user is entering a password -->
     <string name="logins_insecure_connection_warning_learn_more">Kuaave</string>
+    <!-- Prompt message displayed when Fenix detects a user has entered a password and user decides if Fenix should save it. The first parameter is the name of the application (For example: Fenix)  -->
+    <string name="logins_doorhanger_save">¿Eipotápa %s oñongatu ko tembiapo ñepyrũ?</string>
     <!-- Positive confirmation that Fenix should save the new or updated login -->
     <string name="logins_doorhanger_save_confirmation">Ñongatu</string>
     <!-- Negative confirmation that Fenix should not save the new or updated login -->
     <string name="logins_doorhanger_save_dont_save">Ani eñongatu</string>
+    <!-- Shown in snackbar to tell user that the password has been copied -->
+    <string name="logins_password_copied">Ñe’ẽñemi ohasáva kuatiajokohápe</string>
+    <!-- Shown in snackbar to tell user that the username has been copied -->
+    <string name="logins_username_copied">Puruhára réra ohasáva kuatiajokohápe</string>
+    <!-- Shown in snackbar to tell user that the site has been copied -->
+    <string name="logins_site_copied">Tenda ohasáva kuatiajokohápe</string>
+    <!-- Content Description (for screenreaders etc) read for the button to copy a password in logins-->
+    <string name="saved_logins_copy_password">Emonguatia ñe’ẽñemi</string>
+    <!-- Content Description (for screenreaders etc) read for the button to copy a username in logins -->
+    <string name="saved_login_copy_username">Emonguatia puruhára réra</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
     <string name="saved_login_copy_site">Emonguatia tenda</string>
+    <!-- Content Description (for screenreaders etc) read for the button to reveal a password in logins -->
+    <string name="saved_login_reveal_password">Ehechauka ñe’ẽñemi</string>
     <!-- Content Description (for screenreaders etc) read for the button to hide a password in logins -->
     <string name="saved_login_hide_password">Emokañy ñe’ẽñemi</string>
+    <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their logins -->
+    <string name="logins_biometric_prompt_message">Emyandyjey ehecha hag̃ua ne rembiapo ñepyrũ ñongatupyre</string>
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_title">Erekokuaa nde puruhára ha ñe’ẽñemi</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_later">Upéi</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_set_up_now">Emboheko ko’ág̃a</string>
 
+    <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their logins -->
+    <string name="logins_biometric_prompt_message_pin">Emyandyjey ne mba’e’oka</string>
+    <!-- Title for Accessibility Force Enable Zoom Preference -->
+    <string name="preference_accessibility_force_enable_zoom">Zoom opaite ñanduti rendápe</string>
+
+    <!-- Title of the Add search engine screen -->
+    <string name="search_engine_add_custom_search_engine_title">Embojuaju hekaha</string>
+    <!-- Title of the Edit search engine screen -->
+    <string name="search_engine_edit_custom_search_engine_title">Embosako’i hekaha</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
     <string name="search_engine_add_button_content_description">Mbojuaju</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button to save a search engine in the action bar -->
@@ -1018,9 +1088,21 @@
     <string name="search_add_custom_engine_label_other">Ambue</string>
     <!-- Placeholder text shown in the Search Engine Name TextField before a user enters text -->
     <string name="search_add_custom_engine_name_hint">Téra</string>
+    <!-- Placeholder text shown in the Search String TextField before a user enters text -->
+    <string name="search_add_custom_engine_search_string_hint">Jehekaha juajuha eipurútava</string>
     <!-- Text for the button to learn more about adding a custom search engine -->
     <string name="search_add_custom_engine_learn_more_label">Kuaave</string>
 
+    <!-- Text shown when a user leaves the name field empty -->
+    <string name="search_add_custom_engine_error_empty_name">Emoinge hekaha réra</string>
+    <!-- Text shown when a user tries to add a search engine that already exists -->
+    <string name="search_add_custom_engine_error_existing_name">Oĩmavoi pe hekaha hérava “%s”.</string>
+    <!-- Text shown when a user leaves the search string field empty -->
+    <string name="search_add_custom_engine_error_empty_search_string">Emoinge pe jehekaha juajuha</string>
+    <!-- Text shown when a user leaves out the required template string -->
+    <string name="search_add_custom_engine_error_missing_template">Ehechajey pe jehekaha juajuha ojokupytýpa techapyrã ohechaukáva ndive</string>
+    <!-- Text shown when we aren't able to validate the custom search query. The first parameter is the url of the custom search engine -->
+    <string name="search_add_custom_engine_error_cannot_reach">Ojavy eikekuévo “%s” ndive</string>
     <!-- Text shown when a user creates a new search engine -->
     <string name="search_add_custom_engine_success_message">Moheñoipyre %s</string>
     <!-- Text shown when a user successfully edits a custom search engine -->
@@ -1028,9 +1110,31 @@
     <!-- Text shown when a user successfully deletes a custom search engine -->
     <string name="search_delete_search_engine_success_message">Mboguete %s</string>
 
+    <!-- Title text shown for the migration screen to the new browser. Placeholder replaced with app name -->
+    <string name="migration_title">Eg̃uahẽporãite peteĩ %s ipyahuetévape</string>
+    <!-- Text on the disabled button while in progress. Placeholder replaced with app name -->
+    <string name="migration_updating_app_button_text">Hekopyahuhína %s…</string>
+    <!-- Text on the enabled button. Placeholder replaced with app name-->
+    <string name="migration_update_app_button">Ñepyrũ %s</string>
     <!--Text on list of migrated items (e.g. Settings, History, etc.)-->
     <string name="migration_text_passwords">Ñe’ẽñemi</string>
 
+    <!-- Heading for the instructions to allow a permission -->
+    <string name="phone_feature_blocked_intro">Emoneĩ hag̃ua:</string>
+
+    <!-- Label that indicates a site is using a secure connection -->
+    <string name="quick_settings_sheet_secure_connection">Jeikekatu</string>
+    <!-- Label that indicates a site is using a insecure connection -->
+    <string name="quick_settings_sheet_insecure_connection">Jeikekatu’ỹ</string>
+    <!-- label shown when there are not site exceptions to show in the site exception settings -->
+    <string name="no_site_exceptions">Ndaipóri oi’ỹva ko tendápe</string>
+    <!-- Label for the Pocket default top site -->
+    <string name="pocket_top_articles">Jehaipyre iporãvéva</string>
+    <!-- Browser menu button that adds a top site to the home fragment -->
+    <string name="browser_menu_add_to_top_sites">Embojuaju tenda iporãvéva</string>
+    <!-- text shown before the issuer name to indicate who its verified by, parameter is the name of
+     the certificate authority that verified the ticket-->
+    <string name="certificate_info_verified_by">Ohechapyréma: %1$s</string>
     <!-- Login overflow menu delete button -->
     <string name="login_menu_delete_button">Mboguete</string>
 </resources>
