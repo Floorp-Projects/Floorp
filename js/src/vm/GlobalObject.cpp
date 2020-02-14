@@ -812,7 +812,7 @@ bool GlobalObject::initSelfHostingBuiltins(JSContext* cx,
 }
 
 /* static */
-bool GlobalObject::isRuntimeCodeGenEnabled(JSContext* cx, HandleValue code,
+bool GlobalObject::isRuntimeCodeGenEnabled(JSContext* cx, HandleString code,
                                            Handle<GlobalObject*> global) {
   HeapSlot& v = global->getSlotRef(RUNTIME_CODEGEN_ENABLED);
   if (v.isUndefined()) {

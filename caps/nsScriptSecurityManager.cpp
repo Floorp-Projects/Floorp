@@ -398,7 +398,7 @@ NS_IMPL_ISUPPORTS(nsScriptSecurityManager, nsIScriptSecurityManager)
 ///////////////// Security Checks /////////////////
 
 bool nsScriptSecurityManager::ContentSecurityPolicyPermitsJSAction(
-    JSContext* cx, JS::HandleValue aValue) {
+    JSContext* cx, JS::HandleString aCode) {
   MOZ_ASSERT(cx == nsContentUtils::GetCurrentJSContext());
 
   // Get the window, if any, corresponding to the current global
@@ -445,13 +445,7 @@ bool nsScriptSecurityManager::ContentSecurityPolicyPermitsJSAction(
   nsAutoJSString scriptSample;
   if (reportViolation || subjectPrincipal->IsSystemPrincipal() ||
       XRE_IsE10sParentProcess()) {
-    JS::Rooted<JSString*> jsString(cx, JS::ToString(cx, aValue));
-    if (NS_WARN_IF(!jsString)) {
-      JS_ClearPendingException(cx);
-      return false;
-    }
-
-    if (NS_WARN_IF(!scriptSample.init(cx, jsString))) {
+    if (NS_WARN_IF(!scriptSample.init(cx, aCode))) {
       JS_ClearPendingException(cx);
       return false;
     }
