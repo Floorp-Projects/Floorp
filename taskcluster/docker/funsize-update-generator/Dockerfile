@@ -7,7 +7,7 @@ ENV DEBIAN_FRONTEND noninteractive
 # to make sure that files are removed within a single docker layer
 RUN apt-get update -q && \
     apt-get install -yyq --no-install-recommends \
-    python3.6 python3-setuptools python3-cryptography libgetopt-simple-perl \
+    python3.8 python3-setuptools python3-cryptography libgetopt-simple-perl \
     bzip2 python3-requests python3-sh curl \
     python3-dev gcc liblzma-dev xz-utils jq libdpkg-perl locales && \
     apt-get clean
