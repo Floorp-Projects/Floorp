@@ -18,7 +18,7 @@ static Atomic<size_t> gShmemAllocated;
 static Atomic<size_t> gShmemMapped;
 
 class ShmemReporter final : public nsIMemoryReporter {
-  ~ShmemReporter() {}
+  ~ShmemReporter() = default;
 
  public:
   NS_DECL_THREADSAFE_ISUPPORTS

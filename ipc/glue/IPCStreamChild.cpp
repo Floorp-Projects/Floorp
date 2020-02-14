@@ -100,7 +100,7 @@ class IPCStreamDestinationChild final : public PParentToChildStreamChild,
  public:
   nsresult Initialize() { return IPCStreamDestination::Initialize(); }
 
-  ~IPCStreamDestinationChild() {}
+  ~IPCStreamDestinationChild() = default;
 
  private:
   // PParentToChildStreamChild methods
