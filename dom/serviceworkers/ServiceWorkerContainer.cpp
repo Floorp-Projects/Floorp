@@ -687,12 +687,14 @@ void ServiceWorkerContainer::DispatchMessage(RefPtr<ReceivedMessage> aMessage) {
     ErrorResult result;
     bool deserializationFailed = false;
     RootedDictionary<MessageEventInit> init(aCx);
-    if (!FillInMessageEventInit(aCx, aGlobal, *message, init, result)) {
-      deserializationFailed = result.ErrorCodeIs(NS_ERROR_DOM_DATA_CLONE_ERR);
+    auto res = FillInMessageEventInit(aCx, aGlobal, *message, init, result);
+    if (res.isErr()) {
+      deserializationFailed = res.unwrapErr();
       MOZ_ASSERT_IF(deserializationFailed, init.mData.isNull());
       MOZ_ASSERT_IF(deserializationFailed, init.mPorts.IsEmpty());
       MOZ_ASSERT_IF(deserializationFailed, !init.mOrigin.IsEmpty());
       MOZ_ASSERT_IF(deserializationFailed, !init.mSource.IsNull());
+      result.SuppressException();
 
       if (!deserializationFailed && result.MaybeSetPendingException(aCx)) {
         return;
@@ -766,7 +768,7 @@ already_AddRefed<ServiceWorker> GetOrCreateServiceWorkerWithoutWarnings(
 
 }  // namespace
 
-bool ServiceWorkerContainer::FillInMessageEventInit(
+Result<Ok, bool> ServiceWorkerContainer::FillInMessageEventInit(
     JSContext* const aCx, nsIGlobalObject* const aGlobal,
     ReceivedMessage& aMessage, MessageEventInit& aInit, ErrorResult& aRv) {
   // Determining the source and origin should preceed attempting deserialization
@@ -787,23 +789,23 @@ bool ServiceWorkerContainer::FillInMessageEventInit(
   const nsresult rv =
       FillInOriginNoSuffix(aMessage.mServiceWorker, aInit.mOrigin);
   if (NS_FAILED(rv)) {
-    return false;
+    return Err(false);
   }
 
   JS::Rooted<JS::Value> messageData(aCx);
   aMessage.mClonedData.Read(aCx, &messageData, aRv);
   if (aRv.Failed()) {
-    return false;
+    return Err(true);
   }
 
   aInit.mData = messageData;
 
   if (!aMessage.mClonedData.TakeTransferredPortsAsSequence(aInit.mPorts)) {
     xpc::Throw(aCx, NS_ERROR_OUT_OF_MEMORY);
-    return false;
+    return Err(false);
   }
 
-  return true;
+  return Ok();
 }
 
 }  // namespace dom
