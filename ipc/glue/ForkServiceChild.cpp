@@ -126,21 +126,25 @@ NS_IMETHODIMP
 ForkServerLauncher::Observe(nsISupports* aSubject, const char* aTopic,
                             const char16_t* aData) {
   if (!mHaveStartedClient &&
-      strcmp(aTopic, NS_XPCOM_STARTUP_CATEGORY) == 0 &&
-      StaticPrefs::dom_ipc_forkserver_enable_AtStartup()) {
-    mHaveStartedClient = true;
-    ForkServiceChild::StartForkServer();
+      strcmp(aTopic, "final-ui-startup") == 0) {
+    if (StaticPrefs::dom_ipc_forkserver_enable_AtStartup()) {
+      mHaveStartedClient = true;
+      ForkServiceChild::StartForkServer();
 
-    nsCOMPtr<nsIObserverService> obsSvc =
+      nsCOMPtr<nsIObserverService> obsSvc =
         mozilla::services::GetObserverService();
-    MOZ_ASSERT(obsSvc != nullptr);
-    obsSvc->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false);
+      MOZ_ASSERT(obsSvc != nullptr);
+      obsSvc->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false);
+    } else {
+      mSingleton = nullptr;
+    }
   }
 
-  if (mHaveStartedClient &&
-      strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID) == 0) {
-    mHaveStartedClient = false;
-    ForkServiceChild::StopForkServer();
+  if (strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID) == 0) {
+    if (mHaveStartedClient) {
+      mHaveStartedClient = false;
+      ForkServiceChild::StopForkServer();
+    }
 
     // To make leak checker happy!
     mSingleton = nullptr;
