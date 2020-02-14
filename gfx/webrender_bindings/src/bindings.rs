@@ -29,7 +29,7 @@ use webrender::{
     BinaryRecorder, Compositor, DebugFlags, Device,
     NativeSurfaceId, PipelineInfo, ProfilerHooks, RecordedFrameHandle, Renderer, RendererOptions, RendererStats,
     SceneBuilderHooks, ShaderPrecacheFlags, Shaders, ThreadListener, UploadMethod, VertexUsageHint,
-    WrShaders, set_profiler_hooks, CompositorConfig, NativeSurfaceInfo, NativeTileId, FastHashMap
+    WrShaders, set_profiler_hooks, CompositorConfig, NativeSurfaceInfo, NativeTileId
 };
 use thread_profiler::register_thread_with_profiler;
 use moz2d_renderer::Moz2dBlobImageHandler;
@@ -813,29 +813,6 @@ impl<'a> From<(&'a(WrPipelineId, WrDocumentId), &'a WrEpoch)> for WrPipelineEpoc
 }
 
 #[repr(C)]
-pub struct WrPipelineIdAndEpoch {
-    pipeline_id: WrPipelineId,
-    epoch: WrEpoch
-}
-
-impl<'a> From<(&WrPipelineId, &WrEpoch)> for WrPipelineIdAndEpoch {
-    fn from(tuple: (&WrPipelineId, &WrEpoch)) -> WrPipelineIdAndEpoch {
-        WrPipelineIdAndEpoch {
-            pipeline_id: *tuple.0,
-            epoch: *tuple.1,
-        }
-    }
-}
-
-type WrPipelineIdEpochs = FfiVec<WrPipelineIdAndEpoch>;
-
-#[no_mangle]
-pub unsafe extern "C" fn wr_pipelineid_and_epoch_delete(_result: WrPipelineIdEpochs) {
-    // _result will be dropped here, and the drop impl on FfiVec will free
-    // the underlying vec memory
-}
-
-#[repr(C)]
 pub struct WrRemovedPipeline {
     pipeline_id: WrPipelineId,
     document_id: WrDocumentId,
@@ -945,8 +922,7 @@ extern "C" {
     // sampler thread)
     fn apz_register_sampler(window_id: WrWindowId);
     fn apz_sample_transforms(window_id: WrWindowId, transaction: &mut Transaction,
-                             document_id: WrDocumentId,
-                             epochs_being_rendered: WrPipelineIdEpochs);
+                             document_id: WrDocumentId);
     fn apz_deregister_sampler(window_id: WrWindowId);
 }
 
@@ -1028,14 +1004,9 @@ impl AsyncPropertySampler for SamplerCallback {
         unsafe { apz_register_sampler(self.window_id) }
     }
 
-    fn sample(&self, document_id: DocumentId,
-              epochs_being_rendered: &FastHashMap<PipelineId, Epoch>) -> Vec<FrameMsg> {
+    fn sample(&self, document_id: DocumentId) -> Vec<FrameMsg> {
         let mut transaction = Transaction::new();
-        unsafe { apz_sample_transforms(
-	    self.window_id, &mut transaction,
-            document_id, FfiVec::from_vec(epochs_being_rendered.iter()
-					  .map(WrPipelineIdAndEpoch::from).collect())
-	)};
+        unsafe { apz_sample_transforms(self.window_id, &mut transaction, document_id) };
         // TODO: also omta_sample_transforms(...)
         transaction.get_frame_ops()
     }
