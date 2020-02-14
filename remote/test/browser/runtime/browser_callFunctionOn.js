@@ -130,8 +130,12 @@ async function testReturnByValue({ Runtime }, executionContextId) {
       returnByValue: true,
     });
     Assert.deepEqual(
-      result.value,
-      value,
+      result,
+      {
+        type: typeof value,
+        value,
+        description: value != null ? value.toString() : value,
+      },
       "The returned value is the same than the input value"
     );
   }
