@@ -2479,6 +2479,10 @@ extern JS_PUBLIC_API bool JS_ReportErrorFlagsAndNumberUC(
  */
 extern MOZ_COLD JS_PUBLIC_API void JS_ReportOutOfMemory(JSContext* cx);
 
+extern JS_PUBLIC_API bool JS_ExpandErrorArgumentsASCII(
+    JSContext* cx, JSErrorCallback errorCallback, const unsigned errorNumber,
+    JSErrorReport* reportp, ...);
+
 /**
  * Complain when an allocation size overflows the maximum supported limit.
  */
