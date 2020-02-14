@@ -4,11 +4,9 @@
 
 gczeal(0);
 
-let holdings = [];
+let heldValues = [];
 let group = new FinalizationGroup(iterator => {
-    for (const holding of iterator) {
-        holdings.push(holding);
-    }
+  heldValues.push(...iterator);
 });
 
 function ccwToObject() {
@@ -16,37 +14,37 @@ function ccwToObject() {
 }
 
 function ccwToGroup() {
-    let global = newGlobal({newCompartment: true});
-    global.holdings = holdings;
-    return global.eval(
-        `new FinalizationGroup(iterator => holdings.push(...iterator))`);
+  let global = newGlobal({newCompartment: true});
+  global.heldValues = heldValues;
+  return global.eval(
+    `new FinalizationGroup(iterator => heldValues.push(...iterator))`);
 }
 
 function incrementalGC() {
-    startgc(1);
-    while (gcstate() !== "NotActive") {
-        gcslice(1000);
-    }
+  startgc(1);
+  while (gcstate() !== "NotActive") {
+    gcslice(1000);
+  }
 }
 
 for (let w of [false, true]) {
-    for (let x of [false, true]) {
-        for (let y of [false, true]) {
-            for (let z of [false, true]) {
-                let g = w ? ccwToGroup(w) : group;
-                let target = x ? ccwToObject() : {};
-                let holding = y ? ccwToObject() : {};
-                let token = z ? ccwToObject() : {};
-                g.register(target, holding, token);
-                g.unregister(token);
-                g.register(target, holding, token);
-                target = undefined;
-                incrementalGC();
-                holdings.length = 0; // Clear, don't replace.
-                g.cleanupSome();
-                assertEq(holdings.length, 1);
-                assertEq(holdings[0], holding);
-            }
-        }
+  for (let x of [false, true]) {
+    for (let y of [false, true]) {
+      for (let z of [false, true]) {
+        let g = w ? ccwToGroup(w) : group;
+        let target = x ? ccwToObject() : {};
+        let heldValue = y ? ccwToObject() : {};
+        let token = z ? ccwToObject() : {};
+        g.register(target, heldValue, token);
+        g.unregister(token);
+        g.register(target, heldValue, token);
+        target = undefined;
+        incrementalGC();
+        heldValues.length = 0; // Clear, don't replace.
+        g.cleanupSome();
+        assertEq(heldValues.length, 1);
+        assertEq(heldValues[0], heldValue);
+      }
     }
+  }
 }
