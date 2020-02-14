@@ -101,7 +101,7 @@ already_AddRefed<dom::Promise> Buffer::MapReadAsync(ErrorResult& aRv) {
         if (!arrayBuffer) {
           ErrorResult rv;
           rv.StealExceptionFromJSContext(jsapi.cx());
-          promise->MaybeReject(rv);
+          promise->MaybeReject(std::move(rv));
           return;
         }
         JS::Rooted<JS::Value> val(jsapi.cx(), JS::ObjectValue(*arrayBuffer));

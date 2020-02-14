@@ -685,7 +685,8 @@ nsresult PaymentRequestManager::RespondPayment(
       }
       aRequest->RespondShowPayment(response.methodName(), responseData,
                                    response.payerName(), response.payerEmail(),
-                                   response.payerPhone(), rejectedReason);
+                                   response.payerPhone(),
+                                   std::move(rejectedReason));
       if (rejectedReason.Failed()) {
         NotifyRequestDone(aRequest);
       }

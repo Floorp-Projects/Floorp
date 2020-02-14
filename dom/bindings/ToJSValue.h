@@ -303,7 +303,7 @@ MOZ_MUST_USE bool ToJSValue(JSContext* aCx, nsresult aArgument,
 // Accept ErrorResult, for use in rejections, and create an exception
 // representing the failure.  Note, the ErrorResult must indicate a failure
 // with aArgument.Failure() returning true.
-MOZ_MUST_USE bool ToJSValue(JSContext* aCx, ErrorResult& aArgument,
+MOZ_MUST_USE bool ToJSValue(JSContext* aCx, ErrorResult&& aArgument,
                             JS::MutableHandle<JS::Value> aValue);
 
 // Accept owning WebIDL unions.
