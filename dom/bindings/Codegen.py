@@ -1869,16 +1869,7 @@ class CGClassConstructor(CGAbstractStaticMethod):
 
         # Additionally, we want to throw if a caller does a bareword invocation
         # of a constructor without |new|.
-        #
-        # Figure out the name of our constructor for error reporting purposes.
-        # For unnamed webidl constructors, identifier.name is "constructor" but
-        # the name JS sees is the interface name; for named constructors
-        # identifier.name is the actual name.
-        name = self._ctor.identifier.name
-        if name != "constructor":
-            ctorName = name
-        else:
-            ctorName = self.descriptor.interface.identifier.name
+        ctorName = GetConstructorNameForReporting(self.descriptor, self._ctor)
 
         preamble = fill(
             """
@@ -1904,23 +1895,17 @@ class CGClassConstructor(CGAbstractStaticMethod):
         name = self._ctor.identifier.name
         nativeName = MakeNativeName(self.descriptor.binaryNameFor(name))
         callGenerator = CGMethodCall(nativeName, True, self.descriptor,
-                                     self._ctor, isConstructor=True,
-                                     constructorName=ctorName)
+                                     self._ctor, isConstructor=True)
         return preamble + "\n" + callGenerator.define()
 
     def auto_profiler_label(self):
-        name = self._ctor.identifier.name
-        if name != "constructor":
-            ctorName = name
-        else:
-            ctorName = self.descriptor.interface.identifier.name
         return fill(
             """
             AUTO_PROFILER_LABEL_DYNAMIC_FAST(
               "${ctorName}", "constructor", DOM, cx,
               uint32_t(js::ProfilingStackFrame::Flags::RELEVANT_FOR_JS));
             """,
-            ctorName=ctorName)
+            ctorName=GetConstructorNameForReporting(self.descriptor, self._ctor))
 
 
 def NamedConstructorName(m):
@@ -7961,11 +7946,7 @@ class CGPerSignatureCall(CGThing):
             # Pass in our thisVal
             argsPre.append("args.thisv()")
 
-        if isConstructor:
-            ourName = "%s constructor" % descriptor.interface.identifier.name
-        else:
-            ourName = "%s.%s" % (descriptor.interface.identifier.name,
-                                 GetWebExposedName(idlNode, descriptor))
+        ourName = GetLabelForErrorReporting(descriptor, idlNode, isConstructor)
 
         if idlNode.isMethod():
             argDescription = "argument %(index)d of " + ourName
@@ -8357,14 +8338,10 @@ class CGMethodCall(CGThing):
     signatures and generation of a call to that signature.
     """
     def __init__(self, nativeMethodName, static, descriptor, method,
-                 isConstructor=False, constructorName=None):
+                 isConstructor=False):
         CGThing.__init__(self)
 
-        if isConstructor:
-            assert constructorName is not None
-            methodName = constructorName
-        else:
-            methodName = "%s.%s" % (descriptor.interface.identifier.name, method.identifier.name)
+        methodName = GetLabelForErrorReporting(descriptor, method, isConstructor)
         argDesc = "argument %d of " + methodName
 
         if method.getExtendedAttribute("UseCounter"):
@@ -8946,7 +8923,36 @@ def GetWebExposedName(idlObject, descriptor):
     return idlObject.identifier.name
 
 
+def GetConstructorNameForReporting(descriptor, ctor):
+    # Figure out the name of our constructor for reporting purposes.
+    # For unnamed webidl constructors, identifier.name is "constructor" but
+    # the name JS sees is the interface name; for named constructors
+    # identifier.name is the actual name.
+    ctorName = ctor.identifier.name
+    if ctorName == "constructor":
+        return descriptor.interface.identifier.name
+    return ctorName
+
+
+def GetLabelForErrorReporting(descriptor, idlObject, isConstructor):
+    """
+    descriptor is the descriptor for the interface involved
+
+    idlObject is the method (regular or static), attribute (regular or
+    static), or constructor (named or not) involved.
+
+    isConstructor is true if idlObject is a constructor and false otherwise.
+    """
+    if isConstructor:
+        return "%s constructor" % GetConstructorNameForReporting(descriptor, idlObject)
+
+    namePrefix = descriptor.interface.identifier.name
+
+    return "%s.%s" % (namePrefix, GetWebExposedName(idlObject, descriptor))
+
+
 class CGSpecializedMethod(CGAbstractStaticMethod):
+
     """
     A class for generating the C++ code for a specialized method that the JIT
     can call with lower overhead.
