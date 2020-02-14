@@ -3,6 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "CocoaFileUtils.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsIImageLoadingContent.h"
 #include "mozilla/dom/Document.h"
@@ -287,4 +288,33 @@ nsMacShellService::SetDesktopBackgroundColor(uint32_t aColor) {
   // The mac desktop preferences UI uses pictures for the few solid colors it
   // supports.
   return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsMacShellService::ShowSecurityPreferences(const nsACString& aPaneID) {
+  nsresult rv = NS_ERROR_NOT_AVAILABLE;
+
+  CFStringRef paneID = ::CFStringCreateWithBytes(
+      kCFAllocatorDefault, (const UInt8*)PromiseFlatCString(aPaneID).get(),
+      aPaneID.Length(), kCFStringEncodingUTF8, false);
+
+  if (paneID) {
+    CFStringRef format =
+        CFSTR("x-apple.systempreferences:com.apple.preference.security?%@");
+    if (format) {
+      CFStringRef urlStr =
+          CFStringCreateWithFormat(kCFAllocatorDefault, NULL, format, paneID);
+      if (urlStr) {
+        CFURLRef url = ::CFURLCreateWithString(NULL, urlStr, NULL);
+        rv = CocoaFileUtils::OpenURL(url);
+
+        ::CFRelease(urlStr);
+      }
+
+      ::CFRelease(format);
+    }
+
+    ::CFRelease(paneID);
+  }
+  return rv;
 }
