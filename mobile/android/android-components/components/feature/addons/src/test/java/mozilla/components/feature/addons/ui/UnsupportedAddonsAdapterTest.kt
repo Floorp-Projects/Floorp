@@ -17,6 +17,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mockito.spy
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 
@@ -35,24 +36,29 @@ class UnsupportedAddonsAdapterTest {
         val unsupportedAddonsAdapterDelegate: UnsupportedAddonsAdapterDelegate = mock()
         val unsupportedAddons = listOf(Addon("id1"), Addon("id2"))
 
-        val adapter = UnsupportedAddonsAdapter(
-            addonManager,
-            unsupportedAddonsAdapterDelegate,
-            unsupportedAddons
+        val adapter = spy(
+            UnsupportedAddonsAdapter(
+                addonManager,
+                unsupportedAddonsAdapterDelegate,
+                unsupportedAddons
+            )
         )
 
         adapter.removeUninstalledAddonAtPosition(0)
         testDispatcher.advanceUntilIdle()
         verify(unsupportedAddonsAdapterDelegate, times(1)).onUninstallSuccess()
+        verify(adapter, times(1)).notifyItemRemoved(0)
         assertEquals(1, adapter.itemCount)
 
         adapter.removeUninstalledAddonAtPosition(0)
         testDispatcher.advanceUntilIdle()
         verify(unsupportedAddonsAdapterDelegate, times(2)).onUninstallSuccess()
+        verify(adapter, times(2)).notifyItemRemoved(0)
         assertEquals(0, adapter.itemCount)
 
         adapter.removeUninstalledAddonAtPosition(0)
         testDispatcher.advanceUntilIdle()
         verify(unsupportedAddonsAdapterDelegate, times(2)).onUninstallSuccess()
+        verify(adapter, times(2)).notifyItemRemoved(0)
     }
 }

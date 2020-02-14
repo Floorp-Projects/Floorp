@@ -63,7 +63,7 @@ class UnsupportedAddonsAdapter(
 
         val uninstalledAddon = unsupportedAddons[position]
         unsupportedAddons.remove(uninstalledAddon)
-        notifyItemChanged(position)
+        notifyItemRemoved(position)
         unsupportedAddonsAdapterDelegate.onUninstallSuccess()
     }
 
