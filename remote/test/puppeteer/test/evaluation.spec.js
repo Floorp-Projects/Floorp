@@ -32,19 +32,19 @@ module.exports.addTests = function({testRunner, expect}) {
       const result = await page.evaluate(a => a, BigInt(42));
       expect(result).toBe(BigInt(42));
     });
-    it_fails_ffox('should transfer NaN', async({page, server}) => {
+    it('should transfer NaN', async({page, server}) => {
       const result = await page.evaluate(a => a, NaN);
       expect(Object.is(result, NaN)).toBe(true);
     });
-    it_fails_ffox('should transfer -0', async({page, server}) => {
+    it('should transfer -0', async({page, server}) => {
       const result = await page.evaluate(a => a, -0);
       expect(Object.is(result, -0)).toBe(true);
     });
-    it_fails_ffox('should transfer Infinity', async({page, server}) => {
+    it('should transfer Infinity', async({page, server}) => {
       const result = await page.evaluate(a => a, Infinity);
       expect(Object.is(result, Infinity)).toBe(true);
     });
-    it_fails_ffox('should transfer -Infinity', async({page, server}) => {
+    it('should transfer -Infinity', async({page, server}) => {
       const result = await page.evaluate(a => a, -Infinity);
       expect(Object.is(result, -Infinity)).toBe(true);
     });
@@ -64,7 +64,7 @@ module.exports.addTests = function({testRunner, expect}) {
       await page.goto(server.PREFIX + '/global-var.html');
       expect(await page.evaluate('globalVar')).toBe(123);
     });
-    it_fails_ffox('should return undefined for objects with symbols', async({page, server}) => {
+    it('should return undefined for objects with symbols', async({page, server}) => {
       expect(await page.evaluate(() => [Symbol('foo4')])).toBe(undefined);
     });
     it('should work with function shorthands', async({page, server}) => {
@@ -138,19 +138,19 @@ module.exports.addTests = function({testRunner, expect}) {
       const result = await page.evaluate(() => BigInt(42));
       expect(result).toBe(BigInt(42));
     });
-    it_fails_ffox('should return NaN', async({page, server}) => {
+    it('should return NaN', async({page, server}) => {
       const result = await page.evaluate(() => NaN);
       expect(Object.is(result, NaN)).toBe(true);
     });
-    it_fails_ffox('should return -0', async({page, server}) => {
+    it('should return -0', async({page, server}) => {
       const result = await page.evaluate(() => -0);
       expect(Object.is(result, -0)).toBe(true);
     });
-    it_fails_ffox('should return Infinity', async({page, server}) => {
+    it('should return Infinity', async({page, server}) => {
       const result = await page.evaluate(() => Infinity);
       expect(Object.is(result, Infinity)).toBe(true);
     });
-    it_fails_ffox('should return -Infinity', async({page, server}) => {
+    it('should return -Infinity', async({page, server}) => {
       const result = await page.evaluate(() => -Infinity);
       expect(Object.is(result, -Infinity)).toBe(true);
     });

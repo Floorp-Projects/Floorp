@@ -181,7 +181,7 @@ async function testPrimitiveTypes(testFunction) {
 }
 
 async function testUnserializable(testFunction) {
-  const expressions = ["NaN", "-0", "Infinity", "-Infinity"];
+  const expressions = ["-0", "NaN", "Infinity", "-Infinity"];
   for (const expression of expressions) {
     const { result } = await testFunction(expression);
     is(
