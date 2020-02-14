@@ -387,11 +387,6 @@ enum class StyleFlexWrap : uint8_t {
 #define NS_STYLE_FONT_SIZE_NO_KEYWORD \
   10  // Used by Servo to track the "no keyword" case
 
-// grid-auto-flow keywords
-#define NS_STYLE_GRID_AUTO_FLOW_ROW (1 << 0)
-#define NS_STYLE_GRID_AUTO_FLOW_COLUMN (1 << 1)
-#define NS_STYLE_GRID_AUTO_FLOW_DENSE (1 << 2)
-
 // 'subgrid' keyword in grid-template-{columns,rows}
 #define NS_STYLE_GRID_TEMPLATE_SUBGRID 0
 
