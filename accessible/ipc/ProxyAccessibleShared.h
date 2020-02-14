@@ -24,8 +24,9 @@ uint64_t NativeState() const;
 
 /*
  * Set aName to the name of the proxied accessible.
+ * Return the ENameValueFlag passed from Accessible::Name
  */
-void Name(nsString& aName) const;
+uint32_t Name(nsString& aName) const;
 
 /*
  * Set aValue to the value of the proxied accessible.

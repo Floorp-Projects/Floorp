@@ -118,20 +118,26 @@ static ProxyAccessible* GetProxyFor(DocAccessibleParent* aDoc,
   return aDoc->GetAccessible(id);
 }
 
-void ProxyAccessible::Name(nsString& aName) const {
+uint32_t ProxyAccessible::Name(nsString& aName) const {
+  /* The return values here exist only to match behvaiour required
+   * by the header declaration of this function. On Mac, we'd like
+   * to return the associated ENameValueFlag, but we don't have
+   * access to that here, so we return a dummy eNameOK value instead.
+   */
   aName.Truncate();
   RefPtr<IAccessible> acc;
   if (!GetCOMInterface((void**)getter_AddRefs(acc))) {
-    return;
+    return eNameOK;
   }
 
   BSTR result;
   HRESULT hr = acc->get_accName(kChildIdSelf, &result);
   _bstr_t resultWrap(result, false);
   if (FAILED(hr)) {
-    return;
+    return eNameOK;
   }
   aName = (wchar_t*)resultWrap;
+  return eNameOK;
 }
 
 void ProxyAccessible::Value(nsString& aValue) const {
