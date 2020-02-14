@@ -101,9 +101,6 @@ DefaultJitOptions::DefaultJitOptions() {
   // Toggles whether loop invariant code motion is globally disabled.
   SET_DEFAULT(disableLicm, false);
 
-  // Toggles wheter optimization tracking is globally disabled.
-  SET_DEFAULT(disableOptimizationTracking, true);
-
   // Toggle whether Profile Guided Optimization is globally disabled.
   SET_DEFAULT(disablePgo, false);
 

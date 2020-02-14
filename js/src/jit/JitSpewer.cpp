@@ -474,11 +474,6 @@ void jit::CheckLogging() {
       EnableIonDebugSyncLogging();
     } else if (IsFlag(found, "profiling")) {
       EnableChannel(JitSpew_Profiling);
-    } else if (IsFlag(found, "trackopts")) {
-      JitOptions.disableOptimizationTracking = false;
-      EnableChannel(JitSpew_OptimizationTracking);
-    } else if (IsFlag(found, "trackopts-ext")) {
-      EnableChannel(JitSpew_OptimizationTrackingExtended);
     } else if (IsFlag(found, "dump-mir-expr")) {
       EnableChannel(JitSpew_MIRExpressions);
     } else if (IsFlag(found, "cfg")) {
