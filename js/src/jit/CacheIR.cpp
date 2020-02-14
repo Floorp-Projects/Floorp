@@ -5430,33 +5430,6 @@ AttachDecision CallIRGenerator::tryAttachCallNative(HandleFunction calleeFunc) {
   return AttachDecision::Attach;
 }
 
-bool CallIRGenerator::getTemplateObjectForClassHook(
-    HandleObject calleeObj, MutableHandleObject result) {
-  MOZ_ASSERT(IsConstructPC(pc_));
-  JSNative hook = calleeObj->constructHook();
-
-  // Don't allocate a template object for super() calls as Ion doesn't support
-  // super() yet.
-  bool isSuper = op_ == JSOp::SuperCall || op_ == JSOp::SpreadSuperCall;
-  if (isSuper) {
-    return true;
-  }
-
-  if (calleeObj->nonCCWRealm() != cx_->realm()) {
-    return true;
-  }
-
-  if (hook == TypedObject::construct) {
-    Rooted<TypeDescr*> descr(cx_, calleeObj.as<TypeDescr>());
-    result.set(TypedObject::createZeroed(cx_, descr, gc::TenuredHeap));
-    if (!result) {
-      return false;
-    }
-  }
-
-  return true;
-}
-
 AttachDecision CallIRGenerator::tryAttachCallHook(HandleObject calleeObj) {
   if (op_ == JSOp::FunApply) {
     return AttachDecision::NoAction;
@@ -5478,13 +5451,6 @@ AttachDecision CallIRGenerator::tryAttachCallHook(HandleObject calleeObj) {
     return AttachDecision::NoAction;
   }
 
-  RootedObject templateObj(cx_);
-  if (isConstructing &&
-      !getTemplateObjectForClassHook(calleeObj, &templateObj)) {
-    cx_->clearPendingException();
-    return AttachDecision::NoAction;
-  }
-
   // Load argc.
   Int32OperandId argcId(writer.setInputOperandId(0));
 
@@ -5494,15 +5460,10 @@ AttachDecision CallIRGenerator::tryAttachCallHook(HandleObject calleeObj) {
   ObjOperandId calleeObjId = writer.guardToObject(calleeValId);
 
   // Ensure the callee's class matches the one in this stub.
-  FieldOffset classOffset =
-      writer.guardAnyClass(calleeObjId, calleeObj->getClass());
+  writer.guardAnyClass(calleeObjId, calleeObj->getClass());
 
   writer.callClassHook(calleeObjId, argcId, hook, flags);
   writer.typeMonitorResult();
-
-  if (templateObj) {
-    writer.metaClassTemplateObject(templateObj, classOffset);
-  }
 
   cacheIRStubKind_ = BaselineCacheIRStubKind::Monitored;
   trackAttached("Call native func");

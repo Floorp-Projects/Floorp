@@ -420,17 +420,6 @@ class MOZ_STACK_CLASS IonBuilder {
   AbortReasonOr<Ok> getPropTryInlineProtoAccess(bool* emitted, MDefinition* obj,
                                                 PropertyName* name,
                                                 TemporaryTypeSet* types);
-  AbortReasonOr<Ok> getPropTryTypedObject(bool* emitted, MDefinition* obj,
-                                          PropertyName* name);
-  AbortReasonOr<Ok> getPropTryScalarPropOfTypedObject(
-      bool* emitted, MDefinition* typedObj, int32_t fieldOffset,
-      TypedObjectPrediction fieldTypeReprs);
-  AbortReasonOr<Ok> getPropTryReferencePropOfTypedObject(
-      bool* emitted, MDefinition* typedObj, int32_t fieldOffset,
-      TypedObjectPrediction fieldPrediction, PropertyName* name);
-  AbortReasonOr<Ok> getPropTryComplexPropOfTypedObject(
-      bool* emitted, MDefinition* typedObj, int32_t fieldOffset,
-      TypedObjectPrediction fieldTypeReprs, size_t fieldIndex);
   AbortReasonOr<Ok> getPropTryInnerize(bool* emitted, MDefinition* obj,
                                        PropertyName* name,
                                        TemporaryTypeSet* types);
@@ -453,21 +442,6 @@ class MOZ_STACK_CLASS IonBuilder {
                                            PropertyName* name,
                                            MDefinition* value, bool barrier,
                                            TemporaryTypeSet* objTypes);
-  AbortReasonOr<Ok> setPropTryTypedObject(bool* emitted, MDefinition* obj,
-                                          PropertyName* name,
-                                          MDefinition* value);
-  AbortReasonOr<Ok> setPropTryReferencePropOfTypedObject(
-      bool* emitted, MDefinition* obj, int32_t fieldOffset, MDefinition* value,
-      TypedObjectPrediction fieldPrediction, PropertyName* name);
-  AbortReasonOr<Ok> setPropTryReferenceTypedObjectValue(
-      bool* emitted, MDefinition* typedObj, const LinearSum& byteOffset,
-      ReferenceType type, MDefinition* value, PropertyName* name);
-  AbortReasonOr<Ok> setPropTryScalarPropOfTypedObject(
-      bool* emitted, MDefinition* obj, int32_t fieldOffset, MDefinition* value,
-      TypedObjectPrediction fieldTypeReprs);
-  AbortReasonOr<Ok> setPropTryScalarTypedObjectValue(
-      bool* emitted, MDefinition* typedObj, const LinearSum& byteOffset,
-      ScalarTypeDescr::Type type, MDefinition* value);
   AbortReasonOr<Ok> setPropTryCache(bool* emitted, MDefinition* obj,
                                     PropertyName* name, MDefinition* value,
                                     bool barrier);
@@ -544,46 +518,10 @@ class MOZ_STACK_CLASS IonBuilder {
   AbortReasonOr<Ok> hasTryDefiniteSlotOrUnboxed(bool* emitted, MDefinition* obj,
                                                 MDefinition* id);
 
-  // binary data lookup helpers.
-  TypedObjectPrediction typedObjectPrediction(MDefinition* typedObj);
-  TypedObjectPrediction typedObjectPrediction(TemporaryTypeSet* types);
-  bool typedObjectHasField(MDefinition* typedObj, PropertyName* name,
-                           size_t* fieldOffset,
-                           TypedObjectPrediction* fieldTypeReprs,
-                           size_t* fieldIndex, bool* fieldMutable);
-  MDefinition* loadTypedObjectType(MDefinition* value);
-  AbortReasonOr<Ok> loadTypedObjectData(MDefinition* typedObj,
-                                        MDefinition** owner,
-                                        LinearSum* ownerOffset);
-  AbortReasonOr<Ok> loadTypedObjectElements(MDefinition* typedObj,
-                                            const LinearSum& byteOffset,
-                                            uint32_t scale,
-                                            MDefinition** ownerElements,
-                                            MDefinition** ownerScaledOffset,
-                                            int32_t* ownerByteAdjustment);
-  MDefinition* typeObjectForElementFromArrayStructType(MDefinition* typedObj);
-  MDefinition* typeObjectForFieldFromStructType(MDefinition* type,
-                                                size_t fieldIndex);
-  bool checkTypedObjectIndexInBounds(uint32_t elemSize, MDefinition* index,
-                                     TypedObjectPrediction objTypeDescrs,
-                                     LinearSum* indexAsByteOffset);
-  AbortReasonOr<Ok> pushDerivedTypedObject(
-      bool* emitted, MDefinition* obj, const LinearSum& byteOffset,
-      TypedObjectPrediction derivedTypeDescrs, MDefinition* derivedTypeObj);
-  AbortReasonOr<Ok> pushScalarLoadFromTypedObject(MDefinition* obj,
-                                                  const LinearSum& byteoffset,
-                                                  ScalarTypeDescr::Type type);
-  AbortReasonOr<Ok> pushReferenceLoadFromTypedObject(
-      MDefinition* typedObj, const LinearSum& byteOffset, ReferenceType type,
-      PropertyName* name);
-
   // jsop_setelem() helpers.
   AbortReasonOr<Ok> setElemTryTypedArray(bool* emitted, MDefinition* object,
                                          MDefinition* index,
                                          MDefinition* value);
-  AbortReasonOr<Ok> setElemTryTypedObject(bool* emitted, MDefinition* obj,
-                                          MDefinition* index,
-                                          MDefinition* value);
   AbortReasonOr<Ok> initOrSetElemTryDense(bool* emitted, MDefinition* object,
                                           MDefinition* index,
                                           MDefinition* value, bool writeHole);
@@ -591,14 +529,6 @@ class MOZ_STACK_CLASS IonBuilder {
   AbortReasonOr<Ok> initOrSetElemTryCache(bool* emitted, MDefinition* object,
                                           MDefinition* index,
                                           MDefinition* value);
-  AbortReasonOr<Ok> setElemTryReferenceElemOfTypedObject(
-      bool* emitted, MDefinition* obj, MDefinition* index,
-      TypedObjectPrediction objPrediction, MDefinition* value,
-      TypedObjectPrediction elemPrediction);
-  AbortReasonOr<Ok> setElemTryScalarElemOfTypedObject(
-      bool* emitted, MDefinition* obj, MDefinition* index,
-      TypedObjectPrediction objTypeReprs, MDefinition* value,
-      TypedObjectPrediction elemTypeReprs, uint32_t elemSize);
 
   AbortReasonOr<Ok> initArrayElemTryFastPath(bool* emitted, MDefinition* obj,
                                              MDefinition* id,
@@ -620,8 +550,6 @@ class MOZ_STACK_CLASS IonBuilder {
                                          MDefinition* index);
   AbortReasonOr<Ok> getElemTryCallSiteObject(bool* emitted, MDefinition* obj,
                                              MDefinition* index);
-  AbortReasonOr<Ok> getElemTryTypedObject(bool* emitted, MDefinition* obj,
-                                          MDefinition* index);
   AbortReasonOr<Ok> getElemTryString(bool* emitted, MDefinition* obj,
                                      MDefinition* index);
   AbortReasonOr<Ok> getElemTryArguments(bool* emitted, MDefinition* obj,
@@ -633,18 +561,7 @@ class MOZ_STACK_CLASS IonBuilder {
                                                     MDefinition* obj,
                                                     MDefinition* index);
   AbortReasonOr<Ok> getElemAddCache(MDefinition* obj, MDefinition* index);
-  AbortReasonOr<Ok> getElemTryScalarElemOfTypedObject(
-      bool* emitted, MDefinition* obj, MDefinition* index,
-      TypedObjectPrediction objTypeReprs, TypedObjectPrediction elemTypeReprs,
-      uint32_t elemSize);
-  AbortReasonOr<Ok> getElemTryReferenceElemOfTypedObject(
-      bool* emitted, MDefinition* obj, MDefinition* index,
-      TypedObjectPrediction objPrediction,
-      TypedObjectPrediction elemPrediction);
-  AbortReasonOr<Ok> getElemTryComplexElemOfTypedObject(
-      bool* emitted, MDefinition* obj, MDefinition* index,
-      TypedObjectPrediction objTypeReprs, TypedObjectPrediction elemTypeReprs,
-      uint32_t elemSize);
+
   TemporaryTypeSet* computeHeapType(const TemporaryTypeSet* objTypes,
                                     const jsid id);
 
@@ -960,11 +877,6 @@ class MOZ_STACK_CLASS IonBuilder {
   InliningResult inlineTypedArrayByteOffset(CallInfo& callInfo);
   InliningResult inlineTypedArrayElementShift(CallInfo& callInfo);
 
-  // TypedObject intrinsics and natives.
-  InliningResult inlineObjectIsTypeDescr(CallInfo& callInfo);
-  InliningResult inlineConstructTypedObject(CallInfo& callInfo,
-                                            TypeDescr* target);
-
   // Utility intrinsics.
   InliningResult inlineIsCallable(CallInfo& callInfo);
   InliningResult inlineIsConstructor(CallInfo& callInfo);
@@ -997,7 +909,6 @@ class MOZ_STACK_CLASS IonBuilder {
   // Main inlining functions
   InliningResult inlineNativeCall(CallInfo& callInfo, JSFunction* target);
   InliningResult inlineNativeGetter(CallInfo& callInfo, JSFunction* target);
-  InliningResult inlineNonFunctionCall(CallInfo& callInfo, JSObject* target);
   InliningResult inlineScriptedCall(CallInfo& callInfo, JSFunction* target);
   InliningResult inlineSingleCall(CallInfo& callInfo, JSObject* target);
 

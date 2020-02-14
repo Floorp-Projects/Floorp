@@ -62,7 +62,6 @@
  *
  */
 
-var gPrintSettingsAreGlobal = false;
 var gSavePrintSettings = false;
 var gFocusedElement = null;
 
@@ -417,9 +416,6 @@ var PrintUtils = {
   },
 
   getPrintSettings() {
-    gPrintSettingsAreGlobal = Services.prefs.getBoolPref(
-      "print.use_global_printsettings"
-    );
     gSavePrintSettings = Services.prefs.getBoolPref(
       "print.save_print_settings"
     );
@@ -429,12 +425,8 @@ var PrintUtils = {
       var PSSVC = Cc["@mozilla.org/gfx/printsettings-service;1"].getService(
         Ci.nsIPrintSettingsService
       );
-      if (gPrintSettingsAreGlobal) {
-        printSettings = PSSVC.globalPrintSettings;
-        this._setPrinterDefaultsForSelectedPrinter(PSSVC, printSettings);
-      } else {
-        printSettings = PSSVC.newPrintSettings;
-      }
+      printSettings = PSSVC.globalPrintSettings;
+      this._setPrinterDefaultsForSelectedPrinter(PSSVC, printSettings);
     } catch (e) {
       dump("getPrintSettings: " + e + "\n");
     }

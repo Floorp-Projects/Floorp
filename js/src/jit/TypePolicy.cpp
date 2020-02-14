@@ -1047,79 +1047,6 @@ bool StoreTypedArrayHolePolicy::adjustInputs(TempAllocator& alloc,
       alloc, ins, store->arrayType(), store->value(), 3);
 }
 
-bool StoreUnboxedObjectOrNullPolicy::adjustInputs(TempAllocator& alloc,
-                                                  MInstruction* ins) const {
-  if (!ObjectPolicy<0>::staticAdjustInputs(alloc, ins)) {
-    return false;
-  }
-
-  if (!ObjectPolicy<3>::staticAdjustInputs(alloc, ins)) {
-    return false;
-  }
-
-  // Change the value input to a ToObjectOrNull instruction if it might be
-  // a non-null primitive. Insert a post barrier for the instruction's object
-  // and whatever its new value is, unless the value is definitely null.
-  MStoreUnboxedObjectOrNull* store = ins->toStoreUnboxedObjectOrNull();
-
-  MOZ_ASSERT(store->typedObj()->type() == MIRType::Object);
-
-  MDefinition* value = store->value();
-  if (value->type() == MIRType::Object || value->type() == MIRType::Null ||
-      value->type() == MIRType::ObjectOrNull) {
-    if (value->type() != MIRType::Null) {
-      MInstruction* barrier =
-          MPostWriteBarrier::New(alloc, store->typedObj(), value);
-      store->block()->insertBefore(store, barrier);
-    }
-    return true;
-  }
-
-  MToObjectOrNull* replace = MToObjectOrNull::New(alloc, value);
-  store->block()->insertBefore(store, replace);
-  store->setValue(replace);
-
-  if (!BoxPolicy<0>::staticAdjustInputs(alloc, replace)) {
-    return false;
-  }
-
-  MInstruction* barrier =
-      MPostWriteBarrier::New(alloc, store->typedObj(), replace);
-  store->block()->insertBefore(store, barrier);
-
-  return true;
-}
-
-bool StoreUnboxedStringPolicy::adjustInputs(TempAllocator& alloc,
-                                            MInstruction* ins) const {
-  if (!ObjectPolicy<0>::staticAdjustInputs(alloc, ins)) {
-    return false;
-  }
-
-  // Change the value input to a ToString instruction if it might be
-  // a non-null primitive.
-  if (!ConvertToStringPolicy<2>::staticAdjustInputs(alloc, ins)) {
-    return false;
-  }
-
-  if (!ObjectPolicy<3>::staticAdjustInputs(alloc, ins)) {
-    return false;
-  }
-
-  // Insert a post barrier for the instruction's object and whatever its new
-  // value is.
-  MStoreUnboxedString* store = ins->toStoreUnboxedString();
-
-  MOZ_ASSERT(store->typedObj()->type() == MIRType::Object);
-
-  MDefinition* value = store->value();
-  MOZ_ASSERT(value->type() == MIRType::String);
-  MInstruction* barrier =
-      MPostWriteBarrier::New(alloc, store->typedObj(), value);
-  store->block()->insertBefore(store, barrier);
-  return true;
-}
-
 bool ClampPolicy::adjustInputs(TempAllocator& alloc, MInstruction* ins) const {
   MDefinition* in = ins->toClampToUint8()->input();
 
@@ -1234,29 +1161,27 @@ bool TypedArrayIndexPolicy::adjustInputs(TempAllocator& alloc,
 }
 
 // Lists of all TypePolicy specializations which are used by MIR Instructions.
-#define TYPE_POLICY_LIST(_)         \
-  _(AllDoublePolicy)                \
-  _(ArithPolicy)                    \
-  _(BitwisePolicy)                  \
-  _(BoxInputsPolicy)                \
-  _(CallPolicy)                     \
-  _(CallSetElementPolicy)           \
-  _(ClampPolicy)                    \
-  _(ComparePolicy)                  \
-  _(FilterTypeSetPolicy)            \
-  _(InstanceOfPolicy)               \
-  _(PowPolicy)                      \
-  _(SameValuePolicy)                \
-  _(SignPolicy)                     \
-  _(StoreTypedArrayHolePolicy)      \
-  _(StoreUnboxedScalarPolicy)       \
-  _(StoreUnboxedObjectOrNullPolicy) \
-  _(StoreUnboxedStringPolicy)       \
-  _(TestPolicy)                     \
-  _(ToDoublePolicy)                 \
-  _(ToInt32Policy)                  \
-  _(ToStringPolicy)                 \
-  _(TypeBarrierPolicy)              \
+#define TYPE_POLICY_LIST(_)    \
+  _(AllDoublePolicy)           \
+  _(ArithPolicy)               \
+  _(BitwisePolicy)             \
+  _(BoxInputsPolicy)           \
+  _(CallPolicy)                \
+  _(CallSetElementPolicy)      \
+  _(ClampPolicy)               \
+  _(ComparePolicy)             \
+  _(FilterTypeSetPolicy)       \
+  _(InstanceOfPolicy)          \
+  _(PowPolicy)                 \
+  _(SameValuePolicy)           \
+  _(SignPolicy)                \
+  _(StoreTypedArrayHolePolicy) \
+  _(StoreUnboxedScalarPolicy)  \
+  _(TestPolicy)                \
+  _(ToDoublePolicy)            \
+  _(ToInt32Policy)             \
+  _(ToStringPolicy)            \
+  _(TypeBarrierPolicy)         \
   _(TypedArrayIndexPolicy)
 
 #define TEMPLATE_TYPE_POLICY_LIST(_)                                          \

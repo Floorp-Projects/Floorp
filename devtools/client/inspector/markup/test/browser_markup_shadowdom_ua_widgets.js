@@ -10,10 +10,8 @@ const TEST_URL = `data:text/html;charset=utf-8,
   <video id="no-children" controls></video>`;
 
 add_task(async function() {
-  info(
-    "Test a <video> element with no children, showUserAgentShadowRoots=true"
-  );
-  const { inspector, markup } = await setup({ showUserAgentShadowRoots: true });
+  info("Test a <video> element with no children, showAllAnonymousContent=true");
+  const { inspector, markup } = await setup({ showAllAnonymousContent: true });
 
   info("Find the #no-children element.");
   const hostFront = await getNodeFront("#no-children", inspector);
@@ -25,15 +23,15 @@ add_task(async function() {
 
   info("Expand the <video> element");
   await expandContainer(inspector, hostContainer);
-  is(hostContainer.getChildContainers().length, 1, "video has 1 child");
+  is(hostContainer.getChildContainers().length, 3, "video has 3 children");
 
   const shadowRootContainer = hostContainer.getChildContainers()[0];
   assertContainerHasText(shadowRootContainer, "#shadow-root");
 });
 
 add_task(async function() {
-  info("Test a <video> element with children, showUserAgentShadowRoots=true");
-  const { inspector, markup } = await setup({ showUserAgentShadowRoots: true });
+  info("Test a <video> element with children, showAllAnonymousContent=true");
+  const { inspector, markup } = await setup({ showAllAnonymousContent: true });
 
   info("Find the #with-children element.");
   const hostFront = await getNodeFront("#with-children", inspector);
@@ -45,7 +43,7 @@ add_task(async function() {
 
   info("Expand the <video> element");
   await expandContainer(inspector, hostContainer);
-  is(hostContainer.getChildContainers().length, 2, "video has 2 children");
+  is(hostContainer.getChildContainers().length, 4, "video has 4 children");
 
   const shadowRootContainer = hostContainer.getChildContainers()[0];
   assertContainerHasText(shadowRootContainer, "#shadow-root");
@@ -56,10 +54,10 @@ add_task(async function() {
 
 add_task(async function() {
   info(
-    "Test a <video> element with no children, showUserAgentShadowRoots=false"
+    "Test a <video> element with no children, showAllAnonymousContent=false"
   );
   const { inspector, markup } = await setup({
-    showUserAgentShadowRoots: false,
+    showAllAnonymousContent: false,
   });
 
   info("Find the #no-children element.");
@@ -73,9 +71,9 @@ add_task(async function() {
 });
 
 add_task(async function() {
-  info("Test a <video> element with children, showUserAgentShadowRoots=false");
+  info("Test a <video> element with children, showAllAnonymousContent=false");
   const { inspector, markup } = await setup({
-    showUserAgentShadowRoots: false,
+    showAllAnonymousContent: false,
   });
 
   info("Find the #with-children element.");
@@ -94,10 +92,10 @@ add_task(async function() {
   assertContainerHasText(divContainer, "some content");
 });
 
-async function setup({ showUserAgentShadowRoots }) {
+async function setup({ showAllAnonymousContent }) {
   await pushPref(
-    "devtools.inspector.showUserAgentShadowRoots",
-    showUserAgentShadowRoots
+    "devtools.inspector.showAllAnonymousContent",
+    showAllAnonymousContent
   );
 
   const { inspector } = await openInspectorForURL(TEST_URL);
