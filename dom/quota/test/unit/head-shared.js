@@ -596,6 +596,10 @@ function verifyStorage(packageDefinitionRelativePaths, key) {
           throw new Error("A common entry must be a directory");
         }
 
+        if (!expectedEntry.entries && !sharedEntry.entries) {
+          throw new Error("A common entry must not be a leaf");
+        }
+
         if (sharedEntry.entries) {
           if (!expectedEntry.entries) {
             expectedEntry.entries = [];
