@@ -4963,40 +4963,32 @@ void nsGlobalWindowOuter::PrintOuter(ErrorResult& aError) {
 
     nsCOMPtr<nsIPrintSettings> printSettings;
     if (printSettingsService) {
-      bool printSettingsAreGlobal =
-          Preferences::GetBool("print.use_global_printsettings", false);
+      printSettingsService->GetGlobalPrintSettings(
+          getter_AddRefs(printSettings));
 
-      if (printSettingsAreGlobal) {
-        printSettingsService->GetGlobalPrintSettings(
-            getter_AddRefs(printSettings));
+      nsAutoString printerName;
+      printSettings->GetPrinterName(printerName);
 
-        nsAutoString printerName;
-        printSettings->GetPrinterName(printerName);
-
-        bool shouldGetDefaultPrinterName = printerName.IsEmpty();
+      bool shouldGetDefaultPrinterName = printerName.IsEmpty();
 #  ifdef MOZ_X11
-        // In Linux, GTK backend does not support per printer settings.
-        // Calling GetDefaultPrinterName causes a sandbox violation (see Bug
-        // 1329216). The printer name is not needed anywhere else on Linux
-        // before it gets to the parent. In the parent, we will then query the
-        // default printer name if no name is set. Unless we are in the parent,
-        // we will skip this part.
-        if (!XRE_IsParentProcess()) {
-          shouldGetDefaultPrinterName = false;
-        }
-#  endif
-        if (shouldGetDefaultPrinterName) {
-          printSettingsService->GetDefaultPrinterName(printerName);
-          printSettings->SetPrinterName(printerName);
-        }
-        printSettingsService->InitPrintSettingsFromPrinter(printerName,
-                                                           printSettings);
-        printSettingsService->InitPrintSettingsFromPrefs(
-            printSettings, true, nsIPrintSettings::kInitSaveAll);
-      } else {
-        printSettingsService->GetNewPrintSettings(
-            getter_AddRefs(printSettings));
+      // In Linux, GTK backend does not support per printer settings.
+      // Calling GetDefaultPrinterName causes a sandbox violation (see Bug
+      // 1329216). The printer name is not needed anywhere else on Linux
+      // before it gets to the parent. In the parent, we will then query the
+      // default printer name if no name is set. Unless we are in the parent,
+      // we will skip this part.
+      if (!XRE_IsParentProcess()) {
+        shouldGetDefaultPrinterName = false;
       }
+#  endif
+      if (shouldGetDefaultPrinterName) {
+        printSettingsService->GetDefaultPrinterName(printerName);
+        printSettings->SetPrinterName(printerName);
+      }
+      printSettingsService->InitPrintSettingsFromPrinter(printerName,
+                                                         printSettings);
+      printSettingsService->InitPrintSettingsFromPrefs(
+          printSettings, true, nsIPrintSettings::kInitSaveAll);
 
       EnterModalState();
       webBrowserPrint->Print(printSettings, nullptr);
@@ -5004,7 +4996,7 @@ void nsGlobalWindowOuter::PrintOuter(ErrorResult& aError) {
 
       bool savePrintSettings =
           Preferences::GetBool("print.save_print_settings", false);
-      if (printSettingsAreGlobal && savePrintSettings) {
+      if (savePrintSettings) {
         printSettingsService->SavePrintSettingsToPrefs(
             printSettings, true, nsIPrintSettings::kInitSaveAll);
         printSettingsService->SavePrintSettingsToPrefs(
