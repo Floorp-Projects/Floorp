@@ -360,9 +360,6 @@ SheetLoadData::SheetLoadData(Loader* aLoader, nsIURI* aURI, StyleSheet* aSheet,
 }
 
 SheetLoadData::~SheetLoadData() {
-  MOZ_DIAGNOSTIC_ASSERT(mSheetCompleteCalled,
-                        "Should always call SheetComplete");
-
   // Do this iteratively to avoid blowing up the stack.
   RefPtr<SheetLoadData> next = std::move(mNext);
   while (next) {
@@ -1775,10 +1772,14 @@ void Loader::DoSheetComplete(SheetLoadData& aLoadData,
     // Remove the data from the list of loading datas
     if (aLoadData.mIsLoading) {
       SheetLoadDataHashKey key(aLoadData);
-      Maybe<SheetLoadData*> loadingData =
-          mSheets->mLoadingDatas.GetAndRemove(&key);
-      MOZ_DIAGNOSTIC_ASSERT(loadingData && loadingData.value() == &aLoadData);
-      Unused << loadingData;
+#ifdef DEBUG
+      SheetLoadData* loadingData;
+      NS_ASSERTION(mSheets->mLoadingDatas.Get(&key, &loadingData) &&
+                       loadingData == &aLoadData,
+                   "Bad loading table");
+#endif
+
+      mSheets->mLoadingDatas.Remove(&key);
       aLoadData.mIsLoading = false;
     }
   }
@@ -1786,11 +1787,6 @@ void Loader::DoSheetComplete(SheetLoadData& aLoadData,
   // Go through and deal with the whole linked list.
   SheetLoadData* data = &aLoadData;
   do {
-    MOZ_DIAGNOSTIC_ASSERT(!data->mSheetCompleteCalled);
-#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
-    data->mSheetCompleteCalled = true;
-#endif
-
     if (!data->mSheetAlreadyComplete) {
       // If mSheetAlreadyComplete, then the sheet could well be modified between
       // when we posted the async call to SheetComplete and now, since the sheet

@@ -20,9 +20,7 @@ namespace css {
 StreamLoader::StreamLoader(SheetLoadData& aSheetLoadData)
     : mSheetLoadData(&aSheetLoadData), mStatus(NS_OK) {}
 
-StreamLoader::~StreamLoader() {
-  MOZ_DIAGNOSTIC_ASSERT(mOnStopRequestCalled);
-}
+StreamLoader::~StreamLoader() {}
 
 NS_IMPL_ISUPPORTS(StreamLoader, nsIStreamListener)
 
@@ -51,11 +49,6 @@ StreamLoader::OnStartRequest(nsIRequest* aRequest) {
 
 NS_IMETHODIMP
 StreamLoader::OnStopRequest(nsIRequest* aRequest, nsresult aStatus) {
-  MOZ_DIAGNOSTIC_ASSERT(!mOnStopRequestCalled);
-#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
-  mOnStopRequestCalled = true;
-#endif
-
   // Decoded data
   nsCString utf8String;
   {
