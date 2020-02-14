@@ -29,6 +29,7 @@ if CONFIG['MOZ_PLACES']:
         'Database.h',
         'History.h',
         'INativePlacesEventCallback.h',
+        'PageIconProtocolHandler.h',
         'Shutdown.h',
         'SyncedBookmarksMirror.h',
     ]
@@ -45,6 +46,7 @@ if CONFIG['MOZ_PLACES']:
         'nsNavHistory.cpp',
         'nsNavHistoryQuery.cpp',
         'nsNavHistoryResult.cpp',
+        'PageIconProtocolHandler.cpp',
         'PlaceInfo.cpp',
         'Shutdown.cpp',
         'SQLFunctions.cpp',
@@ -61,7 +63,6 @@ if CONFIG['MOZ_PLACES']:
         'Bookmarks.jsm',
         'ExtensionSearchHandler.jsm',
         'History.jsm',
-        'PageIconProtocolHandler.jsm',
         'PlacesBackups.jsm',
         'PlacesCategoriesStarter.jsm',
         'PlacesDBUtils.jsm',
