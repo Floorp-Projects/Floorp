@@ -1525,7 +1525,17 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
     }
   }
 
-  mBounds = aRect;
+  // A default size of 1x1 confuses MobileViewportManager, so
+  // use 0x0 instead. This is also a little more fitting since
+  // we don't yet have a surface yet (and therefore a valid size)
+  // and 0x0 is usually recognized as invalid.
+  LayoutDeviceIntRect rect = aRect;
+  if (aRect.width == 1 && aRect.height == 1) {
+    rect.width = 0;
+    rect.height = 0;
+  }
+
+  mBounds = rect;
 
   BaseCreate(nullptr, aInitData);
 
@@ -1539,12 +1549,6 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
     parent->mChildren.AppendElement(this);
     mParent = parent;
   }
-
-  // A default size of 1x1 confuses MobileViewportManager, so
-  // use 0x0 instead. This is also a little more fitting since
-  // we don't yet have a surface yet (and therefore a valid size)
-  // and 0x0 is usually recognized as invalid.
-  Resize(0, 0, false);
 
   CreateLayerManager();
 
