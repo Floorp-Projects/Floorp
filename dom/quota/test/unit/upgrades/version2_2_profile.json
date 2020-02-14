@@ -1,4 +1,5 @@
 [
+  { "key": "beforeInstall", "entries": [] },
   {
     "key": "afterInstall",
     "entries": [{ "name": "storage.sqlite", "dir": false }]
