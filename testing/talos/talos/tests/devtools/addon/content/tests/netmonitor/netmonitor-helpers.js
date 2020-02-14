@@ -30,33 +30,23 @@ async function waitForAllRequestsFinished(expectedRequests) {
   return new Promise(resolve => {
     // Explicitly waiting for specific number of requests arrived
     let payloadReady = 0;
-    let timingsUpdated = 0;
 
     function onPayloadReady(_, id) {
       payloadReady++;
       maybeResolve();
     }
 
-    function onTimingsUpdated(_, id) {
-      timingsUpdated++;
-      maybeResolve();
-    }
-
     function maybeResolve() {
       // Have all the requests finished yet?
-      if (
-        payloadReady >= expectedRequests &&
-        timingsUpdated >= expectedRequests
-      ) {
+      if (payloadReady >= expectedRequests) {
         // All requests are done - unsubscribe from events and resolve!
         window.api.off(EVENTS.PAYLOAD_READY, onPayloadReady);
-        window.api.off(EVENTS.RECEIVED_EVENT_TIMINGS, onTimingsUpdated);
-        resolve();
+        // Resolve after current frame
+        requestIdleCallback(resolve);
       }
     }
 
     window.api.on(EVENTS.PAYLOAD_READY, onPayloadReady);
-    window.api.on(EVENTS.RECEIVED_EVENT_TIMINGS, onTimingsUpdated);
   });
 }
 
