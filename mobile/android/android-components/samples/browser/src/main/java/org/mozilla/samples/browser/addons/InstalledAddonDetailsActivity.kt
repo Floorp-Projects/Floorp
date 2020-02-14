@@ -14,8 +14,9 @@ import androidx.appcompat.app.AppCompatActivity
 import mozilla.components.feature.addons.Addon
 import mozilla.components.feature.addons.ui.translate
 import mozilla.components.feature.addons.ui.translatedName
-import org.mozilla.samples.browser.R
 import org.mozilla.samples.browser.ext.components
+import org.mozilla.samples.browser.BrowserActivity
+import org.mozilla.samples.browser.R
 
 /**
  * An activity to show the details of a installed add-on.
@@ -93,13 +94,21 @@ class InstalledAddonDetailsActivity : AppCompatActivity() {
         }
     }
 
-    private fun bindSettings(addOn: Addon) {
+    private fun bindSettings(addon: Addon) {
         val view = findViewById<View>(R.id.settings)
-        view.isEnabled = addOn.installedState?.optionsPageUrl != null
+        val optionsPageUrl = addon.installedState?.optionsPageUrl
+        view.isEnabled = optionsPageUrl != null
         view.setOnClickListener {
-            val intent = Intent(this, AddonSettingsActivity::class.java)
-            intent.putExtra("add_on", addOn)
-            this.startActivity(intent)
+            if (addon.installedState?.openOptionsPageInTab == true) {
+                components.tabsUseCases.addTab(optionsPageUrl as String)
+                val intent = Intent(this, BrowserActivity::class.java)
+                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+                this.startActivity(intent)
+            } else {
+                val intent = Intent(this, AddonSettingsActivity::class.java)
+                intent.putExtra("add_on", addon)
+                this.startActivity(intent)
+            }
         }
     }
 
