@@ -90,7 +90,7 @@ class nsScriptSecurityManager final : public nsIScriptSecurityManager {
 
   // Decides, based on CSP, whether or not eval() and stuff can be executed.
   static bool ContentSecurityPolicyPermitsJSAction(JSContext* cx,
-                                                   JS::HandleValue aValue);
+                                                   JS::HandleString aCode);
 
   static bool JSPrincipalsSubsume(JSPrincipals* first, JSPrincipals* second);
 

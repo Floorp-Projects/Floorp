@@ -581,18 +581,12 @@ class LogViolationDetailsRunnable final : public WorkerMainThreadRunnable {
   ~LogViolationDetailsRunnable() = default;
 };
 
-bool ContentSecurityPolicyAllows(JSContext* aCx, JS::HandleValue aValue) {
+bool ContentSecurityPolicyAllows(JSContext* aCx, JS::HandleString aCode) {
   WorkerPrivate* worker = GetWorkerPrivateFromContext(aCx);
   worker->AssertIsOnWorkerThread();
 
-  JS::Rooted<JSString*> jsString(aCx, JS::ToString(aCx, aValue));
-  if (NS_WARN_IF(!jsString)) {
-    JS_ClearPendingException(aCx);
-    return false;
-  }
-
   nsAutoJSString scriptSample;
-  if (NS_WARN_IF(!scriptSample.init(aCx, jsString))) {
+  if (NS_WARN_IF(!scriptSample.init(aCx, aCode))) {
     JS_ClearPendingException(aCx);
     return false;
   }

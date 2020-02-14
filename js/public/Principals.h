@@ -70,7 +70,7 @@ typedef bool (*JSSubsumesOp)(JSPrincipals* first, JSPrincipals* second);
  * Used to check if a CSP instance wants to disable eval() and friends.
  * See GlobalObject::isRuntimeCodeGenEnabled() in vm/GlobalObject.cpp.
  */
-typedef bool (*JSCSPEvalChecker)(JSContext* cx, JS::HandleValue value);
+typedef bool (*JSCSPEvalChecker)(JSContext* cx, JS::HandleString code);
 
 struct JSSecurityCallbacks {
   JSCSPEvalChecker contentSecurityPolicyAllows;
