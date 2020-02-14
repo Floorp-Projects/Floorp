@@ -105,9 +105,7 @@ add_task(async function tip_onResultPicked_mainButton_noURL_mouse() {
     waitForFocus,
     value: "test",
   });
-  let mainButton = document.querySelector(
-    "#urlbarView-row-0 .urlbarView-tip-button"
-  );
+  let mainButton = gURLBar.querySelector(".urlbarView-tip-button");
   Assert.ok(mainButton);
   EventUtils.synthesizeMouseAtCenter(mainButton, {});
   await ext.awaitMessage("onResultPicked received");
@@ -146,9 +144,7 @@ add_task(async function tip_onResultPicked_mainButton_url_mouse() {
       waitForFocus,
       value: "test",
     });
-    let mainButton = document.querySelector(
-      "#urlbarView-row-0 .urlbarView-tip-button"
-    );
+    let mainButton = gURLBar.querySelector(".urlbarView-tip-button");
     Assert.ok(mainButton);
     let loadedPromise = BrowserTestUtils.browserLoaded(
       gBrowser.selectedBrowser
@@ -196,9 +192,7 @@ add_task(async function tip_onResultPicked_helpButton_url_mouse() {
       waitForFocus,
       value: "test",
     });
-    let helpButton = document.querySelector(
-      "#urlbarView-row-0 .urlbarView-tip-help"
-    );
+    let helpButton = gURLBar.querySelector(".urlbarView-tip-help");
     Assert.ok(helpButton);
     let loadedPromise = BrowserTestUtils.browserLoaded(
       gBrowser.selectedBrowser
