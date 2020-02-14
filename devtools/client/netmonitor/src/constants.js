@@ -265,10 +265,6 @@ const HEADERS = [
     canFilter: true,
   },
   {
-    name: "initiator",
-    canFilter: true,
-  },
-  {
     name: "type",
     canFilter: false,
   },
