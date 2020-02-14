@@ -44,6 +44,7 @@ EXPORTS.mozilla.dom += [
 ]
 
 EXPORTS.mozilla.dom.indexedDB += [
+    'ActorsChild.h',
     'ActorsParent.h',
     'IDBResult.h',
     'Key.h',
