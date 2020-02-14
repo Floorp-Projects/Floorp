@@ -63,7 +63,7 @@ class DesktopEnv(BaseEnv):
         final_prefs = dict(DEFAULT_PREFS)
         if prefs is not None:
             final_prefs.update(prefs)
-        options = ["-profile", self.profile]
+        options = ["--allow-downgrade", "-profile", self.profile]
         if headless:
             options.append("-headless")
         args = {"moz:firefoxOptions": {"args": options}}
