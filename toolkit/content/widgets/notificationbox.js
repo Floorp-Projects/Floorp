@@ -28,7 +28,7 @@
 
     get stack() {
       if (!this._stack) {
-        let stack = document.createXULElement("stack");
+        let stack = document.createXULElement("legacy-stack");
         stack._notificationBox = this;
         stack.className = "notificationbox-stack";
         stack.appendChild(document.createXULElement("spacer"));
