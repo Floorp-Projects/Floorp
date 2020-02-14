@@ -32,10 +32,7 @@ class PrintingChild extends ActorChild {
   // this hackery.
 
   get shouldSavePrintSettings() {
-    return (
-      Services.prefs.getBoolPref("print.use_global_printsettings") &&
-      Services.prefs.getBoolPref("print.save_print_settings")
-    );
+    return Services.prefs.getBoolPref("print.save_print_settings");
   }
 
   handleEvent(event) {

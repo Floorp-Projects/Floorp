@@ -67,8 +67,6 @@
   MACRO(callee, callee, "callee")                                              \
   MACRO(caller, caller, "caller")                                              \
   MACRO(callFunction, callFunction, "callFunction")                            \
-  MACRO(CallRegExpMethodIfWrapped, CallRegExpMethodIfWrapped,                  \
-        "CallRegExpMethodIfWrapped")                                           \
   MACRO(cancel, cancel, "cancel")                                              \
   MACRO(case, case_, "case")                                                   \
   MACRO(caseFirst, caseFirst, "caseFirst")                                     \
@@ -360,14 +358,9 @@
   MACRO(quarter, quarter, "quarter")                                           \
   MACRO(raw, raw, "raw")                                                       \
   MACRO(reason, reason, "reason")                                              \
-  MACRO(RegExpBuiltinExec, RegExpBuiltinExec, "RegExpBuiltinExec")             \
   MACRO(RegExpFlagsGetter, RegExpFlagsGetter, "$RegExpFlagsGetter")            \
-  MACRO(RegExpMatcher, RegExpMatcher, "RegExpMatcher")                         \
-  MACRO(RegExpSearcher, RegExpSearcher, "RegExpSearcher")                      \
   MACRO(RegExpStringIterator, RegExpStringIterator, "RegExp String Iterator")  \
-  MACRO(RegExpTester, RegExpTester, "RegExpTester")                            \
   MACRO(RegExpToString, RegExpToString, "$RegExpToString")                     \
-  MACRO(RegExp_prototype_Exec, RegExp_prototype_Exec, "RegExp_prototype_Exec") \
   MACRO(region, region, "region")                                              \
   MACRO(register, register_, "register")                                       \
   MACRO(Reify, Reify, "Reify")                                                 \
@@ -459,8 +452,6 @@
   MACRO(unregister, unregister, "unregister")                                  \
   MACRO(unsized, unsized, "unsized")                                           \
   MACRO(unwatch, unwatch, "unwatch")                                           \
-  MACRO(UnwrapAndCallRegExpBuiltinExec, UnwrapAndCallRegExpBuiltinExec,        \
-        "UnwrapAndCallRegExpBuiltinExec")                                      \
   MACRO(url, url, "url")                                                       \
   MACRO(usage, usage, "usage")                                                 \
   MACRO(useAsm, useAsm, "use asm")                                             \

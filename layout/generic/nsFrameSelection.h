@@ -314,6 +314,7 @@ class nsFrameSelection final {
    */
   nsresult SelectCellElement(nsIContent* aCell);
 
+ private:
   /**
    * Add cells to the selection inside of the given cells range.
    *
@@ -327,6 +328,7 @@ class nsFrameSelection final {
                                int32_t aStartColumnIndex, int32_t aEndRowIndex,
                                int32_t aEndColumnIndex);
 
+ public:
   /**
    * Remove cells from selection inside of the given cell range.
    *
@@ -645,21 +647,6 @@ class nsFrameSelection final {
   MOZ_CAN_RUN_SCRIPT_BOUNDARY void SetAncestorLimiter(nsIContent* aLimiter);
 
   /**
-   * This will tell the frame selection that a double click has been pressed
-   * so it can track abort future drags if inside the same selection
-   * @param aDoubleDown has the double click down happened
-   */
-  void SetMouseDoubleDown(bool aDoubleDown) {
-    mMouseDoubleDownState = aDoubleDown;
-  }
-
-  /**
-   * This will return whether the double down flag was set.
-   * @return whether the double down flag was set
-   */
-  bool GetMouseDoubleDown() const { return mMouseDoubleDownState; }
-
-  /**
    * GetPrevNextBidiLevels will return the frames and associated Bidi levels of
    * the characters logically before and after a (collapsed) selection.
    *
@@ -719,9 +706,6 @@ class nsFrameSelection final {
 
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
   void EndBatchChanges(int16_t aReason = nsISelectionListener::NO_REASON);
-
-  /*unsafe*/
-  nsresult DeleteFromDocument();
 
   mozilla::PresShell* GetPresShell() const { return mPresShell; }
 
@@ -788,7 +772,6 @@ class nsFrameSelection final {
   void SetDesiredPos(nsPoint aPos);  // set the mDesiredPos
 
   uint32_t GetBatching() const { return mBatching; }
-  bool GetNotifyFrames() const { return mNotifyFrames; }
   void SetDirty(bool aDirty = true) {
     if (mBatching) mChangesDuringBatching = aDirty;
   }
@@ -880,10 +863,8 @@ class nsFrameSelection final {
   bool mDelayedMouseEventIsShift = false;
 
   bool mChangesDuringBatching = false;
-  bool mNotifyFrames = true;
   bool mDragSelectingCells = false;
   bool mDragState = false;             // for drag purposes
-  bool mMouseDoubleDownState = false;  // has the doubleclick down happened
   bool mDesiredPosSet = false;
   bool mAccessibleCaretEnabled = false;
 

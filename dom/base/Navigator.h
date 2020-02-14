@@ -228,6 +228,7 @@ class Navigator final : public nsISupports, public nsWrapperCache {
   // WebIDL helper methods
   static bool HasUserMediaSupport(JSContext* /* unused */,
                                   JSObject* /* unused */);
+  static bool HasShareSupport(JSContext* /* unused */, JSObject* /* unused */);
 
   nsPIDOMWindowInner* GetParentObject() const { return GetWindow(); }
 

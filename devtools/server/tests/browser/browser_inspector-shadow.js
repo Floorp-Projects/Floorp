@@ -181,16 +181,16 @@ add_task(async function() {
 });
 
 add_task(async function() {
-  info("Test UA widgets when showUserAgentShadowRoots is true");
+  info("Test UA widgets when showAllAnonymousContent is true");
   await SpecialPowers.pushPrefEnv({
-    set: [["devtools.inspector.showUserAgentShadowRoots", true]],
+    set: [["devtools.inspector.showAllAnonymousContent", true]],
   });
 
   const { walker } = await initInspectorFront(URL);
 
   let el = await walker.querySelector(walker.rootNode, "#video-controls");
   let hostChildren = await walker.children(el);
-  is(hostChildren.nodes.length, 1, "#video-controls tag has one child");
+  is(hostChildren.nodes.length, 3, "#video-controls tag has 3 children");
   const shadowRoot = hostChildren.nodes[0];
   ok(shadowRoot.isShadowRoot, "#video-controls has a shadow-root child");
 
@@ -201,15 +201,15 @@ add_task(async function() {
   hostChildren = await walker.children(el);
   is(
     hostChildren.nodes.length,
-    2,
-    "#video-controls-with-children has two children"
+    4,
+    "#video-controls-with-children has 4 children"
   );
 });
 
 add_task(async function() {
-  info("Test UA widgets when showUserAgentShadowRoots is false");
+  info("Test UA widgets when showAllAnonymousContent is false");
   await SpecialPowers.pushPrefEnv({
-    set: [["devtools.inspector.showUserAgentShadowRoots", false]],
+    set: [["devtools.inspector.showAllAnonymousContent", false]],
   });
 
   const { walker } = await initInspectorFront(URL);

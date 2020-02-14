@@ -153,12 +153,7 @@
   _(IntrinsicTypedArrayLength)                     \
   _(IntrinsicPossiblyWrappedTypedArrayLength)      \
   _(IntrinsicTypedArrayByteOffset)                 \
-  _(IntrinsicTypedArrayElementShift)               \
-                                                   \
-  _(IntrinsicObjectIsTypedObject)                  \
-  _(IntrinsicObjectIsTypeDescr)                    \
-  _(IntrinsicTypeDescrIsSimpleType)                \
-  _(IntrinsicTypeDescrIsArrayType)
+  _(IntrinsicTypedArrayElementShift)
 
 struct JSJitInfo;
 

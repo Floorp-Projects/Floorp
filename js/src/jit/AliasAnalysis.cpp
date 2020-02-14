@@ -87,9 +87,6 @@ static inline const MDefinition* MaybeUnwrap(const MDefinition* object) {
   if (object->isTypedArrayElements()) {
     return nullptr;
   }
-  if (object->isTypedObjectElements()) {
-    return nullptr;
-  }
   if (object->isConstantElements()) {
     return nullptr;
   }
@@ -111,16 +108,11 @@ static inline const MDefinition* GetObject(const MDefinition* ins) {
     case MDefinition::Opcode::InitializedLength:
     case MDefinition::Opcode::LoadElement:
     case MDefinition::Opcode::LoadUnboxedScalar:
-    case MDefinition::Opcode::LoadUnboxedObjectOrNull:
-    case MDefinition::Opcode::LoadUnboxedString:
     case MDefinition::Opcode::StoreElement:
-    case MDefinition::Opcode::StoreUnboxedObjectOrNull:
-    case MDefinition::Opcode::StoreUnboxedString:
     case MDefinition::Opcode::StoreUnboxedScalar:
     case MDefinition::Opcode::SetInitializedLength:
     case MDefinition::Opcode::ArrayLength:
     case MDefinition::Opcode::SetArrayLength:
-    case MDefinition::Opcode::TypedObjectDescr:
     case MDefinition::Opcode::Slots:
     case MDefinition::Opcode::Elements:
     case MDefinition::Opcode::MaybeCopyElementsForWrite:
@@ -145,7 +137,6 @@ static inline const MDefinition* GetObject(const MDefinition* ins) {
     case MDefinition::Opcode::InArray:
     case MDefinition::Opcode::LoadElementHole:
     case MDefinition::Opcode::TypedArrayElements:
-    case MDefinition::Opcode::TypedObjectElements:
     case MDefinition::Opcode::CopyLexicalEnvironmentObject:
     case MDefinition::Opcode::IsPackedArray:
       object = ins->getOperand(0);

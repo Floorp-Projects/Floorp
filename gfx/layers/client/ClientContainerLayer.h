@@ -143,7 +143,7 @@ class ClientRefLayer : public RefLayer, public ClientLayer {
   Layer* AsLayer() override { return this; }
   ShadowableLayer* AsShadowableLayer() override { return this; }
 
-  void RenderLayer() override {}
+  void RenderLayer() override { RenderMaskLayers(this); }
 
   void ComputeEffectiveTransforms(
       const gfx::Matrix4x4& aTransformToSurface) override {
