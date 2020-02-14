@@ -50,14 +50,7 @@ class nsRange final : public mozilla::dom::AbstractRange,
   virtual ~nsRange();
   explicit nsRange(nsINode* aNode);
 
-  bool MaybeCacheToReuse();
-
  public:
-  /**
-   * Called when the process is shutting down.
-   */
-  static void Shutdown();
-
   /**
    * The following Create() returns `nsRange` instance which is initialized
    * only with aNode.  The result is never positioned.
@@ -432,6 +425,15 @@ class nsRange final : public mozilla::dom::AbstractRange,
     static bool sIsNested;
   };
 
+  bool MaybeInterruptLastRelease();
+
+#ifdef DEBUG
+  bool IsCleared() const {
+    return !mRoot && !mRegisteredClosestCommonInclusiveAncestor &&
+           !mSelection && !mNextStartRef && !mNextEndRef;
+  }
+#endif  // #ifdef DEBUG
+
   nsCOMPtr<nsINode> mRoot;
   // mRegisteredClosestCommonInclusiveAncestor is only non-null when the range
   // IsInSelection().  It's kept alive via mStart/mEnd,
@@ -448,7 +450,6 @@ class nsRange final : public mozilla::dom::AbstractRange,
   nsIContent* MOZ_NON_OWNING_REF mNextEndRef;
 
   static nsTArray<RefPtr<nsRange>>* sCachedRanges;
-  static bool sHasShutDown;
 
   friend class mozilla::dom::AbstractRange;
 };
