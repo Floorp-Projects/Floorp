@@ -12,20 +12,14 @@ import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.spyk
 import io.mockk.verify
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.runBlockingTest
 import org.junit.Test
-import org.mozilla.fenix.TestApplication
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.utils.Settings
-import org.robolectric.annotation.Config
 
-@ExperimentalCoroutinesApi
-@Config(application = TestApplication::class)
 internal class InstallationPingTest {
 
     @Test
-    fun `checkAndSend() triggers the ping if it wasn't marked as triggered`() = runBlockingTest {
+    fun `checkAndSend() triggers the ping if it wasn't marked as triggered`() {
         val mockedContext: Context = mockk(relaxed = true)
         val mockedSettings: Settings = mockk(relaxed = true)
         mockkStatic("org.mozilla.fenix.ext.ContextKt")
@@ -40,7 +34,7 @@ internal class InstallationPingTest {
         verify(exactly = 1) { mockAp.triggerPing() }
         // Marking the ping as triggered happens in a co-routine off the main thread,
         // so wait a bit for it.
-        verify(exactly = 1) { mockAp.markAsTriggered() }
+        verify(timeout = 5000, exactly = 1) { mockAp.markAsTriggered() }
     }
 
     @Test

@@ -110,11 +110,6 @@ class Settings private constructor(
         default = ""
     )
 
-    var adjustInstallTimestamp by stringPreference(
-        appContext.getPreferenceKey(R.string.pref_key_adjust_install_timestamp),
-        default = ""
-    )
-
     var openLinksInAPrivateTab by booleanPreference(
         appContext.getPreferenceKey(R.string.pref_key_open_links_in_a_private_tab),
         default = false

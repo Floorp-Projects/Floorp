@@ -171,17 +171,17 @@ The following metrics are added to the ping:
 | user_specified_search_engines.custom_engine_deleted |[event](https://mozilla.github.io/glean/book/user/metrics/event.html) |A user deleted a custom search engine  |[1](https://github.com/mozilla-mobile/fenix/pull/6918)||2020-09-01 |
 
 ## installation
-Intended for counting user installs.
+This ping is intended to capture the source of the installation
 
 The following metrics are added to the ping:
 
 | Name | Type | Description | Data reviews | Extras | Expiration |
 | --- | --- | --- | --- | --- | --- |
-| installation.adgroup |[string](https://mozilla.github.io/glean/book/user/metrics/string.html) |AdGroup  |[1](TODO)||2020-09-01 |
-| installation.campaign |[string](https://mozilla.github.io/glean/book/user/metrics/string.html) |Campaign  |[1](TODO)||2020-09-01 |
-| installation.creative |[string](https://mozilla.github.io/glean/book/user/metrics/string.html) |Creative  |[1](TODO)||2020-09-01 |
-| installation.network |[string](https://mozilla.github.io/glean/book/user/metrics/string.html) |Network  |[1](TODO)||2020-09-01 |
-| installation.timestamp |[string](https://mozilla.github.io/glean/book/user/metrics/string.html) |Timestamp  |[1](TODO)||2020-09-01 |
+| installation.adgroup |[string](https://mozilla.github.io/glean/book/user/metrics/string.html) |The name of the AdGroup that was used to source this installation.  |[1](https://github.com/mozilla-mobile/fenix/pull/8074#issuecomment-586480836)||2020-09-01 |
+| installation.campaign |[string](https://mozilla.github.io/glean/book/user/metrics/string.html) |The name of the campaign that is responsible for this installation.  |[1](https://github.com/mozilla-mobile/fenix/pull/8074#issuecomment-586512202)||2020-09-01 |
+| installation.creative |[string](https://mozilla.github.io/glean/book/user/metrics/string.html) |The identifier of the creative material that the user interacted with.  |[1](https://github.com/mozilla-mobile/fenix/pull/8074#issuecomment-586512202)||2020-09-01 |
+| installation.network |[string](https://mozilla.github.io/glean/book/user/metrics/string.html) |The name of the Network that sourced this installation.  |[1](https://github.com/mozilla-mobile/fenix/pull/8074#issuecomment-586512202)||2020-09-01 |
+| installation.timestamp |[datetime](https://mozilla.github.io/glean/book/user/metrics/datetime.html) |The date and time of the installation.  |[1](https://github.com/mozilla-mobile/fenix/pull/8074#issuecomment-586512202)||2020-09-01 |
 
 ## metrics
 This is a built-in ping that is assembled out of the box by the Glean SDK.

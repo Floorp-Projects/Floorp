@@ -54,10 +54,7 @@ class AdjustMetricsService(private val application: Application) : MetricsServic
                 application.applicationContext.settings().adjustCampaignId =
                     it.campaign
             }
-            if (application.applicationContext.settings().adjustInstallTimestamp.isEmpty()) {
-                application.applicationContext.settings().adjustInstallTimestamp =
-                    System.currentTimeMillis().toString()
-            }
+
             InstallationPing(application).checkAndSend()
         }
 

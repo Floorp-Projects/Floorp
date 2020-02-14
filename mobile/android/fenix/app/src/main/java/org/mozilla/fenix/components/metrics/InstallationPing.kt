@@ -54,13 +54,15 @@ class InstallationPing(private val context: Context) {
      */
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal fun triggerPing() {
-        if (checkMetricsNotEmpty()
-        ) {
-            Installation.campaign.set(context.settings().adjustCampaignId)
-            Installation.adgroup.set(context.settings().adjustAdGroup)
-            Installation.creative.set(context.settings().adjustCreative)
-            Installation.network.set(context.settings().adjustNetwork)
-            Installation.timestamp.set(context.settings().adjustInstallTimestamp)
+        if (checkMetricsNotEmpty()) {
+            context.settings().also {
+                Installation.campaign.set(it.adjustCampaignId)
+                Installation.adgroup.set(it.adjustAdGroup)
+                Installation.creative.set(it.adjustCreative)
+                Installation.network.set(it.adjustNetwork)
+                Installation.timestamp.set()
+            }
+
             CoroutineScope(Dispatchers.IO).launch {
                 Pings.installation.submit()
                 markAsTriggered()

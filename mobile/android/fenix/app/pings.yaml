@@ -21,11 +21,11 @@ activation:
 
 installation:
   description: >
-    Intended for counting user installs.
+    This ping is intended to capture the source of the installation
   include_client_id: false
   bugs:
     - https://github.com/mozilla-mobile/fenix/issues/7295
   data_reviews:
-      - TODO
+    - https://github.com/mozilla-mobile/fenix/pull/8074#issuecomment-586512202
   notification_emails:
-      - fenix-core@mozilla.com
+    - fenix-core@mozilla.com

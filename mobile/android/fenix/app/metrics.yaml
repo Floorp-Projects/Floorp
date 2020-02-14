@@ -1796,11 +1796,11 @@ installation:
    send_in_pings:
      - installation
    description: >
-     Campaign
+     The name of the campaign that is responsible for this installation.
    bugs:
      - https://github.com/mozilla-mobile/fenix/issues/7295
    data_reviews:
-     - TODO
+     - https://github.com/mozilla-mobile/fenix/pull/8074#issuecomment-586512202
    notification_emails:
      - fenix-core@mozilla.com
    expires: "2020-09-01"
@@ -1809,11 +1809,11 @@ installation:
     send_in_pings:
       - installation
     description: >
-      Network
+      The name of the Network that sourced this installation.
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/7295
     data_reviews:
-      - TODO
+      - https://github.com/mozilla-mobile/fenix/pull/8074#issuecomment-586512202
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-09-01"
@@ -1822,11 +1822,11 @@ installation:
     send_in_pings:
       - installation
     description: >
-      AdGroup
+      The name of the AdGroup that was used to source this installation.
     bugs:
-      - https://github.com/mozilla-mobile/fenix/issues/7295
+      - https://github.com/mozilla-mobile/fenix/pull/8074#issuecomment-586512202
     data_reviews:
-      - TODO
+      - https://github.com/mozilla-mobile/fenix/pull/8074#issuecomment-586480836
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-09-01"
@@ -1835,24 +1835,24 @@ installation:
       - installation
     type: string
     description: >
-      Creative
+      The identifier of the creative material that the user interacted with.
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/7295
     data_reviews:
-      - TODO
+      - https://github.com/mozilla-mobile/fenix/pull/8074#issuecomment-586512202
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-09-01"
   timestamp:
     send_in_pings:
       - installation
-    type: string
+    type: datetime
     description: >
-      Timestamp
+      The date and time of the installation.
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/7295
     data_reviews:
-      - TODO
+      - https://github.com/mozilla-mobile/fenix/pull/8074#issuecomment-586512202
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-09-01"
