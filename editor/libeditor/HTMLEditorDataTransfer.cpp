@@ -241,7 +241,7 @@ nsresult HTMLEditor::DoInsertHTMLWithContext(
   // we need to recalculate various things based on potentially new offsets
   // this is work to be completed at a later date (probably by jfrancis)
 
-  AutoTArray<OwningNonNull<nsINode>, 64> nodeList;
+  AutoTArray<OwningNonNull<nsIContent>, 64> arrayOfTopMostChildContents;
   // If we have stream start point information, lets use it and end point.
   // Otherwise, we should make a range all over the document fragment.
   EditorRawDOMPoint streamStartPoint =
@@ -253,9 +253,10 @@ nsresult HTMLEditor::DoInsertHTMLWithContext(
                         : EditorRawDOMPoint::AtEndOf(*fragmentAsNode);
   HTMLEditor::CollectTopMostChildNodesCompletelyInRange(
       EditorRawDOMPoint(streamStartParent, streamStartOffset),
-      EditorRawDOMPoint(streamEndParent, streamEndOffset), nodeList);
+      EditorRawDOMPoint(streamEndParent, streamEndOffset),
+      arrayOfTopMostChildContents);
 
-  if (nodeList.IsEmpty()) {
+  if (arrayOfTopMostChildContents.IsEmpty()) {
     // We aren't inserting anything, but if aDoDeleteSelection is set, we do
     // want to delete everything.
     // XXX What will this do? We've already called DeleteSelectionAsSubAtion()
@@ -283,7 +284,7 @@ nsresult HTMLEditor::DoInsertHTMLWithContext(
     // but if not we want to delete _contents_ of cells and replace
     // with non-table elements.  Use cellSelectionMode bool to
     // indicate results.
-    if (!HTMLEditUtils::IsTableElement(nodeList[0])) {
+    if (!HTMLEditUtils::IsTableElement(arrayOfTopMostChildContents[0])) {
       cellSelectionMode = false;
     }
   }
@@ -361,8 +362,9 @@ nsresult HTMLEditor::DoInsertHTMLWithContext(
   }
 
   // Adjust position based on the first node we are going to insert.
-  EditorDOMPoint pointToInsert = GetBetterInsertionPointFor(
-      nodeList[0], EditorBase::GetStartPoint(*SelectionRefPtr()));
+  EditorDOMPoint pointToInsert =
+      GetBetterInsertionPointFor(arrayOfTopMostChildContents[0],
+                                 EditorBase::GetStartPoint(*SelectionRefPtr()));
   if (NS_WARN_IF(!pointToInsert.IsSet())) {
     return NS_ERROR_FAILURE;
   }
@@ -397,8 +399,9 @@ nsresult HTMLEditor::DoInsertHTMLWithContext(
   }
 
   {  // Block only for AutoHTMLFragmentBoundariesFixer to hide it from the
-     // following code. Note that it may modify nodeList.
-    AutoHTMLFragmentBoundariesFixer fixPiecesOfTablesAndLists(nodeList);
+     // following code. Note that it may modify arrayOfTopMostChildContents.
+    AutoHTMLFragmentBoundariesFixer fixPiecesOfTablesAndLists(
+        arrayOfTopMostChildContents);
   }
 
   MOZ_ASSERT(pointToInsert.GetContainer()->GetChildAt_Deprecated(
@@ -410,22 +413,23 @@ nsresult HTMLEditor::DoInsertHTMLWithContext(
           ? pointToInsert.GetContainer()
           : GetBlockNodeParent(pointToInsert.GetContainer());
   nsCOMPtr<nsIContent> lastInsertedContent;
-  nsCOMPtr<nsINode> insertedContextParent;
-  for (OwningNonNull<nsINode>& curNode : nodeList) {
-    if (NS_WARN_IF(curNode == fragmentAsNode) ||
-        NS_WARN_IF(curNode->IsHTMLElement(nsGkAtoms::body))) {
+  nsCOMPtr<nsIContent> insertedContextParentContent;
+  for (OwningNonNull<nsIContent>& content : arrayOfTopMostChildContents) {
+    if (NS_WARN_IF(content == fragmentAsNode) ||
+        NS_WARN_IF(content->IsHTMLElement(nsGkAtoms::body))) {
       return NS_ERROR_FAILURE;
     }
 
-    if (insertedContextParent) {
+    if (insertedContextParentContent) {
       // If we had to insert something higher up in the paste hierarchy,
       // we want to skip any further paste nodes that descend from that.
       // Else we will paste twice.
       // XXX This check may be really expensive.  Cannot we check whether
       //     the node's `ownerDocument` is the `fragmentAsNode` or not?
-      // XXX If curNode was moved to outside of insertedContextParent by
-      //     mutation event listeners, we will anyway duplicate it.
-      if (EditorUtils::IsDescendantOf(*curNode, *insertedContextParent)) {
+      // XXX If content was moved to outside of insertedContextParentContent
+      //     by mutation event listeners, we will anyway duplicate it.
+      if (EditorUtils::IsDescendantOf(*content,
+                                      *insertedContextParentContent)) {
         continue;
       }
     }
@@ -434,13 +438,13 @@ nsresult HTMLEditor::DoInsertHTMLWithContext(
     // a `<table>` or `<tr>` element, insert only the appropriate children
     // instead.
     bool inserted = false;
-    if (HTMLEditUtils::IsTableRow(curNode) &&
+    if (HTMLEditUtils::IsTableRow(content) &&
         HTMLEditUtils::IsTableRow(pointToInsert.GetContainer()) &&
-        (HTMLEditUtils::IsTable(curNode) ||
+        (HTMLEditUtils::IsTable(content) ||
          HTMLEditUtils::IsTable(pointToInsert.GetContainer()))) {
       // Move children of current node to the insertion point.
-      for (nsCOMPtr<nsIContent> firstChild = curNode->GetFirstChild();
-           firstChild; firstChild = curNode->GetFirstChild()) {
+      for (nsCOMPtr<nsIContent> firstChild = content->GetFirstChild();
+           firstChild; firstChild = content->GetFirstChild()) {
         EditorDOMPoint insertedPoint =
             InsertNodeIntoProperAncestorWithTransaction(
                 *firstChild, pointToInsert,
@@ -459,11 +463,11 @@ nsresult HTMLEditor::DoInsertHTMLWithContext(
     // If a list element on the clipboard, and pasting it into a list or
     // list item element, insert the appropriate children instead.  I.e.,
     // merge the list elements instead of pasting as a sublist.
-    else if (HTMLEditUtils::IsList(curNode) &&
+    else if (HTMLEditUtils::IsList(content) &&
              (HTMLEditUtils::IsList(pointToInsert.GetContainer()) ||
               HTMLEditUtils::IsListItem(pointToInsert.GetContainer()))) {
-      for (nsCOMPtr<nsIContent> firstChild = curNode->GetFirstChild();
-           firstChild; firstChild = curNode->GetFirstChild()) {
+      for (nsCOMPtr<nsIContent> firstChild = content->GetFirstChild();
+           firstChild; firstChild = content->GetFirstChild()) {
         if (HTMLEditUtils::IsListItem(firstChild) ||
             HTMLEditUtils::IsList(firstChild)) {
           // If we're pasting into empty list item, we should remove it
@@ -506,7 +510,7 @@ nsresult HTMLEditor::DoInsertHTMLWithContext(
         else {
           AutoEditorDOMPointChildInvalidator lockOffset(pointToInsert);
           ErrorResult error;
-          curNode->RemoveChild(*firstChild, error);
+          content->RemoveChild(*firstChild, error);
           if (NS_WARN_IF(error.Failed())) {
             error.SuppressException();
           }
@@ -516,10 +520,10 @@ nsresult HTMLEditor::DoInsertHTMLWithContext(
     // If pasting into a `<pre>` element and current node is a `<pre>` element,
     // move only its children.
     else if (parentBlock && HTMLEditUtils::IsPre(parentBlock) &&
-             HTMLEditUtils::IsPre(curNode)) {
+             HTMLEditUtils::IsPre(content)) {
       // Check for pre's going into pre's.
-      for (nsCOMPtr<nsIContent> firstChild = curNode->GetFirstChild();
-           firstChild; firstChild = curNode->GetFirstChild()) {
+      for (nsCOMPtr<nsIContent> firstChild = content->GetFirstChild();
+           firstChild; firstChild = content->GetFirstChild()) {
         EditorDOMPoint insertedPoint =
             InsertNodeIntoProperAncestorWithTransaction(
                 *firstChild, pointToInsert,
@@ -545,28 +549,28 @@ nsresult HTMLEditor::DoInsertHTMLWithContext(
     if (!inserted || NS_FAILED(rv)) {
       EditorDOMPoint insertedPoint =
           InsertNodeIntoProperAncestorWithTransaction(
-              MOZ_KnownLive(*curNode->AsContent()), pointToInsert,
-              SplitAtEdges::eDoNotCreateEmptyContainer);
+              content, pointToInsert, SplitAtEdges::eDoNotCreateEmptyContainer);
       if (insertedPoint.IsSet()) {
-        lastInsertedContent = curNode->AsContent();
+        lastInsertedContent = content;
         pointToInsert = insertedPoint;
       }
 
       // Assume failure means no legal parent in the document hierarchy,
-      // try again with the parent of curNode in the paste hierarchy.
-      for (nsCOMPtr<nsIContent> content =
-               curNode->IsContent() ? curNode->AsContent() : nullptr;
-           content && !insertedPoint.IsSet(); content = content->GetParent()) {
-        if (NS_WARN_IF(!content->GetParent()) ||
-            NS_WARN_IF(content->GetParent()->IsHTMLElement(nsGkAtoms::body))) {
+      // try again with the parent of content in the paste hierarchy.
+      for (nsCOMPtr<nsIContent> parentContent = content;
+           parentContent && !insertedPoint.IsSet();
+           parentContent = parentContent->GetParent()) {
+        if (NS_WARN_IF(!parentContent->GetParent()) ||
+            NS_WARN_IF(
+                parentContent->GetParent()->IsHTMLElement(nsGkAtoms::body))) {
           continue;
         }
-        nsCOMPtr<nsINode> oldParent = content->GetParentNode();
+        OwningNonNull<nsIContent> oldParentContent(*parentContent->GetParent());
         insertedPoint = InsertNodeIntoProperAncestorWithTransaction(
-            MOZ_KnownLive(*content->GetParent()), pointToInsert,
+            oldParentContent, pointToInsert,
             SplitAtEdges::eDoNotCreateEmptyContainer);
         if (insertedPoint.IsSet()) {
-          insertedContextParent = oldParent;
+          insertedContextParentContent = oldParentContent;
           pointToInsert = insertedPoint;
         }
       }
@@ -587,39 +591,47 @@ nsresult HTMLEditor::DoInsertHTMLWithContext(
   EditorDOMPoint pointToPutCaret;
 
   // but don't cross tables
-  nsINode* containerNode = nullptr;
+  nsIContent* containerContent = nullptr;
   if (!HTMLEditUtils::IsTable(lastInsertedContent)) {
-    containerNode = GetLastEditableLeaf(*lastInsertedContent);
-    Element* mostAncestorTableElement = nullptr;
-    for (nsINode* parentNode = containerNode;
-         parentNode && parentNode != lastInsertedContent;
-         parentNode = parentNode->GetParentNode()) {
-      if (HTMLEditUtils::IsTable(parentNode)) {
-        mostAncestorTableElement = parentNode->AsElement();
+    containerContent = GetLastEditableLeaf(*lastInsertedContent);
+    if (containerContent) {
+      Element* mostAncestorTableRelatedElement = nullptr;
+      for (Element* maybeTableRelatedElement =
+               containerContent->IsElement()
+                   ? containerContent->AsElement()
+                   : containerContent->GetParentElement();
+           maybeTableRelatedElement &&
+           maybeTableRelatedElement != lastInsertedContent;
+           maybeTableRelatedElement =
+               maybeTableRelatedElement->GetParentElement()) {
+        if (HTMLEditUtils::IsTable(maybeTableRelatedElement)) {
+          mostAncestorTableRelatedElement = maybeTableRelatedElement;
+        }
       }
-    }
-    // If we're in table elements, we should put caret into the most ancestor
-    // table element.
-    if (mostAncestorTableElement) {
-      containerNode = mostAncestorTableElement;
+      // If we're in table elements, we should put caret into the most ancestor
+      // table element.
+      if (mostAncestorTableRelatedElement) {
+        containerContent = mostAncestorTableRelatedElement;
+      }
     }
   }
   // If we are not in table elements, we should put caret in the last inserted
   // node.
-  if (!containerNode) {
-    containerNode = lastInsertedContent;
+  if (!containerContent) {
+    containerContent = lastInsertedContent;
   }
 
   // If the container is a text node or a container element except `<table>`
   // element, put caret a end of it.
-  if (EditorBase::IsTextNode(containerNode) ||
-      (IsContainer(containerNode) && !HTMLEditUtils::IsTable(containerNode))) {
-    pointToPutCaret.SetToEndOf(containerNode);
+  if (EditorBase::IsTextNode(containerContent) ||
+      (IsContainer(containerContent) &&
+       !HTMLEditUtils::IsTable(containerContent))) {
+    pointToPutCaret.SetToEndOf(containerContent);
   }
   // Otherwise, i.e., it's an atomic element, `<table>` element or data node,
   // put caret after it.
   else {
-    pointToPutCaret.Set(containerNode);
+    pointToPutCaret.Set(containerContent);
     DebugOnly<bool> advanced = pointToPutCaret.AdvanceOffset();
     NS_WARNING_ASSERTION(advanced, "Failed to advance offset from found node");
   }
@@ -2696,7 +2708,7 @@ nsresult HTMLEditor::ParseFragment(const nsAString& aFragStr,
 // static
 void HTMLEditor::CollectTopMostChildNodesCompletelyInRange(
     const EditorRawDOMPoint& aStartPoint, const EditorRawDOMPoint& aEndPoint,
-    nsTArray<OwningNonNull<nsINode>>& aOutArrayOfNodes) {
+    nsTArray<OwningNonNull<nsIContent>>& aOutArrayOfContents) {
   MOZ_ASSERT(aStartPoint.IsSetAndValid());
   MOZ_ASSERT(aEndPoint.IsSetAndValid());
 
@@ -2710,7 +2722,8 @@ void HTMLEditor::CollectTopMostChildNodesCompletelyInRange(
   if (NS_WARN_IF(NS_FAILED(iter.Init(*range)))) {
     return;
   }
-  iter.AppendAllNodesToArray(aOutArrayOfNodes);
+
+  iter.AppendAllNodesToArray(aOutArrayOfContents);
 }
 
 /******************************************************************************
@@ -2718,37 +2731,38 @@ void HTMLEditor::CollectTopMostChildNodesCompletelyInRange(
  ******************************************************************************/
 
 HTMLEditor::AutoHTMLFragmentBoundariesFixer::AutoHTMLFragmentBoundariesFixer(
-    nsTArray<OwningNonNull<nsINode>>& aArrayOfTopMostChildNodes) {
+    nsTArray<OwningNonNull<nsIContent>>& aArrayOfTopMostChildContents) {
   EnsureBeginsOrEndsWithValidContent(StartOrEnd::start,
-                                     aArrayOfTopMostChildNodes);
+                                     aArrayOfTopMostChildContents);
   EnsureBeginsOrEndsWithValidContent(StartOrEnd::end,
-                                     aArrayOfTopMostChildNodes);
+                                     aArrayOfTopMostChildContents);
 }
 
 void HTMLEditor::AutoHTMLFragmentBoundariesFixer::
     CollectListAndTableRelatedElementsAt(
-        nsINode& aNode,
+        nsIContent& aContent,
         nsTArray<OwningNonNull<Element>>& aOutArrayOfListAndTableElements)
         const {
-  for (nsIContent* content = nsIContent::FromNode(&aNode); content;
-       content = content->GetParentElement()) {
-    if (HTMLEditUtils::IsList(content) || HTMLEditUtils::IsTable(content)) {
-      aOutArrayOfListAndTableElements.AppendElement(*content->AsElement());
+  for (Element* element = aContent.IsElement() ? aContent.AsElement()
+                                               : aContent.GetParentElement();
+       element; element = element->GetParentElement()) {
+    if (HTMLEditUtils::IsList(element) || HTMLEditUtils::IsTable(element)) {
+      aOutArrayOfListAndTableElements.AppendElement(*element);
     }
   }
 }
 
 Element*
 HTMLEditor::AutoHTMLFragmentBoundariesFixer::GetMostAncestorListOrTableElement(
-    const nsTArray<OwningNonNull<nsINode>>& aArrayOfTopMostChildNodes,
+    const nsTArray<OwningNonNull<nsIContent>>& aArrayOfTopMostChildContents,
     const nsTArray<OwningNonNull<Element>>& aArrayOfListAndTableRelatedElements)
     const {
   Element* lastFoundAncestorListOrTableElement = nullptr;
-  for (auto& node : aArrayOfTopMostChildNodes) {
-    if (HTMLEditUtils::IsTableElement(node) &&
-        !node->IsHTMLElement(nsGkAtoms::table)) {
+  for (auto& content : aArrayOfTopMostChildContents) {
+    if (HTMLEditUtils::IsTableElement(content) &&
+        !content->IsHTMLElement(nsGkAtoms::table)) {
       Element* tableElement = nullptr;
-      for (Element* maybeTableElement = node->GetParentElement();
+      for (Element* maybeTableElement = content->GetParentElement();
            maybeTableElement;
            maybeTableElement = maybeTableElement->GetParentElement()) {
         if (maybeTableElement->IsHTMLElement(nsGkAtoms::table)) {
@@ -2779,11 +2793,12 @@ HTMLEditor::AutoHTMLFragmentBoundariesFixer::GetMostAncestorListOrTableElement(
       continue;
     }
 
-    if (!HTMLEditUtils::IsListItem(node)) {
+    if (!HTMLEditUtils::IsListItem(content)) {
       continue;
     }
     Element* listElement = nullptr;
-    for (Element* maybeListElement = node->GetParentElement(); maybeListElement;
+    for (Element* maybeListElement = content->GetParentElement();
+         maybeListElement;
          maybeListElement = maybeListElement->GetParentElement()) {
       if (HTMLEditUtils::IsList(maybeListElement)) {
         listElement = maybeListElement;
@@ -2819,18 +2834,18 @@ HTMLEditor::AutoHTMLFragmentBoundariesFixer::GetMostAncestorListOrTableElement(
 
 Element*
 HTMLEditor::AutoHTMLFragmentBoundariesFixer::FindReplaceableTableElement(
-    Element& aTableElement, nsINode& aNodeMaybeInTableElement) const {
+    Element& aTableElement, nsIContent& aContentMaybeInTableElement) const {
   MOZ_ASSERT(aTableElement.IsHTMLElement(nsGkAtoms::table));
   // Perhaps, this is designed for climbing up the DOM tree from
-  // aNodeMaybeInTableElement to aTableElement and making sure that
-  // aNodeMaybeInTableElement itself or its ancestor is a `<td>`, `<th>`,
+  // aContentMaybeInTableElement to aTableElement and making sure that
+  // aContentMaybeInTableElement itself or its ancestor is a `<td>`, `<th>`,
   // `<tr>`, `<thead>`, `<tbody>`, `<tfoot>` or `<caption>`.
   // But this looks really buggy because this loop may skip aTableElement
   // as the following NS_ASSERTION.  We should write automated tests and
   // check right behavior.
-  for (Element* element = aNodeMaybeInTableElement.IsElement()
-                              ? aNodeMaybeInTableElement.AsElement()
-                              : aNodeMaybeInTableElement.GetParentElement();
+  for (Element* element = aContentMaybeInTableElement.IsElement()
+                              ? aContentMaybeInTableElement.AsElement()
+                              : aContentMaybeInTableElement.GetParentElement();
        element; element = element->GetParentElement()) {
     if (!HTMLEditUtils::IsTableElement(element) ||
         element->IsHTMLElement(nsGkAtoms::table)) {
@@ -2860,17 +2875,17 @@ HTMLEditor::AutoHTMLFragmentBoundariesFixer::FindReplaceableTableElement(
 }
 
 bool HTMLEditor::AutoHTMLFragmentBoundariesFixer::IsReplaceableListElement(
-    Element& aListElement, nsINode& aNodeMaybeInListElement) const {
+    Element& aListElement, nsIContent& aContentMaybeInListElement) const {
   MOZ_ASSERT(HTMLEditUtils::IsList(&aListElement));
   // Perhaps, this is designed for climbing up the DOM tree from
-  // aNodeMaybeInListElement to aListElement and making sure that
-  // aNodeMaybeInListElement itself or its ancestor is an list item.
+  // aContentMaybeInListElement to aListElement and making sure that
+  // aContentMaybeInListElement itself or its ancestor is an list item.
   // But this looks really buggy because this loop may skip aListElement
   // as the following NS_ASSERTION.  We should write automated tests and
   // check right behavior.
-  for (Element* element = aNodeMaybeInListElement.IsElement()
-                              ? aNodeMaybeInListElement.AsElement()
-                              : aNodeMaybeInListElement.GetParentElement();
+  for (Element* element = aContentMaybeInListElement.IsElement()
+                              ? aContentMaybeInListElement.AsElement()
+                              : aContentMaybeInListElement.GetParentElement();
        element; element = element->GetParentElement()) {
     if (!HTMLEditUtils::IsListItem(element)) {
       // XXX Perhaps, the original developer of this method assumed that
@@ -2899,18 +2914,19 @@ bool HTMLEditor::AutoHTMLFragmentBoundariesFixer::IsReplaceableListElement(
 }
 
 void HTMLEditor::AutoHTMLFragmentBoundariesFixer::
-    EnsureBeginsOrEndsWithValidContent(
-        StartOrEnd aStartOrEnd,
-        nsTArray<OwningNonNull<nsINode>>& aArrayOfTopMostChildNodes) const {
-  MOZ_ASSERT(!aArrayOfTopMostChildNodes.IsEmpty());
+    EnsureBeginsOrEndsWithValidContent(StartOrEnd aStartOrEnd,
+                                       nsTArray<OwningNonNull<nsIContent>>&
+                                           aArrayOfTopMostChildContents) const {
+  MOZ_ASSERT(!aArrayOfTopMostChildContents.IsEmpty());
 
   // Collect list elements and table related elements at first or last node
-  // in aArrayOfTopMostChildNodes.
+  // in aArrayOfTopMostChildContents.
   AutoTArray<OwningNonNull<Element>, 4>
       arrayOfListAndTableRelatedElementsAtEdge;
   CollectListAndTableRelatedElementsAt(
-      aStartOrEnd == StartOrEnd::end ? aArrayOfTopMostChildNodes.LastElement()
-                                     : aArrayOfTopMostChildNodes[0],
+      aStartOrEnd == StartOrEnd::end
+          ? aArrayOfTopMostChildContents.LastElement()
+          : aArrayOfTopMostChildContents[0],
       arrayOfListAndTableRelatedElementsAtEdge);
   if (arrayOfListAndTableRelatedElementsAtEdge.IsEmpty()) {
     return;
@@ -2918,17 +2934,17 @@ void HTMLEditor::AutoHTMLFragmentBoundariesFixer::
 
   // Get most ancestor list or `<table>` element in
   // arrayOfListAndTableRelatedElementsAtEdge which contains earlier
-  // node in aArrayOfTopMostChildNodes as far as possible.
+  // node in aArrayOfTopMostChildContents as far as possible.
   // XXX With arrayOfListAndTableRelatedElementsAtEdge, this returns a
   //     list or `<table>` element which contains first or last node of
-  //     aArrayOfTopMostChildNodes.  However, this seems slow when
+  //     aArrayOfTopMostChildContents.  However, this seems slow when
   //     aStartOrEnd is StartOrEnd::end and only the last node is in
   //     different list or `<table>`.  But I'm not sure whether it's
   //     possible case or not.  We need to add tests to
   //     test_content_iterator_subtree.html for checking how
   //     SubtreeContentIterator works.
   Element* listOrTableElement = GetMostAncestorListOrTableElement(
-      aArrayOfTopMostChildNodes, arrayOfListAndTableRelatedElementsAtEdge);
+      aArrayOfTopMostChildContents, arrayOfListAndTableRelatedElementsAtEdge);
   if (!listOrTableElement) {
     return;
   }
@@ -2937,58 +2953,60 @@ void HTMLEditor::AutoHTMLFragmentBoundariesFixer::
   // insertion to deal with table elements right away, so that it doesn't
   // orphan some table or list contents outside the table or list.
 
-  OwningNonNull<nsINode>& firstOrLastChildNode =
-      aStartOrEnd == StartOrEnd::end ? aArrayOfTopMostChildNodes.LastElement()
-                                     : aArrayOfTopMostChildNodes[0];
+  OwningNonNull<nsIContent>& firstOrLastChildContent =
+      aStartOrEnd == StartOrEnd::end
+          ? aArrayOfTopMostChildContents.LastElement()
+          : aArrayOfTopMostChildContents[0];
 
   // Find substructure of list or table that must be included in paste.
   Element* replaceElement;
   if (HTMLEditUtils::IsList(listOrTableElement)) {
-    if (!IsReplaceableListElement(*listOrTableElement, firstOrLastChildNode)) {
+    if (!IsReplaceableListElement(*listOrTableElement,
+                                  firstOrLastChildContent)) {
       return;
     }
     replaceElement = listOrTableElement;
   } else {
     MOZ_ASSERT(listOrTableElement->IsHTMLElement(nsGkAtoms::table));
-    replaceElement =
-        FindReplaceableTableElement(*listOrTableElement, firstOrLastChildNode);
+    replaceElement = FindReplaceableTableElement(*listOrTableElement,
+                                                 firstOrLastChildContent);
     if (!replaceElement) {
       return;
     }
   }
 
   // If we can replace the given list element or found a table related element
-  // in the `<table>` element, insert it into aArrayOfTopMostChildNodes which
+  // in the `<table>` element, insert it into aArrayOfTopMostChildContents which
   // is tompost children to be inserted instead of descendants of them in
-  // aArrayOfTopMostChildNodes.
-  for (size_t i = 0; i < aArrayOfTopMostChildNodes.Length();) {
-    OwningNonNull<nsINode>& node = aArrayOfTopMostChildNodes[i];
-    if (node == replaceElement) {
-      // If the element is n aArrayOfTopMostChildNodes, its descendants must
+  // aArrayOfTopMostChildContents.
+  for (size_t i = 0; i < aArrayOfTopMostChildContents.Length();) {
+    OwningNonNull<nsIContent>& content = aArrayOfTopMostChildContents[i];
+    if (content == replaceElement) {
+      // If the element is n aArrayOfTopMostChildContents, its descendants must
       // not be in the array.  Therefore, we don't need to optimize this case.
       // XXX Perhaps, we can break this loop right now.
-      aArrayOfTopMostChildNodes.RemoveElementAt(i);
+      aArrayOfTopMostChildContents.RemoveElementAt(i);
       continue;
     }
-    if (!EditorUtils::IsDescendantOf(node, *replaceElement)) {
+    if (!EditorUtils::IsDescendantOf(content, *replaceElement)) {
       i++;
       continue;
     }
     // For saving number of calls of EditorUtils::IsDescendantOf(), we should
     // remove its siblings in the array.
-    nsIContent* parent = node->GetParent();
-    aArrayOfTopMostChildNodes.RemoveElementAt(i);
-    while (i < aArrayOfTopMostChildNodes.Length() &&
-           aArrayOfTopMostChildNodes[i]->GetParent() == parent) {
-      aArrayOfTopMostChildNodes.RemoveElementAt(i);
+    nsIContent* parent = content->GetParent();
+    aArrayOfTopMostChildContents.RemoveElementAt(i);
+    while (i < aArrayOfTopMostChildContents.Length() &&
+           aArrayOfTopMostChildContents[i]->GetParent() == parent) {
+      aArrayOfTopMostChildContents.RemoveElementAt(i);
     }
   }
 
   // Now replace the removed nodes with the structural parent
   if (aStartOrEnd == StartOrEnd::end) {
-    aArrayOfTopMostChildNodes.AppendElement(*replaceElement);
+    aArrayOfTopMostChildContents.AppendElement(*replaceElement);
   } else {
-    aArrayOfTopMostChildNodes.InsertElementAt(0, *replaceElement);
+    aArrayOfTopMostChildContents.InsertElementAt(0, *replaceElement);
   }
 }
 

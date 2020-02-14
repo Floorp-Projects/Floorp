@@ -106,14 +106,6 @@ void DOMIterator::AppendAllNodesToArray(
   }
 }
 
-template <>
-void DOMIterator::AppendAllNodesToArray(
-    nsTArray<OwningNonNull<nsINode>>& aArrayOfNodes) const {
-  for (; !mIter->IsDone(); mIter->Next()) {
-    aArrayOfNodes.AppendElement(*mIter->GetCurrentNode());
-  }
-}
-
 template <class NodeClass>
 void DOMIterator::AppendNodesToArray(
     BoolFunctor aFunctor, nsTArray<OwningNonNull<NodeClass>>& aArrayOfNodes,
