@@ -20,12 +20,7 @@ class CompositorVsyncDispatcher;
 class VsyncIdType {};
 typedef layers::BaseTransactionId<VsyncIdType> VsyncId;
 
-namespace layout {
-class PVsyncChild;
-}
-
 namespace gfx {
-class PVsyncBridgeParent;
 
 // Controls how and when to enable/disable vsync. Lives as long as the
 // gfxPlatform does on the parent process
@@ -96,24 +91,13 @@ class VsyncSource {
 
 }  // namespace gfx
 
-namespace recordreplay {
-namespace child {
-void NotifyVsyncObserver();
-}
-}  // namespace recordreplay
-
 struct VsyncEvent {
   VsyncId mId;
   TimeStamp mTime;
 
- private:
   VsyncEvent(const VsyncId& aId, const TimeStamp& aTime)
       : mId(aId), mTime(aTime) {}
   VsyncEvent() {}
-  friend class gfx::VsyncSource::Display;
-  friend class gfx::PVsyncBridgeParent;
-  friend class layout::PVsyncChild;
-  friend void recordreplay::child::NotifyVsyncObserver();
 };
 
 }  // namespace mozilla
