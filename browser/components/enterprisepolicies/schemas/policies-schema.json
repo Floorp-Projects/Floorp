@@ -950,6 +950,9 @@
         },
         "OfflineApps": {
           "type": "boolean"
+        },
+        "Locked": {
+          "type": "boolean"
         }
       }
     },
