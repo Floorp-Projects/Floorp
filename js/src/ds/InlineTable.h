@@ -18,8 +18,37 @@ namespace js {
 
 namespace detail {
 
+// The InlineTable below needs an abstract way of testing keys for
+// tombstone values, and to set a key in an entry to a tombstone.
+// This is provided by the KeyPolicy generic type argument, which
+// has a default implementation for pointers provided below.
+
+// A default implementation of a KeyPolicy for some types (only pointer
+// types for now).
+//
+// The `KeyPolicy` type parameter informs an InlineTable of how to
+// check for tombstone values and to set tombstone values within
+// the domain of key (entry).
+//
+// A `KeyPolicy` for some key type `K` must provide two static methods:
+//   static bool isTombstone(const K& key);
+//   static void setToTombstone(K& key);
+template <typename K>
+class DefaultKeyPolicy;
+
+template <typename T>
+class DefaultKeyPolicy<T*> {
+  DefaultKeyPolicy() = delete;
+  DefaultKeyPolicy(const T*&) = delete;
+
+ public:
+  static bool isTombstone(T* const& ptr) { return ptr == nullptr; }
+  static void setToTombstone(T*& ptr) { ptr = nullptr; }
+};
+
 template <typename InlineEntry, typename Entry, typename Table,
-          typename HashPolicy, typename AllocPolicy, size_t InlineEntries>
+          typename HashPolicy, typename AllocPolicy, typename KeyPolicy,
+          size_t InlineEntries>
 class InlineTable : private AllocPolicy {
  private:
   using TablePtr = typename Table::Ptr;
@@ -298,8 +327,8 @@ class InlineTable : private AllocPolicy {
     MOZ_ASSERT(p);
     if (p.isInlinePtr_) {
       MOZ_ASSERT(inlCount_ > 0);
-      MOZ_ASSERT(p.inlPtr_->key != nullptr);
-      p.inlPtr_->key = nullptr;
+      MOZ_ASSERT(!KeyPolicy::isTombstone(p.inlPtr_->key));
+      KeyPolicy::setToTombstone(p.inlPtr_->key);
       --inlCount_;
       return;
     }
@@ -341,7 +370,7 @@ class InlineTable : private AllocPolicy {
 
     bool assertInlineRangeInvariants() const {
       MOZ_ASSERT(uintptr_t(cur_) <= uintptr_t(end_));
-      MOZ_ASSERT_IF(cur_ != end_, cur_->key != nullptr);
+      MOZ_ASSERT_IF(cur_ != end_, !KeyPolicy::isTombstone(cur_->key));
       return true;
     }
 
@@ -352,7 +381,7 @@ class InlineTable : private AllocPolicy {
 
     void advancePastNulls(InlineEntry* begin) {
       InlineEntry* newCur = begin;
-      while (newCur < end_ && nullptr == newCur->key) {
+      while (newCur < end_ && KeyPolicy::isTombstone(newCur->key)) {
         ++newCur;
       }
       MOZ_ASSERT(uintptr_t(newCur) <= uintptr_t(end_));
@@ -403,7 +432,8 @@ class InlineTable : private AllocPolicy {
 // The API is very much like HashMap's.
 template <typename Key, typename Value, size_t InlineEntries,
           typename HashPolicy = DefaultHasher<Key>,
-          typename AllocPolicy = TempAllocPolicy>
+          typename AllocPolicy = TempAllocPolicy,
+          typename KeyPolicy = detail::DefaultKeyPolicy<Key>>
 class InlineMap {
   using Map = HashMap<Key, Value, HashPolicy, AllocPolicy>;
 
@@ -455,7 +485,7 @@ class InlineMap {
   };
 
   using Impl = detail::InlineTable<InlineEntry, Entry, Map, HashPolicy,
-                                   AllocPolicy, InlineEntries>;
+                                   AllocPolicy, KeyPolicy, InlineEntries>;
 
   Impl impl_;
 
@@ -519,7 +549,8 @@ class InlineMap {
 // The API is very much like HashMap's.
 template <typename T, size_t InlineEntries,
           typename HashPolicy = DefaultHasher<T>,
-          typename AllocPolicy = TempAllocPolicy>
+          typename AllocPolicy = TempAllocPolicy,
+          typename KeyPolicy = detail::DefaultKeyPolicy<T>>
 class InlineSet {
   using Set = HashSet<T, HashPolicy, AllocPolicy>;
 
@@ -559,7 +590,7 @@ class InlineSet {
   };
 
   using Impl = detail::InlineTable<InlineEntry, Entry, Set, HashPolicy,
-                                   AllocPolicy, InlineEntries>;
+                                   AllocPolicy, KeyPolicy, InlineEntries>;
 
   Impl impl_;
 
