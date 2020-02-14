@@ -665,7 +665,6 @@ void LoadShapeWrapperContents(MacroAssembler& masm, Register obj, Register dst,
 enum class MetaTwoByteKind : uint8_t {
   NativeTemplateObject,
   ScriptedTemplateObject,
-  ClassTemplateObject,
 };
 
 #ifdef JS_SIMULATOR
@@ -1022,9 +1021,9 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     buffer_.writeByte(uint32_t(kind));
   }
 
-  FieldOffset guardAnyClass(ObjOperandId obj, const JSClass* clasp) {
+  void guardAnyClass(ObjOperandId obj, const JSClass* clasp) {
     writeOpWithOperandId(CacheOp::GuardAnyClass, obj);
-    return addStubField(uintptr_t(clasp), StubField::Type::RawWord);
+    addStubField(uintptr_t(clasp), StubField::Type::RawWord);
   }
 
   void guardFunctionIsNative(ObjOperandId obj) {
@@ -1570,14 +1569,6 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     writeOp(CacheOp::MetaTwoByte);
     buffer_.writeByte(uint32_t(MetaTwoByteKind::ScriptedTemplateObject));
     reuseStubField(calleeOffset);
-    addStubField(uintptr_t(templateObject), StubField::Type::JSObject);
-  }
-
-  void metaClassTemplateObject(JSObject* templateObject,
-                               FieldOffset classOffset) {
-    writeOp(CacheOp::MetaTwoByte);
-    buffer_.writeByte(uint32_t(MetaTwoByteKind::ClassTemplateObject));
-    reuseStubField(classOffset);
     addStubField(uintptr_t(templateObject), StubField::Type::JSObject);
   }
 
@@ -2746,8 +2737,6 @@ class MOZ_RAII CallIRGenerator : public IRGenerator {
                                     bool* skipAttach);
   bool getTemplateObjectForNative(HandleFunction calleeFunc,
                                   MutableHandleObject result);
-  bool getTemplateObjectForClassHook(HandleObject calleeObj,
-                                     MutableHandleObject result);
 
   AttachDecision tryAttachArrayPush();
   AttachDecision tryAttachArrayJoin();

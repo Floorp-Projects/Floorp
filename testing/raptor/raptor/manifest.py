@@ -499,9 +499,10 @@ def get_raptor_test_list(args, oskey):
 
 
 def bool_from_str(boolean_string):
-    if boolean_string == 'true':
+    lower_boolean_str = boolean_string.lower()
+    if lower_boolean_str == 'true':
         return True
-    elif boolean_string == 'false':
+    elif lower_boolean_str == 'false':
         return False
     else:
         raise ValueError("Expected either 'true' or 'false'")

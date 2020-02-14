@@ -41,7 +41,8 @@ bool GCRuntime::registerWithFinalizationGroup(JSContext* cx,
 }
 
 void GCRuntime::markFinalizationGroupData(JSTracer* trc) {
-  // The finalization groups and holdings for all targets are marked as roots.
+  // The finalization groups and held values for all targets are marked as
+  // roots.
   for (GCZonesIter zone(this); !zone.done(); zone.next()) {
     auto& map = zone->finalizationRecordMap();
     for (Zone::FinalizationRecordMap::Enum e(map); !e.empty(); e.popFront()) {
@@ -62,14 +63,14 @@ static FinalizationRecordObject* UnwrapFinalizationRecord(JSObject* obj) {
 }
 
 void GCRuntime::sweepFinalizationGroups(Zone* zone) {
-  // Queue holdings for cleanup for any entries whose target is dying and remove
-  // them from the map. Sweep remaining unregister tokens.
+  // Queue finalization records for cleanup for any entries whose target is
+  // dying and remove them from the map. Sweep remaining unregister tokens.
 
   auto& map = zone->finalizationRecordMap();
   for (Zone::FinalizationRecordMap::Enum e(map); !e.empty(); e.popFront()) {
     auto& records = e.front().value();
     if (IsAboutToBeFinalized(&e.front().mutableKey())) {
-      // Queue holdings for targets that are dying.
+      // Queue finalization records for targets that are dying.
       for (JSObject* obj : records) {
         if (FinalizationRecordObject* record = UnwrapFinalizationRecord(obj)) {
           FinalizationGroupObject* group = record->group();

@@ -3108,12 +3108,34 @@ bool Selection::IsBlockingSelectionChangeEvents() const {
 }
 
 void Selection::DeleteFromDocument(ErrorResult& aRv) {
-  if (!mFrameSelection) return;  // nothing to do
-  RefPtr<nsFrameSelection> frameSelection = mFrameSelection;
-  nsresult rv = frameSelection->DeleteFromDocument();
-  if (NS_FAILED(rv)) {
-    aRv.Throw(rv);
+  if (mSelectionType != SelectionType::eNormal) {
+    return;  // Nothing to do.
   }
+
+  // If we're already collapsed, then we do nothing (bug 719503).
+  if (IsCollapsed()) {
+    return;
+  }
+
+  for (uint32_t rangeIdx = 0; rangeIdx < RangeCount(); ++rangeIdx) {
+    RefPtr<nsRange> range = GetRangeAt(rangeIdx);
+    range->DeleteContents(aRv);
+    if (aRv.Failed()) {
+      return;
+    }
+  }
+
+  // Collapse to the new location.
+  // If we deleted one character, then we move back one element.
+  // FIXME  We don't know how to do this past frame boundaries yet.
+  if (AnchorOffset() > 0) {
+    Collapse(GetAnchorNode(), AnchorOffset());
+  }
+#ifdef DEBUG
+  else {
+    printf("Don't know how to set selection back past frame boundary\n");
+  }
+#endif
 }
 
 void Selection::Modify(const nsAString& aAlter, const nsAString& aDirection,

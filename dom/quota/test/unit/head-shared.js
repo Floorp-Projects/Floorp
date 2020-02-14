@@ -27,6 +27,10 @@ function ok(cond, msg) {
   Assert.ok(!!cond, msg);
 }
 
+function todo(cond, msg) {
+  todo_check_true(cond);
+}
+
 function run_test() {
   runTest();
 }
@@ -590,6 +594,10 @@ function verifyStorage(packageDefinitionRelativePaths, key) {
 
         if (!expectedEntry.dir || !sharedEntry.dir) {
           throw new Error("A common entry must be a directory");
+        }
+
+        if (!expectedEntry.entries && !sharedEntry.entries) {
+          throw new Error("A common entry must not be a leaf");
         }
 
         if (sharedEntry.entries) {

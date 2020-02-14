@@ -107,7 +107,6 @@ namespace jit {
   _(NewArray)                  \
   _(NewArrayCopyOnWrite)       \
   _(NewIterator)               \
-  _(NewDerivedTypedObject)     \
   _(NewCallObject)             \
   _(CreateThisWithTemplate)    \
   _(Lambda)                    \
@@ -631,14 +630,6 @@ class RNewIterator final : public RInstruction {
 
  public:
   RINSTRUCTION_HEADER_NUM_OP_(NewIterator, 1)
-
-  MOZ_MUST_USE bool recover(JSContext* cx,
-                            SnapshotIterator& iter) const override;
-};
-
-class RNewDerivedTypedObject final : public RInstruction {
- public:
-  RINSTRUCTION_HEADER_NUM_OP_(NewDerivedTypedObject, 3)
 
   MOZ_MUST_USE bool recover(JSContext* cx,
                             SnapshotIterator& iter) const override;

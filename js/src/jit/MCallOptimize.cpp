@@ -166,10 +166,6 @@ static bool CanInlineCrossRealm(InlinableNative native) {
     case InlinableNative::IntrinsicTypedArrayLength:
     case InlinableNative::IntrinsicTypedArrayByteOffset:
     case InlinableNative::IntrinsicTypedArrayElementShift:
-    case InlinableNative::IntrinsicObjectIsTypedObject:
-    case InlinableNative::IntrinsicObjectIsTypeDescr:
-    case InlinableNative::IntrinsicTypeDescrIsSimpleType:
-    case InlinableNative::IntrinsicTypeDescrIsArrayType:
     case InlinableNative::IntrinsicArrayIteratorPrototypeOptimizable:
       MOZ_CRASH("Unexpected cross-realm intrinsic call");
 
@@ -560,19 +556,6 @@ IonBuilder::InliningResult IonBuilder::inlineNativeCall(CallInfo& callInfo,
     case InlinableNative::IntrinsicTypedArrayElementShift:
       return inlineTypedArrayElementShift(callInfo);
 
-    // TypedObject intrinsics.
-    case InlinableNative::IntrinsicObjectIsTypedObject:
-      return inlineHasClass(callInfo, &OutlineTransparentTypedObject::class_,
-                            &OutlineOpaqueTypedObject::class_,
-                            &InlineTransparentTypedObject::class_,
-                            &InlineOpaqueTypedObject::class_);
-    case InlinableNative::IntrinsicObjectIsTypeDescr:
-      return inlineObjectIsTypeDescr(callInfo);
-    case InlinableNative::IntrinsicTypeDescrIsSimpleType:
-      return inlineHasClass(callInfo, &ScalarTypeDescr::class_,
-                            &ReferenceTypeDescr::class_);
-    case InlinableNative::IntrinsicTypeDescrIsArrayType:
-      return inlineHasClass(callInfo, &ArrayTypeDescr::class_);
     case InlinableNative::Limit:
       break;
   }
@@ -644,30 +627,6 @@ IonBuilder::InliningResult IonBuilder::inlineNativeGetter(CallInfo& callInfo,
     MDefinition* result = convertToBoolean(maskedFlag);
     current->push(result);
     return InliningStatus_Inlined;
-  }
-
-  return InliningStatus_NotInlined;
-}
-
-IonBuilder::InliningResult IonBuilder::inlineNonFunctionCall(CallInfo& callInfo,
-                                                             JSObject* target) {
-  // Inline a call to a non-function object, invoking the object's call or
-  // construct hook.
-
-  // Don't inline if we're constructing and new.target != callee. This can
-  // happen with Reflect.construct or derived class constructors.
-  if (callInfo.constructing() && callInfo.getNewTarget() != callInfo.fun()) {
-    return InliningStatus_NotInlined;
-  }
-
-  Realm* targetRealm = JS::GetObjectRealmOrNull(target);
-  if (!targetRealm || targetRealm != script()->realm()) {
-    return InliningStatus_NotInlined;
-  }
-
-  if (callInfo.constructing() &&
-      target->constructHook() == TypedObject::construct) {
-    return inlineConstructTypedObject(callInfo, &target->as<TypeDescr>());
   }
 
   return InliningStatus_NotInlined;
@@ -3318,45 +3277,6 @@ IonBuilder::InliningResult IonBuilder::inlineTypedArrayElementShift(
   return InliningStatus_Inlined;
 }
 
-IonBuilder::InliningResult IonBuilder::inlineObjectIsTypeDescr(
-    CallInfo& callInfo) {
-  MOZ_ASSERT(!callInfo.constructing());
-  MOZ_ASSERT(callInfo.argc() == 1);
-
-  if (callInfo.getArg(0)->type() != MIRType::Object) {
-    return InliningStatus_NotInlined;
-  }
-  if (getInlineReturnType() != MIRType::Boolean) {
-    return InliningStatus_NotInlined;
-  }
-
-  // The test is elaborate: in-line only if there is exact
-  // information.
-
-  TemporaryTypeSet* types = callInfo.getArg(0)->resultTypeSet();
-  if (!types) {
-    return InliningStatus_NotInlined;
-  }
-
-  bool result = false;
-  switch (types->forAllClasses(constraints(), IsTypeDescrClass)) {
-    case TemporaryTypeSet::ForAllResult::ALL_FALSE:
-    case TemporaryTypeSet::ForAllResult::EMPTY:
-      result = false;
-      break;
-    case TemporaryTypeSet::ForAllResult::ALL_TRUE:
-      result = true;
-      break;
-    case TemporaryTypeSet::ForAllResult::MIXED:
-      return InliningStatus_NotInlined;
-  }
-
-  pushConstant(BooleanValue(result));
-
-  callInfo.setImplicitlyUsedUnchecked();
-  return InliningStatus_Inlined;
-}
-
 IonBuilder::InliningResult IonBuilder::inlineUnsafeSetReservedSlot(
     CallInfo& callInfo) {
   MOZ_ASSERT(!callInfo.constructing());
@@ -4075,39 +3995,6 @@ IonBuilder::InliningResult IonBuilder::inlineIsConstructing(
 
   bool constructing = inlineCallInfo_->constructing();
   pushConstant(BooleanValue(constructing));
-  return InliningStatus_Inlined;
-}
-
-IonBuilder::InliningResult IonBuilder::inlineConstructTypedObject(
-    CallInfo& callInfo, TypeDescr* descr) {
-  // Only inline default constructors for now.
-  if (callInfo.argc() != 0) {
-    return InliningStatus_NotInlined;
-  }
-
-  if (!InlineTypedObject::canAccommodateType(descr)) {
-    return InliningStatus_NotInlined;
-  }
-
-  JSObject* obj =
-      inspector->getTemplateObjectForClassHook(pc, descr->getClass());
-  if (!obj || !obj->is<InlineTypedObject>()) {
-    return InliningStatus_NotInlined;
-  }
-
-  InlineTypedObject* templateObject = &obj->as<InlineTypedObject>();
-  if (&templateObject->typeDescr() != descr) {
-    return InliningStatus_NotInlined;
-  }
-
-  callInfo.setImplicitlyUsedUnchecked();
-
-  MNewTypedObject* ins =
-      MNewTypedObject::New(alloc(), constraints(), templateObject,
-                           templateObject->group()->initialHeap(constraints()));
-  current->add(ins);
-  current->push(ins);
-
   return InliningStatus_Inlined;
 }
 

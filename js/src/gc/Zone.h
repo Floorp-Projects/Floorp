@@ -324,7 +324,7 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
 
   // A map from finalization group targets to a list of finalization records
   // representing groups that the target is registered with and their associated
-  // holdings.
+  // held values.
   using FinalizationRecordMap =
       GCHashMap<js::HeapPtrObject, js::gc::FinalizationRecordVector,
                 js::MovableCellHasher<js::HeapPtrObject>, js::ZoneAllocPolicy>;

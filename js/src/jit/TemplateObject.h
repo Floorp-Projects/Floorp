@@ -41,7 +41,6 @@ class TemplateObject {
   inline bool isArgumentsObject() const;
   inline bool isTypedArrayObject() const;
   inline bool isRegExpObject() const;
-  inline bool isInlineTypedObject() const;
   inline bool isCallObject() const;
   inline bool isPlainObject() const;
 

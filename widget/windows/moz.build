@@ -93,6 +93,7 @@ SOURCES += [
     'MediaKeysEventSourceFactory.cpp',
     'nsBidiKeyboard.cpp',
     'nsFilePicker.cpp',
+    'nsSharePicker.cpp',
     'nsWidgetFactory.cpp',
     'WinCompositorWidget.cpp',
     'WindowsUIUtils.cpp',

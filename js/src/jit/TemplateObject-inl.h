@@ -36,10 +36,6 @@ inline bool TemplateObject::isRegExpObject() const {
   return obj_->is<RegExpObject>();
 }
 
-inline bool TemplateObject::isInlineTypedObject() const {
-  return obj_->is<InlineTypedObject>();
-}
-
 inline bool TemplateObject::isCallObject() const {
   return obj_->is<CallObject>();
 }

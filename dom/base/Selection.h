@@ -292,6 +292,8 @@ class Selection final : public nsSupportsWeakReference,
 
   /**
    * Deletes this selection from document the nodes belong to.
+   * Only if this has `SelectionType::eNormal`.
+   * TODO: mark as `MOZ_CAN_RUN_SCRIPT`.
    */
   void DeleteFromDocument(mozilla::ErrorResult& aRv);
 
@@ -410,10 +412,14 @@ class Selection final : public nsSupportsWeakReference,
    * @param offset      Where in given dom node to place the selection (the
    *                    offset into the given node)
    */
+  // TODO: mark as `MOZ_CAN_RUN_SCRIPT`
+  // (https://bugzilla.mozilla.org/show_bug.cgi?id=1615296).
   void Collapse(nsINode& aContainer, uint32_t aOffset, ErrorResult& aRv) {
     Collapse(RawRangeBoundary(&aContainer, aOffset), aRv);
   }
 
+  // TODO: this should be `MOZ_CAN_RUN_SCRIPT` instead
+  // (https://bugzilla.mozilla.org/show_bug.cgi?id=1615296).
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
   void Collapse(const RawRangeBoundary& aPoint, ErrorResult& aRv);
 
