@@ -762,8 +762,6 @@ class gfxPlatform : public mozilla::layers::MemoryPressureListener {
   gfxPlatform();
   virtual ~gfxPlatform();
 
-  virtual bool HasBattery() { return false; }
-
   virtual void InitAcceleration();
   virtual void InitWebRenderConfig();
   virtual void InitWebGPUConfig();
