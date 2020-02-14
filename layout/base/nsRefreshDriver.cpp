@@ -509,10 +509,9 @@ class VsyncRefreshDriverTimer : public RefreshDriverTimer {
     explicit RefreshDriverVsyncObserver(
         VsyncRefreshDriverTimer* aVsyncRefreshDriverTimer)
         : mVsyncRefreshDriverTimer(aVsyncRefreshDriverTimer),
-          mParentProcessRefreshTickLock("RefreshTickLock"),
-          mPendingParentProcessVsync(false),
+          mRefreshTickLock("RefreshTickLock"),
           mRecentVsync(TimeStamp::Now()),
-          mLastTick(TimeStamp::Now()),
+          mLastChildTick(TimeStamp::Now()),
           mVsyncRate(TimeDuration::Forever()),
           mProcessedVsync(true) {
       MOZ_ASSERT(NS_IsMainThread());
@@ -521,11 +520,14 @@ class VsyncRefreshDriverTimer : public RefreshDriverTimer {
     class ParentProcessVsyncNotifier final : public Runnable,
                                              public nsIRunnablePriority {
      public:
-      explicit ParentProcessVsyncNotifier(RefreshDriverVsyncObserver* aObserver)
+      ParentProcessVsyncNotifier(RefreshDriverVsyncObserver* aObserver,
+                                 VsyncId aId, TimeStamp aVsyncTimestamp)
           : Runnable(
                 "VsyncRefreshDriverTimer::RefreshDriverVsyncObserver::"
                 "ParentProcessVsyncNotifier"),
-            mObserver(aObserver) {}
+            mObserver(aObserver),
+            mId(aId),
+            mVsyncTimestamp(aVsyncTimestamp) {}
 
       NS_DECL_ISUPPORTS_INHERITED
 
@@ -533,7 +535,7 @@ class VsyncRefreshDriverTimer : public RefreshDriverTimer {
         MOZ_ASSERT(NS_IsMainThread());
         sHighPriorityEnabled = mozilla::BrowserTabsRemoteAutostart();
 
-        mObserver->NotifyParentProcessVsync();
+        mObserver->TickRefreshDriver(mId, mVsyncTimestamp);
         return NS_OK;
       }
 
@@ -547,21 +549,10 @@ class VsyncRefreshDriverTimer : public RefreshDriverTimer {
      private:
       ~ParentProcessVsyncNotifier() {}
       RefPtr<RefreshDriverVsyncObserver> mObserver;
+      VsyncId mId;
+      TimeStamp mVsyncTimestamp;
       static mozilla::Atomic<bool> sHighPriorityEnabled;
     };
-
-    void NotifyParentProcessVsync() {
-      MOZ_ASSERT(NS_IsMainThread());
-      MOZ_ASSERT(XRE_IsParentProcess());
-
-      VsyncEvent vsync;
-      {
-        MonitorAutoLock lock(mParentProcessRefreshTickLock);
-        vsync = mRecentParentProcessVsync;
-        mPendingParentProcessVsync = false;
-      }
-      NotifyVsync(vsync);
-    }
 
     bool NotifyVsync(const VsyncEvent& aVsync) override {
       // IMPORTANT: All paths through this method MUST hold a strong ref on
@@ -573,15 +564,17 @@ class VsyncRefreshDriverTimer : public RefreshDriverTimer {
         // This is so that we don't flood the refresh driver with vsync messages
         // if the main thread is blocked for long periods of time
         {  // scope lock
-          MonitorAutoLock lock(mParentProcessRefreshTickLock);
-          mRecentParentProcessVsync = aVsync;
-          if (mPendingParentProcessVsync) {
+          MonitorAutoLock lock(mRefreshTickLock);
+          mRecentVsync = aVsync.mTime;
+          mRecentVsyncId = aVsync.mId;
+          if (!mProcessedVsync) {
             return true;
           }
-          mPendingParentProcessVsync = true;
+          mProcessedVsync = false;
         }
+
         nsCOMPtr<nsIRunnable> vsyncEvent =
-            new ParentProcessVsyncNotifier(this);
+            new ParentProcessVsyncNotifier(this, aVsync.mId, aVsync.mTime);
         NS_DispatchToMainThread(vsyncEvent);
       } else {
         mRecentVsync = aVsync.mTime;
@@ -651,12 +644,14 @@ class VsyncRefreshDriverTimer : public RefreshDriverTimer {
     }
 
     void OnTimerStart() {
-      mLastTick = TimeStamp::Now();
+      if (!XRE_IsParentProcess()) {
+        mLastChildTick = TimeStamp::Now();
+      }
     }
 
     void NormalPriorityNotify() {
-      if (mLastProcessedTick.IsNull() ||
-          mRecentVsync > mLastProcessedTick) {
+      if (mLastProcessedTickInChildProcess.IsNull() ||
+          mRecentVsync > mLastProcessedTickInChildProcess) {
         // mBlockUntil is for high priority vsync notifications only.
         mBlockUntil = TimeStamp();
         TickRefreshDriver(mRecentVsyncId, mRecentVsync);
@@ -681,7 +676,7 @@ class VsyncRefreshDriverTimer : public RefreshDriverTimer {
         RecordJank(sample);
       } else if (mVsyncRate != TimeDuration::Forever()) {
         TimeDuration contentDelay =
-            (TimeStamp::Now() - mLastTick) - mVsyncRate;
+            (TimeStamp::Now() - mLastChildTick) - mVsyncRate;
         if (contentDelay.ToMilliseconds() < 0) {
           // Vsyncs are noisy and some can come at a rate quicker than
           // the reported hardware rate. In those cases, consider that we have 0
@@ -717,8 +712,14 @@ class VsyncRefreshDriverTimer : public RefreshDriverTimer {
       MOZ_ASSERT(NS_IsMainThread());
 
       RecordTelemetryProbes(aVsyncTimestamp);
-      mLastTick = TimeStamp::Now();
-      mLastProcessedTick = aVsyncTimestamp;
+      if (XRE_IsParentProcess()) {
+        MonitorAutoLock lock(mRefreshTickLock);
+        aVsyncTimestamp = mRecentVsync;
+        mProcessedVsync = true;
+      } else {
+        mLastChildTick = TimeStamp::Now();
+        mLastProcessedTickInChildProcess = aVsyncTimestamp;
+      }
 
       // On 32-bit Windows we sometimes get times where TimeStamp::Now() is not
       // monotonic because the underlying system apis produce non-monontonic
@@ -740,23 +741,21 @@ class VsyncRefreshDriverTimer : public RefreshDriverTimer {
         // Note: mVsyncRefreshDriverTimer might be null now.
       }
 
-      TimeDuration tickDuration = TimeStamp::Now() - mLastTick;
-      mBlockUntil = aVsyncTimestamp + tickDuration;
+      if (!XRE_IsParentProcess()) {
+        TimeDuration tickDuration = TimeStamp::Now() - mLastChildTick;
+        mBlockUntil = aVsyncTimestamp + tickDuration;
+      }
     }
 
     // VsyncRefreshDriverTimer holds this RefreshDriverVsyncObserver and it will
     // be always available before Shutdown(). We can just use the raw pointer
     // here.
     VsyncRefreshDriverTimer* mVsyncRefreshDriverTimer;
-
-    Monitor mParentProcessRefreshTickLock;
-    VsyncEvent mRecentParentProcessVsync;
-    bool mPendingParentProcessVsync;
-
+    Monitor mRefreshTickLock;
     TimeStamp mRecentVsync;
     VsyncId mRecentVsyncId;
-    TimeStamp mLastTick;
-    TimeStamp mLastProcessedTick;
+    TimeStamp mLastChildTick;
+    TimeStamp mLastProcessedTickInChildProcess;
     TimeStamp mBlockUntil;
     TimeDuration mVsyncRate;
     bool mProcessedVsync;
