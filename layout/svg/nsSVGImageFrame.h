@@ -50,14 +50,6 @@ class nsSVGImageFrame final : public mozilla::SVGGeometryFrame,
   friend nsIFrame* NS_NewSVGImageFrame(mozilla::PresShell* aPresShell,
                                        ComputedStyle* aStyle);
 
-  virtual bool CreateWebRenderCommands(
-      mozilla::wr::DisplayListBuilder& aBuilder,
-      mozilla::wr::IpcResourceUpdateQueue& aResources,
-      const mozilla::layers::StackingContextHelper& aSc,
-      mozilla::layers::RenderRootStateManager* aManager,
-      nsDisplayListBuilder* aDisplayListBuilder,
-      mozilla::nsDisplaySVGGeometry* aItem, bool aDryRun) override;
-
  protected:
   explicit nsSVGImageFrame(ComputedStyle* aStyle, nsPresContext* aPresContext)
       : SVGGeometryFrame(aStyle, aPresContext, kClassID),
