@@ -8952,7 +8952,6 @@ def GetLabelForErrorReporting(descriptor, idlObject, isConstructor):
 
 
 class CGSpecializedMethod(CGAbstractStaticMethod):
-
     """
     A class for generating the C++ code for a specialized method that the JIT
     can call with lower overhead.
