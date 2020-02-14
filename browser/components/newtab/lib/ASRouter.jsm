@@ -630,9 +630,6 @@ class _ASRouter {
           /%STARTPAGE_VERSION%/g,
           STARTPAGE_VERSION
         );
-        if (ASRouterPreferences.useReleaseSnippets) {
-          provider.url = provider.url.replace(/%CHANNEL%/g, "release");
-        }
         provider.url = Services.urlFormatter.formatURL(provider.url);
       }
       this.normalizeItemFrequency(provider);
