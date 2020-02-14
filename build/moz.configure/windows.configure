@@ -191,11 +191,11 @@ def valid_ucrt_sdk_dir(windows_sdk_dir, windows_sdk_dir_env):
             # Universal CRT SDK, chances are this is a start-shell-msvc*.bat
             # setup, where INCLUDE and LIB already contain the UCRT paths.
             ucrt_includes = [
-                p for p in os.environ.get('INCLUDE', '').split(os.pathsep)
+                p for p in os.environ.get('INCLUDE', '').split(';')
                 if os.path.basename(p).lower() == 'ucrt'
             ]
             ucrt_libs = [
-                p for p in os.environ.get('LIB', '').split(os.pathsep)
+                p for p in os.environ.get('LIB', '').split(';')
                 if os.path.basename(os.path.dirname(p)).lower() == 'ucrt'
             ]
             if ucrt_includes and ucrt_libs:
@@ -314,7 +314,7 @@ def include_path(vc_path, windows_sdk_dir, ucrt_sdk_dir, dia_sdk_dir):
     if dia_sdk_dir:
         includes.append(os.path.join(dia_sdk_dir, 'include'))
     # Set in the environment for old-configure
-    includes = os.pathsep.join(includes)
+    includes = ';'.join(includes)
     os.environ['INCLUDE'] = includes
     return includes
 
@@ -375,7 +375,7 @@ def lib_path_for(host_or_target):
         libs = []
         lib_env = os.environ.get('LIB')
         if lib_env and not is_host:
-            libs.extend(lib_env.split(os.pathsep))
+            libs.extend(lib_env.split(';'))
         libs.extend((
             os.path.join(vc_path, 'lib', sdk_target),
             atlmfc_dir,
@@ -393,7 +393,7 @@ def lib_path_for(host_or_target):
 @imports('os')
 def lib_path(libs):
     # Set in the environment for old-configure
-    libs = os.pathsep.join(libs)
+    libs = ';'.join(libs)
     os.environ['LIB'] = libs
     return libs
 
