@@ -720,9 +720,6 @@ class nsFrameSelection final {
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
   void EndBatchChanges(int16_t aReason = nsISelectionListener::NO_REASON);
 
-  /*unsafe*/
-  nsresult DeleteFromDocument();
-
   mozilla::PresShell* GetPresShell() const { return mPresShell; }
 
   void DisconnectFromPresShell();

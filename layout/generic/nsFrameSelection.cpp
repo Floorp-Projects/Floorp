@@ -2742,39 +2742,6 @@ void nsFrameSelection::SetAncestorLimiter(nsIContent* aLimiter) {
   }
 }
 
-nsresult nsFrameSelection::DeleteFromDocument() {
-  // If we're already collapsed, then we do nothing (bug 719503).
-  int8_t index = GetIndexFromSelectionType(SelectionType::eNormal);
-  if (!mDomSelections[index]) return NS_ERROR_NULL_POINTER;
-
-  if (mDomSelections[index]->IsCollapsed()) {
-    return NS_OK;
-  }
-
-  RefPtr<Selection> selection = mDomSelections[index];
-  for (uint32_t rangeIdx = 0; rangeIdx < selection->RangeCount(); ++rangeIdx) {
-    RefPtr<nsRange> range = selection->GetRangeAt(rangeIdx);
-    ErrorResult res;
-    range->DeleteContents(res);
-    if (res.Failed()) {
-      return res.StealNSResult();
-    }
-  }
-
-  // Collapse to the new location.
-  // If we deleted one character, then we move back one element.
-  // FIXME  We don't know how to do this past frame boundaries yet.
-  if (mDomSelections[index]->AnchorOffset() > 0)
-    mDomSelections[index]->Collapse(mDomSelections[index]->GetAnchorNode(),
-                                    mDomSelections[index]->AnchorOffset());
-#ifdef DEBUG
-  else
-    printf("Don't know how to set selection back past frame boundary\n");
-#endif
-
-  return NS_OK;
-}
-
 void nsFrameSelection::SetDelayedCaretData(WidgetMouseEvent* aMouseEvent) {
   if (aMouseEvent) {
     mDelayedMouseEventValid = true;
