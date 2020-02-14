@@ -3974,6 +3974,24 @@ class HTMLEditor final : public TextEditor,
 
    private:
     /**
+     * EnsureBeginsOrEndsWithValidContent() replaces some nodes starting from
+     * start or end with proper element node if it's necessary.
+     * If first or last node of aArrayOfTopMostChildNodes is in list and/or
+     * `<table>` element, looks for topmost list element or `<table>` element
+     * with `CollectListAndTableRelatedElementsAt()` and
+     * `GetMostAncestorListOrTableElement()`.  Then, checks whether
+     * some nodes are in aArrayOfTopMostChildNodes are the topmost list/table
+     * element or its descendant and if so, removes the nodes from
+     * aArrayOfTopMostChildNodes and inserts the list/table element instead.
+     * Then, aArrayOfTopMostChildNodes won't start/end with list-item nor
+     * table cells.
+     */
+    enum class StartOrEnd { start, end };
+    void EnsureBeginsOrEndsWithValidContent(
+        StartOrEnd aStartOrEnd,
+        nsTArray<OwningNonNull<nsINode>>& aArrayOfTopMostChildNodes) const;
+
+    /**
      * CollectListAndTableRelatedElementsAt() collects list elements and
      * table related elements from aNode (meaning aNode may be in the first of
      * the result) to the root element.
@@ -3984,28 +4002,21 @@ class HTMLEditor final : public TextEditor,
         const;
 
     /**
-     * TODO: Document what this does.
+     * GetMostAncestorListOrTableElement() returns a list or a `<table>`
+     * element which is in aArrayOfListAndTableElements and they are
+     * actually valid ancestor of at least one of aArrayOfNodes.
      */
-    Element* DiscoverPartialListsAndTables(
-        const nsTArray<OwningNonNull<nsINode>>& aArrayOfNodes,
-        const nsTArray<OwningNonNull<Element>>&
-            aArrayOfListAndTableRelatedElements) const;
-
-    /**
-     * TODO: Document what this does.
-     */
-    enum class StartOrEnd { start, end };
-    void ReplaceOrphanedStructure(
-        StartOrEnd aStartOrEnd, nsTArray<OwningNonNull<nsINode>>& aArrayOfNodes,
+    Element* GetMostAncestorListOrTableElement(
+        const nsTArray<OwningNonNull<nsINode>>& aArrayOfTopMostChildNodes,
         const nsTArray<OwningNonNull<Element>>&
             aArrayOfListAndTableRelatedElements) const;
 
     /**
      * FindReplaceableTableElement() is a helper method of
-     * ReplaceOrphanedStructure().  If aNodeMaybeInTableElement is a descendant
-     * of aTableElement, returns aNodeMaybeInTableElement or its nearest
-     * ancestor whose tag name is `<td>`, `<th>`, `<tr>`, `<thead>`, `<tfoot>`,
-     * `<tbody>` or `<caption>`.
+     * EnsureBeginsOrEndsWithValidContent().  If aNodeMaybeInTableElement is
+     * a descendant of aTableElement, returns aNodeMaybeInTableElement or its
+     * nearest ancestor whose tag name is `<td>`, `<th>`, `<tr>`, `<thead>`,
+     * `<tfoot>`, `<tbody>` or `<caption>`.
      *
      * @param aTableElement               Must be a `<table>` element.
      * @param aNodeMaybeInTableElement    A node which may be in aTableElement.
@@ -4015,8 +4026,8 @@ class HTMLEditor final : public TextEditor,
 
     /**
      * IsReplaceableListElement() is a helper method of
-     * ReplaceOrphanedStructure().  If aNodeMaybeInListElement is a descendant
-     * of aListElement, returns true.  Otherwise, false.
+     * EnsureBeginsOrEndsWithValidContent().  If aNodeMaybeInListElement is a
+     * descendant of aListElement, returns true.  Otherwise, false.
      *
      * @param aListElement                Must be a list element.
      * @param aNodeMaybeInListElement     A node which may be in aListElement.
