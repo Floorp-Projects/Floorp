@@ -2541,10 +2541,17 @@ impl TileCacheInstance {
                     frame_context.spatial_tree,
                 );
 
-                current_pic_clip_rect = map_local_to_surface
-                    .map(&current_pic_clip_rect)
-                    .expect("bug: unable to map")
-                    .inflate(surface.inflation_factor, surface.inflation_factor);
+                // Map the rect into the parent surface, and inflate if this surface requires
+                // it. If the rect can't be mapping (e.g. due to an invalid transform) then
+                // just bail out from the dependencies and cull this primitive.
+                current_pic_clip_rect = match map_local_to_surface.map(&current_pic_clip_rect) {
+                    Some(rect) => {
+                        rect.inflate(surface.inflation_factor, surface.inflation_factor)
+                    }
+                    None => {
+                        return false;
+                    }
+                };
 
                 current_spatial_node_index = surface.surface_spatial_node_index;
             }
