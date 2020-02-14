@@ -24,6 +24,7 @@
 .network-monitor .panel-container .tree-container .objectBox {
   white-space: normal;
   word-wrap: break-word;
+  unicode-bidi: plaintext;
 }
 
 .network-monitor .properties-view {
@@ -109,7 +110,7 @@
 }
 
 .network-monitor .tree-container .treeTable .tree-section,
-.network-monitor .properties-view .raw-headers-container  {
+.network-monitor .properties-view .raw-headers-container {
   width: 100%;
   background-color: var(--theme-toolbar-background);
 }
@@ -203,8 +204,7 @@
 }
 
 .network-monitor .tabpanel-summary-container .tracking-resource {
-  margin-inline-start: -2px;
-  margin-inline-end: 2px;
+  margin-inline: -2px 2px;
   vertical-align: text-bottom;
   fill: var(--theme-icon-color);
 }
@@ -233,7 +233,7 @@
   margin-block: 2px;
 }
 
-.theme-dark .network-monitor .edit-and-resend-button  {
+.theme-dark .network-monitor .edit-and-resend-button {
   background-color: var(--toolbarbutton-background);
   color: var(--theme-selection-color);
 }
@@ -427,8 +427,7 @@
 .network-monitor .timings-overview-item:not(:first-of-type)::before {
   content: "";
   display: inline-flex;
-  margin-inline-end: 10px;
-  margin-inline-start: 10px;
+  margin-inline: 10px;
   width: 1px;
   background: var(--theme-splitter-color);
 }
@@ -454,9 +453,9 @@
 }
 
 .network-monitor .label-separator {
+  margin-block: 5px;
   margin-inline-start: 4px;
   font-weight: 600;
-  margin-block: 5px;
   color: var(--theme-comment);
 }
 
