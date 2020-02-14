@@ -741,6 +741,11 @@ toolbar:not(#TabsToolbar) > #personal-bookmarks {
   #identity-icon-labels {
     max-width: 50px;
   }
+  /* Contenxtual identity labels are user-customizable and can be very long,
+     so we only show the colored icon when the window gets small. */
+  #userContext-label {
+    display: none;
+  }
 }
 /* 680px is just below half of popular 1366px wide screens, so when putting two
    browser windows next to each other on such a screen, they'll be above this
