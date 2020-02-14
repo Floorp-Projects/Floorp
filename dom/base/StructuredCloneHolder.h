@@ -127,10 +127,19 @@ class StructuredCloneHolderBase {
     return size;
   }
 
+  void SetErrorMessage(const char* aErrorMessage) {
+    mErrorMessage.Assign(aErrorMessage);
+  }
+
  protected:
   UniquePtr<JSAutoStructuredCloneBuffer> mBuffer;
 
   StructuredCloneScope mStructuredCloneScope;
+
+  // Error message when a data clone error is about to throw. It's held while
+  // the error callback is fired and it will be throw with a data clone error
+  // later.
+  nsCString mErrorMessage;
 
 #ifdef DEBUG
   bool mClearCalled;
