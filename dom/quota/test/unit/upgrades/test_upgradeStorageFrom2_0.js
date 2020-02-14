@@ -41,6 +41,10 @@ function* testSteps() {
   clear(continueToNextStepSync);
   yield undefined;
 
+  info("Verifying storage");
+
+  verifyStorage(packages, "beforeInstall");
+
   info("Installing packages");
 
   installPackages(packages);
