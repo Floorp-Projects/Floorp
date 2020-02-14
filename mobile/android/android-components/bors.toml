@@ -6,6 +6,7 @@ block_labels = [
   "work in progress"
 ]
 required_approvals = 1
+use_codeowners = true
 delete_merged_branches = true
 cut_body_after = "---"
 [committer]
