@@ -10,7 +10,6 @@
 #include "nsIStreamListener.h"
 #include "nsString.h"
 #include "mozilla/css/SheetLoadData.h"
-#include "mozilla/Assertions.h"
 
 class nsIInputStream;
 
@@ -45,10 +44,6 @@ class StreamLoader : public nsIStreamListener {
   // mBytes, and store all subsequent data in that buffer.
   nsCString mBytes;
   nsAutoCStringN<3> mBOMBytes;
-
-#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
-  bool mOnStopRequestCalled = false;
-#endif
 };
 
 }  // namespace css
