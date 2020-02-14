@@ -432,17 +432,16 @@ option(env='MT', nargs=1, help='Path to the Microsoft Manifest Tool',
        when=host_is_windows)
 
 
-@depends(valid_windows_sdk_dir, valid_ucrt_sdk_dir)
+@depends(valid_windows_sdk_dir, valid_ucrt_sdk_dir, host)
 @imports(_from='os', _import='environ')
-@imports('platform')
-def sdk_bin_path(valid_windows_sdk_dir, valid_ucrt_sdk_dir):
+def sdk_bin_path(valid_windows_sdk_dir, valid_ucrt_sdk_dir, host):
     if not valid_windows_sdk_dir:
         return
 
     vc_host = {
         'x86': 'x86',
-        'AMD64': 'x64',
-    }.get(platform.machine())
+        'x86_64': 'x64',
+    }.get(host.cpu)
 
     # From version 10.0.15063.0 onwards the bin path contains the version number.
     versioned_bin = ('bin' if valid_ucrt_sdk_dir.version < '10.0.15063.0'
