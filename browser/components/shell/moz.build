@@ -11,6 +11,7 @@ LOCAL_INCLUDES += [
 
 BROWSER_CHROME_MANIFESTS += ['test/browser.ini']
 MOCHITEST_CHROME_MANIFESTS += ['test/chrome.ini']
+XPCSHELL_TESTS_MANIFESTS += ['test/unit/xpcshell.ini']
 
 JAR_MANIFESTS += ['jar.mn']
 
@@ -25,6 +26,11 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
 
     SOURCES += [
         'nsMacShellService.cpp',
+    ]
+
+    LOCAL_INCLUDES += [
+        # For CocoaFileUtils
+        '/xpcom/io'
     ]
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk':
     XPIDL_SOURCES += [

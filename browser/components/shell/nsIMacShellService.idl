@@ -12,4 +12,16 @@ interface nsIMacShellService : nsIShellService
    * Opens the desktop preferences, e.g. for after setting the background.
    */
   void showDesktopPreferences();
+
+  /**
+   * @param aPaneID used by macOS to identify the pane to open.
+   *                Example arguments:
+   *                  * "" - use the default Security and Privacy pane.
+   *                  * General
+   *                  * Privacy
+   *                  * Privacy_AllFiles
+   *                  * Privacy_Camera
+   *                  * Privacy_Microphone
+   */
+  void showSecurityPreferences(in ACString aPaneID);
 };
