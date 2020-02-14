@@ -18,6 +18,8 @@
 #include "nsPIDOMWindow.h"
 #include "nsXULAppAPI.h"
 
+using mozilla::dom::BrowsingContext;
+
 NS_IMPL_ADDREF(nsPrintProgress)
 NS_IMPL_RELEASE(nsPrintProgress)
 
@@ -69,21 +71,14 @@ NS_IMETHODIMP nsPrintProgress::OpenProgressDialog(
     nsCOMPtr<nsPIDOMWindowOuter> pParentWindow =
         nsPIDOMWindowOuter::From(parent);
     NS_ENSURE_STATE(pParentWindow);
-    nsCOMPtr<nsIDocShell> docShell = pParentWindow->GetDocShell();
-    NS_ENSURE_STATE(docShell);
-
-    nsCOMPtr<nsIDocShellTreeOwner> owner;
-    docShell->GetTreeOwner(getter_AddRefs(owner));
-
-    nsCOMPtr<nsIAppWindow> ownerAppWindow = do_GetInterface(owner);
-    nsCOMPtr<mozIDOMWindowProxy> ownerWindow = do_GetInterface(ownerAppWindow);
-    NS_ENSURE_STATE(ownerWindow);
-
-    nsCOMPtr<nsPIDOMWindowOuter> piOwnerWindow =
-        nsPIDOMWindowOuter::From(ownerWindow);
+    RefPtr<BrowsingContext> bc = pParentWindow->GetBrowsingContext();
+    NS_ENSURE_STATE(bc);
+    // We're in the Chrome process, so we can get the nsPIDOMWindowOuter:
+    nsCOMPtr<nsPIDOMWindowOuter> piOwnerWindow = bc->Top()->GetDOMWindow();
+    NS_ENSURE_STATE(piOwnerWindow);
 
     // Open the dialog.
-    RefPtr<mozilla::dom::BrowsingContext> newBC;
+    RefPtr<BrowsingContext> newBC;
 
     rv = piOwnerWindow->OpenDialog(
         NS_ConvertASCIItoUTF16(dialogURL), NS_LITERAL_STRING("_blank"),
