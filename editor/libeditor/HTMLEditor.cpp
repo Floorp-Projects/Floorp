@@ -1458,20 +1458,20 @@ HTMLEditor::RebuildDocumentFromSource(const nsAString& aSourceString) {
 }
 
 EditorRawDOMPoint HTMLEditor::GetBetterInsertionPointFor(
-    nsINode& aNodeToInsert, const EditorRawDOMPoint& aPointToInsert) {
+    nsIContent& aContentToInsert, const EditorRawDOMPoint& aPointToInsert) {
   if (NS_WARN_IF(!aPointToInsert.IsSet())) {
     return aPointToInsert;
   }
 
   EditorRawDOMPoint pointToInsert(aPointToInsert.GetNonAnonymousSubtreePoint());
   if (NS_WARN_IF(!pointToInsert.IsSet())) {
-    // Cannot insert aNodeToInsert into this DOM tree.
+    // Cannot insert aContentToInsert into this DOM tree.
     return EditorRawDOMPoint();
   }
 
   // If the node to insert is not a block level element, we can insert it
   // at any point.
-  if (!IsBlockNode(&aNodeToInsert)) {
+  if (!IsBlockNode(&aContentToInsert)) {
     return pointToInsert;
   }
 
