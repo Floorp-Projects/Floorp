@@ -52,14 +52,14 @@ def windows_sdk_dir(value, host):
 @imports('os')
 @imports('re')
 @imports(_from='__builtin__', _import='sorted')
-@imports(_from='__builtin__', _import='WindowsError')
+@imports(_from='__builtin__', _import='Exception')
 def get_sdk_dirs(sdk, subdir):
     def get_dirs_containing(sdk, stem, subdir):
         base = os.path.join(sdk, stem)
         try:
             subdirs = [d for d in os.listdir(base)
                        if os.path.isdir(os.path.join(base, d))]
-        except WindowsError:
+        except Exception:
             subdirs = []
         if not subdirs:
             return ()
