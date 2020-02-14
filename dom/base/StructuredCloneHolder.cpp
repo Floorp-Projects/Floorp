@@ -113,8 +113,13 @@ bool StructuredCloneCallbacksCanTransfer(JSContext* aCx,
                                           aSameProcessScopeRequired);
 }
 
-void StructuredCloneCallbacksError(JSContext* aCx, uint32_t aErrorId) {
+void StructuredCloneCallbacksError(JSContext* aCx, uint32_t aErrorId,
+                                   void* aClosure, const char* aErrorMessage) {
   NS_WARNING("Failed to clone data.");
+  StructuredCloneHolderBase* holder =
+      static_cast<StructuredCloneHolderBase*>(aClosure);
+  MOZ_ASSERT(holder);
+  return holder->SetErrorMessage(aErrorMessage);
 }
 
 void AssertTagValues() {
@@ -276,7 +281,7 @@ void StructuredCloneHolder::Write(JSContext* aCx, JS::Handle<JS::Value> aValue,
                                   ErrorResult& aRv) {
   if (!StructuredCloneHolderBase::Write(aCx, aValue, aTransfer,
                                         aCloneDataPolicy)) {
-    aRv.Throw(NS_ERROR_DOM_DATA_CLONE_ERR);
+    aRv.ThrowDataCloneError(mErrorMessage);
     return;
   }
 }
@@ -294,11 +299,12 @@ void StructuredCloneHolder::Read(nsIGlobalObject* aGlobal, JSContext* aCx,
   MOZ_ASSERT(aGlobal);
 
   mozilla::AutoRestore<nsIGlobalObject*> guard(mGlobal);
+  auto errorMessageGuard = MakeScopeExit([&] { mErrorMessage.Truncate(); });
   mGlobal = aGlobal;
 
   if (!StructuredCloneHolderBase::Read(aCx, aValue, aCloneDataPolicy)) {
     JS_ClearPendingException(aCx);
-    aRv.Throw(NS_ERROR_DOM_DATA_CLONE_ERR);
+    aRv.ThrowDataCloneError(mErrorMessage);
     return;
   }
 
@@ -327,12 +333,14 @@ void StructuredCloneHolder::ReadFromBuffer(
   MOZ_ASSERT(!mBuffer, "ReadFromBuffer() must be called without a Write().");
 
   mozilla::AutoRestore<nsIGlobalObject*> guard(mGlobal);
+  auto errorMessageGuard = MakeScopeExit([&] { mErrorMessage.Truncate(); });
   mGlobal = aGlobal;
 
   if (!JS_ReadStructuredClone(aCx, aBuffer, aAlgorithmVersion, CloneScope(),
                               aValue, aCloneDataPolicy, &sCallbacks, this)) {
     JS_ClearPendingException(aCx);
-    aRv.Throw(NS_ERROR_DOM_DATA_CLONE_ERR);
+    aRv.ThrowDataCloneError(mErrorMessage);
+    return;
   }
 }
 

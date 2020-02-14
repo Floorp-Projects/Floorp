@@ -4870,6 +4870,20 @@ JS_PUBLIC_API void JS_ReportAllocationOverflow(JSContext* cx) {
   ReportAllocationOverflow(cx);
 }
 
+JS_PUBLIC_API bool JS_ExpandErrorArgumentsASCII(JSContext* cx,
+                                                JSErrorCallback errorCallback,
+                                                const unsigned errorNumber,
+                                                JSErrorReport* reportp, ...) {
+  va_list ap;
+  bool ok;
+
+  AssertHeapIsIdle();
+  va_start(ap, reportp);
+  ok = ExpandErrorArgumentsVA(cx, errorCallback, nullptr, errorNumber, nullptr,
+                              ArgumentsAreASCII, reportp, ap);
+  va_end(ap);
+  return ok;
+}
 /************************************************************************/
 
 JS_PUBLIC_API bool JS_SetDefaultLocale(JSRuntime* rt, const char* locale) {

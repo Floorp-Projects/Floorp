@@ -275,7 +275,8 @@ typedef bool (*WriteStructuredCloneOp)(JSContext* cx,
  * To follow HTML5, the application must throw a DATA_CLONE_ERR DOMException
  * with error set to one of the JS_SCERR_* values.
  */
-typedef void (*StructuredCloneErrorOp)(JSContext* cx, uint32_t errorid);
+typedef void (*StructuredCloneErrorOp)(JSContext* cx, uint32_t errorid,
+                                       void* closure, const char* errorMessage);
 
 /**
  * This is called when JS_ReadStructuredClone receives a transferable object
