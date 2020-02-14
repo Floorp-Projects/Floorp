@@ -50,7 +50,7 @@ class DoWorkRunnable final : public CancelableRunnable,
   nsresult Cancel() override;
 
  private:
-  ~DoWorkRunnable() {}
+  ~DoWorkRunnable() = default;
 
   MessagePump* mPump;
   // DoWorkRunnable is designed as a stateless singleton.  Do not add stateful
@@ -65,7 +65,7 @@ MessagePump::MessagePump(nsIEventTarget* aEventTarget)
   mDoWorkEvent = new DoWorkRunnable(this);
 }
 
-MessagePump::~MessagePump() {}
+MessagePump::~MessagePump() = default;
 
 void MessagePump::Run(MessagePump::Delegate* aDelegate) {
   MOZ_ASSERT(keep_running_);

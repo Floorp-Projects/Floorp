@@ -27,7 +27,7 @@ namespace ipc {
 class SharedMemoryBasic final
     : public SharedMemoryCommon<base::SharedMemoryHandle> {
  public:
-  SharedMemoryBasic() {}
+  SharedMemoryBasic() = default;
 
   virtual bool SetHandle(const Handle& aHandle, OpenRights aRights) override {
     return mSharedMemory.SetHandle(aHandle, aRights == RightsReadOnly);
@@ -81,7 +81,7 @@ class SharedMemoryBasic final
   }
 
  private:
-  ~SharedMemoryBasic() {}
+  ~SharedMemoryBasic() = default;
 
   base::SharedMemory mSharedMemory;
 };

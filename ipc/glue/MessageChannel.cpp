@@ -450,7 +450,7 @@ class AutoEnterTransaction {
 };
 
 class PendingResponseReporter final : public nsIMemoryReporter {
-  ~PendingResponseReporter() {}
+  ~PendingResponseReporter() = default;
 
  public:
   NS_DECL_THREADSAFE_ISUPPORTS

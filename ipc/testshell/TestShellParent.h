@@ -39,7 +39,7 @@ class TestShellCommandParent : public PTestShellCommandParent {
   friend class PTestShellCommandParent;
 
  public:
-  TestShellCommandParent() {}
+  TestShellCommandParent() = default;
 
   bool SetCallback(JSContext* aCx, const JS::Value& aCallback);
 

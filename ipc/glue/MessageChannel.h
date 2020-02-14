@@ -46,7 +46,7 @@ class RefCountedMonitor : public Monitor {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(RefCountedMonitor)
 
  private:
-  ~RefCountedMonitor() {}
+  ~RefCountedMonitor() = default;
 };
 
 enum class MessageDirection {
@@ -113,7 +113,7 @@ class MessageChannel : HasResultCodes, MessageLoop::DestructionObserver {
     UntypedCallbackHolder(ActorIdType aActorId, RejectCallback&& aReject)
         : mActorId(aActorId), mReject(std::move(aReject)) {}
 
-    virtual ~UntypedCallbackHolder() {}
+    virtual ~UntypedCallbackHolder() = default;
 
     void Reject(ResponseRejectReason&& aReason) { mReject(std::move(aReason)); }
 
@@ -598,7 +598,7 @@ class MessageChannel : HasResultCodes, MessageLoop::DestructionObserver {
    private:
     MessageTask() = delete;
     MessageTask(const MessageTask&) = delete;
-    ~MessageTask() {}
+    ~MessageTask() = default;
 
     MessageChannel* mChannel;
     Message mMessage;

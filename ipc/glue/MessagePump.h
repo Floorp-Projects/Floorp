@@ -73,7 +73,7 @@ class MessagePumpForChildProcess final : public MessagePump {
   virtual void Run(base::MessagePump::Delegate* aDelegate) override;
 
  private:
-  ~MessagePumpForChildProcess() {}
+  ~MessagePumpForChildProcess() = default;
 
   bool mFirstRun;
 };
@@ -86,7 +86,7 @@ class MessagePumpForNonMainThreads final : public MessagePump {
   virtual void Run(base::MessagePump::Delegate* aDelegate) override;
 
  private:
-  ~MessagePumpForNonMainThreads() {}
+  ~MessagePumpForNonMainThreads() = default;
 };
 
 #if defined(XP_WIN)

@@ -80,11 +80,7 @@ class Shmem final {
 
   Shmem() : mSegment(nullptr), mData(nullptr), mSize(0), mId(0) {}
 
-  Shmem(const Shmem& aOther)
-      : mSegment(aOther.mSegment),
-        mData(aOther.mData),
-        mSize(aOther.mSize),
-        mId(aOther.mId) {}
+  Shmem(const Shmem& aOther) = default;
 
 #if !defined(DEBUG)
   Shmem(PrivateIPDLCaller, SharedMemory* aSegment, id_t aId)
@@ -101,13 +97,7 @@ class Shmem final {
     forget(PrivateIPDLCaller());
   }
 
-  Shmem& operator=(const Shmem& aRhs) {
-    mSegment = aRhs.mSegment;
-    mData = aRhs.mData;
-    mSize = aRhs.mSize;
-    mId = aRhs.mId;
-    return *this;
-  }
+  Shmem& operator=(const Shmem& aRhs) = default;
 
   bool operator==(const Shmem& aRhs) const { return mSegment == aRhs.mSegment; }
 
