@@ -741,12 +741,8 @@ select.playback-rate-selector.devtools-button:not(:empty):not(:disabled):not(.ch
 }
 
 /* No Animation Panel */
-.animation-error-message {
-  overflow: auto;
-}
-
 .animation-error-message > p {
-  white-space: pre;
+  white-space: pre-wrap;
 }
 
 .animation-element-picker::before {
