@@ -715,6 +715,11 @@ async function checkTip(win, expectedTip, closeView = true) {
 async function checkTab(win, url, expectedTip, reset = true) {
   // BrowserTestUtils.withNewTab always waits for tab load, which hangs on
   // about:newtab for some reason, so don't use it.
+  let shownCount;
+  if (expectedTip) {
+    shownCount = UrlbarPrefs.get(`searchTips.${expectedTip}.shownCount`);
+  }
+
   let tab = await BrowserTestUtils.openNewForegroundTab({
     gBrowser: win.gBrowser,
     url,
@@ -722,6 +727,14 @@ async function checkTab(win, url, expectedTip, reset = true) {
   });
 
   await checkTip(win, expectedTip, true);
+  if (expectedTip) {
+    Assert.equal(
+      UrlbarPrefs.get(`searchTips.${expectedTip}.shownCount`),
+      shownCount + 1,
+      "The shownCount pref should have been incremented by one."
+    );
+  }
+
   if (reset) {
     resetProvider();
   }
