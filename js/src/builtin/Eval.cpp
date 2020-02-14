@@ -209,6 +209,8 @@ static EvalJSONResult TryEvalJSON(JSContext* cx, JSLinearString* str,
 
 enum EvalType { DIRECT_EVAL, INDIRECT_EVAL };
 
+// 18.2.1.1 PerformEval
+//
 // Common code implementing direct and indirect eval.
 //
 // Evaluate call.argv[2], if it is a string, in the context of the given calling
@@ -225,20 +227,21 @@ static bool EvalKernel(JSContext* cx, HandleValue v, EvalType evalType,
   MOZ_ASSERT_IF(evalType == INDIRECT_EVAL, IsGlobalLexicalEnvironment(env));
   AssertInnerizedEnvironmentChain(cx, *env);
 
-  if (!GlobalObject::isRuntimeCodeGenEnabled(cx, v, cx->global())) {
+  // Step 2.
+  if (!v.isString()) {
+    vp.set(v);
+    return true;
+  }
+
+  // Steps 3-4.
+  RootedString str(cx, v.toString());
+  if (!GlobalObject::isRuntimeCodeGenEnabled(cx, str, cx->global())) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                               JSMSG_CSP_BLOCKED_EVAL);
     return false;
   }
 
-  // ES5 15.1.2.1 step 1.
-  if (!v.isString()) {
-    vp.set(v);
-    return true;
-  }
-  RootedString str(cx, v.toString());
-
-  // ES5 15.1.2.1 steps 2-8.
+  // Step 5 ff.
 
   // Per ES5, indirect eval runs in the global scope. (eval is specified this
   // way so that the compiler can make assumptions about what bindings may or
@@ -354,8 +357,7 @@ bool js::DirectEvalStringFromIon(JSContext* cx, HandleObject env,
                                  jsbytecode* pc, MutableHandleValue vp) {
   AssertInnerizedEnvironmentChain(cx, *env);
 
-  RootedValue v(cx, StringValue(str));
-  if (!GlobalObject::isRuntimeCodeGenEnabled(cx, v, cx->global())) {
+  if (!GlobalObject::isRuntimeCodeGenEnabled(cx, str, cx->global())) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                               JSMSG_CSP_BLOCKED_EVAL);
     return false;
