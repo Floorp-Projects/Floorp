@@ -14,6 +14,9 @@ exclude: true
 ⚠️  breaking change
 
 ## v75
+- ⚠️ Remove [`GeckoRuntimeSettings.Builder#useContentProcessHint`]. The content
+  process is now preloaded by default if
+  [`GeckoRuntimeSettings.Builder#useMultiprocess`][75.1] is enabled.
 - ⚠️ Move [`GeckoSessionSettings.Builder#useMultiprocess`] to
   [`GeckoRuntimeSettings.Builder#useMultiprocess`][75.1]. Multiprocess state is
   no longer determined per session.
@@ -582,4 +585,4 @@ exclude: true
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: af032cf9dfa68c15ed6321c9615dd8c5d32d215e
+[api-version]: e79b2ea5f93700f9e920b962286ec7b203c493b9

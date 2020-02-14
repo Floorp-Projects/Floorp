@@ -379,7 +379,6 @@ public class GeckoViewActivity
                 runtimeSettingsBuilder.extras(extras);
             }
             runtimeSettingsBuilder
-                    .useContentProcessHint(useMultiprocess)
                     .useMultiprocess(useMultiprocess)
                     .remoteDebuggingEnabled(mEnableRemoteDebugging)
                     .consoleOutput(true)
