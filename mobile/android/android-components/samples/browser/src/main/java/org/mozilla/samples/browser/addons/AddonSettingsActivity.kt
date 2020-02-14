@@ -62,7 +62,9 @@ class AddonSettingsActivity : AppCompatActivity() {
             super.onViewCreated(view, savedInstanceState)
 
             addonSettingsEngineView.render(engineSession)
-            engineSession.loadUrl(addon.installedState!!.optionsPageUrl)
+            addon.installedState?.optionsPageUrl?.let {
+                engineSession.loadUrl(it)
+            }
         }
 
         override fun onDestroyView() {

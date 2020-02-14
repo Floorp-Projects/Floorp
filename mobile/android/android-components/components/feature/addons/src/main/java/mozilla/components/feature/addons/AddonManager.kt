@@ -279,7 +279,8 @@ private fun WebExtension.toInstalledState() =
     Addon.InstalledState(
         id = id,
         version = getMetadata()?.version ?: "",
-        optionsPageUrl = getMetadata()?.optionsPageUrl ?: "",
+        optionsPageUrl = getMetadata()?.optionsPageUrl,
+        openOptionsPageInTab = getMetadata()?.openOptionsPageInTab ?: false,
         enabled = isEnabled(),
         disabledAsUnsupported = getMetadata()?.disabledFlags?.contains(DisabledFlags.APP_SUPPORT) == true
     )
