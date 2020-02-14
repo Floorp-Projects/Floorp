@@ -13,6 +13,7 @@ import android.content.Intent
 import android.os.Build
 import android.os.Build.VERSION_CODES.M
 import android.os.Bundle
+import android.util.Log
 import androidx.appcompat.app.AlertDialog
 import androidx.biometric.BiometricManager
 import androidx.biometric.BiometricPrompt
@@ -22,6 +23,7 @@ import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.SwitchPreference
 import kotlinx.coroutines.Dispatchers.Main
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import mozilla.components.concept.sync.AccountObserver
 import mozilla.components.concept.sync.AuthType
@@ -62,17 +64,21 @@ class LoginsFragment : PreferenceFragmentCompat(), AccountObserver {
         biometricPromptCallback = object : BiometricPrompt.AuthenticationCallback() {
 
             override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
-                // Authentication Error
+                Log.e(LOG_TAG, "onAuthenticationError $errString")
             }
 
             override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
+                Log.d(LOG_TAG, "onAuthenticationSucceeded")
                 lifecycleScope.launch(Main) {
+                    // Workaround for likely biometric library bug
+                    // https://github.com/mozilla-mobile/fenix/issues/8438
+                    delay(SHORT_DELAY_MS)
                     navigateToSavedLoginsFragment()
                 }
             }
 
             override fun onAuthenticationFailed() {
-                // Authenticated Failed
+                Log.e(LOG_TAG, "onAuthenticationFailed")
             }
         }
 
@@ -294,6 +300,8 @@ class LoginsFragment : PreferenceFragmentCompat(), AccountObserver {
     }
 
     companion object {
+        const val SHORT_DELAY_MS = 100L
+        private const val LOG_TAG = "LoginsFragment"
         const val PIN_REQUEST = 303
     }
 }
