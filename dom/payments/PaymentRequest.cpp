@@ -759,14 +759,14 @@ already_AddRefed<Promise> PaymentRequest::Show(
   return promise.forget();
 }
 
-void PaymentRequest::RejectShowPayment(ErrorResult& aRejectReason) {
+void PaymentRequest::RejectShowPayment(ErrorResult&& aRejectReason) {
   MOZ_ASSERT(mAcceptPromise || mResponse);
   MOZ_ASSERT(mState == eInteractive);
 
   if (mResponse) {
-    mResponse->RejectRetry(aRejectReason);
+    mResponse->RejectRetry(std::move(aRejectReason));
   } else {
-    mAcceptPromise->MaybeReject(aRejectReason);
+    mAcceptPromise->MaybeReject(std::move(aRejectReason));
   }
   mState = eClosed;
   mAcceptPromise = nullptr;
@@ -777,12 +777,12 @@ void PaymentRequest::RespondShowPayment(const nsAString& aMethodName,
                                         const nsAString& aPayerName,
                                         const nsAString& aPayerEmail,
                                         const nsAString& aPayerPhone,
-                                        ErrorResult& aResult) {
+                                        ErrorResult&& aResult) {
   MOZ_ASSERT(mAcceptPromise || mResponse);
   MOZ_ASSERT(mState == eInteractive);
 
   if (aResult.Failed()) {
-    RejectShowPayment(aResult);
+    RejectShowPayment(std::move(aResult));
     return;
   }
 
@@ -859,8 +859,7 @@ void PaymentRequest::RespondAbortPayment(bool aSuccess) {
     // Respond show with mUpdateError, set mUpdating to false.
     mUpdating = false;
     RespondShowPayment(EmptyString(), ResponseData(), EmptyString(),
-                       EmptyString(), EmptyString(), mUpdateError);
-    mUpdateError.SuppressException();
+                       EmptyString(), EmptyString(), std::move(mUpdateError));
     return;
   }
 
@@ -872,7 +871,7 @@ void PaymentRequest::RespondAbortPayment(bool aSuccess) {
     mAbortPromise = nullptr;
     ErrorResult abortResult;
     abortResult.ThrowAbortError("The PaymentRequest is aborted");
-    RejectShowPayment(abortResult);
+    RejectShowPayment(std::move(abortResult));
   } else {
     mAbortPromise->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR);
     mAbortPromise = nullptr;
@@ -1197,7 +1196,7 @@ void PaymentRequest::NotifyOwnerDocumentActivityChanged() {
       if (mResponse) {
         ErrorResult rejectReason;
         rejectReason.ThrowAbortError("The owner documnet is not fully active");
-        mResponse->RejectRetry(rejectReason);
+        mResponse->RejectRetry(std::move(rejectReason));
       }
       if (mAbortPromise) {
         mAbortPromise->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
