@@ -202,7 +202,8 @@ class APZCTreeManager : public IAPZCTreeManager, public APZInputBridge {
    */
   void SampleForWebRender(wr::TransactionWrapper& aTxn,
                           const TimeStamp& aSampleTime,
-                          wr::RenderRoot aRenderRoot);
+                          wr::RenderRoot aRenderRoot,
+                          const wr::WrPipelineIdEpochs& aEpochsBeingRendered);
 
   /**
    * Refer to the documentation of APZInputBridge::ReceiveInputEvent() and
