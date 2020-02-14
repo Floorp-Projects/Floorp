@@ -1047,24 +1047,6 @@ WebRenderBridgeParent::GetCollectedFrames() {
   return Api(wr::RenderRoot::Default)->GetCollectedFrames();
 }
 
-void WebRenderBridgeParent::AddPendingScrollPayload(
-    CompositionPayload& aPayload,
-    const std::pair<wr::PipelineId, wr::Epoch>& aKey) {
-  nsTArray<CompositionPayload>* payloads =
-      mPendingScrollPayloads.LookupOrAdd(aKey);
-  payloads->AppendElement(aPayload);
-}
-
-nsTArray<CompositionPayload>* WebRenderBridgeParent::GetPendingScrollPayload(
-    const std::pair<wr::PipelineId, wr::Epoch>& aKey) const {
-  return mPendingScrollPayloads.Get(aKey);
-}
-
-bool WebRenderBridgeParent::RemovePendingScrollPayload(
-    const std::pair<wr::PipelineId, wr::Epoch>& aKey) {
-  return mPendingScrollPayloads.Remove(aKey);
-}
-
 CompositorBridgeParent* WebRenderBridgeParent::GetRootCompositorBridgeParent()
     const {
   if (!mCompositorBridge) {
