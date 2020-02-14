@@ -1322,7 +1322,7 @@ this.VideoControlsImplWidget = class {
           }
 
           this.startFadeOut(this.controlBar, false);
-          this.textTrackListContainer.hidden = true;
+          this.textTrackList.hidden = true;
           this.window.clearTimeout(this._showControlsTimeout);
           this._controlsHiddenByTimeout = false;
         }
@@ -1939,11 +1939,11 @@ this.VideoControlsImplWidget = class {
           }
         }
 
-        this.textTrackListContainer.hidden = true;
+        this.textTrackList.hidden = true;
       },
 
       onControlBarAnimationFinished() {
-        this.textTrackListContainer.hidden = true;
+        this.textTrackList.hidden = true;
         this.video.dispatchEvent(
           new this.window.CustomEvent("controlbarchange")
         );
@@ -1957,10 +1957,10 @@ this.VideoControlsImplWidget = class {
       },
 
       toggleClosedCaption() {
-        if (this.textTrackListContainer.hidden) {
-          this.textTrackListContainer.hidden = false;
+        if (this.textTrackList.hidden) {
+          this.textTrackList.hidden = false;
         } else {
-          this.textTrackListContainer.hidden = true;
+          this.textTrackList.hidden = true;
         }
       },
 
@@ -2281,9 +2281,6 @@ this.VideoControlsImplWidget = class {
           "closedCaptionButton"
         );
         this.textTrackList = this.shadowRoot.getElementById("textTrackList");
-        this.textTrackListContainer = this.shadowRoot.getElementById(
-          "textTrackListContainer"
-        );
         this.pictureInPictureToggleButton = this.shadowRoot.getElementById(
           "pictureInPictureToggleButton"
         );
@@ -2633,9 +2630,7 @@ this.VideoControlsImplWidget = class {
                       enterfullscreenlabel="&fullscreenButton.enterfullscreenlabel;"
                       exitfullscreenlabel="&fullscreenButton.exitfullscreenlabel;"/>
             </div>
-            <div id="textTrackListContainer" class="textTrackListContainer" hidden="true">
-              <div id="textTrackList" class="textTrackList" offlabel="&closedCaption.off;"></div>
-            </div>
+            <div id="textTrackList" class="textTrackList" hidden="true" offlabel="&closedCaption.off;"></div>
           </div>
         </div>
       </div>`,
