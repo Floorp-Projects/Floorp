@@ -124,6 +124,11 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // The number of times the user has been shown the redirect search tip.
   ["searchTips.redirect.shownCount", 0],
 
+  // Hidden pref. Disables checks that prevent search tips being shown, thus
+  // showing them every time the newtab page or the default search engine
+  // homepage is opened.
+  ["searchTips.test.ignoreShowLimits", false],
+
   // Whether speculative connections should be enabled.
   ["speculativeConnect.enabled", true],
 
