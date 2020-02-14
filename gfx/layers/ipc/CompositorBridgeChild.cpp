@@ -45,6 +45,7 @@
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/Unused.h"
 #include "mozilla/DebugOnly.h"
+#include "nsThreadUtils.h"
 #if defined(XP_WIN)
 #  include "WinUtils.h"
 #endif
@@ -109,6 +110,17 @@ bool CompositorBridgeChild::IsSameProcess() const {
   return OtherPid() == base::GetCurrentProcId();
 }
 
+void CompositorBridgeChild::PrepareFinalDestroy() {
+  // Because of medium high priority DidComposite, we need to repost to
+  // medium high priority queue to ensure the actor is destroyed after possible
+  // pending DidComposite message.
+  nsCOMPtr<nsIRunnable> runnable =
+      NewRunnableMethod("CompositorBridgeChild::AfterDestroy", this,
+                        &CompositorBridgeChild::AfterDestroy);
+  NS_DispatchToCurrentThreadQueue(runnable.forget(),
+                                  EventQueuePriority::MediumHigh);
+}
+
 void CompositorBridgeChild::AfterDestroy() {
   // Note that we cannot rely upon mCanSend here because we already set that to
   // false to prevent normal IPDL calls from being made after SendWillClose.
@@ -159,8 +171,8 @@ void CompositorBridgeChild::Destroy() {
     // or CompositorBridgeChild::ActorDestroy was called. Ensure that we do our
     // post destroy clean up no matter what. It is safe to call multiple times.
     MessageLoop::current()->PostTask(
-        NewRunnableMethod("CompositorBridgeChild::AfterDestroy", selfRef,
-                          &CompositorBridgeChild::AfterDestroy));
+        NewRunnableMethod("CompositorBridgeChild::PrepareFinalDestroy", selfRef,
+                          &CompositorBridgeChild::PrepareFinalDestroy));
     return;
   }
 
@@ -221,8 +233,8 @@ void CompositorBridgeChild::Destroy() {
 
   // From now on we can't send any message message.
   MessageLoop::current()->PostTask(
-      NewRunnableMethod("CompositorBridgeChild::AfterDestroy", selfRef,
-                        &CompositorBridgeChild::AfterDestroy));
+      NewRunnableMethod("CompositorBridgeChild::PrepareFinalDestroy", selfRef,
+                        &CompositorBridgeChild::PrepareFinalDestroy));
 }
 
 // static
