@@ -415,7 +415,9 @@ class ExecutionContext {
 
     const value = this._serialize(debuggerObj);
     return {
+      type: typeof value,
       value,
+      description: value != null ? value.toString() : value,
     };
   }
 
