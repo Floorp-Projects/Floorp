@@ -14,26 +14,11 @@ const TEST_ID = "#video-with-subtitles";
 
 // Test that Inspector can show Native Anonymous Content (nac) in user agent widgets, as
 // siblings of the ua widget closed shadow-root.
-
-add_task(async function testWithoutShowAllAnonymousContent() {
-  info(
-    "Test a <video> element with subtitles, without showAllAnonymousContent"
-  );
-  const { inspector } = await setup({ showAllAnonymousContent: false });
-
-  // We should only see the shadow root and the authored <track> element.
-  const tree = `
-  video
-    #shadow-root!ignore-children
-    track`;
-  await assertMarkupViewAsTree(tree, TEST_ID, inspector);
-});
-
-add_task(async function testWithShowAllAnonymousContent() {
+add_task(async function testMarkupView() {
   info(
     "Test a <video> element with subtitles, expect to see native anonymous content"
   );
-  const { inspector } = await setup({ showAllAnonymousContent: true });
+  const { inspector } = await setup();
 
   // We should only see the shadow root, the <track> and two NAC elements <img> and <div>.
   const tree = `
@@ -46,9 +31,7 @@ add_task(async function testWithShowAllAnonymousContent() {
 });
 
 add_task(async function testElementPicker() {
-  const { inspector, markup, toolbox, testActor } = await setup({
-    showAllAnonymousContent: true,
-  });
+  const { inspector, markup, toolbox, testActor } = await setup();
 
   info("Waiting for element picker to become active.");
   await startPicker(toolbox);
@@ -78,12 +61,8 @@ add_task(async function testElementPicker() {
   );
 });
 
-async function setup({ showAllAnonymousContent }) {
-  await pushPref("devtools.inspector.showUserAgentShadowRoots", true);
-  await pushPref(
-    "devtools.inspector.showAllAnonymousContent",
-    showAllAnonymousContent
-  );
+async function setup() {
+  await pushPref("devtools.inspector.showAllAnonymousContent", true);
 
   const { inspector, testActor, toolbox } = await openInspectorForURL(TEST_URL);
   const { markup } = inspector;

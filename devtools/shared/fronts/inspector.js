@@ -18,7 +18,6 @@ const TELEMETRY_EYEDROPPER_OPENED_MENU =
   "DEVTOOLS_MENU_EYEDROPPER_OPENED_COUNT";
 const SHOW_ALL_ANONYMOUS_CONTENT_PREF =
   "devtools.inspector.showAllAnonymousContent";
-const SHOW_UA_SHADOW_ROOTS_PREF = "devtools.inspector.showUserAgentShadowRoots";
 const CONTENT_FISSION_ENABLED_PREF = "devtools.contenttoolbox.fission";
 const USE_NEW_BOX_MODEL_HIGHLIGHTER_PREF =
   "devtools.inspector.use-new-box-model-highlighter";
@@ -64,12 +63,13 @@ class InspectorFront extends FrontClassWithSpec(inspectorSpec) {
     const showAllAnonymousContent = Services.prefs.getBoolPref(
       SHOW_ALL_ANONYMOUS_CONTENT_PREF
     );
-    const showUserAgentShadowRoots = Services.prefs.getBoolPref(
-      SHOW_UA_SHADOW_ROOTS_PREF
-    );
     this.walker = await this.getWalker({
       showAllAnonymousContent,
-      showUserAgentShadowRoots,
+      // Backward compatibility for Firefox 74 or older.
+      // getWalker() now uses a single boolean flag to drive the display of
+      // both anonymous content and user-agent shadow roots.
+      // Older servers used separate flags. See Bug 1613773.
+      showUserAgentShadowRoots: showAllAnonymousContent,
     });
 
     // We need to reparent the RootNode of remote iframe Walkers
