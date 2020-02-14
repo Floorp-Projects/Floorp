@@ -641,10 +641,6 @@ bool nsNativeBasicTheme::GetWidgetPadding(nsDeviceContext* aContext,
       aResult->SizeTo(7 * dpi, 8 * dpi, 7 * dpi, 8 * dpi);
       return true;
     case StyleAppearance::Button:
-      if (IsDateTimeResetButton(aFrame)) {
-        aResult->SizeTo(0, 0, -1 * dpi, 4 * dpi);
-        return true;
-      }
       aResult->SizeTo(7 * dpi, 22 * dpi, 7 * dpi, 22 * dpi);
       return true;
     case StyleAppearance::Textfield:
