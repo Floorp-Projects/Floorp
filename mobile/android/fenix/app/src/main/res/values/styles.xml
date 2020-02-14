@@ -299,7 +299,7 @@
     </style>
 
     <style name="QuickSettingsSmallText">
-        <item name="android:textColor">@color/photonGrey60</item>
+        <item name="android:textColor">?secondaryText</item>
         <item name="android:textSize">12sp</item>
         <item name="android:paddingEnd">16dp</item>
         <item name="android:gravity">top</item>
