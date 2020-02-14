@@ -6,6 +6,8 @@
 
 #include "ServiceWorkerManager.h"
 
+#include <algorithm>
+
 #include "nsAutoPtr.h"
 #include "nsIEffectiveTLDService.h"
 #include "nsIHttpChannel.h"
@@ -166,16 +168,101 @@ static_assert(static_cast<uint16_t>(ServiceWorkerUpdateViaCache::None) ==
 static StaticRefPtr<ServiceWorkerManager> gInstance;
 
 struct ServiceWorkerManager::RegistrationDataPerPrincipal final {
-  // Ordered list of scopes for glob matching.
-  // Each entry is an absolute URL representing the scope.
-  // Each value of the hash table is an array of an absolute URLs representing
-  // the scopes.
+  // Implements a container of keys for the "scope to registration map":
+  // https://w3c.github.io/ServiceWorker/#dfn-scope-to-registration-map
   //
-  // An array is used for now since the number of controlled scopes per
-  // domain is expected to be relatively low. If that assumption was proved
-  // wrong this should be replaced with a better structure to avoid the
-  // memmoves associated with inserting stuff in the middle of the array.
-  nsTArray<nsCString> mOrderedScopes;
+  // where each key is an absolute URL.
+  //
+  // The properties of this map that the spec uses are
+  // 1) insertion,
+  // 2) removal,
+  // 3) iteration of scopes in FIFO order (excluding removed scopes),
+  // 4) and finding, for a given path, the maximal length scope which is a
+  //    prefix of the path.
+  //
+  // Additionally, because this is a container of keys for a map, there
+  // shouldn't be duplicate scopes.
+  //
+  // The current implementation uses a dynamic array as the underlying
+  // container, which is not optimal for unbounded container sizes (all
+  // supported operations are in linear time) but may be superior for small
+  // container sizes.
+  //
+  // If this is proven to be too slow, the underlying storage should be replaced
+  // with a linked list of scopes in combination with an ordered map that maps
+  // scopes to linked list elements/iterators. This would reduce all of the
+  // above operations besides iteration (necessarily linear) to logarithmic
+  // time.
+  class ScopeContainer final : private nsTArray<nsCString> {
+    using Base = nsTArray<nsCString>;
+
+   public:
+    using Base::Contains;
+    using Base::IsEmpty;
+    using Base::Length;
+
+    // No using-declaration to avoid importing the non-const overload.
+    decltype(auto) operator[](Base::index_type aIndex) const {
+      return Base::operator[](aIndex);
+    }
+
+    void InsertScope(const nsACString& aScope) {
+      MOZ_DIAGNOSTIC_ASSERT(nsContentUtils::IsAbsoluteURL(aScope));
+
+      if (Contains(aScope)) {
+        return;
+      }
+
+      AppendElement(aScope);
+    }
+
+    void RemoveScope(const nsACString& aScope) {
+      MOZ_DIAGNOSTIC_ALWAYS_TRUE(RemoveElement(aScope));
+    }
+
+    // Implements most of "Match Service Worker Registration":
+    // https://w3c.github.io/ServiceWorker/#scope-match-algorithm
+    Maybe<nsCString> MatchScope(const nsACString& aClientUrl) const {
+      Maybe<nsCString> match;
+
+      for (const nsCString& scope : *this) {
+        if (StringBeginsWith(aClientUrl, scope)) {
+          if (!match || scope.Length() > match->Length()) {
+            match = Some(scope);
+          }
+        }
+      }
+
+      // Step 7.2:
+      // "Assert: matchingScope’s origin and clientURL’s origin are same
+      // origin."
+      MOZ_DIAGNOSTIC_ASSERT_IF(match, IsSameOrigin(*match, aClientUrl));
+
+      return match;
+    }
+
+   private:
+    bool IsSameOrigin(const nsACString& aMatchingScope,
+                      const nsACString& aClientUrl) const {
+      RefPtr<BasePrincipal> scopePrincipal =
+          BasePrincipal::CreateContentPrincipal(aMatchingScope);
+
+      if (NS_WARN_IF(!scopePrincipal)) {
+        return false;
+      }
+
+      RefPtr<BasePrincipal> clientPrincipal =
+          BasePrincipal::CreateContentPrincipal(aClientUrl);
+
+      if (NS_WARN_IF(!clientPrincipal)) {
+        return false;
+      }
+
+      return scopePrincipal->FastEquals(clientPrincipal);
+    }
+  };
+
+  ScopeContainer mScopeContainer;
 
   // Scope to registration.
   // The scope should be a fully qualified valid URL.
@@ -926,11 +1013,11 @@ class GetRegistrationsRunnable final : public Runnable {
       return NS_OK;
     }
 
-    for (uint32_t i = 0; i < data->mOrderedScopes.Length(); ++i) {
+    for (uint32_t i = 0; i < data->mScopeContainer.Length(); ++i) {
       RefPtr<ServiceWorkerRegistrationInfo> info =
-          data->mInfos.GetWeak(data->mOrderedScopes[i]);
+          data->mInfos.GetWeak(data->mScopeContainer[i]);
 
-      NS_ConvertUTF8toUTF16 scope(data->mOrderedScopes[i]);
+      NS_ConvertUTF8toUTF16 scope(data->mScopeContainer[i]);
 
       nsCOMPtr<nsIURI> scopeURI;
       nsresult rv = NS_NewURI(getter_AddRefs(scopeURI), scope);
@@ -1706,28 +1793,7 @@ void ServiceWorkerManager::AddScopeAndRegistration(
   const auto& data = swm->mRegistrationInfos.LookupForAdd(scopeKey).OrInsert(
       []() { return new RegistrationDataPerPrincipal(); });
 
-  for (uint32_t i = 0; i < data->mOrderedScopes.Length(); ++i) {
-    const nsCString& current = data->mOrderedScopes[i];
-
-    // Perfect match!
-    if (aScope.Equals(current)) {
-      data->mInfos.Put(aScope, aInfo);
-      swm->NotifyListenersOnRegister(aInfo);
-      return;
-    }
-
-    // Sort by length, with longest match first.
-    // /foo/bar should be before /foo/
-    // Similarly /foo/b is between the two.
-    if (StringBeginsWith(aScope, current)) {
-      data->mOrderedScopes.InsertElementAt(i, aScope);
-      data->mInfos.Put(aScope, aInfo);
-      swm->NotifyListenersOnRegister(aInfo);
-      return;
-    }
-  }
-
-  data->mOrderedScopes.AppendElement(aScope);
+  data->mScopeContainer.InsertScope(aScope);
   data->mInfos.Put(aScope, aInfo);
   swm->NotifyListenersOnRegister(aInfo);
 }
@@ -1744,15 +1810,15 @@ bool ServiceWorkerManager::FindScopeForPath(
     return false;
   }
 
-  for (uint32_t i = 0; i < (*aData)->mOrderedScopes.Length(); ++i) {
-    const nsCString& current = (*aData)->mOrderedScopes[i];
-    if (StringBeginsWith(aPath, current)) {
-      aMatch = current;
-      return true;
-    }
+  Maybe<nsCString> scope = (*aData)->mScopeContainer.MatchScope(aPath);
+
+  if (scope) {
+    // scope.isSome() will still truen true after this; we are just moving the
+    // string inside the Maybe, so the Maybe will contain an empty string.
+    aMatch = std::move(*scope);
   }
 
-  return false;
+  return scope.isSome();
 }
 
 /* static */
@@ -1774,7 +1840,7 @@ bool ServiceWorkerManager::HasScope(nsIPrincipal* aPrincipal,
     return false;
   }
 
-  return data->mOrderedScopes.Contains(aScope);
+  return data->mScopeContainer.Contains(aScope);
 }
 
 /* static */
@@ -1814,7 +1880,7 @@ void ServiceWorkerManager::RemoveScopeAndRegistration(
   RefPtr<ServiceWorkerRegistrationInfo> info;
   data->mInfos.Remove(aRegistration->Scope(), getter_AddRefs(info));
   aRegistration->SetUnregistered();
-  data->mOrderedScopes.RemoveElement(aRegistration->Scope());
+  data->mScopeContainer.RemoveScope(aRegistration->Scope());
   swm->NotifyListenersOnUnregister(info);
 
   swm->MaybeRemoveRegistrationInfo(scopeKey);
@@ -1823,7 +1889,7 @@ void ServiceWorkerManager::RemoveScopeAndRegistration(
 void ServiceWorkerManager::MaybeRemoveRegistrationInfo(
     const nsACString& aScopeKey) {
   if (auto entry = mRegistrationInfos.Lookup(aScopeKey)) {
-    if (entry.Data()->mOrderedScopes.IsEmpty() &&
+    if (entry.Data()->mScopeContainer.IsEmpty() &&
         entry.Data()->mJobQueues.Count() == 0) {
       entry.Remove();
     }
