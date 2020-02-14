@@ -396,36 +396,9 @@ nsresult HTMLEditor::DoInsertHTMLWithContext(
     }
   }
 
-  // build up list of parents of first node in list that are either
-  // lists or tables.  First examine front of paste node list.
-  AutoTArray<OwningNonNull<Element>, 4>
-      arrayOfListAndTableRelatedElementsAtStart;
-  HTMLEditor::CollectListAndTableRelatedElementsAt(
-      nodeList[0], arrayOfListAndTableRelatedElementsAtStart);
-  if (!arrayOfListAndTableRelatedElementsAtStart.IsEmpty()) {
-    Element* listOrTableElement = HTMLEditor::DiscoverPartialListsAndTables(
-        nodeList, arrayOfListAndTableRelatedElementsAtStart);
-    // if we have pieces of tables or lists to be inserted, let's force the
-    // paste to deal with table elements right away, so that it doesn't orphan
-    // some table or list contents outside the table or list.
-    if (listOrTableElement) {
-      HTMLEditor::ReplaceOrphanedStructure(StartOrEnd::start, nodeList,
-                                           *listOrTableElement);
-    }
-  }
-
-  // Now go through the same process again for the end of the paste node list.
-  AutoTArray<OwningNonNull<Element>, 4> arrayOfListAndTableRelatedElementsAtEnd;
-  HTMLEditor::CollectListAndTableRelatedElementsAt(
-      nodeList.LastElement(), arrayOfListAndTableRelatedElementsAtEnd);
-  if (!arrayOfListAndTableRelatedElementsAtEnd.IsEmpty()) {
-    Element* listOrTableElement = HTMLEditor::DiscoverPartialListsAndTables(
-        nodeList, arrayOfListAndTableRelatedElementsAtEnd);
-    // don't orphan partial list or table structure
-    if (listOrTableElement) {
-      HTMLEditor::ReplaceOrphanedStructure(StartOrEnd::end, nodeList,
-                                           *listOrTableElement);
-    }
+  {  // Block only for AutoHTMLFragmentBoundariesFixer to hide it from the
+     // following code. Note that it may modify nodeList.
+    AutoHTMLFragmentBoundariesFixer fixPiecesOfTablesAndLists(nodeList);
   }
 
   MOZ_ASSERT(pointToInsert.GetContainer()->GetChildAt_Deprecated(
@@ -2740,10 +2713,50 @@ void HTMLEditor::CollectTopMostChildNodesCompletelyInRange(
   iter.AppendAllNodesToArray(aOutArrayOfNodes);
 }
 
-// static
-void HTMLEditor::CollectListAndTableRelatedElementsAt(
-    nsINode& aNode,
-    nsTArray<OwningNonNull<Element>>& aOutArrayOfListAndTableElements) {
+/******************************************************************************
+ * HTMLEditor::AutoHTMLFragmentBoundariesFixer
+ ******************************************************************************/
+
+HTMLEditor::AutoHTMLFragmentBoundariesFixer::AutoHTMLFragmentBoundariesFixer(
+    nsTArray<OwningNonNull<nsINode>>& aArrayOfTopMostChildNodes) {
+  // build up list of parents of first node in list that are either
+  // lists or tables.  First examine front of paste node list.
+  AutoTArray<OwningNonNull<Element>, 4>
+      arrayOfListAndTableRelatedElementsAtStart;
+  CollectListAndTableRelatedElementsAt(
+      aArrayOfTopMostChildNodes[0], arrayOfListAndTableRelatedElementsAtStart);
+  if (!arrayOfListAndTableRelatedElementsAtStart.IsEmpty()) {
+    Element* listOrTableElement = DiscoverPartialListsAndTables(
+        aArrayOfTopMostChildNodes, arrayOfListAndTableRelatedElementsAtStart);
+    // if we have pieces of tables or lists to be inserted, let's force the
+    // paste to deal with table elements right away, so that it doesn't orphan
+    // some table or list contents outside the table or list.
+    if (listOrTableElement) {
+      ReplaceOrphanedStructure(StartOrEnd::start, aArrayOfTopMostChildNodes,
+                               *listOrTableElement);
+    }
+  }
+
+  // Now go through the same process again for the end of the paste node list.
+  AutoTArray<OwningNonNull<Element>, 4> arrayOfListAndTableRelatedElementsAtEnd;
+  CollectListAndTableRelatedElementsAt(aArrayOfTopMostChildNodes.LastElement(),
+                                       arrayOfListAndTableRelatedElementsAtEnd);
+  if (!arrayOfListAndTableRelatedElementsAtEnd.IsEmpty()) {
+    Element* listOrTableElement = DiscoverPartialListsAndTables(
+        aArrayOfTopMostChildNodes, arrayOfListAndTableRelatedElementsAtEnd);
+    // don't orphan partial list or table structure
+    if (listOrTableElement) {
+      ReplaceOrphanedStructure(StartOrEnd::end, aArrayOfTopMostChildNodes,
+                               *listOrTableElement);
+    }
+  }
+}
+
+void HTMLEditor::AutoHTMLFragmentBoundariesFixer::
+    CollectListAndTableRelatedElementsAt(
+        nsINode& aNode,
+        nsTArray<OwningNonNull<Element>>& aOutArrayOfListAndTableElements)
+        const {
   for (nsIContent* content = nsIContent::FromNode(&aNode); content;
        content = content->GetParentElement()) {
     if (HTMLEditUtils::IsList(content) || HTMLEditUtils::IsTable(content)) {
@@ -2752,11 +2765,11 @@ void HTMLEditor::CollectListAndTableRelatedElementsAt(
   }
 }
 
-// static
-Element* HTMLEditor::DiscoverPartialListsAndTables(
+Element*
+HTMLEditor::AutoHTMLFragmentBoundariesFixer::DiscoverPartialListsAndTables(
     const nsTArray<OwningNonNull<nsINode>>& aArrayOfNodes,
-    const nsTArray<OwningNonNull<Element>>&
-        aArrayOfListAndTableRelatedElements) {
+    const nsTArray<OwningNonNull<Element>>& aArrayOfListAndTableRelatedElements)
+    const {
   Element* lastFoundAncestorListOrTableElement = nullptr;
   for (auto& node : aArrayOfNodes) {
     if (HTMLEditUtils::IsTableElement(node) &&
@@ -2831,9 +2844,9 @@ Element* HTMLEditor::DiscoverPartialListsAndTables(
   return lastFoundAncestorListOrTableElement;
 }
 
-// static
-Element* HTMLEditor::FindReplaceableTableElement(
-    Element& aTableElement, nsINode& aNodeMaybeInTableElement) {
+Element*
+HTMLEditor::AutoHTMLFragmentBoundariesFixer::FindReplaceableTableElement(
+    Element& aTableElement, nsINode& aNodeMaybeInTableElement) const {
   MOZ_ASSERT(aTableElement.IsHTMLElement(nsGkAtoms::table));
   // Perhaps, this is designed for climbing up the DOM tree from
   // aNodeMaybeInTableElement to aTableElement and making sure that
@@ -2873,9 +2886,8 @@ Element* HTMLEditor::FindReplaceableTableElement(
   return nullptr;
 }
 
-// static
-bool HTMLEditor::IsReplaceableListElement(Element& aListElement,
-                                          nsINode& aNodeMaybeInListElement) {
+bool HTMLEditor::AutoHTMLFragmentBoundariesFixer::IsReplaceableListElement(
+    Element& aListElement, nsINode& aNodeMaybeInListElement) const {
   MOZ_ASSERT(HTMLEditUtils::IsList(&aListElement));
   // Perhaps, this is designed for climbing up the DOM tree from
   // aNodeMaybeInListElement to aListElement and making sure that
@@ -2913,10 +2925,9 @@ bool HTMLEditor::IsReplaceableListElement(Element& aListElement,
   return false;
 }
 
-// static
-void HTMLEditor::ReplaceOrphanedStructure(
+void HTMLEditor::AutoHTMLFragmentBoundariesFixer::ReplaceOrphanedStructure(
     StartOrEnd aStartOrEnd, nsTArray<OwningNonNull<nsINode>>& aArrayOfNodes,
-    Element& aListOrTableElement) {
+    Element& aListOrTableElement) const {
   MOZ_ASSERT(!aArrayOfNodes.IsEmpty());
 
   OwningNonNull<nsINode>& firstOrLastChildNode =
@@ -2926,15 +2937,14 @@ void HTMLEditor::ReplaceOrphanedStructure(
   // Find substructure of list or table that must be included in paste.
   Element* replaceElement;
   if (HTMLEditUtils::IsList(&aListOrTableElement)) {
-    if (!HTMLEditor::IsReplaceableListElement(aListOrTableElement,
-                                              firstOrLastChildNode)) {
+    if (!IsReplaceableListElement(aListOrTableElement, firstOrLastChildNode)) {
       return;
     }
     replaceElement = &aListOrTableElement;
   } else {
     MOZ_ASSERT(aListOrTableElement.IsHTMLElement(nsGkAtoms::table));
-    replaceElement = HTMLEditor::FindReplaceableTableElement(
-        aListOrTableElement, firstOrLastChildNode);
+    replaceElement =
+        FindReplaceableTableElement(aListOrTableElement, firstOrLastChildNode);
     if (!replaceElement) {
       return;
     }

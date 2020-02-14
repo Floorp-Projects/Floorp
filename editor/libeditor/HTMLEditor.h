@@ -3955,53 +3955,74 @@ class HTMLEditor final : public TextEditor,
       nsTArray<OwningNonNull<nsINode>>& aOutArrayOfNodes);
 
   /**
-   * CollectListAndTableRelatedElementsAt() collects list elements and
-   * table related elements from aNode (meaning aNode may be in the first of
-   * the result) to the root element.
+   * AutoHTMLFragmentBoundariesFixer fixes both edges of topmost child nodes
+   * which are created with SubtreeContentIterator.
    */
-  static void CollectListAndTableRelatedElementsAt(
-      nsINode& aNode,
-      nsTArray<OwningNonNull<Element>>& aOutArrayOfListAndTableElements);
+  class MOZ_STACK_CLASS AutoHTMLFragmentBoundariesFixer final {
+   public:
+    /**
+     * @param aArrayOfTopMostChildNodes
+     *                         [in/out] The topmost child nodes which will be
+     *                         inserted into the DOM tree.  Both edges, i.e.,
+     *                         first node and last node in this array will be
+     *                         checked whether they can be insertted into
+     *                         another DOM tree.  If not, it'll replaces some
+     *                         orphan nodes around nodes with proper parent.
+     */
+    explicit AutoHTMLFragmentBoundariesFixer(
+        nsTArray<OwningNonNull<nsINode>>& aArrayOfTopMostChildNodes);
 
-  /**
-   * TODO: Document what this does.
-   */
-  static Element* DiscoverPartialListsAndTables(
-      const nsTArray<OwningNonNull<nsINode>>& aArrayOfNodes,
-      const nsTArray<OwningNonNull<Element>>&
-          aArrayOfListAndTableRelatedElements);
+   private:
+    /**
+     * CollectListAndTableRelatedElementsAt() collects list elements and
+     * table related elements from aNode (meaning aNode may be in the first of
+     * the result) to the root element.
+     */
+    void CollectListAndTableRelatedElementsAt(
+        nsINode& aNode,
+        nsTArray<OwningNonNull<Element>>& aOutArrayOfListAndTableElements)
+        const;
 
-  /**
-   * TODO: Document what this does.
-   */
-  enum class StartOrEnd { start, end };
-  static void ReplaceOrphanedStructure(
-      StartOrEnd aStartOrEnd, nsTArray<OwningNonNull<nsINode>>& aArrayOfNodes,
-      Element& aListOrTableElement);
+    /**
+     * TODO: Document what this does.
+     */
+    Element* DiscoverPartialListsAndTables(
+        const nsTArray<OwningNonNull<nsINode>>& aArrayOfNodes,
+        const nsTArray<OwningNonNull<Element>>&
+            aArrayOfListAndTableRelatedElements) const;
 
-  /**
-   * FindReplaceableTableElement() is a helper method of
-   * ReplaceOrphanedStructure().  If aNodeMaybeInTableElement is a descendant
-   * of aTableElement, returns aNodeMaybeInTableElement or its nearest ancestor
-   * whose tag name is `<td>`, `<th>`, `<tr>`, `<thead>`, `<tfoot>`, `<tbody>`
-   * or `<caption>`.
-   *
-   * @param aTableElement               Must be a `<table>` element.
-   * @param aNodeMaybeInTableElement    A node which may be in aTableElement.
-   */
-  static Element* FindReplaceableTableElement(
-      Element& aTableElement, nsINode& aNodeMaybeInTableElement);
+    /**
+     * TODO: Document what this does.
+     */
+    enum class StartOrEnd { start, end };
+    void ReplaceOrphanedStructure(
+        StartOrEnd aStartOrEnd, nsTArray<OwningNonNull<nsINode>>& aArrayOfNodes,
+        Element& aListOrTableElement) const;
 
-  /**
-   * IsReplaceableListElement() is a helper method of
-   * ReplaceOrphanedStructure().  If aNodeMaybeInListElement is a descendant
-   * of aListElement, returns true.  Otherwise, false.
-   *
-   * @param aListElement                Must be a list element.
-   * @param aNodeMaybeInListElement     A node which may be in aListElement.
-   */
-  static bool IsReplaceableListElement(Element& aListElement,
-                                       nsINode& aNodeMaybeInListElement);
+    /**
+     * FindReplaceableTableElement() is a helper method of
+     * ReplaceOrphanedStructure().  If aNodeMaybeInTableElement is a descendant
+     * of aTableElement, returns aNodeMaybeInTableElement or its nearest
+     * ancestor whose tag name is `<td>`, `<th>`, `<tr>`, `<thead>`, `<tfoot>`,
+     * `<tbody>` or `<caption>`.
+     *
+     * @param aTableElement               Must be a `<table>` element.
+     * @param aNodeMaybeInTableElement    A node which may be in aTableElement.
+     */
+    Element* FindReplaceableTableElement(
+        Element& aTableElement, nsINode& aNodeMaybeInTableElement) const;
+
+    /**
+     * IsReplaceableListElement() is a helper method of
+     * ReplaceOrphanedStructure().  If aNodeMaybeInListElement is a descendant
+     * of aListElement, returns true.  Otherwise, false.
+     *
+     * @param aListElement                Must be a list element.
+     * @param aNodeMaybeInListElement     A node which may be in aListElement.
+     */
+    bool IsReplaceableListElement(Element& aListElement,
+                                  nsINode& aNodeMaybeInListElement) const;
+  };
 
   /**
    * GetBetterInsertionPointFor() returns better insertion point to insert
