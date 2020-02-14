@@ -420,7 +420,6 @@ add_task(async function() {
       const requestsListStatus = requestItem.querySelector(".status-code");
       EventUtils.sendMouseEvent({ type: "mouseover" }, requestsListStatus);
       await waitUntil(() => requestsListStatus.title);
-      await waitForDOMIfNeeded(requestItem, ".requests-list-timings-total");
     }
 
     for (let i = 0; i < visibility.length; i++) {

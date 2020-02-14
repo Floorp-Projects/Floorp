@@ -335,7 +335,6 @@
 .requests-list-waterfall {
   background-repeat: repeat-y;
   background-position: left center;
-  overflow: visible;
   /* Background created on a <canvas> in js. */
   /* @see devtools/client/netmonitor/src/widgets/WaterfallBackground.js */
   background-image: -moz-element(#waterfall-background);
@@ -396,8 +395,7 @@
 }
 
 .requests-list-timings {
-  display: flex;
-  align-items: center;
+  transform: scaleX(var(--timings-scale));
 }
 
 .requests-list-timings:dir(ltr) {
@@ -410,11 +408,7 @@
 
 .requests-list-timings-box {
   display: inline-block;
-  height: 12px;
-}
-
-.requests-list-timings-box.filler {
-  background-color: var(--theme-splitter-color);
+  height: 9px;
 }
 
 .requests-list-timings-box.blocked {
@@ -448,9 +442,11 @@
 .requests-list-timings-total {
   display: inline-block;
   padding-inline-start: 4px;
-  font-size: 80%;
+  font-size: 85%;
   font-weight: 600;
   white-space: nowrap;
+  /* This node should not be scaled - apply a reversed transformation */
+  transform: scaleX(var(--timings-rev-scale));
   text-align: left;
 }
 
