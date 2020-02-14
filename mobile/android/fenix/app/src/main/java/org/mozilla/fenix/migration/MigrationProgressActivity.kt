@@ -91,29 +91,23 @@ class MigrationProgressActivity : AbstractMigrationProgressActivity() {
 }
 
 // These are the only items we want to show migrating in the UI.
-internal val whiteList = mapOf(
-    Bookmarks to R.string.preferences_sync_bookmarks,
+internal val whiteList = linkedMapOf(
+    Settings to R.string.settings_title,
     History to R.string.preferences_sync_history,
-    Logins to R.string.migration_text_passwords,
-    Settings to R.string.settings_title
+    Bookmarks to R.string.preferences_sync_bookmarks,
+    Logins to R.string.migration_text_passwords
 )
 
-internal fun MigrationResults.toItemList() = filterKeys {
-    whiteList.keys.contains(it)
-}.map { (type, status) ->
-    MigrationItem(
-        type,
-        status.success
-    )
-}.toMutableList()
-    .plus(
-        whiteList
-            .filterKeys { !this.containsKey(it) }
-            .keys
-            .map { MigrationItem(it, false) }
-    ).sortedBy { it.migration.javaClass.simpleName }
+internal fun MigrationResults.toItemList() = whiteList.keys
+    .map {
+        if (containsKey(it)) {
+            MigrationItem(it, getValue(it).success)
+        } else {
+            MigrationItem(it)
+        }
+    }
 
-internal data class MigrationItem(val migration: Migration, val status: Boolean)
+internal data class MigrationItem(val migration: Migration, val status: Boolean = false)
 
 internal class MigrationStatusAdapter :
     ListAdapter<MigrationItem, MigrationStatusAdapter.ViewHolder>(DiffCallback) {
