@@ -360,6 +360,9 @@ SheetLoadData::SheetLoadData(Loader* aLoader, nsIURI* aURI, StyleSheet* aSheet,
 }
 
 SheetLoadData::~SheetLoadData() {
+  MOZ_DIAGNOSTIC_ASSERT(mSheetCompleteCalled,
+                        "Should always call SheetComplete");
+
   // Do this iteratively to avoid blowing up the stack.
   RefPtr<SheetLoadData> next = std::move(mNext);
   while (next) {
@@ -1615,17 +1618,16 @@ nsresult Loader::LoadSheet(SheetLoadData& aLoadData, SheetState aSheetState,
   // We don't have to hold on to the stream loader.  The ownership
   // model is: Necko owns the stream loader, which owns the load data,
   // which owns us
-  nsCOMPtr<nsIStreamListener> streamLoader = new StreamLoader(aLoadData);
-
+  auto streamLoader = MakeRefPtr<StreamLoader>(aLoadData);
   if (mDocument) {
     net::PredictorLearn(aLoadData.mURI, mDocument->GetDocumentURI(),
                         nsINetworkPredictor::LEARN_LOAD_SUBRESOURCE, mDocument);
   }
 
   rv = channel->AsyncOpen(streamLoader);
-
   if (NS_FAILED(rv)) {
     LOG_ERROR(("  Failed to create stream loader"));
+    streamLoader->AsyncOpenFailed();
     SheetComplete(aLoadData, rv);
     return rv;
   }
@@ -1772,14 +1774,10 @@ void Loader::DoSheetComplete(SheetLoadData& aLoadData,
     // Remove the data from the list of loading datas
     if (aLoadData.mIsLoading) {
       SheetLoadDataHashKey key(aLoadData);
-#ifdef DEBUG
-      SheetLoadData* loadingData;
-      NS_ASSERTION(mSheets->mLoadingDatas.Get(&key, &loadingData) &&
-                       loadingData == &aLoadData,
-                   "Bad loading table");
-#endif
-
-      mSheets->mLoadingDatas.Remove(&key);
+      Maybe<SheetLoadData*> loadingData =
+          mSheets->mLoadingDatas.GetAndRemove(&key);
+      MOZ_DIAGNOSTIC_ASSERT(loadingData && loadingData.value() == &aLoadData);
+      Unused << loadingData;
       aLoadData.mIsLoading = false;
     }
   }
@@ -1787,6 +1785,11 @@ void Loader::DoSheetComplete(SheetLoadData& aLoadData,
   // Go through and deal with the whole linked list.
   SheetLoadData* data = &aLoadData;
   do {
+    MOZ_DIAGNOSTIC_ASSERT(!data->mSheetCompleteCalled);
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+    data->mSheetCompleteCalled = true;
+#endif
+
     if (!data->mSheetAlreadyComplete) {
       // If mSheetAlreadyComplete, then the sheet could well be modified between
       // when we posted the async call to SheetComplete and now, since the sheet
