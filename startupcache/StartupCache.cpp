@@ -601,16 +601,6 @@ void StartupCache::MaybeInitShutdownWrite() {
   gShutdownInitiated = true;
 
   MaybeSpawnWriteThread();
-
-  // If we shutdown quickly timer wont have fired. Instead of writing
-  // it on the main thread and block the shutdown we simply wont update
-  // the startup cache. Always do this if the file doesn't exist since
-  // we use it part of the package step.
-  if (!mCacheData.initialized() || ShouldCompactCache()) {
-    mDirty = true;
-    auto result = WriteToDisk();
-    Unused << NS_WARN_IF(result.isErr());
-  }
 }
 
 void StartupCache::IgnoreDiskCache() {
