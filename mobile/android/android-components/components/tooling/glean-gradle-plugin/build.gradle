@@ -25,6 +25,11 @@ task sourcesJar(type: Jar) {
     from sourceSets.main.allSource
 }
 
+static def getLocalPublicationTimestamp() {
+    def date = new Date()
+    return date.format('yyyyMMddHHmmss')
+}
+
 publishing {
     publications {
         mavenJava(MavenPublication) {
