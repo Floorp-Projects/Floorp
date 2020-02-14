@@ -34,7 +34,7 @@ esac
 
 case "$2" in
 8)  VERSION="8.17.0" ;;
-10) VERSION="10.18.1" ;;
+10) VERSION="10.19.0" ;;
 *)
     echo "Unknown version $2 not recognized in repack-node.sh" >&2
     exit 1
@@ -48,11 +48,11 @@ case "$ARCH--$VERSION" in
     win-x64--8.17.0)      SHA256SUM=e95a63e81b27e78872c0efb9dd5809403014dbf9896035cc17adf51a350f88fa ;;
     win-x86--8.17.0)      SHA256SUM=3ecc0ab4c6ad957f5dfb9ca22453cd35908029fba86350fc96d070e8e5c213b5 ;;
 
-    # From https://nodejs.org/dist/v10.18.1/SHASUMS256.txt.asc
-    linux-x64--10.18.1)   SHA256SUM=8cc40f45c2c62529b15e83a6bbe0ac1febf57af3c5720df68067c96c0fddbbdf ;;
-    darwin-x64--10.18.1)  SHA256SUM=ea344da9fc5e07f1bdf5b192813d22b0e94d78e50bd7965711c01d99f094d9b0 ;;
-    win-x64--10.18.1)     SHA256SUM=fb27bb95c27c72f2e25d0c41309b606b2ae48ba0d6094a19f206ad1df9dc5e19 ;;
-    win-x86--10.18.1)     SHA256SUM=ffe874d6edfc56c88b85de118e14a2e999fa344e8814cc1e1d9cd4048dd75461 ;;
+    # From https://nodejs.org/dist/v10.19.0/SHASUMS256.txt.asc
+    linux-x64--10.19.0)   SHA256SUM=34127c7c6b1ba02d6d4dc3a926f38a5fb88bb37fc7f051349005ce331c7a53c6 ;;
+    darwin-x64--10.19.0)  SHA256SUM=91725d2ed64e4ccd265259e3e29a0e64a4d26d9d1cd9ba390e0cdec13ea7b02f ;;
+    win-x64--10.19.0)     SHA256SUM=210efd45a7f79cf4c350d8f575f990becdd3833cd922796a4c83b27996f5679e ;;
+    win-x86--10.19.0)     SHA256SUM=afd176d4f022b6a5dbd4a908d42c6d85d4f739c040f65430ab3bf60b8f3b9a96 ;;
 esac
 
 # From https://nodejs.org/en/download/
@@ -71,4 +71,8 @@ shasum --algorithm 256 --check node.txt
 
 $UNARCHIVE $ARCHIVE
 mv node-v$VERSION-$ARCH node
+# npx doesn't have great security characteristics (it downloads and executes
+# stuff directly out of npm at runtime), so let's not risk it getting into
+# anyone's PATH who doesn't already have it there:
+rm -f node/bin/npx node/bin/npx.exe
 tar c${REPACK_TAR_COMPRESSION_SWITCH}f "$UPLOAD_DIR"/node.$REPACK_SUFFIX node
