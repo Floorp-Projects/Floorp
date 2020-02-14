@@ -507,7 +507,6 @@ cbindgen-types = [
     { gecko = "StyleGenericScrollbarColor", servo = "values::generics::ui::ScrollbarColor" },
     { gecko = "StyleRGBA", servo = "cssparser::RGBA" },
     { gecko = "StyleOrigin", servo = "stylesheets::Origin" },
-    { gecko = "StyleGenericGradientItem", servo = "values::generics::image::GradientItem" },
     { gecko = "StyleGenericVerticalAlign", servo = "values::generics::box_::VerticalAlign" },
     { gecko = "StyleVerticalAlignKeyword", servo = "values::generics::box_::VerticalAlignKeyword" },
     { gecko = "StyleGenericBasicShape", servo = "values::generics::basic_shape::BasicShape" },
