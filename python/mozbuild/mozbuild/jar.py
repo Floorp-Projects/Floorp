@@ -10,17 +10,16 @@ See the documentation for jar.mn on MDC for further details on the format.
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-import errno
-import io
-import logging
+import sys
 import os
+import errno
 import re
 import six
-from six import BytesIO
-import sys
+import logging
 from time import localtime
-
 from MozZipFile import ZipFile
+from six import BytesIO
+
 from mozbuild.preprocessor import Preprocessor
 from mozbuild.action.buildlist import addEntriesToListFile
 from mozbuild.util import ensure_bytes
@@ -468,8 +467,8 @@ class JarMaker(object):
         self._seen_output.add(out)
 
         if e.preprocess:
-            outf = outHelper.getOutput(out, mode='w')
-            inf = io.open(realsrc, encoding='utf-8')
+            outf = outHelper.getOutput(out)
+            inf = open(realsrc)
             pp = self.pp.clone()
             if src[-4:] == '.css':
                 pp.setMarker('%')
@@ -508,7 +507,7 @@ class JarMaker(object):
             except Exception:
                 return localtime(0)
 
-        def getOutput(self, name, mode='wb'):
+        def getOutput(self, name):
             return ZipEntry(name, self.jarfile)
 
     class OutputHelper_flat(object):
@@ -523,7 +522,7 @@ class JarMaker(object):
         def getDestModTime(self, aPath):
             return getModTime(os.path.join(self.basepath, aPath))
 
-        def getOutput(self, name, mode='wb'):
+        def getOutput(self, name):
             out = self.ensureDirFor(name)
 
             # remove previous link or file
@@ -532,10 +531,7 @@ class JarMaker(object):
             except OSError as e:
                 if e.errno != errno.ENOENT:
                     raise
-            if 'b' in mode:
-                return io.open(out, mode)
-            else:
-                return io.open(out, mode, encoding='utf-8', newline='\n')
+            return open(out, 'wb')
 
         def ensureDirFor(self, name):
             out = os.path.join(self.basepath, name)

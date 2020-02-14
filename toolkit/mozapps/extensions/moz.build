@@ -32,7 +32,6 @@ built_in_addons = 'built_in_addons.json'
 GENERATED_FILES += [built_in_addons]
 manifest = GENERATED_FILES[built_in_addons]
 manifest.script = 'gen_built_in_addons.py'
-manifest.py2 = True
 
 if CONFIG['MOZ_BUILD_APP'] == 'browser':
     manifest.flags = ['--features=browser/features']

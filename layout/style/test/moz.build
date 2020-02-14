@@ -149,5 +149,4 @@ if CONFIG['COMPILE_ENVIRONMENT']:
         'css_properties_like_longhand.js',
         '!host_ListCSSProperties%s' % CONFIG['HOST_BIN_SUFFIX'],
     ]
-    GENERATED_FILES['css_properties.js'].py2 = True
     TEST_HARNESS_FILES.testing.mochitest.tests.layout.style.test += ['!css_properties.js']
