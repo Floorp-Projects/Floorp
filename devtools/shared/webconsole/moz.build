@@ -20,7 +20,6 @@ for dir in RELATIVEDIR.split('/'):
 base += ["!reserved-js-words.js"]
 
 GeneratedFile('reserved-js-words.js', script='GenerateReservedWordsJS.py',
-              py2=True,
               inputs = ['/js/src/frontend/ReservedWords.h'])
 
 DevToolsModules(
