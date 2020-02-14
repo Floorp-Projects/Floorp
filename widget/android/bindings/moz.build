@@ -40,7 +40,6 @@ t = tuple(['sdk_bindings'] +
 GENERATED_FILES += [t]
 GENERATED_FILES[t].script = '/mobile/android/gradle.py:generate_sdk_bindings'
 GENERATED_FILES[t].inputs += ['%s-classes.txt' % stem for stem in generated]
-GENERATED_FILES[t].py2 = True
 
 FINAL_LIBRARY = 'xul'
 

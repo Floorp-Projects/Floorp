@@ -119,7 +119,6 @@ LOCAL_INCLUDES += [
 
 GeneratedFile('dafsa_test_1.inc',
               script='../../ds/tools/make_dafsa.py',
-              py2=True,
               inputs=['dafsa_test_1.dat'])
 
 TEST_HARNESS_FILES.gtest += [
