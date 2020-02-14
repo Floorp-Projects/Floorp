@@ -45,6 +45,10 @@ async function testSteps() {
   let request = clear();
   await requestFinished(request);
 
+  info("Verifying storage");
+
+  verifyStorage(packages, "beforeInstall");
+
   info("Installing packages");
 
   installPackages(packages);
