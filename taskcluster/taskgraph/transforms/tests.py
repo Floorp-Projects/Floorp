@@ -1284,7 +1284,6 @@ CHUNK_SUITES_BLACKLIST = (
     'jittest',
     'jsreftest',
     'marionette',
-    'mochitest-browser-chrome',
     'mochitest-browser-chrome-screenshots',
     'mochitest-browser-chrome-thunderbird',
     'mochitest-valgrind-plain',
