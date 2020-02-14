@@ -138,8 +138,8 @@ NS_IMPL_ISUPPORTS(StartupCache, nsIMemoryReporter)
 
 StartupCache::StartupCache()
     : mDirty(false),
-      mStartupWriteInitiated(false),
       mWrittenOnce(false),
+      mStartupWriteInitiated(false),
       mCurTableReferenced(false),
       mRequestedCount(0),
       mCacheEntriesBaseOffset(0),
@@ -687,7 +687,7 @@ void StartupCache::WriteTimeout(nsITimer* aTimer, void* aClosure) {
  * See StartupCache::WriteTimeout above - this is just the non-static body.
  */
 void StartupCache::MaybeSpawnWriteThread() {
-  if (mWrittenOnce || mWriteThread) {
+  if (mWriteThread || mWrittenOnce) {
     return;
   }
 
