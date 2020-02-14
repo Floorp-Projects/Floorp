@@ -1630,7 +1630,7 @@
 # See https://github.com/whatwg/html/pull/3752
 - name: dom.image-lazy-loading.enabled
   type: RelaxedAtomicBool
-  value: false
+  value: true
   mirror: always
 
 # Enable passing the "storage" option to indexedDB.open.
