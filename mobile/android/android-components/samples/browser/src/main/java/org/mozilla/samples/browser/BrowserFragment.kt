@@ -11,6 +11,7 @@ import android.view.ViewGroup
 import kotlinx.android.synthetic.main.fragment_browser.view.*
 import mozilla.components.feature.awesomebar.AwesomeBarFeature
 import mozilla.components.feature.awesomebar.provider.SearchSuggestionProvider
+import mozilla.components.feature.search.SearchFeature
 import mozilla.components.feature.session.ThumbnailsFeature
 import mozilla.components.feature.tabs.WindowFeature
 import mozilla.components.feature.tabs.toolbar.TabsToolbarFeature
@@ -28,6 +29,7 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
     private val thumbnailsFeature = ViewBoundFeatureWrapper<ThumbnailsFeature>()
     private val readerViewFeature = ViewBoundFeatureWrapper<ReaderViewIntegration>()
     private val webExtToolbarFeature = ViewBoundFeatureWrapper<WebExtensionToolbarFeature>()
+    private val searchFeature = ViewBoundFeatureWrapper<SearchFeature>()
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         val layout = super.onCreateView(inflater, container, savedInstanceState)
@@ -76,6 +78,17 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
                 layout.toolbar,
                 components.store
             ),
+            owner = this,
+            view = layout
+        )
+
+        searchFeature.set(
+            feature = SearchFeature(components.store) {
+                when (it.isPrivate) {
+                    true -> components.searchUseCases.newPrivateTabSearch.invoke(it.query)
+                    false -> components.searchUseCases.newTabSearch.invoke(it.query)
+                }
+            },
             owner = this,
             view = layout
         )

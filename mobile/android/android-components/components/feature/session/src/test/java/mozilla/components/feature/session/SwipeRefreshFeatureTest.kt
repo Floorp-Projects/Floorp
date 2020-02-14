@@ -14,6 +14,7 @@ import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineView
+import mozilla.components.concept.engine.selection.SelectionActionDelegate
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.whenever
@@ -99,5 +100,6 @@ class SwipeRefreshFeatureTest {
         override fun clearSelection() {}
         override fun render(session: EngineSession) {}
         override fun release() {}
+        override var selectionActionDelegate: SelectionActionDelegate? = null
     }
 }

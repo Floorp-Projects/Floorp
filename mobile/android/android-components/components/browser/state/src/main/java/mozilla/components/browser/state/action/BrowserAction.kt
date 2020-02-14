@@ -24,6 +24,7 @@ import mozilla.components.concept.engine.content.blocking.Tracker
 import mozilla.components.concept.engine.prompt.PromptRequest
 import mozilla.components.concept.engine.webextension.WebExtensionBrowserAction
 import mozilla.components.concept.engine.webextension.WebExtensionPageAction
+import mozilla.components.concept.engine.search.SearchRequest
 import mozilla.components.concept.engine.window.WindowRequest
 import mozilla.components.lib.state.Action
 
@@ -228,6 +229,16 @@ sealed class ContentAction : BrowserAction() {
      * Removes the [WindowRequest] of the [ContentState] with the given [sessionId].
      */
     data class ConsumeWindowRequestAction(val sessionId: String) : ContentAction()
+
+    /**
+     * Updates the [SearchRequest] of the [ContentState] with the given [sessionId].
+     */
+    data class UpdateSearchRequestAction(val sessionId: String, val searchRequest: SearchRequest) : ContentAction()
+
+    /**
+     * Removes the [SearchRequest] of the [ContentState] with the given [sessionId].
+     */
+    data class ConsumeSearchRequestAction(val sessionId: String) : ContentAction()
 }
 
 /**

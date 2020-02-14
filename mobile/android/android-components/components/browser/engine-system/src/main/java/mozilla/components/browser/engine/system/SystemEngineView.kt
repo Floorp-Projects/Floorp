@@ -56,6 +56,7 @@ import mozilla.components.concept.engine.content.blocking.Tracker
 import mozilla.components.concept.engine.prompt.PromptRequest
 import mozilla.components.concept.engine.request.RequestInterceptor
 import mozilla.components.concept.engine.request.RequestInterceptor.InterceptionResponse
+import mozilla.components.concept.engine.selection.SelectionActionDelegate
 import mozilla.components.concept.engine.window.WindowRequest
 import mozilla.components.concept.storage.PageVisit
 import mozilla.components.concept.storage.RedirectSource
@@ -75,6 +76,8 @@ class SystemEngineView @JvmOverloads constructor(
 ) : FrameLayout(context, attrs, defStyleAttr), EngineView, View.OnLongClickListener {
     @VisibleForTesting(otherwise = PRIVATE)
     internal var session: SystemEngineSession? = null
+
+    override var selectionActionDelegate: SelectionActionDelegate? = null
 
     /**
      * Render the content of the given session.

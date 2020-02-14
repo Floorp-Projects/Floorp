@@ -13,6 +13,7 @@ import android.widget.TextView
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineView
+import mozilla.components.concept.engine.selection.SelectionActionDelegate
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertFalse
@@ -68,6 +69,8 @@ class FakeEngineView(context: Context) : TextView(context), EngineView {
     override fun setDynamicToolbarMaxHeight(height: Int) {}
 
     override fun release() {}
+
+    override var selectionActionDelegate: SelectionActionDelegate? = null
 }
 
 class BrowserToolbar(context: Context) : TextView(context)

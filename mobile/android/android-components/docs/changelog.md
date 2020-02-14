@@ -50,6 +50,40 @@ permalink: /changelog/
       nonFatalCrashIntent = pendingIntent
   )
   ```
+  
+* **feature-search**
+  * Adds `DefaultSelectionActionDelegate`, which may be used to add new actions to text selection context menus.
+    * It currently adds "Firefox Search" or "Firefox Private Search", depending on whether the selected tab is private.
+  * Adds `SearchFeature`, which consumes search requests made by other components.
+  ```kotlin
+  // Example usage
+
+  // Attach `DefaultSelectionActionDelegate` to the `EngineView`
+  override fun onCreateView(parent: View?, name: String, context: Context, attrs: AttributeSet): View? =
+      when (name) {
+          EngineView::class.java.name -> components.engine.createView(context, attrs).apply {
+              selectionActionDelegate = DefaultSelectionActionDelegate(
+                  components.store,
+                  context,
+                  "My App Name"
+              )
+          }.asView()
+      }
+      
+  // Use `SearchFeature` to attach search requests to your own code
+  private val searchFeature = ViewBoundFeatureWrapper<SearchFeature>()
+  // ...
+  searchFeature.set(
+      feature = SearchFeature(components.store) {
+          when (it.isPrivate) {
+              false -> components.searchUseCases.newTabSearch.invoke(it.query)
+              true -> components.searchUseCases.newPrivateTabSearch.invoke(it.query)
+          }
+      },
+      owner = this,
+      view = layout
+  )
+  ```
 
 * **service-glean**
   * Glean was updated to v24.2.0:

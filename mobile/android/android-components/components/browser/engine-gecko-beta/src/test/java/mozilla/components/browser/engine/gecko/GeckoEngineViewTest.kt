@@ -8,11 +8,13 @@ import android.app.Activity
 import android.content.Context
 import android.graphics.Bitmap
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import mozilla.components.browser.engine.gecko.selection.GeckoSelectionActionDelegate
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.whenever
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.never
@@ -178,5 +180,22 @@ class GeckoEngineViewTest {
         engineView.observer.onCrash()
 
         verify(geckoView).setSession(geckoSession)
+    }
+
+    @Test
+    fun `after rendering currentSelection should be a GeckoSelectionActionDelegate`() {
+        val engineView = GeckoEngineView(context).apply {
+            selectionActionDelegate = mock()
+        }
+        val engineSession = mock<GeckoEngineSession>()
+        val geckoSession = mock<GeckoSession>()
+        val geckoView = mock<NestedGeckoView>()
+
+        whenever(engineSession.geckoSession).thenReturn(geckoSession)
+        engineView.currentGeckoView = geckoView
+
+        engineView.render(engineSession)
+
+        assertTrue(engineView.currentSelection is GeckoSelectionActionDelegate)
     }
 }

@@ -8,6 +8,7 @@ import android.graphics.Bitmap
 import android.view.View
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.OnLifecycleEvent
+import mozilla.components.concept.engine.selection.SelectionActionDelegate
 
 /**
  * View component that renders web content.
@@ -113,6 +114,11 @@ interface EngineView {
      * @param height The maximum possible height of the toolbar.
      */
     fun setDynamicToolbarMaxHeight(height: Int)
+
+    /**
+     * A delegate that will handle interactions with text selection context menus.
+     */
+    var selectionActionDelegate: SelectionActionDelegate?
 }
 
 /**

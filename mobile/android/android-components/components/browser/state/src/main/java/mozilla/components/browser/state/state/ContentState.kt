@@ -9,6 +9,7 @@ import mozilla.components.browser.state.state.content.DownloadState
 import mozilla.components.browser.state.state.content.FindResultState
 import mozilla.components.concept.engine.HitResult
 import mozilla.components.concept.engine.prompt.PromptRequest
+import mozilla.components.concept.engine.search.SearchRequest
 import mozilla.components.concept.engine.window.WindowRequest
 
 /**
@@ -31,6 +32,7 @@ import mozilla.components.concept.engine.window.WindowRequest
  * @property promptRequest the last received [PromptRequest].
  * @property findResults the list of results of the latest "find in page" operation.
  * @property windowRequest the last received [WindowRequest].
+ * @property searchRequest the last received [SearchRequest]
  */
 data class ContentState(
     val url: String,
@@ -46,5 +48,6 @@ data class ContentState(
     val hitResult: HitResult? = null,
     val promptRequest: PromptRequest? = null,
     val findResults: List<FindResultState> = emptyList(),
-    val windowRequest: WindowRequest? = null
+    val windowRequest: WindowRequest? = null,
+    val searchRequest: SearchRequest? = null
 )
