@@ -845,7 +845,7 @@ class TreeMetadataEmitter(LoggingMixin):
                         defines = lib.defines.get_defines()
                     yield GeneratedFile(context, script,
                                         'generate_symbols_file', lib.symbols_file,
-                                        [symbols_file], defines)
+                                        [symbols_file], defines, py2=True)
             if static_lib:
                 is_rust_library = context.get('IS_RUST_LIBRARY')
                 if is_rust_library:
@@ -1483,7 +1483,7 @@ class TreeMetadataEmitter(LoggingMixin):
                                   'action', 'process_define_files.py')
             yield GeneratedFile(context, script, 'process_define_file',
                                 unicode(path),
-                                [Path(context, path + '.in')])
+                                [Path(context, path + '.in')], py2=True)
 
         generated_files = context.get('GENERATED_FILES') or []
         localized_generated_files = context.get('LOCALIZED_GENERATED_FILES') or []
@@ -1526,7 +1526,8 @@ class TreeMetadataEmitter(LoggingMixin):
                     inputs.append(p)
 
                 yield GeneratedFile(context, script, method, outputs, inputs,
-                                    flags.flags, localized=localized, force=flags.force)
+                                    flags.flags, localized=localized, force=flags.force,
+                                    py2=flags.py2)
 
     def _process_test_manifests(self, context):
         for prefix, info in TEST_MANIFESTS.items():
