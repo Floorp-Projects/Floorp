@@ -141,6 +141,15 @@ cfr-whatsnew-lockwise-take-body =
    backed up passwords from anywhere.
 cfr-whatsnew-lockwise-take-link-text = Get the app
 
+## Search Bar
+
+cfr-whatsnew-searchbar-title = Type less, find more with the address bar
+# Variables:
+#   $searchEngineName - Name of the current default search engine as also shown in the urlbar.
+cfr-whatsnew-searchbar-body-enginename = Get to the sites you use most with a single click into the address bar. Find things faster with results from { $searchEngineName } and your browsing history.
+cfr-whatsnew-searchbar-body-generic = Get to the sites you use most with a single click into the address bar. Find things faster with search results from your browsing history.
+cfr-whatsnew-searchbar-icon-alt-text = Magnifying glass icon
+
 ## Picture-in-Picture
 
 cfr-whatsnew-pip-header = Watch videos while you browse
