@@ -1954,10 +1954,8 @@ pref("devtools.inspector.show_pseudo_elements", false);
 pref("devtools.inspector.imagePreviewTooltipSize", 300);
 // Enable user agent style inspection in rule-view
 pref("devtools.inspector.showUserAgentStyles", false);
-// Show all native anonymous content
+// Show native anonymous content and user agent shadow roots
 pref("devtools.inspector.showAllAnonymousContent", false);
-// Show user agent shadow roots
-pref("devtools.inspector.showUserAgentShadowRoots", false);
 // Enable the new Rules View
 pref("devtools.inspector.new-rulesview.enabled", false);
 // Enable the compatibility tool in the inspector.
