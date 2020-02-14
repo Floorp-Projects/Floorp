@@ -163,9 +163,8 @@ already_AddRefed<Promise> Client::Focus(CallerType aCallerType,
           },
           [holder, outerPromise](const CopyableErrorResult& aResult) {
             holder->Complete();
-            // MaybeReject needs a non-const result, so make a copy.
-            CopyableErrorResult result(aResult);
-            outerPromise->MaybeReject(result);
+            // MaybeReject needs a non-const-ref result, so make a copy.
+            outerPromise->MaybeReject(CopyableErrorResult(aResult));
           })
       ->Track(*holder);
 
@@ -201,8 +200,8 @@ already_AddRefed<Promise> Client::Navigate(const nsAString& aURL,
         outerPromise->MaybeResolve(newClient);
       },
       [self, outerPromise](const CopyableErrorResult& aResult) {
-        CopyableErrorResult result(aResult);
-        outerPromise->MaybeReject(result);
+        // MaybeReject needs a non-const-ref result, so make a copy.
+        outerPromise->MaybeReject(CopyableErrorResult(aResult));
       });
 
   return outerPromise.forget();

@@ -551,7 +551,7 @@ void CacheStorage::RunRequest(nsAutoPtr<Entry>&& aEntry) {
     ErrorResult rv;
     args.Add(entry->mRequest, IgnoreBody, IgnoreInvalidScheme, rv);
     if (NS_WARN_IF(rv.Failed())) {
-      entry->mPromise->MaybeReject(rv);
+      entry->mPromise->MaybeReject(std::move(rv));
       return;
     }
   }

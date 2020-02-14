@@ -43,7 +43,7 @@ bool ToJSValue(JSContext* aCx, nsresult aArgument,
   return ToJSValue(aCx, exception, aValue);
 }
 
-bool ToJSValue(JSContext* aCx, ErrorResult& aArgument,
+bool ToJSValue(JSContext* aCx, ErrorResult&& aArgument,
                JS::MutableHandle<JS::Value> aValue) {
   MOZ_ASSERT(aArgument.Failed());
   MOZ_ASSERT(

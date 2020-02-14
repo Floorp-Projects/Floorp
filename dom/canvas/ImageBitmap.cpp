@@ -1674,7 +1674,7 @@ void CreateImageBitmapFromBlob::
     imageBitmap->SetPictureRect(mCropRect.ref(), rv);
 
     if (rv.Failed()) {
-      mPromise->MaybeReject(rv);
+      mPromise->MaybeReject(std::move(rv));
       return;
     }
   }

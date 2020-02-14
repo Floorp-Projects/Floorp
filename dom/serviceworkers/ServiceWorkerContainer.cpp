@@ -383,14 +383,14 @@ already_AddRefed<Promise> ServiceWorkerContainer::Register(
         ErrorResult rv;
         nsIGlobalObject* global = self->GetGlobalIfValid(rv);
         if (rv.Failed()) {
-          outer->MaybeReject(rv);
+          outer->MaybeReject(std::move(rv));
           return;
         }
         RefPtr<ServiceWorkerRegistration> reg =
             global->GetOrCreateServiceWorkerRegistration(aDesc);
         outer->MaybeResolve(reg);
       },
-      [outer](ErrorResult& aRv) { outer->MaybeReject(aRv); });
+      [outer](ErrorResult&& aRv) { outer->MaybeReject(std::move(aRv)); });
 
   return outer.forget();
 }
@@ -433,7 +433,7 @@ already_AddRefed<Promise> ServiceWorkerContainer::GetRegistrations(
         ErrorResult rv;
         nsIGlobalObject* global = self->GetGlobalIfValid(rv);
         if (rv.Failed()) {
-          outer->MaybeReject(rv);
+          outer->MaybeReject(std::move(rv));
           return;
         }
         nsTArray<RefPtr<ServiceWorkerRegistration>> regList;
@@ -446,7 +446,7 @@ already_AddRefed<Promise> ServiceWorkerContainer::GetRegistrations(
         }
         outer->MaybeResolve(regList);
       },
-      [self, outer](ErrorResult& aRv) { outer->MaybeReject(aRv); });
+      [self, outer](ErrorResult&& aRv) { outer->MaybeReject(std::move(aRv)); });
 
   return outer.forget();
 }
@@ -508,14 +508,14 @@ already_AddRefed<Promise> ServiceWorkerContainer::GetRegistration(
         ErrorResult rv;
         nsIGlobalObject* global = self->GetGlobalIfValid(rv);
         if (rv.Failed()) {
-          outer->MaybeReject(rv);
+          outer->MaybeReject(std::move(rv));
           return;
         }
         RefPtr<ServiceWorkerRegistration> reg =
             global->GetOrCreateServiceWorkerRegistration(aDescriptor);
         outer->MaybeResolve(reg);
       },
-      [self, outer](ErrorResult& aRv) {
+      [self, outer](ErrorResult&& aRv) {
         if (!aRv.Failed()) {
           Unused << self->GetGlobalIfValid(aRv);
           if (!aRv.Failed()) {
@@ -523,7 +523,7 @@ already_AddRefed<Promise> ServiceWorkerContainer::GetRegistration(
             return;
           }
         }
-        outer->MaybeReject(aRv);
+        outer->MaybeReject(std::move(aRv));
       });
 
   return outer.forget();
@@ -561,7 +561,7 @@ Promise* ServiceWorkerContainer::GetReady(ErrorResult& aRv) {
         ErrorResult rv;
         nsIGlobalObject* global = self->GetGlobalIfValid(rv);
         if (rv.Failed()) {
-          outer->MaybeReject(rv);
+          outer->MaybeReject(std::move(rv));
           return;
         }
         RefPtr<ServiceWorkerRegistration> reg =
@@ -575,7 +575,7 @@ Promise* ServiceWorkerContainer::GetReady(ErrorResult& aRv) {
             aDescriptor.Version(),
             [outer, reg](bool aResult) { outer->MaybeResolve(reg); });
       },
-      [self, outer](ErrorResult& aRv) { outer->MaybeReject(aRv); });
+      [self, outer](ErrorResult&& aRv) { outer->MaybeReject(std::move(aRv)); });
 
   return mReadyPromise;
 }

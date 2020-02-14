@@ -191,15 +191,15 @@ void MIDIAccess::MaybeCreateMIDIPort(const MIDIPortInfo& aInfo,
 // received, that will be handled by the MIDIPort object itself, and it will
 // request removal from MIDIAccess's maps.
 void MIDIAccess::Notify(const MIDIPortList& aEvent) {
-  ErrorResult rv;
   for (auto& port : aEvent.ports()) {
     // Something went very wrong. Warn and return.
+    ErrorResult rv;
     MaybeCreateMIDIPort(port, rv);
     if (rv.Failed()) {
       if (!mAccessPromise) {
         return;
       }
-      mAccessPromise->MaybeReject(rv);
+      mAccessPromise->MaybeReject(std::move(rv));
       mAccessPromise = nullptr;
     }
   }

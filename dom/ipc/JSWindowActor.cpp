@@ -336,7 +336,7 @@ void JSWindowActor::ReceiveMessageOrQuery(
         promise->MaybeRejectWithTimeoutError(
             "Message handler threw uncatchable exception");
       } else {
-        promise->MaybeReject(aRv);
+        promise->MaybeReject(std::move(aRv));
       }
     } else {
       promise->MaybeResolve(retval);

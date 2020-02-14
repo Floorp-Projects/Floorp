@@ -151,8 +151,8 @@ class PaymentRequest final : public DOMEventTargetHelper,
                           const ResponseData& aData,
                           const nsAString& aPayerName,
                           const nsAString& aPayerEmail,
-                          const nsAString& aPayerPhone, ErrorResult& aResult);
-  void RejectShowPayment(ErrorResult& aRejectReason);
+                          const nsAString& aPayerPhone, ErrorResult&& aResult);
+  void RejectShowPayment(ErrorResult&& aRejectReason);
   void RespondComplete();
 
   already_AddRefed<Promise> Abort(ErrorResult& aRv);

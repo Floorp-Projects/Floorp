@@ -141,7 +141,7 @@ class PaymentResponse final : public DOMEventTargetHelper,
                     PaymentAddress* aShippingAddress,
                     const ResponseData& aDetails, const nsAString& aPayerName,
                     const nsAString& aPayerEmail, const nsAString& aPayerPhone);
-  void RejectRetry(ErrorResult& aRejectReason);
+  void RejectRetry(ErrorResult&& aRejectReason);
 
  protected:
   ~PaymentResponse();

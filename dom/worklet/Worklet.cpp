@@ -130,8 +130,9 @@ class WorkletFetchHandler final : public PromiseNativeHandler,
     RefPtr<Promise> fetchPromise =
         FetchRequest(global, request, init, aCallerType, aRv);
     if (NS_WARN_IF(aRv.Failed())) {
-      promise->MaybeReject(aRv);
-      return promise.forget();
+      // OK to just return null, since caller will ignore return value
+      // anyway if aRv is a failure.
+      return nullptr;
     }
 
     RefPtr<WorkletFetchHandler> handler =
