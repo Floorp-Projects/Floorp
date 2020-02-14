@@ -7,12 +7,6 @@
 const { Component } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const {
-  connect,
-} = require("devtools/client/shared/redux/visibility-handler-connect");
-const {
-  getWaterfallScale,
-} = require("devtools/client/netmonitor/src/selectors/index");
 
 const { L10N } = require("devtools/client/netmonitor/src/utils/l10n");
 const {
@@ -25,12 +19,11 @@ const { TIMING_KEYS } = require("devtools/client/netmonitor/src/constants");
 
 const { div } = dom;
 
-const UPDATED_WATERFALL_ITEM_PROPS = ["eventTimings", "totalTime"];
 const UPDATED_WATERFALL_PROPS = [
-  "item",
-  "firstRequestStartedMs",
-  "scale",
-  "isVisible",
+  "eventTimings",
+  "fromCache",
+  "fromServiceWorker",
+  "totalTime",
 ];
 
 class RequestListColumnWaterfall extends Component {
@@ -40,14 +33,7 @@ class RequestListColumnWaterfall extends Component {
       firstRequestStartedMs: PropTypes.number.isRequired,
       item: PropTypes.object.isRequired,
       onWaterfallMouseDown: PropTypes.func.isRequired,
-      scale: PropTypes.number,
-      isVisible: PropTypes.bool.isRequired,
     };
-  }
-
-  constructor() {
-    super();
-    this.handleMouseOver = this.handleMouseOver.bind(this);
   }
 
   componentDidMount() {
@@ -56,33 +42,32 @@ class RequestListColumnWaterfall extends Component {
   }
 
   componentWillReceiveProps(nextProps) {
-    if (nextProps.isVisible && nextProps.item.totalTime) {
-      const { connector, item } = nextProps;
-      fetchNetworkUpdatePacket(connector.requestData, item, ["eventTimings"]);
-    }
+    const { connector, item } = nextProps;
+    fetchNetworkUpdatePacket(connector.requestData, item, ["eventTimings"]);
   }
 
   shouldComponentUpdate(nextProps) {
     return (
-      nextProps.isVisible &&
-      (!propertiesEqual(UPDATED_WATERFALL_PROPS, this.props, nextProps) ||
-        !propertiesEqual(
-          UPDATED_WATERFALL_ITEM_PROPS,
-          this.props.item,
-          nextProps.item
-        ))
+      !propertiesEqual(
+        UPDATED_WATERFALL_PROPS,
+        this.props.item,
+        nextProps.item
+      ) || this.props.firstRequestStartedMs !== nextProps.firstRequestStartedMs
     );
   }
 
-  handleMouseOver({ target }) {
-    if (!target.title) {
-      target.title = this.timingTooltip();
-    }
-  }
-
   timingTooltip() {
-    const { eventTimings, totalTime } = this.props.item;
+    const {
+      eventTimings,
+      fromCache,
+      fromServiceWorker,
+      totalTime,
+    } = this.props.item;
     const tooltip = [];
+
+    if (fromCache || fromServiceWorker) {
+      return tooltip;
+    }
 
     if (eventTimings) {
       for (const key of TIMING_KEYS) {
@@ -107,42 +92,37 @@ class RequestListColumnWaterfall extends Component {
 
   timingBoxes() {
     const {
-      scale,
-      item: { eventTimings, totalTime },
-    } = this.props;
+      eventTimings,
+      fromCache,
+      fromServiceWorker,
+      totalTime,
+    } = this.props.item;
     const boxes = [];
 
-    // Physical pixel as minimum size
-    const minPixel = 1 / window.devicePixelRatio;
+    if (fromCache || fromServiceWorker) {
+      return boxes;
+    }
 
-    if (typeof totalTime === "number") {
-      if (eventTimings) {
-        // Add a set of boxes representing timing information.
-        for (const key of TIMING_KEYS) {
-          if (eventTimings.timings[key] > 0) {
-            boxes.push(
-              div({
-                key,
-                className: `requests-list-timings-box ${key}`,
-                style: {
-                  width: Math.max(eventTimings.timings[key] * scale, minPixel),
-                },
-              })
-            );
-          }
+    if (eventTimings) {
+      // Add a set of boxes representing timing information.
+      for (const key of TIMING_KEYS) {
+        const width = eventTimings.timings[key];
+
+        // Don't render anything if it surely won't be visible.
+        // One millisecond == one unscaled pixel.
+        if (width > 0) {
+          boxes.push(
+            div({
+              key,
+              className: `requests-list-timings-box ${key}`,
+              style: { width },
+            })
+          );
         }
       }
-      // Minimal box to at least show start and total time
-      if (!boxes.length) {
-        boxes.push(
-          div({
-            className: "requests-list-timings-box filler",
-            key: "filler",
-            style: { width: Math.max(totalTime * scale, minPixel) },
-          })
-        );
-      }
+    }
 
+    if (typeof totalTime === "number") {
       const title = L10N.getFormatStr("networkMenu.totalMS2", totalTime);
       boxes.push(
         div(
@@ -154,39 +134,28 @@ class RequestListColumnWaterfall extends Component {
           title
         )
       );
-    } else {
-      // Pending requests are marked for start time
-      boxes.push(
-        div({
-          className: "requests-list-timings-box filler",
-          key: "pending",
-          style: { width: minPixel },
-        })
-      );
     }
 
     return boxes;
   }
 
   render() {
-    const {
-      firstRequestStartedMs,
-      item: { startedMs },
-      scale,
-      onWaterfallMouseDown,
-    } = this.props;
+    const { firstRequestStartedMs, item, onWaterfallMouseDown } = this.props;
 
     return dom.td(
       {
         className: "requests-list-column requests-list-waterfall",
-        onMouseOver: this.handeMouseOver,
+        onMouseOver: ({ target }) => {
+          if (!target.title) {
+            target.title = this.timingTooltip();
+          }
+        },
       },
       div(
         {
           className: "requests-list-timings",
           style: {
-            paddingInlineStart: `${(startedMs - firstRequestStartedMs) *
-              scale}px`,
+            paddingInlineStart: `${item.startedMs - firstRequestStartedMs}px`,
           },
           onMouseDown: onWaterfallMouseDown,
         },
@@ -196,6 +165,4 @@ class RequestListColumnWaterfall extends Component {
   }
 }
 
-module.exports = connect(state => ({
-  scale: getWaterfallScale(state),
-}))(RequestListColumnWaterfall);
+module.exports = RequestListColumnWaterfall;

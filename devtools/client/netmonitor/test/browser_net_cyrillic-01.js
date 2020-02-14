@@ -27,7 +27,6 @@ add_task(async function() {
   requestItem.scrollIntoView();
   EventUtils.sendMouseEvent({ type: "mouseover" }, requestsListStatus);
   await waitUntil(() => requestsListStatus.title);
-  await waitForDOMIfNeeded(requestItem, ".requests-list-timings-total");
 
   verifyRequestItemTarget(
     document,
