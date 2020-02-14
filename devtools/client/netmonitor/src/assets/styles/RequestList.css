@@ -510,6 +510,54 @@
   outline: none;
 }
 
+.theme-light {
+  --network-initiator-line-color: var(--theme-highlight-blue);
+  --network-initiator-color: var(--theme-highlight-purple);
+}
+
+.theme-dark {
+  --network-initiator-line-color: hsl(210, 40%, 60%);
+  --network-initiator-color: var(--blue-40);
+}
+
+.requests-list-initiator {
+  text-decoration: none;
+}
+
+.requests-list-initiator:hover {
+  text-decoration: underline;
+}
+
+.requests-list-initiator-lastframe {
+  display: unset;
+}
+
+.request-list-item .requests-list-initiator-filename {
+  cursor: pointer;
+  text-decoration: inherit;
+}
+
+.request-list-item:not(.selected) .requests-list-initiator-filename {
+  color: var(--network-initiator-color);
+}
+
+.request-list-item.selected .requests-list-initiator-filename {
+  color: inherit;
+}
+
+.request-list-item .requests-list-initiator-line {
+  cursor: pointer;
+  text-decoration: inherit;
+}
+
+.request-list-item:not(selected) .requests-list-initiator-line {
+  color: var(--network-initiator-line-color);
+}
+
+.request-list-item.selected .requests-list-initiator-line {
+  color: inherit;
+}
+
 /* Responsive web design support */
 
 @media (max-width: 700px) {
