@@ -1631,7 +1631,7 @@ mozilla::ipc::IPCResult ContentChild::RecvReinitRendering(
                                           namespaces[2])) {
     return GetResultForRenderingInitFailure(aImageBridge.OtherPid());
   }
-  if (!gfx::VRManagerChild::ReinitForContent(std::move(aVRBridge))) {
+  if (!gfx::VRManagerChild::InitForContent(std::move(aVRBridge))) {
     return GetResultForRenderingInitFailure(aVRBridge.OtherPid());
   }
   gfxPlatform::GetPlatform()->CompositorUpdated();
