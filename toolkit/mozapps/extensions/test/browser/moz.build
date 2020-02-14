@@ -26,6 +26,7 @@ for addon in addons:
     GENERATED_FILES += [xpi]
     GENERATED_FILES[xpi].script = '../create_xpi.py'
     GENERATED_FILES[xpi].inputs = [indir]
+    GENERATED_FILES[xpi].py2 = True
 
     output_dir += ['!%s' % xpi]
 
