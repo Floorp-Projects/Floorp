@@ -249,7 +249,8 @@ class AndroidEnv(BaseEnv):
         yield
 
     def get_browser_args(self, headless, prefs=None):
-        options = []
+        # XXX merge with DesktopEnv.get_browser_args
+        options = ["--allow-downgrade"]
         if headless:
             options.append("-headless")
         if prefs is None:
