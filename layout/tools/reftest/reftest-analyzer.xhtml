@@ -533,6 +533,7 @@ function show_images(i) {
   ID("image2").style.display = "none";
   ID("diffrect").style.display = "none";
   ID("imgcontrols").reset();
+  ID("pixel-differences").textContent = "";
 
   ID("image1").setAttributeNS(XLINK_NS, "xlink:href", item.images[0]);
   // Making the href be #image1 doesn't seem to work
@@ -552,8 +553,59 @@ function show_images(i) {
 
   cell.style.display = "";
 
-  get_image_data(item.images[0], function(data) { gImage1Data = data; sync_svg_size(gImage1Data); });
-  get_image_data(item.images[1], function(data) { gImage2Data = data });
+  let loaded = [false, false];
+
+  function images_loaded(id) {
+    loaded[id] = true;
+    if (loaded.every(x => x)) {
+      update_pixel_difference_text()
+    }
+  }
+
+  get_image_data(item.images[0], function(data) { gImage1Data = data; sync_svg_size(gImage1Data); images_loaded(0)});
+  get_image_data(item.images[1], function(data) { gImage2Data = data; images_loaded(1)});
+
+}
+
+function update_pixel_difference_text() {
+  let differenceText;
+  if (gImage1Data.height !== gImage2Data.height ||
+      gImage1Data.width !== gImage2Data.width) {
+    differenceText = "Images are different sizes"
+  } else {
+    let [numPixels, maxPerChannel] = get_pixel_differences();
+    if (!numPixels) {
+      differenceText = "Images are identical";
+    } else {
+      differenceText = `Maximum difference per channel ${maxPerChannel}, ${numPixels} pixels differ`;
+    }
+  }
+  ID("pixel-differences").textContent = differenceText;
+}
+
+function get_pixel_differences() {
+  let numPixels = 0;
+  let maxPerChannel = 0;
+  for (var i=0; i<gImage1Data.data.length; i+=4) {
+    let r1 = gImage1Data.data[i];
+    let r2 = gImage2Data.data[i];
+    let g1 = gImage1Data.data[i+1];
+    let g2 = gImage2Data.data[i+1];
+    let b1 = gImage1Data.data[i+2];
+    let b2 = gImage2Data.data[i+2];
+    // Ignore alpha.
+    if (r1 == r2 && g1 == g2 && b1 == b2) {
+      continue;
+    }
+    numPixels += 1;
+    let maxDiff = Math.max(Math.abs(r1-r2),
+                           Math.abs(g1-g2),
+                           Math.abs(b1-b2));
+    if (maxDiff > maxPerChannel) {
+      maxPerChannel = maxDiff
+    }
+  }
+  return [numPixels, maxPerChannel];
 }
 
 function show_image(i) {
@@ -851,6 +903,7 @@ function move_pixel(deltax, deltay) {
       </g>
       <rect id="diffrect" filter="url(#showDifferences)" pointer-events="none" x="0" y="0" width="100%" height="100%" />
     </svg>
+    <div id="pixel-differences"></div>
   </div>
 </div>
 
