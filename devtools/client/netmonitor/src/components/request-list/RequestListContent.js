@@ -82,6 +82,7 @@ class RequestListContent extends Component {
       firstRequestStartedMs: PropTypes.number.isRequired,
       fromCache: PropTypes.bool,
       onCauseBadgeMouseDown: PropTypes.func.isRequired,
+      onInitiatorBadgeMouseDown: PropTypes.func.isRequired,
       onItemRightMouseButtonDown: PropTypes.func.isRequired,
       onItemMouseDown: PropTypes.func.isRequired,
       onSecurityIconMouseDown: PropTypes.func.isRequired,
@@ -318,6 +319,7 @@ class RequestListContent extends Component {
       displayedRequests,
       firstRequestStartedMs,
       onCauseBadgeMouseDown,
+      onInitiatorBadgeMouseDown,
       onSecurityIconMouseDown,
       onWaterfallMouseDown,
       requestFilterTypes,
@@ -367,6 +369,8 @@ class RequestListContent extends Component {
                 onMouseDown: evt =>
                   this.onMouseDown(evt, item.id, item.channelId),
                 onCauseBadgeMouseDown: () => onCauseBadgeMouseDown(item.cause),
+                onInitiatorBadgeMouseDown: () =>
+                  onInitiatorBadgeMouseDown(item.cause),
                 onSecurityIconMouseDown: () =>
                   onSecurityIconMouseDown(item.securityState),
                 onWaterfallMouseDown: () => onWaterfallMouseDown(),
@@ -421,6 +425,11 @@ module.exports = connect(
      */
     onCauseBadgeMouseDown: cause => {
       if (cause.stacktrace && cause.stacktrace.length > 0) {
+        dispatch(Actions.selectDetailsPanelTab("stack-trace"));
+      }
+    },
+    onInitiatorBadgeMouseDown: cause => {
+      if (cause.lastFrame) {
         dispatch(Actions.selectDetailsPanelTab("stack-trace"));
       }
     },

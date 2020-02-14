@@ -15,6 +15,9 @@ const {
 const {
   RESPONSE_HEADERS,
 } = require("devtools/client/netmonitor/src/constants");
+const {
+  getUrlBaseName,
+} = require("devtools/client/netmonitor/src/utils/request-utils");
 
 /**
  * Predicates used when sorting items.
@@ -167,6 +170,31 @@ function cause(first, second) {
   return result || waterfall(first, second);
 }
 
+function initiator(first, second) {
+  let firstInitiator = "";
+  let firstInitiatorLineNumber = 0;
+
+  if (first.cause.lastFrame) {
+    firstInitiator = getUrlBaseName(first.cause.lastFrame.filename);
+    firstInitiatorLineNumber = first.cause.lastFrame.lineNumber;
+  }
+
+  let secondInitiator = "";
+  let secondInitiatorLineNumber = 0;
+
+  if (second.cause.lastFrame) {
+    secondInitiator = getUrlBaseName(second.cause.lastFrame.filename);
+    secondInitiatorLineNumber = second.cause.lastFrame.lineNumber;
+  }
+
+  let result = compareValues(firstInitiator, secondInitiator);
+  if (result === 0) {
+    result = compareValues(firstInitiatorLineNumber, secondInitiatorLineNumber);
+  }
+
+  return result || waterfall(first, second);
+}
+
 function setCookies(first, second) {
   let { responseCookies: firstResponseCookies = { cookies: [] } } = first;
   let { responseCookies: secondResponseCookies = { cookies: [] } } = second;
@@ -255,6 +283,7 @@ const sorters = {
   setCookies,
   remoteip,
   cause,
+  initiator,
   type,
   transferred,
   contentSize,

@@ -58,6 +58,7 @@ const NetworkMonitorActor = ActorClassWithSpec(networkMonitorSpec, {
     this.observer.init();
 
     this.stackTraces = new Set();
+    this.lastFrames = new Map();
 
     this.onStackTraceAvailable = this.onStackTraceAvailable.bind(this);
     this.onRequestContent = this.onRequestContent.bind(this);
@@ -156,6 +157,7 @@ const NetworkMonitorActor = ActorClassWithSpec(networkMonitorSpec, {
     }
 
     this.stackTraces.clear();
+    this.lastFrames.clear();
     if (this.messageManager) {
       this.stopListening();
       this.messageManager = null;
@@ -170,14 +172,19 @@ const NetworkMonitorActor = ActorClassWithSpec(networkMonitorSpec, {
     this.stopListening();
     this.messageManager = mm;
     this.stackTraces = new Set();
+    this.lastFrames.clear();
     this.startListening();
   },
 
   onStackTraceAvailable(msg) {
     const { channelId } = msg.data;
     if (!msg.data.stacktrace) {
+      this.lastFrames.delete(channelId);
       this.stackTraces.delete(channelId);
     } else {
+      if (msg.data.lastFrame) {
+        this.lastFrames.set(channelId, msg.data.lastFrame);
+      }
       this.stackTraces.add(channelId);
     }
   },
@@ -299,6 +306,10 @@ const NetworkMonitorActor = ActorClassWithSpec(networkMonitorSpec, {
     event.cause.stacktrace = this.stackTraces.has(id);
     if (event.cause.stacktrace) {
       this.stackTraces.delete(id);
+    }
+    if (this.lastFrames.has(id)) {
+      event.cause.lastFrame = this.lastFrames.get(id);
+      this.lastFrames.delete(id);
     }
     actor.init(event);
 
