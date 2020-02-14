@@ -28,17 +28,20 @@ class nsDOMOfflineResourceList;
 class nsGlobalWindowInner;
 class nsGlobalWindowOuter;
 class nsIArray;
+class nsIBaseWindow;
 class nsIChannel;
 class nsIContent;
 class nsIContentSecurityPolicy;
 class nsICSSDeclaration;
 class nsIDocShell;
+class nsIDocShellTreeOwner;
 class nsDocShellLoadState;
 class nsIPrincipal;
 class nsIRunnable;
 class nsIScriptTimeoutHandler;
 class nsISerialEventTarget;
 class nsIURI;
+class nsIWebBrowserChrome;
 class nsPIDOMWindowInner;
 class nsPIDOMWindowOuter;
 class nsPIWindowRoot;
@@ -1061,6 +1064,10 @@ class nsPIDOMWindowOuter : public mozIDOMWindowProxy {
       mozilla::dom::BrowsingContext* aOpener);
   already_AddRefed<mozilla::dom::BrowsingContext>
   TakeOpenerForInitialContentBrowser();
+
+  already_AddRefed<nsIDocShellTreeOwner> GetTreeOwner();
+  already_AddRefed<nsIBaseWindow> GetTreeOwnerWindow();
+  already_AddRefed<nsIWebBrowserChrome> GetWebBrowserChrome();
 
  protected:
   // Lazily instantiate an about:blank document if necessary, and if

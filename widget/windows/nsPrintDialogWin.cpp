@@ -8,9 +8,8 @@
 #include "nsArray.h"
 #include "nsCOMPtr.h"
 #include "nsIBaseWindow.h"
+#include "nsIBrowserChild.h"
 #include "nsIDialogParamBlock.h"
-#include "nsIDocShellTreeOwner.h"
-#include "nsIDocShellTreeItem.h"
 #include "nsIDocShell.h"
 #include "nsIEmbeddingSiteWindow.h"
 #include "nsIInterfaceRequestorUtils.h"
@@ -20,6 +19,7 @@
 #include "nsPrintDialogUtil.h"
 #include "nsIPrintSettings.h"
 #include "nsIWebBrowserChrome.h"
+#include "nsPIDOMWindow.h"
 #include "nsQueryObject.h"
 
 static const char* kPageSetupDialogURL =
@@ -161,14 +161,7 @@ HWND nsPrintDialogServiceWin::GetHWNDForDOMWindow(mozIDOMWindowProxy* aWindow) {
   // Now we might be the Browser so check this path
   nsCOMPtr<nsPIDOMWindowOuter> window = nsPIDOMWindowOuter::From(aWindow);
 
-  nsCOMPtr<nsIDocShellTreeItem> treeItem = window->GetDocShell();
-  if (!treeItem) return nullptr;
-
-  nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
-  treeItem->GetTreeOwner(getter_AddRefs(treeOwner));
-  if (!treeOwner) return nullptr;
-
-  nsCOMPtr<nsIWebBrowserChrome> webBrowserChrome(do_GetInterface(treeOwner));
+  nsCOMPtr<nsIWebBrowserChrome> webBrowserChrome = window->GetWebBrowserChrome();
   if (!webBrowserChrome) return nullptr;
 
   nsCOMPtr<nsIBaseWindow> baseWin(do_QueryInterface(webBrowserChrome));
