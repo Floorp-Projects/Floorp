@@ -64,6 +64,25 @@ const MESSAGES = () => [
     trigger: { id: "momentsUpdate" },
   },
   {
+    id: "WHATS_NEW_AWESOMEBAR_74",
+    template: "whatsnew_panel_message",
+    order: 1,
+    content: {
+      bucket_id: "WHATS_NEW_AWESOMEBAR_74",
+      published_date: 1581675076835,
+      title: { string_id: "cfr-whatsnew-searchbar-title" },
+      icon_url: "chrome://browser/skin/search-glass.svg",
+      icon_alt: { string_id: "cfr-whatsnew-searchbar-icon-alt-text" },
+      body: { string_id: "cfr-whatsnew-searchbar-body-enginename" },
+      cta_url:
+        "https://support.mozilla.org/1/firefox/%VERSION%/%OS%/%LOCALE%/address-bar-search",
+      cta_type: "OPEN_URL",
+      link_text: { string_id: "cfr-whatsnew-pip-cta" },
+    },
+    targeting: `firefoxVersion >= 74`,
+    trigger: { id: "whatsNewPanelOpened" },
+  },
+  {
     id: "WHATS_NEW_PIP_72",
     template: "whatsnew_panel_message",
     order: 4,
