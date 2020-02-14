@@ -36,6 +36,7 @@
 #defaultEngine > .menulist-label-box > .menulist-icon,
 #defaultPrivateEngine > .menulist-label-box > .menulist-icon {
   height: 16px;
+  width: 16px;
 }
 
 /* work around a display: none in Linux's menu.css, see bug 1112310 */
