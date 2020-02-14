@@ -112,5 +112,7 @@
     <dimen name="migration_description_text_size">16sp</dimen>
     <dimen name="migration_welcome_title_text_size">20sp</dimen>
     <dimen name="migration_progress_size">24dp</dimen>
+    <dimen name="migration_progress_margin_vertical">8dp</dimen>
+    <dimen name="migration_progress_margin_start">4dp</dimen>
 
 </resources>

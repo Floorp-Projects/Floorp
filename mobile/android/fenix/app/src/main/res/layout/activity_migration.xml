@@ -104,9 +104,9 @@
         style="@style/Widget.AppCompat.ProgressBar"
         android:layout_width="@dimen/migration_progress_size"
         android:layout_height="@dimen/migration_progress_size"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="8dp"
-        android:layout_marginBottom="8dp"
+        android:layout_marginStart="@dimen/migration_progress_margin_start"
+        android:layout_marginTop="@dimen/migration_progress_margin_vertical"
+        android:layout_marginBottom="@dimen/migration_progress_margin_vertical"
         app:layout_constraintBottom_toBottomOf="@+id/migration_button"
         app:layout_constraintStart_toStartOf="@+id/migration_button"
         app:layout_constraintTop_toTopOf="@+id/migration_button" />
