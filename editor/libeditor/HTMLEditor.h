@@ -3936,8 +3936,8 @@ class HTMLEditor final : public TextEditor,
                          Document* aTargetDoc,
                          dom::DocumentFragment** aFragment, bool aTrustedInput);
   /**
-   * CollectTopMostChildNodesCompletelyInRange() collects topmost child nodes
-   * which are completely in the given range.
+   * CollectTopMostChildContentsCompletelyInRange() collects topmost child
+   * contents which are completely in the given range.
    * For example, if the range points a node with its container node, the
    * result is only the node (meaning does not include its descendants).
    * If the range starts start of a node and ends end of it, and if the node
@@ -3947,12 +3947,12 @@ class HTMLEditor final : public TextEditor,
    *
    * @param aStartPoint         Start point of the range.
    * @param aEndPoint           End point of the range.
-   * @param aOutArrayOfNodes    [Out] Topmost children which are completely in
+   * @param aOutArrayOfContents [Out] Topmost children which are completely in
    *                            the range.
    */
   static void CollectTopMostChildNodesCompletelyInRange(
       const EditorRawDOMPoint& aStartPoint, const EditorRawDOMPoint& aEndPoint,
-      nsTArray<OwningNonNull<nsINode>>& aOutArrayOfNodes);
+      nsTArray<OwningNonNull<nsIContent>>& aOutArrayOfContents);
 
   /**
    * AutoHTMLFragmentBoundariesFixer fixes both edges of topmost child nodes
@@ -3961,7 +3961,7 @@ class HTMLEditor final : public TextEditor,
   class MOZ_STACK_CLASS AutoHTMLFragmentBoundariesFixer final {
    public:
     /**
-     * @param aArrayOfTopMostChildNodes
+     * @param aArrayOfTopMostChildContents
      *                         [in/out] The topmost child nodes which will be
      *                         inserted into the DOM tree.  Both edges, i.e.,
      *                         first node and last node in this array will be
@@ -3970,26 +3970,27 @@ class HTMLEditor final : public TextEditor,
      *                         orphan nodes around nodes with proper parent.
      */
     explicit AutoHTMLFragmentBoundariesFixer(
-        nsTArray<OwningNonNull<nsINode>>& aArrayOfTopMostChildNodes);
+        nsTArray<OwningNonNull<nsIContent>>& aArrayOfTopMostChildContents);
 
    private:
     /**
      * EnsureBeginsOrEndsWithValidContent() replaces some nodes starting from
      * start or end with proper element node if it's necessary.
-     * If first or last node of aArrayOfTopMostChildNodes is in list and/or
+     * If first or last node of aArrayOfTopMostChildContents is in list and/or
      * `<table>` element, looks for topmost list element or `<table>` element
      * with `CollectListAndTableRelatedElementsAt()` and
      * `GetMostAncestorListOrTableElement()`.  Then, checks whether
-     * some nodes are in aArrayOfTopMostChildNodes are the topmost list/table
+     * some nodes are in aArrayOfTopMostChildContents are the topmost list/table
      * element or its descendant and if so, removes the nodes from
-     * aArrayOfTopMostChildNodes and inserts the list/table element instead.
-     * Then, aArrayOfTopMostChildNodes won't start/end with list-item nor
+     * aArrayOfTopMostChildContents and inserts the list/table element instead.
+     * Then, aArrayOfTopMostChildContents won't start/end with list-item nor
      * table cells.
      */
     enum class StartOrEnd { start, end };
     void EnsureBeginsOrEndsWithValidContent(
         StartOrEnd aStartOrEnd,
-        nsTArray<OwningNonNull<nsINode>>& aArrayOfTopMostChildNodes) const;
+        nsTArray<OwningNonNull<nsIContent>>& aArrayOfTopMostChildContents)
+        const;
 
     /**
      * CollectListAndTableRelatedElementsAt() collects list elements and
@@ -3997,17 +3998,17 @@ class HTMLEditor final : public TextEditor,
      * the result) to the root element.
      */
     void CollectListAndTableRelatedElementsAt(
-        nsINode& aNode,
+        nsIContent& aContent,
         nsTArray<OwningNonNull<Element>>& aOutArrayOfListAndTableElements)
         const;
 
     /**
      * GetMostAncestorListOrTableElement() returns a list or a `<table>`
      * element which is in aArrayOfListAndTableElements and they are
-     * actually valid ancestor of at least one of aArrayOfNodes.
+     * actually valid ancestor of at least one of aArrayOfTopMostChildContents.
      */
     Element* GetMostAncestorListOrTableElement(
-        const nsTArray<OwningNonNull<nsINode>>& aArrayOfTopMostChildNodes,
+        const nsTArray<OwningNonNull<nsIContent>>& aArrayOfTopMostChildContents,
         const nsTArray<OwningNonNull<Element>>&
             aArrayOfListAndTableRelatedElements) const;
 
@@ -4019,10 +4020,10 @@ class HTMLEditor final : public TextEditor,
      * `<tfoot>`, `<tbody>` or `<caption>`.
      *
      * @param aTableElement               Must be a `<table>` element.
-     * @param aNodeMaybeInTableElement    A node which may be in aTableElement.
+     * @param aContentMaybeInTableElement A node which may be in aTableElement.
      */
     Element* FindReplaceableTableElement(
-        Element& aTableElement, nsINode& aNodeMaybeInTableElement) const;
+        Element& aTableElement, nsIContent& aContentMaybeInTableElement) const;
 
     /**
      * IsReplaceableListElement() is a helper method of
@@ -4030,17 +4031,17 @@ class HTMLEditor final : public TextEditor,
      * descendant of aListElement, returns true.  Otherwise, false.
      *
      * @param aListElement                Must be a list element.
-     * @param aNodeMaybeInListElement     A node which may be in aListElement.
+     * @param aContentMaybeInListElement  A node which may be in aListElement.
      */
     bool IsReplaceableListElement(Element& aListElement,
-                                  nsINode& aNodeMaybeInListElement) const;
+                                  nsIContent& aContentMaybeInListElement) const;
   };
 
   /**
    * GetBetterInsertionPointFor() returns better insertion point to insert
-   * aNodeToInsert.
+   * aContentToInsert.
    *
-   * @param aNodeToInsert       The node to insert.
+   * @param aContentToInsert    The content to insert.
    * @param aPointToInsert      A candidate point to insert the node.
    * @return                    Better insertion point if next visible node
    *                            is a <br> element and previous visible node
@@ -4048,7 +4049,7 @@ class HTMLEditor final : public TextEditor,
    *                            different block level element.
    */
   EditorRawDOMPoint GetBetterInsertionPointFor(
-      nsINode& aNodeToInsert, const EditorRawDOMPoint& aPointToInsert);
+      nsIContent& aContentToInsert, const EditorRawDOMPoint& aPointToInsert);
 
   /**
    * MakeDefinitionListItemWithTransaction() replaces parent list of current
