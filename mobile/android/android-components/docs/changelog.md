@@ -72,6 +72,9 @@ permalink: /changelog/
 * **feature-awesomebar**
   * Added `showDescription` parameter (default to `true`) to `SearchSuggestionProvider` constructors to add the possibility of removing search suggestion description.
 
+* **support-migration**
+  * Emit facts during migration.
+
 # 31.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v30.0.0...v31.0.0)
