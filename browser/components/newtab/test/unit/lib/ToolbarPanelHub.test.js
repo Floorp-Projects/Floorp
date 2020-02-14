@@ -23,6 +23,7 @@ describe("ToolbarPanelHub", () => {
   let getEarliestRecordedDateStub;
   let getEventsByDateRangeStub;
   let handleUserActionStub;
+  let defaultSearchStub;
 
   beforeEach(async () => {
     sandbox = sinon.createSandbox();
@@ -95,6 +96,7 @@ describe("ToolbarPanelHub", () => {
     );
     getEventsByDateRangeStub = sandbox.stub().returns([]);
     handleUserActionStub = sandbox.stub();
+    defaultSearchStub = { defaultEngine: { name: "DDG" } };
     globals.set({
       EveryWindow: everyWindowStub,
       Services: {
@@ -105,6 +107,7 @@ describe("ToolbarPanelHub", () => {
           getBoolPref: getBoolPrefStub,
           setBoolPref: setBoolPrefStub,
         },
+        search: defaultSearchStub,
       },
       PrivateBrowsingUtils: {
         isBrowserPrivate: isBrowserPrivateStub,
@@ -447,6 +450,7 @@ describe("ToolbarPanelHub", () => {
             socialCount: 0,
             trackerCount: 0,
             fingerprinterCount: 0,
+            searchEngineName: Services.search.defaultEngine.name,
           },
         },
       ]);
@@ -480,6 +484,29 @@ describe("ToolbarPanelHub", () => {
             cookieCount: 0,
             cryptominerCount: 0,
             socialCount: 0,
+            searchEngineName: Services.search.defaultEngine.name,
+          },
+        },
+      ]);
+    });
+    it("should fallback to undefined search engine name", async () => {
+      globals.set("Services", {
+        ...global.Services,
+        search: { defaultEngine: null },
+      });
+      const messages = (await PanelTestProvider.getMessages()).filter(
+        m => m.template === "whatsnew_panel_message"
+      );
+      getMessagesStub.returns(messages);
+
+      await instance.renderMessages(fakeWindow, fakeDocument, "container-id");
+
+      assert.calledWithExactly(global.RemoteL10n.l10n.formatMessages, [
+        {
+          id: sinon.match.string,
+          args: {
+            ...instance.state.contentArguments,
+            searchEngineName: "undefined",
           },
         },
       ]);
