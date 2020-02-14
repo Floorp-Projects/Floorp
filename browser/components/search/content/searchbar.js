@@ -677,15 +677,19 @@
 
         BrowserSearch.searchBar._textbox.closePopup();
 
-        let controller = document.commandDispatcher.getControllerForCommand(
-          "cmd_paste"
-        );
-        let pasteEnabled = controller.isCommandEnabled("cmd_paste");
-        if (pasteEnabled) {
-          this._pasteAndSearchMenuItem.removeAttribute("disabled");
-        } else {
-          this._pasteAndSearchMenuItem.setAttribute("disabled", "true");
+        // Update disabled state of menu items
+        for (let item of this._menupopup.querySelectorAll("menuitem[cmd]")) {
+          let command = item.getAttribute("cmd");
+          let controller = document.commandDispatcher.getControllerForCommand(
+            command
+          );
+          item.disabled = !controller.isCommandEnabled(command);
         }
+
+        let pasteEnabled = document.commandDispatcher
+          .getControllerForCommand("cmd_paste")
+          .isCommandEnabled("cmd_paste");
+        this._pasteAndSearchMenuItem.disabled = !pasteEnabled;
 
         this._menupopup.openPopupAtScreen(event.screenX, event.screenY, true);
 
