@@ -141,7 +141,8 @@ def push_to_try(method, msg, try_task_config=None,
                 push=True, closed_tree=False, files_to_change=None):
     check_working_directory(push)
 
-    display_push_estimates(try_task_config)
+    if try_task_config:
+        display_push_estimates(try_task_config)
 
     # Format the commit message
     closed_tree_string = " ON A CLOSED TREE" if closed_tree else ""
