@@ -38,6 +38,7 @@
 #include "GLLibraryLoader.h"
 #include "nsISupportsImpl.h"
 #include "nsRegionFwd.h"
+#include "nsString.h"
 #include "plstr.h"
 #include "GLContextTypes.h"
 #include "SurfaceTypes.h"
