@@ -133,6 +133,7 @@ struct StringArrayAppender {
 
 class ErrorResult;
 class OOMReporter;
+class CopyableErrorResult;
 
 namespace binding_danger {
 
@@ -671,6 +672,10 @@ class ErrorResult : public binding_danger::TErrorResult<
   ErrorResult() : BaseErrorResult() {}
 
   ErrorResult(ErrorResult&& aRHS) : BaseErrorResult(std::move(aRHS)) {}
+  // Explicitly allow moving out of a CopyableErrorResult into an ErrorResult.
+  // This is implemented below so it can see the definition of
+  // CopyableErrorResult.
+  inline explicit ErrorResult(CopyableErrorResult&& aRHS);
 
   explicit ErrorResult(nsresult aRv) : BaseErrorResult(aRv) {}
 
@@ -786,7 +791,17 @@ class CopyableErrorResult
     }
     return *this;
   }
+
+  // Allow conversion to ErrorResult&& so we can move out of ourselves into
+  // an ErrorResult.
+  operator ErrorResult &&() && {
+    auto* val = reinterpret_cast<ErrorResult*>(this);
+    return std::move(*val);
+  }
 };
+
+inline ErrorResult::ErrorResult(CopyableErrorResult&& aRHS)
+    : ErrorResult(reinterpret_cast<ErrorResult&&>(aRHS)) {}
 
 namespace dom {
 namespace binding_detail {
