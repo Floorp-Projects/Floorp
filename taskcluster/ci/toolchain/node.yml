@@ -16,7 +16,6 @@ linux64-node-8:
         symbol: TL(node-8)
     run:
         arguments: ['linux64', '8']
-        toolchain-alias: linux64-node
 
 macosx64-node-8:
     treeherder:
@@ -26,14 +25,12 @@ macosx64-node-8:
         - try
     run:
         arguments: ['macosx64', '8']
-        toolchain-alias: macosx64-node
 
 win64-node-8:
     treeherder:
         symbol: TW64(node-8)
     run:
         arguments: ['win64', '8']
-        toolchain-alias: win64-node
         toolchain-artifact: public/build/node.tar.bz2
 
 win32-node-8:
@@ -41,7 +38,6 @@ win32-node-8:
         symbol: TW32(node-8)
     run:
         arguments: ['win32', '8']
-        toolchain-alias: win32-node
         toolchain-artifact: public/build/node.tar.bz2
     run-on-projects:
         - trunk
@@ -52,6 +48,7 @@ linux64-node-10:
         symbol: TL(node-10)
     run:
         arguments: ['linux64', '10']
+        toolchain-alias: linux64-node
 
 macosx64-node-10:
     treeherder:
@@ -61,6 +58,7 @@ macosx64-node-10:
         - try
     run:
         arguments: ['macosx64', '10']
+        toolchain-alias: macosx64-node
 
 win64-node-10:
     treeherder:
@@ -68,6 +66,7 @@ win64-node-10:
     run:
         arguments: ['win64', '10']
         toolchain-artifact: public/build/node.tar.bz2
+        toolchain-alias: win64-node
 
 win32-node-10:
     treeherder:
@@ -75,6 +74,7 @@ win32-node-10:
     run:
         arguments: ['win32', '10']
         toolchain-artifact: public/build/node.tar.bz2
+        toolchain-alias: win32-node
     run-on-projects:
         - trunk
         - try
