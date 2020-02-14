@@ -11,38 +11,6 @@ job-defaults:
         script: repack-node.sh
         toolchain-artifact: public/build/node.tar.xz
 
-linux64-node-8:
-    treeherder:
-        symbol: TL(node-8)
-    run:
-        arguments: ['linux64', '8']
-
-macosx64-node-8:
-    treeherder:
-        symbol: TM(node-8)
-    run-on-projects:
-        - trunk
-        - try
-    run:
-        arguments: ['macosx64', '8']
-
-win64-node-8:
-    treeherder:
-        symbol: TW64(node-8)
-    run:
-        arguments: ['win64', '8']
-        toolchain-artifact: public/build/node.tar.bz2
-
-win32-node-8:
-    treeherder:
-        symbol: TW32(node-8)
-    run:
-        arguments: ['win32', '8']
-        toolchain-artifact: public/build/node.tar.bz2
-    run-on-projects:
-        - trunk
-        - try
-
 linux64-node-10:
     treeherder:
         symbol: TL(node-10)

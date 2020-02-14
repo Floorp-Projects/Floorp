@@ -32,8 +32,10 @@ win-x64|win-x86)
     ;;
 esac
 
+# Although we're only using one version at the moment, this infrastructure is
+# useful for when we need to do upgrades and have multiple versions of node
+# live in taskcluster at once.
 case "$2" in
-8)  VERSION="8.17.0" ;;
 10) VERSION="10.19.0" ;;
 *)
     echo "Unknown version $2 not recognized in repack-node.sh" >&2
@@ -42,12 +44,6 @@ case "$2" in
 esac
 
 case "$ARCH--$VERSION" in
-    # From https://nodejs.org/dist/v8.17.0/SHASUMS256.txt.asc
-    linux-x64--8.17.0)    SHA256SUM=b7f6dd77fb173c8c7c30d61d0702eefc236bba74398538aa77bfa2bb47bddce6 ;;
-    darwin-x64--8.17.0)   SHA256SUM=b6ef86df44292ba65f2b9a81b99a7db8de22a313f9c5abcebb6cf17ec24e2c97 ;;
-    win-x64--8.17.0)      SHA256SUM=e95a63e81b27e78872c0efb9dd5809403014dbf9896035cc17adf51a350f88fa ;;
-    win-x86--8.17.0)      SHA256SUM=3ecc0ab4c6ad957f5dfb9ca22453cd35908029fba86350fc96d070e8e5c213b5 ;;
-
     # From https://nodejs.org/dist/v10.19.0/SHASUMS256.txt.asc
     linux-x64--10.19.0)   SHA256SUM=34127c7c6b1ba02d6d4dc3a926f38a5fb88bb37fc7f051349005ce331c7a53c6 ;;
     darwin-x64--10.19.0)  SHA256SUM=91725d2ed64e4ccd265259e3e29a0e64a4d26d9d1cd9ba390e0cdec13ea7b02f ;;
