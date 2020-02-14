@@ -634,20 +634,6 @@ llvm_objdump = check_prog('LLVM_OBJDUMP', llvm_objdump, what='llvm-objdump',
 
 add_old_configure_assignment('LLVM_OBJDUMP', llvm_objdump)
 
-# Fork server
-option('--enable-forkserver', env='MOZ_ENABLE_FORKSERVER', help='Enable fork server')
-
-@depends('--enable-forkserver', target)
-def forkserver_flag(value, target):
-    if target.os == 'Android' or \
-       (target.os == 'GNU' and target.kernel == 'Linux') or \
-       target.os == 'FreeBSD':
-        return bool(value)
-    pass
-
-set_config('MOZ_ENABLE_FORKSERVER', forkserver_flag)
-set_define('MOZ_ENABLE_FORKSERVER', forkserver_flag, forkserver_flag)
-
 
 # Please do not add configure checks from here on.
 
