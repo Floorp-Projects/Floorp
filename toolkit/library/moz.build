@@ -85,7 +85,6 @@ def Libxul(name, output_category=None):
     if CONFIG['OS_ARCH'] == 'Linux' and CONFIG['OS_TARGET'] != 'Android':
         GeneratedFile('symverscript', script='/build/gen_symverscript.py',
                       inputs=['../symverscript.in'],
-                      py2=True,
                       flags=['xul%s' % CONFIG['MOZILLA_SYMBOLVERSION']])
         SYMBOLS_FILE = '!symverscript'
 
@@ -377,6 +376,5 @@ else:
     libxul_list = '%sxul_%s' % (
         CONFIG['DLL_PREFIX'], CONFIG['DLL_SUFFIX'].lstrip('.').replace('.','_'))
 GeneratedFile('buildid.cpp', script = 'gen_buildid.py',
-              py2=True,
               inputs=['!build/%s.list' % libxul_list])
 

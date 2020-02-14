@@ -546,11 +546,9 @@ if CONFIG['MOZ_X11']:
     CXXFLAGS += CONFIG['TK_CFLAGS']
 
 GeneratedFile('UseCounterList.h', script='gen-usecounters.py',
-              py2=True,
               entry_point='use_counter_list', inputs=['UseCounters.conf'])
 
 GeneratedFile('UseCounterWorkerList.h', script='gen-usecounters.py',
-              py2=True,
               entry_point='use_counter_list', inputs=['UseCountersWorker.conf'])
 
 if CONFIG['CC_TYPE'] in ('clang', 'gcc'):

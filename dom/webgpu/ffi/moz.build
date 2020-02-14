@@ -15,7 +15,6 @@ if CONFIG['COMPILE_ENVIRONMENT']:
     GeneratedFile('wgpu_ffi_generated.h',
                   script='/layout/style/RunCbindgen.py',
                   entry_point='generate',
-                  py2=True,
                   inputs=[
                     '/gfx/wgpu/wgpu-remote',
                   ])

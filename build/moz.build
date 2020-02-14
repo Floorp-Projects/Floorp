@@ -87,7 +87,6 @@ if CONFIG['MOZ_APP_BASENAME']:
         script='../python/mozbuild/mozbuild/action/preprocessor.py',
         entry_point='generate',
         inputs=['application.ini.in'],
-        py2=True,
         flags=['-D%s=%s' % (k, '1' if v is True else v)
                for k, v in appini_defines.iteritems()])
     
@@ -96,12 +95,10 @@ if CONFIG['MOZ_APP_BASENAME']:
         FINAL_TARGET_PP_FILES += ['update-settings.ini']
 
     GeneratedFile('application.ini.h', script='appini_header.py',
-                  py2=True,
                   inputs=['!application.ini'])
 
 if CONFIG['ENABLE_TESTS']:
     GeneratedFile('automation.py', script='gen_automation.py',
-                  py2=True,
                   inputs=['automation.py.in'])
 
     TEST_HARNESS_FILES.reftest += [

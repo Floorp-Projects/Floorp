@@ -10,6 +10,5 @@ fake_remote_dafsa = GENERATED_FILES['fake_remote_dafsa.bin']
 fake_remote_dafsa.script = '../../../prepare_tlds.py'
 fake_remote_dafsa.inputs = ['fake_public_suffix_list.dat']
 fake_remote_dafsa.flags = ['bin']
-fake_remote_dafsa.py2 = True
 
 TEST_HARNESS_FILES.xpcshell.netwerk.dns.tests.unit.data += ['!fake_remote_dafsa.bin']

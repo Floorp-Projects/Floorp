@@ -82,7 +82,6 @@ include('/ipc/chromium/chromium-config.mozbuild')
 GeneratedFile(
     'generated_jni_wrappers', 'GeneratedJNINatives.h', 'GeneratedJNIWrappers.h',
     'GeneratedJNIWrappers.cpp', script='/mobile/android/gradle.py',
-    py2=True,
     entry_point='generate_generated_jni_wrappers')
 
 FINAL_LIBRARY = 'xul'

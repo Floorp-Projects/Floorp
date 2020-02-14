@@ -180,7 +180,6 @@ def GeneratedFile(name, *names, **kwargs):
     inputs = kwargs.get('inputs', [])
     flags = kwargs.get('flags', [])
     force = kwargs.get('force', False)
-    py2 = kwargs.get('py2', False)
     if entry_point and not script:
        error('entry_point cannot be provided if script is not provided')
     if script and ':' in script:
@@ -198,7 +197,6 @@ def GeneratedFile(name, *names, **kwargs):
     generated_file.inputs = inputs
     generated_file.flags = flags
     generated_file.force = force
-    generated_file.py2 = py2
 
 include('gecko_templates.mozbuild')
 include('test_templates.mozbuild')

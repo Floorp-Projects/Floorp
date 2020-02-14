@@ -25,7 +25,6 @@ LOCAL_INCLUDES += ['.']
 if CONFIG['OS_TARGET'] == 'WINNT' and CONFIG['CPU_ARCH'] == 'aarch64':
     icudata = 'icudata.asm'
     GeneratedFile(icudata, script='genicudata.py',
-                  py2=True,
                   inputs=[CONFIG['ICU_DATA_FILE']], flags=[data_symbol])
     SOURCES += ['!%s' % icudata]
 elif CONFIG['HAVE_YASM']:
