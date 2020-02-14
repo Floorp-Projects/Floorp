@@ -6,7 +6,7 @@
 
 /*
  * FinalizationGroup objects allow a program to register to receive a callback
- * after a 'target' object dies. The callback is passed a 'holdings' value (that
+ * after a 'target' object dies. The callback is passed a 'held value' (that
  * hopefully doesn't entrain the target). An 'unregister token' is an object
  * which can be used to remove multiple previous registrations in one go.
  *
@@ -36,13 +36,13 @@
  *   |  |  +---------------------+    |         |                  |
  *   |  +--+ Group               |    |         v                  |
  *   |     +---------------------+    |     +---+---------+        |
- *   |     | Holdings            |    |     |   Target    |        |
+ *   |     | Held value          |    |     |   Target    |        |
  *   |     +---------------------+    |     +-------------+        |
  *   |                                |                            |
  *   +--------------------------------+----------------------------+
  *
  * Registering a target with a FinalizationGroup creates a FinalizationRecord
- * containing the group and the holdings. This is added to a vector of records
+ * containing the group and the heldValue. This is added to a vector of records
  * associated with the target, implemented as a map on the target's Zone. All
  * finalization records are treated as GC roots.
  *
@@ -60,7 +60,7 @@
  *
  * The finalization record maps are also swept during GC to check for any
  * targets that are dying. For such targets the associated record list is
- * processed and for each record the holdings is queued on finalization
+ * processed and for each record the heldValue is queued on finalization
  * group. At a later time this causes the client's callback to be run.
  *
  * When targets are unregistered, the registration is looked up in the weakmap
@@ -88,9 +88,9 @@ using RootedFinalizationGroupObject = Rooted<FinalizationGroupObject*>;
 using RootedFinalizationIteratorObject = Rooted<FinalizationIteratorObject*>;
 using RootedFinalizationRecordObject = Rooted<FinalizationRecordObject*>;
 
-// A finalization record: a pair of finalization group and holdings value.
+// A finalization record: a pair of finalization group and held value.
 class FinalizationRecordObject : public NativeObject {
-  enum { GroupSlot = 0, HoldingsSlot, SlotCount };
+  enum { GroupSlot = 0, HeldValueSlot, SlotCount };
 
  public:
   static const JSClass class_;
@@ -98,10 +98,10 @@ class FinalizationRecordObject : public NativeObject {
   // The group can be a CCW to a FinalizationGroupObject.
   static FinalizationRecordObject* create(JSContext* cx,
                                           HandleFinalizationGroupObject group,
-                                          HandleValue holdings);
+                                          HandleValue heldValue);
 
   FinalizationGroupObject* group() const;
-  Value holdings() const;
+  Value heldValue() const;
   bool wasCleared() const;
   void clear();
 };
@@ -192,8 +192,8 @@ class FinalizationGroupObject : public NativeObject {
       HandleFinalizationGroupObject group);
 };
 
-// An iterator over a finalization group's queued holdings. In the spec this is
-// called FinalizationGroupCleanupIterator.
+// An iterator over a finalization group's queued held values. In the spec this
+// is called FinalizationGroupCleanupIterator.
 class FinalizationIteratorObject : public NativeObject {
   enum { FinalizationGroupSlot = 0, IndexSlot, SlotCount };
 
