@@ -151,23 +151,7 @@ void StyleComputedUrl::ResolveImage(Document& aDocument,
       css::ImageLoader::NoteSharedLoad(request);
     }
   } else {
-    // NB: If aDocument is not the original document, we may not be able to load
-    // images from aDocument.  Instead we do the image load from the original
-    // doc and clone it to aDocument.
-    Document* loadingDoc = aDocument.GetOriginalDocument();
-    const bool isPrint = !!loadingDoc;
-    if (!loadingDoc) {
-      loadingDoc = &aDocument;
-    }
-
-    // Kick off the load in the loading document.
-    request = css::ImageLoader::LoadImage(*this, *loadingDoc);
-
-    if (isPrint && request) {
-      RefPtr<imgRequestProxy> ret;
-      request->GetStaticRequest(&aDocument, getter_AddRefs(ret));
-      request = std::move(ret);
-    }
+    request = css::ImageLoader::LoadImage(*this, aDocument);
   }
 
   if (!request) {
