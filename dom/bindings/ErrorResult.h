@@ -792,6 +792,11 @@ class CopyableErrorResult
     return *this;
   }
 
+  // Disallow implicit converstion to non-const ErrorResult&, because that would
+  // allow people to throw exceptions on us while bypassing our checks for JS
+  // exceptions.
+  operator ErrorResult&() = delete;
+
   // Allow conversion to ErrorResult&& so we can move out of ourselves into
   // an ErrorResult.
   operator ErrorResult &&() && {
