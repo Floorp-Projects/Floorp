@@ -2719,25 +2719,10 @@ void HTMLEditor::CollectTopMostChildNodesCompletelyInRange(
 
 HTMLEditor::AutoHTMLFragmentBoundariesFixer::AutoHTMLFragmentBoundariesFixer(
     nsTArray<OwningNonNull<nsINode>>& aArrayOfTopMostChildNodes) {
-  // build up list of parents of first node in list that are either
-  // lists or tables.  First examine front of paste node list.
-  AutoTArray<OwningNonNull<Element>, 4>
-      arrayOfListAndTableRelatedElementsAtStart;
-  CollectListAndTableRelatedElementsAt(
-      aArrayOfTopMostChildNodes[0], arrayOfListAndTableRelatedElementsAtStart);
-  if (!arrayOfListAndTableRelatedElementsAtStart.IsEmpty()) {
-    ReplaceOrphanedStructure(StartOrEnd::start, aArrayOfTopMostChildNodes,
-                             arrayOfListAndTableRelatedElementsAtStart);
-  }
-
-  // Now go through the same process again for the end of the paste node list.
-  AutoTArray<OwningNonNull<Element>, 4> arrayOfListAndTableRelatedElementsAtEnd;
-  CollectListAndTableRelatedElementsAt(aArrayOfTopMostChildNodes.LastElement(),
-                                       arrayOfListAndTableRelatedElementsAtEnd);
-  if (!arrayOfListAndTableRelatedElementsAtEnd.IsEmpty()) {
-    ReplaceOrphanedStructure(StartOrEnd::end, aArrayOfTopMostChildNodes,
-                             arrayOfListAndTableRelatedElementsAtEnd);
-  }
+  EnsureBeginsOrEndsWithValidContent(StartOrEnd::start,
+                                     aArrayOfTopMostChildNodes);
+  EnsureBeginsOrEndsWithValidContent(StartOrEnd::end,
+                                     aArrayOfTopMostChildNodes);
 }
 
 void HTMLEditor::AutoHTMLFragmentBoundariesFixer::
@@ -2754,12 +2739,12 @@ void HTMLEditor::AutoHTMLFragmentBoundariesFixer::
 }
 
 Element*
-HTMLEditor::AutoHTMLFragmentBoundariesFixer::DiscoverPartialListsAndTables(
-    const nsTArray<OwningNonNull<nsINode>>& aArrayOfNodes,
+HTMLEditor::AutoHTMLFragmentBoundariesFixer::GetMostAncestorListOrTableElement(
+    const nsTArray<OwningNonNull<nsINode>>& aArrayOfTopMostChildNodes,
     const nsTArray<OwningNonNull<Element>>& aArrayOfListAndTableRelatedElements)
     const {
   Element* lastFoundAncestorListOrTableElement = nullptr;
-  for (auto& node : aArrayOfNodes) {
+  for (auto& node : aArrayOfTopMostChildNodes) {
     if (HTMLEditUtils::IsTableElement(node) &&
         !node->IsHTMLElement(nsGkAtoms::table)) {
       Element* tableElement = nullptr;
@@ -2913,25 +2898,48 @@ bool HTMLEditor::AutoHTMLFragmentBoundariesFixer::IsReplaceableListElement(
   return false;
 }
 
-void HTMLEditor::AutoHTMLFragmentBoundariesFixer::ReplaceOrphanedStructure(
-    StartOrEnd aStartOrEnd, nsTArray<OwningNonNull<nsINode>>& aArrayOfNodes,
-    const nsTArray<OwningNonNull<Element>>& aArrayOfListAndTableRelatedElements)
-    const {
-  MOZ_ASSERT(!aArrayOfNodes.IsEmpty());
+void HTMLEditor::AutoHTMLFragmentBoundariesFixer::
+    EnsureBeginsOrEndsWithValidContent(
+        StartOrEnd aStartOrEnd,
+        nsTArray<OwningNonNull<nsINode>>& aArrayOfTopMostChildNodes) const {
+  MOZ_ASSERT(!aArrayOfTopMostChildNodes.IsEmpty());
 
-  Element* listOrTableElement = DiscoverPartialListsAndTables(
-      aArrayOfNodes, aArrayOfListAndTableRelatedElements);
+  // Collect list elements and table related elements at first or last node
+  // in aArrayOfTopMostChildNodes.
+  AutoTArray<OwningNonNull<Element>, 4>
+      arrayOfListAndTableRelatedElementsAtEdge;
+  CollectListAndTableRelatedElementsAt(
+      aStartOrEnd == StartOrEnd::end ? aArrayOfTopMostChildNodes.LastElement()
+                                     : aArrayOfTopMostChildNodes[0],
+      arrayOfListAndTableRelatedElementsAtEdge);
+  if (arrayOfListAndTableRelatedElementsAtEdge.IsEmpty()) {
+    return;
+  }
+
+  // Get most ancestor list or `<table>` element in
+  // arrayOfListAndTableRelatedElementsAtEdge which contains earlier
+  // node in aArrayOfTopMostChildNodes as far as possible.
+  // XXX With arrayOfListAndTableRelatedElementsAtEdge, this returns a
+  //     list or `<table>` element which contains first or last node of
+  //     aArrayOfTopMostChildNodes.  However, this seems slow when
+  //     aStartOrEnd is StartOrEnd::end and only the last node is in
+  //     different list or `<table>`.  But I'm not sure whether it's
+  //     possible case or not.  We need to add tests to
+  //     test_content_iterator_subtree.html for checking how
+  //     SubtreeContentIterator works.
+  Element* listOrTableElement = GetMostAncestorListOrTableElement(
+      aArrayOfTopMostChildNodes, arrayOfListAndTableRelatedElementsAtEdge);
   if (!listOrTableElement) {
     return;
   }
 
-  // if we have pieces of tables or lists to be inserted, let's force the
+  // If we have pieces of tables or lists to be inserted, let's force the
   // insertion to deal with table elements right away, so that it doesn't
   // orphan some table or list contents outside the table or list.
 
   OwningNonNull<nsINode>& firstOrLastChildNode =
-      aStartOrEnd == StartOrEnd::end ? aArrayOfNodes.LastElement()
-                                     : aArrayOfNodes[0];
+      aStartOrEnd == StartOrEnd::end ? aArrayOfTopMostChildNodes.LastElement()
+                                     : aArrayOfTopMostChildNodes[0];
 
   // Find substructure of list or table that must be included in paste.
   Element* replaceElement;
@@ -2950,15 +2958,16 @@ void HTMLEditor::AutoHTMLFragmentBoundariesFixer::ReplaceOrphanedStructure(
   }
 
   // If we can replace the given list element or found a table related element
-  // in the `<table>` element, insert it into aArrayOfNodes which is tompost
-  // children to be inserted instead of descendants of them in aArrayOfNodes.
-  for (size_t i = 0; i < aArrayOfNodes.Length();) {
-    OwningNonNull<nsINode>& node = aArrayOfNodes[i];
+  // in the `<table>` element, insert it into aArrayOfTopMostChildNodes which
+  // is tompost children to be inserted instead of descendants of them in
+  // aArrayOfTopMostChildNodes.
+  for (size_t i = 0; i < aArrayOfTopMostChildNodes.Length();) {
+    OwningNonNull<nsINode>& node = aArrayOfTopMostChildNodes[i];
     if (node == replaceElement) {
-      // If the element is n aArrayOfNodes, its descendants must not be
-      // in the array.  Therefore, we don't need to optimize this case.
+      // If the element is n aArrayOfTopMostChildNodes, its descendants must
+      // not be in the array.  Therefore, we don't need to optimize this case.
       // XXX Perhaps, we can break this loop right now.
-      aArrayOfNodes.RemoveElementAt(i);
+      aArrayOfTopMostChildNodes.RemoveElementAt(i);
       continue;
     }
     if (!EditorUtils::IsDescendantOf(node, *replaceElement)) {
@@ -2968,18 +2977,18 @@ void HTMLEditor::AutoHTMLFragmentBoundariesFixer::ReplaceOrphanedStructure(
     // For saving number of calls of EditorUtils::IsDescendantOf(), we should
     // remove its siblings in the array.
     nsIContent* parent = node->GetParent();
-    aArrayOfNodes.RemoveElementAt(i);
-    while (i < aArrayOfNodes.Length() &&
-           aArrayOfNodes[i]->GetParent() == parent) {
-      aArrayOfNodes.RemoveElementAt(i);
+    aArrayOfTopMostChildNodes.RemoveElementAt(i);
+    while (i < aArrayOfTopMostChildNodes.Length() &&
+           aArrayOfTopMostChildNodes[i]->GetParent() == parent) {
+      aArrayOfTopMostChildNodes.RemoveElementAt(i);
     }
   }
 
   // Now replace the removed nodes with the structural parent
   if (aStartOrEnd == StartOrEnd::end) {
-    aArrayOfNodes.AppendElement(*replaceElement);
+    aArrayOfTopMostChildNodes.AppendElement(*replaceElement);
   } else {
-    aArrayOfNodes.InsertElementAt(0, *replaceElement);
+    aArrayOfTopMostChildNodes.InsertElementAt(0, *replaceElement);
   }
 }
 
