@@ -399,6 +399,7 @@ class _ToolbarPanelHub {
   }
 
   async _contentArguments() {
+    const { defaultEngine } = Services.search;
     // Between now and 6 weeks ago
     const dateTo = new Date();
     const dateFrom = new Date(dateTo.getTime() - 42 * 24 * 60 * 60 * 1000);
@@ -431,6 +432,10 @@ class _ToolbarPanelHub {
         dateFrom
       ),
       ...totalEvents,
+      // Passing in `undefined` as string for the Fluent variable name
+      // in order to match and select the message that does not require
+      // the variable.
+      searchEngineName: defaultEngine ? defaultEngine.name : "undefined",
     };
   }
 

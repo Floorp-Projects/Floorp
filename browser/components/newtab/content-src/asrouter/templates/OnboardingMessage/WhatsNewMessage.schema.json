@@ -79,8 +79,10 @@
       "format": "uri"
     },
     "icon_alt": {
-      "description": "Alt text for image.",
-      "type": "string"
+      "allOf": [
+        {"$ref": "#/definitions/localizableText"},
+        {"description": "Alt text for image."}
+      ]
     }
   },
   "additionalProperties": false,
