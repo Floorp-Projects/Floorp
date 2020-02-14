@@ -75,8 +75,7 @@ struct null_t {
 };
 
 struct SerializedStructuredCloneBuffer final {
-  SerializedStructuredCloneBuffer()
-      : data(JS::StructuredCloneScope::Unassigned) {}
+  SerializedStructuredCloneBuffer() = default;
 
   SerializedStructuredCloneBuffer(SerializedStructuredCloneBuffer&&) = default;
   SerializedStructuredCloneBuffer& operator=(
@@ -95,7 +94,7 @@ struct SerializedStructuredCloneBuffer final {
     return false;
   }
 
-  JSStructuredCloneData data;
+  JSStructuredCloneData data{JS::StructuredCloneScope::Unassigned};
 };
 
 }  // namespace mozilla

@@ -427,7 +427,7 @@ class ParentImpl::RequestMessageLoopRunnable final : public Runnable {
   }
 
  private:
-  ~RequestMessageLoopRunnable() {}
+  ~RequestMessageLoopRunnable() = default;
 
   NS_DECL_NSIRUNNABLE
 };
@@ -441,7 +441,7 @@ class ParentImpl::ShutdownBackgroundThreadRunnable final : public Runnable {
   }
 
  private:
-  ~ShutdownBackgroundThreadRunnable() {}
+  ~ShutdownBackgroundThreadRunnable() = default;
 
   NS_DECL_NSIRUNNABLE
 };
@@ -460,7 +460,7 @@ class ParentImpl::ForceCloseBackgroundActorsRunnable final : public Runnable {
   }
 
  private:
-  ~ForceCloseBackgroundActorsRunnable() {}
+  ~ForceCloseBackgroundActorsRunnable() = default;
 
   NS_DECL_NSIRUNNABLE
 };
@@ -529,7 +529,7 @@ class NS_NO_VTABLE ParentImpl::CreateCallback {
   virtual void Failure() = 0;
 
  protected:
-  virtual ~CreateCallback() {}
+  virtual ~CreateCallback() = default;
 };
 
 // -----------------------------------------------------------------------------
@@ -578,7 +578,7 @@ class ChildImpl::SendInitBackgroundRunnable final : public CancelableRunnable {
         mSentInitBackground(false),
         mSendInitfunc(std::move(aFunc)) {}
 
-  ~SendInitBackgroundRunnable() {}
+  ~SendInitBackgroundRunnable() = default;
 
   NS_DECL_NSIRUNNABLE
 };
