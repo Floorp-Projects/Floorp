@@ -640,7 +640,7 @@ policies and contribution forms [3].
 
     function promise_rejects(test, expected, promise, description) {
         return promise.then(test.unreached_func("Should have rejected: " + description)).catch(function(e) {
-            assert_throws(expected, function() { throw e }, description);
+            assert_throws_DO_NOT_USE(expected, function() { throw e }, description);
         });
     }
 
@@ -1474,7 +1474,7 @@ policies and contribution forms [3].
      * @param {Function} func Function which should throw.
      * @param {string} description Error description for the case that the error is not thrown.
      */
-    function assert_throws(code, func, description)
+    function assert_throws_DO_NOT_USE(code, func, description)
     {
         try {
             func.call(this);
@@ -1615,7 +1615,6 @@ policies and contribution forms [3].
             }
         }
     }
-    expose(assert_throws, "assert_throws");
 
     /**
      * Assert a JS Error with the expected constructor is thrown.

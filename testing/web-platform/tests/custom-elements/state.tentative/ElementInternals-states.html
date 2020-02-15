@@ -26,9 +26,9 @@ test(() => {
 
 test(() => {
   let i = (new TestElement()).internals;
-  assert_throws(new TypeError(), () => { i.states.supports('foo'); });
-  assert_throws(new SyntaxError(), () => { i.states.add(''); });
-  assert_throws('InvalidCharacterError', () => { i.states.add('a\tb'); });
+  assert_throws_js(TypeError, () => { i.states.supports('foo'); });
+  assert_throws_dom('SyntaxError', () => { i.states.add(''); });
+  assert_throws_dom('InvalidCharacterError', () => { i.states.add('a\tb'); });
 }, 'DOMTokenList behavior of ElementInternals.states: Exceptions');
 
 test(() => {
