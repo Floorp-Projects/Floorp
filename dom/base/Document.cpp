@@ -5387,6 +5387,27 @@ nsresult Document::EditingStateChanged() {
     RefPtr<PresShell> presShell = GetPresShell();
     NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
 
+    // If we're entering the design mode from non-editable state, put the
+    // selection at the beginning of the document for compatibility reasons.
+    bool collapseSelectionAtBeginningOfDocument =
+        designMode && oldState == EditingState::eOff;
+    // However, mEditingState may be eOff even if there is some
+    // `contenteditable` area and selection has been initialized for it because
+    // mEditingState for `contenteditable` may have been scheduled to modify
+    // when safe.  In such case, we should not reinitialize selection.
+    if (collapseSelectionAtBeginningOfDocument && mContentEditableCount) {
+      Selection* selection =
+          presShell->GetSelection(nsISelectionController::SELECTION_NORMAL);
+      NS_WARNING_ASSERTION(selection, "Why don't we have Selection?");
+      if (selection && selection->RangeCount()) {
+        // Perhaps, we don't need to check whether the selection is in
+        // an editing host or not because all contents will be editable
+        // in designMode. (And we don't want to make this code so complicated
+        // because of legacy API.)
+        collapseSelectionAtBeginningOfDocument = false;
+      }
+    }
+
     MOZ_ASSERT(mStyleSetFilled);
 
     // Before making this window editable, we need to modify UA style sheet
@@ -5451,9 +5472,7 @@ nsresult Document::EditingStateChanged() {
       return NS_OK;
     }
 
-    // If we're entering the design mode, put the selection at the beginning of
-    // the document for compatibility reasons.
-    if (designMode && oldState == EditingState::eOff) {
+    if (collapseSelectionAtBeginningOfDocument) {
       htmlEditor->BeginningOfDocument();
     }
 
