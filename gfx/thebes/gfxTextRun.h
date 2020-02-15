@@ -274,7 +274,7 @@ class gfxTextRun : public gfxShapedText {
    * Glyphs should be drawn in logical content order, which can be significant
    * if they overlap (perhaps due to negative spacing).
    */
-  void Draw(Range aRange, mozilla::gfx::Point aPt,
+  void Draw(const Range aRange, const mozilla::gfx::Point aPt,
             const DrawParams& aParams) const;
 
   /**

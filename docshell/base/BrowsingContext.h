@@ -266,6 +266,7 @@ class BrowsingContext : public nsISupports, public nsWrapperCache {
   void GetName(nsAString& aName) { aName = GetName(); }
   bool NameEquals(const nsAString& aName) { return GetName().Equals(aName); }
 
+  Type GetType() const { return mType; }
   bool IsContent() const { return mType == Type::Content; }
   bool IsChrome() const { return !IsContent(); }
 
@@ -523,8 +524,6 @@ class BrowsingContext : public nsISupports, public nsWrapperCache {
   void AddDeprioritizedLoadRunner(nsIRunnable* aRunner);
 
   RefPtr<SessionStorageManager> GetSessionStorageManager();
-
-  Type GetType() const { return mType; }
 
   bool PendingInitialization() const { return mPendingInitialization; };
   void SetPendingInitialization(bool aVal) { mPendingInitialization = aVal; };

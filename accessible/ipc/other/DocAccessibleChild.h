@@ -55,8 +55,8 @@ class DocAccessibleChild : public DocAccessibleChildBase {
   /*
    * Get the name for the accessible with given id.
    */
-  virtual mozilla::ipc::IPCResult RecvName(const uint64_t& aID,
-                                           nsString* aName) override;
+  virtual mozilla::ipc::IPCResult RecvName(const uint64_t& aID, nsString* aName,
+                                           uint32_t* aFlag) override;
 
   virtual mozilla::ipc::IPCResult RecvValue(const uint64_t& aID,
                                             nsString* aValue) override;

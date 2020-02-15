@@ -39,7 +39,7 @@ typedef std::function<void(
 
 typedef std::function<void(bool)> ServiceWorkerBoolCallback;
 
-typedef std::function<void(ErrorResult&)> ServiceWorkerFailureCallback;
+typedef std::function<void(ErrorResult&&)> ServiceWorkerFailureCallback;
 
 bool ServiceWorkerParentInterceptEnabled();
 

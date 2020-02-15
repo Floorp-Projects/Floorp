@@ -908,6 +908,42 @@ typedef ThreadSafeAutoRefCntWithRecording<recordreplay::Behavior::DontPreserve>
   }                                                                          \
   NS_IMETHODIMP_(void) _class::DeleteCycleCollectable(void) { delete this; }
 
+// _WITH_INTERRUPTABLE_LAST_RELEASE can be useful when certain resources
+// should be released as soon as we know the object will be deleted and the
+// instance may be cached for reuse.
+// _last is performed for cleaning up its resources.  Then, _maybeInterrupt is
+// tested and when it returns true, this stops deleting the instance.
+// (Note that it's not allowed to grab the instance with nsCOMPtr or RefPtr
+// during _last is performed.)
+// Therefore, when _maybeInterrupt returns true, the instance has to be grabbed
+// by nsCOMPtr or RefPtr.
+#define NS_IMPL_MAIN_THREAD_ONLY_CYCLE_COLLECTING_RELEASE_WITH_INTERRUPTABLE_LAST_RELEASE( \
+    _class, _last, _maybeInterrupt)                                                        \
+  NS_IMETHODIMP_(MozExternalRefCountType) _class::Release(void) {                          \
+    MOZ_ASSERT(int32_t(mRefCnt) > 0, "dup release");                                       \
+    NS_ASSERT_OWNINGTHREAD(_class);                                                        \
+    bool shouldDelete = false;                                                             \
+    nsISupports* base = NS_CYCLE_COLLECTION_CLASSNAME(_class)::Upcast(this);               \
+    nsrefcnt count = mRefCnt.decr<NS_CycleCollectorSuspectUsingNursery>(                   \
+        base, &shouldDelete);                                                              \
+    NS_LOG_RELEASE(this, count, #_class);                                                  \
+    if (count == 0) {                                                                      \
+      mRefCnt.incr<NS_CycleCollectorSuspectUsingNursery>(base);                            \
+      _last;                                                                               \
+      mRefCnt.decr<NS_CycleCollectorSuspectUsingNursery>(base);                            \
+      if (_maybeInterrupt) {                                                               \
+        MOZ_ASSERT(mRefCnt.get() > 0);                                                     \
+        return mRefCnt.get();                                                              \
+      }                                                                                    \
+      if (shouldDelete) {                                                                  \
+        mRefCnt.stabilizeForDeletion();                                                    \
+        DeleteCycleCollectable();                                                          \
+      }                                                                                    \
+    }                                                                                      \
+    return count;                                                                          \
+  }                                                                                        \
+  NS_IMETHODIMP_(void) _class::DeleteCycleCollectable(void) { delete this; }
+
 ///////////////////////////////////////////////////////////////////////////////
 
 /**

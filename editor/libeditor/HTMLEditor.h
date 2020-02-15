@@ -3963,14 +3963,18 @@ class HTMLEditor final : public TextEditor,
       nsINode& aNode,
       nsTArray<OwningNonNull<Element>>& aOutArrayOfListAndTableElements);
 
-  int32_t DiscoverPartialListsAndTables(
-      nsTArray<OwningNonNull<nsINode>>& aPasteNodes,
-      nsTArray<OwningNonNull<Element>>& aListsAndTables);
+  /**
+   * TODO: Document what this does.
+   */
+  static Element* DiscoverPartialListsAndTables(
+      const nsTArray<OwningNonNull<nsINode>>& aArrayOfNodes,
+      const nsTArray<OwningNonNull<Element>>&
+          aArrayOfListAndTableRelatedElements);
+
   enum class StartOrEnd { start, end };
-  void ReplaceOrphanedStructure(
-      StartOrEnd aStartOrEnd, nsTArray<OwningNonNull<nsINode>>& aNodeArray,
-      nsTArray<OwningNonNull<Element>>& aListAndTableArray,
-      int32_t aHighWaterMark);
+  void ReplaceOrphanedStructure(StartOrEnd aStartOrEnd,
+                                nsTArray<OwningNonNull<nsINode>>& aNodeArray,
+                                Element& aListOrTableElement);
 
   /**
    * FindReplaceableTableElement() is a helper method of

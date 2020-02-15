@@ -95,7 +95,7 @@ mozilla::ipc::IPCResult CacheOpChild::Recv__delete__(
 
   if (NS_WARN_IF(aRv.Failed())) {
     MOZ_DIAGNOSTIC_ASSERT(aResult.type() == CacheOpResult::Tvoid_t);
-    mPromise->MaybeReject(aRv);
+    mPromise->MaybeReject(std::move(aRv));
     mPromise = nullptr;
     return IPC_OK();
   }

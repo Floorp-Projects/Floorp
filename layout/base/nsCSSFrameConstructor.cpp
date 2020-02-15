@@ -219,6 +219,8 @@ nsIFrame* NS_NewDeckFrame(PresShell* aPresShell, ComputedStyle* aStyle);
 
 nsIFrame* NS_NewLeafBoxFrame(PresShell* aPresShell, ComputedStyle* aStyle);
 
+nsIFrame* NS_NewStackFrame(PresShell* aPresShell, ComputedStyle* aStyle);
+
 nsIFrame* NS_NewRangeFrame(PresShell* aPresShell, ComputedStyle* aStyle);
 
 nsIFrame* NS_NewImageBoxFrame(PresShell* aPresShell, ComputedStyle* aStyle);
@@ -3937,6 +3939,7 @@ static bool IsXULDisplayType(const nsStyleDisplay* aDisplay) {
 
 #ifdef MOZ_XUL
   return (aDisplay->mDisplay == StyleDisplay::MozGrid ||
+          aDisplay->mDisplay == StyleDisplay::MozStack ||
           aDisplay->mDisplay == StyleDisplay::MozGridGroup ||
           aDisplay->mDisplay == StyleDisplay::MozGridLine ||
           aDisplay->mDisplay == StyleDisplay::MozDeck ||
@@ -4133,8 +4136,9 @@ already_AddRefed<ComputedStyle> nsCSSFrameConstructor::BeginBuildingScrollFrame(
     // I wonder whether we can eliminate that somehow.
     const nsStyleDisplay* displayStyle = aContentStyle->StyleDisplay();
     if (IsXULDisplayType(displayStyle)) {
-      gfxScrollFrame =
-          NS_NewXULScrollFrame(mPresShell, contentStyle, aIsRoot, false);
+      gfxScrollFrame = NS_NewXULScrollFrame(
+          mPresShell, contentStyle, aIsRoot,
+          displayStyle->mDisplay == StyleDisplay::MozStack);
     } else {
       gfxScrollFrame = NS_NewHTMLScrollFrame(mPresShell, contentStyle, aIsRoot);
     }
@@ -4464,6 +4468,11 @@ nsCSSFrameConstructor::FindDisplayData(const nsStyleDisplay& aDisplay,
     case StyleDisplayInside::MozGridLine: {
       static const FrameConstructionData data =
           SCROLLABLE_XUL_FCDATA(NS_NewGridRowLeafFrame);
+      return &data;
+    }
+    case StyleDisplayInside::MozStack: {
+      static const FrameConstructionData data =
+          SCROLLABLE_XUL_FCDATA(NS_NewStackFrame);
       return &data;
     }
     case StyleDisplayInside::MozDeck: {

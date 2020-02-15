@@ -77,6 +77,11 @@ void DocumentOrShadowRoot::InsertSheetAt(size_t aIndex, StyleSheet& aSheet) {
   mStyleSheets.InsertElementAt(aIndex, &aSheet);
 }
 
+void DocumentOrShadowRoot::InsertAdoptedSheetAt(size_t aIndex,
+                                                StyleSheet& aSheet) {
+  mAdoptedStyleSheets.InsertElementAt(aIndex, &aSheet);
+}
+
 already_AddRefed<StyleSheet> DocumentOrShadowRoot::RemoveSheet(
     StyleSheet& aSheet) {
   auto index = mStyleSheets.IndexOf(&aSheet);
@@ -90,14 +95,9 @@ already_AddRefed<StyleSheet> DocumentOrShadowRoot::RemoveSheet(
 }
 
 // https://wicg.github.io/construct-stylesheets/#dom-documentorshadowroot-adoptedstylesheets
-void DocumentOrShadowRoot::SetAdoptedStyleSheets(
+void DocumentOrShadowRoot::EnsureAdoptedSheetsAreValid(
     const Sequence<OwningNonNull<StyleSheet>>& aAdoptedStyleSheets,
     ErrorResult& aRv) {
-  // TODO(nordzilla): This is just a minimal-implementation stub to land
-  // the WebIDL attribute (Bug 1608489).
-
-  // Step 1 is a variable declaration
-
   for (const OwningNonNull<StyleSheet>& sheet : aAdoptedStyleSheets) {
     // 2.1 Check if all sheets are constructed, else throw NotAllowedError
     if (!sheet->IsConstructed()) {
@@ -112,12 +112,6 @@ void DocumentOrShadowRoot::SetAdoptedStyleSheets(
           "Each adopted style sheet's constructor document must match the "
           "document or shadow root's node document");
     }
-  }
-  // 3. Set the adopted style sheets to the new sheets
-  mAdoptedStyleSheets.ClearAndRetainStorage();
-  mAdoptedStyleSheets.SetCapacity(aAdoptedStyleSheets.Length());
-  for (const OwningNonNull<StyleSheet>& sheet : aAdoptedStyleSheets) {
-    mAdoptedStyleSheets.AppendElement(sheet.get());
   }
 }
 
@@ -652,6 +646,15 @@ nsRadioGroupStruct* DocumentOrShadowRoot::GetOrCreateRadioGroup(
       .get();
 }
 
+int32_t DocumentOrShadowRoot::StyleOrderIndexOfSheet(
+    const StyleSheet& aSheet) const {
+  if (aSheet.IsConstructed()) {
+    int32_t index = mAdoptedStyleSheets.IndexOf(&aSheet);
+    return (index < 0) ? index : index + SheetCount();
+  }
+  return mStyleSheets.IndexOf(&aSheet);
+}
+
 void DocumentOrShadowRoot::GetAdoptedStyleSheets(
     nsTArray<RefPtr<StyleSheet>>& aAdoptedStyleSheets) const {
   aAdoptedStyleSheets = mAdoptedStyleSheets;
@@ -661,27 +664,33 @@ void DocumentOrShadowRoot::Traverse(DocumentOrShadowRoot* tmp,
                                     nsCycleCollectionTraversalCallback& cb) {
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mStyleSheets)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDOMStyleSheets)
-  // TODO(nordzilla): This may get more involved once the sheets are applied.
-  // This currently exists only to land the WebIDL attribute (Bug 1608489)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mAdoptedStyleSheets)
-  for (StyleSheet* sheet : tmp->mStyleSheets) {
-    if (!sheet->IsApplicable()) {
-      continue;
+
+  auto NoteSheets = [tmp, &cb = cb](nsTArray<RefPtr<StyleSheet>>& sheetList) {
+    for (StyleSheet* sheet : sheetList) {
+      if (!sheet->IsApplicable()) {
+        continue;
+      }
+      // The style set or mServoStyles keep more references to it if the sheet
+      // is applicable.
+      if (tmp->mKind == Kind::ShadowRoot) {
+        NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mServoStyles->sheets[i]");
+        cb.NoteXPCOMChild(sheet);
+      } else if (tmp->AsNode().AsDocument()->StyleSetFilled()) {
+        NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(
+            cb, "mStyleSet->mRawSet.stylist.stylesheets.author[i]");
+        cb.NoteXPCOMChild(sheet);
+      }
     }
-    // The style set or mServoStyles keep more references to it if the sheet is
-    // applicable.
-    if (tmp->mKind == Kind::ShadowRoot) {
-      NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mServoStyles->sheets[i]");
-      cb.NoteXPCOMChild(sheet);
-    } else if (tmp->AsNode().AsDocument()->StyleSetFilled()) {
-      NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(
-          cb, "mStyleSet->mRawSet.stylist.stylesheets.author[i]");
-      cb.NoteXPCOMChild(sheet);
-    }
-  }
+  };
+
+  NoteSheets(tmp->mStyleSheets);
+  NoteSheets(tmp->mAdoptedStyleSheets);
+
   for (auto iter = tmp->mIdentifierMap.ConstIter(); !iter.Done(); iter.Next()) {
     iter.Get()->Traverse(&cb);
   }
+
   for (auto iter = tmp->mRadioGroups.Iter(); !iter.Done(); iter.Next()) {
     nsRadioGroupStruct* radioGroup = iter.UserData();
     NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(
@@ -698,10 +707,11 @@ void DocumentOrShadowRoot::Traverse(DocumentOrShadowRoot* tmp,
 }
 
 void DocumentOrShadowRoot::Unlink(DocumentOrShadowRoot* tmp) {
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mDOMStyleSheets)
-  // TODO(nordzilla): This may get more involved once the sheets are applied.
-  // This currently exists only to land the WebIDL attribute (Bug 1608489)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mAdoptedStyleSheets)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mDOMStyleSheets);
+  for (RefPtr<StyleSheet>& sheet : tmp->mAdoptedStyleSheets) {
+    sheet->RemoveAdopter(*tmp);
+  }
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mAdoptedStyleSheets);
   tmp->mIdentifierMap.Clear();
   tmp->mRadioGroups.Clear();
 }

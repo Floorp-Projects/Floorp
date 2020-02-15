@@ -1444,23 +1444,6 @@ class Element : public FragmentOrElement {
   }
 
   /**
-   * Called when we have been adopted, and the information of the
-   * node has been changed.
-   *
-   * The new document can be reached via OwnerDoc().
-   *
-   * If you override this method,
-   * please call up to the parent NodeInfoChanged.
-   *
-   * If you change this, change also the similar method in Link.
-   */
-  virtual void NodeInfoChanged(Document* aOldDoc) {
-#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
-    AssertInvariantsOnNodeInfoChange();
-#endif
-  }
-
-  /**
    * Parse a string into an nsAttrValue for a CORS attribute.  This
    * never fails.  The resulting value is an enumerated value whose
    * GetEnumValue() returns one of the above constants.

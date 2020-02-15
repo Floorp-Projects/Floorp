@@ -2171,7 +2171,7 @@ void ScriptExecutorRunnable::LogExceptionToConsole(
   MOZ_ASSERT(mScriptLoader.mRv.IsJSException());
 
   JS::Rooted<JS::Value> exn(aCx);
-  if (!ToJSValue(aCx, mScriptLoader.mRv, &exn)) {
+  if (!ToJSValue(aCx, std::move(mScriptLoader.mRv), &exn)) {
     return;
   }
 

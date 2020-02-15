@@ -300,9 +300,9 @@ void PaymentResponse::RespondRetry(const nsAString& aMethodName,
   mRetryPromise = nullptr;
 }
 
-void PaymentResponse::RejectRetry(ErrorResult& aRejectReason) {
+void PaymentResponse::RejectRetry(ErrorResult&& aRejectReason) {
   MOZ_ASSERT(mRetryPromise);
-  mRetryPromise->MaybeReject(aRejectReason);
+  mRetryPromise->MaybeReject(std::move(aRejectReason));
   mRetryPromise = nullptr;
 }
 

@@ -20,19 +20,21 @@ namespace css {
 StreamLoader::StreamLoader(SheetLoadData& aSheetLoadData)
     : mSheetLoadData(&aSheetLoadData), mStatus(NS_OK) {}
 
-StreamLoader::~StreamLoader() {}
+StreamLoader::~StreamLoader() {
+  MOZ_DIAGNOSTIC_ASSERT(mOnStopRequestCalled || mAsyncOpenFailed);
+}
 
 NS_IMPL_ISUPPORTS(StreamLoader, nsIStreamListener)
 
 /* nsIRequestObserver implementation */
 NS_IMETHODIMP
 StreamLoader::OnStartRequest(nsIRequest* aRequest) {
+
   // It's kinda bad to let Web content send a number that results
   // in a potentially large allocation directly, but efficiency of
   // compression bombs is so great that it doesn't make much sense
   // to require a site to send one before going ahead and allocating.
-  nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
-  if (channel) {
+  if (nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest)) {
     int64_t length;
     nsresult rv = channel->GetContentLength(&length);
     if (NS_SUCCEEDED(rv) && length > 0) {
@@ -49,6 +51,11 @@ StreamLoader::OnStartRequest(nsIRequest* aRequest) {
 
 NS_IMETHODIMP
 StreamLoader::OnStopRequest(nsIRequest* aRequest, nsresult aStatus) {
+  MOZ_DIAGNOSTIC_ASSERT(!mOnStopRequestCalled);
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+  mOnStopRequestCalled = true;
+#endif
+
   // Decoded data
   nsCString utf8String;
   {

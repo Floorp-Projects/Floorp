@@ -189,9 +189,8 @@ already_AddRefed<Promise> Clients::MatchAll(const ClientQueryOptions& aOptions,
         outerPromise->MaybeResolve(clientList);
       },
       [outerPromise](const CopyableErrorResult& aResult) {
-        // MaybeReject needs a non-const result, so make a copy.
-        CopyableErrorResult result(aResult);
-        outerPromise->MaybeReject(result);
+        // MaybeReject needs a non-const-ref result, so make a copy.
+        outerPromise->MaybeReject(CopyableErrorResult(aResult));
       });
 
   return outerPromise.forget();
@@ -214,7 +213,7 @@ already_AddRefed<Promise> Clients::OpenWindow(const nsAString& aURL,
     CopyableErrorResult rv;
     rv.ThrowTypeError(
         u"Passing \"about:blank\" to Clients.openWindow is not allowed");
-    outerPromise->MaybeReject(rv);
+    outerPromise->MaybeReject(std::move(rv));
     return outerPromise.forget();
   }
 
@@ -244,9 +243,8 @@ already_AddRefed<Promise> Clients::OpenWindow(const nsAString& aURL,
         outerPromise->MaybeResolve(client);
       },
       [outerPromise](const CopyableErrorResult& aResult) {
-        // MaybeReject needs a non-const result, so make a copy.
-        CopyableErrorResult result(aResult);
-        outerPromise->MaybeReject(result);
+        // MaybeReject needs a non-const-ref result, so make a copy.
+        outerPromise->MaybeReject(CopyableErrorResult(aResult));
       });
 
   return outerPromise.forget();
@@ -279,9 +277,8 @@ already_AddRefed<Promise> Clients::Claim(ErrorResult& aRv) {
         outerPromise->MaybeResolveWithUndefined();
       },
       [outerPromise](const CopyableErrorResult& aResult) {
-        // MaybeReject needs a non-const result, so make a copy.
-        CopyableErrorResult result(aResult);
-        outerPromise->MaybeReject(result);
+        // MaybeReject needs a non-const-ref result, so make a copy.
+        outerPromise->MaybeReject(CopyableErrorResult(aResult));
       });
 
   return outerPromise.forget();

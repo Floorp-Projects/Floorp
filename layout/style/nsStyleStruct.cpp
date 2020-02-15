@@ -1082,7 +1082,7 @@ nsStylePosition::nsStylePosition(const Document& aDocument)
       mMaxHeight(StyleMaxSize::None()),
       mFlexBasis(StyleFlexBasis::Size(StyleSize::Auto())),
       mAspectRatio(0.0f),
-      mGridAutoFlow(NS_STYLE_GRID_AUTO_FLOW_ROW),
+      mGridAutoFlow(StyleGridAutoFlow::ROW),
       mBoxSizing(StyleBoxSizing::Content),
       mAlignContent({StyleAlignFlags::NORMAL}),
       mAlignItems({StyleAlignFlags::NORMAL}),

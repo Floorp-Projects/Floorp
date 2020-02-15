@@ -52,14 +52,14 @@ def windows_sdk_dir(value, host):
 @imports('os')
 @imports('re')
 @imports(_from='__builtin__', _import='sorted')
-@imports(_from='__builtin__', _import='WindowsError')
+@imports(_from='__builtin__', _import='Exception')
 def get_sdk_dirs(sdk, subdir):
     def get_dirs_containing(sdk, stem, subdir):
         base = os.path.join(sdk, stem)
         try:
             subdirs = [d for d in os.listdir(base)
                        if os.path.isdir(os.path.join(base, d))]
-        except WindowsError:
+        except Exception:
             subdirs = []
         if not subdirs:
             return ()
@@ -191,11 +191,11 @@ def valid_ucrt_sdk_dir(windows_sdk_dir, windows_sdk_dir_env):
             # Universal CRT SDK, chances are this is a start-shell-msvc*.bat
             # setup, where INCLUDE and LIB already contain the UCRT paths.
             ucrt_includes = [
-                p for p in os.environ.get('INCLUDE', '').split(os.pathsep)
+                p for p in os.environ.get('INCLUDE', '').split(';')
                 if os.path.basename(p).lower() == 'ucrt'
             ]
             ucrt_libs = [
-                p for p in os.environ.get('LIB', '').split(os.pathsep)
+                p for p in os.environ.get('LIB', '').split(';')
                 if os.path.basename(os.path.dirname(p)).lower() == 'ucrt'
             ]
             if ucrt_includes and ucrt_libs:
@@ -276,7 +276,7 @@ def dia_sdk_dir(vc_path, dia_sdk_path):
         # This would be easier if we had the installationPath that
         # get_vc_paths works with, since 'DIA SDK' is relative to that.
         path = os.path.normpath(os.path.join(
-            vc_path, r'..\..\..\..\DIA SDK'))
+            vc_path, '..', '..', '..', '..', 'DIA SDK'))
     else:
         return
 
@@ -314,7 +314,7 @@ def include_path(vc_path, windows_sdk_dir, ucrt_sdk_dir, dia_sdk_dir):
     if dia_sdk_dir:
         includes.append(os.path.join(dia_sdk_dir, 'include'))
     # Set in the environment for old-configure
-    includes = os.pathsep.join(includes)
+    includes = ';'.join(includes)
     os.environ['INCLUDE'] = includes
     return includes
 
@@ -375,7 +375,7 @@ def lib_path_for(host_or_target):
         libs = []
         lib_env = os.environ.get('LIB')
         if lib_env and not is_host:
-            libs.extend(lib_env.split(os.pathsep))
+            libs.extend(lib_env.split(';'))
         libs.extend((
             os.path.join(vc_path, 'lib', sdk_target),
             atlmfc_dir,
@@ -393,7 +393,7 @@ def lib_path_for(host_or_target):
 @imports('os')
 def lib_path(libs):
     # Set in the environment for old-configure
-    libs = os.pathsep.join(libs)
+    libs = ';'.join(libs)
     os.environ['LIB'] = libs
     return libs
 
@@ -432,17 +432,16 @@ option(env='MT', nargs=1, help='Path to the Microsoft Manifest Tool',
        when=host_is_windows)
 
 
-@depends(valid_windows_sdk_dir, valid_ucrt_sdk_dir)
+@depends(valid_windows_sdk_dir, valid_ucrt_sdk_dir, host)
 @imports(_from='os', _import='environ')
-@imports('platform')
-def sdk_bin_path(valid_windows_sdk_dir, valid_ucrt_sdk_dir):
+def sdk_bin_path(valid_windows_sdk_dir, valid_ucrt_sdk_dir, host):
     if not valid_windows_sdk_dir:
         return
 
     vc_host = {
         'x86': 'x86',
-        'AMD64': 'x64',
-    }.get(platform.machine())
+        'x86_64': 'x64',
+    }.get(host.cpu)
 
     # From version 10.0.15063.0 onwards the bin path contains the version number.
     versioned_bin = ('bin' if valid_ucrt_sdk_dir.version < '10.0.15063.0'

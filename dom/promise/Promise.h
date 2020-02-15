@@ -102,9 +102,11 @@ class Promise : public nsISupports, public SupportsWeakPtr<Promise> {
     MaybeSomething(aArg, &Promise::MaybeReject);
   }
 
-  inline void MaybeReject(ErrorResult& aArg) {
+  inline void MaybeReject(ErrorResult&& aArg) {
     MOZ_ASSERT(aArg.Failed());
-    MaybeSomething(aArg, &Promise::MaybeReject);
+    MaybeSomething(std::move(aArg), &Promise::MaybeReject);
+    // That should have consumed aArg.
+    MOZ_ASSERT(!aArg.Failed());
   }
 
   void MaybeReject(const RefPtr<MediaStreamError>& aArg);
@@ -119,7 +121,7 @@ class Promise : public nsISupports, public SupportsWeakPtr<Promise> {
   inline void MaybeRejectWith##name(const nsACString& aMessage) { \
     ErrorResult res;                                              \
     res.Throw##name(aMessage);                                    \
-    MaybeReject(res);                                             \
+    MaybeReject(std::move(res));                                  \
   }                                                               \
   template <int N>                                                \
   void MaybeRejectWith##name(const char(&aMessage)[N]) {          \
@@ -134,13 +136,13 @@ class Promise : public nsISupports, public SupportsWeakPtr<Promise> {
   void MaybeRejectWithTypeError(Ts&&... aMessageArgs) {
     ErrorResult res;
     res.ThrowTypeError<errorNumber>(std::forward<Ts>(aMessageArgs)...);
-    MaybeReject(res);
+    MaybeReject(std::move(res));
   }
 
   inline void MaybeRejectWithTypeError(const nsAString& aMessage) {
     ErrorResult res;
     res.ThrowTypeError(aMessage);
-    MaybeReject(res);
+    MaybeReject(std::move(res));
   }
 
   template <int N>
@@ -152,13 +154,13 @@ class Promise : public nsISupports, public SupportsWeakPtr<Promise> {
   void MaybeRejectWithRangeError(Ts&&... aMessageArgs) {
     ErrorResult res;
     res.ThrowRangeError<errorNumber>(std::forward<Ts>(aMessageArgs)...);
-    MaybeReject(res);
+    MaybeReject(std::move(res));
   }
 
   inline void MaybeRejectWithRangeError(const nsAString& aMessage) {
     ErrorResult res;
     res.ThrowRangeError(aMessage);
-    MaybeReject(res);
+    MaybeReject(std::move(res));
   }
 
   template <int N>
@@ -284,7 +286,7 @@ class Promise : public nsISupports, public SupportsWeakPtr<Promise> {
                                           const nsACString& aMessage) {
     ErrorResult res;
     res.ThrowDOMException(rv, aMessage);
-    MaybeReject(res);
+    MaybeReject(std::move(res));
   }
 
   struct PromiseCapability;
