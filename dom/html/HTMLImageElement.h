@@ -390,9 +390,6 @@ class HTMLImageElement final : public nsGenericHTMLElement,
 
   bool mInDocResponsiveContent;
 
-  // Represents the image is deferred loading until this element gets visible.
-  bool mLazyLoading;
-
   RefPtr<ImageLoadTask> mPendingImageLoadTask;
   nsCOMPtr<nsIPrincipal> mSrcTriggeringPrincipal;
   nsCOMPtr<nsIPrincipal> mSrcsetTriggeringPrincipal;

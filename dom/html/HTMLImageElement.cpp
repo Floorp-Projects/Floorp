@@ -114,7 +114,6 @@ HTMLImageElement::HTMLImageElement(
     : nsGenericHTMLElement(std::move(aNodeInfo)),
       mForm(nullptr),
       mInDocResponsiveContent(false),
-      mLazyLoading(false),
       mCurrentDensity(1.0) {
   // We start out broken
   AddStatesSilently(NS_EVENT_STATE_BROKEN);
@@ -1267,6 +1266,7 @@ void HTMLImageElement::SetLazyLoading() {
           OwnerDoc()->GetLazyLoadImageObserver()) {
     lazyLoadObserver->Observe(*this);
     mLazyLoading = true;
+    UpdateImageState(true);
   }
 }
 

@@ -341,13 +341,6 @@ class nsImageLoadingContent : public nsIImageLoadingContent {
   friend struct AutoStateChanger;
 
   /**
-   * UpdateImageState recomputes the current state of this image loading
-   * content and updates what ImageState() returns accordingly.  It will also
-   * fire a ContentStatesChanged() notification as needed if aNotify is true.
-   */
-  void UpdateImageState(bool aNotify);
-
-  /**
    * Method to fire an event once we know what's going on with the image load.
    *
    * @param aEventType "loadstart", "loadend", "load", or "error" depending on
@@ -364,6 +357,13 @@ class nsImageLoadingContent : public nsIImageLoadingContent {
   RefPtr<mozilla::AsyncEventDispatcher> mPendingEvent;
 
  protected:
+  /**
+   * UpdateImageState recomputes the current state of this image loading
+   * content and updates what ImageState() returns accordingly.  It will also
+   * fire a ContentStatesChanged() notification as needed if aNotify is true.
+   */
+  void UpdateImageState(bool aNotify);
+
   /**
    * Method to create an nsIURI object from the given string (will
    * handle getting the right charset, base, etc).  You MUST pass in a
@@ -600,7 +600,10 @@ class nsImageLoadingContent : public nsIImageLoadingContent {
    * True if we want to set nsIClassOfService::UrgentStart to the channel to
    * get the response ASAP for better user responsiveness.
    */
-  bool mUseUrgentStartForChannel;
+  bool mUseUrgentStartForChannel : 1;
+
+  // Represents the image is deferred loading until this element gets visible.
+  bool mLazyLoading : 1;
 
  private:
   /* The number of nested AutoStateChangers currently tracking our state. */
