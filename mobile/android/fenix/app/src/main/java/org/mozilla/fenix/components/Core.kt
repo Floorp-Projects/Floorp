@@ -43,6 +43,7 @@ import mozilla.components.lib.dataprotect.generateEncryptionKey
 import mozilla.components.service.sync.logins.AsyncLoginsStorageAdapter
 import mozilla.components.service.sync.logins.SyncableLoginsStore
 import org.mozilla.fenix.AppRequestInterceptor
+import org.mozilla.fenix.Config
 import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
@@ -219,9 +220,15 @@ class Core(private val context: Context) {
 
     /**
      * Shared Preferences that encrypt/decrypt using Android KeyStore and lib-dataprotect for 23+
-     * otherwise simply stored
+     * only on Nightly/Debug for now, otherwise simply stored.
+     * See https://github.com/mozilla-mobile/fenix/issues/8324
      */
-    fun getSecureAbove22Preferences() = SecureAbove22Preferences(context, KEY_STORAGE_NAME)
+    fun getSecureAbove22Preferences() =
+        SecureAbove22Preferences(
+            context = context,
+            name = KEY_STORAGE_NAME,
+            forceInsecure = !Config.channel.isNightlyOrDebug
+        )
 
     val passwordsEncryptionKey: String =
         getSecureAbove22Preferences().getString(PASSWORDS_KEY)
