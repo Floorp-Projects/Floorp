@@ -415,6 +415,15 @@ bool GLContextEGL::ReleaseTexImage() {
 }
 
 void GLContextEGL::SetEGLSurfaceOverride(EGLSurface surf) {
+  if (Screen()) {
+    /* Blit `draw` to `read` if we need to, before we potentially juggle
+     * `read` around. If we don't, we might attach a different `read`,
+     * and *then* hit AssureBlitted, which will blit a dirty `draw` onto
+     * the wrong `read`!
+     */
+    Screen()->AssureBlitted();
+  }
+
   mSurfaceOverride = surf;
   DebugOnly<bool> ok = MakeCurrent(true);
   MOZ_ASSERT(ok);
