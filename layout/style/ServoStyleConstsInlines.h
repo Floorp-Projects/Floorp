@@ -440,6 +440,11 @@ inline imgRequestProxy* StyleComputedImageUrl::GetImage() const {
 }
 
 template <>
+inline bool StyleGradient::Repeating() const {
+  return IsLinear() ? AsLinear().repeating : AsRadial().repeating;
+}
+
+template <>
 bool StyleGradient::IsOpaque() const;
 
 template <typename Integer>
