@@ -48,6 +48,8 @@ const availableLogins = {
                               "user1", "pass1", "uname", "pword"),
   "subdomainUser1": new nsLoginInfo("https://sub.example.com", "https://autofill", null,
                               "user1", "pass1", "uname", "pword"),
+  "emptyUsername": new nsLoginInfo("https://example.com", "https://autofill", null,
+                              "", "pass2", "uname", "pword"),
 }
 
 const tests = [
@@ -99,6 +101,16 @@ const tests = [
     expectedACLabels: ["user1"],
     typeUsername: "user1",
     expectedTabbedUsername: "user1",
+    expectedTabbedPassword: "",
+  },
+  {
+    name: "two_logins_one_with_empty_username",
+    logins: ["exampleUser1", "emptyUsername"],
+    expectedAutofillUsername: "user1",
+    expectedAutofillPassword: "pass1",
+    expectedACLabels: ["user1"],
+    typeUsername: "",
+    expectedTabbedUsername: "",
     expectedTabbedPassword: "",
   },
 ];
