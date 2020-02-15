@@ -219,6 +219,8 @@ scheme host and port.""")
                               help="Run browser in headless mode", default=None)
     config_group.add_argument("--no-headless", action="store_false", dest="headless",
                               help="Don't run browser in headless mode")
+    config_group.add_argument("--instrument-to-file", action="store",
+                              help="Path to write instrumentation logs to")
 
     build_type = parser.add_mutually_exclusive_group()
     build_type.add_argument("--debug-build", dest="debug", action="store_true",

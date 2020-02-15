@@ -52,10 +52,10 @@ void DetailedPromise::MaybeReject(nsresult aArg, const nsACString& aReason) {
   Promise::MaybeRejectWithDOMException(aArg, aReason);
 }
 
-void DetailedPromise::MaybeReject(ErrorResult& aArg,
+void DetailedPromise::MaybeReject(ErrorResult&& aArg,
                                   const nsACString& aReason) {
   LogRejectionReason(aArg.ErrorCodeAsInt(), aReason);
-  Promise::MaybeReject(aArg);
+  Promise::MaybeReject(std::move(aArg));
 }
 
 /* static */

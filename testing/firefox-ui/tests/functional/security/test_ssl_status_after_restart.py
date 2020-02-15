@@ -3,121 +3,53 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from __future__ import absolute_import
-from firefox_puppeteer import PuppeteerMixin
-from marionette_driver import Wait
-from marionette_harness import MarionetteTestCase, skip
+
+from marionette_driver import By, Wait
+from marionette_harness import MarionetteTestCase, WindowManagerMixin
 
 
-class TestSSLStatusAfterRestart(PuppeteerMixin, MarionetteTestCase):
+class TestSSLStatusAfterRestart(WindowManagerMixin, MarionetteTestCase):
 
     def setUp(self):
         super(TestSSLStatusAfterRestart, self).setUp()
+        self.marionette.set_context("chrome")
 
-        self.test_data = (
-            {
-                'url': 'https://mozilla-intermediate.badssl.com',
-                'identity': '',
-                'type': 'secure'
-            },
-            {
-                'url': 'https://extended-validation.badssl.com',
-                'identity': 'Mozilla Foundation',
-                'type': 'secure-ev'
-            }
-        )
+        self.test_url = 'https://sha512.badssl.com/'
 
         # Set browser to restore previous session
         self.marionette.set_pref('browser.startup.page', 3)
         # Disable rcwn to make cache behavior deterministic
         self.marionette.set_pref('network.http.rcwn.enable', False)
 
-        self.locationbar = self.browser.navbar.locationbar
-        self.identity_popup = self.locationbar.identity_popup
-
     def tearDown(self):
-        try:
-            self.puppeteer.windows.close_all([self.browser])
-            self.browser.tabbar.close_all_tabs([self.browser.tabbar.tabs[0]])
-            self.browser.switch_to()
-            self.identity_popup.close(force=True)
-            self.marionette.clear_pref('browser.startup.page')
-            self.marionette.clear_pref('network.http.rcwn.enable')
-        finally:
-            super(TestSSLStatusAfterRestart, self).tearDown()
+        self.marionette.clear_pref('browser.startup.page')
+        self.marionette.clear_pref('network.http.rcwn.enable')
 
-    @skip("Bug 1325047 - Tests fails when run with multiple processes")
+        super(TestSSLStatusAfterRestart, self).tearDown()
+
     def test_ssl_status_after_restart(self):
-        for item in self.test_data:
-            with self.marionette.using_context('content'):
-                self.marionette.navigate(item['url'])
-            self.verify_certificate_status(item)
-            self.browser.tabbar.open_tab()
+        with self.marionette.using_context('content'):
+            self.marionette.navigate(self.test_url)
+        self.verify_certificate_status(self.test_url)
 
-        self.restart()
+        self.marionette.restart(in_app=True)
 
-        # Refresh references to elements
-        self.locationbar = self.browser.navbar.locationbar
-        self.identity_popup = self.locationbar.identity_popup
+        self.verify_certificate_status(self.test_url)
 
-        for index, item in enumerate(self.test_data):
-            self.browser.tabbar.tabs[index].select()
-            self.verify_certificate_status(item)
+    def verify_certificate_status(self, url):
+        with self.marionette.using_context('content'):
+            Wait(self.marionette).until(
+                lambda _: self.marionette.get_url() == url,
+                message='Expected URL loaded')
 
-    def verify_certificate_status(self, item):
-        url, identity, cert_type = item['url'], item['identity'], item['type']
+        identity_box = self.marionette.find_element(By.ID, 'identity-box')
+        self.assertEqual(identity_box.get_attribute('pageproxystate'), 'valid')
 
-        # Check the favicon
-        # TODO: find a better way to check, e.g., mozmill's isDisplayed
-        favicon_hidden = self.marionette.execute_script("""
-          return arguments[0].hasAttribute("hidden");
-        """, script_args=[self.browser.navbar.locationbar.identity_icon])
-        self.assertFalse(favicon_hidden)
-
-        self.locationbar.open_identity_popup()
-
-        # Check the type shown on the identity popup doorhanger
-        self.assertEqual(self.identity_popup.element.get_attribute('connection'),
-                         cert_type)
-
-        self.identity_popup.view.main.expander.click()
-        Wait(self.marionette).until(lambda _: self.identity_popup.view.security.selected)
-
-        # Check the identity label
-        self.assertEqual(self.locationbar.identity_organization_label.get_property('value'),
-                         identity)
-
-        # Get the information from the certificate
-        cert = self.browser.tabbar.selected_tab.certificate
-
-        # Open the Page Info window by clicking the More Information button
-        page_info = self.browser.open_page_info_window(
-            lambda _: self.identity_popup.view.security.more_info_button.click())
-
-        # Verify that the current panel is the security panel
-        self.assertEqual(page_info.deck.selected_panel, page_info.deck.security)
-
-        # Verify the domain listed on the security panel
-        # If this is a wildcard cert, check only the domain
-        if cert['commonName'].startswith('*'):
-            self.assertIn(self.puppeteer.security.get_domain_from_common_name(cert['commonName']),
-                          page_info.deck.security.domain.get_property('value'),
-                          'Expected domain found in certificate for ' + url)
-        else:
-            self.assertEqual(page_info.deck.security.domain.get_property('value'),
-                             cert['commonName'],
-                             'Domain value matches certificate common name.')
-
-        # Verify the owner listed on the security panel
-        if identity != '':
-            owner = cert['organization']
-        else:
-            owner = 'This website does not supply ownership information.'
-
-        self.assertEqual(page_info.deck.security.owner.get_property('value'), owner,
-                         'Expected owner label found for ' + url)
-
-        # Verify the verifier listed on the security panel
-        self.assertEqual(page_info.deck.security.verifier.get_property('value'),
-                         cert['issuerOrganization'],
-                         'Verifier matches issuer of certificate for ' + url)
-        page_info.close()
+        class_list = self.marionette.execute_script("""
+          const names = [];
+          for (const name of arguments[0].classList) {
+            names.push(name);
+          }
+          return names;
+        """, script_args=[identity_box])
+        self.assertIn('verifiedDomain', class_list)

@@ -63,9 +63,9 @@ class TestSessionStoreDisabled(SessionStoreTestCase):
         self.marionette.start_session()
         self.marionette.set_context('chrome')
 
-        self.assertEqual(len(self.puppeteer.windows.all), 1,
+        self.assertEqual(len(self.marionette.chrome_window_handles), 1,
                          msg='Windows from last session shouldn`t have been restored.')
-        self.assertEqual(len(self.puppeteer.windows.current.tabbar.tabs), 1,
+        self.assertEqual(len(self.marionette.window_handles), 1,
                          msg='Tabs from last session shouldn`t have been restored.')
 
     def test_restore_with_restart(self):
@@ -74,7 +74,7 @@ class TestSessionStoreDisabled(SessionStoreTestCase):
                          msg='Not all requested windows have been opened. Expected {}, got {}.'
                          .format(self.all_windows, current_windows_set))
 
-        self.restart()
+        self.marionette.restart(in_app=True)
 
         current_windows_set = self.convert_open_windows_to_set()
         self.assertEqual(current_windows_set, self.test_windows,

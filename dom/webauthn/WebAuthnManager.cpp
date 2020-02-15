@@ -247,7 +247,7 @@ already_AddRefed<Promise> WebAuthnManager::MakeCredential(
   nsCString rpId;
   rv = GetOrigin(mParent, origin, rpId);
   if (NS_WARN_IF(rv.Failed())) {
-    promise->MaybeReject(rv);
+    promise->MaybeReject(std::move(rv));
     return promise.forget();
   }
 
@@ -466,7 +466,7 @@ already_AddRefed<Promise> WebAuthnManager::GetAssertion(
   nsCString rpId;
   rv = GetOrigin(mParent, origin, rpId);
   if (NS_WARN_IF(rv.Failed())) {
-    promise->MaybeReject(rv);
+    promise->MaybeReject(std::move(rv));
     return promise.forget();
   }
 

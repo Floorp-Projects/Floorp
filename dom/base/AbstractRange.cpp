@@ -16,6 +16,7 @@
 #include "nsGkAtoms.h"
 #include "nsINode.h"
 #include "nsRange.h"
+#include "nsTArray.h"
 
 namespace mozilla {
 namespace dom {
@@ -44,6 +45,10 @@ template nsresult AbstractRange::SetStartAndEndInternal(
 template nsresult AbstractRange::SetStartAndEndInternal(
     const RawRangeBoundary& aStartBoundary,
     const RawRangeBoundary& aEndBoundary, StaticRange* aRange);
+template bool AbstractRange::MaybeCacheToReuse(nsRange& aInstance);
+template bool AbstractRange::MaybeCacheToReuse(StaticRange& aInstance);
+
+bool AbstractRange::sHasShutDown = false;
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(AbstractRange)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(AbstractRange)
@@ -71,11 +76,53 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 NS_IMPL_CYCLE_COLLECTION_TRACE_WRAPPERCACHE(AbstractRange)
 
 // NOTE: If you need to change default value of members of AbstractRange,
-//       update nsRange::Create(nsINode* aNode) too.
+//       update nsRange::Create(nsINode* aNode) and ClearForReuse() too.
 AbstractRange::AbstractRange(nsINode* aNode)
     : mIsPositioned(false), mIsGenerated(false), mCalledByJS(false) {
+  Init(aNode);
+}
+
+void AbstractRange::Init(nsINode* aNode) {
   MOZ_ASSERT(aNode, "range isn't in a document!");
   mOwner = aNode->OwnerDoc();
+}
+
+// static
+void AbstractRange::Shutdown() {
+  sHasShutDown = true;
+  if (nsTArray<RefPtr<nsRange>>* cachedRanges = nsRange::sCachedRanges) {
+    nsRange::sCachedRanges = nullptr;
+    cachedRanges->Clear();
+    delete cachedRanges;
+  }
+  if (nsTArray<RefPtr<StaticRange>>* cachedRanges =
+          StaticRange::sCachedRanges) {
+    StaticRange::sCachedRanges = nullptr;
+    cachedRanges->Clear();
+    delete cachedRanges;
+  }
+}
+
+// static
+template <class RangeType>
+bool AbstractRange::MaybeCacheToReuse(RangeType& aInstance) {
+  static const size_t kMaxRangeCache = 64;
+
+  // If the instance is not used by JS and the cache is not yet full, we
+  // should reuse it.  Otherwise, delete it.
+  if (sHasShutDown || aInstance.GetWrapperMaybeDead() || aInstance.GetFlags() ||
+      (RangeType::sCachedRanges &&
+       RangeType::sCachedRanges->Length() == kMaxRangeCache)) {
+    return false;
+  }
+
+  aInstance.ClearForReuse();
+
+  if (!RangeType::sCachedRanges) {
+    RangeType::sCachedRanges = new nsTArray<RefPtr<RangeType>>(16);
+  }
+  RangeType::sCachedRanges->AppendElement(&aInstance);
+  return true;
 }
 
 nsINode* AbstractRange::GetClosestCommonInclusiveAncestor() const {

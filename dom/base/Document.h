@@ -1700,7 +1700,7 @@ class Document : public nsINode,
   /**
    * Remove a stylesheet from the document
    */
-  void RemoveStyleSheet(StyleSheet*);
+  void RemoveStyleSheet(StyleSheet&);
 
   /**
    * Notify the document that the applicable state of the sheet changed
@@ -1724,6 +1724,8 @@ class Document : public nsINode,
   StyleSheet* GetFirstAdditionalAuthorSheet() {
     return mAdditionalSheets[eAuthorSheet].SafeElementAt(0);
   }
+
+  void AppendAdoptedStyleSheet(StyleSheet& aSheet);
 
   /**
    * Returns the index that aSheet should be inserted at to maintain document
@@ -3879,6 +3881,10 @@ class Document : public nsINode,
 
   already_AddRefed<Promise> AddCertException(bool aIsTemporary);
 
+  void SetAdoptedStyleSheets(
+      const Sequence<OwningNonNull<StyleSheet>>& aAdoptedStyleSheets,
+      ErrorResult& aRv);
+
  protected:
   void DoUpdateSVGUseElementShadowTrees();
 
@@ -4947,6 +4953,8 @@ class Document : public nsINode,
 
   nsCOMPtr<nsIRequest> mOnloadBlocker;
 
+  // Gecko-internal sheets used for extensions and such.
+  // Exposed to privileged script via nsIDOMWindowUtils.loadSheet.
   nsTArray<RefPtr<StyleSheet>> mAdditionalSheets[AdditionalSheetTypeCount];
 
   // Member to store out last-selected stylesheet set.

@@ -297,11 +297,15 @@ class DynamicToolbarTest : BaseSessionTest() {
         mainSession.loadTestPath(BaseSessionTest.FIXED_VH)
         mainSession.waitForPageStop()
 
+        val promise = sessionRule.session.evaluatePromiseJS("""
+            new Promise(resolve => window.addEventListener('resize', () => resolve(true)));
+        """.trimIndent())
+
         // Do some setVerticalClipping calls that we might try to queue two window resize events.
         sessionRule.display?.run { setVerticalClipping(-dynamicToolbarMaxHeight) }
         sessionRule.display?.run { setVerticalClipping(-dynamicToolbarMaxHeight + 1) }
         sessionRule.display?.run { setVerticalClipping(-dynamicToolbarMaxHeight) }
 
-        mainSession.waitForJS("new Promise(resolve => { window.addEventListener('resize', resolve) })")
+        assertThat("Got a rezie event", promise.value as Boolean, equalTo(true))
     }
 }

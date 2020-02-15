@@ -32,7 +32,6 @@
 #include "nsGkAtoms.h"
 #include "nsImageFrame.h"
 #include "mozilla/GlobalStyleSheetCache.h"
-#include "nsRange.h"
 #include "nsRegion.h"
 #include "nsRepeatService.h"
 #include "nsFloatManager.h"
@@ -113,6 +112,7 @@
 #include "mozilla/HTMLEditorController.h"
 #include "mozilla/ServoBindings.h"
 #include "mozilla/StaticPresData.h"
+#include "mozilla/dom/AbstractRange.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/IPCBlobInputStreamStorage.h"
 #include "mozilla/dom/WebIDLGlobalNameHash.h"
@@ -320,7 +320,7 @@ void nsLayoutStatics::Shutdown() {
     URLExtraData::ReleaseDummy();
   }
 
-  nsRange::Shutdown();
+  mozilla::dom::AbstractRange::Shutdown();
   Document::Shutdown();
   nsMessageManagerScriptExecutor::Shutdown();
   nsFocusManager::Shutdown();

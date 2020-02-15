@@ -90,49 +90,113 @@ class RWLock : public BlockingResourceBase {
 #endif
 };
 
-// Read lock and unlock a RWLock with RAII semantics.  Much preferred to bare
-// calls to ReadLock() and ReadUnlock().
-class MOZ_RAII AutoReadLock final {
+template <typename T>
+class MOZ_RAII BaseAutoReadLock {
  public:
-  explicit AutoReadLock(RWLock& aLock MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+  explicit BaseAutoReadLock(T& aLock MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
       : mLock(&aLock) {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     MOZ_ASSERT(mLock, "null lock");
     mLock->ReadLock();
   }
 
-  ~AutoReadLock() { mLock->ReadUnlock(); }
+  ~BaseAutoReadLock() { mLock->ReadUnlock(); }
 
  private:
-  AutoReadLock() = delete;
-  AutoReadLock(const AutoReadLock&) = delete;
-  AutoReadLock& operator=(const AutoReadLock&) = delete;
+  BaseAutoReadLock() = delete;
+  BaseAutoReadLock(const BaseAutoReadLock&) = delete;
+  BaseAutoReadLock& operator=(const BaseAutoReadLock&) = delete;
 
-  RWLock* mLock;
+  T* mLock;
   MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
-// Write lock and unlock a RWLock with RAII semantics.  Much preferred to bare
-// calls to WriteLock() and WriteUnlock().
-class MOZ_RAII AutoWriteLock final {
+template <typename T>
+class MOZ_RAII BaseAutoWriteLock final {
  public:
-  explicit AutoWriteLock(RWLock& aLock MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+  explicit BaseAutoWriteLock(T& aLock MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
       : mLock(&aLock) {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     MOZ_ASSERT(mLock, "null lock");
     mLock->WriteLock();
   }
 
-  ~AutoWriteLock() { mLock->WriteUnlock(); }
+  ~BaseAutoWriteLock() { mLock->WriteUnlock(); }
 
  private:
-  AutoWriteLock() = delete;
-  AutoWriteLock(const AutoWriteLock&) = delete;
-  AutoWriteLock& operator=(const AutoWriteLock&) = delete;
+  BaseAutoWriteLock() = delete;
+  BaseAutoWriteLock(const BaseAutoWriteLock&) = delete;
+  BaseAutoWriteLock& operator=(const BaseAutoWriteLock&) = delete;
 
-  RWLock* mLock;
+  T* mLock;
   MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
+
+// Read lock and unlock a RWLock with RAII semantics.  Much preferred to bare
+// calls to ReadLock() and ReadUnlock().
+typedef BaseAutoReadLock<RWLock> AutoReadLock;
+
+// Write lock and unlock a RWLock with RAII semantics.  Much preferred to bare
+// calls to WriteLock() and WriteUnlock().
+typedef BaseAutoWriteLock<RWLock> AutoWriteLock;
+
+// XXX: normally we would define StaticRWLock as
+// MOZ_ONLY_USED_TO_AVOID_STATIC_CONSTRUCTORS, but the contexts in which it
+// is used (e.g. member variables in a third-party library) are non-trivial
+// to modify to properly declare everything at static scope.  As those
+// third-party libraries are the only clients, put it behind the detail
+// namespace to discourage other (possibly erroneous) uses from popping up.
+
+namespace detail {
+
+class StaticRWLock {
+ public:
+  // In debug builds, check that mLock is initialized for us as we expect by
+  // the compiler.  In non-debug builds, don't declare a constructor so that
+  // the compiler can see that the constructor is trivial.
+#ifdef DEBUG
+  StaticRWLock() { MOZ_ASSERT(!mLock); }
+#endif
+
+  void ReadLock() { Lock()->ReadLock(); }
+  void ReadUnlock() { Lock()->ReadUnlock(); }
+  void WriteLock() { Lock()->WriteLock(); }
+  void WriteUnlock() { Lock()->WriteUnlock(); }
+
+ private:
+  RWLock* Lock() {
+    if (mLock) {
+      return mLock;
+    }
+
+    RWLock* lock = new RWLock("StaticRWLock");
+    if (!mLock.compareExchange(nullptr, lock)) {
+      delete lock;
+    }
+
+    return mLock;
+  }
+
+  Atomic<RWLock*> mLock;
+
+  // Disallow copy constructor, but only in debug mode.  We only define
+  // a default constructor in debug mode (see above); if we declared
+  // this constructor always, the compiler wouldn't generate a trivial
+  // default constructor for us in non-debug mode.
+#ifdef DEBUG
+  StaticRWLock(const StaticRWLock& aOther);
+#endif
+
+  // Disallow these operators.
+  StaticRWLock& operator=(StaticRWLock* aRhs);
+  static void* operator new(size_t) noexcept(true);
+  static void operator delete(void*);
+};
+
+typedef BaseAutoReadLock<StaticRWLock> StaticAutoReadLock;
+typedef BaseAutoWriteLock<StaticRWLock> StaticAutoWriteLock;
+
+}  // namespace detail
 
 }  // namespace mozilla
 

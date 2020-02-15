@@ -38,12 +38,15 @@ HTMLLIAccessible::HTMLLIAccessible(nsIContent* aContent, DocAccessible* aDoc)
     : HyperTextAccessibleWrap(aContent, aDoc), mBullet(nullptr) {
   mType = eHTMLLiType;
 
-  const nsStyleList* styleList = GetFrame()->StyleList();
-  if (nsLayoutUtils::GetMarkerFrame(aContent) &&
-      (styleList->GetListStyleImage() || !styleList->mCounterStyle.IsNone())) {
-    mBullet = new HTMLListBulletAccessible(mContent, mDoc);
-    Document()->BindToDocument(mBullet, nullptr);
-    AppendChild(mBullet);
+  if (nsIFrame* bulletFrame = nsLayoutUtils::GetMarkerFrame(aContent)) {
+    if (const nsStyleList* styleList = bulletFrame->StyleList()) {
+      if (styleList->GetListStyleImage() ||
+          !styleList->mCounterStyle.IsNone()) {
+        mBullet = new HTMLListBulletAccessible(mContent, mDoc);
+        Document()->BindToDocument(mBullet, nullptr);
+        AppendChild(mBullet);
+      }
+    }
   }
 }
 

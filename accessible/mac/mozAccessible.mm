@@ -274,14 +274,25 @@ static inline NSMutableArray* ConvertToNSArray(nsTArray<ProxyAccessible*>& aArra
   if ([attribute isEqualToString:NSAccessibilityTopLevelUIElementAttribute]) return [self window];
   if ([attribute isEqualToString:NSAccessibilityTitleAttribute]) return [self title];
   if ([attribute isEqualToString:NSAccessibilityTitleUIElementAttribute]) {
+    /* If our accessible is labelled by more than one item, its label
+     * should be set by accessibilityLabel instead of here, so we return nil.
+     */
     if (accWrap) {
       Relation rel = accWrap->RelationByType(RelationType::LABELLED_BY);
       Accessible* tempAcc = rel.Next();
-      return tempAcc ? GetNativeFromGeckoAccessible(tempAcc) : nil;
+      if (tempAcc && !rel.Next()) {
+        return GetNativeFromGeckoAccessible(tempAcc);
+      } else {
+        return nil;
+      }
     }
     nsTArray<ProxyAccessible*> rel = proxy->RelationByType(RelationType::LABELLED_BY);
     ProxyAccessible* tempProxy = rel.SafeElementAt(0);
-    return tempProxy ? GetNativeFromProxy(tempProxy) : nil;
+    if (tempProxy && rel.Length() <= 1) {
+      return GetNativeFromProxy(tempProxy);
+    } else {
+      return nil;
+    }
   }
   if ([attribute isEqualToString:NSAccessibilityHelpAttribute]) return [self help];
   if ([attribute isEqualToString:NSAccessibilityOrientationAttribute]) return [self orientation];
@@ -472,6 +483,43 @@ static inline NSMutableArray* ConvertToNSArray(nsTArray<ProxyAccessible*>& aArra
   // by default we return whatever the MacOS API know about.
   // if you have custom actions, override.
   return NSAccessibilityActionDescription(action);
+}
+
+- (NSString*)accessibilityLabel {
+  AccessibleWrap* accWrap = [self getGeckoAccessible];
+  ProxyAccessible* proxy = [self getProxyAccessible];
+  if (!accWrap && !proxy) {
+    return nil;
+  }
+
+  /* If our accessible is labelled by exactly one item, or if its
+   * name is obtained from a subtree, we should let
+   * NSAccessibilityTitleUIElementAttribute determine its label. */
+  if (accWrap) {
+    nsAutoString name;
+    ENameValueFlag flag = accWrap->Name(name);
+    if (flag == eNameFromSubtree) {
+      return nil;
+    }
+
+    Relation rel = accWrap->RelationByType(RelationType::LABELLED_BY);
+    if (rel.Next() && !rel.Next()) {
+      return nil;
+    }
+  } else if (proxy) {
+    nsAutoString name;
+    uint32_t flag = proxy->Name(name);
+    if (flag == eNameFromSubtree) {
+      return nil;
+    }
+
+    nsTArray<ProxyAccessible*> rels = proxy->RelationByType(RelationType::LABELLED_BY);
+    if (rels.Length() == 1) {
+      return nil;
+    }
+  }
+
+  return [self title];
 }
 
 - (void)accessibilityPerformAction:(NSString*)action {

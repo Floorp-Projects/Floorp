@@ -176,7 +176,7 @@ class Cache::FetchHandler final : public PromiseNativeHandler {
       if (!IsValidPutResponseStatus(*response, PutStatusPolicy::RequireOK,
                                     errorResult)) {
         // TODO: abort the fetch requests we have running (bug 1157434)
-        mPromise->MaybeReject(errorResult);
+        mPromise->MaybeReject(std::move(errorResult));
         return;
       }
 
@@ -195,7 +195,7 @@ class Cache::FetchHandler final : public PromiseNativeHandler {
     result.WouldReportJSException();
     if (NS_WARN_IF(result.Failed())) {
       // TODO: abort the fetch requests we have running (bug 1157434)
-      mPromise->MaybeReject(result);
+      mPromise->MaybeReject(std::move(result));
       return;
     }
 

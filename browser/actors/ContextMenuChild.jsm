@@ -970,6 +970,13 @@ class ContextMenuChild extends JSWindowActorChild {
         height: context.target.height,
         imageText: context.target.title || context.target.alt,
       };
+      const { SVGAnimatedLength } = context.target.ownerGlobal;
+      if (context.imageInfo.height instanceof SVGAnimatedLength) {
+        context.imageInfo.height = context.imageInfo.height.animVal.value;
+      }
+      if (context.imageInfo.width instanceof SVGAnimatedLength) {
+        context.imageInfo.width = context.imageInfo.width.animVal.value;
+      }
 
       const request = context.target.getRequest(
         Ci.nsIImageLoadingContent.CURRENT_REQUEST
