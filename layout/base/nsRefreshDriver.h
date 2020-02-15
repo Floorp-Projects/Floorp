@@ -432,7 +432,7 @@ class nsRefreshDriver final : public mozilla::layers::TransactionIdAllocator,
     EnsureTimerStarted();
   }
 
-  void IntersectionObservationAdded() {
+  void EnsureIntersectionObservationsUpdateHappens() {
     // This is enough to make sure that UpdateIntersectionObservations runs at
     // least once. This is presumably the intent of step 5 in [1]:
     //
