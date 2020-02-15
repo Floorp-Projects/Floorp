@@ -427,12 +427,14 @@ const POLICIES_TESTS = [
       DNSOverHTTPS: {
         Enabled: true,
         ProviderURL: "http://example.com/provider",
+        ExcludedDomains: ["example.com", "example.org"],
         Locked: true,
       },
     },
     lockedPrefs: {
       "network.trr.mode": 2,
       "network.trr.uri": "http://example.com/provider",
+      "network.trr.excluded-domains": "example.com,example.org",
     },
   },
 
@@ -442,11 +444,13 @@ const POLICIES_TESTS = [
       DNSOverHTTPS: {
         Enabled: false,
         ProviderURL: "http://example.com/provider",
+        ExcludedDomains: ["example.com", "example.org"],
       },
     },
     unlockedPrefs: {
       "network.trr.mode": 5,
       "network.trr.uri": "http://example.com/provider",
+      "network.trr.excluded-domains": "example.com,example.org",
     },
   },
 

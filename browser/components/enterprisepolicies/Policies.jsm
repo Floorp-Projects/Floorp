@@ -634,12 +634,23 @@ var Policies = {
 
   DNSOverHTTPS: {
     onBeforeAddons(manager, param) {
+      let locked = false;
+      if ("Locked" in param) {
+        locked = param.Locked;
+      }
       if ("Enabled" in param) {
         let mode = param.Enabled ? 2 : 5;
-        setDefaultPref("network.trr.mode", mode, param.Locked);
+        setDefaultPref("network.trr.mode", mode, locked);
       }
-      if (param.ProviderURL) {
-        setDefaultPref("network.trr.uri", param.ProviderURL.href, param.Locked);
+      if ("ProviderURL" in param) {
+        setDefaultPref("network.trr.uri", param.ProviderURL.href, locked);
+      }
+      if ("ExcludedDomains" in param) {
+        setDefaultPref(
+          "network.trr.excluded-domains",
+          param.ExcludedDomains.join(","),
+          locked
+        );
       }
     },
   },
