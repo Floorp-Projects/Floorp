@@ -72,7 +72,8 @@ class ShadowRoot final : public DocumentFragment,
   ShadowRootMode Mode() const { return mMode; }
   bool IsClosed() const { return mMode == ShadowRootMode::Closed; }
 
-  void RemoveSheet(StyleSheet* aSheet);
+  void RemoveSheet(StyleSheet&);
+  void RemoveSheetFromStyles(StyleSheet&);
   void RuleAdded(StyleSheet&, css::Rule&);
   void RuleRemoved(StyleSheet&, css::Rule&);
   void RuleChanged(StyleSheet&, css::Rule*);
@@ -85,6 +86,7 @@ class ShadowRoot final : public DocumentFragment,
    */
   void CloneInternalDataFrom(ShadowRoot* aOther);
   void InsertSheetAt(size_t aIndex, StyleSheet&);
+  void InsertAdoptedSheetAt(size_t aIndex, StyleSheet&);
 
   // Calls UnbindFromTree for each of our kids, and also flags us as no longer
   // being connected.
@@ -101,10 +103,15 @@ class ShadowRoot final : public DocumentFragment,
   nsresult Bind();
 
  private:
-  void InsertSheetIntoAuthorData(size_t aIndex, StyleSheet&);
+  void InsertSheetIntoAuthorData(size_t aIndex, StyleSheet&,
+                                 const nsTArray<RefPtr<StyleSheet>>&);
 
   void AppendStyleSheet(StyleSheet& aSheet) {
     InsertSheetAt(SheetCount(), aSheet);
+  }
+
+  void AppendAdoptedStyleSheet(StyleSheet& aSheet) {
+    InsertAdoptedSheetAt(AdoptedSheetCount(), aSheet);
   }
 
   /**
@@ -167,6 +174,11 @@ class ShadowRoot final : public DocumentFragment,
   mozilla::ServoStyleRuleMap& ServoStyleRuleMap();
 
   JSObject* WrapNode(JSContext*, JS::Handle<JSObject*> aGivenProto) final;
+
+  void NodeInfoChanged(Document* aOldDoc) override {
+    DocumentFragment::NodeInfoChanged(aOldDoc);
+    ClearAdoptedStyleSheets();
+  }
 
   void AddToIdTable(Element* aElement, nsAtom* aId);
   void RemoveFromIdTable(Element* aElement, nsAtom* aId);
@@ -243,6 +255,12 @@ class ShadowRoot final : public DocumentFragment,
                                     bool aValue) override {
     return DocumentOrShadowRoot::SetValueMissingState(aName, aValue);
   }
+
+  void SetAdoptedStyleSheets(
+      const Sequence<OwningNonNull<StyleSheet>>& aAdoptedStyleSheets,
+      ErrorResult& aRv);
+
+  void ClearAdoptedStyleSheets();
 
  protected:
   // FIXME(emilio): This will need to become more fine-grained.

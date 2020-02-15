@@ -33,6 +33,7 @@
 #include "mozilla/dom/DocumentType.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Event.h"
+#include "mozilla/dom/Link.h"
 #include "mozilla/dom/HTMLImageElement.h"
 #include "mozilla/dom/HTMLMediaElement.h"
 #include "mozilla/dom/HTMLTemplateElement.h"
@@ -192,6 +193,15 @@ nsINode::~nsINode() {
   MOZ_ASSERT(!HasSlots(), "LastRelease was not called?");
   MOZ_ASSERT(mSubtreeRoot == this, "Didn't restore state properly?");
 }
+
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+void nsINode::AssertInvariantsOnNodeInfoChange() {
+  MOZ_DIAGNOSTIC_ASSERT(!IsInComposedDoc());
+  if (nsCOMPtr<Link> link = do_QueryInterface(this)) {
+    MOZ_DIAGNOSTIC_ASSERT(!link->HasPendingLinkUpdate());
+  }
+}
+#endif
 
 void* nsINode::GetProperty(const nsAtom* aPropertyName,
                            nsresult* aStatus) const {
@@ -3067,9 +3077,7 @@ already_AddRefed<nsINode> nsINode::CloneAndAdopt(
     }
 
     aNode->mNodeInfo.swap(newNodeInfo);
-    if (elem) {
-      elem->NodeInfoChanged(oldDoc);
-    }
+    aNode->NodeInfoChanged(oldDoc);
 
     MOZ_ASSERT(newDoc != oldDoc);
     if (elem) {
@@ -3164,9 +3172,7 @@ already_AddRefed<nsINode> nsINode::CloneAndAdopt(
                 aNode, oldDoc->PropertyTable());
           }
           aNode->mNodeInfo.swap(newNodeInfo);
-          if (elem) {
-            elem->NodeInfoChanged(newDoc);
-          }
+          aNode->NodeInfoChanged(newDoc);
           if (wasRegistered) {
             oldDoc->RegisterActivityObserver(aNode->AsElement());
           }

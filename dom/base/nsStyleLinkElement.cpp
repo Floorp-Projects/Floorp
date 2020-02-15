@@ -260,9 +260,9 @@ nsStyleLinkElement::DoUpdateStyleSheet(Document* aOldDocument,
     // disabled, since otherwise a sheet with a stale linking element pointer
     // will be hanging around -- not good!
     if (aOldShadowRoot) {
-      aOldShadowRoot->RemoveSheet(mStyleSheet);
+      aOldShadowRoot->RemoveSheet(*mStyleSheet);
     } else {
-      aOldDocument->RemoveStyleSheet(mStyleSheet);
+      aOldDocument->RemoveStyleSheet(*mStyleSheet);
     }
 
     SetStyleSheet(nullptr);
@@ -297,10 +297,10 @@ nsStyleLinkElement::DoUpdateStyleSheet(Document* aOldDocument,
       ShadowRoot* containingShadow = thisContent->GetContainingShadow();
       // Could be null only during unlink.
       if (MOZ_LIKELY(containingShadow)) {
-        containingShadow->RemoveSheet(mStyleSheet);
+        containingShadow->RemoveSheet(*mStyleSheet);
       }
     } else {
-      doc->RemoveStyleSheet(mStyleSheet);
+      doc->RemoveStyleSheet(*mStyleSheet);
     }
 
     nsStyleLinkElement::SetStyleSheet(nullptr);

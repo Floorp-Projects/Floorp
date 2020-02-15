@@ -246,9 +246,7 @@ class StyleSheet final : public nsICSSLoaderObserver, public nsWrapperCache {
     // different lifetime than mDocument.
     NotOwnedByDocumentOrShadowRoot
   };
-  dom::DocumentOrShadowRoot* GetAssociatedDocumentOrShadowRoot() const {
-    return mDocumentOrShadowRoot;
-  }
+  dom::DocumentOrShadowRoot* GetAssociatedDocumentOrShadowRoot() const;
 
   // Whether this stylesheet is kept alive by the associated document or
   // associated shadow root's document somehow, and thus at least has the same
@@ -258,7 +256,9 @@ class StyleSheet final : public nsICSSLoaderObserver, public nsWrapperCache {
   // Returns the document whose styles this sheet is affecting.
   dom::Document* GetComposedDoc() const;
 
-  // Returns the document we're associated to, via mDocumentOrShadowRoot.
+  // If this is a constructed style sheet, return mConstructorDocument.
+  // Otherwise return the document we're associated to,
+  // via mDocumentOrShadowRoot.
   //
   // Non-null iff GetAssociatedDocumentOrShadowRoot is non-null.
   dom::Document* GetAssociatedDocument() const;
@@ -377,8 +377,21 @@ class StyleSheet final : public nsICSSLoaderObserver, public nsWrapperCache {
   bool IsConstructed() const { return !!mConstructorDocument; }
 
   // Ture if the sheet's constructor document matches the given document
-  bool ConstructorDocumentMatches(dom::Document* document) const {
-    return mConstructorDocument == document;
+  bool ConstructorDocumentMatches(dom::Document* aDocument) const {
+    return mConstructorDocument == aDocument;
+  }
+
+  // Add a document or shadow root to the list of adopters.
+  // Adopters will be notified when styles are changed.
+  void AddAdopter(dom::DocumentOrShadowRoot& aAdopter) {
+    MOZ_ASSERT(IsConstructed());
+    mAdopters.AppendElement(&aAdopter);
+  }
+
+  // Remove a document or shadow root from the list of adopters.
+  void RemoveAdopter(dom::DocumentOrShadowRoot& aAdopter) {
+    // Cannot assert IsConstructed() because this can run after unlink.
+    mAdopters.RemoveElement(&aAdopter);
   }
 
   // WebIDL miscellaneous bits
@@ -542,6 +555,8 @@ class StyleSheet final : public nsICSSLoaderObserver, public nsWrapperCache {
   RefPtr<ServoCSSRuleList> mRuleList;
 
   MozPromiseHolder<StyleSheetParsePromise> mParsePromise;
+
+  nsTArray<dom::DocumentOrShadowRoot*> mAdopters;
 
   // Make StyleSheetInfo and subclasses into friends so they can use
   // ChildSheetListBuilder.

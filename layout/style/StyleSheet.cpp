@@ -142,8 +142,15 @@ bool StyleSheet::HasRules() const {
 }
 
 Document* StyleSheet::GetAssociatedDocument() const {
-  return mDocumentOrShadowRoot ? mDocumentOrShadowRoot->AsNode().OwnerDoc()
-                               : nullptr;
+  auto* associated = GetAssociatedDocumentOrShadowRoot();
+  return associated ? associated->AsNode().OwnerDoc() : nullptr;
+}
+
+dom::DocumentOrShadowRoot* StyleSheet::GetAssociatedDocumentOrShadowRoot()
+    const {
+  // FIXME(nordzilla) This will not work for children of adtoped sheets.
+  // https://bugzilla.mozilla.org/show_bug.cgi?id=1613748
+  return IsConstructed() ? mConstructorDocument : mDocumentOrShadowRoot;
 }
 
 Document* StyleSheet::GetComposedDoc() const {
@@ -163,6 +170,8 @@ bool StyleSheet::IsKeptAliveByDocument() const {
 void StyleSheet::LastRelease() {
   MOZ_ASSERT(mInner, "Should have an mInner at time of destruction.");
   MOZ_ASSERT(mInner->mSheets.Contains(this), "Our mInner should include us.");
+  MOZ_DIAGNOSTIC_ASSERT(mAdopters.IsEmpty(),
+                        "Should have no adopters at time of destruction.");
 
   UnparentChildren();
 
@@ -267,15 +276,22 @@ void StyleSheet::SetComplete() {
 }
 
 void StyleSheet::ApplicableStateChanged(bool aApplicable) {
-  if (!mDocumentOrShadowRoot) {
-    return;
+  auto Notify = [this](DocumentOrShadowRoot& target) {
+    nsINode& node = target.AsNode();
+    if (ShadowRoot* shadow = ShadowRoot::FromNode(node)) {
+      shadow->StyleSheetApplicableStateChanged(*this);
+    } else {
+      node.AsDocument()->StyleSheetApplicableStateChanged(*this);
+    }
+  };
+
+  if (mDocumentOrShadowRoot) {
+    Notify(*mDocumentOrShadowRoot);
   }
 
-  nsINode& node = mDocumentOrShadowRoot->AsNode();
-  if (auto* shadow = ShadowRoot::FromNode(node)) {
-    shadow->StyleSheetApplicableStateChanged(*this);
-  } else {
-    node.AsDocument()->StyleSheetApplicableStateChanged(*this);
+  for (DocumentOrShadowRoot* adopter : mAdopters) {
+    MOZ_ASSERT(adopter, "adopters should never be null");
+    Notify(*adopter);
   }
 }
 
@@ -446,21 +462,28 @@ void StyleSheet::DropStyleSet(ServoStyleSet* aStyleSet) {
 
 // NOTE(emilio): Composed doc and containing shadow root are set in child sheets
 // too, so no need to do it for each ancestor.
-#define NOTIFY(function_, args_)                        \
-  do {                                                  \
-    if (auto* shadow = GetContainingShadow()) {         \
-      shadow->function_ args_;                          \
-    }                                                   \
-    if (auto* doc = GetComposedDoc()) {                 \
-      doc->function_ args_;                             \
-    }                                                   \
-    StyleSheet* current = this;                         \
-    do {                                                \
-      for (ServoStyleSet * set : current->mStyleSets) { \
-        set->function_ args_;                           \
-      }                                                 \
-      current = current->mParent;                       \
-    } while (current);                                  \
+#define NOTIFY(function_, args_)                                      \
+  do {                                                                \
+    if (auto* shadow = GetContainingShadow()) {                       \
+      shadow->function_ args_;                                        \
+    }                                                                 \
+    if (auto* doc = GetComposedDoc()) {                               \
+      doc->function_ args_;                                           \
+    }                                                                 \
+    StyleSheet* current = this;                                       \
+    do {                                                              \
+      for (ServoStyleSet * set : current->mStyleSets) {               \
+        set->function_ args_;                                         \
+      }                                                               \
+      for (auto* adopter : mAdopters) {                               \
+        if (auto* shadow = ShadowRoot::FromNode(adopter->AsNode())) { \
+          shadow->function_ args_;                                    \
+        } else {                                                      \
+          adopter->AsNode().AsDocument()->function_ args_;            \
+        }                                                             \
+      }                                                               \
+      current = current->mParent;                                     \
+    } while (current);                                                \
   } while (0)
 
 void StyleSheet::EnsureUniqueInner() {
@@ -653,6 +676,7 @@ void StyleSheet::ReplaceSync(const nsACString& aText, ErrorResult& aRv) {
   DropRuleList();
   Inner().mContents = std::move(rawContent);
   FinishParse();
+  RuleChanged(nullptr);
 }
 
 nsresult StyleSheet::DeleteRuleFromGroup(css::GroupRule* aGroup,
