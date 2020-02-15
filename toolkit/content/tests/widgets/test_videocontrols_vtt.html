@@ -21,6 +21,7 @@
   const video = document.getElementById("video");
   const ccBtn = getElementWithinVideo(video, "closedCaptionButton");
   const ttList = getElementWithinVideo(video, "textTrackList");
+  const ttListContainer = getElementWithinVideo(video, "textTrackListContainer");
 
   add_task(async function wait_for_media_ready() {
     await SpecialPowers.pushPrefEnv({"set": [["media.cache_size", 40000]]});
@@ -73,7 +74,7 @@
     synthesizeMouseAtCenter(ccBtn, {});
 
     await new Promise(SimpleTest.executeSoon);
-    ok(!ttList.hidden, "Texttrack menu should show up");
+    ok(!ttListContainer.hidden, "Texttrack menu should show up");
     ok(ttList.lastChild.hasAttribute("on"), "The last added item should be highlighted");
   });
 
@@ -86,7 +87,7 @@
     await once(video.textTracks, "change");
     await new Promise(SimpleTest.executeSoon);
     ok(tt.hasAttribute("on"), "Selected item should be enabled");
-    ok(ttList.hidden, "Should hide texttrack menu once clicked on an item");
+    ok(ttListContainer.hidden, "Should hide texttrack menu once clicked on an item");
   });
 
   add_task(async function check_change_texttrack_mode() {
