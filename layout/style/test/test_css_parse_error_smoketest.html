@@ -118,21 +118,20 @@
     },
   ];
 
-  var test = -1;
-  function nextTest() {
-    test++;
-    if (test == tests.length) {
-      SimpleTest.finish();
-      return;
-    }
-    let {css, cssSelectors, error} = tests[test];
-    // Assume cssSelectors is empty if not provided in the test data.
-    cssSelectors = cssSelectors || "";
-    SimpleTest.expectConsoleMessages(function () { testbench.innerHTML = css },
-                                     [{ cssSelectors, errorMessage: error }],
-                                     nextTest);
+  function assertMessages(messages, action) {
+    return new Promise(resolve => {
+      SimpleTest.expectConsoleMessages(action, messages, resolve);
+    });
   }
 
-  SimpleTest.waitForExplicitFinish();
-  nextTest();
+  async function runTests() {
+    for (let {css, cssSelectors = "", error} of tests) {
+      let messages = [ { cssSelectors, errorMessage: error } ];
+      await assertMessages(messages, () => { testbench.innerHTML = css });
+      await assertMessages(messages, () => { new CSSStyleSheet().replaceSync(css) });
+    }
+  }
+
+  add_task(runTests);
+
 </script>

@@ -73,17 +73,20 @@ class DocumentOrShadowRoot {
 
   size_t SheetCount() const { return mStyleSheets.Length(); }
 
-  int32_t IndexOfSheet(const StyleSheet& aSheet) const {
-    return mStyleSheets.IndexOf(&aSheet);
-  }
+  size_t AdoptedSheetCount() const { return mAdoptedStyleSheets.Length(); }
+
+  /**
+   * Returns an index for the sheet in relative style order.
+   * If there are non-applicable sheets, then this index may
+   * not match 1:1 with the sheet's actual index in the style set.
+   *
+   * Handles sheets from both mStyleSheets and mAdoptedStyleSheets
+   */
+  int32_t StyleOrderIndexOfSheet(const StyleSheet& aSheet) const;
 
   StyleSheetList* StyleSheets();
 
   void GetAdoptedStyleSheets(nsTArray<RefPtr<StyleSheet>>&) const;
-
-  void SetAdoptedStyleSheets(
-      const Sequence<OwningNonNull<StyleSheet>>& aAdoptedStyleSheets,
-      ErrorResult& aRv);
 
   Element* GetElementById(const nsAString& aElementId);
 
@@ -222,6 +225,11 @@ class DocumentOrShadowRoot {
   // Returns the reference to the sheet, if found in mStyleSheets.
   already_AddRefed<StyleSheet> RemoveSheet(StyleSheet& aSheet);
   void InsertSheetAt(size_t aIndex, StyleSheet& aSheet);
+  void InsertAdoptedSheetAt(size_t aIndex, StyleSheet& aSheet);
+
+  void EnsureAdoptedSheetsAreValid(
+      const Sequence<OwningNonNull<StyleSheet>>& aAdoptedStyleSheets,
+      ErrorResult& aRv);
 
   void AddSizeOfExcludingThis(nsWindowSizes&) const;
   void AddSizeOfOwnedSheetArrayExcludingThis(
@@ -239,8 +247,6 @@ class DocumentOrShadowRoot {
 
   // Style sheets that are adopted by assinging to the `adoptedStyleSheets`
   // WebIDL atribute. These can only be constructed stylesheets.
-  // TODO(nordzilla): These sheets are not yet applied. These currently
-  // exist only to land the WebIDL attribute (Bug 1608489).
   nsTArray<RefPtr<StyleSheet>> mAdoptedStyleSheets;
 
   /*
