@@ -27,6 +27,18 @@ var SPEC_JSON = {
           'expectation': 'blocked'
         },
         {
+          'name': 'opt-in-blocks-redirects',
+          'expansion': 'default',
+          'source_scheme': 'https',
+          'source_context_list': '*',
+          'delivery_type': '*',
+          'delivery_value': 'opt-in',
+          'redirection': 'swap-scheme',
+          'subresource': {'blockable': [], 'optionally-blockable': '*'},
+          'origin': ['same-https', 'cross-https'],
+          'expectation': 'blocked'
+        },
+        {
           'name': 'no-opt-in-allows',
           'expansion': 'default',
           'source_scheme': 'https',
@@ -57,6 +69,18 @@ var SPEC_JSON = {
           'redirection': '*',
           'subresource': {'blockable': '*', 'optionally-blockable': []},
           'origin': ['cross-http', 'same-http'],
+          'expectation': 'blocked'
+        },
+        {
+          'name': 'opt-in-blocks-redirects',
+          'expansion': 'default',
+          'source_scheme': 'https',
+          'source_context_list': '*',
+          'delivery_type': '*',
+          'delivery_value': 'opt-in',
+          'redirection': 'swap-scheme',
+          'subresource': {'blockable': '*', 'optionally-blockable': []},
+          'origin': ['same-https', 'cross-https'],
           'expectation': 'blocked'
         },
         {
