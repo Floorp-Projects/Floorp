@@ -216,9 +216,9 @@ class PuppeteerRunner(MozbuildObject):
 
         if product == "firefox":
             env["BINARY"] = binary
-            command = ["run", "funit", "--verbose"]
+            command = ["run", "funit", "--", "--verbose"]
         elif product == "chrome":
-            command = ["run", "unit", "--verbose"]
+            command = ["run", "unit", "--", "--verbose"]
 
         if params.get("jobs"):
             env["PPTR_PARALLEL_TESTS"] = str(params["jobs"])
@@ -274,7 +274,8 @@ class PuppeteerTest(MachCommandBase):
                      action="count",
                      default=0,
                      help="Increase remote agent logging verbosity to include "
-                          "debug level messages with -v, and trace messages with -vv.")
+                          "debug level messages with -v, trace messages with -vv,"
+                          "and to not truncate long trace messages with -vvv")
     @CommandArgument("tests", nargs="*")
     def puppeteer_test(self, binary=None, enable_fission=False, headless=False,
                        extra_prefs=None, extra_options=None, jobs=1, verbosity=0,
@@ -314,6 +315,8 @@ class PuppeteerTest(MachCommandBase):
             prefs["remote.log.level"] = "Debug"
         elif verbosity > 1:
             prefs["remote.log.level"] = "Trace"
+        if verbosity > 2:
+            prefs["remote.log.truncate"] = False
 
         self.install_puppeteer(product)
 
