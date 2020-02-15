@@ -4893,6 +4893,10 @@ pref("marionette.contentListener", false);
 // case-sensitively.
 pref("remote.log.level", "Info");
 
+// Certain log messages that are known to be long are truncated. This
+// preference causes them to not be truncated.
+pref("remote.log.truncate", true);
+
 // Enable the JSON View tool (an inspector for application/json documents).
 pref("devtools.jsonview.enabled", true);
 
