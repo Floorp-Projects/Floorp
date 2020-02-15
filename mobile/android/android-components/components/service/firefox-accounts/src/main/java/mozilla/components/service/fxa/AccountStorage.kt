@@ -9,6 +9,7 @@ import android.content.SharedPreferences
 import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.lib.crash.CrashReporter
 import mozilla.components.lib.dataprotect.SecureAbove22Preferences
+import mozilla.components.support.base.log.logger.Logger
 
 const val FXA_STATE_PREFS_KEY = "fxaAppState"
 const val FXA_STATE_KEY = "fxaState"
@@ -26,19 +27,33 @@ internal interface AccountStorage {
  * Migration from [SecureAbove22AccountStorage] will happen upon initialization,
  * unless disabled via [migrateFromSecureStorage].
  */
+@SuppressWarnings("TooGenericExceptionCaught")
 internal class SharedPrefAccountStorage(
     val context: Context,
     crashReporter: CrashReporter? = null,
     migrateFromSecureStorage: Boolean = true
 ) : AccountStorage {
+    internal val logger = Logger("mozac/SharedPrefAccountStorage")
+
     init {
         if (migrateFromSecureStorage) {
             // In case we switched from SecureAbove22AccountStorage to this implementation, migrate persisted account
             // and clear out the old storage layer.
-            val secureStorage = SecureAbove22AccountStorage(context, crashReporter, migrateFromPlaintextStorage = false)
-            secureStorage.read()?.let { secureAccount ->
-                this.write(secureAccount.toJSONString())
-                secureStorage.clear()
+            val secureStorage = SecureAbove22AccountStorage(
+                context,
+                crashReporter,
+                migrateFromPlaintextStorage = false
+            )
+            try {
+                secureStorage.read()?.let { secureAccount ->
+                    this.write(secureAccount.toJSONString())
+                    secureStorage.clear()
+                }
+            } catch (e: Exception) {
+                // Certain devices crash on various Keystore exceptions. While trying to migrate
+                // to use the plaintext storage we don't want to crash if we can't access secure
+                // storage, and just catch the errors.
+                logger.error("Migrating from secure storage failed", e)
             }
         }
     }
