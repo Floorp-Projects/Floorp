@@ -293,7 +293,15 @@
         "http-rp"
       ],
       "worker-classic-data": [],
-      "worker-module-data": []
+      "worker-module-data": [],
+      "sharedworker-classic": [
+        "http-rp"
+      ],
+      "sharedworker-module": [
+        "http-rp"
+      ],
+      "sharedworker-classic-data": [],
+      "sharedworker-module-data": []
     },
     "supported_subresource": {
       "top": "*",
@@ -316,6 +324,26 @@
         "websocket"
       ],
       "worker-module-data": [
+        "xhr",
+        "fetch",
+        "websocket"
+      ],
+      "sharedworker-classic": [
+        "xhr",
+        "fetch",
+        "websocket"
+      ],
+      "sharedworker-module": [
+        "xhr",
+        "fetch",
+        "websocket"
+      ],
+      "sharedworker-classic-data": [
+        "xhr",
+        "fetch",
+        "websocket"
+      ],
+      "sharedworker-module-data": [
         "xhr",
         "fetch",
         "websocket"
@@ -395,6 +423,36 @@
         }
       ],
       "subresourcePolicyDeliveries": []
+    },
+    "sharedworker-classic-data": {
+      "sourceContextList": [
+        {
+          "sourceContextType": "top",
+          "policyDeliveries": [
+            "policy"
+          ]
+        },
+        {
+          "sourceContextType": "sharedworker-classic-data",
+          "policyDeliveries": []
+        }
+      ],
+      "subresourcePolicyDeliveries": []
+    },
+    "sharedworker-module-data": {
+      "sourceContextList": [
+        {
+          "sourceContextType": "top",
+          "policyDeliveries": [
+            "policy"
+          ]
+        },
+        {
+          "sourceContextType": "sharedworker-module-data",
+          "policyDeliveries": []
+        }
+      ],
+      "subresourcePolicyDeliveries": []
     }
   },
   "test_expansion_schema": {
@@ -417,7 +475,9 @@
     "source_context_list": [
       "top",
       "worker-classic-data",
-      "worker-module-data"
+      "worker-module-data",
+      "sharedworker-classic-data",
+      "sharedworker-module-data"
     ],
     "redirection": [
       "no-redirect",
