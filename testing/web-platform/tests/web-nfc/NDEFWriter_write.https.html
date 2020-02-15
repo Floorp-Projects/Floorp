@@ -86,6 +86,16 @@ const invalid_type_messages =
       createMessage([createRecord(':xyz', test_number_data)]),
       createMessage([createRecord(':xyz', test_json_data)]),
 
+      // https://w3c.github.io/web-nfc/#dfn-map-smart-poster-to-ndef
+      // NDEFRecord must have data.
+      createMessage([createRecord('smart-poster')]),
+
+      // NDEFRecord.data for smart-poster record must be a NDEFMessageInit.
+      createMessage([createRecord('smart-poster', test_text_data)]),
+      createMessage([createRecord('smart-poster', test_number_data)]),
+      createMessage([createRecord('smart-poster', test_json_data)]),
+      createMessage([createRecord('smart-poster', test_buffer_data)]),
+
       // https://w3c.github.io/web-nfc/#ndef-record-types
       // The record type is neither a known type ('text', 'mime' etc.) nor a
       // valid external/local type.
@@ -315,6 +325,45 @@ nfc_test(async (t, mockNFC) => {
       'payloadMessage is used instead');
   assertNDEFMessagesEqual(messageContainText, pushed_message.data[0].payloadMessage.data[0].payloadMessage);
 }, "NDEFWriter.write NDEFMessage containing embedded records.");
+
+nfc_test(async (t, mockNFC) => {
+  // A smart-poster record contains a uri record, text record.
+  const uri_record = createUrlRecord(test_url_data);
+  const text_record = createTextRecord(test_text_data);
+  const payload_message = createMessage([uri_record, text_record]);
+  const message = createMessage([createRecord(
+      'smart-poster', payload_message, "dummy_record_id")]);
+
+  const writer = new NDEFWriter();
+  await writer.write(message);
+  const pushed_message = mockNFC.pushedMessage();
+
+  // The mojom message received by mock nfc contains only the smart-poster record.
+  assert_equals(pushed_message.data.length, 1);
+  assert_equals(pushed_message.data[0].recordType, 'smart-poster', 'recordType');
+  assert_equals(pushed_message.data[0].mediaType, null, 'mediaType');
+  assert_equals(pushed_message.data[0].id, 'dummy_record_id', 'id');
+
+  const embedded_records = pushed_message.data[0].payloadMessage.data;
+  assert_equals(embedded_records.length, 2);
+
+  let embedded_record_types = [];
+  for(let record of embedded_records) {
+    embedded_record_types.push(record.recordType);
+    switch(record.recordType) {
+      case 'url':
+        compareNDEFRecords(uri_record, record);
+        break;
+      case 'text':
+        compareNDEFRecords(text_record, record);
+        break;
+      default:
+        assert_unreached("Unknown recordType");
+    }
+  }
+  assert_array_equals(embedded_record_types.sort(), ['text', 'url'],
+      'smart-poster record\'s contained record types');
+}, "NDEFWriter.write NDEFMessage containing smart-poster record.");
 
 nfc_test(async (t, mockNFC) => {
   const writer = new NDEFWriter();
