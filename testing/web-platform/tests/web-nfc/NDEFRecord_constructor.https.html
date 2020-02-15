@@ -402,6 +402,94 @@
   }, 'NDEFRecord constructor with local record type');
 
   test(() => {
+    let buffer = new ArrayBuffer(4);
+    new Uint8Array(buffer).set([1, 2, 3, 4]);
+    const encoder = new TextEncoder();
+    const uri_record = createUrlRecord(test_url_data);
+    const title_record = createTextRecord(test_text_data);
+    const type_record = createRecord(":t", encoder.encode("image/gif"));
+    const size_record = createRecord(":s", new Uint32Array([4096]));
+    const action_record = createRecord(":act", new Uint8Array([0]));
+    const icon_record = createRecord("mime", buffer, test_record_id, 'image/gif');
+    const payload_message = createMessage([
+        uri_record, title_record, type_record, size_record, action_record, icon_record]);
+    const smart_poster_record = createRecord('smart-poster', payload_message, "dummy_record_id");
+
+    const record = new NDEFRecord(smart_poster_record);
+    assert_equals(record.recordType, 'smart-poster', 'recordType');
+    assert_equals(record.mediaType, null, 'mediaType');
+    assert_equals(record.id, 'dummy_record_id', 'id');
+    const embedded_records = record.toRecords();
+    assert_equals(embedded_records.length, 6, 'length');
+
+    const decoder = new TextDecoder();
+    let embedded_record_types = [];
+    for(let record of embedded_records) {
+      embedded_record_types.push(record.recordType);
+      switch(record.recordType) {
+        case 'url':
+          assert_equals(record.mediaType, null, 'uri record\'s mediaType');
+          assert_equals(record.id, test_record_id, 'uri record\'s id');
+          assert_equals(decoder.decode(record.data), test_url_data, 'uri record\'s data');
+          break;
+        case 'text':
+          assert_equals(record.mediaType, null, 'title record\'s mediaType');
+          assert_equals(record.id, test_record_id, 'title record\'s id');
+          assert_equals(record.encoding, 'utf-8', 'title record\'s encoding');
+          assert_equals(record.lang, 'en', 'title record\'s lang');
+          assert_equals(decoder.decode(record.data), test_text_data, 'title record\'s data');
+        case ':t':
+          assert_equals(record.mediaType, null, 'type record\'s mediaType');
+          assert_equals(record.id, null, 'type record\'s id');
+          assert_equals(decoder.decode(record.data), 'image/gif', 'type record\'s data');
+          break;
+        case ':s':
+          assert_equals(record.mediaType, null, 'size record\'s mediaType');
+          assert_equals(record.id, null, 'size record\'s id');
+          assert_equals(record.data.byteLength, 4, 'byteLength of size record\'s data');
+          assert_equals(record.data.getUint32(0), 4096, 'value of size record\'s data');
+          break;
+        case ':act':
+          assert_equals(record.mediaType, null, 'action record\'s mediaType');
+          assert_equals(record.id, null, 'action record\'s id');
+          assert_equals(record.data.byteLength, 1, 'byteLength of action record\'s data');
+          assert_equals(record.data.getUint8(0), 0, 'value of action record\'s data');
+          break;
+        case 'mime':
+          assert_equals(record.mediaType, image/gif, 'icon record\'s mediaType');
+          assert_equals(record.id, test_record_id, 'icon record\'s id');
+          assert_array_equals(new Uint8Array(record.data.buffer), [1, 2, 3, 4],
+              'icon record\'s mediaType');
+          break;
+        default:
+          assert_unreached("Unknown recordType");
+      }
+    }
+    assert_array_equals(embedded_record_types.sort(),
+        [':act', ':s', ':t', 'mime', 'text', 'url'],
+        'smart-poster record\'s contained record types');
+  }, 'NDEFRecord constructor with smart-poster record type');
+
+  test(() => {
+    const uri_record = createUrlRecord(test_url_data);
+    const smart_poster_record = createRecord(
+        'smart-poster', createMessage([uri_record]), "dummy_record_id");
+    const record = new NDEFRecord(smart_poster_record);
+    assert_equals(record.recordType, 'smart-poster', 'recordType');
+    assert_equals(record.mediaType, null, 'mediaType');
+    assert_equals(record.id, 'dummy_record_id', 'id');
+    const embedded_record = record.toRecords();
+
+    // smart-poster record only contains a uri record.
+    assert_equals(embedded_record.length, 1, 'length');
+    const decoder = new TextDecoder();
+    assert_equals(embedded_record.recordType, 'url', 'uri record\'s recordType');
+    assert_equals(embedded_record.mediaType, null, 'uri record\'s mediaType');
+    assert_equals(embedded_record.id, test_record_id, 'uri record\'s id');
+    assert_equals(decoder.decode(embedded_record.data), test_url_data, 'uri record\'s data');
+  }, 'NDEFRecord constructor with smart-poster record type that contains only a mandatory uri record');
+
+  test(() => {
     assert_throws_js(TypeError, () => new NDEFRecord(createRecord('EMptY')),
         'Unknown record type.');
     assert_throws_js(TypeError, () => new NDEFRecord(createRecord('TeXt', test_text_data)),
@@ -440,6 +528,65 @@
     assert_throws_js(TypeError, () => new NDEFRecord(createRecord(
         'example.com:xyz/', test_buffer_data)), 'The type should not contain \'/\'.');
   }, 'NDEFRecord constructor with invalid external record type');
+
+  test(() => {
+    const encoder = new TextEncoder();
+    const uri_record = createUrlRecord(test_url_data);
+    const title_record = createTextRecord(test_text_data);
+    const type_record = createRecord(":t", encoder.encode("image/gif"));
+    const size_record = createRecord(":s", new Uint32Array([4096]));
+    const action_record = createRecord(":act", new Uint8Array([0]));
+    const icon_record = createRecord(
+        "mime", test_buffer_data, test_record_id, 'image/gif');
+
+    const invalid_datas = [
+      // NDEFRecord.data for smart-poster record must be a NDEFMessageInit.
+      "A string is not a NDEFMessageInit",
+      test_buffer_data,
+      // NDEFRecord.data for smart-poster record must contain a URI record.
+      createMessage([title_record, type_record, size_record,
+          action_record, icon_record]),
+      // NDEFRecord.data for smart-poster record must not contain more than
+      // one type record, size record or action record.
+      createMessage([uri_record, title_record, type_record, size_record,
+          action_record, icon_record, type_record]),
+      createMessage([uri_record, title_record, type_record, size_record,
+          action_record, icon_record, size_record]),
+      createMessage([uri_record, title_record, type_record, size_record,
+          action_record, icon_record, action_record]),
+      // NDEFRecord.data for smart-poster record contains a size record must
+      // have a data of type 4-byte 32 bit unsigned integer.
+      createMessage([uri_record, title_record, type_record, action_record,
+          icon_record, createRecord(":s", new Uint8Array([1]))]),
+      // NDEFRecord.data for smart-poster record contains an action record must
+      // have a data of type 1-byte 8 bit unsigned integer.
+      createMessage([uri_record, title_record, type_record, size_record,
+          icon_record, createRecord(":act", new Uint32Array([0]))]),
+      // NDEFRecord.data for smart-poster record contains an icon record must
+      // have a data starts with 'image' or 'video'.
+      createMessage([uri_record, title_record, type_record, size_record,
+          action_record, createMimeRecord(test_buffer_data)]),
+      // NDEFRecord.data for smart-poster record must not contain empty record.
+      createMessage([uri_record, title_record, type_record, size_record,
+          action_record, icon_record, createRecord('empty')]),
+      // NDEFRecord.data for smart-poster record must not contain absolute-url record.
+      createMessage([uri_record, title_record, type_record, size_record,
+          action_record, icon_record, createUrlRecord(test_url_data, true)]),
+      // NDEFRecord.data for smart-poster record must not contain external record.
+      createMessage([uri_record, title_record, type_record, size_record,
+          action_record, icon_record, createRecord('example.com:foo', test_buffer_data)]),
+      // NDEFRecord.data for smart-poster record must not contain unknown record.
+      createMessage([uri_record, title_record, type_record, size_record,
+          action_record, icon_record, createUnknownRecord(test_buffer_data)]),
+      // NDEFRecord.data for smart-poster record must contain only well-known local type.
+      createMessage([uri_record, title_record, type_record, size_record,
+          action_record, icon_record, createRecord(':notWellknownLocalType', test_buffer_data)])
+    ];
+
+    invalid_datas.forEach(data => {
+      assert_throws_js(TypeError, () => new NDEFRecord(createRecord('smart-poster', data)));
+    });
+  }, "NDEFRecord constructor for smart-poster record with invalid embedded records.");
 
   test(() => {
     assert_throws_js(TypeError, () => new NDEFRecord(createRecord(':xyz', test_buffer_data)),
