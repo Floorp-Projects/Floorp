@@ -1,3 +1,6 @@
+@import "invalid.css";
+@import "userContent-import.css";
+
 .reftest-usercss {
   background: lime !important;
 }
