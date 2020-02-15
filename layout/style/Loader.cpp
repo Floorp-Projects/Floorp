@@ -1344,7 +1344,7 @@ nsresult Loader::LoadSheet(SheetLoadData& aLoadData, SheetState aSheetState,
     // Create a StreamLoader instance to which we will feed
     // the data from the sync load.  Do this before creating the
     // channel to make error recovery simpler.
-    nsCOMPtr<nsIStreamListener> streamLoader = new StreamLoader(aLoadData);
+    auto streamLoader = MakeRefPtr<StreamLoader>(aLoadData);
 
     if (mDocument) {
       net::PredictorLearn(aLoadData.mURI, mDocument->GetDocumentURI(),
@@ -1395,6 +1395,7 @@ nsresult Loader::LoadSheet(SheetLoadData& aLoadData, SheetState aSheetState,
     }
     if (NS_FAILED(rv)) {
       LOG_ERROR(("  Failed to create channel"));
+      streamLoader->ChannelOpenFailed();
       SheetComplete(aLoadData, rv);
       return rv;
     }
@@ -1416,6 +1417,7 @@ nsresult Loader::LoadSheet(SheetLoadData& aLoadData, SheetState aSheetState,
 
     if (NS_FAILED(rv)) {
       LOG_ERROR(("  Failed to open URI synchronously"));
+      streamLoader->ChannelOpenFailed();
       SheetComplete(aLoadData, rv);
       return rv;
     }
@@ -1627,7 +1629,7 @@ nsresult Loader::LoadSheet(SheetLoadData& aLoadData, SheetState aSheetState,
   rv = channel->AsyncOpen(streamLoader);
   if (NS_FAILED(rv)) {
     LOG_ERROR(("  Failed to create stream loader"));
-    streamLoader->AsyncOpenFailed();
+    streamLoader->ChannelOpenFailed();
     SheetComplete(aLoadData, rv);
     return rv;
   }

@@ -25,9 +25,9 @@ class StreamLoader : public nsIStreamListener {
 
   explicit StreamLoader(SheetLoadData&);
 
-  void AsyncOpenFailed() {
+  void ChannelOpenFailed() {
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
-    mAsyncOpenFailed = true;
+    mChannelOpenFailed = true;
 #endif
   }
 
@@ -53,7 +53,7 @@ class StreamLoader : public nsIStreamListener {
   nsAutoCStringN<3> mBOMBytes;
 
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
-  bool mAsyncOpenFailed = false;
+  bool mChannelOpenFailed = false;
   bool mOnStopRequestCalled = false;
 #endif
 };
