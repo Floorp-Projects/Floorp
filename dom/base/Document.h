@@ -4063,6 +4063,34 @@ class Document : public nsINode,
       const nsAString& aValue = EmptyString(),
       nsAString* aAdjustedValue = nullptr);
 
+  /**
+   * AutoRunningExecCommandMarker is AutoRestorer for mIsRunningExecCommand.
+   * Since it's a bit field, not a bool member, therefore, we cannot use
+   * AutoRestorer for it.
+   */
+  class MOZ_STACK_CLASS AutoRunningExecCommandMarker final {
+   public:
+    AutoRunningExecCommandMarker() = delete;
+    explicit AutoRunningExecCommandMarker(const AutoRunningExecCommandMarker&) =
+        delete;
+    // Guaranteeing the document's lifetime with `MOZ_CAN_RUN_SCRIPT`.
+    MOZ_CAN_RUN_SCRIPT explicit AutoRunningExecCommandMarker(
+        Document& aDocument)
+        : mDocument(aDocument),
+          mHasBeenRunning(aDocument.mIsRunningExecCommand) {
+      aDocument.mIsRunningExecCommand = true;
+    }
+    ~AutoRunningExecCommandMarker() {
+      if (!mHasBeenRunning) {
+        mDocument.mIsRunningExecCommand = false;
+      }
+    }
+
+   private:
+    Document& mDocument;
+    bool mHasBeenRunning;
+  };
+
   // Mapping table from HTML command name to internal command.
   typedef nsDataHashtable<nsStringCaseInsensitiveHashKey, InternalCommandData>
       InternalCommandDataHashtable;
@@ -4568,6 +4596,9 @@ class Document : public nsINode,
   // We don't use the general deprecated operation mechanism for this because we
   // also record this as a `CountedUnknownProperty`.
   bool mHasWarnedAboutZoom : 1;
+
+  // While we're handling an execCommand call, set to true.
+  bool mIsRunningExecCommand : 1;
 
   uint8_t mPendingFullscreenRequests;
 

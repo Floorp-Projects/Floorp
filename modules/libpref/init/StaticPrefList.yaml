@@ -151,8 +151,10 @@
 
 #ifdef EARLY_BETA_OR_EARLIER
 #define IS_EARLY_BETA_OR_EARLIER true
+#define IS_NOT_EARLY_BETA_OR_EARLIER false
 #else
 #define IS_EARLY_BETA_OR_EARLIER false
+#define IS_NOT_EARLY_BETA_OR_EARLIER true
 #endif
 
 #ifdef ANDROID
@@ -1445,6 +1447,13 @@
 - name: dom.disable_open_during_load
   type: bool
   value: false
+  mirror: always
+
+# If set this to true, `Document.execCommand` may be performed nestedly.
+# Otherwise, nested calls just return false.
+- name: dom.document.exec_command.nested_calls_allowed
+  type: bool
+  value: @IS_NOT_EARLY_BETA_OR_EARLIER@
   mirror: always
 
 - name: dom.enable_window_print

@@ -91,8 +91,8 @@ load 1393171.html
 needs-focus load 1402196.html
 load 1402469.html
 load 1402526.html
-asserts(1) load 1402904.html
-asserts(1) load 1405747.html
+pref(dom.document.exec_command.nested_calls_allowed,true) asserts(1) load 1402904.html # assertion is that mutation event listener caused by execCommand calls another execCommand
+pref(dom.document.exec_command.nested_calls_allowed,true) asserts(1) load 1405747.html # assertion is that mutation event listener caused by execCommand calls another execCommand
 load 1405897.html
 load 1408170.html
 asserts(0-1) load 1414581.html
@@ -106,9 +106,9 @@ load 1441619.html
 load 1443664.html
 skip-if(Android) needs-focus load 1444630.html
 load 1446451.html
-asserts(0-2) load 1464251.html # assertion is that mutation event listener modifies content
+pref(dom.document.exec_command.nested_calls_allowed,true) asserts(2) load 1464251.html # assertion is that mutation event listener caused by execCommand calls another execCommand
 pref(layout.accessiblecaret.enabled,true) load 1470926.html
-asserts(0-1) load 1474978.html # assertion is that mutation event listener modifies content
+pref(dom.document.exec_command.nested_calls_allowed,true) asserts(1) load 1474978.html # assertion is that mutation event listener caused by execCommand calls another execCommand
 load 1525481.html
 load 1533913.html
 load 1534394.html
