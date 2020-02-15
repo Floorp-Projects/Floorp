@@ -1129,19 +1129,35 @@ function invokeRequest(subresource, sourceContextList) {
     },
     "worker-classic": {
       // Classic dedicated worker loaded from same-origin.
-      invoker: invokeFromWorker.bind(undefined, false, {}),
+      invoker: invokeFromWorker.bind(undefined, "worker", false, {}),
     },
     "worker-classic-data": {
       // Classic dedicated worker loaded from data: URL.
-      invoker: invokeFromWorker.bind(undefined, true, {}),
+      invoker: invokeFromWorker.bind(undefined, "worker", true, {}),
     },
     "worker-module": {
       // Module dedicated worker loaded from same-origin.
-      invoker: invokeFromWorker.bind(undefined, false, {type: 'module'}),
+      invoker: invokeFromWorker.bind(undefined, "worker", false, {type: 'module'}),
     },
     "worker-module-data": {
       // Module dedicated worker loaded from data: URL.
-      invoker: invokeFromWorker.bind(undefined, true, {type: 'module'}),
+      invoker: invokeFromWorker.bind(undefined, "worker", true, {type: 'module'}),
+    },
+    "sharedworker-classic": {
+      // Classic dedicated worker loaded from same-origin.
+      invoker: invokeFromWorker.bind(undefined, "sharedworker", false, {}),
+    },
+    "sharedworker-classic-data": {
+      // Classic dedicated worker loaded from data: URL.
+      invoker: invokeFromWorker.bind(undefined, "sharedworker", true, {}),
+    },
+    "sharedworker-module": {
+      // Module dedicated worker loaded from same-origin.
+      invoker: invokeFromWorker.bind(undefined, "sharedworker", false, {type: 'module'}),
+    },
+    "sharedworker-module-data": {
+      // Module dedicated worker loaded from data: URL.
+      invoker: invokeFromWorker.bind(undefined, "sharedworker", true, {type: 'module'}),
     },
   };
 
@@ -1162,6 +1178,8 @@ self.invokeRequest = invokeRequest;
 */
 
 /**
+  @param {string} workerType
+    "worker" (for dedicated worker) or "sharedworker".
   @param {boolean} isDataUrl
     true if the worker script is loaded from data: URL.
     Otherwise, the script is loaded from same-origin.
@@ -1170,7 +1188,7 @@ self.invokeRequest = invokeRequest;
 
   Other parameters and return values are the same as those of invokeRequest().
 */
-function invokeFromWorker(isDataUrl, workerOptions,
+function invokeFromWorker(workerType, isDataUrl, workerOptions,
                           subresource, sourceContextList) {
   const currentSourceContext = sourceContextList[0];
   let workerUrl =
@@ -1194,10 +1212,20 @@ function invokeFromWorker(isDataUrl, workerOptions,
 
   return promise
     .then(url => {
-      const worker = new Worker(url, workerOptions);
-      worker.postMessage({subresource: subresource,
-                          sourceContextList: sourceContextList.slice(1)});
-      return bindEvents2(worker, "message", worker, "error", window, "error");
+      if (workerType === "worker") {
+        const worker = new Worker(url, workerOptions);
+        worker.postMessage({subresource: subresource,
+                           sourceContextList: sourceContextList.slice(1)});
+        return bindEvents2(worker, "message", worker, "error", window, "error");
+      } else if (workerType === "sharedworker") {
+        const worker = new SharedWorker(url, workerOptions);
+        worker.port.start();
+        worker.port.postMessage({subresource: subresource,
+                                 sourceContextList: sourceContextList.slice(1)});
+        return bindEvents2(worker.port, "message", worker, "error", window, "error");
+      } else {
+        throw new Error('Invalid worker type: ' + workerType);
+      }
     })
     .then(event => {
         if (event.data.error)
