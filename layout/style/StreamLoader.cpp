@@ -21,7 +21,7 @@ StreamLoader::StreamLoader(SheetLoadData& aSheetLoadData)
     : mSheetLoadData(&aSheetLoadData), mStatus(NS_OK) {}
 
 StreamLoader::~StreamLoader() {
-  MOZ_DIAGNOSTIC_ASSERT(mOnStopRequestCalled || mAsyncOpenFailed);
+  MOZ_DIAGNOSTIC_ASSERT(mOnStopRequestCalled || mChannelOpenFailed);
 }
 
 NS_IMPL_ISUPPORTS(StreamLoader, nsIStreamListener)
