@@ -671,6 +671,7 @@ renaming_overrides_prefixing = true
 """
 
 "GenericGradient" = """
+  bool Repeating() const;
   bool IsOpaque() const;
 """
 
