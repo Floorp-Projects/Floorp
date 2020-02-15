@@ -1404,9 +1404,7 @@ nsChangeHint nsStyleTableBorder::CalcDifference(
 
 template <>
 bool StyleGradient::IsOpaque() const {
-  auto items =
-      IsLinear() ? AsLinear().items.AsSpan() : AsRadial().items.AsSpan();
-  for (auto& stop : items) {
+  for (auto& stop : items.AsSpan()) {
     if (stop.IsInterpolationHint()) {
       continue;
     }
