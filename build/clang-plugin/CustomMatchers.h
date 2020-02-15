@@ -126,9 +126,20 @@ AST_MATCHER(QualType, isFloat) { return Node->isRealFloatingType(); }
 /// This matcher will match locations in system headers.  This is adopted from
 /// isExpansionInSystemHeader in newer clangs, but modified in order to work
 /// with old clangs that we use on infra.
-AST_POLYMORPHIC_MATCHER(isInSystemHeader,                                      \
+AST_POLYMORPHIC_MATCHER(isInSystemHeader,
                         AST_POLYMORPHIC_SUPPORTED_TYPES(Decl, Stmt)) {
   return ASTIsInSystemHeader(Finder->getASTContext(), Node);
+}
+
+/// This matcher will match a file "gtest-port.h". The file contains
+/// known fopen usages that are OK.
+AST_MATCHER(CallExpr, isInWhitelistForFopenUsage) {
+  static const char Whitelist[] = "gtest-port.h";
+  SourceLocation Loc = Node.getBeginLoc();
+  StringRef FileName =
+      getFilename(Finder->getASTContext().getSourceManager(), Loc);
+
+  return llvm::sys::path::rbegin(FileName)->equals(Whitelist);
 }
 
 /// This matcher will match a list of files.  These files contain
