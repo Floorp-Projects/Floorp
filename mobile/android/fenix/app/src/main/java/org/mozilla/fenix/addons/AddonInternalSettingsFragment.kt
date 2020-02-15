@@ -8,6 +8,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import kotlinx.android.synthetic.main.fragment_add_on_internal_settings.*
 import mozilla.components.feature.addons.ui.translate
@@ -38,9 +39,11 @@ class AddonInternalSettingsFragment : AddonPopupBaseFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        engineSession?.let { engineSession ->
-            addonSettingsEngineView.render(engineSession)
-            engineSession.loadUrl(args.addon.installedState!!.optionsPageUrl)
-        }
+        args.addon.installedState?.optionsPageUrl?.let {
+            engineSession?.let { engineSession ->
+                addonSettingsEngineView.render(engineSession)
+                engineSession.loadUrl(it)
+            }
+        } ?: findNavController().navigateUp()
     }
 }
