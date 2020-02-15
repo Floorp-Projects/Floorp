@@ -54,13 +54,13 @@ class ContainerElement extends HTMLElement {
 customElements.define('container-element', ContainerElement);
 
 test(() => {
-  assert_throws(new SyntaxError(), () => { document.querySelector(':state'); });
-  assert_throws(new SyntaxError(), () => { document.querySelector(':state('); });
-  assert_throws(new SyntaxError(), () => { document.querySelector(':state()'); });
-  assert_throws(new SyntaxError(), () => { document.querySelector(':state(=)'); });
-  assert_throws(new SyntaxError(), () => { document.querySelector(':state(name=value)'); });
-  assert_throws(new SyntaxError(), () => { document.querySelector(':state( foo bar)'); });
-  assert_throws(new SyntaxError(), () => { document.querySelector(':state(16px)'); });
+  assert_throws_dom('SyntaxError', () => { document.querySelector(':state'); });
+  assert_throws_dom('SyntaxError', () => { document.querySelector(':state('); });
+  assert_throws_dom('SyntaxError', () => { document.querySelector(':state()'); });
+  assert_throws_dom('SyntaxError', () => { document.querySelector(':state(=)'); });
+  assert_throws_dom('SyntaxError', () => { document.querySelector(':state(name=value)'); });
+  assert_throws_dom('SyntaxError', () => { document.querySelector(':state( foo bar)'); });
+  assert_throws_dom('SyntaxError', () => { document.querySelector(':state(16px)'); });
 }, ':state() parsing failures');
 
 test(() => {

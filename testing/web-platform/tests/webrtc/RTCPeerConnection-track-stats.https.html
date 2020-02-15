@@ -648,15 +648,4 @@
       }
     }
   }
-
-  async function async_assert_throws(exceptionName, promise, description) {
-    try {
-      await promise;
-    } catch (e) {
-      assert_equals(e.name, exceptionName);
-      return;
-    }
-    assert_unreached('No exception was thrown.');
-  }
-
 </script>

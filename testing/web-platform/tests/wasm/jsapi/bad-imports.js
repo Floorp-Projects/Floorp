@@ -2,7 +2,7 @@
  * `t` should be a function that takes at least three arguments:
  *
  * - the name of the test;
- * - the expected error (to be passed to `assert_throws` or similar);
+ * - the expected error (to be passed to `assert_throws_js`);
  * - a function that takes a `WasmModuleBuilder` and initializes it;
  * - (optionally) an options object.
  *
