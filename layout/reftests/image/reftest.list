@@ -71,3 +71,4 @@ random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == image-srcset-basic-selec
 == image-resize-percent-width.html image-resize-ref.html
 
 == moz-broken-matching-1.html moz-broken-matching-1-ref.html
+pref(dom.image-lazy-loading.enabled,true) == moz-broken-matching-lazy-load.html moz-broken-matching-1-ref.html
