@@ -1300,18 +1300,17 @@ mozilla::ipc::IPCResult BrowserChild::RecvSizeModeChanged(
 }
 
 mozilla::ipc::IPCResult BrowserChild::RecvChildToParentMatrix(
-    const Maybe<gfx::Matrix4x4>& aMatrix,
-    const ScreenRect& aTopLevelViewportVisibleRectInBrowserCoords) {
+    const mozilla::Maybe<mozilla::gfx::Matrix4x4>& aMatrix,
+    const mozilla::ScreenRect& aTopLevelViewportVisibleRectInBrowserCoords) {
   mChildToParentConversionMatrix =
       LayoutDeviceToLayoutDeviceMatrix4x4::FromUnknownMatrix(aMatrix);
   mTopLevelViewportVisibleRectInBrowserCoords =
       aTopLevelViewportVisibleRectInBrowserCoords;
 
-  // Trigger an intersection observation update since ancestor viewports
-  // changed.
+  // Triger an intersection observation since ancestor viewports changed.
   if (RefPtr<Document> toplevelDoc = GetTopLevelDocument()) {
-    if (nsPresContext* pc = toplevelDoc->GetPresContext()) {
-      pc->RefreshDriver()->EnsureIntersectionObservationsUpdateHappens();
+    if (nsPresContext* presContext = toplevelDoc->GetPresContext()) {
+      presContext->RefreshDriver()->IntersectionObservationAdded();
     }
   }
 
