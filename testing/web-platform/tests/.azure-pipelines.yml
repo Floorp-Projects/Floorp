@@ -247,6 +247,7 @@ jobs:
   - task: UsePythonVersion@0
     inputs:
       versionSpec: '3.6.x'
+  # Python 2.7 still needed to update manifest.
   - task: UsePythonVersion@0
     inputs:
       versionSpec: '2.7.x'
@@ -270,6 +271,7 @@ jobs:
   - task: UsePythonVersion@0
     inputs:
       versionSpec: '3.8.x'
+  # Python 2.7 still needed to update manifest.
   - task: UsePythonVersion@0
     inputs:
       versionSpec: '2.7.x'
@@ -424,6 +426,7 @@ jobs:
     inputs:
       versionSpec: '3.6.x'
       addToPath: false
+  # Python 2.7 still needed to update manifest.
   - task: UsePythonVersion@0
     inputs:
       versionSpec: '2.7.x'
@@ -451,6 +454,7 @@ jobs:
     inputs:
       versionSpec: '3.8.x'
       addToPath: false
+  # Python 2.7 still needed to update manifest.
   - task: UsePythonVersion@0
     inputs:
       versionSpec: '2.7.x'
