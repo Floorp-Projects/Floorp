@@ -726,11 +726,11 @@ class GLContext : public GenericAtomicRefCounted,
 
   // Do whatever tear-down is necessary after drawing to our offscreen FBO,
   // if it's bound.
-  void AfterGLDrawCall() { mHeavyGLCallsSinceLastFlush = true; }
+  void AfterGLDrawCall();
 
   // Do whatever setup is necessary to read from our offscreen FBO, if it's
   // bound.
-  void BeforeGLReadCall() {}
+  void BeforeGLReadCall();
 
   // Do whatever tear-down is necessary after reading from our offscreen FBO,
   // if it's bound.
@@ -3567,6 +3567,8 @@ class GLContext : public GenericAtomicRefCounted,
   GLScreenBuffer* Screen() const { return mScreen.get(); }
 
   bool WorkAroundDriverBugs() const { return mWorkAroundDriverBugs; }
+
+  bool IsDrawingToDefaultFramebuffer();
 
   bool IsOffscreenSizeAllowed(const gfx::IntSize& aSize) const;
 
