@@ -40,8 +40,8 @@ class DetailedPromise : public Promise {
   void MaybeReject(nsresult aArg) = delete;
   void MaybeReject(nsresult aArg, const nsACString& aReason);
 
-  void MaybeReject(ErrorResult& aArg) = delete;
-  void MaybeReject(ErrorResult& aArg, const nsACString& aReason);
+  void MaybeReject(ErrorResult&& aArg) = delete;
+  void MaybeReject(ErrorResult&& aArg, const nsACString& aReason);
 
   // Facilities for rejecting with various spec-defined exception values.
 #define DOMEXCEPTION(name, err)                                   \
@@ -64,7 +64,7 @@ class DetailedPromise : public Promise {
   inline void MaybeRejectWithTypeError(const nsAString& aMessage) {
     ErrorResult res;
     res.ThrowTypeError(aMessage);
-    MaybeReject(res, NS_ConvertUTF16toUTF8(aMessage));
+    MaybeReject(std::move(res), NS_ConvertUTF16toUTF8(aMessage));
   }
 
   template <int N>
@@ -78,7 +78,7 @@ class DetailedPromise : public Promise {
   inline void MaybeRejectWithRangeError(const nsAString& aMessage) {
     ErrorResult res;
     res.ThrowRangeError(aMessage);
-    MaybeReject(res, NS_ConvertUTF16toUTF8(aMessage));
+    MaybeReject(std::move(res), NS_ConvertUTF16toUTF8(aMessage));
   }
 
   template <int N>

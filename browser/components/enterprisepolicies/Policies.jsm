@@ -1208,47 +1208,100 @@ var Policies = {
           setAndLockPref("privacy.clearOnShutdown.offlineApps", true);
         }
       } else {
-        setAndLockPref("privacy.sanitize.sanitizeOnShutdown", true);
+        let locked = true;
+        // Needed to preserve original behavior in perpetuity.
+        let lockDefaultPrefs = true;
+        if ("Locked" in param) {
+          locked = param.Locked;
+          lockDefaultPrefs = false;
+        }
+        setDefaultPref("privacy.sanitize.sanitizeOnShutdown", true, locked);
         if ("Cache" in param) {
-          setAndLockPref("privacy.clearOnShutdown.cache", param.Cache);
+          setDefaultPref("privacy.clearOnShutdown.cache", param.Cache, locked);
         } else {
-          setAndLockPref("privacy.clearOnShutdown.cache", false);
+          setDefaultPref(
+            "privacy.clearOnShutdown.cache",
+            false,
+            lockDefaultPrefs
+          );
         }
         if ("Cookies" in param) {
-          setAndLockPref("privacy.clearOnShutdown.cookies", param.Cookies);
+          setDefaultPref(
+            "privacy.clearOnShutdown.cookies",
+            param.Cookies,
+            locked
+          );
         } else {
-          setAndLockPref("privacy.clearOnShutdown.cookies", false);
+          setDefaultPref(
+            "privacy.clearOnShutdown.cookies",
+            false,
+            lockDefaultPrefs
+          );
         }
         if ("Downloads" in param) {
-          setAndLockPref("privacy.clearOnShutdown.downloads", param.Downloads);
+          setDefaultPref(
+            "privacy.clearOnShutdown.downloads",
+            param.Downloads,
+            locked
+          );
         } else {
-          setAndLockPref("privacy.clearOnShutdown.downloads", false);
+          setDefaultPref(
+            "privacy.clearOnShutdown.downloads",
+            false,
+            lockDefaultPrefs
+          );
         }
         if ("FormData" in param) {
-          setAndLockPref("privacy.clearOnShutdown.formdata", param.FormData);
+          setDefaultPref(
+            "privacy.clearOnShutdown.formdata",
+            param.FormData,
+            locked
+          );
         } else {
-          setAndLockPref("privacy.clearOnShutdown.formdata", false);
+          setDefaultPref(
+            "privacy.clearOnShutdown.formdata",
+            false,
+            lockDefaultPrefs
+          );
         }
         if ("History" in param) {
-          setAndLockPref("privacy.clearOnShutdown.history", param.History);
+          setDefaultPref(
+            "privacy.clearOnShutdown.history",
+            param.History,
+            locked
+          );
         } else {
-          setAndLockPref("privacy.clearOnShutdown.history", false);
+          setDefaultPref(
+            "privacy.clearOnShutdown.history",
+            false,
+            lockDefaultPrefs
+          );
         }
         if ("Sessions" in param) {
-          setAndLockPref("privacy.clearOnShutdown.sessions", param.Sessions);
+          setDefaultPref(
+            "privacy.clearOnShutdown.sessions",
+            param.Sessions,
+            locked
+          );
         } else {
-          setAndLockPref("privacy.clearOnShutdown.sessions", false);
+          setDefaultPref(
+            "privacy.clearOnShutdown.sessions",
+            false,
+            lockDefaultPrefs
+          );
         }
         if ("SiteSettings" in param) {
-          setAndLockPref(
+          setDefaultPref(
             "privacy.clearOnShutdown.siteSettings",
-            param.SiteSettings
+            param.SiteSettings,
+            locked
           );
         }
         if ("OfflineApps" in param) {
-          setAndLockPref(
+          setDefaultPref(
             "privacy.clearOnShutdown.offlineApps",
-            param.OfflineApps
+            param.OfflineApps,
+            locked
           );
         }
       }

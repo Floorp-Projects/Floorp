@@ -37,7 +37,6 @@ def run_firefox_ui_test(testtype=None, topsrcdir=None, **kwargs):
     test_types = {
         'functional': {
             'default_tests': [
-                os.path.join('puppeteer', 'manifest.ini'),
                 os.path.join('functional', 'manifest.ini'),
             ],
             'cli_module': firefox_ui_harness.cli_functional,

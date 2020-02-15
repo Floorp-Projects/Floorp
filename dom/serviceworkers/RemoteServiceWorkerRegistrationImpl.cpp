@@ -94,7 +94,7 @@ void RemoteServiceWorkerRegistrationImpl::Unregister(
        aFailureCB](Tuple<bool, CopyableErrorResult>&& aResult) {
         if (Get<1>(aResult).Failed()) {
           // application layer error
-          aFailureCB(Get<1>(aResult));
+          aFailureCB(std::move(Get<1>(aResult)));
           return;
         }
         // success
@@ -146,14 +146,16 @@ void RemoteServiceWorkerRegistrationImpl::RevokeActor(
   mShutdown = true;
 
   if (mOuter) {
-    mOuter->RegistrationCleared();
+    RefPtr<ServiceWorkerRegistration> outer = mOuter;
+    outer->RegistrationCleared();
   }
 }
 
 void RemoteServiceWorkerRegistrationImpl::UpdateState(
     const ServiceWorkerRegistrationDescriptor& aDescriptor) {
   if (mOuter) {
-    mOuter->UpdateState(aDescriptor);
+    RefPtr<ServiceWorkerRegistration> outer = mOuter;
+    outer->UpdateState(aDescriptor);
   }
 }
 

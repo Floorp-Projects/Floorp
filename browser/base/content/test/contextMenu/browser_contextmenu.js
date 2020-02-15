@@ -272,24 +272,43 @@ add_task(async function test_mailto() {
 });
 
 add_task(async function test_image() {
-  await test_contextmenu("#test-image", [
-    "context-viewimage",
-    true,
-    "context-copyimage-contents",
-    true,
-    "context-copyimage",
-    true,
-    "---",
-    null,
-    "context-saveimage",
-    true,
-    "context-sendimage",
-    true,
-    "context-setDesktopBackground",
-    true,
-    "context-viewimageinfo",
-    true,
-  ]);
+  for (let selector of ["#test-image", "#test-svg-image"]) {
+    await test_contextmenu(
+      selector,
+      [
+        "context-viewimage",
+        true,
+        "context-copyimage-contents",
+        true,
+        "context-copyimage",
+        true,
+        "---",
+        null,
+        "context-saveimage",
+        true,
+        "context-sendimage",
+        true,
+        "context-setDesktopBackground",
+        true,
+        "context-viewimageinfo",
+        true,
+      ],
+      {
+        onContextMenuShown() {
+          is(
+            typeof gContextMenu.imageInfo.height,
+            "number",
+            "Should have height"
+          );
+          is(
+            typeof gContextMenu.imageInfo.width,
+            "number",
+            "Should have width"
+          );
+        },
+      }
+    );
+  }
 });
 
 add_task(async function test_canvas() {

@@ -453,7 +453,7 @@ RefPtr<ClientOpPromise> ClientOpenWindowInCurrentProcess(
 #endif  // MOZ_WIDGET_ANDROID
 
   RefPtr<BrowsingContext> bc;
-  CopyableErrorResult rv;
+  ErrorResult rv;
   OpenWindow(aArgs, getter_AddRefs(bc), rv);
 
   nsCOMPtr<nsPIDOMWindowOuter> outerWindow(bc->GetDOMWindow());

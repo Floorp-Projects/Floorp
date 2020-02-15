@@ -15,16 +15,15 @@
 #  include "mozilla/RWLock.h"
 namespace rlbox {
 struct rlbox_shared_lock {
-  mozilla::RWLock rwlock;
-  rlbox_shared_lock() : rwlock("rlbox") {}
+  mozilla::detail::StaticRWLock rwlock;
 };
 }  // namespace rlbox
 #  define RLBOX_USE_CUSTOM_SHARED_LOCK
 #  define RLBOX_SHARED_LOCK(name) rlbox::rlbox_shared_lock name
 #  define RLBOX_ACQUIRE_SHARED_GUARD(name, ...) \
-    mozilla::AutoReadLock name((__VA_ARGS__).rwlock)
+    mozilla::detail::StaticAutoReadLock name((__VA_ARGS__).rwlock)
 #  define RLBOX_ACQUIRE_UNIQUE_GUARD(name, ...) \
-    mozilla::AutoWriteLock name((__VA_ARGS__).rwlock)
+    mozilla::detail::StaticAutoWriteLock name((__VA_ARGS__).rwlock)
 
 #endif
 

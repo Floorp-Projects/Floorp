@@ -777,7 +777,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStylePosition {
   StyleImplicitGridTracks mGridAutoColumns;
   StyleImplicitGridTracks mGridAutoRows;
   float mAspectRatio;
-  uint8_t mGridAutoFlow;  // NS_STYLE_GRID_AUTO_FLOW_*
+  mozilla::StyleGridAutoFlow mGridAutoFlow;
   mozilla::StyleBoxSizing mBoxSizing;
 
   mozilla::StyleAlignContent mAlignContent;

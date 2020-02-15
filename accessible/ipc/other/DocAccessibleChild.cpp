@@ -102,11 +102,12 @@ mozilla::ipc::IPCResult DocAccessibleChild::RecvNativeState(const uint64_t& aID,
 }
 
 mozilla::ipc::IPCResult DocAccessibleChild::RecvName(const uint64_t& aID,
-                                                     nsString* aName) {
+                                                     nsString* aName,
+                                                     uint32_t* aFlag) {
   Accessible* acc = IdToAccessible(aID);
   if (!acc) return IPC_OK();
 
-  acc->Name(*aName);
+  *aFlag = acc->Name(*aName);
   return IPC_OK();
 }
 

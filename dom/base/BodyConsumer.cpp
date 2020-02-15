@@ -736,7 +736,7 @@ void BodyConsumer::ContinueConsumeBody(nsresult aStatus, uint32_t aResultLength,
 
   error.WouldReportJSException();
   if (error.Failed()) {
-    localPromise->MaybeReject(error);
+    localPromise->MaybeReject(std::move(error));
   }
 }
 

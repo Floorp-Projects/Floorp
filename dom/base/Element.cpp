@@ -4239,15 +4239,6 @@ double Element::FirstLineBoxBSize() const {
              : 0.0;
 }
 
-#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
-void Element::AssertInvariantsOnNodeInfoChange() {
-  MOZ_DIAGNOSTIC_ASSERT(!IsInComposedDoc());
-  if (nsCOMPtr<Link> link = do_QueryInterface(this)) {
-    MOZ_DIAGNOSTIC_ASSERT(!link->HasPendingLinkUpdate());
-  }
-}
-#endif
-
 // static
 nsAtom* Element::GetEventNameForAttr(nsAtom* aAttr) {
   if (aAttr == nsGkAtoms::onwebkitanimationend) {

@@ -372,13 +372,23 @@ void ShadowRoot::ApplicableRulesChanged() {
 void ShadowRoot::InsertSheetAt(size_t aIndex, StyleSheet& aSheet) {
   DocumentOrShadowRoot::InsertSheetAt(aIndex, aSheet);
   if (aSheet.IsApplicable()) {
-    InsertSheetIntoAuthorData(aIndex, aSheet);
+    InsertSheetIntoAuthorData(aIndex, aSheet, mStyleSheets);
   }
 }
 
-void ShadowRoot::InsertSheetIntoAuthorData(size_t aIndex, StyleSheet& aSheet) {
-  MOZ_ASSERT(SheetAt(aIndex) == &aSheet);
+void ShadowRoot::InsertAdoptedSheetAt(size_t aIndex, StyleSheet& aSheet) {
+  DocumentOrShadowRoot::InsertAdoptedSheetAt(aIndex, aSheet);
+  if (aSheet.IsApplicable()) {
+    InsertSheetIntoAuthorData(aIndex, aSheet, mAdoptedStyleSheets);
+  }
+}
+
+void ShadowRoot::InsertSheetIntoAuthorData(
+    size_t aIndex, StyleSheet& aSheet,
+    const nsTArray<RefPtr<StyleSheet>>& aList) {
   MOZ_ASSERT(aSheet.IsApplicable());
+  MOZ_ASSERT(aList[aIndex] == &aSheet);
+  MOZ_ASSERT(&aList == &mAdoptedStyleSheets || &aList == &mStyleSheets);
 
   if (!mServoStyles) {
     mServoStyles = Servo_AuthorStyles_Create().Consume();
@@ -388,8 +398,8 @@ void ShadowRoot::InsertSheetIntoAuthorData(size_t aIndex, StyleSheet& aSheet) {
     mStyleRuleMap->SheetAdded(aSheet);
   }
 
-  for (size_t i = aIndex + 1; i < SheetCount(); ++i) {
-    StyleSheet* beforeSheet = SheetAt(i);
+  for (size_t i = aIndex + 1; i < aList.Length(); ++i) {
+    StyleSheet* beforeSheet = aList.ElementAt(i);
     if (!beforeSheet->IsApplicable()) {
       continue;
     }
@@ -400,14 +410,20 @@ void ShadowRoot::InsertSheetIntoAuthorData(size_t aIndex, StyleSheet& aSheet) {
     return;
   }
 
-  Servo_AuthorStyles_AppendStyleSheet(mServoStyles.get(), &aSheet);
+  if (mAdoptedStyleSheets.IsEmpty() || &aList == &mAdoptedStyleSheets) {
+    Servo_AuthorStyles_AppendStyleSheet(mServoStyles.get(), &aSheet);
+  } else {
+    Servo_AuthorStyles_InsertStyleSheetBefore(mServoStyles.get(), &aSheet,
+                                              mAdoptedStyleSheets.ElementAt(0));
+  }
   ApplicableRulesChanged();
 }
 
 // FIXME(emilio): This needs to notify document observers and such,
 // presumably.
 void ShadowRoot::StyleSheetApplicableStateChanged(StyleSheet& aSheet) {
-  int32_t index = IndexOfSheet(aSheet);
+  auto& sheetList = aSheet.IsConstructed() ? mAdoptedStyleSheets : mStyleSheets;
+  int32_t index = sheetList.IndexOf(&aSheet);
   if (index < 0) {
     // NOTE(emilio): @import sheets are handled in the relevant RuleAdded
     // notification, which only notifies after the sheet is loaded.
@@ -419,7 +435,7 @@ void ShadowRoot::StyleSheetApplicableStateChanged(StyleSheet& aSheet) {
     return;
   }
   if (aSheet.IsApplicable()) {
-    InsertSheetIntoAuthorData(size_t(index), aSheet);
+    InsertSheetIntoAuthorData(size_t(index), aSheet, sheetList);
   } else {
     MOZ_ASSERT(mServoStyles);
     if (mStyleRuleMap) {
@@ -430,18 +446,29 @@ void ShadowRoot::StyleSheetApplicableStateChanged(StyleSheet& aSheet) {
   }
 }
 
-void ShadowRoot::RemoveSheet(StyleSheet* aSheet) {
-  MOZ_ASSERT(aSheet);
-  RefPtr<StyleSheet> sheet = DocumentOrShadowRoot::RemoveSheet(*aSheet);
-  MOZ_ASSERT(sheet);
-  if (sheet->IsApplicable()) {
+void ShadowRoot::ClearAdoptedStyleSheets() {
+  for (const RefPtr<StyleSheet>& sheet : mAdoptedStyleSheets) {
+    RemoveSheetFromStyles(*sheet);
+    sheet->RemoveAdopter(*this);
+  }
+  mAdoptedStyleSheets.Clear();
+}
+
+void ShadowRoot::RemoveSheetFromStyles(StyleSheet& aSheet) {
+  if (aSheet.IsApplicable()) {
     MOZ_ASSERT(mServoStyles);
     if (mStyleRuleMap) {
-      mStyleRuleMap->SheetRemoved(*sheet);
+      mStyleRuleMap->SheetRemoved(aSheet);
     }
-    Servo_AuthorStyles_RemoveStyleSheet(mServoStyles.get(), sheet);
+    Servo_AuthorStyles_RemoveStyleSheet(mServoStyles.get(), &aSheet);
     ApplicableRulesChanged();
   }
+}
+
+void ShadowRoot::RemoveSheet(StyleSheet& aSheet) {
+  RefPtr<StyleSheet> sheet = DocumentOrShadowRoot::RemoveSheet(aSheet);
+  MOZ_ASSERT(sheet);
+  RemoveSheetFromStyles(*sheet);
 }
 
 void ShadowRoot::AddToIdTable(Element* aElement, nsAtom* aId) {
@@ -686,4 +713,30 @@ ServoStyleRuleMap& ShadowRoot::ServoStyleRuleMap() {
 nsresult ShadowRoot::Clone(dom::NodeInfo* aNodeInfo, nsINode** aResult) const {
   *aResult = nullptr;
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+}
+
+// https://wicg.github.io/construct-stylesheets/#dom-documentorshadowroot-adoptedstylesheets
+void ShadowRoot::SetAdoptedStyleSheets(
+    const Sequence<OwningNonNull<StyleSheet>>& aAdoptedStyleSheets,
+    ErrorResult& aRv) {
+  // Step 1 is a variable declaration
+
+  // 2.1 Check if all sheets are constructed, else throw NotAllowedError
+  // 2.2 Check if all sheets' constructor documents match the
+  // DocumentOrShadowRoot's node document, else throw NotAlloweError
+  EnsureAdoptedSheetsAreValid(aAdoptedStyleSheets, aRv);
+  if (aRv.Failed()) {
+    return;
+  }
+
+  // 3. Set the adopted style sheets to the new sheets
+  // TODO(nordzilla): There are optimizations that can be made here
+  // in the case of only appending new sheets.
+  // See https://bugzilla.mozilla.org/show_bug.cgi?id=1611236
+  ClearAdoptedStyleSheets();
+  mAdoptedStyleSheets.SetCapacity(aAdoptedStyleSheets.Length());
+  for (const OwningNonNull<StyleSheet>& sheet : aAdoptedStyleSheets) {
+    sheet->AddAdopter(*this);
+    AppendAdoptedStyleSheet(*sheet);
+  }
 }

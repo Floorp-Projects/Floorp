@@ -336,10 +336,16 @@ void BodyStream::ErrorPropagation(JSContext* aCx,
   }
 
   // Let's use a generic error.
-  RefPtr<DOMException> error = DOMException::Create(NS_ERROR_DOM_TYPE_ERR);
+  ErrorResult rv;
+  // XXXbz can we come up with a better error message here to tell the
+  // consumer what went wrong?
+  rv.ThrowTypeError(u"Error in body stream");
 
   JS::Rooted<JS::Value> errorValue(aCx);
-  if (ToJSValue(aCx, error, &errorValue)) {
+  bool ok = ToJSValue(aCx, std::move(rv), &errorValue);
+  MOZ_RELEASE_ASSERT(ok, "ToJSValue never fails for ErrorResult");
+
+  {
     MutexAutoUnlock unlock(mMutex);
     JS::ReadableStreamError(aCx, aStream, errorValue);
   }

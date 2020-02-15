@@ -126,7 +126,7 @@ child:
   // Accessible
   nested(inside_sync) sync State(uint64_t aID) returns(uint64_t states);
   nested(inside_sync) sync NativeState(uint64_t aID) returns(uint64_t states);
-  nested(inside_sync) sync Name(uint64_t aID) returns(nsString name);
+  nested(inside_sync) sync Name(uint64_t aID) returns(nsString name, uint32_t flag);
   nested(inside_sync) sync Value(uint64_t aID) returns(nsString value);
   nested(inside_sync) sync Help(uint64_t aID) returns(nsString help);
   nested(inside_sync) sync Description(uint64_t aID) returns(nsString desc);

@@ -122,7 +122,15 @@ class nsStringBuffer {
     // sort of higher level memory synchronization to protect against
     // the string object being mutated at the same time on multiple
     // threads.
+
+    // See bug 1603504. TSan might complain about a race when using
+    // memory_order_relaxed, so use memory_order_acquire for making TSan
+    // happy.
+#if defined(MOZ_TSAN)
+    return mRefCount.load(std::memory_order_acquire) > 1;
+#else
     return mRefCount.load(std::memory_order_relaxed) > 1;
+#endif
   }
 
   /**

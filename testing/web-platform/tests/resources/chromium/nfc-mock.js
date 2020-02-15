@@ -132,7 +132,7 @@ function matchesWatchOptions(message, options) {
 
 function createNDEFError(type) {
   return {
-    error: type ?
+    error: type != null ?
         new device.mojom.NDEFError({errorType: type, errorMessage: ''}) :
         null
   };
@@ -143,8 +143,7 @@ var WebNFCTest = (() => {
     constructor() {
       this.bindingSet_ = new mojo.BindingSet(device.mojom.NFC);
 
-      this.interceptor_ = new MojoInterfaceInterceptor(
-          device.mojom.NFC.name, "context", true);
+      this.interceptor_ = new MojoInterfaceInterceptor(device.mojom.NFC.name);
       this.interceptor_.oninterfacerequest =
           e => this.bindingSet_.addBinding(this, e.handle);
       this.interceptor_.start();

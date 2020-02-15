@@ -120,6 +120,8 @@ jobs:
                 - linux64-cbindgen
                 - linux64-nasm
                 - linux64-node
+                - linux64-lucetc
+                - wasi-sysroot
 
     android-api-16/pgo:
         description: "Android 4.0 api-16+ PGO instrumented"

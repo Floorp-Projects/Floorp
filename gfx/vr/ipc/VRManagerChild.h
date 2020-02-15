@@ -73,7 +73,6 @@ class VRManagerChild : public PVRManagerChild {
   static void InitSameProcess();
   static void InitWithGPUProcess(Endpoint<PVRManagerChild>&& aEndpoint);
   static bool InitForContent(Endpoint<PVRManagerChild>&& aEndpoint);
-  static bool ReinitForContent(Endpoint<PVRManagerChild>&& aEndpoint);
   static void ShutDown();
 
   static bool IsCreated();
@@ -103,7 +102,8 @@ class VRManagerChild : public PVRManagerChild {
   void FireDOMVRDisplayPresentChangeEvent(uint32_t aDisplayID);
   void FireDOMVRDisplayConnectEventsForLoad(VRManagerEventObserver* aObserver);
 
-  virtual void HandleFatalError(const char* aMsg) const override;
+  void HandleFatalError(const char* aMsg) const override;
+  void ActorDestroy(ActorDestroyReason aReason) override;
 
   void RunPuppet(const nsTArray<uint64_t>& aBuffer, dom::Promise* aPromise,
                  ErrorResult& aRv);
@@ -112,12 +112,12 @@ class VRManagerChild : public PVRManagerChild {
  protected:
   explicit VRManagerChild();
   ~VRManagerChild();
-  void Destroy();
-  void AfterDestroy();
 
   PVRLayerChild* AllocPVRLayerChild(const uint32_t& aDisplayID,
                                     const uint32_t& aGroup);
   bool DeallocPVRLayerChild(PVRLayerChild* actor);
+
+  void ActorDealloc() override;
 
   // MOZ_CAN_RUN_SCRIPT_BOUNDARY until we can mark ipdl-generated things as
   // MOZ_CAN_RUN_SCRIPT.

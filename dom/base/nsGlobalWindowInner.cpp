@@ -809,7 +809,7 @@ class PromiseDocumentFlushedResolver final {
     mCallback->Call(&returnVal, error);
 
     if (error.Failed()) {
-      mPromise->MaybeReject(error);
+      mPromise->MaybeReject(std::move(error));
     } else if (guard.Mutated(0)) {
       // Something within the callback mutated the DOM.
       mPromise->MaybeReject(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR);

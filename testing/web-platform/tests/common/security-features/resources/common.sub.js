@@ -398,7 +398,7 @@ function wrapResult(server_data) {
   requestViaPicture                3        -        Y       -
   requestViaScript                 2        Y        Y       -
   requestViaSendBeacon             3        -        Y       -
-  requestViaSharedWorker           2        Y        -       Y
+  requestViaSharedWorker           2        Y        Y       Y
   requestViaVideo                  3        -        Y       -
   requestViaWebSocket              3        -        Y       -
   requestViaWorklet                3        -        Y       Y

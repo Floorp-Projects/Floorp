@@ -42,19 +42,6 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
         }
 
         /**
-         * Set the content process hint flag.
-         *
-         * @param use If true, this will preload the content process for future use.
-         *            Default is true.
-         * @return This Builder instance.
-
-         */
-        public @NonNull Builder useContentProcessHint(final boolean use) {
-            getSettings().mUseContentProcess = use;
-            return this;
-        }
-
-        /**
          * Set whether multiprocess support should be enabled.
          *
          * @param use A flag determining whether multiprocess should be enabled.
@@ -445,7 +432,6 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
     }
 
     private GeckoRuntime mRuntime;
-    /* package */ boolean mUseContentProcess = true;
     /* package */ String[] mArgs;
     /* package */ Bundle mExtras;
     /* package */ String mConfigFilePath;
@@ -538,7 +524,6 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
     private void updateSettings(final @NonNull GeckoRuntimeSettings settings) {
         updatePrefs(settings);
 
-        mUseContentProcess = settings.getUseContentProcessHint();
         mArgs = settings.getArguments().clone();
         mExtras = new Bundle(settings.getExtras());
         mContentBlocking = new ContentBlocking.Settings(
@@ -559,15 +544,6 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
     /* package */ void commit() {
         commitLocales();
         commitResetPrefs();
-    }
-
-    /**
-     * Get the content process hint flag.
-     *
-     * @return The content process hint flag.
-     */
-    public boolean getUseContentProcessHint() {
-        return mUseContentProcess;
     }
 
     /**
@@ -1123,7 +1099,6 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
     public void writeToParcel(final Parcel out, final int flags) {
         super.writeToParcel(out, flags);
 
-        ParcelableUtils.writeBoolean(out, mUseContentProcess);
         out.writeStringArray(mArgs);
         mExtras.writeToParcel(out, flags);
         ParcelableUtils.writeBoolean(out, mDebugPause);
@@ -1141,7 +1116,6 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
     public void readFromParcel(final @NonNull Parcel source) {
         super.readFromParcel(source);
 
-        mUseContentProcess = ParcelableUtils.readBoolean(source);
         mArgs = source.createStringArray();
         mExtras.readFromParcel(source);
         mDebugPause = ParcelableUtils.readBoolean(source);

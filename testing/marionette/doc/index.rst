@@ -17,9 +17,6 @@ write different kinds of functional tests:
   * The `Marionette Python client`_ is used in the `Mn` job, which
     is generally what you want to use for interacting with web documents
 
-  * `Firefox Puppeteer`_ is a convenience library for Firefox
-    frontend UI automation based on the `Marionette Python client`_
-
 Outside the tree, Marionette is used by `geckodriver`_ to implement
 `WebDriver`_.
 
@@ -28,7 +25,6 @@ including Firefox, Thunderbird, Fennec, and Fenix.
 
 .. _protocol: Protocol.html
 .. _Marionette Python client: /python/marionette_driver.html
-.. _Firefox Puppeteer: http://firefox-puppeteer.readthedocs.io
 .. _geckodriver: /testing/geckodriver/
 .. _WebDriver: https://w3c.github.io/webdriver/
 

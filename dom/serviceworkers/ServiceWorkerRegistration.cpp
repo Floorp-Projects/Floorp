@@ -260,7 +260,7 @@ already_AddRefed<Promise> ServiceWorkerRegistration::Update(ErrorResult& aRv) {
         }
         outer->MaybeResolve(ref);
       },
-      [outer, self](ErrorResult& aRv) { outer->MaybeReject(aRv); });
+      [outer, self](ErrorResult&& aRv) { outer->MaybeReject(std::move(aRv)); });
 
   return outer.forget();
 }
@@ -284,9 +284,10 @@ already_AddRefed<Promise> ServiceWorkerRegistration::Unregister(
   }
 
   mInner->Unregister([outer](bool aSuccess) { outer->MaybeResolve(aSuccess); },
-                     [outer](ErrorResult& aRv) {
+                     [outer](ErrorResult&& aRv) {
                        // register() should be resilient and resolve false
                        // instead of rejecting in most cases.
+                       aRv.SuppressException();
                        outer->MaybeResolve(false);
                      });
 

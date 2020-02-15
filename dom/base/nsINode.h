@@ -268,6 +268,9 @@ class nsNodeWeakReference final : public nsIWeakReference {
  * of nsIContent children and provides access to them.
  */
 class nsINode : public mozilla::dom::EventTarget {
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+  void AssertInvariantsOnNodeInfoChange();
+#endif
  public:
   typedef mozilla::dom::BoxQuadOptions BoxQuadOptions;
   typedef mozilla::dom::ConvertCoordinateOptions ConvertCoordinateOptions;
@@ -679,6 +682,23 @@ class nsINode : public mozilla::dom::EventTarget {
    * @return the nodes node info
    */
   inline mozilla::dom::NodeInfo* NodeInfo() const { return mNodeInfo; }
+
+  /**
+   * Called when we have been adopted, and the information of the
+   * node has been changed.
+   *
+   * The new document can be reached via OwnerDoc().
+   *
+   * If you override this method,
+   * please call up to the parent NodeInfoChanged.
+   *
+   * If you change this, change also the similar method in Link.
+   */
+  virtual void NodeInfoChanged(Document* aOldDoc) {
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+    AssertInvariantsOnNodeInfoChange();
+#endif
+  }
 
   inline bool IsInNamespace(int32_t aNamespace) const {
     return mNodeInfo->NamespaceID() == aNamespace;
