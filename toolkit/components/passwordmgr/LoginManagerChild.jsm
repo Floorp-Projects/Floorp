@@ -268,8 +268,9 @@ const observer = {
 
       case "keydown": {
         if (
-          aEvent.keyCode == aEvent.DOM_VK_TAB ||
-          aEvent.keyCode == aEvent.DOM_VK_RETURN
+          aEvent.target.value &&
+          (aEvent.keyCode == aEvent.DOM_VK_TAB ||
+            aEvent.keyCode == aEvent.DOM_VK_RETURN)
         ) {
           LoginManagerChild.forWindow(window).onUsernameAutocompleted(
             aEvent.target
