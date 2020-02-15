@@ -641,9 +641,7 @@ void GLContextGLX::GetWSIInfo(nsCString* const out) const {
 }
 
 bool GLContextGLX::OverrideDrawable(GLXDrawable drawable) {
-  if (Screen()) Screen()->AssureBlitted();
-  Bool result = mGLX->fMakeCurrent(mDisplay, drawable, mContext);
-  return result;
+  return mGLX->fMakeCurrent(mDisplay, drawable, mContext);
 }
 
 bool GLContextGLX::RestoreDrawable() {

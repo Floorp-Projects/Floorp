@@ -416,7 +416,7 @@ void CanvasClientSharedSurface::UpdateRenderer(gfx::IntSize aSize,
         mShSurfClient->GetAllocator() !=
             GetForwarder()->GetTextureForwarder()) {
       mShSurfClient =
-          CloneSurface(mShSurfClient->Surf(), gl->Screen()->Factory());
+          CloneSurface(mShSurfClient->Surf(), gl->Screen()->Factory().get());
     }
   }
 
