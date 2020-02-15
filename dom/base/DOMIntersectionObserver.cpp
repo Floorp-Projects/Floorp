@@ -162,7 +162,7 @@ void DOMIntersectionObserver::Observe(Element& aTarget) {
   Connect();
   if (mDocument) {
     if (nsPresContext* pc = mDocument->GetPresContext()) {
-      pc->RefreshDriver()->EnsureIntersectionObservationsUpdateHappens();
+      pc->RefreshDriver()->IntersectionObservationAdded();
     }
   }
 }
