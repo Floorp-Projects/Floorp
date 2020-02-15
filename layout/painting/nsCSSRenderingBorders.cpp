@@ -3707,7 +3707,7 @@ ImgDrawResult nsCSSBorderImageRenderer::CreateWebRenderCommands(
       renderer.BuildWebRenderParameters(1.0, extendMode, stops, lineStart,
                                         lineEnd, gradientRadius);
 
-      if (gradient.IsLinear()) {
+      if (gradient.kind.IsLinear()) {
         LayoutDevicePoint startPoint =
             LayoutDevicePoint(dest.origin.x, dest.origin.y) + lineStart;
         LayoutDevicePoint endPoint =
