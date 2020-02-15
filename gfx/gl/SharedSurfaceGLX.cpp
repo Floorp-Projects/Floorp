@@ -49,7 +49,6 @@ void SharedSurface_GLXDrawable::ProducerReleaseImpl() {
 }
 
 void SharedSurface_GLXDrawable::LockProdImpl() {
-  mGL->Screen()->SetReadBuffer(LOCAL_GL_FRONT);
   GLContextGLX::Cast(mGL)->OverrideDrawable(mXlibSurface->GetGLXPixmap());
 }
 

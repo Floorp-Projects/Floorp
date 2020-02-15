@@ -75,11 +75,9 @@ class ReadBuffer {
   const gfx::IntSize& Size() const;
 
   SharedSurface* SharedSurf() const { return mSurf; }
-
-  void SetReadBuffer(GLenum mode) const;
 };
 
-class GLScreenBuffer {
+class GLScreenBuffer final {
  public:
   // Infallible.
   static UniquePtr<GLScreenBuffer> Create(GLContext* gl,
@@ -96,23 +94,18 @@ class GLScreenBuffer {
       layers::LayersIPCChannel* ipcChannel, layers::LayersBackend backend,
       bool useANGLE, const layers::TextureFlags& flags);
 
- protected:
+ private:
   GLContext* const mGL;  // Owns us.
  public:
   const SurfaceCaps mCaps;
 
- protected:
+ private:
   UniquePtr<SurfaceFactory> mFactory;
 
   RefPtr<layers::SharedSurfaceTextureClient> mBack;
   RefPtr<layers::SharedSurfaceTextureClient> mFront;
 
   UniquePtr<ReadBuffer> mRead;
-
-  bool mNeedsBlit;
-
-  GLenum mUserReadBufferMode;
-  GLenum mUserDrawBufferMode;
 
   // Below are the parts that help us pretend to be framebuffer 0:
   GLuint mUserDrawFB;
@@ -131,25 +124,19 @@ class GLScreenBuffer {
  public:
   virtual ~GLScreenBuffer();
 
-  SurfaceFactory* Factory() const { return mFactory.get(); }
-
-  const RefPtr<layers::SharedSurfaceTextureClient>& Front() const {
-    return mFront;
-  }
+  const auto& Factory() const { return mFactory; }
+  const auto& Front() const { return mFront; }
 
   SharedSurface* SharedSurf() const {
     MOZ_ASSERT(mRead);
     return mRead->SharedSurf();
   }
 
-  bool ShouldPreserveBuffer() const { return mCaps.preserve; }
-
+ private:
   GLuint DrawFB() const { return ReadFB(); }
-
   GLuint ReadFB() const { return mRead->mFB; }
 
-  uint32_t DepthBits() const;
-
+ public:
   void DeletingFB(GLuint fb);
 
   const gfx::IntSize& Size() const {
@@ -159,22 +146,9 @@ class GLScreenBuffer {
 
   bool IsReadBufferReady() const { return mRead.get() != nullptr; }
 
-  void BindAsFramebuffer(GLContext* const gl, GLenum target) const;
-
-  void RequireBlit();
-  void AssureBlitted();
-  void AfterDrawCall();
-  void BeforeReadCall();
-
   bool CopyTexImage2D(GLenum target, GLint level, GLenum internalformat,
                       GLint x, GLint y, GLsizei width, GLsizei height,
                       GLint border);
-
-  void SetReadBuffer(GLenum userMode);
-  void SetDrawBuffer(GLenum userMode);
-
-  GLenum GetReadBufferMode() const { return mUserReadBufferMode; }
-  GLenum GetDrawBufferMode() const { return mUserDrawBufferMode; }
 
   /**
    * Attempts to read pixels from the current bound framebuffer, if
@@ -189,16 +163,16 @@ class GLScreenBuffer {
   // Morph changes the factory used to create surfaces.
   void Morph(UniquePtr<SurfaceFactory> newFactory);
 
- protected:
+ private:
   // Returns false on error or inability to resize.
   bool Swap(const gfx::IntSize& size);
 
  public:
-  bool PublishFrame(const gfx::IntSize& size);
+  bool PublishFrame(const gfx::IntSize& size) { return Swap(size); }
 
   bool Resize(const gfx::IntSize& size);
 
- protected:
+ private:
   bool Attach(SharedSurface* surf, const gfx::IntSize& size);
 
   UniquePtr<ReadBuffer> CreateRead(SharedSurface* surf);
@@ -218,12 +192,7 @@ class GLScreenBuffer {
 
   // Here `fb` is the actual framebuffer you want bound. Binding 0 will
   // bind the (generally useless) default framebuffer.
-  void BindFB_Internal(GLuint fb);
-  void BindDrawFB_Internal(GLuint fb);
   void BindReadFB_Internal(GLuint fb);
-
-  bool IsDrawFramebufferDefault() const;
-  bool IsReadFramebufferDefault() const;
 };
 
 }  // namespace gl
