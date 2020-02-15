@@ -290,6 +290,12 @@
         "ProviderURL": {
           "type": "URLorEmpty"
         },
+        "ExcludedDomains": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
         "Locked": {
           "type": "boolean"
         }
