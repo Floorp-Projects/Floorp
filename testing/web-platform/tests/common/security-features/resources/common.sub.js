@@ -13,14 +13,8 @@
 // from what kind of possibly nested source contexts.
 // The objects are represented as JSON objects (not JavaScript/Python classes
 // in a strict sense) to be passed between JavaScript/Python code.
-
-// Note: So far this document covers:
-// - resources/common.sub.js : client-side test infra code
-// - scope/ - server-side scripts that serves nested source contexts
-// but doesn't cover:
-// - tools/ - generator scripts that generates top-level HTML documents.
-// There are some policies only handled by generators (e.g. mixed-content
-// opt-ins) and not yet covered by the docs here.
+//
+// See also common/security-features/Types.md for high-level description.
 
 /**
   @typedef PolicyDelivery
@@ -92,33 +86,6 @@
 /**
   @typedef SourceContext
   @type {object}
-  Requests can be possibly sent from various kinds of source contexts, i.e.
-  fetch client's environment settings objects:
-  top-level windows, iframes, or workers.
-  A SourceContext object specifies one environment settings object, and
-  an Array<SourceContext> specifies a possibly nested context,
-  from the outer-most to inner-most environment settings objects.
-
-  For example:
-    [{sourceContextType: "srcdoc"}, {sourceContextType: "worker-classic"}]
-  means that a subresource request is to be sent from
-  a classic dedicated worker created from <iframe srcdoc>
-  inside the top-level HTML document.
-  Note: the top-level document is not included in the array and
-  is assumed implicitly.
-
-  SourceContext (or Array<SourceContext>) is set based on
-  the fetch client's settings object that is used for the subresource request,
-  NOT on module map settings object, and
-  NOT on the inner-most settings object that appears in the test.
-  For example, Array<SourceContext> is `[]` (indicating the top Window)
-  for `worker.js`
-  - When it is the root worker script: `new Worker('worker.js')`, or
-  - When it is imported from the root worker script:
-    `new Worker('top.js', {type: 'module'})`
-    where `top.js` has `import 'worker.js'`.
-  because the request for `worker.js` uses the Window as its fetch client's
-  settings object, while a WorkerGlobalScope is created though.
 
   @property {string} sourceContextType
     Kind of the source context to be used.
