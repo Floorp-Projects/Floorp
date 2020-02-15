@@ -50,7 +50,8 @@ void FopenUsageChecker::registerMatchers(MatchFinder *AstMatcher) {
                             hasIntegerParam(1), hasIntegerParam(2),
                             hasParamOfType(3, "LPSECURITY_ATTRIBUTES"),
                             hasIntegerParam(4), hasIntegerParam(5),
-                            hasParamOfType(6, "HANDLE"))))))))
+                            hasParamOfType(6, "HANDLE")))))),
+              unless(isInWhitelistForFopenUsage())))
           .bind("funcCall"),
       this);
 }
