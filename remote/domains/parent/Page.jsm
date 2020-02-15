@@ -31,7 +31,6 @@ const { UnsupportedError } = ChromeUtils.import(
 const { streamRegistry } = ChromeUtils.import(
   "chrome://remote/content/domains/parent/IO.jsm"
 );
-const { PollPromise } = ChromeUtils.import("chrome://remote/content/Sync.jsm");
 const { TabManager } = ChromeUtils.import(
   "chrome://remote/content/TabManager.jsm"
 );
@@ -49,8 +48,6 @@ const PDF_TRANSFER_MODES = {
   base64: "ReturnAsBase64",
   stream: "ReturnAsStream",
 };
-
-const TIMEOUT_SET_HISTORY_INDEX = 1000;
 
 class Page extends Domain {
   constructor(session) {
@@ -360,19 +357,6 @@ class Page extends Domain {
 
     const { window } = this.session.target;
     window.gBrowser.gotoIndex(index);
-
-    // On some platforms the requested index isn't set immediately.
-    await PollPromise(
-      async (resolve, reject) => {
-        const currentIndex = await this._getCurrentHistoryIndex();
-        if (currentIndex == index) {
-          resolve();
-        } else {
-          reject();
-        }
-      },
-      { timeout: TIMEOUT_SET_HISTORY_INDEX }
-    );
   }
 
   /**
@@ -584,16 +568,6 @@ class Page extends Domain {
    *     Enabled state of file chooser interception.
    */
   setInterceptFileChooserDialog(options = {}) {}
-
-  _getCurrentHistoryIndex() {
-    const { window } = this.session.target;
-
-    return new Promise(resolve => {
-      SessionStore.getSessionHistory(window.gBrowser.selectedTab, history => {
-        resolve(history.index);
-      });
-    });
-  }
 
   _getIndexForHistoryEntryId(id) {
     const { window } = this.session.target;

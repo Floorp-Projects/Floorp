@@ -17,8 +17,6 @@ const {
   setTimeout,
 } = ChromeUtils.import("resource://gre/modules/Timer.jsm");
 
-const TIMEOUT_SET_HISTORY_INDEX = 1000;
-
 function assertHistoryEntries(history, expectedData, expectedIndex) {
   const { currentIndex, entries } = history;
 
@@ -99,16 +97,27 @@ function getCurrentHistoryIndex() {
 async function gotoHistoryIndex(index) {
   gBrowser.gotoIndex(index);
 
-  // On some platforms the requested index isn't set immediately.
-  await PollPromise(
-    async (resolve, reject) => {
-      const currentIndex = await getCurrentHistoryIndex();
-      if (currentIndex == index) {
-        resolve();
-      } else {
-        reject();
+  return new Promise((resolve, reject) => {
+    let intervalId, timeoutId;
+
+    const onTimer = async type => {
+      switch (type) {
+        case "check":
+          const currentIndex = await getCurrentHistoryIndex();
+          if (currentIndex == index) {
+            clearInterval(intervalId);
+            clearTimeout(timeoutId);
+            resolve();
+          }
+          break;
+        case "timeout":
+          clearInterval(intervalId);
+          reject(new Error(`History navigation to index ${index} failed`));
+          break;
       }
-    },
-    { timeout: TIMEOUT_SET_HISTORY_INDEX }
-  );
+    };
+
+    timeoutId = setTimeout(onTimer, 1000, "timeout");
+    intervalId = setInterval(onTimer, 10, "check");
+  });
 }
