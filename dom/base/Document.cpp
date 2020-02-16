@@ -10483,6 +10483,17 @@ bool Document::CanSavePresentation(nsIRequest* aNewRequest,
     }
   }
 
+  // BFCache is currently not compatible with remote subframes (bug 1609324)
+  if (RefPtr<BrowsingContext> browsingContext = GetBrowsingContext()) {
+    for (auto& child : browsingContext->GetChildren()) {
+      if (!child->IsInProcess()) {
+        aBFCacheCombo |= BFCacheStatus::CONTAINS_REMOTE_SUBFRAMES;
+        ret = false;
+        break;
+      }
+    }
+  }
+
   if (win) {
     auto* globalWindow = nsGlobalWindowInner::Cast(win);
 #ifdef MOZ_WEBSPEECH

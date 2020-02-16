@@ -246,6 +246,7 @@ enum BFCacheStatus {
   CONTAINS_MSE_CONTENT = 1 << 8,         // Status 8
   HAS_ACTIVE_SPEECH_SYNTHESIS = 1 << 9,  // Status 9
   HAS_USED_VR = 1 << 10,                 // Status 10
+  CONTAINS_REMOTE_SUBFRAMES = 1 << 11,   // Status 11
 };
 
 }  // namespace dom
