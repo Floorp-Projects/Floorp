@@ -634,7 +634,7 @@ webgl::LinkedProgramInfo::GetDrawFetchLimits() const {
 
   bool hasActiveAttrib = false;
   bool hasActiveDivisor0 = false;
-  webgl::CachedDrawFetchLimits fetchLimits = {UINT64_MAX, UINT64_MAX};
+  webgl::CachedDrawFetchLimits fetchLimits;
   fetchLimits.usedBuffers.reserve(activeAttribs.size());
 
   for (const auto& progAttrib : activeAttribs) {
