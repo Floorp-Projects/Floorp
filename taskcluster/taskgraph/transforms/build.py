@@ -137,6 +137,12 @@ def use_profile_data(config, jobs):
         job.setdefault('dependencies', {})['generate-profile'] = dependencies
         job.setdefault('fetches', {})['generate-profile'] = ['profdata.tar.xz']
         job['worker']['env'].update({"TASKCLUSTER_PGO_PROFILE_USE": "1"})
+
+        _, worker_os = worker_type_implementation(config.graph_config, job['worker-type'])
+        if worker_os == "linux":
+            # LTO linkage needs more open files than the default from run-task.
+            job['worker']['env'].update({"MOZ_LIMIT_NOFILE": "8192"})
+
         yield job
 
 
