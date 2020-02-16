@@ -48,9 +48,13 @@ struct FragOutputInfo final {
 };
 
 struct CachedDrawFetchLimits final {
-  uint64_t maxVerts = 0;
-  uint64_t maxInstances = 0;
+  uint64_t maxVerts = UINT64_MAX;
+  uint64_t maxInstances = UINT64_MAX;
   std::vector<BufferAndIndex> usedBuffers;
+
+  CachedDrawFetchLimits() = default;
+  explicit CachedDrawFetchLimits(const CachedDrawFetchLimits&) = delete;
+  explicit CachedDrawFetchLimits(CachedDrawFetchLimits&&) = default;
 };
 
 // -
