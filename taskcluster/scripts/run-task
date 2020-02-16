@@ -681,6 +681,23 @@ def main(args):
     print_line(b'setup', b'run-task started in %s\n' % os.getcwd().encode('utf-8'))
     running_as_root = IS_POSIX and os.getuid() == 0
 
+    # Set a reasonable limit to the number of open files.
+    # Running under docker inherits the system defaults, which are not subject
+    # to the "standard" limits set by pam_limits.so, and while they work well
+    # for servers that may receive a lot of connections, they cause performance
+    # problems for things that close file descriptors before forking (for good
+    # reasons), like python's `subprocess.Popen(..., close_fds=True)` (and while
+    # the default was close_fds=False in python2, that changed in python3).
+    # In some cases, Firefox does the same thing when spawning subprocesses.
+    # Processes spawned by this one will inherit the limit set here.
+    try:
+        import resource
+        limit = int(os.environ.get('MOZ_LIMIT_NOFILE', '1024'))
+        resource.setrlimit(resource.RLIMIT_NOFILE, (limit, limit))
+    except ImportError:
+        # The resource module is UNIX only.
+        pass
+
     # Arguments up to '--' are ours. After are for the main task
     # to be executed.
     try:
