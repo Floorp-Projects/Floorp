@@ -54,7 +54,9 @@ struct CachedDrawFetchLimits final {
 
   CachedDrawFetchLimits() = default;
   explicit CachedDrawFetchLimits(const CachedDrawFetchLimits&) = delete;
-  explicit CachedDrawFetchLimits(CachedDrawFetchLimits&&) = default;
+  CachedDrawFetchLimits(CachedDrawFetchLimits&&) = default;
+
+  CachedDrawFetchLimits& operator=(CachedDrawFetchLimits&&) = default;
 };
 
 // -
@@ -118,9 +120,13 @@ struct LinkedProgramInfo final : public RefCounted<LinkedProgramInfo>,
 
   //////
 
+ private:
+  mutable CachedDrawFetchLimits mScratchFetchLimits;
+
   mutable CacheWeakMap<const WebGLVertexArray*, CachedDrawFetchLimits>
       mDrawFetchCache;
 
+ public:
   const CachedDrawFetchLimits* GetDrawFetchLimits() const;
 
   //////

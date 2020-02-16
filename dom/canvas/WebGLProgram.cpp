@@ -604,8 +604,12 @@ webgl::LinkedProgramInfo::GetDrawFetchLimits() const {
   const auto found = mDrawFetchCache.Find(vao);
   if (found) return found;
 
-  std::vector<const CacheInvalidator*> cacheDeps;
   const auto& activeAttribs = active.activeAttribs;
+
+  webgl::CachedDrawFetchLimits fetchLimits;
+  fetchLimits.usedBuffers.reserve(activeAttribs.size());
+
+  std::vector<const CacheInvalidator*> cacheDeps;
   cacheDeps.reserve(2 + activeAttribs.size());
   cacheDeps.push_back(vao.get());
   cacheDeps.push_back(&webgl->mGenericVertexAttribTypeInvalidator);
@@ -634,8 +638,6 @@ webgl::LinkedProgramInfo::GetDrawFetchLimits() const {
 
   bool hasActiveAttrib = false;
   bool hasActiveDivisor0 = false;
-  webgl::CachedDrawFetchLimits fetchLimits;
-  fetchLimits.usedBuffers.reserve(activeAttribs.size());
 
   for (const auto& progAttrib : activeAttribs) {
     const auto& loc = progAttrib.location;
@@ -693,7 +695,14 @@ webgl::LinkedProgramInfo::GetDrawFetchLimits() const {
     return nullptr;
   }
 
-  // --
+  // -
+
+  if (!vao->ShouldCache()) {
+    mScratchFetchLimits = std::move(fetchLimits);
+    return &mScratchFetchLimits;
+  }
+
+  // -
 
   auto entry = mDrawFetchCache.MakeEntry(vao.get(), std::move(fetchLimits));
   entry->ResetInvalidators(std::move(cacheDeps));

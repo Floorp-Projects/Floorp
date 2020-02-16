@@ -34,9 +34,25 @@ class WebGLVertexArray : public WebGLContextBoundObject,
   virtual void BindVertexArray() = 0;
   bool mHasBeenBound = false;
 
+  bool ShouldCache() const {
+    if (!mPreventCacheCooldown) return true;
+    mPreventCacheCooldown -= 1;
+    return false;
+  }
+
+  void InvalidateCaches() const {
+    // The cost of creating and destroying caches is about 10x the cost of doing
+    // the validation. We do want VAO caching to be the fast-path, but
+    // cache-thrashing is too slow to do it naively.
+    mPreventCacheCooldown = 10;
+
+    CacheInvalidator::InvalidateCaches();
+  }
+
  protected:
   std::vector<WebGLVertexAttribData> mAttribs;
   RefPtr<WebGLBuffer> mElementArrayBuffer;
+  mutable uint32_t mPreventCacheCooldown = 0;
 
   friend class ScopedDrawHelper;
   friend class WebGLContext;
