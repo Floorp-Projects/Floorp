@@ -922,8 +922,6 @@ with modules["CONTENT"]:
     errors["NS_ERROR_CONTENT_BLOCKED_SHOW_ALT"] = FAILURE(7)
     # Success variations of content policy blocking
     errors["NS_PROPTABLE_PROP_NOT_THERE"] = FAILURE(10)
-    # Error code for XBL
-    errors["NS_ERROR_XBL_BLOCKED"] = FAILURE(15)
     # Error code for when the content process crashed
     errors["NS_ERROR_CONTENT_CRASHED"] = FAILURE(16)
     # Error code for when a subframe process crashed
