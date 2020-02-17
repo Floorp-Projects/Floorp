@@ -2,6 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+// See https://github.com/web-platform-tests/wpt/issues/12781 for information on
+// the purpose of audit.js, and why testharness.js does not suffice.
 
 /**
  * @fileOverview  WebAudio layout test utility library. Built around W3C's
