@@ -866,6 +866,13 @@ class motionmark_animometer(WebkitBenchmark):
 
 
 @register_test()
+class motionmark_webgl(WebkitBenchmark):
+    # MotionMark benchmark used by many browser vendors (from webkit)
+    tpmanifest = '${talos}/tests/motionmark/webgl.manifest'
+    unit = 'fps'
+
+
+@register_test()
 class ARES6(WebkitBenchmark):
     # ARES-6 benchmark used by many browser vendors (from webkit)
     tpmanifest = '${talos}/tests/ares6/ares6.manifest'
