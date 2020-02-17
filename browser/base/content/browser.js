@@ -5808,6 +5808,7 @@ var CombinedStopReload = {
     this._cancelTransition();
     this.stop.removeEventListener("click", this);
     this.stopReloadContainer.removeEventListener("animationend", this);
+    this.stopReloadContainer.removeEventListener("animationcancel", this);
     this.stopReloadContainer = null;
     this.reload = null;
     this.stop = null;
@@ -5820,6 +5821,7 @@ var CombinedStopReload = {
           this._stopClicked = true;
         }
         break;
+      case "animationcancel":
       case "animationend": {
         if (
           event.target.classList.contains("toolbarbutton-animatable-image") &&
@@ -5856,6 +5858,7 @@ var CombinedStopReload = {
       Services.prefs.getBoolPref("browser.stopReloadAnimation.enabled");
     Services.prefs.addObserver("toolkit.cosmeticAnimations.enabled", this);
     this.stopReloadContainer.addEventListener("animationend", this);
+    this.stopReloadContainer.addEventListener("animationcancel", this);
   },
 
   onTabSwitch() {
