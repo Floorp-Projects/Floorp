@@ -801,14 +801,3 @@ function reload(target, waitForTargetEvent = "navigate") {
   executeSoon(() => target.reload());
   return once(target, waitForTargetEvent);
 }
-
-/**
- * Navigate to a new URL within the panel target.
- * @param  {Object} target             Panel target.
- * @param  {Srting} url                URL to navigate to.
- * @param  {String} waitForTargetEvent Event to wait for after reload.
- */
-function navigate(target, url, waitForTargetEvent = "navigate") {
-  executeSoon(() => target.navigateTo({ url }));
-  return once(target, waitForTargetEvent);
-}

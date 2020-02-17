@@ -75,7 +75,7 @@ const tests = [
   },
   {
     desc: "Navigate to a new page.",
-    setup: async ({ panel }) => navigate(panel.target, buildURL(TEST_URI_2)),
+    setup: () => navigateTo(buildURL(TEST_URI_2)),
     expected: {
       tree: [
         {
