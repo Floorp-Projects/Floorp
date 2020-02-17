@@ -4778,14 +4778,25 @@ impl PicturePrimitive {
             };
 
             let local_points = [
-                transform.transform_point3d(poly.points[0].cast()).unwrap(),
-                transform.transform_point3d(poly.points[1].cast()).unwrap(),
-                transform.transform_point3d(poly.points[2].cast()).unwrap(),
-                transform.transform_point3d(poly.points[3].cast()).unwrap(),
+                transform.transform_point3d(poly.points[0].cast()),
+                transform.transform_point3d(poly.points[1].cast()),
+                transform.transform_point3d(poly.points[2].cast()),
+                transform.transform_point3d(poly.points[3].cast()),
             ];
+
+            // If any of the points are un-transformable, just drop this
+            // plane from drawing.
+            if local_points.iter().any(|p| p.is_none()) {
+                continue;
+            }
+
+            let p0 = local_points[0].unwrap();
+            let p1 = local_points[1].unwrap();
+            let p2 = local_points[2].unwrap();
+            let p3 = local_points[3].unwrap();
             let gpu_blocks = [
-                [local_points[0].x, local_points[0].y, local_points[1].x, local_points[1].y].into(),
-                [local_points[2].x, local_points[2].y, local_points[3].x, local_points[3].y].into(),
+                [p0.x, p0.y, p1.x, p1.y].into(),
+                [p2.x, p2.y, p3.x, p3.y].into(),
             ];
             let gpu_handle = gpu_cache.push_per_frame_blocks(&gpu_blocks);
             let gpu_address = gpu_cache.get_address(&gpu_handle);
