@@ -13,6 +13,7 @@
 | [FennecProfile](-fennec-profile/index.md) | `data class FennecProfile`<br>A profile of "Fennec" (Firefox for Android). |
 | [FxaMigrationResult](-fxa-migration-result/index.md) | `sealed class FxaMigrationResult`<br>Result of an FxA migration. |
 | [Migration](-migration/index.md) | `sealed class Migration`<br>Supported Fennec migrations and their current versions. |
+| [MigrationFacts](-migration-facts/index.md) | `class MigrationFacts`<br>Facts emitted for telemetry related to migration. |
 | [MigrationIntentProcessor](-migration-intent-processor/index.md) | `class MigrationIntentProcessor : `[`IntentProcessor`](../mozilla.components.feature.intent.processing/-intent-processor/index.md)<br>An [IntentProcessor](../mozilla.components.feature.intent.processing/-intent-processor/index.md) that checks if we're in a migration state. |
 | [MigrationRun](-migration-run/index.md) | `data class MigrationRun`<br>Results of running a single versioned migration. |
 | [MigrationStateListener](-migration-state-listener/index.md) | `interface MigrationStateListener`<br>Interface to be implemented by classes that want to observe the migration state changes. |

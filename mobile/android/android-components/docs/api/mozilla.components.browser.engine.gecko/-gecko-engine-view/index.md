@@ -2,7 +2,7 @@
 
 # GeckoEngineView
 
-`class GeckoEngineView : `[`EngineView`](../../mozilla.components.concept.engine/-engine-view/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-gecko-beta/src/main/java/mozilla/components/browser/engine/gecko/GeckoEngineView.kt#L24)
+`class GeckoEngineView : `[`EngineView`](../../mozilla.components.concept.engine/-engine-view/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-gecko-beta/src/main/java/mozilla/components/browser/engine/gecko/GeckoEngineView.kt#L26)
 
 Gecko-based EngineView implementation.
 
@@ -11,6 +11,12 @@ Gecko-based EngineView implementation.
 | Name | Summary |
 |---|---|
 | [&lt;init&gt;](-init-.md) | `GeckoEngineView(context: <ERROR CLASS>, attrs: <ERROR CLASS>? = null, defStyleAttr: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)` = 0)`<br>Gecko-based EngineView implementation. |
+
+### Properties
+
+| Name | Summary |
+|---|---|
+| [selectionActionDelegate](selection-action-delegate.md) | `var selectionActionDelegate: `[`SelectionActionDelegate`](../../mozilla.components.concept.engine.selection/-selection-action-delegate/index.md)`?`<br>A delegate that will handle interactions with text selection context menus. |
 
 ### Functions
 

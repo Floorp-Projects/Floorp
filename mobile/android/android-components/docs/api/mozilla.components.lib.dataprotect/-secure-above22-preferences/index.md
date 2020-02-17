@@ -2,7 +2,7 @@
 
 # SecureAbove22Preferences
 
-`class SecureAbove22Preferences : KeyValuePreferences` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/dataprotect/src/main/java/mozilla/components/lib/dataprotect/SecureAbove22Preferences.kt#L63)
+`class SecureAbove22Preferences : KeyValuePreferences` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/dataprotect/src/main/java/mozilla/components/lib/dataprotect/SecureAbove22Preferences.kt#L66)
 
 A wrapper around [SharedPreferences](#) which encrypts contents on supported API versions (23+).
 Otherwise, this simply delegates to [SharedPreferences](#).
@@ -16,11 +16,15 @@ in which case previously stored values will be lost as well. Applications are en
 
 `name` - A name for this storage, used for isolating different instances of [SecureAbove22Preferences](./index.md).
 
+`forceInsecure` - A flag indicating whether to force plaintext storage. If set to `true`,
+[InsecurePreferencesImpl21](#) will be used as a storage layer, otherwise a storage implementation
+will be decided based on Android API version, with a preference given to secure storage
+
 ### Constructors
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `SecureAbove22Preferences(context: <ERROR CLASS>, name: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`)`<br>A wrapper around [SharedPreferences](#) which encrypts contents on supported API versions (23+). Otherwise, this simply delegates to [SharedPreferences](#). |
+| [&lt;init&gt;](-init-.md) | `SecureAbove22Preferences(context: <ERROR CLASS>, name: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, forceInsecure: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)` = false)`<br>A wrapper around [SharedPreferences](#) which encrypts contents on supported API versions (23+). Otherwise, this simply delegates to [SharedPreferences](#). |
 
 ### Functions
 
