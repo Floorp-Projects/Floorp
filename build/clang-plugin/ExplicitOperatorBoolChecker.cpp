@@ -21,8 +21,7 @@ void ExplicitOperatorBoolChecker::check(
       Result.Nodes.getNodeAs<CXXConversionDecl>("node");
   const CXXRecordDecl *Clazz = Method->getParent();
 
-  if (!Method->isExplicit() &&
-      !hasCustomAttribute<moz_implicit>(Method) &&
+  if (!Method->isExplicit() && !hasCustomAttribute<moz_implicit>(Method) &&
       !ASTIsInSystemHeader(Method->getASTContext(), *Method) &&
       isInterestingDeclForImplicitConversion(Method)) {
     diag(Method->getBeginLoc(), "bad implicit conversion operator for %0",
