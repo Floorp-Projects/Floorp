@@ -32,7 +32,7 @@ add_task(async function() {
   info(
     "Navigate to another page for the same domain with another service worker"
   );
-  await navigate(toolbox, OTHER_SCOPE_URL);
+  await navigateTo(OTHER_SCOPE_URL);
 
   info("Wait until the service worker appears in the application panel");
   await waitUntil(() => getWorkerContainers(doc).length === 2);

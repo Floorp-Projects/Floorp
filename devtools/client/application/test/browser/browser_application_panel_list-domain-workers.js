@@ -36,7 +36,7 @@ add_task(async function() {
     "Navigate to another page for a different domain with no service worker"
   );
 
-  await navigate(toolbox, EMPTY_URL);
+  await navigateTo(EMPTY_URL);
   info("Wait until the service worker list is updated");
   await waitUntil(() => doc.querySelector(".worker-list-empty") !== null);
   ok(
@@ -47,7 +47,7 @@ add_task(async function() {
   info(
     "Navigate to another page for a different domain with another service worker"
   );
-  await navigate(toolbox, OTHER_URL);
+  await navigateTo(OTHER_URL);
 
   info("Wait until the service worker appears in the application panel");
   await waitUntil(() => getWorkerContainers(doc).length === 1);
