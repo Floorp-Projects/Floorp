@@ -48,29 +48,6 @@ registerCleanupFunction(function() {
   );
 });
 
-var navigateTo = async function(inspector, url) {
-  const markuploaded = inspector.once("markuploaded");
-  const onNewRoot = inspector.once("new-root");
-  const onUpdated = inspector.once("inspector-updated");
-  const onReloaded = inspector.once("reloaded");
-
-  info("Navigating to: " + url);
-  const target = inspector.toolbox.target;
-  await target.navigateTo({ url });
-
-  info("Waiting for markup view to load after navigation.");
-  await markuploaded;
-
-  info("Waiting for new root.");
-  await onNewRoot;
-
-  info("Waiting for inspector to update after new-root event.");
-  await onUpdated;
-
-  info("Waiting for inspector updates after page reload");
-  await onReloaded;
-};
-
 /**
  * Start the element picker and focus the content window.
  * @param {Toolbox} toolbox

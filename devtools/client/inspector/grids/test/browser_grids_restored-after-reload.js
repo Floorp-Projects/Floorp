@@ -101,7 +101,7 @@ add_task(async function() {
     store,
     state => state.grids.length == 1 && !state.grids[0].highlighted
   );
-  await navigateTo(inspector, otherUri);
+  await navigateTo(otherUri);
   ({ restored } = await onStateRestored);
   await onGridListRestored;
 

@@ -61,7 +61,7 @@ add_task(async function() {
   const otherUri =
     "data:text/html;charset=utf-8," + encodeURIComponent(OTHER_URI);
   onStateRestored = highlighters.once("flexbox-state-restored");
-  await navigateTo(inspector, otherUri);
+  await navigateTo(otherUri);
   ({ restored } = await onStateRestored);
   ok(!restored, "The highlighter state was not restored");
   ok(!highlighters.flexboxHighlighterShown, "Flexbox highlighter is hidden.");

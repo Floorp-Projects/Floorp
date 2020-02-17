@@ -43,7 +43,7 @@ add_task(async function() {
   );
 
   info("Navigate to a valid url");
-  await navigateTo(inspector, TEST_URL_2);
+  await navigateTo(TEST_URL_2);
 
   is(
     await getDisplayedNodeTextContent("body", inspector),

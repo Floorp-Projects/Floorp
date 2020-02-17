@@ -8,9 +8,9 @@ const URL_1 = "data:text/plain;charset=UTF-8,abcde";
 const URL_2 = "data:text/plain;charset=UTF-8,12345";
 
 add_task(async function() {
-  const { inspector, toolbox } = await openInspectorForURL(URL_1);
+  const { toolbox } = await openInspectorForURL(URL_1);
 
-  await navigateTo(inspector, URL_2);
+  await navigateTo(URL_2);
 
   info("Destroying toolbox");
   try {

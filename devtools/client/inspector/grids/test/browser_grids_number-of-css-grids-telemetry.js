@@ -37,7 +37,6 @@ add_task(async function() {
     state => state.grids.length == 1
   );
   await navigateTo(
-    inspector,
     "data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI2)
   );
   await onGridListUpdate;

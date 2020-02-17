@@ -25,7 +25,7 @@ add_task(async function() {
   await selectNode("#i1", inspector);
 
   info("Navigating to a different page.");
-  await navigateTo(inspector, TEST_URL_2);
+  await navigateTo(TEST_URL_2);
 
   ok(true, "New page loaded");
   await selectNode("#i1", inspector);
@@ -54,7 +54,7 @@ add_task(async function() {
   await selectNode("img", inspector);
 
   info("Navigating to a different page.");
-  await navigateTo(inspector, TEST_URL_4);
+  await navigateTo(TEST_URL_4);
 
   ok(true, "New page loaded");
   await selectNode("#h1", inspector);

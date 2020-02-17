@@ -49,7 +49,7 @@ add_task(async function() {
   await runTest(testActor, inspector, view, false);
 
   info("Reload the page to restore the initial state");
-  await navigateTo(inspector, url);
+  await navigateTo(url);
 
   info("Change toolbox host to WINDOW");
   await toolbox.switchHost("window");

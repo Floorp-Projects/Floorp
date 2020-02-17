@@ -35,6 +35,6 @@ add_task(async function() {
 
   is(highlighters.gridHighlighters.size, 1, "CSS grid highlighter is shown.");
 
-  await navigateTo(inspector, TEST_URI_2);
+  await navigateTo(TEST_URI_2);
   ok(!highlighters.gridHighlighters.size, "CSS grid highlighter is hidden.");
 });
