@@ -251,6 +251,119 @@ var refreshTab = async function(tab = gBrowser.selectedTab) {
 };
 
 /**
+ * Navigate the currently selected tab to a new URL and wait for it to load.
+ * Also wait for the toolbox to attach to the new target, if we navigated
+ * to a new process.
+ *
+ * @param {String} url The url to be loaded in the current tab.
+ * @param {JSON} options Optional dictionary object with the following keys:
+ *        - {Boolean} isErrorPage You may pass `true` is the URL is an error
+ *                    page. Otherwise BrowserTestUtils.browserLoaded will wait
+ *                    for 'load' event, which never fires for error pages.
+ *
+ * @return a promise that resolves when the page has fully loaded.
+ */
+async function navigateTo(uri, { isErrorPage = false } = {}) {
+  const target = await TargetFactory.forTab(gBrowser.selectedTab);
+  const toolbox = gDevTools.getToolbox(target);
+  const currentToolboxTarget = toolbox.target;
+
+  // If we're switching origins, we need to wait for the 'switched-target'
+  // event to make sure everything is ready.
+  // Navigating from/to pages loaded in the parent process, like about:robots,
+  // also spawn new targets.
+  // (If target-switching pref is false, the toolbox will reboot)
+  const onTargetSwitched = toolbox.once("switched-target");
+  // Otherwise, if we don't switch target, it is safe to wait for navigate event.
+  const onNavigate = target.once("navigate");
+
+  // Register panel-specific listeners, which would be useful to wait
+  // for panel-specific events.
+  const onPanelReloaded = waitForPanelReload(
+    toolbox.currentToolId,
+    toolbox.target,
+    toolbox.getCurrentPanel()
+  );
+
+  info(`Load document "${uri}"`);
+  const browser = gBrowser.selectedBrowser;
+  const onBrowserLoaded = BrowserTestUtils.browserLoaded(
+    browser,
+    false,
+    null,
+    isErrorPage
+  );
+  await BrowserTestUtils.loadURI(browser, uri);
+
+  info(`Waiting for page to be loaded…`);
+  await onBrowserLoaded;
+  info(`→ page loaded`);
+
+  if (onPanelReloaded) {
+    info(`Waiting for ${toolbox.currentToolId} to be reloaded…`);
+    await onPanelReloaded();
+    info(`→ panel reloaded`);
+  }
+
+  if (toolbox.target !== currentToolboxTarget) {
+    info(`Waiting for target switch…`);
+    await onTargetSwitched;
+    info(`→ switched-target emitted`);
+  } else {
+    info(`Waiting for target 'navigate' event…`);
+    await onNavigate;
+    info(`→ 'navigate' emitted`);
+  }
+}
+
+/**
+ * Return a function, specific for each panel, in order
+ * to wait for any update which may happen when reloading a page.
+ */
+function waitForPanelReload(currentToolId, target, panel) {
+  if (currentToolId == "inspector") {
+    const inspector = panel;
+    const markuploaded = inspector.once("markuploaded");
+    const onNewRoot = inspector.once("new-root");
+    const onUpdated = inspector.once("inspector-updated");
+    const onReloaded = inspector.once("reloaded");
+
+    return async function() {
+      info("Waiting for markup view to load after navigation.");
+      await markuploaded;
+
+      info("Waiting for new root.");
+      await onNewRoot;
+
+      info("Waiting for inspector to update after new-root event.");
+      await onUpdated;
+
+      info("Waiting for inspector updates after page reload");
+      await onReloaded;
+    };
+  } else if (currentToolId == "netmonitor") {
+    const monitor = panel;
+    const onReloaded = monitor.once("reloaded");
+    return async function() {
+      info("Waiting for netmonitor updates after page reload");
+      await onReloaded;
+    };
+  }
+  return null;
+}
+
+function isFissionEnabled() {
+  return SpecialPowers.useRemoteSubframes;
+}
+
+function isTargetSwitchingEnabled() {
+  return (
+    isFissionEnabled() &&
+    Services.prefs.getBoolPref("devtools.target-switching.enabled", false)
+  );
+}
+
+/**
  * Open the inspector in a tab with given URL.
  * @param {string} url  The URL to open.
  * @param {String} hostType Optional hostType, as defined in Toolbox.HostType
