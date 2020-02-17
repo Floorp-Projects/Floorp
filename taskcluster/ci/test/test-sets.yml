@@ -53,6 +53,7 @@ talos:
     - talos-perf-reftest-singletons
     - talos-tabswitch
     - talos-realworld-webextensions
+    - talos-webgl
     # - talos-h1 Bug 1487031 - Disabled for not finding actionable regressions
     # - talos-h2 Bug 1487031 - Disabled for not finding actionable regressions
 
@@ -75,9 +76,11 @@ talos-profiling:
     - talos-tp5o-profiling
     - talos-tabswitch-profiling
     - talos-realworld-webextensions-profiling
+    - talos-webgl-profiling
 
 talos-ref-hw:
     - talos-g4
+    - talos-webgl
 
 raptor-firefox:
     - raptor-tp6-1-firefox
@@ -527,6 +530,7 @@ windows-talos:
     - talos-xperf
     - talos-tabswitch
     - talos-realworld-webextensions
+    - talos-webgl
     # - talos-h1 Bug 1487031 - Disabled for not finding actionable regressions
 
 # macOS
@@ -583,6 +587,7 @@ macosx64-talos:
     - talos-perf-reftest
     - talos-perf-reftest-singletons
     - talos-realworld-webextensions
+    - talos-webgl
     # - talos-tabswitch # Bug 1453007 times out
     # - talos-h1 # too long to unpack profile- Bug 1442893
 

@@ -19,7 +19,7 @@
             "tests": ["sessionrestore_many_windows"]
         },
         "g1": {
-            "tests": ["tp5o_scroll", "glterrain"],
+            "tests": ["tp5o_scroll"],
             "pagesets_name": "tp5n.zip"
         },
         "damp": {
@@ -34,7 +34,7 @@
             "tests": ["dromaeo_dom"]
         },
         "g4": {
-            "tests": ["glvideo", "displaylist_mutate", "rasterflood_svg", "rasterflood_gradient"]
+            "tests": ["displaylist_mutate", "rasterflood_svg", "rasterflood_gradient"]
         },
         "g5": {
             "tests": ["ts_paint_webext", "tp5o_webext"],
@@ -56,6 +56,9 @@
         "tp5o": {
             "tests": ["tp5o"],
             "pagesets_name": "tp5n.zip"
+        },
+        "webgl": {
+            "tests": ["glterrain", "glvideo", "motionmark_webgl"]
         },
         "xperf": {
             "tests": ["tp5n"],
