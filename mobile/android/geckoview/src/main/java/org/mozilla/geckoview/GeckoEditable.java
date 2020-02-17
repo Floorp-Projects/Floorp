@@ -123,9 +123,9 @@ import android.view.inputmethod.EditorInfo;
     private static final int IME_RANGE_SELECTEDCONVERTEDTEXT = 5;
 
     private static final int IME_RANGE_LINE_NONE = 0;
-    private static final int IME_RANGE_LINE_DOTTED = 1;
-    private static final int IME_RANGE_LINE_DASHED = 2;
-    private static final int IME_RANGE_LINE_SOLID = 3;
+    private static final int IME_RANGE_LINE_SOLID = 1;
+    private static final int IME_RANGE_LINE_DOTTED = 2;
+    private static final int IME_RANGE_LINE_DASHED = 3;
     private static final int IME_RANGE_LINE_DOUBLE = 4;
     private static final int IME_RANGE_LINE_WAVY = 5;
 

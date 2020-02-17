@@ -3301,22 +3301,22 @@ static bool GetColor(const TF_DA_COLOR& aTSFColor, nscolor& aResult) {
 }
 
 static bool GetLineStyle(TF_DA_LINESTYLE aTSFLineStyle,
-                         uint8_t& aTextRangeLineStyle) {
+                         TextRangeStyle::LineStyle& aTextRangeLineStyle) {
   switch (aTSFLineStyle) {
     case TF_LS_NONE:
-      aTextRangeLineStyle = TextRangeStyle::LINESTYLE_NONE;
+      aTextRangeLineStyle = TextRangeStyle::LineStyle::None;
       return true;
     case TF_LS_SOLID:
-      aTextRangeLineStyle = TextRangeStyle::LINESTYLE_SOLID;
+      aTextRangeLineStyle = TextRangeStyle::LineStyle::Solid;
       return true;
     case TF_LS_DOT:
-      aTextRangeLineStyle = TextRangeStyle::LINESTYLE_DOTTED;
+      aTextRangeLineStyle = TextRangeStyle::LineStyle::Dotted;
       return true;
     case TF_LS_DASH:
-      aTextRangeLineStyle = TextRangeStyle::LINESTYLE_DASHED;
+      aTextRangeLineStyle = TextRangeStyle::LineStyle::Dashed;
       return true;
     case TF_LS_SQUIGGLE:
-      aTextRangeLineStyle = TextRangeStyle::LINESTYLE_WAVY;
+      aTextRangeLineStyle = TextRangeStyle::LineStyle::Wavy;
       return true;
     default:
       return false;
