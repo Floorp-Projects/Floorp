@@ -639,7 +639,7 @@ class MockRuntime {
     if (!this.supportedModes_.includes(device.mojom.XRSessionMode.kImmersiveAr)) {
       // Reject outside of AR.
       return Promise.resolve({
-        result : device.mojom.SubscribeToHitTestResult.FAILED,
+        result : device.mojom.SubscribeToHitTestResult.FAILURE_GENERIC,
         subscriptionId : 0
       });
     }
@@ -648,7 +648,7 @@ class MockRuntime {
       if (!this.input_sources_.has(nativeOriginInformation.inputSourceId)) {
         // Reject - unknown input source ID.
         return Promise.resolve({
-          result : device.mojom.SubscribeToHitTestResult.FAILED,
+          result : device.mojom.SubscribeToHitTestResult.FAILURE_GENERIC,
           subscriptionId : 0
         });
       }
@@ -657,14 +657,14 @@ class MockRuntime {
       if (nativeOriginInformation.referenceSpaceCategory == device.mojom.XRReferenceSpaceCategory.UNBOUNDED
        || nativeOriginInformation.referenceSpaceCategory == device.mojom.XRReferenceSpaceCategory.BOUNDED_FLOOR) {
         return Promise.resolve({
-          result : device.mojom.SubscribeToHitTestResult.FAILED,
+          result : device.mojom.SubscribeToHitTestResult.FAILURE_GENERIC,
           subscriptionId : 0
         });
       }
     } else {
       // Planes and anchors are not yet supported by the mock interface.
       return Promise.resolve({
-        result : device.mojom.SubscribeToHitTestResult.FAILED,
+        result : device.mojom.SubscribeToHitTestResult.FAILURE_GENERIC,
         subscriptionId : 0
       });
     }
