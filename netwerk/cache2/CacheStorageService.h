@@ -357,6 +357,13 @@ class CacheStorageService final : public nsICacheStorageService,
   }
 
   nsCOMPtr<nsITimer> mPurgeTimer;
+#ifdef MOZ_TSAN
+  // In OnMemoryConsumptionChange() we check whether the timer exists, but we
+  // cannot grab the lock there (see comment 6 in bug 1614637) and TSan reports
+  // a data race. This data race is harmless, so we use this atomic flag only in
+  // TSan build to suppress it.
+  Atomic<bool, Relaxed> mPurgeTimerActive;
+#endif
 
   class PurgeFromMemoryRunnable : public Runnable {
    public:
