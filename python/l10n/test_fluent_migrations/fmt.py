@@ -145,7 +145,7 @@ def test_migration(cmd, obj_dir, to_test, references):
             mozpath.join(work_dir, 'reference', ref),
             mozpath.join(work_dir, 'en-US', ref),
         )
-    messages = [l.desc for l in client.log('::{} - ::{}'.format(tip, old_tip))]
+    messages = [l.desc.decode('utf-8') for l in client.log(b'::%s - ::%s' % (tip, old_tip))]
     bug = re.search('[0-9]{5,}', migration_name).group()
     # Just check first message for bug number, they're all following the same pattern
     if bug not in messages[0]:
