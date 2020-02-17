@@ -547,7 +547,9 @@
       createMessage([title_record, type_record, size_record,
           action_record, icon_record]),
       // NDEFRecord.data for smart-poster record must not contain more than
-      // one type record, size record or action record.
+      // one uri record, type record, size record or action record.
+      createMessage([uri_record, title_record, type_record, size_record,
+          action_record, icon_record, uri_record]),
       createMessage([uri_record, title_record, type_record, size_record,
           action_record, icon_record, type_record]),
       createMessage([uri_record, title_record, type_record, size_record,
