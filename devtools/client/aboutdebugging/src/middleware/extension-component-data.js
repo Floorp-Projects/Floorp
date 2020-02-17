@@ -15,7 +15,7 @@ const {
 } = require("devtools/client/aboutdebugging/src/modules/extensions-helper");
 
 /**
- * This middleware converts extensions object that get from DebuggerClient.listAddons()
+ * This middleware converts extensions object that get from DevToolsClient.listAddons()
  * to data which is used in DebugTargetItem.
  */
 const extensionComponentDataMiddleware = store => next => action => {

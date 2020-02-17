@@ -40,14 +40,14 @@ add_task(async function() {
   await listener.open();
   equal(DevToolsServer.listeningSockets, 1, "1 listening socket");
 
-  const transport = await DebuggerClient.socketConnect({
+  const transport = await DevToolsClient.socketConnect({
     host: "127.0.0.1",
     port: listener.port,
     encryption: true,
   });
   ok(transport, "Client transport created");
 
-  const client = new DebuggerClient(transport);
+  const client = new DevToolsClient(transport);
   const onUnexpectedClose = () => {
     do_throw("Closed unexpectedly");
   };
@@ -86,7 +86,7 @@ add_task(async function() {
   equal(DevToolsServer.listeningSockets, 1, "1 listening socket");
 
   try {
-    await DebuggerClient.socketConnect({
+    await DevToolsClient.socketConnect({
       host: "127.0.0.1",
       port: listener.port,
       // encryption: false is the default

@@ -41,7 +41,7 @@ async function test_socket_conn() {
 
   info("Starting long and unicode tests at " + new Date().toTimeString());
   const unicodeString = "(╯°□°）╯︵ ┻━┻";
-  const transport = await DebuggerClient.socketConnect({
+  const transport = await DevToolsClient.socketConnect({
     host: "127.0.0.1",
     port: gPort,
   });
@@ -93,7 +93,7 @@ async function test_socket_shutdown() {
 
   info("Connecting to a server socket at " + new Date().toTimeString());
   try {
-    await DebuggerClient.socketConnect({
+    await DevToolsClient.socketConnect({
       host: "127.0.0.1",
       port: gPort,
     });

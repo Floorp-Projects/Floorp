@@ -8,10 +8,10 @@
  * client instance.
  */
 add_task(async function() {
-  const debuggerClient = await createLocalClient();
+  const devToolsClient = await createLocalClient();
 
   info(
-    "Preload a local DebuggerClient as this-firefox in the remoteClientManager"
+    "Preload a local DevToolsClient as this-firefox in the remoteClientManager"
   );
   const {
     remoteClientManager,
@@ -19,7 +19,7 @@ add_task(async function() {
   remoteClientManager.setClient(
     "this-firefox",
     "this-firefox",
-    debuggerClient,
+    devToolsClient,
     {}
   );
   registerCleanupFunction(() => {
@@ -50,18 +50,18 @@ add_task(async function() {
   const onToolboxDestroy = gDevTools.once("toolbox-destroyed");
   await removeTab(tab);
   await onToolboxDestroy;
-  await debuggerClient.close();
+  await devToolsClient.close();
   await removeTab(targetTab);
 });
 
 async function createLocalClient() {
-  const { DebuggerClient } = require("devtools/shared/client/debugger-client");
+  const { DevToolsClient } = require("devtools/shared/client/devtools-client");
   const { DevToolsServer } = require("devtools/server/devtools-server");
   DevToolsServer.init();
   DevToolsServer.registerAllActors();
   DevToolsServer.allowChromeProcess = true;
 
-  const debuggerClient = new DebuggerClient(DevToolsServer.connectPipe());
-  await debuggerClient.connect();
-  return debuggerClient;
+  const devToolsClient = new DevToolsClient(DevToolsServer.connectPipe());
+  await devToolsClient.connect();
+  return devToolsClient;
 }

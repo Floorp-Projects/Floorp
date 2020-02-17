@@ -23,7 +23,7 @@ function run_test() {
 var test_bulk_send_error = async function(transportFactory) {
   const transport = await transportFactory();
 
-  const client = new DebuggerClient(transport);
+  const client = new DevToolsClient(transport);
   return client.connect().then(([app, traits]) => {
     Assert.ok(!traits.bulk);
 

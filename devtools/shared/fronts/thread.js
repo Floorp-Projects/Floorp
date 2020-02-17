@@ -31,7 +31,7 @@ loader.lazyRequireGetter(
  * is a front to the thread actor created in the server side, hiding the
  * protocol details in a traditional JavaScript API.
  *
- * @param client DebuggerClient
+ * @param client DevToolsClient
  * @param actor string
  *        The actor ID for this thread.
  */

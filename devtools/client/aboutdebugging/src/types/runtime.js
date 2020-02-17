@@ -59,7 +59,7 @@ const runtimeDetails = {
   // This might be undefined when connecting to runtimes older than Fx 66
   canDebugServiceWorkers: PropTypes.bool,
 
-  // ClientWrapper built using a DebuggerClient for the runtime
+  // ClientWrapper built using a DevToolsClient for the runtime
   clientWrapper: PropTypes.instanceOf(ClientWrapper).isRequired,
 
   // compatibility report to check if the target runtime is in range of the backward

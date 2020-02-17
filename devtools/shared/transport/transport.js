@@ -26,7 +26,7 @@ loader.lazyGetter(this, "ScriptableInputStream", () => {
 const PACKET_HEADER_MAX = 200;
 
 /**
- * An adapter that handles data transfers between the debugger client and
+ * An adapter that handles data transfers between the devtools client and
  * server. It can work with both nsIPipe and nsIServerSocket transports so
  * long as the properly created input and output streams are specified.
  * (However, for intra-process connections, LocalDebuggerTransport, below,

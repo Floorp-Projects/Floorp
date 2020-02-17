@@ -10,7 +10,7 @@
 
 const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
 const { DevToolsServer } = require("devtools/server/devtools-server");
-const { DebuggerClient } = require("devtools/shared/client/debugger-client");
+const { DevToolsClient } = require("devtools/shared/client/devtools-client");
 const { ObjectFront } = require("devtools/shared/fronts/object");
 const Services = require("Services");
 
@@ -29,7 +29,7 @@ async function connectToDebugger() {
   initDevToolsServer();
 
   const transport = DevToolsServer.connectPipe();
-  const client = new DebuggerClient(transport);
+  const client = new DevToolsClient(transport);
 
   await client.connect();
   return client;

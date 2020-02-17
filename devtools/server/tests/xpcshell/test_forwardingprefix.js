@@ -50,7 +50,7 @@ function newConnection(prefix) {
 /* Create the main connection for these tests. */
 function createMainConnection() {
   ({ conn: gMainConnection, transport: gMainTransport } = newConnection());
-  gClient = new DebuggerClient(gMainTransport);
+  gClient = new DevToolsClient(gMainTransport);
   gClient.connect().then(([type, traits]) => run_next_test());
 }
 

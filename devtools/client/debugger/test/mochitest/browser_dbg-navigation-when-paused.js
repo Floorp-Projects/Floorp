@@ -27,7 +27,7 @@ add_task(async function() {
   // If breakpoints aren't properly ignored after navigation, this could
   // potentially pause at line 9. This helper also ensures that the file
   // source itself has loaded, which may not be the case if navigation cleared
-  // the source and nothing has sent it to the debugger client yet, as was
+  // the source and nothing has sent it to the devtools client yet, as was
   // the case in Bug 1581530.
   assertDebugLine(dbg, 12);
 });

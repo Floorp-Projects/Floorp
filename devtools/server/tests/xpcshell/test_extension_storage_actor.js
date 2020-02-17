@@ -34,7 +34,7 @@ registerCleanupFunction(() => {
 });
 
 /**
- * Starts up DevTools server and connects a new Debugger client.
+ * Starts up DevTools server and connects a new DevTools client.
  *
  * @return {Promise} Resolves with a client object when the debugger has started up.
  */
@@ -42,7 +42,7 @@ async function startDebugger() {
   DevToolsServer.init();
   DevToolsServer.registerAllActors();
   const transport = DevToolsServer.connectPipe();
-  const client = new DebuggerClient(transport);
+  const client = new DevToolsClient(transport);
   await client.connect();
   return client;
 }

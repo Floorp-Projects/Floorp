@@ -259,7 +259,7 @@ async function toolboxTestScript(toolbox, devtoolsTab) {
         "myWebExtensionPopupAddonFunction()"
       );
 
-      info("Wait for all pending requests to settle on the DebuggerClient");
+      info("Wait for all pending requests to settle on the DevToolsClient");
       await toolbox.target.client.waitForRequestsToSettle();
 
       await removeTab(devtoolsTab);

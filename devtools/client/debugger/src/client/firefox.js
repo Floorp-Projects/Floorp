@@ -20,11 +20,11 @@ import { features, prefs } from "../utils/prefs";
 let actions;
 
 export async function onConnect(connection: any, _actions: Object) {
-  const { debuggerClient, targetList } = connection;
+  const { devToolsClient, targetList } = connection;
   actions = _actions;
 
-  setupCommands({ debuggerClient });
-  setupEvents({ actions, debuggerClient });
+  setupCommands({ devToolsClient });
+  setupEvents({ actions, devToolsClient });
   await targetList.watchTargets(
     targetList.ALL_TYPES,
     onTargetAvailable,

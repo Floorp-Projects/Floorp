@@ -46,10 +46,10 @@ function TargetMixin(parentClass) {
         r => (this._resolveOnThreadAttached = r)
       );
 
-      // By default, we close the DebuggerClient of local tabs which
+      // By default, we close the DevToolsClient of local tabs which
       // are instanciated from TargetFactory module.
       // This flag will also be set on local targets opened from about:debugging,
-      // for which a dedicated DebuggerClient is also created.
+      // for which a dedicated DevToolsClient is also created.
       this.shouldCloseClient = this.isLocalTab;
 
       this._client = client;

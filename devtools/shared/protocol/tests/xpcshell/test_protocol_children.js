@@ -385,7 +385,7 @@ add_task(async function() {
   DevToolsServer.init();
 
   const trace = connectPipeTracing();
-  const client = new DebuggerClient(trace);
+  const client = new DevToolsClient(trace);
   const [applicationType] = await client.connect();
   trace.expectReceive({
     from: "<actorid>",

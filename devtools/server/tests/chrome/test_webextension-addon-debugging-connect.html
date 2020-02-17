@@ -30,9 +30,9 @@ add_task(async function test_webextension_addon_debugging_connect() {
   await extension.startup();
   await extension.awaitMessage("background page ready");
 
-  // Connect a DebuggerClient.
+  // Connect a DevToolsClient.
   const transport = DevToolsServer.connectPipe();
-  const client = new DebuggerClient(transport);
+  const client = new DevToolsClient(transport);
   await client.connect();
 
   // List addons and assertions on the expected addon actor.

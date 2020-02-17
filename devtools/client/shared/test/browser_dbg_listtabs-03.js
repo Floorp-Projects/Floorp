@@ -8,7 +8,7 @@
  */
 
 var { DevToolsServer } = require("devtools/server/devtools-server");
-var { DebuggerClient } = require("devtools/shared/client/debugger-client");
+var { DevToolsClient } = require("devtools/shared/client/devtools-client");
 
 const TAB1_URL = EXAMPLE_URL + "doc_empty-tab-01.html";
 
@@ -17,7 +17,7 @@ add_task(async function test() {
   DevToolsServer.registerAllActors();
 
   const transport = DevToolsServer.connectPipe();
-  const client = new DebuggerClient(transport);
+  const client = new DevToolsClient(transport);
   const [type] = await client.connect();
   is(type, "browser", "Root actor should identify itself as a browser.");
   const tab = await addTab(TAB1_URL);

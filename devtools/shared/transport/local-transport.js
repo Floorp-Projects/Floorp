@@ -15,7 +15,7 @@ loader.lazyGetter(this, "Pipe", () => {
 });
 
 /**
- * An adapter that handles data transfers between the debugger client and
+ * An adapter that handles data transfers between the devtools client and
  * server when they both run in the same process. It presents the same API as
  * DebuggerTransport, but instead of transmitting serialized messages across a
  * connection it merely calls the packet dispatcher of the other side.

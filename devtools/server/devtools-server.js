@@ -65,7 +65,7 @@ loader.lazyRequireGetter(this, "EventEmitter", "devtools/shared/event-emitter");
  * It can also create other DevToolsServer, that will live in the same
  * environment as the debugged target (content page, worker...).
  *
- * For instance a regular Toolbox will be linked to DebuggerClient connected to
+ * For instance a regular Toolbox will be linked to DevToolsClient connected to
  * a DevToolsServer running in the same process as the Toolbox (main process).
  * But another DevToolsServer will be created in the same process as the page
  * targeted by the Toolbox.

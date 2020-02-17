@@ -95,7 +95,7 @@ How do you get an initial reference to the front?  That's a bit tricky, but basi
 * Manually
 * Magically
 
-Manually - If you're using a DebuggerClient instance, you can discover the actorID manually and create a Front for it:
+Manually - If you're using a DevToolsClient instance, you can discover the actorID manually and create a Front for it:
 
     let hello = new HelloFront(this.client, { actor: <hello actorID> });
 

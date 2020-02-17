@@ -8,7 +8,7 @@ In order to communicate, a client and a server instance must be created and a pr
 
 ```javascript
 const { DevToolsServer } = require("devtools/server/devtools-server");
-const { DebuggerClient } = require("devtools/shared/client/debugger-client");
+const { DevToolsClient } = require("devtools/shared/client/devtools-client");
 
 function start() {
   // Start the server.
@@ -19,7 +19,7 @@ function start() {
   let transport = DevToolsServer.connectPipe();
 
   // Start the client.
-  client = new DebuggerClient(transport);
+  client = new DevToolsClient(transport);
 
   client.connect((type, traits) => {
     // Now the client is connected to the server.
@@ -32,7 +32,7 @@ If a TCP socket is required, the function should be split in two parts, a server
 
 ```javascript
 const { DevToolsServer } = require("devtools/server/devtools-server");
-const { DebuggerClient } = require("devtools/shared/client/debugger-client");
+const { DevToolsClient } = require("devtools/shared/client/devtools-client");
 
 function startServer() {
   // Start the server.
@@ -44,10 +44,10 @@ function startServer() {
 }
 
 async function startClient() {
-  let transport = await DebuggerClient.socketConnect({ host: "localhost", port: 2929 });
+  let transport = await DevToolsClient.socketConnect({ host: "localhost", port: 2929 });
 
   // Start the client.
-  client = new DebuggerClient(transport);
+  client = new DevToolsClient(transport);
 
   client.connect((type, traits) => {
     // Now the client is connected to the server.
@@ -88,7 +88,7 @@ function attachToTab() {
 }
 ```
 
-The debugger client will send event notifications for a number of events the application may be interested in. These events include state changes in the debugger, like pausing and resuming, stack frames or source scripts being ready for retrieval, etc.
+The devtools client will send event notifications for a number of events the application may be interested in. These events include state changes in the debugger, like pausing and resuming, stack frames or source scripts being ready for retrieval, etc.
 
 ## Handling location changes
 
@@ -139,7 +139,7 @@ Here is the source code for a complete debugger application:
  * Debugger API demo.
  */
 const { DevToolsServer } = require("devtools/server/devtools-server");
-const { DebuggerClient } = require("devtools/shared/client/debugger-client");
+const { DevToolsClient } = require("devtools/shared/client/devtools-client");
 
 let client;
 let threadFront;
@@ -156,7 +156,7 @@ function startDebugger() {
   // let transport = debuggerSocketConnect(host, port);
 
   // Start the client.
-  client = new DebuggerClient(transport);
+  client = new DevToolsClient(transport);
   client.connect((type, traits) => {
     // Now the client is connected to the server.
     debugTab();

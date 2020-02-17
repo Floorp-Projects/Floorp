@@ -25,7 +25,7 @@ function run_test() {
   DevToolsServer.init();
   DevToolsServer.registerAllActors();
 
-  const client = new DebuggerClient(DevToolsServer.connectPipe());
+  const client = new DevToolsClient(DevToolsServer.connectPipe());
   client.connect().then(function() {
     test_requestTypes_request(client);
   });
