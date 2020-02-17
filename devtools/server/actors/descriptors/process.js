@@ -5,7 +5,7 @@
 "use strict";
 
 const Services = require("Services");
-const { DebuggerServer } = require("devtools/server/debugger-server");
+const { DevToolsServer } = require("devtools/server/devtools-server");
 const { Cc, Ci } = require("chrome");
 
 const { ActorClassWithSpec, Actor } = require("devtools/shared/protocol");
@@ -116,7 +116,7 @@ const ProcessDescriptorActor = ActorClassWithSpec(processDescriptorSpec, {
    * Connect the a process actor.
    */
   async getTarget() {
-    if (!DebuggerServer.allowChromeProcess) {
+    if (!DevToolsServer.allowChromeProcess) {
       return {
         error: "forbidden",
         message: "You are not allowed to debug processes.",

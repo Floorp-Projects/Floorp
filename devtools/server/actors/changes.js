@@ -16,7 +16,7 @@ const ChangesActor = protocol.ActorClassWithSpec(changesSpec, {
   /**
    * Create a ChangesActor.
    *
-   * @param {DebuggerServerConnection} conn
+   * @param {DevToolsServerConnection} conn
    *    The server connection.
    * @param {TargetActor} targetActor
    *    The top-level Actor for this tab.

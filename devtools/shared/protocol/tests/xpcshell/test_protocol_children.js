@@ -379,10 +379,10 @@ function expectRootChildren(size) {
 }
 
 add_task(async function() {
-  DebuggerServer.createRootActor = conn => {
+  DevToolsServer.createRootActor = conn => {
     return RootActor(conn);
   };
-  DebuggerServer.init();
+  DevToolsServer.init();
 
   const trace = connectPipeTracing();
   const client = new DebuggerClient(trace);

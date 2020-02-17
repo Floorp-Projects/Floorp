@@ -12,7 +12,7 @@ const {
 
 /**
  * A ArrayBufferClient provides a way to access ArrayBuffer from the
- * debugger server.
+ * devtools server.
  */
 class ArrayBufferFront extends FrontClassWithSpec(arrayBufferSpec) {
   form(json) {

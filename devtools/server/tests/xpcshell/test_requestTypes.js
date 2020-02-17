@@ -22,10 +22,10 @@ function test_requestTypes_request(client, anActor) {
 }
 
 function run_test() {
-  DebuggerServer.init();
-  DebuggerServer.registerAllActors();
+  DevToolsServer.init();
+  DevToolsServer.registerAllActors();
 
-  const client = new DebuggerClient(DebuggerServer.connectPipe());
+  const client = new DebuggerClient(DevToolsServer.connectPipe());
   client.connect().then(function() {
     test_requestTypes_request(client);
   });

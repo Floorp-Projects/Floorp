@@ -46,7 +46,7 @@ async function testRearrange(walker) {
       const { require } = ChromeUtils.import(
         "resource://devtools/shared/Loader.jsm"
       );
-      const { DebuggerServer } = require("devtools/server/debugger-server");
+      const { DevToolsServer } = require("devtools/server/devtools-server");
       const {
         DocumentWalker,
       } = require("devtools/server/actors/inspector/document-walker");
@@ -57,7 +57,7 @@ async function testRearrange(walker) {
       // Convert actorID to current compartment string otherwise
       // searchAllConnectionsForActor is confused and won't find the actor.
       actorID = String(actorID);
-      const nodeActor = DebuggerServer.searchAllConnectionsForActor(actorID);
+      const nodeActor = DevToolsServer.searchAllConnectionsForActor(actorID);
       is(
         sibling,
         nodeActor.rawNode,
@@ -85,11 +85,11 @@ async function testInsertInvalidInput(walker) {
       const { require } = ChromeUtils.import(
         "resource://devtools/shared/Loader.jsm"
       );
-      const { DebuggerServer } = require("devtools/server/debugger-server");
+      const { DevToolsServer } = require("devtools/server/devtools-server");
       // Convert actorID to current compartment string otherwise
       // searchAllConnectionsForActor is confused and won't find the actor.
       actorID = String(actorID);
-      const nodeActor = DebuggerServer.searchAllConnectionsForActor(actorID);
+      const nodeActor = DevToolsServer.searchAllConnectionsForActor(actorID);
       content.hasMutated = false;
       content.observer = new content.MutationObserver(() => {
         content.hasMutated = true;

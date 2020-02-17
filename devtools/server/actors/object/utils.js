@@ -4,7 +4,7 @@
 
 "use strict";
 
-const { DebuggerServer } = require("devtools/server/debugger-server");
+const { DevToolsServer } = require("devtools/server/devtools-server");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const { assert } = DevToolsUtils;
 
@@ -168,7 +168,7 @@ function createValueGrip(value, pool, makeObjectGrip) {
  *        The string we are checking the length of.
  */
 function stringIsLong(str) {
-  return str.length >= DebuggerServer.LONG_STRING_LENGTH;
+  return str.length >= DevToolsServer.LONG_STRING_LENGTH;
 }
 
 const TYPED_ARRAY_CLASSES = [

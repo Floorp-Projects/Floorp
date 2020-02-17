@@ -8,7 +8,7 @@
 /* global worker, loadSubScript, global */
 
 /*
- * Worker debugger script that listens for requests to start a `DebuggerServer` for a
+ * Worker debugger script that listens for requests to start a `DevToolsServer` for a
  * worker in a process.  Loaded into a specific worker during worker-connector.js'
  * `connectToWorker` which is called from the same process as the worker.
  */
@@ -43,10 +43,10 @@ var { ThreadActor } = worker.require("devtools/server/actors/thread");
 var { WebConsoleActor } = worker.require("devtools/server/actors/webconsole");
 var { TabSources } = worker.require("devtools/server/actors/utils/TabSources");
 var makeDebugger = worker.require("devtools/server/actors/utils/make-debugger");
-var { DebuggerServer } = worker.require("devtools/server/debugger-server");
+var { DevToolsServer } = worker.require("devtools/server/devtools-server");
 
-DebuggerServer.init();
-DebuggerServer.createRootActor = function() {
+DevToolsServer.init();
+DevToolsServer.createRootActor = function() {
   throw new Error("Should never get here!");
 };
 
@@ -59,7 +59,7 @@ this.addEventListener("message", function(event) {
   switch (packet.type) {
     case "connect":
       // Step 3: Create a connection to the parent.
-      const connection = DebuggerServer.connectToParent(packet.id, this);
+      const connection = DevToolsServer.connectToParent(packet.id, this);
       connections[packet.id] = {
         connection,
         rpcs: [],

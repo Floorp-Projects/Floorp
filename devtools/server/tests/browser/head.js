@@ -16,7 +16,7 @@ const { DebuggerClient } = require("devtools/shared/client/debugger-client");
 const {
   ActorRegistry,
 } = require("devtools/server/actors/utils/actor-registry");
-const { DebuggerServer } = require("devtools/server/debugger-server");
+const { DevToolsServer } = require("devtools/server/devtools-server");
 
 const PATH = "browser/devtools/server/tests/browser/";
 const TEST_DOMAIN = "http://test1.example.org";
@@ -91,21 +91,21 @@ async function initAccessibilityFrontForUrl(url) {
   return { inspector, walker, accessibility, target };
 }
 
-function initDebuggerServer() {
+function initDevToolsServer() {
   try {
-    // Sometimes debugger server does not get destroyed correctly by previous
+    // Sometimes devtools server does not get destroyed correctly by previous
     // tests.
-    DebuggerServer.destroy();
+    DevToolsServer.destroy();
   } catch (e) {
-    info(`DebuggerServer destroy error: ${e}\n${e.stack}`);
+    info(`DevToolsServer destroy error: ${e}\n${e.stack}`);
   }
-  DebuggerServer.init();
-  DebuggerServer.registerAllActors();
+  DevToolsServer.init();
+  DevToolsServer.registerAllActors();
 }
 
 async function initPerfFront() {
-  initDebuggerServer();
-  const client = new DebuggerClient(DebuggerServer.connectPipe());
+  initDevToolsServer();
+  const client = new DebuggerClient(DevToolsServer.connectPipe());
   await waitUntilClientConnected(client);
   const front = await client.mainRoot.getFront("perf");
   return { front, client };

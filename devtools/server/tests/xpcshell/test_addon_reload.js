@@ -49,10 +49,10 @@ function getSupportFile(path) {
 add_task(async function testReloadExitedAddon() {
   await startupAddonsManager();
 
-  DebuggerServer.init();
-  DebuggerServer.registerAllActors();
+  DevToolsServer.init();
+  DevToolsServer.registerAllActors();
 
-  const client = new DebuggerClient(DebuggerServer.connectPipe());
+  const client = new DebuggerClient(DevToolsServer.connectPipe());
   await client.connect();
 
   // Install our main add-on to trigger reloads on.

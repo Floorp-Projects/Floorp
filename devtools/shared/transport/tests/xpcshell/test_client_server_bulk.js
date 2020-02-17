@@ -7,7 +7,7 @@ var { FileUtils } = ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
 var Pipe = CC("@mozilla.org/pipe;1", "nsIPipe", "init");
 
 function run_test() {
-  initTestDebuggerServer();
+  initTestDevToolsServer();
   add_test_bulk_actor();
 
   add_task(async function() {
@@ -17,7 +17,7 @@ function run_test() {
     await test_bulk_request_cs(local_transport, "bulkEcho", "bulk");
     await test_json_request_cs(socket_transport, "bulkReply", "bulk");
     await test_json_request_cs(local_transport, "bulkReply", "bulk");
-    DebuggerServer.destroy();
+    DevToolsServer.destroy();
   });
 
   run_next_test();
@@ -210,7 +210,7 @@ var test_bulk_request_cs = async function(
     })
     .catch(do_throw);
 
-  DebuggerServer.on("connectionchange", type => {
+  DevToolsServer.on("connectionchange", type => {
     if (type === "closed") {
       serverResolve();
     }
@@ -260,7 +260,7 @@ var test_json_request_cs = async function(
     })
     .catch(do_throw);
 
-  DebuggerServer.on("connectionchange", type => {
+  DevToolsServer.on("connectionchange", type => {
     if (type === "closed") {
       serverResolve();
     }

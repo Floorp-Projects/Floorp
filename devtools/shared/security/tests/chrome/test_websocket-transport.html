@@ -14,7 +14,7 @@ window.onload = function() {
   const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
   const Services = require("Services");
   const {DebuggerClient} = require("devtools/shared/client/debugger-client");
-  const {DebuggerServer} = require("devtools/server/debugger-server");
+  const {DevToolsServer} = require("devtools/server/devtools-server");
   const { SocketListener } = require("devtools/shared/security/socket");
 
   Services.prefs.setBoolPref("devtools.debugger.remote-enabled", true);
@@ -26,19 +26,19 @@ window.onload = function() {
   });
 
   add_task(async function() {
-    DebuggerServer.init();
-    DebuggerServer.registerAllActors();
+    DevToolsServer.init();
+    DevToolsServer.registerAllActors();
 
-    is(DebuggerServer.listeningSockets, 0, "0 listening sockets");
+    is(DevToolsServer.listeningSockets, 0, "0 listening sockets");
 
     const socketOptions = {
       portOrPath: -1,
       webSocket: true,
     };
-    const listener = new SocketListener(DebuggerServer, socketOptions);
+    const listener = new SocketListener(DevToolsServer, socketOptions);
     ok(listener, "Socket listener created");
     await listener.open();
-    is(DebuggerServer.listeningSockets, 1, "1 listening socket");
+    is(DevToolsServer.listeningSockets, 1, "1 listening socket");
 
     const transport = await DebuggerClient.socketConnect({
       host: "127.0.0.1",
@@ -63,9 +63,9 @@ window.onload = function() {
     client.off("closed", onUnexpectedClose);
     transport.close();
     listener.close();
-    is(DebuggerServer.listeningSockets, 0, "0 listening sockets");
+    is(DevToolsServer.listeningSockets, 0, "0 listening sockets");
 
-    DebuggerServer.destroy();
+    DevToolsServer.destroy();
   });
 };
 </script>

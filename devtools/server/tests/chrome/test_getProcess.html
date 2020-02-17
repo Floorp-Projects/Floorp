@@ -1,7 +1,7 @@
 <!DOCTYPE HTML>
 <html>
 <!--
-Bug 1060093 - Test DebuggerServer.getProcess
+Bug 1060093 - Test DevToolsServer.getProcess
 -->
 <head>
   <meta charset="utf-8">
@@ -19,7 +19,7 @@ Bug 1060093 - Test DebuggerServer.getProcess
 
 const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
 const {DebuggerClient} = require("devtools/shared/client/debugger-client");
-const {DebuggerServer} = require("devtools/server/debugger-server");
+const {DevToolsServer} = require("devtools/server/devtools-server");
 const Services = require("Services");
 
 window.onload = function() {
@@ -39,17 +39,17 @@ window.onload = function() {
 
 function runTests() {
   // Instantiate a minimal server
-  DebuggerServer.init();
-  DebuggerServer.allowChromeProcess = true;
-  if (!DebuggerServer.createRootActor) {
-    DebuggerServer.registerAllActors();
+  DevToolsServer.init();
+  DevToolsServer.allowChromeProcess = true;
+  if (!DevToolsServer.createRootActor) {
+    DevToolsServer.registerAllActors();
   }
 
   let client, iframe, processCount;
 
   function connect() {
     // Fake a first connection to the content process
-    const transport = DebuggerServer.connectPipe();
+    const transport = DevToolsServer.connectPipe();
     client = new DebuggerClient(transport);
     client.connect().then(listProcess);
   }
@@ -141,7 +141,7 @@ function runTests() {
   }
 
   function cleanup() {
-    DebuggerServer.destroy();
+    DevToolsServer.destroy();
     iframe.remove();
     SimpleTest.finish();
   }

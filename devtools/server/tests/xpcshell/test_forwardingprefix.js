@@ -12,7 +12,7 @@ var gSubconnection1, gSubconnection2;
 var gClient;
 
 function run_test() {
-  DebuggerServer.init();
+  DevToolsServer.init();
 
   add_test(createMainConnection);
   add_test(TestNoForwardingYet);
@@ -27,7 +27,7 @@ function run_test() {
 
 /*
  * Create a pipe connection, and return an object |{ conn, transport }|,
- * where |conn| is the new DebuggerServerConnection instance, and
+ * where |conn| is the new DevToolsServerConnection instance, and
  * |transport| is the client side of the transport on which it communicates
  * (that is, packets sent on |transport| go to the new connection, and
  * |transport|'s hooks receive replies).
@@ -37,12 +37,12 @@ function run_test() {
  */
 function newConnection(prefix) {
   let conn;
-  DebuggerServer.createRootActor = function(connection) {
+  DevToolsServer.createRootActor = function(connection) {
     conn = connection;
     return new RootActor(connection, {});
   };
 
-  const transport = DebuggerServer.connectPipe(prefix);
+  const transport = DevToolsServer.connectPipe(prefix);
 
   return { conn: conn, transport: transport };
 }
@@ -184,7 +184,7 @@ EchoActor.prototype.actorPrefix = "EchoActor";
 EchoActor.prototype.onEcho = function(request) {
   /*
    * Request packets are frozen. Copy request, so that
-   * DebuggerServerConnection.onPacket can attach a 'from' property.
+   * DevToolsServerConnection.onPacket can attach a 'from' property.
    */
   return JSON.parse(JSON.stringify(request));
 };

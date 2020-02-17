@@ -36,7 +36,7 @@ const { ProcessActorList } = require("devtools/server/actors/process");
  * - sends all navigator:browser window documents a Debugger:Shutdown event
  *   when it exits.
  *
- * * @param aConnection DebuggerServerConnection
+ * * @param aConnection DevToolsServerConnection
  *        The conection to the client.
  */
 exports.createRootActor = function createRootActor(aConnection) {
@@ -64,7 +64,7 @@ exports.createRootActor = function createRootActor(aConnection) {
  * (See the documentation for RootActor for the definition of the "live
  * list" interface.)
  *
- * @param aConnection DebuggerServerConnection
+ * @param aConnection DevToolsServerConnection
  *     The connection in which this list's tab actors may participate.
  *
  * @see BrowserTabList for more a extensive description of how tab list objects

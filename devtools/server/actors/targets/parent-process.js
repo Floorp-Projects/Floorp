@@ -15,7 +15,7 @@
 
 const { Ci } = require("chrome");
 const Services = require("Services");
-const { DebuggerServer } = require("devtools/server/debugger-server");
+const { DevToolsServer } = require("devtools/server/devtools-server");
 const {
   getChildDocShells,
   BrowsingContextTargetActor,
@@ -43,7 +43,7 @@ const parentProcessTargetPrototype = extend({}, browsingContextTargetPrototype);
  * RootActor.getProcess request. ParentProcessTargetActor exposes all target-scoped actors
  * via its form() request, like BrowsingContextTargetActor.
  *
- * @param connection DebuggerServerConnection
+ * @param connection DevToolsServerConnection
  *        The connection to the client.
  * @param window Window object (optional)
  *        If the upper class already knows against which window the actor should attach,
@@ -63,7 +63,7 @@ parentProcessTargetPrototype.initialize = function(connection, window) {
 
   // Defines the default docshell selected for the target actor
   if (!window) {
-    window = Services.wm.getMostRecentWindow(DebuggerServer.chromeWindowType);
+    window = Services.wm.getMostRecentWindow(DevToolsServer.chromeWindowType);
   }
 
   // Default to any available top level window if there is no expected window

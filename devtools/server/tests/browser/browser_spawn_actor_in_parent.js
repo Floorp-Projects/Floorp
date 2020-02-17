@@ -3,7 +3,7 @@
 
 "use strict";
 
-// Test DebuggerServerConnection.spawnActorInParentProcess.
+// Test DevToolsServerConnection.spawnActorInParentProcess.
 // This test instanciates a first test actor "InContentActor" that uses
 // spawnActorInParentProcess to instanciate the second test actor "InParentActor"
 
@@ -51,7 +51,7 @@ add_task(async function() {
   ok(isInParent, "The ParentActor really runs in the parent process");
   ok(
     conn,
-    "`conn`, first contructor argument is a DebuggerServerConnection instance"
+    "`conn`, first contructor argument is a DevToolsServerConnection instance"
   );
   is(
     mm,

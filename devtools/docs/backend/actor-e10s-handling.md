@@ -14,23 +14,23 @@ This page will be removed when all actors relying on this API are removed.
 
 Some actors need to exchange messages between the parent and the child process (typically when some components aren't available in the child process).
 
-To that end, there's a parent/child setup mechanism at `DebuggerServer` level that can be used.
+To that end, there's a parent/child setup mechanism at `DevToolsServer` level that can be used.
 
-When the actor is loaded for the first time in the `DebuggerServer` running in the child process, it may decide to run a setup procedure to load a module in the parent process with which to communicate.
+When the actor is loaded for the first time in the `DevToolsServer` running in the child process, it may decide to run a setup procedure to load a module in the parent process with which to communicate.
 
 Example code for the actor running in the child process:
 
 ```
-  const {DebuggerServer} = require("devtools/server/debugger-server");
+  const {DevToolsServer} = require("devtools/server/devtools-server");
 
   // Setup the child<->parent communication only if the actor module
   // is running in a child process.
-  if (DebuggerServer.isInChildProcess) {
+  if (DevToolsServer.isInChildProcess) {
     setupChildProcess();
   }
 
   function setupChildProcess() {
-    // `setupInParent`  is defined on DebuggerServerConnection,
+    // `setupInParent`  is defined on DevToolsServerConnection,
     // your actor receives a reference to one instance in its constructor.
     conn.setupInParent({
       module: "devtools/server/actors/module-name",
@@ -40,9 +40,9 @@ Example code for the actor running in the child process:
   }
 ```
 
-The `setupChildProcess` helper defined and used in the previous example uses the `DebuggerServerConnection.setupInParent` to run a given setup function in the parent process Debugger Server.
+The `setupChildProcess` helper defined and used in the previous example uses the `DevToolsServerConnection.setupInParent` to run a given setup function in the parent process DevTools Server.
 
-With this, the `DebuggerServer` running in the parent process will require the requested module and call its `setupParentProcess` function (which should be exported on the module).
+With this, the `DevToolsServer` running in the parent process will require the requested module and call its `setupParentProcess` function (which should be exported on the module).
 
 The `setupParentProcess` function will receive a parameter that contains a reference to the **MessageManager** and a prefix that should be used to send/receive messages between the child and parent processes.
 
@@ -96,15 +96,15 @@ The server will call the `onBrowserSwap` method returned by the parent process s
 
 In the child process:
 
-* The `DebuggerServer` loads an actor module,
-* the actor module checks `DebuggerServer.isInChildProcess` to know whether it runs in a child process or not,
-* the actor module then uses the `DebuggerServerConnection.setupInParent` helper to start setting up a parent-process counterpart,
-* the `DebuggerServerConnection.setupInParent` helper asks the parent process to run the required module's setup function,
-* the actor module uses the `DebuggerServerConnection.parentMessageManager.sendSyncMessage` and `DebuggerServerConnection.parentMessageManager.addMessageListener` helpers to send or listen to message.
+* The `DevToolsServer` loads an actor module,
+* the actor module checks `DevToolsServer.isInChildProcess` to know whether it runs in a child process or not,
+* the actor module then uses the `DevToolsServerConnection.setupInParent` helper to start setting up a parent-process counterpart,
+* the `DevToolsServerConnection.setupInParent` helper asks the parent process to run the required module's setup function,
+* the actor module uses the `DevToolsServerConnection.parentMessageManager.sendSyncMessage` and `DevToolsServerConnection.parentMessageManager.addMessageListener` helpers to send or listen to message.
 
 In the parent process:
 
-* The DebuggerServer receives the `DebuggerServerConnection.setupInParent` request,
+* The DevToolsServer receives the `DevToolsServerConnection.setupInParent` request,
 * tries to load the required module,
 * tries to call the `module[setupParent]` function with the frame message manager and the prefix as parameters `{ mm, prefix }`,
 * the `setupParent` function then uses the mm to subscribe the message manager events,

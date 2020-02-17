@@ -35,8 +35,8 @@ function run_test() {
     "test"
   );
 
-  DebuggerServer.init();
-  DebuggerServer.registerAllActors();
+  DevToolsServer.init();
+  DevToolsServer.registerAllActors();
 
   add_test(init);
   add_test(test_client_request_callback);
@@ -50,7 +50,7 @@ function run_test() {
 }
 
 function init() {
-  gClient = new DebuggerClient(DebuggerServer.connectPipe());
+  gClient = new DebuggerClient(DevToolsServer.connectPipe());
   gClient
     .connect()
     .then(() => gClient.mainRoot.rootForm)

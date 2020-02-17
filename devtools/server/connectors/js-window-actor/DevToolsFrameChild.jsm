@@ -17,7 +17,7 @@ class DevToolsFrameChild extends JSWindowActorChild {
 
     // The map is indexed by the connection prefix.
     // The values are objects containing the following properties:
-    // - connection: the DebuggerServerConnection itself
+    // - connection: the DevToolsServerConnection itself
     // - actor: the FrameTargetActor instance
     this._connections = new Map();
 
@@ -51,23 +51,23 @@ class DevToolsFrameChild extends JSWindowActorChild {
   }
 
   _createConnectionAndActor(prefix) {
-    const { DebuggerServer } = this.loader.require(
-      "devtools/server/debugger-server"
+    const { DevToolsServer } = this.loader.require(
+      "devtools/server/devtools-server"
     );
     const { ActorPool } = this.loader.require("devtools/server/actors/common");
     const { FrameTargetActor } = this.loader.require(
       "devtools/server/actors/targets/frame"
     );
 
-    DebuggerServer.init();
+    DevToolsServer.init();
 
     // We want a special server without any root actor and only target-scoped actors.
     // We are going to spawn a FrameTargetActor instance in the next few lines,
     // it is going to act like a root actor without being one.
-    DebuggerServer.registerActors({ target: true });
-    DebuggerServer.on("connectionchange", this._onConnectionChange);
+    DevToolsServer.registerActors({ target: true });
+    DevToolsServer.on("connectionchange", this._onConnectionChange);
 
-    const connection = DebuggerServer.connectToParentWindowActor(prefix, this);
+    const connection = DevToolsServer.connectToParentWindowActor(prefix, this);
 
     // Create the actual target actor.
     const targetActor = new FrameTargetActor(connection, this.docShell);
@@ -85,13 +85,13 @@ class DevToolsFrameChild extends JSWindowActorChild {
    * frame scripts may be running in parallel and reuse the same server.
    */
   _onConnectionChange() {
-    const { DebuggerServer } = this.loader.require(
-      "devtools/server/debugger-server"
+    const { DevToolsServer } = this.loader.require(
+      "devtools/server/devtools-server"
     );
 
     // Only destroy the server if there is no more connections to it. It may be
     // used to debug another tab running in the same process.
-    if (DebuggerServer.hasConnection() || DebuggerServer.keepAlive) {
+    if (DevToolsServer.hasConnection() || DevToolsServer.keepAlive) {
       return;
     }
 
@@ -100,8 +100,8 @@ class DevToolsFrameChild extends JSWindowActorChild {
     }
     this._destroyed = true;
 
-    DebuggerServer.off("connectionchange", this._onConnectionChange);
-    DebuggerServer.destroy();
+    DevToolsServer.off("connectionchange", this._onConnectionChange);
+    DevToolsServer.destroy();
   }
 
   disconnect(msg) {
@@ -114,8 +114,8 @@ class DevToolsFrameChild extends JSWindowActorChild {
       return;
     }
 
-    // Call DebuggerServerConnection.close to destroy all child actors. It
-    // should end up calling DebuggerServerConnection.onClosed that would
+    // Call DevToolsServerConnection.close to destroy all child actors. It
+    // should end up calling DevToolsServerConnection.onClosed that would
     // actually cleanup all actor pools.
     connectionInfo.connection.close();
     this._connections.delete(prefix);

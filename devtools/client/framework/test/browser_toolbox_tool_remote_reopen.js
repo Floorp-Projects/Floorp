@@ -3,7 +3,7 @@
 
 "use strict";
 
-const { DebuggerServer } = require("devtools/server/debugger-server");
+const { DevToolsServer } = require("devtools/server/devtools-server");
 
 // Bug 1277805: Too slow for debug runs
 requestLongerTimeout(2);
@@ -99,7 +99,7 @@ function test() {
     }
 
     gBrowser.removeCurrentTab();
-    DebuggerServer.destroy();
+    DevToolsServer.destroy();
     toggleAllTools(false);
     finish();
   })();

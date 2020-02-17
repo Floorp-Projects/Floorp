@@ -4,7 +4,7 @@
 
 "use strict";
 
-var { DebuggerServer } = require("devtools/server/debugger-server");
+var { DevToolsServer } = require("devtools/server/devtools-server");
 
 var protocol = require("devtools/shared/protocol");
 const { longStringSpec } = require("devtools/shared/specs/string");
@@ -13,7 +13,7 @@ exports.LongStringActor = protocol.ActorClassWithSpec(longStringSpec, {
   initialize: function(conn, str) {
     protocol.Actor.prototype.initialize.call(this, conn);
     this.str = str;
-    this.short = this.str.length < DebuggerServer.LONG_STRING_LENGTH;
+    this.short = this.str.length < DevToolsServer.LONG_STRING_LENGTH;
   },
 
   destroy: function() {
@@ -29,7 +29,7 @@ exports.LongStringActor = protocol.ActorClassWithSpec(longStringSpec, {
       type: "longString",
       actor: this.actorID,
       length: this.str.length,
-      initial: this.str.substring(0, DebuggerServer.LONG_STRING_INITIAL_LENGTH),
+      initial: this.str.substring(0, DevToolsServer.LONG_STRING_INITIAL_LENGTH),
     };
   },
 

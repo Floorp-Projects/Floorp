@@ -6,12 +6,12 @@
 var { FileUtils } = ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
 
 function run_test() {
-  initTestDebuggerServer();
+  initTestDevToolsServer();
 
   add_task(async function() {
     await test_bulk_transfer_transport(socket_transport);
     await test_bulk_transfer_transport(local_transport);
-    DebuggerServer.destroy();
+    DevToolsServer.destroy();
   });
 
   run_next_test();
@@ -40,7 +40,7 @@ var test_bulk_transfer_transport = async function(transportFactory) {
   const reallyLong = really_long();
   writeTestTempFile("bulk-input", reallyLong);
 
-  Assert.equal(Object.keys(DebuggerServer._connections).length, 0);
+  Assert.equal(Object.keys(DevToolsServer._connections).length, 0);
 
   const transport = await transportFactory();
 
@@ -91,13 +91,13 @@ var test_bulk_transfer_transport = async function(transportFactory) {
       Assert.equal(packet.from, "root");
 
       // Server
-      Assert.equal(Object.keys(DebuggerServer._connections).length, 1);
-      info(Object.keys(DebuggerServer._connections));
-      for (const connId in DebuggerServer._connections) {
-        DebuggerServer._connections[connId].onBulkPacket = on_bulk_packet;
+      Assert.equal(Object.keys(DevToolsServer._connections).length, 1);
+      info(Object.keys(DevToolsServer._connections));
+      for (const connId in DevToolsServer._connections) {
+        DevToolsServer._connections[connId].onBulkPacket = on_bulk_packet;
       }
 
-      DebuggerServer.on("connectionchange", type => {
+      DevToolsServer.on("connectionchange", type => {
         if (type === "closed") {
           serverResolve();
         }

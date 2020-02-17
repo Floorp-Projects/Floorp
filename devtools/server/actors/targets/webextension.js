@@ -72,7 +72,7 @@ const webExtensionTargetPrototype = extend({}, parentProcessTargetPrototype);
  * - When the WebExtensions OOP mode has been introduced, this actor has been refactored
  *   and moved from the main process to the new child extension process.
  *
- * @param {DebuggerServerConnection} conn
+ * @param {DevToolsServerConnection} conn
  *        The connection to the client.
  * @param {nsIMessageSender} chromeGlobal.
  *        The chromeGlobal where this actor has been injected by the

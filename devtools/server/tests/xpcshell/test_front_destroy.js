@@ -14,11 +14,11 @@
 _profileInitialized = true;
 
 add_task(async function test() {
-  DebuggerServer.init();
-  DebuggerServer.registerAllActors();
+  DevToolsServer.init();
+  DevToolsServer.registerAllActors();
 
   info("Create and connect the DebuggerClient");
-  const transport = DebuggerServer.connectPipe();
+  const transport = DevToolsServer.connectPipe();
   const client = new DebuggerClient(transport);
   await client.connect();
 

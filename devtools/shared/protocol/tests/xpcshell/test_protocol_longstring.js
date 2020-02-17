@@ -23,7 +23,7 @@ function simpleHello() {
   };
 }
 
-DebuggerServer.LONG_STRING_LENGTH = DebuggerServer.LONG_STRING_INITIAL_LENGTH = DebuggerServer.LONG_STRING_READ_LENGTH = 5;
+DevToolsServer.LONG_STRING_LENGTH = DevToolsServer.LONG_STRING_INITIAL_LENGTH = DevToolsServer.LONG_STRING_READ_LENGTH = 5;
 
 var SHORT_STR = "abc";
 var LONG_STR = "abcdefghijklmnop";
@@ -102,11 +102,11 @@ class RootFront extends protocol.FrontClassWithSpec(rootSpec) {
 }
 
 function run_test() {
-  DebuggerServer.createRootActor = conn => {
+  DevToolsServer.createRootActor = conn => {
     return RootActor(conn);
   };
 
-  DebuggerServer.init();
+  DevToolsServer.init();
   const trace = connectPipeTracing();
   const client = new DebuggerClient(trace);
   let rootFront;

@@ -5,7 +5,7 @@
 
 // Test that the network actor uses the LongStringActor
 
-const { DebuggerServer } = require("devtools/server/debugger-server");
+const { DevToolsServer } = require("devtools/server/devtools-server");
 const LONG_STRING_LENGTH = 400;
 const LONG_STRING_INITIAL_LENGTH = 400;
 let ORIGINAL_LONG_STRING_LENGTH, ORIGINAL_LONG_STRING_INITIAL_LENGTH;
@@ -20,15 +20,15 @@ add_task(async function() {
   await webConsoleFront.startListeners(["NetworkActivity"]);
 
   // Override the default long string settings to lower values.
-  // This is done from the parent process's DebuggerServer as the LongString
+  // This is done from the parent process's DevToolsServer as the LongString
   // actor is being created from the parent process as network requests are
   // watched from the parent process.
-  ORIGINAL_LONG_STRING_LENGTH = DebuggerServer.LONG_STRING_LENGTH;
+  ORIGINAL_LONG_STRING_LENGTH = DevToolsServer.LONG_STRING_LENGTH;
   ORIGINAL_LONG_STRING_INITIAL_LENGTH =
-    DebuggerServer.LONG_STRING_INITIAL_LENGTH;
+    DevToolsServer.LONG_STRING_INITIAL_LENGTH;
 
-  DebuggerServer.LONG_STRING_LENGTH = LONG_STRING_LENGTH;
-  DebuggerServer.LONG_STRING_INITIAL_LENGTH = LONG_STRING_INITIAL_LENGTH;
+  DevToolsServer.LONG_STRING_LENGTH = LONG_STRING_LENGTH;
+  DevToolsServer.LONG_STRING_INITIAL_LENGTH = LONG_STRING_INITIAL_LENGTH;
 
   info("test network POST request");
 
@@ -78,8 +78,8 @@ add_task(async function() {
 
   await target.destroy();
 
-  DebuggerServer.LONG_STRING_LENGTH = ORIGINAL_LONG_STRING_LENGTH;
-  DebuggerServer.LONG_STRING_INITIAL_LENGTH = ORIGINAL_LONG_STRING_INITIAL_LENGTH;
+  DevToolsServer.LONG_STRING_LENGTH = ORIGINAL_LONG_STRING_LENGTH;
+  DevToolsServer.LONG_STRING_INITIAL_LENGTH = ORIGINAL_LONG_STRING_INITIAL_LENGTH;
 });
 
 function assertNetworkEvent(client, webConsoleFront, packet) {

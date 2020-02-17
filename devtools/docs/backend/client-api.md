@@ -7,16 +7,16 @@ DevTools has a client module that allows applications to be written that debug o
 In order to communicate, a client and a server instance must be created and a protocol connection must be established. The connection can be either over a TCP socket or an nsIPipe. The `start` function displayed below establishes an nsIPipe-backed connection:
 
 ```javascript
-const { DebuggerServer } = require("devtools/server/debugger-server");
+const { DevToolsServer } = require("devtools/server/devtools-server");
 const { DebuggerClient } = require("devtools/shared/client/debugger-client");
 
 function start() {
   // Start the server.
-  DebuggerServer.init();
-  DebuggerServer.registerAllActors();
+  DevToolsServer.init();
+  DevToolsServer.registerAllActors();
 
   // Listen to an nsIPipe
-  let transport = DebuggerServer.connectPipe();
+  let transport = DevToolsServer.connectPipe();
 
   // Start the client.
   client = new DebuggerClient(transport);
@@ -31,16 +31,16 @@ function start() {
 If a TCP socket is required, the function should be split in two parts, a server-side and a client-side, like this:
 
 ```javascript
-const { DebuggerServer } = require("devtools/server/debugger-server");
+const { DevToolsServer } = require("devtools/server/devtools-server");
 const { DebuggerClient } = require("devtools/shared/client/debugger-client");
 
 function startServer() {
   // Start the server.
-  DebuggerServer.init();
-  DebuggerServer.registerAllActors();
+  DevToolsServer.init();
+  DevToolsServer.registerAllActors();
 
   // For an nsIServerSocket we do this:
-  DebuggerServer.openListener(2929); // A connection on port 2929.
+  DevToolsServer.openListener(2929); // A connection on port 2929.
 }
 
 async function startClient() {
@@ -138,7 +138,7 @@ Here is the source code for a complete debugger application:
 /*
  * Debugger API demo.
  */
-const { DebuggerServer } = require("devtools/server/debugger-server");
+const { DevToolsServer } = require("devtools/server/devtools-server");
 const { DebuggerClient } = require("devtools/shared/client/debugger-client");
 
 let client;
@@ -146,12 +146,12 @@ let threadFront;
 
 function startDebugger() {
   // Start the server.
-  DebuggerServer.init();
-  DebuggerServer.registerAllActors();
+  DevToolsServer.init();
+  DevToolsServer.registerAllActors();
   // Listen to an nsIPipe
-  let transport = DebuggerServer.connectPipe();
+  let transport = DevToolsServer.connectPipe();
   // For an nsIServerSocket we do this:
-  // DebuggerServer.openListener(port);
+  // DevToolsServer.openListener(port);
   // ...and this at the client:
   // let transport = debuggerSocketConnect(host, port);
 

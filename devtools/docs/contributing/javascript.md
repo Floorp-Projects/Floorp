@@ -60,7 +60,7 @@ Commenting code is important, but bad comments can hurt too, so it's important t
 
 ## Asynchronous code
 
-A lot of code in DevTools is asynchronous, because a lot of it relies on connecting to the DevTools debugger server and getting information from there in an asynchronous fashion.
+A lot of code in DevTools is asynchronous, because a lot of it relies on connecting to the DevTools server and getting information from there in an asynchronous fashion.
 
 It's easy to make mistakes with asynchronous code, so here are a few guidelines that should help:
 

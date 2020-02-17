@@ -677,7 +677,7 @@ exports.CustomHighlighterActor = protocol.ActorClassWithSpec(
  * most frequent way of using it, since highlighters are usually initialized by
  * the HighlighterActor or CustomHighlighterActor, which have a targetActor
  * reference). It can also be initialized just with a window object (which is
- * useful for when a highlighter is used outside of the debugger server context.
+ * useful for when a highlighter is used outside of the devtools server context.
  */
 function HighlighterEnvironment() {
   this.relayTargetActorWindowReady = this.relayTargetActorWindowReady.bind(

@@ -84,42 +84,42 @@ add_task(async function() {
   gBrowser.removeCurrentTab();
 });
 
-async function setupDebuggerServer(webSocket) {
-  info("Create a separate loader instance for the DebuggerServer.");
+async function setupDevToolsServer(webSocket) {
+  info("Create a separate loader instance for the DevToolsServer.");
   const loader = new DevToolsLoader();
-  const { DebuggerServer } = loader.require("devtools/server/debugger-server");
+  const { DevToolsServer } = loader.require("devtools/server/devtools-server");
   const { SocketListener } = loader.require("devtools/shared/security/socket");
 
-  DebuggerServer.init();
-  DebuggerServer.registerAllActors();
-  DebuggerServer.allowChromeProcess = true;
+  DevToolsServer.init();
+  DevToolsServer.registerAllActors();
+  DevToolsServer.allowChromeProcess = true;
   const socketOptions = {
     // Pass -1 to automatically choose an available port
     portOrPath: -1,
     webSocket,
   };
 
-  const listener = new SocketListener(DebuggerServer, socketOptions);
+  const listener = new SocketListener(DevToolsServer, socketOptions);
   ok(listener, "Socket listener created");
   await listener.open();
-  is(DebuggerServer.listeningSockets, 1, "1 listening socket");
+  is(DevToolsServer.listeningSockets, 1, "1 listening socket");
 
-  return { DebuggerServer, listener };
+  return { DevToolsServer, listener };
 }
 
-function teardownDebuggerServer({ DebuggerServer, listener }) {
+function teardownDevToolsServer({ DevToolsServer, listener }) {
   info("Close the listener socket");
   listener.close();
-  is(DebuggerServer.listeningSockets, 0, "0 listening sockets");
+  is(DevToolsServer.listeningSockets, 0, "0 listening sockets");
 
-  info("Destroy the temporary debugger server");
-  DebuggerServer.destroy();
+  info("Destroy the temporary devtools server");
+  DevToolsServer.destroy();
 }
 
 async function testRemoteTCP() {
   info("Test remote process via TCP Connection");
 
-  const server = await setupDebuggerServer(false);
+  const server = await setupDevToolsServer(false);
 
   const { port } = server.listener;
   const target = await targetFromURL(
@@ -135,13 +135,13 @@ async function testRemoteTCP() {
 
   await target.client.close();
 
-  teardownDebuggerServer(server);
+  teardownDevToolsServer(server);
 }
 
 async function testRemoteWebSocket() {
   info("Test remote process via WebSocket Connection");
 
-  const server = await setupDebuggerServer(true);
+  const server = await setupDevToolsServer(true);
 
   const { port } = server.listener;
   const target = await targetFromURL(
@@ -156,5 +156,5 @@ async function testRemoteWebSocket() {
   is(settings.webSocket, true);
   await target.client.close();
 
-  teardownDebuggerServer(server);
+  teardownDevToolsServer(server);
 }

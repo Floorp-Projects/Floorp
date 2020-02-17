@@ -15,7 +15,7 @@ const { Pool } = require("devtools/shared/protocol");
  * objects. Pools are used on both sides of the connection to help coordinate lifetimes.
  *
  * @param conn
- *   Is a DebuggerServerConnection.  Must have
+ *   Is a DevToolsServerConnection.  Must have
  *   addActorPool, removeActorPool, and poolFor.
  * @constructor
  */
@@ -72,7 +72,7 @@ exports.LazyPool = LazyPool;
  *        of the sort that one can add to an ActorPool.
  *
  *     - conn
- *        The DebuggerServerConnection in which the new actors will participate.
+ *        The DevToolsServerConnection in which the new actors will participate.
  *
  *     - actorID
  *        The actor's name, for use as the new actors' parentID.
@@ -133,7 +133,7 @@ exports.createExtraActors = createExtraActors;
  *        of the sort that one can add to an ActorPool.
  *
  *     - conn
- *        The DebuggerServerConnection in which the new actors will participate.
+ *        The DevToolsServerConnection in which the new actors will participate.
  *
  *     - actorID
  *        The actor's name, for use as the new actors' parentID.

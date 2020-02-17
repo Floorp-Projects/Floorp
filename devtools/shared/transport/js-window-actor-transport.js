@@ -8,7 +8,7 @@
  * DevTools transport relying on JS Window Actors. This is an experimental
  * transport. It is only used when using the JS Window Actor based frame
  * connector. In that case this transport will be used to communicate between
- * the DebuggerServer living in the parent process and the DebuggerServer
+ * the DevToolsServer living in the parent process and the DevToolsServer
  * living in the process of the target frame.
  *
  * This is intended to be a replacement for child-transport.js which is a

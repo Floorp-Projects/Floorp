@@ -93,8 +93,8 @@ class RootFront extends protocol.FrontClassWithSpec(rootSpec) {
 }
 
 add_task(async function run_test() {
-  DebuggerServer.createRootActor = RootActor;
-  DebuggerServer.init();
+  DevToolsServer.createRootActor = RootActor;
+  DevToolsServer.init();
 
   const trace = connectPipeTracing();
   const client = new DebuggerClient(trace);

@@ -19,7 +19,7 @@ Migrated from Robocop: https://bugzilla.mozilla.org/show_bug.cgi?id=1184186
   const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
   const { require } =
     ChromeUtils.import("resource://devtools/shared/Loader.jsm");
-  const { DebuggerServer } = require("devtools/server/debugger-server");
+  const { DevToolsServer } = require("devtools/server/devtools-server");
 
   let win = Services.wm.getMostRecentWindow("navigator:browser");
 
@@ -32,15 +32,15 @@ Migrated from Robocop: https://bugzilla.mozilla.org/show_bug.cgi?id=1184186
   // Enable the debugger via the pref it listens for
   Services.prefs.setBoolPref(DEBUGGER_USB_ENABLED, true);
 
-  ok(DebuggerServer.initialized, "initialized");
-  is(DebuggerServer.listeningSockets, 1, "1 listening socket");
+  ok(DevToolsServer.initialized, "initialized");
+  is(DevToolsServer.listeningSockets, 1, "1 listening socket");
 
   </script>
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1010750">Mozilla Bug 1010750</a>
 <br>
-<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1184186">Migrated from Robocop testDebuggerServer</a>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1184186">Migrated from Robocop testDevToolsServer</a>
 <p id="display"></p>
 <div id="content" style="display: none">
 

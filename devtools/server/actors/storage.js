@@ -7,7 +7,7 @@
 const { Cc, Ci, Cu, CC } = require("chrome");
 const protocol = require("devtools/shared/protocol");
 const { LongStringActor } = require("devtools/server/actors/string");
-const { DebuggerServer } = require("devtools/server/debugger-server");
+const { DevToolsServer } = require("devtools/server/devtools-server");
 const Services = require("Services");
 const defer = require("devtools/shared/defer");
 const { isWindowIncluded } = require("devtools/shared/layout/utils");
@@ -505,7 +505,7 @@ StorageActors.createActor(
       // We need to remove the cookie listeners early in E10S mode so we need to
       // use a conditional here to ensure that we only attempt to remove them in
       // single process mode.
-      if (!DebuggerServer.isInChildProcess) {
+      if (!DevToolsServer.isInChildProcess) {
         this.removeCookieObservers();
       }
 
@@ -774,7 +774,7 @@ StorageActors.createActor(
     maybeSetupChildProcess() {
       cookieHelpers.onCookieChanged = this.onCookieChanged.bind(this);
 
-      if (!DebuggerServer.isInChildProcess) {
+      if (!DevToolsServer.isInChildProcess) {
         this.getCookiesFromHost = cookieHelpers.getCookiesFromHost.bind(
           cookieHelpers
         );
@@ -1964,10 +1964,10 @@ if (Services.prefs.getBoolPref(EXTENSION_STORAGE_ENABLED_PREF, false)) {
         }
 
         // FIXME: Bug 1318029 - Due to a bug that is thrown whenever a
-        // LongStringActor string reaches DebuggerServer.LONG_STRING_LENGTH we need
+        // LongStringActor string reaches DevToolsServer.LONG_STRING_LENGTH we need
         // to trim the value. When the bug is fixed we should stop trimming the
         // string here.
-        const maxLength = DebuggerServer.LONG_STRING_LENGTH - 1;
+        const maxLength = DevToolsServer.LONG_STRING_LENGTH - 1;
         if (value.length > maxLength) {
           value = value.substr(0, maxLength);
           isValueEditable = false;
@@ -2572,10 +2572,10 @@ StorageActors.createActor(
       let value = JSON.stringify(item.value);
 
       // FIXME: Bug 1318029 - Due to a bug that is thrown whenever a
-      // LongStringActor string reaches DebuggerServer.LONG_STRING_LENGTH we need
+      // LongStringActor string reaches DevToolsServer.LONG_STRING_LENGTH we need
       // to trim the value. When the bug is fixed we should stop trimming the
       // string here.
-      const maxLength = DebuggerServer.LONG_STRING_LENGTH - 1;
+      const maxLength = DevToolsServer.LONG_STRING_LENGTH - 1;
       if (value.length > maxLength) {
         value = value.substr(0, maxLength);
       }
@@ -2613,7 +2613,7 @@ StorageActors.createActor(
     },
 
     maybeSetupChildProcess() {
-      if (!DebuggerServer.isInChildProcess) {
+      if (!DevToolsServer.isInChildProcess) {
         this.backToChild = (func, rv) => rv;
         this.clearDBStore = indexedDBHelpers.clearDBStore;
         this.findIDBPathsForHost = indexedDBHelpers.findIDBPathsForHost;

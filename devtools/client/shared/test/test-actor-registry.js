@@ -59,21 +59,21 @@
   // Sometimes, we need the test actor before opening or without a toolbox then just
   // create a front for the given `tab`
   exports.getTestActorWithoutToolbox = async function(tab) {
-    const { DebuggerServer } = require("devtools/server/debugger-server");
+    const { DevToolsServer } = require("devtools/server/devtools-server");
     const {
       DebuggerClient,
     } = require("devtools/shared/client/debugger-client");
 
     // We need to spawn a client instance,
     // but for that we have to first ensure a server is running
-    DebuggerServer.init();
-    DebuggerServer.registerAllActors();
-    const client = new DebuggerClient(DebuggerServer.connectPipe());
+    DevToolsServer.init();
+    DevToolsServer.registerAllActors();
+    const client = new DebuggerClient(DevToolsServer.connectPipe());
 
     await client.connect();
 
     // Force connecting to the tab so that the actor is registered in the tab.
-    // Calling `getTab` will spawn a DebuggerServer and ActorRegistry in the content
+    // Calling `getTab` will spawn a DevToolsServer and ActorRegistry in the content
     // process.
     await client.mainRoot.getTab({ tab });
 

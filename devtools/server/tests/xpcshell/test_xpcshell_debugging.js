@@ -16,13 +16,13 @@ _profileInitialized = true;
 add_task(async function() {
   const testFile = do_get_file("xpcshell_debugging_script.js");
 
-  // _setupDebuggerServer is from xpcshell-test's head.js
-  /* global _setupDebuggerServer */
+  // _setupDevToolsServer is from xpcshell-test's head.js
+  /* global _setupDevToolsServer */
   let testResumed = false;
-  const { DebuggerServer } = _setupDebuggerServer([testFile.path], () => {
+  const { DevToolsServer } = _setupDevToolsServer([testFile.path], () => {
     testResumed = true;
   });
-  const transport = DebuggerServer.connectPipe();
+  const transport = DevToolsServer.connectPipe();
   const client = new DebuggerClient(transport);
   await client.connect();
 

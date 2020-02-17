@@ -50,7 +50,7 @@ function makePrefTrackedFlag(exports, name, pref) {
 
 /**
  * Setting the "devtools.debugger.log" preference to true will enable logging of
- * the RDP calls to the debugger server.
+ * the RDP calls to the devtools server.
  */
 makePrefTrackedFlag(exports, "wantLogging", "devtools.debugger.log");
 

@@ -8,18 +8,18 @@
 add_task(async function() {
   const GLOBAL_NAME = "test-nesting1";
 
-  initTestDebuggerServer();
+  initTestDevToolsServer();
   addTestGlobal(GLOBAL_NAME);
   addTestGlobal(GLOBAL_NAME);
   // Conect the first client to the first debuggee.
-  const firstClient = new DebuggerClient(DebuggerServer.connectPipe());
+  const firstClient = new DebuggerClient(DevToolsServer.connectPipe());
   await firstClient.connect();
   const { threadFront: firstThreadFront } = await attachTestThread(
     firstClient,
     GLOBAL_NAME
   );
 
-  const secondClient = new DebuggerClient(DebuggerServer.connectPipe());
+  const secondClient = new DebuggerClient(DevToolsServer.connectPipe());
   await secondClient.connect();
   const { threadFront: secondThreadFront } = await attachTestThread(
     secondClient,

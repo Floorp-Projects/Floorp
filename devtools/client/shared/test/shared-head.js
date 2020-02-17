@@ -166,15 +166,15 @@ registerCleanupFunction(async function cleanup() {
   await waitForTick();
 
   // All connections must be cleaned up by the test when the test ends.
-  const { DebuggerServer } = require("devtools/server/debugger-server");
+  const { DevToolsServer } = require("devtools/server/devtools-server");
   ok(
-    !DebuggerServer.hasConnection(),
-    "The main process DebuggerServer has no pending connection when the test ends"
+    !DevToolsServer.hasConnection(),
+    "The main process DevToolsServer has no pending connection when the test ends"
   );
   // If there is still open connection, close all of them so that following tests
   // could pass.
-  if (DebuggerServer.hasConnection()) {
-    for (const conn of Object.values(DebuggerServer._connections)) {
+  if (DevToolsServer.hasConnection()) {
+    for (const conn of Object.values(DevToolsServer._connections)) {
       conn.close();
     }
   }
@@ -760,7 +760,7 @@ function createTestHTTPServer() {
  * @param {string} url
  *        Actor module URL or absolute require path
  * @param {json} options
- *        Arguments to be passed to DebuggerServer.registerModule
+ *        Arguments to be passed to DevToolsServer.registerModule
  */
 async function registerActorInContentProcess(url, options) {
   function convertChromeToFile(uri) {

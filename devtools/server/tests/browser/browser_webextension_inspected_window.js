@@ -45,7 +45,7 @@ async function setup(pageUrl) {
 
 async function teardown({ client, extension }) {
   await client.close();
-  DebuggerServer.destroy();
+  DevToolsServer.destroy();
   gBrowser.removeCurrentTab();
   await extension.unload();
 }

@@ -5,12 +5,12 @@
 
 // Get the object, from the server side, for a given actor ID
 function getActorInstance(connID, actorID) {
-  return DebuggerServer._connections[connID].getActor(actorID);
+  return DevToolsServer._connections[connID].getActor(actorID);
 }
 
 /**
  * The purpose of these tests is to verify that it's possible to add actors
- * both before and after the DebuggerServer has been initialized, so addons
+ * both before and after the DevToolsServer has been initialized, so addons
  * that add actors don't have to poll the object for its initialization state
  * in order to add actors after initialization but rather can add actors anytime
  * regardless of the object's state.
@@ -30,7 +30,7 @@ add_task(async function() {
     }
   );
 
-  const client = await startTestDebuggerServer("example tab");
+  const client = await startTestDevToolsServer("example tab");
 
   ActorRegistry.registerModule("resource://test/post_init_global_actors.js", {
     prefix: "postInitGlobal",
@@ -75,7 +75,7 @@ add_task(async function() {
   Assert.equal(reply.message, "pong");
 
   // Consider that there is only one connection, and the first one is ours
-  const connID = Object.keys(DebuggerServer._connections)[0];
+  const connID = Object.keys(DevToolsServer._connections)[0];
   const postInitGlobalActor = getActorInstance(
     connID,
     actors.postInitGlobalActor

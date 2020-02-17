@@ -61,7 +61,7 @@ async function testNativeAnonymousStartingNode(walker) {
       const { require } = ChromeUtils.import(
         "resource://devtools/shared/Loader.jsm"
       );
-      const { DebuggerServer } = require("devtools/server/debugger-server");
+      const { DevToolsServer } = require("devtools/server/devtools-server");
 
       const {
         DocumentWalker,
@@ -84,7 +84,7 @@ async function testNativeAnonymousStartingNode(walker) {
       // Convert actorID to current compartment string otherwise
       // searchAllConnectionsForActor is confused and won't find the actor.
       actorID = String(actorID);
-      const serverWalker = DebuggerServer.searchAllConnectionsForActor(actorID);
+      const serverWalker = DevToolsServer.searchAllConnectionsForActor(actorID);
       const node = await serverWalker.attachElement(scrollbar);
 
       ok(node, "A response has arrived");

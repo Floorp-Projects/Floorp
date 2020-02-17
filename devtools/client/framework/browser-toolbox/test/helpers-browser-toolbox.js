@@ -62,7 +62,7 @@ async function initBrowserToolboxTask({
     "Has session state"
   );
 
-  // The port of the DebuggerServer installed in the toolbox process is fixed.
+  // The port of the DevToolsServer installed in the toolbox process is fixed.
   // See browser-toolbox-window.js
   let transport;
   while (true) {

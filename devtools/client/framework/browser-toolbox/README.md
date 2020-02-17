@@ -18,7 +18,7 @@ When describing the setup used by the Browser Toolbox, we will refer to those tw
 
 The startup sequence of the browser toolbox begins in the target Firefox.
 
-`browser-toolbox/Launcher.jsm` will be first reponsible for creating a remote DebuggerServer. This new DebuggerServer runs in the parent process but is separated from any existing DevTools DebuggerServer that spawned earlier for regular DevTools usage. Thanks to this, we will be able to debug files loaded in those regular DebuggerServers used for content toolboxes, about:debugging, ...
+`browser-toolbox/Launcher.jsm` will be first reponsible for creating a remote DevToolsServer. This new DevToolsServer runs in the parent process but is separated from any existing DevTools DevToolsServer that spawned earlier for regular DevTools usage. Thanks to this, we will be able to debug files loaded in those regular DevToolsServers used for content toolboxes, about:debugging, ...
 
 Then we need to start the client Firefox. To do that, `browser-toolbox/Launcher.jsm` creates a profile that will be a copy of the current profile loaded in the target Firefox, so that all user preferences can be automatically ported over. As a reminder both client and target Firefox will run simultaneously, so they can't use the same profile.
 

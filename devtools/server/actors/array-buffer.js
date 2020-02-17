@@ -10,7 +10,7 @@ const { arrayBufferSpec } = require("devtools/shared/specs/array-buffer");
 /**
  * Creates an actor for the specified ArrayBuffer.
  *
- * @param {DebuggerServerConnection} conn
+ * @param {DevToolsServerConnection} conn
  *    The server connection.
  * @param buffer ArrayBuffer
  *        The buffer.

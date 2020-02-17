@@ -6,7 +6,7 @@
 
 const { Cc, Ci, Cr } = require("chrome");
 const EventEmitter = require("devtools/shared/event-emitter");
-const { DebuggerServer } = require("devtools/server/debugger-server");
+const { DevToolsServer } = require("devtools/server/devtools-server");
 const { DebuggerClient } = require("devtools/shared/client/debugger-client");
 const Services = require("Services");
 
@@ -31,7 +31,7 @@ const REMOTE_TIMEOUT = "devtools.debugger.remote-timeout";
  * # Connection
  *
  * A connection is a wrapper around a debugger client. It has a simple
- * API to instantiate a connection to a debugger server. Once disconnected,
+ * API to instantiate a connection to a devtools server. Once disconnected,
  * no need to re-create a Connection object. Calling `connect()` again
  * will re-create a debugger client.
  *
@@ -302,7 +302,7 @@ Connection.prototype = {
       return this._customTransport;
     }
     if (!this.host) {
-      return DebuggerServer.connectPipe();
+      return DevToolsServer.connectPipe();
     }
     const settings = this.socketSettings;
     const transport = await DebuggerClient.socketConnect(settings);

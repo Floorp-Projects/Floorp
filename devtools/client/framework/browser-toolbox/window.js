@@ -225,7 +225,7 @@ async function openToolbox(targetFront) {
 }
 
 function installTestingServer() {
-  // Install a DebuggerServer in this process and inform the server of its
+  // Install a DevToolsServer in this process and inform the server of its
   // location. Tests operating on the browser toolbox run in the server
   // (the firefox parent process) and can connect to this new server using
   // initBrowserToolboxTask(), allowing them to evaluate scripts here.
@@ -233,20 +233,20 @@ function installTestingServer() {
   const testLoader = new DevToolsLoader({
     invisibleToDebugger: true,
   });
-  const { DebuggerServer } = testLoader.require(
-    "devtools/server/debugger-server"
+  const { DevToolsServer } = testLoader.require(
+    "devtools/server/devtools-server"
   );
   const { SocketListener } = testLoader.require(
     "devtools/shared/security/socket"
   );
 
-  DebuggerServer.init();
-  DebuggerServer.registerAllActors();
-  DebuggerServer.allowChromeProcess = true;
+  DevToolsServer.init();
+  DevToolsServer.registerAllActors();
+  DevToolsServer.allowChromeProcess = true;
 
   // Use a fixed port which initBrowserToolboxTask can look for.
   const socketOptions = { portOrPath: 6001 };
-  const listener = new SocketListener(DebuggerServer, socketOptions);
+  const listener = new SocketListener(DevToolsServer, socketOptions);
   listener.open();
 }
 

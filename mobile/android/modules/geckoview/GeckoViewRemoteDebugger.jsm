@@ -24,9 +24,9 @@ XPCOMUtils.defineLazyGetter(this, "require", () => {
   return require;
 });
 
-XPCOMUtils.defineLazyGetter(this, "DebuggerServer", () => {
-  const { DebuggerServer } = require("devtools/server/debugger-server");
-  return DebuggerServer;
+XPCOMUtils.defineLazyGetter(this, "DevToolsServer", () => {
+  const { DevToolsServer } = require("devtools/server/devtools-server");
+  return DevToolsServer;
 });
 
 XPCOMUtils.defineLazyGetter(this, "SocketListener", () => {
@@ -71,16 +71,16 @@ var GeckoViewRemoteDebugger = {
     }
 
     debug`onEnable`;
-    DebuggerServer.init();
-    DebuggerServer.registerAllActors();
+    DevToolsServer.init();
+    DevToolsServer.registerAllActors();
     const {
       createRootActor,
     } = require("resource://gre/modules/dbg-browser-actors.js");
-    DebuggerServer.setRootActor(createRootActor);
-    DebuggerServer.allowChromeProcess = true;
-    DebuggerServer.chromeWindowType = "navigator:geckoview";
+    DevToolsServer.setRootActor(createRootActor);
+    DevToolsServer.allowChromeProcess = true;
+    DevToolsServer.chromeWindowType = "navigator:geckoview";
     // Force the Server to stay alive even if there are no connections at the moment.
-    DebuggerServer.keepAlive = true;
+    DevToolsServer.keepAlive = true;
 
     // Socket address for USB remote debugger expects
     // @ANDROID_PACKAGE_NAME/firefox-debugger-socket.
@@ -120,14 +120,14 @@ var GeckoViewRemoteDebugger = {
 class USBRemoteDebugger {
   start(aPortOrPath) {
     try {
-      const AuthenticatorType = DebuggerServer.Authenticators.get("PROMPT");
+      const AuthenticatorType = DevToolsServer.Authenticators.get("PROMPT");
       const authenticator = new AuthenticatorType.Server();
       authenticator.allowConnection = this.allowConnection.bind(this);
       const socketOptions = {
         authenticator,
         portOrPath: aPortOrPath,
       };
-      this._listener = new SocketListener(DebuggerServer, socketOptions);
+      this._listener = new SocketListener(DevToolsServer, socketOptions);
       this._listener.open();
       debug`USB remote debugger - listening on ${aPortOrPath}`;
     } catch (e) {
@@ -150,12 +150,12 @@ class USBRemoteDebugger {
 
   allowConnection(aSession) {
     if (!this._listener) {
-      return DebuggerServer.AuthenticationResult.DENY;
+      return DevToolsServer.AuthenticationResult.DENY;
     }
 
     if (aSession.server.port) {
-      return DebuggerServer.AuthenticationResult.DENY;
+      return DevToolsServer.AuthenticationResult.DENY;
     }
-    return DebuggerServer.AuthenticationResult.ALLOW;
+    return DevToolsServer.AuthenticationResult.ALLOW;
   }
 }

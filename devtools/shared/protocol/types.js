@@ -396,7 +396,7 @@ types.addPolymorphicType = function(name, subtypes) {
       }
 
       // Extract the typeName out of the actor ID, which should be composed like this
-      // ${DebuggerServerConnectionPrefix}.${typeName}${Number}
+      // ${DevToolsServerConnectionPrefix}.${typeName}${Number}
       const typeName = actorID.match(/\.([a-zA-Z]+)\d+$/)[1];
       if (!subtypes.includes(typeName)) {
         throw new Error(

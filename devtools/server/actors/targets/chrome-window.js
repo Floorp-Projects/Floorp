@@ -48,7 +48,7 @@ const chromeWindowTargetPrototype = extend({}, browsingContextTargetPrototype);
  *
  * You can request a specific window's actor via RootActor.getWindow().
  *
- * @param connection DebuggerServerConnection
+ * @param connection DevToolsServerConnection
  *        The connection to the client.
  * @param window DOMWindow
  *        The window.

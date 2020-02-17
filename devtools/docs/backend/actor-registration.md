@@ -36,4 +36,4 @@ If you are adding a new built-in actor, you should be registering it using `Acto
 
 The `ActorRegistry` loads and creates all of the actors lazily to keep the initial memory usage down (which is extremely important on lower end devices).
 
-It becomes especially important when debugging pages with e10s when there are more than one process, because that's when we need to spawn a `DebuggerServer` per process (it may not be immediately obvious that the server in the main process is mostly only here for piping messages to the actors in the child process).
+It becomes especially important when debugging pages with e10s when there are more than one process, because that's when we need to spawn a `DevToolsServer` per process (it may not be immediately obvious that the server in the main process is mostly only here for piping messages to the actors in the child process).

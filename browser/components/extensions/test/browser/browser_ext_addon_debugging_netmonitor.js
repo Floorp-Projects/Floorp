@@ -5,14 +5,14 @@
 const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
 
 const { DebuggerClient } = require("devtools/shared/client/debugger-client");
-const { DebuggerServer } = require("devtools/server/debugger-server");
+const { DevToolsServer } = require("devtools/server/devtools-server");
 const { gDevTools } = require("devtools/client/framework/devtools");
 const { Toolbox } = require("devtools/client/framework/toolbox");
 
 async function setupToolboxTest(extensionId) {
-  DebuggerServer.init();
-  DebuggerServer.registerAllActors();
-  const transport = DebuggerServer.connectPipe();
+  DevToolsServer.init();
+  DevToolsServer.registerAllActors();
+  const transport = DevToolsServer.connectPipe();
   const client = new DebuggerClient(transport);
   await client.connect();
   const addonFront = await client.mainRoot.getAddon({ id: extensionId });

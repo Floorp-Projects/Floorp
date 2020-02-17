@@ -148,11 +148,11 @@ add_task(async function() {
     const { require } = ChromeUtils.import(
       "resource://devtools/shared/Loader.jsm"
     );
-    const { DebuggerServer } = require("devtools/server/debugger-server");
+    const { DevToolsServer } = require("devtools/server/devtools-server");
     const EventEmitter = require("devtools/shared/event-emitter");
 
     // !Hack! Retrieve a server side object, the FrameTargetActor instance
-    const targetActor = DebuggerServer.searchAllConnectionsForActor(actorId);
+    const targetActor = DevToolsServer.searchAllConnectionsForActor(actorId);
     // In order to listen to internal will-navigate/navigate events
     EventEmitter.on(targetActor, "will-navigate", function(data) {
       sendSyncMessage("devtools-test:event", {
@@ -203,5 +203,5 @@ add_task(async function() {
   );
   await target.destroy();
   Services.obs.addObserver(httpObserver, "http-on-modify-request");
-  DebuggerServer.destroy();
+  DevToolsServer.destroy();
 });

@@ -20,7 +20,7 @@ let expectedConsoleCalls = [];
 
 function doConsoleCalls(aState)
 {
-  const longString = (new Array(DebuggerServer.LONG_STRING_LENGTH + 2)).join("a");
+  const longString = (new Array(DevToolsServer.LONG_STRING_LENGTH + 2)).join("a");
 
   top.console.log("foobarBaz-log", undefined);
 
@@ -135,7 +135,7 @@ function doConsoleCalls(aState)
         {
           type: "longString",
           initial: longString.substring(0,
-            DebuggerServer.LONG_STRING_INITIAL_LENGTH),
+            DevToolsServer.LONG_STRING_INITIAL_LENGTH),
           length: longString.length,
           actor: /[a-z]/,
         },

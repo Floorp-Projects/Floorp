@@ -5,10 +5,10 @@
 "use strict";
 
 async function connect() {
-  DebuggerServer.init();
-  DebuggerServer.registerAllActors();
+  DevToolsServer.init();
+  DevToolsServer.registerAllActors();
 
-  const client = new DebuggerClient(DebuggerServer.connectPipe());
+  const client = new DebuggerClient(DevToolsServer.connectPipe());
   await client.connect();
 
   const addons = await client.mainRoot.getFront("addons");

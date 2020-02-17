@@ -6,7 +6,7 @@
 // Test Debugger.Object.prototype.unsafeDereference in the presence of
 // interesting cross-compartment wrappers.
 //
-// This is not really a debugger server test; it's more of a Debugger test.
+// This is not really a devtools server test; it's more of a Debugger test.
 // But we need xpcshell and Components.utils.Sandbox to get
 // cross-compartment wrappers with interesting properties, and this is the
 // xpcshell test directory most closely related to the JS Debugger API.

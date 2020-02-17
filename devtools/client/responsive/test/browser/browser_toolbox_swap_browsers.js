@@ -13,11 +13,11 @@ function getServerConnections(browser) {
     const { require } = ChromeUtils.import(
       "resource://devtools/shared/Loader.jsm"
     );
-    const { DebuggerServer } = require("devtools/server/debugger-server");
-    if (!DebuggerServer._connections) {
+    const { DevToolsServer } = require("devtools/server/devtools-server");
+    if (!DevToolsServer._connections) {
       return 0;
     }
-    return Object.getOwnPropertyNames(DebuggerServer._connections);
+    return Object.getOwnPropertyNames(DevToolsServer._connections);
   });
 }
 

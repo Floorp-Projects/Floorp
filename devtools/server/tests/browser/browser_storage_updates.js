@@ -247,7 +247,7 @@ function checkStoreValue(name, value, store) {
 
 async function finishTests(target) {
   await target.destroy();
-  DebuggerServer.destroy();
+  DevToolsServer.destroy();
   finish();
 }
 
