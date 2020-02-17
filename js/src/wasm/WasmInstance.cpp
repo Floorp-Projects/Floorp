@@ -1436,7 +1436,7 @@ void Instance::tracePrivate(JSTracer* trc) {
   // This method is only called from WasmInstanceObject so the only reason why
   // TraceEdge is called is so that the pointer can be updated during a moving
   // GC.
-  MOZ_ASSERT(gc::IsMarked(trc->runtime(), &object_));
+  MOZ_ASSERT(!gc::IsAboutToBeFinalized(&object_));
   TraceEdge(trc, &object_, "wasm instance object");
 
   // OK to just do one tier here; though the tiers have different funcImports

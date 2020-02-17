@@ -3544,8 +3544,7 @@ static inline void CheckIsMarkedThing(T* thingp) {
   // try to check the zone. Some threads have access to all zones when sweeping.
   JSContext* cx = TlsContext.get();
   MOZ_ASSERT(cx->gcUse != JSContext::GCUse::Finalizing);
-  if (cx->gcUse == JSContext::GCUse::Sweeping ||
-      cx->gcUse == JSContext::GCUse::Marking) {
+  if (cx->gcUse == JSContext::GCUse::Sweeping) {
     Zone* zone = thing->zoneFromAnyThread();
     MOZ_ASSERT_IF(cx->gcSweepZone,
                   cx->gcSweepZone == zone || zone->isAtomsZone());
