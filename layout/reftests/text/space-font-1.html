@@ -6,7 +6,7 @@
   <style type="text/css">
     @font-face {
       font-family: "test";
-      src: url(../fonts/markA.ttf);
+      src: url(../fonts/markA-nospace.ttf);
     }
     div {
       font-family: test, monospace;
@@ -20,7 +20,7 @@
 </head>
 
 <body>
-  <!-- markA does not have a glyph for the <space> character,
+  <!-- markA-nospace does not have a glyph for the <space> character,
        so the spaces should fall back to 'monospace'. -->
   <div><b>A</b> <b>A</b> <i>A</i> <i>A</i><span>&nbsp;</span></div>
 </body>
