@@ -170,17 +170,13 @@ NS_IMETHODIMP ProxyMIMEInfo::SetFileExtensions(const nsACString& aExtensions) {
 /* boolean extensionExists (in AUTF8String aExtension); */
 NS_IMETHODIMP ProxyMIMEInfo::ExtensionExists(const nsACString& aExtension,
                                              bool* _retval) {
-  *_retval = mProxyHandlerInfo->Extensions().Contains(
-      aExtension, nsCaseInsensitiveCStringArrayComparator());
+  *_retval = mProxyHandlerInfo->Extensions().Contains(aExtension);
   return NS_OK;
 }
 
 /* void appendExtension (in AUTF8String aExtension); */
 NS_IMETHODIMP ProxyMIMEInfo::AppendExtension(const nsACString& aExtension) {
-  if (!mProxyHandlerInfo->Extensions().Contains(
-          aExtension, nsCaseInsensitiveCStringArrayComparator())) {
-    mProxyHandlerInfo->Extensions().AppendElement(aExtension);
-  }
+  mProxyHandlerInfo->Extensions().AppendElement(aExtension);
   return NS_OK;
 }
 
