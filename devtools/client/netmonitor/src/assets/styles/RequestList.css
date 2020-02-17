@@ -225,6 +225,15 @@
   text-overflow: initial;
 }
 
+.requests-list-status-code.status-code-blocked {
+  /* Improve the icon's vertical alignment by matching the row height. */
+  display: inline-flex;
+  vertical-align: top;
+  align-items: center;
+  justify-content: center;
+  height: 24px;
+}
+
 .requests-security-icon-group {
   display: inline-flex;
   vertical-align: top;
@@ -280,15 +289,18 @@
   fill: var(--theme-icon-dimmed-color);
 }
 
+.request-list-item.selected .status-code-blocked,
 .request-list-item.selected .requests-security-state-icon,
 .request-list-item.selected .tracking-resource {
   fill: currentColor;
   stroke: currentColor;
+  color: var(--theme-selection-color);
 }
 
+.theme-dark .request-list-item.selected .status-code-blocked,
 .theme-dark .request-list-item.selected .requests-security-state-icon,
 .theme-dark .request-list-item.selected .tracking-resource {
-  fill: rgba(255, 255, 255, 0.75);
+  color: rgba(255, 255, 255, 0.75);
 }
 
 .request-list-item .requests-list-column,
