@@ -5,6 +5,7 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import datetime
+import re
 
 from six import text_type
 
@@ -57,13 +58,14 @@ def handle_coverage(config, tasks):
 @transforms.add
 def interpolate_missing_values(config, tasks):
     timestamp = _get_timestamp(config)
-    buildid = _get_buildid(config)
+    version = get_version()
+    nightly_version = _get_nightly_version(config, version)
 
     for task in tasks:
         for field in ('description', 'run.gradlew', 'treeherder.symbol'):
             component = task["attributes"]["component"]
             _deep_format(
-                task, field, component=component, timestamp=timestamp, buildid=buildid
+                task, field, component=component, timestamp=timestamp, nightlyVersion=nightly_version
             )
 
         yield task
@@ -79,6 +81,25 @@ def _get_buildid(config):
     push_date_string = config.params["moz_build_date"]
     push_date_time = datetime.datetime.strptime(push_date_string, "%Y%m%d%H%M%S")
     return push_date_time.strftime('%Y%m%d%H%M%S')
+
+
+def _get_nightly_version(config, version):
+    buildid = _get_buildid(config)
+    # TODO: to replace here with mozilla-version sanity check and parsing
+    pattern = re.compile(r"""
+        (?P<major_number>\d+)\.(?P<minor_number>\d+)\.(?P<patch_number>\d+)
+        """, re.VERBOSE)
+    match = pattern.search(version)
+    try:
+        _ = match.group()
+    except AttributeError:
+        raise Exception('version {} does not follow semver'.format(version))
+    version_dict = match.groupdict()
+    return '{}.{}.{}'.format(
+            version_dict['major_number'],
+            version_dict['minor_number'],
+            buildid
+    )
 
 
 def _deep_format(object, field, **format_kwargs):
@@ -101,7 +122,9 @@ def _deep_format(object, field, **format_kwargs):
 @transforms.add
 def add_artifacts(config, tasks):
     timestamp = _get_timestamp(config)
+    # TODO: continue from here
     version = get_version()
+    nightly_version = _get_nightly_version(config, version)
 
     for task in tasks:
         artifact_template = task.pop("artifact-template", {})

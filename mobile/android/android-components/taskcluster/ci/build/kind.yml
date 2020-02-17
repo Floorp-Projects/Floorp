@@ -55,7 +55,7 @@ job-defaults:
                     - ':{component}:publish'
                     - ':{component}:renameSnapshotArtifacts'
                 nightly-release:
-                    - '-Pbuildid={buildid}'
+                    - '-PnightlyVersion={nightlyVersion}'
                     - ':{component}:assemble'
                     - ':{component}:test'
                     - ':{component}:lint'
