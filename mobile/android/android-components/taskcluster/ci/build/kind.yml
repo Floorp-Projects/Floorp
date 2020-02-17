@@ -55,12 +55,12 @@ job-defaults:
                     - ':{component}:publish'
                     - ':{component}:renameSnapshotArtifacts'
                 nightly-release:
-                    - '-Pnightly'
-                    - '-Ptimestamp={timestamp}'
+                    - '-Pbuildid={buildid}'
                     - ':{component}:assemble'
                     - ':{component}:test'
                     - ':{component}:lint'
                     - ':{component}:publish'
+                    - ':{component}:renameArtifacts'
                 default:
                     by-component:
                         # No lintRelease on this job, gradle task isn't defined

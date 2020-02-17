@@ -55,14 +55,15 @@ def handle_coverage(config, tasks):
 
 
 @transforms.add
-def format_component_name_and_timestamp(config, tasks):
+def interpolate_missing_values(config, tasks):
     timestamp = _get_timestamp(config)
+    buildid = _get_buildid(config)
 
     for task in tasks:
         for field in ('description', 'run.gradlew', 'treeherder.symbol'):
             component = task["attributes"]["component"]
             _deep_format(
-                task, field, component=component, timestamp=timestamp
+                task, field, component=component, timestamp=timestamp, buildid=buildid
             )
 
         yield task
@@ -72,6 +73,12 @@ def _get_timestamp(config):
     push_date_string = config.params["moz_build_date"]
     push_date_time = datetime.datetime.strptime(push_date_string, "%Y%m%d%H%M%S")
     return push_date_time.strftime('%Y%m%d.%H%M%S-1')
+
+
+def _get_buildid(config):
+    push_date_string = config.params["moz_build_date"]
+    push_date_time = datetime.datetime.strptime(push_date_string, "%Y%m%d%H%M%S")
+    return push_date_time.strftime('%Y%m%d%H%M%S')
 
 
 def _deep_format(object, field, **format_kwargs):
