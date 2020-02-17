@@ -22,7 +22,7 @@ add_task(async function() {
   }
 
   const onMessage = waitForMessage(hud, "bug618078exception");
-  await loadDocument(hud.toolbox, TEST_URI2);
+  await navigateTo(TEST_URI2);
   const { node } = await onMessage;
   ok(true, "Network exception logged as expected.");
   ok(node.classList.contains("error"), "Network exception is logged as error.");

@@ -19,7 +19,7 @@ const TEST_URI =
 add_task(async function() {
   await pushPref("devtools.target-switching.enabled", true);
   const hud = await openNewTabAndConsole(TEST_URI);
-  await loadDocument(hud.toolbox, TEST_FILE);
+  await navigateTo(TEST_FILE);
 
   await waitFor(() => findMessage(hud, EXPECTED_RESULT, ".message.warn"));
   ok(

@@ -91,7 +91,7 @@ async function navigateAndCheckWarningMessage({ url, name, text }, hud) {
   await clearOutput(hud);
 
   const onMessage = waitForMessage(hud, text, ".message.warn");
-  await loadDocument(hud.toolbox, url);
+  await navigateTo(url);
   const { node } = await onMessage;
   ok(node, name);
 

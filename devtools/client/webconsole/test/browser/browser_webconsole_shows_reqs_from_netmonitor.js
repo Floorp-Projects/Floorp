@@ -37,7 +37,7 @@ add_task(async function task() {
     ],
   });
 
-  await loadDocument(hud.toolbox, TEST_PATH);
+  await navigateTo(TEST_PATH);
   info("Document loaded.");
 
   await onMessageAdded;
