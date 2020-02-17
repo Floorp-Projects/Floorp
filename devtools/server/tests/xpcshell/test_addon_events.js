@@ -14,7 +14,7 @@ add_task(async function testReloadExitedAddon() {
   DevToolsServer.init();
   DevToolsServer.registerAllActors();
 
-  const client = new DebuggerClient(DevToolsServer.connectPipe());
+  const client = new DevToolsClient(DevToolsServer.connectPipe());
   await client.connect();
 
   // Retrieve the current list of addons to be notified of the next list update.

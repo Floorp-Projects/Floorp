@@ -23,7 +23,7 @@ add_task(async function() {
     testResumed = true;
   });
   const transport = DevToolsServer.connectPipe();
-  const client = new DebuggerClient(transport);
+  const client = new DevToolsClient(transport);
   await client.connect();
 
   // Ensure that global actors are available. Just test the device actor.

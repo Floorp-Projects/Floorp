@@ -20,7 +20,7 @@ const {
  * created on the server, hiding implementation details.
  *
  * @param object client
- *        The DebuggerClient instance we live for.
+ *        The DevToolsClient instance we live for.
  */
 class WebConsoleFront extends FrontClassWithSpec(webconsoleSpec) {
   constructor(client, targetFront, parentFront) {

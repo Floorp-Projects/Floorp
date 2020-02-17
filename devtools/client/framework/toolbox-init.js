@@ -87,7 +87,7 @@ async function initToolbox(url, host) {
   } = require("devtools/client/framework/target-from-url");
   const { Toolbox } = require("devtools/client/framework/toolbox");
   const { DevToolsServer } = require("devtools/server/devtools-server");
-  const { DebuggerClient } = require("devtools/shared/client/debugger-client");
+  const { DevToolsClient } = require("devtools/shared/client/devtools-client");
 
   // Specify the default tool to open
   const tool = url.searchParams.get("tool");
@@ -117,7 +117,7 @@ async function initToolbox(url, host) {
 
       DevToolsServer.init();
       DevToolsServer.registerAllActors();
-      const client = new DebuggerClient(DevToolsServer.connectPipe());
+      const client = new DevToolsClient(DevToolsServer.connectPipe());
 
       await client.connect();
       // Creates a target for a given browser iframe.

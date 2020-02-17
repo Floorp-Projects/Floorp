@@ -5,8 +5,8 @@
 "use strict";
 
 class ConsoleCommands {
-  constructor({ debuggerClient, proxy, threadFront, currentTarget }) {
-    this.debuggerClient = debuggerClient;
+  constructor({ devToolsClient, proxy, threadFront, currentTarget }) {
+    this.devToolsClient = devToolsClient;
     this.proxy = proxy;
     this.threadFront = threadFront;
     this.currentTarget = currentTarget;
@@ -25,7 +25,7 @@ class ConsoleCommands {
     // given action on a specific object, so it should take precedence over selected
     // node front.
     if (selectedObjectActor) {
-      const objectFront = this.debuggerClient.getFrontByID(selectedObjectActor);
+      const objectFront = this.devToolsClient.getFrontByID(selectedObjectActor);
       if (objectFront) {
         front = await objectFront.targetFront.getFront("console");
       }

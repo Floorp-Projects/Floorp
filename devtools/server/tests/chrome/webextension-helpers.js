@@ -8,7 +8,7 @@
 const { require, loader } = ChromeUtils.import(
   "resource://devtools/shared/Loader.jsm"
 );
-const { DebuggerClient } = require("devtools/shared/client/debugger-client");
+const { DevToolsClient } = require("devtools/shared/client/devtools-client");
 const { DevToolsServer } = require("devtools/server/devtools-server");
 
 const {
@@ -99,7 +99,7 @@ function collectFrameUpdates({ client }, matchFn) {
 
 async function attachAddon(addonId) {
   const transport = DevToolsServer.connectPipe();
-  const client = new DebuggerClient(transport);
+  const client = new DevToolsClient(transport);
 
   await client.connect();
 

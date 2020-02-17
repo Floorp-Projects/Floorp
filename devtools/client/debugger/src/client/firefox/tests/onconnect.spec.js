@@ -36,7 +36,7 @@ const targetList = {
   },
 };
 
-const debuggerClient = {
+const devToolsClient = {
   mainRoot: {
     traits: {},
   },
@@ -61,7 +61,7 @@ describe("firefox onConnect", () => {
     await onConnect(
       {
         targetList,
-        debuggerClient,
+        devToolsClient,
       },
       actions
     );

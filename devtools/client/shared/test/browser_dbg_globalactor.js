@@ -9,7 +9,7 @@
 
 var { DevToolsServer } = require("devtools/server/devtools-server");
 var { ActorRegistry } = require("devtools/server/actors/utils/actor-registry");
-var { DebuggerClient } = require("devtools/shared/client/debugger-client");
+var { DevToolsClient } = require("devtools/shared/client/devtools-client");
 
 const ACTORS_URL = EXAMPLE_URL + "testactors.js";
 
@@ -24,7 +24,7 @@ add_task(async function() {
   });
 
   const transport = DevToolsServer.connectPipe();
-  const client = new DebuggerClient(transport);
+  const client = new DevToolsClient(transport);
   const [type] = await client.connect();
   is(type, "browser", "Root actor should identify itself as a browser.");
 

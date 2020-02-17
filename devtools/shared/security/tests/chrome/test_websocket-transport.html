@@ -13,7 +13,7 @@
 window.onload = function() {
   const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
   const Services = require("Services");
-  const {DebuggerClient} = require("devtools/shared/client/debugger-client");
+  const {DevToolsClient} = require("devtools/shared/client/devtools-client");
   const {DevToolsServer} = require("devtools/server/devtools-server");
   const { SocketListener } = require("devtools/shared/security/socket");
 
@@ -40,14 +40,14 @@ window.onload = function() {
     await listener.open();
     is(DevToolsServer.listeningSockets, 1, "1 listening socket");
 
-    const transport = await DebuggerClient.socketConnect({
+    const transport = await DevToolsClient.socketConnect({
       host: "127.0.0.1",
       port: listener.port,
       webSocket: true,
     });
     ok(transport, "Client transport created");
 
-    const client = new DebuggerClient(transport);
+    const client = new DevToolsClient(transport);
     const onUnexpectedClose = () => {
       ok(false, "Closed unexpectedly");
     };

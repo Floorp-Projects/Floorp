@@ -585,9 +585,9 @@ function addDeviceForTest(device) {
 }
 
 async function waitForClientClose(ui) {
-  info("Waiting for RDM debugger client to close");
+  info("Waiting for RDM devtools client to close");
   await ui.client.once("closed");
-  info("RDM's debugger client is now closed");
+  info("RDM's devtools client is now closed");
 }
 
 async function testDevicePixelRatio(ui, expected) {

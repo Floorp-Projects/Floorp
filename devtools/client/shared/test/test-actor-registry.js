@@ -61,14 +61,14 @@
   exports.getTestActorWithoutToolbox = async function(tab) {
     const { DevToolsServer } = require("devtools/server/devtools-server");
     const {
-      DebuggerClient,
-    } = require("devtools/shared/client/debugger-client");
+      DevToolsClient,
+    } = require("devtools/shared/client/devtools-client");
 
     // We need to spawn a client instance,
     // but for that we have to first ensure a server is running
     DevToolsServer.init();
     DevToolsServer.registerAllActors();
-    const client = new DebuggerClient(DevToolsServer.connectPipe());
+    const client = new DevToolsClient(DevToolsServer.connectPipe());
 
     await client.connect();
 

@@ -18,7 +18,7 @@ Bug 966991 - Test connectToFrame
 /* eslint-env mozilla/frame-script */
 
 const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
-const { DebuggerClient } = require("devtools/shared/client/debugger-client");
+const { DevToolsClient } = require("devtools/shared/client/devtools-client");
 const { DevToolsServer } = require("devtools/server/devtools-server");
 const {
   connectToFrame,
@@ -87,7 +87,7 @@ function runTests() {
     // Fake a first connection to an iframe
     const transport = DevToolsServer.connectPipe();
     const conn = transport._serverConnection;
-    const client = new DebuggerClient(transport);
+    const client = new DevToolsClient(transport);
     const actor = await connectToFrame(conn, iframe);
     ok(actor.testActor, "Got the test actor");
 
@@ -131,7 +131,7 @@ function runTests() {
     // Then fake a second one, that should spawn a new set of target-scoped actors
     const transport = DevToolsServer.connectPipe();
     const conn = transport._serverConnection;
-    const client = new DebuggerClient(transport);
+    const client = new DevToolsClient(transport);
     const actor = await connectToFrame(conn, iframe);
     ok(actor.testActor, "Got a test actor for the second connection");
     isnot(actor.testActor, firstActor,

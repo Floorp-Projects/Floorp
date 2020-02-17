@@ -46,7 +46,7 @@ loader.lazyRequireGetter(this, "Front", "devtools/shared/protocol", true);
  * provides the means to communicate with the server and exchange the messages
  * required by the protocol in a traditional JavaScript API.
  */
-function DebuggerClient(transport) {
+function DevToolsClient(transport) {
   this._transport = transport;
   this._transport.hooks = this;
 
@@ -72,7 +72,7 @@ function DebuggerClient(transport) {
     this.mainRoot = new RootFront(this, packet);
 
     // Root Front is a special case, managing itself as it doesn't have any parent.
-    // It will register itself to DebuggerClient as a Pool via Front._poolMap.
+    // It will register itself to DevToolsClient as a Pool via Front._poolMap.
     this.mainRoot.manage(this.mainRoot);
 
     this.emit("connected", packet.applicationType, packet.traits);
@@ -80,18 +80,18 @@ function DebuggerClient(transport) {
 }
 
 // Expose these to save callers the trouble of importing DebuggerSocket
-DebuggerClient.socketConnect = function(options) {
+DevToolsClient.socketConnect = function(options) {
   // Defined here instead of just copying the function to allow lazy-load
   return DebuggerSocket.connect(options);
 };
-DevToolsUtils.defineLazyGetter(DebuggerClient, "Authenticators", () => {
+DevToolsUtils.defineLazyGetter(DevToolsClient, "Authenticators", () => {
   return Authentication.Authenticators;
 });
-DevToolsUtils.defineLazyGetter(DebuggerClient, "AuthenticationResult", () => {
+DevToolsUtils.defineLazyGetter(DevToolsClient, "AuthenticationResult", () => {
   return Authentication.AuthenticationResult;
 });
 
-DebuggerClient.prototype = {
+DevToolsClient.prototype = {
   /**
    * Connect to the server and start exchanging protocol messages.
    *
@@ -438,7 +438,7 @@ DebuggerClient.prototype = {
    * Arrange to hand the next reply from |actor| to the handler bound to
    * |request|.
    *
-   * DebuggerClient.prototype.request / startBulkRequest usually takes care of
+   * DevToolsClient.prototype.request / startBulkRequest usually takes care of
    * establishing the handler for a given request, but in rare cases (well,
    * greetings from new root actors, is the only case at the moment) we must be
    * prepared for a "reply" that doesn't correspond to any request we sent.
@@ -795,7 +795,7 @@ DebuggerClient.prototype = {
   },
 
   /**
-   * Creates an object front for this DebuggerClient and the grip in parameter,
+   * Creates an object front for this DevToolsClient and the grip in parameter,
    * @param {Object} grip: The grip to create the ObjectFront for.
    * @returns {ObjectFront}
    */
@@ -808,7 +808,7 @@ DebuggerClient.prototype = {
   },
 };
 
-EventEmitter.decorate(DebuggerClient.prototype);
+EventEmitter.decorate(DevToolsClient.prototype);
 
 class Request extends EventEmitter {
   constructor(request) {
@@ -822,5 +822,5 @@ class Request extends EventEmitter {
 }
 
 module.exports = {
-  DebuggerClient,
+  DevToolsClient,
 };

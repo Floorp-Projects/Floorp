@@ -28,7 +28,7 @@ const {
   ActorRegistry,
 } = require("devtools/server/actors/utils/actor-registry");
 const { DevToolsServer } = require("devtools/server/devtools-server");
-const { DebuggerClient } = require("devtools/shared/client/debugger-client");
+const { DevToolsClient } = require("devtools/shared/client/devtools-client");
 const { SocketListener } = require("devtools/shared/security/socket");
 
 // Convert an nsIScriptError 'flags' value into an appropriate string.
@@ -156,7 +156,7 @@ var socket_transport = async function() {
   }
   const port = DevToolsServer._listeners[0].port;
   info("DevTools server port is " + port);
-  return DebuggerClient.socketConnect({ host: "127.0.0.1", port });
+  return DevToolsClient.socketConnect({ host: "127.0.0.1", port });
 };
 
 function local_transport() {

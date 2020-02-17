@@ -3,7 +3,7 @@
 const run_test = Test(async function() {
   initTestDevToolsServer();
   const connection = DevToolsServer.connectPipe();
-  const client = new DebuggerClient(connection);
+  const client = new DevToolsClient(connection);
 
   await client.connect();
 

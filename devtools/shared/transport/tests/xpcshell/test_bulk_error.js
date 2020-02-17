@@ -51,7 +51,7 @@ function add_test_bulk_actor() {
 var test_string_error = async function(transportFactory, onReady) {
   const transport = await transportFactory();
 
-  const client = new DebuggerClient(transport);
+  const client = new DevToolsClient(transport);
   return client
     .connect()
     .then(([app, traits]) => {

@@ -26,7 +26,7 @@ class RemoteClientManager {
    *        Remote runtime id (see devtools/client/aboutdebugging/src/types).
    * @param {String} type
    *        Remote runtime type (see devtools/client/aboutdebugging/src/types).
-   * @param {DebuggerClient} client
+   * @param {DevToolsClient} client
    * @param {Object} runtimeInfo
    *        See runtimeInfo type from client/aboutdebugging/src/types/runtime.js
    */

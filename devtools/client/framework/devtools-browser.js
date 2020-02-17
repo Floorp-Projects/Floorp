@@ -37,8 +37,8 @@ loader.lazyRequireGetter(
 );
 loader.lazyRequireGetter(
   this,
-  "DebuggerClient",
-  "devtools/shared/client/debugger-client",
+  "DevToolsClient",
+  "devtools/shared/client/devtools-client",
   true
 );
 loader.lazyRequireGetter(
@@ -364,12 +364,12 @@ var gDevToolsBrowser = (exports.gDevToolsBrowser = {
     DevToolsServer.allowChromeProcess = true;
 
     const transport = DevToolsServer.connectPipe();
-    const client = new DebuggerClient(transport);
+    const client = new DevToolsClient(transport);
 
     await client.connect();
     const target = await client.mainRoot.getProcess(processId);
     // Ensure closing the connection in order to cleanup
-    // the debugger client and also the server created in the
+    // the devtools client and also the server created in the
     // content process
     target.on("close", () => {
       client.close();

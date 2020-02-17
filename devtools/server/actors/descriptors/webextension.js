@@ -153,7 +153,7 @@ const WebExtensionDescriptorActor = protocol.ActorClassWithSpec(
       return {};
     },
 
-    // This function will be called from RootActor in case that the debugger client
+    // This function will be called from RootActor in case that the devtools client
     // retrieves list of addons with `iconDataURL` option.
     async loadIconDataURL() {
       this._iconDataURL = await this.getIconDataURL();

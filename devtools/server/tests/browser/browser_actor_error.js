@@ -21,7 +21,7 @@ async function test() {
   });
 
   const transport = DevToolsServer.connectPipe();
-  const gClient = new DebuggerClient(transport);
+  const gClient = new DevToolsClient(transport);
   await gClient.connect();
 
   const { errorActor } = await gClient.mainRoot.rootForm;

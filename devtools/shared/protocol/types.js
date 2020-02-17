@@ -314,7 +314,7 @@ types.addActorType = function(name) {
       // existing front on the connection, and create the front
       // if it isn't found.
       const actorID = typeof v === "string" ? v : v.actor;
-      // `ctx.conn` is a DebuggerClient
+      // `ctx.conn` is a DevToolsClient
       let front = ctx.conn.getFrontByID(actorID);
 
       // When the type `${name}#actorid` is used, `v` is a string refering to the
@@ -553,8 +553,8 @@ exports.registerFront = function(cls) {
  * front of the given type by picking its actor ID out of either the target or root
  * front's form.
  *
- * @param DebuggerClient client
- *    The DebuggerClient instance to use.
+ * @param DevToolsClient client
+ *    The DevToolsClient instance to use.
  * @param string typeName
  *    The type name of the front to instantiate. This is defined in its specifiation.
  * @param json form

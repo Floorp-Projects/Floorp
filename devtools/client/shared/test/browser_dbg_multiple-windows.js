@@ -9,7 +9,7 @@
  */
 
 var { DevToolsServer } = require("devtools/server/devtools-server");
-var { DebuggerClient } = require("devtools/shared/client/debugger-client");
+var { DevToolsClient } = require("devtools/shared/client/devtools-client");
 
 const TAB1_URL = "data:text/html;charset=utf-8,first-tab";
 const TAB2_URL = "data:text/html;charset=utf-8,second-tab";
@@ -19,7 +19,7 @@ add_task(async function() {
   DevToolsServer.registerAllActors();
 
   const transport = DevToolsServer.connectPipe();
-  const client = new DebuggerClient(transport);
+  const client = new DevToolsClient(transport);
   const [type] = await client.connect();
   is(type, "browser", "Root actor should identify itself as a browser.");
 

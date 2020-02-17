@@ -19,7 +19,7 @@ function ensurePrefType(name, expectedType) {
 
 /**
  * Normally the preferences are set using Services.prefs, but this actor allows
- * a debugger client to set preferences on the debuggee. This is particularly useful
+ * a devtools client to set preferences on the debuggee. This is particularly useful
  * when remote debugging, and the preferences should persist to the remote target
  * and not to the client. If used for a local target, it effectively behaves the same
  * as using Services.prefs.
