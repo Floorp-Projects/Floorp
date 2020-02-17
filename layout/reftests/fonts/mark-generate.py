@@ -29,7 +29,10 @@ for codepoint in range(ord("A"), ord("D") + 1):
         f.fontname = n
         f.familyname = n
         f.fullname = n
-        f.copyright = "Copyright (c) 2008 Mozilla Corporation"
+        f.copyright = "Copyright (c) 2008-2020 Mozilla Corporation"
+
+        g = f.createChar(ord(" "), "space")
+        g.width = 1000
 
         g = f.createChar(codepoint, charname)
         g.importOutlines("mark" + mark + "-glyph.svg")
@@ -51,8 +54,11 @@ for codepoint in range(ord("A"), ord("A") + 1):
             f.descent = 400
             f.upos = upos
             f.uwidth = 100
-            f.copyright = "Copyright (c) 2008 Mozilla Corporation"
+            f.copyright = "Copyright (c) 2008-2020 Mozilla Corporation"
     
+            g = f.createChar(ord(" "), "space")
+            g.width = 1000
+
             g = f.createChar(codepoint, charname)
             g.importOutlines("mark" + mark + "-glyph.svg")
             g.width = width
