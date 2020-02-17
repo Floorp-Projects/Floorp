@@ -1,8 +1,5 @@
-<!DOCTYPE html>
-<title>data URL dedicated workers</title>
-<script src="/resources/testharness.js"></script>
-<script src="/resources/testharnessreport.js"></script>
-<script>
+// META: title=data URL dedicated workers
+
 // Helper assert functions -START-
 function assert_worker_sends_pass(test_desc, mime_type, worker_code) {
   async_test(function(t) {
@@ -64,4 +61,3 @@ setup({allow_uncaught_exception:true});
 assert_worker_construction_fails('invalid javascript produces error', 'application/javascript', '}x=3');
 
 // Actual tests -END-
-</script>
