@@ -406,6 +406,34 @@ DIRECT_CALL_OVERRIDES = {
     ("PTestUrgentHangs", "parent"): (
         "TestUrgentHangsParent", "mozilla/_ipdltest/TestUrgentHangs.h"
     ),
+
+    ("PBackgroundFileHandle", "child"):
+    ("indexedDB::BackgroundFileHandleChild", "mozilla/dom/indexedDB/ActorsChild.h"),
+    ("PBackgroundFileRequest", "child"):
+    ("indexedDB::BackgroundFileRequestChild", "mozilla/dom/indexedDB/ActorsChild.h"),
+    ("PBackgroundIDBCursor", "child"):
+    ("indexedDB::BackgroundCursorChildBase", "mozilla/dom/indexedDB/ActorsChild.h"),
+    ("PBackgroundIDBDatabase", "child"):
+    ("indexedDB::BackgroundDatabaseChild", "mozilla/dom/indexedDB/ActorsChild.h"),
+    ("PBackgroundIDBDatabaseRequest", "child"):
+    ("indexedDB::BackgroundDatabaseRequestChild",
+     "mozilla/dom/indexedDB/ActorsChild.h"),
+    ("PBackgroundIDBFactory", "child"):
+    ("indexedDB::BackgroundFactoryChild", "mozilla/dom/indexedDB/ActorsChild.h"),
+    ("PBackgroundIDBFactoryRequest", "child"):
+    ("indexedDB::BackgroundFactoryRequestChild",
+     "mozilla/dom/indexedDB/ActorsChild.h"),
+    ("PBackgroundIDBRequest", "child"):
+    ("indexedDB::BackgroundRequestChild", "mozilla/dom/indexedDB/ActorsChild.h"),
+    ("PBackgroundIDBTransaction", "child"):
+    ("indexedDB::BackgroundTransactionChild", "mozilla/dom/indexedDB/ActorsChild.h"),
+    ("PBackgroundIDBVersionChangeTransaction", "child"):
+    ("indexedDB::BackgroundVersionChangeTransactionChild",
+     "mozilla/dom/indexedDB/ActorsChild.h"),
+    ("PBackgroundIndexedDBUtils", "child"):
+    ("indexedDB::BackgroundUtilsChild", "mozilla/dom/indexedDB/ActorsChild.h"),
+    ("PBackgroundMutableFile", "child"):
+    ("indexedDB::BackgroundMutableFileChild", "mozilla/dom/indexedDB/ActorsChild.h"),
 }
 
 # Our long term goal is to burn this list down, so new entries should be added
@@ -464,23 +492,11 @@ VIRTUAL_CALL_CLASSES = set([
     # .h is not exported
     ("PBackground", "child"),
     ("PBackground", "parent"),
-    ("PBackgroundFileHandle", "child"),
-    ("PBackgroundFileRequest", "child"),
-    ("PBackgroundIDBCursor", "child"),
-    ("PBackgroundIDBDatabase", "child"),
-    ("PBackgroundIDBDatabaseRequest", "child"),
-    ("PBackgroundIDBFactory", "child"),
-    ("PBackgroundIDBFactoryRequest", "child"),
-    ("PBackgroundIDBRequest", "child"),
-    ("PBackgroundIDBTransaction", "child"),
-    ("PBackgroundIDBVersionChangeTransaction", "child"),
-    ("PBackgroundIndexedDBUtils", "child"),
     ("PBackgroundLSDatabase", "child"),
     ("PBackgroundLSObserver", "child"),
     ("PBackgroundLSRequest", "child"),
     ("PBackgroundLSSimpleRequest", "child"),
     ("PBackgroundLSSnapshot", "child"),
-    ("PBackgroundMutableFile", "child"),
     ("PBackgroundSDBConnection", "child"),
     ("PBackgroundSDBRequest", "child"),
     ("PBroadcastChannel", "child"),
