@@ -3,7 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 """
-Script to rename snapshots artifacts to a runtime centralized BUILDID
+Script to rename artifacts to a runtime centralized BUILDID-based version
 """
 
 from __future__ import print_function
