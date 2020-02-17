@@ -879,7 +879,7 @@ that the exception should have as its .constructor.  For example,
 `func` - a function that should throw
 
 ### `assert_throws_exactly(value, func, description)`
-`valie` - the exact value that `func` is expected to throw if called.
+`value` - the exact value that `func` is expected to throw if called.
 
 `func` - a function that should throw
 
