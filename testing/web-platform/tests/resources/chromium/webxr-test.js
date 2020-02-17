@@ -1245,14 +1245,15 @@ class MockXRInputSource {
   getEmptyGamepad() {
     // Mojo complains if some of the properties on Gamepad are null, so set
     // everything to reasonable defaults that tests can override.
-    const gamepad = new device.mojom.Gamepad();
-    gamepad.connected = true;
-    gamepad.id = "";
-    gamepad.timestamp = 0;
-    gamepad.axes = [];
-    gamepad.buttons = [];
-    gamepad.mapping = "xr-standard";
-    gamepad.display_id = 0;
+    const gamepad = {
+      connected: true,
+      id: "",
+      timestamp: 0,
+      axes: [],
+      buttons: [],
+      mapping: "xr-standard",
+      display_id: 0,
+    };
 
     switch (this.handedness_) {
       case 'left':
