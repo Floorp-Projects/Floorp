@@ -177,11 +177,22 @@ function remoteSettingsFunction() {
     expectedTimestamp,
     trigger = "manual",
   } = {}) => {
-    const startedAt = new Date();
     let pollTelemetryArgs = {
       source: TELEMETRY_SOURCE_POLL,
       trigger,
     };
+
+    if (Utils.isOffline) {
+      console.info("Network is offline. Give up.");
+      await UptakeTelemetry.report(
+        TELEMETRY_COMPONENT,
+        UptakeTelemetry.STATUS.NETWORK_OFFLINE_ERROR,
+        pollTelemetryArgs
+      );
+      return;
+    }
+
+    const startedAt = new Date();
 
     // Check if the server backoff time is elapsed.
     if (gPrefs.prefHasUserValue(PREF_SETTINGS_SERVER_BACKOFF)) {

@@ -14,6 +14,19 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/AppConstants.jsm"
 );
 
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "CaptivePortalService",
+  "@mozilla.org/network/captive-portal-service;1",
+  "nsICaptivePortalService"
+);
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "gNetworkLinkService",
+  "@mozilla.org/network/network-link-service;1",
+  "nsINetworkLinkService"
+);
+
 XPCOMUtils.defineLazyGlobalGetters(this, ["fetch"]);
 
 // Create a new instance of the ConsoleAPI so we can control the maxLogLevel with a pref.
@@ -53,6 +66,27 @@ var Utils = {
    * Logger instance.
    */
   log,
+
+  /**
+   * Check if network is down.
+   *
+   * Note that if this returns false, it does not guarantee
+   * that network is up.
+   *
+   * @return {bool} Whether network is down or not.
+   */
+  get isOffline() {
+    try {
+      return (
+        Services.io.offline ||
+        CaptivePortalService.state == CaptivePortalService.LOCKED_PORTAL ||
+        !gNetworkLinkService.isLinkUp
+      );
+    } catch (ex) {
+      log.warn("Could not determine network status.", ex);
+    }
+    return false;
+  },
 
   /**
    * Check if local data exist for the specified client.
