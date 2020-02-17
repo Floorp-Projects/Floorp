@@ -638,29 +638,29 @@ policies and contribution forms [3].
         });
     }
 
-    function promise_rejects(test, expected, promise, description) {
+    function promise_rejects(test, code, promise, description) {
         return promise.then(test.unreached_func("Should have rejected: " + description)).catch(function(e) {
-            assert_throws_DO_NOT_USE(expected, function() { throw e }, description);
+            assert_throws_DO_NOT_USE(code, function() { throw e }, description);
         });
     }
 
-    function promise_rejects_js(test, expected, promise, description) {
+    function promise_rejects_js(test, constructor, promise, description) {
         return promise.then(test.unreached_func("Should have rejected: " + description)).catch(function(e) {
-            assert_throws_js_impl(expected, function() { throw e },
+            assert_throws_js_impl(constructor, function() { throw e },
                                   description, "promise_reject_js");
         });
     }
 
-    function promise_rejects_dom(test, expected, promise, description) {
+    function promise_rejects_dom(test, type, promise, description) {
         return promise.then(test.unreached_func("Should have rejected: " + description)).catch(function(e) {
-            assert_throws_dom_impl(expected, function() { throw e },
+            assert_throws_dom_impl(type, function() { throw e },
                                    description, "promise_rejects_dom");
         });
     }
 
-    function promise_rejects_exactly(test, expected, promise, description) {
+    function promise_rejects_exactly(test, exception, promise, description) {
         return promise.then(test.unreached_func("Should have rejected: " + description)).catch(function(e) {
-            assert_throws_exactly_impl(expected, function() { throw e },
+            assert_throws_exactly_impl(exception, function() { throw e },
                                        description, "promise_rejects_exactly");
         });
     }
