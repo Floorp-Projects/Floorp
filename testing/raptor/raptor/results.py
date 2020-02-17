@@ -616,9 +616,11 @@ class BrowsertimeResultsHandler(PerftestResultsHandler):
 
                     # Try to get subtest values or use the defaults
                     # If values not available use the defaults
+                    subtest_lower_is_better = test.get("subtest_lower_is_better", "True")
                     new_result["subtest_lower_is_better"] = bool(
-                        strtobool(test.get("subtest_lower_is_better", "True"))
-                    )
+                        strtobool(subtest_lower_is_better)
+                    ) if isinstance(subtest_lower_is_better, str) else subtest_lower_is_better
+
                     new_result["subtest_unit"] = test.get("subtest_unit", "ms")
                     LOG.info("parsed new result: %s" % str(new_result))
 
