@@ -434,6 +434,23 @@ int32_t CaseInsensitiveCompare(const char* aLeft, const char* aRight,
   return 0;
 }
 
+static MOZ_ALWAYS_INLINE uint32_t
+GetLowerUTF8Codepoint_inline(const char* aStr, const char* aEnd,
+                             const char** aNext, bool aMatchDiacritics) {
+  uint32_t c;
+  for (;;) {
+    c = GetLowerUTF8Codepoint_inline(aStr, aEnd, aNext);
+    if (aMatchDiacritics) {
+      break;
+    }
+    if (!mozilla::unicode::IsCombiningDiacritic(c)) {
+      break;
+    }
+    aStr = *aNext;
+  }
+  return c;
+}
+
 bool CaseInsensitiveUTF8CharsEqual(const char* aLeft, const char* aRight,
                                    const char* aLeftEnd, const char* aRightEnd,
                                    const char** aLeftNext,
@@ -445,14 +462,15 @@ bool CaseInsensitiveUTF8CharsEqual(const char* aLeft, const char* aRight,
   NS_ASSERTION(aLeft < aLeftEnd, "aLeft must be less than aLeftEnd.");
   NS_ASSERTION(aRight < aRightEnd, "aRight must be less than aRightEnd.");
 
-  uint32_t leftChar = GetLowerUTF8Codepoint_inline(aLeft, aLeftEnd, aLeftNext);
+  uint32_t leftChar = GetLowerUTF8Codepoint_inline(aLeft, aLeftEnd, aLeftNext,
+                                                   aMatchDiacritics);
   if (MOZ_UNLIKELY(leftChar == uint32_t(-1))) {
     *aErr = true;
     return false;
   }
 
-  uint32_t rightChar =
-      GetLowerUTF8Codepoint_inline(aRight, aRightEnd, aRightNext);
+  uint32_t rightChar = GetLowerUTF8Codepoint_inline(
+      aRight, aRightEnd, aRightNext, aMatchDiacritics);
   if (MOZ_UNLIKELY(rightChar == uint32_t(-1))) {
     *aErr = true;
     return false;
