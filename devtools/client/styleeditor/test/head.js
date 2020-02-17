@@ -46,19 +46,6 @@ var addTab = function(url, win) {
   });
 };
 
-/**
- * Navigate the currently selected tab to a new URL and wait for it to load.
- * @param {String} url The url to be loaded in the current tab.
- * @return a promise that resolves when the page has fully loaded.
- */
-var navigateTo = function(url) {
-  info(`Navigating to ${url}`);
-  const browser = gBrowser.selectedBrowser;
-
-  BrowserTestUtils.loadURI(browser, url);
-  return BrowserTestUtils.browserLoaded(browser);
-};
-
 var navigateToAndWaitForStyleSheets = async function(url, ui) {
   const onReset = ui.once("stylesheets-reset");
   await navigateTo(url);

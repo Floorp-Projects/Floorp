@@ -30,7 +30,7 @@ add_task(async function() {
   ok(isWorkerListEmpty, "No Service Worker displayed");
 
   info("Navigate to a page that runs in the child process");
-  await navigate(toolbox, CONTENT_PROCESS_URI_WORKERS);
+  await navigateTo(CONTENT_PROCESS_URI_WORKERS);
 
   info("Wait until the service worker appears in the application panel");
   await waitUntil(() => getWorkerContainers(doc).length === 1);
@@ -47,7 +47,7 @@ add_task(async function() {
   await enableApplicationPanel();
 
   info("Open a page that runs in the parent process");
-  const { panel, toolbox, tab } = await openNewTabAndApplicationPanel(
+  const { panel, tab } = await openNewTabAndApplicationPanel(
     PARENT_PROCESS_URI
   );
   const doc = panel.panelWin.document;
@@ -57,7 +57,7 @@ add_task(async function() {
   await waitUntil(() => doc.querySelector(".js-manifest-empty") !== null);
 
   info("Navigate to a page that runs in the child process");
-  await navigate(toolbox, CONTENT_PROCESS_URI_MANIFEST);
+  await navigateTo(CONTENT_PROCESS_URI_MANIFEST);
 
   info("Waiting for the manifest to load");
   selectPage(panel, "manifest");
