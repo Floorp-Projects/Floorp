@@ -238,16 +238,15 @@ nsMIMEInfoAndroid::GetFileExtensions(nsIUTF8StringEnumerator** aResult) {
 NS_IMETHODIMP
 nsMIMEInfoAndroid::SetFileExtensions(const nsACString& aExtensions) {
   mExtensions.Clear();
-  nsACString::const_iterator start, end;
-  aExtensions.BeginReading(start);
-  aExtensions.EndReading(end);
-  while (start != end) {
-    nsACString::const_iterator cursor = start;
-    mozilla::Unused << FindCharInReadable(',', cursor, end);
-    AddUniqueExtension(Substring(start, cursor));
-    // If a comma was found, skip it for the next search.
-    start = cursor != end ? ++cursor : cursor;
+  nsCString extList(aExtensions);
+
+  int32_t breakLocation = -1;
+  while ((breakLocation = extList.FindChar(',')) != -1) {
+    mExtensions.AppendElement(
+        Substring(extList.get(), extList.get() + breakLocation));
+    extList.Cut(0, breakLocation + 1);
   }
+  if (!extList.IsEmpty()) mExtensions.AppendElement(extList);
   return NS_OK;
 }
 
@@ -269,18 +268,9 @@ nsMIMEInfoAndroid::ExtensionExists(const nsACString& aExtension,
   return NS_OK;
 }
 
-void nsMIMEInfoAndroid::AddUniqueExtension(const nsACString& aExtension) {
-  MOZ_ASSERT(!aExtension.IsEmpty(), "no extension");
-  if (!mExtensions.Contains(aExtension,
-                            nsCaseInsensitiveCStringArrayComparator())) {
-    mExtensions.AppendElement(aExtension);
-  }
-}
-
 NS_IMETHODIMP
 nsMIMEInfoAndroid::AppendExtension(const nsACString& aExtension) {
-  MOZ_ASSERT(!aExtension.IsEmpty(), "No extension");
-  AddUniqueExtension(aExtension);
+  mExtensions.AppendElement(aExtension);
   return NS_OK;
 }
 
@@ -294,13 +284,22 @@ nsMIMEInfoAndroid::GetPrimaryExtension(nsACString& aPrimaryExtension) {
 
 NS_IMETHODIMP
 nsMIMEInfoAndroid::SetPrimaryExtension(const nsACString& aExtension) {
-  MOZ_ASSERT(!aExtension.IsEmpty(), "No extension");
-  int32_t i = mExtensions.IndexOf(aExtension, 0,
-                                  nsCaseInsensitiveCStringArrayComparator());
-  if (i != -1) {
+  uint32_t extCount = mExtensions.Length();
+  uint8_t i;
+  bool found = false;
+  for (i = 0; i < extCount; i++) {
+    const nsCString& ext = mExtensions[i];
+    if (ext.Equals(aExtension, nsCaseInsensitiveCStringComparator())) {
+      found = true;
+      break;
+    }
+  }
+  if (found) {
     mExtensions.RemoveElementAt(i);
   }
+
   mExtensions.InsertElementAt(0, aExtension);
+
   return NS_OK;
 }
 
