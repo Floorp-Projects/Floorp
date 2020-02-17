@@ -45,9 +45,11 @@ class LegacyImplementationProcesses {
         this.descriptors.delete(descriptor);
       }
     }
-    // Add the new process descriptors to the local list
-    for (const descriptor of processes) {
-      if (!this.descriptors.has(descriptor)) {
+
+    const promises = processes
+      .filter(descriptor => !this.descriptors.has(descriptor))
+      .map(async descriptor => {
+        // Add the new process descriptors to the local list
         this.descriptors.add(descriptor);
         const target = await descriptor.getTarget();
         if (!target) {
@@ -58,8 +60,9 @@ class LegacyImplementationProcesses {
           return;
         }
         await this.onTargetAvailable(target);
-      }
-    }
+      });
+
+    await Promise.all(promises);
   }
 
   async listen() {
@@ -85,25 +88,29 @@ class LegacyImplementationFrames {
     // by RootFront.
     // TODO: support frame listening. For now, this only fetches already existing targets
     const { frames } = await this.target.listRemoteFrames();
-    for (const frame of frames) {
-      // As we listen for frameDescriptor's on the RootFront, we get
-      // all the frames and not only the one related to the given `target`.
-      // TODO: support deeply nested frames
-      if (
-        frame.parentID == this.target.browsingContextID ||
-        frame.id == this.target.browsingContextID
-      ) {
-        const target = await frame.getTarget();
+
+    const promises = frames
+      .filter(
+        // As we listen for frameDescriptor's on the RootFront, we get
+        // all the frames and not only the one related to the given `target`.
+        // TODO: support deeply nested frames
+        descriptor =>
+          descriptor.parentID == this.target.browsingContextID ||
+          descriptor.id == this.target.browsingContextID
+      )
+      .map(async descriptor => {
+        const target = await descriptor.getTarget();
         if (!target) {
           console.error(
             "Wasn't able to retrieve the target for",
-            frame.actorID
+            descriptor.actorID
           );
-          continue;
+          return;
         }
         await this.onTargetAvailable(target);
-      }
-    }
+      });
+
+    await Promise.all(promises);
   }
 
   unlisten() {}
@@ -134,13 +141,15 @@ class LegacyImplementationWorkers {
         this.targets.delete(target);
       }
     }
-    // Add the new worker targets to the local list
-    for (const target of workers) {
-      if (!this.targets.has(target)) {
-        this.targets.add(target);
-        await this.onTargetAvailable(target);
-      }
-    }
+    const promises = workers
+      .filter(workerTarget => !this.targets.has(workerTarget))
+      .map(async workerTarget => {
+        // Add the new worker targets to the local list
+        this.targets.add(workerTarget);
+        await this.onTargetAvailable(workerTarget);
+      });
+
+    await Promise.all(promises);
   }
 
   async listen() {
@@ -381,37 +390,42 @@ class TargetList {
       );
     }
 
-    for (const type of types) {
-      // Notify about already existing target of these types
-      for (const targetFront of this._targets) {
-        if (this._matchTargetType(type, targetFront)) {
-          try {
-            // Ensure waiting for eventual async create listeners
-            // which may setup things regarding the existing targets
-            // and listen callsite may care about the full initialization
-            await onAvailable({
-              type,
-              targetFront,
-              isTopLevel: targetFront == this.targetFront,
-              isTargetSwitching: false,
-            });
-          } catch (e) {
-            // Prevent throwing when onAvailable handler throws on one target
-            // so that it can try to register the other targets
-            console.error(
-              "Exception when calling onAvailable handler",
-              e.message,
-              e
-            );
-          }
+    // Notify about already existing target of these types
+    const promises = [...this._targets]
+      .filter(targetFront => {
+        const targetType = this._getTargetType(targetFront);
+        return types.includes(targetType);
+      })
+      .map(async targetFront => {
+        try {
+          // Ensure waiting for eventual async create listeners
+          // which may setup things regarding the existing targets
+          // and listen callsite may care about the full initialization
+          await onAvailable({
+            type: this._getTargetType(targetFront),
+            targetFront,
+            isTopLevel: targetFront == this.targetFront,
+            isTargetSwitching: false,
+          });
+        } catch (e) {
+          // Prevent throwing when onAvailable handler throws on one target
+          // so that it can try to register the other targets
+          console.error(
+            "Exception when calling onAvailable handler",
+            e.message,
+            e
+          );
         }
-      }
+      });
 
+    for (const type of types) {
       this._createListeners.on(type, onAvailable);
       if (onDestroy) {
         this._destroyListeners.on(type, onDestroy);
       }
     }
+
+    await Promise.all(promises);
   }
 
   /**
