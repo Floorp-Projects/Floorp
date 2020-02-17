@@ -1755,8 +1755,8 @@ pub extern "C" fn wr_transaction_update_dynamic_properties(
     transform_count: usize,
 ) {
     let mut properties = DynamicProperties {
-        transforms: Vec::new(),
-        floats: Vec::new(),
+        transforms: Vec::with_capacity(transform_count),
+        floats: Vec::with_capacity(opacity_count),
     };
 
     if transform_count > 0 {
