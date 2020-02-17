@@ -12,15 +12,15 @@ var { DevToolsLoader } = ChromeUtils.import("resource://devtools/shared/Loader.j
 var customLoader = new DevToolsLoader({
   invisibleToDebugger: true,
 });
-var { DebuggerServer } = customLoader.require("devtools/server/debugger-server");
+var { DevToolsServer } = customLoader.require("devtools/server/devtools-server");
 var { DebuggerClient } = require("devtools/shared/client/debugger-client");
 
 function initDebuggerClient() {
-  DebuggerServer.init();
-  DebuggerServer.registerAllActors();
-  DebuggerServer.allowChromeProcess = true;
+  DevToolsServer.init();
+  DevToolsServer.registerAllActors();
+  DevToolsServer.allowChromeProcess = true;
 
-  let transport = DebuggerServer.connectPipe();
+  let transport = DevToolsServer.connectPipe();
   return new DebuggerClient(transport);
 }
 
@@ -43,7 +43,7 @@ registerCleanupFunction(function() {
   gNewChromeSource = null;
 
   customLoader = null;
-  DebuggerServer = null;
+  DevToolsServer = null;
 });
 
 add_task(async function() {

@@ -22,7 +22,7 @@ XPCSHELL_TESTS_MANIFESTS += ['tests/xpcshell/xpcshell.ini']
 
 DevToolsModules(
     'debugger-server-connection.js',
-    'debugger-server.js',
+    'devtools-server.js',
 )
 
 with Files('**'):

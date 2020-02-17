@@ -10,7 +10,7 @@
  *
  * The |Animations| actor is the main entry point. It is used to discover
  * animation players on given nodes.
- * There should only be one instance per debugger server.
+ * There should only be one instance per devtools server.
  *
  * The |AnimationPlayer| actor provides attributes and methods to inspect an
  * animation as well as pause/resume/seek it.

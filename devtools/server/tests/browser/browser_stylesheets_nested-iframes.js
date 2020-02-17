@@ -7,7 +7,7 @@
 // a content document.
 
 add_task(async function() {
-  info("Initialising the debugger server and client.");
+  info("Initialising the devtools server and client.");
   const target = await addTabTarget(
     MAIN_DOMAIN + "stylesheets-nested-iframes.html"
   );

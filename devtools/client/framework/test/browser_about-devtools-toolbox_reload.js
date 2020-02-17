@@ -56,12 +56,12 @@ add_task(async function() {
 
 async function createLocalClient() {
   const { DebuggerClient } = require("devtools/shared/client/debugger-client");
-  const { DebuggerServer } = require("devtools/server/debugger-server");
-  DebuggerServer.init();
-  DebuggerServer.registerAllActors();
-  DebuggerServer.allowChromeProcess = true;
+  const { DevToolsServer } = require("devtools/server/devtools-server");
+  DevToolsServer.init();
+  DevToolsServer.registerAllActors();
+  DevToolsServer.allowChromeProcess = true;
 
-  const debuggerClient = new DebuggerClient(DebuggerServer.connectPipe());
+  const debuggerClient = new DebuggerClient(DevToolsServer.connectPipe());
   await debuggerClient.connect();
   return debuggerClient;
 }

@@ -3,7 +3,7 @@
 
 "use strict";
 
-/* exported Cr, CC, NetUtil, errorCount, initTestDebuggerServer,
+/* exported Cr, CC, NetUtil, errorCount, initTestDevToolsServer,
             writeTestTempFile, socket_transport, local_transport, really_long
 */
 
@@ -27,7 +27,7 @@ Services.prefs.setBoolPref("devtools.debugger.remote-enabled", true);
 const {
   ActorRegistry,
 } = require("devtools/server/actors/utils/actor-registry");
-const { DebuggerServer } = require("devtools/server/debugger-server");
+const { DevToolsServer } = require("devtools/server/devtools-server");
 const { DebuggerClient } = require("devtools/shared/client/debugger-client");
 const { SocketListener } = require("devtools/shared/security/socket");
 
@@ -83,8 +83,8 @@ var listener = {
     }
 
     // Make sure we exit all nested event loops so that the test can finish.
-    while (DebuggerServer.xpcInspector.eventLoopNestLevel > 0) {
-      DebuggerServer.xpcInspector.exitNestedEventLoop();
+    while (DevToolsServer.xpcInspector.eventLoopNestLevel > 0) {
+      DevToolsServer.xpcInspector.exitNestedEventLoop();
     }
 
     // Throw in most cases, but ignore the "strict" messages
@@ -97,18 +97,18 @@ var listener = {
 Services.console.registerListener(listener);
 
 /**
- * Initialize the testing debugger server.
+ * Initialize the testing devtools server.
  */
-function initTestDebuggerServer() {
+function initTestDevToolsServer() {
   ActorRegistry.registerModule("devtools/server/actors/thread", {
     prefix: "script",
     constructor: "ScriptActor",
     type: { global: true, target: true },
   });
   const { createRootActor } = require("xpcshell-test/testactors");
-  DebuggerServer.setRootActor(createRootActor);
+  DevToolsServer.setRootActor(createRootActor);
   // Allow incoming connections.
-  DebuggerServer.init();
+  DevToolsServer.init();
 }
 
 /**
@@ -141,26 +141,26 @@ function writeTestTempFile(fileName, content) {
 /** * Transport Factories ***/
 
 var socket_transport = async function() {
-  if (!DebuggerServer.listeningSockets) {
-    const AuthenticatorType = DebuggerServer.Authenticators.get("PROMPT");
+  if (!DevToolsServer.listeningSockets) {
+    const AuthenticatorType = DevToolsServer.Authenticators.get("PROMPT");
     const authenticator = new AuthenticatorType.Server();
     authenticator.allowConnection = () => {
-      return DebuggerServer.AuthenticationResult.ALLOW;
+      return DevToolsServer.AuthenticationResult.ALLOW;
     };
     const socketOptions = {
       authenticator,
       portOrPath: -1,
     };
-    const debuggerListener = new SocketListener(DebuggerServer, socketOptions);
+    const debuggerListener = new SocketListener(DevToolsServer, socketOptions);
     await debuggerListener.open();
   }
-  const port = DebuggerServer._listeners[0].port;
-  info("Debugger server port is " + port);
+  const port = DevToolsServer._listeners[0].port;
+  info("DevTools server port is " + port);
   return DebuggerClient.socketConnect({ host: "127.0.0.1", port });
 };
 
 function local_transport() {
-  return Promise.resolve(DebuggerServer.connectPipe());
+  return Promise.resolve(DevToolsServer.connectPipe());
 }
 
 /** * Sample Data ***/

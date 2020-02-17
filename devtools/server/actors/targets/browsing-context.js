@@ -231,7 +231,7 @@ const browsingContextTargetPrototype = {
    * This class is subclassed by FrameTargetActor and others.
    * Subclasses are expected to implement a getter for the docShell property.
    *
-   * @param connection DebuggerServerConnection
+   * @param connection DevToolsServerConnection
    *        The conection to the client.
    */
   initialize: function(connection) {

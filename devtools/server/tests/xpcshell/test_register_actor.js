@@ -5,8 +5,8 @@
 
 function run_test() {
   // Allow incoming connections.
-  DebuggerServer.init();
-  DebuggerServer.registerAllActors();
+  DevToolsServer.init();
+  DevToolsServer.registerAllActors();
 
   add_test(test_lazy_api);
   add_test(manual_remove);
@@ -39,7 +39,7 @@ function test_lazy_api() {
   Assert.ok(!isActorLoaded);
   Assert.ok(!isActorInstantiated);
 
-  const client = new DebuggerClient(DebuggerServer.connectPipe());
+  const client = new DebuggerClient(DevToolsServer.connectPipe());
   client.connect().then(function onConnect() {
     client.mainRoot.rootForm.then(onRootForm);
   });
@@ -81,7 +81,7 @@ function manual_remove() {
 }
 
 function cleanup() {
-  DebuggerServer.destroy();
+  DevToolsServer.destroy();
 
   // Check that all actors are unregistered on server destruction
   Assert.ok(

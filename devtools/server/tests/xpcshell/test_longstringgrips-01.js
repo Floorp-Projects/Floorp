@@ -32,7 +32,7 @@ function test_longstring_grip() {
     " you were supposed to, in which case, for the love of God, don't not do" +
     " it!";
 
-  DebuggerServer.LONG_STRING_LENGTH = 200;
+  DevToolsServer.LONG_STRING_LENGTH = 200;
 
   gThreadFront.once("paused", function(packet) {
     const args = packet.frame.arguments;
@@ -44,7 +44,7 @@ function test_longstring_grip() {
       Assert.equal(grip.length, longString.length);
       Assert.equal(
         grip.initial,
-        longString.substr(0, DebuggerServer.LONG_STRING_INITIAL_LENGTH)
+        longString.substr(0, DevToolsServer.LONG_STRING_INITIAL_LENGTH)
       );
 
       const longStringFront = createLongStringFront(gClient, grip);

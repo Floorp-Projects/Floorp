@@ -124,10 +124,10 @@ BrowserToolboxLauncher.getBrowserToolboxSessionState = function() {
 
 BrowserToolboxLauncher.prototype = {
   /**
-   * Initializes the debugger server.
+   * Initializes the devtools server.
    */
   _initServer: function() {
-    if (this.debuggerServer) {
+    if (this.devToolsServer) {
       dumpn("The chrome toolbox server is already running.");
       return;
     }
@@ -142,22 +142,22 @@ BrowserToolboxLauncher.prototype = {
     this.loader = new DevToolsLoader({
       invisibleToDebugger: true,
     });
-    const { DebuggerServer } = this.loader.require(
-      "devtools/server/debugger-server"
+    const { DevToolsServer } = this.loader.require(
+      "devtools/server/devtools-server"
     );
     const { SocketListener } = this.loader.require(
       "devtools/shared/security/socket"
     );
-    this.debuggerServer = DebuggerServer;
-    dumpn("Created a separate loader instance for the DebuggerServer.");
+    this.devToolsServer = DevToolsServer;
+    dumpn("Created a separate loader instance for the DevToolsServer.");
 
-    this.debuggerServer.init();
+    this.devToolsServer.init();
     // We mainly need a root actor and target actors for opening a toolbox, even
     // against chrome/content. But the "no auto hide" button uses the
     // preference actor, so also register the browser actors.
-    this.debuggerServer.registerAllActors();
-    this.debuggerServer.allowChromeProcess = true;
-    dumpn("initialized and added the browser actors for the DebuggerServer.");
+    this.devToolsServer.registerAllActors();
+    this.devToolsServer.allowChromeProcess = true;
+    dumpn("initialized and added the browser actors for the DevToolsServer.");
 
     const chromeDebuggingWebSocket = Services.prefs.getBoolPref(
       "devtools.debugger.chrome-debugging-websocket"
@@ -166,18 +166,18 @@ BrowserToolboxLauncher.prototype = {
       portOrPath: -1,
       webSocket: chromeDebuggingWebSocket,
     };
-    const listener = new SocketListener(this.debuggerServer, socketOptions);
+    const listener = new SocketListener(this.devToolsServer, socketOptions);
     listener.open();
     this.listener = listener;
     this.port = listener.port;
 
     if (!this.port) {
-      throw new Error("No debugger server port");
+      throw new Error("No devtools server port");
     }
 
     dumpn("Finished initializing the chrome toolbox server.");
     dump(
-      `Debugger Server for Browser Toolbox listening on port: ${this.port}\n`
+      `DevTools Server for Browser Toolbox listening on port: ${this.port}\n`
     );
   },
 
@@ -341,9 +341,9 @@ BrowserToolboxLauncher.prototype = {
       this.listener.close();
     }
 
-    if (this.debuggerServer) {
-      this.debuggerServer.destroy();
-      this.debuggerServer = null;
+    if (this.devToolsServer) {
+      this.devToolsServer.destroy();
+      this.devToolsServer = null;
     }
 
     dumpn("Chrome toolbox is now closed...");

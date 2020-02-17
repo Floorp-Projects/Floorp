@@ -17,15 +17,15 @@ Bug 943251 - Test preferences actor
 function runTests() {
   const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
   const {DebuggerClient} = require("devtools/shared/client/debugger-client");
-  const {DebuggerServer} = require("devtools/server/debugger-server");
+  const {DevToolsServer} = require("devtools/server/devtools-server");
   const Services = require("Services");
 
   SimpleTest.waitForExplicitFinish();
 
-  DebuggerServer.init();
-  DebuggerServer.registerAllActors();
+  DevToolsServer.init();
+  DevToolsServer.registerAllActors();
 
-  const client = new DebuggerClient(DebuggerServer.connectPipe());
+  const client = new DebuggerClient(DevToolsServer.connectPipe());
   client.connect().then(function onConnect() {
     return client.mainRoot.getFront("preference");
   }).then(function(p) {
@@ -72,7 +72,7 @@ function runTests() {
       });
 
       client.close().then(() => {
-        DebuggerServer.destroy();
+        DevToolsServer.destroy();
         SimpleTest.finish();
       });
     }

@@ -6,9 +6,9 @@
 
 /**
  * This is an alternative to devtools/server/connectors/frame-connector.js that
- * will use JS window actors to spawn a DebuggerServer in the content process
+ * will use JS window actors to spawn a DevToolsServer in the content process
  * of a remote frame. The communication between the parent process
- * DebuggerServer and the content process DebuggerServer will also rely on
+ * DevToolsServer and the content process DevToolsServer will also rely on
  * JsWindowActors, via a JsWindowActorTransport.
  *
  * See DevToolsFrameChild.jsm and DevToolsFrameParent.jsm for the implementation

@@ -9,7 +9,7 @@ const {
 } = require("devtools/shared/protocol/lazy-pool");
 const { RootActor } = require("devtools/server/actors/root");
 const { ThreadActor } = require("devtools/server/actors/thread");
-const { DebuggerServer } = require("devtools/server/debugger-server");
+const { DevToolsServer } = require("devtools/server/devtools-server");
 const {
   ActorRegistry,
 } = require("devtools/server/actors/utils/actor-registry");
@@ -21,14 +21,14 @@ const {
 } = require("devtools/shared/specs/targets/browsing-context");
 
 var gTestGlobals = new Set();
-DebuggerServer.addTestGlobal = function(global) {
+DevToolsServer.addTestGlobal = function(global) {
   gTestGlobals.add(global);
 };
-DebuggerServer.removeTestGlobal = function(global) {
+DevToolsServer.removeTestGlobal = function(global) {
   gTestGlobals.delete(global);
 };
 
-DebuggerServer.getTestGlobal = function(name) {
+DevToolsServer.getTestGlobal = function(name) {
   for (const g of gTestGlobals) {
     if (g.__name == name) {
       return g;
@@ -39,10 +39,10 @@ DebuggerServer.getTestGlobal = function(name) {
 };
 
 var gAllowNewThreadGlobals = false;
-DebuggerServer.allowNewThreadGlobals = function() {
+DevToolsServer.allowNewThreadGlobals = function() {
   gAllowNewThreadGlobals = true;
 };
-DebuggerServer.disallowNewThreadGlobals = function() {
+DevToolsServer.disallowNewThreadGlobals = function() {
   gAllowNewThreadGlobals = false;
 };
 
@@ -57,7 +57,7 @@ function TestTabList(connection) {
   this.conn = connection;
 
   // An array of actors for each global added with
-  // DebuggerServer.addTestGlobal.
+  // DevToolsServer.addTestGlobal.
   this._targetActors = [];
 
   // A pool mapping those actors' names to the actors.

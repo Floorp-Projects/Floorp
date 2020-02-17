@@ -270,7 +270,7 @@ exports.setValueSummaryLength = function(val) {
 var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
   /**
    * Create the WalkerActor
-   * @param {DebuggerServerConnection} conn
+   * @param {DevToolsServerConnection} conn
    *        The server connection.
    * @param {TargetActor} targetActor
    *        The top-level Actor for this tab.

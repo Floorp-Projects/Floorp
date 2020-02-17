@@ -47,9 +47,9 @@ function onAttach(aState)
     });
   });
 
-  const longString = Array(DebuggerServer.LONG_STRING_LENGTH + 1).join("a"),
+  const longString = Array(DevToolsServer.LONG_STRING_LENGTH + 1).join("a"),
       shortedString = longString.substring(0,
-                        DebuggerServer.LONG_STRING_INITIAL_LENGTH
+                        DevToolsServer.LONG_STRING_INITIAL_LENGTH
                       );
   tests.push(async function() {
     const response = await aState.webConsoleFront.evaluateJSAsync("throw '" + longString + "';")

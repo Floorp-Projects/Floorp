@@ -41,7 +41,7 @@ const ServiceWorkerRegistrationActor = protocol.ActorClassWithSpec(
   {
     /**
      * Create the ServiceWorkerRegistrationActor
-     * @param DebuggerServerConnection conn
+     * @param DevToolsServerConnection conn
      *   The server connection.
      * @param ServiceWorkerRegistrationInfo registration
      *   The registration's information.

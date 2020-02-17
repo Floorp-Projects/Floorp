@@ -12,7 +12,7 @@ var { dumpn } = DevToolsUtils;
 
 loader.lazyRequireGetter(
   this,
-  "DebuggerServerConnection",
+  "DevToolsServerConnection",
   "devtools/server/debugger-server-connection",
   true
 );
@@ -60,24 +60,24 @@ const CONTENT_PROCESS_SERVER_STARTUP_SCRIPT =
 loader.lazyRequireGetter(this, "EventEmitter", "devtools/shared/event-emitter");
 
 /**
- * DebuggerServer is a singleton that has several responsibilities. It will
+ * DevToolsServer is a singleton that has several responsibilities. It will
  * register the DevTools server actors that are relevant to the context.
- * It can also create other DebuggerServer, that will live in the same
+ * It can also create other DevToolsServer, that will live in the same
  * environment as the debugged target (content page, worker...).
  *
  * For instance a regular Toolbox will be linked to DebuggerClient connected to
- * a DebuggerServer running in the same process as the Toolbox (main process).
- * But another DebuggerServer will be created in the same process as the page
+ * a DevToolsServer running in the same process as the Toolbox (main process).
+ * But another DevToolsServer will be created in the same process as the page
  * targeted by the Toolbox.
  *
- * Despite being a singleton, the DebuggerServer still has a lifecycle and a
- * state. When a consumer needs to spawn a DebuggerServer, the init() method
+ * Despite being a singleton, the DevToolsServer still has a lifecycle and a
+ * state. When a consumer needs to spawn a DevToolsServer, the init() method
  * should be called. Then you should either call registerAllActors or
  * registerActors to setup the server.
  * When the server is no longer needed, destroy() should be called.
  *
  */
-var DebuggerServer = {
+var DevToolsServer = {
   _listeners: [],
   _initialized: false,
   // Map of global actor names to actor constructors.
@@ -103,7 +103,7 @@ var DebuggerServer = {
 
   /**
    * Flag used to check if the server can be destroyed when all connections have been
-   * removed. Firefox on Android runs a single shared DebuggerServer, and should not be
+   * removed. Firefox on Android runs a single shared DevToolsServer, and should not be
    * closed even if no client is connected.
    */
   keepAlive: false,
@@ -111,14 +111,14 @@ var DebuggerServer = {
   /**
    * We run a special server in child process whose main actor is an instance
    * of FrameTargetActor, but that isn't a root actor. Instead there is no root
-   * actor registered on DebuggerServer.
+   * actor registered on DevToolsServer.
    */
   get rootlessServer() {
     return !this.createRootActor;
   },
 
   /**
-   * Initialize the debugger server.
+   * Initialize the devtools server.
    */
   init() {
     if (this.initialized) {
@@ -146,10 +146,10 @@ var DebuggerServer = {
   },
 
   /**
-   * Performs cleanup tasks before shutting down the debugger server. Such tasks
+   * Performs cleanup tasks before shutting down the devtools server. Such tasks
    * include clearing any actor constructors added at runtime. This method
-   * should be called whenever a debugger server is no longer useful, to avoid
-   * memory leaks. After this method returns, the debugger server must be
+   * should be called whenever a devtools server is no longer useful, to avoid
+   * memory leaks. After this method returns, the devtools server must be
    * initialized again before use.
    */
   destroy() {
@@ -166,7 +166,7 @@ var DebuggerServer = {
     this.closeAllSocketListeners();
     this._initialized = false;
 
-    dumpn("Debugger server is shut down.");
+    dumpn("DevTools server is shut down.");
   },
 
   /**
@@ -174,12 +174,12 @@ var DebuggerServer = {
    */
   _checkInit() {
     if (!this._initialized) {
-      throw new Error("DebuggerServer has not been initialized.");
+      throw new Error("DevToolsServer has not been initialized.");
     }
 
     if (!this.rootlessServer && !this.createRootActor) {
       throw new Error(
-        "Use DebuggerServer.setRootActor() to add a root actor " +
+        "Use DevToolsServer.setRootActor() to add a root actor " +
           "implementation."
       );
     }
@@ -215,7 +215,7 @@ var DebuggerServer = {
   },
 
   /**
-   * Register all possible actors for this DebuggerServer.
+   * Register all possible actors for this DevToolsServer.
    */
   registerAllActors() {
     this.registerActors({ root: true, browser: true, target: true });
@@ -442,7 +442,7 @@ var DebuggerServer = {
       connID = "server" + loader.id + ".conn" + this._nextConnID++ + ".";
     }
 
-    const conn = new DebuggerServerConnection(
+    const conn = new DevToolsServerConnection(
       connID,
       transport,
       socketListener
@@ -474,7 +474,7 @@ var DebuggerServer = {
     this.emit("connectionchange", "closed", connection);
   },
 
-  // DebuggerServer extension API.
+  // DevToolsServer extension API.
 
   setRootActor(actorFactory) {
     this.createRootActor = actorFactory;
@@ -524,13 +524,13 @@ var DebuggerServer = {
 };
 
 // Expose these to save callers the trouble of importing DebuggerSocket
-DevToolsUtils.defineLazyGetter(DebuggerServer, "Authenticators", () => {
+DevToolsUtils.defineLazyGetter(DevToolsServer, "Authenticators", () => {
   return Authentication.Authenticators;
 });
-DevToolsUtils.defineLazyGetter(DebuggerServer, "AuthenticationResult", () => {
+DevToolsUtils.defineLazyGetter(DevToolsServer, "AuthenticationResult", () => {
   return Authentication.AuthenticationResult;
 });
 
-EventEmitter.decorate(DebuggerServer);
+EventEmitter.decorate(DevToolsServer);
 
-exports.DebuggerServer = DebuggerServer;
+exports.DevToolsServer = DevToolsServer;

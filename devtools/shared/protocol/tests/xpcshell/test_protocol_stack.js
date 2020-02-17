@@ -62,8 +62,8 @@ function run_test() {
     return;
   }
 
-  DebuggerServer.createRootActor = RootActor;
-  DebuggerServer.init();
+  DevToolsServer.createRootActor = RootActor;
+  DevToolsServer.init();
 
   const trace = connectPipeTracing();
   const client = new DebuggerClient(trace);

@@ -23,7 +23,7 @@ SpecialPowers.pushPrefEnv({
 async function startTest() {
   removeEventListener("load", startTest);
 
-  const longString = (new Array(DebuggerServer.LONG_STRING_LENGTH + 3)).join("\u0629");
+  const longString = (new Array(DevToolsServer.LONG_STRING_LENGTH + 3)).join("\u0629");
   createTestGlobalVariable(longString);
 
   const {state} = await attachConsoleToTab(["ConsoleAPI"]);
@@ -109,7 +109,7 @@ async function startTest() {
       value: {
         type: "longString",
         initial: longString.substring(0,
-          DebuggerServer.LONG_STRING_INITIAL_LENGTH),
+          DevToolsServer.LONG_STRING_INITIAL_LENGTH),
         length: longString.length,
       },
     },

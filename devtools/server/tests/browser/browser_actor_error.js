@@ -11,8 +11,8 @@ const ACTORS_URL =
   "chrome://mochitests/content/browser/devtools/server/tests/browser/error-actor.js";
 
 async function test() {
-  DebuggerServer.init();
-  DebuggerServer.registerAllActors();
+  DevToolsServer.init();
+  DevToolsServer.registerAllActors();
 
   ActorRegistry.registerModule(ACTORS_URL, {
     prefix: "error",
@@ -20,7 +20,7 @@ async function test() {
     type: { global: true },
   });
 
-  const transport = DebuggerServer.connectPipe();
+  const transport = DevToolsServer.connectPipe();
   const gClient = new DebuggerClient(transport);
   await gClient.connect();
 

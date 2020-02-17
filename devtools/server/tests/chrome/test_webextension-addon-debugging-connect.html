@@ -31,7 +31,7 @@ add_task(async function test_webextension_addon_debugging_connect() {
   await extension.awaitMessage("background page ready");
 
   // Connect a DebuggerClient.
-  const transport = DebuggerServer.connectPipe();
+  const transport = DevToolsServer.connectPipe();
   const client = new DebuggerClient(transport);
   await client.connect();
 

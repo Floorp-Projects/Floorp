@@ -21,8 +21,8 @@ loader.lazyRequireGetter(
 );
 loader.lazyRequireGetter(
   this,
-  "DebuggerServer",
-  "devtools/server/debugger-server",
+  "DevToolsServer",
+  "devtools/server/devtools-server",
   true
 );
 loader.lazyRequireGetter(
@@ -433,9 +433,9 @@ class ResponsiveUI {
   async connectToServer() {
     // The client being instantiated here is separate from the toolbox. It is being used
     // separately and has a life cycle that doesn't correspond to the toolbox.
-    DebuggerServer.init();
-    DebuggerServer.registerAllActors();
-    this.client = new DebuggerClient(DebuggerServer.connectPipe());
+    DevToolsServer.init();
+    DevToolsServer.registerAllActors();
+    this.client = new DebuggerClient(DevToolsServer.connectPipe());
     await this.client.connect();
 
     const targetFront = await this.client.mainRoot.getTab();

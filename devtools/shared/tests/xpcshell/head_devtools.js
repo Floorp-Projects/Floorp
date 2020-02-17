@@ -53,8 +53,8 @@ var listener = {
     }
 
     // Make sure we exit all nested event loops so that the test can finish.
-    while (DebuggerServer.xpcInspector.eventLoopNestLevel > 0) {
-      DebuggerServer.xpcInspector.exitNestedEventLoop();
+    while (DevToolsServer.xpcInspector.eventLoopNestLevel > 0) {
+      DevToolsServer.xpcInspector.exitNestedEventLoop();
     }
 
     if (!ALLOW_CONSOLE_ERRORS) {

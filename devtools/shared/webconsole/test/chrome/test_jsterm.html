@@ -45,7 +45,7 @@ function onAttach(aState)
   top.foobarObject.omgfoo = 5;
   top.foobarObject.strfoo = "foobarz";
   top.foobarObject.omgstr = "foobarz" +
-    (new Array(DebuggerServer.LONG_STRING_LENGTH * 2)).join("abb");
+    (new Array(DevToolsServer.LONG_STRING_LENGTH * 2)).join("abb");
 
   top.largeObject1 = Object.create(null);
   for (let i = 0; i < MAX_AUTOCOMPLETE_ATTEMPTS + 1; i++) {
@@ -145,7 +145,7 @@ async function doEvalString() {
 async function doEvalLongString() {
   const response = await evaluateJS("window.foobarObject.omgstr");
   const str = top.foobarObject.omgstr;
-  const initial = str.substring(0, DebuggerServer.LONG_STRING_INITIAL_LENGTH);
+  const initial = str.substring(0, DevToolsServer.LONG_STRING_INITIAL_LENGTH);
 
   checkObject(response, {
     input: "window.foobarObject.omgstr",

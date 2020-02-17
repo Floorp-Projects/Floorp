@@ -11,13 +11,13 @@ var { dumpn } = DevToolsUtils;
 loader.lazyRequireGetter(this, "EventEmitter", "devtools/shared/event-emitter");
 loader.lazyRequireGetter(
   this,
-  "DebuggerServer",
-  "devtools/server/debugger-server",
+  "DevToolsServer",
+  "devtools/server/devtools-server",
   true
 );
 
 /**
- * Creates a DebuggerServerConnection.
+ * Creates a DevToolsServerConnection.
  *
  * Represents a connection to this debugging global from a client.
  * Manages a set of actors and actor pools, allocates actor ids, and
@@ -32,7 +32,7 @@ loader.lazyRequireGetter(
  *        SocketListener which accepted the transport.
  *        If this is null, the transport is not that was accepted by SocketListener.
  */
-function DebuggerServerConnection(prefix, transport, socketListener) {
+function DevToolsServerConnection(prefix, transport, socketListener) {
   this._prefix = prefix;
   this._transport = transport;
   this._transport.hooks = this;
@@ -61,9 +61,9 @@ function DebuggerServerConnection(prefix, transport, socketListener) {
 
   EventEmitter.decorate(this);
 }
-exports.DebuggerServerConnection = DebuggerServerConnection;
+exports.DevToolsServerConnection = DevToolsServerConnection;
 
-DebuggerServerConnection.prototype = {
+DevToolsServerConnection.prototype = {
   _prefix: null,
   get prefix() {
     return this._prefix;
@@ -342,7 +342,7 @@ DebuggerServerConnection.prototype = {
     // forward, do so.
     //
     // Note that the presence of a prefix alone doesn't indicate that
-    // forwarding is needed: in DebuggerServerConnection instances in child
+    // forwarding is needed: in DevToolsServerConnection instances in child
     // processes, every actor has a prefixed name.
     if (this._forwardingPrefixes.size > 0) {
       let to = packet.to;
@@ -481,7 +481,7 @@ DebuggerServerConnection.prototype = {
 
     this.rootActor = null;
     this._transport = null;
-    DebuggerServer._connectionClosed(this);
+    DevToolsServer._connectionClosed(this);
   },
 
   /*
@@ -517,7 +517,7 @@ DebuggerServerConnection.prototype = {
   },
 
   /**
-   * In a content child process, ask the DebuggerServer in the parent process
+   * In a content child process, ask the DevToolsServer in the parent process
    * to execute a given module setup helper.
    *
    * @param module

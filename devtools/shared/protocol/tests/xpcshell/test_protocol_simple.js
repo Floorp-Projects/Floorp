@@ -160,10 +160,10 @@ class RootFront extends protocol.FrontClassWithSpec(rootSpec) {
 }
 
 add_task(async function() {
-  DebuggerServer.createRootActor = conn => {
+  DevToolsServer.createRootActor = conn => {
     return RootActor(conn);
   };
-  DebuggerServer.init();
+  DevToolsServer.init();
 
   Assert.throws(() => {
     const badActor = protocol.ActorClassWithSpec({}, {});

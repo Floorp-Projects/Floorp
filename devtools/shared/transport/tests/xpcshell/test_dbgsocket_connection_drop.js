@@ -13,7 +13,7 @@ const { RawPacket } = require("devtools/shared/transport/packets");
 
 function run_test() {
   info("Starting test at " + new Date().toTimeString());
-  initTestDebuggerServer();
+  initTestDevToolsServer();
 
   add_task(test_socket_conn_drops_after_invalid_header);
   add_task(test_socket_conn_drops_after_invalid_header_2);
@@ -45,17 +45,17 @@ function test_socket_conn_drops_after_too_long_header() {
 }
 
 var test_helper = async function(payload) {
-  const AuthenticatorType = DebuggerServer.Authenticators.get("PROMPT");
+  const AuthenticatorType = DevToolsServer.Authenticators.get("PROMPT");
   const authenticator = new AuthenticatorType.Server();
   authenticator.allowConnection = () => {
-    return DebuggerServer.AuthenticationResult.ALLOW;
+    return DevToolsServer.AuthenticationResult.ALLOW;
   };
   const socketOptions = {
     authenticator,
     portOrPath: -1,
   };
 
-  const listener = new SocketListener(DebuggerServer, socketOptions);
+  const listener = new SocketListener(DevToolsServer, socketOptions);
   listener.open();
 
   const transport = await DebuggerClient.socketConnect({

@@ -41,7 +41,7 @@ It should have a light blue background like this:
 
   <img src="performance/profiler-main-thread.png" alt="Select main process" style="width: 300px" />
 
-Otherwise, the vast majority of DevTools backend (DebuggerServer, actors, ...) lives in content processes.
+Otherwise, the vast majority of DevTools backend (DevToolsServer, actors, ...) lives in content processes.
 So if you are debugging them, you should select one of the `Content` lines.
 
 ### Most of the DevTools codebase is in Javascript

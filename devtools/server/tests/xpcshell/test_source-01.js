@@ -13,7 +13,7 @@ const SOURCE_CONTENT = "stopMe()";
 
 add_task(
   threadFrontTest(async ({ threadFront, debuggee }) => {
-    DebuggerServer.LONG_STRING_LENGTH = 200;
+    DevToolsServer.LONG_STRING_LENGTH = 200;
 
     await executeOnNextTickAndWaitForPause(
       () => evaluateTestCode(debuggee),

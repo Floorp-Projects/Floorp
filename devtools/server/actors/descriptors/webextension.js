@@ -45,7 +45,7 @@ loader.lazyImporter(
  * WebExtensionDescriptorActor is a child of RootActor, it can be retrieved via
  * RootActor.listAddons request.
  *
- * @param {DebuggerServerConnection} conn
+ * @param {DevToolsServerConnection} conn
  *        The connection to the client.
  * @param {AddonWrapper} addon
  *        The target addon.

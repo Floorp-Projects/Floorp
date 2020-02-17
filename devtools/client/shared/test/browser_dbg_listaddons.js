@@ -9,7 +9,7 @@ Services.scriptloader.loadSubScript(
   this
 );
 
-var { DebuggerServer } = require("devtools/server/debugger-server");
+var { DevToolsServer } = require("devtools/server/devtools-server");
 var { DebuggerClient } = require("devtools/shared/client/debugger-client");
 
 /**
@@ -21,10 +21,10 @@ const ADDON2_ID = "test-addon-2@mozilla.org";
 const ADDON2_PATH = "addons/test-addon-2/";
 
 add_task(async function() {
-  DebuggerServer.init();
-  DebuggerServer.registerAllActors();
+  DevToolsServer.init();
+  DevToolsServer.registerAllActors();
 
-  const transport = DebuggerServer.connectPipe();
+  const transport = DevToolsServer.connectPipe();
   const client = new DebuggerClient(transport);
 
   const [type] = await client.connect();

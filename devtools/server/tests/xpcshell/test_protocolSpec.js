@@ -1,8 +1,8 @@
 "use strict";
 
 const run_test = Test(async function() {
-  initTestDebuggerServer();
-  const connection = DebuggerServer.connectPipe();
+  initTestDevToolsServer();
+  const connection = DevToolsServer.connectPipe();
   const client = new DebuggerClient(connection);
 
   await client.connect();

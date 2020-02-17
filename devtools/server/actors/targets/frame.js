@@ -33,7 +33,7 @@ const frameTargetPrototype = extend({}, browsingContextTargetPrototype);
 /**
  * Target actor for a frame / docShell in the content process.
  *
- * @param connection DebuggerServerConnection
+ * @param connection DevToolsServerConnection
  *        The conection to the client.
  * @param docShell
  *        The |docShell| for the debugged frame.
