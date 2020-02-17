@@ -95,6 +95,11 @@
       // Gets the name from @title, ignore whitespace content
       testName("from_label_ignore_ws_subtree", "about");
 
+      // role="alert" doesn't get name from subtree...
+      testName("alert", null);
+      // but the subtree is used if referenced by aria-labelledby.
+      testName("inputLabelledByAlert", "Error");
+
       // ////////////////////////////////////////////////////////////////////////
       // label element
 
@@ -439,6 +444,10 @@
 
   <!-- no name from subtree because it holds whitespaces only -->
   <a id="from_label_ignore_ws_subtree" href="about:mozilla" title="about">&nbsp;&nbsp;  </a>
+
+  <!-- Don't use subtree unless referenced by aria-labelledby. -->
+  <div id="alert" role="alert">Error</div>
+  <input type="text" id="inputLabelledByAlert" aria-labelledby="alert">
 
   <!-- label element, label contains control -->
   <label>text<button id="btn_label_inside">10</button>text</label>

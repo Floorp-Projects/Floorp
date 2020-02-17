@@ -87,7 +87,7 @@ ROLE(ALERT,
      ROLE_SYSTEM_ALERT,
      ROLE_SYSTEM_ALERT,
      java::SessionAccessibility::CLASSNAME_VIEW,
-     eNoNameRule)
+     eNameFromSubtreeIfReqRule)
 
 ROLE(WINDOW,
      "window",
