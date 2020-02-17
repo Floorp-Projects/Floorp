@@ -26,7 +26,6 @@
 #include "jit/Ion.h"
 #include "jit/IonAnalysis.h"
 #include "jit/JitRealm.h"
-#include "jit/OptimizationTracking.h"
 #include "js/MemoryMetrics.h"
 #include "js/UniquePtr.h"
 #include "util/DiagnosticAssertions.h"
