@@ -226,6 +226,8 @@ class MockRuntime {
     this.next_frame_id_ = 0;
     this.bounds_ = null;
     this.send_mojo_space_reset_ = false;
+    this.stageParameters_ = null;
+    this.stageParametersUpdated_ = false;
 
     this.service_ = service;
 
@@ -387,37 +389,38 @@ class MockRuntime {
     // don't know the transform from local space to bounds space.
     // We'll cache the bounds so that they can be set in the future if the
     // floorLevel transform is set, but we won't update them just yet.
-    if (this.displayInfo_.stageParameters) {
-      this.displayInfo_.stageParameters.bounds = this.bounds_;
-
-      if (this.sessionClient_.ptr.isBound()) {
-        this.sessionClient_.onChanged(this.displayInfo_);
-      }
+    if (this.stageParameters_) {
+      this.stageParameters_.bounds = this.bounds_;
+      this.onStageParametersUpdated();
     }
   }
 
   setFloorOrigin(floorOrigin) {
-    if (!this.displayInfo_.stageParameters) {
-      this.displayInfo_.stageParameters = default_stage_parameters;
-      this.displayInfo_.stageParameters.bounds = this.bounds_;
+    if (!this.stageParameters_) {
+      this.stageParameters_ = default_stage_parameters;
+      this.stageParameters_.bounds = this.bounds_;
     }
 
-    this.displayInfo_.stageParameters.standingTransform = new gfx.mojom.Transform();
-    this.displayInfo_.stageParameters.standingTransform.matrix =
+    this.stageParameters_.standingTransform = new gfx.mojom.Transform();
+    this.stageParameters_.standingTransform.matrix =
       getMatrixFromTransform(floorOrigin);
 
-    if (this.sessionClient_.ptr.isBound()) {
-      this.sessionClient_.onChanged(this.displayInfo_);
-    }
+    this.onStageParametersUpdated();
   }
 
   clearFloorOrigin() {
-    if (this.displayInfo_.stageParameters) {
-      this.displayInfo_.stageParameters = null;
+    if (this.stageParameters_) {
+      this.stageParameters_ = null;
+      this.onStageParametersUpdated();
+    }
+  }
 
-      if (this.sessionClient_.ptr.isBound()) {
-        this.sessionClient_.onChanged(this.displayInfo_);
-      }
+  onStageParametersUpdated() {
+    // Indicate for the frame loop that the stage parameters have been updated.
+    this.stageParametersUpdated_ = true;
+    this.displayInfo_.stageParameters = this.stageParameters_;
+    if (this.sessionClient_.ptr.isBound()) {
+      this.sessionClient_.onChanged(this.displayInfo_);
     }
   }
 
@@ -569,6 +572,9 @@ class MockRuntime {
   getFrameData(options) {
     const mojo_space_reset = this.send_mojo_space_reset_;
     this.send_mojo_space_reset_ = false;
+
+    const stage_parameters_updated = this.stageParametersUpdated_;
+    this.stageParametersUpdated_ = false;
     if (this.pose_) {
       this.pose_.poseIndex++;
     }
@@ -601,6 +607,8 @@ class MockRuntime {
       frameId: this.next_frame_id_++,
       bufferHolder: null,
       bufferSize: {},
+      stageParameters: this.stageParameters_,
+      stageParametersUpdated: stage_parameters_updated,
     };
 
     this._calculateHitTestResults(frameData);
@@ -946,13 +954,12 @@ class MockRuntime {
         case device.mojom.XRReferenceSpaceCategory.LOCAL:
           return identity();
         case device.mojom.XRReferenceSpaceCategory.LOCAL_FLOOR:
-          if (this.displayInfo_ == null || this.displayInfo_.stageParameters == null
-           || this.displayInfo_.stageParameters.standingTransform == null) {
+          if (this.stageParameters_ == null || this.stageParameters_.standingTransform == null) {
             console.warn("Standing transform not available.");
             return null;
           }
-          // this.displayInfo_.stageParameters.standingTransform = floor_from_mojo aka native_origin_from_mojo
-          return XRMathHelper.inverse(this.displayInfo_.stageParameters.standingTransform.matrix);
+          // this.stageParameters_.standingTransform = floor_from_mojo aka native_origin_from_mojo
+          return XRMathHelper.inverse(this.stageParameters_.standingTransform.matrix);
         case device.mojom.XRReferenceSpaceCategory.VIEWER:
           const transform = {
             position: [
