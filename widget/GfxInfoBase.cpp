@@ -1122,9 +1122,7 @@ bool GfxInfoBase::DoesDriverVendorMatch(const nsAString& aBlocklistVendor,
              nsCaseInsensitiveStringComparator());
 }
 
-bool GfxInfoBase::IsFeatureAllowlisted(int32_t aFeature) const {
-  return aFeature == nsIGfxInfo::FEATURE_WEBRENDER;
-}
+bool GfxInfoBase::IsFeatureAllowlisted(int32_t aFeature) const { return false; }
 
 nsresult GfxInfoBase::GetFeatureStatusImpl(
     int32_t aFeature, int32_t* aStatus, nsAString& aSuggestedVersion,
