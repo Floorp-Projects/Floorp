@@ -171,28 +171,29 @@ class GetTextRangeStyleText final : public nsAutoCString {
 
     AppendLiteral(" }");
   }
-  void AppendLineStyle(uint8_t aLineStyle) {
+  void AppendLineStyle(TextRangeStyle::LineStyle aLineStyle) {
     switch (aLineStyle) {
-      case TextRangeStyle::LINESTYLE_NONE:
-        AppendLiteral("LINESTYLE_NONE");
+      case TextRangeStyle::LineStyle::None:
+        AppendLiteral("LineStyle::None");
         break;
-      case TextRangeStyle::LINESTYLE_SOLID:
-        AppendLiteral("LINESTYLE_SOLID");
+      case TextRangeStyle::LineStyle::Solid:
+        AppendLiteral("LineStyle::Solid");
         break;
-      case TextRangeStyle::LINESTYLE_DOTTED:
-        AppendLiteral("LINESTYLE_DOTTED");
+      case TextRangeStyle::LineStyle::Dotted:
+        AppendLiteral("LineStyle::Dotted");
         break;
-      case TextRangeStyle::LINESTYLE_DASHED:
-        AppendLiteral("LINESTYLE_DASHED");
+      case TextRangeStyle::LineStyle::Dashed:
+        AppendLiteral("LineStyle::Dashed");
         break;
-      case TextRangeStyle::LINESTYLE_DOUBLE:
-        AppendLiteral("LINESTYLE_DOUBLE");
+      case TextRangeStyle::LineStyle::Double:
+        AppendLiteral("LineStyle::Double");
         break;
-      case TextRangeStyle::LINESTYLE_WAVY:
-        AppendLiteral("LINESTYLE_WAVY");
+      case TextRangeStyle::LineStyle::Wavy:
+        AppendLiteral("LineStyle::Wavy");
         break;
       default:
-        AppendPrintf("Invalid(0x%02X)", aLineStyle);
+        AppendPrintf("Invalid(0x%02X)",
+                     static_cast<TextRangeStyle::LineStyleType>(aLineStyle));
         break;
     }
   }
@@ -2622,24 +2623,24 @@ bool IMContextWrapper::SetTextRange(PangoAttrIterator* aPangoAttrIter,
   if (attrUnderline) {
     switch (attrUnderline->value) {
       case PANGO_UNDERLINE_NONE:
-        style.mLineStyle = TextRangeStyle::LINESTYLE_NONE;
+        style.mLineStyle = TextRangeStyle::LineStyle::None;
         break;
       case PANGO_UNDERLINE_DOUBLE:
-        style.mLineStyle = TextRangeStyle::LINESTYLE_DOUBLE;
+        style.mLineStyle = TextRangeStyle::LineStyle::Double;
         break;
       case PANGO_UNDERLINE_ERROR:
-        style.mLineStyle = TextRangeStyle::LINESTYLE_WAVY;
+        style.mLineStyle = TextRangeStyle::LineStyle::Wavy;
         break;
       case PANGO_UNDERLINE_SINGLE:
       case PANGO_UNDERLINE_LOW:
-        style.mLineStyle = TextRangeStyle::LINESTYLE_SOLID;
+        style.mLineStyle = TextRangeStyle::LineStyle::Solid;
         break;
       default:
         MOZ_LOG(gGtkIMLog, LogLevel::Warning,
                 ("0x%p   SetTextRange(), retrieved unknown underline "
                  "style: %d",
                  this, attrUnderline->value));
-        style.mLineStyle = TextRangeStyle::LINESTYLE_SOLID;
+        style.mLineStyle = TextRangeStyle::LineStyle::Solid;
         break;
     }
     style.mDefinedStyles |= TextRangeStyle::DEFINED_LINESTYLE;
@@ -2652,7 +2653,7 @@ bool IMContextWrapper::SetTextRange(PangoAttrIterator* aPangoAttrIter,
       style.mDefinedStyles |= TextRangeStyle::DEFINED_UNDERLINE_COLOR;
     }
   } else {
-    style.mLineStyle = TextRangeStyle::LINESTYLE_NONE;
+    style.mLineStyle = TextRangeStyle::LineStyle::None;
     style.mDefinedStyles |= TextRangeStyle::DEFINED_LINESTYLE;
   }
 
