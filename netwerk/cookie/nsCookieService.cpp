@@ -612,8 +612,7 @@ void nsCookieService::InitDBStates() {
 
   nsCOMPtr<nsIRunnable> runnable =
       NS_NewRunnableFunction("InitDBStates.TryInitDB", [] {
-        NS_ENSURE_TRUE_VOID(gCookieService && gCookieService->mDBState &&
-                            gCookieService->mDefaultDBState);
+        NS_ENSURE_TRUE_VOID(gCookieService);
 
         MonitorAutoLock lock(gCookieService->mMonitor);
 
