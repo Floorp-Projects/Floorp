@@ -2,7 +2,7 @@
 
 # SystemEngineView
 
-`class SystemEngineView : `[`EngineView`](../../mozilla.components.concept.engine/-engine-view/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-system/src/main/java/mozilla/components/browser/engine/system/SystemEngineView.kt#L71)
+`class SystemEngineView : `[`EngineView`](../../mozilla.components.concept.engine/-engine-view/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-system/src/main/java/mozilla/components/browser/engine/system/SystemEngineView.kt#L72)
 
 WebView-based implementation of EngineView.
 
@@ -17,6 +17,12 @@ WebView-based implementation of EngineView.
 | Name | Summary |
 |---|---|
 | [&lt;init&gt;](-init-.md) | `SystemEngineView(context: <ERROR CLASS>, attrs: <ERROR CLASS>? = null, defStyleAttr: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)` = 0)`<br>WebView-based implementation of EngineView. |
+
+### Properties
+
+| Name | Summary |
+|---|---|
+| [selectionActionDelegate](selection-action-delegate.md) | `var selectionActionDelegate: `[`SelectionActionDelegate`](../../mozilla.components.concept.engine.selection/-selection-action-delegate/index.md)`?`<br>A delegate that will handle interactions with text selection context menus. |
 
 ### Functions
 
