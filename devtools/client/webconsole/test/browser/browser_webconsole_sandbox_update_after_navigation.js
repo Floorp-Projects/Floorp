@@ -26,7 +26,7 @@ add_task(async function() {
   );
 
   // load second url
-  await loadDocument(hud.toolbox, TEST_URI2);
+  await navigateTo(TEST_URI2);
 
   ok(!findMessage(hud, "Permission denied"), "no permission denied errors");
 
