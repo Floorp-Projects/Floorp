@@ -109,6 +109,119 @@ add_task(async function() {
   setInputValue(hud, "4 + 7");
   await waitForEagerEvaluationResult(hud, "11");
 
+  setInputValue(hud, "typeof new Proxy({}, {})");
+  await waitForEagerEvaluationResult(hud, `"object"`);
+
+  setInputValue(hud, "typeof Proxy.revocable({}, {}).revoke");
+  await waitForEagerEvaluationResult(hud, `"function"`);
+
+  setInputValue(hud, "Reflect.apply(() => 1, null, [])");
+  await waitForEagerEvaluationResult(hud, "1");
+  setInputValue(
+    hud,
+    `Reflect.apply(() => {
+      globalThis.sideEffect = true;
+      return 2;
+    }, null, [])`
+  );
+  await waitForNoEagerEvaluationResult(hud);
+
+  setInputValue(hud, "Reflect.construct(Array, []).length");
+  await waitForEagerEvaluationResult(hud, "0");
+  setInputValue(
+    hud,
+    `Reflect.construct(function() {
+      globalThis.sideEffect = true;
+    }, [])`
+  );
+  await waitForNoEagerEvaluationResult(hud);
+
+  setInputValue(hud, "Reflect.defineProperty({}, 'a', {value: 1})");
+  await waitForNoEagerEvaluationResult(hud);
+
+  setInputValue(hud, "Reflect.deleteProperty({a: 1}, 'a')");
+  await waitForNoEagerEvaluationResult(hud);
+
+  setInputValue(hud, "Reflect.get({a: 1}, 'a')");
+  await waitForEagerEvaluationResult(hud, "1");
+  setInputValue(hud, "Reflect.get({get a(){return 2}, 'a')");
+  await waitForNoEagerEvaluationResult(hud);
+
+  setInputValue(hud, "Reflect.getOwnPropertyDescriptor({a: 1}, 'a').value");
+  await waitForEagerEvaluationResult(hud, "1");
+  setInputValue(
+    hud,
+    `Reflect.getOwnPropertyDescriptor(
+      new Proxy({ a: 2 }, { getOwnPropertyDescriptor() {
+        globalThis.sideEffect = true;
+        return { value: 2 };
+      }}),
+      "a"
+    )`
+  );
+  await waitForNoEagerEvaluationResult(hud);
+
+  setInputValue(hud, "Reflect.getPrototypeOf({}) === Object.prototype");
+  await waitForEagerEvaluationResult(hud, "true");
+  setInputValue(
+    hud,
+    `Reflect.getPrototypeOf(
+      new Proxy({}, { getPrototypeOf() {
+        globalThis.sideEffect = true;
+        return null;
+      }})
+    )`
+  );
+  await waitForNoEagerEvaluationResult(hud);
+
+  setInputValue(hud, "Reflect.has({a: 1}, 'a')");
+  await waitForEagerEvaluationResult(hud, "true");
+  setInputValue(
+    hud,
+    `Reflect.has(
+      new Proxy({ a: 2 }, { has() {
+        globalThis.sideEffect = true;
+        return true;
+      }}), "a"
+    )`
+  );
+  await waitForNoEagerEvaluationResult(hud);
+
+  setInputValue(hud, "Reflect.isExtensible({})");
+  await waitForEagerEvaluationResult(hud, "true");
+  setInputValue(
+    hud,
+    `Reflect.isExtensible(
+      new Proxy({}, { isExtensible() {
+        globalThis.sideEffect = true;
+        return true;
+      }})
+    )`
+  );
+  await waitForNoEagerEvaluationResult(hud);
+
+  setInputValue(hud, "Reflect.ownKeys({a: 1})[0]");
+  await waitForEagerEvaluationResult(hud, `"a"`);
+  setInputValue(
+    hud,
+    `Reflect.ownKeys(
+      new Proxy({}, { ownKeys() {
+        globalThis.sideEffect = true;
+        return ['a'];
+      }})
+    )`
+  );
+  await waitForNoEagerEvaluationResult(hud);
+
+  setInputValue(hud, "Reflect.preventExtensions({})");
+  await waitForNoEagerEvaluationResult(hud);
+
+  setInputValue(hud, "Reflect.set({}, 'a', 1)");
+  await waitForNoEagerEvaluationResult(hud);
+
+  setInputValue(hud, "Reflect.setPrototypeOf({}, null)");
+  await waitForNoEagerEvaluationResult(hud);
+
   // go back to inline layout.
   await toggleLayout(hud);
 });
