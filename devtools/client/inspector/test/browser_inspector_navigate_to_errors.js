@@ -16,7 +16,7 @@ add_task(async function() {
   const { inspector, testActor } = await openInspectorForURL(TEST_URL_1);
 
   info("Navigate to closed port");
-  await navigateTo(inspector, TEST_URL_2);
+  await navigateTo(TEST_URL_2, { isErrorPage: true });
 
   const documentURI = await testActor.eval("document.documentURI;");
   ok(documentURI.startsWith("about:neterror"), "content is correct.");
@@ -42,7 +42,7 @@ add_task(async function() {
   );
 
   info("Navigate to unknown domain");
-  await navigateTo(inspector, TEST_URL_3);
+  await navigateTo(TEST_URL_3, { isErrorPage: true });
 
   domain = TEST_URL_3.match(/^http:\/\/(.*)\/$/)[1];
   errorMsg = bundle.formatStringFromName("dnsNotFound2", [domain]);
@@ -53,7 +53,7 @@ add_task(async function() {
   );
 
   info("Navigate to a valid url");
-  await navigateTo(inspector, TEST_URL_4);
+  await navigateTo(TEST_URL_4);
 
   is(
     await getDisplayedNodeTextContent("body", inspector),
