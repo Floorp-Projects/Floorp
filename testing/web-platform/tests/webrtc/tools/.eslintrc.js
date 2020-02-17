@@ -15,7 +15,6 @@ module.exports = {
     test: true,
     async_test: true,
     promise_test: true,
-    promise_rejects: true,
     IdlArray: true,
     assert_true: true,
     assert_false: true,

@@ -90,7 +90,7 @@ promise_test(async t => {
 
   // Script loading should error too
   const loadScriptPromise = loadScript('?action=use-stored-ranged-response', { doc: w.document });
-  promise_rejects(t, new Error(), loadScriptPromise);
+  promise_rejects_js(t, Error, loadScriptPromise);
 
   await loadScriptPromise.catch(() => {});
 
