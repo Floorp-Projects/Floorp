@@ -17,7 +17,7 @@
 
   // Selected methods from testharness.js.
   let testharnessProperties = [
-    'test', 'async_test', 'promise_test', 'promise_rejects', 'generate_tests',
+    'test', 'async_test', 'promise_test', 'promise_rejects_js', 'generate_tests',
     'setup', 'done', 'assert_true', 'assert_false'
   ];
 

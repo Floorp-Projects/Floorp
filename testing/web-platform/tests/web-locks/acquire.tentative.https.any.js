@@ -110,7 +110,7 @@ promise_test(async t => {
     throw test_error;
   });
   assert_equals(Promise.resolve(p), p, 'request() result is a Promise');
-  await promise_rejects(t, test_error, p, 'result should reject');
+  await promise_rejects_exactly(t, test_error, p, 'result should reject');
 }, 'Returned Promise rejects if callback throws synchronously');
 
 promise_test(async t => {
@@ -120,5 +120,5 @@ promise_test(async t => {
     throw test_error;
   });
   assert_equals(Promise.resolve(p), p, 'request() result is a Promise');
-  await promise_rejects(t, test_error, p, 'result should reject');
+  await promise_rejects_exactly(t, test_error, p, 'result should reject');
 }, 'Returned Promise rejects if callback throws asynchronously');
