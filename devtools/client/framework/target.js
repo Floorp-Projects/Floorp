@@ -12,8 +12,8 @@ loader.lazyRequireGetter(
 );
 loader.lazyRequireGetter(
   this,
-  "DebuggerClient",
-  "devtools/shared/client/debugger-client",
+  "DevToolsClient",
+  "devtools/shared/client/devtools-client",
   true
 );
 
@@ -29,7 +29,7 @@ exports.TargetFactory = {
    *
    * @param {XULTab} tab
    *        The tab to use in creating a new target.
-   * @param {DebuggerClient} client
+   * @param {DevToolsClient} client
    *        Optional client to fetch the target actor from.
    *
    * @return A target object
@@ -56,13 +56,13 @@ exports.TargetFactory = {
    *
    * This will automatically:
    * - if no client is passed, spawn a DevToolsServer in the parent process,
-   *   and create a DebuggerClient and connect it to this local DevToolsServer,
+   *   and create a DevToolsClient and connect it to this local DevToolsServer,
    * - call RootActor's `getTab` request to retrieve the FrameTargetActor's form,
    * - instantiate a Target instance.
    *
    * @param {XULTab} tab
    *        The tab to use in creating a new target.
-   * @param {DebuggerClient} client
+   * @param {DevToolsClient} client
    *        Optional client to fetch the target actor from.
    *
    * @return A target object
@@ -86,7 +86,7 @@ exports.TargetFactory = {
 
     function createLocalClient() {
       createLocalServer();
-      return new DebuggerClient(DevToolsServer.connectPipe());
+      return new DevToolsClient(DevToolsServer.connectPipe());
     }
 
     if (!client) {

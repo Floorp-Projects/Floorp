@@ -14,7 +14,7 @@ var gActorFront;
 function run_test() {
   initTestDevToolsServer();
   DevToolsServer.registerAllActors();
-  gClient = new DebuggerClient(DevToolsServer.connectPipe());
+  gClient = new DevToolsClient(DevToolsServer.connectPipe());
   gClient.connect().then(getRegistry);
   do_test_pending();
 }

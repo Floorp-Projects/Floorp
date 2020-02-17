@@ -150,12 +150,12 @@ add_task(async function testVersionChecker() {
 });
 
 add_task(async function testVersionCheckWithVeryOldClient() {
-  // Use an empty object as debugger client, calling any method on it will fail.
+  // Use an empty object as devtools client, calling any method on it will fail.
   const emptyClient = {};
   const report = await checkVersionCompatibility(emptyClient);
   equal(
     report.status,
     COMPATIBILITY_STATUS.TOO_OLD,
-    "Report status too old if debugger client is not implementing expected interface"
+    "Report status too old if devtools client is not implementing expected interface"
   );
 });

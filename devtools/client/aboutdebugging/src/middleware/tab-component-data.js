@@ -10,7 +10,7 @@ const {
 } = require("devtools/client/aboutdebugging/src/constants");
 
 /**
- * This middleware converts tabs object that get from DebuggerClient.listTabs() to data
+ * This middleware converts tabs object that get from DevToolsClient.listTabs() to data
  * which is used in DebugTargetItem.
  */
 const tabComponentDataMiddleware = store => next => action => {

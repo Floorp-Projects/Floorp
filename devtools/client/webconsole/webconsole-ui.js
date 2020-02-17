@@ -144,7 +144,7 @@ class WebConsoleUI {
       await this._attachTargets();
 
       this._commands = new ConsoleCommands({
-        debuggerClient: this.hud.currentTarget.client,
+        devToolsClient: this.hud.currentTarget.client,
         proxy: this.getProxy(),
         threadFront: this.hud.toolbox && this.hud.toolbox.threadFront,
         currentTarget: this.hud.currentTarget,

@@ -7,5 +7,5 @@
 DevToolsModules(
     'connection-manager.js',
     'constants.js',
-    'debugger-client.js',
+    'devtools-client.js',
 )

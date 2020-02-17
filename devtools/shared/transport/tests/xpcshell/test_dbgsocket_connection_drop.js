@@ -58,7 +58,7 @@ var test_helper = async function(payload) {
   const listener = new SocketListener(DevToolsServer, socketOptions);
   listener.open();
 
-  const transport = await DebuggerClient.socketConnect({
+  const transport = await DevToolsClient.socketConnect({
     host: "127.0.0.1",
     port: listener.port,
   });

@@ -48,7 +48,7 @@ class RootFront extends FrontClassWithSpec(rootSpec) {
 
     // Root Front is a special Front. It is the only one to set its actor ID manually
     // out of the form object returned by RootActor.sayHello which is called when calling
-    // DebuggerClient.connect().
+    // DevToolsClient.connect().
     this.actorID = form.from;
 
     this.applicationType = form.applicationType;

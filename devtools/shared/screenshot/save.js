@@ -104,7 +104,7 @@ function getFormattedHelpData() {
  * and audio effect.
  *
  * @param object window
- *        The Debugger Client window.
+ *        The DevTools Client window.
  *
  * @param object args
  *        The original args with which the screenshot
@@ -129,7 +129,7 @@ function saveScreenshot(window, args = {}, value) {
  * This function is called to simulate camera effects
  *
  * @param object document
- *        The Debugger Client document.
+ *        The DevTools Client document.
  */
 function simulateCameraShutter(window) {
   if (Services.prefs.getBoolPref("devtools.screenshot.audio.enabled")) {

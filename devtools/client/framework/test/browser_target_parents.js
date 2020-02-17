@@ -5,7 +5,7 @@
 
 // Test a given Target's parentFront attribute returns the correct parent front.
 
-const { DebuggerClient } = require("devtools/shared/client/debugger-client");
+const { DevToolsClient } = require("devtools/shared/client/devtools-client");
 const { DevToolsServer } = require("devtools/server/devtools-server");
 
 const TEST_URL = `data:text/html;charset=utf-8,<div id="test"></div>`;
@@ -35,7 +35,7 @@ add_task(async function() {
     DevToolsServer.registerAllActors();
   }
   const transport = DevToolsServer.connectPipe();
-  const client = new DebuggerClient(transport);
+  const client = new DevToolsClient(transport);
   await client.connect();
 
   const mainRoot = client.mainRoot;
@@ -92,7 +92,7 @@ add_task(async function() {
     DevToolsServer.registerAllActors();
   }
   const transport = DevToolsServer.connectPipe();
-  const client = new DebuggerClient(transport);
+  const client = new DevToolsClient(transport);
   await client.connect();
 
   const mainRoot = client.mainRoot;
@@ -147,7 +147,7 @@ add_task(async function() {
     DevToolsServer.registerAllActors();
   }
   const transport = DevToolsServer.connectPipe();
-  const client = new DebuggerClient(transport);
+  const client = new DevToolsClient(transport);
   await client.connect();
 
   const mainRoot = client.mainRoot;
@@ -180,7 +180,7 @@ add_task(async function() {
     DevToolsServer.registerAllActors();
   }
   const transport = DevToolsServer.connectPipe();
-  const client = new DebuggerClient(transport);
+  const client = new DevToolsClient(transport);
   await client.connect();
 
   const mainRoot = client.mainRoot;

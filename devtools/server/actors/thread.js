@@ -1095,7 +1095,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     }
 
     // In case of multiple nested event loops (due to multiple debuggers open in
-    // different tabs or multiple debugger clients connected to the same tab)
+    // different tabs or multiple devtools clients connected to the same tab)
     // only allow resumption in a LIFO order.
     if (
       this._nestedEventLoops.size &&

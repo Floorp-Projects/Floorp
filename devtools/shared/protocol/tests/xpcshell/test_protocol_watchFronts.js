@@ -97,7 +97,7 @@ add_task(async function run_test() {
   DevToolsServer.init();
 
   const trace = connectPipeTracing();
-  const client = new DebuggerClient(trace);
+  const client = new DevToolsClient(trace);
   await client.connect();
 
   const rootFront = new RootFront(client);

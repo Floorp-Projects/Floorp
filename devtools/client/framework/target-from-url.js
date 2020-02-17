@@ -5,7 +5,7 @@
 "use strict";
 
 const { DevToolsServer } = require("devtools/server/devtools-server");
-const { DebuggerClient } = require("devtools/shared/client/debugger-client");
+const { DevToolsClient } = require("devtools/shared/client/devtools-client");
 const {
   remoteClientManager,
 } = require("devtools/client/shared/remote-debugging/remote-client-manager");
@@ -162,7 +162,7 @@ async function _targetFromURL(client, id, type, chrome) {
 }
 
 /**
- * Create a DebuggerClient for a given URL object having various query parameters:
+ * Create a DevToolsClient for a given URL object having various query parameters:
  *
  * host:
  *    {String} The hostname or IP address to connect to.
@@ -175,7 +175,7 @@ async function _targetFromURL(client, id, type, chrome) {
  *
  * @param {URL} url
  *        The url to fetch query params from.
- * @return a promise that resolves a DebuggerClient object
+ * @return a promise that resolves a DevToolsClient object
  */
 async function clientFromURL(url) {
   const params = url.searchParams;
@@ -196,14 +196,14 @@ async function clientFromURL(url) {
 
   let transport;
   if (port) {
-    transport = await DebuggerClient.socketConnect({ host, port, webSocket });
+    transport = await DevToolsClient.socketConnect({ host, port, webSocket });
   } else {
     // Setup a server if we don't have one already running
     DevToolsServer.init();
     DevToolsServer.registerAllActors();
     transport = DevToolsServer.connectPipe();
   }
-  return new DebuggerClient(transport);
+  return new DevToolsClient(transport);
 }
 
 exports.clientFromURL = clientFromURL;

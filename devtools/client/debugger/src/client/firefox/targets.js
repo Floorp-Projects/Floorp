@@ -7,14 +7,14 @@
 import { addThreadEventListeners, attachAllTargets } from "./events";
 import { features } from "../../utils/prefs";
 import { sameOrigin } from "../../utils/url";
-import type { DebuggerClient, Target } from "./types";
+import type { DevToolsClient, Target } from "./types";
 
 // $FlowIgnore
 const { defaultThreadOptions } = require("devtools/client/shared/thread-utils");
 
 type Args = {
   currentTarget: Target,
-  debuggerClient: DebuggerClient,
+  devToolsClient: DevToolsClient,
   targets: { [string]: Target },
   options: Object,
 };
@@ -66,7 +66,7 @@ async function attachTargets(targetLists, args) {
 }
 
 async function listWorkerTargets(args: Args) {
-  const { currentTarget, debuggerClient } = args;
+  const { currentTarget, devToolsClient } = args;
   if (!currentTarget.isBrowsingContext || currentTarget.isContentProcess) {
     return [];
   }
@@ -75,7 +75,7 @@ async function listWorkerTargets(args: Args) {
   let allWorkers;
   let serviceWorkerRegistrations = [];
   if (attachAllTargets(currentTarget)) {
-    workers = await debuggerClient.mainRoot.listAllWorkerTargets();
+    workers = await devToolsClient.mainRoot.listAllWorkerTargets();
 
     // subprocess workers are ignored because they take several seconds to
     // attach to when opening the browser toolbox. See bug 1594597.
@@ -85,15 +85,15 @@ async function listWorkerTargets(args: Args) {
 
     const {
       registrations,
-    } = await debuggerClient.mainRoot.listServiceWorkerRegistrations();
+    } = await devToolsClient.mainRoot.listServiceWorkerRegistrations();
     serviceWorkerRegistrations = registrations;
   } else {
     workers = (await currentTarget.listWorkers()).workers;
     if (currentTarget.url && features.windowlessServiceWorkers) {
-      allWorkers = await debuggerClient.mainRoot.listAllWorkerTargets();
+      allWorkers = await devToolsClient.mainRoot.listAllWorkerTargets();
       const {
         registrations,
-      } = await debuggerClient.mainRoot.listServiceWorkerRegistrations();
+      } = await devToolsClient.mainRoot.listServiceWorkerRegistrations();
       serviceWorkerRegistrations = registrations.filter(front =>
         sameOrigin(front.url, currentTarget.url)
       );
@@ -134,8 +134,8 @@ async function listWorkerTargets(args: Args) {
 }
 
 async function getAllProcessTargets(args) {
-  const { debuggerClient } = args;
-  const { processes } = await debuggerClient.mainRoot.listProcesses();
+  const { devToolsClient } = args;
+  const { processes } = await devToolsClient.mainRoot.listProcesses();
   return Promise.all(
     processes
       .filter(descriptor => !descriptor.isParent)

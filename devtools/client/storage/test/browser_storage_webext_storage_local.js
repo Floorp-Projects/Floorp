@@ -14,23 +14,23 @@ loader.lazyRequireGetter(
 );
 loader.lazyRequireGetter(
   this,
-  "DebuggerClient",
-  "devtools/shared/client/debugger-client",
+  "DevToolsClient",
+  "devtools/shared/client/devtools-client",
   true
 );
 
 const { Toolbox } = require("devtools/client/framework/toolbox");
 
 /**
- * Initialize and connect a DevToolsServer and DebuggerClient. Note: This test
+ * Initialize and connect a DevToolsServer and DevToolsClient. Note: This test
  * does not use TargetFactory, so it has to set up the DevToolsServer and
- * DebuggerClient on its own.
- * @return {Promise} Resolves with an instance of the DebuggerClient class
+ * DevToolsClient on its own.
+ * @return {Promise} Resolves with an instance of the DevToolsClient class
  */
 async function setupLocalDevToolsServerAndClient() {
   DevToolsServer.init();
   DevToolsServer.registerAllActors();
-  const client = new DebuggerClient(DevToolsServer.connectPipe());
+  const client = new DevToolsClient(DevToolsServer.connectPipe());
   await client.connect();
   return client;
 }

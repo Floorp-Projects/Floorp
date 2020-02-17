@@ -39,7 +39,7 @@ function test_lazy_api() {
   Assert.ok(!isActorLoaded);
   Assert.ok(!isActorInstantiated);
 
-  const client = new DebuggerClient(DevToolsServer.connectPipe());
+  const client = new DevToolsClient(DevToolsServer.connectPipe());
   client.connect().then(function onConnect() {
     client.mainRoot.rootForm.then(onRootForm);
   });

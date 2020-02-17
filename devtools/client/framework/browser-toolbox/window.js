@@ -14,7 +14,7 @@ loader.require("devtools/client/framework/devtools-browser");
 var { gDevTools } = require("devtools/client/framework/devtools");
 var { Toolbox } = require("devtools/client/framework/toolbox");
 var Services = require("Services");
-var { DebuggerClient } = require("devtools/shared/client/debugger-client");
+var { DevToolsClient } = require("devtools/shared/client/devtools-client");
 var { PrefsHelper } = require("devtools/client/shared/prefs");
 const KeyShortcuts = require("devtools/client/shared/key-shortcuts");
 const { LocalizationHelper } = require("devtools/shared/l10n");
@@ -98,12 +98,12 @@ var connect = async function() {
   const host = Prefs.chromeDebuggingHost;
   const webSocket = Prefs.chromeDebuggingWebSocket;
   appendStatusMessage(`Connecting to ${host}:${port}, ws: ${webSocket}`);
-  const transport = await DebuggerClient.socketConnect({
+  const transport = await DevToolsClient.socketConnect({
     host,
     port,
     webSocket,
   });
-  gClient = new DebuggerClient(transport);
+  gClient = new DevToolsClient(transport);
   appendStatusMessage("Start protocol client for connection");
   await gClient.connect();
 

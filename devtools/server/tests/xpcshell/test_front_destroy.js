@@ -17,9 +17,9 @@ add_task(async function test() {
   DevToolsServer.init();
   DevToolsServer.registerAllActors();
 
-  info("Create and connect the DebuggerClient");
+  info("Create and connect the DevToolsClient");
   const transport = DevToolsServer.connectPipe();
-  const client = new DebuggerClient(transport);
+  const client = new DevToolsClient(transport);
   await client.connect();
 
   info("Get the device front and check calling getDescription() on it");

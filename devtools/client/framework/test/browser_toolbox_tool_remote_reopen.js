@@ -14,7 +14,7 @@ requestLongerTimeout(2);
  * The fronts need to be destroyed manually to unbind their onPacket handlers.
  *
  * When you initialize a front and call |this.manage|, it adds a client actor
- * pool that the DebuggerClient uses to route packet replies to that actor.
+ * pool that the DevToolsClient uses to route packet replies to that actor.
  *
  * Most (all?) tools create a new front when they are opened.  When the destroy
  * step is skipped and the tool is reopened, a second front is created and also
@@ -24,11 +24,11 @@ requestLongerTimeout(2);
  * request, an error occurs.
  *
  * This problem does not occur with the toolbox for a local tab because the
- * toolbox target creates its own DebuggerClient for the local tab, and the
+ * toolbox target creates its own DevToolsClient for the local tab, and the
  * client is destroyed when the toolbox is closed, which removes the client
  * actor pools, and avoids this issue.
  *
- * In remote debugging, we do not destroy the DebuggerClient on toolbox close
+ * In remote debugging, we do not destroy the DevToolsClient on toolbox close
  * because it can still used for other targets.
  * Thus, the same client gets reused across multiple toolboxes,
  * which leads to the tools failing if they don't destroy their fronts.

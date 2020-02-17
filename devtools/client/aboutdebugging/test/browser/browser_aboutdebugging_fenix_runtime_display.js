@@ -135,7 +135,7 @@ add_task(async function() {
     "The runtime icon is the Fenix icon"
   );
 
-  info("Wait for all pending requests to settle on the DebuggerClient");
+  info("Wait for all pending requests to settle on the DevToolsClient");
   await clientWrapper.client.waitForRequestsToSettle();
 
   await closeAboutDevtoolsToolbox(document, devtoolsTab, window);
@@ -150,16 +150,16 @@ add_task(async function() {
 });
 
 async function createLocalClientWrapper() {
-  info("Create a local DebuggerClient");
+  info("Create a local DevToolsClient");
   const { DevToolsServer } = require("devtools/server/devtools-server");
-  const { DebuggerClient } = require("devtools/shared/client/debugger-client");
+  const { DevToolsClient } = require("devtools/shared/client/devtools-client");
   const {
     ClientWrapper,
   } = require("devtools/client/aboutdebugging/src/modules/client-wrapper");
 
   DevToolsServer.init();
   DevToolsServer.registerAllActors();
-  const client = new DebuggerClient(DevToolsServer.connectPipe());
+  const client = new DevToolsClient(DevToolsServer.connectPipe());
 
   await client.connect();
   return new ClientWrapper(client);

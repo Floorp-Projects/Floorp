@@ -10,7 +10,7 @@ function test() {
   DevToolsServer.init();
   DevToolsServer.registerAllActors();
 
-  gClient = new DebuggerClient(DevToolsServer.connectPipe());
+  gClient = new DevToolsClient(DevToolsServer.connectPipe());
   gClient
     .connect()
     .then(() => gClient.mainRoot.listTabs())

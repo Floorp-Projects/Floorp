@@ -55,7 +55,7 @@ async function getTargetForSelectedTab(gBrowser) {
  * find the tab with the devtools server, and call the callback.
  *
  * Returns a function which can be called to close the opened ta
- * and disconnect its debugger client.
+ * and disconnect its devtools client.
  */
 async function attachURL(url) {
   // Get the current browser window

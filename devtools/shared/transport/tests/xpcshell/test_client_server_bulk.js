@@ -170,7 +170,7 @@ var test_bulk_request_cs = async function(
 
   const transport = await transportFactory();
 
-  const client = new DebuggerClient(transport);
+  const client = new DevToolsClient(transport);
   client.connect().then(([app, traits]) => {
     Assert.equal(traits.bulk, true);
     client.mainRoot.rootForm.then(clientResolve);
@@ -240,7 +240,7 @@ var test_json_request_cs = async function(
 
   const transport = await transportFactory();
 
-  const client = new DebuggerClient(transport);
+  const client = new DevToolsClient(transport);
   const [, traits] = await client.connect();
   Assert.equal(traits.bulk, true);
   client.mainRoot.rootForm.then(clientResolve);

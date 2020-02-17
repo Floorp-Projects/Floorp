@@ -7,9 +7,9 @@
  * Test blackbox ranges
  */
 
-async function testFinish({ threadFront, debuggerClient }) {
+async function testFinish({ threadFront, devToolsClient }) {
   await threadFront.resume();
-  await close(debuggerClient);
+  await close(devToolsClient);
 
   do_test_finished();
 }

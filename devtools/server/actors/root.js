@@ -397,7 +397,7 @@ exports.RootActor = protocol.ActorClassWithSpec(rootSpec, {
   },
 
   /**
-   * This function can receive the following option from debugger client.
+   * This function can receive the following option from devtools client.
    *
    * @param {Object} option
    *        - iconDataURL: {boolean}

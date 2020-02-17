@@ -17,8 +17,8 @@ const defer = require("devtools/shared/defer");
 /**
  * Base class for client-side actor fronts.
  *
- * @param [DebuggerClient|null] conn
- *   The conn must either be DebuggerClient or null. Must have
+ * @param [DevToolsClient|null] conn
+ *   The conn must either be DevToolsClient or null. Must have
  *   addActorPool, removeActorPool, and poolFor.
  *   conn can be null if the subclass provides a conn property.
  * @param [Target|null] target

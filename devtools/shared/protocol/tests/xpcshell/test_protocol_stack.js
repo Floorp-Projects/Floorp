@@ -66,7 +66,7 @@ function run_test() {
   DevToolsServer.init();
 
   const trace = connectPipeTracing();
-  const client = new DebuggerClient(trace);
+  const client = new DevToolsClient(trace);
   let rootFront;
 
   client.connect().then(function onConnect() {

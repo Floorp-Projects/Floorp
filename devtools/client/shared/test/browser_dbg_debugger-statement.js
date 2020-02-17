@@ -33,7 +33,7 @@ async function testEarlyDebuggerStatement(client, tab, targetFront) {
     ok(false, "Pause shouldn't be called before we've attached!");
   };
 
-  // using the DebuggerClient to listen to the pause packet, as the
+  // using the DevToolsClient to listen to the pause packet, as the
   // threadFront is not yet attached.
   client.on("paused", onPaused);
 

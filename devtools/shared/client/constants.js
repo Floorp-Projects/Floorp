@@ -18,7 +18,7 @@ const ThreadStateTypes = {
 /**
  * Set of protocol messages that are sent by the server without a prior request
  * by the client. This only applies to Actors for which we are not using a
- * protocol.js Front and instead use DebuggerClient directly.
+ * protocol.js Front and instead use DevToolsClient directly.
  */
 const UnsolicitedNotifications = {
   networkEventUpdate: "networkEventUpdate",

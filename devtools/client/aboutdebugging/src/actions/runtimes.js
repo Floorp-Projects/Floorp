@@ -75,7 +75,7 @@ async function getRuntimeIcon(runtime, channel) {
     : "chrome://devtools/skin/images/aboutdebugging-firefox-nightly.svg";
 }
 
-function onRemoteDebuggerClientClosed() {
+function onRemoteDevToolsClientClosed() {
   window.AboutDebugging.onNetworkLocationsUpdated();
   window.AboutDebugging.onUSBRuntimesUpdated();
 }
@@ -184,7 +184,7 @@ function connectRuntime(id) {
       if (runtime.type !== RUNTIMES.THIS_FIREFOX) {
         // `closed` event will be emitted when disabling remote debugging
         // on the connected remote runtime.
-        clientWrapper.once("closed", onRemoteDebuggerClientClosed);
+        clientWrapper.once("closed", onRemoteDevToolsClientClosed);
       }
 
       dispatch({
@@ -241,7 +241,7 @@ function disconnectRuntime(id, shouldRedirect = false) {
       }
 
       if (runtime.type !== RUNTIMES.THIS_FIREFOX) {
-        clientWrapper.off("closed", onRemoteDebuggerClientClosed);
+        clientWrapper.off("closed", onRemoteDevToolsClientClosed);
       }
       await clientWrapper.close();
       if (shouldRedirect) {
@@ -416,7 +416,7 @@ function updateUSBRuntimes(adbRuntimes) {
 
 /**
  * Check that a given runtime can still be found in the provided array of runtimes, and
- * that the connection of the associated DebuggerClient is still valid.
+ * that the connection of the associated DevToolsClient is still valid.
  * Note that this check is only valid for runtimes which match the type of the runtimes
  * in the array.
  */
@@ -529,7 +529,7 @@ function removeRuntimeListeners() {
     for (const runtime of remoteRuntimes) {
       if (runtime.runtimeDetails) {
         const { clientWrapper } = runtime.runtimeDetails;
-        clientWrapper.off("closed", onRemoteDebuggerClientClosed);
+        clientWrapper.off("closed", onRemoteDevToolsClientClosed);
       }
     }
   };

@@ -6,7 +6,7 @@
  */
 
 var { DevToolsServer } = require("devtools/server/devtools-server");
-var { DebuggerClient } = require("devtools/shared/client/debugger-client");
+var { DevToolsClient } = require("devtools/shared/client/devtools-client");
 
 const TAB_URL_1 = "data:text/html;charset=utf-8,foo";
 const TAB_URL_2 = "data:text/html;charset=utf-8,bar";
@@ -19,7 +19,7 @@ add_task(async () => {
   const tab2 = await addTab(TAB_URL_2);
 
   // Connect to devtools server to fetch the two target actors for each tab
-  const client = new DebuggerClient(DevToolsServer.connectPipe());
+  const client = new DevToolsClient(DevToolsServer.connectPipe());
   await client.connect();
 
   const tabs = await client.mainRoot.listTabs();

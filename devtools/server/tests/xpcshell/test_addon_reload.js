@@ -52,7 +52,7 @@ add_task(async function testReloadExitedAddon() {
   DevToolsServer.init();
   DevToolsServer.registerAllActors();
 
-  const client = new DebuggerClient(DevToolsServer.connectPipe());
+  const client = new DevToolsClient(DevToolsServer.connectPipe());
   await client.connect();
 
   // Install our main add-on to trigger reloads on.

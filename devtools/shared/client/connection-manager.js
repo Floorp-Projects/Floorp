@@ -7,7 +7,7 @@
 const { Cc, Ci, Cr } = require("chrome");
 const EventEmitter = require("devtools/shared/event-emitter");
 const { DevToolsServer } = require("devtools/server/devtools-server");
-const { DebuggerClient } = require("devtools/shared/client/debugger-client");
+const { DevToolsClient } = require("devtools/shared/client/devtools-client");
 const Services = require("Services");
 
 const REMOTE_TIMEOUT = "devtools.debugger.remote-timeout";
@@ -30,10 +30,10 @@ const REMOTE_TIMEOUT = "devtools.debugger.remote-timeout";
  *
  * # Connection
  *
- * A connection is a wrapper around a debugger client. It has a simple
+ * A connection is a wrapper around a devtools client. It has a simple
  * API to instantiate a connection to a devtools server. Once disconnected,
  * no need to re-create a Connection object. Calling `connect()` again
- * will re-create a debugger client.
+ * will re-create a devtools client.
  *
  * Methods:
  *  . connect()             Connect to host:port. Expect a "connecting" event.
@@ -197,7 +197,7 @@ Connection.prototype = {
       this.authenticator = null;
       return;
     }
-    const AuthenticatorType = DebuggerClient.Authenticators.get(value);
+    const AuthenticatorType = DevToolsClient.Authenticators.get(value);
     this.authenticator = new AuthenticatorType.Client();
   },
 
@@ -305,7 +305,7 @@ Connection.prototype = {
       return DevToolsServer.connectPipe();
     }
     const settings = this.socketSettings;
-    const transport = await DebuggerClient.socketConnect(settings);
+    const transport = await DevToolsClient.socketConnect(settings);
     return transport;
   },
 
@@ -315,7 +315,7 @@ Connection.prototype = {
         if (!transport) {
           return;
         }
-        this._client = new DebuggerClient(transport);
+        this._client = new DevToolsClient(transport);
         this._client.once("closed", this._onDisconnected);
         this._client.connect().then(this._onConnected);
       },
@@ -329,7 +329,7 @@ Connection.prototype = {
           console.error(e);
         }
         // In some cases, especially on Mac, the openOutputStream call in
-        // DebuggerClient.socketConnect may throw NS_ERROR_NOT_INITIALIZED.
+        // DevToolsClient.socketConnect may throw NS_ERROR_NOT_INITIALIZED.
         // It occurs when we connect agressively to the simulator,
         // and keep trying to open a socket to the server being started in
         // the simulator.

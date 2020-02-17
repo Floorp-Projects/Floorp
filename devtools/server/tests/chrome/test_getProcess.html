@@ -18,7 +18,7 @@ Bug 1060093 - Test DevToolsServer.getProcess
 /* eslint-env mozilla/frame-script */
 
 const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
-const {DebuggerClient} = require("devtools/shared/client/debugger-client");
+const {DevToolsClient} = require("devtools/shared/client/devtools-client");
 const {DevToolsServer} = require("devtools/server/devtools-server");
 const Services = require("Services");
 
@@ -50,7 +50,7 @@ function runTests() {
   function connect() {
     // Fake a first connection to the content process
     const transport = DevToolsServer.connectPipe();
-    client = new DebuggerClient(transport);
+    client = new DevToolsClient(transport);
     client.connect().then(listProcess);
   }
 

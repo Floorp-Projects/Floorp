@@ -32,7 +32,7 @@ if (!DevToolsServer.initialized) {
  *           - targetFront: the target front
  *           - webConsoleFront: the console front
  *           - cleanup: a generator function which can be called to close
- *             the opened tab and disconnect its debugger client.
+ *             the opened tab and disconnect its devtools client.
  */
 async function attachURL(url) {
   const tab = await addTab(url);

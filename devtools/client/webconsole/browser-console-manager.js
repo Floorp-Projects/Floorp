@@ -13,8 +13,8 @@ const { DevToolsLoader } = ChromeUtils.import(
 loader.lazyRequireGetter(this, "Tools", "devtools/client/definitions", true);
 loader.lazyRequireGetter(
   this,
-  "DebuggerClient",
-  "devtools/shared/client/debugger-client",
+  "DevToolsClient",
+  "devtools/shared/client/devtools-client",
   true
 );
 loader.lazyRequireGetter(this, "l10n", "devtools/client/webconsole/utils/l10n");
@@ -38,7 +38,7 @@ class BrowserConsoleManager {
     this._browserConsole = null;
     this._browserConsoleInitializing = null;
     this._browerConsoleSessionState = false;
-    this._debuggerClient = null;
+    this._devToolsClient = null;
   }
 
   storeBrowserConsoleSessionState() {
@@ -79,8 +79,8 @@ class BrowserConsoleManager {
     await this._browserConsole.destroy();
     this._browserConsole = null;
 
-    await this._debuggerClient.close();
-    this._debuggerClient = null;
+    await this._devToolsClient.close();
+    this._devToolsClient = null;
   }
 
   /**
@@ -134,9 +134,9 @@ class BrowserConsoleManager {
 
     DevToolsServer.allowChromeProcess = true;
 
-    this._debuggerClient = new DebuggerClient(DevToolsServer.connectPipe());
-    await this._debuggerClient.connect();
-    return this._debuggerClient.mainRoot.getMainProcess();
+    this._devToolsClient = new DevToolsClient(DevToolsServer.connectPipe());
+    await this._devToolsClient.connect();
+    return this._devToolsClient.mainRoot.getMainProcess();
   }
 
   async openWindow() {

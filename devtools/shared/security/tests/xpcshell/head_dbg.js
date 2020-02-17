@@ -3,7 +3,7 @@
 
 "use strict";
 
-/* exported defer, DebuggerClient, initTestDevToolsServer */
+/* exported defer, DevToolsClient, initTestDevToolsServer */
 
 const { loader, require } = ChromeUtils.import(
   "resource://devtools/shared/Loader.jsm"
@@ -12,7 +12,7 @@ const defer = require("devtools/shared/defer");
 const Services = require("Services");
 const xpcInspector = require("xpcInspector");
 const { DevToolsServer } = require("devtools/server/devtools-server");
-const { DebuggerClient } = require("devtools/shared/client/debugger-client");
+const { DevToolsClient } = require("devtools/shared/client/devtools-client");
 // We need to require lazily since will be crashed if we load SocketListener too early
 // in xpc shell test due to SocketListener loads PSM module.
 loader.lazyRequireGetter(

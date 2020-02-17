@@ -89,7 +89,7 @@ function setupThisFirefoxMock() {
   return thisFirefoxClient;
 }
 
-// Create basic addon data as the DebuggerClient would return it (debuggable and non
+// Create basic addon data as the DevToolsClient would return it (debuggable and non
 // temporary).
 function createAddonData({ id, name, isSystem, hidden }) {
   return {

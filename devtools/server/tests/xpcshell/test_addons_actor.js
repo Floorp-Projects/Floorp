@@ -8,7 +8,7 @@ async function connect() {
   DevToolsServer.init();
   DevToolsServer.registerAllActors();
 
-  const client = new DebuggerClient(DevToolsServer.connectPipe());
+  const client = new DevToolsClient(DevToolsServer.connectPipe());
   await client.connect();
 
   const addons = await client.mainRoot.getFront("addons");

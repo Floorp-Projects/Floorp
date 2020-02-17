@@ -62,8 +62,8 @@ function computeMinMaxVersion(localVersion) {
 /**
  * Tells if the remote device is using a supported version of Firefox.
  *
- * @param {DebuggerClient} debuggerClient
- *        DebuggerClient instance connected to the target remote Firefox.
+ * @param {DevToolsClient} devToolsClient
+ *        DevToolsClient instance connected to the target remote Firefox.
  * @return Object with the following attributes:
  *   * String status, one of COMPATIBILITY_STATUS
  *            COMPATIBLE if the runtime is compatible,
@@ -78,14 +78,14 @@ function computeMinMaxVersion(localVersion) {
  *   * String deviceID
  *            Build ID of remote runtime. A date with like this: YYYYMMDD.
  */
-async function checkVersionCompatibility(debuggerClient) {
+async function checkVersionCompatibility(devToolsClient) {
   const localDescription = {
     appbuildid: Services.appinfo.appBuildID,
     platformversion: AppConstants.MOZ_APP_VERSION,
   };
 
   try {
-    const deviceFront = await debuggerClient.mainRoot.getFront("device");
+    const deviceFront = await devToolsClient.mainRoot.getFront("device");
     const description = await deviceFront.getDescription();
     return _compareVersionCompatibility(localDescription, description);
   } catch (e) {

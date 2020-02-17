@@ -189,7 +189,7 @@ add_task(async function() {
     "Should throw for unknown collection type"
   );
   const trace = connectPipeTracing();
-  const client = new DebuggerClient(trace);
+  const client = new DevToolsClient(trace);
 
   const [applicationType] = await client.connect();
   trace.expectReceive({

@@ -234,11 +234,11 @@ type ConsoleFront = {
  */
 
 /**
- * DebuggerClient
+ * DevToolsClient
  * @memberof firefox
  * @static
  */
-export type DebuggerClient = {
+export type DevToolsClient = {
   _activeRequests: {
     get: any => any,
     delete: any => void,

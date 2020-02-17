@@ -42,7 +42,7 @@ const { DevToolsServer } = require("devtools/server/devtools-server");
 const { DevToolsServer: WorkerDevToolsServer } = worker.require(
   "devtools/server/devtools-server"
 );
-const { DebuggerClient } = require("devtools/shared/client/debugger-client");
+const { DevToolsClient } = require("devtools/shared/client/devtools-client");
 const { ObjectFront } = require("devtools/shared/fronts/object");
 const { LongStringFront } = require("devtools/shared/fronts/string");
 const { TargetFactory } = require("devtools/client/framework/target");
@@ -96,7 +96,7 @@ async function createTargetForMainProcess() {
   DevToolsServer.registerAllActors();
   DevToolsServer.allowChromeProcess = true;
 
-  const client = new DebuggerClient(DevToolsServer.connectPipe());
+  const client = new DevToolsClient(DevToolsServer.connectPipe());
   await client.connect();
 
   return client.mainRoot.getMainProcess();
@@ -357,7 +357,7 @@ function addTestGlobal(name, server = DevToolsServer) {
   return global;
 }
 
-// List the DebuggerClient |client|'s tabs, look for one whose title is
+// List the DevToolsClient |client|'s tabs, look for one whose title is
 // |title|, and apply |callback| to the packet's entry for that tab.
 async function getTestTab(client, title) {
   const tabs = await client.mainRoot.listTabs();
@@ -434,7 +434,7 @@ async function startTestDevToolsServer(title, server = DevToolsServer) {
   DevToolsServer.registerActors({ target: true });
 
   const transport = DevToolsServer.connectPipe();
-  const client = new DebuggerClient(transport);
+  const client = new DevToolsClient(transport);
 
   await connect(client);
   return client;
@@ -603,7 +603,7 @@ function interrupt(threadFront) {
  * Resume JS execution for the specified thread and then wait for the next pause
  * event.
  *
- * @param DebuggerClient client
+ * @param DevToolsClient client
  * @param ThreadFront threadFront
  * @returns Promise
  */
@@ -641,7 +641,7 @@ function stepOver(threadFront) {
  * Resume JS execution for a step out and wait for the pause after the step
  * has been taken.
  *
- * @param DebuggerClient client
+ * @param DevToolsClient client
  * @param ThreadFront threadFront
  * @returns Promise
  */
@@ -783,10 +783,10 @@ async function setupTestFromUrl(url) {
   const global = createTestGlobal("test");
   DevToolsServer.addTestGlobal(global);
 
-  const debuggerClient = new DebuggerClient(DevToolsServer.connectPipe());
-  await connect(debuggerClient);
+  const devToolsClient = new DevToolsClient(DevToolsServer.connectPipe());
+  await connect(devToolsClient);
 
-  const tabs = await listTabs(debuggerClient);
+  const tabs = await listTabs(devToolsClient);
   const targetFront = findTab(tabs, "test");
   await targetFront.attach();
 
@@ -799,7 +799,7 @@ async function setupTestFromUrl(url) {
   const { source } = await promise;
 
   const sourceFront = threadFront.source(source);
-  return { global, debuggerClient, threadFront, sourceFront };
+  return { global, devToolsClient, threadFront, sourceFront };
 }
 
 /**
@@ -815,8 +815,8 @@ async function setupTestFromUrl(url) {
  *           principals by default.
  *        - ThreadFront threadFront
  *          A reference to a ThreadFront instance that is attached to the debuggee.
- *        - DebuggerClient client
- *          A reference to the DebuggerClient used to communicated with the RDP server.
+ *        - DevToolsClient client
+ *          A reference to the DevToolsClient used to communicated with the RDP server.
  * @param Object options
  *        Optional arguments to tweak test environment
  *        - JSPrincipal principal
@@ -850,7 +850,7 @@ function threadFrontTest(test, options = {}) {
     debuggee.__name = scriptName;
     server.addTestGlobal(debuggee);
 
-    const client = new DebuggerClient(server.connectPipe());
+    const client = new DevToolsClient(server.connectPipe());
     await client.connect();
 
     // Attach to the fake tab target and retrieve the ThreadFront instance.

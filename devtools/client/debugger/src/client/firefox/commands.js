@@ -28,7 +28,7 @@ import type {
 
 import type {
   Target,
-  DebuggerClient,
+  DevToolsClient,
   Grip,
   ThreadFront,
   ObjectFront,
@@ -44,7 +44,7 @@ import type {
 let targets: { [string]: Target };
 let currentThreadFront: ThreadFront;
 let currentTarget: Target;
-let debuggerClient: DebuggerClient;
+let devToolsClient: DevToolsClient;
 let sourceActors: { [ActorId]: SourceId };
 let breakpoints: { [string]: Object };
 let eventBreakpoints: ?EventListenerActiveList;
@@ -52,11 +52,11 @@ let eventBreakpoints: ?EventListenerActiveList;
 const CALL_STACK_PAGE_SIZE = 1000;
 
 type Dependencies = {
-  debuggerClient: DebuggerClient,
+  devToolsClient: DevToolsClient,
 };
 
 function setupCommands(dependencies: Dependencies) {
-  debuggerClient = dependencies.debuggerClient;
+  devToolsClient = dependencies.devToolsClient;
   targets = {};
   sourceActors = {};
   breakpoints = {};
@@ -72,14 +72,14 @@ function createObjectFront(grip: Grip): ObjectFront {
     throw new Error("Actor is missing");
   }
 
-  return debuggerClient.createObjectFront(grip, currentThreadFront);
+  return devToolsClient.createObjectFront(grip, currentThreadFront);
 }
 
 async function loadObjectProperties(root: Node) {
   const utils = Reps.objectInspector.utils;
   const properties = await utils.loadProperties.loadItemProperties(
     root,
-    debuggerClient
+    devToolsClient
   );
   return utils.node.getChildren({
     item: root,
@@ -91,7 +91,7 @@ function releaseActor(actor: String) {
   if (!actor) {
     return;
   }
-  const objFront = debuggerClient.getFrontByID(actor);
+  const objFront = devToolsClient.getFrontByID(actor);
 
   if (objFront) {
     return objFront.release().catch(() => {});
@@ -99,7 +99,7 @@ function releaseActor(actor: String) {
 }
 
 function sendPacket(packet: Object) {
-  return debuggerClient.request(packet);
+  return devToolsClient.request(packet);
 }
 
 // Get a copy of the current targets.
@@ -454,7 +454,7 @@ async function fetchThreads() {
 
   await updateTargets({
     currentTarget,
-    debuggerClient,
+    devToolsClient,
     targets,
     options,
   });
@@ -506,7 +506,7 @@ async function getSourceActorBreakableLines({
 }
 
 function getFrontByID(actorID: String) {
-  return debuggerClient.getFrontByID(actorID);
+  return devToolsClient.getFrontByID(actorID);
 }
 
 function timeWarp(position: ExecutionPoint) {

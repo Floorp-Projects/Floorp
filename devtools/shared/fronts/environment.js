@@ -13,8 +13,8 @@ const { environmentSpec } = require("devtools/shared/specs/environment");
 /**
  * Environment fronts are used to manipulate the lexical environment actors.
  *
- * @param client DebuggerClient
- *        The debugger client parent.
+ * @param client DevToolsClient
+ *        The devtools client parent.
  * @param form Object
  *        The form sent across the remote debugging protocol.
  */

@@ -22,7 +22,7 @@ add_task(
       "[object Sandbox]",
       "Debuggee client is valid"
     );
-    ok(client instanceof DebuggerClient, "Client is valid");
+    ok(client instanceof DevToolsClient, "Client is valid");
     ok(
       targetFront instanceof BrowsingContextTargetFront,
       "TargetFront is valid"

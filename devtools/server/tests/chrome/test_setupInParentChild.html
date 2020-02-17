@@ -15,7 +15,7 @@ Bug 1181100 - Test DevToolsServerConnection.setupInParent and DevToolsServer.set
 "use strict";
 
 const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
-const {DebuggerClient} = require("devtools/shared/client/debugger-client");
+const {DevToolsClient} = require("devtools/shared/client/devtools-client");
 const {DevToolsServer} = require("devtools/server/devtools-server");
 const {
   connectToFrame,
@@ -50,7 +50,7 @@ function runTests() {
   // Fake a connection to an iframe
   const transport = DevToolsServer.connectPipe();
   const conn = transport._serverConnection;
-  const client = new DebuggerClient(transport);
+  const client = new DevToolsClient(transport);
 
   // Wait for a response from setupInChild
   const onChild = msg => {

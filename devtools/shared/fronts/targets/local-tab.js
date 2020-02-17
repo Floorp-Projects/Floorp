@@ -120,7 +120,7 @@ class LocalTabTargetFront extends BrowsingContextTargetFront {
     const client = this.client;
 
     if (targetSwitchingEnabled) {
-      // By default, we do close the DebuggerClient when the target is destroyed.
+      // By default, we do close the DevToolsClient when the target is destroyed.
       // This happens when we close the toolbox (Toolbox.destroy calls Target.destroy),
       // or when the tab is closes, the server emits tabDetached and the target
       // destroy itself.

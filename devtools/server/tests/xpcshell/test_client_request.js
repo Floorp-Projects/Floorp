@@ -3,7 +3,7 @@
 
 "use strict";
 
-// Test the DebuggerClient.request API.
+// Test the DevToolsClient.request API.
 
 var gClient, gActorId;
 
@@ -50,7 +50,7 @@ function run_test() {
 }
 
 function init() {
-  gClient = new DebuggerClient(DevToolsServer.connectPipe());
+  gClient = new DevToolsClient(DevToolsServer.connectPipe());
   gClient
     .connect()
     .then(() => gClient.mainRoot.rootForm)
@@ -80,7 +80,7 @@ function checkStack(expectedName) {
 }
 
 function test_client_request_callback() {
-  // Test that DebuggerClient.request accepts a `onResponse` callback as 2nd argument
+  // Test that DevToolsClient.request accepts a `onResponse` callback as 2nd argument
   gClient.request(
     {
       to: gActorId,
@@ -96,7 +96,7 @@ function test_client_request_callback() {
 }
 
 function test_client_request_promise() {
-  // Test that DebuggerClient.request returns a promise that resolves on response
+  // Test that DevToolsClient.request returns a promise that resolves on response
   const request = gClient.request({
     to: gActorId,
     type: "hello",
@@ -111,7 +111,7 @@ function test_client_request_promise() {
 }
 
 function test_client_request_promise_error() {
-  // Test that DebuggerClient.request returns a promise that reject when server
+  // Test that DevToolsClient.request returns a promise that reject when server
   // returns an explicit error message
   const request = gClient.request({
     to: gActorId,
@@ -133,7 +133,7 @@ function test_client_request_promise_error() {
 }
 
 function test_client_request_event_emitter() {
-  // Test that DebuggerClient.request returns also an EventEmitter object
+  // Test that DevToolsClient.request returns also an EventEmitter object
   const request = gClient.request({
     to: gActorId,
     type: "hello",
@@ -215,7 +215,7 @@ function test_close_client_while_sending_requests() {
 }
 
 function test_client_request_after_close() {
-  // Test that DebuggerClient.request fails after we called client.close()
+  // Test that DevToolsClient.request fails after we called client.close()
   // (with promise API)
   const request = gClient.request({
     to: gActorId,
@@ -240,7 +240,7 @@ function test_client_request_after_close() {
 }
 
 function test_client_request_after_close_callback() {
-  // Test that DebuggerClient.request fails after we called client.close()
+  // Test that DevToolsClient.request fails after we called client.close()
   // (with callback API)
   gClient
     .request(

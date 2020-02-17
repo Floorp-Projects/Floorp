@@ -84,13 +84,13 @@ async function testMainProcess() {
   const { DevToolsServer } = customLoader.require(
     "devtools/server/devtools-server"
   );
-  const { DebuggerClient } = require("devtools/shared/client/debugger-client");
+  const { DevToolsClient } = require("devtools/shared/client/devtools-client");
 
   DevToolsServer.init();
   DevToolsServer.registerAllActors();
   DevToolsServer.allowChromeProcess = true;
 
-  const client = new DebuggerClient(DevToolsServer.connectPipe());
+  const client = new DevToolsClient(DevToolsServer.connectPipe());
   await client.connect();
 
   const onThreadActorInstantiated = new Promise(resolve => {

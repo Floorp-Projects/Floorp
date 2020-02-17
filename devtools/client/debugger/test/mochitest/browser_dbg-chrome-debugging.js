@@ -13,15 +13,15 @@ var customLoader = new DevToolsLoader({
   invisibleToDebugger: true,
 });
 var { DevToolsServer } = customLoader.require("devtools/server/devtools-server");
-var { DebuggerClient } = require("devtools/shared/client/debugger-client");
+var { DevToolsClient } = require("devtools/shared/client/devtools-client");
 
-function initDebuggerClient() {
+function initDevToolsClient() {
   DevToolsServer.init();
   DevToolsServer.registerAllActors();
   DevToolsServer.allowChromeProcess = true;
 
   let transport = DevToolsServer.connectPipe();
-  return new DebuggerClient(transport);
+  return new DevToolsClient(transport);
 }
 
 function onNewSource(packet) {
@@ -47,7 +47,7 @@ registerCleanupFunction(function() {
 });
 
 add_task(async function() {
-  gClient = initDebuggerClient();
+  gClient = initDevToolsClient();
 
   const [type] = await gClient.connect();
   is(type, "browser", "Root actor should identify itself as a browser.");

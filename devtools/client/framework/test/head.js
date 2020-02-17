@@ -27,13 +27,13 @@ function toggleAllTools(state) {
 
 function getParentProcessActors(callback) {
   const { DevToolsServer } = require("devtools/server/devtools-server");
-  const { DebuggerClient } = require("devtools/shared/client/debugger-client");
+  const { DevToolsClient } = require("devtools/shared/client/devtools-client");
 
   DevToolsServer.init();
   DevToolsServer.registerAllActors();
   DevToolsServer.allowChromeProcess = true;
 
-  const client = new DebuggerClient(DevToolsServer.connectPipe());
+  const client = new DevToolsClient(DevToolsServer.connectPipe());
   client
     .connect()
     .then(() => client.mainRoot.getMainProcess())
