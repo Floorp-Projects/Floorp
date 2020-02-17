@@ -23,8 +23,7 @@ function handleRequest(request, response)
   let downloadHTML = "";
   if (isDownloadPage) {
     [
-     "no-coop", "same-site", "same-origin", "same-site%20unsafe-allow-outgoing",
-     "same-origin%20unsafe-allow-outgoing"
+     "no-coop", "same-origin", "same-origin-allow-popups",
     ].forEach(coop => {
       downloadHTML +=
         '<a href="https://example.com/browser/toolkit/components/remotebrowserutils/tests/browser/coop_header.sjs?downloadFile&' +

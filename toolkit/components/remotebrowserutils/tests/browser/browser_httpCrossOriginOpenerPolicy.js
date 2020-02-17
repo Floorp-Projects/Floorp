@@ -268,11 +268,6 @@ add_task(async function test_disabled() {
     httpURL("coop_header.sjs?coop=same-origin", "http://example.com"),
     false
   );
-  await test_coop(
-    httpURL("coop_header.sjs?coop=same-origin", "http://example.com"),
-    httpURL("coop_header.sjs?coop=same-site", "http://example.com"),
-    false
-  ); // assuming we don't have fission yet :)
 });
 
 add_task(async function test_enabled() {
@@ -317,13 +312,6 @@ add_task(async function test_enabled() {
   await test_coop(
     httpURL("coop_header.sjs?coop=same-origin&index=1", "https://example.com"),
     httpURL("coop_header.sjs?coop=same-origin&index=1", "https://example.org"),
-    true,
-    checkIsNotCoopRemoteType,
-    checkIsNotCoopRemoteType
-  );
-  await test_coop(
-    httpURL("coop_header.sjs?coop=same-origin&index=2", "https://example.com"),
-    httpURL("coop_header.sjs?coop=same-site&index=2", "https://example.org"),
     true,
     checkIsNotCoopRemoteType,
     checkIsNotCoopRemoteType
@@ -380,14 +368,12 @@ add_task(async function test_download() {
   requestLongerTimeout(4);
   await setPref();
 
-  let initCoopArray = ["", "same-site", "same-origin"];
+  let initCoopArray = ["", "same-origin"];
 
   let downloadCoopArray = [
     "no-coop",
-    "same-site",
     "same-origin",
-    "same-site%20unsafe-allow-outgoing",
-    "same-origin%20unsafe-allow-outgoing",
+    "same-origin-allow-popups",
   ];
 
   // If the coop mismatch between current page and download link, clicking the
