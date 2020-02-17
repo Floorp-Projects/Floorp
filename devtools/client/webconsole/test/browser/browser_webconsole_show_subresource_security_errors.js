@@ -16,7 +16,7 @@ add_task(async function() {
   await pushPref("devtools.target-switching.enabled", true);
   const hud = await openNewTabAndConsole(TEST_URI);
   await clearOutput(hud);
-  await loadDocument(hud.toolbox, TEST_DOC);
+  await navigateTo(TEST_DOC);
 
   await waitFor(() => findMessage(hud, SAMPLE_MSG, ".message.warn"));
 

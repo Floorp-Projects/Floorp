@@ -18,7 +18,7 @@ add_task(async function task() {
   const hud = await openNewTabAndConsole(TEST_URI);
 
   const documentUrl = TEST_PATH + TEST_FILE;
-  await loadDocument(hud.toolbox, documentUrl);
+  await navigateTo(documentUrl);
   info("Document loaded.");
 
   const message = await waitFor(() => findMessage(hud, documentUrl));

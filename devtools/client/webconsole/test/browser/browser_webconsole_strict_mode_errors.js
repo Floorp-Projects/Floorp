@@ -10,19 +10,19 @@ add_task(async function() {
     "data:text/html;charset=utf8,empty page"
   );
 
-  await loadScriptURI(hud, "'use strict';var arguments;");
+  await loadScriptURI("'use strict';var arguments;");
   await waitForError(
     hud,
     "SyntaxError: 'arguments' can't be defined or assigned to in strict mode code"
   );
 
-  await loadScriptURI(hud, "'use strict';function f(a, a) {};");
+  await loadScriptURI("'use strict';function f(a, a) {};");
   await waitForError(hud, "SyntaxError: duplicate formal argument a");
 
-  await loadScriptURI(hud, "'use strict';var o = {get p() {}};o.p = 1;");
+  await loadScriptURI("'use strict';var o = {get p() {}};o.p = 1;");
   await waitForError(hud, 'TypeError: setting getter-only property "p"');
 
-  await loadScriptURI(hud, "'use strict';v = 1;");
+  await loadScriptURI("'use strict';v = 1;");
   await waitForError(
     hud,
     "ReferenceError: assignment to undeclared variable v"
@@ -34,12 +34,12 @@ async function waitForError(hud, text) {
   ok(true, "Received expected error message");
 }
 
-function loadScriptURI(hud, script) {
+function loadScriptURI(script) {
   // On e10s, the exception is triggered in child process
   // and is ignored by test harness
   if (!Services.appinfo.browserTabsRemoteAutostart) {
     expectUncaughtException();
   }
   const uri = "data:text/html;charset=utf8,<script>" + script + "</script>";
-  return loadDocument(hud.toolbox, uri);
+  return navigateTo(uri);
 }

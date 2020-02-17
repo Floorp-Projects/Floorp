@@ -31,14 +31,12 @@ add_task(async function() {
     gMultiProcessBrowser,
     gFissionBrowser
   );
-  const { browser } = await loadTab("about:blank", remoteType);
+  await loadTab("about:blank", remoteType);
 
   hud = await openConsole();
   await clearOutput(hud);
 
-  const loaded = loadBrowser(browser);
-  await loadDocument(hud.toolbox, uri.spec);
-  await loaded;
+  await navigateTo(uri.spec);
 
   await testMessages();
 
