@@ -1799,23 +1799,19 @@ pub extern "C" fn wr_transaction_append_transform_properties(
         return;
     }
 
-    let mut properties = DynamicProperties {
-        transforms: Vec::new(),
-        floats: Vec::new(),
-    };
-
+    let mut transforms = Vec::with_capacity(transform_count);
     let transform_slice = unsafe { make_slice(transform_array, transform_count) };
-    properties.transforms.reserve(transform_slice.len());
+    transforms.reserve(transform_slice.len());
     for element in transform_slice.iter() {
         let prop = PropertyValue {
             key: PropertyBindingKey::new(element.id),
             value: element.transform.into(),
         };
 
-        properties.transforms.push(prop);
+        transforms.push(prop);
     }
 
-    txn.append_dynamic_properties(properties);
+    txn.append_dynamic_transform_properties(transforms);
 }
 
 #[no_mangle]
