@@ -8,7 +8,7 @@ const {
   AUTOCOMPLETE_DATA_RECEIVE,
   AUTOCOMPLETE_PENDING_REQUEST,
   AUTOCOMPLETE_RETRIEVE_FROM_CACHE,
-  APPEND_TO_HISTORY,
+  EVALUATE_EXPRESSION,
   UPDATE_HISTORY_POSITION,
   REVERSE_SEARCH_INPUT_CHANGE,
   REVERSE_SEARCH_BACK,
@@ -89,12 +89,12 @@ function autocomplete(state = getDefaultState(), action) {
     // Reset the autocomplete data when:
     // - clear is explicitely called
     // - the user navigates the history
-    // - or an item was added to the history (i.e. something was evaluated).
+    // - or an expression was evaluated.
     case AUTOCOMPLETE_CLEAR:
       return getDefaultState({
         authorizedEvaluations: state.authorizedEvaluations,
       });
-    case APPEND_TO_HISTORY:
+    case EVALUATE_EXPRESSION:
     case UPDATE_HISTORY_POSITION:
     case REVERSE_SEARCH_INPUT_CHANGE:
     case REVERSE_SEARCH_BACK:

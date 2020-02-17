@@ -10,7 +10,7 @@ const TEST_URI = `data:text/html;charset=utf-8,
   <script>
     window.foo = {
       get rab() {
-        return {};
+        return "rab";
       }
     };
   </script>
@@ -78,4 +78,11 @@ add_task(async function() {
     true,
     "The tooltip is now closed since the input doesn't match a getter name"
   );
+  info("Check that evaluating the expression closes the tooltip");
+  tooltip = await setInputValueForGetterConfirmDialog(toolbox, hud, "foo.rab.");
+  EventUtils.sendString("length");
+  EventUtils.synthesizeKey("KEY_Enter");
+  await waitFor(() => !isConfirmDialogOpened(toolbox));
+  await waitFor(() => findMessage(hud, "3", ".result"));
+  ok("Expression was evaluated and tooltip was closed");
 });
