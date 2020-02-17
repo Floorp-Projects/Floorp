@@ -293,37 +293,37 @@ inline bool typeIsRefPtr(QualType Q) {
 // some AST trees. To get around this, we define our own implementation of
 // IgnoreTrivials.
 inline const Stmt *MaybeSkipOneTrivial(const Stmt *s) {
-  if (!s) {
-    return nullptr;
-  }
-  if (auto *ewc = dyn_cast<ExprWithCleanups>(s)) {
-    return ewc->getSubExpr();
-  }
-  if (auto *mte = dyn_cast<MaterializeTemporaryExpr>(s)) {
-    // With clang 10 and up `getTemporary` has been replaced with the more
-    // versatile `getSubExpr`.
+    if (!s) {
+      return nullptr;
+    }
+    if (auto *ewc = dyn_cast<ExprWithCleanups>(s)) {
+      return ewc->getSubExpr();
+    }
+    if (auto *mte = dyn_cast<MaterializeTemporaryExpr>(s)) {
+      // With clang 10 and up `getTemporary` has been replaced with the more
+      // versatile `getSubExpr`.
 #if CLANG_VERSION_FULL >= 1000
-    return mte->getSubExpr();
+      return mte->getSubExpr();
 #else
-    return mte->GetTemporaryExpr();
+      return mte->GetTemporaryExpr();
 #endif
-  }
-  if (auto *bte = dyn_cast<CXXBindTemporaryExpr>(s)) {
-    return bte->getSubExpr();
-  }
-  if (auto *ce = dyn_cast<CastExpr>(s)) {
-    s = ce->getSubExpr();
-  }
-  if (auto *pe = dyn_cast<ParenExpr>(s)) {
-    s = pe->getSubExpr();
-  }
-  // Not a trivial.
-  return s;
+    }
+    if (auto *bte = dyn_cast<CXXBindTemporaryExpr>(s)) {
+      return bte->getSubExpr();
+    }
+    if (auto *ce = dyn_cast<CastExpr>(s)) {
+      s = ce->getSubExpr();
+    }
+    if (auto *pe = dyn_cast<ParenExpr>(s)) {
+      s = pe->getSubExpr();
+    }
+    // Not a trivial.
+    return s;
 }
 
 inline const Stmt *IgnoreTrivials(const Stmt *s) {
   while (true) {
-    const Stmt *newS = MaybeSkipOneTrivial(s);
+    const Stmt* newS = MaybeSkipOneTrivial(s);
     if (newS == s) {
       return newS;
     }

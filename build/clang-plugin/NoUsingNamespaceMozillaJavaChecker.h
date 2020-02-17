@@ -10,10 +10,11 @@
 class NoUsingNamespaceMozillaJavaChecker : public BaseCheck {
 public:
   NoUsingNamespaceMozillaJavaChecker(StringRef CheckName,
-                                     ContextType *Context = nullptr)
+                                 ContextType *Context = nullptr)
       : BaseCheck(CheckName, Context) {}
   void registerMatchers(MatchFinder *AstMatcher) override;
   void check(const MatchFinder::MatchResult &Result) override;
 };
 
 #endif
+

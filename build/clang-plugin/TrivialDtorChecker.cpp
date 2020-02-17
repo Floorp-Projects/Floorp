@@ -6,7 +6,8 @@
 #include "CustomMatchers.h"
 
 void TrivialDtorChecker::registerMatchers(MatchFinder *AstMatcher) {
-  AstMatcher->addMatcher(cxxRecordDecl(hasTrivialDtor()).bind("node"), this);
+  AstMatcher->addMatcher(cxxRecordDecl(hasTrivialDtor()).bind("node"),
+                         this);
 }
 
 void TrivialDtorChecker::check(const MatchFinder::MatchResult &Result) {
