@@ -7,11 +7,13 @@ package org.mozilla.fenix.settings
 import android.os.Bundle
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
+import androidx.preference.SwitchPreference
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.PrivateShortcutCreateManager
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.getPreferenceKey
 import org.mozilla.fenix.ext.metrics
+import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.showToolbar
 
 /**
@@ -25,11 +27,22 @@ class PrivateBrowsingFragment : PreferenceFragmentCompat() {
 
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         setPreferencesFromResource(R.xml.private_browsing_preferences, rootKey)
+        updatePreferences()
+    }
 
+    private fun updatePreferences() {
         findPreference<Preference>(getPreferenceKey(R.string.pref_key_add_private_browsing_shortcut))?.apply {
             setOnPreferenceClickListener {
                 requireContext().metrics.track(Event.PrivateBrowsingCreateShortcut)
                 PrivateShortcutCreateManager.createPrivateShortcut(requireContext())
+                true
+            }
+        }
+
+        findPreference<SwitchPreference>(getPreferenceKey(R.string.pref_key_open_links_in_a_private_tab))?.apply {
+            setOnPreferenceClickListener {
+                isChecked = requireContext().settings().openLinksInAPrivateTab
+                onPreferenceChangeListener = SharedPreferenceUpdater()
                 true
             }
         }

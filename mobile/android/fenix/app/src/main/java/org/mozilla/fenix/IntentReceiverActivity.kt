@@ -39,6 +39,7 @@ class IntentReceiverActivity : Activity() {
 
         val modeDependentProcessors = if (settings.openLinksInAPrivateTab) {
             components.analytics.metrics.track(Event.OpenedLink(Event.OpenedLink.Mode.PRIVATE))
+            intent.putExtra(HomeActivity.PRIVATE_BROWSING_MODE, true)
             listOf(
                 components.intentProcessors.privateCustomTabIntentProcessor,
                 components.intentProcessors.privateIntentProcessor
