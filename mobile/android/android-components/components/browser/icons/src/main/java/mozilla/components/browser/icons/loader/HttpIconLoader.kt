@@ -49,18 +49,17 @@ class HttpIconLoader(
             redirect = Request.Redirect.FOLLOW,
             useCaches = true)
 
-        val response = try {
-            httpClient.fetch(downloadRequest)
+        return try {
+            val response = httpClient.fetch(downloadRequest)
+            if (response.isSuccess) {
+                response.toIconLoaderResult()
+            } else {
+                failureCache.rememberFailure(resource.url)
+                IconLoader.Result.NoResult
+            }
         } catch (e: IOException) {
             logger.debug("IOException while trying to download icon resource", e)
             return IconLoader.Result.NoResult
-        }
-
-        return if (response.isSuccess) {
-            response.toIconLoaderResult()
-        } else {
-            failureCache.rememberFailure(resource.url)
-            IconLoader.Result.NoResult
         }
     }
 
