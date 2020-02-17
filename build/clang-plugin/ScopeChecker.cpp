@@ -10,8 +10,9 @@ void ScopeChecker::registerMatchers(MatchFinder *AstMatcher) {
   AstMatcher->addMatcher(cxxNewExpr().bind("node"), this);
   AstMatcher->addMatcher(
       materializeTemporaryExpr(
-          unless(hasDescendant(cxxConstructExpr(allowsTemporary())))
-      ).bind("node"), this);
+          unless(hasDescendant(cxxConstructExpr(allowsTemporary()))))
+          .bind("node"),
+      this);
   AstMatcher->addMatcher(
       callExpr(callee(functionDecl(heapAllocator()))).bind("node"), this);
 }
@@ -39,8 +40,7 @@ void ScopeChecker::check(const MatchFinder::MatchResult &Result) {
   QualType T;
   bool IsStaticLocal = false;
 
-  if (const ParmVarDecl *D =
-          Result.Nodes.getNodeAs<ParmVarDecl>("node")) {
+  if (const ParmVarDecl *D = Result.Nodes.getNodeAs<ParmVarDecl>("node")) {
     if (D->hasUnparsedDefaultArg() || D->hasUninstantiatedDefaultArg()) {
       return;
     }
