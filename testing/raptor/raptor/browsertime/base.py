@@ -189,7 +189,6 @@ class Browsertime(Perftest):
         browsertime_options = [
             "--firefox.profileTemplate", str(self.profile.profile),
             "--skipHar",
-            "--video", self.browsertime_video and "true" or "false",
             "--visualMetrics", "false",
             # url load timeout (milliseconds)
             "--timeouts.pageLoad", str(timeout),
@@ -198,6 +197,19 @@ class Browsertime(Perftest):
             "-vvv",
             "--resultDir", self.results_handler.result_dir_for_test(test),
         ]
+
+        if self.browsertime_video:
+            # For now, capturing video with Firefox always uses the window recorder/composition
+            # recorder.  In the future we'd like to be able to selectively use Android's `adb
+            # screenrecord` as well.  (There's no harm setting Firefox options for other browsers.)
+            browsertime_options.extend([
+                "--video", "true",
+                "--firefox.windowRecorder", "true",
+            ])
+        else:
+            browsertime_options.extend([
+                "--video", "false",
+            ])
 
         # have browsertime use our newly-created conditioned-profile path
         if not self.no_condprof:

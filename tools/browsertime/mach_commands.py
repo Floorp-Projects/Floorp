@@ -94,7 +94,7 @@ def visualmetrics_path():
     '''The path to the `visualmetrics.py` script.'''
     return mozpath.join(
         package_path(),
-        'vendor',
+        'browsertime',
         'visualmetrics.py')
 
 
@@ -255,10 +255,13 @@ class MachBrowsertime(MachCommandBase):
         if not setup_helper.check_node_executables_valid():
             return 1
 
-        if 'GECKODRIVER_BASE_URL' not in os.environ:
-            # Use custom `geckodriver` with pre-release Android support.
-            url = 'https://github.com/ncalexan/geckodriver/releases/download/v0.24.0-android/'
-            os.environ[str('GECKODRIVER_BASE_URL')] = str(url)
+        # To use a custom `geckodriver`, set
+        # os.environ[b"GECKODRIVER_BASE_URL"] = bytes(url)
+        # to an endpoint with binaries named like
+        # https://github.com/sitespeedio/geckodriver/blob/master/install.js#L31.
+        if automation:
+            os.environ[b"CHROMEDRIVER_SKIP_DOWNLOAD"] = b"true"
+            os.environ[b"GECKODRIVER_SKIP_DOWNLOAD"] = b"true"
 
         self.log(
             logging.INFO,
