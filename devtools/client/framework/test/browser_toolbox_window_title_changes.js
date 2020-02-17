@@ -51,7 +51,7 @@ function test() {
       .then(async function() {
         const onTitleChanged = waitForTitleChange(toolbox);
         const waitForReloaded = panel.once("reloaded");
-        BrowserTestUtils.loadURI(gBrowser, URL_2);
+        await navigateTo(URL_2);
         await waitForReloaded;
         return onTitleChanged;
       })
@@ -61,7 +61,7 @@ function test() {
       .then(async () => {
         const onTitleChanged = waitForTitleChange(toolbox);
         const waitForReloaded = panel.once("reloaded");
-        BrowserTestUtils.loadURI(gBrowser, URL_3);
+        await navigateTo(URL_3);
         await waitForReloaded;
         return onTitleChanged;
       })

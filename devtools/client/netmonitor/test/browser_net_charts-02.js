@@ -11,14 +11,14 @@
 add_task(async function() {
   const { L10N } = require("devtools/client/netmonitor/src/utils/l10n");
 
-  const { monitor, tab } = await initNetMonitor(SIMPLE_URL);
+  const { monitor } = await initNetMonitor(SIMPLE_URL);
   info("Starting test... ");
 
   const { document, windowRequire } = monitor.panelWin;
   const { Chart } = windowRequire("devtools/client/shared/widgets/Chart");
 
   const wait = waitForNetworkEvents(monitor, 1);
-  BrowserTestUtils.loadURI(tab.linkedBrowser, SIMPLE_URL);
+  await navigateTo(SIMPLE_URL);
   await wait;
 
   const pie = Chart.Pie(document, {
