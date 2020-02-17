@@ -53,7 +53,8 @@ function assertAllHandlerInfosMatchTestData() {
 
   // It's important that the MIME types we check here do not exist at the
   // operating system level, otherwise the list of handlers and file extensions
-  // will be merged. The current implementation avoids duplicate entries.
+  // will be merged. The current implementation adds each saved file extension
+  // even if one already exists in the system, resulting in duplicate entries.
 
   HandlerServiceTestUtils.assertHandlerInfoMatches(handlerInfos.shift(), {
     type: "example/type.handleinternally",
@@ -414,8 +415,8 @@ add_task(async function test_store_fileExtensions_lowercase() {
 });
 
 /**
- * Tests that appendExtension doesn't add duplicates, and that anyway duplicates
- * from possibleApplicationHandlers are removed when saving and reloading.
+ * Tests that duplicates added with "appendExtension" or present in
+ * "possibleApplicationHandlers" are removed when saving and reloading.
  */
 add_task(async function test_store_no_duplicates() {
   await deleteHandlerStore();
@@ -430,10 +431,6 @@ add_task(async function test_store_no_duplicates() {
   handlerInfo.appendExtension("extension_test2");
   handlerInfo.appendExtension("extension_test1");
   handlerInfo.appendExtension("EXTENSION_test1");
-  Assert.deepEqual(Array.from(handlerInfo.getFileExtensions()), [
-    "extension_test1",
-    "extension_test2",
-  ]);
   gHandlerService.store(handlerInfo);
 
   await unloadHandlerStore();
@@ -450,21 +447,6 @@ add_task(async function test_store_no_duplicates() {
     ],
     fileExtensions: ["extension_test1", "extension_test2"],
   });
-});
-
-/**
- * Tests that setFileExtensions doesn't add duplicates.
- */
-add_task(async function test_setFileExtensions_no_duplicates() {
-  await deleteHandlerStore();
-
-  let handlerInfo = getKnownHandlerInfo("example/new");
-  handlerInfo.setFileExtensions("a,b,A,b,c,a");
-  let expected = ["a", "b", "c"];
-  Assert.deepEqual(Array.from(handlerInfo.getFileExtensions()), expected);
-  // Test empty extensions, also at begin and end.
-  handlerInfo.setFileExtensions(",a,,b,A,c,");
-  Assert.deepEqual(Array.from(handlerInfo.getFileExtensions()), expected);
 });
 
 /**
