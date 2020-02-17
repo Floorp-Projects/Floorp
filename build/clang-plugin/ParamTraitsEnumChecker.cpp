@@ -5,18 +5,17 @@
 #include "ParamTraitsEnumChecker.h"
 #include "CustomMatchers.h"
 
-void ParamTraitsEnumChecker::registerMatchers(MatchFinder *AstMatcher) {
+void ParamTraitsEnumChecker::registerMatchers(MatchFinder* AstMatcher) {
   AstMatcher->addMatcher(
-      classTemplateSpecializationDecl(hasName("ParamTraits")).bind("decl"),
-      this);
+    classTemplateSpecializationDecl(hasName("ParamTraits")).bind("decl"), this);
 }
 
 void ParamTraitsEnumChecker::check(const MatchFinder::MatchResult &Result) {
   const ClassTemplateSpecializationDecl *Decl =
-      Result.Nodes.getNodeAs<ClassTemplateSpecializationDecl>("decl");
+    Result.Nodes.getNodeAs<ClassTemplateSpecializationDecl>("decl");
 
-  for (auto &Inner : Decl->decls()) {
-    if (auto *Def = dyn_cast<TypedefDecl>(Inner)) {
+  for (auto& Inner : Decl->decls()) {
+    if (auto* Def = dyn_cast<TypedefDecl>(Inner)) {
       QualType UnderlyingType = Def->getUnderlyingType();
       QualType CanonicalType = UnderlyingType.getCanonicalType();
 

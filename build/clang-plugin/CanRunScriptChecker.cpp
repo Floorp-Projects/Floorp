@@ -55,11 +55,13 @@
 void CanRunScriptChecker::registerMatchers(MatchFinder *AstMatcher) {
   auto Refcounted = qualType(hasDeclaration(cxxRecordDecl(isRefCounted())));
   auto StackSmartPtr =
-      ignoreTrivials(declRefExpr(to(varDecl(hasAutomaticStorageDuration())),
-                                 hasType(isSmartPtrToRefCounted())));
+    ignoreTrivials(
+      declRefExpr(to(varDecl(hasAutomaticStorageDuration())),
+                  hasType(isSmartPtrToRefCounted())));
   auto ConstMemberOfThisSmartPtr =
-      memberExpr(hasType(isSmartPtrToRefCounted()), hasType(isConstQualified()),
-                 hasObjectExpression(cxxThisExpr()));
+    memberExpr(hasType(isSmartPtrToRefCounted()),
+               hasType(isConstQualified()),
+               hasObjectExpression(cxxThisExpr()));
   // A smartptr can be known-live for three reasons:
   // 1) It's declared on the stack.
   // 2) It's a const member of "this".  We know "this" is alive (recursively)
@@ -68,14 +70,15 @@ void CanRunScriptChecker::registerMatchers(MatchFinder *AstMatcher) {
   // 3) It's an immediate temporary being constructed at the point where the
   //    call is happening.
   auto KnownLiveSmartPtr = anyOf(
-      StackSmartPtr, ConstMemberOfThisSmartPtr,
-      ignoreTrivials(cxxConstructExpr(hasType(isSmartPtrToRefCounted()))));
+    StackSmartPtr,
+    ConstMemberOfThisSmartPtr,
+    ignoreTrivials(cxxConstructExpr(hasType(isSmartPtrToRefCounted()))));
 
   auto MozKnownLiveCall =
-      ignoreTrivials(callExpr(callee(functionDecl(hasName("MOZ_KnownLive")))));
+    ignoreTrivials(callExpr(callee(functionDecl(hasName("MOZ_KnownLive")))));
 
-  // Params of the calling function are presumed live, because it itself should
-  // be MOZ_CAN_RUN_SCRIPT.  Note that this is subject to
+  // Params of the calling function are presumed live, because it itself should be
+  // MOZ_CAN_RUN_SCRIPT.  Note that this is subject to
   // https://bugzilla.mozilla.org/show_bug.cgi?id=1537656 a the moment.
   auto KnownLiveParam = anyOf(
       // "this" is OK
@@ -105,12 +108,15 @@ void CanRunScriptChecker::registerMatchers(MatchFinder *AstMatcher) {
       // return non-live objects (e.g. consider "live_pointer->foo()" as an
       // example).  For purposes of this analysis we are assuming the method
       // calls on smart ptrs all just return the pointer inside,
-      cxxMemberCallExpr(
-          on(allOf(hasType(isSmartPtrToRefCounted()), KnownLiveBase))),
+      cxxMemberCallExpr(on(
+          allOf(hasType(isSmartPtrToRefCounted()),
+                KnownLiveBase))),
       // operator* or operator-> on a thing that is already known to be live.
-      cxxOperatorCallExpr(anyOf(hasOverloadedOperatorName("*"),
-                                hasOverloadedOperatorName("->")),
-                          hasAnyArgument(KnownLiveBase), argumentCountIs(1)),
+      cxxOperatorCallExpr(
+          anyOf(hasOverloadedOperatorName("*"),
+                hasOverloadedOperatorName("->")),
+          hasAnyArgument(KnownLiveBase),
+          argumentCountIs(1)),
       // A dereference on a thing that is known to be live.  This is _not_
       // caught by the "operator* or operator->" clause above, because
       // cxxOperatorCallExpr() only catches cases when a class defines
@@ -133,36 +139,47 @@ void CanRunScriptChecker::registerMatchers(MatchFinder *AstMatcher) {
       // does not guarantee liveness; in fact the callee could modify those
       // things!  In practice they would be the wrong type anyway, though, so
       // it's hard to add a test for this.
-      unaryOperator(hasOperatorName("&"),
-                    hasUnaryOperand(allOf(anyOf(hasType(references(Refcounted)),
-                                                hasType(Refcounted)),
-                                          ignoreTrivials(KnownLiveBase)))));
+      unaryOperator(
+          hasOperatorName("&"),
+          hasUnaryOperand(allOf(
+              anyOf(
+                  hasType(references(Refcounted)),
+                  hasType(Refcounted)),
+              ignoreTrivials(KnownLiveBase))))
+      );
 
   auto KnownLive = anyOf(
       // Anything above, of course.
       KnownLiveSimple,
       // Conditional operators where both arms are live.
-      conditionalOperator(hasFalseExpression(ignoreTrivials(KnownLiveSimple)),
-                          hasTrueExpression(ignoreTrivials(KnownLiveSimple)))
+      conditionalOperator(
+          hasFalseExpression(ignoreTrivials(KnownLiveSimple)),
+          hasTrueExpression(ignoreTrivials(KnownLiveSimple)))
       // We're not handling cases like a dereference of a conditional operator,
       // mostly because handling a dereference in general is so ugly.  I
       // _really_ wish I could just write a recursive matcher here easily.
-  );
+      );
 
-  auto InvalidArg = ignoreTrivialsConditional(
-      // We want to consider things if there is anything refcounted involved,
-      // including in any of the trivials that we otherwise strip off.
-      anyOf(hasType(Refcounted), hasType(pointsTo(Refcounted)),
-            hasType(references(Refcounted)), hasType(isSmartPtrToRefCounted())),
-      // We want to find any expression,
-      expr(
+  auto InvalidArg =
+      ignoreTrivialsConditional(
+        // We want to consider things if there is anything refcounted involved,
+        // including in any of the trivials that we otherwise strip off.
+        anyOf(
+          hasType(Refcounted),
+          hasType(pointsTo(Refcounted)),
+          hasType(references(Refcounted)),
+          hasType(isSmartPtrToRefCounted())
+        ),
+        // We want to find any expression,
+        expr(
           // which is not known live,
           unless(KnownLive),
           // and which is not a default arg with value nullptr, since those are
           // always safe,
           unless(cxxDefaultArgExpr(isNullDefaultArg())),
           // and which is not a literal nullptr,
-          unless(cxxNullPtrLiteralExpr()), expr().bind("invalidArg")));
+          unless(cxxNullPtrLiteralExpr()),
+          expr().bind("invalidArg")));
 
   // A matcher which will mark the first invalid argument it finds invalid, but
   // will always match, even if it finds no invalid arguments, so it doesn't
@@ -186,7 +203,11 @@ void CanRunScriptChecker::registerMatchers(MatchFinder *AstMatcher) {
                   // which optionally has an invalid arg,
                   OptionalInvalidExplicitArg,
                   // or which optionally has an invalid this argument,
-                  anyOf(on(InvalidArg), anything()), expr().bind("callExpr")),
+                  anyOf(
+                    on(InvalidArg),
+                    anything()
+                  ),
+                  expr().bind("callExpr")),
               // or a regular call expression,
               callExpr(
                   // which optionally has an invalid arg.
@@ -217,9 +238,10 @@ namespace {
 /// any) also have the annotation.
 class FuncSetCallback : public MatchFinder::MatchCallback {
 public:
-  FuncSetCallback(CanRunScriptChecker &Checker,
+  FuncSetCallback(CanRunScriptChecker& Checker,
                   std::unordered_set<const FunctionDecl *> &FuncSet)
-      : CanRunScriptFuncs(FuncSet), Checker(Checker) {}
+      : CanRunScriptFuncs(FuncSet),
+        Checker(Checker) {}
 
   void run(const MatchFinder::MatchResult &Result) override;
 
@@ -255,13 +277,14 @@ void FuncSetCallback::checkOverriddenMethods(const CXXMethodDecl *Method) {
       const char *ErrorNonCanRunScriptOverridden =
           "functions marked as MOZ_CAN_RUN_SCRIPT cannot override functions "
           "that are not marked MOZ_CAN_RUN_SCRIPT";
-      const char *NoteNonCanRunScriptOverridden =
+      const char* NoteNonCanRunScriptOverridden =
           "overridden function declared here";
 
       Checker.diag(Method->getLocation(), ErrorNonCanRunScriptOverridden,
                    DiagnosticIDs::Error);
       Checker.diag(OverriddenMethod->getLocation(),
-                   NoteNonCanRunScriptOverridden, DiagnosticIDs::Note);
+                   NoteNonCanRunScriptOverridden,
+                   DiagnosticIDs::Note);
     }
   }
 }
@@ -277,7 +300,9 @@ void CanRunScriptChecker::buildFuncSet(ASTContext *Context) {
   Finder.addMatcher(
       functionDecl(hasCanRunScriptAnnotation()).bind("canRunScriptFunction"),
       &Callback);
-  Finder.addMatcher(lambdaExpr().bind("lambda"), &Callback);
+  Finder.addMatcher(
+      lambdaExpr().bind("lambda"),
+      &Callback);
   // We start the analysis, given the ASTContext our main checker is in.
   Finder.matchAST(*Context);
 }
@@ -302,7 +327,7 @@ void CanRunScriptChecker::check(const MatchFinder::MatchResult &Result) {
   const char *NoteNonCanRunScriptParent = "caller function declared here";
 
   const Expr *InvalidArg;
-  if (const CXXDefaultArgExpr *defaultArg =
+  if (const CXXDefaultArgExpr* defaultArg =
           Result.Nodes.getNodeAs<CXXDefaultArgExpr>("invalidArg")) {
     InvalidArg = defaultArg->getExpr();
   } else {
@@ -358,9 +383,11 @@ void CanRunScriptChecker::check(const MatchFinder::MatchResult &Result) {
   // If we have an invalid argument in the call, we emit the diagnostic to
   // signal it.
   if (InvalidArg) {
-    const std::string invalidArgText = Lexer::getSourceText(
-        CharSourceRange::getTokenRange(InvalidArg->getSourceRange()),
-        Result.Context->getSourceManager(), Result.Context->getLangOpts());
+    const std::string invalidArgText =
+        Lexer::getSourceText(
+            CharSourceRange::getTokenRange(InvalidArg->getSourceRange()),
+            Result.Context->getSourceManager(),
+            Result.Context->getLangOpts());
     diag(InvalidArg->getExprLoc(), ErrorInvalidArg, DiagnosticIDs::Error)
         << InvalidArg->getSourceRange() << invalidArgText;
   }

@@ -5,8 +5,7 @@
 #include "NoUsingNamespaceMozillaJavaChecker.h"
 #include "CustomMatchers.h"
 
-void NoUsingNamespaceMozillaJavaChecker::registerMatchers(
-    MatchFinder *AstMatcher) {
+void NoUsingNamespaceMozillaJavaChecker::registerMatchers(MatchFinder *AstMatcher) {
   AstMatcher->addMatcher(
       usingDirectiveDecl(isUsingNamespaceMozillaJava()).bind("directive"),
       this);
@@ -18,7 +17,9 @@ void NoUsingNamespaceMozillaJavaChecker::check(
       Result.Nodes.getNodeAs<UsingDirectiveDecl>("directive");
   const NamespaceDecl *Namespace = Directive->getNominatedNamespace();
 
-  diag(Directive->getUsingLoc(), "using namespace %0 is forbidden",
+  diag(Directive->getUsingLoc(),
+       "using namespace %0 is forbidden",
        DiagnosticIDs::Error)
       << Namespace->getQualifiedNameAsString();
 }
+
