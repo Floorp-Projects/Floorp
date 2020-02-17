@@ -71,7 +71,6 @@ UNIFIED_SOURCES += [
     'MIR.cpp',
     'MIRGraph.cpp',
     'MoveResolver.cpp',
-    'OptimizationTracking.cpp',
     'PerfSpewer.cpp',
     'ProcessExecutableMemory.cpp',
     'RangeAnalysis.cpp',

@@ -48,7 +48,6 @@ using mozilla::Maybe;
 
 using JS::RegExpFlag;
 using JS::RegExpFlags;
-using JS::TrackedOutcome;
 
 namespace js {
 namespace jit {
