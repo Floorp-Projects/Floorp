@@ -273,7 +273,7 @@ def wait_for_service(addr, timeout=60):
         except socket.timeout:
             pass
         except socket.error as e:
-            if e[0] != errno.ECONNREFUSED:
+            if e.errno != errno.ECONNREFUSED:
                 raise
         else:
             return True
