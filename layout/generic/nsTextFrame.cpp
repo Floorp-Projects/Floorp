@@ -5692,20 +5692,21 @@ void nsTextFrame::PaintDecorationLine(
 
 static uint8_t ToStyleLineStyle(const TextRangeStyle& aStyle) {
   switch (aStyle.mLineStyle) {
-    case TextRangeStyle::LINESTYLE_NONE:
+    case TextRangeStyle::LineStyle::None:
       return NS_STYLE_TEXT_DECORATION_STYLE_NONE;
-    case TextRangeStyle::LINESTYLE_WAVY:
-      return NS_STYLE_TEXT_DECORATION_STYLE_WAVY;
-    case TextRangeStyle::LINESTYLE_DASHED:
-      return NS_STYLE_TEXT_DECORATION_STYLE_DASHED;
-    case TextRangeStyle::LINESTYLE_DOTTED:
+    case TextRangeStyle::LineStyle::Solid:
+      return NS_STYLE_TEXT_DECORATION_STYLE_SOLID;
+    case TextRangeStyle::LineStyle::Dotted:
       return NS_STYLE_TEXT_DECORATION_STYLE_DOTTED;
-    case TextRangeStyle::LINESTYLE_DOUBLE:
+    case TextRangeStyle::LineStyle::Dashed:
+      return NS_STYLE_TEXT_DECORATION_STYLE_DASHED;
+    case TextRangeStyle::LineStyle::Double:
       return NS_STYLE_TEXT_DECORATION_STYLE_DOUBLE;
-    default:
-      MOZ_ASSERT_UNREACHABLE("Unknown line style?");
-      return NS_STYLE_TEXT_DECORATION_STYLE_NONE;
+    case TextRangeStyle::LineStyle::Wavy:
+      return NS_STYLE_TEXT_DECORATION_STYLE_WAVY;
   }
+  MOZ_ASSERT_UNREACHABLE("Invalid line style");
+  return NS_STYLE_TEXT_DECORATION_STYLE_NONE;
 }
 
 /**
@@ -5785,7 +5786,7 @@ void nsTextFrame::DrawSelectionDecorations(
       if (isIMEType && aRangeStyle.IsDefined()) {
         // If IME defines the style, that should override our definition.
         if (aRangeStyle.IsLineStyleDefined()) {
-          if (aRangeStyle.mLineStyle == TextRangeStyle::LINESTYLE_NONE) {
+          if (aRangeStyle.mLineStyle == TextRangeStyle::LineStyle::None) {
             return;
           }
           params.style = ToStyleLineStyle(aRangeStyle);
@@ -7362,7 +7363,7 @@ bool nsTextFrame::CombineSelectionUnderlineRect(nsPresContext* aPresContext,
       TextRangeStyle& rangeStyle = sd->mTextRangeStyle;
       if (rangeStyle.IsDefined()) {
         if (!rangeStyle.IsLineStyleDefined() ||
-            rangeStyle.mLineStyle == TextRangeStyle::LINESTYLE_NONE) {
+            rangeStyle.mLineStyle == TextRangeStyle::LineStyle::None) {
           continue;
         }
         params.style = ToStyleLineStyle(rangeStyle);

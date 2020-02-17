@@ -1188,7 +1188,7 @@ void GeckoEditableSupport::OnImeAddCompositionRange(
   range.mEndOffset = aEnd;
   range.mRangeType = ToTextRangeType(aRangeType);
   range.mRangeStyle.mDefinedStyles = aRangeStyle;
-  range.mRangeStyle.mLineStyle = aRangeLineStyle;
+  range.mRangeStyle.mLineStyle = TextRangeStyle::ToLineStyle(aRangeLineStyle);
   range.mRangeStyle.mIsBoldLine = aRangeBoldLine;
   range.mRangeStyle.mForegroundColor =
       ConvertAndroidColor(uint32_t(aRangeForeColor));
