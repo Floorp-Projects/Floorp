@@ -42,35 +42,35 @@ void DanglingOnTemporaryChecker::registerMatchers(MatchFinder *AstMatcher) {
   // Main checker //
   //////////////////
 
-  auto hasParentCall = hasParent(expr(
-      anyOf(cxxOperatorCallExpr(
-                // If we're in a lamda, we may have an operator call expression
-                // ancestor in the AST, but the temporary we're matching
-                // against is not going to have the same lifetime as the
-                // constructor call.
-                unless(has(expr(ignoreTrivials(lambdaExpr())))),
-                expr().bind("parentOperatorCallExpr")),
-            callExpr(
-                // If we're in a lamda, we may have a call expression
-                // ancestor in the AST, but the temporary we're matching
-                // against is not going to have the same lifetime as the
-                // function call.
-                unless(has(expr(ignoreTrivials(lambdaExpr())))),
-                expr().bind("parentCallExpr")),
-            objcMessageExpr(
-                // If we're in a lamda, we may have an objc message expression
-                // ancestor in the AST, but the temporary we're matching
-                // against is not going to have the same lifetime as the
-                // function call.
-                unless(has(expr(ignoreTrivials(lambdaExpr())))),
-                expr().bind("parentObjCMessageExpr")),
-            cxxConstructExpr(
-                // If we're in a lamda, we may have a construct expression
-                // ancestor in the AST, but the temporary we're matching
-                // against is not going to have the same lifetime as the
-                // constructor call.
-                unless(has(expr(ignoreTrivials(lambdaExpr())))),
-                expr().bind("parentConstructExpr")))));
+  auto hasParentCall = hasParent(
+      expr(anyOf(cxxOperatorCallExpr(
+                     // If we're in a lamda, we may have an operator call
+                     // expression ancestor in the AST, but the temporary we're
+                     // matching against is not going to have the same lifetime
+                     // as the constructor call.
+                     unless(has(expr(ignoreTrivials(lambdaExpr())))),
+                     expr().bind("parentOperatorCallExpr")),
+                 callExpr(
+                     // If we're in a lamda, we may have a call expression
+                     // ancestor in the AST, but the temporary we're matching
+                     // against is not going to have the same lifetime as the
+                     // function call.
+                     unless(has(expr(ignoreTrivials(lambdaExpr())))),
+                     expr().bind("parentCallExpr")),
+                 objcMessageExpr(
+                     // If we're in a lamda, we may have an objc message
+                     // expression ancestor in the AST, but the temporary we're
+                     // matching against is not going to have the same lifetime
+                     // as the function call.
+                     unless(has(expr(ignoreTrivials(lambdaExpr())))),
+                     expr().bind("parentObjCMessageExpr")),
+                 cxxConstructExpr(
+                     // If we're in a lamda, we may have a construct expression
+                     // ancestor in the AST, but the temporary we're matching
+                     // against is not going to have the same lifetime as the
+                     // constructor call.
+                     unless(has(expr(ignoreTrivials(lambdaExpr())))),
+                     expr().bind("parentConstructExpr")))));
 
   AstMatcher->addMatcher(
       // This is a matcher on a method call,
