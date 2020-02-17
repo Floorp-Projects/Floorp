@@ -127,6 +127,13 @@ class EventEmitter {
   }
 }
 
+class NetworkOfflineError extends Error {
+  constructor(cid) {
+    super("Network is offline");
+    this.name = "NetworkOfflineError";
+  }
+}
+
 class InvalidSignatureError extends Error {
   constructor(cid) {
     super(`Invalid content signature (${cid})`);
@@ -178,6 +185,9 @@ class AttachmentDownloader extends Downloader {
 }
 
 class RemoteSettingsClient extends EventEmitter {
+  static get NetworkOfflineError() {
+    return NetworkOfflineError;
+  }
   static get InvalidSignatureError() {
     return InvalidSignatureError;
   }
@@ -410,6 +420,11 @@ class RemoteSettingsClient extends EventEmitter {
     const startedAt = new Date();
     let reportStatus = null;
     try {
+      // If network is offline, we can't synchronize.
+      if (Utils.isOffline) {
+        throw new RemoteSettingsClient.NetworkOfflineError();
+      }
+
       // Synchronize remote data into a local DB using Kinto.
       const kintoCollection = await this.openCollection();
       let collectionLastModified = await kintoCollection.db.getLastModified();
@@ -620,6 +635,9 @@ class RemoteSettingsClient extends EventEmitter {
         )
       ) {
         reportStatus = UptakeTelemetry.STATUS.CUSTOM_1_ERROR;
+      }
+      if (e instanceof RemoteSettingsClient.NetworkOfflineError) {
+        reportStatus = UptakeTelemetry.STATUS.NETWORK_OFFLINE_ERROR;
       }
       // No specific error was tracked, mark it as unknown.
       if (reportStatus === null) {

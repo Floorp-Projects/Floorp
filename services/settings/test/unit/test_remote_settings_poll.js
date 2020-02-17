@@ -112,6 +112,29 @@ add_task(async function test_an_event_is_sent_on_start() {
 });
 add_task(clear_state);
 
+add_task(async function test_offline_is_reported_if_relevant() {
+  const startHistogram = getUptakeTelemetrySnapshot(
+    TELEMETRY_HISTOGRAM_POLL_KEY
+  );
+  const offlineBackup = Services.io.offline;
+  try {
+    Services.io.offline = true;
+
+    await RemoteSettings.pollChanges();
+
+    const endHistogram = getUptakeTelemetrySnapshot(
+      TELEMETRY_HISTOGRAM_POLL_KEY
+    );
+    const expectedIncrements = {
+      [UptakeTelemetry.STATUS.NETWORK_OFFLINE_ERROR]: 1,
+    };
+    checkUptakeTelemetry(startHistogram, endHistogram, expectedIncrements);
+  } finally {
+    Services.io.offline = offlineBackup;
+  }
+});
+add_task(clear_state);
+
 add_task(async function test_check_success() {
   const startPollHistogram = getUptakeTelemetrySnapshot(
     TELEMETRY_HISTOGRAM_POLL_KEY
