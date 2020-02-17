@@ -2,10 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include <algorithm>
 #include "CustomAttributes.h"
 #include "plugin.h"
 #include "clang/Frontend/FrontendPluginRegistry.h"
+#include <algorithm>
 
 /* Having annotations in the AST unexpectedly impacts codegen.
  * Ideally, we'd avoid having annotations at all, by using an API such as
@@ -26,37 +26,34 @@
 using namespace clang;
 using namespace llvm;
 
-static DenseMap<const Decl*, CustomAttributesSet> AttributesCache;
+static DenseMap<const Decl *, CustomAttributesSet> AttributesCache;
 
-static CustomAttributesSet CacheAttributes(const Decl* D)
-{
+static CustomAttributesSet CacheAttributes(const Decl *D) {
   CustomAttributesSet attrs = {};
   for (auto Attr : D->specific_attrs<AnnotateAttr>()) {
     auto annotation = Attr->getAnnotation();
-#define ATTR(a) \
-    if (annotation == #a) { \
-      attrs.has_ ## a = true; \
-    } else
+#define ATTR(a)                                                                \
+  if (annotation == #a) {                                                      \
+    attrs.has_##a = true;                                                      \
+  } else
 #include "CustomAttributes.inc"
 #undef ATTR
     {}
   }
-  const_cast<Decl*>(D)->dropAttr<AnnotateAttr>();
+  const_cast<Decl *>(D)->dropAttr<AnnotateAttr>();
   AttributesCache.insert(std::make_pair(D, attrs));
   return attrs;
 }
 
-static void Report(const Decl* D, const char* message)
-{
-  ASTContext& Context = D->getASTContext();
-  DiagnosticsEngine& Diag = Context.getDiagnostics();
-  unsigned ID = Diag.getDiagnosticIDs()->getCustomDiagID(
-    DiagnosticIDs::Warning, message);
+static void Report(const Decl *D, const char *message) {
+  ASTContext &Context = D->getASTContext();
+  DiagnosticsEngine &Diag = Context.getDiagnostics();
+  unsigned ID =
+      Diag.getDiagnosticIDs()->getCustomDiagID(DiagnosticIDs::Warning, message);
   Diag.Report(D->getBeginLoc(), ID);
 }
 
-CustomAttributesSet GetAttributes(const Decl* D)
-{
+CustomAttributesSet GetAttributes(const Decl *D) {
   CustomAttributesSet attrs = {};
   if (D->hasAttr<AnnotateAttr>()) {
     Report(D, "Declaration has unhandled annotations.");
@@ -70,22 +67,22 @@ CustomAttributesSet GetAttributes(const Decl* D)
   return attrs;
 }
 
-bool hasCustomAttribute(const clang::Decl* D, CustomAttributes A)
-{
+bool hasCustomAttribute(const clang::Decl *D, CustomAttributes A) {
   CustomAttributesSet attrs = GetAttributes(D);
   switch (A) {
-#define ATTR(a) case a: return attrs.has_ ## a;
+#define ATTR(a)                                                                \
+  case a:                                                                      \
+    return attrs.has_##a;
 #include "CustomAttributes.inc"
 #undef ATTR
   }
   return false;
 }
 
-class CustomAttributesMatcher : public ast_matchers::MatchFinder::MatchCallback {
+class CustomAttributesMatcher
+    : public ast_matchers::MatchFinder::MatchCallback {
 public:
-  virtual void
-  run(const ast_matchers::MatchFinder::MatchResult &Result) final
-  {
+  virtual void run(const ast_matchers::MatchFinder::MatchResult &Result) final {
     if (auto D = Result.Nodes.getNodeAs<Decl>("decl")) {
       CacheAttributes(D);
     } else if (auto L = Result.Nodes.getNodeAs<LambdaExpr>("lambda")) {
@@ -99,9 +96,10 @@ class CustomAttributesAction : public PluginASTAction {
 public:
   ASTConsumerPtr CreateASTConsumer(CompilerInstance &CI,
                                    StringRef FileName) override {
-    auto& Context = CI.getASTContext();
+    auto &Context = CI.getASTContext();
     auto AstMatcher = new (Context.Allocate<MatchFinder>()) MatchFinder();
-    auto Matcher = new (Context.Allocate<CustomAttributesMatcher>()) CustomAttributesMatcher();
+    auto Matcher = new (Context.Allocate<CustomAttributesMatcher>())
+        CustomAttributesMatcher();
     AstMatcher->addMatcher(decl().bind("decl"), Matcher);
     AstMatcher->addMatcher(lambdaExpr().bind("lambda"), Matcher);
     return AstMatcher->newASTConsumer();
@@ -112,11 +110,8 @@ public:
     return true;
   }
 
-  ActionType getActionType() override {
-    return AddBeforeMainAction;
-  }
+  ActionType getActionType() override { return AddBeforeMainAction; }
 };
 
-static FrontendPluginRegistry::Add<CustomAttributesAction> X(
-  "moz-custom-attributes",
-  "prepare custom attributes for moz-check");
+static FrontendPluginRegistry::Add<CustomAttributesAction>
+    X("moz-custom-attributes", "prepare custom attributes for moz-check");
