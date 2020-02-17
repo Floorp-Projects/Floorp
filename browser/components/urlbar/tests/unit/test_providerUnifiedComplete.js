@@ -212,7 +212,7 @@ add_task(async function test_diacritics() {
   let context = createContext(searchString, { isPrivate: false });
 
   await PlacesUtils.bookmarks.insert({
-    url: "https://bookmark.mozilla.org/%C3%A3gu%C4%A9",
+    url: "https://bookmark.mozilla.org/%C3%A3g%CC%83u%C4%A9",
     title: "Test bookmark with accents in path",
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
   });

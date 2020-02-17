@@ -315,6 +315,9 @@ uint32_t GetNaked(uint32_t aCh) {
   static const UNormalizer2* normalizer;
   static HashMap<uint32_t, uint32_t> nakedCharCache;
 
+  NS_ASSERTION(!IsCombiningDiacritic(aCh),
+               "This character needs to be skipped");
+
   HashMap<uint32_t, uint32_t>::Ptr entry = nakedCharCache.lookup(aCh);
   if (entry.found()) {
     return entry->value();
@@ -338,13 +341,6 @@ uint32_t GetNaked(uint32_t aCh) {
   if (decompositionLen < 1) {
     // The character does not decompose.
     return aCh;
-  }
-
-  if (u_getIntPropertyValue(aCh, UCHAR_GENERAL_CATEGORY) & U_GC_M_MASK) {
-    // The character is itself a combining character, and we don't want to use
-    // its decomposition into multiple combining characters.
-    baseChar = aCh;
-    goto cache;
   }
 
   if (NS_IS_HIGH_SURROGATE(decomposition[0])) {
