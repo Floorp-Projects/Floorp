@@ -24,11 +24,8 @@ import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.Config
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
-import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MozillaProductDetector
-import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getPreferenceKey
-import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.settings.PhoneFeature
 import org.mozilla.fenix.settings.deletebrowsingdata.DeleteBrowsingDataOnQuitType
 import java.security.InvalidParameterException
@@ -483,21 +480,6 @@ class Settings private constructor(
             appContext.getPreferenceKey(R.string.pref_key_private_mode_opened),
             numTimesPrivateModeOpened + 1
         ).apply()
-    }
-
-    fun unsetOpenLinksInAPrivateTabIfNecessary() {
-        if (BrowsersCache.all(appContext).isDefaultBrowser) {
-            return
-        }
-
-        appContext.settings().openLinksInAPrivateTab = false
-        appContext.components.analytics.metrics.track(
-            Event.PreferenceToggled(
-                preferenceKey = appContext.getString(R.string.pref_key_open_links_in_a_private_tab),
-                enabled = false,
-                context = appContext
-            )
-        )
     }
 
     private var showedPrivateModeContextualFeatureRecommender by booleanPreference(

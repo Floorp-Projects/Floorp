@@ -36,7 +36,6 @@ class IntentReceiverActivity : Activity() {
 
     suspend fun processIntent(intent: Intent) {
         val settings = settings()
-        settings.unsetOpenLinksInAPrivateTabIfNecessary()
 
         val modeDependentProcessors = if (settings.openLinksInAPrivateTab) {
             components.analytics.metrics.track(Event.OpenedLink(Event.OpenedLink.Mode.PRIVATE))
