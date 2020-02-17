@@ -982,8 +982,19 @@ fi
 // TODO: Check for updates (expected to be phased out around Q1/2009)
 aland.fi
 
-// fj : https://en.wikipedia.org/wiki/.fj
-*.fj
+// fj : http://domains.fj/
+// Submitted by registry <garth.miller@cocca.org.nz> 2020-02-11
+fj
+ac.fj
+biz.fj
+com.fj
+gov.fj
+info.fj
+mil.fj
+name.fj 
+net.fj
+org.fj
+pro.fj
 
 // fk : https://en.wikipedia.org/wiki/.fk
 *.fk
