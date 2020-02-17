@@ -3,8 +3,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 .status-code {
+  /* non-standard codes may be shorter than 3 characters but should match
+     width of standard codes */
+  min-width: calc(3ch + 4px);
   padding: 0 2px;
   border-radius: 3px;
+  text-align: center;
   font-family: var(--monospace-font-family);
   /* prevent status code from having full line height width from .request-list-item */
   line-height: normal;
@@ -26,7 +30,12 @@
   background-color: var(--status-code-color-4xx);
 }
 
-.status-code[data-code^="5"],
+.status-code[data-code^="5"] {
+  background-color: var(--status-code-color-5xx);
+}
+
+/* Non-standard status codes are styled like 5XX */
+.status-code[data-code^="0"],
 .status-code[data-code^="6"],
 .status-code[data-code^="7"],
 .status-code[data-code^="8"],
@@ -39,21 +48,13 @@
 }
 
 .status-code-blocked {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 24px;
-  width: 24px;
   color: var(--theme-icon-error-color);
-}
-
-.request-list-item.selected .status-code-blocked {
-  color: var(--theme-selection-color);
 }
 
 .status-code-blocked img {
   height: 12px;
   width: 12px;
+  vertical-align: -2px;
   -moz-context-properties: fill;
   fill: currentColor;
 }
