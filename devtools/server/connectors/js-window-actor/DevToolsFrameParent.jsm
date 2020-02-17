@@ -24,7 +24,7 @@ class DevToolsFrameParent extends JSWindowActorParent {
 
     this._destroyed = false;
 
-    // Map of DebuggerServerConnection's used to forward the messages from/to
+    // Map of DevToolsServerConnection's used to forward the messages from/to
     // the client. The connections run in the parent process, as this code. We
     // may have more than one when there is more than one client debugging the
     // same frame. For example, a content toolbox and the browser toolbox.
@@ -32,15 +32,15 @@ class DevToolsFrameParent extends JSWindowActorParent {
     // The map is indexed by the connection prefix.
     // The values are objects containing the following properties:
     // - actor: the frame target actor(as a form)
-    // - connection: the DebuggerServerConnection used to communicate with the
+    // - connection: the DevToolsServerConnection used to communicate with the
     //   frame target actor
     // - forwardingPrefix: the forwarding prefix used by the connection to know
     //   how to forward packets to the frame target
     // - transport: the JsWindowActorTransport
     //
-    // Reminder about prefixes: all DebuggerServerConnections have a `prefix`
+    // Reminder about prefixes: all DevToolsServerConnections have a `prefix`
     // which can be considered as a kind of id. On top of this, parent process
-    // DebuggerServerConnections also have forwarding prefixes because they are
+    // DevToolsServerConnections also have forwarding prefixes because they are
     // responsible for forwarding messages to content process connections.
     this._connections = new Map();
 
@@ -49,7 +49,7 @@ class DevToolsFrameParent extends JSWindowActorParent {
   }
 
   async connectToFrame(connection) {
-    // Compute the same prefix that's used by DebuggerServerConnection when
+    // Compute the same prefix that's used by DevToolsServerConnection when
     // forwarding packets to the target frame.
     const forwardingPrefix = connection.allocID("child");
 

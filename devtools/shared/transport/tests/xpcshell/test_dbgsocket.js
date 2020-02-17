@@ -7,7 +7,7 @@ var gExtraListener;
 
 function run_test() {
   info("Starting test at " + new Date().toTimeString());
-  initTestDebuggerServer();
+  initTestDevToolsServer();
 
   add_task(test_socket_conn);
   add_task(test_socket_shutdown);
@@ -17,27 +17,27 @@ function run_test() {
 }
 
 async function test_socket_conn() {
-  Assert.equal(DebuggerServer.listeningSockets, 0);
-  const AuthenticatorType = DebuggerServer.Authenticators.get("PROMPT");
+  Assert.equal(DevToolsServer.listeningSockets, 0);
+  const AuthenticatorType = DevToolsServer.Authenticators.get("PROMPT");
   const authenticator = new AuthenticatorType.Server();
   authenticator.allowConnection = () => {
-    return DebuggerServer.AuthenticationResult.ALLOW;
+    return DevToolsServer.AuthenticationResult.ALLOW;
   };
   const socketOptions = {
     authenticator,
     portOrPath: -1,
   };
-  const listener = new SocketListener(DebuggerServer, socketOptions);
+  const listener = new SocketListener(DevToolsServer, socketOptions);
   Assert.ok(listener);
   listener.open();
-  Assert.equal(DebuggerServer.listeningSockets, 1);
-  gPort = DebuggerServer._listeners[0].port;
-  info("Debugger server port is " + gPort);
+  Assert.equal(DevToolsServer.listeningSockets, 1);
+  gPort = DevToolsServer._listeners[0].port;
+  info("DevTools server port is " + gPort);
   // Open a second, separate listener
-  gExtraListener = new SocketListener(DebuggerServer, socketOptions);
+  gExtraListener = new SocketListener(DevToolsServer, socketOptions);
   gExtraListener.open();
-  Assert.equal(DebuggerServer.listeningSockets, 2);
-  Assert.ok(!DebuggerServer.hasConnection());
+  Assert.equal(DevToolsServer.listeningSockets, 2);
+  Assert.ok(!DevToolsServer.hasConnection());
 
   info("Starting long and unicode tests at " + new Date().toTimeString());
   const unicodeString = "(╯°□°）╯︵ ┻━┻";
@@ -45,14 +45,14 @@ async function test_socket_conn() {
     host: "127.0.0.1",
     port: gPort,
   });
-  Assert.ok(DebuggerServer.hasConnection());
+  Assert.ok(DevToolsServer.hasConnection());
 
   // Assert that connection settings are available on transport object
   const settings = transport.connectionSettings;
   Assert.equal(settings.host, "127.0.0.1");
   Assert.equal(settings.port, gPort);
 
-  const onDebuggerConnectionClosed = DebuggerServer.once("connectionchange");
+  const onDebuggerConnectionClosed = DevToolsServer.once("connectionchange");
   await new Promise(resolve => {
     transport.hooks = {
       onPacket: function(packet) {
@@ -78,18 +78,18 @@ async function test_socket_conn() {
   });
   const type = await onDebuggerConnectionClosed;
   Assert.equal(type, "closed");
-  Assert.ok(!DebuggerServer.hasConnection());
+  Assert.ok(!DevToolsServer.hasConnection());
 }
 
 async function test_socket_shutdown() {
-  Assert.equal(DebuggerServer.listeningSockets, 2);
+  Assert.equal(DevToolsServer.listeningSockets, 2);
   gExtraListener.close();
-  Assert.equal(DebuggerServer.listeningSockets, 1);
-  Assert.ok(DebuggerServer.closeAllSocketListeners());
-  Assert.equal(DebuggerServer.listeningSockets, 0);
+  Assert.equal(DevToolsServer.listeningSockets, 1);
+  Assert.ok(DevToolsServer.closeAllSocketListeners());
+  Assert.equal(DevToolsServer.listeningSockets, 0);
   // Make sure closing the listener twice does nothing.
-  Assert.ok(!DebuggerServer.closeAllSocketListeners());
-  Assert.equal(DebuggerServer.listeningSockets, 0);
+  Assert.ok(!DevToolsServer.closeAllSocketListeners());
+  Assert.equal(DevToolsServer.listeningSockets, 0);
 
   info("Connecting to a server socket at " + new Date().toTimeString());
   try {
@@ -115,7 +115,7 @@ async function test_socket_shutdown() {
 }
 
 function test_pipe_conn() {
-  const transport = DebuggerServer.connectPipe();
+  const transport = DevToolsServer.connectPipe();
   transport.hooks = {
     onPacket: function(packet) {
       Assert.equal(packet.from, "root");

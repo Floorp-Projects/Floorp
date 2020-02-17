@@ -5,7 +5,7 @@
 "use strict";
 
 const { Cu, Ci } = require("chrome");
-const { DebuggerServer } = require("devtools/server/debugger-server");
+const { DevToolsServer } = require("devtools/server/devtools-server");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 loader.lazyRequireGetter(
   this,

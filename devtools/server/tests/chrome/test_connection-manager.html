@@ -18,11 +18,11 @@ window.onload = function() {
   SimpleTest.waitForExplicitFinish();
 
   const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
-  const {DebuggerServer} = require("devtools/server/debugger-server");
+  const {DevToolsServer} = require("devtools/server/devtools-server");
   const Services = require("Services");
 
-  DebuggerServer.init();
-  DebuggerServer.registerAllActors();
+  DevToolsServer.init();
+  DevToolsServer.registerAllActors();
 
   const {
     ConnectionManager,
@@ -119,7 +119,7 @@ window.onload = function() {
 
     function finish() {
       is(events.join(" "), eventsRef, "Events received in the right order");
-      DebuggerServer.destroy();
+      DevToolsServer.destroy();
       SimpleTest.finish();
     }
   });

@@ -4,13 +4,13 @@
 "use strict";
 
 function run_test() {
-  initTestDebuggerServer();
+  initTestDevToolsServer();
   add_test_bulk_actor();
 
   add_task(async function() {
     await test_string_error(socket_transport, json_reply);
     await test_string_error(local_transport, json_reply);
-    DebuggerServer.destroy();
+    DevToolsServer.destroy();
   });
 
   run_next_test();

@@ -14,7 +14,7 @@ add_task(async function set_enable_extensionStorage_pref() {
 add_task(
   async function test_extensionStorage_disabled_for_non_extension_target() {
     info(
-      "Setting up and connecting Debugger Server and Client in main process"
+      "Setting up and connecting DevTools Server and Client in main process"
     );
     info("Opening a non-extension page in a tab");
     const target = await addTabTarget("data:text/html;charset=utf-8,");

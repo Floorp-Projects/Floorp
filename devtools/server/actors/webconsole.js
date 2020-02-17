@@ -10,7 +10,7 @@ const { webconsoleSpec } = require("devtools/shared/specs/webconsole");
 
 const Services = require("Services");
 const { Cc, Ci, Cu } = require("chrome");
-const { DebuggerServer } = require("devtools/server/debugger-server");
+const { DevToolsServer } = require("devtools/server/devtools-server");
 const { ActorPool } = require("devtools/server/actors/common");
 const { ThreadActor } = require("devtools/server/actors/thread");
 const { ObjectActor } = require("devtools/server/actors/object");
@@ -174,7 +174,7 @@ function isObject(value) {
  *
  * @constructor
  * @param object connection
- *        The connection to the client, DebuggerServerConnection.
+ *        The connection to the client, DevToolsServerConnection.
  * @param object [parentActor]
  *        Optional, the parent actor.
  */
@@ -257,7 +257,7 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
   _listeners: null,
 
   /**
-   * The debugger server connection instance.
+   * The devtools server connection instance.
    * @type object
    */
   conn: null,
@@ -1305,7 +1305,7 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
       }
     }
 
-    // If a value is encountered that the debugger server doesn't support yet,
+    // If a value is encountered that the devtools server doesn't support yet,
     // the console should remain functional.
     let resultGrip;
     if (!awaitResult) {
@@ -1732,9 +1732,9 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
     let lineText = pageError.sourceLine;
     if (
       lineText &&
-      lineText.length > DebuggerServer.LONG_STRING_INITIAL_LENGTH
+      lineText.length > DevToolsServer.LONG_STRING_INITIAL_LENGTH
     ) {
-      lineText = lineText.substr(0, DebuggerServer.LONG_STRING_INITIAL_LENGTH);
+      lineText = lineText.substr(0, DevToolsServer.LONG_STRING_INITIAL_LENGTH);
     }
 
     let notesArray = null;

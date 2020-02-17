@@ -12,7 +12,7 @@
 
 const { Ci } = require("chrome");
 const ChromeUtils = require("ChromeUtils");
-const { DebuggerServer } = require("devtools/server/debugger-server");
+const { DevToolsServer } = require("devtools/server/devtools-server");
 const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
 const protocol = require("devtools/shared/protocol");
 const { workerTargetSpec } = require("devtools/shared/specs/targets/worker");
@@ -61,7 +61,7 @@ const WorkerTargetActor = protocol.ActorClassWithSpec(workerTargetSpec, {
        * ServiceWorker's ID, and this data will be merged with the
        * corresponding registration in the parent process.
        */
-      if (!swm.isParentInterceptEnabled() || !DebuggerServer.isInChildProcess) {
+      if (!swm.isParentInterceptEnabled() || !DevToolsServer.isInChildProcess) {
         const registration = this._getServiceWorkerRegistrationInfo();
         form.scope = registration.scope;
         const newestWorker =

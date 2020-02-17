@@ -6,7 +6,7 @@
 
 const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
 const { TargetFactory } = require("devtools/client/framework/target");
-const { DebuggerServer } = require("devtools/server/debugger-server");
+const { DevToolsServer } = require("devtools/server/devtools-server");
 const {
   BrowserTestUtils,
 } = require("resource://testing-common/BrowserTestUtils.jsm");
@@ -22,11 +22,11 @@ SimpleTest.registerCleanupFunction(function() {
   Services.prefs.clearUserPref("devtools.debugger.log");
 });
 
-if (!DebuggerServer.initialized) {
-  DebuggerServer.init();
-  DebuggerServer.registerAllActors();
+if (!DevToolsServer.initialized) {
+  DevToolsServer.init();
+  DevToolsServer.registerAllActors();
   SimpleTest.registerCleanupFunction(function() {
-    DebuggerServer.destroy();
+    DevToolsServer.destroy();
   });
 }
 
@@ -52,7 +52,7 @@ async function getTargetForSelectedTab(gBrowser) {
 
 /**
  * Open a tab, load the url, wait for it to signal its readiness,
- * find the tab with the debugger server, and call the callback.
+ * find the tab with the devtools server, and call the callback.
  *
  * Returns a function which can be called to close the opened ta
  * and disconnect its debugger client.

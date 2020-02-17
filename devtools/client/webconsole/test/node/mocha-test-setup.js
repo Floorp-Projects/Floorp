@@ -122,8 +122,8 @@ requireHacker.global_hook("default", (path, module) => {
     "devtools/shared/plural-form": () =>
       getModule("devtools/client/webconsole/test/node/fixtures/PluralForm"),
     Services: () => `module.exports = require("devtools-services")`,
-    "devtools/server/debugger-server": () =>
-      `module.exports = {DebuggerServer: {}}`,
+    "devtools/server/devtools-server": () =>
+      `module.exports = {DevToolsServer: {}}`,
     "devtools/client/shared/components/SmartTrace": () => "{}",
     "devtools/client/netmonitor/src/components/TabboxPanel": () => "{}",
     "devtools/client/webconsole/utils/context-menu": () => "{}",

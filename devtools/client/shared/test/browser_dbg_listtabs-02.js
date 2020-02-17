@@ -8,7 +8,7 @@
  */
 
 var { BrowserTabList } = require("devtools/server/actors/webbrowser");
-var { DebuggerServer } = require("devtools/server/debugger-server");
+var { DevToolsServer } = require("devtools/server/devtools-server");
 
 var gTestPage =
   "data:text/html;charset=utf-8," +
@@ -29,10 +29,10 @@ function onListChangedHandler() {
 }
 
 function test() {
-  DebuggerServer.init();
-  DebuggerServer.registerAllActors();
+  DevToolsServer.init();
+  DevToolsServer.registerAllActors();
 
-  gTabList = new BrowserTabList("fake DebuggerServerConnection");
+  gTabList = new BrowserTabList("fake DevToolsServerConnection");
   gTabList._testing = true;
   gTabList.onListChanged = onListChangedHandler;
 

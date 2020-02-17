@@ -397,7 +397,7 @@ function _register_modules_protocol_handler() {
 
 /* Debugging support */
 // Used locally and by our self-tests.
-function _setupDebuggerServer(breakpointFiles, callback) {
+function _setupDevToolsServer(breakpointFiles, callback) {
   // Always allow remote debugging.
   _Services.prefs.setBoolPref("devtools.debugger.remote-enabled", true);
 
@@ -428,12 +428,12 @@ function _setupDebuggerServer(breakpointFiles, callback) {
         "See also https://bugzil.la/1215378."
     );
   }
-  let { DebuggerServer } = require("devtools/server/debugger-server");
-  DebuggerServer.init();
-  DebuggerServer.registerAllActors();
+  let { DevToolsServer } = require("devtools/server/devtools-server");
+  DevToolsServer.init();
+  DevToolsServer.registerAllActors();
   let { createRootActor } = require("resource://testing-common/dbg-actors.js");
-  DebuggerServer.setRootActor(createRootActor);
-  DebuggerServer.allowChromeProcess = true;
+  DevToolsServer.setRootActor(createRootActor);
+  DevToolsServer.allowChromeProcess = true;
 
   // An observer notification that tells us when we can "resume" script
   // execution.
@@ -461,12 +461,12 @@ function _setupDebuggerServer(breakpointFiles, callback) {
 
   const { SocketListener } = require("devtools/shared/security/socket");
 
-  return { DebuggerServer, SocketListener };
+  return { DevToolsServer, SocketListener };
 }
 
 function _initDebugging(port) {
   let initialized = false;
-  const { DebuggerServer, SocketListener } = _setupDebuggerServer(
+  const { DevToolsServer, SocketListener } = _setupDevToolsServer(
     _TEST_FILE,
     () => {
       initialized = true;
@@ -482,17 +482,17 @@ function _initDebugging(port) {
   info("*******************************************************************");
   info("");
 
-  const AuthenticatorType = DebuggerServer.Authenticators.get("PROMPT");
+  const AuthenticatorType = DevToolsServer.Authenticators.get("PROMPT");
   const authenticator = new AuthenticatorType.Server();
   authenticator.allowConnection = () => {
-    return DebuggerServer.AuthenticationResult.ALLOW;
+    return DevToolsServer.AuthenticationResult.ALLOW;
   };
   const socketOptions = {
     authenticator,
     portOrPath: port,
   };
 
-  const listener = new SocketListener(DebuggerServer, socketOptions);
+  const listener = new SocketListener(DevToolsServer, socketOptions);
   listener.open();
 
   // spin an event loop until the debugger connects.

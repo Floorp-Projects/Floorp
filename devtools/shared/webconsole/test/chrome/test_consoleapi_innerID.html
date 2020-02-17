@@ -25,7 +25,7 @@ function doConsoleCalls(aState)
     innerID: window.windowUtils.currentInnerWindowID
   });
 
-  const longString = (new Array(DebuggerServer.LONG_STRING_LENGTH + 2)).join("a");
+  const longString = (new Array(DevToolsServer.LONG_STRING_LENGTH + 2)).join("a");
 
   console.log("foobarBaz-log", undefined);
   console.info("foobarBaz-info", null);
@@ -108,7 +108,7 @@ function doConsoleCalls(aState)
         {
           type: "longString",
           initial: longString.substring(0,
-            DebuggerServer.LONG_STRING_INITIAL_LENGTH),
+            DevToolsServer.LONG_STRING_INITIAL_LENGTH),
           length: longString.length,
           actor: /[a-z]/,
         },

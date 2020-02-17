@@ -52,7 +52,7 @@
       window.foobarObject.omgfoo = 5;
       window.foobarObject.strfoo = "foobarz";
       window.foobarObject.omgstr = "foobarz" +
-        (new Array(${DebuggerServer.LONG_STRING_LENGTH})).join("abb");
+        (new Array(${DevToolsServer.LONG_STRING_LENGTH})).join("abb");
       window.largeObject1 = Object.create(null);
       for (let i = 0; i < ${MAX_AUTOCOMPLETE_ATTEMPTS + 1}; i++) {
         window.largeObject1['a' + i] = i;

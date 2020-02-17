@@ -510,8 +510,8 @@ class NodeFront extends FrontClassWithSpec(nodeSpec) {
       console.warn("Tried to use rawNode on a remote connection.");
       return null;
     }
-    const { DebuggerServer } = require("devtools/server/debugger-server");
-    const actor = DebuggerServer.searchAllConnectionsForActor(this.actorID);
+    const { DevToolsServer } = require("devtools/server/devtools-server");
+    const actor = DevToolsServer.searchAllConnectionsForActor(this.actorID);
     if (!actor) {
       // Can happen if we try to get the raw node for an already-expired
       // actor.

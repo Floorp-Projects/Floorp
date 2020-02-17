@@ -10,8 +10,8 @@ var { dumpn } = DevToolsUtils;
 
 loader.lazyRequireGetter(
   this,
-  "DebuggerServer",
-  "devtools/server/debugger-server",
+  "DevToolsServer",
+  "devtools/server/devtools-server",
   true
 );
 loader.lazyRequireGetter(
@@ -28,7 +28,7 @@ loader.lazyRequireGetter(this, "EventEmitter", "devtools/shared/event-emitter");
  * an active connection.
  *
  * @param object connection
- *        The debugger server connection to use.
+ *        The devtools server connection to use.
  * @param Element frame
  *        The frame element with remote content to connect to.
  * @param function [onDestroy]
@@ -54,7 +54,7 @@ function connectToFrame(connection, frame, onDestroy, { addonId } = {}) {
       if (!actor) {
         mm.addMessageListener("debug:actor", onActorCreated);
       }
-      DebuggerServer._childMessageManagers.add(mm);
+      DevToolsServer._childMessageManagers.add(mm);
     };
 
     const untrackMessageManager = () => {
@@ -67,12 +67,12 @@ function connectToFrame(connection, frame, onDestroy, { addonId } = {}) {
       if (!actor) {
         mm.removeMessageListener("debug:actor", onActorCreated);
       }
-      DebuggerServer._childMessageManagers.delete(mm);
+      DevToolsServer._childMessageManagers.delete(mm);
     };
 
     let actor, childTransport;
     const prefix = connection.allocID("child");
-    // Compute the same prefix that's used by DebuggerServerConnection
+    // Compute the same prefix that's used by DevToolsServerConnection
     const connPrefix = prefix + "/";
 
     // provides hook to actor modules that need to exchange messages
@@ -237,7 +237,7 @@ function connectToFrame(connection, frame, onDestroy, { addonId } = {}) {
         }
       });
       // TODO: Remove this deprecated path once it's no longer needed by add-ons.
-      DebuggerServer.emit("disconnected-from-child:" + connPrefix, {
+      DevToolsServer.emit("disconnected-from-child:" + connPrefix, {
         mm,
         prefix: connPrefix,
       });

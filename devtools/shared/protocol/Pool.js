@@ -15,7 +15,7 @@ var EventEmitter = require("devtools/shared/event-emitter");
  * objects. Pools are used on both sides of the connection to help coordinate lifetimes.
  *
  * @param optional conn
- *   Either a DebuggerServerConnection or a DebuggerClient.  Must have
+ *   Either a DevToolsServerConnection or a DebuggerClient.  Must have
  *   addActorPool, removeActorPool, and poolFor.
  *   conn can be null if the subclass provides a conn property.
  * @constructor
@@ -164,7 +164,7 @@ class Pool extends EventEmitter {
   }
 
   /**
-   * For getting along with the debugger server pools, should be removable
+   * For getting along with the devtools server pools, should be removable
    * eventually.
    */
   cleanup() {

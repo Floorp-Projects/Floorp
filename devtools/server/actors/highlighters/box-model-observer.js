@@ -4,7 +4,7 @@
 
 "use strict";
 
-const { DebuggerServer } = require("devtools/server/debugger-server");
+const { DevToolsServer } = require("devtools/server/devtools-server");
 const {
   AutoRefreshHighlighter,
 } = require("devtools/server/actors/highlighters/auto-refresh");
@@ -47,7 +47,7 @@ class BoxModelHighlighterObserver extends AutoRefreshHighlighter {
     this._ignoreScroll = true;
     this.typeName = this.constructor.name.replace("Observer", "");
 
-    if (DebuggerServer.isInChildProcess) {
+    if (DevToolsServer.isInChildProcess) {
       // eslint-disable-next-line no-restricted-properties
       this.conn.setupInParent({
         module: "devtools/server/actors/highlighters/box-model-renderer",
@@ -83,7 +83,7 @@ class BoxModelHighlighterObserver extends AutoRefreshHighlighter {
       pageListenerTarget.removeEventListener("pagehide", this.onPageHide);
     }
 
-    if (DebuggerServer.isInChildProcess) {
+    if (DevToolsServer.isInChildProcess) {
       this.postMessage("destroy");
     } else {
       this.renderer.destroy();
@@ -94,7 +94,7 @@ class BoxModelHighlighterObserver extends AutoRefreshHighlighter {
   }
 
   get messageManager() {
-    if (!DebuggerServer.isInChildProcess) {
+    if (!DevToolsServer.isInChildProcess) {
       throw new Error(
         "Message manager should only be used when actor is in child process."
       );
@@ -116,7 +116,7 @@ class BoxModelHighlighterObserver extends AutoRefreshHighlighter {
    *        @see BoxModelHighlighterRenderer.render()
    */
   render(data) {
-    if (DebuggerServer.isInChildProcess) {
+    if (DevToolsServer.isInChildProcess) {
       this.postMessage("render", data);
     } else {
       this.renderer.render(data);

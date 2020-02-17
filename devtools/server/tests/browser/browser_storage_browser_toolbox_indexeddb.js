@@ -25,7 +25,7 @@ add_task(async function() {
   forceCollections();
   await target.destroy();
   forceCollections();
-  DebuggerServer.destroy();
+  DevToolsServer.destroy();
   forceCollections();
 });
 

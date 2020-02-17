@@ -233,8 +233,8 @@ const ResponsiveActor = protocol.ActorClassWithSpec(responsiveSpec, {
    * this is the following:
    * RDM is the only current consumer of the touch simulator. RDM instantiates this actor
    * on its own, whether or not the Toolbox is opened. That means it does so in its own
-   * Debugger Server instance.
-   * When the Toolbox is running, it uses a different DebuggerServer. Therefore, it is not
+   * DevTools Server instance.
+   * When the Toolbox is running, it uses a different DevToolsServer. Therefore, it is not
    * possible for the touch simulator to know whether the picker is active or not. This
    * state has to be sent by the client code of the Toolbox to this actor.
    * If a future use case arises where we want to use the touch simulator from the Toolbox

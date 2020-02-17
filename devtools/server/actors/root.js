@@ -15,7 +15,7 @@ const {
   LazyPool,
   createExtraActors,
 } = require("devtools/shared/protocol/lazy-pool");
-const { DebuggerServer } = require("devtools/server/debugger-server");
+const { DevToolsServer } = require("devtools/server/devtools-server");
 const protocol = require("devtools/shared/protocol");
 const { rootSpec } = require("devtools/shared/specs/root");
 
@@ -44,7 +44,7 @@ loader.lazyRequireGetter(
  * Create a remote debugging protocol root actor.
  *
  * @param conn
- *     The DebuggerServerConnection whose root actor we are constructing.
+ *     The DevToolsServerConnection whose root actor we are constructing.
  *
  * @param parameters
  *     The properties of |parameters| provide backing objects for the root
@@ -151,7 +151,7 @@ exports.RootActor = protocol.ActorClassWithSpec(rootSpec, {
       // no longer expose chrome target actors, but also that the above requests are
       // forbidden for security reasons.
       get allowChromeProcess() {
-        return DebuggerServer.allowChromeProcess;
+        return DevToolsServer.allowChromeProcess;
       },
       // Whether or not the MemoryActor's heap snapshot abilities are
       // fully equipped to handle heap snapshots for the memory tool. Fx44+
@@ -274,7 +274,7 @@ exports.RootActor = protocol.ActorClassWithSpec(rootSpec, {
    *
    * ⚠ WARNING ⚠ This can be a very expensive operation, especially if there are many
    * open tabs.  It will cause us to visit every tab, load a frame script, start a
-   * debugger server, and read some data.  With lazy tab support (bug 906076), this
+   * devtools server, and read some data.  With lazy tab support (bug 906076), this
    * would trigger any lazy tabs to be loaded, greatly increasing resource usage.  Avoid
    * this method whenever possible.
    */
@@ -365,7 +365,7 @@ exports.RootActor = protocol.ActorClassWithSpec(rootSpec, {
   },
 
   getWindow: function({ outerWindowID }) {
-    if (!DebuggerServer.allowChromeProcess) {
+    if (!DevToolsServer.allowChromeProcess) {
       throw {
         error: "forbidden",
         message: "You are not allowed to debug windows.",
@@ -555,7 +555,7 @@ exports.RootActor = protocol.ActorClassWithSpec(rootSpec, {
   },
 
   async getProcess(id) {
-    if (!DebuggerServer.allowChromeProcess) {
+    if (!DevToolsServer.allowChromeProcess) {
       throw {
         error: "forbidden",
         message: "You are not allowed to debug chrome.",
@@ -692,7 +692,7 @@ exports.RootActor = protocol.ActorClassWithSpec(rootSpec, {
   _isParentBrowsingContext(id) {
     // TODO: We may stop making the parent process codepath so special
     const window = Services.wm.getMostRecentWindow(
-      DebuggerServer.chromeWindowType
+      DevToolsServer.chromeWindowType
     );
     return id == window.docShell.browsingContext.id;
   },
@@ -762,7 +762,7 @@ exports.RootActor = protocol.ActorClassWithSpec(rootSpec, {
 exports.RootActor.prototype.requestTypes.echo = function(request) {
   /*
    * Request packets are frozen. Copy request, so that
-   * DebuggerServerConnection.onPacket can attach a 'from' property.
+   * DevToolsServerConnection.onPacket can attach a 'from' property.
    */
   return Cu.cloneInto(request, {});
 };

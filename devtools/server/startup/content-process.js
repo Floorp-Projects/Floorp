@@ -7,7 +7,7 @@
 "use strict";
 
 /*
- * Process script that listens for requests to start a `DebuggerServer` for an entire
+ * Process script that listens for requests to start a `DevToolsServer` for an entire
  * content process.  Loaded into content processes by the main process during
  * content-process-connector.js' `connectToContentProcess`.
  *

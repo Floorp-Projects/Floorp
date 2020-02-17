@@ -1,7 +1,7 @@
 <!DOCTYPE HTML>
 <html>
 <!--
-Bug 1181100 - Test DebuggerServerConnection.setupInParent and DebuggerServer.setupInChild
+Bug 1181100 - Test DevToolsServerConnection.setupInParent and DevToolsServer.setupInChild
 -->
 <head>
   <meta charset="utf-8">
@@ -16,7 +16,7 @@ Bug 1181100 - Test DebuggerServerConnection.setupInParent and DebuggerServer.set
 
 const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
 const {DebuggerClient} = require("devtools/shared/client/debugger-client");
-const {DebuggerServer} = require("devtools/server/debugger-server");
+const {DevToolsServer} = require("devtools/server/devtools-server");
 const {
   connectToFrame,
 } = require("devtools/server/connectors/frame-connector");
@@ -42,13 +42,13 @@ function runTests() {
   document.body.appendChild(iframe);
 
   // Instantiate a minimal server
-  DebuggerServer.init();
-  if (!DebuggerServer.createRootActor) {
-    DebuggerServer.registerAllActors();
+  DevToolsServer.init();
+  if (!DevToolsServer.createRootActor) {
+    DevToolsServer.registerAllActors();
   }
 
   // Fake a connection to an iframe
-  const transport = DebuggerServer.connectPipe();
+  const transport = DevToolsServer.connectPipe();
   const conn = transport._serverConnection;
   const client = new DebuggerClient(transport);
 
@@ -62,7 +62,7 @@ function runTests() {
     is(args[2].three, true, "Got last JSON argument");
 
     // Ask the child to call setupInParent
-    DebuggerServer.setupInChild({
+    DevToolsServer.setupInChild({
       module: "chrome://mochitests/content/chrome/devtools/server/tests/chrome/setup-in-child.js",
       setupChild: "callParent",
     });
@@ -83,7 +83,7 @@ function runTests() {
 
   // Instanciate e10s machinery and call setupInChild
   connectToFrame(conn, iframe).then(actor => {
-    DebuggerServer.setupInChild({
+    DevToolsServer.setupInChild({
       module: "chrome://mochitests/content/chrome/devtools/server/tests/chrome/setup-in-child.js",
       setupChild: "setupChild",
       args: [1, "two", {three: true}],
@@ -92,7 +92,7 @@ function runTests() {
 
   function cleanup() {
     client.close().then(function() {
-      DebuggerServer.destroy();
+      DevToolsServer.destroy();
       iframe.remove();
       SimpleTest.finish();
     });

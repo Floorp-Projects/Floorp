@@ -12,9 +12,9 @@ var gRegistryFront;
 var gActorFront;
 
 function run_test() {
-  initTestDebuggerServer();
-  DebuggerServer.registerAllActors();
-  gClient = new DebuggerClient(DebuggerServer.connectPipe());
+  initTestDevToolsServer();
+  DevToolsServer.registerAllActors();
+  gClient = new DebuggerClient(DevToolsServer.connectPipe());
   gClient.connect().then(getRegistry);
   do_test_pending();
 }

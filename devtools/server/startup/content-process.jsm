@@ -5,7 +5,7 @@
 "use strict";
 
 /*
- * Module that listens for requests to start a `DebuggerServer` for an entire content
+ * Module that listens for requests to start a `DevToolsServer` for an entire content
  * process.  Loaded into content processes by the main process during
  * content-process-connector.js' `connectToContentProcess` via the process
  * script `content-process.js`.
@@ -30,35 +30,35 @@ function setupServer(mm) {
     "resource://devtools/shared/Loader.jsm"
   );
 
-  // Init a custom, invisible DebuggerServer, in order to not pollute the
+  // Init a custom, invisible DevToolsServer, in order to not pollute the
   // debugger with all devtools modules, nor break the debugger itself with
   // using it in the same process.
   gLoader = new DevToolsLoader({
     invisibleToDebugger: true,
   });
-  const { DebuggerServer } = gLoader.require("devtools/server/debugger-server");
+  const { DevToolsServer } = gLoader.require("devtools/server/devtools-server");
 
-  DebuggerServer.init();
+  DevToolsServer.init();
   // For browser content toolbox, we do need a regular root actor and all tab
   // actors, but don't need all the "browser actors" that are only useful when
   // debugging the parent process via the browser toolbox.
-  DebuggerServer.registerActors({ root: true, target: true });
+  DevToolsServer.registerActors({ root: true, target: true });
 
   // Destroy the server once its last connection closes. Note that multiple frame
   // scripts may be running in parallel and reuse the same server.
   function destroyServer() {
     // Only destroy the server if there is no more connections to it. It may be used
     // to debug the same process from another client.
-    if (DebuggerServer.hasConnection()) {
+    if (DevToolsServer.hasConnection()) {
       return;
     }
-    DebuggerServer.off("connectionchange", destroyServer);
+    DevToolsServer.off("connectionchange", destroyServer);
 
-    DebuggerServer.destroy();
+    DevToolsServer.destroy();
     gLoader.destroy();
     gLoader = null;
   }
-  DebuggerServer.on("connectionchange", destroyServer);
+  DevToolsServer.on("connectionchange", destroyServer);
 
   return gLoader;
 }
@@ -70,10 +70,10 @@ function init(msg) {
   // Setup a server if none started yet
   const loader = setupServer(mm);
 
-  // Connect both parent/child processes debugger servers RDP via message
+  // Connect both parent/child processes devtools servers RDP via message
   // managers
-  const { DebuggerServer } = loader.require("devtools/server/debugger-server");
-  const conn = DebuggerServer.connectToParent(prefix, mm);
+  const { DevToolsServer } = loader.require("devtools/server/devtools-server");
+  const conn = DevToolsServer.connectToParent(prefix, mm);
   conn.parentMessageManager = mm;
 
   const { ContentProcessTargetActor } = loader.require(
@@ -100,8 +100,8 @@ function init(msg) {
     }
     mm.removeMessageListener("debug:content-process-disconnect", onDestroy);
 
-    // Call DebuggerServerConnection.close to destroy all child actors. It should end up
-    // calling DebuggerServerConnection.onClosed that would actually cleanup all actor
+    // Call DevToolsServerConnection.close to destroy all child actors. It should end up
+    // calling DevToolsServerConnection.onClosed that would actually cleanup all actor
     // pools.
     conn.close();
   });

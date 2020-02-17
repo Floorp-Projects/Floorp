@@ -64,16 +64,16 @@ add_task(async function testRemoveSubtree() {
       const { require } = ChromeUtils.import(
         "resource://devtools/shared/Loader.jsm"
       );
-      const { DebuggerServer } = require("devtools/server/debugger-server");
+      const { DevToolsServer } = require("devtools/server/devtools-server");
 
       // Convert actorID to current compartment string otherwise
       // searchAllConnectionsForActor is confused and won't find the actor.
       previousActorID = String(previousActorID);
       nextActorID = String(nextActorID);
-      const previous = DebuggerServer.searchAllConnectionsForActor(
+      const previous = DevToolsServer.searchAllConnectionsForActor(
         previousActorID
       );
-      const next = DebuggerServer.searchAllConnectionsForActor(nextActorID);
+      const next = DevToolsServer.searchAllConnectionsForActor(nextActorID);
 
       is(
         previous.rawNode,

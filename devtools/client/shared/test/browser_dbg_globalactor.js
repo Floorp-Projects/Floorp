@@ -7,15 +7,15 @@
 
 "use strict";
 
-var { DebuggerServer } = require("devtools/server/debugger-server");
+var { DevToolsServer } = require("devtools/server/devtools-server");
 var { ActorRegistry } = require("devtools/server/actors/utils/actor-registry");
 var { DebuggerClient } = require("devtools/shared/client/debugger-client");
 
 const ACTORS_URL = EXAMPLE_URL + "testactors.js";
 
 add_task(async function() {
-  DebuggerServer.init();
-  DebuggerServer.registerAllActors();
+  DevToolsServer.init();
+  DevToolsServer.registerAllActors();
 
   ActorRegistry.registerModule(ACTORS_URL, {
     prefix: "testOne",
@@ -23,7 +23,7 @@ add_task(async function() {
     type: { global: true },
   });
 
-  const transport = DebuggerServer.connectPipe();
+  const transport = DevToolsServer.connectPipe();
   const client = new DebuggerClient(transport);
   const [type] = await client.connect();
   is(type, "browser", "Root actor should identify itself as a browser.");
@@ -46,9 +46,9 @@ add_task(async function() {
   // Make sure that lazily-created actors are created only once.
   let count = 0;
   for (const connID of Object.getOwnPropertyNames(
-    DebuggerServer._connections
+    DevToolsServer._connections
   )) {
-    const conn = DebuggerServer._connections[connID];
+    const conn = DevToolsServer._connections[connID];
     const actorPrefix = conn._prefix + "testOne";
     for (const pool of conn._extraPools) {
       for (const actor of pool.poolChildren()) {

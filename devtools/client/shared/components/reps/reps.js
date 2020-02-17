@@ -1694,7 +1694,7 @@ function nodeIsUnmappedBinding(item) {
   return value && value.unmapped;
 } // Used to check if an item represents a binding that exists in the debugger's
 // parser result, but does not match up with a binding returned by the
-// debugger server.
+// devtools server.
 
 
 function nodeIsUnscopedBinding(item) {

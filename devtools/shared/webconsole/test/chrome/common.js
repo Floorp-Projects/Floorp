@@ -9,7 +9,7 @@
    withActiveServiceWorker, Services, consoleAPICall */
 
 const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
-const { DebuggerServer } = require("devtools/server/debugger-server");
+const { DevToolsServer } = require("devtools/server/devtools-server");
 const { DebuggerClient } = require("devtools/shared/client/debugger-client");
 const { ObjectFront } = require("devtools/shared/fronts/object");
 const Services = require("Services");
@@ -18,17 +18,17 @@ function initCommon() {
   // Services.prefs.setBoolPref("devtools.debugger.log", true);
 }
 
-function initDebuggerServer() {
-  DebuggerServer.init();
-  DebuggerServer.registerAllActors();
-  DebuggerServer.allowChromeProcess = true;
+function initDevToolsServer() {
+  DevToolsServer.init();
+  DevToolsServer.registerAllActors();
+  DevToolsServer.allowChromeProcess = true;
 }
 
 async function connectToDebugger() {
   initCommon();
-  initDebuggerServer();
+  initDevToolsServer();
 
-  const transport = DebuggerServer.connectPipe();
+  const transport = DevToolsServer.connectPipe();
   const client = new DebuggerClient(transport);
 
   await client.connect();

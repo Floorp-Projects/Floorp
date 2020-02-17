@@ -25,7 +25,7 @@ add_task(async function() {
       const { require } = ChromeUtils.import(
         "resource://devtools/shared/Loader.jsm"
       );
-      const { DebuggerServer } = require("devtools/server/debugger-server");
+      const { DevToolsServer } = require("devtools/server/devtools-server");
       const {
         DocumentWalker: _documentWalker,
       } = require("devtools/server/actors/inspector/document-walker");
@@ -33,7 +33,7 @@ add_task(async function() {
       // Convert actorID to current compartment string otherwise
       // searchAllConnectionsForActor is confused and won't find the actor.
       actorID = String(actorID);
-      const walkerActor = DebuggerServer.searchAllConnectionsForActor(actorID);
+      const walkerActor = DevToolsServer.searchAllConnectionsForActor(actorID);
       const walkerSearch = walkerActor.walkerSearch;
       const {
         WalkerSearch,

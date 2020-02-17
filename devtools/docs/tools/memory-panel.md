@@ -21,7 +21,7 @@ The memory tool is built of three main elements:
    new data with the `HeapAnalysesClient`.
 
 Unlike other tools (such as the JavaScript debugger), the memory tool makes very
-little use of the Remote Debugger Server and the actors that reside in it. Use
+little use of the Remote DevTools Server and the actors that reside in it. Use
 of the [`MemoryActor`](devtools/server/actors/memory.js) is limited to toggling
 allocation stack recording on and off, and transferring heap snapshots from the
 debuggee (which is on the server) to the `HeapAnalysesWorker` (which is on the
@@ -193,7 +193,7 @@ React components should be pure functions from their props to the rendered
 
 Impurity within the frontend is confined to the tasks that are creating and
 dispatching actions. All communication with the outside world (such as the
-`HeapAnalysesWorker`, the Remote Debugger Server, or the file system) is
+`HeapAnalysesWorker`, the Remote DevTools Server, or the file system) is
 restricted to within these tasks.
 
 ### Snapshots State
