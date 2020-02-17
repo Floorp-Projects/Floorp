@@ -20,10 +20,9 @@ add_task(async function() {
   // listen for new sources arriving.
   const toolbox = await openNewTabAndToolbox(INITIAL_URL, "webconsole");
   const service = toolbox.sourceMapURLService;
-  const tab = toolbox.target.localTab;
 
   let sourceSeen = waitForSourceLoad(toolbox, JS_URL);
-  BrowserTestUtils.loadURI(tab.linkedBrowser, PAGE_URL);
+  await navigateTo(PAGE_URL);
   await sourceSeen;
 
   info(`checking original location for ${JS_URL}:${GENERATED_LINE}`);

@@ -13,7 +13,7 @@ add_task(async function() {
     set: [["devtools.netmonitor.features.webSockets", true]],
   });
 
-  const { tab, monitor } = await initNetMonitor(SIMPLE_URL);
+  const { monitor } = await initNetMonitor(SIMPLE_URL);
 
   info("Starting test... ");
 
@@ -29,7 +29,7 @@ add_task(async function() {
 
   // Load page that opens WS connection during the load time.
   const waitForEvents = waitForNetworkEvents(monitor, 3);
-  BrowserTestUtils.loadURI(tab.linkedBrowser, WS_PAGE_EARLY_CONNECTION_URL);
+  await navigateTo(WS_PAGE_EARLY_CONNECTION_URL);
   await waitForEvents;
 
   const requests = document.querySelectorAll(
