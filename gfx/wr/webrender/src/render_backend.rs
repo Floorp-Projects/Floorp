@@ -514,8 +514,8 @@ impl Document {
             FrameMsg::UpdateDynamicProperties(property_bindings) => {
                 self.dynamic_properties.set_properties(property_bindings);
             }
-            FrameMsg::AppendDynamicProperties(property_bindings) => {
-                self.dynamic_properties.add_properties(property_bindings);
+            FrameMsg::AppendDynamicTransformProperties(property_bindings) => {
+                self.dynamic_properties.add_transforms(property_bindings);
             }
             FrameMsg::SetPinchZoom(factor) => {
                 if self.view.pinch_zoom_factor != factor.get() {
