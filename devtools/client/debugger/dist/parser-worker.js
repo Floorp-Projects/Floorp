@@ -7156,7 +7156,7 @@ function parseVueScript(code) {
 function parseConsoleScript(text, opts) {
   try {
     return _parse(text, {
-      plugins: ["objectRestSpread", "dynamicImport"],
+      plugins: ["objectRestSpread", "dynamicImport", "nullishCoalescingOperator", "optionalChaining"],
       ...opts,
       allowAwaitOutsideFunction: true
     });
