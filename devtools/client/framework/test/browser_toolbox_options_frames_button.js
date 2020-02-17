@@ -49,7 +49,7 @@ add_task(async function() {
   ok(framesButton, "Frames button is rendered again.");
 
   info("Navigate to a page with frames, the frames button should be enabled.");
-  await BrowserTestUtils.loadURI(tab.linkedBrowser, TEST_URL_FRAMES);
+  await navigateTo(TEST_URL_FRAMES);
 
   framesButton = doc.getElementById("command-button-frames");
   ok(framesButton, "Frames button is still rendered.");

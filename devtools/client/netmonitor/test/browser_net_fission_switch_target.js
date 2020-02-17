@@ -18,7 +18,7 @@ add_task(async function() {
   // switch, with or without fission.
 
   info("Open a page that runs on the content process and the net monitor");
-  const { monitor, tab, toolbox } = await initNetMonitor(CONTENT_PROCESS_URI);
+  const { monitor, tab } = await initNetMonitor(CONTENT_PROCESS_URI);
   const { store } = monitor.panelWin;
 
   info("Reload the page to show the network event");
@@ -30,7 +30,7 @@ add_task(async function() {
   await waitForReloading;
 
   info("Navigate to a page that runs on parent process");
-  await navigateTo(PARENT_PROCESS_URI, toolbox, monitor, tab);
+  await navigateTo(PARENT_PROCESS_URI);
   is(
     store.getState().requests.requests.length,
     PARENT_PROCESS_URI_NETWORK_COUNT,
@@ -38,7 +38,7 @@ add_task(async function() {
   );
 
   info("Return to a page that runs on content process again");
-  await navigateTo(CONTENT_PROCESS_URI, toolbox, monitor, tab);
+  await navigateTo(CONTENT_PROCESS_URI);
 
   info(`Execute more requests in ${CONTENT_PROCESS_URI}`);
   const currentRequestCount = store.getState().requests.requests.length;
@@ -52,12 +52,3 @@ add_task(async function() {
 
   await teardown(monitor);
 });
-
-async function navigateTo(uri, toolbox, monitor, tab) {
-  const onSwitched = once(toolbox, "switched-target");
-  const onReloaded = once(monitor, "reloaded");
-  BrowserTestUtils.loadURI(tab.linkedBrowser, uri);
-  await onSwitched;
-  await onReloaded;
-  ok(true, "All events we expected were fired");
-}

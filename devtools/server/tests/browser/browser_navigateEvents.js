@@ -191,7 +191,13 @@ add_task(async function() {
 
   // Load another document in this doc to dispatch these events
   assertEvent("load-new-document");
-  BrowserTestUtils.loadURI(browser, URL2);
+
+  // Use BrowserTestUtils instead of navigateTo as there is no toolbox opened
+  const onBrowserLoaded = BrowserTestUtils.browserLoaded(
+    gBrowser.selectedBrowser
+  );
+  await BrowserTestUtils.loadURI(gBrowser.selectedBrowser, URL2);
+  await onBrowserLoaded;
 
   // Wait for all events to be received
   await onAllEventsReceived;
