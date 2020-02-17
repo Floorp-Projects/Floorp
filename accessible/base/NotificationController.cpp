@@ -638,10 +638,6 @@ void NotificationController::WillRefresh(mozilla::TimeStamp aTime) {
                  "isn't created!");
   }
 
-  // Initialize scroll support if needed.
-  if (!(mDocument->mDocFlags & DocAccessible::eScrollInitialized))
-    mDocument->AddScrollListener();
-
   // Process rendered text change notifications.
   for (auto iter = mTextHash.Iter(); !iter.Done(); iter.Next()) {
     nsCOMPtrHashKey<nsIContent>* entry = iter.Get();
