@@ -1882,7 +1882,7 @@ CustomizeMode.prototype = {
 
     let document = aEvent.target.ownerDocument;
     let documentId = document.documentElement.id;
-    if (!aEvent.dataTransfer.mozTypesAt(0)) {
+    if (!aEvent.dataTransfer.mozTypesAt(0).length) {
       return;
     }
 
@@ -2143,6 +2143,16 @@ CustomizeMode.prototype = {
       return;
     }
 
+    // Force creating a new spacer/spring/separator if dragging from the palette
+    if (
+      CustomizableUI.isSpecialWidget(aDraggedItemId) &&
+      aOriginArea.id == kPaletteId
+    ) {
+      aDraggedItemId = aDraggedItemId.match(
+        /^customizableui-special-(spring|spacer|separator)/
+      )[1];
+    }
+
     // Is the target the customization area itself? If so, we just add the
     // widget to the end of the area.
     if (aTargetNode == areaCustomizationTarget) {
@@ -2189,16 +2199,6 @@ CustomizeMode.prototype = {
       );
     }
     let position = placement ? placement.position : null;
-
-    // Force creating a new spacer/spring/separator if dragging from the palette
-    if (
-      CustomizableUI.isSpecialWidget(aDraggedItemId) &&
-      aOriginArea.id == kPaletteId
-    ) {
-      aDraggedItemId = aDraggedItemId.match(
-        /^customizableui-special-(spring|spacer|separator)/
-      )[1];
-    }
 
     // Is the target area the same as the origin? Since we've already handled
     // the possibility that the target is the customization palette, we know
