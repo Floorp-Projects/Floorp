@@ -31,6 +31,6 @@ add_task(async function() {
   await onHighlighterShown;
   ok(highlighters.flexboxHighlighterShown, "Flexbox highlighter is shown.");
 
-  await navigateTo(inspector, TEST_URI_2);
+  await navigateTo(TEST_URI_2);
   ok(!highlighters.flexboxHighlighterShown, "Flexbox highlighter is hidden.");
 });

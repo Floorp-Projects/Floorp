@@ -41,7 +41,7 @@ add_task(async function() {
   // result.
   toolbox.sourceMapURLService;
 
-  await navigateTo(inspector, TEST_URL);
+  await navigateTo(TEST_URL);
 
   await inspector.markup.expandAll();
 

@@ -89,7 +89,7 @@ add_task(async function() {
       await onNewRoot;
       await onUpdated;
     } else {
-      await navigateTo(inspector, url);
+      await navigateTo(url);
     }
   }
 });

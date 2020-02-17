@@ -36,7 +36,7 @@ add_task(async function() {
 
   info("Navigate to a HTML document");
   const toolbarUpdated = inspector.once("inspector-toolbar-updated");
-  await navigateTo(inspector, TEST_URL_2);
+  await navigateTo(TEST_URL_2);
   await toolbarUpdated;
 
   info("Check the inspector toolbar in HTML document");
