@@ -19,14 +19,25 @@
           src="../events.js" />
 
   <script type="application/javascript">
+    let PromEvents = {};
+    Services.scriptloader.loadSubScript(
+      "chrome://mochitests/content/a11y/accessible/tests/mochitest/promisified-events.js",
+      PromEvents);
     //gA11yEventDumpID = "eventdump"; // debug stuff
     gA11yEventDumpToConsole = true; // debug stuff
 
     var gQueue = null;
-    function doTests()
+    async function doTests()
     {
       // Test focus events.
       gQueue = new eventQueue();
+      // Later tests use await.
+      let queueFinished = new Promise(resolve => {
+        gQueue.onFinish = function() {
+          resolve();
+          return DO_NOT_FINISH_TEST;
+        };
+      });
 
       gQueue.push(new synthFocus("richlistbox", new focusChecker("rlb_item1")));
       gQueue.push(new synthDownKey("rlb_item1", new focusChecker("rlb_item2")));
@@ -52,7 +63,20 @@
       gQueue.push(new changeCurrentItem("richlistbox", "rlb_item1"));
       gQueue.push(new changeCurrentItem("menulist", WIN ? "ml_marmalade" : "ml_tangerine"));
 
-      gQueue.invoke(); // Will call SimpleTest.finish();
+      gQueue.invoke();
+      await queueFinished;
+      // Tests beyond this point use await rather than eventQueue.
+
+      // When a menulist contains something other than XUL menuitems, we need
+      // to manage focus with aria-activedescendant.
+      info("Testing opening a menupopup with aria-activedescendant");
+      let focused = PromEvents.waitForEvent(EVENT_FOCUS, "menupopup_ad_div");
+      let popup = getNode("menupopup_ad");
+      popup.openPopup();
+      await focused;
+      popup.hidePopup();
+
+      SimpleTest.finish();
     }
 
     SimpleTest.waitForExplicitFinish();
@@ -106,6 +130,12 @@
           <menuitem id="ml_tangerine" label="tangerine trees"/>
           <menuitem id="ml_marmalade" label="marmalade skies"/>
           <menuitem id="ml_strawberry" label="strawberry fields"/>
+        </menupopup>
+      </menulist>
+
+      <menulist>
+        <menupopup id="menupopup_ad" aria-activedescendant="menupopup_ad_div">
+          <div id="menupopup_ad_div" role="option"></div>
         </menupopup>
       </menulist>
 

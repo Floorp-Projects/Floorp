@@ -510,6 +510,25 @@ void RootAccessible::HandlePopupShownEvent(Accessible* aAccessible) {
           new AccStateChangeEvent(combobox, states::EXPANDED, true);
       if (event) nsEventShell::FireEvent(event);
     }
+
+    // If aria-activedescendant is present, redirect focus.
+    // This is needed for parent process <select> dropdowns, which use a
+    // menulist containing div elements instead of XUL menuitems. XUL menuitems
+    // fire DOMMenuItemActive events from layout instead.
+    MOZ_ASSERT(aAccessible->Elm());
+    if (aAccessible->Elm()->HasAttr(kNameSpaceID_None,
+                                    nsGkAtoms::aria_activedescendant)) {
+      Accessible* activeDescendant = aAccessible->CurrentItem();
+      if (activeDescendant) {
+        FocusMgr()->ActiveItemChanged(activeDescendant, false);
+#ifdef A11Y_LOG
+        if (logging::IsEnabled(logging::eFocus)) {
+          logging::ActiveItemChangeCausedBy("ARIA activedescendant on popup",
+                                            activeDescendant);
+        }
+#endif
+      }
+    }
   }
 }
 
