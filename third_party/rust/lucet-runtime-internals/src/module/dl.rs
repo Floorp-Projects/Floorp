@@ -50,24 +50,28 @@ fn check_feature_support(module_features: &ModuleFeatures) -> Result<(), Error> 
         return Err(missing_feature("POPCNT"));
     }
 
-    let info = cpuid.get_extended_feature_info().ok_or_else(|| {
-        Error::Unsupported("Unable to obtain host CPU extended feature info!".to_string())
-    })?;
+    if module_features.bmi1 || module_features.bmi2 {
+        let info = cpuid.get_extended_feature_info().ok_or_else(|| {
+            Error::Unsupported("Unable to obtain host CPU extended feature info!".to_string())
+        })?;
 
-    if module_features.bmi1 && !info.has_bmi1() {
-        return Err(missing_feature("BMI1"));
+        if module_features.bmi1 && !info.has_bmi1() {
+            return Err(missing_feature("BMI1"));
+        }
+
+        if module_features.bmi2 && !info.has_bmi2() {
+            return Err(missing_feature("BMI2"));
+        }
     }
 
-    if module_features.bmi2 && !info.has_bmi2() {
-        return Err(missing_feature("BMI2"));
-    }
+    if module_features.lzcnt {
+        let info = cpuid.get_extended_function_info().ok_or_else(|| {
+            Error::Unsupported("Unable to obtain host CPU extended function info!".to_string())
+        })?;
 
-    let info = cpuid.get_extended_function_info().ok_or_else(|| {
-        Error::Unsupported("Unable to obtain host CPU extended function info!".to_string())
-    })?;
-
-    if module_features.lzcnt && !info.has_lzcnt() {
-        return Err(missing_feature("LZCNT"));
+        if module_features.lzcnt && !info.has_lzcnt() {
+            return Err(missing_feature("LZCNT"));
+        }
     }
 
     // Features are fine, we're compatible!
