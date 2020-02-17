@@ -299,6 +299,21 @@
       "expectation": "*"
     },
     {
+      "name": "Websockets are no-redirect only",
+      "expansion": "*",
+      "source_scheme": "*",
+      "source_context_list": "*",
+      "delivery_type": "*",
+      "delivery_value": "*",
+      "redirection": [
+        "keep-scheme",
+        "swap-scheme"
+      ],
+      "subresource": "websocket",
+      "origin": "*",
+      "expectation": "*"
+    },
+    {
       "name": "Skip-redundant-for-opt-in-method",
       "expansion": "*",
       "source_scheme": "*",
