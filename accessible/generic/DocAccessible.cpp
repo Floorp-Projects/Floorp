@@ -81,7 +81,6 @@ DocAccessible::DocAccessible(dom::Document* aDocument,
       mAccessibleCache(kDefaultCacheLength),
       mNodeToAccessibleMap(kDefaultCacheLength),
       mDocumentNode(aDocument),
-      mScrollPositionChangedTicks(0),
       mLoadState(eTreeConstructionPending),
       mDocFlags(0),
       mLoadEventType(0),
@@ -510,9 +509,6 @@ nsresult DocAccessible::AddEventListeners() {
 // DocAccessible protected member
 nsresult DocAccessible::RemoveEventListeners() {
   // Remove listeners associated with content documents
-  // Remove scroll position listener
-  RemoveScrollListener();
-
   NS_ASSERTION(mDocumentNode, "No document during removal of listeners.");
 
   if (mDocumentNode) {
@@ -545,7 +541,14 @@ void DocAccessible::ScrollTimerCallback(nsITimer* aTimer, void* aClosure) {
   DocAccessible* docAcc = reinterpret_cast<DocAccessible*>(aClosure);
 
   if (docAcc) {
-    docAcc->DispatchScrollingEvent(nsIAccessibleEvent::EVENT_SCROLLING_END);
+    // Dispatch a scroll-end for all entries in table. They have not
+    // been scrolled in at least `kScrollEventInterval`.
+    for (auto iter = docAcc->mLastScrollingDispatch.Iter(); !iter.Done();
+         iter.Next()) {
+      docAcc->DispatchScrollingEvent(iter.Key(),
+                                     nsIAccessibleEvent::EVENT_SCROLLING_END);
+      iter.Remove();
+    }
 
     if (docAcc->mScrollWatchTimer) {
       docAcc->mScrollWatchTimer = nullptr;
@@ -554,17 +557,16 @@ void DocAccessible::ScrollTimerCallback(nsITimer* aTimer, void* aClosure) {
   }
 }
 
-////////////////////////////////////////////////////////////////////////////////
-// nsIScrollPositionListener
-
-void DocAccessible::ScrollPositionDidChange(nscoord aX, nscoord aY) {
+void DocAccessible::HandleScroll(nsINode* aTarget) {
   const uint32_t kScrollEventInterval = 100;
-  TimeStamp timestamp = TimeStamp::Now();
-  if (mLastScrollingDispatch.IsNull() ||
-      (timestamp - mLastScrollingDispatch).ToMilliseconds() >=
-          kScrollEventInterval) {
-    DispatchScrollingEvent(nsIAccessibleEvent::EVENT_SCROLLING);
-    mLastScrollingDispatch = timestamp;
+  TimeStamp now = TimeStamp::Now();
+  TimeStamp lastDispatch;
+  // If we haven't dispatched a scrolling event for a target in at least
+  // kScrollEventInterval milliseconds, dispatch one now.
+  if (!mLastScrollingDispatch.Get(aTarget, &lastDispatch) ||
+      (now - lastDispatch).ToMilliseconds() >= kScrollEventInterval) {
+    DispatchScrollingEvent(aTarget, nsIAccessibleEvent::EVENT_SCROLLING);
+    mLastScrollingDispatch.Put(aTarget, now);
   }
 
   // If timer callback is still pending, push it 100ms into the future.
@@ -2522,27 +2524,38 @@ void DocAccessible::SetIPCDoc(DocAccessibleChild* aIPCDoc) {
   mIPCDoc = aIPCDoc;
 }
 
-void DocAccessible::DispatchScrollingEvent(uint32_t aEventType) {
-  nsIScrollableFrame* sf = mPresShell->GetRootScrollFrameAsScrollable();
-  if (!sf) {
+void DocAccessible::DispatchScrollingEvent(nsINode* aTarget,
+                                           uint32_t aEventType) {
+  Accessible* acc = GetAccessible(aTarget);
+  if (!acc) {
     return;
   }
 
-  int32_t appUnitsPerDevPixel =
-      mPresShell->GetPresContext()->AppUnitsPerDevPixel();
-  LayoutDevicePoint scrollPoint =
-      LayoutDevicePoint::FromAppUnits(sf->GetScrollPosition(),
-                                      appUnitsPerDevPixel) *
-      mPresShell->GetResolution();
+  LayoutDevicePoint scrollPoint;
+  LayoutDeviceRect scrollRange;
+  nsIScrollableFrame* sf = acc == this
+                               ? mPresShell->GetRootScrollFrameAsScrollable()
+                               : acc->GetFrame()->GetScrollTargetFrame();
 
-  LayoutDeviceRect scrollRange =
-      LayoutDeviceRect::FromAppUnits(sf->GetScrollRange(), appUnitsPerDevPixel);
-  scrollRange.ScaleRoundOut(mPresShell->GetResolution());
+  // If there is no scrollable frame, it's likely a scroll in a popup, like
+  // <select>. Just send an event with no scroll info. The scroll info
+  // is currently only used on Android, and popups are rendered natively
+  // there.
+  if (sf) {
+    int32_t appUnitsPerDevPixel =
+        mPresShell->GetPresContext()->AppUnitsPerDevPixel();
+    scrollPoint = LayoutDevicePoint::FromAppUnits(sf->GetScrollPosition(),
+                                                  appUnitsPerDevPixel) *
+                  mPresShell->GetResolution();
+
+    scrollRange = LayoutDeviceRect::FromAppUnits(sf->GetScrollRange(),
+                                                 appUnitsPerDevPixel);
+    scrollRange.ScaleRoundOut(mPresShell->GetResolution());
+  }
 
   RefPtr<AccEvent> event =
-      new AccScrollingEvent(aEventType, this, scrollPoint.x, scrollPoint.y,
+      new AccScrollingEvent(aEventType, acc, scrollPoint.x, scrollPoint.y,
                             scrollRange.width, scrollRange.height);
-
   nsEventShell::FireEvent(event);
 }
 
