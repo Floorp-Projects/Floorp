@@ -2405,9 +2405,9 @@ class BookmarkObserverRecorder {
   async notifyBookmarkObservers() {
     MirrorLog.trace("Notifying bookmark observers");
     let observers = PlacesUtils.bookmarks.getObservers();
-    for (let observer of observers) {
-      this.notifyObserver(observer, "onBeginUpdateBatch");
-    }
+    // ideally we'd send `onBeginUpdateBatch` here (and `onEndUpdateBatch` at
+    // the end) to all observers, but batching is somewhat broken currently.
+    // See bug 1605881 for all the gory details...
     await Async.yieldingForEach(
       this.guidChangedArgs,
       args => {
@@ -2459,9 +2459,7 @@ class BookmarkObserverRecorder {
       },
       yieldState
     );
-    for (let observer of observers) {
-      this.notifyObserver(observer, "onEndUpdateBatch");
-    }
+    MirrorLog.trace("Notified bookmark observers");
   }
 
   notifyObserversWithInfo(observers, name, info) {
