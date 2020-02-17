@@ -223,6 +223,12 @@ interface nsIPrincipal : nsISerializable
      */
     [noscript] readonly attribute ACString hostPort;
 
+        /**
+     * Returns the "host:port" portion of the 
+     * Principals URI, if any.
+     */
+    [noscript] readonly attribute ACString asciiHost;
+
 
     /**
         * Returns the prepath of the principals uri
@@ -273,6 +279,12 @@ interface nsIPrincipal : nsISerializable
     * other URI is same-origin as the uri of the Principal
     */
     bool IsSameOrigin(in nsIURI otherURI, in bool aIsPrivateWin);
+
+
+    /*
+    *  Generates a Cache-Key for the Cors-Preflight Cache
+    */
+    ACString getPrefLightCacheKey(in nsIURI aURI ,in bool aWithCredentials);
 
     /**
      * Implementation of

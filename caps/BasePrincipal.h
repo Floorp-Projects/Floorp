@@ -142,6 +142,9 @@ class BasePrincipal : public nsJSPrincipals {
   NS_IMETHOD GetIsOriginPotentiallyTrustworthy(bool* aResult) override;
   NS_IMETHOD IsSameOrigin(nsIURI* aURI, bool aIsPrivateWin,
                           bool* aRes) override;
+  NS_IMETHOD GetPrefLightCacheKey(nsIURI* aURI, bool aWithCredentials,
+                                  nsACString& _retval) override;
+  NS_IMETHOD GetAsciiHost(nsACString& aAsciiHost) override;
 
   nsresult ToJSON(nsACString& aJSON);
   static already_AddRefed<BasePrincipal> FromJSON(const nsACString& aJSON);
