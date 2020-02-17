@@ -5,7 +5,11 @@ This document is split in two parts. The first part will focus on the
 modern and robust way of static-analysis and the second part will
 present the build-time static-analysis.
 
-For linting, please see the `linting documentation </tools/lint/>`_.
+For linting, please see the `linting documentation </code-quality/lint/>`_.
+
+For reviews, use the `#static-analysis-reviewers review group <https://phabricator.services.mozilla.com/project/view/120/>`__.
+Ask questions on `#static-analysis:mozilla.org <https://chat.mozilla.org/#/room/#static-analysis:mozilla.org>`__.
+
 
 Clang-Tidy static analysis
 --------------------------
