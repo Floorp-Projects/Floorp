@@ -10,7 +10,7 @@
 #include "jit/CompactBuffer.h"
 #include "jit/CompileInfo.h"
 #include "jit/ExecutableAllocator.h"
-#include "jit/OptimizationTracking.h"
+#include "jit/shared/Assembler-shared.h"
 
 namespace js {
 namespace jit {

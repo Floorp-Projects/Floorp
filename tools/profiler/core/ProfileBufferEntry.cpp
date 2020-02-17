@@ -10,7 +10,6 @@
 #include "ProfileBuffer.h"
 #include "ProfilerMarkerPayload.h"
 
-#include "js/TrackedOptimizationInfo.h"
 #include "jsapi.h"
 #include "jsfriendapi.h"
 #include "mozilla/Logging.h"

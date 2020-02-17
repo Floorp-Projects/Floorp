@@ -53,10 +53,6 @@ using mozilla::DebugOnly;
 using mozilla::Maybe;
 using mozilla::Nothing;
 
-using JS::TrackedOutcome;
-using JS::TrackedStrategy;
-using JS::TrackedTypeSite;
-
 class jit::BaselineFrameInspector {
  public:
   TypeSet::Type thisType;
