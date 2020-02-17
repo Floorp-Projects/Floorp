@@ -206,6 +206,12 @@ bool XULSelectControlAccessible::SelectAll() {
 // XULSelectControlAccessible: Widgets
 
 Accessible* XULSelectControlAccessible::CurrentItem() const {
+  // aria-activedescendant should override.
+  Accessible* current = AccessibleWrap::CurrentItem();
+  if (current) {
+    return current;
+  }
+
   if (!mSelectControl) return nullptr;
 
   RefPtr<dom::Element> currentItemElm;
