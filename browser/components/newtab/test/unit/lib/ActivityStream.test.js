@@ -246,6 +246,29 @@ describe("ActivityStream", () => {
         JSON.parse(PREFS_CONFIG.get("discoverystream.config").value).enabled
       );
     });
+    it("should enable spocs based on region based pref", () => {
+      sandbox.stub(global.Services.prefs, "prefHasUserValue").returns(true);
+      const getStringPrefStub = sandbox.stub(
+        global.Services.prefs,
+        "getStringPref"
+      );
+      getStringPrefStub.withArgs("browser.search.region").returns("CA");
+      getStringPrefStub
+        .withArgs(
+          "browser.newtabpage.activity-stream.discoverystream.region-spocs-config"
+        )
+        .returns("US,CA");
+
+      sandbox
+        .stub(global.Services.locale, "appLocaleAsBCP47")
+        .get(() => "en-CA");
+
+      as._updateDynamicPrefs();
+
+      assert.isTrue(
+        JSON.parse(PREFS_CONFIG.get("discoverystream.config").value).show_spocs
+      );
+    });
   });
   describe("_updateDynamicPrefs topstories default value", () => {
     let getStringPrefStub;

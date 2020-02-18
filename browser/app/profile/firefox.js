@@ -1305,6 +1305,8 @@ pref("browser.newtabpage.activity-stream.discoverystream.spocs-endpoint", "");
 pref("browser.newtabpage.activity-stream.discoverystream.lang-layout-config", "en");
 // List of regions that get stories by default.
 pref("browser.newtabpage.activity-stream.discoverystream.region-stories-config", "US,DE,CA");
+// List of regions that get spocs by default.
+pref("browser.newtabpage.activity-stream.discoverystream.region-spocs-config", "US");
 // Switch between different versions of the recommendation provider.
 pref("browser.newtabpage.activity-stream.discoverystream.personalization.version", 1);
 // Configurable keys used by personalization version 2.
