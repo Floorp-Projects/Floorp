@@ -4760,11 +4760,13 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
             ('ThrowErrorMessage<MSG_DOES_NOT_IMPLEMENT_INTERFACE>(cx, "%s", "%s");\n'
              '%s' % (firstCap(sourceDescription), typeName, exceptionCode)))
 
-    def onFailureIsShared(failureCode):
+    # It's a failure in the committed-to conversion, not a failure to match up
+    # to a type, so we don't want to use failureCode in here. We want to just
+    # throw an exception unconditionally.
+    def onFailureIsShared():
         return CGGeneric(
-            failureCode or
-            ('ThrowErrorMessage<MSG_TYPEDARRAY_IS_SHARED>(cx, "%s");\n'
-             '%s' % (firstCap(sourceDescription), exceptionCode)))
+            'ThrowErrorMessage<MSG_TYPEDARRAY_IS_SHARED>(cx, "%s");\n'
+             '%s' % (firstCap(sourceDescription), exceptionCode))
 
     def onFailureNotCallable(failureCode):
         return CGGeneric(
@@ -5856,7 +5858,7 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
                 """,
                 isSharedMethod=isSharedMethod,
                 objRef=objRef,
-                badType=onFailureIsShared(failureCode).define())
+                badType=onFailureIsShared().define())
         template = wrapObjectTemplate(template, type, "${declName}.SetNull();\n",
                                       failureCode)
         if not isMember:
