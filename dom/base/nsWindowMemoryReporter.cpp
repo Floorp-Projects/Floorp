@@ -537,7 +537,7 @@ nsWindowMemoryReporter::CollectReports(nsIHandleReportCallback* aHandleReport,
     "ghost-windows", KIND_OTHER, UNITS_COUNT, ghostWindows.Count(),
 "The number of ghost windows present (the number of nodes underneath "
 "explicit/window-objects/top(none)/ghost, modulo race conditions).  A ghost "
-"window is not shown in any tab, is not in a tab group with any "
+"window is not shown in any tab, is not in a browsing context group with any "
 "non-detached windows, and has met these criteria for at least "
 "memory.ghost_window_timeout_seconds, or has survived a round of "
 "about:memory's minimize memory usage button.\n\n"
@@ -799,19 +799,23 @@ void nsWindowMemoryReporter::CheckForGhostWindows(
   mLastCheckForGhostWindows = TimeStamp::NowLoRes();
   KillCheckTimer();
 
-  nsTHashtable<nsPtrHashKey<TabGroup>> nonDetachedTabGroups;
+  nsTHashtable<nsPtrHashKey<BrowsingContextGroup>>
+      nonDetachedBrowsingContextGroups;
 
-  // Populate nonDetachedTabGroups.
+  // Populate nonDetachedBrowsingContextGroups.
   for (auto iter = windowsById->Iter(); !iter.Done(); iter.Next()) {
     // Null outer window implies null top, but calling GetInProcessTop() when
     // there's no outer window causes us to spew debug warnings.
     nsGlobalWindowInner* window = iter.UserData();
-    if (!window->GetOuterWindow() || !window->GetInProcessTopInternal()) {
-      // This window is detached, so we don't care about its tab group.
+    if (!window->GetOuterWindow() || !window->GetInProcessTopInternal() ||
+        !window->GetBrowsingContextGroup()) {
+      // This window is detached, so we don't care about its browsing
+      // context group.
       continue;
     }
 
-    nonDetachedTabGroups.PutEntry(window->TabGroup());
+    nonDetachedBrowsingContextGroups.PutEntry(
+        window->GetBrowsingContextGroup());
   }
 
   // Update mDetachedWindows and write the ghost window IDs into aOutGhostIDs,
@@ -846,13 +850,15 @@ void nsWindowMemoryReporter::CheckForGhostWindows(
     }
 
     TimeStamp& timeStamp = iter.Data();
-    TabGroup* tabGroup = window->MaybeTabGroup();
-    if (tabGroup && nonDetachedTabGroups.GetEntry(tabGroup)) {
-      // This window is in the same tab group as a non-detached
+    BrowsingContextGroup* browsingContextGroup =
+        window->GetBrowsingContextGroup();
+    if (browsingContextGroup &&
+        nonDetachedBrowsingContextGroups.GetEntry(browsingContextGroup)) {
+      // This window is in the same browsing context group as a non-detached
       // window, so reset its clock.
       timeStamp = TimeStamp();
     } else {
-      // This window is not in the same tab group as a non-detached
+      // This window is not in the same browsing context group as a non-detached
       // window, so it meets ghost criterion (2).
       if (timeStamp.IsNull()) {
         // This may become a ghost window later; start its clock.

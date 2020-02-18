@@ -7281,6 +7281,11 @@ mozilla::dom::DocGroup* nsPIDOMWindowInner::GetDocGroup() const {
   return nullptr;
 }
 
+mozilla::dom::BrowsingContextGroup*
+nsPIDOMWindowInner::GetBrowsingContextGroup() const {
+  return mBrowsingContext ? mBrowsingContext->Group() : nullptr;
+}
+
 nsIGlobalObject* nsPIDOMWindowInner::AsGlobal() {
   return nsGlobalWindowInner::Cast(this);
 }
