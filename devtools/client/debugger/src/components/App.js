@@ -289,12 +289,7 @@ class App extends Component<Props, State> {
           />
         }
         endPanelControl={true}
-        endPanel={
-          <SecondaryPanes
-            horizontal={horizontal}
-            toggleShortcutsModal={() => this.toggleShortcutsModal()}
-          />
-        }
+        endPanel={<SecondaryPanes horizontal={horizontal} />}
         endPanelCollapsed={endPanelCollapsed}
       />
     );
