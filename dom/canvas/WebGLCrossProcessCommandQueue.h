@@ -41,7 +41,7 @@ class HostWebGLCommandSink : public SyncCommandSink<size_t> {
   // For IPDL:
   friend struct mozilla::ipc::IPDLParamTraits<HostWebGLCommandSink>;
   friend class mozilla::layers::PCompositorBridgeParent;
-  HostWebGLCommandSink() {}
+  HostWebGLCommandSink() = default;
 
   bool DispatchCommand(size_t command) override;
 };

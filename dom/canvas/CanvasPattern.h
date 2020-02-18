@@ -23,7 +23,7 @@ namespace dom {
 class SVGMatrix;
 
 class CanvasPattern final : public nsWrapperCache {
-  ~CanvasPattern() {}
+  ~CanvasPattern() = default;
 
  public:
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(CanvasPattern)

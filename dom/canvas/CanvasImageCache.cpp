@@ -70,7 +70,7 @@ class ImageCacheEntry : public PLDHashEntryHdr {
       : mData(new ImageCacheEntryData(*aKey)) {}
   ImageCacheEntry(const ImageCacheEntry& toCopy)
       : mData(new ImageCacheEntryData(*toCopy.mData)) {}
-  ~ImageCacheEntry() {}
+  ~ImageCacheEntry() = default;
 
   bool KeyEquals(KeyTypePointer key) const {
     return mData->mImage == key->mImage && mData->mCanvas == key->mCanvas;
@@ -105,7 +105,7 @@ class AllCanvasImageCacheEntry : public PLDHashEntryHdr {
   AllCanvasImageCacheEntry(const AllCanvasImageCacheEntry& toCopy)
       : mImage(toCopy.mImage), mSourceSurface(toCopy.mSourceSurface) {}
 
-  ~AllCanvasImageCacheEntry() {}
+  ~AllCanvasImageCacheEntry() = default;
 
   bool KeyEquals(KeyTypePointer key) const { return mImage == key->mImage; }
 
@@ -174,7 +174,7 @@ class ImageCacheObserver final : public nsIObserver {
   }
 
  private:
-  virtual ~ImageCacheObserver() {}
+  virtual ~ImageCacheObserver() = default;
 
   void RegisterMemoryPressureEvent() {
     nsCOMPtr<nsIObserverService> observerService =
@@ -205,7 +205,7 @@ class ImageCacheObserver final : public nsIObserver {
 NS_IMPL_ISUPPORTS(ImageCacheObserver, nsIObserver)
 
 class CanvasImageCacheShutdownObserver final : public nsIObserver {
-  ~CanvasImageCacheShutdownObserver() {}
+  ~CanvasImageCacheShutdownObserver() = default;
 
  public:
   NS_DECL_ISUPPORTS

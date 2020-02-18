@@ -96,7 +96,7 @@ class ImageBitmapShutdownObserver final : public nsIObserver {
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIOBSERVER
  private:
-  ~ImageBitmapShutdownObserver() {}
+  ~ImageBitmapShutdownObserver() = default;
 
   class SendShutdownToWorkerThread : public MainThreadWorkerControlRunnable {
    public:
@@ -1091,7 +1091,7 @@ class CreateImageBitmapFromBlob final : public CancelableRunnable,
         mMainThreadEventTarget(aMainThreadEventTarget),
         mThread(PR_GetCurrentThread()) {}
 
-  virtual ~CreateImageBitmapFromBlob() {}
+  virtual ~CreateImageBitmapFromBlob() = default;
 
   bool IsCurrentThread() const { return mThread == PR_GetCurrentThread(); }
 
