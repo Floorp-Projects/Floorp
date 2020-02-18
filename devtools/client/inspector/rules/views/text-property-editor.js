@@ -153,6 +153,7 @@ TextPropertyEditor.prototype = {
   _create: function() {
     this.element = this.doc.createElementNS(HTML_NS, "li");
     this.element.classList.add("ruleview-property");
+    this.element.dataset.declarationId = this.prop.id;
     this.element._textPropertyEditor = this;
 
     this.container = createChild(this.element, "div", {

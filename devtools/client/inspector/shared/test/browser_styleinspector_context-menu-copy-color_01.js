@@ -28,7 +28,6 @@ async function testView(viewId, inspector) {
   await selectNode("div", inspector);
 
   testIsColorValueNode(view);
-  testIsColorPopupOnAllNodes(view);
   await clearCurrentNodeSelection(inspector);
 }
 
@@ -45,40 +44,6 @@ function testIsColorValueNode(view) {
   for (const node of iterateNodes(colorNode)) {
     ok(isColorValueNode(node), "Node is part of color value.");
   }
-}
-
-/**
- * A function testing that _isColorPopup returns a correct value for all nodes
- * in the view.
- */
-function testIsColorPopupOnAllNodes(view) {
-  const root = rootElement(view);
-  for (const node of iterateNodes(root)) {
-    testIsColorPopupOnNode(view, node);
-  }
-}
-
-/**
- * Test result of _isColorPopup with given node.
- * @param object view
- *               A CSSRuleView or CssComputedView instance.
- * @param Node node
- *             A node to check.
- */
-function testIsColorPopupOnNode(view, node) {
-  info("Testing node " + node);
-  view.styleDocument.popupNode = node;
-  view.contextMenu._colorToCopy = "";
-
-  const result = view.contextMenu._isColorPopup();
-  const correct = isColorValueNode(node);
-
-  is(result, correct, "_isColorPopup returned the expected value " + correct);
-  is(
-    view.contextMenu._colorToCopy,
-    correct ? "rgb(18, 58, 188)" : "",
-    "_colorToCopy was set to the expected value"
-  );
 }
 
 /**
