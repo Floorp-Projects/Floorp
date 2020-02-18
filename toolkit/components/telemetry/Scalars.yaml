@@ -3371,6 +3371,25 @@ timestamps:
     record_in_processes:
       - main
 
+  first_paint_two:
+    bug_numbers:
+      - 1556568
+    description: >
+     Record the timestamp of the first main window paint, in milliseconds since process start.
+     Intended to replace first_paint since first_paint is broken.
+    expires: never
+    kind: uint
+    notification_emails:
+      - hkirschner@mozilla.com
+      - gfx-telemetry-alerts@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - firefox
+      - fennec
+      - geckoview
+    record_in_processes:
+      - main
+
   about_home_topsites_first_paint:
     bug_numbers:
       - 1518521

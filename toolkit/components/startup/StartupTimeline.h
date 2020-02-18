@@ -16,6 +16,7 @@
   mozilla_StartupTimeline_Event(STARTUP_CRASH_DETECTION_BEGIN, "startupCrashDetectionBegin")
   mozilla_StartupTimeline_Event(STARTUP_CRASH_DETECTION_END,"startupCrashDetectionEnd")
   mozilla_StartupTimeline_Event(FIRST_PAINT, "firstPaint")
+  mozilla_StartupTimeline_Event(FIRST_PAINT2, "firstPaint2")
   mozilla_StartupTimeline_Event(SESSION_RESTORE_INIT, "sessionRestoreInit")
   mozilla_StartupTimeline_Event(SESSION_RESTORED, "sessionRestored")
   mozilla_StartupTimeline_Event(CREATE_TOP_LEVEL_WINDOW, "createTopLevelWindow")
@@ -66,6 +67,7 @@ class StartupTimeline {
 
   static void Record(Event ev, TimeStamp when) { sStartupTimeline[ev] = when; }
 
+  static void RecordOnce(Event ev, const TimeStamp& aWhen);
   static void RecordOnce(Event ev);
 #    endif
 
