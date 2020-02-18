@@ -43,6 +43,7 @@ class SSLTokensCache : public nsIMemoryReporter {
   static bool GetSessionCacheInfo(const nsACString& aKey,
                                   SessionCacheInfo& aResult);
   static nsresult Remove(const nsACString& aKey);
+  static void Clear();
 
  private:
   SSLTokensCache();

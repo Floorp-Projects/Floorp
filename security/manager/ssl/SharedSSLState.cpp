@@ -81,7 +81,7 @@ void ClearPrivateSSLState() {
   // If NSS isn't initialized, this throws an assertion. We guard it by checking
   // if the session cache might even have anything worth clearing.
   if (runnable->mShouldClearSessionCache) {
-    SSL_ClearSessionCache();
+    nsNSSComponent::ClearSSLExternalAndInternalSessionCacheNative();
   }
 }
 

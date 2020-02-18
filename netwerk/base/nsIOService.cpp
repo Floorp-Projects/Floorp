@@ -330,7 +330,7 @@ void nsIOService::OnTLSPrefChange(const char* aPref, void* aSelf) {
              pref.EqualsLiteral("security.pki.certificate_transparency.mode")) {
     SetValidationOptionsCommon();
   }
-  SSL_ClearSessionCache();
+  nsNSSComponent::ClearSSLExternalAndInternalSessionCacheNative();
 }
 
 nsresult nsIOService::InitializeCaptivePortalService() {
