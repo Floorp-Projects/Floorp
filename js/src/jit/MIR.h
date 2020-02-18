@@ -10997,6 +10997,23 @@ class MObjectWithProto : public MUnaryInstruction,
   bool possiblyCalls() const override { return true; }
 };
 
+class MBuiltinProto : public MNullaryInstruction {
+  jsbytecode* pc_;
+
+  explicit MBuiltinProto(jsbytecode* pc)
+      : MNullaryInstruction(classOpcode), pc_(pc) {
+    setResultType(MIRType::Object);
+  }
+
+ public:
+  INSTRUCTION_HEADER(BuiltinProto)
+  TRIVIAL_NEW_WRAPPERS
+
+  jsbytecode* pc() const { return pc_; }
+
+  bool possiblyCalls() const override { return true; }
+};
+
 // Flips the input's sign bit, independently of the rest of the number's
 // payload. Note this is different from multiplying by minus-one, which has
 // side-effects for e.g. NaNs.

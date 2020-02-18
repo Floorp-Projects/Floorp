@@ -7145,6 +7145,15 @@ class LObjectWithProto : public LCallInstructionHelper<1, BOX_PIECES, 0> {
   }
 };
 
+class LBuiltinProto : public LCallInstructionHelper<1, 0, 0> {
+ public:
+  LIR_HEADER(BuiltinProto)
+
+  LBuiltinProto() : LCallInstructionHelper(classOpcode) {}
+
+  MBuiltinProto* mir() const { return mir_->toBuiltinProto(); }
+};
+
 template <size_t NumDefs>
 class LIonToWasmCallBase : public LVariadicInstruction<NumDefs, 2> {
   using Base = LVariadicInstruction<NumDefs, 2>;
