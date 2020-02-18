@@ -85,11 +85,10 @@ nsresult AccessibleWrap::HandleAccEvent(AccEvent* aEvent) {
         }
         break;
       }
-      case nsIAccessibleEvent::EVENT_SHOW:
-      case nsIAccessibleEvent::EVENT_HIDE: {
+      case nsIAccessibleEvent::EVENT_REORDER: {
         if (DocAccessibleWrap* topContentDoc =
                 doc->GetTopLevelContentDoc(accessible)) {
-          topContentDoc->CacheViewport();
+          topContentDoc->CacheViewport(true);
         }
         break;
       }

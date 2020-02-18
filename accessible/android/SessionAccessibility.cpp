@@ -450,4 +450,10 @@ void SessionAccessibility::UpdateCachedBounds(
   SendWindowContentChangedEvent();
 }
 
+void SessionAccessibility::UpdateAccessibleFocusBoundaries(
+    AccessibleWrap* aFirst, AccessibleWrap* aLast) {
+  mSessionAccessibility->UpdateAccessibleFocusBoundaries(
+      aFirst ? aFirst->VirtualViewID() : AccessibleWrap::kNoID,
+      aLast ? aLast->VirtualViewID() : AccessibleWrap::kNoID);
+}
 #undef FORWARD_ACTION_TO_ACCESSIBLE

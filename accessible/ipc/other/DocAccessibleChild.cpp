@@ -1709,5 +1709,10 @@ DocAccessibleChild::AllocPDocAccessiblePlatformExtChild() {
   return new DocAccessiblePlatformExtChild();
 }
 
+DocAccessiblePlatformExtChild* DocAccessibleChild::GetPlatformExtension() {
+  return static_cast<DocAccessiblePlatformExtChild*>(
+      SingleManagedOrNull(ManagedPDocAccessiblePlatformExtChild()));
+}
+
 }  // namespace a11y
 }  // namespace mozilla
