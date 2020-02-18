@@ -16,7 +16,11 @@ flat varying vec4 vColor11;
 flat varying vec4 vColorLine;
 
 // x = segment, y = styles, z = edge axes, w = clip mode
-flat varying ivec4 vConfig;
+// Since by default in GLES the vertex shader uses highp 
+// and the fragment shader uses mediump, we explicitely 
+// use mediump precision so we align with the default 
+// mediump precision in the fragment shader.
+flat varying mediump ivec4 vConfig;
 
 // xy = Local space position of the clip center.
 // zw = Scale the rect origin by this to get the outer
@@ -193,8 +197,8 @@ void main(void) {
 
     vConfig = ivec4(
         segment,
-        style0 | (style1 << 16),
-        edge_axis.x | (edge_axis.y << 16),
+        style0 | (style1 << 8),
+        edge_axis.x | (edge_axis.y << 8),
         clip_mode
     );
     vPartialWidths = vec4(aWidths / 3.0, aWidths / 2.0);
@@ -345,8 +349,8 @@ void main(void) {
     vec4 color0, color1;
 
     int segment = vConfig.x;
-    ivec2 style = ivec2(vConfig.y & 0xffff, vConfig.y >> 16);
-    ivec2 edge_axis = ivec2(vConfig.z & 0xffff, vConfig.z >> 16);
+    ivec2 style = ivec2(vConfig.y & 0xff, vConfig.y >> 8);
+    ivec2 edge_axis = ivec2(vConfig.z & 0xff, vConfig.z >> 8);
     int clip_mode = vConfig.w;
 
     float mix_factor = 0.0;
