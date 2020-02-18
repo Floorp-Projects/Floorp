@@ -149,7 +149,6 @@ class InactivePropertyHelper {
       // Grid and flex container properties used on non-grid or non-flex container.
       {
         invalidProperties: [
-          "align-content",
           "align-items",
           "justify-content",
           "place-content",
@@ -161,6 +160,19 @@ class InactivePropertyHelper {
           "grid-row-gap",
         ],
         when: () => !this.gridContainer && !this.flexContainer,
+        fixId: "inactive-css-not-grid-or-flex-container-fix",
+        msgId: "inactive-css-not-grid-or-flex-container",
+        numFixProps: 2,
+      },
+      // align-content is special as align-content:baseline does have an effect on all
+      // grid items, flex items and table cells, regardless of what type of box they are.
+      // See https://bugzilla.mozilla.org/show_bug.cgi?id=1598730
+      {
+        invalidProperties: ["align-content"],
+        when: () =>
+          !this.style["align-content"].includes("baseline") &&
+          !this.gridContainer &&
+          !this.flexContainer,
         fixId: "inactive-css-not-grid-or-flex-container-fix",
         msgId: "inactive-css-not-grid-or-flex-container",
         numFixProps: 2,
