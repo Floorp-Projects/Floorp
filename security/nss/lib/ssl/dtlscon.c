@@ -53,7 +53,7 @@ static const ssl3CipherSuite nonDTLSSuites[] = {
  * TLS             DTLS
  * 1.1 (0302)      1.0 (feff)
  * 1.2 (0303)      1.2 (fefd)
- * 1.3 (0304)      1.3 (fefc)
+ * 1.3 (0304)      1.3 (0304)
  */
 SSL3ProtocolVersion
 dtls_TLSVersionToDTLSVersion(SSL3ProtocolVersion tlsv)
@@ -68,7 +68,7 @@ dtls_TLSVersionToDTLSVersion(SSL3ProtocolVersion tlsv)
         return SSL_LIBRARY_VERSION_DTLS_1_3_WIRE;
     }
 
-    /* Anything other than TLS 1.1 or 1.2 is an error, so return
+    /* Anything else is an error, so return
      * the invalid version 0xffff. */
     return 0xffff;
 }
