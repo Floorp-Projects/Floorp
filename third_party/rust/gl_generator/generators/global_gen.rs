@@ -63,7 +63,7 @@ where
         dest,
         r#"
         #[inline(never)]
-        fn metaloadfn(loadfn: &mut FnMut(&'static str) -> *const __gl_imports::raw::c_void,
+        fn metaloadfn(loadfn: &mut dyn FnMut(&'static str) -> *const __gl_imports::raw::c_void,
                       symbol: &'static str,
                       fallbacks: &[&'static str]) -> *const __gl_imports::raw::c_void {{
             let mut ptr = loadfn(symbol);
@@ -285,12 +285,14 @@ where
         /// ~~~
         #[allow(dead_code)]
         pub fn load_with<F>(mut loadfn: F) where F: FnMut(&'static str) -> *const __gl_imports::raw::c_void {{
+            #[inline(never)]
+            fn inner(loadfn: &mut dyn FnMut(&'static str) -> *const __gl_imports::raw::c_void) {{
     "));
 
     for c in &registry.cmds {
         try!(writeln!(
             dest,
-            "{cmd_name}::load_with(&mut loadfn);",
+            "{cmd_name}::load_with(&mut *loadfn);",
             cmd_name = &c.proto.ident[..]
         ));
     }
@@ -298,6 +300,9 @@ where
     writeln!(
         dest,
         "
+            }}
+
+            inner(&mut loadfn)
         }}
     "
     )
