@@ -11,8 +11,11 @@ This means you might have to go searching through the dependency tree to get a f
 
 
 ## metrics
+
 This is a built-in ping that is assembled out of the box by the Glean SDK.
+
 See the Glean SDK documentation for the [`metrics` ping](https://mozilla.github.io/glean/book/user/pings/metrics.html).
+
 The following metrics are added to the ping:
 
 | Name | Type | Description | Data reviews | Extras | Expiration |
