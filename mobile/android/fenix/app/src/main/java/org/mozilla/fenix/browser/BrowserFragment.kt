@@ -18,6 +18,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import mozilla.components.browser.session.Session
 import mozilla.components.feature.contextmenu.ContextMenuCandidate
 import mozilla.components.feature.readerview.ReaderViewFeature
+import mozilla.components.feature.search.SearchFeature
 import mozilla.components.feature.session.TrackingProtectionUseCases
 import mozilla.components.feature.sitepermissions.SitePermissions
 import mozilla.components.feature.tab.collections.TabCollection
@@ -44,6 +45,7 @@ import org.mozilla.fenix.trackingprotection.TrackingProtectionOverlay
 class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
 
     private val windowFeature = ViewBoundFeatureWrapper<WindowFeature>()
+    private val searchFeature = ViewBoundFeatureWrapper<SearchFeature>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -68,17 +70,18 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
     override fun initializeUI(view: View): Session? {
         val context = requireContext()
         val sessionManager = context.components.core.sessionManager
+        val components = context.components
 
         return super.initializeUI(view)?.also {
             readerViewFeature.set(
                 feature = ReaderViewFeature(
                     context,
-                    context.components.core.engine,
+                    components.core.engine,
                     sessionManager,
                     view.readerViewControlsBar
                 ) { available ->
                     if (available) {
-                        context.components.analytics.metrics.track(Event.ReaderModeAvailable)
+                        components.analytics.metrics.track(Event.ReaderModeAvailable)
                     }
                 },
                 owner = this,
@@ -87,9 +90,20 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
 
             windowFeature.set(
                 feature = WindowFeature(
-                    store = context.components.core.store,
-                    tabsUseCases = context.components.useCases.tabsUseCases
+                    store = components.core.store,
+                    tabsUseCases = components.useCases.tabsUseCases
                 ),
+                owner = this,
+                view = view
+            )
+            searchFeature.set(
+                feature = SearchFeature(components.core.store) {
+                    if (it.isPrivate) {
+                        components.useCases.searchUseCases.newPrivateTabSearch.invoke(it.query)
+                    } else {
+                        components.useCases.searchUseCases.newTabSearch.invoke(it.query)
+                    }
+                },
                 owner = this,
                 view = view
             )

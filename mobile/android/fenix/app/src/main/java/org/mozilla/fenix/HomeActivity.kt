@@ -30,6 +30,7 @@ import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.state.state.WebExtensionState
 import mozilla.components.concept.engine.EngineView
+import mozilla.components.feature.contextmenu.ext.DefaultSelectionActionDelegate
 import mozilla.components.service.fxa.sync.SyncReason
 import mozilla.components.support.base.feature.UserInteractionHandler
 import mozilla.components.support.ktx.kotlin.isUrl
@@ -208,7 +209,13 @@ open class HomeActivity : LocaleAwareAppCompatActivity() {
         context: Context,
         attrs: AttributeSet
     ): View? = when (name) {
-        EngineView::class.java.name -> components.core.engine.createView(context, attrs).asView()
+        EngineView::class.java.name -> components.core.engine.createView(context, attrs).apply {
+            selectionActionDelegate = DefaultSelectionActionDelegate(
+                store = components.core.store,
+                context = context,
+                appName = getString(R.string.app_name)
+            )
+        }.asView()
         else -> super.onCreateView(parent, name, context, attrs)
     }
 
