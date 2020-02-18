@@ -117,12 +117,6 @@ class PrioritizedEventQueue final : public AbstractEventQueue {
   TimeDuration mLastEventDelay;
   TimeStamp mLastEventStart;
 
-  // Try to process one high priority runnable after each normal
-  // priority runnable. This gives the processing model HTML spec has for
-  // 'Update the rendering' in the case only vsync messages are in the
-  // secondary queue and prevents starving the normal queue.
-  bool mProcessHighPriorityQueue = false;
-
   TimeStamp mInputHandlingStartTime;
 
   enum InputEventQueueState {
