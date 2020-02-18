@@ -35,4 +35,27 @@ class UpdateStatusStorageTest {
 
         assertTrue(allowed)
     }
+
+    @Test
+    fun `markAsUnallowed - deletes only the selected addonId from the storage`() {
+        var allowed = storage.isPreviouslyAllowed(testContext, "addonId")
+
+        assertFalse(allowed)
+
+        storage.markAsAllowed(testContext, "addonId")
+        storage.markAsAllowed(testContext, "another_addonId")
+
+        allowed = storage.isPreviouslyAllowed(testContext, "addonId")
+        assertTrue(allowed)
+
+        allowed = storage.isPreviouslyAllowed(testContext, "another_addonId")
+        assertTrue(allowed)
+
+        storage.markAsUnallowed(testContext, "addonId")
+        allowed = storage.isPreviouslyAllowed(testContext, "addonId")
+        assertFalse(allowed)
+
+        allowed = storage.isPreviouslyAllowed(testContext, "another_addonId")
+        assertTrue(allowed)
+    }
 }

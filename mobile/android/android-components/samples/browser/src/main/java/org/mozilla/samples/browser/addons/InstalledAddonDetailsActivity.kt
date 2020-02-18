@@ -8,7 +8,6 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import android.widget.Switch
-import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import mozilla.components.feature.addons.Addon
@@ -40,11 +39,6 @@ class InstalledAddonDetailsActivity : AppCompatActivity() {
         bindPermissions(addon)
 
         bindRemoveButton(addon)
-    }
-
-    private fun bindVersion(addon: Addon) {
-        val versionView = findViewById<TextView>(R.id.version_text)
-        versionView.text = addon.version
     }
 
     private fun bindEnableSwitch(addon: Addon) {

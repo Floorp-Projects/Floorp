@@ -19,7 +19,7 @@ import org.mozilla.geckoview.GeckoRuntimeSettings
 class Components(private val applicationContext: Context) : DefaultComponents(applicationContext) {
     private val runtime by lazy {
         // Allow for exfiltrating Gecko metrics through the Glean SDK.
-        val builder = GeckoRuntimeSettings.Builder()
+        val builder = GeckoRuntimeSettings.Builder().aboutConfigEnabled(true)
         builder.telemetryDelegate(GeckoAdapter())
         GeckoRuntime.create(applicationContext, builder.build())
     }

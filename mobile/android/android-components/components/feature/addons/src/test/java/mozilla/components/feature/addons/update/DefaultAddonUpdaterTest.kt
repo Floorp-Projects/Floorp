@@ -175,7 +175,7 @@ class DefaultAddonUpdaterTest {
         val notificationId = SharedIdsHelper.getIdForTag(context, NOTIFICATION_TAG)
 
         assertFalse(isNotificationVisible(notificationId))
-
+        assertFalse(updater.updateStatusStorage.isPreviouslyAllowed(testContext, currentExt.id))
         updater.updateStatusStorage.clear(context)
     }
 
