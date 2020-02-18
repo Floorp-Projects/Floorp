@@ -173,7 +173,7 @@ sealed class ContentAction : BrowserAction() {
     /**
      * Updates the icon of the [ContentState] with the given [sessionId].
      */
-    data class UpdateIconAction(val sessionId: String, val icon: Bitmap) : ContentAction()
+    data class UpdateIconAction(val sessionId: String, val pageUrl: String, val icon: Bitmap) : ContentAction()
 
     /**
      * Updates the thumbnail of the [ContentState] with the given [sessionId].

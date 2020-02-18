@@ -18,11 +18,14 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.async
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import mozilla.components.browser.icons.decoder.AndroidIconDecoder
 import mozilla.components.browser.icons.decoder.ICOIconDecoder
 import mozilla.components.browser.icons.decoder.IconDecoder
-import mozilla.components.browser.icons.extension.IconSessionObserver
+import mozilla.components.browser.icons.extension.IconMessageHandler
 import mozilla.components.browser.icons.generator.DefaultIconGenerator
 import mozilla.components.browser.icons.generator.IconGenerator
 import mozilla.components.browser.icons.loader.DataUriIconLoader
@@ -41,15 +44,20 @@ import mozilla.components.browser.icons.processor.MemoryIconProcessor
 import mozilla.components.browser.icons.utils.CancelOnDetach
 import mozilla.components.browser.icons.utils.IconDiskCache
 import mozilla.components.browser.icons.utils.IconMemoryCache
-import mozilla.components.browser.session.SessionManager
-import mozilla.components.browser.session.utils.AllSessionsObserver
+import mozilla.components.browser.state.state.BrowserState
+import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.Engine
+import mozilla.components.concept.engine.webextension.WebExtension
 import mozilla.components.concept.fetch.Client
+import mozilla.components.lib.state.ext.flowScoped
 import mozilla.components.support.base.log.logger.Logger
+import mozilla.components.support.ktx.kotlinx.coroutines.flow.filterChanged
 import java.lang.ref.WeakReference
 import java.util.concurrent.Executors
 
 private const val MAXIMUM_SCALE_FACTOR = 2.0f
+
+private const val EXTENSION_MESSAGING_NAME = "MozacBrowserIcons"
 
 // Number of worker threads we are using internally.
 private const val THREADS = 3
@@ -124,7 +132,7 @@ class BrowserIcons(
     /**
      * Installs the "icons" extension in the engine in order to dynamically load icons for loaded websites.
      */
-    fun install(engine: Engine, sessionManager: SessionManager) {
+    fun install(engine: Engine, store: BrowserStore) {
         engine.installWebExtension(
             id = "mozacBrowserIcons",
             url = "resource://android/assets/extensions/browser-icons/",
@@ -132,8 +140,7 @@ class BrowserIcons(
             onSuccess = { extension ->
                 Logger.debug("Installed browser-icons extension")
 
-                AllSessionsObserver(sessionManager, IconSessionObserver(this, sessionManager, extension))
-                    .start()
+                store.flowScoped { flow -> subscribeToUpdates(store, flow, extension) }
             },
             onError = { _, throwable ->
                 Logger.error("Could not install browser-icons extension", throwable)
@@ -192,6 +199,28 @@ class BrowserIcons(
 
     fun onLowMemory() {
         sharedMemoryCache.clear()
+    }
+
+    private suspend fun subscribeToUpdates(
+        store: BrowserStore,
+        flow: Flow<BrowserState>,
+        extension: WebExtension
+    ) {
+        // Whenever we see a new EngineSession in the store then we register our content message
+        // handler if it has not been added yet.
+
+        flow.map { it.tabs }
+            .filterChanged { it.engineState.engineSession }
+            .collect { state ->
+                val engineSession = state.engineState.engineSession ?: return@collect
+
+                if (extension.hasContentMessageHandler(engineSession, EXTENSION_MESSAGING_NAME)) {
+                    return@collect
+                }
+
+                val handler = IconMessageHandler(store, state.id, state.content.private, this)
+                extension.registerContentMessageHandler(engineSession, EXTENSION_MESSAGING_NAME, handler)
+            }
     }
 }
 

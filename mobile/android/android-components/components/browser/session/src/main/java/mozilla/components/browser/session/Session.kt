@@ -17,10 +17,8 @@ import mozilla.components.browser.session.ext.toTabSessionState
 import mozilla.components.browser.state.action.ContentAction.AddFindResultAction
 import mozilla.components.browser.state.action.ContentAction.ClearFindResultsAction
 import mozilla.components.browser.state.action.ContentAction.ConsumeHitResultAction
-import mozilla.components.browser.state.action.ContentAction.RemoveIconAction
 import mozilla.components.browser.state.action.ContentAction.RemoveThumbnailAction
 import mozilla.components.browser.state.action.ContentAction.UpdateHitResultAction
-import mozilla.components.browser.state.action.ContentAction.UpdateIconAction
 import mozilla.components.browser.state.action.ContentAction.UpdateLoadingStateAction
 import mozilla.components.browser.state.action.ContentAction.UpdateProgressAction
 import mozilla.components.browser.state.action.ContentAction.UpdateSearchTermsAction
@@ -32,6 +30,7 @@ import mozilla.components.browser.state.action.CustomTabListAction.RemoveCustomT
 import mozilla.components.browser.state.action.ReaderAction
 import mozilla.components.browser.state.action.TabListAction.AddTabAction
 import mozilla.components.browser.state.action.TrackingProtectionAction
+import mozilla.components.browser.state.selector.findTabOrCustomTab
 import mozilla.components.browser.state.state.CustomTabConfig
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.HitResult
@@ -105,7 +104,6 @@ class Session(
         fun onMediaRemoved(session: Session, media: List<Media>, removed: Media) = Unit
         fun onMediaAdded(session: Session, media: List<Media>, added: Media) = Unit
         fun onCrashStateChanged(session: Session, crashed: Boolean) = Unit
-        fun onIconChanged(session: Session, icon: Bitmap?) = Unit
         fun onReaderableStateUpdated(session: Session, readerable: Boolean) = Unit
         fun onReaderModeChanged(session: Session, enabled: Boolean) = Unit
         fun onRecordingDevicesChanged(session: Session, devices: List<RecordingDevice>) = Unit
@@ -434,12 +432,10 @@ class Session(
     /**
      * An icon for the currently visible page.
      */
-    var icon: Bitmap? by Delegates.observable<Bitmap?>(null) { _, old, new ->
-        if (notifyObservers(old, new) { onIconChanged(this@Session, new) }) {
-            val action = if (new != null) UpdateIconAction(id, new) else RemoveIconAction(id)
-            store?.syncDispatch(action)
-        }
-    }
+    val icon: Bitmap?
+        // This is a workaround until all callers are migrated to use browser-state. Until then
+        // we try to lookup the icon from an attached BrowserStore if possible.
+        get() = store?.state?.findTabOrCustomTab(id)?.content?.icon
 
     /**
      * [Consumable] permission request from web content. A [PermissionRequest]

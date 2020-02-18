@@ -33,11 +33,17 @@ android {
     }
 }
 
+tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
+    kotlinOptions.freeCompilerArgs += [
+            "-Xuse-experimental=kotlinx.coroutines.ExperimentalCoroutinesApi"
+    ]
+}
+
 dependencies {
     implementation project(':support-ktx')
     implementation project(':concept-engine')
     implementation project(':concept-fetch')
-    implementation project(':browser-session')
+    implementation project(':browser-state')
 
     implementation Dependencies.androidx_annotation
     implementation Dependencies.androidx_core_ktx
