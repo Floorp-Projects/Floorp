@@ -24,8 +24,10 @@ apt-get install -y --no-install-recommends \
     python \
     python-dev \
     python-pip \
-    python3 \
-    python3-dev \
+    python3.8 \
+    python3.8-dev \
+    python3-setuptools \
+    python3-wheel \
     python3-pip
 
 apt-get clean
