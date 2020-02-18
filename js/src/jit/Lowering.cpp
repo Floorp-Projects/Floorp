@@ -4727,6 +4727,21 @@ void LIRGenerator::visitSuperFunction(MSuperFunction* ins) {
   defineBox(lir, ins);
 }
 
+void LIRGenerator::visitInitHomeObject(MInitHomeObject* ins) {
+  MDefinition* function = ins->function();
+  MOZ_ASSERT(function->type() == MIRType::Object);
+
+  MDefinition* homeObject = ins->homeObject();
+  MOZ_ASSERT(homeObject->type() == MIRType::Value);
+
+  MOZ_ASSERT(ins->type() == MIRType::Object);
+
+  auto* lir = new (alloc())
+      LInitHomeObject(useRegisterAtStart(function), useBoxAtStart(homeObject));
+  redefine(ins, function);
+  add(lir, ins);
+}
+
 void LIRGenerator::visitConstant(MConstant* ins) {
   if (!IsFloatingPointType(ins->type()) && ins->canEmitAtUses()) {
     emitAtUses(ins);

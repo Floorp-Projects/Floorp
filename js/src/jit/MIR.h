@@ -11088,6 +11088,24 @@ class MSuperFunction : public MUnaryInstruction,
   }
 };
 
+class MInitHomeObject : public MBinaryInstruction,
+                        public MixPolicy<ObjectPolicy<0>, BoxPolicy<1>>::Data {
+  explicit MInitHomeObject(MDefinition* function, MDefinition* homeObject)
+      : MBinaryInstruction(classOpcode, function, homeObject) {
+    setResultType(MIRType::Object);
+    setResultTypeSet(function->resultTypeSet());
+  }
+
+ public:
+  INSTRUCTION_HEADER(InitHomeObject)
+  TRIVIAL_NEW_WRAPPERS
+  NAMED_OPERANDS((0, function), (1, homeObject))
+
+  AliasSet getAliasSet() const override {
+    return AliasSet::Store(AliasSet::ObjectFields);
+  }
+};
+
 // Flips the input's sign bit, independently of the rest of the number's
 // payload. Note this is different from multiplying by minus-one, which has
 // side-effects for e.g. NaNs.

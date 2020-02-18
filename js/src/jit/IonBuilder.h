@@ -736,6 +736,7 @@ class MOZ_STACK_CLASS IonBuilder {
   AbortReasonOr<Ok> jsop_checkthis();
   AbortReasonOr<Ok> jsop_checkthisreinit();
   AbortReasonOr<Ok> jsop_superfun();
+  AbortReasonOr<Ok> jsop_inithomeobject();
 
   /* Inlining. */
 

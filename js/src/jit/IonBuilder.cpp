@@ -2475,6 +2475,9 @@ AbortReasonOr<Ok> IonBuilder::inspectOpcode(JSOp op, bool* restarted) {
     case JSOp::SuperFun:
       return jsop_superfun();
 
+    case JSOp::InitHomeObject:
+      return jsop_inithomeobject();
+
     // ===== NOT Yet Implemented =====
     // Read below!
 
@@ -2487,9 +2490,6 @@ AbortReasonOr<Ok> IonBuilder::inspectOpcode(JSOp op, bool* restarted) {
     case JSOp::SpreadSuperCall:
     case JSOp::SpreadEval:
     case JSOp::StrictSpreadEval:
-
-    // Classes
-    case JSOp::InitHomeObject:
 
     // Super
     case JSOp::SetPropSuper:
@@ -12859,6 +12859,20 @@ AbortReasonOr<Ok> IonBuilder::jsop_checkreturn() {
 
 AbortReasonOr<Ok> IonBuilder::jsop_superfun() {
   auto* ins = MSuperFunction::New(alloc(), current->pop());
+  current->add(ins);
+  current->push(ins);
+  return Ok();
+}
+
+AbortReasonOr<Ok> IonBuilder::jsop_inithomeobject() {
+  MDefinition* homeObject = current->pop();
+  MDefinition* function = current->pop();
+
+  if (needsPostBarrier(homeObject)) {
+    current->add(MPostWriteBarrier::New(alloc(), function, homeObject));
+  }
+
+  auto* ins = MInitHomeObject::New(alloc(), function, homeObject);
   current->add(ins);
   current->push(ins);
   return Ok();
