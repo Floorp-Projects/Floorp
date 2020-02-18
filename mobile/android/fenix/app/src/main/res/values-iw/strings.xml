@@ -49,6 +49,8 @@
     <string name="browser_menu_refresh">רענון</string>
     <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
     <string name="browser_menu_stop">עצירה</string>
+    <!-- Content description (not visible, for screen readers etc.): Bookmark the current page -->
+    <string name="browser_menu_bookmark">הוספה לסימניות</string>
     <!-- Content description (not visible, for screen readers etc.): Un-bookmark the current page -->
     <string name="browser_menu_edit_bookmark">עריכת סימנייה</string>
     <!-- Browser menu button that opens the addon manager -->
@@ -585,12 +587,16 @@
     <string name="share_link_all_apps_subheader">כל הפעולות</string>
     <!-- Sub-header in the dialog to share a link to an app from the most-recent sorted list -->
     <string name="share_link_recent_apps_subheader">בשימוש לאחרונה</string>
+    <!-- An option from the share dialog to sign into sync -->
+    <string name="sync_sign_in">התחברות אל Sync</string>
     <!-- An option from the share dialog to send link to all other sync devices -->
     <string name="sync_send_to_all">שליחה לכל המכשירים</string>
     <!-- Text displayed when sync is offline and cannot be accessed -->
     <string name="sync_offline">לא־מקוון</string>
     <!-- An option to connect additional devices -->
     <string name="sync_connect_device">חיבור מכשיר נוסף</string>
+    <!-- The dialog text shown when additional devices are not available -->
+    <string name="sync_connect_device_dialog">כדי לשלוח לשונית, יש להתחבר ל־Firefox לפחות במכשיר אחד נוסף.</string>
     <!-- Confirmation dialog button -->
     <string name="sync_confirmation_button">הבנתי</string>
     <!-- Share error message -->
@@ -731,21 +737,39 @@
     <string name="onboarding_whats_new_description">יש לך שאלות על העיצוב החדש של %s? רוצה לדעת מה השתנה?</string>
     <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
     <string name="onboarding_whats_new_description_linktext">התשובות כאן</string>
+    <!-- text for the button to confirm automatic sign-in -->
+    <string name="onboarding_firefox_account_auto_signin_confirm">כן, תחברו אותי</string>
+    <!-- text for the automatic sign-in button while signing in is in process -->
+    <string name="onboarding_firefox_account_signing_in">בתהליך התחברות…</string>
+    <!-- text for the button to manually sign into Firefox account. The word "Firefox" should not be translated -->
+    <string name="onboarding_firefox_account_sign_in">התחברות אל Firefox</string>
+    <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
+    <string name="onboarding_firefox_account_automatic_signin_failed">ההתחברות נכשלה</string>
     <!-- text for the tracking protection card description
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_tracking_protection_description1">‏%s עוזר למנוע מאתרים לעקוב אחריך ברשת.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button">רגיל</string>
+    <!-- text for standard blocking option button description -->
+    <string name="onboarding_tracking_protection_standard_button_description">חוסם פחות רכיבי מעקב אך מאפשר לטעון דפים כרגיל</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_button">מחמיר (מומלץ)</string>
     <!-- text for strict blocking option button description -->
     <string name="onboarding_tracking_protection_strict_button_description">חוסם יותר רכיבי מעקב לטובת הגנה וביצועים טובים יותר, אך עלול לגרום לאתרים מסויימים שלא לפעול כראוי</string>
     <!-- text for the private browsing onboarding card header -->
     <string name="onboarding_private_browsing_header">גלישה בפרטיות</string>
+    <!-- text for the private browsing onboarding card description
+    The first parameter is an icon that represents private browsing -->
+    <string name="onboarding_private_browsing_description1">לפתיחת לשונית פרטית פעם אחת, יש להקיש על הסמל %s.</string>
+    <!-- text for the private browsing onboarding card description, explaining how to always using private browsing -->
+    <string name="onboarding_private_browsing_always_description">לפתיחת לשוניות פרטיות כל הזמן, יש לעדכן את הגדרות הגלישה הפרטית.</string>
     <!-- text for the private browsing onbording card button, that launches settings -->
     <string name="onboarding_private_browsing_button">פתיחת הגדרות</string>
     <!-- text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header">הפרטיות שלך</string>
+
+    <!-- Text for the button to read the privacy notice -->
+    <string name="onboarding_privacy_notice_read_button">קריאת הצהרת הפרטיות שלנו</string>
 
     <!-- text for the button to finish onboarding -->
     <string name="onboarding_finish">התחלת גלישה</string>
@@ -753,6 +777,8 @@
     <!-- Onboarding theme -->
     <!-- text for the theme picker onboarding card header -->
     <string name="onboarding_theme_picker_header">בחירת ערכת הנושא שלך</string>
+    <!-- text for the theme picker onboarding card description -->
+    <string name="onboarding_theme_picker_description1">חסכו בסוללה ושמרו על העיניים באמצעות הפעלת מצב כהה.</string>
     <!-- Automatic theme setting (will follow device setting) -->
     <string name="onboarding_theme_automatic_title">אוטומטי</string>
     <!-- Summary of automatic theme setting (will follow device setting) -->
@@ -782,6 +808,8 @@
     <string name="sign_in_with_email">שימוש בדוא״ל במקום</string>
     <!-- Text shown in confirmation dialog to sign out of account -->
     <string name="sign_out_confirmation_message">‏Firefox יפסיק להסתנכרן עם החשבון שלך, אבל לא ימחק את נתוני הגלישה שלך ממכשיר זה.</string>
+    <!-- Option to continue signing out of account shown in confirmation dialog to sign out of account -->
+    <string name="sign_out_disconnect">התנתקות</string>
     <!-- Option to cancel signing out shown in confirmation dialog to sign out of account -->
     <string name="sign_out_cancel">ביטול</string>
     <!-- Error message snackbar shown after the user tried to select a default folder which cannot be altered -->
@@ -895,6 +923,8 @@
     <string name="preferences_passwords_sync_logins_on">פעיל</string>
     <!-- Syncing saved logins in Fenix is off -->
     <string name="preferences_passwords_sync_logins_off">כבוי</string>
+    <!-- Syncing saved logins in Fenix needs login -->
+    <string name="preferences_passwords_sync_logins_sign_in">התחברות אל Sync</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins">כניסות שמורות</string>
     <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->

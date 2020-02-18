@@ -333,7 +333,7 @@
     <!-- Preference switch for marketing data collection -->
     <string name="preferences_marketing_data">Datos de marketing</string>
     <!-- Preference description for marketing data collection, parameter is the app name (e.g. Firefox) -->
-    <string name="preferences_marketing_data_description">Comparte datos sobre las funciones que usás en %1$s con Leanplum, nuestro proveedor de marketing móvil.</string>
+    <string name="preferences_marketing_data_description">Comparte datos acerca de las funciones que usás en %1$s con Leanplum, nuestro proveedor de marketing para móviles.</string>
     <!-- Title for experiments preferences -->
     <string name="preference_experiments">Experimentos</string>
     <!-- Summary for experiments preferences -->
@@ -897,14 +897,14 @@
         but it is ok to make this more literally about "choosing a position in a physical space -->
     <string name="onboarding_toolbar_position_header">Tomá una posición</string>
     <!-- text for the toolbar position card description -->
-    <string name="onboarding_toolbar_position_description">Probá la navegación con una sola mano con la barra de herramientas inferior o movela a la parte superior.</string>
+    <string name="onboarding_toolbar_position_description">Probá la navegación con una sola mano con la barra de herramientas inferior o movela hacia arriba.</string>
     <!-- text for the private browsing onboarding card header -->
     <string name="onboarding_private_browsing_header">Navegá en privado</string>
     <!-- text for the private browsing onboarding card description
     The first parameter is an icon that represents private browsing -->
-    <string name="onboarding_private_browsing_description1">Abrir una pestaña privada una vez: tocá el ícono %s.</string>
+    <string name="onboarding_private_browsing_description1">Para abrir una pestaña privada una vez: tocá el ícono %s.</string>
     <!-- text for the private browsing onboarding card description, explaining how to always using private browsing -->
-    <string name="onboarding_private_browsing_always_description">Abrí pestañas privadas siempre: actualizá tus ajustes de navegación privada.</string>
+    <string name="onboarding_private_browsing_always_description">Para abrir pestañas privadas habitualmente: actualizá tus ajustes de navegación privada.</string>
     <!-- text for the private browsing onbording card button, that launches settings -->
     <string name="onboarding_private_browsing_button">Abrir ajustes</string>
     <!-- text for the privacy notice onboarding card header -->
@@ -926,7 +926,7 @@
     <string name="onboarding_theme_picker_header">Elegí tu tema</string>
 
     <!-- text for the theme picker onboarding card description -->
-    <string name="onboarding_theme_picker_description1">Ahorre algo de batería y proteja su vista: habilite el modo oscuro.</string>
+    <string name="onboarding_theme_picker_description1">Ahorrá un poco de batería y protegé tu vista: habilitá el modo oscuro.</string>
     <!-- Automatic theme setting (will follow device setting) -->
     <string name="onboarding_theme_automatic_title">Automático</string>
     <!-- Summary of automatic theme setting (will follow device setting) -->
@@ -1211,7 +1211,7 @@
     <!-- Title text shown for the migration screen to the new browser. Placeholder replaced with app name -->
     <string name="migration_title">Bienvenido a un %s completamente nuevo</string>
     <!-- Description text followed by a list of things migrating (e.g. Bookmarks, History). Placeholder replaced with app name-->
-    <string name="migration_description">Te espera un navegador completamente rediseñado, con un rendimiento y funciones mejoradas para ayudarte a hacer más en línea.\n\nEspere mientras actualizamos %s con su</string>
+    <string name="migration_description">Te espera un navegador completamente rediseñado, con un rendimiento y funciones mejoradas para ayudarte a hacer más en línea.\n\nEsperá mientras actualizamos %s con tu</string>
     <!-- Text on the disabled button while in progress. Placeholder replaced with app name -->
     <string name="migration_updating_app_button_text">Actualizando %s…</string>
     <!-- Text on the enabled button. Placeholder replaced with app name-->

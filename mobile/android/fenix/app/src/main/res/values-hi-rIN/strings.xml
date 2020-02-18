@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Text for the negative button -->
+    <string name="cfr_neg_button_text">नहीं धन्यवाद</string>
+
+    <!-- Home screen icons - Long press shortcuts -->
+    <!-- Shortcut action to open new tab -->
+    <string name="home_screen_shortcut_open_new_tab_2">नया टैब</string>
+    <!-- Shortcut action to open new private tab -->
+    <string name="home_screen_shortcut_open_new_private_tab_2">नई निजी टैब</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Bookmark the current page -->
+    <string name="browser_menu_bookmark">बुकमार्क</string>
+    <!-- Content description (not visible, for screen readers etc.): Un-bookmark the current page -->
+    <string name="browser_menu_edit_bookmark">बुकमार्क संपादित करें</string>
+    <!-- Browser menu button that opens the addon manager -->
+    <string name="browser_menu_addon_manager">ऐड-ऑन प्रबंधक</string>
+    <!-- Browser menu button that sends a user to help articles -->
+    <string name="browser_menu_help">सहायता</string>
+    <!-- Browser menu button that opens the settings menu -->
+    <string name="browser_menu_settings">सेटिंग</string>
+    <!-- Browser menu button that creates a private tab -->
+    <string name="browser_menu_private_tab">निजी टैब</string>
+    <!-- Browser menu button that creates a new tab -->
+    <string name="browser_menu_new_tab">नया टैब</string>
+
+    </resources>

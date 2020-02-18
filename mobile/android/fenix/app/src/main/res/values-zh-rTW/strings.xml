@@ -898,7 +898,7 @@
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button">標準</string>
     <!-- text for standard blocking option button description -->
-    <string name="onboarding_tracking_protection_standard_button_description">封鎖比較少追蹤器，讓網站可以正常開啟</string>
+    <string name="onboarding_tracking_protection_standard_button_description">封鎖較少追蹤器，讓網站可正常開啟</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_button">嚴格（建議）</string>
     <!-- text for strict blocking option button description -->
@@ -933,7 +933,7 @@
     <!-- text for the theme picker onboarding card header -->
     <string name="onboarding_theme_picker_header">選擇佈景主題</string>
     <!-- text for the theme picker onboarding card description -->
-    <string name="onboarding_theme_picker_description1">開啟暗色模式，節省電力又保護視力。</string>
+    <string name="onboarding_theme_picker_description1">開啟暗色模式，更省電又保護視力。</string>
     <!-- Automatic theme setting (will follow device setting) -->
     <string name="onboarding_theme_automatic_title">自動</string>
     <!-- Summary of automatic theme setting (will follow device setting) -->

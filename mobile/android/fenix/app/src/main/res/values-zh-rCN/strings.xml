@@ -28,7 +28,7 @@
     <string name="private_browsing_title">您已进入隐私浏览模式</string>
     <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="private_browsing_placeholder_description">在您退出本应用或关闭所有隐私标签页后，%1$s 将清除您的搜索记录与浏览历史。虽然这样做不会使您对网站和网络提供方匿名，但还是可以帮助您避免使用此设备的其他人获知您在网上的活动。</string>
+    <string name="private_browsing_placeholder_description">在您退出本应用或关闭所有隐私标签页后，%1$s 将清除您的搜索记录与浏览历史。虽然这样做不会使您对网站和电信运营商匿名，但还是可以帮助您避免使用此设备的其他人获知您在网上的活动。</string>
     <string name="private_browsing_common_myths">隐私浏览功能的常见误解</string>
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">删除浏览会话</string>
@@ -202,7 +202,7 @@
     <!-- Preference for private browsing options -->
     <string name="preferences_private_browsing_options">隐私浏览</string>
     <!-- Preference for opening links in a private tab-->
-    <string name="preferences_open_links_in_a_private_tab">新建隐私标签页来打开链接</string>
+    <string name="preferences_open_links_in_a_private_tab">新建隐私标签页打开链接</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">添加隐私浏览快捷方式</string>
     <!-- Preference for accessibility -->
@@ -911,7 +911,7 @@
     <!-- text for the toolbar position card header
         In English this is an idiom for "choose a side as in an argument or fight"
         but it is ok to make this more literally about "choosing a position in a physical space -->
-    <string name="onboarding_toolbar_position_header">表明您的立场</string>
+    <string name="onboarding_toolbar_position_header">选择工具栏位置</string>
     <!-- text for the toolbar position card description -->
     <string name="onboarding_toolbar_position_description">试试用底部工具栏单手上网，也可以将其移至顶部。</string>
     <!-- text for the private browsing onboarding card header -->

@@ -309,18 +309,29 @@
     <string name="preferences_tracking_protection_exceptions_description">Ñemo’ã tapykuehohápe g̃uarã ndoikovéima ko’ã ñanduti rendápe</string>
     <!-- Button in Exceptions Preference to turn on tracking protection for all sites (remove all exceptions) -->
     <string name="preferences_tracking_protection_exceptions_turn_on_for_all">Emyandy opaite tendápe g̃uarã</string>
+    <!-- Text displayed when there are no exceptions -->
+    <string name="exceptions_empty_message_description">Umi oĩ’ỹva omopa’ũ eipe’a hag̃ua tapykuehoha mo’ãha tenda poravopyrépe.</string>
     <!-- Text displayed when there are no exceptions, with learn more link that brings users to a tracking protection SUMO page -->
     <string name="exceptions_empty_message_learn_more_link">Kuaave</string>
+
+    <!-- Description in Quick Settings that tells user tracking protection is off globally for all sites, and links to Settings to turn it on -->
+    <string name="preferences_tracking_protection_turned_off_globally">Ojepe’apáma, tereho Pytyvõhápe emyandyjey hag̃ua.</string>
 
     <!-- Preference switch for Telemetry -->
     <string name="preferences_telemetry">Telemetry</string>
 
     <!-- Preference switch for usage and technical data collection -->
     <string name="preference_usage_data">Jepuru ha mba’ekuaarã aporekogua</string>
+    <!-- Preference description for usage and technical data collection -->
+    <string name="preferences_usage_data_description">Emoherakuã mba’ekuaarã apopy, jepuru, hardware ha kundahára mboava Mozilla ndive orepytyvõ hag̃ua oikoporãvévo %1$s</string>
     <!-- Preference switch for marketing data collection -->
     <string name="preferences_marketing_data">Mba’ekuaarã jehepyme’ẽrã</string>
+    <!-- Preference description for marketing data collection, parameter is the app name (e.g. Firefox) -->
+    <string name="preferences_marketing_data_description">Emoherakuã mba’ekuaarã umi tembiapoite eipurúva %1$s rehegua Leanplum ndive, ore me’ẽhára pumbyry popeguáva.</string>
     <!-- Title for experiments preferences -->
     <string name="preference_experiments">Mba’epyahu</string>
+    <!-- Summary for experiments preferences -->
+    <string name="preference_experiments_summary">Omoneĩ Mozilla omohenda ha ombyatývo mba’ekuaarã tembiapoite ipyahúvape g̃uarã</string>
     <!-- Preference switch for crash reporter -->
     <string name="preferences_crash_reporter">Marandu jejavyguáva</string>
     <!-- Preference switch for Mozilla location service -->
@@ -340,6 +351,9 @@
     <!-- Preference for removing FxA account -->
     <string name="preferences_sync_remove_account">Emboguete mba’ete</string>
 
+    <!-- Pairing Feature strings -->
+    <!-- Instructions on how to access pairing -->
+    <string name="pair_instructions"><![CDATA[Eike <b>firefox.com/pair</b> mohendaha pegua Firefox mba’évape ereko hag̃ua QR ayvu.]]></string>
     <!-- Button to open camera for pairing -->
     <string name="pair_open_camera">Embojuruja Ta’ãngamýi</string>
     <!-- Button to cancel pairing -->
@@ -607,6 +621,9 @@
     <!-- Summary of delete browsing data on quit preference if it is set to off -->
     <string name="delete_browsing_data_quit_off">Mboguepyre</string>
 
+    <!-- Collections -->
+    <!-- Label to describe what collections are to a new user without any collections -->
+    <string name="collections_description">Eñongatu umi ehayhúva. Eñepyrũ hag̃ua, eñongatu tendayke ijurujáva peteĩ atyha pyahúpe.</string>
     <!-- Collections header on home fragment -->
     <string name="collections_header">Ñembyatyha</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
@@ -676,6 +693,8 @@
     <string name="sync_offline">Juaju’ỹre</string>
     <!-- An option to connect additional devices -->
     <string name="sync_connect_device">Embojuaju ambue mba’e’oka</string>
+    <!-- The dialog text shown when additional devices are not available -->
+    <string name="sync_connect_device_dialog">Emondo hag̃ua tendayke, eñepyrũ tembiapo Firefox-pe ambue mba’e’okápe.</string>
     <!-- Confirmation dialog button -->
     <string name="sync_confirmation_button">Kumbypyre</string>
     <!-- Share error message -->
@@ -839,6 +858,9 @@
     <string name="onboarding_firefox_account_automatic_signin_failed">Tembiapo ñepyrũ ojavy</string>
     <!-- text for the tracking protection onboarding card header -->
     <string name="onboarding_tracking_protection_header">Eñemo’ãke ndetevoi</string>
+    <!-- text for the tracking protection card description
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_tracking_protection_description1">%s nepytyvõ emboyke hag̃ua ñanduti renda nde rapykuehóvo.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button">Ypykue</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
@@ -913,6 +935,10 @@
     <string name="preference_enhanced_tracking_protection_standard_option">Ypykue</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard">Ypykue (jeroviaháva)</string>
+    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_description">Oñembojoja ñemo’ã ha apopykuaa.</string>
+    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_description_2">Kuatiarogue henyhẽta tapiaguáicha, hákatu ojoko sa’ivéta tapykuehohápe.</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Mbaretépe</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings, default setting -->
@@ -1116,11 +1142,21 @@
     <string name="migration_updating_app_button_text">Hekopyahuhína %s…</string>
     <!-- Text on the enabled button. Placeholder replaced with app name-->
     <string name="migration_update_app_button">Ñepyrũ %s</string>
+    <!-- Accessibility description text for a completed migration item -->
+    <string name="migration_icon_description">Ovapaitéma</string>
     <!--Text on list of migrated items (e.g. Settings, History, etc.)-->
     <string name="migration_text_passwords">Ñe’ẽñemi</string>
 
     <!-- Heading for the instructions to allow a permission -->
     <string name="phone_feature_blocked_intro">Emoneĩ hag̃ua:</string>
+
+    <!-- First step for the allowing a permission -->
+    <string name="phone_feature_blocked_step_settings">1. Eho Android ñembohekópe</string>
+
+    <!-- Second step for the allowing a permission -->
+    <string name="phone_feature_blocked_step_permissions"><![CDATA[2. Epoko <b>Ñemoneĩ</b>]]></string>
+    <!-- Third step for the allowing a permission (Fore example: Camera) -->
+    <string name="phone_feature_blocked_step_feature"><![CDATA[3. Emoambue <b>%1$s</b> Ijurujávaramo]]></string>
 
     <!-- Label that indicates a site is using a secure connection -->
     <string name="quick_settings_sheet_secure_connection">Jeikekatu</string>

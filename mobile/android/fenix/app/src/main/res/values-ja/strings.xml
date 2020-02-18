@@ -63,6 +63,10 @@
     <string name="browser_menu_bookmark">ブックマーク</string>
     <!-- Content description (not visible, for screen readers etc.): Un-bookmark the current page -->
     <string name="browser_menu_edit_bookmark">ブックマークを編集</string>
+    <!-- Browser menu button that opens the addon manager -->
+    <string name="browser_menu_addon_manager">アドオンマネージャー</string>
+    <!-- Text displayed when there are no add-ons to be shown -->
+    <string name="no_add_ons">アドオンがありません</string>
     <!-- Browser menu button that sends a user to help articles -->
     <string name="browser_menu_help">ヘルプ</string>
     <!-- Browser menu button that sends a to a the what's new article -->
@@ -157,6 +161,8 @@
     <!-- Preference category for basic settings -->
     <string name="preferences_category_basics">基本設定</string>
 
+    <!-- Preference category for general settings -->
+    <string name="preferences_category_general">一般</string>
     <!-- Preference category for all links about Fenix -->
     <string name="preferences_category_about">製品情報</string>
     <!-- Preference for settings related to changing the default search engine -->
@@ -186,8 +192,12 @@
     <string name="preferences_category_advanced">詳細設定</string>
     <!-- Preference category for privacy settings -->
     <string name="preferences_category_privacy">プライバシー</string>
+    <!-- Preference category for privacy and security settings -->
+    <string name="preferences_category_privacy_security">プライバシーとセキュリティ</string>
     <!-- Preference for advanced site permissions -->
     <string name="preferences_site_permissions">サイトの許可設定</string>
+    <!-- Preference for private browsing options -->
+    <string name="preferences_private_browsing_options">プライベートブラウジング</string>
     <!-- Preference for opening links in a private tab-->
     <string name="preferences_open_links_in_a_private_tab">リンクをプライベートタブで開く</string>
     <!-- Preference for adding private browsing shortcut -->
@@ -202,6 +212,8 @@
     <string name="preferences_toolbar">ツールバー</string>
     <!-- Preference for changing default theme to dark or light mode -->
     <string name="preferences_theme">テーマ</string>
+    <!-- Preference for settings related to visual options -->
+    <string name="preferences_customize">カスタマイズ</string>
     <!-- Preference description for banner about signing in -->
     <string name="preferences_sign_in_description">ブックマーク、履歴などを Firefox アカウントと同期します</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
@@ -237,6 +249,9 @@
 
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">リンクをアプリで開く</string>
+
+    <!-- Preference for add_ons -->
+    <string name="preferences_addons">アドオン</string>
 
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
@@ -313,6 +328,10 @@
     <string name="preference_usage_data">使用状況と技術データ</string>
     <!-- Preference description for usage and technical data collection -->
     <string name="preferences_usage_data_description">パフォーマンス情報、使用状況、ハードウェア情報、設定を Mozilla に送信して %1$s の改善に役立てます</string>
+    <!-- Preference switch for marketing data collection -->
+    <string name="preferences_marketing_data">マーケティングデータ</string>
+    <!-- Preference description for marketing data collection, parameter is the app name (e.g. Firefox) -->
+    <string name="preferences_marketing_data_description">%1$s で使用した機能に関するデータをモバイルマーケティングベンダーの Leanplum と共有します。</string>
     <!-- Title for experiments preferences -->
     <string name="preference_experiments">実験的な機能</string>
     <!-- Summary for experiments preferences -->
@@ -437,6 +456,9 @@
     <string name="collection_open_tabs">タブを開く</string>
 
 
+    <!-- Text for the menu button to remove a top site -->
+    <string name="remove_top_site">削除</string>
+
     <!-- History -->
     <!-- Text for the button to clear all history -->
     <string name="history_delete_all">履歴を削除</string>
@@ -512,6 +534,8 @@
     <string name="bookmark_menu_open_in_private_tab_button">プライベートタブで開く</string>
     <!-- Bookmark overflow menu delete button -->
     <string name="bookmark_menu_delete_button">削除</string>
+    <!--Bookmark overflow menu save button -->
+    <string name="bookmark_menu_save_button">保存</string>
     <!-- Bookmark multi select title in app bar
      The first parameter is the number of bookmarks selected -->
     <string name="bookmarks_multi_select_title">%1$d 件選択</string>
@@ -658,6 +682,10 @@
     <string name="share_link_subheader">リンクを共有</string>
     <!-- Sub-header in the dialog to share a link to another sync device -->
     <string name="share_device_subheader">端末へ送信</string>
+    <!-- Sub-header in the dialog to share a link to an app from the full list -->
+    <string name="share_link_all_apps_subheader">すべての操作</string>
+    <!-- Sub-header in the dialog to share a link to an app from the most-recent sorted list -->
+    <string name="share_link_recent_apps_subheader">最近使用</string>
     <!-- An option from the share dialog to sign into sync -->
     <string name="sync_sign_in">Sync にログイン</string>
     <!-- An option from the share dialog to send link to all other sync devices -->
@@ -710,14 +738,18 @@
     <string name="snackbar_tab_closed">タブを閉じました</string>
     <!-- Text shown in snackbar when user closes all tabs -->
     <string name="snackbar_tabs_closed">すべてのタブを閉じました</string>
+    <!-- Text shown in snackbar when user adds a site to home fragment. Placeholder replaced with app name -->
+    <string name="snackbar_added_to_firefox_home">%s ホームに追加されました！</string>
     <!-- Text shown in snackbar when user closes a private tab -->
     <string name="snackbar_private_tab_closed">プライベートタブを閉じました</string>
     <!-- Text shown in snackbar when user closes all private tabs -->
     <string name="snackbar_private_tabs_closed">すべてのプライベートタブを閉じました</string>
     <!-- Text shown in snackbar when user deletes all private tabs -->
     <string name="snackbar_private_tabs_deleted">プライベートタブを削除しました</string>
-    <!-- Text for action to undo deleting a tab or collection shown in snackbar -->
+    <!-- Text shown in snackbar to undo deleting a tab, top site or collection -->
     <string name="snackbar_deleted_undo">元に戻す</string>
+    <!-- Text shown in snackbar when user removes a top site -->
+    <string name="snackbar_top_site_removed">サイトを削除しました</string>
     <!-- Text for action to undo deleting a tab or collection shown in a11y dialog -->
     <string name="a11y_dialog_deleted_undo">元に戻す</string>
     <!-- Text for action to confirm deleting a tab or collection shown in a11y dialog -->
@@ -743,7 +775,7 @@
 
 
     <!-- Sample text for accessibility font size -->
-    <string name="accessibility_text_size_sample_text">The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog.</string>
+    <string name="accessibility_text_size_sample_text_1">これはサンプルテキストです。この設定でテキストサイズを変更したときに、テキストがどのように表示されるかを示します。</string>
     <!-- Summary for Accessibility Text Size Scaling Preference -->
     <string name="preference_accessibility_text_size_summary">ウェブサイト上のテキストを拡大または縮小します</string>
     <!-- Title for Accessibility Text Size Scaling Preference -->
@@ -770,11 +802,6 @@
     <!-- Subtitle for the history items in delete browsing data, parameter will be replaced with the
         number of history pages the user has -->
     <string name="preferences_delete_browsing_data_browsing_history_subtitle">%d ページ</string>
-    <!-- Title for the collections item in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_collections_title">コレクション</string>
-    <!-- Subtitle for the collections item in Delete browsing data, parameter will be replaced with the
-        number of collections that will be deleted -->
-    <string name="preferences_delete_browsing_data_collections_subtitle">%d 件のコレクション</string>
     <!-- Title for the cookies item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cookies">Cookie</string>
     <!-- Subtitle for the cookies item in Delete browsing data -->
@@ -822,10 +849,8 @@
     <!-- text for the Firefox Preview feature section header
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_feature_section_header">%s を知ろう</string>
-    <!-- text for the theme picker onboarding card header -->
-    <string name="onboarding_theme_picker_header">テーマを選んでください</string>
-    <!-- text for the theme picker onboarding card description -->
-    <string name="onboarding_theme_picker_description">バッテリーと目に優しいダークテーマを試しましょう。</string>
+    <!-- text for the "What's New" onboarding card header -->
+    <string name="onboarding_whats_new_header1">新機能の紹介</string>
     <!-- text for the firefox account onboarding card header
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_firefox_account_header">%s を最大限に活用しよう。</string>
@@ -847,14 +872,14 @@
     <string name="onboarding_firefox_account_automatic_signin_failed">ログインに失敗しました</string>
     <!-- text for the tracking protection onboarding card header -->
     <string name="onboarding_tracking_protection_header">自己防衛しよう</string>
-    <!-- text for the tracking protection card description
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_tracking_protection_description">%s はウェブ上でユーザーを追跡する広告トラッカーをブロックします。</string>
+    <!-- text for tracking protection radio button option for standard level of blocking -->
+    <string name="onboarding_tracking_protection_standard_button">標準</string>
+    <!-- text for tracking protection radio button option for strict level of blocking -->
+    <string name="onboarding_tracking_protection_strict_button">厳格 (推奨)</string>
     <!-- text for the private browsing onboarding card header -->
     <string name="onboarding_private_browsing_header">プライベートなブラウジング</string>
-    <!-- text for the private browsing onboarding card description
-    The first parameter is an icon that represents private browsing -->
-    <string name="onboarding_private_browsing_description">%s アイコンが表示されたら、タップするだけでプライベートブラウジングモードになります。</string>
+    <!-- text for the private browsing onbording card button, that launches settings -->
+    <string name="onboarding_private_browsing_button">設定を開く</string>
     <!-- text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header">あなたのプライバシー</string>
     <!-- text for the privacy notice onboarding card description
@@ -867,6 +892,8 @@
     <string name="onboarding_finish">ブラウジングを始める</string>
 
     <!-- Onboarding theme -->
+    <!-- text for the theme picker onboarding card header -->
+    <string name="onboarding_theme_picker_header">テーマを選んでください</string>
     <!-- Automatic theme setting (will follow device setting) -->
     <string name="onboarding_theme_automatic_title">自動設定</string>
     <!-- Summary of automatic theme setting (will follow device setting) -->
@@ -1037,6 +1064,8 @@
     <string name="preferences_passwords_sync_logins_sign_in">Sync にログイン</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins">保存されたログイン情報</string>
+    <!-- Preference to access list of saved logins -->
+    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link">Sync についての詳細情報。</string>
     <!-- Preference to access list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions">例外</string>
     <!-- Empty description of list of login exceptions that we never save logins for -->
@@ -1143,4 +1172,46 @@
     <string name="search_edit_custom_engine_success_message">%s を保存しました</string>
     <!-- Text shown when a user successfully deletes a custom search engine -->
     <string name="search_delete_search_engine_success_message">%s を削除しました</string>
+
+    <!-- Text on the disabled button while in progress. Placeholder replaced with app name -->
+    <string name="migration_updating_app_button_text">%s を更新しています…</string>
+    <!-- Text on the enabled button. Placeholder replaced with app name-->
+    <string name="migration_update_app_button">%s を起動</string>
+    <!-- Accessibility description text for a completed migration item -->
+    <string name="migration_icon_description">移行が完了しました</string>
+    <!--Text on list of migrated items (e.g. Settings, History, etc.)-->
+    <string name="migration_text_passwords">パスワード</string>
+
+    <!-- Heading for the instructions to allow a permission -->
+    <string name="phone_feature_blocked_intro">許可するには:</string>
+    <!-- First step for the allowing a permission -->
+    <string name="phone_feature_blocked_step_settings">1. Android の設定を開きます</string>
+    <!-- Second step for the allowing a permission -->
+    <string name="phone_feature_blocked_step_permissions"><![CDATA[2. <b>権限</b> をタップします]]></string>
+    <!-- Third step for the allowing a permission (Fore example: Camera) -->
+    <string name="phone_feature_blocked_step_feature"><![CDATA[3. <b>%1$s</b> をオンに切り替えます]]></string>
+
+    <!-- Label that indicates a site is using a secure connection -->
+    <string name="quick_settings_sheet_secure_connection">安全な接続</string>
+    <!-- Label that indicates a site is using a insecure connection -->
+    <string name="quick_settings_sheet_insecure_connection">安全でない接続</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for all sites-->
+    <string name="confirm_clear_permissions_on_all_sites">すべてのサイトの許可設定を消去してもよろしいですか？</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for a site-->
+    <string name="confirm_clear_permissions_site">このサイトの許可設定を消去してもよろしいですか？</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to set default value a permission for a site-->
+    <string name="confirm_clear_permission_site">このサイトのこの許可設定を削除してもよろしいですか？</string>
+    <!-- label shown when there are not site exceptions to show in the site exception settings -->
+    <string name="no_site_exceptions">例外サイトなし</string>
+    <!-- Label for the Pocket default top site -->
+    <string name="pocket_top_articles">トップ記事</string>
+    <!-- Bookmark deletion confirmation -->
+    <string name="bookmark_deletion_confirmation">本当にこのブックマークを削除してもよろしいですか？</string>
+    <!-- Browser menu button that adds a top site to the home fragment -->
+    <string name="browser_menu_add_to_top_sites">トップサイトに追加</string>
+    <!-- text shown before the issuer name to indicate who its verified by, parameter is the name of
+     the certificate authority that verified the ticket-->
+    <string name="certificate_info_verified_by">認証局: %1$s</string>
+    <!-- Login overflow menu delete button -->
+    <string name="login_menu_delete_button">削除</string>
 </resources>
