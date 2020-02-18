@@ -204,7 +204,9 @@ bool IPDLParamTraits<dom::WindowContext*>::Read(
 
   RefPtr<dom::WindowContext> windowContext = dom::WindowContext::GetById(id);
   if (!windowContext) {
+#ifndef FUZZING
     MOZ_CRASH("Attempt to deserialize absent WindowContext");
+#endif
     *aResult = nullptr;
     return false;
   }
