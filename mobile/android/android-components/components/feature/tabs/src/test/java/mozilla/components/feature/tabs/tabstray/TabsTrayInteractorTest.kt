@@ -5,7 +5,7 @@
 package mozilla.components.feature.tabs.tabstray
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import mozilla.components.browser.session.Session
+import mozilla.components.concept.tabstray.Tab
 import mozilla.components.concept.tabstray.TabsTray
 import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.support.test.mock
@@ -36,10 +36,10 @@ class TabsTrayInteractorTest {
         val selectTabUseCase: TabsUseCases.SelectTabUseCase = mock()
         val interactor = TabsTrayInteractor(mock(), selectTabUseCase, mock(), mock())
 
-        val session = Session("https://www.mozilla.org")
-        interactor.onTabSelected(session)
+        val tab = Tab("1", "https://www.mozilla.org")
+        interactor.onTabSelected(tab)
 
-        verify(selectTabUseCase).invoke(session)
+        verify(selectTabUseCase).invoke(tab.id)
     }
 
     @Test
@@ -47,9 +47,9 @@ class TabsTrayInteractorTest {
         val removeTabUseCase: TabsUseCases.RemoveTabUseCase = mock()
         val interactor = TabsTrayInteractor(mock(), mock(), removeTabUseCase, mock())
 
-        val session = Session("https://www.mozilla.org")
-        interactor.onTabClosed(session)
+        val tab = Tab("1", "https://www.mozilla.org")
+        interactor.onTabClosed(tab)
 
-        verify(removeTabUseCase).invoke(session)
+        verify(removeTabUseCase).invoke(tab.id)
     }
 }

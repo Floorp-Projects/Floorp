@@ -38,7 +38,7 @@ class TabTouchCallbackTest {
         verify(observer, never()).onTabClosed(any())
 
         // With a session available.
-        `when`(viewHolder.session).thenReturn(mock())
+        `when`(viewHolder.tab).thenReturn(mock())
 
         touchCallback.onSwiped(viewHolder, 0)
 

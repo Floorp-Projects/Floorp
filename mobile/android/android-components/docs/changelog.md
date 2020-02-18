@@ -12,6 +12,16 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Config.kt)
 
+* **concept-tabstray**
+  * ⚠️ **This is a breaking change**: Removed dependency on `browser-session` and introduced tabs tray specific data classes.
+
+* **browser-tabstray**
+  * ⚠️ **This is a breaking change**: Refactored component to implement updated `concept-tabstray` interfaces.
+
+* **feature-tabs**
+  * ⚠️ **This is a breaking change**: Refactored component to use `browser-state` instead of `browser-session`.
+  * Added additional method to `TabsUseCases` to select a tab based on its id.
+
 * **browser-icons**
   * ⚠️ **This is a breaking change**: Migrated this component to use `browser-state` instead of `browser-session`. It is now required to pass a `BrowserStore` instance (instead of `SessionManager`) to `BrowserIcons.install()`.
 

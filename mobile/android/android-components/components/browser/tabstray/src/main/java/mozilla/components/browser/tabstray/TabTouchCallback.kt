@@ -19,7 +19,7 @@ open class TabTouchCallback(
 
     override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
         with(viewHolder as TabViewHolder) {
-            session?.let { observable.notifyObservers { onTabClosed(it) } }
+            tab?.let { observable.notifyObservers { onTabClosed(it) } }
         }
     }
 

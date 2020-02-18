@@ -47,15 +47,6 @@ class BrowserTabsTray @JvmOverloads constructor(
         attr.recycle()
     }
 
-    override fun onDetachedFromWindow() {
-        super.onDetachedFromWindow()
-
-        // Multiple tabs that we are currently displaying may be subscribed to a Session to update
-        // automatically. Unsubscribe all of them now so that we do not reference them and keep them
-        // in memory.
-        tabsAdapter.unsubscribeHolders()
-    }
-
     /**
      * Convenience method to cast this object to an Android View object.
      */

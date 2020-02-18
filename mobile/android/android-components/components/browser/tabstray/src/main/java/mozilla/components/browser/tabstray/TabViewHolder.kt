@@ -11,8 +11,8 @@ import android.widget.TextView
 import androidx.appcompat.widget.AppCompatImageButton
 import androidx.cardview.widget.CardView
 import androidx.recyclerview.widget.RecyclerView
-import mozilla.components.browser.session.Session
 import mozilla.components.browser.tabstray.thumbnail.TabThumbnailView
+import mozilla.components.concept.tabstray.Tab
 import mozilla.components.concept.tabstray.TabsTray
 import mozilla.components.support.base.observer.Observable
 
@@ -22,7 +22,7 @@ import mozilla.components.support.base.observer.Observable
 class TabViewHolder(
     itemView: View,
     private val tabsTray: BrowserTabsTray
-) : RecyclerView.ViewHolder(itemView), Session.Observer {
+) : RecyclerView.ViewHolder(itemView) {
     private val cardView: CardView = (itemView as CardView).apply {
         elevation = tabsTray.styling.itemElevation
     }
@@ -31,28 +31,28 @@ class TabViewHolder(
     private val closeView: AppCompatImageButton = itemView.findViewById(R.id.mozac_browser_tabstray_close)
     private val thumbnailView: TabThumbnailView = itemView.findViewById(R.id.mozac_browser_tabstray_thumbnail)
 
-    internal var session: Session? = null
+    internal var tab: Tab? = null
 
     /**
      * Displays the data of the given session and notifies the given observable about events.
      */
-    fun bind(session: Session, isSelected: Boolean, observable: Observable<TabsTray.Observer>) {
-        this.session = session.also { it.register(this) }
+    fun bind(tab: Tab, isSelected: Boolean, observable: Observable<TabsTray.Observer>) {
+        this.tab = tab
 
-        val title = if (session.title.isNotEmpty()) {
-            session.title
+        val title = if (tab.title.isNotEmpty()) {
+            tab.title
         } else {
-            session.url
+            tab.url
         }
 
         tabView.text = title
 
         itemView.setOnClickListener {
-            observable.notifyObservers { onTabSelected(session) }
+            observable.notifyObservers { onTabSelected(tab) }
         }
 
         closeView.setOnClickListener {
-            observable.notifyObservers { onTabClosed(session) }
+            observable.notifyObservers { onTabClosed(tab) }
         }
 
         if (isSelected) {
@@ -65,19 +65,8 @@ class TabViewHolder(
             closeView.imageTintList = ColorStateList.valueOf(tabsTray.styling.itemTextColor)
         }
 
-        thumbnailView.setImageBitmap(session.thumbnail)
+        thumbnailView.setImageBitmap(tab.thumbnail)
 
-        iconView.setImageBitmap(session.icon)
-    }
-
-    /**
-     * The attached view no longer needs to display any data.
-     */
-    fun unbind() {
-        session?.unregister(this)
-    }
-
-    override fun onUrlChanged(session: Session, url: String) {
-        tabView.text = url
+        iconView.setImageBitmap(tab.icon)
     }
 }
