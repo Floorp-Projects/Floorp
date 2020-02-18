@@ -462,7 +462,7 @@ class JSONPoliciesProvider {
 
   get hasPolicies() {
     return (
-      !this._failed ||
+      this._failed ||
       (this._policies !== null && !isEmptyObject(this._policies))
     );
   }
