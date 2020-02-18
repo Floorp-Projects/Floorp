@@ -127,7 +127,11 @@ void AppShutdown::Init(AppShutdownMode aMode) {
       StaticPrefs::toolkit_shutdown_lateWriteChecksStage();
   sLateWriteChecksPhase = GetShutdownPhaseFromPrefValue(lateWriteChecksPref);
 
-  scache::StartupCache::GetSingleton()->MaybeInitShutdownWrite();
+  // Very early shutdowns can happen before the startup cache is even
+  // initialized; don't bother initializing it during shutdown.
+  if (auto* cache = scache::StartupCache::GetSingletonNoInit()) {
+    cache->MaybeInitShutdownWrite();
+  }
 }
 
 void AppShutdown::MaybeFastShutdown(ShutdownPhase aPhase) {
