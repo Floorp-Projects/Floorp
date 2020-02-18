@@ -16,9 +16,9 @@ const TEST_URL = `${ORIGIN}/${PATH}storage-dfpi.html`;
 
 function listOrigins() {
   return new Promise(resolve => {
-    SpecialPowers.Services.qms.listOrigins(req => {
-      resolve(req.result.map(item => item.origin));
-    });
+    SpecialPowers.Services.qms.listOrigins().callback = req => {
+      resolve(req.result);
+    };
   });
 }
 
@@ -52,6 +52,7 @@ add_task(async function() {
   // and after `openTabAndSetupStorage` is called.
   // To ensure more accurate results, try choosing a uncommon origin for PREFIX.
   const EXISTING_ORIGINS = await listOrigins();
+  ok(!EXISTING_ORIGINS.includes(ORIGIN), `${ORIGIN} doesn't exist`);
 
   await openTabAndSetupStorage(TEST_URL);
 
@@ -62,7 +63,7 @@ add_task(async function() {
       `check origin: ${origin}`
     );
   }
-  is(origins.length, EXISTING_ORIGINS.length + 1, "num of origin matches");
+  ok(origins.includes(ORIGIN), `${ORIGIN} is added`);
 
   await finishTests();
 });
