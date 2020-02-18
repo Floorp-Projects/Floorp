@@ -175,6 +175,7 @@ class StartupCache : public nsIMemoryReporter {
   nsresult GetDebugObjectOutputStream(nsIObjectOutputStream* aStream,
                                       nsIObjectOutputStream** outStream);
 
+  static StartupCache* GetSingletonNoInit();
   static StartupCache* GetSingleton();
   static void DeleteSingleton();
 

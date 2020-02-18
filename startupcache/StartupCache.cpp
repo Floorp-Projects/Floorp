@@ -102,6 +102,10 @@ static nsresult MapLZ4ErrorToNsresult(size_t aError) {
   return NS_ERROR_FAILURE;
 }
 
+StartupCache* StartupCache::GetSingletonNoInit() {
+  return StartupCache::gStartupCache;
+}
+
 StartupCache* StartupCache::GetSingleton() {
   if (!gStartupCache) {
     if (!XRE_IsParentProcess()) {
