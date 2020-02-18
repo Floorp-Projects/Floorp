@@ -7,7 +7,7 @@ const protocol = require("devtools/shared/protocol");
 const { FrontClassWithSpec } = protocol;
 const {
   DevToolsServerConnection,
-} = require("devtools/server/debugger-server-connection");
+} = require("devtools/server/devtools-server-connection");
 const Services = require("Services");
 
 const inContentSpec = protocol.generateActorSpec({

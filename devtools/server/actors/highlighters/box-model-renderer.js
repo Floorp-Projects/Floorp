@@ -736,7 +736,7 @@ exports.BoxModelHighlighterRenderer = BoxModelHighlighterRenderer;
  *         Message manager that corresponds to the current content tab.
  * @param  {String} options.prefix
  *         Unique prefix for message manager messages.
- *         This is the debugger-server-connection prefix.
+ *         This is the devtools-server-connection prefix.
  * @return {Object}
  *         Defines event listeners for when client disconnects or browser gets
  *         swapped.
