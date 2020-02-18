@@ -20,5 +20,6 @@ DevToolsModules(
     'request-blocking.js',
     'request-utils.js',
     'sort-predicates.js',
-    'sort-utils.js'
+    'sort-utils.js',
+    'tooltips.js'
 )
