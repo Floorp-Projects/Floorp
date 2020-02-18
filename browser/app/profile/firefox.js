@@ -1544,9 +1544,6 @@ pref("browser.contentblocking.database.enabled", true);
 
 pref("dom.storage_access.enabled", true);
 
-pref("browser.contentblocking.control-center.ui.showBlockedLabels", true);
-pref("browser.contentblocking.control-center.ui.showAllowedLabels", false);
-
 pref("browser.contentblocking.cryptomining.preferences.ui.enabled", true);
 pref("browser.contentblocking.fingerprinting.preferences.ui.enabled", true);
 
