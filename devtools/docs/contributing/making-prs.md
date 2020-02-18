@@ -10,7 +10,7 @@ hg commit -m "Bug 1234567 - Implement feature XYZ. r=name,name2!"
  The commit message explained in detail:
  - `Bug 1234567` - The number of the bug in bugzilla.
  - `- Implement feature XYZ.` - The commit message.
- - `r=name` - The short form to request a review. Enter the name you found using the 
+ - `r=name` - The short form to request a review. Enter the name you found using the
  instructions in the [previous step](./code-reviews-find-reviewer.md).
  - `,name2!` - You can have more than one reviewer. The `!` makes the review a *blocking* review (Patch can not land without accepted review).
 
@@ -41,7 +41,7 @@ The reviewer might suggest you do additional changes. For example, they might re
 Hence, you might need to go back to the code and do some edits to address the issues and recommendations. Once you have done this, you must update the existing commit:
 
 ```bash
-hg commit --amend -m 'Address revision issues: rewrite to use helper helpfulHelper()'
+hg commit --amend
 ```
 
 And submit the change again:
