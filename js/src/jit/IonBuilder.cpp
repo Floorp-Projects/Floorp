@@ -2465,6 +2465,9 @@ AbortReasonOr<Ok> IonBuilder::inspectOpcode(JSOp op, bool* restarted) {
     case JSOp::CheckThis:
       return jsop_checkthis();
 
+    case JSOp::CheckThisReinit:
+      return jsop_checkthisreinit();
+
     // ===== NOT Yet Implemented =====
     // Read below!
 
@@ -2480,7 +2483,6 @@ AbortReasonOr<Ok> IonBuilder::inspectOpcode(JSOp op, bool* restarted) {
     // Classes
     case JSOp::InitHomeObject:
     case JSOp::DerivedConstructor:
-    case JSOp::CheckThisReinit:
 
     // Super
     case JSOp::SetPropSuper:
@@ -9903,6 +9905,13 @@ AbortReasonOr<Ok> IonBuilder::jsop_checkclassheritage() {
 
 AbortReasonOr<Ok> IonBuilder::jsop_checkthis() {
   auto* ins = MCheckThis::New(alloc(), current->pop());
+  current->add(ins);
+  current->push(ins);
+  return Ok();
+}
+
+AbortReasonOr<Ok> IonBuilder::jsop_checkthisreinit() {
+  auto* ins = MCheckThisReinit::New(alloc(), current->pop());
   current->add(ins);
   current->push(ins);
   return Ok();
