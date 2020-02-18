@@ -949,8 +949,6 @@ pub struct Capabilities {
     /// Whether the driver supports uploading to textures from a non-zero
     /// offset within a PBO.
     pub supports_nonzero_pbo_offsets: bool,
-    /// Whether the driver supports specifying the texture usage up front.
-    pub supports_texture_usage: bool,
 }
 
 #[derive(Clone, Debug)]
@@ -1311,8 +1309,6 @@ impl Device {
             gl.provoking_vertex_angle(gl::FIRST_VERTEX_CONVENTION);
         }
 
-        let supports_texture_usage = supports_extension(&extensions, "GL_ANGLE_texture_usage");
-
         // Our common-case image data in Firefox is BGRA, so we make an effort
         // to use BGRA as the internal texture storage format to avoid the need
         // to swizzle during upload. Currently we only do this on GLES (and thus
@@ -1484,7 +1480,6 @@ impl Device {
                 supports_khr_debug,
                 supports_texture_swizzle,
                 supports_nonzero_pbo_offsets,
-                supports_texture_usage,
             },
 
             color_formats,
@@ -2088,10 +2083,6 @@ impl Device {
         };
         self.bind_texture(DEFAULT_TEXTURE, &texture, Swizzle::default());
         self.set_texture_parameters(texture.target, filter);
-
-        if self.capabilities.supports_texture_usage && render_target.is_some() {
-            self.gl.tex_parameter_i(texture.target, gl::TEXTURE_USAGE_ANGLE, gl::FRAMEBUFFER_ATTACHMENT_ANGLE as gl::GLint);
-        }
 
         // Allocate storage.
         let desc = self.gl_describe_format(texture.format);
