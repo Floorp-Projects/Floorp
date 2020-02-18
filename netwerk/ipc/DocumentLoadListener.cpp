@@ -1213,7 +1213,7 @@ DocumentLoadListener::GetCachedCrossOriginOpenerPolicy(
 
   RefPtr<nsHttpChannel> httpChannel = do_QueryObject(mChannel);
   if (!httpChannel) {
-    *aPolicy = nsILoadInfo::OPENER_POLICY_NULL;
+    *aPolicy = nsILoadInfo::OPENER_POLICY_UNSAFE_NONE;
     return NS_OK;
   }
 

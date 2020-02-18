@@ -154,7 +154,7 @@ HttpBaseChannel::HttpBaseChannel()
     : mReportCollector(new ConsoleReportCollector()),
       mHttpHandler(gHttpHandler),
       mChannelCreationTime(0),
-      mComputedCrossOriginOpenerPolicy(nsILoadInfo::OPENER_POLICY_NULL),
+      mComputedCrossOriginOpenerPolicy(nsILoadInfo::OPENER_POLICY_UNSAFE_NONE),
       mStartPos(UINT64_MAX),
       mTransferSize(0),
       mRequestSize(0),
@@ -4467,32 +4467,6 @@ nsresult HttpBaseChannel::GetResponseEmbedderPolicy(
   return NS_OK;
 }
 
-namespace {
-
-nsILoadInfo::CrossOriginOpenerPolicy GetSameness(
-    nsILoadInfo::CrossOriginOpenerPolicy aPolicy) {
-  uint8_t sameness = aPolicy & nsILoadInfo::OPENER_POLICY_SAMENESS_MASK;
-  return nsILoadInfo::CrossOriginOpenerPolicy(sameness);
-}
-
-nsILoadInfo::CrossOriginOpenerPolicy CreateCrossOriginOpenerPolicy(
-    nsILoadInfo::CrossOriginOpenerPolicy aSameness, bool aUnsafeAllowOutgoing,
-    bool aEmbedderPolicy) {
-  uint8_t policy = aSameness;
-
-  if (aUnsafeAllowOutgoing) {
-    policy |= nsILoadInfo::OPENER_POLICY_UNSAFE_ALLOW_OUTGOING_FLAG;
-  }
-
-  if (aEmbedderPolicy) {
-    policy |= nsILoadInfo::OPENER_POLICY_EMBEDDER_POLICY_REQUIRE_CORP_FLAG;
-  }
-
-  return nsILoadInfo::CrossOriginOpenerPolicy(policy);
-}
-
-}  // anonymous namespace
-
 // Obtain a cross-origin opener-policy from a response response and a
 // cross-origin opener policy initiator.
 // https://gist.github.com/annevk/6f2dd8c79c77123f39797f6bdac43f3e
@@ -4500,7 +4474,7 @@ NS_IMETHODIMP HttpBaseChannel::ComputeCrossOriginOpenerPolicy(
     nsILoadInfo::CrossOriginOpenerPolicy aInitiatorPolicy,
     nsILoadInfo::CrossOriginOpenerPolicy* aOutPolicy) {
   MOZ_ASSERT(aOutPolicy);
-  *aOutPolicy = nsILoadInfo::OPENER_POLICY_NULL;
+  *aOutPolicy = nsILoadInfo::OPENER_POLICY_UNSAFE_NONE;
 
   if (!mResponseHead) {
     return NS_ERROR_NOT_AVAILABLE;
@@ -4515,67 +4489,30 @@ NS_IMETHODIMP HttpBaseChannel::ComputeCrossOriginOpenerPolicy(
   Unused << mResponseHead->GetHeader(nsHttp::Cross_Origin_Opener_Policy,
                                      openerPolicy);
 
-  // Cross-Origin-Opener-Policy = sameness [ RWS outgoing ] / inherit
-  // sameness = %s"same-origin" / %s"same-site" ; case-sensitive
-  // outgoing = %s"unsafe-allow-outgoing" ; case-sensitive
-  // inherit  = %s"unsafe-inherit" ; case-sensitive
+  // Cross-Origin-Opener-Policy = %s"same-origin" /
+  //                              %s"same-origin-allow-popups" /
+  //                              %s"unsafe-none"; case-sensitive
 
-  nsILoadInfo::CrossOriginOpenerPolicy sameness =
-      nsILoadInfo::OPENER_POLICY_NULL;
-  bool unsafeAllowOutgoing = false;
-  bool embedderPolicy = false;
-  if (openerPolicy.EqualsLiteral("unsafe-inherit")) {
-    // Step 6
-    sameness = GetSameness(aInitiatorPolicy);
-    unsafeAllowOutgoing =
-        !!(aInitiatorPolicy &
-           nsILoadInfo::OPENER_POLICY_UNSAFE_ALLOW_OUTGOING_FLAG);
-  } else {
-    // Step 7
-    Tokenizer t(openerPolicy);
-    nsAutoCString samenessString;
-    nsAutoCString outgoingString;
+  nsILoadInfo::CrossOriginOpenerPolicy policy =
+      nsILoadInfo::OPENER_POLICY_UNSAFE_NONE;
 
-    // The return value will be true if we find any whitespace. If there is
-    // whitespace, then it must be followed by "unsafe-allow-outgoing" otherwise
-    // this is a malformed header value.
-    unsafeAllowOutgoing =
-        t.ReadUntil(Tokenizer::Token::Whitespace(), samenessString);
-    if (unsafeAllowOutgoing) {
-      t.SkipWhites();
-      bool foundEOF =
-          t.ReadUntil(Tokenizer::Token::EndOfFile(), outgoingString);
-      if (!foundEOF) {
-        // Malformed response. There should be no text after the second token.
-        return NS_OK;
-      }
-      if (!outgoingString.EqualsLiteral("unsafe-allow-outgoing")) {
-        // Malformed response. Only one allowed value for the second token.
-        return NS_OK;
-      }
-    }
-
-    if (samenessString.EqualsLiteral("same-origin")) {
-      sameness = nsILoadInfo::OPENER_POLICY_SAME_ORIGIN;
-    } else if (samenessString.EqualsLiteral("same-site")) {
-      sameness = nsILoadInfo::OPENER_POLICY_SAME_SITE;
-    }
+  if (openerPolicy.EqualsLiteral("same-origin")) {
+    policy = nsILoadInfo::OPENER_POLICY_SAME_ORIGIN;
+  } else if (openerPolicy.EqualsLiteral("same-origin-allow-popups")) {
+    policy = nsILoadInfo::OPENER_POLICY_SAME_ORIGIN_ALLOW_POPUPS;
   }
 
-  // Step 9 in obtain a cross-origin opener-policy
-  // https://gist.github.com/annevk/6f2dd8c79c77123f39797f6bdac43f3e
-  if (sameness == nsILoadInfo::OPENER_POLICY_SAME_ORIGIN &&
-      !unsafeAllowOutgoing) {
+  if (policy == nsILoadInfo::OPENER_POLICY_SAME_ORIGIN) {
     nsILoadInfo::CrossOriginEmbedderPolicy coep =
         nsILoadInfo::EMBEDDER_POLICY_NULL;
     if (NS_SUCCEEDED(GetResponseEmbedderPolicy(&coep)) &&
         coep == nsILoadInfo::EMBEDDER_POLICY_REQUIRE_CORP) {
-      embedderPolicy = true;
+      policy =
+          nsILoadInfo::OPENER_POLICY_SAME_ORIGIN_EMBEDDER_POLICY_REQUIRE_CORP;
     }
   }
 
-  *aOutPolicy = CreateCrossOriginOpenerPolicy(sameness, unsafeAllowOutgoing,
-                                              embedderPolicy);
+  *aOutPolicy = policy;
   return NS_OK;
 }
 

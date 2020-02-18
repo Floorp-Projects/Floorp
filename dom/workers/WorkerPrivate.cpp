@@ -2324,7 +2324,7 @@ already_AddRefed<WorkerPrivate> WorkerPrivate::Constructor(
   MOZ_ASSERT(runtimeService);
 
   nsILoadInfo::CrossOriginOpenerPolicy agentClusterCoop =
-      nsILoadInfo::OPENER_POLICY_NULL;
+      nsILoadInfo::OPENER_POLICY_UNSAFE_NONE;
   nsID agentClusterId;
   if (parent) {
     MOZ_ASSERT(aWorkerType == WorkerType::WorkerTypeDedicated);
