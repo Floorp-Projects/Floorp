@@ -15,7 +15,7 @@ class nsTableCellFrame;
 
 namespace mozilla {
 
-enum class TableSelection : uint32_t;
+enum class TableSelectionMode : uint32_t;
 
 namespace a11y {
 
@@ -180,7 +180,8 @@ class HTMLTableAccessible : public HyperTextAccessibleWrap,
    * @param aTarget  [in] indicates what should be selected, either row or
    * column (see nsFrameSelection)
    */
-  nsresult AddRowOrColumnToSelection(int32_t aIndex, TableSelection aTarget);
+  nsresult AddRowOrColumnToSelection(int32_t aIndex,
+                                     TableSelectionMode aTarget);
 
   /**
    * Removes rows or columns at the given index or outside it from selection.
@@ -192,7 +193,7 @@ class HTMLTableAccessible : public HyperTextAccessibleWrap,
    *                    should be unselected only
    */
   nsresult RemoveRowsOrColumnsFromSelection(int32_t aIndex,
-                                            TableSelection aTarget,
+                                            TableSelectionMode aTarget,
                                             bool aIsOuter);
 
 #ifdef SHOW_LAYOUT_HEURISTIC

@@ -670,36 +670,36 @@ bool HTMLTableAccessible::IsCellSelected(uint32_t aRowIdx, uint32_t aColIdx) {
 
 void HTMLTableAccessible::SelectRow(uint32_t aRowIdx) {
   DebugOnly<nsresult> rv =
-      RemoveRowsOrColumnsFromSelection(aRowIdx, TableSelection::Row, true);
+      RemoveRowsOrColumnsFromSelection(aRowIdx, TableSelectionMode::Row, true);
   NS_ASSERTION(NS_SUCCEEDED(rv),
                "RemoveRowsOrColumnsFromSelection() Shouldn't fail!");
 
-  AddRowOrColumnToSelection(aRowIdx, TableSelection::Row);
+  AddRowOrColumnToSelection(aRowIdx, TableSelectionMode::Row);
 }
 
 void HTMLTableAccessible::SelectCol(uint32_t aColIdx) {
-  DebugOnly<nsresult> rv =
-      RemoveRowsOrColumnsFromSelection(aColIdx, TableSelection::Column, true);
+  DebugOnly<nsresult> rv = RemoveRowsOrColumnsFromSelection(
+      aColIdx, TableSelectionMode::Column, true);
   NS_ASSERTION(NS_SUCCEEDED(rv),
                "RemoveRowsOrColumnsFromSelection() Shouldn't fail!");
 
-  AddRowOrColumnToSelection(aColIdx, TableSelection::Column);
+  AddRowOrColumnToSelection(aColIdx, TableSelectionMode::Column);
 }
 
 void HTMLTableAccessible::UnselectRow(uint32_t aRowIdx) {
-  RemoveRowsOrColumnsFromSelection(aRowIdx, TableSelection::Row, false);
+  RemoveRowsOrColumnsFromSelection(aRowIdx, TableSelectionMode::Row, false);
 }
 
 void HTMLTableAccessible::UnselectCol(uint32_t aColIdx) {
-  RemoveRowsOrColumnsFromSelection(aColIdx, TableSelection::Column, false);
+  RemoveRowsOrColumnsFromSelection(aColIdx, TableSelectionMode::Column, false);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 // HTMLTableAccessible: protected implementation
 
 nsresult HTMLTableAccessible::AddRowOrColumnToSelection(
-    int32_t aIndex, TableSelection aTarget) {
-  bool doSelectRow = (aTarget == TableSelection::Row);
+    int32_t aIndex, TableSelectionMode aTarget) {
+  bool doSelectRow = (aTarget == TableSelectionMode::Row);
 
   nsTableWrapperFrame* tableFrame = GetTableWrapperFrame();
   if (!tableFrame) return NS_OK;
@@ -728,7 +728,7 @@ nsresult HTMLTableAccessible::AddRowOrColumnToSelection(
 }
 
 nsresult HTMLTableAccessible::RemoveRowsOrColumnsFromSelection(
-    int32_t aIndex, TableSelection aTarget, bool aIsOuter) {
+    int32_t aIndex, TableSelectionMode aTarget, bool aIsOuter) {
   nsTableWrapperFrame* tableFrame = GetTableWrapperFrame();
   if (!tableFrame) return NS_OK;
 
@@ -736,7 +736,7 @@ nsresult HTMLTableAccessible::RemoveRowsOrColumnsFromSelection(
   RefPtr<nsFrameSelection> tableSelection =
       const_cast<nsFrameSelection*>(presShell->ConstFrameSelection());
 
-  bool doUnselectRow = (aTarget == TableSelection::Row);
+  bool doUnselectRow = (aTarget == TableSelectionMode::Row);
   uint32_t count = doUnselectRow ? ColCount() : RowCount();
 
   int32_t startRowIdx = doUnselectRow ? aIndex : 0;
