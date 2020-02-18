@@ -469,12 +469,11 @@ static already_AddRefed<CSSAnimation> BuildAnimation(
     return oldAnim.forget();
   }
 
-  // mTarget is non-null here, so we emplace it directly.
-  Maybe<OwningAnimationTarget> target;
-  target.emplace(aTarget.mElement, aTarget.mPseudoType);
   KeyframeEffectParams effectOptions;
   RefPtr<KeyframeEffect> effect = new KeyframeEffect(
-      aPresContext->Document(), target, std::move(timing), effectOptions);
+      aPresContext->Document(),
+      OwningAnimationTarget(aTarget.mElement, aTarget.mPseudoType),
+      std::move(timing), effectOptions);
 
   aBuilder.SetKeyframes(*effect, std::move(keyframes));
 

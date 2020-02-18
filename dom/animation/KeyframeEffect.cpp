@@ -73,7 +73,8 @@ bool PropertyValuePair::operator==(const PropertyValuePair& aOther) const {
 
 namespace dom {
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED(KeyframeEffect, AnimationEffect, mTarget)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(KeyframeEffect, AnimationEffect,
+                                   mTarget.mElement)
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(KeyframeEffect, AnimationEffect)
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
@@ -85,11 +86,11 @@ NS_IMPL_ADDREF_INHERITED(KeyframeEffect, AnimationEffect)
 NS_IMPL_RELEASE_INHERITED(KeyframeEffect, AnimationEffect)
 
 KeyframeEffect::KeyframeEffect(Document* aDocument,
-                               const Maybe<OwningAnimationTarget>& aTarget,
+                               OwningAnimationTarget&& aTarget,
                                TimingParams&& aTiming,
                                const KeyframeEffectParams& aOptions)
     : AnimationEffect(aDocument, std::move(aTiming)),
-      mTarget(aTarget),
+      mTarget(std::move(aTarget)),
       mEffectOptions(aOptions),
       mCumulativeChangeHint(nsChangeHint(0)) {}
 
@@ -142,7 +143,7 @@ void KeyframeEffect::SetComposite(const CompositeOperation& aComposite) {
 void KeyframeEffect::NotifySpecifiedTimingUpdated() {
   // Use the same document for a pseudo element and its parent element.
   // Use nullptr if we don't have mTarget, so disable the mutation batch.
-  nsAutoAnimationMutationBatch mb(mTarget ? mTarget->mElement->OwnerDoc()
+  nsAutoAnimationMutationBatch mb(mTarget ? mTarget.mElement->OwnerDoc()
                                           : nullptr);
 
   if (mAnimation) {
@@ -260,8 +261,9 @@ static bool IsEffectiveProperty(const EffectSet& aEffects,
 
 const AnimationProperty* KeyframeEffect::GetEffectiveAnimationOfProperty(
     nsCSSPropertyID aProperty, const EffectSet& aEffects) const {
-  MOZ_ASSERT(&aEffects ==
-             EffectSet::GetEffectSet(mTarget->mElement, mTarget->mPseudoType));
+  MOZ_ASSERT(mTarget &&
+             &aEffects == EffectSet::GetEffectSet(mTarget.mElement,
+                                                  mTarget.mPseudoType));
 
   for (const AnimationProperty& property : mProperties) {
     if (aProperty != property.mProperty) {
@@ -293,7 +295,7 @@ bool KeyframeEffect::HasEffectiveAnimationOfPropertySet(
 nsCSSPropertyIDSet KeyframeEffect::GetPropertiesForCompositor(
     EffectSet& aEffects, const nsIFrame* aFrame) const {
   MOZ_ASSERT(&aEffects ==
-             EffectSet::GetEffectSet(mTarget->mElement, mTarget->mPseudoType));
+             EffectSet::GetEffectSet(mTarget.mElement, mTarget.mPseudoType));
 
   nsCSSPropertyIDSet properties;
 
@@ -393,7 +395,7 @@ void KeyframeEffect::UpdateProperties(const ComputedStyle* aStyle) {
     }
     // Check if we need to update the cumulative change hint because we now have
     // style data.
-    if (mNeedsStyleData && mTarget && mTarget->mElement->HasServoData()) {
+    if (mNeedsStyleData && mTarget && mTarget.mElement->HasServoData()) {
       CalculateCumulativeChangeHint(aStyle);
     }
     return;
@@ -446,7 +448,7 @@ void KeyframeEffect::EnsureBaseStyles(
   mBaseValues.Clear();
 
   nsPresContext* presContext =
-      nsContentUtils::GetContextForContent(mTarget->mElement);
+      nsContentUtils::GetContextForContent(mTarget.mElement);
   // If |aProperties| is empty we're not going to dereference |presContext| so
   // we don't care if it is nullptr.
   //
@@ -495,8 +497,10 @@ void KeyframeEffect::EnsureBaseStyle(
   }
 
   if (!aBaseComputedStyle) {
+    MOZ_ASSERT(mTarget, "Should have a valid target");
+
     Element* animatingElement = EffectCompositor::GetElementToRestyle(
-        mTarget->mElement, mTarget->mPseudoType);
+        mTarget.mElement, mTarget.mPseudoType);
     if (!animatingElement) {
       return;
     }
@@ -580,9 +584,9 @@ void KeyframeEffect::ComposeStyle(RawServoAnimationValueMap& aComposeResult,
   // out of view.
   if (HasPropertiesThatMightAffectOverflow()) {
     nsPresContext* presContext =
-        nsContentUtils::GetContextForContent(mTarget->mElement);
+        nsContentUtils::GetContextForContent(mTarget.mElement);
     EffectSet* effectSet =
-        EffectSet::GetEffectSet(mTarget->mElement, mTarget->mPseudoType);
+        EffectSet::GetEffectSet(mTarget.mElement, mTarget.mPseudoType);
     if (presContext && effectSet) {
       TimeStamp now = presContext->RefreshDriver()->MostRecentRefresh();
       effectSet->UpdateLastOverflowAnimationSyncTime(now);
@@ -679,10 +683,10 @@ static KeyframeEffectParams KeyframeEffectParamsFromUnion(
 }
 
 /* static */
-Maybe<OwningAnimationTarget> KeyframeEffect::ConvertTarget(
+OwningAnimationTarget KeyframeEffect::ConvertTarget(
     const Nullable<ElementOrCSSPseudoElement>& aTarget) {
   // Return value optimization.
-  Maybe<OwningAnimationTarget> result;
+  OwningAnimationTarget result;
 
   if (aTarget.IsNull()) {
     return result;
@@ -693,10 +697,10 @@ Maybe<OwningAnimationTarget> KeyframeEffect::ConvertTarget(
              "Uninitialized target");
 
   if (target.IsElement()) {
-    result.emplace(&target.GetAsElement());
+    result.mElement = &target.GetAsElement();
   } else {
-    RefPtr<Element> elem = target.GetAsCSSPseudoElement().Element();
-    result.emplace(elem, target.GetAsCSSPseudoElement().GetType());
+    result.mElement = target.GetAsCSSPseudoElement().Element();
+    result.mPseudoType = target.GetAsCSSPseudoElement().GetType();
   }
   return result;
 }
@@ -732,9 +736,8 @@ already_AddRefed<KeyframeEffect> KeyframeEffect::ConstructKeyframeEffect(
   KeyframeEffectParams effectOptions =
       KeyframeEffectParamsFromUnion(aOptions, aGlobal.CallerType());
 
-  Maybe<OwningAnimationTarget> target = ConvertTarget(aTarget);
-  RefPtr<KeyframeEffect> effect =
-      new KeyframeEffect(doc, target, std::move(timingParams), effectOptions);
+  RefPtr<KeyframeEffect> effect = new KeyframeEffect(
+      doc, ConvertTarget(aTarget), std::move(timingParams), effectOptions);
 
   effect->SetKeyframes(aGlobal.Context(), aKeyframes, aRv);
   if (aRv.Failed()) {
@@ -749,7 +752,8 @@ nsTArray<AnimationProperty> KeyframeEffect::BuildProperties(
   MOZ_ASSERT(aStyle);
 
   nsTArray<AnimationProperty> result;
-  // If mTarget is null, return an empty property array.
+  // If mTarget is false (i.e. mTarget.mElement is null), return an empty
+  // property array.
   if (!mTarget) {
     return result;
   }
@@ -763,7 +767,7 @@ nsTArray<AnimationProperty> KeyframeEffect::BuildProperties(
   auto keyframesCopy(mKeyframes);
 
   result = KeyframeUtils::GetAnimationPropertiesFromKeyframes(
-      keyframesCopy, mTarget->mElement, aStyle, mEffectOptions.mComposite);
+      keyframesCopy, mTarget.mElement, aStyle, mEffectOptions.mComposite);
 
 #ifdef DEBUG
   MOZ_ASSERT(SpecifiedKeyframeArraysAreEqual(mKeyframes, keyframesCopy),
@@ -801,8 +805,8 @@ void KeyframeEffect::UpdateTargetRegistration() {
              "Out of date Animation::IsRelevant value");
 
   if (isRelevant && !mInEffectSet) {
-    EffectSet* effectSet = EffectSet::GetOrCreateEffectSet(
-        mTarget->mElement, mTarget->mPseudoType);
+    EffectSet* effectSet =
+        EffectSet::GetOrCreateEffectSet(mTarget.mElement, mTarget.mPseudoType);
     effectSet->AddEffect(*this);
     mInEffectSet = true;
     UpdateEffectSet(effectSet);
@@ -820,7 +824,7 @@ void KeyframeEffect::UnregisterTarget() {
   }
 
   EffectSet* effectSet =
-      EffectSet::GetEffectSet(mTarget->mElement, mTarget->mPseudoType);
+      EffectSet::GetEffectSet(mTarget.mElement, mTarget.mPseudoType);
   MOZ_ASSERT(effectSet,
              "If mInEffectSet is true, there must be an EffectSet"
              " on the target element");
@@ -829,7 +833,7 @@ void KeyframeEffect::UnregisterTarget() {
     effectSet->RemoveEffect(*this);
 
     if (effectSet->IsEmpty()) {
-      EffectSet::DestroyEffectSet(mTarget->mElement, mTarget->mPseudoType);
+      EffectSet::DestroyEffectSet(mTarget.mElement, mTarget.mPseudoType);
     }
   }
   nsIFrame* frame = GetPrimaryFrame();
@@ -843,10 +847,10 @@ void KeyframeEffect::RequestRestyle(
     return;
   }
   nsPresContext* presContext =
-      nsContentUtils::GetContextForContent(mTarget->mElement);
+      nsContentUtils::GetContextForContent(mTarget.mElement);
   if (presContext && mAnimation) {
     presContext->EffectCompositor()->RequestRestyle(
-        mTarget->mElement, mTarget->mPseudoType, aRestyleType,
+        mTarget.mElement, mTarget.mPseudoType, aRestyleType,
         mAnimation->CascadeLevel());
   }
 }
@@ -860,17 +864,15 @@ already_AddRefed<ComputedStyle> KeyframeEffect::GetTargetComputedStyle(
   MOZ_ASSERT(mTarget,
              "Should only have a document when we have a target element");
 
-  nsAtom* pseudo =
-      PseudoStyle::IsPseudoElement(mTarget->mPseudoType)
-          ? nsCSSPseudoElements::GetPseudoAtom(mTarget->mPseudoType)
-          : nullptr;
+  nsAtom* pseudo = PseudoStyle::IsPseudoElement(mTarget.mPseudoType)
+                       ? nsCSSPseudoElements::GetPseudoAtom(mTarget.mPseudoType)
+                       : nullptr;
 
-  OwningAnimationTarget kungfuDeathGrip(mTarget->mElement,
-                                        mTarget->mPseudoType);
+  OwningAnimationTarget kungfuDeathGrip(mTarget.mElement, mTarget.mPseudoType);
 
   return aFlushType == Flush::Style
-             ? nsComputedDOMStyle::GetComputedStyle(mTarget->mElement, pseudo)
-             : nsComputedDOMStyle::GetComputedStyleNoFlush(mTarget->mElement,
+             ? nsComputedDOMStyle::GetComputedStyle(mTarget.mElement, pseudo)
+             : nsComputedDOMStyle::GetComputedStyleNoFlush(mTarget.mElement,
                                                            pseudo);
 }
 
@@ -928,8 +930,8 @@ already_AddRefed<KeyframeEffect> KeyframeEffect::Constructor(
   // Note: we don't need to re-throw exceptions since the value specified on
   //       aSource's timing object can be assumed valid.
   RefPtr<KeyframeEffect> effect = new KeyframeEffect(
-      doc, aSource.mTarget, TimingParams(aSource.SpecifiedTiming()),
-      aSource.mEffectOptions);
+      doc, OwningAnimationTarget(aSource.mTarget),
+      TimingParams(aSource.SpecifiedTiming()), aSource.mEffectOptions);
   // Copy cumulative change hint. mCumulativeChangeHint should be the same as
   // the source one because both of targets are the same.
   effect->mCumulativeChangeHint = aSource.mCumulativeChangeHint;
@@ -952,17 +954,17 @@ void KeyframeEffect::GetTarget(
     return;
   }
 
-  switch (mTarget->mPseudoType) {
+  switch (mTarget.mPseudoType) {
     case PseudoStyleType::before:
     case PseudoStyleType::after:
     case PseudoStyleType::marker:
       aRv.SetValue().SetAsCSSPseudoElement() =
-          CSSPseudoElement::GetCSSPseudoElement(mTarget->mElement,
-                                                mTarget->mPseudoType);
+          CSSPseudoElement::GetCSSPseudoElement(mTarget.mElement,
+                                                mTarget.mPseudoType);
       break;
 
     case PseudoStyleType::NotPseudo:
-      aRv.SetValue().SetAsElement() = mTarget->mElement;
+      aRv.SetValue().SetAsElement() = mTarget.mElement;
       break;
 
     default:
@@ -973,7 +975,7 @@ void KeyframeEffect::GetTarget(
 
 void KeyframeEffect::SetTarget(
     const Nullable<ElementOrCSSPseudoElement>& aTarget) {
-  Maybe<OwningAnimationTarget> newTarget = ConvertTarget(aTarget);
+  OwningAnimationTarget newTarget = ConvertTarget(aTarget);
   if (mTarget == newTarget) {
     // Assign the same target, skip it.
     return;
@@ -985,7 +987,7 @@ void KeyframeEffect::SetTarget(
 
     RequestRestyle(EffectCompositor::RestyleType::Layer);
 
-    nsAutoAnimationMutationBatch mb(mTarget->mElement->OwnerDoc());
+    nsAutoAnimationMutationBatch mb(mTarget.mElement->OwnerDoc());
     if (mAnimation) {
       MutationObservers::NotifyAnimationRemoved(mAnimation);
     }
@@ -1002,7 +1004,7 @@ void KeyframeEffect::SetTarget(
 
     RequestRestyle(EffectCompositor::RestyleType::Layer);
 
-    nsAutoAnimationMutationBatch mb(mTarget->mElement->OwnerDoc());
+    nsAutoAnimationMutationBatch mb(mTarget.mElement->OwnerDoc());
     if (mAnimation) {
       MutationObservers::NotifyAnimationAdded(mAnimation);
       mAnimation->ReschedulePendingTasks();
@@ -1315,7 +1317,7 @@ bool KeyframeEffect::CanThrottle() const {
                "The property should be able to run on the compositor");
     if (!effectSet) {
       effectSet =
-          EffectSet::GetEffectSet(mTarget->mElement, mTarget->mPseudoType);
+          EffectSet::GetEffectSet(mTarget.mElement, mTarget.mPseudoType);
       MOZ_ASSERT(effectSet,
                  "CanThrottle should be called on an effect "
                  "associated with a target element");
@@ -1351,7 +1353,7 @@ bool KeyframeEffect::CanThrottleOverflowChanges(const nsIFrame& aFrame) const {
   TimeStamp now = aFrame.PresContext()->RefreshDriver()->MostRecentRefresh();
 
   EffectSet* effectSet =
-      EffectSet::GetEffectSet(mTarget->mElement, mTarget->mPseudoType);
+      EffectSet::GetEffectSet(mTarget.mElement, mTarget.mPseudoType);
   MOZ_ASSERT(effectSet,
              "CanOverflowTransformChanges is expected to be called"
              " on an effect in an effect set");
@@ -1428,16 +1430,16 @@ nsIFrame* KeyframeEffect::GetPrimaryFrame() const {
     return frame;
   }
 
-  if (mTarget->mPseudoType == PseudoStyleType::before) {
-    frame = nsLayoutUtils::GetBeforeFrame(mTarget->mElement);
-  } else if (mTarget->mPseudoType == PseudoStyleType::after) {
-    frame = nsLayoutUtils::GetAfterFrame(mTarget->mElement);
-  } else if (mTarget->mPseudoType == PseudoStyleType::marker) {
-    frame = nsLayoutUtils::GetMarkerFrame(mTarget->mElement);
+  if (mTarget.mPseudoType == PseudoStyleType::before) {
+    frame = nsLayoutUtils::GetBeforeFrame(mTarget.mElement);
+  } else if (mTarget.mPseudoType == PseudoStyleType::after) {
+    frame = nsLayoutUtils::GetAfterFrame(mTarget.mElement);
+  } else if (mTarget.mPseudoType == PseudoStyleType::marker) {
+    frame = nsLayoutUtils::GetMarkerFrame(mTarget.mElement);
   } else {
-    frame = mTarget->mElement->GetPrimaryFrame();
-    MOZ_ASSERT(mTarget->mPseudoType == PseudoStyleType::NotPseudo,
-               "unknown mTarget->mPseudoType");
+    frame = mTarget.mElement->GetPrimaryFrame();
+    MOZ_ASSERT(mTarget.mPseudoType == PseudoStyleType::NotPseudo,
+               "unknown mTarget.mPseudoType");
   }
 
   return frame;
@@ -1447,7 +1449,7 @@ Document* KeyframeEffect::GetRenderedDocument() const {
   if (!mTarget) {
     return nullptr;
   }
-  return mTarget->mElement->GetComposedDoc();
+  return mTarget.mElement->GetComposedDoc();
 }
 
 PresShell* KeyframeEffect::GetPresShell() const {
@@ -1519,7 +1521,7 @@ bool KeyframeEffect::ShouldBlockAsyncTransformAnimations(
     const nsIFrame* aFrame, const nsCSSPropertyIDSet& aPropertySet,
     AnimationPerformanceWarning::Type& aPerformanceWarning /* out */) const {
   EffectSet* effectSet =
-      EffectSet::GetEffectSet(mTarget->mElement, mTarget->mPseudoType);
+      EffectSet::GetEffectSet(mTarget.mElement, mTarget.mPseudoType);
   // The various transform properties ('transform', 'scale' etc.) get combined
   // on the compositor.
   //
@@ -1590,7 +1592,7 @@ void KeyframeEffect::SetPerformanceWarning(
     if (!curr.HasProperty(property.mProperty)) {
       continue;
     }
-    property.SetPerformanceWarning(aWarning, mTarget->mElement);
+    property.SetPerformanceWarning(aWarning, mTarget.mElement);
     curr.RemoveProperty(property.mProperty);
     if (curr.IsEmpty()) {
       return;
@@ -1607,7 +1609,7 @@ KeyframeEffect::CreateComputedStyleForAnimationValue(
              "with a valid ComputedStyle");
 
   Element* elementForResolve = EffectCompositor::GetElementToRestyle(
-      mTarget->mElement, mTarget->mPseudoType);
+      mTarget.mElement, mTarget.mPseudoType);
   // The element may be null if, for example, we target a pseudo-element that no
   // longer exists.
   if (!elementForResolve) {
@@ -1625,7 +1627,7 @@ void KeyframeEffect::CalculateCumulativeChangeHint(
   mNeedsStyleData = false;
 
   nsPresContext* presContext =
-      mTarget ? nsContentUtils::GetContextForContent(mTarget->mElement)
+      mTarget ? nsContentUtils::GetContextForContent(mTarget.mElement)
               : nullptr;
   if (!presContext) {
     // Change hints make no sense if we're not rendered.
@@ -1734,7 +1736,7 @@ void KeyframeEffect::MarkCascadeNeedsUpdate() {
   }
 
   EffectSet* effectSet =
-      EffectSet::GetEffectSet(mTarget->mElement, mTarget->mPseudoType);
+      EffectSet::GetEffectSet(mTarget.mElement, mTarget.mPseudoType);
   if (!effectSet) {
     return;
   }
@@ -1825,7 +1827,7 @@ void KeyframeEffect::UpdateEffectSet(EffectSet* aEffectSet) const {
   EffectSet* effectSet =
       aEffectSet
           ? aEffectSet
-          : EffectSet::GetEffectSet(mTarget->mElement, mTarget->mPseudoType);
+          : EffectSet::GetEffectSet(mTarget.mElement, mTarget.mPseudoType);
   if (!effectSet) {
     return;
   }

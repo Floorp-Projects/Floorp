@@ -79,7 +79,7 @@ void ElementPropertyTransition::UpdateStartValueFromReplacedTransition() {
              "compositor");
   MOZ_ASSERT(mTarget, "We should have a valid target at this moment");
 
-  dom::DocumentTimeline* timeline = mTarget->mElement->OwnerDoc()->Timeline();
+  dom::DocumentTimeline* timeline = mTarget.mElement->OwnerDoc()->Timeline();
   ComputedTiming computedTiming = GetComputedTimingAt(
       dom::CSSTransition::GetCurrentTimeAt(*timeline, TimeStamp::Now(),
                                            mReplacedTransition->mStartTime,
@@ -737,13 +737,10 @@ bool nsTransitionManager::ConsiderInitiatingTransition(
       duration, delay, 1.0 /* iteration count */,
       dom::PlaybackDirection::Normal, dom::FillMode::Backwards);
 
-  // aElement is non-null here, so we emplace it directly.
-  Maybe<OwningAnimationTarget> target;
-  target.emplace(aElement, aPseudoType);
   KeyframeEffectParams effectOptions;
   RefPtr<ElementPropertyTransition> pt = new ElementPropertyTransition(
-      aElement->OwnerDoc(), target, std::move(timing), startForReversingTest,
-      reversePortion, effectOptions);
+      aElement->OwnerDoc(), OwningAnimationTarget(aElement, aPseudoType),
+      std::move(timing), startForReversingTest, reversePortion, effectOptions);
 
   pt->SetKeyframes(GetTransitionKeyframes(aProperty, std::move(startValue),
                                           std::move(endValue), tf),
