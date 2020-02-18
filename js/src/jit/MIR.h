@@ -11048,6 +11048,23 @@ class MBuiltinProto : public MNullaryInstruction {
   bool possiblyCalls() const override { return true; }
 };
 
+class MSuperFunction : public MUnaryInstruction,
+                       public SingleObjectPolicy::Data {
+  explicit MSuperFunction(MDefinition* callee)
+      : MUnaryInstruction(classOpcode, callee) {
+    setResultType(MIRType::Value);
+  }
+
+ public:
+  INSTRUCTION_HEADER(SuperFunction)
+  TRIVIAL_NEW_WRAPPERS
+  NAMED_OPERANDS((0, callee))
+
+  AliasSet getAliasSet() const override {
+    return AliasSet::Load(AliasSet::ObjectFields);
+  }
+};
+
 // Flips the input's sign bit, independently of the rest of the number's
 // payload. Note this is different from multiplying by minus-one, which has
 // side-effects for e.g. NaNs.
