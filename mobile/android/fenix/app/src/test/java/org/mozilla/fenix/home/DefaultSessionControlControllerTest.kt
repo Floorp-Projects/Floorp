@@ -5,10 +5,10 @@
 package org.mozilla.fenix.home
 
 import android.view.View
-import androidx.constraintlayout.motion.widget.MotionLayout
 import androidx.navigation.NavController
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkStatic
 import io.mockk.verify
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -17,21 +17,24 @@ import kotlinx.coroutines.ObsoleteCoroutinesApi
 import kotlinx.coroutines.newSingleThreadContext
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
+import mozilla.components.browser.session.SessionManager
+import mozilla.components.concept.engine.Engine
 import mozilla.components.feature.tab.collections.TabCollection
 import org.junit.After
-import mozilla.components.feature.tab.collections.Tab as ComponentTab
 import org.junit.Before
 import org.junit.Test
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.browsingmode.BrowsingModeManager
+import org.mozilla.fenix.components.TabCollectionStorage
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.home.sessioncontrol.DefaultSessionControlController
 import org.mozilla.fenix.settings.SupportUtils
+import mozilla.components.feature.tab.collections.Tab as ComponentTab
 
 @ExperimentalCoroutinesApi
 @UseExperimental(ObsoleteCoroutinesApi::class)
@@ -41,7 +44,6 @@ class DefaultSessionControlControllerTest {
     private val activity: HomeActivity = mockk(relaxed = true)
     private val store: HomeFragmentStore = mockk(relaxed = true)
     private val navController: NavController = mockk(relaxed = true)
-    private val homeLayout: MotionLayout = mockk(relaxed = true)
     private val browsingModeManager: BrowsingModeManager = mockk(relaxed = true)
     private val closeTab: (sessionId: String) -> Unit = mockk(relaxed = true)
     private val closeAllTabs: (isPrivateMode: Boolean) -> Unit = mockk(relaxed = true)
@@ -55,12 +57,19 @@ class DefaultSessionControlControllerTest {
         mockk(relaxed = true)
     private val metrics: MetricController = mockk(relaxed = true)
     private val state: HomeFragmentState = mockk(relaxed = true)
+    private val sessionManager: SessionManager = mockk(relaxed = true)
+    private val engine: Engine = mockk(relaxed = true)
+    private val tabCollectionStorage: TabCollectionStorage = mockk(relaxed = true)
 
     private lateinit var controller: DefaultSessionControlController
 
     @Before
     fun setup() {
         Dispatchers.setMain(mainThreadSurrogate)
+        mockkStatic("org.mozilla.fenix.ext.ContextKt")
+        every { activity.components.core.engine } returns engine
+        every { activity.components.core.sessionManager } returns sessionManager
+        every { activity.components.core.tabCollectionStorage } returns tabCollectionStorage
 
         every { store.state } returns state
         every { state.collections } returns emptyList()
