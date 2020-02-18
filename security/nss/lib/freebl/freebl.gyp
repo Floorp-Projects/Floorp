@@ -158,6 +158,7 @@
         '<(DEPTH)/exports.gyp:nss_exports'
       ],
       'cflags': [
+        '-march=armv7',
         '-mfpu=neon',
         '<@(softfp_cflags)',
       ],

@@ -537,6 +537,9 @@ ssl_DecodeResumptionToken(sslSessionID *sid, const PRUint8 *encodedToken,
     }
     if (readerBuffer.len) {
         PORT_Assert(readerBuffer.buf);
+        if (sid->peerID) {
+            PORT_Free((void *)sid->peerID);
+        }
         sid->peerID = PORT_Strdup((const char *)readerBuffer.buf);
     }
 

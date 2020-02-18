@@ -5803,14 +5803,26 @@ tls13_HandleEarlyApplicationData(sslSocket *ss, sslBuffer *origBuf)
 }
 
 PRUint16
-tls13_EncodeDraftVersion(SSL3ProtocolVersion version, SSLProtocolVariant variant)
+tls13_EncodeVersion(SSL3ProtocolVersion version, SSLProtocolVariant variant)
 {
+    if (variant == ssl_variant_datagram) {
+        /* TODO: When DTLS 1.3 is out of draft, replace this with
+         * dtls_TLSVersionToDTLSVersion(). */
+        switch (version) {
 #ifdef DTLS_1_3_DRAFT_VERSION
-    if (version == SSL_LIBRARY_VERSION_TLS_1_3 &&
-        variant == ssl_variant_datagram) {
-        return 0x7f00 | DTLS_1_3_DRAFT_VERSION;
-    }
+            case SSL_LIBRARY_VERSION_TLS_1_3:
+                return 0x7f00 | DTLS_1_3_DRAFT_VERSION;
 #endif
+            case SSL_LIBRARY_VERSION_TLS_1_2:
+                return SSL_LIBRARY_VERSION_DTLS_1_2_WIRE;
+            case SSL_LIBRARY_VERSION_TLS_1_1:
+                /* TLS_1_1 maps to DTLS_1_0, see sslproto.h. */
+                return SSL_LIBRARY_VERSION_DTLS_1_0_WIRE;
+            default:
+                PORT_Assert(0);
+        }
+    }
+    /* Stream-variant encodings do not change. */
     return (PRUint16)version;
 }
 
@@ -5840,8 +5852,8 @@ tls13_ClientReadSupportedVersion(sslSocket *ss)
         return SECFailure;
     }
 
-    if (temp != tls13_EncodeDraftVersion(SSL_LIBRARY_VERSION_TLS_1_3,
-                                         ss->protocolVariant)) {
+    if (temp != tls13_EncodeVersion(SSL_LIBRARY_VERSION_TLS_1_3,
+                                    ss->protocolVariant)) {
         /* You cannot negotiate < TLS 1.3 with supported_versions. */
         FATAL_ERROR(ss, SSL_ERROR_RX_MALFORMED_SERVER_HELLO, illegal_parameter);
         return SECFailure;
@@ -5880,7 +5892,7 @@ tls13_NegotiateVersion(sslSocket *ss, const TLSExtension *supportedVersions)
             return SECFailure;
         }
 
-        PRUint16 wire = tls13_EncodeDraftVersion(version, ss->protocolVariant);
+        PRUint16 wire = tls13_EncodeVersion(version, ss->protocolVariant);
         unsigned long offset;
 
         for (offset = 0; offset < versions.len; offset += 2) {

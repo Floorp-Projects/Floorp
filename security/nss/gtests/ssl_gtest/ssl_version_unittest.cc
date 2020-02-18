@@ -335,6 +335,48 @@ TEST_F(TlsConnectStreamTls13, Ssl30ClientHelloWithSupportedVersions) {
   ConnectExpectAlert(server_, kTlsAlertProtocolVersion);
 }
 
+// Verify the client sends only DTLS versions in supported_versions
+TEST_F(DtlsConnectTest, DtlsSupportedVersionsEncoding) {
+  client_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_1,
+                           SSL_LIBRARY_VERSION_TLS_1_3);
+  server_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_1,
+                           SSL_LIBRARY_VERSION_TLS_1_3);
+  auto capture = MakeTlsFilter<TlsExtensionCapture>(
+      client_, ssl_tls13_supported_versions_xtn);
+  Connect();
+
+  ASSERT_EQ(7U, capture->extension().len());
+  uint32_t version = 0;
+  ASSERT_TRUE(capture->extension().Read(1, 2, &version));
+  EXPECT_EQ(0x7f00 | DTLS_1_3_DRAFT_VERSION, static_cast<int>(version));
+  ASSERT_TRUE(capture->extension().Read(3, 2, &version));
+  EXPECT_EQ(SSL_LIBRARY_VERSION_DTLS_1_2_WIRE, static_cast<int>(version));
+  ASSERT_TRUE(capture->extension().Read(5, 2, &version));
+  EXPECT_EQ(SSL_LIBRARY_VERSION_DTLS_1_0_WIRE, static_cast<int>(version));
+}
+
+// Verify the client sends only TLS versions in supported_versions
+TEST_F(TlsConnectTest, TlsSupportedVersionsEncoding) {
+  client_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_0,
+                           SSL_LIBRARY_VERSION_TLS_1_3);
+  server_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_0,
+                           SSL_LIBRARY_VERSION_TLS_1_3);
+  auto capture = MakeTlsFilter<TlsExtensionCapture>(
+      client_, ssl_tls13_supported_versions_xtn);
+  Connect();
+
+  ASSERT_EQ(9U, capture->extension().len());
+  uint32_t version = 0;
+  ASSERT_TRUE(capture->extension().Read(1, 2, &version));
+  EXPECT_EQ(SSL_LIBRARY_VERSION_TLS_1_3, static_cast<int>(version));
+  ASSERT_TRUE(capture->extension().Read(3, 2, &version));
+  EXPECT_EQ(SSL_LIBRARY_VERSION_TLS_1_2, static_cast<int>(version));
+  ASSERT_TRUE(capture->extension().Read(5, 2, &version));
+  EXPECT_EQ(SSL_LIBRARY_VERSION_TLS_1_1, static_cast<int>(version));
+  ASSERT_TRUE(capture->extension().Read(7, 2, &version));
+  EXPECT_EQ(SSL_LIBRARY_VERSION_TLS_1_0, static_cast<int>(version));
+}
+
 INSTANTIATE_TEST_CASE_P(
     TlsDowngradeSentinelTest, TlsDowngradeTest,
     ::testing::Combine(TlsConnectTestBase::kTlsVariantsStream,

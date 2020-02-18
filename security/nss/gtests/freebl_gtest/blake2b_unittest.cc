@@ -113,6 +113,18 @@ TEST_F(Blake2BTests, ContextTest2) {
       << "BLAKE2B_End failed!";
 }
 
+TEST_F(Blake2BTests, NullContextTest) {
+  SECStatus rv = BLAKE2B_Begin(nullptr);
+  ASSERT_EQ(SECFailure, rv);
+
+  rv = BLAKE2B_Update(nullptr, kat_data.data(), 128);
+  ASSERT_EQ(SECFailure, rv);
+
+  std::vector<uint8_t> digest(BLAKE2B512_LENGTH);
+  rv = BLAKE2B_End(nullptr, digest.data(), nullptr, BLAKE2B512_LENGTH);
+  ASSERT_EQ(SECFailure, rv);
+}
+
 TEST_F(Blake2BTests, CloneTest) {
   ScopedBLAKE2BContext ctx(BLAKE2B_NewContext());
   ScopedBLAKE2BContext cloned_ctx(BLAKE2B_NewContext());
