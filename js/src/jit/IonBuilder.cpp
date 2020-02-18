@@ -2453,6 +2453,9 @@ AbortReasonOr<Ok> IonBuilder::inspectOpcode(JSOp op, bool* restarted) {
     case JSOp::FunWithProto:
       return jsop_funwithproto(info().getFunction(pc));
 
+    case JSOp::ObjWithProto:
+      return jsop_objwithproto();
+
     // ===== NOT Yet Implemented =====
     // Read below!
 
@@ -2466,7 +2469,6 @@ AbortReasonOr<Ok> IonBuilder::inspectOpcode(JSOp op, bool* restarted) {
     case JSOp::StrictSpreadEval:
 
     // Classes
-    case JSOp::ObjWithProto:
     case JSOp::BuiltinProto:
     case JSOp::InitHomeObject:
     case JSOp::DerivedConstructor:
@@ -12768,6 +12770,13 @@ AbortReasonOr<Ok> IonBuilder::jsop_instrumentation_scriptid() {
   }
   pushConstant(Int32Value(scriptId));
   return Ok();
+}
+
+AbortReasonOr<Ok> IonBuilder::jsop_objwithproto() {
+  auto* ins = MObjectWithProto::New(alloc(), current->pop());
+  current->add(ins);
+  current->push(ins);
+  return resumeAfter(ins);
 }
 
 MInstruction* IonBuilder::addConvertElementsToDoubles(MDefinition* elements) {
