@@ -88,7 +88,7 @@ job-defaults:
             by-build-type:
                 release: '{component}(BR)'
                 snapshot: '{component}(BSnap)'
-                nightly-release: '{component}(BnR)'
+                nightly-release: '{component}(BN)'
                 default: '{component}(B)'
         platform: android-all/opt
         tier: 1
@@ -112,7 +112,7 @@ overriden-jobs:
             symbol: 'browser-engine-gecko-nigh(BR)'
     nightly-release-browser-engine-gecko-nightly:
         treeherder:
-            symbol: 'browser-engine-gecko-nigh(BnR)'
+            symbol: 'browser-engine-gecko-nigh(BN)'
 
     lib-fetch-httpurlconnection:
         treeherder:
@@ -125,4 +125,4 @@ overriden-jobs:
             symbol: 'lib-fetch-httpurlconnect(BR)'
     nightly-release-lib-fetch-httpurlconnection:
         treeherder:
-            symbol: 'lib-fetch-httpurlconnect(BnR)'
+            symbol: 'lib-fetch-httpurlconnect(BN)'
