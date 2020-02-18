@@ -111,12 +111,10 @@ class AppLinksInterceptorTest {
     @Test
     fun `black listed schemes request not intercepted when triggered by user clicking on a link`() {
         val engineSession: EngineSession = mock()
-        val whitelistedScheme = "whitelisted"
         val blacklistedScheme = "blacklisted"
         val feature = AppLinksInterceptor(
             context = mockContext,
             interceptLinkClicks = true,
-            alwaysAllowedSchemes = setOf(whitelistedScheme),
             alwaysDeniedSchemes = setOf(blacklistedScheme),
             launchInApp = { true },
             useCases = mockUseCases
@@ -130,24 +128,140 @@ class AppLinksInterceptorTest {
     }
 
     @Test
-    fun `white listed schemes request always intercepted regardless of interceptLinkClicks or launchInApp`() {
+    fun `supported schemes request not launched if launchInApp is false`() {
         val engineSession: EngineSession = mock()
-        val whitelistedScheme = "whitelisted"
+        val supportedScheme = "supported"
+        val feature = AppLinksInterceptor(
+            context = mockContext,
+            interceptLinkClicks = true,
+            engineSupportedSchemes = setOf(supportedScheme),
+            launchInApp = { false },
+            useCases = mockUseCases
+        )
+
+        val supportedUrl = "$supportedScheme://example.com"
+        val supportedRedirect = AppLinkRedirect(Intent.parseUri(supportedUrl, 0), null, null)
+        whenever(mockGetRedirect.invoke(supportedUrl)).thenReturn(supportedRedirect)
+        val response = feature.onLoadRequest(engineSession, supportedUrl, true, false)
+        assertEquals(null, response)
+    }
+
+    @Test
+    fun `supported schemes request not launched if interceptLinkClicks is false`() {
+        val engineSession: EngineSession = mock()
+        val supportedScheme = "supported"
+        val feature = AppLinksInterceptor(
+            context = mockContext,
+            interceptLinkClicks = false,
+            engineSupportedSchemes = setOf(supportedScheme),
+            launchInApp = { true },
+            useCases = mockUseCases
+        )
+
+        val supportedUrl = "$supportedScheme://example.com"
+        val supportedRedirect = AppLinkRedirect(Intent.parseUri(supportedUrl, 0), null, null)
+        whenever(mockGetRedirect.invoke(supportedUrl)).thenReturn(supportedRedirect)
+        val response = feature.onLoadRequest(engineSession, supportedUrl, true, false)
+        assertEquals(null, response)
+    }
+
+    @Test
+    fun `supported schemes request not launched if not triggered by user`() {
+        val engineSession: EngineSession = mock()
+        val supportedScheme = "supported"
+        val feature = AppLinksInterceptor(
+            context = mockContext,
+            interceptLinkClicks = true,
+            engineSupportedSchemes = setOf(supportedScheme),
+            launchInApp = { true },
+            useCases = mockUseCases
+        )
+
+        val supportedUrl = "$supportedScheme://example.com"
+        val supportedRedirect = AppLinkRedirect(Intent.parseUri(supportedUrl, 0), null, null)
+        whenever(mockGetRedirect.invoke(supportedUrl)).thenReturn(supportedRedirect)
+        val response = feature.onLoadRequest(engineSession, supportedUrl, false, false)
+        assertEquals(null, response)
+    }
+
+    @Test
+    fun `not supported schemes request always intercepted regardless of hasUserGesture, interceptLinkClicks or launchInApp`() {
+        val engineSession: EngineSession = mock()
+        val supportedScheme = "supported"
+        val notSupportedScheme = "not_supported"
         val blacklistedScheme = "blacklisted"
         val feature = AppLinksInterceptor(
             context = mockContext,
             interceptLinkClicks = false,
-            alwaysAllowedSchemes = setOf(whitelistedScheme),
+            engineSupportedSchemes = setOf(supportedScheme),
             alwaysDeniedSchemes = setOf(blacklistedScheme),
             launchInApp = { false },
             useCases = mockUseCases
         )
 
-        val whiteListedUrl = "$whitelistedScheme://example.com"
-        val whitelistedRedirect = AppLinkRedirect(Intent.parseUri(whiteListedUrl, 0), whiteListedUrl, null)
-        whenever(mockGetRedirect.invoke(whiteListedUrl)).thenReturn(whitelistedRedirect)
-        val response = feature.onLoadRequest(engineSession, whiteListedUrl, true, false)
+        val notSupportedUrl = "$notSupportedScheme://example.com"
+        val notSupportedRedirect = AppLinkRedirect(Intent.parseUri(notSupportedUrl, 0), null, null)
+        whenever(mockGetRedirect.invoke(notSupportedUrl)).thenReturn(notSupportedRedirect)
+        val response = feature.onLoadRequest(engineSession, notSupportedUrl, false, false)
         assert(response is RequestInterceptor.InterceptionResponse.AppIntent)
+    }
+
+    @Test
+    fun `not supported schemes request uses fallback URL if available and launchInApp is set to false`() {
+        val engineSession: EngineSession = mock()
+        val supportedScheme = "supported"
+        val notSupportedScheme = "not_supported"
+        val blacklistedScheme = "blacklisted"
+        val feature = AppLinksInterceptor(
+            context = mockContext,
+            interceptLinkClicks = true,
+            engineSupportedSchemes = setOf(supportedScheme),
+            alwaysDeniedSchemes = setOf(blacklistedScheme),
+            launchInApp = { false },
+            useCases = mockUseCases
+        )
+
+        val notSupportedUrl = "$notSupportedScheme://example.com"
+        val fallbackUrl = "https://example.com"
+        val notSupportedRedirect = AppLinkRedirect(Intent.parseUri(notSupportedUrl, 0), fallbackUrl, null)
+        whenever(mockGetRedirect.invoke(notSupportedUrl)).thenReturn(notSupportedRedirect)
+        val response = feature.onLoadRequest(engineSession, notSupportedUrl, true, false)
+        assert(response is RequestInterceptor.InterceptionResponse.Url)
+    }
+
+    @Test
+    fun `intent scheme launch intent if fallback URL is unavailable and launchInApp is set to false`() {
+        val engineSession: EngineSession = mock()
+        val feature = AppLinksInterceptor(
+            context = mockContext,
+            interceptLinkClicks = false,
+            launchInApp = { false },
+            useCases = mockUseCases
+        )
+
+        val intentUrl = "intent://example.com"
+        val intentRedirect = AppLinkRedirect(Intent.parseUri(intentUrl, 0), null, null)
+        whenever(mockGetRedirect.invoke(intentUrl)).thenReturn(intentRedirect)
+        val response = feature.onLoadRequest(engineSession, intentUrl, true, false)
+        assert(response is RequestInterceptor.InterceptionResponse.AppIntent)
+    }
+
+    @Test
+    fun `intent scheme uses fallback URL if available and launchInApp is set to false`() {
+        val engineSession: EngineSession = mock()
+        val feature = AppLinksInterceptor(
+            context = mockContext,
+            interceptLinkClicks = false,
+            launchInApp = { false },
+            useCases = mockUseCases
+        )
+
+        val intentUrl = "intent://example.com"
+        val fallbackUrl = "https://example.com"
+        val intentRedirect = AppLinkRedirect(Intent.parseUri(intentUrl, 0), fallbackUrl, null)
+        whenever(mockGetRedirect.invoke(intentUrl)).thenReturn(intentRedirect)
+        val response = feature.onLoadRequest(engineSession, intentUrl, true, false)
+        assert(response is RequestInterceptor.InterceptionResponse.Url)
     }
 
     @Test
@@ -186,5 +300,80 @@ class AppLinksInterceptorTest {
         val response = appLinksInterceptor.onLoadRequest(mockEngineSession, webUrlWithAppLink, true, false)
         assert(response is RequestInterceptor.InterceptionResponse.AppIntent)
         verify(mockOpenRedirect).invoke(any(), any())
+    }
+
+    @Test
+    fun `try to use fallback url if user preference is not to launch in third party app`() {
+        appLinksInterceptor = AppLinksInterceptor(
+            context = mockContext,
+            interceptLinkClicks = true,
+            launchInApp = { false },
+            useCases = mockUseCases,
+            launchFromInterceptor = true
+        )
+
+        val testRedirect = AppLinkRedirect(Intent.parseUri(intentUrl, 0), fallbackUrl, null)
+        val response = appLinksInterceptor.handleRedirect(testRedirect, intentUrl, true)
+        assert(response is RequestInterceptor.InterceptionResponse.Url)
+    }
+
+    @Test
+    fun `try to use fallback url if not trigger by user gesture`() {
+        appLinksInterceptor = AppLinksInterceptor(
+            context = mockContext,
+            interceptLinkClicks = true,
+            launchInApp = { true },
+            useCases = mockUseCases,
+            launchFromInterceptor = true
+        )
+
+        val testRedirect = AppLinkRedirect(Intent.parseUri(intentUrl, 0), fallbackUrl, null)
+        val response = appLinksInterceptor.handleRedirect(testRedirect, intentUrl, false)
+        assert(response is RequestInterceptor.InterceptionResponse.Url)
+    }
+
+    @Test
+    fun `do not use fallback url if trigger by user gesture and preference is to launch in app`() {
+        appLinksInterceptor = AppLinksInterceptor(
+            context = mockContext,
+            interceptLinkClicks = true,
+            launchInApp = { true },
+            useCases = mockUseCases,
+            launchFromInterceptor = true
+        )
+
+        val testRedirect = AppLinkRedirect(Intent.parseUri(intentUrl, 0), fallbackUrl, null)
+        val response = appLinksInterceptor.handleRedirect(testRedirect, intentUrl, true)
+        assert(response is RequestInterceptor.InterceptionResponse.AppIntent)
+    }
+
+    @Test
+    fun `launch marketplace intent if available and no external app`() {
+        appLinksInterceptor = AppLinksInterceptor(
+            context = mockContext,
+            interceptLinkClicks = true,
+            launchInApp = { true },
+            useCases = mockUseCases,
+            launchFromInterceptor = true
+        )
+
+        val testRedirect = AppLinkRedirect(null, fallbackUrl, Intent.parseUri(marketplaceUrl, 0))
+        val response = appLinksInterceptor.handleRedirect(testRedirect, webUrl, true)
+        assert(response is RequestInterceptor.InterceptionResponse.AppIntent)
+    }
+
+    @Test
+    fun `use fallback url if available and no external app`() {
+        appLinksInterceptor = AppLinksInterceptor(
+            context = mockContext,
+            interceptLinkClicks = true,
+            launchInApp = { true },
+            useCases = mockUseCases,
+            launchFromInterceptor = true
+        )
+
+        val testRedirect = AppLinkRedirect(null, fallbackUrl, null)
+        val response = appLinksInterceptor.handleRedirect(testRedirect, webUrl, true)
+        assert(response is RequestInterceptor.InterceptionResponse.Url)
     }
 }
