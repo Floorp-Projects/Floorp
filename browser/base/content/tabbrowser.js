@@ -973,12 +973,10 @@
 
       if (title) {
         return {
-          id:
-            mode == "private"
-              ? "browser-main-window-content-title-private"
-              : "browser-main-window-content-title-default",
+          id: "browser-main-window-content-title",
           args: {
             title,
+            mode,
           },
         };
       }
