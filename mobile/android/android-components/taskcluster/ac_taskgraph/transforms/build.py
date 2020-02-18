@@ -78,9 +78,7 @@ def _get_timestamp(config):
 
 
 def _get_buildid(config):
-    push_date_string = config.params["moz_build_date"]
-    push_date_time = datetime.datetime.strptime(push_date_string, "%Y%m%d%H%M%S")
-    return push_date_time.strftime('%Y%m%d%H%M%S')
+    return config.params.moz_build_date.strftime('%Y%m%d%H%M%S')
 
 
 def _get_nightly_version(config, version):
