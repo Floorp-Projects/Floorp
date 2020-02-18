@@ -25,6 +25,15 @@ class WorkersListener {
     this._onProcessDescriptorAvailable = this._onProcessDescriptorAvailable.bind(
       this
     );
+    this._onContentProcessTargetDestroyed = this._onContentProcessTargetDestroyed.bind(
+      this
+    );
+    this._onServiceWorkerRegistrationDestroyed = this._onServiceWorkerRegistrationDestroyed.bind(
+      this
+    );
+    this._onProcessDescriptorDestroyed = this._onProcessDescriptorDestroyed.bind(
+      this
+    );
 
     // Array of contentProcessTarget fronts on which we will listen for worker events.
     this._contentProcessFronts = [];
@@ -42,12 +51,14 @@ class WorkersListener {
     this.rootFront.on("workerListChanged", this._listener);
     this.rootFront.watchFronts(
       "processDescriptor",
-      this._onProcessDescriptorAvailable
+      this._onProcessDescriptorAvailable,
+      this._onProcessDescriptorDestroyed
     );
 
     this.rootFront.watchFronts(
       "serviceWorkerRegistration",
-      this._onServiceWorkerRegistrationAvailable
+      this._onServiceWorkerRegistrationAvailable,
+      this._onServiceWorkerRegistrationDestroyed
     );
 
     this.rootFront.on("serviceWorkerRegistrationListChanged", this._listener);
@@ -81,11 +92,13 @@ class WorkersListener {
 
     this.rootFront.unwatchFronts(
       "processDescriptor",
-      this._onProcessDescriptorAvailable
+      this._onProcessDescriptorAvailable,
+      this._onProcessDescriptorDestroyed
     );
     this.rootFront.unwatchFronts(
       "serviceWorkerRegistration",
-      this._onServiceWorkerRegistrationAvailable
+      this._onServiceWorkerRegistrationAvailable,
+      this._onServiceWorkerRegistrationDestroyed
     );
 
     this._contentProcessFronts = [];
@@ -99,17 +112,36 @@ class WorkersListener {
     front.on("workerListChanged", this._listener);
   }
 
+  _onContentProcessTargetDestroyed(front) {
+    this._contentProcessFronts = this._contentProcessFronts.filter(
+      f => f !== front
+    );
+  }
+
   _onServiceWorkerRegistrationAvailable(front) {
     this._serviceWorkerRegistrationFronts.push(front);
     front.on("push-subscription-modified", this._listener);
     front.on("registration-changed", this._listener);
   }
 
+  _onServiceWorkerRegistrationDestroyed(front) {
+    this._serviceWorkerRegistrationFronts = this._serviceWorkerRegistrationFronts.filter(
+      f => f !== front
+    );
+  }
+
   _onProcessDescriptorAvailable(processFront) {
     this._processDescriptors.push(processFront);
     processFront.watchFronts(
       "contentProcessTarget",
-      this._onContentProcessTargetAvailable
+      this._onContentProcessTargetAvailable,
+      this._onContentProcessTargetDestroyed
+    );
+  }
+
+  _onProcessDescriptorDestroyed(processFront) {
+    this._processDescriptors = this._processDescriptors.filter(
+      f => f !== processFront
     );
   }
 }
