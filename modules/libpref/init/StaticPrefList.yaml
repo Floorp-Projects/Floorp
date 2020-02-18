@@ -1424,6 +1424,12 @@
   value: true
   mirror: always
 
+# Is support for CSSPseudoElement enabled?
+- name: dom.css_pseudo_element.enabled
+  type: bool
+  value: false
+  mirror: always
+
 # Any how many seconds we allow external protocol URLs in iframe when not in
 # single events
 - name: dom.delay.block_external_protocol_in_iframes
