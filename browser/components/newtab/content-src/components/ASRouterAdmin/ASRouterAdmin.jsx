@@ -264,8 +264,8 @@ export class DiscoveryStreamAdmin extends React.PureComponent {
   renderSpocs() {
     const { spocs } = this.props.state.DiscoveryStream;
     let spocsData = [];
-    if (spocs.data && spocs.data.spocs && spocs.data.spocs.length) {
-      spocsData = spocs.data.spocs;
+    if (spocs.data && spocs.data.spocs && spocs.data.spocs.items) {
+      spocsData = spocs.data.spocs.items || [];
     }
 
     return (

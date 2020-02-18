@@ -391,11 +391,13 @@ describe("ASRouterAdmin", () => {
       state.spocs = {
         frequency_caps: [],
         data: {
-          spocs: [
-            {
-              id: 12345,
-            },
-          ],
+          spocs: {
+            items: [
+              {
+                id: 12345,
+              },
+            ],
+          },
         },
       };
       wrapper = shallow(
