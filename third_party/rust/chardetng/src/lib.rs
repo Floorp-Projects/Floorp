@@ -23,7 +23,6 @@ use encoding_rs::ISO_2022_JP;
 use encoding_rs::ISO_8859_8;
 use encoding_rs::SHIFT_JIS;
 use encoding_rs::UTF_8;
-use encoding_rs::WINDOWS_1252;
 use encoding_rs::WINDOWS_1255;
 
 mod data;
@@ -100,10 +99,7 @@ const CJ_PUNCTUATION: i64 = CJK_BASE_SCORE / 2;
 const CJK_OTHER: i64 = CJK_SECONDARY_BASE_SCORE / 4;
 
 /// Latin letter caseless class
-const LATIN_LETTER: u8 = 2;
-
-/// ASCII punctionation caseless class for Hebrew
-const ASCII_PUNCTUATION: u8 = 3;
+const LATIN_LETTER: u8 = 1;
 
 fn contains_upper_case_period_or_non_ascii(label: &[u8]) -> bool {
     for &b in label.into_iter() {
@@ -517,6 +513,13 @@ impl CaselessCandidate {
     }
 }
 
+fn is_ascii_punctuation(byte: u8) -> bool {
+    match byte {
+        b'.' | b',' | b':' | b';' | b'?' | b'!' => true,
+        _ => false,
+    }
+}
+
 struct LogicalCandidate {
     data: &'static SingleByteData,
     prev: u8,
@@ -565,7 +568,7 @@ impl LogicalCandidate {
                 score += self.data.score(caseless_class, self.prev);
 
                 let prev_non_ascii_alphabetic = self.data.is_non_latin_alphabetic(self.prev);
-                if caseless_class == ASCII_PUNCTUATION && prev_non_ascii_alphabetic {
+                if caseless_class == 0 && prev_non_ascii_alphabetic && is_ascii_punctuation(b) {
                     self.plausible_punctuation += 1;
                 }
 
@@ -587,6 +590,7 @@ struct VisualCandidate {
     data: &'static SingleByteData,
     prev: u8,
     prev_ascii: bool,
+    prev_punctuation: bool,
     plausible_punctuation: u64,
     current_word_len: u64,
     longest_word: u64,
@@ -598,6 +602,7 @@ impl VisualCandidate {
             data: data,
             prev: 0,
             prev_ascii: true,
+            prev_punctuation: false,
             plausible_punctuation: 0,
             current_word_len: 0,
             longest_word: 0,
@@ -630,7 +635,7 @@ impl VisualCandidate {
             if !ascii_pair {
                 score += self.data.score(caseless_class, self.prev);
 
-                if non_ascii_alphabetic && self.prev == ASCII_PUNCTUATION {
+                if non_ascii_alphabetic && self.prev_punctuation {
                     self.plausible_punctuation += 1;
                 }
 
@@ -645,6 +650,7 @@ impl VisualCandidate {
 
             self.prev_ascii = ascii;
             self.prev = caseless_class;
+            self.prev_punctuation = caseless_class == 0 && is_ascii_punctuation(b);
         }
         Some(score)
     }
@@ -2417,54 +2423,55 @@ impl EncodingDetector {
     }
 
     // XXX Test-only API
-    // pub fn find_score(&self, encoding: &'static Encoding) -> Option<i64> {
-    //     let mut tld_type = Tld::Generic;
-    //     let mut expectation_is_valid = false;
-    //     if tld_type != Tld::Generic {
-    //         for (i, candidate) in self.candidates.iter().enumerate().skip(Self::FIRST_NORMAL) {
-    //             if encoding_is_native_to_tld(tld_type, i) && candidate.score.is_some() {
-    //                 expectation_is_valid = true;
-    //                 break;
-    //             }
-    //         }
-    //     }
-    //     if !expectation_is_valid {
-    //         // Flip Chinese and Central around
-    //         match tld_type {
-    //             Tld::Simplified => {
-    //                 if self.candidates[Self::BIG5_INDEX].score.is_some() {
-    //                     tld_type = Tld::Traditional;
-    //                     expectation_is_valid = true;
-    //                 }
-    //             }
-    //             Tld::Traditional => {
-    //                 if self.candidates[Self::GBK_INDEX].score.is_some() {
-    //                     tld_type = Tld::Simplified;
-    //                     expectation_is_valid = true;
-    //                 }
-    //             }
-    //             Tld::CentralWindows => {
-    //                 if self.candidates[Self::CENTRAL_ISO_INDEX].score.is_some() {
-    //                     tld_type = Tld::CentralIso;
-    //                     expectation_is_valid = true;
-    //                 }
-    //             }
-    //             Tld::CentralIso => {
-    //                 if self.candidates[Self::CENTRAL_WINDOWS_INDEX].score.is_some() {
-    //                     tld_type = Tld::CentralWindows;
-    //                     expectation_is_valid = true;
-    //                 }
-    //             }
-    //             _ => {}
-    //         }
-    //     }
-    //     for (i, candidate) in self.candidates.iter().enumerate() {
-    //         if encoding == candidate.encoding() {
-    //             return candidate.score(i, tld_type, expectation_is_valid);
-    //         }
-    //     }
-    //     Some(0)
-    // }
+    #[cfg(feature = "testing-only-no-semver-guarantees-do-not-use")]
+    pub fn find_score(&self, encoding: &'static Encoding) -> Option<i64> {
+        let mut tld_type = Tld::Generic;
+        let mut expectation_is_valid = false;
+        if tld_type != Tld::Generic {
+            for (i, candidate) in self.candidates.iter().enumerate().skip(Self::FIRST_NORMAL) {
+                if encoding_is_native_to_tld(tld_type, i) && candidate.score.is_some() {
+                    expectation_is_valid = true;
+                    break;
+                }
+            }
+        }
+        if !expectation_is_valid {
+            // Flip Chinese and Central around
+            match tld_type {
+                Tld::Simplified => {
+                    if self.candidates[Self::BIG5_INDEX].score.is_some() {
+                        tld_type = Tld::Traditional;
+                        expectation_is_valid = true;
+                    }
+                }
+                Tld::Traditional => {
+                    if self.candidates[Self::GBK_INDEX].score.is_some() {
+                        tld_type = Tld::Simplified;
+                        expectation_is_valid = true;
+                    }
+                }
+                Tld::CentralWindows => {
+                    if self.candidates[Self::CENTRAL_ISO_INDEX].score.is_some() {
+                        tld_type = Tld::CentralIso;
+                        expectation_is_valid = true;
+                    }
+                }
+                Tld::CentralIso => {
+                    if self.candidates[Self::CENTRAL_WINDOWS_INDEX].score.is_some() {
+                        tld_type = Tld::CentralWindows;
+                        expectation_is_valid = true;
+                    }
+                }
+                _ => {}
+            }
+        }
+        for (i, candidate) in self.candidates.iter().enumerate() {
+            if encoding == candidate.encoding() {
+                return candidate.score(i, tld_type, expectation_is_valid);
+            }
+        }
+        Some(0)
+    }
 
     const FIRST_NORMAL: usize = 3;
 
@@ -2566,10 +2573,20 @@ impl EncodingDetector {
 mod tests {
     use super::*;
     use detone::IterDecomposeVietnamese;
+    use encoding_rs::IBM866;
+    use encoding_rs::ISO_8859_2;
+    use encoding_rs::ISO_8859_4;
+    use encoding_rs::ISO_8859_5;
     use encoding_rs::ISO_8859_6;
+    use encoding_rs::ISO_8859_7;
+    use encoding_rs::KOI8_U;
+    use encoding_rs::WINDOWS_1250;
     use encoding_rs::WINDOWS_1251;
+    use encoding_rs::WINDOWS_1252;
     use encoding_rs::WINDOWS_1253;
+    use encoding_rs::WINDOWS_1254;
     use encoding_rs::WINDOWS_1256;
+    use encoding_rs::WINDOWS_1257;
     use encoding_rs::WINDOWS_1258;
     use encoding_rs::WINDOWS_874;
 
@@ -2607,6 +2624,11 @@ mod tests {
     }
 
     #[test]
+    fn test_fi_bis() {
+        check("Tämä", WINDOWS_1252);
+    }
+
+    #[test]
     fn test_pt() {
         check(
             "Este é um teste de codificação de caracteres.",
@@ -2620,13 +2642,59 @@ mod tests {
     }
 
     #[test]
-    fn test_ru() {
+    fn test_ru_short() {
         check("Русский", WINDOWS_1251);
     }
 
     #[test]
-    fn test_el() {
+    fn test_ru() {
+        check("Это тест кодировки символов.", WINDOWS_1251);
+    }
+
+    #[test]
+    fn test_ru_iso() {
+        check("Это тест кодировки символов.", ISO_8859_5);
+    }
+
+    #[test]
+    fn test_ru_ibm() {
+        check("Это тест кодировки символов.", IBM866);
+    }
+
+    #[test]
+    fn test_ru_koi() {
+        check("Это тест кодировки символов.", KOI8_U);
+    }
+
+    #[test]
+    fn test_uk() {
+        check("Це тест на кодування символів.", WINDOWS_1251);
+    }
+
+    #[test]
+    fn test_uk_koi() {
+        check("Це тест на кодування символів.", KOI8_U);
+    }
+
+    #[test]
+    fn test_el_short() {
         check("Ελληνικά", WINDOWS_1253);
+    }
+
+    #[test]
+    fn test_el() {
+        check(
+            "Πρόκειται για δοκιμή κωδικοποίησης χαρακτήρων: Άρης",
+            WINDOWS_1253,
+        );
+    }
+
+    #[test]
+    fn test_el_iso() {
+        check(
+            "Πρόκειται για δοκιμή κωδικοποίησης χαρακτήρων: Άρης",
+            ISO_8859_7,
+        );
     }
 
     #[test]
@@ -2652,6 +2720,11 @@ mod tests {
     #[test]
     fn test_vi() {
         check("Đây là một thử nghiệm mã hóa ký tự.", WINDOWS_1258);
+    }
+
+    #[test]
+    fn test_tr() {
+        check("Bu bir karakter kodlama testidir. Latince karakterleri kullanan bazı dillerde karar vermek için daha fazla girdiye ihtiyacımız var.", WINDOWS_1254);
     }
 
     #[test]
@@ -2705,7 +2778,58 @@ mod tests {
     }
 
     #[test]
-    fn test_foo() {
-        check("Straße", WINDOWS_1252);
+    fn test_it() {
+        check("è", WINDOWS_1252);
+    }
+
+    #[test]
+    fn test_en() {
+        check("isn’t", WINDOWS_1252);
+    }
+
+    #[test]
+    fn test_en_bis() {
+        check("Rock ’n Roll", WINDOWS_1252);
+    }
+
+    #[test]
+    fn test_ca() {
+        check("Codificació de caràcters", WINDOWS_1252);
+    }
+
+    #[test]
+    fn test_et() {
+        check("või", WINDOWS_1252);
+    }
+
+    #[test]
+    fn test_pl_iso() {
+        check("To jest test kodowania znaków. W przypadku niektórych języków, które używają znaków łacińskich, potrzebujemy więcej danych, aby podjąć decyzję.", ISO_8859_2);
+    }
+
+    #[test]
+    fn test_pl() {
+        check("To jest test kodowania znaków. W przypadku niektórych języków, które używają znaków łacińskich, potrzebujemy więcej danych, aby podjąć decyzję.", WINDOWS_1250);
+    }
+
+    #[test]
+    fn test_lt() {
+        check("Tai simbolių kodavimo testas. Kai kurioms kalboms, naudojančioms lotyniškus rašmenis, mums reikia daugiau informacijos, kad galėtume priimti sprendimą.", WINDOWS_1257);
+    }
+
+    // TODO: Detected as ISO-8859-2.
+    // #[test]
+    // fn test_lt_windows_iso_8859_4() {
+    //     check("Tai simbolių kodavimo testas. Kai kurioms kalboms, naudojančioms lotyniškus rašmenis, mums reikia daugiau informacijos, kad galėtume priimti sprendimą.", ISO_8859_4);
+    // }
+
+    #[test]
+    fn test_lv() {
+        check("Šis ir rakstzīmju kodēšanas tests. Dažās valodās, kurās tiek izmantotas latīņu valodas burti, lēmuma pieņemšanai mums ir nepieciešams vairāk ieguldījuma.", WINDOWS_1257);
+    }
+
+    #[test]
+    fn test_lv_iso_8859_4() {
+        check("Šis ir rakstzīmju kodēšanas tests. Dažās valodās, kurās tiek izmantotas latīņu valodas burti, lēmuma pieņemšanai mums ir nepieciešams vairāk ieguldījuma.", ISO_8859_4);
     }
 }

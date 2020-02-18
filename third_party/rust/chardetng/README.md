@@ -51,7 +51,7 @@ In general `chardetng` prefers to do negative matching (rule out possibilities f
 <dt>UTF-16[BE|LE]</dt>
 <dd>Not detected: Detecting these belongs on the BOM layer.</dd>
 <dt>x-user-defined</dt>
-<dd>Not detected: This encoding is for XHR. `<meta charset=x-user-defined>` in HTML is not unlabeled and means windows-1252.</dd>
+<dd>Not detected: This encoding is for XHR. <code>&lt;meta charset=x-user-defined></code> in HTML is not unlabeled and means windows-1252.</dd>
 <dt>Replacement</dt>
 <dd>Not detected.</dd>
 <dt>GB18030</dt>
@@ -102,8 +102,6 @@ In general `chardetng` prefers to do negative matching (rule out possibilities f
 <dd>Not detected: These encodings have never been a locale-specific fallback in a major browser or a menu item in IE.</dd>
 </dl>
 
-Of the detected encodings, ISO-8859-5, ISO-8859-6, and ISO-8859-4 are the ones that something else is the most likely to be misdetected as, and, I believe, the three least-used encodings of the ones detected, so these three are the most likely ones to either be removed or downplayed.
-
 ## Known Problems
 
 * GBK detection is less accurate than in ced for short titles consisting of fewer than six hanzi. This is mostly due to the design that prioritizes optimizing binary size over accuracy on very short inputs.
@@ -114,14 +112,36 @@ Of the detected encodings, ISO-8859-5, ISO-8859-6, and ISO-8859-4 are the ones t
 ## Roadmap
 
 - [ ] Investigate parallelizing the `feed` method using Rayon.
-- [ ] Improve windows-874 detection for short inputs.
+- [x] Improve windows-874 detection for short inputs.
 - [ ] Improve GBK detection for short inputs.
 - [ ] Reorganize the frequency data for telling short GBK, EUC-JP, and EUC-KR inputs apart.
-- [ ] Make windows-1257 detection on generic domains a lot more accurate (likely requires looking at trigrams).
-- [ ] Tune Central European detection.
+- [ ] Make Lithuanian and Latvian detection on generic domains a lot more accurate (likely requires looking at trigrams).
+- [x] Tune Central European detection.
 - [ ] Tune the penalties applied to confusable encodings on non-generic TLDs to make detection of confusable encodings possible on non-generic TLDs.
+- [ ] Reduce the binary size by not storing the scoring for implausible-next-to-alphabetic character classes.
+- [ ] Reduce the binary size by classifying ASCII algorithmically.
+- [ ] Reduce the binary size by not storing the scores for C1 controls.
 
 ## Release Notes
+
+### 0.1.6
+
+* Tune Central European detection.
+
+### 0.1.5
+
+* Improve Thai accuracy a lot.
+* Improve accuracy of some languages a bit.
+* Remove unused Hebrew ASCII table.
+
+### 0.1.4
+
+* Properly take into account non-ASCII bytes at word boundaries for windows-1252. (Especially relevant for Italian and Catalan.)
+* Move Estonian from the Baltic model to the Western model. This improves overall Estonian detection but causes š and ž encoded as windows-1257, ISO-8859-13, or ISO-8859-4 to get misdecoded. (It would be possible to add a post-processing step to adjust for š and ž, but this would cause reloads given the way chardetng is integrated with Firefox.)
+* Properly classify letters that ISO-8859-4 has but windows-1257 doesn't have in order to avoid misdetecting non-ISO-8859-4 input as ISO-8859-4.
+* Improve character classification of windows-1254.
+* Avoid classifying byte 0xA1 or above as space-like.
+* Reduce binary size by collapsing similar character classes.
 
 ### 0.1.3
 
