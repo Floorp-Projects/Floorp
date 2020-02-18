@@ -627,7 +627,7 @@ WindowHelper.prototype = {
    * "Presses" the dialog's OK button.
    */
   acceptDialog() {
-    let dialog = this.win.document.getElementById("SanitizeDialog");
+    let dialog = this.win.document.querySelector("dialog");
     is(
       dialog.getButton("accept").disabled,
       false,
@@ -640,7 +640,7 @@ WindowHelper.prototype = {
    * "Presses" the dialog's Cancel button.
    */
   cancelDialog() {
-    this.win.document.getElementById("SanitizeDialog").cancelDialog();
+    this.win.document.querySelector("dialog").cancelDialog();
   },
 
   /**

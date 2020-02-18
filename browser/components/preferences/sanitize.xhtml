@@ -10,15 +10,15 @@
 
 <!DOCTYPE window>
 
-<window type="child"
+<window id="SanitizeDialog"
+        type="child"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         xmlns:html="http://www.w3.org/1999/xhtml"
         persist="lastSelected screenX screenY"
         data-l10n-id="sanitize-prefs"
         data-l10n-attrs="style"
         onload="gSanitizeDialog.init();">
-<dialog id="SanitizeDialog"
-        buttons="accept,cancel,help"
+<dialog buttons="accept,cancel,help"
         helpTopic="prefs-clear-private-data">
 
   <linkset>
