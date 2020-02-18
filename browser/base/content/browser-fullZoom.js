@@ -417,7 +417,7 @@ var FullZoom = {
     let token = this._getBrowserToken(browser);
     let result = ZoomUI.getGlobalValue().then(value => {
       if (token.isCurrent) {
-        ZoomManager.setZoomForBrowser(browser, value);
+        ZoomManager.setZoomForBrowser(browser, value === undefined ? 1 : value);
         this._ignorePendingZoomAccesses(browser);
       }
     });
@@ -453,7 +453,7 @@ var FullZoom = {
     aBrowser,
     aCallback
   ) {
-    if (gInPrintPreviewMode) {
+    if (!this.siteSpecific || gInPrintPreviewMode) {
       this._executeSoon(aCallback);
       return;
     }
@@ -476,7 +476,10 @@ var FullZoom = {
     let token = this._getBrowserToken(aBrowser);
     ZoomUI.getGlobalValue().then(value => {
       if (token.isCurrent) {
-        ZoomManager.setZoomForBrowser(aBrowser, value);
+        ZoomManager.setZoomForBrowser(
+          aBrowser,
+          value === undefined ? 1 : value
+        );
         this._ignorePendingZoomAccesses(aBrowser);
       }
       this._executeSoon(aCallback);
