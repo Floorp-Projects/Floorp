@@ -33,8 +33,7 @@ class ClassifierDummyChannelChild final : public PClassifierDummyChannelChild {
   void Initialize(nsIHttpChannel* aChannel, nsIURI* aURI, bool aIsThirdParty,
                   const std::function<void(bool)>& aCallback);
 
-  mozilla::ipc::IPCResult Recv__delete__(
-      const uint32_t& aClassificationFlags) override;
+  mozilla::ipc::IPCResult Recv__delete__(const uint32_t& aClassificationFlags);
 
   nsCOMPtr<nsIHttpChannel> mChannel;
   nsCOMPtr<nsIURI> mURI;

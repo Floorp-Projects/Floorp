@@ -24,7 +24,7 @@ class URLClassifierChild : public PURLClassifierChild {
   }
 
   mozilla::ipc::IPCResult Recv__delete__(const Maybe<ClassifierInfo>& aInfo,
-                                         const nsresult& aResult) override {
+                                         const nsresult& aResult) {
     MOZ_ASSERT(mCallback);
     if (aInfo.isSome()) {
       mCallback->OnClassifyComplete(aResult, aInfo.ref().list(),
@@ -48,7 +48,7 @@ class URLClassifierLocalChild : public PURLClassifierLocalChild {
   }
 
   mozilla::ipc::IPCResult Recv__delete__(
-      nsTArray<URLClassifierLocalResult>&& aResults) override {
+      nsTArray<URLClassifierLocalResult>&& aResults) {
     nsTArray<RefPtr<nsIUrlClassifierFeatureResult>> finalResults;
 
     nsTArray<URLClassifierLocalResult> results = std::move(aResults);

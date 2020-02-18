@@ -28,7 +28,7 @@ class ScriptCacheParent final : public PScriptCacheParent {
       : mWantCacheData(wantCacheData) {}
 
  protected:
-  virtual IPCResult Recv__delete__(nsTArray<ScriptData>&& scripts) override;
+  IPCResult Recv__delete__(nsTArray<ScriptData>&& scripts);
 
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 

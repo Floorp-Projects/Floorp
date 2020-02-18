@@ -22,8 +22,7 @@ class EndpointForReportChild final : public PEndpointForReportChild {
 
   void Initialize(const ReportDeliver::ReportData& aReportData);
 
-  mozilla::ipc::IPCResult Recv__delete__(
-      const nsCString& aEndpointURL) override;
+  mozilla::ipc::IPCResult Recv__delete__(const nsCString& aEndpointURL);
 
  private:
   ReportDeliver::ReportData mReportData;

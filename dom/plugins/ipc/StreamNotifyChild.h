@@ -30,8 +30,7 @@ class StreamNotifyChild : public PStreamNotifyChild {
   void NPP_URLNotify(NPReason reason);
 
  private:
-  virtual mozilla::ipc::IPCResult Recv__delete__(
-      const NPReason& reason) override;
+  mozilla::ipc::IPCResult Recv__delete__(const NPReason& reason);
 
   mozilla::ipc::IPCResult RecvRedirectNotify(const nsCString& url,
                                              const int32_t& status);
