@@ -141,11 +141,12 @@ class AddonsManagerAdapter(
         holder.titleView.setText(section.title)
     }
 
-    private fun bindNotYetSupportedSection(
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal fun bindNotYetSupportedSection(
         holder: UnsupportedSectionViewHolder,
         section: NotYetSupportedSection
     ) {
-        val context = holder.titleView.context
+        val context = holder.itemView.context
         holder.titleView.setText(section.title)
         holder.descriptionView.text =
             if (unsupportedAddons.size == 1) {
@@ -162,7 +163,8 @@ class AddonsManagerAdapter(
         }
     }
 
-    private fun bindAddon(holder: AddonViewHolder, addon: Addon) {
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal fun bindAddon(holder: AddonViewHolder, addon: Addon) {
         val context = holder.itemView.context
         addon.rating?.let {
             val userCount = context.getString(R.string.mozac_feature_addons_user_rating_count)
