@@ -2324,6 +2324,9 @@ AbortReasonOr<Ok> IonBuilder::inspectOpcode(JSOp op, bool* restarted) {
     case JSOp::ClassConstructor:
       return jsop_classconstructor();
 
+    case JSOp::DerivedConstructor:
+      return jsop_derivedclassconstructor();
+
     case JSOp::Typeof:
     case JSOp::TypeofExpr:
       return jsop_typeof();
@@ -2487,7 +2490,6 @@ AbortReasonOr<Ok> IonBuilder::inspectOpcode(JSOp op, bool* restarted) {
 
     // Classes
     case JSOp::InitHomeObject:
-    case JSOp::DerivedConstructor:
 
     // Super
     case JSOp::SetPropSuper:
@@ -11879,6 +11881,15 @@ AbortReasonOr<Ok> IonBuilder::jsop_object(JSObject* obj) {
 
 AbortReasonOr<Ok> IonBuilder::jsop_classconstructor() {
   MClassConstructor* constructor = MClassConstructor::New(alloc(), pc);
+  current->add(constructor);
+  current->push(constructor);
+  return resumeAfter(constructor);
+}
+
+AbortReasonOr<Ok> IonBuilder::jsop_derivedclassconstructor() {
+  MDefinition* prototype = current->pop();
+
+  auto* constructor = MDerivedClassConstructor::New(alloc(), prototype, pc);
   current->add(constructor);
   current->push(constructor);
   return resumeAfter(constructor);
