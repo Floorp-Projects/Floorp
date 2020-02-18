@@ -2044,6 +2044,10 @@ already_AddRefed<ID2D1Brush> DrawTargetD2D1::CreateBrushForPattern(
         surf, mat, pat->mExtendMode,
         !pat->mSamplingRect.IsEmpty() ? &pat->mSamplingRect : nullptr);
 
+    if (!image) {
+      return CreateTransparentBlackBrush();
+    }
+
     if (surf->GetFormat() == SurfaceFormat::A8) {
       // See bug 1251431, at least FillOpacityMask does not appear to allow a
       // source bitmapbrush with source format A8. This creates a BGRA surface
@@ -2061,6 +2065,11 @@ already_AddRefed<ID2D1Brush> DrawTargetD2D1::CreateBrushForPattern(
                               D2D1::PixelFormat(DXGI_FORMAT_B8G8R8A8_UNORM,
                                                 D2D1_ALPHA_MODE_PREMULTIPLIED)),
                           getter_AddRefs(tmpBitmap));
+
+        if (!tmpBitmap) {
+          return CreateTransparentBlackBrush();
+        }
+
         mDC->GetTarget(getter_AddRefs(oldTarget));
         mDC->SetTarget(tmpBitmap);
 
@@ -2071,10 +2080,6 @@ already_AddRefed<ID2D1Brush> DrawTargetD2D1::CreateBrushForPattern(
         mDC->SetTarget(oldTarget);
         image = tmpBitmap;
       }
-    }
-
-    if (!image) {
-      return CreateTransparentBlackBrush();
     }
 
     if (pat->mSamplingRect.IsEmpty()) {
