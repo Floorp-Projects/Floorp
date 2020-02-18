@@ -1,6 +1,6 @@
 const { validate } = WebAssembly;
 
-assertErrorMessage(() => validate(), Error, /requires at least 1 argument/);
+assertErrorMessage(() => validate(), Error, /At least 1 argument required/);
 
 const argError = /first argument must be an ArrayBuffer or typed array object/;
 assertErrorMessage(() => validate(null), Error, argError);
