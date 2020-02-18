@@ -10874,6 +10874,23 @@ class MCheckObjCoercible : public MUnaryInstruction,
   NAMED_OPERANDS((0, checkValue))
 };
 
+class MCheckClassHeritage : public MUnaryInstruction,
+                            public BoxInputsPolicy::Data {
+  explicit MCheckClassHeritage(MDefinition* heritage)
+      : MUnaryInstruction(classOpcode, heritage) {
+    setGuard();
+    setResultType(MIRType::Value);
+    setResultTypeSet(heritage->resultTypeSet());
+  }
+
+ public:
+  INSTRUCTION_HEADER(CheckClassHeritage)
+  TRIVIAL_NEW_WRAPPERS
+  NAMED_OPERANDS((0, heritage))
+
+  AliasSet getAliasSet() const override { return AliasSet::None(); }
+};
+
 class MDebugCheckSelfHosted : public MUnaryInstruction,
                               public BoxInputsPolicy::Data {
   explicit MDebugCheckSelfHosted(MDefinition* toCheck)

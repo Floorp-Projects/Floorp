@@ -7044,6 +7044,21 @@ class LCheckObjCoercible : public LCallInstructionHelper<0, BOX_PIECES, 0> {
   }
 };
 
+class LCheckClassHeritage : public LInstructionHelper<0, BOX_PIECES, 1> {
+ public:
+  LIR_HEADER(CheckClassHeritage)
+
+  static const size_t Heritage = 0;
+
+  LCheckClassHeritage(const LBoxAllocation& value, const LDefinition& temp)
+      : LInstructionHelper(classOpcode) {
+    setBoxOperand(Heritage, value);
+    setTemp(0, temp);
+  }
+
+  const LDefinition* temp() { return getTemp(0); }
+};
+
 class LDebugCheckSelfHosted : public LCallInstructionHelper<0, BOX_PIECES, 0> {
  public:
   LIR_HEADER(DebugCheckSelfHosted)
