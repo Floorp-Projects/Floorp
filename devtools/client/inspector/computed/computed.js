@@ -291,7 +291,7 @@ CssComputedView.prototype = {
 
   get contextMenu() {
     if (!this._contextMenu) {
-      this._contextMenu = new StyleInspectorMenu(this, { isRuleView: false });
+      this._contextMenu = new StyleInspectorMenu(this);
     }
 
     return this._contextMenu;

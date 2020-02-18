@@ -239,13 +239,13 @@ class Rule {
   /**
    * Returns the TextProperty with the given id or undefined if it cannot be found.
    *
-   * @param {String} id
+   * @param {String|null} id
    *        A TextProperty id.
    * @return {TextProperty|undefined} with the given id in the current Rule or undefined
    * if it cannot be found.
    */
   getDeclaration(id) {
-    return this.textProps.find(textProp => textProp.id === id);
+    return id ? this.textProps.find(textProp => textProp.id === id) : undefined;
   }
 
   /**

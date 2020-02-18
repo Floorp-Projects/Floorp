@@ -54,6 +54,17 @@ loader.lazyRequireGetter(
 );
 loader.lazyRequireGetter(
   this,
+  "getNodeInfo",
+  "devtools/client/inspector/rules/utils/utils",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "StyleInspectorMenu",
+  "devtools/client/inspector/shared/style-inspector-menu"
+);
+loader.lazyRequireGetter(
+  this,
   "advanceValidate",
   "devtools/client/inspector/shared/utils",
   true
@@ -109,6 +120,7 @@ class RulesView {
     this.onToggleSelectorHighlighter = this.onToggleSelectorHighlighter.bind(
       this
     );
+    this.showContextMenu = this.showContextMenu.bind(this);
     this.showDeclarationNameEditor = this.showDeclarationNameEditor.bind(this);
     this.showDeclarationValueEditor = this.showDeclarationValueEditor.bind(
       this
@@ -145,6 +157,7 @@ class RulesView {
       onTogglePrintSimulation: this.onTogglePrintSimulation,
       onTogglePseudoClass: this.onTogglePseudoClass,
       onToggleSelectorHighlighter: this.onToggleSelectorHighlighter,
+      showContextMenu: this.showContextMenu,
       showDeclarationNameEditor: this.showDeclarationNameEditor,
       showDeclarationValueEditor: this.showDeclarationValueEditor,
       showNewDeclarationEditor: this.showNewDeclarationEditor,
@@ -242,6 +255,11 @@ class RulesView {
       this._classList = null;
     }
 
+    if (this._contextMenu) {
+      this._contextMenu.destroy();
+      this._contextMenu = null;
+    }
+
     if (this._selectHighlighter) {
       this._selectorHighlighter.finalize();
       this._selectorHighlighter = null;
@@ -297,6 +315,14 @@ class RulesView {
     }
 
     return this._classList;
+  }
+
+  get contextMenu() {
+    if (!this._contextMenu) {
+      this._contextMenu = new StyleInspectorMenu(this, { isRuleView: true });
+    }
+
+    return this._contextMenu;
   }
 
   /**
@@ -364,6 +390,23 @@ class RulesView {
     // This event is emitted for testing purposes.
     this.inspector.emit("grid-line-names-updated");
     return gridLineNames;
+  }
+
+  /**
+   * Get the type of a given node in the Rules view.
+   *
+   * @param {DOMNode} node
+   *        The node which we want information about.
+   * @return {Object|null} containing the following props:
+   * - rule {Rule} The Rule object.
+   * - type {String} One of the VIEW_NODE_XXX_TYPE const in
+   *   client/inspector/shared/node-types.
+   * - value {Object} Depends on the type of the node.
+   * - view {String} Always "rule" to indicate the rule view.
+   * Otherwise, returns null if the node isn't anything we care about.
+   */
+  getNodeInfo(node) {
+    return getNodeInfo(node, this.elementStyle);
   }
 
   /**
@@ -603,6 +646,13 @@ class RulesView {
     if (prevIsSourceLinkEnabled !== isSourceLinkEnabled) {
       this.store.dispatch(updateSourceLinkEnabled(isSourceLinkEnabled));
     }
+  }
+
+  /**
+   * Handler for showing the context menu.
+   */
+  showContextMenu(event) {
+    this.contextMenu.show(event);
   }
 
   /**
