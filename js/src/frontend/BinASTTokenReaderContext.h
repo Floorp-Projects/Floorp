@@ -1011,7 +1011,7 @@ class HuffmanDictionary;
 // A Huffman dictionary consists in a (contiguous) set of Huffman tables
 // to predict field values and list lengths, and (contiguous) sets of
 // items pointed by each tables.
-class HuffmanDictionaryForMetadata {
+class alignas(uintptr_t) HuffmanDictionaryForMetadata {
   static const uint16_t UnreachableIndex = uint16_t(-1);
 
   using InternalIndex = uint8_t;

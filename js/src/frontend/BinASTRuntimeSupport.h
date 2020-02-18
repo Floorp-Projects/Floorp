@@ -137,7 +137,8 @@ class BinASTSourceMetadata {
   void trace(JSTracer* tracer);
 };
 
-class BinASTSourceMetadataMultipart : public BinASTSourceMetadata {
+class alignas(uintptr_t) BinASTSourceMetadataMultipart
+    : public BinASTSourceMetadata {
   using CharSlice = BinaryASTSupport::CharSlice;
 
   const uint32_t numStrings_;
@@ -216,7 +217,8 @@ class BinASTSourceMetadataMultipart : public BinASTSourceMetadata {
 
 class HuffmanDictionaryForMetadata;
 
-class BinASTSourceMetadataContext : public BinASTSourceMetadata {
+class alignas(uintptr_t) BinASTSourceMetadataContext
+    : public BinASTSourceMetadata {
   const uint32_t numStrings_;
   HuffmanDictionaryForMetadata* dictionary_;
 
