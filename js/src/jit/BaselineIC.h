@@ -1646,12 +1646,18 @@ class ICSetProp_Fallback : public ICFallbackStub {
 // Call
 //      JSOp::Call
 //      JSOp::CallIgnoresRv
+//      JSOp::CallIter
 //      JSOp::FunApply
 //      JSOp::FunCall
 //      JSOp::New
+//      JSOp::SuperCall
+//      JSOp::Eval
+//      JSOp::StrictEval
 //      JSOp::SpreadCall
 //      JSOp::SpreadNew
+//      JSOp::SpreadSuperCall
 //      JSOp::SpreadEval
+//      JSOp::SpreadStrictEval
 
 class ICCall_Fallback : public ICMonitoredFallbackStub {
   friend class ICStubSpace;
