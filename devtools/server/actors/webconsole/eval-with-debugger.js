@@ -38,6 +38,11 @@ loader.lazyRequireGetter(
   "devtools/server/actors/string",
   true
 );
+loader.lazyRequireGetter(
+  this,
+  "eagerFunctionWhitelist",
+  "devtools/server/actors/webconsole/eager-function-whitelist"
+);
 
 function isObject(value) {
   return Object(value) === value;
@@ -487,6 +492,10 @@ function ensureSideEffectFreeNatives() {
     isFinite,
     isNaN,
     unescape,
+
+    // Pull in all of the non-ECMAScript native functions that we want to
+    // whitelist as well.
+    ...eagerFunctionWhitelist,
   ];
 
   const map = new Map();
