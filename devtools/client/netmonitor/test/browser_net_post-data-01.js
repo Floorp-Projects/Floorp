@@ -32,7 +32,6 @@ add_task(async function() {
     const requestsListStatus = requestItem.querySelector(".status-code");
     EventUtils.sendMouseEvent({ type: "mouseover" }, requestsListStatus);
     await waitUntil(() => requestsListStatus.title);
-    await waitForDOMIfNeeded(requestItem, ".requests-list-timings-total");
   }
 
   verifyRequestItemTarget(
@@ -66,8 +65,8 @@ add_task(async function() {
     }
   );
 
-  // Wait for all tree sections updated by react
-  const wait = waitForDOM(document, "#params-panel .tree-section", 3);
+  // Wait for all accordion items updated by react
+  const wait = waitForDOM(document, "#params-panel .accordion-item", 3);
   EventUtils.sendMouseEvent(
     { type: "mousedown" },
     document.querySelectorAll(".request-list-item")[0]
@@ -79,10 +78,10 @@ add_task(async function() {
   await wait;
   await testParamsTab("urlencoded");
 
-  // Wait for all tree sections and editor updated by react
-  const waitForSections = waitForDOM(
+  // Wait for all accordion items and editor updated by react
+  const waitForAccordionItems = waitForDOM(
     document,
-    "#params-panel .tree-section",
+    "#params-panel .accordion-item",
     2
   );
   const waitForSourceEditor = waitForDOM(
@@ -93,7 +92,7 @@ add_task(async function() {
     { type: "mousedown" },
     document.querySelectorAll(".request-list-item")[1]
   );
-  await Promise.all([waitForSections, waitForSourceEditor]);
+  await Promise.all([waitForAccordionItems, waitForSourceEditor]);
   await testParamsTab("multipart");
 
   return teardown(monitor);
@@ -115,9 +114,9 @@ add_task(async function() {
     }
 
     is(
-      tabpanel.querySelectorAll(".tree-section").length,
+      tabpanel.querySelectorAll(".accordion-item").length,
       type == "urlencoded" ? 3 : 2,
-      "There should be correct number of tree sections displayed in this tabpanel."
+      "There should be correct number of accordion items displayed in this tabpanel."
     );
     is(
       tabpanel.querySelectorAll(".empty-notice").length,
@@ -125,28 +124,24 @@ add_task(async function() {
       "The empty notice should not be displayed in this tabpanel."
     );
 
-    const treeSections = tabpanel.querySelectorAll(".tree-section");
+    const accordionItems = tabpanel.querySelectorAll(".accordion-item");
 
     is(
-      treeSections[0].querySelector(".treeLabel").textContent,
+      accordionItems[0].querySelector(".accordion-header-label").textContent,
       L10N.getStr("paramsQueryString"),
       "The query section doesn't have the correct title."
     );
 
     is(
-      treeSections[1].querySelector(".treeLabel").textContent,
+      accordionItems[1].querySelector(".accordion-header-label").textContent,
       L10N.getStr(
         type == "urlencoded" ? "paramsFormData" : "paramsPostPayload"
       ),
       "The post section doesn't have the correct title."
     );
 
-    const labels = tabpanel.querySelectorAll(
-      "tr:not(.tree-section) .treeLabelCell .treeLabel"
-    );
-    const values = tabpanel.querySelectorAll(
-      "tr:not(.tree-section) .treeValueCell .objectBox"
-    );
+    const labels = tabpanel.querySelectorAll("tr .treeLabelCell .treeLabel");
+    const values = tabpanel.querySelectorAll("tr .treeValueCell .objectBox");
 
     is(
       labels[0].textContent,

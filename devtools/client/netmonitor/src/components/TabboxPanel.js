@@ -30,7 +30,7 @@ const WebSocketsPanel = createFactory(
   require("devtools/client/netmonitor/src/components/websockets/WebSocketsPanel")
 );
 const ParamsPanel = createFactory(
-  require("devtools/client/netmonitor/src/components/ParamsPanel")
+  require("devtools/client/netmonitor/src/components/request-details/ParamsPanel")
 );
 const CachePanel = createFactory(
   require("devtools/client/netmonitor/src/components/CachePanel")

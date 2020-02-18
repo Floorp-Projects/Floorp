@@ -35,7 +35,7 @@ add_task(async function() {
   // The Params panel should render the following:
   // Query String:
   // file    foo # bar
-  const keyValue = document.querySelectorAll(".treeTable .treeRow")[1];
+  const keyValue = document.querySelectorAll(".treeTable .treeRow")[0];
 
   is(
     keyValue.innerText,
