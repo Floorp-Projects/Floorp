@@ -246,16 +246,14 @@ public class SessionAccessibility {
                     return true;
                 case AccessibilityNodeInfo.ACTION_NEXT_HTML_ELEMENT:
                     requestViewFocus();
-                    nativeProvider.pivot(virtualViewId, arguments != null ?
+                    return nativeProvider.pivot(virtualViewId, arguments != null ?
                             arguments.getString(AccessibilityNodeInfo.ACTION_ARGUMENT_HTML_ELEMENT_STRING) : "",
                             true, false);
-                    return true;
                 case AccessibilityNodeInfo.ACTION_PREVIOUS_HTML_ELEMENT:
                     requestViewFocus();
-                    nativeProvider.pivot(virtualViewId, arguments != null ?
+                    return nativeProvider.pivot(virtualViewId, arguments != null ?
                             arguments.getString(AccessibilityNodeInfo.ACTION_ARGUMENT_HTML_ELEMENT_STRING) : "",
                             false, false);
-                    return true;
                 case AccessibilityNodeInfo.ACTION_NEXT_AT_MOVEMENT_GRANULARITY:
                 case AccessibilityNodeInfo.ACTION_PREVIOUS_AT_MOVEMENT_GRANULARITY:
                     // XXX: Self brailling gives this action with a bogus argument instead of an actual click action;
@@ -557,6 +555,10 @@ public class SessionAccessibility {
     private boolean mAttached = false;
     // The current node with accessibility focus
     private int mAccessibilityFocusedNode = 0;
+    // The first accessibility focusable node
+    private int mFirstAccessibilityFocusable = 0;
+    // The last accessibility focusable node
+    private int mLastAccessibilityFocusable = 0;
     // The current node with focus
     private int mFocusedNode = 0;
     private int mStartOffset = -1;
@@ -895,8 +897,14 @@ public class SessionAccessibility {
         @WrapForJNI(dispatchTo = "gecko")
         public native void click(int id);
 
-        public void pivot(final int id, final String granularity, final boolean forward, final boolean inclusive) {
-            pivotNative(id, java.util.Arrays.asList(sHtmlGranularities).indexOf(granularity), forward, inclusive);
+        public boolean pivot(final int id, final String granularity, final boolean forward, final boolean inclusive) {
+            final int gran = java.util.Arrays.asList(sHtmlGranularities).indexOf(granularity);
+            if ((forward && id == mLastAccessibilityFocusable) ||
+                    (!forward && id == mFirstAccessibilityFocusable)) {
+                return false;
+            }
+            pivotNative(id, gran, forward, inclusive);
+            return true;
         }
 
         @WrapForJNI(dispatchTo = "gecko", stubName = "Pivot")
@@ -971,6 +979,14 @@ public class SessionAccessibility {
                     }
                     cachedBundle.putIntArray("bounds", bundle.getIntArray("bounds"));
                 }
+            }
+        }
+
+        @WrapForJNI(calledFrom = "gecko")
+        private void updateAccessibleFocusBoundaries(final int firstNode, final int lastNode) {
+            synchronized (SessionAccessibility.this) {
+                mFirstAccessibilityFocusable = firstNode;
+                mLastAccessibilityFocusable = lastNode;
             }
         }
     }

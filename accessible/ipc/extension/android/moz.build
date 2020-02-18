@@ -14,11 +14,14 @@ if CONFIG['ACCESSIBILITY']:
 
     SOURCES += [
         'DocAccessiblePlatformExtChild.cpp',
+        'DocAccessiblePlatformExtParent.cpp',
     ]
 
     LOCAL_INCLUDES += [
         '/accessible/android',
+        '/accessible/generic',
         '/accessible/ipc/other',
+        '/widget/android',
     ]
 
 include('/ipc/chromium/chromium-config.mozbuild')

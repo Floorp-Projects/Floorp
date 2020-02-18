@@ -1445,4 +1445,111 @@ class AccessibilityTest : BaseSessionTest() {
             }
         })
     }
+
+    @Test fun testAccessibilityFocusBoundaries() {
+        loadTestPage("test-links")
+        waitForInitialFocus()
+        var nodeId = View.NO_ID
+        var performedAction: Boolean
+
+        performedAction = provider.performAction(nodeId, AccessibilityNodeInfo.ACTION_NEXT_HTML_ELEMENT, null)
+        assertThat("Successfully moved a11y focus to first node", performedAction, equalTo(true))
+        sessionRule.waitUntilCalled(object : EventDelegate {
+            @AssertCalled(count = 1)
+            override fun onAccessibilityFocused(event: AccessibilityEvent) {
+                nodeId = getSourceId(event)
+                val node = createNodeInfo(nodeId)
+                assertThat("Accessibility focus on a with href",
+                        node.contentDescription as String, startsWith("a with href"))
+            }
+        })
+
+        performedAction = provider.performAction(nodeId, AccessibilityNodeInfo.ACTION_PREVIOUS_HTML_ELEMENT, null)
+        assertThat("Should fail to move a11y focus before first node", performedAction, equalTo(false))
+
+        performedAction = provider.performAction(nodeId, AccessibilityNodeInfo.ACTION_NEXT_HTML_ELEMENT, null)
+        assertThat("Successfully moved a11y focus to second node", performedAction, equalTo(true))
+        sessionRule.waitUntilCalled(object : EventDelegate {
+            @AssertCalled(count = 1)
+            override fun onAccessibilityFocused(event: AccessibilityEvent) {
+                nodeId = getSourceId(event)
+                val node = createNodeInfo(nodeId)
+                assertThat("Accessibility focus on a with no attributes",
+                        node.text as String, startsWith("a with no attributes"))
+            }
+        })
+
+        // hide first and last link
+        mainSession.evaluateJS("document.querySelectorAll('body > :first-child, body > :last-child').forEach(e => e.style.display = 'none');")
+        sessionRule.waitUntilCalled(object : EventDelegate {
+            @AssertCalled(count = 1)
+            override fun onWinContentChanged(event: AccessibilityEvent) { }
+        })
+
+        performedAction = provider.performAction(nodeId, AccessibilityNodeInfo.ACTION_PREVIOUS_HTML_ELEMENT, null)
+        assertThat("Should fail to move a11y focus before first node", performedAction, equalTo(false))
+
+
+        provider.performAction(nodeId, AccessibilityNodeInfo.ACTION_NEXT_HTML_ELEMENT, null)
+        sessionRule.waitUntilCalled(object : EventDelegate {
+            @AssertCalled(count = 1)
+            override fun onAccessibilityFocused(event: AccessibilityEvent) {
+                nodeId = getSourceId(event)
+                val node = createNodeInfo(nodeId)
+                assertThat("Accessibility focus on a with name",
+                        node.text as String, startsWith("a with name"))
+                if (Build.VERSION.SDK_INT >= 19) {
+                    assertThat("a with name is not a link",
+                            node.extras.getCharSequence("AccessibilityNodeInfo.roleDescription")!!.toString(),
+                            equalTo(""))
+                }
+            }
+        })
+
+        provider.performAction(nodeId, AccessibilityNodeInfo.ACTION_NEXT_HTML_ELEMENT, null)
+        sessionRule.waitUntilCalled(object : EventDelegate {
+            @AssertCalled(count = 1)
+            override fun onAccessibilityFocused(event: AccessibilityEvent) {
+                nodeId = getSourceId(event)
+                val node = createNodeInfo(nodeId)
+                assertThat("Accessibility focus on a with onclick",
+                        node.contentDescription as String, startsWith("a with onclick"))
+                if (Build.VERSION.SDK_INT >= 19) {
+                    assertThat("a with onclick is a link",
+                            node.extras.getCharSequence("AccessibilityNodeInfo.roleDescription")!!.toString(),
+                            equalTo("link"))
+                }
+            }
+        })
+
+        performedAction = provider.performAction(nodeId, AccessibilityNodeInfo.ACTION_NEXT_HTML_ELEMENT, null)
+        assertThat("Should fail to move a11y focus to last hidden node", performedAction, equalTo(false))
+
+        // show last link
+        mainSession.evaluateJS("document.querySelector('body > :last-child').style.display = 'initial';")
+        sessionRule.waitUntilCalled(object : EventDelegate {
+            @AssertCalled(count = 1)
+            override fun onWinContentChanged(event: AccessibilityEvent) { }
+        })
+
+        provider.performAction(nodeId, AccessibilityNodeInfo.ACTION_NEXT_HTML_ELEMENT, null)
+        sessionRule.waitUntilCalled(object : EventDelegate {
+            @AssertCalled(count = 1)
+            override fun onAccessibilityFocused(event: AccessibilityEvent) {
+                nodeId = getSourceId(event)
+                val node = createNodeInfo(nodeId)
+                assertThat("Accessibility focus on span with role link",
+                        node.contentDescription as String, startsWith("span with role link"))
+                if (Build.VERSION.SDK_INT >= 19) {
+                    assertThat("span with role link is a link",
+                            node.extras.getCharSequence("AccessibilityNodeInfo.roleDescription")!!.toString(),
+                            equalTo("link"))
+                }
+            }
+        })
+
+        performedAction = provider.performAction(nodeId, AccessibilityNodeInfo.ACTION_NEXT_HTML_ELEMENT, null)
+        assertThat("Should fail to move a11y focus beyond last node", performedAction, equalTo(false))
+    }
+
 }

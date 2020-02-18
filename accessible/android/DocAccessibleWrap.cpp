@@ -5,20 +5,28 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "Accessible-inl.h"
+#include "DocAccessibleChild.h"
 #include "DocAccessibleWrap.h"
 #include "nsIDocShell.h"
 #include "nsLayoutUtils.h"
-#include "DocAccessibleChild.h"
 #include "nsAccessibilityService.h"
 #include "nsAccUtils.h"
 #include "nsIPersistentProperties2.h"
+#include "Pivot.h"
 #include "SessionAccessibility.h"
+#include "TraversalRule.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/a11y/DocAccessiblePlatformExtChild.h"
 
 using namespace mozilla;
 using namespace mozilla::a11y;
 
 const uint32_t kCacheRefreshInterval = 500;
+
+#define UNIQUE_ID(acc)                             \
+  !acc || (acc->IsDoc() && acc->AsDoc()->IPCDoc()) \
+      ? 0                                          \
+      : reinterpret_cast<uint64_t>(acc->UniqueID())
 
 ////////////////////////////////////////////////////////////////////////////////
 // DocAccessibleWrap
@@ -54,15 +62,13 @@ AccessibleWrap* DocAccessibleWrap::GetAccessibleByID(int32_t aID) const {
 
 void DocAccessibleWrap::DoInitialUpdate() {
   DocAccessible::DoInitialUpdate();
-  CacheViewport();
+  CacheViewport(true);
 }
 
 nsresult DocAccessibleWrap::HandleAccEvent(AccEvent* aEvent) {
   switch (aEvent->GetEventType()) {
-    case nsIAccessibleEvent::EVENT_SHOW:
-    case nsIAccessibleEvent::EVENT_HIDE:
     case nsIAccessibleEvent::EVENT_SCROLLING_END:
-      CacheViewport();
+      CacheViewport(false);
       break;
     case nsIAccessibleEvent::EVENT_SCROLLING:
       UpdateFocusPathBounds();
@@ -121,10 +127,6 @@ void DocAccessibleWrap::CacheViewportCallback(nsITimer* aTimer,
     nsTArray<BatchData> cacheData(inViewAccs.Count());
     for (auto iter = inViewAccs.Iter(); !iter.Done(); iter.Next()) {
       Accessible* accessible = iter.Data();
-      auto uid = accessible->IsDoc() && accessible->AsDoc()->IPCDoc()
-                     ? 0
-                     : reinterpret_cast<uint64_t>(accessible->UniqueID());
-
       nsAutoString name;
       accessible->Name(name);
       nsAutoString textValue;
@@ -134,12 +136,12 @@ void DocAccessibleWrap::CacheViewportCallback(nsITimer* aTimer,
       nsAutoString description;
       accessible->Description(description);
 
-      cacheData.AppendElement(
-          BatchData(accessible->Document()->IPCDoc(), uid, accessible->State(),
-                    accessible->Bounds(), accessible->ActionCount(), name,
-                    textValue, nodeID, description, UnspecifiedNaN<double>(),
-                    UnspecifiedNaN<double>(), UnspecifiedNaN<double>(),
-                    UnspecifiedNaN<double>(), nsTArray<Attribute>()));
+      cacheData.AppendElement(BatchData(
+          accessible->Document()->IPCDoc(), UNIQUE_ID(accessible),
+          accessible->State(), accessible->Bounds(), accessible->ActionCount(),
+          name, textValue, nodeID, description, UnspecifiedNaN<double>(),
+          UnspecifiedNaN<double>(), UnspecifiedNaN<double>(),
+          UnspecifiedNaN<double>(), nsTArray<Attribute>()));
     }
 
     ipcDoc->SendBatch(eBatch_Viewport, cacheData);
@@ -154,12 +156,35 @@ void DocAccessibleWrap::CacheViewportCallback(nsITimer* aTimer,
     sessionAcc->ReplaceViewportCache(accessibles);
   }
 
+  if (docAcc->mCachePivotBoundaries) {
+    a11y::Pivot pivot(docAcc);
+    TraversalRule rule(java::SessionAccessibility::HTML_GRANULARITY_DEFAULT);
+    Accessible* first = pivot.First(rule);
+    Accessible* last = pivot.Last(rule);
+
+    // If first/last are null, pass the root document as pivot boundary.
+    if (IPCAccessibilityActive()) {
+      DocAccessibleChild* ipcDoc = docAcc->IPCDoc();
+      ipcDoc->GetPlatformExtension()->SendSetPivotBoundaries(
+          first ? first->Document()->IPCDoc() : ipcDoc, UNIQUE_ID(first),
+          last ? last->Document()->IPCDoc() : ipcDoc, UNIQUE_ID(last));
+    } else if (SessionAccessibility* sessionAcc =
+                   SessionAccessibility::GetInstanceFor(docAcc)) {
+      sessionAcc->UpdateAccessibleFocusBoundaries(
+          first ? static_cast<AccessibleWrap*>(first) : docAcc,
+          last ? static_cast<AccessibleWrap*>(last) : docAcc);
+    }
+
+    docAcc->mCachePivotBoundaries = false;
+  }
+
   if (docAcc->mCacheRefreshTimer) {
     docAcc->mCacheRefreshTimer = nullptr;
   }
 }
 
-void DocAccessibleWrap::CacheViewport() {
+void DocAccessibleWrap::CacheViewport(bool aCachePivotBoundaries) {
+  mCachePivotBoundaries |= aCachePivotBoundaries;
   if (VirtualViewID() == kNoID && !mCacheRefreshTimer) {
     NS_NewTimerWithFuncCallback(getter_AddRefs(mCacheRefreshTimer),
                                 CacheViewportCallback, this,
@@ -189,9 +214,6 @@ void DocAccessibleWrap::CacheFocusPath(AccessibleWrap* aAccessible) {
     nsTArray<BatchData> cacheData;
     for (AccessibleWrap* acc = aAccessible; acc && acc != this->Parent();
          acc = static_cast<AccessibleWrap*>(acc->Parent())) {
-      auto uid = acc->IsDoc() && acc->AsDoc()->IPCDoc()
-                     ? 0
-                     : reinterpret_cast<uint64_t>(acc->UniqueID());
       nsAutoString name;
       acc->Name(name);
       nsAutoString textValue;
@@ -204,10 +226,10 @@ void DocAccessibleWrap::CacheFocusPath(AccessibleWrap* aAccessible) {
       nsTArray<Attribute> attributes;
       nsAccUtils::PersistentPropertiesToArray(props, &attributes);
       cacheData.AppendElement(
-          BatchData(acc->Document()->IPCDoc(), uid, acc->State(), acc->Bounds(),
-                    acc->ActionCount(), name, textValue, nodeID, description,
-                    acc->CurValue(), acc->MinValue(), acc->MaxValue(),
-                    acc->Step(), attributes));
+          BatchData(acc->Document()->IPCDoc(), UNIQUE_ID(acc), acc->State(),
+                    acc->Bounds(), acc->ActionCount(), name, textValue, nodeID,
+                    description, acc->CurValue(), acc->MinValue(),
+                    acc->MaxValue(), acc->Step(), attributes));
       mFocusPath.Put(acc->UniqueID(), acc);
     }
 
@@ -240,11 +262,8 @@ void DocAccessibleWrap::UpdateFocusPathBounds() {
         continue;
       }
 
-      auto uid = accessible->IsDoc() && accessible->AsDoc()->IPCDoc()
-                     ? 0
-                     : reinterpret_cast<uint64_t>(accessible->UniqueID());
       boundsData.AppendElement(
-          BatchData(accessible->Document()->IPCDoc(), uid, 0,
+          BatchData(accessible->Document()->IPCDoc(), UNIQUE_ID(accessible), 0,
                     accessible->Bounds(), 0, nsString(), nsString(), nsString(),
                     nsString(), UnspecifiedNaN<double>(),
                     UnspecifiedNaN<double>(), UnspecifiedNaN<double>(),
@@ -268,3 +287,5 @@ void DocAccessibleWrap::UpdateFocusPathBounds() {
     sessionAcc->UpdateCachedBounds(accessibles);
   }
 }
+
+#undef UNIQUE_ID

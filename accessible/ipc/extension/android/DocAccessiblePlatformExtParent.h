@@ -11,6 +11,10 @@
 namespace mozilla {
 namespace a11y {
 class DocAccessiblePlatformExtParent : public PDocAccessiblePlatformExtParent {
+ public:
+  mozilla::ipc::IPCResult RecvSetPivotBoundaries(
+      PDocAccessibleParent* aFirstDoc, uint64_t aFirst,
+      PDocAccessibleParent* aLastDoc, uint64_t aLast);
 };
 }  // namespace a11y
 }  // namespace mozilla
