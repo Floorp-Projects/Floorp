@@ -71,8 +71,7 @@ class PresentationRequestChild final : public PPresentationRequestChild {
 
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
-  virtual mozilla::ipc::IPCResult Recv__delete__(
-      const nsresult& aResult) override;
+  mozilla::ipc::IPCResult Recv__delete__(const nsresult& aResult);
 
   mozilla::ipc::IPCResult RecvNotifyRequestUrlSelected(const nsString& aUrl);
 

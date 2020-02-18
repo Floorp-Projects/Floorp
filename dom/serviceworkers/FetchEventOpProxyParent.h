@@ -44,7 +44,7 @@ class FetchEventOpProxyParent final : public PFetchEventOpProxyParent {
       const IPCFetchEventRespondWithResult& aResult);
 
   mozilla::ipc::IPCResult Recv__delete__(
-      const ServiceWorkerFetchEventOpResult& aResult) override;
+      const ServiceWorkerFetchEventOpResult& aResult);
 
   void ActorDestroy(ActorDestroyReason) override;
 

@@ -52,7 +52,7 @@ class TestShellCommandParent : public PTestShellCommandParent {
 
   void ActorDestroy(ActorDestroyReason why) override;
 
-  mozilla::ipc::IPCResult Recv__delete__(const nsString& aResponse) override {
+  mozilla::ipc::IPCResult Recv__delete__(const nsString& aResponse) {
     if (!ExecuteCallback(aResponse)) {
       return IPC_FAIL_NO_REASON(this);
     }

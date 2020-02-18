@@ -3368,7 +3368,14 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                     ret=Type('mozilla::ipc::IPCResult'),
                     methodspec=MethodSpec.VIRTUAL)
 
-                if isctor or isdtor:
+                # These method implementations cause problems when trying to
+                # override them with different types in a direct call class.
+                #
+                # For the `isdtor` case there's a simple solution: it doesn't
+                # make much sense to specify arguments and then completely
+                # ignore them, and the no-arg case isn't a problem for
+                # overriding.
+                if isctor or (isdtor and not md.inParams):
                     defaultRecv = MethodDefn(recvDecl)
                     defaultRecv.addcode('return IPC_OK();\n')
                     self.cls.addstmt(defaultRecv)

@@ -39,8 +39,7 @@ class TemporaryIPCBlobChild final : public PTemporaryIPCBlobChild {
 
   mozilla::ipc::IPCResult RecvFileDesc(const FileDescriptor& aFD);
 
-  mozilla::ipc::IPCResult Recv__delete__(
-      const IPCBlobOrError& aBlobOrError) override;
+  mozilla::ipc::IPCResult Recv__delete__(const IPCBlobOrError& aBlobOrError);
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
