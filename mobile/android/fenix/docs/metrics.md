@@ -15,7 +15,9 @@ This means you might have to go searching through the dependency tree to get a f
 
 
 ## activation
+
 This ping is intended to provide a measure of the activation of mobile products. It's generated when Fenix starts, right after Glean is initialized. It doesn't include the client_id, since it might be reporting an hashed version of the Google Advertising ID.
+
 
 The following metrics are added to the ping:
 
@@ -25,8 +27,11 @@ The following metrics are added to the ping:
 | activation.identifier |[string](https://mozilla.github.io/glean/book/user/metrics/string.html) |A hashed and salted version of the Google Advertising ID from the device. This will never be sent in a ping that also contains the client_id.  |[1](https://github.com/mozilla-mobile/fenix/pull/1707#issuecomment-486972209)||2020-09-01 |
 
 ## baseline
+
 This is a built-in ping that is assembled out of the box by the Glean SDK.
+
 See the Glean SDK documentation for the [`baseline` ping](https://mozilla.github.io/glean/book/user/pings/baseline.html).
+
 The following metrics are added to the ping:
 
 | Name | Type | Description | Data reviews | Extras | Expiration |
@@ -35,8 +40,11 @@ The following metrics are added to the ping:
 | metrics.search_count |[labeled_counter](https://mozilla.github.io/glean/book/user/metrics/labeled_counters.html) |The labels for this counter are `<search-engine-name>.<source>`. If the search engine is bundled with Fenix `search-engine-name` will be the name of the search engine. If it's a custom search engine (defined: https://github.com/mozilla-mobile/fenix/issues/1607) the value will be `custom`. `source` will be: `action`, `suggestion`, `widget` or `shortcut` (depending on the source from which the search started). Also added the `other` option for the source but it should never enter on this case.  |[1](https://github.com/mozilla-mobile/fenix/pull/1677), [2](https://github.com/mozilla-mobile/fenix/pull/5216), [3](https://github.com/mozilla-mobile/fenix/pull/7310)||2020-09-01 |
 
 ## events
+
 This is a built-in ping that is assembled out of the box by the Glean SDK.
+
 See the Glean SDK documentation for the [`events` ping](https://mozilla.github.io/glean/book/user/pings/events.html).
+
 The following metrics are added to the ping:
 
 | Name | Type | Description | Data reviews | Extras | Expiration |
@@ -171,7 +179,9 @@ The following metrics are added to the ping:
 | user_specified_search_engines.custom_engine_deleted |[event](https://mozilla.github.io/glean/book/user/metrics/event.html) |A user deleted a custom search engine  |[1](https://github.com/mozilla-mobile/fenix/pull/6918)||2020-09-01 |
 
 ## installation
+
 This ping is intended to capture the source of the installation
+
 
 The following metrics are added to the ping:
 
@@ -184,8 +194,11 @@ The following metrics are added to the ping:
 | installation.timestamp |[datetime](https://mozilla.github.io/glean/book/user/metrics/datetime.html) |The date and time of the installation.  |[1](https://github.com/mozilla-mobile/fenix/pull/8074#issuecomment-586512202)||2020-09-01 |
 
 ## metrics
+
 This is a built-in ping that is assembled out of the box by the Glean SDK.
+
 See the Glean SDK documentation for the [`metrics` ping](https://mozilla.github.io/glean/book/user/pings/metrics.html).
+
 The following metrics are added to the ping:
 
 | Name | Type | Description | Data reviews | Extras | Expiration |

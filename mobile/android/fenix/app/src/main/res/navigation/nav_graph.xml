@@ -525,7 +525,12 @@
     <fragment
         android:id="@+id/deleteBrowsingDataFragment"
         android:name="org.mozilla.fenix.settings.deletebrowsingdata.DeleteBrowsingDataFragment"
-        android:label="@string/preferences_delete_browsing_data" />
+        android:label="@string/preferences_delete_browsing_data" >
+        <action
+            android:id="@+id/action_deleteBrowsingDataFragment_to_settingsFragment"
+            app:destination="@id/settingsFragment"
+            app:popUpTo="@id/homeFragment" />
+    </fragment>
     <fragment
         android:id="@+id/exceptionsFragment"
         android:name="org.mozilla.fenix.exceptions.ExceptionsFragment"
