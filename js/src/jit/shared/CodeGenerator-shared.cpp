@@ -362,13 +362,18 @@ void CodeGeneratorShared::encodeAllocation(LSnapshot* snapshot,
 
       // Lambda should have a default value readable for iterating over the
       // inner frames.
-      if (mir->isLambda() || mir->isLambdaArrow()) {
-        MConstant* constant = mir->isLambda()
-                                  ? mir->toLambda()->functionOperand()
-                                  : mir->toLambdaArrow()->functionOperand();
+      MConstant* functionOperand = nullptr;
+      if (mir->isLambda()) {
+        functionOperand = mir->toLambda()->functionOperand();
+      } else if (mir->isLambdaArrow()) {
+        functionOperand = mir->toLambdaArrow()->functionOperand();
+      } else if (mir->isFunctionWithProto()) {
+        functionOperand = mir->toFunctionWithProto()->functionOperand();
+      }
+      if (functionOperand) {
         uint32_t cstIndex;
         masm.propagateOOM(
-            graph.addConstantToPool(constant->toJSValue(), &cstIndex));
+            graph.addConstantToPool(functionOperand->toJSValue(), &cstIndex));
         alloc = RValueAllocation::RecoverInstruction(index, cstIndex);
         break;
       }

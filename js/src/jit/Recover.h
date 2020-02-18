@@ -111,6 +111,7 @@ namespace jit {
   _(CreateThisWithTemplate)    \
   _(Lambda)                    \
   _(LambdaArrow)               \
+  _(FunctionWithProto)         \
   _(ObjectState)               \
   _(ArrayState)                \
   _(SetArrayLength)            \
@@ -654,6 +655,14 @@ class RLambda final : public RInstruction {
 class RLambdaArrow final : public RInstruction {
  public:
   RINSTRUCTION_HEADER_NUM_OP_(LambdaArrow, 3)
+
+  MOZ_MUST_USE bool recover(JSContext* cx,
+                            SnapshotIterator& iter) const override;
+};
+
+class RFunctionWithProto final : public RInstruction {
+ public:
+  RINSTRUCTION_HEADER_NUM_OP_(FunctionWithProto, 3)
 
   MOZ_MUST_USE bool recover(JSContext* cx,
                             SnapshotIterator& iter) const override;

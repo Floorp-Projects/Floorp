@@ -109,7 +109,8 @@ static bool IsObjectEscaped(MInstruction* ins, JSObject* objDefault = nullptr);
 // Returns False if the lambda is not escaped and if it is optimizable by
 // ScalarReplacementOfObject.
 static bool IsLambdaEscaped(MInstruction* lambda, JSObject* obj) {
-  MOZ_ASSERT(lambda->isLambda() || lambda->isLambdaArrow());
+  MOZ_ASSERT(lambda->isLambda() || lambda->isLambdaArrow() ||
+             lambda->isFunctionWithProto());
   JitSpewDef(JitSpew_Escape, "Check lambda\n", lambda);
   JitSpewIndent spewIndent(JitSpew_Escape);
 
@@ -243,7 +244,8 @@ static bool IsObjectEscaped(MInstruction* ins, JSObject* objDefault) {
       }
 
       case MDefinition::Opcode::Lambda:
-      case MDefinition::Opcode::LambdaArrow: {
+      case MDefinition::Opcode::LambdaArrow:
+      case MDefinition::Opcode::FunctionWithProto: {
         if (IsLambdaEscaped(def->toInstruction(), obj)) {
           JitSpewDef(JitSpew_Escape, "is indirectly escaped by\n", def);
           return true;
@@ -314,6 +316,7 @@ class ObjectMemoryView : public MDefinitionVisitorDefaultNoop {
   void visitFunctionEnvironment(MFunctionEnvironment* ins);
   void visitLambda(MLambda* ins);
   void visitLambdaArrow(MLambdaArrow* ins);
+  void visitFunctionWithProto(MFunctionWithProto* ins);
 
  private:
   void visitObjectGuard(MInstruction* ins, MDefinition* operand);
@@ -472,7 +475,8 @@ void ObjectMemoryView::assertSuccess() {
 
     // The only remaining uses would be removed by DCE, which will also
     // recover the object on bailouts.
-    MOZ_ASSERT(def->isSlots() || def->isLambda() || def->isLambdaArrow());
+    MOZ_ASSERT(def->isSlots() || def->isLambda() || def->isLambdaArrow() ||
+               def->isFunctionWithProto());
     MOZ_ASSERT(!def->hasDefUses());
   }
 }
@@ -644,6 +648,10 @@ void ObjectMemoryView::visitFunctionEnvironment(MFunctionEnvironment* ins) {
     if (input->toLambdaArrow()->environmentChain() != obj_) {
       return;
     }
+  } else if (input->isFunctionWithProto()) {
+    if (input->toFunctionWithProto()->environmentChain() != obj_) {
+      return;
+    }
   } else {
     return;
   }
@@ -666,6 +674,14 @@ void ObjectMemoryView::visitLambda(MLambda* ins) {
 }
 
 void ObjectMemoryView::visitLambdaArrow(MLambdaArrow* ins) {
+  if (ins->environmentChain() != obj_) {
+    return;
+  }
+
+  ins->setIncompleteObject();
+}
+
+void ObjectMemoryView::visitFunctionWithProto(MFunctionWithProto* ins) {
   if (ins->environmentChain() != obj_) {
     return;
   }

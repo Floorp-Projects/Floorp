@@ -5065,6 +5065,9 @@ MDefinition* MFunctionEnvironment::foldsTo(TempAllocator& alloc) {
   if (input()->isLambdaArrow()) {
     return input()->toLambdaArrow()->environmentChain();
   }
+  if (input()->isFunctionWithProto()) {
+    return input()->toFunctionWithProto()->environmentChain();
+  }
   return this;
 }
 

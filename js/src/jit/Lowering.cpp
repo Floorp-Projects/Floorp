@@ -2465,6 +2465,17 @@ void LIRGenerator::visitLambdaArrow(MLambdaArrow* ins) {
   assignSafepoint(lir, ins);
 }
 
+void LIRGenerator::visitFunctionWithProto(MFunctionWithProto* ins) {
+  MOZ_ASSERT(ins->environmentChain()->type() == MIRType::Object);
+  MOZ_ASSERT(ins->prototype()->type() == MIRType::Object);
+
+  auto* lir = new (alloc())
+      LFunctionWithProto(useRegisterAtStart(ins->environmentChain()),
+                         useRegisterAtStart(ins->prototype()));
+  defineReturn(lir, ins);
+  assignSafepoint(lir, ins);
+}
+
 void LIRGenerator::visitSetFunName(MSetFunName* ins) {
   MOZ_ASSERT(ins->fun()->type() == MIRType::Object);
   MOZ_ASSERT(ins->name()->type() == MIRType::Value);

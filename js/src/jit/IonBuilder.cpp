@@ -2450,6 +2450,9 @@ AbortReasonOr<Ok> IonBuilder::inspectOpcode(JSOp op, bool* restarted) {
     case JSOp::CheckClassHeritage:
       return jsop_checkclassheritage();
 
+    case JSOp::FunWithProto:
+      return jsop_funwithproto(info().getFunction(pc));
+
     // ===== NOT Yet Implemented =====
     // Read below!
 
@@ -2463,7 +2466,6 @@ AbortReasonOr<Ok> IonBuilder::inspectOpcode(JSOp op, bool* restarted) {
     case JSOp::StrictSpreadEval:
 
     // Classes
-    case JSOp::FunWithProto:
     case JSOp::ObjWithProto:
     case JSOp::BuiltinProto:
     case JSOp::InitHomeObject:
@@ -11882,6 +11884,22 @@ AbortReasonOr<Ok> IonBuilder::jsop_lambda_arrow(JSFunction* fun) {
   current->add(cst);
   MLambdaArrow* ins = MLambdaArrow::New(
       alloc(), constraints(), current->environmentChain(), newTargetDef, cst);
+  current->add(ins);
+  current->push(ins);
+
+  return resumeAfter(ins);
+}
+
+AbortReasonOr<Ok> IonBuilder::jsop_funwithproto(JSFunction* fun) {
+  MOZ_ASSERT(usesEnvironmentChain());
+  MOZ_ASSERT(!fun->isArrow());
+  MOZ_ASSERT(!fun->isNative());
+
+  MDefinition* proto = current->pop();
+  MConstant* cst = MConstant::NewConstraintlessObject(alloc(), fun);
+  current->add(cst);
+  auto* ins =
+      MFunctionWithProto::New(alloc(), current->environmentChain(), proto, cst);
   current->add(ins);
   current->push(ins);
 
