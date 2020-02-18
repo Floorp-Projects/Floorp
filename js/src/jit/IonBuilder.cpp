@@ -2447,6 +2447,9 @@ AbortReasonOr<Ok> IonBuilder::inspectOpcode(JSOp op, bool* restarted) {
     case JSOp::InstrumentationScriptId:
       return jsop_instrumentation_scriptid();
 
+    case JSOp::CheckClassHeritage:
+      return jsop_checkclassheritage();
+
     // ===== NOT Yet Implemented =====
     // Read below!
 
@@ -2460,7 +2463,6 @@ AbortReasonOr<Ok> IonBuilder::inspectOpcode(JSOp op, bool* restarted) {
     case JSOp::StrictSpreadEval:
 
     // Classes
-    case JSOp::CheckClassHeritage:
     case JSOp::FunWithProto:
     case JSOp::ObjWithProto:
     case JSOp::BuiltinProto:
@@ -9880,6 +9882,13 @@ AbortReasonOr<Ok> IonBuilder::jsop_checkobjcoercible() {
   current->add(check);
   current->push(check);
   return resumeAfter(check);
+}
+
+AbortReasonOr<Ok> IonBuilder::jsop_checkclassheritage() {
+  auto* ins = MCheckClassHeritage::New(alloc(), current->pop());
+  current->add(ins);
+  current->push(ins);
+  return Ok();
 }
 
 uint32_t IonBuilder::getDefiniteSlot(TemporaryTypeSet* types, jsid id,

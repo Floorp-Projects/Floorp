@@ -4617,6 +4617,16 @@ void LIRGenerator::visitCheckObjCoercible(MCheckObjCoercible* ins) {
   assignSafepoint(lir, ins);
 }
 
+void LIRGenerator::visitCheckClassHeritage(MCheckClassHeritage* ins) {
+  MDefinition* heritage = ins->heritage();
+  MOZ_ASSERT(heritage->type() == MIRType::Value);
+
+  auto* lir = new (alloc()) LCheckClassHeritage(useBox(heritage), temp());
+  redefine(ins, heritage);
+  add(lir, ins);
+  assignSafepoint(lir, ins);
+}
+
 void LIRGenerator::visitDebugCheckSelfHosted(MDebugCheckSelfHosted* ins) {
   MDefinition* checkVal = ins->checkValue();
   MOZ_ASSERT(checkVal->type() == MIRType::Value);

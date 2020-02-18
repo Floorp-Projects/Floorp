@@ -719,6 +719,7 @@ class MOZ_STACK_CLASS IonBuilder {
   AbortReasonOr<Ok> jsop_checkisobj(uint8_t kind);
   AbortReasonOr<Ok> jsop_checkiscallable(uint8_t kind);
   AbortReasonOr<Ok> jsop_checkobjcoercible();
+  AbortReasonOr<Ok> jsop_checkclassheritage();
   AbortReasonOr<Ok> jsop_pushcallobj();
   AbortReasonOr<Ok> jsop_implicitthis(PropertyName* name);
   AbortReasonOr<Ok> jsop_importmeta();
