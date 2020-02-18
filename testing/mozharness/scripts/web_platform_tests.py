@@ -221,7 +221,9 @@ class WebPlatformTest(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidM
                 "--stackwalk-binary=%s" % self.query_minidump_stackwalk(),
                 "--stackfix-dir=%s" % os.path.join(dirs["abs_test_install_dir"], "bin"),
                 "--run-by-dir=%i" % (3 if not mozinfo.info["asan"] else 0),
-                "--no-pause-after-test"]
+                "--no-pause-after-test",
+                "--instrument-to-file=%s" % os.path.join(dirs["abs_blob_upload_dir"],
+                                                         "wpt_instruments.txt")]
 
         if self.is_android:
             cmd += ["--device-serial=%s" % self.device_serial,
