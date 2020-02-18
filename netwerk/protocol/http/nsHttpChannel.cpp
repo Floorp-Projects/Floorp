@@ -7482,8 +7482,8 @@ static bool CompareCrossOriginOpenerPolicies(
     nsIPrincipal* documentOrigin,
     nsILoadInfo::CrossOriginOpenerPolicy resultPolicy,
     nsIPrincipal* resultOrigin) {
-  if (documentPolicy == nsILoadInfo::OPENER_POLICY_NULL &&
-      resultPolicy == nsILoadInfo::OPENER_POLICY_NULL) {
+  if (documentPolicy == nsILoadInfo::OPENER_POLICY_UNSAFE_NONE &&
+      resultPolicy == nsILoadInfo::OPENER_POLICY_UNSAFE_NONE) {
     return true;
   }
 
@@ -7496,19 +7496,6 @@ static bool CompareCrossOriginOpenerPolicies(
   if ((documentPolicy & nsILoadInfo::OPENER_POLICY_SAME_ORIGIN) &&
       documentOrigin->Equals(resultOrigin)) {
     return true;
-  }
-
-  if (documentPolicy & nsILoadInfo::OPENER_POLICY_SAME_SITE) {
-    nsAutoCString siteOriginA;
-    nsAutoCString siteOriginB;
-
-    documentOrigin->GetSiteOrigin(siteOriginA);
-    resultOrigin->GetSiteOrigin(siteOriginB);
-    LOG(("Comparing origin doc:[%s] with result:[%s]\n", siteOriginA.get(),
-         siteOriginB.get()));
-    if (siteOriginA == siteOriginB) {
-      return true;
-    }
   }
 
   return false;
@@ -7546,13 +7533,13 @@ nsresult nsHttpChannel::ComputeCrossOriginOpenerPolicyMismatch() {
   // Get the policy of the active document, and the policy for the result.
   nsILoadInfo::CrossOriginOpenerPolicy documentPolicy = ctx->GetOpenerPolicy();
   nsILoadInfo::CrossOriginOpenerPolicy resultPolicy =
-      nsILoadInfo::OPENER_POLICY_NULL;
+      nsILoadInfo::OPENER_POLICY_UNSAFE_NONE;
   Unused << ComputeCrossOriginOpenerPolicy(documentPolicy, &resultPolicy);
   mComputedCrossOriginOpenerPolicy = resultPolicy;
 
   // If bc's popup sandboxing flag set is not empty and potentialCOOP is
   // non-null, then navigate bc to a network error and abort these steps.
-  if (resultPolicy != nsILoadInfo::OPENER_POLICY_NULL &&
+  if (resultPolicy != nsILoadInfo::OPENER_POLICY_UNSAFE_NONE &&
       GetHasNonEmptySandboxingFlag()) {
     LOG(
         ("nsHttpChannel::ComputeCrossOriginOpenerPolicyMismatch network error "
@@ -7595,18 +7582,17 @@ nsresult nsHttpChannel::ComputeCrossOriginOpenerPolicyMismatch() {
   }
 
   // If one of the following is false:
-  //   - document's unsafe-allow-outgoing is true
+  //   - document's policy is same-origin-allow-popups
   //   - resultPolicy is null
   //   - doc is the initial about:blank document
   // then we have a mismatch.
 
-  if (!(documentPolicy &
-        nsILoadInfo::OPENER_POLICY_UNSAFE_ALLOW_OUTGOING_FLAG)) {
+  if (documentPolicy != nsILoadInfo::OPENER_POLICY_SAME_ORIGIN_ALLOW_POPUPS) {
     mHasCrossOriginOpenerPolicyMismatch = true;
     return NS_OK;
   }
 
-  if (resultPolicy != nsILoadInfo::OPENER_POLICY_NULL) {
+  if (resultPolicy != nsILoadInfo::OPENER_POLICY_UNSAFE_NONE) {
     mHasCrossOriginOpenerPolicyMismatch = true;
     return NS_OK;
   }

@@ -1538,7 +1538,7 @@ HttpChannelParent::OnStartRequest(nsIRequest* aRequest) {
   chan->GetAllRedirectsSameOrigin(&allRedirectsSameOrigin);
 
   nsILoadInfo::CrossOriginOpenerPolicy openerPolicy =
-      nsILoadInfo::OPENER_POLICY_NULL;
+      nsILoadInfo::OPENER_POLICY_UNSAFE_NONE;
   chan->GetCrossOriginOpenerPolicy(&openerPolicy);
 
   rv = NS_OK;
