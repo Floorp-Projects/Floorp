@@ -21,6 +21,8 @@ class Element;
 }  // namespace dom
 
 struct OwningAnimationTarget {
+  OwningAnimationTarget() = default;
+
   OwningAnimationTarget(dom::Element* aElement, PseudoStyleType aType)
       : mElement(aElement), mPseudoType(aType) {}
 
@@ -29,6 +31,8 @@ struct OwningAnimationTarget {
   bool operator==(const OwningAnimationTarget& aOther) const {
     return mElement == aOther.mElement && mPseudoType == aOther.mPseudoType;
   }
+
+  explicit operator bool() const { return !!mElement; }
 
   // mElement represents the parent element of a pseudo-element, not the
   // generated content element.
@@ -48,6 +52,8 @@ struct NonOwningAnimationTarget {
   bool operator==(const NonOwningAnimationTarget& aOther) const {
     return mElement == aOther.mElement && mPseudoType == aOther.mPseudoType;
   }
+
+  explicit operator bool() const { return !!mElement; }
 
   // mElement represents the parent element of a pseudo-element, not the
   // generated content element.
