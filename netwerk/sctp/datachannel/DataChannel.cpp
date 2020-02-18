@@ -3081,13 +3081,17 @@ void DataChannel::SetListener(DataChannelListener* aListener,
   mListener = aListener;
 }
 
-void DataChannel::SendErrnoToErrorResult(int error, ErrorResult& aRv) {
+void DataChannel::SendErrnoToErrorResult(int error, size_t aMessageSize,
+                                         ErrorResult& aRv) {
   switch (error) {
     case 0:
       break;
-    case EMSGSIZE:
-      aRv.Throw(NS_ERROR_DOM_TYPE_ERR);
+    case EMSGSIZE: {
+      nsPrintfCString err("Message size (%zu) exceeds maxMessageSize",
+                          aMessageSize);
+      aRv.ThrowTypeError(NS_ConvertUTF8toUTF16(err));
       break;
+    }
     default:
       aRv.Throw(NS_ERROR_DOM_OPERATION_ERR);
       break;
@@ -3173,7 +3177,8 @@ void DataChannel::SendMsg(const nsACString& aMsg, ErrorResult& aRv) {
     return;
   }
 
-  SendErrnoToErrorResult(mConnection->SendMsg(mStream, aMsg), aRv);
+  SendErrnoToErrorResult(mConnection->SendMsg(mStream, aMsg), aMsg.Length(),
+                         aRv);
   if (!aRv.Failed()) {
     IncrementBufferedAmount(aMsg.Length(), aRv);
   }
@@ -3184,7 +3189,8 @@ void DataChannel::SendBinaryMsg(const nsACString& aMsg, ErrorResult& aRv) {
     return;
   }
 
-  SendErrnoToErrorResult(mConnection->SendBinaryMsg(mStream, aMsg), aRv);
+  SendErrnoToErrorResult(mConnection->SendBinaryMsg(mStream, aMsg),
+                         aMsg.Length(), aRv);
   if (!aRv.Failed()) {
     IncrementBufferedAmount(aMsg.Length(), aRv);
   }
@@ -3214,7 +3220,8 @@ void DataChannel::SendBinaryBlob(dom::Blob& aBlob, ErrorResult& aRv) {
     return;
   }
 
-  SendErrnoToErrorResult(mConnection->SendBlob(mStream, msgStream), aRv);
+  SendErrnoToErrorResult(mConnection->SendBlob(mStream, msgStream), msgLength,
+                         aRv);
   if (!aRv.Failed()) {
     IncrementBufferedAmount(msgLength, aRv);
   }

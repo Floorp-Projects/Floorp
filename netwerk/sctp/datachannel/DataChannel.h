@@ -449,7 +449,8 @@ class DataChannel {
   void SetListener(DataChannelListener* aListener, nsISupports* aContext);
 
   // Helper for send methods that converts POSIX error codes to an ErrorResult.
-  static void SendErrnoToErrorResult(int error, ErrorResult& aRv);
+  static void SendErrnoToErrorResult(int error, size_t aMessageSize,
+                                     ErrorResult& aRv);
 
   // Send a string
   void SendMsg(const nsACString& aMsg, ErrorResult& aRv);
