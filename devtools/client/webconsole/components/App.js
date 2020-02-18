@@ -337,11 +337,12 @@ class App extends Component {
   }
 
   renderEagerEvaluation() {
-    if (!this.props.eagerEvaluationEnabled) {
+    const { eagerEvaluationEnabled, serviceContainer } = this.props;
+    if (!eagerEvaluationEnabled) {
       return null;
     }
 
-    return EagerEvaluation();
+    return EagerEvaluation({ serviceContainer });
   }
 
   renderReverseSearch() {

@@ -31,7 +31,29 @@ class EagerEvaluation extends Component {
   static get propTypes() {
     return {
       terminalEagerResult: PropTypes.any,
+      serviceContainer: PropTypes.object.isRequired,
     };
+  }
+
+  componentDidUpdate(prevProps) {
+    const { serviceContainer, terminalEagerResult } = this.props;
+    const { highlightDomElement, unHighlightDomElement } = serviceContainer;
+
+    if (canHighlightObject(prevProps.terminalEagerResult)) {
+      unHighlightDomElement(prevProps.terminalEagerResult.getGrip());
+    }
+
+    if (canHighlightObject(terminalEagerResult)) {
+      highlightDomElement(terminalEagerResult.getGrip());
+    }
+  }
+
+  componentWillUnmount() {
+    const { serviceContainer, terminalEagerResult } = this.props;
+
+    if (canHighlightObject(terminalEagerResult)) {
+      serviceContainer.unHighlightDomElement(terminalEagerResult.getGrip());
+    }
   }
 
   renderRepsResult() {
@@ -61,6 +83,16 @@ class EagerEvaluation extends Component {
       hasResult ? this.renderRepsResult() : null
     );
   }
+}
+
+function canHighlightObject(obj) {
+  const grip = obj && obj.getGrip && obj.getGrip();
+  return (
+    grip &&
+    (REPS.ElementNode.supportsObject(grip) ||
+      REPS.TextNode.supportsObject(grip)) &&
+    grip.preview.isConnected
+  );
 }
 
 function mapStateToProps(state) {
