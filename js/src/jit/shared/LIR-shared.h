@@ -7207,6 +7207,21 @@ class LSuperFunction : public LInstructionHelper<BOX_PIECES, 1, 1> {
   const LDefinition* temp() { return this->getTemp(0); }
 };
 
+class LInitHomeObject : public LInstructionHelper<0, 1 + BOX_PIECES, 0> {
+ public:
+  LIR_HEADER(InitHomeObject)
+
+  static const size_t HomeObjectValue = 1;
+
+  LInitHomeObject(const LAllocation& function, const LBoxAllocation& homeObject)
+      : LInstructionHelper(classOpcode) {
+    setOperand(0, function);
+    setBoxOperand(HomeObjectValue, homeObject);
+  }
+
+  const LAllocation* function() { return getOperand(0); }
+};
+
 template <size_t NumDefs>
 class LIonToWasmCallBase : public LVariadicInstruction<NumDefs, 2> {
   using Base = LVariadicInstruction<NumDefs, 2>;
