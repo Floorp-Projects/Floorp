@@ -127,4 +127,8 @@
     <dimen name="share_header_text_size">12sp</dimen>
     <dimen name="share_progress_bar_margin">16dp</dimen>
 
+    <!--  Onboarding  -->
+    <dimen name="onboarding_dual_pane_radio_button_translation_x">-7dp</dimen>
+    <dimen name="onboarding_dual_pane_radio_button_translation_y">-8dp</dimen>
+
 </resources>
