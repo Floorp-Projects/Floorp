@@ -2,6 +2,8 @@
 /* global ok, is, Cu, BrowserTestUtils, add_task, gBrowser, requestLongerTimeout*/
 "use strict";
 
+Services.prefs.setBoolPref("dom.manifest.enabled", true);
+
 const { ManifestObtainer } = ChromeUtils.import(
   "resource://gre/modules/ManifestObtainer.jsm"
 );
