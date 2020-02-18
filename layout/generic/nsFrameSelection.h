@@ -413,11 +413,10 @@ class nsFrameSelection final {
    * If we are in table cell selection mode. aka ctrl click in table cell
    */
   bool GetTableCellSelection() const {
-    return mTableSelection.mSelectingTableCellMode !=
-           mozilla::TableSelectionMode::None;
+    return mTableSelection.mMode != mozilla::TableSelectionMode::None;
   }
   void ClearTableCellSelection() {
-    mTableSelection.mSelectingTableCellMode = mozilla::TableSelectionMode::None;
+    mTableSelection.mMode = mozilla::TableSelectionMode::None;
   }
 
   /**
@@ -828,8 +827,7 @@ class nsFrameSelection final {
     nsCOMPtr<nsIContent> mEndSelectedCell;
     nsCOMPtr<nsIContent> mAppendStartSelectedCell;
     nsCOMPtr<nsIContent> mUnselectCellOnMouseUp;
-    mozilla::TableSelectionMode mSelectingTableCellMode =
-        mozilla::TableSelectionMode::None;
+    mozilla::TableSelectionMode mMode = mozilla::TableSelectionMode::None;
     int32_t mSelectedCellIndex = 0;
   };
 

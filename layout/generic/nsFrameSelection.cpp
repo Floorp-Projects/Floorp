@@ -314,7 +314,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsFrameSelection)
   }
 
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mTableSelection.mCellParent)
-  tmp->mTableSelection.mSelectingTableCellMode = TableSelectionMode::None;
+  tmp->mTableSelection.mMode = TableSelectionMode::None;
   tmp->mDragSelectingCells = false;
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mTableSelection.mStartSelectedCell)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mTableSelection.mEndSelectedCell)
@@ -1238,7 +1238,7 @@ nsresult nsFrameSelection::TakeFocus(nsIContent* aNewFocus,
   }
 
   // Clear all table selection data
-  mTableSelection.mSelectingTableCellMode = TableSelectionMode::None;
+  mTableSelection.mMode = TableSelectionMode::None;
   mDragSelectingCells = false;
   mTableSelection.mStartSelectedCell = nullptr;
   mTableSelection.mEndSelectedCell = nullptr;
@@ -2073,9 +2073,8 @@ nsresult nsFrameSelection::HandleTableSelection(nsINode* aParentContent,
       //  we can drift into any cell to stay in that mode
       //  even if aTarget = TableSelectionMode::Cell
 
-      if (mTableSelection.mSelectingTableCellMode == TableSelectionMode::Row ||
-          mTableSelection.mSelectingTableCellMode ==
-              TableSelectionMode::Column) {
+      if (mTableSelection.mMode == TableSelectionMode::Row ||
+          mTableSelection.mMode == TableSelectionMode::Column) {
         if (mTableSelection.mEndSelectedCell) {
           // Also check if cell is in same row/col
           result = GetCellIndexes(mTableSelection.mEndSelectedCell,
@@ -2090,11 +2089,9 @@ nsresult nsFrameSelection::HandleTableSelection(nsINode* aParentContent,
               "startColIndex = %d\n",
               curRowIndex, startRowIndex, curColIndex, startColIndex);
 #endif
-          if ((mTableSelection.mSelectingTableCellMode ==
-                   TableSelectionMode::Row &&
+          if ((mTableSelection.mMode == TableSelectionMode::Row &&
                startRowIndex == curRowIndex) ||
-              (mTableSelection.mSelectingTableCellMode ==
-                   TableSelectionMode::Column &&
+              (mTableSelection.mMode == TableSelectionMode::Column &&
                startColIndex == curColIndex))
             return NS_OK;
         }
@@ -2102,10 +2099,9 @@ nsresult nsFrameSelection::HandleTableSelection(nsINode* aParentContent,
         printf(" Dragged into a new column or row\n");
 #endif
         // Continue dragging row or column selection
-        return SelectRowOrColumn(childContent,
-                                 mTableSelection.mSelectingTableCellMode);
+        return SelectRowOrColumn(childContent, mTableSelection.mMode);
       }
-      if (mTableSelection.mSelectingTableCellMode == TableSelectionMode::Cell) {
+      if (mTableSelection.mMode == TableSelectionMode::Cell) {
 #ifdef DEBUG_TABLE_SELECTION
         printf("HandleTableSelection: Dragged into a new cell\n");
 #endif
@@ -2126,13 +2122,11 @@ nsresult nsFrameSelection::HandleTableSelection(nsINode* aParentContent,
             mDomSelections[index]->RemoveAllRanges(IgnoreErrors());
 
             if (startRowIndex == curRowIndex)
-              mTableSelection.mSelectingTableCellMode = TableSelectionMode::Row;
+              mTableSelection.mMode = TableSelectionMode::Row;
             else
-              mTableSelection.mSelectingTableCellMode =
-                  TableSelectionMode::Column;
+              mTableSelection.mMode = TableSelectionMode::Column;
 
-            return SelectRowOrColumn(childContent,
-                                     mTableSelection.mSelectingTableCellMode);
+            return SelectRowOrColumn(childContent, mTableSelection.mMode);
           }
         }
 
@@ -2170,7 +2164,7 @@ nsresult nsFrameSelection::HandleTableSelection(nsINode* aParentContent,
           mDomSelections[index]->RemoveAllRanges(IgnoreErrors());
         }
         mDragSelectingCells = true;  // Signal to start drag-cell-selection
-        mTableSelection.mSelectingTableCellMode = aTarget;
+        mTableSelection.mMode = aTarget;
         // Set start for new drag-selection block (not appended)
         mTableSelection.mStartSelectedCell = childContent;
         // The initial block end is same as the start
@@ -2191,7 +2185,7 @@ nsresult nsFrameSelection::HandleTableSelection(nsINode* aParentContent,
               !IsInSameTable(previousCellNode, childContent)) {
             mDomSelections[index]->RemoveAllRanges(IgnoreErrors());
             // Reset selection mode that is cleared in RemoveAllRanges
-            mTableSelection.mSelectingTableCellMode = aTarget;
+            mTableSelection.mMode = aTarget;
           }
 
           return SelectCellElement(childContent);
@@ -2226,7 +2220,7 @@ nsresult nsFrameSelection::HandleTableSelection(nsINode* aParentContent,
         mTableSelection.mStartSelectedCell = nullptr;
         mDomSelections[index]->RemoveAllRanges(IgnoreErrors());
         // Always do this AFTER RemoveAllRanges
-        mTableSelection.mSelectingTableCellMode = aTarget;
+        mTableSelection.mMode = aTarget;
         return SelectRowOrColumn(childContent, aTarget);
       }
     } else {
