@@ -503,7 +503,7 @@ nsresult Selection::MaybeAddTableCellRange(nsRange* aRange, bool* aDidAddRange,
 
   // If not adding a cell range, we are done here
   if (tableMode != TableSelectionMode::Cell) {
-    mFrameSelection->mSelectingTableCellMode = tableMode;
+    mFrameSelection->mTableSelection.mSelectingTableCellMode = tableMode;
     // Don't fail if range isn't a selected cell, aDidAddRange tells caller if
     // we didn't proceed
     return NS_OK;
@@ -512,8 +512,9 @@ nsresult Selection::MaybeAddTableCellRange(nsRange* aRange, bool* aDidAddRange,
   // Set frame selection mode only if not already set to a table mode
   // so we don't lose the select row and column flags (not detected by
   // getTableCellLocation)
-  if (mFrameSelection->mSelectingTableCellMode == TableSelectionMode::None) {
-    mFrameSelection->mSelectingTableCellMode = tableMode;
+  if (mFrameSelection->mTableSelection.mSelectingTableCellMode ==
+      TableSelectionMode::None) {
+    mFrameSelection->mTableSelection.mSelectingTableCellMode = tableMode;
   }
 
   *aDidAddRange = true;
