@@ -232,8 +232,6 @@ class gfxWindowsPlatform : public gfxPlatform {
   RenderMode mRenderMode;
 
  private:
-  bool HasBattery() override;
-
   void Init();
   void InitAcceleration() override;
   void InitWebRenderConfig() override;
