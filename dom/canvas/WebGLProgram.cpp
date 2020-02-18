@@ -512,7 +512,7 @@ webgl::LinkedProgramInfo::LinkedProgramInfo(WebGLProgram* prog)
       transformFeedbackBufferMode(prog->mNextLink_TransformFeedbackBufferMode) {
 }
 
-webgl::LinkedProgramInfo::~LinkedProgramInfo() {}
+webgl::LinkedProgramInfo::~LinkedProgramInfo() = default;
 
 webgl::AttribBaseType webgl::ToAttribBaseType(const GLenum elemType) {
   switch (elemType) {

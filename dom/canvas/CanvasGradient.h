@@ -58,7 +58,7 @@ class CanvasGradient : public nsWrapperCache {
   nsTArray<mozilla::gfx::GradientStop> mRawStops;
   RefPtr<mozilla::gfx::GradientStops> mStops;
   Type mType;
-  virtual ~CanvasGradient() {}
+  virtual ~CanvasGradient() = default;
 };
 
 }  // namespace dom

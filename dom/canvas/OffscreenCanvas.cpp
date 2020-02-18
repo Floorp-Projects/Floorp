@@ -31,7 +31,7 @@ OffscreenCanvasCloneData::OffscreenCanvasCloneData(
       mNeutered(aNeutered),
       mIsWriteOnly(aIsWriteOnly) {}
 
-OffscreenCanvasCloneData::~OffscreenCanvasCloneData() {}
+OffscreenCanvasCloneData::~OffscreenCanvasCloneData() = default;
 
 OffscreenCanvas::OffscreenCanvas(nsIGlobalObject* aGlobal, uint32_t aWidth,
                                  uint32_t aHeight,

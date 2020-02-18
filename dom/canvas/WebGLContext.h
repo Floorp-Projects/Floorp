@@ -983,7 +983,7 @@ class WebGLContext : public VRefCounted, public SupportsWeakPtr<WebGLContext> {
     nsCString key;  // For reporting.
     nsCString info;
 
-    FailureReason() {}
+    FailureReason() = default;
 
     template <typename A, typename B>
     FailureReason(const A& _key, const B& _info)

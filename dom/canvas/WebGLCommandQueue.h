@@ -39,10 +39,10 @@ class BasicSource {
       : mProducer(std::move(aProducer)) {
     MOZ_ASSERT(mProducer);
   }
-  virtual ~BasicSource() {}
+  virtual ~BasicSource() = default;
 
   // For IPDL:
-  BasicSource() {}
+  BasicSource() = default;
   friend struct mozilla::ipc::IPDLParamTraits<BasicSource>;
 
  protected:
@@ -55,10 +55,10 @@ class BasicSink {
       : mConsumer(std::move(aConsumer)) {
     MOZ_ASSERT(mConsumer);
   }
-  virtual ~BasicSink() {}
+  virtual ~BasicSink() = default;
 
   // For IPDL:
-  BasicSink() {}
+  BasicSink() = default;
   friend struct mozilla::ipc::IPDLParamTraits<BasicSink>;
 
  protected:
@@ -95,7 +95,7 @@ class CommandSource : public BasicSource {
   }
 
   // For IPDL:
-  CommandSource() {}
+  CommandSource() = default;
 };
 
 /**
@@ -174,7 +174,7 @@ class CommandSink : public BasicSink {
   }
 
   // For IPDL:
-  CommandSink() {}
+  CommandSink() = default;
 
   // non-void return value, non-const method variant
   template <typename T, typename ReturnType, typename... Args>
@@ -315,7 +315,7 @@ class SyncCommandSource : public CommandSource<Command> {
   }
 
   // for IPDL:
-  SyncCommandSource() {}
+  SyncCommandSource() = default;
   friend struct mozilla::ipc::IPDLParamTraits<SyncCommandSource<Command>>;
 
  protected:
@@ -361,7 +361,7 @@ class SyncCommandSink : public CommandSink<Command> {
         mProducer(std::move(aResponseProducer)) {}
 
   // for IPDL:
-  SyncCommandSink() {}
+  SyncCommandSink() = default;
   friend struct mozilla::ipc::IPDLParamTraits<SyncCommandSink<Command>>;
 
   // Places RESPONSE_ACK and the typed return value, or RESPONSE_NAK, in

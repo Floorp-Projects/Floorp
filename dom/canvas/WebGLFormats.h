@@ -403,7 +403,7 @@ class FormatUsageAuthority {
   static UniquePtr<FormatUsageAuthority> CreateForWebGL2(gl::GLContext* gl);
 
  private:
-  FormatUsageAuthority() {}
+  FormatUsageAuthority() = default;
 
  public:
   FormatUsageInfo* EditUsage(EffectiveFormat format);

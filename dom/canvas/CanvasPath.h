@@ -66,7 +66,7 @@ class CanvasPath final : public nsWrapperCache {
                ErrorResult& aError);
 
  private:
-  virtual ~CanvasPath() {}
+  virtual ~CanvasPath() = default;
 
   nsCOMPtr<nsISupports> mParent;
   static gfx::Float ToFloat(double aValue) { return gfx::Float(aValue); }
