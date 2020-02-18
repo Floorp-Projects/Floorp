@@ -12858,7 +12858,40 @@ AbortReasonOr<Ok> IonBuilder::jsop_checkreturn() {
 }
 
 AbortReasonOr<Ok> IonBuilder::jsop_superfun() {
-  auto* ins = MSuperFunction::New(alloc(), current->pop());
+  MDefinition* callee = current->pop();
+
+  do {
+    TemporaryTypeSet* calleeTypes = callee->resultTypeSet();
+    JSObject* calleeObj = calleeTypes ? calleeTypes->maybeSingleton() : nullptr;
+    if (!calleeObj) {
+      break;
+    }
+
+    // Refuse to optimize if the prototype is uncacheable.
+    if (calleeObj->hasUncacheableProto() || !calleeObj->hasStaticPrototype()) {
+      break;
+    }
+
+    // The prototype must be a constructor.
+    JSObject* proto = calleeObj->staticPrototype();
+    if (!proto || !proto->isConstructor()) {
+      break;
+    }
+
+    // Add a constraint to ensure we're notified when the prototype changes.
+    TypeSet::ObjectKey* calleeKey = TypeSet::ObjectKey::get(calleeObj);
+    if (!calleeKey->hasStableClassAndProto(constraints())) {
+      break;
+    }
+
+    callee->setImplicitlyUsedUnchecked();
+
+    pushConstant(ObjectValue(*proto));
+
+    return Ok();
+  } while (false);
+
+  auto* ins = MSuperFunction::New(alloc(), callee);
   current->add(ins);
   current->push(ins);
   return Ok();
