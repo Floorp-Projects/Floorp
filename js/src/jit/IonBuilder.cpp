@@ -2462,6 +2462,9 @@ AbortReasonOr<Ok> IonBuilder::inspectOpcode(JSOp op, bool* restarted) {
     case JSOp::CheckReturn:
       return jsop_checkreturn();
 
+    case JSOp::CheckThis:
+      return jsop_checkthis();
+
     // ===== NOT Yet Implemented =====
     // Read below!
 
@@ -2477,7 +2480,6 @@ AbortReasonOr<Ok> IonBuilder::inspectOpcode(JSOp op, bool* restarted) {
     // Classes
     case JSOp::InitHomeObject:
     case JSOp::DerivedConstructor:
-    case JSOp::CheckThis:
     case JSOp::CheckThisReinit:
 
     // Super
@@ -9894,6 +9896,13 @@ AbortReasonOr<Ok> IonBuilder::jsop_checkobjcoercible() {
 
 AbortReasonOr<Ok> IonBuilder::jsop_checkclassheritage() {
   auto* ins = MCheckClassHeritage::New(alloc(), current->pop());
+  current->add(ins);
+  current->push(ins);
+  return Ok();
+}
+
+AbortReasonOr<Ok> IonBuilder::jsop_checkthis() {
+  auto* ins = MCheckThis::New(alloc(), current->pop());
   current->add(ins);
   current->push(ins);
   return Ok();
