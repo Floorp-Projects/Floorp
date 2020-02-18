@@ -807,7 +807,7 @@ class nsFrameSelection final {
   // not return null, then the first node in the returned range is a cell
   // (according to GetFirstCellNodeInRange).
   nsRange* GetNextCellRange();
-  static nsIContent* GetFirstCellNodeInRange(nsRange* aRange);
+  static nsIContent* GetFirstCellNodeInRange(const nsRange* aRange);
   // Returns non-null table if in same table, null otherwise
   static nsIContent* IsInSameTable(nsIContent* aContent1,
                                    nsIContent* aContent2);
