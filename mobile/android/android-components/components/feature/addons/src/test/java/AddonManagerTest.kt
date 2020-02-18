@@ -106,6 +106,7 @@ class AddonManagerTest {
         whenever(newlySupportedExtension.isEnabled()).thenReturn(false)
         whenever(metadata.disabledFlags).thenReturn(DisabledFlags.select(DisabledFlags.APP_SUPPORT))
         whenever(metadata.optionsPageUrl).thenReturn("http://options-page.moz")
+        whenever(metadata.openOptionsPageInTab).thenReturn(true)
         whenever(newlySupportedExtension.id).thenReturn("ext3")
         whenever(newlySupportedExtension.url).thenReturn("site_url")
         whenever(newlySupportedExtension.getMetadata()).thenReturn(metadata)
@@ -127,6 +128,8 @@ class AddonManagerTest {
         assertEquals("ext1", addons[0].installedState!!.id)
         assertTrue(addons[0].isEnabled())
         assertFalse(addons[0].isDisabledAsUnsupported())
+        assertNull(addons[0].installedState!!.optionsPageUrl)
+        assertFalse(addons[0].installedState!!.openOptionsPageInTab)
 
         assertEquals("ext2", addons[1].id)
         assertNull(addons[1].installedState)
@@ -140,6 +143,7 @@ class AddonManagerTest {
         assertFalse(addons[2].isEnabled())
         assertTrue(addons[2].isDisabledAsUnsupported())
         assertEquals("http://options-page.moz", addons[2].installedState!!.optionsPageUrl)
+        assertTrue(addons[2].installedState!!.openOptionsPageInTab)
 
         // Verify the unsupported add-on was included in addons
         assertEquals("unsupported_ext", addons[3].id)

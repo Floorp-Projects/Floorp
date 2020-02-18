@@ -2,7 +2,7 @@
 
 # AbstractMigrationService
 
-`abstract class AbstractMigrationService` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/AbstractMigrationService.kt#L36)
+`abstract class AbstractMigrationService` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/AbstractMigrationService.kt#L38)
 
 Abstract implementation of a background service running a configured [FennecMigrator](../-fennec-migrator/index.md).
 
@@ -30,6 +30,12 @@ An application using this implementation needs to extend this class and provide 
 | [onBind](on-bind.md) | `open fun onBind(intent: <ERROR CLASS>?): <ERROR CLASS>?` |
 | [onCreate](on-create.md) | `open fun onCreate(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
 | [onDestroy](on-destroy.md) | `open fun onDestroy(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
+
+### Companion Object Functions
+
+| Name | Summary |
+|---|---|
+| [dismissNotification](dismiss-notification.md) | `fun dismissNotification(context: <ERROR CLASS>): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Dismisses the "migration completed" notification. |
 
 ### Extension Functions
 

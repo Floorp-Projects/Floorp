@@ -15,6 +15,19 @@ permalink: /changelog/
 * **feature-share**
   * Added database to store recent apps
   * Added `RecentAppsStorage` to handle storing and retrieving most-recent apps
+* **service-glean**
+  * Glean was updated to v25.0.0:
+    * General:
+      * `ping_type` is not included in the `ping_info` any more ([#653](https://github.com/mozilla/glean/pull/653)), the pipeline takes the value from the submission URL.
+      * The version of `glean_parser` has been upgraded to 1.18.2:
+        * **Breaking Change (Java API)** Have the metrics names in Java match the names in Kotlin.
+          See [Bug 1588060](https://bugzilla.mozilla.org/show_bug.cgi?id=1588060).
+        * The reasons a ping are sent are now included in the generated markdown documentation.
+    * Android:
+      * The `Glean.initialize` method runs mostly off the main thread ([#672](https://github.com/mozilla/glean/pull/672)).
+      * Labels in labeled metrics now have a correct, and slightly stricter, regular expression.
+        See [label format](https://mozilla.github.io/glean/user/metrics/index.html#label-format) for more information.
+
 
 # 32.0.0
 
@@ -54,6 +67,40 @@ permalink: /changelog/
       nonFatalCrashIntent = pendingIntent
   )
   ```
+  
+* **feature-search**
+  * Adds `DefaultSelectionActionDelegate`, which may be used to add new actions to text selection context menus.
+    * It currently adds "Firefox Search" or "Firefox Private Search", depending on whether the selected tab is private.
+  * Adds `SearchFeature`, which consumes search requests made by other components.
+  ```kotlin
+  // Example usage
+
+  // Attach `DefaultSelectionActionDelegate` to the `EngineView`
+  override fun onCreateView(parent: View?, name: String, context: Context, attrs: AttributeSet): View? =
+      when (name) {
+          EngineView::class.java.name -> components.engine.createView(context, attrs).apply {
+              selectionActionDelegate = DefaultSelectionActionDelegate(
+                  components.store,
+                  context,
+                  "My App Name"
+              )
+          }.asView()
+      }
+      
+  // Use `SearchFeature` to attach search requests to your own code
+  private val searchFeature = ViewBoundFeatureWrapper<SearchFeature>()
+  // ...
+  searchFeature.set(
+      feature = SearchFeature(components.store) {
+          when (it.isPrivate) {
+              false -> components.searchUseCases.newTabSearch.invoke(it.query)
+              true -> components.searchUseCases.newPrivateTabSearch.invoke(it.query)
+          }
+      },
+      owner = this,
+      view = layout
+  )
+  ```
 
 * **service-glean**
   * Glean was updated to v24.2.0:
@@ -75,6 +122,9 @@ permalink: /changelog/
 
 * **feature-awesomebar**
   * Added `showDescription` parameter (default to `true`) to `SearchSuggestionProvider` constructors to add the possibility of removing search suggestion description.
+
+* **support-migration**
+  * Emit facts during migration.
 
 # 31.0.0
 

@@ -10,12 +10,13 @@ import android.util.AttributeSet
 import android.widget.FrameLayout
 import androidx.annotation.VisibleForTesting
 import androidx.core.view.ViewCompat
+import mozilla.components.browser.engine.gecko.selection.GeckoSelectionActionDelegate
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineView
 import mozilla.components.concept.engine.permission.PermissionRequest
+import mozilla.components.concept.engine.selection.SelectionActionDelegate
 import org.mozilla.geckoview.BasicSelectionActionDelegate
 import org.mozilla.geckoview.GeckoResult
-import java.lang.IllegalStateException
 
 /**
  * Gecko-based EngineView implementation.
@@ -75,6 +76,8 @@ class GeckoEngineView @JvmOverloads constructor(
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal var currentSelection: BasicSelectionActionDelegate? = null
 
+    override var selectionActionDelegate: SelectionActionDelegate? = null
+
     init {
         // Currently this is just a FrameLayout with a single GeckoView instance. Eventually this
         // implementation should handle at least two GeckoView so that we can switch between
@@ -104,8 +107,10 @@ class GeckoEngineView @JvmOverloads constructor(
 
             try {
                 currentGeckoView.setSession(internalSession.geckoSession)
-                currentSelection =
-                    internalSession.geckoSession.selectionActionDelegate as? BasicSelectionActionDelegate
+
+                currentSelection = GeckoSelectionActionDelegate.maybeCreate(context, selectionActionDelegate)
+                    ?: internalSession.geckoSession.selectionActionDelegate as? BasicSelectionActionDelegate
+                internalSession.geckoSession.selectionActionDelegate = currentSelection
             } catch (e: IllegalStateException) {
                 // This is to debug "display already acquired" crashes
                 val otherActivityClassName =

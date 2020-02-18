@@ -94,7 +94,8 @@ data class Addon(
     data class InstalledState(
         val id: String,
         val version: String,
-        val optionsPageUrl: String,
+        val optionsPageUrl: String?,
+        val openOptionsPageInTab: Boolean = false,
         val enabled: Boolean = false,
         val supported: Boolean = true,
         val disabledAsUnsupported: Boolean = false

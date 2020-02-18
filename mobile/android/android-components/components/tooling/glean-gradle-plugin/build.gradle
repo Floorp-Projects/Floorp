@@ -20,16 +20,22 @@ dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
 }
 
+task sourcesJar(type: Jar) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
 publishing {
     publications {
-        maven(MavenPublication) {
+        mavenJava(MavenPublication) {
             from components.java
+            artifact sourcesJar
 
             pom {
                 groupId = config.componentsGroupId
                 artifactId = archivesBaseName
                 description = project.ext.description
-                version = config.componentsVersion + (project.hasProperty('snapshot') ? '-SNAPSHOT' : '')
+                version = config.componentsVersion + (project.hasProperty('snapshot') ? '-SNAPSHOT' : (project.hasProperty('local') ? '-local' + getLocalPublicationTimestamp() : ''))
 
                 licenses {
                     license {
@@ -53,6 +59,21 @@ publishing {
             }
         }
     }
+
+    repositories {
+        maven {
+            url = "$buildDir/maven"
+        }
+    }
+}
+
+task renameSnapshotArtifacts(type: Exec) {
+    dependsOn publish
+
+    def renameScript = "${rootDir}/automation/taskcluster/rename_snapshot_artifacts.py"
+    def mavenBuildDir = "${project.buildDir}/maven"
+
+    commandLine 'python', renameScript, '--path', mavenBuildDir, '--timestamp', (project.hasProperty('timestamp') ? timestamp : '')
 }
 
 task lintRelease {
@@ -79,4 +100,3 @@ compileTestKotlin {
         jvmTarget = "1.8"
     }
 }
-

@@ -80,6 +80,12 @@ internal object ContentStateReducer {
             is ContentAction.ConsumeWindowRequestAction -> updateContentState(state, action.sessionId) {
                 it.copy(windowRequest = null)
             }
+            is ContentAction.UpdateSearchRequestAction -> updateContentState(state, action.sessionId) {
+                it.copy(searchRequest = action.searchRequest)
+            }
+            is ContentAction.ConsumeSearchRequestAction -> updateContentState(state, action.sessionId) {
+                it.copy(searchRequest = null)
+            }
         }
     }
 }

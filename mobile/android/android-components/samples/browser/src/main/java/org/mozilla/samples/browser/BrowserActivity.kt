@@ -13,10 +13,11 @@ import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import mozilla.components.browser.state.state.WebExtensionState
-import mozilla.components.feature.intent.ext.getSessionId
 import mozilla.components.browser.tabstray.BrowserTabsTray
 import mozilla.components.concept.engine.EngineView
 import mozilla.components.concept.tabstray.TabsTray
+import mozilla.components.feature.intent.ext.getSessionId
+import mozilla.components.feature.contextmenu.ext.DefaultSelectionActionDelegate
 import mozilla.components.support.base.feature.UserInteractionHandler
 import mozilla.components.support.utils.SafeIntent
 import mozilla.components.support.webextensions.WebExtensionPopupFeature
@@ -70,7 +71,13 @@ open class BrowserActivity : AppCompatActivity(), ComponentCallbacks2 {
 
     override fun onCreateView(parent: View?, name: String, context: Context, attrs: AttributeSet): View? =
         when (name) {
-            EngineView::class.java.name -> components.engine.createView(context, attrs).asView()
+            EngineView::class.java.name -> components.engine.createView(context, attrs).apply {
+                selectionActionDelegate = DefaultSelectionActionDelegate(
+                    components.store,
+                    context,
+                    "Sample Browser"
+                )
+            }.asView()
             TabsTray::class.java.name -> BrowserTabsTray(context, attrs)
             else -> super.onCreateView(parent, name, context, attrs)
         }

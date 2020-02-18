@@ -7,15 +7,14 @@ package mozilla.components.concept.engine
 import android.content.Context
 import android.util.AttributeSet
 import androidx.annotation.MainThread
-import mozilla.components.concept.engine.content.blocking.TrackingProtectionExceptionStorage
 import mozilla.components.concept.engine.content.blocking.TrackerLog
+import mozilla.components.concept.engine.content.blocking.TrackingProtectionExceptionStorage
 import mozilla.components.concept.engine.utils.EngineVersion
 import mozilla.components.concept.engine.webextension.WebExtensionRuntime
 import mozilla.components.concept.engine.webnotifications.WebNotificationDelegate
 import mozilla.components.concept.engine.webpush.WebPushDelegate
 import mozilla.components.concept.engine.webpush.WebPushHandler
 import org.json.JSONObject
-import java.lang.UnsupportedOperationException
 
 /**
  * Entry point for interacting with the engine implementation.

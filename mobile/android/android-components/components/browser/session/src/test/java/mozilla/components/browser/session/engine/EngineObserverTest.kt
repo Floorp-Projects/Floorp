@@ -224,6 +224,21 @@ class EngineObserverTest {
     }
 
     @Test
+    fun `EngineObserver does not clear title if the URL changes hash`() {
+        val session = Session("https://www.mozilla.org")
+        session.title = "Hello World"
+
+        val observer = EngineObserver(session)
+        observer.onTitleChange("Mozilla")
+
+        assertEquals("Mozilla", session.title)
+
+        observer.onLocationChange("https://www.mozilla.org/#something")
+
+        assertEquals("Mozilla", session.title)
+    }
+
+    @Test
     fun engineObserverClearsBlockedTrackersIfNewPageStartsLoading() {
         val session = Session("https://www.mozilla.org")
         val observer = EngineObserver(session)

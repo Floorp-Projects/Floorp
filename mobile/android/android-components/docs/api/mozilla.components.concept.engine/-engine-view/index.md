@@ -2,9 +2,15 @@
 
 # EngineView
 
-`interface EngineView` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/EngineView.kt#L16)
+`interface EngineView` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/EngineView.kt#L17)
 
 View component that renders web content.
+
+### Properties
+
+| Name | Summary |
+|---|---|
+| [selectionActionDelegate](selection-action-delegate.md) | `abstract var selectionActionDelegate: `[`SelectionActionDelegate`](../../mozilla.components.concept.engine.selection/-selection-action-delegate/index.md)`?`<br>A delegate that will handle interactions with text selection context menus. |
 
 ### Functions
 

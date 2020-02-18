@@ -29,6 +29,7 @@ import org.mockito.Mockito.never
 import org.mockito.Mockito.reset
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoMoreInteractions
+import java.io.InputStream
 import java.io.IOException
 
 @RunWith(AndroidJUnit4::class)
@@ -195,5 +196,32 @@ class HttpIconLoaderTest {
         )
 
         assertEquals(IconLoader.Result.NoResult, loader.load(testContext, mock(), resource))
+    }
+
+    @Test
+    fun `Loader will return NoResult for IOExceptions happening during toIconLoaderResult`() {
+        val client: Client = mock()
+
+        val failingStream: InputStream = object : InputStream() {
+            override fun read(): Int {
+                throw IOException("Kaboom")
+            }
+        }
+
+        val loader = HttpIconLoader(client)
+        doReturn(
+            Response(
+                url = "https://www.example.org",
+                headers = MutableHeaders(),
+                status = 200,
+                body = Response.Body(failingStream))
+        ).`when`(client).fetch(any())
+
+        val resource = IconRequest.Resource(
+            url = "https://www.example.org",
+            type = IconRequest.Resource.Type.APPLE_TOUCH_ICON
+        )
+
+        assertEquals(IconLoader.Result.NoResult, loader.load(mock(), mock(), resource))
     }
 }

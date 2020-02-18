@@ -74,6 +74,7 @@ $dokka.location:mozilla.components.support.migration$uniqueId(java.lang.Exceptio
 $dokka.location:mozilla.components.support.test.ext$isLazyInitialized#kotlin.reflect.KProperty0((kotlin.Any))mozilla.components.support.test.ext/kotlin.reflect.-k-property0/is-lazy-initialized.md
 $dokka.location:mozilla.components.support.test.ext$joinBlocking(kotlinx.coroutines.Job)mozilla.components.support.test.ext/kotlinx.coroutines.-job/join-blocking.md
 $dokka.location:mozilla.components.support.test.file$loadResourceAsString(kotlin.Any, kotlin.String)mozilla.components.support.test.file/kotlin.-any/load-resource-as-string.md
+$dokka.location:mozilla.components.support.utils.ext$toNullablePair(kotlin.Pair((mozilla.components.support.utils.ext.toNullablePair.T, mozilla.components.support.utils.ext.toNullablePair.U)))mozilla.components.support.utils.ext/kotlin.-pair/to-nullable-pair.md
 mozilla.components
 mozilla.components.browser.awesomebar
 mozilla.components.browser.awesomebar.layout
@@ -88,6 +89,7 @@ mozilla.components.browser.engine.gecko.glean
 mozilla.components.browser.engine.gecko.integration
 mozilla.components.browser.engine.gecko.permission
 mozilla.components.browser.engine.gecko.prompt
+mozilla.components.browser.engine.gecko.selection
 mozilla.components.browser.engine.gecko.webextension
 mozilla.components.browser.engine.gecko.window
 mozilla.components.browser.engine.system
@@ -144,6 +146,8 @@ mozilla.components.concept.engine.mediaquery
 mozilla.components.concept.engine.permission
 mozilla.components.concept.engine.prompt
 mozilla.components.concept.engine.request
+mozilla.components.concept.engine.search
+mozilla.components.concept.engine.selection
 mozilla.components.concept.engine.utils
 mozilla.components.concept.engine.webextension
 mozilla.components.concept.engine.webnotifications
@@ -166,6 +170,7 @@ mozilla.components.feature.app.links
 mozilla.components.feature.awesomebar
 mozilla.components.feature.awesomebar.provider
 mozilla.components.feature.contextmenu
+mozilla.components.feature.contextmenu.ext
 mozilla.components.feature.contextmenu.facts
 mozilla.components.feature.customtabs
 mozilla.components.feature.customtabs.feature
@@ -300,6 +305,7 @@ mozilla.components.support.test.robolectric
 mozilla.components.support.test.robolectric.shadow
 mozilla.components.support.test.rule
 mozilla.components.support.utils
+mozilla.components.support.utils.ext
 mozilla.components.support.webextensions
 mozilla.components.tooling.fetch.tests
 mozilla.components.tooling.lint

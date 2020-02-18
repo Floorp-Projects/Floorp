@@ -59,9 +59,13 @@ private interface KeyValuePreferences {
  *
  * @param context A [Context], used for accessing [SharedPreferences].
  * @param name A name for this storage, used for isolating different instances of [SecureAbove22Preferences].
+ * @param forceInsecure A flag indicating whether to force plaintext storage. If set to `true`,
+ * [InsecurePreferencesImpl21] will be used as a storage layer, otherwise a storage implementation
+ * will be decided based on Android API version, with a preference given to secure storage
  */
-class SecureAbove22Preferences(context: Context, name: String) : KeyValuePreferences {
-    private val impl = if (Build.VERSION.SDK_INT >= M) {
+class SecureAbove22Preferences(context: Context, name: String, forceInsecure: Boolean = false) :
+    KeyValuePreferences {
+    private val impl = if (Build.VERSION.SDK_INT >= M && !forceInsecure) {
         SecurePreferencesImpl23(context, name)
     } else {
         InsecurePreferencesImpl21(context, name)
@@ -82,12 +86,39 @@ class SecureAbove22Preferences(context: Context, name: String) : KeyValuePrefere
  * A simple [KeyValuePreferences] implementation which entirely delegates to [SharedPreferences] and doesn't perform any
  * encryption/decryption.
  */
-private class InsecurePreferencesImpl21(context: Context, name: String) : KeyValuePreferences {
+@SuppressWarnings("TooGenericExceptionCaught")
+private class InsecurePreferencesImpl21(
+    context: Context,
+    name: String,
+    migrateFromSecureStorage: Boolean = true
+) : KeyValuePreferences {
     companion object {
         private const val SUFFIX = "_kp_pre_m"
     }
 
+    internal val logger = Logger("mozac/InsecurePreferencesImpl21")
+
     private val prefs = context.getSharedPreferences("$name$SUFFIX", MODE_PRIVATE)
+
+    init {
+        // Check if we have any encrypted values stored on disk.
+        if (migrateFromSecureStorage && Build.VERSION.SDK_INT >= M && prefs.all.isEmpty()) {
+            val secureStorage = SecurePreferencesImpl23(context, name, false)
+            // Copy over any old values.
+            try {
+                secureStorage.all().forEach {
+                    putString(it.key, it.value)
+                }
+            } catch (e: Exception) {
+                // Certain devices crash on various Keystore exceptions. While trying to migrate
+                // to use the plaintext storage we don't want to crash if we can't access secure
+                // storage, and just catch the errors.
+                logger.error("Migrating from secure storage failed", e)
+            }
+            // Erase old storage.
+            secureStorage.clear()
+        }
+    }
 
     override fun all(): Map<String, String> {
         return prefs.all.mapNotNull {
@@ -112,7 +143,11 @@ private class InsecurePreferencesImpl21(context: Context, name: String) : KeyVal
  * A [KeyValuePreferences] which is backed by [SharedPreferences] and performs encryption/decryption of values.
  */
 @TargetApi(M)
-private class SecurePreferencesImpl23(context: Context, name: String) : KeyValuePreferences {
+private class SecurePreferencesImpl23(
+    context: Context,
+    name: String,
+    migrateFromPlaintextStorage: Boolean = true
+) : KeyValuePreferences {
     companion object {
         private const val SUFFIX = "_kp_post_m"
         private const val BASE_64_FLAGS = Base64.URL_SAFE or Base64.NO_PADDING
@@ -120,19 +155,21 @@ private class SecurePreferencesImpl23(context: Context, name: String) : KeyValue
 
     private val logger = Logger("SecurePreferencesImpl23")
     private val prefs = context.getSharedPreferences("$name$SUFFIX", MODE_PRIVATE)
-    private val keystore = Keystore(context.packageName)
+    private val keystore by lazy { Keystore(context.packageName) }
 
     init {
-        // Check if we have any plaintext values stored on disk. That indicates that we've hit an API upgrade situation.
-        // We just went from pre-M to post-M. Since we already have the plaintext keys, we can transparently migrate
-        // them to use the encrypted storage layer.
-        val insecureStorage = InsecurePreferencesImpl21(context, name)
-        // Copy over any old values.
-        insecureStorage.all().forEach {
-            putString(it.key, it.value)
+        if (migrateFromPlaintextStorage && prefs.all.isEmpty()) {
+            // Check if we have any plaintext values stored on disk. That indicates that we've hit
+            // an API upgrade situation. We just went from pre-M to post-M. Since we already have
+            // the plaintext keys, we can transparently migrate them to use the encrypted storage layer.
+            val insecureStorage = InsecurePreferencesImpl21(context, name, false)
+            // Copy over any old values.
+            insecureStorage.all().forEach {
+                putString(it.key, it.value)
+            }
+            // Erase old storage.
+            insecureStorage.clear()
         }
-        // Erase old storage.
-        insecureStorage.clear()
     }
 
     override fun all(): Map<String, String> {

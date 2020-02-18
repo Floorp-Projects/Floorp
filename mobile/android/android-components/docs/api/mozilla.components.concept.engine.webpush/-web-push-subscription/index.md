@@ -2,7 +2,7 @@
 
 # WebPushSubscription
 
-`data class WebPushSubscription` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/webpush/WebPush.kt#L43)
+`data class WebPushSubscription` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/webpush/WebPush.kt#L50)
 
 A data class representation of the [PushSubscription](https://developer.mozilla.org/en-US/docs/Web/API/PushSubscription) web specification.
 

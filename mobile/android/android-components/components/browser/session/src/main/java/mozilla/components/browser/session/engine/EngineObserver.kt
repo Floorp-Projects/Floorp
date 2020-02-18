@@ -6,6 +6,7 @@ package mozilla.components.browser.session.engine
 
 import android.content.Intent
 import android.graphics.Bitmap
+import android.net.Uri
 import android.os.Environment
 import androidx.core.net.toUri
 import mozilla.components.browser.session.Session
@@ -39,7 +40,7 @@ internal class EngineObserver(
 ) : EngineSession.Observer {
 
     override fun onLocationChange(url: String) {
-        if (session.url != url) {
+        if (!isUrlSame(session.url, url)) {
             session.title = ""
         }
 
@@ -62,6 +63,16 @@ internal class EngineObserver(
             it.reject()
             true
         }
+    }
+
+    private fun isUrlSame(originalUrl: String, newUrl: String): Boolean {
+        val originalUri = Uri.parse(originalUrl)
+        val uri = Uri.parse(newUrl)
+
+        return uri.port == originalUri.port &&
+            uri.host == originalUri.host &&
+            uri.path?.trimStart('/') == originalUri.path?.trimStart('/') &&
+            uri.query == originalUri.query
     }
 
     private fun isHostEquals(sessionUrl: String, newUrl: String): Boolean {
