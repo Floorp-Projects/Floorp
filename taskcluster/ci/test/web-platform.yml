@@ -53,7 +53,7 @@ web-platform-tests:
             linux.*64-ccov/opt: 24
             linux.*/debug: 18
             macosx*/opt: 8
-            macosx.*/debug: 16
+            macosx.*/debug: 20
             windows.*/debug: 18
             windows10-64-ccov/opt: 18
             windows10-aarch64/opt: 16
