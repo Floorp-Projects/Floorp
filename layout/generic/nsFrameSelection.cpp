@@ -314,7 +314,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsFrameSelection)
   }
 
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mCellParent)
-  tmp->mSelectingTableCellMode = TableSelection::None;
+  tmp->mSelectingTableCellMode = TableSelectionMode::None;
   tmp->mDragSelectingCells = false;
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mStartSelectedCell)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mEndSelectedCell)
@@ -1238,7 +1238,7 @@ nsresult nsFrameSelection::TakeFocus(nsIContent* aNewFocus,
   }
 
   // Clear all table selection data
-  mSelectingTableCellMode = TableSelection::None;
+  mSelectingTableCellMode = TableSelectionMode::None;
   mDragSelectingCells = false;
   mStartSelectedCell = nullptr;
   mEndSelectedCell = nullptr;
@@ -1330,7 +1330,8 @@ nsresult nsFrameSelection::TakeFocus(nsIContent* aNewFocus,
         // Start selecting in the cell we were in before
         nsINode* parent = ParentOffset(mCellParent, &offset);
         if (parent)
-          HandleTableSelection(parent, offset, TableSelection::Cell, &event);
+          HandleTableSelection(parent, offset, TableSelectionMode::Cell,
+                               &event);
 
         // Find the parent of this new cell and extend selection to it
         parent = ParentOffset(cellparent, &offset);
@@ -1341,7 +1342,8 @@ nsresult nsFrameSelection::TakeFocus(nsIContent* aNewFocus,
         if (parent) {
           mCellParent = cellparent;
           // Continue selection into next cell
-          HandleTableSelection(parent, offset, TableSelection::Cell, &event);
+          HandleTableSelection(parent, offset, TableSelectionMode::Cell,
+                               &event);
         }
       } else {
         // XXXX Problem: Shift+click in browser is appending text selection to
@@ -2017,12 +2019,13 @@ static nsIContent* GetFirstSelectedContent(nsRange* aRange) {
 // TODO: Separate table methods into a separate nsITableSelection interface
 nsresult nsFrameSelection::HandleTableSelection(nsINode* aParentContent,
                                                 int32_t aContentOffset,
-                                                TableSelection aTarget,
+                                                TableSelectionMode aTarget,
                                                 WidgetMouseEvent* aMouseEvent) {
   NS_ENSURE_TRUE(aParentContent, NS_ERROR_NULL_POINTER);
   NS_ENSURE_TRUE(aMouseEvent, NS_ERROR_NULL_POINTER);
 
-  if (mDragState && mDragSelectingCells && aTarget == TableSelection::Table) {
+  if (mDragState && mDragSelectingCells &&
+      aTarget == TableSelectionMode::Table) {
     // We were selecting cells and user drags mouse in table border or inbetween
     // cells,
     //  just do nothing
@@ -2049,7 +2052,7 @@ nsresult nsFrameSelection::HandleTableSelection(nsINode* aParentContent,
   int32_t startRowIndex, startColIndex, curRowIndex, curColIndex;
   if (mDragState && mDragSelectingCells) {
     // We are drag-selecting
-    if (aTarget != TableSelection::Table) {
+    if (aTarget != TableSelectionMode::Table) {
       // If dragging in the same cell as last event, do nothing
       if (mEndSelectedCell == childContent) {
         return NS_OK;
@@ -2065,10 +2068,10 @@ nsresult nsFrameSelection::HandleTableSelection(nsINode* aParentContent,
       //  so we can easily drag-select rows and columns
       // Once we are in row or column mode,
       //  we can drift into any cell to stay in that mode
-      //  even if aTarget = TableSelection::Cell
+      //  even if aTarget = TableSelectionMode::Cell
 
-      if (mSelectingTableCellMode == TableSelection::Row ||
-          mSelectingTableCellMode == TableSelection::Column) {
+      if (mSelectingTableCellMode == TableSelectionMode::Row ||
+          mSelectingTableCellMode == TableSelectionMode::Column) {
         if (mEndSelectedCell) {
           // Also check if cell is in same row/col
           result =
@@ -2083,9 +2086,9 @@ nsresult nsFrameSelection::HandleTableSelection(nsINode* aParentContent,
               "startColIndex = %d\n",
               curRowIndex, startRowIndex, curColIndex, startColIndex);
 #endif
-          if ((mSelectingTableCellMode == TableSelection::Row &&
+          if ((mSelectingTableCellMode == TableSelectionMode::Row &&
                startRowIndex == curRowIndex) ||
-              (mSelectingTableCellMode == TableSelection::Column &&
+              (mSelectingTableCellMode == TableSelectionMode::Column &&
                startColIndex == curColIndex))
             return NS_OK;
         }
@@ -2095,7 +2098,7 @@ nsresult nsFrameSelection::HandleTableSelection(nsINode* aParentContent,
         // Continue dragging row or column selection
         return SelectRowOrColumn(childContent, mSelectingTableCellMode);
       }
-      if (mSelectingTableCellMode == TableSelection::Cell) {
+      if (mSelectingTableCellMode == TableSelectionMode::Cell) {
 #ifdef DEBUG_TABLE_SELECTION
         printf("HandleTableSelection: Dragged into a new cell\n");
 #endif
@@ -2116,9 +2119,9 @@ nsresult nsFrameSelection::HandleTableSelection(nsINode* aParentContent,
             mDomSelections[index]->RemoveAllRanges(IgnoreErrors());
 
             if (startRowIndex == curRowIndex)
-              mSelectingTableCellMode = TableSelection::Row;
+              mSelectingTableCellMode = TableSelectionMode::Row;
             else
-              mSelectingTableCellMode = TableSelection::Column;
+              mSelectingTableCellMode = TableSelectionMode::Column;
 
             return SelectRowOrColumn(childContent, mSelectingTableCellMode);
           }
@@ -2139,7 +2142,7 @@ nsresult nsFrameSelection::HandleTableSelection(nsINode* aParentContent,
       // Clear cell we stored in mouse-down
       mUnselectCellOnMouseUp = nullptr;
 
-      if (aTarget == TableSelection::Cell) {
+      if (aTarget == TableSelectionMode::Cell) {
         bool isSelected = false;
 
         // Check if we have other selected cells
@@ -2184,7 +2187,7 @@ nsresult nsFrameSelection::HandleTableSelection(nsINode* aParentContent,
 
         return NS_OK;
       }
-      if (aTarget == TableSelection::Table) {
+      if (aTarget == TableSelectionMode::Table) {
         // TODO: We currently select entire table when clicked between cells,
         //  should we restrict to only around border?
         //  *** How do we get location data for cell and click?
@@ -2196,7 +2199,8 @@ nsresult nsFrameSelection::HandleTableSelection(nsINode* aParentContent,
         mDomSelections[index]->RemoveAllRanges(IgnoreErrors());
         return CreateAndAddRange(aParentContent, aContentOffset);
       }
-      if (aTarget == TableSelection::Row || aTarget == TableSelection::Column) {
+      if (aTarget == TableSelectionMode::Row ||
+          aTarget == TableSelectionMode::Column) {
 #ifdef DEBUG_TABLE_SELECTION
         printf("aTarget == %d\n", aTarget);
 #endif
@@ -2513,7 +2517,7 @@ nsresult nsFrameSelection::RestrictCellsToSelection(nsIContent* aTable,
 }
 
 nsresult nsFrameSelection::SelectRowOrColumn(nsIContent* aCellContent,
-                                             TableSelection aTarget) {
+                                             TableSelectionMode aTarget) {
   if (!aCellContent) return NS_ERROR_NULL_POINTER;
 
   nsIContent* table = GetParentTable(aCellContent);
@@ -2534,10 +2538,10 @@ nsresult nsFrameSelection::SelectRowOrColumn(nsIContent* aCellContent,
 
   // Be sure we start at proper beginning
   // (This allows us to select row or col given ANY cell!)
-  if (aTarget == TableSelection::Row) {
+  if (aTarget == TableSelectionMode::Row) {
     colIndex = 0;
   }
-  if (aTarget == TableSelection::Column) {
+  if (aTarget == TableSelectionMode::Column) {
     rowIndex = 0;
   }
 
@@ -2553,7 +2557,7 @@ nsresult nsFrameSelection::SelectRowOrColumn(nsIContent* aCellContent,
     lastCell = std::move(curCellContent);
 
     // Move to next cell in cellmap, skipping spanned locations
-    if (aTarget == TableSelection::Row) {
+    if (aTarget == TableSelectionMode::Row) {
       colIndex += tableFrame->GetEffectiveRowSpanAt(rowIndex, colIndex);
     } else {
       rowIndex += tableFrame->GetEffectiveRowSpanAt(rowIndex, colIndex);
@@ -2605,7 +2609,7 @@ nsresult nsFrameSelection::SelectRowOrColumn(nsIContent* aCellContent,
       if (NS_FAILED(result)) return result;
     }
     // Move to next row or column in cellmap, skipping spanned locations
-    if (aTarget == TableSelection::Row)
+    if (aTarget == TableSelectionMode::Row)
       colIndex += actualColSpan;
     else
       rowIndex += actualRowSpan;

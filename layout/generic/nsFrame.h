@@ -20,7 +20,7 @@
 #include "nsISelectionDisplay.h"
 
 namespace mozilla {
-enum class TableSelection : uint32_t;
+enum class TableSelectionMode : uint32_t;
 class PresShell;
 }  // namespace mozilla
 
@@ -682,7 +682,7 @@ class nsFrame : public nsBox {
                                     mozilla::WidgetMouseEvent* aMouseEvent,
                                     nsIContent** aParentContent,
                                     int32_t* aContentOffset,
-                                    mozilla::TableSelection* aTarget);
+                                    mozilla::TableSelectionMode* aTarget);
 
   NS_IMETHOD DoXULLayout(nsBoxLayoutState& aBoxLayoutState) override;
 
