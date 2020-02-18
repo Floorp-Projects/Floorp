@@ -1609,7 +1609,8 @@ PLayerTransactionParent* CompositorBridgeParent::AllocPLayerTransactionParent(
 #ifdef XP_WIN
   // This is needed to avoid freezing the window on a device crash on double
   // buffering, see bug 1549674.
-  if (gfxVars::UseDoubleBufferingWithCompositor() && XRE_IsGPUProcess()) {
+  if (gfxVars::UseDoubleBufferingWithCompositor() && XRE_IsGPUProcess() &&
+      aBackendHints.Contains(LayersBackend::LAYERS_D3D11)) {
     mWidget->AsWindows()->EnsureCompositorWindow();
   }
 #endif
