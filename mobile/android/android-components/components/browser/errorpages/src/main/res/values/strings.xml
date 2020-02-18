@@ -70,8 +70,8 @@
       <p>The requested site did not respond to a connection request and the browser has stopped waiting for a reply.</p>
       <ul>
         <li>Could the server be experiencing high demand or a temporary outage? Try again later.</li>
-        <li>Are you unable to browse other sites? Check the computer’s network connection.</li>
-        <li>Is your computer or network protected by a firewall or proxy? Incorrect settings can interfere with Web browsing.</li>
+        <li>Are you unable to browse other sites? Check the device’s network connection.</li>
+        <li>Is your device or network protected by a firewall or proxy? Incorrect settings can interfere with Web browsing.</li>
         <li>Still having trouble? Consult your network administrator or Internet provider for assistance.</li>
       </ul>
     ]]></string>
@@ -100,7 +100,7 @@
       <p>The browser has stopped trying to retrieve the requested item. The site is redirecting the request in a way that will never complete.</p>
       <ul>
         <li>Have you disabled or blocked cookies required by this site?</li>
-        <li>If accepting the site’s cookies does not resolve the problem, it is likely a server configuration issue and not your computer.</li>
+        <li>If accepting the site’s cookies does not resolve the problem, it is likely a server configuration issue and not your device.</li>
       </ul>
     ]]></string>
 
@@ -110,7 +110,7 @@
     <string name="mozac_browser_errorpages_offline_message"><![CDATA[
       <p>The browser is operating in its offline mode and cannot connect to the requested item.</p>
       <ul>
-        <li>Is the computer connected to an active network?</li>
+        <li>Is the device connected to an active network?</li>
         <li>Press “Try Again” to switch to online mode and reload the page.</li>
       </ul>
     ]]></string>
@@ -250,7 +250,7 @@
       <p>The browser is configured to use a proxy server, but the proxy could not be found.</p>
       <ul>
         <li>Is the browser’s proxy configuration correct? Check the settings and try again.</li>
-        <li>Is the computer connected to an active network?</li>
+        <li>Is the device connected to an active network?</li>
         <li>Still having trouble? Consult your network administrator or Internet provider for assistance.</li>
       </ul>
     ]]></string>
