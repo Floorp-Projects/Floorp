@@ -14,5 +14,6 @@ DevToolsModules(
     'eval-with-debugger.js',
     'message-manager-mock.js',
     'utils.js',
+    'webidl-pure-whitelist.js',
     'worker-listeners.js',
 )
