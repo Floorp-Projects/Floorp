@@ -1609,6 +1609,27 @@ both:
     async WindowClose(BrowsingContext aContext, bool aTrustedCaller);
     async WindowFocus(BrowsingContext aContext, CallerType aCallerType);
     async WindowBlur(BrowsingContext aContext);
+    async RaiseWindow(BrowsingContext aContext, CallerType aCallerType);
+    async ClearFocus(BrowsingContext aContext);
+    async SetFocusedBrowsingContext(BrowsingContext aContext);
+    async SetActiveBrowsingContext(BrowsingContext aContext);
+    async UnsetActiveBrowsingContext(BrowsingContext aContext);
+    async SetFocusedElement(BrowsingContext aContext, bool aNeedsFocus);
+parent:
+    async BlurToParent(BrowsingContext aFocusedBrowsingContext,
+                      BrowsingContext aBrowsingContextToClear,
+                      BrowsingContext aAncestorBrowsingContextToFocus,
+                      bool aIsLeavingDocument, bool aAdjustWidget,
+                      bool aBrowsingContextToClearHandled,
+                      bool aAncestorBrowsingContextToFocusHandled);
+child:
+    async BlurToChild(BrowsingContext aFocusedBrowsingContext,
+                      BrowsingContext aBrowsingContextToClear,
+                      BrowsingContext aAncestorBrowsingContextToFocus,
+                      bool aIsLeavingDocument, bool aAdjustWidget);
+    async SetupFocusedAndActive(BrowsingContext aFocusedBrowsingContext,
+                                BrowsingContext aActiveBrowsingContext);
+both:
     async WindowPostMessage(BrowsingContext aContext, ClonedMessageData aMessage,
                             PostMessageData aData);
 
