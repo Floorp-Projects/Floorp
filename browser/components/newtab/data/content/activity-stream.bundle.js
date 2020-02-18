@@ -981,8 +981,8 @@ class DiscoveryStreamAdmin extends react__WEBPACK_IMPORTED_MODULE_4___default.a.
     } = this.props.state.DiscoveryStream;
     let spocsData = [];
 
-    if (spocs.data && spocs.data.spocs && spocs.data.spocs.length) {
-      spocsData = spocs.data.spocs;
+    if (spocs.data && spocs.data.spocs && spocs.data.spocs.items) {
+      spocsData = spocs.data.spocs.items || [];
     }
 
     return react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement(react__WEBPACK_IMPORTED_MODULE_4___default.a.Fragment, null, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("table", null, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("tbody", null, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement(Row, null, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("td", {
@@ -14407,7 +14407,8 @@ const INITIAL_STATE = {
       spocs_endpoint: "",
       spocs_per_domain: 1,
       lastUpdated: null,
-      data: {// {spocs: {items: []}}
+      data: {// "spocs": {title: "", context: "", items: []},
+        // "placement1": {title: "", context: "", items: []},
       },
       loaded: false,
       frequency_caps: [],
