@@ -9,6 +9,7 @@ body {
   padding: 0;
   margin: 0;
   overflow: hidden;
+  background-color: var(--theme-body-background);
 }
 
 .mainFrame {
@@ -41,13 +42,19 @@ body {
 
 /* Read only properties have a padlock icon */
 .treeTable tr:not(.writable) td.treeValueCell {
-  background: url("chrome://devtools/skin/images/read-only.svg") no-repeat;
-  background-position: 1px 5px;
-  background-size: 10px 10px;
+  background: url("chrome://devtools/skin/images/lock.svg") no-repeat;
+  background-position: 1px 4px;
+  background-size: 12px 12px;
+  -moz-context-properties: fill;
+  fill: var(--theme-icon-dimmed-color);
 }
 
 .treeTable tr:not(.writable) td.treeValueCell:dir(rtl) {
   background-position-x: right 1px;
+}
+
+.treeTable tr:not(.writable).selected td.treeValueCell {
+  fill: var(--theme-selection-color);
 }
 
 /* Non-enumerable properties are grayed out */
@@ -55,8 +62,8 @@ body {
   opacity: 0.7;
 }
 
-.treeTable > tbody > tr > td {
-  border-bottom: 1px solid #EFEFEF;
+.theme-light .treeTable > tbody > tr > td {
+  border-bottom: 1px solid var(--grey-20);
 }
 
 /* Label Types */
@@ -99,15 +106,4 @@ body {
 /* Refresh button */
 #dom-refresh-button::before {
   background-image: url("chrome://devtools/skin/images/reload.svg");
-}
-
-/******************************************************************************/
-/* Theme Dark */
-
-.theme-dark .treeTable > tbody > tr > td {
-  border-bottom: none;
-}
-
-.theme-dark body {
-  background-color: var(--theme-body-background);
 }
