@@ -510,3 +510,34 @@ describe("Function - Two properties with same displayName", () => {
     ).toBe("$:jQuery(a, b, c)");
   });
 });
+
+describe("Function - Class constructor", () => {
+  const object = stubs.get("EmptyClass");
+
+  it("renders empty class as expected", () => {
+    expect(renderRep(object, { mode: undefined }).text()).toBe(
+      "class EmptyClass {}"
+    );
+  });
+
+  it("renders empty class in MODE.TINY as expected", () => {
+    expect(renderRep(object, { mode: MODE.TINY }).text()).toBe(
+      "class EmptyClass"
+    );
+  });
+
+  it("renders class with constructor as expected", () => {
+    expect(
+      renderRep({ ...object, parameterNames: ["a", "b", "c"] }).text()
+    ).toBe("class EmptyClass { constructor(a, b, c) }");
+  });
+
+  it("renders class with constructor in MODE.TINY as expected", () => {
+    expect(
+      renderRep(
+        { ...object, parameterNames: ["a", "b", "c"] },
+        { mode: MODE.TINY }
+      ).text()
+    ).toBe("class EmptyClass");
+  });
+});
