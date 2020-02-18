@@ -459,6 +459,13 @@ IonBuilder::InliningDecision IonBuilder::canInlineTarget(JSFunction* target,
     return DontInline(inlineScript, "Not constructing class constructor");
   }
 
+  if (target->isDerivedClassConstructor()) {
+    // patchInlinedReturn() doesn't yet support derived class constructors, it
+    // must be patched to not use |callInfo.thisArg()| when the inlined target
+    // is a derived class constructor.
+    return DontInline(inlineScript, "Callee is a derived class constructor");
+  }
+
   if (!CanIonInlineScript(inlineScript)) {
     return DontInline(inlineScript, "Disabled Ion compilation");
   }
@@ -2131,6 +2138,7 @@ AbortReasonOr<Ok> IonBuilder::inspectOpcode(JSOp op, bool* restarted) {
     case JSOp::CallIgnoresRv:
     case JSOp::CallIter:
     case JSOp::New:
+    case JSOp::SuperCall:
       MOZ_TRY(jsop_call(GET_ARGC(pc),
                         JSOp(*pc) == JSOp::New || JSOp(*pc) == JSOp::SuperCall,
                         JSOp(*pc) == JSOp::CallIgnoresRv));
@@ -2480,6 +2488,7 @@ AbortReasonOr<Ok> IonBuilder::inspectOpcode(JSOp op, bool* restarted) {
 
     // Spread
     case JSOp::SpreadNew:
+    case JSOp::SpreadSuperCall:
     case JSOp::SpreadEval:
     case JSOp::StrictSpreadEval:
 
@@ -2492,13 +2501,6 @@ AbortReasonOr<Ok> IonBuilder::inspectOpcode(JSOp op, bool* restarted) {
     case JSOp::SetElemSuper:
     case JSOp::StrictSetPropSuper:
     case JSOp::StrictSetElemSuper:
-    // Most of the infrastructure for these exists in Ion, but needs review
-    // and testing before these are enabled. Once other opcodes that are used
-    // in derived classes are supported in Ion, this can be better validated
-    // with testcases. Pay special attention to bailout and other areas where
-    // JSOp::New has special handling.
-    case JSOp::SpreadSuperCall:
-    case JSOp::SuperCall:
 
     // Environments (bug 1366470)
     case JSOp::PushVarEnv:

@@ -2632,7 +2632,7 @@ class MCall : public MVariadicInstruction, public CallPolicy::Data {
   // Original value of argc from the bytecode.
   uint32_t numActualArgs_;
 
-  // True if the call is for JSOp::New.
+  // True if the call is for JSOp::New or JSOp::SuperCall.
   bool construct_ : 1;
 
   // True if the caller does not use the return value.
@@ -3435,7 +3435,9 @@ class MAssertRange : public MUnaryInstruction, public NoTypePolicy::Data {
 };
 
 // Caller-side allocation of |this| for |new|:
-// Given a templateobject, construct |this| for JSOp::New
+// Given a templateobject, construct |this| for JSOp::New.
+// Not used for JSOp::SuperCall, because Baseline doesn't attach template
+// objects for super calls.
 class MCreateThisWithTemplate : public MUnaryInstruction,
                                 public NoTypePolicy::Data {
   gc::InitialHeap initialHeap_;
@@ -3470,7 +3472,7 @@ class MCreateThisWithTemplate : public MUnaryInstruction,
 };
 
 // Caller-side allocation of |this| for |new|:
-// Given a prototype operand, construct |this| for JSOp::New.
+// Given a prototype operand, construct |this| for JSOp::New or JSOp::SuperCall.
 class MCreateThisWithProto : public MTernaryInstruction,
                              public MixPolicy<ObjectPolicy<0>, ObjectPolicy<1>,
                                               ObjectPolicy<2>>::Data {
