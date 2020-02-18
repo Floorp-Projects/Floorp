@@ -55,8 +55,7 @@ def diff_resources(left_path, right_path):
             res = parser.parse(fh.read())
             lines.append(serializer.serialize(res).splitlines(True))
     sys.stdout.writelines(
-        chunk.encode('utf-8')
-        for chunk in unified_diff(lines[0], lines[1], left_path, right_path)
+        chunk for chunk in unified_diff(lines[0], lines[1], left_path, right_path)
     )
 
 
