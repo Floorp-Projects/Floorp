@@ -2051,7 +2051,9 @@ nsresult nsFrameSelection::HandleTableSelection(nsINode* aParentContent,
     // We are drag-selecting
     if (aTarget != TableSelection::Table) {
       // If dragging in the same cell as last event, do nothing
-      if (mEndSelectedCell == childContent) return NS_OK;
+      if (mEndSelectedCell == childContent) {
+        return NS_OK;
+      }
 
 #ifdef DEBUG_TABLE_SELECTION
       printf(
@@ -2092,7 +2094,8 @@ nsresult nsFrameSelection::HandleTableSelection(nsINode* aParentContent,
 #endif
         // Continue dragging row or column selection
         return SelectRowOrColumn(childContent, mSelectingTableCellMode);
-      } else if (mSelectingTableCellMode == TableSelection::Cell) {
+      }
+      if (mSelectingTableCellMode == TableSelection::Cell) {
 #ifdef DEBUG_TABLE_SELECTION
         printf("HandleTableSelection: Dragged into a new cell\n");
 #endif
@@ -2180,7 +2183,8 @@ nsresult nsFrameSelection::HandleTableSelection(nsINode* aParentContent,
         }
 
         return NS_OK;
-      } else if (aTarget == TableSelection::Table) {
+      }
+      if (aTarget == TableSelection::Table) {
         // TODO: We currently select entire table when clicked between cells,
         //  should we restrict to only around border?
         //  *** How do we get location data for cell and click?
@@ -2191,8 +2195,8 @@ nsresult nsFrameSelection::HandleTableSelection(nsINode* aParentContent,
         // Remove existing selection and select the table
         mDomSelections[index]->RemoveAllRanges(IgnoreErrors());
         return CreateAndAddRange(aParentContent, aContentOffset);
-      } else if (aTarget == TableSelection::Row ||
-                 aTarget == TableSelection::Column) {
+      }
+      if (aTarget == TableSelection::Row || aTarget == TableSelection::Column) {
 #ifdef DEBUG_TABLE_SELECTION
         printf("aTarget == %d\n", aTarget);
 #endif
@@ -2227,7 +2231,9 @@ nsresult nsFrameSelection::HandleTableSelection(nsINode* aParentContent,
         return SelectBlockOfCells(mAppendStartSelectedCell, childContent);
       }
 
-      if (mDragSelectingCells) mAppendStartSelectedCell = mStartSelectedCell;
+      if (mDragSelectingCells) {
+        mAppendStartSelectedCell = mStartSelectedCell;
+      }
 
       mDragSelectingCells = false;
       mStartSelectedCell = nullptr;
@@ -2311,8 +2317,9 @@ nsresult nsFrameSelection::HandleTableSelection(nsINode* aParentContent,
 #endif
             // Unselecting the start of previous block
             // XXX What do we use now!
-            if (childContent == mAppendStartSelectedCell)
+            if (childContent == mAppendStartSelectedCell) {
               mAppendStartSelectedCell = nullptr;
+            }
 
             // Deselect cell by removing its range from selection
             ErrorResult err;
@@ -2527,8 +2534,12 @@ nsresult nsFrameSelection::SelectRowOrColumn(nsIContent* aCellContent,
 
   // Be sure we start at proper beginning
   // (This allows us to select row or col given ANY cell!)
-  if (aTarget == TableSelection::Row) colIndex = 0;
-  if (aTarget == TableSelection::Column) rowIndex = 0;
+  if (aTarget == TableSelection::Row) {
+    colIndex = 0;
+  }
+  if (aTarget == TableSelection::Column) {
+    rowIndex = 0;
+  }
 
   nsCOMPtr<nsIContent> firstCell, lastCell;
   while (true) {
@@ -2542,10 +2553,11 @@ nsresult nsFrameSelection::SelectRowOrColumn(nsIContent* aCellContent,
     lastCell = std::move(curCellContent);
 
     // Move to next cell in cellmap, skipping spanned locations
-    if (aTarget == TableSelection::Row)
+    if (aTarget == TableSelection::Row) {
       colIndex += tableFrame->GetEffectiveRowSpanAt(rowIndex, colIndex);
-    else
+    } else {
       rowIndex += tableFrame->GetEffectiveRowSpanAt(rowIndex, colIndex);
+    }
   }
 
   // Use SelectBlockOfCells:

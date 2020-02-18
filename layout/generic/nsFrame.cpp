@@ -4979,7 +4979,7 @@ static nsresult HandleFrameSelection(
     nsFrameSelection* aFrameSelection, nsIFrame::ContentOffsets& aOffsets,
     bool aHandleTableSel, int32_t aContentOffsetForTableSel,
     TableSelection aTargetForTableSel, nsIContent* aParentContentForTableSel,
-    WidgetGUIEvent* aEvent, nsEventStatus* aEventStatus) {
+    WidgetGUIEvent* aEvent, const nsEventStatus* aEventStatus) {
   if (!aFrameSelection) {
     return NS_OK;
   }

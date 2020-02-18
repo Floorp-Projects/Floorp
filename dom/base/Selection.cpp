@@ -510,8 +510,9 @@ nsresult Selection::MaybeAddTableCellRange(nsRange* aRange, bool* aDidAddRange,
   // Set frame selection mode only if not already set to a table mode
   // so we don't lose the select row and column flags (not detected by
   // getTableCellLocation)
-  if (mFrameSelection->mSelectingTableCellMode == TableSelection::None)
+  if (mFrameSelection->mSelectingTableCellMode == TableSelection::None) {
     mFrameSelection->mSelectingTableCellMode = tableMode;
+  }
 
   *aDidAddRange = true;
   return AddRangesForSelectableNodes(aRange, aOutIndex);
