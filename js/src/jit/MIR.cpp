@@ -5659,6 +5659,20 @@ MDefinition* MIsNullOrUndefined::foldsTo(TempAllocator& alloc) {
   return this;
 }
 
+MDefinition* MCheckThis::foldsTo(TempAllocator& alloc) {
+  MDefinition* input = thisValue();
+  if (!input->isBox()) {
+    return this;
+  }
+
+  MDefinition* unboxed = input->getOperand(0);
+  if (unboxed->mightBeMagicType()) {
+    return this;
+  }
+
+  return input;
+}
+
 bool jit::ElementAccessIsDenseNative(CompilerConstraintList* constraints,
                                      MDefinition* obj, MDefinition* id) {
   if (obj->mightBeType(MIRType::String)) {

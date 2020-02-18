@@ -10625,6 +10625,23 @@ class MCheckReturn : public MBinaryInstruction, public BoxInputsPolicy::Data {
   NAMED_OPERANDS((0, returnValue), (1, thisValue))
 };
 
+class MCheckThis : public MUnaryInstruction, public BoxInputsPolicy::Data {
+  explicit MCheckThis(MDefinition* thisVal)
+      : MUnaryInstruction(classOpcode, thisVal) {
+    setGuard();
+    setResultType(MIRType::Value);
+    setResultTypeSet(thisVal->resultTypeSet());
+  }
+
+ public:
+  INSTRUCTION_HEADER(CheckThis)
+  TRIVIAL_NEW_WRAPPERS
+  NAMED_OPERANDS((0, thisValue))
+
+  AliasSet getAliasSet() const override { return AliasSet::None(); }
+  MDefinition* foldsTo(TempAllocator& alloc) override;
+};
+
 // Increase the warm-up counter of the provided script upon execution and test
 // if the warm-up counter surpasses the threshold. Upon hit it will recompile
 // the outermost script (i.e. not the inlined script).

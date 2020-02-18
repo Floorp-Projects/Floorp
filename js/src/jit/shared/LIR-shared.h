@@ -7072,6 +7072,18 @@ class LCheckClassHeritage : public LInstructionHelper<0, BOX_PIECES, 1> {
   const LDefinition* temp() { return getTemp(0); }
 };
 
+class LCheckThis : public LInstructionHelper<0, BOX_PIECES, 0> {
+ public:
+  LIR_HEADER(CheckThis)
+
+  static const size_t ThisValue = 0;
+
+  explicit LCheckThis(const LBoxAllocation& value)
+      : LInstructionHelper(classOpcode) {
+    setBoxOperand(ThisValue, value);
+  }
+};
+
 class LDebugCheckSelfHosted : public LCallInstructionHelper<0, BOX_PIECES, 0> {
  public:
   LIR_HEADER(DebugCheckSelfHosted)
