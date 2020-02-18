@@ -14,9 +14,14 @@ const DEFAULT_PAGE = "#/runtime/this-firefox";
  * and redirects to the default page.
  */
 add_task(async function() {
+  // Create a real local client and use it as the remote USB client for this
+  // test.
+  const clientWrapper = await createLocalClientWrapper();
+
   // enable USB devices mocks
   const mocks = new Mocks();
   mocks.createUSBRuntime(USB_RUNTIME_ID, {
+    clientWrapper,
     deviceName: USB_DEVICE_NAME,
     name: USB_APP_NAME,
   });
@@ -25,8 +30,11 @@ add_task(async function() {
   await selectThisFirefoxPage(document, window.AboutDebugging.store);
 
   mocks.emitUSBUpdate();
+
+  const onRequestSuccess = waitForRequestsSuccess(window.AboutDebugging.store);
   await connectToRuntime(USB_DEVICE_NAME, document);
   await selectRuntime(USB_DEVICE_NAME, USB_APP_NAME, document);
+  await onRequestSuccess;
 
   const disconnectRemoteRuntimeButton = document.querySelector(
     ".qa-runtime-info__action"
@@ -46,6 +54,12 @@ add_task(async function() {
     DEFAULT_PAGE,
     "Redirection to the default page (this-firefox)"
   );
+
+  info("Wait until the Runtime name is displayed");
+  await waitUntil(() => {
+    const runtimeInfo = document.querySelector(".qa-runtime-name");
+    return runtimeInfo && runtimeInfo.textContent.includes("Firefox");
+  });
 
   await removeTab(tab);
 });

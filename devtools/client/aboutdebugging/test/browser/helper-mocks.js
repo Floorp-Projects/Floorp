@@ -161,7 +161,19 @@ class Mocks {
 
     // Add a valid client that can be returned for this particular runtime id.
     let mockUsbClient = runtimeInfo.clientWrapper;
-    if (!mockUsbClient) {
+    if (mockUsbClient) {
+      const originalGetDeviceDescription = mockUsbClient.getDeviceDescription.bind(
+        mockUsbClient
+      );
+      mockUsbClient.getDeviceDescription = async () => {
+        const deviceDescription = await originalGetDeviceDescription();
+        return {
+          channel: runtimeInfo.channel || deviceDescription.channel,
+          name: runtimeInfo.name || deviceDescription.name,
+          version: runtimeInfo.version || deviceDescription.version,
+        };
+      };
+    } else {
       // If no clientWrapper was provided, create a mock client here.
       mockUsbClient = createClientMock();
       mockUsbClient.getDeviceDescription = () => {
@@ -227,3 +239,20 @@ const silenceWorkerUpdates = function() {
   });
 };
 /* exported silenceWorkerUpdates */
+
+async function createLocalClientWrapper() {
+  info("Create a local DevToolsClient");
+  const { DevToolsServer } = require("devtools/server/devtools-server");
+  const { DevToolsClient } = require("devtools/shared/client/devtools-client");
+  const {
+    ClientWrapper,
+  } = require("devtools/client/aboutdebugging/src/modules/client-wrapper");
+
+  DevToolsServer.init();
+  DevToolsServer.registerAllActors();
+  const client = new DevToolsClient(DevToolsServer.connectPipe());
+
+  await client.connect();
+  return new ClientWrapper(client);
+}
+/* exported createLocalClientWrapper */
