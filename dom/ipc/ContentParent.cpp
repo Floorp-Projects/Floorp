@@ -814,8 +814,8 @@ already_AddRefed<ContentParent> ContentParent::MinTabSelect(
 
   for (uint32_t i = 0; i < maxSelectable; i++) {
     ContentParent* p = aContentParents[i];
-    NS_ASSERTION(p->IsAlive(),
-                 "Non-alive contentparent in sBrowserContentParents?");
+    NS_ASSERTION(p->IsDead(),
+                 "Dead contentparent in sBrowserContentParents?");
     if (!p->mShutdownPending && p->mOpener == aOpener) {
       uint32_t tabCount = cpm->GetBrowserParentCountByProcessId(p->ChildID());
       if (tabCount < min) {
@@ -924,76 +924,105 @@ already_AddRefed<ContentParent> ContentParent::GetUsedBrowserProcess(
 }
 
 /*static*/
+already_AddRefed<ContentParent>
+ContentParent::GetNewOrUsedBrowserProcessInternal(Element* aFrameElement,
+                                                  const nsAString& aRemoteType,
+                                                  ProcessPriority aPriority,
+                                                  ContentParent* aOpener,
+                                                  bool aPreferUsed,
+                                                  bool aIsSync) {
+  nsTArray<ContentParent*>& contentParents = GetOrCreatePool(aRemoteType);
+  uint32_t maxContentParents = GetMaxProcessCount(aRemoteType);
+  if (aRemoteType.EqualsLiteral(
+          LARGE_ALLOCATION_REMOTE_TYPE)  // We never want to re-use
+                                         // Large-Allocation processes.
+      && contentParents.Length() >= maxContentParents) {
+    return GetNewOrUsedBrowserProcessInternal(
+        aFrameElement, NS_LITERAL_STRING(DEFAULT_REMOTE_TYPE), aPriority,
+        aOpener, /*aPreferUsed =*/false, aIsSync);
+  }
+
+  // Let's try and reuse an existing process.
+  RefPtr<ContentParent> contentParent = GetUsedBrowserProcess(
+      aOpener, aRemoteType, contentParents, maxContentParents, aPreferUsed);
+
+  if (contentParent) {
+    // We have located a process. It may not have finished initializing,
+    // this will be for the caller to handle.
+    return contentParent.forget();
+  }
+
+  // No reusable process. Let's create and launch one.
+  // The life cycle will be set to `LifecycleState::LAUNCHING`.
+  contentParent = new ContentParent(aOpener, aRemoteType);
+  if (!contentParent->BeginSubprocessLaunch(aIsSync, aPriority)) {
+    // Launch aborted because of shutdown. Bailout.
+    contentParent->LaunchSubprocessReject();
+    return nullptr;
+  }
+  // Store this process for future reuse.
+  contentParents.AppendElement(contentParent);
+
+  // Until the new process is ready let's not allow to start up any
+  // preallocated processes. The blocker will be removed once we receive
+  // the first idle message.
+  PreallocatedProcessManager::AddBlocker(contentParent);
+
+  MOZ_ASSERT(contentParent->IsLaunching());
+  return contentParent.forget();
+}
+
+/*static*/
 RefPtr<ContentParent::LaunchPromise>
 ContentParent::GetNewOrUsedBrowserProcessAsync(Element* aFrameElement,
                                                const nsAString& aRemoteType,
                                                ProcessPriority aPriority,
                                                ContentParent* aOpener,
                                                bool aPreferUsed) {
-  // Figure out if this process will be recording or replaying, and which file
-  // to use for the recording.
-  nsAutoString recordingFile;
-  Maybe<RecordReplayState> maybeRecordReplayState =
-      GetRecordReplayState(aFrameElement, recordingFile);
-  if (maybeRecordReplayState.isNothing()) {
-    // Error, cannot fulfill this record/replay request.
-    return nullptr;
-  }
-  RecordReplayState recordReplayState = maybeRecordReplayState.value();
-
-  nsTArray<ContentParent*>& contentParents = GetOrCreatePool(aRemoteType);
-  uint32_t maxContentParents = GetMaxProcessCount(aRemoteType);
-  if (recordReplayState ==
-          eNotRecordingOrReplaying  // Fall through and always create a new
-                                    // process when recording or replaying.
-      && aRemoteType.EqualsLiteral(
-             LARGE_ALLOCATION_REMOTE_TYPE)  // We never want to re-use
-                                            // Large-Allocation processes.
-      && contentParents.Length() >= maxContentParents) {
-    return GetNewOrUsedBrowserProcessAsync(
-        aFrameElement, NS_LITERAL_STRING(DEFAULT_REMOTE_TYPE), aPriority,
-        aOpener);
-  }
-  {
-    RefPtr<ContentParent> existing = GetUsedBrowserProcess(
-        aOpener, aRemoteType, contentParents, maxContentParents, aPreferUsed);
-    if (existing != nullptr) {
-      return LaunchPromise::CreateAndResolve(existing, __func__);
-    }
+  // Obtain a `ContentParent` launched asynchronously.
+  RefPtr<ContentParent> contentParent = GetNewOrUsedBrowserProcessInternal(
+      aFrameElement, aRemoteType, aPriority, aOpener, aPreferUsed,
+      /* aIsSync = */ false);
+  if (!contentParent) {
+    // In case of launch error, stop here.
+    return LaunchPromise::CreateAndReject(LaunchError(), __func__);
   }
 
-  // Create a new process from scratch.
-  RefPtr<ContentParent> p =
-      new ContentParent(aOpener, aRemoteType, recordReplayState, recordingFile);
+  MOZ_ASSERT(!contentParent->IsDead());
+  if (!contentParent->IsLaunching()) {
+    // `contentParent` is already ready and initialized.
+    return LaunchPromise::CreateAndResolve(contentParent, __func__);
+  }
 
-  RefPtr<LaunchPromise> launchPromise = p->LaunchSubprocessAsync(aPriority);
-  MOZ_ASSERT(launchPromise);
-
-  // Until the new process is ready let's not allow to start up any
-  // preallocated processes. In case of success, the blocker is removed
-  // when we receive the first `idle` message. In case of failure, we
-  // cleanup manually in the `OnReject`.
-  PreallocatedProcessManager::AddBlocker(p);
-
-  return launchPromise->Then(
+  // We have located a process that hasn't finished initializing. Let's race
+  // against whoever launched it (and whoever else is already racing). Once
+  // the race is complete, the winner will finish the initialization.
+  RefPtr<ProcessHandlePromise> ready =
+      contentParent->mSubprocess->WhenProcessHandleReady();
+  return ready->Then(
       GetCurrentThreadSerialEventTarget(), __func__,
-      // on resolve
-      [p, recordReplayState,
-       launchPromise](const RefPtr<ContentParent>& subProcess) {
-        if (recordReplayState == eNotRecordingOrReplaying) {
-          // We cannot reuse `contentParents` as it may have been
-          // overwritten or otherwise altered by another process launch.
-          nsTArray<ContentParent*>& contentParents =
-              GetOrCreatePool(p->GetRemoteType());
-          contentParents.AppendElement(p);
+      // On resolve.
+      [contentParent, aPriority]() {
+        if (contentParent->IsLaunching()) {
+          if (!contentParent->LaunchSubprocessResolve(/* aIsSync = */ false,
+                                                      aPriority)) {
+            contentParent->LaunchSubprocessReject();
+            return LaunchPromise::CreateAndReject(LaunchError(), __func__);
+          }
+          contentParent->mActivateTS = TimeStamp::Now();
+        } else if (contentParent->IsDead()) {
+          // This could happen if we're racing against a sync launch and it
+          // failed.
+          return LaunchPromise::CreateAndReject(LaunchError(), __func__);
         }
-
-        p->mActivateTS = TimeStamp::Now();
-        return launchPromise;
+        return LaunchPromise::CreateAndResolve(contentParent, __func__);
       },
-      [p, launchPromise]() {
-        PreallocatedProcessManager::RemoveBlocker(p);
-        return launchPromise;
+      // On reject.
+      [contentParent]() {
+        if (contentParent->IsLaunching()) {
+          contentParent->LaunchSubprocessReject();
+        }
+        return LaunchPromise::CreateAndReject(LaunchError(), __func__);
       });
 }
 
@@ -1001,57 +1030,32 @@ ContentParent::GetNewOrUsedBrowserProcessAsync(Element* aFrameElement,
 already_AddRefed<ContentParent> ContentParent::GetNewOrUsedBrowserProcess(
     Element* aFrameElement, const nsAString& aRemoteType,
     ProcessPriority aPriority, ContentParent* aOpener, bool aPreferUsed) {
-  // Figure out if this process will be recording or replaying, and which file
-  // to use for the recording.
-  nsAutoString recordingFile;
-  Maybe<RecordReplayState> maybeRecordReplayState =
-      GetRecordReplayState(aFrameElement, recordingFile);
-  if (maybeRecordReplayState.isNothing()) {
-    // Error, cannot fulfill this record/replay request.
-    return nullptr;
-  }
-  RecordReplayState recordReplayState = maybeRecordReplayState.value();
-
-  nsTArray<ContentParent*>& contentParents = GetOrCreatePool(aRemoteType);
-  uint32_t maxContentParents = GetMaxProcessCount(aRemoteType);
-  if (recordReplayState ==
-          eNotRecordingOrReplaying  // Fall through and always create a new
-                                    // process when recording or replaying.
-      && aRemoteType.EqualsLiteral(
-             LARGE_ALLOCATION_REMOTE_TYPE)  // We never want to re-use
-                                            // Large-Allocation processes.
-      && contentParents.Length() >= maxContentParents) {
-    return GetNewOrUsedBrowserProcess(aFrameElement,
-                                      NS_LITERAL_STRING(DEFAULT_REMOTE_TYPE),
-                                      aPriority, aOpener);
-  }
-
-  if (recordReplayState == eNotRecordingOrReplaying) {
-    RefPtr<ContentParent> existing = GetUsedBrowserProcess(
-        aOpener, aRemoteType, contentParents, maxContentParents, aPreferUsed);
-    if (existing != nullptr) {
-      return existing.forget();
-    }
-  }
-
-  // Create a new process from scratch.
-  RefPtr<ContentParent> p =
-      new ContentParent(aOpener, aRemoteType, recordReplayState, recordingFile);
-
-  if (!p->LaunchSubprocessSync(aPriority)) {
+  RefPtr<ContentParent> contentParent = GetNewOrUsedBrowserProcessInternal(
+      aFrameElement, aRemoteType, aPriority, aOpener, aPreferUsed,
+      /* aIsSync = */ true);
+  if (!contentParent) {
+    // In case of launch error, stop here.
     return nullptr;
   }
 
-  // Until the new process is ready let's not allow to start up any preallocated
-  // processes.
-  PreallocatedProcessManager::AddBlocker(p);
-
-  if (recordReplayState == eNotRecordingOrReplaying) {
-    contentParents.AppendElement(p);
+  MOZ_ASSERT(!contentParent->IsDead());
+  if (!contentParent->IsLaunching()) {
+    // `contentParent` is already ready and initialized
+    return contentParent.forget();
   }
 
-  p->mActivateTS = TimeStamp::Now();
-  return p.forget();
+  // We have located a process that hasn't finished initializing. We may be
+  // racing against whoever launched it (and whoever else is already racing).
+  // Since we're sync, we win the race and finish the initialization.
+  const bool launchSuccess = contentParent->mSubprocess->WaitForProcessHandle();
+  if (launchSuccess &&
+      contentParent->LaunchSubprocessResolve(/* aIsSync = */ true, aPriority)) {
+    contentParent->mActivateTS = TimeStamp::Now();
+    return contentParent.forget();
+  }
+  // In case of failure.
+  contentParent->LaunchSubprocessReject();
+  return nullptr;
 }
 
 /*static*/
@@ -1427,7 +1431,7 @@ void ContentParent::Init() {
   }
 
   // Flush any pref updates that happened during launch and weren't
-  // included in the blobs set up in LaunchSubprocessInternal.
+  // included in the blobs set up in BeginSubprocessLaunch.
   for (const Pref& pref : mQueuedPrefs) {
     Unused << NS_WARN_IF(!SendPreferenceUpdate(pref));
   }
@@ -2203,28 +2207,18 @@ void ContentParent::AppendSandboxParams(std::vector<std::string>& aArgs) {
 }
 #endif  // XP_MACOSX && MOZ_SANDBOX
 
-void ContentParent::LaunchSubprocessInternal(
-    ProcessPriority aInitialPriority,
-    mozilla::Variant<bool*, RefPtr<LaunchPromise>*>&& aRetval) {
+bool ContentParent::BeginSubprocessLaunch(bool aIsSync,
+                                          ProcessPriority aPriority) {
   AUTO_PROFILER_LABEL("ContentParent::LaunchSubprocess", OTHER);
-  const bool isSync = aRetval.is<bool*>();
 
+  // Note that, in case of race, we can have a launch started as async
+  // and finished as sync.
   Telemetry::Accumulate(Telemetry::CONTENT_PROCESS_LAUNCH_IS_SYNC,
-                        static_cast<uint32_t>(isSync));
-
-  auto earlyReject = [aRetval, isSync]() {
-    if (isSync) {
-      *aRetval.as<bool*>() = false;
-    } else {
-      *aRetval.as<RefPtr<LaunchPromise>*>() =
-          LaunchPromise::CreateAndReject(LaunchError(), __func__);
-    }
-  };
+                        static_cast<uint32_t>(aIsSync));
 
   if (!ContentProcessManager::GetSingleton()) {
     // Shutdown has begun, we shouldn't spawn any more child processes.
-    earlyReject();
-    return;
+    return false;
   }
 
   std::vector<std::string> extraArgs;
@@ -2237,13 +2231,14 @@ void ContentParent::LaunchSubprocessInternal(
   // Prefs information is passed via anonymous shared memory to avoid bloating
   // the command line.
 
-  SharedPreferenceSerializer prefSerializer;
-  if (!prefSerializer.SerializeToSharedMemory()) {
+  // Instantiate the pref serializer. It will be cleaned up in
+  // `LaunchSubprocessReject`/`LaunchSubprocessResolve`.
+  mPrefSerializer = MakeUnique<mozilla::ipc::SharedPreferenceSerializer>();
+  if (!mPrefSerializer->SerializeToSharedMemory()) {
     MarkAsDead();
-    earlyReject();
-    return;
+    return false;
   }
-  prefSerializer.AddSharedPrefCmdLineArgs(*mSubprocess, extraArgs);
+  mPrefSerializer->AddSharedPrefCmdLineArgs(*mSubprocess, extraArgs);
 
   // Register ContentParent as an observer for changes to any pref
   // whose prefix matches the empty string, i.e. all of them.  The
@@ -2271,139 +2266,124 @@ void ContentParent::LaunchSubprocessInternal(
   extraArgs.push_back("-parentBuildID");
   extraArgs.push_back(parentBuildID.get());
 
-  // Specify whether the process is recording or replaying an execution.
-  if (mRecordReplayState != eNotRecordingOrReplaying) {
-    nsPrintfCString buf(
-        "%d", mRecordReplayState == eRecording
-                  ? (int)recordreplay::ProcessKind::MiddlemanRecording
-                  : (int)recordreplay::ProcessKind::MiddlemanReplaying);
-    extraArgs.push_back(recordreplay::gProcessKindOption);
-    extraArgs.push_back(buf.get());
-
-    extraArgs.push_back(recordreplay::gRecordingFileOption);
-    extraArgs.push_back(NS_ConvertUTF16toUTF8(mRecordingFile).get());
-  }
-
-  RefPtr<ContentParent> self(this);
-
-  auto reject = [self, this](LaunchError err) {
-    NS_ERROR("failed to launch child in the parent");
-    MarkAsDead();
-    return LaunchPromise::CreateAndReject(err, __func__);
-  };
-
   // See also ActorDealloc.
   mSelfRef = this;
+  mLaunchYieldTS = TimeStamp::Now();
+  return mSubprocess->AsyncLaunch(std::move(extraArgs));
+}
 
-  // Lifetime note: the GeckoChildProcessHost holds a strong reference
-  // to the launch promise, which takes ownership of these closures,
-  // which hold strong references to this ContentParent; the
-  // ContentParent then owns the GeckoChildProcessHost (and that
-  // ownership is not exposed to the cycle collector).  Therefore,
-  // this all stays alive until the promise is resolved or rejected.
+void ContentParent::LaunchSubprocessReject() {
+  NS_ERROR("failed to launch child in the parent");
+  // Now that communication with the child is complete, we can cleanup
+  // the preference serializer.
+  mPrefSerializer = nullptr;
+  PreallocatedProcessManager::RemoveBlocker(this);
+  MarkAsDead();
+}
 
-  auto resolve = [self, this, aInitialPriority, isSync,
-                  // Transfer ownership of RAII file descriptor/handle
-                  // holders so that they won't be closed before the
-                  // child can inherit them.
-                  prefSerializer =
-                      std::move(prefSerializer)](base::ProcessHandle handle) {
-    AUTO_PROFILER_LABEL("ContentParent::LaunchSubprocess::resolve", OTHER);
-    const auto launchResumeTS = TimeStamp::Now();
+bool ContentParent::LaunchSubprocessResolve(bool aIsSync,
+                                            ProcessPriority aPriority) {
+  AUTO_PROFILER_LABEL("ContentParent::LaunchSubprocess::resolve", OTHER);
+  // Now that communication with the child is complete, we can cleanup
+  // the preference serializer.
+  mPrefSerializer = nullptr;
 
-    if (!sCreatedFirstContentProcess) {
-      nsCOMPtr<nsIObserverService> obs =
-          mozilla::services::GetObserverService();
-      obs->NotifyObservers(nullptr, "ipc:first-content-process-created",
-                           nullptr);
-      sCreatedFirstContentProcess = true;
-    }
+  const auto launchResumeTS = TimeStamp::Now();
 
-    base::ProcessId procId = base::GetProcId(handle);
-    Open(mSubprocess->TakeChannel(), procId);
+  if (!sCreatedFirstContentProcess) {
+    nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+    obs->NotifyObservers(nullptr, "ipc:first-content-process-created", nullptr);
+    sCreatedFirstContentProcess = true;
+  }
+
+  base::ProcessId procId =
+      base::GetProcId(mSubprocess->GetChildProcessHandle());
+  Open(mSubprocess->TakeChannel(), procId);
 #ifdef MOZ_CODE_COVERAGE
-    Unused << SendShareCodeCoverageMutex(
-        CodeCoverageHandler::Get()->GetMutexHandle(procId));
+  Unused << SendShareCodeCoverageMutex(
+      CodeCoverageHandler::Get()->GetMutexHandle(procId));
 #endif
 
-    mLifecycleState = LifecycleState::ALIVE;
-    if (!InitInternal(aInitialPriority)) {
-      NS_WARNING("failed to initialize child in the parent");
-      // We've already called Open() by this point, so we need to close the
-      // channel to avoid leaking the process.
-      ShutDownProcess(SEND_SHUTDOWN_MESSAGE);
-      return LaunchPromise::CreateAndReject(LaunchError{}, __func__);
-    }
-
-    ContentProcessManager::GetSingleton()->AddContentProcess(this);
-
-    mHangMonitorActor = ProcessHangMonitor::AddProcess(this);
-
-    // Set a reply timeout for CPOWs.
-    SetReplyTimeoutMs(StaticPrefs::dom_ipc_cpow_timeout());
-
-    nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
-    if (obs) {
-      nsAutoString cpId;
-      cpId.AppendInt(static_cast<uint64_t>(this->ChildID()));
-      obs->NotifyObservers(static_cast<nsIObserver*>(this),
-                           "ipc:content-initializing", cpId.get());
-    }
-
-    Init();
-
-    if (isSync) {
-      Telemetry::AccumulateTimeDelta(Telemetry::CONTENT_PROCESS_SYNC_LAUNCH_MS,
-                                     mLaunchTS);
-    } else {
-      Telemetry::AccumulateTimeDelta(Telemetry::CONTENT_PROCESS_LAUNCH_TOTAL_MS,
-                                     mLaunchTS);
-
-      Telemetry::Accumulate(
-          Telemetry::CONTENT_PROCESS_LAUNCH_MAINTHREAD_MS,
-          static_cast<uint32_t>(((mLaunchYieldTS - mLaunchTS) +
-                                 (TimeStamp::Now() - launchResumeTS))
-                                    .ToMilliseconds()));
-    }
-
-    return LaunchPromise::CreateAndResolve(self, __func__);
-  };
-
-  if (isSync) {
-    bool ok = mSubprocess->LaunchAndWaitForProcessHandle(std::move(extraArgs));
-    if (ok) {
-      Unused << resolve(mSubprocess->GetChildProcessHandle());
-    } else {
-      Unused << reject(LaunchError{});
-    }
-    *aRetval.as<bool*>() = ok;
-  } else {
-    auto* retptr = aRetval.as<RefPtr<LaunchPromise>*>();
-    if (mSubprocess->AsyncLaunch(std::move(extraArgs))) {
-      RefPtr<ProcessHandlePromise> ready =
-          mSubprocess->WhenProcessHandleReady();
-      mLaunchYieldTS = TimeStamp::Now();
-      *retptr = ready->Then(GetCurrentThreadSerialEventTarget(), __func__,
-                            std::move(resolve), std::move(reject));
-    } else {
-      *retptr = reject(LaunchError{});
-    }
+  mLifecycleState = LifecycleState::ALIVE;
+  if (!InitInternal(aPriority)) {
+    NS_WARNING("failed to initialize child in the parent");
+    // We've already called Open() by this point, so we need to close the
+    // channel to avoid leaking the process.
+    ShutDownProcess(SEND_SHUTDOWN_MESSAGE);
+    return false;
   }
+
+  ContentProcessManager::GetSingleton()->AddContentProcess(this);
+
+  mHangMonitorActor = ProcessHangMonitor::AddProcess(this);
+
+  // Set a reply timeout for CPOWs.
+  SetReplyTimeoutMs(StaticPrefs::dom_ipc_cpow_timeout());
+
+  nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+  if (obs) {
+    nsAutoString cpId;
+    cpId.AppendInt(static_cast<uint64_t>(this->ChildID()));
+    obs->NotifyObservers(static_cast<nsIObserver*>(this),
+                         "ipc:content-initializing", cpId.get());
+  }
+
+  Init();
+
+  if (aIsSync) {
+    Telemetry::AccumulateTimeDelta(Telemetry::CONTENT_PROCESS_SYNC_LAUNCH_MS,
+                                   mLaunchTS);
+  } else {
+    Telemetry::AccumulateTimeDelta(Telemetry::CONTENT_PROCESS_LAUNCH_TOTAL_MS,
+                                   mLaunchTS);
+
+    Telemetry::Accumulate(
+        Telemetry::CONTENT_PROCESS_LAUNCH_MAINTHREAD_MS,
+        static_cast<uint32_t>(
+            ((mLaunchYieldTS - mLaunchTS) + (TimeStamp::Now() - launchResumeTS))
+                .ToMilliseconds()));
+  }
+  return true;
 }
 
-/* static */
 bool ContentParent::LaunchSubprocessSync(
     hal::ProcessPriority aInitialPriority) {
-  bool retval;
-  LaunchSubprocessInternal(aInitialPriority, mozilla::AsVariant(&retval));
-  return retval;
+  if (!BeginSubprocessLaunch(/* aIsSync = */ true, aInitialPriority)) {
+    return false;
+  }
+  const bool ok = mSubprocess->WaitForProcessHandle();
+  if (ok && LaunchSubprocessResolve(/* aIsSync = */ true, aInitialPriority)) {
+    return true;
+  }
+  LaunchSubprocessReject();
+  return false;
 }
 
-/* static */ RefPtr<ContentParent::LaunchPromise>
-ContentParent::LaunchSubprocessAsync(hal::ProcessPriority aInitialPriority) {
-  RefPtr<LaunchPromise> retval;
-  LaunchSubprocessInternal(aInitialPriority, mozilla::AsVariant(&retval));
-  return retval;
+RefPtr<ContentParent::LaunchPromise> ContentParent::LaunchSubprocessAsync(
+    hal::ProcessPriority aInitialPriority) {
+  if (!BeginSubprocessLaunch(/* aIsSync = */ false, aInitialPriority)) {
+    // Launch aborted because of shutdown. Bailout.
+    LaunchSubprocessReject();
+    return LaunchPromise::CreateAndReject(LaunchError(), __func__);
+  }
+
+  // Otherwise, wait until the process is ready.
+  RefPtr<ProcessHandlePromise> ready = mSubprocess->WhenProcessHandleReady();
+  RefPtr<ContentParent> self = this;
+  mLaunchYieldTS = TimeStamp::Now();
+
+  return ready->Then(
+      GetCurrentThreadSerialEventTarget(), __func__,
+      [self, aInitialPriority](
+          const ProcessHandlePromise::ResolveOrRejectValue& aValue) {
+        if (aValue.IsResolve() &&
+            self->LaunchSubprocessResolve(/* aIsSync = */ false,
+                                          aInitialPriority)) {
+          return LaunchPromise::CreateAndResolve(self, __func__);
+        }
+        self->LaunchSubprocessReject();
+        return LaunchPromise::CreateAndReject(LaunchError(), __func__);
+      });
 }
 
 ContentParent::ContentParent(ContentParent* aOpener,
