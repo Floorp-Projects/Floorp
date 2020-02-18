@@ -1386,6 +1386,31 @@ bool RLambdaArrow::recover(JSContext* cx, SnapshotIterator& iter) const {
   return true;
 }
 
+bool MFunctionWithProto::writeRecoverData(CompactBufferWriter& writer) const {
+  MOZ_ASSERT(canRecoverOnBailout());
+  writer.writeUnsigned(uint32_t(RInstruction::Recover_FunctionWithProto));
+  return true;
+}
+
+RFunctionWithProto::RFunctionWithProto(CompactBufferReader& reader) {}
+
+bool RFunctionWithProto::recover(JSContext* cx, SnapshotIterator& iter) const {
+  RootedObject scopeChain(cx, &iter.read().toObject());
+  RootedObject prototype(cx, &iter.read().toObject());
+  RootedFunction fun(cx, &iter.read().toObject().as<JSFunction>());
+
+  JSObject* resultObject =
+      js::FunWithProtoOperation(cx, fun, scopeChain, prototype);
+  if (!resultObject) {
+    return false;
+  }
+
+  RootedValue result(cx);
+  result.setObject(*resultObject);
+  iter.storeInstructionResult(result);
+  return true;
+}
+
 bool MNewCallObject::writeRecoverData(CompactBufferWriter& writer) const {
   MOZ_ASSERT(canRecoverOnBailout());
   writer.writeUnsigned(uint32_t(RInstruction::Recover_NewCallObject));

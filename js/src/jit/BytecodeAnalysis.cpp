@@ -229,6 +229,7 @@ IonBytecodeInfo js::jit::AnalyzeBytecodeForIon(JSContext* cx,
       case JSOp::PushLexicalEnv:
       case JSOp::PopLexicalEnv:
       case JSOp::ImplicitThis:
+      case JSOp::FunWithProto:
         result.usesEnvironmentChain = true;
         break;
 

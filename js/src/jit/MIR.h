@@ -6825,6 +6825,35 @@ class MLambdaArrow
   }
 };
 
+class MFunctionWithProto : public MTernaryInstruction,
+                           public MixPolicy<ObjectPolicy<0>, ObjectPolicy<1>,
+                                            ObjectPolicy<2>>::Data {
+  const LambdaFunctionInfo info_;
+
+  MFunctionWithProto(MDefinition* envChain, MDefinition* prototype,
+                     MConstant* cst)
+      : MTernaryInstruction(classOpcode, envChain, prototype, cst),
+        info_(&cst->toObject().as<JSFunction>()) {
+    setResultType(MIRType::Object);
+  }
+
+ public:
+  INSTRUCTION_HEADER(FunctionWithProto)
+  TRIVIAL_NEW_WRAPPERS
+  NAMED_OPERANDS((0, environmentChain), (1, prototype))
+
+  MConstant* functionOperand() const { return getOperand(2)->toConstant(); }
+  const LambdaFunctionInfo& info() const { return info_; }
+  MOZ_MUST_USE bool writeRecoverData(
+      CompactBufferWriter& writer) const override;
+  bool canRecoverOnBailout() const override { return true; }
+  bool appendRoots(MRootList& roots) const override {
+    return info_.appendRoots(roots);
+  }
+
+  bool possiblyCalls() const override { return true; }
+};
+
 class MSetFunName : public MBinaryInstruction,
                     public MixPolicy<ObjectPolicy<0>, BoxPolicy<1>>::Data {
   uint8_t prefixKind_;
