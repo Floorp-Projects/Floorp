@@ -845,12 +845,12 @@ class WorkerPermissionChallenge final : public Runnable {
   WorkerPermissionChallenge(WorkerPrivate* aWorkerPrivate,
                             BackgroundFactoryRequestChild* aActor,
                             IDBFactory* aFactory,
-                            const PrincipalInfo& aPrincipalInfo)
+                            PrincipalInfo&& aPrincipalInfo)
       : Runnable("indexedDB::WorkerPermissionChallenge"),
         mWorkerPrivate(aWorkerPrivate),
         mActor(aActor),
         mFactory(aFactory),
-        mPrincipalInfo(aPrincipalInfo) {
+        mPrincipalInfo(std::move(aPrincipalInfo)) {
     MOZ_ASSERT(mWorkerPrivate);
     MOZ_ASSERT(aActor);
     MOZ_ASSERT(aFactory);
@@ -1678,7 +1678,7 @@ mozilla::ipc::IPCResult BackgroundFactoryRequestChild::Recv__delete__(
 }
 
 mozilla::ipc::IPCResult BackgroundFactoryRequestChild::RecvPermissionChallenge(
-    const PrincipalInfo& aPrincipalInfo) {
+    PrincipalInfo&& aPrincipalInfo) {
   AssertIsOnOwningThread();
 
   MaybeCollectGarbageOnIPCMessage();
@@ -1689,7 +1689,7 @@ mozilla::ipc::IPCResult BackgroundFactoryRequestChild::RecvPermissionChallenge(
     workerPrivate->AssertIsOnWorkerThread();
 
     RefPtr<WorkerPermissionChallenge> challenge = new WorkerPermissionChallenge(
-        workerPrivate, this, mFactory, aPrincipalInfo);
+        workerPrivate, this, mFactory, std::move(aPrincipalInfo));
     if (!challenge->Dispatch()) {
       return IPC_FAIL_NO_REASON(this);
     }

@@ -266,7 +266,7 @@ class BackgroundFactoryRequestChild final
       const FactoryRequestResponse& aResponse);
 
   mozilla::ipc::IPCResult RecvPermissionChallenge(
-      const PrincipalInfo& aPrincipalInfo);
+      PrincipalInfo&& aPrincipalInfo);
 
   mozilla::ipc::IPCResult RecvBlocked(uint64_t aCurrentVersion);
 };
