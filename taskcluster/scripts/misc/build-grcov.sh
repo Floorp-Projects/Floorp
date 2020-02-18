@@ -5,7 +5,6 @@ set -x -e -v
 
 PROJECT=grcov
 
-# This script is for building rust-size
 case "$(uname -s)" in
 Linux)
     COMPRESS_EXT=xz
