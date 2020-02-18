@@ -2630,7 +2630,7 @@ nsresult nsFrameSelection::SelectRowOrColumn(nsIContent* aCellContent,
 }
 
 // static
-nsIContent* nsFrameSelection::GetFirstCellNodeInRange(nsRange* aRange) {
+nsIContent* nsFrameSelection::GetFirstCellNodeInRange(const nsRange* aRange) {
   if (!aRange) return nullptr;
 
   nsIContent* childContent = aRange->GetChildAtStartOffset();
