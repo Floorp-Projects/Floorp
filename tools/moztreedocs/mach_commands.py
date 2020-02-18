@@ -278,6 +278,13 @@ class Documentation(MachCommandBase):
 
         for prefix in key_prefixes:
             s3_upload(files, prefix)
+
+            # Don't setup redirects for the "version" prefix since we are
+            # exceeding a 50 redirect limit and external things are unlikely to
+            # link there anyway (see bug 1614908).
+            if version and prefix.endswith(version):
+                continue
+
             if prefix:
                 prefix += '/'
             all_redirects.update({prefix + k: prefix + v for k, v in redirects.items()})
