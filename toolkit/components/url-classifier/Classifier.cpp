@@ -1564,6 +1564,17 @@ RefPtr<LookupCache> Classifier::GetLookupCache(const nsACString& aTable,
   //        '-proto'.
   RefPtr<LookupCache> cache;
   nsCString provider = GetProvider(aTable);
+
+  // Google requests SafeBrowsing related feature should only be enabled when
+  // the databases are update-to-date. Since we disable Safe Browsing update in
+  // Safe Mode, ignore tables provided by Google to ensure we don't show
+  // outdated warnings.
+  if (nsUrlClassifierUtils::IsInSafeMode()) {
+    if (provider.EqualsASCII("google") || provider.EqualsASCII("google4")) {
+      return nullptr;
+    }
+  }
+
   if (StringEndsWith(aTable, NS_LITERAL_CSTRING("-proto"))) {
     cache = new LookupCacheV4(aTable, provider, rootStoreDirectory);
   } else {

@@ -395,7 +395,7 @@ PROT_ListManager.prototype.forceUpdates = function(tables) {
     }
 
     // Trigger an update for the given url.
-    if (!this.checkForUpdates(url)) {
+    if (!this.checkForUpdates(url, true)) {
       ret = false;
     }
   });
@@ -408,11 +408,22 @@ PROT_ListManager.prototype.forceUpdates = function(tables) {
  *
  * @param updateUrl: request updates for tables associated with that url, or
  * for all tables if the url is empty.
+ * @param manual: the update is triggered manually
  */
-PROT_ListManager.prototype.checkForUpdates = function(updateUrl) {
+PROT_ListManager.prototype.checkForUpdates = function(
+  updateUrl,
+  manual = false
+) {
   log("checkForUpdates with " + updateUrl);
   // See if we've triggered the request backoff logic.
   if (!updateUrl) {
+    return false;
+  }
+
+  // Disable SafeBrowsing updates in Safe Mode, but still allow manually
+  // triggering an update for debugging.
+  if (Services.appinfo.inSafeMode && !manual) {
+    log("update is disabled in Safe Mode");
     return false;
   }
 

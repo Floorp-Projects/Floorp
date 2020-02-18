@@ -46,6 +46,8 @@ class nsUrlClassifierUtils final : public nsIUrlClassifierUtils,
 
   static bool IsTestTable(const nsACString& aTableName);
 
+  static bool IsInSafeMode();
+
  private:
   nsUrlClassifierUtils();
   ~nsUrlClassifierUtils();
