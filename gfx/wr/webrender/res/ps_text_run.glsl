@@ -220,26 +220,22 @@ void main(void) {
     vec2 local_pos = glyph_rect.p0 + glyph_rect.size * aPosition.xy;
 #endif
 
-    // Clamp to the local clip rect.
-    local_pos = clamp_rect(local_pos, ph.local_clip_rect);
-
-    // Map the clamped local space corner into device space.
-    vec4 world_pos = transform.m * vec4(local_pos, 0.0, 1.0);
-    vec2 device_pos = world_pos.xy * task.device_pixel_scale;
-
-    // Apply offsets for the render task to get correct screen location.
-    vec2 final_offset = -task.content_origin + task.common_data.task_rect.p0;
-
-    gl_Position = uTransform * vec4(device_pos + final_offset * world_pos.w, ph.z * world_pos.w, world_pos.w);
+    VertexInfo vi = write_vertex(
+        local_pos,
+        ph.local_clip_rect,
+        ph.z,
+        transform,
+        task
+    );
 
 #ifdef WR_FEATURE_GLYPH_TRANSFORM
-    vec2 f = (glyph_transform * local_pos - glyph_rect.p0) / glyph_rect.size;
+    vec2 f = (glyph_transform * vi.local_pos - glyph_rect.p0) / glyph_rect.size;
     V_UV_CLIP = vec4(f, 1.0 - f);
 #else
-    vec2 f = (local_pos - glyph_rect.p0) / glyph_rect.size;
+    vec2 f = (vi.local_pos - glyph_rect.p0) / glyph_rect.size;
 #endif
 
-    write_clip(world_pos, clip_area);
+    write_clip(vi.world_pos, clip_area);
 
     switch (color_mode) {
         case COLOR_MODE_ALPHA:

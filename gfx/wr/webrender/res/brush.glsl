@@ -164,8 +164,12 @@ void main(void) {
 
     // Write the normal vertex information out.
     if (transform.is_axis_aligned) {
+
+        // Select the corner of the local rect that we are processing.
+        vec2 local_pos = segment_rect.p0 + segment_rect.size * aPosition.xy;
+
         vi = write_vertex(
-            segment_rect,
+            local_pos,
             ph.local_clip_rect,
             ph.z,
             transform,
