@@ -253,7 +253,7 @@ void WeakRefMap::sweep() {
     // If target is dying, clear the target field of all weakRefs, and remove
     // the entry from the map.
     if (JS::GCPolicy<HeapPtrObject>::needsSweep(&e.front().mutableKey())) {
-      for (HeapPtrObject& obj : e.front().value()) {
+      for (JSObject* obj : e.front().value()) {
         obj = UncheckedUnwrapWithoutExpose(obj);
         if (!obj->is<WeakRefObject>()) {
           MOZ_ASSERT(JS_IsDeadWrapper(obj));
