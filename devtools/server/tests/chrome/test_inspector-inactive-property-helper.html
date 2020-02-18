@@ -42,14 +42,15 @@ SimpleTest.waitForExplicitFinish();
   //                                  of the one that should be tested in isPropertyUsed.
   // - {Boolean} isActive: should the property be active (isPropertyUsed `used` result).
   const testFiles = [
+    "align-content.js",
     "align-place-self.js",
+    "float.js",
     "gap.js",
+    "grid-with-absolute-properties.js",
     "max-min-width-height.js",
     "place-items-content.js",
-    "vertical-align.js",
-    "float.js",
-    "grid-with-absolute-properties.js",
     "positioned.js",
+    "vertical-align.js",
   ].map(file => `${FOLDER}/${file}`);
 
   // Import all the test cases
