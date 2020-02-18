@@ -81,12 +81,13 @@ class PropertiesView extends Component {
   /**
    * Update only if:
    * 1) The rendered object has changed
-   * 2) The user selected another search result target.
-   * 3) Internal state changes
+   * 2) The filter text has changed
+   * 3) The user selected another search result target.
    */
-  shouldComponentUpdate(nextProps, nextState) {
+  shouldComponentUpdate(nextProps) {
     return (
       this.props.object !== nextProps.object ||
+      this.props.filterText !== nextProps.filterText ||
       (this.props.targetSearchResult !== nextProps.targetSearchResult &&
         nextProps.targetSearchResult !== null)
     );
@@ -152,14 +153,13 @@ class PropertiesView extends Component {
   renderValueWithRep(props) {
     const { member } = props;
 
-    // Hide strings with following conditions
-    // 1. this row is a togglable section and content is object ('cause it shouldn't hide
-    //    when string or number)
-    // 2. the `value` object has a `value` property, only happened in Cookies panel
-    // Put 2 here to not dup this method
+    /* Hide strings with following conditions
+     * - the `value` object has a `value` property (only happens in Cookies panel)
+     */
     if (
-      (member.level === 0 && member.type === "object") ||
-      (typeof member.value === "object" && member.value && member.value.value)
+      typeof member.value === "object" &&
+      member.value &&
+      member.value.value
     ) {
       return null;
     }

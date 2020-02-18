@@ -27,13 +27,24 @@ add_task(async function() {
   const item = document.querySelectorAll(".request-list-item")[0];
   await waitUntil(() => item.querySelector(".requests-list-type").title);
 
-  const wait = waitForDOM(document, "#params-panel .tree-section", 1);
+  // Make sure the accordion items and editor is loaded
+  const waitAccordionItems = waitForDOM(
+    document,
+    "#params-panel .accordion-item",
+    1
+  );
+  const waitSourceEditor = waitForDOM(
+    document,
+    "#params-panel .CodeMirror-code"
+  );
+
   store.dispatch(Actions.toggleNetworkDetails());
   EventUtils.sendMouseEvent(
     { type: "click" },
     document.querySelector("#params-tab")
   );
-  await wait;
+
+  await Promise.all([waitAccordionItems, waitSourceEditor]);
 
   const tabpanel = document.querySelector("#params-panel");
   is(
@@ -46,14 +57,15 @@ add_task(async function() {
     "Request has been truncated",
     "The error message shown is incorrect"
   );
-  const jsonView = tabpanel.querySelector(".tree-section .treeLabel") || {};
+  const jsonView =
+    tabpanel.querySelector(".accordion-item .accordion-header-label") || {};
   is(
     jsonView.textContent === L10N.getStr("jsonScopeName"),
     false,
     "The params json view doesn't have the intended visibility."
   );
   is(
-    tabpanel.querySelector("pre") === null,
+    tabpanel.querySelector("PRE") === null,
     false,
     "The Request Payload has the intended visibility."
   );

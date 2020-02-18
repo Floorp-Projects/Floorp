@@ -21,7 +21,7 @@ add_task(async function() {
   // Execute requests.
   await performRequests(monitor, tab, 12);
 
-  let wait = waitForDOM(document, "#params-panel .tree-section", 3);
+  let wait = waitForDOM(document, "#params-panel .accordion-item", 3);
   EventUtils.sendMouseEvent(
     { type: "mousedown" },
     document.querySelectorAll(".request-list-item")[0]
@@ -33,7 +33,7 @@ add_task(async function() {
   await wait;
   testParamsTab1("a", "", '{ "foo": "bar" }', "");
 
-  wait = waitForDOM(document, "#params-panel .tree-section", 3);
+  wait = waitForDOM(document, "#params-panel .accordion-item", 3);
   EventUtils.sendMouseEvent(
     { type: "mousedown" },
     document.querySelectorAll(".request-list-item")[1]
@@ -41,7 +41,7 @@ add_task(async function() {
   await wait;
   testParamsTab1("a", "b", '{ "foo": "bar" }', "");
 
-  wait = waitForDOM(document, "#params-panel .tree-section", 3);
+  wait = waitForDOM(document, "#params-panel .accordion-item", 3);
   EventUtils.sendMouseEvent(
     { type: "mousedown" },
     document.querySelectorAll(".request-list-item")[2]
@@ -49,41 +49,37 @@ add_task(async function() {
   await wait;
   testParamsTab1("a", "b", "?foo", "bar");
 
-  let waitSections, waitSourceEditor;
-  waitSections = waitForDOM(
-    document,
-    "#params-panel tr:not(.tree-section).treeRow",
-    2
-  );
+  let waitRows, waitSourceEditor;
+  waitRows = waitForDOM(document, "#params-panel tr.treeRow", 2);
   waitSourceEditor = waitForDOM(document, "#params-panel .CodeMirror-code");
   EventUtils.sendMouseEvent(
     { type: "mousedown" },
     document.querySelectorAll(".request-list-item")[3]
   );
-  await Promise.all([waitSections, waitSourceEditor]);
+  await Promise.all([waitRows, waitSourceEditor]);
   testParamsTab2("a", "", '{ "foo": "bar" }', "js");
 
-  waitSections = waitForDOM(
-    document,
-    "#params-panel tr:not(.tree-section).treeRow",
-    2
-  );
+  waitRows = waitForDOM(document, "#params-panel tr.treeRow", 2);
   waitSourceEditor = waitForDOM(document, "#params-panel .CodeMirror-code");
   EventUtils.sendMouseEvent(
     { type: "mousedown" },
     document.querySelectorAll(".request-list-item")[4]
   );
-  await Promise.all([waitSections, waitSourceEditor]);
+  await Promise.all([waitRows, waitSourceEditor]);
   testParamsTab2("a", "b", '{ "foo": "bar" }', "js");
 
-  // Wait for all tree sections and editor updated by react
-  waitSections = waitForDOM(document, "#params-panel .tree-section", 2);
+  // Wait for all accordion items and editor updated by react
+  const waitAccordionItems = waitForDOM(
+    document,
+    "#params-panel .accordion-item",
+    2
+  );
   waitSourceEditor = waitForDOM(document, "#params-panel .CodeMirror-code");
   EventUtils.sendMouseEvent(
     { type: "mousedown" },
     document.querySelectorAll(".request-list-item")[5]
   );
-  await Promise.all([waitSections, waitSourceEditor]);
+  await Promise.all([waitAccordionItems, waitSourceEditor]);
   testParamsTab2("a", "b", "?foo=bar", "text");
 
   EventUtils.sendMouseEvent(
@@ -92,7 +88,7 @@ add_task(async function() {
   );
   testParamsTab3();
 
-  wait = waitForDOM(document, "#params-panel .tree-section", 3);
+  wait = waitForDOM(document, "#params-panel .accordion-item", 3);
   EventUtils.sendMouseEvent(
     { type: "mousedown" },
     document.querySelectorAll(".request-list-item")[7]
@@ -100,7 +96,7 @@ add_task(async function() {
   await wait;
   testParamsTab1("a", "b", '{ "foo": "bar" }', "");
 
-  wait = waitForDOM(document, "#params-panel .tree-section", 3);
+  wait = waitForDOM(document, "#params-panel .accordion-item", 3);
   EventUtils.sendMouseEvent(
     { type: "mousedown" },
     document.querySelectorAll(".request-list-item")[8]
@@ -108,7 +104,7 @@ add_task(async function() {
   await wait;
   testParamsTab1("a", "b", '{ "foo": "bar" }', "");
 
-  wait = waitForDOM(document, "#params-panel .tree-section", 1);
+  wait = waitForDOM(document, "#params-panel .accordion-item", 1);
   EventUtils.sendMouseEvent(
     { type: "mousedown" },
     document.querySelectorAll(".request-list-item")[9]
@@ -116,7 +112,8 @@ add_task(async function() {
   await wait;
   testParamsTabGetWithArgs(new Map([["species", "in=(52,60)"]]));
 
-  wait = waitForDOM(document, "#params-panel .tree-section", 1);
+  // Only the tree content will change
+  wait = waitForDOM(document, "#params-panel tr.treeTable", 0);
   EventUtils.sendMouseEvent(
     { type: "mousedown" },
     document.querySelectorAll(".request-list-item")[10]
@@ -124,7 +121,7 @@ add_task(async function() {
   await wait;
   testParamsTabGetWithArgs(new Map([["a", ["", "b"]]]));
 
-  wait = waitForDOM(document, "#params-panel .tree-section", 1);
+  wait = waitForDOM(document, "#params-panel tr.treeTable", 0);
   EventUtils.sendMouseEvent(
     { type: "mousedown" },
     document.querySelectorAll(".request-list-item")[11]
@@ -143,12 +140,12 @@ add_task(async function() {
     const tabpanel = document.querySelector("#params-panel");
 
     is(
-      tabpanel.querySelectorAll(".tree-section").length,
+      tabpanel.querySelectorAll(".accordion-item").length,
       3,
-      "The number of param tree sections displayed in this tabpanel is incorrect."
+      "The number of param accordion items displayed in this tabpanel is incorrect."
     );
     is(
-      tabpanel.querySelectorAll("tr:not(.tree-section).treeRow").length,
+      tabpanel.querySelectorAll("tr.treeRow").length,
       2,
       "The number of param rows displayed in this tabpanel is incorrect."
     );
@@ -167,21 +164,17 @@ add_task(async function() {
       "The request post data editor should not be displayed."
     );
 
-    const treeSections = tabpanel.querySelectorAll(".tree-section");
-    const labels = tabpanel.querySelectorAll(
-      "tr:not(.tree-section) .treeLabelCell .treeLabel"
-    );
-    const values = tabpanel.querySelectorAll(
-      "tr:not(.tree-section) .treeValueCell .objectBox"
-    );
+    const accordionItems = tabpanel.querySelectorAll(".accordion-item");
+    const labels = tabpanel.querySelectorAll("tr .treeLabelCell .treeLabel");
+    const values = tabpanel.querySelectorAll("tr .treeValueCell .objectBox");
 
     is(
-      treeSections[0].querySelector(".treeLabel").textContent,
+      accordionItems[0].querySelector(".accordion-header-label").textContent,
       L10N.getStr("paramsQueryString"),
       "The params section doesn't have the correct title."
     );
     is(
-      treeSections[1].querySelector(".treeLabel").textContent,
+      accordionItems[1].querySelector(".accordion-header-label").textContent,
       L10N.getStr("paramsFormData"),
       "The form data section doesn't have the correct title."
     );
@@ -219,12 +212,12 @@ add_task(async function() {
     const tabpanel = document.querySelector("#params-panel");
 
     is(
-      tabpanel.querySelectorAll(".tree-section").length,
+      tabpanel.querySelectorAll(".accordion-item").length,
       isJSON ? 3 : 2,
-      "The number of param tree sections displayed in this tabpanel is incorrect."
+      "The number of param accordion items displayed in this tabpanel is incorrect."
     );
     is(
-      tabpanel.querySelectorAll("tr:not(.tree-section).treeRow").length,
+      tabpanel.querySelectorAll("tr.treeRow").length,
       isJSON ? 2 : 1,
       "The number of param rows displayed in this tabpanel is incorrect."
     );
@@ -243,25 +236,21 @@ add_task(async function() {
       "The request post data editor should be displayed."
     );
 
-    const treeSections = tabpanel.querySelectorAll(".tree-section");
+    const accordionItems = tabpanel.querySelectorAll(".accordion-item");
 
     is(
-      treeSections[0].querySelector(".treeLabel").textContent,
+      accordionItems[0].querySelector(".accordion-header-label").textContent,
       L10N.getStr("paramsQueryString"),
       "The query section doesn't have the correct title."
     );
     is(
-      treeSections[1].querySelector(".treeLabel").textContent,
+      accordionItems[1].querySelector(".accordion-header-label").textContent,
       isJSON ? L10N.getStr("jsonScopeName") : L10N.getStr("paramsPostPayload"),
       "The post section doesn't have the correct title."
     );
 
-    const labels = tabpanel.querySelectorAll(
-      "tr:not(.tree-section) .treeLabelCell .treeLabel"
-    );
-    const values = tabpanel.querySelectorAll(
-      "tr:not(.treeS-section) .treeValueCell .objectBox"
-    );
+    const labels = tabpanel.querySelectorAll("tr .treeLabelCell .treeLabel");
+    const values = tabpanel.querySelectorAll("tr .treeValueCell .objectBox");
 
     is(
       labels[0].textContent,
@@ -281,7 +270,7 @@ add_task(async function() {
 
     if (isJSON) {
       is(
-        treeSections[2].querySelector(".treeLabel").textContent,
+        accordionItems[2].querySelector(".accordion-header-label").textContent,
         L10N.getStr("paramsPostPayload"),
         "The post section doesn't have the correct title."
       );
@@ -311,12 +300,12 @@ add_task(async function() {
     const tabpanel = document.querySelector("#params-panel");
 
     is(
-      tabpanel.querySelectorAll(".tree-section").length,
+      tabpanel.querySelectorAll(".accordion-item").length,
       0,
-      "The number of param tree sections displayed in this tabpanel is incorrect."
+      "The number of param accordion items displayed in this tabpanel is incorrect."
     );
     is(
-      tabpanel.querySelectorAll("tr:not(.tree-section).treeRow").length,
+      tabpanel.querySelectorAll("tr.treeRow").length,
       0,
       "The number of param rows displayed in this tabpanel is incorrect."
     );
@@ -350,12 +339,12 @@ add_task(async function() {
     });
 
     is(
-      tabpanel.querySelectorAll(".tree-section").length,
+      tabpanel.querySelectorAll(".accordion-item").length,
       1,
-      "Check the number of param tree sections displayed in this tabpanel."
+      "Check the number of param accordion items displayed in this tabpanel."
     );
     is(
-      tabpanel.querySelectorAll("tr:not(.tree-section).treeRow").length,
+      tabpanel.querySelectorAll("tr.treeRow").length,
       numParamRows,
       "Check the number of param rows displayed in this tabpanel."
     );
@@ -373,16 +362,12 @@ add_task(async function() {
       "The request post data editor should be hidden."
     );
 
-    const treeSections = tabpanel.querySelectorAll(".tree-section");
-    const labels = tabpanel.querySelectorAll(
-      "tr:not(.tree-section) .treeLabelCell .treeLabel"
-    );
-    const values = tabpanel.querySelectorAll(
-      "tr:not(.tree-section) .treeValueCell .objectBox"
-    );
+    const accordionItems = tabpanel.querySelectorAll(".accordion-item");
+    const labels = tabpanel.querySelectorAll("tr .treeLabelCell .treeLabel");
+    const values = tabpanel.querySelectorAll("tr .treeValueCell .objectBox");
 
     is(
-      treeSections[0].querySelector(".treeLabel").textContent,
+      accordionItems[0].querySelector(".accordion-header-label").textContent,
       L10N.getStr("paramsQueryString"),
       "Check the displayed params section title."
     );
@@ -415,7 +400,7 @@ add_task(async function() {
             `"${expValue[i]}"`,
             "Check that multi-value parameter value matches."
           );
-          is(label.dataset.level, 2, "Check that parameter is nested.");
+          is(label.dataset.level, 1, "Check that parameter is nested.");
         }
       } else {
         is(label.textContent, expKey, "Check that parameter name matches.");

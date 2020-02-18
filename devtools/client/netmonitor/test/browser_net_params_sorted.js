@@ -47,7 +47,6 @@ add_task(async function() {
   //           2: "b"
   //         c: 15
   const expectedKeys = [
-    "JSON",
     "watches\t[…]",
     `0\t"hello"`,
     `1\t"how"`,
@@ -60,7 +59,6 @@ add_task(async function() {
     `1\t"c"`,
     `2\t"b"`,
     "c\t15",
-    "Request payload",
   ];
 
   const waitForTreeRow = waitForDOM(
