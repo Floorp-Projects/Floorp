@@ -410,6 +410,25 @@ button > hbox > label {
   margin-inline-end: 0;
 }
 
+#homeContentsGroup checkbox[src] .checkbox-icon {
+  -moz-context-properties: fill;
+  fill: currentColor;
+  margin-inline: 4px 8px;
+  width: 16px;
+}
+
+#homeContentsGroup [data-subcategory] {
+  margin-top: 14px;
+}
+
+#homeContentsGroup [data-subcategory] .section-checkbox {
+  font-weight: 600;
+}
+
+#homeContentsGroup [data-subcategory] > vbox menulist {
+  margin-block: 0;
+}
+
 /* Search Pane */
 
 #engineList {
