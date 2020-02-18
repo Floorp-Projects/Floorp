@@ -305,8 +305,7 @@ def virtualenv_python2(env_python, build_env, mozillabuild, mozconfig, help):
         sys.path.insert(
             0, os.path.join(topsrcdir, 'testing', 'mozbase', 'mozfile'))
         sys.path.insert(
-            0, os.path.join(topsrcdir, 'third_party', 'python', 'backports',
-                            'shutil_which'))
+            0, os.path.join(topsrcdir, 'third_party', 'python', 'backports'))
 
     if python:
         found_python = find_program(python)
