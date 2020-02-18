@@ -114,8 +114,8 @@ Fragment conic_gradient_brush_fs() {
 #endif
 
     vec2 current_dir = pos - V_CENTER;
-    float current_angle = atan(current_dir.y, current_dir.x) + (PI / 2 - V_ANGLE);
-    float offset = mod(current_angle / (2 * PI), 1.0);
+    float current_angle = atan(current_dir.y, current_dir.x) + (PI / 2.0 - V_ANGLE);
+    float offset = mod(current_angle / (2.0 * PI), 1.0);
 
     vec4 color = sample_gradient(V_GRADIENT_ADDRESS,
                                  offset,
