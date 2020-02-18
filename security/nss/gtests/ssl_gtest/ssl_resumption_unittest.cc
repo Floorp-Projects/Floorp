@@ -838,7 +838,7 @@ TEST_F(TlsConnectTest, TestTls13ResumptionDuplicateNST) {
 
   // Clear the session ticket keys to invalidate the old ticket.
   SSLInt_ClearSelfEncryptKey();
-  SSL_SendSessionTicket(server_->ssl_fd(), NULL, 0);
+  EXPECT_EQ(SECSuccess, SSL_SendSessionTicket(server_->ssl_fd(), NULL, 0));
 
   SendReceive();  // Need to read so that we absorb the session tickets.
   CheckKeys();
@@ -1005,7 +1005,8 @@ TEST_F(TlsConnectStreamTls13, ExternalResumptionUseSecondTicket) {
     state->invoked++;
     return SECSuccess;
   };
-  SSL_SetResumptionTokenCallback(client_->ssl_fd(), cb, &ticket_state);
+  EXPECT_EQ(SECSuccess, SSL_SetResumptionTokenCallback(client_->ssl_fd(), cb,
+                                                       &ticket_state));
 
   Connect();
   EXPECT_EQ(SECSuccess, SSL_SendSessionTicket(server_->ssl_fd(), nullptr, 0));
@@ -1443,6 +1444,36 @@ TEST_F(TlsConnectStreamTls13, ExternalTokenAfterHrr) {
 
   Handshake();
   CheckConnected();
+  SendReceive();
+}
+
+TEST_F(TlsConnectStreamTls13, ExternalTokenWithPeerId) {
+  ConfigureSessionCache(RESUME_BOTH, RESUME_BOTH);
+  ConfigureVersion(SSL_LIBRARY_VERSION_TLS_1_3);
+  EXPECT_EQ(SECSuccess, SSL_SetSockPeerID(client_->ssl_fd(), "testPeerId"));
+  std::vector<uint8_t> ticket_state;
+  auto cb = [](PRFileDesc* fd, const PRUint8* ticket, unsigned int ticket_len,
+               void* arg) -> SECStatus {
+    EXPECT_NE(0U, ticket_len);
+    EXPECT_NE(nullptr, ticket);
+    auto ticket_state_ = reinterpret_cast<std::vector<uint8_t>*>(arg);
+    ticket_state_->assign(ticket, ticket + ticket_len);
+    return SECSuccess;
+  };
+  EXPECT_EQ(SECSuccess, SSL_SetResumptionTokenCallback(client_->ssl_fd(), cb,
+                                                       &ticket_state));
+
+  Connect();
+  SendReceive();
+  EXPECT_NE(0U, ticket_state.size());
+
+  Reset();
+  ConfigureSessionCache(RESUME_BOTH, RESUME_BOTH);
+  EXPECT_EQ(SECSuccess, SSL_SetSockPeerID(client_->ssl_fd(), "testPeerId"));
+  client_->SetResumptionToken(ticket_state);
+  ASSERT_TRUE(client_->MaybeSetResumptionToken());
+  ExpectResumption(RESUME_TICKET);
+  Connect();
   SendReceive();
 }
 

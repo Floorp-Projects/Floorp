@@ -189,8 +189,27 @@ class TlsExtensionTest13
   }
 
   void ConnectWithReplacementVersionList(uint16_t version) {
-    DataBuffer versions_buf;
+    // Convert the version encoding for DTLS, if needed.
+    if (variant_ == ssl_variant_datagram) {
+      switch (version) {
+#ifdef DTLS_1_3_DRAFT_VERSION
+        case SSL_LIBRARY_VERSION_TLS_1_3:
+          version = 0x7f00 | DTLS_1_3_DRAFT_VERSION;
+          break;
+#endif
+        case SSL_LIBRARY_VERSION_TLS_1_2:
+          version = SSL_LIBRARY_VERSION_DTLS_1_2_WIRE;
+          break;
+        case SSL_LIBRARY_VERSION_TLS_1_1:
+          /* TLS_1_1 maps to DTLS_1_0, see sslproto.h. */
+          version = SSL_LIBRARY_VERSION_DTLS_1_0_WIRE;
+          break;
+        default:
+          PORT_Assert(0);
+      }
+    }
 
+    DataBuffer versions_buf;
     size_t index = versions_buf.Write(0, 2, 1);
     versions_buf.Write(index, version, 2);
     MakeTlsFilter<TlsExtensionReplacer>(
