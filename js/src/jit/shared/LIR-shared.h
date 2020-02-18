@@ -7177,6 +7177,20 @@ class LBuiltinProto : public LCallInstructionHelper<1, 0, 0> {
   MBuiltinProto* mir() const { return mir_->toBuiltinProto(); }
 };
 
+class LSuperFunction : public LInstructionHelper<BOX_PIECES, 1, 1> {
+ public:
+  LIR_HEADER(SuperFunction)
+
+  explicit LSuperFunction(const LAllocation& callee, const LDefinition& temp)
+      : LInstructionHelper(classOpcode) {
+    setOperand(0, callee);
+    setTemp(0, temp);
+  }
+
+  const LAllocation* callee() { return getOperand(0); }
+  const LDefinition* temp() { return this->getTemp(0); }
+};
+
 template <size_t NumDefs>
 class LIonToWasmCallBase : public LVariadicInstruction<NumDefs, 2> {
   using Base = LVariadicInstruction<NumDefs, 2>;

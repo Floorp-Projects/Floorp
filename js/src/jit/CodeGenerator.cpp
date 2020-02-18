@@ -13621,6 +13621,46 @@ void CodeGenerator::visitBuiltinProto(LBuiltinProto* lir) {
   callVM<Fn, js::BuiltinProtoOperation>(lir);
 }
 
+void CodeGenerator::visitSuperFunction(LSuperFunction* lir) {
+  Register callee = ToRegister(lir->callee());
+  ValueOperand out = ToOutValue(lir);
+  Register temp = ToRegister(lir->temp());
+
+#ifdef DEBUG
+  Label classCheckDone;
+  masm.branchTestObjClass(Assembler::Equal, callee, &JSFunction::class_, temp,
+                          callee, &classCheckDone);
+  masm.assumeUnreachable("Unexpected non-JSFunction callee in JSOp::SuperFun");
+  masm.bind(&classCheckDone);
+#endif
+
+  // Load prototype of callee
+  masm.loadObjProto(callee, temp);
+
+#ifdef DEBUG
+  // We won't encounter a lazy proto, because |callee| is guaranteed to be a
+  // JSFunction and only proxy objects can have a lazy proto.
+  MOZ_ASSERT(uintptr_t(TaggedProto::LazyProto) == 1);
+
+  Label proxyCheckDone;
+  masm.branchPtr(Assembler::NotEqual, temp, ImmWord(1), &proxyCheckDone);
+  masm.assumeUnreachable("Unexpected lazy proto in JSOp::SuperFun");
+  masm.bind(&proxyCheckDone);
+#endif
+
+  Label nullProto, done;
+  masm.branchPtr(Assembler::Equal, temp, ImmWord(0), &nullProto);
+
+  // Box prototype and return
+  masm.tagValue(JSVAL_TYPE_OBJECT, temp, out);
+  masm.jump(&done);
+
+  masm.bind(&nullProto);
+  masm.moveValue(NullValue(), out);
+
+  masm.bind(&done);
+}
+
 template <size_t NumDefs>
 void CodeGenerator::emitIonToWasmCallBase(LIonToWasmCallBase<NumDefs>* lir) {
   wasm::JitCallStackArgVector stackArgs;
