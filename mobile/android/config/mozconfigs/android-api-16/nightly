@@ -19,6 +19,4 @@ export AR="$MOZ_FETCHES_DIR/clang/bin/llvm-ar"
 export NM="$MOZ_FETCHES_DIR/clang/bin/llvm-nm"
 export RANLIB="$MOZ_FETCHES_DIR/clang/bin/llvm-ranlib"
 
-export MOZ_LTO=cross
-
 . "$topsrcdir/mobile/android/config/mozconfigs/common.override"
