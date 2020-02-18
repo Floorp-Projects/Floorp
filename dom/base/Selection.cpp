@@ -386,17 +386,17 @@ void Selection::SetCaretBidiLevel(const Nullable<int16_t>& aCaretBidiLevel,
 
 /**
  * Test whether the supplied range points to a single table element.
- * Result is one of the TableSelection constants. "None" means
+ * Result is one of the TableSelectionMode constants. "None" means
  * a table element isn't selected.
  */
-// TODO: Figure out TableSelection::Column and TableSelection::AllCells
+// TODO: Figure out TableSelectionMode::Column and TableSelectionMode::AllCells
 static nsresult GetTableSelectionType(const nsRange* aRange,
-                                      TableSelection* aTableSelectionType) {
+                                      TableSelectionMode* aTableSelectionType) {
   if (!aRange || !aTableSelectionType) {
     return NS_ERROR_NULL_POINTER;
   }
 
-  *aTableSelectionType = TableSelection::None;
+  *aTableSelectionType = TableSelectionMode::None;
 
   nsINode* startNode = aRange->GetStartContainer();
   if (!startNode) {
@@ -428,14 +428,15 @@ static nsresult GetTableSelectionType(const nsRange* aRange,
   }
 
   if (startContent->IsHTMLElement(nsGkAtoms::tr)) {
-    *aTableSelectionType = TableSelection::Cell;
+    *aTableSelectionType = TableSelectionMode::Cell;
   } else  // check to see if we are selecting a table or row (column and all
           // cells not done yet)
   {
-    if (child->IsHTMLElement(nsGkAtoms::table))
-      *aTableSelectionType = TableSelection::Table;
-    else if (child->IsHTMLElement(nsGkAtoms::tr))
-      *aTableSelectionType = TableSelection::Row;
+    if (child->IsHTMLElement(nsGkAtoms::table)) {
+      *aTableSelectionType = TableSelectionMode::Table;
+    } else if (child->IsHTMLElement(nsGkAtoms::tr)) {
+      *aTableSelectionType = TableSelectionMode::Row;
+    }
   }
 
   return NS_OK;
@@ -443,12 +444,13 @@ static nsresult GetTableSelectionType(const nsRange* aRange,
 
 // static
 nsresult Selection::GetTableCellLocationFromRange(
-    const nsRange* aRange, TableSelection* aSelectionType, int32_t* aRow,
+    const nsRange* aRange, TableSelectionMode* aSelectionType, int32_t* aRow,
     int32_t* aCol) {
-  if (!aRange || !aSelectionType || !aRow || !aCol)
+  if (!aRange || !aSelectionType || !aRow || !aCol) {
     return NS_ERROR_NULL_POINTER;
+  }
 
-  *aSelectionType = TableSelection::None;
+  *aSelectionType = TableSelectionMode::None;
   *aRow = 0;
   *aCol = 0;
 
@@ -457,7 +459,7 @@ nsresult Selection::GetTableCellLocationFromRange(
 
   // Don't fail if range does not point to a single table cell,
   // let aSelectionType tell user if we don't have a cell
-  if (*aSelectionType != TableSelection::Cell) {
+  if (*aSelectionType != TableSelectionMode::Cell) {
     return NS_OK;
   }
 
@@ -495,12 +497,12 @@ nsresult Selection::MaybeAddTableCellRange(nsRange* aRange, bool* aDidAddRange,
 
   // Get if we are adding a cell selection and the row, col of cell if we are
   int32_t newRow, newCol;
-  TableSelection tableMode;
+  TableSelectionMode tableMode;
   result = GetTableCellLocationFromRange(aRange, &tableMode, &newRow, &newCol);
   if (NS_FAILED(result)) return result;
 
   // If not adding a cell range, we are done here
-  if (tableMode != TableSelection::Cell) {
+  if (tableMode != TableSelectionMode::Cell) {
     mFrameSelection->mSelectingTableCellMode = tableMode;
     // Don't fail if range isn't a selected cell, aDidAddRange tells caller if
     // we didn't proceed
@@ -510,7 +512,7 @@ nsresult Selection::MaybeAddTableCellRange(nsRange* aRange, bool* aDidAddRange,
   // Set frame selection mode only if not already set to a table mode
   // so we don't lose the select row and column flags (not detected by
   // getTableCellLocation)
-  if (mFrameSelection->mSelectingTableCellMode == TableSelection::None) {
+  if (mFrameSelection->mSelectingTableCellMode == TableSelectionMode::None) {
     mFrameSelection->mSelectingTableCellMode = tableMode;
   }
 

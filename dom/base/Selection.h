@@ -37,7 +37,7 @@ class AccessibleCaretEventHub;
 class ErrorResult;
 class HTMLEditor;
 class PostContentIterator;
-enum class TableSelection : uint32_t;
+enum class TableSelectionMode : uint32_t;
 struct AutoPrepareFocusRange;
 namespace dom {
 class DocGroup;
@@ -722,9 +722,9 @@ class Selection final : public nsSupportsWeakReference,
   void SelectFramesInAllRanges(nsPresContext* aPresContext);
 
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
-  static nsresult GetTableCellLocationFromRange(const nsRange* aRange,
-                                                TableSelection* aSelectionType,
-                                                int32_t* aRow, int32_t* aCol);
+  static nsresult GetTableCellLocationFromRange(
+      const nsRange* aRange, TableSelectionMode* aSelectionType, int32_t* aRow,
+      int32_t* aCol);
 
   /**
    * @param aOutIndex points to the index of the range in mRanges. If

@@ -4385,14 +4385,14 @@ nsresult nsFrame::HandleEvent(nsPresContext* aPresContext,
 nsresult nsFrame::GetDataForTableSelection(
     const nsFrameSelection* aFrameSelection, mozilla::PresShell* aPresShell,
     WidgetMouseEvent* aMouseEvent, nsIContent** aParentContent,
-    int32_t* aContentOffset, TableSelection* aTarget) {
+    int32_t* aContentOffset, TableSelectionMode* aTarget) {
   if (!aFrameSelection || !aPresShell || !aMouseEvent || !aParentContent ||
       !aContentOffset || !aTarget)
     return NS_ERROR_NULL_POINTER;
 
   *aParentContent = nullptr;
   *aContentOffset = 0;
-  *aTarget = TableSelection::None;
+  *aTarget = TableSelectionMode::None;
 
   int16_t displaySelection = aPresShell->GetSelectionFlags();
 
@@ -4487,15 +4487,16 @@ nsresult nsFrame::GetDataForTableSelection(
 
 #if 0
   if (selectRow)
-    *aTarget = TableSelection::Row;
+    *aTarget = TableSelectionMode::Row;
   else if (selectColumn)
-    *aTarget = TableSelection::Column;
+    *aTarget = TableSelectionMode::Column;
   else
 #endif
-  if (foundCell)
-    *aTarget = TableSelection::Cell;
-  else if (foundTable)
-    *aTarget = TableSelection::Table;
+  if (foundCell) {
+    *aTarget = TableSelectionMode::Cell;
+  } else if (foundTable) {
+    *aTarget = TableSelectionMode::Table;
+  }
 
   return NS_OK;
 }
@@ -4661,7 +4662,7 @@ nsFrame::HandlePress(nsPresContext* aPresContext, WidgetGUIEvent* aEvent,
   // Let Ctrl/Cmd+mouse down do table selection instead of drag initiation
   nsCOMPtr<nsIContent> parentContent;
   int32_t contentOffset;
-  TableSelection target;
+  TableSelectionMode target;
   nsresult rv;
   rv = GetDataForTableSelection(frameselection, presShell, mouseEvent,
                                 getter_AddRefs(parentContent), &contentOffset,
@@ -4931,7 +4932,7 @@ NS_IMETHODIMP nsFrame::HandleDrag(nsPresContext* aPresContext,
   // Check if we are dragging in a table cell
   nsCOMPtr<nsIContent> parentContent;
   int32_t contentOffset;
-  TableSelection target;
+  TableSelectionMode target;
   WidgetMouseEvent* mouseEvent = aEvent->AsMouseEvent();
   mozilla::PresShell* presShell = aPresContext->PresShell();
   nsresult result;
@@ -4975,11 +4976,14 @@ NS_IMETHODIMP nsFrame::HandleDrag(nsPresContext* aPresContext,
  * This static method handles part of the nsFrame::HandleRelease in a way
  * which doesn't rely on the nsFrame object to stay alive.
  */
-static nsresult HandleFrameSelection(
-    nsFrameSelection* aFrameSelection, nsIFrame::ContentOffsets& aOffsets,
-    bool aHandleTableSel, int32_t aContentOffsetForTableSel,
-    TableSelection aTargetForTableSel, nsIContent* aParentContentForTableSel,
-    WidgetGUIEvent* aEvent, const nsEventStatus* aEventStatus) {
+static nsresult HandleFrameSelection(nsFrameSelection* aFrameSelection,
+                                     nsIFrame::ContentOffsets& aOffsets,
+                                     bool aHandleTableSel,
+                                     int32_t aContentOffsetForTableSel,
+                                     TableSelectionMode aTargetForTableSel,
+                                     nsIContent* aParentContentForTableSel,
+                                     WidgetGUIEvent* aEvent,
+                                     const nsEventStatus* aEventStatus) {
   if (!aFrameSelection) {
     return NS_OK;
   }
@@ -5053,7 +5057,7 @@ NS_IMETHODIMP nsFrame::HandleRelease(nsPresContext* aPresContext,
   ContentOffsets offsets;
   nsCOMPtr<nsIContent> parentContent;
   int32_t contentOffsetForTableSel = 0;
-  TableSelection targetForTableSel = TableSelection::None;
+  TableSelectionMode targetForTableSel = TableSelectionMode::None;
   bool handleTableSelection = true;
 
   if (!selectionOff) {
