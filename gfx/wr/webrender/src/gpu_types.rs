@@ -12,6 +12,7 @@ use crate::render_task::RenderTaskAddress;
 use crate::renderer::ShaderColorMode;
 use std::i32;
 use crate::util::{TransformedRectKind, MatrixHelpers};
+use crate::glyph_rasterizer::SubpixelDirection;
 
 // Contains type that must exactly match the same structures declared in GLSL.
 
@@ -365,13 +366,24 @@ impl GlyphInstance {
     // TODO(gw): Some of these fields can be moved to the primitive
     //           header since they are constant, and some can be
     //           compressed to a smaller size.
-    pub fn build(&self, data0: i32, data1: i32, resource_address: i32) -> PrimitiveInstanceData {
+    pub fn build(&self,
+        render_task: RenderTaskAddress,
+        clip_task: RenderTaskAddress,
+        subpx_dir: SubpixelDirection,
+        glyph_index_in_text_run: i32,
+        glyph_uv_rect: GpuCacheAddress,
+        color_mode: ShaderColorMode,
+    ) -> PrimitiveInstanceData {
         PrimitiveInstanceData {
             data: [
                 self.prim_header_index.0 as i32,
-                data0,
-                data1,
-                resource_address | ((BrushShaderKind::Text as i32) << 24),
+                ((render_task.0 as i32) << 16)
+                | clip_task.0 as i32,
+                (subpx_dir as u32 as i32) << 24
+                | (color_mode as u32 as i32) << 16
+                | glyph_index_in_text_run,
+                glyph_uv_rect.as_int()
+                | ((BrushShaderKind::Text as i32) << 24),
             ],
         }
     }

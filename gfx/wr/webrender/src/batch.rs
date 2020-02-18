@@ -1005,12 +1005,12 @@ impl BatchBuilder {
 
                                 for glyph in glyphs {
                                     batch.push(base_instance.build(
-                                        ((render_task_address.0 as i32) << 16)
-                                        | clip_task_address.unwrap().0 as i32,
-                                        (subpx_dir as u32 as i32) << 24
-                                        | (color_mode as u32 as i32) << 16
-                                        | glyph.index_in_text_run,
-                                        glyph.uv_rect_address.as_int(),
+                                        render_task_address,
+                                        clip_task_address.unwrap(),
+                                        subpx_dir,
+                                        glyph.index_in_text_run,
+                                        glyph.uv_rect_address,
+                                        color_mode,
                                     ));
                                 }
                             }
