@@ -459,6 +459,13 @@ void BrowsingContext::Detach(bool aFromIPC) {
   mGroup->Unregister(this);
   mIsDiscarded = true;
 
+  if (XRE_IsParentProcess()) {
+    nsFocusManager* fm = nsFocusManager::GetFocusManager();
+    if (fm) {
+      fm->BrowsingContextDetached(this);
+    }
+  }
+
   if (nsCOMPtr<nsIObserverService> obs = services::GetObserverService()) {
     obs->NotifyObservers(ToSupports(this), "browsing-context-discarded",
                          nullptr);
@@ -577,6 +584,9 @@ void BrowsingContext::UnregisterWindowContext(WindowContext* aWindow) {
   // double-check.
   if (aWindow == mCurrentWindowContext) {
     mCurrentWindowContext = nullptr;
+    if (XRE_IsParentProcess()) {
+      BrowserParent::UpdateFocusFromBrowsingContext();
+    }
   }
 }
 
@@ -1421,6 +1431,9 @@ bool BrowsingContext::CanSet(FieldIndex<IDX_CurrentInnerWindowId>,
 
 void BrowsingContext::DidSet(FieldIndex<IDX_CurrentInnerWindowId>) {
   mCurrentWindowContext = WindowContext::GetById(GetCurrentInnerWindowId());
+  if (XRE_IsParentProcess()) {
+    BrowserParent::UpdateFocusFromBrowsingContext();
+  }
 }
 
 bool BrowsingContext::CanSet(FieldIndex<IDX_IsPopupSpam>, const bool& aValue,
