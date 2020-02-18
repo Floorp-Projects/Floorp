@@ -1928,6 +1928,10 @@ nsresult CopyFileHandleOp::DoFileWork(FileHandle* aFileHandle) {
     mOwningEventTarget->Dispatch(runnable, NS_DISPATCH_NORMAL);
   } while (true);
 
+  if (mOffset < mSize) {
+    // end-of-file reached
+    return NS_ERROR_FAILURE;
+  }
   MOZ_ASSERT(mOffset == mSize);
 
   if (mRead) {
