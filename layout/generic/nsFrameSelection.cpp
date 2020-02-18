@@ -2451,7 +2451,8 @@ nsresult nsFrameSelection::UnselectCells(nsIContent* aTableContent,
       }
     }
 
-    range = GetNextCellRange();
+    const Selection* selection = mDomSelections[index];
+    range = selection ? mTableSelection.GetNextCellRange(*selection) : nullptr;
     cellNode = GetFirstSelectedContent(range);
     MOZ_ASSERT(!range || cellNode, "Must have cellNode if had a range");
   }
@@ -2656,12 +2657,11 @@ nsRange* nsFrameSelection::GetFirstCellRange() {
   return firstRange;
 }
 
-nsRange* nsFrameSelection::GetNextCellRange() {
-  int8_t index = GetIndexFromSelectionType(SelectionType::eNormal);
-  if (!mDomSelections[index]) return nullptr;
+nsRange* nsFrameSelection::TableSelection::GetNextCellRange(
+    const mozilla::dom::Selection& aNormalSelection) {
+  MOZ_ASSERT(aNormalSelection.Type() == SelectionType::eNormal);
 
-  nsRange* range =
-      mDomSelections[index]->GetRangeAt(mTableSelection.mSelectedCellIndex);
+  nsRange* range = aNormalSelection.GetRangeAt(mSelectedCellIndex);
 
   // Get first node in next range of selection - test if it's a cell
   if (!GetFirstCellNodeInRange(range)) {
@@ -2669,7 +2669,7 @@ nsRange* nsFrameSelection::GetNextCellRange() {
   }
 
   // Setup for next cell
-  mTableSelection.mSelectedCellIndex++;
+  mSelectedCellIndex++;
 
   return range;
 }
