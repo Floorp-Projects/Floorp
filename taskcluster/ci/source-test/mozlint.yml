@@ -276,6 +276,18 @@ rustfmt:
             - '**/*.rs'
 
 
+clippy:
+    description: clippy on the Rust code
+    treeherder:
+        symbol: misc(clippy)
+    run:
+        mach: lint -v -l clippy -f treeherder -f json:/builds/worker/mozlint.json *
+    when:
+        files-changed:
+            - '**/*.rs'
+            - '**/Cargo.toml'
+
+
 file-whitespace:
     description: Check for trailing whitespaces and Windows CR
     platform: lint/opt
