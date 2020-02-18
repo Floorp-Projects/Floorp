@@ -79,6 +79,8 @@ class nsNSSComponent final : public nsINSSComponent, public nsIObserver {
 
   static nsresult SetEnabledTLSVersions();
 
+  static void ClearSSLExternalAndInternalSessionCacheNative();
+
  protected:
   virtual ~nsNSSComponent();
 

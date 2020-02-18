@@ -98,4 +98,9 @@ interface nsINSSComponent : nsISupports {
    * certificate verifier.
    */
   [noscript] SharedCertVerifierPtr getDefaultCertVerifier();
+
+  /**
+   * For clearing both SSL internal and external session cache from JS.
+   */
+  void clearSSLExternalAndInternalSessionCache();
 };

@@ -32,7 +32,6 @@
 #include "nsStreamUtils.h"
 #include "nsStringBuffer.h"
 #include "nsThreadUtils.h"
-#include "ssl.h"  // For SSL_ClearSessionCache
 
 using namespace mozilla;
 using namespace mozilla::psm;
@@ -527,7 +526,7 @@ nsCertOverrideService::ClearValidityOverride(const nsACString& aHostName,
 
   nsCOMPtr<nsINSSComponent> nss(do_GetService(PSM_COMPONENT_CONTRACTID));
   if (nss) {
-    SSL_ClearSessionCache();
+    nss->ClearSSLExternalAndInternalSessionCache();
   } else {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -549,7 +548,7 @@ nsCertOverrideService::ClearAllOverrides() {
 
   nsCOMPtr<nsINSSComponent> nss(do_GetService(PSM_COMPONENT_CONTRACTID));
   if (nss) {
-    SSL_ClearSessionCache();
+    nss->ClearSSLExternalAndInternalSessionCache();
   } else {
     return NS_ERROR_NOT_AVAILABLE;
   }

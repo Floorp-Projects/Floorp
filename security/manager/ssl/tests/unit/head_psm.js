@@ -351,25 +351,8 @@ function clearOCSPCache() {
 }
 
 function clearSessionCache() {
-  let SSL_ClearSessionCache = null;
-  try {
-    SSL_ClearSessionCache = _getLibraryFunctionWithNoArguments(
-      "SSL_ClearSessionCache",
-      "ssl3",
-      ctypes.void_t
-    );
-  } catch (e) {
-    // On Windows, this is actually in the nss3 library.
-    SSL_ClearSessionCache = _getLibraryFunctionWithNoArguments(
-      "SSL_ClearSessionCache",
-      "nss3",
-      ctypes.void_t
-    );
-  }
-  if (!SSL_ClearSessionCache) {
-    throw new Error("couldn't get SSL_ClearSessionCache");
-  }
-  SSL_ClearSessionCache();
+  let nssComponent = Cc["@mozilla.org/psm;1"].getService(Ci.nsINSSComponent);
+  nssComponent.clearSSLExternalAndInternalSessionCache();
 }
 
 function getSSLStatistics() {
