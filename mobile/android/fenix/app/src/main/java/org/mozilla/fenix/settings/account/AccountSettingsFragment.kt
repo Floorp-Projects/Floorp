@@ -256,7 +256,7 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
         val loginsNameKey = getPreferenceKey(R.string.pref_key_sync_logins)
         findPreference<CheckBoxPreference>(loginsNameKey)?.apply {
             isEnabled = syncEnginesStatus.containsKey(SyncEngine.Passwords)
-            isChecked = syncEnginesStatus.getOrElse(SyncEngine.Passwords) { false }
+            isChecked = syncEnginesStatus.getOrElse(SyncEngine.Passwords) { true }
         }
     }
 
