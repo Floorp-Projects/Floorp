@@ -4,12 +4,15 @@
 
 import android.content.Context
 import android.os.Bundle
+import mozilla.components.browser.engine.gecko.autofill.GeckoLoginDelegateWrapper
 import mozilla.components.browser.engine.gecko.glean.GeckoAdapter
 import mozilla.components.lib.crash.handler.CrashHandlerService
 import mozilla.components.lib.dataprotect.SecureAbove22Preferences
 import mozilla.components.service.experiments.Experiments
 import mozilla.components.service.sync.logins.AsyncLoginsStorage
+import mozilla.components.service.sync.logins.GeckoLoginStorageDelegate
 import org.mozilla.fenix.Config
+import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.utils.Settings
 import org.mozilla.geckoview.GeckoRuntime
 import org.mozilla.geckoview.GeckoRuntimeSettings
@@ -19,20 +22,23 @@ object GeckoProvider {
     private var runtime: GeckoRuntime? = null
 
     @Synchronized
-    @Suppress("UNUSED_PARAMETER") // API not yet landed in GV beta
     fun getOrCreateRuntime(
         context: Context,
         storage: AsyncLoginsStorage,
         securePreferences: SecureAbove22Preferences
     ): GeckoRuntime {
         if (runtime == null) {
-            runtime = createRuntime(context)
+            runtime = createRuntime(context, storage, securePreferences)
         }
 
         return runtime!!
     }
 
-    private fun createRuntime(context: Context): GeckoRuntime {
+    private fun createRuntime(
+        context: Context,
+        storage: AsyncLoginsStorage,
+        securePreferences: SecureAbove22Preferences
+    ): GeckoRuntime {
         val builder = GeckoRuntimeSettings.Builder()
 
         testConfig?.let {
@@ -60,6 +66,14 @@ object GeckoProvider {
             runtimeSettings.fontSizeFactor = fontSize
         }
 
-        return GeckoRuntime.create(context, runtimeSettings)
+        val geckoRuntime = GeckoRuntime.create(context, runtimeSettings)
+        val loginStorageDelegate = GeckoLoginStorageDelegate(
+            storage,
+            securePreferences,
+            { context.settings().shouldAutofillLogins && context.settings().shouldPromptToSaveLogins }
+        )
+        geckoRuntime.loginStorageDelegate = GeckoLoginDelegateWrapper(loginStorageDelegate)
+
+        return geckoRuntime
     }
 }
