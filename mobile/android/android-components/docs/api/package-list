@@ -204,6 +204,7 @@ mozilla.components.feature.readerview.view
 mozilla.components.feature.search
 mozilla.components.feature.session
 mozilla.components.feature.session.behavior
+mozilla.components.feature.share
 mozilla.components.feature.sitepermissions
 mozilla.components.feature.syncedtabs
 mozilla.components.feature.tab.collections
