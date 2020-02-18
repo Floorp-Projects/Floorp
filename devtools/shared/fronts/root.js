@@ -31,12 +31,6 @@ loader.lazyRequireGetter(
 );
 loader.lazyRequireGetter(
   this,
-  "ContentProcessTargetFront",
-  "devtools/shared/fronts/targets/content-process",
-  true
-);
-loader.lazyRequireGetter(
-  this,
   "LocalTabTargetFront",
   "devtools/shared/fronts/targets/local-tab",
   true
@@ -233,19 +227,9 @@ class RootFront extends FrontClassWithSpec(rootSpec) {
 
   async listProcesses() {
     const { processes } = await super.listProcesses();
-    const processDescriptors = processes.map(form => {
-      if (form.actor && form.actor.includes("processDescriptor")) {
-        return this._getProcessDescriptorFront(form);
-      }
-      // Support FF69 and older
-      return {
-        id: form.id,
-        isParent: form.parent,
-        getTarget: () => {
-          return this.getProcess(form.id);
-        },
-      };
-    });
+    const processDescriptors = processes.map(form =>
+      this._getProcessDescriptorFront(form)
+    );
     return { processes: processDescriptors };
   }
 
@@ -261,39 +245,10 @@ class RootFront extends FrontClassWithSpec(rootSpec) {
 
   async getProcess(id) {
     const { form } = await super.getProcess(id);
-    if (form.actor && form.actor.includes("processDescriptor")) {
-      // The server currently returns a form, when we can drop backwards compatibility,
-      // we can use automatic marshalling here instead, making the next line unnecessary
-      const processDescriptorFront = this._getProcessDescriptorFront(form);
-      return processDescriptorFront.getTarget();
-    }
-
-    // Backwards compatibility for servers up to FF69.
-    // Do not use specification automatic marshalling as getProcess may return
-    // two different type: ParentProcessTargetActor or ContentProcessTargetActor.
-    // Also, we do want to memoize the fronts and return already existing ones.
-    let front = this.actor(form.actor);
-    if (front) {
-      return front;
-    }
-    // getProcess may return a ContentProcessTargetActor or a ParentProcessTargetActor
-    // In most cases getProcess(0) will return the main process target actor,
-    // which is a ParentProcessTargetActor, but not in xpcshell, which uses a
-    // ContentProcessTargetActor. So select the right front based on the actor ID.
-    if (form.actor.includes("contentProcessTarget")) {
-      front = new ContentProcessTargetFront(this._client, null, this);
-    } else {
-      // ParentProcessTargetActor doesn't have a specific front, instead it uses
-      // BrowsingContextTargetFront on the client side.
-      front = new BrowsingContextTargetFront(this._client, null, this);
-    }
-    // As these fronts aren't instantiated by protocol.js, we have to set their actor ID
-    // manually like that:
-    front.actorID = form.actor;
-    front.form(form);
-    this.manage(front);
-
-    return front;
+    // The server currently returns a form, when we can drop backwards compatibility,
+    // we can use automatic marshalling here instead, making the next line unnecessary
+    const processDescriptorFront = this._getProcessDescriptorFront(form);
+    return processDescriptorFront.getTarget();
   }
 
   /**
