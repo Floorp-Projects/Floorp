@@ -46,27 +46,27 @@ pub type GLsync = *const __GLsync;
 pub enum _cl_context {}
 pub enum _cl_event {}
 
-pub type GLDEBUGPROC = Option<extern "system" fn(source: GLenum,
-                                                 gltype: GLenum,
-                                                 id: GLuint,
-                                                 severity: GLenum,
-                                                 length: GLsizei,
-                                                 message: *const GLchar,
-                                                 userParam: *mut super::__gl_imports::raw::c_void)>;
-pub type GLDEBUGPROCARB = Option<extern "system" fn(source: GLenum,
-                                                    gltype: GLenum,
-                                                    id: GLuint,
-                                                    severity: GLenum,
-                                                    length: GLsizei,
-                                                    message: *const GLchar,
-                                                    userParam: *mut super::__gl_imports::raw::c_void)>;
-pub type GLDEBUGPROCKHR = Option<extern "system" fn(source: GLenum,
-                                                    gltype: GLenum,
-                                                    id: GLuint,
-                                                    severity: GLenum,
-                                                    length: GLsizei,
-                                                    message: *const GLchar,
-                                                    userParam: *mut super::__gl_imports::raw::c_void)>;
+pub type GLDEBUGPROC = extern "system" fn(source: GLenum,
+                                          gltype: GLenum,
+                                          id: GLuint,
+                                          severity: GLenum,
+                                          length: GLsizei,
+                                          message: *const GLchar,
+                                          userParam: *mut super::__gl_imports::raw::c_void);
+pub type GLDEBUGPROCARB = extern "system" fn(source: GLenum,
+                                             gltype: GLenum,
+                                             id: GLuint,
+                                             severity: GLenum,
+                                             length: GLsizei,
+                                             message: *const GLchar,
+                                             userParam: *mut super::__gl_imports::raw::c_void);
+pub type GLDEBUGPROCKHR = extern "system" fn(source: GLenum,
+                                             gltype: GLenum,
+                                             id: GLuint,
+                                             severity: GLenum,
+                                             length: GLsizei,
+                                             message: *const GLchar,
+                                             userParam: *mut super::__gl_imports::raw::c_void);
 
 // GLES 1 types
 // "pub type GLclampx = i32;",
@@ -98,11 +98,11 @@ pub type GLDEBUGPROCKHR = Option<extern "system" fn(source: GLenum,
 // GLES 2 types (none currently)
 
 // Vendor extension types
-pub type GLDEBUGPROCAMD = Option<extern "system" fn(id: GLuint,
-                                                    category: GLenum,
-                                                    severity: GLenum,
-                                                    length: GLsizei,
-                                                    message: *const GLchar,
-                                                    userParam: *mut super::__gl_imports::raw::c_void)>;
+pub type GLDEBUGPROCAMD = extern "system" fn(id: GLuint,
+                                             category: GLenum,
+                                             severity: GLenum,
+                                             length: GLsizei,
+                                             message: *const GLchar,
+                                             userParam: *mut super::__gl_imports::raw::c_void);
 pub type GLhalfNV = super::__gl_imports::raw::c_ushort;
 pub type GLvdpauSurfaceNV = GLintptr;

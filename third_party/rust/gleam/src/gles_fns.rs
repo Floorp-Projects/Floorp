@@ -12,16 +12,15 @@ pub struct GlesFns {
 }
 
 impl GlesFns {
-    pub unsafe fn load_with<'a, F>(loadfn: F) -> Rc<dyn Gl>
+    pub unsafe fn load_with<'a, F>(loadfn: F) -> Rc<Gl>
     where
         F: FnMut(&str) -> *const c_void,
     {
         let ffi_gl_ = GlesFfi::load_with(loadfn);
-        Rc::new(GlesFns { ffi_gl_: ffi_gl_ }) as Rc<dyn Gl>
+        Rc::new(GlesFns { ffi_gl_: ffi_gl_ }) as Rc<Gl>
     }
 }
 
-impl Sealed for GlesFns {}
 impl Gl for GlesFns {
     fn get_type(&self) -> GlType {
         GlType::Gles
@@ -222,10 +221,6 @@ impl Gl for GlesFns {
         result
     }
 
-    fn gen_vertex_arrays_apple(&self, _n: GLsizei) -> Vec<GLuint> {
-        panic!("not supported")
-    }
-
     fn gen_queries(&self, n: GLsizei) -> Vec<GLuint> {
         if !self.ffi_gl_.GenQueriesEXT.is_loaded() {
             return Vec::new();
@@ -323,10 +318,6 @@ impl Gl for GlesFns {
             self.ffi_gl_
                 .DeleteVertexArrays(vertex_arrays.len() as GLsizei, vertex_arrays.as_ptr());
         }
-    }
-
-    fn delete_vertex_arrays_apple(&self, _vertex_arrays: &[GLuint]) {
-        panic!("not supported")
     }
 
     fn delete_buffers(&self, buffers: &[GLuint]) {
@@ -493,10 +484,6 @@ impl Gl for GlesFns {
         unsafe {
             self.ffi_gl_.BindVertexArray(vao);
         }
-    }
-
-    fn bind_vertex_array_apple(&self, _vao: GLuint) {
-        panic!("not supported")
     }
 
     fn bind_renderbuffer(&self, target: GLenum, renderbuffer: GLuint) {
@@ -1935,12 +1922,6 @@ impl Gl for GlesFns {
         }
     }
 
-    fn egl_image_target_renderbuffer_storage_oes(&self, target: GLenum, image: GLeglImageOES) {
-        unsafe {
-            self.ffi_gl_.EGLImageTargetRenderbufferStorageOES(target, image);
-        }
-    }
-
     fn generate_mipmap(&self, target: GLenum) {
         unsafe { self.ffi_gl_.GenerateMipmap(target) }
     }
@@ -2137,34 +2118,6 @@ impl Gl for GlesFns {
             unsafe {
                 self.ffi_gl_.BlendBarrierKHR();
             }
-        }
-    }
-
-    // GL_CHROMIUM_copy_texture
-    fn copy_texture_chromium(&self,
-        source_id: GLuint, source_level: GLint,
-        dest_target: GLenum, dest_id: GLuint, dest_level: GLint,
-        internal_format: GLint, dest_type: GLenum,
-        unpack_flip_y: GLboolean, unpack_premultiply_alpha: GLboolean, unpack_unmultiply_alpha: GLboolean)
-    {
-        unsafe {
-            self.ffi_gl_.CopyTextureCHROMIUM(source_id, source_level, dest_target, dest_id, dest_level,
-                internal_format, dest_type,
-                unpack_flip_y, unpack_premultiply_alpha, unpack_unmultiply_alpha,
-            );
-        }
-    }
-    fn copy_sub_texture_chromium(&self,
-        source_id: GLuint, source_level: GLint,
-        dest_target: GLenum, dest_id: GLuint, dest_level: GLint,
-        x_offset: GLint, y_offset: GLint, x: GLint, y: GLint, width: GLsizei, height: GLsizei,
-        unpack_flip_y: GLboolean, unpack_premultiply_alpha: GLboolean, unpack_unmultiply_alpha: GLboolean)
-    {
-        unsafe {
-            self.ffi_gl_.CopySubTextureCHROMIUM(source_id, source_level, dest_target, dest_id, dest_level,
-                x_offset, y_offset, x, y, width, height,
-                unpack_flip_y, unpack_premultiply_alpha, unpack_unmultiply_alpha,
-            );
         }
     }
 }
