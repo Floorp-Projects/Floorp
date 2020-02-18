@@ -264,7 +264,7 @@ class BackgroundFactoryRequestChild final
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
   mozilla::ipc::IPCResult Recv__delete__(
-      const FactoryRequestResponse& aResponse) override;
+      const FactoryRequestResponse& aResponse);
 
   mozilla::ipc::IPCResult RecvPermissionChallenge(
       const PrincipalInfo& aPrincipalInfo);
@@ -387,7 +387,7 @@ class BackgroundDatabaseRequestChild final
  public:
   // IPDL methods are only called by IPDL.
   mozilla::ipc::IPCResult Recv__delete__(
-      const DatabaseRequestResponse& aResponse) override;
+      const DatabaseRequestResponse& aResponse);
 };
 
 class BackgroundVersionChangeTransactionChild;
@@ -623,8 +623,7 @@ class BackgroundRequestChild final : public BackgroundRequestChildBase,
   // IPDL methods are only called by IPDL.
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
-  mozilla::ipc::IPCResult Recv__delete__(
-      const RequestResponse& aResponse) override;
+  mozilla::ipc::IPCResult Recv__delete__(const RequestResponse& aResponse);
 
   mozilla::ipc::IPCResult RecvPreprocess(const PreprocessParams& aParams);
 };
@@ -834,8 +833,7 @@ class BackgroundFileRequestChild final : public PBackgroundFileRequestChild {
   // IPDL methods are only called by IPDL.
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
-  mozilla::ipc::IPCResult Recv__delete__(
-      const FileRequestResponse& aResponse) override;
+  mozilla::ipc::IPCResult Recv__delete__(const FileRequestResponse& aResponse);
 
   mozilla::ipc::IPCResult RecvProgress(const uint64_t& aProgress,
                                        const uint64_t& aProgressMax);
