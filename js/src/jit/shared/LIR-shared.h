@@ -7133,6 +7133,18 @@ class LGetPrototypeOf : public LInstructionHelper<BOX_PIECES, 1, 0> {
   const LAllocation* target() { return getOperand(0); }
 };
 
+class LObjectWithProto : public LCallInstructionHelper<1, BOX_PIECES, 0> {
+ public:
+  LIR_HEADER(ObjectWithProto)
+
+  static const size_t PrototypeValue = 0;
+
+  explicit LObjectWithProto(const LBoxAllocation& prototype)
+      : LCallInstructionHelper(classOpcode) {
+    setBoxOperand(PrototypeValue, prototype);
+  }
+};
+
 template <size_t NumDefs>
 class LIonToWasmCallBase : public LVariadicInstruction<NumDefs, 2> {
   using Base = LVariadicInstruction<NumDefs, 2>;

@@ -4674,6 +4674,15 @@ void LIRGenerator::visitGetPrototypeOf(MGetPrototypeOf* ins) {
   assignSafepoint(lir, ins);
 }
 
+void LIRGenerator::visitObjectWithProto(MObjectWithProto* ins) {
+  MOZ_ASSERT(ins->prototype()->type() == MIRType::Value);
+  MOZ_ASSERT(ins->type() == MIRType::Object);
+
+  auto* lir = new (alloc()) LObjectWithProto(useBoxAtStart(ins->prototype()));
+  defineReturn(lir, ins);
+  assignSafepoint(lir, ins);
+}
+
 void LIRGenerator::visitConstant(MConstant* ins) {
   if (!IsFloatingPointType(ins->type()) && ins->canEmitAtUses()) {
     emitAtUses(ins);
