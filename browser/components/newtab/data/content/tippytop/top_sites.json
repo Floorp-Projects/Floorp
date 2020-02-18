@@ -42,6 +42,12 @@
     "favicon_url": "favicons/bing-com.ico"
   },
   {
+    "title": "ctrip",
+    "url": "https://www.ctrip.com/",
+    "image_url": "images/ctrip-com@2x.png",
+    "favicon_url": "favicons/ctrip-com.ico"
+  },
+  {
     "title": "duckduckgo",
     "url": "https://www.duckduckgo.com/",
     "image_url": "images/duckduckgo-com@2x.png",
@@ -64,6 +70,18 @@
     "url": "https://www.google.com/",
     "image_url": "images/google-com@2x.png",
     "favicon_url": "favicons/google-com.ico"
+  },
+  {
+    "title": "ifeng",
+    "url": "https://www.ifeng.com/",
+    "image_url": "images/ifeng-com@2x.png",
+    "favicon_url": "favicons/ifeng-com.ico"
+  },
+  {
+    "title": "iqiyi",
+    "url": "https://www.iqiyi.com/",
+    "image_url": "images/iqiyi-com@2x.png",
+    "favicon_url": "favicons/iqiyi-com.ico"
   },
   {
     "title": "leboncoin",
@@ -102,6 +120,12 @@
     "favicon_url": "favicons/vk-com.ico"
   },
   {
+    "title": "weibo",
+    "url": "https://weibo.com/",
+    "image_url": "images/weibo-com@2x.png",
+    "favicon_url": "favicons/weibo-com.ico"
+  },
+  {
     "title": "wikipedia",
     "url": "https://www.wikipedia.org/",
     "image_url": "images/wikipedia-org@2x.png",
@@ -124,5 +148,11 @@
     "url": "https://www.youtube.com/",
     "image_url": "images/youtube-com@2x.png",
     "favicon_url": "favicons/youtube-com.png"
+  },
+  {
+    "title": "zhihu",
+    "url": "https://www.zhihu.com/",
+    "image_url": "images/zhihu-com@2x.png",
+    "favicon_url": "favicons/zhihu-com.ico"
   }
 ]
