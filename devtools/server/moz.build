@@ -21,7 +21,7 @@ MOCHITEST_CHROME_MANIFESTS += ['tests/chrome/chrome.ini']
 XPCSHELL_TESTS_MANIFESTS += ['tests/xpcshell/xpcshell.ini']
 
 DevToolsModules(
-    'debugger-server-connection.js',
+    'devtools-server-connection.js',
     'devtools-server.js',
 )
 
