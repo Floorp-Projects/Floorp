@@ -7084,6 +7084,18 @@ class LCheckThis : public LInstructionHelper<0, BOX_PIECES, 0> {
   }
 };
 
+class LCheckThisReinit : public LInstructionHelper<0, BOX_PIECES, 0> {
+ public:
+  LIR_HEADER(CheckThisReinit)
+
+  static const size_t ThisValue = 0;
+
+  explicit LCheckThisReinit(const LBoxAllocation& value)
+      : LInstructionHelper(classOpcode) {
+    setBoxOperand(ThisValue, value);
+  }
+};
+
 class LDebugCheckSelfHosted : public LCallInstructionHelper<0, BOX_PIECES, 0> {
  public:
   LIR_HEADER(DebugCheckSelfHosted)
