@@ -47,11 +47,17 @@ class RulesApp extends PureComponent {
       onTogglePseudoClass: PropTypes.func.isRequired,
       onToggleSelectorHighlighter: PropTypes.func.isRequired,
       rules: PropTypes.arrayOf(PropTypes.shape(Types.rule)).isRequired,
+      showContextMenu: PropTypes.func.isRequired,
       showDeclarationNameEditor: PropTypes.func.isRequired,
       showDeclarationValueEditor: PropTypes.func.isRequired,
       showNewDeclarationEditor: PropTypes.func.isRequired,
       showSelectorEditor: PropTypes.func.isRequired,
     };
+  }
+
+  constructor(props) {
+    super(props);
+    this.onContextMenu = this.onContextMenu.bind(this);
   }
 
   getRuleProps() {
@@ -64,6 +70,21 @@ class RulesApp extends PureComponent {
       showNewDeclarationEditor: this.props.showNewDeclarationEditor,
       showSelectorEditor: this.props.showSelectorEditor,
     };
+  }
+
+  onContextMenu(event) {
+    if (
+      event.target.closest("input[type=text]") ||
+      event.target.closest("input:not([type])") ||
+      event.target.closest("textarea")
+    ) {
+      return;
+    }
+
+    event.stopPropagation();
+    event.preventDefault();
+
+    this.props.showContextMenu(event);
   }
 
   renderInheritedRules(rules) {
@@ -212,6 +233,7 @@ class RulesApp extends PureComponent {
         dom.div(
           {
             id: "ruleview-container-focusable",
+            onContextMenu: this.onContextMenu,
             tabIndex: -1,
           },
           rules.length > 0

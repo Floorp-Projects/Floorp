@@ -212,12 +212,14 @@ class ElementStyle {
   /**
    * Returns the Rule object of the given rule id.
    *
-   * @param  {String} id
+   * @param  {String|null} id
    *         The id of the Rule object.
    * @return {Rule|undefined} of the given rule id or undefined if it cannot be found.
    */
   getRule(id) {
-    return this.rules.find(rule => rule.domRule.actorID === id);
+    return id
+      ? this.rules.find(rule => rule.domRule.actorID === id)
+      : undefined;
   }
 
   /**
@@ -557,15 +559,15 @@ class ElementStyle {
    * Given the id of the rule and the new declaration name, modifies the existing
    * declaration name to the new given value.
    *
-   * @param  {String} ruleID
+   * @param  {String} ruleId
    *         The Rule id of the given CSS declaration.
    * @param  {String} declarationId
    *         The TextProperty id for the CSS declaration.
    * @param  {String} name
    *         The new declaration name.
    */
-  async modifyDeclarationName(ruleID, declarationId, name) {
-    const rule = this.getRule(ruleID);
+  async modifyDeclarationName(ruleId, declarationId, name) {
+    const rule = this.getRule(ruleId);
     if (!rule) {
       return;
     }
