@@ -101,10 +101,12 @@ class TestFunctions : public NonRefcountedDOMObject {
                                            ErrorResult& aError);
   void TestNotAllowShared(const ArrayBufferView& aBuffer);
   void TestNotAllowShared(const ArrayBuffer& aBuffer);
+  void TestNotAllowShared(const nsAString& aBuffer);
   void TestAllowShared(const ArrayBufferView& aBuffer);
   void TestAllowShared(const ArrayBuffer& aBuffer);
   void TestDictWithAllowShared(const DictWithAllowSharedBufferSource& aDict);
-  void TestUnionOfBuffferSource(const ArrayBufferOrArrayBufferView& aUnion);
+  void TestUnionOfBuffferSource(
+      const ArrayBufferOrArrayBufferViewOrString& aUnion);
   void TestUnionOfAllowSharedBuffferSource(
       const MaybeSharedArrayBufferOrMaybeSharedArrayBufferView& aUnion);
 
