@@ -2456,6 +2456,9 @@ AbortReasonOr<Ok> IonBuilder::inspectOpcode(JSOp op, bool* restarted) {
     case JSOp::ObjWithProto:
       return jsop_objwithproto();
 
+    case JSOp::BuiltinProto:
+      return jsop_builtinproto();
+
     // ===== NOT Yet Implemented =====
     // Read below!
 
@@ -2469,7 +2472,6 @@ AbortReasonOr<Ok> IonBuilder::inspectOpcode(JSOp op, bool* restarted) {
     case JSOp::StrictSpreadEval:
 
     // Classes
-    case JSOp::BuiltinProto:
     case JSOp::InitHomeObject:
     case JSOp::DerivedConstructor:
     case JSOp::CheckThis:
@@ -12774,6 +12776,23 @@ AbortReasonOr<Ok> IonBuilder::jsop_instrumentation_scriptid() {
 
 AbortReasonOr<Ok> IonBuilder::jsop_objwithproto() {
   auto* ins = MObjectWithProto::New(alloc(), current->pop());
+  current->add(ins);
+  current->push(ins);
+  return resumeAfter(ins);
+}
+
+AbortReasonOr<Ok> IonBuilder::jsop_builtinproto() {
+  MOZ_ASSERT(GET_UINT8(pc) < JSProto_LIMIT);
+  JSProtoKey key = static_cast<JSProtoKey>(GET_UINT8(pc));
+
+  // Bake in the prototype if it exists.
+  if (JSObject* proto = script()->global().maybeGetPrototype(key)) {
+    pushConstant(ObjectValue(*proto));
+    return Ok();
+  }
+
+  // Otherwise emit code to generate it.
+  auto* ins = MBuiltinProto::New(alloc(), pc);
   current->add(ins);
   current->push(ins);
   return resumeAfter(ins);
