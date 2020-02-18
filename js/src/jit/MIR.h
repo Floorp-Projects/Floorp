@@ -10981,6 +10981,22 @@ class MGetPrototypeOf : public MUnaryInstruction,
   NAMED_OPERANDS((0, target))
 };
 
+class MObjectWithProto : public MUnaryInstruction,
+                         public BoxInputsPolicy::Data {
+  explicit MObjectWithProto(MDefinition* prototype)
+      : MUnaryInstruction(classOpcode, prototype) {
+    setResultType(MIRType::Object);
+    setGuard();  // May throw if prototype is neither an object nor null.
+  }
+
+ public:
+  INSTRUCTION_HEADER(ObjectWithProto)
+  TRIVIAL_NEW_WRAPPERS
+  NAMED_OPERANDS((0, prototype))
+
+  bool possiblyCalls() const override { return true; }
+};
+
 // Flips the input's sign bit, independently of the rest of the number's
 // payload. Note this is different from multiplying by minus-one, which has
 // side-effects for e.g. NaNs.
