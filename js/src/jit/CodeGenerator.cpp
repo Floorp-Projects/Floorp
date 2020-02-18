@@ -3473,6 +3473,17 @@ void CodeGenerator::visitClassConstructor(LClassConstructor* lir) {
   callVM<Fn, js::MakeDefaultConstructor>(lir);
 }
 
+void CodeGenerator::visitDerivedClassConstructor(
+    LDerivedClassConstructor* lir) {
+  pushArg(ToRegister(lir->prototype()));
+  pushArg(ImmPtr(lir->mir()->pc()));
+  pushArg(ImmGCPtr(current->mir()->info().script()));
+
+  using Fn =
+      JSFunction* (*)(JSContext*, HandleScript, jsbytecode*, HandleObject);
+  callVM<Fn, js::MakeDefaultConstructor>(lir);
+}
+
 void CodeGenerator::visitModuleMetadata(LModuleMetadata* lir) {
   pushArg(ImmPtr(lir->mir()->module()));
 
