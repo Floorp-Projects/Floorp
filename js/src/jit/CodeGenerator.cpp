@@ -13279,6 +13279,16 @@ void CodeGenerator::visitCheckThis(LCheckThis* ins) {
   masm.bind(ool->rejoin());
 }
 
+void CodeGenerator::visitCheckThisReinit(LCheckThisReinit* ins) {
+  ValueOperand thisValue = ToValue(ins, LCheckThisReinit::ThisValue);
+
+  using Fn = bool (*)(JSContext*);
+  OutOfLineCode* ool =
+      oolCallVM<Fn, ThrowInitializedThis>(ins, ArgList(), StoreNothing());
+  masm.branchTestMagic(Assembler::NotEqual, thisValue, ool->entry());
+  masm.bind(ool->rejoin());
+}
+
 void CodeGenerator::visitDebugCheckSelfHosted(LDebugCheckSelfHosted* ins) {
   ValueOperand checkValue = ToValue(ins, LDebugCheckSelfHosted::CheckValue);
   pushArg(checkValue);
