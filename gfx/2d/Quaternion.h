@@ -28,7 +28,7 @@ class BaseQuaternion {
   BaseQuaternion(const BaseQuaternion& aOther) {
     x = aOther.x;
     y = aOther.y;
-    z = aOther.y;
+    z = aOther.z;
     w = aOther.w;
   }
 
