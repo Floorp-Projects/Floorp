@@ -133,6 +133,7 @@
 | [mozilla.components.feature.search](mozilla.components.feature.search/index.md) |  |
 | [mozilla.components.feature.session](mozilla.components.feature.session/index.md) |  |
 | [mozilla.components.feature.session.behavior](mozilla.components.feature.session.behavior/index.md) |  |
+| [mozilla.components.feature.share](mozilla.components.feature.share/index.md) |  |
 | [mozilla.components.feature.sitepermissions](mozilla.components.feature.sitepermissions/index.md) |  |
 | [mozilla.components.feature.syncedtabs](mozilla.components.feature.syncedtabs/index.md) |  |
 | [mozilla.components.feature.tab.collections](mozilla.components.feature.tab.collections/index.md) |  |

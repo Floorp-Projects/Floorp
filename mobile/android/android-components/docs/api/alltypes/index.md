@@ -530,6 +530,8 @@
 | [mozilla.components.feature.readerview.view.ReaderViewControlsBar](../mozilla.components.feature.readerview.view/-reader-view-controls-bar/index.md) | A customizable ReaderView control bar implementing [ReaderViewControlsView](../mozilla.components.feature.readerview.view/-reader-view-controls-view/index.md). |
 | [mozilla.components.feature.readerview.view.ReaderViewControlsView](../mozilla.components.feature.readerview.view/-reader-view-controls-view/index.md) | An interface for views that can display ReaderView appearance controls (e.g. font size, font type). |
 | [mozilla.components.feature.readerview.ReaderViewFeature](../mozilla.components.feature.readerview/-reader-view-feature/index.md) | Feature implementation that provides a reader view for the selected session, based on a web extension. |
+| [mozilla.components.feature.share.RecentApp](../mozilla.components.feature.share/-recent-app/index.md) | Interface used for adapting recent apps database entities |
+| [mozilla.components.feature.share.RecentAppsStorage](../mozilla.components.feature.share/-recent-apps-storage/index.md) | Class used for storing and retrieving the most recent apps |
 | [mozilla.components.service.glean.private.RecordedExperimentData](../mozilla.components.service.glean.private/-recorded-experiment-data.md) |  |
 | [mozilla.components.concept.engine.media.RecordingDevice](../mozilla.components.concept.engine.media/-recording-device/index.md) | A recording device that can be used by web content. |
 | [mozilla.components.feature.media.RecordingDevicesNotificationFeature](../mozilla.components.feature.media/-recording-devices-notification-feature/index.md) | Feature for displaying an ongoing notification while recording devices (camera, microphone) are used. |
