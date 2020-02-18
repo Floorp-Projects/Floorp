@@ -16,6 +16,3 @@ interface CSSPseudoElement {
   readonly attribute DOMString type;
   readonly attribute Element element;
 };
-
-// https://drafts.csswg.org/web-animations/#extensions-to-the-pseudoelement-interface
-CSSPseudoElement includes Animatable;

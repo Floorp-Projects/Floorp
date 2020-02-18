@@ -62,13 +62,13 @@ class MOZ_RAII AutoMutationBatchForAnimation {
   explicit AutoMutationBatchForAnimation(
       const Animation& aAnimation MOZ_GUARD_OBJECT_NOTIFIER_PARAM) {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-    Maybe<NonOwningAnimationTarget> target = aAnimation.GetTargetForAnimation();
+    NonOwningAnimationTarget target = aAnimation.GetTargetForAnimation();
     if (!target) {
       return;
     }
 
     // For mutation observers, we use the OwnerDoc.
-    mAutoBatch.emplace(target->mElement->OwnerDoc());
+    mAutoBatch.emplace(target.mElement->OwnerDoc());
   }
 
  private:
@@ -83,12 +83,13 @@ class MOZ_RAII AutoMutationBatchForAnimation {
 //
 // ---------------------------------------------------------------------------
 
-Maybe<NonOwningAnimationTarget> Animation::GetTargetForAnimation() const {
+NonOwningAnimationTarget Animation::GetTargetForAnimation() const {
   AnimationEffect* effect = GetEffect();
+  NonOwningAnimationTarget target;
   if (!effect || !effect->AsKeyframeEffect()) {
-    return Nothing();
+    return target;
   }
-  return effect->AsKeyframeEffect()->GetTarget();
+  return effect->AsKeyframeEffect()->GetAnimationTarget();
 }
 
 /* static */
@@ -641,18 +642,18 @@ void Animation::CommitStyles(ErrorResult& aRv) {
     return;
   }
 
-  Maybe<NonOwningAnimationTarget> target = keyframeEffect->GetTarget();
+  NonOwningAnimationTarget target = keyframeEffect->GetAnimationTarget();
   if (!target) {
     return;
   }
 
-  if (target->mPseudoType != PseudoStyleType::NotPseudo) {
+  if (target.mPseudoType != PseudoStyleType::NotPseudo) {
     aRv.Throw(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR);
     return;
   }
 
   // Check it is an element with a style attribute
-  nsCOMPtr<nsStyledElement> styledElement = do_QueryInterface(target->mElement);
+  nsCOMPtr<nsStyledElement> styledElement = do_QueryInterface(target.mElement);
   if (!styledElement) {
     aRv.Throw(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR);
     return;
@@ -660,16 +661,16 @@ void Animation::CommitStyles(ErrorResult& aRv) {
 
   // Flush style before checking if the target element is rendered since the
   // result could depend on pending style changes.
-  if (Document* doc = target->mElement->GetComposedDoc()) {
+  if (Document* doc = target.mElement->GetComposedDoc()) {
     doc->FlushPendingNotifications(FlushType::Style);
   }
-  if (!target->mElement->IsRendered()) {
+  if (!target.mElement->IsRendered()) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return;
   }
 
   nsPresContext* presContext =
-      nsContentUtils::GetContextForContent(target->mElement);
+      nsContentUtils::GetContextForContent(target.mElement);
   if (!presContext) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return;
@@ -688,11 +689,11 @@ void Animation::CommitStyles(ErrorResult& aRv) {
   // Start the update now so that the old rule doesn't get used
   // between when we mutate the declaration and when we set the new
   // rule.
-  mozAutoDocUpdate autoUpdate(target->mElement->OwnerDoc(), true);
+  mozAutoDocUpdate autoUpdate(target.mElement->OwnerDoc(), true);
 
   // Get the inline style to append to
   RefPtr<DeclarationBlock> declarationBlock;
-  if (auto* existing = target->mElement->GetInlineStyleDeclaration()) {
+  if (auto* existing = target.mElement->GetInlineStyleDeclaration()) {
     declarationBlock = existing->EnsureMutable();
   } else {
     declarationBlock = new DeclarationBlock();
@@ -702,7 +703,7 @@ void Animation::CommitStyles(ErrorResult& aRv) {
   // Prepare the callback
   MutationClosureData closureData;
   closureData.mClosure = nsDOMCSSAttributeDeclaration::MutationClosureFunction;
-  closureData.mElement = target->mElement;
+  closureData.mElement = target.mElement;
   DeclarationBlockMutationClosure beforeChangeClosure = {
       nsDOMCSSAttributeDeclaration::MutationClosureFunction,
       &closureData,
@@ -726,7 +727,7 @@ void Animation::CommitStyles(ErrorResult& aRv) {
   }
 
   // Update inline style declaration
-  target->mElement->SetInlineStyleDeclaration(*declarationBlock, closureData);
+  target.mElement->SetInlineStyleDeclaration(*declarationBlock, closureData);
 }
 
 // ---------------------------------------------------------------------------
@@ -1052,7 +1053,7 @@ bool Animation::IsReplaceable() const {
   // We should only replace animations with a target element (since otherwise
   // what other effects would we consider when determining if they are covered
   // or not?).
-  if (!GetEffect()->AsKeyframeEffect()->GetTarget()) {
+  if (!GetEffect()->AsKeyframeEffect()->GetAnimationTarget()) {
     return false;
   }
 
@@ -1071,15 +1072,16 @@ void Animation::ScheduleReplacementCheck() {
   // If IsReplaceable() is true, the following should also hold
   MOZ_ASSERT(GetEffect());
   MOZ_ASSERT(GetEffect()->AsKeyframeEffect());
-  MOZ_ASSERT(GetEffect()->AsKeyframeEffect()->GetTarget());
 
-  Maybe<NonOwningAnimationTarget> target =
-      GetEffect()->AsKeyframeEffect()->GetTarget();
+  NonOwningAnimationTarget target =
+      GetEffect()->AsKeyframeEffect()->GetAnimationTarget();
+
+  MOZ_ASSERT(target);
 
   nsPresContext* presContext =
-      nsContentUtils::GetContextForContent(target->mElement);
+      nsContentUtils::GetContextForContent(target.mElement);
   if (presContext) {
-    presContext->EffectCompositor()->NoteElementForReducing(*target);
+    presContext->EffectCompositor()->NoteElementForReducing(target);
   }
 }
 

@@ -74,21 +74,6 @@ function assert_equals_records(actual, expected, desc) {
   }
 }
 
-// Create a pseudo element
-function createPseudo(test, element, type) {
-  addStyle(test, { '@keyframes anim': '',
-                   ['.pseudo::' + type]: 'animation: anim 10s; ' +
-                                         'content: \'\';'  });
-  element.classList.add('pseudo');
-  var anims = document.getAnimations();
-  assert_true(anims.length >= 1);
-  var anim = anims[anims.length - 1];
-  assert_equals(anim.effect.target.element, element);
-  assert_equals(anim.effect.target.type, '::' + type);
-  anim.cancel();
-  return anim.effect.target;
-}
-
 function runTest() {
   [ { subtree: false },
     { subtree: true }
@@ -1518,10 +1503,11 @@ function runTest() {
 
   test(t => {
     var div = addDiv(t);
-    var pseudoTarget = createPseudo(t, div, 'before');
     var observer = setupSynchronousObserver(t, div, true);
 
-    var anim = pseudoTarget.animate({ opacity: [ 0, 1 ] }, 200 * MS_PER_SEC);
+    var anim = div.animate({ opacity: [ 0, 1 ] },
+                           { duration: 200 * MS_PER_SEC,
+                             pseudoElement: '::before' });
 
     assert_equals_records(observer.takeRecords(),
       [{ added: [anim], changed: [], removed: [] }],
@@ -1561,13 +1547,13 @@ function runTest() {
 
   test(t => {
     var div = addDiv(t);
-    var pseudoTarget = createPseudo(t, div, 'before');
     var observer = setupSynchronousObserver(t, div, false);
 
     var anim = div.animate({ opacity: [ 0, 1 ] },
                            { duration: 100 * MS_PER_SEC });
-    var pAnim = pseudoTarget.animate({ opacity: [ 0, 1 ] },
-                                     { duration: 100 * MS_PER_SEC });
+    var pAnim = div.animate({ opacity: [ 0, 1 ] },
+                            { duration: 100 * MS_PER_SEC,
+                              pseudoElement: "::before" });
 
     assert_equals_records(observer.takeRecords(),
       [{ added: [anim], changed: [], removed: [] }],
