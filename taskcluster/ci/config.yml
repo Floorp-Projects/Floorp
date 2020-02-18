@@ -141,6 +141,7 @@ treeherder:
         'js': 'JavaScript checks'
         'py': 'Python checks'
         'java': 'Java checks'
+        'rust': 'Rust checks'
         'Static-Analysis': 'Full tree static-analysis'
         'SS': 'Shadow scheduler'
         'test-info': 'Test manifest skip/fail information'
