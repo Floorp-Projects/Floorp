@@ -588,7 +588,7 @@ TexUnpackImage::TexUnpackImage(const WebGLContext* webgl, TexImageTarget target,
                     srcAlphaType),
       mImage(image) {}
 
-TexUnpackImage::~TexUnpackImage() {}
+TexUnpackImage::~TexUnpackImage() = default;
 
 bool TexUnpackImage::Validate(WebGLContext* webgl,
                               const webgl::PackingInfo& pi) {

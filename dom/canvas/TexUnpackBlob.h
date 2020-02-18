@@ -59,7 +59,7 @@ class TexUnpackBlob {
                 uint32_t depth, gfxAlphaType srcAlphaType);
 
  public:
-  virtual ~TexUnpackBlob() {}
+  virtual ~TexUnpackBlob() = default;
 
  protected:
   bool ConvertIfNeeded(WebGLContext* webgl, const uint32_t rowLength,

@@ -129,7 +129,7 @@ bool WebGLContextOptions::operator==(const WebGLContextOptions& r) const {
 
 static std::list<WebGLContext*> sWebglLru;
 
-WebGLContext::LruPosition::LruPosition() : mItr(sWebglLru.end()) {}
+WebGLContext::LruPosition::LruPosition() : mItr(sWebglLru.end()) {}  // NOLINT
 
 WebGLContext::LruPosition::LruPosition(WebGLContext& context)
     : mItr(sWebglLru.insert(sWebglLru.end(), &context)) {}

@@ -713,7 +713,7 @@ class RawBuffer {
     return mData[idx];
   }
 
-  RawBuffer() {}
+  RawBuffer() = default;
   RawBuffer(const RawBuffer&) = delete;
   RawBuffer& operator=(const RawBuffer&) = delete;
 
