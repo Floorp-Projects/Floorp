@@ -241,6 +241,14 @@ vec2 get_image_quad_uv(int address, vec2 f) {
 
 #ifdef WR_FRAGMENT_SHADER
 
+struct Fragment {
+    vec4 color;
+#ifdef WR_FEATURE_DUAL_SOURCE_BLENDING
+    vec4 blend;
+#endif
+};
+
+
 float do_clip() {
     // check for the dummy bounds, which are given to the opaque objects
     if (vClipMaskUvBounds.xy == vClipMaskUvBounds.zw) {
