@@ -33,7 +33,7 @@ var gSanitizePromptDialog = {
   init() {
     // This is used by selectByTimespan() to determine if the window has loaded.
     this._inited = true;
-    this._dialog = document.getElementById("SanitizeDialog");
+    this._dialog = document.querySelector("dialog");
 
     let OKButton = this._dialog.getButton("accept");
     document.l10n.setAttributes(OKButton, "sanitize-button-ok");
