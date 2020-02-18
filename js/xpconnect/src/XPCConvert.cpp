@@ -693,7 +693,12 @@ bool XPCConvert::JSData2Native(JSContext* cx, void* d, HandleValue s,
       }
 
       size_t utf8Length = JS::GetDeflatedUTF8StringLength(linear);
-      rs->SetLength(utf8Length);
+      if (!rs->SetLength(utf8Length, fallible)) {
+        if (pErr) {
+          *pErr = NS_ERROR_OUT_OF_MEMORY;
+        }
+        return false;
+      }
 
       mozilla::DebugOnly<size_t> written = JS::DeflateStringToUTF8Buffer(
           linear, mozilla::MakeSpan(rs->BeginWriting(), utf8Length));
@@ -725,7 +730,12 @@ bool XPCConvert::JSData2Native(JSContext* cx, void* d, HandleValue s,
         return true;
       }
 
-      rs->SetLength(uint32_t(length));
+      if (!rs->SetLength(uint32_t(length), fallible)) {
+        if (pErr) {
+          *pErr = NS_ERROR_OUT_OF_MEMORY;
+        }
+        return false;
+      }
       if (rs->Length() != uint32_t(length)) {
         return false;
       }
