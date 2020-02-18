@@ -2468,6 +2468,9 @@ AbortReasonOr<Ok> IonBuilder::inspectOpcode(JSOp op, bool* restarted) {
     case JSOp::CheckThisReinit:
       return jsop_checkthisreinit();
 
+    case JSOp::SuperFun:
+      return jsop_superfun();
+
     // ===== NOT Yet Implemented =====
     // Read below!
 
@@ -2489,7 +2492,6 @@ AbortReasonOr<Ok> IonBuilder::inspectOpcode(JSOp op, bool* restarted) {
     case JSOp::SetElemSuper:
     case JSOp::StrictSetPropSuper:
     case JSOp::StrictSetElemSuper:
-    case JSOp::SuperFun:
     // Most of the infrastructure for these exists in Ion, but needs review
     // and testing before these are enabled. Once other opcodes that are used
     // in derived classes are supported in Ion, this can be better validated
@@ -12839,6 +12841,13 @@ AbortReasonOr<Ok> IonBuilder::jsop_checkreturn() {
   auto* ins = MCheckReturn::New(alloc(), returnValue, thisValue);
   current->add(ins);
   current->setSlot(info().returnValueSlot(), ins);
+  return Ok();
+}
+
+AbortReasonOr<Ok> IonBuilder::jsop_superfun() {
+  auto* ins = MSuperFunction::New(alloc(), current->pop());
+  current->add(ins);
+  current->push(ins);
   return Ok();
 }
 

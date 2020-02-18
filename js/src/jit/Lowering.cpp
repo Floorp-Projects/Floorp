@@ -4710,6 +4710,14 @@ void LIRGenerator::visitBuiltinProto(MBuiltinProto* ins) {
   assignSafepoint(lir, ins);
 }
 
+void LIRGenerator::visitSuperFunction(MSuperFunction* ins) {
+  MOZ_ASSERT(ins->callee()->type() == MIRType::Object);
+  MOZ_ASSERT(ins->type() == MIRType::Value);
+
+  auto* lir = new (alloc()) LSuperFunction(useRegister(ins->callee()), temp());
+  defineBox(lir, ins);
+}
+
 void LIRGenerator::visitConstant(MConstant* ins) {
   if (!IsFloatingPointType(ins->type()) && ins->canEmitAtUses()) {
     emitAtUses(ins);

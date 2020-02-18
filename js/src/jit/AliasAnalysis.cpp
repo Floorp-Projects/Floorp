@@ -139,6 +139,7 @@ static inline const MDefinition* GetObject(const MDefinition* ins) {
     case MDefinition::Opcode::TypedArrayElements:
     case MDefinition::Opcode::CopyLexicalEnvironmentObject:
     case MDefinition::Opcode::IsPackedArray:
+    case MDefinition::Opcode::SuperFunction:
       object = ins->getOperand(0);
       break;
     case MDefinition::Opcode::GetPropertyCache:
