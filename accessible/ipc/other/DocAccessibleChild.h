@@ -480,6 +480,8 @@ class DocAccessibleChild : public DocAccessibleChildBase {
   virtual PDocAccessiblePlatformExtChild* AllocPDocAccessiblePlatformExtChild()
       override;
 
+  DocAccessiblePlatformExtChild* GetPlatformExtension();
+
  private:
   Accessible* IdToAccessible(const uint64_t& aID) const;
   Accessible* IdToAccessibleLink(const uint64_t& aID) const;

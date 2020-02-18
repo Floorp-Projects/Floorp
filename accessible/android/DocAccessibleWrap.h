@@ -35,7 +35,7 @@ class DocAccessibleWrap : public DocAccessible {
 
   void CacheFocusPath(AccessibleWrap* aAccessible);
 
-  void CacheViewport();
+  void CacheViewport(bool aCachePivotBoundaries);
 
   enum {
     eBatch_Viewport = 0,
@@ -57,6 +57,8 @@ class DocAccessibleWrap : public DocAccessible {
   static void CacheViewportCallback(nsITimer* aTimer, void* aDocAccParam);
 
   nsCOMPtr<nsITimer> mCacheRefreshTimer;
+
+  bool mCachePivotBoundaries;
 
   AccessibleHashtable mFocusPath;
 };
