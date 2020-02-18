@@ -267,7 +267,9 @@ def format_header():
 
 
 def run_fzf(cmd, tasks):
-    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stdin=subprocess.PIPE)
+    env = dict(os.environ)
+    env.update({'PYTHONPATH': os.pathsep.join([p for p in sys.path if 'requests' in p])})
+    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stdin=subprocess.PIPE, env=env)
     out = proc.communicate('\n'.join(tasks))[0].splitlines()
 
     selected = []
