@@ -459,13 +459,6 @@ IonBuilder::InliningDecision IonBuilder::canInlineTarget(JSFunction* target,
     return DontInline(inlineScript, "Not constructing class constructor");
   }
 
-  if (target->isDerivedClassConstructor()) {
-    // patchInlinedReturn() doesn't yet support derived class constructors, it
-    // must be patched to not use |callInfo.thisArg()| when the inlined target
-    // is a derived class constructor.
-    return DontInline(inlineScript, "Callee is a derived class constructor");
-  }
-
   if (!CanIonInlineScript(inlineScript)) {
     return DontInline(inlineScript, "Disabled Ion compilation");
   }
@@ -4319,7 +4312,8 @@ IonBuilder::InliningResult IonBuilder::inlineScriptedCall(CallInfo& callInfo,
   returnBlock->pop();
 
   // Accumulate return values.
-  MDefinition* retvalDefn = patchInlinedReturns(callInfo, returns, returnBlock);
+  MDefinition* retvalDefn =
+      patchInlinedReturns(target, callInfo, returns, returnBlock);
   if (!retvalDefn) {
     return abort(AbortReason::Alloc);
   }
@@ -4335,7 +4329,8 @@ IonBuilder::InliningResult IonBuilder::inlineScriptedCall(CallInfo& callInfo,
   return InliningStatus_Inlined;
 }
 
-MDefinition* IonBuilder::patchInlinedReturn(CallInfo& callInfo,
+MDefinition* IonBuilder::patchInlinedReturn(JSFunction* target,
+                                            CallInfo& callInfo,
                                             MBasicBlock* exit,
                                             MBasicBlock* bottom) {
   // Replaces the MReturn in the exit block with an MGoto.
@@ -4344,7 +4339,10 @@ MDefinition* IonBuilder::patchInlinedReturn(CallInfo& callInfo,
 
   // Constructors must be patched by the caller to always return an object.
   if (callInfo.constructing()) {
-    if (rdef->type() == MIRType::Value) {
+    if (target->isDerivedClassConstructor()) {
+      // Derived class constructors contain extra bytecode to ensure an object
+      // is always returned, so no additional patching is needed.
+    } else if (rdef->type() == MIRType::Value) {
       // Unknown return: dynamically detect objects.
       MReturnFromCtor* filter =
           MReturnFromCtor::New(alloc(), rdef, callInfo.thisArg());
@@ -4420,7 +4418,8 @@ MDefinition* IonBuilder::specializeInlinedReturn(MDefinition* rdef,
   return rdef;
 }
 
-MDefinition* IonBuilder::patchInlinedReturns(CallInfo& callInfo,
+MDefinition* IonBuilder::patchInlinedReturns(JSFunction* target,
+                                             CallInfo& callInfo,
                                              MIRGraphReturns& returns,
                                              MBasicBlock* bottom) {
   // Replaces MReturns with MGotos, returning the MDefinition
@@ -4428,7 +4427,7 @@ MDefinition* IonBuilder::patchInlinedReturns(CallInfo& callInfo,
   MOZ_ASSERT(returns.length() > 0);
 
   if (returns.length() == 1) {
-    return patchInlinedReturn(callInfo, returns[0], bottom);
+    return patchInlinedReturn(target, callInfo, returns[0], bottom);
   }
 
   // Accumulate multiple returns with a phi.
@@ -4438,7 +4437,8 @@ MDefinition* IonBuilder::patchInlinedReturns(CallInfo& callInfo,
   }
 
   for (size_t i = 0; i < returns.length(); i++) {
-    MDefinition* rdef = patchInlinedReturn(callInfo, returns[i], bottom);
+    MDefinition* rdef =
+        patchInlinedReturn(target, callInfo, returns[i], bottom);
     if (!rdef) {
       return nullptr;
     }
