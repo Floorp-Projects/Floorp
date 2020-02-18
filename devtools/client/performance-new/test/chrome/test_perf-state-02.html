@@ -40,12 +40,13 @@
           "The component at first is in an unknown state.");
 
         await perfFrontMock._flushAsyncQueue();
-        is(getRecordingState(), "other-is-recording",
-          "The profiler is not available to record.");
+        is(getRecordingState(), "recording",
+          "The profiler is reflecting the recording state.");
 
-        const button = container.querySelector("button");
-        ok(button, "Selected a button on the component");
-        button.click();
+        const [captureButton, stopButton] = container.querySelectorAll("button");
+        ok(captureButton, "Selected capture button on the component");
+        ok(stopButton, "Selected stop button on the component");
+        stopButton.click();
         is(getRecordingState(), "request-to-stop-profiler",
           "We can request to stop the profiler.");
 

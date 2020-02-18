@@ -89,10 +89,8 @@ export type RecordingState =
   // An async request has been sent to stop the profiler.
   | "request-to-stop-profiler"
   // The profiler notified us that our request to start it actually started
-  // it.
+  // it, or it was already started.
   | "recording"
-  // Some other code with access to the profiler started it.
-  | "other-is-recording"
   // Profiling is not available when in private browsing mode.
   | "locked-by-private-browsing";
 

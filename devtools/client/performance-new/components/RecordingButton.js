@@ -185,13 +185,6 @@ class RecordingButton extends PureComponent {
           },
         });
 
-      case "other-is-recording":
-        return this.renderButton({
-          label: "Stop and discard the other recording",
-          onClick: stopProfilerAndDiscardProfile,
-          additionalMessage: "Another tool is currently recording.",
-        });
-
       case "locked-by-private-browsing":
         return this.renderButton({
           label: span(
