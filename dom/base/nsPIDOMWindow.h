@@ -52,6 +52,7 @@ namespace mozilla {
 namespace dom {
 class AudioContext;
 class BrowsingContext;
+class BrowsingContextGroup;
 class ClientInfo;
 class ClientState;
 class ContentFrameMessageManager;
@@ -400,6 +401,11 @@ class nsPIDOMWindowInner : public mozIDOMWindow {
    * Get the browsing context in this window.
    */
   inline mozilla::dom::BrowsingContext* GetBrowsingContext() const;
+
+  /**
+   * Get the browsing context group this window belongs to.
+   */
+  mozilla::dom::BrowsingContextGroup* GetBrowsingContextGroup() const;
 
   /**
    * Call this to indicate that some node (this window, its document,
