@@ -150,7 +150,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
 
     final override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         // We don't need to wait on shared element transitions for view intents or custom tabs
-        if (getSessionById()?.source != Session.Source.ACTION_VIEW ||
+        if (getSessionById()?.source != Session.Source.ACTION_VIEW &&
             getSessionById()?.isCustomTabSession() != true
         ) {
             FragmentPreDrawManager(this).execute {}
