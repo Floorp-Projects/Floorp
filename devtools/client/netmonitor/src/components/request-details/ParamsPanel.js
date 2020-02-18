@@ -25,14 +25,29 @@ const {
   sortObjectKeys,
 } = require("devtools/client/netmonitor/src/utils/sort-utils");
 const {
+  FILTER_SEARCH_DELAY,
+} = require("devtools/client/netmonitor/src/constants");
+const {
   updateFormDataSections,
 } = require("devtools/client/netmonitor/src/utils/request-utils");
 const Actions = require("devtools/client/netmonitor/src/actions/index");
 
 // Components
 const PropertiesView = createFactory(
-  require("devtools/client/netmonitor/src/components/PropertiesView")
+  require("devtools/client/netmonitor/src/components/request-details/PropertiesView")
 );
+const SearchBox = createFactory(
+  require("devtools/client/shared/components/SearchBox")
+);
+const Accordion = createFactory(
+  require("devtools/client/shared/components/Accordion")
+);
+
+loader.lazyGetter(this, "SourcePreview", function() {
+  return createFactory(
+    require("devtools/client/netmonitor/src/components/previews/SourcePreview")
+  );
+});
 
 const { div } = dom;
 
@@ -43,12 +58,6 @@ const PARAMS_FORM_DATA = L10N.getStr("paramsFormData");
 const PARAMS_POST_PAYLOAD = L10N.getStr("paramsPostPayload");
 const PARAMS_QUERY_STRING = L10N.getStr("paramsQueryString");
 const REQUEST_TRUNCATED = L10N.getStr("requestTruncated");
-const SECTION_NAMES = [
-  JSON_SCOPE_NAME,
-  PARAMS_FORM_DATA,
-  PARAMS_POST_PAYLOAD,
-  PARAMS_QUERY_STRING,
-];
 
 /**
  * Params panel component
@@ -62,6 +71,13 @@ class ParamsPanel extends Component {
       request: PropTypes.object.isRequired,
       updateRequest: PropTypes.func.isRequired,
       targetSearchResult: PropTypes.object,
+    };
+  }
+
+  constructor(props) {
+    super(props);
+    this.state = {
+      filterText: "",
     };
   }
 
@@ -84,11 +100,13 @@ class ParamsPanel extends Component {
   /**
    * Update only if:
    * 1) The rendered object has changed
-   * 2) The user selected another search result target.
+   * 2) The filter text has changed
+   * 3) The user selected another search result target.
    */
-  shouldComponentUpdate(nextProps) {
+  shouldComponentUpdate(nextProps, nextState) {
     return (
       this.props.request !== nextProps.request ||
+      this.state.filterText !== nextState.filterText ||
       (this.props.targetSearchResult !== nextProps.targetSearchResult &&
         nextProps.targetSearchResult !== null)
     );
@@ -131,7 +149,8 @@ class ParamsPanel extends Component {
   }
 
   render() {
-    const { openLink, request, targetSearchResult } = this.props;
+    const { request, targetSearchResult } = this.props;
+    const { filterText } = this.state;
     const { formDataSections, mimeType, requestPostData, url } = request;
     const postData = requestPostData ? requestPostData.postData.text : null;
     const query = getUrlQuery(url);
@@ -144,18 +163,38 @@ class ParamsPanel extends Component {
       return div({ className: "empty-notice" }, PARAMS_EMPTY_TEXT);
     }
 
-    const object = {};
     let error;
+    const items = [];
 
     // Query String section
     if (query) {
-      object[PARAMS_QUERY_STRING] = this.getProperties(parseQueryString(query));
+      items.push({
+        component: PropertiesView,
+        componentProps: {
+          object: this.getProperties(parseQueryString(query)),
+          filterText,
+          targetSearchResult,
+        },
+        header: PARAMS_QUERY_STRING,
+        id: "paramsQueryString",
+        opened: true,
+      });
     }
 
     // Form Data section
     if (formDataSections && formDataSections.length > 0) {
       const sections = formDataSections.filter(str => /\S/.test(str)).join("&");
-      object[PARAMS_FORM_DATA] = this.getProperties(parseFormData(sections));
+      items.push({
+        component: PropertiesView,
+        componentProps: {
+          object: this.getProperties(parseFormData(sections)),
+          filterText,
+          targetSearchResult,
+        },
+        header: PARAMS_FORM_DATA,
+        id: "paramsFormData",
+        opened: true,
+      });
     }
 
     // Request payload section
@@ -175,40 +214,48 @@ class ParamsPanel extends Component {
         const json = this.parseJSON(postData);
 
         if (json) {
-          object[JSON_SCOPE_NAME] = sortObjectKeys(json);
+          items.push({
+            component: PropertiesView,
+            componentProps: {
+              object: sortObjectKeys(json),
+              filterText,
+              targetSearchResult,
+            },
+            header: JSON_SCOPE_NAME,
+            id: "jsonScopeName",
+            opened: true,
+          });
         }
       }
     }
 
-    let expandedNodes;
     if (postData) {
-      let scrollToLine;
-      if (targetSearchResult && targetSearchResult.line) {
-        scrollToLine = targetSearchResult.line;
-        expandedNodes = new Set(["/" + PARAMS_POST_PAYLOAD]);
-      }
-
-      object[PARAMS_POST_PAYLOAD] = {
-        EDITOR_CONFIG: {
+      items.push({
+        component: SourcePreview,
+        componentProps: {
           text: postData,
           mode: mimeType.replace(/;.+/, ""),
-          scrollToLine,
+          targetSearchResult,
         },
-      };
+        header: PARAMS_POST_PAYLOAD,
+        id: "paramsPostPayload",
+        opened: true,
+      });
     }
 
     return div(
       { className: "panel-container" },
       error && div({ className: "request-error-header", title: error }, error),
-      PropertiesView({
-        object,
-        expandedNodes,
-        filterPlaceHolder: PARAMS_FILTER_TEXT,
-        sectionNames: SECTION_NAMES,
-        openLink,
-        targetSearchResult,
-        useQuotes: true,
-      })
+      div(
+        { className: "devtools-toolbar devtools-input-toolbar" },
+        SearchBox({
+          delay: FILTER_SEARCH_DELAY,
+          type: "filter",
+          onChange: text => this.setState({ filterText: text }),
+          placeholder: PARAMS_FILTER_TEXT,
+        })
+      ),
+      Accordion({ items })
     );
   }
 }

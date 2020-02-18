@@ -75,7 +75,7 @@ add_task(async function() {
   );
 
   // Wait for all tree sections updated by react
-  wait = waitForDOM(document, "#params-panel .tree-section", 2);
+  wait = waitForDOM(document, "#params-panel .accordion-item", 2);
   EventUtils.sendMouseEvent(
     { type: "click" },
     document.querySelector("#params-tab")
@@ -94,17 +94,14 @@ add_task(async function() {
   );
 
   is(
-    tabpanel.querySelector(".tree-section .treeLabel").textContent,
+    tabpanel.querySelector(".accordion-item .accordion-header-label")
+      .textContent,
     L10N.getStr("paramsFormData"),
     "The form data section doesn't have the correct title."
   );
 
-  labels = tabpanel.querySelectorAll(
-    "tr:not(.tree-section) .treeLabelCell .treeLabel"
-  );
-  values = tabpanel.querySelectorAll(
-    "tr:not(.tree-section) .treeValueCell .objectBox"
-  );
+  labels = tabpanel.querySelectorAll("tr .treeLabelCell .treeLabel");
+  values = tabpanel.querySelectorAll("tr .treeValueCell .objectBox");
 
   is(
     labels[0].textContent,
