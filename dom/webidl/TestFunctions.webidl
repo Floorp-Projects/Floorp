@@ -122,10 +122,11 @@ interface TestFunctions {
   attribute sequence<[AllowShared] ArrayBuffer> sequenceOfAllowSharedArrayBuffer;
   void testNotAllowShared(ArrayBufferView buffer);
   void testNotAllowShared(ArrayBuffer buffer);
+  void testNotAllowShared(DOMString buffer);
   void testAllowShared([AllowShared] ArrayBufferView buffer);
   void testAllowShared([AllowShared] ArrayBuffer buffer);
   void testDictWithAllowShared(optional DictWithAllowSharedBufferSource buffer = {});
-  void testUnionOfBuffferSource((ArrayBuffer or ArrayBufferView) foo);
+  void testUnionOfBuffferSource((ArrayBuffer or ArrayBufferView or DOMString) foo);
   void testUnionOfAllowSharedBuffferSource(([AllowShared] ArrayBuffer or [AllowShared] ArrayBufferView) foo);
 };
 
