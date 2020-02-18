@@ -16,6 +16,7 @@
 #include "mozilla/net/DNS.h"
 #include "nsISupportsImpl.h"
 #include "nsNamedPipeService.h"
+#include "nsNativeCharsetUtils.h"
 #include "nsNetCID.h"
 #include "nsServiceManagerUtils.h"
 #include "nsSocketTransportService2.h"
@@ -43,7 +44,7 @@ class NamedPipeInfo final : public nsINamedPipeDataObserver {
 
   explicit NamedPipeInfo();
 
-  nsresult Connect(const nsACString& aPath);
+  nsresult Connect(const nsAString& aPath);
   nsresult Disconnect();
 
   /**
@@ -232,15 +233,13 @@ NamedPipeInfo::OnError(uint32_t aError, void* aOverlapped) {
 
 // Named pipe operations
 
-nsresult NamedPipeInfo::Connect(const nsACString& aPath) {
+nsresult NamedPipeInfo::Connect(const nsAString& aPath) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
-  HANDLE pipe;
-  nsAutoCString path(aPath);
-
-  pipe = CreateFileA(path.get(), GENERIC_READ | GENERIC_WRITE,
-                     FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr, OPEN_EXISTING,
-                     FILE_FLAG_OVERLAPPED, nullptr);
+  HANDLE pipe =
+      CreateFileW(PromiseFlatString(aPath).get(), GENERIC_READ | GENERIC_WRITE,
+                  FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr, OPEN_EXISTING,
+                  FILE_FLAG_OVERLAPPED, nullptr);
 
   if (pipe == INVALID_HANDLE_VALUE) {
     LOG_NPIO_ERROR("[%p] CreateFile error (%d)", this, GetLastError());
@@ -621,8 +620,13 @@ static PRStatus nsNamedPipeConnect(PRFileDesc* aFd, const PRNetAddr* aAddr,
     return PR_FAILURE;
   }
 
-  if (NS_WARN_IF(
-          NS_FAILED(info->Connect(nsDependentCString(aAddr->local.path))))) {
+  nsAutoString path;
+  if (NS_FAILED(NS_CopyNativeToUnicode(nsDependentCString(aAddr->local.path),
+                                       path))) {
+    PR_SetError(PR_OUT_OF_MEMORY_ERROR, 0);
+    return PR_FAILURE;
+  }
+  if (NS_WARN_IF(NS_FAILED(info->Connect(path)))) {
     return PR_FAILURE;
   }
 

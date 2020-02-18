@@ -13,7 +13,7 @@
 #include "nsNamedPipeService.h"
 #include "nsNetCID.h"
 
-#define PIPE_NAME "\\\\.\\pipe\\TestNPS"
+#define PIPE_NAME L"\\\\.\\pipe\\TestNPS"
 #define TEST_STR "Hello World"
 
 using namespace mozilla;
@@ -183,7 +183,7 @@ BOOL ConnectToNewClient(HANDLE aPipe, LPOVERLAPPED aOverlapped);
 BOOL CreateAndConnectInstance(LPOVERLAPPED aOverlapped, LPHANDLE aPipe) {
   // FIXME: adjust parameters
   *aPipe =
-      CreateNamedPipeA(PIPE_NAME, PIPE_ACCESS_DUPLEX | FILE_FLAG_OVERLAPPED,
+      CreateNamedPipeW(PIPE_NAME, PIPE_ACCESS_DUPLEX | FILE_FLAG_OVERLAPPED,
                        PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE | PIPE_WAIT, 1,
                        65536, 65536, 3000, NULL);
 
@@ -228,7 +228,7 @@ static nsresult CreateNamedPipe(LPHANDLE aServer, LPHANDLE aClient) {
     return NS_ERROR_FAILURE;
   }
 
-  *aClient = CreateFileA(PIPE_NAME, GENERIC_READ | GENERIC_WRITE,
+  *aClient = CreateFileW(PIPE_NAME, GENERIC_READ | GENERIC_WRITE,
                          FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr,
                          OPEN_EXISTING, FILE_FLAG_OVERLAPPED, nullptr);
 
