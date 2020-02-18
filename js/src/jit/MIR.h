@@ -10617,7 +10617,6 @@ class MCheckReturn : public MBinaryInstruction, public BoxInputsPolicy::Data {
       : MBinaryInstruction(classOpcode, retVal, thisVal) {
     setGuard();
     setResultType(MIRType::Value);
-    setResultTypeSet(retVal->resultTypeSet());
   }
 
  public:
