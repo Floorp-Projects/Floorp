@@ -4728,25 +4728,28 @@ bool TSFTextStore::MaybeHackNoErrorLayoutBugs(LONG& aACPStart, LONG& aACPEnd) {
     // mode on Win7.  So, we should never return TS_E_NOLAYOUT to MS IME for
     // Japanese.
     case TextInputProcessorID::eMicrosoftIMEForJapanese:
-      if (sAlllowToStopHackingIfFine) {
-        return false;
-      }
       // Basically, MS-IME tries to retrieve whole composition string rect
       // at deciding suggest window immediately after unlocking the document.
       // However, in e10s mode, the content hasn't updated yet in most cases.
       // Therefore, if the first character at the retrieving range rect is
       // available, we should use it as the result.
+      // Note that according to bug 1609675, MS-IME for Japanese itself does
+      // not handle TS_E_NOLAYOUT correctly at least on Build 18363.657 (1909).
       if (TSFPrefs::DoNotReturnNoLayoutErrorToMSJapaneseIMEAtFirstChar() &&
           aACPStart < aACPEnd) {
         aACPEnd = aACPStart;
+        break;
+      }
+      if (sAlllowToStopHackingIfFine) {
+        return false;
       }
       // Although, the condition is not clear, MS-IME sometimes retrieves the
       // caret rect immediately after modifying the composition string but
       // before unlocking the document.  In such case, we should return the
       // nearest character rect.
-      else if (TSFPrefs::DoNotReturnNoLayoutErrorToMSJapaneseIMEAtCaret() &&
-               aACPStart == aACPEnd && selectionForTSF.IsCollapsed() &&
-               selectionForTSF.EndOffset() == aACPEnd) {
+      if (TSFPrefs::DoNotReturnNoLayoutErrorToMSJapaneseIMEAtCaret() &&
+          aACPStart == aACPEnd && selectionForTSF.IsCollapsed() &&
+          selectionForTSF.EndOffset() == aACPEnd) {
         int32_t minOffsetOfLayoutChanged =
             static_cast<int32_t>(mContentForTSF.MinOffsetOfLayoutChanged());
         aACPEnd = aACPStart = std::max(minOffsetOfLayoutChanged - 1, 0);
