@@ -23,7 +23,7 @@ pub use ffi::*;
 pub use ffi_gl::Gl as GlFfi;
 pub use ffi_gles::Gles2 as GlesFfi;
 
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub enum GlType {
     Gl,
     Gles,
@@ -74,13 +74,22 @@ pub struct DebugMessage {
     pub severity: GLenum,
 }
 
+mod private {
+    // Private marker trait extended by the Gl public trait so that no one
+    // else outside this crate can implement Gl. Why? So that adding new methods
+    // to it don't lead to a breaking change.
+    pub trait Sealed {}
+}
+use self::private::Sealed;
+
 macro_rules! declare_gl_apis {
     // garbo is a hack to handle unsafe methods.
     ($($(unsafe $([$garbo:expr])*)* fn $name:ident(&self $(, $arg:ident: $t:ty)* $(,)*) $(-> $retty:ty)* ;)+) => {
-        pub trait Gl {
+        pub trait Gl: Sealed {
             $($(unsafe $($garbo)*)* fn $name(&self $(, $arg:$t)*) $(-> $retty)* ;)+
         }
 
+        impl Sealed for ErrorCheckingGl {}
         impl Gl for ErrorCheckingGl {
             $($(unsafe $($garbo)*)* fn $name(&self $(, $arg:$t)*) $(-> $retty)* {
                 let rv = self.gl.$name($($arg,)*);
@@ -89,7 +98,8 @@ macro_rules! declare_gl_apis {
             })+
         }
 
-        impl<F: Fn(&Gl, &str, GLenum)> Gl for ErrorReactingGl<F> {
+        impl<F> Sealed for ErrorReactingGl<F> {}
+        impl<F: Fn(&dyn Gl, &str, GLenum)> Gl for ErrorReactingGl<F> {
             $($(unsafe $($garbo)*)* fn $name(&self $(, $arg:$t)*) $(-> $retty)* {
                 let rv = self.gl.$name($($arg,)*);
                 let error = self.gl.get_error();
@@ -100,6 +110,7 @@ macro_rules! declare_gl_apis {
             })+
         }
 
+        impl<F> Sealed for ProfilingGl<F> {}
         impl<F: Fn(&str, Duration)> Gl for ProfilingGl<F> {
             $($(unsafe $($garbo)*)* fn $name(&self $(, $arg:$t)*) $(-> $retty)* {
                 let start = Instant::now();
@@ -169,6 +180,7 @@ declare_gl_apis! {
     fn gen_framebuffers(&self, n: GLsizei) -> Vec<GLuint>;
     fn gen_textures(&self, n: GLsizei) -> Vec<GLuint>;
     fn gen_vertex_arrays(&self, n: GLsizei) -> Vec<GLuint>;
+    fn gen_vertex_arrays_apple(&self, n: GLsizei) -> Vec<GLuint>;
     fn gen_queries(&self, n: GLsizei) -> Vec<GLuint>;
     fn begin_query(&self, target: GLenum, id: GLuint);
     fn end_query(&self, target: GLenum);
@@ -179,6 +191,7 @@ declare_gl_apis! {
     fn get_query_object_ui64v(&self, id: GLuint, pname: GLenum) -> u64;
     fn delete_queries(&self, queries: &[GLuint]);
     fn delete_vertex_arrays(&self, vertex_arrays: &[GLuint]);
+    fn delete_vertex_arrays_apple(&self, vertex_arrays: &[GLuint]);
     fn delete_buffers(&self, buffers: &[GLuint]);
     fn delete_renderbuffers(&self, renderbuffers: &[GLuint]);
     fn delete_framebuffers(&self, framebuffers: &[GLuint]);
@@ -209,6 +222,7 @@ declare_gl_apis! {
                                 uniform_block_binding: GLuint);
     fn bind_buffer(&self, target: GLenum, buffer: GLuint);
     fn bind_vertex_array(&self, vao: GLuint);
+    fn bind_vertex_array_apple(&self, vao: GLuint);
     fn bind_renderbuffer(&self, target: GLenum, renderbuffer: GLuint);
     fn bind_framebuffer(&self, target: GLenum, framebuffer: GLuint);
     fn bind_texture(&self, target: GLenum, texture: GLuint);
@@ -549,6 +563,7 @@ declare_gl_apis! {
     fn stencil_op(&self, sfail: GLenum, dpfail: GLenum, dppass: GLenum);
     fn stencil_op_separate(&self, face: GLenum, sfail: GLenum, dpfail: GLenum, dppass: GLenum);
     fn egl_image_target_texture2d_oes(&self, target: GLenum, image: GLeglImageOES);
+    fn egl_image_target_renderbuffer_storage_oes(&self, target: GLenum, image: GLeglImageOES);
     fn generate_mipmap(&self, target: GLenum);
     fn insert_event_marker_ext(&self, message: &str);
     fn push_group_marker_ext(&self, message: &str);
@@ -588,49 +603,61 @@ declare_gl_apis! {
     // GL_KHR_debug
     fn get_debug_messages(&self) -> Vec<DebugMessage>;
 
-    // GL_ANGLE_provoking_vertex.
+    // GL_ANGLE_provoking_vertex
     fn provoking_vertex_angle(&self, mode: GLenum);
+
+    // GL_CHROMIUM_copy_texture
+    fn copy_texture_chromium(&self,
+        source_id: GLuint, source_level: GLint,
+        dest_target: GLenum, dest_id: GLuint, dest_level: GLint,
+        internal_format: GLint, dest_type: GLenum,
+        unpack_flip_y: GLboolean, unpack_premultiply_alpha: GLboolean, unpack_unmultiply_alpha: GLboolean);
+    fn copy_sub_texture_chromium(&self,
+        source_id: GLuint, source_level: GLint,
+        dest_target: GLenum, dest_id: GLuint, dest_level: GLint,
+        x_offset: GLint, y_offset: GLint, x: GLint, y: GLint, width: GLsizei, height: GLsizei,
+        unpack_flip_y: GLboolean, unpack_premultiply_alpha: GLboolean, unpack_unmultiply_alpha: GLboolean);
 }
 
 //#[deprecated(since = "0.6.11", note = "use ErrorReactingGl instead")]
 pub struct ErrorCheckingGl {
-    gl: Rc<Gl>,
+    gl: Rc<dyn Gl>,
 }
 
 impl ErrorCheckingGl {
-    pub fn wrap(fns: Rc<Gl>) -> Rc<Gl> {
-        Rc::new(ErrorCheckingGl { gl: fns }) as Rc<Gl>
+    pub fn wrap(fns: Rc<dyn Gl>) -> Rc<dyn Gl> {
+        Rc::new(ErrorCheckingGl { gl: fns }) as Rc<dyn Gl>
     }
 }
 
 /// A wrapper around GL context that calls a specified callback on each GL error.
 pub struct ErrorReactingGl<F> {
-    gl: Rc<Gl>,
+    gl: Rc<dyn Gl>,
     callback: F,
 }
 
-impl<F: 'static + Fn(&Gl, &str, GLenum)> ErrorReactingGl<F> {
-    pub fn wrap(fns: Rc<Gl>, callback: F) -> Rc<Gl> {
-        Rc::new(ErrorReactingGl { gl: fns, callback }) as Rc<Gl>
+impl<F: 'static + Fn(&dyn Gl, &str, GLenum)> ErrorReactingGl<F> {
+    pub fn wrap(fns: Rc<dyn Gl>, callback: F) -> Rc<dyn Gl> {
+        Rc::new(ErrorReactingGl { gl: fns, callback }) as Rc<dyn Gl>
     }
 }
 
 /// A wrapper around GL context that times each call and invokes the callback
 /// if the call takes longer than the threshold.
 pub struct ProfilingGl<F> {
-    gl: Rc<Gl>,
+    gl: Rc<dyn Gl>,
     threshold: Duration,
     callback: F,
 }
 
 impl<F: 'static + Fn(&str, Duration)> ProfilingGl<F> {
-    pub fn wrap(fns: Rc<Gl>, threshold: Duration, callback: F) -> Rc<Gl> {
-        Rc::new(ProfilingGl { gl: fns, threshold, callback }) as Rc<Gl>
+    pub fn wrap(fns: Rc<dyn Gl>, threshold: Duration, callback: F) -> Rc<dyn Gl> {
+        Rc::new(ProfilingGl { gl: fns, threshold, callback }) as Rc<dyn Gl>
     }
 }
 
 #[inline]
-pub fn buffer_data<T>(gl_: &Gl, target: GLenum, data: &[T], usage: GLenum) {
+pub fn buffer_data<T>(gl_: &dyn Gl, target: GLenum, data: &[T], usage: GLenum) {
     gl_.buffer_data_untyped(
         target,
         (data.len() * size_of::<T>()) as GLsizeiptr,
@@ -640,7 +667,7 @@ pub fn buffer_data<T>(gl_: &Gl, target: GLenum, data: &[T], usage: GLenum) {
 }
 
 #[inline]
-pub fn buffer_data_raw<T>(gl_: &Gl, target: GLenum, data: &T, usage: GLenum) {
+pub fn buffer_data_raw<T>(gl_: &dyn Gl, target: GLenum, data: &T, usage: GLenum) {
     gl_.buffer_data_untyped(
         target,
         size_of::<T>() as GLsizeiptr,
@@ -650,7 +677,7 @@ pub fn buffer_data_raw<T>(gl_: &Gl, target: GLenum, data: &T, usage: GLenum) {
 }
 
 #[inline]
-pub fn buffer_sub_data<T>(gl_: &Gl, target: GLenum, offset: isize, data: &[T]) {
+pub fn buffer_sub_data<T>(gl_: &dyn Gl, target: GLenum, offset: isize, data: &[T]) {
     gl_.buffer_sub_data_untyped(
         target,
         offset,

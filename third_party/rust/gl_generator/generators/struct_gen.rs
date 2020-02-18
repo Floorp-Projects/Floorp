@@ -187,7 +187,7 @@ where
             #[allow(dead_code, unused_variables)]
             pub fn load_with<F>(mut loadfn: F) -> {api} where F: FnMut(&'static str) -> *const __gl_imports::raw::c_void {{
                 #[inline(never)]
-                fn do_metaloadfn(loadfn: &mut FnMut(&'static str) -> *const __gl_imports::raw::c_void,
+                fn do_metaloadfn(loadfn: &mut dyn FnMut(&'static str) -> *const __gl_imports::raw::c_void,
                                  symbol: &'static str,
                                  symbols: &[&'static str])
                                  -> *const __gl_imports::raw::c_void {{
