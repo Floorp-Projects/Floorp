@@ -15,23 +15,25 @@
   background-color: var(--console-input-background);
 }
 
-.eager-evaluation-result > .icon {
-  background-image: url(chrome://devtools/skin/images/webconsole/return.svg);
-  color: var(--theme-icon-extreme-dimmed-color);
-  margin: -1px 8px 0 10px;
-}
-
 /* Colors override */
-.theme-light .eager-evaluation-result{
+.theme-light .eager-evaluation-result {
   --object-color: var(--grey-50);
   --location-color: var(--grey-43);
   --null-color: var(--grey-43);
+  --log-icon-color: var(--grey-35);
 }
 
-.theme-dark .eager-evaluation-result{
+.theme-dark .eager-evaluation-result {
   --object-color: var(--grey-43);
-  --location-color: #787878;
-  --null-color: #787878;
+  --location-color: var(--grey-50);
+  --null-color: var(--grey-50);
+  --log-icon-color: var(--grey-55);
+}
+
+.eager-evaluation-result > .icon {
+  background-image: url(chrome://devtools/skin/images/webconsole/return.svg);
+  color: var(--log-icon-color);
+  margin: -1px 8px 0 10px;
 }
 
 .eager-evaluation-result .objectBox-function .param {
