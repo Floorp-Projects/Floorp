@@ -12,15 +12,16 @@ pub struct GlFns {
 }
 
 impl GlFns {
-    pub unsafe fn load_with<'a, F>(loadfn: F) -> Rc<Gl>
+    pub unsafe fn load_with<'a, F>(loadfn: F) -> Rc<dyn Gl>
     where
         F: FnMut(&str) -> *const c_void,
     {
         let ffi_gl_ = GlFfi::load_with(loadfn);
-        Rc::new(GlFns { ffi_gl_: ffi_gl_ }) as Rc<Gl>
+        Rc::new(GlFns { ffi_gl_: ffi_gl_ }) as Rc<dyn Gl>
     }
 }
 
+impl Sealed for GlFns {}
 impl Gl for GlFns {
     fn get_type(&self) -> GlType {
         GlType::Gl
@@ -221,7 +222,15 @@ impl Gl for GlFns {
     fn gen_vertex_arrays(&self, n: GLsizei) -> Vec<GLuint> {
         let mut result = vec![0 as GLuint; n as usize];
         unsafe {
-            self.ffi_gl_.GenVertexArrays(n, result.as_mut_ptr());
+            self.ffi_gl_.GenVertexArrays(n, result.as_mut_ptr())
+        }
+        result
+    }
+
+    fn gen_vertex_arrays_apple(&self, n: GLsizei) -> Vec<GLuint> {
+        let mut result = vec![0 as GLuint; n as usize];
+        unsafe {
+            self.ffi_gl_.GenVertexArraysAPPLE(n, result.as_mut_ptr())
         }
         result
     }
@@ -295,6 +304,13 @@ impl Gl for GlFns {
         unsafe {
             self.ffi_gl_
                 .DeleteVertexArrays(vertex_arrays.len() as GLsizei, vertex_arrays.as_ptr());
+        }
+    }
+
+    fn delete_vertex_arrays_apple(&self, vertex_arrays: &[GLuint]) {
+        unsafe {
+            self.ffi_gl_
+                .DeleteVertexArraysAPPLE(vertex_arrays.len() as GLsizei, vertex_arrays.as_ptr());
         }
     }
 
@@ -461,6 +477,12 @@ impl Gl for GlFns {
     fn bind_vertex_array(&self, vao: GLuint) {
         unsafe {
             self.ffi_gl_.BindVertexArray(vao);
+        }
+    }
+
+    fn bind_vertex_array_apple(&self, vao: GLuint) {
+        unsafe {
+            self.ffi_gl_.BindVertexArrayAPPLE(vao)
         }
     }
 
@@ -1916,6 +1938,11 @@ impl Gl for GlFns {
         panic!("not supported")
     }
 
+    #[allow(unused_variables)]
+    fn egl_image_target_renderbuffer_storage_oes(&self, target: GLenum, image: GLeglImageOES) {
+        panic!("not supported")
+    }
+
     fn generate_mipmap(&self, target: GLenum) {
         unsafe { self.ffi_gl_.GenerateMipmap(target) }
     }
@@ -2152,5 +2179,23 @@ impl Gl for GlFns {
                 self.ffi_gl_.BlendBarrierKHR();
             }
         }
+    }
+
+    // GL_CHROMIUM_copy_texture
+    fn copy_texture_chromium(&self,
+        _source_id: GLuint, _source_level: GLint,
+        _dest_target: GLenum, _dest_id: GLuint, _dest_level: GLint,
+        _internal_format: GLint, _dest_type: GLenum,
+        _unpack_flip_y: GLboolean, _unpack_premultiply_alpha: GLboolean, _unpack_unmultiply_alpha: GLboolean)
+    {
+        unimplemented!("This extension is GLES only");
+    }
+    fn copy_sub_texture_chromium(&self,
+        _source_id: GLuint, _source_level: GLint,
+        _dest_target: GLenum, _dest_id: GLuint, _dest_level: GLint,
+        _x_offset: GLint, _y_offset: GLint, _x: GLint, _y: GLint, _width: GLsizei, _height: GLsizei,
+        _unpack_flip_y: GLboolean, _unpack_premultiply_alpha: GLboolean, _unpack_unmultiply_alpha: GLboolean)
+    {
+        unimplemented!("This extension is GLES only");
     }
 }
