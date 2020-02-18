@@ -172,9 +172,12 @@ class AttachmentDownloader extends Downloader {
       return await super.download(record, options);
     } catch (err) {
       // Report download error.
-      const status = /NetworkError/.test(err.message)
-        ? UptakeTelemetry.STATUS.NETWORK_ERROR
-        : UptakeTelemetry.STATUS.DOWNLOAD_ERROR;
+      let status = UptakeTelemetry.STATUS.DOWNLOAD_ERROR;
+      if (Utils.isOffline) {
+        status = UptakeTelemetry.STATUS.NETWORK_OFFLINE_ERROR;
+      } else if (/NetworkError/.test(err.message)) {
+        status = UptakeTelemetry.STATUS.NETWORK_ERROR;
+      }
       // If the file failed to be downloaded, report it as such in Telemetry.
       await UptakeTelemetry.report(TELEMETRY_COMPONENT, status, {
         source: this._client.identifier,
