@@ -30,6 +30,7 @@ class RDDProcessManager final : public RDDProcessHost::Listener {
 
   // If not using a RDD process, launch a new RDD process asynchronously.
   bool LaunchRDDProcess();
+  bool IsRDDProcessLaunching();
 
   // Ensure that RDD-bound methods can be used. If no RDD process is being
   // used, or one is launched and ready, this function returns immediately.
