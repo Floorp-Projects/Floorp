@@ -2041,7 +2041,7 @@ nsresult nsFrameSelection::HandleTableSelection(nsINode* aParentContent,
   // When doing table selection, always set the direction to next so
   // we can be sure that anchorNode's offset always points to the
   // selected cell
-  int8_t index = GetIndexFromSelectionType(SelectionType::eNormal);
+  const int8_t index = GetIndexFromSelectionType(SelectionType::eNormal);
   if (!mDomSelections[index]) return NS_ERROR_NULL_POINTER;
 
   mDomSelections[index]->SetDirection(eDirNext);
@@ -2150,8 +2150,8 @@ nsresult nsFrameSelection::HandleTableSelection(nsINode* aParentContent,
         bool isSelected = false;
 
         // Check if we have other selected cells
-        nsIContent* previousCellNode =
-            GetFirstSelectedContent(GetFirstCellRange());
+        nsIContent* previousCellNode = GetFirstSelectedContent(
+            mTableSelection.GetFirstCellRange(*mDomSelections[index]));
         if (previousCellNode) {
           // We have at least 1 other selected cell
 
@@ -2400,7 +2400,8 @@ nsresult nsFrameSelection::UnselectCells(nsIContent* aTableContent,
   int32_t maxColIndex = std::max(aStartColumnIndex, aEndColumnIndex);
 
   // Strong reference because we sometimes remove the range
-  RefPtr<nsRange> range = GetFirstCellRange();
+  RefPtr<nsRange> range =
+      mTableSelection.GetFirstCellRange(*mDomSelections[index]);
   nsIContent* cellNode = GetFirstSelectedContent(range);
   MOZ_ASSERT(!range || cellNode, "Must have cellNode if had a range");
 
@@ -2642,17 +2643,17 @@ nsIContent* nsFrameSelection::GetFirstCellNodeInRange(const nsRange* aRange) {
   return childContent;
 }
 
-nsRange* nsFrameSelection::GetFirstCellRange() {
-  int8_t index = GetIndexFromSelectionType(SelectionType::eNormal);
-  if (!mDomSelections[index]) return nullptr;
+nsRange* nsFrameSelection::TableSelection::GetFirstCellRange(
+    const mozilla::dom::Selection& aNormalSelection) {
+  MOZ_ASSERT(aNormalSelection.Type() == SelectionType::eNormal);
 
-  nsRange* firstRange = mDomSelections[index]->GetRangeAt(0);
+  nsRange* firstRange = aNormalSelection.GetRangeAt(0);
   if (!GetFirstCellNodeInRange(firstRange)) {
     return nullptr;
   }
 
   // Setup for next cell
-  mTableSelection.mSelectedCellIndex = 1;
+  mSelectedCellIndex = 1;
 
   return firstRange;
 }
