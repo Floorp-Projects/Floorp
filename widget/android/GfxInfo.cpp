@@ -577,7 +577,7 @@ nsresult GfxInfo::GetFeatureStatusImpl(
         *aStatus = nsIGfxInfo::FEATURE_BLOCKED_DEVICE;
         aFailureId = "FEATURE_FAILURE_WEBRENDER_BLOCKED_DEVICE";
       } else {
-        *aStatus = nsIGfxInfo::FEATURE_STATUS_OK;
+        *aStatus = nsIGfxInfo::FEATURE_ALLOW_QUALIFIED;
       }
       return NS_OK;
     }
