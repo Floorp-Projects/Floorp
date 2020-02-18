@@ -45,12 +45,6 @@ class WorkersListener {
       this._onProcessDescriptorAvailable
     );
 
-    // Support FF69 and older
-    this.rootFront.watchFronts(
-      "contentProcessTarget",
-      this._onContentProcessTargetAvailable
-    );
-
     this.rootFront.watchFronts(
       "serviceWorkerRegistration",
       this._onServiceWorkerRegistrationAvailable
@@ -88,10 +82,6 @@ class WorkersListener {
     this.rootFront.unwatchFronts(
       "processDescriptor",
       this._onProcessDescriptorAvailable
-    );
-    this.rootFront.unwatchFronts(
-      "contentProcessTarget",
-      this._onContentProcessTargetAvailable
     );
     this.rootFront.unwatchFronts(
       "serviceWorkerRegistration",
