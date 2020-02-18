@@ -13,7 +13,7 @@ var { dumpn } = DevToolsUtils;
 loader.lazyRequireGetter(
   this,
   "DevToolsServerConnection",
-  "devtools/server/debugger-server-connection",
+  "devtools/server/devtools-server-connection",
   true
 );
 loader.lazyRequireGetter(
