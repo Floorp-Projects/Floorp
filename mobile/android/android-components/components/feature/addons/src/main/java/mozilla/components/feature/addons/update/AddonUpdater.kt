@@ -24,6 +24,7 @@ import androidx.work.PeriodicWorkRequest
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
+import kotlinx.coroutines.Dispatchers
 import mozilla.components.concept.engine.webextension.WebExtension
 import mozilla.components.feature.addons.Addon
 import mozilla.components.feature.addons.R
@@ -122,6 +123,7 @@ class DefaultAddonUpdater(
     private val applicationContext: Context,
     private val frequency: Frequency = Frequency(1, TimeUnit.DAYS)
 ) : AddonUpdater {
+    private val logger = Logger("DefaultAddonUpdater")
 
     @VisibleForTesting
     internal val updateStatusStorage = UpdateStatusStorage()
@@ -135,6 +137,7 @@ class DefaultAddonUpdater(
             ExistingPeriodicWorkPolicy.KEEP,
             createPeriodicWorkerRequest(addonId)
         )
+        logger.info("registerForFutureUpdates $addonId")
     }
 
     /**
@@ -143,6 +146,7 @@ class DefaultAddonUpdater(
     override fun unregisterForFutureUpdates(addonId: String) {
         WorkManager.getInstance(applicationContext)
             .cancelUniqueWork(getUniquePeriodicWorkName(addonId))
+        logger.info("unregisterForFutureUpdates $addonId")
     }
 
     /**
@@ -154,6 +158,7 @@ class DefaultAddonUpdater(
             ExistingWorkPolicy.KEEP,
             createImmediateWorkerRequest(addonId)
         ).enqueue()
+        logger.info("update $addonId")
     }
 
     /**
@@ -165,6 +170,8 @@ class DefaultAddonUpdater(
         newPermissions: List<String>,
         onPermissionsGranted: (Boolean) -> Unit
     ) {
+        logger.info("onUpdatePermissionRequest $current")
+
         val wasPreviouslyAllowed =
             updateStatusStorage.isPreviouslyAllowed(applicationContext, updated.id)
 
@@ -172,6 +179,8 @@ class DefaultAddonUpdater(
 
         if (!wasPreviouslyAllowed) {
             createNotification(updated, newPermissions)
+        } else {
+            updateStatusStorage.markAsUnallowed(applicationContext, updated.id)
         }
     }
 
@@ -207,7 +216,6 @@ class DefaultAddonUpdater(
     @VisibleForTesting
     internal fun getWorkerConstrains() = Constraints.Builder()
         .setRequiresStorageNotLow(true)
-        .setRequiresDeviceIdle(true)
         .setRequiredNetworkType(NetworkType.CONNECTED)
         .build()
 
@@ -234,6 +242,7 @@ class DefaultAddonUpdater(
         val channelId = ensureNotificationChannelExists(applicationContext, channel)
         val text = createContentText(newPermissions)
 
+        logger.info("Created update notification for add-on ${extension.id}")
         return NotificationCompat.Builder(applicationContext, channelId)
             .setSmallIcon(mozilla.components.ui.icons.R.drawable.mozac_ic_extensions)
             .setContentTitle(getNotificationTitle(extension))
@@ -407,10 +416,14 @@ class DefaultAddonUpdater(
         fun markAsAllowed(context: Context, addonId: String) {
             val allowSet = getData(context)
             allowSet.add(addonId)
-            getSettings(context)
-                .edit()
-                .putStringSet(KEY_ALLOWED_SET, allowSet)
-                .apply()
+            setData(context, allowSet)
+        }
+
+        @Synchronized
+        fun markAsUnallowed(context: Context, addonId: String) {
+            val allowSet = getData(context)
+            allowSet.remove(addonId)
+            setData(context, allowSet)
         }
 
         fun clear(context: Context) {
@@ -419,6 +432,13 @@ class DefaultAddonUpdater(
         }
 
         private fun getSettings(context: Context) = getSharedPreferences(context)
+
+        private fun setData(context: Context, allowSet: MutableSet<String>) {
+            getSettings(context)
+                    .edit()
+                    .putStringSet(KEY_ALLOWED_SET, allowSet)
+                    .apply()
+        }
 
         private fun getData(context: Context): MutableSet<String> {
             val settings = getSharedPreferences(context)
@@ -446,6 +466,9 @@ internal class AddonUpdaterWorker(
     private val params: WorkerParameters
 ) : CoroutineWorker(context, params) {
     private val logger = Logger("AddonUpdaterWorker")
+
+    @Suppress("OverridingDeprecatedMember")
+    override val coroutineContext = Dispatchers.Main
 
     override suspend fun doWork(): Result {
         val extensionId = params.inputData.getString(KEY_DATA_EXTENSIONS_ID) ?: ""

@@ -76,7 +76,7 @@ class AddonDetailsActivity : AppCompatActivity() {
 
     private fun bindVersion(addon: Addon) {
         val versionView = findViewById<TextView>(R.id.version_text)
-        versionView.text = addon.version
+        versionView.text = addon.installedState?.version?.ifEmpty { addon.version } ?: addon.version
     }
 
     private fun bindAuthors(addon: Addon) {
