@@ -365,5 +365,23 @@ SSLTokensCache::CollectReports(nsIHandleReportCallback* aHandleReport,
   return NS_OK;
 }
 
+// static
+void SSLTokensCache::Clear() {
+  LOG(("SSLTokensCache::Clear"));
+  if (!sEnabled) {
+    return;
+  }
+
+  StaticMutexAutoLock lock(sLock);
+  if (!gInstance) {
+    LOG(("  service not initialized"));
+    return;
+  }
+
+  gInstance->mExpirationArray.Clear();
+  gInstance->mTokenCacheRecords.Clear();
+  gInstance->mCacheSize = 0;
+}
+
 }  // namespace net
 }  // namespace mozilla

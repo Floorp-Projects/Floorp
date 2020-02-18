@@ -58,6 +58,7 @@
 #include "ssl.h"
 #include "sslerr.h"
 #include "sslproto.h"
+#include "SSLTokensCache.h"
 #include "prmem.h"
 
 #if defined(XP_LINUX) && !defined(ANDROID)
@@ -205,7 +206,7 @@ static void GetRevocationBehaviorFromPrefs(
       std::min(hardTimeoutMillis, OCSP_TIMEOUT_MILLISECONDS_HARD_MAX);
   hardTimeout = TimeDuration::FromMilliseconds(hardTimeoutMillis);
 
-  SSL_ClearSessionCache();
+  nsNSSComponent::ClearSSLExternalAndInternalSessionCacheNative();
 }
 
 nsNSSComponent::nsNSSComponent()
@@ -1295,7 +1296,7 @@ nsresult CipherSuiteChangeObserver::Observe(nsISupports* /*aSubject*/,
         bool cipherEnabled =
             Preferences::GetBool(cp[i].pref, cp[i].enabledByDefault);
         SSL_CipherPrefSetDefault(cp[i].id, cipherEnabled);
-        SSL_ClearSessionCache();
+        nsNSSComponent::ClearSSLExternalAndInternalSessionCacheNative();
         break;
       }
     }
@@ -2161,7 +2162,9 @@ nsNSSComponent::Observe(nsISupports* aSubject, const char* aTopic,
     } else {
       clearSessionCache = false;
     }
-    if (clearSessionCache) SSL_ClearSessionCache();
+    if (clearSessionCache) {
+      ClearSSLExternalAndInternalSessionCacheNative();
+    }
   }
 
   return NS_OK;
@@ -2302,6 +2305,18 @@ nsNSSComponent::GetDefaultCertVerifier(SharedCertVerifier** result) {
   NS_ENSURE_ARG_POINTER(result);
   RefPtr<SharedCertVerifier> certVerifier(mDefaultCertVerifier);
   certVerifier.forget(result);
+  return NS_OK;
+}
+
+// static
+void nsNSSComponent::ClearSSLExternalAndInternalSessionCacheNative() {
+  SSL_ClearSessionCache();
+  mozilla::net::SSLTokensCache::Clear();
+}
+
+NS_IMETHODIMP
+nsNSSComponent::ClearSSLExternalAndInternalSessionCache() {
+  ClearSSLExternalAndInternalSessionCacheNative();
   return NS_OK;
 }
 
