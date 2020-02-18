@@ -3596,6 +3596,20 @@ void CodeGenerator::emitLambdaInit(Register output, Register envChain,
                 Address(output, JSFunction::offsetOfAtom()));
 }
 
+void CodeGenerator::visitFunctionWithProto(LFunctionWithProto* lir) {
+  Register envChain = ToRegister(lir->environmentChain());
+  Register prototype = ToRegister(lir->prototype());
+  const LambdaFunctionInfo& info = lir->mir()->info();
+
+  pushArg(prototype);
+  pushArg(envChain);
+  pushArg(ImmGCPtr(info.funUnsafe()));
+
+  using Fn =
+      JSObject* (*)(JSContext*, HandleFunction, HandleObject, HandleObject);
+  callVM<Fn, js::FunWithProtoOperation>(lir);
+}
+
 void CodeGenerator::visitSetFunName(LSetFunName* lir) {
   pushArg(Imm32(lir->mir()->prefixKind()));
   pushArg(ToValue(lir, LSetFunName::NameValue));

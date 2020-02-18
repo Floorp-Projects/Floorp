@@ -3568,6 +3568,20 @@ class LLambdaArrow : public LInstructionHelper<1, 1 + BOX_PIECES, 1> {
   const MLambdaArrow* mir() const { return mir_->toLambdaArrow(); }
 };
 
+class LFunctionWithProto : public LCallInstructionHelper<1, 2, 0> {
+ public:
+  LIR_HEADER(FunctionWithProto)
+
+  LFunctionWithProto(const LAllocation& envChain, const LAllocation& prototype)
+      : LCallInstructionHelper(classOpcode) {
+    setOperand(0, envChain);
+    setOperand(1, prototype);
+  }
+  const LAllocation* environmentChain() { return getOperand(0); }
+  const LAllocation* prototype() { return getOperand(1); }
+  const MFunctionWithProto* mir() const { return mir_->toFunctionWithProto(); }
+};
+
 class LSetFunName : public LCallInstructionHelper<1, 1 + BOX_PIECES, 0> {
  public:
   LIR_HEADER(SetFunName)
