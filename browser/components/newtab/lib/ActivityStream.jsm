@@ -136,15 +136,10 @@ const GEO_PREF = "browser.search.region";
 const REGION_STORIES_CONFIG =
   "browser.newtabpage.activity-stream.discoverystream.region-stories-config";
 const SPOCS_GEOS = ["US"];
-const REGION_SPOCS_CONFIG =
-  "browser.newtabpage.activity-stream.discoverystream.region-spocs-config";
 
 // Determine if spocs should be shown for a geo/locale
 function showSpocs({ geo }) {
-  const spocsGeoString =
-    Services.prefs.getStringPref(REGION_SPOCS_CONFIG) || "";
-  const spocsGeo = spocsGeoString.split(",").map(s => s.trim());
-  return spocsGeo.includes(geo);
+  return SPOCS_GEOS.includes(geo);
 }
 
 // Configure default Activity Stream prefs with a plain `value` or a `getValue`

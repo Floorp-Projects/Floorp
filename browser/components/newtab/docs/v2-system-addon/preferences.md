@@ -185,14 +185,6 @@ Programmatically generated hash table where the keys are sponsored content IDs a
 
 A comma separated list of geos that by default have stories enabled in newtab. It matches the client's geo with that list, then looks for a matching locale.
 
-#### `browser.newtabpage.activity-stream.discoverystream.region-spocs-config`
-
-- Type: `string`
-- Default: `US`
-- Pref Type: Firefox
-
-A comma separated list of geos that by default have spocs enabled in newtab. It matches the client's geo with that list.
-
 #### `browser.newtabpage.activity-stream.discoverystream.spocs-endpoint`
 
 - Type: `string`
