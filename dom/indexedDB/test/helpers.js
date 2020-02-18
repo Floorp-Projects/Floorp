@@ -413,6 +413,23 @@ function expectingUpgrade(request) {
   });
 }
 
+function expectingError(request, errorName) {
+  return new Promise(function(resolve, reject) {
+    request.onerror = function(event) {
+      is(errorName, event.target.error.name, "Correct exception type");
+      resolve(event);
+    };
+    request.onsuccess = function(event) {
+      ok(false, "Got success, but did not expect it!");
+      reject(event);
+    };
+    request.onupgradeneeded = function(event) {
+      ok(false, "Got upgrade, but did not expect it!");
+      reject(event);
+    };
+  });
+}
+
 function workerScript() {
   "use strict";
 
