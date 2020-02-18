@@ -17,7 +17,6 @@ CompiledModules(
     'Scopes.js',
     'Thread.js',
     'Threads.js',
-    'UtilsBar.js',
     'WhyPaused.js',
     'XHRBreakpoints.js',
 )

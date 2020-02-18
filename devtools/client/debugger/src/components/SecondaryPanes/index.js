@@ -40,7 +40,6 @@ import Frames from "./Frames";
 import Threads from "./Threads";
 import Accordion from "../shared/Accordion";
 import CommandBar from "./CommandBar";
-import UtilsBar from "./UtilsBar";
 import XHRBreakpoints from "./XHRBreakpoints";
 import EventListeners from "./EventListeners";
 import DOMMutationBreakpoints from "./DOMMutationBreakpoints";
@@ -87,7 +86,6 @@ type State = {
 
 type OwnProps = {|
   horizontal: boolean,
-  toggleShortcutsModal: () => void,
 |};
 type Props = {
   cx: ThreadContext,
@@ -106,7 +104,6 @@ type Props = {
   skipPausing: boolean,
   logEventBreakpoints: boolean,
   source: ?Source,
-  toggleShortcutsModal: () => void,
   toggleAllBreakpoints: typeof actions.toggleAllBreakpoints,
   toggleMapScopes: typeof actions.toggleMapScopes,
   evaluateExpressions: typeof actions.evaluateExpressions,
@@ -504,19 +501,6 @@ class SecondaryPanes extends Component<Props, State> {
     );
   }
 
-  renderUtilsBar() {
-    if (!features.shortcuts) {
-      return;
-    }
-
-    return (
-      <UtilsBar
-        horizontal={this.props.horizontal}
-        toggleShortcutsModal={this.props.toggleShortcutsModal}
-      />
-    );
-  }
-
   render() {
     const { skipPausing } = this.props;
     return (
@@ -532,7 +516,6 @@ class SecondaryPanes extends Component<Props, State> {
             ? this.renderHorizontalLayout()
             : this.renderVerticalLayout()}
         </div>
-        {this.renderUtilsBar()}
       </div>
     );
   }
