@@ -53,6 +53,12 @@ struct NonOwningAnimationTarget {
     return mElement == aOther.mElement && mPseudoType == aOther.mPseudoType;
   }
 
+  NonOwningAnimationTarget& operator=(const OwningAnimationTarget& aOther) {
+    mElement = aOther.mElement;
+    mPseudoType = aOther.mPseudoType;
+    return *this;
+  }
+
   explicit operator bool() const { return !!mElement; }
 
   // mElement represents the parent element of a pseudo-element, not the

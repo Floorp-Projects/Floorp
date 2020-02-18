@@ -271,6 +271,12 @@ void EffectCompositor::PostRestyleForAnimation(dom::Element* aElement,
     return;
   }
 
+  // FIXME: Bug 1615083 KeyframeEffect::SetTarget() and
+  // KeyframeEffect::SetPseudoElement() may set a non-existing pseudo element,
+  // and we still have to update its style, based on the wpt. However, we don't
+  // have the generated element here, so we failed the wpt.
+  //
+  // See wpt for more info: web-animations/interfaces/KeyframeEffect/target.html
   dom::Element* element = GetElementToRestyle(aElement, aPseudoType);
   if (!element) {
     return;
@@ -474,14 +480,14 @@ bool EffectCompositor::ComposeServoAnimationRuleForEffect(
   MOZ_ASSERT(mPresContext && mPresContext->IsDynamic(),
              "Should not be in print preview");
 
-  Maybe<NonOwningAnimationTarget> target = aEffect.GetTarget();
+  NonOwningAnimationTarget target = aEffect.GetAnimationTarget();
   if (!target) {
     return false;
   }
 
   // Don't try to compose animations for elements in documents without a pres
   // shell (e.g. XMLHttpRequest documents).
-  if (!nsContentUtils::GetPresShellForContent(target->mElement)) {
+  if (!nsContentUtils::GetPresShellForContent(target.mElement)) {
     return false;
   }
 
@@ -489,10 +495,10 @@ bool EffectCompositor::ComposeServoAnimationRuleForEffect(
   // where the cascade results are updated in the pre-traversal as needed.
   // This function, however, is only called when committing styles so we
   // need to ensure the cascade results are up-to-date manually.
-  MaybeUpdateCascadeResults(target->mElement, target->mPseudoType);
+  MaybeUpdateCascadeResults(target.mElement, target.mPseudoType);
 
   EffectSet* effectSet =
-      EffectSet::GetEffectSet(target->mElement, target->mPseudoType);
+      EffectSet::GetEffectSet(target.mElement, target.mPseudoType);
 
   // Get a list of effects sorted by composite order up to and including
   // |aEffect|, even if it is not in the EffectSet.
@@ -512,9 +518,9 @@ bool EffectCompositor::ComposeServoAnimationRuleForEffect(
   ComposeSortedEffects(sortedEffectList, effectSet, aCascadeLevel,
                        aAnimationValues);
 
-  MOZ_ASSERT(effectSet ==
-                 EffectSet::GetEffectSet(target->mElement, target->mPseudoType),
-             "EffectSet should not change while composing style");
+  MOZ_ASSERT(
+      effectSet == EffectSet::GetEffectSet(target.mElement, target.mPseudoType),
+      "EffectSet should not change while composing style");
 
   return true;
 }

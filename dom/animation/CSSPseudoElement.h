@@ -54,13 +54,6 @@ class CSSPseudoElement final : public nsWrapperCache {
     return retVal.forget();
   }
 
-  void GetAnimations(const GetAnimationsOptions& aOptions,
-                     nsTArray<RefPtr<Animation>>& aRetVal);
-  already_AddRefed<Animation> Animate(
-      JSContext* aContext, JS::Handle<JSObject*> aKeyframes,
-      const UnrestrictedDoubleOrKeyframeAnimationOptions& aOptions,
-      ErrorResult& aError);
-
   // Given an element:pseudoType pair, returns the CSSPseudoElement stored as a
   // property on |aElement|. If there is no CSSPseudoElement for the specified
   // pseudo-type on element, a new CSSPseudoElement will be created and stored

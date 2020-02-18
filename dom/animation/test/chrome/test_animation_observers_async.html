@@ -502,13 +502,14 @@ promise_test(t => {
   var childBAnimations = childB.getAnimations();
 
   var divBeforeAnimations =
-    docAnims.filter(x => (x.effect.target.element == div &&
-                          x.effect.target.type == "::before"));
+    docAnims.filter(x => (x.effect.target == div &&
+                          x.effect.pseudoElement == "::before"));
   var divAfterAnimations =
-    docAnims.filter(x => (x.effect.target.element == div &&
-                          x.effect.target.type == "::after"));
+    docAnims.filter(x => (x.effect.target == div &&
+                          x.effect.pseudoElement == "::after"));
   var childBPseudoAnimations =
-    docAnims.filter(x => x.effect.target.element == childB);
+    docAnims.filter(x => (x.effect.target == childB &&
+                          x.effect.pseudoElement == "::before"));
 
   var seekRecords;
   // The order in which we get the corresponding records is currently

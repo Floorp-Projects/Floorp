@@ -1310,14 +1310,6 @@ class Element : public FragmentOrElement {
       const UnrestrictedDoubleOrKeyframeAnimationOptions& aOptions,
       ErrorResult& aError);
 
-  // A helper method that factors out the common functionality needed by
-  // Element::Animate and CSSPseudoElement::Animate
-  static already_AddRefed<Animation> Animate(
-      const Nullable<ElementOrCSSPseudoElement>& aTarget, JSContext* aContext,
-      JS::Handle<JSObject*> aKeyframes,
-      const UnrestrictedDoubleOrKeyframeAnimationOptions& aOptions,
-      ErrorResult& aError);
-
   enum class Flush { Yes, No };
 
   MOZ_CAN_RUN_SCRIPT
