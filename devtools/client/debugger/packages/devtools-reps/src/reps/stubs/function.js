@@ -203,4 +203,23 @@ stubs.set("ObjectProperty", {
   },
 });
 
+stubs.set("EmptyClass", {
+  actor: "server0.conn0.child1/obj27",
+  class: "Function",
+  displayName: "EmptyClass",
+  extensible: true,
+  frozen: false,
+  isAsync: false,
+  isClassConstructor: true,
+  isGenerator: false,
+  location: {
+    url: "debugger eval code",
+    line: 1,
+  },
+  name: "EmptyClass",
+  parameterNames: [],
+  sealed: false,
+  type: "object",
+});
+
 module.exports = stubs;
