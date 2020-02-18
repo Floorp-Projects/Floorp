@@ -1106,3 +1106,19 @@ bool nsUrlClassifierUtils::IsTestTable(const nsACString& aTableName) {
   return IsMozTestTable(aTableName) ||
          StringBeginsWith(aTableName, NS_LITERAL_CSTRING("test"));
 }
+
+bool nsUrlClassifierUtils::IsInSafeMode() {
+  static Maybe<bool> sIsInSafeMode;
+
+  if (!sIsInSafeMode.isSome()) {
+    nsCOMPtr<nsIXULRuntime> appInfo =
+        do_GetService("@mozilla.org/xre/runtime;1");
+    if (appInfo) {
+      bool inSafeMode = false;
+      appInfo->GetInSafeMode(&inSafeMode);
+      sIsInSafeMode.emplace(inSafeMode);
+    }
+  }
+
+  return sIsInSafeMode.value();
+}

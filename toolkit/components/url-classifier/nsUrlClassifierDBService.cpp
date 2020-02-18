@@ -1619,15 +1619,6 @@ nsresult nsUrlClassifierDBService::ReadDisallowCompletionsTablesFromPrefs() {
 
 nsresult nsUrlClassifierDBService::Init() {
   MOZ_ASSERT(NS_IsMainThread(), "Must initialize DB service on main thread");
-  nsCOMPtr<nsIXULRuntime> appInfo =
-      do_GetService("@mozilla.org/xre/app-info;1");
-  if (appInfo) {
-    bool inSafeMode = false;
-    appInfo->GetInSafeMode(&inSafeMode);
-    if (inSafeMode) {
-      return NS_ERROR_NOT_AVAILABLE;
-    }
-  }
 
   switch (XRE_GetProcessType()) {
     case GeckoProcessType_Default:
