@@ -7000,13 +7000,12 @@ class LRandom : public LInstructionHelper<1, 0, LRANDOM_NUM_TEMPS> {
   MRandom* mir() const { return mir_->toRandom(); }
 };
 
-class LCheckReturn
-    : public LCallInstructionHelper<BOX_PIECES, 2 * BOX_PIECES, 0> {
+class LCheckReturn : public LInstructionHelper<BOX_PIECES, 2 * BOX_PIECES, 0> {
  public:
   LIR_HEADER(CheckReturn)
 
   LCheckReturn(const LBoxAllocation& retVal, const LBoxAllocation& thisVal)
-      : LCallInstructionHelper(classOpcode) {
+      : LInstructionHelper(classOpcode) {
     setBoxOperand(ReturnValue, retVal);
     setBoxOperand(ThisValue, thisVal);
   }

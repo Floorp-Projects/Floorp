@@ -731,6 +731,7 @@ class MOZ_STACK_CLASS IonBuilder {
   AbortReasonOr<Ok> jsop_coalesce();
   AbortReasonOr<Ok> jsop_objwithproto();
   AbortReasonOr<Ok> jsop_builtinproto();
+  AbortReasonOr<Ok> jsop_checkreturn();
 
   /* Inlining. */
 

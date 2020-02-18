@@ -13213,13 +13213,19 @@ void CodeGenerator::visitNewTarget(LNewTarget* ins) {
 void CodeGenerator::visitCheckReturn(LCheckReturn* ins) {
   ValueOperand returnValue = ToValue(ins, LCheckReturn::ReturnValue);
   ValueOperand thisValue = ToValue(ins, LCheckReturn::ThisValue);
-  Label bail, noChecks;
+  ValueOperand output = ToOutValue(ins);
+
+  Label bail, noChecks, done;
   masm.branchTestObject(Assembler::Equal, returnValue, &noChecks);
   masm.branchTestUndefined(Assembler::NotEqual, returnValue, &bail);
-  masm.branchTestMagicValue(Assembler::Equal, thisValue,
-                            JS_UNINITIALIZED_LEXICAL, &bail);
-  bailoutFrom(&bail, ins->snapshot());
+  masm.branchTestMagic(Assembler::Equal, thisValue, &bail);
+  masm.moveValue(thisValue, output);
+  masm.jump(&done);
   masm.bind(&noChecks);
+  masm.moveValue(returnValue, output);
+  masm.bind(&done);
+
+  bailoutFrom(&bail, ins->snapshot());
 }
 
 void CodeGenerator::visitCheckIsObj(LCheckIsObj* ins) {

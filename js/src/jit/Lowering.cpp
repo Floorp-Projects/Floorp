@@ -4589,11 +4589,10 @@ void LIRGenerator::visitCheckReturn(MCheckReturn* ins) {
   MOZ_ASSERT(retVal->type() == MIRType::Value);
   MOZ_ASSERT(thisVal->type() == MIRType::Value);
 
-  LCheckReturn* lir =
+  auto* lir =
       new (alloc()) LCheckReturn(useBoxAtStart(retVal), useBoxAtStart(thisVal));
   assignSnapshot(lir, Bailout_BadDerivedConstructorReturn);
-  add(lir, ins);
-  redefine(ins, retVal);
+  defineBox(lir, ins);
 }
 
 void LIRGenerator::visitCheckIsObj(MCheckIsObj* ins) {

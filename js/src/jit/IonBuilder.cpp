@@ -2459,6 +2459,9 @@ AbortReasonOr<Ok> IonBuilder::inspectOpcode(JSOp op, bool* restarted) {
     case JSOp::BuiltinProto:
       return jsop_builtinproto();
 
+    case JSOp::CheckReturn:
+      return jsop_checkreturn();
+
     // ===== NOT Yet Implemented =====
     // Read below!
 
@@ -2475,7 +2478,6 @@ AbortReasonOr<Ok> IonBuilder::inspectOpcode(JSOp op, bool* restarted) {
     case JSOp::InitHomeObject:
     case JSOp::DerivedConstructor:
     case JSOp::CheckThis:
-    case JSOp::CheckReturn:
     case JSOp::CheckThisReinit:
 
     // Super
@@ -12796,6 +12798,30 @@ AbortReasonOr<Ok> IonBuilder::jsop_builtinproto() {
   current->add(ins);
   current->push(ins);
   return resumeAfter(ins);
+}
+
+AbortReasonOr<Ok> IonBuilder::jsop_checkreturn() {
+  MOZ_ASSERT(!script()->noScriptRval());
+
+  MDefinition* returnValue = current->getSlot(info().returnValueSlot());
+  MDefinition* thisValue = current->pop();
+
+  if (returnValue->type() == MIRType::Object) {
+    thisValue->setImplicitlyUsedUnchecked();
+    return Ok();
+  }
+
+  if (returnValue->type() == MIRType::Undefined &&
+      !thisValue->mightBeMagicType()) {
+    thisValue->setImplicitlyUsedUnchecked();
+    current->setSlot(info().returnValueSlot(), thisValue);
+    return Ok();
+  }
+
+  auto* ins = MCheckReturn::New(alloc(), returnValue, thisValue);
+  current->add(ins);
+  current->setSlot(info().returnValueSlot(), ins);
+  return Ok();
 }
 
 MInstruction* IonBuilder::addConvertElementsToDoubles(MDefinition* elements) {
