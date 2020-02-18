@@ -113,8 +113,7 @@ class Document;
 
 class KeyframeEffect : public AnimationEffect {
  public:
-  KeyframeEffect(Document* aDocument,
-                 const Maybe<OwningAnimationTarget>& aTarget,
+  KeyframeEffect(Document* aDocument, OwningAnimationTarget&& aTarget,
                  TimingParams&& aTiming, const KeyframeEffectParams& aOptions);
 
   NS_DECL_ISUPPORTS_INHERITED
@@ -151,7 +150,7 @@ class KeyframeEffect : public AnimationEffect {
   Maybe<NonOwningAnimationTarget> GetTarget() const {
     Maybe<NonOwningAnimationTarget> result;
     if (mTarget) {
-      result.emplace(*mTarget);
+      result.emplace(mTarget);
     }
     return result;
   }
@@ -346,7 +345,7 @@ class KeyframeEffect : public AnimationEffect {
  protected:
   ~KeyframeEffect() override = default;
 
-  static Maybe<OwningAnimationTarget> ConvertTarget(
+  static OwningAnimationTarget ConvertTarget(
       const Nullable<ElementOrCSSPseudoElement>& aTarget);
 
   template <class OptionsType>
@@ -399,7 +398,7 @@ class KeyframeEffect : public AnimationEffect {
                        const ComputedStyle* aComputedValues,
                        RefPtr<ComputedStyle>& aBaseComputedValues);
 
-  Maybe<OwningAnimationTarget> mTarget;
+  OwningAnimationTarget mTarget;
 
   KeyframeEffectParams mEffectOptions;
 

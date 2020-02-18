@@ -35,12 +35,12 @@ namespace mozilla {
 
 struct ElementPropertyTransition : public dom::KeyframeEffect {
   ElementPropertyTransition(dom::Document* aDocument,
-                            Maybe<OwningAnimationTarget>& aTarget,
+                            OwningAnimationTarget&& aTarget,
                             TimingParams&& aTiming,
                             AnimationValue aStartForReversingTest,
                             double aReversePortion,
                             const KeyframeEffectParams& aEffectOptions)
-      : dom::KeyframeEffect(aDocument, aTarget, std::move(aTiming),
+      : dom::KeyframeEffect(aDocument, std::move(aTarget), std::move(aTiming),
                             aEffectOptions),
         mStartForReversingTest(aStartForReversingTest),
         mReversePortion(aReversePortion) {}
