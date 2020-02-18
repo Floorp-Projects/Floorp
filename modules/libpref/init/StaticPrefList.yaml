@@ -4288,11 +4288,7 @@
 # composition.
 - name: intl.ime.hack.on_any_apps.fire_key_events_for_composition
   type: bool
-#ifdef MOZ_WIDGET_ANDROID
-  value: @IS_EARLY_BETA_OR_EARLIER@
-#else
-  value: false
-#endif
+  value: @IS_ANDROID@
   mirror: always
 
 #---------------------------------------------------------------------------
