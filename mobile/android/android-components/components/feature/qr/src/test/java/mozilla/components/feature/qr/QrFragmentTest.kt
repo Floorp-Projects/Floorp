@@ -16,6 +16,7 @@ import com.google.zxing.BarcodeFormat
 import com.google.zxing.BinaryBitmap
 import com.google.zxing.MultiFormatReader
 import com.google.zxing.NotFoundException
+import mozilla.components.feature.qr.QrFragment.Companion.chooseOptimalSize
 import mozilla.components.support.base.android.view.AutoFitTextureView
 import mozilla.components.support.test.any
 import mozilla.components.support.test.argumentCaptor
@@ -243,7 +244,7 @@ class QrFragmentTest {
 
     @Test
     fun `choose optimal size`() {
-        var size = QrFragment.chooseOptimalSize(
+        var size = chooseOptimalSize(
             arrayOf(Size(640, 480), Size(1024, 768)),
             640,
             480,
@@ -255,7 +256,7 @@ class QrFragmentTest {
         assertEquals(640, size.width)
         assertEquals(480, size.height)
 
-        size = QrFragment.chooseOptimalSize(
+        size = chooseOptimalSize(
             arrayOf(Size(1024, 768), Size(640, 480)),
             1024,
             768,
@@ -264,10 +265,10 @@ class QrFragmentTest {
             Size(4, 3)
         )
 
-        assertEquals(1024, size.width)
-        assertEquals(768, size.height)
+        assertEquals(640, size.width)
+        assertEquals(480, size.height)
 
-        size = QrFragment.chooseOptimalSize(
+        size = chooseOptimalSize(
             arrayOf(Size(1024, 768), Size(640, 480), Size(320, 240)),
             2048,
             768,
@@ -276,10 +277,10 @@ class QrFragmentTest {
             Size(4, 3)
         )
 
-        assertEquals(1024, size.width)
-        assertEquals(768, size.height)
+        assertEquals(640, size.width)
+        assertEquals(480, size.height)
 
-        size = QrFragment.chooseOptimalSize(
+        size = chooseOptimalSize(
             arrayOf(Size(1024, 768), Size(640, 480), Size(320, 240)),
             1024,
             1024,
@@ -288,11 +289,11 @@ class QrFragmentTest {
             Size(4, 3)
         )
 
-        assertEquals(1024, size.width)
-        assertEquals(768, size.height)
+        assertEquals(640, size.width)
+        assertEquals(480, size.height)
 
-        size = QrFragment.chooseOptimalSize(
-            arrayOf(Size(1024, 768), Size(640, 480), Size(320, 240)),
+        size = chooseOptimalSize(
+            arrayOf(Size(1024, 768), Size(786, 480), Size(320, 240)),
             2048,
             1024,
             QrFragment.MAX_PREVIEW_WIDTH,
@@ -328,5 +329,38 @@ class QrFragmentTest {
         // The rowstride / offset should have been taken into account resulting
         // in the same 1080 * 1920 image source as if the rowstride was equal to the width
         assertArrayEquals(bytesWithEqualRowStride.array(), QrFragment.readImageSource(image).matrix)
+    }
+
+    @Test
+    fun `uses square preview of optimal size`() {
+        val qrFragment = spy(QrFragment.newInstance(mock()))
+        val textureView: AutoFitTextureView = mock()
+        qrFragment.textureView = textureView
+
+        var optimalSize = chooseOptimalSize(
+            arrayOf(Size(640, 480), Size(1024, 768)),
+            640,
+            480,
+            QrFragment.MAX_PREVIEW_WIDTH,
+            QrFragment.MAX_PREVIEW_HEIGHT,
+            Size(16, 9)
+        )
+        qrFragment.adjustPreviewSize(optimalSize)
+        verify(textureView).setAspectRatio(480, 480)
+        assertEquals(480, qrFragment.previewSize?.width)
+        assertEquals(480, qrFragment.previewSize?.height)
+
+        optimalSize = chooseOptimalSize(
+            arrayOf(Size(1024, 768), Size(640, 480), Size(320, 240)),
+            2048,
+            1024,
+            QrFragment.MAX_PREVIEW_WIDTH,
+            QrFragment.MAX_PREVIEW_HEIGHT,
+            Size(16, 9)
+        )
+        qrFragment.adjustPreviewSize(optimalSize)
+        verify(textureView).setAspectRatio(768, 768)
+        assertEquals(768, qrFragment.previewSize?.width)
+        assertEquals(768, qrFragment.previewSize?.height)
     }
 }

@@ -17,7 +17,6 @@ package mozilla.components.feature.qr
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.content.res.Configuration
 import android.graphics.ImageFormat
 import android.graphics.Matrix
 import android.graphics.Point
@@ -291,22 +290,23 @@ class QrFragment : Fragment() {
             maxPreviewWidth = min(maxPreviewWidth, MAX_PREVIEW_WIDTH)
             maxPreviewHeight = min(maxPreviewHeight, MAX_PREVIEW_HEIGHT)
 
-            previewSize = chooseOptimalSize(map.getOutputSizes(SurfaceTexture::class.java),
-                    rotatedPreviewWidth, rotatedPreviewHeight, maxPreviewWidth,
-                    maxPreviewHeight, largest)
+            val optimalSize = chooseOptimalSize(map.getOutputSizes(SurfaceTexture::class.java),
+                rotatedPreviewWidth, rotatedPreviewHeight, maxPreviewWidth,
+                maxPreviewHeight, largest)
 
-            val size = previewSize as Size
-            // We fit the aspect ratio of TextureView to the size of preview we picked.
-            val orientation = resources.configuration.orientation
-            if (orientation == Configuration.ORIENTATION_LANDSCAPE) {
-                textureView.setAspectRatio(size.width, size.height)
-            } else {
-                textureView.setAspectRatio(size.height, size.width)
-            }
-
+            adjustPreviewSize(optimalSize)
             this.cameraId = cameraId
             return
         }
+    }
+
+    internal fun adjustPreviewSize(optimalSize: Size) {
+        // We're seeing slow unreliable scans with distorted screens on some devices
+        // so we're making the preview and scan area a square of the optimal size
+        // to prevent that.
+        val length = min(optimalSize.height, optimalSize.width)
+        textureView.setAspectRatio(length, length)
+        this.previewSize = Size(length, length)
     }
 
     /**
@@ -466,8 +466,8 @@ class QrFragment : Fragment() {
         internal const val STATE_DECODE_PROGRESS = 1
         internal const val STATE_QRCODE_EXIST = 2
 
-        internal const val MAX_PREVIEW_WIDTH = 1920
-        internal const val MAX_PREVIEW_HEIGHT = 1080
+        internal const val MAX_PREVIEW_WIDTH = 786
+        internal const val MAX_PREVIEW_HEIGHT = 786
 
         private const val CAMERA_CLOSE_LOCK_TIMEOUT_MS = 2500L
 
