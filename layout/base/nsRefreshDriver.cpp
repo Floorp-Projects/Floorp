@@ -732,17 +732,25 @@ class VsyncRefreshDriverTimer : public RefreshDriverTimer {
           aVsyncTimestamp <= *&rightnow);
 #endif
 
+      // Let also non-RefreshDriver code to run at least for awhile if we have
+      // a mVsyncRefreshDriverTimer. Note, if nothing else is running,
+      // RefreshDriver will still run as fast as possible, some ticks will
+      // just be triggered from a normal priority runnable.
+      TimeDuration timeForOutsideTick = TimeDuration::FromMilliseconds(0.0f);
+
       // We might have a problem that we call ~VsyncRefreshDriverTimer() before
       // the scheduled TickRefreshDriver() runs. Check mVsyncRefreshDriverTimer
       // before use.
       if (mVsyncRefreshDriverTimer) {
+        timeForOutsideTick = TimeDuration::FromMilliseconds(
+            mVsyncRefreshDriverTimer->GetTimerRate().ToMilliseconds() / 10.0f);
         RefPtr<VsyncRefreshDriverTimer> timer = mVsyncRefreshDriverTimer;
         timer->RunRefreshDrivers(aId, aVsyncTimestamp);
         // Note: mVsyncRefreshDriverTimer might be null now.
       }
 
       TimeDuration tickDuration = TimeStamp::Now() - mLastTick;
-      mBlockUntil = aVsyncTimestamp + tickDuration;
+      mBlockUntil = aVsyncTimestamp + tickDuration + timeForOutsideTick;
     }
 
     // VsyncRefreshDriverTimer holds this RefreshDriverVsyncObserver and it will
