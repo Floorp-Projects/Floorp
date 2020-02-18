@@ -12,6 +12,9 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Config.kt)
 
+* **feature-share**
+  * Added database to store recent apps
+  * Added `RecentAppsStorage` to handle storing and retrieving most-recent apps
 * **service-glean**
   * Glean was updated to v25.0.0:
     * General:

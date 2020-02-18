@@ -142,6 +142,8 @@ _Combined components to implement feature-specific use cases._
 
 * ⚪ [**Session**](components/feature/session/README.md) - A component that connects an (concept) engine implementation with the browser session and storage modules.
 
+* 🔴 [**Share**](components/feature/share/README.md) - Feature implementation for saving and sorting recent apps used for sharing.
+
 * 🔴 [**Sync**](components/feature/sync/README.md) -A component that provides synchronization orchestration for groups of (concept) SyncableStore objects.
 
 * 🔴 [**Tabs**](components/feature/tabs/README.md) - A component that connects a tabs tray implementation with the session and toolbar modules.
