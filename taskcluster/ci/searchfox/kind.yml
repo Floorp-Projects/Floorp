@@ -94,6 +94,8 @@ jobs:
                 - linux64-node
                 - linux64-rust-macos
                 - linux64-cbindgen
+                - linux64-lucetc
+                - wasi-sysroot
 
     win64-searchfox/debug:
         description: "Win64 Searchfox Debug (clang-cl)"
