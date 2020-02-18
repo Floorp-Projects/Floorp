@@ -10,7 +10,6 @@
 #include "mozilla/dom/Animation.h"
 #include "mozilla/dom/KeyframeAnimationOptionsBinding.h"
 // For UnrestrictedDoubleOrKeyframeAnimationOptions;
-#include "mozilla/dom/CSSPseudoElement.h"
 #include "mozilla/dom/KeyframeEffectBinding.h"
 #include "mozilla/dom/MutationObservers.h"
 #include "mozilla/AnimationUtils.h"
@@ -652,6 +651,12 @@ void KeyframeEffect::ResetIsRunningOnCompositor() {
   }
 }
 
+static bool IsSupportedPseudoForWebAnimation(PseudoStyleType aType) {
+  // FIXME: Bug 1615469: Support first-line and first-letter for Web Animation.
+  return aType == PseudoStyleType::before || aType == PseudoStyleType::after ||
+         aType == PseudoStyleType::marker;
+}
+
 static const KeyframeEffectOptions& KeyframeEffectOptionsFromUnion(
     const UnrestrictedDoubleOrKeyframeEffectOptions& aOptions) {
   MOZ_ASSERT(aOptions.IsKeyframeEffectOptions());
@@ -666,7 +671,7 @@ static const KeyframeEffectOptions& KeyframeEffectOptionsFromUnion(
 
 template <class OptionsType>
 static KeyframeEffectParams KeyframeEffectParamsFromUnion(
-    const OptionsType& aOptions, CallerType aCallerType) {
+    const OptionsType& aOptions, CallerType aCallerType, ErrorResult& aRv) {
   KeyframeEffectParams result;
   if (aOptions.IsUnrestrictedDouble() ||
       // Ignore iterationComposite and composite if the corresponding pref is
@@ -679,37 +684,33 @@ static KeyframeEffectParams KeyframeEffectParamsFromUnion(
       KeyframeEffectOptionsFromUnion(aOptions);
   result.mIterationComposite = options.mIterationComposite;
   result.mComposite = options.mComposite;
-  return result;
-}
 
-/* static */
-OwningAnimationTarget KeyframeEffect::ConvertTarget(
-    const Nullable<ElementOrCSSPseudoElement>& aTarget) {
-  // Return value optimization.
-  OwningAnimationTarget result;
-
-  if (aTarget.IsNull()) {
+  result.mPseudoType = PseudoStyleType::NotPseudo;
+  if (DOMStringIsNull(options.mPseudoElement)) {
     return result;
   }
 
-  const ElementOrCSSPseudoElement& target = aTarget.Value();
-  MOZ_ASSERT(target.IsElement() || target.IsCSSPseudoElement(),
-             "Uninitialized target");
-
-  if (target.IsElement()) {
-    result.mElement = &target.GetAsElement();
-  } else {
-    result.mElement = target.GetAsCSSPseudoElement().Element();
-    result.mPseudoType = target.GetAsCSSPseudoElement().GetType();
+  RefPtr<nsAtom> pseudoAtom =
+      nsCSSPseudoElements::GetPseudoAtom(options.mPseudoElement);
+  if (!pseudoAtom) {
+    aRv.ThrowTypeError<MSG_INVALID_PSEUDO_SELECTOR>(options.mPseudoElement);
+    return result;
   }
+
+  result.mPseudoType = nsCSSPseudoElements::GetPseudoType(
+      pseudoAtom, CSSEnabledState::ForAllContent);
+
+  if (!IsSupportedPseudoForWebAnimation(result.mPseudoType)) {
+    aRv.ThrowTypeError<MSG_UNSUPPORTED_PSEUDO_SELECTOR>(options.mPseudoElement);
+  }
+
   return result;
 }
 
 template <class OptionsType>
 /* static */
 already_AddRefed<KeyframeEffect> KeyframeEffect::ConstructKeyframeEffect(
-    const GlobalObject& aGlobal,
-    const Nullable<ElementOrCSSPseudoElement>& aTarget,
+    const GlobalObject& aGlobal, Element* aTarget,
     JS::Handle<JSObject*> aKeyframes, const OptionsType& aOptions,
     ErrorResult& aRv) {
   // We should get the document from `aGlobal` instead of the current Realm
@@ -727,17 +728,22 @@ already_AddRefed<KeyframeEffect> KeyframeEffect::ConstructKeyframeEffect(
     return nullptr;
   }
 
+  KeyframeEffectParams effectOptions =
+      KeyframeEffectParamsFromUnion(aOptions, aGlobal.CallerType(), aRv);
+  // An invalid Pseudo-element aborts all further steps.
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+
   TimingParams timingParams =
       TimingParams::FromOptionsUnion(aOptions, doc, aRv);
   if (aRv.Failed()) {
     return nullptr;
   }
 
-  KeyframeEffectParams effectOptions =
-      KeyframeEffectParamsFromUnion(aOptions, aGlobal.CallerType());
-
   RefPtr<KeyframeEffect> effect = new KeyframeEffect(
-      doc, ConvertTarget(aTarget), std::move(timingParams), effectOptions);
+      doc, OwningAnimationTarget(aTarget, effectOptions.mPseudoType),
+      std::move(timingParams), effectOptions);
 
   effect->SetKeyframes(aGlobal.Context(), aKeyframes, aRv);
   if (aRv.Failed()) {
@@ -785,6 +791,50 @@ static void EnumerateContinuationsOrIBSplitSiblings(nsIFrame* aFrame,
   while (aFrame) {
     aFunc(aFrame);
     aFrame = nsLayoutUtils::GetNextContinuationOrIBSplitSibling(aFrame);
+  }
+}
+
+void KeyframeEffect::UpdateTarget(Element* aElement,
+                                  PseudoStyleType aPseudoType) {
+  OwningAnimationTarget newTarget(aElement, aPseudoType);
+
+  if (mTarget == newTarget) {
+    // Assign the same target, skip it.
+    return;
+  }
+
+  if (mTarget) {
+    UnregisterTarget();
+    ResetIsRunningOnCompositor();
+
+    RequestRestyle(EffectCompositor::RestyleType::Layer);
+
+    nsAutoAnimationMutationBatch mb(mTarget.mElement->OwnerDoc());
+    if (mAnimation) {
+      MutationObservers::NotifyAnimationRemoved(mAnimation);
+    }
+  }
+
+  mTarget = newTarget;
+
+  if (mTarget) {
+    UpdateTargetRegistration();
+    RefPtr<ComputedStyle> computedStyle = GetTargetComputedStyle(Flush::None);
+    if (computedStyle) {
+      UpdateProperties(computedStyle);
+    }
+
+    RequestRestyle(EffectCompositor::RestyleType::Layer);
+
+    nsAutoAnimationMutationBatch mb(mTarget.mElement->OwnerDoc());
+    if (mAnimation) {
+      MutationObservers::NotifyAnimationAdded(mAnimation);
+      mAnimation->ReschedulePendingTasks();
+    }
+  }
+
+  if (mAnimation) {
+    mAnimation->NotifyEffectTargetUpdated();
   }
 }
 
@@ -896,8 +946,7 @@ void DumpAnimationProperties(
 
 /* static */
 already_AddRefed<KeyframeEffect> KeyframeEffect::Constructor(
-    const GlobalObject& aGlobal,
-    const Nullable<ElementOrCSSPseudoElement>& aTarget,
+    const GlobalObject& aGlobal, Element* aTarget,
     JS::Handle<JSObject*> aKeyframes,
     const UnrestrictedDoubleOrKeyframeEffectOptions& aOptions,
     ErrorResult& aRv) {
@@ -906,8 +955,7 @@ already_AddRefed<KeyframeEffect> KeyframeEffect::Constructor(
 
 /* static */
 already_AddRefed<KeyframeEffect> KeyframeEffect::Constructor(
-    const GlobalObject& aGlobal,
-    const Nullable<ElementOrCSSPseudoElement>& aTarget,
+    const GlobalObject& aGlobal, Element* aTarget,
     JS::Handle<JSObject*> aKeyframes,
     const UnrestrictedDoubleOrKeyframeAnimationOptions& aOptions,
     ErrorResult& aRv) {
@@ -947,73 +995,31 @@ already_AddRefed<KeyframeEffect> KeyframeEffect::Constructor(
   return effect.forget();
 }
 
-void KeyframeEffect::GetTarget(
-    Nullable<OwningElementOrCSSPseudoElement>& aRv) const {
-  if (!mTarget) {
-    aRv.SetNull();
+void KeyframeEffect::SetPseudoElement(const nsAString& aPseudoElement,
+                                      ErrorResult& aRv) {
+  PseudoStyleType pseudoType = PseudoStyleType::NotPseudo;
+  if (DOMStringIsNull(aPseudoElement)) {
+    UpdateTarget(mTarget.mElement, pseudoType);
     return;
   }
 
-  switch (mTarget.mPseudoType) {
-    case PseudoStyleType::before:
-    case PseudoStyleType::after:
-    case PseudoStyleType::marker:
-      aRv.SetValue().SetAsCSSPseudoElement() =
-          CSSPseudoElement::GetCSSPseudoElement(mTarget.mElement,
-                                                mTarget.mPseudoType);
-      break;
-
-    case PseudoStyleType::NotPseudo:
-      aRv.SetValue().SetAsElement() = mTarget.mElement;
-      break;
-
-    default:
-      MOZ_ASSERT_UNREACHABLE("Animation of unsupported pseudo-type");
-      aRv.SetNull();
-  }
-}
-
-void KeyframeEffect::SetTarget(
-    const Nullable<ElementOrCSSPseudoElement>& aTarget) {
-  OwningAnimationTarget newTarget = ConvertTarget(aTarget);
-  if (mTarget == newTarget) {
-    // Assign the same target, skip it.
+  // Note: GetPseudoAtom() also returns nullptr for the null string,
+  // so we handle null case before this.
+  RefPtr<nsAtom> pseudoAtom =
+      nsCSSPseudoElements::GetPseudoAtom(aPseudoElement);
+  if (!pseudoAtom) {
+    aRv.ThrowTypeError<MSG_INVALID_PSEUDO_SELECTOR>(aPseudoElement);
     return;
   }
 
-  if (mTarget) {
-    UnregisterTarget();
-    ResetIsRunningOnCompositor();
-
-    RequestRestyle(EffectCompositor::RestyleType::Layer);
-
-    nsAutoAnimationMutationBatch mb(mTarget.mElement->OwnerDoc());
-    if (mAnimation) {
-      MutationObservers::NotifyAnimationRemoved(mAnimation);
-    }
+  pseudoType = nsCSSPseudoElements::GetPseudoType(
+      pseudoAtom, CSSEnabledState::ForAllContent);
+  if (!IsSupportedPseudoForWebAnimation(pseudoType)) {
+    aRv.ThrowTypeError<MSG_UNSUPPORTED_PSEUDO_SELECTOR>(aPseudoElement);
+    return;
   }
 
-  mTarget = newTarget;
-
-  if (mTarget) {
-    UpdateTargetRegistration();
-    RefPtr<ComputedStyle> computedStyle = GetTargetComputedStyle(Flush::None);
-    if (computedStyle) {
-      UpdateProperties(computedStyle);
-    }
-
-    RequestRestyle(EffectCompositor::RestyleType::Layer);
-
-    nsAutoAnimationMutationBatch mb(mTarget.mElement->OwnerDoc());
-    if (mAnimation) {
-      MutationObservers::NotifyAnimationAdded(mAnimation);
-      mAnimation->ReschedulePendingTasks();
-    }
-  }
-
-  if (mAnimation) {
-    mAnimation->NotifyEffectTargetUpdated();
-  }
+  UpdateTarget(mTarget.mElement, pseudoType);
 }
 
 static void CreatePropertyValue(

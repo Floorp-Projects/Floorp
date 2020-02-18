@@ -353,20 +353,20 @@ void nsAnimationReceiver::RecordAnimationMutation(
     return;
   }
 
-  Maybe<NonOwningAnimationTarget> animationTarget = keyframeEffect->GetTarget();
+  NonOwningAnimationTarget animationTarget =
+      keyframeEffect->GetAnimationTarget();
   if (!animationTarget) {
     return;
   }
 
-  Element* elem = animationTarget->mElement;
+  Element* elem = animationTarget.mElement;
   if (!Animations() || !(Subtree() || elem == Target()) ||
       elem->ChromeOnlyAccess()) {
     return;
   }
 
   // Record animations targeting to a pseudo element only when subtree is true.
-  if (animationTarget->mPseudoType != PseudoStyleType::NotPseudo &&
-      !Subtree()) {
+  if (animationTarget.mPseudoType != PseudoStyleType::NotPseudo && !Subtree()) {
     return;
   }
 

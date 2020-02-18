@@ -110,7 +110,7 @@ var AnimationPlayerActor = protocol.ActorClassWithSpec(animationPlayerSpec, {
   },
 
   get isPseudoElement() {
-    return !!this.player.effect.target.element;
+    return !!this.player.effect.pseudoElement;
   },
 
   get node() {
@@ -118,9 +118,11 @@ var AnimationPlayerActor = protocol.ActorClassWithSpec(animationPlayerSpec, {
       return this.player.effect.target;
     }
 
-    const pseudo = this.player.effect.target;
-    const treeWalker = this.walker.getDocumentWalker(pseudo.element);
-    return pseudo.type === "::before"
+    const originatingElem = this.player.effect.target;
+    const treeWalker = this.walker.getDocumentWalker(originatingElem);
+    // FIXME: Bug 1615473: It's possible to use ::before, ::after, ::marker,
+    // ::first-line, or ::first-letter pseudo selector.
+    return this.player.effect.pseudoElement === "::before"
       ? treeWalker.firstChild()
       : treeWalker.lastChild();
   },

@@ -63,7 +63,7 @@ class Animation : public DOMEventTargetHelper,
    * Utility function to get the target (pseudo-)element associated with an
    * animation.
    */
-  Maybe<NonOwningAnimationTarget> GetTargetForAnimation() const;
+  NonOwningAnimationTarget GetTargetForAnimation() const;
 
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;

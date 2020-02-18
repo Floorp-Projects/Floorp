@@ -222,16 +222,16 @@ void MutationObservers::NotifyAnimationMutated(
     dom::Animation* aAnimation, AnimationMutationType aMutatedType) {
   MOZ_ASSERT(aAnimation);
 
-  Maybe<NonOwningAnimationTarget> target = aAnimation->GetTargetForAnimation();
+  NonOwningAnimationTarget target = aAnimation->GetTargetForAnimation();
   if (!target) {
     return;
   }
 
   // A pseudo element and its parent element use the same owner doc.
-  Document* doc = target->mElement->OwnerDoc();
+  Document* doc = target.mElement->OwnerDoc();
   if (doc->MayHaveAnimationObservers()) {
     // we use the its parent element as the subject in DOM Mutation Observer.
-    Element* elem = target->mElement;
+    Element* elem = target.mElement;
     switch (aMutatedType) {
       case AnimationMutationType::Added:
         IMPL_ANIMATION_NOTIFICATION(AnimationAdded, elem, (aAnimation));
