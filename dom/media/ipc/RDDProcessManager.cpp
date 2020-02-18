@@ -42,10 +42,6 @@ RDDProcessManager::RDDProcessManager()
       mProcessToken(0),
       mRDDChild(nullptr) {
   MOZ_COUNT_CTOR(RDDProcessManager);
-
-  mObserver = new Observer(this);
-  nsContentUtils::RegisterShutdownObserver(mObserver);
-  Preferences::AddStrongObserver(mObserver, "");
 }
 
 RDDProcessManager::~RDDProcessManager() {
@@ -98,7 +94,7 @@ void RDDProcessManager::OnPreferenceChange(const char16_t* aData) {
   if (!!mRDDChild) {
     MOZ_ASSERT(mQueuedPrefs.IsEmpty());
     mRDDChild->SendPreferenceUpdate(pref);
-  } else {
+  } else if (IsRDDProcessLaunching()) {
     mQueuedPrefs.AppendElement(pref);
   }
 }
@@ -106,6 +102,14 @@ void RDDProcessManager::OnPreferenceChange(const char16_t* aData) {
 bool RDDProcessManager::LaunchRDDProcess() {
   if (mProcess) {
     return true;
+  }
+
+  // Start listening for pref changes so we can
+  // forward them to the process once it is running.
+  if (!mObserver) {
+    mObserver = new Observer(this);
+    nsContentUtils::RegisterShutdownObserver(mObserver);
+    Preferences::AddStrongObserver(mObserver, "");
   }
 
   mNumProcessAttempts++;
@@ -127,6 +131,11 @@ bool RDDProcessManager::LaunchRDDProcess() {
   }
 
   return CreateVideoBridge();
+}
+
+bool RDDProcessManager::IsRDDProcessLaunching() {
+  MOZ_ASSERT(NS_IsMainThread());
+  return !!mProcess && !mRDDChild;
 }
 
 bool RDDProcessManager::EnsureRDDReady() {
@@ -209,6 +218,7 @@ void RDDProcessManager::DestroyProcess() {
   mProcessToken = 0;
   mProcess = nullptr;
   mRDDChild = nullptr;
+  mQueuedPrefs.Clear();
 
   CrashReporter::AnnotateCrashReport(
       CrashReporter::Annotation::RDDProcessStatus,
