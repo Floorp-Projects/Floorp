@@ -10,6 +10,7 @@
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/ThrottledEventQueue.h"
+#include "nsFocusManager.h"
 
 namespace mozilla {
 namespace dom {
@@ -66,11 +67,27 @@ void BrowsingContextGroup::EnsureSubscribed(ContentParent* aProcess) {
 
   Subscribe(aProcess);
 
+  bool sendFocused = false;
+  bool sendActive = false;
+  BrowsingContext* focused = nullptr;
+  BrowsingContext* active = nullptr;
+  nsFocusManager* fm = nsFocusManager::GetFocusManager();
+  if (fm) {
+    focused = fm->GetFocusedBrowsingContextInChrome();
+    active = fm->GetActiveBrowsingContextInChrome();
+  }
+
   nsTArray<BrowsingContext::IPCInitializer> inits(mContexts.Count());
   nsTArray<WindowContext::IPCInitializer> windowInits(mContexts.Count());
 
   auto addInits = [&](BrowsingContext* aContext) {
     inits.AppendElement(aContext->GetIPCInitializer());
+    if (focused == aContext) {
+      sendFocused = true;
+    }
+    if (active == aContext) {
+      sendActive = true;
+    }
     for (auto& window : aContext->GetWindowContexts()) {
       windowInits.AppendElement(window->GetIPCInitializer());
     }
@@ -96,6 +113,11 @@ void BrowsingContextGroup::EnsureSubscribed(ContentParent* aProcess) {
 
   // Send all of our contexts to the target content process.
   Unused << aProcess->SendRegisterBrowsingContextGroup(inits, windowInits);
+
+  if (sendActive || sendFocused) {
+    Unused << aProcess->SendSetupFocusedAndActive(
+        sendFocused ? focused : nullptr, sendActive ? active : nullptr);
+  }
 }
 
 bool BrowsingContextGroup::IsContextCached(BrowsingContext* aContext) const {

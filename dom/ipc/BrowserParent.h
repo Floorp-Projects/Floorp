@@ -834,17 +834,36 @@ class BrowserParent final : public PBrowserParent,
 
   static void RemoveBrowserParentFromTable(layers::LayersId aLayersId);
 
-  // Keeps track of which BrowserParent has keyboard focus
-  static StaticAutoPtr<nsTArray<BrowserParent*>> sFocusStack;
+  // Keeps track of which BrowserParent has keyboard focus.
+  // If nullptr, the parent process has focus.
+  // Use UpdateFocus() to manage.
+  static BrowserParent* sFocus;
 
-  static void PushFocus(BrowserParent* aBrowserParent);
+  // Keeps track of which top-level BrowserParent the keyboard focus is under.
+  // If nullptr, the parent process has focus.
+  // Use SetTopLevelWebFocus and UnsetTopLevelWebFocus to manage.
+  static BrowserParent* sTopLevelWebFocus;
 
-  static void PopFocus(BrowserParent* aBrowserParent);
+  // Setter for sTopLevelWebFocus
+  static void SetTopLevelWebFocus(BrowserParent* aBrowserParent);
+
+  // Unsetter for sTopLevelWebFocus; only unsets if argument matches
+  // current sTopLevelWebFocus. Use UnsetTopLevelWebFocusAll() to
+  // unset regardless of current value.
+  static void UnsetTopLevelWebFocus(BrowserParent* aBrowserParent);
+
+  // Recomputes sFocus and returns it.
+  static BrowserParent* UpdateFocus();
 
   void OnSubFrameCrashed();
 
  public:
-  static void PopFocusAll();
+  // Unsets sTopLevelWebFocus regardless of its current value.
+  static void UnsetTopLevelWebFocusAll();
+
+  // Recomputes focus when the BrowsingContext tree changes in a
+  // way that potentially invalidates the sFocus.
+  static void UpdateFocusFromBrowsingContext();
 
  private:
   TabId mTabId;
