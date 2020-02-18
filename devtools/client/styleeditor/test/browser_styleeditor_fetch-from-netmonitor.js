@@ -6,11 +6,18 @@
 // A test to ensure Style Editor only issues 1 request for each stylesheet (instead of 2)
 // by using the network monitor's request history (bug 1306892).
 
+const EMPTY_TEST_URL = TEST_BASE_HTTP + "doc_empty.html";
 const TEST_URL = TEST_BASE_HTTP + "doc_fetch_from_netmonitor.html";
 
 add_task(async function() {
   info("Opening netmonitor");
-  const tab = await addTab("about:blank");
+  // Navigate first to an empty document in order to:
+  // * avoid introducing a cross process navigation when calling navigateTo()
+  // * properly wait for request updates when calling navigateTo, while showToolbox
+  //   won't necessarily wait for all pending requests. (If we were loading TEST_URL
+  //   in the tab, we might have pending updates in the netmonitor which won't be
+  //   awaited for by showToolbox)
+  const tab = await addTab(EMPTY_TEST_URL);
   const target = await TargetFactory.forTab(tab);
   const toolbox = await gDevTools.showToolbox(target, "netmonitor");
   const monitor = toolbox.getPanel("netmonitor");
