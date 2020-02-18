@@ -273,24 +273,41 @@ void main(void) {
 #endif
 
 #ifdef WR_FRAGMENT_SHADER
-void main(void) {
+
+Fragment text_brush_fs(void) {
+    Fragment frag;
+
     vec3 tc = vec3(clamp(V_UV, V_UV_BOUNDS.xy, V_UV_BOUNDS.zw), V_LAYER);
     vec4 mask = texture(sColor0, tc);
     mask.rgb = mask.rgb * V_MASK_SWIZZLE.x + mask.aaa * V_MASK_SWIZZLE.y;
 
-    float alpha = do_clip();
-#ifdef WR_FEATURE_GLYPH_TRANSFORM
-    alpha *= float(all(greaterThanEqual(V_UV_CLIP, vec4(0.0))));
-#endif
+    #ifdef WR_FEATURE_GLYPH_TRANSFORM
+        mask *= float(all(greaterThanEqual(V_UV_CLIP, vec4(0.0))));
+    #endif
 
-#if defined(WR_FEATURE_DEBUG_OVERDRAW)
-    oFragColor = WR_DEBUG_OVERDRAW_COLOR;
-#elif defined(WR_FEATURE_DUAL_SOURCE_BLENDING)
-    vec4 alpha_mask = mask * alpha;
-    oFragColor = V_COLOR * alpha_mask;
-    oFragBlend = alpha_mask * V_COLOR.a;
-#else
-    write_output(V_COLOR * mask * alpha);
-#endif
+    frag.color = V_COLOR * mask;
+
+    #ifdef WR_FEATURE_DUAL_SOURCE_BLENDING
+        frag.blend = V_COLOR.a * mask;
+    #endif
+
+    return frag;
 }
-#endif
+
+void main(void) {
+    Fragment frag = text_brush_fs();
+
+    float clip_mask = do_clip();
+    frag.color *= clip_mask;
+
+    #if defined(WR_FEATURE_DEBUG_OVERDRAW)
+        oFragColor = WR_DEBUG_OVERDRAW_COLOR;
+    #elif defined(WR_FEATURE_DUAL_SOURCE_BLENDING)
+        oFragColor = frag.color;
+        oFragBlend = frag.blend * clip_mask;
+    #else
+        write_output(frag.color);
+    #endif
+}
+
+#endif // WR_FRAGMENT_SHADER
