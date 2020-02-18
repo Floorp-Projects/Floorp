@@ -13,7 +13,7 @@
 [package]
 edition = "2018"
 name = "chardetng"
-version = "0.1.3"
+version = "0.1.6"
 authors = ["Henri Sivonen <hsivonen@hsivonen.fi>"]
 description = "A character encoding detector for legacy Web content"
 homepage = "https://docs.rs/chardetng/"
@@ -30,3 +30,6 @@ version = "0.8.17"
 version = "2.2.0"
 [dev-dependencies.detone]
 version = "1.0.0"
+
+[features]
+testing-only-no-semver-guarantees-do-not-use = []
