@@ -953,9 +953,10 @@ class MOZ_STACK_CLASS IonBuilder {
                              CallInfo& callInfo);
   AbortReasonOr<Ok> makeCall(JSFunction* target, CallInfo& callInfo);
 
-  MDefinition* patchInlinedReturn(CallInfo& callInfo, MBasicBlock* exit,
-                                  MBasicBlock* bottom);
-  MDefinition* patchInlinedReturns(CallInfo& callInfo, MIRGraphReturns& returns,
+  MDefinition* patchInlinedReturn(JSFunction* target, CallInfo& callInfo,
+                                  MBasicBlock* exit, MBasicBlock* bottom);
+  MDefinition* patchInlinedReturns(JSFunction* target, CallInfo& callInfo,
+                                   MIRGraphReturns& returns,
                                    MBasicBlock* bottom);
   MDefinition* specializeInlinedReturn(MDefinition* rdef, MBasicBlock* exit);
 
