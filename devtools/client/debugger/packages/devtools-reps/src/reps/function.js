@@ -60,24 +60,47 @@ function FunctionRep(props) {
     });
   }
 
+  const elProps = {
+    "data-link-actor-id": grip.actor,
+    className: "objectBox objectBox-function",
+    // Set dir="ltr" to prevent parentheses from
+    // appearing in the wrong direction
+    dir: "ltr",
+  };
+
+  const parameterNames = (grip.parameterNames || []).filter(param => param);
+
+  if (grip.isClassConstructor) {
+    return span(
+      elProps,
+      getClassTitle(grip, props),
+      getFunctionName(grip, props),
+      ...getClassBody(parameterNames, props),
+      jumpToDefinitionButton
+    );
+  }
+
   return span(
-    {
-      "data-link-actor-id": grip.actor,
-      className: "objectBox objectBox-function",
-      // Set dir="ltr" to prevent function parentheses from
-      // appearing in the wrong direction
-      dir: "ltr",
-    },
-    getTitle(grip, props),
+    elProps,
+    getFunctionTitle(grip, props),
     getFunctionName(grip, props),
     "(",
-    ...renderParams(grip),
+    ...getParams(parameterNames),
     ")",
     jumpToDefinitionButton
   );
 }
 
-function getTitle(grip, props) {
+function getClassTitle(grip) {
+  return span(
+    {
+      className: "objectTitle",
+    },
+    "class "
+  );
+}
+
+function getFunctionTitle(grip, props) {
   const { mode } = props;
 
   if (mode === MODE.TINY && !grip.isGenerator && !grip.isAsync) {
@@ -168,18 +191,31 @@ function cleanFunctionName(name) {
   return name;
 }
 
-function renderParams(grip) {
-  const { parameterNames = [] } = grip;
+function getClassBody(constructorParams, props) {
+  const { mode } = props;
 
-  return parameterNames
-    .filter(param => param)
-    .reduce((res, param, index, arr) => {
-      res.push(span({ className: "param" }, param));
-      if (index < arr.length - 1) {
-        res.push(span({ className: "delimiter" }, ", "));
-      }
-      return res;
-    }, []);
+  if (mode === MODE.TINY) {
+    return [];
+  }
+
+  return [" {", ...getClassConstructor(constructorParams), "}"];
+}
+
+function getClassConstructor(parameterNames) {
+  if (parameterNames.length === 0) {
+    return [];
+  }
+
+  return [" constructor(", ...getParams(parameterNames), ") "];
+}
+
+function getParams(parameterNames) {
+  return parameterNames.flatMap((param, index, arr) => {
+    return [
+      span({ className: "param" }, param),
+      index === arr.length - 1 ? "" : span({ className: "delimiter" }, ", "),
+    ];
+  });
 }
 
 // Registration
