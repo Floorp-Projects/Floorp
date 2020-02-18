@@ -62,7 +62,7 @@ object Versions {
 
     const val google_ads_id_version = "16.0.0"
 
-    const val airbnb_lottie = "3.0.7"
+    const val airbnb_lottie = "3.3.0"
 }
 
 @Suppress("unused")
