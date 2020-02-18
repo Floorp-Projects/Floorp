@@ -9427,6 +9427,16 @@
     "n_buckets": 66,
     "description": "MediaCacheStream stream length size in KB; Either known size from the HTTP header if available, or otherwise the size actually downloaded. Recorded at every MediaCacheStream destruction."
   },
+  "MEDIA_DECODING_PROCESS_CRASH": {
+    "record_in_processes": ["content"],
+    "products": ["firefox", "geckoview"],
+    "alert_emails": ["jolin@mozilla.com"],
+    "bug_numbers": [1304268],
+    "expires_in_version": "never",
+    "kind": "count",
+    "operating_systems": ["android"],
+    "description": "Records a value each time GeckoView remote decoding process crashes unexpectedly while decoding media content."
+  },
   "WEBRTC_DTLS_CIPHER": {
     "record_in_processes": ["content", "socket"],
     "products": ["firefox", "geckoview"],
