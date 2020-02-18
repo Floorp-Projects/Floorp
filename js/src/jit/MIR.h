@@ -6683,6 +6683,27 @@ class MClassConstructor : public MNullaryInstruction {
   TRIVIAL_NEW_WRAPPERS
 
   jsbytecode* pc() const { return pc_; }
+
+  bool possiblyCalls() const override { return true; }
+};
+
+class MDerivedClassConstructor : public MUnaryInstruction,
+                                 public SingleObjectPolicy::Data {
+  jsbytecode* pc_;
+
+  MDerivedClassConstructor(MDefinition* prototype, jsbytecode* pc)
+      : MUnaryInstruction(classOpcode, prototype), pc_(pc) {
+    setResultType(MIRType::Object);
+  }
+
+ public:
+  INSTRUCTION_HEADER(DerivedClassConstructor)
+  TRIVIAL_NEW_WRAPPERS
+  NAMED_OPERANDS((0, prototype))
+
+  jsbytecode* pc() const { return pc_; }
+
+  bool possiblyCalls() const override { return true; }
 };
 
 class MModuleMetadata : public MNullaryInstruction {

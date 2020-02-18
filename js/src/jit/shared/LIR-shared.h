@@ -3501,6 +3501,22 @@ class LClassConstructor : public LCallInstructionHelper<1, 0, 0> {
   LClassConstructor() : LCallInstructionHelper(classOpcode) {}
 };
 
+class LDerivedClassConstructor : public LCallInstructionHelper<1, 1, 0> {
+ public:
+  LIR_HEADER(DerivedClassConstructor)
+
+  explicit LDerivedClassConstructor(const LAllocation& prototype)
+      : LCallInstructionHelper(classOpcode) {
+    setOperand(0, prototype);
+  }
+
+  const LAllocation* prototype() { return getOperand(0); }
+
+  const MDerivedClassConstructor* mir() const {
+    return mir_->toDerivedClassConstructor();
+  }
+};
+
 class LModuleMetadata : public LCallInstructionHelper<1, 0, 0> {
  public:
   LIR_HEADER(ModuleMetadata)
