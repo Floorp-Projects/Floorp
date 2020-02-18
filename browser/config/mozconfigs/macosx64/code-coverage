@@ -1,7 +1,5 @@
 . "$topsrcdir/browser/config/mozconfigs/macosx64/nightly"
 
-unset MOZ_LTO
-
 TOOLTOOL_DIR=${TOOLTOOL_DIR:-$topsrcdir}
 
 ac_add_options --enable-debug-symbols=-g1

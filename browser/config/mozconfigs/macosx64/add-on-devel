@@ -1,7 +1,5 @@
 . $topsrcdir/browser/config/mozconfigs/macosx64/nightly
 
-unset MOZ_LTO
-
 #add-on signing is checked but not enforced
 MOZ_REQUIRE_SIGNING=0
 
