@@ -174,6 +174,8 @@ class GeckoEngineView @JvmOverloads constructor(
                 onFinish(null)
                 GeckoResult<Void>()
             })
+        } else {
+            onFinish(null)
         }
     }
 
