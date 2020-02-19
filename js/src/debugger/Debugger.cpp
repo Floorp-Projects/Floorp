@@ -1078,8 +1078,9 @@ bool DebugAPI::slowPathOnLeaveFrame(JSContext* cx, AbstractFramePtr frame,
             success = handler->onPop(cx, frameobj, completion, nextResumeMode,
                                      &nextValue);
           }
-          nextResumeMode = dbg->processParsedHandlerResult(
-              ar, frame, pc, success, nextResumeMode, &nextValue);
+          RootedValue hookValue(cx);
+          ResumeMode hookResumeMode = dbg->processParsedHandlerResult(
+              ar, frame, pc, success, nextResumeMode, nextValue, &hookValue);
           adjqi.runJobs();
 
           // At this point, we are back in the debuggee compartment, and
@@ -1087,10 +1088,10 @@ bool DebugAPI::slowPathOnLeaveFrame(JSContext* cx, AbstractFramePtr frame,
           MOZ_ASSERT(cx->compartment() == debuggeeGlobal->compartment());
           MOZ_ASSERT(!cx->isExceptionPending());
 
-          if (nextResumeMode != ResumeMode::Continue) {
+          if (hookResumeMode != ResumeMode::Continue) {
             hadResumeOverride = true;
           }
-          completion.get().updateForNextHandler(nextResumeMode, nextValue);
+          completion.get().updateForNextHandler(hookResumeMode, hookValue);
         }
       }
     }
@@ -1696,9 +1697,88 @@ static MOZ_MUST_USE bool AdjustGeneratorResumptionValue(JSContext* cx,
   return true;
 }
 
-void Debugger::reportUncaughtException(Maybe<AutoRealm>& ar) {
+ResumeMode Debugger::processParsedHandlerResult(
+    Maybe<AutoRealm>& ar, AbstractFramePtr frame, jsbytecode* pc, bool success,
+    ResumeMode resumeMode, HandleValue value, MutableHandleValue vp) {
   JSContext* cx = ar->context();
 
+  RootedValue rootValue(cx, value);
+  if (!success || !prepareResumption(cx, frame, pc, resumeMode, &rootValue)) {
+    RootedValue exceptionRv(cx);
+    if (!callUncaughtExceptionHandler(cx, &exceptionRv) ||
+        !ParseResumptionValue(cx, exceptionRv, resumeMode, &rootValue) ||
+        !prepareResumption(cx, frame, pc, resumeMode, &rootValue)) {
+      reportUncaughtException(cx);
+      ar.reset();
+      return ResumeMode::Terminate;
+    }
+  }
+
+  ar.reset();
+  if (!cx->compartment()->wrap(cx, &rootValue)) {
+    return ResumeMode::Terminate;
+  }
+
+  // We only want to update the input values when we have successfully
+  // processed the handler result.
+  vp.set(rootValue);
+
+  return resumeMode;
+}
+
+ResumeMode Debugger::processHandlerResult(Maybe<AutoRealm>& ar, bool success,
+                                          HandleValue rv,
+                                          AbstractFramePtr frame,
+                                          jsbytecode* pc,
+                                          MutableHandleValue vp) {
+  JSContext* cx = ar->context();
+
+  ResumeMode resumeMode = ResumeMode::Continue;
+  RootedValue resultValue(cx);
+  if (success) {
+    success = ParseResumptionValue(cx, rv, resumeMode, &resultValue);
+  }
+  return processParsedHandlerResult(ar, frame, pc, success, resumeMode,
+                                    resultValue, vp);
+}
+
+bool Debugger::prepareResumption(JSContext* cx, AbstractFramePtr frame,
+                                 jsbytecode* pc, ResumeMode& resumeMode,
+                                 MutableHandleValue vp) {
+  return unwrapDebuggeeValue(cx, vp) &&
+         CheckResumptionValue(cx, frame, pc, resumeMode, vp);
+}
+
+bool Debugger::callUncaughtExceptionHandler(JSContext* cx,
+                                            MutableHandleValue vp) {
+  // Uncaught exceptions arise from Debugger code, and so we must already be in
+  // an NX section. This also establishes that we are already within the scope
+  // of an AutoDebuggerJobQueueInterruption object.
+  MOZ_ASSERT(EnterDebuggeeNoExecute::isLockedInStack(cx, *this));
+
+  if (cx->isExceptionPending() && uncaughtExceptionHook) {
+    RootedValue exc(cx);
+    if (!cx->getPendingException(&exc)) {
+      return false;
+    }
+    cx->clearPendingException();
+
+    RootedValue fval(cx, ObjectValue(*uncaughtExceptionHook));
+    if (js::Call(cx, fval, object, exc, vp)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+void Debugger::handleUncaughtException(JSContext* cx) {
+  RootedValue rv(cx);
+  if (!callUncaughtExceptionHandler(cx, &rv)) {
+    reportUncaughtException(cx);
+  }
+}
+
+void Debugger::reportUncaughtException(JSContext* cx) {
   // Uncaught exceptions arise from Debugger code, and so we must already be
   // in an NX section.
   MOZ_ASSERT(EnterDebuggeeNoExecute::isLockedInStack(cx, *this));
@@ -1723,118 +1803,6 @@ void Debugger::reportUncaughtException(Maybe<AutoRealm>& ar) {
     // exception on cx (which it totally shouldn't do), just give up.
     cx->clearPendingException();
   }
-
-  ar.reset();
-}
-
-ResumeMode Debugger::handleUncaughtExceptionHelper(Maybe<AutoRealm>& ar,
-                                                   MutableHandleValue* vp,
-                                                   AbstractFramePtr frame,
-                                                   jsbytecode* pc) {
-  JSContext* cx = ar->context();
-
-  // Uncaught exceptions arise from Debugger code, and so we must already be in
-  // an NX section. This also establishes that we are already within the scope
-  // of an AutoDebuggerJobQueueInterruption object.
-  MOZ_ASSERT(EnterDebuggeeNoExecute::isLockedInStack(cx, *this));
-
-  if (cx->isExceptionPending()) {
-    if (uncaughtExceptionHook) {
-      RootedValue exc(cx);
-      if (!cx->getPendingException(&exc)) {
-        return ResumeMode::Terminate;
-      }
-      cx->clearPendingException();
-
-      RootedValue fval(cx, ObjectValue(*uncaughtExceptionHook));
-      RootedValue rv(cx);
-      if (js::Call(cx, fval, object, exc, &rv)) {
-        if (vp) {
-          ResumeMode resumeMode = ResumeMode::Continue;
-          if (!ParseResumptionValue(cx, rv, resumeMode, *vp)) {
-            reportUncaughtException(ar);
-            return ResumeMode::Terminate;
-          }
-          return leaveDebugger(ar, frame, pc, CallUncaughtExceptionHook::No,
-                               resumeMode, *vp);
-        } else {
-          // Caller is something like onGarbageCollectionHook that
-          // doesn't allow Debugger to control debuggee resumption.
-          // The return value from uncaughtExceptionHook is ignored.
-          return ResumeMode::Continue;
-        }
-      }
-    }
-
-    reportUncaughtException(ar);
-    return ResumeMode::Terminate;
-  }
-
-  ar.reset();
-  return ResumeMode::Terminate;
-}
-
-ResumeMode Debugger::handleUncaughtException(Maybe<AutoRealm>& ar,
-                                             MutableHandleValue vp,
-                                             AbstractFramePtr frame,
-                                             jsbytecode* pc) {
-  return handleUncaughtExceptionHelper(ar, &vp, frame, pc);
-}
-
-ResumeMode Debugger::handleUncaughtException(Maybe<AutoRealm>& ar) {
-  return handleUncaughtExceptionHelper(ar, nullptr, NullFramePtr(), nullptr);
-}
-
-ResumeMode Debugger::leaveDebugger(Maybe<AutoRealm>& ar, AbstractFramePtr frame,
-                                   jsbytecode* pc,
-                                   CallUncaughtExceptionHook callHook,
-                                   ResumeMode resumeMode,
-                                   MutableHandleValue vp) {
-  JSContext* cx = ar->context();
-  if (!unwrapDebuggeeValue(cx, vp) ||
-      !CheckResumptionValue(cx, frame, pc, resumeMode, vp)) {
-    if (callHook == CallUncaughtExceptionHook::Yes) {
-      return handleUncaughtException(ar, vp, frame, pc);
-    }
-    reportUncaughtException(ar);
-    return ResumeMode::Terminate;
-  }
-
-  ar.reset();
-  if (!cx->compartment()->wrap(cx, vp)) {
-    resumeMode = ResumeMode::Terminate;
-    vp.setUndefined();
-  }
-
-  return resumeMode;
-}
-
-ResumeMode Debugger::processParsedHandlerResult(Maybe<AutoRealm>& ar,
-                                                AbstractFramePtr frame,
-                                                jsbytecode* pc, bool success,
-                                                ResumeMode resumeMode,
-                                                MutableHandleValue vp) {
-  if (!success) {
-    return handleUncaughtException(ar, vp, frame, pc);
-  }
-
-  return leaveDebugger(ar, frame, pc, CallUncaughtExceptionHook::Yes,
-                       resumeMode, vp);
-}
-
-ResumeMode Debugger::processHandlerResult(Maybe<AutoRealm>& ar, bool success,
-                                          const Value& rv,
-                                          AbstractFramePtr frame,
-                                          jsbytecode* pc,
-                                          MutableHandleValue vp) {
-  JSContext* cx = ar->context();
-
-  RootedValue rootRv(cx, rv);
-  ResumeMode resumeMode = ResumeMode::Continue;
-  if (success) {
-    success = ParseResumptionValue(cx, rootRv, resumeMode, vp);
-  }
-  return processParsedHandlerResult(ar, frame, pc, success, resumeMode, vp);
 }
 
 /*** Debuggee completion values *********************************************/
@@ -2145,7 +2113,7 @@ ResumeMode Debugger::fireDebuggerStatement(JSContext* cx,
   ScriptFrameIter iter(cx);
   RootedValue scriptFrame(cx);
   if (!getFrame(cx, iter, &scriptFrame)) {
-    reportUncaughtException(ar);
+    reportUncaughtException(cx);
     return ResumeMode::Terminate;
   }
 
@@ -2171,7 +2139,7 @@ ResumeMode Debugger::fireExceptionUnwind(JSContext* cx, HandleValue exc,
   FrameIter iter(cx);
   if (!getFrame(cx, iter, &scriptFrame) ||
       !wrapDebuggeeValue(cx, &wrappedExc)) {
-    reportUncaughtException(ar);
+    reportUncaughtException(cx);
     return ResumeMode::Terminate;
   }
 
@@ -2203,7 +2171,7 @@ ResumeMode Debugger::fireEnterFrame(JSContext* cx, MutableHandleValue vp) {
   ar.emplace(cx, object);
 
   if (!getFrame(cx, iter, &scriptFrame)) {
-    reportUncaughtException(ar);
+    reportUncaughtException(cx);
     return ResumeMode::Terminate;
   }
 
@@ -2227,7 +2195,7 @@ ResumeMode Debugger::fireNativeCall(JSContext* cx, const CallArgs& args,
   RootedValue fval(cx, ObjectValue(*hook));
   RootedValue calleeval(cx, args.calleev());
   if (!wrapDebuggeeValue(cx, &calleeval)) {
-    reportUncaughtException(ar);
+    reportUncaughtException(cx);
     return ResumeMode::Terminate;
   }
 
@@ -2250,8 +2218,7 @@ ResumeMode Debugger::fireNativeCall(JSContext* cx, const CallArgs& args,
   RootedValue rv(cx);
   bool ok = js::Call(cx, fval, object, calleeval, reasonval, &rv);
 
-  AbstractFramePtr frame;
-  return processHandlerResult(ar, ok, rv, frame, nullptr, vp);
+  return processHandlerResult(ar, ok, rv, NullFramePtr(), nullptr, vp);
 }
 
 void Debugger::fireNewScript(JSContext* cx,
@@ -2265,7 +2232,7 @@ void Debugger::fireNewScript(JSContext* cx,
 
   JSObject* dsobj = wrapVariantReferent(cx, scriptReferent);
   if (!dsobj) {
-    reportUncaughtException(ar);
+    reportUncaughtException(cx);
     return;
   }
 
@@ -2273,7 +2240,7 @@ void Debugger::fireNewScript(JSContext* cx,
   RootedValue dsval(cx, ObjectValue(*dsobj));
   RootedValue rv(cx);
   if (!js::Call(cx, fval, object, dsval, &rv)) {
-    handleUncaughtException(ar);
+    handleUncaughtException(cx);
   }
 }
 
@@ -2291,7 +2258,7 @@ void Debugger::fireOnGarbageCollectionHook(
 
   JSObject* dataObj = gcData->toJSObject(cx);
   if (!dataObj) {
-    reportUncaughtException(ar);
+    reportUncaughtException(cx);
     return;
   }
 
@@ -2299,7 +2266,7 @@ void Debugger::fireOnGarbageCollectionHook(
   RootedValue dataVal(cx, ObjectValue(*dataObj));
   RootedValue rv(cx);
   if (!js::Call(cx, fval, object, dataVal, &rv)) {
-    handleUncaughtException(ar);
+    handleUncaughtException(cx);
   }
 }
 
@@ -2490,7 +2457,7 @@ bool DebugAPI::onTrap(JSContext* cx) {
 
         RootedValue scriptFrame(cx);
         if (!dbg->getFrame(cx, iter, &scriptFrame)) {
-          dbg->reportUncaughtException(ar);
+          dbg->reportUncaughtException(cx);
           return false;
         }
 
@@ -2500,7 +2467,7 @@ bool DebugAPI::onTrap(JSContext* cx) {
         // be in the same compartment, so we can't be sure.
         Rooted<JSObject*> handler(cx, bp->handler);
         if (!cx->compartment()->wrap(cx, &handler)) {
-          dbg->reportUncaughtException(ar);
+          dbg->reportUncaughtException(cx);
           return false;
         }
 
@@ -2633,9 +2600,12 @@ bool DebugAPI::onSingleStep(JSContext* cx) {
       Maybe<AutoRealm> ar;
       ar.emplace(cx, dbg->object);
 
-      bool success = handler->onStep(cx, frame, resumeMode, &rval);
+      ResumeMode nextResumeMode = ResumeMode::Continue;
+      RootedValue nextValue(cx);
+      bool success = handler->onStep(cx, frame, nextResumeMode, &nextValue);
       resumeMode = dbg->processParsedHandlerResult(
-          ar, iter.abstractFramePtr(), iter.pc(), success, resumeMode, &rval);
+          ar, iter.abstractFramePtr(), iter.pc(), success, nextResumeMode,
+          nextValue, &rval);
       adjqi.runJobs();
 
       if (resumeMode != ResumeMode::Continue) {
@@ -2663,7 +2633,7 @@ ResumeMode Debugger::fireNewGlobalObject(JSContext* cx,
 
   RootedValue wrappedGlobal(cx, ObjectValue(*global));
   if (!wrapDebuggeeValue(cx, &wrappedGlobal)) {
-    reportUncaughtException(ar);
+    reportUncaughtException(cx);
     return ResumeMode::Terminate;
   }
 
@@ -2685,8 +2655,10 @@ ResumeMode Debugger::fireNewGlobalObject(JSContext* cx,
   // to handleUncaughtException so that it parses resumption values from the
   // uncaughtExceptionHook and tells the caller whether we should execute the
   // rest of the onNewGlobalObject hooks or not.
+  // TODO: Bug 1601171 will let us remove this because we can make it more like
+  // the onGarbageCollection and onNewScripts hooks.
   ResumeMode resumeMode =
-      ok ? ResumeMode::Continue : handleUncaughtException(ar, vp);
+      processHandlerResult(ar, ok, rv, NullFramePtr(), nullptr, vp);
   MOZ_ASSERT(!cx->isExceptionPending());
   return resumeMode;
 }
@@ -2895,7 +2867,7 @@ ResumeMode Debugger::firePromiseHook(JSContext* cx, Hook hook,
 
   RootedValue dbgObj(cx, ObjectValue(*promise));
   if (!wrapDebuggeeValue(cx, &dbgObj)) {
-    reportUncaughtException(ar);
+    reportUncaughtException(cx);
     return ResumeMode::Terminate;
   }
 
@@ -2910,8 +2882,10 @@ ResumeMode Debugger::firePromiseHook(JSContext* cx, Hook hook,
     ok = false;
   }
 
+  // TODO: Bug 1601171 will let us remove this because we can make it more like
+  // the onGarbageCollection and onNewScripts hooks.
   ResumeMode resumeMode =
-      ok ? ResumeMode::Continue : handleUncaughtException(ar, vp);
+      processHandlerResult(ar, ok, rv, NullFramePtr(), nullptr, vp);
   MOZ_ASSERT(!cx->isExceptionPending());
   return resumeMode;
 }

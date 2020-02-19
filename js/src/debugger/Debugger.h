@@ -802,66 +802,18 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
                             WeakGlobalObjectSet::Enum* debugEnum,
                             FromSweep fromSweep);
 
-  enum class CallUncaughtExceptionHook { No, Yes };
-
-  /*
-   * Apply the resumption information in (resumeMode, vp) to `frame` in
-   * anticipation of returning to the debuggee.
-   *
-   * This is the usual path for returning from the debugger to the debuggee
-   * when we have a resumption value to apply. This does final checks on the
-   * result value and exits the debugger's realm by calling `ar.reset()`.
-   * Some hooks don't call this because they don't allow the debugger to
-   * control resumption; those just call `ar.reset()` and return.
-   */
-  ResumeMode leaveDebugger(mozilla::Maybe<AutoRealm>& ar,
-                           AbstractFramePtr frame, jsbytecode* pc,
-                           CallUncaughtExceptionHook callHook,
-                           ResumeMode resumeMode, MutableHandleValue vp);
-
-  /*
-   * Report and clear the pending exception on ar.context, if any.
-   */
-  void reportUncaughtException(mozilla::Maybe<AutoRealm>& ar);
-
-  /*
-   * Cope with an error or exception in a debugger hook.
-   *
-   * If callHook is true, then call the uncaughtExceptionHook, if any. If, in
-   * addition, vp is given, then parse the value returned by
-   * uncaughtExceptionHook as a resumption value.
-   *
-   * If there is no uncaughtExceptionHook, or if it fails, report and clear
-   * the pending exception on ar.context and return ResumeMode::Terminate.
-   *
-   * This always calls `ar.reset()`; ar is a parameter because this method
-   * must do some things in the debugger realm and some things in the
-   * debuggee realm.
-   */
-  ResumeMode handleUncaughtException(mozilla::Maybe<AutoRealm>& ar);
-  ResumeMode handleUncaughtException(mozilla::Maybe<AutoRealm>& ar,
-                                     MutableHandleValue vp,
-                                     AbstractFramePtr frame = NullFramePtr(),
-                                     jsbytecode* pc = nullptr);
-
-  ResumeMode handleUncaughtExceptionHelper(mozilla::Maybe<AutoRealm>& ar,
-                                           MutableHandleValue* vp,
-                                           AbstractFramePtr frame,
-                                           jsbytecode* pc);
-
   /*
    * Handle the result of a hook that is expected to return a resumption
    * value <https://wiki.mozilla.org/Debugger#Resumption_Values>. This is
-   * called when we return from a debugging hook to debuggee code. The
-   * interpreter wants a (ResumeMode, Value) pair telling it how to proceed.
+   * called when we return from a debugging hook to debuggee code.
    *
    * Precondition: ar is entered. We are in the debugger compartment.
    *
-   * Postcondition: This called ar.reset(). See handleUncaughtException.
+   * Postcondition: This called ar.reset().
    *
    * If `success` is false, the hook failed. If an exception is pending in
-   * ar.context(), return handleUncaughtException(ar, vp, callhook).
-   * Otherwise just return ResumeMode::Terminate.
+   * ar.context(), attempt to handle it via the uncaught exception hook,
+   * otherwise report it to the AutoRealm's global.
    *
    * If `success` is true, there must be no exception pending in ar.context().
    * `rv` may be:
@@ -878,16 +830,43 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
    *         an uncatchable error.
    *
    *     anything else - Make a new TypeError the pending exception and
-   *         return handleUncaughtException(ar, vp, callHook).
+   *         attempt to handling it with the uncaught exception handler,
+   *         reporting the error it is still present after.
    */
   ResumeMode processHandlerResult(mozilla::Maybe<AutoRealm>& ar, bool success,
-                                  const Value& rv, AbstractFramePtr frame,
+                                  HandleValue rv, AbstractFramePtr frame,
                                   jsbytecode* pc, MutableHandleValue vp);
-
   ResumeMode processParsedHandlerResult(mozilla::Maybe<AutoRealm>& ar,
                                         AbstractFramePtr frame, jsbytecode* pc,
                                         bool success, ResumeMode resumeMode,
+                                        HandleValue value,
                                         MutableHandleValue vp);
+
+  /**
+   * Given a resumption return value from a hook, parse and validate it based
+   * on the given frame, and split the result into a ResumeMode and Value.
+   */
+  MOZ_MUST_USE bool prepareResumption(JSContext* cx, AbstractFramePtr frame,
+                                      jsbytecode* pc, ResumeMode& resumeMode,
+                                      MutableHandleValue vp);
+
+  /**
+   * If there is a pending exception and a handler, call the handler with the
+   * exception so that it can attempt to resolve the error.
+   */
+  MOZ_MUST_USE bool callUncaughtExceptionHandler(JSContext* cx,
+                                                 MutableHandleValue vp);
+
+  /**
+   * If the context has a pending exception, report it to the current global.
+   */
+  void reportUncaughtException(JSContext* cx);
+
+  /*
+   * Call the uncaught exception handler if there is one, and if there
+   * is still an error after the handler runs, report it to the current global.
+   */
+  void handleUncaughtException(JSContext* cx);
 
   GlobalObject* unwrapDebuggeeArgument(JSContext* cx, const Value& v);
 
