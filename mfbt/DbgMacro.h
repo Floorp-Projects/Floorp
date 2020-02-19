@@ -172,8 +172,8 @@ std::ostream& operator<<(std::ostream& aOut, const T (&aArray)[N]) {
 //                         // MOZ_DBG as an rvalue reference and so wants to
 //                         // invoke B's move constructor to initialize b2
 #ifndef MOZILLA_OFFICIAL
-#  define MOZ_DBG(expression_...) \
-    mozilla::detail::MozDbg(__FILE__, __LINE__, #expression_, expression_)
+#  define MOZ_DBG(...) \
+    mozilla::detail::MozDbg(__FILE__, __LINE__, #__VA_ARGS__, __VA_ARGS__)
 #endif
 
 // Helper macro for MOZ_DEFINE_DBG.
@@ -194,13 +194,13 @@ std::ostream& operator<<(std::ostream& aOut, const T (&aArray)[N]) {
 //
 // generates an operator<< that outputs strings like
 // "Point { x = 1.0, y = 2.0 }".
-#define MOZ_DEFINE_DBG(type_, members_...)                                   \
+#define MOZ_DEFINE_DBG(type_, ...)                                   \
   friend std::ostream& operator<<(std::ostream& aOut, const type_& aValue) { \
     return aOut << #type_                                                    \
-                << (MOZ_ARG_COUNT(members_) == 0 ? "" : " { ")               \
+                << (MOZ_ARG_COUNT(__VA_ARGS__) == 0 ? "" : " { ")               \
                        MOZ_FOR_EACH_SEPARATED(MOZ_DBG_FIELD, (<< ", "), (),  \
-                                              (members_))                    \
-                << (MOZ_ARG_COUNT(members_) == 0 ? "" : " }");               \
+                                              (__VA_ARGS__))                    \
+                << (MOZ_ARG_COUNT(__VA_ARGS__) == 0 ? "" : " }");               \
   }
 
 #endif  // mozilla_DbgMacro_h
