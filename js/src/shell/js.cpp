@@ -10498,6 +10498,12 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
     jit::JitOptions.nativeRegExp = false;
   }
 
+#ifdef NIGHTLY_BUILD
+  if (op.getBoolOption("no-ti")) {
+    jit::JitOptions.typeInference = false;
+  }
+#endif
+
   if (const char* str = op.getStringOption("ion-regalloc")) {
     jit::JitOptions.forcedRegisterAllocator = jit::LookupRegisterAllocator(str);
     if (!jit::JitOptions.forcedRegisterAllocator.isSome()) {
@@ -11014,6 +11020,9 @@ int main(int argc, char** argv, char** envp) {
       !op.addBoolOption('\0', "no-ion", "Disable IonMonkey") ||
       !op.addBoolOption('\0', "no-ion-for-main-context",
                         "Disable IonMonkey for the main context only") ||
+#ifdef NIGHTLY_BUILD
+      !op.addBoolOption('\0', "no-ti", "Disable Type Inference") ||
+#endif
       !op.addBoolOption('\0', "no-asmjs", "Disable asm.js compilation") ||
       !op.addStringOption(
           '\0', "wasm-compiler", "[option]",
