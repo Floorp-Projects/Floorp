@@ -640,13 +640,24 @@ WaylandDMABufSurfaceRGBA::CreateDMABufSurface(int aWidth, int aHeight,
   return surf.forget();
 }
 
+already_AddRefed<WaylandDMABufSurfaceNV12>
+WaylandDMABufSurfaceNV12::CreateNV12Surface(
+    const VADRMPRIMESurfaceDescriptor& aDesc) {
+  RefPtr<WaylandDMABufSurfaceNV12> surf = new WaylandDMABufSurfaceNV12();
+  if (!surf->Create(aDesc)) {
+    return nullptr;
+  }
+  return surf.forget();
+}
+
 WaylandDMABufSurfaceNV12::WaylandDMABufSurfaceNV12()
     : WaylandDMABufSurface(SURFACE_NV12),
       mSurfaceFormat(gfx::SurfaceFormat::NV12),
       mWidth(),
       mHeight(),
       mDrmFormats(),
-      mTexture() {
+      mTexture(),
+      mColorSpace(mozilla::gfx::YUVColorSpace::UNKNOWN) {
   for (int i = 0; i < DMABUF_BUFFER_PLANES; i++) {
     mEGLImage[i] = LOCAL_EGL_NO_IMAGE;
   }
@@ -741,9 +752,9 @@ bool WaylandDMABufSurfaceNV12::Serialize(
         egl->fDupNativeFenceFDANDROID(egl->Display(), mSync));
   }
 
-  aOutDescriptor = SurfaceDescriptorDMABuf(mSurfaceType, mBufferModifier, 0,
-                                           fds, width, height, format, strides,
-                                           offsets, mColorSpace, fenceFD);
+  aOutDescriptor = SurfaceDescriptorDMABuf(
+      mSurfaceType, mBufferModifier, 0, fds, width, height, format, strides,
+      offsets, GetYUVColorSpace(), fenceFD);
   return true;
 }
 
@@ -778,23 +789,14 @@ bool WaylandDMABufSurfaceNV12::CreateTexture(GLContext* aGLContext,
   attribs.AppendElement(mHeight[aPlane]);
   attribs.AppendElement(LOCAL_EGL_LINUX_DRM_FOURCC_EXT);
   attribs.AppendElement(mDrmFormats[aPlane]);
-#define ADD_PLANE_ATTRIBS_NV12(plane_idx)                                   \
-  {                                                                         \
-    attribs.AppendElement(LOCAL_EGL_DMA_BUF_PLANE##plane_idx##_FD_EXT);     \
-    attribs.AppendElement(mDmabufFds[aPlane]);                              \
-    attribs.AppendElement(LOCAL_EGL_DMA_BUF_PLANE##plane_idx##_OFFSET_EXT); \
-    attribs.AppendElement((int)mOffsets[aPlane]);                           \
-    attribs.AppendElement(LOCAL_EGL_DMA_BUF_PLANE##plane_idx##_PITCH_EXT);  \
-    attribs.AppendElement((int)mStrides[aPlane]);                           \
-    if (mBufferModifier != DRM_FORMAT_MOD_INVALID) {                        \
-      attribs.AppendElement(                                                \
-          LOCAL_EGL_DMA_BUF_PLANE##plane_idx##_MODIFIER_LO_EXT);            \
-      attribs.AppendElement(mBufferModifier & 0xFFFFFFFF);                  \
-      attribs.AppendElement(                                                \
-          LOCAL_EGL_DMA_BUF_PLANE##plane_idx##_MODIFIER_HI_EXT);            \
-      attribs.AppendElement(mBufferModifier >> 32);                         \
-    }                                                                       \
-    ADD_PLANE_ATTRIBS_NV12(0);
+#define ADD_PLANE_ATTRIBS_NV12(plane_idx)                                 \
+  attribs.AppendElement(LOCAL_EGL_DMA_BUF_PLANE##plane_idx##_FD_EXT);     \
+  attribs.AppendElement(mDmabufFds[aPlane]);                              \
+  attribs.AppendElement(LOCAL_EGL_DMA_BUF_PLANE##plane_idx##_OFFSET_EXT); \
+  attribs.AppendElement((int)mOffsets[aPlane]);                           \
+  attribs.AppendElement(LOCAL_EGL_DMA_BUF_PLANE##plane_idx##_PITCH_EXT);  \
+  attribs.AppendElement((int)mStrides[aPlane]);
+  ADD_PLANE_ATTRIBS_NV12(0);
 #undef ADD_PLANE_ATTRIBS_NV12
   attribs.AppendElement(LOCAL_EGL_NONE);
 
@@ -826,12 +828,18 @@ bool WaylandDMABufSurfaceNV12::CreateTexture(GLContext* aGLContext,
 void WaylandDMABufSurfaceNV12::ReleaseTextures() {
   FenceDelete();
 
-  if (mGL->MakeCurrent()) {
-    for (int i = 0; i < mBufferPlaneCount; i++) {
-      if (mTexture[i]) {
-        mGL->fDeleteTextures(1, mTexture + i);
-        mTexture[i] = 0;
-      }
+  bool textureActive = false;
+  for (int i = 0; i < mBufferPlaneCount; i++) {
+    if (mTexture[i]) {
+      textureActive = true;
+      break;
+    }
+  }
+
+  if (textureActive && mGL->MakeCurrent()) {
+    mGL->fDeleteTextures(DMABUF_BUFFER_PLANES, mTexture);
+    for (int i = 0; i < DMABUF_BUFFER_PLANES; i++) {
+      mTexture[i] = 0;
     }
     mGL = nullptr;
   }
