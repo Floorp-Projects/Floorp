@@ -260,12 +260,6 @@ class Completion {
            variant.is<Await>();
   }
 
-  /*
-   * If this completion is a suspension of a generator or async call, return the
-   * call's generator object, nullptr otherwise.
-   */
-  AbstractGeneratorObject* maybeGeneratorObject() const;
-
   /* Set `result` to a Debugger API completion value describing this completion.
    */
   bool buildCompletionValue(JSContext* cx, Debugger* dbg,
