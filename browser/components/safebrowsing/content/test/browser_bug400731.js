@@ -1,74 +1,65 @@
 /* Check presence of the "Ignore this warning" button */
 
-/* eslint-env mozilla/frame-script */
-
-function onDOMContentLoaded(callback) {
-  function complete({ data }) {
-    mm.removeMessageListener("Test:DOMContentLoaded", complete);
-    callback(data);
-  }
-
-  let mm = gBrowser.selectedBrowser.messageManager;
-  mm.addMessageListener("Test:DOMContentLoaded", complete);
-
-  function contentScript() {
-    let listener = function() {
-      removeEventListener("DOMContentLoaded", listener);
-
-      let button = content.document.getElementById("ignore_warning_link");
-
-      sendAsyncMessage("Test:DOMContentLoaded", { buttonPresent: !!button });
-    };
-    addEventListener("DOMContentLoaded", listener);
-  }
-  mm.loadFrameScript("data:,(" + contentScript.toString() + ")();", true);
-}
-
-function test() {
-  waitForExplicitFinish();
-
-  waitForDBInit(() => {
-    gBrowser.selectedTab = BrowserTestUtils.addTab(
-      gBrowser,
-      "http://www.itisatrap.org/firefox/its-an-attack.html"
-    );
-    onDOMContentLoaded(testMalware);
+function checkWarningState() {
+  return SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
+    return !!content.document.getElementById("ignore_warning_link");
   });
 }
 
-function testMalware(data) {
-  ok(data.buttonPresent, "Ignore warning link should be present for malware");
+add_task(async function testMalware() {
+  await new Promise(resolve => waitForDBInit(resolve));
 
+  await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:blank");
+
+  const url = "http://www.itisatrap.org/firefox/its-an-attack.html";
+  BrowserTestUtils.loadURI(gBrowser.selectedBrowser, url);
+  await BrowserTestUtils.browserLoaded(
+    gBrowser.selectedBrowser,
+    false,
+    url,
+    true
+  );
+
+  let buttonPresent = await checkWarningState();
+  ok(buttonPresent, "Ignore warning link should be present for malware");
+});
+
+add_task(async function testUnwanted() {
   Services.prefs.setBoolPref("browser.safebrowsing.allowOverride", false);
 
   // Now launch the unwanted software test
-  onDOMContentLoaded(testUnwanted);
-  BrowserTestUtils.loadURI(
-    gBrowser,
-    "http://www.itisatrap.org/firefox/unwanted.html"
+  const url = "http://www.itisatrap.org/firefox/unwanted.html";
+  BrowserTestUtils.loadURI(gBrowser.selectedBrowser, url);
+  await BrowserTestUtils.browserLoaded(
+    gBrowser.selectedBrowser,
+    false,
+    url,
+    true
   );
-}
 
-function testUnwanted(data) {
   // Confirm that "Ignore this warning" is visible - bug 422410
+  let buttonPresent = await checkWarningState();
   ok(
-    !data.buttonPresent,
+    !buttonPresent,
     "Ignore warning link should be missing for unwanted software"
   );
+});
 
+add_task(async function testPhishing() {
   Services.prefs.setBoolPref("browser.safebrowsing.allowOverride", true);
 
   // Now launch the phishing test
-  onDOMContentLoaded(testPhishing);
-  BrowserTestUtils.loadURI(
-    gBrowser,
-    "http://www.itisatrap.org/firefox/its-a-trap.html"
+  const url = "http://www.itisatrap.org/firefox/its-a-trap.html";
+  BrowserTestUtils.loadURI(gBrowser.selectedBrowser, url);
+  await BrowserTestUtils.browserLoaded(
+    gBrowser.selectedBrowser,
+    false,
+    url,
+    true
   );
-}
 
-function testPhishing(data) {
-  ok(data.buttonPresent, "Ignore warning link should be present for phishing");
+  let buttonPresent = await checkWarningState();
+  ok(buttonPresent, "Ignore warning link should be present for phishing");
 
   gBrowser.removeCurrentTab();
-  finish();
-}
+});
