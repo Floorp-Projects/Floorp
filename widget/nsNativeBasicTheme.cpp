@@ -699,6 +699,8 @@ bool nsNativeBasicTheme::GetWidgetOverflow(nsDeviceContext* aContext,
     case StyleAppearance::Textarea:
     case StyleAppearance::Searchfield:
     case StyleAppearance::Listbox:
+    // NOTE: if you change Menulist and MenulistButton to behave differently,
+    // be sure to handle StaticPrefs::layout_css_webkit_appearance_enabled.
     case StyleAppearance::Menulist:
     case StyleAppearance::MenulistButton:
     case StyleAppearance::MozMenulistButton:
@@ -839,6 +841,11 @@ nsITheme::ThemeGeometryType nsNativeBasicTheme::ThemeGeometryTypeForWidget(
 bool nsNativeBasicTheme::ThemeSupportsWidget(nsPresContext* aPresContext,
                                              nsIFrame* aFrame,
                                              StyleAppearance aAppearance) {
+  if (aAppearance == StyleAppearance::MenulistButton &&
+      StaticPrefs::layout_css_webkit_appearance_enabled()) {
+    aAppearance = StyleAppearance::Menulist;
+  }
+
   if (IsWidgetScrollbarPart(aAppearance)) {
     const auto* style = nsLayoutUtils::StyleForScrollbar(aFrame);
     // We don't currently handle custom scrollbars on nsNativeBasicTheme. We
@@ -868,9 +875,9 @@ bool nsNativeBasicTheme::ThemeSupportsWidget(nsPresContext* aPresContext,
     case StyleAppearance::Button:
     case StyleAppearance::Listbox:
     case StyleAppearance::Menulist:
-    case StyleAppearance::MenulistButton:
     case StyleAppearance::MenulistTextfield:
     case StyleAppearance::NumberInput:
+    case StyleAppearance::MenulistButton:
     case StyleAppearance::MozMenulistButton:
     case StyleAppearance::SpinnerUpbutton:
     case StyleAppearance::SpinnerDownbutton:
@@ -881,7 +888,13 @@ bool nsNativeBasicTheme::ThemeSupportsWidget(nsPresContext* aPresContext,
 }
 
 bool nsNativeBasicTheme::WidgetIsContainer(StyleAppearance aAppearance) {
+  if (aAppearance == StyleAppearance::MenulistButton &&
+      StaticPrefs::layout_css_webkit_appearance_enabled()) {
+    aAppearance = StyleAppearance::Menulist;
+  }
+
   switch (aAppearance) {
+    case StyleAppearance::MenulistButton:
     case StyleAppearance::MozMenulistButton:
     case StyleAppearance::Radio:
     case StyleAppearance::Checkbox:

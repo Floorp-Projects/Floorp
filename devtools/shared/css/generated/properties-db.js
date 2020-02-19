@@ -10908,6 +10908,10 @@ exports.PREFERENCES = [
     "layout.css.prefixes.transforms"
   ],
   [
+    "-webkit-appearance",
+    "layout.css.webkit-appearance.enabled"
+  ],
+  [
     "-moz-column-width",
     "layout.css.prefixes.columns"
   ],
