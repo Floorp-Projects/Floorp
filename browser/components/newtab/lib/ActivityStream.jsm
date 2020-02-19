@@ -131,6 +131,10 @@ const DEFAULT_SITES = new Map([
     "FR",
     "https://www.youtube.com/,https://www.facebook.com/,https://www.wikipedia.org/,https://www.amazon.fr/,https://www.leboncoin.fr/,https://twitter.com/",
   ],
+  [
+    "CN",
+    "https://www.baidu.com/,https://www.zhihu.com/,https://www.ifeng.com/,https://weibo.com/,https://www.ctrip.com/,https://www.iqiyi.com/",
+  ],
 ]);
 const GEO_PREF = "browser.search.region";
 const REGION_STORIES_CONFIG =
