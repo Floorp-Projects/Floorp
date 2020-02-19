@@ -29,21 +29,11 @@ add_task(async function() {
     info("added result listener and sent string 'F'");
     await awaitFindResult;
 
-    let awaitScrollDone = BrowserTestUtils.waitForMessage(
-      browser.messageManager,
-      "ScrollDone"
-    );
     // scroll textarea to bottom
-    const scrollTest =
-      'var textarea = content.document.getElementById("textarea1");' +
-      "textarea.scrollTop = textarea.scrollHeight;" +
-      'sendAsyncMessage("ScrollDone", { });';
-    browser.messageManager.loadFrameScript(
-      "data:text/javascript;base64," + btoa(scrollTest),
-      false
-    );
-    await awaitScrollDone;
-    info("got ScrollDone event");
+    await SpecialPowers.spawn(browser, [], () => {
+      let textarea = content.document.getElementById("textarea1");
+      textarea.scrollTop = textarea.scrollHeight;
+    });
     await BrowserTestUtils.loadURI(browser, "about:blank");
     await BrowserTestUtils.browserLoaded(browser);
 
