@@ -43,35 +43,6 @@ function waitForTransferComplete() {
 }
 
 /**
- * Given some browser, loads a framescript that right-clicks
- * on the video1 element to spawn a contextmenu.
- */
-function rightClickVideo(browser) {
-  let frame_script = () => {
-    let utils = content.windowUtils;
-
-    let document = content.document;
-    let video = document.getElementById("video1");
-    let rect = video.getBoundingClientRect();
-
-    /* Synthesize a click in the center of the video. */
-    let left = rect.left + rect.width / 2;
-    let top = rect.top + rect.height / 2;
-
-    utils.sendMouseEvent(
-      "contextmenu",
-      left,
-      top,
-      2 /* aButton */,
-      1 /* aClickCount */,
-      0 /* aModifiers */
-    );
-  };
-  let mm = browser.messageManager;
-  mm.loadFrameScript("data:,(" + frame_script.toString() + ")();", true);
-}
-
-/**
  * Loads a page with a <video> element, right-clicks it and chooses
  * to save a frame screenshot to the disk. Completes once we've
  * verified that the frame has been saved to disk.
@@ -111,7 +82,11 @@ add_task(async function() {
   let popupPromise = promisePopupShown(context);
 
   info("Synthesizing right-click on video element");
-  rightClickVideo(browser);
+  await BrowserTestUtils.synthesizeMouseAtCenter(
+    "#video1",
+    { type: "contextmenu", button: 2 },
+    browser
+  );
   info("Waiting for popup to fire popupshown.");
   await popupPromise;
   info("Popup fired popupshown");
