@@ -515,8 +515,24 @@
  *   file may not see the annotation.
  * MOZ_CAN_RUN_SCRIPT_BOUNDARY: Applies to functions which need to call
  *   MOZ_CAN_RUN_SCRIPT functions, but should not themselves be considered
- *   MOZ_CAN_RUN_SCRIPT. This is important for some bindings and low level code
- *   which need to opt out of the safety checks performed by MOZ_CAN_RUN_SCRIPT.
+ *   MOZ_CAN_RUN_SCRIPT. This should generally be avoided but can be used in
+ *   two cases:
+ *     1) As a temporary measure to limit the scope of changes when adding
+ *        MOZ_CAN_RUN_SCRIPT.  Such a use must be accompanied by a follow-up bug
+ *        to replace the MOZ_CAN_RUN_SCRIPT_BOUNDARY with MOZ_CAN_RUN_SCRIPT and
+ *        a comment linking to that bug.
+ *     2) If we can reason that the MOZ_CAN_RUN_SCRIPT callees of the function
+ *        do not in fact run script (for example, because their behavior depends
+ *        on arguments and we pass the arguments that don't allow script
+ *        execution).  Such a use must be accompanied by a comment that explains
+ *        why it's OK to have the MOZ_CAN_RUN_SCRIPT_BOUNDARY, as well as
+ *        comments in the callee pointing out that if its behavior changes the
+ *        caller might need adjusting.  And perhaps also a followup bug to
+ *        refactor things so the "script" and "no script" codepaths do not share
+ *        a chokepoint.
+ *   Importantly, any use MUST be accompanied by a comment explaining why it's
+ *   there, and should ideally have an action plan for getting rid of the
+ *   MOZ_CAN_RUN_SCRIPT_BOUNDARY annotation.
  * MOZ_MUST_OVERRIDE: Applies to all C++ member functions. All immediate
  *   subclasses must provide an exact override of this method; if a subclass
  *   does not override this method, the compiler will emit an error. This
