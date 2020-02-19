@@ -17,6 +17,7 @@ import mozilla.components.browser.search.provider.AssetsSearchEngineProvider
 import mozilla.components.browser.search.provider.SearchEngineList
 import mozilla.components.browser.search.provider.SearchEngineProvider
 import mozilla.components.browser.search.provider.filter.SearchEngineFilter
+import mozilla.components.browser.search.provider.localization.SearchLocalizationProvider
 import mozilla.components.service.location.MozillaLocationService
 import mozilla.components.service.location.search.RegionSearchLocalizationProvider
 import org.mozilla.fenix.BuildConfig
@@ -28,9 +29,9 @@ import java.util.Locale
 open class FenixSearchEngineProvider(
     private val context: Context
 ) : SearchEngineProvider, CoroutineScope by CoroutineScope(Job() + Dispatchers.IO) {
-    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
 
-    private val localizationProvider =
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    open val localizationProvider: SearchLocalizationProvider =
         RegionSearchLocalizationProvider(
             MozillaLocationService(
                 context,
@@ -137,7 +138,8 @@ open class FenixSearchEngineProvider(
     }
 
     // When we change the locale we need to update the baseSearchEngines list
-    private fun updateBaseSearchEngines() {
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    open fun updateBaseSearchEngines() {
         baseSearchEngines = async {
             AssetsSearchEngineProvider(localizationProvider).loadSearchEngines(context)
         }
@@ -182,7 +184,8 @@ open class FenixSearchEngineProvider(
         return installedIdentifiers + customEngineIdentifiers
     }
 
-    private suspend fun localeAwareInstalledEnginesKey(): String {
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    suspend fun localeAwareInstalledEnginesKey(): String {
         val tag = localizationProvider.determineRegion().let {
             val region = it.region?.let { region ->
                 if (region.isEmpty()) "" else "-$region"
