@@ -275,7 +275,7 @@ class Completion {
    * Given a `ResumeMode` and value (typically derived from a resumption value
    * returned by a Debugger hook), update this completion as requested.
    */
-  void updateForNextHandler(ResumeMode resumeMode, HandleValue value);
+  void updateFromHookResult(ResumeMode resumeMode, HandleValue value);
 
  private:
   using Variant =
