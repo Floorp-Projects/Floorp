@@ -15,6 +15,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.annotation.CallSuper
 import androidx.coordinatorlayout.widget.CoordinatorLayout
+import androidx.core.graphics.drawable.toDrawable
 import androidx.core.net.toUri
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
@@ -475,9 +476,16 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
 
     private fun adjustBackgroundAndNavigate(directions: NavDirections) {
         context?.let {
-            swipeRefresh?.background = ColorDrawable(Color.TRANSPARENT)
-            engineView?.asView()?.visibility = View.GONE
-            findNavController().nav(R.id.browserFragment, directions)
+            engineView.captureThumbnail { bitmap ->
+                lifecycleScope.launch {
+                    // If the bitmap is null, the best we can do to reduce the flash is set transparent
+                    swipeRefresh.background = bitmap?.toDrawable(it.resources)
+                        ?: ColorDrawable(Color.TRANSPARENT)
+
+                    engineView.asView().visibility = View.GONE
+                    findNavController().nav(R.id.browserFragment, directions)
+                }
+            }
         }
     }
 
@@ -531,9 +539,9 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
     @CallSuper
     override fun onBackPressed(): Boolean {
         return findInPageIntegration.onBackPressed() ||
-                fullScreenFeature.onBackPressed() ||
-                sessionFeature.onBackPressed() ||
-                removeSessionIfNeeded()
+            fullScreenFeature.onBackPressed() ||
+            sessionFeature.onBackPressed() ||
+            removeSessionIfNeeded()
     }
 
     /**
