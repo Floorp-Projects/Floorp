@@ -376,6 +376,12 @@ impl FrameBuilder {
                 &mut visibility_state,
             );
 
+            // When there are tiles that are left remaining in the `retained_tiles`,
+            // dirty rects are not valid.
+            if !visibility_state.retained_tiles.caches.is_empty() {
+              visibility_state.composite_state.dirty_rects_are_valid = false;
+            }
+
             // When a new display list is processed by WR, the existing tiles from
             // any picture cache are stored in the `retained_tiles` field above. This
             // allows the first frame of a new display list to reuse any existing tiles
