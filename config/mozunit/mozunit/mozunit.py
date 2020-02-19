@@ -4,7 +4,12 @@
 
 from __future__ import absolute_import
 import inspect
+import io
 import os
+from six import (
+    BytesIO,
+    StringIO,
+)
 import sys
 import unittest
 from unittest import TextTestRunner as _TestRunner, TestResult as _TestResult
@@ -23,8 +28,6 @@ except ImportError:
     from mozbuild.base import MozbuildObject
     build = MozbuildObject.from_environment(cwd=here)
     topsrcdir = build.topsrcdir
-
-StringIO = six.StringIO
 
 '''Helper to make python unit tests report the way that the Mozilla
 unit test infrastructure expects tests to report.
@@ -113,21 +116,30 @@ class MozTestRunner(_TestRunner):
         return result
 
 
-class MockedFile(StringIO):
-    def __init__(self, context, filename, content=''):
-        self.context = context
-        self.name = filename
-        StringIO.__init__(self, content)
+def _mocked_file(cls):
+    '''Create a mocked file class that inherits from the given class.
+    '''
+    class MockedFile(cls):
+        def __init__(self, context, filename, content):
+            self.context = context
+            self.name = filename
+            cls.__init__(self, content)
 
-    def close(self):
-        self.context.files[self.name] = self.getvalue()
-        StringIO.close(self)
+        def close(self):
+            self.context.files[self.name] = self.getvalue()
+            cls.close(self)
 
-    def __enter__(self):
-        return self
+        def __enter__(self):
+            return self
 
-    def __exit__(self, type, value, traceback):
-        self.close()
+        def __exit__(self, type, value, traceback):
+            self.close()
+
+    return MockedFile
+
+
+MockedStringFile = _mocked_file(StringIO)
+MockedBytesFile = _mocked_file(BytesIO)
 
 
 def normcase(path):
@@ -140,6 +152,60 @@ def normcase(path):
     if sys.platform.startswith('win'):
         return path.lower()
     return path
+
+
+class _MockBaseOpen(object):
+    '''Callable that acts like the open() function; see MockedOpen for more
+    info.
+    '''
+    def __init__(self, open, files):
+        self.open = open
+        self.files = files
+
+    def __call__(self, name, mode='r', buffering=None, encoding=None):
+        # open() can be called with an integer "name" (i.e. a file descriptor).
+        # We don't generally do this in our codebase, but internal Python
+        # libraries sometimes do and we want to handle that cleanly.
+        if isinstance(name, int):
+            return self.open(name, mode=mode, buffering=buffering,
+                             encoding=encoding)
+        # buffering is ignored.
+        absname = normcase(os.path.abspath(name))
+        if 'w' in mode:
+            file = self._mocked_file(absname, mode)
+        elif absname in self.files:
+            content = self.files[absname]
+            if content is None:
+                raise IOError(2, 'No such file or directory')
+            file = self._mocked_file(absname, mode, content)
+        elif 'a' in mode:
+            read_mode = 'rb' if 'b' in mode else 'r'
+            file = self._mocked_file(
+                absname, mode, self.open(name, read_mode).read())
+        else:
+            file = self.open(name, mode)
+        if 'a' in mode:
+            file.seek(0, os.SEEK_END)
+        return file
+
+    def _mocked_file(self, name, mode, content=None):
+        raise NotImplementedError('subclass must implement')
+
+
+class _MockPy2Open(_MockBaseOpen):
+    def _mocked_file(self, name, mode, content=None):
+        content = six.ensure_binary(content or b'')
+        return MockedBytesFile(self, name, content)
+
+
+class _MockOpen(_MockBaseOpen):
+    def _mocked_file(self, name, mode, content=None):
+        if 'b' in mode:
+            content = six.ensure_binary(content or b'')
+            return MockedBytesFile(self, name, content)
+        else:
+            content = six.ensure_text(content or u'')
+            return MockedStringFile(self, name, content)
 
 
 class MockedOpen(object):
@@ -170,31 +236,16 @@ class MockedOpen(object):
         for name, content in files.items():
             self.files[normcase(os.path.abspath(name))] = content
 
-    def __call__(self, name, mode='r', buffering=None, encoding=None):
-        # buffering is ignored.
-        absname = normcase(os.path.abspath(name))
-        if 'w' in mode:
-            file = MockedFile(self, absname)
-        elif absname in self.files:
-            content = self.files[absname]
-            if content is None:
-                raise IOError(2, 'No such file or directory')
-            file = MockedFile(self, absname, content)
-        elif 'a' in mode:
-            file = MockedFile(self, absname, self.open(name, 'r').read())
-        else:
-            file = self.open(name, mode)
-        if 'a' in mode:
-            file.seek(0, os.SEEK_END)
-        return file
-
     def __enter__(self):
         import six.moves.builtins
         self.open = six.moves.builtins.open
+        self.io_open = io.open
         self._orig_path_exists = os.path.exists
         self._orig_path_isdir = os.path.isdir
         self._orig_path_isfile = os.path.isfile
-        six.moves.builtins.open = self
+        builtin_cls = _MockPy2Open if six.PY2 else _MockOpen
+        six.moves.builtins.open = builtin_cls(self.open, self.files)
+        io.open = _MockOpen(self.io_open, self.files)
         os.path.exists = self._wrapped_exists
         os.path.isdir = self._wrapped_isdir
         os.path.isfile = self._wrapped_isfile
@@ -202,6 +253,7 @@ class MockedOpen(object):
     def __exit__(self, type, value, traceback):
         import six.moves.builtins
         six.moves.builtins.open = self.open
+        io.open = self.io_open
         os.path.exists = self._orig_path_exists
         os.path.isdir = self._orig_path_isdir
         os.path.isfile = self._orig_path_isfile
