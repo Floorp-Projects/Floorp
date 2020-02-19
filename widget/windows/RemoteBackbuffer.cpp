@@ -206,16 +206,20 @@ class PresentableSharedImage {
     return true;
   }
 
-  bool PresentToWindow(HWND aWindowHandle) {
-    bool isLayered =
-        ::GetWindowLongPtrW(aWindowHandle, GWL_EXSTYLE) & WS_EX_LAYERED;
+  bool PresentToWindow(HWND aWindowHandle,
+                       nsTransparencyMode aTransparencyMode) {
+    if (aTransparencyMode == eTransparencyTransparent) {
+      // If our window is a child window or a child-of-a-child, the window
+      // that needs to be updated is the top level ancestor of the tree
+      HWND topLevelWindow = WinUtils::GetTopLevelHWND(aWindowHandle, true);
+      MOZ_ASSERT(::GetWindowLongPtr(topLevelWindow, GWL_EXSTYLE) &
+                 WS_EX_LAYERED);
 
-    if (isLayered) {
       BLENDFUNCTION bf = {AC_SRC_OVER, 0, 255, AC_SRC_ALPHA};
       SIZE winSize = {mSharedImage.GetWidth(), mSharedImage.GetHeight()};
       POINT srcPos = {0, 0};
       return !!::UpdateLayeredWindow(
-          aWindowHandle, nullptr /*paletteDC*/, nullptr /*newPos*/, &winSize,
+          topLevelWindow, nullptr /*paletteDC*/, nullptr /*newPos*/, &winSize,
           mDeviceContext, &srcPos, 0 /*colorKey*/, &bf, ULW_ALPHA);
     }
 
@@ -294,7 +298,8 @@ Provider::~Provider() {
   }
 }
 
-bool Provider::Initialize(HWND aWindowHandle, DWORD aTargetProcessId) {
+bool Provider::Initialize(HWND aWindowHandle, DWORD aTargetProcessId,
+                          nsTransparencyMode aTransparencyMode) {
   MOZ_ASSERT(aWindowHandle);
   MOZ_ASSERT(aTargetProcessId);
 
@@ -335,6 +340,8 @@ bool Provider::Initialize(HWND aWindowHandle, DWORD aTargetProcessId) {
 
   mServiceThread = std::thread([this] { this->ThreadMain(); });
 
+  mTransparencyMode = aTransparencyMode;
+
   return true;
 }
 
@@ -363,6 +370,10 @@ Maybe<RemoteBackbufferHandles> Provider::CreateRemoteHandles() {
       reinterpret_cast<WindowsHandle>(fileMapping),
       reinterpret_cast<WindowsHandle>(requestReadyEvent),
       reinterpret_cast<WindowsHandle>(responseReadyEvent)));
+}
+
+void Provider::UpdateTransparencyMode(nsTransparencyMode aTransparencyMode) {
+  mTransparencyMode = aTransparencyMode;
 }
 
 void Provider::ThreadMain() {
@@ -457,7 +468,7 @@ void Provider::HandlePresentRequest(PresentResponseData* aResponseData) {
     return;
   }
 
-  if (!mBackbuffer->PresentToWindow(mWindowHandle)) {
+  if (!mBackbuffer->PresentToWindow(mWindowHandle, mTransparencyMode)) {
     return;
   }
 
