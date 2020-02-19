@@ -417,7 +417,7 @@ var FullZoom = {
     let token = this._getBrowserToken(browser);
     let result = ZoomUI.getGlobalValue().then(value => {
       if (token.isCurrent) {
-        ZoomManager.setZoomForBrowser(browser, value === undefined ? 1 : value);
+        ZoomManager.setZoomForBrowser(browser, value);
         this._ignorePendingZoomAccesses(browser);
       }
     });
@@ -453,7 +453,7 @@ var FullZoom = {
     aBrowser,
     aCallback
   ) {
-    if (!this.siteSpecific || gInPrintPreviewMode) {
+    if (gInPrintPreviewMode) {
       this._executeSoon(aCallback);
       return;
     }
@@ -466,20 +466,20 @@ var FullZoom = {
       return;
     }
 
-    if (aValue !== undefined) {
+    if (aValue !== undefined && this.siteSpecific) {
       ZoomManager.setZoomForBrowser(aBrowser, this._ensureValid(aValue));
       this._ignorePendingZoomAccesses(aBrowser);
       this._executeSoon(aCallback);
       return;
     }
 
+    // Above, we check if site-specific zoom is enabled before setting
+    // the tab browser zoom, however global zoom should work independent
+    // of the site-specific pref, so we do no checks here.
     let token = this._getBrowserToken(aBrowser);
     ZoomUI.getGlobalValue().then(value => {
       if (token.isCurrent) {
-        ZoomManager.setZoomForBrowser(
-          aBrowser,
-          value === undefined ? 1 : value
-        );
+        ZoomManager.setZoomForBrowser(aBrowser, value);
         this._ignorePendingZoomAccesses(aBrowser);
       }
       this._executeSoon(aCallback);
