@@ -1203,7 +1203,7 @@ class WebGLContext : public VRefCounted, public SupportsWeakPtr<WebGLContext> {
   GLuint mStencilValueMaskBack = 0;
   GLuint mStencilWriteMaskFront = 0;
   GLuint mStencilWriteMaskBack = 0;
-  uint8_t mColorWriteMask = 0;  // bitmask
+  uint8_t mColorWriteMask = 0xf;  // bitmask
   realGLboolean mDepthWriteMask = 0;
   GLfloat mColorClearValue[4];
   GLint mStencilClearValue = 0;

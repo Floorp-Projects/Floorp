@@ -443,18 +443,6 @@ const webgl::CachedDrawFetchLimits* ValidateDraw(WebGLContext* const webgl,
     if (fb) {
       const auto& info = *fb->GetCompletenessInfo();
       fbZLayerCount = info.zLayerCount;
-
-      for (const auto& attach : fb->ColorDrawBuffers()) {
-        const auto i =
-            uint8_t(attach->mAttachmentPoint - LOCAL_GL_COLOR_ATTACHMENT0);
-        const auto& imageInfo = attach->GetImageInfo();
-        if (!imageInfo) continue;
-        const auto& dstBaseType = imageInfo->mFormat->format->baseType;
-        if (!fnValidateFragOutputType(i, dstBaseType)) return nullptr;
-      }
-    } else {
-      if (!fnValidateFragOutputType(0, webgl::TextureBaseType::Float))
-        return nullptr;
     }
 
     if (fbZLayerCount != linkInfo->zLayerCount) {
@@ -462,6 +450,22 @@ const webgl::CachedDrawFetchLimits* ValidateDraw(WebGLContext* const webgl,
           "Multiview count mismatch: shader: %u, framebuffer: %u",
           uint32_t{linkInfo->zLayerCount}, uint32_t{fbZLayerCount});
       return nullptr;
+    }
+
+    if (webgl->mColorWriteMask) {
+      if (fb) {
+        for (const auto& attach : fb->ColorDrawBuffers()) {
+          const auto i =
+              uint8_t(attach->mAttachmentPoint - LOCAL_GL_COLOR_ATTACHMENT0);
+          const auto& imageInfo = attach->GetImageInfo();
+          if (!imageInfo) continue;
+          const auto& dstBaseType = imageInfo->mFormat->format->baseType;
+          if (!fnValidateFragOutputType(i, dstBaseType)) return nullptr;
+        }
+      } else {
+        if (!fnValidateFragOutputType(0, webgl::TextureBaseType::Float))
+          return nullptr;
+      }
     }
   }
 
