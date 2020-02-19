@@ -8,7 +8,7 @@
 # the locale directory, chrome registry entries and other information
 # necessary to produce the complete manifest file for a language pack.
 ###
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 
 import argparse
 import sys
