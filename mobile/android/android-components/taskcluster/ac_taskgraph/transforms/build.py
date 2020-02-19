@@ -5,6 +5,7 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import datetime
+import re
 
 from six import text_type
 
@@ -55,14 +56,16 @@ def handle_coverage(config, tasks):
 
 
 @transforms.add
-def format_component_name_and_timestamp(config, tasks):
+def interpolate_missing_values(config, tasks):
     timestamp = _get_timestamp(config)
+    version = get_version()
+    nightly_version = _get_nightly_version(config, version)
 
     for task in tasks:
         for field in ('description', 'run.gradlew', 'treeherder.symbol'):
             component = task["attributes"]["component"]
             _deep_format(
-                task, field, component=component, timestamp=timestamp
+                task, field, component=component, timestamp=timestamp, nightlyVersion=nightly_version
             )
 
         yield task
@@ -72,6 +75,29 @@ def _get_timestamp(config):
     push_date_string = config.params["moz_build_date"]
     push_date_time = datetime.datetime.strptime(push_date_string, "%Y%m%d%H%M%S")
     return push_date_time.strftime('%Y%m%d.%H%M%S-1')
+
+
+def _get_buildid(config):
+    return config.params.moz_build_date.strftime('%Y%m%d%H%M%S')
+
+
+def _get_nightly_version(config, version):
+    buildid = _get_buildid(config)
+    # TODO: to replace here with mozilla-version sanity check and parsing
+    pattern = re.compile(r"""
+        (?P<major_number>\d+)\.(?P<minor_number>\d+)\.(?P<patch_number>\d+)
+        """, re.VERBOSE)
+    match = pattern.search(version)
+    try:
+        _ = match.group()
+    except AttributeError:
+        raise Exception('version {} does not follow semver'.format(version))
+    version_dict = match.groupdict()
+    return '{}.{}.{}'.format(
+            version_dict['major_number'],
+            version_dict['minor_number'],
+            buildid
+    )
 
 
 def _deep_format(object, field, **format_kwargs):
@@ -93,8 +119,22 @@ def _deep_format(object, field, **format_kwargs):
 
 @transforms.add
 def add_artifacts(config, tasks):
+
+    def _craft_path_version(version, build_type, nightly_version):
+        """Helper function to craft the correct version to bake in the artifacts full
+        path section"""
+        ret = "{}{}".format(
+            version,
+            "-SNAPSHOT" if build_type == "snapshot" else ''
+        )
+        if build_type == 'nightly':
+            if version in ret:
+                ret = ret.replace(version, nightly_version)
+        return ret
+
     timestamp = _get_timestamp(config)
     version = get_version()
+    nightly_version = _get_nightly_version(config, version)
 
     for task in tasks:
         artifact_template = task.pop("artifact-template", {})
@@ -115,6 +155,13 @@ def add_artifacts(config, tasks):
                 for extension in all_extensions
             }
 
+            # XXX: rather than adding more complex logic above, we simply post-adjust the
+            # dictionary for `nightly` types of graphs
+            if task['attributes']['build-type'] == 'nightly':
+                for ext, path in artifact_file_names_per_extension.items():
+                    if version in path:
+                        artifact_file_names_per_extension[ext] = path.replace(version, nightly_version)
+
             for extension, artifact_file_name in artifact_file_names_per_extension.iteritems():
                 artifact_full_name = artifact_template["name"].format(
                     artifact_file_name=artifact_file_name,
@@ -125,10 +172,8 @@ def add_artifacts(config, tasks):
                     "path": artifact_template["path"].format(
                         component_path=get_path(component),
                         component=component,
-                        version_with_snapshot="{}{}".format(
-                            version,
-                            "-SNAPSHOT" if task["attributes"]["build-type"] == "snapshot" else ''
-                        ),
+                        version_with_snapshot=_craft_path_version(version,
+                            task['attributes']['build-type'], nightly_version),
                         artifact_file_name=artifact_file_name,
                     ),
                 })

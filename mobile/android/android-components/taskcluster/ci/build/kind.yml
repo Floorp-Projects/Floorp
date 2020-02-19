@@ -22,18 +22,21 @@ job-defaults:
         by-build-type:
             release: true
             snapshot: true
+            nightly: true
             default: false
     attributes:
         code-review:
             by-build-type:
                 release: false
                 snapshot: false
+                nightly: false
                 default: true
     description: Execute Gradle tasks for component "{component}"
     include-coverage:
         by-build-type:
             release: false
             snapshot: false
+            nightly: false
             default: true
     run:
         gradlew:
@@ -51,6 +54,13 @@ job-defaults:
                     - ':{component}:lint'
                     - ':{component}:publish'
                     - ':{component}:renameSnapshotArtifacts'
+                nightly:
+                    - '-PnightlyVersion={nightlyVersion}'
+                    - ':{component}:assembleRelease'
+                    - ':{component}:testRelease'
+                    - ':{component}:lintRelease'
+                    - ':{component}:publish'
+                    - ':{component}:renameArtifacts'
                 default:
                     by-component:
                         # No lintRelease on this job, gradle task isn't defined
@@ -70,6 +80,7 @@ job-defaults:
         by-build-type:
             release: []
             snapshot: []
+            nightly: []
             default: [github-pull-request, github-push]
     treeherder:
         kind: build
@@ -77,6 +88,7 @@ job-defaults:
             by-build-type:
                 release: '{component}(BR)'
                 snapshot: '{component}(BSnap)'
+                nightly: '{component}(BN)'
                 default: '{component}(B)'
         platform: android-all/opt
         tier: 1
@@ -95,6 +107,9 @@ overriden-jobs:
     snapshot-browser-engine-gecko-nightly:
         treeherder:
             symbol: 'browser-engine-gecko-nigh(BSnap)'
+    nightly-browser-engine-gecko-nightly:
+        treeherder:
+            symbol: 'browser-engine-gecko-nigh(BN)'
     release-browser-engine-gecko-nightly:
         treeherder:
             symbol: 'browser-engine-gecko-nigh(BR)'
@@ -105,6 +120,9 @@ overriden-jobs:
     snapshot-lib-fetch-httpurlconnection:
         treeherder:
             symbol: 'lib-fetch-httpurlconnect(BSnap)'
+    nightly-lib-fetch-httpurlconnection:
+        treeherder:
+            symbol: 'lib-fetch-httpurlconnect(BN)'
     release-lib-fetch-httpurlconnection:
         treeherder:
             symbol: 'lib-fetch-httpurlconnect(BR)'
