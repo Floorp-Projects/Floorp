@@ -3403,6 +3403,9 @@ void js::TypeMonitorCallSlow(JSContext* cx, JSObject* callee,
 /* static */
 void JitScript::MonitorBytecodeType(JSContext* cx, JSScript* script,
                                     jsbytecode* pc, TypeSet::Type type) {
+  if (!IsTypeInferenceEnabled()) {
+    return;
+  }
   cx->check(script, type);
 
   AutoEnterAnalysis enter(cx);
@@ -3422,6 +3425,9 @@ void JitScript::MonitorBytecodeType(JSContext* cx, JSScript* script,
 void JitScript::MonitorBytecodeTypeSlow(JSContext* cx, JSScript* script,
                                         jsbytecode* pc, StackTypeSet* types,
                                         TypeSet::Type type) {
+  if (!IsTypeInferenceEnabled()) {
+    return;
+  }
   cx->check(script, type);
 
   AutoEnterAnalysis enter(cx);
@@ -3440,6 +3446,7 @@ void JitScript::MonitorBytecodeTypeSlow(JSContext* cx, JSScript* script,
 void JitScript::MonitorMagicValueBytecodeType(JSContext* cx, JSScript* script,
                                               jsbytecode* pc,
                                               const js::Value& rval) {
+  MOZ_ASSERT(IsTypeInferenceEnabled());
   MOZ_ASSERT(rval.isMagic());
 
   // It's possible that we arrived here from bailing out of Ion, and that
@@ -3464,6 +3471,10 @@ void JitScript::MonitorMagicValueBytecodeType(JSContext* cx, JSScript* script,
 void JitScript::MonitorBytecodeType(JSContext* cx, JSScript* script,
                                     jsbytecode* pc, const js::Value& rval) {
   MOZ_ASSERT(BytecodeOpHasTypeSet(JSOp(*pc)));
+
+  if (!IsTypeInferenceEnabled()) {
+    return;
+  }
 
   if (!script->hasJitScript()) {
     return;
@@ -4487,11 +4498,13 @@ void JitScript::sweepTypes(const js::AutoSweepJitScript& sweep, Zone* zone) {
     inlinedCompilations.shrinkTo(dest);
   }
 
-  // Remove constraints and references to dead objects from stack type sets.
-  unsigned num = numTypeSets();
-  StackTypeSet* arr = typeArray(sweep);
-  for (unsigned i = 0; i < num; i++) {
-    arr[i].sweep(sweep, zone);
+  if (IsTypeInferenceEnabled()) {
+    // Remove constraints and references to dead objects from stack type sets.
+    unsigned num = numTypeSets();
+    StackTypeSet* arr = typeArray(sweep);
+    for (unsigned i = 0; i < num; i++) {
+      arr[i].sweep(sweep, zone);
+    }
   }
 
   if (types.hadOOMSweepingTypes()) {

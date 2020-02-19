@@ -1473,6 +1473,10 @@ bool BaselineInterpreterCodeGen::emitWarmUpCounterIncrement() {
 
 template <>
 bool BaselineCompilerCodeGen::emitArgumentTypeChecks() {
+  if (!IsTypeInferenceEnabled()) {
+    return true;
+  }
+
   if (!handler.function()) {
     return true;
   }
@@ -1500,6 +1504,10 @@ bool BaselineCompilerCodeGen::emitArgumentTypeChecks() {
 
 template <>
 bool BaselineInterpreterCodeGen::emitArgumentTypeChecks() {
+  if (!IsTypeInferenceEnabled()) {
+    return true;
+  }
+
   Register scratch1 = R1.scratchReg();
 
   // If the script is not a function, we're done.
@@ -3709,7 +3717,7 @@ template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_GetAliasedVar() {
   emitGetAliasedVar(R0);
 
-  if (handler.maybeIonCompileable()) {
+  if (IsTypeInferenceEnabled() && handler.maybeIonCompileable()) {
     // No need to monitor types if we know Ion can't compile this script.
     if (!emitNextIC()) {
       return false;
@@ -3931,7 +3939,7 @@ bool BaselineCompilerCodeGen::emit_GetImport() {
     }
   }
 
-  if (handler.maybeIonCompileable()) {
+  if (IsTypeInferenceEnabled() && handler.maybeIonCompileable()) {
     // No need to monitor types if we know Ion can't compile this script.
     if (!emitNextIC()) {
       return false;
@@ -3961,7 +3969,7 @@ bool BaselineInterpreterCodeGen::emit_GetImport() {
   }
 
   // Enter the type monitor IC.
-  if (!emitNextIC()) {
+  if (IsTypeInferenceEnabled() && !emitNextIC()) {
     return false;
   }
 

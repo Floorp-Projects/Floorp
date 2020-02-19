@@ -566,7 +566,8 @@ inline void TypeMonitorCall(JSContext* cx, const js::CallArgs& args,
                             bool constructing) {
   if (args.callee().is<JSFunction>()) {
     JSFunction* fun = &args.callee().as<JSFunction>();
-    if (fun->isInterpreted() && fun->nonLazyScript()->hasJitScript()) {
+    if (fun->isInterpreted() && fun->nonLazyScript()->hasJitScript() &&
+        IsTypeInferenceEnabled()) {
       TypeMonitorCallSlow(cx, &args.callee(), args, constructing);
     }
   }
@@ -719,6 +720,9 @@ inline void MarkObjectStateChange(JSContext* cx, JSObject* obj) {
 /* static */ inline void jit::JitScript::MonitorBytecodeType(
     JSContext* cx, JSScript* script, jsbytecode* pc, StackTypeSet* types,
     const js::Value& rval) {
+  if (!IsTypeInferenceEnabled()) {
+    return;
+  }
   if (MOZ_UNLIKELY(rval.isMagic())) {
     MonitorMagicValueBytecodeType(cx, script, pc, rval);
     return;
@@ -761,6 +765,9 @@ inline void MarkObjectStateChange(JSContext* cx, JSObject* obj) {
 /* static */ inline void jit::JitScript::MonitorThisType(JSContext* cx,
                                                          JSScript* script,
                                                          TypeSet::Type type) {
+  if (!IsTypeInferenceEnabled()) {
+    return;
+  }
   cx->check(script, type);
 
   JitScript* jitScript = script->maybeJitScript();
@@ -782,6 +789,9 @@ inline void MarkObjectStateChange(JSContext* cx, JSObject* obj) {
 
 /* static */ inline void jit::JitScript::MonitorThisType(
     JSContext* cx, JSScript* script, const js::Value& value) {
+  if (!IsTypeInferenceEnabled()) {
+    return;
+  }
   // Bound functions or class constructors can use the magic TDZ value as
   // |this| argument. See CreateThis.
   if (MOZ_UNLIKELY(value.isMagic())) {
@@ -798,6 +808,9 @@ inline void MarkObjectStateChange(JSContext* cx, JSObject* obj) {
                                                         JSScript* script,
                                                         unsigned arg,
                                                         TypeSet::Type type) {
+  if (!IsTypeInferenceEnabled()) {
+    return;
+  }
   cx->check(script->compartment(), type);
 
   JitScript* jitScript = script->maybeJitScript();
@@ -819,6 +832,9 @@ inline void MarkObjectStateChange(JSContext* cx, JSObject* obj) {
 
 /* static */ inline void jit::JitScript::MonitorArgType(
     JSContext* cx, JSScript* script, unsigned arg, const js::Value& value) {
+  if (!IsTypeInferenceEnabled()) {
+    return;
+  }
   MonitorArgType(cx, script, arg, TypeSet::GetValueType(value));
 }
 
