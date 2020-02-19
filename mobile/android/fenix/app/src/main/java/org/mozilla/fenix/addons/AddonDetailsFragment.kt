@@ -72,7 +72,8 @@ class AddonDetailsFragment : Fragment(R.layout.fragment_add_on_details) {
     }
 
     private fun bindVersion(addon: Addon, view: View) {
-        view.version_text.text = addon.version
+        view.version_text.text =
+            addon.installedState?.version?.ifEmpty { addon.version } ?: addon.version
     }
 
     private fun bindAuthors(addon: Addon, view: View) {
