@@ -18,7 +18,8 @@
 
 #include "jstypes.h"  // JS_BITS_PER_WORD, JS_PUBLIC_API
 
-#include "jit/IonTypes.h"      // jit::MIRType
+#include "jit/IonTypes.h"  // jit::MIRType
+#include "jit/JitOptions.h"
 #include "js/GCAnnotations.h"  // JS_HAZ_GC_POINTER
 #include "js/Id.h"
 #include "js/TracingAPI.h"  // JSTracer
@@ -60,8 +61,6 @@ class SystemAllocPolicy;
 class TypeConstraint;
 class TypeNewScript;
 class TypeZone;
-
-static constexpr bool IsTypeInferenceEnabled() { return true; }
 
 /*
  * Type inference memory management overview.
