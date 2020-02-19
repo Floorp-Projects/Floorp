@@ -57,7 +57,12 @@ class MigrationProgressActivity : AbstractMigrationProgressActivity() {
             text = context.getString(R.string.migration_title, appName)
         }
 
-        migration_button.apply {
+        migration_button_text_view.text = getString(R.string.migration_updating_app_button_text, appName)
+    }
+
+    override fun onMigrationCompleted(results: MigrationResults) {
+        // Enable clicking the finish button
+        migration_button_text_view.apply {
             setOnClickListener {
                 AbstractMigrationService.dismissNotification(context)
 
@@ -71,18 +76,10 @@ class MigrationProgressActivity : AbstractMigrationProgressActivity() {
                     startActivity(intent)
                 }
             }
-            text = getString(R.string.migration_updating_app_button_text, appName)
-        }
-    }
-
-    override fun onMigrationCompleted(results: MigrationResults) {
-        // Enable clicking the finish button
-        migration_button.apply {
-            isEnabled = true
             text = getString(R.string.migration_update_app_button, getString(R.string.app_name))
-            setBackgroundResource(R.drawable.button_background)
             setTextColor(ContextCompat.getColor(context, R.color.white_color))
         }
+        migration_button.setBackgroundResource(R.drawable.button_background)
         migration_button_progress_bar.visibility = View.INVISIBLE
         // Keep the results list up-to-date.
         statusAdapter.submitList(results.toItemList())

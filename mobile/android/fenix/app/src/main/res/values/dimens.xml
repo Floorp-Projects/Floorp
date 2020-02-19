@@ -104,16 +104,15 @@
     <dimen name="locale_item_subtitle_size">12sp</dimen>
 
     <!--Migration Activity-->
-    <dimen name="migration_button_padding">32dp</dimen>
     <dimen name="migration_margin_horizontal_large">24dp</dimen>
-    <dimen name="migration_margin_vertical">16dp</dimen>
-    <dimen name="migration_margin_vertical_small">8dp</dimen>
+    <dimen name="migration_margin">16dp</dimen>
     <dimen name="migration_firefox_logo_size">48dp</dimen>
     <dimen name="migration_description_text_size">16sp</dimen>
     <dimen name="migration_welcome_title_text_size">20sp</dimen>
     <dimen name="migration_progress_size">24dp</dimen>
-    <dimen name="migration_progress_margin_vertical">8dp</dimen>
+    <dimen name="migration_progress_margin">8dp</dimen>
     <dimen name="migration_progress_margin_start">4dp</dimen>
+    <dimen name="migration_progress_margin_compound">44dp</dimen>
 
     <!-- Share Fragment -->
     <dimen name="share_recent_apps_background_radius">10dp</dimen>
