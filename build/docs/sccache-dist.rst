@@ -77,7 +77,7 @@ must read::
   `this file <https://hg.mozilla.org/mozilla-central/file/tip/taskcluster/ci/toolchain/dist-toolchains.yml>`_.
   For instance, to specify 1.37.0 rather than the current stable, run
   ``rustup toolchain add 1.37.0`` and point to
-  ``~/.rustup/toolchains/1.37.0-x86_64-apple-darwin/bin/rustc`` in your
+  ``/path/to/home/.rustup/toolchains/1.37.0-x86_64-apple-darwin/bin/rustc`` in your
   client config.
 
   The build system currently requires an explicit target to be passed with
@@ -89,12 +89,12 @@ must read::
 * Compiling from a Windows client is supported but hasn't seen as much testing
   as other platforms. The following example mozconfig can be used as a guide::
 
-    ac_add_options CCACHE=~/.mozbuild/sccache/sccache.exe
+    ac_add_options CCACHE=/path/to/home/.mozbuild/sccache/sccache.exe
 
-    export CC="~/.mozbuild/clang/bin/clang-cl.exe --driver-mode=cl"
-    export CXX="~/.mozbuild/clang/bin/clang-cl.exe --driver-mode=cl"
-    export HOST_CC="~/.mozbuild/clang/bin/clang-cl.exe --driver-mode=cl"
-    export HOST_CXX="~/.mozbuild/clang/bin/clang-cl.exe --driver-mode=cl"
+    export CC="/path/to/home/.mozbuild/clang/bin/clang-cl.exe --driver-mode=cl"
+    export CXX="/path/to/home/.mozbuild/clang/bin/clang-cl.exe --driver-mode=cl"
+    export HOST_CC="/path/to/home/.mozbuild/clang/bin/clang-cl.exe --driver-mode=cl"
+    export HOST_CXX="/path/to/home/.mozbuild/clang/bin/clang-cl.exe --driver-mode=cl"
 
   The client config should be located at
   ``~/AppData/Roaming/Mozilla/sccache/config/config``, and as on macOS custom
@@ -115,7 +115,7 @@ must read::
 
 * Add the following to your mozconfig::
 
-    ac_add_options CCACHE=/path/to/sccache
+    ac_add_options CCACHE=/path/to/home/.mozbuild/sccache/sccache
 
   If you're compiling from a macOS client, you might need some additional configuration::
 
