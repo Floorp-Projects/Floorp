@@ -33,7 +33,7 @@ PClientSourceOpChild* ClientSourceChild::AllocPClientSourceOpChild(
 
 bool ClientSourceChild::DeallocPClientSourceOpChild(
     PClientSourceOpChild* aActor) {
-  delete aActor;
+  static_cast<ClientSourceOpChild*>(aActor)->ScheduleDeletion();
   return true;
 }
 
