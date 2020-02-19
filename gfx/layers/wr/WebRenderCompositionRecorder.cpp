@@ -46,7 +46,7 @@ class RendererRecordedFrame final : public layers::RecordedFrame {
 };
 
 void WebRenderCompositionRecorder::MaybeRecordFrame(
-    wr::Renderer* aRenderer, wr::WebRenderPipelineInfo* aFrameEpochs) {
+    wr::Renderer* aRenderer, const wr::WebRenderPipelineInfo* aFrameEpochs) {
   MOZ_ASSERT(wr::RenderThread::IsInRenderThread());
 
   if (!aRenderer || !aFrameEpochs || !DidPaintContent(aFrameEpochs)) {
@@ -66,30 +66,28 @@ void WebRenderCompositionRecorder::MaybeRecordFrame(
 }
 
 bool WebRenderCompositionRecorder::DidPaintContent(
-    wr::WebRenderPipelineInfo* aFrameEpochs) {
+    const wr::WebRenderPipelineInfo* aFrameEpochs) {
   const wr::WrPipelineInfo& info = aFrameEpochs->Raw();
   bool didPaintContent = false;
 
-  for (wr::usize i = 0; i < info.epochs.length; i++) {
-    const wr::PipelineId pipelineId = info.epochs.data[i].pipeline_id;
+  for (const auto& epoch : info.epochs) {
+    const wr::PipelineId pipelineId = epoch.pipeline_id;
 
     if (pipelineId == mRootPipelineId) {
       continue;
     }
 
     const auto it = mContentPipelines.find(AsUint64(pipelineId));
-    if (it == mContentPipelines.end() ||
-        it->second != info.epochs.data[i].epoch) {
+    if (it == mContentPipelines.end() || it->second != epoch.epoch) {
       // This content pipeline has updated list last render or has newly
       // rendered.
       didPaintContent = true;
-      mContentPipelines[AsUint64(pipelineId)] = info.epochs.data[i].epoch;
+      mContentPipelines[AsUint64(pipelineId)] = epoch.epoch;
     }
   }
 
-  for (wr::usize i = 0; i < info.removed_pipelines.length; i++) {
-    const wr::PipelineId pipelineId =
-        info.removed_pipelines.data[i].pipeline_id;
+  for (const auto& removedPipeline : info.removed_pipelines) {
+    const wr::PipelineId pipelineId = removedPipeline.pipeline_id;
     if (pipelineId == mRootPipelineId) {
       continue;
     }

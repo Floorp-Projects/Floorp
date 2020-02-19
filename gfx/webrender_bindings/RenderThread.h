@@ -93,15 +93,12 @@ class WebRenderShaders final {
 class WebRenderPipelineInfo final {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(WebRenderPipelineInfo);
 
- public:
-  explicit WebRenderPipelineInfo(wr::WrPipelineInfo aPipelineInfo);
-
-  const wr::WrPipelineInfo& Raw() { return mPipelineInfo; }
+  const wr::WrPipelineInfo& Raw() const { return mPipelineInfo; }
+  wr::WrPipelineInfo& Raw() { return mPipelineInfo; }
 
  protected:
-  ~WebRenderPipelineInfo();
-
-  const wr::WrPipelineInfo mPipelineInfo;
+  ~WebRenderPipelineInfo() = default;
+  wr::WrPipelineInfo mPipelineInfo;
 };
 
 /// Base class for an event that can be scheduled to run on the render thread.

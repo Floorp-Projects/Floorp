@@ -65,7 +65,7 @@ class AsyncImagePipelineManager final {
   // @param aLatestFrameId RenderedFrameId if a frame has been submitted for
   //                       rendering, invalid if not
   // @param aLastCompletedFrameId RenderedFrameId for the last completed frame
-  void NotifyPipelinesUpdated(RefPtr<wr::WebRenderPipelineInfo> aInfo,
+  void NotifyPipelinesUpdated(RefPtr<const wr::WebRenderPipelineInfo> aInfo,
                               wr::RenderedFrameId aLatestFrameId,
                               wr::RenderedFrameId aLastCompletedFrameId);
 
@@ -244,7 +244,8 @@ class AsyncImagePipelineManager final {
 
   nsTArray<ImageCompositeNotificationInfo> mImageCompositeNotifications;
 
-  typedef std::vector<RefPtr<wr::WebRenderPipelineInfo>> PipelineInfoVector;
+  typedef std::vector<RefPtr<const wr::WebRenderPipelineInfo>>
+      PipelineInfoVector;
 
   // PipelineInfo updates to be processed once a render has been submitted.
   // This is only accessed on the render thread, so does not need a lock.

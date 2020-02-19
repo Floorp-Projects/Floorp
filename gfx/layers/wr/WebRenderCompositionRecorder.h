@@ -60,13 +60,13 @@ class WebRenderCompositionRecorder final : public CompositionRecorder {
    * recorder structures.
    */
   void MaybeRecordFrame(wr::Renderer* aRenderer,
-                        wr::WebRenderPipelineInfo* aFrameEpochs);
+                        const wr::WebRenderPipelineInfo* aFrameEpochs);
 
  private:
   /**
    * Determine if any content pipelines updated.
    */
-  bool DidPaintContent(wr::WebRenderPipelineInfo* aFrameEpochs);
+  bool DidPaintContent(const wr::WebRenderPipelineInfo* aFrameEpochs);
 
   // The id of the root WebRender pipeline.
   //

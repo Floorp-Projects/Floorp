@@ -20,23 +20,6 @@
 namespace mozilla {
 namespace wr {
 
-class MOZ_STACK_CLASS AutoWrRenderResult {
- public:
-  explicit AutoWrRenderResult(WrRenderResult&& aResult) : mResult(aResult) {}
-
-  ~AutoWrRenderResult() { wr_render_result_delete(mResult); }
-
-  bool Result() const { return mResult.result; }
-
-  FfiVec<DeviceIntRect> DirtyRects() const { return mResult.dirty_rects; }
-
- private:
-  const WrRenderResult mResult;
-
-  AutoWrRenderResult(const AutoWrRenderResult&) = delete;
-  AutoWrRenderResult& operator=(const AutoWrRenderResult&) = delete;
-};
-
 wr::WrExternalImage wr_renderer_lock_external_image(
     void* aObj, wr::ExternalImageId aId, uint8_t aChannelIndex,
     wr::ImageRendering aRendering) {
@@ -154,9 +137,9 @@ RenderedFrameId RendererOGL::UpdateAndRender(
 
   auto size = mCompositor->GetBufferSize();
 
-  AutoWrRenderResult result(wr_renderer_render(
-      mRenderer, size.width, size.height, aHadSlowFrame, aOutStats));
-  if (!result.Result()) {
+  nsTArray<DeviceIntRect> dirtyRects;
+  if (!wr_renderer_render(mRenderer, size.width, size.height, aHadSlowFrame,
+                          aOutStats, &dirtyRects)) {
     RenderThread::Get()->HandleWebRenderError(WebRenderError::RENDER);
     mCompositor->GetWidget()->PostRender(&widgetContext);
     return RenderedFrameId();
@@ -176,7 +159,7 @@ RenderedFrameId RendererOGL::UpdateAndRender(
 
   mScreenshotGrabber.MaybeGrabScreenshot(this, size.ToUnknownSize());
 
-  RenderedFrameId frameId = mCompositor->EndFrame(result.DirtyRects());
+  RenderedFrameId frameId = mCompositor->EndFrame(dirtyRects);
 
   mCompositor->GetWidget()->PostRender(&widgetContext);
 
@@ -265,8 +248,9 @@ void RendererOGL::SetFrameStartTime(const TimeStamp& aTime) {
 }
 
 RefPtr<WebRenderPipelineInfo> RendererOGL::FlushPipelineInfo() {
-  auto info = wr_renderer_flush_pipeline_info(mRenderer);
-  return new WebRenderPipelineInfo(info);
+  RefPtr<WebRenderPipelineInfo> info = new WebRenderPipelineInfo();
+  wr_renderer_flush_pipeline_info(mRenderer, &info->Raw());
+  return info;
 }
 
 RenderTextureHost* RendererOGL::GetRenderTexture(
