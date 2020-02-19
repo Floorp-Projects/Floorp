@@ -352,10 +352,3 @@ function checkVideoDidPlay(browser, args) {
     content.document.body.remove(video);
   });
 }
-
-// The JS content loaded by frame script can be used across different content
-// tasks.
-function loadFrameScript(browser, fn) {
-  const mm = browser.messageManager;
-  mm.loadFrameScript("data:,(" + fn.toString() + ")();", false);
-}

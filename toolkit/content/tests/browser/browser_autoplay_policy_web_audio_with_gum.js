@@ -140,10 +140,7 @@ async function testWebAudioWithGUM(testParameters) {
     "https://example.com"
   );
   info("- create audio context -");
-  // We want the same audio context be used between different content
-  // tasks, so it *must* be loaded by frame script.
-  const mm = tab.linkedBrowser.messageManager;
-  mm.loadFrameScript("data:,(" + createAudioContext.toString() + ")();", false);
+  await SpecialPowers.spawn(tab.linkedBrowser, [], createAudioContext);
 
   info("- check whether audio context starts running -");
   try {

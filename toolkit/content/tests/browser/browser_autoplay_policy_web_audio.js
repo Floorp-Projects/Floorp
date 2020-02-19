@@ -128,7 +128,7 @@ async function testAutoplayExistingPermission({ name, permission }) {
   ok(!promptShow(), `should not be showing permission prompt yet`);
 
   info(`- create audio context -`);
-  loadFrameScript(browser, createAudioContext);
+  await SpecialPowers.spawn(browser, [], createAudioContext);
 
   info(`- check AudioContext status -`);
   const isAllowedToStart = permission === Services.perms.ALLOW_ACTION;
@@ -163,7 +163,7 @@ async function testAutoplayUnknownPermission({ name, method }) {
   ok(!promptShow(), `should not be showing permission prompt yet`);
 
   info(`- create AudioContext which should not start -`);
-  loadFrameScript(browser, createAudioContext);
+  await SpecialPowers.spawn(browser, [], createAudioContext);
   await SpecialPowers.spawn(
     browser,
     [false],
