@@ -2185,10 +2185,18 @@ void MediaManager::DeviceListChanged() {
                 // Device has not been removed
                 continue;
               }
-              // Stop the corresponding SourceListener
+              // Stop the corresponding SourceListener. In order to do that
+              // first collect the listeners in an array and stop them after
+              // the loop. The StopRawID method modify indirectly the
+              // mActiveWindows and will assert-crash since the iterator is
+              // active and the table is being enumerated.
+              nsTArray<RefPtr<GetUserMediaWindowListener>> stopListeners;
               for (auto iter = mActiveWindows.Iter(); !iter.Done();
                    iter.Next()) {
-                iter.UserData()->StopRawID(id);
+                stopListeners.AppendElement(iter.UserData());
+              }
+              for (auto& l : stopListeners) {
+                l->StopRawID(id);
               }
             }
             mDeviceIDs = deviceIDs;
