@@ -5535,9 +5535,7 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitFunction(
     RootedFunction fun(cx, funbox->function());
     RootedScript innerScript(
         cx, JSScript::Create(cx, fun, options, compilationInfo.sourceObject,
-                             funbox->sourceStart, funbox->sourceEnd,
-                             funbox->toStringStart, funbox->toStringEnd,
-                             funbox->startLine, funbox->startColumn));
+                             funbox->extent));
     if (!innerScript) {
       return false;
     }
@@ -5561,8 +5559,8 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitFunction(
     }
 
     BytecodeEmitter bce2(this, parser, funbox, innerScript,
-                         /* lazyScript = */ nullptr, funbox->startLine,
-                         funbox->startColumn, compilationInfo, nestedMode,
+                         /* lazyScript = */ nullptr, funbox->extent.lineno,
+                         funbox->extent.column, compilationInfo, nestedMode,
                          *fieldInitializers);
     if (!bce2.init(funNode->pn_pos)) {
       return false;

@@ -1234,9 +1234,10 @@ XDRResult js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
         cx, isFunctionScript ? static_cast<JSObject*>(funOrMod)
                              : static_cast<JSObject*>(cx->global()));
 
-    script = JSScript::Create(cx, functionOrGlobal, *options, sourceObject,
-                              sourceStart, sourceEnd, toStringStart,
-                              toStringEnd, lineno, column);
+    SourceExtent extent{sourceStart, sourceEnd, toStringStart,
+                        toStringEnd, lineno,    column};
+    script =
+        JSScript::Create(cx, functionOrGlobal, *options, sourceObject, extent);
     if (!script) {
       return xdr->fail(JS::TranscodeResult_Throw);
     }
@@ -4303,9 +4304,7 @@ void PrivateScriptData::trace(JSTracer* trc) {
 /* static */
 JSScript* JSScript::New(JSContext* cx, HandleObject functionOrGlobal,
                         HandleScriptSourceObject sourceObject,
-                        uint32_t sourceStart, uint32_t sourceEnd,
-                        uint32_t toStringStart, uint32_t toStringEnd,
-                        uint32_t lineno, uint32_t column) {
+                        SourceExtent extent) {
   void* script = Allocate<BaseScript>(cx);
   if (!script) {
     return nullptr;
@@ -4318,8 +4317,7 @@ JSScript* JSScript::New(JSContext* cx, HandleObject functionOrGlobal,
 #endif
 
   return new (script)
-      JSScript(stubEntry, functionOrGlobal, sourceObject, sourceStart,
-               sourceEnd, toStringStart, toStringEnd, lineno, column);
+      JSScript(stubEntry, functionOrGlobal, sourceObject, extent);
 }
 
 static bool ShouldTrackRecordReplayProgress(JSScript* script) {
@@ -4337,12 +4335,9 @@ static bool ShouldTrackRecordReplayProgress(JSScript* script) {
 JSScript* JSScript::Create(JSContext* cx, HandleObject functionOrGlobal,
                            const ReadOnlyCompileOptions& options,
                            HandleScriptSourceObject sourceObject,
-                           uint32_t sourceStart, uint32_t sourceEnd,
-                           uint32_t toStringStart, uint32_t toStringEnd,
-                           uint32_t lineno, uint32_t column) {
+                           SourceExtent extent) {
   RootedScript script(
-      cx, JSScript::New(cx, functionOrGlobal, sourceObject, sourceStart,
-                        sourceEnd, toStringStart, toStringEnd, lineno, column));
+      cx, JSScript::New(cx, functionOrGlobal, sourceObject, extent));
   if (!script) {
     return nullptr;
   }
@@ -4364,10 +4359,7 @@ JSScript* JSScript::Create(JSContext* cx, HandleObject functionOrGlobal,
                                                 Handle<LazyScript*> lazy) {
   RootedScriptSourceObject sourceObject(cx, lazy->sourceObject());
   RootedObject fun(cx, lazy->function());
-  RootedScript script(
-      cx, JSScript::New(cx, fun, sourceObject, lazy->sourceStart(),
-                        lazy->sourceEnd(), lazy->toStringStart(),
-                        lazy->toStringEnd(), lazy->lineno(), lazy->column()));
+  RootedScript script(cx, JSScript::New(cx, fun, sourceObject, lazy->extent()));
   if (!script) {
     return nullptr;
   }
@@ -5032,11 +5024,11 @@ JSScript* js::detail::CopyScript(JSContext* cx, HandleScript src,
       .setNoScriptRval(src->noScriptRval());
 
   // Create a new JSScript to fill in
-  RootedScript dst(cx,
-                   JSScript::Create(cx, functionOrGlobal, options, sourceObject,
-                                    src->sourceStart(), src->sourceEnd(),
-                                    src->toStringStart(), src->toStringEnd(),
-                                    src->lineno(), src->column()));
+  SourceExtent extent{src->sourceStart(),   src->sourceEnd(),
+                      src->toStringStart(), src->toStringEnd(),
+                      src->lineno(),        src->column()};
+  RootedScript dst(cx, JSScript::Create(cx, functionOrGlobal, options,
+                                        sourceObject, extent));
   if (!dst) {
     return nullptr;
   }
@@ -5501,9 +5493,7 @@ void LazyScript::initScript(JSScript* script) {
 LazyScript* LazyScript::CreateRaw(JSContext* cx, uint32_t ngcthings,
                                   HandleFunction fun,
                                   HandleScriptSourceObject sourceObject,
-                                  uint32_t sourceStart, uint32_t sourceEnd,
-                                  uint32_t toStringStart, uint32_t toStringEnd,
-                                  uint32_t lineno, uint32_t column) {
+                                  SourceExtent extent) {
   cx->check(fun);
 
   void* res = Allocate<BaseScript>(cx);
@@ -5517,9 +5507,7 @@ LazyScript* LazyScript::CreateRaw(JSContext* cx, uint32_t ngcthings,
   uint8_t* stubEntry = nullptr;
 #endif
 
-  LazyScript* lazy =
-      new (res) LazyScript(stubEntry, fun, sourceObject, sourceStart, sourceEnd,
-                           toStringStart, toStringEnd, lineno, column);
+  LazyScript* lazy = new (res) LazyScript(stubEntry, fun, sourceObject, extent);
   if (!lazy) {
     return nullptr;
   }
@@ -5549,15 +5537,13 @@ LazyScript* LazyScript::CreateRaw(JSContext* cx, uint32_t ngcthings,
 LazyScript* LazyScript::Create(
     JSContext* cx, HandleFunction fun, HandleScriptSourceObject sourceObject,
     const frontend::AtomVector& closedOverBindings,
-    const frontend::FunctionBoxVector& innerFunctionBoxes, uint32_t sourceStart,
-    uint32_t sourceEnd, uint32_t toStringStart, uint32_t toStringEnd,
-    uint32_t lineno, uint32_t column) {
+    const frontend::FunctionBoxVector& innerFunctionBoxes,
+    SourceExtent extent) {
   uint32_t ngcthings =
       innerFunctionBoxes.length() + closedOverBindings.length();
 
-  LazyScript* lazy = LazyScript::CreateRaw(
-      cx, ngcthings, fun, sourceObject, sourceStart, sourceEnd, toStringStart,
-      toStringEnd, lineno, column);
+  LazyScript* lazy =
+      LazyScript::CreateRaw(cx, ngcthings, fun, sourceObject, extent);
   if (!lazy) {
     return nullptr;
   }
@@ -5598,9 +5584,10 @@ LazyScript* LazyScript::CreateForXDR(
     uint32_t immutableFlags, uint32_t sourceStart, uint32_t sourceEnd,
     uint32_t toStringStart, uint32_t toStringEnd, uint32_t lineno,
     uint32_t column) {
-  LazyScript* lazy = LazyScript::CreateRaw(
-      cx, ngcthings, fun, sourceObject, sourceStart, sourceEnd, toStringStart,
-      toStringEnd, lineno, column);
+  SourceExtent extent{sourceStart, sourceEnd, toStringStart,
+                      toStringEnd, lineno,    column};
+  LazyScript* lazy =
+      LazyScript::CreateRaw(cx, ngcthings, fun, sourceObject, extent);
   if (!lazy) {
     return nullptr;
   }

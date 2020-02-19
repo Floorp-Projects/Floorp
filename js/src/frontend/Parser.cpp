@@ -1782,10 +1782,9 @@ bool LazyScriptCreationData::create(JSContext* cx, FunctionBox* funbox,
                                     HandleScriptSourceObject sourceObject) {
   Rooted<JSFunction*> function(cx, funbox->function());
   MOZ_ASSERT(function);
-  LazyScript* lazy = LazyScript::Create(
-      cx, function, sourceObject, closedOverBindings, innerFunctionBoxes,
-      funbox->sourceStart, funbox->sourceEnd, funbox->toStringStart,
-      funbox->toStringEnd, funbox->startLine, funbox->startColumn);
+  LazyScript* lazy =
+      LazyScript::Create(cx, function, sourceObject, closedOverBindings,
+                         innerFunctionBoxes, funbox->extent);
   if (!lazy) {
     return false;
   }
@@ -2588,7 +2587,7 @@ bool Parser<FullParseHandler, Unit>::skipLazyInnerFunction(
 
   PropagateTransitiveParseFlags(funbox, pc_->sc());
 
-  if (!tokenStream.advance(funbox->sourceEnd)) {
+  if (!tokenStream.advance(funbox->extent.sourceEnd)) {
     return false;
   }
 
@@ -7190,7 +7189,7 @@ bool GeneralParser<ParseHandler, Unit>::finishClassConstructor(
   if (FunctionBox* ctorbox = classStmt.constructorBox) {
     // Amend the toStringEnd offset for the constructor now that we've
     // finished parsing the class.
-    ctorbox->toStringEnd = classEndOffset;
+    ctorbox->extent.toStringEnd = classEndOffset;
 
     if (numFields > 0) {
       // Field initialization need access to `this`.
