@@ -12,25 +12,6 @@ const resProtocol = Cc[
   "@mozilla.org/network/protocol;1?name=resource"
 ].getService(Ci.nsIResProtocolHandler);
 
-function frameScript() {
-  const { Services } = ChromeUtils.import(
-    "resource://gre/modules/Services.jsm"
-  );
-  let resProtocol = Cc[
-    "@mozilla.org/network/protocol;1?name=resource"
-  ].getService(Ci.nsIResProtocolHandler);
-
-  addMessageListener("Test:ResolveURI", function({ data: uri }) {
-    uri = Services.io.newURI(uri);
-    try {
-      let resolved = resProtocol.resolveURI(uri);
-      sendAsyncMessage("Test:ResolvedURI", resolved);
-    } catch (e) {
-      sendAsyncMessage("Test:ResolvedURI", null);
-    }
-  });
-}
-
 function waitForEvent(obj, name, capturing, chromeEvent) {
   info("Waiting for " + name);
   return new Promise(resolve => {
@@ -54,29 +35,21 @@ function resolveURI(uri) {
 }
 
 function remoteResolveURI(uri) {
-  return new Promise(resolve => {
-    let manager = gBrowser.selectedBrowser.messageManager;
+  return SpecialPowers.spawn(gBrowser.selectedBrowser, [uri], uriToResolve => {
+    const { Services } = ChromeUtils.import(
+      "resource://gre/modules/Services.jsm"
+    );
+    let resProtocol = Cc[
+      "@mozilla.org/network/protocol;1?name=resource"
+    ].getService(Ci.nsIResProtocolHandler);
 
-    function listener({ data: resolved }) {
-      manager.removeMessageListener("Test:ResolvedURI", listener);
-      resolve(resolved);
-    }
-
-    manager.addMessageListener("Test:ResolvedURI", listener);
-    manager.sendAsyncMessage("Test:ResolveURI", uri);
+    uriToResolve = Services.io.newURI(uriToResolve);
+    try {
+      return resProtocol.resolveURI(uriToResolve);
+    } catch (e) {}
+    return null;
   });
 }
-
-var loadTestTab = async function() {
-  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, TEST_URL);
-  let browser = gBrowser.selectedBrowser;
-  await BrowserTestUtils.browserLoaded(browser);
-  browser.messageManager.loadFrameScript(
-    "data:,(" + frameScript.toString() + ")();",
-    true
-  );
-  return browser;
-};
 
 // Restarts the child process by crashing it then reloading the tab
 var restart = async function() {
@@ -96,20 +69,16 @@ var restart = async function() {
     expectedRemote,
     "Browser should be in the right process"
   );
-  browser.messageManager.loadFrameScript(
-    "data:,(" + frameScript.toString() + ")();",
-    true
-  );
   return browser;
 };
 
 // Sanity check that this test is going to be useful
 add_task(async function() {
-  let browser = await loadTestTab();
+  await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_URL);
 
   // This must be loaded in the remote process for this test to be useful
   is(
-    browser.getAttribute("remote"),
+    gBrowser.selectedBrowser.getAttribute("remote"),
     expectedRemote,
     "Browser should be in the right process"
   );
@@ -123,7 +92,7 @@ add_task(async function() {
 
 // Add a mapping, update it then remove it
 add_task(async function() {
-  let browser = await loadTestTab();
+  await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_URL);
 
   info("Set");
   resProtocol.setSubstitution(
@@ -165,7 +134,7 @@ add_task(async function() {
 
 // Add a mapping, restart the child process then check it is still there
 add_task(async function() {
-  let browser = await loadTestTab();
+  await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_URL);
 
   info("Set");
   resProtocol.setSubstitution(
@@ -228,7 +197,7 @@ add_task(async function() {
 
 // Adding a mapping to a resource URI should work
 add_task(async function() {
-  let browser = await loadTestTab();
+  await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_URL);
 
   info("Set");
   resProtocol.setSubstitution(
