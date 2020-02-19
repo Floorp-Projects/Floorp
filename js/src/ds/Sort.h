@@ -75,6 +75,11 @@ MOZ_ALWAYS_INLINE bool MergeArrayRuns(T* dst, const T* src, size_t run1,
  * a <= b operation. If it returns false, the sort terminates immediately with
  * the false result. In this case the content of the array and scratch is
  * arbitrary.
+ *
+ * Note: The merge sort algorithm is a stable sort, preserving relative ordering
+ * of entries that compare equal. This makes it a useful substitute for
+ * |std::stable_sort|, which can't be used in SpiderMonkey because it internally
+ * allocates memory without using SpiderMonkey's allocator.
  */
 template <typename T, typename Comparator>
 MOZ_MUST_USE bool MergeSort(T* array, size_t nelems, T* scratch, Comparator c) {
