@@ -65,10 +65,9 @@ function one_test(delay, continuation) {
     } else {
       setTimeout(doSave, delay);
     }
-    browser.messageManager.loadFrameScript(
-      "data:,content.window.close()",
-      true
-    );
+    SpecialPowers.spawn(browser, [], () => {
+      content.window.close();
+    });
   }
 }
 
