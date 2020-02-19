@@ -206,6 +206,14 @@ like to opt out of data collection, select (N) at the prompt.
 Would you like to enable build system telemetry?'''
 
 
+MOZ_PHAB_ADVERTISE = '''
+If you plan on submitting changes to Firefox use the following command to
+install the review submission tool "moz-phab":
+
+  mach install-moz-phab
+'''
+
+
 def update_or_create_build_telemetry_config(path):
     """Write a mach config file enabling build telemetry to `path`. If the file does not exist,
     create it. If it exists, add the new setting to the existing data.
@@ -525,6 +533,9 @@ class Bootstrapper(object):
         if not (self.instance.which('rustc') and self.instance._parse_version('rustc')
                 >= MODERN_RUST_VERSION):
             print("To build %s, please restart the shell (Start a new terminal window)" % name)
+
+        if not self.instance.which("moz-phab"):
+            print(MOZ_PHAB_ADVERTISE)
 
         # Like 'suggest_browser_mozconfig' or 'suggest_mobile_android_mozconfig'.
         getattr(self.instance, 'suggest_%s_mozconfig' % application)()
