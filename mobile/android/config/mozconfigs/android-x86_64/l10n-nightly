@@ -5,7 +5,6 @@ NO_NDK=1
 . "$topsrcdir/mobile/android/config/mozconfigs/android-x86_64/nightly"
 
 # L10n
-ac_add_options --with-l10n-base=../../l10n-central
 
 # Don't autoclobber l10n, as this can lead to missing binaries and broken builds
 # Bug 1283438

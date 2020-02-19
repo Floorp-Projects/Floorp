@@ -1,5 +1,4 @@
 config = {
-    "l10n_dir": "l10n-central",
     "locales_dir": "mobile/android/locales",
     "ignore_locales": ["en-US"],
 

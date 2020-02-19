@@ -64,7 +64,6 @@ class TestLocalesMixin(unittest.TestCase):
         l.config['locales_file'] = os.path.join(MH_DIR, "test/helper_files/locales.json")
         l.config['base_work_dir'] = '.'
         l.config['work_dir'] = '.'
-        l.config['l10n_dir'] = "l10n_dir"
         l.config['locales_dir'] = "locales_dir"
         l.config['objdir'] = "objdir"
         locales = l.query_locales()
@@ -93,7 +92,6 @@ class TestLocalesMixin(unittest.TestCase):
         l = LocalesTest()
         l.config['base_work_dir'] = "base_work_dir"
         l.config['work_dir'] = "work_dir"
-        l.config['l10n_dir'] = "l10n_dir"
         l.config['locales_dir'] = "locales_dir"
         l.config['objdir'] = "objdir"
         return l
