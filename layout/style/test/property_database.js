@@ -7781,7 +7781,7 @@ var gCSSProperties = {
     applies_to_first_line: true,
     applies_to_placeholder: true,
     initial_values: ["auto"],
-    other_values: ["none"],
+    other_values: ["none", "all"],
     invalid_values: [
       "13",
       "15%",

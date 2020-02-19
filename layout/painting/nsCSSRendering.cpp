@@ -4010,7 +4010,7 @@ void nsCSSRendering::PaintDecorationLine(
   mozilla::StyleTextDecorationSkipInk skipInk =
       aFrame->StyleText()->mTextDecorationSkipInk;
   bool skipInkEnabled =
-      skipInk == mozilla::StyleTextDecorationSkipInk::Auto &&
+      skipInk != mozilla::StyleTextDecorationSkipInk::None &&
       aParams.decoration != StyleTextDecorationLine::LINE_THROUGH &&
       StaticPrefs::layout_css_text_decoration_skip_ink_enabled();
 
@@ -4065,14 +4065,16 @@ void nsCSSRendering::PaintDecorationLine(
   while (iter.NextRun()) {
     if (iter.GetGlyphRun()->mOrientation ==
             mozilla::gfx::ShapedTextFlags::TEXT_ORIENT_VERTICAL_UPRIGHT ||
-        iter.GetGlyphRun()->mIsCJK) {
+        (iter.GetGlyphRun()->mIsCJK &&
+         skipInk == mozilla::StyleTextDecorationSkipInk::Auto)) {
       // We don't support upright text in vertical modes currently
       // (see https://bugzilla.mozilla.org/show_bug.cgi?id=1572294),
       // but we do need to update textPos so that following runs will be
       // correctly positioned.
       // We also don't apply skip-ink to CJK text runs because many fonts
       // have an underline that looks really bad if this is done
-      // (see https://bugzilla.mozilla.org/show_bug.cgi?id=1573249).
+      // (see https://bugzilla.mozilla.org/show_bug.cgi?id=1573249),
+      // when skip-ink is set to 'auto'.
       textPos.fX +=
           textRun->GetAdvanceWidth(
               gfxTextRun::Range(iter.GetStringStart(), iter.GetStringEnd()),
