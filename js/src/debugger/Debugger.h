@@ -807,10 +807,6 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
    * value <https://wiki.mozilla.org/Debugger#Resumption_Values>. This is
    * called when we return from a debugging hook to debuggee code.
    *
-   * Precondition: ar is entered. We are in the debugger compartment.
-   *
-   * Postcondition: This called ar.reset().
-   *
    * If `success` is false, the hook failed. If an exception is pending in
    * ar.context(), attempt to handle it via the uncaught exception hook,
    * otherwise report it to the AutoRealm's global.
@@ -833,12 +829,13 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
    *         attempt to handling it with the uncaught exception handler,
    *         reporting the error it is still present after.
    */
-  ResumeMode processHandlerResult(mozilla::Maybe<AutoRealm>& ar, bool success,
-                                  HandleValue rv, AbstractFramePtr frame,
-                                  jsbytecode* pc, MutableHandleValue vp);
-  ResumeMode processParsedHandlerResult(mozilla::Maybe<AutoRealm>& ar,
-                                        AbstractFramePtr frame, jsbytecode* pc,
-                                        bool success, ResumeMode resumeMode,
+  ResumeMode processHandlerResult(JSContext* cx, bool success, HandleValue rv,
+                                  AbstractFramePtr frame, jsbytecode* pc,
+                                  MutableHandleValue vp);
+
+  ResumeMode processParsedHandlerResult(JSContext* cx, AbstractFramePtr frame,
+                                        jsbytecode* pc, bool success,
+                                        ResumeMode resumeMode,
                                         HandleValue value,
                                         MutableHandleValue vp);
 
