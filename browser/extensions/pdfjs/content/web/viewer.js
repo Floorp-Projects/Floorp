@@ -377,7 +377,7 @@ class DefaultExternalServices {
 exports.DefaultExternalServices = DefaultExternalServices;
 const PDFViewerApplication = {
   initialBookmark: document.location.hash.substring(1),
-  initialized: false,
+  _initializedCapability: (0, _pdfjsLib.createPromiseCapability)(),
   fellback: false,
   appConfig: null,
   pdfDocument: null,
@@ -432,7 +432,8 @@ const PDFViewerApplication = {
         source: this
       });
     });
-    this.initialized = true;
+
+    this._initializedCapability.resolve();
   },
 
   async _readPreferences() {
@@ -637,6 +638,14 @@ const PDFViewerApplication = {
 
   run(config) {
     this.initialize(config).then(webViewerInitialized);
+  },
+
+  get initialized() {
+    return this._initializedCapability.settled;
+  },
+
+  get initializedPromise() {
+    return this._initializedCapability.promise;
   },
 
   zoomIn(ticks) {
