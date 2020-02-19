@@ -259,4 +259,8 @@ class ClientEnvironmentBase {
   static get attribution() {
     return AttributionCode.getAttrDataAsync();
   }
+
+  static get appinfo() {
+    return Services.appinfo;
+  }
 }
