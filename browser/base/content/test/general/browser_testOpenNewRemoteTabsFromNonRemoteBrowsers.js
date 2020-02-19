@@ -11,13 +11,15 @@ const { PrivateBrowsingUtils } = ChromeUtils.import(
 
 requestLongerTimeout(2);
 
-function frame_script() {
-  content.document.body.innerHTML = `
-    <a href="http://example.com/" target="_blank" rel="opener" id="testAnchor">Open a window</a>
-  `;
+function insertAndClickAnchor(browser) {
+  return SpecialPowers.spawn(browser, [], () => {
+    content.document.body.innerHTML = `
+      <a href="http://example.com/" target="_blank" rel="opener" id="testAnchor">Open a window</a>
+    `;
 
-  let element = content.document.getElementById("testAnchor");
-  element.click();
+    let element = content.document.getElementById("testAnchor");
+    element.click();
+  });
 }
 
 /**
@@ -57,19 +59,16 @@ add_task(async function test_new_tab() {
     let testBrowser = testWindow.gBrowser.selectedBrowser;
     info("Preparing non-remote browser");
     await prepareNonRemoteBrowser(testWindow, testBrowser);
-    info("Non-remote browser prepared - sending frame script");
+    info("Non-remote browser prepared");
 
-    // Get our framescript ready
-    let mm = testBrowser.messageManager;
-    mm.loadFrameScript("data:,(" + frame_script.toString() + ")();", true);
+    let tabOpenEventPromise = waitForNewTabEvent(testWindow.gBrowser);
+    await insertAndClickAnchor(testBrowser);
 
-    let tabOpenEvent = await waitForNewTabEvent(testWindow.gBrowser);
-    let newTab = tabOpenEvent.target;
-
+    let newTab = (await tabOpenEventPromise).target;
     await promiseTabLoadEvent(newTab);
 
-    // Our framescript opens to a web page which means that the
-    // tab should eventually become remote.
+    // insertAndClickAnchor causes an open to a web page which
+    // means that the tab should eventually become remote.
     ok(
       newTab.linkedBrowser.isRemoteBrowser,
       "The opened browser never became remote."
@@ -118,9 +117,7 @@ add_task(async function test_new_window() {
     let testBrowser = testWindow.gBrowser.selectedBrowser;
     await prepareNonRemoteBrowser(testWindow, testBrowser);
 
-    // Get our framescript ready
-    let mm = testBrowser.messageManager;
-    mm.loadFrameScript("data:,(" + frame_script.toString() + ")();", true);
+    await insertAndClickAnchor(testBrowser);
 
     // Click on the link in the browser, and wait for the new window.
     let [newWindow] = await TestUtils.topicObserved(
@@ -137,8 +134,8 @@ add_task(async function test_new_window() {
 
     await promiseTabLoadEvent(newTab);
 
-    // Our framescript opens to a web page which means that the
-    // tab should eventually become remote.
+    // insertAndClickAnchor causes an open to a web page which
+    // means that the tab should eventually become remote.
     ok(
       newTab.linkedBrowser.isRemoteBrowser,
       "The opened browser never became remote."
