@@ -15,17 +15,25 @@
   background-color: var(--console-input-background);
 }
 
-/* Colors override */
+/* Override Reps variables to turn eager eval output gray */
 .theme-light .eager-evaluation-result {
   --object-color: var(--grey-50);
+  --number-color: var(--grey-50);
+  --string-color: var(--grey-50);
+  --reference-color: var(--grey-50);
   --location-color: var(--grey-43);
+  --source-link-color: var(--grey-43);
   --null-color: var(--grey-43);
   --log-icon-color: var(--grey-35);
 }
 
 .theme-dark .eager-evaluation-result {
   --object-color: var(--grey-43);
+  --number-color: var(--grey-43);
+  --string-color: var(--grey-43);
+  --reference-color: var(--grey-43);
   --location-color: var(--grey-50);
+  --source-link-color: var(--grey-50);
   --null-color: var(--grey-50);
   --log-icon-color: var(--grey-55);
 }
