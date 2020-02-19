@@ -2508,7 +2508,7 @@ void WebRenderBridgeParent::NotifySceneBuiltForEpoch(
 
 void WebRenderBridgeParent::NotifyDidSceneBuild(
     const nsTArray<wr::RenderRoot>& aRenderRoots,
-    RefPtr<wr::WebRenderPipelineInfo> aInfo) {
+    RefPtr<const wr::WebRenderPipelineInfo> aInfo) {
   MOZ_ASSERT(IsRootWebRenderBridgeParent());
   if (!mCompositorScheduler) {
     return;
@@ -2533,10 +2533,8 @@ void WebRenderBridgeParent::NotifyDidSceneBuild(
 
   // Look through all the pipelines contained within the built scene
   // and check which vsync they initiated from.
-  auto info = aInfo->Raw();
-  for (uintptr_t i = 0; i < info.epochs.length; i++) {
-    auto epoch = info.epochs.data[i];
-
+  const auto& info = aInfo->Raw();
+  for (const auto& epoch : info.epochs) {
     WebRenderBridgeParent* wrBridge = this;
     if (!(epoch.pipeline_id == PipelineId())) {
       wrBridge = mAsyncImageManager->GetWrBridge(epoch.pipeline_id);

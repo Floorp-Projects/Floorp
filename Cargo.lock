@@ -4660,6 +4660,7 @@ dependencies = [
  "nsstring",
  "num_cpus",
  "rayon",
+ "thin-vec",
  "thread_profiler",
  "uuid 0.8.1",
  "webrender",

@@ -31,7 +31,7 @@ class RenderCompositorOGL : public RenderCompositor {
   virtual ~RenderCompositorOGL();
 
   bool BeginFrame() override;
-  RenderedFrameId EndFrame(const FfiVec<DeviceIntRect>& aDirtyRects) final;
+  RenderedFrameId EndFrame(const nsTArray<DeviceIntRect>& aDirtyRects) final;
   bool WaitForGPU() override;
   void Pause() override;
   bool Resume() override;

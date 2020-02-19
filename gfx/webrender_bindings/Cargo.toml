@@ -19,6 +19,7 @@ nsstring = { path = "../../xpcom/rust/nsstring" }
 bincode = "1.0"
 uuid = { version = "0.8", features = ["v4"] }
 fxhash = "0.2.1"
+thin-vec = { version = "0.1.0", features = ["gecko-ffi"] }
 
 [dependencies.webrender]
 path = "../wr/webrender"
