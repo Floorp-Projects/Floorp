@@ -49,6 +49,7 @@ class CommandEncoder final : public ObjectBase, public ChildOf<Device> {
 
  public:
   void EndComputePass(Span<const uint8_t> aData, ErrorResult& aRv);
+  void EndRenderPass(Span<const uint8_t> aData, ErrorResult& aRv);
 
   void CopyBufferToBuffer(const Buffer& aSource, BufferAddress aSourceOffset,
                           const Buffer& aDestination,
@@ -56,6 +57,8 @@ class CommandEncoder final : public ObjectBase, public ChildOf<Device> {
                           BufferAddress aSize);
   already_AddRefed<ComputePassEncoder> BeginComputePass(
       const dom::GPUComputePassDescriptor& aDesc);
+  already_AddRefed<RenderPassEncoder> BeginRenderPass(
+      const dom::GPURenderPassDescriptor& aDesc);
   already_AddRefed<CommandBuffer> Finish(
       const dom::GPUCommandBufferDescriptor& aDesc);
 };

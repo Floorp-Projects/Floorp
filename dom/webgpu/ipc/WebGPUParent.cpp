@@ -146,6 +146,13 @@ ipc::IPCResult WebGPUParent::RecvCommandEncoderRunComputePass(RawId aSelfId,
   return IPC_OK();
 }
 
+ipc::IPCResult WebGPUParent::RecvCommandEncoderRunRenderPass(RawId aSelfId,
+                                                             Shmem&& shmem) {
+  ffi::wgpu_server_encode_render_pass(mContext, aSelfId, shmem.get<uint8_t>(),
+                                      shmem.Size<uint8_t>());
+  return IPC_OK();
+}
+
 ipc::IPCResult WebGPUParent::RecvCommandEncoderFinish(
     RawId aSelfId, const dom::GPUCommandBufferDescriptor& aDesc) {
   Unused << aDesc;
@@ -269,6 +276,11 @@ ipc::IPCResult WebGPUParent::RecvDeviceCreateComputePipeline(
 
 ipc::IPCResult WebGPUParent::RecvComputePipelineDestroy(RawId aSelfId) {
   ffi::wgpu_server_compute_pipeline_destroy(mContext, aSelfId);
+  return IPC_OK();
+}
+
+ipc::IPCResult WebGPUParent::RecvRenderPipelineDestroy(RawId aSelfId) {
+  ffi::wgpu_server_render_pipeline_destroy(mContext, aSelfId);
   return IPC_OK();
 }
 

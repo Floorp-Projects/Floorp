@@ -45,6 +45,7 @@ parent:
   async DeviceCreateCommandEncoder(RawId selfId, GPUCommandEncoderDescriptor desc, RawId newId);
   async CommandEncoderCopyBufferToBuffer(RawId selfId, RawId sourceId, BufferAddress sourceOffset, RawId destinationId, BufferAddress destinationOffset, BufferAddress size);
   async CommandEncoderRunComputePass(RawId selfId, Shmem shmem);
+  async CommandEncoderRunRenderPass(RawId selfId, Shmem shmem);
   async CommandEncoderFinish(RawId selfId, GPUCommandBufferDescriptor desc);
   async CommandEncoderDestroy(RawId selfId);
   async CommandBufferDestroy(RawId selfId);
@@ -59,6 +60,7 @@ parent:
   async ShaderModuleDestroy(RawId selfId);
   async DeviceCreateComputePipeline(RawId selfId, SerialComputePipelineDescriptor desc, RawId newId);
   async ComputePipelineDestroy(RawId selfId);
+  async RenderPipelineDestroy(RawId selfId);
   async Shutdown();
 
 child:
