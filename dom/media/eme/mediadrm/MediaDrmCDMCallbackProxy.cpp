@@ -37,10 +37,10 @@ void MediaDrmCDMCallbackProxy::ResolvePromise(uint32_t aPromiseId) {
 }
 
 void MediaDrmCDMCallbackProxy::RejectPromise(uint32_t aPromiseId,
-                                             nsresult aException,
+                                             ErrorResult&& aException,
                                              const nsCString& aMessage) {
   MOZ_ASSERT(NS_IsMainThread());
-  mProxy->OnRejectPromise(aPromiseId, aException, aMessage);
+  mProxy->OnRejectPromise(aPromiseId, std::move(aException), aMessage);
 }
 
 void MediaDrmCDMCallbackProxy::SessionMessage(

@@ -8,6 +8,7 @@
 #define ChromiumCDMProxy_h_
 
 #include "mozilla/AbstractThread.h"
+#include "mozilla/ErrorResult.h"
 #include "mozilla/CDMProxy.h"
 #include "ChromiumCDMParent.h"
 
@@ -71,7 +72,7 @@ class ChromiumCDMProxy : public CDMProxy {
   void OnSessionError(const nsAString& aSessionId, nsresult aException,
                       uint32_t aSystemCode, const nsAString& aMsg) override;
 
-  void OnRejectPromise(uint32_t aPromiseId, nsresult aDOMException,
+  void OnRejectPromise(uint32_t aPromiseId, ErrorResult&& aException,
                        const nsCString& aMsg) override;
 
   RefPtr<DecryptPromise> Decrypt(MediaRawData* aSample) override;
@@ -79,8 +80,14 @@ class ChromiumCDMProxy : public CDMProxy {
   void OnDecrypted(uint32_t aId, DecryptStatus aResult,
                    const nsTArray<uint8_t>& aDecryptedData) override;
 
-  void RejectPromise(PromiseId aId, nsresult aExceptionCode,
+  void RejectPromise(PromiseId aId, ErrorResult&& aException,
                      const nsCString& aReason) override;
+  // Reject promise with an InvalidStateError and the given message.
+  void RejectPromiseWithStateError(PromiseId aId, const nsCString& aReason);
+  // For use for moving rejections from off-main thread.
+  void RejectPromiseOnMainThread(PromiseId aId,
+                                 CopyableErrorResult&& aException,
+                                 const nsCString& aReason);
 
   void ResolvePromise(PromiseId aId) override;
 

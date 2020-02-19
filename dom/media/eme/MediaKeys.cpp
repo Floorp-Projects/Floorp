@@ -254,16 +254,17 @@ already_AddRefed<DetailedPromise> MediaKeys::RetrievePromise(PromiseId aId) {
   return promise.forget();
 }
 
-void MediaKeys::RejectPromise(PromiseId aId, nsresult aExceptionCode,
+void MediaKeys::RejectPromise(PromiseId aId, ErrorResult&& aException,
                               const nsCString& aReason) {
+  uint32_t errorCodeAsInt = aException.ErrorCodeAsInt();
   EME_LOG("MediaKeys[%p]::RejectPromise(%" PRIu32 ", 0x%" PRIx32 ")", this, aId,
-          static_cast<uint32_t>(aExceptionCode));
+          errorCodeAsInt);
 
   RefPtr<DetailedPromise> promise(RetrievePromise(aId));
   if (!promise) {
     EME_LOG("MediaKeys[%p]::RejectPromise(%" PRIu32 ", 0x%" PRIx32
             ") couldn't retrieve promise! Bailing!",
-            this, aId, static_cast<uint32_t>(aExceptionCode));
+            this, aId, errorCodeAsInt);
     return;
   }
 
@@ -278,19 +279,14 @@ void MediaKeys::RejectPromise(PromiseId aId, nsresult aExceptionCode,
     mPromiseIdToken.Remove(aId);
   }
 
-  MOZ_ASSERT(NS_FAILED(aExceptionCode));
-  if (aExceptionCode == NS_ERROR_DOM_TYPE_ERR) {
-    // This is supposed to be a TypeError, not a DOMException.
-    promise->MaybeRejectWithTypeError(NS_ConvertUTF8toUTF16(aReason));
-  } else {
-    promise->MaybeReject(aExceptionCode, aReason);
-  }
+  MOZ_ASSERT(aException.Failed());
+  promise->MaybeReject(std::move(aException), aReason);
 
   if (mCreatePromiseId == aId) {
     // Note: This will probably destroy the MediaKeys object!
     EME_LOG("MediaKeys[%p]::RejectPromise(%" PRIu32 ", 0x%" PRIx32
             ") calling Release()",
-            this, aId, static_cast<uint32_t>(aExceptionCode));
+            this, aId, errorCodeAsInt);
     Release();
   }
 }

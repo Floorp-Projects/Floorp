@@ -122,14 +122,13 @@ void ChromiumCDMParent::CreateSession(uint32_t aCreateSessionToken,
                                       const nsTArray<uint8_t>& aInitData) {
   GMP_LOG_DEBUG("ChromiumCDMParent::CreateSession(this=%p)", this);
   if (mIsShutdown) {
-    RejectPromise(aPromiseId, NS_ERROR_DOM_INVALID_STATE_ERR,
-                  NS_LITERAL_CSTRING("CDM is shutdown."));
+    RejectPromiseShutdown(aPromiseId);
     return;
   }
   if (!SendCreateSessionAndGenerateRequest(aPromiseId, aSessionType,
                                            aInitDataType, aInitData)) {
-    RejectPromise(
-        aPromiseId, NS_ERROR_DOM_INVALID_STATE_ERR,
+    RejectPromiseWithStateError(
+        aPromiseId,
         NS_LITERAL_CSTRING("Failed to send generateRequest to CDM process."));
     return;
   }
@@ -142,14 +141,13 @@ void ChromiumCDMParent::LoadSession(uint32_t aPromiseId, uint32_t aSessionType,
       "ChromiumCDMParent::LoadSession(this=%p, pid=%u, type=%u, sid=%s)", this,
       aPromiseId, aSessionType, NS_ConvertUTF16toUTF8(aSessionId).get());
   if (mIsShutdown) {
-    RejectPromise(aPromiseId, NS_ERROR_DOM_INVALID_STATE_ERR,
-                  NS_LITERAL_CSTRING("CDM is shutdown."));
+    RejectPromiseShutdown(aPromiseId);
     return;
   }
   if (!SendLoadSession(aPromiseId, aSessionType,
                        NS_ConvertUTF16toUTF8(aSessionId))) {
-    RejectPromise(
-        aPromiseId, NS_ERROR_DOM_INVALID_STATE_ERR,
+    RejectPromiseWithStateError(
+        aPromiseId,
         NS_LITERAL_CSTRING("Failed to send loadSession to CDM process."));
     return;
   }
@@ -159,14 +157,13 @@ void ChromiumCDMParent::SetServerCertificate(uint32_t aPromiseId,
                                              const nsTArray<uint8_t>& aCert) {
   GMP_LOG_DEBUG("ChromiumCDMParent::SetServerCertificate(this=%p)", this);
   if (mIsShutdown) {
-    RejectPromise(aPromiseId, NS_ERROR_DOM_INVALID_STATE_ERR,
-                  NS_LITERAL_CSTRING("CDM is shutdown."));
+    RejectPromiseShutdown(aPromiseId);
     return;
   }
   if (!SendSetServerCertificate(aPromiseId, aCert)) {
-    RejectPromise(aPromiseId, NS_ERROR_DOM_INVALID_STATE_ERR,
-                  NS_LITERAL_CSTRING(
-                      "Failed to send setServerCertificate to CDM process"));
+    RejectPromiseWithStateError(
+        aPromiseId, NS_LITERAL_CSTRING(
+                        "Failed to send setServerCertificate to CDM process"));
   }
 }
 
@@ -175,13 +172,12 @@ void ChromiumCDMParent::UpdateSession(const nsCString& aSessionId,
                                       const nsTArray<uint8_t>& aResponse) {
   GMP_LOG_DEBUG("ChromiumCDMParent::UpdateSession(this=%p)", this);
   if (mIsShutdown) {
-    RejectPromise(aPromiseId, NS_ERROR_DOM_INVALID_STATE_ERR,
-                  NS_LITERAL_CSTRING("CDM is shutdown."));
+    RejectPromiseShutdown(aPromiseId);
     return;
   }
   if (!SendUpdateSession(aPromiseId, aSessionId, aResponse)) {
-    RejectPromise(
-        aPromiseId, NS_ERROR_DOM_INVALID_STATE_ERR,
+    RejectPromiseWithStateError(
+        aPromiseId,
         NS_LITERAL_CSTRING("Failed to send updateSession to CDM process"));
   }
 }
@@ -190,13 +186,12 @@ void ChromiumCDMParent::CloseSession(const nsCString& aSessionId,
                                      uint32_t aPromiseId) {
   GMP_LOG_DEBUG("ChromiumCDMParent::CloseSession(this=%p)", this);
   if (mIsShutdown) {
-    RejectPromise(aPromiseId, NS_ERROR_DOM_INVALID_STATE_ERR,
-                  NS_LITERAL_CSTRING("CDM is shutdown."));
+    RejectPromiseShutdown(aPromiseId);
     return;
   }
   if (!SendCloseSession(aPromiseId, aSessionId)) {
-    RejectPromise(
-        aPromiseId, NS_ERROR_DOM_INVALID_STATE_ERR,
+    RejectPromiseWithStateError(
+        aPromiseId,
         NS_LITERAL_CSTRING("Failed to send closeSession to CDM process"));
   }
 }
@@ -205,13 +200,12 @@ void ChromiumCDMParent::RemoveSession(const nsCString& aSessionId,
                                       uint32_t aPromiseId) {
   GMP_LOG_DEBUG("ChromiumCDMParent::RemoveSession(this=%p)", this);
   if (mIsShutdown) {
-    RejectPromise(aPromiseId, NS_ERROR_DOM_INVALID_STATE_ERR,
-                  NS_LITERAL_CSTRING("CDM is shutdown."));
+    RejectPromiseShutdown(aPromiseId);
     return;
   }
   if (!SendRemoveSession(aPromiseId, aSessionId)) {
-    RejectPromise(
-        aPromiseId, NS_ERROR_DOM_INVALID_STATE_ERR,
+    RejectPromiseWithStateError(
+        aPromiseId,
         NS_LITERAL_CSTRING("Failed to send removeSession to CDM process"));
   }
 }
@@ -258,22 +252,26 @@ void ChromiumCDMParent::GetStatusForPolicy(uint32_t aPromiseId,
                                            const nsCString& aMinHdcpVersion) {
   GMP_LOG_DEBUG("ChromiumCDMParent::GetStatusForPolicy(this=%p)", this);
   if (mIsShutdown) {
-    RejectPromise(aPromiseId, NS_ERROR_DOM_INVALID_STATE_ERR,
-                  NS_LITERAL_CSTRING("CDM is shutdown."));
+    RejectPromiseShutdown(aPromiseId);
     return;
   }
   auto hdcpVersionResult = ToCDMHdcpVersion(aMinHdcpVersion);
   if (hdcpVersionResult.isErr()) {
-    RejectPromise(
-        aPromiseId, NS_ERROR_INVALID_ARG,
-        NS_LITERAL_CSTRING(
-            "getStatusForPolicy failed due to bad hdcp version argument"));
+    ErrorResult rv;
+    // XXXbz there's no spec for this yet, and
+    // <https://github.com/WICG/hdcp-detection/blob/master/explainer.md>
+    // does not define what exceptions get thrown.  Let's assume
+    // TypeError for invalid args, as usual.
+    NS_NAMED_LITERAL_CSTRING(
+        err, "getStatusForPolicy failed due to bad hdcp version argument");
+    rv.ThrowTypeError(NS_ConvertUTF8toUTF16(err));
+    RejectPromise(aPromiseId, std::move(rv), err);
     return;
   }
 
   if (!SendGetStatusForPolicy(aPromiseId, hdcpVersionResult.unwrap())) {
-    RejectPromise(
-        aPromiseId, NS_ERROR_DOM_INVALID_STATE_ERR,
+    RejectPromiseWithStateError(
+        aPromiseId,
         NS_LITERAL_CSTRING("Failed to send getStatusForPolicy to CDM process"));
   }
 }
@@ -414,8 +412,8 @@ ipc::IPCResult ChromiumCDMParent::RecvOnResolveNewSessionPromise(
 
   Maybe<uint32_t> token = mPromiseToCreateSessionToken.GetAndRemove(aPromiseId);
   if (token.isNothing()) {
-    RejectPromise(aPromiseId, NS_ERROR_DOM_INVALID_STATE_ERR,
-                  NS_LITERAL_CSTRING("Lost session token for new session."));
+    RejectPromiseWithStateError(
+        aPromiseId, NS_LITERAL_CSTRING("Lost session token for new session."));
     return IPC_OK();
   }
 
@@ -460,7 +458,8 @@ ipc::IPCResult ChromiumCDMParent::RecvOnResolvePromise(
   return IPC_OK();
 }
 
-void ChromiumCDMParent::RejectPromise(uint32_t aPromiseId, nsresult aException,
+void ChromiumCDMParent::RejectPromise(uint32_t aPromiseId,
+                                      ErrorResult&& aException,
                                       const nsCString& aErrorMessage) {
   GMP_LOG_DEBUG("ChromiumCDMParent::RejectPromise(this=%p, pid=%u)", this,
                 aPromiseId);
@@ -470,28 +469,52 @@ void ChromiumCDMParent::RejectPromise(uint32_t aPromiseId, nsresult aException,
     return;
   }
 
-  mCDMCallback->RejectPromise(aPromiseId, aException, aErrorMessage);
+  mCDMCallback->RejectPromise(aPromiseId, std::move(aException), aErrorMessage);
 }
 
-static nsresult ToNsresult(uint32_t aException) {
+void ChromiumCDMParent::RejectPromiseShutdown(uint32_t aPromiseId) {
+  RejectPromiseWithStateError(aPromiseId,
+                              NS_LITERAL_CSTRING("CDM is shutdown"));
+}
+
+void ChromiumCDMParent::RejectPromiseWithStateError(
+    uint32_t aPromiseId, const nsCString& aErrorMessage) {
+  ErrorResult rv;
+  rv.ThrowInvalidStateError(aErrorMessage);
+  RejectPromise(aPromiseId, std::move(rv), aErrorMessage);
+}
+
+static ErrorResult ToErrorResult(uint32_t aException,
+                                 const nsCString& aErrorMessage) {
+  // XXXbz could we have a CopyableErrorResult sent to us with a better error
+  // message?
+  ErrorResult rv;
   switch (static_cast<cdm::Exception>(aException)) {
     case cdm::Exception::kExceptionNotSupportedError:
-      return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+      rv.ThrowNotSupportedError(aErrorMessage);
+      break;
     case cdm::Exception::kExceptionInvalidStateError:
-      return NS_ERROR_DOM_INVALID_STATE_ERR;
+      rv.ThrowInvalidStateError(aErrorMessage);
+      break;
     case cdm::Exception::kExceptionTypeError:
-      return NS_ERROR_DOM_TYPE_ERR;
+      rv.ThrowTypeError(NS_ConvertUTF8toUTF16(aErrorMessage));
+      break;
     case cdm::Exception::kExceptionQuotaExceededError:
-      return NS_ERROR_DOM_QUOTA_EXCEEDED_ERR;
+      rv.ThrowQuotaExceededError(aErrorMessage);
+      break;
+    default:
+      MOZ_ASSERT_UNREACHABLE("Invalid cdm::Exception enum value.");
+      // Note: Unique placeholder.
+      rv.ThrowTimeoutError(aErrorMessage);
   };
-  MOZ_ASSERT_UNREACHABLE("Invalid cdm::Exception enum value.");
-  return NS_ERROR_DOM_TIMEOUT_ERR;  // Note: Unique placeholder.
+  return rv;
 }
 
 ipc::IPCResult ChromiumCDMParent::RecvOnRejectPromise(
     const uint32_t& aPromiseId, const uint32_t& aException,
     const uint32_t& aSystemCode, const nsCString& aErrorMessage) {
-  RejectPromise(aPromiseId, ToNsresult(aException), aErrorMessage);
+  RejectPromise(aPromiseId, ToErrorResult(aException, aErrorMessage),
+                aErrorMessage);
   return IPC_OK();
 }
 

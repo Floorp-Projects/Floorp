@@ -123,8 +123,8 @@ class MediaKeys final : public nsIDocumentActivity,
   // list of sessions awaiting a session id.
   void ConnectPendingPromiseIdWithToken(PromiseId aId, uint32_t aToken);
 
-  // Reject promise with DOMException corresponding to aExceptionCode.
-  void RejectPromise(PromiseId aId, nsresult aExceptionCode,
+  // Reject promise with the given exception.
+  void RejectPromise(PromiseId aId, ErrorResult&& aException,
                      const nsCString& aReason);
   // Resolves promise with "undefined".
   void ResolvePromise(PromiseId aId);

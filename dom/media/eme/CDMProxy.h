@@ -9,6 +9,7 @@
 
 #include "mozilla/CDMCaps.h"
 #include "mozilla/DataMutex.h"
+#include "mozilla/ErrorResult.h"
 #include "mozilla/MozPromise.h"
 
 #include "mozilla/dom/MediaKeyMessageEvent.h"
@@ -182,7 +183,7 @@ class CDMProxy {
                               uint32_t aSystemCode, const nsAString& aMsg) = 0;
 
   // Main thread only.
-  virtual void OnRejectPromise(uint32_t aPromiseId, nsresult aDOMException,
+  virtual void OnRejectPromise(uint32_t aPromiseId, ErrorResult&& aException,
                                const nsCString& aMsg) = 0;
 
   virtual RefPtr<DecryptPromise> Decrypt(MediaRawData* aSample) = 0;
@@ -191,9 +192,10 @@ class CDMProxy {
   virtual void OnDecrypted(uint32_t aId, DecryptStatus aResult,
                            const nsTArray<uint8_t>& aDecryptedData) = 0;
 
-  // Reject promise with DOMException corresponding to aExceptionCode.
+  // Reject promise with the given ErrorResult.
+  //
   // Can be called from any thread.
-  virtual void RejectPromise(PromiseId aId, nsresult aExceptionCode,
+  virtual void RejectPromise(PromiseId aId, ErrorResult&& aException,
                              const nsCString& aReason) = 0;
 
   // Resolves promise with "undefined".

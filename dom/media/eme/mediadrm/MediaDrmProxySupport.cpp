@@ -183,8 +183,9 @@ void MediaDrmJavaCallbacksSupport::OnRejectPromise(
   // Current implementation assume all the reject from MediaDrm is due to
   // invalid state. Other cases should be handled before calling into
   // MediaDrmProxy API.
-  mDecryptorProxyCallback->RejectPromise(
-      aPromiseId, NS_ERROR_DOM_INVALID_STATE_ERR, reason);
+  ErrorResult rv;
+  rv.ThrowInvalidStateError(reason);
+  mDecryptorProxyCallback->RejectPromise(aPromiseId, std::move(rv), reason);
 }
 
 MediaDrmProxySupport::MediaDrmProxySupport(const nsAString& aKeySystem)
