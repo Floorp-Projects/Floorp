@@ -17,3 +17,5 @@ BROWSER_CHROME_MANIFESTS += ['test/browser.ini']
 
 with Files('**'):
     BUG_COMPONENT = ('DevTools', 'Netmonitor')
+
+SPHINX_TREES['/devtools/netmonitor'] = 'docs'
