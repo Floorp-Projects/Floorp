@@ -3039,8 +3039,8 @@ static void UpdateWRQualificationForIntel(FeatureState& aFeature,
       0x163b,
       0x163d,
       0x163e,
-
-      // HD Graphics 4600
+#if 0
+      // // Gen7.5 not allowed until bug 1576637 is resolved.
       0x0412,
       0x0416,
       0x041a,
@@ -3051,6 +3051,7 @@ static void UpdateWRQualificationForIntel(FeatureState& aFeature,
       0x0a1a,
       0x0a1b,
       0x0a1e,
+#endif
   };
   bool supported = false;
   for (uint16_t id : supportedDevices) {
