@@ -2004,14 +2004,16 @@ class BaseScript : public gc::TenuredCell {
   //   toStringStart_                                          toStringEnd_
   //
   // NOTE: These are counted in Code Units from the start of the script source.
-  uint32_t sourceStart_ = 0;
-  uint32_t sourceEnd_ = 0;
-  uint32_t toStringStart_ = 0;
-  uint32_t toStringEnd_ = 0;
+  struct SourceExtent {
+    uint32_t sourceStart = 0;
+    uint32_t sourceEnd = 0;
+    uint32_t toStringStart = 0;
+    uint32_t toStringEnd = 0;
 
-  // Line and column of |sourceStart_| position.
-  uint32_t lineno_ = 0;
-  uint32_t column_ = 0;  // Count of Code Points
+    // Line and column of |sourceStart_| position.
+    uint32_t lineno = 0;
+    uint32_t column = 0;  // Count of Code Points
+  } extent_;
 
   // See ImmutableFlags / MutableFlags below for definitions. These are stored
   // as uint32_t instead of bitfields to make it more predictable to access
@@ -2047,12 +2049,8 @@ class BaseScript : public gc::TenuredCell {
       : jitCodeRaw_(stubEntry),
         functionOrGlobal_(functionOrGlobal),
         sourceObject_(sourceObject),
-        sourceStart_(sourceStart),
-        sourceEnd_(sourceEnd),
-        toStringStart_(toStringStart),
-        toStringEnd_(toStringEnd),
-        lineno_(lineno),
-        column_(column) {
+        extent_{sourceStart, sourceEnd, toStringStart,
+                toStringEnd, lineno,    column} {
     MOZ_ASSERT(functionOrGlobal->compartment() == sourceObject->compartment());
     MOZ_ASSERT(toStringStart <= sourceStart);
     MOZ_ASSERT(sourceStart <= sourceEnd);
@@ -2265,11 +2263,13 @@ class BaseScript : public gc::TenuredCell {
 
   bool isBinAST() const { return scriptSource()->hasBinASTSource(); }
 
-  uint32_t sourceStart() const { return sourceStart_; }
-  uint32_t sourceEnd() const { return sourceEnd_; }
-  uint32_t sourceLength() const { return sourceEnd_ - sourceStart_; }
-  uint32_t toStringStart() const { return toStringStart_; }
-  uint32_t toStringEnd() const { return toStringEnd_; }
+  uint32_t sourceStart() const { return extent_.sourceStart; }
+  uint32_t sourceEnd() const { return extent_.sourceEnd; }
+  uint32_t sourceLength() const {
+    return extent_.sourceEnd - extent_.sourceStart;
+  }
+  uint32_t toStringStart() const { return extent_.toStringStart; }
+  uint32_t toStringEnd() const { return extent_.toStringEnd; }
 
   MOZ_MUST_USE bool appendSourceDataForToString(JSContext* cx,
                                                 js::StringBuffer& buf);
@@ -2288,23 +2288,23 @@ class BaseScript : public gc::TenuredCell {
     MOZ_ASSERT(sourceStart <= sourceEnd);
     MOZ_ASSERT(sourceEnd <= toStringEnd);
 
-    sourceStart_ = sourceStart;
-    sourceEnd_ = sourceEnd;
-    toStringStart_ = toStringStart;
-    toStringEnd_ = toStringEnd;
+    extent_.sourceStart = sourceStart;
+    extent_.sourceEnd = sourceEnd;
+    extent_.toStringStart = toStringStart;
+    extent_.toStringEnd = toStringEnd;
   }
 
-  void setColumn(uint32_t column) { column_ = column; }
+  void setColumn(uint32_t column) { extent_.column = column; }
 #endif
 
   void setToStringEnd(uint32_t toStringEnd) {
-    MOZ_ASSERT(toStringStart_ <= toStringEnd);
-    MOZ_ASSERT(toStringEnd_ >= sourceEnd_);
-    toStringEnd_ = toStringEnd;
+    MOZ_ASSERT(extent_.toStringStart <= toStringEnd);
+    MOZ_ASSERT(extent_.toStringEnd >= extent_.sourceEnd);
+    extent_.toStringEnd = toStringEnd;
   }
 
-  uint32_t lineno() const { return lineno_; }
-  uint32_t column() const { return column_; }
+  uint32_t lineno() const { return extent_.lineno; }
+  uint32_t column() const { return extent_.column; }
 
   // ImmutableFlags accessors.
   MOZ_MUST_USE bool hasFlag(ImmutableFlags flag) const {
