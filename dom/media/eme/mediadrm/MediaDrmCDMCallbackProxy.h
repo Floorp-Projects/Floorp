@@ -8,6 +8,7 @@
 #define MediaDrmCDMCallbackProxy_h_
 
 #include "mozilla/CDMProxy.h"
+#include "mozilla/ErrorResult.h"
 #include "mozilla/DecryptorProxyCallback.h"
 
 namespace mozilla {
@@ -26,7 +27,7 @@ class MediaDrmCDMCallbackProxy : public DecryptorProxyCallback {
 
   void ResolvePromise(uint32_t aPromiseId) override;
 
-  void RejectPromise(uint32_t aPromiseId, nsresult aException,
+  void RejectPromise(uint32_t aPromiseId, ErrorResult&& aException,
                      const nsCString& aSessionId) override;
 
   void SessionMessage(const nsCString& aSessionId,
