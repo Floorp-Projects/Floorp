@@ -61,9 +61,6 @@ void ObjectGroup::finalize(JSFreeOp* fop) {
     fop->delete_(this, newScript, newScript->gcMallocBytes(),
                  MemoryUse::ObjectGroupAddendum);
   }
-  if (maybePreliminaryObjectsDontCheckGeneration()) {
-    maybePreliminaryObjectsDontCheckGeneration()->clear();
-  }
   fop->delete_(this, maybePreliminaryObjectsDontCheckGeneration(),
                MemoryUse::ObjectGroupAddendum);
 }

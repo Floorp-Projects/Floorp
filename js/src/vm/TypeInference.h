@@ -195,8 +195,6 @@ class PreliminaryObjectArrayWithTemplate : public PreliminaryObjectArray {
  public:
   explicit PreliminaryObjectArrayWithTemplate(Shape* shape) : shape_(shape) {}
 
-  void clear() { shape_.init(nullptr); }
-
   Shape* shape() { return shape_; }
 
   void maybeAnalyze(JSContext* cx, ObjectGroup* group, bool force = false);
