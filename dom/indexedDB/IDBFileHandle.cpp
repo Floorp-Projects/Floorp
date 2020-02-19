@@ -294,10 +294,22 @@ RefPtr<IDBFileRequest> IDBFileHandle::Truncate(const Optional<uint64_t>& aSize,
   // Getting location and additional state checking for truncate
   uint64_t location;
   if (aSize.WasPassed()) {
-    // Just in case someone calls us from C++
-    MOZ_ASSERT(aSize.Value() != UINT64_MAX, "Passed wrong size!");
+    // Cannot use UINT64_MAX as the truncation size, as this is used as a
+    // special value for the location to mark append mode. This is not really of
+    // practical relevance, as a file cannot actually have a size that large.
+
+    // XXX: Remove this check when removing the use of UINT64_MAX as a special
+    // value for the location to mark append mode?
+    if (aSize.Value() == UINT64_MAX) {
+      aRv.ThrowTypeError(u"UINT64_MAX is not a valid size");
+      return nullptr;
+    }
     location = aSize.Value();
   } else {
+    // Fail if we are in append mode.
+
+    // XXX: Is it really ok that truncate with a size parameter works when in
+    // append mode, but one without a size parameter does not?
     if (mLocation == UINT64_MAX) {
       aRv.Throw(NS_ERROR_DOM_FILEHANDLE_NOT_ALLOWED_ERR);
       return nullptr;

@@ -250,3 +250,33 @@ function getFileDBRefCount(name, id) {
 function flushPendingFileDeletions() {
   utils.flushPendingFileDeletions();
 }
+
+async function createReadWriteFileWithInitialContent(dbName, content) {
+  // BEGIN DUPLICATED BLOCK
+  // The functionality of this setup code is duplicated from test_filehandle_truncate.html
+  // (and maybe other test cases), but it has been modified to use async/await.
+
+  let request = indexedDB.open(dbName);
+  await expectingUpgrade(request);
+  let event = await expectingSuccess(request);
+
+  let db = event.target.result;
+  // We cannot use errorHandler because we shouldn't call finishTest() for aysnc tests
+  db.onerror = evt =>
+    ok(false, "indexedDB error, '" + evt.target.error.name + "'");
+
+  request = db.createMutableFile("test.bin");
+  event = await expectingSuccess(request);
+
+  let mutableFile = event.target.result;
+  mutableFile.onerror = evt =>
+    ok(false, "indexedDB error, '" + evt.target.error.name + "'");
+
+  let fileHandle = mutableFile.open("readwrite");
+  request = fileHandle.write(content);
+  event = await expectingSuccess(request);
+  // END DUPLICATED BLOCK
+
+  ok(fileHandle instanceof IDBFileHandle, "Instance of IDBFileHandle");
+  return fileHandle;
+}
