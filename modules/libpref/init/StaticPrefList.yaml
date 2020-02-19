@@ -5530,6 +5530,12 @@
   value: true
   mirror: always
 
+# Is the '-webkit-appearance' alias for '-moz-appearance' enabled?
+- name: layout.css.webkit-appearance.enabled
+  type: bool
+  value: true
+  mirror: always
+
 - name: layout.css.xul-display-values.content.enabled
   type: RelaxedAtomicBool
   value: false
