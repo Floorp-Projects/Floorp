@@ -1,10 +1,12 @@
 platform(linux,mac) == premultiplied-aligned.yaml premultiplied-aligned.png
 platform(linux,mac) == premultiplied-angle.yaml premultiplied-angle.png
 platform(linux,mac) == premultiplied-radial.yaml premultiplied-radial.png
+platform(linux,mac) == premultiplied-conic.yaml premultiplied-conic.png
 
 platform(linux,mac) == premultiplied-aligned-2.yaml premultiplied-aligned-2.png
 platform(linux,mac) == premultiplied-angle-2.yaml premultiplied-angle-2.png
 platform(linux,mac) == premultiplied-radial-2.yaml premultiplied-radial-2.png
+platform(linux,mac) == premultiplied-conic-2.yaml premultiplied-conic-2.png
 
 == linear.yaml linear-ref.png
 == linear-reverse.yaml linear-ref.png
@@ -38,12 +40,22 @@ platform(linux,mac) fuzzy(1,80000) == radial-ellipse.yaml radial-ellipse-ref.png
 == norm-radial-3.yaml norm-radial-3-ref.yaml
 == norm-radial-degenerate.yaml norm-radial-degenerate-ref.yaml
 
+== norm-conic-1.yaml norm-conic-1-ref.yaml
+== norm-conic-2.yaml norm-conic-2-ref.yaml
+# Bug 1616255 - These should pass
+# == norm-conic-3.yaml norm-conic-3-ref.yaml
+# == norm-conic-4.yaml norm-conic-4-ref.yaml
+== norm-conic-degenerate.yaml norm-conic-degenerate-ref.yaml
+
 # fuzzy because of differences from normalization
 # this might be able to be improved
 fuzzy(255,1200) == repeat-linear.yaml repeat-linear-ref.yaml
 fuzzy(255,1200) == repeat-linear-reverse.yaml repeat-linear-ref.yaml
 fuzzy(255,2664) == repeat-radial.yaml repeat-radial-ref.yaml
 fuzzy(255,2664) == repeat-radial-negative.yaml repeat-radial-ref.yaml
+# Bug 1616255 - These should pass
+# == repeat-conic.yaml repeat-conic-ref.yaml
+# == repeat-conic-negative.yaml repeat-conic-ref.yaml
 
 # fuzzy because of thin spaced out column of pixels that are 1 off
 fuzzy(1,83164) == tiling-linear-1.yaml tiling-linear-1-ref.yaml
@@ -55,6 +67,10 @@ fuzzy(1,1) == tiling-radial-2.yaml tiling-radial-2-ref.yaml
 fuzzy(1,3) == tiling-radial-3.yaml tiling-radial-3-ref.yaml
 fuzzy(1,17) == tiling-radial-4.yaml tiling-radial-4-ref.yaml
 
+fuzzy(1,17) == tiling-conic-1.yaml tiling-conic-1-ref.yaml
+fuzzy(1,1) == tiling-conic-2.yaml tiling-conic-2-ref.yaml
+fuzzy(1,3) == tiling-conic-3.yaml tiling-conic-3-ref.yaml
+
 == radial-zero-size-1.yaml radial-zero-size-ref.yaml
 == radial-zero-size-2.yaml radial-zero-size-ref.yaml
 == radial-zero-size-3.yaml radial-zero-size-ref.yaml
@@ -62,3 +78,10 @@ fuzzy(1,17) == tiling-radial-4.yaml tiling-radial-4-ref.yaml
 platform(linux,mac) == linear-aligned-border-radius.yaml linear-aligned-border-radius.png
 platform(linux,mac) == repeat-border-radius.yaml repeat-border-radius.png
 
+== conic.yaml conic-ref.yaml
+fuzzy(1,56) == conic-simple.yaml conic-simple.png
+fuzzy(255,166) == conic-angle.yaml conic-angle.png
+== conic-center.yaml conic-center.png
+fuzzy(1,1) == conic-angle-wraparound.yaml conic-angle.yaml
+fuzzy(1,1) == conic-angle-wraparound-negative.yaml conic-angle.yaml
+fuzzy(1,115) == conic-color-wheel.yaml conic-color-wheel.png
