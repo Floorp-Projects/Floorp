@@ -3768,7 +3768,10 @@ void ClientWebGLContext::ReadPixels(GLint x, GLint y, GLsizei width,
     return;
   }
 
-  const auto& viewElemType = dstData.Type();
+  auto viewElemType = dstData.Type();
+  if (viewElemType == js::Scalar::Uint8Clamped) {
+    viewElemType = js::Scalar::Uint8;
+  }
   if (viewElemType != reqScalarType) {
     EnqueueError(LOCAL_GL_INVALID_OPERATION,
                  "`pixels` type does not match `type`.");
