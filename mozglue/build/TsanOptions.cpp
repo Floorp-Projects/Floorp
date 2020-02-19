@@ -73,6 +73,7 @@ extern "C" const char* __tsan_default_suppressions() {
          "called_from_lib:libpulse.so\n"
          "called_from_lib:libpulsecommon\n"
          "called_from_lib:libsecret-1\n"
+         "called_from_lib:libunity-gtk3-parser\n"
          "called_from_lib:libvorbis.so\n"
          "called_from_lib:libvorbisfile\n"
          "called_from_lib:libX11.so\n"
