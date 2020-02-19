@@ -759,6 +759,52 @@ bool DebugAPI::hasDebuggerStatementHook(GlobalObject* global) {
   return Debugger::hasLiveHook(global, Debugger::OnDebuggerStatement);
 }
 
+template <typename HookIsEnabledFun /* bool (Debugger*) */>
+bool DebuggerList<HookIsEnabledFun>::init(JSContext* cx) {
+  // Determine which debuggers will receive this event, and in what order.
+  // Make a copy of the list, since the original is mutable and we will be
+  // calling into arbitrary JS.
+  Handle<GlobalObject*> global = cx->global();
+  for (Realm::DebuggerVectorEntry& entry : global->getDebuggers()) {
+    Debugger* dbg = entry.dbg;
+    if (hookIsEnabled(dbg)) {
+      if (!debuggers.append(ObjectValue(*dbg->toJSObject()))) {
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
+template <typename HookIsEnabledFun /* bool (Debugger*) */>
+template <typename FireHookFun /* ResumeMode (Debugger*) */>
+ResumeMode DebuggerList<HookIsEnabledFun>::dispatchHook(JSContext* cx,
+                                                        FireHookFun fireHook) {
+  // Preserve the debuggee's microtask event queue while we run the hooks, so
+  // the debugger's microtask checkpoints don't run from the debuggee's
+  // microtasks, and vice versa.
+  JS::AutoDebuggerJobQueueInterruption adjqi;
+  if (!adjqi.init(cx)) {
+    return ResumeMode::Terminate;
+  }
+
+  // Deliver the event to each debugger, checking again to make sure it
+  // should still be delivered.
+  Handle<GlobalObject*> global = cx->global();
+  for (Value* p = debuggers.begin(); p != debuggers.end(); p++) {
+    Debugger* dbg = Debugger::fromJSObject(&p->toObject());
+    EnterDebuggeeNoExecute nx(cx, *dbg, adjqi);
+    if (dbg->debuggees.has(global) && hookIsEnabled(dbg)) {
+      ResumeMode resumeMode = fireHook(dbg);
+      adjqi.runJobs();
+      if (resumeMode != ResumeMode::Continue) {
+        return resumeMode;
+      }
+    }
+  }
+  return ResumeMode::Continue;
+}
+
 JSObject* Debugger::getHook(Hook hook) const {
   MOZ_ASSERT(hook >= 0 && hook < HookCount);
   const Value& v = object->getReservedSlot(JSSLOT_DEBUG_HOOK_START + hook);
@@ -836,14 +882,35 @@ bool DebugAPI::slowPathOnResumeFrame(JSContext* cx, AbstractFramePtr frame) {
 NativeResumeMode DebugAPI::slowPathOnNativeCall(JSContext* cx,
                                                 const CallArgs& args,
                                                 CallReason reason) {
+  DebuggerList debuggerList(cx, [cx](Debugger* dbg) -> bool {
+    return dbg == cx->insideDebuggerEvaluationWithOnNativeCallHook &&
+           dbg->getHook(Debugger::OnNativeCall);
+  });
+
+  if (!debuggerList.init(cx)) {
+    return NativeResumeMode::Abort;
+  }
+
+  if (debuggerList.empty()) {
+    return NativeResumeMode::Continue;
+  }
+
+  // The onNativeCall hook is fired when self hosted functions are called,
+  // and any other self hosted function or C++ native that is directly called
+  // by the self hosted function is considered to be part of the same
+  // native call.
+  //
+  // We check this only after checking that debuggerList has items in order
+  // to avoid unnecessary calls to cx->currentScript(), which can be expensive
+  // when the top frame is in jitcode.
+  JSScript* script = cx->currentScript();
+  if (script && script->selfHosted()) {
+    return NativeResumeMode::Continue;
+  }
+
   RootedValue rval(cx);
-  ResumeMode resumeMode = Debugger::dispatchHook(
-      cx,
-      [cx](Debugger* dbg) -> bool {
-        return dbg == cx->insideDebuggerEvaluationWithOnNativeCallHook &&
-               dbg->getHook(Debugger::OnNativeCall);
-      },
-      [&](Debugger* dbg) -> ResumeMode {
+  ResumeMode resumeMode =
+      debuggerList.dispatchHook(cx, [&](Debugger* dbg) -> ResumeMode {
         return dbg->fireNativeCall(cx, args, reason, &rval);
       });
 
@@ -1118,17 +1185,40 @@ bool DebugAPI::slowPathOnExceptionUnwind(JSContext* cx,
     return true;
   }
 
+  DebuggerList debuggerList(cx, [](Debugger* dbg) -> bool {
+    return dbg->getHook(Debugger::OnExceptionUnwind);
+  });
+
+  if (!debuggerList.init(cx)) {
+    return false;
+  }
+
+  if (debuggerList.empty()) {
+    return true;
+  }
+
+  // We save and restore the exception once up front to avoid having to do it
+  // for each 'onExceptionUnwind' hook that has been registered, and we also
+  // only do it if the debuggerList contains items in order to avoid extra work.
+  RootedValue exc(cx);
+  RootedSavedFrame stack(cx, cx->getPendingExceptionStack());
+  if (!cx->getPendingException(&exc)) {
+    return false;
+  }
+  cx->clearPendingException();
+
   RootedValue rval(cx);
-  ResumeMode resumeMode = Debugger::dispatchHook(
-      cx,
-      [](Debugger* dbg) -> bool {
-        return dbg->getHook(Debugger::OnExceptionUnwind);
-      },
-      [&](Debugger* dbg) -> ResumeMode {
-        return dbg->fireExceptionUnwind(cx, &rval);
+  ResumeMode resumeMode =
+      debuggerList.dispatchHook(cx, [&](Debugger* dbg) -> ResumeMode {
+        return dbg->fireExceptionUnwind(cx, exc, &rval);
       });
 
-  return ApplyFrameResumeMode(cx, frame, resumeMode, rval);
+  if (!ApplyFrameResumeMode(cx, frame, resumeMode, rval)) {
+    return false;
+  }
+
+  cx->setPendingException(exc, stack);
+  return true;
 }
 
 // TODO: Remove Remove this function when all properties/methods returning a
@@ -2090,17 +2180,11 @@ ResumeMode Debugger::fireDebuggerStatement(JSContext* cx,
                               vp);
 }
 
-ResumeMode Debugger::fireExceptionUnwind(JSContext* cx, MutableHandleValue vp) {
+ResumeMode Debugger::fireExceptionUnwind(JSContext* cx, HandleValue exc,
+                                         MutableHandleValue vp) {
   RootedObject hook(cx, getHook(OnExceptionUnwind));
   MOZ_ASSERT(hook);
   MOZ_ASSERT(hook->isCallable());
-
-  RootedValue exc(cx);
-  RootedSavedFrame stack(cx, cx->getPendingExceptionStack());
-  if (!cx->getPendingException(&exc)) {
-    return ResumeMode::Terminate;
-  }
-  cx->clearPendingException();
 
   Maybe<AutoRealm> ar;
   ar.emplace(cx, object);
@@ -2118,12 +2202,8 @@ ResumeMode Debugger::fireExceptionUnwind(JSContext* cx, MutableHandleValue vp) {
   RootedValue fval(cx, ObjectValue(*hook));
   RootedValue rv(cx);
   bool ok = js::Call(cx, fval, object, scriptFrame, wrappedExc, &rv);
-  ResumeMode resumeMode =
-      processHandlerResult(ar, ok, rv, iter.abstractFramePtr(), iter.pc(), vp);
-  if (resumeMode == ResumeMode::Continue) {
-    cx->setPendingException(exc, stack);
-  }
-  return resumeMode;
+  return processHandlerResult(ar, ok, rv, iter.abstractFramePtr(), iter.pc(),
+                              vp);
 }
 
 ResumeMode Debugger::fireEnterFrame(JSContext* cx, MutableHandleValue vp) {
@@ -2161,19 +2241,6 @@ ResumeMode Debugger::fireEnterFrame(JSContext* cx, MutableHandleValue vp) {
 
 ResumeMode Debugger::fireNativeCall(JSContext* cx, const CallArgs& args,
                                     CallReason reason, MutableHandleValue vp) {
-  // The onNativeCall hook is fired when self hosted functions are called,
-  // and any other self hosted function or C++ native that is directly called
-  // by the self hosted function is considered to be part of the same
-  // native call.
-  //
-  // We check this immediately before calling the hook to avoid unnecessary
-  // calls to cx->currentScript(), which can be expensive when the top frame
-  // is in jitcode.
-  JSScript* script = cx->currentScript();
-  if (script && script->selfHosted()) {
-    return ResumeMode::Continue;
-  }
-
   RootedObject hook(cx, getHook(OnNativeCall));
   MOZ_ASSERT(hook);
   MOZ_ASSERT(hook->isCallable());
@@ -2265,45 +2332,13 @@ template <typename HookIsEnabledFun /* bool (Debugger*) */,
 /* static */
 ResumeMode Debugger::dispatchHook(JSContext* cx, HookIsEnabledFun hookIsEnabled,
                                   FireHookFun fireHook) {
-  // Determine which debuggers will receive this event, and in what order.
-  // Make a copy of the list, since the original is mutable and we will be
-  // calling into arbitrary JS.
-  //
-  // Note: In the general case, 'triggered' contains references to objects in
-  // different compartments--every compartment *except* this one.
-  RootedValueVector triggered(cx);
-  Handle<GlobalObject*> global = cx->global();
-  for (Realm::DebuggerVectorEntry& entry : global->getDebuggers()) {
-    Debugger* dbg = entry.dbg;
-    if (hookIsEnabled(dbg)) {
-      if (!triggered.append(ObjectValue(*dbg->toJSObject()))) {
-        return ResumeMode::Terminate;
-      }
-    }
-  }
+  DebuggerList<HookIsEnabledFun> debuggerList(cx, hookIsEnabled);
 
-  // Preserve the debuggee's microtask event queue while we run the hooks, so
-  // the debugger's microtask checkpoints don't run from the debuggee's
-  // microtasks, and vice versa.
-  JS::AutoDebuggerJobQueueInterruption adjqi;
-  if (!adjqi.init(cx)) {
+  if (!debuggerList.init(cx)) {
     return ResumeMode::Terminate;
   }
 
-  // Deliver the event to each debugger, checking again to make sure it
-  // should still be delivered.
-  for (Value* p = triggered.begin(); p != triggered.end(); p++) {
-    Debugger* dbg = Debugger::fromJSObject(&p->toObject());
-    EnterDebuggeeNoExecute nx(cx, *dbg, adjqi);
-    if (dbg->debuggees.has(global) && hookIsEnabled(dbg)) {
-      ResumeMode resumeMode = fireHook(dbg);
-      adjqi.runJobs();
-      if (resumeMode != ResumeMode::Continue) {
-        return resumeMode;
-      }
-    }
-  }
-  return ResumeMode::Continue;
+  return debuggerList.dispatchHook(cx, fireHook);
 }
 
 // Maximum length for source URLs that can be remembered.
