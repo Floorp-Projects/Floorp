@@ -1646,7 +1646,11 @@ bool BaselineCacheIRCompiler::emitMegamorphicSetElement() {
 bool BaselineCacheIRCompiler::emitTypeMonitorResult() {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   allocator.discardStack(masm);
-  EmitEnterTypeMonitorIC(masm);
+  if (IsTypeInferenceEnabled()) {
+    EmitEnterTypeMonitorIC(masm);
+  } else {
+    EmitReturnFromIC(masm);
+  }
   return true;
 }
 
@@ -2059,14 +2063,17 @@ ICStub* js::jit::AttachBaselineCacheIRStub(
       return newStub;
     }
     case BaselineCacheIRStubKind::Monitored: {
-      ICTypeMonitor_Fallback* typeMonitorFallback =
-          stub->toMonitoredFallbackStub()->getFallbackMonitorStub(cx,
-                                                                  outerScript);
-      if (!typeMonitorFallback) {
-        cx->recoverFromOutOfMemory();
-        return nullptr;
+      ICStub* monitorStub = nullptr;
+      if (IsTypeInferenceEnabled()) {
+        ICTypeMonitor_Fallback* typeMonitorFallback =
+            stub->toMonitoredFallbackStub()->getFallbackMonitorStub(
+                cx, outerScript);
+        if (!typeMonitorFallback) {
+          cx->recoverFromOutOfMemory();
+          return nullptr;
+        }
+        monitorStub = typeMonitorFallback->firstMonitorStub();
       }
-      ICStub* monitorStub = typeMonitorFallback->firstMonitorStub();
       auto newStub =
           new (newStubMem) ICCacheIR_Monitored(code, monitorStub, stubInfo);
       writer.copyStubData(newStub->stubDataStart());

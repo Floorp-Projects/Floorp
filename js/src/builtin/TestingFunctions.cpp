@@ -5894,9 +5894,9 @@ static bool MonitorType(JSContext* cx, unsigned argc, Value* vp) {
     }
   }
 
-  // Avoid assertion failures if Baseline is disabled or we can't Baseline
-  // Interpret this script.
-  if (!jit::IsBaselineInterpreterEnabled() ||
+  // Avoid assertion failures if TI or Baseline Interpreter is disabled or if we
+  // can't Baseline Interpret this script.
+  if (!IsTypeInferenceEnabled() || !jit::IsBaselineInterpreterEnabled() ||
       !jit::CanBaselineInterpretScript(script)) {
     args.rval().setUndefined();
     return true;

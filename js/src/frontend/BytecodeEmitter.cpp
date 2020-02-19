@@ -114,7 +114,7 @@ BytecodeEmitter::BytecodeEmitter(
       emitterMode(emitterMode) {
   MOZ_ASSERT_IF(emitterMode == LazyFunction, lazyScript);
 
-  if (sc->isFunctionBox()) {
+  if (IsTypeInferenceEnabled() && sc->isFunctionBox()) {
     // Functions have IC entries for type monitoring |this| and arguments.
     bytecodeSection().setNumICEntries(sc->asFunctionBox()->nargs() + 1);
   }
