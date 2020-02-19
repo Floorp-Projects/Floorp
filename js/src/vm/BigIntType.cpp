@@ -98,6 +98,7 @@
 
 #include "builtin/BigInt.h"
 #include "gc/Allocator.h"
+#include "js/Conversions.h"
 #include "js/Initialization.h"
 #include "js/StableStringChars.h"
 #include "js/Utility.h"
@@ -1782,8 +1783,11 @@ BigInt* js::NumberToBigInt(JSContext* cx, double d) {
   // Step 1 is an assertion checked by the caller.
   // Step 2.
   if (!IsInteger(d)) {
+    char str[JS::MaximumNumberToStringLength];
+    JS::NumberToString(d, str);
+
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                              JSMSG_NUMBER_TO_BIGINT);
+                              JSMSG_NONINTEGER_NUMBER_TO_BIGINT, str);
     return nullptr;
   }
 
