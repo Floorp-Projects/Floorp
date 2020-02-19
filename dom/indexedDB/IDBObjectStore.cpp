@@ -419,13 +419,10 @@ bool CopyingStructuredCloneWriteCallback(JSContext* aCx,
 
 nsresult GetAddInfoCallback(JSContext* aCx, void* aClosure) {
   static const JSStructuredCloneCallbacks kStructuredCloneCallbacks = {
-      nullptr /* read */,
-      StructuredCloneWriteCallback /* write */,
-      nullptr /* reportError */,
-      nullptr /* readTransfer */,
-      nullptr /* writeTransfer */,
-      nullptr /* freeTransfer */,
-      nullptr /* canTransfer */
+      nullptr /* read */,          StructuredCloneWriteCallback /* write */,
+      nullptr /* reportError */,   nullptr /* readTransfer */,
+      nullptr /* writeTransfer */, nullptr /* freeTransfer */,
+      nullptr /* canTransfer */,   nullptr /* sabCloned */
   };
 
   MOZ_ASSERT(aCx);
@@ -1062,6 +1059,7 @@ bool IDBObjectStore::DeserializeValue(JSContext* aCx,
       nullptr,
       nullptr,
       nullptr,
+      nullptr,
       nullptr};
 
   // FIXME: Consider to use StructuredCloneHolder here and in other
@@ -1219,6 +1217,7 @@ class DeserializeIndexValueHelper final : public Runnable {
         nullptr,
         nullptr,
         nullptr,
+        nullptr,
         nullptr};
 
     if (!JS_ReadStructuredClone(
@@ -1320,6 +1319,7 @@ class DeserializeUpgradeValueHelper final : public Runnable {
                                    JS::MutableHandle<JS::Value> aValue) {
     static const JSStructuredCloneCallbacks callbacks = {
         CommonStructuredCloneReadCallback,
+        nullptr,
         nullptr,
         nullptr,
         nullptr,
@@ -2571,7 +2571,8 @@ bool IDBObjectStore::ValueWrapper::Clone(JSContext* aCx) {
       nullptr /* readTransfer */,
       nullptr /* writeTransfer */,
       nullptr /* freeTransfer */,
-      nullptr /* canTransfer */
+      nullptr /* canTransfer */,
+      nullptr /* sabCloned */
   };
 
   StructuredCloneInfo cloneInfo;
