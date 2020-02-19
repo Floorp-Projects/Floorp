@@ -78,7 +78,13 @@
             android:label="@string/mozac_feature_addons_addons"
             android:theme="@style/Theme.AppCompat.Light" />
 
-        <activity android:name=".IntentReceiverActivity">
+        <activity
+            android:name=".IntentReceiverActivity"
+            android:relinquishTaskIdentity="true"
+            android:taskAffinity=""
+            android:exported="true"
+            android:excludeFromRecents="true" >
+
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />

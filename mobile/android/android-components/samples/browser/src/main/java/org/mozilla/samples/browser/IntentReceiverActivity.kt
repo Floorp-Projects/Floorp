@@ -20,6 +20,14 @@ class IntentReceiverActivity : Activity() {
             val intent = intent?.let { Intent(it) } ?: Intent()
             val intentProcessors = components.externalAppIntentProcessors + components.tabIntentProcessor
 
+            // Explicitly remove the new task and clear task flags (Our browser activity is a single
+            // task activity and we never want to start a second task here).
+            intent.flags = intent.flags and Intent.FLAG_ACTIVITY_NEW_TASK.inv()
+            intent.flags = intent.flags and Intent.FLAG_ACTIVITY_CLEAR_TASK.inv()
+
+            // LauncherActivity is started with the "excludeFromRecents" flag (set in manifest). We
+            // do not want to propagate this flag from the launcher activity to the browser.
+            intent.flags = intent.flags and Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS.inv()
             intentProcessors.any { it.process(intent) }
 
             setBrowserActivity(intent)
