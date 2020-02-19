@@ -13,7 +13,9 @@ This means you might have to go searching through the dependency tree to get a f
 
 
 ## bookmarks-sync
+
 A ping sent for every bookmarks sync. It doesn't include the `client_id` because it reports a hashed version of the user's Firefox Account ID.
+
 
 The following metrics are added to the ping:
 
@@ -29,7 +31,9 @@ The following metrics are added to the ping:
 | bookmarks_sync.uid |[string](https://mozilla.github.io/glean/book/user/metrics/string.html) |The user's hashed Firefox Account ID.  |[1](https://github.com/mozilla-mobile/android-components/pull/3092)||never |
 
 ## history-sync
+
 A ping sent for every history sync. It doesn't include the `client_id` because it reports a hashed version of the user's Firefox Account ID.
+
 
 The following metrics are added to the ping:
 
@@ -44,7 +48,9 @@ The following metrics are added to the ping:
 | history_sync.uid |[string](https://mozilla.github.io/glean/book/user/metrics/string.html) |The user's hashed Firefox Account ID.  |[1](https://github.com/mozilla-mobile/android-components/pull/3092)||never |
 
 ## logins-sync
+
 A ping sent for every logins/passwords sync. It doesn't include the `client_id` because it reports a hashed version of the user's Firefox Account ID.
+
 
 The following metrics are added to the ping:
 
