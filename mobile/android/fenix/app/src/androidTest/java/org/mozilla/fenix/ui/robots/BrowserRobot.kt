@@ -256,6 +256,18 @@ class BrowserRobot {
         ).perform(ViewActions.click())
     }
 
+    fun verifySaveLoginPromptIsShown() {
+        mDevice.waitNotNull(Until.findObjects(By.text("test@example.com")), TestAssetHelper.waitingTime)
+        val submitButton = mDevice.findObject(By.res("submit"))
+        submitButton.clickAndWait(Until.newWindow(), TestAssetHelper.waitingTime)
+        // Click save to save the login
+        mDevice.waitNotNull(Until.findObjects(By.text("Save")))
+    }
+
+    fun saveLoginFromPrompt(optionToSaveLogin: String) {
+        mDevice.findObject(By.text(optionToSaveLogin)).click()
+    }
+
     class Transition {
         private val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
         private fun threeDotButton() = onView(

@@ -83,4 +83,10 @@ object TestAssetHelper {
 
         return TestAsset(url, "")
     }
+
+    fun getSaveLoginAsset(server: MockWebServer): TestAsset {
+        val url = server.url("pages/password.html").toString().toUri()!!
+
+        return TestAsset(url, "")
+    }
 }

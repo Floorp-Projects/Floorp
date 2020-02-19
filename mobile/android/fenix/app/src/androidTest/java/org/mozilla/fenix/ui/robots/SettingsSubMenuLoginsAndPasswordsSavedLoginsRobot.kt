@@ -6,6 +6,7 @@ package org.mozilla.fenix.ui.robots
 
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions
+import androidx.test.espresso.assertion.ViewAssertions
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility
@@ -28,6 +29,11 @@ class SettingsSubMenuLoginsAndPasswordsSavedLoginsRobot {
     }
 
     fun tapSetupLater() = onView(ViewMatchers.withText("Later")).perform(ViewActions.click())
+
+    fun verifySavedLoginFromPrompt() = mDevice.waitNotNull(Until.findObjects(By.text("test@example.com")))
+
+    fun verifyNotSavedLoginFromPromt() = onView(ViewMatchers.withText("test@example.com"))
+            .check(ViewAssertions.doesNotExist())
 
     class Transition {
         fun goBack(interact: SettingsSubMenuLoginsAndPasswordRobot.() -> Unit): SettingsSubMenuLoginsAndPasswordRobot.Transition {

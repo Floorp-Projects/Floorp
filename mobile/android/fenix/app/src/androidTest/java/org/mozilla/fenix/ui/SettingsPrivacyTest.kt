@@ -14,8 +14,10 @@ import org.junit.Ignore
 import org.junit.Test
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.HomeActivityTestRule
+import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.helpers.TestHelper
 import org.mozilla.fenix.ui.robots.homeScreen
+import org.mozilla.fenix.ui.robots.navigationToolbar
 
 /**
  *  Tests for verifying the main three dot menu options
@@ -130,6 +132,65 @@ class SettingsPrivacyTest {
         }.openSyncLogins {
             verifyReadyToScanOption()
             verifyUseEmailOption()
+        }
+    }
+
+    @Test
+    fun saveLoginFromPromptTest() {
+        val saveLoginTest =
+                TestAssetHelper.getSaveLoginAsset(mockWebServer)
+
+            navigationToolbar {
+            }.enterURLAndEnterToBrowser(saveLoginTest.url) {
+                verifySaveLoginPromptIsShown()
+                // Click save to save the login
+                saveLoginFromPrompt("Save")
+            }.openHomeScreen {
+            }.openThreeDotMenu {
+            }.openSettings {
+                TestHelper.scrollToElementByText("Logins and passwords")
+            }.openLoginsAndPasswordSubMenu {
+                verifyDefaultView()
+                verifyDefaultValueSyncLogins()
+            }.openSavedLogins {
+            verifySavedLoginsView()
+            tapSetupLater()
+            // Verify that the login appears correctly
+            verifySavedLoginFromPrompt()
+        }
+    }
+
+    @Test
+    fun doNotSaveLoginFromPromptTest() {
+        val saveLoginTest = TestAssetHelper.getSaveLoginAsset(mockWebServer)
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(saveLoginTest.url) {
+            verifySaveLoginPromptIsShown()
+            // Don't save the login
+            saveLoginFromPrompt("Don’t save")
+        }.openHomeScreen {
+        }.openThreeDotMenu {
+        }.openSettings {
+        }.openLoginsAndPasswordSubMenu {
+            verifyDefaultView()
+            verifyDefaultValueSyncLogins()
+        }.openSavedLogins {
+            verifySavedLoginsView()
+            tapSetupLater()
+            // Verify that the login list is empty
+            verifyNotSavedLoginFromPromt()
+        }
+    }
+
+    @Test
+    fun saveLoginsAndPasswordsOptions() {
+        homeScreen {
+        }.openThreeDotMenu {
+        }.openSettings {
+        }.openLoginsAndPasswordSubMenu {
+        }.saveLoginsAndPasswordsOptions {
+            verifySaveLoginsOptionsView()
         }
     }
 
