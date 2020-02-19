@@ -36,7 +36,8 @@ CompositorWidgetChild::~CompositorWidgetChild() {}
 
 bool CompositorWidgetChild::Initialize() {
   mRemoteBackbufferProvider = std::make_unique<remote_backbuffer::Provider>();
-  if (!mRemoteBackbufferProvider->Initialize(mWnd, OtherPid())) {
+  if (!mRemoteBackbufferProvider->Initialize(mWnd, OtherPid(),
+                                             mTransparencyMode)) {
     return false;
   }
 
@@ -67,6 +68,8 @@ bool CompositorWidgetChild::OnWindowResize(const LayoutDeviceIntSize& aSize) {
 void CompositorWidgetChild::OnWindowModeChange(nsSizeMode aSizeMode) {}
 
 void CompositorWidgetChild::UpdateTransparency(nsTransparencyMode aMode) {
+  mTransparencyMode = aMode;
+  mRemoteBackbufferProvider->UpdateTransparencyMode(aMode);
   Unused << SendUpdateTransparency(aMode);
 }
 
