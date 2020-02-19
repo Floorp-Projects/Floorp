@@ -67,7 +67,11 @@ class nsDisplayButtonBoxShadowOuter : public nsPaintedDisplayItem {
       : nsPaintedDisplayItem(aBuilder, aFrame) {
     MOZ_COUNT_CTOR(nsDisplayButtonBoxShadowOuter);
   }
-  MOZ_COUNTED_DTOR_OVERRIDE(nsDisplayButtonBoxShadowOuter)
+#ifdef NS_BUILD_REFCNT_LOGGING
+  virtual ~nsDisplayButtonBoxShadowOuter() {
+    MOZ_COUNT_DTOR(nsDisplayButtonBoxShadowOuter);
+  }
+#endif
 
   virtual bool CreateWebRenderCommands(
       mozilla::wr::DisplayListBuilder& aBuilder,
@@ -191,8 +195,9 @@ class nsDisplayButtonBorder final : public nsPaintedDisplayItem {
       : nsPaintedDisplayItem(aBuilder, aFrame), mBFR(aRenderer) {
     MOZ_COUNT_CTOR(nsDisplayButtonBorder);
   }
-  MOZ_COUNTED_DTOR_OVERRIDE(nsDisplayButtonBorder)
-
+#ifdef NS_BUILD_REFCNT_LOGGING
+  virtual ~nsDisplayButtonBorder() { MOZ_COUNT_DTOR(nsDisplayButtonBorder); }
+#endif
   virtual bool MustPaintOnContentSide() const override { return true; }
 
   virtual void HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
@@ -296,7 +301,11 @@ class nsDisplayButtonForeground final : public nsPaintedDisplayItem {
       : nsPaintedDisplayItem(aBuilder, aFrame), mBFR(aRenderer) {
     MOZ_COUNT_CTOR(nsDisplayButtonForeground);
   }
-  MOZ_COUNTED_DTOR_OVERRIDE(nsDisplayButtonForeground)
+#ifdef NS_BUILD_REFCNT_LOGGING
+  virtual ~nsDisplayButtonForeground() {
+    MOZ_COUNT_DTOR(nsDisplayButtonForeground);
+  }
+#endif
 
   nsDisplayItemGeometry* AllocateGeometry(
       nsDisplayListBuilder* aBuilder) override;

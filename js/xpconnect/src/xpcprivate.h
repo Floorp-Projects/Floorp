@@ -972,8 +972,8 @@ class XPCNativeMember final {
   void SetIndexInInterface(uint16_t index) { mIndexInInterface = index; }
 
   /* default ctor - leave random contents */
-  MOZ_COUNTED_DEFAULT_CTOR(XPCNativeMember)
-  MOZ_COUNTED_DTOR(XPCNativeMember)
+  XPCNativeMember() { MOZ_COUNT_CTOR(XPCNativeMember); }
+  ~XPCNativeMember() { MOZ_COUNT_DTOR(XPCNativeMember); }
 
  private:
   bool Resolve(XPCCallContext& ccx, XPCNativeInterface* iface,

@@ -1716,9 +1716,9 @@ nsXPCComponents_Utils::UnlinkGhostWindows() {
 
 #ifdef NS_FREE_PERMANENT_DATA
 struct IntentionallyLeakedObject {
-  MOZ_COUNTED_DEFAULT_CTOR(IntentionallyLeakedObject)
+  IntentionallyLeakedObject() { MOZ_COUNT_CTOR(IntentionallyLeakedObject); }
 
-  MOZ_COUNTED_DTOR(IntentionallyLeakedObject)
+  ~IntentionallyLeakedObject() { MOZ_COUNT_DTOR(IntentionallyLeakedObject); }
 };
 #endif
 

@@ -1905,7 +1905,7 @@ class PrefCallback : public PLDHashEntryHdr {
   PrefCallback(const PrefCallback&) = delete;
   PrefCallback(PrefCallback&&) = default;
 
-  MOZ_COUNTED_DTOR(PrefCallback)
+  ~PrefCallback() { MOZ_COUNT_DTOR(PrefCallback); }
 
   bool KeyEquals(const PrefCallback* aKey) const {
     // We want to be able to look up a weakly-referencing PrefCallback after

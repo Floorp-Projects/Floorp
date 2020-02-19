@@ -283,7 +283,7 @@ class FrameAnimator {
     MOZ_COUNT_CTOR(FrameAnimator);
   }
 
-  MOZ_COUNTED_DTOR(FrameAnimator)
+  ~FrameAnimator() { MOZ_COUNT_DTOR(FrameAnimator); }
 
   /**
    * Call when you need to re-start animating. Ensures we start from the first

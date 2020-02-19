@@ -37,7 +37,7 @@ class txVariableMapBase {
 class txVariableMap : public txVariableMapBase {
  public:
   txVariableMap() : txVariableMapBase() { MOZ_COUNT_CTOR(txVariableMap); }
-  MOZ_COUNTED_DTOR(txVariableMap)
+  ~txVariableMap() { MOZ_COUNT_DTOR(txVariableMap); }
 };
 
 /**

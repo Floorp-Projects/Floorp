@@ -549,7 +549,9 @@ class nsDisplayOuterSVG final : public nsPaintedDisplayItem {
       : nsPaintedDisplayItem(aBuilder, aFrame) {
     MOZ_COUNT_CTOR(nsDisplayOuterSVG);
   }
-  MOZ_COUNTED_DTOR_OVERRIDE(nsDisplayOuterSVG)
+#ifdef NS_BUILD_REFCNT_LOGGING
+  virtual ~nsDisplayOuterSVG() { MOZ_COUNT_DTOR(nsDisplayOuterSVG); }
+#endif
 
   virtual void HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
                        HitTestState* aState,

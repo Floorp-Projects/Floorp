@@ -402,7 +402,9 @@ struct nsMessageManagerScriptHolder {
     MOZ_COUNT_CTOR(nsMessageManagerScriptHolder);
   }
 
-  MOZ_COUNTED_DTOR(nsMessageManagerScriptHolder)
+  ~nsMessageManagerScriptHolder() {
+    MOZ_COUNT_DTOR(nsMessageManagerScriptHolder);
+  }
 
   JS::PersistentRooted<JSScript*> mScript;
 };
@@ -419,7 +421,9 @@ class nsMessageManagerScriptExecutor {
   nsMessageManagerScriptExecutor() {
     MOZ_COUNT_CTOR(nsMessageManagerScriptExecutor);
   }
-  MOZ_COUNTED_DTOR(nsMessageManagerScriptExecutor)
+  ~nsMessageManagerScriptExecutor() {
+    MOZ_COUNT_DTOR(nsMessageManagerScriptExecutor);
+  }
 
   void DidCreateScriptLoader();
   void LoadScriptInternal(JS::Handle<JSObject*> aMessageManager,

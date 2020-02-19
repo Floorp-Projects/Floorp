@@ -61,7 +61,7 @@ class MessagePortService::MessagePortServiceData final {
   MessagePortServiceData(const MessagePortServiceData& aOther) = delete;
   MessagePortServiceData& operator=(const MessagePortServiceData&) = delete;
 
-  MOZ_COUNTED_DTOR(MessagePortServiceData)
+  ~MessagePortServiceData() { MOZ_COUNT_DTOR(MessagePortServiceData); }
 
   nsID mDestinationUUID;
 

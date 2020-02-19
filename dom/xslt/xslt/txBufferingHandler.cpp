@@ -23,7 +23,7 @@ class txOutputTransaction {
   explicit txOutputTransaction(txTransactionType aType) : mType(aType) {
     MOZ_COUNT_CTOR(txOutputTransaction);
   }
-  MOZ_COUNTED_DTOR_VIRTUAL(txOutputTransaction)
+  virtual ~txOutputTransaction() { MOZ_COUNT_DTOR(txOutputTransaction); }
   txTransactionType mType;
 };
 

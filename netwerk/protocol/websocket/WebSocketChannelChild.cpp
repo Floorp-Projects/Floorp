@@ -121,8 +121,8 @@ bool WebSocketChannelChild::IsEncrypted() const { return mEncrypted; }
 
 class WebSocketEvent {
  public:
-  MOZ_COUNTED_DEFAULT_CTOR(WebSocketEvent)
-  MOZ_COUNTED_DTOR_VIRTUAL(WebSocketEvent)
+  WebSocketEvent() { MOZ_COUNT_CTOR(WebSocketEvent); }
+  virtual ~WebSocketEvent() { MOZ_COUNT_DTOR(WebSocketEvent); }
   virtual void Run(WebSocketChannelChild* aChild) = 0;
 };
 

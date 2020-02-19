@@ -20,9 +20,9 @@ namespace dom {
 // the leak log too.
 class NonRefcountedDOMObject {
  protected:
-  MOZ_COUNTED_DEFAULT_CTOR(NonRefcountedDOMObject)
+  NonRefcountedDOMObject() { MOZ_COUNT_CTOR(NonRefcountedDOMObject); }
 
-  MOZ_COUNTED_DTOR(NonRefcountedDOMObject)
+  ~NonRefcountedDOMObject() { MOZ_COUNT_DTOR(NonRefcountedDOMObject); }
 
   NonRefcountedDOMObject(const NonRefcountedDOMObject& aOther)
       : NonRefcountedDOMObject() {}

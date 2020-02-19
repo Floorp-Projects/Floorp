@@ -88,7 +88,7 @@ class IDBObjectStore final : public nsISupports, public nsWrapperCache {
       MOZ_COUNT_CTOR(IDBObjectStore::ValueWrapper);
     }
 
-    MOZ_COUNTED_DTOR_NESTED(ValueWrapper, IDBObjectStore::ValueWrapper)
+    ~ValueWrapper() { MOZ_COUNT_DTOR(IDBObjectStore::ValueWrapper); }
 
     const JS::Rooted<JS::Value>& Value() const { return mValue; }
 

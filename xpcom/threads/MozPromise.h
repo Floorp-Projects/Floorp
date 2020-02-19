@@ -1303,8 +1303,8 @@ namespace detail {
 // assertions when used on templated types.
 class MethodCallBase {
  public:
-  MOZ_COUNTED_DEFAULT_CTOR(MethodCallBase)
-  MOZ_COUNTED_DTOR_VIRTUAL(MethodCallBase)
+  MethodCallBase() { MOZ_COUNT_CTOR(MethodCallBase); }
+  virtual ~MethodCallBase() { MOZ_COUNT_DTOR(MethodCallBase); }
 };
 
 template <typename PromiseType, typename MethodType, typename ThisType,

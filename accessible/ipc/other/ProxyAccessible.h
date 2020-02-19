@@ -29,7 +29,7 @@ class ProxyAccessible : public ProxyAccessibleBase<ProxyAccessible> {
     MOZ_COUNT_CTOR(ProxyAccessible);
   }
 
-  MOZ_COUNTED_DTOR(ProxyAccessible)
+  ~ProxyAccessible() { MOZ_COUNT_DTOR(ProxyAccessible); }
 
 #include "mozilla/a11y/ProxyAccessibleShared.h"
 

@@ -135,7 +135,7 @@ class EventTargetChainItem {
     MOZ_COUNT_CTOR(EventTargetChainItem);
   }
 
-  MOZ_COUNTED_DTOR(EventTargetChainItem)
+  ~EventTargetChainItem() { MOZ_COUNT_DTOR(EventTargetChainItem); }
 
   static EventTargetChainItem* Create(nsTArray<EventTargetChainItem>& aChain,
                                       EventTarget* aTarget,

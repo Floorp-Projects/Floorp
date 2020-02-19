@@ -100,8 +100,11 @@ class nsDisplayFieldSetBorder final : public nsPaintedDisplayItem {
       : nsPaintedDisplayItem(aBuilder, aFrame) {
     MOZ_COUNT_CTOR(nsDisplayFieldSetBorder);
   }
-  MOZ_COUNTED_DTOR_OVERRIDE(nsDisplayFieldSetBorder)
-
+#ifdef NS_BUILD_REFCNT_LOGGING
+  virtual ~nsDisplayFieldSetBorder() {
+    MOZ_COUNT_DTOR(nsDisplayFieldSetBorder);
+  }
+#endif
   virtual void Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) override;
   virtual nsDisplayItemGeometry* AllocateGeometry(
       nsDisplayListBuilder* aBuilder) override;
