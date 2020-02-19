@@ -6,6 +6,7 @@
 #ifndef _mozilla_dom_ClientSourceOpChild_h
 #define _mozilla_dom_ClientSourceOpChild_h
 
+#include "mozilla/dom/FlippedOnce.h"
 #include "mozilla/dom/PClientSourceOpChild.h"
 #include "ClientOpPromise.h"
 
@@ -15,7 +16,17 @@ namespace dom {
 class ClientSource;
 
 class ClientSourceOpChild final : public PClientSourceOpChild {
-  MozPromiseRequestHolder<ClientOpPromise> mPromiseRequestHolder;
+ public:
+  void Init(const ClientOpConstructorArgs& aArgs);
+
+  // Deletes "this" after initialization (or immediately if already
+  // initialized.) It's UB to use "this" after calling ScheduleDeletion.
+  void ScheduleDeletion();
+
+ private:
+  ~ClientSourceOpChild();
+
+  void Cleanup();
 
   ClientSource* GetSource() const;
 
@@ -25,11 +36,9 @@ class ClientSourceOpChild final : public PClientSourceOpChild {
   // PClientSourceOpChild interface
   void ActorDestroy(ActorDestroyReason aReason) override;
 
- public:
-  ClientSourceOpChild() = default;
-  ~ClientSourceOpChild() = default;
-
-  void Init(const ClientOpConstructorArgs& aArgs);
+  MozPromiseRequestHolder<ClientOpPromise> mPromiseRequestHolder;
+  FlippedOnce<false> mDeletionRequested;
+  FlippedOnce<false> mInitialized;
 };
 
 }  // namespace dom
