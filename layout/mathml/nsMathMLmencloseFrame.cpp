@@ -722,9 +722,7 @@ class nsDisplayNotation final : public nsPaintedDisplayItem {
         mType(aType) {
     MOZ_COUNT_CTOR(nsDisplayNotation);
   }
-#ifdef NS_BUILD_REFCNT_LOGGING
-  virtual ~nsDisplayNotation() { MOZ_COUNT_DTOR(nsDisplayNotation); }
-#endif
+  MOZ_COUNTED_DTOR_OVERRIDE(nsDisplayNotation)
 
   virtual uint16_t CalculatePerFrameKey() const override { return mType; }
 

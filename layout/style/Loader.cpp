@@ -165,7 +165,7 @@ class SheetLoadDataHashKey : public nsURIHashKey {
 
   explicit SheetLoadDataHashKey(css::SheetLoadData&);
 
-  ~SheetLoadDataHashKey() { MOZ_COUNT_DTOR(SheetLoadDataHashKey); }
+  MOZ_COUNTED_DTOR(SheetLoadDataHashKey)
 
   SheetLoadDataHashKey* GetKey() const {
     return const_cast<SheetLoadDataHashKey*>(this);

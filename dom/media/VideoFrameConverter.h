@@ -214,7 +214,7 @@ class VideoFrameConverter {
     }
   };
 
-  virtual ~VideoFrameConverter() { MOZ_COUNT_DTOR(VideoFrameConverter); }
+  MOZ_COUNTED_DTOR_VIRTUAL(VideoFrameConverter)
 
   static void SameFrameTick(nsITimer* aTimer, void* aClosure) {
     MOZ_ASSERT(aClosure);

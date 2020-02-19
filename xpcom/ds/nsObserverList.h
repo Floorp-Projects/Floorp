@@ -28,7 +28,7 @@ class nsObserverList : public nsCharPtrHashKey {
       : nsCharPtrHashKey(std::move(aOther)),
         mObservers(std::move(aOther.mObservers)) {}
 
-  ~nsObserverList() { MOZ_COUNT_DTOR(nsObserverList); }
+  MOZ_COUNTED_DTOR(nsObserverList)
 
   MOZ_MUST_USE nsresult AddObserver(nsIObserver* aObserver, bool aOwnsWeak);
   MOZ_MUST_USE nsresult RemoveObserver(nsIObserver* aObserver);

@@ -25,9 +25,8 @@ namespace net {
 
 class ChannelEvent {
  public:
-  ChannelEvent() { MOZ_COUNT_CTOR(ChannelEvent); }
-  virtual ~ChannelEvent() { MOZ_COUNT_DTOR(ChannelEvent); }
-  virtual void Run() = 0;
+  MOZ_COUNTED_DEFAULT_CTOR(ChannelEvent)
+  MOZ_COUNTED_DTOR_VIRTUAL(ChannelEvent) virtual void Run() = 0;
   virtual already_AddRefed<nsIEventTarget> GetEventTarget() = 0;
 };
 
@@ -35,8 +34,8 @@ class ChannelEvent {
 // GetEventTarget() directly returns an unlabeled event target.
 class MainThreadChannelEvent : public ChannelEvent {
  public:
-  MainThreadChannelEvent() { MOZ_COUNT_CTOR(MainThreadChannelEvent); }
-  virtual ~MainThreadChannelEvent() { MOZ_COUNT_DTOR(MainThreadChannelEvent); }
+  MOZ_COUNTED_DEFAULT_CTOR(MainThreadChannelEvent)
+  MOZ_COUNTED_DTOR_OVERRIDE(MainThreadChannelEvent)
 
   already_AddRefed<nsIEventTarget> GetEventTarget() override {
     MOZ_ASSERT(XRE_IsParentProcess());

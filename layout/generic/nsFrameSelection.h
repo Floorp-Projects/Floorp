@@ -34,9 +34,8 @@ struct SelectionDetails {
       : mStart(), mEnd(), mSelectionType(mozilla::SelectionType::eInvalid) {
     MOZ_COUNT_CTOR(SelectionDetails);
   }
-#ifdef NS_BUILD_REFCNT_LOGGING
-  ~SelectionDetails() { MOZ_COUNT_DTOR(SelectionDetails); }
-#endif
+  MOZ_COUNTED_DTOR(SelectionDetails)
+
   int32_t mStart;
   int32_t mEnd;
   mozilla::SelectionType mSelectionType;
@@ -46,8 +45,8 @@ struct SelectionDetails {
 
 struct SelectionCustomColors {
 #ifdef NS_BUILD_REFCNT_LOGGING
-  SelectionCustomColors() { MOZ_COUNT_CTOR(SelectionCustomColors); }
-  ~SelectionCustomColors() { MOZ_COUNT_DTOR(SelectionCustomColors); }
+  MOZ_COUNTED_DEFAULT_CTOR(SelectionCustomColors)
+  MOZ_COUNTED_DTOR(SelectionCustomColors)
 #endif
   mozilla::Maybe<nscolor> mForegroundColor;
   mozilla::Maybe<nscolor> mBackgroundColor;
@@ -869,7 +868,7 @@ class nsFrameSelection final {
 
   bool mChangesDuringBatching = false;
   bool mDragSelectingCells = false;
-  bool mDragState = false;             // for drag purposes
+  bool mDragState = false;  // for drag purposes
   bool mDesiredPosSet = false;
   bool mAccessibleCaretEnabled = false;
 

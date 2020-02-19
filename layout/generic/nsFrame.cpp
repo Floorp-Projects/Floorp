@@ -932,7 +932,8 @@ static void CompareLayers(
     // be different with the corresponded one in aSecondLayers
     if (!aSecondLayers || i >= aSecondLayers->mImageCount ||
         (!aSecondLayers->mLayers[i].mImage.IsResolved() ||
-         image.GetImageRequest() != aSecondLayers->mLayers[i].mImage.GetImageRequest())) {
+         image.GetImageRequest() !=
+             aSecondLayers->mLayers[i].mImage.GetImageRequest())) {
       if (imgRequestProxy* req = image.GetImageRequest()) {
         aCallback(req);
       }
@@ -2319,11 +2320,7 @@ class nsDisplaySelectionOverlay : public nsPaintedDisplayItem {
         mSelectionValue(aSelectionValue) {
     MOZ_COUNT_CTOR(nsDisplaySelectionOverlay);
   }
-#ifdef NS_BUILD_REFCNT_LOGGING
-  virtual ~nsDisplaySelectionOverlay() {
-    MOZ_COUNT_DTOR(nsDisplaySelectionOverlay);
-  }
-#endif
+  MOZ_COUNTED_DTOR_OVERRIDE(nsDisplaySelectionOverlay)
 
   virtual void Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) override;
   bool CreateWebRenderCommands(
@@ -11720,7 +11717,7 @@ struct DR_FrameTreeNode {
     MOZ_COUNT_CTOR(DR_FrameTreeNode);
   }
 
-  ~DR_FrameTreeNode() { MOZ_COUNT_DTOR(DR_FrameTreeNode); }
+  MOZ_COUNTED_DTOR(DR_FrameTreeNode)
 
   nsIFrame* mFrame;
   DR_FrameTreeNode* mParent;

@@ -356,7 +356,7 @@ namespace dom {
 // IPC receiver for remote GC/CC logging.
 class CycleCollectWithLogsParent final : public PCycleCollectWithLogsParent {
  public:
-  ~CycleCollectWithLogsParent() { MOZ_COUNT_DTOR(CycleCollectWithLogsParent); }
+  MOZ_COUNTED_DTOR(CycleCollectWithLogsParent)
 
   static bool AllocAndSendConstructor(ContentParent* aManager,
                                       bool aDumpAllTraces,

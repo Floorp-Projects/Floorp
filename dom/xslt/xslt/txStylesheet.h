@@ -175,8 +175,8 @@ class txStripSpaceTest {
  */
 class txIGlobalParameter {
  public:
-  txIGlobalParameter() { MOZ_COUNT_CTOR(txIGlobalParameter); }
-  virtual ~txIGlobalParameter() { MOZ_COUNT_DTOR(txIGlobalParameter); }
+  MOZ_COUNTED_DEFAULT_CTOR(txIGlobalParameter)
+  MOZ_COUNTED_DTOR_VIRTUAL(txIGlobalParameter)
   virtual nsresult getValue(txAExprResult** aValue) = 0;
 };
 

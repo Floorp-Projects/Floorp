@@ -34,7 +34,7 @@ class nsFloatCache {
 #ifdef NS_BUILD_REFCNT_LOGGING
   ~nsFloatCache();
 #else
-  ~nsFloatCache() {}
+  ~nsFloatCache() = default;
 #endif
 
   nsFloatCache* Next() const { return mNext; }
@@ -100,7 +100,7 @@ class nsFloatCacheFreeList : private nsFloatCacheList {
   ~nsFloatCacheFreeList();
 #else
   nsFloatCacheFreeList() : mTail(nullptr) {}
-  ~nsFloatCacheFreeList() {}
+  ~nsFloatCacheFreeList() = default;
 #endif
 
   // Reimplement trivial functions
@@ -1291,7 +1291,7 @@ class nsLineList {
     clear();
   }
 
-  ~nsLineList() { MOZ_COUNT_DTOR(nsLineList); }
+  MOZ_COUNTED_DTOR(nsLineList)
 
   const_iterator begin() const {
     const_iterator rv;

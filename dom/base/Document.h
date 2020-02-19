@@ -1599,7 +1599,7 @@ class Document : public nsINode,
 
     nsExpirationState* GetExpirationState() { return &mState; }
 
-    ~SelectorCacheKey() { MOZ_COUNT_DTOR(SelectorCacheKey); }
+    MOZ_COUNTED_DTOR(SelectorCacheKey)
   };
 
   class SelectorCacheKeyDeleter;
