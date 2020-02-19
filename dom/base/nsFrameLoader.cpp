@@ -2830,6 +2830,8 @@ nsresult nsFrameLoader::CreateStaticClone(nsFrameLoader* aDest) {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
+  aDest->mBrowsingContext->EnsureAttached();
+
   // Ensure that the embedder element is set correctly.
   aDest->mBrowsingContext->SetEmbedderElement(aDest->mOwnerContent);
   aDest->mBrowsingContext->Embed();
