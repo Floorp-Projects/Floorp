@@ -2,7 +2,7 @@
 
 # Session
 
-`class Session : `[`Observable`](../../mozilla.components.support.base.observer/-observable/index.md)`<`[`Observer`](-observer/index.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/Session.kt#L53)
+`class Session : `[`Observable`](../../mozilla.components.support.base.observer/-observable/index.md)`<`[`Observer`](-observer/index.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/Session.kt#L52)
 
 Value type that represents the state of a browser session. Changes can be observed.
 
@@ -36,7 +36,7 @@ Value type that represents the state of a browser session. Changes can be observ
 | [fullScreenMode](full-screen-mode.md) | `var fullScreenMode: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Exits fullscreen mode if it's in that state. |
 | [hasParentSession](has-parent-session.md) | `val hasParentSession: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Returns true if this [Session](./index.md) has a parent [Session](./index.md). |
 | [hitResult](hit-result.md) | `var hitResult: `[`Consumable`](../../mozilla.components.support.base.observer/-consumable/index.md)`<`[`HitResult`](../../mozilla.components.concept.engine/-hit-result/index.md)`>`<br>The target of the latest long click operation. |
-| [icon](icon.md) | `var icon: <ERROR CLASS>?`<br>An icon for the currently visible page. |
+| [icon](icon.md) | `val icon: <ERROR CLASS>?`<br>An icon for the currently visible page. |
 | [id](id.md) | `val id: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
 | [launchIntentMetadata](launch-intent-metadata.md) | `var launchIntentMetadata: `[`LaunchIntentMetadata`](../../mozilla.components.browser.session.engine.request/-launch-intent-metadata/index.md)<br>Set when a launch intent is received. |
 | [loadRequestMetadata](load-request-metadata.md) | `var loadRequestMetadata: `[`LoadRequestMetadata`](../../mozilla.components.browser.session.engine.request/-load-request-metadata/index.md)<br>Set when a load request is received, indicating if the request came from web content, or via a redirect. |

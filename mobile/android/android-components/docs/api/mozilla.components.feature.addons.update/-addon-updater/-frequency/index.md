@@ -2,7 +2,7 @@
 
 # Frequency
 
-`class Frequency` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/addons/src/main/java/mozilla/components/feature/addons/update/AddonUpdater.kt#L111)
+`class Frequency` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/addons/src/main/java/mozilla/components/feature/addons/update/AddonUpdater.kt#L112)
 
 Indicates how often an extension should be updated.
 

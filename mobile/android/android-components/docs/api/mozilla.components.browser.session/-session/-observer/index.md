@@ -2,7 +2,7 @@
 
 # Observer
 
-`interface Observer` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/Session.kt#L79)
+`interface Observer` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/Session.kt#L78)
 
 Interface to be implemented by classes that want to observe a session.
 
@@ -17,7 +17,6 @@ Interface to be implemented by classes that want to observe a session.
 | [onDesktopModeChanged](on-desktop-mode-changed.md) | `open fun onDesktopModeChanged(session: `[`Session`](../index.md)`, enabled: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
 | [onFindResult](on-find-result.md) | `open fun onFindResult(session: `[`Session`](../index.md)`, result: `[`FindResult`](../-find-result/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
 | [onFullScreenChanged](on-full-screen-changed.md) | `open fun onFullScreenChanged(session: `[`Session`](../index.md)`, enabled: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
-| [onIconChanged](on-icon-changed.md) | `open fun onIconChanged(session: `[`Session`](../index.md)`, icon: <ERROR CLASS>?): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
 | [onLaunchIntentRequest](on-launch-intent-request.md) | `open fun onLaunchIntentRequest(session: `[`Session`](../index.md)`, url: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, appIntent: <ERROR CLASS>?): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
 | [onLoadRequest](on-load-request.md) | `open fun onLoadRequest(session: `[`Session`](../index.md)`, url: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, triggeredByRedirect: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`, triggeredByWebContent: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
 | [onLoadingStateChanged](on-loading-state-changed.md) | `open fun onLoadingStateChanged(session: `[`Session`](../index.md)`, loading: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |

@@ -10,11 +10,12 @@ Updates the icon of the [ContentState](../../../mozilla.components.browser.state
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `UpdateIconAction(sessionId: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, icon: <ERROR CLASS>)`<br>Updates the icon of the [ContentState](../../../mozilla.components.browser.state.state/-content-state/index.md) with the given [sessionId](session-id.md). |
+| [&lt;init&gt;](-init-.md) | `UpdateIconAction(sessionId: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, pageUrl: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, icon: <ERROR CLASS>)`<br>Updates the icon of the [ContentState](../../../mozilla.components.browser.state.state/-content-state/index.md) with the given [sessionId](session-id.md). |
 
 ### Properties
 
 | Name | Summary |
 |---|---|
 | [icon](icon.md) | `val icon: <ERROR CLASS>` |
+| [pageUrl](page-url.md) | `val pageUrl: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
 | [sessionId](session-id.md) | `val sessionId: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
