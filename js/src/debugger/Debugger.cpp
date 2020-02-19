@@ -1829,17 +1829,12 @@ ResumeMode Debugger::processHandlerResult(Maybe<AutoRealm>& ar, bool success,
                                           MutableHandleValue vp) {
   JSContext* cx = ar->context();
 
-  if (!success) {
-    return handleUncaughtException(ar, vp, frame, pc);
-  }
-
   RootedValue rootRv(cx, rv);
   ResumeMode resumeMode = ResumeMode::Continue;
-  if (!ParseResumptionValue(cx, rootRv, resumeMode, vp)) {
-    return handleUncaughtException(ar, vp, frame, pc);
+  if (success) {
+    success = ParseResumptionValue(cx, rootRv, resumeMode, vp);
   }
-  return leaveDebugger(ar, frame, pc, CallUncaughtExceptionHook::Yes,
-                       resumeMode, vp);
+  return processParsedHandlerResult(ar, frame, pc, success, resumeMode, vp);
 }
 
 /*** Debuggee completion values *********************************************/
