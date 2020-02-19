@@ -767,11 +767,13 @@
     );
   });
 
-  // For now, don't load any elements in the extension dummy document.
-  // We will want to load <browser> when that's migrated (bug 1441935).
-  const isDummyDocument =
-    document.documentURI == "chrome://extensions/content/dummy.xhtml";
-  if (!isDummyDocument) {
+  // Skip loading any extra custom elements in the extension dummy document
+  // and GeckoView windows.
+  const loadExtraCustomElements = !(
+    document.documentURI == "chrome://extensions/content/dummy.xhtml" ||
+    document.documentURI == "chrome://geckoview/content/geckoview.xhtml"
+  );
+  if (loadExtraCustomElements) {
     for (let script of [
       "chrome://global/content/elements/arrowscrollbox.js",
       "chrome://global/content/elements/dialog.js",
