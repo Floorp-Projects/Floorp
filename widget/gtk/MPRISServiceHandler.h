@@ -10,6 +10,7 @@
 #include <gio/gio.h>
 #include "mozilla/dom/MediaControlKeysEvent.h"
 #include "mozilla/Attributes.h"
+#include "nsString.h"
 
 #define DBUS_MRPIS_SERVICE_NAME "org.mpris.MediaPlayer2.firefox"
 #define DBUS_MPRIS_OBJECT_PATH "/org/mpris/MediaPlayer2"
@@ -75,7 +76,7 @@ class MPRISServiceHandler final : public dom::MediaControlKeysEventSource {
   bool CanSetFullscreen();
 #endif
   bool HasTrackList();
-  const char* Identity();
+  const char* Identity() const;
 #ifdef MPRIS_DESKTOP_ENTRY
   const char* DesktopEntry();
 #endif
@@ -140,6 +141,10 @@ class MPRISServiceHandler final : public dom::MediaControlKeysEventSource {
   GDBusNodeInfo* mIntrospectionData = nullptr;
   GDBusConnection* mConnection = nullptr;
   bool mInitialized = false;
+  nsAutoCString mIdentity;
+
+  // Queries nsAppInfo to get the branded browser name and vendor
+  void InitIdentity();
 
   // non-public API, called from events
   void OnNameAcquired(GDBusConnection* aConnection, const gchar* aName);
