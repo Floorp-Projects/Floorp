@@ -10,31 +10,9 @@ const { TabStateFlusher } = ChromeUtils.import(
 const DUMMY =
   "http://example.com/browser/browser/base/content/test/general/dummy_page.html";
 
-function frameScript() {
-  addMessageListener("Test:GetIsAppTab", function() {
-    sendAsyncMessage("Test:IsAppTab", { isAppTab: docShell.isAppTab });
-  });
-}
-
-function loadFrameScript(browser) {
-  browser.messageManager.loadFrameScript(
-    "data:,(" + frameScript.toString() + ")();",
-    true
-  );
-}
-
 function isBrowserAppTab(browser) {
-  return new Promise(resolve => {
-    function listener({ data }) {
-      browser.messageManager.removeMessageListener("Test:IsAppTab", listener);
-      resolve(data.isAppTab);
-    }
-    // It looks like same-process messages may be reordered by the message
-    // manager, so we need to wait one tick before sending the message.
-    executeSoon(function() {
-      browser.messageManager.addMessageListener("Test:IsAppTab", listener);
-      browser.messageManager.sendAsyncMessage("Test:GetIsAppTab");
-    });
+  return SpecialPowers.spawn(browser, [], async () => {
+    return content.docShell.isAppTab;
   });
 }
 
@@ -61,7 +39,6 @@ add_task(async function navigate() {
   let browser = tab.linkedBrowser;
   gBrowser.selectedTab = tab;
   await BrowserTestUtils.browserStopped(gBrowser);
-  loadFrameScript(browser);
   let isAppTab = await isBrowserAppTab(browser);
   ok(!isAppTab, "Docshell shouldn't think it is an app tab");
 
@@ -71,7 +48,6 @@ add_task(async function navigate() {
 
   BrowserTestUtils.loadURI(gBrowser, DUMMY);
   await BrowserTestUtils.browserStopped(gBrowser);
-  loadFrameScript(browser);
   isAppTab = await isBrowserAppTab(browser);
   ok(isAppTab, "Docshell should think it is an app tab");
 
@@ -85,7 +61,6 @@ add_task(async function navigate() {
 
   BrowserTestUtils.loadURI(gBrowser, "about:robots");
   await BrowserTestUtils.browserStopped(gBrowser);
-  loadFrameScript(browser);
   isAppTab = await isBrowserAppTab(browser);
   ok(isAppTab, "Docshell should think it is an app tab");
 
@@ -101,7 +76,6 @@ add_task(async function crash() {
   let browser = tab.linkedBrowser;
   gBrowser.selectedTab = tab;
   await BrowserTestUtils.browserStopped(gBrowser);
-  loadFrameScript(browser);
   let isAppTab = await isBrowserAppTab(browser);
   ok(!isAppTab, "Docshell shouldn't think it is an app tab");
 
@@ -110,7 +84,6 @@ add_task(async function crash() {
   ok(isAppTab, "Docshell should think it is an app tab");
 
   await restart(browser);
-  loadFrameScript(browser);
   isAppTab = await isBrowserAppTab(browser);
   ok(isAppTab, "Docshell should think it is an app tab");
 
