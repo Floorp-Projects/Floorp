@@ -190,9 +190,8 @@ NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
 void MediaDevices::OnDeviceChange() {
   MOZ_ASSERT(NS_IsMainThread());
-  nsresult rv = CheckCurrentGlobalCorrectness();
-  if (NS_FAILED(rv)) {
-    MOZ_ASSERT(false);
+  if (NS_FAILED(CheckCurrentGlobalCorrectness())) {
+    // This is a ghost window, don't do anything.
     return;
   }
 
