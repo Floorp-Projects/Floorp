@@ -189,9 +189,6 @@ async function importDumpIDB(bucket, collection, records) {
   await executeIDB(db, IDB_TIMESTAMPS_STORE, store =>
     store.put({ cid, value: timestamp })
   );
-
-  // Close unused connection.
-  db.close();
 }
 
 /**
