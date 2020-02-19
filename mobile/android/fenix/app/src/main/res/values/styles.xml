@@ -26,6 +26,8 @@
         <item name="colorSwitchThumbNormal">@color/toggle_off_knob_normal_theme</item>
         <!-- Inactive track color(30% transparency) -->
         <item name="android:colorForeground">@color/toggle_off_track_normal_theme</item>
+        <!-- sets the toolbar back button color, radio buttons / unselected checkboxes -->
+        <item name="colorControlNormal">@color/primary_text_normal_theme</item>
 
         <!-- Updated color attributes -->
         <item name="primaryText">@color/primary_text_normal_theme</item>
@@ -115,6 +117,8 @@
         <item name="colorSwitchThumbNormal">@color/toggle_off_knob_dark_theme</item>
         <!-- Inactive track color(30% transparency) -->
         <item name="android:colorForeground">@color/toggle_off_track_dark_theme</item>
+        <!-- sets the toolbar back button color, radio buttons/ unselected checkboxes -->
+        <item name="colorControlNormal">@color/primary_text_private_theme</item>
 
         <!-- Updated color attributes -->
         <item name="primaryText">@color/primary_text_private_theme</item>
