@@ -13,7 +13,6 @@ import org.mozilla.fenix.components.PrivateShortcutCreateManager
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.getPreferenceKey
 import org.mozilla.fenix.ext.metrics
-import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.showToolbar
 
 /**
@@ -41,7 +40,6 @@ class PrivateBrowsingFragment : PreferenceFragmentCompat() {
 
         findPreference<SwitchPreference>(getPreferenceKey(R.string.pref_key_open_links_in_a_private_tab))?.apply {
             setOnPreferenceClickListener {
-                isChecked = requireContext().settings().openLinksInAPrivateTab
                 onPreferenceChangeListener = SharedPreferenceUpdater()
                 true
             }
