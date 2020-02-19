@@ -67,6 +67,10 @@ inline void NativeObject::clearShouldConvertDoubleElements() {
 
 inline void NativeObject::addDenseElementType(JSContext* cx, uint32_t index,
                                               const Value& val) {
+  if (!IsTypeInferenceEnabled()) {
+    return;
+  }
+
   // Avoid a slow AddTypePropertyId call if the type is the same as the type
   // of the previous element.
   TypeSet::Type thisType = TypeSet::GetValueType(val);
@@ -93,15 +97,19 @@ inline void NativeObject::initDenseElementWithType(JSContext* cx,
 }
 
 inline void NativeObject::setDenseElementHole(JSContext* cx, uint32_t index) {
-  MarkObjectGroupFlags(cx, this, OBJECT_FLAG_NON_PACKED);
+  if (IsTypeInferenceEnabled()) {
+    MarkObjectGroupFlags(cx, this, OBJECT_FLAG_NON_PACKED);
+  }
   setDenseElement(index, MagicValue(JS_ELEMENTS_HOLE));
 }
 
 inline void NativeObject::removeDenseElementForSparseIndex(JSContext* cx,
                                                            uint32_t index) {
   MOZ_ASSERT(containsPure(INT_TO_JSID(index)));
-  MarkObjectGroupFlags(cx, this,
-                       OBJECT_FLAG_NON_PACKED | OBJECT_FLAG_SPARSE_INDEXES);
+  if (IsTypeInferenceEnabled()) {
+    MarkObjectGroupFlags(cx, this,
+                         OBJECT_FLAG_NON_PACKED | OBJECT_FLAG_SPARSE_INDEXES);
+  }
   if (containsDenseElement(index)) {
     setDenseElement(index, MagicValue(JS_ELEMENTS_HOLE));
   }
@@ -113,7 +121,9 @@ inline bool NativeObject::writeToIndexWouldMarkNotPacked(uint32_t index) {
 
 inline void NativeObject::markDenseElementsNotPacked(JSContext* cx) {
   MOZ_ASSERT(isNative());
-  MarkObjectGroupFlags(cx, this, OBJECT_FLAG_NON_PACKED);
+  if (IsTypeInferenceEnabled()) {
+    MarkObjectGroupFlags(cx, this, OBJECT_FLAG_NON_PACKED);
+  }
 }
 
 inline void NativeObject::elementsRangeWriteBarrierPost(uint32_t start,
@@ -921,6 +931,9 @@ inline bool ThrowIfNotConstructing(JSContext* cx, const CallArgs& args,
 }
 
 inline bool IsPackedArray(JSObject* obj) {
+  if (!IsTypeInferenceEnabled()) {
+    return false;
+  }
   if (!obj->is<ArrayObject>() || obj->hasLazyGroup()) {
     return false;
   }

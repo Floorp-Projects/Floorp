@@ -138,6 +138,10 @@ void ObjectGroup::setAddendum(AddendumKind kind, void* addendum,
 
 /* static */
 bool ObjectGroup::useSingletonForClone(JSFunction* fun) {
+  if (!IsTypeInferenceEnabled()) {
+    return false;
+  }
+
   if (!fun->isInterpreted()) {
     return false;
   }
@@ -203,6 +207,9 @@ bool ObjectGroup::useSingletonForNewObject(JSContext* cx, JSScript* script,
    * Sub2 lets us continue to distinguish the two subclasses and any extra
    * properties added to those prototype objects.
    */
+  if (!IsTypeInferenceEnabled()) {
+    return false;
+  }
   if (script->isGenerator() || script->isAsync()) {
     return false;
   }
@@ -225,6 +232,10 @@ bool ObjectGroup::useSingletonForAllocationSite(JSScript* script,
    * singleton types. For now this is only done for plain objects, but not
    * typed arrays or normal arrays.
    */
+
+  if (!IsTypeInferenceEnabled()) {
+    return false;
+  }
 
   if (script->function() && !script->treatAsRunOnce()) {
     return false;
@@ -491,6 +502,11 @@ ObjectGroup* ObjectGroup::defaultNewGroup(JSContext* cx, const JSClass* clasp,
   // function. The group starts out as a plain object but might mutate into an
   // unboxed plain object.
   MOZ_ASSERT_IF(!clasp, !!associated);
+
+  if (associated && !associated->is<TypeDescr>() && !IsTypeInferenceEnabled()) {
+    clasp = &PlainObject::class_;
+    associated = nullptr;
+  }
 
   if (associated) {
     MOZ_ASSERT_IF(!associated->is<TypeDescr>(), !clasp);
@@ -806,6 +822,10 @@ ArrayObject* ObjectGroup::newArrayObject(JSContext* cx, const Value* vp,
       return nullptr;
     }
     return obj;
+  }
+
+  if (!IsTypeInferenceEnabled()) {
+    return NewDenseCopiedArray(cx, length, vp, nullptr, newKind);
   }
 
   // Get a type which captures all the elements in the array to be created.
@@ -1127,8 +1147,8 @@ JSObject* ObjectGroup::newPlainObject(JSContext* cx, IdValuePair* properties,
                                       size_t nproperties,
                                       NewObjectKind newKind) {
   // Watch for simple cases where we don't try to reuse plain object groups.
-  if (newKind == SingletonObject || nproperties == 0 ||
-      nproperties >= PropertyTree::MAX_HEIGHT) {
+  if (!IsTypeInferenceEnabled() || newKind == SingletonObject ||
+      nproperties == 0 || nproperties >= PropertyTree::MAX_HEIGHT) {
     return NewPlainObjectWithProperties(cx, properties, nproperties, newKind);
   }
 
@@ -1409,7 +1429,8 @@ ObjectGroup* ObjectGroup::allocationSiteGroup(
 
   uint32_t offset = scriptArg->pcToOffset(pc);
 
-  if (offset >= ObjectGroupRealm::AllocationSiteKey::OFFSET_LIMIT) {
+  if (!IsTypeInferenceEnabled() ||
+      offset >= ObjectGroupRealm::AllocationSiteKey::OFFSET_LIMIT) {
     if (protoArg) {
       return defaultNewGroup(cx, GetClassForProtoKey(kind),
                              TaggedProto(protoArg));
@@ -1546,9 +1567,11 @@ ArrayObject* ObjectGroup::getOrFixupCopyOnWriteObject(JSContext* cx,
 
   // Update type information in the initializer object group.
   MOZ_ASSERT(obj->slotSpan() == 0);
-  for (size_t i = 0; i < obj->getDenseInitializedLength(); i++) {
-    const Value& v = obj->getDenseElement(i);
-    AddTypePropertyId(cx, group, nullptr, JSID_VOID, v);
+  if (IsTypeInferenceEnabled()) {
+    for (size_t i = 0; i < obj->getDenseInitializedLength(); i++) {
+      const Value& v = obj->getDenseElement(i);
+      AddTypePropertyId(cx, group, nullptr, JSID_VOID, v);
+    }
   }
 
   obj->setGroup(group);
@@ -1643,6 +1666,11 @@ ObjectGroup* ObjectGroupRealm::makeGroup(
     Handle<TaggedProto> proto, ObjectGroupFlags initialFlags /* = 0 */) {
   MOZ_ASSERT_IF(proto.isObject(),
                 cx->isInsideCurrentCompartment(proto.toObject()));
+
+  if (!IsTypeInferenceEnabled()) {
+    // Don't track type information.
+    initialFlags |= OBJECT_FLAG_DYNAMIC_MASK;
+  }
 
   ObjectGroup* group = Allocate<ObjectGroup>(cx);
   if (!group) {

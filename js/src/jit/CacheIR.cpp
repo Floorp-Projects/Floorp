@@ -4816,7 +4816,7 @@ AttachDecision CallIRGenerator::tryAttachArrayPush() {
   // This is a soft assert, documenting the fact that we pass 'true'
   // for needsTypeBarrier when constructing typeCheckInfo_ for CallIRGenerator.
   // Can be removed safely if the assumption becomes false.
-  MOZ_ASSERT(typeCheckInfo_.needsTypeBarrier());
+  MOZ_ASSERT_IF(IsTypeInferenceEnabled(), typeCheckInfo_.needsTypeBarrier());
 
   // Guard that the group and shape matches.
   if (typeCheckInfo_.needsTypeBarrier()) {
