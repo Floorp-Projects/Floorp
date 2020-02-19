@@ -263,11 +263,7 @@ class nsDisplayMathMLBoundingMetrics final : public nsDisplayItem {
       : nsDisplayItem(aBuilder, aFrame), mRect(aRect) {
     MOZ_COUNT_CTOR(nsDisplayMathMLBoundingMetrics);
   }
-#  ifdef NS_BUILD_REFCNT_LOGGING
-  virtual ~nsDisplayMathMLBoundingMetrics() {
-    MOZ_COUNT_DTOR(nsDisplayMathMLBoundingMetrics);
-  }
-#  endif
+  MOZ_COUNTED_DTOR_OVERRIDE(nsDisplayMathMLBoundingMetrics)
 
   virtual void Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) override;
   NS_DISPLAY_DECL_NAME("MathMLBoundingMetrics", TYPE_MATHML_BOUNDING_METRICS)
@@ -307,9 +303,7 @@ class nsDisplayMathMLBar final : public nsPaintedDisplayItem {
       : nsPaintedDisplayItem(aBuilder, aFrame), mRect(aRect), mIndex(aIndex) {
     MOZ_COUNT_CTOR(nsDisplayMathMLBar);
   }
-#ifdef NS_BUILD_REFCNT_LOGGING
-  virtual ~nsDisplayMathMLBar() { MOZ_COUNT_DTOR(nsDisplayMathMLBar); }
-#endif
+  MOZ_COUNTED_DTOR_OVERRIDE(nsDisplayMathMLBar)
 
   virtual uint16_t CalculatePerFrameKey() const override { return mIndex; }
 

@@ -508,9 +508,7 @@ class nsTextNodeDirectionalityMap {
     aTextNode->SetHasTextNodeDirectionalityMap();
   }
 
-  ~nsTextNodeDirectionalityMap() {
-    MOZ_COUNT_DTOR(nsTextNodeDirectionalityMap);
-  }
+  MOZ_COUNTED_DTOR(nsTextNodeDirectionalityMap)
 
   static void nsTextNodeDirectionalityMapPropertyDestructor(
       void* aObject, nsAtom* aProperty, void* aPropertyValue, void* aData) {

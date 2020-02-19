@@ -35,8 +35,8 @@ class txXPathTreeWalker;
  **/
 class Expr {
  public:
-  Expr() { MOZ_COUNT_CTOR(Expr); }
-  virtual ~Expr() { MOZ_COUNT_DTOR(Expr); }
+  MOZ_COUNTED_DEFAULT_CTOR(Expr)
+  MOZ_COUNTED_DTOR_VIRTUAL(Expr)
 
   /**
    * Evaluates this Expr based on the given context node and processor state
@@ -330,8 +330,8 @@ class txCoreFunctionCall : public FunctionCall {
  */
 class txNodeTest {
  public:
-  txNodeTest() { MOZ_COUNT_CTOR(txNodeTest); }
-  virtual ~txNodeTest() { MOZ_COUNT_DTOR(txNodeTest); }
+  MOZ_COUNTED_DEFAULT_CTOR(txNodeTest)
+  MOZ_COUNTED_DTOR_VIRTUAL(txNodeTest)
 
   /*
    * Virtual methods

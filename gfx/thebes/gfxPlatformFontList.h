@@ -45,7 +45,7 @@ class CharMapHashKey : public PLDHashEntryHdr {
   CharMapHashKey(const CharMapHashKey& toCopy) : mCharMap(toCopy.mCharMap) {
     MOZ_COUNT_CTOR(CharMapHashKey);
   }
-  ~CharMapHashKey() { MOZ_COUNT_DTOR(CharMapHashKey); }
+  MOZ_COUNTED_DTOR(CharMapHashKey)
 
   gfxCharacterMap* GetKey() const { return mCharMap; }
 

@@ -32,7 +32,7 @@ class BasicColorLayer : public ColorLayer, public BasicImplData {
   }
 
  protected:
-  virtual ~BasicColorLayer() { MOZ_COUNT_DTOR(BasicColorLayer); }
+  MOZ_COUNTED_DTOR_OVERRIDE(BasicColorLayer)
 
  public:
   void SetVisibleRegion(const LayerIntRegion& aRegion) override {

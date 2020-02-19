@@ -2690,7 +2690,7 @@ class nsDisplaySVGText final : public nsPaintedDisplayItem {
     MOZ_ASSERT(aFrame, "Must have a frame!");
   }
 #ifdef NS_BUILD_REFCNT_LOGGING
-  virtual ~nsDisplaySVGText() { MOZ_COUNT_DTOR(nsDisplaySVGText); }
+  MOZ_COUNTED_DTOR_OVERRIDE(nsDisplaySVGText)
 #endif
 
   NS_DISPLAY_DECL_NAME("nsDisplaySVGText", TYPE_SVG_TEXT)
