@@ -526,7 +526,8 @@ const GfxDeviceFamily* GfxDriverInfo::GetDeviceFamily(DeviceFamily id) {
       APPEND_DEVICE(0x163d);
       APPEND_DEVICE(0x163e);
 
-      // HD Graphics 4600
+#if 0
+      // Gen7.5 not allowed until bug 1576637 is resolved.
       APPEND_DEVICE(0x0412);
       APPEND_DEVICE(0x0416);
       APPEND_DEVICE(0x041a);
@@ -537,6 +538,7 @@ const GfxDeviceFamily* GfxDriverInfo::GetDeviceFamily(DeviceFamily id) {
       APPEND_DEVICE(0x0a1a);
       APPEND_DEVICE(0x0a1b);
       APPEND_DEVICE(0x0a1e);
+#endif
       break;
     case DeviceFamily::AtiRolloutWebRender:
       APPEND_RANGE(0x6600, 0x66af);
