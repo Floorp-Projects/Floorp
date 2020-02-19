@@ -9,6 +9,7 @@ DevToolsModules(
     'RequestListColumnCookies.js',
     'RequestListColumnDomain.js',
     'RequestListColumnFile.js',
+    'RequestListColumnInitiator.js',
     'RequestListColumnMethod.js',
     'RequestListColumnProtocol.js',
     'RequestListColumnRemoteIP.js',

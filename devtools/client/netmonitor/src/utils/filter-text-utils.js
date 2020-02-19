@@ -38,6 +38,9 @@ const {
   getFormattedIPAndPort,
 } = require("devtools/client/netmonitor/src/utils/format-utils");
 const { getUnicodeUrl } = require("devtools/client/shared/unicode-url");
+const {
+  getUrlBaseName,
+} = require("devtools/client/netmonitor/src/utils/request-utils");
 
 /*
   The function `parseFilters` is from:
@@ -165,6 +168,16 @@ function isFlagFilterMatch(item, { type, value, negative }) {
       return typeof causeType === "string"
         ? causeType.toLowerCase().includes(value)
         : false;
+    },
+    initiator: () => {
+      const initiator = item.cause.lastFrame
+        ? getUrlBaseName(item.cause.lastFrame.filename) +
+          ":" +
+          item.cause.lastFrame.lineNumber
+        : "";
+      return typeof initiator === "string"
+        ? initiator.toLowerCase().includes(value)
+        : !value;
     },
     transferred: () => {
       if (item.fromCache) {

@@ -35,6 +35,13 @@ rawPackets.set(`GET request`, {
   "cause": {
     "type": "img",
     "loadingDocumentUri": "http://example.com/browser/devtools/client/webconsole/test/browser/stub-generators/test-network-event.html",
+    "lastFrame": {
+      "filename": "http://example.com/browser/devtools/client/webconsole/test/browser/stub-generators/test-network-event.html",
+      "lineNumber": 3,
+      "columnNumber": 1,
+      "functionName": "triggerPacket",
+      "asyncCause": null
+    },
     "stacktraceAvailable": true
   },
   "response": {
@@ -110,6 +117,13 @@ rawPackets.set(`XHR GET request`, {
   "cause": {
     "type": "xhr",
     "loadingDocumentUri": "http://example.com/browser/devtools/client/webconsole/test/browser/stub-generators/test-network-event.html",
+    "lastFrame": {
+      "filename": "http://example.com/browser/devtools/client/webconsole/test/browser/stub-generators/test-network-event.html",
+      "lineNumber": 4,
+      "columnNumber": 5,
+      "functionName": "triggerPacket",
+      "asyncCause": null
+    },
     "stacktraceAvailable": true
   },
   "response": {
@@ -185,6 +199,13 @@ rawPackets.set(`XHR POST request`, {
   "cause": {
     "type": "xhr",
     "loadingDocumentUri": "http://example.com/browser/devtools/client/webconsole/test/browser/stub-generators/test-network-event.html",
+    "lastFrame": {
+      "filename": "http://example.com/browser/devtools/client/webconsole/test/browser/stub-generators/test-network-event.html",
+      "lineNumber": 4,
+      "columnNumber": 5,
+      "functionName": "triggerPacket",
+      "asyncCause": null
+    },
     "stacktraceAvailable": true
   },
   "response": {
