@@ -135,6 +135,11 @@ DefaultJitOptions::DefaultJitOptions() {
   // Whether the IonMonkey JIT is enabled.
   SET_DEFAULT(ion, true);
 
+#ifdef NIGHTLY_BUILD
+  // Whether TI is enabled.
+  SET_DEFAULT(typeInference, true);
+#endif
+
   // Whether the IonMonkey and Baseline JITs are enabled for Trusted Principals.
   // (Ignored if ion or baselineJit is set to true.)
   SET_DEFAULT(jitForTrustedPrincipals, false);
