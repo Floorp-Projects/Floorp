@@ -620,6 +620,21 @@ impl CertStore {
     }
 }
 
+pub const SUPPORTED_ATTRIBUTES: &[CK_ATTRIBUTE_TYPE] = &[
+    CKA_CLASS,
+    CKA_TOKEN,
+    CKA_LABEL,
+    CKA_ID,
+    CKA_VALUE,
+    CKA_ISSUER,
+    CKA_SERIAL_NUMBER,
+    CKA_SUBJECT,
+    CKA_PRIVATE,
+    CKA_KEY_TYPE,
+    CKA_MODULUS,
+    CKA_EC_PARAMS,
+];
+
 /// Attempts to enumerate certificates with private keys exposed by the OS. Currently only looks in
 /// the "My" cert store of the current user. In the future this may look in more locations.
 pub fn list_objects() -> Vec<Object> {
