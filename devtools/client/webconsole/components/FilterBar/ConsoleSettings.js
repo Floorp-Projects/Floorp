@@ -162,10 +162,10 @@ class ConsoleSettings extends Component {
           className:
             "menu-item webconsole-console-settings-menu-item-eager-evaluation",
           label: l10n.getStr(
-            "webconsole.console.settings.menu.item.eagerEvaluation.label"
+            "webconsole.console.settings.menu.item.instantEvaluation.label"
           ),
           tooltip: l10n.getStr(
-            "webconsole.console.settings.menu.item.eagerEvaluation.tooltip"
+            "webconsole.console.settings.menu.item.instantEvaluation.tooltip"
           ),
           onClick: () => dispatch(actions.eagerEvaluationToggle()),
         })
