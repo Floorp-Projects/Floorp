@@ -6949,6 +6949,12 @@
   value: false
   mirror: always
 
+# lax-by-default 2 minutes tollerance for unsafe methods. The value is in seconds.
+- name: network.cookie.sameSite.laxPlusPOST.timeout
+  type: uint32_t
+  value: 0
+  mirror: always
+
 - name: network.cookie.sameSite.noneRequiresSecure
   type: bool
   value: false

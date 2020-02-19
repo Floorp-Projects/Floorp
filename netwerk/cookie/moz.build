@@ -62,6 +62,11 @@ IPDL_SOURCES = [
     'PCookieService.ipdl',
 ]
 
+LOCAL_INCLUDES += [
+    '/netwerk/base',
+    '/netwerk/protocol/http',
+]
+
 include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'

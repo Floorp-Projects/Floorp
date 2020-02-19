@@ -603,6 +603,11 @@ bool NS_HasBeenCrossOrigin(nsIChannel* aChannel, bool aReport = false);
 bool NS_IsSafeTopLevelNav(nsIChannel* aChannel);
 
 /**
+ * Returns true if the channel has a safe method.
+ */
+bool NS_IsSafeMethodNav(nsIChannel* aChannel);
+
+/**
  * Returns true if the channel is a foreign with respect to the host-uri.
  * For loads of TYPE_DOCUMENT, this function returns true if it's a
  * cross origin navigation.
