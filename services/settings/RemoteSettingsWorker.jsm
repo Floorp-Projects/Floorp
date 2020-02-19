@@ -56,6 +56,15 @@ class Worker {
     if (!this.worker) {
       this.worker = new ChromeWorker(this.source);
       this.worker.onmessage = this._onWorkerMessage.bind(this);
+      this.worker.onerror = error => {
+        // Worker crashed. Reject each pending callback.
+        for (const [, reject] of this.callbacks.values()) {
+          reject(error);
+        }
+        this.callbacks.clear();
+        // And terminate it.
+        this.stop();
+      };
     }
     // New activity: reset the idle timer.
     if (this.idleTimeoutId) {

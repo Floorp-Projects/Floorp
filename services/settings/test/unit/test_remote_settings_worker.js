@@ -15,6 +15,8 @@ const { Kinto } = ChromeUtils.import(
   "resource://services-common/kinto-offline-client.js"
 );
 
+XPCOMUtils.defineLazyGlobalGetters(this, ["indexedDB"]);
+
 const IS_ANDROID = AppConstants.platform == "android";
 
 add_task(async function test_canonicaljson_merges_remote_into_local() {
@@ -58,6 +60,8 @@ add_task(async function test_import_json_dump_into_idb() {
 
   const { data: after } = await kintoCollection.list();
   Assert.ok(after.length > 0);
+  // Close this connection, so that we can delete the DB further down.
+  await kintoCollection.db.close();
 });
 
 add_task(async function test_throws_error_if_worker_fails() {
@@ -68,6 +72,36 @@ add_task(async function test_throws_error_if_worker_fails() {
     error = e;
   }
   Assert.equal(error.message.endsWith("localRecords is null"), true);
+});
+
+add_task(async function test_throws_error_if_worker_fails_async() {
+  // Delete the Remote Settings database, and try to import a dump.
+  // This is not supported, and the error thrown asynchronously in the worker
+  // should be reported to the caller.
+  await new Promise((resolve, reject) => {
+    const request = indexedDB.deleteDatabase("remote-settings");
+    request.onsuccess = event => resolve();
+    request.onblocked = event => reject(new Error("Cannot delete DB"));
+    request.onerror = event => reject(event.target.error);
+  });
+  let error;
+  try {
+    await RemoteSettingsWorker.importJSONDump("main", "language-dictionaries");
+  } catch (e) {
+    error = e;
+  }
+  Assert.ok(/IndexedDB: Error accessing remote-settings/.test(error.message));
+});
+
+add_task(async function test_throws_error_if_worker_crashes() {
+  // This simulates a crash at the worker level (not within a promise).
+  let error;
+  try {
+    await RemoteSettingsWorker._execute("unknown_method");
+  } catch (e) {
+    error = e;
+  }
+  Assert.equal(error.message, "TypeError: Agent[method] is not a function");
 });
 
 add_task(async function test_stops_worker_after_timeout() {
