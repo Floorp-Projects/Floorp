@@ -476,7 +476,8 @@ RenderedFrameId RenderCompositorANGLE::EndFrame(
       // If there is no diry rect, we skip SwapChain present.
       if (!aDirtyRects.IsEmpty()) {
         StackArray<RECT, 1> rects(aDirtyRects.Length());
-        for (const auto& rect : aDirtyRects) {
+        for (size_t i = 0; i < aDirtyRects.Length(); ++i) {
+          const DeviceIntRect& rect = aDirtyRects[i];
           // Clip rect to bufferSize
           rects[i].left =
               std::max(0, std::min(rect.origin.x, bufferSize.width));
