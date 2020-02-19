@@ -52,12 +52,6 @@ static already_AddRefed<nsAtom> AtomizeAttribute(const nsAString& aAttribute) {
   return NS_Atomize(aAttribute);
 }
 
-bool HTMLEditor::IsEmptyTextNode(nsINode& aNode) const {
-  bool isEmptyTextNode = false;
-  return EditorBase::IsTextNode(&aNode) &&
-         NS_SUCCEEDED(IsEmptyNode(&aNode, &isEmptyTextNode)) && isEmptyTextNode;
-}
-
 nsresult HTMLEditor::SetInlinePropertyAsAction(nsAtom& aProperty,
                                                nsAtom* aAttribute,
                                                const nsAString& aValue,
@@ -779,19 +773,16 @@ EditResult HTMLEditor::ClearStyleAt(const EditorDOMPoint& aPoint,
   // If it did split nodes, but topmost ancestor inline element is split
   // at start of it, we don't need the empty inline element.  Let's remove
   // it now.
-  if (splitResult.GetPreviousNode()) {
-    bool isEmpty = false;
-    IsEmptyNode(splitResult.GetPreviousNode(), &isEmpty, false, true);
-    if (isEmpty) {
-      // Delete previous node if it's empty.
-      nsresult rv = DeleteNodeWithTransaction(
-          MOZ_KnownLive(*splitResult.GetPreviousNode()));
-      if (NS_WARN_IF(Destroyed())) {
-        return EditResult(NS_ERROR_EDITOR_DESTROYED);
-      }
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return EditResult(rv);
-      }
+  if (splitResult.GetPreviousNode() &&
+      IsEmptyNode(*splitResult.GetPreviousNode(), false, true)) {
+    // Delete previous node if it's empty.
+    nsresult rv = DeleteNodeWithTransaction(
+        MOZ_KnownLive(*splitResult.GetPreviousNode()));
+    if (NS_WARN_IF(Destroyed())) {
+      return EditResult(NS_ERROR_EDITOR_DESTROYED);
+    }
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return EditResult(rv);
     }
   }
 
@@ -838,20 +829,16 @@ EditResult HTMLEditor::ClearStyleAt(const EditorDOMPoint& aPoint,
   // Let's remove the next node if it becomes empty by splitting it.
   // XXX Is this possible case without mutation event listener?
   if (splitResultAtStartOfNextNode.Handled() &&
-      splitResultAtStartOfNextNode.GetNextNode()) {
-    bool isEmpty = false;
-    IsEmptyNode(splitResultAtStartOfNextNode.GetNextNode(), &isEmpty, false,
-                true);
-    if (isEmpty) {
-      // Delete next node if it's empty.
-      nsresult rv = DeleteNodeWithTransaction(
-          MOZ_KnownLive(*splitResultAtStartOfNextNode.GetNextNode()));
-      if (NS_WARN_IF(Destroyed())) {
-        return EditResult(NS_ERROR_EDITOR_DESTROYED);
-      }
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return EditResult(rv);
-      }
+      splitResultAtStartOfNextNode.GetNextNode() &&
+      IsEmptyNode(*splitResultAtStartOfNextNode.GetNextNode(), false, true)) {
+    // Delete next node if it's empty.
+    nsresult rv = DeleteNodeWithTransaction(
+        MOZ_KnownLive(*splitResultAtStartOfNextNode.GetNextNode()));
+    if (NS_WARN_IF(Destroyed())) {
+      return EditResult(NS_ERROR_EDITOR_DESTROYED);
+    }
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return EditResult(rv);
     }
   }
 

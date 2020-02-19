@@ -475,19 +475,15 @@ nsresult HTMLEditor::DoInsertHTMLWithContext(
           // XXX This creates invalid structure if current list item element
           //     is not proper child of the parent element, or current node
           //     is a list element.
-          if (HTMLEditUtils::IsListItem(pointToInsert.GetContainer())) {
-            bool isEmpty;
-            rv = IsEmptyNode(pointToInsert.GetContainer(), &isEmpty, true);
-            if (NS_SUCCEEDED(rv) && isEmpty) {
-              NS_WARNING_ASSERTION(
-                  pointToInsert.GetContainer()->GetParentNode(),
-                  "Insertion point is out of the DOM tree");
-              if (pointToInsert.GetContainer()->GetParentNode()) {
-                pointToInsert.Set(pointToInsert.GetContainer());
-                AutoEditorDOMPointChildInvalidator lockOffset(pointToInsert);
-                DeleteNodeWithTransaction(
-                    MOZ_KnownLive(*pointToInsert.GetChild()));
-              }
+          if (HTMLEditUtils::IsListItem(pointToInsert.GetContainer()) &&
+              IsEmptyNode(*pointToInsert.GetContainer(), true)) {
+            NS_WARNING_ASSERTION(pointToInsert.GetContainerParent(),
+                                 "Insertion point is out of the DOM tree");
+            if (pointToInsert.GetContainerParent()) {
+              pointToInsert.Set(pointToInsert.GetContainer());
+              AutoEditorDOMPointChildInvalidator lockOffset(pointToInsert);
+              DeleteNodeWithTransaction(
+                  MOZ_KnownLive(*pointToInsert.GetChild()));
             }
           }
           EditorDOMPoint insertedPoint =

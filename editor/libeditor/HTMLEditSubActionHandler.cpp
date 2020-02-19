@@ -2204,37 +2204,25 @@ EditActionResult HTMLEditor::SplitMailCiteElements(
   }
 
   // delete any empty cites
-  bool bEmptyCite = false;
-  if (previousNodeOfSplitPoint) {
+  if (previousNodeOfSplitPoint &&
+      IsEmptyNode(*previousNodeOfSplitPoint, true, false)) {
     nsresult rv =
-        IsEmptyNode(previousNodeOfSplitPoint, &bEmptyCite, true, false);
+        DeleteNodeWithTransaction(MOZ_KnownLive(*previousNodeOfSplitPoint));
+    if (NS_WARN_IF(Destroyed())) {
+      return EditActionIgnored(NS_ERROR_EDITOR_DESTROYED);
+    }
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return EditActionIgnored(rv);
-    }
-    if (bEmptyCite) {
-      rv = DeleteNodeWithTransaction(MOZ_KnownLive(*previousNodeOfSplitPoint));
-      if (NS_WARN_IF(Destroyed())) {
-        return EditActionIgnored(NS_ERROR_EDITOR_DESTROYED);
-      }
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return EditActionIgnored(rv);
-      }
     }
   }
 
-  if (citeNode) {
-    nsresult rv = IsEmptyNode(citeNode, &bEmptyCite, true, false);
+  if (citeNode && IsEmptyNode(*citeNode, true, false)) {
+    nsresult rv = DeleteNodeWithTransaction(*citeNode);
+    if (NS_WARN_IF(Destroyed())) {
+      return EditActionIgnored(NS_ERROR_EDITOR_DESTROYED);
+    }
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return EditActionIgnored(rv);
-    }
-    if (bEmptyCite) {
-      rv = DeleteNodeWithTransaction(*citeNode);
-      if (NS_WARN_IF(Destroyed())) {
-        return EditActionIgnored(NS_ERROR_EDITOR_DESTROYED);
-      }
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return EditActionIgnored(rv);
-      }
     }
   }
 
@@ -4037,9 +4025,8 @@ nsresult HTMLEditor::DeleteMostAncestorMailCiteElementIfEmpty(
   if (!mailCiteElement) {
     return NS_OK;
   }
-  bool isEmpty = true, seenBR = false;
-  IsEmptyNodeImpl(mailCiteElement, &isEmpty, true, true, false, &seenBR);
-  if (!isEmpty) {
+  bool seenBR = false;
+  if (!IsEmptyNodeImpl(*mailCiteElement, true, true, false, &seenBR)) {
     return NS_OK;
   }
   EditorDOMPoint atEmptyMailCiteElement(mailCiteElement);
@@ -6195,11 +6182,7 @@ bool HTMLEditor::IsEmptyBlockElement(Element& aElement,
   if (!HTMLEditor::NodeIsBlockStatic(aElement)) {
     return false;
   }
-  bool isEmpty = true;
-  nsresult rv =
-      IsEmptyNode(&aElement, &isEmpty, aIgnoreSingleBR == IgnoreSingleBR::Yes);
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "IsEmptyNode() failed");
-  return NS_SUCCEEDED(rv) && isEmpty;
+  return IsEmptyNode(aElement, aIgnoreSingleBR == IgnoreSingleBR::Yes);
 }
 
 EditActionResult HTMLEditor::AlignAsSubAction(const nsAString& aAlignType) {
@@ -6481,13 +6464,11 @@ nsresult HTMLEditor::AlignNodesAndDescendants(
 
     // Skip insignificant formatting text nodes to prevent unnecessary
     // structure splitting!
-    bool isEmptyTextNode = false;
     if (content->IsText() &&
         ((HTMLEditUtils::IsTableElement(atContent.GetContainer()) &&
           !HTMLEditUtils::IsTableCellOrCaption(*atContent.GetContainer())) ||
          HTMLEditUtils::IsList(atContent.GetContainer()) ||
-         (NS_SUCCEEDED(IsEmptyNode(content, &isEmptyTextNode)) &&
-          isEmptyTextNode))) {
+         IsEmptyNode(*content))) {
       continue;
     }
 
@@ -6690,26 +6671,11 @@ EditActionResult HTMLEditor::MaybeDeleteTopMostEmptyAncestor(
   // elements this way.
   RefPtr<Element> blockElement = GetBlock(aStartContent);
   RefPtr<Element> topMostEmptyBlockElement;
-  if (blockElement && blockElement != &aEditingHostElement) {
-    // Efficiency hack, avoiding IsEmptyNode() call when in body
-    bool isEmptyNode = false;
-    nsresult rv = IsEmptyNode(blockElement, &isEmptyNode, true, false);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return EditActionResult(rv);
-    }
-    while (blockElement && isEmptyNode &&
-           !HTMLEditUtils::IsTableElement(blockElement) &&
-           blockElement != &aEditingHostElement) {
-      topMostEmptyBlockElement = blockElement;
-      blockElement = GetBlockNodeParent(topMostEmptyBlockElement);
-      if (!blockElement) {
-        break;
-      }
-      nsresult rv = IsEmptyNode(blockElement, &isEmptyNode, true, false);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return EditActionResult(rv);
-      }
-    }
+  while (blockElement && blockElement != &aEditingHostElement &&
+         !HTMLEditUtils::IsTableElement(blockElement) &&
+         IsEmptyNode(*blockElement, true, false)) {
+    topMostEmptyBlockElement = blockElement;
+    blockElement = GetBlockNodeParent(topMostEmptyBlockElement);
   }
 
   // XXX Because of not checking whether found block element is editable
@@ -7434,9 +7400,7 @@ void HTMLEditor::SelectBRElementIfCollapsedInEmptyBlock(
     return;
   }
 
-  bool isEmptyNode = false;
-  IsEmptyNode(block, &isEmptyNode, true, false);
-  if (isEmptyNode) {
+  if (IsEmptyNode(*block, true, false)) {
     aStartRef = {block, 0u};
     aEndRef = {block, block->Length()};
   }
@@ -8083,12 +8047,7 @@ nsresult HTMLEditor::HandleInsertParagraphInHeadingElement(Element& aHeader,
   nsCOMPtr<nsIContent> prevItem = GetPriorHTMLSibling(&aHeader);
   if (prevItem) {
     MOZ_DIAGNOSTIC_ASSERT(HTMLEditUtils::IsHeader(*prevItem));
-    bool isEmptyNode;
-    rv = IsEmptyNode(prevItem, &isEmptyNode);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-    if (isEmptyNode) {
+    if (IsEmptyNode(*prevItem)) {
       CreateElementResult createPaddingBRResult =
           InsertPaddingBRElementForEmptyLastLineWithTransaction(
               EditorDOMPoint(prevItem, 0));
@@ -8602,12 +8561,7 @@ nsresult HTMLEditor::HandleInsertParagraphInListItemElement(Element& aListItem,
   // left empty.
   nsCOMPtr<nsIContent> prevItem = GetPriorHTMLSibling(&aListItem);
   if (prevItem && HTMLEditUtils::IsListItem(prevItem)) {
-    bool isEmptyNode;
-    rv = IsEmptyNode(prevItem, &isEmptyNode);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-    if (isEmptyNode) {
+    if (IsEmptyNode(*prevItem)) {
       CreateElementResult createPaddingBRResult =
           InsertPaddingBRElementForEmptyLastLineWithTransaction(
               EditorDOMPoint(prevItem, 0));
@@ -8615,11 +8569,7 @@ nsresult HTMLEditor::HandleInsertParagraphInListItemElement(Element& aListItem,
         return createPaddingBRResult.Rv();
       }
     } else {
-      rv = IsEmptyNode(&aListItem, &isEmptyNode, true);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-      if (isEmptyNode) {
+      if (IsEmptyNode(aListItem, true)) {
         if (aListItem.IsAnyOfHTMLElements(nsGkAtoms::dd, nsGkAtoms::dt)) {
           nsCOMPtr<nsINode> list = aListItem.GetParentNode();
           int32_t itemOffset = list ? list->ComputeIndexOf(&aListItem) : -1;
@@ -9470,12 +9420,8 @@ nsresult HTMLEditor::InsertBRElementToEmptyListItemsAndTableCellsInRange(
              !HTMLEditUtils::IsTableCellOrCaption(*element))) {
           return false;
         }
-        bool isEmptyNode = false;
-        if (NS_WARN_IF(NS_FAILED(static_cast<HTMLEditor*>(aSelf)->IsEmptyNode(
-                element, &isEmptyNode, false, false)))) {
-          return false;
-        }
-        return isEmptyNode;
+        return static_cast<HTMLEditor*>(aSelf)->IsEmptyNode(*element, false,
+                                                            false);
       },
       arrayOfEmptyElements, this);
 
@@ -9663,34 +9609,28 @@ nsresult HTMLEditor::AdjustCaretPositionAndEnsurePaddingBRElement(
   // If caret is in empty block element, we need to insert a `<br>` element
   // because the block should have one-line height.
   if (RefPtr<Element> blockElement = GetBlock(*point.GetContainer())) {
-    if (IsEditable(blockElement)) {
-      bool isEmptyNode;
-      nsresult rv = IsEmptyNode(blockElement, &isEmptyNode, false, false);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
+    if (IsEditable(blockElement) && IsEmptyNode(*blockElement, false, false) &&
+        CanContainTag(*point.GetContainer(), *nsGkAtoms::br)) {
+      Element* bodyOrDocumentElement = GetRoot();
+      if (NS_WARN_IF(!bodyOrDocumentElement)) {
+        return NS_ERROR_FAILURE;
       }
-      if (isEmptyNode && CanContainTag(*point.GetContainer(), *nsGkAtoms::br)) {
-        Element* bodyOrDocumentElement = GetRoot();
-        if (NS_WARN_IF(!bodyOrDocumentElement)) {
-          return NS_ERROR_FAILURE;
-        }
-        if (point.GetContainer() == bodyOrDocumentElement) {
-          // Our root node is completely empty. Don't add a <br> here.
-          // AfterEditInner() will add one for us when it calls
-          // TextEditor::MaybeCreatePaddingBRElementForEmptyEditor().
-          // XXX This kind of dependency between methods makes us spaghetti.
-          //     Let's handle it here later.
-          // XXX This looks odd check.  If active editing host is not a
-          //     `<body>`, what are we doing?
-          return NS_OK;
-        }
-        CreateElementResult createPaddingBRResult =
-            InsertPaddingBRElementForEmptyLastLineWithTransaction(point);
-        if (NS_WARN_IF(createPaddingBRResult.Failed())) {
-          return createPaddingBRResult.Rv();
-        }
+      if (point.GetContainer() == bodyOrDocumentElement) {
+        // Our root node is completely empty. Don't add a <br> here.
+        // AfterEditInner() will add one for us when it calls
+        // TextEditor::MaybeCreatePaddingBRElementForEmptyEditor().
+        // XXX This kind of dependency between methods makes us spaghetti.
+        //     Let's handle it here later.
+        // XXX This looks odd check.  If active editing host is not a
+        //     `<body>`, what are we doing?
         return NS_OK;
       }
+      CreateElementResult createPaddingBRResult =
+          InsertPaddingBRElementForEmptyLastLineWithTransaction(point);
+      if (NS_WARN_IF(createPaddingBRResult.Failed())) {
+        return createPaddingBRResult.Rv();
+      }
+      return NS_OK;
     }
   }
 
@@ -9961,10 +9901,7 @@ nsresult HTMLEditor::RemoveEmptyNodesIn(nsRange& aRange) {
     if (isCandidate) {
       // We delete mailcites even if they have a solo br in them.  Other
       // nodes we require to be empty.
-      nsresult rv = IsEmptyNode(content, &isEmptyNode, isMailCite, true);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
+      isEmptyNode = IsEmptyNode(*content, isMailCite, true);
       if (isEmptyNode) {
         if (isMailCite) {
           // mailcites go on a separate list from other empty nodes
@@ -9997,12 +9934,7 @@ nsresult HTMLEditor::RemoveEmptyNodesIn(nsRange& aRange) {
   // Now delete the empty mailcites.  This is a separate step because we want
   // to pull out any br's and preserve them.
   for (OwningNonNull<nsIContent>& emptyCite : arrayOfEmptyCites) {
-    bool isEmptyNode;
-    nsresult rv = IsEmptyNode(emptyCite, &isEmptyNode, false, true);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-    if (!isEmptyNode) {
+    if (!IsEmptyNode(emptyCite, false, true)) {
       // We are deleting a cite that has just a `<br>`.  We want to delete cite,
       // but preserve `<br>`.
       RefPtr<Element> brElement =
@@ -10294,12 +10226,7 @@ nsresult HTMLEditor::InsertPaddingBRElementForEmptyLastLineIfNeeded(
     return NS_OK;
   }
 
-  bool isEmpty = false;
-  nsresult rv = IsEmptyNode(&aElement, &isEmpty);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-  if (!isEmpty) {
+  if (!IsEmptyNode(aElement)) {
     return NS_OK;
   }
 
@@ -10318,12 +10245,7 @@ nsresult HTMLEditor::InsertBRElementIfEmptyBlockElement(Element& aElement) {
     return NS_OK;
   }
 
-  bool isEmpty;
-  nsresult rv = IsEmptyNode(&aElement, &isEmpty);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-  if (!isEmpty) {
+  if (!IsEmptyNode(aElement)) {
     return NS_OK;
   }
 
