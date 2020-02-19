@@ -63,14 +63,9 @@ function triggerSave(aWindow, aCallback) {
   };
 
   function onUCTDialog(dialog) {
-    function doLoad() {
+    SpecialPowers.spawn(testBrowser, [], async () => {
       content.document.querySelector("iframe").remove();
-    }
-    testBrowser.messageManager.loadFrameScript(
-      "data:,(" + doLoad.toString() + ")()",
-      false
-    );
-    executeSoon(continueDownloading);
+    }).then(() => executeSoon(continueDownloading));
   }
 
   function continueDownloading() {
