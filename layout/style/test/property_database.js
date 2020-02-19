@@ -1478,6 +1478,13 @@ var gCSSProperties = {
     other_values: ["radio", "menulist"],
     invalid_values: [],
   },
+  "-webkit-appearance": {
+    domProp: "webkitAppearance",
+    inherited: false,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    alias_for: "-moz-appearance",
+    subproperties: ["-moz-appearance"],
+  },
   "border-inline": {
     domProp: "borderInline",
     inherited: false,
@@ -12427,15 +12434,6 @@ if (IsCSSPropertyPrefEnabled("layout.css.overscroll-behavior.enabled")) {
       "none contain",
     ],
     invalid_values: ["left", "1px", "contain auto none", "contain nonsense"],
-  };
-}
-if (IsCSSPropertyPrefEnabled("layout.css.webkit-appearance.enabled")) {
-  gCSSProperties["-webkit-appearance"] = {
-    domProp: "webkitAppearance",
-    inherited: false,
-    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
-    alias_for: "-moz-appearance",
-    subproperties: ["-moz-appearance"],
   };
 }
 
