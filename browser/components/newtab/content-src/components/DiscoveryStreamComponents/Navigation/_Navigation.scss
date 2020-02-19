@@ -31,12 +31,9 @@
     }
 
     a {
-      &:hover {
+      &:hover,
+      &:active {
         text-decoration: underline;
-
-        &:active {
-          border-bottom: 1px solid $blue-70;
-        }
       }
 
       &:active {
