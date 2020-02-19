@@ -41,6 +41,7 @@ class OnboardingTrackingProtectionViewHolder(view: View) : RecyclerView.ViewHold
         }
 
         setupRadioGroup(view, trackingProtectionToggle.isChecked)
+        updateRadioGroupState(view, trackingProtectionToggle.isChecked)
     }
 
     private fun setupRadioGroup(view: View, isChecked: Boolean) {
@@ -78,9 +79,11 @@ class OnboardingTrackingProtectionViewHolder(view: View) : RecyclerView.ViewHold
 
         view.protection_standard_description.isEnabled = isChecked
         view.protection_strict_description.isEnabled = isChecked
+        view.clickable_region_standard.isClickable = isChecked
 
         view.protection_standard_title.isEnabled = isChecked
         view.protection_strict_title.isEnabled = isChecked
+        view.clickable_region_strict.isClickable = isChecked
     }
 
     private fun updateTrackingProtectionSetting(enabled: Boolean) {
