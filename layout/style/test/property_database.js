@@ -257,91 +257,6 @@ var validGradientAndElementValues = [
   "radial-gradient(at calc(100px + -25px) top, red, blue)",
   "radial-gradient(at left calc(100px + -25px), red, blue)",
 
-  ...(IsCSSPropertyPrefEnabled("layout.css.conic-gradient.enabled")
-    ? [
-        // Conic gradient
-        "conic-gradient(red, blue)",
-        "conic-gradient(red,blue,yellow)",
-        "conic-gradient(  red  ,  blue,   yellow)",
-        "conic-gradient(red 0, blue 50deg)",
-        "conic-gradient(red 10%, blue 50%)",
-        "conic-gradient(red -50deg, blue 50deg)",
-        "conic-gradient(red 50deg, blue 0.3turn, yellow 200grad, orange 60%, 5rad)",
-
-        "conic-gradient(red 0 100%)",
-        "conic-gradient(red 0 50%, blue 50%)",
-        "conic-gradient(red 0 50deg, blue 50% 100%)",
-        "conic-gradient(red 0 50%, 0deg, blue 50%)",
-        "conic-gradient(red 0deg 50%, 0%, blue 50% 100%)",
-
-        "conic-gradient(from 0, red, blue)",
-        "conic-gradient(from 40deg, red, blue)",
-        "conic-gradient(from 0.4turn, red, blue)",
-        "conic-gradient(from 200grad, red, blue)",
-        "conic-gradient(from 5rad, red, blue)",
-
-        "conic-gradient(at top, red, blue)",
-        "conic-gradient(at top left, red, blue)",
-        "conic-gradient(at left top, red, blue)",
-        "conic-gradient(at center center, red, blue)",
-        "conic-gradient(at 20% bottom, red, blue)",
-        "conic-gradient(at center 20%, red, blue)",
-        "conic-gradient(at left 35px, red, blue)",
-        "conic-gradient(at 10% 10em, red, blue)",
-        "conic-gradient(at 44px top, red, blue)",
-        "conic-gradient(at 0 0, red, blue)",
-        "conic-gradient(at 10px, red, blue)",
-
-        "conic-gradient(at calc(25%) top, red, blue)",
-        "conic-gradient(at left calc(25%), red, blue)",
-        "conic-gradient(at calc(25px) top, red, blue)",
-        "conic-gradient(at left calc(25px), red, blue)",
-        "conic-gradient(at calc(-25%) top, red, blue)",
-        "conic-gradient(at left calc(-25%), red, blue)",
-        "conic-gradient(at calc(-25px) top, red, blue)",
-        "conic-gradient(at left calc(-25px), red, blue)",
-        "conic-gradient(at calc(100px + -25%) top, red, blue)",
-        "conic-gradient(at left calc(100px + -25%), red, blue)",
-        "conic-gradient(at calc(100px + -25px) top, red, blue)",
-        "conic-gradient(at left calc(100px + -25px), red, blue)",
-
-        "conic-gradient(from 0 at 0 0, red, blue)",
-        "conic-gradient(from 40deg at 50%, red, blue)",
-        "conic-gradient(from 0.4turn at left 30%, red, blue)",
-        "conic-gradient(from 200grad at calc(100px + -25%) top, red, blue)",
-        "conic-gradient(from 5rad at 10px, red, blue)",
-
-        "repeating-conic-gradient(red, blue)",
-        "repeating-conic-gradient(red, yellow, blue)",
-        "repeating-conic-gradient(red 1deg, yellow 20%, blue 24em, green)",
-        "repeating-conic-gradient(red, yellow, green, blue 50%)",
-        "repeating-conic-gradient(red -50%, yellow -25%, green, blue)",
-        "repeating-conic-gradient(red -99deg, yellow, green, blue 120%)",
-        "repeating-conic-gradient(#ffff00, #ef3, rgba(10, 20, 30, 0.4))",
-        "repeating-conic-gradient(rgba(10, 20, 30, 0.4), #ffff00, #ef3)",
-
-        "repeating-conic-gradient(from 0, red, blue)",
-        "repeating-conic-gradient(from 40deg, red, blue)",
-        "repeating-conic-gradient(from 0.4turn, red, blue)",
-        "repeating-conic-gradient(from 200grad, red, blue)",
-        "repeating-conic-gradient(from 5rad, red, blue)",
-
-        "repeating-conic-gradient(at top left, red, blue)",
-        "repeating-conic-gradient(at 0 0, red, blue)",
-        "repeating-conic-gradient(at 20% bottom, red, blue)",
-        "repeating-conic-gradient(at center 20%, red, blue)",
-        "repeating-conic-gradient(at left 35px, red, blue)",
-        "repeating-conic-gradient(at 10% 10em, red, blue)",
-        "repeating-conic-gradient(at 44px top, red, blue)",
-
-        "repeating-conic-gradient(from 0 at 0 0, red, blue)",
-        "repeating-conic-gradient(from 40deg at 50%, red, blue)",
-        "repeating-conic-gradient(from 0.4turn at left 30%, red, blue)",
-        "repeating-conic-gradient(from 200grad at calc(100px + -25%) top, red, blue)",
-        "repeating-conic-gradient(from 5rad at 10px, red, blue)",
-      ]
-    : []),
-
   // 2008 GRADIENTS: -webkit-gradient()
   // ----------------------------------
   // linear w/ no color stops (valid) and a variety of position values:
@@ -513,19 +428,6 @@ var invalidGradientAndElementValues = [
   "radial-gradient(circle 50%, red, blue)",
   "radial-gradient(50% circle, red, blue)",
 
-  /* Invalid units */
-  "conic-gradient(red, blue 50px, yellow 30px)",
-  "conic-gradient(from 0%, black, white)",
-  "conic-gradient(from 60%, black, white)",
-  "conic-gradient(from 40px, black, white)",
-  "conic-gradient(from 50, black, white)",
-  "conic-gradient(at 50deg, black, white)",
-  "conic-gradient(from 40deg at 50deg, black, white)",
-  "conic-gradient(from 40deg at 50deg 60deg, black, white)",
-  /* Invalid keywords (or ordering) */
-  "conic-gradient(at 40% from 50deg, black, white)",
-  "conic-gradient(to 50deg, black, white)",
-
   /* Used to be valid only when prefixed */
   "linear-gradient(top left, red, blue)",
   "linear-gradient(0 0, red, blue)",
@@ -599,10 +501,6 @@ var invalidGradientAndElementValues = [
   "radial-gradient(red 0% 50% 75%, blue 75%)",
   "radial-gradient(center, red 0% 50% 100%)",
   "radial-gradient(center, red 0% 50% 75%, blue 75%)",
-  "conic-gradient(red 0% 50% 100%)",
-  "conic-gradient(red 0% 50% 75%, blue 75%)",
-  "conic-gradient(center, red 0% 50% 100%)",
-  "conic-gradient(center, red 0% 50% 75%, blue 75%)",
 
   "-moz-linear-gradient(unset, 10px 10px, from(blue))",
   "-moz-linear-gradient(unset, 10px 10px, blue 0)",
@@ -766,13 +664,6 @@ var invalidGradientAndElementValues = [
   "-webkit-radial-gradient(top 30deg, red, blue)",
   "-webkit-radial-gradient(left top 30deg, red, blue)",
   "-webkit-radial-gradient(10px 20px 30deg, red, blue)",
-
-  // Conic gradients should not support prefixed syntax
-  "-webkit-gradient(conic, 1 2, 3 4, color-stop(0, lime))",
-  "-webkit-conic-gradient(red, blue)",
-  "-moz-conic-gradient(red, blue)",
-  "-webkit-repeating-conic-gradient(red, blue)",
-  "-moz-repeating-conic-gradient(red, blue)",
 ];
 var unbalancedGradientAndElementValues = ["-moz-element(#a()"];
 
