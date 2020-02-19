@@ -824,6 +824,21 @@ impl Object {
     }
 }
 
+pub const SUPPORTED_ATTRIBUTES: &[CK_ATTRIBUTE_TYPE] = &[
+    CKA_CLASS,
+    CKA_TOKEN,
+    CKA_LABEL,
+    CKA_ID,
+    CKA_VALUE,
+    CKA_ISSUER,
+    CKA_SERIAL_NUMBER,
+    CKA_SUBJECT,
+    CKA_PRIVATE,
+    CKA_KEY_TYPE,
+    CKA_MODULUS,
+    CKA_EC_PARAMS,
+];
+
 pub fn list_objects() -> Vec<Object> {
     let mut objects = Vec::new();
     if let Some(identities) = list_identities() {

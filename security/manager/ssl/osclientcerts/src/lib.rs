@@ -1124,3 +1124,6 @@ pub extern "C" fn C_GetFunctionList(ppFunctionList: CK_FUNCTION_LIST_PTR_PTR) ->
     }
     CKR_OK
 }
+
+#[cfg_attr(target_os = "macos", link(name = "Security", kind = "framework"))]
+extern "C" {}
