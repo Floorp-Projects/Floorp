@@ -20,6 +20,7 @@
 #include "util/Poison.h"
 #include "vm/BytecodeUtil.h"
 #include "vm/JSObject.h"
+#include "vm/Printer.h"  // GenericPrinter
 #include "vm/ScopeKind.h"
 #include "vm/Xdr.h"
 
@@ -357,6 +358,10 @@ class Scope : public js::gc::TenuredCell {
   size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 
   void dump();
+#if defined(DEBUG) || defined(JS_JITSPEW)
+  static bool dumpForDisassemble(JSContext* cx, JS::Handle<Scope*> scope,
+                                 GenericPrinter& out, const char* indent);
+#endif /* defined(DEBUG) || defined(JS_JITSPEW) */
 };
 
 /** Empty base class for scope Data classes to inherit from. */
