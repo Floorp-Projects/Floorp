@@ -521,6 +521,10 @@ function ensureSideEffectFreeNatives() {
 }
 
 function nativeHasNoSideEffects(fn) {
+  if (fn.isBoundFunction) {
+    fn = fn.boundTargetFunction;
+  }
+
   // Natives with certain names are always considered side effect free.
   switch (fn.name) {
     case "toString":
