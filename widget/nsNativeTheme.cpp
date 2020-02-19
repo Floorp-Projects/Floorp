@@ -289,7 +289,8 @@ bool nsNativeTheme::IsWidgetStyled(nsPresContext* aPresContext,
           aAppearance == StyleAppearance::Textarea ||
           aAppearance == StyleAppearance::Listbox ||
           aAppearance == StyleAppearance::Menulist ||
-          aAppearance == StyleAppearance::MenulistButton) &&
+          (aAppearance == StyleAppearance::MenulistButton &&
+           StaticPrefs::layout_css_webkit_appearance_enabled())) &&
          aFrame->GetContent()->IsHTMLElement() &&
          aPresContext->HasAuthorSpecifiedRules(
              aFrame,
