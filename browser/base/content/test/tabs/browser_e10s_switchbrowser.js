@@ -10,8 +10,8 @@ const gExpectedHistory = {
 };
 
 function get_remote_history(browser) {
-  function frame_script() {
-    let webNav = docShell.QueryInterface(Ci.nsIWebNavigation);
+  return SpecialPowers.spawn(browser, [], () => {
+    let webNav = content.docShell.QueryInterface(Ci.nsIWebNavigation);
     let sessionHistory = webNav.sessionHistory;
     let result = {
       index: sessionHistory.index,
@@ -26,22 +26,7 @@ function get_remote_history(browser) {
       });
     }
 
-    sendAsyncMessage("Test:History", result);
-  }
-
-  return new Promise(resolve => {
-    browser.messageManager.addMessageListener(
-      "Test:History",
-      function listener({ data }) {
-        browser.messageManager.removeMessageListener("Test:History", listener);
-        resolve(data);
-      }
-    );
-
-    browser.messageManager.loadFrameScript(
-      "data:,(" + frame_script.toString() + ")();",
-      true
-    );
+    return result;
   });
 }
 
