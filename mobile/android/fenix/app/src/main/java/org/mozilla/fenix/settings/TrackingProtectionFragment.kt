@@ -230,7 +230,6 @@ class TrackingProtectionFragment : PreferenceFragmentCompat() {
         customCookiesSelect.onPreferenceChangeListener = object : SharedPreferenceUpdater() {
             override fun onPreferenceChange(preference: Preference, newValue: Any?): Boolean {
                 updateTrackingProtectionPolicy()
-                customTrackingSelect.isVisible = !customTracking.isChecked
                 return super.onPreferenceChange(preference, newValue)
             }
         }
@@ -238,7 +237,6 @@ class TrackingProtectionFragment : PreferenceFragmentCompat() {
         customTrackingSelect.onPreferenceChangeListener = object : SharedPreferenceUpdater() {
             override fun onPreferenceChange(preference: Preference, newValue: Any?): Boolean {
                 updateTrackingProtectionPolicy()
-                customTrackingSelect.isVisible = !customTracking.isChecked
                 return super.onPreferenceChange(preference, newValue)
             }
         }
