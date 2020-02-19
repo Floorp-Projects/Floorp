@@ -1951,6 +1951,40 @@ struct RuntimeScriptData::Hasher {
 using RuntimeScriptDataTable =
     HashSet<RuntimeScriptData*, RuntimeScriptData::Hasher, SystemAllocPolicy>;
 
+// Range of characters in scriptSource which contains a script's source,
+// that is, the range used by the Parser to produce a script.
+//
+// For most functions the fields point to the following locations.
+//
+//   function * f(a, b) { return a + b; }
+//   ^          ^                        ^
+//   |          |                        |
+//   |          sourceStart              sourceEnd
+//   |                                   |
+//   toStringStart                       toStringEnd
+//
+// For the special case of class constructors, the spec requires us to use an
+// alternate definition of toStringStart / toStringEnd.
+//
+//   class C { constructor() { this.field = 42; } }
+//   ^         ^                                 ^ ^
+//   |         |                                 | `---------`
+//   |         sourceStart                       sourceEnd   |
+//   |                                                       |
+//   toStringStart                                           toStringEnd
+//
+// NOTE: These are counted in Code Units from the start of the script source.
+struct SourceExtent {
+  uint32_t sourceStart = 0;
+  uint32_t sourceEnd = 0;
+  uint32_t toStringStart = 0;
+  uint32_t toStringEnd = 0;
+
+  // Line and column of |sourceStart_| position.
+  uint32_t lineno = 0;
+  uint32_t column = 0;  // Count of Code Points
+};
+
 // This class contains fields and accessors that are common to both lazy and
 // non-lazy interpreted scripts. This must be located at offset +0 of any
 // derived classes in order for the 'jitCodeRaw' mechanism to work with the
@@ -1981,39 +2015,7 @@ class BaseScript : public gc::TenuredCell {
   // will not point to anything.
   RefPtr<js::RuntimeScriptData> sharedData_ = {};
 
-  // Range of characters in scriptSource which contains this script's source,
-  // that is, the range used by the Parser to produce this script.
-  //
-  // For most functions the fields point to the following locations.
-  //
-  //   function * f(a, b) { return a + b; }
-  //   ^          ^                        ^
-  //   |          |                        |
-  //   |          sourceStart_             sourceEnd_
-  //   |                                   |
-  //   toStringStart_                      toStringEnd_
-  //
-  // For the special case of class constructors, the spec requires us to use an
-  // alternate definition of toStringStart_ / toStringEnd_.
-  //
-  //   class C { constructor() { this.field = 42; } }
-  //   ^         ^                                 ^ ^
-  //   |         |                                 | `---------`
-  //   |         sourceStart_                      sourceEnd_  |
-  //   |                                                       |
-  //   toStringStart_                                          toStringEnd_
-  //
-  // NOTE: These are counted in Code Units from the start of the script source.
-  struct SourceExtent {
-    uint32_t sourceStart = 0;
-    uint32_t sourceEnd = 0;
-    uint32_t toStringStart = 0;
-    uint32_t toStringEnd = 0;
-
-    // Line and column of |sourceStart_| position.
-    uint32_t lineno = 0;
-    uint32_t column = 0;  // Count of Code Points
-  } extent_;
+  SourceExtent extent_;
 
   // See ImmutableFlags / MutableFlags below for definitions. These are stored
   // as uint32_t instead of bitfields to make it more predictable to access
