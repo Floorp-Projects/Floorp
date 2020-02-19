@@ -14,10 +14,6 @@ const TAB_FORMDATA = { url: TAB_URL, id: { sessionData: CRASH_STATE } };
 const TAB_SHENTRY = { url: TAB_URL, triggeringPrincipal_base64 };
 const TAB_STATE = { entries: [TAB_SHENTRY], formdata: TAB_FORMDATA };
 
-const FRAME_SCRIPT =
-  // eslint-disable-next-line no-useless-concat
-  "data:," + "content.document.getElementById('errorTryAgain').click()";
-
 add_task(async function() {
   // Prepare a blank tab.
   let tab = BrowserTestUtils.addTab(gBrowser, "about:blank");
@@ -42,7 +38,9 @@ add_task(async function() {
 
   let newWindowOpened = BrowserTestUtils.waitForNewWindow();
 
-  browser.messageManager.loadFrameScript(FRAME_SCRIPT, true);
+  SpecialPowers.spawn(browser.browsingContext, [], () => {
+    content.document.getElementById("errorTryAgain").click();
+  });
 
   // Wait until the new window was restored.
   let win = await newWindowOpened;
