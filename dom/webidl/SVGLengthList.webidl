@@ -5,6 +5,7 @@
  *
  * The origin of this IDL file is
  * http://www.w3.org/TR/SVG11/
+ * https://svgwg.org/svg2-draft/types.html#InterfaceSVGLengthList
  *
  * Copyright © 2012 W3C® (MIT, ERCIM, Keio), All Rights Reserved. W3C
  * liability, trademark and document use rules apply.
@@ -27,6 +28,8 @@ interface SVGLengthList {
   SVGLength removeItem(unsigned long index);
   [Throws]
   SVGLength appendItem(SVGLength newItem);
+  [Throws]
+  setter void (unsigned long index, SVGLength newItem);
 
   // Mozilla-specific stuff
   readonly attribute unsigned long length; // synonym for numberOfItems
