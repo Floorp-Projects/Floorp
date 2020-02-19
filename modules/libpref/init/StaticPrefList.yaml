@@ -5185,6 +5185,13 @@
   value: false
   mirror: always
 
+# Is support for CSS conic-gradient enabled?
+- name: layout.css.conic-gradient.enabled
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+  rust: true
+
 # Is support for CSS contain enabled?
 - name: layout.css.contain.enabled
   type: bool
