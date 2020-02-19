@@ -1398,12 +1398,12 @@ void JSScript::setDefaultClassConstructorSpan(
   MOZ_ASSERT(compartment() == sourceObject->compartment());
   MOZ_ASSERT(isDefaultClassConstructor());
   sourceObject_ = sourceObject;
-  toStringStart_ = start;
-  toStringEnd_ = end;
-  sourceStart_ = start;
-  sourceEnd_ = end;
-  lineno_ = line;
-  column_ = column;
+  extent_.toStringStart = start;
+  extent_.toStringEnd = end;
+  extent_.sourceStart = start;
+  extent_.sourceEnd = end;
+  extent_.lineno = line;
+  extent_.column = column;
   // Since this script has been changed to point into the user's source, we
   // can clear its self-hosted flag, allowing Debugger to see it.
   clearFlag(ImmutableFlags::SelfHosted);
@@ -4469,8 +4469,8 @@ bool JSScript::fullyInitFromStencil(JSContext* cx, HandleScript script,
   /* The counts of indexed things must be checked during code generation. */
   MOZ_ASSERT(stencil.natoms <= INDEX_LIMIT);
   MOZ_ASSERT(stencil.ngcthings <= INDEX_LIMIT);
-  MOZ_ASSERT(script->lineno_ == stencil.lineno);
-  MOZ_ASSERT(script->column_ == stencil.column);
+  MOZ_ASSERT(script->extent_.lineno == stencil.lineno);
+  MOZ_ASSERT(script->extent_.column == stencil.column);
 
   // Initialize script flags from BytecodeEmitter
   script->setFlag(ImmutableFlags::Strict, stencil.strict);
