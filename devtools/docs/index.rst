@@ -80,6 +80,7 @@ Tool Architectures
    Debugger <tools/debugger-panel.md>
    Responsive Design Mode <tools/responsive-design-mode.md>
    Console <tools/console-panel.md>
+   Network </devtools/netmonitor/architecture.md>
 
 
 Frontend
