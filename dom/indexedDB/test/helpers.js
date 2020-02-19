@@ -323,6 +323,37 @@ function* assertEventuallyWithGC(conditionFunctor, message) {
   ok(false, message + " (even after " + maxGC + " garbage collections)");
 }
 
+// Asserts that a functor `f` throws an exception that is an instance of
+// `ctor`. If it doesn't throw, or throws a different type of exception, this
+// throws an Error, including the optional `msg` given.
+// Otherwise, it returns the message of the exception.
+//
+// TODO This is DUPLICATED from https://searchfox.org/mozilla-central/rev/cfd1cc461f1efe0d66c2fdc17c024a203d5a2fd8/js/src/tests/shell.js#163
+// This should be moved to a more generic place, as it is in no way specific
+// to IndexedDB.
+function assertThrowsInstanceOf(f, ctor, msg) {
+  var fullmsg;
+  try {
+    f();
+  } catch (exc) {
+    if (exc instanceof ctor) {
+      return exc.message;
+    }
+    fullmsg = `Assertion failed: expected exception ${ctor.name}, got ${exc}`;
+  }
+
+  if (fullmsg === undefined) {
+    fullmsg = `Assertion failed: expected exception ${
+      ctor.name
+    }, no exception thrown`;
+  }
+  if (msg !== undefined) {
+    fullmsg += " - " + msg;
+  }
+
+  throw new Error(fullmsg);
+}
+
 function isWasmSupported() {
   let testingFunctions = SpecialPowers.Cu.getJSTestingFunctions();
   return testingFunctions.wasmIsSupported();
