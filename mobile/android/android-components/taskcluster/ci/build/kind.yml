@@ -56,9 +56,9 @@ job-defaults:
                     - ':{component}:renameSnapshotArtifacts'
                 nightly:
                     - '-PnightlyVersion={nightlyVersion}'
-                    - ':{component}:assemble'
-                    - ':{component}:test'
-                    - ':{component}:lint'
+                    - ':{component}:assembleRelease'
+                    - ':{component}:testRelease'
+                    - ':{component}:lintRelease'
                     - ':{component}:publish'
                     - ':{component}:renameArtifacts'
                 default:
