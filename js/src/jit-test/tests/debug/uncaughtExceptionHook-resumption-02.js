@@ -1,5 +1,5 @@
-// uncaughtExceptionHook resumption value other than undefined causes further
-// hooks to be skipped.
+// uncaughtExceptionHook resumption value other than undefined does not cause
+// further hooks to be skipped.
 
 var g = newGlobal({newCompartment: true});
 var log;
@@ -22,4 +22,4 @@ for (var i = 0; i < 6; i++)
 
 log = '';
 assertEq(g.eval("debugger;"), 42);
-assertEq(log, "012");
+assertEq(log, "012345");

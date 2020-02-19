@@ -501,11 +501,6 @@ class MOZ_RAII DebuggerList {
   void dispatchQuietHook(JSContext* cx, FireHookFun fireHook);
 
   template <typename FireHookFun /* bool (Debugger*, ResumeMode&, MutableHandleValue) */>
-  MOZ_MUST_USE bool dispatchResumeModeHook(JSContext* cx, FireHookFun fireHook,
-                                           ResumeMode& resumeMode,
-                                           MutableHandleValue rval);
-
-  template <typename FireHookFun /* bool (Debugger*, ResumeMode&, MutableHandleValue) */>
   MOZ_MUST_USE bool dispatchResumptionHook(JSContext* cx,
                                            AbstractFramePtr frame,
                                            FireHookFun fireHook);
@@ -976,11 +971,6 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
                                 FireHookFun fireHook);
   template <
       typename HookIsEnabledFun /* bool (Debugger*) */, typename FireHookFun /* bool (Debugger*, ResumeMode&, MutableHandleValue) */>
-  static MOZ_MUST_USE bool dispatchResumeModeHook(
-      JSContext* cx, HookIsEnabledFun hookIsEnabled, FireHookFun fireHook,
-      ResumeMode& resumeMode, MutableHandleValue rval);
-  template <
-      typename HookIsEnabledFun /* bool (Debugger*) */, typename FireHookFun /* bool (Debugger*, ResumeMode&, MutableHandleValue) */>
   static MOZ_MUST_USE bool dispatchResumptionHook(
       JSContext* cx, AbstractFramePtr frame, HookIsEnabledFun hookIsEnabled,
       FireHookFun fireHook);
@@ -1014,13 +1004,9 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
                                    CallReason reason, ResumeMode& resumeMode,
                                    MutableHandleValue vp);
   MOZ_MUST_USE bool fireNewGlobalObject(JSContext* cx,
-                                        Handle<GlobalObject*> global,
-                                        ResumeMode& resumeMode,
-                                        MutableHandleValue vp);
+                                        Handle<GlobalObject*> global);
   MOZ_MUST_USE bool firePromiseHook(JSContext* cx, Hook hook,
-                                    HandleObject promise,
-                                    ResumeMode& resumeMode,
-                                    MutableHandleValue vp);
+                                    HandleObject promise);
 
   DebuggerScript* newVariantWrapper(JSContext* cx,
                                     Handle<DebuggerScriptReferent> referent) {

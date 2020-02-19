@@ -72,6 +72,7 @@ function testWithoutAwait() {
   let hitBreakpoint = false;
   dbg.onEnterFrame = function(frame) {
     if (frame.callee && frame.callee.name == "f") {
+      dbg.onEnterFrame = undefined;
       frame.script.setBreakpoint(offset, {
         hit() {
           hitBreakpoint = true;
@@ -157,6 +158,7 @@ function testWithAwait() {
   let hitBreakpoint = false;
   dbg.onEnterFrame = function(frame) {
     if (frame.callee && frame.callee.name == "f") {
+      dbg.onEnterFrame = undefined;
       frame.script.setBreakpoint(offset, {
         hit() {
           hitBreakpoint = true;
