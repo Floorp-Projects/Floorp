@@ -872,7 +872,7 @@ JSString* js::StringToLowerCase(JSContext* cx, HandleString string) {
   return ToLowerCase<char16_t>(cx, linear);
 }
 
-bool js::str_toLowerCase(JSContext* cx, unsigned argc, Value* vp) {
+static bool str_toLowerCase(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
   RootedString str(cx, ToStringForStringFunction(cx, args.thisv()));
@@ -1309,7 +1309,7 @@ JSString* js::StringToUpperCase(JSContext* cx, HandleString string) {
   return ToUpperCase<char16_t>(cx, linear);
 }
 
-bool js::str_toUpperCase(JSContext* cx, unsigned argc, Value* vp) {
+static bool str_toUpperCase(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
   RootedString str(cx, ToStringForStringFunction(cx, args.thisv()));
@@ -2319,7 +2319,7 @@ static int32_t LastIndexOfImpl(const TextChar* text, size_t textLen,
 
 // ES2017 draft rev 6859bb9ccaea9c6ede81d71e5320e3833b92cb3e
 // 21.1.3.9 String.prototype.lastIndexOf ( searchString [ , position ] )
-bool js::str_lastIndexOf(JSContext* cx, unsigned argc, Value* vp) {
+static bool str_lastIndexOf(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
   // Steps 1-2.

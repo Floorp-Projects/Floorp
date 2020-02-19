@@ -2099,14 +2099,8 @@ static bool intrinsic_ToNumeric(JSContext* cx, unsigned argc, Value* vp) {
 // self-hosting global.
 static const JSFunctionSpec intrinsic_functions[] = {
     JS_INLINABLE_FN("std_Array", array_construct, 1, 0, Array),
-    JS_INLINABLE_FN("std_Array_join", array_join, 1, 0, ArrayJoin),
     JS_INLINABLE_FN("std_Array_push", array_push, 1, 0, ArrayPush),
     JS_INLINABLE_FN("std_Array_pop", array_pop, 0, 0, ArrayPop),
-    JS_INLINABLE_FN("std_Array_shift", array_shift, 0, 0, ArrayShift),
-    JS_FN("std_Array_unshift", array_unshift, 1, 0),
-    JS_INLINABLE_FN("std_Array_slice", array_slice, 2, 0, ArraySlice),
-    JS_FN("std_Array_reverse", array_reverse, 0, 0),
-    JS_FNINFO("std_Array_splice", array_splice, &array_splice_info, 2, 0),
     JS_FN("ArrayNativeSort", intrinsic_ArrayNativeSort, 1, 0),
 
     JS_FN("std_BigInt_valueOf", BigIntObject::valueOf, 0, 0),
@@ -2121,14 +2115,12 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_INLINABLE_FN("std_Math_min", math_min, 2, 0, MathMin),
     JS_INLINABLE_FN("std_Math_abs", math_abs, 1, 0, MathAbs),
 
-    JS_FN("std_Map_has", MapObject::has, 1, 0),
     JS_FN("std_Map_iterator", MapObject::entries, 0, 0),
 
     JS_FN("std_Number_valueOf", num_valueOf, 0, 0),
 
     JS_INLINABLE_FN("std_Object_create", obj_create, 2, 0, ObjectCreate),
     JS_FN("std_Object_propertyIsEnumerable", obj_propertyIsEnumerable, 1, 0),
-    JS_FN("std_Object_getOwnPropertyNames", obj_getOwnPropertyNames, 1, 0),
     JS_FN("std_Object_toString", obj_toString, 0, 0),
 
     JS_INLINABLE_FN("std_Reflect_getPrototypeOf", Reflect_getPrototypeOf, 1, 0,
@@ -2136,7 +2128,6 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("std_Reflect_isExtensible", Reflect_isExtensible, 1, 0),
     JS_FN("std_Reflect_ownKeys", Reflect_ownKeys, 1, 0),
 
-    JS_FN("std_Set_has", SetObject::has, 1, 0),
     JS_FN("std_Set_iterator", SetObject::values, 0, 0),
 
     JS_INLINABLE_FN("std_String_fromCharCode", str_fromCharCode, 1, 0,
@@ -2147,12 +2138,7 @@ static const JSFunctionSpec intrinsic_functions[] = {
                     StringCharCodeAt),
     JS_FN("std_String_includes", str_includes, 1, 0),
     JS_FN("std_String_indexOf", str_indexOf, 1, 0),
-    JS_FN("std_String_lastIndexOf", str_lastIndexOf, 1, 0),
     JS_FN("std_String_startsWith", str_startsWith, 1, 0),
-    JS_INLINABLE_FN("std_String_toLowerCase", str_toLowerCase, 0, 0,
-                    StringToLowerCase),
-    JS_INLINABLE_FN("std_String_toUpperCase", str_toUpperCase, 0, 0,
-                    StringToUpperCase),
     JS_FN("std_String_endsWith", str_endsWith, 1, 0),
 
     JS_FN("std_TypedArray_buffer", js::TypedArray_bufferGetter, 1, 0),

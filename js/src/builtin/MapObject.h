@@ -113,7 +113,6 @@ class MapObject : public NativeObject {
   static MOZ_MUST_USE bool getKeysAndValuesInterleaved(
       HandleObject obj, JS::MutableHandle<GCVector<JS::Value>> entries);
   static MOZ_MUST_USE bool entries(JSContext* cx, unsigned argc, Value* vp);
-  static MOZ_MUST_USE bool has(JSContext* cx, unsigned argc, Value* vp);
   static MapObject* create(JSContext* cx, HandleObject proto = nullptr);
 
   // Publicly exposed Map calls for JSAPI access (webidl maplike/setlike
@@ -166,6 +165,7 @@ class MapObject : public NativeObject {
   static MOZ_MUST_USE bool get_impl(JSContext* cx, const CallArgs& args);
   static MOZ_MUST_USE bool get(JSContext* cx, unsigned argc, Value* vp);
   static MOZ_MUST_USE bool has_impl(JSContext* cx, const CallArgs& args);
+  static MOZ_MUST_USE bool has(JSContext* cx, unsigned argc, Value* vp);
   static MOZ_MUST_USE bool set_impl(JSContext* cx, const CallArgs& args);
   static MOZ_MUST_USE bool set(JSContext* cx, unsigned argc, Value* vp);
   static MOZ_MUST_USE bool delete_impl(JSContext* cx, const CallArgs& args);
@@ -235,7 +235,6 @@ class SetObject : public NativeObject {
   static MOZ_MUST_USE bool values(JSContext* cx, unsigned argc, Value* vp);
   static MOZ_MUST_USE bool add(JSContext* cx, HandleObject obj,
                                HandleValue key);
-  static MOZ_MUST_USE bool has(JSContext* cx, unsigned argc, Value* vp);
 
   // Publicly exposed Set calls for JSAPI access (webidl maplike/setlike
   // interfaces, etc.)
@@ -281,6 +280,7 @@ class SetObject : public NativeObject {
   static MOZ_MUST_USE bool size_impl(JSContext* cx, const CallArgs& args);
   static MOZ_MUST_USE bool size(JSContext* cx, unsigned argc, Value* vp);
   static MOZ_MUST_USE bool has_impl(JSContext* cx, const CallArgs& args);
+  static MOZ_MUST_USE bool has(JSContext* cx, unsigned argc, Value* vp);
   static MOZ_MUST_USE bool add_impl(JSContext* cx, const CallArgs& args);
   static MOZ_MUST_USE bool add(JSContext* cx, unsigned argc, Value* vp);
   static MOZ_MUST_USE bool delete_impl(JSContext* cx, const CallArgs& args);
