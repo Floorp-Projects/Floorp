@@ -95,56 +95,49 @@ nsMIMEInfoBase::GetFileExtensions(nsIUTF8StringEnumerator** aResult) {
 
 NS_IMETHODIMP
 nsMIMEInfoBase::ExtensionExists(const nsACString& aExtension, bool* _retval) {
-  NS_ASSERTION(!aExtension.IsEmpty(), "no extension");
-  bool found = false;
-  uint32_t extCount = mExtensions.Length();
-  if (extCount < 1) return NS_OK;
-
-  for (uint8_t i = 0; i < extCount; i++) {
-    const nsCString& ext = mExtensions[i];
-    if (ext.Equals(aExtension, nsCaseInsensitiveCStringComparator())) {
-      found = true;
-      break;
-    }
-  }
-
-  *_retval = found;
+  MOZ_ASSERT(!aExtension.IsEmpty(), "no extension");
+  *_retval = mExtensions.Contains(aExtension,
+                                  nsCaseInsensitiveCStringArrayComparator());
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsMIMEInfoBase::GetPrimaryExtension(nsACString& _retval) {
-  if (!mExtensions.Length()) return NS_ERROR_NOT_INITIALIZED;
-
+  if (!mExtensions.Length()) {
+    _retval.Truncate();
+    return NS_ERROR_NOT_INITIALIZED;
+  }
   _retval = mExtensions[0];
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsMIMEInfoBase::SetPrimaryExtension(const nsACString& aExtension) {
-  NS_ASSERTION(!aExtension.IsEmpty(), "no extension");
-  uint32_t extCount = mExtensions.Length();
-  uint8_t i;
-  bool found = false;
-  for (i = 0; i < extCount; i++) {
-    const nsCString& ext = mExtensions[i];
-    if (ext.Equals(aExtension, nsCaseInsensitiveCStringComparator())) {
-      found = true;
-      break;
-    }
+  if (MOZ_UNLIKELY(aExtension.IsEmpty())) {
+    MOZ_ASSERT(false, "No extension");
+    return NS_ERROR_INVALID_ARG;
   }
-  if (found) {
+  int32_t i = mExtensions.IndexOf(aExtension, 0,
+                                  nsCaseInsensitiveCStringArrayComparator());
+  if (i != -1) {
     mExtensions.RemoveElementAt(i);
   }
-
   mExtensions.InsertElementAt(0, aExtension);
-
   return NS_OK;
+}
+
+void nsMIMEInfoBase::AddUniqueExtension(const nsACString& aExtension) {
+  if (!aExtension.IsEmpty() &&
+      !mExtensions.Contains(aExtension,
+                            nsCaseInsensitiveCStringArrayComparator())) {
+    mExtensions.AppendElement(aExtension);
+  }
 }
 
 NS_IMETHODIMP
 nsMIMEInfoBase::AppendExtension(const nsACString& aExtension) {
-  mExtensions.AppendElement(aExtension);
+  MOZ_ASSERT(!aExtension.IsEmpty(), "No extension");
+  AddUniqueExtension(aExtension);
   return NS_OK;
 }
 
@@ -192,15 +185,16 @@ nsMIMEInfoBase::Equals(nsIMIMEInfo* aMIMEInfo, bool* _retval) {
 NS_IMETHODIMP
 nsMIMEInfoBase::SetFileExtensions(const nsACString& aExtensions) {
   mExtensions.Clear();
-  nsCString extList(aExtensions);
-
-  int32_t breakLocation = -1;
-  while ((breakLocation = extList.FindChar(',')) != -1) {
-    mExtensions.AppendElement(
-        Substring(extList.get(), extList.get() + breakLocation));
-    extList.Cut(0, breakLocation + 1);
+  nsACString::const_iterator start, end;
+  aExtensions.BeginReading(start);
+  aExtensions.EndReading(end);
+  while (start != end) {
+    nsACString::const_iterator cursor = start;
+    mozilla::Unused << FindCharInReadable(',', cursor, end);
+    AddUniqueExtension(Substring(start, cursor));
+    // If a comma was found, skip it for the next search.
+    start = cursor != end ? ++cursor : cursor;
   }
-  if (!extList.IsEmpty()) mExtensions.AppendElement(extList);
   return NS_OK;
 }
 
