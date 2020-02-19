@@ -113,7 +113,7 @@ open class FenixSearchEngineProvider(
     fun installSearchEngine(context: Context, searchEngine: SearchEngine) = runBlocking {
         val installedIdentifiers = installedSearchEngineIdentifiers(context).toMutableSet()
         installedIdentifiers.add(searchEngine.identifier)
-        prefs(context).edit().putStringSet(INSTALLED_ENGINES_KEY, installedIdentifiers).apply()
+        prefs(context).edit().putStringSet(localeAwareInstalledEnginesKey(), installedIdentifiers).apply()
     }
 
     fun uninstallSearchEngine(context: Context, searchEngine: SearchEngine) = runBlocking {
@@ -124,7 +124,7 @@ open class FenixSearchEngineProvider(
         } else {
             val installedIdentifiers = installedSearchEngineIdentifiers(context).toMutableSet()
             installedIdentifiers.remove(searchEngine.identifier)
-            prefs(context).edit().putStringSet(INSTALLED_ENGINES_KEY, installedIdentifiers).apply()
+            prefs(context).edit().putStringSet(localeAwareInstalledEnginesKey(), installedIdentifiers).apply()
         }
 
         reload()
