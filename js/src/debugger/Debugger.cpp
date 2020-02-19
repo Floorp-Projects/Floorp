@@ -245,9 +245,22 @@ static void PropagateForcedReturn(JSContext* cx, AbstractFramePtr frame,
   frame.setReturnValue(rval);
 }
 
-static bool ApplyFrameResumeMode(JSContext* cx, AbstractFramePtr frame,
-                                 ResumeMode resumeMode, HandleValue rval,
-                                 HandleSavedFrame exnStack) {
+static MOZ_MUST_USE bool AdjustGeneratorResumptionValue(JSContext* cx,
+                                                        AbstractFramePtr frame,
+                                                        ResumeMode& resumeMode,
+                                                        MutableHandleValue vp);
+
+static MOZ_MUST_USE bool ApplyFrameResumeMode(JSContext* cx,
+                                              AbstractFramePtr frame,
+                                              ResumeMode resumeMode,
+                                              HandleValue rv,
+                                              HandleSavedFrame exnStack) {
+  RootedValue rval(cx, rv);
+
+  if (!AdjustGeneratorResumptionValue(cx, frame, resumeMode, &rval)) {
+    return false;
+  }
+
   switch (resumeMode) {
     case ResumeMode::Continue:
       break;
@@ -945,67 +958,73 @@ bool DebugAPI::slowPathOnLeaveFrame(JSContext* cx, AbstractFramePtr frame,
     return frameOk;
   }
 
+  bool hadResumeOverride = false;
   completion = Completion::fromJSFramePop(cx, frame, pc, frameOk);
   Rooted<AbstractGeneratorObject*> genObj(
       cx, completion.get().maybeGeneratorObject());
 
-  // Preserve the debuggee's microtask event queue while we run the hooks, so
-  // the debugger's microtask checkpoints don't run from the debuggee's
-  // microtasks, and vice versa.
-  JS::AutoDebuggerJobQueueInterruption adjqi;
-  if (!adjqi.init(cx)) {
-    return false;
-  }
+  {
+    // Preserve the debuggee's microtask event queue while we run the hooks, so
+    // the debugger's microtask checkpoints don't run from the debuggee's
+    // microtasks, and vice versa.
+    JS::AutoDebuggerJobQueueInterruption adjqi;
+    if (!adjqi.init(cx)) {
+      return false;
+    }
 
-  // This path can be hit via unwinding the stack due to over-recursion or
-  // OOM. In those cases, don't fire the frames' onPop handlers, because
-  // invoking JS will only trigger the same condition. See
-  // slowPathOnExceptionUnwind.
-  if (!cx->isThrowingOverRecursed() && !cx->isThrowingOutOfMemory()) {
-    // For each Debugger.Frame, fire its onPop handler, if any.
-    for (size_t i = 0; i < frames.length(); i++) {
-      HandleDebuggerFrame frameobj = frames[i];
-      Debugger* dbg = Debugger::fromChildJSObject(frameobj);
-      EnterDebuggeeNoExecute nx(cx, *dbg, adjqi);
+    // This path can be hit via unwinding the stack due to over-recursion or
+    // OOM. In those cases, don't fire the frames' onPop handlers, because
+    // invoking JS will only trigger the same condition. See
+    // slowPathOnExceptionUnwind.
+    if (!cx->isThrowingOverRecursed() && !cx->isThrowingOutOfMemory()) {
+      // For each Debugger.Frame, fire its onPop handler, if any.
+      for (size_t i = 0; i < frames.length(); i++) {
+        HandleDebuggerFrame frameobj = frames[i];
+        Debugger* dbg = Debugger::fromChildJSObject(frameobj);
+        EnterDebuggeeNoExecute nx(cx, *dbg, adjqi);
 
-      // Removing a global from a Debugger's debuggee set kills all of that
-      // Debugger's D.Fs in that global. This means that one D.F's onPop can
-      // kill the next D.F. So we have to check whether frameobj is still "on
-      // the stack".
-      if (frameobj->isOnStack() && frameobj->onPopHandler()) {
-        OnPopHandler* handler = frameobj->onPopHandler();
+        // Removing a global from a Debugger's debuggee set kills all of that
+        // Debugger's D.Fs in that global. This means that one D.F's onPop can
+        // kill the next D.F. So we have to check whether frameobj is still "on
+        // the stack".
+        if (frameobj->isOnStack() && frameobj->onPopHandler()) {
+          OnPopHandler* handler = frameobj->onPopHandler();
 
-        Maybe<AutoRealm> ar;
-        ar.emplace(cx, dbg->object);
+          Maybe<AutoRealm> ar;
+          ar.emplace(cx, dbg->object);
 
-        // The resumption requested by the onPop handler we're about to call.
-        ResumeMode nextResumeMode;
-        RootedValue nextValue(cx);
+          // The resumption requested by the onPop handler we're about to call.
+          ResumeMode nextResumeMode;
+          RootedValue nextValue(cx);
 
-        // Call the onPop handler.
-        bool success;
-        {
-          // Mark the generator as running, to prevent reentrance.
-          //
-          // At certain points in a generator's lifetime,
-          // GetGeneratorObjectForFrame can return null even when the generator
-          // exists, but at those points the generator has not yet been exposed
-          // to JavaScript, so reentrance isn't possible anyway. So there's no
-          // harm done if this has no effect in that case.
-          AutoSetGeneratorRunning asgr(cx, genObj);
-          success = handler->onPop(cx, frameobj, completion, nextResumeMode,
-                                   &nextValue);
+          // Call the onPop handler.
+          bool success;
+          {
+            // Mark the generator as running, to prevent reentrance.
+            //
+            // At certain points in a generator's lifetime,
+            // GetGeneratorObjectForFrame can return null even when the
+            // generator exists, but at those points the generator has not yet
+            // been exposed to JavaScript, so reentrance isn't possible anyway.
+            // So there's no harm done if this has no effect in that case.
+            AutoSetGeneratorRunning asgr(cx, genObj);
+            success = handler->onPop(cx, frameobj, completion, nextResumeMode,
+                                     &nextValue);
+          }
+          nextResumeMode = dbg->processParsedHandlerResult(
+              ar, frame, pc, success, nextResumeMode, &nextValue);
+          adjqi.runJobs();
+
+          // At this point, we are back in the debuggee compartment, and
+          // any error has been wrapped up as a completion value.
+          MOZ_ASSERT(cx->compartment() == debuggeeGlobal->compartment());
+          MOZ_ASSERT(!cx->isExceptionPending());
+
+          if (nextResumeMode != ResumeMode::Continue) {
+            hadResumeOverride = true;
+          }
+          completion.get().updateForNextHandler(nextResumeMode, nextValue);
         }
-        nextResumeMode = dbg->processParsedHandlerResult(
-            ar, frame, pc, success, nextResumeMode, &nextValue);
-        adjqi.runJobs();
-
-        // At this point, we are back in the debuggee compartment, and
-        // any error has been wrapped up as a completion value.
-        MOZ_ASSERT(cx->compartment() == debuggeeGlobal->compartment());
-        MOZ_ASSERT(!cx->isExceptionPending());
-
-        completion.get().updateForNextHandler(nextResumeMode, nextValue);
       }
     }
   }
@@ -1015,6 +1034,14 @@ bool DebugAPI::slowPathOnLeaveFrame(JSContext* cx, AbstractFramePtr frame,
   RootedValue value(cx);
   RootedSavedFrame exnStack(cx);
   completion.get().toResumeMode(resumeMode, &value, &exnStack);
+
+  // If we are returning the original value used to create the completion, then
+  // we don't want to treat the resumption value as a Return completion, because
+  // that would cause us to apply AdjustGeneratorResumptionValue to the
+  // already-adjusted value that the generator actually returned.
+  if (!hadResumeOverride && resumeMode == ResumeMode::Return) {
+    resumeMode = ResumeMode::Continue;
+  }
 
   if (!ApplyFrameResumeMode(cx, frame, resumeMode, value, exnStack)) {
     if (!cx->isPropagatingForcedReturn()) {
@@ -1482,23 +1509,16 @@ static bool CheckResumptionValue(JSContext* cx, AbstractFramePtr frame,
 // control of the uncaughtExceptionHook, because this code assumes we won't
 // change our minds and continue execution--we must not close the generator
 // object unless we're really going to force-return.
-static void AdjustGeneratorResumptionValue(JSContext* cx,
-                                           AbstractFramePtr frame,
-                                           ResumeMode& resumeMode,
-                                           MutableHandleValue vp) {
+static MOZ_MUST_USE bool AdjustGeneratorResumptionValue(JSContext* cx,
+                                                        AbstractFramePtr frame,
+                                                        ResumeMode& resumeMode,
+                                                        MutableHandleValue vp) {
   if (resumeMode != ResumeMode::Return && resumeMode != ResumeMode::Throw) {
-    return;
+    return true;
   }
   if (!frame || !frame.isFunctionFrame()) {
-    return;
+    return true;
   }
-
-  // To propagate out of memory in debuggee code.
-  auto getAndClearExceptionThenThrow = [&]() {
-    MOZ_ALWAYS_TRUE(cx->getPendingException(vp));
-    cx->clearPendingException();
-    resumeMode = ResumeMode::Throw;
-  };
 
   // Treat `{return: <value>}` like a `return` statement. Simulate what the
   // debuggee would do for an ordinary `return` statement, using a few bytecode
@@ -1510,7 +1530,7 @@ static void AdjustGeneratorResumptionValue(JSContext* cx,
   if (frame.callee()->isGenerator()) {
     // Throw doesn't require any special processing for (async) generators.
     if (resumeMode == ResumeMode::Throw) {
-      return;
+      return true;
     }
 
     // Forcing return from a (possibly async) generator.
@@ -1532,8 +1552,7 @@ static void AdjustGeneratorResumptionValue(JSContext* cx,
     if (!genObj->is<AsyncGeneratorObject>()) {
       JSObject* pair = CreateIterResultObject(cx, vp, true);
       if (!pair) {
-        getAndClearExceptionThenThrow();
-        return;
+        return false;
       }
       vp.setObject(*pair);
     }
@@ -1552,7 +1571,7 @@ static void AdjustGeneratorResumptionValue(JSContext* cx,
       // Throw doesn't require any special processing for async functions when
       // the internal generator object is already present.
       if (resumeMode == ResumeMode::Throw) {
-        return;
+        return true;
       }
 
       Rooted<AsyncFunctionGeneratorObject*> asyncGenObj(
@@ -1563,8 +1582,7 @@ static void AdjustGeneratorResumptionValue(JSContext* cx,
       if (promise->state() == JS::PromiseState::Pending) {
         if (!AsyncFunctionResolve(cx, asyncGenObj, vp,
                                   AsyncFunctionResolveKind::Fulfill)) {
-          getAndClearExceptionThenThrow();
-          return;
+          return false;
         }
       }
       vp.setObject(*promise);
@@ -1580,8 +1598,7 @@ static void AdjustGeneratorResumptionValue(JSContext* cx,
                               ? PromiseObject::unforgeableReject(cx, vp)
                               : PromiseObject::unforgeableResolve(cx, vp);
       if (!promise) {
-        getAndClearExceptionThenThrow();
-        return;
+        return false;
       }
       vp.setObject(*promise);
 
@@ -1589,6 +1606,8 @@ static void AdjustGeneratorResumptionValue(JSContext* cx,
       resumeMode = ResumeMode::Return;
     }
   }
+
+  return true;
 }
 
 void Debugger::reportUncaughtException(Maybe<AutoRealm>& ar) {
@@ -1699,7 +1718,6 @@ ResumeMode Debugger::leaveDebugger(Maybe<AutoRealm>& ar, AbstractFramePtr frame,
     resumeMode = ResumeMode::Terminate;
     vp.setUndefined();
   }
-  AdjustGeneratorResumptionValue(cx, frame, resumeMode, vp);
 
   return resumeMode;
 }
@@ -2426,6 +2444,9 @@ bool DebugAPI::onTrap(JSContext* cx) {
     }
   }
 
+  ResumeMode resumeMode = ResumeMode::Continue;
+  RootedValue rval(cx);
+
   if (triggered.length() > 0) {
     // Preserve the debuggee's microtask event queue while we run the hooks, so
     // the debugger's microtask checkpoints don't run from the debuggee's
@@ -2473,17 +2494,14 @@ bool DebugAPI::onTrap(JSContext* cx) {
         }
 
         RootedValue rv(cx);
-        RootedValue rval(cx);
         bool ok = CallMethodIfPresent(cx, handler, "hit", 1,
                                       scriptFrame.address(), &rv);
-        ResumeMode resumeMode = dbg->processHandlerResult(
+        resumeMode = dbg->processHandlerResult(
             ar, ok, rv, iter.abstractFramePtr(), iter.pc(), &rval);
         adjqi.runJobs();
 
-        if (!ApplyFrameResumeMode(cx, iter.abstractFramePtr(), resumeMode,
-                                  rval)) {
-          savedExc.drop();
-          return false;
+        if (resumeMode != ResumeMode::Continue) {
+          break;
         }
 
         // Calling JS code invalidates site. Reload it.
@@ -2496,6 +2514,10 @@ bool DebugAPI::onTrap(JSContext* cx) {
     }
   }
 
+  if (!ApplyFrameResumeMode(cx, iter.abstractFramePtr(), resumeMode, rval)) {
+    savedExc.drop();
+    return false;
+  }
   return true;
 }
 
@@ -2574,6 +2596,9 @@ bool DebugAPI::onSingleStep(JSContext* cx) {
   }
 #endif
 
+  RootedValue rval(cx);
+  ResumeMode resumeMode = ResumeMode::Continue;
+
   if (frames.length() > 0) {
     // Preserve the debuggee's microtask event queue while we run the hooks, so
     // the debugger's microtask checkpoints don't run from the debuggee's
@@ -2597,21 +2622,21 @@ bool DebugAPI::onSingleStep(JSContext* cx) {
       Maybe<AutoRealm> ar;
       ar.emplace(cx, dbg->object);
 
-      RootedValue rval(cx);
-      ResumeMode resumeMode = ResumeMode::Continue;
       bool success = handler->onStep(cx, frame, resumeMode, &rval);
       resumeMode = dbg->processParsedHandlerResult(
           ar, iter.abstractFramePtr(), iter.pc(), success, resumeMode, &rval);
       adjqi.runJobs();
 
-      if (!ApplyFrameResumeMode(cx, iter.abstractFramePtr(), resumeMode,
-                                rval)) {
-        savedExc.drop();
-        return false;
+      if (resumeMode != ResumeMode::Continue) {
+        break;
       }
     }
   }
 
+  if (!ApplyFrameResumeMode(cx, iter.abstractFramePtr(), resumeMode, rval)) {
+    savedExc.drop();
+    return false;
+  }
   return true;
 }
 
