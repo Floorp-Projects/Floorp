@@ -102,7 +102,7 @@ class TrackInfo {
 
   virtual UniquePtr<TrackInfo> Clone() const = 0;
 
-  MOZ_COUNTED_DTOR_VIRTUAL(TrackInfo)
+  virtual ~TrackInfo() { MOZ_COUNT_DTOR(TrackInfo); }
 
  protected:
   TrackInfo(const TrackInfo& aOther) {

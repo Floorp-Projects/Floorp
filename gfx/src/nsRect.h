@@ -50,7 +50,9 @@ struct nsRect : public mozilla::gfx::BaseRect<nscoord, nsRect, nsPoint, nsSize,
   }
   nsRect& operator=(const nsRect&) = default;
 
-  MOZ_COUNTED_DTOR(nsRect)
+#ifdef NS_BUILD_REFCNT_LOGGING
+  ~nsRect() { MOZ_COUNT_DTOR(nsRect); }
+#endif
 
   // We have saturating versions of all the Union methods. These avoid
   // overflowing nscoord values in the 'width' and 'height' fields by

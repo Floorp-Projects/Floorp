@@ -42,7 +42,7 @@ class WorkerLocation final : public nsWrapperCache {
     MOZ_COUNT_CTOR(WorkerLocation);
   }
 
-  MOZ_COUNTED_DTOR(WorkerLocation)
+  ~WorkerLocation() { MOZ_COUNT_DTOR(WorkerLocation); }
 
  public:
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(WorkerLocation)

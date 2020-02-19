@@ -69,7 +69,7 @@ class MaskLayerImageCache {
       }
     }
 
-    MOZ_COUNTED_DTOR(PixelRoundedRect)
+    ~PixelRoundedRect() { MOZ_COUNT_DTOR(PixelRoundedRect); }
 
     // Applies the scale and translate components of aTransform.
     // It is an error to pass a matrix which does more than just scale
@@ -226,7 +226,7 @@ class MaskLayerImageCache {
         : mKey(aOther.mKey.get()) {
       NS_ERROR("ALLOW_MEMMOVE == true, should never be called");
     }
-    MOZ_COUNTED_DTOR(MaskLayerImageEntry)
+    ~MaskLayerImageEntry() { MOZ_COUNT_DTOR(MaskLayerImageEntry); }
 
     // KeyEquals(): does this entry match this key?
     bool KeyEquals(KeyTypePointer aKey) const { return *mKey == *aKey; }

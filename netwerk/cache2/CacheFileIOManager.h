@@ -166,7 +166,7 @@ class CacheFileHandles {
     HandleHashKey(const HandleHashKey& aOther) {
       MOZ_ASSERT_UNREACHABLE("HandleHashKey copy constructor is forbidden!");
     }
-    MOZ_COUNTED_DTOR(HandleHashKey)
+    ~HandleHashKey() { MOZ_COUNT_DTOR(HandleHashKey); }
 
     bool KeyEquals(KeyTypePointer aKey) const {
       return memcmp(mHash.get(), aKey, sizeof(SHA1Sum::Hash)) == 0;

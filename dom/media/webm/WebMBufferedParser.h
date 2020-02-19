@@ -295,7 +295,7 @@ class WebMBufferedState final {
 
  private:
   // Private destructor, to discourage deletion outside of Release():
-  MOZ_COUNTED_DTOR(WebMBufferedState)
+  ~WebMBufferedState() { MOZ_COUNT_DTOR(WebMBufferedState); }
 
   // Synchronizes access to the mTimeMapping array and mLastBlockOffset.
   ReentrantMonitor mReentrantMonitor;

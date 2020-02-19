@@ -1333,7 +1333,11 @@ class nsDisplayFramesetBorder : public nsPaintedDisplayItem {
       : nsPaintedDisplayItem(aBuilder, aFrame) {
     MOZ_COUNT_CTOR(nsDisplayFramesetBorder);
   }
-  MOZ_COUNTED_DTOR_OVERRIDE(nsDisplayFramesetBorder)
+#ifdef NS_BUILD_REFCNT_LOGGING
+  virtual ~nsDisplayFramesetBorder() {
+    MOZ_COUNT_DTOR(nsDisplayFramesetBorder);
+  }
+#endif
 
   // REVIEW: see old GetFrameForPoint
   // Receives events in its bounds
@@ -1516,7 +1520,9 @@ class nsDisplayFramesetBlank : public nsPaintedDisplayItem {
       : nsPaintedDisplayItem(aBuilder, aFrame) {
     MOZ_COUNT_CTOR(nsDisplayFramesetBlank);
   }
-  MOZ_COUNTED_DTOR_OVERRIDE(nsDisplayFramesetBlank)
+#ifdef NS_BUILD_REFCNT_LOGGING
+  virtual ~nsDisplayFramesetBlank() { MOZ_COUNT_DTOR(nsDisplayFramesetBlank); }
+#endif
 
   virtual void Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) override;
   NS_DISPLAY_DECL_NAME("FramesetBlank", TYPE_FRAMESET_BLANK)

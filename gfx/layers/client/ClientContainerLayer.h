@@ -137,7 +137,7 @@ class ClientRefLayer : public RefLayer, public ClientLayer {
   }
 
  protected:
-  MOZ_COUNTED_DTOR_OVERRIDE(ClientRefLayer)
+  virtual ~ClientRefLayer() { MOZ_COUNT_DTOR(ClientRefLayer); }
 
  public:
   Layer* AsLayer() override { return this; }

@@ -20,7 +20,7 @@ class ContentParent;
 class ContentProcessManager final {
  public:
   static ContentProcessManager* GetSingleton();
-  MOZ_COUNTED_DTOR(ContentProcessManager);
+  ~ContentProcessManager() { MOZ_COUNT_DTOR(ContentProcessManager); };
 
   /**
    * Add a new content process into the map.
@@ -83,7 +83,7 @@ class ContentProcessManager final {
   nsDataHashtable<nsUint64HashKey, ContentParent*> mContentParentMap;
   nsDataHashtable<nsUint64HashKey, BrowserParent*> mBrowserParentMap;
 
-  MOZ_COUNTED_DEFAULT_CTOR(ContentProcessManager);
+  ContentProcessManager() { MOZ_COUNT_CTOR(ContentProcessManager); };
 };
 
 }  // namespace dom

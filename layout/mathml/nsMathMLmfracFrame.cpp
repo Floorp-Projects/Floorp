@@ -610,7 +610,9 @@ class nsDisplayMathMLSlash : public nsPaintedDisplayItem {
         mThickness(aThickness) {
     MOZ_COUNT_CTOR(nsDisplayMathMLSlash);
   }
-  MOZ_COUNTED_DTOR_OVERRIDE(nsDisplayMathMLSlash)
+#ifdef NS_BUILD_REFCNT_LOGGING
+  virtual ~nsDisplayMathMLSlash() { MOZ_COUNT_DTOR(nsDisplayMathMLSlash); }
+#endif
 
   virtual void Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) override;
   NS_DISPLAY_DECL_NAME("MathMLSlash", TYPE_MATHML_SLASH)

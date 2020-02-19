@@ -155,7 +155,9 @@ class nsDisplayXULImage final : public nsDisplayImageContainer {
       : nsDisplayImageContainer(aBuilder, aFrame) {
     MOZ_COUNT_CTOR(nsDisplayXULImage);
   }
-  MOZ_COUNTED_DTOR_OVERRIDE(nsDisplayXULImage)
+#ifdef NS_BUILD_REFCNT_LOGGING
+  virtual ~nsDisplayXULImage() { MOZ_COUNT_DTOR(nsDisplayXULImage); }
+#endif
 
   virtual bool CanOptimizeToImageLayer(LayerManager* aManager,
                                        nsDisplayListBuilder* aBuilder) override;

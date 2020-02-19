@@ -170,7 +170,7 @@ class nsPropertiesTable final : public nsGlyphTable {
         aPrimaryFontName, StyleFontFamilyNameSyntax::Identifiers));
   }
 
-  MOZ_COUNTED_DTOR(nsPropertiesTable)
+  ~nsPropertiesTable() { MOZ_COUNT_DTOR(nsPropertiesTable); }
 
   const FontFamilyName& PrimaryFontName() const { return mGlyphCodeFonts[0]; }
 
@@ -378,7 +378,7 @@ already_AddRefed<gfxTextRun> nsPropertiesTable::MakeTextRun(
 // forwarded to the gfx code.
 class nsOpenTypeTable final : public nsGlyphTable {
  public:
-  MOZ_COUNTED_DTOR(nsOpenTypeTable)
+  ~nsOpenTypeTable() { MOZ_COUNT_DTOR(nsOpenTypeTable); }
 
   virtual nsGlyphCode ElementAt(DrawTarget* aDrawTarget,
                                 int32_t aAppUnitsPerDevPixel,
@@ -1689,7 +1689,11 @@ class nsDisplayMathMLSelectionRect final : public nsPaintedDisplayItem {
       : nsPaintedDisplayItem(aBuilder, aFrame), mRect(aRect) {
     MOZ_COUNT_CTOR(nsDisplayMathMLSelectionRect);
   }
-  MOZ_COUNTED_DTOR_OVERRIDE(nsDisplayMathMLSelectionRect)
+#ifdef NS_BUILD_REFCNT_LOGGING
+  virtual ~nsDisplayMathMLSelectionRect() {
+    MOZ_COUNT_DTOR(nsDisplayMathMLSelectionRect);
+  }
+#endif
 
   virtual void Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) override;
   NS_DISPLAY_DECL_NAME("MathMLSelectionRect", TYPE_MATHML_SELECTION_RECT)
@@ -1720,7 +1724,11 @@ class nsDisplayMathMLCharForeground final : public nsPaintedDisplayItem {
         mIsSelected(aIsSelected) {
     MOZ_COUNT_CTOR(nsDisplayMathMLCharForeground);
   }
-  MOZ_COUNTED_DTOR_OVERRIDE(nsDisplayMathMLCharForeground)
+#ifdef NS_BUILD_REFCNT_LOGGING
+  virtual ~nsDisplayMathMLCharForeground() {
+    MOZ_COUNT_DTOR(nsDisplayMathMLCharForeground);
+  }
+#endif
 
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder,
                            bool* aSnap) const override {
@@ -1766,7 +1774,11 @@ class nsDisplayMathMLCharDebug final : public nsPaintedDisplayItem {
       : nsPaintedDisplayItem(aBuilder, aFrame), mRect(aRect) {
     MOZ_COUNT_CTOR(nsDisplayMathMLCharDebug);
   }
-  MOZ_COUNTED_DTOR_OVERRIDE(nsDisplayMathMLCharDebug)
+#  ifdef NS_BUILD_REFCNT_LOGGING
+  virtual ~nsDisplayMathMLCharDebug() {
+    MOZ_COUNT_DTOR(nsDisplayMathMLCharDebug);
+  }
+#  endif
 
   virtual void Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) override;
   NS_DISPLAY_DECL_NAME("MathMLCharDebug", TYPE_MATHML_CHAR_DEBUG)

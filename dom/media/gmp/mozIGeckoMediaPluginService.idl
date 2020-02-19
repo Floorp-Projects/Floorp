@@ -41,8 +41,8 @@ typedef GMPVideoGetterCallback<GMPVideoEncoderProxy> GetGMPVideoEncoderCallback;
 class GetNodeIdCallback
 {
 public:
-  MOZ_COUNTED_DEFAULT_CTOR(GetNodeIdCallback)
-  MOZ_COUNTED_DTOR_VIRTUAL(GetNodeIdCallback)
+  GetNodeIdCallback() { MOZ_COUNT_CTOR(GetNodeIdCallback); }
+  virtual ~GetNodeIdCallback() { MOZ_COUNT_DTOR(GetNodeIdCallback); }
   virtual void Done(nsresult aResult, const nsACString& aNodeId) = 0;
 };
 %}

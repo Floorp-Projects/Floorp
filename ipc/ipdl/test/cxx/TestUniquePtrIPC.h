@@ -16,8 +16,8 @@ namespace _ipdltest {
 
 class TestUniquePtrIPCParent : public PTestUniquePtrIPCParent {
  public:
-  MOZ_COUNTED_DEFAULT_CTOR(TestUniquePtrIPCParent)
-  MOZ_COUNTED_DTOR_OVERRIDE(TestUniquePtrIPCParent)
+  TestUniquePtrIPCParent() { MOZ_COUNT_CTOR(TestUniquePtrIPCParent); }
+  virtual ~TestUniquePtrIPCParent() { MOZ_COUNT_DTOR(TestUniquePtrIPCParent); }
 
   static bool RunTestInProcesses() { return true; }
   static bool RunTestInThreads() { return false; }
@@ -37,8 +37,8 @@ class TestUniquePtrIPCParent : public PTestUniquePtrIPCParent {
 
 class TestUniquePtrIPCChild : public PTestUniquePtrIPCChild {
  public:
-  MOZ_COUNTED_DEFAULT_CTOR(TestUniquePtrIPCChild)
-  MOZ_COUNTED_DTOR_OVERRIDE(TestUniquePtrIPCChild)
+  TestUniquePtrIPCChild() { MOZ_COUNT_CTOR(TestUniquePtrIPCChild); }
+  virtual ~TestUniquePtrIPCChild() { MOZ_COUNT_DTOR(TestUniquePtrIPCChild); }
 
   mozilla::ipc::IPCResult RecvTestMessage(UniquePtr<int>&& aA1,
                                           UniquePtr<DummyStruct>&& aA2,

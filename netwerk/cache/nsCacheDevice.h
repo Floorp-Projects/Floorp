@@ -23,8 +23,8 @@ class nsIOutputStream;
  *******************************************************************************/
 class nsCacheDevice {
  public:
-  MOZ_COUNTED_DEFAULT_CTOR(nsCacheDevice)
-  MOZ_COUNTED_DTOR_VIRTUAL(nsCacheDevice)
+  nsCacheDevice() { MOZ_COUNT_CTOR(nsCacheDevice); }
+  virtual ~nsCacheDevice() { MOZ_COUNT_DTOR(nsCacheDevice); }
 
   virtual nsresult Init() = 0;
   virtual nsresult Shutdown() = 0;

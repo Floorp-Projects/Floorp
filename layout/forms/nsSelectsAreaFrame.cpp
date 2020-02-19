@@ -106,7 +106,9 @@ class nsDisplayListFocus : public nsPaintedDisplayItem {
       : nsPaintedDisplayItem(aBuilder, aFrame) {
     MOZ_COUNT_CTOR(nsDisplayListFocus);
   }
-  MOZ_COUNTED_DTOR_OVERRIDE(nsDisplayListFocus)
+#ifdef NS_BUILD_REFCNT_LOGGING
+  virtual ~nsDisplayListFocus() { MOZ_COUNT_DTOR(nsDisplayListFocus); }
+#endif
 
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder,
                            bool* aSnap) const override {
