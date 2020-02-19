@@ -90,6 +90,28 @@ TextRun fetch_text_run(int address) {
     return TextRun(data[0], data[1]);
 }
 
+vec2 get_snap_bias(int subpx_dir) {
+    // In subpixel mode, the subpixel offset has already been
+    // accounted for while rasterizing the glyph. However, we
+    // must still round with a subpixel bias rather than rounding
+    // to the nearest whole pixel, depending on subpixel direciton.
+    switch (subpx_dir) {
+        case SUBPX_DIR_NONE:
+        default:
+            return vec2(0.5);
+        case SUBPX_DIR_HORIZONTAL:
+            // Glyphs positioned [-0.125, 0.125] get a
+            // subpx position of zero. So include that
+            // offset in the glyph position to ensure
+            // we round to the correct whole position.
+            return vec2(0.125, 0.5);
+        case SUBPX_DIR_VERTICAL:
+            return vec2(0.5, 0.125);
+        case SUBPX_DIR_MIXED:
+            return vec2(0.125);
+    }
+}
+
 void main(void) {
     Instance instance = decode_instance_attributes();
 
@@ -118,30 +140,7 @@ void main(void) {
 
     GlyphResource res = fetch_glyph_resource(instance.resource_address);
 
-    vec2 snap_bias;
-    // In subpixel mode, the subpixel offset has already been
-    // accounted for while rasterizing the glyph. However, we
-    // must still round with a subpixel bias rather than rounding
-    // to the nearest whole pixel, depending on subpixel direciton.
-    switch (subpx_dir) {
-        case SUBPX_DIR_NONE:
-        default:
-            snap_bias = vec2(0.5);
-            break;
-        case SUBPX_DIR_HORIZONTAL:
-            // Glyphs positioned [-0.125, 0.125] get a
-            // subpx position of zero. So include that
-            // offset in the glyph position to ensure
-            // we round to the correct whole position.
-            snap_bias = vec2(0.125, 0.5);
-            break;
-        case SUBPX_DIR_VERTICAL:
-            snap_bias = vec2(0.5, 0.125);
-            break;
-        case SUBPX_DIR_MIXED:
-            snap_bias = vec2(0.125);
-            break;
-    }
+    vec2 snap_bias = get_snap_bias(subpx_dir);
 
     // Glyph space refers to the pixel space used by glyph rasterization during frame
     // building. If a non-identity transform was used, WR_FEATURE_GLYPH_TRANSFORM will
