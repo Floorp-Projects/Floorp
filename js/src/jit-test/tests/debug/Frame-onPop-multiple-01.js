@@ -1,4 +1,4 @@
-// Multiple debuggers all get their onPop handlers called, and see each others' effects.
+// Multiple debuggers all get their onPop handlers called.
 
 function completionsEqual(c1, c2) {
     if (c1 && c2) {
@@ -23,22 +23,6 @@ function completionString(c) {
 var g = newGlobal({newCompartment: true}); // poor thing
 g.eval('function f() { debugger; return "1"; }');
 
-// We create a bunch of debuggers, but they all consult this global variable
-// for expectations and responses, so the order in which events get
-// reported to the debuggers doesn't matter.
-// 
-// This list includes every pair of transitions, and is of minimal length.
-// As if opportunity cost were just some theoretical concern.
-var sequence = [{ expect: { return: '1' }, resume: { return: '2'} },
-                { expect: { return: '2' }, resume: { throw:  '3'} },
-                { expect: { throw:  '3' }, resume: { return: '4'} },
-                { expect: { return: '4' }, resume: null },
-                { expect: null,            resume: { throw:  '5'} },
-                { expect: { throw:  '5' }, resume: { throw:  '6'} },
-                { expect: { throw:  '6' }, resume: null           },
-                { expect: null,            resume: null           },
-                { expect: null,            resume: { return: '7'} }];
-
 // A list of the debuggers' Debugger.Frame instances. When it's all over,
 // we test that they are all marked as no longer live.
 var frames = [];
@@ -58,7 +42,7 @@ dbg0.onEnterFrame = function handleOriginalEnter(frame) {
     var log;
 
     // Create a separate debugger to carry out each item in sequence.
-    for (s in sequence) {
+    for (let i = 0; i < 9; i++) {
         // Each debugger's handlers close over a distinct 'dbg', but
         // that's the only distinction between them. Otherwise, they're
         // driven entirely by global data, so the order in which events are
@@ -92,30 +76,25 @@ dbg0.onEnterFrame = function handleOriginalEnter(frame) {
                 };
 
                 f.onPop = function handlePop(c) {
-                    log += ')' + completionString(c);
+                    log += ')';
                     assertEq(this.onStack, true);
+                    assertEq(completionsEqual(c, { return: '1' }), true);
                     frames.push(this);
 
                     // Check that this debugger is in the list, and then remove it.
                     var i = dbgs.indexOf(dbg);
                     assertEq(i != -1, true);
                     dbgs.splice(i,1);
-
-                    // Check the frame's completion value against 'sequence'.
-                    assertEq(completionsEqual(c, sequence[0].expect), true);
-
-                    // Provide the next resumption value from 'sequence'.
-                    return sequence.shift().resume;
                 };
             };
         };
     }
 
     log = '';
-    assertEq(completionsEqual(frame.eval('f()'), { return: '7' }), true);
-    assertEq(log, "eeeeeeeee(((((((((ddddddddd)r1)r2)t3)r4)x)t5)t6)x)x");
+    assertEq(completionsEqual(frame.eval('f()'), { return: '1' }), true);
+    assertEq(log, "eeeeeeeee(((((((((ddddddddd)))))))))");
 
-    dbg0.log += '.';    
+    dbg0.log += '.';
 };
 
 dbg0.log = '';
