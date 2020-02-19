@@ -62,7 +62,8 @@ class SVGAnimatedOrient {
 
   void SetBaseValue(float aValue, uint8_t aUnit, SVGElement* aSVGElement,
                     bool aDoSetAttr);
-  nsresult SetBaseType(SVGEnumValue aValue, SVGElement* aSVGElement);
+  void SetBaseType(SVGEnumValue aValue, SVGElement* aSVGElement,
+                   ErrorResult& aRv);
   void SetAnimValue(float aValue, uint8_t aUnit, SVGElement* aSVGElement);
   void SetAnimType(SVGEnumValue aValue, SVGElement* aSVGElement);
 
@@ -112,7 +113,7 @@ class SVGAnimatedOrient {
     using mozilla::dom::DOMSVGAnimatedEnumeration::SetBaseVal;
     uint16_t BaseVal() override { return Sanitize(mVal->mBaseType); }
     void SetBaseVal(uint16_t aBaseVal, ErrorResult& aRv) override {
-      aRv = mVal->SetBaseType(aBaseVal, mSVGElement);
+      mVal->SetBaseType(aBaseVal, mSVGElement, aRv);
     }
     uint16_t AnimVal() override {
       // Script may have modified animation parameters or timeline -- DOM
