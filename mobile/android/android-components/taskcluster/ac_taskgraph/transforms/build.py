@@ -127,7 +127,7 @@ def add_artifacts(config, tasks):
             version,
             "-SNAPSHOT" if build_type == "snapshot" else ''
         )
-        if build_type == 'nightly-release':
+        if build_type == 'nightly':
             if version in ret:
                 ret = ret.replace(version, nightly_version)
         return ret
@@ -156,8 +156,8 @@ def add_artifacts(config, tasks):
             }
 
             # XXX: rather than adding more complex logic above, we simply post-adjust the
-            # dictionary for `nightly-release` types of graphs
-            if task['attributes']['build-type'] == 'nightly-release':
+            # dictionary for `nightly` types of graphs
+            if task['attributes']['build-type'] == 'nightly':
                 for ext, path in artifact_file_names_per_extension.items():
                     if version in path:
                         artifact_file_names_per_extension[ext] = path.replace(version, nightly_version)

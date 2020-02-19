@@ -15,10 +15,10 @@ def target_tasks_snapshot(full_task_graph, parameters, graph_config):
     return [l for l, t in full_task_graph.tasks.iteritems() if filter(t, parameters)]
 
 
-@_target_task("nightly_release")
+@_target_task("nightly")
 def target_tasks_nightly(full_task_graph, parameters, graph_config):
     def filter(task, parameters):
-        return task.attributes.get("build-type", "") == "nightly-release"
+        return task.attributes.get("build-type", "") == "nightly"
 
     return [l for l, t in full_task_graph.tasks.iteritems() if filter(t, parameters)]
 
