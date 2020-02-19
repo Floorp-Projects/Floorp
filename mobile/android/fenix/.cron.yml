@@ -18,6 +18,12 @@ jobs:
           treeherder-symbol: N-fennec
           target-tasks-method: fennec-nightly
       when: []  # Force hook only
+    - name: fennec-beta
+      job:
+          type: decision-task
+          treeherder-symbol: fennec-beta
+          target-tasks-method: fennec-beta
+      when: []  # Force hook only
     - name: raptor
       job:
           type: decision-task
