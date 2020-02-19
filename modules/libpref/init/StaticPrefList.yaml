@@ -4052,7 +4052,7 @@
 
 - name: gfx.webrender.enable-item-cache
   type: bool
-  value: false
+  value: @IS_NIGHTLY_BUILD@
   mirror: once
 
 #ifdef NIGHTLY_BUILD
