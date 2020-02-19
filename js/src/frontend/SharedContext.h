@@ -352,12 +352,8 @@ class FunctionBox : public ObjectBox, public SharedContext {
   // Back pointer used by asm.js for error messages.
   FunctionNode* functionNode;
 
-  uint32_t sourceStart;
-  uint32_t sourceEnd;
-  uint32_t startLine;
-  uint32_t startColumn;
-  uint32_t toStringStart;
-  uint32_t toStringEnd;
+  SourceExtent extent;
+
   uint16_t length;
 
   bool isGenerator_ : 1;           /* generator function or async generator */
@@ -665,16 +661,16 @@ class FunctionBox : public ObjectBox, public SharedContext {
   bool useAsmOrInsideUseAsm() const { return useAsm; }
 
   void setStart(uint32_t offset, uint32_t line, uint32_t column) {
-    sourceStart = offset;
-    startLine = line;
-    startColumn = column;
+    extent.sourceStart = offset;
+    extent.lineno = line;
+    extent.column = column;
   }
 
   void setEnd(uint32_t end) {
     // For all functions except class constructors, the buffer and
     // toString ending positions are the same. Class constructors override
     // the toString ending position with the end of the class definition.
-    sourceEnd = toStringEnd = end;
+    extent.sourceEnd = extent.toStringEnd = end;
   }
 
   void setArgCount(uint16_t args) { nargs_ = args; }

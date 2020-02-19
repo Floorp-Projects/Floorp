@@ -131,12 +131,7 @@ FunctionBox::FunctionBox(JSContext* cx, TraceListNode* traceListHead,
       functionScopeBindings_(nullptr),
       extraVarScopeBindings_(nullptr),
       functionNode(nullptr),
-      sourceStart(0),
-      sourceEnd(0),
-      startLine(1),
-      startColumn(0),
-      toStringStart(toStringStart),
-      toStringEnd(0),
+      extent{0, 0, toStringStart, 0, 1, 0},
       length(0),
       isGenerator_(generatorKind == GeneratorKind::Generator),
       isAsync_(asyncKind == FunctionAsyncKind::AsyncFunction),
@@ -210,12 +205,7 @@ void FunctionBox::initFromLazyFunction(JSFunction* fun) {
     setHasModuleGoal();
   }
 
-  sourceStart = lazy->sourceStart();
-  sourceEnd = lazy->sourceEnd();
-  toStringStart = lazy->toStringStart();
-  toStringEnd = lazy->toStringEnd();
-  startLine = lazy->lineno();
-  startColumn = lazy->column();
+  extent = lazy->getExtent();
 }
 
 void FunctionBox::initStandaloneFunction(Scope* enclosingScope) {
