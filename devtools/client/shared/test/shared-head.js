@@ -266,7 +266,6 @@ var refreshTab = async function(tab = gBrowser.selectedTab) {
 async function navigateTo(uri, { isErrorPage = false } = {}) {
   const target = await TargetFactory.forTab(gBrowser.selectedTab);
   const toolbox = gDevTools.getToolbox(target);
-  const currentToolboxTarget = toolbox.target;
 
   // If we're switching origins, we need to wait for the 'switched-target'
   // event to make sure everything is ready.
@@ -287,6 +286,7 @@ async function navigateTo(uri, { isErrorPage = false } = {}) {
 
   info(`Load document "${uri}"`);
   const browser = gBrowser.selectedBrowser;
+  const currentPID = browser.browsingContext.currentWindowGlobal.osPid;
   const onBrowserLoaded = BrowserTestUtils.browserLoaded(
     browser,
     false,
@@ -299,13 +299,33 @@ async function navigateTo(uri, { isErrorPage = false } = {}) {
   await onBrowserLoaded;
   info(`→ page loaded`);
 
+  // Compare the PIDs (and not the toolbox's targets) as PIDs are updated also immediately,
+  // while target may be updated slightly later.
+  const switchedToAnotherProcess =
+    currentPID !== browser.browsingContext.currentWindowGlobal.osPid;
+
+  // If we switched to another process and the target switching pref is false,
+  // the toolbox will close and reopen.
+  // For now, this helper doesn't support this case
+  if (
+    switchedToAnotherProcess &&
+    !Services.prefs.getBoolPref("devtools.target-switching.enabled", false)
+  ) {
+    ok(
+      false,
+      `navigateTo(${uri}) navigated to another process, but the target-switching preference is false`
+    );
+    return;
+  }
+
   if (onPanelReloaded) {
     info(`Waiting for ${toolbox.currentToolId} to be reloaded…`);
     await onPanelReloaded();
     info(`→ panel reloaded`);
   }
 
-  if (toolbox.target !== currentToolboxTarget) {
+  // If the tab navigated to another process, expect a target switching
+  if (switchedToAnotherProcess) {
     info(`Waiting for target switch…`);
     await onTargetSwitched;
     info(`→ switched-target emitted`);
