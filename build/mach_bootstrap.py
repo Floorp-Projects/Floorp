@@ -74,6 +74,7 @@ MACH_MODULES = [
     'tools/lint/mach_commands.py',
     'tools/mach_commands.py',
     'tools/moztreedocs/mach_commands.py',
+    'tools/phabricator/mach_commands.py',
     'tools/power/mach_commands.py',
     'tools/tryselect/mach_commands.py',
     'tools/vcs/mach_commands.py',
