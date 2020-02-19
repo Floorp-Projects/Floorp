@@ -61,6 +61,8 @@ class TypeConstraint;
 class TypeNewScript;
 class TypeZone;
 
+static constexpr bool IsTypeInferenceEnabled() { return true; }
+
 /*
  * Type inference memory management overview.
  *
