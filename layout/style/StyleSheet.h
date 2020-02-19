@@ -367,7 +367,7 @@ class StyleSheet final : public nsICSSLoaderObserver, public nsWrapperCache {
   int32_t AddRule(const nsAString& aSelector, const nsAString& aBlock,
                   const dom::Optional<uint32_t>& aIndex,
                   nsIPrincipal& aSubjectPrincipal, ErrorResult& aRv);
-  already_AddRefed<dom::Promise> Replace(const nsAString& aText, ErrorResult&);
+  already_AddRefed<dom::Promise> Replace(const nsACString& aText, ErrorResult&);
   void ReplaceSync(const nsACString& aText, ErrorResult&);
   bool ModificationDisallowed() const {
     return bool(mState & State::ModificationDisallowed);

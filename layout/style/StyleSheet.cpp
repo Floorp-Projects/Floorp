@@ -596,7 +596,7 @@ int32_t StyleSheet::AddRule(const nsAString& aSelector, const nsAString& aBlock,
 }
 
 // https://wicg.github.io/construct-stylesheets/#dom-cssstylesheet-replace
-already_AddRefed<dom::Promise> StyleSheet::Replace(const nsAString& aText,
+already_AddRefed<dom::Promise> StyleSheet::Replace(const nsACString& aText,
                                                    ErrorResult& aRv) {
   // TODO(nordzilla): This is a stub to land the Constructable Stylesheets
   // API under a preference (Bug 1604296). Functionality will be added later.
