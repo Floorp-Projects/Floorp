@@ -933,16 +933,21 @@ class HTMLEditor final : public TextEditor,
   bool IsVisibleTextNode(Text& aText) const;
 
   /**
-   * aNode must be a non-null text node.
-   * outIsEmptyNode must be non-null.
+   * IsEmptyNode() figures out if aNode is an empty node.  A block can have
+   * children and still be considered empty, if the children are empty or
+   * non-editable.
    */
-  nsresult IsEmptyNode(nsINode* aNode, bool* outIsEmptyBlock,
-                       bool aSingleBRDoesntCount = false,
-                       bool aListOrCellNotEmpty = false,
-                       bool aSafeToAskFrames = false) const;
-  nsresult IsEmptyNodeImpl(nsINode* aNode, bool* outIsEmptyBlock,
-                           bool aSingleBRDoesntCount, bool aListOrCellNotEmpty,
-                           bool aSafeToAskFrames, bool* aSeenBR) const;
+  bool IsEmptyNode(nsINode& aNode, bool aSingleBRDoesntCount = false,
+                   bool aListOrCellNotEmpty = false,
+                   bool aSafeToAskFrames = false) const {
+    bool seenBR = false;
+    return IsEmptyNodeImpl(aNode, aSingleBRDoesntCount, aListOrCellNotEmpty,
+                           aSafeToAskFrames, &seenBR);
+  }
+
+  bool IsEmptyNodeImpl(nsINode& aNode, bool aSingleBRDoesntCount,
+                       bool aListOrCellNotEmpty, bool aSafeToAskFrames,
+                       bool* aSeenBR) const;
 
   static bool HasAttributes(Element* aElement) {
     MOZ_ASSERT(aElement);
@@ -1698,9 +1703,7 @@ class HTMLEditor final : public TextEditor,
     if (!HTMLEditor::NodeIsInlineStatic(aContent) || !IsContainer(&aContent)) {
       return false;
     }
-    bool isEmpty = true;
-    IsEmptyNode(&aContent, &isEmpty);
-    return isEmpty;
+    return IsEmptyNode(aContent);
   }
 
   /**
@@ -4362,7 +4365,9 @@ class HTMLEditor final : public TextEditor,
    * IsEmptyTextNode() returns true if aNode is a text node and does not have
    * any visible characters.
    */
-  bool IsEmptyTextNode(nsINode& aNode) const;
+  bool IsEmptyTextNode(nsINode& aNode) const {
+    return EditorBase::IsTextNode(&aNode) && IsEmptyNode(aNode);
+  }
 
   MOZ_CAN_RUN_SCRIPT bool IsSimpleModifiableNode(nsIContent* aContent,
                                                  nsAtom* aProperty,

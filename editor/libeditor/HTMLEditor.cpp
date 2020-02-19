@@ -612,8 +612,7 @@ nsresult HTMLEditor::MaybeCollapseSelectionAtFirstEditableNode(
 
     // If the given block does not contain any visible/editable items, we want
     // to skip it and continue our search.
-    bool isEmptyBlock;
-    if (NS_SUCCEEDED(IsEmptyNode(visNode, &isEmptyBlock)) && isEmptyBlock) {
+    if (IsEmptyNode(*visNode)) {
       // Skip the empty block
       pointToPutCaret.Set(visNode);
       DebugOnly<bool> advanced = pointToPutCaret.AdvanceOffset();
@@ -3062,12 +3061,7 @@ nsresult HTMLEditor::DeleteSelectionWithTransaction(
   if (!blockParent) {
     return NS_OK;
   }
-  bool emptyBlockParent;
-  rv = IsEmptyNode(blockParent, &emptyBlockParent);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-  if (emptyBlockParent) {
+  if (IsEmptyNode(*blockParent)) {
     return NS_OK;
   }
 
@@ -4013,35 +4007,16 @@ bool HTMLEditor::IsEmpty() const {
 }
 
 /**
- * IsEmptyNode() figures out if aNode is an empty node.  A block can have
- * children and still be considered empty, if the children are empty or
- * non-editable.
- */
-nsresult HTMLEditor::IsEmptyNode(nsINode* aNode, bool* outIsEmptyNode,
-                                 bool aSingleBRDoesntCount,
-                                 bool aListOrCellNotEmpty,
-                                 bool aSafeToAskFrames) const {
-  NS_ENSURE_TRUE(aNode && outIsEmptyNode, NS_ERROR_NULL_POINTER);
-  *outIsEmptyNode = true;
-  bool seenBR = false;
-  return IsEmptyNodeImpl(aNode, outIsEmptyNode, aSingleBRDoesntCount,
-                         aListOrCellNotEmpty, aSafeToAskFrames, &seenBR);
-}
-
-/**
  * IsEmptyNodeImpl() is workhorse for IsEmptyNode().
  */
-nsresult HTMLEditor::IsEmptyNodeImpl(nsINode* aNode, bool* outIsEmptyNode,
-                                     bool aSingleBRDoesntCount,
-                                     bool aListOrCellNotEmpty,
-                                     bool aSafeToAskFrames,
-                                     bool* aSeenBR) const {
-  NS_ENSURE_TRUE(aNode && outIsEmptyNode && aSeenBR, NS_ERROR_NULL_POINTER);
+bool HTMLEditor::IsEmptyNodeImpl(nsINode& aNode, bool aSingleBRDoesntCount,
+                                 bool aListOrCellNotEmpty,
+                                 bool aSafeToAskFrames, bool* aSeenBR) const {
+  MOZ_ASSERT(aSeenBR);
 
-  if (Text* text = aNode->GetAsText()) {
-    *outIsEmptyNode = aSafeToAskFrames ? !IsInVisibleTextFrames(*text)
-                                       : !IsVisibleTextNode(*text);
-    return NS_OK;
+  if (Text* text = aNode.GetAsText()) {
+    return aSafeToAskFrames ? !IsInVisibleTextFrames(*text)
+                            : !IsVisibleTextNode(*text);
   }
 
   // if it's not a text node (handled above) and it's not a container,
@@ -4050,36 +4025,34 @@ nsresult HTMLEditor::IsEmptyNodeImpl(nsINode* aNode, bool* outIsEmptyNode,
   // anchors are containers, named anchors are "empty" but we don't
   // want to treat them as such.  Also, don't call ListItems or table
   // cells empty if caller desires.  Form Widgets not empty.
-  if (!IsContainer(aNode) ||
-      (HTMLEditUtils::IsNamedAnchor(aNode) ||
-       HTMLEditUtils::IsFormWidget(aNode) ||
-       (aListOrCellNotEmpty && (HTMLEditUtils::IsListItem(aNode) ||
-                                HTMLEditUtils::IsTableCell(aNode))))) {
-    *outIsEmptyNode = false;
-    return NS_OK;
+  if (!IsContainer(&aNode) ||
+      (HTMLEditUtils::IsNamedAnchor(&aNode) ||
+       HTMLEditUtils::IsFormWidget(&aNode) ||
+       (aListOrCellNotEmpty && (HTMLEditUtils::IsListItem(&aNode) ||
+                                HTMLEditUtils::IsTableCell(&aNode))))) {
+    return false;
   }
 
   // need this for later
   bool isListItemOrCell =
-      HTMLEditUtils::IsListItem(aNode) || HTMLEditUtils::IsTableCell(aNode);
+      HTMLEditUtils::IsListItem(&aNode) || HTMLEditUtils::IsTableCell(&aNode);
 
   // loop over children of node. if no children, or all children are either
   // empty text nodes or non-editable, then node qualifies as empty
-  for (nsCOMPtr<nsIContent> child = aNode->GetFirstChild(); child;
+  for (nsCOMPtr<nsIContent> child = aNode.GetFirstChild(); child;
        child = child->GetNextSibling()) {
     // Is the child editable and non-empty?  if so, return false
     if (EditorBase::IsEditable(child)) {
       if (Text* text = child->GetAsText()) {
         // break out if we find we aren't empty
-        *outIsEmptyNode = aSafeToAskFrames ? !IsInVisibleTextFrames(*text)
-                                           : !IsVisibleTextNode(*text);
-        if (!*outIsEmptyNode) {
-          return NS_OK;
+        if (!(aSafeToAskFrames ? !IsInVisibleTextFrames(*text)
+                               : !IsVisibleTextNode(*text))) {
+          return false;
         }
       } else {
         // An editable, non-text node. We need to check its content.
         // Is it the node we are iterating over?
-        if (child == aNode) {
+        if (child == &aNode) {
           break;
         }
 
@@ -4096,33 +4069,27 @@ nsresult HTMLEditor::IsEmptyNodeImpl(nsINode* aNode, bool* outIsEmptyNode,
               if (HTMLEditUtils::IsList(child) ||
                   child->IsHTMLElement(nsGkAtoms::table)) {
                 // break out if we find we aren't empty
-                *outIsEmptyNode = false;
-                return NS_OK;
+                return false;
               }
             } else if (HTMLEditUtils::IsFormWidget(child)) {
               // is it a form widget?
               // break out if we find we aren't empty
-              *outIsEmptyNode = false;
-              return NS_OK;
+              return false;
             }
           }
 
-          bool isEmptyNode = true;
-          nsresult rv =
-              IsEmptyNodeImpl(child, &isEmptyNode, aSingleBRDoesntCount,
-                              aListOrCellNotEmpty, aSafeToAskFrames, aSeenBR);
-          NS_ENSURE_SUCCESS(rv, rv);
-          if (!isEmptyNode) {
+          if (!IsEmptyNodeImpl(*child, aSingleBRDoesntCount,
+                               aListOrCellNotEmpty, aSafeToAskFrames,
+                               aSeenBR)) {
             // otherwise it ain't empty
-            *outIsEmptyNode = false;
-            return NS_OK;
+            return false;
           }
         }
       }
     }
   }
 
-  return NS_OK;
+  return true;
 }
 
 // add to aElement the CSS inline styles corresponding to the HTML attribute
