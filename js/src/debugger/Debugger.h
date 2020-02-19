@@ -815,8 +815,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
    * control resumption; those just call `ar.reset()` and return.
    */
   ResumeMode leaveDebugger(mozilla::Maybe<AutoRealm>& ar,
-                           AbstractFramePtr frame,
-                           const mozilla::Maybe<HandleValue>& maybeThisv,
+                           AbstractFramePtr frame, jsbytecode* pc,
                            CallUncaughtExceptionHook callHook,
                            ResumeMode resumeMode, MutableHandleValue vp);
 
@@ -840,14 +839,15 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
    * debuggee realm.
    */
   ResumeMode handleUncaughtException(mozilla::Maybe<AutoRealm>& ar);
-  ResumeMode handleUncaughtException(
-      mozilla::Maybe<AutoRealm>& ar, MutableHandleValue vp,
-      const mozilla::Maybe<HandleValue>& thisVForCheck = mozilla::Nothing(),
-      AbstractFramePtr frame = NullFramePtr());
+  ResumeMode handleUncaughtException(mozilla::Maybe<AutoRealm>& ar,
+                                     MutableHandleValue vp,
+                                     AbstractFramePtr frame = NullFramePtr(),
+                                     jsbytecode* pc = nullptr);
 
-  ResumeMode handleUncaughtExceptionHelper(
-      mozilla::Maybe<AutoRealm>& ar, MutableHandleValue* vp,
-      const mozilla::Maybe<HandleValue>& thisVForCheck, AbstractFramePtr frame);
+  ResumeMode handleUncaughtExceptionHelper(mozilla::Maybe<AutoRealm>& ar,
+                                           MutableHandleValue* vp,
+                                           AbstractFramePtr frame,
+                                           jsbytecode* pc);
 
   /*
    * Handle the result of a hook that is expected to return a resumption
