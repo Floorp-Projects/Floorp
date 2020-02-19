@@ -126,7 +126,7 @@ class Core(private val context: Context) {
     val sessionManager by lazy {
         SessionManager(engine, store).also { sessionManager ->
             // Install the "icons" WebExtension to automatically load icons for every visited website.
-            icons.install(engine, sessionManager)
+            icons.install(engine, store)
 
             // Show an ongoing notification when recording devices (camera, microphone) are used by web content
             RecordingDevicesNotificationFeature(context, sessionManager)
