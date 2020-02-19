@@ -1697,7 +1697,8 @@ bool SetNativeDataPropertyPure(JSContext* cx, JSObject* obj, PropertyName* name,
     return false;
   }
 
-  if (NeedsTypeBarrier && !HasTypePropertyId(nobj, NameToId(name), *val)) {
+  if (NeedsTypeBarrier && IsTypeInferenceEnabled() &&
+      !HasTypePropertyId(nobj, NameToId(name), *val)) {
     return false;
   }
 

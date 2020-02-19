@@ -802,6 +802,10 @@ bool BaselineCacheIRCompiler::callTypeUpdateIC(
   // Ensure the stack is empty for the VM call below.
   allocator.discardStack(masm);
 
+  if (!IsTypeInferenceEnabled()) {
+    return true;
+  }
+
   // R0 contains the value that needs to be typechecked.
   MOZ_ASSERT(val == R0);
   MOZ_ASSERT(scratch == R1.scratchReg());

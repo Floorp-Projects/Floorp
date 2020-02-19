@@ -230,6 +230,7 @@ inline TypeSet::Type TypeSet::PrimitiveTypeFromTypeFlag(TypeFlags flag) {
 }
 
 inline TypeSet::Type TypeSet::GetValueType(const Value& val) {
+  MOZ_ASSERT(IsTypeInferenceEnabled());
   if (val.isObject()) {
     return TypeSet::ObjectType(&val.toObject());
   }
@@ -613,6 +614,7 @@ inline bool PropertyHasBeenMarkedNonConstant(JSObject* obj, jsid id) {
 
 MOZ_ALWAYS_INLINE bool HasTrackedPropertyType(JSObject* obj, jsid id,
                                               TypeSet::Type type) {
+  MOZ_ASSERT(IsTypeInferenceEnabled());
   MOZ_ASSERT(id == IdToTypeId(id));
   MOZ_ASSERT(TrackPropertyTypes(obj, id));
 
@@ -633,6 +635,8 @@ MOZ_ALWAYS_INLINE bool HasTrackedPropertyType(JSObject* obj, jsid id,
 
 MOZ_ALWAYS_INLINE bool HasTypePropertyId(JSObject* obj, jsid id,
                                          TypeSet::Type type) {
+  MOZ_ASSERT(IsTypeInferenceEnabled());
+
   id = IdToTypeId(id);
   if (!TrackPropertyTypes(obj, id)) {
     return true;
@@ -643,6 +647,7 @@ MOZ_ALWAYS_INLINE bool HasTypePropertyId(JSObject* obj, jsid id,
 
 MOZ_ALWAYS_INLINE bool HasTypePropertyId(JSObject* obj, jsid id,
                                          const Value& value) {
+  MOZ_ASSERT(IsTypeInferenceEnabled());
   return HasTypePropertyId(obj, id, TypeSet::GetValueType(value));
 }
 
@@ -654,6 +659,9 @@ void AddTypePropertyId(JSContext* cx, ObjectGroup* group, JSObject* obj,
 /* Add a possible type for a property of obj. */
 MOZ_ALWAYS_INLINE void AddTypePropertyId(JSContext* cx, JSObject* obj, jsid id,
                                          TypeSet::Type type) {
+  if (!IsTypeInferenceEnabled()) {
+    return;
+  }
   id = IdToTypeId(id);
   if (TrackPropertyTypes(obj, id) && !HasTrackedPropertyType(obj, id, type)) {
     AddTypePropertyId(cx, obj->group(), obj, id, type);
@@ -665,6 +673,9 @@ void AddMagicTypePropertyId(JSContext* cx, JSObject* obj, jsid id,
 
 MOZ_ALWAYS_INLINE void AddTypePropertyId(JSContext* cx, JSObject* obj, jsid id,
                                          const Value& value) {
+  if (!IsTypeInferenceEnabled()) {
+    return;
+  }
   if (MOZ_UNLIKELY(value.isMagic())) {
     AddMagicTypePropertyId(cx, obj, id, value.whyMagic());
   } else {
@@ -692,6 +703,9 @@ inline void MarkObjectGroupUnknownProperties(JSContext* cx, ObjectGroup* obj) {
 }
 
 inline void MarkTypePropertyNonData(JSContext* cx, JSObject* obj, jsid id) {
+  if (!IsTypeInferenceEnabled()) {
+    return;
+  }
   id = IdToTypeId(id);
   if (TrackPropertyTypes(obj, id)) {
     obj->group()->markPropertyNonData(cx, obj, id);
@@ -699,6 +713,9 @@ inline void MarkTypePropertyNonData(JSContext* cx, JSObject* obj, jsid id) {
 }
 
 inline void MarkTypePropertyNonWritable(JSContext* cx, JSObject* obj, jsid id) {
+  if (!IsTypeInferenceEnabled()) {
+    return;
+  }
   id = IdToTypeId(id);
   if (TrackPropertyTypes(obj, id)) {
     obj->group()->markPropertyNonWritable(cx, obj, id);
@@ -1340,6 +1357,7 @@ inline void ObjectGroup::setBasePropertyCount(const AutoSweepObjectGroup& sweep,
 inline HeapTypeSet* ObjectGroup::getProperty(const AutoSweepObjectGroup& sweep,
                                              JSContext* cx, JSObject* obj,
                                              jsid id) {
+  MOZ_ASSERT(IsTypeInferenceEnabled());
   MOZ_ASSERT(JSID_IS_VOID(id) || JSID_IS_EMPTY(id) || JSID_IS_STRING(id) ||
              JSID_IS_SYMBOL(id));
   MOZ_ASSERT_IF(!JSID_IS_EMPTY(id), id == IdToTypeId(id));
@@ -1389,6 +1407,7 @@ inline HeapTypeSet* ObjectGroup::getProperty(const AutoSweepObjectGroup& sweep,
 
 MOZ_ALWAYS_INLINE HeapTypeSet* ObjectGroup::maybeGetPropertyDontCheckGeneration(
     jsid id) {
+  MOZ_ASSERT(IsTypeInferenceEnabled());
   MOZ_ASSERT(JSID_IS_VOID(id) || JSID_IS_EMPTY(id) || JSID_IS_STRING(id) ||
              JSID_IS_SYMBOL(id));
   MOZ_ASSERT_IF(!JSID_IS_EMPTY(id), id == IdToTypeId(id));
@@ -1422,6 +1441,7 @@ inline unsigned ObjectGroup::getPropertyCount(
 
 inline ObjectGroup::Property* ObjectGroup::getProperty(
     const AutoSweepObjectGroup& sweep, unsigned i) {
+  MOZ_ASSERT(IsTypeInferenceEnabled());
   MOZ_ASSERT(i < getPropertyCount(sweep));
   Property* result;
   if (basePropertyCount(sweep) == 1) {

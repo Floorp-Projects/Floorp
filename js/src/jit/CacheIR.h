@@ -2482,7 +2482,11 @@ class MOZ_RAII PropertyTypeCheckInfo {
 
  public:
   PropertyTypeCheckInfo(JSContext* cx, bool needsTypeBarrier)
-      : group_(cx), id_(cx), needsTypeBarrier_(needsTypeBarrier) {}
+      : group_(cx), id_(cx), needsTypeBarrier_(needsTypeBarrier) {
+    if (!IsTypeInferenceEnabled()) {
+      needsTypeBarrier_ = false;
+    }
+  }
 
   bool needsTypeBarrier() const { return needsTypeBarrier_; }
   bool isSet() const { return group_ != nullptr; }
