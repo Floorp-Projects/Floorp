@@ -19,6 +19,7 @@
 #include "mozAutoDocUpdate.h"
 #include "nsContentUtils.h"
 #include "nsTextFormatter.h"
+#include "nsPrintfCString.h"
 
 using namespace mozilla::dom;
 using namespace mozilla::dom::SVGAngle_Binding;
@@ -340,13 +341,12 @@ void SVGAnimatedOrient::SetBaseValue(float aValue, uint8_t aUnit,
   }
 }
 
-nsresult SVGAnimatedOrient::SetBaseType(SVGEnumValue aValue,
-                                        SVGElement* aSVGElement) {
+void SVGAnimatedOrient::SetBaseType(SVGEnumValue aValue,
+                                    SVGElement* aSVGElement, ErrorResult& aRv) {
   if (mBaseType == aValue) {
-    return NS_OK;
+    return;
   }
-  if (aValue == SVG_MARKER_ORIENT_AUTO || aValue == SVG_MARKER_ORIENT_ANGLE ||
-      aValue == SVG_MARKER_ORIENT_AUTO_START_REVERSE) {
+  if (aValue == SVG_MARKER_ORIENT_AUTO || aValue == SVG_MARKER_ORIENT_ANGLE) {
     AutoChangeOrientNotifier notifier(this, aSVGElement);
 
     mBaseVal = .0f;
@@ -357,9 +357,10 @@ nsresult SVGAnimatedOrient::SetBaseType(SVGEnumValue aValue,
       mAnimValUnit = mBaseValUnit;
       mAnimType = mBaseType;
     }
-    return NS_OK;
+    return;
   }
-  return NS_ERROR_DOM_TYPE_ERR;
+  nsPrintfCString err("Invalid base value %u for marker orient", aValue);
+  aRv.ThrowTypeError(NS_ConvertUTF8toUTF16(err));
 }
 
 void SVGAnimatedOrient::SetAnimValue(float aValue, uint8_t aUnit,
