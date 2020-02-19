@@ -291,7 +291,7 @@ mochitest-media:
                 default: true
     tier:
         by-test-platform:
-            android-em.*: 2
+            android-em.*: 1
             windows10-aarch64.*: 2
             android-hw.*: 1
             default: default

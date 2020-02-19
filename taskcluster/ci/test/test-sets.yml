@@ -597,6 +597,7 @@ android-x86_64-tests:
     - gtest
     - mochitest
     - mochitest-gpu
+    - mochitest-media
     # - mochitest-webgl1-core # Harness issues?
     # - mochitest-webgl1-ext
     # - mochitest-webgl2-core # Emulator not creating ES3?
