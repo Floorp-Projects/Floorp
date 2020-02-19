@@ -1,5 +1,5 @@
-// Ensure that ScriptDebugEpilogue gets called when onExceptionUnwind
-// throws an uncaught exception.
+// Ensure that uncaught exceptions thrown in onExceptionUnwind do not
+// propagate outward into debuggee execution.
 var g = newGlobal({newCompartment: true});
 var dbg = Debugger(g);
 var frame;
@@ -9,7 +9,7 @@ dbg.onExceptionUnwind = function (f, x) {
     throw 'unhandled';
 };
 dbg.onDebuggerStatement = function(f) {
-    assertEq(f.eval('throw 42'), null);
+    assertEq(f.eval('throw 42').throw, 42);
     assertEq(frame.onStack, false);
 };
 g.eval('debugger');

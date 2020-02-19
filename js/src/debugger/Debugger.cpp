@@ -836,8 +836,7 @@ bool DebuggerList<HookIsEnabledFun>::dispatchResumeModeHook(
     bool result = dbg->enterDebuggerHook(
         cx, [&]() -> bool { return fireHook(dbg, resumeMode, rval); });
     if (!result) {
-      resumeMode = ResumeMode::Terminate;
-      rval.setUndefined();
+      return false;
     }
 
     // Stop execution at the first non-Continue hook.
@@ -1156,7 +1155,7 @@ bool DebugAPI::slowPathOnLeaveFrame(JSContext* cx, AbstractFramePtr frame,
           adjqi.runJobs();
 
           if (!result) {
-            resumeMode = ResumeMode::Terminate;
+            return false;
           }
 
           // At this point, we are back in the debuggee compartment, and
@@ -2515,7 +2514,7 @@ bool DebugAPI::onTrap(JSContext* cx) {
         adjqi.runJobs();
 
         if (!result) {
-          resumeMode = ResumeMode::Terminate;
+          return false;
         }
 
         if (resumeMode != ResumeMode::Continue) {
@@ -2649,7 +2648,7 @@ bool DebugAPI::onSingleStep(JSContext* cx) {
       adjqi.runJobs();
 
       if (!result) {
-        resumeMode = ResumeMode::Terminate;
+        return false;
       }
 
       if (resumeMode != ResumeMode::Continue) {
@@ -2755,7 +2754,11 @@ void DebugAPI::slowPathOnNewGlobalObject(JSContext* cx,
       adjqi.runJobs();
 
       if (!result) {
-        resumeMode = ResumeMode::Terminate;
+        // Like other quiet hooks using dispatchQuietHook, this hook
+        // silently ignores all errors that propagate out of it and aren't
+        // already handled by the hook error reporting.
+        cx->clearPendingException();
+        break;
       }
       if (resumeMode != ResumeMode::Continue &&
           resumeMode != ResumeMode::Return) {
