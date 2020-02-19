@@ -15,6 +15,7 @@
 
 #include "mozilla/net/CookieSettings.h"
 #include "mozilla/net/CookieServiceChild.h"
+#include "mozilla/net/HttpBaseChannel.h"
 #include "mozilla/net/NeckoCommon.h"
 
 #include "nsCookieService.h"
@@ -42,6 +43,7 @@
 #include "nsCOMArray.h"
 #include "nsIMutableArray.h"
 #include "nsReadableUtils.h"
+#include "nsQueryObject.h"
 #include "nsCRT.h"
 #include "prprf.h"
 #include "nsNetUtil.h"
@@ -464,6 +466,39 @@ class CompareCookiesByIndex {
     return a.index < b.index;
   }
 };
+
+// Return false if the cookie should be ignored for the current channel.
+bool ProcessSameSiteCookieForForeignRequest(nsIChannel* aChannel,
+                                            nsCookie* aCookie,
+                                            bool aIsSafeTopLevelNav) {
+  int32_t sameSiteAttr = 0;
+  aCookie->GetSameSite(&sameSiteAttr);
+
+  // it if's a cross origin request and the cookie is same site only (strict)
+  // don't send it
+  if (sameSiteAttr == nsICookie::SAMESITE_STRICT) {
+    return false;
+  }
+
+  int64_t currentTimeInUsec = PR_Now();
+
+  // 2 minutes of tolerance for 'sameSite=lax by default' for cookies set
+  // without a sameSite value when used for unsafe http methods.
+  if (StaticPrefs::network_cookie_sameSite_laxPlusPOST_timeout() > 0 &&
+      StaticPrefs::network_cookie_sameSite_laxByDefault() &&
+      sameSiteAttr == nsICookie::SAMESITE_LAX &&
+      aCookie->RawSameSite() == nsICookie::SAMESITE_NONE &&
+      currentTimeInUsec - aCookie->CreationTime() <=
+          (StaticPrefs::network_cookie_sameSite_laxPlusPOST_timeout() *
+           PR_USEC_PER_SEC) &&
+      NS_IsSafeMethodNav(aChannel)) {
+    return true;
+  }
+
+  // if it's a cross origin request, the cookie is same site lax, but it's not a
+  // top-level navigation, don't send it
+  return sameSiteAttr != nsICookie::SAMESITE_LAX || aIsSafeTopLevelNav;
+}
 
 }  // namespace
 
@@ -3043,19 +3078,9 @@ void nsCookieService::GetCookiesForURI(
     // if the cookie is secure and the host scheme isn't, we can't send it
     if (cookie->IsSecure() && !isSecure) continue;
 
-    int32_t sameSiteAttr = 0;
-    cookie->GetSameSite(&sameSiteAttr);
-    if (aIsSameSiteForeign) {
-      // it if's a cross origin request and the cookie is same site only
-      // (strict) don't send it
-      if (sameSiteAttr == nsICookie::SAMESITE_STRICT) {
-        continue;
-      }
-      // if it's a cross origin request, the cookie is same site lax, but it's
-      // not a top-level navigation, don't send it
-      if (sameSiteAttr == nsICookie::SAMESITE_LAX && !aIsSafeTopLevelNav) {
-        continue;
-      }
+    if (aIsSameSiteForeign && !ProcessSameSiteCookieForForeignRequest(
+                                  aChannel, cookie, aIsSafeTopLevelNav)) {
+      continue;
     }
 
     // if the cookie is httpOnly and it's not going directly to the HTTP
