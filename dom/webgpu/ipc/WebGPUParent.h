@@ -47,6 +47,7 @@ class WebGPUParent final : public PWebGPUParent {
       RawId aDestinationId, BufferAddress aDestinationOffset,
       BufferAddress aSize);
   ipc::IPCResult RecvCommandEncoderRunComputePass(RawId aSelfId, Shmem&& shmem);
+  ipc::IPCResult RecvCommandEncoderRunRenderPass(RawId aSelfId, Shmem&& shmem);
   ipc::IPCResult RecvCommandEncoderFinish(
       RawId aSelfId, const dom::GPUCommandBufferDescriptor& aDesc);
   ipc::IPCResult RecvCommandEncoderDestroy(RawId aSelfId);
@@ -71,6 +72,7 @@ class WebGPUParent final : public PWebGPUParent {
       RawId aSelfId, const SerialComputePipelineDescriptor& aDesc,
       RawId aNewId);
   ipc::IPCResult RecvComputePipelineDestroy(RawId aSelfId);
+  ipc::IPCResult RecvRenderPipelineDestroy(RawId aSelfId);
   ipc::IPCResult RecvShutdown();
 
  private:

@@ -760,9 +760,10 @@ dictionary GPUCommandEncoderDescriptor : GPUObjectDescriptorBase {
 [Pref="dom.webgpu.enabled",
  Exposed=Window]
 interface GPUCommandEncoder {
-    //GPURenderPassEncoder beginRenderPass(GPURenderPassDescriptor descriptor);
     [NewObject]
     GPUComputePassEncoder beginComputePass(optional GPUComputePassDescriptor descriptor = {});
+    [NewObject]
+    GPURenderPassEncoder beginRenderPass(GPURenderPassDescriptor descriptor);
 
     void copyBufferToBuffer(
         GPUBuffer source,
@@ -813,16 +814,15 @@ interface mixin GPUProgrammablePassEncoder {
 
 // Render Pass
 interface mixin GPURenderEncoderBase {
-    //void setPipeline(GPURenderPipeline pipeline);
+    void setPipeline(GPURenderPipeline pipeline);
 
-    //void setIndexBuffer(GPUBuffer buffer, u64 offset);
-    //void setVertexBuffers(u32 startSlot,
-    //                      sequence<GPUBuffer> buffers, sequence<u64> offsets);
+    void setIndexBuffer(GPUBuffer buffer, optional u64 offset = 0);
+    void setVertexBuffer(u32 slot, GPUBuffer buffer, optional u64 offset = 0);
 
-    //void draw(u32 vertexCount, u32 instanceCount,
-    //          u32 firstVertex, u32 firstInstance);
-    //void drawIndexed(u32 indexCount, u32 instanceCount,
-    //                 u32 firstIndex, i32 baseVertex, u32 firstInstance);
+    void draw(u32 vertexCount, u32 instanceCount,
+              u32 firstVertex, u32 firstInstance);
+    void drawIndexed(u32 indexCount, u32 instanceCount,
+                     u32 firstIndex, i32 baseVertex, u32 firstInstance);
 
     //void drawIndirect(GPUBuffer indirectBuffer, u64 indirectOffset);
     //void drawIndexedIndirect(GPUBuffer indirectBuffer, u64 indirectOffset);
@@ -841,7 +841,8 @@ interface GPURenderPassEncoder {
     //void setStencilReference(u32 reference);
 
     //void executeBundles(sequence<GPURenderBundle> bundles);
-    //void endPass();
+    [Throws]
+    void endPass();
 };
 GPURenderPassEncoder includes GPUObjectBase;
 GPURenderPassEncoder includes GPUProgrammablePassEncoder;
@@ -887,7 +888,7 @@ interface GPURenderBundleEncoder {
     //GPURenderBundle finish(optional GPURenderBundleDescriptor descriptor = {});
 };
 GPURenderBundleEncoder includes GPUObjectBase;
-GPURenderBundleEncoder includes GPURenderEncoderBase;
+//GPURenderBundleEncoder includes GPURenderEncoderBase;
 
 dictionary GPURenderBundleDescriptor : GPUObjectDescriptorBase {
 };

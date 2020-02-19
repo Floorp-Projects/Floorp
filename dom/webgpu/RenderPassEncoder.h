@@ -22,6 +22,7 @@ namespace webgpu {
 
 class CommandEncoder;
 class RenderBundle;
+class RenderPipeline;
 
 class RenderPassEncoder final : public ObjectBase,
                                 public ChildOf<CommandEncoder> {
@@ -29,15 +30,27 @@ class RenderPassEncoder final : public ObjectBase,
   GPU_DECL_CYCLE_COLLECTION(RenderPassEncoder)
   GPU_DECL_JS_WRAP(RenderPassEncoder)
 
-  RenderPassEncoder() = delete;
+  RenderPassEncoder(CommandEncoder* const aParent,
+                    const dom::GPURenderPassDescriptor& aDesc);
 
  protected:
   virtual ~RenderPassEncoder();
   void Cleanup() {}
 
+  ffi::WGPURawPass mRaw;
+
  public:
   void SetBindGroup(uint32_t aSlot, const BindGroup& aBindGroup,
                     const dom::Sequence<uint32_t>& aDynamicOffsets);
+  void SetPipeline(const RenderPipeline& aPipeline);
+  void SetIndexBuffer(const Buffer& aBuffer, uint64_t aOffset);
+  void SetVertexBuffer(uint32_t aSlot, const Buffer& aBuffer, uint64_t aOffset);
+  void Draw(uint32_t aVertexCount, uint32_t aInstanceCount,
+            uint32_t aFirstVertex, uint32_t aFirstInstance);
+  void DrawIndexed(uint32_t aIndexCount, uint32_t aInstanceCount,
+                   uint32_t aFirstIndex, int32_t aBaseVertex,
+                   uint32_t aFirstInstance);
+  void EndPass(ErrorResult& aRv);
 };
 
 }  // namespace webgpu
