@@ -359,33 +359,55 @@ void RemoteWorkerManager::LaunchNewContentProcess(
   AssertIsInMainProcess();
   AssertIsOnBackgroundThread();
 
-  RefPtr<RemoteWorkerManager> self = this;
+  nsCOMPtr<nsISerialEventTarget> bgEventTarget =
+      GetCurrentThreadSerialEventTarget();
 
-  // This runnable will spawn a new process if it doesn't exist yet.
+  using CallbackParamType = ContentParent::LaunchPromise::ResolveOrRejectValue;
+
+  // A new content process must be requested on the main thread. On success,
+  // the success callback will also run on the main thread. On failure, however,
+  // the failure callback must be run on the background thread - it uses
+  // RemoteWorkerManager, and RemoteWorkerManager isn't threadsafe, so the
+  // promise callback will just dispatch the "real" failure callback to the
+  // background thread.
+  auto processLaunchCallback = [isServiceWorker = IsServiceWorker(aData),
+                                principalInfo = aData.principalInfo(),
+                                bgEventTarget = std::move(bgEventTarget),
+                                self = RefPtr<RemoteWorkerManager>(this)](
+                                   const CallbackParamType& aValue) mutable {
+    if (aValue.IsResolve()) {
+      if (isServiceWorker) {
+        TransmitPermissionsAndBlobURLsForPrincipalInfo(aValue.ResolveValue(),
+                                                       principalInfo);
+      }
+
+      // The failure callback won't run, and we're on the main thread, so
+      // we need to properly release the thread-unsafe RemoteWorkerManager.
+      NS_ProxyRelease(__func__, bgEventTarget, self.forget());
+    } else {
+      // The "real" failure callback.
+      nsCOMPtr<nsIRunnable> r =
+          NS_NewRunnableFunction(__func__, [self = std::move(self)] {
+            auto pendings = std::move(self->mPendings);
+            for (const auto& pending : pendings) {
+              pending.mController->CreationFailed();
+            }
+          });
+
+      bgEventTarget->Dispatch(r.forget(), NS_DISPATCH_NORMAL);
+    }
+  };
+
   nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
-      __func__, [isServiceWorker = IsServiceWorker(aData),
-                 principalInfo = aData.principalInfo(),
-                 self = std::move(self)]() mutable {
+      __func__, [callback = std::move(processLaunchCallback)]() mutable {
         ContentParent::GetNewOrUsedBrowserProcessAsync(
             /* aFrameElement = */ nullptr,
             /* aRemoteType = */ NS_LITERAL_STRING(DEFAULT_REMOTE_TYPE))
-            ->Then(
-                GetCurrentThreadSerialEventTarget(), __func__,
-                [isServiceWorker,
-                 principalInfo](ContentParent* aContentParent) {
-                  if (!isServiceWorker) {
-                    return;
-                  }
-                  TransmitPermissionsAndBlobURLsForPrincipalInfo(aContentParent,
-                                                                 principalInfo);
-                },
-                [self = std::move(self)](
-                    const ContentParent::LaunchPromise::RejectValueType&) {
-                  auto pendings = std::move(self->mPendings);
-                  for (const auto& pending : pendings) {
-                    pending.mController->CreationFailed();
-                  }
-                });
+            ->Then(GetCurrentThreadSerialEventTarget(), __func__,
+                   [callback = std::move(callback)](
+                       const CallbackParamType& aValue) mutable {
+                     callback(aValue);
+                   });
       });
 
   nsCOMPtr<nsIEventTarget> target =
