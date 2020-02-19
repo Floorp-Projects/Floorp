@@ -176,6 +176,7 @@ add_task(async function() {
       "-cause:",
       "-domain:",
       "-has-response-header:",
+      "-initiator:",
       "-is:",
       "-larger-than:",
       "-method:",
