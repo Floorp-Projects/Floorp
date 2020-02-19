@@ -490,8 +490,10 @@ bool SVGElement::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
       for (i = 0; i < enumInfo.mEnumCount; i++) {
         if (aAttribute == enumInfo.mEnumInfo[i].mName) {
           RefPtr<nsAtom> valAtom = NS_Atomize(aValue);
-          rv = enumInfo.mEnums[i].SetBaseValueAtom(valAtom, this);
-          if (NS_FAILED(rv)) {
+          if (!enumInfo.mEnums[i].SetBaseValueAtom(valAtom, this)) {
+            // Exact error value does not matter; we just need to mark the
+            // parse as failed.
+            rv = NS_ERROR_FAILURE;
             enumInfo.SetUnknownValue(i);
           } else {
             aResult.SetTo(valAtom);

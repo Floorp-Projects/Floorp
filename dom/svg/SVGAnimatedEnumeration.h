@@ -43,7 +43,9 @@ class SVGAnimatedEnumeration {
     mIsBaseSet = false;
   }
 
-  nsresult SetBaseValueAtom(const nsAtom* aValue, SVGElement* aSVGElement);
+  // Returns whether aValue corresponded to a key in our mapping (in which case
+  // we actually set the base value) or not (in which case we did not).
+  bool SetBaseValueAtom(const nsAtom* aValue, SVGElement* aSVGElement);
   nsAtom* GetBaseValueAtom(SVGElement* aSVGElement);
   void SetBaseValue(uint16_t aValue, SVGElement* aSVGElement, ErrorResult& aRv);
   uint16_t GetBaseValue() const { return mBaseVal; }

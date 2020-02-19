@@ -98,8 +98,7 @@ class MOZ_RAII AutoSVGViewHandler {
         return false;
       }
       nsAtom* valAtom = NS_GetStaticAtom(aParams);
-      if (!valAtom ||
-          NS_FAILED(mSVGView->mZoomAndPan.SetBaseValueAtom(valAtom, mRoot))) {
+      if (!valAtom || !mSVGView->mZoomAndPan.SetBaseValueAtom(valAtom, mRoot)) {
         return false;
       }
     } else {
