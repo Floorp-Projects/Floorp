@@ -40,26 +40,27 @@ class CrashReporterHelper {
   }
 
  protected:
-  bool GenerateCrashReport(base::ProcessId aPid,
+  void GenerateCrashReport(base::ProcessId aPid,
                            nsString* aMinidumpId = nullptr) {
+    nsAutoString minidumpId;
     if (!mCrashReporter) {
-      HandleOrphanedMinidump(aPid, aMinidumpId);
-      return false;
+      HandleOrphanedMinidump(aPid, minidumpId);
+    } else if (mCrashReporter->GenerateCrashReport(aPid)) {
+      minidumpId = mCrashReporter->MinidumpID();
     }
 
-    bool generated = mCrashReporter->GenerateCrashReport(aPid);
-    if (generated && aMinidumpId) {
-      *aMinidumpId = mCrashReporter->MinidumpID();
+    if (aMinidumpId) {
+      *aMinidumpId = minidumpId;
     }
 
     mCrashReporter = nullptr;
-    return generated;
   }
 
-  void HandleOrphanedMinidump(base::ProcessId aPid, nsString* aMinidumpId) {
-    if (CrashReporter::FinalizeOrphanedMinidump(aPid, PT, aMinidumpId)) {
+ private:
+  void HandleOrphanedMinidump(base::ProcessId aPid, nsString& aMinidumpId) {
+    if (CrashReporter::FinalizeOrphanedMinidump(aPid, PT, &aMinidumpId)) {
       CrashReporterHost::RecordCrash(PT, nsICrashService::CRASH_TYPE_CRASH,
-                                     *aMinidumpId);
+                                     aMinidumpId);
     } else {
       NS_WARNING(nsPrintfCString("child process pid = %d crashed without "
                                  "leaving a minidump behind",
@@ -68,6 +69,7 @@ class CrashReporterHelper {
     }
   }
 
+ protected:
   UniquePtr<ipc::CrashReporterHost> mCrashReporter;
 };
 

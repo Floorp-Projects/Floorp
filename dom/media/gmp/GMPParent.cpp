@@ -433,10 +433,9 @@ void GMPParent::AddCrashAnnotations() {
   }
 }
 
-bool GMPParent::GetCrashID(nsString& aResult) {
+void GMPParent::GetCrashID(nsString& aResult) {
   AddCrashAnnotations();
-
-  return GenerateCrashReport(OtherPid(), &aResult);
+  GenerateCrashReport(OtherPid(), &aResult);
 }
 
 static void GMPNotifyObservers(const uint32_t aPluginID,
@@ -468,13 +467,12 @@ void GMPParent::ActorDestroy(ActorDestroyReason aWhy) {
     Telemetry::Accumulate(Telemetry::SUBPROCESS_ABNORMAL_ABORT,
                           NS_LITERAL_CSTRING("gmplugin"), 1);
     nsString dumpID;
-    if (!GetCrashID(dumpID)) {
-      if (dumpID.IsEmpty()) {
-        NS_WARNING("GMP crash without crash report");
-        dumpID = mName;
-        dumpID += '-';
-        AppendUTF8toUTF16(mVersion, dumpID);
-      }
+    GetCrashID(dumpID);
+    if (dumpID.IsEmpty()) {
+      NS_WARNING("GMP crash without crash report");
+      dumpID = mName;
+      dumpID += '-';
+      AppendUTF8toUTF16(mVersion, dumpID);
     }
 
     // NotifyObservers is mainthread-only
