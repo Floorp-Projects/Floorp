@@ -236,11 +236,11 @@ function plInit() {
         );
         let tabbrowser = browserWindow.gBrowser;
         if (remoteType) {
-          tabbrowser.updateBrowserRemoteness(tabbrowser.initialBrowser, {
+          tabbrowser.updateBrowserRemoteness(tabbrowser.selectedBrowser, {
             remoteType,
           });
         } else {
-          tabbrowser.updateBrowserRemoteness(tabbrowser.initialBrowser, {
+          tabbrowser.updateBrowserRemoteness(tabbrowser.selectedBrowser, {
             remoteType: E10SUtils.NOT_REMOTE,
           });
         }

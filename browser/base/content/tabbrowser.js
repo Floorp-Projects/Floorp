@@ -414,10 +414,6 @@
       // so we have to update it:
       browser.docShellIsActive = this.shouldActivateDocShell(browser);
 
-      // Only necessary because of pageloader talos tests which access this.
-      // Bug 1508171 covers removing this.
-      this.initialBrowser = browser;
-
       let autoScrollPopup = browser._createAutoScrollPopup();
       autoScrollPopup.id = "autoscroller";
       document.getElementById("mainPopupSet").appendChild(autoScrollPopup);

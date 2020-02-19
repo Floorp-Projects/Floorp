@@ -5176,7 +5176,7 @@ var XULBrowserWindow = {
   },
 
   forceInitialBrowserNonRemote(aOpener) {
-    gBrowser.updateBrowserRemoteness(gBrowser.initialBrowser, {
+    gBrowser.updateBrowserRemoteness(gBrowser.selectedBrowser, {
       opener: aOpener,
       remoteType: E10SUtils.NOT_REMOTE,
     });
