@@ -1000,7 +1000,7 @@ class CDMStorageTest {
 
     void ResolvePromise(uint32_t aPromiseId) override {}
 
-    void RejectPromise(uint32_t aPromiseId, nsresult aError,
+    void RejectPromise(uint32_t aPromiseId, ErrorResult&& aError,
                        const nsCString& aErrorMessage) override {}
 
     void SessionMessage(const nsACString& aSessionId, uint32_t aMessageType,

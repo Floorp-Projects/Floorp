@@ -28,7 +28,7 @@ class ChromiumCDMCallbackProxy : public ChromiumCDMCallback {
 
   void ResolvePromise(uint32_t aPromiseId) override;
 
-  void RejectPromise(uint32_t aPromiseId, nsresult aException,
+  void RejectPromise(uint32_t aPromiseId, ErrorResult&& aException,
                      const nsCString& aErrorMessage) override;
 
   void SessionMessage(const nsACString& aSessionId, uint32_t aMessageType,
