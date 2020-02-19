@@ -524,7 +524,8 @@ void AsyncImagePipelineManager::HoldExternalImage(
 }
 
 void AsyncImagePipelineManager::NotifyPipelinesUpdated(
-    RefPtr<wr::WebRenderPipelineInfo> aInfo, wr::RenderedFrameId aLatestFrameId,
+    RefPtr<const wr::WebRenderPipelineInfo> aInfo,
+    wr::RenderedFrameId aLatestFrameId,
     wr::RenderedFrameId aLastCompletedFrameId) {
   MOZ_ASSERT(wr::RenderThread::IsInRenderThread());
   MOZ_ASSERT(mLastCompletedFrameId <= aLastCompletedFrameId.mId);
@@ -532,7 +533,7 @@ void AsyncImagePipelineManager::NotifyPipelinesUpdated(
 
   // This is called on the render thread, so we just stash the data into
   // mPendingUpdates and process it later on the compositor thread.
-  mPendingUpdates.push_back(aInfo);
+  mPendingUpdates.push_back(std::move(aInfo));
   mLastCompletedFrameId = aLastCompletedFrameId.mId;
 
   {
@@ -575,12 +576,11 @@ void AsyncImagePipelineManager::ProcessPipelineUpdates() {
     for (auto pipelineInfo : update.second) {
       auto& info = pipelineInfo->Raw();
 
-      for (uintptr_t i = 0; i < info.epochs.length; i++) {
-        ProcessPipelineRendered(info.epochs.data[i].pipeline_id,
-                                info.epochs.data[i].epoch, update.first);
+      for (auto& epoch : info.epochs) {
+        ProcessPipelineRendered(epoch.pipeline_id, epoch.epoch, update.first);
       }
-      for (uintptr_t i = 0; i < info.removed_pipelines.length; i++) {
-        ProcessPipelineRemoved(info.removed_pipelines.data[i], update.first);
+      for (auto& removedPipeline : info.removed_pipelines) {
+        ProcessPipelineRemoved(removedPipeline, update.first);
       }
     }
   }

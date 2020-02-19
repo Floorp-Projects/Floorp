@@ -415,7 +415,7 @@ void RenderThread::RunEvent(wr::WindowId aWindowId,
 }
 
 static void NotifyDidRender(layers::CompositorBridgeParent* aBridge,
-                            RefPtr<WebRenderPipelineInfo> aInfo,
+                            RefPtr<const WebRenderPipelineInfo> aInfo,
                             VsyncId aCompositeStartId,
                             TimeStamp aCompositeStart, TimeStamp aRenderStart,
                             TimeStamp aEnd, bool aRender,
@@ -429,10 +429,10 @@ static void NotifyDidRender(layers::CompositorBridgeParent* aBridge,
 
   auto info = aInfo->Raw();
 
-  for (uintptr_t i = 0; i < info.epochs.length; i++) {
-    aBridge->NotifyPipelineRendered(
-        info.epochs.data[i].pipeline_id, info.epochs.data[i].epoch,
-        aCompositeStartId, aCompositeStart, aRenderStart, aEnd, &aStats);
+  for (const auto& epoch : info.epochs) {
+    aBridge->NotifyPipelineRendered(epoch.pipeline_id, epoch.epoch,
+                                    aCompositeStartId, aCompositeStart,
+                                    aRenderStart, aEnd, &aStats);
   }
 
   if (aBridge->GetWrBridge()) {
@@ -484,7 +484,7 @@ void RenderThread::UpdateAndRender(
   renderer->CheckGraphicsResetStatus();
 
   TimeStamp end = TimeStamp::Now();
-  RefPtr<WebRenderPipelineInfo> info = renderer->FlushPipelineInfo();
+  RefPtr<const WebRenderPipelineInfo> info = renderer->FlushPipelineInfo();
 
   layers::CompositorThreadHolder::Loop()->PostTask(
       NewRunnableFunction("NotifyDidRenderRunnable", &NotifyDidRender,
@@ -881,13 +881,6 @@ WebRenderShaders::~WebRenderShaders() {
   wr_shaders_delete(mShaders, mGL.get());
 }
 
-WebRenderPipelineInfo::WebRenderPipelineInfo(wr::WrPipelineInfo aPipelineInfo)
-    : mPipelineInfo(aPipelineInfo) {}
-
-WebRenderPipelineInfo::~WebRenderPipelineInfo() {
-  wr_pipeline_info_delete(mPipelineInfo);
-}
-
 WebRenderThreadPool::WebRenderThreadPool(bool low_priority) {
   mThreadPool = wr_thread_pool_new(low_priority);
 }
@@ -1054,17 +1047,18 @@ void wr_schedule_render(mozilla::wr::WrWindowId aWindowId,
 
 static void NotifyDidSceneBuild(RefPtr<layers::CompositorBridgeParent> aBridge,
                                 const nsTArray<wr::RenderRoot>& aRenderRoots,
-                                RefPtr<wr::WebRenderPipelineInfo> aInfo) {
+                                RefPtr<const wr::WebRenderPipelineInfo> aInfo) {
   aBridge->NotifyDidSceneBuild(aRenderRoots, aInfo);
 }
 
 void wr_finished_scene_build(mozilla::wr::WrWindowId aWindowId,
                              const mozilla::wr::WrDocumentId* aDocumentIds,
                              size_t aDocumentIdsCount,
-                             mozilla::wr::WrPipelineInfo aInfo) {
+                             mozilla::wr::WrPipelineInfo* aInfo) {
   RefPtr<mozilla::layers::CompositorBridgeParent> cbp = mozilla::layers::
       CompositorBridgeParent::GetCompositorBridgeParentFromWindowId(aWindowId);
-  RefPtr<wr::WebRenderPipelineInfo> info = new wr::WebRenderPipelineInfo(aInfo);
+  RefPtr<wr::WebRenderPipelineInfo> info = new wr::WebRenderPipelineInfo();
+  info->Raw() = std::move(*aInfo);
   if (cbp) {
     nsTArray<wr::RenderRoot> renderRoots;
     renderRoots.SetLength(aDocumentIdsCount);

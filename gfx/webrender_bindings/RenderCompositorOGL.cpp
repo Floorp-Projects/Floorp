@@ -117,7 +117,7 @@ bool RenderCompositorOGL::BeginFrame() {
 }
 
 RenderedFrameId RenderCompositorOGL::EndFrame(
-    const FfiVec<DeviceIntRect>& aDirtyRects) {
+    const nsTArray<DeviceIntRect>& aDirtyRects) {
   RenderedFrameId frameId = GetNextRenderFrameId();
   InsertFrameDoneSync();
 

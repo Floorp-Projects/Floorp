@@ -2296,7 +2296,7 @@ void CompositorBridgeParent::DidComposite(const VsyncId& aId,
 
 void CompositorBridgeParent::NotifyDidSceneBuild(
     const nsTArray<wr::RenderRoot>& aRenderRoots,
-    RefPtr<wr::WebRenderPipelineInfo> aInfo) {
+    RefPtr<const wr::WebRenderPipelineInfo> aInfo) {
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
   if (mPaused) {
     return;

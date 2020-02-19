@@ -89,9 +89,9 @@ void APZUpdater::CompleteSceneSwap(const wr::WrWindowId& aWindowId,
     return;
   }
 
-  for (uintptr_t i = 0; i < aInfo.removed_pipelines.length; i++) {
-    WRRootId layersId = WRRootId(aInfo.removed_pipelines.data[i].pipeline_id,
-                                 aInfo.removed_pipelines.data[i].document_id);
+  for (const auto& removedPipeline : aInfo.removed_pipelines) {
+    WRRootId layersId =
+        WRRootId(removedPipeline.pipeline_id, removedPipeline.document_id);
     updater->mEpochData.erase(layersId);
   }
   // Reset the built info for all pipelines, then put it back for the ones
@@ -99,10 +99,9 @@ void APZUpdater::CompleteSceneSwap(const wr::WrWindowId& aWindowId,
   for (auto& i : updater->mEpochData) {
     i.second.mBuilt = Nothing();
   }
-  for (uintptr_t i = 0; i < aInfo.epochs.length; i++) {
-    WRRootId layersId = WRRootId(aInfo.epochs.data[i].pipeline_id,
-                                 aInfo.epochs.data[i].document_id);
-    updater->mEpochData[layersId].mBuilt = Some(aInfo.epochs.data[i].epoch);
+  for (const auto& epoch : aInfo.epochs) {
+    WRRootId layersId = WRRootId(epoch.pipeline_id, epoch.document_id);
+    updater->mEpochData[layersId].mBuilt = Some(epoch.epoch);
   }
 
   // Run any tasks that got unblocked, then unlock the tree. The order is
@@ -597,9 +596,8 @@ void apz_pre_scene_swap(mozilla::wr::WrWindowId aWindowId) {
 }
 
 void apz_post_scene_swap(mozilla::wr::WrWindowId aWindowId,
-                         mozilla::wr::WrPipelineInfo aInfo) {
-  mozilla::layers::APZUpdater::CompleteSceneSwap(aWindowId, aInfo);
-  wr_pipeline_info_delete(aInfo);
+                         const mozilla::wr::WrPipelineInfo* aInfo) {
+  mozilla::layers::APZUpdater::CompleteSceneSwap(aWindowId, *aInfo);
 }
 
 void apz_run_updater(mozilla::wr::WrWindowId aWindowId) {

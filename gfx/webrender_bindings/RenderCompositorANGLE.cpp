@@ -446,7 +446,7 @@ bool RenderCompositorANGLE::BeginFrame() {
 }
 
 RenderedFrameId RenderCompositorANGLE::EndFrame(
-    const FfiVec<DeviceIntRect>& aDirtyRects) {
+    const nsTArray<DeviceIntRect>& aDirtyRects) {
   RenderedFrameId frameId = GetNextRenderFrameId();
   InsertGraphicsCommandsFinishedWaitQuery(frameId);
 
@@ -474,10 +474,9 @@ RenderedFrameId RenderCompositorANGLE::EndFrame(
       // Clear full render flag.
       mFullRender = false;
       // If there is no diry rect, we skip SwapChain present.
-      if (aDirtyRects.length > 0) {
-        StackArray<RECT, 1> rects(aDirtyRects.length);
-        for (uintptr_t i = 0; i < aDirtyRects.length; i++) {
-          const DeviceIntRect& rect = aDirtyRects.data[i];
+      if (!aDirtyRects.IsEmpty()) {
+        StackArray<RECT, 1> rects(aDirtyRects.Length());
+        for (const auto& rect : aDirtyRects) {
           // Clip rect to bufferSize
           rects[i].left =
               std::max(0, std::min(rect.origin.x, bufferSize.width));
@@ -491,7 +490,7 @@ RenderedFrameId RenderCompositorANGLE::EndFrame(
 
         DXGI_PRESENT_PARAMETERS params;
         PodZero(&params);
-        params.DirtyRectsCount = aDirtyRects.length;
+        params.DirtyRectsCount = aDirtyRects.Length();
         params.pDirtyRects = rects.data();
 
         HRESULT hr;

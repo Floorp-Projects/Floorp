@@ -90,7 +90,7 @@ bool RenderCompositorEGL::BeginFrame() {
 }
 
 RenderedFrameId RenderCompositorEGL::EndFrame(
-    const FfiVec<DeviceIntRect>& aDirtyRects) {
+    const nsTArray<DeviceIntRect>& aDirtyRects) {
   RenderedFrameId frameId = GetNextRenderFrameId();
   if (mEGLSurface != EGL_NO_SURFACE) {
     gl()->SwapBuffers();

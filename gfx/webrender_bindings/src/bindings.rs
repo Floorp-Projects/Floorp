@@ -23,6 +23,7 @@ use std::os::raw::{c_void, c_char, c_float};
 use std::os::raw::{c_int};
 use std::time::Duration;
 use gleam::gl;
+use thin_vec::ThinVec;
 
 use webrender::{
     api::*, api::units::*, ApiRecordingReceiver, AsyncPropertySampler, AsyncScreenshotHandle,
@@ -253,40 +254,6 @@ impl WrVecU8 {
         let mut vec = self.flush_into_vec();
         vec.extend_from_slice(bytes);
         *self = Self::from_vec(vec);
-    }
-}
-
-#[repr(C)]
-pub struct FfiVec<T> {
-    // We use a *const instead of a *mut because we don't want the C++ side
-    // to be mutating this. It is strictly read-only from C++
-    data: *const T,
-    length: usize,
-    capacity: usize,
-}
-
-impl<T> FfiVec<T> {
-    fn from_vec(v: Vec<T>) -> FfiVec<T> {
-        let ret = FfiVec {
-            data: v.as_ptr(),
-            length: v.len(),
-            capacity: v.capacity(),
-        };
-        mem::forget(v);
-        ret
-    }
-}
-
-impl<T> Drop for FfiVec<T> {
-    fn drop(&mut self) {
-        // turn the stuff back into a Vec and let it be freed normally
-        let _ = unsafe {
-            Vec::from_raw_parts(
-                self.data as *mut T,
-                self.length,
-                self.capacity
-            )
-        };
     }
 }
 
@@ -564,10 +531,11 @@ extern "C" {
     fn wr_schedule_render(window_id: WrWindowId,
                           document_id_array: *const WrDocumentId,
                           document_id_count: usize);
+    // NOTE: This moves away from pipeline_info.
     fn wr_finished_scene_build(window_id: WrWindowId,
                                document_id_array: *const WrDocumentId,
                                document_id_count: usize,
-                               pipeline_info: WrPipelineInfo);
+                               pipeline_info: &mut WrPipelineInfo);
 
     fn wr_transaction_notification_notified(handler: usize, when: Checkpoint);
 }
@@ -621,34 +589,23 @@ pub extern "C" fn wr_renderer_update(renderer: &mut Renderer) {
     renderer.update();
 }
 
-#[repr(C)]
-pub struct WrRenderResult {
-    result: bool,
-    dirty_rects: FfiVec<DeviceIntRect>,
-}
-
 #[no_mangle]
-pub unsafe extern "C" fn wr_render_result_delete(_result: WrRenderResult) {
-    // _result will be dropped here, and the drop impl on FfiVec will free
-    // the underlying vec memory
-}
-
-#[no_mangle]
-pub extern "C" fn wr_renderer_render(renderer: &mut Renderer,
-                                     width: i32,
-                                     height: i32,
-                                     had_slow_frame: bool,
-                                     out_stats: &mut RendererStats) -> WrRenderResult {
+pub extern "C" fn wr_renderer_render(
+    renderer: &mut Renderer,
+    width: i32,
+    height: i32,
+    had_slow_frame: bool,
+    out_stats: &mut RendererStats,
+    out_dirty_rects: &mut ThinVec<DeviceIntRect>,
+) -> bool {
     if had_slow_frame {
       renderer.notify_slow_frame();
     }
     match renderer.render(DeviceIntSize::new(width, height)) {
         Ok(results) => {
             *out_stats = results.stats;
-            WrRenderResult {
-                result: true,
-                dirty_rects: FfiVec::from_vec(results.dirty_rects),
-            }
+            out_dirty_rects.extend(results.dirty_rects);
+            true
         }
         Err(errors) => {
             for e in errors {
@@ -658,10 +615,7 @@ pub extern "C" fn wr_renderer_render(renderer: &mut Renderer,
                     gfx_critical_note(msg.as_ptr());
                 }
             }
-            WrRenderResult {
-                result: false,
-                dirty_rects: FfiVec::from_vec(vec![]),
-            }
+            false
         },
     }
 }
@@ -829,40 +783,36 @@ impl<'a> From<&'a (WrPipelineId, WrDocumentId)> for WrRemovedPipeline {
 
 #[repr(C)]
 pub struct WrPipelineInfo {
-    // This contains an entry for each pipeline that was rendered, along with
-    // the epoch at which it was rendered. Rendered pipelines include the root
-    // pipeline and any other pipelines that were reachable via IFrame display
-    // items from the root pipeline.
-    epochs: FfiVec<WrPipelineEpoch>,
-    // This contains an entry for each pipeline that was removed during the
-    // last transaction. These pipelines would have been explicitly removed by
-    // calling remove_pipeline on the transaction object; the pipeline showing
-    // up in this array means that the data structures have been torn down on
-    // the webrender side, and so any remaining data structures on the caller
-    // side can now be torn down also.
-    removed_pipelines: FfiVec<WrRemovedPipeline>,
+    /// This contains an entry for each pipeline that was rendered, along with
+    /// the epoch at which it was rendered. Rendered pipelines include the root
+    /// pipeline and any other pipelines that were reachable via IFrame display
+    /// items from the root pipeline.
+    epochs: ThinVec<WrPipelineEpoch>,
+    /// This contains an entry for each pipeline that was removed during the
+    /// last transaction. These pipelines would have been explicitly removed by
+    /// calling remove_pipeline on the transaction object; the pipeline showing
+    /// up in this array means that the data structures have been torn down on
+    /// the webrender side, and so any remaining data structures on the caller
+    /// side can now be torn down also.
+    removed_pipelines: ThinVec<WrRemovedPipeline>,
 }
 
 impl WrPipelineInfo {
     fn new(info: &PipelineInfo) -> Self {
         WrPipelineInfo {
-            epochs: FfiVec::from_vec(info.epochs.iter().map(WrPipelineEpoch::from).collect()),
-            removed_pipelines: FfiVec::from_vec(info.removed_pipelines.iter()
-                                                .map(WrRemovedPipeline::from).collect()),
+            epochs: info.epochs.iter().map(WrPipelineEpoch::from).collect(),
+            removed_pipelines: info.removed_pipelines.iter().map(WrRemovedPipeline::from).collect(),
         }
     }
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn wr_renderer_flush_pipeline_info(renderer: &mut Renderer) -> WrPipelineInfo {
+pub unsafe extern "C" fn wr_renderer_flush_pipeline_info(
+    renderer: &mut Renderer,
+    out: &mut WrPipelineInfo,
+) {
     let info = renderer.flush_pipeline_info();
-    WrPipelineInfo::new(&info)
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn wr_pipeline_info_delete(_info: WrPipelineInfo) {
-    // _info will be dropped here, and the drop impl on FfiVec will free
-    // the underlying vec memory
+    *out = WrPipelineInfo::new(&info);
 }
 
 extern "C" {
@@ -912,9 +862,7 @@ extern "C" {
     // updater thread)
     fn apz_register_updater(window_id: WrWindowId);
     fn apz_pre_scene_swap(window_id: WrWindowId);
-    // This function takes ownership of the pipeline_info and is responsible for
-    // freeing it via wr_pipeline_info_delete.
-    fn apz_post_scene_swap(window_id: WrWindowId, pipeline_info: WrPipelineInfo);
+    fn apz_post_scene_swap(window_id: WrWindowId, pipeline_info: &WrPipelineInfo);
     fn apz_run_updater(window_id: WrWindowId);
     fn apz_deregister_updater(window_id: WrWindowId);
 
@@ -955,17 +903,16 @@ impl SceneBuilderHooks for APZCallbacks {
     }
 
     fn post_scene_swap(&self, document_ids: &Vec<DocumentId>, info: PipelineInfo, sceneswap_time: u64) {
+        let mut info = WrPipelineInfo::new(&info);
         unsafe {
-            let info = WrPipelineInfo::new(&info);
             record_telemetry_time(TelemetryProbe::SceneSwapTime, sceneswap_time);
-            apz_post_scene_swap(self.window_id, info);
+            apz_post_scene_swap(self.window_id, &info);
         }
-        let info = WrPipelineInfo::new(&info);
 
         // After a scene swap we should schedule a render for the next vsync,
         // otherwise there's no guarantee that the new scene will get rendered
         // anytime soon
-        unsafe { wr_finished_scene_build(self.window_id, document_ids.as_ptr(), document_ids.len(), info) }
+        unsafe { wr_finished_scene_build(self.window_id, document_ids.as_ptr(), document_ids.len(), &mut info) }
         unsafe { gecko_profiler_end_marker(b"SceneBuilding\0".as_ptr() as *const c_char); }
     }
 
