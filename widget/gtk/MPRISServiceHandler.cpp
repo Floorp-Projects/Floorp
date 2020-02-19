@@ -14,6 +14,7 @@
 #include "mozilla/dom/MediaControlUtils.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Sprintf.h"
+#include "nsIXULAppInfo.h"
 
 // avoid redefined macro in unified build
 #undef LOG
@@ -420,6 +421,8 @@ bool MPRISServiceHandler::Open() {
   MOZ_ASSERT(NS_IsMainThread());
   GError* error = nullptr;
   gchar serviceName[256];
+
+  InitIdentity();
   SprintfLiteral(serviceName, DBUS_MRPIS_SERVICE_NAME ".instance%d", getpid());
   mOwnerId =
       g_bus_own_name(G_BUS_TYPE_SESSION, serviceName,
@@ -470,7 +473,26 @@ bool MPRISServiceHandler::IsOpened() const { return mInitialized; }
 
 bool MPRISServiceHandler::HasTrackList() { return false; }
 
-const char* MPRISServiceHandler::Identity() { return "Mozilla Firefox"; }
+void MPRISServiceHandler::InitIdentity() {
+  nsresult rv;
+  nsAutoCString appName;
+  nsCOMPtr<nsIXULAppInfo> appInfo =
+      do_GetService("@mozilla.org/xre/app-info;1", &rv);
+
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
+  rv = appInfo->GetVendor(mIdentity);
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
+  rv = appInfo->GetName(appName);
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
+
+  mIdentity.Append(' ');
+  mIdentity.Append(appName);
+}
+
+const char* MPRISServiceHandler::Identity() const {
+  MOZ_ASSERT(mInitialized);
+  return mIdentity.get();
+}
 
 GVariant* MPRISServiceHandler::SupportedUriSchemes() {
   GVariantBuilder builder;
