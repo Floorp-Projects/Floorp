@@ -39,13 +39,7 @@ extern bool str_includes(JSContext* cx, unsigned argc, Value* vp);
 
 extern bool str_indexOf(JSContext* cx, unsigned argc, Value* vp);
 
-extern bool str_lastIndexOf(JSContext* cx, unsigned argc, Value* vp);
-
 extern bool str_startsWith(JSContext* cx, unsigned argc, Value* vp);
-
-extern bool str_toLowerCase(JSContext* cx, unsigned argc, Value* vp);
-
-extern bool str_toUpperCase(JSContext* cx, unsigned argc, Value* vp);
 
 extern bool str_toString(JSContext* cx, unsigned argc, Value* vp);
 
