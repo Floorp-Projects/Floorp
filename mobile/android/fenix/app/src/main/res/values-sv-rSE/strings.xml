@@ -849,7 +849,7 @@
     <string name="onboarding_whats_new_header1">Se vad som är nytt</string>
     <!-- text for the "what's new" onboarding card description
     The first parameter is the short name of the app (e.g. Firefox) -->
-    <string name="onboarding_whats_new_description">Har du frågor om den nya designen %s? Vill du veta vad som har förändrats?</string>
+    <string name="onboarding_whats_new_description">Har du frågor om omgjorda %s? Vill du veta vad som har förändrats?</string>
     <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
     <string name="onboarding_whats_new_description_linktext">Få svar här</string>
     <!-- text for the firefox account onboarding card header
@@ -1201,6 +1201,8 @@
 
     <!-- Title text shown for the migration screen to the new browser. Placeholder replaced with app name -->
     <string name="migration_title">Välkommen till en helt ny %s</string>
+    <!-- Description text followed by a list of things migrating (e.g. Bookmarks, History). Placeholder replaced with app name-->
+    <string name="migration_description">En helt ny omgjord webbläsare väntar med förbättrad prestanda och funktioner som hjälper dig att göra mer online.\n\nVänta medan vi uppdaterar %s med dina</string>
     <!-- Text on the disabled button while in progress. Placeholder replaced with app name -->
     <string name="migration_updating_app_button_text">Uppdaterar %s…</string>
     <!-- Text on the enabled button. Placeholder replaced with app name-->

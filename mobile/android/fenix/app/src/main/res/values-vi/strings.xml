@@ -126,7 +126,7 @@
     <!-- Button in the search view that lets a user search by scanning a QR code -->
     <string name="search_scan_button">Quét</string>
     <!-- Button in the search view that lets a user search by using a shortcut -->
-    <string name="search_shortcuts_button">Lối tắt</string>
+    <string name="search_shortcuts_button">Tìm kiếm</string>
     <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
     <string name="search_shortcuts_engine_settings">Cài đặt công cụ tìm kiếm</string>
     <!-- DEPRECATED: Header displayed when selecting a shortcut search engine -->

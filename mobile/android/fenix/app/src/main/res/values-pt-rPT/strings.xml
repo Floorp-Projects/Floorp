@@ -22,12 +22,19 @@
     <!-- Private Browsing -->
     <!-- Title for private session option -->
     <string name="private_browsing_title">Está numa sessão privada</string>
+    <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="private_browsing_placeholder_description">O %1$s limpa o seu histórico de pesquisa e de navegação quando sai da aplicação ou fecha todos os separadores e janelas de navegação privada. Embora isto não o torne anónimo para os sites ou para o seu fornecedor de serviço de Internet, torna mais
+        simples manter o que faz na Internet privado de qualquer outra pessoa que utilize este dispositivo.</string>
     <string name="private_browsing_common_myths">
        Mitos comuns sobre a navegação privada
     </string>
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">Eliminar sessão</string>
 
+    <!-- Private mode shortcut "contextual feature recommender" (CFR) -->
+    <!-- Text for the main message -->
+    <string name="cfr_message">Adicionar um atalho para abrir separadores privados ao seu ecrã inicial.</string>
     <!-- Text for the positive button -->
     <string name="cfr_pos_button_text">Adicionar atalho</string>
     <!-- Text for the negative button -->
@@ -54,6 +61,10 @@
     <string name="browser_menu_bookmark">Marcador</string>
     <!-- Content description (not visible, for screen readers etc.): Un-bookmark the current page -->
     <string name="browser_menu_edit_bookmark">Editar marcador</string>
+    <!-- Browser menu button that opens the addon manager -->
+    <string name="browser_menu_addon_manager">Gestor de extras</string>
+    <!-- Text displayed when there are no add-ons to be shown -->
+    <string name="no_add_ons">Sem extras aqui</string>
     <!-- Browser menu button that sends a user to help articles -->
     <string name="browser_menu_help">Ajuda</string>
     <!-- Browser menu button that sends a to a the what's new article -->
@@ -91,6 +102,8 @@
     <!-- Browser menu text shown in custom tabs to indicate this is a Fenix tab
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="browser_menu_powered_by2">Com tecnologia %1$s</string>
+    <!-- Browser menu button to put the the current page in reader mode -->
+    <string name="browser_menu_read">Vista de leitura</string>
     <!-- Browser menu button to open the current page in an external app -->
     <string name="browser_menu_open_app_link">Abrir na aplicação</string>
     <!-- Browser menu button to configure reader mode appearance e.g. the used font type and size -->
@@ -118,10 +131,16 @@
     <string name="search_shortcuts_search_with">Pesquisar com</string>
     <!-- Header displayed when selecting a shortcut search engine -->
     <string name="search_shortcuts_search_with_2">Desta vez, pesquisar com:</string>
+    <!-- Button in the search view that lets a user navigate to the site in their clipboard -->
+    <string name="awesomebar_clipboard_title">Preencher ligação da área de transferência</string>
     <!-- Button in the search suggestions onboarding that allows search suggestions in private sessions -->
     <string name="search_suggestions_onboarding_allow_button">Permitir</string>
     <!-- Button in the search suggestions onboarding that does not allow search suggestions in private sessions -->
     <string name="search_suggestions_onboarding_do_not_allow_button">Não permitir</string>
+    <!-- Search suggestion onboarding hint title text -->
+    <string name="search_suggestions_onboarding_title">Permitir sugestões de pesquisa em sessões privadas?</string>
+    <!-- Search suggestion onboarding hint description text, first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="search_suggestions_onboarding_text">O %s irá enviar tudo o que escreve na barra de endereço para o seu motor de pesquisa predefinido.</string>
     <!-- Search suggestion onboarding hint Learn more link text -->
     <string name="search_suggestions_onboarding_learn_more_link">Saber mais</string>
 
@@ -136,6 +155,8 @@
     <string name="settings">Definições</string>
     <!-- Preference category for basic settings -->
     <string name="preferences_category_basics">Básico</string>
+    <!-- Preference category for general settings -->
+    <string name="preferences_category_general">Geral</string>
     <!-- Preference category for all links about Fenix -->
     <string name="preferences_category_about">Sobre</string>
     <!-- Preference for settings related to changing the default search engine -->
@@ -165,8 +186,16 @@
     <string name="preferences_category_advanced">Avançadas</string>
     <!-- Preference category for privacy settings -->
     <string name="preferences_category_privacy">Privacidade</string>
+    <!-- Preference category for privacy and security settings -->
+    <string name="preferences_category_privacy_security">Privacidade e segurança</string>
     <!-- Preference for advanced site permissions -->
     <string name="preferences_site_permissions">Permissões do site</string>
+    <!-- Preference for private browsing options -->
+    <string name="preferences_private_browsing_options">Navegação privada</string>
+    <!-- Preference for opening links in a private tab-->
+    <string name="preferences_open_links_in_a_private_tab">Abrir ligações num separador privado</string>
+    <!-- Preference for adding private browsing shortcut -->
+    <string name="preferences_add_private_browsing_shortcut">Adicionar um atalho de navegação privada</string>
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">Acessibilidade</string>
     <!-- Preference category for account information -->
@@ -177,6 +206,8 @@
     <string name="preferences_toolbar">Barra de ferramentas</string>
     <!-- Preference for changing default theme to dark or light mode -->
     <string name="preferences_theme">Tema</string>
+    <!-- Preference for settings related to visual options -->
+    <string name="preferences_customize">Personalizar</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
     <string name="preferences_account_default_name">Conta Firefox</string>
     <!-- Preference for language -->

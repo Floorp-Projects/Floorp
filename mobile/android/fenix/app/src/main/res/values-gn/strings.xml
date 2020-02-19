@@ -778,6 +778,9 @@
     <!-- Title for Accessibility Text Automatic Size Scaling Preference -->
     <string name="preference_accessibility_auto_size">Tai tuichakue ijeheguíva</string>
 
+    <!-- Summary for Accessibility Text Automatic Size Scaling Preference -->
+    <string name="preference_accessibility_auto_size_summary">Pe tai tuichakue ojojoguáta Android pegua ndive. Embogue jeporavorã emboheko hag̃ua ápe.</string>
+
     <!-- Title for the Delete browsing data preference -->
     <string name="preferences_delete_browsing_data">Emboguete kundahára mba’ekuaarã</string>
     <!-- Title for the tabs item in Delete browsing data -->
@@ -808,6 +811,8 @@
     <string name="preferences_delete_browsing_data_button">Emboguete kundahára mba’ekuaarã</string>
     <!-- Title for the Delete browsing data on quit preference -->
     <string name="preferences_delete_browsing_data_on_quit">Emboguete kundahára mba’ekuaarã esẽvo</string>
+    <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
+    <string name="preference_summary_delete_browsing_data_on_quit">Embogue ijehegui kundahára mba’ekuaarã eiporavóvo &quot;Ñesẽ&quot; pe jeporavorã guasúpe</string>
     <!-- Category for history items to delete on quit in delete browsing data on quit -->
     <string name="preferences_delete_browsing_data_on_quit_browsing_history">Kundahára rembiasakue</string>
     <!-- Action item in menu for the Delete browsing data on quit feature -->
@@ -863,6 +868,8 @@
     <string name="onboarding_tracking_protection_description1">%s nepytyvõ emboyke hag̃ua ñanduti renda nde rapykuehóvo.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button">Ypykue</string>
+    <!-- text for standard blocking option button description -->
+    <string name="onboarding_tracking_protection_standard_button_description">Ojoko’ive tapykuehoha hákatu omoneĩ kuatiarogue henyhẽvo hekopete</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_button">Mbaretépe (jeroviaháva)</string>
     <!-- text for the toolbar position card header
@@ -874,6 +881,8 @@
     <!-- text for the private browsing onboarding card description
     The first parameter is an icon that represents private browsing -->
     <string name="onboarding_private_browsing_description1">Embojuruja tendayke ñemigua peteĩ jey: eikutu %s ra’ãnga’i.</string>
+    <!-- text for the private browsing onboarding card description, explaining how to always using private browsing -->
+    <string name="onboarding_private_browsing_always_description">Embojurujaserõ tendayke ñemi tapiaite: embohekopyahu ñemboheko kundaha ñemi reheguáva.</string>
     <!-- text for the private browsing onbording card button, that launches settings -->
     <string name="onboarding_private_browsing_button">Embojuruja ñemboheko</string>
     <!-- text for the privacy notice onboarding card header -->
@@ -888,6 +897,8 @@
     <!-- Onboarding theme -->
     <!-- text for the theme picker onboarding card header -->
     <string name="onboarding_theme_picker_header">Eiporavo ne téma</string>
+    <!-- text for the theme picker onboarding card description -->
+    <string name="onboarding_theme_picker_description1">Eipuruporã batería ha emo’ã nde resa: embojuruja ayvu ypytũ.</string>
     <!-- Automatic theme setting (will follow device setting) -->
     <string name="onboarding_theme_automatic_title">ijeheguietéva</string>
     <!-- Summary of automatic theme setting (will follow device setting) -->
@@ -945,6 +956,8 @@
     <string name="preference_enhanced_tracking_protection_strict_default">Mbaretépe (Ijypykuéva)</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_strict_recommended">Mbaretépe (jeroviaháva)</string>
+    <!--  Accessibility text for the Strict protection information icon  -->
+    <string name="preference_enhanced_tracking_protection_strict_info_button">Mba’e umi ojokóva tapykuehoha mo’ãha imbaretéva</string>
     <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
     <string name="enhanced_tracking_protection_blocked">Jokopyre</string>
     <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
@@ -1162,10 +1175,14 @@
     <string name="quick_settings_sheet_secure_connection">Jeikekatu</string>
     <!-- Label that indicates a site is using a insecure connection -->
     <string name="quick_settings_sheet_insecure_connection">Jeikekatu’ỹ</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to set default value a permission for a site-->
+    <string name="confirm_clear_permission_site">¿Añetehápe emboguese opaite ñemoneĩ ko tenda pegua?</string>
     <!-- label shown when there are not site exceptions to show in the site exception settings -->
     <string name="no_site_exceptions">Ndaipóri oi’ỹva ko tendápe</string>
     <!-- Label for the Pocket default top site -->
     <string name="pocket_top_articles">Jehaipyre iporãvéva</string>
+    <!-- Bookmark deletion confirmation -->
+    <string name="bookmark_deletion_confirmation">¿Añetehápe emboguese ko techaukaha?</string>
     <!-- Browser menu button that adds a top site to the home fragment -->
     <string name="browser_menu_add_to_top_sites">Embojuaju tenda iporãvéva</string>
     <!-- text shown before the issuer name to indicate who its verified by, parameter is the name of

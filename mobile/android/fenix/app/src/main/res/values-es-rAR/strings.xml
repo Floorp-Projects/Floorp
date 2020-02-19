@@ -891,7 +891,7 @@
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_button">Estricta (recomendada)</string>
     <!-- text for strict blocking option button description -->
-    <string name="onboarding_tracking_protection_strict_button_description">Bloquea más rastreadores para una mejor protección y rendimiento, pero puede hacer que algunos sitios no funcionen correctamente</string>
+    <string name="onboarding_tracking_protection_strict_button_description">Bloquea más rastreadores para una mejor protección y rendimiento, pero puede hacer que algunos sitios no se carguen correctamente</string>
     <!-- text for the toolbar position card header
         In English this is an idiom for "choose a side as in an argument or fight"
         but it is ok to make this more literally about "choosing a position in a physical space -->
@@ -904,7 +904,7 @@
     The first parameter is an icon that represents private browsing -->
     <string name="onboarding_private_browsing_description1">Para abrir una pestaña privada una vez: tocá el ícono %s.</string>
     <!-- text for the private browsing onboarding card description, explaining how to always using private browsing -->
-    <string name="onboarding_private_browsing_always_description">Para abrir pestañas privadas habitualmente: actualizá tus ajustes de navegación privada.</string>
+    <string name="onboarding_private_browsing_always_description">Para abrir siempre pestañas privadas: cambiá tus ajustes de navegación privada.</string>
     <!-- text for the private browsing onbording card button, that launches settings -->
     <string name="onboarding_private_browsing_button">Abrir ajustes</string>
     <!-- text for the privacy notice onboarding card header -->
