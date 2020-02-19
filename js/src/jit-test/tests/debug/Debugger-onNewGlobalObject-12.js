@@ -1,5 +1,5 @@
 // Resumption values from uncaughtExceptionHook from onNewGlobalObject
-// handlers affect the dispatch of the event to other Debugger instances.
+// handlers do not affect the dispatch of the event to other Debugger instances.
 
 load(libdir + 'asserts.js');
 
@@ -7,7 +7,6 @@ var dbg1 = new Debugger;
 var dbg2 = new Debugger;
 var dbg3 = new Debugger;
 var log;
-var count;
 
 dbg1.onNewGlobalObject = dbg2.onNewGlobalObject = dbg3.onNewGlobalObject = function () {
   log += 'n';
@@ -18,12 +17,9 @@ dbg1.uncaughtExceptionHook = dbg2.uncaughtExceptionHook = dbg3.uncaughtException
 function (ex) {
   log += 'u';
   assertEq(ex, 'party');
-  if (++count == 2)
-    return { throw: 'fit' };
-  return undefined;
+  return { throw: 'fit' };
 };
 
 log = '';
-count = 0;
 assertEq(typeof newGlobal(), 'object');
-assertEq(log, 'nunu');
+assertEq(log, 'nununu');
