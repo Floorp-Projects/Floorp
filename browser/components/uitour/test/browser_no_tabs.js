@@ -69,12 +69,6 @@ add_task(async function test_windowless_UITour() {
     browserPromise.then(frameInfo => {
       isnot(frameInfo.browser, null, "The browser must exist and not be null.");
 
-      // Load UITour frame script.
-      frameInfo.browser.messageManager.loadFrameScript(
-        "chrome://browser/content/content-UITour.js",
-        false
-      );
-
       // When the page loads, try to use UITour API.
       frameInfo.browser.addEventListener(
         "load",
