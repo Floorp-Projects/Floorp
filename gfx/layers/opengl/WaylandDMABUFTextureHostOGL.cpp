@@ -59,6 +59,8 @@ bool WaylandDMABUFTextureHostOGL::Lock() {
       prev = next;
     }
   }
+
+  mSurface->FenceWait();
   return true;
 }
 
