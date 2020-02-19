@@ -83,12 +83,20 @@ macro_rules! manager_guard_to_manager {
 /// This gets called to initialize the module. For this implementation, this consists of
 /// instantiating the `ManagerProxy`.
 extern "C" fn C_Initialize(_pInitArgs: CK_C_INITIALIZE_ARGS_PTR) -> CK_RV {
-    env_logger::init();
+    // This will fail if this has already been called, but this isn't a problem because either way,
+    // logging has been initialized.
+    let _ = env_logger::try_init();
     let mut manager_guard = try_to_get_manager_guard!();
     match manager_guard.replace(ManagerProxy::new()) {
         Some(_unexpected_previous_manager) => {
-            error!("C_Initialize: manager unexpectedly previously set");
-            return CKR_DEVICE_ERROR;
+            #[cfg(target_os = "macos")]
+            {
+                info!("C_Initialize: manager previously set (this is expected on macOS - replacing it)");
+            }
+            #[cfg(target_os = "windows")]
+            {
+                warn!("C_Initialize: manager unexpectedly previously set (bravely continuing by replacing it)");
+            }
         }
         None => {}
     }
