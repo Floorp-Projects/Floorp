@@ -479,11 +479,39 @@ typedef mozilla::Variant<JSScript*, LazyScript*, WasmInstanceObject*>
 typedef mozilla::Variant<ScriptSourceObject*, WasmInstanceObject*>
     DebuggerSourceReferent;
 
+template <typename HookIsEnabledFun /* bool (Debugger*) */>
+class MOZ_RAII DebuggerList {
+ private:
+  // Note: In the general case, 'debuggers' contains references to objects in
+  // different compartments--every compartment *except* the debugger's.
+  RootedValueVector debuggers;
+  HookIsEnabledFun hookIsEnabled;
+
+ public:
+  /**
+   * The hook function will be called during `init()` to build the list of
+   * active debuggers, and again during dispatch to validate that the hook is
+   * still active for the given debugger.
+   */
+  DebuggerList(JSContext* cx, HookIsEnabledFun hookIsEnabled)
+      : debuggers(cx), hookIsEnabled(hookIsEnabled) {}
+
+  MOZ_MUST_USE bool init(JSContext* cx);
+
+  bool empty() { return debuggers.empty(); }
+
+  template <typename FireHookFun /* ResumeMode (Debugger*) */>
+  ResumeMode dispatchHook(JSContext* cx, FireHookFun fireHook);
+};
+
 class Debugger : private mozilla::LinkedListElement<Debugger> {
   friend class DebugAPI;
   friend class Breakpoint;
   friend class DebuggerFrame;
   friend class DebuggerMemory;
+
+  template <typename>
+  friend class DebuggerList;
   friend struct JSRuntime::GlobalObjectWatchersLinkAccess<Debugger>;
   friend class SavedStacks;
   friend class ScriptedOnStepHandler;
@@ -966,7 +994,8 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
                                  FireHookFun fireHook);
 
   ResumeMode fireDebuggerStatement(JSContext* cx, MutableHandleValue vp);
-  ResumeMode fireExceptionUnwind(JSContext* cx, MutableHandleValue vp);
+  ResumeMode fireExceptionUnwind(JSContext* cx, HandleValue exc,
+                                 MutableHandleValue vp);
   ResumeMode fireEnterFrame(JSContext* cx, MutableHandleValue vp);
   ResumeMode fireNativeCall(JSContext* cx, const CallArgs& args,
                             CallReason reason, MutableHandleValue vp);
