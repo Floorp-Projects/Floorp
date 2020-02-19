@@ -61,14 +61,6 @@ class MultiLocaleBuild(LocalesMixin, MercurialScript):
          "type": "string",
          "help": "Override the tags set for all repos"
          }
-    ], [
-        ["--l10n-dir"],
-        {"action": "store",
-         "dest": "l10n_dir",
-         "type": "string",
-         "default": "l10n",
-         "help": "Specify the l10n dir name"
-         }
     ]]
 
     def __init__(self, require_config_file=True):
