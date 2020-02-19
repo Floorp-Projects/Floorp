@@ -1,3 +1,7 @@
+// |jit-test| skip-if: !isTypeInferenceEnabled()
+// Test depends on singleton/clone behavior (the .callee getter calls
+// IsInternalFunctionObject).
+
 // Debugger.Environment.prototype.callee reveals the callee of environments
 // that have them.
 
