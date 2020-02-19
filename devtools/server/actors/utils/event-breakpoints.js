@@ -4,6 +4,8 @@
 
 "use strict";
 
+const Services = require("Services");
+
 function generalEvent(groupID, eventType) {
   return {
     id: `event.${groupID}.${eventType}`,
@@ -157,11 +159,15 @@ const AVAILABLE_BREAKPOINTS = [
   {
     name: "Keyboard",
     items: [
+      Services.prefs &&
+      Services.prefs.getBoolPref("dom.input_events.beforeinput.enabled")
+        ? generalEvent("keyboard", "beforeinput")
+        : null,
+      generalEvent("keyboard", "input"),
       generalEvent("keyboard", "keydown"),
       generalEvent("keyboard", "keyup"),
       generalEvent("keyboard", "keypress"),
-      generalEvent("keyboard", "input"),
-    ],
+    ].filter(Boolean),
   },
   {
     name: "Load",
