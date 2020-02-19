@@ -248,6 +248,10 @@ void WebGPUChild::DestroyComputePipeline(RawId aId) {
   SendComputePipelineDestroy(aId);
   ffi::wgpu_client_kill_compute_pipeline_id(mClient, aId);
 }
+void WebGPUChild::DestroyRenderPipeline(RawId aId) {
+  SendRenderPipelineDestroy(aId);
+  ffi::wgpu_client_kill_render_pipeline_id(mClient, aId);
+}
 
 }  // namespace webgpu
 }  // namespace mozilla

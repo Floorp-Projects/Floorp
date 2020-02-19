@@ -66,6 +66,7 @@ class WebGPUChild final : public PWebGPUChild {
   void DestroyBindGroup(RawId aId);
   void DestroyShaderModule(RawId aId);
   void DestroyComputePipeline(RawId aId);
+  void DestroyRenderPipeline(RawId aId);
 
  private:
   virtual ~WebGPUChild();

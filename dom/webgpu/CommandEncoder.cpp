@@ -10,6 +10,7 @@
 #include "Buffer.h"
 #include "ComputePassEncoder.h"
 #include "Device.h"
+#include "RenderPassEncoder.h"
 
 namespace mozilla {
 namespace webgpu {
@@ -51,6 +52,12 @@ already_AddRefed<ComputePassEncoder> CommandEncoder::BeginComputePass(
   return pass.forget();
 }
 
+already_AddRefed<RenderPassEncoder> CommandEncoder::BeginRenderPass(
+    const dom::GPURenderPassDescriptor& aDesc) {
+  RefPtr<RenderPassEncoder> pass = new RenderPassEncoder(this, aDesc);
+  return pass.forget();
+}
+
 void CommandEncoder::EndComputePass(Span<const uint8_t> aData,
                                     ErrorResult& aRv) {
   if (!mValid) {
@@ -65,6 +72,22 @@ void CommandEncoder::EndComputePass(Span<const uint8_t> aData,
 
   memcpy(shmem.get<uint8_t>(), aData.data(), aData.Length());
   mBridge->SendCommandEncoderRunComputePass(mId, std::move(shmem));
+}
+
+void CommandEncoder::EndRenderPass(Span<const uint8_t> aData,
+                                   ErrorResult& aRv) {
+  if (!mValid) {
+    return aRv.ThrowInvalidStateError("Command encoder is not valid");
+  }
+  ipc::Shmem shmem;
+  if (!mBridge->AllocShmem(aData.Length(), ipc::Shmem::SharedMemory::TYPE_BASIC,
+                           &shmem)) {
+    return aRv.ThrowAbortError(nsPrintfCString(
+        "Unable to allocate shmem of size %zu", aData.Length()));
+  }
+
+  memcpy(shmem.get<uint8_t>(), aData.data(), aData.Length());
+  mBridge->SendCommandEncoderRunRenderPass(mId, std::move(shmem));
 }
 
 already_AddRefed<CommandBuffer> CommandEncoder::Finish(

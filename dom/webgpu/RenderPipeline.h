@@ -19,10 +19,13 @@ class RenderPipeline final : public ObjectBase, public ChildOf<Device> {
   GPU_DECL_CYCLE_COLLECTION(RenderPipeline)
   GPU_DECL_JS_WRAP(RenderPipeline)
 
+  RenderPipeline(Device* const aParent, RawId aId);
+
+  const RawId mId;
+
  private:
-  RenderPipeline() = delete;
   virtual ~RenderPipeline();
-  void Cleanup() {}
+  void Cleanup();
 };
 
 }  // namespace webgpu
