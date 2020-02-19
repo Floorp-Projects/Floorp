@@ -9893,6 +9893,7 @@ exports.CSS_PROPERTIES = {
     ],
     "supports": [],
     "values": [
+      "all",
       "auto",
       "inherit",
       "initial",
