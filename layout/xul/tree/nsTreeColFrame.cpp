@@ -55,7 +55,11 @@ class nsDisplayXULTreeColSplitterTarget final : public nsDisplayItem {
       : nsDisplayItem(aBuilder, aFrame) {
     MOZ_COUNT_CTOR(nsDisplayXULTreeColSplitterTarget);
   }
-  MOZ_COUNTED_DTOR_OVERRIDE(nsDisplayXULTreeColSplitterTarget)
+#ifdef NS_BUILD_REFCNT_LOGGING
+  virtual ~nsDisplayXULTreeColSplitterTarget() {
+    MOZ_COUNT_DTOR(nsDisplayXULTreeColSplitterTarget);
+  }
+#endif
 
   virtual void HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
                        HitTestState* aState,

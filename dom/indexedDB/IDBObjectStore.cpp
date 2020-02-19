@@ -114,7 +114,7 @@ struct IDBObjectStore::StructuredCloneWriteInfo {
     aCloneWriteInfo.mOffsetToKeyProp = 0;
   }
 
-  MOZ_COUNTED_DTOR(StructuredCloneWriteInfo)
+  ~StructuredCloneWriteInfo() { MOZ_COUNT_DTOR(StructuredCloneWriteInfo); }
 };
 
 // Used by ValueWrapper::Clone to hold strong references to any blob-like
@@ -135,9 +135,9 @@ struct MOZ_STACK_CLASS MutableFileData final {
   nsString type;
   nsString name;
 
-  MOZ_COUNTED_DEFAULT_CTOR(MutableFileData)
+  MutableFileData() { MOZ_COUNT_CTOR(MutableFileData); }
 
-  MOZ_COUNTED_DTOR(MutableFileData)
+  ~MutableFileData() { MOZ_COUNT_DTOR(MutableFileData); }
 };
 
 struct MOZ_STACK_CLASS BlobOrFileData final {
@@ -151,7 +151,7 @@ struct MOZ_STACK_CLASS BlobOrFileData final {
     MOZ_COUNT_CTOR(BlobOrFileData);
   }
 
-  MOZ_COUNTED_DTOR(BlobOrFileData)
+  ~BlobOrFileData() { MOZ_COUNT_DTOR(BlobOrFileData); }
 };
 
 struct MOZ_STACK_CLASS WasmModuleData final {
@@ -164,7 +164,7 @@ struct MOZ_STACK_CLASS WasmModuleData final {
     MOZ_COUNT_CTOR(WasmModuleData);
   }
 
-  MOZ_COUNTED_DTOR(WasmModuleData)
+  ~WasmModuleData() { MOZ_COUNT_DTOR(WasmModuleData); }
 };
 
 struct MOZ_STACK_CLASS GetAddInfoClosure final {
@@ -177,7 +177,7 @@ struct MOZ_STACK_CLASS GetAddInfoClosure final {
     MOZ_COUNT_CTOR(GetAddInfoClosure);
   }
 
-  MOZ_COUNTED_DTOR(GetAddInfoClosure)
+  ~GetAddInfoClosure() { MOZ_COUNT_DTOR(GetAddInfoClosure); }
 };
 
 RefPtr<IDBRequest> GenerateRequest(JSContext* aCx,

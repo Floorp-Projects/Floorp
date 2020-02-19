@@ -31,7 +31,7 @@ class Element;
 class DocumentStyleRootIterator {
  public:
   explicit DocumentStyleRootIterator(nsINode* aStyleRoot);
-  MOZ_COUNTED_DTOR(DocumentStyleRootIterator)
+  ~DocumentStyleRootIterator() { MOZ_COUNT_DTOR(DocumentStyleRootIterator); }
 
   dom::Element* GetNextStyleRoot();
 

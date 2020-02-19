@@ -74,7 +74,9 @@ class nsDisplayMathMLError : public nsPaintedDisplayItem {
       : nsPaintedDisplayItem(aBuilder, aFrame) {
     MOZ_COUNT_CTOR(nsDisplayMathMLError);
   }
-  MOZ_COUNTED_DTOR_OVERRIDE(nsDisplayMathMLError)
+#ifdef NS_BUILD_REFCNT_LOGGING
+  virtual ~nsDisplayMathMLError() { MOZ_COUNT_DTOR(nsDisplayMathMLError); }
+#endif
 
   virtual void Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) override;
   NS_DISPLAY_DECL_NAME("MathMLError", TYPE_MATHML_ERROR)

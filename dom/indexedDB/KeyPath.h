@@ -42,7 +42,7 @@ class KeyPath {
     *this = aOther;
   }
 
-  MOZ_COUNTED_DTOR(KeyPath)
+  ~KeyPath() { MOZ_COUNT_DTOR(KeyPath); }
 
   static nsresult Parse(const nsAString& aString, KeyPath* aKeyPath);
 

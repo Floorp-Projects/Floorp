@@ -788,7 +788,7 @@ class MediaInputPort final {
   }
 
   // Private destructor, to discourage deletion outside of Release():
-  MOZ_COUNTED_DTOR(MediaInputPort)
+  ~MediaInputPort() { MOZ_COUNT_DTOR(MediaInputPort); }
 
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaInputPort)
@@ -1134,7 +1134,7 @@ class MediaTrackGraph {
   explicit MediaTrackGraph(TrackRate aSampleRate) : mSampleRate(aSampleRate) {
     MOZ_COUNT_CTOR(MediaTrackGraph);
   }
-  MOZ_COUNTED_DTOR_VIRTUAL(MediaTrackGraph)
+  virtual ~MediaTrackGraph() { MOZ_COUNT_DTOR(MediaTrackGraph); }
 
   // Intended only for assertions, either on graph thread or not running (in
   // which case we must be on the main thread).

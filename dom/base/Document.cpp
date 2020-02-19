@@ -12804,8 +12804,8 @@ class FullscreenRoots {
   static bool IsEmpty();
 
  private:
-  MOZ_COUNTED_DEFAULT_CTOR(FullscreenRoots)
-  MOZ_COUNTED_DTOR(FullscreenRoots)
+  FullscreenRoots() { MOZ_COUNT_CTOR(FullscreenRoots); }
+  ~FullscreenRoots() { MOZ_COUNT_DTOR(FullscreenRoots); }
 
   enum { NotFound = uint32_t(-1) };
   // Looks in mRoots for aRoot. Returns the index if found, otherwise NotFound.

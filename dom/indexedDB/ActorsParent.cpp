@@ -532,7 +532,7 @@ struct IndexDataValue final {
     MOZ_COUNT_CTOR(IndexDataValue);
   }
 
-  MOZ_COUNTED_DTOR(IndexDataValue)
+  ~IndexDataValue() { MOZ_COUNT_DTOR(IndexDataValue); }
 
   bool operator==(const IndexDataValue& aOther) const {
     if (mIndexId != aOther.mIndexId) {

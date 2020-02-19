@@ -123,7 +123,7 @@ class CondVar : public OffTheBooksCondVar {
     MOZ_COUNT_CTOR(CondVar);
   }
 
-  MOZ_COUNTED_DTOR(CondVar)
+  ~CondVar() { MOZ_COUNT_DTOR(CondVar); }
 
  private:
   CondVar();

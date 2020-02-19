@@ -13,12 +13,12 @@
 
 class txObject {
  public:
-  MOZ_COUNTED_DEFAULT_CTOR(txObject)
+  txObject() { MOZ_COUNT_CTOR(txObject); }
 
   /**
    * Deletes this txObject
    */
-  MOZ_COUNTED_DTOR_VIRTUAL(txObject)
+  virtual ~txObject() { MOZ_COUNT_DTOR(txObject); }
 };
 
 /**

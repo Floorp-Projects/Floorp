@@ -13,8 +13,8 @@
 
 class txPattern {
  public:
-  MOZ_COUNTED_DEFAULT_CTOR(txPattern)
-  MOZ_COUNTED_DTOR_VIRTUAL(txPattern)
+  txPattern() { MOZ_COUNT_CTOR(txPattern); }
+  virtual ~txPattern() { MOZ_COUNT_DTOR(txPattern); }
 
   /*
    * Determines whether this Pattern matches the given node.

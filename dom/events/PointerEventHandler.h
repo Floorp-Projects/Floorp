@@ -28,7 +28,7 @@ class PointerCaptureInfo final {
     MOZ_COUNT_CTOR(PointerCaptureInfo);
   }
 
-  MOZ_COUNTED_DTOR(PointerCaptureInfo)
+  ~PointerCaptureInfo() { MOZ_COUNT_DTOR(PointerCaptureInfo); }
 
   bool Empty() { return !(mPendingContent || mOverrideContent); }
 };

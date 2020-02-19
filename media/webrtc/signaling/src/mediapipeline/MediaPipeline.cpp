@@ -793,7 +793,7 @@ class MediaPipelineTransmit::VideoFrameFeeder : public VideoConverterListener {
   }
 
  protected:
-  MOZ_COUNTED_DTOR_OVERRIDE(VideoFrameFeeder)
+  virtual ~VideoFrameFeeder() { MOZ_COUNT_DTOR(VideoFrameFeeder); }
 
   Mutex mMutex;  // Protects the member below.
   RefPtr<PipelineListener> mListener;

@@ -101,7 +101,7 @@ namespace {
 class TestParent final : public mozilla::ipc::PBackgroundTestParent {
   friend class mozilla::ipc::BackgroundParentImpl;
 
-  MOZ_COUNTED_DEFAULT_CTOR(TestParent)
+  TestParent() { MOZ_COUNT_CTOR(TestParent); }
 
  protected:
   ~TestParent() override { MOZ_COUNT_DTOR(TestParent); }

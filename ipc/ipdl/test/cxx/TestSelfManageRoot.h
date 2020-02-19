@@ -18,8 +18,8 @@ class TestSelfManageParent : public PTestSelfManageParent {
   friend class PTestSelfManageParent;
 
  public:
-  MOZ_COUNTED_DEFAULT_CTOR(TestSelfManageParent)
-  MOZ_COUNTED_DTOR_OVERRIDE(TestSelfManageParent)
+  TestSelfManageParent() { MOZ_COUNT_CTOR(TestSelfManageParent); }
+  virtual ~TestSelfManageParent() { MOZ_COUNT_DTOR(TestSelfManageParent); }
 
   ActorDestroyReason mWhy;
 
@@ -37,7 +37,7 @@ class TestSelfManageRootParent : public PTestSelfManageRootParent {
   friend class PTestSelfManageRootParent;
 
  public:
-  MOZ_COUNTED_DEFAULT_CTOR(TestSelfManageRootParent)
+  TestSelfManageRootParent() { MOZ_COUNT_CTOR(TestSelfManageRootParent); }
   virtual ~TestSelfManageRootParent() {
     MOZ_COUNT_DTOR(TestSelfManageRootParent);
   }
@@ -68,8 +68,8 @@ class TestSelfManageChild : public PTestSelfManageChild {
   friend class PTestSelfManageChild;
 
  public:
-  MOZ_COUNTED_DEFAULT_CTOR(TestSelfManageChild)
-  MOZ_COUNTED_DTOR_OVERRIDE(TestSelfManageChild)
+  TestSelfManageChild() { MOZ_COUNT_CTOR(TestSelfManageChild); }
+  virtual ~TestSelfManageChild() { MOZ_COUNT_DTOR(TestSelfManageChild); }
 
  protected:
   PTestSelfManageChild* AllocPTestSelfManageChild() {
@@ -88,7 +88,7 @@ class TestSelfManageRootChild : public PTestSelfManageRootChild {
   friend class PTestSelfManageRootChild;
 
  public:
-  MOZ_COUNTED_DEFAULT_CTOR(TestSelfManageRootChild)
+  TestSelfManageRootChild() { MOZ_COUNT_CTOR(TestSelfManageRootChild); }
   virtual ~TestSelfManageRootChild() {
     MOZ_COUNT_DTOR(TestSelfManageRootChild);
   }

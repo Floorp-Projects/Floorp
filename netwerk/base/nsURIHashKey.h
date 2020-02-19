@@ -28,7 +28,7 @@ class nsURIHashKey : public PLDHashEntryHdr {
       : PLDHashEntryHdr(std::move(toMove)), mKey(std::move(toMove.mKey)) {
     MOZ_COUNT_CTOR(nsURIHashKey);
   }
-  MOZ_COUNTED_DTOR(nsURIHashKey)
+  ~nsURIHashKey() { MOZ_COUNT_DTOR(nsURIHashKey); }
 
   nsIURI* GetKey() const { return mKey; }
 

@@ -31,7 +31,7 @@ class BasicImageLayer : public ImageLayer, public BasicImplData {
   }
 
  protected:
-  MOZ_COUNTED_DTOR_OVERRIDE(BasicImageLayer)
+  virtual ~BasicImageLayer() { MOZ_COUNT_DTOR(BasicImageLayer); }
 
  public:
   void SetVisibleRegion(const LayerIntRegion& aRegion) override {

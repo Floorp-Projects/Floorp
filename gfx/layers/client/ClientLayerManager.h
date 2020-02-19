@@ -349,7 +349,7 @@ class ClientLayerManager final : public LayerManager,
 
 class ClientLayer : public ShadowableLayer {
  public:
-  MOZ_COUNTED_DEFAULT_CTOR(ClientLayer)
+  ClientLayer() { MOZ_COUNT_CTOR(ClientLayer); }
 
   ~ClientLayer();
 

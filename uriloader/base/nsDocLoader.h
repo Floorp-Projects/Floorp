@@ -259,7 +259,7 @@ class nsDocLoader : public nsIDocumentLoader,
         : mStatusCode(NS_ERROR_NOT_INITIALIZED), mRequest(aRequest) {
       MOZ_COUNT_CTOR(nsStatusInfo);
     }
-    MOZ_COUNTED_DTOR(nsStatusInfo)
+    ~nsStatusInfo() { MOZ_COUNT_DTOR(nsStatusInfo); }
   };
 
   struct nsRequestInfo : public PLDHashEntryHdr {
@@ -272,7 +272,7 @@ class nsDocLoader : public nsIDocumentLoader,
       MOZ_COUNT_CTOR(nsRequestInfo);
     }
 
-    MOZ_COUNTED_DTOR(nsRequestInfo)
+    ~nsRequestInfo() { MOZ_COUNT_DTOR(nsRequestInfo); }
 
     nsIRequest* Request() {
       return static_cast<nsIRequest*>(const_cast<void*>(mKey));

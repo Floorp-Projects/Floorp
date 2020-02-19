@@ -360,7 +360,9 @@ class nsDisplayPlugin final : public nsPaintedDisplayItem {
     MOZ_COUNT_CTOR(nsDisplayPlugin);
     aBuilder->SetContainsPluginItem();
   }
-  MOZ_COUNTED_DTOR_OVERRIDE(nsDisplayPlugin)
+#ifdef NS_BUILD_REFCNT_LOGGING
+  virtual ~nsDisplayPlugin() { MOZ_COUNT_DTOR(nsDisplayPlugin); }
+#endif
 
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder,
                            bool* aSnap) const override;

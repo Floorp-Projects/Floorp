@@ -45,7 +45,11 @@ class nsDisplayTableCellSelection final : public nsPaintedDisplayItem {
       : nsPaintedDisplayItem(aBuilder, aFrame) {
     MOZ_COUNT_CTOR(nsDisplayTableCellSelection);
   }
-  MOZ_COUNTED_DTOR_OVERRIDE(nsDisplayTableCellSelection)
+#ifdef NS_BUILD_REFCNT_LOGGING
+  virtual ~nsDisplayTableCellSelection() {
+    MOZ_COUNT_DTOR(nsDisplayTableCellSelection);
+  }
+#endif
 
   void Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) override {
     static_cast<nsTableCellFrame*>(mFrame)->DecorateForSelection(
@@ -358,7 +362,11 @@ class nsDisplayTableCellBackground : public nsDisplayTableItem {
       : nsDisplayTableItem(aBuilder, aFrame) {
     MOZ_COUNT_CTOR(nsDisplayTableCellBackground);
   }
-  MOZ_COUNTED_DTOR_OVERRIDE(nsDisplayTableCellBackground)
+#ifdef NS_BUILD_REFCNT_LOGGING
+  virtual ~nsDisplayTableCellBackground() {
+    MOZ_COUNT_DTOR(nsDisplayTableCellBackground);
+  }
+#endif
 
   virtual void HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
                        HitTestState* aState,

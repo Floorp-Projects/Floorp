@@ -156,7 +156,7 @@ class nsPreflightCache {
     nsTArray<TokenTime> mHeaders;
   };
 
-  MOZ_COUNTED_DEFAULT_CTOR(nsPreflightCache)
+  nsPreflightCache() { MOZ_COUNT_CTOR(nsPreflightCache); }
 
   ~nsPreflightCache() {
     Clear();

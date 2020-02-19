@@ -20,7 +20,7 @@ class nsPluginNativeWindow : public NPWindow {
  public:
   nsPluginNativeWindow() : NPWindow() { MOZ_COUNT_CTOR(nsPluginNativeWindow); }
 
-  MOZ_COUNTED_DTOR_VIRTUAL(nsPluginNativeWindow)
+  virtual ~nsPluginNativeWindow() { MOZ_COUNT_DTOR(nsPluginNativeWindow); }
 
   /**
    *   !!! CAUTION !!!

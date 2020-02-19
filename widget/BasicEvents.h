@@ -505,7 +505,7 @@ class WidgetEvent : public WidgetEventTime {
   WidgetEvent(bool aIsTrusted, EventMessage aMessage)
       : WidgetEvent(aIsTrusted, aMessage, eBasicEventClass) {}
 
-  MOZ_COUNTED_DTOR_VIRTUAL(WidgetEvent)
+  virtual ~WidgetEvent() { MOZ_COUNT_DTOR(WidgetEvent); }
 
   WidgetEvent(const WidgetEvent& aOther) : WidgetEventTime() {
     MOZ_COUNT_CTOR(WidgetEvent);

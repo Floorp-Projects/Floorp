@@ -49,7 +49,7 @@ class BasicImplData {
         mOperator(gfx::CompositionOp::OP_OVER) {
     MOZ_COUNT_CTOR(BasicImplData);
   }
-  MOZ_COUNTED_DTOR_VIRTUAL(BasicImplData)
+  virtual ~BasicImplData() { MOZ_COUNT_DTOR(BasicImplData); }
 
   /**
    * Layers that paint themselves, such as ImageLayers, should paint

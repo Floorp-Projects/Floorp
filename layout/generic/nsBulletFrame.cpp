@@ -546,7 +546,9 @@ class nsDisplayBullet final : public nsPaintedDisplayItem {
       : nsPaintedDisplayItem(aBuilder, aFrame) {
     MOZ_COUNT_CTOR(nsDisplayBullet);
   }
-  MOZ_COUNTED_DTOR_OVERRIDE(nsDisplayBullet)
+#ifdef NS_BUILD_REFCNT_LOGGING
+  virtual ~nsDisplayBullet() { MOZ_COUNT_DTOR(nsDisplayBullet); }
+#endif
 
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder,
                            bool* aSnap) const override {

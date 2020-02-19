@@ -303,7 +303,7 @@ class MOZ_NEEDS_MEMMOVABLE_MEMBERS StyleChildrenIterator
     return *this;
   }
 
-  MOZ_COUNTED_DTOR(StyleChildrenIterator)
+  ~StyleChildrenIterator() { MOZ_COUNT_DTOR(StyleChildrenIterator); }
 
   using AllChildrenIterator::GetNextChild;
   using AllChildrenIterator::GetPreviousChild;

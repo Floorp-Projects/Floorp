@@ -37,7 +37,7 @@ class GMPTimerParent : public PGMPTimerParent {
 
   struct Context {
     Context() : mId(0) { MOZ_COUNT_CTOR(Context); }
-    MOZ_COUNTED_DTOR(Context)
+    ~Context() { MOZ_COUNT_DTOR(Context); }
     nsCOMPtr<nsITimer> mTimer;
     RefPtr<GMPTimerParent>
         mParent;  // Note: live timers keep the GMPTimerParent alive.

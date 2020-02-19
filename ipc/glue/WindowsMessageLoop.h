@@ -20,9 +20,9 @@ void InitUIThread();
 
 class DeferredMessage {
  public:
-  MOZ_COUNTED_DEFAULT_CTOR(DeferredMessage)
+  DeferredMessage() { MOZ_COUNT_CTOR(DeferredMessage); }
 
-  MOZ_COUNTED_DTOR_OVERRIDE(DeferredMessage)
+  virtual ~DeferredMessage() { MOZ_COUNT_DTOR(DeferredMessage); }
 
   virtual void Run() = 0;
 };

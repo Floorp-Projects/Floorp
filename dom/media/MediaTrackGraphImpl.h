@@ -55,7 +55,7 @@ class ControlMessage {
     MOZ_COUNT_CTOR(ControlMessage);
   }
   // All these run on the graph thread
-  MOZ_COUNTED_DTOR_VIRTUAL(ControlMessage)
+  virtual ~ControlMessage() { MOZ_COUNT_DTOR(ControlMessage); }
   // Do the action of this message on the MediaTrackGraph thread. Any actions
   // affecting graph processing should take effect at mProcessedTime.
   // All track data for times < mProcessedTime has already been

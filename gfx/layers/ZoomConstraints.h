@@ -42,7 +42,7 @@ struct ZoomConstraints {
     MOZ_COUNT_CTOR(ZoomConstraints);
   }
 
-  MOZ_COUNTED_DTOR(ZoomConstraints)
+  ~ZoomConstraints() { MOZ_COUNT_DTOR(ZoomConstraints); }
 
   bool operator==(const ZoomConstraints& other) const {
     return mAllowZoom == other.mAllowZoom &&
