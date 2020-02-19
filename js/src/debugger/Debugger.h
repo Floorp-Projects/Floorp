@@ -501,7 +501,20 @@ class MOZ_RAII DebuggerList {
   bool empty() { return debuggers.empty(); }
 
   template <typename FireHookFun /* ResumeMode (Debugger*) */>
-  ResumeMode dispatchHook(JSContext* cx, FireHookFun fireHook);
+  bool dispatchHook(JSContext* cx, FireHookFun fireHook);
+
+  template <typename FireHookFun /* void (Debugger*) */>
+  void dispatchQuietHook(JSContext* cx, FireHookFun fireHook);
+
+  template <typename FireHookFun /* bool (Debugger*, ResumeMode&, MutableHandleValue) */>
+  MOZ_MUST_USE bool dispatchResumeModeHook(JSContext* cx, FireHookFun fireHook,
+                                           ResumeMode& resumeMode,
+                                           MutableHandleValue rval);
+
+  template <typename FireHookFun /* bool (Debugger*, ResumeMode&, MutableHandleValue) */>
+  MOZ_MUST_USE bool dispatchResumptionHook(JSContext* cx,
+                                           AbstractFramePtr frame,
+                                           FireHookFun fireHook);
 };
 
 class Debugger : private mozilla::LinkedListElement<Debugger> {
@@ -814,30 +827,29 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
    * If `success` is true, there must be no exception pending in ar.context().
    * `rv` may be:
    *
-   *     undefined - Return `ResumeMode::Continue` to continue execution
-   *         normally.
+   *     undefined - Set `resultMode` to `ResumeMode::Continue` to continue
+   *         execution normally.
    *
    *     {return: value} or {throw: value} - Call unwrapDebuggeeValue to
-   *         unwrap `value`. Store the result in `*vp` and return
+   *         unwrap `value`. Store the result in `vp` and set `resultMode` to
    *         `ResumeMode::Return` or `ResumeMode::Throw`. The interpreter
    *         will force the current frame to return or throw an exception.
    *
-   *     null - Return `ResumeMode::Terminate` to terminate the debuggee with
-   *         an uncatchable error.
+   *     null - Set `resultMode` to `ResumeMode::Terminate` to terminate the
+   *         debuggee with an uncatchable error.
    *
    *     anything else - Make a new TypeError the pending exception and
-   *         attempt to handling it with the uncaught exception handler,
-   *         reporting the error it is still present after.
+   *         attempt to handle it with the uncaught exception handler.
    */
-  ResumeMode processHandlerResult(JSContext* cx, bool success, HandleValue rv,
-                                  AbstractFramePtr frame, jsbytecode* pc,
-                                  MutableHandleValue vp);
+  MOZ_MUST_USE bool processHandlerResult(JSContext* cx, bool success,
+                                         HandleValue rv, AbstractFramePtr frame,
+                                         jsbytecode* pc, ResumeMode& resultMode,
+                                         MutableHandleValue vp);
 
-  ResumeMode processParsedHandlerResult(JSContext* cx, AbstractFramePtr frame,
-                                        jsbytecode* pc, bool success,
-                                        ResumeMode resumeMode,
-                                        HandleValue value,
-                                        MutableHandleValue vp);
+  MOZ_MUST_USE bool processParsedHandlerResult(
+      JSContext* cx, AbstractFramePtr frame, jsbytecode* pc, bool success,
+      ResumeMode resumeMode, HandleValue value, ResumeMode& resultMode,
+      MutableHandleValue vp);
 
   /**
    * Given a resumption return value from a hook, parse and validate it based
@@ -860,10 +872,10 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
   void reportUncaughtException(JSContext* cx);
 
   /*
-   * Call the uncaught exception handler if there is one, and if there
-   * is still an error after the handler runs, report it to the current global.
+   * Call the uncaught exception handler if there is one, returning true
+   * if it handled the error, or false otherwise.
    */
-  void handleUncaughtException(JSContext* cx);
+  MOZ_MUST_USE bool handleUncaughtException(JSContext* cx);
 
   GlobalObject* unwrapDebuggeeArgument(JSContext* cx, const Value& v);
 
@@ -965,20 +977,51 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
                                   Handle<PromiseObject*> promise);
 
   template <typename HookIsEnabledFun /* bool (Debugger*) */,
-            typename FireHookFun /* ResumeMode (Debugger*) */>
-  static ResumeMode dispatchHook(JSContext* cx, HookIsEnabledFun hookIsEnabled,
-                                 FireHookFun fireHook);
+            typename FireHookFun /* void (Debugger*) */>
+  static void dispatchQuietHook(JSContext* cx, HookIsEnabledFun hookIsEnabled,
+                                FireHookFun fireHook);
+  template <
+      typename HookIsEnabledFun /* bool (Debugger*) */, typename FireHookFun /* bool (Debugger*, ResumeMode&, MutableHandleValue) */>
+  static MOZ_MUST_USE bool dispatchResumeModeHook(
+      JSContext* cx, HookIsEnabledFun hookIsEnabled, FireHookFun fireHook,
+      ResumeMode& resumeMode, MutableHandleValue rval);
+  template <
+      typename HookIsEnabledFun /* bool (Debugger*) */, typename FireHookFun /* bool (Debugger*, ResumeMode&, MutableHandleValue) */>
+  static MOZ_MUST_USE bool dispatchResumptionHook(
+      JSContext* cx, AbstractFramePtr frame, HookIsEnabledFun hookIsEnabled,
+      FireHookFun fireHook);
 
-  ResumeMode fireDebuggerStatement(JSContext* cx, MutableHandleValue vp);
-  ResumeMode fireExceptionUnwind(JSContext* cx, HandleValue exc,
-                                 MutableHandleValue vp);
-  ResumeMode fireEnterFrame(JSContext* cx, MutableHandleValue vp);
-  ResumeMode fireNativeCall(JSContext* cx, const CallArgs& args,
-                            CallReason reason, MutableHandleValue vp);
-  ResumeMode fireNewGlobalObject(JSContext* cx, Handle<GlobalObject*> global,
-                                 MutableHandleValue vp);
-  ResumeMode firePromiseHook(JSContext* cx, Hook hook, HandleObject promise,
-                             MutableHandleValue vp);
+  template <typename RunImpl /* bool () */>
+  MOZ_MUST_USE bool enterDebuggerHook(JSContext* cx, RunImpl runImpl) {
+    AutoRealm ar(cx, object);
+
+    bool ok = true;
+    if (!runImpl()) {
+      reportUncaughtException(cx);
+      ok = false;
+    }
+    MOZ_ASSERT(!cx->isExceptionPending());
+    return ok;
+  }
+
+  MOZ_MUST_USE bool fireDebuggerStatement(JSContext* cx, ResumeMode& resumeMode,
+                                          MutableHandleValue vp);
+  MOZ_MUST_USE bool fireExceptionUnwind(JSContext* cx, HandleValue exc,
+                                        ResumeMode& resumeMode,
+                                        MutableHandleValue vp);
+  MOZ_MUST_USE bool fireEnterFrame(JSContext* cx, ResumeMode& resumeMode,
+                                   MutableHandleValue vp);
+  MOZ_MUST_USE bool fireNativeCall(JSContext* cx, const CallArgs& args,
+                                   CallReason reason, ResumeMode& resumeMode,
+                                   MutableHandleValue vp);
+  MOZ_MUST_USE bool fireNewGlobalObject(JSContext* cx,
+                                        Handle<GlobalObject*> global,
+                                        ResumeMode& resumeMode,
+                                        MutableHandleValue vp);
+  MOZ_MUST_USE bool firePromiseHook(JSContext* cx, Hook hook,
+                                    HandleObject promise,
+                                    ResumeMode& resumeMode,
+                                    MutableHandleValue vp);
 
   DebuggerScript* newVariantWrapper(JSContext* cx,
                                     Handle<DebuggerScriptReferent> referent) {
@@ -1024,14 +1067,14 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
    * Receive a "new script" event from the engine. A new script was compiled
    * or deserialized.
    */
-  void fireNewScript(JSContext* cx,
-                     Handle<DebuggerScriptReferent> scriptReferent);
+  MOZ_MUST_USE bool fireNewScript(
+      JSContext* cx, Handle<DebuggerScriptReferent> scriptReferent);
 
   /*
    * Receive a "garbage collection" event from the engine. A GC cycle with the
    * given data was recently completed.
    */
-  void fireOnGarbageCollectionHook(
+  MOZ_MUST_USE bool fireOnGarbageCollectionHook(
       JSContext* cx, const JS::dbg::GarbageCollectionEvent::Ptr& gcData);
 
   inline Breakpoint* firstBreakpoint() const;
