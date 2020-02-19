@@ -142,6 +142,14 @@ class nsAutoOwningThread {
       NS_LogDtor((void*)_ptr, _name, _size); \
     } while (0)
 
+#  define MOZ_COUNTED_DEFAULT_CTOR(_type) \
+    _type() { MOZ_COUNT_CTOR(_type); }
+
+#  define MOZ_COUNTED_DTOR_META(_type, _prefix, _postfix) \
+    _prefix ~_type() _postfix { MOZ_COUNT_DTOR(_type); }
+#  define MOZ_COUNTED_DTOR_NESTED(_type, _nestedName) \
+    ~_type() { MOZ_COUNT_DTOR(_nestedName); }
+
 /* nsCOMPtr.h allows these macros to be defined by clients
  * These logging functions require dynamic_cast<void*>, so they don't
  * do anything useful if we don't have dynamic_cast<void*>.
@@ -163,8 +171,18 @@ class nsAutoOwningThread {
 #  define MOZ_COUNT_DTOR(_type)
 #  define MOZ_COUNT_DTOR_INHERITED(_type, _base)
 #  define MOZ_LOG_DTOR(_ptr, _name, _size)
+#  define MOZ_COUNTED_DEFAULT_CTOR(_type) _type() = default;
+#  define MOZ_COUNTED_DTOR_META(_type, _prefix, _postfix) \
+    _prefix ~_type() _postfix = default;
+#  define MOZ_COUNTED_DTOR_NESTED(_type, _nestedName) ~_type() = default;
 
 #endif /* NS_BUILD_REFCNT_LOGGING */
+
+#define MOZ_COUNTED_DTOR(_type) MOZ_COUNTED_DTOR_META(_type, , )
+#define MOZ_COUNTED_DTOR_OVERRIDE(_type) \
+  MOZ_COUNTED_DTOR_META(_type, , override)
+#define MOZ_COUNTED_DTOR_FINAL(_type) MOZ_COUNTED_DTOR_META(_type, , final)
+#define MOZ_COUNTED_DTOR_VIRTUAL(_type) MOZ_COUNTED_DTOR_META(_type, virtual, )
 
 // Support for ISupports classes which interact with cycle collector.
 
