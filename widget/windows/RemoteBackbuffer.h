@@ -25,9 +25,12 @@ class Provider {
   Provider();
   ~Provider();
 
-  bool Initialize(HWND aWindowHandle, DWORD aTargetProcessId);
+  bool Initialize(HWND aWindowHandle, DWORD aTargetProcessId,
+                  nsTransparencyMode aTransparencyMode);
 
   Maybe<RemoteBackbufferHandles> CreateRemoteHandles();
+
+  void UpdateTransparencyMode(nsTransparencyMode aTransparencyMode);
 
   Provider(const Provider&) = delete;
   Provider(Provider&&) = delete;
@@ -49,6 +52,8 @@ class Provider {
   bool mStopServiceThread;
   std::thread mServiceThread;
   std::unique_ptr<PresentableSharedImage> mBackbuffer;
+  mozilla::Atomic<nsTransparencyMode, MemoryOrdering::Relaxed>
+      mTransparencyMode;
 };
 
 class Client {
