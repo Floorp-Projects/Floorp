@@ -37,6 +37,18 @@ bool IsServiceWorker(const RemoteWorkerData& aData) {
          OptionalServiceWorkerData::TServiceWorkerData;
 }
 
+// Respecting COOP and COEP requires processing headers in the parent
+// process in order to choose an appropriate content process, but the
+// workers' ScriptLoader processes headers in content processes. An
+// intermediary step that provides security guarantees is to simply never
+// allow SharedWorkers and ServiceWorkers to exist in a COOP+COEP process.
+// The ultimate goal is to allow these worker types to be put in such
+// processes based on their script response headers.
+// https://bugzilla.mozilla.org/show_bug.cgi?id=1595206
+bool IsServiceWorkerRemoteType(const nsAString& aRemoteType) {
+  return IsWebRemoteType(aRemoteType) && !IsWebCoopCoepRemoteType(aRemoteType);
+}
+
 void TransmitPermissionsAndBlobURLsForPrincipalInfo(
     ContentParent* aContentParent, const PrincipalInfo& aPrincipalInfo) {
   AssertIsOnMainThread();
@@ -93,21 +105,38 @@ void RemoteWorkerManager::RegisterActor(RemoteWorkerServiceParent* aActor) {
   MOZ_ASSERT(!mChildActors.Contains(aActor));
   mChildActors.AppendElement(aActor);
 
+  nsTArray<Pending> unlaunched;
+
+  RefPtr<ContentParent> contentParent =
+      BackgroundParent::GetContentParent(aActor->Manager());
+  auto scopeExit = MakeScopeExit(
+      [&] { NS_ReleaseOnMainThreadSystemGroup(contentParent.forget()); });
+  const auto& remoteType = contentParent->GetRemoteType();
+
   if (!mPendings.IsEmpty()) {
     // Flush pending launching.
-    for (const Pending& p : mPendings) {
+    for (Pending& p : mPendings) {
       if (p.mController->IsTerminated()) {
+        continue;
+      }
+
+      if (IsServiceWorker(p.mData) && !IsServiceWorkerRemoteType(remoteType)) {
+        unlaunched.AppendElement(std::move(p));
         continue;
       }
 
       LaunchInternal(p.mController, aActor, p.mData);
     }
 
-    mPendings.Clear();
+    std::swap(mPendings, unlaunched);
 
-    // We don't need to keep this manager alive manually. The Actor is doing it
-    // for us.
-    Release();
+    // AddRef is called when the first Pending object is added to mPendings, so
+    // the balancing Release is called when the last Pending object is removed.
+    // RemoteWorkerServiceParents will hold strong references to
+    // RemoteWorkerManager.
+    if (mPendings.IsEmpty()) {
+      Release();
+    }
   }
 }
 
@@ -258,15 +287,7 @@ RemoteWorkerManager::SelectTargetActorForServiceWorker(
                    RefPtr<ContentParent>&& aContentParent) {
     const auto& remoteType = aContentParent->GetRemoteType();
 
-    // Respecting COOP and COEP requires processing headers in the parent
-    // process in order to choose an appropriate content process, but the
-    // workers' ScriptLoader processes headers in content processes. An
-    // intermediary step that provides security guarantees is to simply never
-    // allow SharedWorkers and ServiceWorkers to exist in a COOP+COEP process.
-    // The ultimate goal is to allow these worker types to be put in such
-    // processes based on their script response headers.
-    // https://bugzilla.mozilla.org/show_bug.cgi?id=1595206
-    if (IsWebRemoteType(remoteType) && !IsWebCoopCoepRemoteType(remoteType)) {
+    if (IsServiceWorkerRemoteType(remoteType)) {
       auto lock = aContentParent->mRemoteWorkerActorData.Lock();
 
       if (lock->mCount || !lock->mShutdownStarted) {
