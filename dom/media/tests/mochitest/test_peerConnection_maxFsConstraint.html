@@ -30,6 +30,12 @@
     return d;
   };
 
+  const checkForH264Support = async () => {
+    const pc = new RTCPeerConnection();
+    const offer = await pc.createOffer({offerToReceiveVideo: true});
+    return offer.sdp.match(/a=rtpmap:[1-9][0-9]* H264/);
+  };
+
   function testScale(codec) {
     var v1 = createMediaElement('video', 'v1');
     var v2 = createMediaElement('video', 'v2');
@@ -81,12 +87,12 @@
 
   runNetworkTest(async () => {
     await pushPrefs(['media.peerconnection.video.lock_scaling', true]);
-    await testScale("H264");
-    // H.264 is prefered on Android for there is HW codec. Disable that to test
-    // VP8.
-    if (navigator.appVersion.includes("Android")) {
-      await pushPrefs(["media.webrtc.hw.h264.enabled", false]);
+    if (await checkForH264Support()) {
+      await testScale("H264");
     }
+
+    // Disable h264 hardware support, to ensure it is not prioritized over VP8
+    await pushPrefs(["media.webrtc.hw.h264.enabled", false]);
     await testScale("VP8");
     networkTestFinished();
   });
