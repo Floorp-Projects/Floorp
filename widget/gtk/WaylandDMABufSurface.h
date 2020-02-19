@@ -13,6 +13,7 @@
 #include "mozilla/widget/nsWaylandDisplay.h"
 
 typedef void* EGLImageKHR;
+typedef void* EGLSyncKHR;
 
 #define DMABUF_BUFFER_PLANES 4
 
@@ -77,13 +78,28 @@ class WaylandDMABufSurface {
   };
   virtual bool IsFullRange() { return false; };
 
-  WaylandDMABufSurface(SurfaceType aSurfaceType);
+  void FenceSet();
+  void FenceWait();
+  void FenceDelete();
+
+  WaylandDMABufSurface(SurfaceType aSurfaceType)
+      : mSurfaceType(aSurfaceType),
+        mBufferModifier(0),
+        mBufferPlaneCount(0),
+        mStrides(),
+        mOffsets(),
+        mSync(0) {
+    for (auto& slot : mDmabufFds) {
+      slot = -1;
+    }
+  }
 
  protected:
   virtual bool Create(const mozilla::layers::SurfaceDescriptor& aDesc) = 0;
   virtual void ReleaseSurface() = 0;
+  bool FenceCreate(int aFd);
 
-  virtual ~WaylandDMABufSurface(){};
+  virtual ~WaylandDMABufSurface() { FenceDelete(); };
 
   SurfaceType mSurfaceType;
   uint64_t mBufferModifier;
@@ -93,6 +109,7 @@ class WaylandDMABufSurface {
   uint32_t mStrides[DMABUF_BUFFER_PLANES];
   uint32_t mOffsets[DMABUF_BUFFER_PLANES];
 
+  EGLSyncKHR mSync;
   RefPtr<mozilla::gl::GLContext> mGL;
 };
 
@@ -172,7 +189,6 @@ class WaylandDMABufSurfaceRGBA : public WaylandDMABufSurface {
   struct gbm_bo* mGbmBufferObject;
   uint32_t mGbmBufferFlags;
 
-  RefPtr<mozilla::gl::GLContext> mGL;
   EGLImageKHR mEGLImage;
   GLuint mTexture;
 
@@ -227,7 +243,6 @@ class WaylandDMABufSurfaceNV12 : public WaylandDMABufSurface {
   EGLImageKHR mEGLImage[DMABUF_BUFFER_PLANES];
   GLuint mTexture[DMABUF_BUFFER_PLANES];
   mozilla::gfx::YUVColorSpace mColorSpace;
-  RefPtr<mozilla::gl::GLContext> mGL;
 };
 
 #endif
