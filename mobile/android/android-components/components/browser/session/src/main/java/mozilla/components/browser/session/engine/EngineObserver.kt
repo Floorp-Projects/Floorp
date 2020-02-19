@@ -44,10 +44,6 @@ internal class EngineObserver(
             session.title = ""
         }
 
-        if (!isHostEquals(session.url, url)) {
-            session.icon = null
-        }
-
         if (!isInScope(session.webAppManifest, url)) {
             session.webAppManifest = null
         }

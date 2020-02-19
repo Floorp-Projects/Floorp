@@ -11,7 +11,8 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import mozilla.components.browser.icons.BrowserIcons
 import mozilla.components.browser.icons.IconRequest
-import mozilla.components.browser.session.Session
+import mozilla.components.browser.state.action.ContentAction
+import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.webextension.MessageHandler
 import org.json.JSONObject
@@ -20,17 +21,19 @@ import org.json.JSONObject
  * [MessageHandler] implementation that receives messages from the icons web extensions and performs icon loads.
  */
 internal class IconMessageHandler(
-    private val session: Session,
+    private val store: BrowserStore,
+    private val sessionId: String,
+    private val private: Boolean,
     private val icons: BrowserIcons
 ) : MessageHandler {
-    private val scope = CoroutineScope(Dispatchers.Main)
+    private val scope = CoroutineScope(Dispatchers.IO)
 
     @VisibleForTesting(otherwise = VisibleForTesting.NONE) // This only exists so that we can wait in tests.
     internal var lastJob: Job? = null
 
     override fun onMessage(message: Any, source: EngineSession?): Any {
         if (message is JSONObject) {
-            message.toIconRequest(session.private)?.let { loadRequest(it) }
+            message.toIconRequest(private)?.let { loadRequest(it) }
         } else {
             throw IllegalStateException("Received unexpected message: $message")
         }
@@ -44,11 +47,7 @@ internal class IconMessageHandler(
         lastJob = scope.launch {
             val icon = icons.loadIcon(request).await()
 
-            if (session.url == request.url) {
-                // Only update the icon of the session if we are still on this page. The user may have navigated
-                // away by the time the icon is loaded.
-                session.icon = icon.bitmap
-            }
+            store.dispatch(ContentAction.UpdateIconAction(sessionId, request.url, icon.bitmap))
         }
     }
 }

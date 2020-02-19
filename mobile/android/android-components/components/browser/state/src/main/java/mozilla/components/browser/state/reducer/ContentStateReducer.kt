@@ -4,6 +4,7 @@
 
 package mozilla.components.browser.state.reducer
 
+import android.net.Uri
 import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.ContentState
@@ -23,7 +24,13 @@ internal object ContentStateReducer {
                 it.copy(thumbnail = null)
             }
             is ContentAction.UpdateUrlAction -> updateContentState(state, action.sessionId) {
-                it.copy(url = action.url)
+                val icon = if (!isHostEquals(it.url, action.url)) {
+                    null
+                } else {
+                    it.icon
+                }
+
+                it.copy(url = action.url, icon = icon)
             }
             is ContentAction.UpdateProgressAction -> updateContentState(state, action.sessionId) {
                 it.copy(progress = action.progress)
@@ -41,7 +48,13 @@ internal object ContentStateReducer {
                 it.copy(securityInfo = action.securityInfo)
             }
             is ContentAction.UpdateIconAction -> updateContentState(state, action.sessionId) {
-                it.copy(icon = action.icon)
+                if (action.pageUrl == it.url) {
+                    // Only update the icon of the state if we are still on this page. The user may
+                    // have navigated away by the time the icon is loaded.
+                    it.copy(icon = action.icon)
+                } else {
+                    it
+                }
             }
             is ContentAction.UpdateThumbnailAction -> updateContentState(state, action.sessionId) {
                 it.copy(thumbnail = action.thumbnail)
@@ -113,4 +126,11 @@ private fun updateContentState(
             }
         }
     )
+}
+
+private fun isHostEquals(sessionUrl: String, newUrl: String): Boolean {
+    val sessionUri = Uri.parse(sessionUrl)
+    val newUri = Uri.parse(newUrl)
+
+    return sessionUri.scheme == newUri.scheme && sessionUri.host == newUri.host
 }

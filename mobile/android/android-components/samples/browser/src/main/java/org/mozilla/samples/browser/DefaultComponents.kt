@@ -120,7 +120,7 @@ open class DefaultComponents(private val applicationContext: Context) {
                 .whenGoingToBackground()
                 .whenSessionsChange()
 
-            icons.install(engine, this)
+            icons.install(engine, store)
 
             RecordingDevicesNotificationFeature(applicationContext, sessionManager = this)
                 .enable()

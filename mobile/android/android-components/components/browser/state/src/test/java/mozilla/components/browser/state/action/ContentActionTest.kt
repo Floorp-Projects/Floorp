@@ -5,6 +5,7 @@
 package mozilla.components.browser.state.action
 
 import android.graphics.Bitmap
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.state.selector.findCustomTab
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.SecurityInfoState
@@ -27,9 +28,11 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
+import org.junit.runner.RunWith
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.spy
 
+@RunWith(AndroidJUnit4::class)
 class ContentActionTest {
     private lateinit var store: BrowserStore
     private lateinit var tabId: String
@@ -68,6 +71,46 @@ class ContentActionTest {
 
         assertEquals(newUrl, tab.content.url)
         assertNotEquals(newUrl, otherTab.content.url)
+    }
+
+    @Test
+    fun `UpdateUrlAction clears icon`() {
+        val icon = spy(Bitmap::class.java)
+
+        assertNotEquals(icon, tab.content.icon)
+        assertNotEquals(icon, otherTab.content.icon)
+
+        store.dispatch(
+            ContentAction.UpdateIconAction(tab.id, tab.content.url, icon)
+        ).joinBlocking()
+
+        assertEquals(icon, tab.content.icon)
+
+        store.dispatch(
+            ContentAction.UpdateUrlAction(tab.id, "https://www.example.org")
+        ).joinBlocking()
+
+        assertNull(tab.content.icon)
+    }
+
+    @Test
+    fun `UpdateUrlAction does not clear icon if host is the same`() {
+        val icon = spy(Bitmap::class.java)
+
+        assertNotEquals(icon, tab.content.icon)
+        assertNotEquals(icon, otherTab.content.icon)
+
+        store.dispatch(
+            ContentAction.UpdateIconAction(tab.id, tab.content.url, icon)
+        ).joinBlocking()
+
+        assertEquals(icon, tab.content.icon)
+
+        store.dispatch(
+            ContentAction.UpdateUrlAction(tab.id, "https://www.mozilla.org/firefox")
+        ).joinBlocking()
+
+        assertEquals(icon, tab.content.icon)
     }
 
     @Test
@@ -209,11 +252,25 @@ class ContentActionTest {
         assertNotEquals(icon, otherTab.content.icon)
 
         store.dispatch(
-                ContentAction.UpdateIconAction(tab.id, icon)
+            ContentAction.UpdateIconAction(tab.id, tab.content.url, icon)
         ).joinBlocking()
 
         assertEquals(icon, tab.content.icon)
         assertNotEquals(icon, otherTab.content.icon)
+    }
+
+    @Test
+    fun `UpdateIconAction does not update icon if page URL is different`() {
+        val icon = spy(Bitmap::class.java)
+
+        assertNotEquals(icon, tab.content.icon)
+        assertNotEquals(icon, otherTab.content.icon)
+
+        store.dispatch(
+            ContentAction.UpdateIconAction(tab.id, "https://different.example.org", icon)
+        ).joinBlocking()
+
+        assertNull(tab.content.icon)
     }
 
     @Test
@@ -223,7 +280,7 @@ class ContentActionTest {
         assertNotEquals(icon, tab.content.icon)
 
         store.dispatch(
-                ContentAction.UpdateIconAction(tab.id, icon)
+            ContentAction.UpdateIconAction(tab.id, tab.content.url, icon)
         ).joinBlocking()
 
         assertEquals(icon, tab.content.icon)
