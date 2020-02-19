@@ -5,21 +5,6 @@
 /* eslint-disable mozilla/no-arbitrary-setTimeout */
 "use strict";
 
-function createAudioContext() {
-  content.ac = new content.AudioContext();
-  const ac = content.ac;
-  const dest = ac.destination;
-  const source = ac.createBufferSource();
-  const buf = ac.createBuffer(1, 3 * ac.sampleRate, ac.sampleRate);
-  const bufData = buf.getChannelData(0);
-  for (let idx = 0; idx < buf.length; idx++) {
-    bufData[idx] = 0.0;
-  }
-  source.buffer = buf;
-  source.connect(dest);
-  source.start();
-}
-
 async function waitUntilAudioContextStarts() {
   const ac = content.ac;
   if (ac.state == "running") {
@@ -45,11 +30,21 @@ add_task(async function testSilentAudioContext() {
   const browser = tab.linkedBrowser;
 
   info(`- create audio context -`);
-  // We want the same audio context to be used across different content
-  // tasks, so it needs to be loaded by a frame script.
-  const mm = tab.linkedBrowser.messageManager;
-  mm.loadFrameScript("data:,(" + createAudioContext.toString() + ")();", false);
-
+  // We want the same audio context to be used across different content tasks
+  await SpecialPowers.spawn(tab.linkedBrowser, [], () => {
+    content.ac = new content.AudioContext();
+    const ac = content.ac;
+    const dest = ac.destination;
+    const source = ac.createBufferSource();
+    const buf = ac.createBuffer(1, 3 * ac.sampleRate, ac.sampleRate);
+    const bufData = Cu.cloneInto(buf.getChannelData(0), {});
+    for (let idx = 0; idx < buf.length; idx++) {
+      bufData[idx] = 0.0;
+    }
+    source.buffer = buf;
+    source.connect(dest);
+    source.start();
+  });
   info(`- check AudioContext's state -`);
   await SpecialPowers.spawn(browser, [], waitUntilAudioContextStarts);
   ok(true, `AudioContext is running.`);
