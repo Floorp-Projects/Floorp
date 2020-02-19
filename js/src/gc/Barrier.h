@@ -636,6 +636,7 @@ class HeapPtr : public WriteBarriered<T> {
   }
 
   void init(const T& v) {
+    MOZ_ASSERT(this->value == JS::SafelyInitialized<T>());
     AssertTargetIsNotGray(v);
     this->value = v;
     this->post(JS::SafelyInitialized<T>(), this->value);
