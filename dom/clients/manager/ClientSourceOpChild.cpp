@@ -8,6 +8,7 @@
 
 #include "ClientSource.h"
 #include "ClientSourceChild.h"
+#include "mozilla/Assertions.h"
 #include "mozilla/Unused.h"
 
 namespace mozilla {
@@ -71,7 +72,7 @@ void ClientSourceOpChild::DoSourceOp(Method aMethod, const Args& aArgs) {
 }
 
 void ClientSourceOpChild::ActorDestroy(ActorDestroyReason aReason) {
-  mPromiseRequestHolder.DisconnectIfExists();
+  Cleanup();
 }
 
 void ClientSourceOpChild::Init(const ClientOpConstructorArgs& aArgs) {
@@ -102,6 +103,31 @@ void ClientSourceOpChild::Init(const ClientOpConstructorArgs& aArgs) {
       break;
     }
   }
+
+  mInitialized.Flip();
+
+  if (mDeletionRequested) {
+    Cleanup();
+    delete this;
+  }
+}
+
+void ClientSourceOpChild::ScheduleDeletion() {
+  if (mInitialized) {
+    Cleanup();
+    delete this;
+    return;
+  }
+
+  mDeletionRequested.Flip();
+}
+
+ClientSourceOpChild::~ClientSourceOpChild() {
+  MOZ_DIAGNOSTIC_ASSERT(mInitialized);
+}
+
+void ClientSourceOpChild::Cleanup() {
+  mPromiseRequestHolder.DisconnectIfExists();
 }
 
 }  // namespace dom
