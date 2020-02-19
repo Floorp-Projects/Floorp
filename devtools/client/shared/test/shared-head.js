@@ -368,6 +368,12 @@ function waitForPanelReload(currentToolId, target, panel) {
       info("Waiting for netmonitor updates after page reload");
       await onReloaded;
     };
+  } else if (currentToolId == "webconsole") {
+    const onReloaded = panel.once("reloaded");
+    return async function() {
+      info("Waiting for webconsole updates after page reload");
+      await onReloaded;
+    };
   }
   return null;
 }
