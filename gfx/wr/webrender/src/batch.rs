@@ -14,6 +14,7 @@ use crate::gpu_types::{BrushFlags, BrushInstance, PrimitiveHeaders, ZBufferId, Z
 use crate::gpu_types::{ClipMaskInstance, SplitCompositeInstance, BrushShaderKind};
 use crate::gpu_types::{PrimitiveInstanceData, RasterizationSpace, GlyphInstance};
 use crate::gpu_types::{PrimitiveHeader, PrimitiveHeaderIndex, TransformPaletteId, TransformPalette};
+use crate::gpu_types::{ImageBrushData, get_shader_opacity};
 use crate::internal_types::{FastHashMap, SavedTargetIndex, Swizzle, TextureSource, Filter};
 use crate::picture::{Picture3DContext, PictureCompositeMode, PicturePrimitive};
 use crate::prim_store::{DeferredResolve, EdgeAaSegmentMask, PrimitiveInstanceKind, PrimitiveVisibilityIndex, PrimitiveVisibilityMask};
@@ -849,12 +850,12 @@ impl BatchBuilder {
 
                 let batch_params = BrushBatchParameters::instanced(
                     BrushBatchKind::Image(ImageBufferKind::Texture2DArray),
-                    [
-                        ShaderColorMode::Image as i32 | ((AlphaType::PremultipliedAlpha as i32) << 16),
-                        RasterizationSpace::Local as i32,
-                        get_shader_opacity(1.0),
-                        0,
-                    ],
+                    ImageBrushData {
+                        color_mode: ShaderColorMode::Image,
+                        alpha_type: AlphaType::PremultipliedAlpha,
+                        raster_space: RasterizationSpace::Local,
+                        opacity: 1.0,
+                    }.encode(),
                     segment_data,
                 );
 
@@ -1035,12 +1036,12 @@ impl BatchBuilder {
                         (
                             BrushBatchKind::Image(get_buffer_kind(cache_item.texture_id)),
                             textures,
-                            [
-                                ShaderColorMode::Image as i32 | ((AlphaType::PremultipliedAlpha as i32) << 16),
-                                RasterizationSpace::Local as i32,
-                                get_shader_opacity(1.0),
-                                0,
-                            ],
+                            ImageBrushData {
+                                color_mode: ShaderColorMode::Image,
+                                alpha_type: AlphaType::PremultipliedAlpha,
+                                raster_space: RasterizationSpace::Local,
+                                opacity: 1.0,
+                            }.encode(),
                             cache_item.uv_rect_handle.as_int(gpu_cache),
                         )
                     }
@@ -1248,12 +1249,16 @@ impl BatchBuilder {
                                             non_segmented_blend_mode,
                                             textures,
                                         );
-                                        let prim_header_index = prim_headers.push(&prim_header, z_id, [
-                                            ShaderColorMode::Image as i32 | ((AlphaType::PremultipliedAlpha as i32) << 16),
-                                            RasterizationSpace::Screen as i32,
-                                            get_shader_opacity(1.0),
-                                            0,
-                                        ]);
+                                        let prim_header_index = prim_headers.push(
+                                            &prim_header,
+                                            z_id,
+                                            ImageBrushData {
+                                                color_mode: ShaderColorMode::Image,
+                                                alpha_type: AlphaType::PremultipliedAlpha,
+                                                raster_space: RasterizationSpace::Screen,
+                                                opacity: 1.0,
+                                            }.encode(),
+                                        );
 
                                         self.add_brush_instance_to_batches(
                                             key,
@@ -1323,12 +1328,16 @@ impl BatchBuilder {
                                                 ..prim_header
                                             };
 
-                                            let shadow_prim_header_index = prim_headers.push(&shadow_prim_header, z_id, [
-                                                ShaderColorMode::Alpha as i32 | ((AlphaType::PremultipliedAlpha as i32) << 16),
-                                                RasterizationSpace::Screen as i32,
-                                                get_shader_opacity(1.0),
-                                                0,
-                                            ]);
+                                            let shadow_prim_header_index = prim_headers.push(
+                                                &shadow_prim_header,
+                                                z_id,
+                                                ImageBrushData {
+                                                    color_mode: ShaderColorMode::Alpha,
+                                                    alpha_type: AlphaType::PremultipliedAlpha,
+                                                    raster_space: RasterizationSpace::Screen,
+                                                    opacity: 1.0,
+                                                }.encode(),
+                                            );
 
                                             self.add_brush_instance_to_batches(
                                                 shadow_key,
@@ -1346,12 +1355,16 @@ impl BatchBuilder {
                                         }
                                         let z_id_content = z_generator.next();
 
-                                        let content_prim_header_index = prim_headers.push(&prim_header, z_id_content, [
-                                            ShaderColorMode::Image as i32 | ((AlphaType::PremultipliedAlpha as i32) << 16),
-                                            RasterizationSpace::Screen as i32,
-                                            get_shader_opacity(1.0),
-                                            0,
-                                        ]);
+                                        let content_prim_header_index = prim_headers.push(
+                                            &prim_header,
+                                            z_id_content,
+                                            ImageBrushData {
+                                                color_mode: ShaderColorMode::Image,
+                                                alpha_type: AlphaType::PremultipliedAlpha,
+                                                raster_space: RasterizationSpace::Screen,
+                                                opacity: 1.0,
+                                            }.encode(),
+                                        );
 
                                         self.add_brush_instance_to_batches(
                                             content_key,
@@ -1525,12 +1538,16 @@ impl BatchBuilder {
                                     BlendMode::Advanced(mode),
                                     textures,
                                 );
-                                let prim_header_index = prim_headers.push(&prim_header, z_id, [
-                                    ShaderColorMode::Image as i32 | ((AlphaType::PremultipliedAlpha as i32) << 16),
-                                    RasterizationSpace::Local as i32,
-                                    get_shader_opacity(1.0),
-                                    0,
-                                ]);
+                                let prim_header_index = prim_headers.push(
+                                    &prim_header,
+                                    z_id,
+                                    ImageBrushData {
+                                        color_mode: ShaderColorMode::Image,
+                                        alpha_type: AlphaType::PremultipliedAlpha,
+                                        raster_space: RasterizationSpace::Local,
+                                        opacity: 1.0,
+                                    }.encode(),
+                                );
 
                                 self.add_brush_instance_to_batches(
                                     key,
@@ -1607,12 +1624,12 @@ impl BatchBuilder {
                                 let batch_params = BrushBatchParameters::shared(
                                     BrushBatchKind::Image(ImageBufferKind::Texture2DArray),
                                     textures,
-                                    [
-                                        ShaderColorMode::Image as i32 | ((AlphaType::PremultipliedAlpha as i32) << 16),
-                                        RasterizationSpace::Screen as i32,
-                                        get_shader_opacity(1.0),
-                                        0,
-                                    ],
+                                    ImageBrushData {
+                                        color_mode: ShaderColorMode::Image,
+                                        alpha_type: AlphaType::PremultipliedAlpha,
+                                        raster_space: RasterizationSpace::Screen,
+                                        opacity: 1.0,
+                                    }.encode(),
                                     uv_rect_address,
                                 );
 
@@ -1680,12 +1697,16 @@ impl BatchBuilder {
                                     non_segmented_blend_mode,
                                     textures,
                                 );
-                                let prim_header_index = prim_headers.push(&prim_header, z_id, [
-                                    ShaderColorMode::Image as i32 | ((AlphaType::PremultipliedAlpha as i32) << 16),
-                                    RasterizationSpace::Screen as i32,
-                                    get_shader_opacity(1.0),
-                                    0,
-                                ]);
+                                let prim_header_index = prim_headers.push(
+                                    &prim_header,
+                                    z_id,
+                                    ImageBrushData {
+                                        color_mode: ShaderColorMode::Image,
+                                        alpha_type: AlphaType::PremultipliedAlpha,
+                                        raster_space: RasterizationSpace::Screen,
+                                        opacity: 1.0,
+                                    }.encode(),
+                                );
 
                                 self.add_brush_instance_to_batches(
                                     key,
@@ -1759,12 +1780,12 @@ impl BatchBuilder {
                 let batch_params = BrushBatchParameters::shared(
                     BrushBatchKind::Image(get_buffer_kind(cache_item.texture_id)),
                     textures,
-                    [
-                        ShaderColorMode::Image as i32 | ((AlphaType::PremultipliedAlpha as i32) << 16),
-                        RasterizationSpace::Local as i32,
-                        get_shader_opacity(1.0),
-                        0,
-                    ],
+                    ImageBrushData {
+                        color_mode: ShaderColorMode::Image,
+                        alpha_type: AlphaType::PremultipliedAlpha,
+                        raster_space: RasterizationSpace::Local,
+                        opacity: 1.0,
+                    }.encode(),
                     cache_item.uv_rect_handle.as_int(gpu_cache),
                 );
 
@@ -1976,12 +1997,12 @@ impl BatchBuilder {
                     rendering: image_data.image_rendering,
                     tile: None,
                 };
-                let prim_user_data = [
-                    ShaderColorMode::Image as i32 | ((image_data.alpha_type as i32) << 16),
-                    RasterizationSpace::Local as i32,
-                    get_shader_opacity(opacity_binding),
-                    0,
-                ];
+                let prim_user_data = ImageBrushData {
+                    color_mode: ShaderColorMode::Image,
+                    alpha_type: image_data.alpha_type,
+                    raster_space: RasterizationSpace::Local,
+                    opacity: opacity_binding,
+                }.encode();
 
                 if image_instance.visible_tiles.is_empty() {
                     let cache_item = match image_data.source {
@@ -2156,12 +2177,13 @@ impl BatchBuilder {
 
                     let textures = BatchTextures::color(cache_item.texture_id);
                     let batch_kind = BrushBatchKind::Image(get_buffer_kind(cache_item.texture_id));
-                    let prim_user_data = [
-                        ShaderColorMode::Image as i32 | ((AlphaType::PremultipliedAlpha as i32) << 16),
-                        RasterizationSpace::Local as i32,
-                        get_shader_opacity(1.0),
-                        0,
-                    ];
+                    let prim_user_data = ImageBrushData {
+                        color_mode: ShaderColorMode::Image,
+                        alpha_type: AlphaType::PremultipliedAlpha,
+                        raster_space: RasterizationSpace::Local,
+                        opacity: 1.0,
+                    }.encode();
+
                     let specific_resource_address = cache_item.uv_rect_handle.as_int(gpu_cache);
                     prim_header.specific_prim_address = gpu_cache.get_address(&ctx.globals.default_image_handle);
 
@@ -2451,12 +2473,12 @@ impl BatchBuilder {
                 let prim_header_index = prim_headers.push(
                     &prim_header,
                     z_id,
-                    [
-                        ShaderColorMode::Image as i32 | ((AlphaType::PremultipliedAlpha as i32) << 16),
-                        RasterizationSpace::Screen as i32,
-                        get_shader_opacity(1.0),
-                        0
-                    ],
+                    ImageBrushData {
+                        color_mode: ShaderColorMode::Image,
+                        alpha_type: AlphaType::PremultipliedAlpha,
+                        raster_space: RasterizationSpace::Screen,
+                        opacity: 1.0,
+                    }.encode(),
                 );
 
                 self.add_brush_instance_to_batches(
@@ -3217,10 +3239,6 @@ fn get_buffer_kind(texture: TextureSource) -> ImageBufferKind {
         }
         _ => ImageBufferKind::Texture2DArray,
     }
-}
-
-fn get_shader_opacity(opacity: f32) -> i32 {
-    (opacity * 65535.0).round() as i32
 }
 
 impl<'a, 'rc> RenderTargetContext<'a, 'rc> {
