@@ -196,20 +196,6 @@ add_task(async function test_delete_removes_local_file() {
 });
 add_task(clear_state);
 
-add_task(async function test_delete_all() {
-  const client = RemoteSettings("some-collection");
-  const kintoCol = await client.openCollection();
-  await kintoCol.create(RECORD);
-  const fileURL = await downloader.download(RECORD);
-  const localFilePath = pathFromURL(fileURL);
-  Assert.ok(await OS.File.exists(localFilePath));
-
-  await client.attachments.deleteAll();
-
-  Assert.ok(!(await OS.File.exists(localFilePath)));
-});
-add_task(clear_state);
-
 add_task(async function test_downloader_is_accessible_via_client() {
   const client = RemoteSettings("some-collection");
 
