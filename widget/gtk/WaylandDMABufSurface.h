@@ -11,6 +11,7 @@
 #include "GLContext.h"
 #include "GLContextTypes.h"
 #include "mozilla/widget/nsWaylandDisplay.h"
+#include "mozilla/widget/va_drmcommon.h"
 
 typedef void* EGLImageKHR;
 typedef void* EGLSyncKHR;
@@ -38,7 +39,6 @@ typedef enum {
 } WaylandDMABufSurfaceFlags;
 
 class WaylandDMABufSurfaceRGBA;
-struct _VADRMPRIMESurfaceDescriptor;
 
 class WaylandDMABufSurface {
  public:
@@ -198,10 +198,10 @@ class WaylandDMABufSurfaceRGBA : public WaylandDMABufSurface {
 
 class WaylandDMABufSurfaceNV12 : public WaylandDMABufSurface {
  public:
-  static already_AddRefed<WaylandDMABufSurfaceNV12> CreateYUVSurface(
-      const _VADRMPRIMESurfaceDescriptor& aDesc);
+  static already_AddRefed<WaylandDMABufSurfaceNV12> CreateNV12Surface(
+      const VADRMPRIMESurfaceDescriptor& aDesc);
 
-  bool Create(const _VADRMPRIMESurfaceDescriptor& aDesc);
+  bool Create(const VADRMPRIMESurfaceDescriptor& aDesc);
 
   bool Serialize(mozilla::layers::SurfaceDescriptor& aOutDescriptor);
 
