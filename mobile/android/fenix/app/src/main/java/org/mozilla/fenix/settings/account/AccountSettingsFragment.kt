@@ -19,6 +19,7 @@ import androidx.navigation.fragment.findNavController
 import androidx.preference.CheckBoxPreference
 import androidx.preference.EditTextPreference
 import androidx.preference.Preference
+import androidx.preference.PreferenceCategory
 import androidx.preference.PreferenceFragmentCompat
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -159,8 +160,9 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
             }
         }
 
-        // Make sure out sync engine checkboxes are up-to-date.
+        // Make sure out sync engine checkboxes are up-to-date and disabled if currently syncing
         updateSyncEngineStates()
+        setCwtsDisabledWhileSyncing(accountManager.isSyncActive())
 
         val historyNameKey = getPreferenceKey(R.string.pref_key_sync_history)
         findPreference<CheckBoxPreference>(historyNameKey)?.apply {
@@ -315,15 +317,10 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
         }
     }
 
-    private fun setEnginesDisabledWhileSyncing(isSyncing: Boolean) {
-        listOf(
-            R.string.pref_key_sync_bookmarks,
-            R.string.pref_key_sync_history,
-            R.string.pref_key_sync_logins
-        )
-            .map { getPreferenceKey(it) }
-            .map { findPreference<CheckBoxPreference>(it) }
-            .forEach { it?.isEnabled = !isSyncing }
+    private fun setCwtsDisabledWhileSyncing(isSyncing: Boolean) {
+        findPreference<PreferenceCategory>(
+            getPreferenceKey(R.string.preferences_sync_category)
+        )?.isEnabled = !isSyncing
     }
 
     private val syncStatusObserver = object : SyncStatusObserver {
@@ -333,7 +330,7 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
                 view?.announceForAccessibility(getString(R.string.sync_syncing_in_progress))
                 pref?.title = getString(R.string.sync_syncing_in_progress)
                 pref?.isEnabled = false
-                setEnginesDisabledWhileSyncing(true)
+                setCwtsDisabledWhileSyncing(true)
             }
         }
 
@@ -350,7 +347,7 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
                 }
                 // Make sure out sync engine checkboxes are up-to-date.
                 updateSyncEngineStates()
-                setEnginesDisabledWhileSyncing(false)
+                setCwtsDisabledWhileSyncing(false)
             }
         }
 

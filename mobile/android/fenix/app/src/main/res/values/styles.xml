@@ -13,8 +13,8 @@
         <item name="android:windowBackground">@color/foundation_normal_theme</item>
         <item name="android:colorEdgeEffect">@color/accent_normal_theme</item>
         <item name="android:colorAccent">@color/primary_text_normal_theme</item>
-        <item name="android:textColorPrimary">@color/primary_text_normal_theme</item>
-        <item name="android:textColorSecondary">@color/secondary_text_normal_theme</item>
+        <item name="android:textColorPrimary">@color/state_list_text_color</item>
+        <item name="android:textColorSecondary">@color/secondary_state_list_text_color</item>
         <item name="alertDialogStyle">@style/DialogStyleNormal</item>
         <item name="alertDialogTheme">@style/DialogStyleNormal</item>
         <item name="android:windowEnableSplitTouch">false</item>
@@ -104,8 +104,8 @@
         <item name="android:colorEdgeEffect">@color/accent_private_theme</item>
         <item name="android:colorAccent">@color/primary_text_private_theme</item>
         <item name="android:colorControlActivated">@color/accent_high_contrast_private_theme</item>
-        <item name="android:textColorPrimary">@color/primary_text_private_theme</item>
-        <item name="android:textColorSecondary">@color/secondary_text_private_theme</item>
+        <item name="android:textColorPrimary">@color/state_list_text_color</item>
+        <item name="android:textColorSecondary">@color/secondary_state_list_text_color</item>
         <item name="alertDialogStyle">@style/DialogStyleDark</item>
         <item name="alertDialogTheme">@style/DialogStyleDark</item>
         <item name="android:windowEnableSplitTouch">false</item>
