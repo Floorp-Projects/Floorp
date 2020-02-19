@@ -18,7 +18,8 @@ add_task(async function() {
   await openPreferencesViaOpenPreferencesAPI("paneGeneral", {
     leaveOpen: true,
   });
-  await evaluateSearchResults("Text Encoding", "fontsGroup");
+  // Oh, Canada:
+  await evaluateSearchResults("Unified Canadian Syllabary", "fontsGroup");
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
