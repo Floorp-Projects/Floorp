@@ -1,3 +1,7 @@
+// |jit-test| skip-if: !isTypeInferenceEnabled()
+// Test depends on singleton/clone behavior (the .callee getter calls
+// IsInternalFunctionObject).
+
 // Optimized out scopes should be considered optimizedOut.
 
 var g = newGlobal({newCompartment: true});

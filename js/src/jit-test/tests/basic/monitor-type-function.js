@@ -1,3 +1,5 @@
+// |jit-test| skip-if: !isTypeInferenceEnabled()
+
 function f(x) {
     return f.toString();
 }

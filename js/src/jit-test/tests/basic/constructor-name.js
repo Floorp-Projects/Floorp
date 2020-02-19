@@ -1,3 +1,6 @@
+// |jit-test| skip-if: !isTypeInferenceEnabled()
+// Unfortunately getConstructorName depends on TI's TypeNewScript.
+
 function Ctor() {}
 
 var nested = {};

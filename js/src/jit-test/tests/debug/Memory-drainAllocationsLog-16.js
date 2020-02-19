@@ -1,3 +1,6 @@
+// |jit-test| skip-if: !isTypeInferenceEnabled()
+// Constructor name depends on TI TypeNewScript heuristics.
+
 // Test drainAllocationsLog() and constructor names.
 
 const root = newGlobal({newCompartment: true});
