@@ -26,7 +26,7 @@ class ClientColorLayer : public ColorLayer, public ClientLayer {
   }
 
  protected:
-  virtual ~ClientColorLayer() { MOZ_COUNT_DTOR(ClientColorLayer); }
+  MOZ_COUNTED_DTOR_OVERRIDE(ClientColorLayer)
 
  public:
   void SetVisibleRegion(const LayerIntRegion& aRegion) override {

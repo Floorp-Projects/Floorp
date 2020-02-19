@@ -29,12 +29,7 @@ class nsDisplayColumnRule : public nsPaintedDisplayItem {
       : nsPaintedDisplayItem(aBuilder, aFrame) {
     MOZ_COUNT_CTOR(nsDisplayColumnRule);
   }
-#ifdef NS_BUILD_REFCNT_LOGGING
-  virtual ~nsDisplayColumnRule() {
-    MOZ_COUNT_DTOR(nsDisplayColumnRule);
-    mBorderRenderers.Clear();
-  }
-#endif
+  MOZ_COUNTED_DTOR_OVERRIDE(nsDisplayColumnRule)
 
   /**
    * Returns the frame's visual overflow rect instead of the frame's bounds.

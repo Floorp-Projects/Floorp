@@ -459,7 +459,7 @@ class nsWSAdmissionManager {
         : mAddress(addr), mChannel(channel) {
       MOZ_COUNT_CTOR(nsOpenConn);
     }
-    ~nsOpenConn() { MOZ_COUNT_DTOR(nsOpenConn); }
+    MOZ_COUNTED_DTOR(nsOpenConn)
 
     nsCString mAddress;
     WebSocketChannel* mChannel;

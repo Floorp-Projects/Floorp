@@ -1828,7 +1828,7 @@ class InsertIterator final {
     MOZ_ASSERT(aNodes, "No nodes to search for accessible elements");
     MOZ_COUNT_CTOR(InsertIterator);
   }
-  ~InsertIterator() { MOZ_COUNT_DTOR(InsertIterator); }
+  MOZ_COUNTED_DTOR(InsertIterator)
 
   Accessible* Context() const { return mWalker.Context(); }
   Accessible* Child() const { return mChild; }

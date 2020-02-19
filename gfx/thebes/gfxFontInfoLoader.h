@@ -56,7 +56,7 @@ class FontInfoData {
 
  protected:
   // Protected destructor, to discourage deletion outside of Release():
-  virtual ~FontInfoData() { MOZ_COUNT_DTOR(FontInfoData); }
+  MOZ_COUNTED_DTOR_VIRTUAL(FontInfoData)
 
  public:
   virtual void Load();

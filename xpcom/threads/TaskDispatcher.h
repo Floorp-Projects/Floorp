@@ -167,7 +167,7 @@ class AutoTaskDispatcher : public TaskDispatcher {
       MOZ_COUNT_CTOR(PerThreadTaskGroup);
     }
 
-    ~PerThreadTaskGroup() { MOZ_COUNT_DTOR(PerThreadTaskGroup); }
+    MOZ_COUNTED_DTOR(PerThreadTaskGroup)
 
     RefPtr<AbstractThread> mThread;
     nsTArray<nsCOMPtr<nsIRunnable>> mStateChangeTasks;

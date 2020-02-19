@@ -154,11 +154,7 @@ class nsDisplayRangeFocusRing final : public nsPaintedDisplayItem {
       : nsPaintedDisplayItem(aBuilder, aFrame) {
     MOZ_COUNT_CTOR(nsDisplayRangeFocusRing);
   }
-#ifdef NS_BUILD_REFCNT_LOGGING
-  virtual ~nsDisplayRangeFocusRing() {
-    MOZ_COUNT_DTOR(nsDisplayRangeFocusRing);
-  }
-#endif
+  MOZ_COUNTED_DTOR_OVERRIDE(nsDisplayRangeFocusRing)
 
   nsDisplayItemGeometry* AllocateGeometry(
       nsDisplayListBuilder* aBuilder) override;

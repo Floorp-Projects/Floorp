@@ -21,9 +21,9 @@ class txExecutionState;
 
 class txInstruction : public txObject {
  public:
-  txInstruction() { MOZ_COUNT_CTOR(txInstruction); }
+  MOZ_COUNTED_DEFAULT_CTOR(txInstruction)
 
-  virtual ~txInstruction() { MOZ_COUNT_DTOR(txInstruction); }
+  MOZ_COUNTED_DTOR_OVERRIDE(txInstruction)
 
   virtual nsresult execute(txExecutionState& aEs) = 0;
 
