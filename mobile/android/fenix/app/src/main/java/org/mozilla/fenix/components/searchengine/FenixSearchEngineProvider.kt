@@ -39,7 +39,7 @@ open class FenixSearchEngineProvider(
             )
         )
 
-    open val baseSearchEngines = async {
+    open var baseSearchEngines = async {
         AssetsSearchEngineProvider(localizationProvider).loadSearchEngines(context)
     }
 
@@ -77,8 +77,8 @@ open class FenixSearchEngineProvider(
      * are readily available throughout the app.
      */
     fun installedSearchEngines(context: Context): SearchEngineList = runBlocking {
-        val engineList = loadedSearchEngines.await()
         val installedIdentifiers = installedSearchEngineIdentifiers(context)
+        val engineList = loadedSearchEngines.await()
 
         engineList.copy(
             list = engineList.list.filter {
@@ -99,8 +99,8 @@ open class FenixSearchEngineProvider(
     }
 
     fun uninstalledSearchEngines(context: Context): SearchEngineList = runBlocking {
-        val engineList = loadedSearchEngines.await()
         val installedIdentifiers = installedSearchEngineIdentifiers(context)
+        val engineList = loadedSearchEngines.await()
 
         engineList.copy(list = engineList.list.filterNot { installedIdentifiers.contains(it.identifier) })
     }
@@ -136,6 +136,13 @@ open class FenixSearchEngineProvider(
         }
     }
 
+    // When we change the locale we need to update the baseSearchEngines list
+    private fun updateBaseSearchEngines() {
+        baseSearchEngines = async {
+            AssetsSearchEngineProvider(localizationProvider).loadSearchEngines(context)
+        }
+    }
+
     private fun refreshAsync() = async {
         val engineList = baseSearchEngines.await()
         val bundledList = bundledSearchEngines.await().list
@@ -152,19 +159,39 @@ open class FenixSearchEngineProvider(
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     suspend fun installedSearchEngineIdentifiers(context: Context): Set<String> {
         val prefs = prefs(context)
+        val installedEnginesKey = localeAwareInstalledEnginesKey()
 
-        if (!prefs.contains(INSTALLED_ENGINES_KEY)) {
+        if (installedEnginesKey != prefs.getString(CURRENT_LOCALE_KEY, "")) {
+            updateBaseSearchEngines()
+            reload()
+            prefs.edit().putString(CURRENT_LOCALE_KEY, installedEnginesKey).apply()
+        }
+
+        if (!prefs.contains(installedEnginesKey)) {
             val defaultSet = baseSearchEngines.await()
                 .list
                 .map { it.identifier }
                 .toSet()
 
-            prefs.edit().putStringSet(INSTALLED_ENGINES_KEY, defaultSet).apply()
+            prefs.edit().putStringSet(installedEnginesKey, defaultSet).apply()
         }
 
-        val installedIdentifiers = prefs(context).getStringSet(INSTALLED_ENGINES_KEY, setOf()) ?: setOf()
+        val installedIdentifiers = prefs(context).getStringSet(installedEnginesKey, setOf()) ?: setOf()
+
         val customEngineIdentifiers = customSearchEngines.await().list.map { it.identifier }.toSet()
         return installedIdentifiers + customEngineIdentifiers
+    }
+
+    private suspend fun localeAwareInstalledEnginesKey(): String {
+        val tag = localizationProvider.determineRegion().let {
+            val region = it.region?.let { region ->
+                if (region.isEmpty()) "" else "-$region"
+            }
+
+            "${it.languageTag}$region"
+        }
+
+        return "$INSTALLED_ENGINES_KEY-$tag"
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
@@ -172,5 +199,6 @@ open class FenixSearchEngineProvider(
         val BUNDLED_SEARCH_ENGINES = listOf("reddit", "youtube")
         const val PREF_FILE = "fenix-search-engine-provider"
         const val INSTALLED_ENGINES_KEY = "fenix-installed-search-engines"
+        const val CURRENT_LOCALE_KEY = "fenix-current-locale"
     }
 }
