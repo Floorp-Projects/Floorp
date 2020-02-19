@@ -1095,8 +1095,6 @@ bool DebugAPI::slowPathOnLeaveFrame(JSContext* cx, AbstractFramePtr frame,
 
   bool hadResumeOverride = false;
   completion = Completion::fromJSFramePop(cx, frame, pc, frameOk);
-  Rooted<AbstractGeneratorObject*> genObj(
-      cx, completion.get().maybeGeneratorObject());
 
   {
     // Preserve the debuggee's microtask event queue while we run the hooks, so
@@ -1112,6 +1110,10 @@ bool DebugAPI::slowPathOnLeaveFrame(JSContext* cx, AbstractFramePtr frame,
     // invoking JS will only trigger the same condition. See
     // slowPathOnExceptionUnwind.
     if (!cx->isThrowingOverRecursed() && !cx->isThrowingOutOfMemory()) {
+      Rooted<AbstractGeneratorObject*> genObj(
+          cx, frame.isGeneratorFrame() ? GetGeneratorObjectForFrame(cx, frame)
+                                       : nullptr);
+
       // For each Debugger.Frame, fire its onPop handler, if any.
       for (size_t i = 0; i < frames.length(); i++) {
         HandleDebuggerFrame frameobj = frames[i];
@@ -2038,22 +2040,6 @@ struct MOZ_STACK_CLASS Completion::BuildValueMatcher {
 bool Completion::buildCompletionValue(JSContext* cx, Debugger* dbg,
                                       MutableHandleValue result) const {
   return variant.match(BuildValueMatcher(cx, dbg, result));
-}
-
-AbstractGeneratorObject* Completion::maybeGeneratorObject() const {
-  if (variant.is<InitialYield>()) {
-    return variant.as<InitialYield>().generatorObject;
-  }
-
-  if (variant.is<Yield>()) {
-    return variant.as<Yield>().generatorObject;
-  }
-
-  if (variant.is<Await>()) {
-    return variant.as<Await>().generatorObject;
-  }
-
-  return nullptr;
 }
 
 void Completion::updateForNextHandler(ResumeMode resumeMode,
