@@ -3901,7 +3901,7 @@
 - name: gfx.webrender.compositor
   type: bool
 #if defined(XP_WIN)
-  value: false
+  value: true
 #else
   value: false
 #endif
