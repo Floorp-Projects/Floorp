@@ -15,6 +15,10 @@ job-defaults:
             linux64.*:
                 docker-image: {in-tree: "lint"}
                 max-run-time: 3600
+                env:
+                    RUSTFMT: /build/rust/bin/rustfmt
+                    RUSTUP_HOME: /build/rust
+                    CARGO_HOME: /build/rust
             default:
                 max-run-time: 3600
     treeherder:

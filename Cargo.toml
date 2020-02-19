@@ -39,6 +39,7 @@ exclude = [
   "media/mp4parse-rust/mp4parse_capi",
   "media/mp4parse-rust/mp4parse_fallible",
   "xpcom/rust/gkrust_utils",
+  "tools/lint/test/files/clippy",
   "tools/fuzzing/rust",
 ]
 
