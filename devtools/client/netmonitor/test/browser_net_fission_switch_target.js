@@ -5,50 +5,45 @@
 
 // Test switching for the top-level target.
 
-const PARENT_PROCESS_URI = "about:robots";
-const PARENT_PROCESS_URI_NETWORK_COUNT = 0;
-const CONTENT_PROCESS_URI = CUSTOM_GET_URL;
-const CONTENT_PROCESS_URI_NETWORK_COUNT = 1;
+const EXAMPLE_COM_URL = "http://example.com/document-builder.sjs?html=testcom";
+const EXAMPLE_NET_URL = "http://example.net/document-builder.sjs?html=testnet";
+const REQUEST_URL = SEARCH_SJS + "?value=test";
+const PARENT_PROCESS_URL = "about:blank";
 
 add_task(async function() {
   await pushPref("devtools.target-switching.enabled", true);
 
-  // We use about:robots, because this page will run in the parent process.
-  // Navigating from about:robots to a regular content page will always trigger a target
-  // switch, with or without fission.
+  info("Open a page that runs on the content process and the netmonitor");
+  const { monitor } = await initNetMonitor(EXAMPLE_COM_URL);
+  await assertRequest(monitor, REQUEST_URL);
 
-  info("Open a page that runs on the content process and the net monitor");
-  const { monitor, tab } = await initNetMonitor(CONTENT_PROCESS_URI);
-  const { store } = monitor.panelWin;
+  info("Navigate to a page that runs in another content process (if fission)");
+  await navigateTo(EXAMPLE_NET_URL);
+  await assertRequest(monitor, REQUEST_URL);
 
-  info("Reload the page to show the network event");
-  const waitForReloading = waitForNetworkEvents(
-    monitor,
-    CONTENT_PROCESS_URI_NETWORK_COUNT
-  );
-  tab.linkedBrowser.reload();
-  await waitForReloading;
+  info("Navigate to a parent process page");
+  await navigateTo(PARENT_PROCESS_URL);
+  await assertRequest(monitor, REQUEST_URL);
 
-  info("Navigate to a page that runs on parent process");
-  await navigateTo(PARENT_PROCESS_URI);
-  is(
-    store.getState().requests.requests.length,
-    PARENT_PROCESS_URI_NETWORK_COUNT,
-    `Request count of ${PARENT_PROCESS_URI} is correct`
-  );
-
-  info("Return to a page that runs on content process again");
-  await navigateTo(CONTENT_PROCESS_URI);
-
-  info(`Execute more requests in ${CONTENT_PROCESS_URI}`);
-  const currentRequestCount = store.getState().requests.requests.length;
-  const additionalRequestCount = 3;
-  await performRequests(monitor, tab, additionalRequestCount);
-  is(
-    store.getState().requests.requests.length - currentRequestCount,
-    additionalRequestCount,
-    "Additional request count is reflected correctly"
-  );
+  info("Navigate back to the example.com content page");
+  await navigateTo(EXAMPLE_COM_URL);
+  await assertRequest(monitor, REQUEST_URL);
 
   await teardown(monitor);
 });
+
+async function assertRequest(monitor, url) {
+  const waitForRequests = waitForNetworkEvents(monitor, 1);
+  info("Create a request in the target page for the URL: " + url);
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [url], async _url => {
+    // Note: we are not reusing performRequests available in some netmonitor
+    // test pages because we also need to run this helper against an about:
+    // page, which won't have the helper defined.
+    // Therefore, we use a simplified performRequest implementation here.
+    const xhr = new content.wrappedJSObject.XMLHttpRequest();
+    xhr.open("GET", _url, true);
+    xhr.send(null);
+  });
+  info("Wait for the request to be received by the netmonitor UI");
+  return waitForRequests;
+}
