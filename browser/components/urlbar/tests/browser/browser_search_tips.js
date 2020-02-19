@@ -19,7 +19,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 });
 
 // These should match the same consts in UrlbarProviderSearchTips.jsm.
-const SHOW_TIP_DELAY_MS = 200;
 const MAX_SHOWN_COUNT = 4;
 const LAST_UPDATE_THRESHOLD_MS = 24 * 60 * 60 * 1000;
 const TIPS = {
@@ -669,7 +668,7 @@ async function checkTip(win, expectedTip, closeView = true) {
   if (!expectedTip) {
     // Wait a bit for the tip to not show up.
     // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
-    await new Promise(resolve => setTimeout(resolve, 3 * SHOW_TIP_DELAY_MS));
+    await new Promise(resolve => setTimeout(resolve, 100));
     Assert.ok(!win.gURLBar.view.isOpen);
     return;
   }
