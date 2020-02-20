@@ -463,6 +463,11 @@ release-partner-repack-notarization-part-1
 
 We switched to a 3-part mac notarization workflow in bug 1562412. This is the first task, which signs the files and submits them for notarization.
 
+release-partner-repack-notarization-poller
+------------------------------------------
+
+We switched to a 3-part mac notarization workflow in bug 1562412. This is the second task, which polls Apple for notarization status. Because this is run in a separate, special notarization poller pool, we free up the mac notarization pool for actual signing work.
+
 release-partner-repack-repackage
 --------------------------------
 Repackaging of partner repacks.
@@ -498,6 +503,11 @@ release-eme-free-repack-notarization-part-1
 -------------------------------------------
 
 We switched to a 3-part mac notarization workflow in bug 1562412. This is the first task, which signs the files and submits them for notarization.
+
+release-eme-free-repack-notarization-poller
+-------------------------------------------
+
+We switched to a 3-part mac notarization workflow in bug 1562412. This is the second task, which polls Apple for notarization status. Because this is run in a separate, special notarization poller pool, we free up the mac notarization pool for actual signing work.
 
 release-eme-free-repack-repackage
 ---------------------------------
