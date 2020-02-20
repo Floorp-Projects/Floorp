@@ -38,6 +38,7 @@ py2commands="
     geckoview-junit
     gradle
     gtest
+    hazards
     ide
     import-pr
     install
