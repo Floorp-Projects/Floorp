@@ -2649,13 +2649,13 @@ class JSScript : public js::BaseScript {
 
   static JSScript* New(JSContext* cx, js::HandleObject functionOrGlobal,
                        js::HandleScriptSourceObject sourceObject,
-                       js::SourceExtent extent);
+                       const js::SourceExtent& extent);
 
  public:
   static JSScript* Create(JSContext* cx, js::HandleObject functionOrGlobal,
                           const JS::ReadOnlyCompileOptions& options,
                           js::HandleScriptSourceObject sourceObject,
-                          js::SourceExtent extent);
+                          const js::SourceExtent& extent);
 
   static JSScript* CreateFromLazy(JSContext* cx,
                                   js::Handle<js::LazyScript*> lazy);
@@ -3340,7 +3340,7 @@ class LazyScript : public BaseScript {
   static LazyScript* CreateRaw(JSContext* cx, uint32_t ngcthings,
                                HandleFunction fun,
                                HandleScriptSourceObject sourceObject,
-                               SourceExtent extent);
+                               const SourceExtent& extent);
 
  public:
   static const uint32_t NumClosedOverBindingsLimit =
@@ -3353,7 +3353,7 @@ class LazyScript : public BaseScript {
       JSContext* cx, HandleFunction fun, HandleScriptSourceObject sourceObject,
       const frontend::AtomVector& closedOverBindings,
       const frontend::FunctionBoxVector& innerFunctionBoxes,
-      SourceExtent extent);
+      const SourceExtent& extent);
 
   // Create a LazyScript and initialize the closedOverBindings and the
   // innerFunctions with dummy values to be replaced in a later initialization
