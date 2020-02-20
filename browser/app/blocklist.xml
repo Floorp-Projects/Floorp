@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1581702872026">
+<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1582103702173">
   <emItems>
     <emItem blockID="i334" id="{0F827075-B026-42F3-885D-98981EE7B1AE}">
       <prefs/>
@@ -3660,6 +3660,22 @@
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
+    <emItem blockID="32ebf2f0-a321-48fd-a5a4-94a4980f4697" id="/^((\{9664bedb-6f24-4672-8b72-2565e0b3fc21\})|(alex\.todor@gmail\.com)|(alex1233\.todor@gmail\.com)|(alex123333\.todor@gmail\.com)|(alex131\.todor@gmail\.com)|(alex13\.todor@gmail\.com)|(alex12223\.todor@gmail\.com)|(alex1214122223\.todor@gmail\.com)|(alex1222214123\.todor@gmail\.com)|(alex1222214fawfaw123\.todor@gmail\.com)|(a\.todor@gmail\.com)|(abvcaasgawgaw\.todor@gmail\.com)|(abvcaasgawgaw122141\.todor@gmail\.com)|(abvcaasgawgaw122fwafaw141\.todor@gmail\.com)|(abvcaasgawgaw122fwaaaafaw141\.todor@gmail\.com)|(abvcaasgawgaw12aa2fwaaaafaw141\.todor@gmail\.com)|(abvc\.todor@gmail\.com)|(ateststn@example\.com)|(abvc1\.todor@gmail\.com)|(test@gmail\.com)|(test1112@gmail\.com)|(as@test\.com)|(stagod@test\.com)|(stagod_qa@test\.com)|(stagod_as@test\.com)|(fop@test\.com)|(\{e83eb1bf-7847-4253-8108-4c1ec0601757\})|(\{3cfa4fd4-a747-4666-b97e-2262f6255eeb\}))$/">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="cc8e1b77-eab1-42d7-9625-bf4153547903" id="/^((\{6fb37444-4339-4a36-9e4f-c4c47b550c4e\})|(\{430b4bcb-4487-471e-82b8-a3056ae137ba\})|(\{394990b1-4ede-4bdd-a3fe-58506591f00b\})|(\{3ca06113-1cea-4e7a-b775-19666a9c77a2\})|(\{deebf5b9-62b8-4b5c-8e1b-8f8d83939441\})|(\{15c41cbc-18a2-4756-80a9-418ba03f533d\}))$/">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="e9119771-cb28-4853-8aae-72aedfe27b2f" id="/^((addon@faster\.com)|(\{09bfa06b-5e73-4daa-96bd-88092fe71c52\})|(\{eb4d44d6-4ad4-4b77-9509-8e6eadaef074\})|(Blockfbunseenads@addon\.com)|(Blockfbunseenads0@addon\.com)|(\{a8180cdc-19f4-4299-9bb5-5b6b2f2c2de6\})|(\{2454bb7d-4cf7-40f3-a5da-40e6889d83fa\})|(\{cd6999f9-c84e-47b4-a355-d54bedfe9c17\})|(\{53d5a956-eecc-456b-a6ce-b137c511a04d\})|(\{9b2dba6e-c179-47ca-bbd8-6b7033c4f2fc\})|(\{d77d7463-a323-4b3a-9b96-69b31e4d488e\}))$/">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="24b4f43e-106f-44a6-a992-7d07634bb5eb" id="bookmark-this@page.xpi">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
   </emItems>
   <pluginItems>
     <pluginItem blockID="p332">
@@ -3692,15 +3708,15 @@
       <infoURL>https://get.adobe.com/shockwave/</infoURL>
       <versionRange maxVersion="12.2.0.162" minVersion="0" severity="0" vulnerabilitystatus="1"/>
     </pluginItem>
-    <pluginItem blockID="832dc9ff-3314-4df2-abcf-7bd65a645371">
-      <match name="filename" exp="(NPSWF32.*\.dll)|(NPSWF64.*\.dll)|(Flash\ Player\.plugin)"/>
-      <infoURL>https://get.adobe.com/flashplayer/</infoURL>
-      <versionRange maxVersion="32.0.0.303" minVersion="0" severity="0" vulnerabilitystatus="1"/>
-    </pluginItem>
     <pluginItem blockID="49b843cc-a8fc-4ede-be0c-a0da56d0214f" os="Linux">
       <match name="filename" exp="libflashplayer\.so"/>
       <infoURL>https://get.adobe.com/flashplayer/</infoURL>
-      <versionRange maxVersion="32.0.0.303" minVersion="0" severity="0" vulnerabilitystatus="1"/>
+      <versionRange maxVersion="32.0.0.314" minVersion="0" severity="0" vulnerabilitystatus="1"/>
+    </pluginItem>
+    <pluginItem blockID="832dc9ff-3314-4df2-abcf-7bd65a645371">
+      <match name="filename" exp="(NPSWF32.*\.dll)|(NPSWF64.*\.dll)|(Flash\ Player\.plugin)"/>
+      <infoURL>https://get.adobe.com/flashplayer/</infoURL>
+      <versionRange maxVersion="32.0.0.314" minVersion="0" severity="0" vulnerabilitystatus="1"/>
     </pluginItem>
   </pluginItems>
   <gfxItems>
