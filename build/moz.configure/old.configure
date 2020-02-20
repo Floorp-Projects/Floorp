@@ -245,7 +245,6 @@ def old_configure_options(*options):
     '--enable-system-cairo',
     '--enable-system-extension-dirs',
     '--enable-system-pixman',
-    '--enable-system-sqlite',
     '--enable-universalchardet',
     '--enable-updater',
     '--enable-xul',
