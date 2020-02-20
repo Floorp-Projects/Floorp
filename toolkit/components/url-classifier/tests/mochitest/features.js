@@ -230,7 +230,7 @@ async function runTest(test, expectedFlag, expectedTrackingResource, prefs) {
     if (test.annotationExpected) {
       is(data.classificationFlags, expectedFlag, "Correct flag");
       is(
-        data.isTrackingResource,
+        data.isThirdPartyTrackingResource,
         expectedTrackingResource,
         "Tracking resource flag matches"
       );
@@ -262,7 +262,7 @@ function runTests(flag, prefs, trackingResource) {
       // eslint-disable-next-line no-undef
       sendAsyncMessage("last-channel-flags", {
         classificationFlags: classifiedChannel.classificationFlags,
-        isTrackingResource: classifiedChannel.isTrackingResource(),
+        isThirdPartyTrackingResource: classifiedChannel.isThirdPartyTrackingResource(),
       });
     }
 
