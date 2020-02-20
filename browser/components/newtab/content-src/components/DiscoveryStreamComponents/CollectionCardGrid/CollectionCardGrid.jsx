@@ -17,6 +17,11 @@ export class _CollectionCardGrid extends React.PureComponent {
 
     const { title, context } = DiscoveryStream.spocs.data[placement.name] || {};
 
+    // Just in case of bad data, don't display a broken collection.
+    if (!title) {
+      return null;
+    }
+
     // Generally a card grid displays recs with spocs already injected.
     // Normally it doesn't care which rec is a spoc and which isn't,
     // it just displays content in a grid.
