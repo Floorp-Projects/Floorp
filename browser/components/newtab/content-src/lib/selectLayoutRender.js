@@ -6,7 +6,7 @@ export const selectLayoutRender = ({
   state = {},
   prefs = {},
   rollCache = [],
-  lang = "",
+  locale = "",
 }) => {
   const { layout, feeds, spocs } = state;
   let spocIndexMap = {};
@@ -68,7 +68,7 @@ export const selectLayoutRender = ({
     filterArray.push("TopSites");
   }
 
-  if (!lang.startsWith("en-")) {
+  if (!locale.startsWith("en-")) {
     filterArray.push("Navigation");
   }
 

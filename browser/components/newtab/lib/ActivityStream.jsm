@@ -692,7 +692,9 @@ this.ActivityStream = class ActivityStream {
         this.feeds,
         ac.BroadcastToContent({
           type: at.INIT,
-          data: {},
+          data: {
+            locale: this.locale,
+          },
         }),
         { type: at.UNINIT }
       );

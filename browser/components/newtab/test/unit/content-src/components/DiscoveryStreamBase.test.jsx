@@ -102,6 +102,7 @@ describe("<DiscoveryStreamBase>", () => {
     };
     return shallow(
       <DiscoveryStreamBase
+        locale="en-US"
         DiscoveryStream={defaultProps}
         Prefs={{
           values: {
