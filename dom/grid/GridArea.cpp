@@ -30,7 +30,7 @@ GridArea::GridArea(Grid* aParent, nsAtom* aName, GridDeclaration aType,
       mColumnStart(aColumnStart),
       mColumnEnd(aColumnEnd) {}
 
-GridArea::~GridArea() {}
+GridArea::~GridArea() = default;
 
 JSObject* GridArea::WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) {
