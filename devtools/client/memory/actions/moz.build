@@ -8,7 +8,6 @@ DevToolsModules(
     'census-display.js',
     'diffing.js',
     'filter.js',
-    'front.js',
     'io.js',
     'label-display.js',
     'refresh.js',
