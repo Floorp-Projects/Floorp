@@ -225,7 +225,7 @@ HTMLCanvasPrintState::HTMLCanvasPrintState(
       mContext(aContext),
       mCallback(aCallback) {}
 
-HTMLCanvasPrintState::~HTMLCanvasPrintState() {}
+HTMLCanvasPrintState::~HTMLCanvasPrintState() = default;
 
 /* virtual */
 JSObject* HTMLCanvasPrintState::WrapObject(JSContext* aCx,
@@ -647,7 +647,7 @@ class CanvasCaptureTrackSource : public MediaStreamTrackSource {
   void Enable() override {}
 
  private:
-  virtual ~CanvasCaptureTrackSource() {}
+  virtual ~CanvasCaptureTrackSource() = default;
 
   RefPtr<CanvasCaptureMediaStream> mCaptureStream;
 };

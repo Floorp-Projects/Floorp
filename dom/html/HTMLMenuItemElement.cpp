@@ -41,8 +41,8 @@ static const nsAttrValue::EnumTable* kMenuItemDefaultType =
 // A base class inherited by all radio visitors.
 class Visitor {
  public:
-  Visitor() {}
-  virtual ~Visitor() {}
+  Visitor() = default;
+  virtual ~Visitor() = default;
 
   /**
    * Visit a node in the tree. This is meant to be called on all radios in a
@@ -108,7 +108,7 @@ class GetCheckedDirtyVisitor : public Visitor {
 // Set checked dirty to true on all radios in the group.
 class SetCheckedDirtyVisitor : public Visitor {
  public:
-  SetCheckedDirtyVisitor() {}
+  SetCheckedDirtyVisitor() = default;
   virtual bool Visit(HTMLMenuItemElement* aMenuItem) override {
     aMenuItem->SetCheckedDirty();
     return true;
@@ -153,7 +153,7 @@ HTMLMenuItemElement::HTMLMenuItemElement(
   mParserCreating = aFromParser;
 }
 
-HTMLMenuItemElement::~HTMLMenuItemElement() {}
+HTMLMenuItemElement::~HTMLMenuItemElement() = default;
 
 // NS_IMPL_ELEMENT_CLONE(HTMLMenuItemElement)
 

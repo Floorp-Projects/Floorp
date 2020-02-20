@@ -14,7 +14,7 @@ NS_IMPL_NS_NEW_HTML_ELEMENT(Legend)
 namespace mozilla {
 namespace dom {
 
-HTMLLegendElement::~HTMLLegendElement() {}
+HTMLLegendElement::~HTMLLegendElement() = default;
 
 NS_IMPL_ELEMENT_CLONE(HTMLLegendElement)
 

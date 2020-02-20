@@ -19,7 +19,7 @@ namespace dom {
 // http://lxr.mozilla.org/classic/source/lib/layout/laytable.c#46
 #define MAX_COLSPAN 1000
 
-HTMLTableColElement::~HTMLTableColElement() {}
+HTMLTableColElement::~HTMLTableColElement() = default;
 
 JSObject* HTMLTableColElement::WrapNode(JSContext* aCx,
                                         JS::Handle<JSObject*> aGivenProto) {

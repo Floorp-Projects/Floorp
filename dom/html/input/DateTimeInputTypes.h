@@ -11,7 +11,7 @@
 
 class DateTimeInputTypeBase : public ::InputType {
  public:
-  ~DateTimeInputTypeBase() override {}
+  ~DateTimeInputTypeBase() override = default;
 
   bool IsValueMissing() const override;
   bool IsRangeOverflow() const override;

@@ -99,7 +99,7 @@ class ImageLoadTask final : public MicroTaskRunnable {
   bool AlwaysLoad() { return mAlwaysLoad; }
 
  private:
-  ~ImageLoadTask() {}
+  ~ImageLoadTask() = default;
   RefPtr<HTMLImageElement> mElement;
   nsCOMPtr<Document> mDocument;
   bool mAlwaysLoad;

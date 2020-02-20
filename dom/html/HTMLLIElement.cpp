@@ -18,7 +18,7 @@ NS_IMPL_NS_NEW_HTML_ELEMENT(LI)
 namespace mozilla {
 namespace dom {
 
-HTMLLIElement::~HTMLLIElement() {}
+HTMLLIElement::~HTMLLIElement() = default;
 
 NS_IMPL_ELEMENT_CLONE(HTMLLIElement)
 

@@ -15,7 +15,7 @@ namespace mozilla {
 namespace dom {
 
 class ValidityState final : public nsISupports, public nsWrapperCache {
-  ~ValidityState() {}
+  ~ValidityState() = default;
 
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS

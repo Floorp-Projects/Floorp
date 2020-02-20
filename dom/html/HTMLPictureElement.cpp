@@ -22,7 +22,7 @@ HTMLPictureElement::HTMLPictureElement(
     already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
     : nsGenericHTMLElement(std::move(aNodeInfo)) {}
 
-HTMLPictureElement::~HTMLPictureElement() {}
+HTMLPictureElement::~HTMLPictureElement() = default;
 
 NS_IMPL_ELEMENT_CLONE(HTMLPictureElement)
 

@@ -260,7 +260,7 @@ class nsMediaEvent : public Runnable {
       : Runnable(aName),
         mElement(aElement),
         mLoadID(mElement->GetCurrentLoadID()) {}
-  ~nsMediaEvent() {}
+  ~nsMediaEvent() = default;
 
   NS_IMETHOD Run() override = 0;
 
@@ -1133,7 +1133,7 @@ class HTMLMediaElement::MediaLoadListener final
       public nsIInterfaceRequestor,
       public nsIObserver,
       public nsIThreadRetargetableStreamListener {
-  ~MediaLoadListener() {}
+  ~MediaLoadListener() = default;
 
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIREQUESTOBSERVER

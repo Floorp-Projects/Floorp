@@ -29,7 +29,7 @@ namespace dom {
 
 //----------------------------------------------------------------------
 
-HTMLBodyElement::~HTMLBodyElement() {}
+HTMLBodyElement::~HTMLBodyElement() = default;
 
 JSObject* HTMLBodyElement::WrapNode(JSContext* aCx,
                                     JS::Handle<JSObject*> aGivenProto) {

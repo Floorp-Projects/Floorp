@@ -21,7 +21,7 @@ HTMLAllCollection::HTMLAllCollection(mozilla::dom::Document* aDocument)
   MOZ_ASSERT(mDocument);
 }
 
-HTMLAllCollection::~HTMLAllCollection() {}
+HTMLAllCollection::~HTMLAllCollection() = default;
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(HTMLAllCollection, mDocument, mCollection,
                                       mNamedMap)

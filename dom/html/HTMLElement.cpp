@@ -30,7 +30,7 @@ HTMLElement::HTMLElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
   }
 }
 
-HTMLElement::~HTMLElement() {}
+HTMLElement::~HTMLElement() = default;
 
 NS_IMPL_ELEMENT_CLONE(HTMLElement)
 

@@ -19,7 +19,7 @@ NS_IMPL_NS_NEW_HTML_ELEMENT(Heading)
 namespace mozilla {
 namespace dom {
 
-HTMLHeadingElement::~HTMLHeadingElement() {}
+HTMLHeadingElement::~HTMLHeadingElement() = default;
 
 NS_IMPL_ELEMENT_CLONE(HTMLHeadingElement)
 

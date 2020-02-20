@@ -31,7 +31,7 @@ nsIConstraintValidation::nsIConstraintValidation()
       ,
       mBarredFromConstraintValidation(false) {}
 
-nsIConstraintValidation::~nsIConstraintValidation() {}
+nsIConstraintValidation::~nsIConstraintValidation() = default;
 
 mozilla::dom::ValidityState* nsIConstraintValidation::Validity() {
   if (!mValidity) {

@@ -46,7 +46,7 @@ ASSERT_NODE_FLAGS_SPACE(ELEMENT_TYPE_SPECIFIC_BITS_OFFSET + 2);
 const DOMTokenListSupportedToken HTMLAnchorElement::sSupportedRelValues[] = {
     "noreferrer", "noopener", nullptr};
 
-HTMLAnchorElement::~HTMLAnchorElement() {}
+HTMLAnchorElement::~HTMLAnchorElement() = default;
 
 bool HTMLAnchorElement::IsInteractiveHTMLContent(bool aIgnoreTabindex) const {
   return HasAttr(kNameSpaceID_None, nsGkAtoms::href) ||

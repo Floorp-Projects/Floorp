@@ -73,7 +73,7 @@ class GetFilesHelper;
  * page is being viewed in private browsing.
  */
 class UploadLastDir final : public nsIObserver, public nsSupportsWeakReference {
-  ~UploadLastDir() {}
+  ~UploadLastDir() = default;
 
  public:
   NS_DECL_ISUPPORTS
@@ -100,7 +100,7 @@ class UploadLastDir final : public nsIObserver, public nsSupportsWeakReference {
   nsresult StoreLastUsedDirectory(Document* aDoc, nsIFile* aDir);
 
   class ContentPrefCallback final : public nsIContentPrefCallback2 {
-    virtual ~ContentPrefCallback() {}
+    virtual ~ContentPrefCallback() = default;
 
    public:
     ContentPrefCallback(nsIFilePicker* aFilePicker,
@@ -1642,7 +1642,7 @@ class HTMLInputElement final : public TextControlElement,
   };
 
   class nsFilePickerShownCallback : public nsIFilePickerShownCallback {
-    virtual ~nsFilePickerShownCallback() {}
+    virtual ~nsFilePickerShownCallback() = default;
 
    public:
     nsFilePickerShownCallback(HTMLInputElement* aInput,

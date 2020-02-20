@@ -16,7 +16,7 @@ NS_IMPL_NS_NEW_HTML_ELEMENT(Font)
 namespace mozilla {
 namespace dom {
 
-HTMLFontElement::~HTMLFontElement() {}
+HTMLFontElement::~HTMLFontElement() = default;
 
 JSObject* HTMLFontElement::WrapNode(JSContext* aCx,
                                     JS::Handle<JSObject*> aGivenProto) {

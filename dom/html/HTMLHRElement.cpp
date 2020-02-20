@@ -18,7 +18,7 @@ HTMLHRElement::HTMLHRElement(
     already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
     : nsGenericHTMLElement(std::move(aNodeInfo)) {}
 
-HTMLHRElement::~HTMLHRElement() {}
+HTMLHRElement::~HTMLHRElement() = default;
 
 NS_IMPL_ELEMENT_CLONE(HTMLHRElement)
 

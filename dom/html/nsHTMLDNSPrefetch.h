@@ -90,10 +90,10 @@ class nsHTMLDNSPrefetch {
     NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSIDNSLISTENER
 
-    nsListener() {}
+    nsListener() = default;
 
    private:
-    ~nsListener() {}
+    ~nsListener() = default;
   };
 
   class nsDeferrals final : public nsIWebProgressListener,

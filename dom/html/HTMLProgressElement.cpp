@@ -24,7 +24,7 @@ HTMLProgressElement::HTMLProgressElement(
   AddStatesSilently(NS_EVENT_STATE_INDETERMINATE);
 }
 
-HTMLProgressElement::~HTMLProgressElement() {}
+HTMLProgressElement::~HTMLProgressElement() = default;
 
 NS_IMPL_ELEMENT_CLONE(HTMLProgressElement)
 

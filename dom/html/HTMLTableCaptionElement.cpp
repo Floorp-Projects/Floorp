@@ -16,7 +16,7 @@ NS_IMPL_NS_NEW_HTML_ELEMENT(TableCaption)
 namespace mozilla {
 namespace dom {
 
-HTMLTableCaptionElement::~HTMLTableCaptionElement() {}
+HTMLTableCaptionElement::~HTMLTableCaptionElement() = default;
 
 JSObject* HTMLTableCaptionElement::WrapNode(JSContext* aCx,
                                             JS::Handle<JSObject*> aGivenProto) {

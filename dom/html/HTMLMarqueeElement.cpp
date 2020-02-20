@@ -20,7 +20,7 @@ NS_IMPL_NS_NEW_HTML_ELEMENT(Marquee)
 namespace mozilla {
 namespace dom {
 
-HTMLMarqueeElement::~HTMLMarqueeElement() {}
+HTMLMarqueeElement::~HTMLMarqueeElement() = default;
 
 NS_IMPL_ELEMENT_CLONE(HTMLMarqueeElement)
 

@@ -11,7 +11,7 @@
 
 class NumericInputTypeBase : public ::InputType {
  public:
-  ~NumericInputTypeBase() override {}
+  ~NumericInputTypeBase() override = default;
 
   bool IsRangeOverflow() const override;
   bool IsRangeUnderflow() const override;

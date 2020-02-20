@@ -21,7 +21,7 @@ NS_IMPL_NS_NEW_HTML_ELEMENT(SharedList)
 namespace mozilla {
 namespace dom {
 
-HTMLSharedListElement::~HTMLSharedListElement() {}
+HTMLSharedListElement::~HTMLSharedListElement() = default;
 
 NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED_0(HTMLSharedListElement,
                                                nsGenericHTMLElement)

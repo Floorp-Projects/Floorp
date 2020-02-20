@@ -38,7 +38,7 @@ class InputType {
       mozilla::dom::HTMLInputElement* aInputElement, uint8_t aType,
       void* aMemory);
 
-  virtual ~InputType() {}
+  virtual ~InputType() = default;
 
   // Float value returned by GetStep() when the step attribute is set to 'any'.
   static const mozilla::Decimal kStepAny;

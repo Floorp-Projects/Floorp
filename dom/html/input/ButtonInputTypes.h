@@ -11,7 +11,7 @@
 
 class ButtonInputTypeBase : public ::InputType {
  public:
-  ~ButtonInputTypeBase() override {}
+  ~ButtonInputTypeBase() override = default;
 
  protected:
   explicit ButtonInputTypeBase(mozilla::dom::HTMLInputElement* aInputElement)

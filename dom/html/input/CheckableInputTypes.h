@@ -11,7 +11,7 @@
 
 class CheckableInputTypeBase : public ::InputType {
  public:
-  ~CheckableInputTypeBase() override {}
+  ~CheckableInputTypeBase() override = default;
 
  protected:
   explicit CheckableInputTypeBase(mozilla::dom::HTMLInputElement* aInputElement)

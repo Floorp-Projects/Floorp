@@ -561,7 +561,7 @@ NS_IMPL_ISUPPORTS(HTMLInputElement::nsFilePickerShownCallback,
                   nsIFilePickerShownCallback)
 
 class nsColorPickerShownCallback final : public nsIColorPickerShownCallback {
-  ~nsColorPickerShownCallback() {}
+  ~nsColorPickerShownCallback() = default;
 
  public:
   nsColorPickerShownCallback(HTMLInputElement* aInput,
