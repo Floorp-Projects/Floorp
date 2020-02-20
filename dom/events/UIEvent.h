@@ -94,7 +94,7 @@ class UIEvent : public Event {
   MOZ_CAN_RUN_SCRIPT int32_t RangeOffset() const;
 
  protected:
-  ~UIEvent() {}
+  ~UIEvent() = default;
 
   // Internal helper functions
   nsIntPoint GetMovementPoint();

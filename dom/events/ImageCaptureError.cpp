@@ -22,7 +22,7 @@ ImageCaptureError::ImageCaptureError(nsISupports* aParent, uint16_t aCode,
                                      const nsAString& aMessage)
     : mParent(aParent), mMessage(aMessage), mCode(aCode) {}
 
-ImageCaptureError::~ImageCaptureError() {}
+ImageCaptureError::~ImageCaptureError() = default;
 
 nsISupports* ImageCaptureError::GetParentObject() const { return mParent; }
 

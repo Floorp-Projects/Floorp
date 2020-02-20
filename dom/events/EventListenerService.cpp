@@ -30,7 +30,7 @@ using namespace dom;
 
 NS_IMPL_ISUPPORTS(EventListenerChange, nsIEventListenerChange)
 
-EventListenerChange::~EventListenerChange() {}
+EventListenerChange::~EventListenerChange() = default;
 
 EventListenerChange::EventListenerChange(EventTarget* aTarget)
     : mTarget(aTarget) {}

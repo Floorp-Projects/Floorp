@@ -79,7 +79,7 @@ class WritingModeToString final : public nsAutoCString {
     }
     AssignLiteral("Vertical (RL)");
   }
-  virtual ~WritingModeToString() {}
+  virtual ~WritingModeToString() = default;
 };
 
 class SelectionChangeDataToString final : public nsAutoCString {
@@ -105,7 +105,7 @@ class SelectionChangeDataToString final : public nsAutoCString {
         ToChar(aData.mReversed), ToChar(aData.mCausedByComposition),
         ToChar(aData.mCausedBySelectionEvent));
   }
-  virtual ~SelectionChangeDataToString() {}
+  virtual ~SelectionChangeDataToString() = default;
 };
 
 class TextChangeDataToString final : public nsAutoCString {
@@ -126,7 +126,7 @@ class TextChangeDataToString final : public nsAutoCString {
         ToChar(aData.mIncludingChangesDuringComposition),
         ToChar(aData.mIncludingChangesWithoutComposition));
   }
-  virtual ~TextChangeDataToString() {}
+  virtual ~TextChangeDataToString() = default;
 };
 
 /******************************************************************************

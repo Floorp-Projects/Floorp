@@ -36,7 +36,7 @@ class TransitionEvent : public Event {
   float ElapsedTime();
 
  protected:
-  ~TransitionEvent() {}
+  ~TransitionEvent() = default;
 };
 
 }  // namespace dom

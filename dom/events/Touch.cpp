@@ -86,7 +86,7 @@ Touch::Touch(const Touch& aOther)
   nsJSContext::LikelyShortLivingObjectCreated();
 }
 
-Touch::~Touch() {}
+Touch::~Touch() = default;
 
 // static
 bool Touch::PrefEnabled(JSContext* aCx, JSObject* aGlobal) {

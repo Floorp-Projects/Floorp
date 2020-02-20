@@ -79,7 +79,7 @@ class MouseEvent : public UIEvent {
                         float aPressure, uint16_t aInputSource);
 
  protected:
-  ~MouseEvent() {}
+  ~MouseEvent() = default;
 
   void InitMouseEvent(const nsAString& aType, bool aCanBubble, bool aCancelable,
                       nsGlobalWindowInner* aView, int32_t aDetail,

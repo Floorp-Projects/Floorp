@@ -45,7 +45,7 @@ class SimpleGestureEvent : public MouseEvent {
                               double aDelta, uint32_t aClickCount);
 
  protected:
-  ~SimpleGestureEvent() {}
+  ~SimpleGestureEvent() = default;
 };
 
 }  // namespace dom

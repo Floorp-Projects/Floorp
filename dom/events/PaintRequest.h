@@ -36,7 +36,7 @@ class PaintRequest final : public nsISupports, public nsWrapperCache {
   void SetRequest(const nsRect& aRequest) { mRequest = aRequest; }
 
  private:
-  ~PaintRequest() {}
+  ~PaintRequest() = default;
 
   RefPtr<Event> mParent;
   nsRect mRequest;
@@ -67,7 +67,7 @@ class PaintRequestList final : public nsISupports, public nsWrapperCache {
   }
 
  private:
-  ~PaintRequestList() {}
+  ~PaintRequestList() = default;
 
   nsTArray<RefPtr<PaintRequest> > mArray;
   RefPtr<Event> mParent;
