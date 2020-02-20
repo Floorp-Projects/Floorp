@@ -291,6 +291,29 @@ class RadialGradientPattern : public Pattern {
 };
 
 /**
+ * This class is used for Conic Gradient Patterns, the gradient stops are
+ * stored in a separate object and are backend dependent. This class itself
+ * may be used on the stack.
+ */
+class ConicGradientPattern : public Pattern {
+ public:
+  /// For constructor parameter description, see member data documentation.
+  ConicGradientPattern(const Point& aCenter, Float aAngle,
+                       GradientStops* aStops, const Matrix& aMatrix = Matrix())
+      : mCenter(aCenter), mAngle(aAngle), mStops(aStops), mMatrix(aMatrix) {}
+
+  PatternType GetType() const override { return PatternType::CONIC_GRADIENT; }
+
+  Point mCenter;  //!< Center of the gradient
+  Float mAngle;   //!< Start angle of gradient
+  RefPtr<GradientStops>
+      mStops;      /**< GradientStops object for this gradient, this
+                        should match the backend type of the draw target
+                        this pattern will be used with. */
+  Matrix mMatrix;  //!< A matrix that transforms the pattern into user space
+};
+
+/**
  * This class is used for Surface Patterns, they wrap a surface and a
  * repetition mode for the surface. This may be used on the stack.
  */
