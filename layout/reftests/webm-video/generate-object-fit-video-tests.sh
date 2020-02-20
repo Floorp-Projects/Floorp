@@ -33,7 +33,7 @@ for ((i = 0; i < $numImageFiles; i++)); do
   hg add $videoDest
 done
 
-# Add comment & default-preferences line to reftest.list in dest directory:
+# Add comment to reftest.list in dest directory:
 reftestListFileName="$VIDEO_REFTEST_PATH/reftest.list"
 echo "
 # Tests for <video src> with 'object-fit' & 'object-position':

@@ -26,7 +26,7 @@ for ((i = 0; i < $numImageFiles; i++)); do
   hg cp support/$imageFileName $imageDest
 done
 
-# Add comment & default-preferences line to reftest.list in dest directory:
+# Add comment to reftest.list in dest directory:
 reftestListFileName="$XUL_REFTEST_PATH/reftest.list"
 echo "
 # Tests for XUL <image> with 'object-fit' & 'object-position':
