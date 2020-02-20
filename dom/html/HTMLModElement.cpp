@@ -17,7 +17,7 @@ HTMLModElement::HTMLModElement(
     already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
     : nsGenericHTMLElement(std::move(aNodeInfo)) {}
 
-HTMLModElement::~HTMLModElement() {}
+HTMLModElement::~HTMLModElement() = default;
 
 NS_IMPL_ELEMENT_CLONE(HTMLModElement)
 

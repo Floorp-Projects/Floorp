@@ -48,7 +48,7 @@ media::TimeIntervals TimeRanges::ToTimeIntervals() const {
   return t;
 }
 
-TimeRanges::~TimeRanges() {}
+TimeRanges::~TimeRanges() = default;
 
 double TimeRanges::Start(uint32_t aIndex, ErrorResult& aRv) const {
   if (aIndex >= mRanges.Length()) {

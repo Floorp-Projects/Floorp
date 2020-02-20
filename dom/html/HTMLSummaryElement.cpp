@@ -20,7 +20,7 @@ NS_IMPL_NS_NEW_HTML_ELEMENT(Summary)
 namespace mozilla {
 namespace dom {
 
-HTMLSummaryElement::~HTMLSummaryElement() {}
+HTMLSummaryElement::~HTMLSummaryElement() = default;
 
 NS_IMPL_ELEMENT_CLONE(HTMLSummaryElement)
 

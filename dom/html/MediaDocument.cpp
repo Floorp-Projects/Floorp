@@ -113,7 +113,7 @@ const char* const MediaDocument::sFormatNames[4] = {
 
 MediaDocument::MediaDocument()
     : nsHTMLDocument(), mDidInitialDocumentSetup(false) {}
-MediaDocument::~MediaDocument() {}
+MediaDocument::~MediaDocument() = default;
 
 nsresult MediaDocument::Init() {
   nsresult rv = nsHTMLDocument::Init();

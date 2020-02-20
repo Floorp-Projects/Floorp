@@ -24,7 +24,7 @@ NS_IMPL_NS_NEW_HTML_ELEMENT(Label)
 namespace mozilla {
 namespace dom {
 
-HTMLLabelElement::~HTMLLabelElement() {}
+HTMLLabelElement::~HTMLLabelElement() = default;
 
 JSObject* HTMLLabelElement::WrapNode(JSContext* aCx,
                                      JS::Handle<JSObject*> aGivenProto) {

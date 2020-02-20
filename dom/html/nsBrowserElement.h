@@ -27,8 +27,8 @@ class ErrorResult;
  */
 class nsBrowserElement {
  public:
-  nsBrowserElement() {}
-  virtual ~nsBrowserElement() {}
+  nsBrowserElement() = default;
+  virtual ~nsBrowserElement() = default;
 
   void SendMouseEvent(const nsAString& aType, uint32_t aX, uint32_t aY,
                       uint32_t aButton, uint32_t aClickCount,

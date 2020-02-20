@@ -38,7 +38,7 @@ class HTMLMapElement final : public nsGenericHTMLElement {
                              JS::Handle<JSObject*> aGivenProto) override;
 
  protected:
-  ~HTMLMapElement() {}
+  ~HTMLMapElement() = default;
 
   RefPtr<nsContentList> mAreas;
 };

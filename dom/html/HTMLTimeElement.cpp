@@ -19,7 +19,7 @@ HTMLTimeElement::HTMLTimeElement(
     already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
     : nsGenericHTMLElement(std::move(aNodeInfo)) {}
 
-HTMLTimeElement::~HTMLTimeElement() {}
+HTMLTimeElement::~HTMLTimeElement() = default;
 
 NS_IMPL_ELEMENT_CLONE(HTMLTimeElement)
 

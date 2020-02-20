@@ -19,7 +19,7 @@ namespace dom {
 
 // you will see the phrases "rowgroup" and "section" used interchangably
 
-HTMLTableSectionElement::~HTMLTableSectionElement() {}
+HTMLTableSectionElement::~HTMLTableSectionElement() = default;
 
 JSObject* HTMLTableSectionElement::WrapNode(JSContext* aCx,
                                             JS::Handle<JSObject*> aGivenProto) {

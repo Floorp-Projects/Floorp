@@ -34,7 +34,7 @@ class RadioNodeList final : public nsSimpleContentList {
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECLARE_STATIC_IID_ACCESSOR(MOZILLA_DOM_RADIONODELIST_IMPLEMENTATION_IID)
  private:
-  ~RadioNodeList() {}
+  ~RadioNodeList() = default;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(RadioNodeList,

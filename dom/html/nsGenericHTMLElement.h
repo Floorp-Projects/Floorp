@@ -232,7 +232,7 @@ class nsGenericHTMLElement : public nsGenericHTMLElementBase {
       ErrorResult& aRv);
 
  protected:
-  virtual ~nsGenericHTMLElement() {}
+  virtual ~nsGenericHTMLElement() = default;
 
  public:
   /**

@@ -720,7 +720,7 @@ EncodingFormSubmission::EncodingFormSubmission(
   }
 }
 
-EncodingFormSubmission::~EncodingFormSubmission() {}
+EncodingFormSubmission::~EncodingFormSubmission() = default;
 
 // i18n helper routines
 nsresult EncodingFormSubmission::EncodeVal(const nsAString& aStr,

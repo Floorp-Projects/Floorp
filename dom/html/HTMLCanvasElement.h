@@ -110,7 +110,7 @@ class FrameCaptureListener : public SupportsWeakPtr<FrameCaptureListener> {
                         const TimeStamp& aTime) = 0;
 
  protected:
-  virtual ~FrameCaptureListener() {}
+  virtual ~FrameCaptureListener() = default;
 
   bool mFrameCaptureRequested;
 };

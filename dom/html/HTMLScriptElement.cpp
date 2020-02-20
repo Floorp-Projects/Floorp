@@ -38,7 +38,7 @@ HTMLScriptElement::HTMLScriptElement(
   AddMutationObserver(this);
 }
 
-HTMLScriptElement::~HTMLScriptElement() {}
+HTMLScriptElement::~HTMLScriptElement() = default;
 
 NS_IMPL_ISUPPORTS_INHERITED(HTMLScriptElement, nsGenericHTMLElement,
                             nsIScriptLoaderObserver, nsIScriptElement,

@@ -17,7 +17,7 @@ HTMLFrameElement::HTMLFrameElement(
     FromParser aFromParser)
     : nsGenericHTMLFrameElement(std::move(aNodeInfo), aFromParser) {}
 
-HTMLFrameElement::~HTMLFrameElement() {}
+HTMLFrameElement::~HTMLFrameElement() = default;
 
 NS_IMPL_ELEMENT_CLONE(HTMLFrameElement)
 
