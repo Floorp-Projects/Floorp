@@ -334,7 +334,7 @@ class ReadReadyRunnable final : public WorkerSyncRunnable {
   }
 
  private:
-  ~ReadReadyRunnable() {}
+  ~ReadReadyRunnable() = default;
 };
 
 // This class implements nsIInputStreamCallback and it will be called when the
@@ -355,7 +355,7 @@ class ReadCallback final : public nsIInputStreamCallback {
   }
 
  private:
-  ~ReadCallback() {}
+  ~ReadCallback() = default;
 
   // The worker is kept alive because of the sync event loop.
   WorkerPrivate* mWorkerPrivate;

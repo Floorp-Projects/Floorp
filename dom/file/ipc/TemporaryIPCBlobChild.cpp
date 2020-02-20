@@ -16,7 +16,7 @@ TemporaryIPCBlobChild::TemporaryIPCBlobChild(MutableBlobStorage* aStorage)
   MOZ_ASSERT(aStorage);
 }
 
-TemporaryIPCBlobChild::~TemporaryIPCBlobChild() {}
+TemporaryIPCBlobChild::~TemporaryIPCBlobChild() = default;
 
 mozilla::ipc::IPCResult TemporaryIPCBlobChild::RecvFileDesc(
     const FileDescriptor& aFD) {

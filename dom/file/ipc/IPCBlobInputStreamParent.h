@@ -21,7 +21,7 @@ class NS_NO_VTABLE IPCBlobInputStreamParentCallback {
   NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
 
  protected:
-  virtual ~IPCBlobInputStreamParentCallback() {}
+  virtual ~IPCBlobInputStreamParentCallback() = default;
 };
 
 class IPCBlobInputStreamParent final : public PIPCBlobInputStreamParent {
