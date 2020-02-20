@@ -40,7 +40,7 @@ impl From<DisplayItemRef<'_, '_>> for CachedDisplayItem {
     }
 }
 
-#[derive(Clone, Deserialize, Serialize)]
+#[derive(Clone, Default, Deserialize, Serialize)]
 pub struct DisplayItemCache {
     items: Vec<Option<CachedDisplayItem>>
 }
@@ -57,7 +57,7 @@ impl DisplayItemCache {
         }
     }
 
-    fn add_item(
+    pub fn add_item(
         &mut self,
         key: Option<ItemKey>,
         item: DisplayItemRef
@@ -71,12 +71,6 @@ impl DisplayItemCache {
         key: ItemKey
     ) -> Option<&CachedDisplayItem> {
         self.items[key as usize].as_ref()
-    }
-
-    pub fn new() -> Self {
-        Self {
-            items: Vec::new()
-        }
     }
 
     pub fn update(
