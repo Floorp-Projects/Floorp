@@ -137,7 +137,22 @@ const kSafeSchemes = [
   "xmpp",
 ];
 
-const kDocumentChannelAllowedSchemes = ["http", "https", "ftp", "data"];
+const kDocumentChannelDeniedSchemes = ["javascript"];
+const kDocumentChannelDeniedURIs = [
+  "about:blank",
+  "about:printpreview",
+  "about:privatebrowsing",
+  "about:crashcontent",
+];
+
+// Changes here should also be made in SchemeUsesDocChannel in
+// nsDocShell.cpp.
+function documentChannelPermittedForURI(aURI) {
+  return (
+    !kDocumentChannelDeniedSchemes.includes(aURI.scheme) &&
+    !kDocumentChannelDeniedURIs.includes(aURI.spec)
+  );
+}
 
 // Note that even if the scheme fits the criteria for a web-handled scheme
 // (ie it is compatible with the checks registerProtocolHandler uses), it may
@@ -256,7 +271,8 @@ function validatedWebRemoteType(
 
   if (
     allowLinkedWebInFileUriProcess &&
-    // This is not supported with documentchannel
+    // This is not supported with documentchannel and will go away in
+    // Bug 1603007
     !documentChannel &&
     aPreferredRemoteType == FILE_REMOTE_TYPE
   ) {
@@ -264,6 +280,9 @@ function validatedWebRemoteType(
     // when it is same origin as target or the current URI is already a
     // file:// URI.
     if (aCurrentUri) {
+      if (aCurrentUri.scheme == "file" || aCurrentUri.spec == "about:blank") {
+        return FILE_REMOTE_TYPE;
+      }
       try {
         // checkSameOriginURI throws when not same origin.
         // todo: if you intend to update CheckSameOriginURI to log the error to the
@@ -722,9 +741,10 @@ var E10SUtils = {
     // for now, and let DocumentChannel do it during the response.
     if (
       currentRemoteType != NOT_REMOTE &&
+      requiredRemoteType != NOT_REMOTE &&
       uriObject &&
       (remoteSubframes || documentChannel) &&
-      kDocumentChannelAllowedSchemes.includes(uriObject.scheme)
+      documentChannelPermittedForURI(uriObject)
     ) {
       mustChangeProcess = false;
     }
@@ -786,18 +806,6 @@ var E10SUtils = {
       return false;
     }
 
-    // If we are using DocumentChannel or remote subframes (fission), and
-    // are loading a HTTP URI, we can start the load in the current
-    // process, and then perform the switch later-on using the
-    // RedirectProcessChooser mechanism.
-    if (
-      Services.appinfo.remoteType != NOT_REMOTE &&
-      (useRemoteSubframes || documentChannel) &&
-      kDocumentChannelAllowedSchemes.includes(aURI.scheme)
-    ) {
-      return true;
-    }
-
     // If we are in a Large-Allocation process, and it wouldn't be content visible
     // to change processes, we want to load into a new process so that we can throw
     // this one out. We don't want to move into a new process if we have post data,
@@ -814,6 +822,14 @@ var E10SUtils = {
       return false;
     }
 
+    let wantRemoteType = this.getRemoteTypeForURIObject(
+      aURI,
+      true,
+      useRemoteSubframes,
+      Services.appinfo.remoteType,
+      webNav.currentURI
+    );
+
     // Allow history load if loaded in this process before.
     let requestedIndex = sessionHistory.legacySHistory.requestedIndex;
     if (requestedIndex >= 0) {
@@ -824,23 +840,23 @@ var E10SUtils = {
         return true;
       }
 
-      // If not originally loaded in this process allow it if the URI would
-      // normally be allowed to load in this process by default.
-      let remoteType = Services.appinfo.remoteType;
-      return (
-        remoteType ==
-        this.getRemoteTypeForURIObject(
-          aURI,
-          true,
-          useRemoteSubframes,
-          remoteType,
-          webNav.currentURI
-        )
-      );
+      return Services.appinfo.remoteType == wantRemoteType;
+    }
+
+    // If we are using DocumentChannel or remote subframes (fission), we
+    // can start the load in the current process, and then perform the
+    // switch later-on using the nsIProcessSwitchRequestor mechanism.
+    if (
+      (useRemoteSubframes || documentChannel) &&
+      Services.appinfo.remoteType != NOT_REMOTE &&
+      wantRemoteType != NOT_REMOTE &&
+      documentChannelPermittedForURI(aURI)
+    ) {
+      return true;
     }
 
     // If the URI can be loaded in the current process then continue
-    return this.shouldLoadURIInThisProcess(aURI, useRemoteSubframes);
+    return Services.appinfo.remoteType == wantRemoteType;
   },
 
   redirectLoad(
