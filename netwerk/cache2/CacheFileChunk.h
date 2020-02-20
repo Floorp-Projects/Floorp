@@ -112,8 +112,8 @@ NS_DEFINE_STATIC_IID_ACCESSOR(CacheFileChunkListener,
 
 class ChunkListenerItem {
  public:
-  ChunkListenerItem() { MOZ_COUNT_CTOR(ChunkListenerItem); }
-  ~ChunkListenerItem() { MOZ_COUNT_DTOR(ChunkListenerItem); }
+  MOZ_COUNTED_DEFAULT_CTOR(ChunkListenerItem)
+  MOZ_COUNTED_DTOR(ChunkListenerItem)
 
   nsCOMPtr<nsIEventTarget> mTarget;
   nsCOMPtr<CacheFileChunkListener> mCallback;
@@ -121,8 +121,8 @@ class ChunkListenerItem {
 
 class ChunkListeners {
  public:
-  ChunkListeners() { MOZ_COUNT_CTOR(ChunkListeners); }
-  ~ChunkListeners() { MOZ_COUNT_DTOR(ChunkListeners); }
+  MOZ_COUNTED_DEFAULT_CTOR(ChunkListeners)
+  MOZ_COUNTED_DTOR(ChunkListeners)
 
   nsTArray<ChunkListenerItem*> mItems;
 };

@@ -40,7 +40,7 @@ class TextDecoder final : public NonRefcountedDOMObject {
     MOZ_COUNT_CTOR(TextDecoder);
   }
 
-  ~TextDecoder() { MOZ_COUNT_DTOR(TextDecoder); }
+  MOZ_COUNTED_DTOR(TextDecoder)
 
   bool WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto,
                   JS::MutableHandle<JSObject*> aReflector) {

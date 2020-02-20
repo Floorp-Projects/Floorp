@@ -48,7 +48,7 @@ class PresentationServiceBase {
    public:
     explicit SessionIdManager() { MOZ_COUNT_CTOR(SessionIdManager); }
 
-    ~SessionIdManager() { MOZ_COUNT_DTOR(SessionIdManager); }
+    MOZ_COUNTED_DTOR(SessionIdManager)
 
     nsresult GetWindowId(const nsAString& aSessionId, uint64_t* aWindowId) {
       MOZ_ASSERT(NS_IsMainThread());
@@ -126,7 +126,7 @@ class PresentationServiceBase {
    public:
     explicit AvailabilityManager() { MOZ_COUNT_CTOR(AvailabilityManager); }
 
-    ~AvailabilityManager() { MOZ_COUNT_DTOR(AvailabilityManager); }
+    MOZ_COUNTED_DTOR(AvailabilityManager)
 
     void AddAvailabilityListener(
         const nsTArray<nsString>& aAvailabilityUrls,

@@ -1466,9 +1466,7 @@ class nsDisplayComboboxFocus : public nsPaintedDisplayItem {
       : nsPaintedDisplayItem(aBuilder, aFrame) {
     MOZ_COUNT_CTOR(nsDisplayComboboxFocus);
   }
-#ifdef NS_BUILD_REFCNT_LOGGING
-  virtual ~nsDisplayComboboxFocus() { MOZ_COUNT_DTOR(nsDisplayComboboxFocus); }
-#endif
+  MOZ_COUNTED_DTOR_OVERRIDE(nsDisplayComboboxFocus)
 
   virtual void Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) override;
   NS_DISPLAY_DECL_NAME("ComboboxFocus", TYPE_COMBOBOX_FOCUS)

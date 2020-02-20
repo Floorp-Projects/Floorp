@@ -56,7 +56,7 @@ class URLAndReferrerInfoHashKey : public PLDHashEntryHdr {
       : PLDHashEntryHdr(std::move(aToMove)), mKey(std::move(aToMove.mKey)) {
     MOZ_COUNT_CTOR(URLAndReferrerInfoHashKey);
   }
-  ~URLAndReferrerInfoHashKey() { MOZ_COUNT_DTOR(URLAndReferrerInfoHashKey); }
+  MOZ_COUNTED_DTOR(URLAndReferrerInfoHashKey)
 
   const URLAndReferrerInfo* GetKey() const { return mKey; }
 
