@@ -69,7 +69,7 @@ class XULFrameElement final : public nsXULElement, public nsFrameLoaderOwner {
                                              nsGkAtoms::editor))
 
  protected:
-  virtual ~XULFrameElement() {}
+  virtual ~XULFrameElement() = default;
 
   RefPtr<BrowsingContext> mOpener;
 

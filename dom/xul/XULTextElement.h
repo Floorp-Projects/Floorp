@@ -35,7 +35,7 @@ class XULTextElement final : public nsXULElement {
   }
 
  protected:
-  virtual ~XULTextElement() {}
+  virtual ~XULTextElement() = default;
   JSObject* WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) final;
 };
 

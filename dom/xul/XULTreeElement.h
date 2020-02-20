@@ -116,7 +116,7 @@ class XULTreeElement final : public nsXULElement {
   nsTreeBodyFrame* mTreeBody;
   nsCOMPtr<nsITreeView> mView;
 
-  virtual ~XULTreeElement() {}
+  virtual ~XULTreeElement() = default;
 
   JSObject* WrapNode(JSContext* aCx,
                      JS::Handle<JSObject*> aGivenProto) override;
