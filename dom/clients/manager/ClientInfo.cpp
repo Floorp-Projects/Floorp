@@ -42,7 +42,7 @@ ClientInfo& ClientInfo::operator=(ClientInfo&& aRight) {
   return *this;
 }
 
-ClientInfo::~ClientInfo() {}
+ClientInfo::~ClientInfo() = default;
 
 bool ClientInfo::operator==(const ClientInfo& aRight) const {
   return *mData == *aRight.mData;

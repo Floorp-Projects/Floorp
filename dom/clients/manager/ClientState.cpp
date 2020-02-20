@@ -41,7 +41,7 @@ ClientWindowState& ClientWindowState::operator=(ClientWindowState&& aRight) {
   return *this;
 }
 
-ClientWindowState::~ClientWindowState() {}
+ClientWindowState::~ClientWindowState() = default;
 
 mozilla::dom::VisibilityState ClientWindowState::VisibilityState() const {
   return mData->visibilityState();
@@ -85,7 +85,7 @@ ClientWorkerState& ClientWorkerState::operator=(ClientWorkerState&& aRight) {
   return *this;
 }
 
-ClientWorkerState::~ClientWorkerState() {}
+ClientWorkerState::~ClientWorkerState() = default;
 
 StorageAccess ClientWorkerState::GetStorageAccess() const {
   return mData->storageAccess();
@@ -93,7 +93,7 @@ StorageAccess ClientWorkerState::GetStorageAccess() const {
 
 const IPCClientWorkerState& ClientWorkerState::ToIPC() const { return *mData; }
 
-ClientState::ClientState() {}
+ClientState::ClientState() = default;
 
 ClientState::ClientState(const ClientWindowState& aWindowState) {
   mData.emplace(AsVariant(aWindowState));
@@ -119,7 +119,7 @@ ClientState& ClientState::operator=(ClientState&& aRight) {
   return *this;
 }
 
-ClientState::~ClientState() {}
+ClientState::~ClientState() = default;
 
 // static
 ClientState ClientState::FromIPC(const IPCClientState& aData) {
