@@ -5,6 +5,7 @@
 loader: taskgraph.loader.transform:loader
 
 transforms:
+    - fenix_taskgraph.transforms.nimbledroid:transforms
     - taskgraph.transforms.job:transforms
     - taskgraph.transforms.task:transforms
 
@@ -18,9 +19,17 @@ job-defaults:
         using: run-commands
         use-caches: false
         secrets:
-            - name: project/mobile/fenix/nimbledroid
-              key: api_key
-              path: .nimbledroid_token
+            by-level:
+                '3':
+                    - name: project/mobile/fenix/nimbledroid
+                      key: api_key
+                      path: .nimbledroid_token
+                default: []
+        pre-commands:
+            by-level:
+              '3': []
+              default:
+                - [echo, '--', '>', .nimbledroid_token]
     run-on-tasks-for: []
     treeherder:
         kind: test
@@ -39,16 +48,15 @@ jobs:
             signing: signing-nightly
         run:
             commands:
-            - [wget, {artifact-reference: '<signing/public/build/armeabi-v7a/geckoNightly/target.apk>'}, '-O', target.apk]
-            - [python, automation/taskcluster/upload_apk_nimbledroid.py, target.apk, .nimbledroid_token]
-
+                - [wget, {artifact-reference: '<signing/public/build/armeabi-v7a/geckoNightly/target.apk>'}, '-O', target.apk]
+                - [python, automation/taskcluster/upload_apk_nimbledroid.py, target.apk, .nimbledroid_token]
         treeherder:
             symbol: nightly(nimbledroid)
-    
+
     production:
         attributes:
             release-type: production
-        dependencies: 
+        dependencies:
             signing: signing-production
         run:
             commands:
@@ -60,7 +68,7 @@ jobs:
     beta:
         attributes:
             release-type: beta
-        dependencies: 
+        dependencies:
             signing: signing-beta
         run:
             commands:
@@ -68,4 +76,3 @@ jobs:
                 - [python, automation/taskcluster/upload_apk_nimbledroid.py, target.apk, .nimbledroid_token]
         treeherder:
             symbol: beta(nimbledroid)
-            

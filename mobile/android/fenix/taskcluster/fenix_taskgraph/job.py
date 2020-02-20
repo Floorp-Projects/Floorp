@@ -32,6 +32,7 @@ gradlew_schema = Schema({
 
 run_commands_schema = Schema({
     Required("using"): "run-commands",
+    Optional("pre-commands"): [[text_type]],
     Required("commands"): [[taskref_or_string]],
     Required("workdir"): text_type,
     Optional("use-caches"): bool,
@@ -42,7 +43,8 @@ run_commands_schema = Schema({
 @run_job_using("docker-worker", "run-commands", schema=run_commands_schema)
 def configure_run_commands_schema(config, job, taskdesc):
     run = job["run"]
-    pre_commands = [
+    pre_commands = run.pop("pre-commands", [])
+    pre_commands += [
         _generate_secret_command(secret) for secret in run.get("secrets", [])
     ]
     all_commands = pre_commands + run.pop("commands", [])

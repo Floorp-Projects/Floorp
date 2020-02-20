@@ -38,5 +38,9 @@ token_file = sys.argv[2]
 with open(token_file) as f:
 	key = f.read()
 
+if key.rstrip() == '--':
+	print('Nimbledroid key "--" detected. Not uploading anything to the service.')
+	sys.exit(0)
+
 with open(apk_path) as apk_file:
 	uploadApk({'apk': apk_file}, key)
