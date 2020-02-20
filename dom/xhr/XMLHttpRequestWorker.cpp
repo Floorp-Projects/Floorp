@@ -218,7 +218,7 @@ class WorkerThreadProxySyncRunnable : public WorkerMainThreadRunnable {
   }
 
  protected:
-  virtual ~WorkerThreadProxySyncRunnable() {}
+  virtual ~WorkerThreadProxySyncRunnable() = default;
 
   virtual void RunOnMainThread(ErrorResult& aRv) = 0;
 
@@ -250,7 +250,7 @@ class SendRunnable final : public WorkerThreadProxySyncRunnable,
   }
 
  private:
-  ~SendRunnable() {}
+  ~SendRunnable() = default;
 
   virtual void RunOnMainThread(ErrorResult& aRv) override;
 };
@@ -303,7 +303,7 @@ class MainThreadProxyRunnable : public MainThreadWorkerSyncRunnable {
     MOZ_ASSERT(aProxy);
   }
 
-  virtual ~MainThreadProxyRunnable() {}
+  virtual ~MainThreadProxyRunnable() = default;
 };
 
 class XHRUnpinRunnable final : public MainThreadWorkerControlRunnable {
@@ -318,7 +318,7 @@ class XHRUnpinRunnable final : public MainThreadWorkerControlRunnable {
   }
 
  private:
-  ~XHRUnpinRunnable() {}
+  ~XHRUnpinRunnable() = default;
 
   bool WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override {
     if (mXMLHttpRequestPrivate->SendInProgress()) {
@@ -339,7 +339,7 @@ class AsyncTeardownRunnable final : public Runnable {
   }
 
  private:
-  ~AsyncTeardownRunnable() {}
+  ~AsyncTeardownRunnable() = default;
 
   NS_IMETHOD
   Run() override {
@@ -377,7 +377,7 @@ class LoadStartDetectionRunnable final : public Runnable,
           mChannelId(aChannelId) {}
 
    private:
-    ~ProxyCompleteRunnable() {}
+    ~ProxyCompleteRunnable() = default;
 
     virtual bool WorkerRun(JSContext* aCx,
                            WorkerPrivate* aWorkerPrivate) override {
@@ -491,7 +491,7 @@ class EventRunnable final : public MainThreadProxyRunnable {
         mScopeObj(RootingCx(), aScopeObj) {}
 
  private:
-  ~EventRunnable() {}
+  ~EventRunnable() = default;
 
   bool PreDispatch(WorkerPrivate* /* unused */) final;
   bool WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override;
@@ -503,7 +503,7 @@ class SyncTeardownRunnable final : public WorkerThreadProxySyncRunnable {
       : WorkerThreadProxySyncRunnable(aWorkerPrivate, aProxy) {}
 
  private:
-  ~SyncTeardownRunnable() {}
+  ~SyncTeardownRunnable() = default;
 
   virtual void RunOnMainThread(ErrorResult& aRv) override {
     mProxy->Teardown(/* aSendUnpin */ true);
@@ -521,7 +521,7 @@ class SetBackgroundRequestRunnable final
       : WorkerThreadProxySyncRunnable(aWorkerPrivate, aProxy), mValue(aValue) {}
 
  private:
-  ~SetBackgroundRequestRunnable() {}
+  ~SetBackgroundRequestRunnable() = default;
 
   virtual void RunOnMainThread(ErrorResult& aRv) override {
     mProxy->mXHR->SetMozBackgroundRequest(mValue, aRv);
@@ -537,7 +537,7 @@ class SetWithCredentialsRunnable final : public WorkerThreadProxySyncRunnable {
       : WorkerThreadProxySyncRunnable(aWorkerPrivate, aProxy), mValue(aValue) {}
 
  private:
-  ~SetWithCredentialsRunnable() {}
+  ~SetWithCredentialsRunnable() = default;
 
   virtual void RunOnMainThread(ErrorResult& aRv) override {
     mProxy->mXHR->SetWithCredentials(mValue, aRv);
@@ -556,7 +556,7 @@ class SetResponseTypeRunnable final : public WorkerThreadProxySyncRunnable {
   XMLHttpRequestResponseType ResponseType() { return mResponseType; }
 
  private:
-  ~SetResponseTypeRunnable() {}
+  ~SetResponseTypeRunnable() = default;
 
   virtual void RunOnMainThread(ErrorResult& aRv) override {
     mProxy->mXHR->SetResponseTypeRaw(mResponseType);
@@ -574,7 +574,7 @@ class SetTimeoutRunnable final : public WorkerThreadProxySyncRunnable {
         mTimeout(aTimeout) {}
 
  private:
-  ~SetTimeoutRunnable() {}
+  ~SetTimeoutRunnable() = default;
 
   virtual void RunOnMainThread(ErrorResult& aRv) override {
     mProxy->mXHR->SetTimeout(mTimeout, aRv);
@@ -587,7 +587,7 @@ class AbortRunnable final : public WorkerThreadProxySyncRunnable {
       : WorkerThreadProxySyncRunnable(aWorkerPrivate, aProxy) {}
 
  private:
-  ~AbortRunnable() {}
+  ~AbortRunnable() = default;
 
   virtual void RunOnMainThread(ErrorResult& aRv) override;
 };
@@ -603,7 +603,7 @@ class GetAllResponseHeadersRunnable final
         mResponseHeaders(aResponseHeaders) {}
 
  private:
-  ~GetAllResponseHeadersRunnable() {}
+  ~GetAllResponseHeadersRunnable() = default;
 
   virtual void RunOnMainThread(ErrorResult& aRv) override {
     mProxy->mXHR->GetAllResponseHeaders(mResponseHeaders, aRv);
@@ -622,7 +622,7 @@ class GetResponseHeaderRunnable final : public WorkerThreadProxySyncRunnable {
         mValue(aValue) {}
 
  private:
-  ~GetResponseHeaderRunnable() {}
+  ~GetResponseHeaderRunnable() = default;
 
   virtual void RunOnMainThread(ErrorResult& aRv) override {
     mProxy->mXHR->GetResponseHeader(mHeader, mValue, aRv);
@@ -681,7 +681,7 @@ class OpenRunnable final : public WorkerThreadProxySyncRunnable {
   }
 
  private:
-  ~OpenRunnable() {}
+  ~OpenRunnable() = default;
 
   virtual void RunOnMainThread(ErrorResult& aRv) override {
     WorkerPrivate* oldWorker = mProxy->mWorkerPrivate;
@@ -707,7 +707,7 @@ class SetRequestHeaderRunnable final : public WorkerThreadProxySyncRunnable {
         mValue(aValue) {}
 
  private:
-  ~SetRequestHeaderRunnable() {}
+  ~SetRequestHeaderRunnable() = default;
 
   virtual void RunOnMainThread(ErrorResult& aRv) override {
     mProxy->mXHR->SetRequestHeader(mHeader, mValue, aRv);
@@ -724,7 +724,7 @@ class OverrideMimeTypeRunnable final : public WorkerThreadProxySyncRunnable {
         mMimeType(aMimeType) {}
 
  private:
-  ~OverrideMimeTypeRunnable() {}
+  ~OverrideMimeTypeRunnable() = default;
 
   virtual void RunOnMainThread(ErrorResult& aRv) override {
     mProxy->mXHR->OverrideMimeType(mMimeType, aRv);

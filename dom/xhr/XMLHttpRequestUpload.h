@@ -27,7 +27,7 @@ class XMLHttpRequestUpload final : public XMLHttpRequestEventTarget {
   }
 
  private:
-  virtual ~XMLHttpRequestUpload() {}
+  virtual ~XMLHttpRequestUpload() = default;
 };
 
 }  // namespace dom
