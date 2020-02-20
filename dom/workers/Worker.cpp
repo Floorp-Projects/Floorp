@@ -29,15 +29,22 @@ already_AddRefed<Worker> Worker::Constructor(const GlobalObject& aGlobal,
                                              ErrorResult& aRv) {
   JSContext* cx = aGlobal.Context();
 
+  nsCOMPtr<nsIGlobalObject> globalObject =
+      do_QueryInterface(aGlobal.GetAsSupports());
+
+  if (globalObject->AsInnerWindow() &&
+      !globalObject->AsInnerWindow()->IsCurrentInnerWindow()) {
+    aRv.ThrowInvalidStateError(
+        "Cannot create worker for a going to be discarded document");
+    return nullptr;
+  }
+
   RefPtr<WorkerPrivate> workerPrivate = WorkerPrivate::Constructor(
       cx, aScriptURL, false /* aIsChromeWorker */, WorkerTypeDedicated,
       aOptions.mName, VoidCString(), nullptr /*aLoadInfo */, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
-
-  nsCOMPtr<nsIGlobalObject> globalObject =
-      do_QueryInterface(aGlobal.GetAsSupports());
 
   RefPtr<Worker> worker = new Worker(globalObject, workerPrivate.forget());
   return worker.forget();
