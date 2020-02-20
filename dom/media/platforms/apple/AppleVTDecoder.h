@@ -108,7 +108,7 @@ class AppleVTDecoder : public MediaDataDecoder,
   // Protects mReorderQueue and mPromise.
   Monitor mMonitor;
   ReorderQueue mReorderQueue;
-  MozPromiseHolder<DecodePromise> mPromise;
+  MozMonitoredPromiseHolder<DecodePromise> mPromise;
 
   // Decoded frame will be dropped if its pts is smaller than this
   // value. It shold be initialized before Input() or after Flush(). So it is

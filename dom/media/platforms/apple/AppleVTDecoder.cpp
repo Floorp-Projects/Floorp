@@ -57,6 +57,8 @@ AppleVTDecoder::AppleVTDecoder(const VideoInfo& aConfig, TaskQueue* aTaskQueue,
       ,
       mIsFlushing(false),
       mMonitor("AppleVTDecoder"),
+      mPromise(&mMonitor),  // To ensure our PromiseHolder is only ever accessed
+                            // with the monitor held.
       mFormat(nullptr),
       mSession(nullptr),
       mIsHardwareAccelerated(false) {
@@ -64,9 +66,6 @@ AppleVTDecoder::AppleVTDecoder(const VideoInfo& aConfig, TaskQueue* aTaskQueue,
   // TODO: Verify aConfig.mime_type.
   LOG("Creating AppleVTDecoder for %dx%d h.264 video", mDisplayWidth,
       mDisplayHeight);
-
-  // To ensure our PromiseHolder is only ever accessed with the monitor held.
-  mPromise.SetMonitor(&mMonitor);
 }
 
 AppleVTDecoder::~AppleVTDecoder() { MOZ_COUNT_DTOR(AppleVTDecoder); }

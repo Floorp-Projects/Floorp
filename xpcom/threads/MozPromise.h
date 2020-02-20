@@ -1128,28 +1128,18 @@ typedef MozPromise<bool, nsresult, /* IsExclusive = */ false>
  * Class to encapsulate a promise for a particular role. Use this as the member
  * variable for a class whose method returns a promise.
  */
-template <typename PromiseType>
-class MozPromiseHolder {
+template <typename PromiseType, typename ImplType>
+class MozPromiseHolderBase {
  public:
-  MozPromiseHolder() : mMonitor(nullptr) {}
+  MozPromiseHolderBase() = default;
 
-  MozPromiseHolder(MozPromiseHolder&& aOther)
-      : mMonitor(nullptr), mPromise(std::move(aOther.mPromise)) {}
+  MozPromiseHolderBase(MozPromiseHolderBase&& aOther) = default;
+  MozPromiseHolderBase& operator=(MozPromiseHolderBase&& aOther) = default;
 
-  // Move semantics.
-  MozPromiseHolder& operator=(MozPromiseHolder&& aOther) {
-    MOZ_ASSERT(!mMonitor && !aOther.mMonitor);
-    MOZ_DIAGNOSTIC_ASSERT(!mPromise);
-    mPromise = std::move(aOther.mPromise);
-    return *this;
-  }
-
-  ~MozPromiseHolder() { MOZ_ASSERT(!mPromise); }
+  ~MozPromiseHolderBase() { MOZ_ASSERT(!mPromise); }
 
   already_AddRefed<PromiseType> Ensure(const char* aMethodName) {
-    if (mMonitor) {
-      mMonitor->AssertCurrentThreadOwns();
-    }
+    static_cast<ImplType*>(this)->Check();
     if (!mPromise) {
       mPromise = new (typename PromiseType::Private)(aMethodName);
     }
@@ -1157,20 +1147,13 @@ class MozPromiseHolder {
     return p.forget();
   }
 
-  // Provide a Monitor that should always be held when accessing this instance.
-  void SetMonitor(Monitor* aMonitor) { mMonitor = aMonitor; }
-
   bool IsEmpty() const {
-    if (mMonitor) {
-      mMonitor->AssertCurrentThreadOwns();
-    }
+    static_cast<const ImplType*>(this)->Check();
     return !mPromise;
   }
 
   already_AddRefed<typename PromiseType::Private> Steal() {
-    if (mMonitor) {
-      mMonitor->AssertCurrentThreadOwns();
-    }
+    static_cast<ImplType*>(this)->Check();
     return mPromise.forget();
   }
 
@@ -1181,9 +1164,7 @@ class MozPromiseHolder {
                   "Resolve() argument must be implicitly convertible to "
                   "MozPromise's ResolveValueT");
 
-    if (mMonitor) {
-      mMonitor->AssertCurrentThreadOwns();
-    }
+    static_cast<ImplType*>(this)->Check();
     MOZ_ASSERT(mPromise);
     mPromise->Resolve(std::forward<ResolveValueType_>(aResolveValue),
                       aMethodName);
@@ -1205,9 +1186,7 @@ class MozPromiseHolder {
                   "Reject() argument must be implicitly convertible to "
                   "MozPromise's RejectValueT");
 
-    if (mMonitor) {
-      mMonitor->AssertCurrentThreadOwns();
-    }
+    static_cast<ImplType*>(this)->Check();
     MOZ_ASSERT(mPromise);
     mPromise->Reject(std::forward<RejectValueType_>(aRejectValue), aMethodName);
     mPromise = nullptr;
@@ -1224,9 +1203,7 @@ class MozPromiseHolder {
   template <typename ResolveOrRejectValueType_>
   void ResolveOrReject(ResolveOrRejectValueType_&& aValue,
                        const char* aMethodName) {
-    if (mMonitor) {
-      mMonitor->AssertCurrentThreadOwns();
-    }
+    static_cast<ImplType*>(this)->Check();
     MOZ_ASSERT(mPromise);
     mPromise->ResolveOrReject(std::forward<ResolveOrRejectValueType_>(aValue),
                               aMethodName);
@@ -1243,8 +1220,37 @@ class MozPromiseHolder {
   }
 
  private:
-  Monitor* mMonitor;
   RefPtr<typename PromiseType::Private> mPromise;
+};
+
+template <typename PromiseType>
+class MozPromiseHolder
+    : public MozPromiseHolderBase<PromiseType, MozPromiseHolder<PromiseType>> {
+ public:
+  using MozPromiseHolderBase<
+      PromiseType, MozPromiseHolder<PromiseType>>::MozPromiseHolderBase;
+  static constexpr void Check(){};
+};
+
+template <typename PromiseType>
+class MozMonitoredPromiseHolder
+    : public MozPromiseHolderBase<PromiseType,
+                                  MozMonitoredPromiseHolder<PromiseType>> {
+ public:
+  // Provide a Monitor that should always be held when accessing this instance.
+  explicit MozMonitoredPromiseHolder(Monitor* const aMonitor)
+      : mMonitor(aMonitor) {
+    MOZ_ASSERT(aMonitor);
+  }
+
+  MozMonitoredPromiseHolder(MozMonitoredPromiseHolder&& aOther) = delete;
+  MozMonitoredPromiseHolder& operator=(MozMonitoredPromiseHolder&& aOther) =
+      delete;
+
+  void Check() const { mMonitor->AssertCurrentThreadOwns(); }
+
+ private:
+  Monitor* const mMonitor;
 };
 
 /*
