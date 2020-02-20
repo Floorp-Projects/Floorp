@@ -81,7 +81,6 @@ DEFINES['SQLITE_OMIT_DECLTYPE'] = True
 # Try to use a MEMORY temp store when possible. That allows for better
 # performance and doesn't suffer from a full separate tmp partition.
 # Exclude 32bit platforms due to address space fragmentation issues.
-# System Sqlite is managed through a PRAGMA instead.
 if CONFIG['OS_TARGET'] == 'Android':
     # On Android there's no tmp partition, so always use a MEMORY temp store.
     DEFINES['SQLITE_TEMP_STORE'] = 3
@@ -91,7 +90,6 @@ elif CONFIG['HAVE_64BIT_BUILD']:
 
 # Change the default temp files prefix, to easily distinguish files we created
 # vs files created by other Sqlite instances in the system.
-# This has obviously no effect in case of System Sqlite.
 DEFINES['SQLITE_TEMP_FILE_PREFIX'] = '"mz_etilqs_"'
 
 # Suppress warnings in third-party code.

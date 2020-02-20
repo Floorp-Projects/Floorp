@@ -62,7 +62,6 @@ GTK3_VERSION=3.4.0
 GDK_VERSION_MAX_ALLOWED=GDK_VERSION_3_4
 W32API_VERSION=3.14
 DBUS_VERSION=0.60
-SQLITE_VERSION=3.31.1
 
 dnl Set various checks
 dnl ========================================================
@@ -2132,35 +2131,11 @@ dnl =
 dnl ========================================================
 MOZ_ARG_HEADER(Individual module options)
 
-dnl ========================================================
-dnl Check for sqlite
-dnl ========================================================
-
-MOZ_SYSTEM_SQLITE=
-MOZ_ARG_ENABLE_BOOL(system-sqlite,
-[  --enable-system-sqlite  Use system sqlite (located with pkgconfig)],
-MOZ_SYSTEM_SQLITE=1,
-MOZ_SYSTEM_SQLITE= )
-
-if test -n "$MOZ_SYSTEM_SQLITE"
-then
-    dnl ============================
-    dnl === SQLite Version check ===
-    dnl ============================
-    dnl Check to see if the system SQLite package is new enough.
-    PKG_CHECK_MODULES(SQLITE, sqlite3 >= $SQLITE_VERSION)
-else
-    dnl ==============================
-    dnl === SQLite fdatasync check ===
-    dnl ==============================
-    dnl Check to see if fdatasync is available
-    AC_CHECK_FUNC(fdatasync)
-fi
-
-if test -n "$MOZ_SYSTEM_SQLITE"; then
-    AC_DEFINE(MOZ_SYSTEM_SQLITE)
-fi
-AC_SUBST(MOZ_SYSTEM_SQLITE)
+dnl ==============================
+dnl === SQLite fdatasync check ===
+dnl ==============================
+dnl Check to see if fdatasync is available and make use of it
+AC_CHECK_FUNC(fdatasync)
 
 dnl ========================================================
 dnl = Disable zipwriter
