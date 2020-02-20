@@ -40,6 +40,11 @@ BrowsingContextGroup* WindowContext::Group() const {
   return mBrowsingContext->Group();
 }
 
+WindowGlobalParent* WindowContext::Canonical() {
+  MOZ_RELEASE_ASSERT(XRE_IsParentProcess());
+  return static_cast<WindowGlobalParent*>(this);
+}
+
 nsIGlobalObject* WindowContext::GetParentObject() const {
   return xpc::NativeGlobal(xpc::PrivilegedJunkScope());
 }
@@ -167,6 +172,31 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_WRAPPERCACHE(WindowContext)
 }  // namespace dom
 
 namespace ipc {
+
+void IPDLParamTraits<dom::MaybeDiscarded<dom::WindowContext>>::Write(
+    IPC::Message* aMsg, IProtocol* aActor,
+    const dom::MaybeDiscarded<dom::WindowContext>& aParam) {
+  uint64_t id = aParam.ContextId();
+  WriteIPDLParam(aMsg, aActor, id);
+}
+
+bool IPDLParamTraits<dom::MaybeDiscarded<dom::WindowContext>>::Read(
+    const IPC::Message* aMsg, PickleIterator* aIter, IProtocol* aActor,
+    dom::MaybeDiscarded<dom::WindowContext>* aResult) {
+  uint64_t id = 0;
+  if (!ReadIPDLParam(aMsg, aIter, aActor, &id)) {
+    return false;
+  }
+
+  if (id == 0) {
+    *aResult = nullptr;
+  } else if (RefPtr<dom::WindowContext> wc = dom::WindowContext::GetById(id)) {
+    *aResult = std::move(wc);
+  } else {
+    aResult->SetDiscarded(id);
+  }
+  return true;
+}
 
 void IPDLParamTraits<dom::WindowContext*>::Write(IPC::Message* aMsg,
                                                  IProtocol* aActor,
