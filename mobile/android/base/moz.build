@@ -20,3 +20,4 @@ t = ('android_apks',)
 GENERATED_FILES += [t]
 GENERATED_FILES[t].force = True
 GENERATED_FILES[t].script = '/mobile/android/gradle.py:assemble_app'
+GENERATED_FILES[t].py2 = True

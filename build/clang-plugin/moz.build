@@ -62,6 +62,7 @@ if CONFIG['ENABLE_MOZSEARCH_PLUGIN']:
     ]
 
 GeneratedFile('ThirdPartyPaths.cpp', script="ThirdPartyPaths.py",
+              py2=True,
               entry_point="generate", inputs=[
                   '/tools/rewriting/ThirdPartyPaths.txt',
                   '/tools/rewriting/Generated.txt',
