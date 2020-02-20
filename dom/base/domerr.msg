@@ -49,7 +49,6 @@ DOM4_MSG_DEF(InvalidStateError, "The matrix could not be computed", NS_ERROR_DOM
 /* XPath errors from http://www.w3.org/TR/DOM-Level-3-XPath/ */
 
 DOM4_MSG_DEF(SyntaxError, "The expression is not a legal expression.", NS_ERROR_DOM_INVALID_EXPRESSION_ERR)
-DOM4_MSG_DEF(TypeError, "The expression cannot be converted to return the specified type.", NS_ERROR_DOM_TYPE_ERR)
 
 /* IndexedDB errors http://dvcs.w3.org/hg/IndexedDB/raw-file/tip/Overview.html#exceptions */
 
