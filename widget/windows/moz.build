@@ -33,7 +33,6 @@ EXPORTS.mozilla.widget += [
     'WinCompositorWidget.h',
     'WinCompositorWindowThread.h',
     'WindowsEMF.h',
-    'WindowsSMTCProvider.h',
     'WinMessages.h',
     'WinModifierKeyState.h',
     'WinNativeEventData.h',
@@ -97,7 +96,6 @@ SOURCES += [
     'nsSharePicker.cpp',
     'nsWidgetFactory.cpp',
     'WinCompositorWidget.cpp',
-    'WindowsSMTCProvider.cpp',
     'WindowsUIUtils.cpp',
     'WinMouseScrollHandler.cpp',
 ]
