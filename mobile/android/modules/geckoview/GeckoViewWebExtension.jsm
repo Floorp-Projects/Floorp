@@ -438,6 +438,19 @@ async function updatePromptHandler(aInfo) {
 }
 
 var GeckoViewWebExtension = {
+  observe(aSubject, aTopic, aData) {
+    debug`observe ${aTopic}`;
+
+    switch (aTopic) {
+      case "devtools-installed-addon": {
+        EventDispatcher.instance.sendRequest({
+          type: "GeckoView:WebExtension:DebuggerListUpdated",
+        });
+        break;
+      }
+    }
+  },
+
   async registerWebExtension(aId, aUri, allowContentMessaging, aCallback) {
     const params = {
       id: aId,
@@ -836,3 +849,4 @@ GeckoViewWebExtension.extensionScopes = new Map();
 GeckoViewWebExtension.browserActions = new WeakMap();
 // WeakMap[Extension -> PageAction]
 GeckoViewWebExtension.pageActions = new WeakMap();
+Services.obs.addObserver(GeckoViewWebExtension, "devtools-installed-addon");

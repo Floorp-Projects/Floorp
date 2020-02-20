@@ -1598,11 +1598,16 @@ package org.mozilla.geckoview {
     method @UiThread @Nullable public WebExtensionController.TabDelegate getTabDelegate();
     method @NonNull @AnyThread public GeckoResult<WebExtension> install(@NonNull String);
     method @AnyThread @NonNull public GeckoResult<List<WebExtension>> list();
+    method @UiThread public void setDebuggerDelegate(@NonNull WebExtensionController.DebuggerDelegate);
     method @UiThread public void setPromptDelegate(@Nullable WebExtensionController.PromptDelegate);
     method @AnyThread public void setTabActive(@NonNull GeckoSession, boolean);
     method @UiThread public void setTabDelegate(@Nullable WebExtensionController.TabDelegate);
     method @NonNull @AnyThread public GeckoResult<Void> uninstall(@NonNull WebExtension);
     method @AnyThread @NonNull public GeckoResult<WebExtension> update(@NonNull WebExtension);
+  }
+
+  public static interface WebExtensionController.DebuggerDelegate {
+    method @UiThread default public void onExtensionListUpdated();
   }
 
   public static class WebExtensionController.EnableSource {
