@@ -38,6 +38,9 @@ public class TabSession extends GeckoSession {
         mUri = uri;
     }
 
+    public void onLocationChange(@NonNull String uri) {
+        mUri = uri;
+    }
 
     @Override // Parcelable
     @UiThread

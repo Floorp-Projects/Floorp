@@ -409,6 +409,7 @@ public class GeckoViewActivity
                 public GeckoResult<GeckoSession> onNewTab(WebExtension source, String uri) {
                     final TabSession newSession = createSession();
                     mToolbarView.updateTabCount();
+                    setGeckoViewSession(newSession);
                     return GeckoResult.fromValue(newSession);
                 }
                 @Override
@@ -498,6 +499,7 @@ public class GeckoViewActivity
                 mFullAccessibilityTree = session.getSettings().getFullAccessibilityTree();
 
                 mTabSessionManager.addSession(session);
+                session.open(sGeckoRuntime);
                 setGeckoViewSession(session);
             } else {
                 session = createSession();
@@ -860,9 +862,6 @@ public class GeckoViewActivity
         final GeckoSession previousSession = mGeckoView.releaseSession();
         if (previousSession != null) {
             controller.setTabActive(previousSession, false);
-        }
-        if (!session.isOpen()) {
-            session.open(sGeckoRuntime);
         }
         mGeckoView.setSession(session);
         controller.setTabActive(session, true);
@@ -1398,6 +1397,10 @@ public class GeckoViewActivity
         @Override
         public void onLocationChange(GeckoSession session, final String url) {
             mToolbarView.getLocationView().setText(url);
+            TabSession tabSession = mTabSessionManager.getSession(session);
+            if (tabSession != null) {
+                tabSession.onLocationChange(url);
+            }
             mCurrentUri = url;
         }
 
@@ -1426,6 +1429,7 @@ public class GeckoViewActivity
         public GeckoResult<GeckoSession> onNewSession(final GeckoSession session, final String uri) {
             final TabSession newSession = createSession();
             mToolbarView.updateTabCount();
+            setGeckoViewSession(newSession);
             // A reference to newSession is stored by mTabSessionManager,
             // which prevents the session from being garbage-collected.
             return GeckoResult.fromValue(newSession);
