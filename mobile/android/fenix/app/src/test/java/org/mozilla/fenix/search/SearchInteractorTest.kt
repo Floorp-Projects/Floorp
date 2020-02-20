@@ -99,7 +99,6 @@ class SearchInteractorTest {
         interactor.onEditingCanceled()
 
         verify {
-            store.dispatch(SearchFragmentAction.UpdateEditingCanceled)
             navController.navigateUp()
         }
     }

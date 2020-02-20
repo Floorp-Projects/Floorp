@@ -58,7 +58,6 @@ class SearchFragmentStoreTest {
         showHistorySuggestions = false,
         showBookmarkSuggestions = false,
         session = null,
-        searchAccessPoint = Event.PerformedSearch.SearchAccessPoint.NONE,
-        isAnimatingOut = false
+        searchAccessPoint = Event.PerformedSearch.SearchAccessPoint.NONE
     )
 }

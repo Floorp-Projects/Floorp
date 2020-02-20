@@ -32,19 +32,6 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
 
-    <ImageButton
-        android:id="@+id/back_button"
-        android:layout_width="40dp"
-        android:layout_height="40dp"
-        android:layout_margin="8dp"
-        android:background="?selectableItemBackground"
-        android:contentDescription="@string/browser_menu_back"
-        android:tint="?primaryText"
-        app:layout_constraintBottom_toBottomOf="@id/toolbar_wrapper"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@id/toolbar_wrapper"
-        app:srcCompat="@drawable/mozac_ic_back" />
-
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/toolbar_wrapper"
         android:layout_width="0dp"
@@ -53,7 +40,7 @@
         android:outlineProvider="paddedBounds"
         android:transitionName="toolbar_wrapper_transition"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@id/back_button"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
         <FrameLayout
@@ -80,7 +67,7 @@
         android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="@id/awesomeBar_barrier"
         app:layout_constraintEnd_toEndOf="@id/toolbar_wrapper"
-        app:layout_constraintStart_toStartOf="@id/back_button"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/toolbar_wrapper">
 
         <ImageView
@@ -138,7 +125,7 @@
         android:layout_marginTop="@dimen/search_fragment_shortcuts_label_margin_vertical"
         android:layout_marginEnd="@dimen/search_fragment_shortcuts_label_margin_horizontal"
         android:text="@string/search_shortcuts_search_with_2"
-        app:layout_constraintStart_toStartOf="@id/back_button"
+        app:layout_constraintStart_toStartOf="@id/toolbar_wrapper"
         app:layout_constraintTop_toBottomOf="@id/awesomeBar_barrier"
         tools:text="This time, search with:" />
 
