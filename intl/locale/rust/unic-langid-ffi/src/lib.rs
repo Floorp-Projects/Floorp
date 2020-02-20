@@ -15,6 +15,11 @@ pub unsafe extern "C" fn unic_langid_new(
     let langid = if name.eq_ignore_ascii_case(b"ja-jp-mac") {
         "ja-JP-macos".parse()
     } else {
+        // Cut out any `.FOO` like `en-US.POSIX`.
+        let mut name: &[u8] = name.as_ref();
+        if let Some(ptr) = name.iter().position(|b| b == &b'.') {
+            name = &name[..ptr];
+        }
         LanguageIdentifier::from_bytes(name)
     };
 
