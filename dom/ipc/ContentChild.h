@@ -743,7 +743,7 @@ class ContentChild final
 
   mozilla::ipc::IPCResult RecvRestoreBrowsingContextChildren(
       const MaybeDiscarded<BrowsingContext>& aContext,
-      BrowsingContext::Children&& aChildren);
+      const nsTArray<MaybeDiscarded<BrowsingContext>>& aChildren);
 
   mozilla::ipc::IPCResult RecvRegisterBrowsingContextGroup(
       nsTArray<BrowsingContext::IPCInitializer>&& aInits,

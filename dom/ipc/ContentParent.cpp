@@ -6215,7 +6215,7 @@ mozilla::ipc::IPCResult ContentParent::RecvCacheBrowsingContextChildren(
 
 mozilla::ipc::IPCResult ContentParent::RecvRestoreBrowsingContextChildren(
     const MaybeDiscarded<BrowsingContext>& aContext,
-    BrowsingContext::Children&& aChildren) {
+    nsTArray<MaybeDiscarded<BrowsingContext>>&& aChildren) {
   if (aContext.IsNullOrDiscarded()) {
     MOZ_LOG(BrowsingContext::GetLog(), LogLevel::Debug,
             ("ParentIPC: Trying to restore already detached"));
@@ -6231,7 +6231,21 @@ mozilla::ipc::IPCResult ContentParent::RecvRestoreBrowsingContextChildren(
     return IPC_OK();
   }
 
-  context->RestoreChildren(std::move(aChildren), /* aFromIPC */ true);
+  // Remove any null or discarded child BrowsingContexts, creating a list with
+  // only active contexts.
+  // Modify the existing BrowsingContext as it will be passed to each other
+  // process using `SendRestoreBrowsingContextChildren`.
+  nsTArray<RefPtr<BrowsingContext>> children(aChildren.Length());
+  aChildren.RemoveElementsBy(
+      [&](const MaybeDiscarded<BrowsingContext>& child) -> bool {
+        if (child.IsNullOrDiscarded()) {
+          return true;
+        }
+        children.AppendElement(child.get());
+        return false;
+      });
+
+  context->RestoreChildren(std::move(children), /* aFromIPC */ true);
 
   context->Group()->EachOtherParent(this, [&](ContentParent* aParent) {
     Unused << aParent->SendRestoreBrowsingContextChildren(context, aChildren);

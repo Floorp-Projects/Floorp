@@ -655,7 +655,7 @@ class ContentParent final
 
   mozilla::ipc::IPCResult RecvRestoreBrowsingContextChildren(
       const MaybeDiscarded<BrowsingContext>& aContext,
-      BrowsingContext::Children&& aChildren);
+      nsTArray<MaybeDiscarded<BrowsingContext>>&& aChildren);
 
   mozilla::ipc::IPCResult RecvWindowClose(
       const MaybeDiscarded<BrowsingContext>& aContext, bool aTrustedCaller);

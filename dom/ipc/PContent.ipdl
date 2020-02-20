@@ -1607,7 +1607,7 @@ both:
      * Re-attach all BrowsingContexts in a 'aContext'.
      */
     async RestoreBrowsingContextChildren(MaybeDiscardedBrowsingContext aContext,
-                                         BrowsingContext[] aChildren);
+                                         MaybeDiscardedBrowsingContext[] aChildren);
 
     async WindowClose(MaybeDiscardedBrowsingContext aContext,
                       bool aTrustedCaller);
