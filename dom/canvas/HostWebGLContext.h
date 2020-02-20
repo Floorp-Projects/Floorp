@@ -196,11 +196,6 @@ class HostWebGLContext final : public SupportsWeakPtr<HostWebGLContext> {
 
   void DidRefresh() { mContext->DidRefresh(); }
 
-  RefPtr<gfx::SourceSurface> GetSurfaceSnapshot(
-      gfxAlphaType* out_alphaType) const {
-    return mContext->GetSurfaceSnapshot(out_alphaType);
-  }
-
   void GenerateError(const GLenum error, const std::string& text) const {
     mContext->GenerateErrorImpl(error, text);
   }

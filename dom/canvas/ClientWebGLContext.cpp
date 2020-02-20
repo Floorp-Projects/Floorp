@@ -18,6 +18,7 @@
 #include "mozilla/layers/OOPCanvasRenderer.h"
 #include "mozilla/layers/TextureClientSharedSurface.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/ScopeExit.h"
 #include "mozilla/StaticPrefs_webgl.h"
 #include "nsContentUtils.h"
 #include "nsIGfxInfo.h"
@@ -883,9 +884,106 @@ ClientWebGLContext::SetContextOptions(JSContext* cx,
 void ClientWebGLContext::DidRefresh() { Run<RPROC(DidRefresh)>(); }
 
 already_AddRefed<gfx::SourceSurface> ClientWebGLContext::GetSurfaceSnapshot(
-    gfxAlphaType* out_alphaType) {
-  auto ret = Run<RPROC(GetSurfaceSnapshot)>(out_alphaType);
-  return ret.forget();
+    gfxAlphaType* const out_alphaType) {
+  const FuncScope funcScope(*this, "<GetSurfaceSnapshot>");
+  if (IsContextLost()) return nullptr;
+  const auto notLost =
+      mNotLost;  // Hold a strong-ref to prevent LoseContext=>UAF.
+
+  const auto& options = mNotLost->info.options;
+  const auto& state = State();
+
+  const auto drawFbWas = state.mBoundDrawFb;
+  const auto readFbWas = state.mBoundReadFb;
+
+  const auto alignmentWas = Run<RPROC(GetParameter)>(LOCAL_GL_PACK_ALIGNMENT);
+  if (!alignmentWas) return nullptr;
+
+  const auto size = DrawingBufferSize();
+
+  // -
+
+  BindFramebuffer(LOCAL_GL_FRAMEBUFFER, nullptr);
+  PixelStorei(LOCAL_GL_PACK_ALIGNMENT, 4);
+
+  auto reset = MakeScopeExit([&] {
+    if (drawFbWas == readFbWas) {
+      BindFramebuffer(LOCAL_GL_FRAMEBUFFER, drawFbWas);
+    } else {
+      BindFramebuffer(LOCAL_GL_DRAW_FRAMEBUFFER, drawFbWas);
+      BindFramebuffer(LOCAL_GL_READ_FRAMEBUFFER, readFbWas);
+    }
+    PixelStorei(LOCAL_GL_PACK_ALIGNMENT, *alignmentWas);
+  });
+
+  const auto surfFormat = options.alpha ? gfx::SurfaceFormat::B8G8R8A8
+                                        : gfx::SurfaceFormat::B8G8R8X8;
+  const auto stride = size.x * 4;
+  RefPtr<gfx::DataSourceSurface> surf =
+      gfx::Factory::CreateDataSourceSurfaceWithStride(
+          {size.x, size.y}, surfFormat, stride, /*zero=*/true);
+  MOZ_ASSERT(surf);
+  if (NS_WARN_IF(!surf)) return nullptr;
+
+  {
+    const gfx::DataSourceSurface::ScopedMap map(
+        surf, gfx::DataSourceSurface::READ_WRITE);
+    if (!map.IsMapped()) {
+      MOZ_ASSERT(false);
+      return nullptr;
+    }
+    MOZ_ASSERT(static_cast<uint32_t>(map.GetStride()) == stride);
+
+    const auto range = Range<uint8_t>(map.GetData(), stride * size.y);
+    auto view = RawBufferView(range);
+    Run<RPROC(ReadPixels)>(0, 0, size.x, size.y, LOCAL_GL_RGBA,
+                           LOCAL_GL_UNSIGNED_BYTE, view);
+
+    // -
+
+    const auto swapRowRedBlue = [&](uint8_t* const row) {
+      for (const auto x : IntegerRange(size.x)) {
+        std::swap(row[4 * x], row[4 * x + 2]);
+      }
+    };
+
+    std::vector<uint8_t> tempRow(stride);
+    for (const auto srcY : IntegerRange(size.y / 2)) {
+      const auto dstY = size.y - 1 - srcY;
+      const auto srcRow = (range.begin() + (stride * srcY)).get();
+      const auto dstRow = (range.begin() + (stride * dstY)).get();
+      memcpy(tempRow.data(), dstRow, stride);
+      memcpy(dstRow, srcRow, stride);
+      swapRowRedBlue(dstRow);
+      memcpy(srcRow, tempRow.data(), stride);
+      swapRowRedBlue(srcRow);
+    }
+    if (size.y & 1) {
+      const auto midY = size.y / 2;  // size.y = 3 => midY = 1
+      const auto midRow = (range.begin() + (stride * midY)).get();
+      swapRowRedBlue(midRow);
+    }
+  }
+
+  gfxAlphaType srcAlphaType;
+  if (!options.alpha) {
+    srcAlphaType = gfxAlphaType::Opaque;
+  } else if (options.premultipliedAlpha) {
+    srcAlphaType = gfxAlphaType::Premult;
+  } else {
+    srcAlphaType = gfxAlphaType::NonPremult;
+  }
+
+  if (out_alphaType) {
+    *out_alphaType = srcAlphaType;
+  } else {
+    // Expects Opaque or Premult
+    if (srcAlphaType == gfxAlphaType::NonPremult) {
+      gfxUtils::PremultiplyDataSurface(surf, surf);
+    }
+  }
+
+  return surf.forget();
 }
 
 UniquePtr<uint8_t[]> ClientWebGLContext::GetImageBuffer(int32_t* out_format) {
