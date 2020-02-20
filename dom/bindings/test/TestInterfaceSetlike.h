@@ -34,7 +34,7 @@ class TestInterfaceSetlike final : public nsISupports, public nsWrapperCache {
       const GlobalObject& aGlobal, ErrorResult& rv);
 
  private:
-  virtual ~TestInterfaceSetlike() {}
+  virtual ~TestInterfaceSetlike() = default;
   nsCOMPtr<nsPIDOMWindowInner> mParent;
 };
 

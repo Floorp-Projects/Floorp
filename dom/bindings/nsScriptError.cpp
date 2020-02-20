@@ -46,7 +46,7 @@ nsScriptErrorBase::nsScriptErrorBase()
       mIsFromPrivateWindow(false),
       mIsFromChromeContext(false) {}
 
-nsScriptErrorBase::~nsScriptErrorBase() {}
+nsScriptErrorBase::~nsScriptErrorBase() = default;
 
 void nsScriptErrorBase::AddNote(nsIScriptErrorNote* note) {
   mNotes.AppendObject(note);
@@ -448,7 +448,7 @@ nsScriptErrorNote::nsScriptErrorNote()
       mLineNumber(0),
       mColumnNumber(0) {}
 
-nsScriptErrorNote::~nsScriptErrorNote() {}
+nsScriptErrorNote::~nsScriptErrorNote() = default;
 
 void nsScriptErrorNote::Init(const nsAString& message,
                              const nsAString& sourceName, uint32_t sourceId,
