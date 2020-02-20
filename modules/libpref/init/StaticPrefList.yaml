@@ -8130,6 +8130,21 @@
   value: false
   mirror: always
 
+- name: view_source.wrap_long_lines
+  type: bool
+  value: @IS_ANDROID@
+  mirror: always
+
+- name: view_source.syntax_highlight
+  type: bool
+  value: true
+  mirror: always
+
+- name: view_source.tab_size
+  type: int32_t
+  value: 4
+  mirror: always
+
 #---------------------------------------------------------------------------
 # Prefs starting with "webgl." (for pref access from Worker threads)
 #---------------------------------------------------------------------------
