@@ -1657,21 +1657,26 @@ void ContentParent::RemoveFromList() {
 
 void ContentParent::MarkAsDead() {
   RemoveFromList();
-  mLifecycleState = LifecycleState::DEAD;
+
 #ifdef MOZ_WIDGET_ANDROID
-  nsCOMPtr<nsIEventTarget> launcherThread(GetIPCLauncher());
-  MOZ_ASSERT(launcherThread);
+  if (mLifecycleState == LifecycleState::ALIVE) {
+    nsCOMPtr<nsIEventTarget> launcherThread(GetIPCLauncher());
+    MOZ_ASSERT(launcherThread);
 
-  auto procType = java::GeckoProcessType::CONTENT();
-  auto selector =
-      java::GeckoProcessManager::Selector::New(procType, OtherPid());
+    auto procType = java::GeckoProcessType::CONTENT();
+    auto selector =
+        java::GeckoProcessManager::Selector::New(procType, OtherPid());
 
-  launcherThread->Dispatch(NS_NewRunnableFunction(
-      "ContentParent::MarkAsDead",
-      [selector = java::GeckoProcessManager::Selector::GlobalRef(selector)]() {
-        java::GeckoProcessManager::MarkAsDead(selector);
-      }));
+    launcherThread->Dispatch(NS_NewRunnableFunction(
+        "ContentParent::MarkAsDead",
+        [selector =
+             java::GeckoProcessManager::Selector::GlobalRef(selector)]() {
+          java::GeckoProcessManager::MarkAsDead(selector);
+        }));
+  }
 #endif
+
+  mLifecycleState = LifecycleState::DEAD;
 }
 
 void ContentParent::OnChannelError() {
