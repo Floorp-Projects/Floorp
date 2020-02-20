@@ -48,12 +48,13 @@ class GitCommit:
 def load_git_repository():
     commit_map = dict()
     # First, scan the tags for "mozilla-xxx" that keep track of manually synchronized changes
-    sync_tags = downstream_git_repo.describe(
-        describe_strategy=pygit2.GIT_DESCRIBE_TAGS, pattern='mozilla-*')
-    for desc in sync_tags.splitlines():
-        commit = downstream_git_repo.lookup_reference('refs/tags/' + desc[:48]).peel()
+    sync_tags = filter(
+        lambda ref: ref.startswith('refs/tags/mozilla-'),
+        list(downstream_git_repo.references))
+    for desc in sync_tags:
+        commit = downstream_git_repo.lookup_reference(desc).peel()
         # cut out the revision hash from the output
-        hg_rev = desc[8:48]
+        hg_rev = desc[18:]
         commit_map[hg_rev] = GitCommit(hg_rev, commit)
         debugprint("Loaded pre-existing tag hg %s -> git %s" % (hg_rev, commit.oid))
     # Next, scan the commits for a specific message format
@@ -394,7 +395,7 @@ if not hg_commits[hg_tip].touches_sync_code and len(hg_commits[hg_tip].parents) 
 if DEBUG:
     for (rev, cset) in hg_commits.items():
         desc = "  %s" % rev
-        desc += " touches WR: %s" % cset.touches_wr_code
+        desc += " touches code to sync: %s" % cset.touches_sync_code
         desc += " parents: %s" % cset.parents
         if rev in hg_to_git_commit_map:
             desc += " git: %s" % hg_to_git_commit_map[rev].commit_obj.oid
