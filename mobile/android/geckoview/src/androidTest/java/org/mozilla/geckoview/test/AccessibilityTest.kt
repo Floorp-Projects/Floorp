@@ -304,6 +304,24 @@ class AccessibilityTest : BaseSessionTest() {
                 assertThat("Text node should match text", node.text as String, equalTo("world"))
             }
         })
+
+        mainSession.finder.find("sweet", 0)
+        sessionRule.waitUntilCalled(object : EventDelegate {
+            @AssertCalled(count = 1)
+            override fun onAccessibilityFocused(event: AccessibilityEvent) {
+                val node = createNodeInfo(getSourceId(event))
+                assertThat("Text node should match text", node.contentDescription as String, equalTo("sweet"))
+            }
+        })
+
+        mainSession.finder.find("Hell", 0)
+        sessionRule.waitUntilCalled(object : EventDelegate {
+            @AssertCalled(count = 1)
+            override fun onAccessibilityFocused(event: AccessibilityEvent) {
+                val node = createNodeInfo(getSourceId(event))
+                assertThat("Text node should match text", node.text as String, equalTo("Hello "))
+            }
+        })
     }
 
     private fun waitUntilTextSelectionChanged(fromIndex: Int, toIndex: Int) {
