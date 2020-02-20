@@ -800,7 +800,6 @@ class nsFrameSelection final {
                                    nsIContent* aContent2);
   // Might return null
   static nsIContent* GetParentTable(nsIContent* aCellNode);
-  nsresult CreateAndAddRange(nsINode* aContainer, int32_t aOffset);
 
   ////////////BEGIN nsFrameSelection members
 
