@@ -2,6 +2,8 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
     <item android:title="@string/tracking_protection" android:id="@+id/action_tp" app:showAsAction="never"
           android:checkable="true"/>
+    <item android:title="Allow Autoplay" android:id="@+id/allow_autoplay" app:showAsAction="never"
+        android:checkable="true" />
     <item android:title="@string/tracking_protection_ex" android:id="@+id/action_tpe" app:showAsAction="never" />
     <item android:title="@string/desktop_mode" android:id="@+id/desktop_mode" android:checkable="true"
           app:showAsAction="never" />

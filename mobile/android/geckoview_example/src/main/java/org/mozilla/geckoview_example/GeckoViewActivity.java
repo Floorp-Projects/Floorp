@@ -308,6 +308,7 @@ public class GeckoViewActivity
     private GeckoView mGeckoView;
     private boolean mFullAccessibilityTree;
     private boolean mUseTrackingProtection;
+    private boolean mAllowAutoplay;
     private boolean mUsePrivateBrowsing;
     private boolean mEnableRemoteDebugging;
     private boolean mKillProcessOnDestroy;
@@ -317,7 +318,6 @@ public class GeckoViewActivity
 
     private boolean mShowNotificationsRejected;
     private ArrayList<String> mAcceptedPersistentStorage = new ArrayList<String>();
-    private ArrayList<String> mAcceptedAutoplay = new ArrayList<>();
 
     private ToolbarLayout mToolbarView;
     private String mCurrentUri;
@@ -734,6 +734,7 @@ public class GeckoViewActivity
         menu.findItem(R.id.desktop_mode).setChecked(mDesktopMode);
         menu.findItem(R.id.action_remote_debugging).setChecked(mEnableRemoteDebugging);
         menu.findItem(R.id.action_forward).setEnabled(mCanGoForward);
+        menu.findItem(R.id.allow_autoplay).setChecked(mAllowAutoplay);
         return true;
     }
 
@@ -750,6 +751,10 @@ public class GeckoViewActivity
             case R.id.action_tp:
                 mUseTrackingProtection = !mUseTrackingProtection;
                 updateTrackingProtection(session);
+                session.reload();
+                break;
+            case R.id.allow_autoplay:
+                mAllowAutoplay = !mAllowAutoplay;
                 session.reload();
                 break;
             case R.id.action_tpe:
@@ -1314,8 +1319,13 @@ public class GeckoViewActivity
             } else if (PERMISSION_XR == type) {
                 resId = R.string.request_xr;
             } else if (PERMISSION_AUTOPLAY_AUDIBLE == type || PERMISSION_AUTOPLAY_INAUDIBLE == type) {
-                Log.d(LOGTAG, "Rejecting autoplay request");
-                callback.reject();
+                if (!mAllowAutoplay) {
+                    Log.d(LOGTAG, "Rejecting autoplay request");
+                    callback.reject();
+                } else {
+                    Log.d(LOGTAG, "Granting autoplay request");
+                    callback.grant();
+                }
                 return;
             } else {
                 Log.w(LOGTAG, "Unknown permission: " + type);

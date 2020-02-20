@@ -497,7 +497,6 @@ package org.mozilla.geckoview {
     method public boolean getAboutConfigEnabled();
     method @NonNull public String[] getArguments();
     method public boolean getAutomaticFontSizeAdjustment();
-    method public int getAutoplayDefault();
     method @Nullable public String getConfigFilePath();
     method public boolean getConsoleOutputEnabled();
     method @NonNull public ContentBlocking.Settings getContentBlocking();
@@ -524,7 +523,6 @@ package org.mozilla.geckoview {
     method public boolean getWebFontsEnabled();
     method @NonNull public GeckoRuntimeSettings setAboutConfigEnabled(boolean);
     method @NonNull public GeckoRuntimeSettings setAutomaticFontSizeAdjustment(boolean);
-    method @NonNull public GeckoRuntimeSettings setAutoplayDefault(int);
     method @NonNull public GeckoRuntimeSettings setConsoleOutputEnabled(boolean);
     method @NonNull public GeckoRuntimeSettings setDoubleTapZoomingEnabled(boolean);
     method @NonNull public GeckoRuntimeSettings setFontInflationEnabled(boolean);
@@ -537,8 +535,6 @@ package org.mozilla.geckoview {
     method @NonNull public GeckoRuntimeSettings setPreferredColorScheme(int);
     method @NonNull public GeckoRuntimeSettings setRemoteDebuggingEnabled(boolean);
     method @NonNull public GeckoRuntimeSettings setWebFontsEnabled(boolean);
-    field public static final int AUTOPLAY_DEFAULT_ALLOWED = 0;
-    field public static final int AUTOPLAY_DEFAULT_BLOCKED = 1;
     field public static final int COLOR_SCHEME_DARK = 1;
     field public static final int COLOR_SCHEME_LIGHT = 0;
     field public static final int COLOR_SCHEME_SYSTEM = -1;
@@ -550,7 +546,6 @@ package org.mozilla.geckoview {
     method @NonNull public GeckoRuntimeSettings.Builder aboutConfigEnabled(boolean);
     method @NonNull public GeckoRuntimeSettings.Builder arguments(@NonNull String[]);
     method @NonNull public GeckoRuntimeSettings.Builder automaticFontSizeAdjustment(boolean);
-    method @NonNull public GeckoRuntimeSettings.Builder autoplayDefault(int);
     method @NonNull public GeckoRuntimeSettings.Builder configFilePath(@Nullable String);
     method @NonNull public GeckoRuntimeSettings.Builder consoleOutput(boolean);
     method @NonNull public GeckoRuntimeSettings.Builder contentBlocking(@NonNull ContentBlocking.Settings);
