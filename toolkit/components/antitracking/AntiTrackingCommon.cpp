@@ -10,6 +10,7 @@
 #include "mozilla/dom/CanonicalBrowsingContext.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/WindowGlobalParent.h"
+#include "mozilla/net/UrlClassifierCommon.h"
 #include "mozilla/ipc/MessageChannel.h"
 #include "mozilla/AbstractThread.h"
 #include "mozilla/HashFunctions.h"
@@ -2450,7 +2451,14 @@ void AntiTrackingCommon::RedirectHeuristic(nsIChannel* aOldChannel,
 
   bool allowedByPreviousRedirect =
       oldLoadInfo->GetAllowListFutureDocumentsCreatedFromThisRedirectChain();
-  if (classifiedNewChannel->IsTrackingResource()) {
+
+  // We're looking at the first-party classification flags because we're
+  // interested in first-party redirects.
+  uint32_t newClassificationFlags =
+      classifiedNewChannel->GetFirstPartyClassificationFlags();
+
+  if (net::UrlClassifierCommon::IsTrackingClassificationFlag(
+          newClassificationFlags)) {
     // This is not a tracking -> non-tracking redirect.
     LOG_SPEC2(("Redirect for %s to %s because it's not tracking to "
                "non-tracking. Part of a chain of granted redirects: %d",
@@ -2461,7 +2469,11 @@ void AntiTrackingCommon::RedirectHeuristic(nsIChannel* aOldChannel,
     return;
   }
 
-  if (!classifiedOldChannel->IsTrackingResource() &&
+  uint32_t oldClassificationFlags =
+      classifiedOldChannel->GetFirstPartyClassificationFlags();
+
+  if (!net::UrlClassifierCommon::IsTrackingClassificationFlag(
+          oldClassificationFlags) &&
       !allowedByPreviousRedirect) {
     // This is not a tracking -> non-tracking redirect.
     LOG_SPEC2(
