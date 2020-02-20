@@ -31,8 +31,10 @@ add_task(async function() {
     }
   };
 
-  // Add a pattern which should block one of the requests
+  // Add patterns which should block some of the requests
   type("test1");
+  EventUtils.synthesizeKey("KEY_Enter");
+  type("test/*/test3");
   EventUtils.synthesizeKey("KEY_Enter");
 
   // Close the blocking panel to ensure it's opened by the context menu later
@@ -41,21 +43,29 @@ add_task(async function() {
   // Execute two XHRs (the same URL) and wait till they're finished
   const TEST_URL_1 = SEARCH_SJS + "?value=test1";
   const TEST_URL_2 = SEARCH_SJS + "?value=test2";
+  const TEST_URL_3 = SEARCH_SJS + "test/something/test3";
+  const TEST_URL_4 = SEARCH_SJS + "test/something/test4";
 
-  let wait = waitForNetworkEvents(monitor, 2);
+  let wait = waitForNetworkEvents(monitor, 4);
   await ContentTask.spawn(tab.linkedBrowser, TEST_URL_1, async function(url) {
     content.wrappedJSObject.performRequests(1, url);
   });
   await ContentTask.spawn(tab.linkedBrowser, TEST_URL_2, async function(url) {
     content.wrappedJSObject.performRequests(1, url);
   });
+  await ContentTask.spawn(tab.linkedBrowser, TEST_URL_3, async function(url) {
+    content.wrappedJSObject.performRequests(1, url);
+  });
+  await ContentTask.spawn(tab.linkedBrowser, TEST_URL_4, async function(url) {
+    content.wrappedJSObject.performRequests(1, url);
+  });
   await wait;
 
-  // Wait till there are two resources rendered in the results
-  await waitForDOMIfNeeded(document, ".request-list-item", 2);
+  // Wait till there are four resources rendered in the results
+  await waitForDOMIfNeeded(document, ".request-list-item", 4);
 
-  // Ensure that test1 item was blocked and test2 item wasn't
   let requestItems = document.querySelectorAll(".request-list-item");
+  // Ensure that test1 item was blocked and test2 item wasn't
   ok(
     checkRequestListItemBlocked(requestItems[0]),
     "The first request was blocked"
@@ -63,6 +73,15 @@ add_task(async function() {
   ok(
     !checkRequestListItemBlocked(requestItems[1]),
     "The second request was not blocked"
+  );
+  // Ensure that test3 item was blocked and test4 item wasn't
+  ok(
+    checkRequestListItemBlocked(requestItems[2]),
+    "The third request was blocked"
+  );
+  ok(
+    !checkRequestListItemBlocked(requestItems[3]),
+    "The fourth request was not blocked"
   );
 
   EventUtils.sendMouseEvent({ type: "mousedown" }, requestItems[0]);
@@ -83,11 +102,11 @@ add_task(async function() {
   });
   await wait;
 
-  await waitForDOMIfNeeded(document, ".request-list-item", 3);
+  await waitForDOMIfNeeded(document, ".request-list-item", 5);
   requestItems = document.querySelectorAll(".request-list-item");
   ok(
-    !checkRequestListItemBlocked(requestItems[2]),
-    "The third request was not blocked"
+    !checkRequestListItemBlocked(requestItems[4]),
+    "The fifth request was not blocked"
   );
 
   await teardown(monitor);
