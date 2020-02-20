@@ -275,13 +275,6 @@ class TextControlState final : public SupportsWeakPtr<TextControlState> {
   void GetPreviewText(nsAString& aValue);
   bool GetPreviewVisibility() { return mPreviewVisibility; }
 
-  /**
-   * Get the maxlength attribute
-   * @param aMaxLength the value of the max length attr
-   * @returns false if attr not defined
-   */
-  int32_t GetMaxLength();
-
   void HideSelectionIfBlurred();
 
   struct SelectionProperties {
