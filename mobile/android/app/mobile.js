@@ -350,10 +350,6 @@ pref("devtools.remote.wifi.enabled", false);
 // don't forget to change the all.js accordingly.
 pref("devtools.performance.recording.features", "[\"js\",\"leaf\",\"stackwalk\",\"java\"]");
 
-// With the typical screen sizes on mobile devices, we want to wrap page sources by default.
-pref("view_source.wrap_long_lines", true);
-
-
 pref("ui.touch.radius.enabled", false);
 pref("ui.touch.radius.leftmm", 3);
 pref("ui.touch.radius.topmm", 5);
