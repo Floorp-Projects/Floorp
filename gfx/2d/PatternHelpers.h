@@ -52,6 +52,10 @@ class GeneralPattern final {
         mPattern = new (mRadialGradientPattern.addr()) RadialGradientPattern(
             static_cast<const RadialGradientPattern&>(aPattern));
         break;
+      case PatternType::CONIC_GRADIENT:
+        mPattern = new (mConicGradientPattern.addr()) ConicGradientPattern(
+            static_cast<const ConicGradientPattern&>(aPattern));
+        break;
       case PatternType::SURFACE:
         mPattern = new (mSurfacePattern.addr())
             SurfacePattern(static_cast<const SurfacePattern&>(aPattern));
@@ -86,6 +90,15 @@ class GeneralPattern final {
     return mRadialGradientPattern.addr();
   }
 
+  ConicGradientPattern* InitConicGradientPattern(
+      const Point& aCenter, Float aAngle, GradientStops* aStops,
+      const Matrix& aMatrix = Matrix()) {
+    MOZ_ASSERT(!mPattern);
+    mPattern = new (mConicGradientPattern.addr())
+        ConicGradientPattern(aCenter, aAngle, aStops, aMatrix);
+    return mConicGradientPattern.addr();
+  }
+
   SurfacePattern* InitSurfacePattern(
       SourceSurface* aSourceSurface, ExtendMode aExtendMode,
       const Matrix& aMatrix = Matrix(),
@@ -113,6 +126,7 @@ class GeneralPattern final {
     AlignedStorage2<ColorPattern> mColorPattern;
     AlignedStorage2<LinearGradientPattern> mLinearGradientPattern;
     AlignedStorage2<RadialGradientPattern> mRadialGradientPattern;
+    AlignedStorage2<ConicGradientPattern> mConicGradientPattern;
     AlignedStorage2<SurfacePattern> mSurfacePattern;
   };
   Pattern* mPattern = nullptr;
