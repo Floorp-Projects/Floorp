@@ -26,24 +26,15 @@ Services.prefs.clearUserPref("browser.sessionstore.restore_on_demand");
 
 function clickButton(browser, id) {
   info("Clicking " + id);
-
-  let frame_script = buttonId => {
+  return SpecialPowers.spawn(browser, [id], buttonId => {
     let button = content.document.getElementById(buttonId);
     button.click();
-  };
-
-  let mm = browser.messageManager;
-  mm.loadFrameScript(
-    "data:,(" + frame_script.toString() + ")('" + id + "');",
-    false
-  );
+  });
 }
 
 /**
  * Checks the documentURI of the root document of a remote browser
- * to see if it equals URI. Returns a Promise that resolves if
- * there is a match, and rejects with an error message if they
- * do not match.
+ * to see if it equals URI.
  *
  * @param browser
  *        The remote <xul:browser> to check the root document URI in.
@@ -51,34 +42,20 @@ function clickButton(browser, id) {
  *        A string to match the root document URI against.
  * @return Promise
  */
-function promiseContentDocumentURIEquals(browser, URI) {
-  return new Promise((resolve, reject) => {
-    let frame_script = () => {
-      sendAsyncMessage("test:documenturi", {
-        uri: content.document.documentURI,
-      });
-    };
-
-    let mm = browser.messageManager;
-    mm.addMessageListener("test:documenturi", function onMessage(message) {
-      mm.removeMessageListener("test:documenturi", onMessage);
-      let contentURI = message.data.uri;
-      if (contentURI == URI) {
-        resolve();
-      } else {
-        reject(`Content has URI ${contentURI} which does not match ${URI}`);
-      }
-    });
-
-    mm.loadFrameScript("data:,(" + frame_script.toString() + ")();", false);
+async function promiseContentDocumentURIEquals(browser, URI) {
+  let contentURI = await SpecialPowers.spawn(browser, [], () => {
+    return content.document.documentURI;
   });
+  is(
+    contentURI,
+    URI,
+    `Content has URI ${contentURI} which does not match ${URI}`
+  );
 }
 
 /**
  * Checks the window.history.length of the root window of a remote
- * browser to see if it equals length. Returns a Promise that resolves
- * if there is a match, and rejects with an error message if they
- * do not match.
+ * browser to see if it equals length.
  *
  * @param browser
  *        The remote <xul:browser> to check the root window.history.length
@@ -86,30 +63,16 @@ function promiseContentDocumentURIEquals(browser, URI) {
  *        The expected history length
  * @return Promise
  */
-function promiseHistoryLength(browser, length) {
-  return new Promise((resolve, reject) => {
-    let frame_script = () => {
-      sendAsyncMessage("test:historylength", {
-        length: content.history.length,
-      });
-    };
-
-    let mm = browser.messageManager;
-    mm.addMessageListener("test:historylength", function onMessage(message) {
-      mm.removeMessageListener("test:historylength", onMessage);
-      let contentLength = message.data.length;
-      if (contentLength == length) {
-        resolve();
-      } else {
-        reject(
-          `Content has window.history.length ${contentLength} which does ` +
-            `not equal expected ${length}`
-        );
-      }
-    });
-
-    mm.loadFrameScript("data:,(" + frame_script.toString() + ")();", false);
+async function promiseHistoryLength(browser, length) {
+  let contentLength = await SpecialPowers.spawn(browser, [], () => {
+    return content.history.length;
   });
+  is(
+    contentLength,
+    length,
+    `Content has window.history.length ${contentLength} which does ` +
+      `not equal expected ${length}`
+  );
 }
 
 /**
@@ -298,8 +261,9 @@ add_task(async function test_revive_tab_from_session_store() {
   ok(newTab2.hasAttribute("pending"), "Second tab should be pending.");
 
   // Use SessionStore to revive the first tab
-  clickButton(browser, "restoreTab");
-  await promiseTabRestored(newTab);
+  let tabRestoredPromise = promiseTabRestored(newTab);
+  await clickButton(browser, "restoreTab");
+  await tabRestoredPromise;
   ok(
     !newTab.hasAttribute("crashed"),
     "Tab shouldn't be marked as crashed anymore."
@@ -365,8 +329,13 @@ add_task(async function test_revive_all_tabs_from_session_store() {
   );
 
   // Use SessionStore to revive all the tabs
-  clickButton(browser, "restoreAll");
-  await promiseTabRestored(newTab);
+  let tabRestoredPromises = Promise.all([
+    promiseTabRestored(newTab),
+    promiseTabRestored(newTab2),
+  ]);
+  await clickButton(browser, "restoreAll");
+  await tabRestoredPromises;
+
   ok(
     !newTab.hasAttribute("crashed"),
     "Tab shouldn't be marked as crashed anymore."
@@ -416,7 +385,7 @@ add_task(async function test_close_tab_after_crash() {
   );
 
   // Click the close tab button
-  clickButton(browser, "closeTab");
+  await clickButton(browser, "closeTab");
   await promise;
 
   is(gBrowser.tabs.length, 1, "Should have closed the tab");
@@ -520,8 +489,9 @@ add_task(async function test_aboutcrashedtabzoom() {
     "zoom should have reset on crash"
   );
 
-  clickButton(browser, "restoreTab");
-  await promiseTabRestored(newTab);
+  let tabRestoredPromise = promiseTabRestored(newTab);
+  await clickButton(browser, "restoreTab");
+  await tabRestoredPromise;
 
   ok(
     ZoomManager.getZoomForBrowser(browser) === zoomLevel,
