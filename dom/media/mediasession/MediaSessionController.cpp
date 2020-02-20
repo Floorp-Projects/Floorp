@@ -17,6 +17,12 @@ mozilla::LazyLogModule gMediaSession("MediaSession");
 namespace mozilla {
 namespace dom {
 
+MediaSessionController::MediaSessionController(uint64_t aContextId)
+    : mTopLevelBCId(aContextId) {
+  MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess(),
+                        "MediaSessionController only runs on Chrome process!");
+}
+
 void MediaSessionController::NotifySessionCreated(uint64_t aSessionContextId) {
   if (mMetadataMap.Contains(aSessionContextId)) {
     return;

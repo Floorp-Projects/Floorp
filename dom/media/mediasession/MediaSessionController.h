@@ -36,6 +36,8 @@ class MediaSessionController {
  public:
   NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
 
+  explicit MediaSessionController(uint64_t aContextId);
+
   // Use these functions to ensure that we can track all existing media session
   // in the same tab when media session is created or destroyed in the content
   // process.
@@ -50,6 +52,7 @@ class MediaSessionController {
   // it has already set its metadata. Otherwise, return default media metadata
   // which is based on website's title and favicon.
   MediaMetadataBase GetCurrentMediaMetadata() const;
+  uint64_t Id() const { return mTopLevelBCId; }
 
  protected:
   ~MediaSessionController() = default;
@@ -57,6 +60,7 @@ class MediaSessionController {
   MediaMetadataBase CreateDefaultMetadata() const;
   void UpdateActiveMediaSessionContextId();
 
+  uint64_t mTopLevelBCId;
   Maybe<uint64_t> mActiveMediaSessionContextId;
   nsDataHashtable<nsUint64HashKey, Maybe<MediaMetadataBase>> mMetadataMap;
 };

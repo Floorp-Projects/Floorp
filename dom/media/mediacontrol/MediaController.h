@@ -71,7 +71,6 @@ class MediaController final : public MediaSessionController {
   // then calling any its method won't take any effect.
   void Shutdown();
 
-  uint64_t Id() const;
   bool IsAudible() const;
   uint64_t ControlledMediaNum() const;
   PlaybackState GetState() const;
@@ -100,7 +99,6 @@ class MediaController final : public MediaSessionController {
 
   void SetPlayState(PlaybackState aState);
 
-  uint64_t mBrowsingContextId;
   bool mAudible = false;
   bool mIsRegisteredToService = false;
   int64_t mControlledMediaNum = 0;
