@@ -14,7 +14,7 @@ NS_IMPL_ISUPPORTS(MLSFallback, nsITimerCallback, nsINamed)
 
 MLSFallback::MLSFallback(uint32_t delay) : mDelayMs(delay) {}
 
-MLSFallback::~MLSFallback() {}
+MLSFallback::~MLSFallback() = default;
 
 nsresult MLSFallback::Startup(nsIGeolocationUpdate* aWatcher) {
   if (mHandoffTimer || mMLSFallbackProvider) {

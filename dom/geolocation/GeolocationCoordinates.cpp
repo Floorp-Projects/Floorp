@@ -24,7 +24,7 @@ GeolocationCoordinates::GeolocationCoordinates(GeolocationPosition* aPosition,
                                                nsIDOMGeoPositionCoords* aCoords)
     : mPosition(aPosition), mCoords(aCoords) {}
 
-GeolocationCoordinates::~GeolocationCoordinates() {}
+GeolocationCoordinates::~GeolocationCoordinates() = default;
 
 GeolocationPosition* GeolocationCoordinates::GetParentObject() const {
   return mPosition;
