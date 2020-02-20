@@ -1043,11 +1043,11 @@ BrowserChild::~BrowserChild() {
   mozilla::DropJSObjects(this);
 }
 
-mozilla::ipc::IPCResult BrowserChild::RecvWillChangeProcess(
-    WillChangeProcessResolver&& aResolve) {
+mozilla::ipc::IPCResult BrowserChild::RecvSkipBrowsingContextDetach(
+    SkipBrowsingContextDetachResolver&& aResolve) {
   if (nsCOMPtr<nsIDocShell> docShell = do_GetInterface(WebNavigation())) {
     RefPtr<nsDocShell> docshell = nsDocShell::Cast(docShell);
-    docshell->SetWillChangeProcess();
+    docshell->SkipBrowsingContextDetach();
   }
   aResolve(true);
   return IPC_OK();

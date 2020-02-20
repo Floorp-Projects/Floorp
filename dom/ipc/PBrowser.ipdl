@@ -1016,7 +1016,7 @@ child:
      */
     async SetWidgetNativeData(WindowsHandle aHandle);
 
-    async WillChangeProcess() returns (bool success);
+    async SkipBrowsingContextDetach() returns (bool success);
 
 parent:
     /**

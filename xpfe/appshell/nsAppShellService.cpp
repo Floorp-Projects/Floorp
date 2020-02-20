@@ -321,25 +321,11 @@ class BrowserDestroyer final : public Runnable {
         mBrowser(aBrowser),
         mContainer(aContainer) {}
 
-  static nsresult Destroy(nsIWebBrowser* aBrowser) {
-    RefPtr<BrowsingContext> bc;
-    if (nsCOMPtr<nsIDocShell> docShell = do_GetInterface(aBrowser)) {
-      bc = docShell->GetBrowsingContext();
-    }
-
-    nsCOMPtr<nsIBaseWindow> window(do_QueryInterface(aBrowser));
-    nsresult rv = window->Destroy();
-    MOZ_ASSERT(bc);
-    if (bc) {
-      bc->Detach();
-    }
-    return rv;
-  }
-
   NS_IMETHOD
   Run() override {
     // Explicitly destroy the browser, in case this isn't the last reference.
-    return Destroy(mBrowser);
+    nsCOMPtr<nsIBaseWindow> window = do_QueryInterface(mBrowser);
+    return window->Destroy();
   }
 
  protected:
@@ -368,8 +354,8 @@ class WindowlessBrowser final : public nsIWindowlessBrowser,
   NS_FORWARD_SAFE_NSIWEBNAVIGATION(mWebNavigation)
   NS_FORWARD_SAFE_NSIINTERFACEREQUESTOR(mInterfaceRequestor)
 
- private:
-  ~WindowlessBrowser() {
+ protected:
+  virtual ~WindowlessBrowser() {
     if (mClosed) {
       return;
     }
@@ -380,10 +366,11 @@ class WindowlessBrowser final : public nsIWindowlessBrowser,
     // when it's safe to run scripts. If this was triggered by GC, it may
     // not always be safe to run scripts, in which cases we need to delay
     // destruction until it is.
-    auto runnable = MakeRefPtr<BrowserDestroyer>(mBrowser, mContainer);
-    nsContentUtils::AddScriptRunner(runnable.forget());
+    nsCOMPtr<nsIRunnable> runnable = new BrowserDestroyer(mBrowser, mContainer);
+    nsContentUtils::AddScriptRunner(runnable);
   }
 
+ private:
   nsCOMPtr<nsIWebBrowser> mBrowser;
   nsCOMPtr<nsIWebNavigation> mWebNavigation;
   nsCOMPtr<nsIInterfaceRequestor> mInterfaceRequestor;
@@ -406,7 +393,9 @@ WindowlessBrowser::Close() {
 
   mWebNavigation = nullptr;
   mInterfaceRequestor = nullptr;
-  return BrowserDestroyer::Destroy(mBrowser);
+
+  nsCOMPtr<nsIBaseWindow> window = do_QueryInterface(mBrowser);
+  return window->Destroy();
 }
 
 NS_IMETHODIMP
@@ -450,10 +439,10 @@ nsAppShellService::CreateWindowlessBrowser(bool aIsChrome,
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Create a BrowsingContext for our windowless browser.
-  RefPtr<BrowsingContext> browsingContext = BrowsingContext::CreateWindowless(
-      nullptr, nullptr, EmptyString(),
-      aIsChrome ? BrowsingContext::Type::Chrome
-                : BrowsingContext::Type::Content);
+  RefPtr<BrowsingContext> browsingContext =
+      BrowsingContext::Create(nullptr, nullptr, EmptyString(),
+                              aIsChrome ? BrowsingContext::Type::Chrome
+                                        : BrowsingContext::Type::Content);
 
   /* Next, we create an instance of nsWebBrowser. Instances of this class have
    * an associated doc shell, which is what we're interested in.

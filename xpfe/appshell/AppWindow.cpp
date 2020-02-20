@@ -692,10 +692,8 @@ NS_IMETHODIMP AppWindow::Destroy() {
 
   mDOMWindow = nullptr;
   if (mDocShell) {
-    RefPtr<BrowsingContext> bc(mDocShell->GetBrowsingContext());
     nsCOMPtr<nsIBaseWindow> shellAsWin(do_QueryInterface(mDocShell));
     shellAsWin->Destroy();
-    bc->Detach();
     mDocShell = nullptr;  // this can cause reentrancy of this function
   }
 
