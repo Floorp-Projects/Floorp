@@ -6,53 +6,19 @@
 // error.
 SimpleTest.ignoreAllUncaughtExceptions(true);
 
-/* eslint-disable mozilla/no-arbitrary-setTimeout */
-function frameScript() {
-  addMessageListener("Test:RequestFullscreen", () => {
-    content.document.body.requestFullscreen();
-  });
-  content.document.addEventListener("fullscreenchange", () => {
-    sendAsyncMessage(
-      "Test:FullscreenChanged",
-      !!content.document.fullscreenElement
-    );
-  });
-  addMessageListener("Test:QueryFullscreenState", () => {
-    sendAsyncMessage(
-      "Test:FullscreenState",
-      !!content.document.fullscreenElement
-    );
-  });
-  function waitUntilActive() {
-    if (docShell.isActive && content.document.hasFocus()) {
-      sendAsyncMessage("Test:Activated");
-    } else {
-      setTimeout(waitUntilActive, 10);
-    }
-  }
-  waitUntilActive();
-}
-/* eslint-enable mozilla/no-arbitrary-setTimeout */
-
-var gMessageManager;
-
-function listenOneMessage(aMsg, aListener) {
-  function listener({ data }) {
-    gMessageManager.removeMessageListener(aMsg, listener);
-    aListener(data);
-  }
-  gMessageManager.addMessageListener(aMsg, listener);
-}
-
-function promiseOneMessage(aMsg) {
-  return new Promise(resolve => listenOneMessage(aMsg, resolve));
-}
-
 function captureUnexpectedFullscreenChange() {
   ok(false, "Caught an unexpected fullscreen change");
 }
 
 const kPage = "http://example.org/browser/dom/html/test/dummy_page.html";
+
+function waitForDocActivated(aBrowser) {
+  return SpecialPowers.spawn(aBrowser, [], () => {
+    return ContentTaskUtils.waitForCondition(
+      () => docShell.isActive && content.document.hasFocus()
+    );
+  });
+}
 
 add_task(async function() {
   await pushPrefs(
@@ -60,39 +26,53 @@ add_task(async function() {
     ["full-screen-api.transition-duration.leave", "0 0"]
   );
 
-  let tab = BrowserTestUtils.addTab(gBrowser, kPage);
-  registerCleanupFunction(() => gBrowser.removeTab(tab));
+  let tab = await BrowserTestUtils.openNewForegroundTab({
+    gBrowser,
+    opening: kPage,
+    waitForStateStop: true,
+  });
   let browser = tab.linkedBrowser;
-  gBrowser.selectedTab = tab;
-  await waitForDocLoadComplete();
 
-  gMessageManager = browser.messageManager;
-  gMessageManager.loadFrameScript(
-    "data:,(" + frameScript.toString() + ")();",
-    false
-  );
-
-  // Wait for the document being activated, so that
-  // fullscreen request won't be denied.
-  await promiseOneMessage("Test:Activated");
+  // As requestFullscreen checks the active state of the docshell,
+  // wait for the document to be activated, just to be sure that
+  // the fullscreen request won't be denied.
+  await SpecialPowers.spawn(browser, [], () => {
+    return ContentTaskUtils.waitForCondition(
+      () => docShell.isActive && content.document.hasFocus()
+    );
+  });
 
   let contextMenu = document.getElementById("contentAreaContextMenu");
   ok(contextMenu, "Got context menu");
 
   let state;
   info("Enter DOM fullscreen");
-  gMessageManager.sendAsyncMessage("Test:RequestFullscreen");
-  state = await promiseOneMessage("Test:FullscreenChanged");
+  let fullScreenChangedPromise = BrowserTestUtils.waitForContentEvent(
+    browser,
+    "fullscreenchange"
+  );
+  await SpecialPowers.spawn(browser, [], () => {
+    content.document.body.requestFullscreen();
+  });
+
+  await fullScreenChangedPromise;
+  state = await SpecialPowers.spawn(browser, [], () => {
+    return !!content.document.fullscreenElement;
+  });
   ok(state, "The content should have entered fullscreen");
   ok(document.fullscreenElement, "The chrome should also be in fullscreen");
-  gMessageManager.addMessageListener(
-    "Test:FullscreenChanged",
+
+  let removeContentEventListener = BrowserTestUtils.addContentEventListener(
+    browser,
+    "fullscreenchange",
     captureUnexpectedFullscreenChange
   );
 
   info("Open context menu");
   is(contextMenu.state, "closed", "Should not have opened context menu");
+
   let popupShownPromise = promiseWaitForEvent(window, "popupshown");
+
   EventUtils.synthesizeMouse(
     browser,
     screen.width / 2,
@@ -113,19 +93,22 @@ add_task(async function() {
   // does not exit fullscreen.
   // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
   await new Promise(resolve => setTimeout(resolve, 1000));
-  gMessageManager.sendAsyncMessage("Test:QueryFullscreenState");
-  state = await promiseOneMessage("Test:FullscreenState");
+  state = await SpecialPowers.spawn(browser, [], () => {
+    return !!content.document.fullscreenElement;
+  });
   ok(state, "The content should still be in fullscreen");
   ok(document.fullscreenElement, "The chrome should still be in fullscreen");
 
+  removeContentEventListener();
   info("Send the second escape");
-  gMessageManager.removeMessageListener(
-    "Test:FullscreenChanged",
-    captureUnexpectedFullscreenChange
+  let fullscreenExitPromise = BrowserTestUtils.waitForContentEvent(
+    browser,
+    "fullscreenchange"
   );
-  let fullscreenExitPromise = promiseOneMessage("Test:FullscreenChanged");
   EventUtils.synthesizeKey("KEY_Escape");
   state = await fullscreenExitPromise;
   ok(!state, "The content should have exited fullscreen");
   ok(!document.fullscreenElement, "The chrome should have exited fullscreen");
+
+  gBrowser.removeTab(tab);
 });
