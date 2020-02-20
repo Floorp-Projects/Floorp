@@ -104,14 +104,6 @@ struct IPDLParamTraits<dom::MaybeDiscarded<dom::WindowContext>> {
 };
 
 template <>
-struct IPDLParamTraits<dom::WindowContext*> {
-  static void Write(IPC::Message* aMsg, IProtocol* aActor,
-                    dom::WindowContext* aParam);
-  static bool Read(const IPC::Message* aMsg, PickleIterator* aIter,
-                   IProtocol* aActor, RefPtr<dom::WindowContext>* aResult);
-};
-
-template <>
 struct IPDLParamTraits<dom::WindowContext::IPCInitializer> {
   static void Write(IPC::Message* aMessage, IProtocol* aActor,
                     const dom::WindowContext::IPCInitializer& aInitializer);

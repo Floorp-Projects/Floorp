@@ -198,58 +198,6 @@ bool IPDLParamTraits<dom::MaybeDiscarded<dom::WindowContext>>::Read(
   return true;
 }
 
-void IPDLParamTraits<dom::WindowContext*>::Write(IPC::Message* aMsg,
-                                                 IProtocol* aActor,
-                                                 dom::WindowContext* aParam) {
-  uint64_t id = aParam ? aParam->InnerWindowId() : 0;
-  WriteIPDLParam(aMsg, aActor, id);
-  if (!aParam) {
-    return;
-  }
-
-  // Make sure that the other side will still have our WindowContext around when
-  // it tries to perform deserialization. See `BrowsingContext`'s impl for
-  // justifications.
-  if (aActor->GetIPCChannel()->IsCrossProcess()) {
-    MOZ_RELEASE_ASSERT(
-        !aParam->IsDiscarded(),
-        "Cannot send discarded WindowContext between processes!");
-  } else {
-    aParam->AddRef();
-  }
-}
-
-bool IPDLParamTraits<dom::WindowContext*>::Read(
-    const IPC::Message* aMsg, PickleIterator* aIter, IProtocol* aActor,
-    RefPtr<dom::WindowContext>* aResult) {
-  uint64_t id = 0;
-  if (!ReadIPDLParam(aMsg, aIter, aActor, &id)) {
-    return false;
-  }
-
-  if (id == 0) {
-    *aResult = nullptr;
-    return true;
-  }
-
-  RefPtr<dom::WindowContext> windowContext = dom::WindowContext::GetById(id);
-  if (!windowContext) {
-#ifndef FUZZING
-    MOZ_CRASH("Attempt to deserialize absent WindowContext");
-#endif
-    *aResult = nullptr;
-    return false;
-  }
-
-  if (!aActor->GetIPCChannel()->IsCrossProcess()) {
-    // Release the reference taken in `::Write()` for in-process actors.
-    windowContext.get()->Release();
-  }
-
-  *aResult = std::move(windowContext);
-  return true;
-}
-
 void IPDLParamTraits<dom::WindowContext::IPCInitializer>::Write(
     IPC::Message* aMessage, IProtocol* aActor,
     const dom::WindowContext::IPCInitializer& aInit) {
