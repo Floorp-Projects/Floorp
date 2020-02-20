@@ -12,7 +12,7 @@
 const TEST_URL = "data:text/html,<html><body></body></html>";
 
 this.test = makeMemoryTest(TEST_URL, async function({ tab, panel }) {
-  const memoryFront = panel.panelWin.gFront;
+  const memoryFront = panel.panelWin.gStore.getState().front;
   ok(memoryFront, "Should get the MemoryFront");
 
   const snapshotFilePath = await memoryFront.saveHeapSnapshot({
