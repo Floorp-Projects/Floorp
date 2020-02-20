@@ -178,7 +178,7 @@ linux64-qr/debug:
 linux64-ccov/opt:
     build-platform: linux64-ccov/opt
     test-sets:
-        - common-tests
+        - linux-common-tests
         - web-platform-tests-1604
         - talos
 
