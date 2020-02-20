@@ -92,6 +92,11 @@ class TextControlElement : public nsGenericHTMLFormElementWithState {
   virtual bool ValueChanged() const = 0;
 
   /**
+   * Returns the used maxlength attribute value.
+   */
+  virtual int32_t UsedMaxLength() const = 0;
+
+  /**
    * Get the current value of the text editor.
    *
    * @param aValue the buffer to retrieve the value in

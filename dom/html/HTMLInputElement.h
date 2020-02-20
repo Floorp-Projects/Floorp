@@ -532,6 +532,13 @@ class HTMLInputElement final : public TextControlElement,
 
   int32_t MaxLength() const { return GetIntAttr(nsGkAtoms::maxlength, -1); }
 
+  int32_t UsedMaxLength() const final {
+    if (mType == NS_FORM_INPUT_NUMBER) {
+      return -1;
+    }
+    return MaxLength();
+  }
+
   void SetMaxLength(int32_t aValue, ErrorResult& aRv) {
     int32_t minLength = MinLength();
     if (aValue < 0 || (minLength >= 0 && aValue < minLength)) {
@@ -1489,7 +1496,7 @@ class HTMLInputElement final : public TextControlElement,
   /*
    * InputType object created based on input type.
    */
-  UniquePtr<InputType, DoNotDelete> mInputType;
+  UniquePtr<::InputType, DoNotDelete> mInputType;
 
   // Memory allocated for mInputType, reused when type changes.
   char mInputTypeMem[INPUT_TYPE_SIZE];

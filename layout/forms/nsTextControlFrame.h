@@ -286,13 +286,6 @@ class nsTextControlFrame : public nsContainerFrame,
                               const nsAString* aValue = nullptr);
 
   /**
-   * Get the maxlength attribute
-   * @param aMaxLength the value of the max length attr
-   * @returns false if attr not defined
-   */
-  bool GetMaxLength(int32_t* aMaxLength);
-
-  /**
    * Find out whether an attribute exists on the content or not.
    * @param aAtt the attribute to determine the existence of
    * @returns false if it does not exist
