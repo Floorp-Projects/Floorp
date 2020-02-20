@@ -14,6 +14,8 @@ import android.widget.ImageView
 import androidx.annotation.ColorInt
 import androidx.annotation.VisibleForTesting
 import androidx.annotation.VisibleForTesting.PRIVATE
+import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.constraintlayout.widget.ConstraintSet
 import androidx.core.content.ContextCompat
 import androidx.core.view.inputmethod.EditorInfoCompat
 import androidx.core.view.isVisible
@@ -104,6 +106,9 @@ class EditToolbar internal constructor(
             setOnTextChangeListener { text, _ ->
                 onTextChanged(text)
             }
+
+            setUrlGoneMargin(ConstraintSet.END,
+                    context.resources.getDimensionPixelSize(R.dimen.mozac_browser_toolbar_url_gone_margin_end))
 
             setOnDispatchKeyEventPreImeListener { event ->
                 if (event?.keyCode == KeyEvent.KEYCODE_BACK && editListener?.onCancelEditing() != false) {
@@ -251,8 +256,28 @@ class EditToolbar internal constructor(
         views.url.setText("")
     }
 
+    private fun setUrlGoneMargin(anchor: Int, dimen: Int) {
+        val set = ConstraintSet()
+        val container = rootView.findViewById<ConstraintLayout>(
+                R.id.mozac_browser_toolbar_container)
+        set.clone(container)
+        set.setGoneMargin(R.id.mozac_browser_toolbar_edit_url_view, anchor, dimen)
+        set.applyTo(container)
+    }
+
     private fun onTextChanged(text: String) {
         views.clear.isVisible = text.isNotBlank()
+        /*
+        We use margin_gone instead of margin to take into account both the actionContainer(which in
+        most cases is gone) and the clear button.
+         */
+        if (text.isNotBlank()) {
+            setUrlGoneMargin(ConstraintSet.END, 0)
+        } else {
+            setUrlGoneMargin(ConstraintSet.END, rootView.resources.getDimensionPixelSize(
+                    R.dimen.mozac_browser_toolbar_url_gone_margin_end
+            ))
+        }
         editListener?.onTextChanged(text)
     }
 }
