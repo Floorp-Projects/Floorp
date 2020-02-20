@@ -36,7 +36,7 @@ class EmptyBlobImpl final : public BaseBlobImpl {
   virtual bool IsMemoryFile() const override { return true; }
 
  private:
-  ~EmptyBlobImpl() {}
+  ~EmptyBlobImpl() = default;
 };
 
 }  // namespace dom

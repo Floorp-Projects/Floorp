@@ -55,7 +55,7 @@ class FileList final : public nsISupports, public nsWrapperCache {
   void ToSequence(Sequence<RefPtr<File>>& aSequence, ErrorResult& aRv) const;
 
  private:
-  ~FileList() {}
+  ~FileList() = default;
 
   FallibleTArray<RefPtr<File>> mFiles;
   nsCOMPtr<nsISupports> mParent;

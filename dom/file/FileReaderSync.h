@@ -25,7 +25,7 @@ class FileReaderSync final {
 
  private:
   // Private destructor, to discourage deletion outside of Release():
-  ~FileReaderSync() {}
+  ~FileReaderSync() = default;
 
   nsresult ConvertStream(nsIInputStream* aStream, const char* aCharset,
                          nsAString& aResult);

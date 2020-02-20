@@ -77,7 +77,7 @@ bool MemoryBlobImpl::DataOwner::sMemoryReporterRegistered = false;
 MOZ_DEFINE_MALLOC_SIZE_OF(MemoryFileDataOwnerMallocSizeOf)
 
 class MemoryBlobImplDataOwnerMemoryReporter final : public nsIMemoryReporter {
-  ~MemoryBlobImplDataOwnerMemoryReporter() {}
+  ~MemoryBlobImplDataOwnerMemoryReporter() = default;
 
  public:
   NS_DECL_THREADSAFE_ISUPPORTS

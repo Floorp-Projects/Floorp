@@ -81,7 +81,7 @@ class MultipartBlobImpl final : public BaseBlobImpl {
                      UINT64_MAX),
         mBlobImpls(std::move(aBlobImpls)) {}
 
-  virtual ~MultipartBlobImpl() {}
+  virtual ~MultipartBlobImpl() = default;
 
   void SetLengthAndModifiedDate(ErrorResult& aRv);
 

@@ -22,7 +22,7 @@ File::File(nsIGlobalObject* aGlobal, BlobImpl* aImpl) : Blob(aGlobal, aImpl) {
   MOZ_ASSERT(aImpl->IsFile());
 }
 
-File::~File() {}
+File::~File() = default;
 
 /* static */
 File* File::Create(nsIGlobalObject* aGlobal, BlobImpl* aImpl) {

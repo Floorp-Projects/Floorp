@@ -147,7 +147,7 @@ class BaseBlobImpl : public BlobImpl {
   }
 
  protected:
-  virtual ~BaseBlobImpl() {}
+  virtual ~BaseBlobImpl() = default;
 
   /**
    * Returns a new, effectively-unique serial number. This should be used

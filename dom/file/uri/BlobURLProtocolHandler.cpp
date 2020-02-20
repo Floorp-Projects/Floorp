@@ -347,7 +347,7 @@ class BlobURLsReporter final : public nsIMemoryReporter {
   }
 
  private:
-  ~BlobURLsReporter() {}
+  ~BlobURLsReporter() = default;
 
   static void BuildPath(nsAutoCString& path, nsCStringHashKey::KeyType aKey,
                         DataInfo* aInfo, bool anonymize) {
@@ -460,7 +460,7 @@ class ReleasingTimerHolder final : public Runnable,
   explicit ReleasingTimerHolder(const nsACString& aURI)
       : Runnable("ReleasingTimerHolder"), mURI(aURI) {}
 
-  ~ReleasingTimerHolder() {}
+  ~ReleasingTimerHolder() = default;
 
   void RevokeURI() {
     // Remove the shutting down blocker

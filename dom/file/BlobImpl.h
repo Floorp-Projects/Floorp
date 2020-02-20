@@ -31,7 +31,7 @@ class BlobImpl : public nsISupports {
   NS_DECLARE_STATIC_IID_ACCESSOR(BLOBIMPL_IID)
   NS_DECL_THREADSAFE_ISUPPORTS
 
-  BlobImpl() {}
+  BlobImpl() = default;
 
   virtual void GetName(nsAString& aName) const = 0;
 
@@ -106,7 +106,7 @@ class BlobImpl : public nsISupports {
   virtual bool IsDirectory() const { return false; }
 
  protected:
-  virtual ~BlobImpl() {}
+  virtual ~BlobImpl() = default;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(BlobImpl, BLOBIMPL_IID)
