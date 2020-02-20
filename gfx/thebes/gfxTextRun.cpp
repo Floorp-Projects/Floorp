@@ -2067,7 +2067,7 @@ gfxFont* gfxFontGroup::GetFirstValidFont(uint32_t aCh,
 
     // already have a font?
     gfxFont* font = ff.Font();
-    if (font && font->HasCharacter(aCh)) {
+    if (font) {
       if (aGeneric) {
         *aGeneric = ff.Generic();
       }
@@ -2097,7 +2097,7 @@ gfxFont* gfxFontGroup::GetFirstValidFont(uint32_t aCh,
     }
 
     font = GetFontAt(i, aCh, &loading);
-    if (font && font->HasCharacter(aCh)) {
+    if (font) {
       if (aGeneric) {
         *aGeneric = mFonts[i].Generic();
       }
@@ -2237,8 +2237,7 @@ already_AddRefed<gfxTextRun> gfxFontGroup::MakeHyphenTextRun(
   // U+2010 from some other, possibly poorly-matching face
   static const char16_t hyphen = 0x2010;
   gfxFont* font = GetFirstValidFont(uint32_t(hyphen));
-  if (font->HasCharacter(hyphen) &&
-      (mFonts.IsEmpty() || font == mFonts[0].Font())) {
+  if (font->HasCharacter(hyphen)) {
     return MakeTextRun(&hyphen, 1, aDrawTarget, aAppUnitsPerDevUnit,
                        ShapedTextFlags(), nsTextFrameUtils::Flags(), nullptr);
   }
@@ -2714,8 +2713,7 @@ gfxTextRun* gfxFontGroup::GetEllipsisTextRun(
   // otherwise use three ASCII periods as fallback.
   gfxFont* firstFont = GetFirstValidFont(uint32_t(kEllipsisChar[0]));
   nsString ellipsis =
-      (firstFont->HasCharacter(kEllipsisChar[0]) &&
-       (mFonts.IsEmpty() || firstFont == mFonts[0].Font()))
+      firstFont->HasCharacter(kEllipsisChar[0])
           ? nsDependentString(kEllipsisChar, ArrayLength(kEllipsisChar) - 1)
           : nsDependentString(kASCIIPeriodsChar,
                               ArrayLength(kASCIIPeriodsChar) - 1);
