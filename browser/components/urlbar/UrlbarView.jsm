@@ -399,13 +399,9 @@ class UrlbarView {
       !this.input.value ||
       this.input.getAttribute("pageproxystate") == "valid"
     ) {
-      // We do not show Top Sites in private windows, or if the user disabled
-      // them on about:newtab.
-      let canOpenTopSites =
-        !this.input.isPrivate &&
-        UrlbarPrefs.get("browser.newtabpage.activity-stream.feeds.topsites");
       if (
-        canOpenTopSites &&
+        // Do not show Top Sites in private windows.
+        !this.input.isPrivate &&
         !this.isOpen &&
         ["mousedown", "command"].includes(queryOptions.event.type)
       ) {
