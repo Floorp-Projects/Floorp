@@ -9,14 +9,13 @@ from __future__ import absolute_import, print_function
 import json
 import os
 import signal
+import subprocess
 import sys
 
 sys.path.append(os.path.join(os.path.dirname(__file__), "eslint"))
 from eslint import setup_helper
 
 from mozbuild.nodeutil import find_node_executable
-
-from mozprocess import ProcessHandler
 
 from mozlint import result
 
@@ -86,26 +85,31 @@ def lint(paths, config, binary=None, fix=None, setup=None, **lintargs):
     if os.environ.get('MSYSTEM') in ('MINGW32', 'MINGW64'):
         # The eslint binary needs to be run from a shell with msys
         shell = True
+    encoding = 'utf-8'
 
     orig = signal.signal(signal.SIGINT, signal.SIG_IGN)
-    proc = ProcessHandler(cmd_args, env=os.environ, stream=None,
-                          shell=shell, universal_newlines=True)
-    proc.run()
+    proc = subprocess.Popen(cmd_args,
+                            shell=shell,
+                            stdout=subprocess.PIPE,
+                            stderr=subprocess.PIPE)
     signal.signal(signal.SIGINT, orig)
 
     try:
-        proc.wait()
+        output, errors = proc.communicate()
     except KeyboardInterrupt:
         proc.kill()
         return []
 
-    if not proc.output:
-        return []  # no output means success
+    if errors:
+        errors = errors.decode(encoding, "replace")
+        print(errors)
 
+    if not output:
+        return []  # no output means success
+    output = output.decode(encoding, "replace")
     try:
-        jsonresult = json.loads(proc.output[0])
+        jsonresult = json.loads(output)
     except ValueError:
-        output = "\n".join(proc.output)
         print(ESLINT_ERROR_MESSAGE.format(output))
         return 1
 
