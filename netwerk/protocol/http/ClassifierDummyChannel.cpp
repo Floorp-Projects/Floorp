@@ -759,5 +759,15 @@ NS_IMETHODIMP ClassifierDummyChannel::IsSocialTrackingResource(
   return NS_OK;
 }
 
+NS_IMETHODIMP ClassifierDummyChannel::IsThirdPartySocialTrackingResource(
+    bool* aIsThirdPartySocialTrackingResource) {
+  MOZ_ASSERT(!mFirstPartyClassificationFlags ||
+             !mThirdPartyClassificationFlags);
+  *aIsThirdPartySocialTrackingResource =
+      UrlClassifierCommon::IsSocialTrackingClassificationFlag(
+          mThirdPartyClassificationFlags);
+  return NS_OK;
+}
+
 }  // namespace net
 }  // namespace mozilla
