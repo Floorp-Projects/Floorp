@@ -40,51 +40,6 @@ NS_IMPL_ISUPPORTS(LocaleService, mozILocaleService, nsIObserver,
 mozilla::StaticRefPtr<LocaleService> LocaleService::sInstance;
 
 /**
- * This function transforms a canonical Mozilla Language Tag, into it's
- * BCP47 compilant form.
- *
- * Example: "ja-JP-mac" -> "ja-JP-macos"
- *
- * The BCP47 form should be used for all calls to ICU/Intl APIs.
- * The canonical form is used for all internal operations.
- */
-static bool SanitizeForBCP47(nsACString& aLocale, bool strict) {
-  // Currently, the only locale code we use that's not BCP47-conformant is
-  // "ja-JP-mac" on OS X, and ICU canonicalizes it into a mouthfull
-  // "ja-JP-x-lvariant-mac", so instead we're hardcoding a conversion
-  // of it to "ja-JP-macos".
-  if (aLocale.LowerCaseEqualsASCII("ja-jp-mac")) {
-    aLocale.AssignLiteral("ja-JP-macos");
-    return true;
-  }
-
-  nsAutoCString locale(aLocale);
-  locale.Trim(" ");
-
-  // POSIX may bring us locales such as "en-US.UTF8", which
-  // ICU converts to `en-US-u-va-posix`. Let's cut out
-  // the `.UTF8`, since it doesn't matter for us.
-  int32_t pos = locale.FindChar('.');
-  if (pos != -1) {
-    locale.Cut(pos, locale.Length() - pos);
-  }
-
-  // The rest of this function will use ICU canonicalization for any other
-  // tag that may come this way.
-  const int32_t LANG_TAG_CAPACITY = 128;
-  char langTag[LANG_TAG_CAPACITY];
-  UErrorCode err = U_ZERO_ERROR;
-  // This is a fail-safe method that will set langTag to "und" if it cannot
-  // match any part of the input locale code.
-  int32_t len = uloc_toLanguageTag(locale.get(), langTag, LANG_TAG_CAPACITY,
-                                   strict, &err);
-  if (U_SUCCESS(err) && len > 0) {
-    aLocale.Assign(langTag, len);
-  }
-  return U_SUCCESS(err);
-}
-
-/**
  * This function splits an input string by `,` delimiter, sanitizes the result
  * language tags and returns them to the caller.
  */
@@ -93,7 +48,7 @@ static void SplitLocaleListStringIntoArray(nsACString& str,
   if (str.Length() > 0) {
     for (const nsACString& part : str.Split(',')) {
       nsAutoCString locale(part);
-      if (SanitizeForBCP47(locale, true)) {
+      if (LocaleService::CanonicalizeLanguageId(locale)) {
         if (!aRetVal.Contains(locale)) {
           aRetVal.AppendElement(locale);
         }
@@ -421,7 +376,7 @@ LocaleService::GetDefaultLocale(nsACString& aRetVal) {
     locale.Trim(" \t\n\r");
     // This should never be empty.
     MOZ_ASSERT(!locale.IsEmpty());
-    if (SanitizeForBCP47(locale, true)) {
+    if (CanonicalizeLanguageId(locale)) {
       mDefaultLocale.Assign(locale);
     }
 
@@ -617,7 +572,7 @@ LocaleService::SetRequestedLocales(const nsTArray<nsCString>& aRequested) {
 
   for (auto& req : aRequested) {
     nsAutoCString locale(req);
-    if (!SanitizeForBCP47(locale, true)) {
+    if (!CanonicalizeLanguageId(locale)) {
       NS_ERROR("Invalid language tag provided to SetRequestedLocales!");
       return NS_ERROR_INVALID_ARG;
     }
@@ -667,7 +622,7 @@ LocaleService::SetAvailableLocales(const nsTArray<nsCString>& aAvailable) {
 
   for (auto& avail : aAvailable) {
     nsAutoCString locale(avail);
-    if (!SanitizeForBCP47(locale, true)) {
+    if (!CanonicalizeLanguageId(locale)) {
       NS_ERROR("Invalid language tag provided to SetAvailableLocales!");
       return NS_ERROR_INVALID_ARG;
     }
