@@ -115,6 +115,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler {
                     requireContext().applicationContext,
                     DownloadService::class
                 ),
+                tabId = sessionId,
                 onNeedToRequestPermissions = { permissions ->
                     requestPermissions(permissions, REQUEST_CODE_DOWNLOAD_PERMISSIONS)
                 }),
@@ -142,7 +143,8 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler {
             store = components.store,
             candidates = contextMenuCandidates,
             engineView = layout.engineView,
-            useCases = components.contextMenuUseCases)
+            useCases = components.contextMenuUseCases,
+            tabId = sessionId)
 
         promptFeature.set(
             feature = PromptFeature(

@@ -64,6 +64,21 @@ fun BrowserState.findCustomTabOrSelectedTab(customTabId: String? = null): Sessio
 }
 
 /**
+ * Finds and returns the tab with the given id or the selected tab if no id was provided (null). Returns null
+ * if no matching tab could be found or if no selected tab exists.
+ *
+ * @param tabId An optional ID of a tab. If not provided or null then the selected tab will be returned.
+ * @return The custom tab with the provided ID or the selected tav if no id was provided.
+ */
+fun BrowserState.findTabOrCustomTabOrSelectedTab(tabId: String? = null): SessionState? {
+    return if (tabId != null) {
+        findTabOrCustomTab(tabId)
+    } else {
+        selectedTab
+    }
+}
+
+/**
  * List of private tabs.
  */
 val BrowserState.privateTabs: List<TabSessionState>

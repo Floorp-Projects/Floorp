@@ -15,6 +15,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.mapNotNull
 import mozilla.components.browser.state.selector.findCustomTabOrSelectedTab
+import mozilla.components.browser.state.selector.findTabOrCustomTabOrSelectedTab
 import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.state.content.DownloadState
 import mozilla.components.browser.state.store.BrowserStore
@@ -59,7 +60,7 @@ class DownloadsFeature(
     override var onNeedToRequestPermissions: OnNeedToRequestPermissions = { },
     onDownloadStopped: onDownloadStopped = noop,
     private val downloadManager: DownloadManager = AndroidDownloadManager(applicationContext),
-    private val customTabId: String? = null,
+    private val tabId: String? = null,
     private val fragmentManager: FragmentManager? = null,
     private val promptsStyling: PromptsStyling? = null,
     @VisibleForTesting(otherwise = PRIVATE)
@@ -89,7 +90,7 @@ class DownloadsFeature(
         }
 
         scope = store.flowScoped { flow ->
-            flow.mapNotNull { state -> state.findCustomTabOrSelectedTab(customTabId) }
+            flow.mapNotNull { state -> state.findTabOrCustomTabOrSelectedTab(tabId) }
                 .ifChanged { it.content.download }
                 .collect { state ->
                     val download = state.content.download
@@ -205,7 +206,7 @@ class DownloadsFeature(
     }
 
     private fun withActiveDownload(block: (Pair<SessionState, DownloadState>) -> Unit) {
-        val state = store.state.findCustomTabOrSelectedTab(customTabId) ?: return
+        val state = store.state.findCustomTabOrSelectedTab(tabId) ?: return
         val download = state.content.download ?: return
         block(Pair(state, download))
     }

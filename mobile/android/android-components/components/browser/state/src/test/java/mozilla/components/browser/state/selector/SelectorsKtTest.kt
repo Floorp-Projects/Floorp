@@ -103,6 +103,24 @@ class SelectorsKtTest {
     }
 
     @Test
+    fun `findTabOrCustomTabOrSelectedTab extension function`() {
+        val tab = createTab("https://www.firefox.com")
+        val otherTab = createTab("https://getpocket.com")
+        val customTab = createCustomTab("https://www.mozilla.org")
+
+        val state = BrowserState(
+                tabs = listOf(tab, otherTab),
+                customTabs = listOf(customTab),
+                selectedTabId = tab.id)
+
+        assertEquals(tab, state.findTabOrCustomTabOrSelectedTab())
+        assertEquals(tab, state.findTabOrCustomTabOrSelectedTab(null))
+        assertEquals(tab, state.findTabOrCustomTabOrSelectedTab(tab.id))
+        assertEquals(otherTab, state.findTabOrCustomTabOrSelectedTab(otherTab.id))
+        assertEquals(customTab, state.findTabOrCustomTabOrSelectedTab(customTab.id))
+    }
+
+    @Test
     fun `privateTabs and normalTabs extension properties`() {
         val tab1 = createTab("https://www.firefox.com")
         val tab2 = createTab("https://www.mozilla.org")
