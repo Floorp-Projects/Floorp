@@ -2886,6 +2886,7 @@ impl Renderer {
             | DebugCommand::SimulateLongSceneBuild(_)
             | DebugCommand::SimulateLongLowPrioritySceneBuild(_)
             | DebugCommand::EnableNativeCompositor(_)
+            | DebugCommand::SetBatchingLookback(_)
             | DebugCommand::EnableMultithreading(_) => {}
             DebugCommand::InvalidateGpuCache => {
                 match self.gpu_cache_texture.bus {

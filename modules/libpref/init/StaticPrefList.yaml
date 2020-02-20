@@ -3886,6 +3886,11 @@
   value: true
   mirror: always
 
+- name: gfx.webrender.batching.lookback
+  type: uint32_t
+  value: 10
+  mirror: always
+
 - name: gfx.webrender.compositor
   type: bool
 #if defined(XP_WIN)
