@@ -10,6 +10,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.attributes import copy_attributes_from_dependent_job
 from taskgraph.util.taskcluster import get_artifact_url
+from taskgraph.util.treeherder import add_suffix, join_symbol
 
 
 transforms = TransformSequence()
@@ -37,17 +38,14 @@ def make_task_description(config, jobs):
             dep_treeherder = dep_job.task.get('extra', {}).get('treeherder', {})
             treeherder.setdefault('tier', dep_treeherder.get('tier', 1))
             treeherder.setdefault('symbol', _generate_treeherder_symbol(
-                dep_treeherder.get('symbol')
+                dep_treeherder.get('groupSymbol', '?'), dep_treeherder.get('symbol')
             ))
-            if dep_treeherder.get('groupSymbol'):
-                treeherder.setdefault('groupSymbol', dep_treeherder['groupSymbol'])
             treeherder.setdefault('kind', 'build')
 
         label = dep_job.label.replace('part-1', 'poller')
         description = (
-            "Initial Signing for locale '{locale}' for build '"
+            "Mac Notarization Poller for build '"
             "{build_platform}/{build_type}'".format(
-                locale=attributes.get('locale', 'en-US'),
                 build_platform=build_platform,
                 build_type=attributes.get('build_type')
             )
@@ -90,6 +88,5 @@ def make_task_description(config, jobs):
         yield task
 
 
-def _generate_treeherder_symbol(build_symbol):
-    symbol = build_symbol + '-poll'
-    return symbol
+def _generate_treeherder_symbol(group_symbol, build_symbol):
+    return join_symbol(group_symbol, add_suffix(build_symbol, '-poll'))
