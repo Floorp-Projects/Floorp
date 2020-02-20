@@ -266,7 +266,6 @@ class PermissionDelegateTest : BaseSessionTest() {
         // The profile used in automation sets this to false, so we need to hack it back to true here.
         sessionRule.setPrefsUntilTestEnd(mapOf(
                 "media.geckoview.autoplay.request" to true))
-        sessionRule.runtime.settings.autoplayDefault = GeckoRuntimeSettings.AUTOPLAY_DEFAULT_BLOCKED
 
         mainSession.loadTestPath(AUTOPLAY_PATH)
 
