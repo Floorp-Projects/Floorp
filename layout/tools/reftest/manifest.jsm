@@ -31,7 +31,7 @@ function ReadTopManifest(aFileURL, aFilter, aManifestID)
 }
 
 // Note: If you materially change the reftest manifest parsing,
-// please keep the parser in print-manifest-dirs.py in sync.
+// please keep the parser in layout/tools/reftest/__init__.py in sync.
 function ReadManifest(aURL, aFilter, aManifestID)
 {
     // Ensure each manifest is only read once. This assumes that manifests that
@@ -72,6 +72,7 @@ function ReadManifest(aURL, aFilter, aManifestID)
 
     var lineNo = 0;
     var urlprefix = "";
+    var defaults = [];
     var defaultTestPrefSettings = [], defaultRefPrefSettings = [];
     if (g.compareRetainedDisplayLists) {
         AddRetainedDisplayListTestPrefs(GetOrCreateSandbox(), defaultTestPrefSettings,
@@ -94,6 +95,12 @@ function ReadManifest(aURL, aFilter, aManifestID)
             if (items.length != 2)
                 throw "url-prefix requires one url in manifest file " + aURL.spec + " line " + lineNo;
             urlprefix = items[1];
+            continue;
+        }
+
+        if (items[0] == "defaults") {
+            items.shift();
+            defaults = items;
             continue;
         }
 
@@ -136,6 +143,8 @@ function ReadManifest(aURL, aFilter, aManifestID)
         var nonSkipUsed = false;
         var noAutoFuzz = false;
 
+        var origLength = items.length;
+        items = defaults.concat(items);
         while (items[0].match(/^(fails|needs-focus|random|skip|asserts|slow|require-or|silentfail|pref|test-pref|ref-pref|fuzzy|chaos-mode|wr-capture|wr-capture-ref|noautofuzz)/)) {
             var item = items.shift();
             var stat;
@@ -247,6 +256,12 @@ function ReadManifest(aURL, aFilter, aManifestID)
                     allow_silent_fail = true;
                 }
             }
+        }
+
+        if (items.length > origLength) {
+            // Implies we broke out of the loop before we finished processing
+            // defaults. This means defaults contained an invalid token.
+            throw "Error in manifest file " + aURL.spec + " line " + lineNo + ": invalid defaults token '" + items[0] + "'";
         }
 
         if (minAsserts > maxAsserts) {
@@ -551,9 +566,9 @@ function BuildConditionSandbox(aURL) {
     sandbox.webrtc = false;
 #endif
 
-let retainedDisplayListsEnabled = prefs.getBoolPref("layout.display-list.retain", false);
-sandbox.retainedDisplayLists = retainedDisplayListsEnabled && !g.compareRetainedDisplayLists;
-sandbox.compareRetainedDisplayLists = g.compareRetainedDisplayLists;
+    let retainedDisplayListsEnabled = prefs.getBoolPref("layout.display-list.retain", false);
+    sandbox.retainedDisplayLists = retainedDisplayListsEnabled && !g.compareRetainedDisplayLists;
+    sandbox.compareRetainedDisplayLists = g.compareRetainedDisplayLists;
 
     sandbox.skiaPdf = false;
 
