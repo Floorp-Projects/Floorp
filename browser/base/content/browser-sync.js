@@ -791,6 +791,7 @@ var gSync = {
     switchToTabHavingURI(url, true, { replaceQueryString: true });
   },
 
+  // Returns true if we managed to send the tab to any targets, false otherwise.
   async sendTabToDevice(url, targets, title) {
     const fxaCommandsDevices = [];
     const oldSendTabClients = [];
@@ -801,6 +802,25 @@ var gSync = {
         oldSendTabClients.push(target.clientRecord);
       } else {
         console.error(`Target ${target.id} unsuitable for send tab.`);
+      }
+    }
+    // If a master-password is enabled then it must be unlocked so FxA can get
+    // the encryption keys from the login manager. (If we end up using the "sync"
+    // fallback that would end up prompting by itself, but the FxA command route
+    // will not) - so force that here.
+    let cryptoSDR = Cc["@mozilla.org/login-manager/crypto/SDR;1"].getService(
+      Ci.nsILoginManagerCrypto
+    );
+    if (!cryptoSDR.isLoggedIn) {
+      if (cryptoSDR.uiBusy) {
+        console.log("Master password UI is busy - not sending the tabs");
+        return false;
+      }
+      try {
+        cryptoSDR.encrypt("bacon"); // forces the mp prompt.
+      } catch (e) {
+        console.log("Master password remains unlocked - not sending the tabs");
+        return false;
       }
     }
     let numFailed = 0;
