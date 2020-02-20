@@ -100,6 +100,8 @@ class WindowGlobalParent final : public WindowContext,
   // The current URI which loaded in the document.
   nsIURI* GetDocumentURI() override { return mDocumentURI; }
 
+  const nsString& GetDocumentTitle() const { return mDocumentTitle; }
+
   // Window IDs for inner/outer windows.
   uint64_t OuterWindowId() { return mOuterWindowId; }
   uint64_t InnerWindowId() { return mInnerWindowId; }
@@ -158,6 +160,7 @@ class WindowGlobalParent final : public WindowContext,
   mozilla::ipc::IPCResult RecvInternalLoad(dom::BrowsingContext* aTargetBC,
                                            nsDocShellLoadState* aLoadState);
   mozilla::ipc::IPCResult RecvUpdateDocumentURI(nsIURI* aURI);
+  mozilla::ipc::IPCResult RecvUpdateDocumentTitle(const nsString& aTitle);
   mozilla::ipc::IPCResult RecvSetIsInitialDocument(bool aIsInitialDocument) {
     mIsInitialDocument = aIsInitialDocument;
     return IPC_OK();
@@ -188,6 +191,8 @@ class WindowGlobalParent final : public WindowContext,
   // mutations which may have been made in the actual document.
   nsCOMPtr<nsIPrincipal> mDocumentPrincipal;
   nsCOMPtr<nsIURI> mDocumentURI;
+  nsString mDocumentTitle;
+
   RefPtr<CanonicalBrowsingContext> mBrowsingContext;
   nsRefPtrHashtable<nsStringHashKey, JSWindowActorParent> mWindowActors;
   uint64_t mInnerWindowId;
