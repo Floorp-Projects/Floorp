@@ -129,7 +129,7 @@ class CloseRunnable final : public nsIRunnable, public nsICancelableRunnable {
   nsresult Cancel() override { return NS_OK; }
 
  private:
-  ~CloseRunnable() {}
+  ~CloseRunnable() = default;
 
   RefPtr<BroadcastChannel> mBC;
 };
