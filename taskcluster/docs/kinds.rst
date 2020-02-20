@@ -81,6 +81,13 @@ passes them to signing servers to have their contents signed appropriately, base
 on an appropriate signing format. One signing job is created for each shippable-l10n
 job (usually chunked).
 
+For mac notarization, we download the signed bits that have been notarized by Apple, and we staple the notarization to the app and pkg.
+
+shippable-l10n-notarization-part-1
+----------------------------------
+
+We switched to a 3-part mac notarization workflow in bug 1562412. This is the first task, which signs the files and submits them for notarization.
+
 source-test
 -----------
 
