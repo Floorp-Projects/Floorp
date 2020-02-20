@@ -68,6 +68,9 @@ include scripttests.list
 # test url-prefix
 include urlprefixtests.list
 
+# test defaults
+include defaults-tests.list
+
 # test default-preferences
 include default-preferences-tests.list
 

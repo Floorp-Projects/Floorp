@@ -374,7 +374,31 @@ must be one of the following:
    a manifest, it is legal to use it anywhere in a manifest. Subsequent uses
    of url-prefix overwrite any existing values.
 
-4. Specification of default preferences
+4. Specification of defaults
+
+   defaults [<failure-type> | <preference> | <http>]
+
+   where <failure-type>, <preference> and <http> are defined above.
+
+   The default settings will be used for all following test items in the manifest.
+   Any test specific settings will override the defaults, just as later items
+   within a line override earlier ones.
+
+   A defaults line with no settings will reset the defaults to be empty.
+
+   As with url-prefix, defaults will often be used at the start of a manifest file
+   so that it applies to all test items, but it is legal for defaults to appear
+   anywhere in the manifest. A subsequent defaults will reset any previous default
+   settings and overwrite them with the new settings.
+
+   It is invalid to set non-skip defaults before an include line, just as it is
+   invalid to specify non-skip settings directly on the include line itself. If a
+   manifest needs to use both defaults and include, the include should appear
+   before the defaults. If it's important to specify the include later on in the
+   manifest, a blank defaults line directly preceding the include can be used to
+   reset the defaults.
+
+5. Specification of default preferences
 
    default-preferences <preference>*
 
