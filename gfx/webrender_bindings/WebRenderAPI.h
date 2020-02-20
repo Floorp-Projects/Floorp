@@ -405,7 +405,6 @@ class DisplayListBuilder final {
 
   usize Dump(usize aIndent, const Maybe<usize>& aStart,
              const Maybe<usize>& aEnd);
-  void DumpSerializedDisplayList();
 
   void Finalize(wr::LayoutSize& aOutContentSizes,
                 wr::BuiltDisplayList& aOutDisplayList);
