@@ -33,7 +33,7 @@ class InternalHeaders final {
     Entry(const nsACString& aName, const nsACString& aValue)
         : mName(aName), mValue(aValue) {}
 
-    Entry() {}
+    Entry() = default;
 
     nsCString mName;
     nsCString mValue;

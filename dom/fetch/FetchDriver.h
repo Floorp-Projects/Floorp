@@ -74,7 +74,7 @@ class FetchDriverObserver {
   virtual void OnDataAvailable() = 0;
 
  protected:
-  virtual ~FetchDriverObserver(){};
+  virtual ~FetchDriverObserver() = default;
 
   virtual void OnResponseAvailableInternal(InternalResponse* aResponse) = 0;
 

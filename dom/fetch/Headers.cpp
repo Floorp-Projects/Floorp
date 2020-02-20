@@ -83,7 +83,7 @@ JSObject* Headers::WrapObject(JSContext* aCx,
   return mozilla::dom::Headers_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-Headers::~Headers() {}
+Headers::~Headers() = default;
 
 }  // namespace dom
 }  // namespace mozilla
