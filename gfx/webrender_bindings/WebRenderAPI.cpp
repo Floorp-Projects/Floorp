@@ -529,6 +529,10 @@ void WebRenderAPI::EnableMultithreading(bool aEnable) {
   wr_api_enable_multithreading(mDocHandle, aEnable);
 }
 
+void WebRenderAPI::SetBatchingLookback(uint32_t aCount) {
+  wr_api_set_batching_lookback(mDocHandle, aCount);
+}
+
 void WebRenderAPI::Pause() {
   class PauseEvent : public RendererEvent {
    public:

@@ -106,6 +106,7 @@ class WebRenderBridgeParent final
   void UpdateQualitySettings();
   void UpdateDebugFlags();
   void UpdateMultithreading();
+  void UpdateBatchingParameters();
 
   mozilla::ipc::IPCResult RecvEnsureConnected(
       TextureFactoryIdentifier* aTextureFactoryIdentifier,

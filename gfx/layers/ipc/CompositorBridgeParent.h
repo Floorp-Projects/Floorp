@@ -740,6 +740,11 @@ class CompositorBridgeParent final : public CompositorBridgeParentBase,
   static void UpdateWebRenderMultithreading();
 
   /**
+   * Notify the compositor webrender batching parameters have been updated.
+   */
+  static void UpdateWebRenderBatchingParameters();
+
+  /**
    * Wrap the data structure to be sent over IPC.
    */
   Maybe<CollectedFramesParams> WrapCollectedFrames(CollectedFrames&& aFrames);
