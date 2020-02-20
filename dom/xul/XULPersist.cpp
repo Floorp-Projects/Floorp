@@ -45,7 +45,7 @@ NS_IMPL_ISUPPORTS(XULPersist, nsIDocumentObserver)
 XULPersist::XULPersist(Document* aDocument)
     : nsStubDocumentObserver(), mDocument(aDocument) {}
 
-XULPersist::~XULPersist() {}
+XULPersist::~XULPersist() = default;
 
 void XULPersist::Init() {
   ApplyPersistentAttributes();

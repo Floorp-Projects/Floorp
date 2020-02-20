@@ -23,7 +23,7 @@ class nsXULControllerData final {
   nsXULControllerData(uint32_t inControllerID, nsIController* inController)
       : mControllerID(inControllerID), mController(inController) {}
 
-  ~nsXULControllerData() {}
+  ~nsXULControllerData() = default;
 
   uint32_t GetControllerID() { return mControllerID; }
 

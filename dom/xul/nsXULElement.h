@@ -126,7 +126,7 @@ class nsXULPrototypeNode {
 
  protected:
   explicit nsXULPrototypeNode(Type aType) : mType(aType) {}
-  virtual ~nsXULPrototypeNode() {}
+  virtual ~nsXULPrototypeNode() = default;
 };
 
 class nsXULPrototypeElement : public nsXULPrototypeNode {
@@ -239,7 +239,7 @@ class nsXULPrototypeText : public nsXULPrototypeNode {
   nsXULPrototypeText() : nsXULPrototypeNode(eType_Text) {}
 
  private:
-  virtual ~nsXULPrototypeText() {}
+  virtual ~nsXULPrototypeText() = default;
 
  public:
   virtual nsresult Serialize(
@@ -258,7 +258,7 @@ class nsXULPrototypePI : public nsXULPrototypeNode {
   nsXULPrototypePI() : nsXULPrototypeNode(eType_PI) {}
 
  private:
-  virtual ~nsXULPrototypePI() {}
+  virtual ~nsXULPrototypePI() = default;
 
  public:
   virtual nsresult Serialize(
