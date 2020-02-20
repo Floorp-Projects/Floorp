@@ -2939,12 +2939,6 @@ class nsContentUtils {
                                           nsIChannel* aChannel, nsIURI* aURI);
 
   /*
-   * Returns true if this window's channel has been marked as a tracking
-   * resource.
-   */
-  static bool IsTrackingResourceWindow(nsPIDOMWindowInner* aWindow);
-
-  /*
    * Returns true if this window's channel has been marked as a third-party
    * tracking resource.
    */
