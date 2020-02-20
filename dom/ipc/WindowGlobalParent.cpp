@@ -244,6 +244,12 @@ IPCResult WindowGlobalParent::RecvUpdateDocumentURI(nsIURI* aURI) {
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult WindowGlobalParent::RecvUpdateDocumentTitle(
+    const nsString& aTitle) {
+  mDocumentTitle = aTitle;
+  return IPC_OK();
+}
+
 IPCResult WindowGlobalParent::RecvSetHasBeforeUnload(bool aHasBeforeUnload) {
   mHasBeforeUnload = aHasBeforeUnload;
   return IPC_OK();

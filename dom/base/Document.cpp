@@ -8448,6 +8448,12 @@ void Document::DoNotifyPossibleTitleChange() {
     }
   }
 
+  if (nsPIDOMWindowInner* inner = GetInnerWindow()) {
+    if (WindowGlobalChild* child = inner->GetWindowGlobalChild()) {
+      child->SendUpdateDocumentTitle(title);
+    }
+  }
+
   // Fire a DOM event for the title change.
   nsContentUtils::DispatchChromeEvent(this, ToSupports(this),
                                       NS_LITERAL_STRING("DOMTitleChanged"),

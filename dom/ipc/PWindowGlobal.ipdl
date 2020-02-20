@@ -75,6 +75,9 @@ parent:
   /// Update the URI of the document in this WindowGlobal.
   async UpdateDocumentURI(nsIURI aUri);
 
+  // Update the title of the document in this WindowGlobal.
+  async UpdateDocumentTitle(nsString aTitle);
+
   /// Send down initial document bit to the parent.
   async SetIsInitialDocument(bool aIsInitialDocument);
 
