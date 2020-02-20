@@ -15,7 +15,7 @@ NS_IMPL_NS_NEW_HTML_ELEMENT(Div)
 namespace mozilla {
 namespace dom {
 
-HTMLDivElement::~HTMLDivElement() {}
+HTMLDivElement::~HTMLDivElement() = default;
 
 NS_IMPL_ELEMENT_CLONE(HTMLDivElement)
 

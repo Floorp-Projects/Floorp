@@ -31,7 +31,7 @@ HTMLOutputElement::HTMLOutputElement(
   AddStatesSilently(NS_EVENT_STATE_VALID | NS_EVENT_STATE_MOZ_UI_VALID);
 }
 
-HTMLOutputElement::~HTMLOutputElement() {}
+HTMLOutputElement::~HTMLOutputElement() = default;
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(HTMLOutputElement, nsGenericHTMLFormElement,
                                    mValidity, mTokenList)

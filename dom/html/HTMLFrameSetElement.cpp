@@ -16,7 +16,7 @@ NS_IMPL_NS_NEW_HTML_ELEMENT(FrameSet)
 namespace mozilla {
 namespace dom {
 
-HTMLFrameSetElement::~HTMLFrameSetElement() {}
+HTMLFrameSetElement::~HTMLFrameSetElement() = default;
 
 JSObject* HTMLFrameSetElement::WrapNode(JSContext* aCx,
                                         JS::Handle<JSObject*> aGivenProto) {

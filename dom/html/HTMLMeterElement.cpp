@@ -21,7 +21,7 @@ HTMLMeterElement::HTMLMeterElement(
     already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
     : nsGenericHTMLElement(std::move(aNodeInfo)) {}
 
-HTMLMeterElement::~HTMLMeterElement() {}
+HTMLMeterElement::~HTMLMeterElement() = default;
 
 NS_IMPL_ELEMENT_CLONE(HTMLMeterElement)
 

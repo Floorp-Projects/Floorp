@@ -67,7 +67,7 @@ class ImageListener : public MediaDocumentStreamListener {
 ImageListener::ImageListener(ImageDocument* aDocument)
     : MediaDocumentStreamListener(aDocument) {}
 
-ImageListener::~ImageListener() {}
+ImageListener::~ImageListener() = default;
 
 NS_IMETHODIMP
 ImageListener::OnStartRequest(nsIRequest* request) {
@@ -153,7 +153,7 @@ ImageDocument::ImageDocument()
 {
 }
 
-ImageDocument::~ImageDocument() {}
+ImageDocument::~ImageDocument() = default;
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(ImageDocument, MediaDocument, mImageContent)
 

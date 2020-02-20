@@ -17,7 +17,7 @@ HTMLDataElement::HTMLDataElement(
     already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
     : nsGenericHTMLElement(std::move(aNodeInfo)) {}
 
-HTMLDataElement::~HTMLDataElement() {}
+HTMLDataElement::~HTMLDataElement() = default;
 
 NS_IMPL_ELEMENT_CLONE(HTMLDataElement)
 

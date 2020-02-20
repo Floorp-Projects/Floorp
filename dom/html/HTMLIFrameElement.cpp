@@ -62,7 +62,7 @@ HTMLIFrameElement::HTMLIFrameElement(
   mFeaturePolicy->SetDefaultOrigin(origin);
 }
 
-HTMLIFrameElement::~HTMLIFrameElement() {}
+HTMLIFrameElement::~HTMLIFrameElement() = default;
 
 NS_IMPL_ELEMENT_CLONE(HTMLIFrameElement)
 

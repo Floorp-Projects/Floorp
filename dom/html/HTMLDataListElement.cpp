@@ -12,7 +12,7 @@ NS_IMPL_NS_NEW_HTML_ELEMENT(DataList)
 namespace mozilla {
 namespace dom {
 
-HTMLDataListElement::~HTMLDataListElement() {}
+HTMLDataListElement::~HTMLDataListElement() = default;
 
 JSObject* HTMLDataListElement::WrapNode(JSContext* aCx,
                                         JS::Handle<JSObject*> aGivenProto) {

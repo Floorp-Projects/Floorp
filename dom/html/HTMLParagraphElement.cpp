@@ -16,7 +16,7 @@ NS_IMPL_NS_NEW_HTML_ELEMENT(Paragraph)
 namespace mozilla {
 namespace dom {
 
-HTMLParagraphElement::~HTMLParagraphElement() {}
+HTMLParagraphElement::~HTMLParagraphElement() = default;
 
 NS_IMPL_ELEMENT_CLONE(HTMLParagraphElement)
 

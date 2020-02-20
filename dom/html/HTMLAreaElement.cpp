@@ -24,7 +24,7 @@ HTMLAreaElement::HTMLAreaElement(
     already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
     : nsGenericHTMLElement(std::move(aNodeInfo)), Link(this) {}
 
-HTMLAreaElement::~HTMLAreaElement() {}
+HTMLAreaElement::~HTMLAreaElement() = default;
 
 NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED(HTMLAreaElement,
                                              nsGenericHTMLElement, Link)

@@ -104,7 +104,7 @@ PluginStreamListener::OnStartRequest(nsIRequest* request) {
   return MediaDocumentStreamListener::OnStartRequest(request);
 }
 
-PluginDocument::PluginDocument() {}
+PluginDocument::PluginDocument() = default;
 
 PluginDocument::~PluginDocument() = default;
 

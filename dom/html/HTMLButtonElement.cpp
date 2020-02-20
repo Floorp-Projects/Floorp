@@ -62,7 +62,7 @@ HTMLButtonElement::HTMLButtonElement(
   AddStatesSilently(NS_EVENT_STATE_ENABLED);
 }
 
-HTMLButtonElement::~HTMLButtonElement() {}
+HTMLButtonElement::~HTMLButtonElement() = default;
 
 // nsISupports
 

@@ -17,7 +17,7 @@ NS_IMPL_NS_NEW_HTML_ELEMENT(Span)
 namespace mozilla {
 namespace dom {
 
-HTMLSpanElement::~HTMLSpanElement() {}
+HTMLSpanElement::~HTMLSpanElement() = default;
 
 NS_IMPL_ELEMENT_CLONE(HTMLSpanElement)
 

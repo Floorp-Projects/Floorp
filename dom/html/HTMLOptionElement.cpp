@@ -42,7 +42,7 @@ HTMLOptionElement::HTMLOptionElement(
   AddStatesSilently(NS_EVENT_STATE_ENABLED);
 }
 
-HTMLOptionElement::~HTMLOptionElement() {}
+HTMLOptionElement::~HTMLOptionElement() = default;
 
 NS_IMPL_ELEMENT_CLONE(HTMLOptionElement)
 

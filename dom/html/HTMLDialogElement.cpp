@@ -23,7 +23,7 @@ nsGenericHTMLElement* NS_NewHTMLDialogElement(
 namespace mozilla {
 namespace dom {
 
-HTMLDialogElement::~HTMLDialogElement() {}
+HTMLDialogElement::~HTMLDialogElement() = default;
 
 NS_IMPL_ELEMENT_CLONE(HTMLDialogElement)
 

@@ -28,7 +28,7 @@ HTMLSourceElement::HTMLSourceElement(
     already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
     : nsGenericHTMLElement(std::move(aNodeInfo)) {}
 
-HTMLSourceElement::~HTMLSourceElement() {}
+HTMLSourceElement::~HTMLSourceElement() = default;
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(HTMLSourceElement, nsGenericHTMLElement,
                                    mSrcMediaSource)

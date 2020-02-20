@@ -38,7 +38,7 @@ HTMLMenuElement::HTMLMenuElement(
     already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
     : nsGenericHTMLElement(std::move(aNodeInfo)), mType(MENU_TYPE_TOOLBAR) {}
 
-HTMLMenuElement::~HTMLMenuElement() {}
+HTMLMenuElement::~HTMLMenuElement() = default;
 
 NS_IMPL_ELEMENT_CLONE(HTMLMenuElement)
 

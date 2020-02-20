@@ -103,7 +103,8 @@ class WindowDestroyObserver final : public nsIObserver {
   }
 
  private:
-  ~WindowDestroyObserver(){};
+  ~WindowDestroyObserver() = default;
+
   HTMLTrackElement* mTrackElement;
   uint64_t mInnerID;
 };
