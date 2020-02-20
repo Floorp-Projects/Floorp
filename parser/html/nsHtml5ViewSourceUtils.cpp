@@ -6,6 +6,7 @@
 #include "mozilla/Preferences.h"
 #include "nsHtml5AttributeName.h"
 #include "nsHtml5String.h"
+#include "mozilla/StaticPrefs_view_source.h"
 
 // static
 nsHtml5HtmlAttributes* nsHtml5ViewSourceUtils::NewBodyAttributes() {
@@ -14,10 +15,10 @@ nsHtml5HtmlAttributes* nsHtml5ViewSourceUtils::NewBodyAttributes() {
   bodyAttrs->addAttribute(nsHtml5AttributeName::ATTR_ID, id, -1);
 
   nsString klass;
-  if (mozilla::Preferences::GetBool("view_source.wrap_long_lines", true)) {
+  if (StaticPrefs::view_source_wrap_long_lines()) {
     klass.AppendLiteral(u"wrap ");
   }
-  if (mozilla::Preferences::GetBool("view_source.syntax_highlight", true)) {
+  if (StaticPrefs::view_source_syntax_highlight()) {
     klass.AppendLiteral(u"highlight");
   }
   if (!klass.IsEmpty()) {
@@ -25,7 +26,7 @@ nsHtml5HtmlAttributes* nsHtml5ViewSourceUtils::NewBodyAttributes() {
                             nsHtml5String::FromString(klass), -1);
   }
 
-  int32_t tabSize = mozilla::Preferences::GetInt("view_source.tab_size", 4);
+  int32_t tabSize = StaticPrefs::view_source_tab_size();
   if (tabSize > 0) {
     nsString style;
     style.AssignLiteral("-moz-tab-size: ");
