@@ -686,6 +686,7 @@ static const TransportSecurityPreload kPublicKeyPinningPreloadList[] = {
   { "chrome-devtools-frontend.appspot.com", true, false, false, -1, &kPinset_google_root_pems },
   { "chrome.com", true, false, false, -1, &kPinset_google_root_pems },
   { "chrome.google.com", true, false, false, -1, &kPinset_google_root_pems },
+  { "chromereporting-pa.googleapis.com", true, false, false, -1, &kPinset_google_root_pems },
   { "chromiumbugs.appspot.com", true, false, false, -1, &kPinset_google_root_pems },
   { "chromiumcodereview.appspot.com", true, false, false, -1, &kPinset_google_root_pems },
   { "cl.search.yahoo.com", false, true, false, -1, &kPinset_yahoo },
@@ -1032,8 +1033,10 @@ static const TransportSecurityPreload kPublicKeyPinningPreloadList[] = {
   { "np.search.yahoo.com", false, true, false, -1, &kPinset_yahoo },
   { "nz.search.yahoo.com", false, true, false, -1, &kPinset_yahoo },
   { "oauth.twitter.com", true, false, false, -1, &kPinset_twitterCom },
+  { "oauthaccountmanager.googleapis.com", true, false, false, -1, &kPinset_google_root_pems },
   { "pa.search.yahoo.com", false, true, false, -1, &kPinset_yahoo },
   { "passwords.google.com", true, false, false, -1, &kPinset_google_root_pems },
+  { "passwordsleakcheck-pa.googleapis.com", true, false, false, -1, &kPinset_google_root_pems },
   { "payments.google.com", true, false, false, -1, &kPinset_google_root_pems },
   { "pe.search.yahoo.com", false, true, false, -1, &kPinset_yahoo },
   { "ph.search.yahoo.com", false, true, false, -1, &kPinset_yahoo },
@@ -1082,6 +1085,7 @@ static const TransportSecurityPreload kPublicKeyPinningPreloadList[] = {
   { "torproject.org", false, false, false, -1, &kPinset_tor },
   { "touch.facebook.com", true, false, false, -1, &kPinset_facebook },
   { "tr.search.yahoo.com", false, true, false, -1, &kPinset_yahoo },
+  { "translate.googleapis.com", true, false, false, -1, &kPinset_google_root_pems },
   { "tv.search.yahoo.com", false, true, false, -1, &kPinset_yahoo },
   { "tw.search.yahoo.com", false, true, false, -1, &kPinset_yahoo },
   { "twimg.com", true, false, false, -1, &kPinset_twitterCDN },
@@ -1131,8 +1135,8 @@ static const TransportSecurityPreload kPublicKeyPinningPreloadList[] = {
   { "zh.search.yahoo.com", false, true, false, -1, &kPinset_yahoo },
 };
 
-// Pinning Preload List Length = 486;
+// Pinning Preload List Length = 490;
 
 static const int32_t kUnknownId = -1;
 
-static const PRTime kPreloadPKPinsExpirationTime = INT64_C(1590413275822000);
+static const PRTime kPreloadPKPinsExpirationTime = INT64_C(1590672643930000);
