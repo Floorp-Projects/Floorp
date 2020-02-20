@@ -98,12 +98,6 @@ if CONFIG['MOZ_THUNDERBIRD'] or CONFIG['MOZ_SUITE']:
 # will need to change it here as well.
 DEFINES['SQLITE_MAX_LIKE_PATTERN_LENGTH'] = 50000
 
-# See Sqlite moz.build for reasoning about TEMP_STORE.
-# For system sqlite we cannot use the compile time option, so we use a pragma.
-if CONFIG['MOZ_SYSTEM_SQLITE'] and (CONFIG['OS_TARGET'] == 'Android'
-                                    or CONFIG['HAVE_64BIT_BUILD']):
-    DEFINES['MOZ_MEMORY_TEMP_STORE_PRAGMA'] = True
-
 LOCAL_INCLUDES += [
     '/dom/base',
     '/third_party/sqlite3/src',

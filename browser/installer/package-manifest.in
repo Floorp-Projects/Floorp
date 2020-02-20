@@ -138,10 +138,8 @@
 @RESPATH@/update-settings.ini
 #endif
 @RESPATH@/platform.ini
-#ifndef MOZ_SYSTEM_SQLITE
 #ifndef MOZ_FOLD_LIBS
 @BINPATH@/@DLL_PREFIX@mozsqlite3@DLL_SUFFIX@
-#endif
 #endif
 @BINPATH@/@DLL_PREFIX@lgpllibs@DLL_SUFFIX@
 #ifdef MOZ_FFVPX
