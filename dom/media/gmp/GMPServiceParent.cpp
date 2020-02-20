@@ -81,10 +81,10 @@ GeckoMediaPluginServiceParent::GeckoMediaPluginServiceParent()
       mScannedPluginOnDisk(false),
       mWaitingForPluginsSyncShutdown(false),
       mInitPromiseMonitor("GeckoMediaPluginServiceParent::mInitPromiseMonitor"),
+      mInitPromise(&mInitPromiseMonitor),
       mLoadPluginsFromDiskComplete(false),
       mMainThread(SystemGroup::AbstractMainThreadFor(TaskCategory::Other)) {
   MOZ_ASSERT(NS_IsMainThread());
-  mInitPromise.SetMonitor(&mInitPromiseMonitor);
 }
 
 GeckoMediaPluginServiceParent::~GeckoMediaPluginServiceParent() {
