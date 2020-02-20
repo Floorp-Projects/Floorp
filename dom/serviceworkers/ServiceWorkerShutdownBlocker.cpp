@@ -6,6 +6,7 @@
 
 #include "ServiceWorkerShutdownBlocker.h"
 
+#include <chrono>
 #include <utility>
 
 #include "MainThreadUtils.h"
@@ -34,7 +35,9 @@ ServiceWorkerShutdownBlocker::BlockShutdown(nsIAsyncShutdownClient* aClient) {
   MOZ_ASSERT(!mShutdownClient);
 
   mShutdownClient = aClient;
+
   MaybeUnblockShutdown();
+  MaybeInitUnblockShutdownTimer();
 
   return NS_OK;
 }
@@ -131,6 +134,9 @@ void ServiceWorkerShutdownBlocker::StopAcceptingPromises() {
   MOZ_ASSERT(IsAcceptingPromises());
 
   mState = AsVariant(NotAcceptingPromises(mState.as<AcceptingPromises>()));
+
+  MaybeUnblockShutdown();
+  MaybeInitUnblockShutdownTimer();
 }
 
 uint32_t ServiceWorkerShutdownBlocker::CreateShutdownState() {
@@ -183,8 +189,18 @@ void ServiceWorkerShutdownBlocker::MaybeUnblockShutdown() {
     return;
   }
 
+  UnblockShutdown();
+}
+
+void ServiceWorkerShutdownBlocker::UnblockShutdown() {
+  MOZ_ASSERT(mShutdownClient);
+
   mShutdownClient->RemoveBlocker(this);
   mShutdownClient = nullptr;
+
+  if (mTimer) {
+    mTimer->Cancel();
+  }
 }
 
 uint32_t ServiceWorkerShutdownBlocker::PromiseSettled() {
@@ -218,6 +234,38 @@ ServiceWorkerShutdownBlocker::NotAcceptingPromises::NotAcceptingPromises(
     AcceptingPromises aPreviousState)
     : mPendingPromises(aPreviousState.mPendingPromises) {
   AssertIsOnMainThread();
+}
+
+NS_IMETHODIMP ServiceWorkerShutdownBlocker::Notify(nsITimer*) {
+  // TODO: this method being called indicates that there are ServiceWorkers
+  // that did not complete shutdown before the timer expired - there should be
+  // a telemetry ping or some other way of recording the state of when this
+  // happens (e.g. what's returned by GetState()).
+  UnblockShutdown();
+  return NS_OK;
+}
+
+void ServiceWorkerShutdownBlocker::MaybeInitUnblockShutdownTimer() {
+#ifdef RELEASE_OR_BETA
+  AssertIsOnMainThread();
+  MOZ_ASSERT(!mTimer);
+
+  if (!mShutdownClient || IsAcceptingPromises()) {
+    return;
+  }
+
+  MOZ_ASSERT(GetPendingPromises(),
+             "Shouldn't be blocking shutdown with zero pending promises.");
+
+  using namespace std::chrono_literals;
+
+  static constexpr auto delay =
+      std::chrono::duration_cast<std::chrono::milliseconds>(10s);
+
+  mTimer = NS_NewTimer();
+
+  mTimer->InitWithCallback(this, delay.count(), nsITimer::TYPE_ONE_SHOT);
+#endif
 }
 
 }  // namespace dom
