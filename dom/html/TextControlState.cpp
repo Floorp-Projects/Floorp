@@ -1866,7 +1866,7 @@ nsresult TextControlState::PrepareEditor(const nsAString* aValue) {
   }
 
   // Set max text field length
-  newTextEditor->SetMaxTextLength(GetMaxLength());
+  newTextEditor->SetMaxTextLength(mTextCtrlElement->UsedMaxLength());
 
   editorFlags = newTextEditor->Flags();
 
@@ -2477,17 +2477,6 @@ void TextControlState::UnbindFromFrame(nsTextControlFrame* aFrame) {
     // TODO Find something better to do if this fails...
     NS_WARNING_ASSERTION(ok, "SetValue() couldn't allocate memory");
   }
-}
-
-int32_t TextControlState::GetMaxLength() {
-  if (NS_WARN_IF(!mTextCtrlElement)) {
-    return -1;
-  }
-
-  const nsAttrValue* attr =
-      mTextCtrlElement->GetParsedAttr(nsGkAtoms::maxlength);
-  return attr && attr->Type() == nsAttrValue::eInteger ? attr->GetIntegerValue()
-                                                       : -1;
 }
 
 void TextControlState::GetValue(nsAString& aValue, bool aIgnoreWrap) const {
