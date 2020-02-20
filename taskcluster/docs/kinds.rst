@@ -34,6 +34,13 @@ Many builds must be signed. The build-signing task takes the unsigned `build`
 kind artifacts and passes them through signingscriptworker to a signing server
 and returns signed results.
 
+For mac notarization, we download the signed bits that have been notarized by Apple, and we staple the notarization to the app and pkg.
+
+build-notarization-part-1
+-------------------------
+
+We switched to a 3-part mac notarization workflow in bug 1562412. This is the first task, which signs the files and submits them for notarization.
+
 artifact-build
 --------------
 
