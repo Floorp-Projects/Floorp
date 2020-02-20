@@ -6,6 +6,8 @@ with Files('**'):
     BUG_COMPONENT = ('GeckoView', 'General')
 
 FINAL_TARGET_FILES.actors += [
+    'BrowserTabParent.jsm',
+    'GeckoViewContentChild.jsm',
     'LoadURIDelegateChild.jsm',
     'WebBrowserChromeChild.jsm',
 ]

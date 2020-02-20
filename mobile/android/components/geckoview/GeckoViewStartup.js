@@ -22,6 +22,16 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 const { debug, warn } = GeckoViewUtils.initLogging("Startup"); // eslint-disable-line no-unused-vars
 
 const ACTORS = {
+  BrowserTab: {
+    parent: {
+      moduleURI: "resource:///actors/BrowserTabParent.jsm",
+    },
+  },
+  GeckoViewContent: {
+    child: {
+      moduleURI: "resource:///actors/GeckoViewContentChild.jsm",
+    },
+  },
   LoadURIDelegate: {
     child: {
       moduleURI: "resource:///actors/LoadURIDelegateChild.jsm",

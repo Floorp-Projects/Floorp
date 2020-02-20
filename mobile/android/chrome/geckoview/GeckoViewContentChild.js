@@ -23,6 +23,7 @@ const SCROLL_BEHAVIOR_SMOOTH = 0;
 const SCROLL_BEHAVIOR_AUTO = 1;
 
 XPCOMUtils.defineLazyModuleGetters(this, {
+  E10SUtils: "resource://gre/modules/E10SUtils.jsm",
   ManifestObtainer: "resource://gre/modules/ManifestObtainer.jsm",
   PrivacyFilter: "resource://gre/modules/sessionstore/PrivacyFilter.jsm",
   SessionHistory: "resource://gre/modules/sessionstore/SessionHistory.jsm",
@@ -210,18 +211,15 @@ class GeckoViewContentChild extends GeckoViewChildModule {
       }
 
       case "GeckoView:RestoreState":
-        this._savedState = aMsg.data;
+        const { history, formdata, scrolldata, loadOptions } = aMsg.data;
+        this._savedState = { history, formdata, scrolldata };
 
-        if (this._savedState.history) {
-          let restoredHistory = SessionHistory.restore(
-            docShell,
-            this._savedState.history
-          );
+        if (history) {
+          let restoredHistory = SessionHistory.restore(docShell, history);
 
           addEventListener(
             "load",
             _ => {
-              const formdata = this._savedState.formdata;
               if (formdata) {
                 this.Utils.restoreFrameTreeData(
                   content,
@@ -243,7 +241,6 @@ class GeckoViewContentChild extends GeckoViewChildModule {
 
           let scrollRestore = _ => {
             if (content.location != "about:blank") {
-              const scrolldata = this._savedState.scrolldata;
               if (scrolldata) {
                 this.Utils.restoreFrameTreeData(
                   content,
@@ -278,7 +275,7 @@ class GeckoViewContentChild extends GeckoViewChildModule {
             .getInterface(Ci.nsIWebProgress);
           webProgress.addProgressListener(this.progressFilter, this.flags);
 
-          restoredHistory.QueryInterface(Ci.nsISHistory).reloadCurrentEntry();
+          this.loadEntry(loadOptions, restoredHistory);
         }
         break;
 
@@ -333,6 +330,35 @@ class GeckoViewContentChild extends GeckoViewChildModule {
         );
         break;
     }
+  }
+
+  loadEntry(loadOptions, history) {
+    if (!loadOptions) {
+      history.QueryInterface(Ci.nsISHistory).reloadCurrentEntry();
+      return;
+    }
+
+    const webNavigation = docShell.QueryInterface(Ci.nsIWebNavigation);
+
+    let {
+      referrerInfo,
+      triggeringPrincipal,
+      uri,
+      flags,
+      csp,
+      headers,
+    } = loadOptions;
+    referrerInfo = E10SUtils.deserializeReferrerInfo(referrerInfo);
+    triggeringPrincipal = E10SUtils.deserializePrincipal(triggeringPrincipal);
+    csp = E10SUtils.deserializeCSP(csp);
+
+    webNavigation.loadURI(uri, {
+      triggeringPrincipal,
+      referrerInfo,
+      loadFlags: flags,
+      csp,
+      headers,
+    });
   }
 
   // eslint-disable-next-line complexity

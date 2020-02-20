@@ -1343,13 +1343,51 @@ class NavigationDelegateTest : BaseSessionTest() {
 
     @Test
     fun processSwitching() {
+        val settings = sessionRule.runtime.settings
+        val aboutConfigEnabled = settings.aboutConfigEnabled
+        settings.aboutConfigEnabled = true
+
+        var currentUrl: String? = null
+        mainSession.delegateUntilTestEnd(object: GeckoSession.NavigationDelegate {
+            override fun onLocationChange(session: GeckoSession, url: String?) {
+                currentUrl = url
+            }
+
+            override fun onLoadError(session: GeckoSession, uri: String?, error: WebRequestError): GeckoResult<String>? {
+                assertThat("Should not get here", false, equalTo(true))
+                return null
+            }
+        })
+
         // This loads in the parent process
         mainSession.loadUri("about:config")
-        sessionRule.waitForPageStop()
+        // Switching processes involves loading about:blank
+        sessionRule.waitForPageStops(2)
+
+        assertThat("URL should match", currentUrl!!, equalTo("about:config"))
 
         // This will load a page in the child
         mainSession.loadTestPath(HELLO_HTML_PATH)
-        sessionRule.waitForPageStop()
+        sessionRule.waitForPageStops(2)
+
+        assertThat("URL should match", currentUrl!!, endsWith(HELLO_HTML_PATH))
+
+        mainSession.loadUri("about:config")
+        sessionRule.waitForPageStops(2)
+
+        assertThat("URL should match", currentUrl!!, equalTo("about:config"))
+
+        sessionRule.session.goBack()
+        sessionRule.waitForPageStops(2)
+
+        assertThat("URL should match", currentUrl!!, endsWith(HELLO_HTML_PATH))
+
+        sessionRule.session.goBack()
+        sessionRule.waitForPageStops(2)
+
+        assertThat("URL should match", currentUrl!!, equalTo("about:config"))
+
+        settings.aboutConfigEnabled = aboutConfigEnabled
     }
 
     @Test fun setLocationHash() {
