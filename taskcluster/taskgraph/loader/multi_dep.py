@@ -170,6 +170,35 @@ def single_locale_grouping(config, tasks):
     return groups
 
 
+@group_by('chunk-locales')
+def chunk_locale_grouping(config, tasks):
+    """Split by a chunk_locale (but also by platform, build-type, product)
+
+    This grouping is written for mac signing with notarization, but might also
+    be useful elsewhere.
+
+    """
+    groups = {}
+
+    for task in tasks:
+        if task.kind not in config.get('kind-dependencies', []):
+            continue
+        if skip_only_or_not(config, task):
+            continue
+        platform = task.attributes.get('build_platform')
+        build_type = task.attributes.get('build_type')
+        product = task.attributes.get('shipping_product',
+                                      task.task.get('shipping-product'))
+        chunk_locales = tuple(sorted(task.attributes.get('chunk_locales', [])))
+
+        chunk_locale_key = (platform, build_type, product, chunk_locales)
+        groups.setdefault(chunk_locale_key, [])
+        if task not in groups[chunk_locale_key]:
+            groups[chunk_locale_key].append(task)
+
+    return groups
+
+
 def assert_unique_members(kinds, error_msg=None):
     if len(kinds) != len(set(kinds)):
         raise Exception(error_msg)
