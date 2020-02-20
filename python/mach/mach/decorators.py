@@ -8,7 +8,6 @@ import argparse
 import collections
 import inspect
 import sys
-import types
 
 from .base import MachError
 from .registrar import Registrar
@@ -136,20 +135,17 @@ def CommandProvider(cls):
 
     seen_commands = set()
 
-    # We scan __dict__ because we only care about the classes own attributes,
+    # We scan __dict__ because we only care about the classes' own attributes,
     # not inherited ones. If we did inherited attributes, we could potentially
     # define commands multiple times. We also sort keys so commands defined in
     # the same class are grouped in a sane order.
-    for attr in sorted(cls.__dict__.keys()):
-        value = cls.__dict__[attr]
+    command_methods = sorted([
+        (name, value._mach_command)
+        for name, value in cls.__dict__.items()
+        if hasattr(value, '_mach_command')
+    ])
 
-        if not isinstance(value, types.FunctionType):
-            continue
-
-        command = getattr(value, '_mach_command', None)
-        if not command:
-            continue
-
+    for method, command in command_methods:
         # Ignore subcommands for now: we handle them later.
         if command.subcommand:
             continue
@@ -173,7 +169,7 @@ def CommandProvider(cls):
                 raise MachError(msg)
 
         command.cls = cls
-        command.method = attr
+        command.method = method
         command.pass_context = pass_context
 
         Registrar.register_command_handler(command)
@@ -181,16 +177,7 @@ def CommandProvider(cls):
     # Now do another pass to get sub-commands. We do this in two passes so
     # we can check the parent command existence without having to hold
     # state and reconcile after traversal.
-    for attr in sorted(cls.__dict__.keys()):
-        value = cls.__dict__[attr]
-
-        if not isinstance(value, types.FunctionType):
-            continue
-
-        command = getattr(value, '_mach_command', None)
-        if not command:
-            continue
-
+    for method, command in command_methods:
         # It is a regular command.
         if not command.subcommand:
             continue
@@ -203,7 +190,7 @@ def CommandProvider(cls):
             continue
 
         command.cls = cls
-        command.method = attr
+        command.method = method
         command.pass_context = pass_context
         parent = Registrar.command_handlers[command.name]
 
