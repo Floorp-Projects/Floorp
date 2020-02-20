@@ -3952,12 +3952,19 @@ mozilla::ipc::IPCResult ContentChild::RecvCacheBrowsingContextChildren(
 
 mozilla::ipc::IPCResult ContentChild::RecvRestoreBrowsingContextChildren(
     const MaybeDiscarded<BrowsingContext>& aContext,
-    BrowsingContext::Children&& aChildren) {
+    const nsTArray<MaybeDiscarded<BrowsingContext>>& aChildren) {
   if (aContext.IsNullOrDiscarded()) {
     return IPC_OK();
   }
 
-  aContext.get()->RestoreChildren(std::move(aChildren), /* aFromIPC */ true);
+  nsTArray<RefPtr<BrowsingContext>> children(aChildren.Length());
+  for (const auto& child : aChildren) {
+    if (!child.IsNullOrDiscarded()) {
+      children.AppendElement(child.get());
+    }
+  }
+
+  aContext.get()->RestoreChildren(std::move(children), /* aFromIPC */ true);
   return IPC_OK();
 }
 
