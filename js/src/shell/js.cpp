@@ -2761,13 +2761,6 @@ static bool CpuNow(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
-static bool ClearKeptObjects(JSContext* cx, unsigned argc, Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  JS::ClearKeptObjects(cx);
-  args.rval().setUndefined();
-  return true;
-}
-
 static bool PrintInternal(JSContext* cx, const CallArgs& args, RCFile* file) {
   if (!file->isOpen()) {
     JS_ReportErrorASCII(cx, "output file is closed");
@@ -9074,12 +9067,6 @@ JS_FN_HELP("parseBin", BinParse, 1, 0,
 "cpuNow()",
 " Returns the approximate processor time used by the process since an arbitrary epoch, in seconds.\n"
 " Only the difference between two calls to `cpuNow()` is meaningful."),
-
-   JS_FN_HELP("clearKeptObjects", ClearKeptObjects, 0, 0,
-"clearKeptObjects()",
-"Clear the kept alive objects for JS WeakRef, this is used in shell to test \n"
-"WeakRef bahavior when a synchronous sequence of ECMAScript execution completes"
-".\n"),
 
     JS_FS_HELP_END
 };
