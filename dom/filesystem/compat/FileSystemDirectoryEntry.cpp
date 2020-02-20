@@ -31,7 +31,7 @@ FileSystemDirectoryEntry::FileSystemDirectoryEntry(
   MOZ_ASSERT(aGlobal);
 }
 
-FileSystemDirectoryEntry::~FileSystemDirectoryEntry() {}
+FileSystemDirectoryEntry::~FileSystemDirectoryEntry() = default;
 
 JSObject* FileSystemDirectoryEntry::WrapObject(
     JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {

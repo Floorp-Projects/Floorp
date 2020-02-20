@@ -92,7 +92,7 @@ Directory::Directory(nsIGlobalObject* aGlobal, nsIFile* aFile,
   }
 }
 
-Directory::~Directory() {}
+Directory::~Directory() = default;
 
 nsIGlobalObject* Directory::GetParentObject() const { return mGlobal; }
 
