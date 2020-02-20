@@ -2073,6 +2073,17 @@ var gBrowserInit = {
       }
     });
 
+    if (BrowserHandler.kiosk) {
+      // We don't modify popup windows for kiosk mode
+      if (!gURLBar.readOnly) {
+        window.fullScreen = true;
+      }
+    }
+
+    if (!Services.policies.isAllowed("hideShowMenuBar")) {
+      document.getElementById("toolbar-menubar").removeAttribute("toolbarname");
+    }
+
     CaptivePortalWatcher.delayedStartup();
 
     this.delayedStartupFinished = true;
@@ -2086,17 +2097,6 @@ var gBrowserInit = {
 
     Services.obs.notifyObservers(window, "browser-delayed-startup-finished");
     TelemetryTimestamps.add("delayedStartupFinished");
-
-    if (BrowserHandler.kiosk) {
-      // We don't modify popup windows for kiosk mode
-      if (!gURLBar.readOnly) {
-        window.fullScreen = true;
-      }
-    }
-
-    if (!Services.policies.isAllowed("hideShowMenuBar")) {
-      document.getElementById("toolbar-menubar").removeAttribute("toolbarname");
-    }
   },
 
   _setInitialFocus() {
