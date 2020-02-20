@@ -3,8 +3,6 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <!DOCTYPE window [
-<!ENTITY % styleEditorDTD SYSTEM "chrome://devtools/locale/styleeditor.dtd" >
- %styleEditorDTD;
 <!ENTITY % editMenuStrings SYSTEM "chrome://global/locale/editMenuOverlay.dtd">
  %editMenuStrings;
 <!ENTITY % sourceEditorStrings SYSTEM "chrome://devtools/locale/sourceeditor.dtd">
@@ -25,6 +23,7 @@
 
   <linkset>
     <html:link rel="localization" href="toolkit/global/textActions.ftl"/>
+    <html:link rel="localization" href="devtools/client/styleeditor.ftl"/>
   </linkset>
 
   <script src="chrome://devtools/content/shared/theme-switching.js"/>
@@ -76,9 +75,9 @@
     </menupopup>
     <menupopup id="sidebar-context" incontentshell="false">
       <menuitem id="context-openlinknewtab"
-        label="&openLinkNewTab.label;"/>
+        data-l10n-id="styleeditor-open-link-new-tab"/>
       <menuitem id="context-copyurl"
-        label="&copyUrl.label;"/>
+        data-l10n-id="styleeditor-copy-url"/>
     </menupopup>
   </popupset>
 
@@ -96,28 +95,28 @@
         <toolbar class="devtools-toolbar">
           <hbox class="devtools-toolbarbutton-group">
             <toolbarbutton class="style-editor-newButton devtools-toolbarbutton"
-                        accesskey="&newButton.accesskey;"
-                        tooltiptext="&newButton.tooltip;"/>
+                        data-l10n-id="styleeditor-new-button"/>
             <toolbarbutton class="style-editor-importButton devtools-toolbarbutton"
-                        accesskey="&importButton.accesskey;"
-                        tooltiptext="&importButton.tooltip;"/>
+                        data-l10n-id="styleeditor-import-button"/>
           </hbox>
           <spacer/>
           <toolbarbutton id="style-editor-options"
                       class="devtools-toolbarbutton devtools-option-toolbarbutton"
-                      tooltiptext="&optionsButton.tooltip;"/>
+                      data-l10n-id="styleeditor-options-button"/>
         </toolbar>
       </box>
       <box id="splitview-resizer-target" class="theme-sidebar splitview-nav-container"
               persist="height">
         <html:ol class="splitview-nav" tabindex="0"></html:ol>
         <html:div class="splitview-nav placeholder empty">
-          <html:p><html:strong>&noStyleSheet.label;</html:strong></html:p>
-          <html:p>&noStyleSheet-tip-start.label;
-            <html:a href="#"
-              class="style-editor-newButton">&noStyleSheet-tip-action.label;</html:a>
-            &noStyleSheet-tip-end.label;</html:p>
-        </html:div>
+          <html:p><html:strong
+            data-l10n-id="styleeditor-no-stylesheet"
+          ></html:strong></html:p>  
+          <html:p
+            data-l10n-id="styleeditor-no-stylesheet-tip"><html:a class="style-editor-newButton" 
+                                                                data-l10n-name="append-new-stylesheet" href="#"/></html:p>
+            </html:div>
+
       </box> <!-- .splitview-nav-container -->
     </box>   <!-- .splitview-controller -->
     <splitter class="devtools-side-splitter devtools-invisible-splitter"/>
@@ -126,8 +125,7 @@
     <html:div id="splitview-templates" hidden="true">
       <html:li id="splitview-tpl-summary-stylesheet" tabindex="0">
         <label class="stylesheet-enabled" tabindex="0"
-          tooltiptext="&visibilityToggle.tooltip;"
-          accesskey="&saveButton.accesskey;"></label>
+          data-l10n-id="styleeditor-visibility-toggle"></label>
         <html:hgroup class="stylesheet-info">
           <html:h1><html:a class="stylesheet-name" tabindex="0"><label crop="center"/></html:a></html:h1>
           <html:div class="stylesheet-more">
@@ -136,8 +134,7 @@
             <html:h3 class="stylesheet-rule-count"></html:h3>
             <spacer/>
             <html:h3><label class="stylesheet-saveButton"
-                  tooltiptext="&saveButton.tooltip;"
-                  accesskey="&saveButton.accesskey;">&saveButton.label;</label></html:h3>
+                  data-l10n-id="styleeditor-save-button"></label></html:h3>
           </html:div>
         </html:hgroup>
       </html:li>
@@ -145,11 +142,11 @@
       <box id="splitview-tpl-details-stylesheet" class="splitview-details">
         <hbox class="stylesheet-details-container">
           <box class="stylesheet-editor-input textbox"
-               data-placeholder="&editorTextbox.placeholder;"/>
+               data-l10n-id="styleeditor-editor-textbox"/>
           <splitter class="devtools-side-splitter"/>
           <vbox class="stylesheet-sidebar theme-sidebar" hidden="true">
-            <toolbar class="devtools-toolbar">
-              &mediaRules.label;
+            <toolbar class="devtools-toolbar" 
+              data-l10n-id="styleeditor-media-rules">
             </toolbar>
             <vbox class="stylesheet-media-container" flex="1">
               <html:div class="stylesheet-media-list" />
