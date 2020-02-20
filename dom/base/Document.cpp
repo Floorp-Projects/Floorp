@@ -15087,7 +15087,7 @@ void Document::MaybeAllowStorageForOpenerAfterUserInteraction() {
   }
 
   // No tracking resource.
-  if (!nsContentUtils::IsTrackingResourceWindow(inner)) {
+  if (!nsContentUtils::IsThirdPartyTrackingResourceWindow(inner)) {
     return;
   }
 
