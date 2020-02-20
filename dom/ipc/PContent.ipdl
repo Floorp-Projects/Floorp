@@ -957,7 +957,7 @@ parent:
 
     async PSessionStorageObserver();
 
-    async PSHistory(BrowsingContext aContext);
+    async PSHistory(MaybeDiscardedBrowsingContext aContext);
 
     // Clone from entry or use shared id.
     sync PSHEntry(nullable PSHistory shistory, PSHEntryOrSharedID entryOrSharedID);

@@ -625,7 +625,8 @@ class ContentChild final
                                     const PSHEntryOrSharedID& aEntryOrSharedID);
   void DeallocPSHEntryChild(PSHEntryChild*);
 
-  PSHistoryChild* AllocPSHistoryChild(BrowsingContext* aContext);
+  PSHistoryChild* AllocPSHistoryChild(
+      const MaybeDiscarded<BrowsingContext>& aContext);
 
   void DeallocPSHistoryChild(PSHistoryChild* aActor);
 
