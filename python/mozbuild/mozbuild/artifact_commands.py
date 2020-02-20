@@ -178,7 +178,7 @@ class PackageFrontend(MachCommandBase):
     def artifact_toolchain(self, verbose=False, cache_dir=None,
                            skip_cache=False, from_build=(),
                            tooltool_manifest=None, authentication_file=None,
-                           no_unpack=False, retry=None,
+                           no_unpack=False, retry=0,
                            artifact_manifest=None, files=()):
         '''Download, cache and install pre-built toolchains.
         '''
