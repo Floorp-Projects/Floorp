@@ -136,7 +136,7 @@ class ReadStream::Inner::NoteClosedRunnable final : public CancelableRunnable {
   }
 
  private:
-  ~NoteClosedRunnable() {}
+  ~NoteClosedRunnable() = default;
 
   RefPtr<ReadStream::Inner> mStream;
 };
@@ -168,7 +168,7 @@ class ReadStream::Inner::ForgetRunnable final : public CancelableRunnable {
   }
 
  private:
-  ~ForgetRunnable() {}
+  ~ForgetRunnable() = default;
 
   RefPtr<ReadStream::Inner> mStream;
 };

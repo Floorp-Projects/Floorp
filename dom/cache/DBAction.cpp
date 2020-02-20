@@ -64,7 +64,7 @@ nsresult WipeDatabase(const QuotaInfo& aQuotaInfo, nsIFile* aDBFile,
 
 DBAction::DBAction(Mode aMode) : mMode(aMode) {}
 
-DBAction::~DBAction() {}
+DBAction::~DBAction() = default;
 
 void DBAction::RunOnTarget(Resolver* aResolver, const QuotaInfo& aQuotaInfo,
                            Data* aOptionalData) {
@@ -151,7 +151,7 @@ nsresult DBAction::OpenConnection(const QuotaInfo& aQuotaInfo, nsIFile* aDBDir,
 
 SyncDBAction::SyncDBAction(Mode aMode) : DBAction(aMode) {}
 
-SyncDBAction::~SyncDBAction() {}
+SyncDBAction::~SyncDBAction() = default;
 
 void SyncDBAction::RunWithDBOnTarget(Resolver* aResolver,
                                      const QuotaInfo& aQuotaInfo,

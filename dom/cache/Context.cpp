@@ -24,7 +24,7 @@ using mozilla::dom::cache::QuotaInfo;
 
 class NullAction final : public Action {
  public:
-  NullAction() {}
+  NullAction() = default;
 
   virtual void RunOnTarget(Resolver* aResolver, const QuotaInfo&,
                            Data*) override {
@@ -149,7 +149,7 @@ class Context::QuotaInitRunnable final : public nsIRunnable,
     nsresult Result() const { return mResult; }
 
    private:
-    ~SyncResolver() {}
+    ~SyncResolver() = default;
 
     bool mResolved;
     nsresult mResult;
