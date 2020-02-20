@@ -7,6 +7,7 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
+import argparse
 import json
 import os
 import textwrap
@@ -88,7 +89,7 @@ class MachCommands(MachCommandBase):
     def script_dir(self):
         return os.path.join(self.topsrcdir, "js/src/devtools/rootAnalysis")
 
-    @Command('hazards', category='build',
+    @Command('hazards', category='build', order='declaration',
              description='Commands for running the static analysis for GC rooting hazards')
     def hazards(self):
         """Commands related to performing the GC rooting hazard analysis"""
@@ -235,8 +236,7 @@ class MachCommands(MachCommandBase):
         return self.run_process(args=args, cwd=self.work_dir, pass_thru=True)
 
     @inherit_command_args('build')
-    @SubCommand('hazards', 'compile',
-                description='(Internal: perform the monitored hazard build)')
+    @SubCommand('hazards', 'compile', description=argparse.SUPPRESS)
     @CommandArgument('--mozconfig', default=None, metavar='FILENAME',
                      help='Build with the given mozconfig.')
     @CommandArgument('--application', default='browser',
