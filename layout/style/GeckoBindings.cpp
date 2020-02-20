@@ -1485,13 +1485,8 @@ GeckoFontMetrics Gecko_GetFontMetrics(const nsPresContext* aPresContext,
       presContext, aIsVertical, aFont, aFontSize, aUseUserFontSet);
 
   ret.mXSize = fm->XHeight();
-
-  // The size of the 'ch' unit is based on the width of the 'zero' glyph *in
-  // the font used to render it*, which may not be the same as the "first
-  // available font" in general, so we must explicitly tell GetFirstValidFont
-  // which character we care about.
   gfxFloat zeroWidth = fm->GetThebesFontGroup()
-                           ->GetFirstValidFont('0')
+                           ->GetFirstValidFont()
                            ->GetMetrics(fm->Orientation())
                            .zeroWidth;
   ret.mChSize = zeroWidth >= 0.0
