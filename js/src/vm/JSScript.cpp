@@ -4304,7 +4304,7 @@ void PrivateScriptData::trace(JSTracer* trc) {
 /* static */
 JSScript* JSScript::New(JSContext* cx, HandleObject functionOrGlobal,
                         HandleScriptSourceObject sourceObject,
-                        SourceExtent extent) {
+                        const SourceExtent& extent) {
   void* script = Allocate<BaseScript>(cx);
   if (!script) {
     return nullptr;
@@ -4335,7 +4335,7 @@ static bool ShouldTrackRecordReplayProgress(JSScript* script) {
 JSScript* JSScript::Create(JSContext* cx, HandleObject functionOrGlobal,
                            const ReadOnlyCompileOptions& options,
                            HandleScriptSourceObject sourceObject,
-                           SourceExtent extent) {
+                           const SourceExtent& extent) {
   RootedScript script(
       cx, JSScript::New(cx, functionOrGlobal, sourceObject, extent));
   if (!script) {
@@ -5493,7 +5493,7 @@ void LazyScript::initScript(JSScript* script) {
 LazyScript* LazyScript::CreateRaw(JSContext* cx, uint32_t ngcthings,
                                   HandleFunction fun,
                                   HandleScriptSourceObject sourceObject,
-                                  SourceExtent extent) {
+                                  const SourceExtent& extent) {
   cx->check(fun);
 
   void* res = Allocate<BaseScript>(cx);
@@ -5538,7 +5538,7 @@ LazyScript* LazyScript::Create(
     JSContext* cx, HandleFunction fun, HandleScriptSourceObject sourceObject,
     const frontend::AtomVector& closedOverBindings,
     const frontend::FunctionBoxVector& innerFunctionBoxes,
-    SourceExtent extent) {
+    const SourceExtent& extent) {
   uint32_t ngcthings =
       innerFunctionBoxes.length() + closedOverBindings.length();
 
