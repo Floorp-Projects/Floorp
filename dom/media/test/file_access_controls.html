@@ -2,7 +2,7 @@
 <head>
   <script type="text/javascript" src="manifest.js"></script>
 </head>
-<body onload="setTimeout(load, 0);">
+<body onload="setTimeout(load, 0);" onunload="done()">
 <script>
 
 // Page URL: http://example.org/tests/dom/media/test/file_access_controls.html
@@ -115,7 +115,6 @@ function nextTest() {
     } else {
       //dump("Exiting...\n");
       // We're done, exit the test.
-      done();
       window.close();
       return;
     }

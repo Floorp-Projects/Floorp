@@ -41,11 +41,7 @@ class CanonicalBrowsingContext final : public BrowsingContext {
   bool IsOwnedByProcess(uint64_t aProcessId) const {
     return mProcessId == aProcessId;
   }
-  bool IsEmbeddedInProcess(uint64_t aProcessId) const {
-    return mEmbedderProcessId == aProcessId;
-  }
   uint64_t OwnerProcessId() const { return mProcessId; }
-  uint64_t EmbedderProcessId() const { return mEmbedderProcessId; }
   ContentParent* GetContentParent() const;
 
   void GetCurrentRemoteType(nsAString& aRemoteType, ErrorResult& aRv) const;
@@ -117,10 +113,8 @@ class CanonicalBrowsingContext final : public BrowsingContext {
   using Type = BrowsingContext::Type;
   CanonicalBrowsingContext(BrowsingContext* aParent,
                            BrowsingContextGroup* aGroup,
-                           uint64_t aBrowsingContextId,
-                           uint64_t aOwnerProcessId,
-                           uint64_t aEmbedderProcessId, Type aType,
-                           FieldTuple&& aFields);
+                           uint64_t aBrowsingContextId, uint64_t aProcessId,
+                           Type aType, FieldTuple&& aFields);
 
  private:
   friend class BrowsingContext;
@@ -154,9 +148,6 @@ class CanonicalBrowsingContext final : public BrowsingContext {
   // XXX(farre): Store a ContentParent pointer here rather than mProcessId?
   // Indicates which process owns the docshell.
   uint64_t mProcessId;
-
-  // Indicates which process owns the embedder element.
-  uint64_t mEmbedderProcessId;
 
   // The ID of the former owner process during an ownership change, which may
   // have in-flight messages that assume it is still the owner.

@@ -477,7 +477,9 @@ class nsDocShell final : public nsDocLoader,
   // Clear the document's storage access flag if needed.
   void MaybeClearStorageAccessFlag();
 
-  void SetWillChangeProcess() { mWillChangeProcess = true; }
+  void SkipBrowsingContextDetach() {
+    mSkipBrowsingContextDetachOnDestroy = true;
+  }
 
   // Create a content viewer within this nsDocShell for the given
   // `WindowGlobalChild` actor.
@@ -1353,9 +1355,10 @@ class nsDocShell final : public nsDocLoader,
 
   bool mIsFrame : 1;
 
-  // If mWillChangeProcess is set to true, then when the docshell is destroyed,
-  // we prepare the browsing context to change process.
-  bool mWillChangeProcess : 1;
+  // If mSkipBrowsingContextDetachOnDestroy is set to true, then when the
+  // docshell is destroyed, the browsing context will not be detached. This is
+  // for cases where we want to preserve the BC for future use.
+  bool mSkipBrowsingContextDetachOnDestroy : 1;
 
   // Set when activity in this docshell is being watched by the developer tools.
   bool mWatchedByDevtools : 1;
