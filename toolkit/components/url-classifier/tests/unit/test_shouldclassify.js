@@ -128,6 +128,7 @@ add_task(async function testShouldClassify() {
     "privacy.trackingprotection.annotate_channels",
     true
   );
+  Services.prefs.setBoolPref("network.dns.native-is-localhost", true);
 
   setupHttpServer();
 
@@ -141,9 +142,11 @@ add_task(async function testShouldClassify() {
       channel.asyncOpen({
         onStartRequest: (request, context) => {
           Assert.equal(
-            request
-              .QueryInterface(Ci.nsIClassifiedChannel)
-              .isTrackingResource(),
+            !!(
+              request.QueryInterface(Ci.nsIClassifiedChannel)
+                .classificationFlags &
+              Ci.nsIClassifiedChannel.CLASSIFIED_ANY_BASIC_TRACKING
+            ),
             getExpectedResult(params)
           );
           request.cancel(Cr.NS_ERROR_ABORT);

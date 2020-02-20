@@ -1095,6 +1095,9 @@ this.AntiTracking = {
       channel.asyncOpen(listener);
     });
 
-    return channel.QueryInterface(Ci.nsIClassifiedChannel).isTrackingResource();
+    return !!(
+      channel.QueryInterface(Ci.nsIClassifiedChannel).classificationFlags &
+      Ci.nsIClassifiedChannel.CLASSIFIED_ANY_BASIC_TRACKING
+    );
   },
 };
