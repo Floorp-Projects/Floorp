@@ -22,7 +22,7 @@ namespace mozilla {
 namespace dom {
 
 MediaController::MediaController(uint64_t aContextId)
-    : mBrowsingContextId(aContextId) {
+    : MediaSessionController(aContextId) {
   MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess(),
                         "MediaController only runs on Chrome process!");
   LOG("Create controller %" PRId64, Id());
@@ -94,7 +94,7 @@ void MediaController::UpdateMediaControlKeysEventToContentMediaIfNeeded(
   RefPtr<BrowsingContext> context =
       mActiveMediaSessionContextId
           ? BrowsingContext::Get(*mActiveMediaSessionContextId)
-          : BrowsingContext::Get(mBrowsingContextId);
+          : BrowsingContext::Get(mTopLevelBCId);
   if (context && !context->IsDiscarded()) {
     context->Canonical()->UpdateMediaControlKeysEvent(aEvent);
   }
@@ -222,8 +222,6 @@ void MediaController::SetPlayState(PlaybackState aState) {
 }
 
 PlaybackState MediaController::GetState() const { return mState; }
-
-uint64_t MediaController::Id() const { return mBrowsingContextId; }
 
 bool MediaController::IsAudible() const {
   return mState == PlaybackState::ePlaying && mAudible;
