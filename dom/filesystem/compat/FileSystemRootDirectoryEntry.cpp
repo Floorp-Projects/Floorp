@@ -29,7 +29,7 @@ FileSystemRootDirectoryEntry::FileSystemRootDirectoryEntry(
   MOZ_ASSERT(aGlobal);
 }
 
-FileSystemRootDirectoryEntry::~FileSystemRootDirectoryEntry() {}
+FileSystemRootDirectoryEntry::~FileSystemRootDirectoryEntry() = default;
 
 void FileSystemRootDirectoryEntry::GetName(nsAString& aName,
                                            ErrorResult& aRv) const {

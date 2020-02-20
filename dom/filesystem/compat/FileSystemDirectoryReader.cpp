@@ -104,7 +104,7 @@ class PromiseHandler final : public PromiseNativeHandler {
   }
 
  private:
-  ~PromiseHandler() {}
+  ~PromiseHandler() = default;
 
   RefPtr<FileSystemDirectoryEntry> mParentEntry;
   RefPtr<FileSystem> mFileSystem;
@@ -138,7 +138,7 @@ FileSystemDirectoryReader::FileSystemDirectoryReader(
   MOZ_ASSERT(aFileSystem);
 }
 
-FileSystemDirectoryReader::~FileSystemDirectoryReader() {}
+FileSystemDirectoryReader::~FileSystemDirectoryReader() = default;
 
 JSObject* FileSystemDirectoryReader::WrapObject(
     JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {
