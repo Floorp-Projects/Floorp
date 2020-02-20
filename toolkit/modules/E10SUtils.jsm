@@ -854,14 +854,7 @@ var E10SUtils = {
     aFlags,
     aCsp
   ) {
-    let actor;
-    try {
-      actor = aDocShell.domWindow.windowGlobalChild.getActor("BrowserTab");
-    } catch (ex) {}
-    if (!actor) {
-      // Fall back to using the message manager.
-      actor = aDocShell.messageManager;
-    }
+    const actor = aDocShell.domWindow.windowGlobalChild.getActor("BrowserTab");
 
     // Retarget the load to the correct process
     let sessionHistory = aDocShell.QueryInterface(Ci.nsIWebNavigation)
