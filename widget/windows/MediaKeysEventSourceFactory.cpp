@@ -3,13 +3,17 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "MediaKeysEventSourceFactory.h"
+#include "WindowsSMTCProvider.h"
 
 namespace mozilla {
 namespace widget {
 
 mozilla::dom::MediaControlKeysEventSource* CreateMediaControlKeysEventSource() {
-  // TODO : will implement this in bug 1584501.
-  return nullptr;
+#ifndef __MINGW32__
+  return new WindowsSMTCProvider();
+#else
+  return nullptr;  // MinGW doesn't support the required Windows 8.1+ APIs
+#endif
 }
 
 }  // namespace widget
