@@ -7,6 +7,9 @@ PROJECT=dump_syms
 case "$(uname -s)" in
 Linux)
     COMPRESS_EXT=xz
+    export RUSTFLAGS=-Clinker=clang++
+    export CXX=clang++
+    export PATH=$MOZ_FETCHES_DIR/clang/bin:$MOZ_FETCHES_DIR/binutils/bin:$PATH
     ;;
 MINGW*)
     UPLOAD_DIR=$PWD/public/build

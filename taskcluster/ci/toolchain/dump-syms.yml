@@ -20,6 +20,8 @@ linux64-dump-syms:
         toolchain-artifact: public/build/dump_syms.tar.xz
     fetches:
         toolchain:
+            - linux64-binutils
+            - linux64-clang
             - linux64-rust
 
 win64-dump-syms:
