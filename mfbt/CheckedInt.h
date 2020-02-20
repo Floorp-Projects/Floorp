@@ -14,6 +14,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/IntegerTypeTraits.h"
 #include <limits>
+#include <type_traits>
 
 #define MOZILLA_CHECKEDINT_COMPARABLE_VERSION(major, minor, patch) \
   (major << 16 | minor << 8 | patch)
@@ -408,7 +409,8 @@ struct NegateImpl<T, false> {
   static constexpr CheckedInt<T> negate(const CheckedInt<T>& aVal) {
     // Handle negation separately for signed/unsigned, for simpler code and to
     // avoid an MSVC warning negating an unsigned value.
-    return CheckedInt<T>(0, aVal.isValid() && aVal.mValue == 0);
+    static_assert(detail::IsInRange<T>(0), "Integer type can't represent 0");
+    return CheckedInt<T>(T(0), aVal.isValid() && aVal.mValue == 0);
   }
 };
 
@@ -420,7 +422,10 @@ struct NegateImpl<T, true> {
     if (!aVal.isValid() || aVal.mValue == std::numeric_limits<T>::min()) {
       return CheckedInt<T>(aVal.mValue, false);
     }
-    return CheckedInt<T>(-aVal.mValue, true);
+    /* For some T, arithmetic ops automatically promote to a wider type, so
+     * explitly do the narrowing cast here.  The narrowing cast is valid because
+     * we did the check for min value above. */
+    return CheckedInt<T>(T(-aVal.mValue), true);
   }
 };
 
@@ -506,9 +511,10 @@ class CheckedInt {
   template <typename U>
   constexpr CheckedInt(U aValue, bool aIsValid)
       : mValue(aValue), mIsValid(aIsValid) {
-    static_assert(
-        detail::IsSupported<T>::value && detail::IsSupported<U>::value,
-        "This type is not supported by CheckedInt");
+    static_assert(std::is_same_v<T, U>,
+                  "this constructor must accept only T values");
+    static_assert(detail::IsSupported<T>::value,
+                  "This type is not supported by CheckedInt");
   }
 
   friend struct detail::NegateImpl<T>;
@@ -544,9 +550,10 @@ class CheckedInt {
   }
 
   /** Constructs a valid checked integer with initial value 0 */
-  constexpr CheckedInt() : mValue(0), mIsValid(true) {
+  constexpr CheckedInt() : mValue(T(0)), mIsValid(true) {
     static_assert(detail::IsSupported<T>::value,
                   "This type is not supported by CheckedInt");
+    static_assert(detail::IsInRange<T>(0), "Integer type can't represent 0");
   }
 
   /** @returns the actual value */
@@ -668,15 +675,20 @@ class CheckedInt {
   bool operator>=(U aOther) const = delete;
 };
 
-#define MOZ_CHECKEDINT_BASIC_BINARY_OPERATOR(NAME, OP)             \
-  template <typename T>                                            \
-  constexpr CheckedInt<T> operator OP(const CheckedInt<T>& aLhs,   \
-                                      const CheckedInt<T>& aRhs) { \
-    if (!detail::Is##NAME##Valid(aLhs.mValue, aRhs.mValue)) {      \
-      return CheckedInt<T>(0, false);                              \
-    }                                                              \
-    return CheckedInt<T>(aLhs.mValue OP aRhs.mValue,               \
-                         aLhs.mIsValid && aRhs.mIsValid);          \
+#define MOZ_CHECKEDINT_BASIC_BINARY_OPERATOR(NAME, OP)                      \
+  template <typename T>                                                     \
+  constexpr CheckedInt<T> operator OP(const CheckedInt<T>& aLhs,            \
+                                      const CheckedInt<T>& aRhs) {          \
+    if (!detail::Is##NAME##Valid(aLhs.mValue, aRhs.mValue)) {               \
+      static_assert(detail::IsInRange<T>(0),                                \
+                    "Integer type can't represent 0");                      \
+      return CheckedInt<T>(T(0), false);                                    \
+    }                                                                       \
+    /* For some T, arithmetic ops automatically promote to a wider type, so \
+     * explitly do the narrowing cast here.  The narrowing cast is valid    \
+     * because we did the "Is##NAME##Valid" check above. */                 \
+    return CheckedInt<T>(T(aLhs.mValue OP aRhs.mValue),                     \
+                         aLhs.mIsValid && aRhs.mIsValid);                   \
   }
 
 #if MOZ_HAS_BUILTIN_OP_OVERFLOW
@@ -686,7 +698,9 @@ class CheckedInt {
                                         const CheckedInt<T>& aRhs) { \
       auto result = T{};                                             \
       if (FUN(aLhs.mValue, aRhs.mValue, &result)) {                  \
-        return CheckedInt<T>(0, false);                              \
+        static_assert(detail::IsInRange<T>(0),                       \
+                      "Integer type can't represent 0");             \
+        return CheckedInt<T>(T(0), false);                           \
       }                                                              \
       return CheckedInt<T>(result, aLhs.mIsValid && aRhs.mIsValid);  \
     }
