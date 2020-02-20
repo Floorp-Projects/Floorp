@@ -10,6 +10,7 @@ import errno
 import json
 import os
 import re
+import six
 
 from mozbuild.util import hash_file
 import mozpack.path as mozpath
@@ -245,15 +246,13 @@ class WarningsDatabase(object):
         obj = {'files': {}}
 
         # All this hackery because JSON can't handle sets.
-        for k, v in self._files.iteritems():
+        for k, v in six.iteritems(self._files):
             obj['files'][k] = {}
 
-            for k2, v2 in v.iteritems():
+            for k2, v2 in six.iteritems(v):
                 normalized = v2
-
-                if k2 == 'warnings':
-                    normalized = [w for w in v2]
-
+                if isinstance(v2, set):
+                    normalized = list(v2)
                 obj['files'][k][k2] = normalized
 
         json.dump(obj, fh, indent=2)
@@ -265,13 +264,10 @@ class WarningsDatabase(object):
         self._files = obj['files']
 
         # Normalize data types.
-        for filename, value in self._files.iteritems():
-            for k, v in value.iteritems():
-                if k != 'warnings':
-                    continue
-
+        for filename, value in six.iteritems(self._files):
+            if 'warnings' in value:
                 normalized = set()
-                for d in v:
+                for d in value['warnings']:
                     w = CompilerWarning()
                     w.update(d)
                     normalized.add(w)
