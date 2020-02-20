@@ -15,10 +15,6 @@
 
 ### Feature-specific test groups
 
-common-tests:
-    - marionette
-    - mochitest-browser-chrome
-
 web-platform-tests:
     - web-platform-tests
     - web-platform-tests-crashtests
@@ -341,7 +337,6 @@ linux32-tests:
 
 linux-common-tests:
     - marionette
-    - mochitest-browser-chrome
 
 linux1804-tests:
     - cppunit
@@ -353,6 +348,7 @@ linux1804-tests:
     - jittest
     - mochitest
     - mochitest-a11y
+    - mochitest-browser-chrome
     - mochitest-chrome
     - mochitest-devtools-chrome
     - mochitest-gpu
@@ -400,6 +396,7 @@ linux1804-ccov-tests:
     - jsreftest
     - mochitest
     - mochitest-a11y
+    - mochitest-browser-chrome
     - mochitest-chrome
     - mochitest-devtools-chrome
     - mochitest-gpu
