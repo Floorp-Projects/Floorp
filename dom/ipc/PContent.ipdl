@@ -1039,7 +1039,7 @@ parent:
                              int64_t aContentLength,
                              bool aWasFileChannel,
                              URIParams? aReferrer,
-                             BrowsingContext aContext,
+                             MaybeDiscardedBrowsingContext aContext,
                              bool aShouldCloseWindow);
 
     async PHandlerService();
