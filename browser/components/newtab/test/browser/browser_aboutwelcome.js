@@ -72,7 +72,7 @@ add_task(async function test_trailhead_branches() {
     "join-dynamic",
     // Expected selectors:
     [
-      ".trailhead.joinCohort",
+      ".trailhead.welcomeCohort",
       "button[data-l10n-id=onboarding-data-sync-button2]",
       "button[data-l10n-id=onboarding-firefox-monitor-button]",
       "button[data-l10n-id=onboarding-browse-privately-button]",
@@ -85,7 +85,7 @@ add_task(async function test_trailhead_branches() {
     "join-dynamic",
     // Expected selectors:
     [
-      ".trailhead.joinCohort",
+      ".trailhead.welcomeCohort",
       "button[data-l10n-id=onboarding-firefox-monitor-button]",
       "button[data-l10n-id=onboarding-browse-privately-button]",
     ],
@@ -99,7 +99,7 @@ add_task(async function test_trailhead_branches() {
     "join-dynamic",
     // Expected selectors:
     [
-      ".trailhead.joinCohort",
+      ".trailhead.welcomeCohort",
       "button[data-l10n-id=onboarding-firefox-monitor-button]",
     ],
     // Unexpected selectors:
@@ -121,7 +121,7 @@ add_task(async function test_trailhead_branches() {
     "modal_variant_a-supercharge",
     // Expected selectors:
     [
-      ".trailhead.joinCohort",
+      ".trailhead.welcomeCohort",
       "p[data-l10n-id=onboarding-benefit-sync-text]",
       "p[data-l10n-id=onboarding-benefit-monitor-text]",
       "p[data-l10n-id=onboarding-benefit-lockwise-text]",
@@ -132,11 +132,25 @@ add_task(async function test_trailhead_branches() {
     "modal_variant_f-supercharge",
     // Expected selectors:
     [
-      ".trailhead.joinCohort",
+      ".trailhead.welcomeCohort",
       "h3[data-l10n-id=onboarding-welcome-form-header]",
       "p[data-l10n-id=onboarding-benefit-sync-text]",
       "p[data-l10n-id=onboarding-benefit-monitor-text]",
       "p[data-l10n-id=onboarding-benefit-lockwise-text]",
+      "button[data-l10n-id=onboarding-join-form-signin]",
+    ]
+  );
+
+  await test_trailhead_branch(
+    "join-supercharge",
+    // Expected selectors:
+    [
+      ".trailhead.welcomeCohort",
+      "h3[data-l10n-id=onboarding-welcome-form-header]",
+      "p[data-l10n-id=onboarding-benefit-sync-text]",
+      "p[data-l10n-id=onboarding-benefit-monitor-text]",
+      "p[data-l10n-id=onboarding-benefit-lockwise-text]",
+      "button[data-l10n-id=onboarding-join-form-signin]",
     ]
   );
 

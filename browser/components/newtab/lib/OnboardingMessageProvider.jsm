@@ -35,26 +35,6 @@ const TRAILHEAD_ONBOARDING_TEMPLATE = {
   },
 };
 
-const TRAILHEAD_MODAL_VARIANT_CONTENT = {
-  className: "joinCohort",
-  benefits: ["sync", "monitor", "lockwise"].map(id => ({
-    id,
-    title: { string_id: `onboarding-benefit-${id}-title` },
-    text: { string_id: `onboarding-benefit-${id}-text` },
-  })),
-  learn: {
-    text: { string_id: "onboarding-welcome-modal-family-learn-more" },
-    url: "https://www.mozilla.org/firefox/accounts/",
-  },
-  form: {
-    title: { string_id: "onboarding-welcome-form-header" },
-    text: { string_id: "onboarding-join-form-body" },
-    email: { string_id: "onboarding-join-form-email" },
-    button: { string_id: "onboarding-join-form-continue" },
-  },
-  skipButton: { string_id: "onboarding-start-browsing-button-label" },
-};
-
 const TRAILHEAD_FULL_PAGE_CONTENT = {
   title: { string_id: "onboarding-welcome-body" },
   learn: {
@@ -69,9 +49,8 @@ const TRAILHEAD_FULL_PAGE_CONTENT = {
   },
 };
 
-const JOIN_CONTENT = {
-  className: "joinCohort",
-  title: { string_id: "onboarding-welcome-body" },
+const DEFAULT_WELCOME_CONTENT = {
+  className: "welcomeCohort",
   benefits: ["sync", "monitor", "lockwise"].map(id => ({
     id,
     title: { string_id: `onboarding-benefit-${id}-title` },
@@ -96,7 +75,8 @@ const ONBOARDING_MESSAGES = () => [
     utm_term: "trailhead-join",
     ...TRAILHEAD_ONBOARDING_TEMPLATE,
     content: {
-      ...JOIN_CONTENT,
+      ...DEFAULT_WELCOME_CONTENT,
+      title: { string_id: "onboarding-welcome-body" },
     },
   },
   {
@@ -135,21 +115,12 @@ const ONBOARDING_MESSAGES = () => [
     trigger: { id: "firstRun" },
   },
   {
-    id: "TRAILHEAD_5",
-    targeting: "trailheadInterrupt == 'modal_control'",
-    utm_term: "trailhead-modal_control",
-    ...TRAILHEAD_ONBOARDING_TEMPLATE,
-    content: {
-      ...JOIN_CONTENT,
-    },
-  },
-  {
     id: "TRAILHEAD_6",
     targeting: "trailheadInterrupt == 'modal_variant_a'",
     utm_term: "trailhead-modal_variant_a",
     ...TRAILHEAD_ONBOARDING_TEMPLATE,
     content: {
-      ...TRAILHEAD_MODAL_VARIANT_CONTENT,
+      ...DEFAULT_WELCOME_CONTENT,
       title: { string_id: "onboarding-welcome-modal-get-body" },
     },
   },
@@ -159,7 +130,7 @@ const ONBOARDING_MESSAGES = () => [
     utm_term: "trailhead-modal_variant_b",
     ...TRAILHEAD_ONBOARDING_TEMPLATE,
     content: {
-      ...TRAILHEAD_MODAL_VARIANT_CONTENT,
+      ...DEFAULT_WELCOME_CONTENT,
       title: { string_id: "onboarding-welcome-modal-supercharge-body" },
     },
   },
@@ -169,18 +140,8 @@ const ONBOARDING_MESSAGES = () => [
     utm_term: "trailhead-modal_variant_c",
     ...TRAILHEAD_ONBOARDING_TEMPLATE,
     content: {
-      ...TRAILHEAD_MODAL_VARIANT_CONTENT,
+      ...DEFAULT_WELCOME_CONTENT,
       title: { string_id: "onboarding-welcome-modal-privacy-body" },
-    },
-  },
-  {
-    id: "TRAILHEAD_9",
-    targeting: "trailheadInterrupt == 'modal_variant_f'",
-    utm_term: "trailhead-modal_variant_f",
-    ...TRAILHEAD_ONBOARDING_TEMPLATE,
-    content: {
-      ...JOIN_CONTENT,
-      form: TRAILHEAD_MODAL_VARIANT_CONTENT.form,
     },
   },
   {
