@@ -459,8 +459,9 @@ impl<'a> SceneBuilder<'a> {
             device_pixel_scale,
         );
 
+        let cache = &root_pipeline.display_list_cache;
         builder.build_items(
-            &mut root_pipeline.display_list.iter(),
+            &mut root_pipeline.display_list.iter_with_cache(cache),
             root_pipeline.pipeline_id,
             true,
         );
@@ -1000,8 +1001,9 @@ impl<'a> SceneBuilder<'a> {
         self.rf_mapper.push_scope();
         self.iframe_depth += 1;
 
+        let cache = &pipeline.display_list_cache;
         self.build_items(
-            &mut pipeline.display_list.iter(),
+            &mut pipeline.display_list.iter_with_cache(cache),
             pipeline.pipeline_id,
             true,
         );
