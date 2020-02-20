@@ -254,6 +254,8 @@
   var SpecialPowers = global.SpecialPowers;
   var SpecialPowersCu = SpecialPowers.Cu;
   var SpecialPowersForceGC = SpecialPowers.forceGC;
+  var TestingFunctions = SpecialPowers.Cu.getJSTestingFunctions();
+  var ClearKeptObjects = TestingFunctions.clearKeptObjects;
 
   // Cached DOM nodes used by the test harness itself.  (We assume the test
   // doesn't misbehave in a way that actively interferes with what the test
@@ -386,6 +388,8 @@
     }
   }
   global.gc = gc;
+
+  global.clearKeptObjects = ClearKeptObjects;
 
   function options(aOptionName) {
     // return value of options() is a comma delimited list
