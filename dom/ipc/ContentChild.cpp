@@ -4074,15 +4074,15 @@ mozilla::ipc::IPCResult ContentChild::RecvWindowBlur(
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult ContentChild::RecvRaiseWindow(BrowsingContext* aContext,
-                                                      CallerType aCallerType) {
-  if (!aContext) {
+mozilla::ipc::IPCResult ContentChild::RecvRaiseWindow(
+    const MaybeDiscarded<BrowsingContext>& aContext, CallerType aCallerType) {
+  if (aContext.IsNullOrDiscarded()) {
     MOZ_LOG(BrowsingContext::GetLog(), LogLevel::Debug,
             ("ChildIPC: Trying to send a message to dead or detached context"));
     return IPC_OK();
   }
 
-  nsCOMPtr<nsPIDOMWindowOuter> window = aContext->GetDOMWindow();
+  nsCOMPtr<nsPIDOMWindowOuter> window = aContext.get()->GetDOMWindow();
   if (!window) {
     MOZ_LOG(
         BrowsingContext::GetLog(), LogLevel::Debug,
@@ -4098,14 +4098,14 @@ mozilla::ipc::IPCResult ContentChild::RecvRaiseWindow(BrowsingContext* aContext,
 }
 
 mozilla::ipc::IPCResult ContentChild::RecvClearFocus(
-    BrowsingContext* aContext) {
-  if (!aContext) {
+    const MaybeDiscarded<BrowsingContext>& aContext) {
+  if (aContext.IsNullOrDiscarded()) {
     MOZ_LOG(BrowsingContext::GetLog(), LogLevel::Debug,
             ("ChildIPC: Trying to send a message to dead or detached context"));
     return IPC_OK();
   }
 
-  nsCOMPtr<nsPIDOMWindowOuter> window = aContext->GetDOMWindow();
+  nsCOMPtr<nsPIDOMWindowOuter> window = aContext.get()->GetDOMWindow();
   if (!window) {
     MOZ_LOG(
         BrowsingContext::GetLog(), LogLevel::Debug,
@@ -4121,8 +4121,8 @@ mozilla::ipc::IPCResult ContentChild::RecvClearFocus(
 }
 
 mozilla::ipc::IPCResult ContentChild::RecvSetFocusedBrowsingContext(
-    BrowsingContext* aContext) {
-  if (!aContext) {
+    const MaybeDiscarded<BrowsingContext>& aContext) {
+  if (aContext.IsNullOrDiscarded()) {
     MOZ_LOG(BrowsingContext::GetLog(), LogLevel::Debug,
             ("ChildIPC: Trying to send a message to dead or detached context"));
     return IPC_OK();
@@ -4130,14 +4130,14 @@ mozilla::ipc::IPCResult ContentChild::RecvSetFocusedBrowsingContext(
 
   nsFocusManager* fm = nsFocusManager::GetFocusManager();
   if (fm) {
-    fm->SetFocusedBrowsingContextFromOtherProcess(aContext);
+    fm->SetFocusedBrowsingContextFromOtherProcess(aContext.get());
   }
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult ContentChild::RecvSetActiveBrowsingContext(
-    BrowsingContext* aContext) {
-  if (!aContext) {
+    const MaybeDiscarded<BrowsingContext>& aContext) {
+  if (aContext.IsNullOrDiscarded()) {
     MOZ_LOG(BrowsingContext::GetLog(), LogLevel::Debug,
             ("ChildIPC: Trying to send a message to dead or detached context"));
     return IPC_OK();
@@ -4145,14 +4145,14 @@ mozilla::ipc::IPCResult ContentChild::RecvSetActiveBrowsingContext(
 
   nsFocusManager* fm = nsFocusManager::GetFocusManager();
   if (fm) {
-    fm->SetActiveBrowsingContextFromOtherProcess(aContext);
+    fm->SetActiveBrowsingContextFromOtherProcess(aContext.get());
   }
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult ContentChild::RecvUnsetActiveBrowsingContext(
-    BrowsingContext* aContext) {
-  if (!aContext) {
+    const MaybeDiscarded<BrowsingContext>& aContext) {
+  if (aContext.IsNullOrDiscarded()) {
     MOZ_LOG(BrowsingContext::GetLog(), LogLevel::Debug,
             ("ChildIPC: Trying to send a message to dead or detached context"));
     return IPC_OK();
@@ -4160,20 +4160,20 @@ mozilla::ipc::IPCResult ContentChild::RecvUnsetActiveBrowsingContext(
 
   nsFocusManager* fm = nsFocusManager::GetFocusManager();
   if (fm) {
-    fm->UnsetActiveBrowsingContextFromOtherProcess(aContext);
+    fm->UnsetActiveBrowsingContextFromOtherProcess(aContext.get());
   }
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult ContentChild::RecvSetFocusedElement(
-    BrowsingContext* aContext, bool aNeedsFocus) {
-  if (!aContext) {
+    const MaybeDiscarded<BrowsingContext>& aContext, bool aNeedsFocus) {
+  if (aContext.IsNullOrDiscarded()) {
     MOZ_LOG(BrowsingContext::GetLog(), LogLevel::Debug,
             ("ChildIPC: Trying to send a message to dead or detached context"));
     return IPC_OK();
   }
 
-  nsCOMPtr<nsPIDOMWindowOuter> window = aContext->GetDOMWindow();
+  nsCOMPtr<nsPIDOMWindowOuter> window = aContext.get()->GetDOMWindow();
   if (!window) {
     MOZ_LOG(
         BrowsingContext::GetLog(), LogLevel::Debug,
@@ -4186,35 +4186,43 @@ mozilla::ipc::IPCResult ContentChild::RecvSetFocusedElement(
 }
 
 mozilla::ipc::IPCResult ContentChild::RecvBlurToChild(
-    BrowsingContext* aFocusedBrowsingContext,
-    BrowsingContext* aBrowsingContextToClear,
-    BrowsingContext* aAncestorBrowsingContextToFocus, bool aIsLeavingDocument,
-    bool aAdjustWidget) {
-  if (!aFocusedBrowsingContext) {
+    const MaybeDiscarded<BrowsingContext>& aFocusedBrowsingContext,
+    const MaybeDiscarded<BrowsingContext>& aBrowsingContextToClear,
+    const MaybeDiscarded<BrowsingContext>& aAncestorBrowsingContextToFocus,
+    bool aIsLeavingDocument, bool aAdjustWidget) {
+  if (aFocusedBrowsingContext.IsNullOrDiscarded()) {
     MOZ_LOG(BrowsingContext::GetLog(), LogLevel::Debug,
             ("ChildIPC: Trying to send a message to dead or detached context"));
     return IPC_OK();
   }
 
+  BrowsingContext* toClear = aBrowsingContextToClear.IsDiscarded()
+                                 ? nullptr
+                                 : aBrowsingContextToClear.get();
+  BrowsingContext* toFocus = aAncestorBrowsingContextToFocus.IsDiscarded()
+                                 ? nullptr
+                                 : aAncestorBrowsingContextToFocus.get();
+
   nsFocusManager* fm = nsFocusManager::GetFocusManager();
   if (fm) {
-    fm->BlurFromOtherProcess(aFocusedBrowsingContext, aBrowsingContextToClear,
-                             aAncestorBrowsingContextToFocus,
+    fm->BlurFromOtherProcess(aFocusedBrowsingContext.get(), toClear, toFocus,
                              aIsLeavingDocument, aAdjustWidget);
   }
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult ContentChild::RecvSetupFocusedAndActive(
-    BrowsingContext* aFocusedBrowsingContext,
-    BrowsingContext* aActiveBrowsingContext) {
+    const MaybeDiscarded<BrowsingContext>& aFocusedBrowsingContext,
+    const MaybeDiscarded<BrowsingContext>& aActiveBrowsingContext) {
   nsFocusManager* fm = nsFocusManager::GetFocusManager();
   if (fm) {
-    if (aActiveBrowsingContext) {
-      fm->SetActiveBrowsingContextFromOtherProcess(aActiveBrowsingContext);
+    if (!aActiveBrowsingContext.IsNullOrDiscarded()) {
+      fm->SetActiveBrowsingContextFromOtherProcess(
+          aActiveBrowsingContext.get());
     }
-    if (aFocusedBrowsingContext) {
-      fm->SetFocusedBrowsingContextFromOtherProcess(aFocusedBrowsingContext);
+    if (!aFocusedBrowsingContext.IsNullOrDiscarded()) {
+      fm->SetFocusedBrowsingContextFromOtherProcess(
+          aFocusedBrowsingContext.get());
     }
   }
   return IPC_OK();
