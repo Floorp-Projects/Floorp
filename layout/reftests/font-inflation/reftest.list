@@ -9,7 +9,7 @@
 # The font-inflation code uses the meta-viewport tag as one of its inputs
 # when determining if font-inflation needs to be applied, so enable it for
 # these tests.
-default-preferences pref(dom.meta-viewport.enabled,true)
+defaults pref(dom.meta-viewport.enabled,true)
 
 test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) test-pref(font.size.inflation.maxRatio,200) == maxRatio-1.html maxRatio-1-ref.html
 test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) == text-1.html text-1-ref.html
@@ -123,4 +123,4 @@ pref(font.size.inflation.emPerLine,15) pref(font.size.inflation.forceEnabled,tru
 random-if(gtkWidget) pref(font.size.inflation.emPerLine,15) pref(font.size.inflation.forceEnabled,true) == xul-reflow-1.html xul-reflow-1-ref.html
 
 # reset the default preferences
-default-preferences
+defaults

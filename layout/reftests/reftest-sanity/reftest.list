@@ -71,9 +71,6 @@ include urlprefixtests.list
 # test defaults
 include defaults-tests.list
 
-# test default-preferences
-include default-preferences-tests.list
-
 # test that all corners are visible
 != corners-1.html corners-1-ref.html
 != corners-2.html corners-2-ref.html
@@ -178,9 +175,9 @@ skip-if(!asyncPan||!browserIsRemote) == async-scroll-1a.html async-scroll-1-ref.
 
 # Disable low-res painting for this test as it will cause more to
 # be drawn than we want.
-default-preferences pref(layers.low-precision-buffer,false)
+defaults pref(layers.low-precision-buffer,false)
 skip-if(!asyncPan||!browserIsRemote) != async-scroll-1b.html async-scroll-1-ref.html
-default-preferences
+defaults
 
 skip-if(!Android) pref(apz.allow_zooming,true) != async-zoom-1.html async-zoom-1-ref.html
 fuzzy(0-112,0-800) skip-if(!Android) pref(apz.allow_zooming,true) == async-zoom-2.html async-zoom-2-ref.html

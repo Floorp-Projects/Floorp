@@ -1,5 +1,5 @@
 # enable variation font support
-default-preferences pref(layout.css.font-variations.enabled,true)
+defaults pref(layout.css.font-variations.enabled,true)
 
 == font-optical-sizing-1.html font-optical-sizing-1-ref.html
 
@@ -8,4 +8,4 @@ default-preferences pref(layout.css.font-variations.enabled,true)
 fails-if(OSX<1012) fails-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) != font-optical-sizing-1.html font-optical-sizing-1-notref.html
 
 # reset the default preferences
-default-preferences
+defaults
