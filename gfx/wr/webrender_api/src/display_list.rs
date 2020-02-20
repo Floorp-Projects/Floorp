@@ -137,6 +137,67 @@ pub struct BuiltDisplayListDescriptor {
     extra_data_offset: usize,
 }
 
+#[derive(Clone)]
+pub struct DisplayListWithCache {
+    display_list: BuiltDisplayList,
+    cache: DisplayItemCache,
+}
+
+impl DisplayListWithCache {
+    pub fn iter(&self) -> BuiltDisplayListIter {
+        self.display_list.iter_with_cache(&self.cache)
+    }
+
+    pub fn new_from_list(display_list: BuiltDisplayList) -> Self {
+        let mut cache = DisplayItemCache::new();
+        cache.update(&display_list);
+
+        DisplayListWithCache {
+            display_list,
+            cache
+        }
+    }
+
+    pub fn update(&mut self, display_list: BuiltDisplayList) {
+        self.cache.update(&display_list);
+        self.display_list = display_list;
+    }
+
+    pub fn descriptor(&self) -> &BuiltDisplayListDescriptor {
+        self.display_list.descriptor()
+    }
+
+    pub fn data(&self) -> &[u8] {
+        self.display_list.data()
+    }
+}
+
+#[cfg(feature = "serialize")]
+impl Serialize for DisplayListWithCache {
+    fn serialize<S: Serializer>(
+        &self,
+        serializer: S
+    ) -> Result<S::Ok, S::Error> {
+        BuiltDisplayList::serialize_with_iterator(serializer, self.iter())
+    }
+}
+
+#[cfg(feature = "deserialize")]
+impl<'de> Deserialize<'de> for DisplayListWithCache {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let display_list = BuiltDisplayList::deserialize(deserializer)?;
+        let cache = DisplayItemCache::new();
+
+        Ok(DisplayListWithCache {
+            display_list,
+            cache,
+        })
+    }
+}
+
 impl BuiltDisplayListDescriptor {}
 
 pub struct BuiltDisplayListIter<'a> {
@@ -351,6 +412,91 @@ impl BuiltDisplayList {
 
     pub fn cache_size(&self) -> usize {
         self.descriptor.cache_size
+    }
+
+    pub fn serialize_with_iterator<S: Serializer>(
+        serializer: S,
+        mut iterator: BuiltDisplayListIter,
+    ) -> Result<S::Ok, S::Error> {
+        use crate::display_item::DisplayItem as Real;
+        use crate::display_item::DebugDisplayItem as Debug;
+
+        let mut seq = serializer.serialize_seq(None)?;
+
+        while let Some(item) = iterator.next_raw() {
+            let serial_di = match *item.item() {
+                Real::Clip(v) => Debug::Clip(
+                    v,
+                    item.iter.cur_complex_clip.iter().collect()
+                ),
+                Real::ClipChain(v) => Debug::ClipChain(
+                    v,
+                    item.iter.cur_clip_chain_items.iter().collect()
+                ),
+                Real::ScrollFrame(v) => Debug::ScrollFrame(
+                    v,
+                    item.iter.cur_complex_clip.iter().collect()
+                ),
+                Real::Text(v) => Debug::Text(
+                    v,
+                    item.iter.cur_glyphs.iter().collect()
+                ),
+                Real::SetFilterOps => Debug::SetFilterOps(
+                    item.iter.cur_filters.iter().collect()
+                ),
+                Real::SetFilterData => {
+                    debug_assert!(!item.iter.cur_filter_data.is_empty(),
+                        "next_raw should have populated cur_filter_data");
+                    let temp_filter_data = &item.iter.cur_filter_data[item.iter.cur_filter_data.len()-1];
+
+                    let func_types: Vec<di::ComponentTransferFuncType> =
+                        temp_filter_data.func_types.iter().collect();
+                    debug_assert!(func_types.len() == 4,
+                        "someone changed the number of filter funcs without updating this code");
+                    Debug::SetFilterData(di::FilterData {
+                        func_r_type: func_types[0],
+                        r_values: temp_filter_data.r_values.iter().collect(),
+                        func_g_type: func_types[1],
+                        g_values: temp_filter_data.g_values.iter().collect(),
+                        func_b_type: func_types[2],
+                        b_values: temp_filter_data.b_values.iter().collect(),
+                        func_a_type: func_types[3],
+                        a_values: temp_filter_data.a_values.iter().collect(),
+                    })
+                },
+                Real::SetFilterPrimitives => Debug::SetFilterPrimitives(
+                    item.iter.cur_filter_primitives.iter().collect()
+                ),
+                Real::SetGradientStops => Debug::SetGradientStops(
+                    item.iter.cur_stops.iter().collect()
+                ),
+                Real::StickyFrame(v) => Debug::StickyFrame(v),
+                Real::Rectangle(v) => Debug::Rectangle(v),
+                Real::ClearRectangle(v) => Debug::ClearRectangle(v),
+                Real::HitTest(v) => Debug::HitTest(v),
+                Real::Line(v) => Debug::Line(v),
+                Real::Image(v) => Debug::Image(v),
+                Real::RepeatingImage(v) => Debug::RepeatingImage(v),
+                Real::YuvImage(v) => Debug::YuvImage(v),
+                Real::Border(v) => Debug::Border(v),
+                Real::BoxShadow(v) => Debug::BoxShadow(v),
+                Real::Gradient(v) => Debug::Gradient(v),
+                Real::RadialGradient(v) => Debug::RadialGradient(v),
+                Real::ConicGradient(v) => Debug::ConicGradient(v),
+                Real::Iframe(v) => Debug::Iframe(v),
+                Real::PushReferenceFrame(v) => Debug::PushReferenceFrame(v),
+                Real::PushStackingContext(v) => Debug::PushStackingContext(v),
+                Real::PushShadow(v) => Debug::PushShadow(v),
+                Real::BackdropFilter(v) => Debug::BackdropFilter(v),
+
+                Real::PopReferenceFrame => Debug::PopReferenceFrame,
+                Real::PopStackingContext => Debug::PopStackingContext,
+                Real::PopAllShadows => Debug::PopAllShadows,
+                Real::ReuseItem(_) => unreachable!("Unexpected item"),
+            };
+            seq.serialize_element(&serial_di)?
+        }
+        seq.end()
     }
 }
 
@@ -616,89 +762,13 @@ impl<'a, T: Copy + peek_poke::Peek> Iterator for AuxIter<'a, T> {
 
 impl<'a, T: Copy + peek_poke::Peek> ::std::iter::ExactSizeIterator for AuxIter<'a, T> {}
 
-
 #[cfg(feature = "serialize")]
 impl Serialize for BuiltDisplayList {
-    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        use crate::display_item::DisplayItem as Real;
-        use crate::display_item::DebugDisplayItem as Debug;
-
-        let mut seq = serializer.serialize_seq(None)?;
-        let mut traversal = self.iter();
-        while let Some(item) = traversal.next_raw() {
-            let serial_di = match *item.item() {
-                Real::Clip(v) => Debug::Clip(
-                    v,
-                    item.iter.cur_complex_clip.iter().collect()
-                ),
-                Real::ClipChain(v) => Debug::ClipChain(
-                    v,
-                    item.iter.cur_clip_chain_items.iter().collect()
-                ),
-                Real::ScrollFrame(v) => Debug::ScrollFrame(
-                    v,
-                    item.iter.cur_complex_clip.iter().collect()
-                ),
-                Real::Text(v) => Debug::Text(
-                    v,
-                    item.iter.cur_glyphs.iter().collect()
-                ),
-                Real::SetFilterOps => Debug::SetFilterOps(
-                    item.iter.cur_filters.iter().collect()
-                ),
-                Real::SetFilterData => {
-                    debug_assert!(!item.iter.cur_filter_data.is_empty(),
-                        "next_raw should have populated cur_filter_data");
-                    let temp_filter_data = &item.iter.cur_filter_data[item.iter.cur_filter_data.len()-1];
-
-                    let func_types: Vec<di::ComponentTransferFuncType> =
-                        temp_filter_data.func_types.iter().collect();
-                    debug_assert!(func_types.len() == 4,
-                        "someone changed the number of filter funcs without updating this code");
-                    Debug::SetFilterData(di::FilterData {
-                        func_r_type: func_types[0],
-                        r_values: temp_filter_data.r_values.iter().collect(),
-                        func_g_type: func_types[1],
-                        g_values: temp_filter_data.g_values.iter().collect(),
-                        func_b_type: func_types[2],
-                        b_values: temp_filter_data.b_values.iter().collect(),
-                        func_a_type: func_types[3],
-                        a_values: temp_filter_data.a_values.iter().collect(),
-                    })
-                },
-                Real::SetFilterPrimitives => Debug::SetFilterPrimitives(
-                    item.iter.cur_filter_primitives.iter().collect()
-                ),
-                Real::SetGradientStops => Debug::SetGradientStops(
-                    item.iter.cur_stops.iter().collect()
-                ),
-                Real::StickyFrame(v) => Debug::StickyFrame(v),
-                Real::Rectangle(v) => Debug::Rectangle(v),
-                Real::ClearRectangle(v) => Debug::ClearRectangle(v),
-                Real::HitTest(v) => Debug::HitTest(v),
-                Real::Line(v) => Debug::Line(v),
-                Real::Image(v) => Debug::Image(v),
-                Real::RepeatingImage(v) => Debug::RepeatingImage(v),
-                Real::YuvImage(v) => Debug::YuvImage(v),
-                Real::Border(v) => Debug::Border(v),
-                Real::BoxShadow(v) => Debug::BoxShadow(v),
-                Real::Gradient(v) => Debug::Gradient(v),
-                Real::RadialGradient(v) => Debug::RadialGradient(v),
-                Real::ConicGradient(v) => Debug::ConicGradient(v),
-                Real::Iframe(v) => Debug::Iframe(v),
-                Real::PushReferenceFrame(v) => Debug::PushReferenceFrame(v),
-                Real::PushStackingContext(v) => Debug::PushStackingContext(v),
-                Real::PushShadow(v) => Debug::PushShadow(v),
-                Real::BackdropFilter(v) => Debug::BackdropFilter(v),
-
-                Real::PopReferenceFrame => Debug::PopReferenceFrame,
-                Real::PopStackingContext => Debug::PopStackingContext,
-                Real::PopAllShadows => Debug::PopAllShadows,
-                Real::ReuseItem(k) => Debug::ReuseItem(k),
-            };
-            seq.serialize_element(&serial_di)?
-        }
-        seq.end()
+    fn serialize<S: Serializer>(
+        &self,
+        serializer: S
+    ) -> Result<S::Ok, S::Error> {
+        Self::serialize_with_iterator(serializer, self.iter())
     }
 }
 
@@ -708,10 +778,9 @@ impl Serialize for BuiltDisplayList {
 
 #[cfg(feature = "deserialize")]
 impl<'de> Deserialize<'de> for BuiltDisplayList {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
+    fn deserialize<D: Deserializer<'de>>(
+        deserializer: D
+    ) -> Result<Self, D::Error> {
         use crate::display_item::DisplayItem as Real;
         use crate::display_item::DebugDisplayItem as Debug;
 
@@ -799,7 +868,7 @@ impl<'de> Deserialize<'de> for BuiltDisplayList {
                 Debug::PopStackingContext => Real::PopStackingContext,
                 Debug::PopReferenceFrame => Real::PopReferenceFrame,
                 Debug::PopAllShadows => Real::PopAllShadows,
-                Debug::ReuseItem(k) => Real::ReuseItem(k),
+                Debug::ReuseItem(_) => unreachable!("Unexpected item"),
             };
             poke_into_vec(&item, &mut data);
             // the aux data is serialized after the item, hence the temporary
