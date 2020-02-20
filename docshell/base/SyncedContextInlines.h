@@ -56,48 +56,51 @@ nsresult Transaction<Context>::Commit(Context* aOwner) {
 
 template <typename Context>
 mozilla::ipc::IPCResult Transaction<Context>::CommitFromIPC(
-    Context* aOwner, ContentParent* aSource) {
+    const MaybeDiscarded<Context>& aOwner, ContentParent* aSource) {
   MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
-  if (!aOwner || aOwner->IsDiscarded()) {
+  if (aOwner.IsNullOrDiscarded()) {
     MOZ_LOG(Context::GetLog(), LogLevel::Debug,
             ("IPC: Trying to send a message to dead or detached context"));
     return IPC_OK();
   }
+  Context* owner = aOwner.get();
 
   // Validate that the set from content is allowed before continuing.
-  if (!Validate(aOwner, aSource)) {
+  if (!Validate(owner, aSource)) {
     return IPC_FAIL(aSource, "Invalid Transaction from Child");
   }
 
-  BrowsingContextGroup* group = aOwner->Group();
+  BrowsingContextGroup* group = owner->Group();
   group->EachOtherParent(aSource, [&](ContentParent* aParent) {
-    aOwner->SendCommitTransaction(aParent, *this,
-                                  aParent->GetBrowsingContextFieldEpoch());
+    owner->SendCommitTransaction(aParent, *this,
+                                 aParent->GetBrowsingContextFieldEpoch());
   });
 
-  Apply(aOwner);
+  Apply(owner);
   return IPC_OK();
 }
 
 template <typename Context>
 mozilla::ipc::IPCResult Transaction<Context>::CommitFromIPC(
-    Context* aOwner, uint64_t aEpoch, ContentChild* aSource) {
+    const MaybeDiscarded<Context>& aOwner, uint64_t aEpoch,
+    ContentChild* aSource) {
   MOZ_DIAGNOSTIC_ASSERT(XRE_IsContentProcess());
-  if (!aOwner || aOwner->IsDiscarded()) {
+  if (aOwner.IsNullOrDiscarded()) {
     MOZ_LOG(Context::GetLog(), LogLevel::Debug,
             ("ChildIPC: Trying to send a message to dead or detached context"));
     return IPC_OK();
   }
+  Context* owner = aOwner.get();
 
   // Clear any fields which have been obsoleted by the epoch.
   EachIndex([&](auto idx) {
     auto& field = GetAt(idx, mMaybeFields);
-    if (field && GetAt(idx, GetFieldStorage(aOwner).mEpochs) > aEpoch) {
+    if (field && GetAt(idx, GetFieldStorage(owner).mEpochs) > aEpoch) {
       field.reset();
     }
   });
 
-  Apply(aOwner);
+  Apply(owner);
   return IPC_OK();
 }
 

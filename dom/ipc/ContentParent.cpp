@@ -6012,32 +6012,37 @@ mozilla::ipc::IPCResult ContentParent::RecvStoreUserInteractionAsPermission(
 }
 
 mozilla::ipc::IPCResult ContentParent::RecvNotifyMediaStateChanged(
-    BrowsingContext* aContext, ControlledMediaState aState) {
-  if (!aContext || aContext->IsDiscarded()) {
+    const MaybeDiscarded<BrowsingContext>& aContext,
+    ControlledMediaState aState) {
+  if (aContext.IsNullOrDiscarded()) {
     return IPC_OK();
   }
   if (RefPtr<MediaController> controller =
-          aContext->Canonical()->GetMediaController()) {
+          aContext.get_canonical()->GetMediaController()) {
     controller->NotifyMediaStateChanged(aState);
   }
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult ContentParent::RecvNotifyMediaAudibleChanged(
-    BrowsingContext* aContext, bool aAudible) {
-  if (!aContext || aContext->IsDiscarded()) {
+    const MaybeDiscarded<BrowsingContext>& aContext, bool aAudible) {
+  if (aContext.IsNullOrDiscarded()) {
     return IPC_OK();
   }
   if (RefPtr<MediaController> controller =
-          aContext->Canonical()->GetMediaController()) {
+          aContext.get_canonical()->GetMediaController()) {
     controller->NotifyMediaAudibleChanged(aAudible);
   }
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult ContentParent::RecvNotifyMediaSessionUpdated(
-    BrowsingContext* aContext, bool aIsCreated) {
-  NotfiyMediaSessionCreationOrDeconstruction(aContext, aIsCreated);
+    const MaybeDiscarded<BrowsingContext>& aContext, bool aIsCreated) {
+  if (aContext.IsNullOrDiscarded()) {
+    return IPC_OK();
+  }
+
+  NotfiyMediaSessionCreationOrDeconstruction(aContext.get(), aIsCreated);
   return IPC_OK();
 }
 
@@ -6127,9 +6132,9 @@ mozilla::ipc::IPCResult ContentParent::RecvAttachBrowsingContext(
 }
 
 bool ContentParent::CheckBrowsingContextOwnership(
-    BrowsingContext* aBC, const char* aOperation) const {
-  if (!aBC->Canonical()->IsOwnedByProcess(ChildID())) {
-    MOZ_DIAGNOSTIC_ASSERT(ChildID() == aBC->Canonical()->GetInFlightProcessId(),
+    CanonicalBrowsingContext* aBC, const char* aOperation) const {
+  if (!aBC->IsOwnedByProcess(ChildID())) {
+    MOZ_DIAGNOSTIC_ASSERT(ChildID() == aBC->GetInFlightProcessId(),
                           "Attempt to modify a BrowsingContext from a child "
                           "which doesn't own it");
 
@@ -6141,9 +6146,9 @@ bool ContentParent::CheckBrowsingContextOwnership(
   return true;
 }
 
-bool ContentParent::CheckBrowsingContextEmbedder(BrowsingContext* aBC,
+bool ContentParent::CheckBrowsingContextEmbedder(CanonicalBrowsingContext* aBC,
                                                  const char* aOperation) const {
-  if (!aBC->Canonical()->IsEmbeddedInProcess(ChildID())) {
+  if (!aBC->IsEmbeddedInProcess(ChildID())) {
     MOZ_LOG(BrowsingContext::GetLog(), LogLevel::Warning,
             ("ParentIPC: Trying to %s out of process context 0x%08" PRIx64,
              aOperation, aBC->Id()));
@@ -6160,7 +6165,8 @@ mozilla::ipc::IPCResult ContentParent::RecvDetachBrowsingContext(
 
   // NOTE: It's OK if we don't have this context anymore. It was just already
   // detached, return.
-  RefPtr<BrowsingContext> context = BrowsingContext::Get(aContextId);
+  RefPtr<CanonicalBrowsingContext> context =
+      CanonicalBrowsingContext::Get(aContextId);
   if (!context || context->IsDiscarded()) {
     MOZ_LOG(BrowsingContext::GetLog(), LogLevel::Debug,
             ("ParentIPC: Trying to detach already detached"));
@@ -6177,14 +6183,15 @@ mozilla::ipc::IPCResult ContentParent::RecvDetachBrowsingContext(
 }
 
 mozilla::ipc::IPCResult ContentParent::RecvCacheBrowsingContextChildren(
-    BrowsingContext* aContext) {
-  if (!aContext || aContext->IsDiscarded()) {
+    const MaybeDiscarded<BrowsingContext>& aContext) {
+  if (aContext.IsNullOrDiscarded()) {
     MOZ_LOG(BrowsingContext::GetLog(), LogLevel::Debug,
             ("ParentIPC: Trying to cache already detached"));
     return IPC_OK();
   }
+  CanonicalBrowsingContext* context = aContext.get_canonical();
 
-  if (!CheckBrowsingContextOwnership(aContext, "cache")) {
+  if (!CheckBrowsingContextOwnership(context, "cache")) {
     // We're trying to cache a child BrowsingContext in another child
     // process. This is illegal since the owner of the BrowsingContext
     // is the proccess with the in-process docshell, which is tracked
@@ -6192,24 +6199,26 @@ mozilla::ipc::IPCResult ContentParent::RecvCacheBrowsingContextChildren(
     return IPC_OK();
   }
 
-  aContext->CacheChildren(/* aFromIPC */ true);
+  context->CacheChildren(/* aFromIPC */ true);
 
-  aContext->Group()->EachOtherParent(this, [&](ContentParent* aParent) {
-    Unused << aParent->SendCacheBrowsingContextChildren(aContext);
+  context->Group()->EachOtherParent(this, [&](ContentParent* aParent) {
+    Unused << aParent->SendCacheBrowsingContextChildren(context);
   });
 
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult ContentParent::RecvRestoreBrowsingContextChildren(
-    BrowsingContext* aContext, BrowsingContext::Children&& aChildren) {
-  if (!aContext || aContext->IsDiscarded()) {
+    const MaybeDiscarded<BrowsingContext>& aContext,
+    BrowsingContext::Children&& aChildren) {
+  if (aContext.IsNullOrDiscarded()) {
     MOZ_LOG(BrowsingContext::GetLog(), LogLevel::Debug,
             ("ParentIPC: Trying to restore already detached"));
     return IPC_OK();
   }
+  CanonicalBrowsingContext* context = aContext.get_canonical();
 
-  if (!CheckBrowsingContextOwnership(aContext, "restore")) {
+  if (!CheckBrowsingContextOwnership(context, "restore")) {
     // We're trying to cache a child BrowsingContext in another child
     // process. This is illegal since the owner of the BrowsingContext
     // is the proccess with the in-process docshell, which is tracked
@@ -6217,10 +6226,10 @@ mozilla::ipc::IPCResult ContentParent::RecvRestoreBrowsingContextChildren(
     return IPC_OK();
   }
 
-  aContext->RestoreChildren(std::move(aChildren), /* aFromIPC */ true);
+  context->RestoreChildren(std::move(aChildren), /* aFromIPC */ true);
 
-  aContext->Group()->EachOtherParent(this, [&](ContentParent* aParent) {
-    Unused << aParent->SendRestoreBrowsingContextChildren(aContext, aChildren);
+  context->Group()->EachOtherParent(this, [&](ContentParent* aParent) {
+    Unused << aParent->SendRestoreBrowsingContextChildren(context, aChildren);
   });
 
   return IPC_OK();
@@ -6249,54 +6258,57 @@ void ContentParent::UnregisterRemoveWorkerActor() {
 }
 
 mozilla::ipc::IPCResult ContentParent::RecvWindowClose(
-    BrowsingContext* aContext, bool aTrustedCaller) {
-  if (!aContext || aContext->IsDiscarded()) {
+    const MaybeDiscarded<BrowsingContext>& aContext, bool aTrustedCaller) {
+  if (aContext.IsNullOrDiscarded()) {
     MOZ_LOG(
         BrowsingContext::GetLog(), LogLevel::Debug,
         ("ParentIPC: Trying to send a message to dead or detached context"));
     return IPC_OK();
   }
+  CanonicalBrowsingContext* context = aContext.get_canonical();
 
   // FIXME Need to check that the sending process has access to the unit of
   // related
   //       browsing contexts of bc.
 
   ContentProcessManager* cpm = ContentProcessManager::GetSingleton();
-  ContentParent* cp = cpm->GetContentProcessById(
-      ContentParentId(aContext->Canonical()->OwnerProcessId()));
-  Unused << cp->SendWindowClose(aContext, aTrustedCaller);
+  ContentParent* cp =
+      cpm->GetContentProcessById(ContentParentId(context->OwnerProcessId()));
+  Unused << cp->SendWindowClose(context, aTrustedCaller);
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult ContentParent::RecvWindowFocus(
-    BrowsingContext* aContext, CallerType aCallerType) {
-  if (!aContext || aContext->IsDiscarded()) {
+    const MaybeDiscarded<BrowsingContext>& aContext, CallerType aCallerType) {
+  if (aContext.IsNullOrDiscarded()) {
     MOZ_LOG(
         BrowsingContext::GetLog(), LogLevel::Debug,
         ("ParentIPC: Trying to send a message to dead or detached context"));
     return IPC_OK();
   }
+  CanonicalBrowsingContext* context = aContext.get_canonical();
 
   ContentProcessManager* cpm = ContentProcessManager::GetSingleton();
-  ContentParent* cp = cpm->GetContentProcessById(
-      ContentParentId(aContext->Canonical()->OwnerProcessId()));
-  Unused << cp->SendWindowFocus(aContext, aCallerType);
+  ContentParent* cp =
+      cpm->GetContentProcessById(ContentParentId(context->OwnerProcessId()));
+  Unused << cp->SendWindowFocus(context, aCallerType);
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult ContentParent::RecvWindowBlur(
-    BrowsingContext* aContext) {
-  if (!aContext || aContext->IsDiscarded()) {
+    const MaybeDiscarded<BrowsingContext>& aContext) {
+  if (aContext.IsNullOrDiscarded()) {
     MOZ_LOG(
         BrowsingContext::GetLog(), LogLevel::Debug,
         ("ParentIPC: Trying to send a message to dead or detached context"));
     return IPC_OK();
   }
+  CanonicalBrowsingContext* context = aContext.get_canonical();
 
   ContentProcessManager* cpm = ContentProcessManager::GetSingleton();
-  ContentParent* cp = cpm->GetContentProcessById(
-      ContentParentId(aContext->Canonical()->OwnerProcessId()));
-  Unused << cp->SendWindowBlur(aContext);
+  ContentParent* cp =
+      cpm->GetContentProcessById(ContentParentId(context->OwnerProcessId()));
+  Unused << cp->SendWindowBlur(context);
   return IPC_OK();
 }
 
@@ -6467,14 +6479,15 @@ mozilla::ipc::IPCResult ContentParent::RecvBlurToParent(
 }
 
 mozilla::ipc::IPCResult ContentParent::RecvWindowPostMessage(
-    BrowsingContext* aContext, const ClonedMessageData& aMessage,
-    const PostMessageData& aData) {
-  if (!aContext || aContext->IsDiscarded()) {
+    const MaybeDiscarded<BrowsingContext>& aContext,
+    const ClonedMessageData& aMessage, const PostMessageData& aData) {
+  if (aContext.IsNullOrDiscarded()) {
     MOZ_LOG(
         BrowsingContext::GetLog(), LogLevel::Debug,
         ("ParentIPC: Trying to send a message to dead or detached context"));
     return IPC_OK();
   }
+  CanonicalBrowsingContext* context = aContext.get_canonical();
 
   if (aData.source() && aData.source()->IsDiscarded()) {
     MOZ_LOG(
@@ -6483,7 +6496,7 @@ mozilla::ipc::IPCResult ContentParent::RecvWindowPostMessage(
     return IPC_OK();
   }
 
-  RefPtr<ContentParent> cp = aContext->Canonical()->GetContentParent();
+  RefPtr<ContentParent> cp = context->GetContentParent();
   if (!cp) {
     MOZ_LOG(BrowsingContext::GetLog(), LogLevel::Debug,
             ("ParentIPC: Trying to send PostMessage to dead content process"));
@@ -6499,7 +6512,7 @@ mozilla::ipc::IPCResult ContentParent::RecvWindowPostMessage(
     return IPC_OK();
   }
 
-  Unused << cp->SendWindowPostMessage(aContext, message, aData);
+  Unused << cp->SendWindowPostMessage(context, message, aData);
   return IPC_OK();
 }
 
@@ -6516,8 +6529,8 @@ void ContentParent::OnBrowsingContextGroupUnsubscribe(
 }
 
 mozilla::ipc::IPCResult ContentParent::RecvCommitBrowsingContextTransaction(
-    BrowsingContext* aContext, BrowsingContext::BaseTransaction&& aTransaction,
-    uint64_t aEpoch) {
+    const MaybeDiscarded<BrowsingContext>& aContext,
+    BrowsingContext::BaseTransaction&& aTransaction, uint64_t aEpoch) {
   // Record the new BrowsingContextFieldEpoch associated with this transaction.
   // This should be done unconditionally, so that we're always in-sync.
   //
@@ -6554,8 +6567,8 @@ mozilla::ipc::IPCResult ContentParent::RecvReportServiceWorkerShutdownProgress(
 }
 
 mozilla::ipc::IPCResult ContentParent::RecvCommitWindowContextTransaction(
-    WindowContext* aContext, WindowContext::BaseTransaction&& aTransaction,
-    uint64_t aEpoch) {
+    const MaybeDiscarded<WindowContext>& aContext,
+    WindowContext::BaseTransaction&& aTransaction, uint64_t aEpoch) {
   // Record the new BrowsingContextFieldEpoch associated with this transaction.
   // This should be done unconditionally, so that we're always in-sync.
   //

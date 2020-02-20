@@ -191,49 +191,52 @@ void WindowGlobalParent::GetContentBlockingLog(nsAString& aLog) {
 }
 
 mozilla::ipc::IPCResult WindowGlobalParent::RecvLoadURI(
-    dom::BrowsingContext* aTargetBC, nsDocShellLoadState* aLoadState,
-    bool aSetNavigating) {
-  if (!aTargetBC || aTargetBC->IsDiscarded()) {
+    const MaybeDiscarded<dom::BrowsingContext>& aTargetBC,
+    nsDocShellLoadState* aLoadState, bool aSetNavigating) {
+  if (aTargetBC.IsNullOrDiscarded()) {
     MOZ_LOG(
         BrowsingContext::GetLog(), LogLevel::Debug,
         ("ParentIPC: Trying to send a message with dead or detached context"));
     return IPC_OK();
   }
+  CanonicalBrowsingContext* targetBC = aTargetBC.get_canonical();
 
   // FIXME: For cross-process loads, we should double check CanAccess() for the
   // source browsing context in the parent process.
 
-  if (aTargetBC->Group() != BrowsingContext()->Group()) {
+  if (targetBC->Group() != BrowsingContext()->Group()) {
     return IPC_FAIL(this, "Illegal cross-group BrowsingContext load");
   }
 
   // FIXME: We should really initiate the load in the parent before bouncing
   // back down to the child.
 
-  aTargetBC->LoadURI(nullptr, aLoadState, aSetNavigating);
+  targetBC->LoadURI(nullptr, aLoadState, aSetNavigating);
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult WindowGlobalParent::RecvInternalLoad(
-    dom::BrowsingContext* aTargetBC, nsDocShellLoadState* aLoadState) {
-  if (!aTargetBC || aTargetBC->IsDiscarded()) {
+    const MaybeDiscarded<dom::BrowsingContext>& aTargetBC,
+    nsDocShellLoadState* aLoadState) {
+  if (aTargetBC.IsNullOrDiscarded()) {
     MOZ_LOG(
         BrowsingContext::GetLog(), LogLevel::Debug,
         ("ParentIPC: Trying to send a message with dead or detached context"));
     return IPC_OK();
   }
+  CanonicalBrowsingContext* targetBC = aTargetBC.get_canonical();
 
   // FIXME: For cross-process loads, we should double check CanAccess() for the
   // source browsing context in the parent process.
 
-  if (aTargetBC->Group() != BrowsingContext()->Group()) {
+  if (targetBC->Group() != BrowsingContext()->Group()) {
     return IPC_FAIL(this, "Illegal cross-group BrowsingContext load");
   }
 
   // FIXME: We should really initiate the load in the parent before bouncing
   // back down to the child.
 
-  aTargetBC->InternalLoad(mBrowsingContext, aLoadState, nullptr, nullptr);
+  targetBC->InternalLoad(mBrowsingContext, aLoadState, nullptr, nullptr);
   return IPC_OK();
 }
 

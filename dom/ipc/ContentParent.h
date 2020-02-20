@@ -650,16 +650,18 @@ class ContentParent final
       uint64_t aContextId, DetachBrowsingContextResolver&& aResolve);
 
   mozilla::ipc::IPCResult RecvCacheBrowsingContextChildren(
-      BrowsingContext* aContext);
+      const MaybeDiscarded<BrowsingContext>& aContext);
 
   mozilla::ipc::IPCResult RecvRestoreBrowsingContextChildren(
-      BrowsingContext* aContext, BrowsingContext::Children&& aChildren);
+      const MaybeDiscarded<BrowsingContext>& aContext,
+      BrowsingContext::Children&& aChildren);
 
-  mozilla::ipc::IPCResult RecvWindowClose(BrowsingContext* aContext,
-                                          bool aTrustedCaller);
-  mozilla::ipc::IPCResult RecvWindowFocus(BrowsingContext* aContext,
-                                          CallerType aCallerType);
-  mozilla::ipc::IPCResult RecvWindowBlur(BrowsingContext* aContext);
+  mozilla::ipc::IPCResult RecvWindowClose(
+      const MaybeDiscarded<BrowsingContext>& aContext, bool aTrustedCaller);
+  mozilla::ipc::IPCResult RecvWindowFocus(
+      const MaybeDiscarded<BrowsingContext>& aContext, CallerType aCallerType);
+  mozilla::ipc::IPCResult RecvWindowBlur(
+      const MaybeDiscarded<BrowsingContext>& aContext);
   mozilla::ipc::IPCResult RecvRaiseWindow(BrowsingContext* aContext,
                                           CallerType aCallerType);
   mozilla::ipc::IPCResult RecvClearFocus(BrowsingContext* aContext);
@@ -677,9 +679,10 @@ class ContentParent final
       BrowsingContext* aAncestorBrowsingContextToFocus, bool aIsLeavingDocument,
       bool aAdjustWidget, bool aBrowsingContextToClearHandled,
       bool aAncestorBrowsingContextToFocusHandled);
+
   mozilla::ipc::IPCResult RecvWindowPostMessage(
-      BrowsingContext* aContext, const ClonedMessageData& aMessage,
-      const PostMessageData& aData);
+      const MaybeDiscarded<BrowsingContext>& aContext,
+      const ClonedMessageData& aMessage, const PostMessageData& aData);
 
   FORWARD_SHMEM_ALLOCATOR_TO(PContentParent)
 
@@ -689,9 +692,9 @@ class ContentParent final
       const FileDescriptor& aFD) override;
 
  protected:
-  bool CheckBrowsingContextOwnership(BrowsingContext* aBC,
+  bool CheckBrowsingContextOwnership(CanonicalBrowsingContext* aBC,
                                      const char* aOperation) const;
-  bool CheckBrowsingContextEmbedder(BrowsingContext* aBC,
+  bool CheckBrowsingContextEmbedder(CanonicalBrowsingContext* aBC,
                                     const char* aOperation) const;
 
   void OnChannelConnected(int32_t pid) override;
@@ -1101,12 +1104,12 @@ class ContentParent final
   mozilla::ipc::IPCResult RecvPrivateDocShellsExist(const bool& aExist);
 
   mozilla::ipc::IPCResult RecvCommitBrowsingContextTransaction(
-      BrowsingContext* aContext,
+      const MaybeDiscarded<BrowsingContext>& aContext,
       BrowsingContext::BaseTransaction&& aTransaction, uint64_t aEpoch);
 
   mozilla::ipc::IPCResult RecvCommitWindowContextTransaction(
-      WindowContext* aContext, WindowContext::BaseTransaction&& aTransaction,
-      uint64_t aEpoch);
+      const MaybeDiscarded<WindowContext>& aContext,
+      WindowContext::BaseTransaction&& aTransaction, uint64_t aEpoch);
 
   mozilla::ipc::IPCResult RecvFirstIdle();
 
@@ -1253,13 +1256,14 @@ class ContentParent final
       const Principal& aPrincipal);
 
   mozilla::ipc::IPCResult RecvNotifyMediaStateChanged(
-      BrowsingContext* aContext, ControlledMediaState aState);
+      const MaybeDiscarded<BrowsingContext>& aContext,
+      ControlledMediaState aState);
 
   mozilla::ipc::IPCResult RecvNotifyMediaAudibleChanged(
-      BrowsingContext* aContext, bool aAudible);
+      const MaybeDiscarded<BrowsingContext>& aContext, bool aAudible);
 
   mozilla::ipc::IPCResult RecvNotifyMediaSessionUpdated(
-      BrowsingContext* aContext, bool aIsCreated);
+      const MaybeDiscarded<BrowsingContext>& aContext, bool aIsCreated);
 
   mozilla::ipc::IPCResult RecvGetModulesTrust(
       ModulePaths&& aModPaths, bool aRunAtNormalPriority,

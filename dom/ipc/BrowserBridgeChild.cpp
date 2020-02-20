@@ -223,18 +223,24 @@ mozilla::ipc::IPCResult BrowserBridgeChild::RecvScrollRectIntoView(
 }
 
 mozilla::ipc::IPCResult BrowserBridgeChild::RecvSubFrameCrashed(
-    BrowsingContext* aContext) {
-  if (aContext) {
-    RefPtr<nsFrameLoaderOwner> frameLoaderOwner =
-        do_QueryObject(aContext->GetEmbedderElement());
-    IgnoredErrorResult rv;
-    RemotenessOptions options;
-    options.mError.Construct(static_cast<uint32_t>(NS_ERROR_FRAME_CRASHED));
-    frameLoaderOwner->ChangeRemoteness(options, rv);
+    const MaybeDiscarded<BrowsingContext>& aContext) {
+  if (aContext.IsNullOrDiscarded()) {
+    return IPC_OK();
+  }
 
-    if (NS_WARN_IF(rv.Failed())) {
-      return IPC_FAIL(this, "Remoteness change failed");
-    }
+  RefPtr<nsFrameLoaderOwner> frameLoaderOwner =
+      do_QueryObject(aContext.get()->GetEmbedderElement());
+  if (!frameLoaderOwner) {
+    return IPC_OK();
+  }
+
+  IgnoredErrorResult rv;
+  RemotenessOptions options;
+  options.mError.Construct(static_cast<uint32_t>(NS_ERROR_FRAME_CRASHED));
+  frameLoaderOwner->ChangeRemoteness(options, rv);
+
+  if (NS_WARN_IF(rv.Failed())) {
+    return IPC_FAIL(this, "Remoteness change failed");
   }
 
   return IPC_OK();
