@@ -120,6 +120,9 @@ void ShaderConfigOGL::SetColorMultiplier(uint32_t aMultiplier) {
 void ShaderConfigOGL::SetNV12(bool aEnabled) {
   SetFeature(ENABLE_TEXTURE_NV12, aEnabled);
   MOZ_ASSERT(!(mFeatures & ENABLE_TEXTURE_YCBCR));
+#ifdef MOZ_WAYLAND
+  SetFeature(ENABLE_TEXTURE_NV12_GA_SWITCH, aEnabled);
+#endif
 }
 
 void ShaderConfigOGL::SetComponentAlpha(bool aEnabled) {
@@ -458,15 +461,25 @@ ProgramProfileOGL ProgramProfileOGL::GetProfileFor(ShaderConfigOGL aConfig) {
              << "(uYTexture, coord * uTexCoordMultiplier).r;" << endl;
           fs << "  COLOR_PRECISION float cb = " << texture2D
              << "(uCbTexture, coord * uCbCrTexCoordMultiplier).r;" << endl;
-          fs << "  COLOR_PRECISION float cr = " << texture2D
-             << "(uCbTexture, coord * uCbCrTexCoordMultiplier).a;" << endl;
+          if (aConfig.mFeatures & ENABLE_TEXTURE_NV12_GA_SWITCH) {
+            fs << "  COLOR_PRECISION float cr = " << texture2D
+               << "(uCbTexture, coord * uCbCrTexCoordMultiplier).g;" << endl;
+          } else {
+            fs << "  COLOR_PRECISION float cr = " << texture2D
+               << "(uCbTexture, coord * uCbCrTexCoordMultiplier).a;" << endl;
+          }
         } else {
           fs << "  COLOR_PRECISION float y = " << texture2D
              << "(uYTexture, coord).r;" << endl;
           fs << "  COLOR_PRECISION float cb = " << texture2D
              << "(uCbTexture, coord).r;" << endl;
-          fs << "  COLOR_PRECISION float cr = " << texture2D
-             << "(uCbTexture, coord).a;" << endl;
+          if (aConfig.mFeatures & ENABLE_TEXTURE_NV12_GA_SWITCH) {
+            fs << "  COLOR_PRECISION float cr = " << texture2D
+               << "(uCbTexture, coord).g;" << endl;
+          } else {
+            fs << "  COLOR_PRECISION float cr = " << texture2D
+               << "(uCbTexture, coord).a;" << endl;
+          }
         }
       }
       fs << "  vec3 yuv = vec3(y, cb, cr);" << endl;
