@@ -37,7 +37,7 @@ class GamepadHapticActuator : public nsISupports, public nsWrapperCache {
   void Set(const GamepadHapticActuator* aOther);
 
  private:
-  virtual ~GamepadHapticActuator() {}
+  virtual ~GamepadHapticActuator() = default;
 
  protected:
   nsCOMPtr<nsISupports> mParent;
