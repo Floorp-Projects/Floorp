@@ -46,14 +46,9 @@ class ChannelInfo final {
 
   ChannelInfo() : mInited(false) {}
 
-  ChannelInfo(const ChannelInfo& aRHS)
-      : mSecurityInfo(aRHS.mSecurityInfo), mInited(aRHS.mInited) {}
+  ChannelInfo(const ChannelInfo& aRHS) = default;
 
-  ChannelInfo& operator=(const ChannelInfo& aRHS) {
-    mSecurityInfo = aRHS.mSecurityInfo;
-    mInited = aRHS.mInited;
-    return *this;
-  }
+  ChannelInfo& operator=(const ChannelInfo& aRHS) = default;
 
   void InitFromDocument(Document* aDoc);
   void InitFromChannel(nsIChannel* aChannel);

@@ -165,7 +165,7 @@ InternalRequest::InternalRequest(const IPCInternalRequest& aIPCRequest)
   }
 }
 
-InternalRequest::~InternalRequest() {}
+InternalRequest::~InternalRequest() = default;
 
 template void InternalRequest::ToIPC<mozilla::ipc::PBackgroundChild>(
     IPCInternalRequest* aIPCRequest, mozilla::ipc::PBackgroundChild* aManager,

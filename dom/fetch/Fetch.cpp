@@ -300,7 +300,7 @@ class WorkerFetchResolver final : public FetchDriverObserver {
     MOZ_ASSERT(mPromiseProxy);
   }
 
-  ~WorkerFetchResolver() {}
+  ~WorkerFetchResolver() = default;
 
   virtual void FlushConsoleReport() override;
 };
