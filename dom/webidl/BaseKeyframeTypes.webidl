@@ -39,6 +39,7 @@ dictionary BasePropertyIndexedKeyframe {
 dictionary BaseKeyframe {
   double? offset = null;
   DOMString easing = "linear";
+  [Pref="dom.animations-api.compositing.enabled"]
   CompositeOperationOrAuto composite = "auto";
 
   // Non-standard extensions

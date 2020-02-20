@@ -117,6 +117,21 @@ test(t => {
   );
 }, 'composite member is ignored on keyframes when using object notation');
 
+test(t => {
+  const anim = addDiv(t).animate(
+    { marginLeft: ['0px', '10px'] },
+    100 * MS_PER_SEC
+  );
+
+  for (let frame of anim.effect.getKeyframes()) {
+    assert_false(
+      'composite' in frame,
+      'The BaseComputedKeyframe.composite member is not present'
+    );
+  }
+}, 'composite member is hidden from the result of ' +
+   'KeyframeEffect::getKeyframes()');
+
 done();
 </script>
 </body>
