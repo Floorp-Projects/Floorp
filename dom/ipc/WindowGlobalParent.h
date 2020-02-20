@@ -154,11 +154,12 @@ class WindowGlobalParent final : public WindowContext,
   JSWindowActor::Type GetSide() override { return JSWindowActor::Type::Parent; }
 
   // IPC messages
-  mozilla::ipc::IPCResult RecvLoadURI(dom::BrowsingContext* aTargetBC,
-                                      nsDocShellLoadState* aLoadState,
-                                      bool aSetNavigating);
-  mozilla::ipc::IPCResult RecvInternalLoad(dom::BrowsingContext* aTargetBC,
-                                           nsDocShellLoadState* aLoadState);
+  mozilla::ipc::IPCResult RecvLoadURI(
+      const MaybeDiscarded<dom::BrowsingContext>& aTargetBC,
+      nsDocShellLoadState* aLoadState, bool aSetNavigating);
+  mozilla::ipc::IPCResult RecvInternalLoad(
+      const MaybeDiscarded<dom::BrowsingContext>& aTargetBC,
+      nsDocShellLoadState* aLoadState);
   mozilla::ipc::IPCResult RecvUpdateDocumentURI(nsIURI* aURI);
   mozilla::ipc::IPCResult RecvUpdateDocumentTitle(const nsString& aTitle);
   mozilla::ipc::IPCResult RecvSetIsInitialDocument(bool aIsInitialDocument) {

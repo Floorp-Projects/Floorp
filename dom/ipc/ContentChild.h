@@ -667,10 +667,11 @@ class ContentChild final
       CrossProcessRedirectResolver&& aResolve);
 
   mozilla::ipc::IPCResult RecvStartDelayedAutoplayMediaComponents(
-      BrowsingContext* aContext);
+      const MaybeDiscarded<BrowsingContext>& aContext);
 
   mozilla::ipc::IPCResult RecvUpdateMediaControlKeysEvent(
-      BrowsingContext* aContext, MediaControlKeysEvent aEvent);
+      const MaybeDiscarded<BrowsingContext>& aContext,
+      MediaControlKeysEvent aEvent);
 
   void HoldBrowsingContextGroup(BrowsingContextGroup* aBCG);
   void ReleaseBrowsingContextGroup(BrowsingContextGroup* aBCG);
@@ -737,20 +738,22 @@ class ContentChild final
       uint64_t aContextId, DetachBrowsingContextResolver&& aResolve);
 
   mozilla::ipc::IPCResult RecvCacheBrowsingContextChildren(
-      BrowsingContext* aContext);
+      const MaybeDiscarded<BrowsingContext>& aContext);
 
   mozilla::ipc::IPCResult RecvRestoreBrowsingContextChildren(
-      BrowsingContext* aContext, BrowsingContext::Children&& aChildren);
+      const MaybeDiscarded<BrowsingContext>& aContext,
+      BrowsingContext::Children&& aChildren);
 
   mozilla::ipc::IPCResult RecvRegisterBrowsingContextGroup(
       nsTArray<BrowsingContext::IPCInitializer>&& aInits,
       nsTArray<WindowContext::IPCInitializer>&& aWindowInits);
 
-  mozilla::ipc::IPCResult RecvWindowClose(BrowsingContext* aContext,
-                                          bool aTrustedCaller);
-  mozilla::ipc::IPCResult RecvWindowFocus(BrowsingContext* aContext,
-                                          CallerType aCallerType);
-  mozilla::ipc::IPCResult RecvWindowBlur(BrowsingContext* aContext);
+  mozilla::ipc::IPCResult RecvWindowClose(
+      const MaybeDiscarded<BrowsingContext>& aContext, bool aTrustedCaller);
+  mozilla::ipc::IPCResult RecvWindowFocus(
+      const MaybeDiscarded<BrowsingContext>& aContext, CallerType aCallerType);
+  mozilla::ipc::IPCResult RecvWindowBlur(
+      const MaybeDiscarded<BrowsingContext>& aContext);
   mozilla::ipc::IPCResult RecvRaiseWindow(BrowsingContext* aContext,
                                           CallerType aCallerType);
   mozilla::ipc::IPCResult RecvClearFocus(BrowsingContext* aContext);
@@ -770,17 +773,18 @@ class ContentChild final
   mozilla::ipc::IPCResult RecvSetupFocusedAndActive(
       BrowsingContext* aFocusedBrowsingContext,
       BrowsingContext* aActiveBrowsingContext);
+
   mozilla::ipc::IPCResult RecvWindowPostMessage(
-      BrowsingContext* aContext, const ClonedMessageData& aMessage,
-      const PostMessageData& aData);
+      const MaybeDiscarded<BrowsingContext>& aContext,
+      const ClonedMessageData& aMessage, const PostMessageData& aData);
 
   mozilla::ipc::IPCResult RecvCommitBrowsingContextTransaction(
-      BrowsingContext* aContext,
+      const MaybeDiscarded<BrowsingContext>& aContext,
       BrowsingContext::BaseTransaction&& aTransaction, uint64_t aEpoch);
 
   mozilla::ipc::IPCResult RecvCommitWindowContextTransaction(
-      WindowContext* aContext, WindowContext::BaseTransaction&& aTransaction,
-      uint64_t aEpoch);
+      const MaybeDiscarded<WindowContext>& aContext,
+      WindowContext::BaseTransaction&& aTransaction, uint64_t aEpoch);
 
   mozilla::ipc::IPCResult RecvCreateWindowContext(
       WindowContext::IPCInitializer&& aInit);
@@ -794,16 +798,16 @@ class ContentChild final
       const nsCString& aCategory, const bool& aFromPrivateWindow,
       const uint64_t& aInnerWindowId, const bool& aFromChromeContext);
 
-  mozilla::ipc::IPCResult RecvLoadURI(BrowsingContext* aContext,
-                                      nsDocShellLoadState* aLoadState,
-                                      bool aSetNavigating);
+  mozilla::ipc::IPCResult RecvLoadURI(
+      const MaybeDiscarded<BrowsingContext>& aContext,
+      nsDocShellLoadState* aLoadState, bool aSetNavigating);
 
-  mozilla::ipc::IPCResult RecvInternalLoad(BrowsingContext* aContext,
-                                           nsDocShellLoadState* aLoadState,
-                                           bool aTakeFocus);
+  mozilla::ipc::IPCResult RecvInternalLoad(
+      const MaybeDiscarded<BrowsingContext>& aContext,
+      nsDocShellLoadState* aLoadState, bool aTakeFocus);
 
-  mozilla::ipc::IPCResult RecvDisplayLoadError(BrowsingContext* aContext,
-                                               const nsAString& aURI);
+  mozilla::ipc::IPCResult RecvDisplayLoadError(
+      const MaybeDiscarded<BrowsingContext>& aContext, const nsAString& aURI);
 
 #ifdef NIGHTLY_BUILD
   virtual PContentChild::Result OnMessageReceived(const Message& aMsg) override;

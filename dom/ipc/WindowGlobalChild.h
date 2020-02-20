@@ -119,10 +119,11 @@ class WindowGlobalChild final : public WindowGlobalActor,
                                          const ClonedMessageData& aStack);
 
   mozilla::ipc::IPCResult RecvMakeFrameLocal(
-      dom::BrowsingContext* aFrameContext, uint64_t aPendingSwitchId);
+      const MaybeDiscarded<dom::BrowsingContext>& aFrameContext,
+      uint64_t aPendingSwitchId);
 
   mozilla::ipc::IPCResult RecvMakeFrameRemote(
-      dom::BrowsingContext* aFrameContext,
+      const MaybeDiscarded<dom::BrowsingContext>& aFrameContext,
       ManagedEndpoint<PBrowserBridgeChild>&& aEndpoint, const TabId& aTabId,
       MakeFrameRemoteResolver&& aResolve);
 
