@@ -31,6 +31,10 @@ class _MachCommand(object):
         'arguments',
         'argument_group_names',
 
+        # By default, subcommands will be sorted. If this is set to
+        # 'declaration', they will be left in declaration order.
+        'order',
+
         # Describes how dispatch is performed.
 
         # The Python class providing the command. This is the class type not
@@ -51,10 +55,15 @@ class _MachCommand(object):
         # Dict of string to _MachCommand defining sub-commands for this
         # command.
         'subcommand_handlers',
+
+        # For subcommands, the global order that the subcommand's declaration
+        # was seen.
+        'decl_order',
     )
 
     def __init__(self, name=None, subcommand=None, category=None,
-                 description=None, conditions=None, parser=None):
+                 description=None, conditions=None, parser=None,
+                 order=None):
         self.name = name
         self.subcommand = subcommand
         self.category = category
@@ -63,11 +72,13 @@ class _MachCommand(object):
         self._parser = parser
         self.arguments = []
         self.argument_group_names = []
+        self.order = order
 
         self.cls = None
         self.pass_context = None
         self.method = None
         self.subcommand_handlers = {}
+        self.decl_order = None
 
     @property
     def parser(self):
@@ -87,7 +98,7 @@ class _MachCommand(object):
             raise ValueError('can only operate on _MachCommand instances')
 
         for a in self.__slots__:
-            if not getattr(self, a):
+            if getattr(self, a) is None:
                 setattr(self, a, getattr(other, a))
 
         return self
@@ -254,9 +265,15 @@ class SubCommand(object):
 
         description -- A textual description for this sub command.
     """
+
+    global_order = 0
+
     def __init__(self, command, subcommand, description=None, parser=None):
         self._mach_command = _MachCommand(name=command, subcommand=subcommand,
-                                          description=description, parser=parser)
+                                          description=description,
+                                          parser=parser)
+        self._mach_command.decl_order = SubCommand.global_order
+        SubCommand.global_order += 1
 
     def __call__(self, func):
         if not hasattr(func, '_mach_command'):

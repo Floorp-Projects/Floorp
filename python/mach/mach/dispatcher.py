@@ -385,7 +385,14 @@ class CommandAction(argparse.Action):
             ' subcommand [subcommand arguments]'
         group = parser.add_argument_group('Sub Commands')
 
-        for subcommand, subhandler in sorted(handler.subcommand_handlers.items()):
+        def by_decl_order(item): return item[1].decl_order
+        def by_name(item): return item[1].subcommand
+
+        subhandlers = handler.subcommand_handlers.items()
+        for subcommand, subhandler in sorted(
+                subhandlers,
+                key=by_decl_order if handler.order == 'declaration' else by_name
+        ):
             group.add_argument(subcommand, help=subhandler.description,
                                action='store_true')
 
