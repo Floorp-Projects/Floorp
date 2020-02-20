@@ -70,7 +70,7 @@ Request::Request(nsIGlobalObject* aOwner, InternalRequest* aRequest,
   }
 }
 
-Request::~Request() {}
+Request::~Request() = default;
 
 already_AddRefed<InternalRequest> Request::GetInternalRequest() {
   RefPtr<InternalRequest> r = mRequest;
