@@ -13,6 +13,7 @@ ChromeUtils.import("resource://normandy/lib/ClientEnvironment.jsm", this);
 ChromeUtils.import("resource://normandy/lib/PreferenceExperiments.jsm", this);
 ChromeUtils.import("resource://normandy/lib/TelemetryEvents.jsm", this);
 ChromeUtils.import("resource://normandy/lib/Uptake.jsm", this);
+ChromeUtils.import("resource://normandy/actions/BaseAction.jsm", this);
 ChromeUtils.import(
   "resource://normandy/actions/PreferenceExperimentAction.jsm",
   this
@@ -68,10 +69,10 @@ decorate_task(
   async function run_without_errors(reportRecipe) {
     const action = new PreferenceExperimentAction();
     const recipe = preferenceExperimentFactory();
-    await action.runRecipe(recipe);
+    await action.processRecipe(recipe, BaseAction.suitability.FILTER_MATCH);
     await action.finalize();
-    // runRecipe catches exceptions thrown by _run(), so
-    // explicitly check for reported success here.
+    // Errors thrown in actions are caught and silenced, so instead check for an
+    // explicit success here.
     Assert.deepEqual(reportRecipe.args, [[recipe, Uptake.RECIPE_SUCCESS]]);
   }
 );
@@ -86,7 +87,7 @@ decorate_task(
     action.log = mockLogger();
 
     const recipe = preferenceExperimentFactory();
-    await action.runRecipe(recipe);
+    await action.processRecipe(recipe, BaseAction.suitability.FILTER_MATCH);
 
     Assert.ok(action.log.debug.args.length === 1);
     Assert.deepEqual(action.log.debug.args[0], [
@@ -148,7 +149,7 @@ decorate_task(
         return branches[0];
       });
 
-    await action.runRecipe(recipe);
+    await action.processRecipe(recipe, BaseAction.suitability.FILTER_MATCH);
     await action.finalize();
 
     Assert.deepEqual(startStub.args, [
@@ -184,7 +185,7 @@ decorate_task(
       name: "test",
     });
 
-    await action.runRecipe(recipe);
+    await action.processRecipe(recipe, BaseAction.suitability.FILTER_MATCH);
     await action.finalize();
 
     Assert.deepEqual(markLastSeenStub.args, [["test"]]);
@@ -201,7 +202,7 @@ decorate_task(
       name: "test",
     });
 
-    await action.runRecipe(recipe);
+    await action.processRecipe(recipe, BaseAction.suitability.FILTER_MATCH);
     await action.finalize();
 
     Assert.deepEqual(markLastSeenStub.args, [], "markLastSeen was not called");
@@ -217,7 +218,7 @@ decorate_task(
       isEnrollmentPaused: true,
     });
 
-    await action.runRecipe(recipe);
+    await action.processRecipe(recipe, BaseAction.suitability.FILTER_MATCH);
     await action.finalize();
 
     Assert.deepEqual(startStub.args, [], "start was not called");
@@ -241,7 +242,7 @@ decorate_task(
       slug: "seen",
     });
 
-    await action.runRecipe(recipe);
+    await action.processRecipe(recipe, BaseAction.suitability.FILTER_MATCH);
     await action.finalize();
 
     Assert.deepEqual(stopStub.args, [
@@ -271,7 +272,7 @@ decorate_task(
       name: "seen",
     });
 
-    await action.runRecipe(recipe);
+    await action.processRecipe(recipe, BaseAction.suitability.FILTER_MATCH);
     await action.finalize();
 
     Assert.deepEqual(
@@ -314,7 +315,7 @@ decorate_task(
         return branches[0];
       });
 
-    await action.runRecipe(recipe);
+    await action.processRecipe(recipe, BaseAction.suitability.FILTER_MATCH);
     await action.finalize();
 
     Assert.deepEqual(reportRecipeStub.args, [
@@ -335,7 +336,7 @@ decorate_task(
       isHighPopulation: false,
     });
 
-    await action.runRecipe(recipe);
+    await action.processRecipe(recipe, BaseAction.suitability.FILTER_MATCH);
     await action.finalize();
 
     Assert.deepEqual(startStub.args[0][0].experimentType, "exp");
@@ -352,7 +353,7 @@ decorate_task(
       isHighPopulation: true,
     });
 
-    await action.runRecipe(recipe);
+    await action.processRecipe(recipe, BaseAction.suitability.FILTER_MATCH);
     await action.finalize();
 
     Assert.deepEqual(startStub.args[0][0].experimentType, "exp-highpop");
@@ -440,7 +441,7 @@ decorate_task(
       .callsFake(async function(slug, branches) {
         return branches[0];
       });
-    await action.runRecipe(recipe);
+    await action.processRecipe(recipe, BaseAction.suitability.FILTER_MATCH);
     await action.finalize();
 
     const activeExperiments = await PreferenceExperiments.getAllActive();

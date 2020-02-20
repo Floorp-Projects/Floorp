@@ -1,5 +1,6 @@
 "use strict";
 
+ChromeUtils.import("resource://normandy/actions/BaseAction.jsm", this);
 ChromeUtils.import("resource://normandy/actions/ConsoleLogAction.jsm", this);
 ChromeUtils.import("resource://normandy/lib/Uptake.jsm", this);
 
@@ -9,7 +10,7 @@ add_task(async function logging_works() {
   const infoStub = sinon.stub(action.log, "info");
   try {
     const recipe = { id: 1, arguments: { message: "Hello, world!" } };
-    await action.runRecipe(recipe);
+    await action.processRecipe(recipe, BaseAction.suitability.FILTER_MATCH);
     is(action.lastError, null, "lastError should be null");
     Assert.deepEqual(
       infoStub.args,
@@ -31,7 +32,7 @@ decorate_task(
     try {
       // message is required
       let recipe = { id: 1, arguments: {} };
-      await action.runRecipe(recipe);
+      await action.processRecipe(recipe, BaseAction.suitability.FILTER_MATCH);
       is(action.lastError, null, "lastError should be null");
       Assert.deepEqual(infoStub.args, [], "no message should be logged");
       Assert.deepEqual(reportRecipeStub.args, [
@@ -42,7 +43,7 @@ decorate_task(
 
       // message must be a string
       recipe = { id: 1, arguments: { message: 1 } };
-      await action.runRecipe(recipe);
+      await action.processRecipe(recipe, BaseAction.suitability.FILTER_MATCH);
       is(action.lastError, null, "lastError should be null");
       Assert.deepEqual(infoStub.args, [], "no message should be logged");
       Assert.deepEqual(reportRecipeStub.args, [
