@@ -750,14 +750,6 @@ struct IPDLParamTraits<dom::MaybeDiscarded<dom::BrowsingContext>> {
 };
 
 template <>
-struct IPDLParamTraits<dom::BrowsingContext*> {
-  static void Write(IPC::Message* aMsg, IProtocol* aActor,
-                    dom::BrowsingContext* aParam);
-  static bool Read(const IPC::Message* aMsg, PickleIterator* aIter,
-                   IProtocol* aActor, RefPtr<dom::BrowsingContext>* aResult);
-};
-
-template <>
 struct IPDLParamTraits<dom::BrowsingContext::IPCInitializer> {
   static void Write(IPC::Message* aMessage, IProtocol* aActor,
                     const dom::BrowsingContext::IPCInitializer& aInitializer);
