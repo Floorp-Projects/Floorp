@@ -77,7 +77,7 @@ class PendingAnimationTracker final {
   void MarkAnimationsThatMightNeedSynchronization();
 
  private:
-  ~PendingAnimationTracker() {}
+  ~PendingAnimationTracker() = default;
 
   void EnsurePaintIsScheduled();
 

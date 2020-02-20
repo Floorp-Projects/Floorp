@@ -48,7 +48,7 @@ class Document;
 class Animation : public DOMEventTargetHelper,
                   public LinkedListElement<Animation> {
  protected:
-  virtual ~Animation() {}
+  virtual ~Animation() = default;
 
  public:
   explicit Animation(nsIGlobalObject* aGlobal)
