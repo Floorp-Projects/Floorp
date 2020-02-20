@@ -759,8 +759,8 @@
     <string name="snackbar_tab_closed">탭 닫힘</string>
     <!-- Text shown in snackbar when user closes all tabs -->
     <string name="snackbar_tabs_closed">탭 닫힘</string>
-    <!-- Text shown in snackbar when user adds a site to home fragment. Placeholder replaced with app name -->
-    <string name="snackbar_added_to_firefox_home">%s 홈에 추가됨!</string>
+    <!-- Text shown in snackbar when user adds a site to top sites -->
+    <string name="snackbar_added_to_top_sites">상위 사이트에 추가됨!</string>
     <!-- Text shown in snackbar when user closes a private tab -->
     <string name="snackbar_private_tab_closed">사생활 보호 탭 닫힘</string>
     <!-- Text shown in snackbar when user closes all private tabs -->
@@ -1018,7 +1018,35 @@
     <string name="preference_enhanced_tracking_protection_strict_description">더 강력한 보호를 제공하지만, 일부 사이트 또는 컨텐츠의 손상을 야기할 수 있습니다.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">엄격 추적 방지 기능에 의해 차단된 것</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom">사용자 지정</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom_description">차단할 추적기 및 스크립트 선택</string>
+    <!--  Accessibility text for the Strict protection information icon  -->
+    <string name="preference_enhanced_tracking_protection_custom_info_button">사용자 지정 추적 방지 기능으로 차단된 것</string>
     <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
+    <!-- Preference for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies">쿠키</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_1">교차 사이트 및 소셜 미디어 추적기</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_2">방문하지 않은 사이트의 쿠키</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_3">모든 제3자 쿠키 (웹사이트가 깨질 수 있음)</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_4">모든 쿠키 (웹사이트가 깨질 수 있음)</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings for tracking content -->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content">추적 콘텐츠</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content_1">모든 탭에서</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content_2">사생활 보호 탭에서만</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content_3">사용자 지정 탭에서만</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom_cryptominers">크립토마이너</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom_fingerprinters">핑거프린터</string>
     <string name="enhanced_tracking_protection_blocked">차단됨</string>
     <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
     <string name="enhanced_tracking_protection_allowed">허용됨</string>

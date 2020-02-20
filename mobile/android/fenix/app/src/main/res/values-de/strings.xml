@@ -751,8 +751,8 @@
     <string name="snackbar_tab_closed">Tab geschlossen</string>
     <!-- Text shown in snackbar when user closes all tabs -->
     <string name="snackbar_tabs_closed">Tabs geschlossen</string>
-    <!-- Text shown in snackbar when user adds a site to home fragment. Placeholder replaced with app name -->
-    <string name="snackbar_added_to_firefox_home">%s zum Startbildschirm hinzugefügt!</string>
+    <!-- Text shown in snackbar when user adds a site to top sites -->
+    <string name="snackbar_added_to_top_sites">Zu wichtigen Seiten hinzugefügt!</string>
     <!-- Text shown in snackbar when user closes a private tab -->
     <string name="snackbar_private_tab_closed">Privater Tab geschlossen</string>
     <!-- Text shown in snackbar when user closes all private tabs -->
@@ -1004,7 +1004,35 @@
     <string name="preference_enhanced_tracking_protection_strict_description">Stärkerer Schutz, kann jedoch dazu führen, dass einige Inhalte nicht funktionieren.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">Was wird durch den strengen Tracking-Schutz blockiert?</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom">Benutzerdefiniert</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom_description">Wählen Sie, welche Art von Skripten zur Aktivitätenverfolgung und sonstige Inhalte blockiert werden</string>
+    <!--  Accessibility text for the Strict protection information icon  -->
+    <string name="preference_enhanced_tracking_protection_custom_info_button">Was wird durch den benutzerdefinierten Tracking-Schutz blockiert?</string>
     <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
+    <!-- Preference for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies">Cookies</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_1">Zur seitenübergreifenden Aktivitätenverfolgung und von sozialen Netzwerken</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_2">Cookies von nicht besuchten Websites</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_3">Alle Cookies von Drittanbietern (einige Websites funktionieren dann eventuell nicht mehr)</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_4">Alle Cookies (einige Websites funktionieren dann nicht mehr)</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings for tracking content -->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content">Inhalte zur Aktivitätenverfolgung</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content_1">In allen Tabs</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content_2">Nur in privaten Tabs</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content_3">Nur in benutzerdefinierten Tabs</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom_cryptominers">Heimliche Digitalwährungsberechner (Krypto-Miner)</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom_fingerprinters">Identifizierer (Fingerprinter)</string>
     <string name="enhanced_tracking_protection_blocked">Blockiert</string>
     <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
     <string name="enhanced_tracking_protection_allowed">Erlaubt</string>

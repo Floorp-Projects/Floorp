@@ -730,8 +730,8 @@
     <string name="snackbar_tab_closed">Zamknięto kartę</string>
     <!-- Text shown in snackbar when user closes all tabs -->
     <string name="snackbar_tabs_closed">Zamknięto karty</string>
-    <!-- Text shown in snackbar when user adds a site to home fragment. Placeholder replaced with app name -->
-    <string name="snackbar_added_to_firefox_home">Dodano do strony startowej przeglądarki %s</string>
+    <!-- Text shown in snackbar when user adds a site to top sites -->
+    <string name="snackbar_added_to_top_sites">Dodano do popularnych stron</string>
     <!-- Text shown in snackbar when user closes a private tab -->
     <string name="snackbar_private_tab_closed">Zamknięto prywatną kartę</string>
     <!-- Text shown in snackbar when user closes all private tabs -->
@@ -981,7 +981,35 @@
     <string name="preference_enhanced_tracking_protection_strict_description">Silniejsza ochrona, ale może powodować niepoprawne działanie niektórych stron.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">Co jest blokowane przez ścisłą ochronę przed śledzeniem</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom">Własna</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom_description">Wybierz, które elementy śledzące i skrypty blokować</string>
+    <!--  Accessibility text for the Strict protection information icon  -->
+    <string name="preference_enhanced_tracking_protection_custom_info_button">Co jest blokowane przez własną ochronę przed śledzeniem</string>
     <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
+    <!-- Preference for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies">Ciasteczka</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_1">Śledzące między witrynami i serwisów społecznościowych</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_2">Ciasteczka z nieodwiedzonych witryn</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_3">Wszystkie ciasteczka zewnętrznych witryn (może powodować niepoprawne działanie stron)</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_4">Wszystkie ciasteczka (spowoduje niepoprawne działanie stron)</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings for tracking content -->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content">Treści z elementami śledzącymi</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content_1">We wszystkich kartach</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content_2">Tylko w prywatnych kartach</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content_3">Tylko w niestandardowych kartach</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom_cryptominers">Elementy używające urządzenia użytkownika do generowania kryptowalut</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom_fingerprinters">Elementy śledzące przez zbieranie informacji o konfiguracji</string>
     <string name="enhanced_tracking_protection_blocked">Blokowane</string>
     <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
     <string name="enhanced_tracking_protection_allowed">Dopuszczone</string>

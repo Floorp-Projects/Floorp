@@ -297,6 +297,14 @@
     <string name="preferences_tracking_protection_settings">Sporingsbeskyttelse</string>
     <!-- Preference switch for tracking protection -->
     <string name="preferences_tracking_protection">Sporingsbeskyttelse</string>
+    <!-- Preference for tracking protection exceptions -->
+    <string name="preferences_tracking_protection_exceptions">Unntak</string>
+    <!-- Preference description for tracking protection exceptions -->
+    <string name="preferences_tracking_protection_exceptions_description">Sporingsbeskyttelse er slått av for disse nettstedene</string>
+    <!-- Button in Exceptions Preference to turn on tracking protection for all sites (remove all exceptions) -->
+    <string name="preferences_tracking_protection_exceptions_turn_on_for_all">Slå på for alle nettsteder</string>
+    <!-- Text displayed when there are no exceptions -->
+    <string name="exceptions_empty_message_description">Unntak lar deg slå av sporingsbeskyttelse for utvalgte nettsteder.</string>
     <!-- Text displayed when there are no exceptions, with learn more link that brings users to a tracking protection SUMO page -->
     <string name="exceptions_empty_message_learn_more_link">Les mer</string>
 
@@ -306,9 +314,31 @@
     <!-- Preference switch for Telemetry -->
     <string name="preferences_telemetry">Telemetri</string>
 
+    <!-- Preference switch for usage and technical data collection -->
+    <string name="preference_usage_data">Bruk og tekniske data</string>
+    <!-- Preference description for usage and technical data collection -->
+    <string name="preferences_usage_data_description">Deler data om ytelse, bruksmønster, maskinvare og tilpasninger i din nettleser med Mozilla, for å hjelpe oss å gjøre %1$s bedre</string>
+    <!-- Preference switch for marketing data collection -->
+    <string name="preferences_marketing_data">Markedsføringsdata</string>
+    <!-- Preference description for marketing data collection, parameter is the app name (e.g. Firefox) -->
+    <string name="preferences_marketing_data_description">Deler data om hvilke funksjoner du bruker i %1$s med Leanplum, vår mobile markedsføringsleverandør.</string>
+    <!-- Title for experiments preferences -->
+    <string name="preference_experiments">Eksperimenter</string>
+    <!-- Summary for experiments preferences -->
+    <string name="preference_experiments_summary">Tillater Mozilla å installere og samle inn data for eksperimentelle funksjoner</string>
+
+    <!-- Preference switch for crash reporter -->
+    <string name="preferences_crash_reporter">Krasjrapporterer</string>
+    <!-- Preference switch for Mozilla location service -->
+    <string name="preferences_mozilla_location_service">Mozilla plasseringstjeneste</string>
+    <!-- Preference switch for app health report. The first parameter is the name of the application (For example: Fenix) -->
+    <string name="preferences_fenix_health_report">%s helserapport</string>
+
     <!-- Turn On Sync Preferences -->
     <!-- Header of the Turn on Sync preference view -->
     <string name="preferences_sync">Slå på Sync</string>
+    <!-- Preference for pairing -->
+    <string name="preferences_sync_pair">Skann paringskode i Firefox på din datamaskin</string>
     <!-- Preference for account login -->
     <string name="preferences_sync_sign_in">Logg inn</string>
     <!-- Preference for reconnecting to FxA sync -->
@@ -336,6 +366,8 @@
     <!-- Preference for using dark theme -->
     <string name="preference_dark_theme">Mørkt</string>
 
+    <!-- Preference for using using dark or light theme automatically set by battery -->
+    <string name="preference_auto_battery_theme">Innstilt av strømstyring</string>
     <!-- Preference for using following device theme -->
     <string name="preference_follow_device_theme">Følg enhetens tema</string>
 
@@ -444,6 +476,11 @@
     <!-- Text shown when no history exists -->
     <string name="history_empty_message">Ingen historikk her</string>
 
+    <!-- Crashes -->
+    <!-- Title text displayed on the tab crash page. This first parameter is the name of the application (For example: Fenix) -->
+    <string name="tab_crash_title_2">Beklager. %1$s kan ikke laste den siden.</string>
+    <!-- Description text displayed on the tab crash page -->
+    <string name="tab_crash_description">Du kan prøve å gjenopprette eller lukke denne fanen nedenfor.</string>
     <!-- Send crash report checkbox text on the tab crash page -->
     <string name="tab_crash_send_report">Send krasjrapport til Mozilla</string>
     <!-- Close tab button text on the tab crash page -->
@@ -468,6 +505,8 @@
     <string name="bookmark_add_folder">Legg til mappe</string>
     <!-- deprecated: Snackbar title shown after a bookmark has been created. -->
     <string name="bookmark_created_snackbar">Bokmerke opprettet.</string>
+    <!-- Snackbar title shown after a bookmark has been created. -->
+    <string name="bookmark_saved_snackbar">Bokmerke lagret!</string>
     <!-- Snackbar edit button shown after a bookmark has been created. -->
     <string name="edit_bookmark_snackbar_action">REDIGER</string>
     <!-- Bookmark overflow menu edit button -->
@@ -515,6 +554,8 @@
      The first parameter is the host part of the URL of the bookmark deleted, if any -->
     <string name="bookmark_deletion_snackbar_message">Slettet %1$s</string>
 
+    <!-- Bookmark snackbar message on deleting multiple bookmarks -->
+    <string name="bookmark_deletion_multiple_snackbar_message">Sletter valgte bokmerker</string>
     <!-- Bookmark undo button for deletion snackbar action -->
     <string name="bookmark_undo_deletion">ANGRE</string>
 
@@ -524,6 +565,10 @@
     <!-- Button label that take the user to the Android App setting -->
     <string name="phone_feature_go_to_settings">Gå til Innstillinger</string>
 
+    <!-- Content description (not visible, for screen readers etc.): Quick settings sheet
+        to give users access to site specific information / settings. For example:
+        Secure settings status and a button to modify site permissions -->
+    <string name="quick_settings_sheet">Oversikt over hurtige innstillinger</string>
     <!-- Label that indicates that this option it the recommended one -->
     <string name="phone_feature_recommended">Anbefalt</string>
 
@@ -678,8 +723,6 @@
     <string name="snackbar_tab_closed">Fane lukket</string>
     <!-- Text shown in snackbar when user closes all tabs -->
     <string name="snackbar_tabs_closed">Faner lukket</string>
-    <!-- Text shown in snackbar when user adds a site to home fragment. Placeholder replaced with app name -->
-    <string name="snackbar_added_to_firefox_home">Lagt til %s-startside!</string>
     <!-- Text shown in snackbar when user closes a private tab -->
     <string name="snackbar_private_tab_closed">Privat fane lukket</string>
     <!-- Text shown in snackbar when user closes all private tabs -->
@@ -744,6 +787,8 @@
     <string name="preferences_delete_browsing_data_cookies">Infokapsler</string>
     <!-- Subtitle for the cookies item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cookies_subtitle">Du blir logget ut fra de fleste nettsteder</string>
+    <!-- Title for the cached images and files item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cached_files">Hurtiglagrede (cached) bilder og filer</string>
     <!-- Subtitle for the cached images and files item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cached_files_subtitle">Frigjør lagringsplass</string>
     <!-- Title for the site permissions item in Delete browsing data -->
@@ -825,6 +870,13 @@
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_button">Streng (anbefales)</string>
 
+    <!-- text for strict blocking option button description -->
+    <string name="onboarding_tracking_protection_strict_button_description">Blokkerer flere sporingsmekanismer for å oppnå bedre beskyttelse og ytelse, men kan føre til at noen nettsteder ikke fungerer optimalt</string>
+    <!-- text for the toolbar position card header
+        In English this is an idiom for "choose a side as in an argument or fight"
+        but it is ok to make this more literally about "choosing a position in a physical space -->
+    <string name="onboarding_toolbar_position_header">Velg side</string>
+
     <!-- Text shown for settings option for sign with pairing -->
     <string name="sign_in_with_camera">Logg inn med kameraet ditt</string>
     <!-- Text shown for settings option for sign with email -->
@@ -867,7 +919,6 @@
     <string name="preference_enhanced_tracking_protection_strict_description">Sterkere beskyttelse, men kan føre til at noen nettsteder eller innhold ikke vil fungere.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">Hva er blokkert av streng sporingsbeskyttelse</string>
-    <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
     <string name="enhanced_tracking_protection_blocked">Blokkert</string>
     <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
     <string name="enhanced_tracking_protection_allowed">Tillatt</string>
@@ -985,5 +1036,34 @@
     <string name="logins_biometric_prompt_message">Lås opp for å se dine lagrede innlogginger</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_later">Senere</string>
+
+    <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_set_up_now">Konfigurer nå</string>
+    <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their logins -->
+    <string name="logins_biometric_prompt_message_pin">Lås opp enheten din</string>
+    <!-- Title for Accessibility Force Enable Zoom Preference -->
+    <string name="preference_accessibility_force_enable_zoom">Zoom på alle nettsteder</string>
+
+    <!-- Title of the Add search engine screen -->
+    <string name="search_engine_add_custom_search_engine_title">Legg til søkemotor</string>
+    <!-- Title of the Edit search engine screen -->
+    <string name="search_engine_edit_custom_search_engine_title">Rediger søkemotor</string>
+    <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
+    <string name="search_engine_add_button_content_description">Legg til</string>
+    <!-- Content description (not visible, for screen readers etc.): Title for the button to save a search engine in the action bar -->
+    <string name="search_engine_add_custom_search_engine_edit_button_content_description">Lagre</string>
+    <!-- Text for the menu button to edit a search engine -->
+    <string name="search_engine_edit">Rediger</string>
+    <!-- Text for the menu button to delete a search engine -->
+    <string name="search_engine_delete">Slett</string>
+
+    <!-- Text for the button to create a custom search engine on the Add search engine screen -->
+    <string name="search_add_custom_engine_label_other">Andre</string>
+    <!-- Placeholder text shown in the Search Engine Name TextField before a user enters text -->
+    <string name="search_add_custom_engine_name_hint">Navn</string>
+    <!-- Placeholder text shown in the Search String TextField before a user enters text -->
+    <string name="search_add_custom_engine_search_string_hint">Søkestreng å bruke</string>
+    <!-- Description text for the Search String TextField. The %s is part of the string -->
+    <string name="search_add_custom_engine_search_string_example">Bytt ut spørringen med «%s». Eksempel:\nhttps://www.google.com/search?q=%s</string>
 
     </resources>

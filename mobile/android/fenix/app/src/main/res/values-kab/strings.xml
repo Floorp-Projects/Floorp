@@ -727,8 +727,8 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="snackbar_tab_closed">Iccer imdel</string>
     <!-- Text shown in snackbar when user closes all tabs -->
     <string name="snackbar_tabs_closed">Medlen iccaren</string>
-    <!-- Text shown in snackbar when user adds a site to home fragment. Placeholder replaced with app name -->
-    <string name="snackbar_added_to_firefox_home">Rnu ɣer ugejdan %s!</string>
+    <!-- Text shown in snackbar when user adds a site to top sites -->
+    <string name="snackbar_added_to_top_sites">Rnu ɣer ismal ifazen!</string>
     <!-- Text shown in snackbar when user closes a private tab -->
     <string name="snackbar_private_tab_closed">Imdel iccer uslig</string>
     <!-- Text shown in snackbar when user closes all private tabs -->
@@ -978,7 +978,35 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="preference_enhanced_tracking_protection_strict_description">Ammesten yettwaseǧhed, maca kra n yismal akked ugbur yemzer ur teddun ara akken iwata.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">Ayen iweḥlen s ummeten n uḥriṣ mgal aḍfaṛ</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom">Udmawan</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom_description">Fren ineḍfaṛen akked iskripten ara tesweḥleḍ.</string>
+    <!--  Accessibility text for the Strict protection information icon  -->
+    <string name="preference_enhanced_tracking_protection_custom_info_button">Ayen iweḥlen s ummeten udmawan mgal aḍfaṛ</string>
     <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
+    <!-- Preference for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies">Inagan n tuqqna</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_1">Ineḍfaṛen gar yismal akked iẓeḍwa inmettiyen</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_2">Inagan n tuqqna n yismal ur yettwarzan ara</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_3">Akk inagan n tuqqna wis kraḍ (zemren ad rẓen isaml web)</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_4">Akk inagan n tuqqna (ad rẓen isaml web)</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings for tracking content -->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content">Agbur n uḍfaṛ</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content_1">Deg iccren meṛṛa</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content_2">Deg iccaren usligen kan</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content_3">Deg iccaren udmawanen kan</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom_cryptominers">Ikripṭuminaren</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom_fingerprinters">Idsilen umḍinen</string>
     <string name="enhanced_tracking_protection_blocked">Iwḥel</string>
     <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
     <string name="enhanced_tracking_protection_allowed">Ittusireg</string>

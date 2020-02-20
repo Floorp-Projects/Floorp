@@ -634,8 +634,8 @@
     <!-- Text shown in snackbar when user closes all tabs -->
     <string name="snackbar_tabs_closed">הלשוניות נסגרו</string>
 
-    <!-- Text shown in snackbar when user adds a site to home fragment. Placeholder replaced with app name -->
-    <string name="snackbar_added_to_firefox_home">נוסף למסך הבית של %s!</string>
+    <!-- Text shown in snackbar when user adds a site to top sites -->
+    <string name="snackbar_added_to_top_sites">נוסף לאתרים המובילים!</string>
     <!-- Text shown in snackbar when user closes a private tab -->
     <string name="snackbar_private_tab_closed">הלשונית הפרטית נסגרה</string>
     <!-- Text shown in snackbar when user closes all private tabs -->
@@ -844,7 +844,31 @@
     <string name="preference_enhanced_tracking_protection_strict_description">הגנה חזקה יותר, אך עשויה לשבש פעילות של אתרים או תוכן.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">מה נחסם על־ידי הגנת מעקב מחמירה</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom">התאמה אישית</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom_description">בחירה באילו רכיבי מעקב ותסריטים יש לחסום</string>
+    <!--  Accessibility text for the Strict protection information icon  -->
+    <string name="preference_enhanced_tracking_protection_custom_info_button">מה נחסם על־ידי הגנת מעקב מותאמת אישית</string>
     <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
+    <!-- Preference for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies">עוגיות</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_2">עוגיות מאתרים שלא ביקרתי בהם</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_3">כל העוגיות צד־שלישי (עשוי לשבש פעילות של חלק מהאתרים)</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_4">כל העוגיות (ישבש פעילות של אתרים)</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings for tracking content -->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content">תוכן מעקב</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content_1">בכל הלשוניות</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content_2">בלשוניות פרטיות בלבד</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content_3">בלשוניות מותאמות אישית בלבד</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom_cryptominers">כורי מטבעות דיגיטליים</string>
     <string name="enhanced_tracking_protection_blocked">חסומים</string>
     <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
     <string name="enhanced_tracking_protection_allowed">מורשים</string>
