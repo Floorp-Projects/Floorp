@@ -13,8 +13,8 @@ namespace dom {
 
 class GamepadEventChannelChild final : public PGamepadEventChannelChild {
  public:
-  GamepadEventChannelChild() {}
-  ~GamepadEventChannelChild() {}
+  GamepadEventChannelChild() = default;
+  ~GamepadEventChannelChild() = default;
   mozilla::ipc::IPCResult RecvGamepadUpdate(
       const GamepadChangeEvent& aGamepadEvent);
   mozilla::ipc::IPCResult RecvReplyGamepadPromise(const uint32_t& aPromiseID);

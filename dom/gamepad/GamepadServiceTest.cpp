@@ -61,7 +61,7 @@ GamepadServiceTest::GamepadServiceTest(nsPIDOMWindowInner* aWindow)
       mShuttingDown(false),
       mChild(nullptr) {}
 
-GamepadServiceTest::~GamepadServiceTest() {}
+GamepadServiceTest::~GamepadServiceTest() = default;
 
 void GamepadServiceTest::InitPBackgroundActor() {
   MOZ_ASSERT(!mChild);

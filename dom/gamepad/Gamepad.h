@@ -109,7 +109,7 @@ class Gamepad final : public nsISupports, public nsWrapperCache {
   }
 
  private:
-  virtual ~Gamepad() {}
+  virtual ~Gamepad() = default;
   void UpdateTimestamp();
 
  protected:
