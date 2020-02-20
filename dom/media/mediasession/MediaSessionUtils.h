@@ -15,10 +15,6 @@ namespace dom {
 
 inline void NotfiyMediaSessionCreationOrDeconstruction(
     BrowsingContext* aContext, bool aIsCreated) {
-  if (!aContext || aContext->IsDiscarded()) {
-    return;
-  }
-
   if (XRE_IsContentProcess()) {
     ContentChild* contentChild = ContentChild::GetSingleton();
     Unused << contentChild->SendNotifyMediaSessionUpdated(aContext, aIsCreated);

@@ -49,12 +49,14 @@ async refcounted protocol PWindowGlobal
 child:
   async __delete__();
 
-  async MakeFrameLocal(BrowsingContext aFrameContext, uint64_t aSwitchId);
-  async MakeFrameRemote(BrowsingContext aFrameContext,
+  async MakeFrameLocal(MaybeDiscardedBrowsingContext aFrameContext,
+                       uint64_t aSwitchId);
+  async MakeFrameRemote(MaybeDiscardedBrowsingContext aFrameContext,
                         ManagedEndpoint<PBrowserBridgeChild> aEndpoint,
                         TabId aTabId) returns (bool success);
 
-  async DrawSnapshot(IntRect? aRect, float aScale, nscolor aBackgroundColor, uint32_t aFlags) returns (PaintFragment retval);
+  async DrawSnapshot(IntRect? aRect, float aScale, nscolor aBackgroundColor,
+                     uint32_t aFlags) returns (PaintFragment retval);
 
   /**
    * Returns the serialized security info associated with this window.
@@ -62,15 +64,18 @@ child:
   async GetSecurityInfo() returns(nsCString? serializedSecInfo);
 
 both:
-  async RawMessage(JSWindowActorMessageMeta aMetadata, ClonedMessageData aData, ClonedMessageData aStack);
+  async RawMessage(JSWindowActorMessageMeta aMetadata, ClonedMessageData aData,
+                   ClonedMessageData aStack);
 
 parent:
   // Load the given URI load state into the current owner process of the given
   // BrowsingContext. aTargetBC must be in the same BrowsingContextGroup as this
   // window global.
-  async LoadURI(BrowsingContext aTargetBC, nsDocShellLoadState aLoadState, bool aSetNavigating);
+  async LoadURI(MaybeDiscardedBrowsingContext aTargetBC,
+                nsDocShellLoadState aLoadState, bool aSetNavigating);
 
-  async InternalLoad(BrowsingContext aTargetBC, nsDocShellLoadState aLoadState);
+  async InternalLoad(MaybeDiscardedBrowsingContext aTargetBC,
+                     nsDocShellLoadState aLoadState);
 
   /// Update the URI of the document in this WindowGlobal.
   async UpdateDocumentURI(nsIURI aUri);

@@ -52,12 +52,12 @@ class Transaction {
   nsresult Commit(Context* aOwner);
 
   // Called from `ContentParent` in response to a transaction from content.
-  mozilla::ipc::IPCResult CommitFromIPC(Context* aOwner,
+  mozilla::ipc::IPCResult CommitFromIPC(const MaybeDiscarded<Context>& aOwner,
                                         ContentParent* aSource);
 
   // Called from `ContentChild` in response to a transaction from the parent.
-  mozilla::ipc::IPCResult CommitFromIPC(Context* aOwner, uint64_t aEpoch,
-                                        ContentChild* aSource);
+  mozilla::ipc::IPCResult CommitFromIPC(const MaybeDiscarded<Context>& aOwner,
+                                        uint64_t aEpoch, ContentChild* aSource);
 
   void Write(IPC::Message* aMsg, mozilla::ipc::IProtocol* aActor) const;
   bool Read(const IPC::Message* aMsg, PickleIterator* aIter,

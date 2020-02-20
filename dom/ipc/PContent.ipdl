@@ -109,9 +109,11 @@ using moveonly mozilla::ModulesMapResult from "mozilla/UntrustedModulesData.h";
 using mozilla::Telemetry::DiscardedData from "mozilla/TelemetryComms.h";
 using mozilla::CrossProcessMutexHandle from "mozilla/ipc/CrossProcessMutex.h";
 using refcounted class mozilla::dom::BrowsingContext from "mozilla/dom/BrowsingContext.h";
+using mozilla::dom::MaybeDiscardedBrowsingContext from "mozilla/dom/BrowsingContext.h";
 using mozilla::dom::BrowsingContextTransaction from "mozilla/dom/BrowsingContext.h";
 using mozilla::dom::BrowsingContextInitializer from "mozilla/dom/BrowsingContext.h";
 using refcounted class mozilla::dom::WindowContext from "mozilla/dom/WindowContext.h";
+using mozilla::dom::MaybeDiscardedWindowContext from "mozilla/dom/WindowContext.h";
 using mozilla::dom::WindowContextTransaction from "mozilla/dom/WindowContext.h";
 using mozilla::dom::WindowContextInitializer from "mozilla/dom/WindowContext.h";
 using base::SharedMemoryHandle from "base/shared_memory.h";
@@ -848,13 +850,13 @@ child:
     * This method is used to notifty content process to start delayed autoplay
     * media via browsing context.
     */
-    async StartDelayedAutoplayMediaComponents(BrowsingContext aContext);
+    async StartDelayedAutoplayMediaComponents(MaybeDiscardedBrowsingContext aContext);
 
     /**
      * This method is used to dispatch MediaControlKeysEvent to content process
      * in order to control media within a specific browsing context tree.
      */
-    async UpdateMediaControlKeysEvent(BrowsingContext aContext,
+    async UpdateMediaControlKeysEvent(MaybeDiscardedBrowsingContext aContext,
                                       MediaControlKeysEvent aEvent);
 
     // Begin subscribing to a new BrowsingContextGroup, sending down the current
@@ -871,11 +873,11 @@ child:
 
     async EvictContentViewers(uint64_t[] aToEvictSharedStateIDs);
 
-    async LoadURI(BrowsingContext aContext, nsDocShellLoadState aLoadState, bool aSetNavigating);
+    async LoadURI(MaybeDiscardedBrowsingContext aContext, nsDocShellLoadState aLoadState, bool aSetNavigating);
 
-    async InternalLoad(BrowsingContext aContext, nsDocShellLoadState aLoadState, bool aTakeFocus);
+    async InternalLoad(MaybeDiscardedBrowsingContext aContext, nsDocShellLoadState aLoadState, bool aTakeFocus);
 
-    async DisplayLoadError(BrowsingContext aContext, nsString aURI);
+    async DisplayLoadError(MaybeDiscardedBrowsingContext aContext, nsString aURI);
 
 parent:
     async InitBackground(Endpoint<PBackgroundParent> aEndpoint);
@@ -1507,20 +1509,21 @@ parent:
     * certain tab. We would use the browsing context to find the corresponding
     * controller.
     */
-    async NotifyMediaStateChanged(BrowsingContext aContext,
+    async NotifyMediaStateChanged(MaybeDiscardedBrowsingContext aContext,
                                   ControlledMediaState aState);
 
    /**
     * When media became audible or inaudible in content process, we have to
     * notify chrome process in order to which tab is audible.
     */
-    async NotifyMediaAudibleChanged(BrowsingContext aContext, bool aAudible);
+    async NotifyMediaAudibleChanged(MaybeDiscardedBrowsingContext aContext,
+                                    bool aAudible);
 
    /**
     * This method is used to update media session's status when it's being
     * created or destroyed.
     */
-    async NotifyMediaSessionUpdated(BrowsingContext aContext, bool aIsCreated);
+    async NotifyMediaSessionUpdated(MaybeDiscardedBrowsingContext aContext, bool aIsCreated);
 
     /**
      * Due to sandboxing, a child process's UntrustedModulesProcessor cannot
@@ -1546,7 +1549,7 @@ both:
                       nsCString category, bool privateWindow, uint64_t innerWindowId,
                       bool fromChromeContext);
 
-    async CommitBrowsingContextTransaction(BrowsingContext aContext,
+    async CommitBrowsingContextTransaction(MaybeDiscardedBrowsingContext aContext,
                                            BrowsingContextTransaction aTransaction,
                                            uint64_t aEpoch);
 
@@ -1598,17 +1601,19 @@ both:
      * Removes all of 'aContext'\'s children, and caches them in the
      * BrowsingContextGroup.
      */
-    async CacheBrowsingContextChildren(BrowsingContext aContext);
+    async CacheBrowsingContextChildren(MaybeDiscardedBrowsingContext aContext);
 
     /**
      * Re-attach all BrowsingContexts in a 'aContext'.
      */
-    async RestoreBrowsingContextChildren(BrowsingContext aContext,
+    async RestoreBrowsingContextChildren(MaybeDiscardedBrowsingContext aContext,
                                          BrowsingContext[] aChildren);
 
-    async WindowClose(BrowsingContext aContext, bool aTrustedCaller);
-    async WindowFocus(BrowsingContext aContext, CallerType aCallerType);
-    async WindowBlur(BrowsingContext aContext);
+    async WindowClose(MaybeDiscardedBrowsingContext aContext,
+                      bool aTrustedCaller);
+    async WindowFocus(MaybeDiscardedBrowsingContext aContext,
+                      CallerType aCallerType);
+    async WindowBlur(MaybeDiscardedBrowsingContext aContext);
     async RaiseWindow(BrowsingContext aContext, CallerType aCallerType);
     async ClearFocus(BrowsingContext aContext);
     async SetFocusedBrowsingContext(BrowsingContext aContext);
@@ -1630,7 +1635,8 @@ child:
     async SetupFocusedAndActive(BrowsingContext aFocusedBrowsingContext,
                                 BrowsingContext aActiveBrowsingContext);
 both:
-    async WindowPostMessage(BrowsingContext aContext, ClonedMessageData aMessage,
+    async WindowPostMessage(MaybeDiscardedBrowsingContext aContext,
+                            ClonedMessageData aMessage,
                             PostMessageData aData);
 
     /**
@@ -1640,7 +1646,7 @@ both:
     async SessionStorageData(uint64_t aTopContextId, nsCString aOriginAttrs,
                              nsCString aOriginKey, KeyValuePair[] aDefaultData,
                              KeyValuePair[] aSessionData);
-    async CommitWindowContextTransaction(WindowContext aContext,
+    async CommitWindowContextTransaction(MaybeDiscardedWindowContext aContext,
                                          WindowContextTransaction aTransaction,
                                          uint64_t aEpoch);
 
