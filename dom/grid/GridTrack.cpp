@@ -29,7 +29,7 @@ GridTrack::GridTrack(GridTracks* aParent)
   MOZ_ASSERT(aParent, "Should never be instantiated with a null GridTracks");
 }
 
-GridTrack::~GridTrack() {}
+GridTrack::~GridTrack() = default;
 
 JSObject* GridTrack::WrapObject(JSContext* aCx,
                                 JS::Handle<JSObject*> aGivenProto) {

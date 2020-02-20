@@ -26,7 +26,7 @@ GridTracks::GridTracks(GridDimension* aParent) : mParent(aParent) {
   MOZ_ASSERT(aParent, "Should never be instantiated with a null GridDimension");
 }
 
-GridTracks::~GridTracks() {}
+GridTracks::~GridTracks() = default;
 
 JSObject* GridTracks::WrapObject(JSContext* aCx,
                                  JS::Handle<JSObject*> aGivenProto) {

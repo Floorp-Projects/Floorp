@@ -30,7 +30,7 @@ GridDimension::GridDimension(Grid* aParent)
   MOZ_ASSERT(aParent, "Should never be instantiated with a null Grid");
 }
 
-GridDimension::~GridDimension() {}
+GridDimension::~GridDimension() = default;
 
 JSObject* GridDimension::WrapObject(JSContext* aCx,
                                     JS::Handle<JSObject*> aGivenProto) {
