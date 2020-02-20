@@ -163,19 +163,13 @@ class TestMemoryUsage(AwsyTestCase):
     def clear_preloaded_browser(self):
         """
         Clears out the preloaded browser.
-
-        Note: Does nothing on older builds that don't have a
-              `gBrowser.removePreloadedBrowser` method.
         """
         self.logger.info("closing preloaded browser")
         script = """
             if (window.NewTabPagePreloading) {
                 return NewTabPagePreloading.removePreloadedBrowser(window);
             }
-            if ("removePreloadedBrowser" in gBrowser) {
-                return gBrowser.removePreloadedBrowser();
-            }
-            return "gBrowser.removePreloadedBrowser not available";
+            return "NewTabPagePreloading.removePreloadedBrowser not available";
             """
         try:
             result = self.marionette.execute_script(script,
