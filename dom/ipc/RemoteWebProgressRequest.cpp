@@ -259,6 +259,12 @@ RemoteWebProgressRequest::IsSocialTrackingResource(
 }
 
 NS_IMETHODIMP
+RemoteWebProgressRequest::IsThirdPartySocialTrackingResource(
+    bool* aIsThirdPartySocialTrackingResource) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 RemoteWebProgressRequest::GetClassificationFlags(
     uint32_t* aClassificationFlags) {
   return NS_ERROR_NOT_IMPLEMENTED;
