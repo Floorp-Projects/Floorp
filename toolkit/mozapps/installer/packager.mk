@@ -124,6 +124,12 @@ ifdef MOZ_AUTOMATION
 		--no-download \
 	  )
 endif
+ifndef CROSS_COMPILE
+	# Generate a file that describes the local Normandy client.
+	env LD_LIBRARY_PATH="$(LD_LIBRARY_PATH):$(DIST)/$(PKG_PATH)/bin" \
+		$(DIST)/$(PKG_PATH)/bin/xpcshell \
+		$(MOZILLA_DIR)/toolkit/components/normandy/metadata-script.js $(MOZ_NORMANDY_JSON)
+endif
 	$(TOUCH) $@
 
 GARBAGE += make-package
