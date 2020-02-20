@@ -25,9 +25,9 @@ class TextEncoder final : public NonRefcountedDOMObject {
     return new TextEncoder();
   }
 
-  TextEncoder() {}
+  TextEncoder() = default;
 
-  virtual ~TextEncoder() {}
+  virtual ~TextEncoder() = default;
 
   bool WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto,
                   JS::MutableHandle<JSObject*> aReflector) {
