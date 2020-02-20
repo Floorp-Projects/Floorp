@@ -2073,8 +2073,8 @@ nsresult nsCookieService::GetCookieStringCommon(nsIURI* aHostURI,
   bool isSameSiteForeign = NS_IsSameSiteForeign(aChannel, aHostURI);
   GetCookieStringInternal(
       aHostURI, aChannel, result.contains(ThirdPartyAnalysis::IsForeign),
-      result.contains(ThirdPartyAnalysis::IsTrackingResource),
-      result.contains(ThirdPartyAnalysis::IsSocialTrackingResource),
+      result.contains(ThirdPartyAnalysis::IsThirdPartyTrackingResource),
+      result.contains(ThirdPartyAnalysis::IsThirdPartySocialTrackingResource),
       result.contains(ThirdPartyAnalysis::IsFirstPartyStorageAccessGranted),
       rejectedReason, isSafeTopLevelNav, isSameSiteForeign, aHttpBound, attrs,
       aCookie);
@@ -2178,18 +2178,18 @@ nsresult nsCookieService::SetCookieStringCommon(nsIURI* aHostURI,
   nsCString cookieString(aCookieHeader);
   SetCookieStringInternal(
       aHostURI, result.contains(ThirdPartyAnalysis::IsForeign),
-      result.contains(ThirdPartyAnalysis::IsTrackingResource),
-      result.contains(ThirdPartyAnalysis::IsSocialTrackingResource),
+      result.contains(ThirdPartyAnalysis::IsThirdPartyTrackingResource),
+      result.contains(ThirdPartyAnalysis::IsThirdPartySocialTrackingResource),
       result.contains(ThirdPartyAnalysis::IsFirstPartyStorageAccessGranted),
       rejectedReason, cookieString, aServerTime, aFromHttp, attrs, aChannel);
   return NS_OK;
 }
 
 void nsCookieService::SetCookieStringInternal(
-    nsIURI* aHostURI, bool aIsForeign, bool aIsTrackingResource,
-    bool aIsSocialTrackingResource, bool aFirstPartyStorageAccessGranted,
-    uint32_t aRejectedReason, nsCString& aCookieHeader,
-    const nsACString& aServerTime, bool aFromHttp,
+    nsIURI* aHostURI, bool aIsForeign, bool aIsThirdPartyTrackingResource,
+    bool aIsThirdPartySocialTrackingResource,
+    bool aFirstPartyStorageAccessGranted, uint32_t aRejectedReason,
+    nsCString& aCookieHeader, const nsACString& aServerTime, bool aFromHttp,
     const OriginAttributes& aOriginAttrs, nsIChannel* aChannel) {
   NS_ASSERTION(aHostURI, "null host!");
 
@@ -2230,9 +2230,9 @@ void nsCookieService::SetCookieStringInternal(
   CountCookiesFromHostInternal(hostFromURI, aOriginAttrs.mPrivateBrowsingId,
                                &priorCookieCount);
   CookieStatus cookieStatus = CheckPrefs(
-      cookieSettings, aHostURI, aIsForeign, aIsTrackingResource,
-      aIsSocialTrackingResource, aFirstPartyStorageAccessGranted, aCookieHeader,
-      priorCookieCount, aOriginAttrs, &rejectedReason);
+      cookieSettings, aHostURI, aIsForeign, aIsThirdPartyTrackingResource,
+      aIsThirdPartySocialTrackingResource, aFirstPartyStorageAccessGranted,
+      aCookieHeader, priorCookieCount, aOriginAttrs, &rejectedReason);
 
   MOZ_ASSERT_IF(rejectedReason, cookieStatus == STATUS_REJECTED);
 
@@ -2985,7 +2985,8 @@ bool nsCookieService::PathMatches(nsCookie* aCookie, const nsACString& aPath) {
 
 void nsCookieService::GetCookiesForURI(
     nsIURI* aHostURI, nsIChannel* aChannel, bool aIsForeign,
-    bool aIsTrackingResource, bool aIsSocialTrackingResource,
+    bool aIsThirdPartyTrackingResource,
+    bool aIsThirdPartySocialTrackingResource,
     bool aFirstPartyStorageAccessGranted, uint32_t aRejectedReason,
     bool aIsSafeTopLevelNav, bool aIsSameSiteForeign, bool aHttpBound,
     const OriginAttributes& aOriginAttrs, nsTArray<nsCookie*>& aCookieList) {
@@ -3027,9 +3028,9 @@ void nsCookieService::GetCookiesForURI(
   CountCookiesFromHostInternal(hostFromURI, aOriginAttrs.mPrivateBrowsingId,
                                &priorCookieCount);
   CookieStatus cookieStatus = CheckPrefs(
-      cookieSettings, aHostURI, aIsForeign, aIsTrackingResource,
-      aIsSocialTrackingResource, aFirstPartyStorageAccessGranted, VoidCString(),
-      priorCookieCount, aOriginAttrs, &rejectedReason);
+      cookieSettings, aHostURI, aIsForeign, aIsThirdPartyTrackingResource,
+      aIsThirdPartySocialTrackingResource, aFirstPartyStorageAccessGranted,
+      VoidCString(), priorCookieCount, aOriginAttrs, &rejectedReason);
 
   MOZ_ASSERT_IF(rejectedReason, cookieStatus == STATUS_REJECTED);
 
@@ -3151,15 +3152,17 @@ void nsCookieService::GetCookiesForURI(
 
 void nsCookieService::GetCookieStringInternal(
     nsIURI* aHostURI, nsIChannel* aChannel, bool aIsForeign,
-    bool aIsTrackingResource, bool aIsSocialTrackingResource,
+    bool aIsThirdPartyTrackingResource,
+    bool aIsThirdPartySocialTrackingResource,
     bool aFirstPartyStorageAccessGranted, uint32_t aRejectedReason,
     bool aIsSafeTopLevelNav, bool aIsSameSiteForeign, bool aHttpBound,
     const OriginAttributes& aOriginAttrs, nsACString& aCookieString) {
   AutoTArray<nsCookie*, 8> foundCookieList;
-  GetCookiesForURI(aHostURI, aChannel, aIsForeign, aIsTrackingResource,
-                   aIsSocialTrackingResource, aFirstPartyStorageAccessGranted,
-                   aRejectedReason, aIsSafeTopLevelNav, aIsSameSiteForeign,
-                   aHttpBound, aOriginAttrs, foundCookieList);
+  GetCookiesForURI(
+      aHostURI, aChannel, aIsForeign, aIsThirdPartyTrackingResource,
+      aIsThirdPartySocialTrackingResource, aFirstPartyStorageAccessGranted,
+      aRejectedReason, aIsSafeTopLevelNav, aIsSameSiteForeign, aHttpBound,
+      aOriginAttrs, foundCookieList);
 
   nsCookie* cookie;
   for (uint32_t i = 0; i < foundCookieList.Length(); ++i) {
@@ -3982,7 +3985,8 @@ static inline bool IsSubdomainOf(const nsCString& a, const nsCString& b) {
 
 CookieStatus nsCookieService::CheckPrefs(
     nsICookieSettings* aCookieSettings, nsIURI* aHostURI, bool aIsForeign,
-    bool aIsTrackingResource, bool aIsSocialTrackingResource,
+    bool aIsThirdPartyTrackingResource,
+    bool aIsThirdPartySocialTrackingResource,
     bool aFirstPartyStorageAccessGranted, const nsACString& aCookieHeader,
     const int aNumOfCookies, const OriginAttributes& aOriginAttrs,
     uint32_t* aRejectedReason) {
@@ -4031,7 +4035,8 @@ CookieStatus nsCookieService::CheckPrefs(
   // No cookies allowed if this request comes from a tracker, in a 3rd party
   // context, when anti-tracking protection is enabled and when we don't have
   // access to the first-party cookie jar.
-  if (aIsForeign && aIsTrackingResource && !aFirstPartyStorageAccessGranted &&
+  if (aIsForeign && aIsThirdPartyTrackingResource &&
+      !aFirstPartyStorageAccessGranted &&
       aCookieSettings->GetRejectThirdPartyTrackers()) {
     // Explicitly pass nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER
     // here to ensure that we are testing the partitioning configuration only
@@ -4049,7 +4054,7 @@ CookieStatus nsCookieService::CheckPrefs(
     COOKIE_LOGFAILURE(aCookieHeader.IsVoid() ? GET_COOKIE : SET_COOKIE,
                       aHostURI, aCookieHeader,
                       "cookies are disabled in trackers");
-    if (aIsSocialTrackingResource) {
+    if (aIsThirdPartySocialTrackingResource) {
       *aRejectedReason =
           nsIWebProgressListener::STATE_COOKIES_BLOCKED_SOCIALTRACKER;
     } else {

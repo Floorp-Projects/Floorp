@@ -149,8 +149,8 @@ void CookieServiceChild::TrackCookieLoad(nsIChannel* aChannel) {
   bool isSameSiteForeign = NS_IsSameSiteForeign(aChannel, uri);
   SendPrepareCookieList(
       uriParams, result.contains(ThirdPartyAnalysis::IsForeign),
-      result.contains(ThirdPartyAnalysis::IsTrackingResource),
-      result.contains(ThirdPartyAnalysis::IsSocialTrackingResource),
+      result.contains(ThirdPartyAnalysis::IsThirdPartyTrackingResource),
+      result.contains(ThirdPartyAnalysis::IsThirdPartySocialTrackingResource),
       result.contains(ThirdPartyAnalysis::IsFirstPartyStorageAccessGranted),
       rejectedReason, isSafeTopLevelNav, isSameSiteForeign, attrs);
 }
@@ -243,10 +243,11 @@ void CookieServiceChild::PrefChanged(nsIPrefBranch* aPrefBranch) {
 }
 
 void CookieServiceChild::GetCookieStringFromCookieHashTable(
-    nsIURI* aHostURI, bool aIsForeign, bool aIsTrackingResource,
-    bool aIsSocialTrackingResource, bool aFirstPartyStorageAccessGranted,
-    uint32_t aRejectedReason, bool aIsSafeTopLevelNav, bool aIsSameSiteForeign,
-    nsIChannel* aChannel, nsACString& aCookieString) {
+    nsIURI* aHostURI, bool aIsForeign, bool aIsThirdPartyTrackingResource,
+    bool aIsThirdPartySocialTrackingResource,
+    bool aFirstPartyStorageAccessGranted, uint32_t aRejectedReason,
+    bool aIsSafeTopLevelNav, bool aIsSameSiteForeign, nsIChannel* aChannel,
+    nsACString& aCookieString) {
   nsCOMPtr<nsIEffectiveTLDService> TLDService =
       do_GetService(NS_EFFECTIVETLDSERVICE_CONTRACTID);
   NS_ASSERTION(TLDService, "Can't get TLDService");
@@ -282,9 +283,10 @@ void CookieServiceChild::GetCookieStringFromCookieHashTable(
       nsCookieService::GetCookieSettings(aChannel);
 
   CookieStatus cookieStatus = nsCookieService::CheckPrefs(
-      cookieSettings, aHostURI, aIsForeign, aIsTrackingResource,
-      aIsSocialTrackingResource, aFirstPartyStorageAccessGranted, VoidCString(),
-      CountCookiesFromHashTable(baseDomain, attrs), attrs, &aRejectedReason);
+      cookieSettings, aHostURI, aIsForeign, aIsThirdPartyTrackingResource,
+      aIsThirdPartySocialTrackingResource, aFirstPartyStorageAccessGranted,
+      VoidCString(), CountCookiesFromHashTable(baseDomain, attrs), attrs,
+      &aRejectedReason);
 
   if (cookieStatus != STATUS_ACCEPTED &&
       cookieStatus != STATUS_ACCEPT_SESSION) {
@@ -452,8 +454,8 @@ nsresult CookieServiceChild::GetCookieStringInternal(
 
   GetCookieStringFromCookieHashTable(
       aHostURI, result.contains(ThirdPartyAnalysis::IsForeign),
-      result.contains(ThirdPartyAnalysis::IsTrackingResource),
-      result.contains(ThirdPartyAnalysis::IsSocialTrackingResource),
+      result.contains(ThirdPartyAnalysis::IsThirdPartyTrackingResource),
+      result.contains(ThirdPartyAnalysis::IsThirdPartySocialTrackingResource),
       result.contains(ThirdPartyAnalysis::IsFirstPartyStorageAccessGranted),
       rejectedReason, isSafeTopLevelNav, isSameSiteForeign, aChannel,
       aCookieString);
@@ -505,8 +507,8 @@ nsresult CookieServiceChild::SetCookieStringInternal(
     SendSetCookieString(
         hostURIParams, channelURIParams, optionalLoadInfoArgs,
         result.contains(ThirdPartyAnalysis::IsForeign),
-        result.contains(ThirdPartyAnalysis::IsTrackingResource),
-        result.contains(ThirdPartyAnalysis::IsSocialTrackingResource),
+        result.contains(ThirdPartyAnalysis::IsThirdPartyTrackingResource),
+        result.contains(ThirdPartyAnalysis::IsThirdPartySocialTrackingResource),
         result.contains(ThirdPartyAnalysis::IsFirstPartyStorageAccessGranted),
         rejectedReason, attrs, cookieString, nsCString(aServerTime), aFromHttp);
   }
@@ -521,8 +523,8 @@ nsresult CookieServiceChild::SetCookieStringInternal(
 
   CookieStatus cookieStatus = nsCookieService::CheckPrefs(
       cookieSettings, aHostURI, result.contains(ThirdPartyAnalysis::IsForeign),
-      result.contains(ThirdPartyAnalysis::IsTrackingResource),
-      result.contains(ThirdPartyAnalysis::IsSocialTrackingResource),
+      result.contains(ThirdPartyAnalysis::IsThirdPartyTrackingResource),
+      result.contains(ThirdPartyAnalysis::IsThirdPartySocialTrackingResource),
       result.contains(ThirdPartyAnalysis::IsFirstPartyStorageAccessGranted),
       aCookieString, CountCookiesFromHashTable(baseDomain, attrs), attrs,
       &rejectedReason);
