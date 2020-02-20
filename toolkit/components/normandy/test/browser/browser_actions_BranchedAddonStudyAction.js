@@ -2,6 +2,7 @@
 
 ChromeUtils.import("resource://gre/modules/Services.jsm", this);
 ChromeUtils.import("resource://testing-common/TestUtils.jsm", this);
+ChromeUtils.import("resource://normandy/actions/BaseAction.jsm", this);
 ChromeUtils.import(
   "resource://normandy/actions/BranchedAddonStudyAction.jsm",
   this
@@ -97,7 +98,7 @@ decorate_task(
     const action = new BranchedAddonStudyAction();
     const enrollSpy = sinon.spy(action, "enroll");
     const updateSpy = sinon.spy(action, "update");
-    await action.runRecipe(recipe);
+    await action.processRecipe(recipe, BaseAction.suitability.FILTER_MATCH);
     is(action.lastError, null, "lastError should be null");
     ok(!enrollSpy.called, "enroll should not be called");
     ok(updateSpy.called, "update should be called");
@@ -126,7 +127,7 @@ decorate_task(
       }),
     };
     const action = new BranchedAddonStudyAction();
-    await action.runRecipe(recipe);
+    await action.processRecipe(recipe, BaseAction.suitability.FILTER_MATCH);
     is(action.lastError, null, "lastError should be null");
 
     const studies = await AddonStudies.getAll();
@@ -164,7 +165,7 @@ decorate_task(
       }),
     };
     const action = new BranchedAddonStudyAction();
-    await action.runRecipe(recipe);
+    await action.processRecipe(recipe, BaseAction.suitability.FILTER_MATCH);
     is(action.lastError, null, "lastError should be null");
 
     const studies = await AddonStudies.getAll();
@@ -203,7 +204,7 @@ decorate_task(
       }),
     };
     const action = new BranchedAddonStudyAction();
-    await action.runRecipe(recipe);
+    await action.processRecipe(recipe, BaseAction.suitability.FILTER_MATCH);
     is(action.lastError, null, "lastError should be null");
 
     const studies = await AddonStudies.getAll();
@@ -251,7 +252,7 @@ decorate_task(
       }),
     };
     const action = new BranchedAddonStudyAction();
-    await action.runRecipe(recipe);
+    await action.processRecipe(recipe, BaseAction.suitability.FILTER_MATCH);
     is(action.lastError, null, "lastError should be null");
 
     const addon = await AddonManager.getAddonByID(FIXTURE_ADDON_ID);
@@ -316,7 +317,7 @@ decorate_task(
     const action = new BranchedAddonStudyAction();
     const enrollSpy = sinon.spy(action, "enroll");
     const updateSpy = sinon.spy(action, "update");
-    await action.runRecipe(recipe);
+    await action.processRecipe(recipe, BaseAction.suitability.FILTER_MATCH);
     is(action.lastError, null, "lastError should be null");
     ok(!enrollSpy.called, "enroll should not be called");
     ok(updateSpy.called, "update should be called");
@@ -383,7 +384,7 @@ decorate_task(
     };
     const action = new BranchedAddonStudyAction();
     const updateSpy = sinon.spy(action, "update");
-    await action.runRecipe(recipe);
+    await action.processRecipe(recipe, BaseAction.suitability.FILTER_MATCH);
     is(action.lastError, null, "lastError should be null");
     ok(updateSpy.called, "update should be called");
     sendEventStub.assertEvents([
@@ -437,7 +438,7 @@ decorate_task(
     };
     const action = new BranchedAddonStudyAction();
     const updateSpy = sinon.spy(action, "update");
-    await action.runRecipe(recipe);
+    await action.processRecipe(recipe, BaseAction.suitability.FILTER_MATCH);
     is(action.lastError, null, "lastError should be null");
     ok(updateSpy.called, "update should be called");
     sendEventStub.assertEvents([
@@ -495,7 +496,7 @@ decorate_task(
     };
     const action = new BranchedAddonStudyAction();
     const updateSpy = sinon.spy(action, "update");
-    await action.runRecipe(recipe);
+    await action.processRecipe(recipe, BaseAction.suitability.FILTER_MATCH);
     is(action.lastError, null, "lastError should be null");
     ok(updateSpy.called, "update should be called");
     sendEventStub.assertEvents([
@@ -552,7 +553,7 @@ decorate_task(
     };
     const action = new BranchedAddonStudyAction();
     const updateSpy = sinon.spy(action, "update");
-    await action.runRecipe(recipe);
+    await action.processRecipe(recipe, BaseAction.suitability.FILTER_MATCH);
     is(action.lastError, null, "lastError should be null");
     ok(updateSpy.called, "update should be called");
     sendEventStub.assertEvents([
@@ -609,7 +610,7 @@ decorate_task(
     };
     const action = new BranchedAddonStudyAction();
     const updateSpy = sinon.spy(action, "update");
-    await action.runRecipe(recipe);
+    await action.processRecipe(recipe, BaseAction.suitability.FILTER_MATCH);
     is(action.lastError, null, "lastError should be null");
     ok(updateSpy.called, "update should be called");
     sendEventStub.assertEvents([
@@ -668,7 +669,7 @@ decorate_task(
     };
     const action = new BranchedAddonStudyAction();
     const updateSpy = sinon.spy(action, "update");
-    await action.runRecipe(recipe);
+    await action.processRecipe(recipe, BaseAction.suitability.FILTER_MATCH);
     is(action.lastError, null, "lastError should be null");
     ok(updateSpy.called, "update should be called");
     sendEventStub.assertEvents([
@@ -842,7 +843,7 @@ decorate_task(
         id: recipe.arguments.branches[0].extensionApiId,
       }),
     };
-    await action.runRecipe(recipe);
+    await action.processRecipe(recipe, BaseAction.suitability.FILTER_MATCH);
     is(
       action.state,
       BranchedAddonStudyAction.STATE_DISABLED,
@@ -880,7 +881,7 @@ decorate_task(
     mockApi.extensionDetails = {
       [recipe.arguments.extensionApiId]: extensionDetails,
     };
-    await action.runRecipe(recipe);
+    await action.processRecipe(recipe, BaseAction.suitability.FILTER_MATCH);
     const addon = await AddonManager.getAddonByID(
       extensionDetails.extension_id
     );
@@ -929,7 +930,7 @@ decorate_task(
     const action = new BranchedAddonStudyAction();
     const enrollSpy = sinon.spy(action, "enroll");
     const updateSpy = sinon.spy(action, "update");
-    await action.runRecipe(recipe);
+    await action.processRecipe(recipe, BaseAction.suitability.FILTER_MATCH);
     is(action.lastError, null, "lastError should be null");
     ok(!enrollSpy.called, "enroll should not be called");
     ok(updateSpy.called, "update should be called");
@@ -1034,7 +1035,7 @@ const successEnrollBranchedTest = decorate(
     chooseBranchStub.callsFake(async ({ branches }) =>
       branches.find(b => b.slug === branch)
     );
-    await action.runRecipe(recipe);
+    await action.processRecipe(recipe, BaseAction.suitability.FILTER_MATCH);
     is(action.lastError, null, "lastError should be null");
 
     const study = await AddonStudies.get(recipe.id);
@@ -1146,7 +1147,7 @@ decorate_task(
     const enrollSpy = sinon.spy(action, "enroll");
     const unenrollSpy = sinon.spy(action, "unenroll");
     const updateSpy = sinon.spy(action, "update");
-    await action.runRecipe(recipe);
+    await action.processRecipe(recipe, BaseAction.suitability.FILTER_MATCH);
     is(action.lastError, null, "lastError should be null");
 
     ok(!enrollSpy.called, "Enroll should not be called");
@@ -1201,7 +1202,7 @@ decorate_task(
     });
 
     let action = new BranchedAddonStudyAction();
-    await action.runRecipe(recipe);
+    await action.processRecipe(recipe, BaseAction.suitability.FILTER_MATCH);
     await action.finalize();
     is(action.lastError, null, "lastError should be null");
 

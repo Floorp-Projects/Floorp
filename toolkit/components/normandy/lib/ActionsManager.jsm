@@ -13,6 +13,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   AddonRollbackAction: "resource://normandy/actions/AddonRollbackAction.jsm",
   AddonRolloutAction: "resource://normandy/actions/AddonRolloutAction.jsm",
   AddonStudyAction: "resource://normandy/actions/AddonStudyAction.jsm",
+  BaseAction: "resource://normandy/actions/BaseAction.jsm",
   BranchedAddonStudyAction:
     "resource://normandy/actions/BranchedAddonStudyAction.jsm",
   ConsoleLogAction: "resource://normandy/actions/ConsoleLogAction.jsm",
@@ -81,14 +82,17 @@ class ActionsManager {
     return capabilities;
   }
 
-  async runRecipe(recipe) {
+  async processRecipe(recipe, suitability) {
     let actionName = recipe.action;
 
     if (actionName in this.localActions) {
       log.info(`Executing recipe "${recipe.name}" (action=${recipe.action})`);
       const action = this.localActions[actionName];
-      await action.runRecipe(recipe);
-    } else {
+      await action.processRecipe(recipe, suitability);
+
+      // If the recipe doesn't have matching capabilities, then a missing action
+      // is expected. In this case, don't send an error
+    } else if (suitability !== BaseAction.suitability.CAPABILITES_MISMATCH) {
       log.error(
         `Could not execute recipe ${recipe.name}:`,
         `Action ${recipe.action} is either missing or invalid.`

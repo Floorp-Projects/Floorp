@@ -178,7 +178,7 @@ const AddonRollouts = {
   /**
    * Test whether there is a rollout in storage with the given slug.
    * @param {string} slug
-   * @returns {boolean}
+   * @returns {Promise<boolean>}
    */
   async has(slug) {
     const db = await getDatabase();

@@ -1,5 +1,6 @@
 "use strict";
 
+ChromeUtils.import("resource://normandy/actions/BaseAction.jsm", this);
 ChromeUtils.import("resource://normandy/lib/ActionsManager.jsm", this);
 ChromeUtils.import("resource://normandy/lib/NormandyApi.jsm", this);
 ChromeUtils.import("resource://normandy/lib/Uptake.jsm", this);
@@ -10,11 +11,11 @@ decorate_task(async function(reportActionStub, Stub) {
   const recipe = { id: 1, action: "test-local-action-used" };
 
   let actionUsed = {
-    runRecipe: sinon.stub(),
+    processRecipe: sinon.stub(),
     finalize: sinon.stub(),
   };
   let actionUnused = {
-    runRecipe: sinon.stub(),
+    processRecipe: sinon.stub(),
     finalize: sinon.stub(),
   };
   manager.localActions = {
@@ -22,12 +23,12 @@ decorate_task(async function(reportActionStub, Stub) {
     "test-local-action-unused": actionUnused,
   };
 
-  await manager.runRecipe(recipe);
+  await manager.processRecipe(recipe, BaseAction.suitability.FILTER_MATCH);
   await manager.finalize();
 
   Assert.deepEqual(
-    actionUsed.runRecipe.args,
-    [[recipe]],
+    actionUsed.processRecipe.args,
+    [[recipe, BaseAction.suitability.FILTER_MATCH]],
     "used action should be called with the recipe"
   );
   ok(
@@ -35,7 +36,7 @@ decorate_task(async function(reportActionStub, Stub) {
     "finalize should be called on used action"
   );
   Assert.deepEqual(
-    actionUnused.runRecipe.args,
+    actionUnused.processRecipe.args,
     [],
     "unused action should not be called with the recipe"
   );

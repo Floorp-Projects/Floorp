@@ -3,6 +3,7 @@
 ChromeUtils.import("resource://gre/modules/Services.jsm", this);
 ChromeUtils.import("resource://gre/modules/Preferences.jsm", this);
 ChromeUtils.import("resource://gre/modules/TelemetryEnvironment.jsm", this);
+ChromeUtils.import("resource://normandy/actions/BaseAction.jsm", this);
 ChromeUtils.import(
   "resource://normandy/actions/PreferenceRollbackAction.jsm",
   this
@@ -41,7 +42,7 @@ decorate_task(
     const recipe = { id: 1, arguments: { rolloutSlug: "test-rollout" } };
 
     const action = new PreferenceRollbackAction();
-    await action.runRecipe(recipe);
+    await action.processRecipe(recipe, BaseAction.suitability.FILTER_MATCH);
     await action.finalize();
     is(action.lastError, null, "lastError should be null");
 
@@ -142,7 +143,7 @@ decorate_task(
     let recipe = { id: 1, arguments: { rolloutSlug: "graduated-rollout" } };
 
     const action = new PreferenceRollbackAction();
-    await action.runRecipe(recipe);
+    await action.processRecipe(recipe, BaseAction.suitability.FILTER_MATCH);
     await action.finalize();
     is(action.lastError, null, "lastError should be null");
 
@@ -192,7 +193,7 @@ decorate_task(
     let recipe = { id: 1, arguments: { rolloutSlug: "missing-rollout" } };
 
     const action = new PreferenceRollbackAction();
-    await action.runRecipe(recipe);
+    await action.processRecipe(recipe, BaseAction.suitability.FILTER_MATCH);
     await action.finalize();
     is(action.lastError, null, "lastError should be null");
 
@@ -228,7 +229,7 @@ decorate_task(
     await PreferenceRollouts.add(rollout);
 
     const action = new PreferenceRollbackAction();
-    await action.runRecipe(recipe);
+    await action.processRecipe(recipe, BaseAction.suitability.FILTER_MATCH);
     await action.finalize();
     is(action.lastError, null, "lastError should be null");
 
@@ -283,7 +284,7 @@ decorate_task(PreferenceRollouts.withTestMock, async function simple_rollback(
   const recipe = { id: 1, arguments: { rolloutSlug: "test-rollout" } };
 
   const action = new PreferenceRollbackAction();
-  await action.runRecipe(recipe);
+  await action.processRecipe(recipe, BaseAction.suitability.FILTER_MATCH);
   await action.finalize();
   is(action.lastError, null, "lastError should be null");
 

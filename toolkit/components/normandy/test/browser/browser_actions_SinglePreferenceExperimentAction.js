@@ -9,6 +9,7 @@ ChromeUtils.import(
 ChromeUtils.import("resource://gre/modules/Services.jsm", this);
 ChromeUtils.import("resource://gre/modules/Preferences.jsm", this);
 ChromeUtils.import("resource://gre/modules/TelemetryEnvironment.jsm", this);
+ChromeUtils.import("resource://normandy/actions/BaseAction.jsm", this);
 ChromeUtils.import("resource://normandy/lib/ClientEnvironment.jsm", this);
 ChromeUtils.import("resource://normandy/lib/PreferenceExperiments.jsm", this);
 ChromeUtils.import("resource://normandy/lib/TelemetryEvents.jsm", this);
@@ -70,7 +71,7 @@ decorate_task(
         return branches[0];
       });
 
-    await action.runRecipe(recipe);
+    await action.processRecipe(recipe, BaseAction.suitability.FILTER_MATCH);
     await action.finalize();
 
     Assert.deepEqual(runStub.args, [

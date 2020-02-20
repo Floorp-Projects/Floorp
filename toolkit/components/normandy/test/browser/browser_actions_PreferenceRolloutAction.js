@@ -3,6 +3,7 @@
 ChromeUtils.import("resource://gre/modules/Services.jsm", this);
 ChromeUtils.import("resource://gre/modules/Preferences.jsm", this);
 ChromeUtils.import("resource://gre/modules/TelemetryEnvironment.jsm", this);
+ChromeUtils.import("resource://normandy/actions/BaseAction.jsm", this);
 ChromeUtils.import(
   "resource://normandy/actions/PreferenceRolloutAction.jsm",
   this
@@ -33,7 +34,7 @@ decorate_task(
     };
 
     const action = new PreferenceRolloutAction();
-    await action.runRecipe(recipe);
+    await action.processRecipe(recipe, BaseAction.suitability.FILTER_MATCH);
     await action.finalize();
     is(action.lastError, null, "lastError should be null");
 
@@ -139,7 +140,7 @@ decorate_task(
     };
 
     let action = new PreferenceRolloutAction();
-    await action.runRecipe(recipe);
+    await action.processRecipe(recipe, BaseAction.suitability.FILTER_MATCH);
     await action.finalize();
     is(action.lastError, null, "lastError should be null");
 
@@ -166,7 +167,7 @@ decorate_task(
       { preferenceName: "test.pref3", value: 2 },
     ];
     action = new PreferenceRolloutAction();
-    await action.runRecipe(recipe);
+    await action.processRecipe(recipe, BaseAction.suitability.FILTER_MATCH);
     await action.finalize();
     is(action.lastError, null, "lastError should be null");
 
@@ -258,7 +259,7 @@ decorate_task(
     };
 
     const action = new PreferenceRolloutAction();
-    await action.runRecipe(recipe);
+    await action.processRecipe(recipe, BaseAction.suitability.FILTER_MATCH);
     await action.finalize();
     is(action.lastError, null, "lastError should be null");
 
@@ -328,14 +329,14 @@ decorate_task(
 
     // running both in the same session
     let action = new PreferenceRolloutAction();
-    await action.runRecipe(recipe1);
-    await action.runRecipe(recipe2);
+    await action.processRecipe(recipe1, BaseAction.suitability.FILTER_MATCH);
+    await action.processRecipe(recipe2, BaseAction.suitability.FILTER_MATCH);
     await action.finalize();
     is(action.lastError, null, "lastError should be null");
 
     // running recipe2 in a separate session shouldn't change things
     action = new PreferenceRolloutAction();
-    await action.runRecipe(recipe2);
+    await action.processRecipe(recipe2, BaseAction.suitability.FILTER_MATCH);
     await action.finalize();
     is(action.lastError, null, "lastError should be null");
 
@@ -427,7 +428,7 @@ decorate_task(
     };
 
     const action = new PreferenceRolloutAction();
-    await action.runRecipe(recipe);
+    await action.processRecipe(recipe, BaseAction.suitability.FILTER_MATCH);
     await action.finalize();
     is(action.lastError, null, "lastError should be null");
 
@@ -478,7 +479,7 @@ decorate_task(
     };
 
     const action = new PreferenceRolloutAction();
-    await action.runRecipe(recipe);
+    await action.processRecipe(recipe, BaseAction.suitability.FILTER_MATCH);
     await action.finalize();
     is(action.lastError, null, "lastError should be null");
 
@@ -535,7 +536,7 @@ decorate_task(
     Services.prefs.setIntPref("test.pref", 2);
 
     const action = new PreferenceRolloutAction();
-    await action.runRecipe(recipe);
+    await action.processRecipe(recipe, BaseAction.suitability.FILTER_MATCH);
     await action.finalize();
     is(action.lastError, null, "lastError should be null");
 
@@ -576,13 +577,13 @@ decorate_task(
 
     // run once
     let action = new PreferenceRolloutAction();
-    await action.runRecipe(recipe);
+    await action.processRecipe(recipe, BaseAction.suitability.FILTER_MATCH);
     await action.finalize();
     is(action.lastError, null, "lastError should be null");
 
     // run a second time
     action = new PreferenceRolloutAction();
-    await action.runRecipe(recipe);
+    await action.processRecipe(recipe, BaseAction.suitability.FILTER_MATCH);
     await action.finalize();
     is(action.lastError, null, "lastError should be null");
 
@@ -631,7 +632,7 @@ decorate_task(
     };
 
     const action = new PreferenceRolloutAction();
-    await action.runRecipe(recipe);
+    await action.processRecipe(recipe, BaseAction.suitability.FILTER_MATCH);
     await action.finalize();
     is(action.lastError, null, "lastError should be null");
 
