@@ -1801,9 +1801,9 @@ void Selection::RemoveAllRanges(ErrorResult& aRv) {
   RefPtr<nsFrameSelection> frameSelection = mFrameSelection;
   frameSelection->ClearTableCellSelection();
 
+  RefPtr<Selection> kungFuDeathGrip{this};
   // Be aware, this instance may be destroyed after this call.
-  // XXX Why doesn't this call Selection::NotifySelectionListener() directly?
-  result = frameSelection->NotifySelectionListeners(GetType());
+  result = NotifySelectionListeners();
 
   // Also need to notify the frames!
   // PresShell::CharacterDataChanged should do that on DocumentChanged
@@ -1847,7 +1847,8 @@ void Selection::AddRangeAndSelectFramesAndNotifyListeners(nsRange& aRange,
     return;
   }
 
-  // MaybeAddTableCellRange might flush frame.
+  // MaybeAddTableCellRange might flush frame and `NotifySelectionListeners`
+  // below might destruct `this`.
   RefPtr<Selection> kungFuDeathGrip(this);
 
   // This inserts a table cell range in proper document order
@@ -1889,9 +1890,7 @@ void Selection::AddRangeAndSelectFramesAndNotifyListeners(nsRange& aRange,
   SelectFrames(presContext, range, true);
 
   // Be aware, this instance may be destroyed after this call.
-  // XXX Why doesn't this call Selection::NotifySelectionListener() directly?
-  RefPtr<nsFrameSelection> frameSelection = mFrameSelection;
-  result = frameSelection->NotifySelectionListeners(GetType());
+  result = NotifySelectionListeners();
   if (NS_FAILED(result)) {
     aRv.Throw(result);
   }
@@ -1971,10 +1970,9 @@ void Selection::RemoveRangeAndUnselectFramesAndNotifyListeners(
 
   if (!mFrameSelection) return;  // nothing to do
 
+  RefPtr<Selection> kungFuDeathGrip{this};
   // Be aware, this instance may be destroyed after this call.
-  // XXX Why doesn't this call Selection::NotifySelectionListener() directly?
-  RefPtr<nsFrameSelection> frameSelection = mFrameSelection;
-  rv = frameSelection->NotifySelectionListeners(GetType());
+  rv = NotifySelectionListeners();
   if (NS_FAILED(rv)) {
     aRv.Throw(rv);
   }
@@ -2095,9 +2093,9 @@ void Selection::Collapse(const RawRangeBoundary& aPoint, ErrorResult& aRv) {
   SetAnchorFocusRange(0);
   SelectFrames(presContext, range, true);
 
+  RefPtr<Selection> kungFuDeathGrip{this};
   // Be aware, this instance may be destroyed after this call.
-  // XXX Why doesn't this call Selection::NotifySelectionListener() directly?
-  result = frameSelection->NotifySelectionListeners(GetType());
+  result = NotifySelectionListeners();
   if (NS_FAILED(result)) {
     aRv.Throw(result);
   }
@@ -2567,10 +2565,9 @@ void Selection::Extend(nsINode& aContainer, uint32_t aOffset,
          nsAtomCString(content->NodeInfo()->NameAtom()).get(), aOffset);
 #endif
 
+  RefPtr<Selection> kungFuDeathGrip{this};
   // Be aware, this instance may be destroyed after this call.
-  // XXX Why doesn't this call Selection::NotifySelectionListener() directly?
-  RefPtr<nsFrameSelection> frameSelection = mFrameSelection;
-  res = frameSelection->NotifySelectionListeners(GetType());
+  res = NotifySelectionListeners();
   if (NS_FAILED(res)) {
     aRv.Throw(res);
   }
