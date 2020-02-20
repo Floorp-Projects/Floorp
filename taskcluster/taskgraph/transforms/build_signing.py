@@ -49,6 +49,7 @@ def add_signed_routes(config, jobs):
 def define_upstream_artifacts(config, jobs):
     for job in jobs:
         dep_job = job['primary-dependency']
+        upstream_artifact_task = job.pop('upstream-artifact-task', dep_job)
 
         job['attributes'] = copy_attributes_from_dependent_job(dep_job)
 
@@ -57,11 +58,17 @@ def define_upstream_artifacts(config, jobs):
             job,
             keep_locale_template=False,
             kind=config.kind,
+            dep_kind=upstream_artifact_task.kind
         )
 
+        task_ref = '<{}>'.format(upstream_artifact_task.kind)
+        task_type = 'build'
+        if 'notarization' in upstream_artifact_task.kind:
+            task_type = 'scriptworker'
+
         job['upstream-artifacts'] = [{
-            'taskId': {'task-reference': '<build>'},
-            'taskType': 'build',
+            'taskId': {'task-reference': task_ref},
+            'taskType': task_type,
             'paths': spec['artifacts'],
             'formats': spec['formats'],
         } for spec in artifacts_specifications]
