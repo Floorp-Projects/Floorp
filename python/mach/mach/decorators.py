@@ -97,7 +97,7 @@ class _MachCommand(object):
             raise ValueError('can only operate on _MachCommand instances')
 
         for a in self.__slots__:
-            if getattr(self, a) is None:
+            if not getattr(self, a):
                 setattr(self, a, getattr(other, a))
 
         return self
