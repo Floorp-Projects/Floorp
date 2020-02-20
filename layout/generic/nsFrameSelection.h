@@ -307,7 +307,7 @@ class nsFrameSelection final {
                                 mozilla::WidgetMouseEvent* aMouseEvent);
 
   /**
-   * Add cell to the selection.
+   * Add cell to the selection with `SelectionType::eNormal`.
    *
    * @param  aCell  [in] HTML td element.
    */
