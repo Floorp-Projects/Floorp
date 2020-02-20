@@ -7,6 +7,9 @@ const { ExtensionTestUtils } = ChromeUtils.import(
 const { AddonStudyAction } = ChromeUtils.import(
   "resource://normandy/actions/AddonStudyAction.jsm"
 );
+const { BaseAction } = ChromeUtils.import(
+  "resource://normandy/actions/BaseAction.jsm"
+);
 const { TelemetryEvents } = ChromeUtils.import(
   "resource://normandy/lib/TelemetryEvents.jsm"
 );
@@ -166,16 +169,19 @@ decorate_task(
     const RECIPE_ID = 1;
     const UNENROLL_REASON = "test-ending";
     let action = new AddonStudyAction();
-    await action.runRecipe({
-      id: RECIPE_ID,
-      type: "addon-study",
-      arguments: {
-        name: "addon unenroll test",
-        description: "testing",
-        addonUrl: "http://example.com/study.xpi",
-        extensionApiId: API_ID,
+    await action.processRecipe(
+      {
+        id: RECIPE_ID,
+        type: "addon-study",
+        arguments: {
+          name: "addon unenroll test",
+          description: "testing",
+          addonUrl: "http://example.com/study.xpi",
+          extensionApiId: API_ID,
+        },
       },
-    });
+      BaseAction.suitability.FILTER_MATCH
+    );
 
     await extension.awaitStartup();
 
@@ -262,16 +268,19 @@ decorate_task(
     const RECIPE_ID = 1;
     const UNENROLL_REASON = "test-ending";
     let action = new AddonStudyAction();
-    await action.runRecipe({
-      id: RECIPE_ID,
-      type: "addon-study",
-      arguments: {
-        name: "addon unenroll test",
-        description: "testing",
-        addonUrl: "http://example.com/study.xpi",
-        extensionApiId: API_ID,
+    await action.processRecipe(
+      {
+        id: RECIPE_ID,
+        type: "addon-study",
+        arguments: {
+          name: "addon unenroll test",
+          description: "testing",
+          addonUrl: "http://example.com/study.xpi",
+          extensionApiId: API_ID,
+        },
       },
-    });
+      BaseAction.suitability.FILTER_MATCH
+    );
 
     await extension.startupPromise;
 

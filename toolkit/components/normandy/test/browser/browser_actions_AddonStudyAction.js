@@ -3,6 +3,7 @@
 ChromeUtils.import("resource://gre/modules/Services.jsm", this);
 ChromeUtils.import("resource://testing-common/TestUtils.jsm", this);
 ChromeUtils.import("resource://normandy/actions/AddonStudyAction.jsm", this);
+ChromeUtils.import("resource://normandy/actions/BaseAction.jsm", this);
 ChromeUtils.import("resource://normandy/lib/AddonStudies.jsm", this);
 ChromeUtils.import("resource://normandy/lib/Uptake.jsm", this);
 
@@ -62,7 +63,7 @@ decorate_task(
     const action = new AddonStudyAction();
     const enrollSpy = sinon.spy(action, "enroll");
     const updateSpy = sinon.spy(action, "update");
-    await action.runRecipe(recipe);
+    await action.processRecipe(recipe, BaseAction.suitability.FILTER_MATCH);
     is(action.lastError, null, "lastError should be null");
     ok(!enrollSpy.called, "enroll should not be called");
     ok(updateSpy.called, "update should be called");
@@ -92,7 +93,7 @@ decorate_task(
       }),
     };
     const action = new AddonStudyAction();
-    await action.runRecipe(recipe);
+    await action.processRecipe(recipe, BaseAction.suitability.FILTER_MATCH);
     is(action.lastError, null, "lastError should be null");
 
     const studies = await AddonStudies.getAll();
@@ -130,7 +131,7 @@ decorate_task(
       }),
     };
     const action = new AddonStudyAction();
-    await action.runRecipe(recipe);
+    await action.processRecipe(recipe, BaseAction.suitability.FILTER_MATCH);
     is(action.lastError, null, "lastError should be null");
 
     const studies = await AddonStudies.getAll();
@@ -173,7 +174,7 @@ decorate_task(
       }),
     };
     const action = new AddonStudyAction();
-    await action.runRecipe(recipe);
+    await action.processRecipe(recipe, BaseAction.suitability.FILTER_MATCH);
     is(action.lastError, null, "lastError should be null");
 
     const studies = await AddonStudies.getAll();
@@ -224,7 +225,7 @@ decorate_task(
       }),
     };
     const action = new AddonStudyAction();
-    await action.runRecipe(recipe);
+    await action.processRecipe(recipe, BaseAction.suitability.FILTER_MATCH);
     is(action.lastError, null, "lastError should be null");
 
     const addon = await AddonManager.getAddonByID(FIXTURE_ADDON_ID);
@@ -281,7 +282,7 @@ decorate_task(
       [recipe.arguments.extensionApiId]: extensionDetails,
     };
     const action = new AddonStudyAction();
-    await action.runRecipe(recipe);
+    await action.processRecipe(recipe, BaseAction.suitability.FILTER_MATCH);
     is(action.lastError, null, "lastError should be null");
 
     await webExtStartupPromise;
@@ -388,7 +389,7 @@ decorate_task(
     const action = new AddonStudyAction();
     const enrollSpy = sinon.spy(action, "enroll");
     const updateSpy = sinon.spy(action, "update");
-    await action.runRecipe(recipe);
+    await action.processRecipe(recipe, BaseAction.suitability.FILTER_MATCH);
     is(action.lastError, null, "lastError should be null");
     ok(!enrollSpy.called, "enroll should not be called");
     ok(updateSpy.called, "update should be called");
@@ -464,7 +465,7 @@ decorate_task(
     };
     const action = new AddonStudyAction();
     const updateSpy = sinon.spy(action, "update");
-    await action.runRecipe(recipe);
+    await action.processRecipe(recipe, BaseAction.suitability.FILTER_MATCH);
     is(action.lastError, null, "lastError should be null");
     ok(updateSpy.called, "update should be called");
     sendEventStub.assertEvents([
@@ -526,7 +527,7 @@ decorate_task(
     };
     const action = new AddonStudyAction();
     const updateSpy = sinon.spy(action, "update");
-    await action.runRecipe(recipe);
+    await action.processRecipe(recipe, BaseAction.suitability.FILTER_MATCH);
     is(action.lastError, null, "lastError should be null");
     ok(updateSpy.called, "update should be called");
     sendEventStub.assertEvents([
@@ -592,7 +593,7 @@ decorate_task(
     };
     const action = new AddonStudyAction();
     const updateSpy = sinon.spy(action, "update");
-    await action.runRecipe(recipe);
+    await action.processRecipe(recipe, BaseAction.suitability.FILTER_MATCH);
     is(action.lastError, null, "lastError should be null");
     ok(updateSpy.called, "update should be called");
     sendEventStub.assertEvents([
@@ -657,7 +658,7 @@ decorate_task(
     };
     const action = new AddonStudyAction();
     const updateSpy = sinon.spy(action, "update");
-    await action.runRecipe(recipe);
+    await action.processRecipe(recipe, BaseAction.suitability.FILTER_MATCH);
     is(action.lastError, null, "lastError should be null");
     ok(updateSpy.called, "update should be called");
     sendEventStub.assertEvents([
@@ -722,7 +723,7 @@ decorate_task(
     };
     const action = new AddonStudyAction();
     const updateSpy = sinon.spy(action, "update");
-    await action.runRecipe(recipe);
+    await action.processRecipe(recipe, BaseAction.suitability.FILTER_MATCH);
     is(action.lastError, null, "lastError should be null");
     ok(updateSpy.called, "update should be called");
     sendEventStub.assertEvents([
@@ -789,7 +790,7 @@ decorate_task(
     };
     const action = new AddonStudyAction();
     const updateSpy = sinon.spy(action, "update");
-    await action.runRecipe(recipe);
+    await action.processRecipe(recipe, BaseAction.suitability.FILTER_MATCH);
     is(action.lastError, null, "lastError should be null");
     ok(updateSpy.called, "update should be called");
     sendEventStub.assertEvents([
@@ -951,7 +952,7 @@ decorate_task(
         id: recipe.arguments.extensionApiId,
       }),
     };
-    await action.runRecipe(recipe);
+    await action.processRecipe(recipe, BaseAction.suitability.FILTER_MATCH);
     is(
       action.state,
       AddonStudyAction.STATE_DISABLED,
@@ -989,7 +990,7 @@ decorate_task(
     mockApi.extensionDetails = {
       [recipe.arguments.extensionApiId]: extensionDetails,
     };
-    await action.runRecipe(recipe);
+    await action.processRecipe(recipe, BaseAction.suitability.FILTER_MATCH);
     const addon = await AddonManager.getAddonByID(
       extensionDetails.extension_id
     );
@@ -1046,7 +1047,7 @@ decorate_task(
     const action = new AddonStudyAction();
     const enrollSpy = sinon.spy(action, "enroll");
     const updateSpy = sinon.spy(action, "update");
-    await action.runRecipe(recipe);
+    await action.processRecipe(recipe, BaseAction.suitability.FILTER_MATCH);
     is(action.lastError, null, "lastError should be null");
     ok(!enrollSpy.called, "enroll should not be called");
     ok(updateSpy.called, "update should be called");
@@ -1119,7 +1120,7 @@ decorate_task(
     const action = new AddonStudyAction();
     const enrollSpy = sinon.spy(action, "enroll");
     const updateSpy = sinon.spy(action, "update");
-    await action.runRecipe(recipe);
+    await action.processRecipe(recipe, BaseAction.suitability.FILTER_MATCH);
 
     is(action.lastError, null, "lastError should be null");
     ok(!enrollSpy.called, "enroll should not be called");

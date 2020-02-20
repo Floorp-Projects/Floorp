@@ -3,6 +3,7 @@
 ChromeUtils.import("resource://gre/modules/Services.jsm", this);
 ChromeUtils.import("resource://gre/modules/TelemetryEnvironment.jsm", this);
 ChromeUtils.import("resource://normandy/actions/AddonRolloutAction.jsm", this);
+ChromeUtils.import("resource://normandy/actions/BaseAction.jsm", this);
 ChromeUtils.import("resource://normandy/lib/AddonRollouts.jsm", this);
 ChromeUtils.import("resource://normandy/lib/TelemetryEvents.jsm", this);
 ChromeUtils.import("resource://testing-common/NormandyTestUtils.jsm", this);
@@ -37,7 +38,7 @@ decorate_task(
     );
 
     const action = new AddonRolloutAction();
-    await action.runRecipe(recipe);
+    await action.processRecipe(recipe, BaseAction.suitability.FILTER_MATCH);
     is(action.lastError, null, "lastError should be null");
 
     await webExtStartupPromise;
@@ -118,7 +119,7 @@ decorate_task(
     );
 
     let action = new AddonRolloutAction();
-    await action.runRecipe(recipe);
+    await action.processRecipe(recipe, BaseAction.suitability.FILTER_MATCH);
     is(action.lastError, null, "lastError should be null");
 
     await webExtStartupPromise;
@@ -134,7 +135,7 @@ decorate_task(
       FIXTURE_ADDON_ID
     );
     action = new AddonRolloutAction();
-    await action.runRecipe(recipe);
+    await action.processRecipe(recipe, BaseAction.suitability.FILTER_MATCH);
     is(action.lastError, null, "lastError should be null");
 
     await webExtStartupPromise;
@@ -203,7 +204,7 @@ decorate_task(
     );
 
     let action = new AddonRolloutAction();
-    await action.runRecipe(recipe);
+    await action.processRecipe(recipe, BaseAction.suitability.FILTER_MATCH);
     is(action.lastError, null, "lastError should be null");
 
     await webExtStartupPromise;
@@ -215,7 +216,7 @@ decorate_task(
 
     // re-run the same recipe
     action = new AddonRolloutAction();
-    await action.runRecipe(recipe);
+    await action.processRecipe(recipe, BaseAction.suitability.FILTER_MATCH);
     is(action.lastError, null, "lastError should be null");
 
     addon = await AddonManager.getAddonByID(FIXTURE_ADDON_ID);
@@ -279,7 +280,7 @@ decorate_task(
     );
 
     let action = new AddonRolloutAction();
-    await action.runRecipe(recipe);
+    await action.processRecipe(recipe, BaseAction.suitability.FILTER_MATCH);
     is(action.lastError, null, "lastError should be null");
 
     await webExtStartupPromise;
@@ -291,14 +292,17 @@ decorate_task(
 
     // update existing enrollment
     action = new AddonRolloutAction();
-    await action.runRecipe({
-      ...recipe,
-      id: 2,
-      arguments: {
-        ...recipe.arguments,
-        slug: "test-conflict",
+    await action.processRecipe(
+      {
+        ...recipe,
+        id: 2,
+        arguments: {
+          ...recipe.arguments,
+          slug: "test-conflict",
+        },
       },
-    });
+      BaseAction.suitability.FILTER_MATCH
+    );
     is(action.lastError, null, "lastError should be null");
 
     addon = await AddonManager.getAddonByID(FIXTURE_ADDON_ID);
@@ -379,7 +383,7 @@ decorate_task(
     );
 
     let action = new AddonRolloutAction();
-    await action.runRecipe(recipe);
+    await action.processRecipe(recipe, BaseAction.suitability.FILTER_MATCH);
     is(action.lastError, null, "lastError should be null");
 
     await webExtStartupPromise;
@@ -392,7 +396,7 @@ decorate_task(
     // update existing enrollment
     recipe.arguments.extensionApiId = 2;
     action = new AddonRolloutAction();
-    await action.runRecipe(recipe);
+    await action.processRecipe(recipe, BaseAction.suitability.FILTER_MATCH);
     is(action.lastError, null, "lastError should be null");
 
     addon = await AddonManager.getAddonByID(FIXTURE_ADDON_ID);
@@ -470,7 +474,7 @@ decorate_task(
     );
 
     let action = new AddonRolloutAction();
-    await action.runRecipe(recipe);
+    await action.processRecipe(recipe, BaseAction.suitability.FILTER_MATCH);
     is(action.lastError, null, "lastError should be null");
 
     await webExtStartupPromise;
@@ -483,7 +487,7 @@ decorate_task(
     // update existing enrollment
     recipe.arguments.extensionApiId = 2;
     action = new AddonRolloutAction();
-    await action.runRecipe(recipe);
+    await action.processRecipe(recipe, BaseAction.suitability.FILTER_MATCH);
     is(action.lastError, null, "lastError should be null");
 
     addon = await AddonManager.getAddonByID(FIXTURE_ADDON_ID);

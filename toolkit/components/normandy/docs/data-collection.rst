@@ -14,17 +14,12 @@ Runner Status
 Once per-fetch and execution of recipes, one of the following statuses is
 reported under the key ``normandy/runner``:
 
-.. data:: RUNNER_INVALID_SIGNATURE
+.. data:: RUNNER_SUCCESS
 
-   :Telemetry value: signature_error
+   :Telemetry value: success
 
-   Normandy failed to verify the signature of the fetched recipes.
-
-.. data:: RUNNER_NETWORK_ERROR
-
-   :Telemetry value: network_error
-
-   There was a network-related error while fetching recipes.
+   The operation completed successfully. Individual failures with actions and
+   recipes may have been reported separately.
 
 .. data:: RUNNER_SERVER_ERROR
 
@@ -32,13 +27,6 @@ reported under the key ``normandy/runner``:
 
    The data returned by the server when fetching the recipe is invalid in some
    way.
-
-.. data:: RUNNER_SUCCESS
-
-   :Telemetry value: success
-
-   The operation completed successfully. Individual failures with actions and
-   recipes may have been reported separately.
 
 Action Status
 ^^^^^^^^^^^^^
@@ -126,6 +114,12 @@ reported under the key ``normandy/recipe/<recipe id>``:
    :Telemetry value: success
 
    The recipe was executed successfully.
+
+.. data:: RECIPE_SIGNATURE_INVALID
+
+   :Telemetry value: signature_error
+
+   Normandy failed to verify the signature of the recipe.
 
 
 Additionally, Normandy reports a `keyed scalar`_ to measure recipe
