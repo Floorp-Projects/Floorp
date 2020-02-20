@@ -169,6 +169,6 @@ void ConsoleReportCollector::ClearConsoleReports() {
   mPendingReports.Clear();
 }
 
-ConsoleReportCollector::~ConsoleReportCollector() {}
+ConsoleReportCollector::~ConsoleReportCollector() = default;
 
 }  // namespace mozilla

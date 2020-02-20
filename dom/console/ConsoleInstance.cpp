@@ -101,7 +101,7 @@ ConsoleInstance::ConsoleInstance(JSContext* aCx,
   }
 }
 
-ConsoleInstance::~ConsoleInstance() {}
+ConsoleInstance::~ConsoleInstance() = default;
 
 JSObject* ConsoleInstance::WrapObject(JSContext* aCx,
                                       JS::Handle<JSObject*> aGivenProto) {
