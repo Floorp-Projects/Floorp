@@ -26,10 +26,10 @@ add_task(async function setup() {
   await Services.search.setDefault(engineDefault);
 
   registerCleanupFunction(async function() {
-    gCUITestUtils.removeSearchBar();
     await Services.search.setDefault(originalEngine);
     await Services.search.removeEngine(engineDefault);
     await BrowserTestUtils.closeWindow(win);
+    gCUITestUtils.removeSearchBar();
   });
 });
 
