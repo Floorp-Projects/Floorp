@@ -1503,28 +1503,27 @@ class RTCPeerConnection {
   }
 
   updateNegotiationNeeded() {
-    if (this._closed || this.signalingState != "stable") {
-      return;
-    }
-
-    let negotiationNeeded =
-      this._impl.checkNegotiationNeeded() ||
-      this._localUfragsToReplace.size > 0;
-    if (!negotiationNeeded) {
-      this._negotiationNeeded = false;
-      return;
-    }
-
-    if (this._negotiationNeeded) {
-      return;
-    }
-
-    this._negotiationNeeded = true;
-
     this._queueTaskWithClosedCheck(() => {
-      if (this._negotiationNeeded) {
+      this._chain(async () => {
+        if (this._closed || this.signalingState != "stable") {
+          return;
+        }
+
+        let negotiationNeeded =
+          this._impl.checkNegotiationNeeded() ||
+          this._localUfragsToReplace.size > 0;
+        if (!negotiationNeeded) {
+          this._negotiationNeeded = false;
+          return;
+        }
+
+        if (this._negotiationNeeded) {
+          return;
+        }
+
+        this._negotiationNeeded = true;
         this.dispatchEvent(new this._win.Event("negotiationneeded"));
-      }
+      });
     });
   }
 
