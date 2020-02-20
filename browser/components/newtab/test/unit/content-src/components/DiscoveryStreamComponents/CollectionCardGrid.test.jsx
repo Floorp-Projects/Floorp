@@ -100,4 +100,30 @@ describe("<CollectionCardGrid>", () => {
       "context"
     );
   });
+
+  it("should render nothing without a title", () => {
+    const initialSpocs = [{ id: 123 }, { id: 456 }, { id: 789 }];
+    wrapper = mountCollectionWithProps(
+      {
+        placement: {
+          name: "spocs",
+        },
+        data: {
+          spocs: initialSpocs,
+        },
+      },
+      {
+        data: {
+          spocs: {
+            title: "",
+            context: "context",
+            items: initialSpocs,
+          },
+        },
+      }
+    );
+
+    assert.ok(wrapper.exists());
+    assert.ok(!wrapper.exists(".ds-collection-card-grid"));
+  });
 });

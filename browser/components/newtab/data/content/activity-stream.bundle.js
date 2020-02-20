@@ -6382,7 +6382,11 @@ class _CollectionCardGrid extends react__WEBPACK_IMPORTED_MODULE_1___default.a.P
     const {
       title,
       context
-    } = DiscoveryStream.spocs.data[placement.name] || {}; // Generally a card grid displays recs with spocs already injected.
+    } = DiscoveryStream.spocs.data[placement.name] || {}; // Just in case of bad data, don't display a broken collection.
+
+    if (!title) {
+      return null;
+    } // Generally a card grid displays recs with spocs already injected.
     // Normally it doesn't care which rec is a spoc and which isn't,
     // it just displays content in a grid.
     // For collections, we're only displaying a list of spocs.
@@ -6390,6 +6394,7 @@ class _CollectionCardGrid extends react__WEBPACK_IMPORTED_MODULE_1___default.a.P
     // it shouldn't need to care. So we just pass our spocs along as recs.
     // Think of it as injecting all rec positions with spocs.
     // Consider maybe making recommendations in CardGrid use a more generic name.
+
 
     const recsData = {
       recommendations: data.spocs
