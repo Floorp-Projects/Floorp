@@ -1157,7 +1157,7 @@ fails-if(usesRepeatResampling) fails-if(webrender&&!winWidget) == 446100-1e.html
 fails-if(usesRepeatResampling) fails-if(Android) fails-if(webrender&&!winWidget) == 446100-1g.html about:blank
 == 446100-1h.html about:blank
 == 447749-1.html 447749-1-ref.html
-fuzzy(0-127,0-2) fuzzy-if(geckoview&&webrender&&device,43-43,4-4) == 448193.html 448193-ref.html
+fuzzy(0-127,0-2) == 448193.html 448193-ref.html
 != 449149-1a.html about:blank
 != 449149-1b.html about:blank
 == 449149-2.html 449149-2-ref.html
@@ -1208,7 +1208,7 @@ fuzzy-if(skiaContent,0-1,0-5) == 459443-1.html 459443-1-ref.html
 == 459613-1.html 459613-1-ref.html
 == 460012-1.html 460012-1-ref.html
 == 461266-1.html 461266-1-ref.html
-fuzzy-if(skiaContent||webrender,0-1,0-31200) fails-if(geckoview&&webrender&&device) == 461512-1.html 461512-1-ref.html
+fuzzy-if(skiaContent||webrender,0-1,0-31200) == 461512-1.html 461512-1-ref.html
 == 462844-1.html 462844-ref.html
 == 462844-2.html 462844-ref.html
 == 462844-3.html 462844-ref.html
