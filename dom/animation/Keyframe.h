@@ -63,17 +63,10 @@ struct PropertyValuePair {
 struct Keyframe {
   Keyframe() = default;
   Keyframe(const Keyframe& aOther) = default;
-  Keyframe(Keyframe&& aOther) { *this = std::move(aOther); }
+  Keyframe(Keyframe&& aOther) = default;
 
   Keyframe& operator=(const Keyframe& aOther) = default;
-  Keyframe& operator=(Keyframe&& aOther) {
-    mOffset = aOther.mOffset;
-    mComputedOffset = aOther.mComputedOffset;
-    mTimingFunction = std::move(aOther.mTimingFunction);
-    mComposite = std::move(aOther.mComposite);
-    mPropertyValues = std::move(aOther.mPropertyValues);
-    return *this;
-  }
+  Keyframe& operator=(Keyframe&& aOther) = default;
 
   Maybe<double> mOffset;
   static constexpr double kComputedOffsetNotSet = -1.0;
