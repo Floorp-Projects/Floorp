@@ -598,7 +598,8 @@ class ContentParent final
 
   void DeallocPSHEntryParent(PSHEntryParent*);
 
-  PSHistoryParent* AllocPSHistoryParent(BrowsingContext* aContext);
+  PSHistoryParent* AllocPSHistoryParent(
+      const MaybeDiscarded<BrowsingContext>& aContext);
 
   void DeallocPSHistoryParent(PSHistoryParent* aActor);
 
