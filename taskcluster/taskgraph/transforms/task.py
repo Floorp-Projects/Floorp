@@ -912,7 +912,8 @@ def build_generic_worker_payload(config, task, task_def):
 
     # behavior for mac iscript
     Optional('mac-behavior'): Any(
-        "mac_notarize", "mac_sign", "mac_sign_and_pkg", "mac_geckodriver",
+        "mac_notarize_part_1", "mac_notarize_part_3", "mac_sign_and_pkg",
+        "mac_geckodriver",
     ),
     Optional('entitlements-url'): text_type,
 })

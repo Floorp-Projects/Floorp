@@ -176,6 +176,19 @@ def make_task_description(config, jobs):
         }
 
         if 'macosx' in build_platform:
+            mac_behavior = evaluate_keyed_by(
+                config.graph_config['mac-notarization']['mac-behavior'],
+                'mac behavior',
+                {'project': config.params['project']},
+            )
+            if mac_behavior == 'mac_notarize':
+                if 'part-1' in config.kind:
+                    mac_behavior = 'mac_notarize_part_1'
+                elif config.kind.endswith('signing'):
+                    mac_behavior = 'mac_notarize_part_3'
+                else:
+                    raise Exception("Unknown kind {} for mac_behavior!".format(config.kind))
+            task['worker']['mac-behavior'] = mac_behavior
             worker_type_alias_map = {
                 'linux-depsigning': 'mac-depsigning',
                 'linux-signing': 'mac-signing',
@@ -188,15 +201,6 @@ def make_task_description(config, jobs):
                     " ({} not found in mapping)".format(worker_type_alias)
                 )
             worker_type_alias = worker_type_alias_map[worker_type_alias]
-            mac_behavior = evaluate_keyed_by(
-                config.graph_config['mac-notarization']['mac-behavior'],
-                'mac behavior',
-                {
-                    'release-type': config.params['release_type'],
-                    'platform': build_platform,
-                },
-            )
-            task['worker']['mac-behavior'] = mac_behavior
             if job.get('entitlements-url'):
                 task['worker']['entitlements-url'] = job['entitlements-url']
 
