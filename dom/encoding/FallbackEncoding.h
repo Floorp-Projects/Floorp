@@ -68,7 +68,7 @@ class FallbackEncoding : public nsIObserver, nsSupportsWeakReference {
   static StaticRefPtr<FallbackEncoding> sInstance;
 
   FallbackEncoding();
-  virtual ~FallbackEncoding(){};
+  virtual ~FallbackEncoding() = default;
 
   /**
    * Invalidates the cache.
