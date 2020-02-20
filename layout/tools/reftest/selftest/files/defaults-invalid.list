@@ -1,0 +1,2 @@
+defaults skip-if(true) == foo.html bar.html
+== foo.html bar.html
