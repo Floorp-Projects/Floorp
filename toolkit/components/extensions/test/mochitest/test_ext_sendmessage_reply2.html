@@ -131,6 +131,7 @@ function makeExtension(id, otherId) {
   let args = `${token}, ${JSON.stringify(id)}, ${JSON.stringify(otherId)}`;
 
   let extensionData = {
+    useAddonManager: "permanent",
     background: `(${backgroundScript})(${args})`,
     manifest: {
       "applications": {"gecko": {id}},
