@@ -31,6 +31,7 @@ const ACTORS = {
     child: {
       moduleURI: "resource:///actors/WebBrowserChromeChild.jsm",
     },
+    includeChrome: true,
   },
 };
 

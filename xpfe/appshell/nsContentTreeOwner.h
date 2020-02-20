@@ -49,6 +49,9 @@ class nsContentTreeOwner final : public nsIDocShellTreeOwner,
   void AppWindow(mozilla::AppWindow* aAppWindow);
   mozilla::AppWindow* AppWindow();
 
+ private:
+  already_AddRefed<nsIWebBrowserChrome3> GetWebBrowserChrome();
+
  protected:
   mozilla::AppWindow* mAppWindow;
   nsSiteWindow* mSiteWindow;

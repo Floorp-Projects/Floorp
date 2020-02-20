@@ -33,6 +33,7 @@
 #include "mozilla/NullPrincipal.h"
 #include "nsDocShell.h"
 #include "nsDocShellLoadState.h"
+#include "nsQueryActor.h"
 
 #include "nsIScriptObjectPrincipal.h"
 #include "nsIURI.h"
@@ -70,6 +71,28 @@ class nsSiteWindow : public nsIEmbeddingSiteWindow {
   virtual ~nsSiteWindow();
   nsContentTreeOwner* mAggregator;
 };
+
+already_AddRefed<nsIWebBrowserChrome3>
+nsContentTreeOwner::GetWebBrowserChrome() {
+  if (!mAppWindow) {
+    return nullptr;
+  }
+
+  nsCOMPtr<nsIDocShell> docShell;
+  mAppWindow->GetDocShell(getter_AddRefs(docShell));
+
+  if (!docShell) {
+    return nullptr;
+  }
+
+  nsCOMPtr<nsPIDOMWindowOuter> outer(docShell->GetWindow());
+  if (nsCOMPtr<nsIWebBrowserChrome3> chrome =
+          do_QueryActor(u"WebBrowserChrome", outer)) {
+    return chrome.forget();
+  }
+
+  return nullptr;
+}
 
 //*****************************************************************************
 //***    nsContentTreeOwner: Object Management
@@ -149,6 +172,13 @@ NS_IMETHODIMP nsContentTreeOwner::GetInterface(const nsIID& aIID,
   if (aIID.Equals(NS_GET_IID(nsIAppWindow))) {
     NS_ENSURE_STATE(mAppWindow);
     return mAppWindow->QueryInterface(aIID, aSink);
+  }
+
+  if (aIID.Equals(NS_GET_IID(nsIWebBrowserChrome3))) {
+    if (nsCOMPtr<nsIWebBrowserChrome3> chrome = GetWebBrowserChrome()) {
+      chrome.forget(aSink);
+      return NS_OK;
+    }
   }
 
   return QueryInterface(aIID, aSink);
