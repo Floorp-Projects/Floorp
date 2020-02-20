@@ -27,6 +27,7 @@ import kotlinx.android.synthetic.main.search_suggestions_onboarding.view.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import mozilla.components.concept.storage.HistoryStorage
 import mozilla.components.feature.qr.QrFeature
+import mozilla.components.feature.qr.QrFragment
 import mozilla.components.lib.state.ext.consumeFrom
 import mozilla.components.support.base.feature.UserInteractionHandler
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
@@ -278,6 +279,31 @@ class SearchFragment : Fragment(), UserInteractionHandler {
 
         permissionDidUpdate = false
         hideToolbar()
+
+        if (!isQrFragmentVisible()) {
+            refocusUrlView()
+        }
+    }
+
+    /**
+     * Refocus URL editText. Needed after the user brings back the app
+     * into the foreground.
+     * See https://github.com/mozilla-mobile/fenix/issues/6290
+     **/
+    private fun refocusUrlView() {
+        val urlView = toolbarView.view
+            .findViewById<InlineAutocompleteEditText>(R.id.mozac_browser_toolbar_edit_url_view)
+        if (!urlView.hasFocus()) {
+            urlView.requestFocus()
+        }
+    }
+
+    /**
+     * Check to see if QrFragment exists & is visible.
+     * */
+    private fun isQrFragmentVisible(): Boolean {
+        val foundQrFragment = parentFragmentManager.fragments.firstOrNull { it is QrFragment }
+        return foundQrFragment != null && foundQrFragment.isVisible
     }
 
     override fun onPause() {
