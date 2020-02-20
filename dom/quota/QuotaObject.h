@@ -52,7 +52,7 @@ class QuotaObject {
     MOZ_COUNT_CTOR(QuotaObject);
   }
 
-  ~QuotaObject() { MOZ_COUNT_DTOR(QuotaObject); }
+  MOZ_COUNTED_DTOR(QuotaObject)
 
   already_AddRefed<QuotaObject> LockedAddRef() {
     AssertCurrentThreadOwnsQuotaMutex();

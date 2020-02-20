@@ -78,7 +78,7 @@ inline Position Position::FromPercentage(float aPercent) {
 struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleFont {
   nsStyleFont(const nsStyleFont& aStyleFont);
   explicit nsStyleFont(const mozilla::dom::Document&);
-  ~nsStyleFont() { MOZ_COUNT_DTOR(nsStyleFont); }
+  MOZ_COUNTED_DTOR(nsStyleFont)
   static constexpr bool kHasTriggerImageLoads = false;
 
   nsChangeHint CalcDifference(const nsStyleFont& aNewData) const;
@@ -191,7 +191,7 @@ struct nsStyleImageLayers {
 
   explicit nsStyleImageLayers(LayerType aType);
   nsStyleImageLayers(const nsStyleImageLayers& aSource);
-  ~nsStyleImageLayers() { MOZ_COUNT_DTOR(nsStyleImageLayers); }
+  MOZ_COUNTED_DTOR(nsStyleImageLayers)
 
   static bool IsInitialPositionForLayerType(mozilla::Position aPosition,
                                             LayerType aType);
@@ -393,7 +393,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleBackground {
 struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleMargin {
   explicit nsStyleMargin(const mozilla::dom::Document&);
   nsStyleMargin(const nsStyleMargin& aMargin);
-  ~nsStyleMargin() { MOZ_COUNT_DTOR(nsStyleMargin); }
+  MOZ_COUNTED_DTOR(nsStyleMargin)
   static constexpr bool kHasTriggerImageLoads = false;
 
   nsChangeHint CalcDifference(const nsStyleMargin& aNewData) const;
@@ -431,7 +431,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleMargin {
 struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStylePadding {
   explicit nsStylePadding(const mozilla::dom::Document&);
   nsStylePadding(const nsStylePadding& aPadding);
-  ~nsStylePadding() { MOZ_COUNT_DTOR(nsStylePadding); }
+  MOZ_COUNTED_DTOR(nsStylePadding)
   static constexpr bool kHasTriggerImageLoads = false;
 
   nsChangeHint CalcDifference(const nsStylePadding& aNewData) const;
@@ -640,7 +640,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleBorder {
 struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleOutline {
   explicit nsStyleOutline(const mozilla::dom::Document&);
   nsStyleOutline(const nsStyleOutline& aOutline);
-  ~nsStyleOutline() { MOZ_COUNT_DTOR(nsStyleOutline); }
+  MOZ_COUNTED_DTOR(nsStyleOutline)
   static constexpr bool kHasTriggerImageLoads = false;
 
   nsChangeHint CalcDifference(const nsStyleOutline& aNewData) const;
@@ -1012,7 +1012,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleText {
 struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleVisibility {
   explicit nsStyleVisibility(const mozilla::dom::Document&);
   nsStyleVisibility(const nsStyleVisibility& aVisibility);
-  ~nsStyleVisibility() { MOZ_COUNT_DTOR(nsStyleVisibility); }
+  MOZ_COUNTED_DTOR(nsStyleVisibility)
   static constexpr bool kHasTriggerImageLoads = false;
 
   nsChangeHint CalcDifference(const nsStyleVisibility& aNewData) const;

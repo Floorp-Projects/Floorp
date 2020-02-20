@@ -8268,7 +8268,7 @@ class StringBuilder {
  public:
   StringBuilder() : mLast(this), mLength(0) { MOZ_COUNT_CTOR(StringBuilder); }
 
-  ~StringBuilder() { MOZ_COUNT_DTOR(StringBuilder); }
+  MOZ_COUNTED_DTOR(StringBuilder)
 
   void Append(nsAtom* aAtom) {
     Unit* u = AddUnit();

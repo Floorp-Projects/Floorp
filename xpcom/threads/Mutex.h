@@ -130,7 +130,7 @@ class Mutex : public OffTheBooksMutex {
     MOZ_COUNT_CTOR(Mutex);
   }
 
-  ~Mutex() { MOZ_COUNT_DTOR(Mutex); }
+  MOZ_COUNTED_DTOR(Mutex)
 
  private:
   Mutex();

@@ -55,7 +55,7 @@ class BasicReadbackLayer : public ReadbackLayer, public BasicImplData {
   }
 
  protected:
-  virtual ~BasicReadbackLayer() { MOZ_COUNT_DTOR(BasicReadbackLayer); }
+  MOZ_COUNTED_DTOR_OVERRIDE(BasicReadbackLayer)
 
  public:
   void SetVisibleRegion(const LayerIntRegion& aRegion) override {

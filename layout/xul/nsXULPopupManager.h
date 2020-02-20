@@ -175,7 +175,7 @@ class nsMenuChainItem {
     MOZ_COUNT_CTOR(nsMenuChainItem);
   }
 
-  ~nsMenuChainItem() { MOZ_COUNT_DTOR(nsMenuChainItem); }
+  MOZ_COUNTED_DTOR(nsMenuChainItem)
 
   nsIContent* Content();
   nsMenuPopupFrame* Frame() { return mFrame; }

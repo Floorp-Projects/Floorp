@@ -17,8 +17,8 @@ class Expr;
 
 class txToplevelItem {
  public:
-  txToplevelItem() { MOZ_COUNT_CTOR(txToplevelItem); }
-  virtual ~txToplevelItem() { MOZ_COUNT_DTOR(txToplevelItem); }
+  MOZ_COUNTED_DEFAULT_CTOR(txToplevelItem)
+  MOZ_COUNTED_DTOR_VIRTUAL(txToplevelItem)
 
   enum type {
     attributeSet,

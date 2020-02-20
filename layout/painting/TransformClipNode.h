@@ -126,7 +126,7 @@ class TransformClipNode {
   }
 
  private:
-  ~TransformClipNode() { MOZ_COUNT_DTOR(TransformClipNode); }
+  MOZ_COUNTED_DTOR(TransformClipNode)
 
   const RefPtr<TransformClipNode> mParent;
   const gfx::Matrix4x4Flagged mTransform;

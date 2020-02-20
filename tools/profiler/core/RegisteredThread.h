@@ -32,7 +32,7 @@ class RacyRegisteredThread final {
     MOZ_COUNT_CTOR(RacyRegisteredThread);
   }
 
-  ~RacyRegisteredThread() { MOZ_COUNT_DTOR(RacyRegisteredThread); }
+  MOZ_COUNTED_DTOR(RacyRegisteredThread)
 
   void SetIsBeingProfiled(bool aIsBeingProfiled) {
     mIsBeingProfiled = aIsBeingProfiled;

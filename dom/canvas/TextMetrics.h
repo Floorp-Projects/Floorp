@@ -37,7 +37,7 @@ class TextMetrics final : public NonRefcountedDOMObject {
     MOZ_COUNT_CTOR(TextMetrics);
   }
 
-  ~TextMetrics() { MOZ_COUNT_DTOR(TextMetrics); }
+  MOZ_COUNTED_DTOR(TextMetrics)
 
   double Width() const { return width; }
 

@@ -99,7 +99,7 @@ class MediaSegment {
   MediaSegment(const MediaSegment&) = delete;
   MediaSegment& operator=(const MediaSegment&) = delete;
 
-  virtual ~MediaSegment() { MOZ_COUNT_DTOR(MediaSegment); }
+  MOZ_COUNTED_DTOR_VIRTUAL(MediaSegment)
 
   enum Type { AUDIO, VIDEO, TYPE_COUNT };
 

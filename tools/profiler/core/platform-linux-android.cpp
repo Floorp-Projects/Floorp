@@ -129,7 +129,7 @@ class PlatformData {
  public:
   explicit PlatformData(int aThreadId) { MOZ_COUNT_CTOR(PlatformData); }
 
-  ~PlatformData() { MOZ_COUNT_DTOR(PlatformData); }
+  MOZ_COUNTED_DTOR(PlatformData)
 };
 
 ////////////////////////////////////////////////////////////////////////

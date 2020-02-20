@@ -89,7 +89,7 @@ class FullscreenRequest : public FullscreenChange {
                                             dom::CallerType::NonSystem, false));
   }
 
-  ~FullscreenRequest() { MOZ_COUNT_DTOR(FullscreenRequest); }
+  MOZ_COUNTED_DTOR(FullscreenRequest)
 
   dom::Element* Element() const { return mElement; }
 
@@ -149,7 +149,7 @@ class FullscreenExit : public FullscreenChange {
     return WrapUnique(new FullscreenExit(aDoc, nullptr));
   }
 
-  ~FullscreenExit() { MOZ_COUNT_DTOR(FullscreenExit); }
+  MOZ_COUNTED_DTOR(FullscreenExit)
 
  private:
   FullscreenExit(dom::Document* aDoc, already_AddRefed<Promise> aPromise)

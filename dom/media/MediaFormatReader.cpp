@@ -453,7 +453,7 @@ class MediaFormatReader::DemuxerProxy {
     MOZ_COUNT_CTOR(DemuxerProxy);
   }
 
-  ~DemuxerProxy() { MOZ_COUNT_DTOR(DemuxerProxy); }
+  MOZ_COUNTED_DTOR(DemuxerProxy)
 
   RefPtr<ShutdownPromise> Shutdown() {
     RefPtr<Data> data = std::move(mData);

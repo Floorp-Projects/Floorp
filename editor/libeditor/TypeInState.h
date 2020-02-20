@@ -41,7 +41,7 @@ struct PropItem {
         value(aValue) {
     MOZ_COUNT_CTOR(PropItem);
   }
-  ~PropItem() { MOZ_COUNT_DTOR(PropItem); }
+  MOZ_COUNTED_DTOR(PropItem)
 };
 
 class StyleCache final {

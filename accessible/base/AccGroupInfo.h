@@ -15,7 +15,7 @@ namespace a11y {
  */
 class AccGroupInfo {
  public:
-  ~AccGroupInfo() { MOZ_COUNT_DTOR(AccGroupInfo); }
+  MOZ_COUNTED_DTOR(AccGroupInfo)
 
   /**
    * Return 1-based position in the group.

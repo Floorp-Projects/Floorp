@@ -364,7 +364,7 @@ class AudioSourcePullListener : public MediaTrackListener {
     MOZ_COUNT_CTOR(AudioSourcePullListener);
   }
 
-  ~AudioSourcePullListener() { MOZ_COUNT_DTOR(AudioSourcePullListener); }
+  MOZ_COUNTED_DTOR(AudioSourcePullListener)
 
   void NotifyPull(MediaTrackGraph* aGraph, TrackTime aEndOfAppendedData,
                   TrackTime aDesiredTime) override;

@@ -145,7 +145,7 @@ class WidgetTouchEvent : public WidgetInputEvent {
 
   virtual WidgetTouchEvent* AsTouchEvent() override { return this; }
 
-  WidgetTouchEvent() { MOZ_COUNT_CTOR(WidgetTouchEvent); }
+  MOZ_COUNTED_DEFAULT_CTOR(WidgetTouchEvent)
 
   WidgetTouchEvent(const WidgetTouchEvent& aOther)
       : WidgetInputEvent(aOther.IsTrusted(), aOther.mMessage, aOther.mWidget,
@@ -165,7 +165,7 @@ class WidgetTouchEvent : public WidgetInputEvent {
     mFlags.mCancelable = mMessage != eTouchCancel;
   }
 
-  virtual ~WidgetTouchEvent() { MOZ_COUNT_DTOR(WidgetTouchEvent); }
+  MOZ_COUNTED_DTOR_OVERRIDE(WidgetTouchEvent)
 
   virtual WidgetEvent* Duplicate() const override {
     MOZ_ASSERT(mClass == eTouchEventClass,
