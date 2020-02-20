@@ -196,10 +196,6 @@ def make_job_description(config, jobs):
     for job in jobs:
         dep_job = job['primary-dependency']
         dependencies = {dep_job.attributes.get('kind'): dep_job.label}
-        if len(dep_job.dependencies) > 1 and not config.kind == 'repackage-msi':
-            # repackage-signing can end up with multiple deps...
-            raise NotImplementedError(
-                "Can't repackage a signing task with multiple dependencies")
 
         attributes = copy_attributes_from_dependent_job(dep_job)
         attributes['repackage_type'] = 'repackage'
