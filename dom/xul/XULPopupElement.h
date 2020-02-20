@@ -90,7 +90,7 @@ class XULPopupElement : public nsXULElement {
   void SetConstraintRect(DOMRectReadOnly& aRect);
 
  protected:
-  virtual ~XULPopupElement() {}
+  virtual ~XULPopupElement() = default;
 
   JSObject* WrapNode(JSContext* aCx,
                      JS::Handle<JSObject*> aGivenProto) override;

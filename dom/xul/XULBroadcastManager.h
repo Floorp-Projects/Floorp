@@ -87,13 +87,8 @@ class XULBroadcastManager final {
           mSetAttr(aSetAttr),
           mNeedsAttrChange(aNeedsAttrChange) {}
 
-    nsDelayedBroadcastUpdate(const nsDelayedBroadcastUpdate& aOther)
-        : mBroadcaster(aOther.mBroadcaster),
-          mListener(aOther.mListener),
-          mAttr(aOther.mAttr),
-          mAttrName(aOther.mAttrName),
-          mSetAttr(aOther.mSetAttr),
-          mNeedsAttrChange(aOther.mNeedsAttrChange) {}
+    nsDelayedBroadcastUpdate(const nsDelayedBroadcastUpdate& aOther) = delete;
+    nsDelayedBroadcastUpdate(nsDelayedBroadcastUpdate&& aOther) = default;
 
     nsCOMPtr<Element> mBroadcaster;
     nsCOMPtr<Element> mListener;

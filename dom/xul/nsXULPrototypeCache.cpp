@@ -68,7 +68,7 @@ static void DisableXULCacheChangedCallback(const char* aPref, void* aClosure) {
 
 nsXULPrototypeCache* nsXULPrototypeCache::sInstance = nullptr;
 
-nsXULPrototypeCache::nsXULPrototypeCache() {}
+nsXULPrototypeCache::nsXULPrototypeCache() = default;
 
 nsXULPrototypeCache::~nsXULPrototypeCache() { FlushScripts(); }
 

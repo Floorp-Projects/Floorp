@@ -25,7 +25,7 @@ class XULMenuElement final : public nsXULElement {
   MOZ_CAN_RUN_SCRIPT bool OpenedWithKey();
 
  private:
-  virtual ~XULMenuElement() {}
+  virtual ~XULMenuElement() = default;
   JSObject* WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) final;
 
   nsIFrame* GetFrame();
