@@ -52,7 +52,7 @@ nsGeoPositionCoords::nsGeoPositionCoords(double aLat, double aLong, double aAlt,
   MOZ_ASSERT(EqualOrBothNaN(mSpeed, aSpeed));
 }
 
-nsGeoPositionCoords::~nsGeoPositionCoords() {}
+nsGeoPositionCoords::~nsGeoPositionCoords() = default;
 
 NS_INTERFACE_MAP_BEGIN(nsGeoPositionCoords)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMGeoPositionCoords)
@@ -120,7 +120,7 @@ nsGeoPosition::nsGeoPosition(nsIDOMGeoPositionCoords* aCoords,
                              DOMTimeStamp aTimestamp)
     : mTimestamp(aTimestamp), mCoords(aCoords) {}
 
-nsGeoPosition::~nsGeoPosition() {}
+nsGeoPosition::~nsGeoPosition() = default;
 
 NS_INTERFACE_MAP_BEGIN(nsGeoPosition)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMGeoPosition)
@@ -157,7 +157,7 @@ GeolocationPosition::GeolocationPosition(nsISupports* aParent,
                                          nsIDOMGeoPosition* aGeoPosition)
     : mParent(aParent), mGeoPosition(aGeoPosition) {}
 
-GeolocationPosition::~GeolocationPosition() {}
+GeolocationPosition::~GeolocationPosition() = default;
 
 nsISupports* GeolocationPosition::GetParentObject() const { return mParent; }
 
