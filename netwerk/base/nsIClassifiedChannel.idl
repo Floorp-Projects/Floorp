@@ -147,31 +147,6 @@ interface nsIClassifiedChannel : nsISupports
   };
 
   /**
-   * Returns true if the channel has loaded a resource that is classified as
-   * tracker.
-   * This is a helper attribute which returns the same value of
-   * (classificationFlags & CLASSIFIED_ANY_BASIC_TRACKING) or
-   * (classificationFlags & CLASSIFIED_ANY_STRICT_TRACKING) or
-   * (classificationFlags & CLASSIFIED_ANY_SOCIAL_TRACKING)
-   *
-   * Note that top-level channels could be marked as tracking
-   * resource. In order to identify third-party tracking resources
-   * specifically, use isThirdPartyTrackingResource().
-   */
-  boolean isTrackingResource();
-
-%{ C++
-  inline bool IsTrackingResource()
-  {
-    bool value = false;
-    if (NS_SUCCEEDED(IsTrackingResource(&value)) && value) {
-      return true;
-    }
-    return false;
-  }
-%}
-
-  /**
    * Returns true  if the channel has been processed by URL-Classifier features
    * and is considered third-party with the top window URI, and if it has loaded
    * a resource that is classified as a tracker.
