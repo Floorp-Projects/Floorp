@@ -87,6 +87,8 @@ static nsAtom* GetTag(nsINode* aNode);
 // returns the parent
 static nsINode* ParentOffset(nsINode* aNode, int32_t* aChildOffset);
 static nsINode* GetCellParent(nsINode* aDomNode);
+static nsresult CreateAndAddRange(nsINode* aContainer, int32_t aOffset,
+                                  Selection& aNormalSelection);
 
 #ifdef PRINT_RANGE
 static void printRange(nsRange* aDomRange);
@@ -2202,8 +2204,9 @@ nsresult nsFrameSelection::HandleTableSelection(nsINode* aParentContent,
         mTableSelection.mEndSelectedCell = nullptr;
 
         // Remove existing selection and select the table
-        mDomSelections[index]->RemoveAllRanges(IgnoreErrors());
-        return CreateAndAddRange(aParentContent, aContentOffset);
+        const RefPtr<Selection> selection = mDomSelections[index];
+        selection->RemoveAllRanges(IgnoreErrors());
+        return CreateAndAddRange(aParentContent, aContentOffset, *selection);
       }
       if (aTarget == TableSelectionMode::Row ||
           aTarget == TableSelectionMode::Column) {
@@ -2739,11 +2742,19 @@ nsresult nsFrameSelection::SelectCellElement(nsIContent* aCellElement) {
   // Get child offset
   int32_t offset = parent->ComputeIndexOf(aCellElement);
 
-  return CreateAndAddRange(parent, offset);
+  const int8_t index = GetIndexFromSelectionType(SelectionType::eNormal);
+  const RefPtr<Selection> selection = mDomSelections[index];
+  if (!selection) {
+    return NS_ERROR_NULL_POINTER;
+  }
+
+  return CreateAndAddRange(parent, offset, *selection);
 }
 
-nsresult nsFrameSelection::CreateAndAddRange(nsINode* aContainer,
-                                             int32_t aOffset) {
+nsresult CreateAndAddRange(nsINode* aContainer, int32_t aOffset,
+                           Selection& aNormalSelection) {
+  MOZ_ASSERT(aNormalSelection.Type() == SelectionType::eNormal);
+
   if (!aContainer) {
     return NS_ERROR_NULL_POINTER;
   }
@@ -2757,11 +2768,8 @@ nsresult nsFrameSelection::CreateAndAddRange(nsINode* aContainer,
   }
   MOZ_ASSERT(range);
 
-  int8_t index = GetIndexFromSelectionType(SelectionType::eNormal);
-  if (!mDomSelections[index]) return NS_ERROR_NULL_POINTER;
-
   ErrorResult err;
-  mDomSelections[index]->AddRangeAndSelectFramesAndNotifyListeners(*range, err);
+  aNormalSelection.AddRangeAndSelectFramesAndNotifyListeners(*range, err);
   return err.StealNSResult();
 }
 
