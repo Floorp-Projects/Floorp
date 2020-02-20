@@ -54,7 +54,7 @@ const DESCRIPTION = {
 };
 
 this.test = makeMemoryTest(TEST_URL, async function({ tab, panel }) {
-  const front = panel.panelWin.gStore.getState().front;
+  const front = panel.panelWin.gFront;
 
   const startWindows = await getWindowsInSnapshot(front);
   dumpn(

@@ -9,7 +9,6 @@ DevToolsModules(
     'diffing.js',
     'errors.js',
     'filter.js',
-    'front.js',
     'individuals.js',
     'label-display.js',
     'sizes.js',

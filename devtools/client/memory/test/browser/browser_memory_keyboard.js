@@ -39,9 +39,9 @@ function waitUntilExpanded(store, node) {
 
 this.test = makeMemoryTest(TEST_URL, async function({ tab, panel }) {
   const heapWorker = panel.panelWin.gHeapAnalysesClient;
+  const front = panel.panelWin.gFront;
   const store = panel.panelWin.gStore;
   const { getState, dispatch } = store;
-  const front = getState().front;
   const doc = panel.panelWin.document;
 
   dispatch(changeView(viewState.CENSUS));

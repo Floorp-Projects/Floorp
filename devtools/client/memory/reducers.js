@@ -6,7 +6,6 @@
 exports.allocations = require("devtools/client/memory/reducers/allocations");
 exports.censusDisplay = require("devtools/client/memory/reducers/census-display");
 exports.diffing = require("devtools/client/memory/reducers/diffing");
-exports.front = require("devtools/client/memory/reducers/front");
 exports.individuals = require("devtools/client/memory/reducers/individuals");
 exports.labelDisplay = require("devtools/client/memory/reducers/label-display");
 exports.treeMapDisplay = require("devtools/client/memory/reducers/tree-map-display");
