@@ -816,18 +816,6 @@
   mirror: always
   rust: true
 
-# Whether we should suppress the background-image of the canvas (the root
-# frame) if we're in forced colors mode.
-#
-# This is important because some sites use background-image with a plain color
-# and it causes undesirable results in high-contrast mode.
-#
-# See bug 1614921 for example.
-- name: browser.display.suppress_canvas_background_image_on_forced_colors
-  type: bool
-  value: true
-  mirror: always
-
 - name: browser.display.focus_ring_on_anything
   type: bool
   value: false

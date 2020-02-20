@@ -1,14 +1,17 @@
 <!DOCTYPE html>
-<title>Backplates should not include margins, indentation, padding, border space, or text-alignment space.</title>
-<style>
-  .outer {
-    background:linear-gradient(blue,blue);
-  }
-  div {
-    margin-bottom: 30px;
-  }
-</style>
-<div class="outer">
+<html>
+<head>
+  <title>Backplates should not include margins, indentation, padding, border space, or text-alignment space.</title>
+  <style>
+    body {
+      background:linear-gradient(blue,blue);
+    }
+    div {
+      margin-bottom: 30px;
+    }
+  </style>
+</head>
+<body>
   <div>div</div>
   <div style="margin-left: 30px">div w/ margin-left</div>
   <div><span style="margin-left: 100px">span w/ margin-left</span></div>
@@ -19,4 +22,5 @@
   <div style="text-align: right">div w/ text-align:right</div>
   <div style="direction: rtl; text-align: center">div w/ RTL &amp; text-align:center</div>
   <div style="text-indent: 200px">div w/ text-indent</div>
-</div>
+
+</body></html>
