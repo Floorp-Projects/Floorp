@@ -23,9 +23,15 @@ exclude: true
 - Added [`DebuggerDelegate#onExtensionListUpdated`][75.2] to notify that a temporary
   extension has been installed by the debugger.
   ([bug 1614295]({{bugzilla}}1614295))
+- ⚠️ Removed [`GeckoRuntimeSettings.setAutoplayDefault`][75.3], use
+  [`GeckoSession.PermissionDelegate#PERMISSION_AUTOPLAY_AUDIBLE`][73.12] and
+  [`GeckoSession.PermissionDelegate#PERMISSION_AUTOPLAY_INAUDIBLE`][73.13] to
+  control autoplay.
+  ([bug 1614894]({{bugzilla}}1614894))
 
 [75.1]: {{javadoc_uri}}/GeckoRuntimeSettings.Builder.html#useMultiprocess-boolean-
 [75.2]: {{javadoc_uri}}/WebExtensionController.DebuggerDelegate.html#onExtensionListUpdated--
+[75.3]: {{javadoc_uri}}/GeckoRuntimeSettings.Builder.html#autoplayDefault-boolean-
 
 ## v74
 - Added [`WebExtensionController.enable`][74.1] and [`disable`][74.2] to
@@ -589,4 +595,4 @@ exclude: true
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: e79b2ea5f93700f9e920b962286ec7b203c493b9
+[api-version]: 898e8783e858824b7af7e4e9763bf5aaa54c0b0c
