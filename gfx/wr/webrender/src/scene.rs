@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{BuiltDisplayList, DisplayItemCache, ColorF, DynamicProperties, Epoch, FontRenderMode};
+use api::{BuiltDisplayList, DisplayListWithCache, ColorF, DynamicProperties, Epoch, FontRenderMode};
 use api::{PipelineId, PropertyBinding, PropertyBindingId, PropertyValue, MixBlendMode, StackingContext};
 use api::units::*;
 use crate::composite::CompositorKind;
@@ -132,8 +132,7 @@ pub struct ScenePipeline {
     pub viewport_size: LayoutSize,
     pub content_size: LayoutSize,
     pub background_color: Option<ColorF>,
-    pub display_list: BuiltDisplayList,
-    pub display_list_cache: DisplayItemCache,
+    pub display_list: DisplayListWithCache,
 }
 
 /// A complete representation of the layout bundling visible pipelines together.
@@ -168,12 +167,15 @@ impl Scene {
         viewport_size: LayoutSize,
         content_size: LayoutSize,
     ) {
-        let pipeline = self.pipelines.remove(&pipeline_id);
-        let mut display_list_cache = pipeline.map_or(Default::default(), |p| {
-            p.display_list_cache
-        });
-
-        display_list_cache.update(&display_list);
+        // Adds a cache to the given display list. If this pipeline already had
+        // a display list before, that display list is updated and used instead.
+        let display_list = match self.pipelines.remove(&pipeline_id) {
+            Some(mut pipeline) => {
+                pipeline.display_list.update(display_list);
+                pipeline.display_list
+            }
+            None => DisplayListWithCache::new_from_list(display_list)
+        };
 
         let new_pipeline = ScenePipeline {
             pipeline_id,
@@ -181,7 +183,6 @@ impl Scene {
             content_size,
             background_color,
             display_list,
-            display_list_cache,
         };
 
         self.pipelines.insert(pipeline_id, new_pipeline);
