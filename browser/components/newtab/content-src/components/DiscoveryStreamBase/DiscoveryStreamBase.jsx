@@ -274,7 +274,7 @@ export class _DiscoveryStreamBase extends React.PureComponent {
       state: this.props.DiscoveryStream,
       prefs: this.props.Prefs.values,
       rollCache,
-      lang: this.props.document.documentElement.lang,
+      locale: this.props.locale,
     });
     const { config, spocs, feeds } = this.props.DiscoveryStream;
 
