@@ -95,7 +95,9 @@ nsresult AccessibleWrap::HandleAccEvent(AccEvent* aEvent) {
       case nsIAccessibleEvent::EVENT_TEXT_CARET_MOVED: {
         if (accessible != aEvent->Document() && !aEvent->IsFromUserInput()) {
           AccCaretMoveEvent* caretEvent = downcast_accEvent(aEvent);
-          if (IsHyperText()) {
+          HyperTextAccessible* ht = AsHyperText();
+          if ((State() & states::FOCUSABLE) != 0 ||
+              (ht && ht->SelectionCount())) {
             DOMPoint point =
                 AsHyperText()->OffsetToDOMPoint(caretEvent->GetCaretOffset());
             if (Accessible* newPos =
