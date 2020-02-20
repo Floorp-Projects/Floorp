@@ -211,7 +211,7 @@ class Cache::FetchHandler final : public PromiseNativeHandler {
   }
 
  private:
-  ~FetchHandler() {}
+  ~FetchHandler() = default;
 
   void Fail() { mPromise->MaybeRejectWithTypeError<MSG_FETCH_FAILED>(); }
 

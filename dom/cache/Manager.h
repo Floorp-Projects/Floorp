@@ -111,7 +111,7 @@ class Manager final {
                               StreamList* aStreamList) {}
 
    protected:
-    ~Listener() {}
+    ~Listener() = default;
   };
 
   enum State { Open, Closing };

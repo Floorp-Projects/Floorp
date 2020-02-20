@@ -42,7 +42,7 @@ bool ActorChild::WorkerRefNotified() const {
   return mWorkerRef && mWorkerRef->Notified();
 }
 
-ActorChild::ActorChild() {}
+ActorChild::ActorChild() = default;
 
 ActorChild::~ActorChild() { MOZ_DIAGNOSTIC_ASSERT(!mWorkerRef); }
 

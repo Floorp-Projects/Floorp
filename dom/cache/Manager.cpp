@@ -672,7 +672,7 @@ class Manager::CachePutAllAction final : public DBAction {
   }
 
  private:
-  ~CachePutAllAction() {}
+  ~CachePutAllAction() = default;
 
   virtual void RunWithDBOnTarget(Resolver* aResolver,
                                  const QuotaInfo& aQuotaInfo, nsIFile* aDBDir,
