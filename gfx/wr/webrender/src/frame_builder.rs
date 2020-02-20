@@ -262,7 +262,6 @@ impl FrameBuilder {
         texture_cache_profile: &mut TextureCacheProfileCounters,
         composite_state: &mut CompositeState,
         tile_cache_logger: &mut TileCacheLogger,
-        config: FrameBuilderConfig,
     ) -> Option<RenderTaskId> {
         profile_scope!("cull");
 
@@ -349,7 +348,7 @@ impl FrameBuilder {
                 surfaces,
                 debug_flags,
                 scene_properties,
-                config,
+                config: scene.config,
             };
 
             let mut visibility_state = FrameVisibilityState {
@@ -504,7 +503,6 @@ impl FrameBuilder {
         render_task_counters: &mut RenderTaskGraphCounters,
         debug_flags: DebugFlags,
         tile_cache_logger: &mut TileCacheLogger,
-        config: FrameBuilderConfig,
     ) -> Frame {
         profile_scope!("build");
         profile_marker!("BuildFrame");
@@ -575,7 +573,6 @@ impl FrameBuilder {
             &mut resource_profile.texture_cache,
             &mut composite_state,
             tile_cache_logger,
-            config,
         );
 
         let mut passes;
