@@ -1041,8 +1041,10 @@ void DrawTargetD2D1::PushLayer(bool aOpaque, Float aOpacity,
 }
 
 void DrawTargetD2D1::PopLayer() {
+  // We must have at least one layer at all times.
+  MOZ_ASSERT(mPushedLayers.size() > 1);
   MOZ_ASSERT(CurrentLayer().mPushedClips.size() == 0);
-  if (!EnsureInitialized()) {
+  if (!EnsureInitialized() || mPushedLayers.size() <= 1) {
     return;
   }
   RefPtr<ID2D1CommandList> list = CurrentLayer().mCurrentList;
