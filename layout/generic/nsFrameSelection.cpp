@@ -89,6 +89,8 @@ static nsINode* ParentOffset(nsINode* aNode, int32_t* aChildOffset);
 static nsINode* GetCellParent(nsINode* aDomNode);
 static nsresult CreateAndAddRange(nsINode* aContainer, int32_t aOffset,
                                   Selection& aNormalSelection);
+static nsresult SelectCellElement(nsIContent* aCellElement,
+                                  Selection& aNormalSelection);
 
 #ifdef PRINT_RANGE
 static void printRange(nsRange* aDomRange);
@@ -2466,6 +2468,18 @@ nsresult nsFrameSelection::TableSelection::UnselectCells(
   return NS_OK;
 }
 
+nsresult SelectCellElement(nsIContent* aCellElement,
+                           Selection& aNormalSelection) {
+  MOZ_ASSERT(aNormalSelection.Type() == SelectionType::eNormal);
+
+  nsIContent* parent = aCellElement->GetParent();
+
+  // Get child offset
+  int32_t offset = parent->ComputeIndexOf(aCellElement);
+
+  return CreateAndAddRange(parent, offset, aNormalSelection);
+}
+
 nsresult nsFrameSelection::AddCellsToSelection(nsIContent* aTableContent,
                                                int32_t aStartRowIndex,
                                                int32_t aStartColumnIndex,
@@ -2737,18 +2751,13 @@ nsIContent* nsFrameSelection::GetParentTable(nsIContent* aCell) {
 }
 
 nsresult nsFrameSelection::SelectCellElement(nsIContent* aCellElement) {
-  nsIContent* parent = aCellElement->GetParent();
-
-  // Get child offset
-  int32_t offset = parent->ComputeIndexOf(aCellElement);
-
   const int8_t index = GetIndexFromSelectionType(SelectionType::eNormal);
   const RefPtr<Selection> selection = mDomSelections[index];
   if (!selection) {
     return NS_ERROR_NULL_POINTER;
   }
 
-  return CreateAndAddRange(parent, offset, *selection);
+  return ::SelectCellElement(aCellElement, *selection);
 }
 
 nsresult CreateAndAddRange(nsINode* aContainer, int32_t aOffset,
