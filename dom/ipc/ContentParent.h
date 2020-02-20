@@ -663,22 +663,24 @@ class ContentParent final
       const MaybeDiscarded<BrowsingContext>& aContext, CallerType aCallerType);
   mozilla::ipc::IPCResult RecvWindowBlur(
       const MaybeDiscarded<BrowsingContext>& aContext);
-  mozilla::ipc::IPCResult RecvRaiseWindow(BrowsingContext* aContext,
-                                          CallerType aCallerType);
-  mozilla::ipc::IPCResult RecvClearFocus(BrowsingContext* aContext);
+  mozilla::ipc::IPCResult RecvRaiseWindow(
+      const MaybeDiscarded<BrowsingContext>& aContext, CallerType aCallerType);
+  mozilla::ipc::IPCResult RecvClearFocus(
+      const MaybeDiscarded<BrowsingContext>& aContext);
   mozilla::ipc::IPCResult RecvSetFocusedBrowsingContext(
-      BrowsingContext* aContext);
+      const MaybeDiscarded<BrowsingContext>& aContext);
   mozilla::ipc::IPCResult RecvSetActiveBrowsingContext(
-      BrowsingContext* aContext);
+      const MaybeDiscarded<BrowsingContext>& aContext);
   mozilla::ipc::IPCResult RecvUnsetActiveBrowsingContext(
-      BrowsingContext* aContext);
-  mozilla::ipc::IPCResult RecvSetFocusedElement(BrowsingContext* aContext,
-                                                bool aNeedsFocus);
+      const MaybeDiscarded<BrowsingContext>& aContext);
+  mozilla::ipc::IPCResult RecvSetFocusedElement(
+      const MaybeDiscarded<BrowsingContext>& aContext, bool aNeedsFocus);
   mozilla::ipc::IPCResult RecvBlurToParent(
-      BrowsingContext* aFocusedBrowsingContext,
-      BrowsingContext* aBrowsingContextToClear,
-      BrowsingContext* aAncestorBrowsingContextToFocus, bool aIsLeavingDocument,
-      bool aAdjustWidget, bool aBrowsingContextToClearHandled,
+      const MaybeDiscarded<BrowsingContext>& aFocusedBrowsingContext,
+      const MaybeDiscarded<BrowsingContext>& aBrowsingContextToClear,
+      const MaybeDiscarded<BrowsingContext>& aAncestorBrowsingContextToFocus,
+      bool aIsLeavingDocument, bool aAdjustWidget,
+      bool aBrowsingContextToClearHandled,
       bool aAncestorBrowsingContextToFocusHandled);
 
   mozilla::ipc::IPCResult RecvWindowPostMessage(
