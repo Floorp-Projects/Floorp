@@ -20,9 +20,9 @@ this.test = makeMemoryTest(TEST_URL, async function({ panel }) {
   requestLongerTimeout(2);
 
   const heapWorker = panel.panelWin.gHeapAnalysesClient;
-  const front = panel.panelWin.gFront;
   const store = panel.panelWin.gStore;
   const { dispatch } = store;
+  const front = store.getState().front;
   const doc = panel.panelWin.document;
 
   dispatch(changeView(viewState.CENSUS));

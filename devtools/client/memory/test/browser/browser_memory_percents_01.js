@@ -29,8 +29,8 @@ function checkCells(cells) {
 
 this.test = makeMemoryTest(TEST_URL, async function({ tab, panel }) {
   const heapWorker = panel.panelWin.gHeapAnalysesClient;
-  const front = panel.panelWin.gFront;
   const { getState, dispatch } = panel.panelWin.gStore;
+  const front = getState().front;
   const doc = panel.panelWin.document;
 
   dispatch(changeView(viewState.CENSUS));
