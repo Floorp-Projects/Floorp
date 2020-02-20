@@ -3614,11 +3614,6 @@ pub extern "C" fn wr_dump_display_list(state: &mut WrState,
 }
 
 #[no_mangle]
-pub extern "C" fn wr_dump_serialized_display_list(state: &mut WrState) {
-    state.frame_builder.dl_builder.dump_serialized_display_list();
-}
-
-#[no_mangle]
 pub unsafe extern "C" fn wr_api_finalize_builder(state: &mut WrState,
                                                  content_size: &mut LayoutSize,
                                                  dl_descriptor: &mut BuiltDisplayListDescriptor,
