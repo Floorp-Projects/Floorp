@@ -494,6 +494,42 @@ static void SetPaintPattern(SkPaint& aPaint, const Pattern& aPattern,
       }
       break;
     }
+    case PatternType::CONIC_GRADIENT: {
+      const ConicGradientPattern& pat =
+          static_cast<const ConicGradientPattern&>(aPattern);
+      GradientStopsSkia* stops =
+          static_cast<GradientStopsSkia*>(pat.mStops.get());
+      if (!stops || stops->mCount < 2 || !pat.mCenter.IsFinite() ||
+          !IsFinite(pat.mAngle)) {
+        aPaint.setColor(SK_ColorTRANSPARENT);
+      } else {
+        SkMatrix mat;
+        GfxMatrixToSkiaMatrix(pat.mMatrix, mat);
+        if (aMatrix) {
+          mat.postConcat(*aMatrix);
+        }
+
+        SkScalar cx = SkFloatToScalar(pat.mCenter.x);
+        SkScalar cy = SkFloatToScalar(pat.mCenter.y);
+
+        // Skia's sweep gradient angles are relative to the x-axis, not the
+        // y-axis.
+        Float angle = (pat.mAngle * 180.0 / M_PI) - 90.0;
+        if (angle != 0.0) {
+          mat.preRotate(angle, cx, cy);
+        }
+
+        sk_sp<SkShader> shader = SkGradientShader::MakeSweep(
+            cx, cy, &stops->mColors.front(), &stops->mPositions.front(),
+            stops->mCount, 0, &mat);
+        if (shader) {
+          aPaint.setShader(shader);
+        } else {
+          aPaint.setColor(SK_ColorTRANSPARENT);
+        }
+      }
+      break;
+    }
     case PatternType::SURFACE: {
       const SurfacePattern& pat = static_cast<const SurfacePattern&>(aPattern);
       sk_sp<SkImage> image =
