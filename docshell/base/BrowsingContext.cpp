@@ -534,9 +534,11 @@ void BrowsingContext::RestoreChildren(Children&& aChildren, bool aFromIPC) {
           ("%s: Restoring children of 0x%08" PRIx64 "",
            XRE_IsParentProcess() ? "Parent" : "Child", Id()));
 
+  nsTArray<MaybeDiscarded<BrowsingContext>> ipcChildren(aChildren.Length());
   for (BrowsingContext* child : aChildren) {
     MOZ_DIAGNOSTIC_ASSERT(child->GetParent() == this);
     Unused << mGroup->EvictCachedContext(child);
+    ipcChildren.AppendElement(child);
   }
 
   mChildren.AppendElements(aChildren);
@@ -544,7 +546,7 @@ void BrowsingContext::RestoreChildren(Children&& aChildren, bool aFromIPC) {
   if (!aFromIPC && XRE_IsContentProcess()) {
     auto cc = ContentChild::GetSingleton();
     MOZ_DIAGNOSTIC_ASSERT(cc);
-    cc->SendRestoreBrowsingContextChildren(this, aChildren);
+    cc->SendRestoreBrowsingContextChildren(this, ipcChildren);
   }
 }
 
