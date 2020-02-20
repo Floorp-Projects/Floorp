@@ -13,6 +13,8 @@ import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import java.lang.ref.WeakReference
+import java.util.Collections
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.Executors
 
 /**
@@ -43,7 +45,7 @@ open class Store<S : State, A : Action>(
 ) {
     private val dispatcher = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
     private val scope = CoroutineScope(dispatcher)
-    private val subscriptions = mutableSetOf<Subscription<S, A>>()
+    private val subscriptions = Collections.newSetFromMap(ConcurrentHashMap<Subscription<S, A>, Boolean>())
     private val exceptionHandler = CoroutineExceptionHandler { _, throwable ->
         // We want exceptions in the reducer to crash the app and not get silently ignored. Therefore we rethrow the
         // exception on the main thread.
@@ -81,10 +83,7 @@ open class Store<S : State, A : Action>(
     @Synchronized
     fun observeManually(observer: Observer<S>): Subscription<S, A> {
         val subscription = Subscription(observer, store = this)
-
-        synchronized(subscriptions) {
-            subscriptions.add(subscription)
-        }
+        subscriptions.add(subscription)
 
         return subscription
     }
@@ -106,16 +105,11 @@ open class Store<S : State, A : Action>(
         }
 
         currentState = newState
-
-        synchronized(subscriptions) {
-            subscriptions.forEach { subscription -> subscription.dispatch(newState) }
-        }
+        subscriptions.forEach { subscription -> subscription.dispatch(newState) }
     }
 
     private fun removeSubscription(subscription: Subscription<S, A>) {
-        synchronized(subscriptions) {
-            subscriptions.remove(subscription)
-        }
+        subscriptions.remove(subscription)
     }
 
     /**
