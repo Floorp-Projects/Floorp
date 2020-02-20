@@ -44,10 +44,10 @@ class IterableIteratorBase : public nsISupports {
   NS_DECL_CYCLE_COLLECTION_CLASS(IterableIteratorBase)
   typedef enum { Keys = 0, Values, Entries } IterableIteratorType;
 
-  IterableIteratorBase() {}
+  IterableIteratorBase() = default;
 
  protected:
-  virtual ~IterableIteratorBase() {}
+  virtual ~IterableIteratorBase() = default;
   virtual void UnlinkHelper() = 0;
   virtual void TraverseHelper(nsCycleCollectionTraversalCallback& cb) = 0;
 };
@@ -208,7 +208,7 @@ class IterableIterator final : public IterableIteratorBase {
   }
 
  protected:
-  virtual ~IterableIterator() {}
+  virtual ~IterableIterator() = default;
 
   // Since we're templated on a binding, we need to possibly CC it, but can't do
   // that through macros. So it happens here.

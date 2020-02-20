@@ -41,7 +41,7 @@ class TestInterfaceIterableDoubleUnion final : public nsISupports,
   OwningStringOrLong& GetValueAtIndex(uint32_t aIndex);
 
  private:
-  virtual ~TestInterfaceIterableDoubleUnion() {}
+  virtual ~TestInterfaceIterableDoubleUnion() = default;
   nsCOMPtr<nsPIDOMWindowInner> mParent;
   nsTArray<std::pair<nsString, OwningStringOrLong>> mValues;
 };

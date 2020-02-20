@@ -41,7 +41,7 @@ class TestInterfaceMaplike final : public nsISupports, public nsWrapperCache {
   bool HasInternal(const nsAString& aKey);
 
  private:
-  virtual ~TestInterfaceMaplike() {}
+  virtual ~TestInterfaceMaplike() = default;
   nsCOMPtr<nsPIDOMWindowInner> mParent;
 };
 

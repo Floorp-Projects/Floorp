@@ -140,9 +140,9 @@ struct TypedArray
   typedef TypedArray_base<T, UnwrapArray, GetLengthAndDataAndSharedness> Base;
 
  public:
-  TypedArray() : Base() {}
+  TypedArray() = default;
 
-  TypedArray(TypedArray&& aOther) : Base(std::move(aOther)) {}
+  TypedArray(TypedArray&& aOther) = default;
 
   static inline JSObject* Create(JSContext* cx, nsWrapperCache* creator,
                                  uint32_t length, const T* data = nullptr) {
