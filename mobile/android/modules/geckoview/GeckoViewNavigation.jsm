@@ -15,7 +15,6 @@ const { XPCOMUtils } = ChromeUtils.import(
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   E10SUtils: "resource://gre/modules/E10SUtils.jsm",
-  GeckoViewSettings: "resource://gre/modules/GeckoViewSettings.jsm",
   LoadURIDelegate: "resource://gre/modules/LoadURIDelegate.jsm",
   Services: "resource://gre/modules/Services.jsm",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
@@ -68,7 +67,6 @@ class GeckoViewNavigation extends GeckoViewModule {
       "GeckoView:PurgeHistory",
     ]);
 
-    this.messageManager.addMessageListener("Browser:LoadURI", this);
     this._initialAboutBlank = true;
 
     debug`sessionContextId=${this.settings.sessionContextId}`;
@@ -89,7 +87,7 @@ class GeckoViewNavigation extends GeckoViewModule {
   }
 
   // Bundle event handler.
-  onEvent(aEvent, aData, aCallback) {
+  async onEvent(aEvent, aData, aCallback) {
     debug`onEvent: event=${aEvent}, data=${aData}`;
 
     switch (aEvent) {
@@ -136,11 +134,8 @@ class GeckoViewNavigation extends GeckoViewModule {
           navFlags |= Ci.nsIWebNavigation.LOAD_FLAGS_REPLACE_HISTORY;
         }
 
-        if (GeckoViewSettings.useMultiprocess) {
-          this.moduleManager.updateRemoteTypeForURI(uri);
-        }
-
         let triggeringPrincipal, referrerInfo, csp;
+        let parsedUri;
         if (referrerSessionId) {
           const referrerWindow = Services.ww.getWindowByName(
             referrerSessionId,
@@ -160,7 +155,7 @@ class GeckoViewNavigation extends GeckoViewModule {
           );
         } else {
           try {
-            const parsedUri = Services.io.newURI(uri);
+            parsedUri = Services.io.newURI(uri);
             if (
               parsedUri.schemeIs("about") ||
               parsedUri.schemeIs("data") ||
@@ -226,7 +221,8 @@ class GeckoViewNavigation extends GeckoViewModule {
         // referring session, the referrerInfo is null.
         //
         // csp is only present if we have a referring document, null otherwise.
-        this.browser.loadURI(uri, {
+        this.loadURI({
+          uri: parsedUri ? parsedUri.spec : uri,
           flags: navFlags,
           referrerInfo,
           triggeringPrincipal,
@@ -251,33 +247,37 @@ class GeckoViewNavigation extends GeckoViewModule {
     }
   }
 
-  // Message manager event handler.
-  receiveMessage(aMsg) {
-    debug`receiveMessage: ${aMsg.name}`;
+  async loadURI({
+    uri,
+    flags,
+    referrerInfo,
+    triggeringPrincipal,
+    headers,
+    csp,
+  }) {
+    if (!this.moduleManager.shouldLoadInThisProcess(uri)) {
+      referrerInfo = E10SUtils.serializeReferrerInfo(referrerInfo);
+      triggeringPrincipal = E10SUtils.serializePrincipal(triggeringPrincipal);
+      csp = E10SUtils.serializeCSP(csp);
 
-    switch (aMsg.name) {
-      case "Browser:LoadURI":
-        // This is triggered by E10SUtils.redirectLoad(), and means
-        // we may need to change the remoteness of our browser and
-        // load the URI.
-        const {
-          uri,
-          flags,
-          referrerInfo,
-          triggeringPrincipal,
-        } = aMsg.data.loadOptions;
-
-        this.moduleManager.updateRemoteTypeForURI(uri);
-
-        this.browser.loadURI(uri, {
-          flags,
-          referrerInfo: E10SUtils.deserializeReferrerInfo(referrerInfo),
-          triggeringPrincipal: E10SUtils.deserializePrincipal(
-            triggeringPrincipal
-          ),
-        });
-        break;
+      this.moduleManager.updateRemoteAndNavigate(uri, {
+        referrerInfo,
+        triggeringPrincipal,
+        headers,
+        csp,
+        flags,
+        uri,
+      });
+      return;
     }
+
+    this.browser.loadURI(uri, {
+      flags,
+      referrerInfo,
+      triggeringPrincipal,
+      csp,
+      headers,
+    });
   }
 
   waitAndSetupWindow(aSessionId, { opener, nextRemoteTabId, forceNotRemote }) {
