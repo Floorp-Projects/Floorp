@@ -86,7 +86,7 @@ class GamepadManager final : public nsIObserver {
 
  protected:
   GamepadManager();
-  ~GamepadManager(){};
+  ~GamepadManager() = default;
 
   // Fire a gamepadconnected or gamepaddisconnected event for the gamepad
   // at |aIndex| to all windows that are listening and have received

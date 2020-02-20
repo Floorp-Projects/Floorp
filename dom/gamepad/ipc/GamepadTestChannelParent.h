@@ -22,7 +22,7 @@ class GamepadTestChannelParent final : public PGamepadTestChannelParent {
   mozilla::ipc::IPCResult RecvShutdownChannel();
 
  private:
-  ~GamepadTestChannelParent() {}
+  ~GamepadTestChannelParent() = default;
   bool mShuttingdown;
 };
 

@@ -17,7 +17,7 @@ namespace {
 
 class SendGamepadUpdateRunnable final : public Runnable {
  private:
-  ~SendGamepadUpdateRunnable() {}
+  ~SendGamepadUpdateRunnable() = default;
   RefPtr<GamepadEventChannelParent> mParent;
   GamepadChangeEvent mEvent;
 

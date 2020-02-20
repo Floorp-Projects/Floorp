@@ -40,7 +40,7 @@ class GamepadButton : public nsISupports, public nsWrapperCache {
   double Value() const { return mValue; }
 
  private:
-  virtual ~GamepadButton() {}
+  virtual ~GamepadButton() = default;
 
  protected:
   nsCOMPtr<nsISupports> mParent;

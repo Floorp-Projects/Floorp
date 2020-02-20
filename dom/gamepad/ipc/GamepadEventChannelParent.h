@@ -32,7 +32,7 @@ class GamepadEventChannelParent final : public PGamepadEventChannelParent {
   bool HasGamepadListener() const { return mHasGamepadListener; }
 
  private:
-  ~GamepadEventChannelParent() {}
+  ~GamepadEventChannelParent() = default;
   bool mHasGamepadListener;
   nsCOMPtr<nsIEventTarget> mBackgroundEventTarget;
 };

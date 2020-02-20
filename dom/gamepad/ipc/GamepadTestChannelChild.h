@@ -17,8 +17,8 @@ class GamepadTestChannelChild final : public PGamepadTestChannelChild {
   friend class PGamepadTestChannelChild;
 
  public:
-  GamepadTestChannelChild() {}
-  ~GamepadTestChannelChild() {}
+  GamepadTestChannelChild() = default;
+  ~GamepadTestChannelChild() = default;
   void AddPromise(const uint32_t& aID, Promise* aPromise);
 
  private:
