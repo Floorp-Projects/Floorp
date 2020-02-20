@@ -20,6 +20,7 @@ const INITIAL_STATE = {
   App: {
     // Have we received real data from the app yet?
     initialized: false,
+    locale: "",
   },
   ASRouter: { initialized: false },
   Snippets: { initialized: false },

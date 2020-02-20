@@ -174,7 +174,7 @@ export class BaseContent extends React.PureComponent {
             <div className={`body-wrapper${initialized ? " on" : ""}`}>
               {isDiscoveryStream ? (
                 <ErrorBoundary className="borderless-error">
-                  <DiscoveryStreamBase />
+                  <DiscoveryStreamBase locale={props.App.locale} />
                 </ErrorBoundary>
               ) : (
                 <Sections />
