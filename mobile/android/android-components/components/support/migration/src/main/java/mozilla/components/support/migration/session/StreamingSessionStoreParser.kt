@@ -25,6 +25,7 @@ internal object StreamingSessionStoreParser {
 
         file.inputStream().bufferedReader().use {
             val reader = JsonReader(it)
+            reader.isLenient = true
 
             reader.beginObject()
 
