@@ -199,6 +199,34 @@ def chunk_locale_grouping(config, tasks):
     return groups
 
 
+@group_by('partner-repack-ids')
+def partner_repack_ids_grouping(config, tasks):
+    """Split by partner_repack_ids (but also by platform, build-type, product)
+
+    This grouping is written for release-{eme-free,partner}-repack-signing.
+
+    """
+    groups = {}
+
+    for task in tasks:
+        if task.kind not in config.get('kind-dependencies', []):
+            continue
+        if skip_only_or_not(config, task):
+            continue
+        platform = task.attributes.get('build_platform')
+        build_type = task.attributes.get('build_type')
+        product = task.attributes.get('shipping_product',
+                                      task.task.get('shipping-product'))
+        partner_repack_ids = tuple(sorted(task.task.get('extra', {}).get('repack_ids', [])))
+
+        partner_repack_ids_key = (platform, build_type, product, partner_repack_ids)
+        groups.setdefault(partner_repack_ids_key, [])
+        if task not in groups[partner_repack_ids_key]:
+            groups[partner_repack_ids_key].append(task)
+
+    return groups
+
+
 def assert_unique_members(kinds, error_msg=None):
     if len(kinds) != len(set(kinds)):
         raise Exception(error_msg)
