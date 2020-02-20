@@ -951,7 +951,8 @@ void nsCSSGradientRenderer::Paint(gfxContext& aContext, const nsRect& aDest,
       matrix.PreTranslate(-mLineStart);
     }
   } else {
-    gradientPattern = new gfxPattern(mCenter.x, mCenter.y, mAngle);
+    // conic-gradient is only implemented for WebRender
+    return;
   }
   // Use a pattern transform to take account of source and dest rects
   matrix.PreTranslate(gfxPoint(mPresContext->CSSPixelsToDevPixels(aSrc.x),
@@ -961,7 +962,7 @@ void nsCSSGradientRenderer::Paint(gfxContext& aContext, const nsRect& aDest,
       gfxFloat(nsPresContext::CSSPixelsToAppUnits(aSrc.height)) / aDest.height);
   gradientPattern->SetMatrix(matrix);
 
-  if (!mGradient->IsConic() && stopDelta == 0.0) {
+  if (stopDelta == 0.0) {
     // Non-repeating gradient with all stops in same place -> just add
     // first stop and last stop, both at position 0.
     // Repeating gradient with all stops in the same place, or radial

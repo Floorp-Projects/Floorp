@@ -1564,12 +1564,6 @@ void RecordedEvent::RecordPatternData(S& aStream,
                        &aPattern.mStorage));
       return;
     }
-    case PatternType::CONIC_GRADIENT: {
-      WriteElement(aStream,
-                   *reinterpret_cast<const ConicGradientPatternStorage*>(
-                       &aPattern.mStorage));
-      return;
-    }
     case PatternType::SURFACE: {
       WriteElement(aStream, *reinterpret_cast<const SurfacePatternStorage*>(
                                 &aPattern.mStorage));
@@ -1599,11 +1593,6 @@ void RecordedEvent::ReadPatternData(S& aStream,
     }
     case PatternType::RADIAL_GRADIENT: {
       ReadElement(aStream, *reinterpret_cast<RadialGradientPatternStorage*>(
-                               &aPattern.mStorage));
-      return;
-    }
-    case PatternType::CONIC_GRADIENT: {
-      ReadElement(aStream, *reinterpret_cast<ConicGradientPatternStorage*>(
                                &aPattern.mStorage));
       return;
     }
@@ -1668,18 +1657,6 @@ inline void RecordedEvent::StorePattern(PatternStorage& aDestination,
       store->mCenter2 = pat->mCenter2;
       store->mRadius1 = pat->mRadius1;
       store->mRadius2 = pat->mRadius2;
-      store->mMatrix = pat->mMatrix;
-      store->mStops = pat->mStops.get();
-      return;
-    }
-    case PatternType::CONIC_GRADIENT: {
-      ConicGradientPatternStorage* store =
-          reinterpret_cast<ConicGradientPatternStorage*>(
-              &aDestination.mStorage);
-      const ConicGradientPattern* pat =
-          static_cast<const ConicGradientPattern*>(&aSource);
-      store->mCenter = pat->mCenter;
-      store->mAngle = pat->mAngle;
       store->mMatrix = pat->mMatrix;
       store->mStops = pat->mStops.get();
       return;
@@ -1825,14 +1802,6 @@ inline void RecordedEvent::OutputSimplePatternInfo(
               &aStorage.mStorage);
       aOutput << "RadialGradient (Center 1: (" << store->mCenter1.x << ", "
               << store->mCenter2.y << ") Radius 2: " << store->mRadius2;
-      return;
-    }
-    case PatternType::CONIC_GRADIENT: {
-      const ConicGradientPatternStorage* store =
-          reinterpret_cast<const ConicGradientPatternStorage*>(
-              &aStorage.mStorage);
-      aOutput << "ConicGradient (Center: (" << store->mCenter.x << ", "
-              << store->mCenter.y << ") Angle: " << store->mAngle;
       return;
     }
     case PatternType::SURFACE: {
@@ -2170,16 +2139,6 @@ struct GenericPattern {
             storage->mMatrix);
         return mPattern;
       }
-      case PatternType::CONIC_GRADIENT: {
-        ConicGradientPatternStorage* storage =
-            reinterpret_cast<ConicGradientPatternStorage*>(&mStorage->mStorage);
-        mPattern = new (mConGradPat) ConicGradientPattern(
-            storage->mCenter, storage->mAngle,
-            storage->mStops ? mTranslator->LookupGradientStops(storage->mStops)
-                            : nullptr,
-            storage->mMatrix);
-        return mPattern;
-      }
       default:
         return new (mColPat) ColorPattern(Color());
     }
@@ -2191,7 +2150,6 @@ struct GenericPattern {
     char mColPat[sizeof(ColorPattern)];
     char mLinGradPat[sizeof(LinearGradientPattern)];
     char mRadGradPat[sizeof(RadialGradientPattern)];
-    char mConGradPat[sizeof(ConicGradientPattern)];
     char mSurfPat[sizeof(SurfacePattern)];
   };
 
