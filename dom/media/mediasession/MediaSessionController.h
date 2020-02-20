@@ -56,12 +56,14 @@ class MediaSessionController {
 
  protected:
   ~MediaSessionController() = default;
+  uint64_t mTopLevelBCId;
+  Maybe<uint64_t> mActiveMediaSessionContextId;
 
+ private:
+  nsString GetDefaultFaviconURL() const;
   MediaMetadataBase CreateDefaultMetadata() const;
   void UpdateActiveMediaSessionContextId();
 
-  uint64_t mTopLevelBCId;
-  Maybe<uint64_t> mActiveMediaSessionContextId;
   nsDataHashtable<nsUint64HashKey, Maybe<MediaMetadataBase>> mMetadataMap;
 };
 

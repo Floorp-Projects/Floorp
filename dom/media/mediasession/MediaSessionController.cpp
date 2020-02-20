@@ -4,7 +4,15 @@
 
 #include "MediaSessionController.h"
 
-#include "mozilla/dom/BrowsingContext.h"
+#include "mozilla/dom/CanonicalBrowsingContext.h"
+#include "mozilla/dom/WindowGlobalParent.h"
+
+#include "nsIChromeRegistry.h"
+#include "nsIXULAppInfo.h"
+
+#ifdef MOZ_PLACES
+#  include "nsIFaviconService.h"
+#endif  // MOZ_PLACES
 
 mozilla::LazyLogModule gMediaSession("MediaSession");
 
@@ -88,9 +96,75 @@ void MediaSessionController::UpdateActiveMediaSessionContextId() {
 }
 
 MediaMetadataBase MediaSessionController::CreateDefaultMetadata() const {
-  // TODO : using website's title and favicon as title and arwork to fill out
-  // returned result in bug1611328.
-  return MediaMetadataBase();
+  MediaMetadataBase metadata;
+  RefPtr<CanonicalBrowsingContext> bc =
+      CanonicalBrowsingContext::Get(mTopLevelBCId);
+  if (!bc) {
+    return metadata;
+  }
+
+  RefPtr<WindowGlobalParent> globalParent = bc->GetCurrentWindowGlobal();
+  if (!globalParent) {
+    return metadata;
+  }
+
+  // The media metadata would be shown on the virtual controller interface. For
+  // example, on Android, the interface would be shown on both notification bar
+  // and lockscreen. Therefore, what information we provide via metadata is
+  // quite important, because if we're in private browsing, we don't want to
+  // expose details about what website the user is browsing on the lockscreen.
+  bool inPrivateBrowsing = false;
+  if (RefPtr<Element> element = bc->GetEmbedderElement()) {
+    inPrivateBrowsing =
+        nsContentUtils::IsInPrivateBrowsing(element->OwnerDoc());
+  }
+
+  if (inPrivateBrowsing) {
+    // TODO : maybe need l10n?
+    if (nsCOMPtr<nsIXULAppInfo> appInfo =
+            do_GetService("@mozilla.org/xre/app-info;1")) {
+      nsCString appName;
+      appInfo->GetName(appName);
+      CopyUTF8toUTF16(appName, metadata.mTitle);
+    } else {
+      metadata.mTitle.AssignLiteral("Firefox");
+    }
+    metadata.mTitle.AppendLiteral(" is playing media");
+  } else {
+    metadata.mTitle = globalParent->GetDocumentTitle();
+  }
+  metadata.mArtwork.AppendElement()->mSrc = GetDefaultFaviconURL();
+
+  LOG("Default media metadata, title=%s, album src=%s",
+      NS_ConvertUTF16toUTF8(metadata.mTitle).get(),
+      NS_ConvertUTF16toUTF8(metadata.mArtwork[0].mSrc).get());
+  return metadata;
+}
+
+nsString MediaSessionController::GetDefaultFaviconURL() const {
+#ifdef MOZ_PLACES
+  nsCOMPtr<nsIURI> faviconURI;
+  nsresult rv = NS_NewURI(getter_AddRefs(faviconURI),
+                          NS_LITERAL_CSTRING(FAVICON_DEFAULT_URL));
+  NS_ENSURE_SUCCESS(rv, NS_LITERAL_STRING(""));
+
+  // Convert URI from `chrome://XXX` to `file://XXX` because we would like to
+  // let OS related frameworks, such as SMTC and MPRIS, handle this URL in order
+  // to show the icon on virtual controller interface.
+  nsCOMPtr<nsIChromeRegistry> regService = services::GetChromeRegistryService();
+  if (!regService) {
+    return EmptyString();
+  }
+  nsCOMPtr<nsIURI> processedURI;
+  regService->ConvertChromeURL(faviconURI, getter_AddRefs(processedURI));
+
+  nsAutoCString spec;
+  if (NS_FAILED(processedURI->GetSpec(spec))) {
+    return EmptyString();
+  }
+  return NS_ConvertUTF8toUTF16(spec);
+#endif
+  return EmptyString();
 }
 
 MediaMetadataBase MediaSessionController::GetCurrentMediaMetadata() const {
