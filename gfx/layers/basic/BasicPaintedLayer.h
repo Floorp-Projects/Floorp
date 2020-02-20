@@ -39,7 +39,7 @@ class BasicPaintedLayer : public PaintedLayer, public BasicImplData {
   }
 
  protected:
-  virtual ~BasicPaintedLayer() { MOZ_COUNT_DTOR(BasicPaintedLayer); }
+  MOZ_COUNTED_DTOR_OVERRIDE(BasicPaintedLayer)
 
  public:
   void SetVisibleRegion(const LayerIntRegion& aRegion) override {

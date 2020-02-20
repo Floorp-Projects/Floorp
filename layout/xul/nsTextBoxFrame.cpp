@@ -246,7 +246,7 @@ class nsDisplayXULTextBox final : public nsPaintedDisplayItem {
     MOZ_COUNT_CTOR(nsDisplayXULTextBox);
   }
 #ifdef NS_BUILD_REFCNT_LOGGING
-  virtual ~nsDisplayXULTextBox() { MOZ_COUNT_DTOR(nsDisplayXULTextBox); }
+  MOZ_COUNTED_DTOR_OVERRIDE(nsDisplayXULTextBox)
 #endif
 
   virtual void Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) override;

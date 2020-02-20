@@ -995,7 +995,7 @@ class GroupInfo final {
 
  private:
   // Private destructor, to discourage deletion outside of Release():
-  ~GroupInfo() { MOZ_COUNT_DTOR(GroupInfo); }
+  MOZ_COUNTED_DTOR(GroupInfo)
 
   already_AddRefed<OriginInfo> LockedGetOriginInfo(const nsACString& aOrigin);
 
@@ -1024,9 +1024,9 @@ class GroupInfoPair {
   friend class QuotaObject;
 
  public:
-  GroupInfoPair() { MOZ_COUNT_CTOR(GroupInfoPair); }
+  MOZ_COUNTED_DEFAULT_CTOR(GroupInfoPair)
 
-  ~GroupInfoPair() { MOZ_COUNT_DTOR(GroupInfoPair); }
+  MOZ_COUNTED_DTOR(GroupInfoPair)
 
  private:
   already_AddRefed<GroupInfo> LockedGetGroupInfo(

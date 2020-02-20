@@ -63,9 +63,7 @@ class nsDisplayCanvas final : public nsPaintedDisplayItem {
       : nsPaintedDisplayItem(aBuilder, aFrame) {
     MOZ_COUNT_CTOR(nsDisplayCanvas);
   }
-#ifdef NS_BUILD_REFCNT_LOGGING
-  virtual ~nsDisplayCanvas() { MOZ_COUNT_DTOR(nsDisplayCanvas); }
-#endif
+  MOZ_COUNTED_DTOR_OVERRIDE(nsDisplayCanvas)
 
   NS_DISPLAY_DECL_NAME("nsDisplayCanvas", TYPE_CANVAS)
 
