@@ -82,6 +82,13 @@ VRManager* VRManager::Get() {
   return sVRManagerSingleton;
 }
 
+/* static */
+VRManager* VRManager::MaybeGet() {
+  MOZ_ASSERT(XRE_IsParentProcess() || XRE_IsGPUProcess());
+
+  return sVRManagerSingleton;
+}
+
 Atomic<uint32_t> VRManager::sDisplayBase(0);
 
 /* static */
@@ -1117,6 +1124,22 @@ void VRManager::Shutdown() {
   // We will close Shmem in the DTOR to avoid
   // mSubmitThread is still running but its shmem
   // has been released.
+}
+
+void VRManager::ShutdownVRManagerParents() {
+  // Close removes the CanvasParent from the set so take a copy first.
+  VRManagerParentSet vrManagerParents;
+  for (auto iter = mVRManagerParents.Iter(); !iter.Done(); iter.Next()) {
+    vrManagerParents.PutEntry(iter.Get()->GetKey());
+  }
+
+  for (auto iter = vrManagerParents.Iter(); !iter.Done(); iter.Next()) {
+    iter.Get()->GetKey()->Close();
+    iter.Remove();
+  }
+
+  MOZ_DIAGNOSTIC_ASSERT(mVRManagerParents.IsEmpty(),
+                        "Closing should have cleared all entries.");
 }
 
 void VRManager::CheckWatchDog() {
