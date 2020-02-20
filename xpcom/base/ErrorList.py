@@ -880,7 +880,6 @@ with modules["SECURITY"]:
 with modules["DOM_XPATH"]:
     # DOM error codes from http://www.w3.org/TR/DOM-Level-3-XPath/
     errors["NS_ERROR_DOM_INVALID_EXPRESSION_ERR"] = FAILURE(51)
-    errors["NS_ERROR_DOM_TYPE_ERR"] = FAILURE(52)
 
 
 # =======================================================================
