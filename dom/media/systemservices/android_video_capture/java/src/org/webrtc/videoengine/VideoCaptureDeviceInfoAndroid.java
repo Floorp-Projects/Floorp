@@ -37,17 +37,11 @@ public class VideoCaptureDeviceInfoAndroid {
   @WebRTCJNITarget
   private static CaptureCapabilityAndroid[] getDeviceInfo() {
       final Context context = GeckoAppShell.getApplicationContext();
-      final boolean hasPermissions = Permissions.has(
-              context, Manifest.permission.CAMERA);
 
-      if (hasPermissions) {
-          if (Camera2Enumerator.isSupported(context)) {
-              return createDeviceList(new Camera2Enumerator(context));
-          } else {
-              return createDeviceList(new Camera1Enumerator());
-          }
+      if (Camera2Enumerator.isSupported(context)) {
+          return createDeviceList(new Camera2Enumerator(context));
       } else {
-          return new CaptureCapabilityAndroid[0];
+          return createDeviceList(new Camera1Enumerator());
       }
   }
 
