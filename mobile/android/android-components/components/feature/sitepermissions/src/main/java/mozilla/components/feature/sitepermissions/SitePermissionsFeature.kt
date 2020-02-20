@@ -26,6 +26,8 @@ import mozilla.components.browser.session.runWithSessionIdOrSelected
 import mozilla.components.concept.engine.permission.Permission
 import mozilla.components.concept.engine.permission.Permission.ContentAudioCapture
 import mozilla.components.concept.engine.permission.Permission.ContentAudioMicrophone
+import mozilla.components.concept.engine.permission.Permission.ContentAutoPlayAudible
+import mozilla.components.concept.engine.permission.Permission.ContentAutoPlayInaudible
 import mozilla.components.concept.engine.permission.Permission.ContentGeoLocation
 import mozilla.components.concept.engine.permission.Permission.ContentNotification
 import mozilla.components.concept.engine.permission.Permission.ContentVideoCamera
@@ -229,7 +231,8 @@ class SitePermissionsFeature(
             storage.findSitePermissionsBy(request.host)
         }
 
-        val prompt = if (shouldApplyRules(permissionFromStorage)) {
+        val prompt = if (shouldApplyRules(permissionFromStorage) ||
+            request.isForAutoplay()) {
             handleRuledFlow(request, session)
         } else {
             handleNoRuledFlow(permissionFromStorage, request, session)
@@ -267,15 +270,28 @@ class SitePermissionsFeature(
         permissionRequest: PermissionRequest,
         session: Session
     ): SitePermissionsDialogFragment? {
-        val action = requireNotNull(sitePermissionsRules).getActionFrom(permissionRequest)
-        return when (action) {
-            SitePermissionsRules.Action.BLOCKED -> {
-                permissionRequest.reject()
-                session.contentPermissionRequest.consume { true }
-                null
-            }
-            SitePermissionsRules.Action.ASK_TO_ALLOW -> {
-                createPrompt(permissionRequest, session)
+        // For now we only support autoplay via sitePermissionsRules until we add support for
+        // autoplay for specific sites see Fenix issue  #8603
+        return if (permissionRequest.isForAutoplay() && sitePermissionsRules == null) {
+            permissionRequest.reject()
+            session.contentPermissionRequest.consume { true }
+            null
+        } else {
+            val action = requireNotNull(sitePermissionsRules).getActionFrom(permissionRequest)
+            when (action) {
+                SitePermissionsRules.Action.ALLOWED -> {
+                    permissionRequest.grant()
+                    session.contentPermissionRequest.consume { true }
+                    null
+                }
+                SitePermissionsRules.Action.BLOCKED -> {
+                    permissionRequest.reject()
+                    session.contentPermissionRequest.consume { true }
+                    null
+                }
+                SitePermissionsRules.Action.ASK_TO_ALLOW -> {
+                    createPrompt(permissionRequest, session)
+                }
             }
         }
     }
@@ -318,6 +334,9 @@ class SitePermissionsFeature(
         return sitePermissions
     }
 
+    private fun PermissionRequest.isForAutoplay() =
+        this.permissions.any { it is ContentAutoPlayInaudible || it is ContentAutoPlayAudible }
+
     private fun updateSitePermissionsStatus(
         status: SitePermissions.Status,
         permission: Permission,
@@ -335,6 +354,12 @@ class SitePermissionsFeature(
             }
             is ContentVideoCamera, is ContentVideoCapture -> {
                 sitePermissions.copy(camera = status)
+            }
+            is ContentAutoPlayAudible -> {
+                sitePermissions.copy(autoplayAudible = status)
+            }
+            is ContentAutoPlayInaudible -> {
+                sitePermissions.copy(autoplayInaudible = status)
             }
             else ->
                 throw InvalidParameterException("$permission is not a valid permission.")
@@ -572,7 +597,8 @@ private fun Permission.isSupported(): Boolean {
         is ContentGeoLocation,
         is ContentNotification,
         is ContentAudioCapture, is ContentAudioMicrophone,
-        is ContentVideoCamera, is ContentVideoCapture -> true
+        is ContentVideoCamera, is ContentVideoCapture,
+        is ContentAutoPlayAudible, is ContentAutoPlayInaudible -> true
         else -> false
     }
 }

@@ -17,6 +17,8 @@ import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.permission.Permission
 import mozilla.components.concept.engine.permission.Permission.ContentAudioCapture
 import mozilla.components.concept.engine.permission.Permission.ContentAudioMicrophone
+import mozilla.components.concept.engine.permission.Permission.ContentAutoPlayAudible
+import mozilla.components.concept.engine.permission.Permission.ContentAutoPlayInaudible
 import mozilla.components.concept.engine.permission.Permission.ContentGeoLocation
 import mozilla.components.concept.engine.permission.Permission.ContentNotification
 import mozilla.components.concept.engine.permission.Permission.ContentVideoCamera
@@ -235,7 +237,9 @@ class SitePermissionsFeatureTest {
             location = SitePermissionsRules.Action.BLOCKED,
             camera = SitePermissionsRules.Action.ASK_TO_ALLOW,
             notification = SitePermissionsRules.Action.ASK_TO_ALLOW,
-            microphone = SitePermissionsRules.Action.BLOCKED
+            microphone = SitePermissionsRules.Action.BLOCKED,
+            autoplayAudible = SitePermissionsRules.Action.BLOCKED,
+            autoplayInaudible = SitePermissionsRules.Action.ASK_TO_ALLOW
         )
 
         sitePermissionFeature.sitePermissionsRules = rules
@@ -286,6 +290,128 @@ class SitePermissionsFeatureTest {
     }
 
     @Test
+    fun `only autoplay requests should use default rules instead of site rules`() {
+        val siteRules = SitePermissions(
+            location = BLOCKED,
+            camera = BLOCKED,
+            notification = BLOCKED,
+            microphone = BLOCKED,
+            autoplayAudible = BLOCKED,
+            autoplayInaudible = BLOCKED,
+            origin = "any",
+            savedAt = 1
+        )
+        val defaultRules = SitePermissionsRules(
+            location = SitePermissionsRules.Action.ALLOWED,
+            camera = SitePermissionsRules.Action.ALLOWED,
+            notification = SitePermissionsRules.Action.ALLOWED,
+            microphone = SitePermissionsRules.Action.ALLOWED,
+            autoplayAudible = SitePermissionsRules.Action.ALLOWED,
+            autoplayInaudible = SitePermissionsRules.Action.ALLOWED
+        )
+
+        doReturn(siteRules).`when`(mockStorage).findSitePermissionsBy(anyString())
+        sitePermissionFeature.sitePermissionsRules = defaultRules
+
+        fun testPermission(permission: Permission, shouldUseDefaultRules: Boolean) {
+            var grantWasCalled = false
+            var rejectWasCalled = false
+
+            val permissionRequest: PermissionRequest = object : PermissionRequest {
+                override val uri: String?
+                    get() = "http://www.mozilla.org"
+                override val permissions: List<Permission>
+                    get() = listOf(permission)
+
+                override fun grant(permissions: List<Permission>) {
+                    grantWasCalled = true
+                }
+
+                override fun reject() {
+                    rejectWasCalled = true
+                }
+            }
+
+            mockStorage = mock()
+            val session = getSelectedSession()
+            session.contentPermissionRequest = Consumable.from(permissionRequest)
+
+            runBlocking {
+                val prompt = sitePermissionFeature.onContentPermissionRequested(session, permissionRequest)
+
+                assertTrue(grantWasCalled == shouldUseDefaultRules)
+                assertTrue(rejectWasCalled != shouldUseDefaultRules)
+                assertNull(prompt)
+            }
+        }
+
+        listOf(ContentAutoPlayInaudible(), ContentAutoPlayAudible()).forEach {
+            testPermission(permission = it, shouldUseDefaultRules = true)
+        }
+        listOf(
+            ContentGeoLocation(),
+            ContentNotification(),
+            ContentAudioCapture(),
+            ContentAudioMicrophone()
+        ).forEach {
+            testPermission(permission = it, shouldUseDefaultRules = false)
+        }
+    }
+
+    @Test
+    fun `autoplay requests should be denied if sitePermissionsRules is null`() {
+        val siteRules = SitePermissions(
+            location = ALLOWED,
+            camera = ALLOWED,
+            notification = ALLOWED,
+            microphone = ALLOWED,
+            autoplayAudible = ALLOWED,
+            autoplayInaudible = ALLOWED,
+            origin = "any",
+            savedAt = 1
+        )
+
+        doReturn(siteRules).`when`(mockStorage).findSitePermissionsBy(anyString())
+        sitePermissionFeature.sitePermissionsRules = null
+
+        fun assertPermissionRejected(permission: Permission) {
+            var grantWasCalled = false
+            var rejectWasCalled = false
+
+            val permissionRequest: PermissionRequest = object : PermissionRequest {
+                override val uri: String?
+                    get() = "http://www.mozilla.org"
+                override val permissions: List<Permission>
+                    get() = listOf(permission)
+
+                override fun grant(permissions: List<Permission>) {
+                    grantWasCalled = true
+                }
+
+                override fun reject() {
+                    rejectWasCalled = true
+                }
+            }
+
+            mockStorage = mock()
+            val session = getSelectedSession()
+            session.contentPermissionRequest = Consumable.from(permissionRequest)
+
+            runBlocking {
+                val prompt = sitePermissionFeature.onContentPermissionRequested(session, permissionRequest)
+
+                assertFalse(grantWasCalled)
+                assertTrue(rejectWasCalled)
+                assertNull(prompt)
+            }
+        }
+
+        listOf(ContentAutoPlayInaudible(), ContentAutoPlayAudible()).forEach {
+            assertPermissionRejected(permission = it)
+        }
+    }
+
+    @Test
     fun `storing a new SitePermissions must call save on the store`() {
         val sitePermissionsList = listOf(ContentGeoLocation())
         val request: PermissionRequest = mock()
@@ -325,6 +451,8 @@ class SitePermissionsFeatureTest {
             ContentNotification(),
             ContentAudioCapture(),
             ContentAudioMicrophone(),
+            ContentAutoPlayAudible(),
+            ContentAutoPlayInaudible(),
             Generic(id = null)
         )
 

@@ -35,6 +35,14 @@ class GeckoPermissionRequestTest {
         assertEquals(uri, request.uri)
         assertEquals(listOf(Permission.ContentGeoLocation()), request.permissions)
 
+        request = GeckoPermissionRequest.Content(uri, GeckoSession.PermissionDelegate.PERMISSION_AUTOPLAY_AUDIBLE, callback)
+        assertEquals(uri, request.uri)
+        assertEquals(listOf(Permission.ContentAutoPlayAudible()), request.permissions)
+
+        request = GeckoPermissionRequest.Content(uri, GeckoSession.PermissionDelegate.PERMISSION_AUTOPLAY_INAUDIBLE, callback)
+        assertEquals(uri, request.uri)
+        assertEquals(listOf(Permission.ContentAutoPlayInaudible()), request.permissions)
+
         request = GeckoPermissionRequest.Content(uri, 1234, callback)
         assertEquals(uri, request.uri)
         assertEquals(listOf(Permission.Generic("1234", "Gecko permission type = 1234")), request.permissions)

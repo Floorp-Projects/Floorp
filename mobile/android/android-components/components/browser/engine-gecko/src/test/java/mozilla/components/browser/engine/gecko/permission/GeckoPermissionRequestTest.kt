@@ -16,6 +16,8 @@ import org.junit.runner.RunWith
 import org.mockito.Mockito.verify
 import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.GeckoSession.PermissionDelegate.MediaSource
+import org.mozilla.geckoview.GeckoSession.PermissionDelegate.PERMISSION_AUTOPLAY_AUDIBLE
+import org.mozilla.geckoview.GeckoSession.PermissionDelegate.PERMISSION_AUTOPLAY_INAUDIBLE
 import org.mozilla.geckoview.GeckoSession.PermissionDelegate.PERMISSION_DESKTOP_NOTIFICATION
 import org.mozilla.geckoview.GeckoSession.PermissionDelegate.PERMISSION_GEOLOCATION
 
@@ -34,6 +36,14 @@ class GeckoPermissionRequestTest {
         request = GeckoPermissionRequest.Content(uri, PERMISSION_GEOLOCATION, callback)
         assertEquals(uri, request.uri)
         assertEquals(listOf(Permission.ContentGeoLocation()), request.permissions)
+
+        request = GeckoPermissionRequest.Content(uri, PERMISSION_AUTOPLAY_AUDIBLE, callback)
+        assertEquals(uri, request.uri)
+        assertEquals(listOf(Permission.ContentAutoPlayAudible()), request.permissions)
+
+        request = GeckoPermissionRequest.Content(uri, PERMISSION_AUTOPLAY_INAUDIBLE, callback)
+        assertEquals(uri, request.uri)
+        assertEquals(listOf(Permission.ContentAutoPlayInaudible()), request.permissions)
 
         request = GeckoPermissionRequest.Content(uri, 1234, callback)
         assertEquals(uri, request.uri)

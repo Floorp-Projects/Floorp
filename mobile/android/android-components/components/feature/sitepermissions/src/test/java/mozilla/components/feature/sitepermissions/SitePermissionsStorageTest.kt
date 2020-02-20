@@ -18,6 +18,8 @@ import mozilla.components.feature.sitepermissions.SitePermissionsStorage.Permiss
 import mozilla.components.feature.sitepermissions.SitePermissionsStorage.Permission.LOCATION
 import mozilla.components.feature.sitepermissions.SitePermissionsStorage.Permission.MICROPHONE
 import mozilla.components.feature.sitepermissions.SitePermissionsStorage.Permission.NOTIFICATION
+import mozilla.components.feature.sitepermissions.SitePermissionsStorage.Permission.AUTOPLAY_AUDIBLE
+import mozilla.components.feature.sitepermissions.SitePermissionsStorage.Permission.AUTOPLAY_INAUDIBLE
 import mozilla.components.feature.sitepermissions.db.SitePermissionsDao
 import mozilla.components.feature.sitepermissions.db.SitePermissionsDatabase
 import mozilla.components.feature.sitepermissions.db.SitePermissionsEntity
@@ -84,6 +86,8 @@ class SitePermissionsStorageTest {
         assertFalse(LOCATION in map)
         assertFalse(NOTIFICATION in map)
         assertFalse(CAMERA in map)
+        assertFalse(AUTOPLAY_AUDIBLE in map)
+        assertFalse(AUTOPLAY_INAUDIBLE in map)
         assertEquals(2, map[BLUETOOTH]?.size)
         assertEquals(2, map[MICROPHONE]?.size)
     }
@@ -142,6 +146,8 @@ class SitePermissionsStorageTest {
                 microphone = ALLOWED,
                 camera = BLOCKED,
                 bluetooth = ALLOWED,
+                autoplayAudible = BLOCKED,
+                autoplayInaudible = NO_DECISION,
                 savedAt = 0
             ),
             SitePermissionsEntity(
@@ -152,6 +158,8 @@ class SitePermissionsStorageTest {
                 microphone = ALLOWED,
                 camera = BLOCKED,
                 bluetooth = ALLOWED,
+                autoplayAudible = BLOCKED,
+                autoplayInaudible = NO_DECISION,
                 savedAt = 0
             )
         )
