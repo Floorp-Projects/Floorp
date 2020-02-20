@@ -125,39 +125,6 @@ async function withMerchantTab(
   });
 }
 
-/**
- * Load the privileged payment dialog wrapper document in a new tab and run the
- * task function.
- *
- * @param {string} requestId of the PaymentRequest
- * @param {Function} taskFn to run in the dialog with the frame as an argument.
- * @returns {Promise} which resolves when the dialog document is loaded
- */
-function withNewDialogFrame(requestId, taskFn) {
-  async function dialogTabTask(dialogBrowser) {
-    let paymentRequestFrame = dialogBrowser.contentDocument.getElementById(
-      "paymentRequestFrame"
-    );
-    // Ensure the inner frame is loaded
-    await spawnPaymentDialogTask(
-      paymentRequestFrame,
-      async function ensureLoaded() {
-        await ContentTaskUtils.waitForCondition(
-          () => content.document.readyState == "complete",
-          "Waiting for the unprivileged frame to load"
-        );
-      }
-    );
-    await taskFn(paymentRequestFrame);
-  }
-
-  let args = {
-    gBrowser,
-    url: `chrome://payments/content/paymentDialogWrapper.xul?requestId=${requestId}`,
-  };
-  return BrowserTestUtils.withNewTab(args, dialogTabTask);
-}
-
 async function withNewTabInPrivateWindow(args = {}, taskFn) {
   let privateWin = await BrowserTestUtils.openNewBrowserWindow({
     private: true,
@@ -167,23 +134,6 @@ async function withNewTabInPrivateWindow(args = {}, taskFn) {
   });
   await withMerchantTab(tabArgs, taskFn);
   await BrowserTestUtils.closeWindow(privateWin);
-}
-
-/**
- * Spawn a content task inside the inner unprivileged frame of a privileged Payment Request dialog.
- *
- * @param {string} requestId
- * @param {Function} contentTaskFn
- * @param {object?} [args = null] for the content task
- * @returns {Promise}
- */
-function spawnTaskInNewDialog(requestId, contentTaskFn, args = null) {
-  return withNewDialogFrame(
-    requestId,
-    async function spawnTaskInNewDialog_tabTask(reqFrame) {
-      await spawnPaymentDialogTask(reqFrame, contentTaskFn, args);
-    }
-  );
 }
 
 async function addAddressRecord(address) {
