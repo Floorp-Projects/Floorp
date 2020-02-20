@@ -404,15 +404,17 @@ class Bootstrapper(object):
     def bootstrap(self):
         if self.choice is None:
             # Like ['1. Firefox for Desktop', '2. Firefox for Android Artifact Mode', ...].
-            labels = ['%s. %s' % (i + 1, name) for (i, (name, _)) in enumerate(APPLICATIONS)]
+            labels = ['%s. %s' % (i, name) for i, name in enumerate(APPLICATIONS.keys(), 1)]
             prompt = APPLICATION_CHOICE % '\n'.join('  {}'.format(label) for label in labels)
             prompt_choice = self.instance.prompt_int(prompt=prompt, low=1, high=len(APPLICATIONS))
             name, application = APPLICATIONS.items()[prompt_choice-1]
-        elif self.choice not in APPLICATIONS.keys():
+        elif self.choice in APPLICATIONS.keys():
+            name, application = self.choice, APPLICATIONS[self.choice]
+        elif self.choice in APPLICATIONS.values():
+            name, application = next((k, v) for k, v in APPLICATIONS.items() if v == self.choice)
+        else:
             raise Exception('Please pick a valid application choice: (%s)' %
                             '/'.join(APPLICATIONS.keys()))
-        else:
-            name, application = APPLICATIONS.items()[self.choice]
 
         self.instance.application = application
         self.instance.artifact_mode = 'artifact_mode' in application
