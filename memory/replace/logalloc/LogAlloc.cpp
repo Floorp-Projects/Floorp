@@ -133,10 +133,14 @@ void replace_init(malloc_table_t* aTable, ReplaceMallocBridge** aBridge) {
   /* Initialize output file descriptor from the MALLOC_LOG environment
    * variable. Numbers up to 9999 are considered as a preopened file
    * descriptor number. Other values are considered as a file name. */
+#ifdef _WIN32
+  wchar_t* log = _wgetenv(L"MALLOC_LOG");
+#else
   char* log = getenv("MALLOC_LOG");
+#endif
   if (log && *log) {
     int fd = 0;
-    const char* fd_num = log;
+    const auto* fd_num = log;
     while (*fd_num) {
       /* Reject non digits. */
       if (*fd_num < '0' || *fd_num > '9') {
@@ -161,7 +165,7 @@ void replace_init(malloc_table_t* aTable, ReplaceMallocBridge** aBridge) {
       handle = reinterpret_cast<HANDLE>(_get_osfhandle(fd));
     } else {
       handle =
-          CreateFileA(log, FILE_APPEND_DATA, FILE_SHARE_READ | FILE_SHARE_WRITE,
+          CreateFileW(log, FILE_APPEND_DATA, FILE_SHARE_READ | FILE_SHARE_WRITE,
                       nullptr, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
     }
     if (handle != INVALID_HANDLE_VALUE) {
