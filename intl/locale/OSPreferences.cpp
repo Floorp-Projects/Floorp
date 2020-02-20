@@ -54,19 +54,7 @@ void OSPreferences::Refresh() {
  * It returns true if the canonicalization was successful.
  */
 bool OSPreferences::CanonicalizeLanguageTag(nsCString& aLoc) {
-  char langTag[512];
-
-  UErrorCode status = U_ZERO_ERROR;
-
-  int32_t langTagLen = uloc_toLanguageTag(aLoc.get(), langTag,
-                                          sizeof(langTag) - 1, false, &status);
-
-  if (U_FAILURE(status)) {
-    return false;
-  }
-
-  aLoc.Assign(langTag, langTagLen);
-  return true;
+  return LocaleService::CanonicalizeLanguageId(aLoc);
 }
 
 /**
@@ -291,7 +279,9 @@ OSPreferences::GetRegionalPrefsLocales(nsTArray<nsCString>& aRetVal) {
     return NS_OK;
   }
 
-  return NS_ERROR_FAILURE;
+  // If we failed to read regional prefs locales,
+  // use system locales as last fallback.
+  return GetSystemLocales(aRetVal);
 }
 
 static OSPreferences::DateTimeFormatStyle ToDateTimeFormatStyle(
