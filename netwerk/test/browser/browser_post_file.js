@@ -16,28 +16,6 @@ async function readFile(path) {
   return decoder.decode(array);
 }
 
-function frameScript() {
-  const { setTimeout } = ChromeUtils.import("resource://gre/modules/Timer.jsm");
-  addMessageListener("Test:WaitForIFrame", function() {
-    var check = function() {
-      if (content) {
-        var frame = content.document.getElementById("frame");
-        if (frame) {
-          var okBox = frame.contentDocument.getElementById("action_file_ok");
-          if (okBox) {
-            sendAsyncMessage("Test:IFrameLoaded");
-            return;
-          }
-        }
-      }
-
-      setTimeout(check, 100);
-    };
-
-    check();
-  });
-}
-
 add_task(async function() {
   var postFilename = "post_file.html";
   var actionFilename = "action_file.html";
@@ -76,24 +54,19 @@ add_task(async function() {
   var actionPath = await createTestFile(actionFilename, actionFileContent);
 
   var postURI = OS.Path.toFileURI(postPath);
+  var actionURI = OS.Path.toFileURI(actionPath);
 
-  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, postURI);
-  let browser = gBrowser.selectedBrowser;
-  browser.messageManager.loadFrameScript(
-    "data:,(" + frameScript.toString() + ")();",
-    true
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "about:blank"
   );
-  await new Promise(resolve => {
-    let manager = browser.messageManager;
-
-    function listener() {
-      manager.removeMessageListener("Test:IFrameLoaded", listener);
-      resolve();
-    }
-
-    manager.addMessageListener("Test:IFrameLoaded", listener);
-    manager.sendAsyncMessage("Test:WaitForIFrame");
-  });
+  let browserLoadedPromise = BrowserTestUtils.browserLoaded(
+    tab.linkedBrowser,
+    true,
+    actionURI
+  );
+  BrowserTestUtils.loadURI(tab.linkedBrowser, postURI);
+  await browserLoadedPromise;
 
   var actionFileContentAfter = await readFile(actionPath);
   is(actionFileContentAfter, actionFileContent, "action file is not modified");
