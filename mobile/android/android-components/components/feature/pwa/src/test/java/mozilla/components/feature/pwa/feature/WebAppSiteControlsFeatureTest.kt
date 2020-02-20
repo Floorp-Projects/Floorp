@@ -27,7 +27,7 @@ class WebAppSiteControlsFeatureTest {
     fun `register receiver on resume`() {
         val context = spy(testContext)
 
-        val feature = WebAppSiteControlsFeature(context, mock(), mock(), "session-id", mock())
+        val feature = WebAppSiteControlsFeature(context, mock(), "session-id", mock())
         feature.onResume()
 
         verify(context).registerReceiver(eq(feature), any())
@@ -39,7 +39,7 @@ class WebAppSiteControlsFeatureTest {
 
         doNothing().`when`(context).unregisterReceiver(any())
 
-        val feature = WebAppSiteControlsFeature(context, mock(), mock(), "session-id", mock())
+        val feature = WebAppSiteControlsFeature(context, mock(), "session-id", mock())
         feature.onPause()
 
         verify(context).unregisterReceiver(feature)
