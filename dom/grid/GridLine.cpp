@@ -30,7 +30,7 @@ GridLine::GridLine(GridLines* aParent)
   MOZ_ASSERT(aParent, "Should never be instantiated with a null GridLines");
 }
 
-GridLine::~GridLine() {}
+GridLine::~GridLine() = default;
 
 void GridLine::GetNames(nsTArray<nsString>& aNames) const {
   aNames.SetCapacity(mNames.Length());

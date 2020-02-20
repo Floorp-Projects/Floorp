@@ -27,7 +27,7 @@ GridLines::GridLines(GridDimension* aParent) : mParent(aParent) {
   MOZ_ASSERT(aParent, "Should never be instantiated with a null GridDimension");
 }
 
-GridLines::~GridLines() {}
+GridLines::~GridLines() = default;
 
 JSObject* GridLines::WrapObject(JSContext* aCx,
                                 JS::Handle<JSObject*> aGivenProto) {
