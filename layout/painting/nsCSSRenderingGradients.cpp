@@ -225,6 +225,17 @@ static Tuple<CSSPoint, CSSPoint, CSSCoord, CSSCoord> ComputeRadialGradientLine(
   return MakeTuple(start, end, radiusX, radiusY);
 }
 
+// Compute the center and the start angle of the conic gradient.
+static Tuple<CSSPoint, float> ComputeConicGradientProperties(
+    const StyleGradient& aGradient, const CSSSize& aBoxSize) {
+  const auto& conic = aGradient.AsConic();
+  const Position& position = conic.position;
+  float angle = static_cast<float>(conic.angle.ToRadians());
+  CSSPoint center = ResolvePosition(position, aBoxSize);
+
+  return MakeTuple(center, angle);
+}
+
 static float Interpolate(float aF1, float aF2, float aFrac) {
   return aF1 + aFrac * (aF2 - aF1);
 }
@@ -563,22 +574,40 @@ static Maybe<double> GetSpecifiedGradientPosition(
   return Some(pos.ResolveToCSSPixels(aLineLength) / aLineLength);
 }
 
-static nsTArray<ColorStop> ComputeColorStops(ComputedStyle* aComputedStyle,
-                                             const StyleGradient& aGradient,
-                                             CSSCoord aLineLength) {
-  auto items = aGradient.IsLinear() ? aGradient.AsLinear().items.AsSpan()
-                                    : aGradient.AsRadial().items.AsSpan();
+// aLineLength argument is unused for conic-gradients.
+static Maybe<double> GetSpecifiedGradientPosition(
+    const StyleGenericGradientItem<StyleColor, StyleAngleOrPercentage>& aItem,
+    CSSCoord aLineLength) {
+  if (aItem.IsSimpleColorStop()) {
+    return Nothing();
+  }
 
-  MOZ_ASSERT(items.Length() >= 2,
+  const StyleAngleOrPercentage& pos = aItem.IsComplexColorStop()
+                                          ? aItem.AsComplexColorStop().position
+                                          : aItem.AsInterpolationHint();
+
+  if (pos.IsPercentage()) {
+    return Some(pos.AsPercentage()._0);
+  }
+
+  return Some(pos.AsAngle().ToRadians() / (2 * M_PI));
+}
+
+template <typename T>
+static nsTArray<ColorStop> ComputeColorStopsForItems(
+    ComputedStyle* aComputedStyle,
+    Span<const StyleGenericGradientItem<StyleColor, T>> aItems,
+    CSSCoord aLineLength) {
+  MOZ_ASSERT(aItems.Length() >= 2,
              "The parser should reject gradients with less than two stops");
 
-  nsTArray<ColorStop> stops(items.Length());
+  nsTArray<ColorStop> stops(aItems.Length());
 
   // If there is a run of stops before stop i that did not have specified
   // positions, then this is the index of the first stop in that run.
   Maybe<size_t> firstUnsetPosition;
-  for (size_t i = 0; i < items.Length(); ++i) {
-    const auto& stop = items[i];
+  for (size_t i = 0; i < aItems.Length(); ++i) {
+    const auto& stop = aItems[i];
     double position;
 
     Maybe<double> specifiedPosition =
@@ -589,7 +618,7 @@ static nsTArray<ColorStop> ComputeColorStops(ComputedStyle* aComputedStyle,
     } else if (i == 0) {
       // First stop defaults to position 0.0
       position = 0.0;
-    } else if (i == items.Length() - 1) {
+    } else if (i == aItems.Length() - 1) {
       // Last stop defaults to position 1.0
       position = 1.0;
     } else {
@@ -634,6 +663,21 @@ static nsTArray<ColorStop> ComputeColorStops(ComputedStyle* aComputedStyle,
   return stops;
 }
 
+static nsTArray<ColorStop> ComputeColorStops(ComputedStyle* aComputedStyle,
+                                             const StyleGradient& aGradient,
+                                             CSSCoord aLineLength) {
+  if (aGradient.IsLinear()) {
+    return ComputeColorStopsForItems(
+        aComputedStyle, aGradient.AsLinear().items.AsSpan(), aLineLength);
+  }
+  if (aGradient.IsRadial()) {
+    return ComputeColorStopsForItems(
+        aComputedStyle, aGradient.AsRadial().items.AsSpan(), aLineLength);
+  }
+  return ComputeColorStopsForItems(
+      aComputedStyle, aGradient.AsConic().items.AsSpan(), aLineLength);
+}
+
 nsCSSGradientRenderer nsCSSGradientRenderer::Create(
     nsPresContext* aPresContext, ComputedStyle* aComputedStyle,
     const StyleGradient& aGradient, const nsSize& aIntrinsicSize) {
@@ -641,18 +685,25 @@ nsCSSGradientRenderer nsCSSGradientRenderer::Create(
 
   // Compute "gradient line" start and end relative to the intrinsic size of
   // the gradient.
-  CSSPoint lineStart, lineEnd;
-  CSSCoord radiusX = 0, radiusY = 0;  // for radial gradients only
+  CSSPoint lineStart, lineEnd, center;  // center is for conic gradients only
+  CSSCoord radiusX = 0, radiusY = 0;    // for radial gradients only
+  float angle = 0.0;                    // for conic gradients only
   if (aGradient.IsLinear()) {
     Tie(lineStart, lineEnd) =
         ComputeLinearGradientLine(aPresContext, aGradient, srcSize);
-  } else {
+  } else if (aGradient.IsRadial()) {
     Tie(lineStart, lineEnd, radiusX, radiusY) =
         ComputeRadialGradientLine(aGradient, srcSize);
+  } else {
+    MOZ_ASSERT(aGradient.IsConic());
+    Tie(center, angle) = ComputeConicGradientProperties(aGradient, srcSize);
   }
   // Avoid sending Infs or Nans to downwind draw targets.
   if (!lineStart.IsFinite() || !lineEnd.IsFinite()) {
     lineStart = lineEnd = CSSPoint(0, 0);
+  }
+  if (!center.IsFinite()) {
+    center = CSSPoint(0, 0);
   }
   CSSCoord lineLength =
       NS_hypot(lineEnd.x - lineStart.x, lineEnd.y - lineStart.y);
@@ -677,6 +728,11 @@ nsCSSGradientRenderer nsCSSGradientRenderer::Create(
   };
   renderer.mRadiusX = aPresContext->CSSPixelsToDevPixels(radiusX);
   renderer.mRadiusY = aPresContext->CSSPixelsToDevPixels(radiusY);
+  renderer.mCenter = {
+      aPresContext->CSSPixelsToDevPixels(center.x),
+      aPresContext->CSSPixelsToDevPixels(center.y),
+  };
+  renderer.mAngle = angle;
   return renderer;
 }
 
@@ -869,8 +925,7 @@ void nsCSSGradientRenderer::Paint(gfxContext& aContext, const nsRect& aDest,
 
     gradientPattern = new gfxPattern(gradientStart.x, gradientStart.y,
                                      gradientEnd.x, gradientEnd.y);
-  } else {
-    MOZ_ASSERT(mGradient->IsRadial());
+  } else if (mGradient->IsRadial()) {
     NS_ASSERTION(firstStop >= 0.0,
                  "Negative stops not allowed for radial gradients");
 
@@ -895,6 +950,9 @@ void nsCSSGradientRenderer::Paint(gfxContext& aContext, const nsRect& aDest,
       matrix.PreScale(1.0, mRadiusX / mRadiusY);
       matrix.PreTranslate(-mLineStart);
     }
+  } else {
+    // conic-gradient is only implemented for WebRender
+    return;
   }
   // Use a pattern transform to take account of source and dest rects
   matrix.PreTranslate(gfxPoint(mPresContext->CSSPixelsToDevPixels(aSrc.x),
@@ -1120,7 +1178,8 @@ bool nsCSSGradientRenderer::TryPaintTilesWithExtendMode(
 void nsCSSGradientRenderer::BuildWebRenderParameters(
     float aOpacity, wr::ExtendMode& aMode, nsTArray<wr::GradientStop>& aStops,
     LayoutDevicePoint& aLineStart, LayoutDevicePoint& aLineEnd,
-    LayoutDeviceSize& aGradientRadius) {
+    LayoutDeviceSize& aGradientRadius, LayoutDevicePoint& aGradientCenter,
+    float& aGradientAngle) {
   aMode =
       mGradient->Repeating() ? wr::ExtendMode::Repeat : wr::ExtendMode::Clamp;
 
@@ -1136,6 +1195,8 @@ void nsCSSGradientRenderer::BuildWebRenderParameters(
   aLineStart = LayoutDevicePoint(mLineStart.x, mLineStart.y);
   aLineEnd = LayoutDevicePoint(mLineEnd.x, mLineEnd.y);
   aGradientRadius = LayoutDeviceSize(mRadiusX, mRadiusY);
+  aGradientCenter = LayoutDevicePoint(mCenter.x, mCenter.y);
+  aGradientAngle = mAngle;
 }
 
 void nsCSSGradientRenderer::BuildWebRenderDisplayItems(
@@ -1151,8 +1212,10 @@ void nsCSSGradientRenderer::BuildWebRenderDisplayItems(
   LayoutDevicePoint lineStart;
   LayoutDevicePoint lineEnd;
   LayoutDeviceSize gradientRadius;
+  LayoutDevicePoint gradientCenter;
+  float gradientAngle;
   BuildWebRenderParameters(aOpacity, extendMode, stops, lineStart, lineEnd,
-                           gradientRadius);
+                           gradientRadius, gradientCenter, gradientAngle);
 
   nscoord appUnitsPerDevPixel = mPresContext->AppUnitsPerDevPixel();
 
@@ -1188,6 +1251,9 @@ void nsCSSGradientRenderer::BuildWebRenderDisplayItems(
   lineStart.x = (lineStart.x - srcTransform.x) * srcTransform.width;
   lineStart.y = (lineStart.y - srcTransform.y) * srcTransform.height;
 
+  gradientCenter.x = (gradientCenter.x - srcTransform.x) * srcTransform.width;
+  gradientCenter.y = (gradientCenter.y - srcTransform.y) * srcTransform.height;
+
   if (mGradient->IsLinear()) {
     lineEnd.x = (lineEnd.x - srcTransform.x) * srcTransform.width;
     lineEnd.y = (lineEnd.y - srcTransform.y) * srcTransform.height;
@@ -1199,8 +1265,7 @@ void nsCSSGradientRenderer::BuildWebRenderDisplayItems(
         mozilla::wr::ToLayoutPoint(lineEnd), stops, extendMode,
         mozilla::wr::ToLayoutSize(firstTileBounds.Size()),
         mozilla::wr::ToLayoutSize(tileSpacing));
-  } else {
-    MOZ_ASSERT(mGradient->IsRadial());
+  } else if (mGradient->IsRadial()) {
     gradientRadius.width *= srcTransform.width;
     gradientRadius.height *= srcTransform.height;
 
@@ -1210,6 +1275,14 @@ void nsCSSGradientRenderer::BuildWebRenderDisplayItems(
         mozilla::wr::ToLayoutPoint(lineStart),
         mozilla::wr::ToLayoutSize(gradientRadius), stops, extendMode,
         mozilla::wr::ToLayoutSize(firstTileBounds.Size()),
+        mozilla::wr::ToLayoutSize(tileSpacing));
+  } else {
+    MOZ_ASSERT(mGradient->IsConic());
+    aBuilder.PushConicGradient(
+        mozilla::wr::ToLayoutRect(gradientBounds),
+        mozilla::wr::ToLayoutRect(clipBounds), aIsBackfaceVisible,
+        mozilla::wr::ToLayoutPoint(gradientCenter), gradientAngle, stops,
+        extendMode, mozilla::wr::ToLayoutSize(firstTileBounds.Size()),
         mozilla::wr::ToLayoutSize(tileSpacing));
   }
 }
