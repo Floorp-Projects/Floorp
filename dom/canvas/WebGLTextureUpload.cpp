@@ -170,11 +170,13 @@ UniquePtr<webgl::TexUnpackBlob> WebGLContext::FromDomElem(
   // same as drawImage.
   uint32_t flags = nsLayoutUtils::SFE_WANT_FIRST_FRAME_IF_IMAGE |
                    nsLayoutUtils::SFE_WANT_IMAGE_SURFACE |
-                   nsLayoutUtils::SFE_USE_ELEMENT_SIZE_IF_VECTOR |
-                   nsLayoutUtils::SFE_ALLOW_NON_PREMULT;
+                   nsLayoutUtils::SFE_USE_ELEMENT_SIZE_IF_VECTOR;
 
   if (mPixelStore.mColorspaceConversion == LOCAL_GL_NONE)
     flags |= nsLayoutUtils::SFE_NO_COLORSPACE_CONVERSION;
+
+  if (!mPixelStore.mPremultiplyAlpha)
+    flags |= nsLayoutUtils::SFE_PREFER_NO_PREMULTIPLY_ALPHA;
 
   RefPtr<gfx::DrawTarget> idealDrawTarget = nullptr;  // Don't care for now.
   auto sfer = nsLayoutUtils::SurfaceFromElement(
