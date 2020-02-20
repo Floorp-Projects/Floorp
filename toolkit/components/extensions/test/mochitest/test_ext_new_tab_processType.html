@@ -27,6 +27,62 @@ function promiseObserved(topic, check) {
   });
 }
 
+add_task(async function test_target_blank_link_no_opener_from_privileged() {
+  const linkURL = "http://example.com/";
+
+  function extension_tab() {
+    document.getElementById("link").click();
+  }
+
+  function content_script() {
+    browser.runtime.sendMessage("content_page_loaded");
+  }
+
+  let extension = ExtensionTestUtils.loadExtension({
+    useAddonManager: "permanent",
+    manifest: {
+      applications: { gecko: { id: "target_blank_link@tests.mozilla.org" } },
+      content_scripts: [{
+        js: ["content_script.js"],
+        matches: ["http://example.com/*"],
+        run_at: "document_idle",
+      }],
+      permissions: ["tabs"],
+    },
+    files: {
+      "page.html": `<!DOCTYPE html>
+        <html>
+          <head><meta charset="utf-8"></html>
+          <body>
+            <a href="${linkURL}" target="_blank" id="link">link</a>
+            <script src="extension_tab.js"><\/script>
+          </body>
+        </html>`,
+      "extension_tab.js": extension_tab,
+      "content_script.js": content_script,
+    },
+    background() {
+      let pageTab;
+      browser.runtime.onMessage.addListener((msg, sender) => {
+        if (sender.tab) {
+          browser.test.sendMessage(msg, sender.tab.url);
+          browser.tabs.remove(sender.tab.id);
+          browser.tabs.remove(pageTab.id);
+        }
+      });
+      pageTab = browser.tabs.create({ url: browser.runtime.getURL("page.html") });
+    },
+  });
+
+  await extension.startup();
+
+  // Make sure page is loaded correctly
+  const url = await extension.awaitMessage("content_page_loaded");
+  is(url, linkURL, "Page URL should match");
+
+  await extension.unload();
+});
+
 add_task(async function test_target_blank_link() {
   const linkURL = "http://mochi.test:8888/tests/toolkit/";
 
