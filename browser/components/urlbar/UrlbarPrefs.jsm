@@ -181,7 +181,6 @@ const PREF_OTHER_DEFAULTS = new Map([
   ["browser.search.suggest.enabled.private", false],
   ["ui.popup.disable_autohide", false],
   ["browser.fixup.dns_first_for_single_words", false],
-  ["browser.newtabpage.activity-stream.feeds.topsites", true],
 ]);
 
 // Maps preferences under browser.urlbar.suggest to behavior names, as defined
