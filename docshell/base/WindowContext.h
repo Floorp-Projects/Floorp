@@ -7,6 +7,7 @@
 #ifndef mozilla_dom_WindowContext_h
 #define mozilla_dom_WindowContext_h
 
+#include "mozilla/dom/MaybeDiscarded.h"
 #include "mozilla/dom/SyncedContext.h"
 
 namespace mozilla {
@@ -26,8 +27,12 @@ class WindowContext : public nsISupports, public nsWrapperCache {
 
   BrowsingContext* GetBrowsingContext() const { return mBrowsingContext; }
   BrowsingContextGroup* Group() const;
+  uint64_t Id() const { return InnerWindowId(); }
   uint64_t InnerWindowId() const { return mInnerWindowId; }
   bool IsDiscarded() const { return mIsDiscarded; }
+
+  // Cast this object to it's parent-process canonical form.
+  WindowGlobalParent* Canonical();
 
   nsIGlobalObject* GetParentObject() const;
   JSObject* WrapObject(JSContext* cx,
@@ -80,6 +85,7 @@ class WindowContext : public nsISupports, public nsWrapperCache {
 
 using WindowContextTransaction = WindowContext::BaseTransaction;
 using WindowContextInitializer = WindowContext::IPCInitializer;
+using MaybeDiscardedWindowContext = MaybeDiscarded<WindowContext>;
 
 // Don't specialize the `Transaction` object for every translation unit it's
 // used in. This should help keep code size down.
@@ -88,6 +94,15 @@ extern template class syncedcontext::Transaction<WindowContext>;
 }  // namespace dom
 
 namespace ipc {
+template <>
+struct IPDLParamTraits<dom::MaybeDiscarded<dom::WindowContext>> {
+  static void Write(IPC::Message* aMsg, IProtocol* aActor,
+                    const dom::MaybeDiscarded<dom::WindowContext>& aParam);
+  static bool Read(const IPC::Message* aMsg, PickleIterator* aIter,
+                   IProtocol* aActor,
+                   dom::MaybeDiscarded<dom::WindowContext>* aResult);
+};
+
 template <>
 struct IPDLParamTraits<dom::WindowContext*> {
   static void Write(IPC::Message* aMsg, IProtocol* aActor,

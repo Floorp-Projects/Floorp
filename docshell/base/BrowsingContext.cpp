@@ -1516,6 +1516,33 @@ void BrowsingContext::AddDeprioritizedLoadRunner(nsIRunnable* aRunner) {
 
 namespace ipc {
 
+void IPDLParamTraits<dom::MaybeDiscarded<dom::BrowsingContext>>::Write(
+    IPC::Message* aMsg, IProtocol* aActor,
+    const dom::MaybeDiscarded<dom::BrowsingContext>& aParam) {
+  MOZ_DIAGNOSTIC_ASSERT(!aParam.GetMaybeDiscarded() ||
+                        aParam.GetMaybeDiscarded()->EverAttached());
+  uint64_t id = aParam.ContextId();
+  WriteIPDLParam(aMsg, aActor, id);
+}
+
+bool IPDLParamTraits<dom::MaybeDiscarded<dom::BrowsingContext>>::Read(
+    const IPC::Message* aMsg, PickleIterator* aIter, IProtocol* aActor,
+    dom::MaybeDiscarded<dom::BrowsingContext>* aResult) {
+  uint64_t id = 0;
+  if (!ReadIPDLParam(aMsg, aIter, aActor, &id)) {
+    return false;
+  }
+
+  if (id == 0) {
+    *aResult = nullptr;
+  } else if (RefPtr<dom::BrowsingContext> bc = dom::BrowsingContext::Get(id)) {
+    *aResult = std::move(bc);
+  } else {
+    aResult->SetDiscarded(id);
+  }
+  return true;
+}
+
 void IPDLParamTraits<dom::BrowsingContext*>::Write(
     IPC::Message* aMsg, IProtocol* aActor, dom::BrowsingContext* aParam) {
   MOZ_DIAGNOSTIC_ASSERT(!aParam || aParam->EverAttached());
