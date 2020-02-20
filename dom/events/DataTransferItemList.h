@@ -94,7 +94,7 @@ class DataTransferItemList final : public nsISupports, public nsWrapperCache {
   void RegenerateFiles();
   void GenerateFiles(FileList* aFiles, nsIPrincipal* aFilesPrincipal);
 
-  ~DataTransferItemList() {}
+  ~DataTransferItemList() = default;
 
   RefPtr<DataTransfer> mDataTransfer;
   RefPtr<FileList> mFiles;

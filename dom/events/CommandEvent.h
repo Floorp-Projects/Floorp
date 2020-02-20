@@ -29,7 +29,7 @@ class CommandEvent : public Event {
   void GetCommand(nsAString& aCommand);
 
  protected:
-  ~CommandEvent() {}
+  ~CommandEvent() = default;
 };
 
 }  // namespace dom

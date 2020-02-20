@@ -54,7 +54,7 @@ class TouchList final : public nsISupports, public nsWrapperCache {
   void Clear() { mPoints.Clear(); }
 
  protected:
-  ~TouchList() {}
+  ~TouchList() = default;
 
   nsCOMPtr<nsISupports> mParent;
   WidgetTouchEvent::TouchArray mPoints;
@@ -105,7 +105,7 @@ class TouchEvent : public UIEvent {
                                                   const TouchEventInit& aParam);
 
  protected:
-  ~TouchEvent() {}
+  ~TouchEvent() = default;
 
   void AssignTouchesToWidgetEvent(TouchList* aList, bool aCheckDuplicates);
 

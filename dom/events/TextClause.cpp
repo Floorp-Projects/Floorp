@@ -41,7 +41,7 @@ JSObject* TextClause::WrapObject(JSContext* aCx,
   return TextClause_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-TextClause::~TextClause() {}
+TextClause::~TextClause() = default;
 
 }  // namespace dom
 }  // namespace mozilla

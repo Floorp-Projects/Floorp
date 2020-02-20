@@ -42,7 +42,7 @@ class MutationEvent : public Event {
                          uint16_t& aAttrChange, ErrorResult& aRv);
 
  protected:
-  ~MutationEvent() {}
+  ~MutationEvent() = default;
 };
 
 }  // namespace dom

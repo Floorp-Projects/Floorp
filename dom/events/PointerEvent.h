@@ -51,7 +51,7 @@ class PointerEvent : public MouseEvent {
   void GetCoalescedEvents(nsTArray<RefPtr<PointerEvent>>& aPointerEvents);
 
  protected:
-  ~PointerEvent() {}
+  ~PointerEvent() = default;
 
  private:
   // This method returns the boolean to indicate whether spoofing pointer

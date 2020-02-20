@@ -46,7 +46,7 @@ class ScrollAreaEvent : public UIEvent {
                            float aHeight);
 
  protected:
-  ~ScrollAreaEvent() {}
+  ~ScrollAreaEvent() = default;
 
   RefPtr<DOMRect> mClientArea;
 };

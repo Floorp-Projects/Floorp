@@ -32,7 +32,7 @@ NS_INTERFACE_MAP_END_INHERITING(Event)
 StorageEvent::StorageEvent(EventTarget* aOwner)
     : Event(aOwner, nullptr, nullptr) {}
 
-StorageEvent::~StorageEvent() {}
+StorageEvent::~StorageEvent() = default;
 
 StorageEvent* StorageEvent::AsStorageEvent() { return this; }
 

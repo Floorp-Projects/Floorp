@@ -113,7 +113,7 @@ class DeviceMotionEvent final : public Event {
       const DeviceMotionEventInit& aEventInitDict);
 
  protected:
-  ~DeviceMotionEvent() {}
+  ~DeviceMotionEvent() = default;
 
   RefPtr<DeviceAcceleration> mAcceleration;
   RefPtr<DeviceAcceleration> mAccelerationIncludingGravity;

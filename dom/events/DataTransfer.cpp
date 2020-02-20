@@ -233,7 +233,7 @@ DataTransfer::DataTransfer(nsISupports* aParent, EventMessage aEventMessage,
                "invalid event type for DataTransfer constructor");
 }
 
-DataTransfer::~DataTransfer() {}
+DataTransfer::~DataTransfer() = default;
 
 // static
 already_AddRefed<DataTransfer> DataTransfer::Constructor(

@@ -39,7 +39,7 @@ class InputEvent : public UIEvent {
   bool IsComposing();
 
  protected:
-  ~InputEvent() {}
+  ~InputEvent() = default;
 
   // mInputTypeValue stores inputType attribute value if the instance is
   // created by script and not initialized with known inputType value.

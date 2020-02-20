@@ -49,7 +49,7 @@ class NotifyPaintEvent : public Event {
   DOMHighResTimeStamp PaintTimeStamp(SystemCallerGuarantee);
 
  protected:
-  ~NotifyPaintEvent() {}
+  ~NotifyPaintEvent() = default;
 
  private:
   nsRegion GetRegion(SystemCallerGuarantee);

@@ -37,7 +37,7 @@ class ClipboardEvent : public Event {
                           bool aCancelable, DataTransfer* aClipboardData);
 
  protected:
-  ~ClipboardEvent() {}
+  ~ClipboardEvent() = default;
 };
 
 }  // namespace dom

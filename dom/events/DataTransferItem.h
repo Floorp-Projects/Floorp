@@ -103,7 +103,7 @@ class DataTransferItem final : public nsISupports, public nsWrapperCache {
   static eKind KindFromData(nsIVariant* aData);
 
  private:
-  ~DataTransferItem() {}
+  ~DataTransferItem() = default;
   already_AddRefed<File> CreateFileFromInputStream(nsIInputStream* aStream);
 
   already_AddRefed<nsIGlobalObject> GetGlobalFromDataTransfer();

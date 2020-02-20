@@ -25,7 +25,7 @@ namespace dom {
 Clipboard::Clipboard(nsPIDOMWindowInner* aWindow)
     : DOMEventTargetHelper(aWindow) {}
 
-Clipboard::~Clipboard() {}
+Clipboard::~Clipboard() = default;
 
 already_AddRefed<Promise> Clipboard::ReadHelper(
     JSContext* aCx, nsIPrincipal& aSubjectPrincipal,

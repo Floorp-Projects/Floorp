@@ -15,7 +15,7 @@ using namespace mozilla::ipc;
 namespace mozilla {
 namespace dom {
 
-RemoteDragStartData::~RemoteDragStartData() {}
+RemoteDragStartData::~RemoteDragStartData() = default;
 
 RemoteDragStartData::RemoteDragStartData(
     BrowserParent* aBrowserParent, nsTArray<IPCDataTransfer>&& aDataTransfer,

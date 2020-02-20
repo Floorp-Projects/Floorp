@@ -36,7 +36,7 @@ class MouseScrollEvent : public MouseEvent {
                             int32_t aAxis);
 
  protected:
-  ~MouseScrollEvent() {}
+  ~MouseScrollEvent() = default;
 };
 
 }  // namespace dom

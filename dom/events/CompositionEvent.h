@@ -43,7 +43,7 @@ class CompositionEvent : public UIEvent {
   void GetRanges(TextClauseArray& aRanges);
 
  protected:
-  ~CompositionEvent() {}
+  ~CompositionEvent() = default;
 
   nsString mData;
   nsString mLocale;

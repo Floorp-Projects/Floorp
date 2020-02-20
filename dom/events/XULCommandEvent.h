@@ -49,7 +49,7 @@ class XULCommandEvent : public UIEvent {
                         uint16_t aInputSource, ErrorResult& aRv);
 
  protected:
-  ~XULCommandEvent() {}
+  ~XULCommandEvent() = default;
 
   RefPtr<Event> mSourceEvent;
   uint16_t mInputSource;
