@@ -475,11 +475,11 @@ ThirdPartyUtil::AnalyzeChannel(nsIChannel* aChannel, bool aNotify, nsIURI* aURI,
   nsCOMPtr<nsIClassifiedChannel> classifiedChannel =
       do_QueryInterface(aChannel);
   if (classifiedChannel) {
-    if (classifiedChannel->IsTrackingResource()) {
-      result += ThirdPartyAnalysis::IsTrackingResource;
+    if (classifiedChannel->IsThirdPartyTrackingResource()) {
+      result += ThirdPartyAnalysis::IsThirdPartyTrackingResource;
     }
-    if (classifiedChannel->IsSocialTrackingResource()) {
-      result += ThirdPartyAnalysis::IsSocialTrackingResource;
+    if (classifiedChannel->IsThirdPartySocialTrackingResource()) {
+      result += ThirdPartyAnalysis::IsThirdPartySocialTrackingResource;
     }
 
     // Check first-party storage access even for non-tracking resources, since

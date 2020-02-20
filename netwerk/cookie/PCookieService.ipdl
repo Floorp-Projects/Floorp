@@ -48,8 +48,10 @@ parent:
    *        mozIThirdPartyUtil.isThirdPartyChannel. Third party requests may be
    *        rejected depending on user preferences; if those checks are
    *        disabled, this parameter is ignored.
-   * @param isTrackingResource
-   *        True if the request has been marked as tracking.
+   * @param isThirdPartyTrackingResource
+   *        True if the request has been marked as 3rd party tracking.
+   * @param isThirdPartySocialTrackingResource
+   *        True if the request has been marked as 3rd party social tracking.
    * @param firstPartyStorageAccessGranted
    *        True if host has storage access granted. Note that the storage
    *        access is automatically granted also if the channel is not marked as
@@ -73,8 +75,8 @@ parent:
                                             URIParams? channelURI,
                                             LoadInfoArgs? loadInfoArgs,
                                             bool isForeign,
-                                            bool isTrackingResource,
-                                            bool isSocialTrackingResource,
+                                            bool isThirdPartyTrackingResource,
+                                            bool isThirdPartySocialTrackingResource,
                                             bool firstPartyStorageAccessGranted,
                                             uint32_t rejectedReason,
                                             OriginAttributes aStoragePrincipalAttrs,
@@ -84,8 +86,8 @@ parent:
 
   async PrepareCookieList(URIParams host,
                           bool isForeign,
-                          bool isTrackingResource,
-                          bool isSocialTrackingResource,
+                          bool isThirdPartyTrackingResource,
+                          bool isThirdPartySocialTrackingResource,
                           bool firstPartyStorageAccessGranted,
                           uint32_t rejectedReason,
                           bool isSafeTopLevelNav,
