@@ -93,11 +93,11 @@ class nsScriptErrorBase : public nsIScriptError {
 
 class nsScriptError final : public nsScriptErrorBase {
  public:
-  nsScriptError() {}
+  nsScriptError() = default;
   NS_DECL_THREADSAFE_ISUPPORTS
 
  private:
-  virtual ~nsScriptError() {}
+  virtual ~nsScriptError() = default;
 };
 
 class nsScriptErrorWithStack : public nsScriptErrorBase {

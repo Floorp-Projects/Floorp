@@ -25,13 +25,13 @@ class WrapperCachedNonISupportsTestInterface final : public nsWrapperCache {
       WrapperCachedNonISupportsTestInterface)
 
  public:
-  WrapperCachedNonISupportsTestInterface() {}
+  WrapperCachedNonISupportsTestInterface() = default;
 
   static already_AddRefed<WrapperCachedNonISupportsTestInterface> Constructor(
       const GlobalObject& aGlobalObject);
 
  protected:
-  ~WrapperCachedNonISupportsTestInterface() {}
+  ~WrapperCachedNonISupportsTestInterface() = default;
 
  public:
   nsISupports* GetParentObject() const { return nullptr; }

@@ -41,7 +41,7 @@ class TestInterfaceIterableDouble final : public nsISupports,
   nsAString& GetValueAtIndex(uint32_t aIndex);
 
  private:
-  virtual ~TestInterfaceIterableDouble() {}
+  virtual ~TestInterfaceIterableDouble() = default;
   nsCOMPtr<nsPIDOMWindowInner> mParent;
   nsTArray<std::pair<nsString, nsString>> mValues;
 };

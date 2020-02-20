@@ -40,7 +40,7 @@ class TestInterfaceIterableSingle final : public nsISupports,
   int32_t IndexedGetter(uint32_t aIndex, bool& aFound) const;
 
  private:
-  virtual ~TestInterfaceIterableSingle() {}
+  virtual ~TestInterfaceIterableSingle() = default;
   nsCOMPtr<nsPIDOMWindowInner> mParent;
   nsTArray<int32_t> mValues;
 };

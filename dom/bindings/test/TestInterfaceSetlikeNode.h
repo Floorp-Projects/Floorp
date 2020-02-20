@@ -36,7 +36,7 @@ class TestInterfaceSetlikeNode final : public nsISupports,
       const GlobalObject& aGlobal, ErrorResult& rv);
 
  private:
-  virtual ~TestInterfaceSetlikeNode() {}
+  virtual ~TestInterfaceSetlikeNode() = default;
   nsCOMPtr<nsPIDOMWindowInner> mParent;
 };
 
