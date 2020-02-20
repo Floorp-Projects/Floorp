@@ -2531,11 +2531,18 @@ void DocAccessible::DispatchScrollingEvent(nsINode* aTarget,
     return;
   }
 
+  nsIFrame* frame = acc->GetFrame();
+  if (!frame) {
+    // Although the accessible had a frame at scroll time, it may now be gone
+    // because of display: contents.
+    return;
+  }
+
   LayoutDevicePoint scrollPoint;
   LayoutDeviceRect scrollRange;
   nsIScrollableFrame* sf = acc == this
                                ? mPresShell->GetRootScrollFrameAsScrollable()
-                               : acc->GetFrame()->GetScrollTargetFrame();
+                               : frame->GetScrollTargetFrame();
 
   // If there is no scrollable frame, it's likely a scroll in a popup, like
   // <select>. Just send an event with no scroll info. The scroll info
