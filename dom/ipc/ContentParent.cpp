@@ -6489,7 +6489,7 @@ mozilla::ipc::IPCResult ContentParent::RecvWindowPostMessage(
   }
   CanonicalBrowsingContext* context = aContext.get_canonical();
 
-  if (aData.source() && aData.source()->IsDiscarded()) {
+  if (aData.source().IsDiscarded()) {
     MOZ_LOG(
         BrowsingContext::GetLog(), LogLevel::Debug,
         ("ParentIPC: Trying to send a message from dead or detached context"));

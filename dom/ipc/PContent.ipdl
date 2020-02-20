@@ -334,7 +334,7 @@ struct NotificationEventData
 
 struct PostMessageData
 {
-    BrowsingContext source;
+    MaybeDiscardedBrowsingContext source;
     nsString origin;
     nsString targetOrigin;
     nsIURI targetOriginURI;
