@@ -1,6 +1,6 @@
 == input-color-1.html input-color-1-ref.html
 
-default-preferences pref(dom.forms.color,true)
+defaults pref(dom.forms.color,true)
 
 == margin-padding-1.html margin-padding-1-ref.html
 == block-invalidate-1.html block-invalidate-1-ref.html

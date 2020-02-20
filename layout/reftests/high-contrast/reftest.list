@@ -1,5 +1,5 @@
 # This pref enables high-contrast mode in the testcases here:
-default-preferences test-pref(browser.display.document_color_use,2) test-pref(browser.display.permit_backplate,true)
+defaults test-pref(browser.display.document_color_use,2) test-pref(browser.display.permit_backplate,true)
 
 # There are several platform-specific fuzzy-if notations below due to
 # anti-aliasing, extra visual overflow, and slightly inacurate reftest

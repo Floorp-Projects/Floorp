@@ -195,12 +195,12 @@ random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) != meiryo-en-bolditalic.htm
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) != meiryo-en-bolditalic.html meiryo-en-bold.html # Bug 1392106
 
 # test support of variation-font format hints
-default-preferences pref(layout.css.font-variations.enabled,false)
+defaults pref(layout.css.font-variations.enabled,false)
 == variation-format-hint-1a.html variation-format-hint-1A-ref.html
 == variation-format-hint-1b.html variation-format-hint-1A-ref.html
 == variation-format-hint-1c.html variation-format-hint-1A-ref.html
 == variation-format-hint-1d.html variation-format-hint-1A-ref.html
-default-preferences pref(layout.css.font-variations.enabled,true)
+defaults pref(layout.css.font-variations.enabled,true)
 # Currently Windows 7 and macOS all fail on 
 # treeherder because our OS versions are too old to support variation fonts
 fails-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)||(cocoaWidget&&OSX<1012)) == variation-format-hint-1a.html variation-format-hint-1B-ttf-ref.html
@@ -208,4 +208,4 @@ fails-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)||(cocoaWidget&&OSX<1012)) == 
 fails-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)||(cocoaWidget&&OSX<1012)) == variation-format-hint-1c.html variation-format-hint-1B-woff-ref.html
 fails-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)||(cocoaWidget&&OSX<1012)) == variation-format-hint-1d.html variation-format-hint-1B-woff2-ref.html
 
-default-preferences
+defaults

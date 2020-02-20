@@ -149,9 +149,6 @@ class ReftestManifest(object):
                     urlprefix = items[i+1]
                     break
 
-                if item == 'default-preferences':
-                    break
-
                 if item == 'include':
                     self.load(os.path.join(mdir, items[i+1]))
                     break

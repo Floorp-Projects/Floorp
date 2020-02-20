@@ -104,30 +104,6 @@ function ReadManifest(aURL, aFilter, aManifestID)
             continue;
         }
 
-        if (items[0] == "default-preferences") {
-            var m;
-            var item;
-            defaultTestPrefSettings = [];
-            defaultRefPrefSettings = [];
-            items.shift();
-            while ((item = items.shift())) {
-                if (!(m = item.match(RE_PREF_ITEM))) {
-                    throw "Unexpected item in default-preferences list in manifest file " + aURL.spec + " line " + lineNo;
-                }
-                if (!AddPrefSettings(m[1], m[2], m[3], GetOrCreateSandbox(),
-                                     defaultTestPrefSettings,
-                                     defaultRefPrefSettings)) {
-                    throw "Error in pref value in manifest file " + aURL.spec + " line " + lineNo;
-                }
-            }
-            if (g.compareRetainedDisplayLists) {
-                AddRetainedDisplayListTestPrefs(GetOrCreateSandbox(),
-                                                defaultTestPrefSettings,
-                                                defaultRefPrefSettings);
-            }
-            continue;
-        }
-
         var expected_status = EXPECTED_PASS;
         var allow_silent_fail = false;
         var minAsserts = 0;

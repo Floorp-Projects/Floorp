@@ -14,7 +14,7 @@
 #
 # IMPORTANT: For robustness, each test should be listed *twice* in this
 # manifest -- once with the high quality downscaling pref disabled, and once
-# with this pref enabled. The pref is set via "default-preferences", so
+# with this pref enabled. The pref is set via "defaults", so
 # simply appending a new test to the lists below each of those lines should be
 # sufficient.
 #
@@ -35,7 +35,7 @@ fuzzy(0-51,0-90) fuzzy-if(skiaContent,0-142,0-77) fuzzy-if(webrender,64-64,31-31
 
 # RUN TESTS WITH DOWNSCALE-DURING-DECODE DISABLED:
 # ================================================
-default-preferences pref(image.downscale-during-decode.enabled,false)
+defaults pref(image.downscale-during-decode.enabled,false)
 
 fuzzy-if(winWidget,0-16,0-20) fuzzy-if(cocoaWidget,0-106,0-31) == downscale-1.html downscale-1-ref.html
 
@@ -112,7 +112,7 @@ fuzzy(0-1,0-1024) == downscale-32px.html?.jpg downscale-32px-ref.html
 
 # RUN TESTS WITH DOWNSCALE-DURING-DECODE ENABLED:
 # ===============================================
-default-preferences pref(image.downscale-during-decode.enabled,true)
+defaults pref(image.downscale-during-decode.enabled,true)
 
 fuzzy(0-31,0-127) fuzzy-if(d2d,0-31,0-147) == downscale-1.html downscale-1-ref.html # intermittently 147 pixels on win7 accelerated only (not win8)
 
