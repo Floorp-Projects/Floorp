@@ -374,6 +374,9 @@ class WebGLContext : public VRefCounted, public SupportsWeakPtr<WebGLContext> {
 
   void SetCompositableHost(RefPtr<layers::CompositableHost>& aCompositableHost);
 
+  RefPtr<mozilla::gfx::SourceSurface> GetSurfaceSnapshot(
+      gfxAlphaType* out_alphaType);
+
   /**
    * An abstract base class to be implemented by callers wanting to be notified
    * that a refresh has occurred. Callers must ensure an observer is removed
