@@ -63,7 +63,8 @@ in the array by checking the file name is `paymentRequest.xhtml` (e.g. ``tabs[0]
 Dialog Architecture
 ===================
 
-Privileged wrapper XUL document (paymentDialogWrapper.xul) containing a remote ``<xul:browser="true" remote="true">`` containing unprivileged XHTML (paymentRequest.xhtml).
+A remote ``<xul:browser="true" remote="true">`` is `added to the Browser Window <https://searchfox.org/mozilla-central/search?q=%20_createPaymentFrame&case=false&regexp=false&path=>`_
+containing unprivileged XHTML (paymentRequest.xhtml).
 Keeping the dialog contents unprivileged is useful since the dialog will render payment line items and shipping options that are provided by web developers and should therefore be considered untrusted.
 In order to communicate across the process boundary a privileged frame script (`paymentDialogFrameScript.js`) is loaded into the iframe to relay messages.
 This is because the unprivileged document cannot access message managers.
