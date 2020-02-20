@@ -1878,6 +1878,16 @@ const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
         V(21, 20, 16, 4590), "Intel driver >= 21.20.16.4590");
 #endif
 
+    // Bug 1615421 / 1607860 - Playing videos appear to crash with WebRender
+    // with this particular driver.
+    APPEND_TO_DRIVER_BLOCKLIST2(
+        OperatingSystem::Windows,
+        (nsAString&)GfxDriverInfo::GetDeviceVendor(VendorIntel),
+        (nsAString&)GfxDriverInfo::GetDriverVendor(DriverVendorAll),
+        GfxDriverInfo::allDevices, nsIGfxInfo::FEATURE_WEBRENDER,
+        nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION, DRIVER_EQUAL,
+        V(23, 20, 16, 4973), "Intel driver > 23.20.16.4973");
+
     ////////////////////////////////////
     // FEATURE_WEBRENDER_COMPOSITOR
 
