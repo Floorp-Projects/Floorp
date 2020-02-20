@@ -1914,6 +1914,10 @@ mozilla::ipc::IPCResult ContentChild::RecvConstructBrowser(
     }
   }
 
+  if (aWindowInit.browsingContext().IsNullOrDiscarded()) {
+    return IPC_FAIL(this, "Null or discarded initial BrowsingContext");
+  }
+
   // We'll happily accept any kind of IPCTabContext here; we don't need to
   // check that it's of a certain type for security purposes, because we
   // believe whatever the parent process tells us.
@@ -1930,7 +1934,7 @@ mozilla::ipc::IPCResult ContentChild::RecvConstructBrowser(
 
   RefPtr<BrowserChild> browserChild = BrowserChild::Create(
       this, aTabId, aSameTabGroupAs, tc.GetTabContext(),
-      aWindowInit.browsingContext(), aChromeFlags, aIsTopLevel);
+      aWindowInit.browsingContext().get(), aChromeFlags, aIsTopLevel);
 
   // Bind the created BrowserChild to IPC to actually link the actor.
   if (NS_WARN_IF(!BindPBrowserEndpoint(std::move(aBrowserEp), browserChild))) {

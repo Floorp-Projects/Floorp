@@ -247,6 +247,11 @@ mozilla::ipc::IPCResult BrowserBridgeChild::RecvSubFrameCrashed(
 }
 
 void BrowserBridgeChild::ActorDestroy(ActorDestroyReason aWhy) {
+  if (!mBrowsingContext) {
+    // This BBC was never valid, skip teardown.
+    return;
+  }
+
   // Ensure we unblock our document's 'load' event (in case the OOP-iframe has
   // been removed before it finished loading, or its subprocess crashed):
   UnblockOwnerDocsLoadEvent();

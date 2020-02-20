@@ -50,7 +50,7 @@ namespace dom {
 
 WindowGlobalParent::WindowGlobalParent(const WindowGlobalInit& aInit,
                                        bool aInProcess)
-    : WindowContext(aInit.browsingContext(), aInit.innerWindowId(), {}),
+    : WindowContext(aInit.browsingContext().get(), aInit.innerWindowId(), {}),
       mDocumentPrincipal(aInit.principal()),
       mDocumentURI(aInit.documentURI()),
       mInnerWindowId(aInit.innerWindowId()),
@@ -62,7 +62,7 @@ WindowGlobalParent::WindowGlobalParent(const WindowGlobalInit& aInit,
   MOZ_RELEASE_ASSERT(mDocumentPrincipal, "Must have a valid principal");
 
   // NOTE: mBrowsingContext initialized in Init()
-  MOZ_RELEASE_ASSERT(aInit.browsingContext(),
+  MOZ_RELEASE_ASSERT(!aInit.browsingContext().IsNullOrDiscarded(),
                      "Must be made in BrowsingContext");
 
   mFields.SetWithoutSyncing<IDX_OuterWindowId>(aInit.outerWindowId());
@@ -86,7 +86,7 @@ void WindowGlobalParent::Init(const WindowGlobalInit& aInit) {
     cp->TransmitPermissionsForPrincipal(mDocumentPrincipal);
   }
 
-  mBrowsingContext = CanonicalBrowsingContext::Cast(aInit.browsingContext());
+  mBrowsingContext = aInit.browsingContext().get_canonical();
   MOZ_ASSERT(mBrowsingContext);
 
   MOZ_DIAGNOSTIC_ASSERT(

@@ -3444,6 +3444,10 @@ mozilla::ipc::IPCResult ContentParent::RecvConstructPopupBrowser(
     return IPC_FAIL(this, "CanOpenBrowser Failed");
   }
 
+  if (aInitialWindowInit.browsingContext().IsNullOrDiscarded()) {
+    return IPC_FAIL(this, "Null or discarded initial BrowsingContext");
+  }
+
   uint32_t chromeFlags = aChromeFlags;
   TabId openerTabId(0);
   ContentParentId openerCpId(0);
@@ -3476,7 +3480,7 @@ mozilla::ipc::IPCResult ContentParent::RecvConstructPopupBrowser(
   chromeFlags |= nsIWebBrowserChrome::CHROME_REMOTE_WINDOW;
 
   CanonicalBrowsingContext* browsingContext =
-      CanonicalBrowsingContext::Cast(aInitialWindowInit.browsingContext());
+      aInitialWindowInit.browsingContext().get_canonical();
   if (NS_WARN_IF(!browsingContext->IsOwnedByProcess(ChildID()))) {
     return IPC_FAIL(this, "BrowsingContext Owned by Incorrect Process!");
   }

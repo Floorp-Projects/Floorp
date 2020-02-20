@@ -30,8 +30,12 @@ BrowserBridgeParent::~BrowserBridgeParent() { Destroy(); }
 nsresult BrowserBridgeParent::InitWithProcess(
     ContentParent* aContentParent, const nsString& aPresentationURL,
     const WindowGlobalInit& aWindowInit, uint32_t aChromeFlags, TabId aTabId) {
+  if (aWindowInit.browsingContext().IsNullOrDiscarded()) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
   RefPtr<CanonicalBrowsingContext> browsingContext =
-      aWindowInit.browsingContext()->Canonical();
+      aWindowInit.browsingContext().get_canonical();
 
   // We can inherit most TabContext fields for the new BrowserParent actor from
   // our Manager BrowserParent. We also need to sync the first party domain if
