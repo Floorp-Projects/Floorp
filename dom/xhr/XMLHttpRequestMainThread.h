@@ -577,7 +577,7 @@ class XMLHttpRequestMainThread final : public XMLHttpRequest,
     }
 
    private:
-    virtual ~nsHeaderVisitor() {}
+    virtual ~nsHeaderVisitor() = default;
 
     nsTArray<HeaderEntry> mHeaderList;
     nsCString mHeaders;
@@ -859,7 +859,7 @@ class nsXHRParseEndListener : public nsIDOMEventListener {
   void SetIsStale() { mXHR = nullptr; }
 
  private:
-  virtual ~nsXHRParseEndListener() {}
+  virtual ~nsXHRParseEndListener() = default;
 
   XMLHttpRequestMainThread* mXHR;
 };
