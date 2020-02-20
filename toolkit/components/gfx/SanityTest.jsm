@@ -207,9 +207,6 @@ function verifyLayersRendering(ctx) {
 }
 
 function testCompositor(test, win, ctx) {
-  takeWindowSnapshot(win, ctx);
-  var testPassed = true;
-
   if (win.windowUtils.layerManagerType == "WebRender") {
     // When layer manger type is WebRender, drawWindow() is skipped, since
     // drawWindow() could take long time and
@@ -217,7 +214,14 @@ function testCompositor(test, win, ctx) {
     if (Services.prefs.getBoolPref(AL_ENABLED_PREF, false)) {
       Services.prefs.setBoolPref(AL_TEST_FAILED_PREF, true);
     }
-  } else if (!verifyLayersRendering(ctx)) {
+    reportResult(TEST_PASSED);
+    return true;
+  }
+
+  takeWindowSnapshot(win, ctx);
+  var testPassed = true;
+
+  if (!verifyLayersRendering(ctx)) {
     // Try disabling advanced layers if it was enabled. Also trigger
     // a device reset so the screen redraws.
     if (Services.prefs.getBoolPref(AL_ENABLED_PREF, false)) {
