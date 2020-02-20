@@ -5134,8 +5134,8 @@ bool CallIRGenerator::getTemplateObjectForScripted(HandleFunction calleeFunc,
   if (protov.isObject()) {
     AutoRealm ar(cx_, calleeFunc);
     TaggedProto proto(&protov.toObject());
-    ObjectGroup* group =
-        ObjectGroup::defaultNewGroup(cx_, nullptr, proto, newTarget);
+    ObjectGroup* group = ObjectGroup::defaultNewGroup(cx_, &PlainObject::class_,
+                                                      proto, newTarget);
     if (!group) {
       return false;
     }

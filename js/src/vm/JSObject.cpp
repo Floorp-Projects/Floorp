@@ -1121,8 +1121,8 @@ JSObject* js::CreateThisForFunctionWithProto(
 
   if (proto) {
     RootedObjectGroup group(
-        cx, ObjectGroup::defaultNewGroup(cx, nullptr, TaggedProto(proto),
-                                         newTarget));
+        cx, ObjectGroup::defaultNewGroup(cx, &PlainObject::class_,
+                                         TaggedProto(proto), newTarget));
     if (!group) {
       return nullptr;
     }
@@ -1137,8 +1137,8 @@ JSObject* js::CreateThisForFunctionWithProto(
         if (regenerate) {
           // The script was analyzed successfully and may have changed
           // the new type table, so refetch the group.
-          group = ObjectGroup::defaultNewGroup(cx, nullptr, TaggedProto(proto),
-                                               newTarget);
+          group = ObjectGroup::defaultNewGroup(cx, &PlainObject::class_,
+                                               TaggedProto(proto), newTarget);
           AutoSweepObjectGroup sweepNewGroup(group);
           MOZ_ASSERT(group && group->newScript(sweepNewGroup));
         }

@@ -3059,6 +3059,8 @@ void ObjectGroup::detachNewScript(bool isSweeping, ObjectGroup* replacement) {
 
   if (newScript->analyzed()) {
     ObjectGroupRealm& objectGroups = ObjectGroupRealm::get(this);
+    const JSClass* clasp = this->clasp();
+    MOZ_ASSERT(clasp == &PlainObject::class_);
     TaggedProto proto = this->proto();
     if (proto.isObject() && IsForwarded(proto.toObject())) {
       proto = TaggedProto(Forwarded(proto.toObject()));
@@ -3068,10 +3070,10 @@ void ObjectGroup::detachNewScript(bool isSweeping, ObjectGroup* replacement) {
       AutoSweepObjectGroup sweepReplacement(replacement);
       MOZ_ASSERT(replacement->newScript(sweepReplacement)->function() ==
                  newScript->function());
-      objectGroups.replaceDefaultNewGroup(nullptr, proto, associated,
+      objectGroups.replaceDefaultNewGroup(clasp, proto, associated,
                                           replacement);
     } else {
-      objectGroups.removeDefaultNewGroup(nullptr, proto, associated);
+      objectGroups.removeDefaultNewGroup(clasp, proto, associated);
     }
   } else {
     MOZ_ASSERT(!replacement);
@@ -4031,7 +4033,7 @@ bool TypeNewScript::maybeAnalyze(JSContext* cx, ObjectGroup* group,
   group->addDefiniteProperties(cx, prefixShape);
 
   ObjectGroupRealm& realm = ObjectGroupRealm::get(group);
-  realm.replaceDefaultNewGroup(nullptr, group->proto(), function(),
+  realm.replaceDefaultNewGroup(group->clasp(), group->proto(), function(),
                                initialGroup);
 
   templateObject()->setGroup(initialGroup);
