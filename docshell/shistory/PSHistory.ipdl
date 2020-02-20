@@ -7,7 +7,6 @@ include protocol PSHEntry;
 
 include DOMTypes;
 
-using refcounted class mozilla::dom::BrowsingContext from "mozilla/dom/BrowsingContext.h";
 using mozilla::dom::MaybeDiscardedBrowsingContext from "mozilla/dom/BrowsingContext.h";
 using refcounted class mozilla::dom::CrossProcessSHEntry from "mozilla/dom/MaybeNewPSHEntry.h";
 using refcounted class nsDocShellLoadState from "mozilla/dom/DocShellMessageUtils.h";

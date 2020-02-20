@@ -1545,69 +1545,6 @@ bool IPDLParamTraits<dom::MaybeDiscarded<dom::BrowsingContext>>::Read(
   return true;
 }
 
-void IPDLParamTraits<dom::BrowsingContext*>::Write(
-    IPC::Message* aMsg, IProtocol* aActor, dom::BrowsingContext* aParam) {
-  MOZ_DIAGNOSTIC_ASSERT(!aParam || aParam->EverAttached());
-  uint64_t id = aParam ? aParam->Id() : 0;
-  WriteIPDLParam(aMsg, aActor, id);
-  if (!aParam) {
-    return;
-  }
-
-  // Make sure that the other side will still have our BrowsingContext around
-  // when it tries to perform deserialization.
-  if (aActor->GetIPCChannel()->IsCrossProcess()) {
-    // If we're sending the message between processes, we only know the other
-    // side will still have a copy if we've not been discarded yet. As
-    // serialization cannot fail softly, fail loudly by crashing.
-    MOZ_RELEASE_ASSERT(
-        !aParam->IsDiscarded(),
-        "Cannot send discarded BrowsingContext between processes!");
-  } else {
-    // If we're in-process, we can take an extra reference to ensure it lives
-    // long enough to make it to the other side. This reference is freed in
-    // `::Read()`.
-    aParam->AddRef();
-  }
-}
-
-bool IPDLParamTraits<dom::BrowsingContext*>::Read(
-    const IPC::Message* aMsg, PickleIterator* aIter, IProtocol* aActor,
-    RefPtr<dom::BrowsingContext>* aResult) {
-  uint64_t id = 0;
-  if (!ReadIPDLParam(aMsg, aIter, aActor, &id)) {
-    return false;
-  }
-
-  if (id == 0) {
-    *aResult = nullptr;
-    return true;
-  }
-
-  RefPtr<dom::BrowsingContext> browsingContext = dom::BrowsingContext::Get(id);
-  if (!browsingContext) {
-#ifndef FUZZING
-    // NOTE: We could fail softly by returning `false` if the `BrowsingContext`
-    // isn't present, but doing so will cause a crash anyway. Let's improve
-    // diagnostics by reliably crashing here.
-    //
-    // If we can recover from failures to deserialize in the future, this crash
-    // should be removed or modified.
-    MOZ_CRASH("Attempt to deserialize absent BrowsingContext");
-#endif
-    *aResult = nullptr;
-    return false;
-  }
-
-  if (!aActor->GetIPCChannel()->IsCrossProcess()) {
-    // Release the reference taken in `::Write()` for in-process actors.
-    browsingContext.get()->Release();
-  }
-
-  *aResult = std::move(browsingContext);
-  return true;
-}
-
 void IPDLParamTraits<dom::BrowsingContext::IPCInitializer>::Write(
     IPC::Message* aMessage, IProtocol* aActor,
     const dom::BrowsingContext::IPCInitializer& aInit) {
