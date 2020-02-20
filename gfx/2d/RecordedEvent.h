@@ -129,6 +129,13 @@ struct RadialGradientPatternStorage {
   Matrix mMatrix;
 };
 
+struct ConicGradientPatternStorage {
+  Point mCenter;
+  Float mAngle;
+  ReferencePtr mStops;
+  Matrix mMatrix;
+};
+
 struct SurfacePatternStorage {
   ExtendMode mExtend;
   SamplingFilter mSamplingFilter;
@@ -144,6 +151,7 @@ struct PatternStorage {
     char mColor[sizeof(ColorPatternStorage)];
     char mLinear[sizeof(LinearGradientPatternStorage)];
     char mRadial[sizeof(RadialGradientPatternStorage)];
+    char mConic[sizeof(ConicGradientPatternStorage)];
     char mSurface[sizeof(SurfacePatternStorage)];
   };
 };
