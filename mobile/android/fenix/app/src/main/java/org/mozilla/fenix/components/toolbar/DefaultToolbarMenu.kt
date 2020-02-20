@@ -22,7 +22,9 @@ import mozilla.components.browser.menu.item.BrowserMenuItemToolbar
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.storage.BookmarksStorage
+import org.mozilla.fenix.Config
 import org.mozilla.fenix.R
+import org.mozilla.fenix.ReleaseChannel
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.theme.ThemeManager
@@ -132,6 +134,10 @@ class DefaultToolbarMenu(
             context.components.browsingModeManager.mode == BrowsingMode.Normal
         val shouldDeleteDataOnQuit = Settings.getInstance(context)
             .shouldDeleteBrowsingDataOnQuit
+        val shouldShowWebcompatReporter = Config.channel !in setOf(
+            ReleaseChannel.FenixProduction,
+            ReleaseChannel.FennecProduction
+        )
 
         // Predicates that need to be repeatedly called as the session changes
         fun shouldShowAddToHomescreen(): Boolean =
@@ -154,7 +160,7 @@ class DefaultToolbarMenu(
             findInPage,
             privateTab,
             newTab,
-            reportIssue,
+            if (shouldShowWebcompatReporter) reportIssue else null,
             if (shouldShowSaveToCollection) saveToCollection else null,
             if (shouldDeleteDataOnQuit) deleteDataOnQuit else null,
             readerMode.apply { visible = ::shouldShowReaderMode },
