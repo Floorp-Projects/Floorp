@@ -7,6 +7,9 @@
 const { Cc, Ci, Cr } = require("chrome");
 const Services = require("Services");
 const flags = require("devtools/shared/flags");
+const {
+  wildcardToRegExp,
+} = require("devtools/server/actors/network-monitor/utils/wildcard-to-regexp");
 
 loader.lazyRequireGetter(
   this,
@@ -746,7 +749,11 @@ NetworkObserver.prototype = {
       if (blockedReason !== undefined) {
         // We were definitely blocked, but the blocker didn't say why.
         event.blockedReason = "unknown";
-      } else if (this.blockedURLs.some(url => httpActivity.url.includes(url))) {
+      } else if (
+        this.blockedURLs.some(url =>
+          wildcardToRegExp(url).test(httpActivity.url)
+        )
+      ) {
         channel.cancel(Cr.NS_BINDING_ABORTED);
         event.blockedReason = "devtools";
       }
