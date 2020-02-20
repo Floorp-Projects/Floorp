@@ -125,23 +125,33 @@ var ModuleManager = {
     this._modules.forEach(aCallback, this);
   },
 
-  updateRemoteTypeForURI(aURI) {
-    const currentType = this.browser.remoteType || E10SUtils.NOT_REMOTE;
-    const remoteType = E10SUtils.getRemoteTypeForURI(
+  getActor(aActorName) {
+    return this.browser.browsingContext.currentWindowGlobal.getActor(
+      aActorName
+    );
+  },
+
+  remoteTypeFor(aURI, currentType) {
+    return E10SUtils.getRemoteTypeForURI(
       aURI,
       GeckoViewSettings.useMultiprocess,
       /* useRemoteSubframes */ false,
       currentType,
       this.browser.currentURI
     );
+  },
 
-    debug`updateRemoteType: uri=${aURI} currentType=${currentType}
+  shouldLoadInThisProcess(aURI) {
+    const currentType = this.browser.remoteType || E10SUtils.NOT_REMOTE;
+    return currentType === this.remoteTypeFor(aURI, currentType);
+  },
+
+  async updateRemoteAndNavigate(aURI, aLoadOptions, aHistoryIndex = -1) {
+    const currentType = this.browser.remoteType || E10SUtils.NOT_REMOTE;
+    const remoteType = this.remoteTypeFor(aURI, currentType);
+
+    debug`updateRemoteAndNavigate: uri=${aURI} currentType=${currentType}
                              remoteType=${remoteType}`;
-
-    if (currentType === remoteType) {
-      // We're already using a child process of the correct type.
-      return false;
-    }
 
     if (
       remoteType !== E10SUtils.NOT_REMOTE &&
@@ -151,8 +161,29 @@ var ModuleManager = {
       return false;
     }
 
-    // Now we're switching the remoteness (value of "remote" attr).
+    // Session state like history is maintained at the process level so we need
+    // to collect it and restore it in the other process when switching.
+    // TODO: This should go away when we migrate the history to the main
+    // process Bug 1507287.
+    const sessionState = await this.getActor("GeckoViewContent").sendQuery(
+      "CollectSessionState"
+    );
+    const { history } = sessionState;
 
+    // If the navigation is from history we don't need to load the page again
+    // so we ignore loadOptions
+    if (aHistoryIndex >= 0) {
+      // Make sure the historyIndex is valid
+      history.index = aHistoryIndex + 1;
+      history.index = Math.max(
+        1,
+        Math.min(history.index, history.entries.length)
+      );
+    } else {
+      sessionState.loadOptions = aLoadOptions;
+    }
+
+    // Now we're switching the remoteness (value of "remote" attr).
     let disabledModules = [];
     this.forEach(module => {
       if (module.enabled) {
@@ -196,6 +227,11 @@ var ModuleManager = {
     disabledModules.forEach(module => {
       module.enabled = true;
     });
+
+    this.messageManager.sendAsyncMessage(
+      "GeckoView:RestoreState",
+      sessionState
+    );
 
     this.browser.focus();
     return true;
@@ -543,6 +579,10 @@ function startup() {
       },
     },
   ]);
+
+  // TODO: Bug 1569360 Allows actors to temporarely access ModuleManager until
+  // we migrate everything over to actors.
+  window.moduleManager = ModuleManager;
 
   Services.tm.dispatchToMainThread(() => {
     // This should always be the first thing we do here - any additional delayed
