@@ -57,6 +57,7 @@ EXPORTS.mozilla.dom += [
     'JSWindowActorChild.h',
     'JSWindowActorParent.h',
     'JSWindowActorService.h',
+    'MaybeDiscarded.h',
     'MemoryReportRequest.h',
     'PermissionMessageUtils.h',
     'PropertyBagUtils.h',

@@ -7,6 +7,7 @@
 #ifndef mozilla_dom_SyncedContext_h
 #define mozilla_dom_SyncedContext_h
 
+#include "mozilla/dom/MaybeDiscarded.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/Tuple.h"

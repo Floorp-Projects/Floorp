@@ -16,6 +16,7 @@
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/LoadURIOptionsBinding.h"
 #include "mozilla/dom/LocationBase.h"
+#include "mozilla/dom/MaybeDiscarded.h"
 #include "mozilla/dom/FeaturePolicyUtils.h"
 #include "mozilla/dom/SessionStorageManager.h"
 #include "mozilla/dom/UserActivation.h"
@@ -730,6 +731,7 @@ extern bool GetRemoteOuterWindowProxy(JSContext* aCx, BrowsingContext* aContext,
 using BrowsingContextTransaction = BrowsingContext::BaseTransaction;
 using BrowsingContextInitializer = BrowsingContext::IPCInitializer;
 using BrowsingContextChildren = BrowsingContext::Children;
+using MaybeDiscardedBrowsingContext = MaybeDiscarded<BrowsingContext>;
 
 // Specialize the transaction object for every translation unit it's used in.
 extern template class syncedcontext::Transaction<BrowsingContext>;
@@ -738,6 +740,15 @@ extern template class syncedcontext::Transaction<BrowsingContext>;
 
 // Allow sending BrowsingContext objects over IPC.
 namespace ipc {
+template <>
+struct IPDLParamTraits<dom::MaybeDiscarded<dom::BrowsingContext>> {
+  static void Write(IPC::Message* aMsg, IProtocol* aActor,
+                    const dom::MaybeDiscarded<dom::BrowsingContext>& aParam);
+  static bool Read(const IPC::Message* aMsg, PickleIterator* aIter,
+                   IProtocol* aActor,
+                   dom::MaybeDiscarded<dom::BrowsingContext>* aResult);
+};
+
 template <>
 struct IPDLParamTraits<dom::BrowsingContext*> {
   static void Write(IPC::Message* aMsg, IProtocol* aActor,
