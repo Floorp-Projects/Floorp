@@ -1240,7 +1240,11 @@ ShaderConfigOGL CompositorOGL::GetShaderConfigFor(Effect* aEffect,
     }
     case EffectTypes::NV12:
       config.SetNV12(true);
-      config.SetTextureTarget(LOCAL_GL_TEXTURE_RECTANGLE_ARB);
+      if (gl()->IsExtensionSupported(gl::GLContext::ARB_texture_rectangle)) {
+        config.SetTextureTarget(LOCAL_GL_TEXTURE_RECTANGLE_ARB);
+      } else {
+        config.SetTextureTarget(LOCAL_GL_TEXTURE_2D);
+      }
       break;
     case EffectTypes::COMPONENT_ALPHA: {
       config.SetComponentAlpha(true);
