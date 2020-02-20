@@ -14,7 +14,6 @@ cpu = CONFIG['CPU_ARCH']
 
 gen_src = '%s.c' % cpu
 GeneratedFile(gen_src, script='copy_source.py', entry_point='copy',
-              py2=True,
               inputs = ['../inject.c'])
 
 SOURCES += [
