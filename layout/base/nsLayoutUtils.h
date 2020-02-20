@@ -2125,9 +2125,8 @@ class nsLayoutUtils {
     SFE_WANT_FIRST_FRAME_IF_IMAGE = 1 << 1,
     /* Whether we should skip colorspace/gamma conversion */
     SFE_NO_COLORSPACE_CONVERSION = 1 << 2,
-    /* Specifies that the caller wants either OPAQUE or NON_PREMULT mAlphaType,
-       if this is can be done efficiently. */
-    SFE_PREFER_NO_PREMULTIPLY_ALPHA = 1 << 3,
+    /* Caller handles SFER::mAlphaType = NonPremult */
+    SFE_ALLOW_NON_PREMULT = 1 << 3,
     /* Whether we should skip getting a surface for vector images and
        return a DirectDrawInfo containing an imgIContainer instead. */
     SFE_NO_RASTERIZING_VECTORS = 1 << 4,
