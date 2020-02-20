@@ -939,6 +939,16 @@ def build_scriptworker_signing_payload(config, task, task_def):
     task['release-artifacts'] = list(artifacts)
 
 
+@payload_builder('notarization-poller', schema={
+    Required('uuid-manifest'): taskref_or_string,
+})
+def notarization_poller_payload(config, task, task_def):
+    worker = task['worker']
+    task_def['payload'] = {
+        'uuid_manifest':  worker['uuid-manifest']
+    }
+
+
 @payload_builder('beetmover', schema={
     # the maximum time to run, in seconds
     Required('max-run-time', default=600): int,
