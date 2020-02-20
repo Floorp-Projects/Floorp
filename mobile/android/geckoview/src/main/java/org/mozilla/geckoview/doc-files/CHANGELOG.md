@@ -20,8 +20,12 @@ exclude: true
 - ⚠️ Move [`GeckoSessionSettings.Builder#useMultiprocess`] to
   [`GeckoRuntimeSettings.Builder#useMultiprocess`][75.1]. Multiprocess state is
   no longer determined per session.
+- Added [`DebuggerDelegate#onExtensionListUpdated`][75.2] to notify that a temporary
+  extension has been installed by the debugger.
+  ([bug 1614295]({{bugzilla}}1614295))
 
 [75.1]: {{javadoc_uri}}/GeckoRuntimeSettings.Builder.html#useMultiprocess-boolean-
+[75.2]: {{javadoc_uri}}/WebExtensionController.DebuggerDelegate.html#onExtensionListUpdated--
 
 ## v74
 - Added [`WebExtensionController.enable`][74.1] and [`disable`][74.2] to
