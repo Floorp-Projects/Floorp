@@ -120,9 +120,6 @@ actions.COLLAPSE_DOMINATOR_TREE_NODE = "collapse-dominator-tree-node";
 
 actions.RESIZE_SHORTEST_PATHS = "resize-shortest-paths";
 
-// Fired when the memory front is changed.
-actions.UPDATE_MEMORY_FRONT = "update-memory-front";
-
 /** * Census Displays ***************************************************************/
 
 const COUNT = Object.freeze({ by: "count", count: true, bytes: true });
