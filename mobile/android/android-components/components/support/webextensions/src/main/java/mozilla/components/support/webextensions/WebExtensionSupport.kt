@@ -23,6 +23,7 @@ import mozilla.components.concept.engine.webextension.WebExtensionRuntime
 import mozilla.components.lib.state.ext.flowScoped
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.filterChanged
+import mozilla.components.support.webextensions.facts.emitWebExtensionsInitializedFact
 import java.util.concurrent.ConcurrentHashMap
 
 /**
@@ -219,6 +220,7 @@ object WebExtensionSupport {
         runtime.listInstalledWebExtensions(
             onSuccess = {
                 extensions -> extensions.forEach { registerInstalledExtension(store, it) }
+                emitWebExtensionsInitializedFact(extensions)
                 initializationResult.complete(Unit)
             },
             onError = {
