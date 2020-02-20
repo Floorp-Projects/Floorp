@@ -48,6 +48,7 @@ class InputType {
    */
   void DropReference();
 
+  virtual bool MinAndMaxLengthApply() const { return false; }
   virtual bool IsTooLong() const;
   virtual bool IsTooShort() const;
   virtual bool IsValueMissing() const;

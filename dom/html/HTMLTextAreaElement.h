@@ -180,7 +180,8 @@ class HTMLTextAreaElement final : public TextControlElement,
   }
   // nsGenericHTMLFormElementWithState::GetForm is fine
   using nsGenericHTMLFormElementWithState::GetForm;
-  int32_t MaxLength() { return GetIntAttr(nsGkAtoms::maxlength, -1); }
+  int32_t MaxLength() const { return GetIntAttr(nsGkAtoms::maxlength, -1); }
+  int32_t UsedMaxLength() const final { return MaxLength(); }
   void SetMaxLength(int32_t aMaxLength, ErrorResult& aError) {
     int32_t minLength = MinLength();
     if (aMaxLength < 0 || (minLength >= 0 && aMaxLength < minLength)) {
@@ -189,7 +190,7 @@ class HTMLTextAreaElement final : public TextControlElement,
       SetHTMLIntAttr(nsGkAtoms::maxlength, aMaxLength, aError);
     }
   }
-  int32_t MinLength() { return GetIntAttr(nsGkAtoms::minlength, -1); }
+  int32_t MinLength() const { return GetIntAttr(nsGkAtoms::minlength, -1); }
   void SetMinLength(int32_t aMinLength, ErrorResult& aError) {
     int32_t maxLength = MaxLength();
     if (aMinLength < 0 || (maxLength >= 0 && aMinLength > maxLength)) {
