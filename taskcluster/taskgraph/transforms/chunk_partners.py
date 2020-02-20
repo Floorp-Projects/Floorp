@@ -42,9 +42,16 @@ def chunk_partners(config, jobs):
         build_platform = dep_job.attributes["build_platform"]
         repack_id = dep_job.task.get('extra', {}).get('repack_id')
         repack_ids = dep_job.task.get('extra', {}).get('repack_ids')
+        copy_repack_ids = job.pop('copy-repack-ids', False)
 
+        if copy_repack_ids:
+            assert repack_ids, "dep_job {} doesn't have repack_ids!".format(
+                dep_job.label
+            )
+            job.setdefault('extra', {})['repack_ids'] = repack_ids
+            yield job
         # first downstream of the repack task, no chunking or fanout has been done yet
-        if not any([repack_id, repack_ids]):
+        elif not any([repack_id, repack_ids]):
             platform_repack_ids = _get_repack_ids_by_platform(partner_configs, build_platform)
             # we chunk mac signing
             if config.kind in ("release-partner-repack-signing",
