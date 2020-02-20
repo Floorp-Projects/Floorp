@@ -65,7 +65,7 @@ object Performance {
      * it is for testing visual metrics. These checks aren't full proof but most of our users won't have
      * ADB on and USB connected at the same time when running Firefox.
      */
-    fun isPerformanceTest(intent: Intent, context: Context): Boolean {
+    private fun isPerformanceTest(intent: Intent, context: Context): Boolean {
         if (!intent.getBooleanExtra(EXTRA_IS_PERFORMANCE_TEST, false)) {
             return false
         }
@@ -85,14 +85,14 @@ object Performance {
     /**
      * Bypasses the onboarding screen on launch
      */
-    fun disableOnboarding(context: Context) {
+    private fun disableOnboarding(context: Context) {
         FenixOnboarding(context).finish()
     }
 
     /**
      * Disables the tracking protection popup. However, TP is still on.
      */
-    fun disableTrackingProtectionPopups(context: Context) {
+    private fun disableTrackingProtectionPopups(context: Context) {
         Settings.getInstance(context).isOverrideTPPopupsForPerformanceTest = true
     }
 }
