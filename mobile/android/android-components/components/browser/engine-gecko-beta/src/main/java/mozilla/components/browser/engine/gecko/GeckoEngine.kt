@@ -239,9 +239,14 @@ class GeckoEngine(
         onSuccess: (WebExtension?) -> Unit,
         onError: (String, Throwable) -> Unit
     ) {
-        runtime.webExtensionController.update((extension as GeckoWebExtension).nativeExtension).then({
-            val updatedExtension = GeckoWebExtension(it!!, runtime.webExtensionController)
-            updatedExtension.registerActionHandler(webExtensionActionHandler)
+        runtime.webExtensionController.update((extension as GeckoWebExtension).nativeExtension).then({ geckoExtension ->
+            val updatedExtension = if (geckoExtension != null) {
+                GeckoWebExtension(geckoExtension, runtime.webExtensionController).also {
+                    it.registerActionHandler(webExtensionActionHandler)
+                }
+            } else {
+                null
+            }
             onSuccess(updatedExtension)
             GeckoResult<Void>()
         }, { throwable ->
