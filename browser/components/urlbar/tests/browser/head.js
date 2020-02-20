@@ -93,40 +93,44 @@ async function updateTopSites(condition, searchShortcuts = false) {
  * @returns {*}
  *   The value returned from `awaitCallback`.
  */
-async function checkIntervention({
+function checkIntervention({
   searchString,
   tip,
   title,
   button,
   awaitCallback,
 } = {}) {
-  // Do a search that triggers the tip.
-  let [result, element] = await awaitTip(searchString);
-  Assert.strictEqual(result.payload.type, tip);
-  await element.ownerDocument.l10n.translateFragment(element);
+  // Opening modal dialogs confuses focus on Linux just after them, thus run
+  // these checks in separate tabs to better isolate them.
+  return BrowserTestUtils.withNewTab("about:blank", async () => {
+    // Do a search that triggers the tip.
+    let [result, element] = await awaitTip(searchString);
+    Assert.strictEqual(result.payload.type, tip);
+    await element.ownerDocument.l10n.translateFragment(element);
 
-  let actualTitle = element._elements.get("title").textContent;
-  if (typeof title == "string") {
-    Assert.equal(actualTitle, title, "Title string");
-  } else {
-    // regexp
-    Assert.ok(title.test(actualTitle), "Title regexp");
-  }
+    let actualTitle = element._elements.get("title").textContent;
+    if (typeof title == "string") {
+      Assert.equal(actualTitle, title, "Title string");
+    } else {
+      // regexp
+      Assert.ok(title.test(actualTitle), "Title regexp");
+    }
 
-  let actualButton = element._elements.get("tipButton").textContent;
-  if (typeof button == "string") {
-    Assert.equal(actualButton, button, "Button string");
-  } else {
-    // regexp
-    Assert.ok(button.test(actualButton), "Button regexp");
-  }
+    let actualButton = element._elements.get("tipButton").textContent;
+    if (typeof button == "string") {
+      Assert.equal(actualButton, button, "Button string");
+    } else {
+      // regexp
+      Assert.ok(button.test(actualButton), "Button regexp");
+    }
 
-  Assert.ok(BrowserTestUtils.is_visible(element._elements.get("helpButton")));
+    Assert.ok(BrowserTestUtils.is_visible(element._elements.get("helpButton")));
 
-  let values = await Promise.all([awaitCallback(), pickTip()]);
-  Assert.ok(true, "Refresh dialog opened");
+    let values = await Promise.all([awaitCallback(), pickTip()]);
+    Assert.ok(true, "Refresh dialog opened");
 
-  return values[0] || null;
+    return values[0] || null;
+  });
 }
 
 /**
