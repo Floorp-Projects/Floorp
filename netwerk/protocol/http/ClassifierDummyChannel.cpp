@@ -747,18 +747,6 @@ NS_IMETHODIMP ClassifierDummyChannel::IsThirdPartyTrackingResource(
   return NS_OK;
 }
 
-NS_IMETHODIMP ClassifierDummyChannel::IsSocialTrackingResource(
-    bool* aIsSocialTrackingResource) {
-  MOZ_ASSERT(!mFirstPartyClassificationFlags ||
-             !mThirdPartyClassificationFlags);
-  *aIsSocialTrackingResource =
-      UrlClassifierCommon::IsSocialTrackingClassificationFlag(
-          mThirdPartyClassificationFlags) ||
-      UrlClassifierCommon::IsSocialTrackingClassificationFlag(
-          mFirstPartyClassificationFlags);
-  return NS_OK;
-}
-
 NS_IMETHODIMP ClassifierDummyChannel::IsThirdPartySocialTrackingResource(
     bool* aIsThirdPartySocialTrackingResource) {
   MOZ_ASSERT(!mFirstPartyClassificationFlags ||

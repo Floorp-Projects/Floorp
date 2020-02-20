@@ -1495,18 +1495,6 @@ HttpBaseChannel::IsThirdPartyTrackingResource(bool* aIsTrackingResource) {
 }
 
 NS_IMETHODIMP
-HttpBaseChannel::IsSocialTrackingResource(bool* aIsSocialTrackingResource) {
-  MOZ_ASSERT(!mFirstPartyClassificationFlags ||
-             !mThirdPartyClassificationFlags);
-  *aIsSocialTrackingResource =
-      UrlClassifierCommon::IsSocialTrackingClassificationFlag(
-          mThirdPartyClassificationFlags) ||
-      UrlClassifierCommon::IsSocialTrackingClassificationFlag(
-          mFirstPartyClassificationFlags);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 HttpBaseChannel::IsThirdPartySocialTrackingResource(
     bool* aIsThirdPartySocialTrackingResource) {
   MOZ_ASSERT(!mFirstPartyClassificationFlags ||
