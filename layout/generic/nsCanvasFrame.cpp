@@ -24,7 +24,6 @@
 #include "nsPrintfCString.h"
 #include "mozilla/AccessibleCaretEventHub.h"
 #include "mozilla/ComputedStyle.h"
-#include "mozilla/StaticPrefs_browser.h"
 #include "mozilla/dom/AnonymousContent.h"
 #include "mozilla/layers/StackingContextHelper.h"
 #include "mozilla/layers/RenderRootStateManager.h"
@@ -517,19 +516,10 @@ void nsCanvasFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
     bool needBlendContainer = false;
     nsDisplayListBuilder::AutoContainerASRTracker contASRTracker(aBuilder);
 
-    // In high-contrast-mode, we suppress background-image on the canvas frame
-    // (even when backplating), because users expect site backgrounds to conform
-    // to their HCM background color when a solid color is rendered, and some
-    // websites use solid-color images instead of an overwritable background
-    // color.
-    const bool suppressBackgroundImage =
-        !PresContext()->PrefSheetPrefs().mUseDocumentColors &&
-        StaticPrefs::browser_display_suppress_canvas_background_image_on_forced_colors();
-
     // Create separate items for each background layer.
     const nsStyleImageLayers& layers = bg->StyleBackground()->mImage;
     NS_FOR_VISIBLE_IMAGE_LAYERS_BACK_TO_FRONT(i, layers) {
-      if (layers.mLayers[i].mImage.IsNone() || suppressBackgroundImage) {
+      if (layers.mLayers[i].mImage.IsNone()) {
         continue;
       }
       if (layers.mLayers[i].mBlendMode != NS_STYLE_BLEND_NORMAL) {
