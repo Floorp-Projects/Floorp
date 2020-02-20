@@ -10,6 +10,7 @@
 #include "nsCOMPtr.h"
 #include "nsIAsyncShutdown.h"
 #include "nsISupportsImpl.h"
+#include "nsITimer.h"
 
 #include "ServiceWorkerShutdownState.h"
 #include "mozilla/MozPromise.h"
@@ -20,14 +21,31 @@ namespace dom {
 
 /**
  * Main thread only.
+ *
+ * A ServiceWorkerShutdownBlocker will "accept promises", and each of these
+ * promises will be a "pending promise" while it hasn't settled. At some point,
+ * `StopAcceptingPromises()` should be called and the state will change to "not
+ * accepting promises" (this is a one way state transition). The shutdown phase
+ * of the shutdown client the blocker is created with will be blocked until
+ * there are no more pending promises.
+ *
+ * It doesn't matter whether the state changes to "not accepting promises"
+ * before or during the associated shutdown phase.
+ *
+ * In beta/release builds there will be an additional timer that starts ticking
+ * once both the shutdown phase has been reached and the state is "not accepting
+ * promises". If when the timer expire there are still pending promises,
+ * shutdown will be forcefully unblocked.
  */
-class ServiceWorkerShutdownBlocker final : public nsIAsyncShutdownBlocker {
+class ServiceWorkerShutdownBlocker final : public nsIAsyncShutdownBlocker,
+                                           public nsITimerCallback {
  public:
   using Progress = ServiceWorkerShutdownState::Progress;
   static const uint32_t kInvalidShutdownStateId = 0;
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIASYNCSHUTDOWNBLOCKER
+  NS_DECL_NSITIMERCALLBACK
 
   /**
    * Returns the registered shutdown blocker if registration succeeded and
@@ -82,6 +100,11 @@ class ServiceWorkerShutdownBlocker final : public nsIAsyncShutdownBlocker {
   void MaybeUnblockShutdown();
 
   /**
+   * Requires `BlockShutdown()` to have been called.
+   */
+  void UnblockShutdown();
+
+  /**
    * Returns the remaining pending promise count (i.e. excluding the promise
    * that just settled).
    */
@@ -90,6 +113,15 @@ class ServiceWorkerShutdownBlocker final : public nsIAsyncShutdownBlocker {
   bool IsAcceptingPromises() const;
 
   uint32_t GetPendingPromises() const;
+
+  /**
+   * Initializes a timer that will unblock shutdown unconditionally once it's
+   * expired (even if there are still pending promises). No-op if:
+   * 1) not a beta or release build, or
+   * 2) shutdown is not being blocked or `StopAcceptingPromises()` has not been
+   *    called.
+   */
+  void MaybeInitUnblockShutdownTimer();
 
   struct AcceptingPromises {
     uint32_t mPendingPromises = 0;
@@ -106,6 +138,8 @@ class ServiceWorkerShutdownBlocker final : public nsIAsyncShutdownBlocker {
   nsCOMPtr<nsIAsyncShutdownClient> mShutdownClient;
 
   HashMap<uint32_t, ServiceWorkerShutdownState> mShutdownStates;
+
+  nsCOMPtr<nsITimer> mTimer;
 };
 
 }  // namespace dom
