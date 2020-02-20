@@ -370,7 +370,12 @@ SHistoryChild::CreateEntry(nsISHEntry** aEntry) {
 }
 
 nsresult SHistoryChild::LoadURI(LoadSHEntryData& aLoadData) {
-  nsCOMPtr<nsIDocShell> docShell = aLoadData.browsingContext()->GetDocShell();
+  if (NS_WARN_IF(aLoadData.browsingContext().IsNullOrDiscarded())) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<nsIDocShell> docShell =
+      aLoadData.browsingContext().get()->GetDocShell();
   NS_ENSURE_TRUE(docShell, NS_ERROR_FAILURE);
 
   RefPtr<SHEntryChild> entry;

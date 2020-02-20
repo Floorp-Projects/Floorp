@@ -3474,11 +3474,18 @@ void ContentChild::DeallocPSHEntryChild(PSHEntryChild* aActor) {
   RefPtr<SHEntryChild> child(dont_AddRef(static_cast<SHEntryChild*>(aActor)));
 }
 
-PSHistoryChild* ContentChild::AllocPSHistoryChild(BrowsingContext* aContext) {
+PSHistoryChild* ContentChild::AllocPSHistoryChild(
+    const MaybeDiscarded<BrowsingContext>& aContext) {
+  // FIXME: How should SHistoryChild construction deal with a null or discarded
+  // BrowsingContext? This will likely kill the current child process.
+  if (NS_WARN_IF(aContext.IsNullOrDiscarded())) {
+    return nullptr;
+  }
+
   // We take a strong reference for the IPC layer. The Release implementation
   // for SHistoryChild will ask the IPC layer to release it (through
   // DeallocPSHistoryChild) if that is the only remaining reference.
-  return do_AddRef(new SHistoryChild(aContext)).take();
+  return do_AddRef(new SHistoryChild(aContext.get())).take();
 }
 
 void ContentChild::DeallocPSHistoryChild(PSHistoryChild* aActor) {
