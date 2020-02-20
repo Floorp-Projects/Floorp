@@ -1262,6 +1262,16 @@ impl RenderBackend {
                         self.resource_cache.enable_multithreading(enable);
                         return RenderBackendStatus::Continue;
                     }
+                    DebugCommand::SetBatchingLookback(count) => {
+                        self.frame_config.batch_lookback_count = count as usize;
+                        self.low_priority_scene_tx.send(SceneBuilderRequest::SetFrameBuilderConfig(
+                            self.frame_config.clone()
+                        )).unwrap();
+                        for (_, doc) in &mut self.documents {
+                            doc.scene.config.batch_lookback_count = count as usize;
+                        }
+                        return RenderBackendStatus::Continue;
+                    }
                     DebugCommand::SimulateLongSceneBuild(time_ms) => {
                         self.scene_tx.send(SceneBuilderRequest::SimulateLongSceneBuild(time_ms)).unwrap();
                         return RenderBackendStatus::Continue;

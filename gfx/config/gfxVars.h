@@ -48,6 +48,7 @@ class gfxVarReceiver;
   _(UseWebRenderMultithreading, bool, false)                       \
   _(WebRenderMaxPartialPresentRects, int32_t, 0)                   \
   _(WebRenderDebugFlags, int32_t, 0)                               \
+  _(WebRenderBatchingLookback, int32_t, 10)                        \
   _(ScreenDepth, int32_t, 0)                                       \
   _(GREDirectory, nsString, nsString())                            \
   _(ProfDirectory, nsString, nsString())                           \

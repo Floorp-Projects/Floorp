@@ -1774,6 +1774,16 @@ void WebRenderBridgeParent::UpdateMultithreading() {
   }
 }
 
+void WebRenderBridgeParent::UpdateBatchingParameters() {
+  uint32_t count = gfxVars::WebRenderBatchingLookback();
+  for (auto& api : mApis) {
+    if (!api) {
+      continue;
+    }
+    api->SetBatchingLookback(count);
+  }
+}
+
 #if defined(MOZ_WIDGET_ANDROID)
 void WebRenderBridgeParent::RequestScreenPixels(
     UiCompositorControllerParent* aController) {

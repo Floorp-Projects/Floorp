@@ -1558,6 +1558,11 @@ pub unsafe extern "C" fn wr_api_enable_multithreading(dh: &mut DocumentHandle, e
     dh.api.send_debug_cmd(DebugCommand::EnableMultithreading(enable));
 }
 
+#[no_mangle]
+pub unsafe extern "C" fn wr_api_set_batching_lookback(dh: &mut DocumentHandle, count: u32) {
+    dh.api.send_debug_cmd(DebugCommand::SetBatchingLookback(count));
+}
+
 fn make_transaction(do_async: bool) -> Transaction {
     let mut transaction = Transaction::new();
     // Ensure that we either use async scene building or not based on the
