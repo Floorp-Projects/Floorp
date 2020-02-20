@@ -39,7 +39,7 @@ class MOZ_STACK_CLASS ContentEventHandler {
    */
   class MOZ_STACK_CLASS RawRange final {
    public:
-    RawRange() {}
+    RawRange() = default;
 
     void Clear() {
       mRoot = nullptr;
@@ -169,7 +169,7 @@ class MOZ_STACK_CLASS ContentEventHandler {
     // referred.
     bool mAfterOpenTag = true;
 
-    NodePosition() : RangeBoundary() {}
+    NodePosition() = default;
 
     NodePosition(nsINode* aContainer, int32_t aOffset)
         : RangeBoundary(aContainer, aOffset) {}

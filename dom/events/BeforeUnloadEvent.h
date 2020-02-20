@@ -32,7 +32,7 @@ class BeforeUnloadEvent : public Event {
   void SetReturnValue(const nsAString& aReturnValue);
 
  protected:
-  ~BeforeUnloadEvent() {}
+  ~BeforeUnloadEvent() = default;
 
   nsString mText;
 };

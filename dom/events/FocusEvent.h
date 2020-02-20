@@ -32,7 +32,7 @@ class FocusEvent : public UIEvent {
                                                   const FocusEventInit& aParam);
 
  protected:
-  ~FocusEvent() {}
+  ~FocusEvent() = default;
 
   void InitFocusEvent(const nsAString& aType, bool aCanBubble, bool aCancelable,
                       nsGlobalWindowInner* aView, int32_t aDetail,
