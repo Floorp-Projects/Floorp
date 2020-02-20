@@ -42,21 +42,21 @@ class DefaultBrowsingModeManager(
     private var _mode: BrowsingMode = BrowsingMode.Normal
 ) : BrowsingModeManager {
 
-    private var _browsingModeListener: BrowsingModeListener? = null
+    private val browsingModeListeners = mutableSetOf<BrowsingModeListener>()
 
     fun registerBrowsingModeListener(browsingModeListener: BrowsingModeListener) {
-        _browsingModeListener = browsingModeListener
+        browsingModeListeners.add(browsingModeListener)
     }
 
-    fun unregisterBrowsingModeListener() {
-        _browsingModeListener = null
+    fun unregisterBrowsingModeListener(browsingModeListener: BrowsingModeListener) {
+        browsingModeListeners.remove(browsingModeListener)
     }
 
     override var mode: BrowsingMode
         get() = _mode
         set(value) {
             _mode = value
-            _browsingModeListener?.onBrowsingModeChange(value)
+            browsingModeListeners.forEach { it.onBrowsingModeChange(value) }
             Settings.instance?.lastKnownMode = value
         }
 }

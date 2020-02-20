@@ -178,7 +178,7 @@ open class HomeActivity : LocaleAwareAppCompatActivity() {
 
     final override fun onStop() {
         super.onStop()
-        browsingModeManager.unregisterBrowsingModeListener()
+        browsingModeManager.unregisterBrowsingModeListener(browsingModeListener)
     }
 
     final override fun onPause() {
