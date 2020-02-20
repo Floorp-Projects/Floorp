@@ -790,10 +790,6 @@ class nsFrameSelection final {
   nsresult SelectBlockOfCells(nsIContent* aStartNode, nsIContent* aEndNode);
   nsresult SelectRowOrColumn(nsIContent* aCellContent,
                              mozilla::TableSelectionMode aTarget);
-  nsresult UnselectCells(nsIContent* aTable, int32_t aStartRowIndex,
-                         int32_t aStartColumnIndex, int32_t aEndRowIndex,
-                         int32_t aEndColumnIndex,
-                         bool aRemoveOutsideOfCellRange);
 
   static nsresult GetCellIndexes(nsIContent* aCell, int32_t& aRowIndex,
                                  int32_t& aColIndex);
@@ -822,6 +818,13 @@ class nsFrameSelection final {
     // not return null, then the first node in the returned range is a cell
     // (according to GetFirstCellNodeInRange).
     nsRange* GetNextCellRange(const mozilla::dom::Selection& aNormalSelection);
+
+    // TODO: mark as `MOZ_CAN_RUN_SCRIPT`.
+    nsresult UnselectCells(nsIContent* aTable, int32_t aStartRowIndex,
+                           int32_t aStartColumnIndex, int32_t aEndRowIndex,
+                           int32_t aEndColumnIndex,
+                           bool aRemoveOutsideOfCellRange,
+                           mozilla::dom::Selection& aNormalSelection);
 
     nsCOMPtr<nsINode> mCellParent;  // used to snap to table selection
     nsCOMPtr<nsIContent> mStartSelectedCell;
