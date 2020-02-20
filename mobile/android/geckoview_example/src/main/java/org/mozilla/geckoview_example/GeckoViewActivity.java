@@ -94,12 +94,14 @@ interface BrowserActionDelegate {
 
 class WebExtensionManager implements WebExtension.ActionDelegate,
                                      WebExtensionController.PromptDelegate,
+                                     WebExtensionController.DebuggerDelegate,
                                      TabSessionManager.TabObserver {
     public WebExtension extension;
 
     private LruCache<WebExtension.Icon, Bitmap> mBitmapCache = new LruCache<>(5);
     private GeckoRuntime mRuntime;
     private WebExtension.Action mDefaultAction;
+    private TabSessionManager mTabManager;
 
     private WeakReference<BrowserActionDelegate> mActionDelegate;
 
@@ -107,6 +109,11 @@ class WebExtensionManager implements WebExtension.ActionDelegate,
     @Override
     public GeckoResult<AllowOrDeny> onInstallPrompt(final @NonNull WebExtension extension) {
         return GeckoResult.fromValue(AllowOrDeny.ALLOW);
+    }
+
+    @Override
+    public void onExtensionListUpdated() {
+        refreshExtensionList();
     }
 
     // We only support either one browserAction or one pageAction
@@ -244,12 +251,12 @@ class WebExtensionManager implements WebExtension.ActionDelegate,
         }
     }
 
-    public GeckoResult<Void> unregisterExtension(TabSessionManager tabManager) {
+    public GeckoResult<Void> unregisterExtension() {
         if (extension == null) {
             return GeckoResult.fromValue(null);
         }
 
-        tabManager.unregisterWebExtension();
+        mTabManager.unregisterWebExtension();
 
         return mRuntime.getWebExtensionController().uninstall(extension).accept((unused) -> {
             extension = null;
@@ -258,22 +265,24 @@ class WebExtensionManager implements WebExtension.ActionDelegate,
         });
     }
 
-    public void registerExtension(WebExtension extension,
-                                  TabSessionManager tabManager) {
+    public void registerExtension(WebExtension extension) {
         extension.setActionDelegate(this);
-        tabManager.setWebExtensionActionDelegate(extension, this);
+        mTabManager.setWebExtensionActionDelegate(extension, this);
         this.extension = extension;
+    }
+
+    private void refreshExtensionList() {
+        mRuntime.getWebExtensionController()
+                .list().accept(extensions -> {
+            for (final WebExtension extension : extensions) {
+                registerExtension(extension);
+            }
+        });
     }
 
     public WebExtensionManager(GeckoRuntime runtime,
                                TabSessionManager tabManager) {
-        runtime.getWebExtensionController()
-                .list().accept(extensions -> {
-            for (final WebExtension extension : extensions) {
-                registerExtension(extension, tabManager);
-            }
-        });
-
+        mTabManager = tabManager;
         mRuntime = runtime;
     }
 }
@@ -414,6 +423,8 @@ public class GeckoViewActivity
 
             sExtensionManager = new WebExtensionManager(sGeckoRuntime, mTabSessionManager);
             mTabSessionManager.setTabObserver(sExtensionManager);
+
+            sGeckoRuntime.getWebExtensionController().setDebuggerDelegate(sExtensionManager);
 
             // `getSystemService` call requires API level 23
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
@@ -797,12 +808,12 @@ public class GeckoViewActivity
             setPopupVisibility(false);
             mPopupView = null;
             mPopupSession = null;
-            sExtensionManager.unregisterExtension(mTabSessionManager).then(unused -> {
+            sExtensionManager.unregisterExtension().then(unused -> {
                 final WebExtensionController controller = sGeckoRuntime.getWebExtensionController();
                 controller.setPromptDelegate(sExtensionManager);
                 return controller.install(uri);
             }).accept(extension ->
-                    sExtensionManager.registerExtension(extension, mTabSessionManager));
+                    sExtensionManager.registerExtension(extension));
         });
         builder.setNegativeButton(R.string.cancel, (dialog, which) -> {
             // Nothing to do

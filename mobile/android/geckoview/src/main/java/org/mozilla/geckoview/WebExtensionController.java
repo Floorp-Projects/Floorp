@@ -27,6 +27,7 @@ import static org.mozilla.geckoview.WebExtension.InstallException.ErrorCodes.ERR
 public class WebExtensionController {
     private final static String LOGTAG = "WebExtension";
 
+    private DebuggerDelegate mDebuggerDelegate;
     private PromptDelegate mPromptDelegate;
     private final WebExtension.Listener mListener;
 
@@ -291,6 +292,23 @@ public class WebExtensionController {
         } */
     }
 
+    public interface DebuggerDelegate {
+        /**
+         * Called whenever the list of installed extensions has been modified using the debugger
+         * with tools like web-ext.
+         *
+         * This is intended as an opportunity to refresh the list of installed extensions using
+         * {@link WebExtensionController#list} and to set delegates on the new {@link WebExtension}
+         * objects, e.g. using {@link WebExtension#setActionDelegate} and
+         * {@link WebExtension#setMessageDelegate}.
+         *
+         * @see <a href="https://extensionworkshop.com/documentation/develop/getting-started-with-web-ext">
+         *     Getting started with web-ext</a>
+         */
+        @UiThread
+        default void onExtensionListUpdated() {}
+    }
+
     /**
      * @return the current {@link PromptDelegate} instance.
      * @see PromptDelegate
@@ -326,6 +344,29 @@ public class WebExtensionController {
         }
 
         mPromptDelegate = delegate;
+    }
+
+    /**
+     * Set the {@link DebuggerDelegate} for this instance. This delegate will receive updates
+     * about extension changes using developer tools.
+     *
+     * @param delegate the Delegate instance
+     */
+    @UiThread
+    public void setDebuggerDelegate(final @NonNull DebuggerDelegate delegate) {
+        if (delegate == null && mDebuggerDelegate != null) {
+            EventDispatcher.getInstance().unregisterUiThreadListener(
+                    mInternals,
+                    "GeckoView:WebExtension:DebuggerListUpdated"
+            );
+        } else if (delegate != null && mDebuggerDelegate == null) {
+            EventDispatcher.getInstance().registerUiThreadListener(
+                    mInternals,
+                    "GeckoView:WebExtension:DebuggerListUpdated"
+            );
+        }
+
+        mDebuggerDelegate = delegate;
     }
 
     private static class WebExtensionResult extends GeckoResult<WebExtension>
@@ -662,6 +703,11 @@ public class WebExtensionController {
             return;
         } else if ("GeckoView:WebExtension:UpdatePrompt".equals(event)) {
             updatePrompt(bundle, callback);
+            return;
+        } else if ("GeckoView:WebExtension:DebuggerListUpdated".equals(event)) {
+            if (mDebuggerDelegate != null) {
+                mDebuggerDelegate.onExtensionListUpdated();
+            }
             return;
         }
 

@@ -8,6 +8,7 @@ const { AddonManager } = require("resource://gre/modules/AddonManager.jsm");
 const protocol = require("devtools/shared/protocol");
 const { FileUtils } = require("resource://gre/modules/FileUtils.jsm");
 const { addonsSpec } = require("devtools/shared/specs/addon/addons");
+const { Services } = require("resource://gre/modules/Services.jsm");
 
 // This actor is not used by DevTools, but is relied on externally by
 // webext-run and the Firefox VS-Code plugin. see bug #1578108
@@ -25,6 +26,8 @@ const AddonsActor = protocol.ActorClassWithSpec(addonsSpec, {
     } catch (error) {
       throw new Error(`Could not install add-on at '${addonPath}': ${error}`);
     }
+
+    Services.obs.notifyObservers(null, "devtools-installed-addon", addon.id);
 
     // TODO: once the add-on actor has been refactored to use
     // protocol.js, we could return it directly.
