@@ -61,6 +61,7 @@ import org.mozilla.fenix.library.bookmarks.BookmarkFragmentDirections
 import org.mozilla.fenix.library.history.HistoryFragmentDirections
 import org.mozilla.fenix.perf.HotStartPerformanceMonitor
 import org.mozilla.fenix.perf.Performance
+import org.mozilla.fenix.perf.StartupTimeline
 import org.mozilla.fenix.search.SearchFragmentDirections
 import org.mozilla.fenix.settings.DefaultBrowserSettingsFragmentDirections
 import org.mozilla.fenix.settings.SettingsFragmentDirections
@@ -125,8 +126,6 @@ open class HomeActivity : LocaleAwareAppCompatActivity() {
             }
         }
 
-        Performance.instrumentColdStartupToHomescreenTime(this)
-
         externalSourceIntentProcessors.any { it.process(intent, navHost.navController, this.intent) }
 
         Performance.processIntentIfPerformanceTest(intent, this)
@@ -143,6 +142,7 @@ open class HomeActivity : LocaleAwareAppCompatActivity() {
         supportActionBar?.hide()
 
         lifecycle.addObserver(webExtensionPopupFeature)
+        StartupTimeline.onActivityCreateEndHome(this)
     }
 
     @CallSuper

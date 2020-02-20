@@ -16,6 +16,7 @@ import org.mozilla.fenix.components.getType
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
+import org.mozilla.fenix.perf.StartupTimeline
 import org.mozilla.fenix.shortcut.NewTabShortcutIntentProcessor
 
 /**
@@ -35,6 +36,8 @@ class IntentReceiverActivity : Activity() {
             intent.stripUnwantedFlags()
             processIntent(intent)
         }
+
+        StartupTimeline.onActivityCreateEndIntentReceiver()
     }
 
     suspend fun processIntent(intent: Intent) {
