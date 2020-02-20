@@ -23,7 +23,7 @@ let root, store, unsubscribe;
 
 const initialize = async function() {
   // Exposed by panel.js
-  const { gFront, gToolbox, gHeapAnalysesClient } = window;
+  const { gToolbox, gHeapAnalysesClient } = window;
 
   root = document.querySelector("#app");
   store = Store();
@@ -35,11 +35,12 @@ const initialize = async function() {
   ReactDOM.render(provider, root);
   unsubscribe = store.subscribe(onStateChange);
 
-  // Connect memory front and component.
-  store.dispatch(updateMemoryFront(gFront));
-
   // Exposed for tests.
   window.gStore = store;
+};
+
+const updateFront = front => {
+  store.dispatch(updateMemoryFront(front));
 };
 
 const destroy = function() {
@@ -76,4 +77,4 @@ function onStateChange() {
   isHighlighted = isRecording;
 }
 
-module.exports = { initialize, destroy };
+module.exports = { initialize, updateFront, destroy };
