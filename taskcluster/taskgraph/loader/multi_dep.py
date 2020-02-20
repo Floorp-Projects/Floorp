@@ -77,6 +77,33 @@ def loader(kind, path, config, params, loaded_tasks):
         yield job
 
 
+def skip_only_or_not(config, task):
+    """Return True if we should skip this task based on only_ or not_ config."""
+    only_platforms = config.get('only-for-build-platforms')
+    not_platforms = config.get('not-for-build-platforms')
+    only_attributes = config.get('only-for-attributes')
+    not_attributes = config.get('not-for-attributes')
+    task_attrs = task.attributes
+    if only_platforms or not_platforms:
+        platform = task_attrs.get('build_platform')
+        build_type = task_attrs.get('build_type')
+        if not platform or not build_type:
+            return True
+        combined_platform = "{}/{}".format(platform, build_type)
+        if only_platforms and combined_platform not in only_platforms:
+            return True
+        elif not_platforms and combined_platform in not_platforms:
+            return True
+    if only_attributes:
+        if not set(only_attributes) & set(task_attrs):
+            # make sure any attribute exists
+            return True
+    if not_attributes:
+        if set(not_attributes) & set(task_attrs):
+            return True
+    return False
+
+
 def group_tasks(config, tasks):
     group_by_fn = GROUP_BY_MAP[config['group-by']]
 
@@ -92,27 +119,16 @@ def group_tasks(config, tasks):
 
 @group_by('platform')
 def platform_grouping(config, tasks):
-    only_platforms = config.get('only-for-build-platforms')
-    not_platforms = config.get('not-for-build-platforms')
-
     groups = {}
     for task in tasks:
         if task.kind not in config.get('kind-dependencies', []):
+            continue
+        if skip_only_or_not(config, task):
             continue
         platform = task.attributes.get('build_platform')
         build_type = task.attributes.get('build_type')
         product = task.attributes.get('shipping_product',
                                       task.task.get('shipping-product'))
-
-        # Skip only_ and not_ platforms that don't match
-        if only_platforms or not_platforms:
-            if not platform or not build_type:
-                continue
-            combined_platform = "{}/{}".format(platform, build_type)
-            if only_platforms and combined_platform not in only_platforms:
-                continue
-            elif not_platforms and combined_platform in not_platforms:
-                continue
 
         groups.setdefault((platform, build_type, product), []).append(task)
     return groups
@@ -130,12 +146,12 @@ def single_locale_grouping(config, tasks):
     be useful elsewhere.
 
     """
-    only_platforms = config.get('only-for-build-platforms')
-    not_platforms = config.get('not-for-build-platforms')
     groups = {}
 
     for task in tasks:
         if task.kind not in config.get('kind-dependencies', []):
+            continue
+        if skip_only_or_not(config, task):
             continue
         platform = task.attributes.get('build_platform')
         build_type = task.attributes.get('build_type')
@@ -144,16 +160,6 @@ def single_locale_grouping(config, tasks):
         task_locale = task.attributes.get('locale')
         chunk_locales = task.attributes.get('chunk_locales')
         locales = chunk_locales or [task_locale]
-
-        # Skip only_ and not_ platforms that don't match
-        if only_platforms or not_platforms:
-            if not platform or not build_type:
-                continue
-            combined_platform = "{}/{}".format(platform, build_type)
-            if only_platforms and combined_platform not in only_platforms:
-                continue
-            elif not_platforms and combined_platform in not_platforms:
-                continue
 
         for locale in locales:
             locale_key = (platform, build_type, product, locale)
