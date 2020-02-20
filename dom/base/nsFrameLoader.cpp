@@ -178,7 +178,6 @@ nsFrameLoader::nsFrameLoader(Element* aOwner, BrowsingContext* aBrowsingContext,
       mLoadingOriginalSrc(false),
       mRemoteBrowserShown(false),
       mIsRemoteFrame(!aRemoteType.IsEmpty()),
-      mWillChangeProcess(false),
       mObservingOwnerContent(false),
       mTabProcessCrashFired(false) {}
 
@@ -281,34 +280,16 @@ static already_AddRefed<BrowsingContext> CreateBrowsingContext(
   nsAutoString frameName;
   GetFrameName(aOwner, frameName);
 
-  // Create our BrowsingContext without immediately attaching it. It's possible
-  // that no DocShell or remote browser will ever be created for this
-  // FrameLoader, particularly if the document that we were created for is not
-  // currently active. And in that latter case, if we try to attach our BC now,
-  // it will wind up attached as a child of the currently active inner window
-  // for the BrowsingContext, and cause no end of trouble.
   if (IsTopContent(parentContext, aOwner)) {
     // Create toplevel content without a parent & as Type::Content.
-    RefPtr<BrowsingContext> bc = BrowsingContext::CreateDetached(
-        nullptr, aOpener, frameName, BrowsingContext::Type::Content);
-
-    // If this is a mozbrowser frame, pretend it's windowless so that it gets
-    // ownership of its BrowsingContext even though it's a top-level content
-    // frame. This is horrible, but will fortunately go away soon.
-    if (nsCOMPtr<nsIMozBrowserFrame> mozbrowser =
-            aOwner->GetAsMozBrowserFrame()) {
-      if (mozbrowser->GetReallyIsBrowser()) {
-        bc->SetWindowless();
-      }
-    }
-    return bc.forget();
+    return BrowsingContext::Create(nullptr, aOpener, frameName,
+                                   BrowsingContext::Type::Content);
   }
 
   auto type = parentContext->IsContent() ? BrowsingContext::Type::Content
                                          : BrowsingContext::Type::Chrome;
 
-  return BrowsingContext::CreateDetached(parentContext, aOpener, frameName,
-                                         type);
+  return BrowsingContext::Create(parentContext, aOpener, frameName, type);
 }
 
 static bool InitialLoadIsRemote(Element* aOwner) {
@@ -1917,10 +1898,6 @@ void nsFrameLoader::DestroyDocShell() {
     GetDocShell()->Destroy();
   }
 
-  if (!mWillChangeProcess && mBrowsingContext->EverAttached()) {
-    mBrowsingContext->Detach();
-  }
-
   mBrowsingContext = nullptr;
   mDocShell = nullptr;
 
@@ -2036,8 +2013,6 @@ nsresult nsFrameLoader::MaybeCreateDocShell() {
   if (NS_WARN_IF(!parentDocShell)) {
     return NS_ERROR_UNEXPECTED;
   }
-
-  mBrowsingContext->EnsureAttached();
 
   // nsDocShell::Create will attach itself to the passed browsing
   // context inside of nsDocShell::Create
@@ -2528,8 +2503,6 @@ bool nsFrameLoader::TryRemoteBrowserInternal() {
     return false;
   }
 
-  mBrowsingContext->EnsureAttached();
-
   RefPtr<ContentParent> openerContentParent;
   RefPtr<nsIPrincipal> openerContentPrincipal;
   RefPtr<BrowserParent> sameTabGroupAs;
@@ -2646,15 +2619,6 @@ bool nsFrameLoader::TryRemoteBrowserInternal() {
       sameTabGroupAs, nextRemoteTabId);
   if (!mRemoteBrowser) {
     return false;
-  }
-  // If we were given a remote tab ID, we may be attaching to an existing remote
-  // browser, which already has its own BrowsingContext. If so, we need to
-  // detach our original BC and take ownership of the one from the remote
-  // browser.
-  if (mBrowsingContext != mRemoteBrowser->GetBrowsingContext()) {
-    MOZ_DIAGNOSTIC_ASSERT(nextRemoteTabId);
-    mBrowsingContext->Detach();
-    mBrowsingContext = mRemoteBrowser->GetBrowsingContext();
   }
 
   mRemoteBrowser->GetBrowsingContext()->Embed();
@@ -3027,7 +2991,6 @@ void nsFrameLoader::InitializeFromBrowserParent(BrowserParent* aBrowserParent) {
   MOZ_ASSERT(!mRemoteBrowser);
   mIsRemoteFrame = true;
   mRemoteBrowser = new BrowserHost(aBrowserParent);
-  mBrowsingContext = aBrowserParent->GetBrowsingContext();
   mChildID = aBrowserParent ? aBrowserParent->Manager()->ChildID() : 0;
   MaybeUpdatePrimaryBrowserParent(eBrowserParentChanged);
   ReallyLoadFrameScripts();
@@ -3257,14 +3220,13 @@ already_AddRefed<BrowsingContext> nsFrameLoader::GetBrowsingContext() {
 }
 
 already_AddRefed<BrowsingContext> nsFrameLoader::GetExtantBrowsingContext() {
-  RefPtr<BrowsingContext> browsingContext;
   if (mRemoteBrowser) {
-    browsingContext = mRemoteBrowser->GetBrowsingContext();
-  } else if (mDocShell) {
-    browsingContext = mDocShell->GetBrowsingContext();
+    return do_AddRef(mRemoteBrowser->GetBrowsingContext());
   }
-  MOZ_ASSERT_IF(browsingContext, browsingContext == mBrowsingContext);
-  return browsingContext.forget();
+  if (mDocShell) {
+    return do_AddRef(mDocShell->GetBrowsingContext());
+  }
+  return nullptr;
 }
 
 void nsFrameLoader::InitializeBrowserAPI() {
@@ -3450,12 +3412,11 @@ JSObject* nsFrameLoader::WrapObject(JSContext* cx,
   return result;
 }
 
-void nsFrameLoader::SetWillChangeProcess() {
-  mWillChangeProcess = true;
-
+void nsFrameLoader::SkipBrowsingContextDetach() {
   if (IsRemoteFrame()) {
     // OOP Browser - Go directly over Browser Parent
     if (auto* browserParent = GetBrowserParent()) {
+      RefPtr<BrowsingContext> bc(GetBrowsingContext());
       // We're going to be synchronously changing the owner of the
       // BrowsingContext in the parent process while the current owner may still
       // have in-flight requests which only the owner is allowed to make. Those
@@ -3471,16 +3432,17 @@ void nsFrameLoader::SetWillChangeProcess() {
       // resilient. For the moment, though, the surrounding process switch code
       // is enough in flux that we're better off with a workable interim
       // solution.
-      MOZ_DIAGNOSTIC_ASSERT(mBrowsingContext ==
-                            RefPtr<BrowsingContext>(GetBrowsingContext()));
-      RefPtr<CanonicalBrowsingContext> bc(mBrowsingContext->Canonical());
-      bc->SetInFlightProcessId(browserParent->Manager()->ChildID());
-      auto callback = [bc](auto) { bc->SetInFlightProcessId(0); };
-      browserParent->SendWillChangeProcess(callback, callback);
+      bc->Canonical()->SetInFlightProcessId(
+          browserParent->Manager()->ChildID());
+      browserParent->SendSkipBrowsingContextDetach(
+          [bc](bool aSuccess) { bc->Canonical()->SetInFlightProcessId(0); },
+          [bc](mozilla::ipc::ResponseRejectReason aReason) {
+            bc->Canonical()->SetInFlightProcessId(0);
+          });
     }
     // OOP IFrame - Through Browser Bridge Parent, set on browser child
     else if (auto* browserBridgeChild = GetBrowserBridgeChild()) {
-      Unused << browserBridgeChild->SendWillChangeProcess();
+      Unused << browserBridgeChild->SendSkipBrowsingContextDetach();
     }
     return;
   }
@@ -3488,7 +3450,7 @@ void nsFrameLoader::SetWillChangeProcess() {
   // In process
   RefPtr<nsDocShell> docshell = GetDocShell();
   MOZ_ASSERT(docshell);
-  docshell->SetWillChangeProcess();
+  docshell->SkipBrowsingContextDetach();
 }
 
 void nsFrameLoader::MaybeNotifyCrashed(BrowsingContext* aBrowsingContext,

@@ -103,7 +103,7 @@ parent:
 
   async SetIsUnderHiddenEmbedderElement(bool aIsUnderHiddenEmbedderElement);
 
-  async WillChangeProcess();
+  async SkipBrowsingContextDetach();
 
 #ifdef ACCESSIBILITY
   /**

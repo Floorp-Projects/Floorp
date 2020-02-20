@@ -102,7 +102,7 @@ void nsFrameLoaderOwner::ChangeRemotenessCommon(
     if (mFrameLoader) {
       if (aPreserveContext) {
         bc = mFrameLoader->GetBrowsingContext();
-        mFrameLoader->SetWillChangeProcess();
+        mFrameLoader->SkipBrowsingContextDetach();
       }
 
       // Preserve the networkCreated status, as nsDocShells created after a

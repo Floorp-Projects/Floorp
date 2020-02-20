@@ -155,26 +155,6 @@ class BrowsingContext : public nsISupports, public nsWrapperCache {
                                                   const nsAString& aName,
                                                   Type aType);
 
-  // Same as the above, but does not immediately attach the browsing context.
-  // `EnsureAttached()` must be called before the BrowsingContext is used for a
-  // DocShell, BrowserParent, or BrowserBridgeChild.
-  static already_AddRefed<BrowsingContext> CreateDetached(
-      BrowsingContext* aParent, BrowsingContext* aOpener,
-      const nsAString& aName, Type aType);
-
-  // Same as Create, but for a BrowsingContext which does not belong to a
-  // visible window, and will always be detached by the process that created it.
-  // In contrast, any top-level BrowsingContext created in a content process
-  // using Create() is assumed to belong to a <browser> element in the parent
-  // process, which will be responsible for detaching it.
-  static already_AddRefed<BrowsingContext> CreateWindowless(
-      BrowsingContext* aParent, BrowsingContext* aOpener,
-      const nsAString& aName, Type aType);
-
-  void EnsureAttached();
-
-  bool EverAttached() const { return mEverAttached; }
-
   // Cast this object to a canonical browsing context, and return it.
   CanonicalBrowsingContext* Canonical();
 
@@ -187,9 +167,6 @@ class BrowsingContext : public nsISupports, public nsWrapperCache {
   // been destroyed, and may not be available on the other side of an IPC
   // message.
   bool IsDiscarded() const { return mIsDiscarded; }
-
-  bool Windowless() const { return mWindowless; }
-  void SetWindowless();
 
   // Get the DocShell for this BrowsingContext if it is in-process, or
   // null if it's not.
@@ -501,7 +478,6 @@ class BrowsingContext : public nsISupports, public nsWrapperCache {
     uint64_t GetOpenerId() const { return mozilla::Get<IDX_OpenerId>(mFields); }
 
     bool mCached;
-    bool mWindowless;
 
     FieldTuple mFields;
   };
@@ -658,9 +634,6 @@ class BrowsingContext : public nsISupports, public nsWrapperCache {
   JS::Heap<JSObject*> mWindowProxy;
   LocationProxy mLocation;
 
-  // True if Attach() has been called on this BrowsingContext already.
-  bool mEverAttached : 1;
-
   // Is the most recent Document in this BrowsingContext loaded within this
   // process? This may be true with a null mDocShell after the Window has been
   // closed.
@@ -669,10 +642,6 @@ class BrowsingContext : public nsISupports, public nsWrapperCache {
   // Has this browsing context been discarded? BrowsingContexts should
   // only be discarded once.
   bool mIsDiscarded : 1;
-
-  // True if this BrowsingContext has no associated visible window, and is owned
-  // by whichever process created it, even if top-level.
-  bool mWindowless : 1;
 
   // This is true if the BrowsingContext was out of process, but is now in
   // process, and might have remote window proxies that need to be cleaned up.
