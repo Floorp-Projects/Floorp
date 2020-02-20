@@ -2278,7 +2278,7 @@ class BaseScript : public gc::TenuredCell {
   }
   uint32_t toStringStart() const { return extent_.toStringStart; }
   uint32_t toStringEnd() const { return extent_.toStringEnd; }
-  const SourceExtent& extent() const { return extent_; }
+  SourceExtent extent() const { return extent_; }
 
   MOZ_MUST_USE bool appendSourceDataForToString(JSContext* cx,
                                                 js::StringBuffer& buf);
@@ -2314,8 +2314,6 @@ class BaseScript : public gc::TenuredCell {
 
   uint32_t lineno() const { return extent_.lineno; }
   uint32_t column() const { return extent_.column; }
-
-  const SourceExtent& getExtent() const { return extent_; }
 
   // ImmutableFlags accessors.
   MOZ_MUST_USE bool hasFlag(ImmutableFlags flag) const {

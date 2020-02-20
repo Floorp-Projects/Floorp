@@ -205,7 +205,7 @@ void FunctionBox::initFromLazyFunction(JSFunction* fun) {
     setHasModuleGoal();
   }
 
-  extent = lazy->getExtent();
+  extent = lazy->extent();
 }
 
 void FunctionBox::initStandaloneFunction(Scope* enclosingScope) {
