@@ -543,7 +543,7 @@ class FunctionBox : public ObjectBox, public SharedContext {
 
   bool needsExtraBodyVarEnvironmentRegardlessOfBindings() const {
     MOZ_ASSERT(hasParameterExprs);
-    return hasExtensibleScope() || needsDotGeneratorName();
+    return hasExtensibleScope();
   }
 
   bool isLikelyConstructorWrapper() const {
