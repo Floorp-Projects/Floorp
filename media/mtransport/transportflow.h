@@ -17,7 +17,6 @@
 #include "mozilla/UniquePtr.h"
 #include "transportlayer.h"
 #include "m_cpp_utils.h"
-#include "nsAutoPtr.h"
 
 // A stack of transport layers acts as a flow.
 // Generally, one reads and writes to the top layer.
@@ -92,7 +91,7 @@ class TransportFlow final : public nsISupports {
 
   void EnsureSameThread(TransportLayer* layer);
 
-  static void DestroyFinal(nsAutoPtr<std::deque<TransportLayer*>> layers);
+  static void DestroyFinal(UniquePtr<std::deque<TransportLayer*>> layers);
 
   // Overload needed because we use deque internally and queue externally.
   static void ClearLayers(std::deque<TransportLayer*>* layers);
