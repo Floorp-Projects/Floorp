@@ -826,6 +826,10 @@ nsresult nsTypeAheadFind::GetSearchContainers(
     // IsRangeVisible. It returns the first visible range after searchRange
     IsRangeVisible(mSearchRange, aIsFirstVisiblePreferred, true,
                    getter_AddRefs(mStartPointRange), nullptr);
+    // We want to search in the visible selection range. That means that the
+    // start point needs to be the end if we're looking backwards, or vice
+    // versa.
+    mStartPointRange->Collapse(!aFindPrev);
   } else {
     uint32_t startOffset;
     nsCOMPtr<nsINode> startNode;
@@ -844,9 +848,8 @@ nsresult nsTypeAheadFind::GetSearchContainers(
     // We need to set the start point this way, other methods haven't worked
     mStartPointRange->SelectNode(*startNode, IgnoreErrors());
     mStartPointRange->SetStart(*startNode, startOffset, IgnoreErrors());
+    mStartPointRange->Collapse(true);  // collapse to start
   }
-
-  mStartPointRange->Collapse(true);  // collapse to start
 
   presShell.forget(aPresShell);
   presContext.forget(aPresContext);
