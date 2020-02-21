@@ -199,7 +199,7 @@ public class GeckoResult<T> {
 
         @Override
         public void dispatch(final Runnable r) {
-            mEventTarget.dispatch(r);
+            mEventTarget.execute(r);
         }
     }
 
