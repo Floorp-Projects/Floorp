@@ -1,11 +1,41 @@
-.ds-dismiss-ds-collection {
+.ds-dismiss.ds-dismiss-ds-collection {
   .ds-dismiss-button {
-    margin: 0;
+    margin: 26px 0 0;
+    inset-inline-end: 25px;
   }
 }
 
 .ds-collection-card-grid {
+  padding: 10px 25px;
+  margin: 0 0 50px;
+
   .story-footer {
     display: none;
+  }
+
+  .ds-header {
+    padding: 0 40px 0 0;
+
+    .title {
+      @include dark-theme-only {
+        color: $grey-10;
+      }
+
+      color: $grey-90;
+      font-weight: 600;
+      font-size: 17px;
+      line-height: 24px;
+    }
+
+    .ds-context {
+      @include dark-theme-only {
+        color: $grey-40;
+      }
+
+      color: $grey-50;
+      font-weight: normal;
+      font-size: 13px;
+      line-height: 24px;
+    }
   }
 }

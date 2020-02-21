@@ -354,6 +354,7 @@ export class _DiscoveryStreamBase extends React.PureComponent {
 
     // Extract TopSites to render before the rest and Message to use for header
     const topSites = extractComponent("TopSites");
+    const sponsoredCollection = extractComponent("CollectionCardGrid");
     const message = extractComponent("Message") || {
       header: {
         link_text: topStories.learnMore.link.message,
@@ -373,6 +374,13 @@ export class _DiscoveryStreamBase extends React.PureComponent {
             {
               width: 12,
               components: [topSites],
+            },
+          ])}
+        {sponsoredCollection &&
+          this.renderLayout([
+            {
+              width: 12,
+              components: [sponsoredCollection],
             },
           ])}
         {!!layoutRender.length && (

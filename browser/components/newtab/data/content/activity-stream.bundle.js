@@ -4434,6 +4434,7 @@ class _DiscoveryStreamBase extends react__WEBPACK_IMPORTED_MODULE_14___default.a
 
 
     const topSites = extractComponent("TopSites");
+    const sponsoredCollection = extractComponent("CollectionCardGrid");
     const message = extractComponent("Message") || {
       header: {
         link_text: topStories.learnMore.link.message,
@@ -4447,6 +4448,9 @@ class _DiscoveryStreamBase extends react__WEBPACK_IMPORTED_MODULE_14___default.a
     }), topSites && this.renderLayout([{
       width: 12,
       components: [topSites]
+    }]), sponsoredCollection && this.renderLayout([{
+      width: 12,
+      components: [sponsoredCollection]
     }]), !!layoutRender.length && react__WEBPACK_IMPORTED_MODULE_14___default.a.createElement(content_src_components_CollapsibleSection_CollapsibleSection__WEBPACK_IMPORTED_MODULE_3__["CollapsibleSection"], {
       className: "ds-layout",
       collapsed: topStories.pref.collapsed,
@@ -4579,7 +4583,9 @@ class CardGrid extends react__WEBPACK_IMPORTED_MODULE_2___default.a.PureComponen
     const isEmpty = data.recommendations.length === 0;
     return react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement("div", null, this.props.title && react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement("div", {
       className: "ds-header"
-    }, react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement("div", null, this.props.title), this.props.context && react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement("div", {
+    }, react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement("div", {
+      className: "title"
+    }, this.props.title), this.props.context && react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement("div", {
       className: "ds-context"
     }, this.props.context)), isEmpty ? react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement("div", {
       className: "ds-card-grid empty"

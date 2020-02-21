@@ -1991,11 +1991,31 @@ main {
   .ds-card-grid.empty {
     grid-template-columns: auto; }
 
-.ds-dismiss-ds-collection .ds-dismiss-button {
-  margin: 0; }
+.ds-dismiss.ds-dismiss-ds-collection .ds-dismiss-button {
+  margin: 26px 0 0;
+  inset-inline-end: 25px; }
 
-.ds-collection-card-grid .story-footer {
-  display: none; }
+.ds-collection-card-grid {
+  padding: 10px 25px;
+  margin: 0 0 50px; }
+  .ds-collection-card-grid .story-footer {
+    display: none; }
+  .ds-collection-card-grid .ds-header {
+    padding: 0 40px 0 0; }
+    .ds-collection-card-grid .ds-header .title {
+      color: #0C0C0D;
+      font-weight: 600;
+      font-size: 17px;
+      line-height: 24px; }
+      [lwt-newtab-brighttext] .ds-collection-card-grid .ds-header .title {
+        color: #F9F9FA; }
+    .ds-collection-card-grid .ds-header .ds-context {
+      color: #737373;
+      font-weight: normal;
+      font-size: 13px;
+      line-height: 24px; }
+      [lwt-newtab-brighttext] .ds-collection-card-grid .ds-header .ds-context {
+        color: #B1B1B3; }
 
 .ds-hero {
   position: relative; }
@@ -2944,14 +2964,17 @@ main {
     position: absolute;
     inset-inline-end: 0;
     top: 0;
-    border-radius: 50%;
-    background: rgba(12, 12, 13, 0.1); }
-    [lwt-newtab-brighttext] .ds-dismiss .ds-dismiss-button {
-      background: rgba(12, 12, 13, 0.3); }
+    border-radius: 50%; }
+    .ds-dismiss .ds-dismiss-button .icon {
+      fill: #737373; }
+      [lwt-newtab-brighttext] .ds-dismiss .ds-dismiss-button .icon {
+        fill: #EDEDF0; }
     .ds-dismiss .ds-dismiss-button:hover {
       background: rgba(12, 12, 13, 0.2); }
       [lwt-newtab-brighttext] .ds-dismiss .ds-dismiss-button:hover {
         background: rgba(12, 12, 13, 0.5); }
+      .ds-dismiss .ds-dismiss-button:hover .icon {
+        fill: #2A2A2E; }
     .ds-dismiss .ds-dismiss-button:active {
       background: rgba(12, 12, 13, 0.3); }
       [lwt-newtab-brighttext] .ds-dismiss .ds-dismiss-button:active {
