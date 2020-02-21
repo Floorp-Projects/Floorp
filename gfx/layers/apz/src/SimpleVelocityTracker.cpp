@@ -10,8 +10,8 @@
 #include "mozilla/StaticPrefs_apz.h"
 #include "mozilla/StaticPtr.h"  // for StaticAutoPtr
 
-#define SVT_LOG(...)
-// #define SVT_LOG(...) printf_stderr("SimpleVelocityTracker: " __VA_ARGS__)
+static mozilla::LazyLogModule sApzSvtLog("apz.simplevelocitytracker");
+#define SVT_LOG(...) MOZ_LOG(sApzSvtLog, LogLevel::Debug, (__VA_ARGS__))
 
 namespace mozilla {
 namespace layers {

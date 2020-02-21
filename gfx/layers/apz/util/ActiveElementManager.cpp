@@ -14,8 +14,8 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Document.h"
 
-#define AEM_LOG(...)
-// #define AEM_LOG(...) printf_stderr("AEM: " __VA_ARGS__)
+static mozilla::LazyLogModule sApzAemLog("apz.activeelement");
+#define AEM_LOG(...) MOZ_LOG(sApzAemLog, LogLevel::Debug, (__VA_ARGS__))
 
 namespace mozilla {
 namespace layers {

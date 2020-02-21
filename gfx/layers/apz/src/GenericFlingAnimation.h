@@ -22,8 +22,8 @@
 #include "mozilla/TimeStamp.h"
 #include "nsThreadUtils.h"
 
-#define FLING_LOG(...)
-// #define FLING_LOG(...) printf_stderr("FLING: " __VA_ARGS__)
+static mozilla::LazyLogModule sApzFlgLog("apz.fling");
+#define FLING_LOG(...) MOZ_LOG(sApzFlgLog, LogLevel::Debug, (__VA_ARGS__))
 
 namespace mozilla {
 namespace layers {

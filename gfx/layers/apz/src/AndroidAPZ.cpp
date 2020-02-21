@@ -16,8 +16,8 @@
 #include "ViewConfiguration.h"
 #include "mozilla/StaticPrefs_apz.h"
 
-#define ANDROID_APZ_LOG(...)
-// #define ANDROID_APZ_LOG(...) printf_stderr("ANDROID_APZ: " __VA_ARGS__)
+static mozilla::LazyLogModule sApzAndLog("apz.android");
+#define ANDROID_APZ_LOG(...) MOZ_LOG(sApzAndLog, LogLevel::Debug, (__VA_ARGS__))
 
 static float sMaxFlingSpeed = 0.0f;
 
