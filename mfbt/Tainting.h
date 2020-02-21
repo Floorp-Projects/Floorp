@@ -16,6 +16,14 @@
 
 namespace mozilla {
 
+template <typename T>
+class Tainted;
+
+namespace ipc {
+template <typename>
+struct IPDLParamTraits;
+}
+
 /*
  * The Tainted<> class allows data to be wrapped and considered 'tainted'; which
  * requires explicit validation of the data before it can be used for
@@ -50,10 +58,15 @@ class Tainted {
   T mValue;
 
  public:
+  explicit Tainted() = default;
+
   template <typename U>
   explicit Tainted(U&& aValue) : mValue(std::forward<U>(aValue)) {}
 
   T& Coerce() { return this->mValue; }
+  const T& Coerce() const { return this->mValue; }
+
+  friend struct mozilla::ipc::IPDLParamTraits<Tainted<T>>;
 };
 
 // ================================================
@@ -115,11 +128,16 @@ class Tainted {
 // We use the same variable name in the nested scope, shadowing the outer
 // scope - this allows the user to write the same variable name in the
 // macro's condition without using a magic name like 'value'.
+//
+// We mark it MOZ_MAYBE_UNUSED because sometimes the condition doesn't
+// make use of tainted_value, which causes an unused variable warning.
+// That will only happen when we are bypssing validation, which is a
+// future ergonomic we will iterate on.
 #define MOZ_VALIDATE_AND_GET_HELPER3(tainted_value, condition, \
                                      assertionstring)          \
   [&tainted_value]() {                                         \
     auto& tmp = tainted_value.Coerce();                        \
-    auto& tainted_value = tmp;                                 \
+    auto& MOZ_MAYBE_UNUSED tainted_value = tmp;                \
     MOZ_RELEASE_ASSERT((condition), assertionstring);          \
     return tmp;                                                \
   }()
@@ -139,11 +157,11 @@ class Tainted {
 // This construct uses a lambda expression to create a scope and test the
 // condition, returning true or false.
 // We use the same variable-shadowing trick.
-#define MOZ_IS_VALID(tainted_value, condition) \
-  [&tainted_value]() {                         \
-    auto& tmp = tainted_value.Coerce();        \
-    auto& tainted_value = tmp;                 \
-    return (condition);                        \
+#define MOZ_IS_VALID(tainted_value, condition)  \
+  [&tainted_value]() {                          \
+    auto& tmp = tainted_value.Coerce();         \
+    auto& MOZ_MAYBE_UNUSED tainted_value = tmp; \
+    return (condition);                         \
   }()
 
 // Allows us to test validity and returning a default value if the value is
