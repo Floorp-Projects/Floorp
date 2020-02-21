@@ -77,7 +77,7 @@ MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(MessageManagerFlags);
 
 class MessageManagerCallback {
  public:
-  virtual ~MessageManagerCallback() {}
+  virtual ~MessageManagerCallback() = default;
 
   virtual bool DoLoadMessageManagerScript(const nsAString& aURL,
                                           bool aRunInGlobalScope) {
@@ -445,7 +445,7 @@ class nsMessageManagerScriptExecutor {
 };
 
 class nsScriptCacheCleaner final : public nsIObserver {
-  ~nsScriptCacheCleaner() {}
+  ~nsScriptCacheCleaner() = default;
 
   NS_DECL_ISUPPORTS
 

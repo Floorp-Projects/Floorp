@@ -1228,7 +1228,7 @@ class ThrottleTimeoutsCallback final : public nsITimerCallback,
   }
 
  private:
-  ~ThrottleTimeoutsCallback() {}
+  ~ThrottleTimeoutsCallback() = default;
 
  private:
   // The strong reference here keeps the Window and hence the TimeoutManager

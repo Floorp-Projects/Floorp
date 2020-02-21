@@ -86,7 +86,7 @@ class nsForceXMLListener : public nsIStreamListener {
 nsForceXMLListener::nsForceXMLListener(nsIStreamListener* aListener)
     : mListener(aListener) {}
 
-nsForceXMLListener::~nsForceXMLListener() {}
+nsForceXMLListener::~nsForceXMLListener() = default;
 
 NS_IMPL_ISUPPORTS(nsForceXMLListener, nsIStreamListener, nsIRequestObserver)
 

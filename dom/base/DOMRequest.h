@@ -83,7 +83,7 @@ class DOMRequest : public DOMEventTargetHelper {
 };
 
 class DOMRequestService final : public nsIDOMRequestService {
-  ~DOMRequestService() {}
+  ~DOMRequestService() = default;
 
  public:
   NS_DECL_ISUPPORTS

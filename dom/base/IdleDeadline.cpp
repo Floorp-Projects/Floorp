@@ -39,7 +39,7 @@ IdleDeadline::IdleDeadline(nsIGlobalObject* aGlobal, bool aDidTimeout,
       mDidTimeout(aDidTimeout),
       mDeadline(aDeadline) {}
 
-IdleDeadline::~IdleDeadline() {}
+IdleDeadline::~IdleDeadline() = default;
 
 JSObject* IdleDeadline::WrapObject(JSContext* aCx,
                                    JS::Handle<JSObject*> aGivenProto) {

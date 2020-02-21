@@ -39,7 +39,7 @@ nsDOMNavigationTiming::nsDOMNavigationTiming(nsDocShell* aDocShell) {
   mDocShell = aDocShell;
 }
 
-nsDOMNavigationTiming::~nsDOMNavigationTiming() {}
+nsDOMNavigationTiming::~nsDOMNavigationTiming() = default;
 
 void nsDOMNavigationTiming::Clear() {
   mNavigationType = TYPE_RESERVED;

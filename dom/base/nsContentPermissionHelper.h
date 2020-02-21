@@ -199,7 +199,7 @@ class nsContentPermissionRequestProxy : public nsIContentPermissionRequest {
     void NotifyVisibilityResult(const bool& aIsVisible);
 
    private:
-    virtual ~nsContentPermissionRequesterProxy() {}
+    virtual ~nsContentPermissionRequesterProxy() = default;
 
     ContentPermissionRequestParent* mParent;
     bool mWaitGettingResult;

@@ -72,7 +72,7 @@ class nsNameSpaceManager final {
                         const int32_t aNameSpaceID);
   nsresult AddDisabledNameSpace(already_AddRefed<nsAtom> aURI,
                                 const int32_t aNameSpaceID);
-  ~nsNameSpaceManager(){};
+  ~nsNameSpaceManager() = default;
 
   nsDataHashtable<nsRefPtrHashKey<nsAtom>, int32_t> mURIToIDTable;
   nsDataHashtable<nsRefPtrHashKey<nsAtom>, int32_t> mDisabledURIToIDTable;

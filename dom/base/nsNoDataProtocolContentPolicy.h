@@ -27,13 +27,13 @@
 #include "mozilla/Attributes.h"
 
 class nsNoDataProtocolContentPolicy final : public nsIContentPolicy {
-  ~nsNoDataProtocolContentPolicy() {}
+  ~nsNoDataProtocolContentPolicy() = default;
 
  public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSICONTENTPOLICY
 
-  nsNoDataProtocolContentPolicy() {}
+  nsNoDataProtocolContentPolicy() = default;
 };
 
 #endif /* nsNoDataProtocolContentPolicy_h__ */
