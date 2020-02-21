@@ -4,6 +4,10 @@
 'use strict';
 
 promise_test(async testCase => {
+  const frame = document.createElement("iframe");
+  const path = new URL("resources/iframe.sub.html", window.location).pathname;
+  frame.src = `${CROSS_ORIGIN}${path}`;
+  document.body.append(frame);
   try {
     let result = await performance.measureMemory();
     checkMeasureMemory(result);
@@ -13,5 +17,4 @@ promise_test(async testCase => {
     }
     assert_equals(error.name, 'SecurityError');
   }
-}, 'Well-formed result of performance.measureMemory.');
-
+}, 'Well-formed result of performance.measureMemory with cross-origin iframe.');
