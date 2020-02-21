@@ -37,6 +37,7 @@ class RemoteSandboxBroker : public AbstractSandboxBroker {
                                          bool aIsFileProcess) override;
   void SetSecurityLevelForGPUProcess(int32_t aSandboxLevel) override;
   bool SetSecurityLevelForRDDProcess() override;
+  bool SetSecurityLevelForSocketProcess() override;
   bool SetSecurityLevelForPluginProcess(int32_t aSandboxLevel) override;
   bool SetSecurityLevelForGMPlugin(SandboxLevel aLevel,
                                    bool aIsRemoteLaunch = false) override;

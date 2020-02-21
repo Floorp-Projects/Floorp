@@ -1439,7 +1439,12 @@ bool WindowsProcessLauncher::DoSetup() {
       }
       break;
     case GeckoProcessType_Socket:
-      // TODO - setup sandboxing for the socket process.
+      if (!PR_GetEnv("MOZ_DISABLE_SOCKET_PROCESS_SANDBOX")) {
+        if (!mResults.mSandboxBroker->SetSecurityLevelForSocketProcess()) {
+          return false;
+        }
+        mUseSandbox = true;
+      }
       break;
     case GeckoProcessType_RemoteSandboxBroker:
       // We don't sandbox the sandbox launcher...
