@@ -7617,6 +7617,7 @@ GeneralParser<ParseHandler, Unit>::fieldInitializerOpt(Node propName,
   funbox->setStart(firstTokenPos.begin, firstTokenLine, firstTokenColumn);
 
   // Push a SourceParseContext on to the stack.
+  ParseContext* outerpc = pc_;
   SourceParseContext funpc(this, funbox, /* newDirectives = */ nullptr);
   if (!funpc.init()) {
     return null();
@@ -7771,6 +7772,10 @@ GeneralParser<ParseHandler, Unit>::fieldInitializerOpt(Node propName,
 
   if (!finishFunction(/* isStandaloneFunction = */ false,
                       IsFieldInitializer::Yes)) {
+    return null();
+  }
+
+  if (!leaveInnerFunction(outerpc)) {
     return null();
   }
 
