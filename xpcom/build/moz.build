@@ -70,9 +70,9 @@ if CONFIG['OS_ARCH'] != 'WINNT':
         'NSPRInterposer.cpp',
     ]
 
-GeneratedFile('Services.cpp', script='Services.py', entry_point='services_cpp', py2=True)
-GeneratedFile('Services.h', script='Services.py', entry_point='services_h', py2=True)
-GeneratedFile('services.rs', script='Services.py', entry_point='services_rs', py2=True)
+GeneratedFile('Services.cpp', script='Services.py', entry_point='services_cpp')
+GeneratedFile('Services.h', script='Services.py', entry_point='services_h')
+GeneratedFile('services.rs', script='Services.py', entry_point='services_rs')
 
 include('/ipc/chromium/chromium-config.mozbuild')
 
