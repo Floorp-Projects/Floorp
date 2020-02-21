@@ -98,18 +98,20 @@ AccessibilityView.prototype = {
     ReactDOM.unmountComponentAtNode(container);
   },
 
-  async selectAccessible(walker, accessible) {
-    await this.store.dispatch(select(walker, accessible));
+  async selectAccessible(accessible) {
+    await this.store.dispatch(select(accessible));
     window.emit(EVENTS.NEW_ACCESSIBLE_FRONT_INSPECTED);
   },
 
-  async highlightAccessible(walker, accessible) {
-    await this.store.dispatch(highlight(walker, accessible));
+  async highlightAccessible(accessible) {
+    await this.store.dispatch(highlight(accessible));
     window.emit(EVENTS.NEW_ACCESSIBLE_FRONT_HIGHLIGHTED);
   },
 
-  async selectNodeAccessible(walker, node) {
-    let accessible = await walker.getAccessibleFor(node);
+  async selectNodeAccessible(node) {
+    const accessibilityFront = await node.targetFront.getFront("accessibility");
+    const accessibleWalkerFront = await accessibilityFront.getWalker();
+    let accessible = await accessibleWalkerFront.getAccessibleFor(node);
     if (accessible) {
       await accessible.hydrate();
     }
@@ -122,7 +124,7 @@ AccessibilityView.prototype = {
       const { nodes: children } = await node.walkerFront.children(node);
       for (const child of children) {
         if (child.nodeType === nodeConstants.TEXT_NODE) {
-          accessible = await walker.getAccessibleFor(child);
+          accessible = await accessibleWalkerFront.getAccessibleFor(child);
           // indexInParent property is only available with additional request
           // for data (hydration) about the accessible object.
           if (accessible) {
@@ -136,7 +138,7 @@ AccessibilityView.prototype = {
       }
     }
 
-    await this.store.dispatch(select(walker, accessible));
+    await this.store.dispatch(select(accessible));
     window.emit(EVENTS.NEW_ACCESSIBLE_FRONT_INSPECTED);
   },
 
