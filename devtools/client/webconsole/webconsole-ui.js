@@ -568,33 +568,29 @@ class WebConsoleUI {
     this[id] = node;
   }
 
-  /**
-   * Retrieve the FrameActor ID given a frame depth, or the selected one if no
-   * frame depth given.
-   *
-   * @return { frameActor: String|null, webConsoleFront: WebConsoleFront }:
-   *         frameActor is the FrameActor ID for the given frame depth
-   *         (or the selected frame if it exists), null if no frame was found.
-   *         webConsoleFront is the front for the thread the frame is associated with.
-   */
+  // Retrieves the debugger's currently selected frame front
   async getFrameActor() {
     const state = this.hud.getDebuggerFrames();
     if (!state) {
-      return { frameActor: null, webConsoleFront: this.webConsoleFront };
+      return null;
     }
 
-    const grip = state.frames[state.selected];
+    const frame = state.frames[state.selected];
 
-    if (!grip) {
-      return { frameActor: null, webConsoleFront: this.webConsoleFront };
+    if (!frame) {
+      return null;
     }
 
-    const webConsoleFront = await state.target.getFront("console");
+    return frame.actor;
+  }
 
-    return {
-      frameActor: grip.actor,
-      webConsoleFront,
-    };
+  getWebConsoleFront({ frameActorId } = {}) {
+    if (!frameActorId) {
+      return this.webConsoleFront;
+    }
+
+    const frameFront = this.hud.getFrontByID(frameActorId);
+    return frameFront.getWebConsoleFront();
   }
 
   getSelectedNodeActor() {
