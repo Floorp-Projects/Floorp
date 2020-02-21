@@ -334,6 +334,11 @@ void WebRenderLayerManager::EndTransactionWithoutLayer(
     printf_stderr("-- WebRender display list build --\n");
   }
 
+  if (XRE_IsContentProcess() &&
+      StaticPrefs::gfx_webrender_dl_dump_content_serialized()) {
+    builder.DumpSerializedDisplayList();
+  }
+
   if (aDisplayList) {
     MOZ_ASSERT(aDisplayListBuilder && !aBackground);
     // Record the time spent "layerizing". WR doesn't actually layerize but
