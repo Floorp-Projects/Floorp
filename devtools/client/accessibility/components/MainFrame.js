@@ -78,11 +78,9 @@ class MainFrame extends Component {
   componentWillMount() {
     this.props.accessibility.on("init", this.resetAccessibility);
     this.props.accessibility.on("shutdown", this.resetAccessibility);
-    this.props.accessibilityWalker.on(
-      "document-ready",
-      this.resetAccessibility
-    );
-
+    this.props.startListeningForAccessibilityEvents({
+      "document-ready": this.resetAccessibility,
+    });
     window.addEventListener("resize", this.onPanelWindowResize, true);
   }
 
@@ -95,11 +93,9 @@ class MainFrame extends Component {
   componentWillUnmount() {
     this.props.accessibility.off("init", this.resetAccessibility);
     this.props.accessibility.off("shutdown", this.resetAccessibility);
-    this.props.accessibilityWalker.off(
-      "document-ready",
-      this.resetAccessibility
-    );
-
+    this.props.stopListeningForAccessibilityEvents({
+      "document-ready": this.resetAccessibility,
+    });
     window.removeEventListener("resize", this.onPanelWindowResize, true);
   }
 
