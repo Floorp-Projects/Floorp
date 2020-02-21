@@ -33,7 +33,6 @@
 #include "ZeroPole.h"
 
 #include "nsTArray.h"
-#include "nsAutoPtr.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/UniquePtr.h"
 
@@ -44,6 +43,7 @@ class AudioBlock;
 namespace WebCore {
 
 using mozilla::AudioBlock;
+using mozilla::UniquePtr;
 
 // DynamicsCompressor implements a flexible audio dynamics compression effect
 // such as is commonly used in musical production and game audio. It lowers the
@@ -115,8 +115,8 @@ class DynamicsCompressor {
   } ZeroPoleFilterPack4;
 
   // Per-channel emphasis filters.
-  nsTArray<nsAutoPtr<ZeroPoleFilterPack4> > m_preFilterPacks;
-  nsTArray<nsAutoPtr<ZeroPoleFilterPack4> > m_postFilterPacks;
+  nsTArray<UniquePtr<ZeroPoleFilterPack4> > m_preFilterPacks;
+  nsTArray<UniquePtr<ZeroPoleFilterPack4> > m_postFilterPacks;
 
   mozilla::UniquePtr<const float*[]> m_sourceChannels;
   mozilla::UniquePtr<float*[]> m_destinationChannels;

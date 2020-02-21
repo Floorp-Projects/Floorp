@@ -31,21 +31,22 @@ using media::TimeUnit;
 /** Decoder base class for Ogg-encapsulated streams. */
 OggCodecState* OggCodecState::Create(ogg_page* aPage) {
   NS_ASSERTION(ogg_page_bos(aPage), "Only call on BOS page!");
-  nsAutoPtr<OggCodecState> codecState;
+  UniquePtr<OggCodecState> codecState;
   if (aPage->body_len > 6 && memcmp(aPage->body + 1, "theora", 6) == 0) {
-    codecState = new TheoraState(aPage);
+    codecState = MakeUnique<TheoraState>(aPage);
   } else if (aPage->body_len > 6 && memcmp(aPage->body + 1, "vorbis", 6) == 0) {
-    codecState = new VorbisState(aPage);
+    codecState = MakeUnique<VorbisState>(aPage);
   } else if (aPage->body_len > 8 && memcmp(aPage->body, "OpusHead", 8) == 0) {
-    codecState = new OpusState(aPage);
+    codecState = MakeUnique<OpusState>(aPage);
   } else if (aPage->body_len > 8 && memcmp(aPage->body, "fishead\0", 8) == 0) {
-    codecState = new SkeletonState(aPage);
+    codecState = MakeUnique<SkeletonState>(aPage);
   } else if (aPage->body_len > 5 && memcmp(aPage->body, "\177FLAC", 5) == 0) {
-    codecState = new FlacState(aPage);
+    codecState = MakeUnique<FlacState>(aPage);
   } else {
-    codecState = new OggCodecState(aPage, false);
+    // Can't use MakeUnique here, OggCodecState is protected.
+    codecState.reset(new OggCodecState(aPage, false));
   }
-  return codecState->OggCodecState::InternalInit() ? codecState.forget()
+  return codecState->OggCodecState::InternalInit() ? codecState.release()
                                                    : nullptr;
 }
 
@@ -940,7 +941,7 @@ bool OpusState::DecodeHeader(OggPacketPtr aPacket) {
   switch (mPacketCount++) {
     // Parse the id header.
     case 0:
-      mParser = new OpusParser;
+      mParser = MakeUnique<OpusParser>();
       if (!mParser->DecodeHeader(aPacket->packet, aPacket->bytes)) {
         return false;
       }
@@ -1421,7 +1422,7 @@ bool SkeletonState::DecodeIndex(ogg_packet* aPacket) {
     return (mActive = false);
   }
 
-  nsAutoPtr<nsKeyFrameIndex> keyPoints(new nsKeyFrameIndex(startTime, endTime));
+  UniquePtr<nsKeyFrameIndex> keyPoints(new nsKeyFrameIndex(startTime, endTime));
 
   p = aPacket->packet + INDEX_KEYPOINT_OFFSET;
   const unsigned char* limit = aPacket->packet + aPacket->bytes;
@@ -1451,7 +1452,7 @@ bool SkeletonState::DecodeIndex(ogg_packet* aPacket) {
 
   int32_t keyPointsRead = keyPoints->Length();
   if (keyPointsRead > 0) {
-    mIndex.Put(serialno, keyPoints.forget());
+    mIndex.Put(serialno, keyPoints.release());
   }
 
   LOG(LogLevel::Debug, ("Loaded %d keypoints for Skeleton on stream %u",
@@ -1569,7 +1570,7 @@ bool SkeletonState::DecodeFisbone(ogg_packet* aPacket) {
   int64_t msgLength = aPacket->bytes - checked_fields_pos.value();
   char* msgProbe = (char*)aPacket->packet + checked_fields_pos.value();
   char* msgHead = msgProbe;
-  nsAutoPtr<MessageField> field(new MessageField());
+  UniquePtr<MessageField> field(new MessageField());
 
   const static FieldPatternType kFieldTypeMaps[] = {
       {"Content-Type:", eContentType},
@@ -1626,7 +1627,7 @@ bool SkeletonState::DecodeFisbone(ogg_packet* aPacket) {
     // mMsgFieldStore has an entry for serialno already.
     return false;
   }
-  entry.OrInsert([&field]() { return field.forget(); });
+  entry.OrInsert([&field]() { return field.release(); });
   return true;
 }
 

@@ -10,7 +10,6 @@
 #  include "mozilla/AbstractThread.h"
 #  include "mozilla/LinkedList.h"
 
-#  include "nsAutoPtr.h"
 #  include "MediaEventSource.h"
 #  include "TimeUnits.h"
 #  include "VideoUtils.h"
@@ -26,7 +25,7 @@ typedef MediaEventSourceExc<TimedMetadata> TimedMetadataEventSource;
 class TimedMetadata : public LinkedListElement<TimedMetadata> {
  public:
   TimedMetadata(const media::TimeUnit& aPublishTime,
-                UniquePtr<MetadataTags>&& aTags, nsAutoPtr<MediaInfo>&& aInfo)
+                UniquePtr<MetadataTags>&& aTags, UniquePtr<MediaInfo>&& aInfo)
       : mPublishTime(aPublishTime),
         mTags(std::move(aTags)),
         mInfo(std::move(aInfo)) {}
@@ -46,7 +45,7 @@ class TimedMetadata : public LinkedListElement<TimedMetadata> {
   // The media info, including the info of audio tracks and video tracks.
   // The ownership is transfered to MediaDecoder when dispatching to the
   // main thread.
-  nsAutoPtr<MediaInfo> mInfo;
+  UniquePtr<MediaInfo> mInfo;
 };
 
 // This class encapsulate the logic to give the metadata from the reader to

@@ -13,7 +13,6 @@
 #  include "mozilla/RefPtr.h"
 #  include "mozilla/TimeStamp.h"
 #  include "mozilla/UniquePtr.h"
-#  include "nsAutoPtr.h"
 #  include "nsCOMPtr.h"
 #  include "nsThreadUtils.h"
 #  include "WavDumper.h"
@@ -88,7 +87,7 @@ class AudioClock {
   // True if the we are timestretching, false if we are resampling.
   bool mPreservesPitch;
   // The history of frames sent to the audio engine in each DataCallback.
-  const nsAutoPtr<FrameHistory> mFrameHistory;
+  const UniquePtr<FrameHistory> mFrameHistory;
 };
 
 /*

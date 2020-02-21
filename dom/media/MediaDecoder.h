@@ -25,7 +25,6 @@
 #  include "mozilla/StateMirroring.h"
 #  include "mozilla/StateWatching.h"
 #  include "mozilla/dom/MediaDebugInfoBinding.h"
-#  include "nsAutoPtr.h"
 #  include "nsCOMPtr.h"
 #  include "nsIObserver.h"
 #  include "nsISupports.h"
@@ -407,7 +406,7 @@ class MediaDecoder : public DecoderDoctorLifeLogger<MediaDecoder> {
 
   // Called when the first audio and/or video from the media file has been
   // loaded by the state machine. Call on the main thread only.
-  virtual void FirstFrameLoaded(nsAutoPtr<MediaInfo> aInfo,
+  virtual void FirstFrameLoaded(UniquePtr<MediaInfo> aInfo,
                                 MediaDecoderEventVisibility aEventVisibility);
 
   void SetStateMachineParameters();
@@ -561,7 +560,7 @@ class MediaDecoder : public DecoderDoctorLifeLogger<MediaDecoder> {
 
   // Stores media info, including info of audio tracks and video tracks, should
   // only be accessed from main thread.
-  nsAutoPtr<MediaInfo> mInfo;
+  UniquePtr<MediaInfo> mInfo;
 
   // Tracks the visibility status of owner element's document.
   bool mIsDocumentVisible;

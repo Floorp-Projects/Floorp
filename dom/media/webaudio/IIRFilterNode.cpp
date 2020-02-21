@@ -73,7 +73,8 @@ class IIRFilterNodeEngine final : public AudioNodeEngine {
       // Adjust the number of filters based on the number of channels
       mIIRFilters.SetLength(aInput.ChannelCount());
       for (size_t i = 0; i < aInput.ChannelCount(); ++i) {
-        mIIRFilters[i] = new blink::IIRFilter(&mFeedforward, &mFeedback);
+        mIIRFilters[i] =
+            MakeUnique<blink::IIRFilter>(&mFeedforward, &mFeedback);
       }
     }
 
@@ -115,7 +116,7 @@ class IIRFilterNodeEngine final : public AudioNodeEngine {
 
  private:
   RefPtr<AudioNodeTrack> mDestination;
-  nsTArray<nsAutoPtr<blink::IIRFilter>> mIIRFilters;
+  nsTArray<UniquePtr<blink::IIRFilter>> mIIRFilters;
   AudioDoubleArray mFeedforward;
   AudioDoubleArray mFeedback;
   uint64_t mWindowID;

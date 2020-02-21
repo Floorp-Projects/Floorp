@@ -27,7 +27,6 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/TaskQueue.h"
-#include "nsAutoPtr.h"
 #include "nsCharSeparatedTokenizer.h"
 #include "nsContentTypeParser.h"
 #include "nsContentUtils.h"

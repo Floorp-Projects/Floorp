@@ -8,10 +8,10 @@
 #include "ipc/IPCMessageUtils.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/RTCStatsReportBinding.h"
-#include "nsAutoPtr.h"
+#include "mozilla/UniquePtr.h"
 
 typedef mozilla::dom::RTCStatsReportInternal StatsReport;
-typedef nsTArray<nsAutoPtr<StatsReport>> RTCReports;
+typedef nsTArray<mozilla::UniquePtr<StatsReport>> RTCReports;
 typedef mozilla::dom::Sequence<nsString> WebrtcGlobalLog;
 
 namespace mozilla {

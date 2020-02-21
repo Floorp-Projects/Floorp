@@ -47,9 +47,9 @@ ReverbConvolverStage::ReverbConvolverStage(
   MOZ_ASSERT(impulseResponse);
   MOZ_ASSERT(accumulationBuffer);
 
-  m_fftKernel = new FFTBlock(fftSize);
+  m_fftKernel = MakeUnique<FFTBlock>(fftSize);
   m_fftKernel->PadAndMakeScaledDFT(impulseResponse + stageOffset, stageLength);
-  m_fftConvolver = new FFTConvolver(fftSize, renderPhase);
+  m_fftConvolver = MakeUnique<FFTConvolver>(fftSize, renderPhase);
 
   // The convolution stage at offset stageOffset needs to have a corresponding
   // delay to cancel out the offset.
@@ -91,7 +91,7 @@ void ReverbConvolverStage::process(const float* source) {
 
   // Now, run the convolution (into the delay buffer).
   // An expensive FFT will happen every fftSize / 2 frames.
-  const float* output = m_fftConvolver->process(m_fftKernel, source);
+  const float* output = m_fftConvolver->process(m_fftKernel.get(), source);
 
   // Now accumulate into reverb's accumulation buffer.
   m_accumulationBuffer->accumulate(output, WEBAUDIO_BLOCK_SIZE,

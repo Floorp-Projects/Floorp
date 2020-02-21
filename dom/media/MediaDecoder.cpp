@@ -706,13 +706,13 @@ void MediaDecoder::MetadataLoaded(
   mMediaSeekable = aInfo->mMediaSeekable;
   mMediaSeekableOnlyInBufferedRanges =
       aInfo->mMediaSeekableOnlyInBufferedRanges;
-  mInfo = aInfo.release();
+  mInfo = std::move(aInfo);
 
   // Make sure the element and the frame (if any) are told about
   // our new size.
   if (aEventVisibility != MediaDecoderEventVisibility::Suppressed) {
     mFiredMetadataLoaded = true;
-    GetOwner()->MetadataLoaded(mInfo, std::move(aTags));
+    GetOwner()->MetadataLoaded(mInfo.get(), std::move(aTags));
   }
   // Invalidate() will end up calling GetOwner()->UpdateMediaSize with the last
   // dimensions retrieved from the video frame container. The video frame
@@ -763,7 +763,7 @@ const char* MediaDecoder::PlayStateStr() {
 }
 
 void MediaDecoder::FirstFrameLoaded(
-    nsAutoPtr<MediaInfo> aInfo, MediaDecoderEventVisibility aEventVisibility) {
+    UniquePtr<MediaInfo> aInfo, MediaDecoderEventVisibility aEventVisibility) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_DIAGNOSTIC_ASSERT(!IsShutdown());
   AbstractThread::AutoEnter context(AbstractMainThread());
@@ -773,7 +773,7 @@ void MediaDecoder::FirstFrameLoaded(
       aInfo->mAudio.mChannels, aInfo->mAudio.mRate, aInfo->HasAudio(),
       aInfo->HasVideo(), PlayStateStr(), IsTransportSeekable());
 
-  mInfo = aInfo.forget();
+  mInfo = std::move(aInfo);
 
   Invalidate();
 

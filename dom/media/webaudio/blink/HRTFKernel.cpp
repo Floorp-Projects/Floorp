@@ -79,7 +79,7 @@ HRTFKernel::HRTFKernel(float* impulseResponse, size_t length, float sampleRate)
     }
   }
 
-  m_fftFrame = new FFTBlock(fftSize);
+  m_fftFrame = MakeUnique<FFTBlock>(fftSize);
   m_fftFrame->PadAndMakeScaledDFT(impulseResponse, length);
 }
 
@@ -100,9 +100,10 @@ nsReturnRef<HRTFKernel> HRTFKernel::createInterpolatedKernel(
   float frameDelay =
       (1 - x) * kernel1->frameDelay() + x * kernel2->frameDelay();
 
-  nsAutoPtr<FFTBlock> interpolatedFrame(FFTBlock::CreateInterpolatedBlock(
+  UniquePtr<FFTBlock> interpolatedFrame(FFTBlock::CreateInterpolatedBlock(
       *kernel1->fftFrame(), *kernel2->fftFrame(), x));
-  return HRTFKernel::create(interpolatedFrame, frameDelay, sampleRate1);
+  return HRTFKernel::create(std::move(interpolatedFrame), frameDelay,
+                            sampleRate1);
 }
 
 }  // namespace WebCore

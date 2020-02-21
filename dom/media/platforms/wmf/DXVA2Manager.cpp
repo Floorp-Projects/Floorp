@@ -513,10 +513,10 @@ DXVA2Manager* DXVA2Manager::CreateD3D9DXVA(
     return nullptr;
   }
 
-  nsAutoPtr<D3D9DXVA2Manager> d3d9Manager(new D3D9DXVA2Manager());
+  UniquePtr<D3D9DXVA2Manager> d3d9Manager(new D3D9DXVA2Manager());
   hr = d3d9Manager->Init(aKnowsCompositor, aFailureReason);
   if (SUCCEEDED(hr)) {
-    return d3d9Manager.forget();
+    return d3d9Manager.release();
   }
 
   // No hardware accelerated video decoding. :(
@@ -1231,11 +1231,11 @@ DXVA2Manager* DXVA2Manager::CreateD3D11DXVA(
     return nullptr;
   }
 
-  nsAutoPtr<D3D11DXVA2Manager> manager(new D3D11DXVA2Manager());
+  UniquePtr<D3D11DXVA2Manager> manager(new D3D11DXVA2Manager());
   HRESULT hr = manager->Init(aKnowsCompositor, aFailureReason, aDevice);
   NS_ENSURE_TRUE(SUCCEEDED(hr), nullptr);
 
-  return manager.forget();
+  return manager.release();
 }
 
 DXVA2Manager::DXVA2Manager() : mLock("DXVA2Manager") {

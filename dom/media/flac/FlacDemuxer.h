@@ -10,7 +10,6 @@
 #include "mozilla/Attributes.h"
 #include "MediaDataDemuxer.h"
 #include "MediaResource.h"
-#include "nsAutoPtr.h"
 namespace mozilla {
 
 namespace flac {
@@ -96,7 +95,7 @@ class FlacTrackDemuxer : public MediaTrackDemuxer,
   MediaResourceIndex mSource;
 
   // Flac frame parser used to detect frames and extract side info.
-  nsAutoPtr<flac::FrameParser> mParser;
+  UniquePtr<flac::FrameParser> mParser;
 
   // Total duration of parsed frames.
   media::TimeUnit mParsedFramesDuration;

@@ -27,7 +27,6 @@
 #include "mozilla/UniquePtr.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/MediaStreamTrackBinding.h"
-#include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsComponentManagerUtils.h"
 #include "nsDirectoryServiceDefs.h"

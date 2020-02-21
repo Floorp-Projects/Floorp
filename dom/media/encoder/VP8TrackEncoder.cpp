@@ -50,11 +50,11 @@ VP8TrackEncoder::~VP8TrackEncoder() {
 
 void VP8TrackEncoder::Destroy() {
   if (mInitialized) {
-    vpx_codec_destroy(mVPXContext);
+    vpx_codec_destroy(mVPXContext.get());
   }
 
   if (mVPXImageWrapper) {
-    vpx_img_free(mVPXImageWrapper);
+    vpx_img_free(mVPXImageWrapper.get());
   }
   mInitialized = false;
 }
@@ -79,18 +79,19 @@ nsresult VP8TrackEncoder::Init(int32_t aWidth, int32_t aHeight,
   // Creating a wrapper to the image - setting image data to NULL. Actual
   // pointer will be set in encode. Setting align to 1, as it is meaningless
   // (actual memory is not allocated).
-  vpx_img_wrap(mVPXImageWrapper, VPX_IMG_FMT_I420, mFrameWidth, mFrameHeight, 1,
-               nullptr);
+  vpx_img_wrap(mVPXImageWrapper.get(), VPX_IMG_FMT_I420, mFrameWidth,
+               mFrameHeight, 1, nullptr);
 
   vpx_codec_flags_t flags = 0;
   flags |= VPX_CODEC_USE_OUTPUT_PARTITION;
-  if (vpx_codec_enc_init(mVPXContext, vpx_codec_vp8_cx(), &config, flags)) {
+  if (vpx_codec_enc_init(mVPXContext.get(), vpx_codec_vp8_cx(), &config,
+                         flags)) {
     return NS_ERROR_FAILURE;
   }
 
-  vpx_codec_control(mVPXContext, VP8E_SET_STATIC_THRESHOLD, 1);
-  vpx_codec_control(mVPXContext, VP8E_SET_CPUUSED, -6);
-  vpx_codec_control(mVPXContext, VP8E_SET_TOKEN_PARTITIONS,
+  vpx_codec_control(mVPXContext.get(), VP8E_SET_STATIC_THRESHOLD, 1);
+  vpx_codec_control(mVPXContext.get(), VP8E_SET_CPUUSED, -6);
+  vpx_codec_control(mVPXContext.get(), VP8E_SET_TOKEN_PARTITIONS,
                     VP8_ONE_TOKENPARTITION);
 
   SetInitialized();
@@ -113,8 +114,9 @@ nsresult VP8TrackEncoder::Reconfigure(int32_t aWidth, int32_t aHeight,
   }
 
   // Recreate image wrapper
-  vpx_img_free(mVPXImageWrapper);
-  vpx_img_wrap(mVPXImageWrapper, VPX_IMG_FMT_I420, aWidth, aHeight, 1, nullptr);
+  vpx_img_free(mVPXImageWrapper.get());
+  vpx_img_wrap(mVPXImageWrapper.get(), VPX_IMG_FMT_I420, aWidth, aHeight, 1,
+               nullptr);
   // Encoder configuration structure.
   vpx_codec_enc_cfg_t config;
   nsresult rv = SetConfigurationValues(aWidth, aHeight, aDisplayWidth,
@@ -226,7 +228,7 @@ nsresult VP8TrackEncoder::GetEncodedPartitions(
   EncodedFrame::FrameType frameType = EncodedFrame::VP8_P_FRAME;
   nsTArray<uint8_t> frameData;
   const vpx_codec_cx_pkt_t* pkt = nullptr;
-  while ((pkt = vpx_codec_get_cx_data(mVPXContext, &iter)) != nullptr) {
+  while ((pkt = vpx_codec_get_cx_data(mVPXContext.get(), &iter)) != nullptr) {
     switch (pkt->kind) {
       case VPX_CODEC_CX_FRAME_PKT: {
         // Copy the encoded data from libvpx to frameData
@@ -492,9 +494,9 @@ nsresult VP8TrackEncoder::GetEncodedTrack(
         mDurationSinceLastKeyframe += chunk.GetDuration();
       }
 
-      if (vpx_codec_encode(mVPXContext, mVPXImageWrapper, mEncodedTimestamp,
-                           (unsigned long)chunk.GetDuration(), flags,
-                           VPX_DL_REALTIME)) {
+      if (vpx_codec_encode(
+              mVPXContext.get(), mVPXImageWrapper.get(), mEncodedTimestamp,
+              (unsigned long)chunk.GetDuration(), flags, VPX_DL_REALTIME)) {
         VP8LOG(LogLevel::Error, "vpx_codec_encode failed to encode the frame.");
         return NS_ERROR_FAILURE;
       }
@@ -550,7 +552,7 @@ nsresult VP8TrackEncoder::GetEncodedTrack(
     // Bug 1243611, keep calling vpx_codec_encode and vpx_codec_get_cx_data
     // until vpx_codec_get_cx_data return null.
     while (true) {
-      if (vpx_codec_encode(mVPXContext, nullptr, mEncodedTimestamp, 0, 0,
+      if (vpx_codec_encode(mVPXContext.get(), nullptr, mEncodedTimestamp, 0, 0,
                            VPX_DL_REALTIME)) {
         return NS_ERROR_FAILURE;
       }

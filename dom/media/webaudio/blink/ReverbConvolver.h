@@ -31,15 +31,17 @@
 
 #include "ReverbAccumulationBuffer.h"
 #include "ReverbInputBuffer.h"
-#include "nsAutoPtr.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Monitor.h"
+#include "mozilla/UniquePtr.h"
 #ifdef LOG
 #  undef LOG
 #endif
 #include "base/thread.h"
 
 namespace WebCore {
+
+using mozilla::UniquePtr;
 
 class ReverbConvolverStage;
 
@@ -67,8 +69,8 @@ class ReverbConvolver {
   size_t sizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
  private:
-  nsTArray<nsAutoPtr<ReverbConvolverStage> > m_stages;
-  nsTArray<nsAutoPtr<ReverbConvolverStage> > m_backgroundStages;
+  nsTArray<UniquePtr<ReverbConvolverStage> > m_stages;
+  nsTArray<UniquePtr<ReverbConvolverStage> > m_backgroundStages;
   size_t m_impulseResponseLength;
 
   ReverbAccumulationBuffer m_accumulationBuffer;

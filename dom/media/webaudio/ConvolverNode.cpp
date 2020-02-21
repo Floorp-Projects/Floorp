@@ -6,7 +6,6 @@
 
 #include "ConvolverNode.h"
 #include "mozilla/dom/ConvolverNodeBinding.h"
-#include "nsAutoPtr.h"
 #include "AlignmentUtils.h"
 #include "AudioNodeEngine.h"
 #include "AudioNodeTrack.h"
@@ -100,7 +99,7 @@ class ConvolverNodeEngine final : public AudioNodeEngine {
       mRightConvolverMode = RightConvolverMode::Always;
     }
 
-    mReverb = aReverb;
+    mReverb.reset(aReverb);
   }
 
   void AllocateReverbInput(const AudioBlock& aInput,
@@ -146,7 +145,7 @@ class ConvolverNodeEngine final : public AudioNodeEngine {
  private:
   // Keeping mReverbInput across process calls avoids unnecessary reallocation.
   AudioBlock mReverbInput;
-  nsAutoPtr<WebCore::Reverb> mReverb;
+  UniquePtr<WebCore::Reverb> mReverb;
   // Tracks samples of the tail remaining to be output.  INT32_MIN is a
   // special value to indicate that the end of any previous tail has been
   // handled.
@@ -459,11 +458,11 @@ void ConvolverNode::SetBuffer(JSContext* aCx, AudioBuffer* aBuffer,
     const size_t MaxFFTSize = 32768;
 
     bool allocationFailure = false;
-    nsAutoPtr<WebCore::Reverb> reverb(new WebCore::Reverb(
+    UniquePtr<WebCore::Reverb> reverb(new WebCore::Reverb(
         data, MaxFFTSize, !Context()->IsOffline(), mNormalize,
         aBuffer->SampleRate(), &allocationFailure));
     if (!allocationFailure) {
-      ns->SetReverb(reverb.forget(), data.ChannelCount());
+      ns->SetReverb(reverb.release(), data.ChannelCount());
     } else {
       aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
       return;

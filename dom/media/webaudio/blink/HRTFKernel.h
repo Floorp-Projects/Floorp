@@ -29,15 +29,16 @@
 #ifndef HRTFKernel_h
 #define HRTFKernel_h
 
-#include "nsAutoPtr.h"
 #include "nsAutoRef.h"
 #include "nsTArray.h"
 #include "mozilla/FFTBlock.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/UniquePtr.h"
 
 namespace WebCore {
 
 using mozilla::FFTBlock;
+using mozilla::UniquePtr;
 
 // HRTF stands for Head-Related Transfer Function.
 // HRTFKernel is a frequency-domain representation of an impulse-response used
@@ -56,7 +57,7 @@ class HRTFKernel {
   static nsReturnRef<HRTFKernel> create(float* impulseResponse, size_t length,
                                         float sampleRate);
 
-  static nsReturnRef<HRTFKernel> create(nsAutoPtr<FFTBlock> fftFrame,
+  static nsReturnRef<HRTFKernel> create(UniquePtr<FFTBlock> fftFrame,
                                         float frameDelay, float sampleRate);
 
   // Given two HRTFKernels, and an interpolation factor x: 0 -> 1, returns an
@@ -86,12 +87,12 @@ class HRTFKernel {
   // Note: this is destructive on the passed in |impulseResponse|.
   HRTFKernel(float* impulseResponse, size_t fftSize, float sampleRate);
 
-  HRTFKernel(nsAutoPtr<FFTBlock> fftFrame, float frameDelay, float sampleRate)
-      : m_fftFrame(fftFrame),
+  HRTFKernel(UniquePtr<FFTBlock> fftFrame, float frameDelay, float sampleRate)
+      : m_fftFrame(std::move(fftFrame)),
         m_frameDelay(frameDelay),
         m_sampleRate(sampleRate) {}
 
-  nsAutoPtr<FFTBlock> m_fftFrame;
+  UniquePtr<FFTBlock> m_fftFrame;
   float m_frameDelay;
   float m_sampleRate;
 };
@@ -116,11 +117,11 @@ inline nsReturnRef<HRTFKernel> HRTFKernel::create(float* impulseResponse,
       new HRTFKernel(impulseResponse, length, sampleRate));
 }
 
-inline nsReturnRef<HRTFKernel> HRTFKernel::create(nsAutoPtr<FFTBlock> fftFrame,
+inline nsReturnRef<HRTFKernel> HRTFKernel::create(UniquePtr<FFTBlock> fftFrame,
                                                   float frameDelay,
                                                   float sampleRate) {
   return nsReturnRef<HRTFKernel>(
-      new HRTFKernel(fftFrame, frameDelay, sampleRate));
+      new HRTFKernel(std::move(fftFrame), frameDelay, sampleRate));
 }
 
 }  // namespace WebCore
