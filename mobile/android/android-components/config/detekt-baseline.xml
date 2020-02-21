@@ -485,7 +485,7 @@
     <ID>UndocumentedPublicFunction:SampleToolbarHelpers.kt$fun getToolbarConfiguration(intent: Intent): ToolbarConfiguration</ID>
     <ID>UndocumentedPublicFunction:SearchLocalizationProvider.kt$SearchLocalizationProvider$suspend fun determineRegion(): SearchLocalization</ID>
     <ID>UndocumentedPublicFunction:SearchUseCases.kt$SearchUseCases.SearchUseCase$fun invoke(searchTerms: String, searchEngine: SearchEngine? = null)</ID>
-    <ID>UndocumentedPublicFunction:SendCrashReportService.kt$SendCrashReportService.Companion$fun createReportIntent(context: Context, crash: Crash): Intent</ID>
+    <ID>UndocumentedPublicFunction:SendCrashReportService.kt$SendCrashReportService.Companion$fun createReportIntent( context: Context, crash: Crash, notificationTag: String? = null, notificationId: Int = 0 ): Intent</ID>
     <ID>UndocumentedPublicFunction:SendCrashTelemetryService.kt$SendCrashTelemetryService.Companion$fun createReportIntent(context: Context, crash: Crash): Intent</ID>
     <ID>UndocumentedPublicFunction:Session.kt$Session.Observer$fun onAppPermissionRequested(session: Session, permissionRequest: PermissionRequest): Boolean</ID>
     <ID>UndocumentedPublicFunction:Session.kt$Session.Observer$fun onCloseWindowRequested(session: Session, windowRequest: WindowRequest): Boolean</ID>

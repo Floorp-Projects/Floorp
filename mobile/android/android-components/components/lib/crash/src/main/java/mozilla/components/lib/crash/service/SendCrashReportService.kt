@@ -9,6 +9,8 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.os.IBinder
+import androidx.annotation.VisibleForTesting
+import androidx.annotation.VisibleForTesting.PRIVATE
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import mozilla.components.lib.crash.Crash
@@ -20,10 +22,21 @@ import mozilla.components.support.base.ids.SharedIdsHelper
 private const val NOTIFICATION_TAG = "mozac.lib.crash.sendcrash"
 private const val NOTIFICATION_ID = 1
 
+@VisibleForTesting(otherwise = PRIVATE)
+internal const val NOTIFICATION_TAG_KEY = "mozac.lib.crash.notification.tag"
+
+@VisibleForTesting(otherwise = PRIVATE)
+internal const val NOTIFICATION_ID_KEY = "mozac.lib.crash.notification.id"
+
 class SendCrashReportService : Service() {
     private val crashReporter: CrashReporter by lazy { CrashReporter.requireInstance }
 
     override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int {
+        intent.getStringExtra(NOTIFICATION_TAG_KEY)?.apply {
+            NotificationManagerCompat.from(applicationContext)
+                .cancel(this, intent.getIntExtra(NOTIFICATION_ID_KEY, 0))
+        }
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = CrashNotification.ensureChannelExists(this)
             val notification = NotificationCompat.Builder(this, channel)
@@ -55,8 +68,19 @@ class SendCrashReportService : Service() {
     }
 
     companion object {
-        fun createReportIntent(context: Context, crash: Crash): Intent {
+        fun createReportIntent(
+            context: Context,
+            crash: Crash,
+            notificationTag: String? = null,
+            notificationId: Int = 0
+        ): Intent {
             val intent = Intent(context, SendCrashReportService::class.java)
+
+            notificationTag?.apply {
+                intent.putExtra(NOTIFICATION_TAG_KEY, notificationTag)
+                intent.putExtra(NOTIFICATION_ID_KEY, notificationId)
+            }
+
             crash.fillIn(intent)
 
             return intent
