@@ -346,7 +346,11 @@ promise_test(() => {
   const plainSheet = new CSSStyleSheet();
   const redStyleSheetPromise = plainSheet.replace(redStyleTexts[0]);
   return redStyleSheetPromise.then(function(redStyleSheet) {
-    assert_throws_dom('NotAllowedError', () => { iframe.contentDocument.adoptedStyleSheets = [redStyleSheet]; });
+    assert_throws_dom(
+      'NotAllowedError',
+      iframe.contentWindow.DOMException,
+      () => { iframe.contentDocument.adoptedStyleSheets = [redStyleSheet]; }
+    );
     assert_equals(getComputedStyle(greenIframeSpan).color, "rgb(0, 0, 0)");
     assert_equals(getComputedStyle(redIframeSpan).color, "rgb(0, 0, 0)");
     assert_equals(getComputedStyle(blueIframeSpan).color, "rgb(0, 0, 0)");
@@ -448,7 +452,9 @@ test(() => {
   iframe.contentDocument.body.appendChild(iframeDiv);
 
   assert_equals(getComputedStyle(iframeDiv).color, "rgb(0, 0, 0)");
-  assert_throws_dom('NotAllowedError', () => { iframe.contentDocument.adoptedStyleSheets = [nonConstructedStyleSheet]; });
+  assert_throws_dom('NotAllowedError', iframe.contentWindow.DOMException, () => {
+    iframe.contentDocument.adoptedStyleSheets = [nonConstructedStyleSheet];
+  });
   assert_equals(getComputedStyle(iframeDiv).color, "rgb(0, 0, 0)");
 
   iframeStyle = iframe.contentDocument.createElement("style");
