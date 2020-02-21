@@ -185,7 +185,7 @@ AccessibilityPanel.prototype = {
   },
 
   selectAccessible(accessibleFront) {
-    this.postContentMessage("selectAccessible", this.walker, accessibleFront);
+    this.postContentMessage("selectAccessible", accessibleFront);
   },
 
   selectAccessibleForNode(nodeFront, reason) {
@@ -197,15 +197,11 @@ AccessibilityPanel.prototype = {
       );
     }
 
-    this.postContentMessage("selectNodeAccessible", this.walker, nodeFront);
+    this.postContentMessage("selectNodeAccessible", nodeFront);
   },
 
   highlightAccessible(accessibleFront) {
-    this.postContentMessage(
-      "highlightAccessible",
-      this.walker,
-      accessibleFront
-    );
+    this.postContentMessage("highlightAccessible", accessibleFront);
   },
 
   postContentMessage(type, ...args) {
