@@ -538,34 +538,6 @@ add_task(async function test_success_with_partial_list() {
 });
 add_task(clear_state);
 
-add_task(async function test_full_polling() {
-  server.registerPathHandler(
-    CHANGES_PATH,
-    serveChangesEntries(10000, [
-      {
-        id: "b6ba7fab-a40a-4d03-a4af-6b627f3c5b36",
-        last_modified: 42,
-        host: "localhost",
-        bucket: "main",
-        collection: "poll-test-collection",
-      },
-    ])
-  );
-
-  const c = RemoteSettings("poll-test-collection");
-  let maybeSyncCount = 0;
-  c.maybeSync = () => {
-    maybeSyncCount++;
-  };
-
-  await RemoteSettings.pollChanges();
-  await RemoteSettings.pollChanges({ full: true });
-
-  // Since the second call is full, clients are called
-  Assert.equal(maybeSyncCount, 2, "maybeSync should be called twice");
-});
-add_task(clear_state);
-
 add_task(async function test_server_bad_json() {
   const startHistogram = getUptakeTelemetrySnapshot(
     TELEMETRY_HISTOGRAM_POLL_KEY

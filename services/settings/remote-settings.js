@@ -17,15 +17,31 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
-  UptakeTelemetry: "resource://services-common/uptake-telemetry.js",
-  pushBroadcastService: "resource://gre/modules/PushBroadcastService.jsm",
-  RemoteSettingsClient: "resource://services-settings/RemoteSettingsClient.jsm",
-  Utils: "resource://services-settings/Utils.jsm",
-  FilterExpressions:
-    "resource://gre/modules/components-utils/FilterExpressions.jsm",
-  RemoteSettingsWorker: "resource://services-settings/RemoteSettingsWorker.jsm",
-});
+ChromeUtils.defineModuleGetter(
+  this,
+  "UptakeTelemetry",
+  "resource://services-common/uptake-telemetry.js"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "pushBroadcastService",
+  "resource://gre/modules/PushBroadcastService.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "RemoteSettingsClient",
+  "resource://services-settings/RemoteSettingsClient.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "Utils",
+  "resource://services-settings/Utils.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "FilterExpressions",
+  "resource://gre/modules/components-utils/FilterExpressions.jsm"
+);
 
 XPCOMUtils.defineLazyGlobalGetters(this, ["fetch"]);
 
@@ -155,21 +171,12 @@ function remoteSettingsFunction() {
    * @param {Object} options
 .  * @param {Object} options.expectedTimestamp (optional) The expected timestamp to be received — used by servers for cache busting.
    * @param {string} options.trigger           (optional) label to identify what triggered this sync (eg. ``"timer"``, default: `"manual"`)
-   * @param {bool}   options.full              (optional) Ignore last polling status and fetch all changes (default: `false`)
    * @returns {Promise} or throws error if something goes wrong.
    */
   remoteSettings.pollChanges = async ({
     expectedTimestamp,
     trigger = "manual",
-    full = false,
   } = {}) => {
-    // When running in full mode, we ignore last polling status.
-    if (full) {
-      gPrefs.clearUserPref(PREF_SETTINGS_SERVER_BACKOFF);
-      gPrefs.clearUserPref(PREF_SETTINGS_LAST_UPDATE);
-      gPrefs.clearUserPref(PREF_SETTINGS_LAST_ETAG);
-    }
-
     let pollTelemetryArgs = {
       source: TELEMETRY_SOURCE_POLL,
       trigger,
@@ -383,7 +390,8 @@ function remoteSettingsFunction() {
         if (!client) {
           return null;
         }
-        const localTimestamp = await client.getLastModified();
+        const kintoCol = await client.openCollection();
+        const localTimestamp = await kintoCol.db.getLastModified();
         const lastCheck = Services.prefs.getIntPref(
           client.lastCheckTimePref,
           0
@@ -409,25 +417,6 @@ function remoteSettingsFunction() {
       defaultSigner: DEFAULT_SIGNER,
       collections: collections.filter(c => !!c),
     };
-  };
-
-  /**
-   * Delete all local data, of every collection.
-   */
-  remoteSettings.clearAll = async () => {
-    const { collections } = await remoteSettings.inspect();
-    await Promise.all(
-      collections.map(async ({ collection }) => {
-        const client = RemoteSettings(collection);
-        // Delete all potential attachments.
-        await client.attachments.deleteAll();
-        // Delete local data.
-        const kintoCollection = await client.openCollection();
-        await kintoCollection.clear();
-        // Remove status pref.
-        Services.prefs.clearUserPref(client.lastCheckTimePref);
-      })
-    );
   };
 
   /**

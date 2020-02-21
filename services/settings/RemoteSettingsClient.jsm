@@ -185,20 +185,6 @@ class AttachmentDownloader extends Downloader {
       throw err;
     }
   }
-
-  /**
-   * Delete all downloaded records attachments.
-   *
-   * Note: the list of attachments to be deleted is based on the
-   * current list of records.
-   */
-  async deleteAll() {
-    const kintoCol = await this._client.openCollection();
-    const { data: allRecords } = await kintoCol.list();
-    return Promise.all(
-      allRecords.filter(r => !!r.attachment).map(r => this.delete(r))
-    );
-  }
 }
 
 class RemoteSettingsClient extends EventEmitter {
@@ -291,9 +277,10 @@ class RemoteSettingsClient extends EventEmitter {
    */
   async getLastModified() {
     let timestamp = -1;
+
     try {
-      const kintoCollection = await this.openCollection();
-      timestamp = await kintoCollection.db.getLastModified();
+      const collection = await this.openCollection();
+      timestamp = await collection.db.getLastModified();
     } catch (err) {
       console.warn(
         `Error retrieving the getLastModified timestamp from ${
@@ -302,6 +289,7 @@ class RemoteSettingsClient extends EventEmitter {
         err
       );
     }
+
     return timestamp;
   }
 
