@@ -267,14 +267,10 @@ void FunctionBox::initWithEnclosingParseContext(ParseContext* enclosing,
 }
 
 void FunctionBox::initFieldInitializer(ParseContext* enclosing,
-                                       Handle<FunctionCreationData> data,
-                                       HasHeritage hasHeritage) {
+                                       Handle<FunctionCreationData> data) {
   this->initWithEnclosingParseContext(enclosing, data,
-                                      FunctionSyntaxKind::Expression);
-  allowSuperProperty_ = true;
-  allowSuperCall_ = false;
+                                      FunctionSyntaxKind::Method);
   allowArguments_ = false;
-  needsThisTDZChecks_ = hasHeritage == HasHeritage::Yes;
 }
 
 void FunctionBox::initWithEnclosingScope(JSFunction* fun) {
