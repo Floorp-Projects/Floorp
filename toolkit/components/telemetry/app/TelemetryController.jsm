@@ -181,6 +181,13 @@ var TelemetryController = Object.freeze({
   },
 
   /**
+   * Used only for testing purposes.
+   */
+  async testDeleteFOGotypeDirs() {
+    return Impl._deleteFOGotypeDirs();
+  },
+
+  /**
    * Send a notification.
    */
   observe(aSubject, aTopic, aData) {
@@ -852,6 +859,10 @@ var Impl = {
           EcosystemTelemetry.startup();
           TelemetryPrioPing.startup();
 
+          Services.tm.idleDispatchToMainThread(() =>
+            this._deleteFOGotypeDirs()
+          );
+
           this._delayedInitTaskDeferred.resolve();
         } catch (e) {
           this._delayedInitTaskDeferred.reject(e);
@@ -1390,6 +1401,21 @@ var Impl = {
         }
       }
       Telemetry.registerBuiltinEvents(category, eventJSProbes[category]);
+    }
+  },
+
+  async _deleteFOGotypeDirs() {
+    const tmpdir = OS.Constants.Path.tmpDir;
+    let dirit = new OS.File.DirectoryIterator(tmpdir);
+    let fogotypeDirs = (await dirit.nextBatch()).filter(
+      e => e.isDir && e.name.startsWith("fogotype.")
+    );
+    for (let fogotypeDir of fogotypeDirs) {
+      try {
+        await OS.File.removeDir(fogotypeDir.path);
+      } catch {
+        this._log.trace("Couldn't delete a FOGotype dir. Alas.");
+      }
     }
   },
 };
