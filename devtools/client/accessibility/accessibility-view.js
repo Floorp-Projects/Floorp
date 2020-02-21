@@ -64,10 +64,6 @@ AccessibilityView.prototype = {
    * - fluentBundles                         {Array}
    *                                         array of FluentBundles elements for
    *                                         localization
-   * - simulator                             {Object}
-   *                                         front for simulator actor
-   *                                         responsible for setting color
-   *                                         matrices in docShell
    * - toolbox                               {Object}
    *                                         devtools toolbox.
    * - getAccessibilityTreeRoot              {Function}
@@ -84,17 +80,21 @@ AccessibilityView.prototype = {
    *                                         Audit function that will start
    *                                         accessibility audit for given types
    *                                         of accessibility issues.
+   * - simulate                              {null|Function}
+   *                                         Apply simulation of a given type
+   *                                         (by setting color matrices in
+   *                                         docShell).
    */
   async initialize({
     front,
     supports,
     fluentBundles,
-    simulator,
     toolbox,
     getAccessibilityTreeRoot,
     startListeningForAccessibilityEvents,
     stopListeningForAccessibilityEvents,
     audit,
+    simulate,
   }) {
     // Make sure state is reset every time accessibility panel is initialized.
     await this.store.dispatch(reset(front, supports));
@@ -102,12 +102,12 @@ AccessibilityView.prototype = {
     const mainFrame = MainFrame({
       accessibility: front,
       fluentBundles,
-      simulator,
       toolbox,
       getAccessibilityTreeRoot,
       startListeningForAccessibilityEvents,
       stopListeningForAccessibilityEvents,
       audit,
+      simulate,
     });
     // Render top level component
     const provider = createElement(Provider, { store: this.store }, mainFrame);
