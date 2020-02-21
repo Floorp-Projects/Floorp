@@ -124,6 +124,8 @@
   MACRO(dotThis, dotThis, ".this")                                             \
   MACRO(dotInitializers, dotInitializers, ".initializers")                     \
   MACRO(dotFieldKeys, dotFieldKeys, ".fieldKeys")                              \
+  MACRO(dotStaticInitializers, dotStaticInitializers, ".staticInitializers")   \
+  MACRO(dotStaticFieldKeys, dotStaticFieldKeys, ".staticFieldKeys")            \
   MACRO(each, each, "each")                                                    \
   MACRO(element, element, "element")                                           \
   MACRO(elementType, elementType, "elementType")                               \

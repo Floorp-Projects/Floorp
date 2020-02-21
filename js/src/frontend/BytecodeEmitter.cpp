@@ -5510,7 +5510,8 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitFunction(
 
       if (classContentsIfConstructor) {
         mozilla::Maybe<FieldInitializers> fieldInitializers =
-            setupFieldInitializers(classContentsIfConstructor);
+            setupFieldInitializers(classContentsIfConstructor,
+                                   FieldPlacement::Instance);
         if (!fieldInitializers) {
           ReportAllocationOverflow(cx);
           return false;
@@ -5548,7 +5549,8 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitFunction(
 
     mozilla::Maybe<FieldInitializers> fieldInitializers;
     if (classContentsIfConstructor) {
-      fieldInitializers = setupFieldInitializers(classContentsIfConstructor);
+      fieldInitializers = setupFieldInitializers(classContentsIfConstructor,
+                                                 FieldPlacement::Instance);
       if (!fieldInitializers) {
         ReportAllocationOverflow(cx);
         return false;
@@ -8204,6 +8206,7 @@ bool BytecodeEmitter::emitPropertyList(ListNode* obj, PropertyEmitter& pe,
   //                [stack] CTOR? OBJ
 
   size_t curFieldKeyIndex = 0;
+  size_t curStaticFieldKeyIndex = 0;
   for (ParseNode* propdef : obj->contents()) {
     if (propdef->is<ClassField>()) {
       MOZ_ASSERT(type == ClassBody);
@@ -8211,7 +8214,11 @@ bool BytecodeEmitter::emitPropertyList(ListNode* obj, PropertyEmitter& pe,
       // is created elsewhere.
       ClassField* field = &propdef->as<ClassField>();
       if (field->name().getKind() == ParseNodeKind::ComputedName) {
-        if (!emitGetName(cx->names().dotFieldKeys)) {
+        auto fieldKeysName = field->isStatic()
+                                 ? &JSAtomState::dotStaticFieldKeys
+                                 : &JSAtomState::dotFieldKeys;
+        HandlePropertyName fieldKeys = cx->names().*fieldKeysName;
+        if (!emitGetName(fieldKeys)) {
           //        [stack] CTOR? OBJ ARRAY
           return false;
         }
@@ -8229,7 +8236,14 @@ bool BytecodeEmitter::emitPropertyList(ListNode* obj, PropertyEmitter& pe,
           return false;
         }
 
-        if (!emitUint32Operand(JSOp::InitElemArray, curFieldKeyIndex)) {
+        size_t fieldKeysIndex;
+        if (field->isStatic()) {
+          fieldKeysIndex = curStaticFieldKeyIndex++;
+        } else {
+          fieldKeysIndex = curFieldKeyIndex++;
+        }
+
+        if (!emitUint32Operand(JSOp::InitElemArray, fieldKeysIndex)) {
           //        [stack] CTOR? OBJ ARRAY
           return false;
         }
@@ -8238,8 +8252,6 @@ bool BytecodeEmitter::emitPropertyList(ListNode* obj, PropertyEmitter& pe,
           //        [stack] CTOR? OBJ
           return false;
         }
-
-        curFieldKeyIndex++;
       }
       continue;
     }
@@ -8675,9 +8687,11 @@ bool BytecodeEmitter::emitObjLiteralValue(ObjLiteralCreationData* data,
 }
 
 mozilla::Maybe<FieldInitializers> BytecodeEmitter::setupFieldInitializers(
-    ListNode* classMembers) {
-  auto isClassField = [](ParseNode* propdef) {
-    return propdef->is<ClassField>();
+    ListNode* classMembers, FieldPlacement placement) {
+  bool isStatic = placement == FieldPlacement::Static;
+  auto isClassField = [isStatic](ParseNode* propdef) {
+    return propdef->is<ClassField>() &&
+           propdef->as<ClassField>().isStatic() == isStatic;
   };
 
   size_t numFields =
@@ -8714,9 +8728,12 @@ mozilla::Maybe<FieldInitializers> BytecodeEmitter::setupFieldInitializers(
 // BytecodeEmitter::emitCreateFieldKeys does `let .fieldKeys = [...];`
 // BytecodeEmitter::emitPropertyList fills in the elements of the array.
 // See GeneralParser::fieldInitializer for the `this[.fieldKeys[0]]` part.
-bool BytecodeEmitter::emitCreateFieldKeys(ListNode* obj) {
-  auto isFieldWithComputedName = [](ParseNode* propdef) {
+bool BytecodeEmitter::emitCreateFieldKeys(ListNode* obj,
+                                          FieldPlacement placement) {
+  bool isStatic = placement == FieldPlacement::Static;
+  auto isFieldWithComputedName = [isStatic](ParseNode* propdef) {
     return propdef->is<ClassField>() &&
+           propdef->as<ClassField>().isStatic() == isStatic &&
            propdef->as<ClassField>().name().getKind() ==
                ParseNodeKind::ComputedName;
   };
@@ -8727,8 +8744,10 @@ bool BytecodeEmitter::emitCreateFieldKeys(ListNode* obj) {
     return true;
   }
 
-  NameOpEmitter noe(this, cx->names().dotFieldKeys.toHandle(),
-                    NameOpEmitter::Kind::Initialize);
+  auto fieldKeysName =
+      isStatic ? &JSAtomState::dotStaticFieldKeys : &JSAtomState::dotFieldKeys;
+  HandlePropertyName fieldKeys = cx->names().*fieldKeysName;
+  NameOpEmitter noe(this, fieldKeys, NameOpEmitter::Kind::Initialize);
   if (!noe.prepareForRhs()) {
     return false;
   }
@@ -8752,10 +8771,15 @@ bool BytecodeEmitter::emitCreateFieldKeys(ListNode* obj) {
 }
 
 bool BytecodeEmitter::emitCreateFieldInitializers(ClassEmitter& ce,
-                                                  ListNode* obj) {
-  //          [stack] HOMEOBJ HERITAGE?
+                                                  ListNode* obj,
+                                                  FieldPlacement placement) {
+  // FieldPlacement::Instance
+  //                [stack] HOMEOBJ HERITAGE?
+  //
+  // FieldPlacement::Static
+  //                [stack] CTOR HOMEOBJ
   mozilla::Maybe<FieldInitializers> fieldInitializers =
-      setupFieldInitializers(obj);
+      setupFieldInitializers(obj, placement);
   if (!fieldInitializers) {
     ReportAllocationOverflow(cx);
     return false;
@@ -8766,8 +8790,11 @@ bool BytecodeEmitter::emitCreateFieldInitializers(ClassEmitter& ce,
     return true;
   }
 
-  if (!ce.prepareForFieldInitializers(numFields)) {
-    //          [stack] HOMEOBJ HERITAGE? ARRAY
+  bool isStatic = placement == FieldPlacement::Static;
+  if (!ce.prepareForFieldInitializers(numFields, isStatic)) {
+    //              [stack] HOMEOBJ HERITAGE? ARRAY
+    // or:
+    //              [stack] CTOR HOMEOBJ ARRAY
     return false;
   }
 
@@ -8775,27 +8802,41 @@ bool BytecodeEmitter::emitCreateFieldInitializers(ClassEmitter& ce,
     if (!propdef->is<ClassField>()) {
       continue;
     }
+    if (propdef->as<ClassField>().isStatic() != isStatic) {
+      continue;
+    }
 
     FunctionNode* initializer = propdef->as<ClassField>().initializer();
+    if (!ce.prepareForFieldInitializer()) {
+      return false;
+    }
     if (!emitTree(initializer)) {
       //            [stack] HOMEOBJ HERITAGE? ARRAY LAMBDA
+      // or:
+      //            [stack] CTOR HOMEOBJ ARRAY LAMBDA
       return false;
     }
     if (initializer->funbox()->needsHomeObject()) {
       MOZ_ASSERT(initializer->funbox()->allowSuperProperty());
-      if (!ce.emitFieldInitializerHomeObject()) {
+      if (!ce.emitFieldInitializerHomeObject(isStatic)) {
         //          [stack] HOMEOBJ HERITAGE? ARRAY LAMBDA
+        // or:
+        //          [stack] CTOR HOMEOBJ ARRAY LAMBDA
         return false;
       }
     }
     if (!ce.emitStoreFieldInitializer()) {
       //            [stack] HOMEOBJ HERITAGE? ARRAY
+      // or:
+      //            [stack] CTOR HOMEOBJ ARRAY
       return false;
     }
   }
 
   if (!ce.emitFieldInitializersEnd()) {
     //              [stack] HOMEOBJ HERITAGE?
+    // or:
+    //              [stack] CTOR HOMEOBJ
     return false;
   }
 
@@ -9543,7 +9584,8 @@ bool BytecodeEmitter::emitClass(
                  cx->names().dotInitializers);
 
       auto isInstanceField = [](ParseNode* propdef) {
-        return propdef->is<ClassField>();
+        return propdef->is<ClassField>() &&
+               !propdef->as<ClassField>().isStatic();
       };
 
       // As an optimization omit the |.initializers| binding when no instance
@@ -9559,7 +9601,8 @@ bool BytecodeEmitter::emitClass(
         }
 
         // Any class with field initializers will have a constructor
-        if (!emitCreateFieldInitializers(ce, classMembers)) {
+        if (!emitCreateFieldInitializers(ce, classMembers,
+                                         FieldPlacement::Instance)) {
           return false;
         }
       }
@@ -9600,7 +9643,7 @@ bool BytecodeEmitter::emitClass(
     }
   }
 
-  if (!emitCreateFieldKeys(classMembers)) {
+  if (!emitCreateFieldKeys(classMembers, FieldPlacement::Instance)) {
     return false;
   }
 
