@@ -262,12 +262,10 @@ CONTENT_ACCESSIBLE_FILES += [
 
 
 GeneratedFile('nsCSSPropertyID.h', script='GenerateCSSPropertyID.py',
-              py2=True,
               entry_point='generate',
               inputs=['nsCSSPropertyID.h.in', '!ServoCSSPropList.py'])
 GeneratedFile('ServoCSSPropList.h',
               script='GenerateServoCSSPropList.py',
-              py2=True,
               entry_point='generate_header',
               inputs=['!ServoCSSPropList.py'])
 GeneratedFile('ServoCSSPropList.py',
@@ -284,13 +282,11 @@ if CONFIG['COMPILE_ENVIRONMENT']:
 
     GeneratedFile('CompositorAnimatableProperties.h',
                   script='GenerateCompositorAnimatableProperties.py',
-                  py2=True,
                   entry_point='generate',
                   inputs=['!ServoCSSPropList.py'])
     GeneratedFile(
         'CountedUnknownProperties.h',
         script='GenerateCountedUnknownProperties.py',
-        py2=True,
         entry_point='generate',
         inputs=[
             '/servo/components/style/properties/counted_unknown_properties.py',
@@ -306,7 +302,6 @@ if CONFIG['COMPILE_ENVIRONMENT']:
                   entry_point='generate',
                   inputs=['!ServoCSSPropList.py'])
     GeneratedFile('ServoStyleConsts.h', script='RunCbindgen.py',
-                  py2=True,
                   entry_point='generate',
                   inputs = ['/servo/ports/geckolib', '/servo/components/style'])
 
