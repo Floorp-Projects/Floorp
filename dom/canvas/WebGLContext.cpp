@@ -1252,56 +1252,6 @@ void WebGLContext::LoseContext(const webgl::ContextLossReason reason) {
   mHost->OnContextLoss(reason);
 }
 
-RefPtr<gfx::SourceSurface> WebGLContext::GetSurfaceSnapshot(
-    gfxAlphaType* const out_alphaType) {
-  const FuncScope funcScope(*this, "<GetSurfaceSnapshot>");
-  if (IsContextLost()) return nullptr;
-
-  if (!BindDefaultFBForRead()) return nullptr;
-
-  const auto surfFormat = mOptions.alpha ? gfx::SurfaceFormat::B8G8R8A8
-                                         : gfx::SurfaceFormat::B8G8R8X8;
-  const auto& size = mDefaultFB->mSize;
-  RefPtr<gfx::DataSourceSurface> surf;
-  surf = gfx::Factory::CreateDataSourceSurfaceWithStride(size, surfFormat,
-                                                         size.width * 4);
-  if (NS_WARN_IF(!surf)) return nullptr;
-
-  ReadPixelsIntoDataSurface(gl, surf);
-
-  gfxAlphaType alphaType;
-  if (!mOptions.alpha) {
-    alphaType = gfxAlphaType::Opaque;
-  } else if (mOptions.premultipliedAlpha) {
-    alphaType = gfxAlphaType::Premult;
-  } else {
-    alphaType = gfxAlphaType::NonPremult;
-  }
-
-  if (out_alphaType) {
-    *out_alphaType = alphaType;
-  } else {
-    // Expects Opaque or Premult
-    if (alphaType == gfxAlphaType::NonPremult) {
-      gfxUtils::PremultiplyDataSurface(surf, surf);
-    }
-  }
-
-  RefPtr<gfx::DrawTarget> dt = gfx::Factory::CreateDrawTarget(
-      gfxPlatform::GetPlatform()->GetSoftwareBackend(), size,
-      gfx::SurfaceFormat::B8G8R8A8);
-  if (!dt) return nullptr;
-
-  dt->SetTransform(
-      gfx::Matrix::Translation(0.0, size.height).PreScale(1.0, -1.0));
-
-  const gfx::Rect rect{0, 0, float(size.width), float(size.height)};
-  dt->DrawSurface(surf, rect, rect, gfx::DrawSurfaceOptions(),
-                  gfx::DrawOptions(1.0f, gfx::CompositionOp::OP_SOURCE));
-
-  return dt->Snapshot();
-}
-
 void WebGLContext::DidRefresh() {
   if (gl) {
     gl->FlushIfHeavyGLCallsSinceLastFlush();
