@@ -65,7 +65,7 @@ void FocusState::Update(LayersId aRootLayerTreeId,
   MutexAutoLock lock(mMutex);
 
   FS_LOG("Update with rlt=%" PRIu64 ", olt=%" PRIu64 ", ft=(%s, %" PRIu64 ")\n",
-         aRootLayerTreeId, aOriginatingLayersId, aState.Type(),
+         aRootLayerTreeId.mId, aOriginatingLayersId.mId, aState.Type(),
          aState.mSequenceNumber);
   mReceivedUpdate = true;
 
@@ -85,7 +85,7 @@ void FocusState::Update(LayersId aRootLayerTreeId,
     auto currentNode = mFocusTree.find(mFocusLayersId);
     if (currentNode == mFocusTree.end()) {
       FS_LOG("Setting target to nil (cannot find lt=%" PRIu64 ")\n",
-             mFocusLayersId);
+             mFocusLayersId.mId);
       return;
     }
 
@@ -130,11 +130,11 @@ void FocusState::Update(LayersId aRootLayerTreeId,
           FS_LOG(
               "Setting target to nil (bailing out of infinite loop, lt=%" PRIu64
               ")\n",
-              mFocusState.mFocusLayersId);
+              mFocusState.mFocusLayersId.mId);
           return true;
         }
 
-        FS_LOG("Looking for target in lt=%" PRIu64 "\n", aRefLayerId);
+        FS_LOG("Looking for target in lt=%" PRIu64 "\n", aRefLayerId.mId);
 
         // The focus target is in a child layer tree
         mFocusState.mFocusLayersId = aRefLayerId;

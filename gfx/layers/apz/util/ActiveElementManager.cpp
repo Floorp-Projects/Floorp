@@ -80,7 +80,7 @@ void ActiveElementManager::TriggerElementActivation() {
     mSetActiveTask = task;
     MessageLoop::current()->PostDelayedTask(
         task.forget(), StaticPrefs::ui_touch_activation_delay_ms());
-    AEM_LOG("Scheduling mSetActiveTask %p\n", mSetActiveTask);
+    AEM_LOG("Scheduling mSetActiveTask %p\n", mSetActiveTask.get());
   }
 }
 
@@ -158,7 +158,7 @@ void ActiveElementManager::ResetTouchBlockState() {
 
 void ActiveElementManager::SetActiveTask(
     const nsCOMPtr<dom::Element>& aTarget) {
-  AEM_LOG("mSetActiveTask %p running\n", mSetActiveTask);
+  AEM_LOG("mSetActiveTask %p running\n", mSetActiveTask.get());
 
   // This gets called from mSetActiveTask's Run() method. The message loop
   // deletes the task right after running it, so we need to null out
@@ -168,7 +168,7 @@ void ActiveElementManager::SetActiveTask(
 }
 
 void ActiveElementManager::CancelTask() {
-  AEM_LOG("Cancelling task %p\n", mSetActiveTask);
+  AEM_LOG("Cancelling task %p\n", mSetActiveTask.get());
 
   if (mSetActiveTask) {
     mSetActiveTask->Cancel();
