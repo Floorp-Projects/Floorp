@@ -52,9 +52,7 @@ bool Locale::Matches(const Locale& aOther, bool aThisRange,
   return unic_langid_matches(mRaw.get(), aOther.Raw(), aThisRange, aOtherRange);
 }
 
-bool Locale::AddLikelySubtags() {
-  return unic_langid_add_likely_subtags(mRaw.get());
-}
+bool Locale::Maximize() { return unic_langid_maximize(mRaw.get()); }
 
 void Locale::ClearVariants() { unic_langid_clear_variants(mRaw.get()); }
 

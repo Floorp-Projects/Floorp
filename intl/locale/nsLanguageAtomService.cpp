@@ -175,7 +175,7 @@ nsStaticAtom* nsLanguageAtomService::GetUncachedLanguageGroup(
     if (loc.IsWellFormed()) {
       // Fill in script subtag if not present.
       if (loc.GetScript().IsEmpty()) {
-        loc.AddLikelySubtags();
+        loc.Maximize();
       }
       // Traditional Chinese has separate prefs for Hong Kong / Taiwan;
       // check the region subtag.

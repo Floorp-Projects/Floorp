@@ -110,9 +110,9 @@ class Locale {
    *
    * Example:
    *
-   * Locale("en").AddLikelySubtags().AsString(); // "en-Latn-US"
+   * Locale("en").Maximize().AsString(); // "en-Latn-US"
    */
-  bool AddLikelySubtags();
+  bool Maximize();
 
   /**
    * Clears the variants field of the Locale object.
