@@ -4629,8 +4629,7 @@ void LIRGenerator::visitCheckObjCoercible(MCheckObjCoercible* ins) {
   MDefinition* checkVal = ins->checkValue();
   MOZ_ASSERT(checkVal->type() == MIRType::Value);
 
-  LCheckObjCoercible* lir =
-      new (alloc()) LCheckObjCoercible(useBoxAtStart(checkVal));
+  auto* lir = new (alloc()) LCheckObjCoercible(useBoxAtStart(checkVal));
   redefine(ins, checkVal);
   add(lir, ins);
   assignSafepoint(lir, ins);

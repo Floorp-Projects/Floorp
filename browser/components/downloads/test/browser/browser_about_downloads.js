@@ -16,23 +16,29 @@ add_task(async function test_about_downloads() {
     { state: DownloadsCommon.DOWNLOAD_FINISHED },
     { state: DownloadsCommon.DOWNLOAD_PAUSED },
   ]);
-  await BrowserTestUtils.withNewTab("about:downloads", async function(browser) {
+
+  await BrowserTestUtils.withNewTab("about:blank", async browser => {
+    let downloadsLoaded = BrowserTestUtils.waitForEvent(
+      browser,
+      "InitialDownloadsLoaded",
+      true
+    );
+    BrowserTestUtils.loadURI(browser, "about:downloads");
+    await downloadsLoaded;
     await SpecialPowers.spawn(browser, [], async function() {
       let box = content.document.getElementById("downloadsRichListBox");
       ok(box, "Should have list of downloads");
       is(box.children.length, 2, "Should have 2 downloads.");
       for (let kid of box.children) {
         let desc = kid.querySelector(".downloadTarget");
-        is(
-          desc.value,
-          "dm-ui-test.file",
-          "Should have listed the file name for this download."
+        // This would just be an `is` check, but stray temp files
+        // if this test (or another in this dir) ever fails could throw that off.
+        ok(
+          /^dm-ui-test(-\d+)?.file$/.test(desc.value),
+          `Label '${desc.value}' should match 'dm-ui-test.file'`
         );
       }
-      info("Wait for the first item to be selected.");
-      await ContentTaskUtils.waitForCondition(() => {
-        return box.firstChild.selected;
-      }, "Timed out waiting for the first item to be selected.");
+      ok(box.firstChild.selected, "First item should be selected.");
     });
   });
 });

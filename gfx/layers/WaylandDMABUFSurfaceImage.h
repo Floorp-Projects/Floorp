@@ -13,24 +13,27 @@
 #include "mozilla/layers/TextureClient.h"
 
 namespace mozilla {
+class VAAPIFrameHolder;
+}
+
+namespace mozilla {
 namespace layers {
 
-// An alias for av_buffer_unref(AVBufferRef**)
-typedef void (*AVFrameReleaseCallback)(void** aFrameRef);
+typedef void (*AVFrameReleaseCallback)(VAAPIFrameHolder* aFrameHolder);
 
 class WaylandDMABUFSurfaceImage : public Image {
  public:
   explicit WaylandDMABUFSurfaceImage(WaylandDMABufSurface* aSurface,
                                      AVFrameReleaseCallback aReleaseCallback,
-                                     void* aDecoder, void* aFrameRef)
+                                     VAAPIFrameHolder* aFrameHolder)
       : Image(nullptr, ImageFormat::WAYLAND_DMABUF),
         mSurface(aSurface),
         mReleaseCallback(aReleaseCallback),
-        mFrameRef(aFrameRef) {}
+        mFrameHolder(aFrameHolder) {}
 
   ~WaylandDMABUFSurfaceImage() {
     if (mReleaseCallback) {
-      mReleaseCallback(&mFrameRef);
+      mReleaseCallback(mFrameHolder);
     }
   }
 
@@ -52,12 +55,8 @@ class WaylandDMABUFSurfaceImage : public Image {
 
   // When WaylandDMABUFSurfaceImage is created on top of ffmpeg frame located at
   // GPU memory we need to keep it until painting of the frame is finished.
-
-  // mReleaseCallback points to av_buffer_unref() from libva library.
   AVFrameReleaseCallback mReleaseCallback;
-  // AVBufferRef* which points to a frame located at GPU.
-  // We own this reference.
-  void* mFrameRef;
+  VAAPIFrameHolder* mFrameHolder;
 };
 
 }  // namespace layers

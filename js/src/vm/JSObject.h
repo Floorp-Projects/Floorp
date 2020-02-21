@@ -994,14 +994,6 @@ extern JSObject* PrimitiveToObject(JSContext* cx, const Value& v);
 
 namespace js {
 
-/* For converting stack values to objects. */
-MOZ_ALWAYS_INLINE JSObject* ToObjectFromStack(JSContext* cx, HandleValue vp) {
-  if (vp.isObject()) {
-    return &vp.toObject();
-  }
-  return js::ToObjectSlow(cx, vp, true);
-}
-
 JSObject* ToObjectSlowForPropertyAccess(JSContext* cx, JS::HandleValue val,
                                         int valIndex, HandleId key);
 JSObject* ToObjectSlowForPropertyAccess(JSContext* cx, JS::HandleValue val,

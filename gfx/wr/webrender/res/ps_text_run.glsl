@@ -124,8 +124,10 @@ void main(void) {
     ClipArea clip_area = fetch_clip_area(instance.clip_address);
     PictureTask task = fetch_picture_task(instance.picture_task_address);
 
+    // Note that the reference frame relative offset is stored in the prim local
+    // rect size during batching, instead of the actual size of the primitive.
     TextRun text = fetch_text_run(ph.specific_prim_address);
-    vec2 text_offset = vec2(ph.user_data.xy) / 256.0;
+    vec2 text_offset = ph.local_rect.size;
 
     if (color_mode == COLOR_MODE_FROM_PASS) {
         color_mode = uMode;
@@ -183,7 +185,7 @@ void main(void) {
         local_pos = glyph_transform_inv * (glyph_rect.p0 + glyph_rect.size * aPosition.xy);
     }
 #else
-    float raster_scale = float(ph.user_data.z) / 65535.0;
+    float raster_scale = float(ph.user_data.x) / 65535.0;
 
     // Scale in which the glyph is snapped when rasterized.
     float glyph_raster_scale = raster_scale * task.device_pixel_scale;

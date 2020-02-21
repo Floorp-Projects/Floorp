@@ -236,3 +236,33 @@ jobs:
                 - name: public/condprof
                   path: archive
                   type: directory
+    android-hw-p2-8-0-aarch64-fennec:
+        worker-type: t-bitbar-gw-perf-p2
+        description: Creates or update conditioned profiles on Fennec+P2
+        treeherder:
+            symbol: condprof(fennec)
+            platform: android-hw-p2-8-0-android-aarch64/opt
+        dependencies:
+            build-linux/opt: build-linux-shippable/opt
+        fetches:
+            build-linux/opt:
+                - artifact: target.common.tests.tar.gz
+                - artifact: target.condprof.tests.tar.gz
+        index:
+            product: firefox
+            job-name: condprof-p2_aarch64-fennec
+        run:
+            run-as-root: true
+            command: >-
+                curl -L -o target.apk https://firefox-ci-tc.services.mozilla.com/api/index/v1/task/project.mobile.fenix.v2.fennec-nightly.latest/artifacts/public/build/arm64-v8a/geckoNightly/target.apk &&
+                adb install -r target.apk &&
+                rm -rf target.apk &&
+                $CONDPROF_ROOT/virtualenv/virtualenv.py -p python3 $CONDPROF_ROOT &&
+                cd $CONDPROF_ROOT &&
+                export PATH="$PATH:$MOZ_FETCHES_DIR/bin" &&
+                bin/python3 condprof/runner.py --device-name p2_aarch64 --firefox org.mozilla.fennec_aurora ../../archive
+        worker:
+            artifacts:
+                - name: public/condprof
+                  path: archive
+                  type: directory

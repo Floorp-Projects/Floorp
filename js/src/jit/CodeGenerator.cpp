@@ -13251,14 +13251,13 @@ void CodeGenerator::visitCheckIsObj(LCheckIsObj* ins) {
 
 void CodeGenerator::visitCheckObjCoercible(LCheckObjCoercible* ins) {
   ValueOperand checkValue = ToValue(ins, LCheckObjCoercible::CheckValue);
-  Label fail, done;
-  masm.branchTestNull(Assembler::Equal, checkValue, &fail);
-  masm.branchTestUndefined(Assembler::NotEqual, checkValue, &done);
-  masm.bind(&fail);
-  pushArg(checkValue);
+
   using Fn = bool (*)(JSContext*, HandleValue);
-  callVM<Fn, ThrowObjectCoercible>(ins);
-  masm.bind(&done);
+  OutOfLineCode* ool = oolCallVM<Fn, ThrowObjectCoercible>(
+      ins, ArgList(checkValue), StoreNothing());
+  masm.branchTestNull(Assembler::Equal, checkValue, ool->entry());
+  masm.branchTestUndefined(Assembler::Equal, checkValue, ool->entry());
+  masm.bind(ool->rejoin());
 }
 
 void CodeGenerator::visitCheckClassHeritage(LCheckClassHeritage* ins) {

@@ -102,10 +102,10 @@ class ScreenOrientation::FullscreenEventListener final
 
 class ScreenOrientation::VisibleEventListener final
     : public nsIDOMEventListener {
-  ~VisibleEventListener() {}
+  ~VisibleEventListener() = default;
 
  public:
-  VisibleEventListener() {}
+  VisibleEventListener() = default;
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDOMEVENTLISTENER
@@ -148,7 +148,7 @@ ScreenOrientation::LockOrientationTask::LockOrientationTask(
   MOZ_ASSERT(aDocument);
 }
 
-ScreenOrientation::LockOrientationTask::~LockOrientationTask() {}
+ScreenOrientation::LockOrientationTask::~LockOrientationTask() = default;
 
 bool ScreenOrientation::LockOrientationTask::OrientationLockContains(
     OrientationType aOrientationType) {

@@ -28,7 +28,7 @@ class Document;
 // Attribute helper class used to wrap up an attribute with a dom
 // object that implements the DOM Attr interface.
 class Attr final : public nsINode {
-  virtual ~Attr() {}
+  virtual ~Attr() = default;
 
  public:
   Attr(nsDOMAttributeMap* aAttrMap, already_AddRefed<dom::NodeInfo>&& aNodeInfo,

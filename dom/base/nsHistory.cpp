@@ -36,7 +36,7 @@ NS_INTERFACE_MAP_END
 nsHistory::nsHistory(nsPIDOMWindowInner* aInnerWindow)
     : mInnerWindow(do_GetWeakReference(aInnerWindow)) {}
 
-nsHistory::~nsHistory() {}
+nsHistory::~nsHistory() = default;
 
 nsPIDOMWindowInner* nsHistory::GetParentObject() const {
   nsCOMPtr<nsPIDOMWindowInner> win(do_QueryReferent(mInnerWindow));

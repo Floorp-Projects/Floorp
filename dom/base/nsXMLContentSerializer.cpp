@@ -67,7 +67,7 @@ nsXMLContentSerializer::nsXMLContentSerializer()
       mBodyOnly(false),
       mInBody(0) {}
 
-nsXMLContentSerializer::~nsXMLContentSerializer() {}
+nsXMLContentSerializer::~nsXMLContentSerializer() = default;
 
 NS_IMPL_ISUPPORTS(nsXMLContentSerializer, nsIContentSerializer)
 

@@ -15,21 +15,28 @@ namespace indexedDB {
 
 class FileManager;
 
-class FileInfo {
+class FileInfo final {
   friend class FileManager;
+
+  const int64_t mFileId;
 
   ThreadSafeAutoRefCnt mRefCnt;
   ThreadSafeAutoRefCnt mDBRefCnt;
   ThreadSafeAutoRefCnt mSliceRefCnt;
 
-  RefPtr<FileManager> mFileManager;
+  const RefPtr<FileManager> mFileManager;
 
  public:
   class CustomCleanupCallback;
 
-  static FileInfo* Create(FileManager* aFileManager, int64_t aId);
-
-  explicit FileInfo(FileManager* aFileManager);
+  FileInfo(RefPtr<FileManager> aFileManager, const int64_t aFileId,
+           const nsrefcnt aInitialDBRefCnt = 0)
+      : mFileId(aFileId),
+        mDBRefCnt(aInitialDBRefCnt),
+        mFileManager(std::move(aFileManager)) {
+    MOZ_ASSERT(mFileManager);
+    MOZ_ASSERT(mFileId > 0);
+  }
 
   void AddRef() { UpdateReferences(mRefCnt, 1); }
 
@@ -48,12 +55,9 @@ class FileInfo {
 
   FileManager* Manager() const { return mFileManager; }
 
-  virtual int64_t Id() const = 0;
+  int64_t Id() const { return mFileId; }
 
   static nsCOMPtr<nsIFile> GetFileForFileInfo(FileInfo* aFileInfo);
-
- protected:
-  virtual ~FileInfo() = default;
 
  private:
   void UpdateReferences(

@@ -206,6 +206,7 @@ function DownloadsPlacesView(aRichListBox, aActive = true) {
   // the places setter.
   this._initiallySelectedElement = null;
   this._downloadsData = DownloadsCommon.getData(window.opener || window, true);
+  this._waitingForInitialData = true;
   this._downloadsData.addView(this);
 
   // Get the Download button out of the attention state since we're about to
@@ -378,15 +379,11 @@ DownloadsPlacesView.prototype = {
       let firstDownloadElement = this._richlistbox.firstChild;
       if (firstDownloadElement != this._initiallySelectedElement) {
         // We may be called before _ensureVisibleElementsAreActive,
-        // or before the download binding is attached. Therefore, ensure the
-        // first item is activated, and pass the item to the richlistbox
-        // setters only at a point we know for sure the binding is attached.
+        // therefore, ensure the first item is activated.
         firstDownloadElement._shell.ensureActive();
-        Services.tm.dispatchToMainThread(() => {
-          this._richlistbox.selectedItem = firstDownloadElement;
-          this._richlistbox.currentItem = firstDownloadElement;
-          this._initiallySelectedElement = firstDownloadElement;
-        });
+        this._richlistbox.selectedItem = firstDownloadElement;
+        this._richlistbox.currentItem = firstDownloadElement;
+        this._initiallySelectedElement = firstDownloadElement;
       }
     }
   },
@@ -419,6 +416,12 @@ DownloadsPlacesView.prototype = {
     this._ensureInitialSelection();
     this._ensureVisibleElementsAreActive();
     goUpdateDownloadCommands();
+    if (this._waitingForInitialData) {
+      this._waitingForInitialData = false;
+      this._richlistbox.dispatchEvent(
+        new CustomEvent("InitialDownloadsLoaded")
+      );
+    }
   },
 
   _prependBatchFragment() {

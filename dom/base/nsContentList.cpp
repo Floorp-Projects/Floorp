@@ -39,7 +39,7 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
-nsBaseContentList::~nsBaseContentList() {}
+nsBaseContentList::~nsBaseContentList() = default;
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsBaseContentList)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsBaseContentList)

@@ -2,11 +2,17 @@
 <!-- Any copyright is dedicated to the Public Domain.
    - http://creativecommons.org/publicdomain/zero/1.0/ -->
 
-<!-- Simplest form with username and password fields pre-populated. -->
+<!-- Form with username and password fields pre-populated.
+     With a couple elements where .defaultValue !== .value -->
 <form id="form-basic">
   <input id="form-basic-username" name="username" value="user">
   <input id="form-basic-password" name="password" type="password" value="pass">
+  <select name="picker">
+  	<option value="foo">0</option>
+  	<option value="bar" selected>1</option>
+  </select>
   <input id="form-basic-submit" type="submit">
+  <button id="form-basic-reset" type="reset">Reset</button>
 </form>
 
 </body></html>

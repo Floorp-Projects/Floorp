@@ -266,7 +266,7 @@ inline void CompositorBridgeParent::ForEachIndirectLayerTree(
 inline void CompositorBridgeParent::ForEachWebRenderBridgeParent(
     const Lambda& aCallback) {
   sIndirectLayerTreesLock->AssertCurrentThreadOwns();
-  for (auto it : sIndirectLayerTrees) {
+  for (auto& it : sIndirectLayerTrees) {
     LayerTreeState* state = &it.second;
     if (state->mWrBridge) {
       aCallback(state->mWrBridge);

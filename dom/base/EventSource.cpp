@@ -1779,7 +1779,7 @@ EventSource::EventSource(nsIGlobalObject* aGlobal,
   mImpl = new EventSourceImpl(this, aCookieSettings);
 }
 
-EventSource::~EventSource() {}
+EventSource::~EventSource() = default;
 
 nsresult EventSource::CreateAndDispatchSimpleEvent(const nsAString& aName) {
   RefPtr<Event> event = NS_NewDOMEvent(this, nullptr, nullptr);

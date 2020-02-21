@@ -27,7 +27,7 @@ class FormData final : public nsISupports,
                        public nsWrapperCache {
  private:
   FormData(const FormData& aFormData);
-  ~FormData() {}
+  ~FormData() = default;
 
   struct FormDataTuple {
     nsString name;

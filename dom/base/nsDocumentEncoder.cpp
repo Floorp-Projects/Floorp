@@ -1287,7 +1287,7 @@ class nsHTMLCopyEncoder : public nsDocumentEncoder {
 
 nsHTMLCopyEncoder::nsHTMLCopyEncoder() { mIsTextWidget = false; }
 
-nsHTMLCopyEncoder::~nsHTMLCopyEncoder() {}
+nsHTMLCopyEncoder::~nsHTMLCopyEncoder() = default;
 
 NS_IMETHODIMP
 nsHTMLCopyEncoder::Init(Document* aDocument, const nsAString& aMimeType,

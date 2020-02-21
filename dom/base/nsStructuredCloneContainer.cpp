@@ -31,7 +31,7 @@ NS_INTERFACE_MAP_END
 
 nsStructuredCloneContainer::nsStructuredCloneContainer() : mVersion(0) {}
 
-nsStructuredCloneContainer::~nsStructuredCloneContainer() {}
+nsStructuredCloneContainer::~nsStructuredCloneContainer() = default;
 
 NS_IMETHODIMP
 nsStructuredCloneContainer::InitFromJSVal(JS::Handle<JS::Value> aData,

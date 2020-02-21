@@ -76,7 +76,7 @@ class UnlinkHostObjectURIsRunnable final : public mozilla::Runnable {
   }
 
  private:
-  ~UnlinkHostObjectURIsRunnable() {}
+  ~UnlinkHostObjectURIsRunnable() = default;
 
   nsTArray<nsCString> mURIs;
 };

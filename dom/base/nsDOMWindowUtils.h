@@ -49,7 +49,7 @@ class nsTranslationNodeList final : public nsITranslationNodeList {
   }
 
  private:
-  ~nsTranslationNodeList() {}
+  ~nsTranslationNodeList() = default;
 
   nsTArray<nsCOMPtr<nsINode> > mNodes;
   nsTArray<bool> mNodeIsRoot;

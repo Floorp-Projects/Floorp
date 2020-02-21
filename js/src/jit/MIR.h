@@ -10958,6 +10958,9 @@ class MCheckObjCoercible : public MUnaryInstruction,
   INSTRUCTION_HEADER(CheckObjCoercible)
   TRIVIAL_NEW_WRAPPERS
   NAMED_OPERANDS((0, checkValue))
+
+  AliasSet getAliasSet() const override { return AliasSet::None(); }
+  MDefinition* foldsTo(TempAllocator& alloc) override;
 };
 
 class MCheckClassHeritage : public MUnaryInstruction,

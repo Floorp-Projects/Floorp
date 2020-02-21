@@ -645,6 +645,8 @@ bool ThrowInitializedThis(JSContext* cx);
 
 bool ThrowHomeObjectNotObject(JSContext* cx);
 
+bool ThrowObjectCoercible(JSContext* cx, HandleValue value);
+
 bool DefaultClassConstructor(JSContext* cx, unsigned argc, Value* vp);
 
 bool Debug_CheckSelfHosted(JSContext* cx, HandleValue v);

@@ -16,7 +16,7 @@ MessageListenerManager::MessageListenerManager(
     : nsFrameMessageManager(aCallback, aFlags),
       mParentManager(aParentManager) {}
 
-MessageListenerManager::~MessageListenerManager() {}
+MessageListenerManager::~MessageListenerManager() = default;
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(MessageListenerManager)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY

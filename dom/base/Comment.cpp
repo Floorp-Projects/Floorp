@@ -19,7 +19,7 @@ using namespace dom;
 namespace mozilla {
 namespace dom {
 
-Comment::~Comment() {}
+Comment::~Comment() = default;
 
 already_AddRefed<CharacterData> Comment::CloneDataNode(
     mozilla::dom::NodeInfo* aNodeInfo, bool aCloneText) const {

@@ -84,7 +84,10 @@ function evaluateExpression(expression) {
     let mapped;
     ({ expression, mapped } = await getMappedExpression(hud, expression));
 
-    const { frameActor, webConsoleFront } = await webConsoleUI.getFrameActor();
+    const frameActorId = await webConsoleUI.getFrameActor();
+    const webConsoleFront = await webConsoleUI.getWebConsoleFront({
+      frameActorId,
+    });
 
     // Even if the evaluation fails,
     // we still need to pass the error response to onExpressionEvaluated.
@@ -92,7 +95,7 @@ function evaluateExpression(expression) {
 
     const response = await client
       .evaluateJSAsync(expression, {
-        frameActor,
+        frameActor: frameActorId,
         selectedNodeFront: webConsoleUI.getSelectedNodeFront(),
         webConsoleFront,
         mapped,
@@ -239,10 +242,13 @@ function terminalInputChanged(expression) {
     let mapped;
     ({ expression, mapped } = await getMappedExpression(hud, expression));
 
-    const { frameActor, webConsoleFront } = await webConsoleUI.getFrameActor();
+    const frameActorId = await webConsoleUI.getFrameActor();
+    const webConsoleFront = await webConsoleUI.getWebConsoleFront({
+      frameActorId,
+    });
 
     const response = await client.evaluateJSAsync(expression, {
-      frameActor,
+      frameActor: frameActorId,
       selectedNodeFront: webConsoleUI.getSelectedNodeFront(),
       webConsoleFront,
       mapped,

@@ -84,7 +84,7 @@ class DocumentFragment : public FragmentOrElement {
 #endif
 
  protected:
-  virtual ~DocumentFragment() {}
+  virtual ~DocumentFragment() = default;
 
   nsresult Clone(dom::NodeInfo* aNodeInfo, nsINode** aResult) const override;
   RefPtr<Element> mHost;

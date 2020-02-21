@@ -119,7 +119,7 @@ struct CustomElementData {
   }
 
  private:
-  virtual ~CustomElementData() {}
+  virtual ~CustomElementData() = default;
 
   // Custom element type, for <button is="x-button"> or <x-button>
   // this would be x-button.
@@ -195,7 +195,7 @@ struct CustomElementDefinition {
   }
 
  private:
-  ~CustomElementDefinition() {}
+  ~CustomElementDefinition() = default;
 };
 
 class CustomElementReaction {
@@ -292,7 +292,8 @@ class CustomElementReactionsStack {
   }
 
  private:
-  ~CustomElementReactionsStack(){};
+  ~CustomElementReactionsStack() = default;
+  ;
 
   /**
    * Push a new element queue onto the custom element reactions stack.

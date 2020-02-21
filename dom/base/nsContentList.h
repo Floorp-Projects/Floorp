@@ -112,7 +112,7 @@ class nsSimpleContentList : public nsBaseContentList {
                                JS::Handle<JSObject*> aGivenProto) override;
 
  protected:
-  virtual ~nsSimpleContentList() {}
+  virtual ~nsSimpleContentList() = default;
 
  private:
   // This has to be a strong reference, the root might go away before the list.
@@ -152,7 +152,7 @@ class nsEmptyContentList final : public nsBaseContentList,
   virtual void GetSupportedNames(nsTArray<nsString>& aNames) override;
 
  protected:
-  virtual ~nsEmptyContentList() {}
+  virtual ~nsEmptyContentList() = default;
 
  private:
   // This has to be a strong reference, the root might go away before the list.
@@ -178,12 +178,7 @@ struct nsContentListKey {
         mHash(mozilla::AddToHash(mozilla::HashString(aTagname), mRootNode,
                                  mMatchNameSpaceId, mIsHTMLDocument)) {}
 
-  nsContentListKey(const nsContentListKey& aContentListKey)
-      : mRootNode(aContentListKey.mRootNode),
-        mMatchNameSpaceId(aContentListKey.mMatchNameSpaceId),
-        mTagname(aContentListKey.mTagname),
-        mIsHTMLDocument(aContentListKey.mIsHTMLDocument),
-        mHash(aContentListKey.mHash) {}
+  nsContentListKey(const nsContentListKey& aContentListKey) = default;
 
   inline uint32_t GetHash(void) const { return mHash; }
 

@@ -1453,12 +1453,6 @@ bool ThrowBadDerivedReturn(JSContext* cx, HandleValue v) {
   return false;
 }
 
-bool ThrowObjectCoercible(JSContext* cx, HandleValue v) {
-  MOZ_ASSERT(v.isUndefined() || v.isNull());
-  MOZ_ALWAYS_FALSE(ToObjectSlow(cx, v, true));
-  return false;
-}
-
 bool BaselineGetFunctionThis(JSContext* cx, BaselineFrame* frame,
                              MutableHandleValue res) {
   return GetFunctionThis(cx, frame, res);

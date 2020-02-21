@@ -6,6 +6,9 @@
 from condprof.util import ERROR
 
 
+_SUPPORTED_MOBILE_BROWSERS = "fenix", "gecko", "fennec"
+
+
 class TabSwitcher:
     """ Helper used to create tabs and circulate in them.
     """
@@ -17,7 +20,9 @@ class TabSwitcher:
         self._max = options.get("max_urls", 10)
         self.platform = options.get("platform", "")
         self.num_tabs = self._max >= 100 and 100 or self._max
-        self._mobile = "fenix" in self.platform or "gecko" in self.platform
+        self._mobile = any(
+            mobile in self.platform for mobile in _SUPPORTED_MOBILE_BROWSERS
+        )
 
     async def create_windows(self):
         # on mobile we don't use tabs for now

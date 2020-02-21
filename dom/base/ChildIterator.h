@@ -36,22 +36,6 @@ class ExplicitChildIterator {
   explicit ExplicitChildIterator(const nsIContent* aParent,
                                  bool aStartAtBeginning = true);
 
-  ExplicitChildIterator(const ExplicitChildIterator& aOther)
-      : mParent(aOther.mParent),
-        mParentAsSlot(aOther.mParentAsSlot),
-        mChild(aOther.mChild),
-        mDefaultChild(aOther.mDefaultChild),
-        mIsFirst(aOther.mIsFirst),
-        mIndexInInserted(aOther.mIndexInInserted) {}
-
-  ExplicitChildIterator(ExplicitChildIterator&& aOther)
-      : mParent(aOther.mParent),
-        mParentAsSlot(aOther.mParentAsSlot),
-        mChild(aOther.mChild),
-        mDefaultChild(aOther.mDefaultChild),
-        mIsFirst(aOther.mIsFirst),
-        mIndexInInserted(aOther.mIndexInInserted) {}
-
   nsIContent* GetNextChild();
 
   // Looks for aChildToFind respecting insertion points until aChildToFind is
@@ -134,16 +118,6 @@ class FlattenedChildIterator : public ExplicitChildIterator {
     Init(false);
   }
 
-  FlattenedChildIterator(FlattenedChildIterator&& aOther)
-      : ExplicitChildIterator(std::move(aOther)),
-        mOriginalContent(aOther.mOriginalContent),
-        mShadowDOMInvolved(aOther.mShadowDOMInvolved) {}
-
-  FlattenedChildIterator(const FlattenedChildIterator& aOther)
-      : ExplicitChildIterator(aOther),
-        mOriginalContent(aOther.mOriginalContent),
-        mShadowDOMInvolved(aOther.mShadowDOMInvolved) {}
-
   bool ShadowDOMInvolved() { return mShadowDOMInvolved; }
 
   const nsIContent* Parent() const { return mOriginalContent; }
@@ -190,26 +164,17 @@ class AllChildrenIterator : private FlattenedChildIterator {
         mFlags(aFlags),
         mPhase(aStartAtBeginning ? eAtBegin : eAtEnd) {}
 
-  AllChildrenIterator(AllChildrenIterator&& aOther)
-      : FlattenedChildIterator(std::move(aOther)),
-        mAnonKids(std::move(aOther.mAnonKids)),
-        mAnonKidsIdx(aOther.mAnonKidsIdx),
-        mFlags(aOther.mFlags),
-        mPhase(aOther.mPhase)
 #ifdef DEBUG
-        ,
-        mMutationGuard(aOther.mMutationGuard)
-#endif
-  {
-  }
+  AllChildrenIterator(AllChildrenIterator&&) = default;
 
   AllChildrenIterator& operator=(AllChildrenIterator&& aOther) {
+    // Explicitly call the destructor to ensure the assertion in the destructor
+    // is checked.
     this->~AllChildrenIterator();
     new (this) AllChildrenIterator(std::move(aOther));
     return *this;
   }
 
-#ifdef DEBUG
   ~AllChildrenIterator() { MOZ_ASSERT(!mMutationGuard.Mutated(0)); }
 #endif
 
@@ -298,10 +263,7 @@ class MOZ_NEEDS_MEMMOVABLE_MEMBERS StyleChildrenIterator
     MOZ_COUNT_CTOR(StyleChildrenIterator);
   }
 
-  StyleChildrenIterator& operator=(StyleChildrenIterator&& aOther) {
-    AllChildrenIterator::operator=(std::move(aOther));
-    return *this;
-  }
+  StyleChildrenIterator& operator=(StyleChildrenIterator&& aOther) = default;
 
   MOZ_COUNTED_DTOR(StyleChildrenIterator)
 

@@ -25,7 +25,7 @@ class Document;
 class DocumentType;
 
 class DOMImplementation final : public nsISupports, public nsWrapperCache {
-  ~DOMImplementation() {}
+  ~DOMImplementation() = default;
 
  public:
   DOMImplementation(Document* aOwner, nsIGlobalObject* aScriptObject,

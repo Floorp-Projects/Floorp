@@ -51,6 +51,7 @@ HeaderIncludes = (
     'nsString.h',
     'nsTArray.h',
     'mozilla/ipc/ProtocolUtils.h',
+    'mozilla/ipc/TaintingIPCUtils.h',
     'nsTHashtable.h',
     'mozilla/OperatorNewExtensions.h',
     'mozilla/UniquePtr.h',

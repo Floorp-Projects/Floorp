@@ -204,7 +204,7 @@ class TextInputProcessor final : public nsITextInputProcessor,
     void ToggleModifierKey(const ModifierKeyData& aModifierKeyData);
 
    private:
-    virtual ~ModifierKeyDataArray() {}
+    virtual ~ModifierKeyDataArray() = default;
   };
 
   void EnsureModifierKeyDataArray() {

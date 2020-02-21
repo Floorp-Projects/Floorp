@@ -17,7 +17,7 @@
 
 using namespace mozilla;
 
-nsDOMSerializer::nsDOMSerializer() {}
+nsDOMSerializer::nsDOMSerializer() = default;
 
 static already_AddRefed<nsIDocumentEncoder> SetUpEncoder(
     nsINode& aRoot, const nsAString& aCharset, ErrorResult& aRv) {
