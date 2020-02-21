@@ -1093,11 +1093,16 @@ class MessageDecl(ipdl.ast.MessageDecl):
         return self.params[0]
 
     def makeCxxParams(self, paramsems='in', returnsems='out',
-                      side=None, implicit=True):
+                      side=None, implicit=True, direction=None):
         """Return a list of C++ decls per the spec'd configuration.
 |params| and |returns| is the C++ semantics of those: 'in', 'out', or None."""
 
         def makeDecl(d, sems):
+            if self.decl.type.tainted and direction == 'recv':
+                # Tainted types are passed by-value, allowing the receiver to move them if desired.
+                assert sems != 'out'
+                return Decl(Type('Tainted', T=d.bareType(side)), d.name)
+
             if sems == 'in':
                 return Decl(d.inType(side), d.name)
             elif sems == 'move':
@@ -3266,6 +3271,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             #endif  // DEBUG
 
             #include "base/id_map.h"
+            #include "mozilla/Tainting.h"
             #include "mozilla/ipc/MessageChannel.h"
             #include "mozilla/ipc/ProtocolUtils.h"
             ''')
@@ -3364,7 +3370,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                 recvDecl = MethodDecl(
                     md.recvMethod(),
                     params=md.makeCxxParams(paramsems='move', returnsems=returnsems,
-                                            side=self.side, implicit=implicit),
+                                            side=self.side, implicit=implicit, direction='recv'),
                     ret=Type('mozilla::ipc::IPCResult'),
                     methodspec=MethodSpec.VIRTUAL)
 
@@ -3405,7 +3411,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
 
                 self.cls.addstmt(StmtDecl(MethodDecl(
                     _allocMethod(managed, self.side),
-                    params=md.makeCxxParams(side=self.side, implicit=False),
+                    params=md.makeCxxParams(side=self.side, implicit=False, direction='recv'),
                     ret=actortype, methodspec=MethodSpec.PURE)))
 
             # add the Dealloc interface for all managed non-refcounted actors,
@@ -4657,18 +4663,26 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                                               actor=ExprVar.THIS)]
             start = 1
 
+        decls.extend([StmtDecl(Decl(
+                                   (Type('Tainted', T=p.bareType(side))
+                                    if md.decl.type.tainted else
+                                    p.bareType(side)),
+                                   p.var().name))
+                      for p in md.params[start:]])
+        reads.extend([_ParamTraits.checkedRead(p.ipdltype,
+                                               ExprAddrOf(p.var()),
+                                               msgexpr, ExprAddrOf(itervar),
+                                               errfn, "'%s'" % p.ipdltype.name(),
+                                               sentinelKey=p.name, errfnSentinel=errfnSent,
+                                               actor=ExprVar.THIS)
+                      for p in md.params[start:]])
+
         stmts.extend((
             [StmtDecl(Decl(_iterType(ptr=False), self.itervar.name),
                       initargs=[msgvar])]
-            + decls + [StmtDecl(Decl(p.bareType(side), p.var().name))
-                       for p in md.params[start:]]
+            + decls
             + [Whitespace.NL]
-            + reads + [_ParamTraits.checkedRead(p.ipdltype, ExprAddrOf(p.var()),
-                                                msgexpr, ExprAddrOf(itervar),
-                                                errfn, "'%s'" % p.ipdltype.name(),
-                                                sentinelKey=p.name, errfnSentinel=errfnSent,
-                                                actor=ExprVar.THIS)
-                       for p in md.params[start:]]
+            + reads
             + [self.endRead(msgvar, itervar)]))
 
         return stmts
@@ -4904,7 +4918,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         decl = MethodDecl(
             md.sendMethod(),
             params=md.makeCxxParams(paramsems, returnsems=returnsems,
-                                    side=self.side, implicit=implicit),
+                                    side=self.side, implicit=implicit, direction='send'),
             warn_unused=((self.side == 'parent' and returnsems != 'callback') or
                          (md.decl.type.isCtor() and not md.decl.type.isAsync())),
             ret=rettype)
