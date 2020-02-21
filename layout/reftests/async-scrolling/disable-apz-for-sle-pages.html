@@ -14,11 +14,11 @@
 
     addEventListener('scroll', function() {
         document.getElementById('fake-fixed').style.top = window.scrollY + "px";
+        setTimeout(done, 0);
     }, false);
 
     addEventListener('load', function() {
         window.scrollTo(0, 100);
-        setTimeout(done, 0);
     }, false);
 
     function done() {
