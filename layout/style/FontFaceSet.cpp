@@ -33,6 +33,7 @@
 #include "mozilla/Telemetry.h"
 #include "mozilla/LoadInfo.h"
 #include "nsContentPolicyUtils.h"
+#include "nsContentUtils.h"
 #include "nsDeviceContext.h"
 #include "nsFontFaceLoader.h"
 #include "nsIClassOfService.h"
@@ -414,16 +415,6 @@ bool FontFaceSet::HasRuleFontFace(FontFace* aFontFace) {
 }
 #endif
 
-static bool IsPdfJs(nsIPrincipal* aPrincipal) {
-  if (!aPrincipal) {
-    return false;
-  }
-  nsCOMPtr<nsIURI> uri;
-  aPrincipal->GetURI(getter_AddRefs(uri));
-  return uri && uri->GetSpecOrDefault().EqualsLiteral(
-                    "resource://pdf.js/web/viewer.html");
-}
-
 void FontFaceSet::Add(FontFace& aFontFace, ErrorResult& aRv) {
   FlushUserFontSet();
 
@@ -461,7 +452,7 @@ void FontFaceSet::Add(FontFace& aFontFace, ErrorResult& aRv) {
   if (clonedDoc) {
     // The document is printing, copy the font to the static clone as well.
     nsCOMPtr<nsIPrincipal> principal = mDocument->GetPrincipal();
-    if (principal->IsSystemPrincipal() || IsPdfJs(principal)) {
+    if (principal->IsSystemPrincipal() || nsContentUtils::IsPDFJS(principal)) {
       ErrorResult rv;
       clonedDoc->Fonts()->Add(aFontFace, rv);
       MOZ_ASSERT(!rv.Failed());
