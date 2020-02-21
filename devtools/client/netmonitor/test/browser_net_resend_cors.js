@@ -64,11 +64,11 @@ add_task(async function() {
 
     const { length } = getSortedRequests(store.getState());
 
-    info("Cloning the selected request into a custom clone");
-    store.dispatch(Actions.cloneSelectedRequest());
+    info(`Cloning the ${item.method} request into a custom clone`);
+    store.dispatch(Actions.cloneRequest(item.id));
 
     info("Sending the cloned request (without change)");
-    store.dispatch(Actions.sendCustomRequest(connector));
+    store.dispatch(Actions.sendCustomRequest(connector, item.id));
 
     await waitUntil(
       () => getSortedRequests(store.getState()).length === length + 1
