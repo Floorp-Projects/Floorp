@@ -3262,8 +3262,7 @@ already_AddRefed<nsILoadContext> nsFrameLoader::LoadContext() {
   return loadContext.forget();
 }
 
-already_AddRefed<BrowsingContext> nsFrameLoader::GetBrowsingContext() {
-  RefPtr<BrowsingContext> browsingContext;
+BrowsingContext* nsFrameLoader::GetBrowsingContext() {
   if (IsRemoteFrame()) {
     Unused << EnsureRemoteBrowser();
   } else if (mOwnerContent) {
@@ -3272,15 +3271,15 @@ already_AddRefed<BrowsingContext> nsFrameLoader::GetBrowsingContext() {
   return GetExtantBrowsingContext();
 }
 
-already_AddRefed<BrowsingContext> nsFrameLoader::GetExtantBrowsingContext() {
-  RefPtr<BrowsingContext> browsingContext;
+BrowsingContext* nsFrameLoader::GetExtantBrowsingContext() {
+  BrowsingContext* browsingContext = nullptr;
   if (mRemoteBrowser) {
     browsingContext = mRemoteBrowser->GetBrowsingContext();
   } else if (mDocShell) {
     browsingContext = mDocShell->GetBrowsingContext();
   }
   MOZ_ASSERT_IF(browsingContext, browsingContext == mBrowsingContext);
-  return browsingContext.forget();
+  return browsingContext;
 }
 
 void nsFrameLoader::InitializeBrowserAPI() {
@@ -3487,8 +3486,7 @@ void nsFrameLoader::SetWillChangeProcess() {
       // resilient. For the moment, though, the surrounding process switch code
       // is enough in flux that we're better off with a workable interim
       // solution.
-      MOZ_DIAGNOSTIC_ASSERT(mBrowsingContext ==
-                            RefPtr<BrowsingContext>(GetBrowsingContext()));
+      MOZ_DIAGNOSTIC_ASSERT(mBrowsingContext == GetBrowsingContext());
       RefPtr<CanonicalBrowsingContext> bc(mBrowsingContext->Canonical());
       bc->SetInFlightProcessId(browserParent->Manager()->ChildID());
       auto callback = [bc](auto) { bc->SetInFlightProcessId(0); };
