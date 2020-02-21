@@ -79,7 +79,7 @@ export class CardGrid extends React.PureComponent {
       <div>
         {this.props.title && (
           <div className="ds-header">
-            <div>{this.props.title}</div>
+            <div className="title">{this.props.title}</div>
             {this.props.context && (
               <div className="ds-context">{this.props.context}</div>
             )}
