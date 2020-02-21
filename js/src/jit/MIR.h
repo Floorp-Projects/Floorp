@@ -10973,8 +10973,6 @@ class MCheckClassHeritage : public MUnaryInstruction,
   INSTRUCTION_HEADER(CheckClassHeritage)
   TRIVIAL_NEW_WRAPPERS
   NAMED_OPERANDS((0, heritage))
-
-  AliasSet getAliasSet() const override { return AliasSet::None(); }
 };
 
 class MDebugCheckSelfHosted : public MUnaryInstruction,
