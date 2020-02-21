@@ -55,7 +55,6 @@ class MainFrame extends Component {
     return {
       accessibility: PropTypes.object.isRequired,
       fluentBundles: PropTypes.array.isRequired,
-      accessibilityWalker: PropTypes.object.isRequired,
       enabled: PropTypes.bool.isRequired,
       dispatch: PropTypes.func.isRequired,
       auditing: PropTypes.array.isRequired,
@@ -65,6 +64,7 @@ class MainFrame extends Component {
       getAccessibilityTreeRoot: PropTypes.func.isRequired,
       startListeningForAccessibilityEvents: PropTypes.func.isRequired,
       stopListeningForAccessibilityEvents: PropTypes.func.isRequired,
+      audit: PropTypes.func.isRequired,
     };
   }
 
@@ -125,7 +125,6 @@ class MainFrame extends Component {
   render() {
     const {
       accessibility,
-      accessibilityWalker,
       fluentBundles,
       enabled,
       auditing,
@@ -134,6 +133,7 @@ class MainFrame extends Component {
       getAccessibilityTreeRoot,
       startListeningForAccessibilityEvents,
       stopListeningForAccessibilityEvents,
+      audit,
     } = this.props;
 
     if (!enabled) {
@@ -149,7 +149,7 @@ class MainFrame extends Component {
         { className: "mainFrame", role: "presentation" },
         Toolbar({
           accessibility,
-          accessibilityWalker,
+          audit,
           simulator,
           toolboxDoc: toolbox.doc,
         }),
