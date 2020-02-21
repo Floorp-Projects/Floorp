@@ -461,8 +461,6 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
                     view = view
                 )
             }
-
-            (activity as HomeActivity).updateThemeForSession(session)
         }
     }
 
