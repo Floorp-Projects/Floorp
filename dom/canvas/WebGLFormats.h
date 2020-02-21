@@ -276,29 +276,6 @@ struct FormatInfo {
   }
 };
 
-struct PackingInfo {
-  GLenum format;
-  GLenum type;
-
-  bool operator<(const PackingInfo& x) const {
-    if (format != x.format) return format < x.format;
-
-    return type < x.type;
-  }
-
-  bool operator==(const PackingInfo& x) const {
-    return (format == x.format && type == x.type);
-  }
-};
-
-struct DriverUnpackInfo {
-  GLenum internalFormat;
-  GLenum unpackFormat;
-  GLenum unpackType;
-
-  PackingInfo ToPacking() const { return {unpackFormat, unpackType}; }
-};
-
 //////////////////////////////////////////////////////////////////////////////////////////
 
 const FormatInfo* GetFormat(EffectiveFormat format);

@@ -589,10 +589,6 @@ bool WebGLContext::InitAndValidateGL(FailureReason* const out_failReason) {
   mPixelStore.mUnpackSkipRows = 0;
   mPixelStore.mUnpackSkipPixels = 0;
   mPixelStore.mUnpackAlignment = 4;
-  mPixelStore.mPackRowLength = 0;
-  mPixelStore.mPackSkipRows = 0;
-  mPixelStore.mPackSkipPixels = 0;
-  mPixelStore.mPackAlignment = 4;
 
   mPrimRestartTypeBytes = 0;
 

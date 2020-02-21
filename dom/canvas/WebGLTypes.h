@@ -349,17 +349,13 @@ struct FloatOrInt final  // For TexParameter[fi] and friends.
   }
 };
 
-struct WebGLPixelStore {
+struct WebGLPixelStore final {
   uint32_t mUnpackImageHeight = 0;
   uint32_t mUnpackSkipImages = 0;
   uint32_t mUnpackRowLength = 0;
   uint32_t mUnpackSkipRows = 0;
   uint32_t mUnpackSkipPixels = 0;
   uint32_t mUnpackAlignment = 0;
-  uint32_t mPackRowLength = 0;
-  uint32_t mPackSkipRows = 0;
-  uint32_t mPackSkipPixels = 0;
-  uint32_t mPackAlignment = 0;
   GLenum mColorspaceConversion = 0;
   bool mFlipY = false;
   bool mPremultiplyAlpha = false;
@@ -464,6 +460,43 @@ typedef avec3<uint32_t> uvec3;
 // -
 
 namespace webgl {
+
+struct PackingInfo final {
+  GLenum format = 0;
+  GLenum type = 0;
+
+  bool operator<(const PackingInfo& x) const {
+    if (format != x.format) return format < x.format;
+
+    return type < x.type;
+  }
+
+  bool operator==(const PackingInfo& x) const {
+    return (format == x.format && type == x.type);
+  }
+};
+
+struct DriverUnpackInfo final {
+  GLenum internalFormat = 0;
+  GLenum unpackFormat = 0;
+  GLenum unpackType = 0;
+
+  PackingInfo ToPacking() const { return {unpackFormat, unpackType}; }
+};
+
+struct PixelPackState final {
+  uint32_t alignment = 4;
+  uint32_t rowLength = 0;
+  uint32_t skipRows = 0;
+  uint32_t skipPixels = 0;
+};
+
+struct ReadPixelsDesc final {
+  ivec2 srcOffset;
+  uvec2 size;
+  PackingInfo pi = {LOCAL_GL_RGBA, LOCAL_GL_UNSIGNED_BYTE};
+  PixelPackState packState;
+};
 
 class ExtensionBits final {
   uint64_t mBits = 0;

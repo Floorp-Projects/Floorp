@@ -409,7 +409,7 @@ class HostWebGLContext final : public SupportsWeakPtr<HostWebGLContext> {
     mContext->LinkProgram(*obj);
   }
 
-  void PixelStorei(GLenum pname, GLint param) const {
+  void PixelStorei(GLenum pname, uint32_t param) const {
     mContext->PixelStorei(pname, param);
   }
 
@@ -646,15 +646,15 @@ class HostWebGLContext final : public SupportsWeakPtr<HostWebGLContext> {
   }
 
   // ------------------------------ Readback -------------------------------
-  void ReadPixelsPbo(GLint x, GLint y, GLsizei width, GLsizei height,
-                     GLenum format, GLenum type, uint64_t offset) const {
-    mContext->ReadPixelsPbo(x, y, width, height, format, type, offset);
+  void ReadPixelsPbo(const webgl::ReadPixelsDesc& desc,
+                     const uint64_t offset) const {
+    mContext->ReadPixelsPbo(desc, offset);
   }
 
-  void ReadPixels(GLint x, GLint y, GLsizei width, GLsizei height,
-                  GLenum format, GLenum type, RawBuffer<uint8_t>& dest) const {
+  void ReadPixels(const webgl::ReadPixelsDesc& desc,
+                  RawBuffer<uint8_t>& dest) const {
     const auto range = MakeRange(dest);
-    mContext->ReadPixels(x, y, width, height, format, type, range);
+    mContext->ReadPixels(desc, range);
   }
 
   // ----------------------------- Sampler -----------------------------------
