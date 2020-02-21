@@ -6,10 +6,13 @@
 
 from __future__ import absolute_import, print_function
 
-import os
 import argparse
+import os
+import sys
 
-from util.estimates import duration_summary, task_duration_data
+here = os.path.abspath(os.path.dirname(__file__))
+sys.path.insert(0, os.path.join(os.path.dirname(here), 'util'))
+from estimates import duration_summary, task_duration_data
 
 
 def process_args():
