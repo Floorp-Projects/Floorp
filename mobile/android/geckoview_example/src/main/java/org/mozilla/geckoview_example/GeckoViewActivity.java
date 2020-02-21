@@ -284,6 +284,7 @@ class WebExtensionManager implements WebExtension.ActionDelegate,
                                TabSessionManager tabManager) {
         mTabManager = tabManager;
         mRuntime = runtime;
+        refreshExtensionList();
     }
 }
 
