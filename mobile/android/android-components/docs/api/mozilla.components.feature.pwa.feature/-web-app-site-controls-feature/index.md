@@ -2,15 +2,23 @@
 
 # WebAppSiteControlsFeature
 
-`class WebAppSiteControlsFeature : LifecycleObserver` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/pwa/src/main/java/mozilla/components/feature/pwa/feature/WebAppSiteControlsFeature.kt#L34)
+`class WebAppSiteControlsFeature : LifecycleObserver` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/pwa/src/main/java/mozilla/components/feature/pwa/feature/WebAppSiteControlsFeature.kt#L33)
 
 Displays site controls notification for fullscreen web apps.
+
+### Parameters
+
+`sessionId` - ID of the web app session to observe.
+
+`manifest` - Web App Manifest reference used to populate the notification.
+
+`controlsBuilder` - Customizes the created notification.
 
 ### Constructors
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `WebAppSiteControlsFeature(applicationContext: <ERROR CLASS>, sessionManager: `[`SessionManager`](../../mozilla.components.browser.session/-session-manager/index.md)`, reloadUrlUseCase: `[`ReloadUrlUseCase`](../../mozilla.components.feature.session/-session-use-cases/-reload-url-use-case/index.md)`, sessionId: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, manifest: `[`WebAppManifest`](../../mozilla.components.concept.engine.manifest/-web-app-manifest/index.md)`?)`<br>Displays site controls notification for fullscreen web apps. |
+| [&lt;init&gt;](-init-.md) | `WebAppSiteControlsFeature(applicationContext: <ERROR CLASS>, sessionManager: `[`SessionManager`](../../mozilla.components.browser.session/-session-manager/index.md)`, reloadUrlUseCase: `[`ReloadUrlUseCase`](../../mozilla.components.feature.session/-session-use-cases/-reload-url-use-case/index.md)`, sessionId: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, manifest: `[`WebAppManifest`](../../mozilla.components.concept.engine.manifest/-web-app-manifest/index.md)`? = null, controlsBuilder: `[`SiteControlsBuilder`](../-site-controls-builder/index.md)` = SiteControlsBuilder.CopyAndRefresh(reloadUrlUseCase))``WebAppSiteControlsFeature(applicationContext: <ERROR CLASS>, sessionManager: `[`SessionManager`](../../mozilla.components.browser.session/-session-manager/index.md)`, sessionId: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, manifest: `[`WebAppManifest`](../../mozilla.components.concept.engine.manifest/-web-app-manifest/index.md)`? = null, controlsBuilder: `[`SiteControlsBuilder`](../-site-controls-builder/index.md)` = SiteControlsBuilder.Default())`<br>Displays site controls notification for fullscreen web apps. |
 
 ### Functions
 

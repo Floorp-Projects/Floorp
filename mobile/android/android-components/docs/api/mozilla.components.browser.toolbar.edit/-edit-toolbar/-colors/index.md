@@ -2,7 +2,7 @@
 
 # Colors
 
-`data class Colors` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/toolbar/src/main/java/mozilla/components/browser/toolbar/edit/EditToolbar.kt#L68)
+`data class Colors` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/toolbar/src/main/java/mozilla/components/browser/toolbar/edit/EditToolbar.kt#L70)
 
 Data class holding the customizable colors in "edit mode".
 

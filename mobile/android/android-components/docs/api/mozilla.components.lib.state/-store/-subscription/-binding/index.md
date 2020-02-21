@@ -2,7 +2,7 @@
 
 # Binding
 
-`interface Binding` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/state/src/main/java/mozilla/components/lib/state/Store.kt#L181)
+`interface Binding` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/state/src/main/java/mozilla/components/lib/state/Store.kt#L175)
 
 ### Functions
 

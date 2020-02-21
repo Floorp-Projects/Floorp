@@ -2,7 +2,7 @@
 
 # colors
 
-`var colors: `[`Colors`](-colors/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/toolbar/src/main/java/mozilla/components/browser/toolbar/edit/EditToolbar.kt#L120)
+`var colors: `[`Colors`](-colors/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/toolbar/src/main/java/mozilla/components/browser/toolbar/edit/EditToolbar.kt#L125)
 
 Customizable colors in "edit mode".
 
