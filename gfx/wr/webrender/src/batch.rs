@@ -895,14 +895,18 @@ impl BatchBuilder {
                 // The local prim rect is only informative for text primitives, as
                 // thus is not directly necessary for any drawing of the text run.
                 // However the glyph offsets are relative to the prim rect origin
-                // less the unsnapped reference frame offset. In the prim header,
-                // we only have room to store the snapped reference frame offset,
-                // which we cannot recalculate because it ignores the animated
-                // components for the transform. As such, we adjust the prim rect
-                // origin here, so that the shader does not need to know the
-                // unsnapped offset as well.
+                // less the unsnapped reference frame offset. We also want the
+                // the snapped reference frame offset, because cannot recalculate
+                // it as it ignores the animated components for the transform. As
+                // such, we adjust the prim rect origin here, and replace the size
+                // with the unsnapped and snapped offsets respectively. This has
+                // the added bonus of avoiding quantization effects when storing
+                // floats in the extra header integers.
                 let prim_header = PrimitiveHeader {
-                    local_rect: prim_rect.translate(-run.reference_frame_relative_offset),
+                    local_rect: LayoutRect::new(
+                        prim_rect.origin - run.reference_frame_relative_offset,
+                        run.snapped_reference_frame_relative_offset.to_size(),
+                    ),
                     local_clip_rect: prim_info.combined_local_clip_rect,
                     specific_prim_address: prim_cache_address,
                     transform_id,
@@ -914,9 +918,9 @@ impl BatchBuilder {
                     &prim_header,
                     z_id,
                     [
-                        (run.snapped_reference_frame_relative_offset.x * 256.0) as i32,
-                        (run.snapped_reference_frame_relative_offset.y * 256.0) as i32,
                         (raster_scale * 65535.0).round() as i32,
+                        0,
+                        0,
                         0,
                     ],
                 );
