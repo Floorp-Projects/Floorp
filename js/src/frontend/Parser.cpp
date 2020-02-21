@@ -7007,8 +7007,10 @@ bool GeneralParser<ParseHandler, Unit>::classMember(
     }
 
     if (isStatic) {
-      errorAt(propNameOffset, JSMSG_BAD_METHOD_DEF);
-      return false;
+      if (propAtom == cx_->names().prototype) {
+        errorAt(propNameOffset, JSMSG_BAD_METHOD_DEF);
+        return false;
+      }
     }
 
     if (propAtom == cx_->names().constructor) {

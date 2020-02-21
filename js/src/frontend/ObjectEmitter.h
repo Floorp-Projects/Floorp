@@ -681,9 +681,19 @@ class MOZ_STACK_CLASS ClassEmitter : public PropertyEmitter {
   //     |               |
   //     +<--------------+
   //     |
-  //     | (do PropertyEmitter operation)  emitEnd  +-----+
-  //     +-------------------------------+--------->| End |
-  //                                                +-----+
+  //     | (do PropertyEmitter operation)
+  //     +--------------------------------+
+  //                                      |
+  //     +-------------+    emitBinding   |
+  //     |  BoundName  |<-----------------+
+  //     +--+----------+
+  //        |
+  //        | emitEnd
+  //        |
+  //     +--v----+
+  //     |  End  |
+  //     +-------+
+  //
   // clang-format on
   enum class ClassState {
     // The initial state.
@@ -709,6 +719,9 @@ class MOZ_STACK_CLASS ClassEmitter : public PropertyEmitter {
 
     // After calling emitFieldInitializersEnd.
     StaticFieldInitializersEnd,
+
+    // After calling emitBinding.
+    BoundName,
 
     // After calling emitEnd.
     End,
@@ -798,6 +811,8 @@ class MOZ_STACK_CLASS ClassEmitter : public PropertyEmitter {
   MOZ_MUST_USE bool emitFieldInitializerHomeObject(bool isStatic);
   MOZ_MUST_USE bool emitStoreFieldInitializer();
   MOZ_MUST_USE bool emitFieldInitializersEnd();
+
+  MOZ_MUST_USE bool emitBinding();
 
   MOZ_MUST_USE bool emitEnd(Kind kind);
 

@@ -8928,6 +8928,112 @@ bool BytecodeEmitter::emitInitializeInstanceFields() {
   return true;
 }
 
+bool BytecodeEmitter::emitInitializeStaticFields(ListNode* classMembers) {
+  auto isStaticField = [](ParseNode* propdef) {
+    return propdef->is<ClassField>() && propdef->as<ClassField>().isStatic();
+  };
+  size_t numFields =
+      std::count_if(classMembers->contents().begin(),
+                    classMembers->contents().end(), isStaticField);
+
+  if (numFields == 0) {
+    return true;
+  }
+
+  if (!emitGetName(cx->names().dotStaticInitializers)) {
+    //              [stack] CTOR ARRAY
+    return false;
+  }
+
+  for (size_t fieldIndex = 0; fieldIndex < numFields; fieldIndex++) {
+    bool hasNext = fieldIndex < numFields - 1;
+    if (hasNext) {
+      // We Dup to keep the array around (it is consumed in the bytecode below)
+      // for next iterations of this loop, except for the last iteration, which
+      // avoids an extra Pop at the end of the loop.
+      if (!emit1(JSOp::Dup)) {
+        //          [stack] CTOR ARRAY ARRAY
+        return false;
+      }
+    }
+
+    if (!emitNumberOp(fieldIndex)) {
+      //            [stack] CTOR ARRAY? ARRAY INDEX
+      return false;
+    }
+
+    // Don't use CallElem here, because the receiver of the call != the receiver
+    // of this getelem. (Specifically, the call receiver is `ctor`, and the
+    // receiver of this getelem is `.staticInitializers`)
+    if (!emit1(JSOp::GetElem)) {
+      //            [stack] CTOR ARRAY? FUNC
+      return false;
+    }
+
+    if (!emitDupAt(1 + hasNext)) {
+      //            [stack] CTOR ARRAY? FUNC CTOR
+      return false;
+    }
+
+    if (!emitCall(JSOp::CallIgnoresRv, 0)) {
+      //            [stack] CTOR ARRAY? RVAL
+      return false;
+    }
+
+    if (!emit1(JSOp::Pop)) {
+      //            [stack] CTOR ARRAY?
+      return false;
+    }
+  }
+
+  // Overwrite |.staticInitializers| and |.staticFieldKeys| with undefined to
+  // avoid keeping the arrays alive indefinitely.
+  auto clearStaticFieldSlot = [&](HandlePropertyName name) {
+    NameOpEmitter noe(this, name, NameOpEmitter::Kind::SimpleAssignment);
+    if (!noe.prepareForRhs()) {
+      //            [stack] ENV? VAL?
+      return false;
+    }
+
+    if (!emit1(JSOp::Undefined)) {
+      //            [stack] ENV? VAL? UNDEFINED
+      return false;
+    }
+
+    if (!noe.emitAssignment()) {
+      //            [stack] VAL
+      return false;
+    }
+
+    if (!emit1(JSOp::Pop)) {
+      //            [stack]
+      return false;
+    }
+
+    return true;
+  };
+
+  if (!clearStaticFieldSlot(cx->names().dotStaticInitializers)) {
+    return false;
+  }
+
+  auto isStaticFieldWithComputedName = [](ParseNode* propdef) {
+    return propdef->is<ClassField>() && propdef->as<ClassField>().isStatic() &&
+           propdef->as<ClassField>().name().getKind() ==
+               ParseNodeKind::ComputedName;
+  };
+
+  if (std::any_of(classMembers->contents().begin(),
+                  classMembers->contents().end(),
+                  isStaticFieldWithComputedName)) {
+    if (!clearStaticFieldSlot(cx->names().dotStaticFieldKeys)) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 // Using MOZ_NEVER_INLINE in here is a workaround for llvm.org/pr14047. See
 // the comment on emitSwitch.
 MOZ_NEVER_INLINE bool BytecodeEmitter::emitObject(ListNode* objNode,
@@ -9647,8 +9753,26 @@ bool BytecodeEmitter::emitClass(
     return false;
   }
 
+  if (!emitCreateFieldInitializers(ce, classMembers, FieldPlacement::Static)) {
+    return false;
+  }
+
+  if (!emitCreateFieldKeys(classMembers, FieldPlacement::Static)) {
+    return false;
+  }
+
   if (!emitPropertyList(classMembers, ce, ClassBody)) {
     //              [stack] CTOR HOMEOBJ
+    return false;
+  }
+
+  if (!ce.emitBinding()) {
+    //              [stack] CTOR
+    return false;
+  }
+
+  if (!emitInitializeStaticFields(classMembers)) {
+    //              [stack] CTOR
     return false;
   }
 
