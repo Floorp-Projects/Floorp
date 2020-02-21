@@ -30,6 +30,8 @@ class UnsupportedAddonsAdapter(
     addons: List<Addon>
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
     private val unsupportedAddons = addons.toMutableList()
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal var pendingUninstall = false
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         holder as UnsupportedAddonViewHolder
@@ -42,28 +44,38 @@ class UnsupportedAddonsAdapter(
                 addon.id
             }
 
+        bindRemoveButton(holder, addon)
+    }
+
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal fun bindRemoveButton(holder: UnsupportedAddonViewHolder, addon: Addon) {
+        holder.removeButton.isEnabled = !pendingUninstall
+        if (pendingUninstall) {
+            return
+        }
+
         holder.removeButton.setOnClickListener {
-            holder.removeButton.visibility = View.GONE
+            pendingUninstall = true
+            notifyDataSetChanged()
             addonManager.uninstallAddon(addon,
-                onSuccess = {
-                    removeUninstalledAddonAtPosition(position)
-                },
-                onError = { addonId, throwable ->
-                    unsupportedAddonsAdapterDelegate.onUninstallError(addonId, throwable)
-                    holder.removeButton.visibility = View.VISIBLE
-                })
+                    onSuccess = {
+                        removeUninstalledAddon(addon)
+                    },
+                    onError = { addonId, throwable ->
+                        pendingUninstall = false
+                        notifyDataSetChanged()
+                        unsupportedAddonsAdapterDelegate.onUninstallError(addonId, throwable)
+                    })
         }
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    internal fun removeUninstalledAddonAtPosition(position: Int) {
-        if (position >= unsupportedAddons.size) {
+    internal fun removeUninstalledAddon(addon: Addon) {
+        if (!unsupportedAddons.remove(addon)) {
             return
         }
-
-        val uninstalledAddon = unsupportedAddons[position]
-        unsupportedAddons.remove(uninstalledAddon)
-        notifyItemRemoved(position)
+        pendingUninstall = false
+        notifyDataSetChanged()
         unsupportedAddonsAdapterDelegate.onUninstallSuccess()
     }
 
