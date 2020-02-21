@@ -92,7 +92,7 @@ class Expressions extends Component<Props, State> {
   clear = () => {
     this.setState(() => {
       this.props.clearExpressionError();
-      return { editing: false, editIndex: -1, inputValue: "" };
+      return { editing: false, editIndex: -1, inputValue: "", focused: false };
     });
   };
 
