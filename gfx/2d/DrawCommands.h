@@ -68,6 +68,10 @@ class StoredPattern {
         new (mRadial) RadialGradientPattern(
             *static_cast<const RadialGradientPattern*>(&aPattern));
         return;
+      case PatternType::CONIC_GRADIENT:
+        new (mConic) ConicGradientPattern(
+            *static_cast<const ConicGradientPattern*>(&aPattern));
+        return;
     }
   }
 
@@ -98,6 +102,7 @@ class StoredPattern {
     char mColor[sizeof(ColorPattern)];
     char mLinear[sizeof(LinearGradientPattern)];
     char mRadial[sizeof(RadialGradientPattern)];
+    char mConic[sizeof(ConicGradientPattern)];
     char mSurface[sizeof(SurfacePattern)];
   };
 };

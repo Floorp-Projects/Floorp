@@ -414,7 +414,8 @@ enum class PatternType : int8_t {
   COLOR,
   SURFACE,
   LINEAR_GRADIENT,
-  RADIAL_GRADIENT
+  RADIAL_GRADIENT,
+  CONIC_GRADIENT
 };
 
 enum class JoinStyle : int8_t {
