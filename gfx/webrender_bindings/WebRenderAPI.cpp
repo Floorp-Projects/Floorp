@@ -938,6 +938,10 @@ usize DisplayListBuilder::Dump(usize aIndent, const Maybe<usize>& aStart,
                               aEnd.ptrOr(nullptr));
 }
 
+void DisplayListBuilder::DumpSerializedDisplayList() {
+  wr_dump_serialized_display_list(mWrState);
+}
+
 void DisplayListBuilder::Finalize(wr::LayoutSize& aOutContentSize,
                                   BuiltDisplayList& aOutDisplayList) {
   wr_api_finalize_builder(mWrState, &aOutContentSize, &aOutDisplayList.dl_desc,
