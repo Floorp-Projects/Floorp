@@ -295,9 +295,6 @@ LexerTransition<nsJPEGDecoder::State> nsJPEGDecoder::ReadJPEGData(
             gfxPlatform::GetCMSOutputProfile()) {
           uint32_t profileSpace = qcms_profile_get_color_space(mInProfile);
 
-#ifdef DEBUG_tor
-          fprintf(stderr, "JPEG profileSpace: 0x%08X\n", profileSpace);
-#endif
           qcms_data_type outputType = gfxPlatform::GetCMSOSRGBAType();
           Maybe<qcms_data_type> inputType;
           if (profileSpace == icSigRgbData) {
