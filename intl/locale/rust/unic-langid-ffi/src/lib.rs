@@ -7,7 +7,7 @@ use nsstring::nsCString;
 use thin_vec::ThinVec;
 pub use unic_langid::{LanguageIdentifier, LanguageIdentifierError, CharacterDirection};
 
-fn new_langid_for_mozilla(name: &nsACString) -> Result<LanguageIdentifier, LanguageIdentifierError> {
+pub fn new_langid_for_mozilla(name: &nsACString) -> Result<LanguageIdentifier, LanguageIdentifierError> {
     if name.eq_ignore_ascii_case(b"ja-jp-mac") {
         "ja-JP-macos".parse()
     } else {
