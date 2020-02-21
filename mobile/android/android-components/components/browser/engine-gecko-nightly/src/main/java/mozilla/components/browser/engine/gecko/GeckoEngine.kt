@@ -332,8 +332,15 @@ class GeckoEngine(
             }
         }
 
+        val debuggerDelegate = object : WebExtensionController.DebuggerDelegate {
+            override fun onExtensionListUpdated() {
+                webExtensionDelegate.onExtensionListUpdated()
+            }
+        }
+
         runtime.webExtensionController.promptDelegate = promptDelegate
         runtime.webExtensionController.tabDelegate = tabsDelegate
+        runtime.webExtensionController.setDebuggerDelegate(debuggerDelegate)
     }
 
     /**

@@ -125,4 +125,12 @@ interface WebExtensionDelegate {
         newPermissions: List<String>,
         onPermissionsGranted: ((Boolean) -> Unit)
     ) = Unit
+
+    /**
+     * Invoked when the list of installed extensions has been updated in the engine
+     * (the web extension runtime). This happens as a result of debugging tools (e.g
+     * web-ext) installing temporary extensions. It does not happen in the regular flow
+     * of installing / uninstalling extensions by the user.
+     */
+    fun onExtensionListUpdated() = Unit
 }

@@ -14,6 +14,7 @@ internal object WebExtensionReducer {
      * [WebExtensionAction] Reducer function for modifying a specific [WebExtensionState] in
      *  both [SessionState.extensionState] or [BrowserState.extensions].
      */
+    @Suppress("LongMethod")
     fun reduce(state: BrowserState, action: WebExtensionAction): BrowserState {
         return when (action) {
             is WebExtensionAction.InstallWebExtensionAction -> {
@@ -33,6 +34,12 @@ internal object WebExtensionReducer {
                 state.copy(
                     extensions = state.extensions - action.extensionId,
                     tabs = state.tabs.map { it.copy(extensionState = it.extensionState - action.extensionId) }
+                )
+            }
+            is WebExtensionAction.UninstallAllWebExtensionsAction -> {
+                state.copy(
+                    extensions = emptyMap(),
+                    tabs = state.tabs.map { it.copy(extensionState = emptyMap()) }
                 )
             }
             is WebExtensionAction.UpdateWebExtensionEnabledAction -> {
