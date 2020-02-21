@@ -49,12 +49,13 @@ add_task(async function setup() {
       // Change the endpoints to prevent non-local network connections when landing on the page.
       ["browser.contentblocking.report.monitor.url", ""],
       ["browser.contentblocking.report.monitor.sign_in_url", ""],
-      ["browser.contentblocking.report.lockwise.url", ""],
       ["browser.contentblocking.report.social.url", ""],
       ["browser.contentblocking.report.cookie.url", ""],
       ["browser.contentblocking.report.tracker.url", ""],
       ["browser.contentblocking.report.fingerprinter.url", ""],
       ["browser.contentblocking.report.cryptominer.url", ""],
+      ["browser.contentblocking.report.lockwise.mobile-android.url", ""],
+      ["browser.contentblocking.report.lockwise.mobile-ios.url", ""],
     ],
   });
 
@@ -218,11 +219,14 @@ add_task(async function checkTelemetryClickEvents() {
   is(events.length, 1, `recorded telemetry for lw_open_button`);
 
   await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
-    const lockwiseAppLink = await ContentTaskUtils.waitForCondition(() => {
-      return content.document.getElementById("lockwise-inline-link");
-    }, "lockwiseAppLink exists");
+    const lockwiseAndroidAppLink = await ContentTaskUtils.waitForCondition(
+      () => {
+        return content.document.getElementById("lockwise-android-inline-link");
+      },
+      "lockwiseAndroidAppLink exists"
+    );
 
-    lockwiseAppLink.click();
+    lockwiseAndroidAppLink.click();
   });
 
   events = await waitForTelemetryEventCount(4);
@@ -231,9 +235,10 @@ add_task(async function checkTelemetryClickEvents() {
     e =>
       e[1] == "security.ui.protections" &&
       e[2] == "click" &&
-      e[3] == "lw_sync_link"
+      e[3] == "lw_sync_link" &&
+      e[4] == "android"
   );
-  is(events.length, 1, `recorded telemetry for lw_sync_link`);
+  is(events.length, 1, `recorded telemetry for lw_sync_link, android`);
 
   await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
     const lockwiseReportLink = await ContentTaskUtils.waitForCondition(() => {
@@ -438,6 +443,25 @@ add_task(async function checkTelemetryClickEvents() {
     1,
     `recorded telemetry for cryptominer trackers_about_link`
   );
+
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+    const lockwiseIOSAppLink = await ContentTaskUtils.waitForCondition(() => {
+      return content.document.getElementById("lockwise-ios-inline-link");
+    }, "lockwiseIOSAppLink exists");
+
+    lockwiseIOSAppLink.click();
+  });
+
+  events = await waitForTelemetryEventCount(15);
+
+  events = events.filter(
+    e =>
+      e[1] == "security.ui.protections" &&
+      e[2] == "click" &&
+      e[3] == "lw_sync_link" &&
+      e[4] == "ios"
+  );
+  is(events.length, 1, `recorded telemetry for lw_sync_link`);
 
   await BrowserTestUtils.removeTab(tab);
   // We open three extra tabs with the click events.

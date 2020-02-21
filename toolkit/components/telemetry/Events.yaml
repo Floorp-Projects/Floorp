@@ -1560,6 +1560,7 @@ security.ui.protections:
       - 1557050
       - 1572825
       - 1610897
+      - 1612088
     description: >
       User interaction by click events on the protection report.
     objects: [

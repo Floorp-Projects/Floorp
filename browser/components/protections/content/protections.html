@@ -138,7 +138,7 @@
               </a>
             </div>
           </div>
-          <div class="card-body hidden">
+          <div class="card-body">
             <div class="body-wrapper">
               <div id="monitor-body-content">
                 <div class="monitor-info-wrapper">
@@ -204,10 +204,19 @@
         <div class="card-body hidden">
           <div id="lockwise-body-content" class="body-wrapper">
             <div class="no-logins hidden">
-                <img class="lockwise-mobile-app-icon" src="chrome://browser/content/logos/lockwise-mobile-app.svg"/>
-                <span data-l10n-id="lockwise-no-logins-content">
-                  <a target="_blank" id="lockwise-inline-link" data-l10n-name="lockwise-inline-link" href=""></a>
-                </span>
+              <span class="exit-icon" aria-label="close"></span>
+              <img class="lockwise-mobile-app-icon light" src="chrome://browser/content/logos/lockwise-light.svg"/>
+              <img class="lockwise-mobile-app-icon dark" src="chrome://browser/content/logos/lockwise-dark.svg"/>
+              <span>
+                <h2 id="lockwise-mobile-app-title" class="card-title" data-l10n-id="lockwise-mobile-app-title"></h2>
+                <p class="content">
+                  <span data-l10n-id="lockwise-no-logins-card-content"></span>
+                  <span target="_blank" id="lockwise-app-links" data-l10n-id="lockwise-app-links" href="">
+                    <a id="lockwise-android-inline-link" target="_blank" data-l10n-name="lockwise-android-inline-link"></a>
+                    <a id="lockwise-ios-inline-link" target="_blank" data-l10n-name="lockwise-ios-inline-link"></a>
+                  </span>
+                </p>
+              </span>
             </div>
             <div class="has-logins hidden">
               <span class="number-of-logins block">

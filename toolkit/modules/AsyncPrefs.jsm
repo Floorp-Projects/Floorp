@@ -29,6 +29,7 @@ const kAllowedPrefs = new Set([
 
   "security.ssl.errorReporting.automatic",
   "security.tls.version.enable-deprecated",
+  "browser.contentblocking.report.hide_lockwise_app",
 ]);
 
 const kPrefTypeMap = new Map([

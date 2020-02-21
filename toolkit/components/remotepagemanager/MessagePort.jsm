@@ -75,6 +75,7 @@ let RPMAccessManager = {
       isWindowPrivate: ["yes"],
     },
     "about:protections": {
+      setBoolPref: ["browser.contentblocking.report.hide_lockwise_app"],
       getBoolPref: [
         "browser.contentblocking.report.lockwise.enabled",
         "browser.contentblocking.report.monitor.enabled",
@@ -84,14 +85,16 @@ let RPMAccessManager = {
         "privacy.trackingprotection.fingerprinting.enabled",
         "privacy.trackingprotection.enabled",
         "privacy.trackingprotection.socialtracking.enabled",
+        "browser.contentblocking.report.hide_lockwise_app",
       ],
       getStringPref: [
         "browser.contentblocking.category",
-        "browser.contentblocking.report.lockwise.url",
         "browser.contentblocking.report.monitor.url",
         "browser.contentblocking.report.monitor.sign_in_url",
         "browser.contentblocking.report.manage_devices.url",
         "browser.contentblocking.report.proxy_extension.url",
+        "browser.contentblocking.report.lockwise.mobile-android.url",
+        "browser.contentblocking.report.lockwise.mobile-ios.url",
       ],
       getIntPref: ["network.cookie.cookieBehavior"],
       getFormatURLPref: [

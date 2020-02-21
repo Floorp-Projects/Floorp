@@ -4,6 +4,8 @@
 
 :root {
   --card-padding: 24px;
+  --exit-icon-size: 12px;
+  --exit-icon-position: calc((var(--card-padding) - var(--exit-icon-size)) / 2);
   --social-color: #9059FF;
   --cookie-color: #0090F4;
   --tracker-color: #2AC3A2;
@@ -110,6 +112,7 @@ h2 {
 .etp-card.custom-not-blocking #protection-details,
 #manage-protections,
 .etp-card .icon.dark,
+.lockwise-mobile-app-icon.dark,
 a.hidden,
 .loading .card-body.hidden,
 .lockwise-card.hidden,
@@ -125,7 +128,9 @@ a.hidden,
 .loading a,
 .loading button,
 .loading .wrapper,
-.proxy-card.hidden {
+.proxy-card.hidden,
+.card-body.hidden,
+.hidden {
   display: none;
 }
 
@@ -154,6 +159,14 @@ a.hidden,
     .etp-card .icon.light {
       display: none;
     }
+
+    .lockwise-mobile-app-icon.dark {
+      display: block;
+    }
+
+    .lockwise-mobile-app-icon.light {
+      display: none;
+    }
   }
 }
 
@@ -163,7 +176,7 @@ a.hidden,
   grid-template-rows: 20% auto;
   padding: 0;
   margin-block-end: 25px;
-  line-height: 1.6em;
+  line-height: 1.3em;
 }
 
 .card-header,
@@ -186,6 +199,32 @@ a.hidden,
   font-size: .93em;
   cursor: default;
   color: var(--in-content-deemphasized-text);
+}
+
+.exit-icon {
+  position: absolute;
+  width: var(--exit-icon-size);
+  height: var(--exit-icon-size);
+  background-image: url(chrome://browser/skin/stop.svg);
+  background-size: calc(var(--exit-icon-size) - 2px);
+  background-position: center;
+  background-repeat: no-repeat;
+  top: var(--exit-icon-position);
+  right: var(--exit-icon-position);
+  -moz-context-properties: fill;
+  fill: var(--in-content-deemphasized-text);
+}
+
+.exit-icon:dir(rtl) {
+  left: var(--exit-icon-position);
+}
+
+.exit-icon:hover {
+  background-color: var(--in-content-button-background);
+}
+
+.exit-icon:hover:active {
+  background-color: var(--in-content-button-background-hover);
 }
 
 .custom-not-blocking .content {
@@ -232,6 +271,7 @@ a.hidden,
   border-block-start: 1px solid var(--in-content-border-color);
   grid-column: span 2;
   grid-row: 2;
+  position: relative;
 }
 
 .body-wrapper {
@@ -536,11 +576,10 @@ label[for="tab-cryptominer"]:hover ~ #highlight-hover {
   display: grid;
   font-size: 0.875em;
   align-items: center;
-  color: var(--in-content-deemphasized-text);
 }
 
 #lockwise-body-content > .no-logins {
-  grid: 1fr / 50px 275px;
+  grid: 1fr / 1fr 6fr;
   grid-gap: 0;
 }
 
@@ -550,10 +589,12 @@ label[for="tab-cryptominer"]:hover ~ #highlight-hover {
 }
 
 .lockwise-mobile-app-icon {
-  -moz-context-properties: fill;
-  fill: currentColor;
-  width: 38px;
-  height: 35px;
+  height: 56px;
+  width: auto;
+}
+
+#lockwise-app-links {
+  display: block;
 }
 
 .passwords-stored-text,
