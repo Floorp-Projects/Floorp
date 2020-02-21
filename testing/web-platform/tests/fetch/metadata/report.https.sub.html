@@ -3,7 +3,10 @@
 <script src=/resources/testharness.js></script>
 <script src=/resources/testharnessreport.js></script>
 <script src=/fetch/metadata/resources/helper.js></script>
-<link id="style" href="https://foo.bar" rel="stylesheet">
+
+<!-- The hostname here is unimportant, so long as it doesn't match 'self'. -->
+<link id="style" href="https://{{hosts[alt][élève]}}:{{ports[https][0]}}/css/support/a-green.css" rel="stylesheet">
+
 <body></body>
 <script>
   setup({ explicit_done: true });
