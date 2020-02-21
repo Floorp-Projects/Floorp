@@ -7089,8 +7089,25 @@ bool GeneralParser<ParseHandler, Unit>::classMember(
       }
   }
 
-  // .fieldKeys must be declared outside the scope .initializers is declared in,
-  // hence this extra scope.
+  // When |super()| is invoked, we search for the nearest scope containing
+  // |.initializers| to initialize the class fields. This set-up precludes
+  // declaring |.initializers| in the class scope, because in some syntactic
+  // contexts |super()| can appear nested in a class, while actually belonging
+  // to an outer class definition.
+  //
+  // Example:
+  // class Outer extends Base {
+  //   field = 1;
+  //   constructor() {
+  //     class Inner {
+  //       field = 2;
+  //
+  //       // The super() call in the computed property name mustn't access
+  //       // Inner's |.initializers| array, but instead Outer's.
+  //       [super()]() {}
+  //     }
+  //   }
+  // }
   Maybe<ParseContext::Scope> dotInitializersScope;
   if (isConstructor && !options().selfHostingMode) {
     dotInitializersScope.emplace(this);
@@ -7206,10 +7223,6 @@ bool GeneralParser<ParseHandler, Unit>::finishClassConstructor(
     } else {
       // There should not be any non-lazy script yet.
       MOZ_ASSERT_IF(ctorbox->hasObject(), ctorbox->function()->isIncomplete());
-    }
-
-    if (numFields == 0) {
-      handler_.deleteConstructorScope(cx_, classMembers);
     }
   }
 
