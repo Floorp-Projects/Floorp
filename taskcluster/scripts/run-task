@@ -692,8 +692,20 @@ def main(args):
     # Processes spawned by this one will inherit the limit set here.
     try:
         import resource
-        limit = int(os.environ.get('MOZ_LIMIT_NOFILE', '1024'))
-        resource.setrlimit(resource.RLIMIT_NOFILE, (limit, limit))
+        # Keep the hard limit the same, though, allowing processes to change their
+        # soft limit if they need to (Firefox does, for instance).
+        (soft, hard) = resource.getrlimit(resource.RLIMIT_NOFILE)
+        limit = os.environ.get('MOZ_LIMIT_NOFILE')
+        if limit:
+            limit = int(limit)
+        else:
+            # If no explicit limit is given, use 1024 if it's less than the current
+            # soft limit. For instance, the default on macOS is 256, so we'd pick
+            # that rather than 1024.
+            limit = min(soft, 1024)
+        # Now apply the limit, if it's different from the original one.
+        if limit != soft:
+            resource.setrlimit(resource.RLIMIT_NOFILE, (limit, hard))
     except ImportError:
         # The resource module is UNIX only.
         pass
