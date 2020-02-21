@@ -18,7 +18,12 @@ from logger.logger import RaptorLogger
 from mozdevice import ADBDevice
 from performance_tuning import tune_performance
 from perftest import PerftestAndroid
-from power import init_android_power_test, finish_android_power_test
+from power import (
+    init_android_power_test,
+    finish_android_power_test,
+    enable_charging,
+    disable_charging
+)
 from signal_handler import SignalHandlerException
 from utils import write_yml_file
 from webextension.base import WebExtension
@@ -48,6 +53,8 @@ class WebExtensionAndroid(PerftestAndroid, WebExtension):
         if self.device is None:
             self.device = ADBDevice(verbose=True)
             tune_performance(self.device, log=LOG)
+        if self.config['power_test']:
+            disable_charging(self.device)
 
         LOG.info("creating remote root folder for raptor: %s" % self.remote_test_root)
         self.device.rm(self.remote_test_root, force=True, recursive=True)
@@ -206,6 +213,7 @@ class WebExtensionAndroid(PerftestAndroid, WebExtension):
                 init_android_power_test(self)
                 LOG.info("Running OS baseline, pausing for 1 minute...")
                 time.sleep(60)
+                LOG.info("Finishing baseline...")
                 finish_android_power_test(self, "os-baseline", os_baseline=True)
 
                 # initialize for the test
@@ -218,6 +226,8 @@ class WebExtensionAndroid(PerftestAndroid, WebExtension):
 
         except SignalHandlerException:
             self.device.stop_application(self.config["binary"])
+            if self.config['power_test']:
+                enable_charging(self.device)
 
         finally:
             if self.config["power_test"]:
@@ -391,5 +401,8 @@ class WebExtensionAndroid(PerftestAndroid, WebExtension):
     def clean_up(self):
         LOG.info("removing test folder for raptor: %s" % self.remote_test_root)
         self.device.rm(self.remote_test_root, force=True, recursive=True)
+
+        if self.config['power_test']:
+            enable_charging(self.device)
 
         super(WebExtensionAndroid, self).clean_up()

@@ -87,8 +87,7 @@ def create_parser(mach_interface=False):
     add_arg('--power-test', dest="power_test", action="store_true",
             help="Use Raptor to measure power usage on Android browsers (Geckoview Example, "
             "Fenix, Refbrow, and Fennec) as well as on Intel-based MacOS machines that have "
-            "Intel Power Gadget installed. The host ip address must be specified via the "
-            "--host command line argument if an android device/browser is being tested.")
+            "Intel Power Gadget installed.")
     add_arg('--memory-test', dest="memory_test", action="store_true",
             help="Use Raptor to measure memory usage.")
     add_arg('--cpu-test', dest="cpu_test", action="store_true",
@@ -195,15 +194,12 @@ def verify_options(parser, args):
     if args.gecko_profile and args.app in CHROMIUM_DISTROS:
         parser.error("Gecko profiling is not supported on Chrome/Chromium!")
 
-    # if running power tests on geckoview/android, --host must be specified.
     if args.power_test:
-        if args.app in ["fennec", "geckoview", "refbrow", "fenix"]:
-            if args.host in ('localhost', '127.0.0.1'):
-                parser.error("When running power tests on Android browsers, the --host "
-                             "argument is required.")
-        elif platform.system().lower() not in ('darwin',):
-            parser.error("--power-test is only available on MacOS desktop machines, "
-                         "platform detected: %s." % platform.system().lower())
+        if args.app not in ["fennec", "geckoview", "refbrow", "fenix"]:
+            if platform.system().lower() not in ('darwin',):
+                parser.error("Power tests are only available on MacOS desktop machines or "
+                             "Firefox android browers. App requested: %s. Platform "
+                             "detected: %s." % (args.app, platform.system().lower()))
 
     if args.cpu_test:
         if args.app not in ["fennec", "geckoview", "refbrow", "fenix"]:
