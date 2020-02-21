@@ -21,7 +21,6 @@ from operator import itemgetter
 # Skip all tests which use features not supported in SpiderMonkey.
 UNSUPPORTED_FEATURES = set([
     "tail-call-optimization",
-    "class-static-fields-public",
     "class-fields-private",
     "class-static-fields-private",
     "class-methods-private",

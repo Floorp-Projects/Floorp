@@ -1,4 +1,4 @@
-// |reftest| skip error:SyntaxError -- class-static-fields-public is not supported
+// |reftest| error:SyntaxError
 // This file was procedurally generated from the following sources:
 // - src/class-elements/init-err-contains-arguments.case
 // - src/class-elements/initializer-error/cls-decl-fields-static-comp-name.template
