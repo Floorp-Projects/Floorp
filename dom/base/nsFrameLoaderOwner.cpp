@@ -33,8 +33,7 @@ void nsFrameLoaderOwner::SetFrameLoader(nsFrameLoader* aNewFrameLoader) {
   mFrameLoader = aNewFrameLoader;
 }
 
-already_AddRefed<mozilla::dom::BrowsingContext>
-nsFrameLoaderOwner::GetBrowsingContext() {
+mozilla::dom::BrowsingContext* nsFrameLoaderOwner::GetBrowsingContext() {
   if (mFrameLoader) {
     return mFrameLoader->GetBrowsingContext();
   }
