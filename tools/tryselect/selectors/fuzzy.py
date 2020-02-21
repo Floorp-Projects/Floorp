@@ -26,7 +26,7 @@ terminal = Terminal()
 here = os.path.abspath(os.path.dirname(__file__))
 build = MozbuildObject.from_environment(cwd=here)
 
-PREVIEW_SCRIPT = os.path.join(build.topsrcdir, 'tools/tryselect/preview.py')
+PREVIEW_SCRIPT = os.path.join(build.topsrcdir, 'tools/tryselect/selectors/preview.py')
 
 # Some tasks show up in the target task set, but are either special cases
 # or uncommon enough that they should only be selectable with --full.
