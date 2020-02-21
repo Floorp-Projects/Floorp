@@ -53,24 +53,6 @@ async function setup(pageUrl) {
   });
 }
 
-async function checkIframedUnmodifiedForm(formSelector = "form") {
-  let wasModified = await SpecialPowers.spawn(getIframeBrowsingContext(window), [formSelector], function(sel) {
-    let form = content.document.querySelector(sel);
-    let inputs = Array.from(form.elements || form.querySelectorAll("input"));
-    for (let ele of inputs) {
-      // No point in checking form submit/reset buttons.
-      if (ele.type == "submit" || ele.type == "reset") {
-        continue;
-      }
-      if (ele.value !== ele.defaultValue) {
-        return true;
-      }
-    }
-    return false;
-  });
-  ok(!wasModified, "Expected form to have no modified values");
-}
-
 async function clickLink() {
   let loadPromise = waitForLoad();
   await SpecialPowers.spawn(getIframeBrowsingContext(window), [], function() {
@@ -96,7 +78,6 @@ add_task(async function test_no_message_on_navigation() {
   // If login field values were set by the website, we don't message to save the
   // login values if the user did not interact with the fields before submiting.
   await setup(PREFILLED_FORM_URL);
-  await checkIframedUnmodifiedForm();
 
   let submitMessageSent = false;
   getSubmitMessage().then(value => {
@@ -115,7 +96,6 @@ add_task(async function test_prefd_off_message_on_navigation() {
     ["signon.userInputRequiredToCapture.enabled", false],
   ]});
   await setup(PREFILLED_FORM_URL);
-  await checkIframedUnmodifiedForm();
 
   let promiseSubmitMessage = getSubmitMessage();
   await clickLink();
@@ -127,7 +107,6 @@ add_task(async function test_prefd_off_message_on_navigation() {
 
 add_task(async function test_message_with_user_interaction_on_navigation() {
   await setup(PREFILLED_FORM_URL);
-  await checkIframedUnmodifiedForm();
   await userInput("#form-basic-username", "foo");
 
   let promiseSubmitMessage = getSubmitMessage();
@@ -138,7 +117,6 @@ add_task(async function test_message_with_user_interaction_on_navigation() {
 
 add_task(async function test_empty_form_with_input_handler() {
   await setup(EXAMPLE_COM + "formless_basic.html");
-  await checkIframedUnmodifiedForm("body");
   await userInput("#form-basic-username", "user");
   await userInput("#form-basic-password", "pass");
 
@@ -202,7 +180,6 @@ add_task(async function test_message_on_autofill_with_user_interaction() {
 add_task(async function test_no_message_on_user_input_from_other_form() {
   // ensure input into unrelated fields on the page don't change login form modified-ness
   await setup(PREFILLED_FORM_URL);
-  await checkIframedUnmodifiedForm();
 
   // Add a form which will not be submitted and an input associated with that form
   await SpecialPowers.spawn(getIframeBrowsingContext(window), [], function() {

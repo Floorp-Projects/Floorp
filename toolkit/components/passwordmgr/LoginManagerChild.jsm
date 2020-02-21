@@ -2238,7 +2238,8 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
     // also consider a form modified if there's a difference between fields' .value and .defaultValue
     if (!fieldsModified) {
       fieldsModified = Array.from(form.elements).some(
-        field => field.value !== field.defaultValue
+        field =>
+          field.defaultValue !== undefined && field.value !== field.defaultValue
       );
     }
     return fieldsModified;
