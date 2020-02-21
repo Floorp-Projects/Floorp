@@ -14,6 +14,8 @@
 #include "nsPrintfCString.h"                  // for nsPrintfCString
 #include "UnitTransforms.h"                   // for ViewAs
 
+static mozilla::LazyLogModule sApzMgrLog("apz.manager");
+
 namespace mozilla {
 namespace layers {
 
@@ -415,21 +417,23 @@ void HitTestingTreeNode::Dump(const char* aPrefix) const {
   if (mPrevSibling) {
     mPrevSibling->Dump(aPrefix);
   }
-  printf_stderr(
-      "%sHitTestingTreeNode (%p) APZC (%p) g=(%s) %s%s%sr=(%s) t=(%s) "
-      "c=(%s)%s%s\n",
-      aPrefix, this, mApzc.get(),
-      mApzc ? Stringify(mApzc->GetGuid()).c_str()
-            : nsPrintfCString("l=0x%" PRIx64, uint64_t(mLayersId)).get(),
-      (mOverride & EventRegionsOverride::ForceDispatchToContent) ? "fdtc " : "",
-      (mOverride & EventRegionsOverride::ForceEmptyHitRegion) ? "fehr " : "",
-      (mFixedPosTarget != ScrollableLayerGuid::NULL_SCROLL_ID)
-          ? nsPrintfCString("fixed=%" PRIu64 " ", mFixedPosTarget).get()
-          : "",
-      Stringify(mEventRegions).c_str(), Stringify(mTransform).c_str(),
-      mClipRegion ? Stringify(mClipRegion.ref()).c_str() : "none",
-      mScrollbarData.mDirection.isSome() ? " scrollbar" : "",
-      IsScrollThumbNode() ? " scrollthumb" : "");
+  MOZ_LOG(
+      sApzMgrLog, LogLevel::Debug,
+      ("%sHitTestingTreeNode (%p) APZC (%p) g=(%s) %s%s%sr=(%s) t=(%s) "
+       "c=(%s)%s%s\n",
+       aPrefix, this, mApzc.get(),
+       mApzc ? Stringify(mApzc->GetGuid()).c_str()
+             : nsPrintfCString("l=0x%" PRIx64, uint64_t(mLayersId)).get(),
+       (mOverride & EventRegionsOverride::ForceDispatchToContent) ? "fdtc "
+                                                                  : "",
+       (mOverride & EventRegionsOverride::ForceEmptyHitRegion) ? "fehr " : "",
+       (mFixedPosTarget != ScrollableLayerGuid::NULL_SCROLL_ID)
+           ? nsPrintfCString("fixed=%" PRIu64 " ", mFixedPosTarget).get()
+           : "",
+       Stringify(mEventRegions).c_str(), Stringify(mTransform).c_str(),
+       mClipRegion ? Stringify(mClipRegion.ref()).c_str() : "none",
+       mScrollbarData.mDirection.isSome() ? " scrollbar" : "",
+       IsScrollThumbNode() ? " scrollthumb" : ""));
   if (mLastChild) {
     mLastChild->Dump(nsPrintfCString("%s  ", aPrefix).get());
   }

@@ -12,9 +12,6 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/StaticPrefs_apz.h"
 
-#define FLING_PHYS_LOG(...)
-// #define FLING_PHYS_LOG(...) printf_stderr("FLING: " __VA_ARGS__)
-
 namespace mozilla {
 namespace layers {
 
