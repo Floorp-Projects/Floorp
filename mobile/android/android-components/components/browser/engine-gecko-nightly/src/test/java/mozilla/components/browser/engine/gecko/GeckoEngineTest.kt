@@ -985,6 +985,43 @@ class GeckoEngineTest {
     }
 
     @Test
+    fun `try to update a web extension without a new update available`() {
+        val runtime = mock<GeckoRuntime>()
+        val extensionController: WebExtensionController = mock()
+
+        val bundle = GeckoBundle()
+        bundle.putString("webExtensionId", "id")
+        bundle.putString("locationURI", "uri")
+        val updateExtensionResult = GeckoResult<GeckoWebExtension>()
+        whenever(extensionController.update(any())).thenReturn(updateExtensionResult)
+        whenever(runtime.webExtensionController).thenReturn(extensionController)
+
+        val engine = GeckoEngine(context, runtime = runtime)
+        val webExtensionsDelegate: WebExtensionDelegate = mock()
+        engine.registerWebExtensionDelegate(webExtensionsDelegate)
+
+        val extension = mozilla.components.browser.engine.gecko.webextension.GeckoWebExtension(
+                "test-webext",
+                "resource://android/assets/extensions/test",
+                runtime.webExtensionController,
+                true,
+                true
+        )
+        var result: WebExtension? = null
+        var onErrorCalled = false
+
+        engine.updateWebExtension(
+                extension,
+                onSuccess = { result = it },
+                onError = { _, _ -> onErrorCalled = true }
+        )
+        updateExtensionResult.complete(null)
+
+        assertFalse(onErrorCalled)
+        assertNull(result)
+    }
+
+    @Test
     fun `update web extension failure`() {
         val runtime = mock<GeckoRuntime>()
         val extensionController: WebExtensionController = mock()
