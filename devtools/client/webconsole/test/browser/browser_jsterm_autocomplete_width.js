@@ -21,16 +21,12 @@ const TEST_URI = `data:text/html;charset=utf-8,
 <body>Test</body>`;
 
 add_task(async function() {
-  const { jsterm } = await openNewTabAndConsole(TEST_URI);
+  const hud = await openNewTabAndConsole(TEST_URI);
+  const { jsterm } = hud;
   const { autocompletePopup: popup } = jsterm;
 
-  const onPopUpOpen = popup.once("popup-opened");
-
   info(`wait for completion suggestions for "xx"`);
-  EventUtils.sendString("xx");
-
-  await onPopUpOpen;
-
+  await setInputValueForAutocompletion(hud, "xx");
   ok(popup.isOpen, "popup is open");
 
   const expectedPopupItems = ["xx", "xxx"];
@@ -42,8 +38,10 @@ add_task(async function() {
 
   const originalWidth = popup._tooltip.container.clientWidth;
   ok(
-    originalWidth > 2 * jsterm._inputCharWidth,
-    "popup is at least wider than the width of the longest list item"
+    originalWidth >= getLongestLabelWidth(jsterm),
+    `popup (${originalWidth}px) is at least wider than the width of the longest list item (${getLongestLabelWidth(
+      jsterm
+    )}px)`
   );
 
   info(`wait for completion suggestions for "xx."`);
@@ -57,10 +55,15 @@ add_task(async function() {
     "popup has expected items"
   );
   const newPopupWidth = popup._tooltip.container.clientWidth;
-  ok(newPopupWidth > originalWidth, "The popup width was updated");
   ok(
-    newPopupWidth > 20 * jsterm._inputCharWidth,
-    "popup is at least wider than the width of the longest list item"
+    newPopupWidth >= originalWidth,
+    `The popup width was updated (${originalWidth}px -> ${newPopupWidth}px)`
+  );
+  ok(
+    newPopupWidth >= getLongestLabelWidth(jsterm),
+    `popup (${newPopupWidth}px) is at least wider than the width of the longest list item (${getLongestLabelWidth(
+      jsterm
+    )}px)`
   );
 
   info(`wait for completion suggestions for "xx"`);
@@ -74,3 +77,12 @@ add_task(async function() {
     "popup is back to its original width"
   );
 });
+
+function getLongestLabelWidth(jsterm) {
+  return (
+    jsterm._inputCharWidth *
+    jsterm.autocompletePopup.items
+      .map(item => item.label)
+      .sort((a, b) => a < b)[0].length
+  );
+}
