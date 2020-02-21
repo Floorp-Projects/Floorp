@@ -207,7 +207,7 @@ class MediaKeySystemAccessManager final : public nsIObserver {
   nsTArray<UniquePtr<PendingRequest>> mPendingInstallRequests;
 
   nsCOMPtr<nsPIDOMWindowInner> mWindow;
-  bool mAddedObservers;
+  bool mAddedObservers = false;
 
   // Has the app approved protected media playback? If it has we cache the
   // value so we don't need to check again.

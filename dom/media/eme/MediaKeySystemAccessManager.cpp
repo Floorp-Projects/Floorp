@@ -112,7 +112,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 MediaKeySystemAccessManager::MediaKeySystemAccessManager(
     nsPIDOMWindowInner* aWindow)
-    : mWindow(aWindow), mAddedObservers(false) {
+    : mWindow(aWindow) {
   MOZ_ASSERT(NS_IsMainThread());
 }
 
