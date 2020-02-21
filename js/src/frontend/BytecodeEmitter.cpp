@@ -8679,11 +8679,7 @@ mozilla::Maybe<FieldInitializers> BytecodeEmitter::setupFieldInitializers(
   size_t numFields = 0;
   for (ParseNode* propdef : classMembers->contents()) {
     if (propdef->is<ClassField>()) {
-      FunctionNode* initializer = propdef->as<ClassField>().initializer();
-      // Don't include fields without initializers.
-      if (initializer != nullptr) {
-        numFields++;
-      }
+      numFields++;
     }
   }
   // If there are more initializers than can be represented, return invalid.
@@ -8778,22 +8774,21 @@ bool BytecodeEmitter::emitCreateFieldInitializers(ClassEmitter& ce,
 
   for (ParseNode* propdef : obj->contents()) {
     if (propdef->is<ClassField>()) {
-      if (FunctionNode* initializer = propdef->as<ClassField>().initializer()) {
-        if (!emitTree(initializer)) {
-          //          [stack] HOMEOBJ HERITAGE? ARRAY LAMBDA
+      FunctionNode* initializer = propdef->as<ClassField>().initializer();
+      if (!emitTree(initializer)) {
+        //          [stack] HOMEOBJ HERITAGE? ARRAY LAMBDA
+        return false;
+      }
+      if (initializer->funbox()->needsHomeObject()) {
+        MOZ_ASSERT(initializer->funbox()->allowSuperProperty());
+        if (!ce.emitFieldInitializerHomeObject()) {
+          //          [stack] CTOR OBJ ARRAY LAMBDA
           return false;
         }
-        if (initializer->funbox()->needsHomeObject()) {
-          MOZ_ASSERT(initializer->funbox()->allowSuperProperty());
-          if (!ce.emitFieldInitializerHomeObject()) {
-            //          [stack] CTOR OBJ ARRAY LAMBDA
-            return false;
-          }
-        }
-        if (!ce.emitStoreFieldInitializer()) {
-          //          [stack] HOMEOBJ HERITAGE? ARRAY
-          return false;
-        }
+      }
+      if (!ce.emitStoreFieldInitializer()) {
+        //          [stack] HOMEOBJ HERITAGE? ARRAY
+        return false;
       }
     }
   }

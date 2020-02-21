@@ -2126,10 +2126,8 @@ class ClassField : public BinaryNode {
  public:
   ClassField(ParseNode* name, ParseNode* initializer)
       : BinaryNode(ParseNodeKind::ClassField,
-                   initializer == nullptr
-                       ? name->pn_pos
-                       : TokenPos::box(name->pn_pos, initializer->pn_pos),
-                   name, initializer) {}
+                   TokenPos::box(name->pn_pos, initializer->pn_pos), name,
+                   initializer) {}
 
   static bool test(const ParseNode& node) {
     bool match = node.isKind(ParseNodeKind::ClassField);
@@ -2139,9 +2137,7 @@ class ClassField : public BinaryNode {
 
   ParseNode& name() const { return *left(); }
 
-  FunctionNode* initializer() const {
-    return right() ? &right()->as<FunctionNode>() : nullptr;
-  }
+  FunctionNode* initializer() const { return &right()->as<FunctionNode>(); }
 };
 
 class PropertyDefinition : public BinaryNode {
