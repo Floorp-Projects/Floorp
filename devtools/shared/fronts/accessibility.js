@@ -187,12 +187,23 @@ class AccessibilityFront extends FrontClassWithSpec(accessibilitySpec) {
     this.formAttributeName = "accessibilityActor";
   }
 
-  bootstrap() {
-    return super.bootstrap().then(state => {
-      this.enabled = state.enabled;
-      this.canBeEnabled = state.canBeEnabled;
-      this.canBeDisabled = state.canBeDisabled;
-    });
+  // We purposefully do not use initialize here and separate accessiblity
+  // front/actor initialization into two parts: getting the front from target
+  // and then separately bootstrapping the front. The reason for that is because
+  // accessibility front is always created as part of the accessibility panel
+  // startup when the toolbox is opened. If initialize was used, in rare cases,
+  // when the toolbox is destroyed before the accessibility tool startup is
+  // complete, the toolbox destruction would hang because the accessibility
+  // front will indefinitely wait for its initialize method to complete before
+  // being destroyed. With custom bootstrapping the front will be destroyed
+  // correctly.
+  async bootstrap() {
+    this.accessibleWalkerFront = await super.getWalker();
+    ({
+      enabled: this.enabled,
+      canBeEnabled: this.canBeEnabled,
+      canBeDisabled: this.canBeDisabled,
+    } = await super.bootstrap());
   }
 
   init() {

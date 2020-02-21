@@ -35,8 +35,14 @@ add_task(async function() {
   ok(accessibility.getWalker, "The getWalker method exists");
   ok(accessibility.getSimulator, "The getSimulator method exists");
 
-  let a11yWalker = await accessibility.getWalker();
-  ok(a11yWalker, "The AccessibleWalkerFront was returned");
+  ok(accessibility.accessibleWalkerFront, "Accessible walker was initialized");
+
+  let a11yWalker = accessibility.accessibleWalkerFront;
+  is(
+    a11yWalker,
+    accessibility.accessibleWalkerFront,
+    "The AccessibleWalkerFront was returned"
+  );
 
   const a11ySimulator = await accessibility.getSimulator();
   const webRenderEnabled = isWebRenderEnabled(window);
@@ -83,7 +89,7 @@ add_task(async function() {
     canBeEnabled: true,
   });
 
-  a11yWalker = await accessibility.getWalker();
+  a11yWalker = accessibility.accessibleWalkerFront;
   const rootNode = await domWalker.getRootNode();
   const a11yDoc = await a11yWalker.getAccessibleFor(rootNode);
   ok(a11yDoc, "Accessible document actor is created");

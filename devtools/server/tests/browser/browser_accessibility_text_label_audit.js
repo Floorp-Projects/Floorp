@@ -40,7 +40,7 @@ add_task(async function() {
     `${MAIN_DOMAIN}doc_accessibility_text_label_audit.html`
   );
 
-  const a11yWalker = await accessibility.getWalker();
+  const a11yWalker = accessibility.accessibleWalkerFront;
   await accessibility.enable();
 
   const tests = [
