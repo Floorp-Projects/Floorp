@@ -42,7 +42,6 @@ import org.mozilla.geckoview.ContentBlockingController
 import org.mozilla.geckoview.ContentBlockingController.Event
 import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoRuntime
-import org.mozilla.geckoview.GeckoRuntimeSettings
 import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.GeckoWebExecutor
 import org.mozilla.geckoview.WebExtensionController
@@ -537,15 +536,9 @@ class GeckoEngine(
             get() = PreferredColorScheme.from(runtime.settings.preferredColorScheme)
             set(value) { runtime.settings.preferredColorScheme = value.toGeckoValue() }
 
-        override var allowAutoplayMedia: Boolean
-            get() = runtime.settings.autoplayDefault == GeckoRuntimeSettings.AUTOPLAY_DEFAULT_ALLOWED
-            set(value) {
-                runtime.settings.autoplayDefault = if (value) {
-                    GeckoRuntimeSettings.AUTOPLAY_DEFAULT_ALLOWED
-                } else {
-                    GeckoRuntimeSettings.AUTOPLAY_DEFAULT_BLOCKED
-                }
-            }
+        // TODO this setting was removed in GV. We'll refactor / remove this in
+        // https://github.com/mozilla-mobile/android-components/pull/5953
+        override var allowAutoplayMedia: Boolean = false
 
         override var suspendMediaWhenInactive: Boolean
             get() = defaultSettings?.suspendMediaWhenInactive ?: false
