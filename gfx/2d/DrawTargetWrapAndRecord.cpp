@@ -258,14 +258,6 @@ struct AdjustedPattern final {
             radGradPat->mMatrix);
         return mPattern;
       }
-      case PatternType::CONIC_GRADIENT: {
-        ConicGradientPattern* conGradPat =
-            static_cast<ConicGradientPattern*>(mOrigPattern);
-        mPattern = new (mConGradPat) ConicGradientPattern(
-            conGradPat->mCenter, conGradPat->mAngle,
-            GetGradientStops(conGradPat->mStops), conGradPat->mMatrix);
-        return mPattern;
-      }
       default:
         return new (mColPat) ColorPattern(Color());
     }
@@ -277,7 +269,6 @@ struct AdjustedPattern final {
     char mColPat[sizeof(ColorPattern)];
     char mLinGradPat[sizeof(LinearGradientPattern)];
     char mRadGradPat[sizeof(RadialGradientPattern)];
-    char mConGradPat[sizeof(ConicGradientPattern)];
     char mSurfPat[sizeof(SurfacePattern)];
   };
 
@@ -724,11 +715,6 @@ void DrawTargetWrapAndRecord::EnsurePatternDependenciesStored(
     case PatternType::RADIAL_GRADIENT: {
       MOZ_ASSERT(mRecorder->HasStoredObject(
           static_cast<const RadialGradientPattern*>(&aPattern)->mStops));
-      return;
-    }
-    case PatternType::CONIC_GRADIENT: {
-      MOZ_ASSERT(mRecorder->HasStoredObject(
-          static_cast<const ConicGradientPattern*>(&aPattern)->mStops));
       return;
     }
     case PatternType::SURFACE: {
