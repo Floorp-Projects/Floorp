@@ -85,11 +85,6 @@ open class BrowserActivity : AppCompatActivity(), ComponentCallbacks2 {
             else -> super.onCreateView(parent, name, context, attrs)
         }
 
-    override fun onTrimMemory(level: Int) {
-        components.sessionManager.onLowMemory()
-        components.icons.onLowMemory()
-    }
-
     private fun openPopup(webExtensionState: WebExtensionState) {
         val intent = Intent(this, WebExtensionActionPopupActivity::class.java)
         intent.putExtra("web_extension_id", webExtensionState.id)

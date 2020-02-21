@@ -69,4 +69,11 @@ class SampleApplication : Application() {
             Logger.error("Failed to initialize web extension support", e)
         }
     }
+
+    override fun onTrimMemory(level: Int) {
+        super.onTrimMemory(level)
+
+        components.sessionManager.onTrimMemory(level)
+        components.icons.onTrimMemory(level)
+    }
 }

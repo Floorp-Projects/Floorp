@@ -4,6 +4,7 @@
 
 package mozilla.components.browser.session
 
+import android.content.ComponentCallbacks2
 import mozilla.components.browser.session.engine.EngineObserver
 import mozilla.components.browser.session.ext.syncDispatch
 import mozilla.components.browser.session.ext.toCustomTabSessionState
@@ -18,6 +19,7 @@ import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineSessionState
+import mozilla.components.support.base.memory.MemoryConsumer
 import mozilla.components.support.base.observer.Observable
 import java.lang.IllegalArgumentException
 
@@ -29,7 +31,7 @@ class SessionManager(
     val engine: Engine,
     private val store: BrowserStore? = null,
     private val delegate: LegacySessionManager = LegacySessionManager(engine, EngineSessionLinker(store))
-) : Observable<SessionManager.Observer> by delegate {
+) : Observable<SessionManager.Observer> by delegate, MemoryConsumer {
 
     /**
      * This class only exists for migrating from browser-session
@@ -318,9 +320,16 @@ class SessionManager(
      * Informs this [SessionManager] that the OS is in low memory condition so it
      * can reduce its allocated objects.
      */
+    @Deprecated("Use onTrimMemory instead.", replaceWith = ReplaceWith("onTrimMemory"))
     fun onLowMemory() {
         delegate.onLowMemory()
         store?.syncDispatch(SystemAction.LowMemoryAction)
+    }
+
+    override fun onTrimMemory(level: Int) {
+        if (level >= ComponentCallbacks2.TRIM_MEMORY_RUNNING_LOW) {
+            delegate.onLowMemory()
+        }
     }
 
     companion object {

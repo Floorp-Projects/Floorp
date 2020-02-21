@@ -4,6 +4,7 @@
 
 package mozilla.components.browser.icons
 
+import android.content.ComponentCallbacks2
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.drawable.Drawable
@@ -51,6 +52,7 @@ import mozilla.components.concept.engine.webextension.WebExtension
 import mozilla.components.concept.fetch.Client
 import mozilla.components.lib.state.ext.flowScoped
 import mozilla.components.support.base.log.logger.Logger
+import mozilla.components.support.base.memory.MemoryConsumer
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.filterChanged
 import java.lang.ref.WeakReference
 import java.util.concurrent.Executors
@@ -95,7 +97,7 @@ class BrowserIcons(
         DiskIconProcessor(sharedDiskCache)
     ),
     jobDispatcher: CoroutineDispatcher = Executors.newFixedThreadPool(THREADS).asCoroutineDispatcher()
-) {
+) : MemoryConsumer {
     private val logger = Logger("BrowserIcons")
     private val maximumSize = context.resources.getDimensionPixelSize(R.dimen.mozac_browser_icons_maximum_size)
     private val scope = CoroutineScope(jobDispatcher)
@@ -197,8 +199,18 @@ class BrowserIcons(
         }
     }
 
+    /**
+     * The device is running low on memory. This component should trim its memory usage.
+     */
+    @Deprecated("Use onTrimMemory instead.", replaceWith = ReplaceWith("onTrimMemory"))
     fun onLowMemory() {
         sharedMemoryCache.clear()
+    }
+
+    override fun onTrimMemory(level: Int) {
+        if (level >= ComponentCallbacks2.TRIM_MEMORY_RUNNING_LOW) {
+            sharedMemoryCache.clear()
+        }
     }
 
     private suspend fun subscribeToUpdates(
