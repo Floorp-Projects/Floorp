@@ -55,7 +55,7 @@ PostMessageEvent::PostMessageEvent(BrowsingContext* aSource,
       mScriptLocation(Some(aScriptLocation)),
       mIsFromPrivateWindow(aIsFromPrivateWindow) {}
 
-PostMessageEvent::~PostMessageEvent() {}
+PostMessageEvent::~PostMessageEvent() = default;
 
 NS_IMETHODIMP
 PostMessageEvent::Run() {

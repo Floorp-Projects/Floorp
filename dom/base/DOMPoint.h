@@ -59,7 +59,7 @@ class DOMPointReadOnly : public nsWrapperCache {
       JSStructuredCloneReader* aReader);
 
  protected:
-  virtual ~DOMPointReadOnly() {}
+  virtual ~DOMPointReadOnly() = default;
 
   // Shared implementation of ReadStructuredClone for DOMPoint and
   // DOMPointReadOnly.

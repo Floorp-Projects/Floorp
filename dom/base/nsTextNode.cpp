@@ -79,7 +79,7 @@ class nsAttributeTextNode final : public nsTextNode,
   RefPtr<nsAtom> mAttrName;
 };
 
-nsTextNode::~nsTextNode() {}
+nsTextNode::~nsTextNode() = default;
 
 // Use the CC variant of this, even though this class does not define
 // a new CC participant, to make QIing to the CC interfaces faster.

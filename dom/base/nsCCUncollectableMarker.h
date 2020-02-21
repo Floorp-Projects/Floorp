@@ -35,8 +35,8 @@ class nsCCUncollectableMarker final : public nsIObserver {
   static uint32_t sGeneration;
 
  private:
-  nsCCUncollectableMarker() {}
-  ~nsCCUncollectableMarker() {}
+  nsCCUncollectableMarker() = default;
+  ~nsCCUncollectableMarker() = default;
 };
 
 namespace mozilla {

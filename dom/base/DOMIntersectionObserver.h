@@ -20,7 +20,7 @@ class DOMIntersectionObserver;
 
 class DOMIntersectionObserverEntry final : public nsISupports,
                                            public nsWrapperCache {
-  ~DOMIntersectionObserverEntry() {}
+  ~DOMIntersectionObserverEntry() = default;
 
  public:
   DOMIntersectionObserverEntry(nsISupports* aOwner, DOMHighResTimeStamp aTime,

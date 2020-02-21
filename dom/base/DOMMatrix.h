@@ -230,7 +230,7 @@ class DOMMatrixReadOnly : public nsWrapperCache {
   nsAutoPtr<gfx::MatrixDouble> mMatrix2D;
   nsAutoPtr<gfx::Matrix4x4Double> mMatrix3D;
 
-  virtual ~DOMMatrixReadOnly() {}
+  virtual ~DOMMatrixReadOnly() = default;
 
   /**
    * Sets data from a fully validated and fixed-up matrix init,
@@ -319,7 +319,7 @@ class DOMMatrix : public DOMMatrixReadOnly {
   DOMMatrix* InvertSelf();
   DOMMatrix* SetMatrixValue(const nsACString&, ErrorResult&);
 
-  virtual ~DOMMatrix() {}
+  virtual ~DOMMatrix() = default;
 
  private:
   DOMMatrix(nsISupports* aParent, bool is2D)

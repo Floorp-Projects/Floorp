@@ -15,7 +15,7 @@ using namespace mozilla::dom;
 nsDOMCaretPosition::nsDOMCaretPosition(nsINode* aNode, uint32_t aOffset)
     : mOffset(aOffset), mOffsetNode(aNode), mAnonymousContentNode(nullptr) {}
 
-nsDOMCaretPosition::~nsDOMCaretPosition() {}
+nsDOMCaretPosition::~nsDOMCaretPosition() = default;
 
 nsINode* nsDOMCaretPosition::GetOffsetNode() const { return mOffsetNode; }
 

@@ -23,7 +23,7 @@ IdleRequest::IdleRequest(IdleRequestCallback* aCallback, uint32_t aHandle)
   MOZ_DIAGNOSTIC_ASSERT(mCallback);
 }
 
-IdleRequest::~IdleRequest() {}
+IdleRequest::~IdleRequest() = default;
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(IdleRequest)
 

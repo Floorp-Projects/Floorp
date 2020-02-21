@@ -29,7 +29,7 @@ class SameProcessMessageQueue {
     virtual nsresult HandleMessage() = 0;
 
    protected:
-    virtual ~Runnable() {}
+    virtual ~Runnable() = default;
 
    private:
     bool mDispatched;

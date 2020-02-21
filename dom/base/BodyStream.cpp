@@ -317,7 +317,7 @@ BodyStream::BodyStream(nsIGlobalObject* aGlobal,
   MOZ_DIAGNOSTIC_ASSERT(aStreamHolder);
 }
 
-BodyStream::~BodyStream() {}
+BodyStream::~BodyStream() = default;
 
 void BodyStream::ErrorPropagation(JSContext* aCx,
                                   const MutexAutoLock& aProofOfLock,

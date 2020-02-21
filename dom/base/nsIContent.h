@@ -799,7 +799,7 @@ class nsIContent : public nsINode {
    */
   nsAtom* DoGetID() const;
 
-  ~nsIContent() {}
+  ~nsIContent() = default;
 
  public:
 #ifdef DEBUG

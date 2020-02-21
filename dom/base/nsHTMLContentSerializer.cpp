@@ -40,7 +40,7 @@ nsresult NS_NewHTMLContentSerializer(nsIContentSerializer** aSerializer) {
 
 nsHTMLContentSerializer::nsHTMLContentSerializer() { mIsHTMLSerializer = true; }
 
-nsHTMLContentSerializer::~nsHTMLContentSerializer() {}
+nsHTMLContentSerializer::~nsHTMLContentSerializer() = default;
 
 NS_IMETHODIMP
 nsHTMLContentSerializer::AppendDocumentStart(Document* aDocument) {
