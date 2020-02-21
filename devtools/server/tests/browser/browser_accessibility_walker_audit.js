@@ -145,7 +145,7 @@ add_task(async function() {
     }
   }
 
-  const a11yWalker = await accessibility.getWalker();
+  const a11yWalker = accessibility.accessibleWalkerFront;
   ok(a11yWalker, "The AccessibleWalkerFront was returned");
   await accessibility.enable();
 
