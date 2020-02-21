@@ -393,8 +393,10 @@ ifneq ($(filter-out en-US x-test,$(AB_CD)),)
     $(call QUOTED_WILDCARD,$(topobjdir)/$(MOZ_BUILD_APP)/installer/windows/l10ngen/setup-stub.exe)
 endif
 
+ifdef MOZ_NORMANDY
 ifndef CROSS_COMPILE
   UPLOAD_FILES += $(call QUOTED_WILDCARD,$(MOZ_NORMANDY_JSON))
+endif
 endif
 
 ifdef MOZ_CODE_COVERAGE
