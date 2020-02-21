@@ -1722,26 +1722,6 @@ StyleAlignFlags nsContainerFrame::CSSAlignmentForAbsPosChild(
   return StyleAlignFlags::START;
 }
 
-#ifdef ACCESSIBILITY
-void nsContainerFrame::GetSpokenMarkerText(nsAString& aText) const {
-  aText.Truncate();
-  const nsStyleList* myList = StyleList();
-  if (myList->GetListStyleImage()) {
-    char16_t kDiscCharacter = 0x2022;
-    aText.Assign(kDiscCharacter);
-    aText.Append(' ');
-    return;
-  }
-  if (nsIFrame* marker = nsLayoutUtils::GetMarkerFrame(GetContent())) {
-    if (nsBulletFrame* bullet = do_QueryFrame(marker)) {
-      bullet->GetSpokenText(aText);
-    } else {
-      marker->GetContent()->GetTextContent(aText, IgnoreErrors());
-    }
-  }
-}
-#endif
-
 nsOverflowContinuationTracker::nsOverflowContinuationTracker(
     nsContainerFrame* aFrame, bool aWalkOOFFrames,
     bool aSkipOverflowContainerChildren)

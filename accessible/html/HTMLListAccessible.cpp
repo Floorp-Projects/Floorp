@@ -11,7 +11,7 @@
 #include "Role.h"
 #include "States.h"
 
-#include "nsContainerFrame.h"
+#include "nsBulletFrame.h"
 #include "nsLayoutUtils.h"
 
 using namespace mozilla;
@@ -38,14 +38,13 @@ HTMLLIAccessible::HTMLLIAccessible(nsIContent* aContent, DocAccessible* aDoc)
     : HyperTextAccessibleWrap(aContent, aDoc), mBullet(nullptr) {
   mType = eHTMLLiType;
 
-  if (nsIFrame* bulletFrame = nsLayoutUtils::GetMarkerFrame(aContent)) {
-    if (const nsStyleList* styleList = bulletFrame->StyleList()) {
-      if (styleList->GetListStyleImage() ||
-          !styleList->mCounterStyle.IsNone()) {
-        mBullet = new HTMLListBulletAccessible(mContent, mDoc);
-        Document()->BindToDocument(mBullet, nullptr);
-        AppendChild(mBullet);
-      }
+  if (nsBulletFrame* bulletFrame =
+          do_QueryFrame(nsLayoutUtils::GetMarkerFrame(aContent))) {
+    const nsStyleList* styleList = bulletFrame->StyleList();
+    if (styleList->GetListStyleImage() || !styleList->mCounterStyle.IsNone()) {
+      mBullet = new HTMLListBulletAccessible(mContent, mDoc);
+      Document()->BindToDocument(mBullet, nullptr);
+      AppendChild(mBullet);
     }
   }
 }
@@ -137,10 +136,20 @@ ENameValueFlag HTMLListBulletAccessible::Name(nsString& aName) const {
   aName.Truncate();
 
   // Native anonymous content, ARIA can't be used. Get list bullet text.
-  if (nsContainerFrame* frame = do_QueryFrame(mContent->GetPrimaryFrame())) {
-    frame->GetSpokenMarkerText(aName);
+  nsBulletFrame* frame = do_QueryFrame(GetFrame());
+  if (!frame) {
+    return eNameOK;
   }
 
+  if (frame->StyleList()->GetListStyleImage()) {
+    // Bullet is an image, so use default bullet character.
+    const char16_t kDiscCharacter = 0x2022;
+    aName.Assign(kDiscCharacter);
+    aName.Append(' ');
+    return eNameOK;
+  }
+
+  frame->GetSpokenText(aName);
   return eNameOK;
 }
 
