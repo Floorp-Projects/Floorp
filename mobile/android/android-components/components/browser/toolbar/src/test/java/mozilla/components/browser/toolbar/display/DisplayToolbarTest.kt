@@ -698,4 +698,15 @@ class DisplayToolbarTest {
         menuView.dismissMenu()
         assertTrue(wasDismissed)
     }
+
+    @Test
+    fun `url formatter used if provided`() {
+        val (_, displayToolbar) = createDisplayToolbar()
+        displayToolbar.url = "https://mozilla.org"
+        assertEquals(displayToolbar.url, displayToolbar.views.origin.url)
+
+        displayToolbar.urlFormatter = { it.replace("https://".toRegex(), "") }
+        displayToolbar.url = "https://mozilla.org"
+        assertEquals("mozilla.org", displayToolbar.views.origin.url)
+    }
 }
