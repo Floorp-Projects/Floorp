@@ -1233,6 +1233,7 @@ class MockXRInputSource {
     // Pointer data for DOM Overlay, set by setOverlayPointerPosition()
     if (this.overlay_pointer_position_) {
       input_state.overlayPointerPosition = this.overlay_pointer_position_;
+      this.overlay_pointer_position_ = null;
     }
 
     return input_state;
