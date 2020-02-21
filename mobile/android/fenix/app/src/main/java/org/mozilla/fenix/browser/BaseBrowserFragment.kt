@@ -98,8 +98,14 @@ import org.mozilla.fenix.theme.ThemeManager
 @Suppress("TooManyFunctions", "LargeClass")
 abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, SessionManager.Observer {
     protected lateinit var browserFragmentStore: BrowserFragmentStore
-    protected lateinit var browserInteractor: BrowserToolbarViewInteractor
-    protected lateinit var browserToolbarView: BrowserToolbarView
+
+    private var _browserInteractor: BrowserToolbarViewInteractor? = null
+    protected val browserInteractor: BrowserToolbarViewInteractor
+        get() = _browserInteractor!!
+
+    private var _browserToolbarView: BrowserToolbarView? = null
+    protected val browserToolbarView: BrowserToolbarView
+        get() = _browserToolbarView!!
 
     protected val readerViewFeature = ViewBoundFeatureWrapper<ReaderViewFeature>()
 
@@ -191,15 +197,16 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
                 topSiteStorage = requireComponents.core.topSiteStorage
             )
 
-            browserInteractor = BrowserInteractor(
+            _browserInteractor = BrowserInteractor(
                 browserToolbarController = browserToolbarController
             )
 
-            browserToolbarView = BrowserToolbarView(
+            _browserToolbarView = BrowserToolbarView(
                 container = view.browserLayout,
                 shouldUseBottomToolbar = context.settings().shouldUseBottomToolbar,
                 interactor = browserInteractor,
-                customTabSession = customTabSessionId?.let { sessionManager.findSessionById(it) }
+                customTabSession = customTabSessionId?.let { sessionManager.findSessionById(it) },
+                lifecycleOwner = this.viewLifecycleOwner
             )
 
             toolbarIntegration.set(
@@ -762,6 +769,15 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
                 }
             }
         }
+    }
+
+    /*
+     * Dereference these views when the fragment view is destroyed to prevent memory leaks
+     */
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _browserToolbarView = null
+        _browserInteractor = null
     }
 
     companion object {

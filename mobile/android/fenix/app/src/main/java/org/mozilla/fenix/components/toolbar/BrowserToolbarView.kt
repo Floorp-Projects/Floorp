@@ -11,9 +11,9 @@ import android.view.ViewGroup
 import android.widget.LinearLayout
 import android.widget.PopupWindow
 import androidx.annotation.LayoutRes
-import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
+import androidx.lifecycle.LifecycleOwner
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.extensions.LayoutContainer
 import kotlinx.android.synthetic.main.browser_toolbar_popup_window.view.*
@@ -45,7 +45,8 @@ class BrowserToolbarView(
     private val container: ViewGroup,
     private val shouldUseBottomToolbar: Boolean,
     private val interactor: BrowserToolbarViewInteractor,
-    private val customTabSession: Session?
+    private val customTabSession: Session?,
+    private val lifecycleOwner: LifecycleOwner
 ) : LayoutContainer {
 
     override val containerView: View?
@@ -188,7 +189,7 @@ class BrowserToolbarView(
                     hasAccountProblem = components.backgroundServices.accountManager.accountNeedsReauth(),
                     shouldReverseItems = !shouldUseBottomToolbar,
                     onItemTapped = { interactor.onBrowserToolbarMenuItemTapped(it) },
-                    lifecycleOwner = container.context as AppCompatActivity,
+                    lifecycleOwner = lifecycleOwner,
                     sessionManager = sessionManager,
                     bookmarksStorage = bookmarkStorage
                 )
