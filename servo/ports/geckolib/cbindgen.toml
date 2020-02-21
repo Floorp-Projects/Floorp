@@ -271,6 +271,22 @@ renaming_overrides_prefixing = true
   inline void ScaleBy(float);
 """
 
+"GenericCalcNode" = """
+ private:
+
+  template <typename ResultT, typename PercentageConverter>
+  ResultT ResolveInternal(ResultT aPercentageBasis,
+                          PercentageConverter aPercentageConverter) const;
+
+ public:
+  CSSCoord ResolveToCSSPixels(CSSCoord aPercentageBasis) const;
+
+  using CoordPercentageRounder = nscoord(*)(float);
+  nscoord Resolve(nscoord aBasis, CoordPercentageRounder) const;
+
+  void ScaleLengthsBy(float);
+"""
+
 "LengthPercentageUnion" = """
   using Self = StyleLengthPercentageUnion;
 
