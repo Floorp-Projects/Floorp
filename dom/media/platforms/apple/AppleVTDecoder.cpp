@@ -15,7 +15,6 @@
 #include "MediaData.h"
 #include "mozilla/ArrayUtils.h"
 #include "H264.h"
-#include "nsAutoPtr.h"
 #include "nsThreadUtils.h"
 #include "mozilla/Logging.h"
 #include "VideoUtils.h"
@@ -276,7 +275,7 @@ static void PlatformCallback(void* decompressionOutputRefCon,
   LOGEX(decoder, "AppleVideoDecoder %s status %d flags %d", __func__,
         static_cast<int>(status), flags);
 
-  nsAutoPtr<AppleVTDecoder::AppleFrameRef> frameRef(
+  UniquePtr<AppleVTDecoder::AppleFrameRef> frameRef(
       static_cast<AppleVTDecoder::AppleFrameRef*>(sourceFrameRefCon));
 
   // Validate our arguments.

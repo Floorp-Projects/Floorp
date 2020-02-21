@@ -20,7 +20,6 @@
 #  include "MediaDataDemuxer.h"
 #  include "MediaMetadataManager.h"
 #  include "MediaPromiseDefs.h"
-#  include "nsAutoPtr.h"
 #  include "PDMFactory.h"
 #  include "SeekTarget.h"
 

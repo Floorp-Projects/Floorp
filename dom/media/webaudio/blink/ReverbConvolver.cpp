@@ -102,17 +102,17 @@ ReverbConvolver::ReverbConvolver(const float* impulseResponseData,
     // at the same time
     int renderPhase = convolverRenderPhase + stagePhase;
 
-    nsAutoPtr<ReverbConvolverStage> stage(new ReverbConvolverStage(
+    UniquePtr<ReverbConvolverStage> stage(new ReverbConvolverStage(
         response, totalResponseLength, reverbTotalLatency, stageOffset,
         stageSize, fftSize, renderPhase, &m_accumulationBuffer));
 
     bool isBackgroundStage = false;
 
     if (this->useBackgroundThreads() && stageOffset > RealtimeFrameLimit) {
-      m_backgroundStages.AppendElement(stage.forget());
+      m_backgroundStages.AppendElement(std::move(stage));
       isBackgroundStage = true;
     } else
-      m_stages.AppendElement(stage.forget());
+      m_stages.AppendElement(std::move(stage));
 
     // Figure out next FFT size
     fftSize *= 2;

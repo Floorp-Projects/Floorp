@@ -22,7 +22,6 @@
 #include "MediaSpan.h"
 #include "SourceBufferTask.h"
 #include "TimeUnits.h"
-#include "nsAutoPtr.h"
 #include "nsTArray.h"
 
 namespace mozilla {
@@ -222,7 +221,7 @@ class TrackBuffersManager final
   // Recreate the ContainerParser and if aReuseInitData is true then
   // feed it with the previous init segment found.
   void RecreateParser(bool aReuseInitData);
-  nsAutoPtr<ContainerParser> mParser;
+  UniquePtr<ContainerParser> mParser;
 
   // Demuxer objects and methods.
   void AppendDataToCurrentInputBuffer(const MediaSpan& aData);

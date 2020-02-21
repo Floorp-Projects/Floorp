@@ -7,7 +7,6 @@
 
 #include "GMPLog.h"
 #include "mozilla/Unused.h"
-#include "nsAutoPtr.h"
 #include "nsComponentManagerUtils.h"
 
 namespace mozilla {
@@ -36,10 +35,10 @@ mozilla::ipc::IPCResult GMPTimerParent::RecvSetTimer(
   }
 
   nsresult rv;
-  nsAutoPtr<Context> ctx(new Context());
+  UniquePtr<Context> ctx(new Context());
 
   rv = NS_NewTimerWithFuncCallback(
-      getter_AddRefs(ctx->mTimer), &GMPTimerParent::GMPTimerExpired, ctx,
+      getter_AddRefs(ctx->mTimer), &GMPTimerParent::GMPTimerExpired, ctx.get(),
       aTimeoutMs, nsITimer::TYPE_ONE_SHOT, "gmp::GMPTimerParent::RecvSetTimer",
       mGMPEventTarget);
   NS_ENSURE_SUCCESS(rv, IPC_OK());
@@ -47,7 +46,7 @@ mozilla::ipc::IPCResult GMPTimerParent::RecvSetTimer(
   ctx->mId = aTimerId;
   ctx->mParent = this;
 
-  mTimers.PutEntry(ctx.forget());
+  mTimers.PutEntry(ctx.release());
 
   return IPC_OK();
 }
@@ -78,10 +77,10 @@ void GMPTimerParent::ActorDestroy(ActorDestroyReason aWhy) {
 /* static */
 void GMPTimerParent::GMPTimerExpired(nsITimer* aTimer, void* aClosure) {
   MOZ_ASSERT(aClosure);
-  nsAutoPtr<Context> ctx(static_cast<Context*>(aClosure));
+  UniquePtr<Context> ctx(static_cast<Context*>(aClosure));
   MOZ_ASSERT(ctx->mParent);
   if (ctx->mParent) {
-    ctx->mParent->TimerExpired(ctx);
+    ctx->mParent->TimerExpired(ctx.get());
   }
 }
 

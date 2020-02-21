@@ -6,8 +6,8 @@
 #define GetUserMediaRequest_h__
 
 #include "mozilla/ErrorResult.h"
+#include "mozilla/UniquePtr.h"
 #include "nsISupportsImpl.h"
-#include "nsAutoPtr.h"
 #include "nsWrapperCache.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "nsPIDOMWindow.h"
@@ -49,7 +49,7 @@ class GetUserMediaRequest : public nsISupports, public nsWrapperCache {
   const nsString mCallID;
   const nsString mRawID;
   const nsString mMediaSource;
-  nsAutoPtr<MediaStreamConstraints> mConstraints;
+  UniquePtr<MediaStreamConstraints> mConstraints;
   bool mIsSecure;
   bool mIsHandlingUserInput;
 };

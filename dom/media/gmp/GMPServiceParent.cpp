@@ -27,7 +27,6 @@
 #include "mozilla/SystemGroup.h"
 #include "mozilla/Unused.h"
 #include "nsAppDirectoryServiceDefs.h"
-#include "nsAutoPtr.h"
 #include "nsComponentManagerUtils.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsDirectoryServiceUtils.h"
@@ -1735,11 +1734,12 @@ bool GMPServiceParent::Create(Endpoint<PGMPServiceParent>&& aGMPService) {
   nsresult rv = gmp->GetThread(getter_AddRefs(gmpThread));
   NS_ENSURE_SUCCESS(rv, false);
 
-  nsAutoPtr<GMPServiceParent> serviceParent(new GMPServiceParent(gmp));
+  UniquePtr<GMPServiceParent> serviceParent(new GMPServiceParent(gmp));
   bool ok;
-  rv = gmpThread->Dispatch(
-      new OpenPGMPServiceParent(serviceParent, std::move(aGMPService), &ok),
-      NS_DISPATCH_SYNC);
+  rv =
+      gmpThread->Dispatch(new OpenPGMPServiceParent(
+                              serviceParent.get(), std::move(aGMPService), &ok),
+                          NS_DISPATCH_SYNC);
 
   if (NS_WARN_IF(NS_FAILED(rv) || !ok)) {
     return false;
@@ -1747,7 +1747,7 @@ bool GMPServiceParent::Create(Endpoint<PGMPServiceParent>&& aGMPService) {
 
   // Now that the service parent is set up, it will be destroyed by
   // ActorDestroy.
-  Unused << serviceParent.forget();
+  Unused << serviceParent.release();
 
   return true;
 }

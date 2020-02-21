@@ -11,7 +11,6 @@
 #include "mozilla/RefPtr.h"
 #include "MP4Interval.h"
 #include "MP4Metadata.h"
-#include "nsAutoPtr.h"
 #include "SinfParser.h"
 
 using namespace mozilla::media;
@@ -418,7 +417,8 @@ Index::Index(const IndiceWrapper& aIndices, ByteStream* aSource,
              uint32_t aTrackId, bool aIsAudio)
     : mSource(aSource), mIsAudio(aIsAudio) {
   if (!aIndices.Length()) {
-    mMoofParser = new MoofParser(aSource, AsVariant(aTrackId), aIsAudio);
+    mMoofParser =
+        MakeUnique<MoofParser>(aSource, AsVariant(aTrackId), aIsAudio);
   } else {
     if (!mIndex.SetCapacity(aIndices.Length(), fallible)) {
       // OOM.

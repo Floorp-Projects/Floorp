@@ -11,7 +11,6 @@
 #include "MoofParser.h"
 #include "mozilla/Result.h"
 #include "MP4Interval.h"
-#include "nsAutoPtr.h"
 #include "nsISupportsImpl.h"
 #include "TimeUnits.h"
 
@@ -111,7 +110,7 @@ class Index {
   mozilla::media::TimeIntervals ConvertByteRangesToTimeRanges(
       const mozilla::MediaByteRangeSet& aByteRanges);
   uint64_t GetEvictionOffset(Microseconds aTime);
-  bool IsFragmented() { return mMoofParser; }
+  bool IsFragmented() { return !!mMoofParser; }
 
   friend class SampleIterator;
 
@@ -123,7 +122,7 @@ class Index {
   ByteStream* mSource;
   FallibleTArray<Sample> mIndex;
   FallibleTArray<MP4DataOffset> mDataOffset;
-  nsAutoPtr<MoofParser> mMoofParser;
+  UniquePtr<MoofParser> mMoofParser;
   nsTArray<SampleIterator*> mIterators;
 
   // ConvertByteRangesToTimeRanges cache

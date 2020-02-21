@@ -15,7 +15,6 @@
 #include "mozilla/Mutex.h"
 #include "mozilla/StateWatching.h"
 #include "mozilla/TaskQueue.h"
-#include "nsAutoPtr.h"
 #include "nsAutoRef.h"
 #include "nsIRunnable.h"
 #include "nsTArray.h"

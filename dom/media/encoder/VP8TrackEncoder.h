@@ -96,9 +96,9 @@ class VP8TrackEncoder : public VideoTrackEncoder {
 
   // VP8 relative members.
   // Codec context structure.
-  nsAutoPtr<vpx_codec_ctx_t> mVPXContext;
+  UniquePtr<vpx_codec_ctx_t> mVPXContext;
   // Image Descriptor.
-  nsAutoPtr<vpx_image_t> mVPXImageWrapper;
+  UniquePtr<vpx_image_t> mVPXImageWrapper;
 };
 
 }  // namespace mozilla

@@ -6,7 +6,6 @@
 
 #include "DynamicsCompressorNode.h"
 #include "mozilla/dom/DynamicsCompressorNodeBinding.h"
-#include "nsAutoPtr.h"
 #include "AudioNodeEngine.h"
 #include "AudioNodeTrack.h"
 #include "AudioDestinationNode.h"
@@ -82,8 +81,8 @@ class DynamicsCompressorNodeEngine final : public AudioNodeEngine {
     const uint32_t channelCount = aInput.ChannelCount();
     if (mCompressor->numberOfChannels() != channelCount) {
       // Create a new compressor object with a new channel count
-      mCompressor = new WebCore::DynamicsCompressor(aTrack->mSampleRate,
-                                                    aInput.ChannelCount());
+      mCompressor = MakeUnique<WebCore::DynamicsCompressor>(
+          aTrack->mSampleRate, aInput.ChannelCount());
     }
 
     TrackTime pos = mDestination->GraphTimeToTrackTime(aFrom);
@@ -157,7 +156,7 @@ class DynamicsCompressorNodeEngine final : public AudioNodeEngine {
   AudioParamTimeline mRatio;
   AudioParamTimeline mAttack;
   AudioParamTimeline mRelease;
-  nsAutoPtr<DynamicsCompressor> mCompressor;
+  UniquePtr<DynamicsCompressor> mCompressor;
 };
 
 DynamicsCompressorNode::DynamicsCompressorNode(AudioContext* aContext)

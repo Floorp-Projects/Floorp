@@ -63,7 +63,7 @@
 
 #include <vector>
 
-#include "nsAutoPtr.h"
+#include "mozilla/UniquePtr.h"
 
 #include "energy_endpointer_params.h"
 
@@ -142,7 +142,7 @@ class EnergyEndpointer {
   float sample_rate_;  // Sampling rate.
 
   // Ring buffers to hold the speech activity history.
-  nsAutoPtr<HistoryRing> history_;
+  UniquePtr<HistoryRing> history_;
 
   // Configuration parameters.
   EnergyEndpointerParams params_;

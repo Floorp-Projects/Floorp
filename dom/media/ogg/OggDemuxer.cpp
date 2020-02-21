@@ -582,8 +582,7 @@ bool OggDemuxer::ReadOggChain(const media::TimeUnit& aLastEndTime) {
     return false;
   }
 
-  nsAutoPtr<OggCodecState> codecState;
-  codecState = OggCodecState::Create(&page);
+  UniquePtr<OggCodecState> codecState(OggCodecState::Create(&page));
   if (!codecState) {
     return false;
   }
@@ -602,7 +601,7 @@ bool OggDemuxer::ReadOggChain(const media::TimeUnit& aLastEndTime) {
 
   OggCodecState* state;
 
-  mCodecStore.Add(serial, codecState.forget());
+  mCodecStore.Add(serial, codecState.release());
   state = mCodecStore.Get(serial);
 
   NS_ENSURE_TRUE(state != nullptr, false);
@@ -670,7 +669,7 @@ bool OggDemuxer::ReadOggChain(const media::TimeUnit& aLastEndTime) {
     if (mTimedMetadataEvent) {
       mTimedMetadataEvent->Notify(
           TimedMetadata(mDecodedAudioDuration, std::move(tags),
-                        nsAutoPtr<MediaInfo>(new MediaInfo(mInfo))));
+                        UniquePtr<MediaInfo>(new MediaInfo(mInfo))));
     }
     // Setup a new TrackInfo so that the MediaFormatReader will flush the
     // current decoder.
