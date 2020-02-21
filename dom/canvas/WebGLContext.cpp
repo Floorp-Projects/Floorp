@@ -2208,7 +2208,7 @@ webgl::LinkActiveInfo GetLinkActiveInfo(
       std::vector<GLint> blockMatrixStrideList(count, -1);
       std::vector<GLint> blockIsRowMajorList(count, 0);
 
-      if (webgl2) {
+      if (webgl2 && count) {
         std::vector<GLuint> activeIndices;
         activeIndices.reserve(count);
         for (const auto i : IntegerRange(count)) {
