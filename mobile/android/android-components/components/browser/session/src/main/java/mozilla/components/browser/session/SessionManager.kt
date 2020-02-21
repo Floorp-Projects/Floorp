@@ -19,6 +19,7 @@ import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineSessionState
+import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.base.memory.MemoryConsumer
 import mozilla.components.support.base.observer.Observable
 import java.lang.IllegalArgumentException
@@ -26,12 +27,14 @@ import java.lang.IllegalArgumentException
 /**
  * This class provides access to a centralized registry of all active sessions.
  */
-@Suppress("TooManyFunctions")
+@Suppress("TooManyFunctions", "LargeClass")
 class SessionManager(
     val engine: Engine,
     private val store: BrowserStore? = null,
-    private val delegate: LegacySessionManager = LegacySessionManager(engine, EngineSessionLinker(store))
+    private val linker: EngineSessionLinker = EngineSessionLinker(store),
+    private val delegate: LegacySessionManager = LegacySessionManager(engine, linker)
 ) : Observable<SessionManager.Observer> by delegate, MemoryConsumer {
+    private val logger = Logger("SessionManager")
 
     /**
      * This class only exists for migrating from browser-session
@@ -64,17 +67,22 @@ class SessionManager(
         }
 
         fun unlink(session: Session) {
-            session.engineSessionHolder.engineObserver?.let { observer ->
-                session.engineSessionHolder.apply {
-                    engineSession?.unregister(observer)
-                    engineSession?.close()
-                    engineSession = null
-                    engineSessionState = null
-                    engineObserver = null
-                }
+            val observer = session.engineSessionHolder.engineObserver
+            val engineSession = session.engineSessionHolder.engineSession
+
+            if (observer != null && engineSession != null) {
+                engineSession.unregister(observer)
             }
 
+            session.engineSessionHolder.engineSession = null
+            session.engineSessionHolder.engineObserver = null
+            session.engineSessionHolder.engineSessionState = null
+
             store?.syncDispatch(UnlinkEngineSessionAction(session.id))
+
+            // Now, that neither the session manager nor the store keep a reference to the engine
+            // session, we can close it.
+            engineSession?.close()
         }
     }
 
@@ -322,14 +330,53 @@ class SessionManager(
      */
     @Deprecated("Use onTrimMemory instead.", replaceWith = ReplaceWith("onTrimMemory"))
     fun onLowMemory() {
-        delegate.onLowMemory()
-        store?.syncDispatch(SystemAction.LowMemoryAction)
+        onTrimMemory(ComponentCallbacks2.TRIM_MEMORY_MODERATE)
     }
 
+    @Synchronized
+    @Suppress("NestedBlockDepth")
     override fun onTrimMemory(level: Int) {
-        if (level >= ComponentCallbacks2.TRIM_MEMORY_RUNNING_LOW) {
-            delegate.onLowMemory()
+        val clearThumbnails = level >= ComponentCallbacks2.TRIM_MEMORY_RUNNING_LOW
+        val closeEngineSessions = level >= ComponentCallbacks2.TRIM_MEMORY_RUNNING_CRITICAL
+
+        logger.debug("onTrimMemory($level): clearThumbnails=$clearThumbnails, closeEngineSessions=$closeEngineSessions")
+
+        if (!clearThumbnails && !closeEngineSessions) {
+            // Nothing to do for now.
+            return
         }
+
+        val selectedSession = selectedSession
+        val states = mutableMapOf<String, EngineSessionState>()
+        val sessions = sessions
+
+        var clearedThumbnails = 0
+        var unlinkedEngineSessions = 0
+
+        sessions.forEach {
+            if (it != selectedSession) {
+                if (clearThumbnails) {
+                    it.thumbnail = null
+                    clearedThumbnails++
+                }
+
+                if (closeEngineSessions) {
+                    val state = it.engineSessionHolder.engineSession?.saveState()
+                    linker.unlink(it)
+
+                    if (state != null) {
+                        it.engineSessionHolder.engineSessionState = state
+                        states[it.id] = state
+                    }
+
+                    unlinkedEngineSessions++
+                }
+            }
+        }
+
+        logger.debug("Cleared $clearedThumbnails thumbnail(s) and unlinked $unlinkedEngineSessions engine sessions(s)")
+
+        store?.syncDispatch(SystemAction.LowMemoryAction(states))
     }
 
     companion object {

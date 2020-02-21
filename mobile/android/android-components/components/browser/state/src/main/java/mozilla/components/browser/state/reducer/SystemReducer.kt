@@ -6,6 +6,7 @@ package mozilla.components.browser.state.reducer
 
 import mozilla.components.browser.state.action.SystemAction
 import mozilla.components.browser.state.state.BrowserState
+import mozilla.components.browser.state.state.EngineState
 
 internal object SystemReducer {
     /**
@@ -16,7 +17,17 @@ internal object SystemReducer {
             is SystemAction.LowMemoryAction -> {
                 val updatedTabs = state.tabs.map {
                     if (state.selectedTabId != it.id) {
-                        it.copy(content = it.content.copy(thumbnail = null))
+                        it.copy(
+                            content = it.content.copy(thumbnail = null),
+                            engineState = if (it.id in action.states) {
+                                EngineState(
+                                    engineSession = null,
+                                    engineSessionState = action.states[it.id]
+                                )
+                            } else {
+                                it.engineState
+                            }
+                        )
                     } else {
                         it
                     }

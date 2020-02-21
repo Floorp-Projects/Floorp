@@ -17,6 +17,8 @@ import mozilla.components.support.ktx.android.content.isMainProcess
 import mozilla.components.support.webextensions.WebExtensionSupport
 
 class SampleApplication : Application() {
+    private val logger = Logger("SampleApplication")
+
     val components by lazy { Components(this) }
 
     override fun onCreate() {
@@ -72,6 +74,8 @@ class SampleApplication : Application() {
 
     override fun onTrimMemory(level: Int) {
         super.onTrimMemory(level)
+
+        logger.debug("onTrimMemory: $level")
 
         components.sessionManager.onTrimMemory(level)
         components.icons.onTrimMemory(level)

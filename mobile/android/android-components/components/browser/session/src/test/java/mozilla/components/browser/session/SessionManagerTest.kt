@@ -753,6 +753,7 @@ class SessionManagerTest {
     }
 
     @Test
+    @Suppress("Deprecation")
     fun `thumbnails of all but selected session should be removed on low memory`() {
         val manager = SessionManager(mock())
 

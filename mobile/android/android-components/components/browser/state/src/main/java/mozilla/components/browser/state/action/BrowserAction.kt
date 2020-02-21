@@ -22,9 +22,9 @@ import mozilla.components.concept.engine.EngineSessionState
 import mozilla.components.concept.engine.HitResult
 import mozilla.components.concept.engine.content.blocking.Tracker
 import mozilla.components.concept.engine.prompt.PromptRequest
+import mozilla.components.concept.engine.search.SearchRequest
 import mozilla.components.concept.engine.webextension.WebExtensionBrowserAction
 import mozilla.components.concept.engine.webextension.WebExtensionPageAction
-import mozilla.components.concept.engine.search.SearchRequest
 import mozilla.components.concept.engine.window.WindowRequest
 import mozilla.components.lib.state.Action
 
@@ -40,8 +40,13 @@ sealed class SystemAction : BrowserAction() {
     /**
      * Optimizes the [BrowserState] by removing unneeded and optional
      * resources if the system is in a low memory condition.
+     *
+     * @param states map of session ids to engine session states where the engine session was closed
+     * by SessionManager.
      */
-    object LowMemoryAction : SystemAction()
+    data class LowMemoryAction(
+        val states: Map<String, EngineSessionState>
+    ) : SystemAction()
 }
 
 /**

@@ -46,6 +46,10 @@ permalink: /changelog/
   * ⚠️ **This is a breaking change**: Added `defaultTabsFilter` to `TabsFeature` for initial presenting of tabs.
     * `TabsFeature.filterTabs` also uses the same filter if no new filter is provided.
 
+* **browser-session**
+  * SessionManager will now close internal `EngineSession` instances on memory pressure when `onTrimMemory()` gets called
+  * `SessionManager.onLowMemory()` is now deprecated and `SessionManager.onTrimMemory(level)` should be used instead.
+
 # 34.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v33.0.0...v34.0.0)
