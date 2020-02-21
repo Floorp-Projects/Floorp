@@ -14,6 +14,7 @@ import mozilla.components.lib.crash.Crash
 import mozilla.components.lib.crash.CrashReporter
 import mozilla.components.support.test.any
 import mozilla.components.support.test.eq
+import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.rule.MainCoroutineRule
 import org.junit.After
@@ -113,5 +114,14 @@ class SendCrashReportServiceTest {
             "/data/data/org.mozilla.samples.browser/files/mozilla/Crash Reports/pending/3ba5f665-8422-dc8e-a88e-fc65c081d304.extra",
             nativeCrash.extrasPath
         )
+    }
+
+    @Test
+    fun `notification tag and id is added to the report intent`() {
+        val crash: Crash = mock()
+        val intent = SendCrashReportService.createReportIntent(testContext, crash, "test_tag", 123)
+
+        assertEquals(intent.getStringExtra(NOTIFICATION_TAG_KEY), "test_tag")
+        assertEquals(intent.getIntExtra(NOTIFICATION_ID_KEY, 0), 123)
     }
 }

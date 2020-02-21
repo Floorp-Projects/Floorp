@@ -38,7 +38,7 @@ internal class CrashNotification(
         )
 
         val reportPendingIntent = SendCrashReportService
-            .createReportIntent(context, crash)
+            .createReportIntent(context, crash, NOTIFICATION_TAG, NOTIFICATION_ID)
             .asForegroundServicePendingIntent(
                 context, SharedIdsHelper.getNextIdForTag(context, PENDING_INTENT_TAG)
             )
