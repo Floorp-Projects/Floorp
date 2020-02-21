@@ -169,23 +169,17 @@ async function releaseActors(state, client, dispatch) {
     return;
   }
 
-  const watchpoints = getWatchpoints(state);
-  let released = false;
+  let promises = [];
   for (const actor of actors) {
-    // Watchpoints are stored in object actors.
-    // If we release the actor we lose the watchpoint.
-    if (!watchpoints.has(actor)) {
-      await client.releaseActor(actor);
-      released = true;
-    }
+    promises.push(client.releaseActor(actor));
   }
 
-  if (released) {
-    dispatch({
-      type: "RELEASED_ACTORS",
-      data: { actors },
-    });
-  }
+  await Promise.all(promises);
+
+  dispatch({
+    type: "RELEASED_ACTORS",
+    data: { actors },
+  });
 }
 
 function invokeGetter(node: Node, receiverId: string | null) {
