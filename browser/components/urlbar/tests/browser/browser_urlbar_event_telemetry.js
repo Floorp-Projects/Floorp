@@ -460,8 +460,7 @@ const tests = [
 
   async function(win) {
     info("Open the panel with dropmarker, type something, Enter.");
-    let dropmarkerWasHidden = win.gURLBar.dropmarker.hidden;
-    win.gURLBar.dropmarker.hidden = false;
+    Services.prefs.setBoolPref("browser.urlbar.openViewOnFocus", false);
     win.gURLBar.select();
     let promise = BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
     await UrlbarTestUtils.promisePopupOpen(win, () => {
@@ -470,7 +469,7 @@ const tests = [
     await promiseAutocompleteResultPopup("x", win, true);
     EventUtils.synthesizeKey("VK_RETURN", {}, win);
     await promise;
-    win.gURLBar.dropmarker.hidden = dropmarkerWasHidden;
+    Services.prefs.clearUserPref("browser.urlbar.openViewOnFocus");
     return {
       category: "urlbar",
       method: "engagement",
@@ -842,8 +841,7 @@ const tests = [
 
   async function(win) {
     info("Open the panel with dropmarker, type something, blur it.");
-    let dropmarkerWasHidden = win.gURLBar.dropmarker.hidden;
-    win.gURLBar.dropmarker.hidden = false;
+    Services.prefs.setBoolPref("browser.urlbar.openViewOnFocus", false);
     await BrowserTestUtils.withNewTab(
       { gBrowser: win.gBrowser, url: "about:blank" },
       async browser => {
@@ -855,7 +853,7 @@ const tests = [
         win.gURLBar.blur();
       }
     );
-    win.gURLBar.dropmarker.hidden = dropmarkerWasHidden;
+    Services.prefs.clearUserPref("browser.urlbar.openViewOnFocus");
     return {
       category: "urlbar",
       method: "abandonment",

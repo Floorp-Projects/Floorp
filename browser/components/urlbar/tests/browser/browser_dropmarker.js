@@ -4,13 +4,8 @@
 
 "use strict";
 
-add_task(async function setup() {
-  if (gURLBar.dropmarker.hidden) {
-    gURLBar.dropmarker.hidden = false;
-    registerCleanupFunction(() => {
-      gURLBar.dropmarker.hidden = true;
-    });
-  }
+SpecialPowers.pushPrefEnv({
+  set: [["browser.urlbar.openViewOnFocus", false]],
 });
 
 add_task(async function basic() {
