@@ -123,8 +123,9 @@ class MediaTransportHandler {
   sigslot::signal1<dom::RTCIceGatheringState> SignalGatheringStateChange;
   sigslot::signal1<dom::RTCIceConnectionState> SignalConnectionStateChange;
 
-  sigslot::signal2<const std::string&, MediaPacket&> SignalPacketReceived;
-  sigslot::signal2<const std::string&, MediaPacket&> SignalEncryptedSending;
+  sigslot::signal2<const std::string&, const MediaPacket&> SignalPacketReceived;
+  sigslot::signal2<const std::string&, const MediaPacket&>
+      SignalEncryptedSending;
   sigslot::signal2<const std::string&, TransportLayer::State> SignalStateChange;
   sigslot::signal2<const std::string&, TransportLayer::State>
       SignalRtcpStateChange;
@@ -139,9 +140,10 @@ class MediaTransportHandler {
   void OnAlpnNegotiated(const std::string& aAlpn);
   void OnGatheringStateChange(dom::RTCIceGatheringState aState);
   void OnConnectionStateChange(dom::RTCIceConnectionState aState);
-  void OnPacketReceived(const std::string& aTransportId, MediaPacket& aPacket);
+  void OnPacketReceived(const std::string& aTransportId,
+                        const MediaPacket& aPacket);
   void OnEncryptedSending(const std::string& aTransportId,
-                          MediaPacket& aPacket);
+                          const MediaPacket& aPacket);
   void OnStateChange(const std::string& aTransportId,
                      TransportLayer::State aState);
   void OnRtcpStateChange(const std::string& aTransportId,
