@@ -6,7 +6,11 @@ add_task(async function testLocalStorage() {
   async function background() {
     function openTabs() {
       let promise = new Promise(resolve => {
-        let tabURLs = ["http://example.com/", "http://example.net/"];
+        // Open tabs on every one of the urls that the test extension
+        // content script is going to match.
+        const manifest = browser.runtime.getManifest();
+        const tabURLs = manifest.content_scripts[0].matches;
+        browser.test.log(`Opening tabs on ${JSON.stringify(tabURLs)}`);
 
         let tabs;
         let waitingCount = tabURLs.length;
@@ -52,6 +56,14 @@ add_task(async function testLocalStorage() {
     await browser.tabs.sendMessage(tabs[0].id, "checkLocalStorageCleared");
     await browser.tabs.sendMessage(tabs[1].id, "checkLocalStorageSet");
 
+    if (SpecialPowers.Services.lsm.nextGenLocalStorageEnabled === false) {
+      // This assertion fails when localStorage is using the legacy
+      // implementation (See Bug 1595431).
+      browser.test.log("Skipped assertion on nextGenLocalStorageEnabled=false");
+    } else {
+      await browser.tabs.sendMessage(tabs[2].id, "checkLocalStorageSet");
+    }
+
     await sendMessageToTabs(tabs, "resetLocalStorage");
     await sendMessageToTabs(tabs, "checkLocalStorageSet");
     await browser.browsingData.removeLocalStorage({});
@@ -90,7 +102,11 @@ add_task(async function testLocalStorage() {
       permissions: ["browsingData"],
       content_scripts: [
         {
-          matches: ["http://example.com/", "http://example.net/"],
+          matches: [
+            "http://example.com/",
+            "http://example.net/",
+            "http://test1.example.com/",
+          ],
           js: ["content-script.js"],
           run_at: "document_start",
         },
