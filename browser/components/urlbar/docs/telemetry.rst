@@ -76,6 +76,71 @@ FX_URLBAR_SELECTED_RESULT_INDEX_BY_TYPE
   URLBAR_SELECTED_RESULT_TYPES). For each key, this records the indexes of
   picked results for that result type.
 
+Scalars
+-------
+
+urlbar.tips
+  This is a keyed scalar whose values are uints and are incremented each time a
+  tip result is shown, a tip is picked, and a tip's help button is picked. The
+  keys are:
+
+  - ``intervention_clear-help``
+    Incremented when the user picks the help button in the clear-history search
+    intervention.
+  - ``intervention_clear-picked``
+    Incremented when the user picks the clear-history search intervention.
+  - ``intervention_clear-shown``
+    Incremented when the clear-history search intervention is shown.
+  - ``intervention_refresh-help``
+    Incremented when the user picks the help button in the refresh-Firefox
+    search intervention.
+  - ``intervention_refresh-picked``
+    Incremented when the user picks the refresh-Firefox search intervention.
+  - ``intervention_refresh-shown``
+    Incremented when the refresh-Firefox search intervention is shown.
+  - ``intervention_update_ask-help``
+    Incremented when the user picks the help button in the update_ask search
+    intervention, which is shown when there's a Firefox update available but the
+    user's preference says we should ask them to download and apply it.
+  - ``intervention_update_ask-picked``
+    Incremented when the user picks the update_ask search intervention.
+  - ``intervention_update_ask-shown``
+    Incremented when the update_ask search intervention is shown.
+  - ``intervention_update_refresh-help``
+    Incremented when the user picks the help button in the update_refresh search
+    intervention, which is shown when the user's browser is up to date but they
+    triggered the update intervention. We show this special refresh intervention
+    instead.
+  - ``intervention_update_refresh-picked``
+    Incremented when the user picks the update_refresh search intervention.
+  - ``intervention_update_refresh-shown``
+    Incremented when the update_refresh search intervention is shown.
+  - ``intervention_update_restart-help``
+    Incremented when the user picks the help button in the update_restart search
+    intervention, which is shown when there's an update and it's been downloaded
+    and applied. The user needs to restart to finish.
+  - ``intervention_update_restart-picked``
+    Incremented when the user picks the update_restart search intervention.
+  - ``intervention_update_restart-shown``
+    Incremented when the update_restart search intervention is shown.
+  - ``intervention_update_web-help``
+    Incremented when the user picks the help button in the update_web search
+    intervention, which is shown when we can't update the browser or possibly
+    even check for updates for some reason, so the user should download the
+    latest version from the web.
+  - ``intervention_update_web-picked``
+    Incremented when the user picks the update_web search intervention.
+  - ``intervention_update_web-shown``
+    Incremented when the update_web search intervention is shown.
+  - ``searchTip_onboard-picked``
+    Incremented when the user picks the onboarding search tip.
+  - ``searchTip_onboard-shown``
+    Incremented when the onboarding search tip is shown.
+  - ``searchTip_redirect-picked``
+    Incremented when the user picks the redirect search tip.
+  - ``searchTip_redirect-shown``
+    Incremented when the redirect search tip is shown.
+
 Event Telemetry
 ---------------
 
