@@ -191,7 +191,6 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
                 },
                 openInFenixIntent = Intent(context, IntentReceiverActivity::class.java).apply {
                     action = Intent.ACTION_VIEW
-                    flags = Intent.FLAG_ACTIVITY_NEW_TASK
                 },
                 bookmarkTapped = { lifecycleScope.launch { bookmarkTapped(it) } },
                 scope = lifecycleScope,

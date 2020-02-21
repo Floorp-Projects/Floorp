@@ -108,7 +108,14 @@
             android:taskAffinity=""
             android:windowSoftInputMode="adjustResize|stateAlwaysHidden" />
 
-        <activity android:name=".IntentReceiverActivity" android:theme="@style/Theme.Transparent">
+        <activity
+            android:name=".IntentReceiverActivity"
+            android:theme="@style/Theme.Transparent"
+            android:relinquishTaskIdentity="true"
+            android:taskAffinity=""
+            android:exported="true"
+            android:excludeFromRecents="true" >
+
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
 

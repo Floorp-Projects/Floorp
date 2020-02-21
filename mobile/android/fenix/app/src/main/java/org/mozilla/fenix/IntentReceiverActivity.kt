@@ -57,6 +57,15 @@ class IntentReceiverActivity : Activity() {
                 modeDependentProcessors +
                 NewTabShortcutIntentProcessor()
 
+        // Explicitly remove the new task and clear task flags (Our browser activity is a single
+        // task activity and we never want to start a second task here).
+        intent.flags = intent.flags and Intent.FLAG_ACTIVITY_NEW_TASK.inv()
+        intent.flags = intent.flags and Intent.FLAG_ACTIVITY_CLEAR_TASK.inv()
+
+        // IntentReceiverActivity is started with the "excludeFromRecents" flag (set in manifest). We
+        // do not want to propagate this flag from the intent receiver activity to the browser.
+        intent.flags = intent.flags and Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS.inv()
+
         // Call process for side effects, short on the first that returns true
         intentProcessors.any { it.process(intent) }
 
@@ -66,8 +75,8 @@ class IntentReceiverActivity : Activity() {
         intent.setClassName(applicationContext, intentProcessorType.activityClassName)
         intent.putExtra(HomeActivity.OPEN_TO_BROWSER, intentProcessorType.shouldOpenToBrowser(intent))
 
-        // finish() before starting another activity. Don't keep this on the activities back stack.
-        finish()
         startActivity(intent)
+        // must finish() after starting the other activity
+        finish()
     }
 }
