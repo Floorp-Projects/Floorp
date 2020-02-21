@@ -5,6 +5,7 @@
 != mask.yaml green.yaml
 == aligned-layer-rect.yaml aligned-layer-rect-ref.yaml
 == mask-transformed-to-empty-rect.yaml mask-transformed-to-empty-rect-ref.yaml
+== fuzzy(110,155) mask-transformed-skew.yaml mask-transformed-skew-ref.yaml
 platform(linux,mac) == rounded-corners.yaml rounded-corners.png
 != mask.yaml out-of-bounds.yaml
 platform(linux,mac) fuzzy(1,17500) color_targets(3) alpha_targets(1) == mask-atomicity.yaml mask-atomicity-ref.yaml
