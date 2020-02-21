@@ -37,6 +37,8 @@ inactive-css-property-is-impossible-to-override-in-visited = It’s impossible t
 
 inactive-css-position-property-on-unpositioned-box = <strong>{ $property }</strong> has no effect on this element since it’s not a positioned element.
 
+inactive-text-overflow-when-no-overflow = <strong>{ $property }</strong> has no effect on this element since <strong>overflow:hidden</strong> is not set.
+
 ## In the Rule View when a CSS property cannot be successfully applied we display
 ## an icon. When this icon is hovered this message is displayed to explain how
 ## the problem can be solved.
@@ -64,3 +66,5 @@ inactive-css-non-replaced-inline-or-table-column-or-column-group-fix = Try addin
 inactive-css-not-display-block-on-floated-fix = Try removing <strong>float</strong> or adding <strong>display:block</strong>. { learn-more }
 
 inactive-css-position-property-on-unpositioned-box-fix = Try setting its <strong>position</strong> property to something other than <strong>static</strong>. { learn-more }
+
+inactive-text-overflow-when-no-overflow-fix = Try adding <strong>overflow:hidden</strong>. { learn-more }
