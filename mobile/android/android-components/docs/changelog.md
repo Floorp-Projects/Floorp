@@ -23,6 +23,12 @@ permalink: /changelog/
   * Added `engineSupportedSchemes` as a parameter for `AppLinksInterceptor`.  This allows the caller to specify which protocol is supported by the engine.
     * Using this information, app links can decide if a protocol should be launched in a third party app or not regardless of user preference.
 
+* **feature-downloads**
+  * ⚠️ **This is a breaking change**: `customTabId` is renamed to `tabId`.
+
+* **feature-contextmenu**
+  * ⚠️ **This is a breaking change**: `customTabId` is renamed to `tabId`.
+
 # 33.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v32.0.0...v33.0.0)
