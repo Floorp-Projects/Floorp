@@ -73,6 +73,8 @@
       var s = document.createElement('script');
       s.innerText = script.innerText;
       s.nonce = 'abc';
+      assert_equals(s.nonce, 'abc');
+      assert_equals(s.getAttribute('nonce'), null);
       document.head.appendChild(s);
       assert_equals(s.nonce, 'abc');
       assert_equals(s.getAttribute('nonce'), null);
@@ -160,12 +162,11 @@
     #cssTest[nonce=abc] { background: url(/security/resources/abe.png); }
 </style>
 <script nonce="abc" id="cssTest">
-    async_test(t => {
-      requestAnimationFrame(t.step_func_done(_ => {
-        var script = document.querySelector('#cssTest');
-        var style = getComputedStyle(script);
-        assert_equals(style['display'], 'block');
-        assert_equals(style['background-image'], 'none');
-      }));
+    test(t => {
+      const script = document.querySelector('#cssTest');
+      t.add_cleanup(() => script.remove());
+      var style = getComputedStyle(script);
+      assert_equals(style['display'], 'block');
+      assert_equals(style['background-image'], 'none');
     }, "Nonces don't leak via CSS side-channels.");
 </script>
