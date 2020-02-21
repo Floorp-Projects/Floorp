@@ -2586,6 +2586,28 @@ impl Renderer {
                     resource_updates,
                     memory_pressure,
                 } => {
+                    if memory_pressure {
+                        // If a memory pressure event arrives _after_ a new scene has
+                        // been published that writes persistent targets (i.e. cached
+                        // render tasks to the texture cache, or picture cache tiles)
+                        // but _before_ the next update/render loop, those targets
+                        // will not be updated due to the active_documents list being
+                        // cleared at the end of this message. To work around that,
+                        // if any of the existing documents have not rendered yet, and
+                        // have picture/texture cache targets, force a render so that
+                        // those targets are updated.
+                        let must_be_drawn = self.active_documents
+                            .iter()
+                            .any(|(_, doc)| {
+                                doc.frame.must_be_drawn()
+                            });
+
+                        if must_be_drawn {
+                            let device_size = self.device_size;
+                            self.render_impl(device_size).ok();
+                        }
+                    }
+
                     self.pending_texture_updates.push(resource_updates.texture_updates);
                     self.pending_native_surface_updates.extend(resource_updates.native_surface_updates);
                     self.device.begin_frame();

@@ -1299,7 +1299,13 @@ var gIdentityHandler = {
     let tabIcon = gBrowser.selectedTab.iconImage;
     let image = new Image();
     image.src = tabIcon.src;
-    ctx.drawImage(image, 0, 0, 16 * scale, 16 * scale);
+    try {
+      ctx.drawImage(image, 0, 0, 16 * scale, 16 * scale);
+    } catch (e) {
+      // Sites might specify invalid data URIs favicons that
+      // will result in errors when trying to draw, we can
+      // just ignore this case and not paint any favicon.
+    }
 
     let dt = event.dataTransfer;
     dt.setData("text/x-moz-url", urlString);

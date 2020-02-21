@@ -409,6 +409,19 @@ class WebConsole {
     await netmonitor.panelWin.Netmonitor.inspectRequest(requestId);
   }
 
+  getHighlighter() {
+    if (!this.toolbox) {
+      return null;
+    }
+
+    if (this._highlighter) {
+      return this._highlighter;
+    }
+
+    this._highlighter = this.toolbox.getHighlighter();
+    return this._highlighter;
+  }
+
   async resendNetworkRequest(requestId) {
     if (!this.toolbox) {
       return;
