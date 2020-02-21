@@ -41,16 +41,16 @@ class SettingsUseCasesTest {
 
     @Test
     fun `UpdateSettingUseCase will update all sessions`() {
-        val autoplaySetting = object : UpdateSettingUseCase<Boolean>(settings, sessionManager) {
+        val allowFileAccessSetting = object : UpdateSettingUseCase<Boolean>(settings, sessionManager) {
             override fun update(settings: Settings, value: Boolean) {
-                settings.allowAutoplayMedia = value
+                settings.allowFileAccess = value
             }
         }
 
-        autoplaySetting(true)
-        verify(settings).allowAutoplayMedia = true
-        verify(engineSessionA.settings).allowAutoplayMedia = true
-        verify(engineSessionB.settings).allowAutoplayMedia = true
+        allowFileAccessSetting(true)
+        verify(settings).allowFileAccess = true
+        verify(engineSessionA.settings).allowFileAccess = true
+        verify(engineSessionB.settings).allowFileAccess = true
     }
 
     @Test

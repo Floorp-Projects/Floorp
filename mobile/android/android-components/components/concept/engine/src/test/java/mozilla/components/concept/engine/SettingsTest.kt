@@ -71,8 +71,6 @@ class SettingsTest {
             { settings.preferredColorScheme = PreferredColorScheme.System },
             { settings.testingModeEnabled },
             { settings.testingModeEnabled = false },
-            { settings.allowAutoplayMedia },
-            { settings.allowAutoplayMedia = false },
             { settings.suspendMediaWhenInactive },
             { settings.suspendMediaWhenInactive = false },
             { settings.fontInflationEnabled },
@@ -116,7 +114,6 @@ class SettingsTest {
         assertFalse(settings.supportMultipleWindows)
         assertEquals(PreferredColorScheme.System, settings.preferredColorScheme)
         assertFalse(settings.testingModeEnabled)
-        assertTrue(settings.allowAutoplayMedia)
         assertFalse(settings.suspendMediaWhenInactive)
         assertNull(settings.fontInflationEnabled)
         assertNull(settings.fontSizeFactor)
@@ -150,7 +147,6 @@ class SettingsTest {
             supportMultipleWindows = true,
             preferredColorScheme = PreferredColorScheme.Dark,
             testingModeEnabled = true,
-            allowAutoplayMedia = false,
             suspendMediaWhenInactive = true,
             fontInflationEnabled = false,
             fontSizeFactor = 2.0F,
@@ -180,7 +176,6 @@ class SettingsTest {
         assertTrue(defaultSettings.supportMultipleWindows)
         assertEquals(PreferredColorScheme.Dark, defaultSettings.preferredColorScheme)
         assertTrue(defaultSettings.testingModeEnabled)
-        assertFalse(defaultSettings.allowAutoplayMedia)
         assertTrue(defaultSettings.suspendMediaWhenInactive)
         assertFalse(defaultSettings.fontInflationEnabled!!)
         assertEquals(2.0F, defaultSettings.fontSizeFactor)
