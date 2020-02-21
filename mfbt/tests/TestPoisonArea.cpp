@@ -360,8 +360,9 @@ static uintptr_t ReserveNegativeControl() {
   return (uintptr_t)result;
 }
 
+#ifndef _WIN32
 static void JumpTo(uintptr_t aOpaddr) {
-#ifdef __ia64
+#  ifdef __ia64
   struct func_call {
     uintptr_t mFunc;
     uintptr_t mGp;
@@ -369,27 +370,9 @@ static void JumpTo(uintptr_t aOpaddr) {
       aOpaddr,
   };
   ((void (*)()) & call)();
-#else
-  ((void (*)())aOpaddr)();
-#endif
-}
-
-#ifdef _WIN32
-static BOOL IsBadExecPtr(uintptr_t aPtr) {
-  BOOL ret = false;
-
-#  ifdef _MSC_VER
-  __try {
-    JumpTo(aPtr);
-  } __except (EXCEPTION_EXECUTE_HANDLER) {
-    ret = true;
-  }
 #  else
-  printf("INFO | exec test not supported on MinGW build\n");
-  // We do our best
-  ret = IsBadReadPtr((const void*)aPtr, 1);
+  ((void (*)())aOpaddr)();
 #  endif
-  return ret;
 }
 #endif
 
@@ -421,20 +404,26 @@ static bool TestPage(const char* aPageLabel, uintptr_t aPageAddr,
     }
 
 #ifdef _WIN32
-    BOOL badptr;
+    bool badptr = true;
+    MEMORY_BASIC_INFORMATION mbi = {};
 
-    switch (test) {
-      case 0:
-        badptr = IsBadReadPtr((const void*)opaddr, 1);
-        break;
-      case 1:
-        badptr = IsBadExecPtr(opaddr);
-        break;
-      case 2:
-        badptr = IsBadWritePtr((void*)opaddr, 1);
-        break;
-      default:
-        abort();
+    if (VirtualQuery((LPCVOID)opaddr, &mbi, sizeof(mbi)) &&
+        mbi.State == MEM_COMMIT) {
+      switch (test) {
+        case 0:  // read
+          badptr = !(mbi.Protect & (PAGE_EXECUTE_READ | PAGE_EXECUTE_READWRITE |
+                                    PAGE_READONLY | PAGE_READWRITE));
+          break;
+        case 1:  // execute
+          badptr =
+              !(mbi.Protect & (PAGE_EXECUTE_READ | PAGE_EXECUTE_READWRITE));
+          break;
+        case 2:  // write
+          badptr = !(mbi.Protect & (PAGE_READWRITE | PAGE_EXECUTE_READWRITE));
+          break;
+        default:
+          abort();
+      }
     }
 
     if (badptr) {
