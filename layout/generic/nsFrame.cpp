@@ -8461,7 +8461,7 @@ static nsContentAndOffset FindLineBreakingFrame(nsIFrame* aFrame,
 
   // Treat form controls as inline leaves
   // XXX we really need a way to determine whether a frame is inline-level
-  if (nsIFormControlFrame* fcf = do_QueryFrame(aFrame)) {
+  if (static_cast<nsIFormControlFrame*>(do_QueryFrame(aFrame))) {
     return result;
   }
 
