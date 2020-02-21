@@ -261,6 +261,8 @@ class ClientEnvironmentBase {
   }
 
   static get appinfo() {
+    Services.appinfo.QueryInterface(Ci.nsIXULAppInfo);
+    Services.appinfo.QueryInterface(Ci.nsIPlatformInfo);
     return Services.appinfo;
   }
 }
