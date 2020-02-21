@@ -170,7 +170,7 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
             final Context context = GeckoAppShell.getApplicationContext();
             final Intent intent = new Intent();
             intent.setClassName(context,
-                                GeckoServiceChildProcess.class.getName() + '$' + mType.toString());
+                                GeckoChildProcessServices.class.getName() + '$' + mType.toString());
 
             mPendingBind = new GeckoResult<>();
             try {
