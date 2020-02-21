@@ -21,9 +21,13 @@ from condprof.util import write_yml_file, LOG, DEFAULT_PREFS, ERROR, BaseEnv
 class AndroidDevice:
     def __init__(self, app_name, marionette_port=2828, verbose=False):
         self.app_name = app_name
+        self.fennec = "fennec" in app_name
+
         # XXX make that an option
         if "fenix" in app_name:
             self.activity = "org.mozilla.fenix.IntentReceiverActivity"
+        elif self.fennec:
+            self.activity = None
         else:
             self.activity = "org.mozilla.geckoview_example.GeckoViewActivity"
         self.verbose = verbose
@@ -131,9 +135,32 @@ class AndroidDevice:
         # an on-device config.yml file
         intent = "android.intent.action.VIEW"
         device.stop_application(self.app_name)
-        device.launch_application(
-            self.app_name, self.activity, intent, extras=None, url="about:blank"
-        )
+        if self.fennec:
+            # XXX does the Fennec app picks up the YML file ?
+            extra_args = [
+                "-profile",
+                self.remote_profile,
+                "--es",
+                "env0",
+                "LOG_VERBOSE=1",
+                "--es",
+                "env1",
+                "R_LOG_LEVEL=6",
+                "--es",
+                "env2",
+                "MOZ_WEBRENDER=0",
+            ]
+
+            device.launch_fennec(
+                self.app_name,
+                extra_args=extra_args,
+                url="about:blank",
+                fail_if_running=False,
+            )
+        else:
+            device.launch_application(
+                self.app_name, self.activity, intent, extras=None, url="about:blank"
+            )
         if not device.process_exist(self.app_name):
             raise Exception("Could not start %s" % self.app_name)
 
