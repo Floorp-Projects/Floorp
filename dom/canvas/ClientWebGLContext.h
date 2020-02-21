@@ -177,6 +177,7 @@ class ContextGenerationInfo final {
   std::array<float, 4> mClearColor = {{0, 0, 0, 0}};
   std::array<float, 4> mBlendColor = {{0, 0, 0, 0}};
   std::array<float, 2> mDepthRange = {{0, 1}};
+  webgl::PixelPackState mPixelPackState;
 
   std::vector<GLenum> mCompressedTextureFormats;
 
