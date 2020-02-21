@@ -243,10 +243,6 @@ struct nsFind::State final {
   // Sets up the first node position and offset.
   void Initialize();
 
-  static bool ValidTextNode(const nsINode& aNode) {
-    return aNode.IsText() && !SkipNode(aNode.AsText());
-  }
-
   const bool mFindBackward;
 
   // Whether we've called GetNextNode() at least once.
@@ -269,7 +265,15 @@ void nsFind::State::Advance() {
     nsIContent* current =
         mFindBackward ? mIterator.GetPrev() : mIterator.GetNext();
 
-    if (!current || ValidTextNode(*current)) {
+    if (!current) {
+      return;
+    }
+
+    if (!current->IsContent() || SkipNode(current->AsContent())) {
+      continue;
+    }
+
+    if (current->IsText()) {
       return;
     }
   }
@@ -280,23 +284,11 @@ void nsFind::State::Initialize() {
   mInitialized = true;
   mIterOffset = mFindBackward ? -1 : 0;
 
-  nsINode* container = mFindBackward ? mStartPoint.GetStartContainer()
-                                     : mStartPoint.GetEndContainer();
-
   // Set up ourselves at the first node we want to start searching at.
-  nsIContent* beginning = mFindBackward ? mStartPoint.GetChildAtStartOffset()
-                                        : mStartPoint.GetChildAtEndOffset();
-  if (beginning) {
-    mIterator.Seek(*beginning);
-    // If the start point is pointing to a node, when looking backwards we'd
-    // start looking at the children of that node, and we don't really want
-    // that. When looking forwards, we look at the next sibling afterwards.
-    if (mFindBackward) {
-      mIterator.GetPrevSkippingChildren();
-    }
-  } else if (container && container->IsContent()) {
-    // Text-only range, or pointing to past the end of the node, for example.
-    mIterator.Seek(*container->AsContent());
+  nsINode* beginning = mFindBackward ? mStartPoint.GetEndContainer()
+                                     : mStartPoint.GetStartContainer();
+  if (beginning && beginning->IsContent()) {
+    mIterator.Seek(*beginning->AsContent());
   }
 
   nsINode* current = mIterator.GetCurrent();
@@ -304,22 +296,19 @@ void nsFind::State::Initialize() {
     return;
   }
 
-  if (!ValidTextNode(*current)) {
+  if (!current->IsText() || SkipNode(current->AsText())) {
     Advance();
-    current = mIterator.GetCurrent();
-    if (!current) {
-      return;
-    }
+    return;
   }
 
   mLastBlockParent = GetBlockParent(*current->AsText());
 
-  if (current != container) {
+  if (current != beginning) {
     return;
   }
 
   mIterOffset =
-      mFindBackward ? mStartPoint.StartOffset() : mStartPoint.EndOffset();
+      mFindBackward ? mStartPoint.EndOffset() : mStartPoint.StartOffset();
 }
 
 const nsTextFragment* nsFind::State::GetNextNonEmptyTextFragmentInSameBlock() {
