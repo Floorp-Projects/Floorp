@@ -205,7 +205,7 @@ void nsFrameLoaderOwner::ChangeRemotenessWithBridge(BrowserBridgeChild* aBridge,
 
   std::function<void()> frameLoaderInit = [&] {
     RefPtr<BrowserBridgeHost> host = aBridge->FinishInit(mFrameLoader);
-    mFrameLoader->mBrowsingContext->SetEmbedderElement(
+    mFrameLoader->mPendingBrowsingContext->SetEmbedderElement(
         mFrameLoader->GetOwnerContent());
     mFrameLoader->mRemoteBrowser = host;
   };
