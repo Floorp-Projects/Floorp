@@ -1,4 +1,4 @@
-// |reftest| skip -- class-static-fields-private,class-static-fields-public is not supported
+// |reftest| skip -- class-static-fields-private is not supported
 // This file was procedurally generated from the following sources:
 // - src/class-elements/static-field-anonymous-function-name.case
 // - src/class-elements/default/cls-decl.template

@@ -1,4 +1,3 @@
-// |reftest| skip -- class-static-fields-public is not supported
 // Copyright (C) 2017 Leo Balter. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 /*---

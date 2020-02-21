@@ -1,4 +1,4 @@
-// |reftest| skip module -- class-static-fields-public is not supported
+// |reftest| module
 // Copyright 2019 André Bargull. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 
