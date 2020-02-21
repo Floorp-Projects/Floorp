@@ -108,7 +108,6 @@ class GeckoEngineTest {
         whenever(runtimeSettings.forceUserScalableEnabled).thenReturn(false)
         whenever(runtimeSettings.contentBlocking).thenReturn(contentBlockingSettings)
         whenever(runtimeSettings.preferredColorScheme).thenReturn(GeckoRuntimeSettings.COLOR_SCHEME_SYSTEM)
-        whenever(runtimeSettings.autoplayDefault).thenReturn(GeckoRuntimeSettings.AUTOPLAY_DEFAULT_ALLOWED)
         whenever(runtime.settings).thenReturn(runtimeSettings)
         val engine = GeckoEngine(context, runtime = runtime, defaultSettings = defaultSettings)
 
@@ -151,10 +150,6 @@ class GeckoEngineTest {
         assertEquals(PreferredColorScheme.System, engine.settings.preferredColorScheme)
         engine.settings.preferredColorScheme = PreferredColorScheme.Dark
         verify(runtimeSettings).preferredColorScheme = PreferredColorScheme.Dark.toGeckoValue()
-
-        assertTrue(engine.settings.allowAutoplayMedia)
-        engine.settings.allowAutoplayMedia = false
-        verify(runtimeSettings).autoplayDefault = GeckoRuntimeSettings.AUTOPLAY_DEFAULT_BLOCKED
 
         assertFalse(engine.settings.suspendMediaWhenInactive)
         engine.settings.suspendMediaWhenInactive = true
@@ -331,7 +326,6 @@ class GeckoEngineTest {
         whenever(runtimeSettings.javaScriptEnabled).thenReturn(true)
         whenever(runtime.settings).thenReturn(runtimeSettings)
         whenever(runtimeSettings.contentBlocking).thenReturn(contentBlockingSettings)
-        whenever(runtimeSettings.autoplayDefault).thenReturn(GeckoRuntimeSettings.AUTOPLAY_DEFAULT_BLOCKED)
         whenever(runtimeSettings.fontInflationEnabled).thenReturn(true)
 
         val engine = GeckoEngine(context,
@@ -357,7 +351,6 @@ class GeckoEngineTest {
         verify(runtimeSettings).fontInflationEnabled = false
         verify(runtimeSettings).fontSizeFactor = 2.0F
         verify(runtimeSettings).remoteDebuggingEnabled = true
-        verify(runtimeSettings).autoplayDefault = GeckoRuntimeSettings.AUTOPLAY_DEFAULT_BLOCKED
         verify(runtimeSettings).forceUserScalableEnabled = false
 
         val trackingStrictCategories = TrackingProtectionPolicy.strict().trackingCategories.sumBy { it.id }
