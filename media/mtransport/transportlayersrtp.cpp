@@ -14,7 +14,6 @@
 #include "mozilla/Assertions.h"
 #include "transportlayerdtls.h"
 #include "srtp.h"
-#include "nsAutoPtr.h"
 
 namespace mozilla {
 
