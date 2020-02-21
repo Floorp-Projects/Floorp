@@ -3446,3 +3446,109 @@ bool StyleTransform::HasPercent() const {
   }
   return false;
 }
+
+template <>
+void StyleCalcNode::ScaleLengthsBy(float aScale) {
+  auto ScaleNode = [aScale](const StyleCalcNode& aNode) {
+    // This const_cast could be removed by generating more mut-casts, if
+    // needed.
+    const_cast<StyleCalcNode&>(aNode).ScaleLengthsBy(aScale);
+  };
+
+  switch (tag) {
+    case Tag::Leaf: {
+      auto& leaf = AsLeaf();
+      if (leaf.IsLength()) {
+        // This const_cast could be removed by generating more mut-casts, if
+        // needed.
+        const_cast<Length&>(leaf.AsLength()).ScaleBy(aScale);
+      }
+      break;
+    }
+    case Tag::Clamp: {
+      auto& clamp = AsClamp();
+      ScaleNode(*clamp.min);
+      ScaleNode(*clamp.center);
+      ScaleNode(*clamp.max);
+      break;
+    }
+    case Tag::MinMax: {
+      for (auto& child : AsMinMax()._0.AsSpan()) {
+        ScaleNode(child);
+      }
+      break;
+    }
+    case Tag::Sum: {
+      for (auto& child : AsSum().AsSpan()) {
+        ScaleNode(child);
+      }
+      break;
+    }
+  }
+}
+
+template <>
+template <typename ResultT, typename PercentageConverter>
+ResultT StyleCalcNode::ResolveInternal(ResultT aPercentageBasis,
+                                       PercentageConverter aConverter) const {
+  static_assert(std::is_same_v<decltype(aConverter(1.0f)), ResultT>);
+  static_assert(std::is_same_v<ResultT, nscoord> ||
+                std::is_same_v<ResultT, CSSCoord>);
+
+  switch (tag) {
+    case Tag::Leaf: {
+      auto& leaf = AsLeaf();
+      if (leaf.IsPercentage()) {
+        return aConverter(leaf.AsPercentage()._0 * aPercentageBasis);
+      }
+      if constexpr (std::is_same_v<ResultT, nscoord>) {
+        return leaf.AsLength().ToAppUnits();
+      } else {
+        return leaf.AsLength().ToCSSPixels();
+      }
+    }
+    case Tag::Clamp: {
+      auto& clamp = AsClamp();
+      auto min = clamp.min->ResolveInternal(aPercentageBasis, aConverter);
+      auto center = clamp.center->ResolveInternal(aPercentageBasis, aConverter);
+      auto max = clamp.max->ResolveInternal(aPercentageBasis, aConverter);
+      return std::max(min, std::min(center, max));
+    }
+    case Tag::MinMax: {
+      auto children = AsMinMax()._0.AsSpan();
+      StyleMinMaxOp op = AsMinMax()._1;
+
+      ResultT result = children[0].ResolveInternal(aPercentageBasis, aConverter);
+      for (auto& child : children.From(1)) {
+        ResultT candidate = child.ResolveInternal(aPercentageBasis, aConverter);
+        if (op == StyleMinMaxOp::Max) {
+          result = std::max(result, candidate);
+        } else {
+          result = std::min(result, candidate);
+        }
+      }
+      return result;
+    }
+    case Tag::Sum: {
+      ResultT result = 0;
+      for (auto& child : AsSum().AsSpan()) {
+        result += child.ResolveInternal(aPercentageBasis, aConverter);
+      }
+      return result;
+    }
+  }
+
+  MOZ_ASSERT_UNREACHABLE("Unknown calc node");
+  return 0;
+}
+
+template<>
+CSSCoord StyleCalcNode::ResolveToCSSPixels(CSSCoord aBasis) const {
+  return ResolveInternal(aBasis, [](CSSCoord aPercent) { return aPercent; });
+}
+
+template<>
+nscoord StyleCalcNode::Resolve(nscoord aBasis,
+                               CoordPercentageRounder aRounder) const {
+  return ResolveInternal(aBasis, aRounder);
+}
