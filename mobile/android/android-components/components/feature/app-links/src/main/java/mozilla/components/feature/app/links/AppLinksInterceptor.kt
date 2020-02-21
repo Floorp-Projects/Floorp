@@ -30,8 +30,7 @@ import mozilla.components.concept.engine.request.RequestInterceptor
  *
  * @param context Context the feature is associated with.
  * @param interceptLinkClicks If {true} then intercept link clicks.
- * @param alwaysAllowedSchemes List of schemes that will always be allowed to be opened in a third-party
- * app even if [interceptLinkClicks] is `false`.
+ * @param engineSupportedSchemes List of schemes that the engine supports.
  * @param alwaysDeniedSchemes List of schemes that will never be opened in a third-party app even if
  * [interceptLinkClicks] is `true`.
  * @param launchInApp If {true} then launch app links in third party app(s). Default to false because
@@ -43,7 +42,9 @@ import mozilla.components.concept.engine.request.RequestInterceptor
 class AppLinksInterceptor(
     private val context: Context,
     private val interceptLinkClicks: Boolean = false,
-    private val alwaysAllowedSchemes: Set<String> = setOf("mailto", "market", "sms", "tel"),
+    // list of scheme from https://searchfox.org/mozilla-central/source/netwerk/build/components.conf
+    private val engineSupportedSchemes: Set<String> = setOf("about", "data", "file", "ftp", "http",
+        "https", "moz-extension", "moz-safe-about", "resource", "view-source", "ws", "wss"),
     private val alwaysDeniedSchemes: Set<String> = setOf("javascript", "about"),
     private val launchInApp: () -> Boolean = { false },
     private val useCases: AppLinksUseCases = AppLinksUseCases(context, launchInApp),
@@ -62,10 +63,10 @@ class AppLinksInterceptor(
             uriScheme == null -> true
             // If request not from user gesture or if we're already on the site,
             // and we're clicking around then let's not go to an external app.
-            !hasUserGesture || isSameDomain -> true
+            (!hasUserGesture && engineSupportedSchemes.contains(uriScheme)) || isSameDomain -> true
             // If scheme not in whitelist then follow user preference
             (!interceptLinkClicks || !launchInApp()) &&
-                (!alwaysAllowedSchemes.contains(uriScheme)) -> true
+                engineSupportedSchemes.contains(uriScheme) -> true
             // Never go to an external app when scheme is in blacklist
             alwaysDeniedSchemes.contains(uriScheme) -> true
             else -> false
@@ -76,7 +77,7 @@ class AppLinksInterceptor(
         }
 
         val redirect = useCases.interceptedAppLinkRedirect(uri)
-        val result = handleRedirect(redirect, uri)
+        val result = handleRedirect(redirect, uri, hasUserGesture)
         if (redirect.isRedirect()) {
             if (launchFromInterceptor && result is RequestInterceptor.InterceptionResponse.AppIntent) {
                 useCases.openAppLink(result.appIntent)
@@ -93,29 +94,29 @@ class AppLinksInterceptor(
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal fun handleRedirect(
         redirect: AppLinkRedirect,
-        uri: String
+        uri: String,
+        hasUserGesture: Boolean
     ): RequestInterceptor.InterceptionResponse? {
         if (!redirect.hasExternalApp()) {
             redirect.marketplaceIntent?.let {
                 return RequestInterceptor.InterceptionResponse.AppIntent(it, uri)
             }
 
-            return handleFallback(redirect)
+            redirect.fallbackUrl?.let {
+                return RequestInterceptor.InterceptionResponse.Url(it)
+            }
+
+            return null
+        }
+
+        if (!hasUserGesture || !launchInApp()) {
+            redirect.fallbackUrl?.let {
+                return RequestInterceptor.InterceptionResponse.Url(it)
+            }
         }
 
         redirect.appIntent?.let {
             return RequestInterceptor.InterceptionResponse.AppIntent(it, uri)
-        }
-
-        return null
-    }
-
-    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    internal fun handleFallback(
-        redirect: AppLinkRedirect
-    ): RequestInterceptor.InterceptionResponse? {
-        redirect.fallbackUrl?.let {
-            return RequestInterceptor.InterceptionResponse.Url(it)
         }
 
         return null

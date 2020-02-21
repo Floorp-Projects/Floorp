@@ -18,6 +18,11 @@ permalink: /changelog/
 * **support-webextensions**
   * Emit facts on installed and enabled addon ids after web extension is initialized.
 
+* **feature-app-links**
+  * ⚠️ **This is a breaking change**: `alwaysAllowedSchemes` is removed as a parameter for `AppLinksInterceptor`.
+  * Added `engineSupportedSchemes` as a parameter for `AppLinksInterceptor`.  This allows the caller to specify which protocol is supported by the engine.
+    * Using this information, app links can decide if a protocol should be launched in a third party app or not regardless of user preference.
+
 # 33.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v32.0.0...v33.0.0)
@@ -42,7 +47,6 @@ permalink: /changelog/
       * The `Glean.initialize` method runs mostly off the main thread ([#672](https://github.com/mozilla/glean/pull/672)).
       * Labels in labeled metrics now have a correct, and slightly stricter, regular expression.
         See [label format](https://mozilla.github.io/glean/user/metrics/index.html#label-format) for more information.
-
 
 # 32.0.0
 
