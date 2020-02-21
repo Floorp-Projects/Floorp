@@ -66,15 +66,13 @@
     <string name="mozac_browser_errorpages_net_timeout_title">Przekroczono czas oczekiwania</string>
 
     <!-- The error message shown when a website took long to load. -->
-    <string name="mozac_browser_errorpages_net_timeout_message"><![CDATA[
-      <p>Witryna przez dłuższy czas nie odpowiedziała na żądanie połączenia i przeglądarka przestała czekać na odpowiedź.</p>
+    <string name="mozac_browser_errorpages_net_timeout_message"><![CDATA[<p>Witryna przez dłuższy czas nie odpowiedziała na żądanie połączenia i przeglądarka przestała czekać na odpowiedź.</p>
       <ul>
         <li>Witryna może być tymczasowo niedostępna lub przeciążona. Spróbuj ponownie za pewien czas.</li>
         <li>Jeśli nie możesz otworzyć żadnej strony, sprawdź swoje połączenie sieciowe.</li>
-        <li>Jeśli ten komputer jest chroniony przez zaporę sieciową lub serwer proxy, sprawdź, czy ten program jest uprawniony do łączenia się z Internetem.</li>
+        <li>Jeśli to urządzenie jest chronione przez zaporę sieciową lub serwer proxy, sprawdź, czy ten program jest uprawniony do łączenia się z Internetem.</li>
         <li>Jeśli nadal występują problemy, skonsultuj się z administratorem sieci lub dostawcą usług internetowych.</li>
-      </ul>
-    ]]></string>
+      </ul>]]></string>
 
     <!-- The document title and heading of the error page shown when a website could not be reached. -->
     <string name="mozac_browser_errorpages_connection_failure_title">Nie można połączyć</string>
@@ -98,24 +96,20 @@
     <string name="mozac_browser_errorpages_redirect_loop_title">Nieprawidłowe przekierowanie strony</string>
 
     <!-- The error message shown when the browser gets stuck in an infinite loop when loading a website. -->
-    <string name="mozac_browser_errorpages_redirect_loop_message"><![CDATA[
-      <p>Przeglądarka przerwała próby pobrania żądanego elementu. Witryna przekierowuje żądanie w sposób, który uniemożliwia jego dokończenie.</p>
+    <string name="mozac_browser_errorpages_redirect_loop_message"><![CDATA[<p>Przeglądarka przerwała próby pobrania żądanego elementu. Witryna przekierowuje żądanie w sposób, który uniemożliwia jego dokończenie.</p>
       <ul>
         <li>Czy ciasteczka zostały wyłączone lub zablokowane dla tej witryny?</li>
-        <li>Jeśli włączenie obsługi ciasteczek dla tej witryny nie rozwiązuje problemu, najprawdopodobniej jest to problem w konfiguracji serwera, a nie oprogramowania na komputerze użytkownika.</li>
-      </ul>
-    ]]></string>
+        <li>Jeśli włączenie obsługi ciasteczek dla tej witryny nie rozwiązuje problemu, najprawdopodobniej jest to problem w konfiguracji serwera, a nie oprogramowania na urządzeniu użytkownika.</li>
+      </ul>]]></string>
 
     <!-- The document title and heading of the error page shown when a website cannot be loaded because the browser is in offline mode. -->
     <string name="mozac_browser_errorpages_offline_title">Tryb offline</string>
     <!-- The error message shown when a website cannot be loaded because the browser is in offline mode. -->
-    <string name="mozac_browser_errorpages_offline_message"><![CDATA[
-      <p>Przeglądarka pracuje w trybie offline i nie może pobrać żądanego elementu.</p>
+    <string name="mozac_browser_errorpages_offline_message"><![CDATA[<p>Przeglądarka pracuje w trybie offline i nie może pobrać żądanego elementu.</p>
       <ul>
-        <li>Czy komputer podłączony jest do działającej sieci?</li>
+        <li>Czy urządzenie podłączone jest do działającej sieci?</li>
         <li>Naciśnij „Spróbuj ponownie”, aby przejść do trybu online i ponownie wczytać stronę.</li>
-      </ul>
-    ]]></string>
+      </ul>]]></string>
 
     <!-- The document title and heading of the error page shown when the browser prevents loading a website on a restricted port. -->
     <string name="mozac_browser_errorpages_port_blocked_title">Zastrzeżony adres</string>
@@ -255,14 +249,12 @@
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_proxy_host_title">Nie odnaleziono serwera proxy</string>
-    <string name="mozac_browser_errorpages_unknown_proxy_host_message"><![CDATA[
-      <p>Przeglądarka została skonfigurowana tak, aby używać serwera proxy, ale serwer proxy nie może zostać odnaleziony.</p>
+    <string name="mozac_browser_errorpages_unknown_proxy_host_message"><![CDATA[<p>Przeglądarka została skonfigurowana tak, aby używać serwera proxy, ale serwer proxy nie może zostać odnaleziony.</p>
       <ul>
         <li>Czy konfiguracja serwerów proxy w przeglądarce jest prawidłowa? Sprawdź ustawienia i spróbuj ponownie.</li>
-        <li>Upewnij się, że komputer jest podłączony do działającej sieci.</li>
+        <li>Upewnij się, że urządzenie jest podłączone do działającej sieci.</li>
         <li>Jeśli nadal występują problemy, skonsultuj się z administratorem sieci lub dostawcą usług internetowych.</li>
-      </ul>
-    ]]></string>
+      </ul>]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_safe_browsing_malware_uri_title">Witryna ze złośliwym oprogramowaniem</string>

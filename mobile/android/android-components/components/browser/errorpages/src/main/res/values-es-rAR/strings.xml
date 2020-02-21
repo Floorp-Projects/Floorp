@@ -62,15 +62,13 @@
     <!-- The document title and heading of the error page shown when a website takes too long to load. -->
     <string name="mozac_browser_errorpages_net_timeout_title">La conexión tardó demasiado tiempo</string>
     <!-- The error message shown when a website took long to load. -->
-    <string name="mozac_browser_errorpages_net_timeout_message"><![CDATA[
-	<p>El sitio solicitado no respondió a una pedido de conexión y el navegador dejó de esperar una respuesta.</p>
+    <string name="mozac_browser_errorpages_net_timeout_message"><![CDATA[<p>El sitio solicitado no respondió a una pedido de conexión y el navegador dejó de esperar una respuesta.</p>
 	<ul>
 		<li>¿El servidor podría estar experimentando una alta demanda o un corte temporal? Volvé a probar más tarde.</li>
-		<li>¿No podés navegar por otros sitios? Comprobá la conexión de red del equipo.</li>
-		<li>¿Tu red o equipo está protegido por un firewall o un proxy? Una configuración incorrecta puede interferir con la navegación web.</li>
+		<li>¿No podés navegar por otros sitios? Verificá la conexión de red del dispositivo.</li>
+		<li>¿Tu red o dispositivo está protegido por un firewall o un proxy? Una configuración incorrecta puede interferir con la navegación web.</li>
 		<li>¿Todavía tenés problemas? Consultá con el administrador de la red o el proveedor de Internet para obtener asistencia técnica.</li>
-	</ul>
-	]]></string>
+	</ul>]]></string>
 
     <!-- The document title and heading of the error page shown when a website could not be reached. -->
     <string name="mozac_browser_errorpages_connection_failure_title">No se puede conectar</string>
@@ -90,14 +88,12 @@
     <string name="mozac_browser_errorpages_redirect_loop_title">La página no se  redirecciona correctamente</string>
 
     <!-- The error message shown when the browser gets stuck in an infinite loop when loading a website. -->
-    <string name="mozac_browser_errorpages_redirect_loop_message"><![CDATA[
-      <p>El navegador dejó de tratar de transferir el ítem solicitado. El sitio está redirigiendo el pedido en una manera que nunca se completará.</p>
+    <string name="mozac_browser_errorpages_redirect_loop_message"><![CDATA[<p>El navegador dejó de tratar de transferir el ítem solicitado. El sitio está redirigiendo el pedido en una manera que nunca se completará.</p>
       <ul>
       <li>¿Deshabilitaste o bloqueaste cookies requeridas por este sitio?</li>
-      <li> Si aceptar las cookies del sitio no resuelve el problema, seguramente es un problema de configuración del servidor y no de tu computadora.</li>
+      <li> Si aceptar las cookies del sitio no resuelve el problema, seguramente es un problema de configuración del servidor y no de tu dispositivo.</li>
     
-        </ul>
-    ]]></string>
+        </ul>]]></string>
 
     <!-- The document title and heading of the error page shown when a website cannot be loaded because the browser is in offline mode. -->
     <string name="mozac_browser_errorpages_offline_title">Modo sin conexión</string>
@@ -241,7 +237,7 @@
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_proxy_host_title">No se encontró el servidor proxy</string>
 
-    <string name="mozac_browser_errorpages_unknown_proxy_host_message"><![CDATA[<p>El navegador está configurado para usar un servidor proxy, pero el proxy no se encontró el servidor.</p><ul><li>¿La configuración del proxy del navegador es correcta? Verificá la configuración y probá de nuevo.</li><li>¿La computadora está conectada a una red activa?</li><li>¿Todavía tenés problemas? Consultá con tu administrador de red o tu proveedor de Internet para recibir asistencia.</li></ul>]]></string>
+    <string name="mozac_browser_errorpages_unknown_proxy_host_message"><![CDATA[<p>El navegador está configurado para usar un servidor proxy, pero el proxy no se encontró el servidor.</p><ul><li>¿La configuración del proxy del navegador es correcta? Verificá la configuración y probá de nuevo.</li><li>¿El dispositivo está conectado a una red activa?</li><li>¿Todavía tenés problemas? Consultá con tu administrador de red o tu proveedor de Internet para recibir asistencia.</li></ul>]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_safe_browsing_malware_uri_title">Problema del sitio con contenido malicioso</string>

@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Text for the title of an alert dialog displayed by a web page. %1$s will be replaced with the URL of the current page (displaying the dialog). -->
-    <string name="mozac_browser_engine_system_alert_title">Pada halaman %1$s mengatakan:</string>
+    <string name="mozac_browser_engine_system_alert_title">Laman dari %1$s menjelaskan:</string>
     <!-- Text for the message of an auth dialog displayed by a web page.
     %1$s will be replaced by the realm, %2$s will be replaced with the URL of the current page (displaying the dialog). -->
-    <string name="mozac_browser_engine_system_auth_message">%2$s meminta nama pengguna dan sandi anda. Situs ini mengatakan: “%1$s”</string>
+    <string name="mozac_browser_engine_system_auth_message">%2$s meminta nama pengguna dan sandi anda. Situs ini berkata: “%1$s”</string>
     <!-- Text for the message of an auth dialog displayed by a web page. %1$s will be replaced with the URL of the current page (displaying the dialog). -->
     <string name="mozac_browser_engine_system_auth_no_realm_message">%1$s meminta nama pengguna dan sandi anda.</string>
 </resources>

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Description for browser_data permission. -->
+    <string name="mozac_feature_addons_permissions_browser_data_description">Beresihan jujutan langlangan, réréméh, jeung data nu tumali</string>
+    <!-- The developer website (Homepage) of the add-on. -->
+    <string name="mozac_feature_addons_home_page">Tepas</string>
+    </resources>

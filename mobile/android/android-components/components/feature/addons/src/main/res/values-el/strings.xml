@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- The version on of add-on. -->
+    <string name="mozac_feature_addons_version">Έκδοση</string>
+    <!-- The authors of an add-on. -->
+    <string name="mozac_feature_addons_authors">Δημιουργοί</string>
+    <!-- The last date that the add-on was updated. -->
+    <string name="mozac_feature_addons_last_updated">Τελευταία ενημέρωση</string>
+    <!-- The developer website (Homepage) of the add-on. -->
+    <string name="mozac_feature_addons_home_page">Αρχική σελίδα</string>
+    <!-- The settings of the add-on. -->
+    <string name="mozac_feature_addons_settings">Ρυθμίσεις</string>
+    <!-- Indicates the add-on is enabled. -->
+    <string name="mozac_feature_addons_enabled">Ενεργό</string>
+    <!-- Indicates the add-on is disabled. -->
+    <string name="mozac_feature_addons_disabled">Ανενεργό</string>
+    <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the disabled section. -->
+    <string name="mozac_feature_addons_disabled_section">Ανενεργά</string>
+    <!-- Displays a page with all the details of an add-on. -->
+    <string name="mozac_feature_addons_details">Λεπτομέρειες</string>
+    <!-- This is button that remove (uninstall an add-on). -->
+    <string name="mozac_feature_addons_remove">Αφαίρεση</string>
+    <!-- This is the title of a dialog that asks the users if they to install or not an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_permissions_dialog_title">Προσθήκη του %1$s;</string>
+    <!-- This is a button to add (install) an add-on . -->
+    <string name="mozac_feature_addons_permissions_dialog_add">Προσθήκη</string>
+    <!-- This is a button to cancel the add-on installation . -->
+    <string name="mozac_feature_addons_permissions_dialog_cancel">Ακύρωση</string>
+    <!-- Indicates how many users have rated an add-on. %1$s will be replaced with number of users -->
+    <string name="mozac_feature_addons_user_rating_count">Χρήστες: %1$s</string>
+    <!-- Accessibility content description for the amount of stars that add-on has, where %1$.02f will be the amount of stars and / separator and 5 the maximum number of stars e.g (2/5, 4.5/5 or 5/5)  . -->
+    <string name="mozac_feature_addons_rating_content_description">%1$.02f/5</string>
+    <!-- This is the title of page where all the add-ons are listed-->
+    <string name="mozac_feature_addons_addons">Πρόσθετα</string>
+    <!-- Text shown in not yet supported add-ons section in AddonsManagerAdapter. -->
+    <string name="mozac_feature_addons_unsupported_caption">1 πρόσθετο</string>
+    <!-- Text shown in not yet supported add-ons section in AddonsManagerAdapter - plural. %1$s is the number of unsupported add-ons -->
+    <string name="mozac_feature_addons_unsupported_caption_plural">%1$s πρόσθετα</string>
+    <!-- Text link to a sumo page for learning more about unsupported add-ons. -->
+    <string name="mozac_feature_addons_unsupported_learn_more">Μάθετε περισσότερα</string>
+</resources>

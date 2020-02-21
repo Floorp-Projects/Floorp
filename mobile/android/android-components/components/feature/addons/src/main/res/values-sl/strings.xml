@@ -1,5 +1,53 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Description for privacy add-on permission. -->
+    <string name="mozac_feature_addons_permissions_privacy_description">branje in spreminjanje nastavitev zasebnosti</string>
+    <!-- Description for all_urls add-on permission. -->
+    <string name="mozac_feature_addons_permissions_all_urls_description">dostop do vaših podatkov za vse spletne strani</string>
+    <!-- Description for tabs add-on permission. -->
+    <string name="mozac_feature_addons_permissions_tabs_description">dostop do zavihkov brskalnika</string>
+    <!-- Description for unlimited_storage permission. -->
+    <string name="mozac_feature_addons_permissions_unlimited_storage_description">shranjevanje neomejene količine podatkov odjemalca</string>
+    <!-- Description for navigation permission. -->
+    <string name="mozac_feature_addons_permissions_web_navigation_description">dostop do dejavnosti brskalnika</string>
+    <!-- Description for bookmarks permission. -->
+    <string name="mozac_feature_addons_permissions_bookmarks_description">branje in spreminjanje zaznamkov</string>
+    <!-- Description for browser_setting permission. -->
+    <string name="mozac_feature_addons_permissions_browser_setting_description">branje in spreminjanje nastavitev brskalnika</string>
+    <!-- Description for browser_data permission. -->
+    <string name="mozac_feature_addons_permissions_browser_data_description">brisanje nedavne zgodovine, piškotkov in povezanih podatkov</string>
+    <!-- Description for clipboard_read permission. -->
+    <string name="mozac_feature_addons_permissions_clipboard_read_description">dostop do podatkov z odložišča</string>
+    <!-- Description for clipboard_write permission. -->
+    <string name="mozac_feature_addons_permissions_clipboard_write_description">shranjevanje podatkov na odložišče</string>
+    <!-- Description for downloads permission. -->
+    <string name="mozac_feature_addons_permissions_downloads_description">prenašanje datotek ter branje in spreminjanje zgodovine prenosov</string>
+    <!-- Description for downloads_open permission. -->
+    <string name="mozac_feature_addons_permissions_downloads_open_description">odpiranje datotek, prenesenih na vašo napravo</string>
+    <!-- Description for find permission. -->
+    <string name="mozac_feature_addons_permissions_find_description">branje besedila vseh odprtih zavihkov</string>
+    <!-- Description for geolocation permission. -->
+    <string name="mozac_feature_addons_permissions_geolocation_description">dostop do vaše lokacije</string>
+    <!-- Description for history permission. -->
+    <string name="mozac_feature_addons_permissions_history_description">dostop do zgodovine brskanja</string>
+    <!-- Description for management permission. -->
+    <string name="mozac_feature_addons_permissions_management_description">spremljanje rabe razširitev in upravljanje tem</string>
+    <!-- Description for native_messaging permission. -->
+    <string name="mozac_feature_addons_permissions_native_messaging_description">izmenjevanje sporočil z drugimi aplikacijami</string>
+    <!-- Description for notifications permission. -->
+    <string name="mozac_feature_addons_permissions_notifications_description">prikazovanje obvestil</string>
+    <!-- Description for pkcs11 permission. -->
+    <string name="mozac_feature_addons_permissions_pkcs11_description">zagotavljanje kriptografskih storitev za overjanje</string>
+    <!-- Description for proxy permission. -->
+    <string name="mozac_feature_addons_permissions_proxy_description">nadzor nad nastavitvami posrednika</string>
+    <!-- Description for sessions permission. -->
+    <string name="mozac_feature_addons_permissions_sessions_description">dostop do nedavno zaprtih zavihkov</string>
+    <!-- Description for tab_hide permission. -->
+    <string name="mozac_feature_addons_permissions_tab_hide_description">skrivanje in prikazovanje zavihkov brskalnika</string>
+    <!-- Description for top_sites permission. -->
+    <string name="mozac_feature_addons_permissions_top_sites_description">dostop do zgodovine brskanja</string>
+    <!-- Description for devtools permission. -->
+    <string name="mozac_feature_addons_permissions_devtools_description">razširjanje razvojnih orodij za dostop do vaših podatkov v odprtih zavihkih</string>
     <!-- The version on of add-on. -->
     <string name="mozac_feature_addons_version">Različica</string>
     <!-- The authors of an add-on. -->
@@ -14,10 +62,18 @@
     <string name="mozac_feature_addons_rating">Ocena</string>
     <!-- The settings of the add-on. -->
     <string name="mozac_feature_addons_settings">Nastavitve</string>
+    <!-- Indicates the add-on is enabled. -->
+    <string name="mozac_feature_addons_enabled">Omogočeno</string>
+    <!-- Indicates the add-on is disabled. -->
+    <string name="mozac_feature_addons_disabled">Onemogočeno</string>
     <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the installed section. -->
     <string name="mozac_feature_addons_installed_section">Nameščeno</string>
     <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the recommended section. -->
     <string name="mozac_feature_addons_recommended_section">Priporočeno</string>
+    <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the not yet supported section. -->
+    <string name="mozac_feature_addons_unsupported_section">Še ni podprto</string>
+    <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the disabled section. -->
+    <string name="mozac_feature_addons_disabled_section">Onemogočeno</string>
     <!-- Displays a page with all the details of an add-on. -->
     <string name="mozac_feature_addons_details">Podrobnosti</string>
     <!-- Displays a page with all the permissions of an add-on. -->
@@ -34,6 +90,8 @@
     <string name="mozac_feature_addons_permissions_dialog_cancel">Prekliči</string>
     <!-- Accessibility content description to install add-on button. -->
     <string name="mozac_feature_addons_install_addon_content_description">Namesti dodatek</string>
+    <!-- Indicates how many users have rated an add-on. %1$s will be replaced with number of users -->
+    <string name="mozac_feature_addons_user_rating_count">Uporabniki: %1$s</string>
     <!-- This is the title of page where all the add-ons are listed-->
     <string name="mozac_feature_addons_addons">Dodatki</string>
     <!-- The label of the allow button, this will be shown to the user when an add-on needs new permissions, with the button the user will indicate that they want to accept the new permissions and update the add-on-->
@@ -42,6 +100,14 @@
     <string name="mozac_feature_addons_updater_notification_deny_button">Zavrni</string>
     <!-- Name of the "notification channel" used for displaying a notification for updating an add-on. See https://developer.android.com/training/notify-user/channels -->
     <string name="mozac_feature_addons_updater_notification_channel">Posodobitve dodatkov</string>
+    <!-- This is the caption for not yet supported screen caption -->
+    <string name="mozac_feature_addons_not_yet_supported_caption">Tehnologija dodatkov za Firefox se posodablja. Ti dodatki uporabljajo ogrodja, ki niso združljivi s Firefoxom 75 in novejšimi.</string>
+    <!-- This is the caption for the add-on installation progress overlay -->
+    <string name="mozac_add_on_install_progress_caption">Prenašanje in preverjanje dodatka …</string>
+    <!-- Text shown after failed to install an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_failed_to_install">Dodatka %1$s ni bilo mogoče namestiti</string>
+    <!-- Text shown in not yet supported add-ons section in AddonsManagerAdapter. -->
+    <string name="mozac_feature_addons_unsupported_caption">1 dodatek</string>
     <!-- Text link to a sumo page for learning more about unsupported add-ons. -->
     <string name="mozac_feature_addons_unsupported_learn_more">Več o tem</string>
-</resources>
+    </resources>

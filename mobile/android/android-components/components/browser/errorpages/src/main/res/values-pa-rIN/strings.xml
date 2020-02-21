@@ -41,6 +41,12 @@
 
     <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website has an invalid SSL certificate. -->
     <string name="mozac_browser_errorpages_security_bad_cert_advanced">ਤਕਨੀਕੀ…</string>
+    <!-- The advanced certificate information shown when a website sends has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[
+        <label>ਕੋਈ ਸਾਈਟ ਦੀ ਨਕਲ ਕਰਦਾ ਹੋ ਸਕਦਾ ਹੈ ਅਤੇ ਤੁਹਾਨੂੰ ਜਾਰੀ ਨਹੀਂ ਰੱਖਣਾ ਚਾਹੀਦਾ ਹੈ।</label>
+        <br><br>
+        <label>ਵੈੱਬਸਾਈਟਾਂ ਆਪਣੀ ਪਛਾਣ ਸਰਟੀਫਿਕੇਟ ਰਾਹੀਂ ਸਿੱਧ ਕਰਦੀਆਂ ਹਨ। %1$s <b>%2$s</b> ਉੱਤੇ ਭਰੋਸਾ ਨਹੀਂ ਕਰਦਾ ਹੈ, ਕਿਉਂਕਿ ਇਹ ਸਰਟੀਫਿਕੇਟ ਨੂੰ ਜਾਰੀ ਕਰਨ ਵਾਲਾ ਅਣਪਛਾਤਾ ਹੈ, ਸਰਟੀਫਿਕੇਟ ਖੁਦ-ਦਸਤਖਤੀ ਹੈ ਜਾਂ ਸਰਵਰ ਠੀਕ ਵਿਚਕਾਰਲੇ ਸਰਟੀਫਿਕੇਟ ਨਹੀਂ ਭੇਜ ਰਿਹਾ ਹੈ।</label>
+    ]]></string>
     <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
     <string name="mozac_browser_errorpages_security_bad_cert_back">ਪਿੱਛੇ ਜਾਓ (ਸਿਫਾਰਸ਼ੀ)</string>
     <!-- The text shown inside the advanced options button used to bypass the invalid SSL certificate. It's only shown if the user has expanded the advanced options. -->

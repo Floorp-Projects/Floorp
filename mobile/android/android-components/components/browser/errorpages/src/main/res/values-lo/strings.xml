@@ -40,6 +40,13 @@
       </ul>
     ]]></string>
 
+    <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_advanced">ຂັ້ນສູງ…</string>
+    <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_back">ກັບຄືນ (ແນະນຳ)</string>
+    <!-- The text shown inside the advanced options button used to bypass the invalid SSL certificate. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_accept_temporary">ຍອມຮັບຄວາມສ່ຽງ ແລະ ດຳເນີນການຕໍ່</string>
+
     <!-- The document title and heading of the error page shown when the user's network connection is interrupted while connecting to a website. -->
     <string name="mozac_browser_errorpages_net_interrupt_title">ການເຊື່ອມຕໍ່ຖືກລົບກວນ</string>
 
@@ -80,6 +87,21 @@
     <!-- The document title and heading of the error page shown when a website cannot be loaded because the browser is in offline mode. -->
     <string name="mozac_browser_errorpages_offline_title">ໂໝດອັອບໄລ</string>
 
+    <!-- The document title and heading of the error page shown when the Internet connection is disrupted while loading a website. -->
+    <string name="mozac_browser_errorpages_net_reset_title">ການເຊື່ອມຕໍ່ຖືກຕັດ</string>
+
+    <!-- The document title and heading of the error page shown when the browser refuses to load a type of file that is considered unsafe. -->
+    <string name="mozac_browser_errorpages_unsafe_content_type_title">ປະເພດເອກະສານທີ່ບໍ່ປອດໄພ</string>
+    <!-- The error message shown when the browser refuses to load a type of file that is considered unsafe. -->
+    <string name="mozac_browser_errorpages_unsafe_content_type_message"><![CDATA[<ul>
+        <li>ກະລູນາຕິດຕໍ່ຫາເຈົ້າຂອງເວັບໄຊທເພື່ອແຈ້ງບັນຫານີ້ໃຫ້ພວກເຂົາຮູ້.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_host_title">ບໍ່ພົບທີ່ຢູ່</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_no_internet_title">ບໍ່ມີການເຊື່ອມຕໍ່ກັບອິນເຕີເນັດ</string>
     <!-- Text that will show up on the button at the bottom of the error page -->
     <string name="mozac_browser_errorpages_no_internet_refresh_button">ໂຫລດຄືນໃຫມ່</string>
 
@@ -96,5 +118,11 @@
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_file_access_denied_title">ການເຂົ້າເຖິງໄຟລ໌ຂໍ້ມູນໄດ້ຖືກປະຕິເສດ</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_proxy_host_title">ບໍ່ພົບພລັອກຊີເຊີເວີ</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_title">ປັນຫາເວັບໄຊທ Malware</string>
 
     </resources>

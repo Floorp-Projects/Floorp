@@ -32,4 +32,8 @@
     <!-- Action shown in a "snacbkar" after opening a new/private tab. Clicking this action will switch to the newly opened tab. -->
     <string name="mozac_feature_contextmenu_snackbar_action_switch">切換</string>
     <string name="mozac_feature_contextmenu_open_link_in_external_app">用外部應用程式開啟鏈結</string>
+    <!-- Action shown in a text selection context menu. This will prompt a search using the selected text. The first parameter is the name of the application (For example: Fenix)-->
+    <string name="mozac_selection_context_menu_search">%s 搜尋</string>
+    <!-- Action shown in a text selection context menu. This will prompt a search in a private tab using the selected text The first parameter is the name of the application (For example: Fenix) -->
+    <string name="mozac_selection_context_menu_search_privately">%s 隱私搜尋</string>
 </resources>

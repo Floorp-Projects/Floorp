@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Text for context menu item to share the link with an other app. -->
+    <string name="mozac_feature_contextmenu_share_link">Partejar lo ligam</string>
+    <!-- Text for context menu item to copy the link to the clipboard. -->
+    <string name="mozac_feature_contextmenu_copy_link">Copiar lo ligam</string>
+    <!-- Text for context menu item to save / download the image. -->
+    <string name="mozac_feature_contextmenu_save_image">Enregistrar l’imatge</string>
+    <!-- Text for confirmation "snackbar" shown after opening a link in a new tab.  -->
+    <string name="mozac_feature_contextmenu_snackbar_new_tab_opened">Onglet novèl dobèrt</string>
+    <!-- Text for confirmation "snackbar" shown after opening a link in a new private tab.  -->
+    <string name="mozac_feature_contextmenu_snackbar_new_private_tab_opened">Onglet novèl privat dobèrt</string>
+    <!-- Action shown in a text selection context menu. This will prompt a search using the selected text. The first parameter is the name of the application (For example: Fenix)-->
+    <string name="mozac_selection_context_menu_search">Recercar amb %s</string>
+    </resources>

@@ -37,6 +37,12 @@
 
     <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website has an invalid SSL certificate. -->
     <string name="mozac_browser_errorpages_security_bad_cert_advanced">Espertu…</string>
+    <!-- The advanced certificate information shown when a website sends has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[¶
+        <label>Qualchissia puderia pruvà d’impatrunissi di u situ web è seria più sicuru d’ùn micca cuntinuà.</label>¶
+        <br><br>¶
+        <label>I siti web stabiliscenu a so identità via certificati. %1$s ùn hà fidanza in <b>%2$s</b> perchè l’emettore di u so certificatu hè scunnisciutu, u certificatu hè firmatu daperellu, o ancu u servitore ùn manda micca certificati intermediarii curretti.</label>¶
+    ]]></string>
     <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
     <string name="mozac_browser_errorpages_security_bad_cert_back">Ritornu (ricumandatu)</string>
     <!-- The text shown inside the advanced options button used to bypass the invalid SSL certificate. It's only shown if the user has expanded the advanced options. -->

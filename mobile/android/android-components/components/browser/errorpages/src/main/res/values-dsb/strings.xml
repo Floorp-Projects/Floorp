@@ -65,15 +65,13 @@
     <string name="mozac_browser_errorpages_net_timeout_title">Zwisk jo cas pśekšocył</string>
 
     <!-- The error message shown when a website took long to load. -->
-    <string name="mozac_browser_errorpages_net_timeout_message"><![CDATA[
-      <p>Pominane sedło njejo na zwiskowe napšašowanje wótegroniło a wobglědowak jo pśestał na wótegrono cakaś.</p>
+    <string name="mozac_browser_errorpages_net_timeout_message"><![CDATA[<p>Pominane sedło njejo na zwiskowe napšašowanje wótegroniło a wobglědowak jo pśestał na wótegrono cakaś.</p>
       <ul>
         <li>Móžo byś, až serwer jo pśeśěžony abo ma nachylne mólenje? Wopytajśo pózdźej hyšći raz.</li>
-        <li>Njamóžośo druge sedła pśeglědowaś? Pśespytajśo seśowy zwisk licadła.</li>
-        <li>Šćita se wašo licadło abo waša seś z wognjoweju murju abo proksy? Njekorektne nastajenja mógu webowemu pśeglědowanjeju zajźowaś.</li>
+        <li>Njamóžośo druge sedła pśeglědowaś? Pśespytajśo seśowy zwisk rěda.</li>
+        <li>Šćita se waš rěd abo waša seś z wognjoweju murju abo proksy? Njekorektne nastajenja mógu webowemu pśeglědowanjeju zajźowaś.</li>
         <li>Maśo hyšći śěže? Konsultěrujśo swójogo seśowego administratora abo internetnego póbitowarja za pódpěru.</li>
-      </ul>
-    ]]></string>
+      </ul>]]></string>
 
     <!-- The document title and heading of the error page shown when a website could not be reached. -->
     <string name="mozac_browser_errorpages_connection_failure_title">Zwisk njejo móžny</string>
@@ -96,25 +94,21 @@
     <string name="mozac_browser_errorpages_redirect_loop_title">Bok pšawje njepósrědnja</string>
 
     <!-- The error message shown when the browser gets stuck in an infinite loop when loading a website. -->
-    <string name="mozac_browser_errorpages_redirect_loop_message"><![CDATA[
-      <p>Wobglědowak jo pśestał, pominany objekt wótwołowaś. Sedło pósrědnja napšašowanje na nałog, kótaryž se njekóńcy.</p>
+    <string name="mozac_browser_errorpages_redirect_loop_message"><![CDATA[<p>Wobglědowak jo pśestał, pominany objekt wótwołowaś. Sedło pósrědnja napšašowanje na nałog, kótaryž se njekóńcy.</p>
       <ul>
         <li>Sćo cookieje znjemóžnił abo zablokěrował, kótarež su trěbne za tós to sedło?</li>
-        <li>Jolic akceptěrowanje sedłowych cookiejow njerozwězujo ten problem, jo to nejskerjej problem serwereje konfiguracije a nic wašogo licadła.</li>
-      </ul>
-    ]]></string>
+        <li>Jolic akceptěrowanje sedłowych cookiejow njerozwězujo ten problem, jo to nejskerjej problem serwereje konfiguracije a nic wašogo rěda.</li>
+      </ul>]]></string>
 
     <!-- The document title and heading of the error page shown when a website cannot be loaded because the browser is in offline mode. -->
     <string name="mozac_browser_errorpages_offline_title">Offline-modus</string>
 
     <!-- The error message shown when a website cannot be loaded because the browser is in offline mode. -->
-    <string name="mozac_browser_errorpages_offline_message"><![CDATA[
-      <p>Wobglědowak źěła offline a njamóžo z pominanym objektom zwězaś.</p>
+    <string name="mozac_browser_errorpages_offline_message"><![CDATA[<p>Wobglědowak źěła offline a njamóžo z pominanym objektom zwězaś.</p>
       <ul>
-        <li>Jo licadło z aktiwneju seśu zwězany?</li>
+        <li>Jo rěd z aktiwneju seśu zwězany?</li>
         <li>Klikniśo na „Hyšći raz“, aby do online-modusa pśejšeł a bok znowego zacytał.</li>
-      </ul>
-    ]]></string>
+      </ul>]]></string>
 
     <!-- The document title and heading of the error page shown when the browser prevents loading a website on a restricted port. -->
     <string name="mozac_browser_errorpages_port_blocked_title">Port z pśicynow wěstoty wobgranicowany</string>
@@ -248,14 +242,12 @@
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_proxy_host_title">Proksyjowy serwer njenamakany</string>
-    <string name="mozac_browser_errorpages_unknown_proxy_host_message"><![CDATA[
-      <p>Wobglědowak jo se konfigurěrował, aby se wužywa proksyjowy serwer, ale proksy njedajo se namakaś.</p>
+    <string name="mozac_browser_errorpages_unknown_proxy_host_message"><![CDATA[<p>Wobglědowak jo se konfigurěrował, aby se wužywa proksyjowy serwer, ale proksy njedajo se namakaś.</p>
       <ul>
         <li>Jo konfiguracija proksyja wobglědowaka korektna? Pśeglědajśo nastajenja a wopytajśo hyšći raz.</li>
-        <li>Jo licadło z aktiwneju seśu zwězane?</li>
+        <li>Jo rěd z aktiwneju seśu zwězany?</li>
         <li>Maśo hyšći śěže? Stajśo ze swójim seśowym administratorom abo internetny póbitowarjom za pódpěru do zwiska.</li>
-      </ul>
-    ]]></string>
+      </ul>]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_safe_browsing_malware_uri_title">Problem ze sedłom ze škódneju softwaru</string>

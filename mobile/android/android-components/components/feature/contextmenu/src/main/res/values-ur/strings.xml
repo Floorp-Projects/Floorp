@@ -14,4 +14,7 @@
     <string name="mozac_feature_contextmenu_copy_image_location">نقش محل وقوع نقل کریں</string>
     <!-- Text for context menu item to save / download the image. -->
     <string name="mozac_feature_contextmenu_save_image">نقش محفوظ کریں</string>
-    </resources>
+    <!-- Action shown in a "snacbkar" after opening a new/private tab. Clicking this action will switch to the newly opened tab. -->
+    <string name="mozac_feature_contextmenu_snackbar_action_switch">سوئچ</string>
+    <string name="mozac_feature_contextmenu_open_link_in_external_app">لنک کو باهری ایپ میں کھولیں</string>
+</resources>

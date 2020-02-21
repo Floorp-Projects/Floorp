@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- The version on of add-on. -->
+    <string name="mozac_feature_addons_version">संस्करण</string>
+    <!-- The developer website (Homepage) of the add-on. -->
+    <string name="mozac_feature_addons_home_page">मुख्य पृष्ठ</string>
+    <!-- The rating of the add-on. -->
+    <string name="mozac_feature_addons_rating">रेटिंग</string>
+    <!-- The settings of the add-on. -->
+    <string name="mozac_feature_addons_settings">सेटिंग</string>
+    <!-- Indicates the add-on is enabled. -->
+    <string name="mozac_feature_addons_settings_on">चालू</string>
+    <!-- Indicates the add-on is disabled. -->
+    <string name="mozac_feature_addons_settings_off">बंद</string>
+    <!-- Indicates the add-on is enabled. -->
+    <string name="mozac_feature_addons_enabled">सक्रिय किया गया</string>
+    <!-- Indicates the add-on is disabled. -->
+    <string name="mozac_feature_addons_disabled">निष्क्रिय किया गया</string>
+    <!-- Displays a page with all the details of an add-on. -->
+    <string name="mozac_feature_addons_details">विवरण</string>
+    <!-- This is button that remove (uninstall an add-on). -->
+    <string name="mozac_feature_addons_remove">हटाएं</string>
+    <!-- This is the title of a dialog that asks the users if they to install or not an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_permissions_dialog_title">%1$s जोड़ना चाहते हैं?</string>
+    <!-- This is a button to add (install) an add-on . -->
+    <string name="mozac_feature_addons_permissions_dialog_add">जोड़ें</string>
+    <!-- This is a button to cancel the add-on installation . -->
+    <string name="mozac_feature_addons_permissions_dialog_cancel">रद्द करें</string>
+    <!-- Indicates how many users have rated an add-on. %1$s will be replaced with number of users -->
+    <string name="mozac_feature_addons_user_rating_count">उपयोगकर्ता: %1$s</string>
+    <!-- Accessibility content description for the amount of stars that add-on has, where %1$.02f will be the amount of stars and / separator and 5 the maximum number of stars e.g (2/5, 4.5/5 or 5/5)  . -->
+    <string name="mozac_feature_addons_rating_content_description">%1$.02f/5</string>
+    <!-- This is the title of page where all the add-ons are listed-->
+    <string name="mozac_feature_addons_addons">ऐड-ऑन</string>
+    <!-- Text link to a sumo page for learning more about unsupported add-ons. -->
+    <string name="mozac_feature_addons_unsupported_learn_more">अधिक जानें</string>
+</resources>

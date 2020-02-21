@@ -66,12 +66,18 @@
     <string name="mozac_feature_addons_settings_on">켜짐</string>
     <!-- Indicates the add-on is disabled. -->
     <string name="mozac_feature_addons_settings_off">꺼짐</string>
+    <!-- Indicates the add-on is enabled. -->
+    <string name="mozac_feature_addons_enabled">사용함</string>
+    <!-- Indicates the add-on is disabled. -->
+    <string name="mozac_feature_addons_disabled">사용 안 함</string>
     <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the installed section. -->
     <string name="mozac_feature_addons_installed_section">설치됨</string>
     <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the recommended section. -->
     <string name="mozac_feature_addons_recommended_section">추천</string>
     <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the not yet supported section. -->
     <string name="mozac_feature_addons_unsupported_section">아직 지원되지 않음</string>
+    <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the disabled section. -->
+    <string name="mozac_feature_addons_disabled_section">사용 안 함</string>
     <!-- Displays a page with all the details of an add-on. -->
     <string name="mozac_feature_addons_details">상세 정보</string>
     <!-- Displays a page with all the permissions of an add-on. -->

@@ -15,6 +15,14 @@
     <!-- The document title and heading of the error page shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
     <string name="mozac_browser_errorpages_security_ssl_title">قابل بھروسا کنکشن ناکام ہو گیا ہے</string>
 
+    <!-- The error message shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_ssl_message"><![CDATA[
+      <ul>
+        <li>جو صفحہ آپ دیکھنا چاہ رہے ہیں، دکھایا نہیں جا سکتا کیونکہ موصول قوائف کی اصلیت کی تصدیق نہیں ہو سکی۔</li> 
+        <li>ویب سائٹ کے مالک کو اس مسلے کا بتانے کے لیے ان سے رابطہ کریں۔</li>
+      </ul>
+    ]]></string>
+
     <!-- The document title and heading of the error page shown when a website sends has an invalid or expired SSL certificate. -->
     <string name="mozac_browser_errorpages_security_bad_cert_title">قابل بھروسا کنکشن ناکام ہو گیا ہے</string>
 
@@ -36,6 +44,11 @@
 
     <!-- The document title and heading of the error page shown when a website responds in an unexpected way and the browser cannot continue. -->
     <string name="mozac_browser_errorpages_unknown_socket_type_title">سرور کی طرف سے غیر متوقع جواب</string>
+
+    <!-- The error message shown when a website responds in an unexpected way and the browser cannot continue. -->
+    <string name="mozac_browser_errorpages_unknown_socket_type_message"><![CDATA[
+      <p>سائٹ نے نیٹ ورک فرمائش کا ایک غیر متوقع طریقے سے جواب دیا اور براؤزر جاری نہیں رہ سکتا۔</p>
+    ]]></string>
 
     <!-- The document title and heading of the error page shown when the browser gets stuck in an infinite loop when loading a website. -->
     <string name="mozac_browser_errorpages_redirect_loop_title">صفحہ ٹھیک طرح ری ڈائریکٹ نہیں ہو رہا</string>

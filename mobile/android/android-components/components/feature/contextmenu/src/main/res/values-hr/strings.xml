@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Text for context menu item to open the link in a new tab. -->
+    <string name="mozac_feature_contextmenu_open_link_in_new_tab">Otvori poveznicu u novoj kartici</string>
+    <!-- Text for context menu item to open the link in a private tab. -->
+    <string name="mozac_feature_contextmenu_open_link_in_private_tab">Otvori poveznicu u privatnoj kartici</string>
+    <!-- Text for context menu item to open the image in a new tab. -->
+    <string name="mozac_feature_contextmenu_open_image_in_new_tab">Otvori sliku u novoj kartici</string>
+    <!-- Text for context menu item to share the link with an other app. -->
+    <string name="mozac_feature_contextmenu_share_link">Dijeli poveznicu</string>
+    <!-- Text for context menu item to copy the link to the clipboard. -->
+    <string name="mozac_feature_contextmenu_copy_link">Kopiraj poveznicu</string>
+    <!-- Text for context menu item to copy the URL pointing to the image to the clipboard. -->
+    <string name="mozac_feature_contextmenu_copy_image_location">Kopiraj lokaciju slike</string>
+    <!-- Text for context menu item to save / download the image. -->
+    <string name="mozac_feature_contextmenu_save_image">Spremi sliku</string>
+    <!-- Text for confirmation "snackbar" shown after opening a link in a new tab.  -->
+    <string name="mozac_feature_contextmenu_snackbar_new_tab_opened">Nova kartica otvorena</string>
+    <!-- Text for confirmation "snackbar" shown after opening a link in a new private tab.  -->
+    <string name="mozac_feature_contextmenu_snackbar_new_private_tab_opened">Nova privatna kartica otvorena</string>
+    <!-- Text for confirmation "snackbar" shown after copying a link or image URL to the clipboard. -->
+    <string name="mozac_feature_contextmenu_snackbar_link_copied">Poveznica kopirana u međuspremnik</string>
+    <!-- Action shown in a "snacbkar" after opening a new/private tab. Clicking this action will switch to the newly opened tab. -->
+    <string name="mozac_feature_contextmenu_snackbar_action_switch">Prebaci</string>
+    <string name="mozac_feature_contextmenu_open_link_in_external_app">Otvori poveznicu u vanjskoj aplikaciji</string>
+    <!-- Action shown in a text selection context menu. This will prompt a search using the selected text. The first parameter is the name of the application (For example: Fenix)-->
+    <string name="mozac_selection_context_menu_search">%s pretraga</string>
+    <!-- Action shown in a text selection context menu. This will prompt a search in a private tab using the selected text The first parameter is the name of the application (For example: Fenix) -->
+    <string name="mozac_selection_context_menu_search_privately">%s privatna pretraga</string>
+</resources>
