@@ -53,67 +53,49 @@ platform_names:
     path_platform:
         by-platform:
             linux-shippable: 'linux-i686'
-            linux-devedition-nightly: 'linux-i686'
             linux-devedition: 'linux-i686'
             linux64-shippable: 'linux-x86_64'
-            linux64-devedition-nightly: 'linux-x86_64'
             linux64-devedition: 'linux-x86_64'
             linux64-asan-reporter-nightly: 'linux-x86_64-asan-reporter'
             macosx64-shippable: 'mac'
-            macosx64-devedition-nightly: 'mac'
             macosx64-devedition: 'mac'
             win32-shippable: 'win32'
-            win32-devedition-nightly: 'win32'
             win32-devedition: 'win32'
             win64-shippable: 'win64'
-            win64-devedition-nightly: 'win64'
             win64-devedition: 'win64'
             win64-aarch64-shippable: 'win64-aarch64'
-            win64-aarch64-devedition-nightly: 'win64-aarch64'
             win64-aarch64-devedition: 'win64-aarch64'
             win64-asan-reporter-nightly: 'win64-asan-reporter'
     tools_platform:
         by-platform:
             linux-shippable: 'linux'
-            linux-devedition-nightly: 'linux-devedition'
             linux-devedition: 'linux-devedition'
             linux64-shippable: 'linux64'
-            linux64-devedition-nightly: 'linux64-devedition'
             linux64-devedition: 'linux64-devedition'
             linux64-asan-reporter-nightly: 'linux-x86_64-asan-reporter'
             macosx64-shippable: 'macosx64'
-            macosx64-devedition-nightly: 'macosx64-devedition'
             macosx64-devedition: 'macosx64-devedition'
             win32-shippable: 'win32'
-            win32-devedition-nightly: 'win32-devedition'
             win32-devedition: 'win32-devedition'
             win64-shippable: 'win64'
-            win64-devedition-nightly: 'win64-devedition'
             win64-devedition: 'win64-devedition'
             win64-aarch64-shippable: 'win64-aarch64'
-            win64-aarch64-devedition-nightly: 'win64-aarch64-devedition'
             win64-aarch64-devedition: 'win64-aarch64-devedition'
             win64-asan-reporter-nightly: 'win64-asan-reporter'
     filename_platform:
         by-platform:
             linux-shippable: 'linux'
-            linux-devedition-nightly: 'linux'
             linux-devedition: 'linux'
             linux64-shippable: 'linux64'
-            linux64-devedition-nightly: 'linux64'
             linux64-devedition: 'linux64'
             linux64-asan-reporter-nightly: 'linux-x86_64-asan-reporter'
             macosx64-shippable: 'macosx64'
-            macosx64-devedition-nightly: 'macosx64'
             macosx64-devedition: 'macosx64'
             win32-shippable: 'win32'
-            win32-devedition-nightly: 'win32'
             win32-devedition: 'win32'
             win64-shippable: 'win64'
-            win64-devedition-nightly: 'win64'
             win64-devedition: 'win64'
             win64-aarch64-shippable: 'win64_aarch64'
-            win64-aarch64-devedition-nightly: 'win64_aarch64'
             win64-aarch64-devedition: 'win64_aarch64'
             win64-asan-reporter-nightly: 'win64-asan-reporter'
 
@@ -237,7 +219,6 @@ mapping:
         only_for_platforms:
             - linux-shippable
             - linux64-shippable
-            - linux64-devedition-nightly
             - linux64-devedition
             - macosx64-shippable
             - win32-shippable
@@ -257,9 +238,6 @@ mapping:
             - win32-shippable
             - win64-shippable
             - win64-aarch64-shippable
-            - win32-devedition-nightly
-            - win64-devedition-nightly
-            - win64-aarch64-devedition-nightly
             - win32-devedition
             - win64-devedition
             - win64-aarch64-devedition
@@ -276,9 +254,6 @@ mapping:
             - win32-shippable
             - win64-shippable
             - win64-aarch64-shippable
-            - win32-devedition-nightly
-            - win64-devedition-nightly
-            - win64-aarch64-devedition-nightly
             - win32-devedition
             - win64-devedition
             - win64-aarch64-devedition
@@ -295,9 +270,6 @@ mapping:
             - win32-shippable
             - win64-shippable
             - win64-aarch64-shippable
-            - win32-devedition-nightly
-            - win64-devedition-nightly
-            - win64-aarch64-devedition-nightly
             - win32-devedition
             - win64-devedition
             - win64-aarch64-devedition
@@ -314,9 +286,6 @@ mapping:
             - win32-shippable
             - win64-shippable
             - win64-aarch64-shippable
-            - win32-devedition-nightly
-            - win64-devedition-nightly
-            - win64-aarch64-devedition-nightly
             - win32-devedition
             - win64-devedition
             - win64-aarch64-devedition
@@ -331,8 +300,6 @@ mapping:
         only_for_platforms:
             - linux-shippable
             - linux64-shippable
-            - linux-devedition-nightly
-            - linux64-devedition-nightly
             - linux-devedition
             - linux64-devedition
         pretty_name: firefox-${version}.tar.bz2
@@ -346,8 +313,6 @@ mapping:
         only_for_platforms:
             - linux-shippable
             - linux64-shippable
-            - linux-devedition-nightly
-            - linux64-devedition-nightly
             - linux-devedition
             - linux64-devedition
         pretty_name: firefox-${version}.tar.bz2.asc
@@ -370,7 +335,6 @@ mapping:
             - repackage
         only_for_platforms:
             - macosx64-shippable
-            - macosx64-devedition-nightly
             - macosx64-devedition
         pretty_name: Firefox ${version}.dmg
         checksums_path: ${path_platform}/${locale}/Firefox ${version}.dmg
@@ -384,9 +348,6 @@ mapping:
             - win64-shippable
             - win32-shippable
             - win64-aarch64-shippable
-            - win64-devedition-nightly
-            - win32-devedition-nightly
-            - win64-aarch64-devedition-nightly
             - win64-devedition
             - win32-devedition
             - win64-aarch64-devedition
@@ -402,9 +363,6 @@ mapping:
             - win64-shippable
             - win32-shippable
             - win64-aarch64-shippable
-            - win64-devedition-nightly
-            - win32-devedition-nightly
-            - win64-aarch64-devedition-nightly
             - win64-devedition
             - win32-devedition
             - win64-aarch64-devedition
@@ -418,7 +376,6 @@ mapping:
             - repackage-signing
         only_for_platforms:
             - win32-shippable
-            - win32-devedition-nightly
             - win32-devedition
         pretty_name: Firefox Installer.exe
         checksums_path: ${path_platform}/${locale}/Firefox Installer.exe
@@ -431,8 +388,6 @@ mapping:
         only_for_platforms:
             - win64-shippable
             - win32-shippable
-            - win64-devedition-nightly
-            - win32-devedition-nightly
             - win64-devedition
             - win32-devedition
         pretty_name: Firefox Setup ${version}.msi
