@@ -38,6 +38,15 @@
 
 /*************************** Auxiliary Declarations ***************************/
 
+static MOZ_THREAD_LOCAL(int) tlsSuspendLateWriteChecks;
+
+bool SuspendingLateWriteChecksForCurrentThread() {
+  if (!tlsSuspendLateWriteChecks.init()) {
+    return true;
+  }
+  return tlsSuspendLateWriteChecks.get() > 0;
+}
+
 // This a wrapper over a file descriptor that provides a Printf method and
 // computes the sha1 of the data that passes through it.
 class SHA1Stream {
@@ -103,6 +112,10 @@ class LateWriteObserver final : public mozilla::IOInterposeObserver {
 
 void LateWriteObserver::Observe(
     mozilla::IOInterposeObserver::Observation& aOb) {
+  if (SuspendingLateWriteChecksForCurrentThread()) {
+    return;
+  }
+
 #ifdef DEBUG
   MOZ_CRASH();
 #endif
@@ -231,6 +244,22 @@ void StopLateWriteChecks() {
     // called at shutdown and only in special cases.
     // sLateWriteObserver = nullptr;
   }
+}
+
+void PushSuspendLateWriteChecks() {
+  if (!tlsSuspendLateWriteChecks.init()) {
+    return;
+  }
+  tlsSuspendLateWriteChecks.set(tlsSuspendLateWriteChecks.get() + 1);
+}
+
+void PopSuspendLateWriteChecks() {
+  if (!tlsSuspendLateWriteChecks.init()) {
+    return;
+  }
+  int current = tlsSuspendLateWriteChecks.get();
+  MOZ_ASSERT(current > 0);
+  tlsSuspendLateWriteChecks.set(current - 1);
 }
 
 }  // namespace mozilla

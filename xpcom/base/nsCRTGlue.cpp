@@ -19,6 +19,7 @@
 #ifdef XP_WIN
 #  include <io.h>
 #  include <windows.h>
+#  include "mozilla/LateWriteChecks.h"
 #  include "mozilla/UniquePtr.h"
 #endif
 
@@ -259,6 +260,7 @@ void vprintf_stderr(const char* aFmt, va_list aArgs) {
 
   vfprintf(fp, aFmt, aArgs);
 
+  AutoSuspendLateWriteChecks suspend;
   fclose(fp);
 }
 
