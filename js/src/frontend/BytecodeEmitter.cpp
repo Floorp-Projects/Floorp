@@ -9529,16 +9529,32 @@ bool BytecodeEmitter::emitClass(
   // Stack currently has HOMEOBJ followed by optional HERITAGE. When HERITAGE
   // is not used, an implicit value of %FunctionPrototype% is implied.
   if (constructor) {
-    FunctionNode* ctor;
-    // .fieldKeys must be declared outside the scope .initializers is declared
-    // in, hence this extra scope.
+    // See |Parser::classMember(...)| for the reason why |.initializers| is
+    // created within its own scope.
     Maybe<LexicalScopeEmitter> lse;
+    FunctionNode* ctor;
     if (constructor->is<LexicalScopeNode>()) {
-      if (!constructor->as<LexicalScopeNode>().isEmptyScope()) {
+      LexicalScopeNode* constructorScope = &constructor->as<LexicalScopeNode>();
+
+      // The constructor scope should only contain the |.initializers| binding.
+      MOZ_ASSERT(!constructorScope->isEmptyScope());
+      MOZ_ASSERT(constructorScope->scopeBindings()->length == 1);
+      MOZ_ASSERT(constructorScope->scopeBindings()->trailingNames[0].name() ==
+                 cx->names().dotInitializers);
+
+      auto isInstanceField = [](ParseNode* propdef) {
+        return propdef->is<ClassField>();
+      };
+
+      // As an optimization omit the |.initializers| binding when no instance
+      // fields are present.
+      bool hasInstanceFields =
+          std::any_of(classMembers->contents().begin(),
+                      classMembers->contents().end(), isInstanceField);
+      if (hasInstanceFields) {
         lse.emplace(this);
-        if (!lse->emitScope(
-                ScopeKind::Lexical,
-                constructor->as<LexicalScopeNode>().scopeBindings())) {
+        if (!lse->emitScope(ScopeKind::Lexical,
+                            constructorScope->scopeBindings())) {
           return false;
         }
 
@@ -9548,11 +9564,10 @@ bool BytecodeEmitter::emitClass(
         }
       }
 
-      ctor = &constructor->as<LexicalScopeNode>()
-                  .scopeBody()
-                  ->as<ClassMethod>()
-                  .method();
+      ctor = &constructorScope->scopeBody()->as<ClassMethod>().method();
     } else {
+      // The |.initializers| binding is never emitted when in self-hosting mode.
+      MOZ_ASSERT(emitterMode == BytecodeEmitter::SelfHosting);
       ctor = &constructor->as<ClassMethod>().method();
     }
 
