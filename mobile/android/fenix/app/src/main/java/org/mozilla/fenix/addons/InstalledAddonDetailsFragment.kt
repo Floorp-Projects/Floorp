@@ -13,7 +13,6 @@ import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.navigation.Navigation
 import androidx.navigation.findNavController
-import kotlinx.android.synthetic.main.activity_addons.view.*
 import kotlinx.android.synthetic.main.fragment_installed_add_on_details.*
 import kotlinx.android.synthetic.main.fragment_installed_add_on_details.view.*
 import kotlinx.coroutines.CoroutineScope
@@ -94,7 +93,7 @@ class InstalledAddonDetailsFragment : Fragment() {
         switch.setOnCheckedChangeListener { v, isChecked ->
             val addonManager = v.context.components.addonManager
             switch.isClickable = false
-            remove_add_on.isEnabled = false
+            view.remove_add_on.isEnabled = false
             if (isChecked) {
                 addonManager.enableAddon(
                     addon,
@@ -103,7 +102,7 @@ class InstalledAddonDetailsFragment : Fragment() {
                             switch.isClickable = true
                             switch.setText(R.string.mozac_feature_addons_settings_on)
                             view.settings.isVisible = true
-                            remove_add_on.isEnabled = true
+                            view.remove_add_on.isEnabled = true
                             this.addon = it
                             showSnackBar(
                                 view,
@@ -117,7 +116,7 @@ class InstalledAddonDetailsFragment : Fragment() {
                     onError = {
                         runIfFragmentIsAttached {
                             switch.isClickable = true
-                            remove_add_on.isEnabled = true
+                            view.remove_add_on.isEnabled = true
                             showSnackBar(
                                 view,
                                 getString(
@@ -129,14 +128,14 @@ class InstalledAddonDetailsFragment : Fragment() {
                     }
                 )
             } else {
+                view.settings.isVisible = false
                 addonManager.disableAddon(
                     addon,
                     onSuccess = {
                         runIfFragmentIsAttached {
                             switch.isClickable = true
                             switch.setText(R.string.mozac_feature_addons_settings_off)
-                            view.settings.isVisible = false
-                            remove_add_on.isEnabled = true
+                            view.remove_add_on.isEnabled = true
                             this.addon = it
                             showSnackBar(
                                 view,
@@ -150,7 +149,7 @@ class InstalledAddonDetailsFragment : Fragment() {
                     onError = {
                         runIfFragmentIsAttached {
                             switch.isClickable = true
-                            remove_add_on.isEnabled = true
+                            view.remove_add_on.isEnabled = true
                             showSnackBar(
                                 view,
                                 getString(
