@@ -1,4 +1,3 @@
-// |reftest| skip -- class-static-fields-public is not supported
 // This file was procedurally generated from the following sources:
 // - src/class-elements/static-field-init-with-this.case
 // - src/class-elements/default/cls-expr.template
