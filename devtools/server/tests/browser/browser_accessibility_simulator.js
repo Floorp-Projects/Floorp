@@ -72,7 +72,7 @@ add_task(async function() {
     MAIN_DOMAIN + "doc_accessibility.html"
   );
 
-  const simulator = await accessibility.getSimulator();
+  const simulator = accessibility.simulatorFront;
 
   if (!simulator) {
     ok(!isWebRenderEnabled(window), "Web render is disabled.");

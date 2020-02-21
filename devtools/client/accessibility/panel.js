@@ -64,6 +64,7 @@ function AccessibilityPanel(iframeWindow, toolbox, startup) {
     this
   );
   this.audit = this.audit.bind(this);
+  this.simulate = this.simulate.bind(this);
 
   EventEmitter.decorate(this);
 }
@@ -104,7 +105,6 @@ AccessibilityPanel.prototype = {
 
     await this.startup.initAccessibility();
     this.picker = new Picker(this);
-    this.simulator = await this.front.getSimulator();
     this.fluentBundles = await this.createFluentBundles();
 
     this.updateA11YServiceDurationTimer();
@@ -183,7 +183,6 @@ AccessibilityPanel.prototype = {
       front: this.front,
       supports: this.supports,
       fluentBundles: this.fluentBundles,
-      simulator: this.simulator,
       toolbox: this._toolbox,
       getAccessibilityTreeRoot: this.getAccessibilityTreeRoot,
       startListeningForAccessibilityEvents: this
@@ -191,6 +190,7 @@ AccessibilityPanel.prototype = {
       stopListeningForAccessibilityEvents: this
         .stopListeningForAccessibilityEvents,
       audit: this.audit,
+      simulate: this.startup.simulator && this.simulate,
     });
   },
 
@@ -351,6 +351,10 @@ AccessibilityPanel.prototype = {
       this.walker.on("audit-event", auditEventHandler);
       this.walker.startAudit({ types });
     });
+  },
+
+  simulate(types) {
+    return this.startup.simulator.simulate({ types });
   },
 
   get front() {

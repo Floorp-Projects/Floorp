@@ -44,13 +44,21 @@ add_task(async function() {
     "The AccessibleWalkerFront was returned"
   );
 
-  const a11ySimulator = await accessibility.getSimulator();
+  const a11ySimulator = accessibility.simulatorFront;
   const webRenderEnabled = isWebRenderEnabled(window);
   is(
     !!a11ySimulator,
     webRenderEnabled,
     `The SimulatorFront was${webRenderEnabled ? "" : " not"} returned.`
   );
+  if (webRenderEnabled) {
+    ok(accessibility.simulatorFront, "Accessible simulator was initialized");
+    is(
+      a11ySimulator,
+      accessibility.simulatorFront,
+      "The SimulatorFront was returned"
+    );
+  }
 
   checkAccessibilityState(accessibility, {
     enabled: false,
