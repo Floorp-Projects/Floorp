@@ -121,6 +121,21 @@ To customize the menu you could use separate properties 1 or full access to the 
     </style>
 ```
 
+## Facts
+
+This component emits the following [Facts](../../support/base/README.md#Facts):
+
+| Action | Item                    | Extras            | Description                          |
+|--------|-------------------------|-------------------|--------------------------------------|
+| Click  | web_extension_menu_item | `menuItemExtras`  | Web extension menu item was clicked. |
+
+
+#### `menuItemExtras`
+
+| Key  | Type   | Value                                                    |
+|------|--------|----------------------------------------------------------|
+| "id" | String | Web extension id of the clicked web extension menu item. |
+
 ## License
 
     This Source Code Form is subject to the terms of the Mozilla Public

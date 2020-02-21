@@ -19,7 +19,7 @@ implementation "org.mozilla.components:support-webextensions:{latest-version}"
 This component emits the following [Facts](../../support/base/README.md#Facts):
 
 | Action      | Item                       | Extras            | Description                     |
-|-------------|-----------------------_----|-------------------|---------------------------------|
+|-------------|----------------------------|-------------------|---------------------------------|
 | Interaction | web_extensions_initialized | `extensionExtras` | Web extensions are initialized. |
 
 

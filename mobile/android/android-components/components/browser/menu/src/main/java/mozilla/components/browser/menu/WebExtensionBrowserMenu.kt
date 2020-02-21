@@ -9,6 +9,7 @@ import android.widget.PopupWindow
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.collect
+import mozilla.components.browser.menu.facts.emitOpenMenuItemFact
 import mozilla.components.browser.menu.item.WebExtensionBrowserMenuItem
 import mozilla.components.browser.state.selector.selectedTab
 import mozilla.components.browser.state.state.BrowserState
@@ -106,9 +107,13 @@ class WebExtensionBrowserMenu internal constructor(
 
             // Add the global browser/page action if it doesn't exist
             val browserMenuItem = actionMap.getOrPut(extension.id) {
+                val listener = {
+                    emitOpenMenuItemFact(extension.id)
+                    globalAction.onClick()
+                }
                 val browserMenuItem = WebExtensionBrowserMenuItem(
                     action = globalAction,
-                    listener = globalAction.onClick
+                    listener = listener
                 )
                 browserMenuItem
             }

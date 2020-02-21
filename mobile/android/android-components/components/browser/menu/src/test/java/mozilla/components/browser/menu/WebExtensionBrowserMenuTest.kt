@@ -6,12 +6,16 @@ package mozilla.components.browser.menu
 
 import android.graphics.Bitmap
 import android.graphics.Color
+import android.view.View
 import android.widget.Button
+import android.widget.ImageView
+import android.widget.TextView
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.test.TestCoroutineDispatcher
 import mozilla.components.browser.menu.WebExtensionBrowserMenu.Companion.getOrUpdateWebExtensionMenuItems
 import mozilla.components.browser.menu.WebExtensionBrowserMenu.Companion.webExtensionBrowserActions
 import mozilla.components.browser.menu.WebExtensionBrowserMenu.Companion.webExtensionPageActions
+import mozilla.components.browser.menu.facts.BrowserMenuFacts.Items.WEB_EXTENSION_MENU_ITEM
 import mozilla.components.browser.menu.item.SimpleBrowserMenuItem
 import mozilla.components.browser.menu.item.WebExtensionBrowserMenuItem
 import mozilla.components.browser.state.selector.selectedTab
@@ -23,9 +27,12 @@ import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.webextension.Action
 import mozilla.components.concept.engine.webextension.WebExtensionBrowserAction
 import mozilla.components.concept.engine.webextension.WebExtensionPageAction
+import mozilla.components.support.base.facts.Action as FactsAction
+import mozilla.components.support.base.facts.processor.CollectionProcessor
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.rule.MainCoroutineRule
+import mozilla.components.support.test.whenever
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -111,7 +118,7 @@ class WebExtensionBrowserMenuTest {
 
         menu.dismiss()
         val anotherBrowserAction =
-                WebExtensionBrowserAction("another_title", false, mock(), "", 0, 0) {}
+            WebExtensionBrowserAction("another_title", false, mock(), "", 0, 0) {}
         val anotherPageAction =
             WebExtensionBrowserAction("another_title", false, mock(), "", 0, 0) {}
         val anotherExtension: Map<String, WebExtensionState> = mapOf(
@@ -135,7 +142,6 @@ class WebExtensionBrowserMenuTest {
 
     @Test
     fun `render web extension actions from browser state`() {
-
         val defaultBrowserAction =
             WebExtensionBrowserAction("default_browser_action_title", false, mock(), "", 0, 0) {}
         val defaultPageAction =
@@ -178,14 +184,21 @@ class WebExtensionBrowserMenuTest {
                 )
             )
 
-        val browserMenuItems = getOrUpdateWebExtensionMenuItems(store.state, store.state.selectedTab)
+        val browserMenuItems =
+            getOrUpdateWebExtensionMenuItems(store.state, store.state.selectedTab)
         assertEquals(2, browserMenuItems.size)
 
         var actionMenu = browserMenuItems[0]
-        assertEquals("overridden_browser_action_title", (actionMenu as WebExtensionBrowserMenuItem).action.title)
+        assertEquals(
+            "overridden_browser_action_title",
+            (actionMenu as WebExtensionBrowserMenuItem).action.title
+        )
 
         actionMenu = browserMenuItems[1]
-        assertEquals("overridden_page_action_title", (actionMenu as WebExtensionBrowserMenuItem).action.title)
+        assertEquals(
+            "overridden_page_action_title",
+            (actionMenu as WebExtensionBrowserMenuItem).action.title
+        )
     }
 
     @Test
@@ -365,8 +378,10 @@ class WebExtensionBrowserMenuTest {
         ) {}
 
         val browserExtensions = HashMap<String, WebExtensionState>()
-        browserExtensions["1"] = WebExtensionState(id = "1", name = "extensionA", browserAction = actionExt1)
-        browserExtensions["2"] = WebExtensionState(id = "2", name = "extensionB", browserAction = actionExt2)
+        browserExtensions["1"] =
+            WebExtensionState(id = "1", name = "extensionA", browserAction = actionExt1)
+        browserExtensions["2"] =
+            WebExtensionState(id = "2", name = "extensionB", browserAction = actionExt2)
 
         val tabSessionState = TabSessionState(
             content = mock(),
@@ -378,5 +393,60 @@ class WebExtensionBrowserMenuTest {
         assertEquals(2, actionItems.size)
         assertEquals(actionExt1, (actionItems[0] as WebExtensionBrowserMenuItem).action)
         assertEquals(actionExt2, (actionItems[1] as WebExtensionBrowserMenuItem).action)
+    }
+
+    @Test
+    fun `clicking on the menu item should emit a BrowserMenuFacts with the web extension id`() {
+        val imageView: ImageView = mock()
+        val badgeView: TextView = mock()
+        val labelView = TextView(testContext)
+        val container = View(testContext)
+        val view: View = mock()
+
+        whenever(view.findViewById<ImageView>(R.id.action_image)).thenReturn(imageView)
+        whenever(view.findViewById<TextView>(R.id.badge_text)).thenReturn(badgeView)
+        whenever(view.findViewById<TextView>(R.id.action_label)).thenReturn(labelView)
+        whenever(view.findViewById<View>(R.id.container)).thenReturn(container)
+        whenever(view.context).thenReturn(mock())
+
+        val browserAction =
+            WebExtensionBrowserAction("title", false, mock(), "", 0, 0) {}
+        val pageAction =
+            WebExtensionPageAction("title", false, mock(), "", 0, 0) {}
+        val extensions: Map<String, WebExtensionState> = mapOf(
+            "some_example_id" to WebExtensionState(
+                "some_example_id",
+                "url",
+                "name",
+                true,
+                browserAction = browserAction,
+                pageAction = pageAction
+            )
+        )
+
+        val store =
+            BrowserStore(
+                BrowserState(
+                    extensions = extensions
+                )
+            )
+
+        val browserMenuItems = getOrUpdateWebExtensionMenuItems(store.state)
+        val menuItem = browserMenuItems[1] as WebExtensionBrowserMenuItem
+        val menu: WebExtensionBrowserMenu = mock()
+
+        menuItem.bind(menu, view)
+        testDispatcher.advanceUntilIdle()
+
+        CollectionProcessor.withFactCollection { facts ->
+            container.performClick()
+
+            val fact = facts[0]
+            assertEquals(FactsAction.CLICK, fact.action)
+            assertEquals(WEB_EXTENSION_MENU_ITEM, fact.item)
+            assertEquals(1, fact.metadata?.size)
+            assertTrue(fact.metadata?.containsKey("id")!!)
+            assertEquals("some_example_id", fact.metadata?.get("id"))
+        }
     }
 }
