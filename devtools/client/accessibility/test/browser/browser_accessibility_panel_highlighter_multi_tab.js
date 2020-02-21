@@ -36,13 +36,6 @@ add_task(async function() {
   await checkHighlighted(toolbox2, false);
 });
 
-async function checkHighlighted(toolbox, expected) {
-  await BrowserTestUtils.waitForCondition(async function() {
-    const isHighlighted = await toolbox.isToolHighlighted("accessibility");
-    return isHighlighted === expected;
-  });
-}
-
 async function openOptions(toolbox) {
   const panel = await toolbox.selectTool("options");
   return {

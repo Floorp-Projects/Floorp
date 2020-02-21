@@ -24,13 +24,7 @@ add_task(async function tabHighlighted() {
   ok(a11yService, "Accessibility service was started");
   await addTab(buildURL(TEST_URI));
   const { toolbox } = await openInspector();
-  const isHighlighted = await toolbox.isToolHighlighted("accessibility");
-
-  ok(
-    isHighlighted,
-    "When accessibility service is running, accessibility panel should" +
-      "be highlighted when toolbox opens"
-  );
+  await checkHighlighted(toolbox, true);
 
   a11yService = null;
   gBrowser.removeCurrentTab();

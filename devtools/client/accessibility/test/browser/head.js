@@ -8,7 +8,7 @@
 /* exported addTestTab, checkTreeState, checkSidebarState, checkAuditState, selectRow,
             toggleRow, toggleMenuItem, addA11yPanelTestsTask, reload, navigate,
             openSimulationMenu, toggleSimulationOption, TREE_FILTERS_MENU_ID,
-            PREFS_MENU_ID */
+            PREFS_MENU_ID, checkHighlighted */
 
 "use strict";
 
@@ -800,4 +800,19 @@ function addA11YPanelTask(msg, uri, task) {
 function reload(target, waitForTargetEvent = "navigate") {
   executeSoon(() => target.reload());
   return once(target, waitForTargetEvent);
+}
+
+/**
+ * Wait and check that the state of the accessibility tab in the toolbox is
+ * correct.
+ * @param {Object}   toolbox
+ *                   DevTools toolbox to be checked.
+ * @param {Boolean}  expected
+ *                   Expected highlighted state of the accessibility tab.
+ */
+async function checkHighlighted(toolbox, expected) {
+  await BrowserTestUtils.waitForCondition(async function() {
+    const isHighlighted = await toolbox.isToolHighlighted("accessibility");
+    return isHighlighted === expected;
+  });
 }
