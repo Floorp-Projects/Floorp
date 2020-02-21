@@ -105,10 +105,10 @@ The commit message should look like:
 
     Optionally, a longer description of the change.
 
-To find a reviewer, the easiest way is to do ``hg log <modified-file>`` (or
-``git log <modified-file>``, if you're using git) on the relevant files, and
-look who usually is reviewing the actual changes (ie not reformat, renaming
-of variables, etc).
+To :ref:`find a reviewer or a review group <Getting reviews>`, the easiest way is to do
+``hg log <modified-file>`` (or ``git log <modified-file>``, if
+you're using git) on the relevant files, and look who usually is
+reviewing the actual changes (ie not reformat, renaming of variables, etc).
 
 To visualize your patch in the repository, run:
 
