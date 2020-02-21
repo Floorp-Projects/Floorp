@@ -101,14 +101,9 @@ class TrySelect(MachCommandBase):
         special preset handling. They can all save and load presets the same
         way.
         """
-        from tryselect.preset import migrate_old_presets
         from tryselect.util.dicttools import merge
 
         user_presets = self.presets.handlers[0]
-
-        # TODO: Remove after Jan 1, 2020.
-        migrate_old_presets(user_presets)
-
         if preset_action == 'list':
             self.presets.list()
             sys.exit()
