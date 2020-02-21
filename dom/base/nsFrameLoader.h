@@ -468,7 +468,7 @@ class nsFrameLoader final : public nsStubMutationObserver,
 
   nsresult PopulateUserContextIdFromAttribute(mozilla::OriginAttributes& aAttr);
 
-  RefPtr<mozilla::dom::BrowsingContext> mBrowsingContext;
+  RefPtr<mozilla::dom::BrowsingContext> mPendingBrowsingContext;
   nsCOMPtr<nsIURI> mURIToLoad;
   nsCOMPtr<nsIPrincipal> mTriggeringPrincipal;
   nsCOMPtr<nsIContentSecurityPolicy> mCsp;
