@@ -53,17 +53,11 @@
 #include "GestureEventListener.h"  // for GestureEventListener::setLongTapEnabled
 #include "UnitTransforms.h"        // for ViewAs
 
-#define ENABLE_APZCTM_LOGGING 0
-// #define ENABLE_APZCTM_LOGGING 1
+static mozilla::LazyLogModule sApzMgrLog("apz.manager");
+#define APZCTM_LOG(...) MOZ_LOG(sApzMgrLog, LogLevel::Debug, (__VA_ARGS__))
 
-#if ENABLE_APZCTM_LOGGING
-#  define APZCTM_LOG(...) printf_stderr("APZCTM: " __VA_ARGS__)
-#else
-#  define APZCTM_LOG(...)
-#endif
-
-// #define APZ_KEY_LOG(...) printf_stderr("APZKEY: " __VA_ARGS__)
-#define APZ_KEY_LOG(...)
+static mozilla::LazyLogModule sApzKeyLog("apz.key");
+#define APZ_KEY_LOG(...) MOZ_LOG(sApzKeyLog, LogLevel::Debug, (__VA_ARGS__))
 
 namespace mozilla {
 namespace layers {
@@ -647,13 +641,10 @@ APZCTreeManager::UpdateHitTestingTreeImpl(const ScrollNode& aRoot,
     state.mNodesToDestroy[i]->Destroy();
   }
 
-#if ENABLE_APZCTM_LOGGING
-  // Make the hit-test tree line up with the layer dump
-  printf_stderr("APZCTreeManager (%p)\n", this);
+  APZCTM_LOG("APZCTreeManager (%p)\n", this);
   if (mRootNode) {
     mRootNode->Dump("  ");
   }
-#endif
   SendSubtreeTransformsToChromeMainThread(nullptr);
 }
 

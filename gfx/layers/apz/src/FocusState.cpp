@@ -8,8 +8,8 @@
 
 #include "mozilla/layers/APZThreadUtils.h"
 
-// #define FS_LOG(...) printf_stderr("FS: " __VA_ARGS__)
-#define FS_LOG(...)
+static mozilla::LazyLogModule sApzFstLog("apz.focusstate");
+#define FS_LOG(...) MOZ_LOG(sApzFstLog, LogLevel::Debug, (__VA_ARGS__))
 
 namespace mozilla {
 namespace layers {

@@ -36,8 +36,8 @@
 #include "nsLayoutUtils.h"
 #include "nsQueryFrame.h"
 
-#define APZES_LOG(...)
-// #define APZES_LOG(...) printf_stderr("APZES: " __VA_ARGS__)
+static mozilla::LazyLogModule sApzEvtLog("apz.eventstate");
+#define APZES_LOG(...) MOZ_LOG(sApzEvtLog, LogLevel::Debug, (__VA_ARGS__))
 
 // Static helper functions
 namespace {
