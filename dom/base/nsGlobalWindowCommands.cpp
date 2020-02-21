@@ -126,7 +126,7 @@ class nsSelectionCommandsBase : public nsIControllerCommand {
                              nsISupports* aCommandContext) override;
 
  protected:
-  virtual ~nsSelectionCommandsBase() {}
+  virtual ~nsSelectionCommandsBase() = default;
 
   static nsresult GetPresShellFromWindow(nsPIDOMWindowOuter* aWindow,
                                          PresShell** aPresShell);
@@ -462,7 +462,7 @@ nsresult nsPhysicalSelectCommand::DoCommand(const char* aCommandName,
 #endif
 
 class nsClipboardCommand final : public nsIControllerCommand {
-  ~nsClipboardCommand() {}
+  ~nsClipboardCommand() = default;
 
  public:
   NS_DECL_ISUPPORTS
@@ -553,7 +553,7 @@ class nsSelectionCommand : public nsIControllerCommand {
   NS_DECL_NSICONTROLLERCOMMAND
 
  protected:
-  virtual ~nsSelectionCommand() {}
+  virtual ~nsSelectionCommand() = default;
 
   virtual nsresult IsClipboardCommandEnabled(const char* aCommandName,
                                              nsIContentViewerEdit* aEdit,
@@ -873,7 +873,7 @@ class nsLookUpDictionaryCommand final : public nsIControllerCommand {
   NS_DECL_NSICONTROLLERCOMMAND
 
  private:
-  virtual ~nsLookUpDictionaryCommand() {}
+  virtual ~nsLookUpDictionaryCommand() = default;
 };
 
 NS_IMPL_ISUPPORTS(nsLookUpDictionaryCommand, nsIControllerCommand)

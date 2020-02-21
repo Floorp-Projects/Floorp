@@ -51,8 +51,7 @@ class nsAttrKey {
   nsAttrKey(int32_t aNs, nsAtom* aName)
       : mNamespaceID(aNs), mLocalName(aName) {}
 
-  nsAttrKey(const nsAttrKey& aAttr)
-      : mNamespaceID(aAttr.mNamespaceID), mLocalName(aAttr.mLocalName) {}
+  nsAttrKey(const nsAttrKey& aAttr) = default;
 };
 
 /**
@@ -66,7 +65,7 @@ class nsAttrHashKey : public PLDHashEntryHdr {
   explicit nsAttrHashKey(KeyTypePointer aKey) : mKey(*aKey) {}
   nsAttrHashKey(const nsAttrHashKey& aCopy)
       : PLDHashEntryHdr{}, mKey(aCopy.mKey) {}
-  ~nsAttrHashKey() {}
+  ~nsAttrHashKey() = default;
 
   KeyType GetKey() const { return mKey; }
   bool KeyEquals(KeyTypePointer aKey) const {

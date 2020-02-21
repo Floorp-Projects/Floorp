@@ -228,7 +228,7 @@ nsPropertyTable::PropertyList::PropertyList(nsAtom* aName,
       mTransfer(aTransfer),
       mNext(nullptr) {}
 
-nsPropertyTable::PropertyList::~PropertyList() {}
+nsPropertyTable::PropertyList::~PropertyList() = default;
 
 void nsPropertyTable::PropertyList::Destroy() {
   // Enumerate any remaining object/value pairs and destroy the value object.

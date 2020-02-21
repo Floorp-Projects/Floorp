@@ -176,7 +176,7 @@ namespace {
 
 class NativeInputRunnable final : public PrioritizableRunnable {
   explicit NativeInputRunnable(already_AddRefed<nsIRunnable>&& aEvent);
-  ~NativeInputRunnable() {}
+  ~NativeInputRunnable() = default;
 
  public:
   static already_AddRefed<nsIRunnable> Create(

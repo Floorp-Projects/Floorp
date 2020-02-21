@@ -42,7 +42,7 @@ nsresult NS_NewContentPolicy(nsIContentPolicy** aResult) {
 
 nsContentPolicy::nsContentPolicy() : mPolicies(NS_CONTENTPOLICY_CATEGORY) {}
 
-nsContentPolicy::~nsContentPolicy() {}
+nsContentPolicy::~nsContentPolicy() = default;
 
 #ifdef DEBUG
 #  define WARN_IF_URI_UNINITIALIZED(uri, name)            \

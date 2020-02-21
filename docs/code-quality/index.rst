@@ -84,7 +84,7 @@ In this document, we try to list these all tools.
      - Upstream
    * - Flake8
      - Yes (with `autopep8 <https://github.com/hhatto/autopep8>`_)
-     -
+     - :ref:`Flake8`
      - http://flake8.pycqa.org/
    * - Python 2/3 compatibility check
      -
@@ -102,7 +102,7 @@ In this document, we try to list these all tools.
      - Upstream
    * - Rustfmt
      - Yes
-     -
+     - :ref:`Rustfmt`
      - https://github.com/rust-lang/rustfmt
    * - Clippy
      -
@@ -121,3 +121,29 @@ In this document, we try to list these all tools.
      -
      -
      - https://github.com/facebook/infer
+
+.. list-table:: Others
+   :widths: 25 25 25 25
+   :header-rows: 1
+
+   * - Tools
+     - Has autofixes
+     - More info
+     - Upstream
+   * - shellcheck
+     -
+     -
+     - https://www.shellcheck.net/
+   * - rstchecker
+     -
+     - :ref:`RST Linter`
+     - https://github.com/myint/rstcheck
+   * - Typo detection
+     - Yes
+     - :ref:`Codespell`
+     - https://github.com/codespell-project/codespell
+   * - YAML linter
+     -
+     -
+     - https://github.com/adrienverge/yamllint
+

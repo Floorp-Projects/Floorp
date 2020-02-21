@@ -62,7 +62,7 @@ nsQueryContentEventResult::nsQueryContentEventResult(
   aEvent.mSucceeded = false;
 }
 
-nsQueryContentEventResult::~nsQueryContentEventResult() {}
+nsQueryContentEventResult::~nsQueryContentEventResult() = default;
 
 NS_IMETHODIMP
 nsQueryContentEventResult::GetOffset(uint32_t* aOffset) {

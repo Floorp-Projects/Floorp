@@ -7061,14 +7061,14 @@ class LCheckIsCallable : public LInstructionHelper<0, BOX_PIECES, 1> {
   MCheckIsCallable* mir() const { return mir_->toCheckIsCallable(); }
 };
 
-class LCheckObjCoercible : public LCallInstructionHelper<0, BOX_PIECES, 0> {
+class LCheckObjCoercible : public LInstructionHelper<0, BOX_PIECES, 0> {
  public:
   LIR_HEADER(CheckObjCoercible)
 
   static const size_t CheckValue = 0;
 
   explicit LCheckObjCoercible(const LBoxAllocation& value)
-      : LCallInstructionHelper(classOpcode) {
+      : LInstructionHelper(classOpcode) {
     setBoxOperand(CheckValue, value);
   }
 };

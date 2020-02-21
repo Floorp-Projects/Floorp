@@ -275,7 +275,7 @@ namespace jit {
   _(ThrowHomeObjectNotObject, js::ThrowHomeObjectNotObject)                    \
   _(ThrowInitializedThis, js::ThrowInitializedThis)                            \
   _(ThrowMsgOperation, js::ThrowMsgOperation)                                  \
-  _(ThrowObjectCoercible, js::jit::ThrowObjectCoercible)                       \
+  _(ThrowObjectCoercible, js::ThrowObjectCoercible)                            \
   _(ThrowOperation, js::ThrowOperation)                                        \
   _(ThrowRuntimeLexicalError, js::jit::ThrowRuntimeLexicalError)               \
   _(ThrowUninitializedThis, js::ThrowUninitializedThis)                        \

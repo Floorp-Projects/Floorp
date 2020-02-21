@@ -48,7 +48,7 @@ class VisibilityChangeListener final : public nsIDOMEventListener {
   already_AddRefed<nsIContentPermissionRequestCallback> GetCallback();
 
  private:
-  virtual ~VisibilityChangeListener() {}
+  virtual ~VisibilityChangeListener() = default;
 
   nsWeakPtr mWindow;
   nsCOMPtr<nsIContentPermissionRequestCallback> mCallback;
@@ -208,7 +208,7 @@ ContentPermissionType::ContentPermissionType(
   mOptions = aOptions;
 }
 
-ContentPermissionType::~ContentPermissionType() {}
+ContentPermissionType::~ContentPermissionType() = default;
 
 NS_IMETHODIMP
 ContentPermissionType::GetType(nsACString& aType) {

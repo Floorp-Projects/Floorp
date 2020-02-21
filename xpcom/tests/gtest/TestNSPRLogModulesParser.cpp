@@ -98,6 +98,32 @@ TEST(NSPRLogModulesParser, Multiple)
   EXPECT_EQ(kExpectedCount, count);
 }
 
+TEST(NSPRLogModulesParser, Characters)
+{
+  std::pair<const char*, mozilla::LogLevel> expected[] = {
+      {"valid.name", mozilla::LogLevel::Verbose},
+      {"valid_name", mozilla::LogLevel::Debug},
+      {"invalid", mozilla::LogLevel::Error},
+  };
+
+  const size_t kExpectedCount = MOZ_ARRAY_LENGTH(expected);
+
+  auto* currTest = expected;
+
+  size_t count = 0;
+  mozilla::NSPRLogModulesParser(
+      "valid.name:5,valid_name:4,invalid/name:3,aborts-everything:2",
+      [&](const char* aName, mozilla::LogLevel aLevel, int32_t) mutable {
+        ASSERT_LT(count, kExpectedCount);
+        EXPECT_STREQ(currTest->first, aName);
+        EXPECT_EQ(currTest->second, aLevel);
+        currTest++;
+        count++;
+      });
+
+  EXPECT_EQ(kExpectedCount, count);
+}
+
 TEST(NSPRLogModulesParser, RawArg)
 {
   bool callbackInvoked = false;

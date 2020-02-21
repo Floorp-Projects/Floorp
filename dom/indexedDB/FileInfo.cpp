@@ -24,47 +24,6 @@ namespace indexedDB {
 using namespace mozilla::dom::quota;
 using namespace mozilla::ipc;
 
-namespace {
-
-template <typename IdType>
-class FileInfoImpl final : public FileInfo {
-  IdType mFileId;
-
- public:
-  FileInfoImpl(FileManager* aFileManager, IdType aFileId)
-      : FileInfo(aFileManager), mFileId(aFileId) {
-    MOZ_ASSERT(aFileManager);
-    MOZ_ASSERT(aFileId > 0);
-  }
-
- private:
-  ~FileInfoImpl() = default;
-
-  virtual int64_t Id() const override { return int64_t(mFileId); }
-};
-
-}  // namespace
-
-FileInfo::FileInfo(FileManager* aFileManager) : mFileManager(aFileManager) {
-  MOZ_ASSERT(aFileManager);
-}
-
-// static
-FileInfo* FileInfo::Create(FileManager* aFileManager, int64_t aId) {
-  MOZ_ASSERT(aFileManager);
-  MOZ_ASSERT(aId > 0);
-
-  if (aId <= INT16_MAX) {
-    return new FileInfoImpl<int16_t>(aFileManager, aId);
-  }
-
-  if (aId <= INT32_MAX) {
-    return new FileInfoImpl<int32_t>(aFileManager, aId);
-  }
-
-  return new FileInfoImpl<int64_t>(aFileManager, aId);
-}
-
 void FileInfo::GetReferences(int32_t* aRefCnt, int32_t* aDBRefCnt,
                              int32_t* aSliceRefCnt) {
   MOZ_ASSERT(!IndexedDatabaseManager::IsClosed());

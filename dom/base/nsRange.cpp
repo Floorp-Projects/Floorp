@@ -1281,7 +1281,7 @@ class MOZ_STACK_CLASS RangeSubtreeIterator {
 
  public:
   RangeSubtreeIterator() : mIterState(eDone) {}
-  ~RangeSubtreeIterator() {}
+  ~RangeSubtreeIterator() = default;
 
   nsresult Init(nsRange* aRange);
   already_AddRefed<nsINode> GetCurrentNode();

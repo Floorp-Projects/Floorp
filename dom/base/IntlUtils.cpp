@@ -23,7 +23,7 @@ NS_INTERFACE_MAP_END
 
 IntlUtils::IntlUtils(nsPIDOMWindowInner* aWindow) : mWindow(aWindow) {}
 
-IntlUtils::~IntlUtils() {}
+IntlUtils::~IntlUtils() = default;
 
 JSObject* IntlUtils::WrapObject(JSContext* aCx,
                                 JS::Handle<JSObject*> aGivenProto) {

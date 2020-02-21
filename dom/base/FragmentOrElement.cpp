@@ -530,7 +530,7 @@ void nsIContent::nsExtendedContentSlots::TraverseExtendedSlots(
   aCb.NoteXPCOMChild(NS_ISUPPORTS_CAST(nsIContent*, mAssignedSlot.get()));
 }
 
-nsIContent::nsExtendedContentSlots::nsExtendedContentSlots() {}
+nsIContent::nsExtendedContentSlots::nsExtendedContentSlots() = default;
 
 nsIContent::nsExtendedContentSlots::~nsExtendedContentSlots() = default;
 
@@ -621,7 +621,7 @@ size_t FragmentOrElement::nsDOMSlots::SizeOfIncludingThis(
 
 FragmentOrElement::nsExtendedDOMSlots::nsExtendedDOMSlots() = default;
 
-FragmentOrElement::nsExtendedDOMSlots::~nsExtendedDOMSlots() {}
+FragmentOrElement::nsExtendedDOMSlots::~nsExtendedDOMSlots() = default;
 
 void FragmentOrElement::nsExtendedDOMSlots::UnlinkExtendedSlots() {
   nsIContent::nsExtendedContentSlots::UnlinkExtendedSlots();

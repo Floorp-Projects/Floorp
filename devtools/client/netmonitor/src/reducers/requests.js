@@ -221,6 +221,7 @@ function cloneRequest(state, id) {
     requestHeaders: clonedRequest.requestHeaders,
     requestPostData: clonedRequest.requestPostData,
     requestPostDataAvailable: clonedRequest.requestPostDataAvailable,
+    requestHeadersAvailable: clonedRequest.requestHeadersAvailable,
     isCustom: true,
   };
 

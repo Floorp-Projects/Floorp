@@ -31,7 +31,7 @@ NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(Crypto, mParent, mSubtle)
 
 Crypto::Crypto(nsIGlobalObject* aParent) : mParent(aParent) {}
 
-Crypto::~Crypto() {}
+Crypto::~Crypto() = default;
 
 /* virtual */
 JSObject* Crypto::WrapObject(JSContext* aCx,

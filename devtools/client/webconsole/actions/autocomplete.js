@@ -27,10 +27,11 @@ function autocompleteUpdate(force, getterPath, expressionVars) {
     }
 
     const inputValue = hud.getInputValue();
-    const {
-      frameActor: frameActorId,
-      webConsoleFront,
-    } = await webConsoleUI.getFrameActor();
+    const frameActorId = await webConsoleUI.getFrameActor();
+    const webConsoleFront = await webConsoleUI.getWebConsoleFront({
+      frameActorId,
+    });
+
     const cursor = webConsoleUI.getInputCursor();
 
     const state = getState().autocomplete;

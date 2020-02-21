@@ -32,7 +32,7 @@ nsDOMTokenList::nsDOMTokenList(
   // we'll be told to drop our reference
 }
 
-nsDOMTokenList::~nsDOMTokenList() {}
+nsDOMTokenList::~nsDOMTokenList() = default;
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(nsDOMTokenList, mElement)
 

@@ -1491,15 +1491,11 @@ def set_worker_type(config, tests):
         elif test_platform.startswith('android-hw-g5'):
             if test['suite'] != 'raptor':
                 test['worker-type'] = 't-bitbar-gw-unit-g5'
-            elif '--power-test' in test['mozharness']['extra-options']:
-                test['worker-type'] = 't-bitbar-gw-batt-g5'
             else:
                 test['worker-type'] = 't-bitbar-gw-perf-g5'
         elif test_platform.startswith('android-hw-p2'):
             if test['suite'] != 'raptor':
                 test['worker-type'] = 't-bitbar-gw-unit-p2'
-            elif '--power-test' in test['mozharness']['extra-options']:
-                test['worker-type'] = 't-bitbar-gw-batt-p2'
             else:
                 test['worker-type'] = 't-bitbar-gw-perf-p2'
         elif test_platform.startswith('android-em-7.0-x86'):

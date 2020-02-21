@@ -40,7 +40,7 @@ DOMParser::DOMParser(nsIGlobalObject* aOwner, nsIPrincipal* aDocPrincipal,
   MOZ_ASSERT(aDocumentURI);
 }
 
-DOMParser::~DOMParser() {}
+DOMParser::~DOMParser() = default;
 
 // QueryInterface implementation for DOMParser
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DOMParser)

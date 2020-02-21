@@ -77,7 +77,7 @@ class InactivePropertyHelper {
    * }
    *
    * If you add a new rule, also add a test for it in:
-   * server/tests/mochitest/test_inspector-inactive-property-helper.html
+   * server/tests/chrome/test_inspector-inactive-property-helper.html
    *
    * The main export is `isPropertyUsed()`, which can be used to check if a
    * property is used or not, and why.
@@ -279,6 +279,22 @@ class InactivePropertyHelper {
         when: () => !this.isPositioned && !this.gridItem && !this.flexItem,
         fixId: "inactive-css-position-property-on-unpositioned-box-fix",
         msgId: "inactive-css-position-property-on-unpositioned-box",
+        numFixProps: 1,
+      },
+      // text-overflow property used on elements for which overflow is not set to hidden.
+      // Note that this validator only checks if overflow:hidden is set on the element.
+      // In theory, we should also be checking if the element is a block as this doesn't
+      // normally work on inline element. However there are many edge cases that made it
+      // impossible for the JS code to determine whether the type of box would support
+      // text-overflow. So, rather than risking to show invalid warnings, we decided to
+      // only warn when overflow:hidden wasn't set. There is more information about this
+      // in this discussion https://phabricator.services.mozilla.com/D62407 and on the bug
+      // https://bugzilla.mozilla.org/show_bug.cgi?id=1551578
+      {
+        invalidProperties: ["text-overflow"],
+        when: () => !this.checkComputedStyle("overflow", ["hidden"]),
+        fixId: "inactive-text-overflow-when-no-overflow-fix",
+        msgId: "inactive-text-overflow-when-no-overflow",
         numFixProps: 1,
       },
     ];

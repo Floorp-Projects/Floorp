@@ -64,8 +64,7 @@ class IdentifierMapEntry : public PLDHashEntryHdr {
         : mAtom(aAtom), mString(nullptr) {}
     MOZ_IMPLICIT DependentAtomOrString(const nsAString& aString)
         : mAtom(nullptr), mString(&aString) {}
-    DependentAtomOrString(const DependentAtomOrString& aOther)
-        : mAtom(aOther.mAtom), mString(aOther.mString) {}
+    DependentAtomOrString(const DependentAtomOrString& aOther) = default;
 
     nsAtom* mAtom;
     const nsAString* mString;
@@ -75,8 +74,8 @@ class IdentifierMapEntry : public PLDHashEntryHdr {
   typedef const DependentAtomOrString* KeyTypePointer;
 
   explicit IdentifierMapEntry(const DependentAtomOrString* aKey);
-  IdentifierMapEntry(IdentifierMapEntry&& aOther);
-  ~IdentifierMapEntry();
+  IdentifierMapEntry(IdentifierMapEntry&& aOther) = default;
+  ~IdentifierMapEntry() = default;
 
   nsString GetKeyAsString() const {
     if (mKey.mAtom) {
@@ -198,11 +197,8 @@ class IdentifierMapEntry : public PLDHashEntryHdr {
   // We use an OwningAtomOrString as our internal key storage.  It needs to own
   // the key string, whether in atom or string form.
   struct OwningAtomOrString final {
-    OwningAtomOrString(const OwningAtomOrString& aOther)
-        : mAtom(aOther.mAtom), mString(aOther.mString) {}
-
-    OwningAtomOrString(OwningAtomOrString&& aOther)
-        : mAtom(std::move(aOther.mAtom)), mString(std::move(aOther.mString)) {}
+    OwningAtomOrString(const OwningAtomOrString& aOther) = delete;
+    OwningAtomOrString(OwningAtomOrString&& aOther) = default;
 
     explicit OwningAtomOrString(const DependentAtomOrString& aOther)
         // aOther may have a null mString, so jump through a bit of a hoop in
@@ -214,7 +210,7 @@ class IdentifierMapEntry : public PLDHashEntryHdr {
           mString(aOther.mString ? *aOther.mString : EmptyString()) {}
 
     RefPtr<nsAtom> mAtom;
-    const nsString mString;
+    nsString mString;
   };
 
   IdentifierMapEntry(const IdentifierMapEntry& aOther) = delete;

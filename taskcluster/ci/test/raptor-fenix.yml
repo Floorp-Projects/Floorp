@@ -602,7 +602,6 @@ raptor-scn-power-idle-fenix:
             - --app=fenix
             - --binary-path=org.mozilla.fenix.performancetest
             - --power-test
-            - --host HOST_IP
             - --activity=org.mozilla.fenix.IntentReceiverActivity
 
 raptor-scn-cpu-memory-idle-fenix:
@@ -638,7 +637,6 @@ raptor-scn-cpu-memory-power-idle-fenix:
             - --cpu-test
             - --memory-test
             - --power-test
-            - --host HOST_IP
             - --activity=org.mozilla.fenix.IntentReceiverActivity
 
 raptor-scn-power-idle-bg-fenix:
@@ -655,7 +653,6 @@ raptor-scn-power-idle-bg-fenix:
             - --app=fenix
             - --binary-path=org.mozilla.fenix.performancetest
             - --power-test
-            - --host HOST_IP
             - --activity=org.mozilla.fenix.IntentReceiverActivity
 
 raptor-scn-cpu-memory-idle-bg-fenix:
@@ -691,7 +688,6 @@ raptor-scn-cpu-memory-power-idle-bg-fenix:
             - --cpu-test
             - --memory-test
             - --power-test
-            - --host HOST_IP
             - --activity=org.mozilla.fenix.IntentReceiverActivity
 
 raptor-youtube-playback-fenix:
@@ -741,5 +737,4 @@ raptor-speedometer-fenix-power:
             - --app=fenix
             - --binary-path=org.mozilla.fenix.performancetest
             - --power-test
-            - --host HOST_IP
             - --activity=org.mozilla.fenix.IntentReceiverActivity

@@ -401,16 +401,6 @@ IdentifierMapEntry::IdentifierMapEntry(
     const IdentifierMapEntry::DependentAtomOrString* aKey)
     : mKey(aKey ? *aKey : nullptr) {}
 
-IdentifierMapEntry::~IdentifierMapEntry() {}
-
-IdentifierMapEntry::IdentifierMapEntry(IdentifierMapEntry&& aOther)
-    : PLDHashEntryHdr(std::move(aOther)),
-      mKey(std::move(aOther.mKey)),
-      mIdContentList(std::move(aOther.mIdContentList)),
-      mNameContentList(std::move(aOther.mNameContentList)),
-      mChangeCallbacks(std::move(aOther.mChangeCallbacks)),
-      mImageElement(std::move(aOther.mImageElement)) {}
-
 void IdentifierMapEntry::Traverse(
     nsCycleCollectionTraversalCallback* aCallback) {
   NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(*aCallback,
@@ -604,7 +594,7 @@ class SimpleHTMLCollection final : public nsSimpleContentList,
   using nsBaseContentList::Item;
 
  private:
-  virtual ~SimpleHTMLCollection() {}
+  virtual ~SimpleHTMLCollection() = default;
 };
 
 NS_IMPL_ISUPPORTS_INHERITED(SimpleHTMLCollection, nsSimpleContentList,
@@ -648,13 +638,13 @@ class SubDocMapEntry : public PLDHashEntryHdr {
 
 class OnloadBlocker final : public nsIRequest {
  public:
-  OnloadBlocker() {}
+  OnloadBlocker() = default;
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIREQUEST
 
  private:
-  ~OnloadBlocker() {}
+  ~OnloadBlocker() = default;
 };
 
 NS_IMPL_ISUPPORTS(OnloadBlocker, nsIRequest)
@@ -11515,7 +11505,7 @@ namespace {
  * the CSSLoader's style cache
  */
 class StubCSSLoaderObserver final : public nsICSSLoaderObserver {
-  ~StubCSSLoaderObserver() {}
+  ~StubCSSLoaderObserver() = default;
 
  public:
   NS_IMETHOD
@@ -11593,7 +11583,7 @@ class nsDelayedEventDispatcher : public Runnable {
       : mozilla::Runnable("nsDelayedEventDispatcher") {
     mDocuments.SwapElements(aDocuments);
   }
-  virtual ~nsDelayedEventDispatcher() {}
+  virtual ~nsDelayedEventDispatcher() = default;
 
   NS_IMETHOD Run() override {
     FireOrClearDelayedEvents(mDocuments, true);

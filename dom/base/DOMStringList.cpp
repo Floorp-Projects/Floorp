@@ -20,7 +20,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DOMStringList)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-DOMStringList::~DOMStringList() {}
+DOMStringList::~DOMStringList() = default;
 
 JSObject* DOMStringList::WrapObject(JSContext* aCx,
                                     JS::Handle<JSObject*> aGivenProto) {
