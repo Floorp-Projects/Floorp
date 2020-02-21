@@ -64,6 +64,7 @@ data class SearchFragmentState(
  * Actions to dispatch through the `SearchStore` to modify `SearchState` through the reducer.
  */
 sealed class SearchFragmentAction : Action {
+    data class SetShowSearchSuggestions(val show: Boolean) : SearchFragmentAction()
     data class SearchShortcutEngineSelected(val engine: SearchEngine) : SearchFragmentAction()
     data class SelectNewDefaultSearchEngine(val engine: SearchEngine) : SearchFragmentAction()
     data class ShowSearchShortcutEnginePicker(val show: Boolean) : SearchFragmentAction()
@@ -91,5 +92,7 @@ private fun searchStateReducer(state: SearchFragmentState, action: SearchFragmen
             )
         is SearchFragmentAction.AllowSearchSuggestionsInPrivateModePrompt ->
             state.copy(showSearchSuggestionsHint = action.show)
+        is SearchFragmentAction.SetShowSearchSuggestions ->
+            state.copy(showSearchSuggestions = action.show)
     }
 }

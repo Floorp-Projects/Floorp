@@ -209,6 +209,8 @@ class SearchFragment : Fragment(), UserInteractionHandler {
                 inflated.visibility = View.GONE
                 context?.settings()?.shouldShowSearchSuggestionsInPrivate = true
                 context?.settings()?.showSearchSuggestionsInPrivateOnboardingFinished = true
+                searchStore.dispatch(SearchFragmentAction.SetShowSearchSuggestions(true))
+                searchStore.dispatch(SearchFragmentAction.AllowSearchSuggestionsInPrivateModePrompt(false))
                 requireComponents.analytics.metrics.track(Event.PrivateBrowsingShowSearchSuggestions)
             }
 
