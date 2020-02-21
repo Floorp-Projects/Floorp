@@ -10,40 +10,56 @@
     <string name="mozac_feature_addons_permissions_history_description">برائوزنگ سابقات تک رسائی  حاصل کریں</string>
     <!-- Description for proxy permission. -->
     <string name="mozac_feature_addons_permissions_proxy_description">برائوزر کی پراکسی ترتیبات کو کنٹرول کریں</string>
-    <!-- The version on an addon. -->
+    <!-- The version on of add-on. -->
     <string name="mozac_feature_addons_version">ورژن</string>
-    <!-- The developer website (Homepage) of the addon. -->
+    <!-- The authors of an add-on. -->
+    <string name="mozac_feature_addons_authors">تخليق کار</string>
+    <!-- The last date that the add-on was updated. -->
+    <string name="mozac_feature_addons_last_updated">آخری تازہ کاری</string>
+    <!-- The developer website (Homepage) of the add-on. -->
     <string name="mozac_feature_addons_home_page">ابتدائی صفحہ</string>
-    <!-- The rating of the addon. -->
+    <!-- A link where users can find more information about add-ons permissions. -->
+    <string name="mozac_feature_addons_learn_more">اجازتوں کے بارے میں مزید سیکھیں</string>
+    <!-- The rating of the add-on. -->
     <string name="mozac_feature_addons_rating">شرح کاری</string>
-    <!-- The settings of the addon. -->
+    <!-- The settings of the add-on. -->
     <string name="mozac_feature_addons_settings">سیٹنگز</string>
-    <!-- Indicates the addon is enable. -->
+    <!-- Indicates the add-on is enabled. -->
     <string name="mozac_feature_addons_settings_on">چالو</string>
-    <!-- Indicates the addon is disable. -->
+    <!-- Indicates the add-on is disabled. -->
     <string name="mozac_feature_addons_settings_off">بند</string>
-    <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) addons, this string indicates the recommended section. -->
+    <!-- Indicates the add-on is enabled. -->
+    <string name="mozac_feature_addons_enabled">فعال شدہ</string>
+    <!-- Indicates the add-on is disabled. -->
+    <string name="mozac_feature_addons_disabled">غیر فعال شدہ</string>
+    <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the installed section. -->
+    <string name="mozac_feature_addons_installed_section">تنصیب شدہ</string>
+    <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the recommended section. -->
     <string name="mozac_feature_addons_recommended_section">تجویز کردہ</string>
-    <!-- Displays a page with all the details of an addon. -->
+    <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the disabled section. -->
+    <string name="mozac_feature_addons_disabled_section">غیر فعال شدہ</string>
+    <!-- Displays a page with all the details of an add-on. -->
     <string name="mozac_feature_addons_details">تفصیلات</string>
-    <!-- This is button that remove (uninstall an addon). -->
+    <!-- Displays a page with all the permissions of an add-on. -->
+    <string name="mozac_feature_addons_permissions">اجازتیں</string>
+    <!-- This is button that remove (uninstall an add-on). -->
     <string name="mozac_feature_addons_remove">ہٹائیں</string>
-    <!-- This is the title of a dialog that indicates to the user if wants to install or not an addon. %1$s is the addon name. -->
+    <!-- This is the title of a dialog that asks the users if they to install or not an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_permissions_dialog_title">%1$s شامل کریں؟</string>
-    <!-- This is the subtitle of a dialog that indicate to the user if wants to install or not an addon, the subtitle list the permissions that this addon requires, the permissions will dynamically listed after the ":". -->
+    <!-- This is the subtitle of a dialog that asks the users if they want to install or not an add-on, the subtitle lists the permissions that this add-on requires, the permissions will dynamically be listed after the ":". -->
     <string name="mozac_feature_addons_permissions_dialog_subtitle">اس میں آپ کی اجازت کی ضرورت ہے:</string>
-    <!-- This a button to add (installs) an addon . -->
+    <!-- This is a button to add (install) an add-on . -->
     <string name="mozac_feature_addons_permissions_dialog_add">شامل کریں</string>
-    <!-- This a button to cancel the addon installation . -->
+    <!-- This is a button to cancel the add-on installation . -->
     <string name="mozac_feature_addons_permissions_dialog_cancel">منسوخ کریں</string>
-    <!-- Accessibility content description to install addon button. -->
+    <!-- Accessibility content description to install add-on button. -->
     <string name="mozac_feature_addons_install_addon_content_description">ایڈ اون انسٹاال کریں</string>
-    <!-- Indicate how many user has rated an addon. %1$s will be replace with number of users -->
+    <!-- Indicates how many users have rated an add-on. %1$s will be replaced with number of users -->
     <string name="mozac_feature_addons_user_rating_count">صارفین: %1$s</string>
     <!-- This is the title of page where all the add-ons are listed-->
     <string name="mozac_feature_addons_addons">ایڈ اون</string>
-    <!-- The label of the allow button, this will be shown to the user when an addons needs new permissions, with the button the user will indicate that wants to accept the new permissions and update the addon-->
+    <!-- The label of the allow button, this will be shown to the user when an add-on needs new permissions, with the button the user will indicate that they want to accept the new permissions and update the add-on-->
     <string name="mozac_feature_addons_updater_notification_allow_button">اجازت دیں</string>
-    <!-- The label of the deny button on a notification, this will be shown to the user when an addons needs new permissions. Indicates the user denies the new permissions and prevent the addon from be updated-->
+    <!-- The label of the deny button on a notification, this will be shown to the user when an add-on needs new permissions. Indicates the user denies the new permissions and prevents the add-on from be updated-->
     <string name="mozac_feature_addons_updater_notification_deny_button">انکار کریں</string>
     </resources>

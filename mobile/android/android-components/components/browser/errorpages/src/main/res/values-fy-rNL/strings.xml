@@ -89,15 +89,15 @@
     <!-- The error message shown when a website took long to load. -->
     <string name="mozac_browser_errorpages_net_timeout_message"><![CDATA[
       
-      <p>De opfrege website hat net op in ferbiningsfersyk antwurde, en de browser wachtet net mear op in antwurd.</p>
+      <p>De opfrege website hat net op in ferbiningsfersyk antwurde en de browser wachtet net mear op in antwurd.</p>
       
       <ul>
         
         <li>Miskien ûnderfynt de server in hege fraach of in tydlike stroomûnderbrekking? Probearje it letter opnij.</li>
         
-        <li>Kinne jo gjin oare websites besykje? Kontrolearje de netwurkferbining fan de kompjûter.</li>
+        <li>Kinne jo gjin oare websites besykje? Kontrolearje de netwurkferbining fan it apparaat.</li>
         
-        <li>Wurdt jo kompjûter of netwurk beskerme troch in firewall of proxy? Ferkearde ynstellingen kinne in goede wurking wylst it webbrowsen tsjin gean.</li>
+        <li>Wurdt jo apparaat of netwurk beskerme troch in firewall of proxy? Ferkearde ynstellingen kinne in goede wurking wylst it webbrowsen tsjin gean.</li>
         
         <li>Hawwe jo noch hieltyd problemen? Freegje jo netwurkbehearder of ynternetprovider foar assistinsje.</li>
       
@@ -143,7 +143,7 @@
         
         <li>Hawwe jo cookies dy\'t nedich binne foar dizze website útskeakele of blokkearre?</li>
         
-        <li>As it akseptearjen fan cookies fan dizze website it probleem net oplost is it wierskynlik in serverkonfiguraasjeprobleem en net jo kompjûter.</li>
+        <li>As it akseptearjen fan cookies fan dizze website it probleem net oplost is it wierskynlik in serverkonfiguraasjeprobleem en net jo apparaat.</li>
       
       </ul>
     
@@ -159,7 +159,7 @@
       
       <ul>
         
-        <li>Is de kompjûter ferbûn mei in aktyf netwurk?</li>
+        <li>Is it apparaat ferbûn mei in aktyf netwurk?</li>
         
         <li>Klik op ‘Opnij probearje’ om nei onlinemodus te gean en laad de side opnij.</li>
       
@@ -385,9 +385,9 @@
       
       <ul>
       
-        <li>Is de proxykonfiguraasje fan de browser in oarder? Kontrolearje de ynstellingen en probearje it opnij.</li>
+        <li>Is de proxykonfiguraasje fan de browser yn oarder? Kontrolearje de ynstellingen en probearje it opnij.</li>
       
-        <li>Is de kompjûter ferbûn mei in aktyf netwurk?</li>
+        <li>Is it apparaat ferbûn mei in aktyf netwurk?</li>
       
         <li>Hawwe jo noch hieltyd problemen? Freegje jo netwurkbehearder of ynternetprovider foar assistinsje.</li>
       

@@ -69,15 +69,13 @@
     <string name="mozac_browser_errorpages_net_timeout_title">Forbindelsens tidsfrist udløb</string>
 
     <!-- The error message shown when a website took long to load. -->
-    <string name="mozac_browser_errorpages_net_timeout_message"><![CDATA[
-      <p>Det anmodede websted svarede ikke på en anmodning om forbindelse, og browseren er stoppet med at vente på et svar.</p>
+    <string name="mozac_browser_errorpages_net_timeout_message"><![CDATA[<p>Det anmodede websted svarede ikke på en anmodning om forbindelse, og browseren er stoppet med at vente på et svar.</p>
       <ul>
         <li>Kan serveren opleve stor efterspørgsel eller være midlertidigt nede? Prøv igen senere.</li>
-        <li>Er du ikke i stand til at besøge andre websteder? Kontrollér computerens netværksforbindelse.</li>
-        <li>Er din computer eller dit netværk beskyttet af en firewall eller en proxy? Forkerte indstillinger kan forstyrre din webbrowsing.</li>
+        <li>Er du ikke i stand til at besøge andre websteder? Kontrollér enhedens netværksforbindelse.</li>
+        <li>Er din enhed eller dit netværk beskyttet af en firewall eller en proxy? Forkerte indstillinger kan forstyrre din webbrowsing.</li>
         <li>Har du stadig problemer? Kontakt din netværksadministrator eller din internetudbyder for at få hjælp.</li>
-      </ul>
-    ]]></string>
+      </ul>]]></string>
 
     <!-- The document title and heading of the error page shown when a website could not be reached. -->
     <string name="mozac_browser_errorpages_connection_failure_title">Kan ikke oprette forbindelse</string>
@@ -100,24 +98,20 @@
     <!-- The document title and heading of the error page shown when the browser gets stuck in an infinite loop when loading a website. -->
     <string name="mozac_browser_errorpages_redirect_loop_title">Denne side viderestiller ikke forespørgslen korrekt</string>
     <!-- The error message shown when the browser gets stuck in an infinite loop when loading a website. -->
-    <string name="mozac_browser_errorpages_redirect_loop_message"><![CDATA[
-      <p>Browseren har afbrudt forespørgslen, fordi webstedet viderestiller forespørgslen på den måde, der forhindrer den i nogensinde at blive færdig.</p>
+    <string name="mozac_browser_errorpages_redirect_loop_message"><![CDATA[<p>Browseren har afbrudt forespørgslen, fordi webstedet viderestiller forespørgslen på den måde, der forhindrer den i nogensinde at blive færdig.</p>
       <ul>
         <li>Har du deaktiveret eller blokeret cookies for webstedet?</li>
-        <li>Hvis det ikke hjælper at aktivere cookies for webstedet, så skyldes problemet sandsynligvis en fejl på webserveren og ikke din computer.</li>
-      </ul>
-    ]]></string>
+        <li>Hvis det ikke hjælper at aktivere cookies for webstedet, så skyldes problemet sandsynligvis en fejl på webserveren og ikke din enhed.</li>
+      </ul>]]></string>
 
     <!-- The document title and heading of the error page shown when a website cannot be loaded because the browser is in offline mode. -->
     <string name="mozac_browser_errorpages_offline_title">Offline-tilstand</string>
     <!-- The error message shown when a website cannot be loaded because the browser is in offline mode. -->
-    <string name="mozac_browser_errorpages_offline_message"><![CDATA[
-      <p>Browseren er sat i offline-tilstand og kan ikke oprette den anmodede forbindelse.</p>
+    <string name="mozac_browser_errorpages_offline_message"><![CDATA[<p>Browseren er sat i offline-tilstand og kan ikke oprette den anmodede forbindelse.</p>
       <ul>
-        <li>Er computeren forbundet til et aktivt netværk?</li>
+        <li>Er enheden forbundet til et aktivt netværk?</li>
         <li>Tryk på "Prøv igen" for at skifte til online-tilstand og genindlæse siden.</li>
-      </ul>
-    ]]></string>
+      </ul>]]></string>
 
     <!-- The document title and heading of the error page shown when the browser prevents loading a website on a restricted port. -->
     <string name="mozac_browser_errorpages_port_blocked_title">Port begrænset af sikkerhedshensyn</string>
@@ -256,14 +250,12 @@
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_proxy_host_title">Proxyserver blev ikke fundet</string>
 
-    <string name="mozac_browser_errorpages_unknown_proxy_host_message"><![CDATA[      
-      <p>Browseren er indstillet til at anvende en proxyserver, men serveren kunne ikke findes.</p>
+    <string name="mozac_browser_errorpages_unknown_proxy_host_message"><![CDATA[<p>Browseren er indstillet til at anvende en proxyserver, men serveren kunne ikke findes.</p>
       <ul>
         <li>Er browserens proxy-indstillinger korrekte? Kontrollér indstillingerne og prøv igen.</li>
-        <li>Er computeren forbundet til et aktivt netværk?</li>
+        <li>Er enheden forbundet til et aktivt netværk?</li>
         <li>Har du stadig problemer? Kontakt din netværksadministrator eller din internetudbyder for at få hjælp.</li>
-      </ul>
-    ]]></string>
+      </ul>]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_safe_browsing_malware_uri_title">Problem med malware-websted</string>

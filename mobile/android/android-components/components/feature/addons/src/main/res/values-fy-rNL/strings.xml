@@ -15,7 +15,7 @@
     <!-- Description for browser_setting permission. -->
     <string name="mozac_feature_addons_permissions_browser_setting_description">Browserynstellingen lêze en oanpasse</string>
     <!-- Description for browser_data permission. -->
-    <string name="mozac_feature_addons_permissions_browser_data_description">Resinte sneupskiednis, cookies en relatearre gegevens wiskje</string>
+    <string name="mozac_feature_addons_permissions_browser_data_description">Resinte browserskiednis, cookies en relatearre gegevens wiskje</string>
     <!-- Description for clipboard_read permission. -->
     <string name="mozac_feature_addons_permissions_clipboard_read_description">Gegevens fan it klamboerd ophelje</string>
     <!-- Description for clipboard_write permission. -->
@@ -66,12 +66,18 @@
     <string name="mozac_feature_addons_settings_on">Oan</string>
     <!-- Indicates the add-on is disabled. -->
     <string name="mozac_feature_addons_settings_off">Ut</string>
+    <!-- Indicates the add-on is enabled. -->
+    <string name="mozac_feature_addons_enabled">Ynskeakele</string>
+    <!-- Indicates the add-on is disabled. -->
+    <string name="mozac_feature_addons_disabled">Utskeakele</string>
     <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the installed section. -->
     <string name="mozac_feature_addons_installed_section">Ynstallearre</string>
     <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the recommended section. -->
     <string name="mozac_feature_addons_recommended_section">Oanrekommandearre</string>
     <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the not yet supported section. -->
     <string name="mozac_feature_addons_unsupported_section">Noch net stipe</string>
+    <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the disabled section. -->
+    <string name="mozac_feature_addons_disabled_section">Utskeakele</string>
     <!-- Displays a page with all the details of an add-on. -->
     <string name="mozac_feature_addons_details">Details</string>
     <!-- Displays a page with all the permissions of an add-on. -->
@@ -138,4 +144,4 @@
     <string name="mozac_feature_addons_unsupported_caption_plural">%1$s add-ons</string>
     <!-- Text link to a sumo page for learning more about unsupported add-ons. -->
     <string name="mozac_feature_addons_unsupported_learn_more">Mear ynfo</string>
-</resources>
+    </resources>

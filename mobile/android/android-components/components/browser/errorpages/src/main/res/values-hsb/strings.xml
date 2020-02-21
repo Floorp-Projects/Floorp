@@ -62,25 +62,21 @@
     <!-- The document title and heading of the error page shown when a website takes too long to load. -->
     <string name="mozac_browser_errorpages_net_timeout_title">Zwisk je čas překročił</string>
     <!-- The error message shown when a website took long to load. -->
-    <string name="mozac_browser_errorpages_net_timeout_message"><![CDATA[
-      <p>Požadane sydło na zwiskowe naprašowanje njewotmołwi a wobhladowak přesta na wotmołwu čakać.</p>
+    <string name="mozac_browser_errorpages_net_timeout_message"><![CDATA[<p>Požadane sydło na zwiskowe naprašowanje njewotmołwi a wobhladowak přesta na wotmołwu čakać.</p>
       <ul>
         <li>Móže być, zo serwer je přećeženy abo ma nachwilne mylenje? Spytajće pozdźišo hišće raz.</li>
-        <li>Njemóžeće druhe sydła přehladować? Přepruwujće syćowy zwisk ličaka.</li>
-        <li>Škita so waš ličak abo waša syć z wohnjowej murju abo proksy? Njekorektne nastajenja móža webpřehladowanju wadźić.</li>
+        <li>Njemóžeće druhe sydła přehladować? Přepruwujće syćowy zwisk grata.</li>
+        <li>Škita so waš grat abo waša syć z wohnjowej murju abo proksy? Njekorektne nastajenja móža webpřehladowanju wadźić.</li>
         <li>Maće hišće ćeže? Skonsultujće swojeho syćoweho administratora abo internetneho poskićowarja za podpěru.</li>
-      </ul>
-    ]]></string>
+      </ul>]]></string>
 
     <!-- The document title and heading of the error page shown when a website could not be reached. -->
     <string name="mozac_browser_errorpages_connection_failure_title">Zwisk móžny njeje</string>
     <!-- The error message shown when a website could not be reached. -->
-    <string name="mozac_browser_errorpages_connection_failure_message"><![CDATA[
-      <ul>
+    <string name="mozac_browser_errorpages_connection_failure_message"><![CDATA[<ul>
         <li>Sydło njesteji snano nachwilu k dispoziciji abo je přećežene. Spytajće za mało wokomikow hišće raz.</li>
-        <li>Jeli njemóžeće strony začitać, přepruwujće datowy abo WLAN-zwisk wašeho mobilneho grata.</li>
-      </ul>
-    ]]></string>
+        <li>Jeli njemóžeće strony začitać, přepruwujće daty abo WLAN-zwisk wašeho mobilneho grata.</li>
+      </ul>]]></string>
 
     <!-- The document title and heading of the error page shown when a website responds in an unexpected way and the browser cannot continue. -->
     <string name="mozac_browser_errorpages_unknown_socket_type_title">Njewočakowana wotmołwa ze serwera</string>
@@ -92,25 +88,21 @@
     <!-- The document title and heading of the error page shown when the browser gets stuck in an infinite loop when loading a website. -->
     <string name="mozac_browser_errorpages_redirect_loop_title">Strona njeprawje posrědkuje</string>
     <!-- The error message shown when the browser gets stuck in an infinite loop when loading a website. -->
-    <string name="mozac_browser_errorpages_redirect_loop_message"><![CDATA[
-      <p>Wobhladowak přesta požadany objekt wotwołować. Sydło sposrědkuje naprašowanje na wašnje, kotrež so njekónči.</p>
+    <string name="mozac_browser_errorpages_redirect_loop_message"><![CDATA[<p>Wobhladowak přesta požadany objekt wotwołować. Sydło sposrědkuje naprašowanje na wašnje, kotrež so njekónči.</p>
       <ul>
         <li>Sće placki znjemóžnił abo zablokował, kotrež su trěbne za tute sysdło?</li>
-        <li>Jeli akceptowanje plackow tutoho sydła problem njerozrisa, je to najskerje problem konfiguracije serwera a nic wašeho ličaka.</li>
-      </ul>
-    ]]></string>
+        <li>Jeli akceptowanje plackow tutoho sydła problem njerozrisa, je to najskerje problem konfiguracije serwera a nic wašeho grata.</li>
+      </ul>]]></string>
 
     <!-- The document title and heading of the error page shown when a website cannot be loaded because the browser is in offline mode. -->
     <string name="mozac_browser_errorpages_offline_title">Offline-modus</string>
 
     <!-- The error message shown when a website cannot be loaded because the browser is in offline mode. -->
-    <string name="mozac_browser_errorpages_offline_message"><![CDATA[
-      <p>Wobhladowak offline dźěła a njemóže z požadanym objektom zwjazać.</p>
+    <string name="mozac_browser_errorpages_offline_message"><![CDATA[<p>Wobhladowak offline dźěła a njemóže z požadanym objektom zwjazać.</p>
       <ul>
-        <li>Je ličak z aktiwnej syću zwjazany?</li>
+        <li>Je grat z aktiwnej syću zwjazany?</li>
         <li>Klikńće na “Hišće raz”, zo byšće do online-modusa přešoł a stronu znowa začitał.</li>
-      </ul>
-    ]]></string>
+      </ul>]]></string>
 
     <!-- The document title and heading of the error page shown when the browser prevents loading a website on a restricted port. -->
     <string name="mozac_browser_errorpages_port_blocked_title">Port z přičinow wěstoty wobmjezowany</string>
@@ -245,14 +237,12 @@
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_proxy_host_title">Proksyjowy serwer njenamakany</string>
-    <string name="mozac_browser_errorpages_unknown_proxy_host_message"><![CDATA[
-      <p>Wobhladowak bu konfigurowany, zo by so proksyjowy serwer wužiwa, ale proksy njeda so namakać.</p>
+    <string name="mozac_browser_errorpages_unknown_proxy_host_message"><![CDATA[<p>Wobhladowak bu konfigurowany, zo by so proksyjowy serwer wužiwa, ale proksy njeda so namakać.</p>
       <ul>
         <li>Je konfiguracija proksyja wobhladowaka korektna? Přepruwujće nastajenja a spytajće hišće raz.</li>
-        <li>Je ličak z aktiwnej syću zwjazany?</li>
+        <li>Je grat z aktiwnej syću zwjazany?</li>
         <li>Maće hišće ćeže? Stajće so ze swojim syćowym administratorom abo internetnym poskićowarjom za podpěru do zwiska.</li>
-      </ul>
-    ]]></string>
+      </ul>]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_safe_browsing_malware_uri_title">Problem ze sydłom ze škódnej softwaru</string>

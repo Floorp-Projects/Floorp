@@ -85,7 +85,7 @@
       <p>הדפדפן הפסיק לנסות למצוא את הפריט המבוקש. האתר מכוון מחדש את הבקשה בצורה שלעולם לא תושלם.</p>
       <ul>
         <li>האם ביטלת או חסמת עוגיות שנדרשות על־ידי אתר זה?</li>
-        <li>אם קבלת עוגיות מאתר זה אינה פותרת את הבעיה, סביר שמדובר בתקלה בהגדרות השרת ולא במחשב שלך.</li>
+        <li>אם קבלת עוגיות מאתר זה אינה פותרת את הבעיה, סביר שמדובר בתקלה בהגדרות השרת ולא במכשיר שלך.</li>
       </ul>
     ]]></string>
 
@@ -96,7 +96,7 @@
     <string name="mozac_browser_errorpages_offline_message"><![CDATA[
       <p>הדפדפן פועל כעת במצב לא־מקוון ואינו יכול להתחבר לפריט המבוקש.</p>
       <ul>
-        <li>האם המחשב מחובר לרשת פעילה?</li>
+        <li>האם המכשיר מחובר לרשת פעילה?</li>
         <li>יש ללחוץ על ״ניסיון חוזר״ כדי לעבור למצב מקוון ולטעון מחדש את הדף.</li>
       </ul>
     ]]></string>
@@ -152,11 +152,14 @@
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_no_internet_title">אין חיבור לרשת</string>
+    <!-- The main body text of this error page. It will be shown beneath the title -->
+    <string name="mozac_browser_errorpages_no_internet_message">נא לבדוק את החיבור שלך לרשת או לנסות לטעון את הדף מחדש בעוד מספר רגעים.</string>
     <!-- Text that will show up on the button at the bottom of the error page -->
     <string name="mozac_browser_errorpages_no_internet_refresh_button">טעינה מחדש</string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_malformed_uri_title">כתובת לא חוקית</string>
+    <string name="mozac_browser_errorpages_malformed_uri_message"><![CDATA[<p>הכתובת שסופקה אינה בתבנית מזוהה. נא לבדוק את שורת המיקום עבור שגיאות ולנסות שוב.</p>]]></string>
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_malformed_uri_title_alternative">כתובת לא חוקית</string>
     <!-- This string contains markup. The URL should not be localized. -->
@@ -169,6 +172,12 @@
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_protocol_title">פרוטוקול לא מוכר</string>
+
+    <string name="mozac_browser_errorpages_unknown_protocol_message"><![CDATA[<p>הכתובת מציינת פרוטוקול (לדוגמה: <q>wxyz://</q>) שהדפדפן אינו מזהה, ולכן הדפדפן אינו יכול להתחבר לאתר כראוי.</p>
+      <ul>
+        <li>האם הינך מנסה לגשת לשירות מולטימדיה או לשירות אחר שאינו מבוסס טקסט? נא לבדוק אם קיימות לאתר דרישות נוספות.</li>
+        <li>פרוטוקולים מסויימים עשויים לדרוש שימוש ביישומי צד־שלישי או בתוספים חיצוניים לפני שהדפדפן יוכל לזהות אותם.</li>
+      </ul>]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_file_not_found_title">קובץ לא נמצא</string>

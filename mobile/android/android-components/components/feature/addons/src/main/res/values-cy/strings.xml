@@ -72,6 +72,8 @@
     <string name="mozac_feature_addons_recommended_section">Cymeradwy</string>
     <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the not yet supported section. -->
     <string name="mozac_feature_addons_unsupported_section">Heb ei gefnogi eto</string>
+    <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the disabled section. -->
+    <string name="mozac_feature_addons_disabled_section">Analluogwyd</string>
     <!-- Displays a page with all the details of an add-on. -->
     <string name="mozac_feature_addons_details">Manylion</string>
     <!-- Displays a page with all the permissions of an add-on. -->
@@ -138,4 +140,8 @@
     <string name="mozac_feature_addons_unsupported_caption_plural">%1$s ychwanegyn</string>
     <!-- Text link to a sumo page for learning more about unsupported add-ons. -->
     <string name="mozac_feature_addons_unsupported_learn_more">Dysgu rhagor</string>
+    <!-- Indicates the add-on is enabled. -->
+    <string name="mozac_feature_addons_enabled">Galluogwyd</string>
+    <!-- Indicates the add-on is disabled. -->
+    <string name="mozac_feature_addons_disabled">Analluogwyd</string>
 </resources>

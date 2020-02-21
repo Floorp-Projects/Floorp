@@ -63,15 +63,13 @@
     <!-- The document title and heading of the error page shown when a website takes too long to load. -->
     <string name="mozac_browser_errorpages_net_timeout_title">The connection has timed out</string>
     <!-- The error message shown when a website took long to load. -->
-    <string name="mozac_browser_errorpages_net_timeout_message"><![CDATA[
-      <p>The requested site did not respond to a connection request and the browser has stopped waiting for a reply.</p>
+    <string name="mozac_browser_errorpages_net_timeout_message"><![CDATA[<p>The requested site did not respond to a connection request and the browser has stopped waiting for a reply.</p>
       <ul>
         <li>Could the server be experiencing high demand or a temporary outage? Try again later.</li>
-        <li>Are you unable to browse other sites? Check the computer’s network connection.</li>
-        <li>Is your computer or network protected by a firewall or proxy? Incorrect settings can interfere with Web browsing.</li>
+        <li>Are you unable to browse other sites? Check the device’s network connection.</li>
+        <li>Is your device or network protected by a firewall or proxy? Incorrect settings can interfere with Web browsing.</li>
         <li>Still having trouble? Consult your network administrator or Internet provider for assistance.</li>
-      </ul>
-    ]]></string>
+      </ul>]]></string>
 
     <!-- The document title and heading of the error page shown when a website could not be reached. -->
     <string name="mozac_browser_errorpages_connection_failure_title">Unable to connect</string>
@@ -93,24 +91,20 @@
     <!-- The document title and heading of the error page shown when the browser gets stuck in an infinite loop when loading a website. -->
     <string name="mozac_browser_errorpages_redirect_loop_title">The page isn’t redirecting properly</string>
     <!-- The error message shown when the browser gets stuck in an infinite loop when loading a website. -->
-    <string name="mozac_browser_errorpages_redirect_loop_message"><![CDATA[
-      <p>The browser has stopped trying to retrieve the requested item. The site is redirecting the request in a way that will never complete.</p>
+    <string name="mozac_browser_errorpages_redirect_loop_message"><![CDATA[<p>The browser has stopped trying to retrieve the requested item. The site is redirecting the request in a way that will never complete.</p>
       <ul>
         <li>Have you disabled or blocked cookies required by this site?</li>
-        <li>If accepting the site’s cookies does not resolve the problem, it is likely a server configuration issue and not your computer.</li>
-      </ul>
-    ]]></string>
+        <li>If accepting the site’s cookies does not resolve the problem, it is likely a server configuration issue and not your device.</li>
+      </ul>]]></string>
 
     <!-- The document title and heading of the error page shown when a website cannot be loaded because the browser is in offline mode. -->
     <string name="mozac_browser_errorpages_offline_title">Offline Mode</string>
     <!-- The error message shown when a website cannot be loaded because the browser is in offline mode. -->
-    <string name="mozac_browser_errorpages_offline_message"><![CDATA[
-      <p>The browser is operating in its offline mode and cannot connect to the requested item.</p>
+    <string name="mozac_browser_errorpages_offline_message"><![CDATA[<p>The browser is operating in its offline mode and cannot connect to the requested item.</p>
       <ul>
-        <li>Is the computer connected to an active network?</li>
+        <li>Is the device connected to an active network?</li>
         <li>Press “Try Again” to switch to online mode and reload the page.</li>
-      </ul>
-    ]]></string>
+      </ul>]]></string>
 
     <!-- The document title and heading of the error page shown when the browser prevents loading a website on a restricted port. -->
     <string name="mozac_browser_errorpages_port_blocked_title">Port restricted for security reasons</string>
@@ -244,14 +238,12 @@
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_proxy_host_title">Proxy Server Not Found</string>
-    <string name="mozac_browser_errorpages_unknown_proxy_host_message"><![CDATA[
-      <p>The browser is configured to use a proxy server, but the proxy could not be found.</p>
+    <string name="mozac_browser_errorpages_unknown_proxy_host_message"><![CDATA[<p>The browser is configured to use a proxy server, but the proxy could not be found.</p>
       <ul>
         <li>Is the browser’s proxy configuration correct? Check the settings and try again.</li>
-        <li>Is the computer connected to an active network?</li>
+        <li>Is the device connected to an active network?</li>
         <li>Still having trouble? Consult your network administrator or Internet provider for assistance.</li>
-      </ul>
-    ]]></string>
+      </ul>]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_safe_browsing_malware_uri_title">Malware site issue</string>

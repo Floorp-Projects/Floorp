@@ -67,9 +67,9 @@
     <!-- Indicates the add-on is disabled. -->
     <string name="mozac_feature_addons_settings_off">Désactivé</string>
     <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the installed section. -->
-    <string name="mozac_feature_addons_installed_section">Installé</string>
+    <string name="mozac_feature_addons_installed_section">Installés</string>
     <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the recommended section. -->
-    <string name="mozac_feature_addons_recommended_section">Recommandé</string>
+    <string name="mozac_feature_addons_recommended_section">Recommandés</string>
     <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the not yet supported section. -->
     <string name="mozac_feature_addons_unsupported_section">Pas encore pris en charge</string>
     <!-- Displays a page with all the details of an add-on. -->
@@ -138,4 +138,10 @@
     <string name="mozac_feature_addons_unsupported_caption_plural">%1$s modules complémentaires</string>
     <!-- Text link to a sumo page for learning more about unsupported add-ons. -->
     <string name="mozac_feature_addons_unsupported_learn_more">En savoir plus</string>
+    <!-- Indicates the add-on is enabled. -->
+    <string name="mozac_feature_addons_enabled">Activé</string>
+    <!-- Indicates the add-on is disabled. -->
+    <string name="mozac_feature_addons_disabled">Désactivé</string>
+    <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the disabled section. -->
+    <string name="mozac_feature_addons_disabled_section">Désactivés</string>
 </resources>

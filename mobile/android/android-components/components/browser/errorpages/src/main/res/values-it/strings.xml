@@ -63,15 +63,13 @@
     <!-- The document title and heading of the error page shown when a website takes too long to load. -->
     <string name="mozac_browser_errorpages_net_timeout_title">Tempo per la connessione esaurito</string>
     <!-- The error message shown when a website took long to load. -->
-    <string name="mozac_browser_errorpages_net_timeout_message"><![CDATA[
-	<p>Il sito richiesto non ha risposto a una richiesta di connessione e il browser ha smesso di attendere una risposta.</p>
+    <string name="mozac_browser_errorpages_net_timeout_message"><![CDATA[<p>Il sito richiesto non ha risposto a una richiesta di connessione e il browser ha smesso di attendere una risposta.</p>
 	<ul>
 		<li>È possibile che il server sia soggetto a un’elevata richiesta o un’interruzione temporanea. Riprovare più tardi.</li>
-		<li>Si riesce a navigare su altri siti? Controllare la connessione di rete del computer. </li>
-		<li> Il computer o la rete sono protetti da un firewall o un proxy? Impostazioni errate possono interferire con la navigazione sul web. </li>
+		<li>Si riesce a navigare su altri siti? Controllare la connessione di rete del dispositivo. </li>
+		<li> Il dispositivo o la rete sono protetti da un firewall o un proxy? Impostazioni errate possono interferire con la navigazione sul web. </li>
 		<li> Si riscontrano ancora problemi? Consultare l’amministratore di rete o il provider Internet per ricevere assistenza. </li>
-	</ul>
-	]]></string>
+	</ul>]]></string>
 
     <!-- The document title and heading of the error page shown when a website could not be reached. -->
     <string name="mozac_browser_errorpages_connection_failure_title">Connessione non riuscita</string>
@@ -93,24 +91,20 @@
     <!-- The document title and heading of the error page shown when the browser gets stuck in an infinite loop when loading a website. -->
     <string name="mozac_browser_errorpages_redirect_loop_title">La pagina non reindirizza in modo corretto</string>
     <!-- The error message shown when the browser gets stuck in an infinite loop when loading a website. -->
-    <string name="mozac_browser_errorpages_redirect_loop_message"><![CDATA[
-	<p> Il browser ha smesso di cercare di recuperare l’elemento richiesto. Il sito sta reindirizzando la richiesta in un modo che non sarà mai completato. </p>
+    <string name="mozac_browser_errorpages_redirect_loop_message"><![CDATA[<p> Il browser ha smesso di cercare di recuperare l’elemento richiesto. Il sito sta reindirizzando la richiesta in un modo che non sarà mai completato. </p>
 	<ul>
 		<li> Sono stati disabilitati o bloccati i cookie richiesti da questo sito? </li>
-		<li> Se accettando i cookie del sito non risolve il problema, è probabile che si tratti di un problema di configurazione del server e non del computer. </li>
-	</ul>
-	]]></string>
+		<li> Se accettando i cookie del sito non risolve il problema, è probabile che si tratti di un problema di configurazione del server e non del dispositivo. </li>
+	</ul>]]></string>
 
     <!-- The document title and heading of the error page shown when a website cannot be loaded because the browser is in offline mode. -->
     <string name="mozac_browser_errorpages_offline_title">Non in linea</string>
     <!-- The error message shown when a website cannot be loaded because the browser is in offline mode. -->
-    <string name="mozac_browser_errorpages_offline_message"><![CDATA[
-	<p>Il browser si trova in modalità non in linea e non è possibile connettersi con l’elemento richiesto.</p>
+    <string name="mozac_browser_errorpages_offline_message"><![CDATA[<p>Il browser si trova in modalità non in linea e non è possibile connettersi con l’elemento richiesto.</p>
 	<ul>
-		<li>Il computer è collegato a una rete attiva?</li>
+		<li>Il dispositivo è collegato a una rete attiva?</li>
 		<li>Selezionare “Riprova” per passare alla modalità in linea e ricaricare la pagina.</li>
-	</ul>
-	]]></string>
+	</ul>]]></string>
 
     <!-- The document title and heading of the error page shown when the browser prevents loading a website on a restricted port. -->
     <string name="mozac_browser_errorpages_port_blocked_title">Porta bloccata per motivi di sicurezza</string>
@@ -241,14 +235,12 @@
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_proxy_host_title">Impossibile contattare il server proxy</string>
-    <string name="mozac_browser_errorpages_unknown_proxy_host_message"><![CDATA[
-	<p> Il browser è configurato per utilizzare un server proxy, ma il proxy non è stato rilevato. </p>
+    <string name="mozac_browser_errorpages_unknown_proxy_host_message"><![CDATA[<p> Il browser è configurato per utilizzare un server proxy, ma il proxy non è stato rilevato. </p>
 	<ul>
 		<li> La configurazione proxy del browser è corretta? Controllare le impostazioni e riprovare. </li>
-		<li> Il computer è collegato a una rete funzionante? </li>
+		<li> Il dispositivo è collegato a una rete funzionante? </li>
 		<li> Si riscontrano ancora problemi? Consultare l’amministratore di rete o il provider Internet per ricevere assistenza. </li>
-	</ul>
-	]]></string>
+	</ul>]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_safe_browsing_malware_uri_title">Problema di sito con malware</string>

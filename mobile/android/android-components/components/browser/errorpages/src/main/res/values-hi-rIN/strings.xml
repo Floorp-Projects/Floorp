@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The default document title of an error page (i.e., the contents of the `<title>` tag). -->
+    <string name="mozac_browser_errorpages_page_title">पृष्ठ की लोडिंग में समस्या है</string>
+
+    <!-- The button that appears at the bottom of an error page. -->
+    <string name="mozac_browser_errorpages_page_refresh">पुनः प्रयास करें</string>
+
+    <!-- The button that appears at the bottom of an error page. -->
+    <string name="mozac_browser_errorpages_page_go_back">वापस जाएं</string>
+
+    <!-- The document title and heading of an error page shown when a website cannot be loaded for an unknown reason. -->
+    <string name="mozac_browser_errorpages_generic_title">अनुरोध पूरा नहीं किया जा सका</string>
+    <!-- The error message shown when a website cannot be loaded for an unknown reason. -->
+    <string name="mozac_browser_errorpages_generic_message"><![CDATA[<p>इस समस्या या त्रुटी के बारे में अतिरिक्त जानकारी फिलहाल उपलब्ध नहीं है।</p>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_ssl_title">सुरक्षित संपर्क विफ़ल</string>
+
+    <!-- The error message shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_ssl_message"><![CDATA[¶
+      <ul>¶
+        <li>जिस पृष्ठ को आप देखने की कोशिश कर रहे हैं  उसे दिखाया नहीं जा सकता क्योंकि प्राप्त डेटा के प्रमाणिकता की सत्यापन नहीं की जा सकी</li>¶
+        <li>कृपया इस समस्या की जानकारी देने के लिए वेबसाइट प्रदाता से संपर्क करें।</li>¶
+      </ul>¶]]></string>
+
+    <!-- The document title and heading of the error page shown when a website sends has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_title">सुरक्षित संपर्क विफ़ल</string>
+
+    <!-- The error message shown when a website sends has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[¶
+      <ul>¶
+        <li>यह सर्वर विन्यास से जुड़ी समस्या हो सकती है, या यह कोई ऐसा हो सकता है जो सर्वर की नकल बनाने की कोशिश कर रहा हो।</li>¶
+        <li>यदि पहले कभी आप इस सर्वर से सफलतापूर्वक जुड़े हों, तो त्रुटी कुछ समय की हो सकती है, और बाद में आप पुनः प्रयास कर सकते हैं।</li>¶
+      </ul>¶]]></string>
+
+    <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_advanced">विस्तृत…</string>
+
+    <!-- The advanced certificate information shown when a website sends has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[¶
+        <label>शायद कोई व्यक्ति साइट की नकल करने की कोशिश कर रहा हो और आपको आगे नहीं बढ़ना चाहिए।</label>¶
+        <br><br>¶
+        <label>वेबसाइट अपनी पहचान प्रमाण-पत्रों द्वारा साबित करते हैं। <b>%2$s</b> पर %1$s विश्वास नहीं करता क्योंकि इसका प्रमाणपत्र प्रदाता अज्ञात है, प्रमाणपत्र स्वतः हस्ताक्षरित है या सर्वर सही मध्यवर्ती प्रमाणपत्र नहीं भेज रहा है।</label>¶]]></string>
+    <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_back">पीछे जाएं (सलाह)</string>
+    <!-- The text shown inside the advanced options button used to bypass the invalid SSL certificate. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_accept_temporary">जोखिम स्वीकारें और आगे बढ़ें</string>
+
+    <!-- The document title and heading of the error page shown when the user's network connection is interrupted while connecting to a website. -->
+    <string name="mozac_browser_errorpages_net_interrupt_title">संपर्क में बाधा उत्पन्न हुई</string>
+
+    </resources>

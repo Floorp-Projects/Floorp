@@ -64,13 +64,11 @@ kdo se snaží vydávat za server.</li>
     <!-- The document title and heading of the error page shown when a website takes too long to load. -->
     <string name="mozac_browser_errorpages_net_timeout_title">Vypršel čas spojení</string>
     <!-- The error message shown when a website took long to load. -->
-    <string name="mozac_browser_errorpages_net_timeout_message"><![CDATA[
-      <p>Požadovaný server neodpověděl na požadavek o připojení a prohlížeč ukončil čekání na tuto odpověď.</p>
+    <string name="mozac_browser_errorpages_net_timeout_message"><![CDATA[<p>Požadovaný server neodpověděl na požadavek o připojení a prohlížeč ukončil čekání na tuto odpověď.</p>
       <ul>
-        <li>Server může být velmi vytížen; Opakujte akci později.</li><li>Je možné, že se jedná o síťový problém mezi vaším počítačem a serverem.</li>
+        <li>Server může být velmi vytížen; Opakujte akci později.</li><li>Je možné, že se jedná o síťový problém mezi vaším zařízením a serverem.</li>
         <li>Pokud problém přetrvává, poraďte se se správcem vaší sítě, nebo poskytovatelem připojení k internetu.</li>
-      </ul>
-    ]]></string>
+      </ul>]]></string>
 
     <!-- The document title and heading of the error page shown when a website could not be reached. -->
     <string name="mozac_browser_errorpages_connection_failure_title">Nelze se připojit</string>
@@ -92,24 +90,20 @@ kdo se snaží vydávat za server.</li>
     <!-- The document title and heading of the error page shown when the browser gets stuck in an infinite loop when loading a website. -->
     <string name="mozac_browser_errorpages_redirect_loop_title">Smyčka při přesměrování</string>
     <!-- The error message shown when the browser gets stuck in an infinite loop when loading a website. -->
-    <string name="mozac_browser_errorpages_redirect_loop_message"><![CDATA[
-      <p>Prohlížeč ukončil spojení, protože server přesměrovává požadavky na tuto adresu sám na sebe, a to takovým způsobem, který zabraňuje jejich dokončení.</p>
+    <string name="mozac_browser_errorpages_redirect_loop_message"><![CDATA[<p>Prohlížeč ukončil spojení, protože server přesměrovává požadavky na tuto adresu sám na sebe, a to takovým způsobem, který zabraňuje jejich dokončení.</p>
       <ul>
         <li>Je možné, že stránka vyžaduje ukládání cookies, které máte zakázané nebo je pro tento server blokujete.</li>
-        <li>Většinou se ale jedná o problém konfigurace serveru a <em>není</em> to tak problém vašeho počítače.</li>
-      </ul>
-    ]]></string>
+        <li>Většinou se ale jedná o problém konfigurace serveru a <em>není</em> to tak problém vašeho zařízení.</li>
+      </ul>]]></string>
 
     <!-- The document title and heading of the error page shown when a website cannot be loaded because the browser is in offline mode. -->
     <string name="mozac_browser_errorpages_offline_title">Režim offline</string>
     <!-- The error message shown when a website cannot be loaded because the browser is in offline mode. -->
-    <string name="mozac_browser_errorpages_offline_message"><![CDATA[
-      <p>Prohlížeč je teď v režimu offline a k požadované položce se nelze připojit.</p>
+    <string name="mozac_browser_errorpages_offline_message"><![CDATA[<p>Prohlížeč je teď v režimu offline a k požadované položce se nelze připojit.</p>
       <ul>
-        <li>Je počítač připojen k funkční síti?</li>
+        <li>Je zařízení připojeno k funkční síti?</li>
         <li>Pro přechod do režimu online a opětovné načtení stránky klepněte na tlačítko „Zkusit znovu“.</li>
-      </ul>
-    ]]></string>
+      </ul>]]></string>
 
     <!-- The document title and heading of the error page shown when the browser prevents loading a website on a restricted port. -->
     <string name="mozac_browser_errorpages_port_blocked_title">Omezení přístupu na port</string>

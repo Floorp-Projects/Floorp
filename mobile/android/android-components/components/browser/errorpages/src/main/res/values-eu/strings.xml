@@ -41,6 +41,12 @@
 
     <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website has an invalid SSL certificate. -->
     <string name="mozac_browser_errorpages_security_bad_cert_advanced">Aurreratua…</string>
+    <!-- The advanced certificate information shown when a website sends has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[
+        <label>Baten bat gunea ordezten saiatzen egon liteke eta ez zenuke jarraitu behar.</label>
+        <br><br>
+        <label>Webguneek bere identitatea ziurtagirien bidez frogatzen dute. %1$sek ez du <b>%2$s</b> fidagarritzat jotzen ziurtagiriaren jaulkitzailea ezezaguna delako, ziurtagiria guneak berak sinatutakoa delako, edo zerbitzariak ez dituelako tarteko ziurtagiriak egoki bidaltzen.</label>
+    ]]></string>
     <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
     <string name="mozac_browser_errorpages_security_bad_cert_back">Itzuli (gomendatua)</string>
     <!-- The text shown inside the advanced options button used to bypass the invalid SSL certificate. It's only shown if the user has expanded the advanced options. -->
@@ -62,26 +68,22 @@
     <string name="mozac_browser_errorpages_net_timeout_title">Konexioaren denbora-muga gainditu da</string>
 
     <!-- The error message shown when a website took long to load. -->
-    <string name="mozac_browser_errorpages_net_timeout_message"><![CDATA[
-      <p>Eskatutako guneak ez du eskaera erantzun eta nabigatzaileak itxaroteari utzi dio.</p>
+    <string name="mozac_browser_errorpages_net_timeout_message"><![CDATA[<p>Eskatutako guneak ez du eskaera erantzun eta nabigatzaileak itxaroteari utzi dio.</p>
       <ul>
         <li>Zerbitzariak lan karga handia duelako gerta daiteke.  Saiatu geroago.</li>
-        <li>Gauza bera gertatzen zaizu beste guneekin? Begiratu zure ordenagailuaren sareko konexioa.</li>
-        <li>Zure ordenagailu edo sarea suebaki edo proxy baten bitartez babestuta dago?  Gaizki konfiguratutako ezarpenek web nabigazioa oztopa dezakete.</li>
+        <li>Gauza bera gertatzen zaizu beste guneekin? Egiaztatu zure gailuaren sareko konexioa.</li>
+        <li>Zure gailua edo sarea suebaki edo proxy baten bitartez babestuta dago?  Gaizki konfiguratutako ezarpenek web nabigazioa oztopa dezakete.</li>
         <li>Arazoak oraindik? Jarri harremanetan zure sarearen kudeatzailearekin edo Internet hornitzailearekin.</li>
-      </ul>
-    ]]></string>
+      </ul>]]></string>
 
     <!-- The document title and heading of the error page shown when a website could not be reached. -->
     <string name="mozac_browser_errorpages_connection_failure_title">Ezin da konektatu</string>
 
     <!-- The error message shown when a website could not be reached. -->
-    <string name="mozac_browser_errorpages_connection_failure_message"><![CDATA[
-      <ul>
+    <string name="mozac_browser_errorpages_connection_failure_message"><![CDATA[<ul>
         <li>Gunea une batez desgaituta edo oso lanpetuta egon daiteke. Saiatu berriro minutu batzuen buruan.</li>
-        <li>Ezin baduzu beste orririk kargatu, egiaztatu zure gailu mugikorraren datu- edo WiFi-konexioa.</li>
-      </ul>
-    ]]></string>
+        <li>Ezin baduzu beste orririk kargatu, egiaztatu zure gailuaren datu- edo WiFi-konexioa.</li>
+      </ul>]]></string>
 
     <!-- The document title and heading of the error page shown when a website responds in an unexpected way and the browser cannot continue. -->
     <string name="mozac_browser_errorpages_unknown_socket_type_title">Ustekabeko erantzuna zerbitzaritik</string>
@@ -93,24 +95,20 @@
     <!-- The document title and heading of the error page shown when the browser gets stuck in an infinite loop when loading a website. -->
     <string name="mozac_browser_errorpages_redirect_loop_title">Orriak ez du birbideraketa ondo egiten</string>
     <!-- The error message shown when the browser gets stuck in an infinite loop when loading a website. -->
-    <string name="mozac_browser_errorpages_redirect_loop_message"><![CDATA[
-      <p>Nabigatzaileak eskatutako elementua berreskuratzen saiatzeari utzi dio. Gunea eskaera modu okerrean birbideratzen ari da.</p>
+    <string name="mozac_browser_errorpages_redirect_loop_message"><![CDATA[<p>Nabigatzaileak eskatutako elementua berreskuratzen saiatzeari utzi dio. Gunea eskaera modu okerrean birbideratzen ari da.</p>
       <ul>
         <li>Gune honetarako cookieak blokeatu edo ezgaitu dituzu?</li>
-        <li>Guneak bidalitako cookieak onartu eta gero arazoa konpontzen ez bada, zerbitzariaren konfigurazioaren arazoa izan daiteke eta ez zure ordenagailuarena.</li>
-      </ul>
-    ]]></string>
+        <li>Guneak bidalitako cookieak onartu eta gero arazoa konpontzen ez bada, zerbitzariaren konfigurazioaren arazoa izan daiteke eta ez zure gailuarena.</li>
+      </ul>]]></string>
 
     <!-- The document title and heading of the error page shown when a website cannot be loaded because the browser is in offline mode. -->
     <string name="mozac_browser_errorpages_offline_title">Lineaz kanpoko modua</string>
     <!-- The error message shown when a website cannot be loaded because the browser is in offline mode. -->
-    <string name="mozac_browser_errorpages_offline_message"><![CDATA[
-      <p>Nabigatzailea lineaz kanpo dago eta ezin du eskatutako elementuarekin konektatu.</p>
+    <string name="mozac_browser_errorpages_offline_message"><![CDATA[<p>Nabigatzailea lineaz kanpo dago eta ezin du eskatutako elementuarekin konektatu.</p>
       <ul>
-        <li>Ordenagailua sare aktibo batera konektatuta dago?</li>
+        <li>Gailua sare aktibo batera konektatuta dago?</li>
         <li>Sakatu "Saiatu berriro" botoia nabigatzailea linean jarri eta orria berritzeko.</li>
-      </ul>
-    ]]></string>
+      </ul>]]></string>
 
     <!-- The document title and heading of the error page shown when the browser prevents loading a website on a restricted port. -->
     <string name="mozac_browser_errorpages_port_blocked_title">Segurtasun neurriengatik ataka galarazita dago</string>
@@ -251,14 +249,12 @@
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_proxy_host_title">Proxy-zerbitzaria ez da aurkitu</string>
 
-    <string name="mozac_browser_errorpages_unknown_proxy_host_message"><![CDATA[
-      <p>Nabigatzailea proxy-zerbitzari bat erabiltzeko konfiguratuta dago, baina proxy-zerbitzaria ez da aurkitu.</p>
+    <string name="mozac_browser_errorpages_unknown_proxy_host_message"><![CDATA[<p>Nabigatzailea proxy-zerbitzari bat erabiltzeko konfiguratuta dago, baina proxy-zerbitzaria ez da aurkitu.</p>
         <ul>
         <li>Proxy-zerbitzariaren ezarpenak ondo ezarrita daude? Egiaztatu ezarpenak eta saiatu berriro.</li>
-        <li>Ordenagailua sare batera konektatua dago?</li>
+        <li>Gailua sare batera konektatua dago?</li>
         <li>Arazoak oraindik? Jarri harremanetan zure sarearen kudeatzailearekin edo Internet hornitzailearekin.</li>
-      </ul>
-    ]]></string>
+      </ul>]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_safe_browsing_malware_uri_title">Malware gunea</string>
