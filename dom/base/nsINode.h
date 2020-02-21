@@ -980,6 +980,12 @@ class nsINode : public mozilla::dom::EventTarget {
   mozilla::dom::Element* GetParentElementCrossingShadowRoot() const;
 
   /**
+   * Get closest element node for the node.  Meaning that if the node is an
+   * element node, returns itself.  Otherwise, returns parent element or null.
+   */
+  inline mozilla::dom::Element* GetAsElementOrParentElement() const;
+
+  /**
    * Get the root of the subtree this node belongs to.  This never returns
    * null.  It may return 'this' (e.g. for document nodes, and nodes that
    * are the roots of disconnected subtrees).

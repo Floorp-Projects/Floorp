@@ -593,9 +593,7 @@ nsresult HTMLEditor::DoInsertHTMLWithContext(
     if (containerContent) {
       Element* mostAncestorTableRelatedElement = nullptr;
       for (Element* maybeTableRelatedElement =
-               containerContent->IsElement()
-                   ? containerContent->AsElement()
-                   : containerContent->GetParentElement();
+               containerContent->GetAsElementOrParentElement();
            maybeTableRelatedElement &&
            maybeTableRelatedElement != lastInsertedContent;
            maybeTableRelatedElement =
@@ -2739,9 +2737,8 @@ void HTMLEditor::AutoHTMLFragmentBoundariesFixer::
         nsIContent& aContent,
         nsTArray<OwningNonNull<Element>>& aOutArrayOfListAndTableElements)
         const {
-  for (Element* element = aContent.IsElement() ? aContent.AsElement()
-                                               : aContent.GetParentElement();
-       element; element = element->GetParentElement()) {
+  for (Element* element = aContent.GetAsElementOrParentElement(); element;
+       element = element->GetParentElement()) {
     if (HTMLEditUtils::IsList(element) || HTMLEditUtils::IsTable(element)) {
       aOutArrayOfListAndTableElements.AppendElement(*element);
     }
@@ -2839,9 +2836,8 @@ HTMLEditor::AutoHTMLFragmentBoundariesFixer::FindReplaceableTableElement(
   // But this looks really buggy because this loop may skip aTableElement
   // as the following NS_ASSERTION.  We should write automated tests and
   // check right behavior.
-  for (Element* element = aContentMaybeInTableElement.IsElement()
-                              ? aContentMaybeInTableElement.AsElement()
-                              : aContentMaybeInTableElement.GetParentElement();
+  for (Element* element =
+           aContentMaybeInTableElement.GetAsElementOrParentElement();
        element; element = element->GetParentElement()) {
     if (!HTMLEditUtils::IsTableElement(element) ||
         element->IsHTMLElement(nsGkAtoms::table)) {
@@ -2879,9 +2875,8 @@ bool HTMLEditor::AutoHTMLFragmentBoundariesFixer::IsReplaceableListElement(
   // But this looks really buggy because this loop may skip aListElement
   // as the following NS_ASSERTION.  We should write automated tests and
   // check right behavior.
-  for (Element* element = aContentMaybeInListElement.IsElement()
-                              ? aContentMaybeInListElement.AsElement()
-                              : aContentMaybeInListElement.GetParentElement();
+  for (Element* element =
+           aContentMaybeInListElement.GetAsElementOrParentElement();
        element; element = element->GetParentElement()) {
     if (!HTMLEditUtils::IsListItem(element)) {
       // XXX Perhaps, the original developer of this method assumed that

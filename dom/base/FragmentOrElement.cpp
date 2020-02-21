@@ -276,22 +276,18 @@ nsresult nsIContent::LookupNamespaceURIInternal(
   }
   // Trace up the content parent chain looking for the namespace
   // declaration that declares aNamespacePrefix.
-  const nsIContent* content = this;
-  do {
-    if (content->IsElement() &&
-        content->AsElement()->GetAttr(kNameSpaceID_XMLNS, name, aNamespaceURI))
+  for (Element* element = GetAsElementOrParentElement(); element;
+       element = element->GetParentElement()) {
+    if (element->GetAttr(kNameSpaceID_XMLNS, name, aNamespaceURI)) {
       return NS_OK;
-  } while ((content = content->GetParent()));
+    }
+  }
   return NS_ERROR_FAILURE;
 }
 
 nsAtom* nsIContent::GetLang() const {
-  for (const auto* content = this; content; content = content->GetParent()) {
-    if (!content->IsElement()) {
-      continue;
-    }
-
-    auto* element = content->AsElement();
+  for (const Element* element = GetAsElementOrParentElement(); element;
+       element = element->GetParentElement()) {
     if (!element->GetAttrCount()) {
       continue;
     }
