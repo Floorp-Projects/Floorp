@@ -639,12 +639,13 @@ static nsresult AppendImagePromise(nsITransferable* aTransferable,
     // Fix the file extension in the URL
     nsAutoCString primaryExtension;
     mimeInfo->GetPrimaryExtension(primaryExtension);
-
-    rv = NS_MutateURI(imgUri)
-             .Apply(NS_MutatorMethod(&nsIURLMutator::SetFileExtension,
-                                     primaryExtension, nullptr))
-             .Finalize(imgUrl);
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (!primaryExtension.IsEmpty()) {
+      rv = NS_MutateURI(imgUri)
+               .Apply(NS_MutatorMethod(&nsIURLMutator::SetFileExtension,
+                                       primaryExtension, nullptr))
+               .Finalize(imgUrl);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
   }
 
   nsAutoCString fileName;

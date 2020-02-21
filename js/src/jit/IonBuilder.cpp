@@ -9906,7 +9906,7 @@ AbortReasonOr<Ok> IonBuilder::jsop_checkclassheritage() {
   auto* ins = MCheckClassHeritage::New(alloc(), current->pop());
   current->add(ins);
   current->push(ins);
-  return Ok();
+  return resumeAfter(ins);
 }
 
 AbortReasonOr<Ok> IonBuilder::jsop_checkthis() {
