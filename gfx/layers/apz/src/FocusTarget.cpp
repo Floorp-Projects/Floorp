@@ -164,7 +164,7 @@ FocusTarget::FocusTarget(PresShell* aRootPresShell,
     if (layersId.IsValid()) {
       FT_LOG("Creating reflayer target with seq=%" PRIu64 ", kl=%d, lt=%" PRIu64
              "\n",
-             aFocusSequenceNumber, mFocusHasKeyEventListeners, layersId);
+             aFocusSequenceNumber, mFocusHasKeyEventListeners, layersId.mId);
 
       mData = AsVariant<LayersId>(std::move(layersId));
       return;
