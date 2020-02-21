@@ -74,6 +74,13 @@ android {
             manifestPlaceholders.isRaptorEnabled = "true"
             applicationIdSuffix ".fenix.performancetest"
             debuggable true
+            manifestPlaceholders = [
+                // Since we configure this build to behave like a "fennec" flavored build, we need
+                // to set a shared user id for the manifest. The actual values does not matter.
+                // However we pick a unique value to not "clash" with other Fenix/Fennec builds
+                // installed on the device.
+                "sharedUserId": "org.mozilla.fenix.performancetest.sharedID"
+            ]
         }
         fenixNightly releaseTemplate >> {
             applicationIdSuffix ".fenix.nightly"
@@ -203,6 +210,12 @@ android {
             manifest.srcFile "src/migration/AndroidManifest.xml"
         }
         fennecProduction {
+            java.srcDirs = ['src/migration/java']
+            manifest.srcFile "src/migration/AndroidManifest.xml"
+        }
+        forPerformanceTest {
+            // We want our performance test builds to use the same code as our "fennec" flavor builds
+            // since those builds will ship to our large user base.
             java.srcDirs = ['src/migration/java']
             manifest.srcFile "src/migration/AndroidManifest.xml"
         }
