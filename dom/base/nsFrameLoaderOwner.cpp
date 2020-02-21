@@ -33,7 +33,8 @@ void nsFrameLoaderOwner::SetFrameLoader(nsFrameLoader* aNewFrameLoader) {
   mFrameLoader = aNewFrameLoader;
 }
 
-mozilla::dom::BrowsingContext* nsFrameLoaderOwner::GetBrowsingContext() {
+already_AddRefed<mozilla::dom::BrowsingContext>
+nsFrameLoaderOwner::GetBrowsingContext() {
   if (mFrameLoader) {
     return mFrameLoader->GetBrowsingContext();
   }
@@ -205,7 +206,7 @@ void nsFrameLoaderOwner::ChangeRemotenessWithBridge(BrowserBridgeChild* aBridge,
 
   std::function<void()> frameLoaderInit = [&] {
     RefPtr<BrowserBridgeHost> host = aBridge->FinishInit(mFrameLoader);
-    mFrameLoader->mPendingBrowsingContext->SetEmbedderElement(
+    mFrameLoader->mBrowsingContext->SetEmbedderElement(
         mFrameLoader->GetOwnerContent());
     mFrameLoader->mRemoteBrowser = host;
   };
