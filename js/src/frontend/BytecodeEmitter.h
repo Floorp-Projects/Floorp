@@ -526,6 +526,7 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
                                                 FieldPlacement placement);
   const FieldInitializers& findFieldInitializersForCall();
   MOZ_MUST_USE bool emitInitializeInstanceFields();
+  MOZ_MUST_USE bool emitInitializeStaticFields(ListNode* classMembers);
 
   // To catch accidental misuse, emitUint16Operand/emit3 assert that they are
   // not used to unconditionally emit JSOp::GetLocal. Variable access should
