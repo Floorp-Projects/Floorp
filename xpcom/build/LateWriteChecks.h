@@ -54,6 +54,25 @@ void BeginLateWriteChecks();
  */
 void StopLateWriteChecks();
 
+/**
+ * Temporarily suspend late write checks for the current thread. This is useful
+ * if you're about to perform a write, but it would be fine if this write were
+ * interrupted or skipped during a fast shutdown.
+ */
+void PushSuspendLateWriteChecks();
+
+/**
+ * Resume late write checks for the current thread, assuming an ancestor in the
+ * call stack hasn't also pushed a suspension.
+ */
+void PopSuspendLateWriteChecks();
+
+class MOZ_RAII AutoSuspendLateWriteChecks {
+ public:
+  AutoSuspendLateWriteChecks() { PushSuspendLateWriteChecks(); }
+  ~AutoSuspendLateWriteChecks() { PopSuspendLateWriteChecks(); }
+};
+
 }  // namespace mozilla
 
 #endif  // mozilla_LateWriteChecks_h
