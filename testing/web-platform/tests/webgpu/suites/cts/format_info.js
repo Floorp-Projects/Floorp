@@ -2,9 +2,7 @@
 * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
 **/
 
-import { C } from '../../framework/index.js'; // Textures
-
-export const kTextureFormatInfo =
+export const textureFormatInfo =
 /* prettier-ignore */
 {
   // Try to keep these manually-formatted in a readable grid.
@@ -169,61 +167,36 @@ export const kTextureFormatInfo =
     color: false
   }
 };
-export const kTextureFormats = Object.keys(kTextureFormatInfo); // Bindings
-
-export const kMaxBindingsPerBindGroup = 16;
-export const kPerStageBindingLimits =
-/* prettier-ignore */
-{
-  'uniform-buffer': 12,
-  'storage-buffer': 4,
-  'sampler': 16,
-  'sampled-texture': 16,
-  'storage-texture': 4
-};
-const kStagesAll = C.ShaderStage.Vertex | C.ShaderStage.Fragment | C.ShaderStage.Compute;
-const kStagesNonVertex = C.ShaderStage.Fragment | C.ShaderStage.Compute;
-export const kBindingTypeInfo =
+export const textureFormats = Object.keys(textureFormatInfo);
+export const bindingTypeInfo =
 /* prettier-ignore */
 {
   'uniform-buffer': {
     type: 'buffer',
-    validStages: kStagesAll,
-    perStageLimitType: 'uniform-buffer',
     maxDynamicCount: 8
   },
   'storage-buffer': {
     type: 'buffer',
-    validStages: kStagesNonVertex,
-    perStageLimitType: 'storage-buffer',
     maxDynamicCount: 4
   },
   'readonly-storage-buffer': {
     type: 'buffer',
-    validStages: kStagesAll,
-    perStageLimitType: 'storage-buffer',
     maxDynamicCount: 4
   },
   'sampler': {
     type: 'sampler',
-    validStages: kStagesAll,
-    perStageLimitType: 'sampler',
     maxDynamicCount: 0
   },
   'sampled-texture': {
     type: 'texture',
-    validStages: kStagesAll,
-    perStageLimitType: 'sampled-texture',
     maxDynamicCount: 0
   },
   'storage-texture': {
     type: 'texture',
-    validStages: kStagesAll,
-    perStageLimitType: 'storage-texture',
     maxDynamicCount: 0
   }
 };
-export const kBindingTypes = Object.keys(kBindingTypeInfo);
-export const kShaderStages = [C.ShaderStage.Vertex, C.ShaderStage.Fragment, C.ShaderStage.Compute];
-export const kShaderStageCombinations = [0, 1, 2, 3, 4, 5, 6, 7];
-//# sourceMappingURL=capability_info.js.map
+export const bindingTypes = Object.keys(bindingTypeInfo);
+export const shaderStages = [1, 2, 4];
+export const shaderStageCombinations = [0, 1, 2, 3, 4, 5, 6, 7];
+//# sourceMappingURL=format_info.js.map
