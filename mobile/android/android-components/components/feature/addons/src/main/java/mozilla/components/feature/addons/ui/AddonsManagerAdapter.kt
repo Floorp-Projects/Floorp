@@ -4,6 +4,9 @@
 
 package mozilla.components.feature.addons.ui
 
+import android.graphics.Bitmap
+import android.graphics.drawable.BitmapDrawable
+import android.graphics.drawable.TransitionDrawable
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -216,7 +219,7 @@ class AddonsManagerAdapter(
                 val iconBitmap = addonCollectionProvider.getAddonIconBitmap(addon)
                 iconBitmap?.let {
                     scope.launch(Main) {
-                        iconView.setImageBitmap(it)
+                        iconView.setWithCrossFadeAnimation(it)
                     }
                 }
             } catch (e: IOException) {
@@ -284,3 +287,10 @@ private fun Addon.inUnsupportedSection() = isInstalled() && !isSupported()
 private fun Addon.inRecommendedSection() = !isInstalled()
 private fun Addon.inInstalledSection() = isInstalled() && isSupported() && isEnabled()
 private fun Addon.inDisabledSection() = isInstalled() && isSupported() && !isEnabled()
+private fun ImageView.setWithCrossFadeAnimation(bitmap: Bitmap, durationMillis: Int = 1700) {
+    val bitmapDrawable = BitmapDrawable(context.resources, bitmap)
+    val animation = TransitionDrawable(arrayOf(drawable, bitmapDrawable))
+    animation.isCrossFadeEnabled = true
+    setImageDrawable(animation)
+    animation.startTransition(durationMillis)
+}
