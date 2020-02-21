@@ -1052,6 +1052,7 @@ browsertime-speedometer:
     raptor-test: raptor-speedometer
     run-on-projects:
         by-test-platform:
+            .*-ref-hw-2017/.*: []
             windows10-aarch64/opt: ['try']
             default: ['integration', 'try']
     variants: ["fission"]
@@ -1067,6 +1068,7 @@ browsertime-ares6:
     raptor-test: raptor-ares6
     run-on-projects:
         by-test-platform:
+            .*-ref-hw-2017/.*: []
             windows10-aarch64/opt: ['try']
             default: ['integration', 'try']
     variants: ["fission"]
