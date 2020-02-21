@@ -3081,7 +3081,9 @@ void nsFrameLoader::ApplySandboxFlags(uint32_t sandboxFlags) {
       sandboxFlags |= SANDBOXED_AUXILIARY_NAVIGATION;
     }
   }
-  mBrowsingContext->SetSandboxFlags(sandboxFlags);
+  if (BrowsingContext* context = GetBrowsingContext()) {
+    context->SetSandboxFlags(sandboxFlags);
+  }
 }
 
 /* virtual */
