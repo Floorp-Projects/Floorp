@@ -5,7 +5,7 @@
 export const description = `
 copy imageBitmap To texture tests.
 `;
-import { TestGroup, pcombine, poptions } from '../../framework/index.js';
+import { TestGroup, assert, pcombine, poptions } from '../../framework/index.js';
 import { GPUTest } from './gpu_test.js';
 
 function calculateRowPitch(width, bytesPerPixel) {
@@ -60,6 +60,17 @@ class F extends GPUTest {
     }
 
     return failedPixels > 0 ? lines.join('\n') : undefined;
+  } // Using drawImage to extract imageBitmap content.
+
+
+  imageBitmapToData(imageBitmap) {
+    const imageCanvas = document.createElement('canvas');
+    imageCanvas.width = imageBitmap.width;
+    imageCanvas.height = imageBitmap.height;
+    const imageCanvasContext = imageCanvas.getContext('2d');
+    assert(imageCanvasContext !== null, 'Cannot create canvas context for reading back contents from imageBitmap.');
+    imageCanvasContext.drawImage(imageBitmap, 0, 0, imageBitmap.width, imageBitmap.height);
+    return imageCanvasContext.getImageData(0, 0, imageBitmap.width, imageBitmap.height).data;
   }
 
 }
@@ -102,6 +113,7 @@ g.test('from ImageData', async t => {
     height: imageBitmap.height,
     depth: 1
   });
+  const data = t.imageBitmapToData(imageBitmap);
   const rowPitchValue = calculateRowPitch(imageBitmap.width, bytesPerPixel);
   const testBuffer = t.device.createBuffer({
     size: rowPitchValue * imageBitmap.height,
@@ -126,7 +138,7 @@ g.test('from ImageData', async t => {
     depth: 1
   });
   t.device.defaultQueue.submit([encoder.finish()]);
-  t.checkCopyImageBitmapResult(testBuffer, imagePixels, imageBitmap.width, imageBitmap.height, bytesPerPixel);
+  t.checkCopyImageBitmapResult(testBuffer, data, imageBitmap.width, imageBitmap.height, bytesPerPixel);
 }).params(pcombine(poptions('width', [1, 2, 4, 15, 255, 256]), //
 poptions('height', [1, 2, 4, 15, 255, 256])));
 //# sourceMappingURL=copyImageBitmapToTexture.spec.js.map
