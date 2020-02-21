@@ -10960,6 +10960,7 @@ class MCheckObjCoercible : public MUnaryInstruction,
   NAMED_OPERANDS((0, checkValue))
 
   AliasSet getAliasSet() const override { return AliasSet::None(); }
+  MDefinition* foldsTo(TempAllocator& alloc) override;
 };
 
 class MCheckClassHeritage : public MUnaryInstruction,
