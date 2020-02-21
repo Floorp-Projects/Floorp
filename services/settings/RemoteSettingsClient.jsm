@@ -6,7 +6,6 @@
 
 var EXPORTED_SYMBOLS = ["RemoteSettingsClient"];
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
@@ -55,19 +54,6 @@ function cacheProxy(target) {
       return cache.get(prop);
     },
   });
-}
-
-class ClientEnvironment extends ClientEnvironmentBase {
-  static get appID() {
-    // eg. Firefox is "{ec8030f7-c20a-464f-9b0e-13a3a9e97384}".
-    Services.appinfo.QueryInterface(Ci.nsIXULAppInfo);
-    return Services.appinfo.ID;
-  }
-
-  static get toolkitVersion() {
-    Services.appinfo.QueryInterface(Ci.nsIPlatformInfo);
-    return Services.appinfo.platformVersion;
-  }
 }
 
 /**
@@ -873,7 +859,7 @@ class RemoteSettingsClient extends EventEmitter {
       return data;
     }
     const start = Cu.now() * 1000;
-    const environment = cacheProxy(ClientEnvironment);
+    const environment = cacheProxy(ClientEnvironmentBase);
     const dataPromises = data.map(e => this.filterFunc(e, environment));
     const results = await Promise.all(dataPromises);
     if (gTimingEnabled) {
