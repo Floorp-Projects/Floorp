@@ -1272,7 +1272,6 @@ dependencies = [
  "nsstring",
  "thin-vec",
  "unic-langid",
- "unic-langid-ffi",
  "xpcom",
 ]
 
