@@ -344,14 +344,6 @@ sccache:
         # 0.2.12 release + a handful of fixes
         revision: e59cc28cf37254e182ede79070384f8166b52f8e
 
-openssl-1.1.0g:
-    description: openssl 1.1.0g source code
-    fetch:
-        type: static-url
-        url: https://www.openssl.org/source/openssl-1.1.0g.tar.gz
-        sha256: de4d501267da39310905cb6dc8c6121f7a2cad45a7707f76df828fe1b85073af
-        size: 5404748
-
 fxc2:
     description: fxc2 source code
     fetch:
