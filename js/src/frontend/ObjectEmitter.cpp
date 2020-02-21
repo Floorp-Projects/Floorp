@@ -813,7 +813,7 @@ bool ClassEmitter::emitFieldInitializersEnd() {
   return true;
 }
 
-bool ClassEmitter::emitEnd(Kind kind) {
+bool ClassEmitter::emitBinding() {
   MOZ_ASSERT(propertyState_ == PropertyState::Start ||
              propertyState_ == PropertyState::Init);
   MOZ_ASSERT(classState_ == ClassState::InitConstructor ||
@@ -827,36 +827,27 @@ bool ClassEmitter::emitEnd(Kind kind) {
   }
 
   if (name_) {
-    MOZ_ASSERT(tdzCache_.isSome());
     MOZ_ASSERT(innerScope_.isSome());
 
     if (!bce_->emitLexicalInitialization(name_)) {
       //            [stack] CTOR
       return false;
     }
+  }
 
-    if (!innerScope_->leave(bce_)) {
-      return false;
-    }
-    innerScope_.reset();
+  //                [stack] CTOR
 
-    if (kind == Kind::Declaration) {
-      if (!bce_->emitLexicalInitialization(name_)) {
-        //          [stack] CTOR
-        return false;
-      }
-      // Only class statements make outer bindings, and they do not leave
-      // themselves on the stack.
-      if (!bce_->emit1(JSOp::Pop)) {
-        //          [stack]
-        return false;
-      }
-    }
+#ifdef DEBUG
+  classState_ = ClassState::BoundName;
+#endif
+  return true;
+}
 
-    tdzCache_.reset();
-  } else if (innerScope_.isSome()) {
-    //              [stack] CTOR
-    MOZ_ASSERT(kind == Kind::Expression);
+bool ClassEmitter::emitEnd(Kind kind) {
+  MOZ_ASSERT(classState_ == ClassState::BoundName);
+  //                [stack] CTOR
+
+  if (innerScope_.isSome()) {
     MOZ_ASSERT(tdzCache_.isSome());
 
     if (!innerScope_->leave(bce_)) {
@@ -865,9 +856,23 @@ bool ClassEmitter::emitEnd(Kind kind) {
     innerScope_.reset();
     tdzCache_.reset();
   } else {
-    //              [stack] CTOR
     MOZ_ASSERT(kind == Kind::Expression);
     MOZ_ASSERT(tdzCache_.isNothing());
+  }
+
+  if (kind == Kind::Declaration) {
+    MOZ_ASSERT(name_);
+
+    if (!bce_->emitLexicalInitialization(name_)) {
+      //            [stack] CTOR
+      return false;
+    }
+    // Only class statements make outer bindings, and they do not leave
+    // themselves on the stack.
+    if (!bce_->emit1(JSOp::Pop)) {
+      //            [stack]
+      return false;
+    }
   }
 
   //                [stack] # class declaration
