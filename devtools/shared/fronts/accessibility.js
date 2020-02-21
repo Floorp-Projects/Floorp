@@ -199,6 +199,7 @@ class AccessibilityFront extends FrontClassWithSpec(accessibilitySpec) {
   // correctly.
   async bootstrap() {
     this.accessibleWalkerFront = await super.getWalker();
+    this.simulatorFront = await super.getSimulator();
     ({
       enabled: this.enabled,
       canBeEnabled: this.canBeEnabled,
