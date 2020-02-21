@@ -15,30 +15,30 @@
     android:paddingBottom="16dp"
     tools:ignore="Overdraw">
 
-    <TextView
+    <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/host_name"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:drawableStart="@drawable/mozac_ic_globe"
         android:drawablePadding="16dp"
         android:gravity="center_vertical"
         android:textColor="?android:textColorPrimary"
         android:textSize="16sp"
+        app:drawableStartCompat="@drawable/mozac_ic_globe"
         app:drawableTint="?android:textColorPrimary"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         tools:text="host.com" />
 
-    <TextView
+    <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/save_message"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
-        android:drawableStart="@drawable/mozac_ic_login"
         android:drawablePadding="16dp"
         android:gravity="center_vertical"
         android:textColor="?android:textColorPrimary"
         android:textSize="16sp"
+        app:drawableStartCompat="@drawable/mozac_ic_login"
         app:drawableTint="?android:textColorPrimary"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/host_name"
