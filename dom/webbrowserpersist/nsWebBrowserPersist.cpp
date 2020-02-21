@@ -1999,9 +1999,15 @@ nsresult nsWebBrowserPersist::CalculateAndAppendFileExt(
           mimeInfo->ExtensionExists(fileExt, &useOldExt);
         }
 
-        // can't use old extension so use primary extension
+        // If the url doesn't have an extension, or we don't know the extension,
+        // try to use the primary extension for the type. If we don't know the
+        // primary extension for the type, just continue with the url extension.
         if (!useOldExt) {
-          mimeInfo->GetPrimaryExtension(fileExt);
+          nsAutoCString primaryExt;
+          mimeInfo->GetPrimaryExtension(primaryExt);
+          if (!primaryExt.IsEmpty()) {
+            fileExt = primaryExt;
+          }
         }
 
         if (!fileExt.IsEmpty()) {
