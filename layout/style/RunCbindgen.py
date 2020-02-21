@@ -19,13 +19,14 @@ def _get_crate_name(crate_path):
 
 CARGO_LOCK = mozpath.join(buildconfig.topsrcdir, "Cargo.lock")
 
-def generate(output, cbindgen_crate_path, *in_tree_dependencies):
+def _generate(output, cbindgen_crate_path, metadata_crate_path,
+              in_tree_dependencies):
     env = os.environ.copy()
     env['CARGO'] = str(buildconfig.substs['CARGO'])
 
     p = subprocess.Popen([
         buildconfig.substs['CBINDGEN'],
-        mozpath.join(buildconfig.topsrcdir, "toolkit", "library", "rust"),
+        metadata_crate_path,
         "--lockfile",
         CARGO_LOCK,
         "--crate",
@@ -51,3 +52,22 @@ def generate(output, cbindgen_crate_path, *in_tree_dependencies):
                     deps.add(mozpath.join(path, file))
 
     return deps
+
+
+def generate(output, cbindgen_crate_path, *in_tree_dependencies):
+    metadata_crate_path = mozpath.join(buildconfig.topsrcdir,
+                                       "toolkit", "library", "rust")
+    return _generate(output, cbindgen_crate_path, metadata_crate_path,
+                     in_tree_dependencies)
+
+
+# Use the binding's crate directory instead of toolkit/library/rust as
+# the metadata crate directory.
+#
+# This is necessary for the bindings inside SpiderMonkey, given that
+# SpiderMonkey tarball doesn't contain toolkit/library/rust and its
+# dependencies.
+def generate_with_same_crate(output, cbindgen_crate_path,
+                             *in_tree_dependencies):
+    return _generate(output, cbindgen_crate_path, cbindgen_crate_path,
+                     in_tree_dependencies)
