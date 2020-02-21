@@ -69,7 +69,7 @@ class SHistoryChild final : public PSHistoryChild,
 
   ~SHistoryChild() = default;
 
-  nsresult LoadURI(LoadSHEntryData& aLoadData);
+  nsresult LoadURI(nsTArray<LoadSHEntryData>& aLoadData);
 
   // Track all bfcache entries and evict on expiration.
   mozilla::UniquePtr<HistoryTracker> mHistoryTracker;

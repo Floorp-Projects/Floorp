@@ -140,9 +140,10 @@ class nsSHistory : public mozilla::LinkedListElement<nsSHistory>,
   // If this doesn't return an error then either aLoadResult is set to nothing,
   // in which case the caller should ignore the load, or it returns a valid
   // LoadEntryResult in aLoadResult which the caller should use to do the load.
-  nsresult Reload(uint32_t aReloadFlags, Maybe<LoadEntryResult>& aLoadResult);
-  nsresult ReloadCurrentEntry(LoadEntryResult& aLoadResult);
-  nsresult GotoIndex(int32_t aIndex, LoadEntryResult& aLoadResult);
+  nsresult Reload(uint32_t aReloadFlags,
+                  nsTArray<LoadEntryResult>& aLoadResults);
+  nsresult ReloadCurrentEntry(nsTArray<LoadEntryResult>& aLoadResults);
+  nsresult GotoIndex(int32_t aIndex, nsTArray<LoadEntryResult>& aLoadResults);
 
   void WindowIndices(int32_t aIndex, int32_t* aOutStartIndex,
                      int32_t* aOutEndIndex);
@@ -160,13 +161,13 @@ class nsSHistory : public mozilla::LinkedListElement<nsSHistory>,
   nsresult LoadDifferingEntries(nsISHEntry* aPrevEntry, nsISHEntry* aNextEntry,
                                 mozilla::dom::BrowsingContext* aRootBC,
                                 long aLoadType, bool& aDifferenceFound,
-                                LoadEntryResult& aLoadResult);
+                                nsTArray<LoadEntryResult>& aLoadResults);
   nsresult InitiateLoad(nsISHEntry* aFrameEntry,
                         mozilla::dom::BrowsingContext* aFrameBC, long aLoadType,
-                        LoadEntryResult& aLoadResult);
+                        nsTArray<LoadEntryResult>& aLoadResult);
 
   nsresult LoadEntry(int32_t aIndex, long aLoadType, uint32_t aHistCmd,
-                     LoadEntryResult& aLoad);
+                     nsTArray<LoadEntryResult>& aLoadResults);
 
 #ifdef DEBUG
   nsresult PrintHistory();
@@ -190,7 +191,7 @@ class nsSHistory : public mozilla::LinkedListElement<nsSHistory>,
 
   nsresult LoadNextPossibleEntry(int32_t aNewIndex, long aLoadType,
                                  uint32_t aHistCmd,
-                                 LoadEntryResult& aLoadResult);
+                                 nsTArray<LoadEntryResult>& aLoadResults);
 
   // aIndex is the index of the entry which may be removed.
   // If aKeepNext is true, aIndex is compared to aIndex + 1,
