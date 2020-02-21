@@ -298,7 +298,6 @@ raptor-speedometer-fennec68-power:
             - --app=fennec
             - --binary=org.mozilla.firefox
             - --power-test
-            - --host HOST_IP
 
 raptor-scn-power-idle-fennec68:
     description: "Raptor idle-browser power-usage test on Fennec68"
@@ -311,7 +310,6 @@ raptor-scn-power-idle-fennec68:
             - --app=fennec
             - --binary=org.mozilla.firefox
             - --power-test
-            - --host HOST_IP
 
 raptor-scn-power-idle-bg-fennec68:
     description: "Raptor idle-browser (backgrounded) power-usage measurement on Fennec68"
@@ -324,7 +322,6 @@ raptor-scn-power-idle-bg-fennec68:
             - --app=fennec
             - --binary=org.mozilla.firefox
             - --power-test
-            - --host HOST_IP
 
 raptor-youtube-playback-fennec68:
     description: "Raptor YouTube Playback on Fennec68"
