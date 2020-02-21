@@ -1,3 +1,4 @@
+--min-version 1.0.4 bind-framebuffer-flush-bug.html
 --min-version 1.0.4 blending.html
 --min-version 1.0.4 canvas-alpha-bug.html
 --min-version 1.0.4 --max-version 1.9.9 clipping-wide-points.html

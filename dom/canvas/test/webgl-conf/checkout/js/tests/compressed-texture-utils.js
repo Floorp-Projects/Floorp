@@ -1,24 +1,7 @@
 /*
-** Copyright (c) 2018 The Khronos Group Inc.
-**
-** Permission is hereby granted, free of charge, to any person obtaining a
-** copy of this software and/or associated documentation files (the
-** "Materials"), to deal in the Materials without restriction, including
-** without limitation the rights to use, copy, modify, merge, publish,
-** distribute, sublicense, and/or sell copies of the Materials, and to
-** permit persons to whom the Materials are furnished to do so, subject to
-** the following conditions:
-**
-** The above copyright notice and this permission notice shall be included
-** in all copies or substantial portions of the Materials.
-**
-** THE MATERIALS ARE PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-** EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-** MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
-** IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
-** CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
-** TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-** MATERIALS OR THE USE OR OTHER DEALINGS IN THE MATERIALS.
+Copyright (c) 2019 The Khronos Group Inc.
+Use of this source code is governed by an MIT-style license that can be
+found in the LICENSE.txt file.
 */
 
 "use strict";
@@ -173,6 +156,42 @@ var testFormatRestrictionsOnBufferSize = function(gl, validFormats, expectedByte
     }
 };
 
+/**
+ * @param {WebGLRenderingContextBase} gl
+ * @param {Object} validFormats Mapping from format names to format enum values.
+ * @param expectedByteLength A function that takes in width, height and format and returns the expected buffer size in bytes.
+ * @param getBlockDimensions A function that takes in a format and returns block size in pixels.
+ * @param {number} width Width of the image in pixels.
+ * @param {number} height Height of the image in pixels.
+ * @param {Object} subImageConfigs configs for compressedTexSubImage calls
+ */
+var testTexSubImageDimensions = function(gl, validFormats, expectedByteLength, getBlockDimensions, width, height, subImageConfigs) {
+    var tex = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, tex);
+
+    for (var formatId in validFormats) {
+        if (validFormats.hasOwnProperty(formatId)) {
+            var format = validFormats[formatId];
+            var blockSize = getBlockDimensions(format);
+            var expectedSize = expectedByteLength(width, height, format);
+            var data = new Uint8Array(expectedSize);
+
+            gl.compressedTexImage2D(gl.TEXTURE_2D, 0, format, width, height, 0, data);
+            wtu.glErrorShouldBe(gl, gl.NO_ERROR, "setting up compressed texture");
+
+            for (let i = 0, len = subImageConfigs.length; i < len; ++i) {
+                let c = subImageConfigs[i];
+                var subData = new Uint8Array(expectedByteLength(c.width, c.height, format));
+                gl.compressedTexSubImage2D(gl.TEXTURE_2D, 0, c.xoffset, c.yoffset, c.width, c.height, format, subData);
+                wtu.glErrorShouldBe(gl, c.expectation, c.message);
+            }
+        }
+    }
+
+    gl.bindTexture(gl.TEXTURE_2D, null);
+    gl.deleteTexture(tex);
+};
+
 return {
     formatToString: formatToString,
     insertCaptionedImg: insertCaptionedImg,
@@ -180,7 +199,8 @@ return {
     testCompressedFormatsListed: testCompressedFormatsListed,
     testCompressedFormatsUnavailableWhenExtensionDisabled: testCompressedFormatsUnavailableWhenExtensionDisabled,
     testCorrectEnumValuesInExt: testCorrectEnumValuesInExt,
-    testFormatRestrictionsOnBufferSize: testFormatRestrictionsOnBufferSize
+    testFormatRestrictionsOnBufferSize: testFormatRestrictionsOnBufferSize,
+    testTexSubImageDimensions: testTexSubImageDimensions,
 };
 
 })();

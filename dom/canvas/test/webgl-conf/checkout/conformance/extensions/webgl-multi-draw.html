@@ -175,16 +175,17 @@ function runTest() {
     }
   }
 
-  doTest('WEBGL_multi_draw', false);
-  doTest('WEBGL_multi_draw_instanced', true);
-}
-
-function doTest(extensionName, instanced) {
+  const extensionName = 'WEBGL_multi_draw';
   const ext = gl.getExtension(extensionName);
-
   if (!runSupportedTest(extensionName, ext)) {
     return;
   }
+
+  doTest(ext, false);
+  doTest(ext, true);
+}
+
+function doTest(ext, instanced) {
 
   function runValidationTests() {
     const vertexBuffer = gl.createBuffer();

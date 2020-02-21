@@ -28,6 +28,13 @@ INDENT TABS:*.vert
 INDENT TABS:deqp/functional/gles3/*.js
 INDENT TABS:conformance-suites/2.0.0/deqp/functional/gles3/*.js
 
+## Two files in the repository deliberately contain non-UTF-8 Unicode,
+## which Python can't decode by default. Skip the content checks for
+## them.
+
+INVALID UNICODE:conformance/glsl/misc/non-ascii-comments.vert.html
+INVALID UNICODE:conformance/glsl/misc/non-ascii.vert.html
+
 ## File types that should never be checked ##
 
 *:*.pdf

@@ -1,28 +1,7 @@
 <!--
-
-/*
-** Copyright (c) 2012 The Khronos Group Inc.
-**
-** Permission is hereby granted, free of charge, to any person obtaining a
-** copy of this software and/or associated documentation files (the
-** "Materials"), to deal in the Materials without restriction, including
-** without limitation the rights to use, copy, modify, merge, publish,
-** distribute, sublicense, and/or sell copies of the Materials, and to
-** permit persons to whom the Materials are furnished to do so, subject to
-** the following conditions:
-**
-** The above copyright notice and this permission notice shall be included
-** in all copies or substantial portions of the Materials.
-**
-** THE MATERIALS ARE PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-** EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-** MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
-** IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
-** CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
-** TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-** MATERIALS OR THE USE OR OTHER DEALINGS IN THE MATERIALS.
-*/
-
+Copyright (c) 2019 The Khronos Group Inc.
+Use of this source code is governed by an MIT-style license that can be
+found in the LICENSE.txt file.
 -->
 
 <!DOCTYPE html>
@@ -328,9 +307,36 @@ function runTest(canvas, antialias) {
       shouldBe("actual", "expected");
     }
     wtu.glErrorShouldBe(gl, gl.NO_ERROR, "there should be no GL errors");
+
+    debug("");
+    debug("check readback into Uint8ClampedArray");
+    continueTestFunc = continueTestPart4;
+    const kSize = 32;
+    canvas.width = kSize;
+    canvas.height = kSize;
+    if (gl.getError() != gl.CONTEXT_LOST_WEBGL) {
+      continueTestPart4();
+    }
+  }
+
+  function continueTestPart4() {
+    const kSize = 32;
+    gl.viewport(0, 0, kSize, kSize);
+    gl.clearColor(0.0, 1.0, 0.0, 1.0);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+
+    var buf = new Uint8ClampedArray(4);
+    gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, buf);
+    wtu.glErrorShouldBe(gl, gl.NO_ERROR, "there should be no GL errors reading back into a Uint8ClampedArray");
+    if (buf[0] == 0 && buf[1] == 255 && buf[2] == 0 && buf[3] == 255) {
+      testPassed("Readback into Uint8ClampedArray worked successfully");
+    } else {
+      assertMsg(false,
+                "color pixel at 0, 0 should be [0, 255, 0, 255], was " +
+                [buf[0], buf[1], buf[2], buf[3]]);
+    }
   }
 }
 </script>
 </body>
 </html>
-

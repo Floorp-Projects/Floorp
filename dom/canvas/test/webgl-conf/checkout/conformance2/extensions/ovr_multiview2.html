@@ -1,28 +1,7 @@
 <!--
-
-/*
-** Copyright (c) 2018 The Khronos Group Inc.
-**
-** Permission is hereby granted, free of charge, to any person obtaining a
-** copy of this software and/or associated documentation files (the
-** "Materials"), to deal in the Materials without restriction, including
-** without limitation the rights to use, copy, modify, merge, publish,
-** distribute, sublicense, and/or sell copies of the Materials, and to
-** permit persons to whom the Materials are furnished to do so, subject to
-** the following conditions:
-**
-** The above copyright notice and this permission notice shall be included
-** in all copies or substantial portions of the Materials.
-**
-** THE MATERIALS ARE PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-** EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-** MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
-** IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
-** CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
-** TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-** MATERIALS OR THE USE OR OTHER DEALINGS IN THE MATERIALS.
-*/
-
+Copyright (c) 2019 The Khronos Group Inc.
+Use of this source code is governed by an MIT-style license that can be
+found in the LICENSE.txt file.
 -->
 
 <!DOCTYPE html>
@@ -34,16 +13,32 @@
 <script src="../../js/js-test-pre.js"></script>
 <script src="../../js/webgl-test-utils.js"></script>
 <script src="../../js/tests/ovr_multiview2_util.js"></script>
-<script id="macroFragmentShader" type="x-shader/x-fragment">#version 300 es
+<script id="requireDefine_GL_OVR_multiview2" type="x-shader/x-fragment">#version 300 es
+#ifndef GL_OVR_multiview2
+    #error no GL_OVR_multiview2
+#endif
 precision highp float;
 out vec4 my_FragColor;
 void main() {
-#ifdef GL_OVR_multiview2
     my_FragColor = vec4(0.0, 1.0, 0.0, 1.0);
-#else
-    // Error expected
-    #error no GL_OVR_multiview2;
+}
+</script>
+<script id="forbidDefine_GL_OVR_multiview" type="x-shader/x-fragment">#version 300 es
+#ifdef GL_OVR_multiview
+    #error legacy GL_OVR_multiview support must be forbidden
 #endif
+precision highp float;
+out vec4 my_FragColor;
+void main() {
+    my_FragColor = vec4(0.0, 1.0, 0.0, 1.0);
+}
+</script>
+<script id="legacyMultiview1Shader" type="x-shader/x-fragment">#version 300 es
+#extension GL_OVR_multiview: require
+precision highp float;
+out vec4 my_FragColor;
+void main() {
+    my_FragColor = vec4(0.0, 1.0, 0.0, 1.0);
 }
 </script>
 </head>
@@ -91,19 +86,11 @@ function runDefaultFramebufferQueryTest()
     debug("");
     debug("Testing querying base view index and num views on the default framebuffer");
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-    let baseViewIndex = gl.getFramebufferAttachmentParameter(gl.FRAMEBUFFER, gl.BACK, ext.FRAMEBUFFER_ATTACHMENT_TEXTURE_BASE_VIEW_INDEX_OVR);
-    let numViews = gl.getFramebufferAttachmentParameter(gl.FRAMEBUFFER, gl.BACK, ext.FRAMEBUFFER_ATTACHMENT_TEXTURE_NUM_VIEWS_OVR);
-    if (baseViewIndex != 0) {
-        testFailed('Unexpected baseViewIndex ' + baseViewIndex + ' on the default framebuffer');
-    } else {
-        testPassed('baseViewIndex on the default framebuffer was 0');
-    }
-    if (numViews != 0) {
-        testFailed('Unexpected numViews ' + numViews + ' on the default framebuffer');
-    } else {
-        testPassed('numViews on the default framebuffer was 0');
-    }
-    wtu.glErrorShouldBe(gl, gl.NO_ERROR, "should be no errors from framebuffer queries on the default framebuffer");
+    // Same behavior as FRAMEBUFFER_ATTACHMENT_TEXTURE_LAYER:
+    gl.getFramebufferAttachmentParameter(gl.FRAMEBUFFER, gl.BACK, ext.FRAMEBUFFER_ATTACHMENT_TEXTURE_BASE_VIEW_INDEX_OVR);
+    wtu.glErrorShouldBe(gl, gl.INVALID_ENUM, "FRAMEBUFFER_ATTACHMENT_TEXTURE_BASE_VIEW_INDEX_OVR is INVALID_ENUM for default framebuffer");
+    gl.getFramebufferAttachmentParameter(gl.FRAMEBUFFER, gl.BACK, ext.FRAMEBUFFER_ATTACHMENT_TEXTURE_NUM_VIEWS_OVR);
+    wtu.glErrorShouldBe(gl, gl.INVALID_ENUM, "FRAMEBUFFER_ATTACHMENT_TEXTURE_NUM_VIEWS_OVR is INVALID_ENUM for default framebuffer");
 }
 
 function runInvalidTextureTypeTest()
@@ -283,19 +270,15 @@ function runShaderCompileTest(extensionEnabled)
     debug("");
     debug("Testing shader compiles with extension " + (extensionEnabled ? "enabled" : "disabled"));
 
-    var macroFragmentProgram = wtu.setupProgram(gl, [wtu.simpleVertexShaderESSL300, "macroFragmentShader"], undefined, undefined, true);
+    let prog = wtu.setupProgram(gl, [wtu.simpleVertexShaderESSL300, "requireDefine_GL_OVR_multiview2"], undefined, undefined, true);
+    expectTrue(!extensionEnabled == !prog,
+               "GL_OVR_multiview2 must be defined by the preprocessor iff OVR_multiview2 is enabled by getExtension.");
     if (extensionEnabled) {
-        if (macroFragmentProgram) {
-            testPassed("GL_OVR_multiview2 defined in shaders when extension is enabled");
-        } else {
-            testFailed("GL_OVR_multiview2 not defined in shaders when extension is enabled");
-        }
-    } else {
-        if (macroFragmentProgram) {
-            testFailed("GL_OVR_multiview2 defined in shaders when extension is disabled");
-        } else {
-            testPassed("GL_OVR_multiview2 not defined in shaders when extension disabled");
-        }
+        prog = wtu.setupProgram(gl, [wtu.simpleVertexShaderESSL300, "forbidDefine_GL_OVR_multiview"], undefined, undefined, true);
+        expectTrue(prog, "GL_OVR_multiview must never be defined by the preprocessor.");
+
+        prog = wtu.setupProgram(gl, [wtu.simpleVertexShaderESSL300, "legacyMultiview1Shader"], undefined, undefined, true);
+        expectTrue(!prog, "#extension GL_OVR_multiview must be forbidden.");
     }
 
     if (!extensionEnabled) {

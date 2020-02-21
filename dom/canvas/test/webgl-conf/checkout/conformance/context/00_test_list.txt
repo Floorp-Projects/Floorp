@@ -16,3 +16,4 @@ incorrect-context-object-behaviour.html
 --max-version 1.9.9 methods.html
 premultiplyalpha-test.html
 --min-version 1.0.4 user-defined-properties-on-context.html
+--min-version 1.0.4 zero-sized-canvas.html

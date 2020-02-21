@@ -1,28 +1,7 @@
 ﻿<!--
-
-/*
-** Copyright (c) 2012-2016 The Khronos Group Inc.
-**
-** Permission is hereby granted, free of charge, to any person obtaining a
-** copy of this software and/or associated documentation files (the
-** "Materials"), to deal in the Materials without restriction, including
-** without limitation the rights to use, copy, modify, merge, publish,
-** distribute, sublicense, and/or sell copies of the Materials, and to
-** permit persons to whom the Materials are furnished to do so, subject to
-** the following conditions:
-**
-** The above copyright notice and this permission notice shall be included
-** in all copies or substantial portions of the Materials.
-**
-** THE MATERIALS ARE PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-** EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-** MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
-** IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
-** CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
-** TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-** MATERIALS OR THE USE OR OTHER DEALINGS IN THE MATERIALS.
-*/
-
+Copyright (c) 2019 The Khronos Group Inc.
+Use of this source code is governed by an MIT-style license that can be
+found in the LICENSE.txt file.
 -->
 
 <!DOCTYPE html>
@@ -38,8 +17,6 @@
 img {
  border: 1px solid black;
  margin-right: 1em;
-}
-.testimages {
 }
 
 .testimages br {
@@ -62,47 +39,122 @@ description("This test verifies the functionality of the WEBGL_compressed_textur
 
 debug("");
 
-// This is the original image from webgl-compressed-texture-s3tc.html but
-// scaled to 0x40..0xbf inclusive and alpha changed from 0x69 to 0x7f.
-var img_4x4_rgba_raw = new Uint8Array([
-    0xbf,0x40,0x40,0x7f,0x40,0xbf,0x40,0xff,0xbf,0x40,0x40,0xff,0x40,0xbf,0x40,0xff,
-    0x40,0xbf,0x40,0xff,0x40,0xbf,0x40,0xff,0xbf,0x40,0x40,0xff,0x40,0xbf,0x40,0xff,
-    0xbf,0x40,0x40,0xff,0xbf,0x40,0x40,0xff,0xbf,0x40,0x40,0xff,0x40,0xbf,0x40,0xff,
-    0x40,0xbf,0x40,0xff,0x40,0xbf,0x40,0xff,0x40,0xbf,0x40,0xff,0x40,0xbf,0x40,0xff,
-]);
-var img_4x4_rgb_dxt1 = new Uint8Array([
-    0x08,0xba,0xe8,0x45,0x44,0x45,0x40,0x55,
-]);
+/*
+These tests use the same payloads as a non-sRGB version. When running side-by-side,
+images from these tests must appear much darker than linear counterparts.
+*/
+
+/*
+BC1 (DXT1) block
+e0 = [  0, 255, 0]
+e1 = [255,   0, 0]
+e0 < e1, so it uses 3-color mode
+
+local palette
+    0: [  0, 255, 0, 255]
+    1: [255,   0, 0, 255]
+    2: [128, 128, 0, 255]
+    3: [  0,   0, 0, 255] // for BC1 RGB
+    3: [  0,   0, 0,   0] // for BC1 RGBA
+selectors
+    3 2 1 0
+    2 2 1 0
+    1 1 1 0
+    0 0 0 0
+
+Extending this block with opaque alpha and uploading as BC2 or BC3
+will generate wrong colors because BC2 and BC3 do not have 3-color mode.
+*/
 var img_4x4_rgba_dxt1 = new Uint8Array([
-    0xa8,0x4d,0x48,0xb2,0x13,0x10,0x15,0x00,
+    0xE0, 0x07, 0x00, 0xF8, 0x1B, 0x1A, 0x15, 0x00
 ]);
+
+/*
+BC2 (DXT3) block
+
+Quantized alpha values
+    0 1 2 3
+    4 5 6 7
+    8 9 A B
+    C D E F
+
+RGB block
+e0 = [255,   0, 0]
+e1 = [  0, 255, 0]
+BC2 has only 4-color mode
+
+local palette
+    0: [255,   0, 0]
+    1: [  0, 255, 0]
+    2: [170,  85, 0]
+    3: [ 85, 170, 0]
+selectors
+    0 1 2 3
+    1 1 2 3
+    2 2 2 3
+    3 3 3 3
+*/
 var img_4x4_rgba_dxt3 = new Uint8Array([
-    0xf7,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0x08,0xba,0xe8,0x45,0x44,0x45,0x40,0x55,
+    0x10, 0x32, 0x54, 0x76, 0x98, 0xBA, 0xDC, 0xFE,
+    0x00, 0xF8, 0xE0, 0x07, 0xE4, 0xE5, 0xEA, 0xFF
 ]);
+
+/*
+BC3 (DXT5) block
+
+Alpha block (aka DXT5A)
+e0 = 255
+e1 = 0
+e0 > e1, so using 6 intermediate points
+local palette
+    255, 0, 219, 182, 146, 109, 73, 36
+selectors
+    0 1 2 3
+    1 2 3 4
+    2 3 4 5
+    3 4 5 6
+
+RGB block
+e0 = [255,   0, 0]
+e1 = [  0, 255, 0]
+BC3 has only 4-color mode
+
+local palette
+    0: [255,   0, 0]
+    1: [  0, 255, 0]
+    2: [170,  85, 0]
+    3: [ 85, 170, 0]
+selectors
+    3 2 1 0
+    3 2 1 1
+    3 2 2 2
+    3 3 3 3
+*/
 var img_4x4_rgba_dxt5 = new Uint8Array([
-    0xff,0x7f,0x01,0x00,0x00,0x00,0x00,0x00,0x08,0xba,0xe8,0x45,0x44,0x45,0x40,0x55,
+    0xFF, 0x00, 0x88, 0x16, 0x8D, 0x1A, 0x3B, 0xD6,
+    0x00, 0xF8, 0xE0, 0x07, 0x1B, 0x5B, 0xAB, 0xFF
 ]);
-var img_8x8_rgba_raw = new Uint8Array([
-    0xdf,0xa0,0xa0,0x7f,0x40,0xbf,0x40,0xff,0xbf,0x40,0x40,0xff,0x40,0xbf,0x40,0xff,0xbf,0xbf,0x40,0xff,0x40,0x40,0xbf,0xff,0xbf,0xbf,0x40,0xff,0x40,0x40,0xbf,0xff,
-    0x40,0xbf,0x40,0x7f,0x40,0xbf,0x40,0xff,0xbf,0x40,0x40,0xff,0x40,0xbf,0x40,0xff,0x40,0x40,0xbf,0xff,0x40,0x40,0xbf,0xff,0xbf,0xbf,0x40,0xff,0x40,0x40,0xbf,0xff,
-    0xbf,0x40,0x40,0xff,0xbf,0x40,0x40,0xff,0xbf,0x40,0x40,0xff,0x40,0xbf,0x40,0xff,0xbf,0xbf,0x40,0xff,0xbf,0xbf,0x40,0xff,0xbf,0xbf,0x40,0xff,0x40,0x40,0xbf,0xff,
-    0x40,0xbf,0x40,0xff,0x40,0xbf,0x40,0xff,0x40,0xbf,0x40,0xff,0x40,0xbf,0x40,0xff,0x40,0x40,0xbf,0xff,0x40,0x40,0xbf,0xff,0x40,0x40,0xbf,0xff,0x40,0x40,0xbf,0xff,
-    0x40,0xbf,0x40,0xff,0xbf,0x40,0xbf,0xff,0x40,0xbf,0x40,0xff,0xbf,0x40,0xbf,0xff,0x40,0x40,0xbf,0xff,0x40,0xbf,0xbf,0xff,0x40,0x40,0xbf,0xff,0x40,0xbf,0xbf,0xff,
-    0xbf,0x40,0xbf,0xff,0xbf,0x40,0xbf,0xff,0x40,0xbf,0x40,0xff,0xbf,0x40,0xbf,0xff,0x40,0xbf,0xbf,0xff,0x40,0xbf,0xbf,0xff,0x40,0x40,0xbf,0xff,0x40,0xbf,0xbf,0xff,
-    0x40,0xbf,0x40,0x7f,0x40,0xbf,0x40,0xff,0x40,0xbf,0x40,0xff,0xbf,0x40,0xbf,0xff,0x40,0x40,0xbf,0xff,0x40,0x40,0xbf,0xff,0x40,0x40,0xbf,0xff,0x40,0xbf,0xbf,0xff,
-    0xbf,0x40,0xbf,0x7f,0xbf,0x40,0xbf,0xff,0xbf,0x40,0xbf,0xff,0xbf,0x40,0xbf,0xff,0x40,0xbf,0xbf,0xff,0x40,0xbf,0xbf,0xff,0x40,0xbf,0xbf,0xff,0x40,0xbf,0xbf,0xff,
-]);
-var img_8x8_rgb_dxt1 = new Uint8Array([
-    0x08,0xba,0xe8,0x45,0x44,0x45,0x40,0x55,0xe8,0xbd,0x17,0x42,0x44,0x45,0x40,0x55,0x17,0xba,0xe8,0x45,0x11,0x10,0x15,0x00,0xf7,0x45,0x17,0x42,0x11,0x10,0x15,0x00,
-]);
+
+/*
+8x8 block endpoints use half-intensity values (appear darker than 4x4)
+*/
 var img_8x8_rgba_dxt1 = new Uint8Array([
-    0xa8,0x4d,0x48,0xb2,0x13,0x10,0x15,0x00,0xe8,0xbd,0x17,0x42,0x44,0x45,0x40,0x55,0x17,0xba,0xe8,0x45,0x11,0x10,0x15,0x00,0xf7,0x45,0x17,0x42,0x11,0x10,0x15,0x00,
+    0xe0,0x03,0x00,0x78,0x13,0x10,0x15,0x00,
+    0x0f,0x00,0xe0,0x7b,0x11,0x10,0x15,0x00,
+    0xe0,0x03,0x0f,0x78,0x44,0x45,0x40,0x55,
+    0x0f,0x00,0xef,0x03,0x44,0x45,0x40,0x55
 ]);
 var img_8x8_rgba_dxt3 = new Uint8Array([
-    0xf7,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0x08,0xba,0xe8,0x45,0x44,0x45,0x40,0x55,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xe8,0xbd,0x17,0x42,0x44,0x45,0x40,0x55,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0x17,0xba,0xe8,0x45,0x11,0x10,0x15,0x00,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xf7,0x45,0x17,0x42,0x11,0x10,0x15,0x00,
+    0xf6,0xff,0xf6,0xff,0xff,0xff,0xff,0xff,0x00,0x78,0xe0,0x03,0x44,0x45,0x40,0x55,
+    0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xe0,0x7b,0x0f,0x00,0x44,0x45,0x40,0x55,
+    0xff,0xff,0xff,0xff,0xf6,0xff,0xf6,0xff,0x0f,0x78,0xe0,0x03,0x11,0x10,0x15,0x00,
+    0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xef,0x03,0x0f,0x00,0x11,0x10,0x15,0x00
 ]);
 var img_8x8_rgba_dxt5 = new Uint8Array([
-    0xff,0x7f,0x01,0x00,0x00,0x00,0x00,0x00,0x08,0xba,0xe8,0x45,0x44,0x45,0x40,0x55,0xff,0xff,0x49,0x92,0x24,0x49,0x92,0x24,0xe8,0xbd,0x17,0x42,0x44,0x45,0x40,0x55,0xff,0xff,0x49,0x92,0x24,0x49,0x92,0x24,0x17,0xba,0xe8,0x45,0x11,0x10,0x15,0x00,0xff,0xff,0x49,0x92,0x24,0x49,0x92,0x24,0xf7,0x45,0x17,0x42,0x11,0x10,0x15,0x00,
+0xff,0x69,0x01,0x10,0x00,0x00,0x00,0x00,0x00,0x78,0xe0,0x03,0x44,0x45,0x40,0x55,
+    0xff,0xff,0x00,0x00,0x00,0x00,0x00,0x00,0xe0,0x7b,0x0f,0x00,0x44,0x45,0x40,0x55,
+    0xff,0x69,0x00,0x00,0x00,0x01,0x10,0x00,0x0f,0x78,0xe0,0x03,0x11,0x10,0x15,0x00,
+    0xff,0xff,0x00,0x00,0x00,0x00,0x00,0x00,0xef,0x03,0xef,0x00,0x11,0x10,0x15,0x00
 ]);
 
 var wtu = WebGLTestUtils;
@@ -127,6 +179,7 @@ if (!gl) {
 } else {
     testPassed("WebGL context exists");
 
+    // Run tests with extension disabled
     ctu.testCompressedFormatsUnavailableWhenExtensionDisabled(gl, validFormats, expectedByteLength, 4);
 
     // Query the extension and store globally so shouldBe can access it
@@ -154,6 +207,7 @@ function getBlockDimensions(format) {
 }
 
 function runTestExtension() {
+    debug("");
     debug("Testing WEBGL_compressed_texture_s3tc_srgb");
 
     // Test that enum values are listed correctly in supported formats and in the extension object.
@@ -167,6 +221,11 @@ function runTestExtension() {
     testDXT1_SRGB_ALPHA();
     testDXT3_SRGB_ALPHA();
     testDXT5_SRGB_ALPHA();
+
+    // Test compressed PBOs with a single format
+    if (contextVersion >= 2) {
+        testDXT5_SRGB_ALPHA_PBO();
+    }
 }
 
 function testDXT1_SRGB() {
@@ -174,16 +233,21 @@ function testDXT1_SRGB() {
         {   width: 4,
             height: 4,
             channels: 3,
-            data: img_4x4_rgb_dxt1,
+            data: img_4x4_rgba_dxt1,
             format: ext.COMPRESSED_SRGB_S3TC_DXT1_EXT,
             hasAlpha: false,
         },
         {   width: 8,
             height: 8,
             channels: 3,
-            data: img_8x8_rgb_dxt1,
+            data: img_8x8_rgba_dxt1,
             format: ext.COMPRESSED_SRGB_S3TC_DXT1_EXT,
             hasAlpha: false,
+            subX0: 0,
+            subY0: 0,
+            subWidth: 4,
+            subHeight: 4,
+            subData: img_4x4_rgba_dxt1
         }
     ];
     testDXTTextures(tests);
@@ -228,6 +292,11 @@ function testDXT3_SRGB_ALPHA() {
             data: img_8x8_rgba_dxt3,
             format: ext.COMPRESSED_SRGB_ALPHA_S3TC_DXT3_EXT,
             hasAlpha: true,
+            subX0: 0,
+            subY0: 0,
+            subWidth: 4,
+            subHeight: 4,
+            subData: img_4x4_rgba_dxt3
         }
     ];
     testDXTTextures(tests);
@@ -248,6 +317,11 @@ function testDXT5_SRGB_ALPHA() {
             data: img_8x8_rgba_dxt5,
             format: ext.COMPRESSED_SRGB_ALPHA_S3TC_DXT5_EXT,
             hasAlpha: true,
+            subX0: 0,
+            subY0: 0,
+            subWidth: 4,
+            subHeight: 4,
+            subData: img_4x4_rgba_dxt5
         }
     ];
     testDXTTextures(tests);
@@ -266,21 +340,33 @@ function testDXTTextures(tests) {
 
 function uncompressDXTBlockSRGB(
     destBuffer, destX, destY, destWidth, src, srcOffset, format) {
+    // Decoding routines follow D3D11 functional spec wrt
+    // endpoints unquantization and interpolation.
+    // Some hardware may produce slightly different values - it's normal.
+
     function make565(src, offset) {
-        return src[offset + 0] + src[offset + 1] * 256;
+        return src[offset + 0] + (src[offset + 1] << 8);
     }
     function make8888From565(c) {
+        // These values exactly match hw decoder when selectors are 0 or 1.
+        function replicateBits(v, w) {
+           return (v << (8 - w)) | (v >> (w + w - 8));
+        }
         return [
-                Math.floor(((c >> 11) & 0x1F) * 255 / 31),
-                Math.floor(((c >>    5) & 0x3F) * 255 / 63),
-                Math.floor(((c >>    0) & 0x1F) * 255 / 31),
+                replicateBits((c >> 11) & 0x1F, 5),
+                replicateBits((c >>  5) & 0x3F, 6),
+                replicateBits((c >>  0) & 0x1F, 5),
                 255
             ];
     }
     function mix(mult, c0, c1, div) {
         var r = [];
         for (var ii = 0; ii < c0.length; ++ii) {
-            r[ii] = Math.floor((c0[ii] * mult + c1[ii]) / div);
+            // For green channel (6 bits), this interpolation exactly matches hw decoders
+
+            // For red and blue channels (5 bits), this interpolation exactly
+            // matches only some hw decoders and stays within acceptable range for others.
+            r[ii] = Math.floor((c0[ii] * mult + c1[ii]) / div + 0.5);
         }
         return r;
     }
@@ -317,7 +403,7 @@ function uncompressDXTBlockSRGB(
                 break;
             case ext.COMPRESSED_SRGB_ALPHA_S3TC_DXT3_EXT:
                 {
-                    var alpha0 = src[srcOffset + yy * 2 + Math.floor(xx / 2)];
+                    var alpha0 = src[srcOffset + yy * 2 + (xx >> 1)];
                     var alpha1 = (alpha0 >> ((xx % 2) * 4)) & 0xF;
                     alpha = alpha1 | (alpha1 << 4);
                 }
@@ -326,7 +412,7 @@ function uncompressDXTBlockSRGB(
                 {
                     var alpha0 = src[srcOffset + 0];
                     var alpha1 = src[srcOffset + 1];
-                    var alphaOff = Math.floor(yy / 2) * 3 + 2;
+                    var alphaOff = (yy >> 1) * 3 + 2;
                     var alphaBits =
                          src[srcOffset + alphaOff + 0] +
                          src[srcOffset + alphaOff + 1] * 256 +
@@ -342,7 +428,7 @@ function uncompressDXTBlockSRGB(
                             alpha = alpha1;
                             break;
                         default:
-                            alpha = ((8 - alphaCode) * alpha0 + (alphaCode - 1) * alpha1) / 7;
+                            alpha = Math.floor(((8 - alphaCode) * alpha0 + (alphaCode - 1) * alpha1) / 7.0 + 0.5);
                             break;
                         }
                     } else {
@@ -360,7 +446,7 @@ function uncompressDXTBlockSRGB(
                             alpha = 255;
                             break;
                         default:
-                            alpha = ((6 - alphaCode) * alpha0 + (alphaCode - 1) * alpha1) / 5;
+                            alpha = Math.floor(((6 - alphaCode) * alpha0 + (alphaCode - 1) * alpha1) / 5.0 + 0.5);
                             break;
                         }
                     }
@@ -394,6 +480,29 @@ function uncompressDXTSRGB(width, height, data, format) {
         for (var xx = 0; xx < blocksAcross; ++xx) {
             uncompressDXTBlockSRGB(
                 dest, xx * 4, yy * 4, width, data,
+                (yy * blocksAcross + xx) * blockSize, format);
+        }
+    }
+    return dest;
+}
+
+function uncompressDXTIntoSubRegionSRGB(width, height, subX0, subY0, subWidth, subHeight, data, format)
+{
+    if (width % 4 || height % 4 || subX0 % 4 || subY0 % 4 || subWidth % 4 || subHeight % 4)
+        throw "bad dimension";
+
+    var dest = new Uint8Array(width * height * 4);
+    // Zero-filled DXT1 texture represents [0, 0, 0, 255]
+    if (format == ext.COMPRESSED_SRGB_S3TC_DXT1_EXT || format == ext.COMPRESSED_SRGB_ALPHA_S3TC_DXT1_EXT) {
+        for (var i = 3; i < dest.length; i += 4) dest[i] = 255;
+    }
+    var blocksAcross = subWidth / 4;
+    var blocksDown = subHeight / 4;
+    var blockSize = getBlockSize(format);
+    for (var yy = 0; yy < blocksDown; ++yy) {
+        for (var xx = 0; xx < blocksAcross; ++xx) {
+            uncompressDXTBlockSRGB(
+                dest, subX0 + xx * 4, subY0 + yy * 4, width, data,
                 (yy * blocksAcross + xx) * blockSize, format);
         }
     }
@@ -434,6 +543,31 @@ function testDXTTexture(test, useTexStorage) {
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
     if (useTexStorage) {
+        if (test.subData) {
+            var uncompressedDataSub = uncompressDXTIntoSubRegionSRGB(
+                width, height, test.subX0, test.subY0, test.subWidth, test.subHeight, test.subData, format);
+            var tex1 = gl.createTexture();
+            gl.bindTexture(gl.TEXTURE_2D, tex1);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+
+            gl.texStorage2D(gl.TEXTURE_2D, 1, format, width, height);
+            wtu.glErrorShouldBe(gl, gl.NO_ERROR, "allocating compressed texture via texStorage2D");
+            gl.compressedTexSubImage2D(
+                gl.TEXTURE_2D, 0, test.subX0, test.subY0, test.subWidth, test.subHeight, format, test.subData);
+            wtu.glErrorShouldBe(gl, gl.NO_ERROR, "uploading compressed texture data via compressedTexSubImage2D");
+
+            wtu.clearAndDrawUnitQuad(gl);
+            wtu.glErrorShouldBe(gl, gl.NO_ERROR, "drawing unit quad 1");
+            compareRect(width, height, test.channels, uncompressedDataSub, "NEAREST");
+
+            // Clean up and recover
+            gl.deleteTexture(tex1);
+            gl.bindTexture(gl.TEXTURE_2D, tex);
+        }
+
         gl.texStorage2D(gl.TEXTURE_2D, 1, format, width, height);
         wtu.glErrorShouldBe(gl, gl.NO_ERROR, "allocating compressed texture via texStorage2D");
         wtu.clearAndDrawUnitQuad(gl);
@@ -451,13 +585,13 @@ function testDXTTexture(test, useTexStorage) {
     wtu.glErrorShouldBe(gl, gl.NO_ERROR, "after clearing generateMipmap error");
     wtu.clearAndDrawUnitQuad(gl);
     wtu.glErrorShouldBe(gl, gl.NO_ERROR, "drawing unit quad 1");
-    compareRect(width, height, test.channels, width, height, uncompressedData, data, format, "NEAREST");
+    compareRect(width, height, test.channels, uncompressedData, "NEAREST");
     // Test again with linear filtering.
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
     wtu.clearAndDrawUnitQuad(gl);
     wtu.glErrorShouldBe(gl, gl.NO_ERROR, "drawing unit quad 2");
-    compareRect(width, height, test.channels, width, height, uncompressedData, data, format, "LINEAR");
+    compareRect(width, height, test.channels, uncompressedData, "LINEAR");
 
     if (!useTexStorage) {
         // It's not allowed to redefine textures defined via texStorage2D.
@@ -558,16 +692,62 @@ function testDXTTexture(test, useTexStorage) {
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
             wtu.clearAndDrawUnitQuad(gl);
-            compareRect(width, height, test.channels, width, height, uncompressedData, data, format, "NEAREST");
+            compareRect(width, height, test.channels, uncompressedData, "NEAREST");
             wtu.glErrorShouldBe(gl, gl.NO_ERROR, "drawing unit quad");
             // Next test LINEAR filtering.
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
             wtu.clearAndDrawUnitQuad(gl);
             wtu.glErrorShouldBe(gl, gl.NO_ERROR, "drawing unit quad");
-            compareRect(width, height, test.channels, width, height, uncompressedData, data, format, "LINEAR");
+            compareRect(width, height, test.channels, uncompressedData, "LINEAR");
         }
     }
+}
+
+function testDXT5_SRGB_ALPHA_PBO() {
+    debug("");
+    debug("testing PBO uploads");
+    var width = 8;
+    var height = 8;
+    var channels = 4;
+    var data = img_8x8_rgba_dxt5;
+    var format = ext.COMPRESSED_SRGB_ALPHA_S3TC_DXT5_EXT;
+    var uncompressedData = uncompressDXTSRGB(width, height, data, format);
+
+    var tex = gl.createTexture();
+
+    // First, PBO size = image size
+    var pbo1 = gl.createBuffer();
+    gl.bindBuffer(gl.PIXEL_UNPACK_BUFFER, pbo1);
+    gl.bufferData(gl.PIXEL_UNPACK_BUFFER, data, gl.STATIC_DRAW);
+    wtu.glErrorShouldBe(gl, gl.NO_ERROR, "uploading a PBO");
+
+    gl.bindTexture(gl.TEXTURE_2D, tex);
+    gl.texStorage2D(gl.TEXTURE_2D, 1, format, width, height);
+    gl.compressedTexSubImage2D(gl.TEXTURE_2D, 0, 0, 0, width, height, format, data.length, 0);
+    wtu.glErrorShouldBe(gl, gl.NO_ERROR, "uploading a texture from a PBO");
+
+    gl.bindBuffer(gl.PIXEL_UNPACK_BUFFER, null);
+    wtu.clearAndDrawUnitQuad(gl);
+    wtu.glErrorShouldBe(gl, gl.NO_ERROR, "drawing unit quad");
+    compareRect(width, height, channels, uncompressedData, "NEAREST");
+
+    // Clear the texture before the next test
+    gl.bindBuffer(gl.PIXEL_UNPACK_BUFFER, null);
+    gl.compressedTexSubImage2D(gl.TEXTURE_2D, 0, 0, 0, width, height, format, new Uint8Array(data.length));
+
+    // Second, image is just a subrange of the PBO
+    var pbo2 = gl.createBuffer();
+    gl.bindBuffer(gl.PIXEL_UNPACK_BUFFER, pbo2);
+    gl.bufferData(gl.PIXEL_UNPACK_BUFFER, data.length*3, gl.STATIC_DRAW);
+    gl.bufferSubData(gl.PIXEL_UNPACK_BUFFER, data.length, data);
+    wtu.glErrorShouldBe(gl, gl.NO_ERROR, "uploading a PBO subrange");
+    gl.compressedTexSubImage2D(gl.TEXTURE_2D, 0, 0, 0, width, height, format, data.length, data.length);
+    wtu.glErrorShouldBe(gl, gl.NO_ERROR, "uploading a texture from a PBO subrange");
+    gl.bindBuffer(gl.PIXEL_UNPACK_BUFFER, null);
+    wtu.clearAndDrawUnitQuad(gl);
+    wtu.glErrorShouldBe(gl, gl.NO_ERROR, "drawing unit quad");
+    compareRect(width, height, channels, uncompressedData, "NEAREST");
 }
 
 // See EXT_texture_sRGB, Section 3.8.x, sRGB Texture Color Conversion.
@@ -581,47 +761,71 @@ function sRGBChannelToLinear(value) {
     return Math.trunc(value * 255 + 0.5);
 }
 
-function compareRect(
-        actualWidth, actualHeight, actualChannels,
-        dataWidth, dataHeight, expectedData,
-        testData, testFormat, filteringMode) {
-    var actual = new Uint8Array(actualWidth * actualHeight * 4);
-    gl.readPixels(
-            0, 0, actualWidth, actualHeight, gl.RGBA, gl.UNSIGNED_BYTE, actual);
+function compareRect(width, height, channels, expectedData, filteringMode) {
+    var actual = new Uint8Array(width * height * 4);
+    gl.readPixels(0, 0, width, height, gl.RGBA, gl.UNSIGNED_BYTE, actual);
     wtu.glErrorShouldBe(gl, gl.NO_ERROR, "reading back pixels");
 
     var div = document.createElement("div");
     div.className = "testimages";
-    ctu.insertCaptionedImg(div, "expected", ctu.makeScaledImage(
-            actualWidth, actualHeight, dataWidth, expectedData,
-            actualChannels == 4));
-    ctu.insertCaptionedImg(div, "actual", ctu.makeScaledImage(
-            actualWidth, actualHeight, actualWidth, actual,
-            actualChannels == 4));
+    ctu.insertCaptionedImg(div, "expected", ctu.makeScaledImage(width, height, width, expectedData, true));
+    ctu.insertCaptionedImg(div, "actual", ctu.makeScaledImage(width, height, width, actual, true));
     div.appendChild(document.createElement('br'));
     document.getElementById("console").appendChild(div);
 
-    // This threshold is required because the values we get back from the
-    // implementation don't exactly match our javascript implementation.
-    // This is probably due to allowances in the way sRGB interacts with S3TC.
-    var threshold = 2;
     var failed = false;
-    for (var yy = 0; yy < actualHeight; ++yy) {
-        for (var xx = 0; xx < actualWidth; ++xx) {
-            var actualOffset = (yy * actualWidth + xx) * 4;
-            var expectedOffset = (yy * dataWidth + xx) * 4;
-            var expected = [
-                    expectedData[expectedOffset + 0],
-                    expectedData[expectedOffset + 1],
-                    expectedData[expectedOffset + 2],
-                    (actualChannels == 3 ? 255 : expectedData[expectedOffset + 3])
-            ];
-            for (var jj = 0; jj < 4; ++jj) {
-                if (Math.abs(actual[actualOffset + jj] - expected[jj]) > threshold) {
+    for (var yy = 0; yy < height; ++yy) {
+        for (var xx = 0; xx < width; ++xx) {
+            var offset = (yy * width + xx) * 4;
+            var expected = expectedData.slice(offset, offset + 4);
+            // Compare RGB values
+            for (var jj = 0; jj < 3; ++jj) {
+                // Acceptable interpolation error depends on endpoints:
+                // 1.0 / 255.0 + 0.03 * max(abs(endpoint0 - endpoint1), abs(endpoint0_p - endpoint1_p))
+                // For simplicity, assume the worst case (e0 is 0.0, e1 is 1.0). After conversion to unorm8, it is 9.
+                if (Math.abs(actual[offset + jj] - expected[jj]) > 9) {
+                    var was = actual[offset + 0].toString();
+                    for (var j = 1; j < 3; ++j) {
+                        was += "," + actual[offset + j];
+                    }
                     failed = true;
-                    var was = actual.slice(actualOffset, actualOffset + 4);
-                    testFailed('at (' + xx + ', ' + yy + ') expected: '
-                        + expected + ' ± ' + threshold + '; was ' + was);
+                    testFailed('RGB at (' + xx + ', ' + yy +
+                                        ') expected: ' + expected + ' ± 9 was ' + was);
+                }
+            }
+
+            if (channels == 3) {
+                // BC1 RGB is allowed to be mapped to BC1 RGBA.
+                // In such a case, 3-color mode black value can be transparent:
+                // [0, 0, 0, 0] instead of [0, 0, 0, 255].
+
+                if (actual[offset + 3] != expected[3]) {
+                    // Got non-opaque value for opaque format
+
+                    // Check RGB values. Notice, that the condition here
+                    // is more permissive than needed since we don't have
+                    // compressed data at this point.
+                    if (actual[offset] == 0 &&
+                        actual[offset + 1] == 0 &&
+                        actual[offset + 2] == 0 &&
+                        actual[offset + 3] == 0) {
+                            debug("<b>DXT1 SRGB is mapped to DXT1 SRGB ALPHA</b>");
+                    } else {
+                        failed = true;
+                        testFailed('Alpha at (' + xx + ', ' + yy +
+                                              ') expected: ' + expected[3] + ' was ' + actual[offset + 3]);
+                    }
+                }
+            } else {
+                // Compare Alpha values
+                // Acceptable interpolation error depends on endpoints:
+                // 1.0 / 65535.0 + 0.03 * max(abs(endpoint0 - endpoint1), abs(endpoint0_p - endpoint1_p))
+                // For simplicity, assume the worst case (e0 is 0.0, e1 is 1.0). After conversion to unorm8, it is 8.
+                if (Math.abs(actual[offset + 3] - expected[3]) > 8) {
+                    var was = actual[offset + 3].toString();
+                    failed = true;
+                    testFailed('Alpha at (' + xx + ', ' + yy +
+                                          ') expected: ' + expected + ' ± 8 was ' + was);
                 }
             }
         }

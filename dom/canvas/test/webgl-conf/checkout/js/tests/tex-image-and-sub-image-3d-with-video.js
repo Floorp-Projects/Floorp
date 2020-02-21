@@ -1,24 +1,7 @@
 /*
-** Copyright (c) 2015 The Khronos Group Inc.
-**
-** Permission is hereby granted, free of charge, to any person obtaining a
-** copy of this software and/or associated documentation files (the
-** "Materials"), to deal in the Materials without restriction, including
-** without limitation the rights to use, copy, modify, merge, publish,
-** distribute, sublicense, and/or sell copies of the Materials, and to
-** permit persons to whom the Materials are furnished to do so, subject to
-** the following conditions:
-**
-** The above copyright notice and this permission notice shall be included
-** in all copies or substantial portions of the Materials.
-**
-** THE MATERIALS ARE PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-** EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-** MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
-** IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
-** CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
-** TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-** MATERIALS OR THE USE OR OTHER DEALINGS IN THE MATERIALS.
+Copyright (c) 2019 The Khronos Group Inc.
+Use of this source code is governed by an MIT-style license that can be
+found in the LICENSE.txt file.
 */
 
 // This block needs to be outside the onload handler in order for this
@@ -152,7 +135,7 @@ function generateTest(internalFormat, pixelFormat, pixelType, prologue, resource
         wtu.clearAndDrawUnitQuad(gl, [0, 0, 0, 255]);
         // Check a few pixels near the top and bottom and make sure they have
         // the right color.
-        var tolerance = 5;
+        const tolerance = 6;
         debug("Checking lower left corner");
         wtu.checkCanvasRect(gl, 4, 4, 2, 2, bottomColor,
                             "shouldBe " + bottomColor, tolerance);

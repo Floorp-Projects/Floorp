@@ -1,28 +1,7 @@
 <!--
-
-/*
-** Copyright (c) 2018 The Khronos Group Inc.
-**
-** Permission is hereby granted, free of charge, to any person obtaining a
-** copy of this software and/or associated documentation files (the
-** "Materials"), to deal in the Materials without restriction, including
-** without limitation the rights to use, copy, modify, merge, publish,
-** distribute, sublicense, and/or sell copies of the Materials, and to
-** permit persons to whom the Materials are furnished to do so, subject to
-** the following conditions:
-**
-** The above copyright notice and this permission notice shall be included
-** in all copies or substantial portions of the Materials.
-**
-** THE MATERIALS ARE PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-** EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-** MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
-** IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
-** CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
-** TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-** MATERIALS OR THE USE OR OTHER DEALINGS IN THE MATERIALS.
-*/
-
+Copyright (c) 2019 The Khronos Group Inc.
+Use of this source code is governed by an MIT-style license that can be
+found in the LICENSE.txt file.
 -->
 
 <!DOCTYPE html>
@@ -73,6 +52,27 @@ function runTestExtension() {
   ctu.testCorrectEnumValuesInExt(ext, validFormats);
   // Test that texture upload buffer size is validated correctly.
   ctu.testFormatRestrictionsOnBufferSize(gl, validFormats, expectedByteLength, getBlockDimensions);
+  // Test TexSubImage validation on dimensions
+  // CompressedTexSubImage* will result in an
+  // INVALID_OPERATION error only if one of the following conditions occurs:
+  // * <width> is not a multiple of four, and <width> plus <xoffset> is not
+  // equal to TEXTURE_WIDTH;
+  // * <height> is not a multiple of four, and <height> plus <yoffset> is
+  //           not equal to TEXTURE_HEIGHT; or
+  // * <xoffset> or <yoffset> is not a multiple of four.
+  ctu.testTexSubImageDimensions(gl, validFormats, expectedByteLength, getBlockDimensions,
+    16, 16, [
+      { xoffset: 0, yoffset: 0, width: 4, height: 3,
+        expectation: gl.INVALID_OPERATION, message: "height is not a multiple of 4" },
+      { xoffset: 0, yoffset: 0, width: 3, height: 4,
+        expectation: gl.INVALID_OPERATION, message: "width is not a multiple of 4" },
+      { xoffset: 1, yoffset: 0, width: 4, height: 4,
+        expectation: gl.INVALID_OPERATION, message: "xoffset is not a multiple of 4" },
+      { xoffset: 0, yoffset: 1, width: 4, height: 4,
+        expectation: gl.INVALID_OPERATION, message: "yoffset is not a multiple of 4" },
+      { xoffset: 12, yoffset: 12, width: 4, height: 4,
+        expectation: gl.NO_ERROR, message: "is valid" },
+  ]);
 };
 
 function runTest() {

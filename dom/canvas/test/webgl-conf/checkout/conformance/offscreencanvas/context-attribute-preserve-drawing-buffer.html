@@ -1,28 +1,7 @@
 <!--
-
-/*
-** Copyright (c) 2017 The Khronos Group Inc.
-**
-** Permission is hereby granted, free of charge, to any person obtaining a
-** copy of this software and/or associated documentation files (the
-** "Materials"), to deal in the Materials without restriction, including
-** without limitation the rights to use, copy, modify, merge, publish,
-** distribute, sublicense, and/or sell copies of the Materials, and to
-** permit persons to whom the Materials are furnished to do so, subject to
-** the following conditions:
-**
-** The above copyright notice and this permission notice shall be included
-** in all copies or substantial portions of the Materials.
-**
-** THE MATERIALS ARE PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-** EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-** MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
-** IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
-** CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
-** TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-** MATERIALS OR THE USE OR OTHER DEALINGS IN THE MATERIALS.
-*/
-
+Copyright (c) 2019 The Khronos Group Inc.
+Use of this source code is governed by an MIT-style license that can be
+found in the LICENSE.txt file.
 -->
 <!DOCTYPE html>
 <html>
@@ -36,6 +15,7 @@
 </head>
 <body>
 <div id="description"></div>
+<div id="canvases"></div>
 <div id="console"></div>
 <script>
 "use strict";
@@ -54,6 +34,7 @@ const nextFrame = () => new Promise(r => requestAnimationFrame(r));
 
 async function getPixelsFromOffscreenWebgl(preserveFlag, color, msg) {
   const canvas = document.createElement("canvas");
+  document.getElementById("canvases").appendChild(canvas);
   const offscreenCanvas = transferredOffscreenCanvasCreation(canvas, 10, 10);
   const gl = offscreenCanvas.getContext("webgl", {preserveDrawingBuffer: preserveFlag});
 
@@ -63,6 +44,7 @@ async function getPixelsFromOffscreenWebgl(preserveFlag, color, msg) {
 
   let t;
   const t0 = await nextFrame();
+  const timeDuration = preserveFlag ? 500 : 2000;
   for (;;) {
     t = await nextFrame();
 
@@ -79,8 +61,9 @@ async function getPixelsFromOffscreenWebgl(preserveFlag, color, msg) {
       }
     }
 
-    // Keep checking until it takes up to a certain time
-    if (t > t0 + 500) {
+    // Keep checking until it takes up to a certain time.
+    // preserveDrawingBuffer:false seems flaky on Chrome's test bots; run that test for longer.
+    if (t > t0 + timeDuration) {
       break;
     }
   }
@@ -88,7 +71,7 @@ async function getPixelsFromOffscreenWebgl(preserveFlag, color, msg) {
   if (preserveFlag) {
     testPassed(msg);
   } else {
-    testFailed(msg + '\nexpected: ' + color.toString() + ' was ' + pixels.toString());
+    testFailed(msg + '\nafter ' + timeDuration + ' ms, expected: ' + color.toString() + ' was ' + pixels.toString());
   }
 }
 
@@ -101,8 +84,8 @@ async function getPixelsFromOffscreenWebgl(preserveFlag, color, msg) {
 
     // Test if OffscreenCanvas.webgl loses contents if preserveDrawingBuffer is false.
     await getPixelsFromOffscreenWebgl(false, [0, 0, 0, 0], "should not be preserved");
-    finishTest();
   }
+  finishTest();
 })();
 
 </script>
