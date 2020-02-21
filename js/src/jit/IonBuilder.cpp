@@ -9899,7 +9899,7 @@ AbortReasonOr<Ok> IonBuilder::jsop_checkobjcoercible() {
   MCheckObjCoercible* check = MCheckObjCoercible::New(alloc(), current->pop());
   current->add(check);
   current->push(check);
-  return resumeAfter(check);
+  return Ok();
 }
 
 AbortReasonOr<Ok> IonBuilder::jsop_checkclassheritage() {
