@@ -467,7 +467,7 @@ void nsLineBreaker::UpdateCurrentWordLanguage(nsAtom* aHyphenationLanguage) {
     if (aHyphenationLanguage && !mCurrentWordLanguage) {
       Locale loc = Locale(nsAtomCString(aHyphenationLanguage));
       if (loc.GetScript().IsEmpty()) {
-        loc.AddLikelySubtags();
+        loc.Maximize();
       }
       const nsDependentCSubstring& script = loc.GetScript();
       mScriptIsChineseOrJapanese =

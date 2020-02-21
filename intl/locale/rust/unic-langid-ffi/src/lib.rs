@@ -159,6 +159,6 @@ pub unsafe extern "C" fn unic_langid_matches(
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn unic_langid_add_likely_subtags(langid: &mut LanguageIdentifier) -> bool {
+pub unsafe extern "C" fn unic_langid_maximize(langid: &mut LanguageIdentifier) -> bool {
     langid.maximize()
 }
