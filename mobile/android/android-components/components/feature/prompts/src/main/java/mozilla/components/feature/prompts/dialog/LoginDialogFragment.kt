@@ -14,8 +14,8 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.FrameLayout
-import android.widget.TextView
 import androidx.annotation.VisibleForTesting
+import androidx.appcompat.widget.AppCompatTextView
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.textfield.TextInputEditText
@@ -96,9 +96,9 @@ internal class LoginDialogFragment : PromptDialogFragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        view.findViewById<TextView>(R.id.host_name).text = origin
+        view.findViewById<AppCompatTextView>(R.id.host_name).text = origin
 
-        view.findViewById<TextView>(R.id.save_message).text =
+        view.findViewById<AppCompatTextView>(R.id.save_message).text =
             getString(R.string.mozac_feature_prompt_logins_save_message, activity?.appName)
 
         view.findViewById<Button>(R.id.save_confirm).setOnClickListener {
