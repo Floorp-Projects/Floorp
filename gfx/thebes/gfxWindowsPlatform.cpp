@@ -888,35 +888,37 @@ void gfxWindowsPlatform::CheckForContentOnlyDeviceReset() {
   }
 }
 
-void gfxWindowsPlatform::GetPlatformCMSOutputProfile(void*& mem,
-                                                     size_t& mem_size) {
-  WCHAR str[MAX_PATH];
-  DWORD size = MAX_PATH;
-  BOOL res;
-
-  mem = nullptr;
-  mem_size = 0;
-
-  HDC dc = GetDC(nullptr);
-  if (!dc) return;
-
-  MOZ_SEH_TRY { res = GetICMProfileW(dc, &size, (LPWSTR)&str); }
-  MOZ_SEH_EXCEPT(GetExceptionCode() == EXCEPTION_ILLEGAL_INSTRUCTION) {
-    res = FALSE;
+nsTArray<uint8_t> gfxWindowsPlatform::GetPlatformCMSOutputProfileData() {
+  HDC dc = ::GetDC(nullptr);
+  if (!dc) {
+    return nsTArray<uint8_t>();
   }
 
-  ReleaseDC(nullptr, dc);
-  if (!res) return;
+  WCHAR profilePath[MAX_PATH];
+  DWORD profilePathLen = MAX_PATH;
 
-#ifdef _WIN32
-  qcms_data_from_unicode_path(str, &mem, &mem_size);
+  bool getProfileResult = ::GetICMProfileW(dc, &profilePathLen, profilePath);
 
-#  ifdef DEBUG_tor
-  if (mem_size > 0)
-    fprintf(stderr, "ICM profile read from %s successfully\n",
-            NS_ConvertUTF16toUTF8(str).get());
-#  endif  // DEBUG_tor
-#endif    // _WIN32
+  ::ReleaseDC(nullptr, dc);
+
+  if (!getProfileResult) {
+    return nsTArray<uint8_t>();
+  }
+
+  void* mem = nullptr;
+  size_t size = 0;
+
+  qcms_data_from_unicode_path(profilePath, &mem, &size);
+  if (!mem) {
+    return nsTArray<uint8_t>();
+  }
+
+  nsTArray<uint8_t> result;
+  result.AppendElements(static_cast<uint8_t*>(mem), size);
+
+  free(mem);
+
+  return result;
 }
 
 void gfxWindowsPlatform::GetDLLVersion(char16ptr_t aDLLPath,
