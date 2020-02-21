@@ -137,6 +137,11 @@ class nsMIMEInfoBase : public nsIMIMEInfo {
    */
   static nsresult GetLocalFileFromURI(nsIURI* aURI, nsIFile** aFile);
 
+  /**
+   * Internal helper to avoid adding duplicates.
+   */
+  void AddUniqueExtension(const nsACString& aExtension);
+
   // member variables
   nsTArray<nsCString>
       mExtensions;  ///< array of file extensions associated w/ this MIME obj
