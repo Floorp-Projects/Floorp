@@ -610,7 +610,7 @@ class WebGLContext : public VRefCounted, public SupportsWeakPtr<WebGLContext> {
 
   void LineWidth(GLfloat width);
   void LinkProgram(WebGLProgram& prog);
-  void PixelStorei(GLenum pname, GLint param);
+  void PixelStorei(GLenum pname, uint32_t param);
   void PolygonOffset(GLfloat factor, GLfloat units);
 
   RefPtr<layers::SharedSurfaceTextureClient> GetVRFrame();
@@ -623,20 +623,15 @@ class WebGLContext : public VRefCounted, public SupportsWeakPtr<WebGLContext> {
       const webgl::FormatUsageInfo* usage) const;
 
  protected:
-  void ReadPixelsImpl(GLint x, GLint y, GLsizei width, GLsizei height,
-                      GLenum format, GLenum type, uintptr_t data,
+  void ReadPixelsImpl(const webgl::ReadPixelsDesc&, uintptr_t data,
                       uint64_t dataLen);
-  bool DoReadPixelsAndConvert(const webgl::FormatInfo* srcFormat, GLint x,
-                              GLint y, GLsizei width, GLsizei height,
-                              GLenum format, GLenum destType, uintptr_t dest,
+  bool DoReadPixelsAndConvert(const webgl::FormatInfo* srcFormat,
+                              const webgl::ReadPixelsDesc&, uintptr_t dest,
                               uint64_t dataLen, uint32_t rowStride);
 
  public:
-  void ReadPixelsPbo(GLint x, GLint y, GLsizei width, GLsizei height,
-                     GLenum format, GLenum type, uint64_t offset);
-
-  void ReadPixels(GLint x, GLint y, GLsizei width, GLsizei height,
-                  GLenum format, GLenum type, const Range<uint8_t>& dest);
+  void ReadPixelsPbo(const webgl::ReadPixelsDesc&, uint64_t offset);
+  void ReadPixels(const webgl::ReadPixelsDesc&, const Range<uint8_t>& dest);
 
   ////
 
@@ -1160,10 +1155,6 @@ class WebGLContext : public VRefCounted, public SupportsWeakPtr<WebGLContext> {
 
   CheckedUint32 GetUnpackSize(bool isFunc3D, uint32_t width, uint32_t height,
                               uint32_t depth, uint8_t bytesPerPixel);
-
-  bool ValidatePackSize(uint32_t width, uint32_t height, uint8_t bytesPerPixel,
-                        uint32_t* const out_rowStride,
-                        uint32_t* const out_endOffset);
 
   UniquePtr<webgl::TexUnpackBlob> FromDomElem(
       const dom::HTMLCanvasElement& canvas, TexImageTarget target, uvec3 size,

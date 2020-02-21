@@ -895,16 +895,17 @@ already_AddRefed<gfx::SourceSurface> ClientWebGLContext::GetSurfaceSnapshot(
 
   const auto drawFbWas = state.mBoundDrawFb;
   const auto readFbWas = state.mBoundReadFb;
-
-  const auto alignmentWas = Run<RPROC(GetParameter)>(LOCAL_GL_PACK_ALIGNMENT);
-  if (!alignmentWas) return nullptr;
+  const auto pboWas =
+      Find(state.mBoundBufferByTarget, LOCAL_GL_PIXEL_PACK_BUFFER);
 
   const auto size = DrawingBufferSize();
 
   // -
 
   BindFramebuffer(LOCAL_GL_FRAMEBUFFER, nullptr);
-  PixelStorei(LOCAL_GL_PACK_ALIGNMENT, 4);
+  if (pboWas) {
+    BindBuffer(LOCAL_GL_PIXEL_PACK_BUFFER, nullptr);
+  }
 
   auto reset = MakeScopeExit([&] {
     if (drawFbWas == readFbWas) {
@@ -913,7 +914,9 @@ already_AddRefed<gfx::SourceSurface> ClientWebGLContext::GetSurfaceSnapshot(
       BindFramebuffer(LOCAL_GL_DRAW_FRAMEBUFFER, drawFbWas);
       BindFramebuffer(LOCAL_GL_READ_FRAMEBUFFER, readFbWas);
     }
-    PixelStorei(LOCAL_GL_PACK_ALIGNMENT, *alignmentWas);
+    if (pboWas) {
+      BindBuffer(LOCAL_GL_PIXEL_PACK_BUFFER, pboWas);
+    }
   });
 
   const auto surfFormat = options.alpha ? gfx::SurfaceFormat::B8G8R8A8
@@ -934,10 +937,11 @@ already_AddRefed<gfx::SourceSurface> ClientWebGLContext::GetSurfaceSnapshot(
     }
     MOZ_ASSERT(static_cast<uint32_t>(map.GetStride()) == stride);
 
+    const auto desc = webgl::ReadPixelsDesc{{0, 0}, size};
+
     const auto range = Range<uint8_t>(map.GetData(), stride * size.y);
     auto view = RawBufferView(range);
-    Run<RPROC(ReadPixels)>(0, 0, size.x, size.y, LOCAL_GL_RGBA,
-                           LOCAL_GL_UNSIGNED_BYTE, view);
+    Run<RPROC(ReadPixels)>(desc, view);
 
     // -
 
@@ -1695,6 +1699,10 @@ void ClientWebGLContext::GetParameter(JSContext* cx, GLenum pname,
       }
       break;
 
+    case LOCAL_GL_PACK_ALIGNMENT:
+      retval.set(JS::NumberValue(state.mPixelPackState.alignment));
+      return;
+
     // -
     // Array returns
 
@@ -1826,6 +1834,16 @@ void ClientWebGLContext::GetParameter(JSContext* cx, GLenum pname,
         return;
       case LOCAL_GL_MAX_ARRAY_TEXTURE_LAYERS:
         retval.set(JS::NumberValue(limits.maxTexArrayLayers));
+        return;
+
+      case LOCAL_GL_PACK_ROW_LENGTH:
+        retval.set(JS::NumberValue(state.mPixelPackState.rowLength));
+        return;
+      case LOCAL_GL_PACK_SKIP_PIXELS:
+        retval.set(JS::NumberValue(state.mPixelPackState.skipPixels));
+        return;
+      case LOCAL_GL_PACK_SKIP_ROWS:
+        retval.set(JS::NumberValue(state.mPixelPackState.skipRows));
         return;
     }  // switch pname
   }    // if webgl2
@@ -2410,7 +2428,50 @@ void ClientWebGLContext::LineWidth(GLfloat width) {
   Run<RPROC(LineWidth)>(width);
 }
 
-void ClientWebGLContext::PixelStorei(GLenum pname, GLint param) {
+void ClientWebGLContext::PixelStorei(const GLenum pname, const GLint iparam) {
+  const FuncScope funcScope(*this, "pixelStorei");
+  if (IsContextLost()) return;
+  if (!ValidateNonNegative("param", iparam)) return;
+  const auto param = static_cast<uint32_t>(iparam);
+
+  auto& state = State();
+  auto& packState = state.mPixelPackState;
+  switch (pname) {
+    case LOCAL_GL_PACK_ALIGNMENT:
+      switch (param) {
+        case 1:
+        case 2:
+        case 4:
+        case 8:
+          break;
+        default:
+          EnqueueError(LOCAL_GL_INVALID_VALUE,
+                       "PACK_ALIGNMENT must be one of [1,2,4,8], was %i.",
+                       iparam);
+          return;
+      }
+      packState.alignment = param;
+      return;
+
+    case LOCAL_GL_PACK_ROW_LENGTH:
+      if (!mIsWebGL2) break;
+      packState.rowLength = param;
+      return;
+
+    case LOCAL_GL_PACK_SKIP_PIXELS:
+      if (!mIsWebGL2) break;
+      packState.skipPixels = param;
+      return;
+
+    case LOCAL_GL_PACK_SKIP_ROWS:
+      if (!mIsWebGL2) break;
+      packState.skipRows = param;
+      return;
+
+    default:
+      break;
+  }
+
   Run<RPROC(PixelStorei)>(pname, param);
 }
 
@@ -3841,9 +3902,16 @@ void ClientWebGLContext::ReadPixels(GLint x, GLint y, GLsizei width,
                                     ErrorResult& out_error) const {
   const FuncScope funcScope(*this, "readPixels");
   if (!ReadPixels_SharedPrecheck(aCallerType, out_error)) return;
+  const auto& state = State();
+  if (!ValidateNonNegative("width", width)) return;
+  if (!ValidateNonNegative("height", height)) return;
   if (!ValidateNonNegative("offset", offset)) return;
-  Run<RPROC(ReadPixelsPbo)>(x, y, width, height, format, type,
-                            static_cast<uint64_t>(offset));
+
+  const auto desc = webgl::ReadPixelsDesc{{x, y},
+                                          *uvec2::From(width, height),
+                                          {format, type},
+                                          state.mPixelPackState};
+  Run<RPROC(ReadPixelsPbo)>(desc, static_cast<uint64_t>(offset));
 }
 
 void ClientWebGLContext::ReadPixels(GLint x, GLint y, GLsizei width,
@@ -3854,6 +3922,9 @@ void ClientWebGLContext::ReadPixels(GLint x, GLint y, GLsizei width,
                                     ErrorResult& out_error) const {
   const FuncScope funcScope(*this, "readPixels");
   if (!ReadPixels_SharedPrecheck(aCallerType, out_error)) return;
+  const auto& state = State();
+  if (!ValidateNonNegative("width", width)) return;
+  if (!ValidateNonNegative("height", height)) return;
 
   ////
 
@@ -3882,9 +3953,14 @@ void ClientWebGLContext::ReadPixels(GLint x, GLint y, GLsizei width,
                                LOCAL_GL_INVALID_VALUE, &bytes, &byteLen)) {
     return;
   }
+
+  const auto desc = webgl::ReadPixelsDesc{{x, y},
+                                          *uvec2::From(width, height),
+                                          {format, type},
+                                          state.mPixelPackState};
   const auto range = Range<uint8_t>(bytes, byteLen);
   auto view = RawBufferView(range);
-  Run<RPROC(ReadPixels)>(x, y, width, height, format, type, view);
+  Run<RPROC(ReadPixels)>(desc, view);
 }
 
 bool ClientWebGLContext::ReadPixels_SharedPrecheck(
