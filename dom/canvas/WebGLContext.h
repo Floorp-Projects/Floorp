@@ -196,36 +196,6 @@ struct BufferAndIndex final {
   uint32_t id = -1;
 };
 
-// -
-
-class DynDGpuManager final {
-  static constexpr uint32_t TICK_MS = 3000;
-
-  enum class State {
-    Inactive,
-    Primed,
-    Active,
-  };
-
-  Mutex mMutex;
-  bool mActivityThisTick = false;
-  State mState = State::Inactive;
-  RefPtr<gl::GLContext> mDGpuContext;
-
- public:
-  static std::shared_ptr<DynDGpuManager> Get();
-
-  DynDGpuManager();
-  ~DynDGpuManager();
-
-  void ReportActivity(const std::shared_ptr<DynDGpuManager>& strong);
-
- private:
-  void SetState(const MutexAutoLock&, State);
-  void Tick(const std::shared_ptr<DynDGpuManager>& strong);
-  void DispatchTick(const std::shared_ptr<DynDGpuManager>& strong);
-};
-
 }  // namespace webgl
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -317,15 +287,6 @@ class WebGLContext : public VRefCounted, public SupportsWeakPtr<WebGLContext> {
  public:
   // Grab a const reference so we can see changes, but can't make changes.
   const decltype(mGL_OnlyClearInDestroyResourcesAndContext)& gl;
-
- private:
-  std::shared_ptr<webgl::DynDGpuManager> mDynDGpuManager;
-
-  void ReportActivity() const {
-    if (mDynDGpuManager) {
-      mDynDGpuManager->ReportActivity(mDynDGpuManager);
-    }
-  }
 
  public:
   void CheckForInactivity();

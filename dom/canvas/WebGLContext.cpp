@@ -249,8 +249,6 @@ void WebGLContext::DestroyResourcesAndContext() {
   gl->MarkDestroyed();
   mGL_OnlyClearInDestroyResourcesAndContext = nullptr;
   MOZ_ASSERT(!gl);
-
-  mDynDGpuManager = nullptr;
 }
 
 void ClientWebGLContext::Invalidate() {
@@ -384,39 +382,14 @@ bool WebGLContext::CreateAndInitGL(
       powerPref = dom::WebGLPowerPreference::Low_power;
     }
 
-    if (StaticPrefs::webgl_default_low_power() &&
-        powerPref == dom::WebGLPowerPreference::Default) {
+    const auto overrideVal = StaticPrefs::webgl_power_preference_override();
+    if (overrideVal > 0) {
+      powerPref = dom::WebGLPowerPreference::High_performance;
+    } else if (overrideVal < 0) {
       powerPref = dom::WebGLPowerPreference::Low_power;
     }
 
-    bool highPower;
-    switch (powerPref) {
-      case dom::WebGLPowerPreference::Low_power:
-        highPower = false;
-        break;
-
-      case dom::WebGLPowerPreference::High_performance:
-        highPower = true;
-        break;
-
-        // Eventually add a heuristic, but for now default to high-performance.
-        // We can even make it dynamic by holding on to a
-        // ForceDiscreteGPUHelperCGL iff we decide it's a high-performance
-        // application:
-        // - Non-trivial canvas size
-        // - Many draw calls
-        // - Same origin with root page (try to stem bleeding from WebGL
-        // ads/trackers)
-      default:
-        highPower = false;
-        mDynDGpuManager = webgl::DynDGpuManager::Get();
-        if (!mDynDGpuManager) {
-          highPower = true;
-        }
-        break;
-    }
-
-    if (highPower) {
+    if (powerPref == dom::WebGLPowerPreference::High_performance) {
       flags |= gl::CreateContextFlags::HIGH_POWER;
     }
   }
@@ -1013,7 +986,6 @@ bool WebGLContext::PresentScreenBuffer(gl::GLScreenBuffer* const targetScreen) {
   mDrawCallsSinceLastFlush = 0;
 
   if (!mShouldPresent) return false;
-  ReportActivity();
 
   if (!ValidateAndInitFB(nullptr)) return false;
 
@@ -1853,101 +1825,6 @@ nsresult webgl::AvailabilityRunnable::Run() {
   mWebGL->mAvailabilityRunnable = nullptr;
   return NS_OK;
 }
-
-// ---------------
-
-namespace webgl {
-
-/*static*/
-std::shared_ptr<DynDGpuManager> DynDGpuManager::Get() {
-#ifndef XP_MACOSX
-  if (true) return nullptr;
-#endif
-
-  static std::weak_ptr<DynDGpuManager> sCurrent;
-
-  auto ret = sCurrent.lock();
-  if (!ret) {
-    ret.reset(new DynDGpuManager);
-    sCurrent = ret;
-  }
-  return ret;
-}
-
-DynDGpuManager::DynDGpuManager() : mMutex("DynDGpuManager") {}
-DynDGpuManager::~DynDGpuManager() = default;
-
-void DynDGpuManager::SetState(const MutexAutoLock&, const State newState) {
-  if (gfxEnv::GpuSwitchingSpew()) {
-    printf_stderr(
-        "[MOZ_GPU_SWITCHING_SPEW] DynDGpuManager::SetState(%u -> %u)\n",
-        uint32_t(mState), uint32_t(newState));
-  }
-
-  if (newState == State::Active) {
-    if (!mDGpuContext) {
-      const auto flags = gl::CreateContextFlags::HIGH_POWER;
-      nsCString failureId;
-      mDGpuContext = gl::GLContextProvider::CreateHeadless(flags, &failureId);
-    }
-  } else {
-    mDGpuContext = nullptr;
-  }
-
-  mState = newState;
-}
-
-void DynDGpuManager::ReportActivity(
-    const std::shared_ptr<DynDGpuManager>& strong) {
-  MOZ_ASSERT(strong.get() == this);
-  const MutexAutoLock lock(mMutex);
-
-  if (mActivityThisTick) return;
-  mActivityThisTick = true;
-
-  // Promote!
-  switch (mState) {
-    case State::Inactive:
-      SetState(lock, State::Primed);
-      DispatchTick(strong);  // Initial tick
-      break;
-
-    case State::Primed:
-      SetState(lock, State::Active);
-      break;
-    case State::Active:
-      if (!mDGpuContext) {
-        SetState(lock, State::Active);
-      }
-      break;
-  }
-}
-
-void DynDGpuManager::Tick(const std::shared_ptr<DynDGpuManager>& strong) {
-  MOZ_ASSERT(strong.get() == this);
-  const MutexAutoLock lock(mMutex);
-  MOZ_ASSERT(mState != State::Inactive);
-
-  if (!mActivityThisTick) {
-    SetState(lock, State::Inactive);
-    return;
-  }
-  mActivityThisTick = false;  // reset
-
-  DispatchTick(strong);
-}
-
-void DynDGpuManager::DispatchTick(
-    const std::shared_ptr<DynDGpuManager>& strong) {
-  MOZ_ASSERT(strong.get() == this);
-
-  const auto fnTick = [strong]() { strong->Tick(strong); };
-  already_AddRefed<mozilla::Runnable> event =
-      NS_NewRunnableFunction("DynDGpuManager fnWeakTick", fnTick);
-  NS_DelayedDispatchToCurrentThread(std::move(event), TICK_MS);
-}
-
-}  // namespace webgl
 
 // -
 
