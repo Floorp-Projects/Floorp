@@ -210,8 +210,9 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin):
             "dest": "power_test",
             "action": "store_true",
             "default": False,
-            "help": "Use Raptor to measure power usage; the host IP address must be specified via "
-            "the --host command-line argument.",
+            "help": "Use Raptor to measure power usage on Android browsers (Geckoview Example, "
+                    "Fenix, Refbrow, and Fennec) as well as on Intel-based MacOS machines that "
+                    "have Intel Power Gadget installed.",
         }],
         [["--memory-test"], {
             "dest": "memory_test",

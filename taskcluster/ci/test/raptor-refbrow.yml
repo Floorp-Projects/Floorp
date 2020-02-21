@@ -134,7 +134,6 @@ raptor-scn-power-idle-refbrow:
             - --app=refbrow
             - --binary-path=org.mozilla.reference.browser.raptor
             - --power-test
-            - --host HOST_IP
             - --activity=org.mozilla.reference.browser.BrowserTestActivity
 
 raptor-scn-cpu-memory-idle-refbrow:
@@ -166,7 +165,6 @@ raptor-scn-cpu-memory-power-idle-refbrow:
             - --cpu-test
             - --memory-test
             - --power-test
-            - --host HOST_IP
             - --activity=org.mozilla.reference.browser.BrowserTestActivity
 
 raptor-scn-power-idle-bg-refbrow:
@@ -181,7 +179,6 @@ raptor-scn-power-idle-bg-refbrow:
             - --app=refbrow
             - --binary-path=org.mozilla.reference.browser.raptor
             - --power-test
-            - --host HOST_IP
             - --activity=org.mozilla.reference.browser.BrowserTestActivity
 
 raptor-scn-cpu-memory-idle-bg-refbrow:
@@ -213,7 +210,6 @@ raptor-scn-cpu-memory-power-idle-bg-refbrow:
             - --cpu-test
             - --memory-test
             - --power-test
-            - --host HOST_IP
             - --activity=org.mozilla.reference.browser.BrowserTestActivity
 
 raptor-speedometer-refbrow:

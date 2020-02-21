@@ -166,7 +166,6 @@ raptor-speedometer-geckoview-power:
             - --binary=org.mozilla.geckoview_example
             - --power-test
             - --page-cycles 5
-            - --host HOST_IP
             - --activity=org.mozilla.geckoview_example.GeckoViewActivity
 
 raptor-speedometer-geckoview-cpu-memory:
@@ -202,7 +201,6 @@ raptor-speedometer-geckoview-cpu-memory-power:
             - --memory-test
             - --power-test
             - --page-cycles 5
-            - --host HOST_IP
             - --activity=org.mozilla.geckoview_example.GeckoViewActivity
 
 raptor-scn-power-idle-geckoview:
@@ -216,7 +214,6 @@ raptor-scn-power-idle-geckoview:
             - --app=geckoview
             - --binary=org.mozilla.geckoview_example
             - --power-test
-            - --host HOST_IP
             - --activity=org.mozilla.geckoview_example.GeckoViewActivity
 
 raptor-scn-cpu-memory-idle-geckoview:
@@ -246,7 +243,6 @@ raptor-scn-cpu-memory-power-idle-geckoview:
             - --cpu-test
             - --memory-test
             - --power-test
-            - --host HOST_IP
             - --activity=org.mozilla.geckoview_example.GeckoViewActivity
 
 raptor-scn-power-idle-bg-geckoview:
@@ -260,7 +256,6 @@ raptor-scn-power-idle-bg-geckoview:
             - --app=geckoview
             - --binary=org.mozilla.geckoview_example
             - --power-test
-            - --host HOST_IP
             - --activity=org.mozilla.geckoview_example.GeckoViewActivity
 
 raptor-scn-cpu-memory-idle-bg-geckoview:
@@ -290,7 +285,6 @@ raptor-scn-cpu-memory-power-idle-bg-geckoview:
             - --cpu-test
             - --memory-test
             - --power-test
-            - --host HOST_IP
             - --activity=org.mozilla.geckoview_example.GeckoViewActivity
 
 raptor-unity-webgl-geckoview:
