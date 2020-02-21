@@ -5,13 +5,19 @@ WORKSPACE=$HOME/workspace
 INSTALL_DIR=$WORKSPACE/wine
 
 mkdir -p $INSTALL_DIR
+mkdir -p $WORKSPACE/build/wine
+mkdir -p $WORKSPACE/build/wine64
 
-cd $MOZ_FETCHES_DIR
-
-# --------------
-cd wine-3.0.3
-./configure --prefix=$INSTALL_DIR/
+cd $WORKSPACE/build/wine64
+$MOZ_FETCHES_DIR/wine-3.0.3/configure --enable-win64 --without-x --without-freetype --prefix=$INSTALL_DIR/
 make -j$(nproc)
+
+cd $WORKSPACE/build/wine
+$MOZ_FETCHES_DIR/wine-3.0.3/configure --with-wine64=../wine64 --without-x --without-freetype --prefix=$INSTALL_DIR/
+make -j$(nproc)
+make install
+
+cd $WORKSPACE/build/wine64
 make install
 
 # --------------
