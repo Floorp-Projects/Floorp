@@ -45,6 +45,7 @@
 #include "vm/Scope.h"
 #include "vm/Shape.h"
 #include "vm/SharedImmutableStringsCache.h"
+#include "vm/SharedStencil.h"
 #include "vm/Time.h"
 
 namespace JS {
@@ -1999,6 +2000,9 @@ struct SourceExtent {
 // derived classes in order for the 'jitCodeRaw' mechanism to work with the
 // JITs.
 class BaseScript : public gc::TenuredCell {
+ public:
+  using ImmutableFlags = frontend::ImmutableScriptFlags;
+
  protected:
   // Pointer to baseline->method()->raw(), ion->method()->raw(), a wasm jit
   // entry, the JIT's EnterInterpreter stub, or the lazy link stub. Must be
@@ -2026,10 +2030,18 @@ class BaseScript : public gc::TenuredCell {
 
   SourceExtent extent_;
 
-  // See ImmutableFlags / MutableFlags below for definitions. These are stored
+  // Immutable flags should not be modified after this script has been
+  // initialized. These flags should likely be preserved when serializing
+  // (XDR) or copying (CopyScript) this script. This is only public for the
+  // JITs.
+  //
+  // Specific accessors for flag values are defined with
+  // IMMUTABLE_FLAG_* macros below.
+  ImmutableFlags immutableScriptFlags_;
+
+  // See MutableFlags below for definitions. This is stored
   // as uint32_t instead of bitfields to make it more predictable to access
   // from JIT code.
-  uint32_t immutableFlags_ = 0;
   uint32_t mutableFlags_ = 0;
 
   ScriptWarmUpData warmUpData_ = {};
@@ -2066,102 +2078,6 @@ class BaseScript : public gc::TenuredCell {
   }
 
  public:
-  // Immutable flags should not be modified after this script has been
-  // initialized. These flags should likely be preserved when serializing
-  // (XDR) or copying (CopyScript) this script. This is only public for the
-  // JITs.
-  //
-  // Specific accessors for flag values are defined with
-  // IMMUTABLE_FLAG_* macros below.
-  enum class ImmutableFlags : uint32_t {
-    // No need for result value of last expression statement.
-    NoScriptRval = 1 << 0,
-
-    // Code is in strict mode.
-    Strict = 1 << 1,
-
-    // (1 << 2) is unused.
-
-    // True if the script has a non-syntactic scope on its dynamic scope chain.
-    // That is, there are objects about which we know nothing between the
-    // outermost syntactic scope and the global.
-    HasNonSyntacticScope = 1 << 3,
-
-    // See Parser::selfHostingMode.
-    SelfHosted = 1 << 4,
-
-    // See FunctionBox.
-    BindingsAccessedDynamically = 1 << 5,
-    FunHasExtensibleScope = 1 << 6,
-
-    // Bytecode contains JSOp::CallSiteObj
-    // (We don't relazify functions with template strings, due to observability)
-    HasCallSiteObj = 1 << 7,
-
-    // Script is parsed with a top-level goal of Module. This may be a top-level
-    // or an inner-function script.
-    HasModuleGoal = 1 << 8,
-
-    FunctionHasThisBinding = 1 << 9,
-    FunctionHasExtraBodyVarScope = 1 << 10,
-
-    // Whether the arguments object for this script, if it needs one, should be
-    // mapped (alias formal parameters).
-    HasMappedArgsObj = 1 << 11,
-
-    // Script contains inner functions. Used to check if we can relazify the
-    // script.
-    HasInnerFunctions = 1 << 12,
-
-    NeedsHomeObject = 1 << 13,
-
-    IsDerivedClassConstructor = 1 << 14,
-    IsDefaultClassConstructor = 1 << 15,
-
-    // Script is a lambda to treat as running once or a global or eval script
-    // that will only run once.  Which one it is can be disambiguated by
-    // checking whether function() is null.
-    TreatAsRunOnce = 1 << 16,
-
-    // 'this', 'arguments' and f.apply() are used. This is likely to be a
-    // wrapper.
-    IsLikelyConstructorWrapper = 1 << 17,
-
-    // Set if this function is a generator function or async generator.
-    IsGenerator = 1 << 18,
-
-    // Set if this function is an async function or async generator.
-    IsAsync = 1 << 19,
-
-    // Set if this function has a rest parameter.
-    HasRest = 1 << 20,
-
-    // See comments below.
-    ArgumentsHasVarBinding = 1 << 21,
-
-    // Script came from eval().
-    IsForEval = 1 << 22,
-
-    // Whether this is a top-level module script.
-    IsModule = 1 << 23,
-
-    // Whether this function needs a call object or named lambda environment.
-    NeedsFunctionEnvironmentObjects = 1 << 24,
-
-    // Whether the Parser declared 'arguments'.
-    ShouldDeclareArguments = 1 << 25,
-
-    // Script is for function.
-    IsFunction = 1 << 26,
-
-    // Whether this script contains a direct eval statement.
-    HasDirectEval = 1 << 27,
-
-    // Whether this BaseScript is a LazyScript. This flag will be removed after
-    // LazyScript and JSScript are merged in Bug 1529456.
-    IsLazyScript = 1 << 28,
-  };
-
   // Mutable flags typically store information about runtime or deoptimization
   // behavior of this script. This is only public for the JITs.
   //
@@ -2315,14 +2231,20 @@ class BaseScript : public gc::TenuredCell {
   uint32_t lineno() const { return extent_.lineno; }
   uint32_t column() const { return extent_.column; }
 
+ public:
+  ImmutableFlags immutableFlags() const { return immutableScriptFlags_; }
+
+  void setImmutableFlags(ImmutableFlags flags) {
+    immutableScriptFlags_ = flags;
+  }
+
   // ImmutableFlags accessors.
   MOZ_MUST_USE bool hasFlag(ImmutableFlags flag) const {
-    return immutableFlags_ & uint32_t(flag);
+    return immutableScriptFlags_ & flag;
   }
-  uint32_t immutableFlags() const { return immutableFlags_; }
-
- protected:
-  void setFlag(ImmutableFlags flag) { immutableFlags_ |= uint32_t(flag); }
+  void setFlag(ImmutableFlags flag) {
+    immutableScriptFlags_.scriptFlags_ |= flag;
+  }
   void setFlag(ImmutableFlags flag, bool b) {
     if (b) {
       setFlag(flag);
@@ -2330,9 +2252,10 @@ class BaseScript : public gc::TenuredCell {
       clearFlag(flag);
     }
   }
-  void clearFlag(ImmutableFlags flag) { immutableFlags_ &= ~uint32_t(flag); }
+  void clearFlag(ImmutableFlags flag) {
+    immutableScriptFlags_.scriptFlags_ &= ~flag;
+  }
 
- public:
   // MutableFlags accessors.
   MOZ_MUST_USE bool hasFlag(MutableFlags flag) const {
     return mutableFlags_ & uint32_t(flag);
@@ -2372,9 +2295,10 @@ setterLevel:                                                                  \
   FLAG_GETTER_SETTER(MutableFlags, name, public, lowerName, name)
 
   IMMUTABLE_FLAG_GETTER(noScriptRval, NoScriptRval)
+  IMMUTABLE_FLAG_GETTER(selfHosted, SelfHosted)
+  IMMUTABLE_FLAG_GETTER_SETTER_PUBLIC(treatAsRunOnce, TreatAsRunOnce)
   IMMUTABLE_FLAG_GETTER_SETTER_PUBLIC(strict, Strict)
   IMMUTABLE_FLAG_GETTER(hasNonSyntacticScope, HasNonSyntacticScope)
-  IMMUTABLE_FLAG_GETTER(selfHosted, SelfHosted)
   IMMUTABLE_FLAG_GETTER_SETTER_PUBLIC(bindingsAccessedDynamically,
                                       BindingsAccessedDynamically)
   IMMUTABLE_FLAG_GETTER_SETTER_PUBLIC(funHasExtensibleScope,
@@ -2391,7 +2315,6 @@ setterLevel:                                                                  \
                                       IsDerivedClassConstructor)
   IMMUTABLE_FLAG_GETTER_SETTER_PUBLIC(isDefaultClassConstructor,
                                       IsDefaultClassConstructor)
-  IMMUTABLE_FLAG_GETTER_SETTER_PUBLIC(treatAsRunOnce, TreatAsRunOnce)
   IMMUTABLE_FLAG_GETTER_SETTER_PUBLIC(isLikelyConstructorWrapper,
                                       IsLikelyConstructorWrapper)
   IMMUTABLE_FLAG_GETTER(isGenerator, IsGenerator)
@@ -2555,7 +2478,9 @@ setterLevel:                                                                  \
     return offsetof(BaseScript, sharedData_);
   }
   static size_t offsetOfImmutableFlags() {
-    return offsetof(BaseScript, immutableFlags_);
+    static_assert(offsetof(ImmutableFlags, scriptFlags_) == 0,
+                  "Required for JIT flag access");
+    return offsetof(BaseScript, immutableScriptFlags_);
   }
   static constexpr size_t offsetOfMutableFlags() {
     return offsetof(BaseScript, mutableFlags_);
