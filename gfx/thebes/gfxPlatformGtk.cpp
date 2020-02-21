@@ -352,126 +352,133 @@ uint32_t gfxPlatformGtk::MaxGenericSubstitions() {
 
 bool gfxPlatformGtk::AccelerateLayersByDefault() { return true; }
 
-void gfxPlatformGtk::GetPlatformCMSOutputProfile(void*& mem, size_t& size) {
-  mem = nullptr;
-  size = 0;
+#if defined(MOZ_X11)
 
-#ifdef MOZ_X11
-  GdkDisplay* display = gdk_display_get_default();
-  if (!mIsX11Display) return;
-
-  const char EDID1_ATOM_NAME[] = "XFree86_DDC_EDID1_RAWDATA";
-  const char ICC_PROFILE_ATOM_NAME[] = "_ICC_PROFILE";
-
-  Atom edidAtom, iccAtom;
-  Display* dpy = GDK_DISPLAY_XDISPLAY(display);
-  // In xpcshell tests, we never initialize X and hence don't have a Display.
-  // In this case, there's no output colour management to be done, so we just
-  // return with nullptr.
-  if (!dpy) return;
-
-  Window root = gdk_x11_get_default_root_xwindow();
+static nsTArray<uint8_t> GetDisplayICCProfile(Display* dpy, Window& root) {
+  const char kIccProfileAtomName[] = "_ICC_PROFILE";
+  Atom iccAtom = XInternAtom(dpy, kIccProfileAtomName, TRUE);
+  if (!iccAtom) {
+    return nsTArray<uint8_t>();
+  }
 
   Atom retAtom;
   int retFormat;
   unsigned long retLength, retAfter;
   unsigned char* retProperty;
 
-  iccAtom = XInternAtom(dpy, ICC_PROFILE_ATOM_NAME, TRUE);
-  if (iccAtom) {
-    // read once to get size, once for the data
-    if (Success == XGetWindowProperty(dpy, root, iccAtom, 0,
-                                      INT_MAX /* length */, X11False,
-                                      AnyPropertyType, &retAtom, &retFormat,
-                                      &retLength, &retAfter, &retProperty)) {
-      if (retLength > 0) {
-        void* buffer = malloc(retLength);
-        if (buffer) {
-          memcpy(buffer, retProperty, retLength);
-          mem = buffer;
-          size = retLength;
-        }
-      }
-
-      XFree(retProperty);
-      if (size > 0) {
-#  ifdef DEBUG_tor
-        fprintf(stderr, "ICM profile read from %s successfully\n",
-                ICC_PROFILE_ATOM_NAME);
-#  endif
-        return;
-      }
-    }
+  if (XGetWindowProperty(dpy, root, iccAtom, 0, INT_MAX /* length */, X11False,
+                         AnyPropertyType, &retAtom, &retFormat, &retLength,
+                         &retAfter, &retProperty) != Success) {
+    return nsTArray<uint8_t>();
   }
 
-  edidAtom = XInternAtom(dpy, EDID1_ATOM_NAME, TRUE);
-  if (edidAtom) {
-    if (Success == XGetWindowProperty(dpy, root, edidAtom, 0, 32, X11False,
-                                      AnyPropertyType, &retAtom, &retFormat,
-                                      &retLength, &retAfter, &retProperty)) {
-      double gamma;
-      qcms_CIE_xyY whitePoint;
-      qcms_CIE_xyYTRIPLE primaries;
+  nsTArray<uint8_t> result;
 
-      if (retLength != 128) {
-#  ifdef DEBUG_tor
-        fprintf(stderr, "Short EDID data\n");
-#  endif
-        return;
-      }
-
-      // Format documented in "VESA E-EDID Implementation Guide"
-
-      gamma = (100 + retProperty[0x17]) / 100.0;
-      whitePoint.x =
-          ((retProperty[0x21] << 2) | (retProperty[0x1a] >> 2 & 3)) / 1024.0;
-      whitePoint.y =
-          ((retProperty[0x22] << 2) | (retProperty[0x1a] >> 0 & 3)) / 1024.0;
-      whitePoint.Y = 1.0;
-
-      primaries.red.x =
-          ((retProperty[0x1b] << 2) | (retProperty[0x19] >> 6 & 3)) / 1024.0;
-      primaries.red.y =
-          ((retProperty[0x1c] << 2) | (retProperty[0x19] >> 4 & 3)) / 1024.0;
-      primaries.red.Y = 1.0;
-
-      primaries.green.x =
-          ((retProperty[0x1d] << 2) | (retProperty[0x19] >> 2 & 3)) / 1024.0;
-      primaries.green.y =
-          ((retProperty[0x1e] << 2) | (retProperty[0x19] >> 0 & 3)) / 1024.0;
-      primaries.green.Y = 1.0;
-
-      primaries.blue.x =
-          ((retProperty[0x1f] << 2) | (retProperty[0x1a] >> 6 & 3)) / 1024.0;
-      primaries.blue.y =
-          ((retProperty[0x20] << 2) | (retProperty[0x1a] >> 4 & 3)) / 1024.0;
-      primaries.blue.Y = 1.0;
-
-      XFree(retProperty);
-
-#  ifdef DEBUG_tor
-      fprintf(stderr, "EDID gamma: %f\n", gamma);
-      fprintf(stderr, "EDID whitepoint: %f %f %f\n", whitePoint.x, whitePoint.y,
-              whitePoint.Y);
-      fprintf(stderr, "EDID primaries: [%f %f %f] [%f %f %f] [%f %f %f]\n",
-              primaries.Red.x, primaries.Red.y, primaries.Red.Y,
-              primaries.Green.x, primaries.Green.y, primaries.Green.Y,
-              primaries.Blue.x, primaries.Blue.y, primaries.Blue.Y);
-#  endif
-
-      qcms_data_create_rgb_with_gamma(whitePoint, primaries, gamma, &mem,
-                                      &size);
-
-#  ifdef DEBUG_tor
-      if (size > 0) {
-        fprintf(stderr, "ICM profile read from %s successfully\n",
-                EDID1_ATOM_NAME);
-      }
-#  endif
-    }
+  if (retLength > 0) {
+    result.AppendElements(static_cast<uint8_t*>(retProperty), retLength);
   }
-#endif
+
+  XFree(retProperty);
+
+  return result;
 }
+
+nsTArray<uint8_t> gfxPlatformGtk::GetPlatformCMSOutputProfileData() {
+  if (!mIsX11Display) {
+    return nsTArray<uint8_t>();
+  }
+
+  GdkDisplay* display = gdk_display_get_default();
+  Display* dpy = GDK_DISPLAY_XDISPLAY(display);
+  // In xpcshell tests, we never initialize X and hence don't have a Display.
+  // In this case, there's no output colour management to be done, so we just
+  // return with nullptr.
+  if (!dpy) {
+    return nsTArray<uint8_t>();
+  }
+
+  Window root = gdk_x11_get_default_root_xwindow();
+
+  // First try ICC Profile
+  nsTArray<uint8_t> iccResult = GetDisplayICCProfile(dpy, root);
+  if (!iccResult.IsEmpty()) {
+    return iccResult;
+  }
+
+  // If ICC doesn't work, then try EDID
+  const char kEdid1AtomName[] = "XFree86_DDC_EDID1_RAWDATA";
+  Atom edidAtom = XInternAtom(dpy, kEdid1AtomName, TRUE);
+  if (!edidAtom) {
+    return nsTArray<uint8_t>();
+  }
+
+  Atom retAtom;
+  int retFormat;
+  unsigned long retLength, retAfter;
+  unsigned char* retProperty;
+
+  if (XGetWindowProperty(dpy, root, edidAtom, 0, 32, X11False, AnyPropertyType,
+                         &retAtom, &retFormat, &retLength, &retAfter,
+                         &retProperty) != Success) {
+    return nsTArray<uint8_t>();
+  }
+
+  if (retLength != 128) {
+    return nsTArray<uint8_t>();
+  }
+
+  // Format documented in "VESA E-EDID Implementation Guide"
+  float gamma = (100 + retProperty[0x17]) / 100.0f;
+
+  qcms_CIE_xyY whitePoint;
+  whitePoint.x =
+      ((retProperty[0x21] << 2) | (retProperty[0x1a] >> 2 & 3)) / 1024.0;
+  whitePoint.y =
+      ((retProperty[0x22] << 2) | (retProperty[0x1a] >> 0 & 3)) / 1024.0;
+  whitePoint.Y = 1.0;
+
+  qcms_CIE_xyYTRIPLE primaries;
+  primaries.red.x =
+      ((retProperty[0x1b] << 2) | (retProperty[0x19] >> 6 & 3)) / 1024.0;
+  primaries.red.y =
+      ((retProperty[0x1c] << 2) | (retProperty[0x19] >> 4 & 3)) / 1024.0;
+  primaries.red.Y = 1.0;
+
+  primaries.green.x =
+      ((retProperty[0x1d] << 2) | (retProperty[0x19] >> 2 & 3)) / 1024.0;
+  primaries.green.y =
+      ((retProperty[0x1e] << 2) | (retProperty[0x19] >> 0 & 3)) / 1024.0;
+  primaries.green.Y = 1.0;
+
+  primaries.blue.x =
+      ((retProperty[0x1f] << 2) | (retProperty[0x1a] >> 6 & 3)) / 1024.0;
+  primaries.blue.y =
+      ((retProperty[0x20] << 2) | (retProperty[0x1a] >> 4 & 3)) / 1024.0;
+  primaries.blue.Y = 1.0;
+
+  XFree(retProperty);
+
+  void* mem = nullptr;
+  size_t size = 0;
+  qcms_data_create_rgb_with_gamma(whitePoint, primaries, gamma, &mem, &size);
+  if (!mem) {
+    return nsTArray<uint8_t>();
+  }
+
+  nsTArray<uint8_t> result;
+  result.AppendElements(static_cast<uint8_t*>(mem), size);
+  free(mem);
+
+  return result;
+}
+
+#else  // defined(MOZ_X11)
+
+nsTArray<uint8_t> gfxPlatformGtk::GetPlatformCMSOutputProfileData() {
+  return nsTArray<uint8_t>();
+}
+
+#endif
 
 bool gfxPlatformGtk::CheckVariationFontSupport() {
   // Although there was some variation/multiple-master support in FreeType

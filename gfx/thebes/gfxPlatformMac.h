@@ -84,7 +84,7 @@ class gfxPlatformMac : public gfxPlatform {
   void InitPlatformGPUProcessPrefs() override;
 
  private:
-  void GetPlatformCMSOutputProfile(void*& mem, size_t& size) override;
+  nsTArray<uint8_t> GetPlatformCMSOutputProfileData() override;
 
   // read in the pref value for the lower threshold on font anti-aliasing
   static uint32_t ReadAntiAliasingThreshold();

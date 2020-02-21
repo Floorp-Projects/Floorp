@@ -565,16 +565,13 @@ gfxPlatformMac::CreateHardwareVsyncSource() {
   return osxVsyncSource.forget();
 }
 
-void gfxPlatformMac::GetPlatformCMSOutputProfile(void*& mem, size_t& size) {
-  mem = nullptr;
-  size = 0;
-
+nsTArray<uint8_t> gfxPlatformMac::GetPlatformCMSOutputProfileData() {
   CGColorSpaceRef cspace = ::CGDisplayCopyColorSpace(::CGMainDisplayID());
   if (!cspace) {
     cspace = ::CGColorSpaceCreateDeviceRGB();
   }
   if (!cspace) {
-    return;
+    return nsTArray<uint8_t>();
   }
 
   CFDataRef iccp = ::CGColorSpaceCopyICCProfile(cspace);
@@ -582,22 +579,21 @@ void gfxPlatformMac::GetPlatformCMSOutputProfile(void*& mem, size_t& size) {
   ::CFRelease(cspace);
 
   if (!iccp) {
-    return;
+    return nsTArray<uint8_t>();
   }
 
   // copy to external buffer
-  size = static_cast<size_t>(::CFDataGetLength(iccp));
+  size_t size = static_cast<size_t>(::CFDataGetLength(iccp));
+
+  nsTArray<uint8_t> result;
+
   if (size > 0) {
-    void* data = malloc(size);
-    if (data) {
-      memcpy(data, ::CFDataGetBytePtr(iccp), size);
-      mem = data;
-    } else {
-      size = 0;
-    }
+    result.AppendElements(::CFDataGetBytePtr(iccp), size);
   }
 
   ::CFRelease(iccp);
+
+  return result;
 }
 
 bool gfxPlatformMac::CheckVariationFontSupport() {

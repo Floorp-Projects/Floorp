@@ -2179,21 +2179,30 @@ void gfxPlatform::TransformPixel(const Color& in, Color& out,
     out = in;
 }
 
-void gfxPlatform::GetPlatformCMSOutputProfile(void*& mem, size_t& size) {
-  mem = nullptr;
-  size = 0;
+nsTArray<uint8_t> gfxPlatform::GetPlatformCMSOutputProfileData() {
+  return nsTArray<uint8_t>();
 }
 
-void gfxPlatform::GetCMSOutputProfileData(void*& mem, size_t& size) {
+nsTArray<uint8_t> gfxPlatform::GetCMSOutputProfileData() {
   nsAutoCString fname;
   Preferences::GetCString("gfx.color_management.display_profile", fname);
-  mem = nullptr;
-  if (!fname.IsEmpty()) {
-    qcms_data_from_path(fname.get(), &mem, &size);
+
+  if (fname.IsEmpty()) {
+    return gfxPlatform::GetPlatform()->GetPlatformCMSOutputProfileData();
   }
+
+  void* mem = nullptr;
+  size_t size = 0;
+  qcms_data_from_path(fname.get(), &mem, &size);
   if (mem == nullptr) {
-    gfxPlatform::GetPlatform()->GetPlatformCMSOutputProfile(mem, size);
+    return gfxPlatform::GetPlatform()->GetPlatformCMSOutputProfileData();
   }
+
+  nsTArray<uint8_t> result;
+  result.AppendElements(static_cast<uint8_t*>(mem), size);
+  free(mem);
+
+  return result;
 }
 
 void gfxPlatform::CreateCMSOutputProfile() {
@@ -2210,13 +2219,10 @@ void gfxPlatform::CreateCMSOutputProfile() {
     }
 
     if (!gCMSOutputProfile) {
-      void* mem = nullptr;
-      size_t size = 0;
-
-      GetCMSOutputProfileData(mem, size);
-      if ((mem != nullptr) && (size > 0)) {
-        gCMSOutputProfile = qcms_profile_from_memory(mem, size);
-        free(mem);
+      nsTArray<uint8_t> outputProfileData = GetCMSOutputProfileData();
+      if (!outputProfileData.IsEmpty()) {
+        gCMSOutputProfile = qcms_profile_from_memory(
+            outputProfileData.Elements(), outputProfileData.Length());
       }
     }
 
@@ -3385,35 +3391,35 @@ void gfxPlatform::GetFrameStats(mozilla::widget::InfoObject& aObj) {
 }
 
 void gfxPlatform::GetCMSSupportInfo(mozilla::widget::InfoObject& aObj) {
-  void* profile = nullptr;
-  size_t size = 0;
-
-  GetCMSOutputProfileData(profile, size);
-  if (!profile) {
+  nsTArray<uint8_t> outputProfileData = GetCMSOutputProfileData();
+  if (outputProfileData.IsEmpty()) {
+    nsPrintfCString msg("Empty profile data");
+    aObj.DefineProperty("CMSOutputProfile", msg.get());
     return;
   }
 
   // Some profiles can be quite large. We don't want to include giant profiles
   // by default in about:support. For now, we only accept less than 8kiB.
   const size_t kMaxProfileSize = 8192;
-  if (size < kMaxProfileSize) {
-    char* encodedProfile = nullptr;
-    nsresult rv =
-        Base64Encode(reinterpret_cast<char*>(profile), size, &encodedProfile);
-    if (NS_SUCCEEDED(rv)) {
-      aObj.DefineProperty("CMSOutputProfile", encodedProfile);
-      free(encodedProfile);
-    } else {
-      nsPrintfCString msg("base64 encode failed 0x%08x",
-                          static_cast<uint32_t>(rv));
-      aObj.DefineProperty("CMSOutputProfile", msg.get());
-    }
-  } else {
-    nsPrintfCString msg("%zu bytes, too large", size);
+  if (outputProfileData.Length() >= kMaxProfileSize) {
+    nsPrintfCString msg("%zu bytes, too large", outputProfileData.Length());
     aObj.DefineProperty("CMSOutputProfile", msg.get());
+    return;
   }
 
-  free(profile);
+  char* encodedProfile = nullptr;
+  nsresult rv =
+      Base64Encode(reinterpret_cast<char*>(outputProfileData.Elements()),
+                   outputProfileData.Length(), &encodedProfile);
+  if (!NS_SUCCEEDED(rv)) {
+    nsPrintfCString msg("base64 encode failed 0x%08x",
+                        static_cast<uint32_t>(rv));
+    aObj.DefineProperty("CMSOutputProfile", msg.get());
+    return;
+  }
+
+  aObj.DefineProperty("CMSOutputProfile", encodedProfile);
+  free(encodedProfile);
 }
 
 void gfxPlatform::GetDisplayInfo(mozilla::widget::InfoObject& aObj) {
