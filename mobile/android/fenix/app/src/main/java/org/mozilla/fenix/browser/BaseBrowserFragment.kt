@@ -244,7 +244,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
                     candidates = getContextMenuCandidates(context, view),
                     engineView = view.engineView,
                     useCases = context.components.useCases.contextMenuUseCases,
-                    customTabId = customTabSessionId
+                    tabId = customTabSessionId
                 ),
                 owner = this,
                 view = view
@@ -255,7 +255,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
                 store = store,
                 useCases = context.components.useCases.downloadUseCases,
                 fragmentManager = childFragmentManager,
-                customTabId = customTabSessionId,
+                tabId = customTabSessionId,
                 downloadManager = FetchDownloadManager(
                     context.applicationContext,
                     DownloadService::class
