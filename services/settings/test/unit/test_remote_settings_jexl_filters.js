@@ -65,7 +65,7 @@ add_task(async function test_returns_entries_where_jexl_is_true() {
     },
     {
       willMatch: true,
-      filter_expression: 'env.appID == "xpcshell@tests.mozilla.org"',
+      filter_expression: 'env.appinfo.ID == "xpcshell@tests.mozilla.org"',
     },
     {
       willMatch: false,
