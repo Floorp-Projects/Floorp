@@ -204,8 +204,7 @@ add_test(function test_requestedLocales_sanitize() {
   Assert.equal(locales[0], "de");
   Assert.equal(locales[1], "pl");
   Assert.equal(locales[2], "de-AT");
-  Assert.equal(locales[3], "und");
-  Assert.equal(locales.length, 4);
+  Assert.equal(locales.length, 3);
 
   Services.prefs.clearUserPref(PREF_REQUESTED_LOCALES);
 
