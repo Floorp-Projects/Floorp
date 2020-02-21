@@ -526,7 +526,7 @@ const GfxDeviceFamily* GfxDriverInfo::GetDeviceFamily(DeviceFamily id) {
       APPEND_DEVICE(0x163d);
       APPEND_DEVICE(0x163e);
 
-#if 0
+#ifdef MOZ_WIDGET_GTK
       // Gen7.5 not allowed until bug 1576637 is resolved.
       APPEND_DEVICE(0x0412);
       APPEND_DEVICE(0x0416);
