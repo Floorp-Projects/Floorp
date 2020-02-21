@@ -1,0 +1,49 @@
+<html>
+  <head>
+    <script>
+
+    var loadCount = 0;
+    function loadListener(event) {
+      ++loadCount;
+      if (loadCount == 2) {
+        // Use a timer to ensure we don't get extra load events.
+        setTimeout(function() {
+          opener.ok(document.getElementById("i1").contentDocument.documentURI.includes("frame1.html"),
+                    "Should have loaded the initial page to the first iframe");
+          opener.ok(document.getElementById("i2").contentDocument.documentURI.includes("frame1.html"),
+                    "Should have loaded the initial page to the second iframe");
+          opener.nextTest();
+          window.close();
+        }, 1000);
+      } else if (loadCount > 2) {
+        opener.ok(false, "Too many load events");
+      }
+      // if we don't get enough load events, the test will time out.
+    }
+
+    function setupIframe(id) {
+      var ifr = document.getElementById(id);
+      return new Promise(function(resolve) {
+        ifr.onload = function() {
+          // Replace load listener to catch page loads from the session history.
+          ifr.onload = loadListener();
+          // Need to use setTimeout, because triggering loads inside
+          // load event listener has special behavior.
+          setTimeout(resolve);
+        }
+        ifr.contentWindow.location.href = "frame2.html";
+      });
+    }
+
+    async function test() {
+      await setupIframe("i1");
+      await setupIframe("i2");
+      history.go(-2);
+    }
+    </script>
+  </head>
+  <body onload="setTimeout(test)">
+    <iframe id="i1" src="frame1.html"></iframe>
+    <iframe id="i2" src="frame1.html"></iframe>
+  </body>
+</html>
