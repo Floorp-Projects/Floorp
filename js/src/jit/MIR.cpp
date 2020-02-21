@@ -5687,6 +5687,21 @@ MDefinition* MCheckThisReinit::foldsTo(TempAllocator& alloc) {
   return input;
 }
 
+MDefinition* MCheckObjCoercible::foldsTo(TempAllocator& alloc) {
+  MDefinition* input = checkValue();
+  if (!input->isBox()) {
+    return this;
+  }
+
+  MDefinition* unboxed = input->getOperand(0);
+  if (unboxed->mightBeType(MIRType::Null) ||
+      unboxed->mightBeType(MIRType::Undefined)) {
+    return this;
+  }
+
+  return input;
+}
+
 bool jit::ElementAccessIsDenseNative(CompilerConstraintList* constraints,
                                      MDefinition* obj, MDefinition* id) {
   if (obj->mightBeType(MIRType::String)) {

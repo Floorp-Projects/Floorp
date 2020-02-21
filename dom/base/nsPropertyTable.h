@@ -34,7 +34,7 @@ class nsIFrame;
 
 class nsPropertyOwner {
  public:
-  nsPropertyOwner(const nsPropertyOwner& aOther) : mObject(aOther.mObject) {}
+  nsPropertyOwner(const nsPropertyOwner& aOther) = default;
 
   // These are the types of objects that can own properties. No object should
   // inherit more then one of these classes.
@@ -94,8 +94,7 @@ class nsPropertyTable {
    * property value is returned.
    */
   void* TakeProperty(const nsPropertyOwner& aObject,
-                      const nsAtom* aPropertyName,
-                      nsresult* aStatus = nullptr) {
+                     const nsAtom* aPropertyName, nsresult* aStatus = nullptr) {
     return GetPropertyInternal(aObject, aPropertyName, true, aStatus);
   }
 

@@ -31,7 +31,7 @@ NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(nsMimeTypeArray, mWindow, mMimeTypes,
 nsMimeTypeArray::nsMimeTypeArray(nsPIDOMWindowInner* aWindow)
     : mWindow(aWindow) {}
 
-nsMimeTypeArray::~nsMimeTypeArray() {}
+nsMimeTypeArray::~nsMimeTypeArray() = default;
 
 JSObject* nsMimeTypeArray::WrapObject(JSContext* aCx,
                                       JS::Handle<JSObject*> aGivenProto) {
@@ -172,7 +172,7 @@ nsMimeType::nsMimeType(nsPIDOMWindowInner* aWindow,
   MOZ_ASSERT(aPluginElement);
 }
 
-nsMimeType::~nsMimeType() {}
+nsMimeType::~nsMimeType() = default;
 
 nsPIDOMWindowInner* nsMimeType::GetParentObject() const {
   MOZ_ASSERT(mWindow);

@@ -56,7 +56,7 @@ class nsNodeSupportsWeakRefTearoff final : public nsISupportsWeakReference {
   NS_DECL_CYCLE_COLLECTION_CLASS(nsNodeSupportsWeakRefTearoff)
 
  private:
-  ~nsNodeSupportsWeakRefTearoff() {}
+  ~nsNodeSupportsWeakRefTearoff() = default;
 
   nsCOMPtr<nsINode> mNode;
 };

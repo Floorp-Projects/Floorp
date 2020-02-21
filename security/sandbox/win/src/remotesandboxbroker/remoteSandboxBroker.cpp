@@ -145,6 +145,11 @@ bool RemoteSandboxBroker::SetSecurityLevelForRDDProcess() {
       "RemoteSandboxBroker::SetSecurityLevelForRDDProcess not Implemented");
 }
 
+bool RemoteSandboxBroker::SetSecurityLevelForSocketProcess() {
+  MOZ_CRASH(
+      "RemoteSandboxBroker::SetSecurityLevelForSocketProcess not Implemented");
+}
+
 bool RemoteSandboxBroker::SetSecurityLevelForPluginProcess(
     int32_t aSandboxLevel) {
   MOZ_CRASH(

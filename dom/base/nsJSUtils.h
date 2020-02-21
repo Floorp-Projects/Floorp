@@ -344,7 +344,7 @@ class nsTAutoJSString : public nsTAutoString<T> {
    * nsTAutoJSString should be default constructed, which leaves it empty
    * (this->IsEmpty()), and initialized with one of the init() methods below.
    */
-  nsTAutoJSString() {}
+  nsTAutoJSString() = default;
 
   bool init(JSContext* aContext, JSString* str) {
     return AssignJSString(aContext, *this, str);

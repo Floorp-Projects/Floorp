@@ -53,8 +53,10 @@ class TestClient(unittest.TestCase):
         self.assertEqual(len(os.listdir(download_dir)), num_elmts + 2)
 
         # we do two network calls when getting a file, a HEAD and a GET
-        response_calls = len(responses.calls)
-        self.assertEqual(response_calls, 2)
+        self.assertEqual(len(responses.calls), 2)
+
+        # reseting the response counters
+        responses.calls.reset()
 
         # and we should reuse them without downloading the file again
         get_profile(self.target, "win64", "settled", "default")
@@ -63,7 +65,7 @@ class TestClient(unittest.TestCase):
         self.assertEqual(len(os.listdir(download_dir)), num_elmts + 2)
 
         # and do a single extra HEAD call
-        self.assertEqual(len(responses.calls), response_calls + 1)
+        self.assertEqual(len(responses.calls), 1)
 
 
 if __name__ == "__main__":

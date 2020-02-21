@@ -74,7 +74,7 @@ already_AddRefed<DataSourceSurface> GetBRGADataSourceSurfaceSync(
 }
 
 class EncodingCompleteEvent : public CancelableRunnable {
-  virtual ~EncodingCompleteEvent() {}
+  virtual ~EncodingCompleteEvent() = default;
 
  public:
   explicit EncodingCompleteEvent(
@@ -133,7 +133,7 @@ class EncodingCompleteEvent : public CancelableRunnable {
 };
 
 class EncodingRunnable : public Runnable {
-  virtual ~EncodingRunnable() {}
+  virtual ~EncodingRunnable() = default;
 
  public:
   NS_INLINE_DECL_REFCOUNTING_INHERITED(EncodingRunnable, Runnable)

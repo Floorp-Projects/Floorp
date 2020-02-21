@@ -77,7 +77,7 @@ class nsIScriptGlobalObject : public nsIGlobalObject {
   virtual bool IsBlackForCC(bool aTracingNeeded = true) { return false; }
 
  protected:
-  virtual ~nsIScriptGlobalObject() {}
+  virtual ~nsIScriptGlobalObject() = default;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIScriptGlobalObject, NS_ISCRIPTGLOBALOBJECT_IID)

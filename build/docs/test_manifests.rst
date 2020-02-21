@@ -157,6 +157,13 @@ run-sequentially
    By convention, the value of this key is a string describing why the test
    can't be run in parallel.
 
+scheme
+   Changes the scheme and domain from which the test runs. (Only used in mochitest suites)
+   
+   There are two possible values:
+      - ``http`` (default): The test will run from http://mochi.test:8888
+      - ``https``: The test will run from https://example.com:443
+
 .. _manifest_filter_language:
 
 Manifest Filter Language

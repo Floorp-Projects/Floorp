@@ -65,7 +65,7 @@ class nsContentAreaDragDrop {
 // during the drop instead of when it is added to the drag data transfer. This
 // ensures that the image data is only created when an image drop is allowed.
 class nsContentAreaDragDropDataProvider : public nsIFlavorDataProvider {
-  virtual ~nsContentAreaDragDropDataProvider() {}
+  virtual ~nsContentAreaDragDropDataProvider() = default;
 
  public:
   NS_DECL_ISUPPORTS
