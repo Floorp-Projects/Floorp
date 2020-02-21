@@ -115,6 +115,10 @@ class WebConsole {
     return this.chromeUtilsWindow.gViewSourceUtils;
   }
 
+  getFrontByID(id) {
+    return this.currentTarget.client.getFrontByID(id);
+  }
+
   /**
    * Initialize the Web Console instance.
    *
