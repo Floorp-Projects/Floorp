@@ -289,21 +289,21 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
         @Override
         public void onServiceConnected(final ComponentName name,
                                        final IBinder service) {
-            XPCOMEventTarget.launcherThread().dispatch(() -> {
+            XPCOMEventTarget.launcherThread().execute(() -> {
                 completeServiceConnect(service);
             });
         }
 
         @Override
         public void onServiceDisconnected(final ComponentName name) {
-            XPCOMEventTarget.launcherThread().dispatch(() -> {
+            XPCOMEventTarget.launcherThread().execute(() -> {
                 completeServiceDisconnect();
             });
         }
 
         @Override
         public void binderDied() {
-            XPCOMEventTarget.launcherThread().dispatch(() -> {
+            XPCOMEventTarget.launcherThread().execute(() -> {
                 onBinderDeath();
             });
         }
@@ -327,7 +327,7 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
     }
 
     public void preload(final GeckoProcessType... types) {
-        XPCOMEventTarget.launcherThread().dispatch(() -> {
+        XPCOMEventTarget.launcherThread().execute(() -> {
             for (final GeckoProcessType type : types) {
                 final ChildConnection connection = getConnection(type);
                 connection.bind().accept(child -> {
@@ -342,7 +342,7 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
     }
 
     public void crashChild() {
-        XPCOMEventTarget.launcherThread().dispatch(() -> {
+        XPCOMEventTarget.launcherThread().execute(() -> {
             final ChildConnection conn = mConnections.get(GeckoProcessType.CONTENT);
             if (conn == null) {
                 return;
@@ -380,7 +380,7 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
         final Bundle extras = GeckoThread.getActiveExtras();
         final int flags = filterFlagsForChild(GeckoThread.getActiveFlags());
 
-        XPCOMEventTarget.launcherThread().dispatch(() -> {
+        XPCOMEventTarget.launcherThread().execute(() -> {
             INSTANCE.start(result, type, args, extras, flags, prefsFd,
                            prefMapFd, ipcFd, crashFd, crashAnnotationFd,
                            /* isRetry */ false);
