@@ -6947,10 +6947,10 @@ static AccessorType ToAccessorType(PropertyType propType) {
 
 template <class ParseHandler, typename Unit>
 bool GeneralParser<ParseHandler, Unit>::classMember(
-    YieldHandling yieldHandling, DefaultHandling defaultHandling,
-    const ParseContext::ClassStatement& classStmt, HandlePropertyName className,
-    uint32_t classStartOffset, HasHeritage hasHeritage, size_t& numFields,
-    size_t& numFieldKeys, ListNodeType& classMembers, bool* done) {
+    YieldHandling yieldHandling, const ParseContext::ClassStatement& classStmt,
+    HandlePropertyName className, uint32_t classStartOffset,
+    HasHeritage hasHeritage, size_t& numFields, size_t& numFieldKeys,
+    ListNodeType& classMembers, bool* done) {
   *done = false;
 
   TokenKind tt;
@@ -7022,8 +7022,8 @@ bool GeneralParser<ParseHandler, Unit>::classMember(
 
     numFields++;
 
-    FunctionNodeType initializer = fieldInitializerOpt(
-        yieldHandling, hasHeritage, propName, propAtom, numFieldKeys);
+    FunctionNodeType initializer =
+        fieldInitializerOpt(propName, propAtom, numFieldKeys);
     if (!initializer) {
       return false;
     }
@@ -7316,9 +7316,9 @@ GeneralParser<ParseHandler, Unit>::classDefinition(
     size_t numFieldKeys = 0;
     for (;;) {
       bool done;
-      if (!classMember(yieldHandling, defaultHandling, classStmt, className,
-                       classStartOffset, hasHeritage, numFields, numFieldKeys,
-                       classMembers, &done)) {
+      if (!classMember(yieldHandling, classStmt, className, classStartOffset,
+                       hasHeritage, numFields, numFieldKeys, classMembers,
+                       &done)) {
         return null();
       }
       if (done) {
@@ -7416,7 +7416,6 @@ GeneralParser<ParseHandler, Unit>::synthesizeConstructor(
     return null();
   }
   funbox->initWithEnclosingParseContext(pc_, data, functionSyntaxKind);
-  handler_.setFunctionBox(funNode, funbox);
   setFunctionEndFromCurrentToken(funbox);
 
   // Push a SourceParseContext on to the stack.
@@ -7544,9 +7543,9 @@ GeneralParser<ParseHandler, Unit>::synthesizeConstructor(
 
 template <class ParseHandler, typename Unit>
 typename ParseHandler::FunctionNodeType
-GeneralParser<ParseHandler, Unit>::fieldInitializerOpt(
-    YieldHandling yieldHandling, HasHeritage hasHeritage, Node propName,
-    HandleAtom propAtom, size_t& numFieldKeys) {
+GeneralParser<ParseHandler, Unit>::fieldInitializerOpt(Node propName,
+                                                       HandleAtom propAtom,
+                                                       size_t& numFieldKeys) {
   bool hasInitializer = false;
   if (!tokenStream.matchToken(&hasInitializer, TokenKind::Assign,
                               TokenStream::SlashIsDiv)) {
@@ -7586,8 +7585,7 @@ GeneralParser<ParseHandler, Unit>::fieldInitializerOpt(
   if (!funbox) {
     return null();
   }
-  funbox->initFieldInitializer(pc_, data, hasHeritage);
-  handler_.setFunctionBox(funNode, funbox);
+  funbox->initFieldInitializer(pc_, data);
 
   // We can't use setFunctionStartAtCurrentToken because that uses pos().begin,
   // which is incorrect for fields without initializers (pos() points to the

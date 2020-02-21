@@ -484,6 +484,7 @@ class FunctionBox : public ObjectBox, public SharedContext {
   void initWithEnclosingParseContext(ParseContext* enclosing,
                                      Handle<FunctionCreationData> fun,
                                      FunctionSyntaxKind kind) {
+    MOZ_ASSERT(fun.get().kind == kind);
     initWithEnclosingParseContext(enclosing, kind, fun.get().flags.isArrow(),
                                   fun.get().flags.allowSuperProperty());
   }
@@ -494,11 +495,8 @@ class FunctionBox : public ObjectBox, public SharedContext {
                                   fun->allowSuperProperty());
   }
 
-  void initFieldInitializer(ParseContext* enclosing, JSFunction* fun,
-                            HasHeritage hasHeritage);
   void initFieldInitializer(ParseContext* enclosing,
-                            Handle<FunctionCreationData> data,
-                            HasHeritage hasHeritage);
+                            Handle<FunctionCreationData> data);
 
   void setEnclosingScopeForInnerLazyFunction(
       const AbstractScope& enclosingScope);
