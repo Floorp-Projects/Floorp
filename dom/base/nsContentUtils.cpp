@@ -4667,19 +4667,11 @@ already_AddRefed<DocumentFragment> nsContentUtils::CreateContextualFragment(
     RefPtr<DocumentFragment> frag =
         new DocumentFragment(document->NodeInfoManager());
 
-    nsCOMPtr<nsIContent> contextAsContent = do_QueryInterface(aContextNode);
-    if (contextAsContent && !contextAsContent->IsElement()) {
-      contextAsContent = contextAsContent->GetParent();
-      if (contextAsContent && !contextAsContent->IsElement()) {
-        // can this even happen?
-        contextAsContent = nullptr;
-      }
-    }
-
-    if (contextAsContent && !contextAsContent->IsHTMLElement(nsGkAtoms::html)) {
+    Element* element = aContextNode->GetAsElementOrParentElement();
+    if (element && !element->IsHTMLElement(nsGkAtoms::html)) {
       aRv = ParseFragmentHTML(
-          aFragment, frag, contextAsContent->NodeInfo()->NameAtom(),
-          contextAsContent->GetNameSpaceID(),
+          aFragment, frag, element->NodeInfo()->NameAtom(),
+          element->GetNameSpaceID(),
           (document->GetCompatibilityMode() == eCompatibility_NavQuirks),
           aPreventScriptExecution);
     } else {
@@ -4694,11 +4686,8 @@ already_AddRefed<DocumentFragment> nsContentUtils::CreateContextualFragment(
 
   AutoTArray<nsString, 32> tagStack;
   nsAutoString uriStr, nameStr;
-  nsCOMPtr<nsIContent> content = do_QueryInterface(aContextNode);
-  // just in case we have a text node
-  if (content && !content->IsElement()) content = content->GetParent();
-
-  while (content && content->IsElement()) {
+  for (Element* element = aContextNode->GetAsElementOrParentElement(); element;
+       element = element->GetParentElement()) {
     nsString& tagName = *tagStack.AppendElement();
     // It mostly doesn't actually matter what tag name we use here: XML doesn't
     // have parsing that depends on the open tag stack, apart from namespace
@@ -4718,14 +4707,13 @@ already_AddRefed<DocumentFragment> nsContentUtils::CreateContextualFragment(
     tagName.AssignLiteral("notacustomelement");
 
     // see if we need to add xmlns declarations
-    uint32_t count = content->AsElement()->GetAttrCount();
+    uint32_t count = element->GetAttrCount();
     bool setDefaultNamespace = false;
     if (count > 0) {
       uint32_t index;
 
       for (index = 0; index < count; index++) {
-        const BorrowedAttrInfo info =
-            content->AsElement()->GetAttrInfoAt(index);
+        const BorrowedAttrInfo info = element->GetAttrInfoAt(index);
         const nsAttrName* name = info.mName;
         if (name->NamespaceEquals(kNameSpaceID_XMLNS)) {
           info.mValue->ToString(uriStr);
@@ -4747,7 +4735,7 @@ already_AddRefed<DocumentFragment> nsContentUtils::CreateContextualFragment(
     }
 
     if (!setDefaultNamespace) {
-      mozilla::dom::NodeInfo* info = content->NodeInfo();
+      mozilla::dom::NodeInfo* info = element->NodeInfo();
       if (!info->GetPrefixAtom() && info->NamespaceID() != kNameSpaceID_None) {
         // We have no namespace prefix, but have a namespace ID.  Push
         // default namespace attr in, so that our kids will be in our
@@ -4758,8 +4746,6 @@ already_AddRefed<DocumentFragment> nsContentUtils::CreateContextualFragment(
         tagName.Append('"');
       }
     }
-
-    content = content->GetParent();
   }
 
   RefPtr<DocumentFragment> frag;

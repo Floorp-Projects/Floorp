@@ -2367,8 +2367,7 @@ Element* HTMLEditor::GetElementOrParentByTagNameInternal(const nsAtom& aTagName,
                                                          nsINode& aNode) const {
   MOZ_ASSERT(&aTagName != nsGkAtoms::_empty);
 
-  Element* currentElement =
-      aNode.IsElement() ? aNode.AsElement() : aNode.GetParentElement();
+  Element* currentElement = aNode.GetAsElementOrParentElement();
   if (NS_WARN_IF(!currentElement)) {
     // Neither aNode nor its parent is an element, so no ancestor is
     MOZ_ASSERT(!aNode.GetParentNode() ||
@@ -3556,32 +3555,29 @@ bool HTMLEditor::IsTextPropertySetByContent(nsINode* aNode, nsAtom* aProperty,
                                             nsAString* outValue) {
   MOZ_ASSERT(aNode && aProperty);
 
-  while (aNode) {
-    if (aNode->IsElement()) {
-      Element* element = aNode->AsElement();
-      if (aProperty == element->NodeInfo()->NameAtom()) {
-        if (!aAttribute) {
-          return true;
-        }
-        nsAutoString value;
-        element->GetAttr(kNameSpaceID_None, aAttribute, value);
-        if (outValue) {
-          *outValue = value;
-        }
-        if (!value.IsEmpty()) {
-          if (!aValue) {
-            return true;
-          }
-          if (aValue->Equals(value, nsCaseInsensitiveStringComparator())) {
-            return true;
-          }
-          // We found the prop with the attribute, but the value doesn't
-          // match.
-          break;
-        }
-      }
+  for (Element* element = aNode->GetAsElementOrParentElement(); element;
+       element = element->GetParentElement()) {
+    if (aProperty != element->NodeInfo()->NameAtom()) {
+      continue;
     }
-    aNode = aNode->GetParentNode();
+    if (!aAttribute) {
+      return true;
+    }
+    nsAutoString value;
+    element->GetAttr(kNameSpaceID_None, aAttribute, value);
+    if (outValue) {
+      *outValue = value;
+    }
+    if (!value.IsEmpty()) {
+      if (!aValue) {
+        return true;
+      }
+      if (aValue->Equals(value, nsCaseInsensitiveStringComparator())) {
+        return true;
+      }
+      // We found the prop with the attribute, but the value doesn't match.
+      return false;
+    }
   }
   return false;
 }
@@ -4448,12 +4444,14 @@ nsresult HTMLEditor::CopyLastEditableChildStylesWithTransaction(
     deepestEditableContent =
         GetPreviousEditableHTMLNode(*deepestEditableContent);
   }
-  Element* deepestVisibleEditableElement = nullptr;
-  if (deepestEditableContent) {
-    deepestVisibleEditableElement =
-        deepestEditableContent->IsElement()
-            ? deepestEditableContent->AsElement()
-            : deepestEditableContent->GetParentElement();
+  if (!deepestEditableContent) {
+    return NS_OK;
+  }
+
+  Element* deepestVisibleEditableElement =
+      deepestEditableContent->GetAsElementOrParentElement();
+  if (!deepestVisibleEditableElement) {
+    return NS_OK;
   }
 
   // Clone inline elements to keep current style in the new block.
