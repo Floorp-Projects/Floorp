@@ -1996,6 +1996,11 @@ inline mozilla::dom::Element* nsINode::GetPreviousElementSibling() const {
   return nullptr;
 }
 
+inline mozilla::dom::Element* nsINode::GetAsElementOrParentElement() const {
+  return IsElement() ? const_cast<mozilla::dom::Element*>(AsElement())
+                     : GetParentElement();
+}
+
 inline mozilla::dom::Element* nsINode::GetNextElementSibling() const {
   nsIContent* nextSibling = GetNextSibling();
   while (nextSibling) {
