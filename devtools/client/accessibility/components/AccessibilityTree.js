@@ -151,8 +151,8 @@ class AccessibilityTree extends Component {
    */
   onNameChange(accessibleFront, parentFront) {
     const { accessibles, dispatch } = this.props;
-    const accessibilityWalkerFront = accessibleFront.parent();
-    parentFront = parentFront || accessibilityWalkerFront;
+    const accessibleWalkerFront = accessibleFront.parent();
+    parentFront = parentFront || accessibleWalkerFront;
 
     if (
       accessibles.has(accessibleFront.actorID) ||
