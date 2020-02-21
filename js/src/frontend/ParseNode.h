@@ -2130,11 +2130,14 @@ class ClassMethod : public BinaryNode {
 };
 
 class ClassField : public BinaryNode {
+  bool isStatic_;
+
  public:
-  ClassField(ParseNode* name, ParseNode* initializer)
+  ClassField(ParseNode* name, ParseNode* initializer, bool isStatic)
       : BinaryNode(ParseNodeKind::ClassField,
                    TokenPos::box(name->pn_pos, initializer->pn_pos), name,
-                   initializer) {}
+                   initializer),
+        isStatic_(isStatic) {}
 
   static bool test(const ParseNode& node) {
     bool match = node.isKind(ParseNodeKind::ClassField);
@@ -2145,6 +2148,8 @@ class ClassField : public BinaryNode {
   ParseNode& name() const { return *left(); }
 
   FunctionNode* initializer() const { return &right()->as<FunctionNode>(); }
+
+  bool isStatic() const { return isStatic_; }
 };
 
 class PropertyDefinition : public BinaryNode {

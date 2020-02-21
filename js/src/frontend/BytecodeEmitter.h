@@ -517,11 +517,13 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   MOZ_MUST_USE bool emitObjLiteralValue(ObjLiteralCreationData* data,
                                         ParseNode* value);
 
+  enum class FieldPlacement { Instance, Static };
   mozilla::Maybe<FieldInitializers> setupFieldInitializers(
-      ListNode* classMembers);
-  MOZ_MUST_USE bool emitCreateFieldKeys(ListNode* obj);
-  MOZ_MUST_USE bool emitCreateFieldInitializers(ClassEmitter& ce,
-                                                ListNode* obj);
+      ListNode* classMembers, FieldPlacement placement);
+  MOZ_MUST_USE bool emitCreateFieldKeys(ListNode* obj,
+                                        FieldPlacement placement);
+  MOZ_MUST_USE bool emitCreateFieldInitializers(ClassEmitter& ce, ListNode* obj,
+                                                FieldPlacement placement);
   const FieldInitializers& findFieldInitializersForCall();
   MOZ_MUST_USE bool emitInitializeInstanceFields();
 

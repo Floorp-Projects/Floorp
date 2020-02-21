@@ -365,7 +365,8 @@ class SyntaxParseHandler {
     return NodeGeneric;
   }
   MOZ_MUST_USE Node newClassFieldDefinition(Node name,
-                                            FunctionNodeType initializer) {
+                                            FunctionNodeType initializer,
+                                            bool isStatic) {
     return NodeGeneric;
   }
   MOZ_MUST_USE bool addClassMemberDefinition(ListNodeType memberList,

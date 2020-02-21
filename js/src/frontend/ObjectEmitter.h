@@ -642,31 +642,21 @@ class MOZ_STACK_CLASS ClassEmitter : public PropertyEmitter {
   //                                     |
   //     +-------------------------------+
   //     |
-  //     | prepareForFieldInitializers
-  //     +-----------------------------+
-  //     |                             |
-  //     |                             |    +-------------------+
-  //     |      +--------------------->+--->| FieldInitializers |-+
-  //     |      |                           +-------------------+ |
-  //     |      |                                                 |
-  //     |      |      (emit initializer method)                  |
-  //     |      |   +<--------------------------------------------+
-  //     |      |   |
-  //     |      |   | emitFieldInitializerHomeObject  +--------------------------------+
-  //     |      |   +-------------------------------->| FieldInitializerWithHomeObject |-+
-  //     |      |   |                                 +--------------------------------+ |
-  //     |      |   |                                                                    |
-  //     |      |   +------------------------------------------------------------------->+
-  //     |      |                                                                        |
-  //     |      |     emitStoreFieldInitializer                                          |
-  //     |  +<--+<-----------------------------------------------------------------------+
-  //     |  |
-  //     |  | emitFieldInitializersEnd  +----------------------+
-  //     |  +-------------------------->| FieldInitializersEnd |-+
-  //     |                              +----------------------+ |
-  //     |                                                       |
-  //     |<------------------------------------------------------+
   //     |
+  //     |  prepareForFieldInitializers(isStatic = false)
+  //     +---------------+
+  //     |               |
+  //     |      +--------v------------------+
+  //     |      | InstanceFieldInitializers |
+  //     |      +---------------------------+
+  //     |               |
+  //                     | emitFieldInitializersEnd
+  //     |               |
+  //     |      +--------v---------------------+
+  //     |      | InstanceFieldInitializersEnd |
+  //     |      +------------------------------+
+  //     |               |
+  //     +<--------------+
   //     |
   //     |   emitInitConstructor           +-----------------+
   //     +-+--------------------------->+->| InitConstructor |-+
@@ -674,11 +664,26 @@ class MOZ_STACK_CLASS ClassEmitter : public PropertyEmitter {
   //       | emitInitDefaultConstructor |                      |
   //       +----------------------------+                      |
   //                                                           |
-  //       +---------------------------------------------------+
-  //       |
-  //       | (do PropertyEmitter operation)  emitEnd  +-----+
-  //       +-------------------------------+--------->| End |
-  //                                                  +-----+
+  //     +-----------------------------------------------------+
+  //     |
+  //     |  prepareForFieldInitializers(isStatic = true)
+  //     +---------------+
+  //     |               |
+  //     |      +--------v----------------+
+  //     |      | StaticFieldInitializers |
+  //     |      +-------------------------+
+  //     |               |
+  //     |               | emitFieldInitializersEnd
+  //     |               |
+  //     |      +--------v-------------------+
+  //     |      | StaticFieldInitializersEnd |
+  //     |      +----------------------------+
+  //     |               |
+  //     +<--------------+
+  //     |
+  //     | (do PropertyEmitter operation)  emitEnd  +-----+
+  //     +-------------------------------+--------->| End |
+  //                                                +-----+
   // clang-format on
   enum class ClassState {
     // The initial state.
@@ -693,20 +698,57 @@ class MOZ_STACK_CLASS ClassEmitter : public PropertyEmitter {
     // After calling emitInitConstructor or emitInitDefaultConstructor.
     InitConstructor,
 
-    // After calling prepareForFieldInitializers
-    // and 0 or more calls to emitStoreFieldInitializer.
-    FieldInitializers,
-
-    // After calling emitFieldInitializerHomeObject
-    FieldInitializerWithHomeObject,
+    // After calling prepareForFieldInitializers(isStatic = false).
+    InstanceFieldInitializers,
 
     // After calling emitFieldInitializersEnd.
-    FieldInitializersEnd,
+    InstanceFieldInitializersEnd,
+
+    // After calling prepareForFieldInitializers(isStatic = true).
+    StaticFieldInitializers,
+
+    // After calling emitFieldInitializersEnd.
+    StaticFieldInitializersEnd,
 
     // After calling emitEnd.
     End,
   };
   ClassState classState_ = ClassState::Start;
+
+  // The state of the fields emitter.
+  //
+  // clang-format off
+  //
+  //   +-------+
+  //   | Start +<-----------------------------+
+  //   +-------+                              |
+  //       |                                  |
+  //       | prepareForFieldInitializer       | emitStoreFieldInitializer
+  //       v                                  |
+  // +-------------+                          |
+  // | Initializer +------------------------->+
+  // +-------------+                          |
+  //       |                                  |
+  //       | emitFieldInitializerHomeObject   |
+  //       v                                  |
+  // +---------------------------+            |
+  // | InitializerWithHomeObject +------------+
+  // +---------------------------+
+  //
+  // clang-format on
+  enum class FieldState {
+    // After calling prepareForFieldInitializers
+    // and 0 or more calls to emitStoreFieldInitializer.
+    Start,
+
+    // After calling prepareForFieldInitializer
+    Initializer,
+
+    // After calling emitFieldInitializerHomeObject
+    InitializerWithHomeObject,
+  };
+  FieldState fieldState_ = FieldState::Start;
+
   size_t numFields_ = 0;
 #endif
 
@@ -750,8 +792,10 @@ class MOZ_STACK_CLASS ClassEmitter : public PropertyEmitter {
   MOZ_MUST_USE bool emitInitDefaultConstructor(uint32_t classStart,
                                                uint32_t classEnd);
 
-  MOZ_MUST_USE bool prepareForFieldInitializers(size_t numFields);
-  MOZ_MUST_USE bool emitFieldInitializerHomeObject();
+  MOZ_MUST_USE bool prepareForFieldInitializers(size_t numFields,
+                                                bool isStatic);
+  MOZ_MUST_USE bool prepareForFieldInitializer();
+  MOZ_MUST_USE bool emitFieldInitializerHomeObject(bool isStatic);
   MOZ_MUST_USE bool emitStoreFieldInitializer();
   MOZ_MUST_USE bool emitFieldInitializersEnd();
 

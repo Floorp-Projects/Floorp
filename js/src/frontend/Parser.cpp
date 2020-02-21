@@ -6949,7 +6949,7 @@ template <class ParseHandler, typename Unit>
 bool GeneralParser<ParseHandler, Unit>::classMember(
     YieldHandling yieldHandling, const ParseContext::ClassStatement& classStmt,
     HandlePropertyName className, uint32_t classStartOffset,
-    HasHeritage hasHeritage, size_t& numFields, size_t& numFieldKeys,
+    HasHeritage hasHeritage, ClassFields& classFields,
     ListNodeType& classMembers, bool* done) {
   *done = false;
 
@@ -7020,10 +7020,14 @@ bool GeneralParser<ParseHandler, Unit>::classMember(
       return false;
     }
 
-    numFields++;
+    if (isStatic) {
+      classFields.staticFields++;
+    } else {
+      classFields.instanceFields++;
+    }
 
     FunctionNodeType initializer =
-        fieldInitializerOpt(propName, propAtom, numFieldKeys);
+        fieldInitializerOpt(propName, propAtom, classFields, isStatic);
     if (!initializer) {
       return false;
     }
@@ -7033,7 +7037,7 @@ bool GeneralParser<ParseHandler, Unit>::classMember(
     }
 
     ClassFieldType field =
-        handler_.newClassFieldDefinition(propName, initializer);
+        handler_.newClassFieldDefinition(propName, initializer, isStatic);
     if (!field) {
       return false;
     }
@@ -7153,10 +7157,11 @@ template <class ParseHandler, typename Unit>
 bool GeneralParser<ParseHandler, Unit>::finishClassConstructor(
     const ParseContext::ClassStatement& classStmt, HandlePropertyName className,
     HasHeritage hasHeritage, uint32_t classStartOffset, uint32_t classEndOffset,
-    size_t numFields, ListNodeType& classMembers) {
+    const ClassFields& classFields, ListNodeType& classMembers) {
   // Fields cannot re-use the constructor obtained via JSOp::ClassConstructor or
   // JSOp::DerivedConstructor due to needing to emit calls to the field
   // initializers in the constructor. So, synthesize a new one.
+  size_t numFields = classFields.instanceFields;
   if (classStmt.constructorBox == nullptr && numFields > 0) {
     MOZ_ASSERT(!options().selfHostingMode);
     // Unconditionally create the scope here, because it's always the
@@ -7312,13 +7317,11 @@ GeneralParser<ParseHandler, Unit>::classDefinition(
       return null();
     }
 
-    size_t numFields = 0;
-    size_t numFieldKeys = 0;
+    ClassFields classFields{};
     for (;;) {
       bool done;
       if (!classMember(yieldHandling, classStmt, className, classStartOffset,
-                       hasHeritage, numFields, numFieldKeys, classMembers,
-                       &done)) {
+                       hasHeritage, classFields, classMembers, &done)) {
         return null();
       }
       if (done) {
@@ -7326,16 +7329,30 @@ GeneralParser<ParseHandler, Unit>::classDefinition(
       }
     }
 
-    if (numFieldKeys > 0) {
+    if (classFields.instanceFieldKeys > 0) {
       if (!noteDeclaredName(cx_->names().dotFieldKeys, DeclarationKind::Let,
                             namePos)) {
         return null();
       }
     }
 
+    if (classFields.staticFields > 0) {
+      if (!noteDeclaredName(cx_->names().dotStaticInitializers,
+                            DeclarationKind::Let, namePos)) {
+        return null();
+      }
+    }
+
+    if (classFields.staticFieldKeys > 0) {
+      if (!noteDeclaredName(cx_->names().dotStaticFieldKeys,
+                            DeclarationKind::Let, namePos)) {
+        return null();
+      }
+    }
+
     classEndOffset = pos().end;
     if (!finishClassConstructor(classStmt, className, hasHeritage,
-                                classStartOffset, classEndOffset, numFields,
+                                classStartOffset, classEndOffset, classFields,
                                 classMembers)) {
       return null();
     }
@@ -7545,7 +7562,8 @@ template <class ParseHandler, typename Unit>
 typename ParseHandler::FunctionNodeType
 GeneralParser<ParseHandler, Unit>::fieldInitializerOpt(Node propName,
                                                        HandleAtom propAtom,
-                                                       size_t& numFieldKeys) {
+                                                       ClassFields& classFields,
+                                                       bool isStatic) {
   bool hasInitializer = false;
   if (!tokenStream.matchToken(&hasInitializer, TokenKind::Assign,
                               TokenStream::SlashIsDiv)) {
@@ -7659,13 +7677,22 @@ GeneralParser<ParseHandler, Unit>::fieldInitializerOpt(Node propName,
   if (!propAtom) {
     // See BytecodeEmitter::emitCreateFieldKeys for an explanation of what
     // .fieldKeys means and its purpose.
-    Node dotFieldKeys = newInternalDotName(cx_->names().dotFieldKeys);
-    if (!dotFieldKeys) {
+    NameNodeType fieldKeysName;
+    if (isStatic) {
+      fieldKeysName = newInternalDotName(cx_->names().dotStaticFieldKeys);
+    } else {
+      fieldKeysName = newInternalDotName(cx_->names().dotFieldKeys);
+    }
+    if (!fieldKeysName) {
       return null();
     }
 
-    double fieldKeyIndex = numFieldKeys;
-    numFieldKeys++;
+    double fieldKeyIndex;
+    if (isStatic) {
+      fieldKeyIndex = classFields.staticFieldKeys++;
+    } else {
+      fieldKeyIndex = classFields.instanceFieldKeys++;
+    }
     Node fieldKeyIndexNode = handler_.newNumber(
         fieldKeyIndex, DecimalPoint::NoDecimal, wholeInitializerPos);
     if (!fieldKeyIndexNode) {
@@ -7673,7 +7700,7 @@ GeneralParser<ParseHandler, Unit>::fieldInitializerOpt(Node propName,
     }
 
     Node fieldKeyValue = handler_.newPropertyByValue(
-        dotFieldKeys, fieldKeyIndexNode, wholeInitializerPos.end);
+        fieldKeysName, fieldKeyIndexNode, wholeInitializerPos.end);
     if (!fieldKeyValue) {
       return null();
     }
