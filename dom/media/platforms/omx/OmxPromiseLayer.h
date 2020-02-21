@@ -9,7 +9,6 @@
 
 #  include "mozilla/MozPromise.h"
 #  include "mozilla/TaskQueue.h"
-#  include "nsAutoPtr.h"
 
 #  include "OMX_Core.h"
 #  include "OMX_Types.h"
@@ -222,7 +221,7 @@ class OmxPromiseLayer {
 
   nsTArray<FlushCommand> mFlushCommands;
 
-  nsAutoPtr<OmxPlatformLayer> mPlatformLayer;
+  UniquePtr<OmxPlatformLayer> mPlatformLayer;
 
  private:
   // Elements are added to holders when FillBuffer() or FillBuffer(). And

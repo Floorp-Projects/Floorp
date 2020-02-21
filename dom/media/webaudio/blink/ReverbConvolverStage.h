@@ -31,7 +31,6 @@
 
 #include "FFTConvolver.h"
 
-#include "nsAutoPtr.h"
 #include "nsTArray.h"
 #include "mozilla/FFTBlock.h"
 #include "mozilla/MemoryReporting.h"
@@ -67,8 +66,8 @@ class ReverbConvolverStage {
   size_t sizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
  private:
-  nsAutoPtr<FFTBlock> m_fftKernel;
-  nsAutoPtr<FFTConvolver> m_fftConvolver;
+  UniquePtr<FFTBlock> m_fftKernel;
+  UniquePtr<FFTConvolver> m_fftConvolver;
 
   ReverbAccumulationBuffer* m_accumulationBuffer;
   int m_accumulationReadIndex;

@@ -15,7 +15,6 @@
 #include "PlayingRefChangeHandler.h"
 #include "blink/HRTFPanner.h"
 #include "blink/HRTFDatabaseLoader.h"
-#include "nsAutoPtr.h"
 
 using WebCore::HRTFDatabaseLoader;
 using WebCore::HRTFPanner;
@@ -102,8 +101,8 @@ class PannerNodeEngine final : public AudioNodeEngine {
     RefPtr<HRTFDatabaseLoader> loader =
         HRTFDatabaseLoader::createAndLoadAsynchronouslyIfNecessary(
             NodeMainThread()->Context()->SampleRate());
-    mHRTFPanner = new HRTFPanner(NodeMainThread()->Context()->SampleRate(),
-                                 loader.forget());
+    mHRTFPanner = MakeUnique<HRTFPanner>(
+        NodeMainThread()->Context()->SampleRate(), loader.forget());
   }
 
   void SetInt32Parameter(uint32_t aIndex, int32_t aParam) override {
@@ -246,7 +245,7 @@ class PannerNodeEngine final : public AudioNodeEngine {
   // This member is set on the main thread, but is not accessed on the rendering
   // thread untile mPanningModelFunction has changed, and this happens strictly
   // later, via a MediaTrackGraph ControlMessage.
-  nsAutoPtr<HRTFPanner> mHRTFPanner;
+  UniquePtr<HRTFPanner> mHRTFPanner;
   RefPtr<AudioListenerEngine> mListenerEngine;
   typedef void (PannerNodeEngine::*PanningModelFunction)(
       const AudioBlock& aInput, AudioBlock* aOutput, TrackTime tick);

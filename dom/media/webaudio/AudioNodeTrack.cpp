@@ -231,9 +231,9 @@ void AudioNodeTrack::SetReverb(WebCore::Reverb* aReverb,
           mImpulseChanelCount(aImpulseChannelCount) {}
     void Run() override {
       static_cast<AudioNodeTrack*>(mTrack)->Engine()->SetReverb(
-          mReverb.forget(), mImpulseChanelCount);
+          mReverb.release(), mImpulseChanelCount);
     }
-    nsAutoPtr<WebCore::Reverb> mReverb;
+    UniquePtr<WebCore::Reverb> mReverb;
     uint32_t mImpulseChanelCount;
   };
 

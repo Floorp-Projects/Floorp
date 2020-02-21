@@ -22,7 +22,6 @@
 #include "mozilla/Span.h"
 #include "mozilla/StaticPrefs_media.h"
 #include "mozilla/Telemetry.h"
-#include "nsAutoPtr.h"
 #include "nsPrintfCString.h"
 
 extern mozilla::LazyLogModule gMediaDemuxerLog;

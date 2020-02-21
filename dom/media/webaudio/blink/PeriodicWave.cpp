@@ -57,8 +57,10 @@ already_AddRefed<PeriodicWave> PeriodicWave::create(float sampleRate,
     size_t halfSize = periodicWave->m_periodicWaveSize / 2;
     numberOfComponents = std::min(numberOfComponents, halfSize);
     periodicWave->m_numberOfComponents = numberOfComponents;
-    periodicWave->m_realComponents = new AudioFloatArray(numberOfComponents);
-    periodicWave->m_imagComponents = new AudioFloatArray(numberOfComponents);
+    periodicWave->m_realComponents =
+        MakeUnique<AudioFloatArray>(numberOfComponents);
+    periodicWave->m_imagComponents =
+        MakeUnique<AudioFloatArray>(numberOfComponents);
     memcpy(periodicWave->m_realComponents->Elements(), real,
            numberOfComponents * sizeof(float));
     memcpy(periodicWave->m_imagComponents->Elements(), imag,
@@ -257,9 +259,8 @@ void PeriodicWave::createBandLimitedTables(float fundamentalFrequency,
   frame.ImagData(0) = 0;
 
   // Create the band-limited table.
-  AlignedAudioFloatArray* table =
-      new AlignedAudioFloatArray(m_periodicWaveSize);
-  m_bandLimitedTables[rangeIndex] = table;
+  m_bandLimitedTables[rangeIndex] =
+      MakeUnique<AlignedAudioFloatArray>(m_periodicWaveSize);
 
   // Apply an inverse FFT to generate the time-domain table data.
   float* data = m_bandLimitedTables[rangeIndex]->Elements();
@@ -288,8 +289,8 @@ void PeriodicWave::generateBasicWaveform(OscillatorType shape) {
   unsigned halfSize = fftSize / 2;
 
   m_numberOfComponents = halfSize;
-  m_realComponents = new AudioFloatArray(halfSize);
-  m_imagComponents = new AudioFloatArray(halfSize);
+  m_realComponents = MakeUnique<AudioFloatArray>(halfSize);
+  m_imagComponents = MakeUnique<AudioFloatArray>(halfSize);
   float* realP = m_realComponents->Elements();
   float* imagP = m_imagComponents->Elements();
 

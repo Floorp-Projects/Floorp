@@ -15,7 +15,6 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/ErrorNames.h"
 #include "mtransport/runnable_utils.h"
-#include "nsAutoPtr.h"
 #include "Tracing.h"
 
 // scoped_ptr.h uses FF
@@ -799,8 +798,8 @@ void AudioInputProcessing::NotifyOutputData(MediaTrackGraphImpl* aGraph,
       mPacketizerOutput->Channels() != aChannels) {
     // It's ok to drop the audio still in the packetizer here: if this changes,
     // we changed devices or something.
-    mPacketizerOutput =
-        new AudioPacketizer<AudioDataValue, float>(aRate / 100, aChannels);
+    mPacketizerOutput = MakeUnique<AudioPacketizer<AudioDataValue, float>>(
+        aRate / 100, aChannels);
   }
 
   mPacketizerOutput->Input(aBuffer, aFrames);
@@ -889,8 +888,8 @@ void AudioInputProcessing::PacketizeAndProcess(MediaTrackGraphImpl* aGraph,
   if (!mPacketizerInput || mPacketizerInput->PacketSize() != aRate / 100u ||
       mPacketizerInput->Channels() != aChannels) {
     // It's ok to drop the audio still in the packetizer here.
-    mPacketizerInput =
-        new AudioPacketizer<AudioDataValue, float>(aRate / 100, aChannels);
+    mPacketizerInput = MakeUnique<AudioPacketizer<AudioDataValue, float>>(
+        aRate / 100, aChannels);
   }
 
   // Packetize our input data into 10ms chunks, deinterleave into planar channel

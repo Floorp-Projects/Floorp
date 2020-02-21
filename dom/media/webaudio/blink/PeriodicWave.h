@@ -30,7 +30,7 @@
 #define PeriodicWave_h
 
 #include "mozilla/dom/OscillatorNodeBinding.h"
-#include <nsAutoPtr.h>
+#include "mozilla/UniquePtr.h"
 #include <nsTArray.h>
 #include "AlignedTArray.h"
 #include "mozilla/MemoryReporting.h"
@@ -39,6 +39,8 @@ namespace WebCore {
 
 typedef AlignedTArray<float> AlignedAudioFloatArray;
 typedef nsTArray<float> AudioFloatArray;
+
+using mozilla::UniquePtr;
 
 class PeriodicWave {
  public:
@@ -90,8 +92,8 @@ class PeriodicWave {
   unsigned m_numberOfRanges;
   float m_centsPerRange;
   unsigned m_numberOfComponents;
-  nsAutoPtr<AudioFloatArray> m_realComponents;
-  nsAutoPtr<AudioFloatArray> m_imagComponents;
+  UniquePtr<AudioFloatArray> m_realComponents;
+  UniquePtr<AudioFloatArray> m_imagComponents;
 
   // The lowest frequency (in Hertz) where playback will include all of the
   // partials.  Playing back lower than this frequency will gradually lose
@@ -113,7 +115,7 @@ class PeriodicWave {
   unsigned m_maxPartialsInBandLimitedTable;
   float m_normalizationScale;
   bool m_disableNormalization;
-  nsTArray<nsAutoPtr<AlignedAudioFloatArray> > m_bandLimitedTables;
+  nsTArray<UniquePtr<AlignedAudioFloatArray> > m_bandLimitedTables;
 };
 
 }  // namespace WebCore

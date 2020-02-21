@@ -30,12 +30,14 @@
 #define Reverb_h
 
 #include "ReverbConvolver.h"
-#include "nsAutoPtr.h"
 #include "nsTArray.h"
 #include "AudioBlock.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/UniquePtr.h"
 
 namespace WebCore {
+
+using mozilla::UniquePtr;
 
 // Multi-channel convolution reverb with channel matrixing - one or more
 // ReverbConvolver objects are used internally.
@@ -67,7 +69,7 @@ class Reverb {
 
   size_t m_impulseResponseLength;
 
-  nsTArray<nsAutoPtr<ReverbConvolver> > m_convolvers;
+  nsTArray<UniquePtr<ReverbConvolver> > m_convolvers;
 
   // For "True" stereo processing
   mozilla::AudioBlock m_tempBuffer;

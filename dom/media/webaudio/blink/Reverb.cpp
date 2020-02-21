@@ -147,10 +147,10 @@ void Reverb::initialize(const nsTArray<const float*>& impulseResponseBuffer,
     const float* channel = impulseResponseBuffer[channelIndex];
     size_t length = impulseResponseBufferLength;
 
-    nsAutoPtr<ReverbConvolver> convolver(
+    UniquePtr<ReverbConvolver> convolver(
         new ReverbConvolver(channel, length, maxFFTSize, convolverRenderPhase,
                             useBackgroundThreads));
-    m_convolvers.AppendElement(convolver.forget());
+    m_convolvers.AppendElement(std::move(convolver));
 
     convolverRenderPhase += WEBAUDIO_BLOCK_SIZE;
   }

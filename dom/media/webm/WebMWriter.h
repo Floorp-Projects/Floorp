@@ -7,7 +7,6 @@
 #define WebMWriter_h_
 
 #include "ContainerWriter.h"
-#include "nsAutoPtr.h"
 
 namespace mozilla {
 
@@ -62,7 +61,7 @@ class WebMWriter : public ContainerWriter {
       const nsTArray<RefPtr<TrackMetadataBase>>& aMetadata) override;
 
  private:
-  nsAutoPtr<EbmlComposer> mEbmlComposer;
+  UniquePtr<EbmlComposer> mEbmlComposer;
 };
 
 }  // namespace mozilla

@@ -25,8 +25,8 @@ OmxPromiseLayer::OmxPromiseLayer(TaskQueue* aTaskQueue,
                                  OmxDataDecoder* aDataDecoder,
                                  layers::ImageContainer* aImageContainer)
     : mTaskQueue(aTaskQueue) {
-  mPlatformLayer =
-      OmxPlatformLayer::Create(aDataDecoder, this, aTaskQueue, aImageContainer);
+  mPlatformLayer.reset(OmxPlatformLayer::Create(aDataDecoder, this, aTaskQueue,
+                                                aImageContainer));
   MOZ_ASSERT(!!mPlatformLayer);
 }
 

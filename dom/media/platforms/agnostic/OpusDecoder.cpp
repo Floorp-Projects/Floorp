@@ -140,7 +140,7 @@ nsresult OpusDataDecoder::DecodeHeader(const unsigned char* aData,
   MOZ_ASSERT(!mDecodedHeader);
   mDecodedHeader = true;
 
-  mOpusParser = new OpusParser;
+  mOpusParser = MakeUnique<OpusParser>();
   if (!mOpusParser->DecodeHeader(const_cast<unsigned char*>(aData), aLength)) {
     return NS_ERROR_FAILURE;
   }
