@@ -40,6 +40,7 @@ class AbstractSandboxBroker {
 
   virtual void SetSecurityLevelForGPUProcess(int32_t aSandboxLevel) = 0;
   virtual bool SetSecurityLevelForRDDProcess() = 0;
+  virtual bool SetSecurityLevelForSocketProcess() = 0;
 
   virtual bool SetSecurityLevelForPluginProcess(int32_t aSandboxLevel) = 0;
   enum SandboxLevel { LockDown, Restricted };
@@ -87,6 +88,7 @@ class SandboxBroker : public AbstractSandboxBroker {
 
   void SetSecurityLevelForGPUProcess(int32_t aSandboxLevel) override;
   bool SetSecurityLevelForRDDProcess() override;
+  bool SetSecurityLevelForSocketProcess() override;
 
   bool SetSecurityLevelForPluginProcess(int32_t aSandboxLevel) override;
   bool SetSecurityLevelForGMPlugin(SandboxLevel aLevel,
