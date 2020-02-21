@@ -8214,11 +8214,6 @@
   value: @IS_NOT_ANDROID@
   mirror: always
 
-- name: webgl.default-low-power
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-
 - name: webgl.default-no-alpha
   type: RelaxedAtomicBool
   value: false
@@ -8247,7 +8242,6 @@
   type: RelaxedAtomicBool
   value: false
   mirror: always
-
 
 - name: webgl.disable-fail-if-major-performance-caveat
   type: RelaxedAtomicBool
@@ -8345,6 +8339,11 @@
 - name: webgl.out-of-process
   type: RelaxedAtomicBool
   value: false
+  mirror: always
+
+- name: webgl.power-preference-override
+  type: int32_t
+  value: 0
   mirror: always
 
 - name: webgl.prefer-16bpp
