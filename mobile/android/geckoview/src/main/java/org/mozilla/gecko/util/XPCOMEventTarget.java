@@ -17,7 +17,7 @@ import org.mozilla.geckoview.BuildConfig;
 @WrapForJNI
 public final class XPCOMEventTarget extends JNIObject implements IXPCOMEventTarget {
     @Override
-    public void dispatch(final Runnable runnable) {
+    public void execute(final Runnable runnable) {
         dispatchNative(new JNIRunnable(runnable));
     }
 
@@ -71,7 +71,7 @@ public final class XPCOMEventTarget extends JNIObject implements IXPCOMEventTarg
 
     @WrapForJNI
     private static synchronized void resolveAndDispatch(final String name, final Runnable runnable) {
-        getTarget(name).dispatch(runnable);
+        getTarget(name).execute(runnable);
     }
 
     private static native void resolveAndDispatchNative(final String name, final Runnable runnable);
@@ -101,11 +101,11 @@ public final class XPCOMEventTarget extends JNIObject implements IXPCOMEventTarg
         }
 
         @Override
-        public void dispatch(final Runnable runnable) {
+        public void execute(final Runnable runnable) {
             final IXPCOMEventTarget target = XPCOMEventTarget.getTarget(mTargetName);
 
             if (target != null && target instanceof XPCOMEventTarget) {
-                target.dispatch(runnable);
+                target.execute(runnable);
                 return;
             }
 

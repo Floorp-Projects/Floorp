@@ -5,7 +5,8 @@
 
 package org.mozilla.gecko.util;
 
-public interface IXPCOMEventTarget {
-    public void dispatch(final Runnable runnable);
+import java.util.concurrent.Executor;
+
+public interface IXPCOMEventTarget extends Executor {
     public boolean isOnCurrentThread();
 }
