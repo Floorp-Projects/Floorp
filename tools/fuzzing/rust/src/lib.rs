@@ -26,7 +26,7 @@ fn eat_lmdb_err<T>(value: Result<T, rkv::StoreError>) -> Result<Option<T>, rkv::
             println!("Not a crash, but an error outside LMDB: {}", err);
             println!("A refined fuzzing test, or changes to RKV, might be required.");
             Err(err)
-        },
+        }
     }
 }
 
@@ -51,7 +51,9 @@ pub extern "C" fn fuzz_rkv_db_file(raw_data: *const u8, size: libc::size_t) -> l
 
     let &mut builder = rkv::Rkv::environment_builder().set_max_dbs(2);
     let env = rkv::Rkv::from_env(Path::new("."), builder).unwrap();
-    let store = env.open_single("test", rkv::StoreOptions::create()).unwrap();
+    let store = env
+        .open_single("test", rkv::StoreOptions::create())
+        .unwrap();
 
     let reader = env.read().unwrap();
     eat_lmdb_err(store.get(&reader, &[0])).unwrap();
@@ -85,11 +87,16 @@ pub extern "C" fn fuzz_rkv_db_name(raw_data: *const u8, size: libc::size_t) -> l
 pub extern "C" fn fuzz_rkv_key_write(raw_data: *const u8, size: libc::size_t) -> libc::c_int {
     let data = unsafe { std::slice::from_raw_parts(raw_data as *const u8, size as usize) };
 
-    let root = Builder::new().prefix("fuzz_rkv_key_write").tempdir().unwrap();
+    let root = Builder::new()
+        .prefix("fuzz_rkv_key_write")
+        .tempdir()
+        .unwrap();
     fs::create_dir_all(root.path()).unwrap();
 
     let env = rkv::Rkv::new(root.path()).unwrap();
-    let store = env.open_single("test", rkv::StoreOptions::create()).unwrap();
+    let store = env
+        .open_single("test", rkv::StoreOptions::create())
+        .unwrap();
 
     let mut writer = env.write().unwrap();
     // Some data are invalid values, and are handled as store errors.
@@ -103,11 +110,16 @@ pub extern "C" fn fuzz_rkv_key_write(raw_data: *const u8, size: libc::size_t) ->
 pub extern "C" fn fuzz_rkv_val_write(raw_data: *const u8, size: libc::size_t) -> libc::c_int {
     let data = unsafe { std::slice::from_raw_parts(raw_data as *const u8, size as usize) };
 
-    let root = Builder::new().prefix("fuzz_rkv_val_write").tempdir().unwrap();
+    let root = Builder::new()
+        .prefix("fuzz_rkv_val_write")
+        .tempdir()
+        .unwrap();
     fs::create_dir_all(root.path()).unwrap();
 
     let env = rkv::Rkv::new(root.path()).unwrap();
-    let store = env.open_single("test", rkv::StoreOptions::create()).unwrap();
+    let store = env
+        .open_single("test", rkv::StoreOptions::create())
+        .unwrap();
 
     let mut writer = env.write().unwrap();
     let string = String::from_utf8_lossy(data);
@@ -139,22 +151,28 @@ pub extern "C" fn fuzz_rkv_calls(raw_data: *const u8, size: libc::size_t) -> lib
     fn maybe_do<I: Iterator<Item = u8>>(fuzz: &mut I, f: impl FnOnce(&mut I) -> ()) -> Option<()> {
         match fuzz.next().map(|byte| byte % 2) {
             Some(0) => Some(f(fuzz)),
-            _ => None
+            _ => None,
         }
     }
 
-    fn maybe_abort<I: Iterator<Item = u8>>(fuzz: &mut I, read: rkv::Reader) -> Result<(), rkv::StoreError>  {
+    fn maybe_abort<I: Iterator<Item = u8>>(
+        fuzz: &mut I,
+        read: rkv::Reader,
+    ) -> Result<(), rkv::StoreError> {
         match fuzz.next().map(|byte| byte % 2) {
             Some(0) => Ok(read.abort()),
-            _ => Ok(())
+            _ => Ok(()),
         }
     };
 
-    fn maybe_commit<I: Iterator<Item = u8>>(fuzz: &mut I, write: rkv::Writer) -> Result<(), rkv::StoreError>  {
+    fn maybe_commit<I: Iterator<Item = u8>>(
+        fuzz: &mut I,
+        write: rkv::Writer,
+    ) -> Result<(), rkv::StoreError> {
         match fuzz.next().map(|byte| byte % 3) {
             Some(0) => write.commit(),
             Some(1) => Ok(write.abort()),
-            _ => Ok(())
+            _ => Ok(()),
         }
     };
 
@@ -166,39 +184,49 @@ pub extern "C" fn fuzz_rkv_calls(raw_data: *const u8, size: libc::size_t) -> lib
         })
     };
 
-    fn get_fuzz_data<I: Iterator<Item = u8> + Clone>(fuzz: &mut I, max_len: usize) -> Option<Vec<u8>> {
+    fn get_fuzz_data<I: Iterator<Item = u8> + Clone>(
+        fuzz: &mut I,
+        max_len: usize,
+    ) -> Option<Vec<u8>> {
         fuzz.next().map(|byte| {
             let n = byte as usize;
             fuzz.clone().take((n * n) % max_len).collect()
         })
     };
 
-    fn get_any_data<I: Iterator<Item = u8> + Clone>(fuzz: &mut I, max_len: usize) -> Option<Vec<u8>> {
+    fn get_any_data<I: Iterator<Item = u8> + Clone>(
+        fuzz: &mut I,
+        max_len: usize,
+    ) -> Option<Vec<u8>> {
         match fuzz.next().map(|byte| byte % 2) {
             Some(0) => get_static_data(fuzz).map(|v| v.clone().into_bytes()),
             Some(1) => get_fuzz_data(fuzz, max_len),
-            _ => None
+            _ => None,
         }
     };
 
-    fn store_put<I: Iterator<Item = u8> + Clone>(fuzz: &mut I, env: &rkv::Rkv, store: &rkv::SingleStore) {
+    fn store_put<I: Iterator<Item = u8> + Clone>(
+        fuzz: &mut I,
+        env: &rkv::Rkv,
+        store: &rkv::SingleStore,
+    ) {
         let key = match get_any_data(fuzz, 1024) {
             Some(key) => key,
-            None => return
+            None => return,
         };
         let value = match get_any_data(fuzz, std::usize::MAX) {
             Some(value) => value,
-            None => return
+            None => return,
         };
 
         let mut writer = env.write().unwrap();
         let mut full = false;
 
         match store.put(&mut writer, key, &rkv::Value::Blob(&value)) {
-            Ok(_) => {},
-            Err(rkv::StoreError::LmdbError(lmdb::Error::BadValSize)) => {},
+            Ok(_) => {}
+            Err(rkv::StoreError::LmdbError(lmdb::Error::BadValSize)) => {}
             Err(rkv::StoreError::LmdbError(lmdb::Error::MapFull)) => full = true,
-            Err(err) => panic_with_err(err)
+            Err(err) => panic_with_err(err),
         };
 
         if full {
@@ -209,40 +237,48 @@ pub extern "C" fn fuzz_rkv_calls(raw_data: *const u8, size: libc::size_t) -> lib
         }
     }
 
-    fn store_get<I: Iterator<Item = u8> + Clone>(fuzz: &mut I, env: &rkv::Rkv, store: &rkv::SingleStore) {
+    fn store_get<I: Iterator<Item = u8> + Clone>(
+        fuzz: &mut I,
+        env: &rkv::Rkv,
+        store: &rkv::SingleStore,
+    ) {
         let key = match get_any_data(fuzz, 1024) {
             Some(key) => key,
-            None => return
+            None => return,
         };
 
         let mut reader = match env.read() {
             Ok(reader) => reader,
             Err(rkv::StoreError::LmdbError(lmdb::Error::ReadersFull)) => return,
-            Err(err) => return panic_with_err(err)
+            Err(err) => return panic_with_err(err),
         };
 
         match store.get(&mut reader, key) {
-            Ok(_) => {},
-            Err(rkv::StoreError::LmdbError(lmdb::Error::BadValSize)) => {},
-            Err(err) => panic_with_err(err)
+            Ok(_) => {}
+            Err(rkv::StoreError::LmdbError(lmdb::Error::BadValSize)) => {}
+            Err(err) => panic_with_err(err),
         };
 
         maybe_abort(fuzz, reader).unwrap();
     }
 
-    fn store_delete<I: Iterator<Item = u8> + Clone>(fuzz: &mut I, env: &rkv::Rkv, store: &rkv::SingleStore) {
+    fn store_delete<I: Iterator<Item = u8> + Clone>(
+        fuzz: &mut I,
+        env: &rkv::Rkv,
+        store: &rkv::SingleStore,
+    ) {
         let key = match get_any_data(fuzz, 1024) {
             Some(key) => key,
-            None => return
+            None => return,
         };
 
         let mut writer = env.write().unwrap();
 
         match store.delete(&mut writer, key) {
-            Ok(_) => {},
-            Err(rkv::StoreError::LmdbError(lmdb::Error::BadValSize)) => {},
-            Err(rkv::StoreError::LmdbError(lmdb::Error::NotFound)) => {},
-            Err(err) => panic_with_err(err)
+            Ok(_) => {}
+            Err(rkv::StoreError::LmdbError(lmdb::Error::BadValSize)) => {}
+            Err(rkv::StoreError::LmdbError(lmdb::Error::NotFound)) => {}
+            Err(err) => panic_with_err(err),
         };
 
         maybe_commit(fuzz, writer).unwrap();
@@ -273,7 +309,9 @@ pub extern "C" fn fuzz_rkv_calls(raw_data: *const u8, size: libc::size_t) -> lib
     });
 
     let env = rkv::Rkv::from_env(root.path(), builder).unwrap();
-    let store = env.open_single("test", rkv::StoreOptions::create()).unwrap();
+    let store = env
+        .open_single("test", rkv::StoreOptions::create())
+        .unwrap();
 
     let shared_env = Arc::new(env);
     let shared_store = Arc::new(store);
@@ -290,15 +328,13 @@ pub extern "C" fn fuzz_rkv_calls(raw_data: *const u8, size: libc::size_t) -> lib
         let chunk: Vec<_> = fuzz.by_ref().take(chunk_size).collect();
         let mut fuzz = chunk.into_iter();
 
-        thread::spawn(move || {
-            loop {
-                match fuzz.next().map(|byte| byte % 4) {
-                    Some(0) => store_put(&mut fuzz, &env, &store),
-                    Some(1) => store_get(&mut fuzz, &env, &store),
-                    Some(2) => store_delete(&mut fuzz, &env, &store),
-                    Some(3) => store_resize(&mut fuzz, &env),
-                    _ => break
-                }
+        thread::spawn(move || loop {
+            match fuzz.next().map(|byte| byte % 4) {
+                Some(0) => store_put(&mut fuzz, &env, &store),
+                Some(1) => store_get(&mut fuzz, &env, &store),
+                Some(2) => store_delete(&mut fuzz, &env, &store),
+                Some(3) => store_resize(&mut fuzz, &env),
+                _ => break,
             }
         })
     });
