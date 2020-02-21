@@ -22,9 +22,12 @@ frag-depth.html
 invalid-default-precision.html
 invalid-invariant.html
 loops-with-side-effects.html
+--min-version 2.0.1 matrix-row-major.html
+--min-version 2.0.1 matrix-row-major-dynamic-indexing.html
 misplaced-version-directive.html
 --min-version 2.0.1 no-attribute-vertex-shader.html
 sampler-no-precision.html
+--min-version 2.0.1 sampler-array-indexing.html
 sequence-operator-returns-non-constant.html
 shader-linking.html
 shader-with-1024-character-define.html

@@ -1,6 +1,7 @@
 --min-version 1.0.3 --max-version 1.9.9 angle-instanced-arrays.html
 --min-version 1.0.3 --max-version 1.9.9 angle-instanced-arrays-out-of-bounds.html
 --min-version 1.0.3 --max-version 1.9.9 ext-blend-minmax.html
+--min-version 1.0.4 ext-float-blend.html
 --min-version 1.0.4 ext-texture-compression-bptc.html
 --min-version 1.0.4 ext-texture-compression-rgtc.html
 --min-version 1.0.4 ext-disjoint-timer-query.html
@@ -25,6 +26,7 @@
 --min-version 1.0.3 --max-version 1.9.9 oes-texture-half-float-with-image.html
 --min-version 1.0.3 --max-version 1.9.9 oes-texture-half-float-with-video.html
 --min-version 1.0.2 --max-version 1.9.9 oes-element-index-uint.html
+--min-version 1.0.4 --max-version 1.9.9 oes-fbo-render-mipmap.html
 webgl-debug-renderer-info.html
 webgl-debug-shaders.html
 --min-version 1.0.4 webgl-compressed-texture-astc.html
