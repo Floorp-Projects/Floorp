@@ -81,6 +81,8 @@ class gfxPlatformMac : public gfxPlatform {
 
   bool CheckVariationFontSupport() override;
 
+  void InitPlatformGPUProcessPrefs() override;
+
  private:
   void GetPlatformCMSOutputProfile(void*& mem, size_t& size) override;
 
