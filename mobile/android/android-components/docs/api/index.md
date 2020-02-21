@@ -237,6 +237,7 @@
 | [mozilla.components.support.utils](mozilla.components.support.utils/index.md) |  |
 | [mozilla.components.support.utils.ext](mozilla.components.support.utils.ext/index.md) |  |
 | [mozilla.components.support.webextensions](mozilla.components.support.webextensions/index.md) |  |
+| [mozilla.components.support.webextensions.facts](mozilla.components.support.webextensions.facts/index.md) |  |
 | [mozilla.components.tooling.fetch.tests](mozilla.components.tooling.fetch.tests/index.md) |  |
 | [mozilla.components.tooling.lint](mozilla.components.tooling.lint/index.md) |  |
 | [mozilla.components.ui.autocomplete](mozilla.components.ui.autocomplete/index.md) |  |

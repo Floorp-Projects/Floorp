@@ -2,7 +2,7 @@
 
 # EditToolbar
 
-`class EditToolbar` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/toolbar/src/main/java/mozilla/components/browser/toolbar/edit/EditToolbar.kt#L51)
+`class EditToolbar` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/toolbar/src/main/java/mozilla/components/browser/toolbar/edit/EditToolbar.kt#L53)
 
 Sub-component of the browser toolbar responsible for allowing the user to edit the URL ("edit mode").
 

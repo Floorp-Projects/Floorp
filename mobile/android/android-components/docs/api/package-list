@@ -308,6 +308,7 @@ mozilla.components.support.test.rule
 mozilla.components.support.utils
 mozilla.components.support.utils.ext
 mozilla.components.support.webextensions
+mozilla.components.support.webextensions.facts
 mozilla.components.tooling.fetch.tests
 mozilla.components.tooling.lint
 mozilla.components.ui.autocomplete
