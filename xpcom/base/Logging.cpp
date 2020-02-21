@@ -10,6 +10,7 @@
 
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/FileUtils.h"
+#include "mozilla/LateWriteChecks.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/Printf.h"
@@ -390,6 +391,7 @@ class LogModuleManager {
 
   void Print(const char* aName, LogLevel aLevel, const TimeStamp* aStart,
              const char* aFmt, va_list aArgs) MOZ_FORMAT_PRINTF(5, 0) {
+    AutoSuspendLateWriteChecks suspendLateWriteChecks;
     long pid = static_cast<long>(base::GetCurrentProcId());
     const size_t kBuffSize = 1024;
     char buff[kBuffSize];
