@@ -59,6 +59,11 @@ void main(void) {
     // TODO: Handle repeating masks?
     vec2 clamped_mask_uv = clamp(vClipMaskImageUv, vec2(0.0, 0.0), vLocalPos.ww);
 
+    // Ensure we don't draw outside of our tile.
+    // FIXME(emilio): Can we do this earlier?
+    if (clamped_mask_uv != vClipMaskImageUv)
+        discard;
+
     vec2 source_uv = clamp(
         clamped_mask_uv / vLocalPos.w * vClipMaskUvRect.zw + vClipMaskUvRect.xy,
         vClipMaskUvInnerRect.xy, vClipMaskUvInnerRect.zw);
