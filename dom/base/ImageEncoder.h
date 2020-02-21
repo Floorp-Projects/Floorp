@@ -113,7 +113,7 @@ class EncodeCompleteCallback {
   virtual nsresult ReceiveBlobImpl(already_AddRefed<BlobImpl> aBlobImpl) = 0;
 
  protected:
-  virtual ~EncodeCompleteCallback() {}
+  virtual ~EncodeCompleteCallback() = default;
 };
 
 }  // namespace dom

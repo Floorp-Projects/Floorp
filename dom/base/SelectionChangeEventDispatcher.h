@@ -59,7 +59,7 @@ class SelectionChangeEventDispatcher final {
  private:
   nsTArray<RawRangeData> mOldRanges;
 
-  ~SelectionChangeEventDispatcher() {}
+  ~SelectionChangeEventDispatcher() = default;
 };
 
 }  // namespace mozilla

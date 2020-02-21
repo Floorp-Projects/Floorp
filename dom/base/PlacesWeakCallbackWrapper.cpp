@@ -30,7 +30,7 @@ PlacesWeakCallbackWrapper::Constructor(const GlobalObject& aGlobal,
   return wrapper.forget();
 }
 
-PlacesWeakCallbackWrapper::~PlacesWeakCallbackWrapper() {}
+PlacesWeakCallbackWrapper::~PlacesWeakCallbackWrapper() = default;
 
 nsISupports* PlacesWeakCallbackWrapper::GetParentObject() const {
   nsCOMPtr<nsISupports> parent = do_QueryReferent(mParent);
