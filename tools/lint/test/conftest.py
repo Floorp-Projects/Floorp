@@ -93,6 +93,7 @@ def lint(config, root):
     ResultSummary.root = root
 
     def wrapper(paths, config=config, root=root, collapse_results=False, **lintargs):
+        logger.setLevel(logging.DEBUG)
         lintargs['log'] = logging.LoggerAdapter(logger, {
             "lintname": config.get("name"),
             "pid": os.getpid()
