@@ -644,12 +644,7 @@ CSSCoord LengthPercentage::ToLengthInCSSPixels() const {
 }
 
 bool LengthPercentage::ConvertsToPercentage() const {
-  if (IsPercentage()) {
-    return true;
-  }
-  MOZ_ASSERT(IsLength() || !AsCalc().length.IsZero(),
-             "Should've been simplified to a percentage");
-  return false;
+  return IsPercentage();
 }
 
 float LengthPercentage::ToPercentage() const {
@@ -673,10 +668,15 @@ bool LengthPercentage::IsDefinitelyZero() const {
   if (IsPercentage()) {
     return AsPercentage()._0 == 0.0f;
   }
-  MOZ_ASSERT(!AsCalc().length.IsZero(),
-             "Should've been simplified to a percentage");
+  // calc() should've been simplified to a percentage.
   return false;
 }
+
+template <>
+CSSCoord StyleCalcNode::ResolveToCSSPixels(CSSCoord aPercentageBasis) const;
+
+template <>
+void StyleCalcNode::ScaleLengthsBy(float);
 
 CSSCoord LengthPercentage::ResolveToCSSPixels(CSSCoord aPercentageBasis) const {
   if (IsLength()) {
@@ -685,8 +685,7 @@ CSSCoord LengthPercentage::ResolveToCSSPixels(CSSCoord aPercentageBasis) const {
   if (IsPercentage()) {
     return AsPercentage()._0 * aPercentageBasis;
   }
-  auto& calc = AsCalc();
-  return calc.length.ToCSSPixels() + calc.percentage._0 * aPercentageBasis;
+  return AsCalc().node.ResolveToCSSPixels(aPercentageBasis);
 }
 
 template <typename T>
@@ -700,12 +699,11 @@ CSSCoord LengthPercentage::ResolveToCSSPixelsWith(T aPercentageGetter) const {
 }
 
 template <typename T, typename U>
-nscoord LengthPercentage::Resolve(T aPercentageGetter,
-                                  U aPercentageRounder) const {
+nscoord LengthPercentage::Resolve(T aPercentageGetter, U aRounder) const {
   static_assert(std::is_same<decltype(aPercentageGetter()), nscoord>::value,
                 "Should return app units");
   static_assert(
-      std::is_same<decltype(aPercentageRounder(1.0f)), nscoord>::value,
+      std::is_same<decltype(aRounder(1.0f)), nscoord>::value,
       "Should return app units");
   if (ConvertsToLength()) {
     return ToLength();
@@ -715,11 +713,9 @@ nscoord LengthPercentage::Resolve(T aPercentageGetter,
   }
   nscoord basis = aPercentageGetter();
   if (IsPercentage()) {
-    return aPercentageRounder(basis * AsPercentage()._0);
+    return aRounder(basis * AsPercentage()._0);
   }
-  auto& calc = AsCalc();
-  return calc.length.ToAppUnits() +
-         aPercentageRounder(basis * calc.percentage._0);
+  return AsCalc().node.Resolve(basis, aRounder);
 }
 
 nscoord LengthPercentage::Resolve(nscoord aPercentageBasis) const {
@@ -743,7 +739,7 @@ void LengthPercentage::ScaleLengthsBy(float aScale) {
     AsLength().ScaleBy(aScale);
   }
   if (IsCalc()) {
-    AsCalc().length.ScaleBy(aScale);
+    AsCalc().node.ScaleLengthsBy(aScale);
   }
 }
 
