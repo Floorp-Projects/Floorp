@@ -108,6 +108,12 @@ bool RemoteOuterWindowProxy::getOwnPropertyDescriptor(
     return ok;
   }
 
+  // We don't need the "print" hack that nsOuterWindowProxy has, because pdf
+  // documents are placed in a process based on their principal before the PDF
+  // viewer changes principals around, so are always same-process with things
+  // that are same-origin with their original principal and won't reach this
+  // code in the cases when "print" should be accessible.
+
   if (JSID_IS_STRING(aId)) {
     nsAutoJSString str;
     if (!str.init(aCx, JSID_TO_STRING(aId))) {
