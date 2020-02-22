@@ -8,6 +8,7 @@
 let legacyIDs = [
   getID(`legacy-global`),
   getID(`legacy-user`),
+  getID(`legacy-app`),
   getID(`legacy-profile`),
 ];
 
@@ -28,7 +29,7 @@ add_task(async function test_sideloads_after_rebuild() {
 
   // SCOPE_APPLICATION will never sideload, so we expect 3
   let sideloaded = await AddonManagerPrivate.getNewSideloads();
-  Assert.equal(sideloaded.length, 3, "three sideloaded addon");
+  Assert.equal(sideloaded.length, 4, "four sideloaded addon");
   let sideloadedIds = sideloaded.map(a => a.id);
   for (let id of legacyIDs) {
     Assert.ok(sideloadedIds.includes(id));
@@ -49,9 +50,9 @@ add_task(async function test_sideloads_after_rebuild() {
 
   await promiseStartupManager("2");
 
-  // We should still only have 3 addons.
+  // We should still only have 4 addons.
   let addons = await AddonManager.getAddonsByTypes(["extension"]);
-  Assert.equal(addons.length, 3, "addons remain installed");
+  Assert.equal(addons.length, 4, "addons remain installed");
 
   await promiseShutdownManager();
 
@@ -59,6 +60,11 @@ add_task(async function test_sideloads_after_rebuild() {
   // appStartup.json and is not in a sideloadScope.
   await createWebExtension(
     getID(`sideload-global-2`),
+    initialVersion("sideload-global"),
+    globalDir
+  );
+  await createWebExtension(
+    getID(`sideload-app-2`),
     initialVersion("sideload-global"),
     globalDir
   );
@@ -79,7 +85,7 @@ add_task(async function test_sideloads_after_rebuild() {
   await promiseStartupManager();
 
   addons = await AddonManager.getAddonsByTypes(["extension"]);
-  Assert.equal(addons.length, 4, "addons installed");
+  Assert.equal(addons.length, 5, "addons installed");
 
   await promiseShutdownManager();
 
