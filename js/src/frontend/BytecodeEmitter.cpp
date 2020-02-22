@@ -8773,23 +8773,25 @@ bool BytecodeEmitter::emitCreateFieldInitializers(ClassEmitter& ce,
   }
 
   for (ParseNode* propdef : obj->contents()) {
-    if (propdef->is<ClassField>()) {
-      FunctionNode* initializer = propdef->as<ClassField>().initializer();
-      if (!emitTree(initializer)) {
+    if (!propdef->is<ClassField>()) {
+      continue;
+    }
+
+    FunctionNode* initializer = propdef->as<ClassField>().initializer();
+    if (!emitTree(initializer)) {
+      //            [stack] HOMEOBJ HERITAGE? ARRAY LAMBDA
+      return false;
+    }
+    if (initializer->funbox()->needsHomeObject()) {
+      MOZ_ASSERT(initializer->funbox()->allowSuperProperty());
+      if (!ce.emitFieldInitializerHomeObject()) {
         //          [stack] HOMEOBJ HERITAGE? ARRAY LAMBDA
         return false;
       }
-      if (initializer->funbox()->needsHomeObject()) {
-        MOZ_ASSERT(initializer->funbox()->allowSuperProperty());
-        if (!ce.emitFieldInitializerHomeObject()) {
-          //          [stack] CTOR OBJ ARRAY LAMBDA
-          return false;
-        }
-      }
-      if (!ce.emitStoreFieldInitializer()) {
-        //          [stack] HOMEOBJ HERITAGE? ARRAY
-        return false;
-      }
+    }
+    if (!ce.emitStoreFieldInitializer()) {
+      //            [stack] HOMEOBJ HERITAGE? ARRAY
+      return false;
     }
   }
 
