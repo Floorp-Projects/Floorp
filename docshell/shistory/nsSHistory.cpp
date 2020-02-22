@@ -830,27 +830,29 @@ nsSHistory::EvictAllContentViewers() {
   return NS_OK;
 }
 
-static nsresult LoadURI(nsSHistory::LoadEntryResult& aLoadResult) {
-  return aLoadResult.mBrowsingContext->LoadURI(nullptr, aLoadResult.mLoadState,
-                                               false);
+static void LoadURIs(nsTArray<nsSHistory::LoadEntryResult>& aLoadResults) {
+  for (nsSHistory::LoadEntryResult& loadEntry : aLoadResults) {
+    loadEntry.mBrowsingContext->LoadURI(nullptr, loadEntry.mLoadState, false);
+  }
 }
 
 NS_IMETHODIMP
 nsSHistory::Reload(uint32_t aReloadFlags) {
-  Maybe<LoadEntryResult> loadResult;
-  nsresult rv = Reload(aReloadFlags, loadResult);
+  nsTArray<LoadEntryResult> loadResults;
+  nsresult rv = Reload(aReloadFlags, loadResults);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (!loadResult) {
+  if (loadResults.IsEmpty()) {
     return NS_OK;
   }
 
-  return LoadURI(loadResult.ref());
+  LoadURIs(loadResults);
+  return NS_OK;
 }
 
 nsresult nsSHistory::Reload(uint32_t aReloadFlags,
-                            Maybe<LoadEntryResult>& aLoadResult) {
-  MOZ_ASSERT(!aLoadResult.isSome());
+                            nsTArray<LoadEntryResult>& aLoadResults) {
+  MOZ_ASSERT(aLoadResults.IsEmpty());
 
   uint32_t loadType;
   if (aReloadFlags & nsIWebNavigation::LOAD_FLAGS_BYPASS_PROXY &&
@@ -878,10 +880,9 @@ nsresult nsSHistory::Reload(uint32_t aReloadFlags,
     return NS_OK;
   }
 
-  aLoadResult.emplace();
-  nsresult rv = LoadEntry(mIndex, loadType, HIST_CMD_RELOAD, aLoadResult.ref());
+  nsresult rv = LoadEntry(mIndex, loadType, HIST_CMD_RELOAD, aLoadResults);
   if (NS_FAILED(rv)) {
-    aLoadResult.reset();
+    aLoadResults.Clear();
     return rv;
   }
 
@@ -890,18 +891,20 @@ nsresult nsSHistory::Reload(uint32_t aReloadFlags,
 
 NS_IMETHODIMP
 nsSHistory::ReloadCurrentEntry() {
-  LoadEntryResult loadResult;
-  nsresult rv = ReloadCurrentEntry(loadResult);
+  nsTArray<LoadEntryResult> loadResults;
+  nsresult rv = ReloadCurrentEntry(loadResults);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return LoadURI(loadResult);
+  LoadURIs(loadResults);
+  return NS_OK;
 }
 
-nsresult nsSHistory::ReloadCurrentEntry(LoadEntryResult& aLoadResult) {
+nsresult nsSHistory::ReloadCurrentEntry(
+    nsTArray<LoadEntryResult>& aLoadResults) {
   // Notify listeners
   NOTIFY_LISTENERS(OnHistoryGotoIndex, ());
 
-  return LoadEntry(mIndex, LOAD_HISTORY, HIST_CMD_RELOAD, aLoadResult);
+  return LoadEntry(mIndex, LOAD_HISTORY, HIST_CMD_RELOAD, aLoadResults);
 }
 
 void nsSHistory::EvictOutOfRangeWindowContentViewers(int32_t aIndex) {
@@ -1382,11 +1385,12 @@ nsSHistory::UpdateIndex() {
 
 NS_IMETHODIMP
 nsSHistory::GotoIndex(int32_t aIndex) {
-  LoadEntryResult loadResult;
-  nsresult rv = GotoIndex(aIndex, loadResult);
+  nsTArray<LoadEntryResult> loadResults;
+  nsresult rv = GotoIndex(aIndex, loadResults);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return LoadURI(loadResult);
+  LoadURIs(loadResults);
+  return NS_OK;
 }
 
 NS_IMETHODIMP_(void)
@@ -1397,26 +1401,27 @@ nsSHistory::EnsureCorrectEntryAtCurrIndex(nsISHEntry* aEntry) {
   }
 }
 
-nsresult nsSHistory::GotoIndex(int32_t aIndex, LoadEntryResult& aLoadResult) {
-  return LoadEntry(aIndex, LOAD_HISTORY, HIST_CMD_GOTOINDEX, aLoadResult);
+nsresult nsSHistory::GotoIndex(int32_t aIndex,
+                               nsTArray<LoadEntryResult>& aLoadResults) {
+  return LoadEntry(aIndex, LOAD_HISTORY, HIST_CMD_GOTOINDEX, aLoadResults);
 }
 
-nsresult nsSHistory::LoadNextPossibleEntry(int32_t aNewIndex, long aLoadType,
-                                           uint32_t aHistCmd,
-                                           LoadEntryResult& aLoadResult) {
+nsresult nsSHistory::LoadNextPossibleEntry(
+    int32_t aNewIndex, long aLoadType, uint32_t aHistCmd,
+    nsTArray<LoadEntryResult>& aLoadResults) {
   mRequestedIndex = -1;
   if (aNewIndex < mIndex) {
-    return LoadEntry(aNewIndex - 1, aLoadType, aHistCmd, aLoadResult);
+    return LoadEntry(aNewIndex - 1, aLoadType, aHistCmd, aLoadResults);
   }
   if (aNewIndex > mIndex) {
-    return LoadEntry(aNewIndex + 1, aLoadType, aHistCmd, aLoadResult);
+    return LoadEntry(aNewIndex + 1, aLoadType, aHistCmd, aLoadResults);
   }
   return NS_ERROR_FAILURE;
 }
 
 nsresult nsSHistory::LoadEntry(int32_t aIndex, long aLoadType,
                                uint32_t aHistCmd,
-                               LoadEntryResult& aLoadResult) {
+                               nsTArray<LoadEntryResult>& aLoadResults) {
   if (!mRootBC) {
     return NS_ERROR_FAILURE;
   }
@@ -1457,16 +1462,16 @@ nsresult nsSHistory::LoadEntry(int32_t aIndex, long aLoadType,
 
   if (mRequestedIndex == mIndex) {
     // Possibly a reload case
-    return InitiateLoad(nextEntry, mRootBC, aLoadType, aLoadResult);
+    return InitiateLoad(nextEntry, mRootBC, aLoadType, aLoadResults);
   }
 
   // Going back or forward.
   bool differenceFound = false;
   nsresult rv = LoadDifferingEntries(prevEntry, nextEntry, mRootBC, aLoadType,
-                                     differenceFound, aLoadResult);
+                                     differenceFound, aLoadResults);
   if (!differenceFound) {
     // We did not find any differences. Go further in the history.
-    return LoadNextPossibleEntry(aIndex, aLoadType, aHistCmd, aLoadResult);
+    return LoadNextPossibleEntry(aIndex, aLoadType, aHistCmd, aLoadResults);
   }
 
   return rv;
@@ -1474,7 +1479,8 @@ nsresult nsSHistory::LoadEntry(int32_t aIndex, long aLoadType,
 
 nsresult nsSHistory::LoadDifferingEntries(
     nsISHEntry* aPrevEntry, nsISHEntry* aNextEntry, BrowsingContext* aParent,
-    long aLoadType, bool& aDifferenceFound, LoadEntryResult& aLoadResult) {
+    long aLoadType, bool& aDifferenceFound,
+    nsTArray<LoadEntryResult>& aLoadResults) {
   if (!aPrevEntry || !aNextEntry || !aParent) {
     return NS_ERROR_FAILURE;
   }
@@ -1489,7 +1495,7 @@ nsresult nsSHistory::LoadDifferingEntries(
 
     // Set the Subframe flag if not navigating the root docshell.
     aNextEntry->SetIsSubFrame(aParent != mRootBC);
-    return InitiateLoad(aNextEntry, aParent, aLoadType, aLoadResult);
+    return InitiateLoad(aNextEntry, aParent, aLoadType, aLoadResults);
   }
 
   // The entries are the same, so compare any child frames
@@ -1543,17 +1549,18 @@ nsresult nsSHistory::LoadDifferingEntries(
     // This will either load a new page to shell or some subshell or
     // do nothing.
     LoadDifferingEntries(pChild, nChild, bcChild, aLoadType, aDifferenceFound,
-                         aLoadResult);
+                         aLoadResults);
   }
   return result;
 }
 
 nsresult nsSHistory::InitiateLoad(nsISHEntry* aFrameEntry,
                                   BrowsingContext* aFrameBC, long aLoadType,
-                                  LoadEntryResult& aLoadResult) {
+                                  nsTArray<LoadEntryResult>& aLoadResults) {
   NS_ENSURE_STATE(aFrameBC && aFrameEntry);
 
-  aLoadResult.mBrowsingContext = aFrameBC;
+  LoadEntryResult* loadResult = aLoadResults.AppendElement();
+  loadResult->mBrowsingContext = aFrameBC;
 
   nsCOMPtr<nsIURI> newURI = aFrameEntry->GetURI();
   RefPtr<nsDocShellLoadState> loadState = new nsDocShellLoadState(newURI);
@@ -1580,7 +1587,7 @@ nsresult nsSHistory::InitiateLoad(nsISHEntry* aFrameEntry,
   nsCOMPtr<nsIContentSecurityPolicy> csp = aFrameEntry->GetCsp();
   loadState->SetCsp(csp);
 
-  aLoadResult.mLoadState = std::move(loadState);
+  loadResult->mLoadState = std::move(loadState);
 
   return NS_OK;
 }
