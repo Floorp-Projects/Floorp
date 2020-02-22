@@ -31,6 +31,7 @@ import mozilla.components.feature.sitepermissions.SitePermissions
 import mozilla.components.feature.sitepermissions.SitePermissions.Status.NO_DECISION
 import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.support.test.robolectric.testContext
+import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.TestApplication
@@ -106,6 +107,7 @@ class DefaultQuickSettingsControllerTest {
     }
 
     @Test
+    @Ignore("Disabling because of intermittent failures https://github.com/mozilla-mobile/fenix/issues/8621")
     fun `handlePermissionToggled allowed by Android should toggle the permissions and modify View's state`() {
         val permissionName = "CAMERA"
         val websitePermission = mockk<WebsitePermission.Camera>()

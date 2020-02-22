@@ -53,6 +53,7 @@ class ContextMenusTest {
     }
 
     @Test
+    @Ignore("Disabling because of intermittent failures https://github.com/mozilla-mobile/fenix/issues/8663")
     fun verifyContextOpenLinkNewTab() {
         val pageLinks =
             TestAssetHelper.getGenericAsset(mockWebServer, 4)
