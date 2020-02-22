@@ -16,6 +16,18 @@ interface nsIQuotaUsageRequest;
 interface nsIQuotaManagerService : nsISupports
 {
   /**
+   * Check if storage is initialized.
+   */
+  [must_use] nsIQuotaRequest
+  storageInitialized();
+
+  /**
+   * Check if temporary storage is initialized.
+   */
+  [must_use] nsIQuotaRequest
+  temporaryStorageInitialized();
+
+  /**
    * Initializes storage directory. This can be used in tests to verify
    * upgrade methods.
    *

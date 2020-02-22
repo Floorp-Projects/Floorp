@@ -26,6 +26,14 @@ namespace mozilla {
 namespace dom {
 namespace quota {
 
+struct StorageInitializedParams
+{
+};
+
+struct TemporaryStorageInitializedParams
+{
+};
+
 struct InitParams
 {
 };
@@ -113,6 +121,8 @@ struct ListOriginsParams
 
 union RequestParams
 {
+  StorageInitializedParams;
+  TemporaryStorageInitializedParams;
   InitParams;
   InitTemporaryStorageParams;
   InitStorageAndOriginParams;

@@ -8,6 +8,16 @@ namespace mozilla {
 namespace dom {
 namespace quota {
 
+struct StorageInitializedResponse
+{
+  bool initialized;
+};
+
+struct TemporaryStorageInitializedResponse
+{
+  bool initialized;
+};
+
 struct InitResponse
 {
 };
@@ -64,6 +74,8 @@ struct ListOriginsResponse
 union RequestResponse
 {
   nsresult;
+  StorageInitializedResponse;
+  TemporaryStorageInitializedResponse;
   InitResponse;
   InitTemporaryStorageResponse;
   InitStorageAndOriginResponse;

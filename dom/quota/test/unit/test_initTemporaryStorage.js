@@ -33,4 +33,8 @@ async function testSteps() {
   metadataFile.append(metadataFileName);
 
   ok(metadataFile.exists(), "Directory metadata file does exist");
+
+  info("Verifying initialization status");
+
+  await verifyInitializationStatus(true, true);
 }
