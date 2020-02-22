@@ -1264,7 +1264,7 @@ void WebGLFramebuffer::BlitFramebuffer(WebGLContext* webgl, GLint srcX0,
     const auto& info = *srcFB->GetCompletenessInfo();
     if (info.zLayerCount != 1) {
       webgl->GenerateError(LOCAL_GL_INVALID_FRAMEBUFFER_OPERATION,
-                           "Source framebuffer cannot have multiple views.");
+                           "Source framebuffer cannot have more than one multiview layer.");
       return;
     }
     srcColorFormat = nullptr;
@@ -1322,6 +1322,11 @@ void WebGLFramebuffer::BlitFramebuffer(WebGLContext* webgl, GLint srcX0,
     MOZ_ASSERT(!dstFB->DepthStencilAttachment().HasAttachment());
 
     const auto& info = *dstFB->GetCompletenessInfo();
+    if (info.isMultiview) {
+      webgl->GenerateError(LOCAL_GL_INVALID_FRAMEBUFFER_OPERATION,
+                           "Destination framebuffer cannot have multiview attachments.");
+      return;
+    }
     dstSize = {info.width, info.height};
   } else {
     dstHasSamples = webgl->Options().antialias;
