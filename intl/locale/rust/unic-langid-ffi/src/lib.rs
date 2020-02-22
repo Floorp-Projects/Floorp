@@ -5,7 +5,7 @@
 use nsstring::nsACString;
 use nsstring::nsCString;
 use thin_vec::ThinVec;
-pub use unic_langid::{LanguageIdentifier, LanguageIdentifierError};
+pub use unic_langid::{LanguageIdentifier, LanguageIdentifierError, CharacterDirection};
 
 fn new_langid_for_mozilla(name: &nsACString) -> Result<LanguageIdentifier, LanguageIdentifierError> {
     if name.eq_ignore_ascii_case(b"ja-jp-mac") {
@@ -161,4 +161,12 @@ pub unsafe extern "C" fn unic_langid_matches(
 #[no_mangle]
 pub unsafe extern "C" fn unic_langid_maximize(langid: &mut LanguageIdentifier) -> bool {
     langid.maximize()
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn unic_langid_is_rtl(name: &nsACString) -> bool {
+    match new_langid_for_mozilla(name) {
+        Ok(langid) => langid.character_direction() == CharacterDirection::RTL,
+        Err(_) => false
+    }
 }
