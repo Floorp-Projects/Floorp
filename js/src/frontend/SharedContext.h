@@ -531,8 +531,12 @@ class FunctionBox : public ObjectBox, public SharedContext {
   }
 
   bool needsCallObjectRegardlessOfBindings() const {
-    return hasExtensibleScope() || needsHomeObject() ||
-           isDerivedClassConstructor() || isGenerator() || isAsync();
+    // Always create a CallObject if:
+    // - The scope is extensible at runtime due to sloppy eval.
+    // - The function is a generator or async function. (The debugger reads the
+    //   generator object directly from the frame.)
+
+    return hasExtensibleScope() || isGenerator() || isAsync();
   }
 
   bool hasExtraBodyVarScope() const {
