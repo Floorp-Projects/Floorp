@@ -8676,12 +8676,13 @@ bool BytecodeEmitter::emitObjLiteralValue(ObjLiteralCreationData* data,
 
 mozilla::Maybe<FieldInitializers> BytecodeEmitter::setupFieldInitializers(
     ListNode* classMembers) {
-  size_t numFields = 0;
-  for (ParseNode* propdef : classMembers->contents()) {
-    if (propdef->is<ClassField>()) {
-      numFields++;
-    }
-  }
+  auto isClassField = [](ParseNode* propdef) {
+    return propdef->is<ClassField>();
+  };
+
+  size_t numFields =
+      std::count_if(classMembers->contents().begin(),
+                    classMembers->contents().end(), isClassField);
   // If there are more initializers than can be represented, return invalid.
   if (numFields > FieldInitializers::MaxInitializers) {
     return Nothing();
@@ -8714,16 +8715,14 @@ mozilla::Maybe<FieldInitializers> BytecodeEmitter::setupFieldInitializers(
 // BytecodeEmitter::emitPropertyList fills in the elements of the array.
 // See GeneralParser::fieldInitializer for the `this[.fieldKeys[0]]` part.
 bool BytecodeEmitter::emitCreateFieldKeys(ListNode* obj) {
-  size_t numFieldKeys = 0;
-  for (ParseNode* propdef : obj->contents()) {
-    if (propdef->is<ClassField>()) {
-      ClassField* field = &propdef->as<ClassField>();
-      if (field->name().getKind() == ParseNodeKind::ComputedName) {
-        numFieldKeys++;
-      }
-    }
-  }
+  auto isFieldWithComputedName = [](ParseNode* propdef) {
+    return propdef->is<ClassField>() &&
+           propdef->as<ClassField>().name().getKind() ==
+               ParseNodeKind::ComputedName;
+  };
 
+  size_t numFieldKeys = std::count_if(
+      obj->contents().begin(), obj->contents().end(), isFieldWithComputedName);
   if (numFieldKeys == 0) {
     return true;
   }
