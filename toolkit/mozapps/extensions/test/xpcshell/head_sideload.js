@@ -42,7 +42,7 @@ registerDirectory("XREUSysExt", userDir.parent);
 // SCOPE_APPLICATION
 const addonAppDir = gProfD.clone();
 addonAppDir.append("app-global");
-addonAppDir.append(gAppInfo.ID);
+addonAppDir.append("extensions");
 registerDirectory("XREAddonAppDir", addonAppDir.parent);
 
 // SCOPE_PROFILE
