@@ -2017,3 +2017,11 @@ def forkserver_flag(value, target):
 
 set_config('MOZ_ENABLE_FORKSERVER', forkserver_flag)
 set_define('MOZ_ENABLE_FORKSERVER', forkserver_flag, forkserver_flag)
+
+# new cert storage implementation
+# ==============================================================
+option('--disable-new-cert-storage', env='MOZ_NEW_CERT_STORAGE',
+       help='{Enable|Disable} new certificate storage')
+
+set_config('MOZ_NEW_CERT_STORAGE', True, when='--enable-new-cert-storage')
+set_define('MOZ_NEW_CERT_STORAGE', True, when='--enable-new-cert-storage')
