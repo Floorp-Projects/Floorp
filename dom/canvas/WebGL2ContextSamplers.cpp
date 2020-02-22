@@ -64,6 +64,12 @@ Maybe<double> WebGL2Context::GetSamplerParameter(const WebGLSampler& sampler,
 
   ////
 
+  const auto fnAsFloat = [&]() {
+    GLfloat param = 0;
+    gl->fGetSamplerParameterfv(sampler.mGLName, pname, &param);
+    return param;
+  };
+
   switch (pname) {
     case LOCAL_GL_TEXTURE_MIN_FILTER:
     case LOCAL_GL_TEXTURE_MAG_FILTER:
@@ -77,16 +83,21 @@ Maybe<double> WebGL2Context::GetSamplerParameter(const WebGLSampler& sampler,
       return Some(param);
     }
     case LOCAL_GL_TEXTURE_MIN_LOD:
-    case LOCAL_GL_TEXTURE_MAX_LOD: {
-      GLfloat param = 0;
-      gl->fGetSamplerParameterfv(sampler.mGLName, pname, &param);
-      return Some(param);
-    }
+    case LOCAL_GL_TEXTURE_MAX_LOD:
+      return Some(fnAsFloat());
+
+    case LOCAL_GL_TEXTURE_MAX_ANISOTROPY:
+      if (!IsExtensionEnabled(
+              WebGLExtensionID::EXT_texture_filter_anisotropic)) {
+        break;
+      }
+      return Some(fnAsFloat());
 
     default:
-      ErrorInvalidEnumInfo("pname", pname);
-      return {};
+      break;
   }
+  ErrorInvalidEnumInfo("pname", pname);
+  return {};
 }
 
 }  // namespace mozilla
