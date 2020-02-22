@@ -20,8 +20,6 @@
 #include "nsXULAppAPI.h"
 #include "nsZipArchive.h"
 
-#include "unicode/uloc.h"
-
 #define INTL_SYSTEM_LOCALES_CHANGED "intl:system-locales-changed"
 
 #define REQUESTED_LOCALES_PREF "intl.locale.requested"
@@ -244,7 +242,7 @@ bool LocaleService::IsLocaleRTL(const nsACString& aLocale) {
     return (pref > 0);
   }
 
-  return uloc_isRightToLeft(PromiseFlatCString(aLocale).get());
+  return unic_langid_is_rtl(&aLocale);
 }
 
 bool LocaleService::IsAppLocaleRTL() {
