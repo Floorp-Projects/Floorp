@@ -1373,7 +1373,7 @@ class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
                                    GLsizei numViewLayers) const {
     const FuncScope funcScope(*this, "framebufferTextureMultiview");
     if (IsContextLost()) return;
-    if (tex && numViewLayers < 1) {
+    if (numViewLayers < 1) {
       EnqueueError(LOCAL_GL_INVALID_VALUE, "`numViewLayers` must be >=1.");
       return;
     }
