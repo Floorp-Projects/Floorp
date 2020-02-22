@@ -2,7 +2,7 @@
 
 # SendCrashReportService
 
-`class SendCrashReportService` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/crash/src/main/java/mozilla/components/lib/crash/service/SendCrashReportService.kt#L23)
+`class SendCrashReportService` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/crash/src/main/java/mozilla/components/lib/crash/service/SendCrashReportService.kt#L31)
 
 ### Constructors
 
@@ -21,7 +21,7 @@
 
 | Name | Summary |
 |---|---|
-| [createReportIntent](create-report-intent.md) | `fun createReportIntent(context: <ERROR CLASS>, crash: `[`Crash`](../../mozilla.components.lib.crash/-crash/index.md)`): <ERROR CLASS>` |
+| [createReportIntent](create-report-intent.md) | `fun createReportIntent(context: <ERROR CLASS>, crash: `[`Crash`](../../mozilla.components.lib.crash/-crash/index.md)`, notificationTag: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`? = null, notificationId: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)` = 0): <ERROR CLASS>` |
 
 ### Extension Functions
 
