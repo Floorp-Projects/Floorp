@@ -58,19 +58,6 @@ class EstimateResult : public nsIQuotaEstimateResult {
   NS_DECL_NSIQUOTAESTIMATERESULT
 };
 
-class OriginsResult : public nsIQuotaOriginsResult {
-  nsCString mOrigin;
-
- public:
-  explicit OriginsResult(const nsACString& aOrigin);
-
- private:
-  virtual ~OriginsResult() = default;
-
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIQUOTAORIGINSRESULT
-};
-
 }  // namespace quota
 }  // namespace dom
 }  // namespace mozilla

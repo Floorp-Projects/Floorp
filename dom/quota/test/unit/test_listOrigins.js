@@ -3,33 +3,11 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-async function CreateTestEnvironment(origins) {
-  let request;
-  for (let origin of origins) {
-    request = initStorageAndOrigin(getPrincipal(origin.origin), "default");
-    await requestFinished(request);
-  }
-
-  request = reset();
-  await requestFinished(request);
-}
-
 async function testSteps() {
   const origins = [
-    {
-      origin: "https://example.com",
-      path: "https+++example.com",
-    },
-
-    {
-      origin: "https://localhost",
-      path: "https+++localhost",
-    },
-
-    {
-      origin: "https://www.mozilla.org",
-      path: "https+++www.mozilla.org",
-    },
+    "https://example.com",
+    "https://localhost",
+    "https://www.mozilla.org",
   ];
 
   function verifyResult(result, expectedOrigins) {
@@ -39,13 +17,10 @@ async function testSteps() {
     info("Sorting elements");
 
     result.sort(function(a, b) {
-      let originA = a.origin;
-      let originB = b.origin;
-
-      if (originA < originB) {
+      if (a < b) {
         return -1;
       }
-      if (originA > originB) {
+      if (a > b) {
         return 1;
       }
       return 0;
@@ -54,22 +29,42 @@ async function testSteps() {
     info("Verifying elements");
 
     for (let i = 0; i < result.length; i++) {
-      let a = result[i];
-      let b = expectedOrigins[i];
-      ok(a.origin == b.origin, "Origin equals");
+      ok(result[i] == expectedOrigins[i], "Result matches expected origin");
     }
   }
 
-  info("Creating test environment");
+  info("Clearing");
 
-  await CreateTestEnvironment(origins);
+  let request = clear();
+  await requestFinished(request);
 
-  info("Getting origins after initializing the storage");
+  info("Listing origins");
 
-  await new Promise(resolve => {
-    listOrigins(req => {
-      verifyResult(req.result, origins);
-      resolve();
-    });
-  });
+  request = listOrigins();
+  await requestFinished(request);
+
+  info("Verifying result");
+
+  verifyResult(request.result, []);
+
+  info("Clearing");
+
+  request = clear();
+  await requestFinished(request);
+
+  info("Initializing origins");
+
+  for (const origin of origins) {
+    request = initStorageAndOrigin(getPrincipal(origin), "default");
+    await requestFinished(request);
+  }
+
+  info("Listing origins");
+
+  request = listOrigins();
+  await requestFinished(request);
+
+  info("Verifying result");
+
+  verifyResult(request.result, origins);
 }

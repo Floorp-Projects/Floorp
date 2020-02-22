@@ -39,7 +39,8 @@ interface nsIQuotaRequest : nsIQuotaRequestBase
   // The result can contain one of these types:
   //   void
   //   bool
-  //   array of nsIQuotaOriginsResult
+  //   nsIQuotaEstimateResult
+  //   array of strings
   [must_use] readonly attribute nsIVariant result;
 
   attribute nsIQuotaCallback callback;
