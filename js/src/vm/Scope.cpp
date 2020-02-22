@@ -752,9 +752,8 @@ bool FunctionScope::prepareForScopeCreation(
   // An environment may be needed regardless of existence of any closed over
   // bindings:
   //   - Extensible scopes (i.e., due to direct eval)
-  //   - Needing a home object
-  //   - Being a derived class constructor
-  //   - Being a generator
+  //   - Being a generator or async function
+  // Also see |FunctionBox::needsExtraBodyVarEnvironmentRegardlessOfBindings()|.
   if (!envShape && needsEnvironment) {
     envShape.set(getEmptyEnvironmentShape(cx));
     if (!envShape) {
