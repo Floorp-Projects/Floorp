@@ -31,27 +31,31 @@ XPCOMUtils.defineLazyGetter(this, "logger", () =>
 
 XPCOMUtils.defineLazyGetter(this, "appUpdater", () => new AppUpdater());
 
-// The possible tips to show.
+// The possible tips to show.  These names (except NONE) are used in the names
+// of keys in the `urlbar.tips` keyed scalar telemetry (see telemetry.rst).
+// Don't modify them unless you've considered that.  If you do modify them or
+// add new tips, then you are also adding new `urlbar.tips` keys and therefore
+// need an expanded data collection review.
 const TIPS = {
   NONE: "",
-  CLEAR: "clear",
-  REFRESH: "refresh",
+  CLEAR: "intervention_clear",
+  REFRESH: "intervention_refresh",
 
   // There's an update available, but the user's pref says we should ask them to
   // download and apply it.
-  UPDATE_ASK: "update_ask",
+  UPDATE_ASK: "intervention_update_ask",
 
   // The user's browser is up to date, but they triggered the update
   // intervention. We show this special refresh intervention instead.
-  UPDATE_REFRESH: "update_refresh",
+  UPDATE_REFRESH: "intervention_update_refresh",
 
   // There's an update and it's been downloaded and applied. The user needs to
   // restart to finish.
-  UPDATE_RESTART: "update_restart",
+  UPDATE_RESTART: "intervention_update_restart",
 
   // We can't update the browser or possibly even check for updates for some
   // reason, so the user should download the latest version from the web.
-  UPDATE_WEB: "update_web",
+  UPDATE_WEB: "intervention_update_web",
 };
 
 const EN_LOCALE_MATCH = /^en(-.*)$/;
@@ -434,6 +438,8 @@ class ProviderInterventions extends UrlbarProvider {
     // The tip we should currently show.
     this.currentTip = TIPS.NONE;
 
+    this.tipsShownInCurrentEngagement = new Set();
+
     // This object is used to match the user's queries to tips.
     XPCOMUtils.defineLazyGetter(this, "queryScorer", () => {
       let queryScorer = new QueryScorer({
@@ -451,6 +457,13 @@ class ProviderInterventions extends UrlbarProvider {
       }
       return queryScorer;
     });
+  }
+
+  /**
+   * Enum of the types of intervention tips.
+   */
+  get TIP_TYPE() {
+    return TIPS;
   }
 
   /**
@@ -585,6 +598,8 @@ class ProviderInterventions extends UrlbarProvider {
       return;
     }
 
+    this.tipsShownInCurrentEngagement.add(this.currentTip);
+
     addCallback(this, result);
     this.queries.delete(queryContext);
   }
@@ -630,6 +645,15 @@ class ProviderInterventions extends UrlbarProvider {
         );
         break;
     }
+  }
+
+  onEngagement(isPrivate, state) {
+    if (["engagement", "abandonment"].includes(state)) {
+      for (let tip of this.tipsShownInCurrentEngagement) {
+        Services.telemetry.keyedScalarAdd("urlbar.tips", `${tip}-shown`, 1);
+      }
+    }
+    this.tipsShownInCurrentEngagement.clear();
   }
 
   /**

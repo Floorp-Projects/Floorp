@@ -118,12 +118,6 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // results.
   ["restyleSearches", false],
 
-  // The number of times the user has been shown the onboarding search tip.
-  ["searchTips.onboard.shownCount", 0],
-
-  // The number of times the user has been shown the redirect search tip.
-  ["searchTips.redirect.shownCount", 0],
-
   // Hidden pref. Disables checks that prevent search tips being shown, thus
   // showing them every time the newtab page or the default search engine
   // homepage is opened.
@@ -147,6 +141,12 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // When using switch to tabs, if set to true this will move the tab into the
   // active window.
   ["switchTabs.adoptIntoActiveWindow", false],
+
+  // The number of times the user has been shown the onboarding search tip.
+  ["tipShownCount.searchTip_onboard", 0],
+
+  // The number of times the user has been shown the redirect search tip.
+  ["tipShownCount.searchTip_redirect", 0],
 
   // Remove redundant portions from URLs.
   ["trimURLs", true],

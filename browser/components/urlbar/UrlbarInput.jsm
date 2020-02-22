@@ -609,9 +609,18 @@ class UrlbarInput {
         break;
       }
       case UrlbarUtils.RESULT_TYPE.TIP: {
+        let scalarName;
         if (element.classList.contains("urlbarView-tip-help")) {
           url = result.payload.helpUrl;
+          if (!url) {
+            Cu.reportError("helpUrl not specified");
+            return;
+          }
+          scalarName = `${result.payload.type}-help`;
+        } else {
+          scalarName = `${result.payload.type}-picked`;
         }
+        Services.telemetry.keyedScalarAdd("urlbar.tips", scalarName, 1);
         if (!url) {
           this.handleRevert();
           this.controller.engagementEvent.record(event, {
