@@ -5,6 +5,7 @@
 package org.mozilla.fenix.components
 
 import GeckoProvider
+import android.app.Application
 import android.content.Context
 import android.content.res.Configuration
 import io.sentry.Sentry
@@ -117,6 +118,11 @@ class Core(private val context: Context) {
     val customTabsStore by lazy { CustomTabsServiceStore() }
 
     /**
+     * The [PendingSessionDeletionManager] maintains a set of sessionIds that are marked for deletion
+     */
+    val pendingSessionDeletionManager by lazy { PendingSessionDeletionManager(context as Application) }
+
+    /**
      * The session manager component provides access to a centralized registry of
      * all browser sessions (i.e. tabs). It is initialized here to persist and restore
      * sessions from the [SessionStorage], and with a default session (about:blank) in
@@ -140,6 +146,12 @@ class Core(private val context: Context) {
                         snapshot,
                         updateSelection = (sessionManager.selectedSession == null)
                     )
+                }
+
+                pendingSessionDeletionManager.getSessionsToDelete(context).forEach {
+                    sessionManager.findSessionById(it)?.let { session ->
+                        sessionManager.remove(session)
+                    }
                 }
 
                 // Now that we have restored our previous state (if there's one) let's setup auto saving the state while
@@ -277,13 +289,13 @@ class Core(private val context: Context) {
     }
 
     private fun geCustomCookiePolicy(): CookiePolicy {
-            return when (context.settings().blockCookiesSelectionInCustomTrackingProtection) {
-                "all" -> CookiePolicy.ACCEPT_NONE
-                "social" -> CookiePolicy.ACCEPT_NON_TRACKERS
-                "unvisited" -> CookiePolicy.ACCEPT_VISITED
-                "third-party" -> CookiePolicy.ACCEPT_ONLY_FIRST_PARTY
-                else -> CookiePolicy.ACCEPT_NONE
-            }
+        return when (context.settings().blockCookiesSelectionInCustomTrackingProtection) {
+            "all" -> CookiePolicy.ACCEPT_NONE
+            "social" -> CookiePolicy.ACCEPT_NON_TRACKERS
+            "unvisited" -> CookiePolicy.ACCEPT_VISITED
+            "third-party" -> CookiePolicy.ACCEPT_ONLY_FIRST_PARTY
+            else -> CookiePolicy.ACCEPT_NONE
+        }
     }
 
     private fun getCustomTrackingCategories(): Array<TrackingCategory> {

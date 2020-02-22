@@ -202,7 +202,7 @@ class HomeFragment : Fragment() {
                 registerCollectionStorageObserver = ::registerCollectionStorageObserver,
                 scrollToTheTop = ::scrollToTheTop,
                 showDeleteCollectionPrompt = ::showDeleteCollectionPrompt,
-                openSettingsScreen = :: openSettingsScreen
+                openSettingsScreen = ::openSettingsScreen
             )
         )
         updateLayout(view)
@@ -277,7 +277,8 @@ class HomeFragment : Fragment() {
             // TODO remove when viewLifecycleOwner is fixed
             val context = context ?: return@launch
 
-            val iconSize = context.resources.getDimensionPixelSize(R.dimen.preference_icon_drawable_size)
+            val iconSize =
+                context.resources.getDimensionPixelSize(R.dimen.preference_icon_drawable_size)
 
             val searchEngine = context.components.search.provider.getDefaultEngine(context)
             val searchIcon = BitmapDrawable(context.resources, searchEngine.icon)
@@ -336,7 +337,8 @@ class HomeFragment : Fragment() {
 
             if (onboarding.userHasBeenOnboarded()) {
                 homeFragmentStore.dispatch(
-                    HomeFragmentAction.ModeChange(Mode.fromBrowsingMode(newMode)))
+                    HomeFragmentAction.ModeChange(Mode.fromBrowsingMode(newMode))
+                )
             }
         }
     }
@@ -355,12 +357,14 @@ class HomeFragment : Fragment() {
         val context = requireContext()
         val components = context.components
 
-        homeFragmentStore.dispatch(HomeFragmentAction.Change(
-            collections = components.core.tabCollectionStorage.cachedTabCollections,
-            mode = currentMode.getCurrentMode(),
-            tabs = getListOfSessions().toTabs(),
-            topSites = components.core.topSiteStorage.cachedTopSites
-        ))
+        homeFragmentStore.dispatch(
+            HomeFragmentAction.Change(
+                collections = components.core.tabCollectionStorage.cachedTabCollections,
+                mode = currentMode.getCurrentMode(),
+                tabs = getListOfSessions().toTabs(),
+                topSites = components.core.topSiteStorage.cachedTopSites
+            )
+        )
 
         requireComponents.backgroundServices.accountManager.register(currentMode, owner = this)
         requireComponents.backgroundServices.accountManager.register(object : AccountObserver {
@@ -377,7 +381,8 @@ class HomeFragment : Fragment() {
         }, owner = this)
 
         if (context.settings().showPrivateModeContextualFeatureRecommender &&
-            browsingModeManager.mode.isPrivate) {
+            browsingModeManager.mode.isPrivate
+        ) {
             recommendPrivateBrowsingShortcut()
         }
 
@@ -517,7 +522,8 @@ class HomeFragment : Fragment() {
             // Otherwise, we will encounter an activity token error.
             privateBrowsingButton.post {
                 privateBrowsingRecommend.showAsDropDown(
-                    privateBrowsingButton, 0, CFR_Y_OFFSET, Gravity.TOP or Gravity.END)
+                    privateBrowsingButton, 0, CFR_Y_OFFSET, Gravity.TOP or Gravity.END
+                )
             }
         }
     }
@@ -528,7 +534,9 @@ class HomeFragment : Fragment() {
             homeFragmentStore.dispatch(
                 HomeFragmentAction.ModeChange(
                     mode = currentMode.getCurrentMode(),
-                    tabs = getListOfSessions().toTabs()))
+                    tabs = getListOfSessions().toTabs()
+                )
+            )
         }
     }
 
@@ -633,10 +641,16 @@ class HomeFragment : Fragment() {
 
     private fun removeAllTabsWithUndo(listOfSessionsToDelete: Sequence<Session>, private: Boolean) {
         homeFragmentStore.dispatch(HomeFragmentAction.TabsChange(emptyList()))
+        listOfSessionsToDelete.forEach {
+            requireComponents.core.pendingSessionDeletionManager.addSession(
+                it.id
+            )
+        }
 
         val deleteOperation: (suspend () -> Unit) = {
             listOfSessionsToDelete.forEach {
                 sessionManager.remove(it)
+                requireComponents.core.pendingSessionDeletionManager.removeSession(it.id)
             }
         }
         deleteAllSessionsJob = deleteOperation
@@ -651,6 +665,11 @@ class HomeFragment : Fragment() {
             view!!,
             snackbarMessage,
             getString(R.string.snackbar_deleted_undo), {
+                listOfSessionsToDelete.forEach {
+                    requireComponents.core.pendingSessionDeletionManager.removeSession(
+                        it.id
+                    )
+                }
                 if (private) {
                     requireComponents.analytics.metrics.track(Event.PrivateBrowsingSnackbarUndoTapped)
                 }
@@ -664,11 +683,13 @@ class HomeFragment : Fragment() {
 
     private fun removeTabWithUndo(sessionId: String, private: Boolean) {
         val sessionManager = requireComponents.core.sessionManager
+        requireComponents.core.pendingSessionDeletionManager.addSession(sessionId)
         val deleteOperation: (suspend () -> Unit) = {
             sessionManager.findSessionById(sessionId)
                 ?.let { session ->
                     pendingSessionDeletion = null
                     sessionManager.remove(session)
+                    requireComponents.core.pendingSessionDeletionManager.removeSession(sessionId)
                 }
         }
 
@@ -684,6 +705,7 @@ class HomeFragment : Fragment() {
             view!!,
             snackbarMessage,
             getString(R.string.snackbar_deleted_undo), {
+                requireComponents.core.pendingSessionDeletionManager.removeSession(sessionId)
                 pendingSessionDeletion = null
                 emitSessionChanges()
             },
@@ -777,8 +799,12 @@ class HomeFragment : Fragment() {
                     border?.visibility = View.GONE
                 }
 
-                override fun onAnimationStart(animation: Animator?) { /* noop */ }
-                override fun onAnimationRepeat(animation: Animator?) { /* noop */ }
+                override fun onAnimationStart(animation: Animator?) { /* noop */
+                }
+
+                override fun onAnimationRepeat(animation: Animator?) { /* noop */
+                }
+
                 override fun onAnimationEnd(animation: Animator?) {
                     border?.animate()?.alpha(0.0F)?.setStartDelay(ANIM_ON_SCREEN_DELAY)
                         ?.setDuration(FADE_ANIM_DURATION)
