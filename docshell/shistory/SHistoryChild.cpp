@@ -369,23 +369,27 @@ SHistoryChild::CreateEntry(nsISHEntry** aEntry) {
   return NS_OK;
 }
 
-nsresult SHistoryChild::LoadURI(LoadSHEntryData& aLoadData) {
-  if (NS_WARN_IF(aLoadData.browsingContext().IsNullOrDiscarded())) {
-    return NS_ERROR_FAILURE;
+nsresult SHistoryChild::LoadURI(nsTArray<LoadSHEntryData>& aLoadData) {
+  for (LoadSHEntryData& l : aLoadData) {
+     if (l.browsingContext().IsNullOrDiscarded()) {
+       continue;
+     }
+
+    nsCOMPtr<nsIDocShell> docShell = l.browsingContext().get()->GetDocShell();
+    if (!docShell) {
+      continue;
+    }
+
+    RefPtr<SHEntryChild> entry;
+    if (l.shEntry()) {
+      entry = l.shEntry()->ToSHEntryChild();
+    }
+
+    // FIXME Should this be sent through IPC?
+    l.loadState()->SetSHEntry(entry);
+    docShell->LoadURI(l.loadState(), false);
   }
-
-  nsCOMPtr<nsIDocShell> docShell =
-      aLoadData.browsingContext().get()->GetDocShell();
-  NS_ENSURE_TRUE(docShell, NS_ERROR_FAILURE);
-
-  RefPtr<SHEntryChild> entry;
-  if (aLoadData.shEntry()) {
-    entry = aLoadData.shEntry()->ToSHEntryChild();
-  }
-
-  // FIXME Should this be sent through IPC?
-  aLoadData.loadState()->SetSHEntry(entry);
-  return docShell->LoadURI(aLoadData.loadState(), false);
+  return NS_OK;
 }
 
 }  // namespace dom
