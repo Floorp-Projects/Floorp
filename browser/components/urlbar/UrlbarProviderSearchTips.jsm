@@ -46,11 +46,15 @@ XPCOMUtils.defineLazyPreferenceGetter(
   true
 );
 
-// The possible tips to show.
+// The possible tips to show.  These names (except NONE) are used in the names
+// of keys in the `urlbar.tips` keyed scalar telemetry (see telemetry.rst).
+// Don't modify them unless you've considered that.  If you do modify them or
+// add new tips, then you are also adding new `urlbar.tips` keys and therefore
+// need an expanded data collection review.
 const TIPS = {
   NONE: "",
-  ONBOARD: "onboard",
-  REDIRECT: "redirect",
+  ONBOARD: "searchTip_onboard",
+  REDIRECT: "searchTip_redirect",
 };
 
 // This maps engine names to regexes matching their homepages. We show the
@@ -92,16 +96,23 @@ class ProviderSearchTips extends UrlbarProvider {
 
     // Whether we should disable tips for the current browser session, for
     // example because a tip was already shown.
-    this.disableTipsForCurrentSession = false;
-
-    if (
-      UrlbarPrefs.get("searchTips.onboard.shownCount") >= MAX_SHOWN_COUNT &&
-      UrlbarPrefs.get("searchTips.redirect.shownCount") >= MAX_SHOWN_COUNT
-    ) {
-      this.disableTipsForCurrentSession = true;
+    this.disableTipsForCurrentSession = true;
+    for (let tip of Object.values(TIPS)) {
+      if (tip && UrlbarPrefs.get(`tipShownCount.${tip}`) < MAX_SHOWN_COUNT) {
+        this.disableTipsForCurrentSession = false;
+        break;
+      }
     }
+
     // Whether and what kind of tip we've shown in the current engagement.
     this.showedTipTypeInCurrentEngagement = TIPS.NONE;
+  }
+
+  /**
+   * Enum of the types of search tips.
+   */
+  get TIP_TYPE() {
+    return TIPS;
   }
 
   get PRIORITY() {
@@ -171,6 +182,7 @@ class ProviderSearchTips extends UrlbarProvider {
       UrlbarUtils.RESULT_TYPE.TIP,
       UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
       {
+        type: tip,
         buttonTextData: { id: "urlbar-search-tips-confirm" },
         icon: defaultEngine.iconURI.spec,
       }
@@ -200,6 +212,8 @@ class ProviderSearchTips extends UrlbarProvider {
     if (!this.queries.has(queryContext)) {
       return;
     }
+
+    Services.telemetry.keyedScalarAdd("urlbar.tips", `${tip}-shown`, 1);
 
     addCallback(this, result);
     this.queries.delete(queryContext);
@@ -240,23 +254,13 @@ class ProviderSearchTips extends UrlbarProvider {
       state == "engagement"
     ) {
       // The user either clicked the tip's "Okay, Got It" button, or they
-      // engaged with the urlbar while the tip was showing. We treat both as
-      // the user's acknowledgment of the tip, and we don't show tips again in any
+      // engaged with the urlbar while the tip was showing. We treat both as the
+      // user's acknowledgment of the tip, and we don't show tips again in any
       // session. Set the shown count to the max.
-      switch (this.showedTipTypeInCurrentEngagement) {
-        case TIPS.ONBOARD:
-          Services.prefs.setIntPref(
-            "browser.urlbar.searchTips.onboard.shownCount",
-            MAX_SHOWN_COUNT
-          );
-          break;
-        case TIPS.REDIRECT:
-          Services.prefs.setIntPref(
-            "browser.urlbar.searchTips.redirect.shownCount",
-            MAX_SHOWN_COUNT
-          );
-          break;
-      }
+      Services.prefs.setIntPref(
+        `browser.urlbar.tipShownCount.${this.showedTipTypeInCurrentEngagement}`,
+        MAX_SHOWN_COUNT
+      );
     }
     this.showedTipTypeInCurrentEngagement = TIPS.NONE;
   }
@@ -314,15 +318,12 @@ class ProviderSearchTips extends UrlbarProvider {
 
     // Determine which tip we should show for the tab.
     let tip;
-    let shownCountPrefName;
     let isNewtab = ["about:newtab", "about:home"].includes(urlStr);
     let isSearchHomepage = !isNewtab && (await isDefaultEngineHomepage(urlStr));
     if (isNewtab) {
       tip = TIPS.ONBOARD;
-      shownCountPrefName = "searchTips.onboard.shownCount";
     } else if (isSearchHomepage) {
       tip = TIPS.REDIRECT;
-      shownCountPrefName = "searchTips.redirect.shownCount";
     } else {
       // No tip.
       return;
@@ -334,7 +335,7 @@ class ProviderSearchTips extends UrlbarProvider {
 
     // If we've shown this type of tip the maximum number of times over all
     // sessions, don't show it again.
-    let shownCount = UrlbarPrefs.get(shownCountPrefName);
+    let shownCount = UrlbarPrefs.get(`tipShownCount.${tip}`);
     if (shownCount >= MAX_SHOWN_COUNT && !ignoreShowLimits) {
       return;
     }
@@ -346,7 +347,7 @@ class ProviderSearchTips extends UrlbarProvider {
 
     // Store the new shown count.
     Services.prefs.setIntPref(
-      `browser.urlbar.${shownCountPrefName}`,
+      `browser.urlbar.tipShownCount.${tip}`,
       shownCount + 1
     );
 

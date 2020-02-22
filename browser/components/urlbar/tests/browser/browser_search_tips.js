@@ -21,11 +21,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 // These should match the same consts in UrlbarProviderSearchTips.jsm.
 const MAX_SHOWN_COUNT = 4;
 const LAST_UPDATE_THRESHOLD_MS = 24 * 60 * 60 * 1000;
-const TIPS = {
-  NONE: "",
-  ONBOARD: "onboard",
-  REDIRECT: "redirect",
-};
 
 // We test some of the bigger Google domains.
 const GOOGLE_DOMAINS = [
@@ -43,8 +38,18 @@ add_task(async function init() {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["browser.urlbar.update1.searchTips", true],
-      ["browser.urlbar.searchTips.redirect.shownCount", 0],
-      ["browser.urlbar.searchTips.onboard.shownCount", 0],
+      [
+        `browser.urlbar.tipShownCount.${
+          UrlbarProviderSearchTips.TIP_TYPE.ONBOARD
+        }`,
+        0,
+      ],
+      [
+        `browser.urlbar.tipShownCount.${
+          UrlbarProviderSearchTips.TIP_TYPE.REDIRECT
+        }`,
+        0,
+      ],
     ],
   });
 
@@ -83,12 +88,20 @@ add_task(async function init() {
 
 // The onboarding tip should be shown on about:newtab.
 add_task(async function newtab() {
-  await checkTab(window, "about:newtab", TIPS.ONBOARD);
+  await checkTab(
+    window,
+    "about:newtab",
+    UrlbarProviderSearchTips.TIP_TYPE.ONBOARD
+  );
 });
 
 // The onboarding tip should be shown on about:home.
 add_task(async function home() {
-  await checkTab(window, "about:home", TIPS.ONBOARD);
+  await checkTab(
+    window,
+    "about:home",
+    UrlbarProviderSearchTips.TIP_TYPE.ONBOARD
+  );
 });
 
 // The redirect tip should be shown for www.google.com when it's the default
@@ -97,7 +110,7 @@ add_task(async function google() {
   await setDefaultEngine("Google");
   for (let domain of GOOGLE_DOMAINS) {
     await withDNSRedirect(domain, "/", async url => {
-      await checkTab(window, url, TIPS.REDIRECT);
+      await checkTab(window, url, UrlbarProviderSearchTips.TIP_TYPE.REDIRECT);
     });
   }
 });
@@ -108,7 +121,7 @@ add_task(async function googleWebhp() {
   await setDefaultEngine("Google");
   for (let domain of GOOGLE_DOMAINS) {
     await withDNSRedirect(domain, "/webhp", async url => {
-      await checkTab(window, url, TIPS.REDIRECT);
+      await checkTab(window, url, UrlbarProviderSearchTips.TIP_TYPE.REDIRECT);
     });
   }
 });
@@ -119,7 +132,11 @@ add_task(async function googleQueryString() {
   await setDefaultEngine("Google");
   for (let domain of GOOGLE_DOMAINS) {
     await withDNSRedirect(domain, "/webhp", async url => {
-      await checkTab(window, `${url}?hl=en`, TIPS.REDIRECT);
+      await checkTab(
+        window,
+        `${url}?hl=en`,
+        UrlbarProviderSearchTips.TIP_TYPE.REDIRECT
+      );
     });
   }
 });
@@ -129,7 +146,11 @@ add_task(async function googleResults() {
   await setDefaultEngine("Google");
   for (let domain of GOOGLE_DOMAINS) {
     await withDNSRedirect(domain, "/search", async url => {
-      await checkTab(window, `${url}?q=firefox`, TIPS.NONE);
+      await checkTab(
+        window,
+        `${url}?q=firefox`,
+        UrlbarProviderSearchTips.TIP_TYPE.NONE
+      );
     });
   }
 });
@@ -140,7 +161,7 @@ add_task(async function googleNotDefault() {
   await setDefaultEngine("Bing");
   for (let domain of GOOGLE_DOMAINS) {
     await withDNSRedirect(domain, "/", async url => {
-      await checkTab(window, url, TIPS.NONE);
+      await checkTab(window, url, UrlbarProviderSearchTips.TIP_TYPE.NONE);
     });
   }
 });
@@ -151,7 +172,7 @@ add_task(async function googleWebhpNotDefault() {
   await setDefaultEngine("Bing");
   for (let domain of GOOGLE_DOMAINS) {
     await withDNSRedirect(domain, "/webhp", async url => {
-      await checkTab(window, url, TIPS.NONE);
+      await checkTab(window, url, UrlbarProviderSearchTips.TIP_TYPE.NONE);
     });
   }
 });
@@ -161,7 +182,7 @@ add_task(async function googleWebhpNotDefault() {
 add_task(async function bing() {
   await setDefaultEngine("Bing");
   await withDNSRedirect("www.bing.com", "/", async url => {
-    await checkTab(window, url, TIPS.REDIRECT);
+    await checkTab(window, url, UrlbarProviderSearchTips.TIP_TYPE.REDIRECT);
   });
 });
 
@@ -170,7 +191,11 @@ add_task(async function bing() {
 add_task(async function bingQueryString() {
   await setDefaultEngine("Bing");
   await withDNSRedirect("www.bing.com", "/", async url => {
-    await checkTab(window, `${url}?toWww=1`, TIPS.REDIRECT);
+    await checkTab(
+      window,
+      `${url}?toWww=1`,
+      UrlbarProviderSearchTips.TIP_TYPE.REDIRECT
+    );
   });
 });
 
@@ -178,7 +203,11 @@ add_task(async function bingQueryString() {
 add_task(async function bingResults() {
   await setDefaultEngine("Bing");
   await withDNSRedirect("www.bing.com", "/search", async url => {
-    await checkTab(window, `${url}?q=firefox`, TIPS.NONE);
+    await checkTab(
+      window,
+      `${url}?q=firefox`,
+      UrlbarProviderSearchTips.TIP_TYPE.NONE
+    );
   });
 });
 
@@ -187,7 +216,7 @@ add_task(async function bingResults() {
 add_task(async function bingNotDefault() {
   await setDefaultEngine("Google");
   await withDNSRedirect("www.bing.com", "/", async url => {
-    await checkTab(window, url, TIPS.NONE);
+    await checkTab(window, url, UrlbarProviderSearchTips.TIP_TYPE.NONE);
   });
 });
 
@@ -196,7 +225,7 @@ add_task(async function bingNotDefault() {
 add_task(async function ddg() {
   await setDefaultEngine("DuckDuckGo");
   await withDNSRedirect("duckduckgo.com", "/", async url => {
-    await checkTab(window, url, TIPS.REDIRECT);
+    await checkTab(window, url, UrlbarProviderSearchTips.TIP_TYPE.REDIRECT);
   });
 });
 
@@ -205,7 +234,7 @@ add_task(async function ddg() {
 add_task(async function ddgStart() {
   await setDefaultEngine("DuckDuckGo");
   await withDNSRedirect("start.duckduckgo.com", "/", async url => {
-    await checkTab(window, url, TIPS.REDIRECT);
+    await checkTab(window, url, UrlbarProviderSearchTips.TIP_TYPE.REDIRECT);
   });
 });
 
@@ -214,7 +243,7 @@ add_task(async function ddgStart() {
 add_task(async function ddgNotDefault() {
   await setDefaultEngine("Google");
   await withDNSRedirect("duckduckgo.com", "/", async url => {
-    await checkTab(window, url, TIPS.NONE);
+    await checkTab(window, url, UrlbarProviderSearchTips.TIP_TYPE.NONE);
   });
 });
 
@@ -223,7 +252,7 @@ add_task(async function ddgNotDefault() {
 add_task(async function ddgStartNotDefault() {
   await setDefaultEngine("Google");
   await withDNSRedirect("start.duckduckgo.com", "/", async url => {
-    await checkTab(window, url, TIPS.NONE);
+    await checkTab(window, url, UrlbarProviderSearchTips.TIP_TYPE.NONE);
   });
 });
 
@@ -233,28 +262,45 @@ add_task(async function ddgStartNotDefault() {
 add_task(async function ddgSearchResultsPage() {
   await setDefaultEngine("DuckDuckGo");
   await withDNSRedirect("duckduckgo.com", "/", async url => {
-    await checkTab(window, `${url}?q=test`, TIPS.NONE);
+    await checkTab(
+      window,
+      `${url}?q=test`,
+      UrlbarProviderSearchTips.TIP_TYPE.NONE
+    );
   });
 });
 
 // The redirect tip should not be shown on a non-engine page.
 add_task(async function nonEnginePage() {
-  await checkTab(window, "http://example.com/", TIPS.NONE);
+  await checkTab(
+    window,
+    "http://example.com/",
+    UrlbarProviderSearchTips.TIP_TYPE.NONE
+  );
 });
 
 // Tips should be shown at most once per session regardless of their type.
 add_task(async function oncePerSession() {
   await setDefaultEngine("Google");
-  await checkTab(window, "about:newtab", TIPS.ONBOARD, false);
-  await checkTab(window, "about:newtab", TIPS.NONE, false);
+  await checkTab(
+    window,
+    "about:newtab",
+    UrlbarProviderSearchTips.TIP_TYPE.ONBOARD,
+    false
+  );
+  await checkTab(
+    window,
+    "about:newtab",
+    UrlbarProviderSearchTips.TIP_TYPE.NONE,
+    false
+  );
   await withDNSRedirect("www.google.com", "/", async url => {
-    await checkTab(window, url, TIPS.NONE);
+    await checkTab(window, url, UrlbarProviderSearchTips.TIP_TYPE.NONE);
   });
 });
 
 // Picking the tip's button should cause the Urlbar to blank out and the tip to
-// be not to be shown again in any session. An engagement event should be
-// recorded.
+// be not to be shown again in any session. Telemetry should be updated.
 add_task(async function pickButton_onboard() {
   UrlbarProviderSearchTips.disableTipsForCurrentSession = false;
   await SpecialPowers.pushPrefEnv({
@@ -267,7 +313,7 @@ add_task(async function pickButton_onboard() {
     url: "about:newtab",
     waitForLoad: false,
   });
-  await checkTip(window, TIPS.ONBOARD, false);
+  await checkTip(window, UrlbarProviderSearchTips.TIP_TYPE.ONBOARD, false);
 
   // Click the tip button.
   let result = await UrlbarTestUtils.getDetailsOfResultAt(window, 0);
@@ -276,6 +322,15 @@ add_task(async function pickButton_onboard() {
     EventUtils.synthesizeMouseAtCenter(button, {});
   });
   gURLBar.blur();
+
+  // Check telemetry.
+  const scalars = TelemetryTestUtils.getProcessScalars("parent", true, true);
+  TelemetryTestUtils.assertKeyedScalar(
+    scalars,
+    "urlbar.tips",
+    `${UrlbarProviderSearchTips.TIP_TYPE.ONBOARD}-picked`,
+    1
+  );
   TelemetryTestUtils.assertEvents(
     [
       {
@@ -289,7 +344,9 @@ add_task(async function pickButton_onboard() {
   );
 
   Assert.equal(
-    UrlbarPrefs.get("searchTips.onboard.shownCount"),
+    UrlbarPrefs.get(
+      `tipShownCount.${UrlbarProviderSearchTips.TIP_TYPE.ONBOARD}`
+    ),
     MAX_SHOWN_COUNT,
     "Onboarding tips are disabled after tip button is picked."
   );
@@ -301,8 +358,7 @@ add_task(async function pickButton_onboard() {
 });
 
 // Picking the tip's button should cause the Urlbar to blank out and the tip to
-// be not to be shown again in any session. An engagement event should be
-// recorded.
+// be not to be shown again in any session. Telemetry should be updated.
 add_task(async function pickButton_redirect() {
   UrlbarProviderSearchTips.disableTipsForCurrentSession = false;
   await SpecialPowers.pushPrefEnv({
@@ -315,7 +371,7 @@ add_task(async function pickButton_redirect() {
     await withDNSRedirect("www.google.com", "/", async url => {
       await BrowserTestUtils.loadURI(gBrowser.selectedBrowser, url);
       await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
-      await checkTip(window, TIPS.REDIRECT, false);
+      await checkTip(window, UrlbarProviderSearchTips.TIP_TYPE.REDIRECT, false);
 
       // Click the tip button.
       let result = await UrlbarTestUtils.getDetailsOfResultAt(window, 0);
@@ -327,6 +383,14 @@ add_task(async function pickButton_redirect() {
     });
   });
 
+  // Check telemetry.
+  const scalars = TelemetryTestUtils.getProcessScalars("parent", true, true);
+  TelemetryTestUtils.assertKeyedScalar(
+    scalars,
+    "urlbar.tips",
+    `${UrlbarProviderSearchTips.TIP_TYPE.REDIRECT}-picked`,
+    1
+  );
   TelemetryTestUtils.assertEvents(
     [
       {
@@ -340,7 +404,9 @@ add_task(async function pickButton_redirect() {
   );
 
   Assert.equal(
-    UrlbarPrefs.get("searchTips.redirect.shownCount"),
+    UrlbarPrefs.get(
+      `tipShownCount.${UrlbarProviderSearchTips.TIP_TYPE.REDIRECT}`
+    ),
     MAX_SHOWN_COUNT,
     "Redirect tips are disabled after tip button is picked."
   );
@@ -363,13 +429,22 @@ add_task(async function clickInInput_onboard() {
     url: "about:newtab",
     waitForLoad: false,
   });
-  await checkTip(window, TIPS.ONBOARD, false);
+  await checkTip(window, UrlbarProviderSearchTips.TIP_TYPE.ONBOARD, false);
 
   // Click in the input.
   await UrlbarTestUtils.promisePopupClose(window, () => {
     EventUtils.synthesizeMouseAtCenter(gURLBar.textbox.parentNode, {});
   });
   gURLBar.blur();
+
+  // Check telemetry.
+  const scalars = TelemetryTestUtils.getProcessScalars("parent", true, true);
+  TelemetryTestUtils.assertKeyedScalar(
+    scalars,
+    "urlbar.tips",
+    `${UrlbarProviderSearchTips.TIP_TYPE.ONBOARD}-picked`,
+    1
+  );
   TelemetryTestUtils.assertEvents(
     [
       {
@@ -383,7 +458,9 @@ add_task(async function clickInInput_onboard() {
   );
 
   Assert.equal(
-    UrlbarPrefs.get("searchTips.onboard.shownCount"),
+    UrlbarPrefs.get(
+      `tipShownCount.${UrlbarProviderSearchTips.TIP_TYPE.ONBOARD}`
+    ),
     MAX_SHOWN_COUNT,
     "Onboarding tips are disabled after tip button is picked."
   );
@@ -408,13 +485,22 @@ add_task(async function openLocation_onboard() {
     url: "about:newtab",
     waitForLoad: false,
   });
-  await checkTip(window, TIPS.ONBOARD, false);
+  await checkTip(window, UrlbarProviderSearchTips.TIP_TYPE.ONBOARD, false);
 
   // Trigger the open location command.
   await UrlbarTestUtils.promisePopupClose(window, () => {
     document.getElementById("Browser:OpenLocation").doCommand();
   });
   gURLBar.blur();
+
+  // Check telemetry.
+  const scalars = TelemetryTestUtils.getProcessScalars("parent", true, true);
+  TelemetryTestUtils.assertKeyedScalar(
+    scalars,
+    "urlbar.tips",
+    `${UrlbarProviderSearchTips.TIP_TYPE.ONBOARD}-picked`,
+    1
+  );
   TelemetryTestUtils.assertEvents(
     [
       {
@@ -428,7 +514,9 @@ add_task(async function openLocation_onboard() {
   );
 
   Assert.equal(
-    UrlbarPrefs.get("searchTips.onboard.shownCount"),
+    UrlbarPrefs.get(
+      `tipShownCount.${UrlbarProviderSearchTips.TIP_TYPE.ONBOARD}`
+    ),
     MAX_SHOWN_COUNT,
     "Onboarding tips are disabled after tip button is picked."
   );
@@ -453,7 +541,7 @@ add_task(async function clickInInput_redirect() {
     await withDNSRedirect("www.google.com", "/", async url => {
       await BrowserTestUtils.loadURI(gBrowser.selectedBrowser, url);
       await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
-      await checkTip(window, TIPS.REDIRECT, false);
+      await checkTip(window, UrlbarProviderSearchTips.TIP_TYPE.REDIRECT, false);
 
       // Click in the input.
       await UrlbarTestUtils.promisePopupClose(window, () => {
@@ -463,6 +551,14 @@ add_task(async function clickInInput_redirect() {
     });
   });
 
+  // Check telemetry.
+  const scalars = TelemetryTestUtils.getProcessScalars("parent", true, true);
+  TelemetryTestUtils.assertKeyedScalar(
+    scalars,
+    "urlbar.tips",
+    `${UrlbarProviderSearchTips.TIP_TYPE.REDIRECT}-picked`,
+    1
+  );
   TelemetryTestUtils.assertEvents(
     [
       {
@@ -476,7 +572,9 @@ add_task(async function clickInInput_redirect() {
   );
 
   Assert.equal(
-    UrlbarPrefs.get("searchTips.redirect.shownCount"),
+    UrlbarPrefs.get(
+      `tipShownCount.${UrlbarProviderSearchTips.TIP_TYPE.REDIRECT}`
+    ),
     MAX_SHOWN_COUNT,
     "Redirect tips are disabled after tip button is picked."
   );
@@ -499,7 +597,7 @@ add_task(async function openLocation_redirect() {
     await withDNSRedirect("www.google.com", "/", async url => {
       await BrowserTestUtils.loadURI(gBrowser.selectedBrowser, url);
       await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
-      await checkTip(window, TIPS.REDIRECT, false);
+      await checkTip(window, UrlbarProviderSearchTips.TIP_TYPE.REDIRECT, false);
 
       // Trigger the open location command.
       await UrlbarTestUtils.promisePopupClose(window, () => {
@@ -509,6 +607,14 @@ add_task(async function openLocation_redirect() {
     });
   });
 
+  // Check telemetry.
+  const scalars = TelemetryTestUtils.getProcessScalars("parent", true, true);
+  TelemetryTestUtils.assertKeyedScalar(
+    scalars,
+    "urlbar.tips",
+    `${UrlbarProviderSearchTips.TIP_TYPE.REDIRECT}-picked`,
+    1
+  );
   TelemetryTestUtils.assertEvents(
     [
       {
@@ -522,7 +628,9 @@ add_task(async function openLocation_redirect() {
   );
 
   Assert.equal(
-    UrlbarPrefs.get("searchTips.redirect.shownCount"),
+    UrlbarPrefs.get(
+      `tipShownCount.${UrlbarProviderSearchTips.TIP_TYPE.REDIRECT}`
+    ),
     MAX_SHOWN_COUNT,
     "Redirect tips are disabled after tip button is picked."
   );
@@ -538,7 +646,7 @@ add_task(async function pickingTipDoesNotDisableOtherKinds() {
     url: "about:newtab",
     waitForLoad: false,
   });
-  await checkTip(window, TIPS.ONBOARD, false);
+  await checkTip(window, UrlbarProviderSearchTips.TIP_TYPE.ONBOARD, false);
 
   // Click the tip button.
   let result = await UrlbarTestUtils.getDetailsOfResultAt(window, 0);
@@ -549,7 +657,9 @@ add_task(async function pickingTipDoesNotDisableOtherKinds() {
 
   gURLBar.blur();
   Assert.equal(
-    UrlbarPrefs.get("searchTips.onboard.shownCount"),
+    UrlbarPrefs.get(
+      `tipShownCount.${UrlbarProviderSearchTips.TIP_TYPE.ONBOARD}`
+    ),
     MAX_SHOWN_COUNT,
     "Onboarding tips are disabled after tip button is picked."
   );
@@ -565,11 +675,11 @@ add_task(async function pickingTipDoesNotDisableOtherKinds() {
     url: "about:newtab",
     waitForLoad: false,
   });
-  await checkTip(window, TIPS.NONE);
+  await checkTip(window, UrlbarProviderSearchTips.TIP_TYPE.NONE);
 
   // We should still show redirect tips.
   await withDNSRedirect("www.google.com", "/", async url => {
-    await checkTab(window, url, TIPS.REDIRECT);
+    await checkTab(window, url, UrlbarProviderSearchTips.TIP_TYPE.REDIRECT);
   });
 
   BrowserTestUtils.removeTab(tab2);
@@ -594,7 +704,7 @@ add_task(async function notification() {
     await withDNSRedirect("www.google.com", "/", async url => {
       await BrowserTestUtils.loadURI(gBrowser.selectedBrowser, url);
       await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
-      await checkTip(window, TIPS.NONE);
+      await checkTip(window, UrlbarProviderSearchTips.TIP_TYPE.NONE);
       box.removeNotification(note, true);
     });
   });
@@ -605,8 +715,9 @@ add_task(async function notification() {
 add_task(async function tabSwitch() {
   let tab = BrowserTestUtils.addTab(gBrowser, "about:newtab");
   UrlbarProviderSearchTips.disableTipsForCurrentSession = false;
+  Services.telemetry.clearScalars();
   await BrowserTestUtils.switchTab(gBrowser, tab);
-  await checkTip(window, TIPS.ONBOARD);
+  await checkTip(window, UrlbarProviderSearchTips.TIP_TYPE.ONBOARD);
   BrowserTestUtils.removeTab(tab);
   resetProvider();
 });
@@ -619,7 +730,7 @@ add_task(async function ignoreEndsEngagement() {
     await withDNSRedirect("www.google.com", "/", async url => {
       await BrowserTestUtils.loadURI(gBrowser.selectedBrowser, url);
       await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
-      await checkTip(window, TIPS.REDIRECT, /* closeView */ false);
+      await checkTip(window, UrlbarProviderSearchTips.TIP_TYPE.REDIRECT, false);
       // We're just looking for any target outside the Urlbar.
       let spring = gURLBar.inputField
         .closest("#nav-bar")
@@ -628,7 +739,8 @@ add_task(async function ignoreEndsEngagement() {
         await EventUtils.synthesizeMouseAtCenter(spring, {});
       });
       Assert.ok(
-        UrlbarProviderSearchTips.showedTipTypeInCurrentEngagement == TIPS.NONE,
+        UrlbarProviderSearchTips.showedTipTypeInCurrentEngagement ==
+          UrlbarProviderSearchTips.TIP_TYPE.NONE,
         "The engagement should have ended after the tip was ignored."
       );
     });
@@ -642,7 +754,7 @@ add_task(async function ignoreEndsEngagement() {
 add_task(async function noActionWhenDisabled() {
   await setDefaultEngine("Bing");
   await withDNSRedirect("www.bing.com", "/", async url => {
-    await checkTab(window, url, TIPS.REDIRECT);
+    await checkTab(window, url, UrlbarProviderSearchTips.TIP_TYPE.REDIRECT);
   });
 
   await SpecialPowers.pushPrefEnv({
@@ -683,13 +795,13 @@ async function checkTip(win, expectedTip, closeView = true) {
   let title;
   let name = Services.search.defaultEngine.name;
   switch (expectedTip) {
-    case TIPS.ONBOARD:
+    case UrlbarProviderSearchTips.TIP_TYPE.ONBOARD:
       heuristic = true;
       title =
         `Type less, find more: Search ${name} right from your ` +
         `address bar.`;
       break;
-    case TIPS.REDIRECT:
+    case UrlbarProviderSearchTips.TIP_TYPE.REDIRECT:
       heuristic = false;
       title =
         `Start your search here to see suggestions from ${name} ` +
@@ -706,6 +818,14 @@ async function checkTip(win, expectedTip, closeView = true) {
     BrowserTestUtils.is_hidden(result.element.row._elements.get("helpButton"))
   );
 
+  const scalars = TelemetryTestUtils.getProcessScalars("parent", true, true);
+  TelemetryTestUtils.assertKeyedScalar(
+    scalars,
+    "urlbar.tips",
+    `${expectedTip}-shown`,
+    1
+  );
+
   if (closeView) {
     await UrlbarTestUtils.promisePopupClose(win);
   }
@@ -716,7 +836,7 @@ async function checkTab(win, url, expectedTip, reset = true) {
   // about:newtab for some reason, so don't use it.
   let shownCount;
   if (expectedTip) {
-    shownCount = UrlbarPrefs.get(`searchTips.${expectedTip}.shownCount`);
+    shownCount = UrlbarPrefs.get(`tipShownCount.${expectedTip}`);
   }
 
   let tab = await BrowserTestUtils.openNewForegroundTab({
@@ -728,7 +848,7 @@ async function checkTab(win, url, expectedTip, reset = true) {
   await checkTip(win, expectedTip, true);
   if (expectedTip) {
     Assert.equal(
-      UrlbarPrefs.get(`searchTips.${expectedTip}.shownCount`),
+      UrlbarPrefs.get(`tipShownCount.${expectedTip}`),
       shownCount + 1,
       "The shownCount pref should have been incremented by one."
     );
@@ -799,8 +919,12 @@ async function withDNSRedirect(domain, path, callback) {
 }
 
 function resetProvider() {
-  Services.prefs.setIntPref("browser.urlbar.searchTips.onboard.shownCount", 0);
-  Services.prefs.setIntPref("browser.urlbar.searchTips.redirect.shownCount", 0);
+  Services.prefs.clearUserPref(
+    `browser.urlbar.tipShownCount.${UrlbarProviderSearchTips.TIP_TYPE.ONBOARD}`
+  );
+  Services.prefs.clearUserPref(
+    `browser.urlbar.tipShownCount.${UrlbarProviderSearchTips.TIP_TYPE.REDIRECT}`
+  );
   UrlbarProviderSearchTips.disableTipsForCurrentSession = false;
 }
 
