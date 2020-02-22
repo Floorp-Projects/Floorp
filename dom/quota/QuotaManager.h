@@ -327,6 +327,11 @@ class QuotaManager final : public BackgroundThreadObject {
   template <typename P>
   void CollectPendingOriginsForListing(P aPredicate);
 
+  bool IsStorageInitialized() const {
+    AssertIsOnIOThread();
+    return static_cast<bool>(mStorageConnection);
+  }
+
   void AssertStorageIsInitialized() const
 #ifdef DEBUG
       ;

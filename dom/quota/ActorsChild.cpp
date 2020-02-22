@@ -304,6 +304,14 @@ mozilla::ipc::IPCResult QuotaRequestChild::Recv__delete__(
       HandleResponse(aResponse.get_nsresult());
       break;
 
+    case RequestResponse::TStorageInitializedResponse:
+      HandleResponse(aResponse.get_StorageInitializedResponse().initialized());
+      break;
+
+    case RequestResponse::TTemporaryStorageInitializedResponse:
+      HandleResponse(aResponse.get_TemporaryStorageInitializedResponse().initialized());
+      break;
+
     case RequestResponse::TInitResponse:
     case RequestResponse::TInitTemporaryStorageResponse:
     case RequestResponse::TClearOriginResponse:
