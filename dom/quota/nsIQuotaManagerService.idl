@@ -94,14 +94,10 @@ interface nsIQuotaManagerService : nsISupports
                        [optional] in boolean aFromMemory);
 
   /**
-   * Schedules an asynchronous callback that will inspect all origins and
-   * just returns the origin strings of origins.
-   *
-   * @param aCallback
-   *        The callback that will be called when the origin is collected.
+   * Asynchronously lists all origins and returns them as plain strings.
    */
   [must_use] nsIQuotaRequest
-  listOrigins(in nsIQuotaCallback aCallback);
+  listOrigins();
 
   /**
    * Removes all storages. The files may not be deleted immediately depending
