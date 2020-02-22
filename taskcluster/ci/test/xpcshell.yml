@@ -64,7 +64,7 @@ xpcshell:
             windows10-aarch64/.*: 3600
             windows(7-32|10-64)(-shippable)?/opt: 5400
             .*-ccov/.*: 5400
-            .*-tsan/opt: 5400
+            .*-tsan/opt: 7200
             default: 2700
     allow-software-gl-layers: false
     tier:
