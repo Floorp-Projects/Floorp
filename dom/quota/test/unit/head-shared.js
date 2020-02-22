@@ -116,6 +116,20 @@ function resetGlobalLimit() {
   SpecialPowers.clearUserPref("dom.quotaManager.temporaryStorage.fixedLimit");
 }
 
+function storageInitialized(callback) {
+  let request = SpecialPowers._getQuotaManager().storageInitialized();
+  request.callback = callback;
+
+  return request;
+}
+
+function temporaryStorageInitialized(callback) {
+  let request = SpecialPowers._getQuotaManager().temporaryStorageInitialized();
+  request.callback = callback;
+
+  return request;
+}
+
 function init(callback) {
   let request = SpecialPowers._getQuotaManager().init();
   request.callback = callback;
@@ -679,4 +693,40 @@ function verifyStorage(packageDefinitionRelativePaths, key) {
   log("Stringified expected entries: " + JSON.stringify(expectedEntries));
 
   compareEntries(currentEntries, expectedEntries, key);
+}
+
+async function verifyInitializationStatus(
+  expectStorageIsInitialized,
+  expectTemporaryStorageIsInitialized
+) {
+  if (!expectStorageIsInitialized && expectTemporaryStorageIsInitialized) {
+    throw new Error("Invalid expectation");
+  }
+
+  let request = storageInitialized();
+  await requestFinished(request);
+
+  const storageIsInitialized = request.result;
+
+  request = temporaryStorageInitialized();
+  await requestFinished(request);
+
+  const temporaryStorageIsInitialized = request.result;
+
+  ok(
+    !(!storageIsInitialized && temporaryStorageIsInitialized),
+    "Initialization status is consistent"
+  );
+
+  if (expectStorageIsInitialized) {
+    ok(storageIsInitialized, "Storage is initialized");
+  } else {
+    ok(!storageIsInitialized, "Storage is not initialized");
+  }
+
+  if (expectTemporaryStorageIsInitialized) {
+    ok(temporaryStorageIsInitialized, "Temporary storage is initialized");
+  } else {
+    ok(!temporaryStorageIsInitialized, "Temporary storage is not initialized");
+  }
 }

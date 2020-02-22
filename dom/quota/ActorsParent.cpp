@@ -1487,6 +1487,35 @@ class QuotaRequestBase : public NormalOriginOperationBase,
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 };
 
+class InitializedRequestBase : public QuotaRequestBase {
+ protected:
+  bool mInitialized;
+
+ public:
+  bool Init(Quota* aQuota) override;
+
+ protected:
+  InitializedRequestBase();
+};
+
+class StorageInitializedOp final : public InitializedRequestBase {
+ private:
+  ~StorageInitializedOp() = default;
+
+  nsresult DoDirectoryWork(QuotaManager* aQuotaManager) override;
+
+  void GetResponse(RequestResponse& aResponse) override;
+};
+
+class TemporaryStorageInitializedOp final : public InitializedRequestBase {
+ private:
+  ~TemporaryStorageInitializedOp() = default;
+
+  nsresult DoDirectoryWork(QuotaManager* aQuotaManager) override;
+
+  void GetResponse(RequestResponse& aResponse) override;
+};
+
 class InitOp final : public QuotaRequestBase {
  public:
   InitOp() : QuotaRequestBase(/* aExclusive */ false) {
@@ -6234,7 +6263,7 @@ nsresult QuotaManager::UpgradeLocalStorageArchiveFrom4To5(
 
 void QuotaManager::AssertStorageIsInitialized() const {
   AssertIsOnIOThread();
-  MOZ_ASSERT(mStorageConnection);
+  MOZ_ASSERT(IsStorageInitialized());
 }
 
 #endif  // DEBUG
@@ -8503,6 +8532,8 @@ bool Quota::VerifyRequestParams(const RequestParams& aParams) const {
   MOZ_ASSERT(aParams.type() != RequestParams::T__None);
 
   switch (aParams.type()) {
+    case RequestParams::TStorageInitializedParams:
+    case RequestParams::TTemporaryStorageInitializedParams:
     case RequestParams::TInitParams:
     case RequestParams::TInitTemporaryStorageParams:
       break;
@@ -8695,6 +8726,14 @@ PQuotaRequestParent* Quota::AllocPQuotaRequestParent(
   RefPtr<QuotaRequestBase> actor;
 
   switch (aParams.type()) {
+    case RequestParams::TStorageInitializedParams:
+      actor = new StorageInitializedOp();
+      break;
+
+    case RequestParams::TTemporaryStorageInitializedParams:
+      actor = new TemporaryStorageInitializedOp();
+      break;
+
     case RequestParams::TInitParams:
       actor = new InitOp();
       break;
@@ -9318,6 +9357,65 @@ void QuotaRequestBase::ActorDestroy(ActorDestroyReason aWhy) {
   AssertIsOnOwningThread();
 
   NoteActorDestroyed();
+}
+
+InitializedRequestBase::InitializedRequestBase()
+    : QuotaRequestBase(/* aExclusive */ false), mInitialized(false) {
+  AssertIsOnOwningThread();
+
+  // Overwrite NormalOriginOperationBase default values.
+  mNeedsDirectoryLocking = false;
+
+  // Overwrite OriginOperationBase default values.
+  mNeedsQuotaManagerInit = true;
+  mNeedsStorageInit = false;
+}
+
+bool InitializedRequestBase::Init(Quota* aQuota) {
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(aQuota);
+
+  return true;
+}
+
+nsresult StorageInitializedOp::DoDirectoryWork(QuotaManager* aQuotaManager) {
+  AssertIsOnIOThread();
+
+  AUTO_PROFILER_LABEL("StorageInitializedOp::DoDirectoryWork", OTHER);
+
+  mInitialized = aQuotaManager->IsStorageInitialized();
+
+  return NS_OK;
+}
+
+void StorageInitializedOp::GetResponse(RequestResponse& aResponse) {
+  AssertIsOnOwningThread();
+
+  StorageInitializedResponse storageInitializedResponse;
+
+  storageInitializedResponse.initialized() = mInitialized;
+
+  aResponse = storageInitializedResponse;
+}
+
+nsresult TemporaryStorageInitializedOp::DoDirectoryWork(QuotaManager* aQuotaManager) {
+  AssertIsOnIOThread();
+
+  AUTO_PROFILER_LABEL("TemporaryStorageInitializedOp::DoDirectoryWork", OTHER);
+
+  mInitialized = aQuotaManager->IsTemporaryStorageInitialized();
+
+  return NS_OK;
+}
+
+void TemporaryStorageInitializedOp::GetResponse(RequestResponse& aResponse) {
+  AssertIsOnOwningThread();
+
+  TemporaryStorageInitializedResponse temporaryStorageInitializedResponse;
+
+  temporaryStorageInitializedResponse.initialized() = mInitialized;
+
+  aResponse = temporaryStorageInitializedResponse;
 }
 
 nsresult InitOp::DoDirectoryWork(QuotaManager* aQuotaManager) {
