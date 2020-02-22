@@ -609,7 +609,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "112ae99c38eb"
+        "revision": "ab83cddf15a3"
     },
     "gl": {
         "platforms": [
@@ -845,14 +845,14 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "24c81e77d0c7"
+        "revision": "42158db01d1b"
     },
     "ja-JP-mac": {
         "platforms": [
             "macosx64",
             "macosx64-devedition"
         ],
-        "revision": "774521efe74a"
+        "revision": "8c5114c84bb7"
     },
     "ka": {
         "platforms": [
