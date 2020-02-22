@@ -617,7 +617,7 @@ void gfxDWriteFontEntry::GetVariationAxes(
 
 void gfxDWriteFontEntry::GetVariationInstances(
     nsTArray<gfxFontVariationInstance>& aInstances) {
-  gfxFontUtils::GetVariationInstances(this, aInstances);
+  gfxFontUtils::GetVariationData(this, nullptr, &aInstances);
 }
 
 gfxFont* gfxDWriteFontEntry::CreateFontInstance(

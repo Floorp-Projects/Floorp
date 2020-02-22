@@ -1721,9 +1721,11 @@ bool gfxFontUtils::GetColorGlyphLayers(hb_blob_t* aCOLR, hb_blob_t* aCPAL,
   return true;
 }
 
-void gfxFontUtils::GetVariationInstances(
-    gfxFontEntry* aFontEntry, nsTArray<gfxFontVariationInstance>& aInstances) {
-  MOZ_ASSERT(aInstances.IsEmpty());
+void gfxFontUtils::GetVariationData(
+    gfxFontEntry* aFontEntry, nsTArray<gfxFontVariationAxis>* aAxes,
+    nsTArray<gfxFontVariationInstance>* aInstances) {
+  MOZ_ASSERT(!aAxes || aAxes->IsEmpty());
+  MOZ_ASSERT(!aInstances || aInstances->IsEmpty());
 
   if (!aFontEntry->HasVariations()) {
     return;
@@ -1753,6 +1755,7 @@ void gfxFontUtils::GetVariationInstances(
     AutoSwap_PRUint16 flags;
     AutoSwap_PRUint16 axisNameID;
   };
+  const uint16_t HIDDEN_AXIS = 0x0001;  // AxisRecord flags value
 
   // https://www.microsoft.com/typography/otspec/fvar.htm#instanceRecord
   struct InstanceRecord {
@@ -1827,30 +1830,51 @@ void gfxFontUtils::GetVariationInstances(
   if (instData + uint32_t(instanceCount) * instanceSize > data + len) {
     return;
   }
-  aInstances.SetCapacity(instanceCount);
-  for (unsigned i = 0; i < instanceCount; ++i, instData += instanceSize) {
-    // Typed pointer to the current instance record, to read its fields.
-    auto inst = reinterpret_cast<const InstanceRecord*>(instData);
-    // Pointer to the coordinates array within the instance record.
-    // This array has axisCount elements, and is included in instanceSize
-    // (which depends on axisCount, and was validated above) so we know
-    // access to coords[j] below will not be outside the table bounds.
-    auto coords = &inst->coordinates[0];
-    gfxFontVariationInstance instance;
-    uint16_t nameID = inst->subfamilyNameID;
-    nsresult rv = ReadCanonicalName(nameTable, nameID, instance.mName);
-    if (NS_FAILED(rv)) {
-      // If no name was available for the instance, ignore it.
-      continue;
+  if (aInstances) {
+    aInstances->SetCapacity(instanceCount);
+    for (unsigned i = 0; i < instanceCount; ++i, instData += instanceSize) {
+      // Typed pointer to the current instance record, to read its fields.
+      auto inst = reinterpret_cast<const InstanceRecord*>(instData);
+      // Pointer to the coordinates array within the instance record.
+      // This array has axisCount elements, and is included in instanceSize
+      // (which depends on axisCount, and was validated above) so we know
+      // access to coords[j] below will not be outside the table bounds.
+      auto coords = &inst->coordinates[0];
+      gfxFontVariationInstance instance;
+      uint16_t nameID = inst->subfamilyNameID;
+      nsresult rv = ReadCanonicalName(nameTable, nameID, instance.mName);
+      if (NS_FAILED(rv)) {
+        // If no name was available for the instance, ignore it.
+        continue;
+      }
+      instance.mValues.SetCapacity(axisCount);
+      for (unsigned j = 0; j < axisCount; ++j) {
+        gfxFontVariationValue value = {axes[j].axisTag,
+                                       int32_t(coords[j]) / 65536.0f};
+        instance.mValues.AppendElement(value);
+      }
+      aInstances->AppendElement(instance);
     }
-    instance.mValues.SetCapacity(axisCount);
-    for (unsigned j = 0; j < axisCount; ++j) {
-      gfxFontVariationValue value;
-      value.mAxis = axes[j].axisTag;
-      value.mValue = int32_t(coords[j]) / 65536.0;
-      instance.mValues.AppendElement(value);
+  }
+  if (aAxes) {
+    aAxes->SetCapacity(axisCount);
+    for (unsigned i = 0; i < axisCount; ++i) {
+      if (uint16_t(axes[i].flags) & HIDDEN_AXIS) {
+        continue;
+      }
+      gfxFontVariationAxis axis;
+      axis.mTag = axes[i].axisTag;
+      uint16_t nameID = axes[i].axisNameID;
+      nsresult rv = ReadCanonicalName(nameTable, nameID, axis.mName);
+      if (NS_FAILED(rv)) {
+        axis.mName.Truncate(0);
+      }
+      // Convert values from 16.16 fixed-point to float
+      axis.mMinValue = int32_t(axes[i].minValue) / 65536.0f;
+      axis.mDefaultValue = int32_t(axes[i].defaultValue) / 65536.0f;
+      axis.mMaxValue = int32_t(axes[i].maxValue) / 65536.0f;
+      aAxes->AppendElement(axis);
     }
-    aInstances.AppendElement(instance);
   }
 }
 

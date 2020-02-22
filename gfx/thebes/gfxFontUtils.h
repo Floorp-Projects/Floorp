@@ -1165,13 +1165,14 @@ class gfxFontUtils {
                                   nsTArray<uint16_t>& aGlyphs,
                                   nsTArray<mozilla::gfx::Color>& aColors);
 
-  // Helper used to implement gfxFontEntry::GetVariationInstances for
+  // Helper used to implement gfxFontEntry::GetVariation{Axes,Instances} for
   // platforms where the native font APIs don't provide the info we want
-  // in a convenient form.
+  // in a convenient form, or when native APIs are too expensive.
   // (Not used on platforms -- currently, freetype -- where the font APIs
   // expose variation instance details directly.)
-  static void GetVariationInstances(
-      gfxFontEntry* aFontEntry, nsTArray<gfxFontVariationInstance>& aInstances);
+  static void GetVariationData(gfxFontEntry* aFontEntry,
+                               nsTArray<gfxFontVariationAxis>* aAxes,
+                               nsTArray<gfxFontVariationInstance>* aInstances);
 
   // Helper method for reading localized family names from the name table
   // of a single face.
