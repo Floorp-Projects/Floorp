@@ -4,6 +4,10 @@
 
 "use strict";
 
+const { AddonSettings } = ChromeUtils.import(
+  "resource://gre/modules/addons/AddonSettings.jsm"
+);
+
 // We refer to addons that were sideloaded prior to disabling sideloading as legacy.  We
 // determine that they are legacy because they are in a SCOPE that is not included
 // in AddonSettings.SCOPES_SIDELOAD.
@@ -27,6 +31,7 @@
 let legacyIDs = [
   getID(`legacy-global`),
   getID(`legacy-user`),
+  getID(`legacy-app`),
   getID(`legacy-profile`),
 ];
 
@@ -44,7 +49,7 @@ add_task(async function test_sideloads_legacy() {
 
   // SCOPE_APPLICATION will never sideload, so we expect 3 addons.
   let sideloaded = await AddonManagerPrivate.getNewSideloads();
-  Assert.equal(sideloaded.length, 3, "three sideloaded addon");
+  Assert.equal(sideloaded.length, 4, "four sideloaded addons");
   let sideloadedIds = sideloaded.map(a => a.id);
   for (let id of legacyIDs) {
     Assert.ok(sideloadedIds.includes(id), `${id} is sideloaded`);
@@ -62,6 +67,11 @@ add_task(async function test_sideloads_legacy() {
 add_task(async function test_sideloads_disabled() {
   // First, reset our scope pref to disable sideloading.
   Services.prefs.clearUserPref("extensions.sideloadScopes");
+  Assert.equal(
+    AddonManager.SCOPE_PROFILE,
+    AddonSettings.SCOPES_SIDELOAD,
+    "sideload limited to profile"
+  );
 
   // Create 4 new addons, only one of these, "profile" should
   // sideload.
@@ -99,7 +109,11 @@ add_task(async function test_sideloads_disabled() {
   // Test that we still have the 3 legacy addons from the prior test, plus
   // the new "profile" addon from this test.
   let extensionAddons = await AddonManager.getAddonsByTypes(["extension"]);
-  Assert.equal(extensionAddons.length, 4);
+  Assert.equal(
+    extensionAddons.length,
+    5,
+    "five addons expected to be installed"
+  );
   let IDs = extensionAddons.map(ext => ext.id);
   for (let id of [getID("profile"), ...legacyIDs]) {
     Assert.ok(IDs.includes(id), `${id} is installed`);
@@ -120,7 +134,7 @@ add_task(async function test_sideloads_changed() {
 
   await promiseStartupManager();
   let addons = await AddonManager.getAddonsByTypes(["extension"]);
-  Assert.equal(addons.length, 4, "addons installed");
+  Assert.equal(addons.length, 5, "addons installed");
 
   check_startup_changes(AddonManager.STARTUP_CHANGE_INSTALLED, []);
   check_startup_changes(AddonManager.STARTUP_CHANGE_CHANGED, [
@@ -151,7 +165,7 @@ add_task(async function test_sideload_removal() {
 add_task(async function test_sideload_uninstall() {
   await promiseStartupManager();
   let addons = await AddonManager.getAddonsByTypes(["extension"]);
-  Assert.equal(addons.length, 3, "addons installed");
+  Assert.equal(addons.length, 4, "addons installed");
   for (let addon of addons) {
     let file = AddonTestUtils.getFileForAddon(
       scopeToDir.get(addon.scope),
