@@ -13,5 +13,15 @@ import mozilla.components.feature.search.BrowserStoreSearchAdapter
  * More convenient secondary constructor for creating a [DefaultSelectionActionDelegate].
  */
 @Suppress("FunctionName")
-fun DefaultSelectionActionDelegate(store: BrowserStore, context: Context, appName: String) =
-    DefaultSelectionActionDelegate(BrowserStoreSearchAdapter(store), context.resources, appName)
+fun DefaultSelectionActionDelegate(
+    store: BrowserStore,
+    context: Context,
+    appName: String,
+    shareTextClicked: ((String) -> Unit)? = null
+) =
+    DefaultSelectionActionDelegate(
+        BrowserStoreSearchAdapter(store),
+        context.resources,
+        appName,
+        shareTextClicked
+    )

@@ -22,6 +22,9 @@ permalink: /changelog/
   * ⚠️ **This is a breaking change**: Refactored component to use `browser-state` instead of `browser-session`.
   * Added additional method to `TabsUseCases` to select a tab based on its id.
 
+* **feature-contextmenu**
+  * Adds optional `shareTextClicked` lambda to `DefaultSelectionActionDelegate` which allows adding and dispatching a text selection share action
+
 * **browser-icons**
   * ⚠️ **This is a breaking change**: Migrated this component to use `browser-state` instead of `browser-session`. It is now required to pass a `BrowserStore` instance (instead of `SessionManager`) to `BrowserIcons.install()`.
 
