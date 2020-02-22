@@ -26,7 +26,7 @@ struct LoadSHEntryData
 
 union LoadSHEntryResult {
   nsresult;
-  LoadSHEntryData;
+  LoadSHEntryData[];
 };
 
 sync protocol PSHistory {

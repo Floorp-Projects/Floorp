@@ -24,13 +24,19 @@ LegacySHistory::LegacySHistory(SHistoryParent* aSHistoryParent,
   aRootBC->SetSessionHistory(this);
 }
 
-static void FillInLoadResult(nsresult aRv,
-                             const nsSHistory::LoadEntryResult& aLoadResult,
-                             LoadSHEntryResult* aResult) {
+static void FillInLoadResult(
+    nsresult aRv, const nsTArray<nsSHistory::LoadEntryResult>& aLoadResults,
+    LoadSHEntryResult* aResult) {
   if (NS_SUCCEEDED(aRv)) {
-    *aResult = LoadSHEntryData(
-        static_cast<LegacySHEntry*>(aLoadResult.mLoadState->SHEntry()),
-        aLoadResult.mBrowsingContext, aLoadResult.mLoadState);
+    nsTArray<LoadSHEntryData> data;
+    data.SetCapacity(aLoadResults.Length());
+    for (const nsSHistory::LoadEntryResult& l : aLoadResults) {
+      data.AppendElement(
+          LoadSHEntryData(static_cast<LegacySHEntry*>(l.mLoadState->SHEntry()),
+                          l.mBrowsingContext, l.mLoadState));
+    }
+
+    *aResult = data;
   } else {
     *aResult = aRv;
   }
@@ -95,12 +101,10 @@ bool SHistoryParent::RecvPurgeHistory(int32_t aNumEntries, nsresult* aResult) {
 }
 
 bool SHistoryParent::RecvReloadCurrentEntry(LoadSHEntryResult* aLoadResult) {
-  nsSHistory::LoadEntryResult loadResult;
-  nsresult rv = mHistory->ReloadCurrentEntry(loadResult);
+  nsTArray<nsSHistory::LoadEntryResult> loadResults;
+  nsresult rv = mHistory->ReloadCurrentEntry(loadResults);
   if (NS_SUCCEEDED(rv)) {
-    *aLoadResult = LoadSHEntryData(
-        static_cast<LegacySHEntry*>(loadResult.mLoadState->SHEntry()),
-        loadResult.mBrowsingContext, loadResult.mLoadState);
+    FillInLoadResult(rv, loadResults, aLoadResult);
   } else {
     *aLoadResult = rv;
   }
@@ -109,9 +113,9 @@ bool SHistoryParent::RecvReloadCurrentEntry(LoadSHEntryResult* aLoadResult) {
 
 bool SHistoryParent::RecvGotoIndex(int32_t aIndex,
                                    LoadSHEntryResult* aLoadResult) {
-  nsSHistory::LoadEntryResult loadResult;
-  nsresult rv = mHistory->GotoIndex(aIndex, loadResult);
-  FillInLoadResult(rv, loadResult, aLoadResult);
+  nsTArray<nsSHistory::LoadEntryResult> loadResults;
+  nsresult rv = mHistory->GotoIndex(aIndex, loadResults);
+  FillInLoadResult(rv, loadResults, aLoadResult);
   return true;
 }
 
@@ -193,12 +197,12 @@ bool SHistoryParent::RecvRemoveFrameEntries(PSHEntryParent* aEntry) {
 
 bool SHistoryParent::RecvReload(const uint32_t& aReloadFlags,
                                 LoadSHEntryResult* aLoadResult) {
-  Maybe<nsSHistory::LoadEntryResult> loadResult;
-  nsresult rv = mHistory->Reload(aReloadFlags, loadResult);
-  if (NS_SUCCEEDED(rv) && !loadResult) {
+  nsTArray<nsSHistory::LoadEntryResult> loadResults;
+  nsresult rv = mHistory->Reload(aReloadFlags, loadResults);
+  if (NS_SUCCEEDED(rv) && loadResults.IsEmpty()) {
     *aLoadResult = NS_OK;
   } else {
-    FillInLoadResult(rv, loadResult.ref(), aLoadResult);
+    FillInLoadResult(rv, loadResults, aLoadResult);
   }
   return true;
 }
