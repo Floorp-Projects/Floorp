@@ -116,11 +116,8 @@ if (AppConstants.MOZ_ALLOW_ADDON_SIDELOAD || Cu.isInAutomation) {
     PREF_EM_SIDELOAD_SCOPES,
     AppConstants.MOZ_ALLOW_ADDON_SIDELOAD
       ? AddonManager.SCOPE_ALL
-      : AddonManager.SCOPE_PROFILE | AddonManager.SCOPE_APPLICATION
+      : AddonManager.SCOPE_PROFILE
   );
 } else {
-  makeConstant(
-    "SCOPES_SIDELOAD",
-    AddonManager.SCOPE_PROFILE | AddonManager.SCOPE_APPLICATION
-  );
+  makeConstant("SCOPES_SIDELOAD", AddonManager.SCOPE_PROFILE);
 }
