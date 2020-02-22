@@ -1628,12 +1628,6 @@ else
   AC_MSG_RESULT([no])
 fi
 
-if test "$EARLY_BETA_OR_EARLIER"; then
-    MOZ_NEW_CERT_STORAGE=1
-    AC_DEFINE(MOZ_NEW_CERT_STORAGE)
-fi
-AC_SUBST(MOZ_NEW_CERT_STORAGE)
-
 # Allow someone to change MOZ_APP_NAME and MOZ_APP_BASENAME in mozconfig
 MOZ_ARG_WITH_STRING(app-name,
 [--with-app-name=APPNAME sets MOZ_APP_NAME to APPNAME],
