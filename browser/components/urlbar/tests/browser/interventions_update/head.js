@@ -28,17 +28,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   UrlbarTestUtils: "resource://testing-common/UrlbarTestUtils.jsm",
 });
 
-// The types of intervention tips.
-const TIPS = {
-  NONE: "",
-  CLEAR: "clear",
-  REFRESH: "refresh",
-  UPDATE_RESTART: "update_restart",
-  UPDATE_ASK: "update_ask",
-  UPDATE_REFRESH: "update_refresh",
-  UPDATE_WEB: "update_web",
-};
-
 // For each intervention type, a search string that trigger the intervention.
 const SEARCH_STRINGS = {
   CLEAR: "firefox history",
@@ -256,6 +245,21 @@ async function doUpdateTest({
 
   // Pick the tip and wait for the action.
   let values = await Promise.all([awaitCallback(), pickTip()]);
+
+  // Check telemetry.
+  const scalars = TelemetryTestUtils.getProcessScalars("parent", true, true);
+  TelemetryTestUtils.assertKeyedScalar(
+    scalars,
+    "urlbar.tips",
+    `${tip}-shown`,
+    1
+  );
+  TelemetryTestUtils.assertKeyedScalar(
+    scalars,
+    "urlbar.tips",
+    `${tip}-picked`,
+    1
+  );
 
   return values[0] || null;
 }

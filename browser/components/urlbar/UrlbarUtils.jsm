@@ -91,9 +91,13 @@ var UrlbarUtils = {
     // Payload: { url, icon, device, title }
     REMOTE_TAB: 6,
     // An actionable message to help the user with their query.
+    // `type` is a string and is required.  It will be used in the names of keys
+    // in the `urlbar.tips` keyed scalar telemetry (see telemetry.rst).  If you
+    // add a new type, then you are also adding new `urlbar.tips` keys and
+    // therefore need an expanded data collection review.
     // textData and buttonTextData are objects containing an l10n id and args.
     // If a tip is untranslated it's possible to provide text and buttonText.
-    // Payload: { icon, textData, buttonTextData, [buttonUrl], [helpUrl] }
+    // Payload: { type, icon, textData, buttonTextData, [buttonUrl], [helpUrl] }
     TIP: 7,
   },
 

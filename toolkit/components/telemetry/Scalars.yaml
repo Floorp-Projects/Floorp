@@ -5120,6 +5120,25 @@ policies:
     record_in_processes:
       - main
 
+urlbar:
+  tips:
+    bug_numbers:
+      - 1608461
+    description: >
+      A keyed uint recording how many times particular tips are shown in the
+      Urlbar and how often their confirm and help buttons are pressed.
+    expires: never
+    kind: uint
+    keyed: true
+    notification_emails:
+      - fx-search@mozilla.com
+      - tbrooks@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - main
+
 # The following section is for probes testing the Telemetry system. They will not be
 # submitted in pings and are only used for testing.
 telemetry.test:

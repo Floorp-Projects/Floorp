@@ -1,8 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-// Tests keyboard selection within and clicks on UrlbarUtils.RESULT_TYPE.TIP
-// results.
+// Tests keyboard selection within UrlbarUtils.RESULT_TYPE.TIP results.
 
 "use strict";
 
@@ -284,106 +283,5 @@ add_task(async function tipHasNoHelpButton() {
   );
 
   gURLBar.view.close();
-  UrlbarProvidersManager.unregisterProvider(provider);
-});
-
-add_task(async function mouseSelection() {
-  window.windowUtils.disableNonTestMouseEvents(true);
-  registerCleanupFunction(() => {
-    window.windowUtils.disableNonTestMouseEvents(false);
-  });
-
-  let results = [
-    new UrlbarResult(
-      UrlbarUtils.RESULT_TYPE.TIP,
-      UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
-      {
-        icon: "",
-        text: "This is a test intervention.",
-        buttonText: "Done",
-        data: "test",
-        helpUrl: HELP_URL,
-        buttonUrl: TIP_URL,
-      }
-    ),
-  ];
-
-  let provider = new UrlbarTestUtils.TestProvider({ results, priority: 1 });
-  UrlbarProvidersManager.registerProvider(provider);
-
-  // Click the help button.
-  await UrlbarTestUtils.promiseAutocompleteResultPopup({
-    value: "test",
-    window,
-    waitForFocus,
-  });
-  let row = await UrlbarTestUtils.waitForAutocompleteResultAt(window, 0);
-  let helpButton = row._elements.get("helpButton");
-  let loadPromise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
-  await Promise.all([
-    loadPromise,
-    UrlbarTestUtils.promisePopupClose(window, () => {
-      EventUtils.synthesizeMouseAtCenter(helpButton, {});
-    }),
-  ]);
-  Assert.equal(
-    gURLBar.value,
-    HELP_URL,
-    "Should have navigated to the tip's help page."
-  );
-
-  // Click the main button.
-  await UrlbarTestUtils.promiseAutocompleteResultPopup({
-    value: "test",
-    window,
-    waitForFocus,
-  });
-  row = await UrlbarTestUtils.waitForAutocompleteResultAt(window, 0);
-  let mainButton = row._elements.get("tipButton");
-  loadPromise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
-  await Promise.all([
-    loadPromise,
-    UrlbarTestUtils.promisePopupClose(window, () => {
-      EventUtils.synthesizeMouseAtCenter(mainButton, {});
-    }),
-  ]);
-  Assert.equal(gURLBar.value, TIP_URL, "Should have navigated to the tip URL.");
-
-  // Click inside the tip but outside the buttons.  Nothing should happen.  Make
-  // the result the heuristic to check that the selection on the main button
-  // isn't lost.
-  results[0].heuristic = true;
-  await UrlbarTestUtils.promiseAutocompleteResultPopup({
-    value: "test",
-    window,
-    waitForFocus,
-  });
-  row = await UrlbarTestUtils.waitForAutocompleteResultAt(window, 0);
-  Assert.equal(
-    UrlbarTestUtils.getSelectedElementIndex(window),
-    0,
-    "The main button's index should be selected initially"
-  );
-  Assert.equal(
-    UrlbarTestUtils.getSelectedElement(window),
-    row._elements.get("tipButton"),
-    "The main button element should be selected initially"
-  );
-  EventUtils.synthesizeMouseAtCenter(row, {});
-  // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
-  await new Promise(r => setTimeout(r, 500));
-  Assert.ok(gURLBar.view.isOpen, "The view should remain open");
-  Assert.equal(
-    UrlbarTestUtils.getSelectedElementIndex(window),
-    0,
-    "The main button's index should remain selected"
-  );
-  Assert.equal(
-    UrlbarTestUtils.getSelectedElement(window),
-    row._elements.get("tipButton"),
-    "The main button element should remain selected"
-  );
-  await UrlbarTestUtils.promisePopupClose(window);
-
   UrlbarProvidersManager.unregisterProvider(provider);
 });

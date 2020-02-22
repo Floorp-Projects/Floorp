@@ -3,15 +3,10 @@
 
 "use strict";
 
-const TIPS = {
-  NONE: "",
-  CLEAR: "clear",
-  REFRESH: "refresh",
-  UPDATE_RESTART: "update_restart",
-  UPDATE_ASK: "update_ask",
-  UPDATE_REFRESH: "update_refresh",
-  UPDATE_WEB: "update_web",
-};
+XPCOMUtils.defineLazyModuleGetters(this, {
+  UrlbarProviderInterventions:
+    "resource:///modules/UrlbarProviderInterventions.jsm",
+});
 
 const SEARCH_STRINGS = {
   CLEAR: "firefox history",
@@ -32,7 +27,7 @@ add_task(async function refresh() {
   // button.
   await checkIntervention({
     searchString: SEARCH_STRINGS.REFRESH,
-    tip: TIPS.REFRESH,
+    tip: UrlbarProviderInterventions.TIP_TYPE.REFRESH,
     title:
       "Restore default settings and remove old add-ons for optimal performance.",
     button: /^Refresh .+…$/,
@@ -51,7 +46,7 @@ add_task(async function clear() {
   // button.
   await checkIntervention({
     searchString: SEARCH_STRINGS.CLEAR,
-    tip: TIPS.CLEAR,
+    tip: UrlbarProviderInterventions.TIP_TYPE.CLEAR,
     title: "Clear your cache, cookies, history and more.",
     button: "Choose What to Clear…",
     awaitCallback() {
@@ -70,7 +65,10 @@ add_task(async function clear_private() {
   // First, make sure the extension works in PBM by triggering a non-clear
   // tip.
   let result = (await awaitTip(SEARCH_STRINGS.REFRESH, win))[0];
-  Assert.strictEqual(result.payload.type, TIPS.REFRESH);
+  Assert.strictEqual(
+    result.payload.type,
+    UrlbarProviderInterventions.TIP_TYPE.REFRESH
+  );
 
   // Blur the urlbar so that the engagement is ended.
   await UrlbarTestUtils.promisePopupClose(win, () => win.gURLBar.blur());
@@ -84,10 +82,53 @@ add_task(async function clear_private() {
   await BrowserTestUtils.closeWindow(win);
 });
 
+// Tests that if multiple interventions of the same type are seen in the same
+// engagement, only one instance is recorded in Telemetry.
+add_task(async function multipleInterventionsInOneEngagement() {
+  Services.telemetry.clearScalars();
+  let result = (await awaitTip(SEARCH_STRINGS.REFRESH, window))[0];
+  Assert.strictEqual(
+    result.payload.type,
+    UrlbarProviderInterventions.TIP_TYPE.REFRESH
+  );
+  result = (await awaitTip(SEARCH_STRINGS.CLEAR, window))[0];
+  Assert.strictEqual(
+    result.payload.type,
+    UrlbarProviderInterventions.TIP_TYPE.CLEAR
+  );
+  result = (await awaitTip(SEARCH_STRINGS.REFRESH, window))[0];
+  Assert.strictEqual(
+    result.payload.type,
+    UrlbarProviderInterventions.TIP_TYPE.REFRESH
+  );
+
+  // Blur the urlbar so that the engagement is ended.
+  await UrlbarTestUtils.promisePopupClose(window, () => window.gURLBar.blur());
+
+  const scalars = TelemetryTestUtils.getProcessScalars("parent", true, true);
+  // We should only record one impression for the Refresh tip. Although it was
+  // seen twice, it was in the same engagement.
+  TelemetryTestUtils.assertKeyedScalar(
+    scalars,
+    "urlbar.tips",
+    `${UrlbarProviderInterventions.TIP_TYPE.REFRESH}-shown`,
+    1
+  );
+  TelemetryTestUtils.assertKeyedScalar(
+    scalars,
+    "urlbar.tips",
+    `${UrlbarProviderInterventions.TIP_TYPE.CLEAR}-shown`,
+    1
+  );
+});
+
 add_task(async function tipsAreEnglishOnly() {
   // Test that Interventions are working in en-US.
   let result = (await awaitTip(SEARCH_STRINGS.REFRESH, window))[0];
-  Assert.strictEqual(result.payload.type, TIPS.REFRESH);
+  Assert.strictEqual(
+    result.payload.type,
+    UrlbarProviderInterventions.TIP_TYPE.REFRESH
+  );
   await UrlbarTestUtils.promisePopupClose(window, () => window.gURLBar.blur());
 
   // We will need to fetch new engines when we switch locales.
@@ -117,4 +158,62 @@ add_task(async function tipsAreEnglishOnly() {
   // Interventions should no longer work in the new locale.
   await awaitNoTip(SEARCH_STRINGS.CLEAR, window);
   await UrlbarTestUtils.promisePopupClose(window, () => window.gURLBar.blur());
+});
+
+/**
+ * Picks the help button from an Intervention. We spoof the Intervention in this
+ * test because our withDNSRedirect helper cannot handle the HTTPS SUMO links.
+ */
+add_task(async function pickHelpButton() {
+  const helpUrl = "http://example.com/";
+  let results = [
+    new UrlbarResult(
+      UrlbarUtils.RESULT_TYPE.URL,
+      UrlbarUtils.RESULT_SOURCE.HISTORY,
+      { url: "http://mozilla.org/a" }
+    ),
+    new UrlbarResult(
+      UrlbarUtils.RESULT_TYPE.TIP,
+      UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
+      {
+        type: UrlbarProviderInterventions.TIP_TYPE.CLEAR,
+        text: "This is a test tip.",
+        buttonText: "Done",
+        data: "test",
+        helpUrl,
+      }
+    ),
+  ];
+  let interventionProvider = new UrlbarTestUtils.TestProvider({
+    results,
+    priority: 2,
+  });
+  UrlbarProvidersManager.registerProvider(interventionProvider);
+
+  registerCleanupFunction(() => {
+    UrlbarProvidersManager.unregisterProvider(interventionProvider);
+  });
+
+  await BrowserTestUtils.withNewTab("about:blank", async () => {
+    let [result, element] = await awaitTip(SEARCH_STRINGS.CLEAR);
+    Assert.strictEqual(
+      result.payload.type,
+      UrlbarProviderInterventions.TIP_TYPE.CLEAR
+    );
+
+    let helpButton = element._elements.get("helpButton");
+    Assert.ok(BrowserTestUtils.is_visible(helpButton));
+    EventUtils.synthesizeMouseAtCenter(helpButton, {});
+
+    await BrowserTestUtils.loadURI(gBrowser.selectedBrowser, helpUrl);
+    await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+
+    const scalars = TelemetryTestUtils.getProcessScalars("parent", true, true);
+    TelemetryTestUtils.assertKeyedScalar(
+      scalars,
+      "urlbar.tips",
+      `${UrlbarProviderInterventions.TIP_TYPE.CLEAR}-help`,
+      1
+    );
+  });
 });

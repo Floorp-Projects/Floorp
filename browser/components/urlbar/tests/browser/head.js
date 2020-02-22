@@ -129,6 +129,23 @@ function checkIntervention({
     let values = await Promise.all([awaitCallback(), pickTip()]);
     Assert.ok(true, "Refresh dialog opened");
 
+    // Ensure the urlbar is closed so that the engagement is ended.
+    await UrlbarTestUtils.promisePopupClose(window, () => gURLBar.blur());
+
+    const scalars = TelemetryTestUtils.getProcessScalars("parent", true, true);
+    TelemetryTestUtils.assertKeyedScalar(
+      scalars,
+      "urlbar.tips",
+      `${tip}-shown`,
+      1
+    );
+    TelemetryTestUtils.assertKeyedScalar(
+      scalars,
+      "urlbar.tips",
+      `${tip}-picked`,
+      1
+    );
+
     return values[0] || null;
   });
 }
