@@ -66,10 +66,7 @@ job-defaults:
                     ./taskcluster/scripts/iris/run-iris-windows.sh
         using: run-task
         tooltool-downloads: public
-    run-on-projects:
-        by-name:
-            nightly.*: [try, mozilla-central]
-            default: [try]
+    run-on-projects: []
     treeherder:
         kind: test
         platform:
