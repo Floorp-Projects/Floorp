@@ -6,7 +6,6 @@
 #include "nsAutoCompleteController.h"
 #include "nsAutoCompleteSimpleResult.h"
 
-#include "nsAutoPtr.h"
 #include "nsNetCID.h"
 #include "nsIIOService.h"
 #include "nsReadableUtils.h"

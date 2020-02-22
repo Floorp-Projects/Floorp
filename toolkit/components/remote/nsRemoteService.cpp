@@ -26,13 +26,13 @@
 #endif
 #include "nsRemoteService.h"
 
-#include "nsAutoPtr.h"
 #include "nsIObserverService.h"
 #include "nsString.h"
 #include "nsServiceManagerUtils.h"
 #include "mozilla/ModuleUtils.h"
 #include "SpecialSystemDirectory.h"
 #include "mozilla/CmdLineAndEnvUtils.h"
+#include "mozilla/UniquePtr.h"
 
 // Time to wait for the remoting service to start
 #define START_TIMEOUT_SEC 5
@@ -99,23 +99,23 @@ RemoteResult nsRemoteService::StartClient(const char* aDesktopStartupID) {
     return REMOTE_NOT_FOUND;
   }
 
-  nsAutoPtr<nsRemoteClient> client;
+  UniquePtr<nsRemoteClient> client;
 
 #ifdef MOZ_WIDGET_GTK
   bool useX11Remote = GDK_IS_X11_DISPLAY(gdk_display_get_default());
 
 #  if defined(MOZ_ENABLE_DBUS)
   if (!useX11Remote || getenv(DBUS_REMOTE_ENV)) {
-    client = new nsDBusRemoteClient();
+    client = MakeUnique<nsDBusRemoteClient>();
   }
 #  endif
   if (!client && useX11Remote) {
-    client = new nsXRemoteClient();
+    client = MakeUnique<nsXRemoteClient>();
   }
 #elif defined(XP_WIN)
-  client = new nsWinRemoteClient();
+  client = MakeUnique<nsWinRemoteClient>();
 #elif defined(XP_DARWIN)
-  client = new nsMacRemoteClient();
+  client = MakeUnique<nsMacRemoteClient>();
 #else
   return REMOTE_NOT_FOUND;
 #endif

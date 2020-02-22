@@ -21,7 +21,6 @@
 #include "nsIAppWindow.h"
 #include "nsNativeCharsetUtils.h"
 #include "nsThreadUtils.h"
-#include "nsAutoPtr.h"
 #include "nsString.h"
 #include "mozilla/AppShutdown.h"
 #include "mozilla/Preferences.h"

@@ -7,7 +7,6 @@
 #include "nsXULAppAPI.h"
 #include "nsSystemAlertsService.h"
 #include "nsAlertsIconListener.h"
-#include "nsAutoPtr.h"
 
 NS_IMPL_ADDREF(nsSystemAlertsService)
 NS_IMPL_RELEASE(nsSystemAlertsService)

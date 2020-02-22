@@ -3,7 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "DownloadPlatform.h"
-#include "nsAutoPtr.h"
 #include "nsNetUtil.h"
 #include "nsString.h"
 #include "nsINestedURI.h"

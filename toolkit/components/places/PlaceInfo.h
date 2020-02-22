@@ -8,7 +8,6 @@
 #include "mozIAsyncHistory.h"
 #include "nsString.h"
 #include "nsTArray.h"
-#include "nsAutoPtr.h"
 #include "mozilla/Attributes.h"
 
 class nsIURI;

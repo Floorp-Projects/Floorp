@@ -36,7 +36,6 @@
 #include "mozilla/TimeStamp.h"
 #include "mozilla/intl/LocaleService.h"
 
-#include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsDebug.h"
 #include "nsDependentSubstring.h"

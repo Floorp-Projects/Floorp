@@ -10,7 +10,6 @@
 
 #if defined(XP_WIN)
 #  include "ProfileUnlockerWin.h"
-#  include "nsAutoPtr.h"
 #endif
 
 #if defined(XP_MACOSX)
