@@ -10,6 +10,8 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/Variant.h"
 
+#include <iterator>
+
 #include "frontend/Stencil.h"
 #include "frontend/Token.h"
 #include "util/Text.h"
@@ -1342,6 +1344,13 @@ class ListNode : public ParseNode {
     explicit iterator(ParseNode* node) : node_(node) {}
 
    public:
+    // Implement std::iterator_traits.
+    using iterator_category = std::input_iterator_tag;
+    using value_type = ParseNode*;
+    using difference_type = ptrdiff_t;
+    using pointer = ParseNode**;
+    using reference = ParseNode*&;
+
     bool operator==(const iterator& other) const {
       return node_ == other.node_;
     }
