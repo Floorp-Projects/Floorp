@@ -8,7 +8,6 @@
 #include "nsIURI.h"
 #include "nsTArray.h"
 #include "nsStringEnumerator.h"
-#include "nsAutoPtr.h"
 #include "nsIMIMEInfo.h"
 #include "nsComponentManagerUtils.h"
 #include "nsArray.h"
