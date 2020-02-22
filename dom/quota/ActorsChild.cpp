@@ -136,20 +136,12 @@ void QuotaUsageRequestChild::HandleResponse(
   if (aResponse.IsEmpty()) {
     variant->SetAsEmptyArray();
   } else {
-    nsTArray<RefPtr<UsageResult>> usageResults;
+    nsTArray<RefPtr<UsageResult>> usageResults(aResponse.Length());
 
-    const uint32_t count = aResponse.Length();
-
-    usageResults.SetCapacity(count);
-
-    for (uint32_t index = 0; index < count; index++) {
-      auto& originUsage = aResponse[index];
-
-      RefPtr<UsageResult> usageResult =
-          new UsageResult(originUsage.origin(), originUsage.persisted(),
-                          originUsage.usage(), originUsage.lastAccessed());
-
-      usageResults.AppendElement(usageResult.forget());
+    for (const auto& originUsage : aResponse) {
+      usageResults.AppendElement(MakeRefPtr<UsageResult>(
+          originUsage.origin(), originUsage.persisted(), originUsage.usage(),
+          originUsage.lastAccessed()));
     }
 
     variant->SetAsArray(nsIDataType::VTYPE_INTERFACE_IS,
@@ -285,16 +277,14 @@ void QuotaRequestChild::HandleResponse(const nsTArray<nsCString>& aResponse) {
   if (aResponse.IsEmpty()) {
     variant->SetAsEmptyArray();
   } else {
-    nsTArray<RefPtr<OriginsResult>> originsResults(aResponse.Length());
-    for (auto& origin : aResponse) {
-      RefPtr<OriginsResult> originsResult = new OriginsResult(origin);
+    nsTArray<const char*> stringPointers(aResponse.Length());
 
-      originsResults.AppendElement(originsResult.forget());
+    for (const auto& string : aResponse) {
+      stringPointers.AppendElement(string.get());
     }
 
-    variant->SetAsArray(
-        nsIDataType::VTYPE_INTERFACE_IS, &NS_GET_IID(nsIQuotaOriginsResult),
-        originsResults.Length(), static_cast<void*>(originsResults.Elements()));
+    variant->SetAsArray(nsIDataType::VTYPE_CHAR_STR, nullptr,
+                        stringPointers.Length(), stringPointers.Elements());
   }
 
   mRequest->SetResult(variant);

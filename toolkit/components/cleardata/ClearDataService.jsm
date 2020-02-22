@@ -533,16 +533,16 @@ const QuotaCleaner = {
           // wiped if we are provided an aHost of "example.com".
           promises.push(
             new Promise((aResolve, aReject) => {
-              Services.qms.listOrigins(aRequest => {
+              Services.qms.listOrigins().callback = aRequest => {
                 if (aRequest.resultCode != Cr.NS_OK) {
                   aReject({ message: "Delete by host failed" });
                   return;
                 }
 
                 let promises = [];
-                for (let item of aRequest.result) {
+                for (const origin of aRequest.result) {
                   let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
-                    item.origin
+                    origin
                   );
                   let host;
                   try {
@@ -573,7 +573,7 @@ const QuotaCleaner = {
                 }
 
                 Promise.all(promises).then(aResolve);
-              });
+              };
             })
           );
         }

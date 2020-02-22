@@ -33,9 +33,3 @@ interface nsIQuotaEstimateResult : nsISupports
 
   readonly attribute unsigned long long limit;
 };
-
-[scriptable, function, uuid(5d8c2fbe-9ccc-4bab-8f03-8591dfc8e351)]
-interface nsIQuotaOriginsResult : nsISupports
-{
-  readonly attribute ACString origin;
-};
