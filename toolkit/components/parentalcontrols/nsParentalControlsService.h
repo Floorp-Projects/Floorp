@@ -8,7 +8,6 @@
 
 #include "nsIParentalControlsService.h"
 #include "nsCOMPtr.h"
-#include "nsAutoPtr.h"
 #include "nsIURI.h"
 
 #if defined(XP_WIN)

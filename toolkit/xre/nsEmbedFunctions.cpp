@@ -63,6 +63,7 @@
 #include "mozilla/AbstractThread.h"
 #include "mozilla/FilePreferences.h"
 #include "mozilla/RDDProcessImpl.h"
+#include "mozilla/UniquePtr.h"
 
 #include "mozilla/ipc/BrowserProcessSubThread.h"
 #include "mozilla/ipc/GeckoChildProcessHost.h"
@@ -684,51 +685,51 @@ nsresult XRE_InitChildProcess(int aArgc, char* aArgv[],
     // Associate this thread with a UI MessageLoop
     MessageLoop uiMessageLoop(uiLoopType);
     {
-      nsAutoPtr<ProcessChild> process;
+      UniquePtr<ProcessChild> process;
       switch (XRE_GetProcessType()) {
         case GeckoProcessType_Default:
           MOZ_CRASH("This makes no sense");
           break;
 
         case GeckoProcessType_Plugin:
-          process = new PluginProcessChild(parentPID);
+          process = MakeUnique<PluginProcessChild>(parentPID);
           break;
 
         case GeckoProcessType_Content:
-          process = new ContentProcess(parentPID);
+          process = MakeUnique<ContentProcess>(parentPID);
           break;
 
         case GeckoProcessType_IPDLUnitTest:
 #ifdef MOZ_IPDL_TESTS
-          process = new IPDLUnitTestProcessChild(parentPID);
+          process = MakeUnique<IPDLUnitTestProcessChild>(parentPID);
 #else
           MOZ_CRASH("rebuild with --enable-ipdl-tests");
 #endif
           break;
 
         case GeckoProcessType_GMPlugin:
-          process = new gmp::GMPProcessChild(parentPID);
+          process = MakeUnique<gmp::GMPProcessChild>(parentPID);
           break;
 
         case GeckoProcessType_GPU:
-          process = new gfx::GPUProcessImpl(parentPID);
+          process = MakeUnique<gfx::GPUProcessImpl>(parentPID);
           break;
 
         case GeckoProcessType_VR:
-          process = new gfx::VRProcessChild(parentPID);
+          process = MakeUnique<gfx::VRProcessChild>(parentPID);
           break;
 
         case GeckoProcessType_RDD:
-          process = new RDDProcessImpl(parentPID);
+          process = MakeUnique<RDDProcessImpl>(parentPID);
           break;
 
         case GeckoProcessType_Socket:
-          process = new net::SocketProcessImpl(parentPID);
+          process = MakeUnique<net::SocketProcessImpl>(parentPID);
           break;
 
 #if defined(MOZ_SANDBOX) && defined(XP_WIN)
         case GeckoProcessType_RemoteSandboxBroker:
-          process = new RemoteSandboxBrokerProcessChild(parentPID);
+          process = MakeUnique<RemoteSandboxBrokerProcessChild>(parentPID);
           break;
 #endif
 

@@ -17,6 +17,7 @@
 #include "mozilla/dom/XPathResult.h"
 #include "mozilla/dom/XPathEvaluator.h"
 #include "mozilla/dom/XPathExpression.h"
+#include "mozilla/UniquePtr.h"
 #include "nsCharSeparatedTokenizer.h"
 #include "nsContentList.h"
 #include "nsContentUtils.h"
@@ -991,7 +992,7 @@ static Element* FindNodeByXPath(JSContext* aCx, Document& aDocument,
                                 const nsAString& aExpression) {
   FormDataParseContext parsingContext(aDocument.IsHTMLDocument());
   IgnoredErrorResult rv;
-  nsAutoPtr<XPathExpression> expression(
+  UniquePtr<XPathExpression> expression(
       aDocument.XPathEvaluator()->CreateExpression(aExpression, &parsingContext,
                                                    &aDocument, rv));
   if (rv.Failed()) {
