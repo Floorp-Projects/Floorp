@@ -24,7 +24,7 @@ Review groups
    * - Name
      - Owns
      - Members
-   * - #dom-workers-and-storage-reviewerse
+   * - #dom-workers-and-storage-reviewers
      - DOM Workers & Storage
      - `Member list <https://phabricator.services.mozilla.com/project/members/115/>`__
    * - #devtools-inspector-reviewers
