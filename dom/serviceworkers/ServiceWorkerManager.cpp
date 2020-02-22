@@ -26,6 +26,8 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/ErrorNames.h"
 #include "mozilla/LoadContext.h"
+#include "mozilla/Result.h"
+#include "mozilla/ResultExtensions.h"
 #include "mozilla/SystemGroup.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/dom/BindingUtils.h"
@@ -283,6 +285,29 @@ already_AddRefed<nsIAsyncShutdownClient> GetAsyncShutdownBarrier() {
   MOZ_ASSERT(NS_SUCCEEDED(rv));
 
   return barrier.forget();
+}
+
+Result<nsCOMPtr<nsIPrincipal>, nsresult> ScopeToPrincipal(
+    nsIURI* aScopeURI, const OriginAttributes& aOriginAttributes) {
+  MOZ_ASSERT(aScopeURI);
+
+  nsCOMPtr<nsIPrincipal> principal =
+      BasePrincipal::CreateContentPrincipal(aScopeURI, aOriginAttributes);
+  if (NS_WARN_IF(!principal)) {
+    return Err(NS_ERROR_FAILURE);
+  }
+
+  return principal;
+}
+
+Result<nsCOMPtr<nsIPrincipal>, nsresult> ScopeToPrincipal(
+    const nsACString& aScope, const OriginAttributes& aOriginAttributes) {
+  MOZ_ASSERT(nsContentUtils::IsAbsoluteURL(aScope));
+
+  nsCOMPtr<nsIURI> scopeURI;
+  MOZ_TRY(NS_NewURI(getter_AddRefs(scopeURI), aScope));
+
+  return ScopeToPrincipal(scopeURI, aOriginAttributes);
 }
 
 }  // namespace
@@ -1069,14 +1094,24 @@ nsresult ServiceWorkerManager::SendPushEvent(
     return NS_ERROR_INVALID_ARG;
   }
 
-  ServiceWorkerInfo* serviceWorker = GetActiveWorkerInfoForScope(attrs, aScope);
-  if (NS_WARN_IF(!serviceWorker)) {
+  nsCOMPtr<nsIPrincipal> principal;
+  MOZ_TRY_VAR(principal, ScopeToPrincipal(aScope, attrs));
+
+  // The registration handling a push notification must have an exact scope
+  // match. This will try to find an exact match, unlike how fetch may find the
+  // registration with the longest scope that's a prefix of the fetched URL.
+  RefPtr<ServiceWorkerRegistrationInfo> registration =
+      GetRegistration(principal, aScope);
+  if (NS_WARN_IF(!registration)) {
     return NS_ERROR_FAILURE;
   }
 
-  RefPtr<ServiceWorkerRegistrationInfo> registration =
-      GetRegistration(serviceWorker->Principal(), aScope);
-  MOZ_RELEASE_ASSERT(registration);
+  MOZ_DIAGNOSTIC_ASSERT(registration->Scope().Equals(aScope));
+
+  ServiceWorkerInfo* serviceWorker = registration->GetActive();
+  if (NS_WARN_IF(!serviceWorker)) {
+    return NS_ERROR_FAILURE;
+  }
 
   return serviceWorker->WorkerPrivate()->SendPushEvent(aMessageId, aData,
                                                        registration);
@@ -1242,8 +1277,14 @@ ServiceWorkerInfo* ServiceWorkerManager::GetActiveWorkerInfoForScope(
   if (NS_FAILED(rv)) {
     return nullptr;
   }
-  nsCOMPtr<nsIPrincipal> principal =
-      BasePrincipal::CreateContentPrincipal(scopeURI, aOriginAttributes);
+
+  auto result = ScopeToPrincipal(scopeURI, aOriginAttributes);
+  if (NS_WARN_IF(result.isErr())) {
+    return nullptr;
+  }
+
+  auto principal = result.unwrap();
+
   RefPtr<ServiceWorkerRegistrationInfo> registration =
       GetServiceWorkerRegistrationInfo(principal, scopeURI);
   if (!registration) {
@@ -2343,20 +2384,15 @@ void ServiceWorkerManager::SoftUpdateInternal(
     return;
   }
 
-  nsCOMPtr<nsIURI> scopeURI;
-  nsresult rv = NS_NewURI(getter_AddRefs(scopeURI), aScope);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
+  auto result = ScopeToPrincipal(aScope, aOriginAttributes);
+  if (NS_WARN_IF(result.isErr())) {
     return;
   }
 
-  nsCOMPtr<nsIPrincipal> principal =
-      BasePrincipal::CreateContentPrincipal(scopeURI, aOriginAttributes);
-  if (NS_WARN_IF(!principal)) {
-    return;
-  }
+  auto principal = result.unwrap();
 
   nsAutoCString scopeKey;
-  rv = PrincipalToScopeKey(principal, scopeKey);
+  nsresult rv = PrincipalToScopeKey(principal, scopeKey);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return;
   }
