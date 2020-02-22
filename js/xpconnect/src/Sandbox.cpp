@@ -38,6 +38,7 @@
 #include "mozilla/dom/CSSRuleBinding.h"
 #include "mozilla/dom/DirectoryBinding.h"
 #include "mozilla/dom/DocumentBinding.h"
+#include "mozilla/dom/DOMExceptionBinding.h"
 #include "mozilla/dom/DOMParserBinding.h"
 #include "mozilla/dom/DOMTokenListBinding.h"
 #include "mozilla/dom/ElementBinding.h"
@@ -843,6 +844,8 @@ bool xpc::GlobalProperties::Parse(JSContext* cx, JS::HandleObject obj) {
       Document = true;
     } else if (JS_LinearStringEqualsLiteral(nameStr, "Directory")) {
       Directory = true;
+    } else if (JS_LinearStringEqualsLiteral(nameStr, "DOMException")) {
+      DOMException = true;
     } else if (JS_LinearStringEqualsLiteral(nameStr, "DOMParser")) {
       DOMParser = true;
     } else if (JS_LinearStringEqualsLiteral(nameStr, "DOMTokenList")) {
@@ -947,8 +950,13 @@ bool xpc::GlobalProperties::Define(JSContext* cx, JS::HandleObject obj) {
     return false;
   }
 
-  if (DOMParser && !dom::DOMParser_Binding::GetConstructorObject(cx))
+  if (DOMException && !dom::DOMException_Binding::GetConstructorObject(cx)) {
     return false;
+  }
+
+  if (DOMParser && !dom::DOMParser_Binding::GetConstructorObject(cx)) {
+    return false;
+  }
 
   if (DOMTokenList && !dom::DOMTokenList_Binding::GetConstructorObject(cx)) {
     return false;
