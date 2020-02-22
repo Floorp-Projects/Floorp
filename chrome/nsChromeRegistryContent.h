@@ -28,8 +28,6 @@ class nsChromeRegistryContent : public nsChromeRegistry {
   NS_IMETHOD Observe(nsISupports* aSubject, const char* aTopic,
                      const char16_t* aData) override;
   NS_IMETHOD IsLocaleRTL(const nsACString& package, bool* aResult) override;
-  NS_IMETHOD GetSelectedLocale(const nsACString& aPackage, bool aAsBCP47,
-                               nsACString& aLocale) override;
 
   void RegisterPackage(const ChromePackage& aPackage);
   void RegisterOverride(const OverrideMapping& aOverride);

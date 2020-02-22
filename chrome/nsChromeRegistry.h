@@ -85,8 +85,6 @@ class nsChromeRegistry : public nsIToolkitChromeRegistry,
   static nsresult GetProviderAndPath(nsIURI* aChromeURL, nsACString& aProvider,
                                      nsACString& aPath);
 
-  void SanitizeForBCP47(nsACString& aLocale);
-
  public:
   static already_AddRefed<nsChromeRegistry> GetSingleton();
 
