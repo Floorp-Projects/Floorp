@@ -30,6 +30,7 @@ SOURCES += [
     'TestNoAutoType.cpp',
     'TestNoDuplicateRefCntMember.cpp',
     'TestNoExplicitMoveConstructor.cpp',
+    'TestNoNewThreadsChecker.cpp',
     'TestNonHeapClass.cpp',
     'TestNonMemMovable.cpp',
     'TestNonMemMovableStd.cpp',
