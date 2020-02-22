@@ -168,7 +168,7 @@ SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf() {
           0,  // DLLs are always mapped at offset 0 on Windows
           NS_LITERAL_CSTRING("000000000000000000000000000000000"),
           moduleNameStr, modulePathStr, pdbNameStr, pdbNameStr,
-          GetVersion(modulePath), "");
+          NS_LITERAL_CSTRING(""), "");
       sharedLibraryInfo.AddSharedLibrary(shlib);
       continue;
     }
