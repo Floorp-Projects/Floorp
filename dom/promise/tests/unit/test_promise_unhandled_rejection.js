@@ -12,6 +12,7 @@ const { PromiseTestUtils } = ChromeUtils.import(
 );
 
 PromiseTestUtils.expectUncaughtRejection(/could not be cloned/);
+PromiseTestUtils.expectUncaughtRejection(/An exception was thrown/);
 PromiseTestUtils.expectUncaughtRejection(/Bleah/);
 
 const filename = "resource://foo/Bar.jsm";
@@ -84,15 +85,56 @@ add_task(async function test_unhandled_dom_exception_wrapped() {
     });`
   );
 
-  equal(messages.length, 1, "Got one console message");
+  equal(messages.length, 2, "Got two console messages");
+
+  let [msg1, msg2] = messages;
+  ok(msg1 instanceof Ci.nsIScriptError, "Message is a script error");
+  equal(msg1.sourceName, filename, "Got expected filename");
+  equal(msg1.lineNumber, 2, "Got expected line number");
+  equal(
+    msg1.errorMessage,
+    "NS_ERROR_FAILURE: Bleah.",
+    "Got expected error message"
+  );
+
+  ok(msg2 instanceof Ci.nsIScriptError, "Message is a script error");
+  equal(msg2.sourceName, filename, "Got expected filename");
+  equal(msg2.lineNumber, 2, "Got expected line number");
+  equal(
+    msg2.errorMessage,
+    "InvalidStateError: An exception was thrown",
+    "Got expected error message"
+  );
+});
+
+add_task(async function test_unhandled_dom_exception_from_sandbox() {
+  let sandbox = Cu.Sandbox(
+    Services.scriptSecurityManager.createContentPrincipalFromOrigin(
+      "http://example.com/"
+    ),
+    { wantGlobalProperties: ["DOMException"] }
+  );
+  let ctor = Cu.evalInSandbox("DOMException", sandbox);
+  Cu.exportFunction(
+    function frick() {
+      throw new ctor("Bleah.");
+    },
+    sandbox,
+    { defineAs: "frick" }
+  );
+
+  let messages = await getSandboxMessages(
+    sandbox,
+    `new Promise(() => {
+      frick();
+    });`
+  );
+
+  equal(messages.length, 1, "Got one console messages");
 
   let [msg] = messages;
   ok(msg instanceof Ci.nsIScriptError, "Message is a script error");
   equal(msg.sourceName, filename, "Got expected filename");
   equal(msg.lineNumber, 2, "Got expected line number");
-  equal(
-    msg.errorMessage,
-    "NS_ERROR_FAILURE: Bleah.",
-    "Got expected error message"
-  );
+  equal(msg.errorMessage, "Error: Bleah.", "Got expected error message");
 });

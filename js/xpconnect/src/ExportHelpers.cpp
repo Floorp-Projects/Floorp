@@ -10,11 +10,14 @@
 #include "jsfriendapi.h"
 #include "js/Proxy.h"
 #include "js/Wrapper.h"
+#include "mozilla/ErrorResult.h"
+#include "mozilla/Unused.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/BlobBinding.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/FileListBinding.h"
 #include "mozilla/dom/StructuredCloneHolder.h"
+#include "nsContentUtils.h"
 #include "nsGlobalWindow.h"
 #include "nsJSUtils.h"
 
@@ -275,6 +278,62 @@ static bool CheckSameOriginArg(JSContext* cx, FunctionForwarderOptions& options,
   return false;
 }
 
+// Sanitize the exception on cx (which comes from calling unwrappedFun), if the
+// current Realm of cx shouldn't have access to it.  unwrappedFun is generally
+// _not_ in the current Realm of cx here.
+static void MaybeSanitizeException(JSContext* cx,
+                                   JS::Handle<JSObject*> unwrappedFun) {
+  // Ensure that we are not propagating more-privileged exceptions
+  // to less-privileged code.
+  nsIPrincipal* callerPrincipal = nsContentUtils::SubjectPrincipal(cx);
+
+  // Re-enter the unwrappedFun Realm to do get the current exception, so we
+  // don't end up unnecessarily wrapping exceptions.
+  {  // Scope for JSAutoRealm
+    JSAutoRealm ar(cx, unwrappedFun);
+    JS::Rooted<JS::Value> exn(cx);
+    // If JS_GetPendingException returns false, this was an uncatchable
+    // exception, or we somehow failed to wrap the exception into our
+    // compartment.  In either case, treating this as uncatchable exception,
+    // by returning without setting any exception on the JSContext,
+    // seems fine.
+    if (!JS_GetPendingException(cx, &exn)) {
+      JS_ClearPendingException(cx);
+      return;
+    }
+
+    // Let through non-objects as-is, because some APIs rely on
+    // that and accidental exceptions are never non-objects.
+    if (!exn.isObject() ||
+        callerPrincipal->Subsumes(nsContentUtils::ObjectPrincipal(
+            js::UncheckedUnwrap(&exn.toObject())))) {
+      // Just leave exn as-is.
+      return;
+    }
+
+    // Whoever we are throwing the exception to should not have access to
+    // the exception.  Sanitize it.  First report the existing exception.
+    JS::Rooted<JSObject*> exnStack(cx, JS::GetPendingExceptionStack(cx));
+    JS_ClearPendingException(cx);
+    {  // Scope for AutoJSAPI
+      AutoJSAPI jsapi;
+      if (jsapi.Init(unwrappedFun)) {
+        JS::SetPendingExceptionAndStack(cx, exn, exnStack);
+      }
+      // If Init() fails, we can't report the exception, but oh, well.
+
+      // Now just let the AutoJSAPI go out of scope and it will report the
+      // exception in its destructor.
+    }
+  }
+
+  // Now back in our original Realm again, throw a sanitized exception.
+  ErrorResult rv;
+  rv.ThrowInvalidStateError("An exception was thrown");
+  // Can we provide a better context here?
+  Unused << rv.MaybeSetPendingException(cx);
+}
+
 static bool FunctionForwarder(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -299,6 +358,7 @@ static bool FunctionForwarder(JSContext* cx, unsigned argc, Value* vp) {
     thisVal.setObject(*thisObject);
   }
 
+  bool ok = true;
   {
     // We manually implement the contents of CrossCompartmentWrapper::call
     // here, because certain function wrappers (notably content->nsEP) are
@@ -323,15 +383,20 @@ static bool FunctionForwarder(JSContext* cx, unsigned argc, Value* vp) {
     RootedValue fval(cx, ObjectValue(*unwrappedFun));
     if (args.isConstructing()) {
       RootedObject obj(cx);
-      if (!JS::Construct(cx, fval, args, &obj)) {
-        return false;
+      ok = JS::Construct(cx, fval, args, &obj);
+      if (ok) {
+        args.rval().setObject(*obj);
       }
-      args.rval().setObject(*obj);
     } else {
-      if (!JS::Call(cx, thisVal, fval, args, args.rval())) {
-        return false;
-      }
+      ok = JS::Call(cx, thisVal, fval, args, args.rval());
     }
+  }
+
+  // Now that we are back in our original Realm, we can check whether to
+  // sanitize the exception.
+  if (!ok) {
+    MaybeSanitizeException(cx, unwrappedFun);
+    return false;
   }
 
   // Rewrap the return value into our compartment.
