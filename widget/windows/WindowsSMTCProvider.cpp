@@ -242,20 +242,22 @@ void WindowsSMTCProvider::SetPlaybackState(mozilla::dom::PlaybackState aState) {
   MOZ_ASSERT(mInitialized);
   MediaControlKeysEventSource::SetPlaybackState(aState);
 
+  HRESULT hr;
+
   // Note: we can't return the status of put_PlaybackStatus, but we can at least
   // assert it.
   switch (aState) {
     case mozilla::dom::PlaybackState::ePaused:
-      MOZ_ASSERT(!FAILED(mControls->put_PlaybackStatus(
-          ABI::Windows::Media::MediaPlaybackStatus_Paused)));
+      hr = mControls->put_PlaybackStatus(
+          ABI::Windows::Media::MediaPlaybackStatus_Paused);
       break;
     case mozilla::dom::PlaybackState::ePlaying:
-      MOZ_ASSERT(!FAILED(mControls->put_PlaybackStatus(
-          ABI::Windows::Media::MediaPlaybackStatus_Playing)));
+      hr = mControls->put_PlaybackStatus(
+          ABI::Windows::Media::MediaPlaybackStatus_Playing);
       break;
     case mozilla::dom::PlaybackState::eStopped:
-      MOZ_ASSERT(!FAILED(mControls->put_PlaybackStatus(
-          ABI::Windows::Media::MediaPlaybackStatus_Stopped)));
+      hr = mControls->put_PlaybackStatus(
+          ABI::Windows::Media::MediaPlaybackStatus_Stopped);
       break;
       // MediaPlaybackStatus still supports Closed and Changing, which we don't
       // use (yet)
@@ -264,6 +266,10 @@ void WindowsSMTCProvider::SetPlaybackState(mozilla::dom::PlaybackState aState) {
           "Enum Inconsitency between PlaybackState and WindowsSMTCProvider");
       break;
   }
+
+  // When building for release, hr is never read
+  MOZ_ASSERT(SUCCEEDED(hr));
+  Unused << hr;
 }
 
 bool WindowsSMTCProvider::SetControlAttributes(
@@ -348,8 +354,11 @@ bool WindowsSMTCProvider::SetMusicMetadata(
   MOZ_ASSERT(mInitialized);
   MOZ_ASSERT(aTitle);
   ComPtr<IMusicDisplayProperties> musicProps;
+
   HRESULT hr = mDisplay->put_Type(MediaPlaybackType::MediaPlaybackType_Music);
   MOZ_ASSERT(SUCCEEDED(hr));
+  // When building for release, hr is never read
+  Unused << hr;
   hr = mDisplay->get_MusicProperties(musicProps.GetAddressOf());
   if (FAILED(hr)) {
     LOG("SystemMediaTransportControls: Failed at get_MusicProperties()");
@@ -357,21 +366,28 @@ bool WindowsSMTCProvider::SetMusicMetadata(
   }
 
   if (aArtist.isSome()) {
-    MOZ_ASSERT(SUCCEEDED(
-        musicProps->put_Artist(HStringReference(aArtist.value()).Get())));
+    hr = musicProps->put_Artist(HStringReference(aArtist.value()).Get());
   } else {
-    MOZ_ASSERT(SUCCEEDED(musicProps->put_Artist(
-        nullptr)));  // clearing the previously stored value
+    hr = musicProps->put_Artist(
+        nullptr);  // clearing the previously stored value
   }
+
+  MOZ_ASSERT(SUCCEEDED(hr));
+  // When building for release, hr is never read
+  Unused << hr;
 
   musicProps->put_Title(HStringReference(aTitle).Get());
   if (aAlbumArtist.isSome()) {
-    MOZ_ASSERT(SUCCEEDED(musicProps->put_AlbumArtist(
-        HStringReference(aAlbumArtist.value()).Get())));
+    hr = musicProps->put_AlbumArtist(
+        HStringReference(aAlbumArtist.value()).Get());
   } else {
-    MOZ_ASSERT(SUCCEEDED(musicProps->put_AlbumArtist(
-        nullptr)));  // clearing the previously stored value
+    hr = musicProps->put_AlbumArtist(
+        nullptr);  // clearing the previously stored value
   }
+
+  MOZ_ASSERT(SUCCEEDED(hr));
+  // When building for release, hr is never read
+  Unused << hr;
 
   return true;
 }
