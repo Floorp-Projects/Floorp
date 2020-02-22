@@ -373,6 +373,23 @@ class StyleSheet final : public nsICSSLoaderObserver, public nsWrapperCache {
     return bool(mState & State::ModificationDisallowed);
   }
 
+  // Called before and after the asynchronous Replace() function
+  // to disable/re-enable modification while there is a pending promise.
+  void SetModificationDisallowed(bool aDisallowed) {
+    MOZ_ASSERT(IsConstructed());
+    MOZ_ASSERT(!IsReadOnly());
+    if (aDisallowed) {
+      mState |= State::ModificationDisallowed;
+      // Sheet will be re-set to complete when its rules are replaced
+      mState &= ~State::Complete;
+      if (!Disabled()) {
+        ApplicableStateChanged(false);
+      }
+    } else {
+      mState &= ~State::ModificationDisallowed;
+    }
+  }
+
   // True if the sheet was created through the Constructable StyleSheets API
   bool IsConstructed() const { return !!mConstructorDocument; }
 
@@ -435,6 +452,12 @@ class StyleSheet final : public nsICSSLoaderObserver, public nsWrapperCache {
   // Removes a stylesheet from its parent sheet child list, if any.
   void RemoveFromParent();
 
+  // Resolves mReplacePromise with this sheet.
+  void MaybeResolveReplacePromise();
+
+  // Rejects mReplacePromise with a NetworkError.
+  void MaybeRejectReplacePromise();
+
  private:
   void SetModifiedRules() {
     mState |= State::ModifiedRules | State::ModifiedRulesForDevtools;
@@ -491,6 +514,9 @@ class StyleSheet final : public nsICSSLoaderObserver, public nsWrapperCache {
   // Called when a stylesheet is cloned.
   void StyleSheetCloned(StyleSheet&);
 
+  // Notifies that the applicable state changed.
+  // aApplicable is the value that we expect to get from IsApplicable().
+  // assertion will fail if the expectation does not match reality.
   void ApplicableStateChanged(bool aApplicable);
 
   void UnparentChildren();
@@ -518,6 +544,10 @@ class StyleSheet final : public nsICSSLoaderObserver, public nsWrapperCache {
   StyleSheet* mParent;  // weak ref
 
   RefPtr<dom::Document> mConstructorDocument;
+
+  // Will be set in the Replace() function and resolved/rejected by the
+  // sheet once its rules have been replaced and the sheet is complete again.
+  RefPtr<dom::Promise> mReplacePromise;
 
   nsString mTitle;
 

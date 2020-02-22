@@ -1688,14 +1688,8 @@ Loader::Completed Loader::ParseSheet(const nsACString& aBytes,
           target, __func__,
           [loadData = RefPtr<SheetLoadData>(&aLoadData)](bool aDummy) {
             MOZ_ASSERT(NS_IsMainThread());
-            loadData->mIsBeingParsed = false;
             loadData->mLoader->UnblockOnload(/* aFireSync = */ false);
-            // If there are no child sheets outstanding, mark us as complete.
-            // Otherwise, the children are holding strong refs to the data
-            // and will call SheetComplete() on it when they complete.
-            if (loadData->mPendingChildren == 0) {
-              loadData->mLoader->SheetComplete(*loadData, NS_OK);
-            }
+            loadData->SheetFinishedParsingAsync();
           },
           [] { MOZ_CRASH("rejected parse promise"); });
   return Completed::No;
@@ -1767,7 +1761,7 @@ void Loader::DoSheetComplete(SheetLoadData& aLoadData,
                              LoadDataArray& aDatasToNotify) {
   LOG(("css::Loader::DoSheetComplete"));
   MOZ_ASSERT(aLoadData.mSheet, "Must have a sheet");
-  NS_ASSERTION(mSheets || !aLoadData.mURI,
+  NS_ASSERTION(mSheets || !aLoadData.mURI || aLoadData.mSheet->IsConstructed(),
                "mLoadingDatas should be initialized by now.");
 
   // Twiddle the hashtables
@@ -1796,7 +1790,12 @@ void Loader::DoSheetComplete(SheetLoadData& aLoadData,
       // If mSheetAlreadyComplete, then the sheet could well be modified between
       // when we posted the async call to SheetComplete and now, since the sheet
       // was page-accessible during that whole time.
-      MOZ_ASSERT(!data->mSheet->HasForcedUniqueInner(),
+
+      // HasForcedUniqueInner() is okay if the sheet is constructed, because
+      // constructed sheets are always unique and they may be set to complete
+      // multiple times if their rules are replaced via Replace()
+      MOZ_ASSERT(data->mSheet->IsConstructed() ||
+                     !data->mSheet->HasForcedUniqueInner(),
                  "should not get a forced unique inner during parsing");
       data->mSheet->SetComplete();
       data->ScheduleLoadEventIfNeeded();
@@ -1830,7 +1829,9 @@ void Loader::DoSheetComplete(SheetLoadData& aLoadData,
   // If we ever start doing this for failed loads, we'll need to
   // adjust the PostLoadEvent code that thinks anything already
   // complete must have loaded succesfully.
-  if (!aLoadData.mLoadFailed && aLoadData.mURI) {
+  // We don't want to use mSheets for constructable stylesheets.
+  if (!aLoadData.mLoadFailed && aLoadData.mURI &&
+      !aLoadData.mSheet->IsConstructed()) {
     // Pick our sheet to cache carefully.  Ideally, we want to cache
     // one of the sheets that will be kept alive by a document or
     // parent sheet anyway, so that if someone then accesses it via
@@ -1876,6 +1877,7 @@ void Loader::MarkLoadTreeFailed(SheetLoadData& aLoadData) {
   SheetLoadData* data = &aLoadData;
   do {
     data->mLoadFailed = true;
+    data->mSheet->MaybeRejectReplacePromise();
 
     if (data->mParentData) {
       MarkLoadTreeFailed(*data->mParentData);
@@ -2543,6 +2545,7 @@ void Loader::UnblockOnload(bool aFireSync) {
 already_AddRefed<nsISerialEventTarget> Loader::DispatchTarget() {
   nsCOMPtr<nsISerialEventTarget> target;
   if (mDocument) {
+    // If you change this, you may want to change StyleSheet::Replace
     target = mDocument->EventTargetFor(TaskCategory::Other);
   } else if (mDocGroup) {
     target = mDocGroup->EventTargetFor(TaskCategory::Other);
