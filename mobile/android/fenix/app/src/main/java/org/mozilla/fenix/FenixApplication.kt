@@ -38,6 +38,7 @@ import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.session.NotificationSessionObserver
 import org.mozilla.fenix.session.VisibilityLifecycleCallback
 import org.mozilla.fenix.utils.BrowsersCache
+import org.mozilla.fenix.utils.Settings
 
 @SuppressLint("Registered")
 @Suppress("TooManyFunctions")
@@ -293,7 +294,12 @@ open class FenixApplication : LocaleAwareApplication() {
                 components.core.store,
                 onNewTabOverride = {
                     _, engineSession, url ->
-                        val session = Session(url)
+                        val shouldCreatePrivateSession =
+                            components.core.sessionManager.selectedSession?.private
+                                ?: Settings.instance?.openLinksInAPrivateTab
+                                ?: false
+
+                        val session = Session(url, shouldCreatePrivateSession)
                         components.core.sessionManager.add(session, true, engineSession)
                         session.id
                 },

@@ -5,7 +5,6 @@
 package org.mozilla.fenix.settings
 
 import android.os.Bundle
-import android.util.Log
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.SwitchPreference
@@ -15,7 +14,6 @@ import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.getPreferenceKey
 import org.mozilla.fenix.ext.metrics
 import org.mozilla.fenix.ext.showToolbar
-import org.mozilla.fenix.utils.Settings
 
 /**
  * Lets the user customize Private browsing options.

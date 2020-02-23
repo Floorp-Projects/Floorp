@@ -29,7 +29,6 @@ import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
-import org.mozilla.fenix.browser.browsingmode.DefaultBrowsingModeManager
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.Services
 import org.mozilla.fenix.components.metrics.Event
@@ -48,7 +47,6 @@ class BookmarkControllerTest {
 
     private val homeActivity: HomeActivity = mockk(relaxed = true)
     private val services: Services = mockk(relaxed = true)
-    private val browsingModeManager: DefaultBrowsingModeManager = mockk(relaxed = true)
 
     private val item =
         BookmarkNode(BookmarkNodeType.ITEM, "456", "123", 0, "Mozilla", "http://mozilla.org", null)
@@ -84,8 +82,6 @@ class BookmarkControllerTest {
             "android.content.ClipData",
             "org.mozilla.fenix.ext.ContextKt"
         )
-
-        every { homeActivity.components.browsingModeManager } returns browsingModeManager
 
         every { homeActivity.components.services } returns services
         every { navController.currentDestination } returns NavDestination("").apply {
