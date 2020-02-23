@@ -2265,6 +2265,7 @@ void gfxPlatformFontList::InitializeFamily(uint32_t aGeneration,
 void gfxPlatformFontList::SetCharacterMap(uint32_t aGeneration,
                                           const fontlist::Pointer& aFacePtr,
                                           const gfxSparseBitSet& aMap) {
+  MOZ_ASSERT(XRE_IsParentProcess());
   auto list = SharedFontList();
   MOZ_ASSERT(list);
   if (!list) {
@@ -2275,7 +2276,7 @@ void gfxPlatformFontList::SetCharacterMap(uint32_t aGeneration,
   }
   fontlist::Face* face = static_cast<fontlist::Face*>(aFacePtr.ToPtr(list));
   if (face) {
-    face->SetCharacterMap(list, &aMap);
+    face->mCharacterMap = GetShmemCharMap(&aMap);
   }
 }
 
