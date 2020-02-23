@@ -6,7 +6,6 @@ package org.mozilla.fenix
 
 import android.content.Context
 import android.content.Intent
-import android.content.res.Configuration
 import android.os.Bundle
 import android.util.AttributeSet
 import android.view.View
@@ -98,15 +97,6 @@ open class HomeActivity : LocaleAwareAppCompatActivity() {
             DeepLinkIntentProcessor(this),
             OpenBrowserIntentProcessor(this, ::getIntentSessionId)
         )
-    }
-
-    override fun applyOverrideConfiguration(overrideConfiguration: Configuration?) {
-        if (overrideConfiguration != null) {
-            val uiMode = overrideConfiguration.uiMode
-            overrideConfiguration.setTo(baseContext.resources.configuration)
-            overrideConfiguration.uiMode = uiMode
-        }
-        super.applyOverrideConfiguration(overrideConfiguration)
     }
 
     final override fun onCreate(savedInstanceState: Bundle?) {
