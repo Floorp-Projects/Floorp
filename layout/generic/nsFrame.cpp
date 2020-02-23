@@ -5585,7 +5585,7 @@ void nsIFrame::DisassociateImage(const StyleImage& aImage) {
 }
 
 Maybe<nsIFrame::Cursor> nsIFrame::GetCursor(const nsPoint&) {
-  StyleCursorKind kind = StyleUI()->mCursor;
+  StyleCursorKind kind = StyleUI()->mCursor.keyword;
   if (kind == StyleCursorKind::Auto) {
     // If this is editable, I-beam cursor is better for most elements.
     kind = (mContent && mContent->IsEditable()) ? StyleCursorKind::Text

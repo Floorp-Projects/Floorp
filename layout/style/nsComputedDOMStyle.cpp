@@ -667,8 +667,8 @@ static void CollectImageURLsForProperty(nsCSSPropertyID aProp,
 
   switch (aProp) {
     case eCSSProperty_cursor:
-      for (auto& image : aStyle.StyleUI()->mCursorImages) {
-        AddImageURL(image.mImage, aURLs);
+      for (auto& image : aStyle.StyleUI()->mCursor.images.AsSpan()) {
+        AddImageURL(image.url, aURLs);
       }
       break;
     case eCSSProperty_background_image:

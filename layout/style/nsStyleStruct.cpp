@@ -3096,42 +3096,12 @@ LogicalSide nsStyleText::TextEmphasisSide(WritingMode aWM) const {
 // nsStyleUI
 //
 
-nsCursorImage::nsCursorImage(const StyleComputedImageUrl& aImage)
-    : mHaveHotspot(false), mHotspotX(0.0f), mHotspotY(0.0f), mImage(aImage) {}
-
-nsCursorImage::nsCursorImage(const nsCursorImage& aOther)
-    : mHaveHotspot(aOther.mHaveHotspot),
-      mHotspotX(aOther.mHotspotX),
-      mHotspotY(aOther.mHotspotY),
-      mImage(aOther.mImage) {}
-
-nsCursorImage& nsCursorImage::operator=(const nsCursorImage& aOther) {
-  if (this != &aOther) {
-    mHaveHotspot = aOther.mHaveHotspot;
-    mHotspotX = aOther.mHotspotX;
-    mHotspotY = aOther.mHotspotY;
-    mImage = aOther.mImage;
-  }
-
-  return *this;
-}
-
-bool nsCursorImage::operator==(const nsCursorImage& aOther) const {
-  NS_ASSERTION(mHaveHotspot || (mHotspotX == 0 && mHotspotY == 0),
-               "expected mHotspot{X,Y} to be 0 when mHaveHotspot is false");
-  NS_ASSERTION(
-      aOther.mHaveHotspot || (aOther.mHotspotX == 0 && aOther.mHotspotY == 0),
-      "expected mHotspot{X,Y} to be 0 when mHaveHotspot is false");
-  return mHaveHotspot == aOther.mHaveHotspot && mHotspotX == aOther.mHotspotX &&
-         mHotspotY == aOther.mHotspotY && mImage == aOther.mImage;
-}
-
 nsStyleUI::nsStyleUI(const Document& aDocument)
     : mUserInput(StyleUserInput::Auto),
       mUserModify(StyleUserModify::ReadOnly),
       mUserFocus(StyleUserFocus::None),
       mPointerEvents(StylePointerEvents::Auto),
-      mCursor(StyleCursorKind::Auto),
+      mCursor{{}, StyleCursorKind::Auto},
       mCaretColor(StyleColorOrAuto::Auto()),
       mScrollbarColor(StyleScrollbarColor::Auto()) {
   MOZ_COUNT_CTOR(nsStyleUI);
@@ -3143,7 +3113,6 @@ nsStyleUI::nsStyleUI(const nsStyleUI& aSource)
       mUserFocus(aSource.mUserFocus),
       mPointerEvents(aSource.mPointerEvents),
       mCursor(aSource.mCursor),
-      mCursorImages(aSource.mCursorImages),
       mCaretColor(aSource.mCaretColor),
       mScrollbarColor(aSource.mScrollbarColor) {
   MOZ_COUNT_CTOR(nsStyleUI);
@@ -3155,16 +3124,16 @@ void nsStyleUI::TriggerImageLoads(Document& aDocument,
                                   const nsStyleUI* aOldStyle) {
   MOZ_ASSERT(NS_IsMainThread());
 
-  for (size_t i = 0; i < mCursorImages.Length(); ++i) {
-    nsCursorImage& cursor = mCursorImages[i];
+  auto cursorImages = mCursor.images.AsSpan();
+  auto oldCursorImages = aOldStyle ? aOldStyle->mCursor.images.AsSpan() : Span<const StyleCursorImage>();
+  for (size_t i = 0; i < cursorImages.Length(); ++i) {
+    auto& cursor = cursorImages[i];
 
-    if (!cursor.mImage.IsImageResolved()) {
-      const nsCursorImage* oldCursor =
-          (aOldStyle && aOldStyle->mCursorImages.Length() > i)
-              ? &aOldStyle->mCursorImages[i]
-              : nullptr;
-      cursor.mImage.ResolveImage(aDocument,
-                                 oldCursor ? &oldCursor->mImage : nullptr);
+    if (!cursor.url.IsImageResolved()) {
+      const auto* oldCursor =
+          oldCursorImages.Length() > i ? &oldCursorImages[i] : nullptr;
+      const_cast<StyleComputedImageUrl&>(cursor.url)
+          .ResolveImage(aDocument, oldCursor ? &oldCursor->url : nullptr);
     }
   }
 }
@@ -3172,12 +3141,6 @@ void nsStyleUI::TriggerImageLoads(Document& aDocument,
 nsChangeHint nsStyleUI::CalcDifference(const nsStyleUI& aNewData) const {
   nsChangeHint hint = nsChangeHint(0);
   if (mCursor != aNewData.mCursor) {
-    hint |= nsChangeHint_UpdateCursor;
-  }
-
-  // We could do better. But it wouldn't be worth it, URL-specified cursors are
-  // rare.
-  if (mCursorImages != aNewData.mCursorImages) {
     hint |= nsChangeHint_UpdateCursor;
   }
 
