@@ -3185,7 +3185,7 @@ nsChangeHint nsStyleUI::CalcDifference(const nsStyleUI& aNewData) const {
 nsStyleUIReset::nsStyleUIReset(const Document& aDocument)
     : mUserSelect(StyleUserSelect::Auto),
       mScrollbarWidth(StyleScrollbarWidth::Auto),
-      mForceBrokenImageIcon(0),
+      mMozForceBrokenImageIcon(0),
       mIMEMode(StyleImeMode::Auto),
       mWindowDragging(StyleWindowDragging::Default),
       mWindowShadow(StyleWindowShadow::Default),
@@ -3199,7 +3199,7 @@ nsStyleUIReset::nsStyleUIReset(const Document& aDocument)
 nsStyleUIReset::nsStyleUIReset(const nsStyleUIReset& aSource)
     : mUserSelect(aSource.mUserSelect),
       mScrollbarWidth(aSource.mScrollbarWidth),
-      mForceBrokenImageIcon(aSource.mForceBrokenImageIcon),
+      mMozForceBrokenImageIcon(aSource.mMozForceBrokenImageIcon),
       mIMEMode(aSource.mIMEMode),
       mWindowDragging(aSource.mWindowDragging),
       mWindowShadow(aSource.mWindowShadow),
@@ -3215,7 +3215,7 @@ nsChangeHint nsStyleUIReset::CalcDifference(
     const nsStyleUIReset& aNewData) const {
   nsChangeHint hint = nsChangeHint(0);
 
-  if (mForceBrokenImageIcon != aNewData.mForceBrokenImageIcon) {
+  if (mMozForceBrokenImageIcon != aNewData.mMozForceBrokenImageIcon) {
     hint |= nsChangeHint_ReconstructFrame;
   }
   if (mScrollbarWidth != aNewData.mScrollbarWidth) {
