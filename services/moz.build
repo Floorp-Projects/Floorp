@@ -13,6 +13,12 @@ DIRS += [
     'settings',
 ]
 
+# The automation dir is only included in nightlies and debug
+if not CONFIG['RELEASE_OR_BETA'] or CONFIG['MOZ_DEBUG']:
+    DIRS += [
+        'automation'
+    ]
+
 if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'android':
     DIRS += [
         'fxaccounts',
