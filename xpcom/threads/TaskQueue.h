@@ -128,7 +128,7 @@ class TaskQueue : public AbstractThread {
   // Monitor that protects the queue and mIsRunning;
   Monitor mQueueMonitor;
 
-  typedef struct {
+  typedef struct TaskStruct {
     nsCOMPtr<nsIRunnable> event;
     uint32_t flags;
   } TaskStruct;
