@@ -18,6 +18,8 @@
 #if defined(XP_WIN)
 #  include <process.h>
 #  include "mozilla/gfx/DeviceManagerDx.h"
+#else
+#  include <unistd.h>
 #endif
 
 namespace mozilla {
