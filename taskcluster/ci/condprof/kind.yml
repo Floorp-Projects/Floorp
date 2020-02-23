@@ -22,8 +22,11 @@ job-defaults:
         using: run-task
         checkout: false
         tooltool-downloads: public
+    scopes:
+        - secrets:get:project/releng/gecko/build/level-{level}/conditioned-profiles
     worker:
-        max-run-time: 5400
+        taskcluster-proxy: true
+        max-run-time: 10800
         env:
             MOZ_FETCHES_DIR: fetches
             CONDPROF_ARCHIVES: /builds/worker/archive
