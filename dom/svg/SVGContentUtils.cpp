@@ -166,7 +166,10 @@ static DashState GetStrokeDashData(
   Float totalLengthOfDashes = 0.0, totalLengthOfGaps = 0.0;
   Float pathScale = 1.0;
 
-  if (aContextPaint && aStyleSVG->StrokeDasharrayFromObject()) {
+  if (aStyleSVG->mStrokeDasharray.IsContextValue()) {
+    if (!aContextPaint) {
+      return eContinuousStroke;
+    }
     const FallibleTArray<Float>& dashSrc = aContextPaint->GetStrokeDashArray();
     dashArrayLength = dashSrc.Length();
     if (dashArrayLength <= 0) {
@@ -184,8 +187,8 @@ static DashState GetStrokeDashData(
       (i % 2 ? totalLengthOfGaps : totalLengthOfDashes) += dashSrc[i];
     }
   } else {
-    const auto& dasharray = aStyleSVG->mStrokeDasharray;
-    dashArrayLength = aStyleSVG->mStrokeDasharray.Length();
+    const auto dasharray = aStyleSVG->mStrokeDasharray.AsValues().AsSpan();
+    dashArrayLength = dasharray.Length();
     if (dashArrayLength <= 0) {
       return eContinuousStroke;
     }
@@ -243,11 +246,13 @@ static DashState GetStrokeDashData(
     return eNoStroke;
   }
 
-  if (aContextPaint && aStyleSVG->StrokeDashoffsetFromObject()) {
-    aStrokeOptions->mDashOffset = Float(aContextPaint->GetStrokeDashOffset());
+  if (aStyleSVG->mStrokeDashoffset.IsContextValue()) {
+    aStrokeOptions->mDashOffset =
+        Float(aContextPaint ? aContextPaint->GetStrokeDashOffset() : 0);
   } else {
     aStrokeOptions->mDashOffset =
-        SVGContentUtils::CoordToFloat(aElement, aStyleSVG->mStrokeDashoffset) *
+        SVGContentUtils::CoordToFloat(
+            aElement, aStyleSVG->mStrokeDashoffset.AsLengthPercentage()) *
         pathScale;
   }
 
@@ -332,12 +337,12 @@ Float SVGContentUtils::GetStrokeWidth(SVGElement* aElement,
   auto doCompute = [&](ComputedStyle const* computedStyle) {
     const nsStyleSVG* styleSVG = computedStyle->StyleSVG();
 
-    if (aContextPaint && styleSVG->StrokeWidthFromObject()) {
-      res = aContextPaint->GetStrokeWidth();
-      return;
+    if (styleSVG->mStrokeWidth.IsContextValue()) {
+      res = aContextPaint ? aContextPaint->GetStrokeWidth() : 1.0;
+    } else {
+      res = SVGContentUtils::CoordToFloat(
+          aElement, styleSVG->mStrokeWidth.AsLengthPercentage());
     }
-
-    res = SVGContentUtils::CoordToFloat(aElement, styleSVG->mStrokeWidth);
   };
 
   if (aComputedStyle) {

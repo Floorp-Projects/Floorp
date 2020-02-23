@@ -485,9 +485,7 @@ class nsSVGUtils {
                                    imgDrawingParams& aImgParams,
                                    SVGContextPaint* aContextPaint = nullptr);
 
-  static float GetOpacity(nsStyleSVGOpacitySource aOpacityType,
-                          const float& aOpacity,
-                          SVGContextPaint* aContextPaint);
+  static float GetOpacity(const mozilla::StyleSVGOpacity&, SVGContextPaint*);
 
   /*
    * @return false if there is no stroke
