@@ -29,7 +29,7 @@ from condprof.util import (
     get_current_platform,
     extract_from_dmg,
 )  # NOQA
-from condprof.customization import get_customizations  # NOQA
+from condprof.customization import get_customizations, find_customization  # NOQA
 from condprof.client import read_changelog, ProfileNotFoundError  # NOQA
 
 
@@ -43,12 +43,6 @@ def main(args=sys.argv[1:]):
     )
     parser.add_argument(
         "--customization", help="Profile customization to use", type=str, default="all"
-    )
-    parser.add_argument(
-        "--fresh-profile",
-        help="Create a fresh profile",
-        action="store_true",
-        default=False,
     )
     parser.add_argument(
         "--visible", help="Don't use headless mode", action="store_true", default=False
@@ -89,6 +83,14 @@ def main(args=sys.argv[1:]):
         args.firefox = os.path.join(target, "Contents", "MacOS", "firefox")
 
     args.android = args.firefox is not None and args.firefox.startswith("org.mozilla")
+
+    # early checks to avoid extra work
+    if args.customization != "all":
+        if find_customization(args.customization) is None:
+            raise IOError("Cannot find customization %r" % args.customization)
+
+    if args.scenario != "all" and args.scenario not in scenarii:
+        raise IOError("Cannot find scenario %r" % args.scenario)
 
     if not args.android and args.firefox is not None:
         LOG("Verifying Desktop Firefox binary")
