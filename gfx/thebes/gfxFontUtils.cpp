@@ -546,7 +546,7 @@ typedef struct {
   AutoSwap_PRUint16 arrays[1];
 } Format4Cmap;
 
-typedef struct {
+typedef struct Format14Cmap {
   AutoSwap_PRUint16 format;
   AutoSwap_PRUint32 length;
   AutoSwap_PRUint32 numVarSelectorRecords;
@@ -560,7 +560,7 @@ typedef struct {
   VarSelectorRecord varSelectorRecords[1];
 } Format14Cmap;
 
-typedef struct {
+typedef struct NonDefUVSTable {
   AutoSwap_PRUint32 numUVSMappings;
 
   typedef struct {
