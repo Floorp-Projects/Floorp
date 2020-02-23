@@ -28,7 +28,7 @@ import os
 from arsenic import get_session
 from arsenic.browsers import Firefox
 
-from condprof.util import fresh_profile, LOG, ERROR, obfuscate_file, obfuscate
+from condprof.util import fresh_profile, LOG, ERROR
 from condprof.scenarii import scenarii
 from condprof.client import get_profile, ProfileNotFoundError
 from condprof.archiver import Archiver
@@ -59,16 +59,6 @@ class ProfileCreator:
 
     async def run(self, headless=True):
         LOG("Building %s x %s" % (self.scenario, self.customization_data["name"]))
-
-        if self.scenario in self.customization_data.get("ignore_scenario", []):
-            LOG("Skipping (ignored scenario in that customization)")
-            return
-
-        filter_by_platform = self.customization_data.get("platforms")
-        if filter_by_platform and self.env.target_platform not in filter_by_platform:
-            LOG("Skipping (ignored platform in that customization)")
-            return
-
         with self.env.get_device(2828, verbose=True) as device:
             try:
                 with self.env.get_browser():
@@ -93,18 +83,9 @@ class ProfileCreator:
         LOG("Archive created at %s" % archive_name)
         statinfo = os.stat(archive_name)
         LOG("Current size is %d" % statinfo.st_size)
-        LOG("Extracting logs")
-        if "logs" in metadata:
-            logs = metadata.pop("logs")
-            for prefix, prefixed_logs in logs.items():
-                for log in prefixed_logs:
-                    content = obfuscate(log["content"])[1]
-                    with open(os.path.join(dir, prefix + "-" + log["name"]), "wb") as f:
-                        f.write(content.encode("utf-8"))
-
         if metadata.get("result", 0) != 0:
             LOG("The scenario returned a bad exit code")
-            raise Exception(metadata.get("result_message", "scenario error"))
+            raise Exception("scenario error")
         self.changelog.append("update", **metadata)
 
     async def build_profile(self, device, headless):
@@ -136,8 +117,7 @@ class ProfileCreator:
         metadata = Metadata(profile)
 
         LOG("Starting the Gecko app...")
-        adb_logs = self._log_filename("adb")
-        self.env.prepare(logfile=adb_logs)
+        self.env.prepare(logfile=self._log_filename("adb"))
         geckodriver_logs = self._log_filename("geckodriver")
         LOG("Writing geckodriver logs in %s" % geckodriver_logs)
         step = START
@@ -166,9 +146,7 @@ class ProfileCreator:
             raise
         finally:
             self.env.stop_browser()
-            for logfile in (adb_logs, geckodriver_logs):
-                if os.path.exists(logfile):
-                    obfuscate_file(logfile)
+
         self.env.collect_profile()
 
         # writing metadata

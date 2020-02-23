@@ -2,7 +2,7 @@ import random
 import os
 import asyncio
 
-from condprof.util import LOG
+from condprof.util import get_logger
 from condprof.helpers import TabSwitcher
 
 
@@ -47,7 +47,7 @@ async def heavy(session, options):
     visited = 0
 
     for current, url in enumerate(URL_LIST):
-        LOG("%d/%d %s" % (current + 1, max, url))
+        get_logger().visit_url(index=current + 1, total=max, url=url)
         retries = 0
         while retries < 3:
             try:
