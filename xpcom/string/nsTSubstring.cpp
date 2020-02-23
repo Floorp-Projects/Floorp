@@ -658,45 +658,6 @@ bool nsTSubstring<T>::Replace(index_type aCutStart, size_type aCutLength,
 }
 
 template <typename T>
-void nsTSubstring<T>::ReplaceASCII(index_type aCutStart, size_type aCutLength,
-                                   const char* aData, size_type aLength) {
-  if (!ReplaceASCII(aCutStart, aCutLength, aData, aLength, mozilla::fallible)) {
-    AllocFailed(this->Length() - aCutLength + 1);
-  }
-}
-
-template <typename T>
-bool nsTSubstring<T>::ReplaceASCII(index_type aCutStart, size_type aCutLength,
-                                   const char* aData, size_type aLength,
-                                   const fallible_t& aFallible) {
-  if (aLength == size_type(-1)) {
-    aLength = strlen(aData);
-  }
-
-  // A Unicode string can't depend on an ASCII string buffer,
-  // so this dependence check only applies to CStrings.
-#ifdef CharT_is_char
-  if (this->IsDependentOn(aData, aData + aLength)) {
-    nsTAutoString_CharT temp(aData, aLength);
-    return Replace(aCutStart, aCutLength, temp, aFallible);
-  }
-#endif
-
-  aCutStart = XPCOM_MIN(aCutStart, this->Length());
-
-  bool ok = ReplacePrep(aCutStart, aCutLength, aLength);
-  if (!ok) {
-    return false;
-  }
-
-  if (aLength > 0) {
-    char_traits::copyASCII(this->mData + aCutStart, aData, aLength);
-  }
-
-  return true;
-}
-
-template <typename T>
 void nsTSubstring<T>::Replace(index_type aCutStart, size_type aCutLength,
                               const substring_tuple_type& aTuple) {
   if (aTuple.IsDependentOn(this->mData, this->mData + this->mLength)) {
