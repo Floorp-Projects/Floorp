@@ -13,7 +13,7 @@ const TEST_URL = `data:text/html;charset=utf-8,
                         height: 8000px'>
                     </div>`;
 
-const PREFIX = "measuring-tool-highlighter-";
+const PREFIX = "measuring-tool-";
 const HIGHLIGHTER_TYPE = "MeasuringToolHighlighter";
 
 const X = 32;
