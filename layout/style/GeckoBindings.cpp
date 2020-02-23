@@ -1105,20 +1105,6 @@ const AnonymousCounterStyle* Gecko_CounterStyle_GetAnonymous(
   return aPtr->AsAnonymous();
 }
 
-void Gecko_SetCursorArrayCapacity(nsStyleUI* aUi, size_t aCapacity) {
-  aUi->mCursorImages.Clear();
-  aUi->mCursorImages.SetCapacity(aCapacity);
-}
-
-void Gecko_AppendCursorImage(nsStyleUI* aUi,
-                             const StyleComputedImageUrl* aUrl) {
-  aUi->mCursorImages.EmplaceBack(*aUrl);
-}
-
-void Gecko_CopyCursorArrayFrom(nsStyleUI* aDest, const nsStyleUI* aSrc) {
-  aDest->mCursorImages = aSrc->mCursorImages;
-}
-
 void Gecko_EnsureTArrayCapacity(void* aArray, size_t aCapacity,
                                 size_t aElemSize) {
   auto base = reinterpret_cast<

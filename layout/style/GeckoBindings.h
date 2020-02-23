@@ -344,11 +344,6 @@ void Gecko_SetListStyleImageImageValue(
 
 void Gecko_CopyListStyleImageFrom(nsStyleList* dest, const nsStyleList* src);
 
-// cursor style.
-void Gecko_SetCursorArrayCapacity(nsStyleUI*, size_t);
-void Gecko_AppendCursorImage(nsStyleUI*, const mozilla::StyleComputedImageUrl*);
-void Gecko_CopyCursorArrayFrom(nsStyleUI* dest, const nsStyleUI* src);
-
 // Dirtiness tracking.
 void Gecko_SetNodeFlags(const nsINode* node, uint32_t flags);
 void Gecko_UnsetNodeFlags(const nsINode* node, uint32_t flags);

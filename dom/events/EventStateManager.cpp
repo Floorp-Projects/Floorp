@@ -3916,9 +3916,9 @@ static CursorImage ComputeCustomCursor(nsPresContext* aPresContext,
   // If we are falling back because any cursor before us is loading, let the
   // consumer know.
   bool loading = false;
-  for (const nsCursorImage& image : style.StyleUI()->mCursorImages) {
+  for (const auto& image : style.StyleUI()->mCursor.images.AsSpan()) {
     uint32_t status;
-    imgRequestProxy* req = image.GetImage();
+    imgRequestProxy* req = image.url.GetImage();
     if (!req || NS_FAILED(req->GetImageStatus(&status))) {
       continue;
     }
@@ -3935,8 +3935,8 @@ static CursorImage ComputeCustomCursor(nsPresContext* aPresContext,
       continue;
     }
     Maybe<gfx::Point> specifiedHotspot =
-        image.mHaveHotspot ? Some(gfx::Point{image.mHotspotX, image.mHotspotY})
-                           : Nothing();
+        image.has_hotspot ? Some(gfx::Point{image.hotspot_x, image.hotspot_y})
+                          : Nothing();
     gfx::IntPoint hotspot = ComputeHotspot(container, specifiedHotspot);
     CursorImage result{hotspot, std::move(container), loading};
     if (ShouldBlockCustomCursor(aPresContext, aEvent, result)) {
