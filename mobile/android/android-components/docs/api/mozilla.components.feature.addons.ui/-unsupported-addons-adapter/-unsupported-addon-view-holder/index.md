@@ -2,7 +2,7 @@
 
 # UnsupportedAddonViewHolder
 
-`class UnsupportedAddonViewHolder : ViewHolder` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/addons/src/main/java/mozilla/components/feature/addons/ui/UnsupportedAddonsAdapter.kt#L89)
+`class UnsupportedAddonViewHolder : ViewHolder` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/addons/src/main/java/mozilla/components/feature/addons/ui/UnsupportedAddonsAdapter.kt#L101)
 
 A view holder for displaying unsupported add-on items.
 
