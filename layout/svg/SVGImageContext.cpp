@@ -42,8 +42,7 @@ void SVGImageContext::MaybeStoreContextPaint(Maybe<SVGImageContext>& aContext,
 
   bool haveContextPaint = false;
 
-  RefPtr<SVGEmbeddingContextPaint> contextPaint =
-      new SVGEmbeddingContextPaint();
+  auto contextPaint = MakeRefPtr<SVGEmbeddingContextPaint>();
 
   if ((style->mMozContextProperties.bits & StyleContextPropertyBits::FILL) &&
       style->mFill.kind.IsColor()) {
@@ -60,12 +59,16 @@ void SVGImageContext::MaybeStoreContextPaint(Maybe<SVGImageContext>& aContext,
   if (style->mMozContextProperties.bits &
       StyleContextPropertyBits::FILL_OPACITY) {
     haveContextPaint = true;
-    contextPaint->SetFillOpacity(style->mFillOpacity);
+    contextPaint->SetFillOpacity(style->mFillOpacity.IsOpacity()
+                                     ? style->mFillOpacity.AsOpacity()
+                                     : 1.0f);
   }
   if (style->mMozContextProperties.bits &
       StyleContextPropertyBits::STROKE_OPACITY) {
     haveContextPaint = true;
-    contextPaint->SetStrokeOpacity(style->mStrokeOpacity);
+    contextPaint->SetStrokeOpacity(style->mStrokeOpacity.IsOpacity()
+                                       ? style->mStrokeOpacity.AsOpacity()
+                                       : 1.0f);
   }
 
   if (haveContextPaint) {
