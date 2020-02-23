@@ -1142,7 +1142,7 @@ static void GetRealmName(JS::Realm* realm, nsCString& name, int* anonymizeID,
           }
         }
         if (lastSlashPos != -1) {
-          name.ReplaceASCII(pathPos, lastSlashPos - pathPos, "<anonymized>");
+          name.ReplaceLiteral(pathPos, lastSlashPos - pathPos, "<anonymized>");
         } else {
           // Something went wrong. Anonymize the entire path to be
           // safe.
