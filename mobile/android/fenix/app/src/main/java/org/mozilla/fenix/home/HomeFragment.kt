@@ -105,7 +105,7 @@ class HomeFragment : Fragment() {
             }
         }
 
-    private val browsingModeManager get() = requireComponents.browsingModeManager
+    private val browsingModeManager get() = (activity as HomeActivity).browsingModeManager
     private var homeAppBarOffset = 0
     private val singleSessionObserver = object : Session.Observer {
         override fun onTitleChanged(session: Session, title: String) {

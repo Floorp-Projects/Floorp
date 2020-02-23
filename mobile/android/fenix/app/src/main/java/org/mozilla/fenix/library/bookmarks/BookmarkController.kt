@@ -56,7 +56,7 @@ class DefaultBookmarkController(
     private val services: Services = activity.components.services
 
     override fun handleBookmarkTapped(item: BookmarkNode) {
-        openInNewTab(item.url!!, true, BrowserDirection.FromBookmarks, context.components.browsingModeManager.mode)
+        openInNewTab(item.url!!, true, BrowserDirection.FromBookmarks, activity.browsingModeManager.mode)
     }
 
     override fun handleBookmarkExpand(folder: BookmarkNode) {
@@ -117,7 +117,7 @@ class DefaultBookmarkController(
     ) {
         invokePendingDeletion.invoke()
         with(activity) {
-            components.browsingModeManager.mode = mode
+            browsingModeManager.mode = mode
             openToBrowserAndLoad(searchTermOrURL, newTab, from)
         }
     }

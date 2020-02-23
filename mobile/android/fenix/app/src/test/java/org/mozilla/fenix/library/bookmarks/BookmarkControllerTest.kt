@@ -114,16 +114,16 @@ class BookmarkControllerTest {
     @Test
     fun `handleBookmarkTapped should respect browsing mode`() {
         // if in normal mode, should be in normal mode
-        every { context.components.browsingModeManager.mode } returns BrowsingMode.Normal
+        every { homeActivity.browsingModeManager.mode } returns BrowsingMode.Normal
 
         controller.handleBookmarkTapped(item)
-        assertEquals(BrowsingMode.Normal, context.components.browsingModeManager.mode)
+        assertEquals(BrowsingMode.Normal, homeActivity.browsingModeManager.mode)
 
         // if in private mode, should be in private mode
-        every { context.components.browsingModeManager.mode } returns BrowsingMode.Private
+        every { homeActivity.browsingModeManager.mode } returns BrowsingMode.Private
 
         controller.handleBookmarkTapped(item)
-        assertEquals(BrowsingMode.Private, context.components.browsingModeManager.mode)
+        assertEquals(BrowsingMode.Private, homeActivity.browsingModeManager.mode)
     }
 
     @Test
@@ -209,7 +209,7 @@ class BookmarkControllerTest {
 
         verifyOrder {
             invokePendingDeletion.invoke()
-            browsingModeManager.mode = BrowsingMode.Normal
+            homeActivity.browsingModeManager.mode = BrowsingMode.Normal
             homeActivity.openToBrowserAndLoad(item.url!!, true, BrowserDirection.FromBookmarks)
         }
     }
@@ -220,7 +220,7 @@ class BookmarkControllerTest {
 
         verifyOrder {
             invokePendingDeletion.invoke()
-            browsingModeManager.mode = BrowsingMode.Private
+            homeActivity.browsingModeManager.mode = BrowsingMode.Private
             homeActivity.openToBrowserAndLoad(item.url!!, true, BrowserDirection.FromBookmarks)
         }
     }

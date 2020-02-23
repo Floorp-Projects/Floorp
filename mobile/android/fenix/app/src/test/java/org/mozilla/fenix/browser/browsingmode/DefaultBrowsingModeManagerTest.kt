@@ -4,42 +4,40 @@
 
 package org.mozilla.fenix.browser.browsingmode
 
-import mozilla.components.support.test.any
-import mozilla.components.support.test.mock
+import io.mockk.MockKAnnotations
+import io.mockk.impl.annotations.MockK
+import io.mockk.verify
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
-import org.mockito.Mockito.times
-import org.mockito.Mockito.verify
 
 class DefaultBrowsingModeManagerTest {
 
-    lateinit var manager: DefaultBrowsingModeManager
+    @MockK(relaxed = true) lateinit var callback: (BrowsingMode) -> Unit
+    lateinit var manager: BrowsingModeManager
 
     private val initMode = BrowsingMode.Normal
 
     @Before
     fun before() {
-        manager = DefaultBrowsingModeManager(initMode)
+        MockKAnnotations.init(this)
+        manager = DefaultBrowsingModeManager(initMode, callback)
     }
 
     @Test
     fun `WHEN mode is updated THEN callback is invoked`() {
-        val browsingModeListener: BrowsingModeListener = mock()
-        manager.registerBrowsingModeListener(browsingModeListener)
-
-        verify(browsingModeListener, times(0)).onBrowsingModeChange(any())
+        verify(exactly = 0) { callback.invoke(any()) }
 
         manager.mode = BrowsingMode.Private
         manager.mode = BrowsingMode.Private
         manager.mode = BrowsingMode.Private
 
-        verify(browsingModeListener, times(3)).onBrowsingModeChange(any())
+        verify(exactly = 3) { callback.invoke(any()) }
 
         manager.mode = BrowsingMode.Normal
         manager.mode = BrowsingMode.Normal
 
-        verify(browsingModeListener, times(5)).onBrowsingModeChange(any())
+        verify(exactly = 5) { callback.invoke(any()) }
     }
 
     @Test

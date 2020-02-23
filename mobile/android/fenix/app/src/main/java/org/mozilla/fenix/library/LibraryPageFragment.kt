@@ -5,10 +5,10 @@
 package org.mozilla.fenix.library
 
 import androidx.fragment.app.Fragment
+import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.hideToolbar
-import org.mozilla.fenix.ext.requireComponents
 
 abstract class LibraryPageFragment<T> : Fragment() {
 
@@ -24,7 +24,7 @@ abstract class LibraryPageFragment<T> : Fragment() {
                 }
         }
 
-        requireComponents.browsingModeManager.mode = BrowsingMode.fromBoolean(private)
+        (activity as HomeActivity).browsingModeManager.mode = BrowsingMode.fromBoolean(private)
         hideToolbar()
     }
 }

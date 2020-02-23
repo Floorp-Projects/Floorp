@@ -169,7 +169,7 @@ class HistoryFragment : LibraryPageFragment<HistoryItem>(), UserInteractionHandl
             }
 
             (activity as HomeActivity).apply {
-                components.browsingModeManager.mode = BrowsingMode.Private
+                browsingModeManager.mode = BrowsingMode.Private
                 supportActionBar?.hide()
             }
             nav(
