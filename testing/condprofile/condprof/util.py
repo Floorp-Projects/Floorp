@@ -21,6 +21,7 @@ from datetime import datetime
 
 import requests
 from requests.exceptions import ConnectionError
+from requests.packages.urllib3.util.retry import Retry
 
 from condprof import progress
 
@@ -70,7 +71,7 @@ class NullLogger:
         traceback.print_exc(file=sys.stdout)
 
 
-def get_logger():
+def _get_logger():
     global _LOGGER
     if _LOGGER is not None:
         return _LOGGER
@@ -95,12 +96,12 @@ def get_logger():
 
 def LOG(msg):
     msg = "[%s] %s" % (datetime.now().isoformat(), msg)
-    get_logger().msg(msg)
+    _get_logger().msg(obfuscate(msg)[1])
 
 
 def ERROR(msg):
     msg = "[%s] %s" % (datetime.now().isoformat(), msg)
-    get_logger().error(msg)
+    _get_logger().error(obfuscate(msg)[1])
 
 
 def fresh_profile(profile, customization_data):
@@ -111,12 +112,15 @@ def fresh_profile(profile, customization_data):
     new_profile = create_profile(app="firefox")
     prefs = customization_data["prefs"]
     prefs.update(DEFAULT_PREFS)
+    LOG("Setting prefs %s" % str(prefs.items()))
     new_profile.set_preferences(prefs)
     extensions = []
     for name, url in customization_data["addons"].items():
         LOG("Downloading addon %s" % name)
         extension = download_file(url)
         extensions.append(extension)
+    LOG("Installing addons")
+    new_profile.addons.install(extensions, unpack=True)
     new_profile.addons.install(extensions)
     shutil.copytree(new_profile.profile, profile)
     return profile
@@ -279,12 +283,12 @@ def latest_nightly(binary=None):
 
 
 def write_yml_file(yml_file, yml_data):
-    get_logger().info("writing %s to %s" % (yml_data, yml_file))
+    LOG("writing %s to %s" % (yml_data, yml_file))
     try:
         with open(yml_file, "w") as outfile:
             yaml.dump(yml_data, outfile, default_flow_style=False)
     except Exception as e:
-        get_logger().critical("failed to write yaml file, exeption: %s" % e)
+        ERROR("failed to write yaml file, exeption: %s" % e)
 
 
 def get_version(firefox):
@@ -357,3 +361,70 @@ class BaseEnv:
 
     def stop_browser(self):
         pass
+
+
+_URL = (
+    "{0}/secrets/v1/secret/project"
+    "{1}releng{1}gecko{1}build{1}level-{2}{1}conditioned-profiles"
+)
+_DEFAULT_SERVER = "https://firefox-ci-tc.services.mozilla.com"
+
+
+def get_tc_secret():
+    if "TASK_ID" not in os.environ:
+        raise OSError("Not running in Taskcluster")
+    session = requests.Session()
+    retry = Retry(total=5, backoff_factor=0.1, status_forcelist=[500, 502, 503, 504])
+    http_adapter = requests.adapters.HTTPAdapter(max_retries=retry)
+    session.mount("https://", http_adapter)
+    session.mount("http://", http_adapter)
+    secrets_url = _URL.format(
+        os.environ.get("TASKCLUSTER_PROXY_URL", _DEFAULT_SERVER),
+        "%2F",
+        os.environ.get("MOZ_SCM_LEVEL", "1"),
+    )
+    res = session.get(secrets_url)
+    res.raise_for_status()
+    return res.json()["secret"]
+
+
+_CACHED = {}
+
+
+def obfuscate(text):
+    username, password = get_credentials()
+    if username is None:
+        return False, text
+    if username not in text and password not in text:
+        return False, text
+    text = text.replace(password, "<PASSWORD>")
+    text = text.replace(username, "<USERNAME>")
+    return True, text
+
+
+def obfuscate_file(path):
+    with open(path) as f:
+        data = f.read()
+    hit, data = obfuscate(data)
+    if not hit:
+        return
+    with open(path, "w") as f:
+        f.write(data)
+
+
+def get_credentials():
+    if "creds" in _CACHED:
+        return _CACHED["creds"]
+    password = os.environ.get("FXA_PASSWORD")
+    username = os.environ.get("FXA_USERNAME")
+    if username is None or password is None:
+        if "TASK_ID" not in os.environ:
+            return None, None
+        try:
+            secret = get_tc_secret()
+        except Exception:
+            return None, None
+        password = secret["password"]
+        username = secret["username"]
+    _CACHED["creds"] = username, password
+    return username, password

@@ -5,6 +5,7 @@
 
    },
    "scenario": {
-       "heavy": {"max_urls": 50}
-   }
+       "heavy": {"max_urls": 100}
+   },
+   "ignore_scenario": ["synced"]
 }
