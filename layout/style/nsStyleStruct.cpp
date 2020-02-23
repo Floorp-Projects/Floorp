@@ -805,11 +805,14 @@ nsStyleSVG::nsStyleSVG(const Document& aDocument)
       mMarkerMid(StyleUrlOrNone::None()),
       mMarkerStart(StyleUrlOrNone::None()),
       mMozContextProperties{{}, {0}},
-      mStrokeDashoffset(LengthPercentage::Zero()),
-      mStrokeWidth(LengthPercentage::FromPixels(1.0f)),
-      mFillOpacity(1.0f),
+      mStrokeDasharray(StyleSVGStrokeDashArray::Values({})),
+      mStrokeDashoffset(
+          StyleSVGLength::LengthPercentage(LengthPercentage::Zero())),
+      mStrokeWidth(
+          StyleSVGWidth::LengthPercentage(LengthPercentage::FromPixels(1.0f))),
+      mFillOpacity(StyleSVGOpacity::Opacity(1.0f)),
       mStrokeMiterlimit(4.0f),
-      mStrokeOpacity(1.0f),
+      mStrokeOpacity(StyleSVGOpacity::Opacity(1.0f)),
       mClipRule(StyleFillRule::Nonzero),
       mColorInterpolation(NS_STYLE_COLOR_INTERPOLATION_SRGB),
       mColorInterpolationFilters(NS_STYLE_COLOR_INTERPOLATION_LINEARRGB),
@@ -819,10 +822,7 @@ nsStyleSVG::nsStyleSVG(const Document& aDocument)
       mStrokeLinecap(StyleStrokeLinecap::Butt),
       mStrokeLinejoin(StyleStrokeLinejoin::Miter),
       mDominantBaseline(StyleDominantBaseline::Auto),
-      mTextAnchor(StyleTextAnchor::Start),
-      mContextFlags(
-          (eStyleSVGOpacitySource_Normal << FILL_OPACITY_SOURCE_SHIFT) |
-          (eStyleSVGOpacitySource_Normal << STROKE_OPACITY_SOURCE_SHIFT)) {
+      mTextAnchor(StyleTextAnchor::Start) {
   MOZ_COUNT_CTOR(nsStyleSVG);
 }
 
@@ -834,8 +834,8 @@ nsStyleSVG::nsStyleSVG(const nsStyleSVG& aSource)
       mMarkerEnd(aSource.mMarkerEnd),
       mMarkerMid(aSource.mMarkerMid),
       mMarkerStart(aSource.mMarkerStart),
-      mStrokeDasharray(aSource.mStrokeDasharray),
       mMozContextProperties(aSource.mMozContextProperties),
+      mStrokeDasharray(aSource.mStrokeDasharray),
       mStrokeDashoffset(aSource.mStrokeDashoffset),
       mStrokeWidth(aSource.mStrokeWidth),
       mFillOpacity(aSource.mFillOpacity),
@@ -850,8 +850,7 @@ nsStyleSVG::nsStyleSVG(const nsStyleSVG& aSource)
       mStrokeLinecap(aSource.mStrokeLinecap),
       mStrokeLinejoin(aSource.mStrokeLinejoin),
       mDominantBaseline(aSource.mDominantBaseline),
-      mTextAnchor(aSource.mTextAnchor),
-      mContextFlags(aSource.mContextFlags) {
+      mTextAnchor(aSource.mTextAnchor) {
   MOZ_COUNT_CTOR(nsStyleSVG);
 }
 
@@ -926,7 +925,6 @@ nsChangeHint nsStyleSVG::CalcDifference(const nsStyleSVG& aNewData) const {
       mFillRule != aNewData.mFillRule || mPaintOrder != aNewData.mPaintOrder ||
       mShapeRendering != aNewData.mShapeRendering ||
       mStrokeDasharray != aNewData.mStrokeDasharray ||
-      mContextFlags != aNewData.mContextFlags ||
       mMozContextProperties.bits != aNewData.mMozContextProperties.bits) {
     return hint | nsChangeHint_RepaintFrame;
   }

@@ -1709,12 +1709,6 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleColumn {
   nscoord mTwipsPerPixel;
 };
 
-enum nsStyleSVGOpacitySource : uint8_t {
-  eStyleSVGOpacitySource_Normal,
-  eStyleSVGOpacitySource_ContextFillOpacity,
-  eStyleSVGOpacitySource_ContextStrokeOpacity
-};
-
 struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleSVG {
   explicit nsStyleSVG(const mozilla::dom::Document&);
   nsStyleSVG(const nsStyleSVG& aSource);
@@ -1728,15 +1722,15 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleSVG {
   mozilla::StyleUrlOrNone mMarkerEnd;
   mozilla::StyleUrlOrNone mMarkerMid;
   mozilla::StyleUrlOrNone mMarkerStart;
-  nsTArray<mozilla::NonNegativeLengthPercentage> mStrokeDasharray;
   mozilla::StyleMozContextProperties mMozContextProperties;
 
-  mozilla::LengthPercentage mStrokeDashoffset;
-  mozilla::NonNegativeLengthPercentage mStrokeWidth;
+  mozilla::StyleSVGStrokeDashArray mStrokeDasharray;
+  mozilla::StyleSVGLength mStrokeDashoffset;
+  mozilla::StyleSVGWidth mStrokeWidth;
 
-  float mFillOpacity;
+  mozilla::StyleSVGOpacity mFillOpacity;
   float mStrokeMiterlimit;
-  float mStrokeOpacity;
+  mozilla::StyleSVGOpacity mStrokeOpacity;
 
   mozilla::StyleFillRule mClipRule;
   uint8_t mColorInterpolation;         // NS_STYLE_COLOR_INTERPOLATION_*
@@ -1755,63 +1749,33 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleSVG {
     return bool(mMozContextProperties.bits);
   }
 
-  nsStyleSVGOpacitySource FillOpacitySource() const {
-    uint8_t value =
-        (mContextFlags & FILL_OPACITY_SOURCE_MASK) >> FILL_OPACITY_SOURCE_SHIFT;
-    return nsStyleSVGOpacitySource(value);
-  }
-  nsStyleSVGOpacitySource StrokeOpacitySource() const {
-    uint8_t value = (mContextFlags & STROKE_OPACITY_SOURCE_MASK) >>
-                    STROKE_OPACITY_SOURCE_SHIFT;
-    return nsStyleSVGOpacitySource(value);
-  }
-  bool StrokeDasharrayFromObject() const {
-    return mContextFlags & STROKE_DASHARRAY_CONTEXT;
-  }
-  bool StrokeDashoffsetFromObject() const {
-    return mContextFlags & STROKE_DASHOFFSET_CONTEXT;
-  }
-  bool StrokeWidthFromObject() const {
-    return mContextFlags & STROKE_WIDTH_CONTEXT;
-  }
-
   bool HasMarker() const {
     return mMarkerStart.IsUrl() || mMarkerMid.IsUrl() || mMarkerEnd.IsUrl();
   }
 
   /**
    * Returns true if the stroke is not "none" and the stroke-opacity is greater
-   * than zero. This ignores stroke-widths as that depends on the context.
+   * than zero (or a context-dependent value).
+   *
+   * This ignores stroke-widths as that depends on the context.
    */
   bool HasStroke() const {
-    return !mStroke.kind.IsNone() && mStrokeOpacity > 0;
+    if (mStroke.kind.IsNone()) {
+      return false;
+    }
+    return !mStrokeOpacity.IsOpacity() || mStrokeOpacity.AsOpacity() > 0;
   }
 
   /**
    * Returns true if the fill is not "none" and the fill-opacity is greater
-   * than zero.
+   * than zero (or a context-dependent value).
    */
-  bool HasFill() const { return !mFill.kind.IsNone() && mFillOpacity > 0; }
-
- private:
-  // Flags to represent the use of context-fill and context-stroke
-  // for fill-opacity or stroke-opacity, and context-value for stroke-dasharray,
-  // stroke-dashoffset and stroke-width.
-
-  // fill-opacity: context-{fill,stroke}
-  static const uint8_t FILL_OPACITY_SOURCE_MASK = 0x03;
-  // stroke-opacity: context-{fill,stroke}
-  static const uint8_t STROKE_OPACITY_SOURCE_MASK = 0x0C;
-  // stroke-dasharray: context-value
-  static const uint8_t STROKE_DASHARRAY_CONTEXT = 0x10;
-  // stroke-dashoffset: context-value
-  static const uint8_t STROKE_DASHOFFSET_CONTEXT = 0x20;
-  // stroke-width: context-value
-  static const uint8_t STROKE_WIDTH_CONTEXT = 0x40;
-  static const uint8_t FILL_OPACITY_SOURCE_SHIFT = 0;
-  static const uint8_t STROKE_OPACITY_SOURCE_SHIFT = 2;
-
-  uint8_t mContextFlags;
+  bool HasFill() const {
+    if (mFill.kind.IsNone()) {
+      return false;
+    }
+    return !mFillOpacity.IsOpacity() || mFillOpacity.AsOpacity() > 0;
+  }
 };
 
 struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleSVGReset {

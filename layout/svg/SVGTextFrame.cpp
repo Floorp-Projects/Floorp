@@ -49,6 +49,7 @@
 #include "mozilla/dom/Text.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/PatternHelpers.h"
+#include "mozilla/StaticPrefs_svg.h"
 #include <algorithm>
 #include <cmath>
 #include <limits>
@@ -4967,15 +4968,21 @@ bool SVGTextFrame::ShouldRenderAsPath(nsTextFrame* aFrame,
   // Fill is a non-solid paint, has a non-default fill-rule or has
   // non-1 opacity.
   if (!(style->mFill.kind.IsNone() ||
-        (style->mFill.kind.IsColor() && style->mFillOpacity == 1))) {
+        (style->mFill.kind.IsColor() && style->mFillOpacity.IsOpacity() &&
+         style->mFillOpacity.AsOpacity() == 1))) {
     return true;
   }
 
   // Text has a stroke.
-  if (style->HasStroke() &&
-      SVGContentUtils::CoordToFloat(static_cast<SVGElement*>(GetContent()),
-                                    style->mStrokeWidth) > 0) {
-    return true;
+  if (style->HasStroke()) {
+    if (style->mStrokeWidth.IsContextValue()) {
+      return true;
+    }
+    if (SVGContentUtils::CoordToFloat(
+            static_cast<SVGElement*>(GetContent()),
+            style->mStrokeWidth.AsLengthPercentage()) > 0) {
+      return true;
+    }
   }
 
   return false;

@@ -141,8 +141,8 @@ DrawMode SVGContextPaintImpl::Init(const DrawTarget* aDrawTarget,
   if (style->mFill.kind.IsNone()) {
     SetFillOpacity(0.0f);
   } else {
-    float opacity = nsSVGUtils::GetOpacity(
-        style->FillOpacitySource(), style->mFillOpacity, aOuterContextPaint);
+    float opacity =
+        nsSVGUtils::GetOpacity(style->mFillOpacity, aOuterContextPaint);
 
     SetupInheritablePaint(aDrawTarget, aContextMatrix, aFrame, opacity,
                           aOuterContextPaint, mFillPaint, &nsStyleSVG::mFill,
@@ -158,8 +158,7 @@ DrawMode SVGContextPaintImpl::Init(const DrawTarget* aDrawTarget,
     SetStrokeOpacity(0.0f);
   } else {
     float opacity =
-        nsSVGUtils::GetOpacity(style->StrokeOpacitySource(),
-                               style->mStrokeOpacity, aOuterContextPaint);
+        nsSVGUtils::GetOpacity(style->mStrokeOpacity, aOuterContextPaint);
 
     SetupInheritablePaint(aDrawTarget, aContextMatrix, aFrame, opacity,
                           aOuterContextPaint, mStrokePaint,

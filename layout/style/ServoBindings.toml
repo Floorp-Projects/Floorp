@@ -568,6 +568,10 @@ cbindgen-types = [
     { gecko = "StyleClipPath", servo = "values::computed::basic_shape::ClipPath" },
     { gecko = "StyleGridAutoFlow", servo = "values::computed::GridAutoFlow" },
     { gecko = "StyleCursor", servo = "values::computed::Cursor" },
+    { gecko = "StyleSVGStrokeDashArray", servo = "values::computed::svg::SVGStrokeDashArray" },
+    { gecko = "StyleSVGWidth", servo = "values::computed::svg::SVGWidth" },
+    { gecko = "StyleSVGOpacity", servo = "values::computed::svg::SVGOpacity" },
+    { gecko = "StyleSVGLength", servo = "values::computed::svg::SVGLength" },
 ]
 
 mapped-generic-types = [
