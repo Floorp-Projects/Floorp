@@ -586,7 +586,8 @@ void MPRISServiceHandler::SetPlaybackState(dom::PlaybackState aState) {
   g_dbus_connection_emit_signal(
       mConnection, nullptr, DBUS_MPRIS_OBJECT_PATH,
       "org.freedesktop.DBus.Properties", "PropertiesChanged",
-      g_variant_new("(sa{sv}as)", "org.mpris.MediaPlayer2", &builder, nullptr),
+      g_variant_new("(sa{sv}as)", "org.mpris.MediaPlayer2.Player", &builder,
+                    nullptr),
       nullptr);
 }
 
