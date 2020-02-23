@@ -49,6 +49,10 @@ var gExceptionPaths = [
   // Exclude all search-extensions because they aren't referenced by filename
   "resource://search-extensions/",
 
+  // Exclude all services-automation because they are used through webdriver
+  "resource://gre/modules/services-automation/",
+  "resource://services-automation/ServicesAutomation.jsm",
+
   // Bug 1550165 - Exclude localized App/Play store badges. These badges
   // are displayed in a promo area on the first load of about:logins.
   "chrome://browser/content/aboutlogins/third-party/app-store/",
