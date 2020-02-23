@@ -545,21 +545,11 @@ class nsTSubstring : public mozilla::detail::nsTStringRepr<T> {
   void NS_FASTCALL Replace(index_type aCutStart, size_type aCutLength,
                            const substring_tuple_type& aTuple);
 
-  void NS_FASTCALL ReplaceASCII(index_type aCutStart, size_type aCutLength,
-                                const char* aData,
-                                size_type aLength = size_type(-1));
-
-  MOZ_MUST_USE bool NS_FASTCALL ReplaceASCII(index_type aCutStart,
-                                             size_type aCutLength,
-                                             const char* aData,
-                                             size_type aLength,
-                                             const fallible_t&);
-
   // ReplaceLiteral must ONLY be called with an actual literal string, or
   // a character array *constant* of static storage duration declared
   // without an explicit size and with an initializer that is a string
   // literal or is otherwise null-terminated.
-  // Use Replace or ReplaceASCII for other character array variables.
+  // Use Replace for other character array variables.
   template <int N>
   void ReplaceLiteral(index_type aCutStart, size_type aCutLength,
                       const char_type (&aStr)[N]) {
