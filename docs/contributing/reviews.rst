@@ -39,6 +39,9 @@ Review groups
    * - #firefox-source-docs-reviewers
      - Documentation files and its build
      - `Member list <https://phabricator.services.mozilla.com/project/members/118/>`__
+   * - #firefox-ux-team
+     - User experience (UX)
+     - `Member list <https://phabricator.services.mozilla.com/project/members/91/>`__
    * - #firefox-svg-reviewers
      - SVG-related changes
      - `Member list <https://phabricator.services.mozilla.com/project/members/97/>`__
