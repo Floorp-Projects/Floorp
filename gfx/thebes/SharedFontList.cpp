@@ -92,7 +92,7 @@ Family::Family(FontList* aList, const InitData& aData)
 class SetCharMapRunnable : public mozilla::Runnable {
  public:
   SetCharMapRunnable(uint32_t aListGeneration, Face* aFace,
-                     const gfxSparseBitSet* aCharMap)
+                     gfxCharacterMap* aCharMap)
       : Runnable("SetCharMapRunnable"),
         mListGeneration(aListGeneration),
         mFace(aFace),
@@ -111,18 +111,16 @@ class SetCharMapRunnable : public mozilla::Runnable {
  private:
   uint32_t mListGeneration;
   Face* mFace;
-  const gfxSparseBitSet* mCharMap;
+  RefPtr<gfxCharacterMap> mCharMap;
 };
 
-void Face::SetCharacterMap(FontList* aList, const gfxSparseBitSet* aCharMap) {
+void Face::SetCharacterMap(FontList* aList, gfxCharacterMap* aCharMap) {
   if (!XRE_IsParentProcess()) {
     if (NS_IsMainThread()) {
       Pointer ptr = aList->ToSharedPointer(this);
       dom::ContentChild::GetSingleton()->SendSetCharacterMap(
           aList->GetGeneration(), ptr, *aCharMap);
     } else {
-      // aCharMap is kept alive by our caller until it has been successfully
-      // recorded in the Face, so we don't need to make/pass a copy.
       NS_DispatchToMainThread(
           new SetCharMapRunnable(aList->GetGeneration(), this, aCharMap));
     }

@@ -11,7 +11,7 @@
 #include "mozilla/FontPropertyTypes.h"
 #include <atomic>
 
-class gfxSparseBitSet;
+class gfxCharacterMap;
 struct gfxFontStyle;
 class gfxFontEntry;
 struct GlobalFontMatch;
@@ -146,7 +146,7 @@ struct Face {
     return !mDescriptor.IsNull() && mIndex != uint16_t(-1);
   }
 
-  void SetCharacterMap(FontList* aList, const gfxSparseBitSet* aCharMap);
+  void SetCharacterMap(FontList* aList, gfxCharacterMap* aCharMap);
 
   String mDescriptor;
   uint16_t mIndex;
