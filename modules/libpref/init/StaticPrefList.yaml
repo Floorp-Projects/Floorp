@@ -5142,7 +5142,7 @@
 # Whether `min()` / `max()` / `clamp()` are enabled.
 - name: layout.css.comparison-functions.enabled
   type: RelaxedAtomicBool
-  value: false
+  value: true
   mirror: always
   rust: true
 
