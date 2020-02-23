@@ -489,61 +489,9 @@
         ]
       },
       "appliesTo": [{
-        "included": { "locales": { "matches": ["en-US"] } },
-        "excluded": { "regions": ["by", "ca", "ch", "gb", "kz", "nl", "ru", "tr"] }
-      }, {
         "included": {
           "locales": { "matches": ["en-US"] },
-          "regions": ["au"]
-        },
-        "webExtension": {
-          "locales": ["au"]
-        },
-        "telemetryId": "ebay-au",
-        "params": {
-          "searchUrlGetParams": [
-            { "name": "ff3", "value": "4" },
-            { "name": "toolid", "value": "20004" },
-            { "name": "campid", "value": "5338192028" },
-            { "name": "customid", "value": "" },
-            { "name": "mpre", "value": "https://www.ebay.com.au/sch/{searchTerms}" }
-          ]
-        }
-      }, {
-        "included": {
-          "locales": { "matches": ["en-US"] },
-          "regions": ["ie"]
-        },
-        "webExtension": {
-          "locales": ["ie"]
-        },
-        "telemetryId": "ebay-ie",
-        "params": {
-          "searchUrlGetParams": [
-            { "name": "ff3", "value": "4" },
-            { "name": "toolid", "value": "20004" },
-            { "name": "campid", "value": "5338192028" },
-            { "name": "customid", "value": "" },
-            { "name": "mpre", "value": "https://www.ebay.ie/sch/{searchTerms}" }
-          ]
-        }
-      }, {
-        "included": {
-          "locales": { "matches": ["en-US"] },
-          "regions": ["be"]
-        },
-        "webExtension": {
-          "locales": ["be"]
-        },
-        "telemetryId": "ebay-be",
-        "params": {
-          "searchUrlGetParams": [
-            { "name": "ff3", "value": "4" },
-            { "name": "toolid", "value": "20004" },
-            { "name": "campid", "value": "5338192028" },
-            { "name": "customid", "value": "" },
-            { "name": "mpre", "value": "https://www.befr.ebay.be/sch/{searchTerms}" }
-          ]
+          "regions": ["us"]
         }
       }, {
         "included": { "locales": {
@@ -579,7 +527,7 @@
         }
       }, {
         "included": {
-          "locales": { "matches": ["br", "fr", "wo"] },
+          "locales": { "matches": ["br", "en-US", "fr", "wo"] },
           "regions": ["be"]
         },
         "webExtension": {
@@ -666,7 +614,7 @@
         }
       }, {
         "included": {
-          "locales": { "matches": ["cy", "en-GB", "gd"] },
+          "locales": { "matches": ["cy", "en-GB", "en-US", "gd"] },
           "regions": ["au"]
         },
         "webExtension": {
@@ -684,13 +632,22 @@
         }
       }, {
         "included": {
-          "locales": { "matches": ["cy", "en-GB", "gd"] },
+          "locales": { "matches": ["cy", "en-GB", "en-US", "gd"] },
           "regions": ["ie"]
         },
         "webExtension": {
           "locales": ["ie"]
         },
-        "telemetryId": "ebay-ie"
+        "telemetryId": "ebay-ie",
+        "params": {
+          "searchUrlGetParams": [
+            { "name": "ff3", "value": "4" },
+            { "name": "toolid", "value": "20004" },
+            { "name": "campid", "value": "5338192028" },
+            { "name": "customid", "value": "" },
+            { "name": "mpre", "value": "https://www.ebay.ie/sch/{searchTerms}" }
+          ]
+        }
       }, {
         "included": { "locales": { "matches": ["de", "dsb", "hsb"] }},
         "webExtension": {
