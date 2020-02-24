@@ -104,3 +104,7 @@ fuzzy(0-2,0-800000) == large-gradient-5.html large-gradient-5-ref.html
 == 1224761-1.html 1224761-1-ref.html
 
 fuzzy(0-4,0-800000) == mask-gradient-translucent-end-color-1.html mask-gradient-translucent-end-color-1-ref.html
+
+== scaled-color-stop-position.html scaled-color-stop-position-ref.html
+fuzzy-if(webrender&&winWidget,0-1,0-387) == color-stop-clamp-interpolation.html color-stop-clamp-interpolation-ref.html
+== linear-gradient-repeated.html linear-gradient-repeated-ref.html
