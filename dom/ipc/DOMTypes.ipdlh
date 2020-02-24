@@ -334,7 +334,6 @@ union IPDLVariantValue
   nsString;
   nsCString;
   nsIURI;
-  nsIPrincipal;
 };
 
 struct IDPLVariant

@@ -2511,12 +2511,6 @@ class nsContentUtils {
   static bool IsPDFJSEnabled();
 
   /**
-   * Checks to see whether the given principal is the internal PDF
-   * viewer principal.
-   */
-  static bool IsPDFJS(nsIPrincipal* aPrincipal);
-
-  /**
    * Checks if internal SWF player is enabled.
    */
   static bool IsSWFPlayerEnabled();
