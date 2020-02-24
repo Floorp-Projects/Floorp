@@ -8,6 +8,9 @@
 
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/Logging.h"
+#include "mozilla/layers/TextureClient.h"
+#include "mozilla/SyncRunnable.h"
+#include "nsTHashtable.h"
 #include "RecordedCanvasEventImpl.h"
 
 #if defined(XP_WIN)
@@ -22,6 +25,22 @@ namespace layers {
 // events from the content process. We don't want to wait for too long in case
 // other content processes are waiting for events to process.
 static const TimeDuration kReadEventTimeout = TimeDuration::FromMilliseconds(5);
+
+class RingBufferReaderServices final
+    : public CanvasEventRingBuffer::ReaderServices {
+ public:
+  explicit RingBufferReaderServices(RefPtr<CanvasTranslator> aCanvasTranslator)
+      : mCanvasTranslator(std::move(aCanvasTranslator)) {}
+
+  ~RingBufferReaderServices() final = default;
+
+  bool WriterClosed() final {
+    return !mCanvasTranslator->GetIPCChannel()->CanSend();
+  }
+
+ private:
+  RefPtr<CanvasTranslator> mCanvasTranslator;
+};
 
 static TextureData* CreateTextureData(TextureType aTextureType,
                                       const gfx::IntSize& aSize,
@@ -49,12 +68,44 @@ static TextureData* CreateTextureData(TextureType aTextureType,
   return textureData;
 }
 
-/* static */
-UniquePtr<CanvasTranslator> CanvasTranslator::Create() {
-  return UniquePtr<CanvasTranslator>(new CanvasTranslator());
+typedef nsTHashtable<nsRefPtrHashKey<CanvasTranslator>> CanvasTranslatorSet;
+
+static CanvasTranslatorSet& CanvasTranslators() {
+  MOZ_ASSERT(CanvasThreadHolder::IsInCanvasThread());
+  static CanvasTranslatorSet* sCanvasTranslator = new CanvasTranslatorSet();
+  return *sCanvasTranslator;
 }
 
-CanvasTranslator::CanvasTranslator() : gfx::InlineTranslator() {}
+static void EnsureAllClosed() {
+  for (auto iter = CanvasTranslators().Iter(); !iter.Done(); iter.Next()) {
+    iter.Get()->GetKey()->Close();
+  }
+}
+
+/* static */ void CanvasTranslator::Shutdown() {
+  // If the dispatch fails there is no canvas thread and so no translators.
+  CanvasThreadHolder::MaybeDispatchToCanvasThread(NewRunnableFunction(
+      "CanvasTranslator::EnsureAllClosed", &EnsureAllClosed));
+}
+
+/* static */ already_AddRefed<CanvasTranslator> CanvasTranslator::Create(
+    ipc::Endpoint<PCanvasParent>&& aEndpoint) {
+  MOZ_ASSERT(NS_IsInCompositorThread());
+
+  RefPtr<CanvasThreadHolder> threadHolder =
+      CanvasThreadHolder::EnsureCanvasThread();
+  RefPtr<CanvasTranslator> canvasTranslator =
+      new CanvasTranslator(do_AddRef(threadHolder));
+  threadHolder->DispatchToCanvasThread(
+      NewRunnableMethod<Endpoint<PCanvasParent>&&>(
+          "CanvasTranslator::Bind", canvasTranslator, &CanvasTranslator::Bind,
+          std::move(aEndpoint)));
+  return canvasTranslator.forget();
+}
+
+CanvasTranslator::CanvasTranslator(
+    already_AddRefed<CanvasThreadHolder> aCanvasThreadHolder)
+    : gfx::InlineTranslator(), mCanvasThreadHolder(aCanvasThreadHolder) {}
 
 CanvasTranslator::~CanvasTranslator() {
   if (mReferenceTextureData) {
@@ -62,29 +113,78 @@ CanvasTranslator::~CanvasTranslator() {
   }
 }
 
-bool CanvasTranslator::Init(
+void CanvasTranslator::Bind(Endpoint<PCanvasParent>&& aEndpoint) {
+  if (!aEndpoint.Bind(this)) {
+    return;
+  }
+
+  CanvasTranslators().PutEntry(this);
+}
+
+mozilla::ipc::IPCResult CanvasTranslator::RecvInitTranslator(
     const TextureType& aTextureType,
     const ipc::SharedMemoryBasic::Handle& aReadHandle,
     const CrossProcessSemaphoreHandle& aReaderSem,
-    const CrossProcessSemaphoreHandle& aWriterSem,
-    UniquePtr<CanvasEventRingBuffer::ReaderServices> aReaderServices) {
+    const CrossProcessSemaphoreHandle& aWriterSem) {
   mTextureType = aTextureType;
   mReferenceTextureData.reset(CreateTextureData(
       aTextureType, gfx::IntSize(1, 1), gfx::SurfaceFormat::B8G8R8A8));
   mReferenceTextureData->Lock(OpenMode::OPEN_READ_WRITE);
   mBaseDT = mReferenceTextureData->BorrowDrawTarget();
-  return mStream.InitReader(aReadHandle, aReaderSem, aWriterSem,
-                            std::move(aReaderServices));
+  mStream = MakeUnique<CanvasEventRingBuffer>();
+  if (!mStream->InitReader(aReadHandle, aReaderSem, aWriterSem,
+                           MakeUnique<RingBufferReaderServices>(this))) {
+    return IPC_FAIL(this, "Failed to initialize CanvasTranslator.");
+  }
+
+  mTranslationTaskQueue = mCanvasThreadHolder->CreateWorkerTaskQueue();
+  return RecvResumeTranslation();
+}
+
+ipc::IPCResult CanvasTranslator::RecvResumeTranslation() {
+  if (!IsValid()) {
+    return IPC_FAIL(this, "Canvas Translation failed.");
+  }
+
+  MOZ_ALWAYS_SUCCEEDS(mTranslationTaskQueue->Dispatch(
+      NewRunnableMethod("CanvasTranslator::StartTranslation", this,
+                        &CanvasTranslator::StartTranslation)));
+
+  return IPC_OK();
+}
+
+void CanvasTranslator::StartTranslation() {
+  if (!TranslateRecording() && !GetIPCChannel()->Unsound_IsClosed()) {
+    MOZ_ALWAYS_SUCCEEDS(mTranslationTaskQueue->Dispatch(
+        NewRunnableMethod("CanvasTranslator::StartTranslation", this,
+                          &CanvasTranslator::StartTranslation)));
+  }
+}
+
+void CanvasTranslator::ActorDestroy(ActorDestroyReason why) {
+  mTranslationTaskQueue->BeginShutdown()->Then(
+      MessageLoop::current()->SerialEventTarget(), __func__, this,
+      &CanvasTranslator::FinishShutdown, &CanvasTranslator::FinishShutdown);
+}
+
+void CanvasTranslator::FinishShutdown() {
+  // mTranslationTaskQueue has shutdown we can safely drop the ring buffer to
+  // break the cycle caused by RingBufferReaderServices.
+  mStream = nullptr;
+  CanvasThreadHolder::ReleaseOnCompositorThread(mCanvasThreadHolder.forget());
+  CanvasTranslators().RemoveEntry(this);
 }
 
 bool CanvasTranslator::TranslateRecording() {
-  int32_t eventType = mStream.ReadNextEvent();
-  while (mStream.good()) {
+  MOZ_ASSERT(CanvasThreadHolder::IsInCanvasWorker());
+
+  int32_t eventType = mStream->ReadNextEvent();
+  while (mStream->good()) {
     bool success = RecordedEvent::DoWithEventFromStream(
-        mStream, static_cast<RecordedEvent::EventType>(eventType),
+        *mStream, static_cast<RecordedEvent::EventType>(eventType),
         [&](RecordedEvent* recordedEvent) -> bool {
           // Make sure that the whole event was read from the stream.
-          if (!mStream.good()) {
+          if (!mStream->good()) {
             return false;
           }
 
@@ -99,19 +199,19 @@ bool CanvasTranslator::TranslateRecording() {
     }
 
     if (!mIsInTransaction) {
-      return mStream.StopIfEmpty();
+      return mStream->StopIfEmpty();
     }
 
-    if (!mStream.HasDataToRead()) {
+    if (!mStream->HasDataToRead()) {
       // We're going to wait for the next event, so take the opportunity to
       // flush the rendering.
       Flush();
-      if (!mStream.WaitForDataToRead(kReadEventTimeout, 0)) {
+      if (!mStream->WaitForDataToRead(kReadEventTimeout, 0)) {
         return true;
       }
     }
 
-    eventType = mStream.ReadNextEvent();
+    eventType = mStream->ReadNextEvent();
   }
 
   mIsValid = false;
@@ -120,8 +220,8 @@ bool CanvasTranslator::TranslateRecording() {
 
 #define READ_AND_PLAY_CANVAS_EVENT_TYPE(_typeenum, _class) \
   case _typeenum: {                                        \
-    auto e = _class(mStream);                              \
-    if (!mStream.good()) {                                 \
+    auto e = _class(*mStream);                             \
+    if (!mStream->good()) {                                \
       return false;                                        \
     }                                                      \
     return e.PlayCanvasEvent(this);                        \

@@ -7,6 +7,7 @@
 #ifndef mozilla_layers_ContentCompositorBridgeParent_h
 #define mozilla_layers_ContentCompositorBridgeParent_h
 
+#include "mozilla/layers/CanvasTranslator.h"
 #include "mozilla/layers/CompositorBridgeParent.h"
 #include "mozilla/layers/CompositorThread.h"
 #include "mozilla/UniquePtr.h"
@@ -18,7 +19,6 @@ class PWebGPUParent;
 
 namespace layers {
 
-class CanvasParent;
 class CompositorOptions;
 
 /**
@@ -244,7 +244,7 @@ class ContentCompositorBridgeParent final : public CompositorBridgeParentBase {
   bool mNotifyAfterRemotePaint;
   bool mDestroyCalled;
 
-  RefPtr<CanvasParent> mCanvasParent;
+  RefPtr<CanvasTranslator> mCanvasTranslator;
 };
 
 }  // namespace layers

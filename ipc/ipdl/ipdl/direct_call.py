@@ -17,6 +17,8 @@ DIRECT_CALL_OVERRIDES = {
         "BackgroundMutableFileParentBase", "mozilla/dom/filehandle/ActorsParent.h"
     ),
 
+    ("PCanvas", "parent"): ("CanvasTranslator", "mozilla/layers/CanvasTranslator.h"),
+
     ("PChromiumCDM", "parent"): ("ChromiumCDMParent", "ChromiumCDMParent.h"),
 
     ("PCompositorBridge", "parent"): (
