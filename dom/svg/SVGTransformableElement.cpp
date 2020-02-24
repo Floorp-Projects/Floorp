@@ -67,16 +67,16 @@ nsChangeHint SVGTransformableElement::GetAttributeChangeHint(
                  "Unknown modification type.");
       if (!mTransforms || !mTransforms->HasTransform()) {
         // New value is empty, treat as removal.
+        // FIXME: Should we just rely on CreatedOrRemovedOnLastChange?
         isAdditionOrRemoval = true;
-      } else if (mTransforms->RequiresFrameReconstruction()) {
+      } else if (mTransforms->CreatedOrRemovedOnLastChange()) {
         // Old value was empty, treat as addition.
         isAdditionOrRemoval = true;
       }
     }
 
     if (isAdditionOrRemoval) {
-      // Reconstruct the frame tree to handle stacking context changes:
-      retval |= nsChangeHint_ReconstructFrame;
+      retval |= nsChangeHint_ComprehensiveAddOrRemoveTransform;
     } else {
       // We just assume the old and new transforms are different.
       retval |= nsChangeHint_UpdatePostTransformOverflow |
