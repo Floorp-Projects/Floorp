@@ -531,6 +531,7 @@ void ChannelMediaDecoder::Suspend() {
   if (mResource) {
     mResource->Suspend(true);
   }
+  MediaDecoder::Suspend();
 }
 
 void ChannelMediaDecoder::Resume() {
@@ -538,6 +539,7 @@ void ChannelMediaDecoder::Resume() {
   if (mResource) {
     mResource->Resume();
   }
+  MediaDecoder::Resume();
 }
 
 void ChannelMediaDecoder::MetadataLoaded(

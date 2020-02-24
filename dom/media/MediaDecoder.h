@@ -233,14 +233,15 @@ class MediaDecoder : public DecoderDoctorLifeLogger<MediaDecoder> {
   // media element when it is sent to the bfcache, or when we need
   // to throttle the download. Call on the main thread only. This can
   // be called multiple times, there's an internal "suspend count".
-  virtual void Suspend() {}
+  // When it is called the internal system audio resource are cleaned up.
+  virtual void Suspend();
 
   // Resume any media downloads that have been suspended. Called by the
   // media element when it is restored from the bfcache, or when we need
   // to stop throttling the download. Call on the main thread only.
   // The download will only actually resume once as many Resume calls
   // have been made as Suspend calls.
-  virtual void Resume() {}
+  virtual void Resume();
 
   // Moves any existing channel loads into or out of background. Background
   // loads don't block the load event. This is called when we stop or restart

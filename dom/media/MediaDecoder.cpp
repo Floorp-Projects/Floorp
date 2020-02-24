@@ -1230,6 +1230,18 @@ void MediaDecoder::Invalidate() {
   }
 }
 
+void MediaDecoder::Suspend() {
+  MOZ_ASSERT(NS_IsMainThread());
+  AbstractThread::AutoEnter context(AbstractMainThread());
+  GetStateMachine()->InvokeSuspendMediaSink();
+}
+
+void MediaDecoder::Resume() {
+  MOZ_ASSERT(NS_IsMainThread());
+  AbstractThread::AutoEnter context(AbstractMainThread());
+  GetStateMachine()->InvokeResumeMediaSink();
+}
+
 // Constructs the time ranges representing what segments of the media
 // are buffered and playable.
 media::TimeIntervals MediaDecoder::GetBuffered() {
