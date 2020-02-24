@@ -5,6 +5,11 @@ use std::ops::Range;
 #[inline(always)]
 pub fn unpack_bits<F>(buf: &mut [u8], channels: usize, bit_depth: u8, func: F)
 where F: Fn(u8, &mut[u8]) {
+    // Return early if empty. This enables to subtract `channels` later without overflow.
+    if buf.len() < channels {
+        return;
+    }
+
     let bits = buf.len()/channels*bit_depth as usize;
     let extra_bits = bits % 8;
     let entries = bits / 8 + match extra_bits {
@@ -28,16 +33,21 @@ where F: Fn(u8, &mut[u8]) {
     let j = (0..=buf.len() - channels).rev().step_by(channels);
     for ((shift, i), j) in i.zip(j) {
         let pixel = (buf[i] & (mask << shift)) >> shift;
-        func(pixel, &mut buf[j as usize..(j + channels) as usize])
+        func(pixel, &mut buf[j..(j + channels)])
     }
 }
 
 pub fn expand_trns_line(buf: &mut[u8], trns: &[u8], channels: usize) {
+    // Return early if empty. This enables to subtract `channels` later without overflow.
+    if buf.len() < (channels+1) {
+        return;
+    }
+
     let i = (0..=buf.len() / (channels+1) * channels - channels).rev().step_by(channels);
     let j = (0..=buf.len() - (channels+1)).rev().step_by(channels+1);
     for (i, j) in i.zip(j) {
-        let i_pixel = i as usize;
-        let j_chunk = j as usize;
+        let i_pixel = i;
+        let j_chunk = j;
         if &buf[i_pixel..i_pixel+channels] == trns {
             buf[j_chunk+channels] = 0
         } else {
@@ -51,11 +61,16 @@ pub fn expand_trns_line(buf: &mut[u8], trns: &[u8], channels: usize) {
 
 pub fn expand_trns_line16(buf: &mut[u8], trns: &[u8], channels: usize) {
     let c2 = 2 * channels;
+    // Return early if empty. This enables to subtract `channels` later without overflow.
+    if buf.len() < (c2+2) {
+        return;
+    }
+
     let i = (0..=buf.len() / (c2+2) * c2 - c2).rev().step_by(c2);
     let j = (0..=buf.len() - (c2+2)).rev().step_by(c2+2);
     for (i, j) in i.zip(j) {
-        let i_pixel = i as usize;
-        let j_chunk = j as usize;
+        let i_pixel = i;
+        let j_chunk = j;
         if &buf[i_pixel..i_pixel+c2] == trns {
             buf[j_chunk+c2] = 0;
             buf[j_chunk+c2 + 1] = 0
@@ -99,8 +114,8 @@ impl Adam7Iterator {
             lines: 0,
             line_width: 0,
             current_pass: 1,
-            width: width,
-            height: height
+            width,
+            height,
         };
         this.init_pass();
         this
@@ -108,8 +123,8 @@ impl Adam7Iterator {
 
     /// Calculates the bounds of the current pass
     fn init_pass(&mut self) {
-        let w = self.width as f64;
-        let h = self.height as f64;
+        let w = f64::from(self.width);
+        let h = f64::from(self.height);
         let (line_width, lines) = match self.current_pass {
             1 => (w/8.0, h/8.0),
             2 => ((w-4.0)/8.0, h/8.0),
@@ -183,7 +198,7 @@ fn expand_adam7_bits(pass: u8, width: usize, line_no: usize, bits_pp: usize) -> 
     // the equivalent line number in progressive scan
     let prog_line = line_mul * line_no + line_off;
     // line width is rounded up to the next byte
-    let line_width = width * bits_pp + 7 & !7;
+    let line_width = (width * bits_pp + 7) & !7;
     let line_start = prog_line * line_width;
     let start = line_start + (samp_off * bits_pp);
     let stop = line_start + (width * bits_pp);

@@ -157,7 +157,7 @@ fn resize_window(display: &Display, image: &RawImage2d<'static, u8>) {
         width *= 10;
         height *= 10;
     }
-    display.gl_window().set_inner_size(dpi::LogicalSize::new(f64::from(width), f64::from(height)));
+    display.gl_window().window().set_inner_size(dpi::LogicalSize::new(f64::from(width), f64::from(height)));
 }
 
 fn main() {

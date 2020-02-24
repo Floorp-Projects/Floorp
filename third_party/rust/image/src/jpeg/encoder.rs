@@ -1,11 +1,13 @@
-#![cfg_attr(feature = "cargo-clippy", allow(too_many_arguments))]
+#![allow(clippy::too_many_arguments)]
 
 use byteorder::{BigEndian, WriteBytesExt};
-use math::utils::clamp;
+use crate::error::{ImageError, ImageResult};
+use crate::math::utils::clamp;
 use num_iter::range_step;
 use std::io::{self, Write};
 
-use color;
+use crate::color;
+use crate::image::ImageEncoder;
 
 use super::entropy::build_huff_lut;
 use super::transform;
@@ -28,7 +30,7 @@ static APP0: u8 = 0xE0;
 
 // section K.1
 // table K.1
-#[cfg_attr(rustfmt, rustfmt_skip)]
+#[rustfmt::skip]
 static STD_LUMA_QTABLE: [u8; 64] = [
     16, 11, 10, 16,  24,  40,  51,  61,
     12, 12, 14, 19,  26,  58,  60,  55,
@@ -41,7 +43,7 @@ static STD_LUMA_QTABLE: [u8; 64] = [
 ];
 
 // table K.2
-#[cfg_attr(rustfmt, rustfmt_skip)]
+#[rustfmt::skip]
 static STD_CHROMA_QTABLE: [u8; 64] = [
     17, 18, 24, 47, 99, 99, 99, 99,
     18, 21, 26, 66, 99, 99, 99, 99,
@@ -120,7 +122,7 @@ static CHROMABLUEID: u8 = 2;
 static CHROMAREDID: u8 = 3;
 
 /// The permutation of dct coefficients.
-#[cfg_attr(rustfmt, rustfmt_skip)]
+#[rustfmt::skip]
 static UNZIGZAG: [u8; 64] = [
      0,  1,  8, 16,  9,  2,  3, 10,
     17, 24, 32, 25, 18, 11,  4,  5,
@@ -157,7 +159,7 @@ struct Component {
     _dc_pred: i32,
 }
 
-pub struct BitWriter<'a, W: 'a> {
+pub(crate) struct BitWriter<'a, W: 'a> {
     w: &'a mut W,
     accumulator: u32,
     nbits: u8,
@@ -273,6 +275,59 @@ impl<'a, W: Write + 'a> BitWriter<'a, W> {
     }
 }
 
+/// Represents a unit in which the density of an image is measured
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum PixelDensityUnit {
+    /// Represents the absence of a unit, the values indicate only a
+    /// [pixel aspect ratio](https://en.wikipedia.org/wiki/Pixel_aspect_ratio)
+    PixelAspectRatio,
+
+    /// Pixels per inch (2.54 cm)
+    Inches,
+
+    /// Pixels per centimeter
+    Centimeters,
+}
+
+/// Represents the pixel density of an image
+///
+/// For example, a 300 DPI image is represented by:
+///
+/// ```rust
+/// use image::jpeg::*;
+/// let hdpi = PixelDensity::dpi(300);
+/// assert_eq!(hdpi, PixelDensity {density: (300,300), unit: PixelDensityUnit::Inches})
+/// ```
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct PixelDensity {
+    /// A couple of values for (Xdensity, Ydensity)
+    pub density: (u16, u16),
+    /// The unit in which the density is measured
+    pub unit: PixelDensityUnit,
+}
+
+impl PixelDensity {
+    /// Creates the most common pixel density type:
+    /// the horizontal and the vertical density are equal,
+    /// and measured in pixels per inch.
+    pub fn dpi(density: u16) -> Self {
+        PixelDensity {
+            density: (density, density),
+            unit: PixelDensityUnit::Inches,
+        }
+    }
+}
+
+impl Default for PixelDensity {
+    /// Returns a pixel density with a pixel aspect ratio of 1
+    fn default() -> Self {
+        PixelDensity {
+            density: (1, 1),
+            unit: PixelDensityUnit::PixelAspectRatio,
+        }
+    }
+}
+
 /// The representation of a JPEG encoder
 pub struct JPEGEncoder<'a, W: 'a> {
     writer: BitWriter<'a, W>,
@@ -284,6 +339,8 @@ pub struct JPEGEncoder<'a, W: 'a> {
     luma_actable: Vec<(u8, u16)>,
     chroma_dctable: Vec<(u8, u16)>,
     chroma_actable: Vec<(u8, u16)>,
+
+    pixel_density: PixelDensity,
 }
 
 impl<'a, W: Write> JPEGEncoder<'a, W> {
@@ -359,7 +416,16 @@ impl<'a, W: Write> JPEGEncoder<'a, W> {
             luma_actable: la,
             chroma_dctable: cd,
             chroma_actable: ca,
+
+            pixel_density: PixelDensity::default(),
         }
+    }
+
+    /// Set the pixel density of the images the encoder will encode.
+    /// If this method is not called, then a default pixel aspect ratio of 1x1 will be applied,
+    /// and no DPI information will be stored in the image.
+    pub fn set_pixel_density(&mut self, pixel_density: PixelDensity) {
+        self.pixel_density = pixel_density;
     }
 
     /// Encodes the image ```image```
@@ -373,15 +439,15 @@ impl<'a, W: Write> JPEGEncoder<'a, W> {
         width: u32,
         height: u32,
         c: color::ColorType,
-    ) -> io::Result<()> {
-        let n = color::num_components(c);
+    ) -> ImageResult<()> {
+        let n = c.channel_count();
         let num_components = if n == 1 || n == 2 { 1 } else { 3 };
 
         self.writer.write_segment(SOI, None)?;
 
         let mut buf = Vec::new();
 
-        build_jfif_header(&mut buf);
+        build_jfif_header(&mut buf, self.pixel_density);
         self.writer.write_segment(APP0, Some(&buf))?;
 
         build_frame_header(
@@ -443,26 +509,20 @@ impl<'a, W: Write> JPEGEncoder<'a, W> {
         self.writer.write_segment(SOS, Some(&buf))?;
 
         match c {
-            color::ColorType::RGB(8) => {
+            color::ColorType::Rgb8 => {
                 self.encode_rgb(image, width as usize, height as usize, 3)?
             }
-            color::ColorType::RGBA(8) => {
+            color::ColorType::Rgba8 => {
                 self.encode_rgb(image, width as usize, height as usize, 4)?
             }
-            color::ColorType::Gray(8) => {
+            color::ColorType::L8 => {
                 self.encode_gray(image, width as usize, height as usize, 1)?
             }
-            color::ColorType::GrayA(8) => {
+            color::ColorType::La8 => {
                 self.encode_gray(image, width as usize, height as usize, 2)?
             }
             _ => {
-                return Err(io::Error::new(
-                    io::ErrorKind::InvalidInput,
-                    &format!(
-                    "Unsupported color type {:?}. Use 8 bit per channel RGB(A) or Gray(A) instead.",
-                    c
-                )[..],
-                ))
+                return Err(ImageError::UnsupportedColor(c.into()))
             }
         };
 
@@ -572,16 +632,32 @@ impl<'a, W: Write> JPEGEncoder<'a, W> {
     }
 }
 
-fn build_jfif_header(m: &mut Vec<u8>) {
+impl<'a, W: Write> ImageEncoder for JPEGEncoder<'a, W> {
+    fn write_image(
+        mut self,
+        buf: &[u8],
+        width: u32,
+        height: u32,
+        color_type: color::ColorType,
+    ) -> ImageResult<()> {
+        self.encode(buf, width, height, color_type)
+    }
+}
+
+fn build_jfif_header(m: &mut Vec<u8>, density: PixelDensity) {
     m.clear();
 
     let _ = write!(m, "JFIF");
     let _ = m.write_all(&[0]);
     let _ = m.write_all(&[0x01]);
     let _ = m.write_all(&[0x02]);
-    let _ = m.write_all(&[0]);
-    let _ = m.write_u16::<BigEndian>(1);
-    let _ = m.write_u16::<BigEndian>(1);
+    let _ = m.write_all(&[match density.unit {
+        PixelDensityUnit::PixelAspectRatio => 0x00,
+        PixelDensityUnit::Inches => 0x01,
+        PixelDensityUnit::Centimeters => 0x02,
+    }]);
+    let _ = m.write_u16::<BigEndian>(density.density.0);
+    let _ = m.write_u16::<BigEndian>(density.density.1);
     let _ = m.write_all(&[0]);
     let _ = m.write_all(&[0]);
 }
@@ -756,11 +832,20 @@ fn copy_blocks_gray(
 
 #[cfg(test)]
 mod tests {
-    use super::super::JPEGDecoder;
-    use super::JPEGEncoder;
-    use color::ColorType;
-    use image::ImageDecoder;
+    use super::super::JpegDecoder;
+    use super::{JPEGEncoder, PixelDensity, build_jfif_header};
+    use crate::color::ColorType;
+    use crate::image::ImageDecoder;
     use std::io::Cursor;
+
+    fn decode(encoded: &[u8]) -> Vec<u8> {
+        let decoder = JpegDecoder::new(Cursor::new(encoded))
+            .expect("Could not decode image");
+
+        let mut decoded = vec![0; decoder.total_bytes() as usize];
+        decoder.read_image(&mut decoded).expect("Could not decode image");
+        decoded
+    }
 
     #[test]
     fn roundtrip_sanity_check() {
@@ -772,15 +857,13 @@ mod tests {
         {
             let mut encoder = JPEGEncoder::new_with_quality(&mut encoded_img, 100);
             encoder
-                .encode(&img, 1, 1, ColorType::RGB(8))
+                .encode(&img, 1, 1, ColorType::Rgb8)
                 .expect("Could not encode image");
         }
 
         // decode it from the memory buffer
         {
-            let decoder = JPEGDecoder::new(Cursor::new(&encoded_img))
-                .expect("Could not decode image");
-            let decoded = decoder.read_image().expect("Could not decode image");
+            let decoded = decode(&encoded_img);
             // note that, even with the encode quality set to 100, we do not get the same image
             // back. Therefore, we're going to assert that it's at least red-ish:
             assert_eq!(3, decoded.len());
@@ -800,15 +883,13 @@ mod tests {
         {
             let mut encoder = JPEGEncoder::new_with_quality(&mut encoded_img, 100);
             encoder
-                .encode(&img, 2, 2, ColorType::Gray(8))
+                .encode(&img, 2, 2, ColorType::L8)
                 .expect("Could not encode image");
         }
 
         // decode it from the memory buffer
         {
-            let decoder = JPEGDecoder::new(Cursor::new(&encoded_img))
-                .expect("Could not decode image");
-            let decoded = decoder.read_image().expect("Could not decode image");
+            let decoded = decode(&encoded_img);
             // note that, even with the encode quality set to 100, we do not get the same image
             // back. Therefore, we're going to assert that the diagonal is at least white-ish:
             assert_eq!(4, decoded.len());
@@ -817,5 +898,20 @@ mod tests {
             assert!(decoded[2] < 0x80);
             assert!(decoded[3] > 0x80);
         }
+    }
+
+    #[test]
+    fn jfif_header_density_check() {
+        let mut buffer = Vec::new();
+        build_jfif_header(&mut buffer, PixelDensity::dpi(300));
+        assert_eq!(buffer, vec![
+                b'J', b'F', b'I', b'F',
+                0, 1, 2, // JFIF version 1.2
+                1, // density is in dpi
+                300u16.to_be_bytes()[0], 300u16.to_be_bytes()[1],
+                300u16.to_be_bytes()[0], 300u16.to_be_bytes()[1],
+                0, 0, // No thumbnail
+            ]
+        );
     }
 }

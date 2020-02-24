@@ -4,6 +4,7 @@
 [![Crates.io](https://img.shields.io/crates/v/png.svg)](https://crates.io/crates/png)
 ![Lines of Code](https://tokei.rs/b1/github/image-rs/image-png)
 [![License](https://img.shields.io/crates/l/png.svg)](https://github.com/image-rs/image-png)
+[![fuzzit](https://app.fuzzit.dev/badge?org_id=image-rs)](https://app.fuzzit.dev/orgs/image-rs/dashboard)
 
 PNG decoder/encoder in pure Rust.
 

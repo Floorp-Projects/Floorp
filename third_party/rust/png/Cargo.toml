@@ -13,7 +13,7 @@
 [package]
 edition = "2018"
 name = "png"
-version = "0.15.0"
+version = "0.15.3"
 authors = ["nwin <nwin@users.noreply.github.com>"]
 exclude = ["tests/*"]
 description = "PNG decoding and encoding library in pure Rust"
@@ -36,7 +36,7 @@ version = "0.4.2"
 version = "0.2.14"
 
 [dev-dependencies.glium]
-version = "0.22"
+version = "0.24"
 features = ["glutin"]
 default-features = false
 
@@ -44,10 +44,10 @@ default-features = false
 version = "0.3"
 
 [dev-dependencies.rand]
-version = "0.5.5"
+version = "0.7.0"
 
 [dev-dependencies.term]
-version = "0.4"
+version = "0.6.1"
 
 [features]
 benchmarks = []

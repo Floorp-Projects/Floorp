@@ -21,10 +21,10 @@ fn run_benchmark(b: &mut Bencher, color_type: image::ColorType) {
 
 #[bench]
 fn bench_rgb(b: &mut Bencher) {
-    run_benchmark(b, image::RGB(8));
+    run_benchmark(b, image::ColorType::Rgb8);
 }
 
 #[bench]
 fn bench_gray(b: &mut Bencher) {
-    run_benchmark(b, image::Gray(8));
+    run_benchmark(b, image::ColorType::L8);
 }

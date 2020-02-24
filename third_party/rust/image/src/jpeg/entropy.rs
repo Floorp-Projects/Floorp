@@ -49,7 +49,7 @@ fn derive_codes_and_sizes(bits: &[u8]) -> (Vec<u8>, Vec<u16>) {
     (huffsize, huffcode)
 }
 
-pub fn build_huff_lut(bits: &[u8], huffval: &[u8]) -> Vec<(u8, u16)> {
+pub(crate) fn build_huff_lut(bits: &[u8], huffval: &[u8]) -> Vec<(u8, u16)> {
     let mut lut = vec![(17u8, 0u16); 256];
     let (huffsize, huffcode) = derive_codes_and_sizes(bits);
 

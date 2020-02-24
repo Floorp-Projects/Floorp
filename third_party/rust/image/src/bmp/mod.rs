@@ -7,7 +7,7 @@
 //!  * <https://en.wikipedia.org/wiki/BMP_file_format>
 //!
 
-pub use self::decoder::BMPDecoder;
+pub use self::decoder::BmpDecoder;
 pub use self::encoder::BMPEncoder;
 
 mod decoder;

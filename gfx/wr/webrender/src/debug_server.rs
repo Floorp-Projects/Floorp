@@ -310,7 +310,7 @@ impl Screenshot {
                 &data,
                 size.width as u32,
                 size.height as u32,
-                image_loader::ColorType::RGBA(8),
+                image_loader::ColorType::Rgba8,
             ).unwrap();
         }
 

@@ -1,13 +1,13 @@
 //! Functions for altering and converting the color of pixelbufs
 
-use buffer::{ImageBuffer, Pixel};
-use color::{Luma, Rgba};
-use image::{GenericImage, GenericImageView};
-use math::nq;
-use math::utils::clamp;
+use crate::buffer::{ImageBuffer, Pixel};
+use crate::color::{Luma, Rgba};
+use crate::image::{GenericImage, GenericImageView};
+use crate::math::nq;
+use crate::math::utils::clamp;
 use num_traits::{Num, NumCast};
 use std::f64::consts::PI;
-use traits::Primitive;
+use crate::traits::Primitive;
 
 type Subpixel<I> = <<I as GenericImageView>::Pixel as Pixel>::Subpixel;
 
@@ -312,7 +312,7 @@ where
 mod test {
 
     use super::*;
-    use ImageBuffer;
+    use crate::ImageBuffer;
 
     #[test]
     fn test_dither() {

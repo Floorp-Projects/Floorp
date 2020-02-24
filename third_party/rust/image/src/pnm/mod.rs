@@ -4,7 +4,7 @@
 //! `BLACKANDWHITE`, `GRAYSCALE` and `RGB` and explicitely recognizes but rejects their `_ALPHA`
 //! variants for now as alpha color types are unsupported.
 use self::autobreak::AutoBreak;
-pub use self::decoder::PNMDecoder;
+pub use self::decoder::PnmDecoder;
 pub use self::encoder::PNMEncoder;
 use self::header::HeaderRecord;
 pub use self::header::{ArbitraryHeader, ArbitraryTuplType, BitmapHeader, GraymapHeader,
@@ -20,8 +20,8 @@ mod header;
 mod tests {
     use super::*;
     use byteorder::{ByteOrder, NativeEndian};
-    use color::ColorType;
-    use image::ImageDecoder;
+    use crate::color::ColorType;
+    use crate::image::ImageDecoder;
 
     fn execute_roundtrip_default(buffer: &[u8], width: u32, height: u32, color: ColorType) {
         let mut encoded_buffer = Vec::new();
@@ -34,11 +34,12 @@ mod tests {
         }
 
         let (header, loaded_color, loaded_image) = {
-            let decoder = PNMDecoder::new(&encoded_buffer[..]).unwrap();
-            let colortype = decoder.colortype();
-            let image = decoder.read_image().expect("Failed to decode the image");
-            let (_, header) = PNMDecoder::new(&encoded_buffer[..]).unwrap().into_inner();
-            (header, colortype, image)
+            let decoder = PnmDecoder::new(&encoded_buffer[..]).unwrap();
+            let color_type = decoder.color_type();
+            let mut image = vec![0; decoder.total_bytes() as usize];
+            decoder.read_image(&mut image).expect("Failed to decode the image");
+            let (_, header) = PnmDecoder::new(&encoded_buffer[..]).unwrap().into_inner();
+            (header, color_type, image)
         };
 
         assert_eq!(header.width(), width);
@@ -64,11 +65,12 @@ mod tests {
         }
 
         let (header, loaded_color, loaded_image) = {
-            let decoder = PNMDecoder::new(&encoded_buffer[..]).unwrap();
-            let colortype = decoder.colortype();
-            let image = decoder.read_image().expect("Failed to decode the image");
-            let (_, header) = PNMDecoder::new(&encoded_buffer[..]).unwrap().into_inner();
-            (header, colortype, image)
+            let decoder = PnmDecoder::new(&encoded_buffer[..]).unwrap();
+            let color_type = decoder.color_type();
+            let mut image = vec![0; decoder.total_bytes() as usize];
+            decoder.read_image(&mut image).expect("Failed to decode the image");
+            let (_, header) = PnmDecoder::new(&encoded_buffer[..]).unwrap().into_inner();
+            (header, color_type, image)
         };
 
         assert_eq!(header.width(), width);
@@ -89,11 +91,12 @@ mod tests {
         }
 
         let (header, loaded_color, loaded_image) = {
-            let decoder = PNMDecoder::new(&encoded_buffer[..]).unwrap();
-            let colortype = decoder.colortype();
-            let image = decoder.read_image().expect("Failed to decode the image");
-            let (_, header) = PNMDecoder::new(&encoded_buffer[..]).unwrap().into_inner();
-            (header, colortype, image)
+            let decoder = PnmDecoder::new(&encoded_buffer[..]).unwrap();
+            let color_type = decoder.color_type();
+            let mut image = vec![0; decoder.total_bytes() as usize];
+            decoder.read_image(&mut image).expect("Failed to decode the image");
+            let (_, header) = PnmDecoder::new(&encoded_buffer[..]).unwrap().into_inner();
+            (header, color_type, image)
         };
 
         let mut buffer_u8 = vec![0; buffer.len() * 2];
@@ -107,7 +110,7 @@ mod tests {
 
     #[test]
     fn roundtrip_rgb() {
-        #[cfg_attr(rustfmt, rustfmt_skip)]
+        #[rustfmt::skip]
         let buf: [u8; 27] = [
               0,   0,   0,
               0,   0, 255,
@@ -119,20 +122,20 @@ mod tests {
             255, 255, 255,
             255, 255, 255,
         ];
-        execute_roundtrip_default(&buf, 3, 3, ColorType::RGB(8));
-        execute_roundtrip_with_subtype(&buf, 3, 3, ColorType::RGB(8), PNMSubtype::ArbitraryMap);
+        execute_roundtrip_default(&buf, 3, 3, ColorType::Rgb8);
+        execute_roundtrip_with_subtype(&buf, 3, 3, ColorType::Rgb8, PNMSubtype::ArbitraryMap);
         execute_roundtrip_with_subtype(
             &buf,
             3,
             3,
-            ColorType::RGB(8),
+            ColorType::Rgb8,
             PNMSubtype::Pixmap(SampleEncoding::Binary),
         );
         execute_roundtrip_with_subtype(
             &buf,
             3,
             3,
-            ColorType::RGB(8),
+            ColorType::Rgb8,
             PNMSubtype::Pixmap(SampleEncoding::Ascii),
         );
     }
@@ -141,6 +144,6 @@ mod tests {
     fn roundtrip_u16() {
         let buf: [u16; 6] = [0, 1, 0xFFFF, 0x1234, 0x3412, 0xBEAF];
 
-        execute_roundtrip_u16(&buf, 6, 1, ColorType::Gray(16));
+        execute_roundtrip_u16(&buf, 6, 1, ColorType::L16);
     }
 }

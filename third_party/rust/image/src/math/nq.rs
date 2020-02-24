@@ -30,7 +30,7 @@
  *
  */
 
-use math::utils::clamp;
+use crate::math::utils::clamp;
 use std::cmp::{max, min};
 
 const CHANNELS: usize = 4;

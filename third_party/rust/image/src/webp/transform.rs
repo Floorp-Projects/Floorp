@@ -1,7 +1,7 @@
 static CONST1: i64 = 20091;
 static CONST2: i64 = 35468;
 
-pub fn idct4x4(block: &mut [i32]) {
+pub(crate) fn idct4x4(block: &mut [i32]) {
     // The intermediate results may overflow the types, so we stretch the type.
     fn fetch(block: &mut [i32], idx: usize) -> i64 {
         i64::from(block[idx])
@@ -45,7 +45,7 @@ pub fn idct4x4(block: &mut [i32]) {
 }
 
 // 14.3
-pub fn iwht4x4(block: &mut [i32]) {
+pub(crate) fn iwht4x4(block: &mut [i32]) {
     for i in 0usize..4 {
         let a1 = block[i] + block[12 + i];
         let b1 = block[4 + i] + block[8 + i];

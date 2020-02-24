@@ -5,6 +5,25 @@
 use num_traits::{Bounded, Num, NumCast};
 use std::ops::AddAssign;
 
+/// Types which are safe to treat as an immutable byte slice in a pixel layout
+/// for image encoding.
+pub trait EncodableLayout: seals::EncodableLayout {
+    /// Get the bytes of this value.
+    fn as_bytes(&self) -> &[u8];
+}
+
+impl EncodableLayout for [u8] {
+    fn as_bytes(&self) -> &[u8] {
+        bytemuck::cast_slice(self)
+    }
+}
+
+impl EncodableLayout for [u16] {
+    fn as_bytes(&self) -> &[u8] {
+        bytemuck::cast_slice(self)
+    }
+}
+
 /// Primitive trait from old stdlib
 pub trait Primitive: Copy + NumCast + Num + PartialOrd<Self> + Clone + Bounded {}
 
@@ -44,4 +63,13 @@ impl Enlargeable for u16 {
 }
 impl Enlargeable for u32 {
     type Larger = u64;
+}
+
+
+/// Private module for supertraits of sealed traits.
+mod seals {
+    pub trait EncodableLayout {}
+
+    impl EncodableLayout for [u8] {}
+    impl EncodableLayout for [u16] {}
 }

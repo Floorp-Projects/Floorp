@@ -59,7 +59,7 @@ pub fn save<P: Clone + AsRef<Path>>(
 
     let encoder = PNGEncoder::new(File::create(path).unwrap());
     encoder
-        .encode(&buffer, width, height, ColorType::RGBA(8))
+        .encode(&buffer, width, height, ColorType::Rgba8)
         .expect("Unable to encode PNG!");
 }
 
