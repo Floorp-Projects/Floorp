@@ -14,22 +14,20 @@ static StaticRefPtr<ChildProcessChannelListener> sCPCLSingleton;
 void ChildProcessChannelListener::RegisterCallback(uint64_t aIdentifier,
                                                    Callback&& aCallback) {
   if (auto args = mChannelArgs.GetAndRemove(aIdentifier)) {
-    aCallback(args->mChannel, std::move(args->mRedirects),
-              args->mLoadStateLoadFlags, args->mTiming);
+    aCallback(args->mLoadState, std::move(args->mRedirects), args->mTiming);
   } else {
     mCallbacks.Put(aIdentifier, std::move(aCallback));
   }
 }
 
 void ChildProcessChannelListener::OnChannelReady(
-    nsIChannel* aChannel, uint64_t aIdentifier,
+    nsDocShellLoadState* aLoadState, uint64_t aIdentifier,
     nsTArray<net::DocumentChannelRedirect>&& aRedirects,
-    uint32_t aLoadStateLoadFlags, nsDOMNavigationTiming* aTiming) {
+    nsDOMNavigationTiming* aTiming) {
   if (auto callback = mCallbacks.GetAndRemove(aIdentifier)) {
-    (*callback)(aChannel, std::move(aRedirects), aLoadStateLoadFlags, aTiming);
+    (*callback)(aLoadState, std::move(aRedirects), aTiming);
   } else {
-    mChannelArgs.Put(aIdentifier, {aChannel, std::move(aRedirects),
-                                   aLoadStateLoadFlags, aTiming});
+    mChannelArgs.Put(aIdentifier, {aLoadState, std::move(aRedirects), aTiming});
   }
 }
 
