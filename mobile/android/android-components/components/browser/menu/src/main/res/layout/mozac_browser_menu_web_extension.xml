@@ -23,6 +23,7 @@
     <TextView
         android:id="@+id/action_label"
         style="@style/Mozac.Browser.Menu.Item.Text"
+        android:background="@android:color/transparent"
         android:layout_width="wrap_content"
         android:layout_height="@dimen/mozac_browser_menu_item_container_layout_height"
         android:gravity="center_vertical"

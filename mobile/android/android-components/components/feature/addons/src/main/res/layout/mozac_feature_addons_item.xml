@@ -28,8 +28,8 @@
                 android:layout_width="32dp"
                 android:layout_height="32dp"
                 android:layout_gravity="center"
-                android:src="@drawable/mozac_ic_extensions"
                 android:importantForAccessibility="no"
+                android:src="@android:color/transparent"
                 android:scaleType="fitCenter" />
 
     </androidx.cardview.widget.CardView>
