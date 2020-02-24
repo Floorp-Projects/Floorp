@@ -210,12 +210,7 @@ open class TabCounter @JvmOverloads constructor(
                         // Only apply the size when we calculate a valid value.
                         counter_text.setTextSize(TypedValue.COMPLEX_UNIT_PX, sizeInPixel.toFloat())
                         counter_text.setTypeface(null, Typeface.BOLD)
-                        val shiftDp = TypedValue.applyDimension(
-                            TypedValue.COMPLEX_UNIT_DIP,
-                            if (newRatio == TWO_DIGITS_SIZE_RATIO) TWO_DIGIT_PADDING else ONE_DIGIT_PADDING,
-                            context.resources.displayMetrics
-                        ).toInt()
-                        counter_text.setPadding(0, shiftDp, shiftDp, 0)
+                        counter_text.setPadding(0, 0, 0, 0)
                     }
                 }
             })

@@ -3,11 +3,12 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
-    android:width="24dp"
-    android:height="24dp"
-    android:viewportWidth="24"
-    android:viewportHeight="24">
-  <path
-      android:pathData="M15.22 22H5.78A3.78 3.78 0 0 1 2 18.22V8.78C2 6.69 3.7 5 5.78 5h9.44C17.31 5 19 6.7 19 8.78v9.44c0 2-1.7 3.78-3.78 3.78zM5.86 7C4.83 7 4 7.83 4 8.86v9.28C4 19.17 4.83 20 5.86 20h9.28c1 0 1.86-0.83 1.86-1.86V8.86C17 8 16.17 7 15 7H6zM6 4c0-1.1 1-2 2-2h8a6 6 0 0 1 6 6v0L22 16a2 2 0 0 1-2 2L20 8V8a4 4 0 0 0-4-4H6z"
-      android:fillColor="?primaryText" />
+  android:width="24dp"
+  android:height="24dp"
+  android:viewportWidth="24"
+  android:viewportHeight="24">
+  android:pathData="M17.5556,22L6.4444,22C3.9898,22 2,20.0102 2,17.5556L2,6.4444C2,3.9898 3.9898,2 6.4444,2L17.5556,2C20.0102,2 22,3.9898 22,6.4444L22,17.5556C22,20.0102 20.0102,22 17.5556,22ZM6.5378,4.3529C5.3311,4.3529 4.3529,5.3311 4.3529,6.5378L4.3529,17.4622C4.3529,18.6689 5.3311,19.6471 6.5378,19.6471L17.4622,19.6471C18.6689,19.6471 19.6471,18.6689 19.6471,17.4622L19.6471,6.5378C19.6471,5.3311 18.6689,4.3529 17.4622,4.3529L6.5378,4.3529Z"
+    <path
+        android:strokeWidth="1"
+        android:fillColor="?primaryText"/>
 </vector>
