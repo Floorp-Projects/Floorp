@@ -21,35 +21,38 @@ function MemoryPanel(iframeWindow, toolbox) {
   }).require;
   this.initializer = browserRequire("devtools/client/memory/initializer");
 
+  this._onTargetAvailable = this._onTargetAvailable.bind(this);
+
   EventEmitter.decorate(this);
 }
 
 MemoryPanel.prototype = {
   async open() {
-    if (this._opening) {
-      return this._opening;
-    }
-
     this.panelWin.gToolbox = this._toolbox;
-    this.panelWin.gFront = await this.target.getFront("memory");
     this.panelWin.gHeapAnalysesClient = new HeapAnalysesClient();
 
-    await this.panelWin.gFront.attach();
+    await this.initializer.initialize();
 
-    this._opening = this.initializer.initialize().then(() => {
-      this.isReady = true;
-      this.emit("ready");
-      return this;
-    });
+    await this._toolbox.targetList.watchTargets(
+      [this._toolbox.targetList.TYPES.FRAME],
+      this._onTargetAvailable
+    );
 
-    return this._opening;
+    this.isReady = true;
+    this.emit("ready");
+
+    return this;
+  },
+
+  async _onTargetAvailable({ targetFront, isTopLevel }) {
+    if (isTopLevel) {
+      const front = await targetFront.getFront("memory");
+      await front.attach();
+      this.initializer.updateFront(front);
+    }
   },
 
   // DevToolPanel API
-
-  get target() {
-    return this._toolbox.target;
-  },
 
   destroy() {
     // Make sure this panel is not already destroyed.
@@ -58,14 +61,15 @@ MemoryPanel.prototype = {
     }
     this._destroyed = true;
 
+    this._toolbox.targetList.unwatchTargets(
+      [this._toolbox.targetList.TYPES.FRAME],
+      this._onTargetAvailable
+    );
+
     this.initializer.destroy();
 
-    // Destroy front to ensure packet handler is removed from client
-    this.panelWin.gFront.destroy();
     this.panelWin.gHeapAnalysesClient.destroy();
     this.panelWin = null;
-    this._opening = null;
-    this.isReady = false;
     this.emit("destroyed");
   },
 };
