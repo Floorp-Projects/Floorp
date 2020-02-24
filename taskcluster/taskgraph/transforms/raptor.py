@@ -29,7 +29,10 @@ raptor_description_schema = Schema({
         [text_type]
     ),
     Optional('raptor-test'): text_type,
-    Optional('raptor-subtests'): [text_type],
+    Optional('raptor-subtests'): optionally_keyed_by(
+        'app',
+        [text_type]
+    ),
     Optional('activity'): optionally_keyed_by(
         'app',
         text_type
@@ -50,6 +53,7 @@ raptor_description_schema = Schema({
     Optional('run-on-projects'): optionally_keyed_by(
         'app',
         'test-name',
+        'raptor-test',
         test_description_schema['run-on-projects']
     ),
     Optional('variants'): optionally_keyed_by(
@@ -123,6 +127,43 @@ def split_apps(config, tests):
 
 @transforms.add
 def handle_keyed_by_app(config, tests):
+    """
+    Only resolve keys for raptor-subtests here since the
+    `raptor-test` keyed-by option might have keyed-by fields
+    as well.
+    """
+    fields = ['raptor-subtests']
+    for test in tests:
+        for field in fields:
+            resolve_keyed_by(test, field, item_name=test['test-name'])
+        yield test
+
+
+@transforms.add
+def split_raptor_subtests(config, tests):
+    for test in tests:
+        # for tests that have 'raptor-subtests' listed, we want to create a separate
+        # test job for every subtest (i.e. split out each page-load URL into its own job)
+        subtests = test.pop('raptor-subtests', None)
+        if not subtests:
+            yield test
+            continue
+
+        chunk_number = 0
+
+        for subtest in subtests:
+            chunk_number += 1
+
+            # create new test job
+            chunked = deepcopy(test)
+            chunked['raptor-test'] = subtest
+            chunked['chunk-number'] = chunk_number
+
+            yield chunked
+
+
+@transforms.add
+def handle_keyed_by(config, tests):
     fields = [
         'variants',
         'limit-platforms',
@@ -176,36 +217,25 @@ def split_pageload(config, tests):
 
 @transforms.add
 def split_browsertime_page_load_by_url(config, tests):
-
     for test in tests:
-
-        # for tests that have 'raptor-subtests' listed, we want to create a separate
-        # test job for every subtest (i.e. split out each page-load URL into its own job)
-        subtests = test.pop('raptor-subtests', None)
-        if not subtests:
+        # `chunk-number` only exists when the task had a
+        # definition for `raptor-subtests`
+        chunk_number = test.pop('chunk-number', None)
+        if not chunk_number:
             yield test
             continue
 
-        chunk_number = 0
+        # only run the subtest/single URL
+        test['test-name'] += "-{}".format(test['raptor-test'])
+        test['try-name'] += "-{}".format(test['raptor-test'])
 
-        for subtest in subtests:
+        # set treeherder symbol and description
+        group, symbol = split_symbol(test['treeherder-symbol'])
+        symbol += "-{}".format(chunk_number)
+        test['treeherder-symbol'] = join_symbol(group, symbol)
+        test['description'] += "-{}".format(test['raptor-test'])
 
-            # create new test job
-            chunked = deepcopy(test)
-
-            # only run the subtest/single URL
-            chunked['test-name'] += "-{}".format(subtest)
-            chunked['try-name'] += "-{}".format(subtest)
-            chunked['raptor-test'] = subtest
-
-            # set treeherder symbol and description
-            chunk_number += 1
-            group, symbol = split_symbol(test['treeherder-symbol'])
-            symbol += "-{}".format(chunk_number)
-            chunked['treeherder-symbol'] = join_symbol(group, symbol)
-            chunked['description'] += "-{}".format(subtest)
-
-            yield chunked
+        yield test
 
 
 @transforms.add
