@@ -73,9 +73,6 @@ struct WrWindowId;
 struct DocumentId;
 struct WrPipelineInfo;
 
-struct WrPipelineIdAndEpoch;
-using WrPipelineIdEpochs = nsTArray<WrPipelineIdAndEpoch>;
-
 const uint64_t ROOT_CLIP_CHAIN = ~0;
 
 }  // namespace wr
@@ -91,8 +88,7 @@ void apz_deregister_updater(mozilla::wr::WrWindowId aWindowId);
 void apz_register_sampler(mozilla::wr::WrWindowId aWindowId);
 void apz_sample_transforms(mozilla::wr::WrWindowId aWindowId,
                            mozilla::wr::Transaction* aTransaction,
-                           mozilla::wr::DocumentId aRenderRootId,
-                           const mozilla::wr::WrPipelineIdEpochs* aPipelineEpochs);
+                           mozilla::wr::DocumentId aRenderRootId);
 void apz_deregister_sampler(mozilla::wr::WrWindowId aWindowId);
 }  // extern "C"
 
