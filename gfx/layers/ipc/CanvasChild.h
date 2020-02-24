@@ -29,6 +29,8 @@ class CanvasChild final : public PCanvasChild {
 
   explicit CanvasChild(Endpoint<PCanvasChild>&& aEndpoint);
 
+  ipc::IPCResult RecvNotifyDeviceChanged();
+
   /**
    * Ensures that the DrawEventRecorder has been created.
    *

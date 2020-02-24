@@ -155,17 +155,18 @@ class ImageCacheObserver final : public nsIObserver {
 
   explicit ImageCacheObserver(ImageCache* aImageCache)
       : mImageCache(aImageCache) {
-    RegisterMemoryPressureEvent();
+    RegisterObserverEvents();
   }
 
   void Destroy() {
-    UnregisterMemoryPressureEvent();
+    UnregisterObserverEvents();
     mImageCache = nullptr;
   }
 
   NS_IMETHOD Observe(nsISupports* aSubject, const char* aTopic,
                      const char16_t* aSomeData) override {
-    if (!mImageCache || strcmp(aTopic, "memory-pressure")) {
+    if (!mImageCache || (strcmp(aTopic, "memory-pressure") != 0 &&
+                         strcmp(aTopic, "canvas-device-reset") != 0)) {
       return NS_OK;
     }
 
@@ -176,7 +177,7 @@ class ImageCacheObserver final : public nsIObserver {
  private:
   virtual ~ImageCacheObserver() = default;
 
-  void RegisterMemoryPressureEvent() {
+  void RegisterObserverEvents() {
     nsCOMPtr<nsIObserverService> observerService =
         mozilla::services::GetObserverService();
 
@@ -184,10 +185,11 @@ class ImageCacheObserver final : public nsIObserver {
 
     if (observerService) {
       observerService->AddObserver(this, "memory-pressure", false);
+      observerService->AddObserver(this, "canvas-device-reset", false);
     }
   }
 
-  void UnregisterMemoryPressureEvent() {
+  void UnregisterObserverEvents() {
     nsCOMPtr<nsIObserverService> observerService =
         mozilla::services::GetObserverService();
 
@@ -196,6 +198,7 @@ class ImageCacheObserver final : public nsIObserver {
     // no longer available. See bug 1029504.
     if (observerService) {
       observerService->RemoveObserver(this, "memory-pressure");
+      observerService->RemoveObserver(this, "canvas-device-reset");
     }
   }
 
