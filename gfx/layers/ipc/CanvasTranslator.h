@@ -249,13 +249,22 @@ class CanvasTranslator final : public gfx::InlineTranslator,
 
   void FinishShutdown();
 
+  TextureData* CreateTextureData(TextureType aTextureType,
+                                 const gfx::IntSize& aSize,
+                                 gfx::SurfaceFormat aFormat);
+
   void AddSurfaceDescriptor(gfx::ReferencePtr aRefPtr,
                             TextureData* atextureData);
 
   bool HandleExtensionEvent(int32_t aType);
 
+  bool CheckForFreshCanvasDevice(int aLineNumber);
+
   RefPtr<CanvasThreadHolder> mCanvasThreadHolder;
   RefPtr<TaskQueue> mTranslationTaskQueue;
+#if defined(XP_WIN)
+  RefPtr<ID3D11Device> mDevice;
+#endif
   // We hold the ring buffer as a UniquePtr so we can drop it once
   // mTranslationTaskQueue has shutdown to break a RefPtr cycle.
   UniquePtr<CanvasEventRingBuffer> mStream;

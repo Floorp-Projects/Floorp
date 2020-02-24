@@ -1137,9 +1137,6 @@ RefPtr<ID3D11Device> DeviceManagerDx::GetVRDevice() {
 
 RefPtr<ID3D11Device> DeviceManagerDx::GetCanvasDevice() {
   MutexAutoLock lock(mDeviceLock);
-  if (!mCanvasDevice) {
-    CreateCanvasDevice();
-  }
   return mCanvasDevice;
 }
 
