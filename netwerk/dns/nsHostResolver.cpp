@@ -1882,8 +1882,10 @@ nsHostResolver::LookupStatus nsHostResolver::CompleteLookup(
       if (addrRec->addr_info && newRRSet) {
         addrRec->addr_info->ttl = newRRSet->ttl;
         // Update trr timings
-        addrRec->addr_info->SetTrrFetchDuration(newRRSet->GetTrrFetchDuration());
-        addrRec->addr_info->SetTrrFetchDurationNetworkOnly(newRRSet->GetTrrFetchDurationNetworkOnly());
+        addrRec->addr_info->SetTrrFetchDuration(
+            newRRSet->GetTrrFetchDuration());
+        addrRec->addr_info->SetTrrFetchDurationNetworkOnly(
+            newRRSet->GetTrrFetchDurationNetworkOnly());
       }
       old_addr_info = std::move(newRRSet);
     }

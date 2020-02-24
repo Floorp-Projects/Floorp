@@ -45,8 +45,8 @@ nsSize CSSSizeOrRatio::ComputeConcreteSize() const {
   return nsSize(mRatio.ApplyTo(mHeight), mHeight);
 }
 
-nsImageRenderer::nsImageRenderer(nsIFrame* aForFrame,
-                                 const StyleImage* aImage, uint32_t aFlags)
+nsImageRenderer::nsImageRenderer(nsIFrame* aForFrame, const StyleImage* aImage,
+                                 uint32_t aFlags)
     : mForFrame(aForFrame),
       mImage(aImage),
       mType(aImage->tag),
@@ -130,9 +130,9 @@ bool nsImageRenderer::PrepareImage() {
     nsCOMPtr<imgIContainer> srcImage;
     DebugOnly<nsresult> rv =
         mImage->GetImageRequest()->GetImage(getter_AddRefs(srcImage));
-      MOZ_ASSERT(NS_SUCCEEDED(rv) && srcImage,
-                 "If GetImage() is failing, mImage->IsComplete() "
-                 "should have returned false");
+    MOZ_ASSERT(NS_SUCCEEDED(rv) && srcImage,
+               "If GetImage() is failing, mImage->IsComplete() "
+               "should have returned false");
 
     if (!mImage->IsRect()) {
       mImageContainer.swap(srcImage);
@@ -865,8 +865,8 @@ ImgDrawResult nsImageRenderer::DrawBorderImageComponent(
     return ImgDrawResult::SUCCESS;
   }
 
-  const bool isRequestBacked = mType == StyleImage::Tag::Url ||
-                               mType == StyleImage::Tag::Rect;
+  const bool isRequestBacked =
+      mType == StyleImage::Tag::Url || mType == StyleImage::Tag::Rect;
   MOZ_ASSERT(isRequestBacked == mImage->IsImageRequestType());
 
   if (isRequestBacked || mType == StyleImage::Tag::Element) {
@@ -998,9 +998,8 @@ ImgDrawResult nsImageRenderer::DrawShapeImage(nsPresContext* aPresContext,
     // rendered pixel has an alpha that precisely matches the alpha of the
     // closest pixel in the image.
     return nsLayoutUtils::DrawSingleImage(
-        aRenderingContext, aPresContext, mImageContainer,
-        SamplingFilter::POINT, dest, dest, Nothing(), drawFlags, nullptr,
-        nullptr);
+        aRenderingContext, aPresContext, mImageContainer, SamplingFilter::POINT,
+        dest, dest, Nothing(), drawFlags, nullptr, nullptr);
   }
 
   if (mImage->IsGradient()) {

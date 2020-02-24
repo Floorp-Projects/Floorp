@@ -105,8 +105,7 @@ ffi::WGPURawPass BeginRenderPass(RawId aEncoderId,
         }
       }
       if (ca.mLoadValue.IsGPUColorDict()) {
-        cd.clear_color =
-            ConvertColor(ca.mLoadValue.GetAsGPUColorDict());
+        cd.clear_color = ConvertColor(ca.mLoadValue.GetAsGPUColorDict());
       }
     }
   }

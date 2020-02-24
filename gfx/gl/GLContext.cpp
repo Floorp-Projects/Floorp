@@ -2119,9 +2119,7 @@ void GLContext::ReportOutstandingNames() {
 
 #endif /* DEBUG */
 
-void GLContext::GuaranteeResolve() {
-  fFinish();
-}
+void GLContext::GuaranteeResolve() { fFinish(); }
 
 const gfx::IntSize& GLContext::OffscreenSize() const {
   MOZ_ASSERT(IsOffscreen());

@@ -212,6 +212,6 @@ using StyleAtomicUsize = std::atomic<size_t>;
 static_assert(sizeof(void*) == 4, "");
 #    define SERVO_32_BITS 1
 #  endif
-#define CBINDGEN_IS_GECKO
+#  define CBINDGEN_IS_GECKO
 
 #endif

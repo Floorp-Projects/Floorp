@@ -194,13 +194,13 @@ std::ostream& operator<<(std::ostream& aOut, const T (&aArray)[N]) {
 //
 // generates an operator<< that outputs strings like
 // "Point { x = 1.0, y = 2.0 }".
-#define MOZ_DEFINE_DBG(type_, ...)                                   \
+#define MOZ_DEFINE_DBG(type_, ...)                                           \
   friend std::ostream& operator<<(std::ostream& aOut, const type_& aValue) { \
     return aOut << #type_                                                    \
-                << (MOZ_ARG_COUNT(__VA_ARGS__) == 0 ? "" : " { ")               \
+                << (MOZ_ARG_COUNT(__VA_ARGS__) == 0 ? "" : " { ")            \
                        MOZ_FOR_EACH_SEPARATED(MOZ_DBG_FIELD, (<< ", "), (),  \
-                                              (__VA_ARGS__))                    \
-                << (MOZ_ARG_COUNT(__VA_ARGS__) == 0 ? "" : " }");               \
+                                              (__VA_ARGS__))                 \
+                << (MOZ_ARG_COUNT(__VA_ARGS__) == 0 ? "" : " }");            \
   }
 
 #endif  // mozilla_DbgMacro_h

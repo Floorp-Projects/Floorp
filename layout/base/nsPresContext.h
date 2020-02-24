@@ -1312,7 +1312,8 @@ class nsPresContext : public nsISupports,
   unsigned mInitialized : 1;
 #endif
 
-  mozilla::UniquePtr<mozilla::MediaFeatureChange> mPendingMediaFeatureValuesChange;
+  mozilla::UniquePtr<mozilla::MediaFeatureChange>
+      mPendingMediaFeatureValuesChange;
 
  protected:
   virtual ~nsPresContext();

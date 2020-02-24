@@ -209,10 +209,10 @@ class CancelDNSRequestEvent : public Runnable {
   NS_IMETHOD Run() override {
     if (mDnsRequest->CanSend()) {
       // Send request to Parent process.
-      mDnsRequest->SendCancelDNSRequest(mDnsRequest->mHost, mDnsRequest->mTrrServer,
-                                        mDnsRequest->mType,
-                                        mDnsRequest->mOriginAttributes,
-                                        mDnsRequest->mFlags, mReasonForCancel);
+      mDnsRequest->SendCancelDNSRequest(
+          mDnsRequest->mHost, mDnsRequest->mTrrServer, mDnsRequest->mType,
+          mDnsRequest->mOriginAttributes, mDnsRequest->mFlags,
+          mReasonForCancel);
     }
     return NS_OK;
   }
@@ -226,12 +226,10 @@ class CancelDNSRequestEvent : public Runnable {
 // DNSRequestChild
 //-----------------------------------------------------------------------------
 
-DNSRequestChild::DNSRequestChild(const nsACString& aHost,
-                                 const nsACString& aTrrServer, const uint16_t& aType,
-                                 const OriginAttributes& aOriginAttributes,
-                                 const uint32_t& aFlags,
-                                 nsIDNSListener* aListener,
-                                 nsIEventTarget* target)
+DNSRequestChild::DNSRequestChild(
+    const nsACString& aHost, const nsACString& aTrrServer,
+    const uint16_t& aType, const OriginAttributes& aOriginAttributes,
+    const uint32_t& aFlags, nsIDNSListener* aListener, nsIEventTarget* target)
     : mListener(aListener),
       mTarget(target),
       mResultStatus(NS_OK),

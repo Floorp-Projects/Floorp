@@ -4203,9 +4203,7 @@ bool nsNativeThemeCocoa::WidgetIsContainer(StyleAppearance aAppearance) {
 }
 
 bool nsNativeThemeCocoa::ThemeDrawsFocusForWidget(StyleAppearance aAppearance) {
-
-  if (aAppearance == StyleAppearance::MenulistButton ||
-      aAppearance == StyleAppearance::Button ||
+  if (aAppearance == StyleAppearance::MenulistButton || aAppearance == StyleAppearance::Button ||
       aAppearance == StyleAppearance::MozMacHelpButton ||
       aAppearance == StyleAppearance::MozMacDisclosureButtonOpen ||
       aAppearance == StyleAppearance::MozMacDisclosureButtonClosed ||

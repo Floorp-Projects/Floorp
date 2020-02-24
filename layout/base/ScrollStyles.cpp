@@ -18,5 +18,4 @@ bool ScrollStyles::IsHiddenInBothDirections() const {
          mVertical == StyleOverflow::Hidden;
 }
 
-
 }  // namespace mozilla

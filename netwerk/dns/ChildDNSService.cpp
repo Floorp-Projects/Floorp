@@ -153,8 +153,8 @@ ChildDNSService::AsyncResolve(const nsACString& hostname, uint32_t flags,
   }
 
   return AsyncResolveInternal(hostname, EmptyCString(),
-                              nsIDNSService::RESOLVE_TYPE_DEFAULT,
-                              flags, listener, target_, attrs, result);
+                              nsIDNSService::RESOLVE_TYPE_DEFAULT, flags,
+                              listener, target_, attrs, result);
 }
 
 NS_IMETHODIMP
@@ -164,9 +164,8 @@ ChildDNSService::AsyncResolveNative(const nsACString& hostname, uint32_t flags,
                                     const OriginAttributes& aOriginAttributes,
                                     nsICancelable** result) {
   return AsyncResolveInternal(hostname, EmptyCString(),
-                              nsIDNSService::RESOLVE_TYPE_DEFAULT,
-                              flags, listener, target_, aOriginAttributes,
-                              result);
+                              nsIDNSService::RESOLVE_TYPE_DEFAULT, flags,
+                              listener, target_, aOriginAttributes, result);
 }
 
 NS_IMETHODIMP
@@ -184,8 +183,8 @@ ChildDNSService::AsyncResolveWithTrrServer(
   }
 
   return AsyncResolveInternal(hostname, trrServer,
-                              nsIDNSService::RESOLVE_TYPE_DEFAULT,
-                              flags, listener, target_, attrs, result);
+                              nsIDNSService::RESOLVE_TYPE_DEFAULT, flags,
+                              listener, target_, attrs, result);
 }
 
 NS_IMETHODIMP
@@ -194,9 +193,8 @@ ChildDNSService::AsyncResolveWithTrrServerNative(
     nsIDNSListener* listener, nsIEventTarget* target_,
     const OriginAttributes& aOriginAttributes, nsICancelable** result) {
   return AsyncResolveInternal(hostname, trrServer,
-                              nsIDNSService::RESOLVE_TYPE_DEFAULT,
-                              flags, listener, target_, aOriginAttributes,
-                              result);
+                              nsIDNSService::RESOLVE_TYPE_DEFAULT, flags,
+                              listener, target_, aOriginAttributes, result);
 }
 
 NS_IMETHODIMP
@@ -258,8 +256,8 @@ ChildDNSService::CancelAsyncResolveNative(
 NS_IMETHODIMP
 ChildDNSService::CancelAsyncResolveWithTrrServer(
     const nsACString& aHostname, const nsACString& aTrrServer, uint32_t aFlags,
-    nsIDNSListener* aListener, nsresult aReason, JS::HandleValue aOriginAttributes,
-    JSContext* aCx, uint8_t aArgc) {
+    nsIDNSListener* aListener, nsresult aReason,
+    JS::HandleValue aOriginAttributes, JSContext* aCx, uint8_t aArgc) {
   OriginAttributes attrs;
 
   if (aArgc == 1) {

@@ -836,7 +836,6 @@ nsFind::Find(const nsAString& aPatText, nsRange* aSearchRange,
           }
         }
 
-
         int32_t matchStartOffset;
         int32_t matchEndOffset;
         // convert char index to range point:

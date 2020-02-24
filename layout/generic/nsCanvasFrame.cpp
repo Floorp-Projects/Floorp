@@ -524,7 +524,8 @@ void nsCanvasFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
     // color.
     const bool suppressBackgroundImage =
         !PresContext()->PrefSheetPrefs().mUseDocumentColors &&
-        StaticPrefs::browser_display_suppress_canvas_background_image_on_forced_colors();
+        StaticPrefs::
+            browser_display_suppress_canvas_background_image_on_forced_colors();
 
     // Create separate items for each background layer.
     const nsStyleImageLayers& layers = bg->StyleBackground()->mImage;

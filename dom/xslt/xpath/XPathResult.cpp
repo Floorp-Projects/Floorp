@@ -88,7 +88,8 @@ nsINode* XPathResult::IterateNext(ErrorResult& aRv) {
   }
 
   if (mInvalidIteratorState) {
-    aRv.ThrowInvalidStateError("The document has been mutated since the result was returned");
+    aRv.ThrowInvalidStateError(
+        "The document has been mutated since the result was returned");
     return nullptr;
   }
 

@@ -35,8 +35,7 @@ ZoneAllocator::ZoneAllocator(JSRuntime* rt)
       gcHeapSize(&rt->gc.heapSize),
       mallocHeapSize(nullptr),
       jitHeapSize(nullptr),
-      jitHeapThreshold(jit::MaxCodeBytesPerProcess * 0.8) {
-}
+      jitHeapThreshold(jit::MaxCodeBytesPerProcess * 0.8) {}
 
 ZoneAllocator::~ZoneAllocator() {
 #ifdef DEBUG

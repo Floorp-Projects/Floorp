@@ -466,13 +466,11 @@ TEST(TArray, MakeBackInserter)
 struct RefCounted;
 
 class Foo {
-  ~Foo(); // Intentionally out of line
+  ~Foo();  // Intentionally out of line
 
   nsTArray<RefPtr<RefCounted>> mArray;
 
-  const RefCounted* GetFirst() const {
-    return mArray.SafeElementAt(0);
-  }
+  const RefCounted* GetFirst() const { return mArray.SafeElementAt(0); }
 };
 
 }  // namespace TestTArray

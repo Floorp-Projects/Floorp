@@ -44,7 +44,7 @@ nsSharePicker::Init(mozIDOMWindowProxy* aOpenerWindow) {
 }
 
 NS_IMETHODIMP
-nsSharePicker::GetOpenerWindow(mozIDOMWindowProxy **aOpenerWindow) {
+nsSharePicker::GetOpenerWindow(mozIDOMWindowProxy** aOpenerWindow) {
   *aOpenerWindow = mOpenerWindow;
   return NS_OK;
 }

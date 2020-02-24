@@ -11,36 +11,36 @@
 #include <stdio.h>   // for nullptr, stdout
 #include <string.h>  // for strcmp
 
-#include "ChangeAttributeTransaction.h"     // for ChangeAttributeTransaction
-#include "CompositionTransaction.h"         // for CompositionTransaction
-#include "CreateElementTransaction.h"       // for CreateElementTransaction
-#include "DeleteNodeTransaction.h"          // for DeleteNodeTransaction
-#include "DeleteRangeTransaction.h"         // for DeleteRangeTransaction
-#include "DeleteTextTransaction.h"          // for DeleteTextTransaction
-#include "EditAggregateTransaction.h"       // for EditAggregateTransaction
-#include "EditorEventListener.h"            // for EditorEventListener
-#include "InsertNodeTransaction.h"          // for InsertNodeTransaction
-#include "InsertTextTransaction.h"          // for InsertTextTransaction
-#include "JoinNodeTransaction.h"            // for JoinNodeTransaction
-#include "PlaceholderTransaction.h"         // for PlaceholderTransaction
-#include "SplitNodeTransaction.h"           // for SplitNodeTransaction
-#include "mozilla/CheckedInt.h"             // for CheckedInt
+#include "ChangeAttributeTransaction.h"       // for ChangeAttributeTransaction
+#include "CompositionTransaction.h"           // for CompositionTransaction
+#include "CreateElementTransaction.h"         // for CreateElementTransaction
+#include "DeleteNodeTransaction.h"            // for DeleteNodeTransaction
+#include "DeleteRangeTransaction.h"           // for DeleteRangeTransaction
+#include "DeleteTextTransaction.h"            // for DeleteTextTransaction
+#include "EditAggregateTransaction.h"         // for EditAggregateTransaction
+#include "EditorEventListener.h"              // for EditorEventListener
+#include "InsertNodeTransaction.h"            // for InsertNodeTransaction
+#include "InsertTextTransaction.h"            // for InsertTextTransaction
+#include "JoinNodeTransaction.h"              // for JoinNodeTransaction
+#include "PlaceholderTransaction.h"           // for PlaceholderTransaction
+#include "SplitNodeTransaction.h"             // for SplitNodeTransaction
+#include "mozilla/CheckedInt.h"               // for CheckedInt
 #include "mozilla/ComposerCommandsUpdater.h"  // for ComposerCommandsUpdater
-#include "mozilla/ComputedStyle.h"          // for ComputedStyle
-#include "mozilla/CSSEditUtils.h"           // for CSSEditUtils
-#include "mozilla/EditAction.h"             // for EditSubAction
-#include "mozilla/EditorDOMPoint.h"         // for EditorDOMPoint
-#include "mozilla/EditorSpellCheck.h"       // for EditorSpellCheck
-#include "mozilla/EditorUtils.h"            // for various helper classes.
-#include "mozilla/EditTransactionBase.h"    // for EditTransactionBase
-#include "mozilla/FlushType.h"              // for FlushType::Frames
-#include "mozilla/IMEContentObserver.h"     // for IMEContentObserver
-#include "mozilla/IMEStateManager.h"        // for IMEStateManager
-#include "mozilla/mozalloc.h"               // for operator new, etc.
-#include "mozilla/mozInlineSpellChecker.h"  // for mozInlineSpellChecker
-#include "mozilla/mozSpellChecker.h"        // for mozSpellChecker
-#include "mozilla/Preferences.h"            // for Preferences
-#include "mozilla/PresShell.h"              // for PresShell
+#include "mozilla/ComputedStyle.h"            // for ComputedStyle
+#include "mozilla/CSSEditUtils.h"             // for CSSEditUtils
+#include "mozilla/EditAction.h"               // for EditSubAction
+#include "mozilla/EditorDOMPoint.h"           // for EditorDOMPoint
+#include "mozilla/EditorSpellCheck.h"         // for EditorSpellCheck
+#include "mozilla/EditorUtils.h"              // for various helper classes.
+#include "mozilla/EditTransactionBase.h"      // for EditTransactionBase
+#include "mozilla/FlushType.h"                // for FlushType::Frames
+#include "mozilla/IMEContentObserver.h"       // for IMEContentObserver
+#include "mozilla/IMEStateManager.h"          // for IMEStateManager
+#include "mozilla/mozalloc.h"                 // for operator new, etc.
+#include "mozilla/mozInlineSpellChecker.h"    // for mozInlineSpellChecker
+#include "mozilla/mozSpellChecker.h"          // for mozSpellChecker
+#include "mozilla/Preferences.h"              // for Preferences
+#include "mozilla/PresShell.h"                // for PresShell
 #include "mozilla/RangeBoundary.h"      // for RawRangeBoundary, RangeBoundary
 #include "mozilla/Services.h"           // for GetObserverService
 #include "mozilla/ServoCSSParser.h"     // for ServoCSSParser
