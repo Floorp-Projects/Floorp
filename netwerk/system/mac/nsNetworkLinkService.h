@@ -9,7 +9,6 @@
 #include "nsIObserver.h"
 #include "nsITimer.h"
 #include "mozilla/Mutex.h"
-#include "mozilla/TimeStamp.h"
 #include "mozilla/SHA1.h"
 
 #include <SystemConfiguration/SCNetworkReachability.h>
@@ -69,9 +68,6 @@ class nsNetworkLinkService : public nsINetworkLinkService,
   mozilla::Mutex mMutex;
   nsCString mNetworkId;
   nsTArray<nsCString> mDNSSuffixList;
-
-  // Time stamp of last NS_NETWORK_LINK_DATA_CHANGED event
-  mozilla::TimeStamp mNetworkChangeTime;
 
   // The timer used to delay the calculation of network id since it takes some
   // time to discover the gateway's MAC address.
