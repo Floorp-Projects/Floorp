@@ -74,6 +74,7 @@
 
 #include "nsBidiPresUtils.h"
 #include "RubyUtils.h"
+#include "TextOverflow.h"
 #include "nsAnimationManager.h"
 
 // For triple-click pref
@@ -1013,22 +1014,27 @@ bool nsIFrame::HasDisplayItem(uint32_t aKey) {
   return false;
 }
 
-void nsIFrame::DiscardOldItems() {
-  DisplayItemArray* items = GetProperty(DisplayItems());
+template <typename Condition>
+static void DiscardDisplayItems(nsIFrame* aFrame, Condition aCondition) {
+  auto* items = aFrame->GetProperty(nsIFrame::DisplayItems());
   if (!items) {
     return;
   }
 
   for (nsDisplayItemBase* i : *items) {
-    // Only discard items that are invalidated by this frame,
-    // as we're only guaranteed to rebuild those items. Table
-    // background items are created by the relevant table part,
-    // but have the cell frame as the primary frame, and we don't
-    // want to remove them if this is the cell.
-    if (i->FrameForInvalidation() == this) {
-      i->DiscardIfOldItem();
+    // Only discard items that are invalidated by this frame, as we're only
+    // guaranteed to rebuild those items. Table background items are created by
+    // the relevant table part, but have the cell frame as the primary frame,
+    // and we don't want to remove them if this is the cell.
+    if (aCondition(i) && i->FrameForInvalidation() == aFrame) {
+      i->SetCantBeReused();
     }
   }
+}
+
+static void DiscardOldItems(nsIFrame* aFrame) {
+  DiscardDisplayItems(
+      aFrame, [](nsDisplayItemBase* aItem) { return aItem->IsOldItem(); });
 }
 
 void nsIFrame::RemoveDisplayItemDataForDeletion() {
@@ -3832,7 +3838,7 @@ static nsDisplayItem* WrapInWrapList(nsDisplayListBuilder* aBuilder,
     // positioned descendants that might be outside of this list, and might not
     // have been rebuilt this time.
     if (needsWrapList) {
-      aFrame->DiscardOldItems();
+      DiscardOldItems(aFrame);
     } else {
       aList->RemoveBottom();
       return item;
@@ -7750,7 +7756,6 @@ bool nsIFrame::UpdateOverflow() {
     nsView* view = GetView();
     if (view) {
       ReflowChildFlags flags = GetXULLayoutFlags();
-
       if (!(flags & ReflowChildFlags::NoSizeView)) {
         // Make sure the frame's view is properly sized.
         nsViewManager* vm = view->GetViewManager();
@@ -9739,6 +9744,13 @@ bool nsIFrame::FinishAndStoreOverflow(nsOverflowAreas& aOverflowAreas,
 
   if (anyOverflowChanged) {
     SVGObserverUtils::InvalidateDirectRenderingObservers(this);
+    if (IsBlockFrameOrSubclass() &&
+        TextOverflow::CanHaveOverflowMarkers(this)) {
+      DiscardDisplayItems(this, [](nsDisplayItemBase* aItem) {
+        return aItem->GetType() == DisplayItemType::TYPE_TEXT_OVERFLOW;
+      });
+      SchedulePaint(PAINT_DEFAULT, false);
+    }
   }
   return anyOverflowChanged;
 }

@@ -2308,11 +2308,7 @@ class nsDisplayItemBase : public nsDisplayItemLink {
 
   void SetCantBeReused() { mItemFlags += ItemBaseFlag::CantBeReused; }
 
-  void DiscardIfOldItem() {
-    if (mOldList) {
-      SetCantBeReused();
-    }
-  }
+  bool IsOldItem() const { return !!mOldList; }
 
   /**
    * Returns true if the frame of this display item is in a modified subtree.
