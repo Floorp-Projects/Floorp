@@ -12870,7 +12870,7 @@ RefPtr<FullDatabaseMetadata> FullDatabaseMetadata::Duplicate() const {
       newIndexMetadata->mCommonMetadata = value->mCommonMetadata;
 
       if (NS_WARN_IF(!newOSMetadata->mIndexes.Put(
-              indexEntry.GetKey(), std::move(newIndexMetadata), fallible))) {
+              indexEntry.GetKey(), newIndexMetadata.forget(), fallible))) {
         return nullptr;
       }
     }
@@ -12879,7 +12879,7 @@ RefPtr<FullDatabaseMetadata> FullDatabaseMetadata::Duplicate() const {
                newOSMetadata->mIndexes.Count());
 
     if (NS_WARN_IF(!newMetadata->mObjectStores.Put(
-            objectStoreEntry.GetKey(), std::move(newOSMetadata), fallible))) {
+            objectStoreEntry.GetKey(), newOSMetadata.forget(), fallible))) {
       return nullptr;
     }
   }

@@ -9,7 +9,6 @@
 #include "nsDataHashtable.h"
 #include "nsInterfaceHashtable.h"
 #include "nsClassHashtable.h"
-#include "nsRefPtrHashtable.h"
 
 #include "nsCOMPtr.h"
 #include "nsISupports.h"
@@ -35,21 +34,6 @@ class TestUniChar  // for nsClassHashtable
   uint32_t GetChar() const { return mWord; }
 
  private:
-  uint32_t mWord;
-};
-
-class TestUniCharRefCounted  // for nsRefPtrHashtable
-{
- public:
-  NS_INLINE_DECL_REFCOUNTING(TestUniCharRefCounted);
-
-  explicit TestUniCharRefCounted(uint32_t aWord) { mWord = aWord; }
-
-  uint32_t GetChar() const { return mWord; }
-
- private:
-  ~TestUniCharRefCounted() = default;
-
   uint32_t mWord;
 };
 
@@ -672,39 +656,4 @@ TEST(Hashtables, ClassHashtable_LookupForAdd)
     entry2.OrRemove();
   }
   ASSERT_TRUE(0 == EntToUniClass.Count());
-}
-
-TEST(Hashtables, RefPtrHashtable)
-{
-  // check a RefPtr-hashtable
-  nsRefPtrHashtable<nsCStringHashKey, TestUniCharRefCounted> EntToUniClass(
-      ENTITY_COUNT);
-
-  for (auto& entity : gEntities) {
-    EntToUniClass.Put(
-        nsDependentCString(entity.mStr),
-        mozilla::MakeRefPtr<TestUniCharRefCounted>(entity.mUnicode));
-  }
-
-  TestUniCharRefCounted* myChar;
-
-  for (auto& entity : gEntities) {
-    ASSERT_TRUE(EntToUniClass.Get(nsDependentCString(entity.mStr), &myChar));
-  }
-
-  ASSERT_FALSE(EntToUniClass.Get(NS_LITERAL_CSTRING("xxxx"), &myChar));
-
-  uint32_t count = 0;
-  for (auto iter = EntToUniClass.Iter(); !iter.Done(); iter.Next()) {
-    count++;
-  }
-  ASSERT_EQ(count, ENTITY_COUNT);
-
-  EntToUniClass.Clear();
-
-  count = 0;
-  for (auto iter = EntToUniClass.Iter(); !iter.Done(); iter.Next()) {
-    count++;
-  }
-  ASSERT_EQ(count, uint32_t(0));
 }

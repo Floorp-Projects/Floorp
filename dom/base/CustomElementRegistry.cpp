@@ -963,7 +963,7 @@ void CustomElementRegistry::Define(
       disableInternals, disableShadow);
 
   CustomElementDefinition* def = definition.get();
-  mCustomDefinitions.Put(nameAtom, std::move(definition));
+  mCustomDefinitions.Put(nameAtom, definition.forget());
 
   MOZ_ASSERT(mCustomDefinitions.Count() == mConstructors.count(),
              "Number of entries should be the same");
@@ -1022,7 +1022,7 @@ void CustomElementRegistry::SetElementCreationCallback(
   }
 
   RefPtr<CustomElementCreationCallback> callback = &aCallback;
-  mElementCreationCallbacks.Put(nameAtom, std::move(callback));
+  mElementCreationCallbacks.Put(nameAtom, callback.forget());
 }
 
 void CustomElementRegistry::Upgrade(nsINode& aRoot) {
