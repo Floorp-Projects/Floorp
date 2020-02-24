@@ -58,6 +58,15 @@ class nsRefPtrHashtable
   MOZ_MUST_USE bool Put(KeyType aKey, already_AddRefed<PtrType> aData,
                         const mozilla::fallible_t&);
 
+  template <typename U,
+            typename = std::enable_if_t<std::is_base_of_v<PtrType, U>>>
+  void Put(KeyType aKey, RefPtr<U>&& aData);
+
+  template <typename U,
+            typename = std::enable_if_t<std::is_base_of_v<PtrType, U>>>
+  MOZ_MUST_USE bool Put(KeyType aKey, RefPtr<U>&& aData,
+                        const mozilla::fallible_t&);
+
   /**
    * Remove the entry associated with aKey (if any), optionally _moving_ its
    * current value into *aData, thereby avoiding calls to AddRef and Release.
@@ -148,14 +157,28 @@ PtrType* nsRefPtrHashtable<KeyClass, PtrType>::GetWeak(KeyType aKey,
 template <class KeyClass, class PtrType>
 void nsRefPtrHashtable<KeyClass, PtrType>::Put(
     KeyType aKey, already_AddRefed<PtrType> aData) {
+  Put(aKey, RefPtr<PtrType>{aData});
+}
+
+template <class KeyClass, class PtrType>
+bool nsRefPtrHashtable<KeyClass, PtrType>::Put(KeyType aKey,
+                                               already_AddRefed<PtrType> aData,
+                                               const mozilla::fallible_t&) {
+  return Put(aKey, RefPtr<PtrType>{aData}, mozilla::fallible);
+}
+
+template <class KeyClass, class PtrType>
+template <typename U, typename>
+void nsRefPtrHashtable<KeyClass, PtrType>::Put(KeyType aKey,
+                                               RefPtr<U>&& aData) {
   if (!Put(aKey, std::move(aData), mozilla::fallible)) {
     NS_ABORT_OOM(this->mTable.EntrySize() * this->mTable.EntryCount());
   }
 }
 
 template <class KeyClass, class PtrType>
-bool nsRefPtrHashtable<KeyClass, PtrType>::Put(KeyType aKey,
-                                               already_AddRefed<PtrType> aData,
+template <typename U, typename>
+bool nsRefPtrHashtable<KeyClass, PtrType>::Put(KeyType aKey, RefPtr<U>&& aData,
                                                const mozilla::fallible_t&) {
   typename base_type::EntryType* ent = this->PutEntry(aKey, mozilla::fallible);
 
@@ -163,7 +186,7 @@ bool nsRefPtrHashtable<KeyClass, PtrType>::Put(KeyType aKey,
     return false;
   }
 
-  ent->SetData(aData);
+  ent->SetData(std::move(aData));
 
   return true;
 }
