@@ -167,11 +167,6 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // encouraging them to use the Urlbar.
   ["update1.searchTips", false],
 
-  // If true, we do not allow the TAB key to cycle through results when the
-  // Urlbar was focused with the keyboard. Instead, Tab will focus the next
-  // focusable toolbar element after the Urlbar.
-  ["update1.restrictTabAfterKeyboardFocus", true],
-
   // Whether the urlbar displays a permanent search button in design update 2.
   ["update2.searchButton", false],
 ]);
