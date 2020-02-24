@@ -120,6 +120,39 @@ ipc::IPCResult WebGPUParent::RecvBufferDestroy(RawId aSelfId) {
   return IPC_OK();
 }
 
+ipc::IPCResult WebGPUParent::RecvDeviceCreateTexture(
+    RawId aSelfId, const ffi::WGPUTextureDescriptor& aDesc, RawId aNewId) {
+  ffi::wgpu_server_device_create_texture(mContext, aSelfId, &aDesc, aNewId);
+  return IPC_OK();
+}
+
+ipc::IPCResult WebGPUParent::RecvTextureCreateView(
+    RawId aSelfId, const ffi::WGPUTextureViewDescriptor& aDesc, RawId aNewId) {
+  ffi::wgpu_server_texture_create_view(mContext, aSelfId, &aDesc, aNewId);
+  return IPC_OK();
+}
+
+ipc::IPCResult WebGPUParent::RecvTextureDestroy(RawId aSelfId) {
+  ffi::wgpu_server_texture_destroy(mContext, aSelfId);
+  return IPC_OK();
+}
+
+ipc::IPCResult WebGPUParent::RecvTextureViewDestroy(RawId aSelfId) {
+  ffi::wgpu_server_texture_view_destroy(mContext, aSelfId);
+  return IPC_OK();
+}
+
+ipc::IPCResult WebGPUParent::RecvDeviceCreateSampler(
+    RawId aSelfId, const ffi::WGPUSamplerDescriptor& aDesc, RawId aNewId) {
+  ffi::wgpu_server_device_create_sampler(mContext, aSelfId, &aDesc, aNewId);
+  return IPC_OK();
+}
+
+ipc::IPCResult WebGPUParent::RecvSamplerDestroy(RawId aSelfId) {
+  ffi::wgpu_server_sampler_destroy(mContext, aSelfId);
+  return IPC_OK();
+}
+
 ipc::IPCResult WebGPUParent::RecvDeviceCreateCommandEncoder(
     RawId aSelfId, const dom::GPUCommandEncoderDescriptor& aDesc,
     RawId aNewId) {

@@ -39,6 +39,15 @@ class WebGPUParent final : public PWebGPUParent {
   ipc::IPCResult RecvBufferMapRead(RawId aSelfId, Shmem&& shmem,
                                    BufferMapReadResolver&& resolver);
   ipc::IPCResult RecvBufferDestroy(RawId aSelfId);
+  ipc::IPCResult RecvDeviceCreateTexture(
+      RawId aSelfId, const ffi::WGPUTextureDescriptor& aDesc, RawId aNewId);
+  ipc::IPCResult RecvTextureCreateView(
+      RawId aSelfId, const ffi::WGPUTextureViewDescriptor& aDesc, RawId aNewId);
+  ipc::IPCResult RecvTextureDestroy(RawId aSelfId);
+  ipc::IPCResult RecvTextureViewDestroy(RawId aSelfId);
+  ipc::IPCResult RecvDeviceCreateSampler(
+      RawId aSelfId, const ffi::WGPUSamplerDescriptor& aDesc, RawId aNewId);
+  ipc::IPCResult RecvSamplerDestroy(RawId aSelfId);
   ipc::IPCResult RecvDeviceCreateCommandEncoder(
       RawId aSelfId, const dom::GPUCommandEncoderDescriptor& aDesc,
       RawId aNewId);
