@@ -169,7 +169,7 @@ class MOZ_STACK_CLASS AutoSetCurrentTransaction final {
       MOZ_ASSERT(threadLocal);
 
       // Hang onto this for resetting later.
-      mThreadLocal = threadLocal->mIndexedDBThreadLocal;
+      mThreadLocal = threadLocal->mIndexedDBThreadLocal.get();
       MOZ_ASSERT(mThreadLocal);
 
       // Save the current value.

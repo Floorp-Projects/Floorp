@@ -9,6 +9,7 @@
 
 #include "mozilla/PSandboxTestingParent.h"
 #include "mozilla/Monitor.h"
+#include "mozilla/UniquePtr.h"
 
 #if !defined(MOZ_SANDBOX) || !defined(MOZ_DEBUG) || !defined(ENABLE_TESTS)
 #  error "This file should not be used outside of debug with tests"
@@ -39,7 +40,7 @@ class SandboxTestingParent : public PSandboxTestingParent {
   void ShutdownSandboxTestThread();
   void Bind(Endpoint<PSandboxTestingParent>&& aEnd);
 
-  nsAutoPtr<SandboxTestingThread> mThread;
+  UniquePtr<SandboxTestingThread> mThread;
   Monitor mMonitor;
   bool mShutdownDone;
 };

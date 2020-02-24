@@ -59,7 +59,7 @@ ThreadLocal* GetIndexedDBThreadLocal() {
       BackgroundChildImpl::GetThreadLocalForCurrentThread();
   MOZ_ASSERT(threadLocal);
 
-  ThreadLocal* idbThreadLocal = threadLocal->mIndexedDBThreadLocal;
+  ThreadLocal* idbThreadLocal = threadLocal->mIndexedDBThreadLocal.get();
   MOZ_ASSERT(idbThreadLocal);
 
   return idbThreadLocal;

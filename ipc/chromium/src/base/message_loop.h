@@ -26,7 +26,6 @@
 #  include "base/message_pump_libevent.h"
 #endif
 
-#include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsIRunnable.h"
 #include "nsThreadUtils.h"

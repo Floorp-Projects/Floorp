@@ -137,7 +137,7 @@ uint64_t IDBRequest::NextSerialNumber() {
       BackgroundChildImpl::GetThreadLocalForCurrentThread();
   MOZ_ASSERT(threadLocal);
 
-  ThreadLocal* idbThreadLocal = threadLocal->mIndexedDBThreadLocal;
+  const auto& idbThreadLocal = threadLocal->mIndexedDBThreadLocal;
   MOZ_ASSERT(idbThreadLocal);
 
   return idbThreadLocal->NextRequestSN();

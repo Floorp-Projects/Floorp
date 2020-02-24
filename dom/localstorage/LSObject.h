@@ -8,6 +8,7 @@
 #define mozilla_dom_localstorage_LSObject_h
 
 #include "mozilla/dom/Storage.h"
+#include "nsAutoPtr.h"
 
 class nsGlobalWindowInner;
 class nsIPrincipal;

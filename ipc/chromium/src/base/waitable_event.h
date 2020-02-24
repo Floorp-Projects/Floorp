@@ -19,7 +19,6 @@
 #  include "base/condition_variable.h"
 #  include "base/lock.h"
 #  include "nsISupportsImpl.h"
-#  include "nsAutoPtr.h"
 #endif
 
 #include "base/message_loop.h"

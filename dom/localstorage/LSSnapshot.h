@@ -9,6 +9,7 @@
 
 #include "LSValue.h"
 
+#include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsDataHashtable.h"
 #include "nsIRunnable.h"

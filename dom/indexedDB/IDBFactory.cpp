@@ -665,11 +665,11 @@ RefPtr<IDBOpenDBRequest> IDBFactory::OpenInternal(
     BackgroundChildImpl::ThreadLocal* threadLocal =
         BackgroundChildImpl::GetThreadLocalForCurrentThread();
 
-    nsAutoPtr<ThreadLocal> newIDBThreadLocal;
+    UniquePtr<ThreadLocal> newIDBThreadLocal;
     ThreadLocal* idbThreadLocal;
 
     if (threadLocal && threadLocal->mIndexedDBThreadLocal) {
-      idbThreadLocal = threadLocal->mIndexedDBThreadLocal;
+      idbThreadLocal = threadLocal->mIndexedDBThreadLocal.get();
     } else {
       nsCOMPtr<nsIUUIDGenerator> uuidGen =
           do_GetService("@mozilla.org/uuid-generator;1");
@@ -678,7 +678,8 @@ RefPtr<IDBOpenDBRequest> IDBFactory::OpenInternal(
       nsID id;
       MOZ_ALWAYS_SUCCEEDS(uuidGen->GenerateUUIDInPlace(&id));
 
-      newIDBThreadLocal = idbThreadLocal = new ThreadLocal(id);
+      newIDBThreadLocal = WrapUnique(new ThreadLocal(id));
+      idbThreadLocal = newIDBThreadLocal.get();
     }
 
     PBackgroundChild* backgroundActor =

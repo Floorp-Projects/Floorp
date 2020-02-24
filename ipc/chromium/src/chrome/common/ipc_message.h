@@ -11,14 +11,11 @@
 
 #include "base/basictypes.h"
 #include "base/pickle.h"
+#include "mozilla/RefPtr.h"
 #include "mozilla/TimeStamp.h"
 
 #ifdef MOZ_TASK_TRACER
 #  include "GeckoTaskTracer.h"
-#endif
-
-#if defined(OS_POSIX)
-#  include "nsAutoPtr.h"
 #endif
 
 #ifdef FUZZING

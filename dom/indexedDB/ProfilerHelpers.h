@@ -47,7 +47,7 @@ class MOZ_STACK_CLASS LoggingIdString final
       const BackgroundChildImpl::ThreadLocal* threadLocal =
           BackgroundChildImpl::GetThreadLocalForCurrentThread();
       if (threadLocal) {
-        const ThreadLocal* idbThreadLocal = threadLocal->mIndexedDBThreadLocal;
+        const auto& idbThreadLocal = threadLocal->mIndexedDBThreadLocal;
         if (idbThreadLocal) {
           Assign(idbThreadLocal->IdString());
         }
