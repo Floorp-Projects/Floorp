@@ -282,7 +282,11 @@ function initPage() {
       "security.tls.version.enable-deprecated"
     );
 
-    if (isTlsVersionError && !tls10OverrideEnabled) {
+    if (
+      isTlsVersionError &&
+      !tls10OverrideEnabled &&
+      !RPMPrefIsLocked("security.tls.version.min")
+    ) {
       // security.tls.* prefs may be reset by the user when they
       // encounter an error, so it's important that this has a
       // different pref branch.
