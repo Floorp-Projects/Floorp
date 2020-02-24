@@ -467,7 +467,7 @@ Interceptor::PublishTarget(detail::LiveSetAutoLock& aLiveSetLock,
   // ownership of aTarget into mInterceptorMap which remains live for the
   // lifetime of this Interceptor.
   mTarget = ToInterceptorTargetPtr(aTarget);
-  GetLiveSet().Put(mTarget.get(), weakRef.forget());
+  GetLiveSet().Put(mTarget.get(), std::move(weakRef));
 
   // Now we transfer aTarget's ownership into mInterceptorMap.
   mInterceptorMap.AppendElement(
