@@ -60,16 +60,32 @@ class OnboardingTrackingProtectionViewHolder(view: View) : RecyclerView.ViewHold
             updateTrackingProtectionPolicy()
         }
 
-        view.clickable_region_standard.setOnClickListener {
-            standardTrackingProtection.performClick()
+        view.clickable_region_standard.apply {
+            setOnClickListener {
+                standardTrackingProtection.performClick()
+            }
+            val standardTitle = view.context.getString(
+                R.string.onboarding_tracking_protection_standard_button
+            )
+            val standardSummary = view.context.getString(
+                R.string.onboarding_tracking_protection_standard_button_description
+            )
+            contentDescription = "$standardTitle. $standardSummary"
         }
 
         strictTrackingProtection.onClickListener {
             updateTrackingProtectionPolicy()
         }
 
-        view.clickable_region_strict.setOnClickListener {
-            strictTrackingProtection.performClick()
+        view.clickable_region_strict.apply {
+            setOnClickListener {
+                strictTrackingProtection.performClick()
+            }
+            val strictTitle =
+                view.context.getString(R.string.onboarding_tracking_protection_strict_button)
+            val strictSummary =
+                view.context.getString(R.string.onboarding_tracking_protection_strict_button_description)
+            contentDescription = "$strictTitle. $strictSummary"
         }
     }
 
