@@ -8,7 +8,6 @@
 
 #include "nsMediaFeatures.h"
 #include "nsGkAtoms.h"
-#include "nsCSSKeywords.h"
 #include "nsStyleConsts.h"
 #include "nsPresContext.h"
 #include "nsCSSProps.h"

@@ -14,7 +14,6 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Casting.h"
 
-#include "nsCSSKeywords.h"
 #include "nsLayoutUtils.h"
 #include "nsIWidget.h"
 #include "nsStyleConsts.h"  // For system widget appearance types
@@ -30,8 +29,6 @@
 #include "mozilla/StaticPrefs_layout.h"
 
 using namespace mozilla;
-
-typedef nsCSSProps::KTableEntry KTableEntry;
 
 static int32_t gPropertyTableRefCount;
 static nsStaticCaseInsensitiveNameTable* gFontDescTable;
@@ -163,70 +160,6 @@ const nsCString& nsCSSProps::GetStringValue(nsCSSCounterDesc aCounterDesc) {
     return sNullStr;
   }
 }
-
-/***************************************************************************/
-
-int32_t nsCSSProps::FindIndexOfKeyword(nsCSSKeyword aKeyword,
-                                       const KTableEntry aTable[]) {
-  if (eCSSKeyword_UNKNOWN == aKeyword) {
-    // NOTE: we can have keyword tables where eCSSKeyword_UNKNOWN is used
-    // not only for the sentinel, but also in the middle of the table to
-    // knock out values that have been disabled by prefs, e.g. kDisplayKTable.
-    // So we deal with eCSSKeyword_UNKNOWN up front to avoid returning a valid
-    // index in the loop below.
-    return -1;
-  }
-  for (int32_t i = 0;; ++i) {
-    const KTableEntry& entry = aTable[i];
-    if (entry.IsSentinel()) {
-      break;
-    }
-    if (aKeyword == entry.mKeyword) {
-      return i;
-    }
-  }
-  return -1;
-}
-
-bool nsCSSProps::FindKeyword(nsCSSKeyword aKeyword, const KTableEntry aTable[],
-                             int32_t& aResult) {
-  int32_t index = FindIndexOfKeyword(aKeyword, aTable);
-  if (index >= 0) {
-    aResult = aTable[index].mValue;
-    return true;
-  }
-  return false;
-}
-
-nsCSSKeyword nsCSSProps::ValueToKeywordEnum(int32_t aValue,
-                                            const KTableEntry aTable[]) {
-#ifdef DEBUG
-  typedef decltype(aTable[0].mValue) table_value_type;
-  NS_ASSERTION(table_value_type(aValue) == aValue, "Value out of range");
-#endif
-  for (int32_t i = 0;; ++i) {
-    const KTableEntry& entry = aTable[i];
-    if (entry.IsSentinel()) {
-      break;
-    }
-    if (aValue == entry.mValue) {
-      return entry.mKeyword;
-    }
-  }
-  return eCSSKeyword_UNKNOWN;
-}
-
-const nsCString& nsCSSProps::ValueToKeyword(int32_t aValue,
-                                            const KTableEntry aTable[]) {
-  nsCSSKeyword keyword = ValueToKeywordEnum(aValue, aTable);
-  if (keyword == eCSSKeyword_UNKNOWN) {
-    static nsDependentCString sNullStr("");
-    return sNullStr;
-  } else {
-    return nsCSSKeywords::GetStringValue(keyword);
-  }
-}
-
 const CSSPropFlags nsCSSProps::kFlagsTable[eCSSProperty_COUNT] = {
 #define CSS_PROP_LONGHAND(name_, id_, method_, flags_, ...) flags_,
 #define CSS_PROP_SHORTHAND(name_, id_, method_, flags_, ...) flags_,

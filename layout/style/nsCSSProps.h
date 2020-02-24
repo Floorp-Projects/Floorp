@@ -19,7 +19,6 @@
 #include "nsString.h"
 #include "nsCSSPropertyID.h"
 #include "nsStyleStructFwd.h"
-#include "nsCSSKeywords.h"
 #include "mozilla/UseCounter.h"
 #include "mozilla/CSSEnabledState.h"
 #include "mozilla/CSSPropFlags.h"
@@ -42,36 +41,10 @@ nsCSSPropertyID Servo_Property_LookupEnabledForAllContent(const nsACString*);
 const uint8_t* Servo_Property_GetName(nsCSSPropertyID, uint32_t* aLength);
 }
 
-struct nsCSSKTableEntry {
-  // nsCSSKTableEntry objects can be initialized either with an uint16_t value
-  // or a value of an enumeration type that can fit within an uint16_t.
-  static constexpr uint16_t SENTINEL_VALUE = uint16_t(-1);
-
-  constexpr nsCSSKTableEntry(nsCSSKeyword aKeyword, uint16_t aValue)
-      : mKeyword(aKeyword), mValue(aValue) {}
-
-  template <typename T,
-            typename = typename std::enable_if<std::is_enum<T>::value>::type>
-  constexpr nsCSSKTableEntry(nsCSSKeyword aKeyword, T aValue)
-      : mKeyword(aKeyword), mValue(static_cast<uint16_t>(aValue)) {
-    static_assert(mozilla::EnumTypeFitsWithin<T, uint16_t>::value,
-                  "aValue must be an enum that fits within mValue");
-    MOZ_ASSERT(static_cast<uint16_t>(aValue) != SENTINEL_VALUE);
-  }
-
-  bool IsSentinel() const {
-    return mKeyword == eCSSKeyword_UNKNOWN && mValue == SENTINEL_VALUE;
-  }
-
-  nsCSSKeyword mKeyword;
-  uint16_t mValue;
-};
-
 class nsCSSProps {
  public:
   typedef mozilla::CSSEnabledState EnabledState;
   typedef mozilla::CSSPropFlags Flags;
-  typedef nsCSSKTableEntry KTableEntry;
 
   static void AddRefTable(void);
   static void ReleaseTable(void);
@@ -123,40 +96,6 @@ class nsCSSProps {
 
   static const nsCString& GetStringValue(nsCSSFontDesc aFontDesc);
   static const nsCString& GetStringValue(nsCSSCounterDesc aCounterDesc);
-
-  // Returns the index of |aKeyword| in |aTable|, if it exists there;
-  // otherwise, returns -1.
-  // NOTE: Generally, clients should call FindKeyword() instead of this method.
-  static int32_t FindIndexOfKeyword(nsCSSKeyword aKeyword,
-                                    const KTableEntry aTable[]);
-
-  // Find |aKeyword| in |aTable|, if found set |aValue| to its corresponding
-  // value. If not found, return false and do not set |aValue|.
-  static bool FindKeyword(nsCSSKeyword aKeyword, const KTableEntry aTable[],
-                          int32_t& aValue);
-  // Return the first keyword in |aTable| that has the corresponding value
-  // |aValue|. Return |eCSSKeyword_UNKNOWN| if not found.
-  static nsCSSKeyword ValueToKeywordEnum(int32_t aValue,
-                                         const KTableEntry aTable[]);
-  template <typename T,
-            typename = typename std::enable_if<std::is_enum<T>::value>::type>
-  static nsCSSKeyword ValueToKeywordEnum(T aValue, const KTableEntry aTable[]) {
-    static_assert(
-        mozilla::EnumTypeFitsWithin<T, uint16_t>::value,
-        "aValue must be an enum that fits within KTableEntry::mValue");
-    return ValueToKeywordEnum(static_cast<uint16_t>(aValue), aTable);
-  }
-  // Ditto but as a string, return "" when not found.
-  static const nsCString& ValueToKeyword(int32_t aValue,
-                                         const KTableEntry aTable[]);
-  template <typename T,
-            typename = typename std::enable_if<std::is_enum<T>::value>::type>
-  static const nsCString& ValueToKeyword(T aValue, const KTableEntry aTable[]) {
-    static_assert(
-        mozilla::EnumTypeFitsWithin<T, uint16_t>::value,
-        "aValue must be an enum that fits within KTableEntry::mValue");
-    return ValueToKeyword(static_cast<uint16_t>(aValue), aTable);
-  }
 
  private:
   static const Flags kFlagsTable[eCSSProperty_COUNT];
