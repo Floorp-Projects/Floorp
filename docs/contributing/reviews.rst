@@ -79,5 +79,5 @@ Review groups
      - Changes related to WebIDL
      - `Member list <https://phabricator.services.mozilla.com/project/members/112/>`__
 
-
-
+To create a new group, fill a `new bug in Conduit::Phabricator <https://bugzilla.mozilla.org/enter_bug.cgi?product=Conduit&component=Administration>`__.
+See `bug 1613306 <https://bugzilla.mozilla.org/show_bug.cgi?id=1613306>`__ as example.
