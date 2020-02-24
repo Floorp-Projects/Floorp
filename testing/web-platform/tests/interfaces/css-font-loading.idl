@@ -21,7 +21,7 @@ enum FontFaceLoadStatus { "unloaded", "loading", "loaded", "error" };
 [Exposed=(Window,Worker)]
 interface FontFace {
   constructor(CSSOMString family, (CSSOMString or BinaryData) source,
-                optional FontFaceDescriptors descriptors);
+                optional FontFaceDescriptors descriptors = {});
   attribute CSSOMString family;
   attribute CSSOMString style;
   attribute CSSOMString weight;
@@ -44,7 +44,7 @@ dictionary FontFaceSetLoadEventInit : EventInit {
 
 [Exposed=(Window,Worker)]
 interface FontFaceSetLoadEvent : Event {
-  constructor(CSSOMString type, optional FontFaceSetLoadEventInit eventInitDict);
+  constructor(CSSOMString type, optional FontFaceSetLoadEventInit eventInitDict = {});
   [SameObject] readonly attribute FrozenArray<FontFace> fontfaces;
 };
 
