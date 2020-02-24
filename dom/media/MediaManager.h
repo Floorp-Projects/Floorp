@@ -127,6 +127,7 @@ class MediaDevice : public nsIMediaDevice {
   const nsString mID;
   const nsString mGroupID;
   const nsString mRawID;
+  const nsString mRawName;
 };
 
 typedef nsRefPtrHashtable<nsUint64HashKey, GetUserMediaWindowListener>
