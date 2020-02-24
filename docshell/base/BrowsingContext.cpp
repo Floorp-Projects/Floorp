@@ -1346,6 +1346,45 @@ void BrowsingContext::DidSet(FieldIndex<IDX_Muted>) {
   });
 }
 
+void BrowsingContext::SetCustomUserAgent(const nsAString& aUserAgent) {
+  Top()->SetUserAgentOverride(aUserAgent);
+}
+
+void BrowsingContext::DidSet(FieldIndex<IDX_UserAgentOverride>) {
+  MOZ_ASSERT(IsTop());
+
+  PreOrderWalk([&](BrowsingContext* aContext) {
+    nsIDocShell* shell = aContext->GetDocShell();
+    if (shell) {
+      shell->ClearCachedUserAgent();
+    }
+  });
+}
+
+bool BrowsingContext::CanSet(FieldIndex<IDX_UserAgentOverride>,
+                             const nsString& aUserAgent,
+                             ContentParent* aSource) {
+  if (!IsTop()) {
+    return false;
+  }
+
+  if (aSource) {
+    MOZ_ASSERT(XRE_IsParentProcess());
+
+    // Double-check ownership if we aren't the setter.
+    if (!Canonical()->IsOwnedByProcess(aSource->ChildID()) &&
+        aSource->ChildID() != Canonical()->GetInFlightProcessId()) {
+      return false;
+    }
+  } else if (!IsInProcess() && !XRE_IsParentProcess()) {
+    // Don't allow this to be set from content processes that
+    // don't own the BrowsingContext.
+    return false;
+  }
+
+  return true;
+}
+
 bool BrowsingContext::CanSet(FieldIndex<IDX_EmbedderInnerWindowId>,
                              const uint64_t& aValue, ContentParent* aSource) {
   // Generally allow clearing this. We may want to be more precise about this

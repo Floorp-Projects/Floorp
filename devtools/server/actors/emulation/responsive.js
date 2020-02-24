@@ -316,12 +316,12 @@ const ResponsiveActor = protocol.ActorClassWithSpec(responsiveSpec, {
     if (this._previousUserAgentOverride === undefined) {
       this._previousUserAgentOverride = this.getUserAgentOverride();
     }
-    this.docShell.customUserAgent = userAgent;
+    this.docShell.browsingContext.customUserAgent = userAgent;
     return true;
   },
 
   getUserAgentOverride() {
-    return this.docShell.customUserAgent;
+    return this.docShell.browsingContext.customUserAgent;
   },
 
   clearUserAgentOverride() {

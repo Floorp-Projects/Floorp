@@ -9,12 +9,12 @@ const URL = "data:text/html;charset=utf-8,<iframe id='test-iframe'></iframe>";
 async function contentTask() {
   let docshell = docShell;
   is(
-    docshell.customUserAgent,
+    docshell.browsingContext.customUserAgent,
     "",
     "There should initially be no customUserAgent"
   );
 
-  docshell.customUserAgent = "foo";
+  docshell.browsingContext.customUserAgent = "foo";
   is(
     content.navigator.userAgent,
     "foo",

@@ -254,7 +254,7 @@ void Navigator::GetUserAgent(nsAString& aUserAgent, CallerType aCallerType,
     nsIDocShell* docshell = window->GetDocShell();
     nsString customUserAgent;
     if (docshell) {
-      docshell->GetCustomUserAgent(customUserAgent);
+      docshell->GetBrowsingContext()->GetCustomUserAgent(customUserAgent);
 
       if (!customUserAgent.IsEmpty()) {
         aUserAgent = customUserAgent;

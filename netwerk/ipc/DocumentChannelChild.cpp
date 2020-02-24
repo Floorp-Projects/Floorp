@@ -129,10 +129,6 @@ DocumentChannelChild::AsyncOpen(nsIStreamListener* aListener) {
   if (mTiming) {
     args.timing() = Some(mTiming);
   }
-  nsDocShell* docshell = GetDocShell();
-  if (docshell) {
-    docshell->GetCustomUserAgent(args.customUserAgent());
-  }
 
   nsCOMPtr<nsIBrowserChild> iBrowserChild;
   NS_QueryNotificationCallbacks(mCallbacks, mLoadGroup,

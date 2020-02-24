@@ -43,7 +43,7 @@ class Emulation extends ContentProcessDomain {
   }
 
   _setCustomUserAgent(userAgent) {
-    this.docShell.customUserAgent = userAgent;
+    this.docShell.browsingContext.customUserAgent = userAgent;
   }
 
   _setDPPXOverride(dppx) {

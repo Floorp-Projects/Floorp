@@ -179,11 +179,6 @@ interface nsIDocShell : nsIDocShellTreeItem
   attribute EventTarget chromeEventHandler;
 
   /**
-   * This allows chrome to set a custom User agent on a specific docshell
-   */
-  attribute AString customUserAgent;
-
-  /**
    * Whether CSS error reporting is enabled.
    */
   attribute boolean cssErrorReportingEnabled;
@@ -407,6 +402,8 @@ interface nsIDocShell : nsIDocShellTreeItem
    * beginRestore().
    */
   void finishRestore();
+
+  void clearCachedUserAgent();
 
   /* Track whether we're currently restoring a document presentation. */
   readonly attribute boolean restoringDocument;

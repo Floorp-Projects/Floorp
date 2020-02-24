@@ -1093,7 +1093,6 @@ class nsDocShell final : public nsDocLoader,
 
   nsID mHistoryID;
   nsString mTitle;
-  nsString mCustomUserAgent;
   nsCString mOriginalUriString;
   nsWeakPtr mOpener;
   nsTObserverArray<nsWeakPtr> mPrivacyObservers;
