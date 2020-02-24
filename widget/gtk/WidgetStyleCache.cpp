@@ -1438,5 +1438,7 @@ void StyleContextSetScale(GtkStyleContext* style, gint aScaleFactor) {
   static auto sGtkStyleContextSetScalePtr =
       (void (*)(GtkStyleContext*, gint))dlsym(RTLD_DEFAULT,
                                               "gtk_style_context_set_scale");
-  sGtkStyleContextSetScalePtr(style, aScaleFactor);
+  if (sGtkStyleContextSetScalePtr && style) {
+    sGtkStyleContextSetScalePtr(style, aScaleFactor);
+  }
 }
