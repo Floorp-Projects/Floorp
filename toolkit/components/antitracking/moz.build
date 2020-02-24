@@ -8,6 +8,7 @@ with Files('**'):
     BUG_COMPONENT = ('Core', 'Privacy: Anti-Tracking')
 
 XPIDL_SOURCES += [
+    'nsIPurgeTrackerService.idl',
     'nsITrackingDBService.idl',
     'nsIURLDecorationAnnotationsService.idl',
 ]
@@ -20,6 +21,7 @@ EXTRA_COMPONENTS += [
 
 EXTRA_JS_MODULES += [
     'ContentBlockingAllowList.jsm',
+    'PurgeTrackerService.jsm',
     'TrackingDBService.jsm',
     'URLDecorationAnnotationsService.jsm',
 ]
