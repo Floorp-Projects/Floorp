@@ -863,8 +863,8 @@ void HTMLTableElement::MapAttributesIntoRule(
   // illegal)
   value = aAttributes->GetAttr(nsGkAtoms::align);
   if (value && value->Type() == nsAttrValue::eEnum) {
-    if (value->GetEnumValue() == NS_STYLE_TEXT_ALIGN_CENTER ||
-        value->GetEnumValue() == NS_STYLE_TEXT_ALIGN_MOZ_CENTER) {
+    if (value->GetEnumValue() == uint8_t(StyleTextAlign::Center) ||
+        value->GetEnumValue() == uint8_t(StyleTextAlign::MozCenter)) {
       aDecls.SetAutoValueIfUnset(eCSSProperty_margin_left);
       aDecls.SetAutoValueIfUnset(eCSSProperty_margin_right);
     }

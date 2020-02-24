@@ -867,8 +867,8 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleText {
 
   mozilla::StyleRGBA mColor;
   mozilla::StyleTextTransform mTextTransform;
-  uint8_t mTextAlign;      // NS_STYLE_TEXT_ALIGN_*
-  uint8_t mTextAlignLast;  // NS_STYLE_TEXT_ALIGN_*
+  mozilla::StyleTextAlign mTextAlign;
+  mozilla::StyleTextAlignLast mTextAlignLast;
   mozilla::StyleTextJustify mTextJustify;
   mozilla::StyleWhiteSpace mWhiteSpace;
   mozilla::StyleLineBreak mLineBreak = mozilla::StyleLineBreak::Auto;
@@ -973,6 +973,36 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleText {
       return false;
     }
     return true;
+  }
+
+  mozilla::StyleTextAlign TextAlignForLastLine() const {
+    switch (mTextAlignLast) {
+      case mozilla::StyleTextAlignLast::Auto:
+        // 'text-align-last: auto' is equivalent to the value of the
+        // 'text-align' property except when 'text-align' is set to 'justify',
+        // in which case it is 'justify' when 'text-justify' is 'distribute' and
+        // 'start' otherwise.
+        //
+        // XXX: the code below will have to change when we implement
+        // text-justify
+        if (mTextAlign == mozilla::StyleTextAlign::Justify) {
+          return mozilla::StyleTextAlign::Start;
+        }
+        return mTextAlign;
+      case mozilla::StyleTextAlignLast::Center:
+        return mozilla::StyleTextAlign::Center;
+      case mozilla::StyleTextAlignLast::Start:
+        return mozilla::StyleTextAlign::Start;
+      case mozilla::StyleTextAlignLast::End:
+        return mozilla::StyleTextAlign::End;
+      case mozilla::StyleTextAlignLast::Left:
+        return mozilla::StyleTextAlign::Left;
+      case mozilla::StyleTextAlignLast::Right:
+        return mozilla::StyleTextAlign::Right;
+      case mozilla::StyleTextAlignLast::Justify:
+        return mozilla::StyleTextAlign::Justify;
+    }
+    return mozilla::StyleTextAlign::Start;
   }
 
   bool HasWebkitTextStroke() const { return mWebkitTextStrokeWidth > 0; }

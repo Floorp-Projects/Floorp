@@ -2234,13 +2234,14 @@ void nsBlockFrame::MarkLineDirty(LineIterator aLine,
  * Test whether lines are certain to be aligned left so that we can make
  * resizing optimizations
  */
-static inline bool IsAlignedLeft(uint8_t aAlignment, StyleDirection aDirection,
+static inline bool IsAlignedLeft(StyleTextAlign aAlignment,
+                                 StyleDirection aDirection,
                                  uint8_t aUnicodeBidi, nsIFrame* aFrame) {
   return nsSVGUtils::IsInSVGTextSubtree(aFrame) ||
-         NS_STYLE_TEXT_ALIGN_LEFT == aAlignment ||
-         (((NS_STYLE_TEXT_ALIGN_START == aAlignment &&
+         StyleTextAlign::Left == aAlignment ||
+         (((StyleTextAlign::Start == aAlignment &&
             StyleDirection::Ltr == aDirection) ||
-           (NS_STYLE_TEXT_ALIGN_END == aAlignment &&
+           (StyleTextAlign::End == aAlignment &&
             StyleDirection::Rtl == aDirection)) &&
           !(NS_STYLE_UNICODE_BIDI_PLAINTEXT & aUnicodeBidi));
 }
@@ -2621,11 +2622,9 @@ void nsBlockFrame::ReflowDirtyLines(BlockReflowInput& aState) {
     if (aState.ContainerSize() != line->mContainerSize) {
       line->mContainerSize = aState.ContainerSize();
 
-      bool isLastLine = line == mLines.back() && !GetNextInFlow() &&
-                        NS_STYLE_TEXT_ALIGN_AUTO == StyleText()->mTextAlignLast;
-      uint8_t align =
-          isLastLine ? StyleText()->mTextAlign : StyleText()->mTextAlignLast;
-
+      const bool isLastLine = line == mLines.back() && !GetNextInFlow();
+      const auto align = isLastLine ? StyleText()->TextAlignForLastLine()
+                                    : StyleText()->mTextAlign;
       if (line->mWritingMode.IsVertical() || line->mWritingMode.IsBidiRTL() ||
           !IsAlignedLeft(align,
                          aState.mReflowInput.mStyleVisibility->mDirection,
@@ -4903,17 +4902,15 @@ bool nsBlockFrame::PlaceLine(BlockReflowInput& aState,
   const nsStyleText* styleText = StyleText();
 
   /**
-   * text-align-last defaults to the same value as text-align when
-   * text-align-last is set to auto (except when text-align is set to justify),
-   * so in that case we don't need to set isLastLine.
+   * We don't care checking for IsLastLine properly if we don't care (if it
+   * can't change the used text-align value for the line).
    *
    * In other words, isLastLine really means isLastLineAndWeCare.
    */
-  bool isLastLine =
+  const bool isLastLine =
       !nsSVGUtils::IsInSVGTextSubtree(this) &&
-      ((NS_STYLE_TEXT_ALIGN_AUTO != styleText->mTextAlignLast ||
-        NS_STYLE_TEXT_ALIGN_JUSTIFY == styleText->mTextAlign) &&
-       (aLineLayout.GetLineEndsInBR() || IsLastLine(aState, aLine)));
+      styleText->TextAlignForLastLine() != styleText->mTextAlign &&
+      (aLineLayout.GetLineEndsInBR() || IsLastLine(aState, aLine));
 
   aLineLayout.TextAlignLine(aLine, isLastLine);
 

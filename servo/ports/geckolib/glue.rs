@@ -4790,9 +4790,7 @@ pub extern "C" fn Servo_DeclarationBlock_SetKeywordValue(
     use style::properties::PropertyDeclaration;
     use style::values::generics::box_::{VerticalAlign, VerticalAlignKeyword};
     use style::values::generics::font::FontStyle;
-    use style::values::specified::BorderStyle;
-    use style::values::specified::Display;
-    use style::values::specified::{Clear, Float};
+    use style::values::specified::{BorderStyle, Clear, Display, Float, TextAlign};
 
     fn get_from_computed<T>(value: u32) -> T
     where
@@ -4812,7 +4810,7 @@ pub extern "C" fn Servo_DeclarationBlock_SetKeywordValue(
         Float => get_from_computed::<Float>(value),
         Clear => get_from_computed::<Clear>(value),
         VerticalAlign => VerticalAlign::Keyword(VerticalAlignKeyword::from_u32(value).unwrap()),
-        TextAlign => longhands::text_align::SpecifiedValue::from_gecko_keyword(value),
+        TextAlign => get_from_computed::<TextAlign>(value),
         TextEmphasisPosition => longhands::text_emphasis_position::SpecifiedValue::from_gecko_keyword(value),
         FontSize => {
             // We rely on Gecko passing in font-size values (0...7) here.

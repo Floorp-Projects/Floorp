@@ -167,15 +167,15 @@ const nsCString& nsCSSProps::GetStringValue(nsCSSCounterDesc aCounterDesc) {
 /***************************************************************************/
 
 const KTableEntry nsCSSProps::kTextAlignKTable[] = {
-    {eCSSKeyword_left, NS_STYLE_TEXT_ALIGN_LEFT},
-    {eCSSKeyword_right, NS_STYLE_TEXT_ALIGN_RIGHT},
-    {eCSSKeyword_center, NS_STYLE_TEXT_ALIGN_CENTER},
-    {eCSSKeyword_justify, NS_STYLE_TEXT_ALIGN_JUSTIFY},
-    {eCSSKeyword__moz_center, NS_STYLE_TEXT_ALIGN_MOZ_CENTER},
-    {eCSSKeyword__moz_right, NS_STYLE_TEXT_ALIGN_MOZ_RIGHT},
-    {eCSSKeyword__moz_left, NS_STYLE_TEXT_ALIGN_MOZ_LEFT},
-    {eCSSKeyword_start, NS_STYLE_TEXT_ALIGN_START},
-    {eCSSKeyword_end, NS_STYLE_TEXT_ALIGN_END},
+    {eCSSKeyword_left, StyleTextAlign::Left},
+    {eCSSKeyword_right, StyleTextAlign::Right},
+    {eCSSKeyword_center, StyleTextAlign::Center},
+    {eCSSKeyword_justify, StyleTextAlign::Justify},
+    {eCSSKeyword__moz_center, StyleTextAlign::MozCenter},
+    {eCSSKeyword__moz_right, StyleTextAlign::MozRight},
+    {eCSSKeyword__moz_left, StyleTextAlign::MozLeft},
+    {eCSSKeyword_start, StyleTextAlign::Start},
+    {eCSSKeyword_end, StyleTextAlign::End},
     {eCSSKeyword_UNKNOWN, nsCSSKTableEntry::SENTINEL_VALUE},
 };
 

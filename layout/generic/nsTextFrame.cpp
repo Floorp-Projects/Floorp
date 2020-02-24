@@ -2181,9 +2181,9 @@ already_AddRefed<gfxTextRun> BuildTextRunsScanner::BuildTextRunForFrames(
   nsTextFrame* nextBreakBeforeFrame = GetNextBreakBeforeFrame(&nextBreakIndex);
   bool isSVG = nsSVGUtils::IsInSVGTextSubtree(mLineContainer);
   bool enabledJustification =
-      (mLineContainer->StyleText()->mTextAlign == NS_STYLE_TEXT_ALIGN_JUSTIFY ||
+      (mLineContainer->StyleText()->mTextAlign == StyleTextAlign::Justify ||
        mLineContainer->StyleText()->mTextAlignLast ==
-           NS_STYLE_TEXT_ALIGN_JUSTIFY);
+           StyleTextAlignLast::Justify);
 
   const nsStyleText* textStyle = nullptr;
   const nsStyleFont* fontStyle = nullptr;
@@ -9544,9 +9544,9 @@ void nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
 
   // Compute space and letter counts for justification, if required
   if (!textStyle->WhiteSpaceIsSignificant() &&
-      (lineContainer->StyleText()->mTextAlign == NS_STYLE_TEXT_ALIGN_JUSTIFY ||
+      (lineContainer->StyleText()->mTextAlign == StyleTextAlign::Justify ||
        lineContainer->StyleText()->mTextAlignLast ==
-           NS_STYLE_TEXT_ALIGN_JUSTIFY ||
+           StyleTextAlignLast::Justify ||
        shouldSuppressLineBreak) &&
       !nsSVGUtils::IsInSVGTextSubtree(lineContainer)) {
     AddStateBits(TEXT_JUSTIFICATION_ENABLED);

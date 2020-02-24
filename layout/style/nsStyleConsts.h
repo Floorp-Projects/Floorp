@@ -519,20 +519,6 @@ enum class StyleObjectFit : uint8_t {
 };
 
 // See nsStyleText
-#define NS_STYLE_TEXT_ALIGN_START 0
-#define NS_STYLE_TEXT_ALIGN_LEFT 1
-#define NS_STYLE_TEXT_ALIGN_RIGHT 2
-#define NS_STYLE_TEXT_ALIGN_CENTER 3
-#define NS_STYLE_TEXT_ALIGN_JUSTIFY 4
-#define NS_STYLE_TEXT_ALIGN_CHAR \
-  5  // align based on a certain character, for table cell
-#define NS_STYLE_TEXT_ALIGN_END 6
-#define NS_STYLE_TEXT_ALIGN_AUTO 7
-#define NS_STYLE_TEXT_ALIGN_MOZ_CENTER 8
-#define NS_STYLE_TEXT_ALIGN_MOZ_RIGHT 9
-#define NS_STYLE_TEXT_ALIGN_MOZ_LEFT 10
-
-// See nsStyleText
 #define NS_STYLE_TEXT_DECORATION_STYLE_NONE \
   0  // not in CSS spec, mapped to -moz-none
 #define NS_STYLE_TEXT_DECORATION_STYLE_DOTTED 1

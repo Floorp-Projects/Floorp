@@ -1263,12 +1263,14 @@ void nsTreeBodyFrame::AdjustForCellText(nsAutoString& aText, int32_t aRowIndex,
                                                   aRenderingContext);
 
   switch (aColumn->GetTextAlignment()) {
-    case NS_STYLE_TEXT_ALIGN_RIGHT: {
+    case mozilla::StyleTextAlign::Right:
       aTextRect.x += aTextRect.width - width;
-    } break;
-    case NS_STYLE_TEXT_ALIGN_CENTER: {
+      break;
+    case mozilla::StyleTextAlign::Center:
       aTextRect.x += (aTextRect.width - width) / 2;
-    } break;
+      break;
+    default:
+      break;
   }
 
   aTextRect.width = width;
