@@ -12,7 +12,9 @@
 
 #include "mozilla/gfx/InlineTranslator.h"
 #include "mozilla/layers/CanvasDrawEventRecorder.h"
+#include "mozilla/layers/CanvasThread.h"
 #include "mozilla/layers/LayersSurfaces.h"
+#include "mozilla/layers/PCanvasParent.h"
 #include "mozilla/ipc/CrossProcessSemaphore.h"
 #include "mozilla/Monitor.h"
 #include "mozilla/UniquePtr.h"
@@ -22,21 +24,61 @@ namespace layers {
 
 class TextureData;
 
-class CanvasTranslator final : public gfx::InlineTranslator {
+class CanvasTranslator final : public gfx::InlineTranslator,
+                               public PCanvasParent {
  public:
-  /**
-   * Create an uninitialized CanvasTranslator. This must be initialized via the
-   * Init function before any translation can occur. We need this to be able
-   * to create the CanvasTranslator on a different thread where we will need
-   * to call WaitForSurfaceDescriptor. Otherwise we have a race between the
-   * CanvasTranslator being created on the canvas thread and the first texture
-   * being required on the Compositor thread.
-   *
-   * @returns the new CanvasTranslator
-   */
-  static UniquePtr<CanvasTranslator> Create();
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CanvasTranslator)
 
-  ~CanvasTranslator();
+  friend class PProtocolParent;
+
+  /**
+   * Create an uninitialized CanvasTranslator and bind it to the given endpoint
+   * on the CanvasPlaybackLoop.
+   *
+   * @param aEndpoint the endpoint to bind to
+   * @return the new CanvasTranslator
+   */
+  static already_AddRefed<CanvasTranslator> Create(
+      Endpoint<PCanvasParent>&& aEndpoint);
+
+  /**
+   * Shutdown all of the CanvasTranslators.
+   */
+  static void Shutdown();
+
+  /**
+   * Initialize the canvas translator for a particular TextureType and
+   * CanvasEventRingBuffer.
+   *
+   * @param aTextureType the TextureType the translator will create
+   * @param aReadHandle handle to the shared memory for the
+   *        CanvasEventRingBuffer
+   * @param aReaderSem reading blocked semaphore for the CanvasEventRingBuffer
+   * @param aWriterSem writing blocked semaphore for the CanvasEventRingBuffer
+   */
+  ipc::IPCResult RecvInitTranslator(
+      const TextureType& aTextureType,
+      const ipc::SharedMemoryBasic::Handle& aReadHandle,
+      const CrossProcessSemaphoreHandle& aReaderSem,
+      const CrossProcessSemaphoreHandle& aWriterSem);
+
+  /**
+   * Used to tell the CanvasTranslator to start translating again after it has
+   * stopped due to a timeout waiting for events.
+   */
+  ipc::IPCResult RecvResumeTranslation();
+
+  void ActorDestroy(ActorDestroyReason why) final;
+
+  /**
+   * Used by the compositor thread to get the SurfaceDescriptor associated with
+   * the DrawTarget from another process.
+   *
+   * @param aDrawTarget the key to find the TextureData
+   * @returns the SurfaceDescriptor associated with the key
+   */
+  UniquePtr<SurfaceDescriptor> LookupSurfaceDescriptorForClientDrawTarget(
+      const uintptr_t aDrawTarget);
 
   /**
    * Initializes a canvas translator for a particular TextureType, which
@@ -94,7 +136,7 @@ class CanvasTranslator final : public gfx::InlineTranslator {
    * @param aSize the number of chars to write
    */
   void ReturnWrite(const char* aData, size_t aSize) {
-    mStream.ReturnWrite(aData, aSize);
+    mStream->ReturnWrite(aData, aSize);
   }
 
   /**
@@ -196,14 +238,27 @@ class CanvasTranslator final : public gfx::InlineTranslator {
       gfx::ReferencePtr aSurface);
 
  private:
-  CanvasTranslator();
+  explicit CanvasTranslator(
+      already_AddRefed<CanvasThreadHolder> aCanvasThreadHolder);
+
+  ~CanvasTranslator();
+
+  void Bind(Endpoint<PCanvasParent>&& aEndpoint);
+
+  void StartTranslation();
+
+  void FinishShutdown();
 
   void AddSurfaceDescriptor(gfx::ReferencePtr aRefPtr,
                             TextureData* atextureData);
 
   bool HandleExtensionEvent(int32_t aType);
 
-  CanvasEventRingBuffer mStream;
+  RefPtr<CanvasThreadHolder> mCanvasThreadHolder;
+  RefPtr<TaskQueue> mTranslationTaskQueue;
+  // We hold the ring buffer as a UniquePtr so we can drop it once
+  // mTranslationTaskQueue has shutdown to break a RefPtr cycle.
+  UniquePtr<CanvasEventRingBuffer> mStream;
   TextureType mTextureType = TextureType::Unknown;
   UniquePtr<TextureData> mReferenceTextureData;
   typedef std::unordered_map<void*, UniquePtr<TextureData>> TextureMap;

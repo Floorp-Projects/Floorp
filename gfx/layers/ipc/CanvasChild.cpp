@@ -26,7 +26,7 @@ class RingBufferWriterServices final
   ~RingBufferWriterServices() final = default;
 
   bool ReaderClosed() final {
-    return mCanvasChild->GetIPCChannel()->Unsound_IsClosed();
+    return !mCanvasChild->GetIPCChannel()->CanSend();
   }
 
   void ResumeReader() final { mCanvasChild->ResumeTranslation(); }
