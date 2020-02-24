@@ -3839,6 +3839,12 @@ GeckoDriver.prototype.print = async function(cmd) {
   printSettings.footerStrLeft = "";
   printSettings.footerStrRight = "";
 
+  // Override any os-specific unwriteable margins
+  printSettings.unwriteableMarginTop = 0;
+  printSettings.unwriteableMarginLeft = 0;
+  printSettings.unwriteableMarginBottom = 0;
+  printSettings.unwriteableMarginRight = 0;
+
   if (landscape) {
     printSettings.orientation = Ci.nsIPrintSettings.kLandscapeOrientation;
   }
