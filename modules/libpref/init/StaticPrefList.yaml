@@ -6054,11 +6054,18 @@
 
 - name: media.mediasource.webm.enabled
   type: RelaxedAtomicBool
-#if defined(XP_WIN) || defined(XP_MACOSX) || defined(MOZ_WIDGET_ANDROID)
   value: true
-#else
-  value: false
-#endif
+  mirror: always
+
+# Check if vp9 is enabled by default in mediasource. False on Android.
+# If disabled, vp9 will only be enabled under some conditions:
+# - h264 HW decoding is not supported
+# - mp4 is not enabled
+# - Device was deemed fast enough to decode VP9 via the VP9Benchmark utility
+# - A VP9 HW decoder is present.
+- name: media.mediasource.vp9.enabled
+  type: RelaxedAtomicBool
+  value: @IS_NOT_ANDROID@
   mirror: always
 
 - name: media.mediasource.webm.audio.enabled
