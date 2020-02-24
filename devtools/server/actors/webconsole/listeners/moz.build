@@ -6,7 +6,7 @@
 
 DevToolsModules(
     'console-api.js',
-    'console-progress.js',
+    'console-file-activity.js',
     'console-reflow.js',
     'console-service.js',
     'content-process.js',
