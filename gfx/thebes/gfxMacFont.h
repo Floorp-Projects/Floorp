@@ -23,9 +23,6 @@ class gfxMacFont : public gfxFont {
 
   CGFontRef GetCGFontRef() const { return mCGFont; }
 
-  /* overrides for the pure virtual methods in gfxFont */
-  uint32_t GetSpaceGlyph() override { return mSpaceGlyph; }
-
   /* override Measure to add padding for antialiasing */
   RunMetrics Measure(const gfxTextRun* aTextRun, uint32_t aStart, uint32_t aEnd,
                      BoundingBoxType aBoundingBoxType, DrawTarget* aDrawTargetForTightBoundingBox,
@@ -87,7 +84,6 @@ class gfxMacFont : public gfxFont {
   mozilla::UniquePtr<gfxFontShaper> mCoreTextShaper;
 
   Metrics mMetrics;
-  uint32_t mSpaceGlyph;
   nscolor mFontSmoothingBackgroundColor;
 
   bool mVariationFont;  // true if font has OpenType variations

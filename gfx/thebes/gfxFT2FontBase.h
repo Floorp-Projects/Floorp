@@ -42,7 +42,6 @@ class gfxFT2FontBase : public gfxFont {
   virtual ~gfxFT2FontBase();
 
   uint32_t GetGlyph(uint32_t aCharCode);
-  uint32_t GetSpaceGlyph() override;
   bool ProvidesGetGlyph() const override { return true; }
   virtual uint32_t GetGlyph(uint32_t unicode,
                             uint32_t variation_selector) override;
@@ -77,7 +76,6 @@ class gfxFT2FontBase : public gfxFont {
 
   RefPtr<mozilla::gfx::SharedFTFace> mFTFace;
 
-  uint32_t mSpaceGlyph;
   Metrics mMetrics;
   int mFTLoadFlags;
   bool mEmbolden;

@@ -24,9 +24,6 @@ class gfxGDIFont : public gfxFont {
 
   HFONT GetHFONT() { return mFont; }
 
-  /* overrides for the pure virtual methods in gfxFont */
-  uint32_t GetSpaceGlyph() override;
-
   already_AddRefed<mozilla::gfx::ScaledFont> GetScaledFont(
       DrawTarget* aTarget) override;
 
@@ -81,7 +78,6 @@ class gfxGDIFont : public gfxFont {
   HFONT mFont;
 
   Metrics* mMetrics;
-  uint32_t mSpaceGlyph;
   bool mIsBitmap;
 
   bool mNeedsSyntheticBold;

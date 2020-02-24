@@ -82,7 +82,6 @@ gfxDWriteFont::gfxDWriteFont(const RefPtr<UnscaledFontDWrite>& aUnscaledFont,
     : gfxFont(aUnscaledFont, aFontEntry, aFontStyle, anAAOption),
       mFontFace(aFontFace ? aFontFace : aUnscaledFont->GetFontFace()),
       mMetrics(nullptr),
-      mSpaceGlyph(0),
       mUseSubpixelPositions(false),
       mAllowManualShowGlyphs(true),
       mAzureScaledFontUsedClearType(false) {
@@ -440,8 +439,6 @@ bool gfxDWriteFont::HasBitmapStrikeForSize(uint32_t aSize) {
 
   return hasStrike;
 }
-
-uint32_t gfxDWriteFont::GetSpaceGlyph() { return mSpaceGlyph; }
 
 bool gfxDWriteFont::IsValid() const { return mFontFace != nullptr; }
 

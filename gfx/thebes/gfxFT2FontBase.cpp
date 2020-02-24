@@ -34,7 +34,6 @@ gfxFT2FontBase::gfxFT2FontBase(
     const gfxFontStyle* aFontStyle, int aLoadFlags, bool aEmbolden)
     : gfxFont(aUnscaledFont, aFontEntry, aFontStyle, kAntialiasDefault),
       mFTFace(std::move(aFTFace)),
-      mSpaceGlyph(0),
       mFTLoadFlags(aLoadFlags | FT_LOAD_IGNORE_GLOBAL_ADVANCE_WIDTH |
                    FT_LOAD_COLOR),
       mEmbolden(aEmbolden),
@@ -451,9 +450,6 @@ void gfxFT2FontBase::InitMetrics() {
 const gfxFont::Metrics& gfxFT2FontBase::GetHorizontalMetrics() {
   return mMetrics;
 }
-
-// Get the glyphID of a space
-uint32_t gfxFT2FontBase::GetSpaceGlyph() { return mSpaceGlyph; }
 
 uint32_t gfxFT2FontBase::GetGlyph(uint32_t unicode,
                                   uint32_t variation_selector) {
