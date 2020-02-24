@@ -460,11 +460,6 @@ void nsFrameLoader::LoadFrame(bool aOriginalSrc) {
     return;
   }
 
-  if (doc->IsLoadedAsInteractiveData()) {
-    // XBL bindings doc shouldn't load sub-documents.
-    return;
-  }
-
   nsIURI* base_uri = mOwnerContent->GetBaseURI();
   auto encoding = doc->GetDocumentCharacterSet();
 
@@ -529,8 +524,8 @@ nsresult nsFrameLoader::LoadURI(nsIURI* aURI,
 
 void nsFrameLoader::ResumeLoad(uint64_t aPendingSwitchID) {
   Document* doc = mOwnerContent->OwnerDoc();
-  if (doc->IsStaticDocument() || doc->IsLoadedAsInteractiveData()) {
-    // Static & XBL bindings doc shouldn't load sub-documents.
+  if (doc->IsStaticDocument()) {
+    // Static doc shouldn't load sub-documents.
     return;
   }
 

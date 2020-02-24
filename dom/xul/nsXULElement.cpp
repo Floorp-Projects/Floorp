@@ -586,8 +586,7 @@ nsresult nsXULElement::BindToTree(BindContext& aContext, nsINode& aParent) {
   }
 
   Document& doc = aContext.OwnerDoc();
-  if (!IsInNativeAnonymousSubtree() && !doc.IsLoadedAsInteractiveData() &&
-      !doc.AllowXULXBL() &&
+  if (!IsInNativeAnonymousSubtree() && !doc.AllowXULXBL() &&
       !doc.HasWarnedAbout(Document::eImportXULIntoContent)) {
     nsContentUtils::AddScriptRunner(new XULInContentErrorReporter(doc));
   }
