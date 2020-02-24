@@ -12,18 +12,50 @@ import mozilla.components.feature.sitepermissions.SitePermissionsRules.Action.BL
 /**
  * Indicate how site permissions must behave by permission category.
  */
-data class SitePermissionsRules(
+data class SitePermissionsRules internal constructor(
     val camera: Action,
     val location: Action,
     val notification: Action,
-    val microphone: Action
+    val microphone: Action,
+    val autoplayAudible: Action,
+    val autoplayInaudible: Action
 ) {
+
+    constructor(
+        camera: Action,
+        location: Action,
+        notification: Action,
+        microphone: Action,
+        autoplayAudible: AutoplayAction,
+        autoplayInaudible: AutoplayAction
+    ) : this(
+        camera = camera,
+        location = location,
+        notification = notification,
+        microphone = microphone,
+        autoplayAudible = autoplayAudible.toAction(),
+        autoplayInaudible = autoplayInaudible.toAction()
+    )
+
     enum class Action {
-        BLOCKED, ASK_TO_ALLOW;
+        ALLOWED, BLOCKED, ASK_TO_ALLOW;
 
         fun toStatus(): SitePermissions.Status = when (this) {
+            ALLOWED -> SitePermissions.Status.ALLOWED
             BLOCKED -> SitePermissions.Status.BLOCKED
             ASK_TO_ALLOW -> SitePermissions.Status.NO_DECISION
+        }
+    }
+
+    /**
+     * Autoplay requests will never prompt the user
+     */
+    enum class AutoplayAction {
+        ALLOWED, BLOCKED;
+
+        internal fun toAction(): Action = when (this) {
+            ALLOWED -> Action.ALLOWED
+            BLOCKED -> Action.BLOCKED
         }
     }
 
@@ -48,6 +80,12 @@ data class SitePermissionsRules(
             }
             is Permission.ContentVideoCamera, is Permission.ContentVideoCapture -> {
                 camera
+            }
+            is Permission.ContentAutoPlayAudible -> {
+                autoplayAudible
+            }
+            is Permission.ContentAutoPlayInaudible -> {
+                autoplayInaudible
             }
             else -> ASK_TO_ALLOW
         }

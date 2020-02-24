@@ -37,6 +37,12 @@ internal data class SitePermissionsEntity(
     @ColumnInfo(name = "local_storage")
     var localStorage: SitePermissions.Status,
 
+    @ColumnInfo(name = "autoplay_audible")
+    var autoplayAudible: SitePermissions.Status,
+
+    @ColumnInfo(name = "autoplay_inaudible")
+    var autoplayInaudible: SitePermissions.Status,
+
     @ColumnInfo(name = "saved_at")
     var savedAt: Long
 ) {
@@ -50,6 +56,8 @@ internal data class SitePermissionsEntity(
             camera,
             bluetooth,
             localStorage,
+            autoplayAudible,
+            autoplayInaudible,
             savedAt
         )
     }
@@ -64,6 +72,8 @@ internal fun SitePermissions.toSitePermissionsEntity(): SitePermissionsEntity {
         camera,
         bluetooth,
         localStorage,
+        autoplayAudible,
+        autoplayInaudible,
         savedAt
     )
 }

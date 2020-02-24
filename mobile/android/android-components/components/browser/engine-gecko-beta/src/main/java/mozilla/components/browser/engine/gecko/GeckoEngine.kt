@@ -452,6 +452,13 @@ class GeckoEngine(
      * See [Engine.settings]
      */
     override val settings: Settings = object : Settings() {
+
+        init {
+            // `autoplayDefault` has been removed from GV nightly, but for now it must be set to
+            // `allowed` in order for site specific autoplay permissions to work.
+            runtime.settings.autoplayDefault = GeckoRuntimeSettings.AUTOPLAY_DEFAULT_ALLOWED
+        }
+
         override var javascriptEnabled: Boolean
             get() = runtime.settings.javaScriptEnabled
             set(value) { runtime.settings.javaScriptEnabled = value }
@@ -538,16 +545,6 @@ class GeckoEngine(
             get() = PreferredColorScheme.from(runtime.settings.preferredColorScheme)
             set(value) { runtime.settings.preferredColorScheme = value.toGeckoValue() }
 
-        override var allowAutoplayMedia: Boolean
-            get() = runtime.settings.autoplayDefault == GeckoRuntimeSettings.AUTOPLAY_DEFAULT_ALLOWED
-            set(value) {
-                runtime.settings.autoplayDefault = if (value) {
-                    GeckoRuntimeSettings.AUTOPLAY_DEFAULT_ALLOWED
-                } else {
-                    GeckoRuntimeSettings.AUTOPLAY_DEFAULT_BLOCKED
-                }
-            }
-
         override var suspendMediaWhenInactive: Boolean
             get() = defaultSettings?.suspendMediaWhenInactive ?: false
             set(value) { defaultSettings?.suspendMediaWhenInactive = value }
@@ -594,7 +591,6 @@ class GeckoEngine(
             this.testingModeEnabled = it.testingModeEnabled
             this.userAgentString = it.userAgentString
             this.preferredColorScheme = it.preferredColorScheme
-            this.allowAutoplayMedia = it.allowAutoplayMedia
             this.suspendMediaWhenInactive = it.suspendMediaWhenInactive
             this.fontInflationEnabled = it.fontInflationEnabled
             this.fontSizeFactor = it.fontSizeFactor

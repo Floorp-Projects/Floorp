@@ -340,7 +340,6 @@ class GeckoEngineTest {
                 testingModeEnabled = true,
                 userAgentString = "test-ua",
                 preferredColorScheme = PreferredColorScheme.Light,
-                allowAutoplayMedia = false,
                 suspendMediaWhenInactive = true,
                 forceUserScalableContent = false
             ), runtime)
@@ -367,7 +366,6 @@ class GeckoEngineTest {
         assertTrue(engine.settings.testingModeEnabled)
         assertEquals("test-ua", engine.settings.userAgentString)
         assertEquals(PreferredColorScheme.Light, engine.settings.preferredColorScheme)
-        assertFalse(engine.settings.allowAutoplayMedia)
         assertTrue(engine.settings.suspendMediaWhenInactive)
 
         engine.settings.safeBrowsingPolicy = arrayOf(SafeBrowsingPolicy.PHISHING)

@@ -8,6 +8,7 @@ import android.view.View
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.engine.Engine
+import mozilla.components.concept.engine.permission.Permission
 import mozilla.components.concept.engine.permission.Permission.ContentAudioCapture
 import mozilla.components.concept.engine.permission.Permission.ContentGeoLocation
 import mozilla.components.concept.engine.permission.Permission.ContentNotification
@@ -58,7 +59,9 @@ class SitePermissionsRulesTest {
             camera = ASK_TO_ALLOW,
             location = BLOCKED,
             notification = ASK_TO_ALLOW,
-            microphone = BLOCKED
+            microphone = BLOCKED,
+            autoplayAudible = ASK_TO_ALLOW,
+            autoplayInaudible = BLOCKED
         )
 
         val mockRequest: PermissionRequest = mock()
@@ -79,6 +82,14 @@ class SitePermissionsRulesTest {
         action = rules.getActionFrom(mockRequest)
         assertEquals(action, rules.camera)
 
+        doReturn(listOf(Permission.ContentAutoPlayAudible())).`when`(mockRequest).permissions
+        action = rules.getActionFrom(mockRequest)
+        assertEquals(action, rules.autoplayAudible)
+
+        doReturn(listOf(Permission.ContentAutoPlayInaudible())).`when`(mockRequest).permissions
+        action = rules.getActionFrom(mockRequest)
+        assertEquals(action, rules.autoplayInaudible)
+
         doReturn(listOf(Generic("", ""))).`when`(mockRequest).permissions
         action = rules.getActionFrom(mockRequest)
         assertEquals(action, rules.camera)
@@ -90,7 +101,9 @@ class SitePermissionsRulesTest {
             camera = ASK_TO_ALLOW,
             location = BLOCKED,
             notification = ASK_TO_ALLOW,
-            microphone = BLOCKED
+            microphone = BLOCKED,
+            autoplayInaudible = ASK_TO_ALLOW,
+            autoplayAudible = ASK_TO_ALLOW
         )
 
         val mockRequest: PermissionRequest = mock()
@@ -103,7 +116,9 @@ class SitePermissionsRulesTest {
             camera = ASK_TO_ALLOW,
             location = BLOCKED,
             notification = ASK_TO_ALLOW,
-            microphone = ASK_TO_ALLOW
+            microphone = ASK_TO_ALLOW,
+            autoplayInaudible = BLOCKED,
+            autoplayAudible = BLOCKED
         )
 
         action = rules.getActionFrom(mockRequest)

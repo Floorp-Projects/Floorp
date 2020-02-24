@@ -57,6 +57,7 @@ interface PermissionRequest {
  * @property id an optional native engine-specific ID of this permission.
  * @property desc an optional description of what this permission type is for.
  */
+@Suppress("UndocumentedPublicClass")
 sealed class Permission {
     abstract val id: String?
     abstract val desc: String?
@@ -71,6 +72,8 @@ sealed class Permission {
     data class ContentVideoCapture(override val id: String? = "", override val desc: String? = "") : Permission()
     data class ContentVideoScreen(override val id: String? = "", override val desc: String? = "") : Permission()
     data class ContentVideoOther(override val id: String? = "", override val desc: String? = "") : Permission()
+    data class ContentAutoPlayAudible(override val id: String? = "", override val desc: String? = "") : Permission()
+    data class ContentAutoPlayInaudible(override val id: String? = "", override val desc: String? = "") : Permission()
 
     data class AppCamera(override val id: String? = "", override val desc: String? = "") : Permission()
     data class AppAudio(override val id: String? = "", override val desc: String? = "") : Permission()

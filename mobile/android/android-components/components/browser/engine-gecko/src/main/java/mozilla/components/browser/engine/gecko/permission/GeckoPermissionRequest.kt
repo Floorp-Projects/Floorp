@@ -17,6 +17,8 @@ import org.mozilla.geckoview.GeckoSession.PermissionDelegate.MediaSource.SOURCE_
 import org.mozilla.geckoview.GeckoSession.PermissionDelegate.MediaSource.SOURCE_MICROPHONE
 import org.mozilla.geckoview.GeckoSession.PermissionDelegate.MediaSource.SOURCE_OTHER
 import org.mozilla.geckoview.GeckoSession.PermissionDelegate.MediaSource.SOURCE_SCREEN
+import org.mozilla.geckoview.GeckoSession.PermissionDelegate.PERMISSION_AUTOPLAY_AUDIBLE
+import org.mozilla.geckoview.GeckoSession.PermissionDelegate.PERMISSION_AUTOPLAY_INAUDIBLE
 import org.mozilla.geckoview.GeckoSession.PermissionDelegate.PERMISSION_DESKTOP_NOTIFICATION
 import org.mozilla.geckoview.GeckoSession.PermissionDelegate.PERMISSION_GEOLOCATION
 
@@ -50,7 +52,9 @@ sealed class GeckoPermissionRequest constructor(
         companion object {
             val permissionsMap = mapOf(
                 PERMISSION_DESKTOP_NOTIFICATION to Permission.ContentNotification(),
-                PERMISSION_GEOLOCATION to Permission.ContentGeoLocation()
+                PERMISSION_GEOLOCATION to Permission.ContentGeoLocation(),
+                PERMISSION_AUTOPLAY_AUDIBLE to Permission.ContentAutoPlayAudible(),
+                PERMISSION_AUTOPLAY_INAUDIBLE to Permission.ContentAutoPlayInaudible()
             )
         }
     }

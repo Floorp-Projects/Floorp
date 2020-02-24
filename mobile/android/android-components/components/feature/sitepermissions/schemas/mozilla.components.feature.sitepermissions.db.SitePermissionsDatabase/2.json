@@ -2,11 +2,11 @@
   "formatVersion": 1,
   "database": {
     "version": 2,
-    "identityHash": "279719818fbc84cac905ddf942282eae",
+    "identityHash": "f5350dbda12da0f415e9d09d00c36f49",
     "entities": [
       {
         "tableName": "site_permissions",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`origin` TEXT NOT NULL, `location` INTEGER NOT NULL, `notification` INTEGER NOT NULL, `microphone` INTEGER NOT NULL, `camera` INTEGER NOT NULL, `bluetooth` INTEGER NOT NULL, `local_storage` INTEGER NOT NULL, `saved_at` INTEGER NOT NULL, PRIMARY KEY(`origin`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`origin` TEXT NOT NULL, `location` INTEGER NOT NULL, `notification` INTEGER NOT NULL, `microphone` INTEGER NOT NULL, `camera` INTEGER NOT NULL, `bluetooth` INTEGER NOT NULL, `local_storage` INTEGER NOT NULL, `autoplay_audible` INTEGER NOT NULL, `autoplay_inaudible` INTEGER NOT NULL, `saved_at` INTEGER NOT NULL, PRIMARY KEY(`origin`))",
         "fields": [
           {
             "fieldPath": "origin",
@@ -51,6 +51,18 @@
             "notNull": true
           },
           {
+            "fieldPath": "autoplayAudible",
+            "columnName": "autoplay_audible",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "autoplayInaudible",
+            "columnName": "autoplay_inaudible",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
             "fieldPath": "savedAt",
             "columnName": "saved_at",
             "affinity": "INTEGER",
@@ -67,9 +79,10 @@
         "foreignKeys": []
       }
     ],
+    "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, \"279719818fbc84cac905ddf942282eae\")"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'f5350dbda12da0f415e9d09d00c36f49')"
     ]
   }
 }

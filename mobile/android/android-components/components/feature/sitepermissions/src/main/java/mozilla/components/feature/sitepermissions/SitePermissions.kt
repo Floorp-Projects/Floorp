@@ -21,6 +21,8 @@ data class SitePermissions(
     val camera: Status = NO_DECISION,
     val bluetooth: Status = NO_DECISION,
     val localStorage: Status = NO_DECISION,
+    val autoplayAudible: Status = NO_DECISION,
+    val autoplayInaudible: Status = NO_DECISION,
     val savedAt: Long
 ) : Parcelable {
     enum class Status(
@@ -49,6 +51,8 @@ data class SitePermissions(
             Permission.LOCAL_STORAGE -> localStorage
             Permission.NOTIFICATION -> notification
             Permission.LOCATION -> location
+            Permission.AUTOPLAY_AUDIBLE -> autoplayAudible
+            Permission.AUTOPLAY_INAUDIBLE -> autoplayInaudible
         }
     }
 }
