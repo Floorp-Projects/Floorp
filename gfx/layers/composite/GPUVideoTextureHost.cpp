@@ -40,6 +40,11 @@ TextureHost* GPUVideoTextureHost::EnsureWrappedTextureHost() {
   auto& sd = static_cast<SurfaceDescriptorRemoteDecoder&>(mDescriptor);
   mWrappedTextureHost =
       VideoBridgeParent::GetSingleton(sd.source())->LookupTexture(sd.handle());
+
+  if (mWrappedTextureHost && mExternalImageId.isSome()) {
+    mWrappedTextureHost->CreateRenderTexture(mExternalImageId.ref());
+  }
+
   return mWrappedTextureHost;
 }
 
@@ -119,12 +124,20 @@ bool GPUVideoTextureHost::HasIntermediateBuffer() const {
 
 void GPUVideoTextureHost::CreateRenderTexture(
     const wr::ExternalImageId& aExternalImageId) {
-  MOZ_ASSERT(EnsureWrappedTextureHost());
-  if (!EnsureWrappedTextureHost()) {
+  MOZ_ASSERT(mExternalImageId.isNothing());
+
+  mExternalImageId = Some(aExternalImageId);
+
+  // When mWrappedTextureHost already exist, call CreateRenderTexture() here.
+  // In other cases, EnsureWrappedTextureHost() handles CreateRenderTexture().
+
+  if (mWrappedTextureHost) {
+    mWrappedTextureHost->CreateRenderTexture(aExternalImageId);
     return;
   }
 
-  EnsureWrappedTextureHost()->CreateRenderTexture(aExternalImageId);
+  MOZ_ASSERT(EnsureWrappedTextureHost());
+  EnsureWrappedTextureHost();
 }
 
 uint32_t GPUVideoTextureHost::NumSubTextures() {
