@@ -2,6 +2,8 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
+from __future__ import print_function
+
 import collections
 import copy
 import hashlib
@@ -18,7 +20,10 @@ from gyp.common import OrderedSet
 import gyp.msvs_emulation
 import gyp.MSVSUtil as MSVSUtil
 import gyp.xcode_emulation
-from cStringIO import StringIO
+try:
+  from cStringIO import StringIO
+except ImportError:
+  from io import StringIO
 
 from gyp.common import GetEnvironFallback
 import gyp.ninja_syntax as ninja_syntax
@@ -350,7 +355,7 @@ class NinjaWriter(object):
 
     Uses a stamp file if necessary."""
 
-    assert targets == filter(None, targets), targets
+    assert targets == [t for t in targets if t], targets
     if len(targets) == 0:
       assert not order_only
       return None
@@ -427,8 +432,8 @@ class NinjaWriter(object):
           compile_depends.append(target.PreCompileInput())
           if target.uses_cpp:
             self.target.uses_cpp = True
-      actions_depends = filter(None, actions_depends)
-      compile_depends = filter(None, compile_depends)
+      actions_depends = [d for d in actions_depends if d]
+      compile_depends = [d for d in compile_depends if d]
       actions_depends = self.WriteCollapsedDependencies('actions_depends',
                                                         actions_depends)
       compile_depends = self.WriteCollapsedDependencies('compile_depends',
@@ -455,8 +460,8 @@ class NinjaWriter(object):
     try:
       sources = extra_sources + spec.get('sources', [])
     except TypeError:
-      print 'extra_sources: ', str(extra_sources)
-      print 'spec.get("sources"): ', str(spec.get('sources'))
+      print('extra_sources: ', str(extra_sources))
+      print('spec.get("sources"): ', str(spec.get('sources')))
       raise
     if sources:
       if self.flavor == 'mac' and len(self.archs) > 1:
@@ -485,8 +490,9 @@ class NinjaWriter(object):
         if self.flavor != 'mac' or len(self.archs) == 1:
           link_deps += [self.GypPathToNinja(o) for o in obj_outputs]
         else:
-          print "Warning: Actions/rules writing object files don't work with " \
-                "multiarch targets, dropping. (target %s)" % spec['target_name']
+          print("Warning: Actions/rules writing object files don't work with " \
+                "multiarch targets, dropping. (target %s)" %
+                spec['target_name'])
     elif self.flavor == 'mac' and len(self.archs) > 1:
       link_deps = collections.defaultdict(list)
 
@@ -615,7 +621,7 @@ class NinjaWriter(object):
       args = action['action']
       depfile = action.get('depfile', None)
       if depfile:
-        depfile = self.ExpandSpecial(depfile, self.base_to_build)
+        depfile = self.ExpandSpecial(depfile)
       pool = 'console' if int(action.get('ninja_use_console', 0)) else None
       rule_name, _ = self.WriteNewNinjaRule(name, args, description,
                                             is_cygwin, env, pool,
@@ -838,7 +844,7 @@ class NinjaWriter(object):
         'XCASSETS_LAUNCH_IMAGE': 'launch-image',
     }
     settings = self.xcode_settings.xcode_settings[self.config_name]
-    for settings_key, arg_name in settings_to_arg.iteritems():
+    for settings_key, arg_name in settings_to_arg.items():
       value = settings.get(settings_key)
       if value:
         extra_arguments[arg_name] = value
@@ -1772,7 +1778,7 @@ def GetDefaultConcurrentLinks():
 
     # VS 2015 uses 20% more working set than VS 2013 and can consume all RAM
     # on a 64 GB machine.
-    mem_limit = max(1, stat.ullTotalPhys / (5 * (2 ** 30)))  # total / 5GB
+    mem_limit = max(1, stat.ullTotalPhys // (5 * (2 ** 30)))  # total / 5GB
     hard_cap = max(1, int(os.environ.get('GYP_LINK_CONCURRENCY_MAX', 2**32)))
     return min(mem_limit, hard_cap)
   elif sys.platform.startswith('linux'):
@@ -1784,14 +1790,14 @@ def GetDefaultConcurrentLinks():
           if not match:
             continue
           # Allow 8Gb per link on Linux because Gold is quite memory hungry
-          return max(1, int(match.group(1)) / (8 * (2 ** 20)))
+          return max(1, int(match.group(1)) // (8 * (2 ** 20)))
     return 1
   elif sys.platform == 'darwin':
     try:
       avail_bytes = int(subprocess.check_output(['sysctl', '-n', 'hw.memsize']))
       # A static library debug build of Chromium's unit_tests takes ~2.7GB, so
       # 4GB per ld process allows for some more bloat.
-      return max(1, avail_bytes / (4 * (2 ** 30)))  # total / 4GB
+      return max(1, avail_bytes // (4 * (2 ** 30)))  # total / 4GB
     except:
       return 1
   else:
@@ -1946,7 +1952,7 @@ def GenerateOutputForConfig(target_list, target_dicts, data, params,
       wrappers[key[:-len('_wrapper')]] = os.path.join(build_to_root, value)
 
   # Support wrappers from environment variables too.
-  for key, value in os.environ.iteritems():
+  for key, value in os.environ.items():
     if key.lower().endswith('_wrapper'):
       key_prefix = key[:-len('_wrapper')]
       key_prefix = re.sub(r'\.HOST$', '.host', key_prefix)
@@ -1966,7 +1972,7 @@ def GenerateOutputForConfig(target_list, target_dicts, data, params,
               configs, generator_flags)
     cl_paths = gyp.msvs_emulation.GenerateEnvironmentFiles(
         toplevel_build, generator_flags, shared_system_includes, OpenOutput)
-    for arch, path in sorted(cl_paths.iteritems()):
+    for arch, path in sorted(cl_paths.items()):
       if clang_cl:
         # If we have selected clang-cl, use that instead.
         path = clang_cl
@@ -2381,6 +2387,7 @@ def GenerateOutputForConfig(target_list, target_dicts, data, params,
 
     qualified_target_for_hash = gyp.common.QualifiedTarget(build_file, name,
                                                            toolset)
+    qualified_target_for_hash = qualified_target_for_hash.encode('utf-8')
     hash_for_rules = hashlib.md5(qualified_target_for_hash).hexdigest()
 
     base_path = os.path.dirname(build_file)
@@ -2447,7 +2454,7 @@ def PerformBuild(data, configurations, params):
   for config in configurations:
     builddir = os.path.join(options.toplevel_dir, 'out', config)
     arguments = ['ninja', '-C', builddir]
-    print 'Building [%s]: %s' % (config, arguments)
+    print('Building [%s]: %s' % (config, arguments))
     subprocess.check_call(arguments)
 
 
@@ -2475,7 +2482,7 @@ def GenerateOutput(target_list, target_dicts, data, params):
     GenerateOutputForConfig(target_list, target_dicts, data, params,
                             user_config)
   else:
-    config_names = target_dicts[target_list[0]]['configurations'].keys()
+    config_names = target_dicts[target_list[0]]['configurations']
     if params['parallel']:
       try:
         pool = multiprocessing.Pool(len(config_names))
@@ -2484,7 +2491,7 @@ def GenerateOutput(target_list, target_dicts, data, params):
           arglists.append(
               (target_list, target_dicts, data, params, config_name))
         pool.map(CallGenerateOutputForConfig, arglists)
-      except KeyboardInterrupt, e:
+      except KeyboardInterrupt as e:
         pool.terminate()
         raise e
     else:

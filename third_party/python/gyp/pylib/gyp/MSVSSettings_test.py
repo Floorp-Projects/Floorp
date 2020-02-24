@@ -6,7 +6,10 @@
 
 """Unit tests for the MSVSSettings.py file."""
 
-import StringIO
+try:
+  from StringIO import StringIO
+except ImportError:
+  from io import StringIO
 import unittest
 import gyp.MSVSSettings as MSVSSettings
 
@@ -14,7 +17,7 @@ import gyp.MSVSSettings as MSVSSettings
 class TestSequenceFunctions(unittest.TestCase):
 
   def setUp(self):
-    self.stderr = StringIO.StringIO()
+    self.stderr = StringIO()
 
   def _ExpectedWarnings(self, expected):
     """Compares recorded lines to expected warnings."""

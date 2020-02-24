@@ -30,7 +30,7 @@ if (sys.platform != 'win32' and
       proc = subprocess.Popen(['otool', '-L', path], stdout=subprocess.PIPE)
     else:
       proc = subprocess.Popen(['ldd', path], stdout=subprocess.PIPE)
-    output = proc.communicate()[0]
+    output = proc.communicate()[0].decode('utf-8')
     assert not proc.returncode
     return 'libstdc++' in output or 'libc++' in output
 

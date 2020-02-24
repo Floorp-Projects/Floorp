@@ -6,6 +6,8 @@
 """Tests for analyzer
 """
 
+from __future__ import print_function
+
 import json
 import TestGyp
 
@@ -75,56 +77,56 @@ def EnsureContains(matched=False, compile_targets=set(), test_targets=set()):
   """Verifies output contains |compile_targets|."""
   result = _ReadOutputFileContents()
   if 'error' in result:
-    print 'unexpected error', result.get('error')
+    print('unexpected error', result.get('error'))
     test.fail_test()
 
   if 'invalid_targets' in result:
-    print 'unexpected invalid_targets', result.get('invalid_targets')
+    print('unexpected invalid_targets', result.get('invalid_targets'))
     test.fail_test()
 
   actual_compile_targets = set(result['compile_targets'])
   if actual_compile_targets != compile_targets:
-    print 'actual compile_targets:', actual_compile_targets, \
-           '\nexpected compile_targets:', compile_targets
+    print('actual compile_targets:', actual_compile_targets,
+           '\nexpected compile_targets:', compile_targets)
     test.fail_test()
 
   actual_test_targets = set(result['test_targets'])
   if actual_test_targets != test_targets:
-    print 'actual test_targets:', actual_test_targets, \
-           '\nexpected test_targets:', test_targets
+    print('actual test_targets:', actual_test_targets,
+           '\nexpected test_targets:', test_targets)
     test.fail_test()
 
   if matched and result['status'] != found:
-    print 'expected', found, 'got', result['status']
+    print('expected', found, 'got', result['status'])
     test.fail_test()
   elif not matched and result['status'] != not_found:
-    print 'expected', not_found, 'got', result['status']
+    print('expected', not_found, 'got', result['status'])
     test.fail_test()
 
 
 def EnsureMatchedAll(compile_targets, test_targets=set()):
   result = _ReadOutputFileContents()
   if 'error' in result:
-    print 'unexpected error', result.get('error')
+    print('unexpected error', result.get('error'))
     test.fail_test()
 
   if 'invalid_targets' in result:
-    print 'unexpected invalid_targets', result.get('invalid_targets')
+    print('unexpected invalid_targets', result.get('invalid_targets'))
     test.fail_test()
 
   if result['status'] != found_all:
-    print 'expected', found_all, 'got', result['status']
+    print('expected', found_all, 'got', result['status'])
     test.fail_test()
 
   actual_compile_targets = set(result['compile_targets'])
   if actual_compile_targets != compile_targets:
-    print ('actual compile_targets:', actual_compile_targets,
+    print('actual compile_targets:', actual_compile_targets,
            '\nexpected compile_targets:', compile_targets)
     test.fail_test()
 
   actual_test_targets = set(result['test_targets'])
   if actual_test_targets != test_targets:
-    print ('actual test_targets:', actual_test_targets,
+    print('actual test_targets:', actual_test_targets,
            '\nexpected test_targets:', test_targets)
     test.fail_test()
 
@@ -133,15 +135,15 @@ def EnsureError(expected_error_string):
   """Verifies output contains the error string."""
   result = _ReadOutputFileContents()
   if result.get('error', '').find(expected_error_string) == -1:
-    print 'actual error:', result.get('error', ''), '\nexpected error:', \
-        expected_error_string
+    print('actual error:', result.get('error', ''), '\nexpected error:',
+        expected_error_string)
     test.fail_test()
 
 
 def EnsureStdoutContains(expected_error_string):
   if test.stdout().find(expected_error_string) == -1:
-    print 'actual stdout:', test.stdout(), '\nexpected stdout:', \
-        expected_error_string
+    print('actual stdout:', test.stdout(), '\nexpected stdout:',
+        expected_error_string)
     test.fail_test()
 
 
@@ -150,8 +152,8 @@ def EnsureInvalidTargets(expected_invalid_targets):
   result = _ReadOutputFileContents()
   actual_invalid_targets = set(result['invalid_targets'])
   if actual_invalid_targets != expected_invalid_targets:
-    print 'actual invalid_targets:', actual_invalid_targets, \
-        '\nexpected :', expected_invalid_targets
+    print('actual invalid_targets:', actual_invalid_targets,
+        '\nexpected :', expected_invalid_targets)
     test.fail_test()
 
 

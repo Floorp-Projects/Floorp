@@ -345,7 +345,7 @@ def WriteOnDiff(filename):
           prefix=os.path.split(filename)[1] + '.gyp.',
           dir=os.path.split(filename)[0])
       try:
-        self.tmp_file = os.fdopen(tmp_fd, 'wb')
+        self.tmp_file = os.fdopen(tmp_fd, 'w')
       except Exception:
         # Don't leave turds behind.
         os.unlink(self.tmp_path)
@@ -363,7 +363,7 @@ def WriteOnDiff(filename):
         same = False
         try:
           same = filecmp.cmp(self.tmp_path, filename, False)
-        except OSError, e:
+        except OSError as e:
           if e.errno != errno.ENOENT:
             raise
 
@@ -382,9 +382,9 @@ def WriteOnDiff(filename):
           #
           # No way to get the umask without setting a new one?  Set a safe one
           # and then set it back to the old value.
-          umask = os.umask(077)
+          umask = os.umask(0o77)
           os.umask(umask)
-          os.chmod(self.tmp_path, 0666 & ~umask)
+          os.chmod(self.tmp_path, 0o666 & ~umask)
           if sys.platform == 'win32' and os.path.exists(filename):
             # NOTE: on windows (but not cygwin) rename will not replace an
             # existing file, so it must be preceded with a remove. Sadly there
@@ -471,7 +471,7 @@ def CopyTool(flavor, out_path, generator_flags={}):
         ''.join([source[0], header] + source[1:]))
 
   # Make file executable.
-  os.chmod(tool_path, 0755)
+  os.chmod(tool_path, 0o755)
 
 
 # From Alex Martelli,
@@ -584,7 +584,7 @@ def TopologicallySorted(graph, get_edges):
     graph = {'a': '$(b) $(c)', 'b': 'hi', 'c': '$(b)'}
     def GetEdges(node):
       return re.findall(r'\$\(([^))]\)', graph[node])
-    print TopologicallySorted(graph.keys(), GetEdges)
+    print(TopologicallySorted(graph.keys(), GetEdges))
     ==>
     ['a', 'c', b']
   """

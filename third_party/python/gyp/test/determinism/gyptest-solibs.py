@@ -9,6 +9,8 @@ Verifies builds are the same even with different PYTHONHASHSEEDs.
 Tests all_targets, implicit_deps and solibs.
 """
 
+from __future__ import print_function
+
 import os
 import sys
 import TestGyp
@@ -28,7 +30,7 @@ if test.format == 'ninja':
     if base1 != contents1:
       test.fail_test()
     if base2 != contents2:
-      print base2
+      print(base2)
       test.fail_test()
 
   del os.environ["PYTHONHASHSEED"]

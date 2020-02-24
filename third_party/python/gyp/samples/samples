@@ -4,6 +4,8 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
+from __future__ import print_function
+
 import os.path
 import shutil
 import sys
@@ -57,7 +59,7 @@ gyps = [
 
 def Main(argv):
   if len(argv) != 3 or argv[1] not in ['push', 'pull']:
-    print 'Usage: %s push/pull PATH_TO_CHROME' % argv[0]
+    print('Usage: %s push/pull PATH_TO_CHROME' % argv[0])
     return 1
 
   path_to_chrome = argv[2]
@@ -66,10 +68,10 @@ def Main(argv):
     chrome_file = os.path.join(path_to_chrome, g)
     local_file = os.path.join(os.path.dirname(argv[0]), os.path.split(g)[1])
     if argv[1] == 'push':
-      print 'Copying %s to %s' % (local_file, chrome_file)
+      print('Copying %s to %s' % (local_file, chrome_file))
       shutil.copyfile(local_file, chrome_file)
     elif argv[1] == 'pull':
-      print 'Copying %s to %s' % (chrome_file, local_file)
+      print('Copying %s to %s' % (chrome_file, local_file))
       shutil.copyfile(chrome_file, local_file)
     else:
       assert False

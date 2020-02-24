@@ -8,6 +8,8 @@
 Test variable expansion of '<|(list.txt ...)' syntax commands.
 """
 
+from __future__ import print_function
+
 import os
 import sys
 
@@ -36,14 +38,14 @@ contents = test.read('src/filelist.gypd').replace(
     '\r', '').replace('\\\\', '/')
 expect = test.read('filelist.gypd.golden').replace('\r', '')
 if not test.match(contents, expect):
-  print "Unexpected contents of `src/filelist.gypd'"
+  print("Unexpected contents of `src/filelist.gypd'")
   test.diff(expect, contents, 'src/filelist.gypd ')
   test.fail_test()
 
 contents = test.read('src/names.txt')
 expect = 'John\nJacob\nJingleheimer\nSchmidt\n'
 if not test.match(contents, expect):
-  print "Unexpected contents of `src/names.txt'"
+  print("Unexpected contents of `src/names.txt'")
   test.diff(expect, contents, 'src/names.txt ')
   test.fail_test()
 

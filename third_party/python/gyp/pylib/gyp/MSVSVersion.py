@@ -189,7 +189,7 @@ def _RegistryQuery(key, value=None):
   text = None
   try:
     text = _RegistryQueryBase('Sysnative', key, value)
-  except OSError, e:
+  except OSError as e:
     if e.errno == errno.ENOENT:
       text = _RegistryQueryBase('System32', key, value)
     else:
@@ -207,12 +207,15 @@ def _RegistryGetValueUsingWinReg(key, value):
     contents of the registry key's value, or None on failure.  Throws
     ImportError if _winreg is unavailable.
   """
-  import _winreg
+  try:
+    import _winreg as winreg
+  except ImportError:
+    import winreg
   try:
     root, subkey = key.split('\\', 1)
     assert root == 'HKLM'  # Only need HKLM for now.
-    with _winreg.OpenKey(_winreg.HKEY_LOCAL_MACHINE, subkey) as hkey:
-      return _winreg.QueryValueEx(hkey, value)[0]
+    with winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, subkey) as hkey:
+      return winreg.QueryValueEx(hkey, value)[0]
   except WindowsError:
     return None
 
@@ -257,6 +260,16 @@ def _CreateVersion(name, path, sdk_based=False):
   if path:
     path = os.path.normpath(path)
   versions = {
+      '2019': VisualStudioVersion('2019',
+                                  'Visual Studio 2019',
+                                  solution_version='12.00',
+                                  project_version='15.0',
+                                  flat_sln=False,
+                                  uses_vcxproj=True,
+                                  path=path,
+                                  sdk_based=sdk_based,
+                                  default_toolset='v141',
+                                  compatible_sdks=['v8.1', 'v10.0']),
       '2017': VisualStudioVersion('2017',
                                   'Visual Studio 2017',
                                   solution_version='12.00',

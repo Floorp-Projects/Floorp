@@ -8,6 +8,8 @@
 Make sure msvs_application_type_revision works correctly.
 """
 
+from __future__ import print_function
+
 import TestGyp
 
 import os
@@ -16,7 +18,7 @@ import struct
 
 CHDIR = 'winrt-app-type-revision'
 
-print 'This test is not currently working on the bots: https://code.google.com/p/gyp/issues/detail?id=466'
+print('This test is not currently working on the bots: https://code.google.com/p/gyp/issues/detail?id=466')
 sys.exit(0)
 
 if (sys.platform == 'win32' and

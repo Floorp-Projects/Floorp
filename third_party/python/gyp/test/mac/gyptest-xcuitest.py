@@ -23,7 +23,7 @@ if sys.platform == 'darwin':
   out, err = job.communicate()
   if job.returncode != 0:
     raise Exception('Error %d running xcodebuild' % job.returncode)
-  xcode_version, build_number = out.splitlines()
+  xcode_version, build_number = out.decode('utf-8').splitlines()
   # Convert the version string from 'Xcode 5.0' to ['5','0'].
   xcode_version = xcode_version.split()[-1].split('.')
   if xcode_version < ['7']:

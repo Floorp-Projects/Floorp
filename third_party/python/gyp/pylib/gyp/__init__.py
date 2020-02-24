@@ -4,6 +4,8 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
+from __future__ import print_function
+
 import copy
 import gyp.input
 import optparse
@@ -14,6 +16,12 @@ import sys
 import traceback
 from gyp.common import GypError
 
+try:
+  # basestring was removed in python3.
+  basestring
+except NameError:
+  basestring = str
+
 # Default debug modes for GYP
 debug = {}
 
@@ -21,7 +29,6 @@ debug = {}
 DEBUG_GENERAL = 'general'
 DEBUG_VARIABLES = 'variables'
 DEBUG_INCLUDES = 'includes'
-
 
 def DebugOutput(mode, message, *args):
   if 'all' in gyp.debug or mode in gyp.debug:
@@ -34,8 +41,8 @@ def DebugOutput(mode, message, *args):
       pass
     if args:
       message %= args
-    print '%s:%s:%d:%s %s' % (mode.upper(), os.path.basename(ctx[0]),
-                              ctx[1], ctx[2], message)
+    print('%s:%s:%d:%s %s' % (mode.upper(), os.path.basename(ctx[0]),
+                              ctx[1], ctx[2], message))
 
 def FindBuildFiles():
   extension = '.gyp'
@@ -207,7 +214,7 @@ def RegenerateFlags(options):
   # We always want to ignore the environment when regenerating, to avoid
   # duplicate or changed flags in the environment at the time of regeneration.
   flags = ['--ignore-environment']
-  for name, metadata in options._regeneration_metadata.iteritems():
+  for name, metadata in options._regeneration_metadata.items():
     opt = metadata['opt']
     value = getattr(options, name)
     value_predicate = metadata['type'] == 'path' and FixPath or Noop
@@ -226,12 +233,13 @@ def RegenerateFlags(options):
           (action == 'store_false' and not value)):
         flags.append(opt)
       elif options.use_environment and env_name:
-        print >>sys.stderr, ('Warning: environment regeneration unimplemented '
+        print(('Warning: environment regeneration unimplemented '
                              'for %s flag %r env_name %r' % (action, opt,
-                                                             env_name))
+                                                             env_name)),
+                                                             file=sys.stderr)
     else:
-      print >>sys.stderr, ('Warning: regeneration unimplemented for action %r '
-                           'flag %r' % (action, opt))
+      print(('Warning: regeneration unimplemented for action %r '
+                           'flag %r' % (action, opt)), file=sys.stderr)
 
   return flags
 
@@ -431,12 +439,11 @@ def gyp_main(args):
     for build_file in build_files:
       build_file_dir = os.path.abspath(os.path.dirname(build_file))
       build_file_dir_components = build_file_dir.split(os.path.sep)
-      components_len = len(build_file_dir_components)
-      for index in xrange(components_len - 1, -1, -1):
-        if build_file_dir_components[index] == 'src':
+      for component in reversed(build_file_dir_components):
+        if component == 'src':
           options.depth = os.path.sep.join(build_file_dir_components)
           break
-        del build_file_dir_components[index]
+        del build_file_dir_components[-1]
 
       # If the inner loop found something, break without advancing to another
       # build file.
@@ -475,7 +482,7 @@ def gyp_main(args):
   if home_dot_gyp != None:
     default_include = os.path.join(home_dot_gyp, 'include.gypi')
     if os.path.exists(default_include):
-      print 'Using overrides found in ' + default_include
+      print('Using overrides found in ' + default_include)
       includes.append(default_include)
 
   # Command-line --include files come after the default include.
@@ -490,7 +497,7 @@ def gyp_main(args):
   if options.generator_flags:
     gen_flags += options.generator_flags
   generator_flags = NameValueListToDict(gen_flags)
-  if DEBUG_GENERAL in gyp.debug.keys():
+  if DEBUG_GENERAL in gyp.debug:
     DebugOutput(DEBUG_GENERAL, "generator_flags: %s", generator_flags)
 
   # Generate all requested formats (use a set in case we got one format request
@@ -523,7 +530,7 @@ def gyp_main(args):
     generator.GenerateOutput(flat_list, targets, data, params)
 
     if options.configs:
-      valid_configs = targets[flat_list[0]]['configurations'].keys()
+      valid_configs = targets[flat_list[0]]['configurations']
       for conf in options.configs:
         if conf not in valid_configs:
           raise GypError('Invalid config specified via --build: %s' % conf)
@@ -536,7 +543,7 @@ def gyp_main(args):
 def main(args):
   try:
     return gyp_main(args)
-  except GypError, e:
+  except GypError as e:
     sys.stderr.write("gyp: %s\n" % e)
     return 1
 

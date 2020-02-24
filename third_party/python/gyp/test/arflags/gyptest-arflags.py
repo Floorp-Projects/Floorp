@@ -8,12 +8,14 @@
 Verifies that building a target with invalid arflags fails.
 """
 
+from __future__ import print_function
+
 import os
 import sys
 import TestGyp
 
 if sys.platform == 'darwin':
-  print "This test is currently disabled: https://crbug.com/483696."
+  print("This test is currently disabled: https://crbug.com/483696.")
   sys.exit(0)
 
 

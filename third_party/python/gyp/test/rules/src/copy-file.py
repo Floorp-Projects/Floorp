@@ -6,6 +6,6 @@
 import sys
 
 contents = open(sys.argv[1], 'r').read()
-open(sys.argv[2], 'wb').write(contents)
+open(sys.argv[2], 'w').write(contents)
 
 sys.exit(0)

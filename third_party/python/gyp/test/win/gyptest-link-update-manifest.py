@@ -39,7 +39,8 @@ if sys.platform == 'win32':
     Returns None is there is no such manifest."""
     with LoadLibrary(path) as handle:
       try:
-        return win32api.LoadResource(handle, RT_MANIFEST, resource_name)
+        return win32api.LoadResource(
+            handle, RT_MANIFEST, resource_name).decode('utf-8', 'ignore')
       except pywintypes.error as error:
         if error.args[0] == winerror.ERROR_RESOURCE_DATA_NOT_FOUND:
           return None
@@ -75,7 +76,7 @@ if sys.platform == 'win32':
   gypfile = 'update-manifest.gyp'
 
   def WriteAndUpdate(uac_execution_level, additional_manifest_files, do_build):
-    with open(os.path.join(CHDIR, gypfile), 'wb') as f:
+    with open(os.path.join(CHDIR, gypfile), 'w') as f:
       f.write(gyp_template % {
         'uac_execution_level': uac_execution_level,
         'additional_manifest_files': additional_manifest_files,

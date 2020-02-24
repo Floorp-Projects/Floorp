@@ -6,6 +6,8 @@
 TestMac.py:  a collection of helper function shared between test on Mac OS X.
 """
 
+from __future__ import print_function
+
 import re
 import subprocess
 
@@ -15,7 +17,7 @@ __all__ = ['Xcode', 'CheckFileType']
 def CheckFileType(test, file, archs):
   """Check that |file| contains exactly |archs| or fails |test|."""
   proc = subprocess.Popen(['lipo', '-info', file], stdout=subprocess.PIPE)
-  o = proc.communicate()[0].strip()
+  o = proc.communicate()[0].decode('utf-8').strip()
   assert not proc.returncode
   if len(archs) == 1:
     pattern = re.compile('^Non-fat file: (.*) is architecture: (.*)$')
@@ -23,13 +25,13 @@ def CheckFileType(test, file, archs):
     pattern = re.compile('^Architectures in the fat file: (.*) are: (.*)$')
   match = pattern.match(o)
   if match is None:
-    print 'Ouput does not match expected pattern: %s' % (pattern.pattern)
+    print('Ouput does not match expected pattern: %s' % (pattern.pattern))
     test.fail_test()
   else:
     found_file, found_archs = match.groups()
     if found_file != file or set(found_archs.split()) != set(archs):
-      print 'Expected file %s with arch %s, got %s with arch %s' % (
-          file, ' '.join(archs), found_file, found_archs)
+      print('Expected file %s with arch %s, got %s with arch %s' % (
+          file, ' '.join(archs), found_file, found_archs))
       test.fail_test()
 
 
@@ -41,7 +43,7 @@ class XcodeInfo(object):
 
   def _XcodeVersion(self):
     lines = subprocess.check_output(['xcodebuild', '-version']).splitlines()
-    version = ''.join(lines[0].split()[-1].split('.'))
+    version = ''.join(lines[0].decode('utf-8').split()[-1].split('.'))
     version = (version + '0' * (3 - len(version))).zfill(4)
     return version, lines[-1].split()[-1]
 
@@ -59,6 +61,7 @@ class XcodeInfo(object):
     if 'SDKBuild' not in self._cache:
       self._cache['SDKBuild'] = subprocess.check_output(
           ['xcodebuild', '-version', '-sdk', '', 'ProductBuildVersion'])
+      self._cache['SDKBuild'] = self._cache['SDKBuild'].decode('utf-8')
       self._cache['SDKBuild'] = self._cache['SDKBuild'].rstrip('\n')
     return self._cache['SDKBuild']
 

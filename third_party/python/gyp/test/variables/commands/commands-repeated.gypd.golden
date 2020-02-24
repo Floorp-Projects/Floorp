@@ -72,6 +72,6 @@
                'not_int_4': '13.0',
                'not_int_5': '+14',
                'other_letters': 'ABCDEFG',
-               'pi': 'import math; print math.pi',
+               'pi': 'import math; print(math.pi)',
                'third_letters': 'ABCDEFGHIJK',
                'zero_int': '0'}}

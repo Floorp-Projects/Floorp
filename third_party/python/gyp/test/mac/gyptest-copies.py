@@ -8,6 +8,8 @@
 Verifies that 'copies' with app bundles are handled correctly.
 """
 
+from __future__ import print_function
+
 import TestGyp
 
 import os
@@ -15,7 +17,7 @@ import sys
 import time
 
 if sys.platform == 'darwin':
-  print "This test is currently disabled: https://crbug.com/483696."
+  print("This test is currently disabled: https://crbug.com/483696.")
   sys.exit(0)
 
   test = TestGyp.TestGyp(formats=['ninja', 'make', 'xcode'])

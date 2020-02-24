@@ -79,7 +79,8 @@ if sys.platform == 'darwin':
     TestMac.CheckFileType(test, result_file, ['i386', 'x86_64'])
     # Check that symbol "_x" made it into both versions of the binary:
     if not all(['D _x' in subprocess.check_output(
-        ['nm', '-arch', arch, result_file]) for arch in ['i386', 'x86_64']]):
+        ['nm', '-arch', arch, result_file]).decode('utf-8')
+        for arch in ['i386', 'x86_64']]):
       # This can only flakily fail, due to process ordering issues. If this
       # does fail flakily, then something's broken, it's not the test at fault.
       test.fail_test()

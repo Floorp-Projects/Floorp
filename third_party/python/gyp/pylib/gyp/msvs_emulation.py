@@ -7,6 +7,7 @@ This module helps emulate Visual Studio 2008 behavior on top of other
 build systems, primarily ninja.
 """
 
+import collections
 import os
 import re
 import subprocess
@@ -15,6 +16,12 @@ import sys
 from gyp.common import OrderedSet
 import gyp.MSVSUtil
 import gyp.MSVSVersion
+
+try:
+  # basestring was removed in python3.
+  basestring
+except NameError:
+  basestring = str
 
 
 windows_quoter_regex = re.compile(r'(\\*)"')
@@ -84,8 +91,8 @@ def _AddPrefix(element, prefix):
   """Add |prefix| to |element| or each subelement if element is iterable."""
   if element is None:
     return element
-  # Note, not Iterable because we don't want to handle strings like that.
-  if isinstance(element, list) or isinstance(element, tuple):
+  if (isinstance(element, collections.Iterable) and
+      not isinstance(element, basestring)):
     return [prefix + e for e in element]
   else:
     return prefix + element
@@ -97,7 +104,8 @@ def _DoRemapping(element, map):
   if map is not None and element is not None:
     if not callable(map):
       map = map.get # Assume it's a dict, otherwise a callable to do the remap.
-    if isinstance(element, list) or isinstance(element, tuple):
+    if (isinstance(element, collections.Iterable) and
+        not isinstance(element, basestring)):
       element = filter(None, [map(elem) for elem in element])
     else:
       element = map(element)
@@ -109,7 +117,8 @@ def _AppendOrReturn(append, element):
   then add |element| to it, adding each item in |element| if it's a list or
   tuple."""
   if append is not None and element is not None:
-    if isinstance(element, list) or isinstance(element, tuple):
+    if (isinstance(element, collections.Iterable) and
+        not isinstance(element, basestring)):
       append.extend(element)
     else:
       append.append(element)
@@ -209,7 +218,7 @@ class MsvsSettings(object):
     configs = spec['configurations']
     for field, default in supported_fields:
       setattr(self, field, {})
-      for configname, config in configs.iteritems():
+      for configname, config in configs.items():
         getattr(self, field)[configname] = config.get(field, default())
 
     self.msvs_cygwin_dirs = spec.get('msvs_cygwin_dirs', ['.'])
@@ -482,7 +491,7 @@ class MsvsSettings(object):
       # https://msdn.microsoft.com/en-us/library/dn502518.aspx
       cflags.append('/FS')
     # ninja handles parallelism by itself, don't have the compiler do it too.
-    cflags = filter(lambda x: not x.startswith('/MP'), cflags)
+    cflags = [x for x in cflags if not x.startswith('/MP')]
     return cflags
 
   def _GetPchFlags(self, config, extension):
@@ -649,19 +658,17 @@ class MsvsSettings(object):
 
     # If the base address is not specifically controlled, DYNAMICBASE should
     # be on by default.
-    base_flags = filter(lambda x: 'DYNAMICBASE' in x or x == '/FIXED',
-                        ldflags)
-    if not base_flags:
+    if not any('DYNAMICBASE' in flag or flag == '/FIXED' for flag in ldflags):
       ldflags.append('/DYNAMICBASE')
 
     # If the NXCOMPAT flag has not been specified, default to on. Despite the
     # documentation that says this only defaults to on when the subsystem is
     # Vista or greater (which applies to the linker), the IDE defaults it on
     # unless it's explicitly off.
-    if not filter(lambda x: 'NXCOMPAT' in x, ldflags):
+    if not any('NXCOMPAT' in flag for flag in ldflags):
       ldflags.append('/NXCOMPAT')
 
-    have_def_file = filter(lambda x: x.startswith('/DEF:'), ldflags)
+    have_def_file = any(flag.startswith('/DEF:') for flag in ldflags)
     manifest_flags, intermediate_manifest, manifest_files = \
         self._GetLdManifestFlags(config, manifest_base_name, gyp_to_build_path,
                                  is_executable and not have_def_file, build_dir)
@@ -953,7 +960,7 @@ def ExpandMacros(string, expansions):
   """Expand $(Variable) per expansions dict. See MsvsSettings.GetVSMacroEnv
   for the canonical way to retrieve a suitable dict."""
   if '$' in string:
-    for old, new in expansions.iteritems():
+    for old, new in expansions.items():
       assert '$(' not in new, new
       string = string.replace(old, new)
   return string
@@ -1001,7 +1008,7 @@ def _FormatAsEnvironmentBlock(envvar_dict):
   CreateProcess documentation for more details."""
   block = ''
   nul = '\0'
-  for key, value in envvar_dict.iteritems():
+  for key, value in envvar_dict.items():
     block += key + '=' + value + nul
   block += nul
   return block
@@ -1056,7 +1063,7 @@ def GenerateEnvironmentFiles(toplevel_build_dir, generator_flags,
       env['INCLUDE'] = ';'.join(system_includes)
 
     env_block = _FormatAsEnvironmentBlock(env)
-    f = open_out(os.path.join(toplevel_build_dir, 'environment.' + arch), 'wb')
+    f = open_out(os.path.join(toplevel_build_dir, 'environment.' + arch), 'w')
     f.write(env_block)
     f.close()
 
@@ -1078,7 +1085,7 @@ def VerifyMissingSources(sources, build_dir, generator_flags, gyp_to_ninja):
   if int(generator_flags.get('msvs_error_on_missing_sources', 0)):
     no_specials = filter(lambda x: '$' not in x, sources)
     relative = [os.path.join(build_dir, gyp_to_ninja(s)) for s in no_specials]
-    missing = filter(lambda x: not os.path.exists(x), relative)
+    missing = [x for x in relative if not os.path.exists(x)]
     if missing:
       # They'll look like out\Release\..\..\stuff\things.cc, so normalize the
       # path for a slightly less crazy looking output.

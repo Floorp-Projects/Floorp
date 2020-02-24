@@ -19,6 +19,7 @@ def IgnoreOutput(string, expected_string):
 
 def CompilerVersion(compiler):
   stdout = subprocess.check_output([compiler, '-v'], stderr=subprocess.STDOUT)
+  stdout = stdout.decode('utf-8')
   return stdout.rstrip('\n')
 
 def CompilerSupportsWarnAboutInvalidOffsetOfMacro(test):

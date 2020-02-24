@@ -8,6 +8,8 @@
 Verifies that stripping works.
 """
 
+from __future__ import print_function
+
 import TestGyp
 import TestMac
 
@@ -16,7 +18,7 @@ import subprocess
 import sys
 import time
 
-print "This test is currently disabled: https://crbug.com/483696."
+print("This test is currently disabled: https://crbug.com/483696.")
 sys.exit(0)
 
 if sys.platform == 'darwin':
@@ -36,7 +38,7 @@ if sys.platform == 'darwin':
     m = r.search(o)
     n = int(m.group(1))
     if n != n_expected:
-      print 'Stripping: Expected %d symbols, got %d' % (n_expected, n)
+      print('Stripping: Expected %d symbols, got %d' % (n_expected, n))
       test.fail_test()
 
   # Starting with Xcode 5.0, clang adds an additional symbols to the compiled

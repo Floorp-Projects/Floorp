@@ -8,4 +8,4 @@ import sys
 
 contents = 'Hello from make-subdir-file.py\n'
 
-open(sys.argv[1], 'wb').write(contents)
+open(sys.argv[1], 'w').write(contents)

@@ -27,7 +27,7 @@ if sys.platform == 'darwin':
     p = test.built_file_path(p, chdir=CHDIR)
     r = re.compile(r'cmd LC_RPATH.*?path (.*?) \(offset \d+\)', re.DOTALL)
     proc = subprocess.Popen(['otool', '-l', p], stdout=subprocess.PIPE)
-    o = proc.communicate()[0]
+    o = proc.communicate()[0].decode('utf-8')
     assert not proc.returncode
     return r.findall(o)
 
