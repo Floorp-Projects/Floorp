@@ -25,7 +25,7 @@ add_task(async function() {
 
   await onPopUpOpen;
 
-  const popupItems = popup.getItems().map(e => e.label);
+  const popupItems = getAutocompletePopupLabels(popup);
   is(
     popupItems.includes("0"),
     false,

@@ -39,7 +39,7 @@ add_task(async function() {
 
   ok(popup.isOpen, "popup is open");
 
-  const popupItems = popup.getItems().map(e => e.label);
+  const popupItems = getAutocompletePopupLabels(popup);
   const expectedPopupItems = ["item00", "item1", "item2", "item3"];
 
   is(popup.itemCount, expectedPopupItems.length, "popup.itemCount is correct");

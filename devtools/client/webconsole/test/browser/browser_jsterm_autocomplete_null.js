@@ -29,7 +29,7 @@ add_task(async function() {
   ok(popup.isOpen, "popup is open");
   const expectedPopupItems = ["null", "nullVar"];
   is(
-    popup.items.map(i => i.label).join("-"),
+    getAutocompletePopupLabels(popup).join("-"),
     expectedPopupItems.join("-"),
     "popup has expected items"
   );
