@@ -7,7 +7,6 @@ import json
 import os
 import re
 
-from distutils.util import strtobool
 from six.moves.urllib.parse import parse_qs, urlsplit, urlunsplit, urlencode, unquote
 
 from logger.logger import RaptorLogger
@@ -478,9 +477,9 @@ def get_raptor_test_list(args, oskey):
                 del next_test['hero']
 
         if next_test.get('lower_is_better') is not None:
-            next_test['lower_is_better'] = strtobool(next_test.get('lower_is_better'))
+            next_test['lower_is_better'] = bool_from_str(next_test.get('lower_is_better'))
         if next_test.get('subtest_lower_is_better') is not None:
-            next_test['subtest_lower_is_better'] = strtobool(
+            next_test['subtest_lower_is_better'] = bool_from_str(
                 next_test.get('subtest_lower_is_better')
             )
 
@@ -497,3 +496,13 @@ def get_raptor_test_list(args, oskey):
         LOG.critical("abort: specified test name doesn't exist")
 
     return tests_to_run
+
+
+def bool_from_str(boolean_string):
+    lower_boolean_str = boolean_string.lower()
+    if lower_boolean_str == 'true':
+        return True
+    elif lower_boolean_str == 'false':
+        return False
+    else:
+        raise ValueError("Expected either 'true' or 'false'")
