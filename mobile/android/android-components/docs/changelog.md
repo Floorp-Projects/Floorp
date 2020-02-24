@@ -39,6 +39,15 @@ permalink: /changelog/
 * **feature-contextmenu**
   * ⚠️ **This is a breaking change**: `customTabId` is renamed to `tabId`.
 
+* **feature-push**
+  * ⚠️ **This is a breaking change**:
+    * Removed APIs from AutoPushFeature: `subscribeForType`, `unsubscribeForType`, `subscribeAll`.
+    * Removed `PushType` enum and it's internal uses.
+    * Use the new ✨ `subscribe` and `unsubscribe` APIs.
+
+* **feature-accounts-push**
+  * Updated `FxaPushSupportFeature` to use the new `AutoPushFeature` APIs.
+
 # 33.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v32.0.0...v33.0.0)
@@ -102,7 +111,7 @@ permalink: /changelog/
       nonFatalCrashIntent = pendingIntent
   )
   ```
-  
+
 * **feature-search**
   * Adds `DefaultSelectionActionDelegate`, which may be used to add new actions to text selection context menus.
     * It currently adds "Firefox Search" or "Firefox Private Search", depending on whether the selected tab is private.
@@ -121,7 +130,7 @@ permalink: /changelog/
               )
           }.asView()
       }
-      
+
   // Use `SearchFeature` to attach search requests to your own code
   private val searchFeature = ViewBoundFeatureWrapper<SearchFeature>()
   // ...
