@@ -2352,13 +2352,6 @@ void CompositorBridgeParent::NotifyPipelineRendered(
         mIsForcedFirstPaint = false;
       }
 
-      std::pair<wr::PipelineId, wr::Epoch> key(aPipelineId, aEpoch);
-      if (nsTArray<CompositionPayload>* payloads =
-              mWrBridge->GetPendingScrollPayload(key)) {
-        RecordCompositionPayloadsPresented(*payloads);
-        mWrBridge->RemovePendingScrollPayload(key);
-      }
-
       TransactionId transactionId = mWrBridge->FlushTransactionIdsForEpoch(
           aEpoch, aCompositeStartId, aCompositeStart, aRenderStart,
           aCompositeEnd, uiController);
@@ -2379,13 +2372,6 @@ void CompositorBridgeParent::NotifyPipelineRendered(
     MOZ_ASSERT(!wrBridge->IsRootWebRenderBridgeParent());
     wrBridge->RemoveEpochDataPriorTo(aEpoch);
     if (!mPaused) {
-      std::pair<wr::PipelineId, wr::Epoch> key(aPipelineId, aEpoch);
-      if (nsTArray<CompositionPayload>* payloads =
-              wrBridge->GetPendingScrollPayload(key)) {
-        RecordCompositionPayloadsPresented(*payloads);
-        wrBridge->RemovePendingScrollPayload(key);
-      }
-
       TransactionId transactionId = wrBridge->FlushTransactionIdsForEpoch(
           aEpoch, aCompositeStartId, aCompositeStart, aRenderStart,
           aCompositeEnd, uiController, aStats, &stats);
