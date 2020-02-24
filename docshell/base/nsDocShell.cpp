@@ -12754,28 +12754,22 @@ nsDocShell::ResumeRedirectedLoad(uint64_t aIdentifier, int32_t aHistoryIndex) {
   // Call into InternalLoad with the pending channel when it is received.
   cpcl->RegisterCallback(
       aIdentifier,
-      [self, aHistoryIndex](nsIChannel* aChannel,
+      [self, aHistoryIndex](nsDocShellLoadState* aLoadState,
                             nsTArray<net::DocumentChannelRedirect>&& aRedirects,
-                            uint32_t aLoadStateLoadFlags,
                             nsDOMNavigationTiming* aTiming) {
+        MOZ_ASSERT(aLoadState->GetPendingRedirectedChannel());
         if (NS_WARN_IF(self->mIsBeingDestroyed)) {
-          aChannel->Cancel(NS_BINDING_ABORTED);
+          aLoadState->GetPendingRedirectedChannel()->Cancel(NS_BINDING_ABORTED);
           return;
         }
-
-        RefPtr<nsDocShellLoadState> loadState;
-        nsresult rv = nsDocShellLoadState::CreateFromPendingChannel(
-            aChannel, getter_AddRefs(loadState));
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return;
-        }
-        loadState->SetLoadFlags(aLoadStateLoadFlags);
 
         nsCOMPtr<nsIURI> previousURI;
         uint32_t previousFlags = 0;
-        ExtractLastVisit(aChannel, getter_AddRefs(previousURI), &previousFlags);
-        self->SavePreviousRedirectsAndLastVisit(aChannel, previousURI,
-                                                previousFlags, aRedirects);
+        ExtractLastVisit(aLoadState->GetPendingRedirectedChannel(),
+                         getter_AddRefs(previousURI), &previousFlags);
+        self->SavePreviousRedirectsAndLastVisit(
+            aLoadState->GetPendingRedirectedChannel(), previousURI,
+            previousFlags, aRedirects);
 
         MOZ_ASSERT(
             (self->mCurrentURI && NS_IsAboutBlank(self->mCurrentURI)) ||
@@ -12790,16 +12784,16 @@ nsDocShell::ResumeRedirectedLoad(uint64_t aIdentifier, int32_t aHistoryIndex) {
               self->mSessionHistory->LegacySHistory();
 
           nsCOMPtr<nsISHEntry> entry;
-          rv = legacySHistory->GetEntryAtIndex(aHistoryIndex,
-                                               getter_AddRefs(entry));
+          nsresult rv = legacySHistory->GetEntryAtIndex(aHistoryIndex,
+                                                        getter_AddRefs(entry));
           if (NS_SUCCEEDED(rv)) {
             legacySHistory->InternalSetRequestedIndex(aHistoryIndex);
-            loadState->SetLoadType(LOAD_HISTORY);
-            loadState->SetSHEntry(entry);
+            aLoadState->SetLoadType(LOAD_HISTORY);
+            aLoadState->SetSHEntry(entry);
           }
         }
 
-        self->InternalLoad(loadState, nullptr, nullptr);
+        self->InternalLoad(aLoadState, nullptr, nullptr);
       });
   return NS_OK;
 }
