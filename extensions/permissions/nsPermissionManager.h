@@ -24,6 +24,7 @@
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/ExpandedPrincipal.h"
 #include "mozilla/MozPromise.h"
+#include "mozilla/Pair.h"
 #include "mozilla/Unused.h"
 #include "mozilla/Variant.h"
 #include "mozilla/Vector.h"
@@ -278,7 +279,7 @@ class nsPermissionManager final : public nsIPermissionManager,
    *
    * Get all permissions keys which could correspond to the given principal.
    * This method, like GetKeyForPrincipal, is infallible and should always
-   * produce at least one key.
+   * produce at least one (key, origin) pair.
    *
    * Unlike GetKeyForPrincipal, this method also gets the keys for base domains
    * of the given principal. All keys returned by this method must be available
@@ -286,8 +287,10 @@ class nsPermissionManager final : public nsIPermissionManager,
    * checked in the `aExactHostMatch = false` situation.
    *
    * @param aPrincipal  The Principal which the key is to be extracted from.
+   * @return returns an array of (key, origin) pairs.
    */
-  static nsTArray<nsCString> GetAllKeysForPrincipal(nsIPrincipal* aPrincipal);
+  static nsTArray<mozilla::Pair<nsCString, nsCString>> GetAllKeysForPrincipal(
+      nsIPrincipal* aPrincipal);
 
   // From ContentChild.
   nsresult RemoveAllFromIPC();
@@ -313,15 +316,17 @@ class nsPermissionManager final : public nsIPermissionManager,
    * determining the permission key for a given principal.
    *
    * This method may only be called in the parent process. It fills the nsTArray
-   * argument with the IPC::Permission objects which have a matching permission
-   * key.
+   * argument with the IPC::Permission objects which have a matching origin.
    *
-   * @param permissionKey  The key to use to find the permissions of interest.
+   * @param origin The origin to use to find the permissions of interest.
+   * @param key The key to use to find the permissions of interest. Only used
+   *            when the origin argument is empty.
    * @param perms  An array which will be filled with the permissions which
-   *               match the given permission key.
+   *               match the given origin.
    */
-  bool GetPermissionsWithKey(const nsACString& aPermissionKey,
-                             nsTArray<IPC::Permission>& aPerms);
+  bool GetPermissionsFromOriginOrKey(const nsACString& aOrigin,
+                                     const nsACString& aKey,
+                                     nsTArray<IPC::Permission>& aPerms);
 
   /**
    * See `nsPermissionManager::GetPermissionsWithKey` for more info on
