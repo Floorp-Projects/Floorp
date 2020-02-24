@@ -39,7 +39,7 @@ class TopSiteItemViewHolder(
         }
 
         view.top_site_item.setOnLongClickListener() {
-            topSiteMenu.menuBuilder.build(view.context).show(anchor = it)
+            topSiteMenu.menuBuilder.build(view.context).show(anchor = it.top_site_title)
             return@setOnLongClickListener true
         }
     }
