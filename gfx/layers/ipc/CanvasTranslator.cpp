@@ -120,6 +120,7 @@ mozilla::ipc::IPCResult CanvasTranslator::RecvInitTranslator(
     const ipc::SharedMemoryBasic::Handle& aReadHandle,
     const CrossProcessSemaphoreHandle& aReaderSem,
     const CrossProcessSemaphoreHandle& aWriterSem) {
+  mTextureType = aTextureType;
 #if defined(XP_WIN)
   if (!CheckForFreshCanvasDevice(__LINE__)) {
     gfxCriticalNote << "GFX: CanvasTranslator failed to get device";
@@ -127,15 +128,6 @@ mozilla::ipc::IPCResult CanvasTranslator::RecvInitTranslator(
   }
 #endif
 
-  mTextureType = aTextureType;
-  mReferenceTextureData.reset(CreateTextureData(
-      aTextureType, gfx::IntSize(1, 1), gfx::SurfaceFormat::B8G8R8A8));
-  if (!mReferenceTextureData) {
-    return IPC_FAIL(this, "Failed to create reference texture.");
-  }
-
-  mReferenceTextureData->Lock(OpenMode::OPEN_READ_WRITE);
-  mBaseDT = mReferenceTextureData->BorrowDrawTarget();
   mStream = MakeUnique<CanvasEventRingBuffer>();
   if (!mStream->InitReader(aReadHandle, aReaderSem, aWriterSem,
                            MakeUnique<RingBufferReaderServices>(this))) {
@@ -272,6 +264,22 @@ void CanvasTranslator::DeviceChangeAcknowledged() {
   mDeviceResetInProgress = false;
 }
 
+bool CanvasTranslator::CreateReferenceTexture() {
+  if (mReferenceTextureData) {
+    mReferenceTextureData->Unlock();
+  }
+
+  mReferenceTextureData.reset(CreateTextureData(
+      mTextureType, gfx::IntSize(1, 1), gfx::SurfaceFormat::B8G8R8A8));
+  if (!mReferenceTextureData) {
+    return false;
+  }
+
+  mReferenceTextureData->Lock(OpenMode::OPEN_READ_WRITE);
+  mBaseDT = mReferenceTextureData->BorrowDrawTarget();
+  return true;
+}
+
 bool CanvasTranslator::CheckForFreshCanvasDevice(int aLineNumber) {
 #if defined(XP_WIN)
   // If a new device has already been created, use that one.
@@ -282,7 +290,7 @@ bool CanvasTranslator::CheckForFreshCanvasDevice(int aLineNumber) {
       NotifyDeviceChanged();
     }
     mDevice = device.forget();
-    return true;
+    return CreateReferenceTexture();
   }
 
   if (mDevice) {
@@ -305,7 +313,7 @@ bool CanvasTranslator::CheckForFreshCanvasDevice(int aLineNumber) {
                                  /*aForceDispatch*/ true);
 
   mDevice = gfx::DeviceManagerDx::Get()->GetCanvasDevice();
-  return !!mDevice;
+  return mDevice && CreateReferenceTexture();
 #else
   return false;
 #endif

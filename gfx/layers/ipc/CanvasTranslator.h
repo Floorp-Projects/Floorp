@@ -263,6 +263,7 @@ class CanvasTranslator final : public gfx::InlineTranslator,
 
   bool HandleExtensionEvent(int32_t aType);
 
+  bool CreateReferenceTexture();
   bool CheckForFreshCanvasDevice(int aLineNumber);
   void NotifyDeviceChanged();
 
