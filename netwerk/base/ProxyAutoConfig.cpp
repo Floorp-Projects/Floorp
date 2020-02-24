@@ -580,7 +580,7 @@ class JSContextWrapper {
     JSContext* cx = JS_NewContext(JS::DefaultHeapMaxBytes + aExtraHeapSize);
     if (NS_WARN_IF(!cx)) return nullptr;
 
-    JS::ContextOptionsRef(cx).setDisableIon();
+    JS::ContextOptionsRef(cx).setDisableIon().setDisableEvalSecurityChecks();
 
     JSContextWrapper* entry = new JSContextWrapper(cx);
     if (NS_FAILED(entry->Init())) {
