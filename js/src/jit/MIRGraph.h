@@ -24,9 +24,9 @@ class MStart;
 
 class MDefinitionIterator;
 
-typedef InlineListIterator<MInstruction> MInstructionIterator;
-typedef InlineListReverseIterator<MInstruction> MInstructionReverseIterator;
-typedef InlineListIterator<MPhi> MPhiIterator;
+using MInstructionIterator = InlineListIterator<MInstruction>;
+using MInstructionReverseIterator = InlineListReverseIterator<MInstruction>;
+using MPhiIterator = InlineListIterator<MPhi>;
 
 #ifdef DEBUG
 typedef InlineForwardListIterator<MResumePoint> MResumePointIterator;
@@ -703,9 +703,9 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock> {
 #endif
 };
 
-typedef InlineListIterator<MBasicBlock> MBasicBlockIterator;
-typedef InlineListIterator<MBasicBlock> ReversePostorderIterator;
-typedef InlineListReverseIterator<MBasicBlock> PostorderIterator;
+using MBasicBlockIterator = InlineListIterator<MBasicBlock>;
+using ReversePostorderIterator = InlineListIterator<MBasicBlock>;
+using PostorderIterator = InlineListReverseIterator<MBasicBlock>;
 
 typedef Vector<MBasicBlock*, 1, JitAllocPolicy> MIRGraphReturns;
 

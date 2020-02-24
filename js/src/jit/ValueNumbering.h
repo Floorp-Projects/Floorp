@@ -25,8 +25,8 @@ class ValueNumberer {
   class VisibleValues {
     // Hash policy for ValueSet.
     struct ValueHasher {
-      typedef const MDefinition* Lookup;
-      typedef MDefinition* Key;
+      using Lookup = const MDefinition*;
+      using Key = MDefinition*;
       static HashNumber hash(Lookup ins);
       static bool match(Key k, Lookup l);
       static void rekey(Key& k, Key newKey);
@@ -39,8 +39,8 @@ class ValueNumberer {
    public:
     explicit VisibleValues(TempAllocator& alloc);
 
-    typedef ValueSet::Ptr Ptr;
-    typedef ValueSet::AddPtr AddPtr;
+    using Ptr = ValueSet::Ptr;
+    using AddPtr = ValueSet::AddPtr;
 
     Ptr findLeader(const MDefinition* def) const;
     AddPtr findLeaderForAdd(MDefinition* def);

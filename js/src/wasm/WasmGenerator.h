@@ -106,7 +106,7 @@ struct CompileTaskState {
   }
 };
 
-typedef ExclusiveWaitableData<CompileTaskState> ExclusiveCompileTaskState;
+using ExclusiveCompileTaskState = ExclusiveWaitableData<CompileTaskState>;
 
 // A CompileTask holds a batch of input functions that are to be compiled on a
 // helper thread as well as, eventually, the results of compilation.

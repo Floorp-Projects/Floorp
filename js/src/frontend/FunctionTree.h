@@ -47,7 +47,7 @@ class FunctionTree {
   FunctionBox* funbox() { return funbox_; }
   void setFunctionBox(FunctionBox* node) { funbox_ = node; }
 
-  typedef bool (*FunctionTreeVisitorFunction)(ParserBase*, FunctionTree*);
+  using FunctionTreeVisitorFunction = bool (*)(ParserBase*, FunctionTree*);
   bool visitRecursively(JSContext* cx, ParserBase* parser,
                         FunctionTreeVisitorFunction func) {
     if (!CheckRecursionLimit(cx)) {

@@ -981,7 +981,7 @@ namespace mozilla {
 
 template <>
 struct DefaultHasher<js::AbstractFramePtr> {
-  typedef js::AbstractFramePtr Lookup;
+  using Lookup = js::AbstractFramePtr;
 
   static js::HashNumber hash(const Lookup& key) {
     return mozilla::HashGeneric(key.raw());

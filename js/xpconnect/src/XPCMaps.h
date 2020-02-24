@@ -357,7 +357,7 @@ class NativeSetMap {
 
 class XPCWrappedNativeProtoMap {
  public:
-  typedef PLDHashEntryStub Entry;
+  using Entry = PLDHashEntryStub;
 
   XPCWrappedNativeProtoMap();
 

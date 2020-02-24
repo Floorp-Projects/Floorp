@@ -55,32 +55,32 @@ enum class RoundingMode;
 typedef GCVector<JSFunction*, 0, SystemAllocPolicy> JSFunctionVector;
 
 class WasmMemoryObject;
-typedef GCPtr<WasmMemoryObject*> GCPtrWasmMemoryObject;
-typedef Rooted<WasmMemoryObject*> RootedWasmMemoryObject;
-typedef Handle<WasmMemoryObject*> HandleWasmMemoryObject;
-typedef MutableHandle<WasmMemoryObject*> MutableHandleWasmMemoryObject;
+using GCPtrWasmMemoryObject = GCPtr<WasmMemoryObject*>;
+using RootedWasmMemoryObject = Rooted<WasmMemoryObject*>;
+using HandleWasmMemoryObject = Handle<WasmMemoryObject*>;
+using MutableHandleWasmMemoryObject = MutableHandle<WasmMemoryObject*>;
 
 class WasmModuleObject;
-typedef Rooted<WasmModuleObject*> RootedWasmModuleObject;
-typedef Handle<WasmModuleObject*> HandleWasmModuleObject;
-typedef MutableHandle<WasmModuleObject*> MutableHandleWasmModuleObject;
+using RootedWasmModuleObject = Rooted<WasmModuleObject*>;
+using HandleWasmModuleObject = Handle<WasmModuleObject*>;
+using MutableHandleWasmModuleObject = MutableHandle<WasmModuleObject*>;
 
 class WasmInstanceObject;
-typedef GCVector<WasmInstanceObject*> WasmInstanceObjectVector;
-typedef Rooted<WasmInstanceObject*> RootedWasmInstanceObject;
-typedef Handle<WasmInstanceObject*> HandleWasmInstanceObject;
-typedef MutableHandle<WasmInstanceObject*> MutableHandleWasmInstanceObject;
+using WasmInstanceObjectVector = GCVector<WasmInstanceObject*>;
+using RootedWasmInstanceObject = Rooted<WasmInstanceObject*>;
+using HandleWasmInstanceObject = Handle<WasmInstanceObject*>;
+using MutableHandleWasmInstanceObject = MutableHandle<WasmInstanceObject*>;
 
 class WasmTableObject;
 typedef GCVector<WasmTableObject*, 0, SystemAllocPolicy> WasmTableObjectVector;
-typedef Rooted<WasmTableObject*> RootedWasmTableObject;
-typedef Handle<WasmTableObject*> HandleWasmTableObject;
-typedef MutableHandle<WasmTableObject*> MutableHandleWasmTableObject;
+using RootedWasmTableObject = Rooted<WasmTableObject*>;
+using HandleWasmTableObject = Handle<WasmTableObject*>;
+using MutableHandleWasmTableObject = MutableHandle<WasmTableObject*>;
 
 class WasmGlobalObject;
 typedef GCVector<WasmGlobalObject*, 0, SystemAllocPolicy>
     WasmGlobalObjectVector;
-typedef Rooted<WasmGlobalObject*> RootedWasmGlobalObject;
+using RootedWasmGlobalObject = Rooted<WasmGlobalObject*>;
 
 class StructTypeDescr;
 typedef GCVector<HeapPtr<StructTypeDescr*>, 0, SystemAllocPolicy>
@@ -114,8 +114,8 @@ class Table;
 typedef Vector<uint32_t, 8, SystemAllocPolicy> Uint32Vector;
 
 typedef Vector<uint8_t, 0, SystemAllocPolicy> Bytes;
-typedef UniquePtr<Bytes> UniqueBytes;
-typedef UniquePtr<const Bytes> UniqueConstBytes;
+using UniqueBytes = UniquePtr<Bytes>;
+using UniqueConstBytes = UniquePtr<const Bytes>;
 typedef Vector<char, 0, SystemAllocPolicy> UTF8Bytes;
 typedef Vector<Instance*, 0, SystemAllocPolicy> InstanceVector;
 typedef Vector<UniqueChars, 0, SystemAllocPolicy> UniqueCharsVector;
@@ -199,8 +199,8 @@ struct ShareableBytes : ShareableBase<ShareableBytes> {
   }
 };
 
-typedef RefPtr<ShareableBytes> MutableBytes;
-typedef RefPtr<const ShareableBytes> SharedBytes;
+using MutableBytes = RefPtr<ShareableBytes>;
+using SharedBytes = RefPtr<const ShareableBytes>;
 
 // The Opcode compactly and safely represents the primary opcode plus any
 // extension, with convenient predicates and accessors.
@@ -740,9 +740,9 @@ class AnyRef {
   static constexpr uintptr_t AnyRefObjTag = 0;
 };
 
-typedef Rooted<AnyRef> RootedAnyRef;
-typedef Handle<AnyRef> HandleAnyRef;
-typedef MutableHandle<AnyRef> MutableHandleAnyRef;
+using RootedAnyRef = Rooted<AnyRef>;
+using HandleAnyRef = Handle<AnyRef>;
+using MutableHandleAnyRef = MutableHandle<AnyRef>;
 
 // TODO/AnyRef-boxing: With boxed immediates and strings, these will be defined
 // as MOZ_CRASH or similar so that we can find all locations that need to be
@@ -853,9 +853,9 @@ class FuncRef {
   bool isNull() { return value_ == nullptr; }
 };
 
-typedef Rooted<FuncRef> RootedFuncRef;
-typedef Handle<FuncRef> HandleFuncRef;
-typedef MutableHandle<FuncRef> MutableHandleFuncRef;
+using RootedFuncRef = Rooted<FuncRef>;
+using HandleFuncRef = Handle<FuncRef>;
+using MutableHandleFuncRef = MutableHandle<FuncRef>;
 
 // Given any FuncRef, unbox it as a JS Value -- always a JSFunction*.
 
@@ -1009,14 +1009,14 @@ class MOZ_NON_PARAM Val : public LitVal {
   void trace(JSTracer* trc);
 };
 
-typedef Rooted<Val> RootedVal;
-typedef Handle<Val> HandleVal;
-typedef MutableHandle<Val> MutableHandleVal;
+using RootedVal = Rooted<Val>;
+using HandleVal = Handle<Val>;
+using MutableHandleVal = MutableHandle<Val>;
 
 typedef GCVector<Val, 0, SystemAllocPolicy> ValVector;
-typedef Rooted<ValVector> RootedValVector;
-typedef Handle<ValVector> HandleValVector;
-typedef MutableHandle<ValVector> MutableHandleValVector;
+using RootedValVector = Rooted<ValVector>;
+using HandleValVector = Handle<ValVector>;
+using MutableHandleValVector = MutableHandle<ValVector>;
 
 // The FuncType class represents a WebAssembly function signature which takes a
 // list of value types and returns an expression type. The engine uses two
@@ -1159,7 +1159,7 @@ class FuncType {
 };
 
 struct FuncTypeHashPolicy {
-  typedef const FuncType& Lookup;
+  using Lookup = const FuncType&;
   static HashNumber hash(Lookup ft) { return ft.hash(); }
   static bool match(const FuncType* lhs, Lookup rhs) { return *lhs == rhs; }
 };
@@ -1548,8 +1548,8 @@ struct ElemSegment : AtomicRefCounted<ElemSegment> {
 constexpr uint32_t NullFuncIndex = UINT32_MAX;
 static_assert(NullFuncIndex > MaxFuncs, "Invariant");
 
-typedef RefPtr<ElemSegment> MutableElemSegment;
-typedef SerializableRefPtr<const ElemSegment> SharedElemSegment;
+using MutableElemSegment = RefPtr<ElemSegment>;
+using SharedElemSegment = SerializableRefPtr<const ElemSegment>;
 typedef Vector<SharedElemSegment, 0, SystemAllocPolicy> ElemSegmentVector;
 
 // DataSegmentEnv holds the initial results of decoding a data segment from the
@@ -1586,8 +1586,8 @@ struct DataSegment : AtomicRefCounted<DataSegment> {
   WASM_DECLARE_SERIALIZABLE(DataSegment)
 };
 
-typedef RefPtr<DataSegment> MutableDataSegment;
-typedef SerializableRefPtr<const DataSegment> SharedDataSegment;
+using MutableDataSegment = RefPtr<DataSegment>;
+using SharedDataSegment = SerializableRefPtr<const DataSegment>;
 typedef Vector<SharedDataSegment, 0, SystemAllocPolicy> DataSegmentVector;
 
 // The CustomSection(Env) structs are like DataSegment(Env): CustomSectionEnv is
@@ -2480,7 +2480,7 @@ struct ExportArg {
   uint64_t hi;
 };
 
-typedef int32_t (*ExportFuncPtr)(ExportArg* args, TlsData* tls);
+using ExportFuncPtr = int32_t (*)(ExportArg*, TlsData*);
 
 // FuncImportTls describes the region of wasm global memory allocated in the
 // instance's thread-local storage for a function import. This is accessed
@@ -2944,7 +2944,7 @@ bool IsCodegenDebugEnabled(DebugChannel channel);
 void DebugCodegen(DebugChannel channel, const char* fmt, ...)
     MOZ_FORMAT_PRINTF(2, 3);
 
-typedef void (*PrintCallback)(const char* text);
+using PrintCallback = void (*)(const char*);
 
 }  // namespace wasm
 }  // namespace js

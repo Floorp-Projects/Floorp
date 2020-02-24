@@ -23,7 +23,7 @@ class ArgumentsObject;
 
 namespace jit {
 
-typedef void* CalleeToken;
+using CalleeToken = void*;
 
 enum class FrameType {
   // A JS frame is analogous to a js::InterpreterFrame, representing one

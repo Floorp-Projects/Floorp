@@ -105,7 +105,7 @@ class TaggedValue {
 // ResultType value is less than the OpIter, we can just borrow the pointer
 // without ownership or copying.
 class ResultType {
-  typedef TaggedValue<const ValTypeVector> Tagged;
+  using Tagged = TaggedValue<const ValTypeVector>;
   Tagged tagged_;
 
   enum Kind {
@@ -220,7 +220,7 @@ class ResultType {
 //  [] -> [results] via pointer to FuncType (ignoring [params])
 
 class BlockType {
-  typedef TaggedValue<const FuncType> Tagged;
+  using Tagged = TaggedValue<const FuncType>;
   Tagged tagged_;
 
   enum Kind {
@@ -555,12 +555,12 @@ class TypeAndValueT {
 template <typename Policy>
 class MOZ_STACK_CLASS OpIter : private Policy {
  public:
-  typedef typename Policy::Value Value;
-  typedef typename Policy::ValueVector ValueVector;
-  typedef TypeAndValueT<Value> TypeAndValue;
+  using Value = typename Policy::Value;
+  using ValueVector = typename Policy::ValueVector;
+  using TypeAndValue = TypeAndValueT<Value>;
   typedef Vector<TypeAndValue, 8, SystemAllocPolicy> TypeAndValueStack;
-  typedef typename Policy::ControlItem ControlItem;
-  typedef ControlStackEntry<ControlItem> Control;
+  using ControlItem = typename Policy::ControlItem;
+  using Control = ControlStackEntry<ControlItem>;
   typedef Vector<Control, 8, SystemAllocPolicy> ControlStack;
 
  private:

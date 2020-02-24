@@ -37,65 +37,65 @@ class ModuleObject;
 
 // These are internal counterparts to the public types such as HandleObject.
 
-typedef JS::Handle<NativeObject*> HandleNativeObject;
-typedef JS::Handle<Shape*> HandleShape;
-typedef JS::Handle<ObjectGroup*> HandleObjectGroup;
-typedef JS::Handle<JSAtom*> HandleAtom;
-typedef JS::Handle<JSLinearString*> HandleLinearString;
-typedef JS::Handle<PropertyName*> HandlePropertyName;
-typedef JS::Handle<ArrayObject*> HandleArrayObject;
-typedef JS::Handle<PlainObject*> HandlePlainObject;
-typedef JS::Handle<SavedFrame*> HandleSavedFrame;
-typedef JS::Handle<ScriptSourceObject*> HandleScriptSourceObject;
-typedef JS::Handle<DebuggerArguments*> HandleDebuggerArguments;
-typedef JS::Handle<DebuggerEnvironment*> HandleDebuggerEnvironment;
-typedef JS::Handle<DebuggerFrame*> HandleDebuggerFrame;
-typedef JS::Handle<DebuggerObject*> HandleDebuggerObject;
-typedef JS::Handle<DebuggerScript*> HandleDebuggerScript;
-typedef JS::Handle<DebuggerSource*> HandleDebuggerSource;
-typedef JS::Handle<Scope*> HandleScope;
-typedef JS::Handle<ModuleObject*> HandleModuleObject;
+using HandleNativeObject = JS::Handle<NativeObject*>;
+using HandleShape = JS::Handle<Shape*>;
+using HandleObjectGroup = JS::Handle<ObjectGroup*>;
+using HandleAtom = JS::Handle<JSAtom*>;
+using HandleLinearString = JS::Handle<JSLinearString*>;
+using HandlePropertyName = JS::Handle<PropertyName*>;
+using HandleArrayObject = JS::Handle<ArrayObject*>;
+using HandlePlainObject = JS::Handle<PlainObject*>;
+using HandleSavedFrame = JS::Handle<SavedFrame*>;
+using HandleScriptSourceObject = JS::Handle<ScriptSourceObject*>;
+using HandleDebuggerArguments = JS::Handle<DebuggerArguments*>;
+using HandleDebuggerEnvironment = JS::Handle<DebuggerEnvironment*>;
+using HandleDebuggerFrame = JS::Handle<DebuggerFrame*>;
+using HandleDebuggerObject = JS::Handle<DebuggerObject*>;
+using HandleDebuggerScript = JS::Handle<DebuggerScript*>;
+using HandleDebuggerSource = JS::Handle<DebuggerSource*>;
+using HandleScope = JS::Handle<Scope*>;
+using HandleModuleObject = JS::Handle<ModuleObject*>;
 
-typedef JS::MutableHandle<Shape*> MutableHandleShape;
-typedef JS::MutableHandle<JSAtom*> MutableHandleAtom;
-typedef JS::MutableHandle<NativeObject*> MutableHandleNativeObject;
-typedef JS::MutableHandle<PlainObject*> MutableHandlePlainObject;
-typedef JS::MutableHandle<SavedFrame*> MutableHandleSavedFrame;
-typedef JS::MutableHandle<DebuggerArguments*> MutableHandleDebuggerArguments;
-typedef JS::MutableHandle<DebuggerEnvironment*>
-    MutableHandleDebuggerEnvironment;
-typedef JS::MutableHandle<DebuggerFrame*> MutableHandleDebuggerFrame;
-typedef JS::MutableHandle<DebuggerObject*> MutableHandleDebuggerObject;
-typedef JS::MutableHandle<DebuggerScript*> MutableHandleDebuggerScript;
-typedef JS::MutableHandle<DebuggerSource*> MutableHandleDebuggerSource;
-typedef JS::MutableHandle<Scope*> MutableHandleScope;
-typedef JS::MutableHandle<ModuleObject*> MutableHandleModuleObject;
-typedef JS::MutableHandle<ArrayObject*> MutableHandleArrayObject;
+using MutableHandleShape = JS::MutableHandle<Shape*>;
+using MutableHandleAtom = JS::MutableHandle<JSAtom*>;
+using MutableHandleNativeObject = JS::MutableHandle<NativeObject*>;
+using MutableHandlePlainObject = JS::MutableHandle<PlainObject*>;
+using MutableHandleSavedFrame = JS::MutableHandle<SavedFrame*>;
+using MutableHandleDebuggerArguments = JS::MutableHandle<DebuggerArguments*>;
+using MutableHandleDebuggerEnvironment =
+    JS::MutableHandle<DebuggerEnvironment*>;
+using MutableHandleDebuggerFrame = JS::MutableHandle<DebuggerFrame*>;
+using MutableHandleDebuggerObject = JS::MutableHandle<DebuggerObject*>;
+using MutableHandleDebuggerScript = JS::MutableHandle<DebuggerScript*>;
+using MutableHandleDebuggerSource = JS::MutableHandle<DebuggerSource*>;
+using MutableHandleScope = JS::MutableHandle<Scope*>;
+using MutableHandleModuleObject = JS::MutableHandle<ModuleObject*>;
+using MutableHandleArrayObject = JS::MutableHandle<ArrayObject*>;
 
-typedef JS::Rooted<NativeObject*> RootedNativeObject;
-typedef JS::Rooted<Shape*> RootedShape;
-typedef JS::Rooted<ObjectGroup*> RootedObjectGroup;
-typedef JS::Rooted<JSAtom*> RootedAtom;
-typedef JS::Rooted<JSLinearString*> RootedLinearString;
-typedef JS::Rooted<PropertyName*> RootedPropertyName;
-typedef JS::Rooted<ArrayObject*> RootedArrayObject;
-typedef JS::Rooted<GlobalObject*> RootedGlobalObject;
-typedef JS::Rooted<PlainObject*> RootedPlainObject;
-typedef JS::Rooted<SavedFrame*> RootedSavedFrame;
-typedef JS::Rooted<ScriptSourceObject*> RootedScriptSourceObject;
-typedef JS::Rooted<DebuggerArguments*> RootedDebuggerArguments;
-typedef JS::Rooted<DebuggerEnvironment*> RootedDebuggerEnvironment;
-typedef JS::Rooted<DebuggerFrame*> RootedDebuggerFrame;
-typedef JS::Rooted<DebuggerObject*> RootedDebuggerObject;
-typedef JS::Rooted<DebuggerScript*> RootedDebuggerScript;
-typedef JS::Rooted<DebuggerSource*> RootedDebuggerSource;
-typedef JS::Rooted<Scope*> RootedScope;
-typedef JS::Rooted<ModuleObject*> RootedModuleObject;
+using RootedNativeObject = JS::Rooted<NativeObject*>;
+using RootedShape = JS::Rooted<Shape*>;
+using RootedObjectGroup = JS::Rooted<ObjectGroup*>;
+using RootedAtom = JS::Rooted<JSAtom*>;
+using RootedLinearString = JS::Rooted<JSLinearString*>;
+using RootedPropertyName = JS::Rooted<PropertyName*>;
+using RootedArrayObject = JS::Rooted<ArrayObject*>;
+using RootedGlobalObject = JS::Rooted<GlobalObject*>;
+using RootedPlainObject = JS::Rooted<PlainObject*>;
+using RootedSavedFrame = JS::Rooted<SavedFrame*>;
+using RootedScriptSourceObject = JS::Rooted<ScriptSourceObject*>;
+using RootedDebuggerArguments = JS::Rooted<DebuggerArguments*>;
+using RootedDebuggerEnvironment = JS::Rooted<DebuggerEnvironment*>;
+using RootedDebuggerFrame = JS::Rooted<DebuggerFrame*>;
+using RootedDebuggerObject = JS::Rooted<DebuggerObject*>;
+using RootedDebuggerScript = JS::Rooted<DebuggerScript*>;
+using RootedDebuggerSource = JS::Rooted<DebuggerSource*>;
+using RootedScope = JS::Rooted<Scope*>;
+using RootedModuleObject = JS::Rooted<ModuleObject*>;
 
-typedef JS::GCVector<JSFunction*> FunctionVector;
-typedef JS::GCVector<PropertyName*> PropertyNameVector;
-typedef JS::GCVector<Shape*> ShapeVector;
-typedef JS::GCVector<JSString*> StringVector;
+using FunctionVector = JS::GCVector<JSFunction*>;
+using PropertyNameVector = JS::GCVector<PropertyName*>;
+using ShapeVector = JS::GCVector<Shape*>;
+using StringVector = JS::GCVector<JSString*>;
 
 /**
  * Interface substitute for Rooted<T> which does not root the variable's
@@ -168,9 +168,9 @@ class MaybeRooted {};
 template <typename T>
 class MaybeRooted<T, CanGC> {
  public:
-  typedef JS::Handle<T> HandleType;
-  typedef JS::Rooted<T> RootType;
-  typedef JS::MutableHandle<T> MutableHandleType;
+  using HandleType = JS::Handle<T>;
+  using RootType = JS::Rooted<T>;
+  using MutableHandleType = JS::MutableHandle<T>;
 
   static inline JS::Handle<T> toHandle(HandleType v) { return v; }
 
@@ -187,9 +187,9 @@ class MaybeRooted<T, CanGC> {
 template <typename T>
 class MaybeRooted<T, NoGC> {
  public:
-  typedef const T& HandleType;
-  typedef FakeRooted<T> RootType;
-  typedef FakeMutableHandle<T> MutableHandleType;
+  using HandleType = const T&;
+  using RootType = FakeRooted<T>;
+  using MutableHandleType = FakeMutableHandle<T>;
 
   static JS::Handle<T> toHandle(HandleType v) { MOZ_CRASH("Bad conversion"); }
 

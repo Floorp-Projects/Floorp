@@ -1667,7 +1667,7 @@ void HeapTypeSetKey::freeze(CompilerConstraintList* constraints) {
   LifoAlloc* alloc = constraints->alloc();
   LifoAlloc::AutoFallibleScope fallibleAllocator(alloc);
 
-  typedef CompilerConstraintInstance<ConstraintDataFreeze> T;
+  using T = CompilerConstraintInstance<ConstraintDataFreeze>;
   constraints->add(alloc->new_<T>(alloc, *this, ConstraintDataFreeze()));
 }
 
@@ -1869,7 +1869,7 @@ bool TypeSet::ObjectKey::hasFlags(CompilerConstraintList* constraints,
   HeapTypeSetKey objectProperty = property(JSID_EMPTY);
   LifoAlloc* alloc = constraints->alloc();
 
-  typedef CompilerConstraintInstance<ConstraintDataFreezeObjectFlags> T;
+  using T = CompilerConstraintInstance<ConstraintDataFreezeObjectFlags>;
   constraints->add(alloc->new_<T>(alloc, objectProperty,
                                   ConstraintDataFreezeObjectFlags(flags)));
   return false;
@@ -1923,7 +1923,7 @@ gc::InitialHeap ObjectGroup::initialHeap(CompilerConstraintList* constraints) {
       TypeSet::ObjectKey::get(this)->property(JSID_EMPTY);
   LifoAlloc* alloc = constraints->alloc();
 
-  typedef CompilerConstraintInstance<ConstraintDataFreezeObjectFlags> T;
+  using T = CompilerConstraintInstance<ConstraintDataFreezeObjectFlags>;
   constraints->add(
       alloc->new_<T>(alloc, objectProperty,
                      ConstraintDataFreezeObjectFlags(OBJECT_FLAG_PRE_TENURE)));
@@ -1983,9 +1983,8 @@ void TypeSet::ObjectKey::watchStateChangeForTypedArrayData(
   HeapTypeSetKey objectProperty = property(JSID_EMPTY);
   LifoAlloc* alloc = constraints->alloc();
 
-  typedef CompilerConstraintInstance<
-      ConstraintDataFreezeObjectForTypedArrayData>
-      T;
+  using T =
+      CompilerConstraintInstance<ConstraintDataFreezeObjectForTypedArrayData>;
   constraints->add(
       alloc->new_<T>(alloc, objectProperty,
                      ConstraintDataFreezeObjectForTypedArrayData(tarray)));
@@ -2062,7 +2061,7 @@ bool HeapTypeSetKey::nonData(CompilerConstraintList* constraints) {
 
   LifoAlloc* alloc = constraints->alloc();
 
-  typedef CompilerConstraintInstance<ConstraintDataFreezePropertyState> T;
+  using T = CompilerConstraintInstance<ConstraintDataFreezePropertyState>;
   constraints->add(
       alloc->new_<T>(alloc, *this,
                      ConstraintDataFreezePropertyState(
@@ -2077,7 +2076,7 @@ bool HeapTypeSetKey::nonWritable(CompilerConstraintList* constraints) {
 
   LifoAlloc* alloc = constraints->alloc();
 
-  typedef CompilerConstraintInstance<ConstraintDataFreezePropertyState> T;
+  using T = CompilerConstraintInstance<ConstraintDataFreezePropertyState>;
   constraints->add(
       alloc->new_<T>(alloc, *this,
                      ConstraintDataFreezePropertyState(
@@ -2152,7 +2151,7 @@ bool HeapTypeSetKey::constant(CompilerConstraintList* constraints,
   *valOut = val;
 
   LifoAlloc* alloc = constraints->alloc();
-  typedef CompilerConstraintInstance<ConstraintDataConstantProperty> T;
+  using T = CompilerConstraintInstance<ConstraintDataConstantProperty>;
   constraints->add(
       alloc->new_<T>(alloc, *this, ConstraintDataConstantProperty()));
   return true;
@@ -2200,7 +2199,7 @@ bool HeapTypeSetKey::couldBeConstant(CompilerConstraintList* constraints) {
   // inert constraints to pin these properties in place.
 
   LifoAlloc* alloc = constraints->alloc();
-  typedef CompilerConstraintInstance<ConstraintDataInert> T;
+  using T = CompilerConstraintInstance<ConstraintDataInert>;
   constraints->add(alloc->new_<T>(alloc, *this, ConstraintDataInert()));
 
   return false;

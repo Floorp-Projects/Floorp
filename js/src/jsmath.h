@@ -15,7 +15,7 @@
 
 namespace js {
 
-typedef double (*UnaryFunType)(double);
+using UnaryFunType = double (*)(double);
 
 /*
  * JS math functions.

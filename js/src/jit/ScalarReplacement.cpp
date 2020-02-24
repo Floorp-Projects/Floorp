@@ -22,7 +22,7 @@ namespace jit {
 template <typename MemoryView>
 class EmulateStateOf {
  private:
-  typedef typename MemoryView::BlockState BlockState;
+  using BlockState = typename MemoryView::BlockState;
 
   MIRGenerator* mir_;
   MIRGraph& graph_;
@@ -270,7 +270,7 @@ static bool IsObjectEscaped(MInstruction* ins, JSObject* objDefault) {
 
 class ObjectMemoryView : public MDefinitionVisitorDefaultNoop {
  public:
-  typedef MObjectState BlockState;
+  using BlockState = MObjectState;
   static const char phaseName[];
 
  private:
@@ -916,7 +916,7 @@ static bool IsArrayEscaped(MInstruction* ins, MInstruction* newArray) {
 // replace all reference of the allocation by the MArrayState definition.
 class ArrayMemoryView : public MDefinitionVisitorDefaultNoop {
  public:
-  typedef MArrayState BlockState;
+  using BlockState = MArrayState;
   static const char* phaseName;
 
  private:

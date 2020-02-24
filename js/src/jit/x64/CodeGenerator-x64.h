@@ -31,7 +31,7 @@ class CodeGeneratorX64 : public CodeGeneratorX86Shared {
   void emitWasmStore(T* ins);
 };
 
-typedef CodeGeneratorX64 CodeGeneratorSpecific;
+using CodeGeneratorSpecific = CodeGeneratorX64;
 
 }  // namespace jit
 }  // namespace js

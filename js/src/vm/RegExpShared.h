@@ -224,7 +224,7 @@ class RegExpZone {
         : atom(shared.unbarrieredGet()->getSource()),
           flags(shared.unbarrieredGet()->getFlags()) {}
 
-    typedef Key Lookup;
+    using Lookup = Key;
     static HashNumber hash(const Lookup& l) {
       HashNumber hash = DefaultHasher<JSAtom*>::hash(l.atom);
       return mozilla::AddToHash(hash, l.flags.value());

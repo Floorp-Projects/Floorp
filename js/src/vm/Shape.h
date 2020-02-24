@@ -124,8 +124,8 @@ class Shape;
 struct StackShape;
 
 struct ShapeHasher : public DefaultHasher<Shape*> {
-  typedef Shape* Key;
-  typedef StackShape Lookup;
+  using Key = Shape*;
+  using Lookup = StackShape;
 
   static MOZ_ALWAYS_INLINE HashNumber hash(const Lookup& l);
   static MOZ_ALWAYS_INLINE bool match(Key k, const Lookup& l);
@@ -254,8 +254,8 @@ class PropertyTree {
 
 class TenuringTracer;
 
-typedef JSGetterOp GetterOp;
-typedef JSSetterOp SetterOp;
+using GetterOp = JSGetterOp;
+using SetterOp = JSSetterOp;
 
 /* Limit on the number of slotful properties in an object. */
 static const uint32_t SHAPE_INVALID_SLOT = Bit(24) - 1;
@@ -918,7 +918,7 @@ namespace mozilla {
 
 template <>
 struct DefaultHasher<jsid> {
-  typedef jsid Lookup;
+  using Lookup = jsid;
   static HashNumber hash(jsid id) { return js::HashId(id); }
   static bool match(jsid id1, jsid id2) { return id1 == id2; }
 };

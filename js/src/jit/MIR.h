@@ -251,7 +251,7 @@ class MUse : public TempObject, public InlineListNode<MUse> {
 #endif
 };
 
-typedef InlineList<MUse>::iterator MUseIterator;
+using MUseIterator = InlineList<MUse>::iterator;
 
 // A node is an entry in the MIR graph. It has two kinds:
 //   MInstruction: an instruction which appears in the IR stream.
@@ -975,13 +975,13 @@ class CompilerGCPointer {
   CompilerGCPointer<T>& operator=(const CompilerGCPointer<T>&) = delete;
 };
 
-typedef CompilerGCPointer<JSObject*> CompilerObject;
-typedef CompilerGCPointer<NativeObject*> CompilerNativeObject;
-typedef CompilerGCPointer<JSFunction*> CompilerFunction;
-typedef CompilerGCPointer<JSScript*> CompilerScript;
-typedef CompilerGCPointer<PropertyName*> CompilerPropertyName;
-typedef CompilerGCPointer<Shape*> CompilerShape;
-typedef CompilerGCPointer<ObjectGroup*> CompilerObjectGroup;
+using CompilerObject = CompilerGCPointer<JSObject*>;
+using CompilerNativeObject = CompilerGCPointer<NativeObject*>;
+using CompilerFunction = CompilerGCPointer<JSFunction*>;
+using CompilerScript = CompilerGCPointer<JSScript*>;
+using CompilerPropertyName = CompilerGCPointer<PropertyName*>;
+using CompilerShape = CompilerGCPointer<Shape*>;
+using CompilerObjectGroup = CompilerGCPointer<ObjectGroup*>;
 
 class MRootList : public TempObject {
  public:
@@ -1321,7 +1321,7 @@ class MVariadicT : public T {
   }
 };
 
-typedef MVariadicT<MInstruction> MVariadicInstruction;
+using MVariadicInstruction = MVariadicT<MInstruction>;
 
 // Generates an LSnapshot without further effect.
 class MStart : public MNullaryInstruction {
@@ -10294,7 +10294,7 @@ struct MStoreToRecover : public TempObject,
   explicit MStoreToRecover(MDefinition* operand) : operand(operand) {}
 };
 
-typedef InlineSpaghettiStack<MStoreToRecover> MStoresToRecoverList;
+using MStoresToRecoverList = InlineSpaghettiStack<MStoreToRecover>;
 
 // A resume point contains the information needed to reconstruct the Baseline
 // state from a position in the JIT. See the big comment near resumeAfter() in

@@ -819,8 +819,8 @@ class LElementVisitor {
       : ins_(nullptr), lastPC_(nullptr), lastNotInlinedPC_(nullptr) {}
 };
 
-typedef InlineList<LInstruction>::iterator LInstructionIterator;
-typedef InlineList<LInstruction>::reverse_iterator LInstructionReverseIterator;
+using LInstructionIterator = InlineList<LInstruction>::iterator;
+using LInstructionReverseIterator = InlineList<LInstruction>::reverse_iterator;
 
 class MPhi;
 
@@ -1291,8 +1291,8 @@ struct SafepointNunboxEntry {
 };
 
 class LSafepoint : public TempObject {
-  typedef SafepointSlotEntry SlotEntry;
-  typedef SafepointNunboxEntry NunboxEntry;
+  using SlotEntry = SafepointSlotEntry;
+  using NunboxEntry = SafepointNunboxEntry;
 
  public:
   typedef Vector<SlotEntry, 0, JitAllocPolicy> SlotList;
@@ -1707,7 +1707,7 @@ class LInstruction::InputIterator {
 
 class LIRGraph {
   struct ValueHasher {
-    typedef Value Lookup;
+    using Lookup = Value;
     static HashNumber hash(const Value& v) { return HashNumber(v.asRawBits()); }
     static bool match(const Value& lhs, const Value& rhs) { return lhs == rhs; }
   };

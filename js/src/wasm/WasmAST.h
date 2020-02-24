@@ -46,7 +46,7 @@ using AstHashMap = HashMap<K, V, HP, LifoAllocPolicy<Fallible>>;
 
 using mozilla::Variant;
 
-typedef AstVector<bool> AstBoolVector;
+using AstBoolVector = AstVector<bool>;
 
 class AstName {
   const char16_t* begin_;
@@ -215,7 +215,7 @@ struct AstBlockType {
 };
 
 struct AstNameHasher {
-  typedef const AstName Lookup;
+  using Lookup = const AstName;
   static js::HashNumber hash(Lookup l) {
     return mozilla::HashString(l.begin(), l.length());
   }
@@ -224,10 +224,10 @@ struct AstNameHasher {
 
 using AstNameMap = AstHashMap<AstName, uint32_t, AstNameHasher>;
 
-typedef AstVector<AstValType> AstValTypeVector;
-typedef AstVector<AstExpr*> AstExprVector;
-typedef AstVector<AstName> AstNameVector;
-typedef AstVector<AstRef> AstRefVector;
+using AstValTypeVector = AstVector<AstValType>;
+using AstExprVector = AstVector<AstExpr*>;
+using AstNameVector = AstVector<AstName>;
+using AstRefVector = AstVector<AstRef>;
 
 struct AstBase {
   void* operator new(size_t numBytes, LifoAlloc& astLifo) noexcept(true) {
@@ -289,7 +289,7 @@ class AstFuncType : public AstTypeDef {
            EqualContainers(results(), rhs.results());
   }
 
-  typedef const AstFuncType& Lookup;
+  using Lookup = const AstFuncType&;
   static HashNumber hash(Lookup ft) {
     HashNumber hn = 0;
     for (const AstValType& vt : ft.args()) {
@@ -1129,7 +1129,7 @@ class AstGlobal : public AstNode {
   }
 };
 
-typedef AstVector<AstGlobal*> AstGlobalVector;
+using AstGlobalVector = AstVector<AstGlobal*>;
 
 class AstImport : public AstNode {
   AstName name_;
@@ -1233,11 +1233,11 @@ class AstDataSegment : public AstNode {
   const AstNameVector& fragments() const { return fragments_; }
 };
 
-typedef AstVector<AstDataSegment*> AstDataSegmentVector;
+using AstDataSegmentVector = AstVector<AstDataSegment*>;
 
 struct AstNullValue {};
 typedef Variant<AstRef, AstNullValue> AstElem;
-typedef AstVector<AstElem> AstElemVector;
+using AstElemVector = AstVector<AstElem>;
 
 enum class AstElemSegmentKind {
   Active,
@@ -1271,7 +1271,7 @@ class AstElemSegment : public AstNode {
   const AstElemVector& elems() const { return elems_; }
 };
 
-typedef AstVector<AstElemSegment*> AstElemSegmentVector;
+using AstElemSegmentVector = AstVector<AstElemSegment*>;
 
 class AstStartFunc : public AstNode {
   AstRef func_;
@@ -1304,13 +1304,13 @@ struct AstTable {
 
 class AstModule : public AstNode {
  public:
-  typedef AstVector<AstFunc*> FuncVector;
-  typedef AstVector<AstImport*> ImportVector;
-  typedef AstVector<AstExport*> ExportVector;
-  typedef AstVector<AstTypeDef*> TypeDefVector;
-  typedef AstVector<AstName> NameVector;
-  typedef AstVector<AstMemory> AstMemoryVector;
-  typedef AstVector<AstTable> AstTableVector;
+  using FuncVector = AstVector<AstFunc*>;
+  using ImportVector = AstVector<AstImport*>;
+  using ExportVector = AstVector<AstExport*>;
+  using TypeDefVector = AstVector<AstTypeDef*>;
+  using NameVector = AstVector<AstName>;
+  using AstMemoryVector = AstVector<AstMemory>;
+  using AstTableVector = AstVector<AstTable>;
 
  private:
   typedef AstHashMap<AstFuncType*, uint32_t, AstFuncType> FuncTypeMap;

@@ -7716,8 +7716,8 @@ bool CData::GetRuntime(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
-typedef JS::TwoByteCharsZ (*InflateUTF8Method)(JSContext*, const JS::UTF8Chars,
-                                               size_t*, arena_id_t);
+using InflateUTF8Method = JS::TwoByteCharsZ (*)(JSContext*, const JS::UTF8Chars,
+                                                size_t*, arena_id_t);
 
 static bool ReadStringCommon(JSContext* cx, InflateUTF8Method inflateUTF8,
                              unsigned argc, Value* vp, const char* funName,

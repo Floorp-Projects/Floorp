@@ -67,7 +67,7 @@ class MoveEmitterX86 {
                                                size_t i);
 };
 
-typedef MoveEmitterX86 MoveEmitter;
+using MoveEmitter = MoveEmitterX86;
 
 }  // namespace jit
 }  // namespace js

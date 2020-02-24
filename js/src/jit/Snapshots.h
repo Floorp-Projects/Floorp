@@ -339,8 +339,8 @@ class RValueAllocation {
   HashNumber hash() const;
 
   struct Hasher {
-    typedef RValueAllocation Key;
-    typedef Key Lookup;
+    using Key = RValueAllocation;
+    using Lookup = Key;
     static HashNumber hash(const Lookup& v) { return v.hash(); }
     static bool match(const Key& k, const Lookup& l) { return k == l; }
   };
@@ -356,7 +356,7 @@ class SnapshotWriter {
 
   // Map RValueAllocations to an offset in the allocWriter_ buffer.  This is
   // useful as value allocations are repeated frequently.
-  typedef RValueAllocation RVA;
+  using RVA = RValueAllocation;
   typedef HashMap<RVA, uint32_t, RVA::Hasher, SystemAllocPolicy> RValueAllocMap;
   RValueAllocMap allocMap_;
 

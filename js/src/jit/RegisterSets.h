@@ -19,7 +19,7 @@ namespace js {
 namespace jit {
 
 struct AnyRegister {
-  typedef uint8_t Code;
+  using Code = uint8_t;
 
   static const uint8_t Total = Registers::Total + FloatRegisters::Total;
   static const uint8_t Invalid = UINT8_MAX;
@@ -250,8 +250,8 @@ class ConstantOrRegister {
 template <typename T>
 class TypedRegisterSet {
  public:
-  typedef T RegType;
-  typedef typename T::SetType SetType;
+  using RegType = T;
+  using SetType = typename T::SetType;
 
  private:
   SetType bits_;
@@ -339,8 +339,8 @@ class TypedRegisterSet {
   uint32_t getPushSizeInBytes() const { return T::GetPushSizeInBytes(*this); }
 };
 
-typedef TypedRegisterSet<Register> GeneralRegisterSet;
-typedef TypedRegisterSet<FloatRegister> FloatRegisterSet;
+using GeneralRegisterSet = TypedRegisterSet<Register>;
+using FloatRegisterSet = TypedRegisterSet<FloatRegister>;
 
 class AnyRegisterIterator;
 
@@ -473,9 +473,9 @@ class LiveSet;
 template <typename Set>
 class AllocatableSetAccessors {
  public:
-  typedef Set RegSet;
-  typedef typename RegSet::RegType RegType;
-  typedef typename RegSet::SetType SetType;
+  using RegSet = Set;
+  using RegType = typename RegSet::RegType;
+  using SetType = typename RegSet::SetType;
 
  protected:
   RegSet set_;
@@ -506,9 +506,9 @@ class AllocatableSetAccessors {
 template <>
 class AllocatableSetAccessors<RegisterSet> {
  public:
-  typedef RegisterSet RegSet;
-  typedef AnyRegister RegType;
-  typedef char SetType;
+  using RegSet = RegisterSet;
+  using RegType = AnyRegister;
+  using SetType = char;
 
  protected:
   RegisterSet set_;
@@ -555,9 +555,9 @@ class AllocatableSetAccessors<RegisterSet> {
 template <typename Set>
 class LiveSetAccessors {
  public:
-  typedef Set RegSet;
-  typedef typename RegSet::RegType RegType;
-  typedef typename RegSet::SetType SetType;
+  using RegSet = Set;
+  using RegType = typename RegSet::RegType;
+  using SetType = typename RegSet::SetType;
 
  protected:
   RegSet set_;
@@ -583,9 +583,9 @@ class LiveSetAccessors {
 template <>
 class LiveSetAccessors<RegisterSet> {
  public:
-  typedef RegisterSet RegSet;
-  typedef AnyRegister RegType;
-  typedef char SetType;
+  using RegSet = RegisterSet;
+  using RegType = AnyRegister;
+  using SetType = char;
 
  protected:
   RegisterSet set_;
@@ -631,7 +631,7 @@ class LiveSetAccessors<RegisterSet> {
 // |takeAny| variants.
 template <class Accessors, typename Set>
 class SpecializedRegSet : public Accessors {
-  typedef Accessors Parent;
+  using Parent = Accessors;
 
  public:
   DEFINE_ACCESSOR_CONSTRUCTORS_(SpecializedRegSet)
@@ -740,7 +740,7 @@ class SpecializedRegSet : public Accessors {
 // Specialization of the accessors for the RegisterSet aggregate.
 template <class Accessors>
 class SpecializedRegSet<Accessors, RegisterSet> : public Accessors {
-  typedef Accessors Parent;
+  using Parent = Accessors;
 
  public:
   DEFINE_ACCESSOR_CONSTRUCTORS_(SpecializedRegSet)
@@ -1007,13 +1007,13 @@ class AllocatableSet<RegisterSet>
 #undef DEFINE_ACCESSOR_CONSTRUCTORS_FOR_REGISTERSET_
 #undef DEFINE_ACCESSOR_CONSTRUCTORS_
 
-typedef AllocatableSet<GeneralRegisterSet> AllocatableGeneralRegisterSet;
-typedef AllocatableSet<FloatRegisterSet> AllocatableFloatRegisterSet;
-typedef AllocatableSet<RegisterSet> AllocatableRegisterSet;
+using AllocatableGeneralRegisterSet = AllocatableSet<GeneralRegisterSet>;
+using AllocatableFloatRegisterSet = AllocatableSet<FloatRegisterSet>;
+using AllocatableRegisterSet = AllocatableSet<RegisterSet>;
 
-typedef LiveSet<GeneralRegisterSet> LiveGeneralRegisterSet;
-typedef LiveSet<FloatRegisterSet> LiveFloatRegisterSet;
-typedef LiveSet<RegisterSet> LiveRegisterSet;
+using LiveGeneralRegisterSet = LiveSet<GeneralRegisterSet>;
+using LiveFloatRegisterSet = LiveSet<FloatRegisterSet>;
+using LiveRegisterSet = LiveSet<RegisterSet>;
 
 // iterates in whatever order happens to be convenient.
 // Use TypedRegisterBackwardIterator or TypedRegisterForwardIterator if a
@@ -1080,14 +1080,14 @@ class TypedRegisterForwardIterator {
   T operator*() const { return regset_.template getFirst<RegTypeName::Any>(); }
 };
 
-typedef TypedRegisterIterator<Register> GeneralRegisterIterator;
-typedef TypedRegisterIterator<FloatRegister> FloatRegisterIterator;
-typedef TypedRegisterBackwardIterator<Register> GeneralRegisterBackwardIterator;
-typedef TypedRegisterBackwardIterator<FloatRegister>
-    FloatRegisterBackwardIterator;
-typedef TypedRegisterForwardIterator<Register> GeneralRegisterForwardIterator;
-typedef TypedRegisterForwardIterator<FloatRegister>
-    FloatRegisterForwardIterator;
+using GeneralRegisterIterator = TypedRegisterIterator<Register>;
+using FloatRegisterIterator = TypedRegisterIterator<FloatRegister>;
+using GeneralRegisterBackwardIterator = TypedRegisterBackwardIterator<Register>;
+using FloatRegisterBackwardIterator =
+    TypedRegisterBackwardIterator<FloatRegister>;
+using GeneralRegisterForwardIterator = TypedRegisterForwardIterator<Register>;
+using FloatRegisterForwardIterator =
+    TypedRegisterForwardIterator<FloatRegister>;
 
 class AnyRegisterIterator {
   GeneralRegisterIterator geniter_;

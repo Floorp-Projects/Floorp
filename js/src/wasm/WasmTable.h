@@ -124,7 +124,7 @@ class Table : public ShareableBase<Table> {
   size_t gcMallocBytes() const;
 };
 
-typedef RefPtr<Table> SharedTable;
+using SharedTable = RefPtr<Table>;
 typedef Vector<SharedTable, 0, SystemAllocPolicy> SharedTableVector;
 
 }  // namespace wasm

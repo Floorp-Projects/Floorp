@@ -585,8 +585,8 @@ class XPCJSRuntime final : public mozilla::CycleCollectedJSRuntime {
   JS::Value mStrJSVals[XPCJSContext::IDX_TOTAL_COUNT];
 
   struct Hasher {
-    typedef RefPtr<mozilla::BasePrincipal> Key;
-    typedef Key Lookup;
+    using Key = RefPtr<mozilla::BasePrincipal>;
+    using Lookup = Key;
     static uint32_t hash(const Lookup& l) { return l->GetOriginNoSuffixHash(); }
     static bool match(const Key& k, const Lookup& l) {
       return k->FastEquals(l);
@@ -1826,7 +1826,7 @@ class XPCConvert {
                              const void* buf, const nsXPTType& type,
                              const nsID* iid, uint32_t count, nsresult* pErr);
 
-  typedef std::function<void*(uint32_t*)> ArrayAllocFixupLen;
+  using ArrayAllocFixupLen = std::function<void*(uint32_t*)>;
 
   /**
    * Convert a JS::Value into a native array.
@@ -2083,11 +2083,11 @@ class TypedAutoMarkingPtr : public AutoMarkingPtr {
   T* mPtr;
 };
 
-typedef TypedAutoMarkingPtr<XPCWrappedNative> AutoMarkingWrappedNativePtr;
-typedef TypedAutoMarkingPtr<XPCWrappedNativeTearOff>
-    AutoMarkingWrappedNativeTearOffPtr;
-typedef TypedAutoMarkingPtr<XPCWrappedNativeProto>
-    AutoMarkingWrappedNativeProtoPtr;
+using AutoMarkingWrappedNativePtr = TypedAutoMarkingPtr<XPCWrappedNative>;
+using AutoMarkingWrappedNativeTearOffPtr =
+    TypedAutoMarkingPtr<XPCWrappedNativeTearOff>;
+using AutoMarkingWrappedNativeProtoPtr =
+    TypedAutoMarkingPtr<XPCWrappedNativeProto>;
 
 /***************************************************************************/
 namespace xpc {

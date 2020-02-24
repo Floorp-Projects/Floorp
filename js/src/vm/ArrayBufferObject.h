@@ -126,12 +126,12 @@ class ArrayBufferObjectMaybeShared : public NativeObject {
   inline bool isWasm() const;
 };
 
-typedef Rooted<ArrayBufferObjectMaybeShared*>
-    RootedArrayBufferObjectMaybeShared;
-typedef Handle<ArrayBufferObjectMaybeShared*>
-    HandleArrayBufferObjectMaybeShared;
-typedef MutableHandle<ArrayBufferObjectMaybeShared*>
-    MutableHandleArrayBufferObjectMaybeShared;
+using RootedArrayBufferObjectMaybeShared =
+    Rooted<ArrayBufferObjectMaybeShared*>;
+using HandleArrayBufferObjectMaybeShared =
+    Handle<ArrayBufferObjectMaybeShared*>;
+using MutableHandleArrayBufferObjectMaybeShared =
+    MutableHandle<ArrayBufferObjectMaybeShared*>;
 
 /*
  * ArrayBufferObject
@@ -466,9 +466,9 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
   }
 };
 
-typedef Rooted<ArrayBufferObject*> RootedArrayBufferObject;
-typedef Handle<ArrayBufferObject*> HandleArrayBufferObject;
-typedef MutableHandle<ArrayBufferObject*> MutableHandleArrayBufferObject;
+using RootedArrayBufferObject = Rooted<ArrayBufferObject*>;
+using HandleArrayBufferObject = Handle<ArrayBufferObject*>;
+using MutableHandleArrayBufferObject = MutableHandle<ArrayBufferObject*>;
 
 bool CreateWasmBuffer(JSContext* cx, const wasm::Limits& memory,
                       MutableHandleArrayBufferObjectMaybeShared buffer);

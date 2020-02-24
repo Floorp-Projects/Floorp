@@ -1758,7 +1758,7 @@ static int BoyerMooreHorspool(const TextChar* text, uint32_t textLen,
 
 template <typename TextChar, typename PatChar>
 struct MemCmp {
-  typedef uint32_t Extent;
+  using Extent = uint32_t;
   static MOZ_ALWAYS_INLINE Extent computeExtent(const PatChar*,
                                                 uint32_t patLen) {
     return (patLen - 1) * sizeof(PatChar);
@@ -1772,7 +1772,7 @@ struct MemCmp {
 
 template <typename TextChar, typename PatChar>
 struct ManualCmp {
-  typedef const PatChar* Extent;
+  using Extent = const PatChar*;
   static MOZ_ALWAYS_INLINE Extent computeExtent(const PatChar* pat,
                                                 uint32_t patLen) {
     return pat + patLen;

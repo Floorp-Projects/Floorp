@@ -34,7 +34,7 @@ class MacroAssemblerX86Shared : public Assembler {
   // knows what to use instead of copying these data structures.
   template <class T>
   struct Constant {
-    typedef T Pod;
+    using Pod = T;
 
     T value;
     UsesVector uses;

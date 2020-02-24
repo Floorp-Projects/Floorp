@@ -1022,7 +1022,7 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared {
   void profilerExitFrame();
 };
 
-typedef MacroAssemblerX64 MacroAssemblerSpecific;
+using MacroAssemblerSpecific = MacroAssemblerX64;
 
 }  // namespace jit
 }  // namespace js

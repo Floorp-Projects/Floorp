@@ -773,19 +773,19 @@ struct LastArg;
 
 template <>
 struct LastArg<> {
-  typedef void Type;
+  using Type = void;
   static constexpr size_t nbArgs = 0;
 };
 
 template <typename HeadType>
 struct LastArg<HeadType> {
-  typedef HeadType Type;
+  using Type = HeadType;
   static constexpr size_t nbArgs = 1;
 };
 
 template <typename HeadType, typename... TailTypes>
 struct LastArg<HeadType, TailTypes...> {
-  typedef typename LastArg<TailTypes...>::Type Type;
+  using Type = typename LastArg<TailTypes...>::Type;
   static constexpr size_t nbArgs = LastArg<TailTypes...>::nbArgs + 1;
 };
 

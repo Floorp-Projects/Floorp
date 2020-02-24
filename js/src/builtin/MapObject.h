@@ -31,7 +31,7 @@ class HashableValue {
 
  public:
   struct Hasher {
-    typedef HashableValue Lookup;
+    using Lookup = HashableValue;
     static HashNumber hash(const Lookup& v,
                            const mozilla::HashCodeScrambler& hcs) {
       return v.hash(hcs);

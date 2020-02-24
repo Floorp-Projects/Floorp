@@ -45,7 +45,7 @@ struct CallableOffsets;
 struct FuncOffsets;
 struct Frame;
 
-typedef JS::ProfilingFrameIterator::RegisterState RegisterState;
+using RegisterState = JS::ProfilingFrameIterator::RegisterState;
 
 // Iterates over a linear group of wasm frames of a single wasm JitActivation,
 // called synchronously from C++ in the wasm thread. It will stop at the first

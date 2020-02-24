@@ -984,8 +984,8 @@ struct MovableCellHasher<WeakHeapPtr<T>> {
 /* Useful for hashtables with a HeapPtr as key. */
 template <class T>
 struct HeapPtrHasher {
-  typedef HeapPtr<T> Key;
-  typedef T Lookup;
+  using Key = HeapPtr<T>;
+  using Lookup = T;
 
   static HashNumber hash(Lookup obj) { return DefaultHasher<T>::hash(obj); }
   static bool match(const Key& k, Lookup l) { return k.get() == l; }
@@ -994,8 +994,8 @@ struct HeapPtrHasher {
 
 template <class T>
 struct PreBarrieredHasher {
-  typedef PreBarriered<T> Key;
-  typedef T Lookup;
+  using Key = PreBarriered<T>;
+  using Lookup = T;
 
   static HashNumber hash(Lookup obj) { return DefaultHasher<T>::hash(obj); }
   static bool match(const Key& k, Lookup l) { return k.get() == l; }
@@ -1005,8 +1005,8 @@ struct PreBarrieredHasher {
 /* Useful for hashtables with a WeakHeapPtr as key. */
 template <class T>
 struct WeakHeapPtrHasher {
-  typedef WeakHeapPtr<T> Key;
-  typedef T Lookup;
+  using Key = WeakHeapPtr<T>;
+  using Lookup = T;
 
   static HashNumber hash(Lookup obj) { return DefaultHasher<T>::hash(obj); }
   static bool match(const Key& k, Lookup l) { return k.unbarrieredGet() == l; }

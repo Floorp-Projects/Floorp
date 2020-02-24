@@ -49,14 +49,14 @@ typedef Vector<MDefinition*, 8, SystemAllocPolicy> DefVector;
 
 struct IonCompilePolicy {
   // We store SSA definitions in the value stack.
-  typedef MDefinition* Value;
-  typedef DefVector ValueVector;
+  using Value = MDefinition*;
+  using ValueVector = DefVector;
 
   // We store loop headers and then/else blocks in the control flow stack.
-  typedef MBasicBlock* ControlItem;
+  using ControlItem = MBasicBlock*;
 };
 
-typedef OpIter<IonCompilePolicy> IonOpIter;
+using IonOpIter = OpIter<IonCompilePolicy>;
 
 class FunctionCompiler;
 

@@ -30,9 +30,9 @@ using namespace js::gc;
 
 using JS::AutoGCRooter;
 
-typedef RootedValueMap::Range RootRange;
-typedef RootedValueMap::Entry RootEntry;
-typedef RootedValueMap::Enum RootEnum;
+using RootRange = RootedValueMap::Range;
+using RootEntry = RootedValueMap::Entry;
+using RootEnum = RootedValueMap::Enum;
 
 template <typename T>
 using TraceFunction = void (*)(JSTracer* trc, T* ref, const char* name);

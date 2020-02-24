@@ -1293,7 +1293,7 @@ struct TypedNative {
   TypedNative(InlinableNative native, ABIFunctionType abiType)
       : native(native), abiType(abiType) {}
 
-  typedef TypedNative Lookup;
+  using Lookup = TypedNative;
   static HashNumber hash(const Lookup& l) {
     return HashGeneric(uint32_t(l.native), uint32_t(l.abiType));
   }

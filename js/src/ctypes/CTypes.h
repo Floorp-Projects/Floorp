@@ -521,7 +521,7 @@ JSObject* CreateInternal(JSContext* cx, HandleObject baseType);
 JSObject* GetBaseType(JSObject* obj);
 }  // namespace PointerType
 
-typedef UniquePtr<ffi_type> UniquePtrFFIType;
+using UniquePtrFFIType = UniquePtr<ffi_type>;
 
 namespace ArrayType {
 JSObject* CreateInternal(JSContext* cx, HandleObject baseType, size_t length,

@@ -178,7 +178,7 @@ class ExclusiveData {
 
 template <class T>
 class ExclusiveWaitableData : public ExclusiveData<T> {
-  typedef ExclusiveData<T> Base;
+  using Base = ExclusiveData<T>;
 
   mutable ConditionVariable condVar_;
 
@@ -192,7 +192,7 @@ class ExclusiveWaitableData : public ExclusiveData<T> {
       : Base(id, std::forward<Args>(args)...) {}
 
   class MOZ_STACK_CLASS Guard : public ExclusiveData<T>::Guard {
-    typedef typename ExclusiveData<T>::Guard Base;
+    using Base = typename ExclusiveData<T>::Guard;
 
    public:
     explicit Guard(const ExclusiveWaitableData& parent) : Base(parent) {}

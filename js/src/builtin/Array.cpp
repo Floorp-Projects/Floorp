@@ -1906,8 +1906,8 @@ static bool ComparatorNumericRightMinusLeft(const NumericElement& a,
   return true;
 }
 
-typedef bool (*ComparatorNumeric)(const NumericElement& a,
-                                  const NumericElement& b, bool* lessOrEqualp);
+using ComparatorNumeric = bool (*)(const NumericElement&, const NumericElement&,
+                                   bool*);
 
 static const ComparatorNumeric SortComparatorNumerics[] = {
     nullptr, nullptr, ComparatorNumericLeftMinusRight,
@@ -1925,8 +1925,7 @@ static bool ComparatorInt32RightMinusLeft(const Value& a, const Value& b,
   return true;
 }
 
-typedef bool (*ComparatorInt32)(const Value& a, const Value& b,
-                                bool* lessOrEqualp);
+using ComparatorInt32 = bool (*)(const Value&, const Value&, bool*);
 
 static const ComparatorInt32 SortComparatorInt32s[] = {
     nullptr, nullptr, ComparatorInt32LeftMinusRight,

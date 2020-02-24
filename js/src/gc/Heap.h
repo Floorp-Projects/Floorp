@@ -720,7 +720,7 @@ static_assert(ArenaBitmapBytes * ArenasPerChunk == sizeof(ChunkBitmap),
 static_assert(js::gc::ChunkMarkBitmapBits == ArenaBitmapBits * ArenasPerChunk,
               "Ensure that the mark bitmap has the right number of bits.");
 
-typedef BitArray<ArenasPerChunk> PerArenaBitmap;
+using PerArenaBitmap = BitArray<ArenasPerChunk>;
 
 const size_t ChunkPadSize = ChunkSize - (sizeof(Arena) * ArenasPerChunk) -
                             sizeof(ChunkBitmap) - sizeof(PerArenaBitmap) -

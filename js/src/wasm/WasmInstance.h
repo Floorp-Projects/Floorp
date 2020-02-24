@@ -236,7 +236,7 @@ class Instance {
                             uint32_t outputTypeIndex, void* maybeNullPtr);
 };
 
-typedef UniquePtr<Instance> UniqueInstance;
+using UniqueInstance = UniquePtr<Instance>;
 
 }  // namespace wasm
 }  // namespace js

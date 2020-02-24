@@ -53,7 +53,7 @@ using mozilla::DebugOnly;
 using mozilla::Maybe;
 using mozilla::PodCopy;
 
-typedef Rooted<PropertyIteratorObject*> RootedPropertyIteratorObject;
+using RootedPropertyIteratorObject = Rooted<PropertyIteratorObject*>;
 
 static const gc::AllocKind ITERATOR_FINALIZE_KIND =
     gc::AllocKind::OBJECT2_BACKGROUND;

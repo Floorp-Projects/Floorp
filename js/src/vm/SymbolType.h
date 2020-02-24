@@ -111,8 +111,8 @@ namespace js {
 
 /* Hash policy used by the SymbolRegistry. */
 struct HashSymbolsByDescription {
-  typedef JS::Symbol* Key;
-  typedef JSAtom* Lookup;
+  using Key = JS::Symbol*;
+  using Lookup = JSAtom*;
 
   static HashNumber hash(Lookup l) { return HashNumber(l->hash()); }
   static bool match(Key sym, Lookup l) { return sym->description() == l; }

@@ -209,7 +209,7 @@ class MOZ_STACK_CLASS JSONParserBase {
 template <typename CharT>
 class MOZ_STACK_CLASS JSONParser : public JSONParserBase {
  private:
-  typedef mozilla::RangedPtr<const CharT> CharPtr;
+  using CharPtr = mozilla::RangedPtr<const CharT>;
 
   CharPtr current;
   const CharPtr begin, end;

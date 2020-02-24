@@ -120,10 +120,8 @@ class BaselineICFallbackCode {
 
 enum class DebugTrapHandlerKind { Interpreter, Compiler, Count };
 
-typedef void (*EnterJitCode)(void* code, unsigned argc, Value* argv,
-                             InterpreterFrame* fp, CalleeToken calleeToken,
-                             JSObject* envChain, size_t numStackValues,
-                             Value* vp);
+using EnterJitCode = void (*)(void*, unsigned int, Value*, InterpreterFrame*,
+                              CalleeToken, JSObject*, size_t, Value*);
 
 class JitcodeGlobalTable;
 

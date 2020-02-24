@@ -18,7 +18,7 @@ namespace jsipc {
 
 template <class Base>
 class JavaScriptBase : public WrapperOwner, public WrapperAnswer, public Base {
-  typedef WrapperAnswer Answer;
+  using Answer = WrapperAnswer;
 
  public:
   virtual ~JavaScriptBase() {}

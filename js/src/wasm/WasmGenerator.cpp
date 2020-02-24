@@ -618,7 +618,7 @@ static bool AppendForEach(Vec* dstVec, const Vec& srcVec, Op op) {
     return false;
   }
 
-  typedef typename Vec::ElementType T;
+  using T = typename Vec::ElementType;
 
   const T* src = srcVec.begin();
 

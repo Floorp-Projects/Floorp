@@ -59,7 +59,7 @@ struct BinaryASTSupport {
     }
 #endif  // DEBUG
 
-    typedef const CharSlice Lookup;
+    using Lookup = const CharSlice;
     static js::HashNumber hash(Lookup l) {
       return mozilla::HashString(l.start_, l.byteLen_);
     }
