@@ -12,10 +12,14 @@ Runs the static rooting analysis
 from subprocess import Popen
 import argparse
 import os
-import shlex
 import subprocess
 import sys
 import re
+
+try:
+    from shlex import quote
+except ImportError:
+    from pipes import quote
 
 # Python 2/3 version independence polyfills
 
@@ -56,7 +60,7 @@ def fill(command, config):
 
 
 def print_command(command, outfile=None, env=None):
-    output = ' '.join(shlex.quote(s) for s in command)
+    output = ' '.join(quote(s) for s in command)
     if outfile:
         output += ' > ' + outfile
     if env:
