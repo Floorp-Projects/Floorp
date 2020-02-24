@@ -1182,7 +1182,12 @@ PdfStreamConverter.prototype = {
       uri,
       aRequest.loadInfo.originAttributes
     );
+    // Remember the principal we would have had before we mess with it.
+    let originalPrincipal = Services.scriptSecurityManager.getChannelResultPrincipal(
+      aRequest
+    );
     aRequest.owner = resourcePrincipal;
+    aRequest.setProperty("noPDFJSPrincipal", originalPrincipal);
 
     channel.asyncOpen(proxy);
   },
