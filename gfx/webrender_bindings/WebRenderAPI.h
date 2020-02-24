@@ -598,7 +598,7 @@ class DisplayListBuilder final {
                      const wr::BoxShadowClipMode& aClipMode);
 
   void StartCachedItem(wr::ItemKey aKey);
-  bool EndCachedItem(wr::ItemKey aKey);
+  void EndCachedItem(wr::ItemKey aKey);
   void ReuseItem(wr::ItemKey aKey);
   void SetDisplayListCacheSize(const size_t aCacheSize);
 
