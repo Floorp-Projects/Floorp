@@ -96,6 +96,7 @@ class DecodedStream : public MediaSink {
 
   Watchable<bool> mPlaying;
   Mirror<PrincipalHandle> mPrincipalHandle;
+  AbstractCanonical<PrincipalHandle>* mCanonicalOutputPrincipal;
   const nsTArray<RefPtr<ProcessedMediaTrack>> mOutputTracks;
 
   double mVolume;
