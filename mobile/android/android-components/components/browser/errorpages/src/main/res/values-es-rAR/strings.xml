@@ -99,7 +99,7 @@
     <string name="mozac_browser_errorpages_offline_title">Modo sin conexión</string>
 
     <!-- The error message shown when a website cannot be loaded because the browser is in offline mode. -->
-    <string name="mozac_browser_errorpages_offline_message"><![CDATA[<p>El navegador está funcionando en el modo sin conexión y no puede conectarse al ítem solicitado.</p><ul><li>¿La computadora está conectada a una red activa?</li><li>Presioná “Intentar de nuevo” para volver al modo con conexión y recargar la página.</li></ul>]]></string>
+    <string name="mozac_browser_errorpages_offline_message"><![CDATA[<p>El navegador está funcionando en el modo sin conexión y no puede conectarse al ítem solicitado.</p><ul><li>¿El dispositivo está conectado a una red activa?</li><li>Presioná “Intentar de nuevo” para volver al modo con conexión y recargar la página.</li></ul>]]></string>
 
     <!-- The document title and heading of the error page shown when the browser prevents loading a website on a restricted port. -->
     <string name="mozac_browser_errorpages_port_blocked_title">Restricción del puerto por razones de seguridad</string>
@@ -112,7 +112,11 @@
     <string name="mozac_browser_errorpages_net_reset_title">Se restableció la conexión</string>
 
     <!-- The error message shown when the Internet connection is disrupted while loading a website. -->
-    <string name="mozac_browser_errorpages_net_reset_message"><![CDATA[<p>]]></string>
+    <string name="mozac_browser_errorpages_net_reset_message"><![CDATA[<p>El navegador se conectó con éxito, pero se interrumpió la conexión mientras se transfería la información. Volvé a probar.</p>
+	<ul>
+		<li>El sitio podría no estar disponible temporalmente o estar demasiado ocupado. Volvé a probar en unos minutos.</li>
+		<li>Si no podés cargar ninguna página, revisá la conexión wifi o de datos de tu dispositivo móvil.</li>
+	</ul>]]></string>
 
     <!-- The document title and heading of the error page shown when the browser refuses to load a type of file that is considered unsafe. -->
     <string name="mozac_browser_errorpages_unsafe_content_type_title">Tipo de archivo no seguro</string>

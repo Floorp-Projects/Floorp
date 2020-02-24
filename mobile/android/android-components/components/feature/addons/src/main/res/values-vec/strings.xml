@@ -5,7 +5,7 @@
     <!-- Description for all_urls add-on permission. -->
     <string name="mozac_feature_addons_permissions_all_urls_description">Asedere a i dati de tuti i siti web</string>
     <!-- Description for tabs add-on permission. -->
-    <string name="mozac_feature_addons_permissions_tabs_description">Asedere a le schede de el browser</string>
+    <string name="mozac_feature_addons_permissions_tabs_description">Asedere a ƚe schede de el browser</string>
     <!-- Description for unlimited_storage permission. -->
     <string name="mozac_feature_addons_permissions_unlimited_storage_description">Salvare dati so el dispoxitivo sensa limitasioni de spasio</string>
     <!-- Description for navigation permission. -->
@@ -21,7 +21,7 @@
     <!-- Description for clipboard_write permission. -->
     <string name="mozac_feature_addons_permissions_clipboard_write_description">Salvare i dati ne i scaraboci</string>
     <!-- Description for downloads permission. -->
-    <string name="mozac_feature_addons_permissions_downloads_description">Scargare file, lexere e modìfegare ƚa cronologìa de download de el browser</string>
+    <string name="mozac_feature_addons_permissions_downloads_description">Scargare file, ƚexere e modìfegare ƚa cronoƚogìa de download de el browser</string>
     <!-- Description for downloads_open permission. -->
     <string name="mozac_feature_addons_permissions_downloads_open_description">Vèrxere i file scaricà so el dispoxitivo</string>
     <!-- Description for find permission. -->
@@ -29,7 +29,7 @@
     <!-- Description for geolocation permission. -->
     <string name="mozac_feature_addons_permissions_geolocation_description">Acedere a ƚa to poxision</string>
     <!-- Description for history permission. -->
-    <string name="mozac_feature_addons_permissions_history_description">Asedere a ƚa cronologìa de navigasion</string>
+    <string name="mozac_feature_addons_permissions_history_description">Asedere a ƚa cronoƚogìa de navigasion</string>
     <!-- Description for management permission. -->
     <string name="mozac_feature_addons_permissions_management_description">Monitorare l’utilixo de ƚe estensioni e gestire i temi</string>
     <!-- Description for native_messaging permission. -->
@@ -45,9 +45,9 @@
     <!-- Description for tab_hide permission. -->
     <string name="mozac_feature_addons_permissions_tab_hide_description">Scondere e mostrare ƚe schede</string>
     <!-- Description for top_sites permission. -->
-    <string name="mozac_feature_addons_permissions_top_sites_description">Asedi ne ƚa cronologìa</string>
+    <string name="mozac_feature_addons_permissions_top_sites_description">Asedi ne ƚa cronoƚogìa</string>
     <!-- Description for devtools permission. -->
-    <string name="mozac_feature_addons_permissions_devtools_description">Consentire a i stromenti de svilupo de asedere a i dati de le schede</string>
+    <string name="mozac_feature_addons_permissions_devtools_description">Consentire a i stromenti de sviƚupo de asedere a i dati de ƚe schede</string>
     <!-- The version on of add-on. -->
     <string name="mozac_feature_addons_version">Version</string>
     <!-- The authors of an add-on. -->
@@ -93,7 +93,7 @@
     <!-- This is a button to cancel the add-on installation . -->
     <string name="mozac_feature_addons_permissions_dialog_cancel">Anuƚa</string>
     <!-- Accessibility content description to install add-on button. -->
-    <string name="mozac_feature_addons_install_addon_content_description">Instaƚa componente da xontare</string>
+    <string name="mozac_feature_addons_install_addon_content_description">Instaƚa conponente da xontare</string>
     <!-- Indicates how many users have rated an add-on. %1$s will be replaced with number of users -->
     <string name="mozac_feature_addons_user_rating_count">Utenti: %1$s</string>
     <!-- Accessibility content description for the amount of stars that add-on has, where %1$.02f will be the amount of stars and / separator and 5 the maximum number of stars e.g (2/5, 4.5/5 or 5/5)  . -->
@@ -111,15 +111,15 @@
     <!-- Name of the "notification channel" used for displaying a notification for updating an add-on. See https://developer.android.com/training/notify-user/channels -->
     <string name="mozac_feature_addons_updater_notification_channel">Axornamenti de el conponente xontà</string>
     <!-- This is the caption for not yet supported screen caption -->
-    <string name="mozac_feature_addons_not_yet_supported_caption">La tecnologia de i componenti xontabili de Firefox la xe en costante axornamento. Sti conponenti axuntivi i utilixano framework incompatibiƚi co Firefox 75 e versioni sucesive.</string>
+    <string name="mozac_feature_addons_not_yet_supported_caption">Ƚa tecnologia de i conponenti xontabili de Firefox ƚa xe en costante axornamento. Sti conponenti axuntivi i utilixano framework inconpatibiƚi co Firefox 75 e versioni sucesive.</string>
     <!-- This is the caption for the add-on installation progress overlay -->
-    <string name="mozac_add_on_install_progress_caption">Download e verifega de el componente xontà en corso…</string>
+    <string name="mozac_add_on_install_progress_caption">Download e verifega de el conponente xontà en corso…</string>
     <!-- Error shown when something unexpected happened while trying to get the add-on list from the server -->
-    <string name="mozac_feature_addons_failed_to_query_add_ons">Inposibiƚe exeguire ƚa query de i componenti xontà.</string>
+    <string name="mozac_feature_addons_failed_to_query_add_ons">Inposibiƚe exeguire ƚa query de i conponenti xontà.</string>
     <!-- Text shown after successfully installed an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_successfully_installed">%1$s instaƚà coretamente</string>
     <!-- Text shown after failed to install an add-on. %1$s is the add-on name. -->
-    <string name="mozac_feature_addons_failed_to_install">Imposibiƚe instaƚare %1$s</string>
+    <string name="mozac_feature_addons_failed_to_install">Inposibiƚe instaƚare %1$s</string>
     <!-- Text shown after successfully enabled an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_successfully_enabled">%1$s ativà coretamente</string>
     <!-- Text shown after failed to enable an add-on. %1$s is the add-on name. -->
@@ -137,7 +137,7 @@
     <!-- Text shown after failed to remove an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_failed_to_remove" tools:ignore="UnusedResources">Inposibiƚe rimovere %1$s</string>
     <!-- Label shown to indicate that the add-on was migrated from a previous version of the app. %1$s is the app name most of the case it will be FireFox. -->
-    <string name="mozac_feature_addons_migrated_from_a_previous_version_label" tools:ignore="UnusedResources">Sto componente xontabiƚe el provien da ƚa migrasion de na version presedente de %1$s</string>
+    <string name="mozac_feature_addons_migrated_from_a_previous_version_label" tools:ignore="UnusedResources">Sto conponente xontabiƚe el provien da ƚa migrasion de na version presedente de %1$s</string>
     <!-- Text shown in not yet supported add-ons section in AddonsManagerAdapter. -->
     <string name="mozac_feature_addons_unsupported_caption">1 conponente xontà</string>
     <!-- Text shown in not yet supported add-ons section in AddonsManagerAdapter - plural. %1$s is the number of unsupported add-ons -->

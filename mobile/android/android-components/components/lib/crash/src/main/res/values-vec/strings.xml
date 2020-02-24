@@ -4,10 +4,10 @@
     <string name="mozac_lib_crash_dialog_title">Se xe verificà on problema en %1$s che gà provocà on aresto anomaƚo.</string>
 
     <!-- Label of the checkbox for sending crash reports in the crash reporter dialog. %1$s will be replaced with the name of the organization (e.g. Mozilla). -->
-    <string name="mozac_lib_crash_dialog_checkbox">Manda na segnalasion de aresto anomaƚo a %1$s</string>
+    <string name="mozac_lib_crash_dialog_checkbox">Manda na segnaƚasion de aresto anomaƚo a %1$s</string>
 
     <!-- Label of the button closing the crash reporter dialog. -->
-    <string name="mozac_lib_crash_dialog_button_close">Sara</string>
+    <string name="mozac_lib_crash_dialog_button_close">Sara su</string>
 
     <!-- Label of the button closing the crash reporter dialog and restarting the app. -->
     <string name="mozac_lib_crash_dialog_button_restart">Invia de novo %1$s</string>
@@ -19,5 +19,5 @@
     <string name="mozac_lib_crash_notification_action_report">Segnaƚa</string>
 
     <!-- Label of notification showing that the crash report service is running. %1$s will be replaced with the name of the organization (e.g. Mozilla). -->
-    <string name="mozac_lib_send_crash_report_in_progress">Son drio mandare la segnaƚasion de aresto anomaƚo a %1$s</string>
+    <string name="mozac_lib_send_crash_report_in_progress">Son drio mandare ƚa segnaƚasion de aresto anomaƚo a %1$s</string>
 </resources>

@@ -50,36 +50,30 @@
     <!-- The document title and heading of the error page shown when the user's network connection is interrupted while connecting to a website. -->
     <string name="mozac_browser_errorpages_net_interrupt_title">連線中斷</string>
     <!-- The error message shown when the user's network connection is interrupted while connecting to a website. -->
-    <string name="mozac_browser_errorpages_net_interrupt_message"><![CDATA[
-	<p>瀏覽器連線成功，但傳輸被中斷了；請稍候重試。</p>
+    <string name="mozac_browser_errorpages_net_interrupt_message"><![CDATA[<p>瀏覽器連線成功，但傳輸被中斷了；請稍候重試。</p>
 	<ul>
 		<li>網站可能太忙碌或暫時無法使用，請稍候再試一次。</li>
-		<li>若您無法載入任何頁面，請檢查您的數據或 Wi-Fi 連線。</li>
-	</ul>
-	]]></string>
+		<li>若您無法載入任何頁面，請檢查裝置的數據或 Wi-Fi 連線。</li>
+	</ul>]]></string>
 
     <!-- The document title and heading of the error page shown when a website takes too long to load. -->
     <string name="mozac_browser_errorpages_net_timeout_title">網路連線逾時</string>
     <!-- The error message shown when a website took long to load. -->
-    <string name="mozac_browser_errorpages_net_timeout_message"><![CDATA[
-	<p>指定的網站一直沒有回應，瀏覽器已停止等待。</p>
+    <string name="mozac_browser_errorpages_net_timeout_message"><![CDATA[<p>指定的網站一直沒有回應，瀏覽器已停止等待。</p>
 	<ul>
 		<li>該網站可能暫時流量過高？請稍候再試。</li>
-		<li>無法瀏覽其它網站？請檢查網路連線。</li>
-		<li>電腦有開防火牆或 Proxy？請確定這些設定是否正確。</li>
+		<li>無法瀏覽其它網站？請檢查裝置的網路連線。</li>
+		<li>裝置需經過防火牆或 Proxy 才能連線？請確定這些設定是否正確。</li>
 		<li>仍有其它問題？請洽詢您的網路管理員或網路業者。</li>
-	</ul>
-	]]></string>
+	</ul>]]></string>
 
     <!-- The document title and heading of the error page shown when a website could not be reached. -->
     <string name="mozac_browser_errorpages_connection_failure_title">連線失敗</string>
     <!-- The error message shown when a website could not be reached. -->
-    <string name="mozac_browser_errorpages_connection_failure_message"><![CDATA[
-	<ul>
-		<li>可能是網站暫停服務？請稍候重試。</li>
-		<li>若您無法載入任何頁面，請檢查您的數據或 Wi-Fi 連線。</li>
-	</ul>
-	]]></string>
+    <string name="mozac_browser_errorpages_connection_failure_message"><![CDATA[<ul>
+		<li>可能是網站暫停服務貨忙碌中？請稍候重試。</li>
+		<li>若您無法載入任何頁面，請檢查裝置的數據或 Wi-Fi 連線。</li>
+	</ul>]]></string>
 
     <!-- The document title and heading of the error page shown when a website responds in an unexpected way and the browser cannot continue. -->
     <string name="mozac_browser_errorpages_unknown_socket_type_title">錯誤的回應</string>
@@ -91,13 +85,11 @@
     <!-- The document title and heading of the error page shown when the browser gets stuck in an infinite loop when loading a website. -->
     <string name="mozac_browser_errorpages_redirect_loop_title">頁面重新導向不正確</string>
     <!-- The error message shown when the browser gets stuck in an infinite loop when loading a website. -->
-    <string name="mozac_browser_errorpages_redirect_loop_message"><![CDATA[
-	<p>瀏覽器已停止試圖取得資料。因為網站似乎在無止盡的重新導向(Redirect)。</p>
+    <string name="mozac_browser_errorpages_redirect_loop_message"><![CDATA[<p>瀏覽器已停止試圖取得資料。因為網站似乎在無止盡的重新導向。</p>
 	<ul>
-		<li>您是否依此網站的要求關掉或封鎖 Cookie？</li>
-		<li>若接受此網站的 Cookie 也無法解決此問題，通常是伺服器設定錯誤而非您的電腦的問題。</li>
-	</ul>
-	]]></string>
+		<li>您是否關掉或封鎖此網站運作必需的 Cookie？</li>
+		<li>若接受此網站的 Cookie 也無法解決此問題，通常是伺服器設定錯誤而非您的裝置的問題。</li>
+	</ul>]]></string>
 
     <!-- The document title and heading of the error page shown when a website cannot be loaded because the browser is in offline mode. -->
     <string name="mozac_browser_errorpages_offline_title">離線模式</string>
@@ -120,13 +112,11 @@
     <!-- The document title and heading of the error page shown when the Internet connection is disrupted while loading a website. -->
     <string name="mozac_browser_errorpages_net_reset_title">連線被重設</string>
     <!-- The error message shown when the Internet connection is disrupted while loading a website. -->
-    <string name="mozac_browser_errorpages_net_reset_message"><![CDATA[
-	<p>在嘗試連線時，此網路連線被中斷。請再試一次。</p>
+    <string name="mozac_browser_errorpages_net_reset_message"><![CDATA[<p>在嘗試連線時，此網路連線被中斷。請再試一次。</p>
 	<ul>
 		<li>網站可能太忙碌或暫時無法使用，請稍候再試一次。</li>
-		<li>若您無法載入任何頁面，請檢查您的數據或 Wi-Fi 連線。</li>
-	</ul>
-	]]></string>
+		<li>若您無法載入任何頁面，請檢查裝置的數據或 Wi-Fi 連線。</li>
+	</ul>]]></string>
 
     <!-- The document title and heading of the error page shown when the browser refuses to load a type of file that is considered unsafe. -->
     <string name="mozac_browser_errorpages_unsafe_content_type_title">不安全的檔案格式</string>
@@ -168,15 +158,13 @@
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_host_title">找不到網址</string>
     <!-- In the example, the two URLs in markup do not need to be translated. -->
-    <string name="mozac_browser_errorpages_unknown_host_message"><![CDATA[
-	<p>瀏覽器找不到網址指定的伺服器主機。</p>
+    <string name="mozac_browser_errorpages_unknown_host_message"><![CDATA[<p>瀏覽器找不到網址指定的伺服器主機。</p>
 	<ul>
 		<li>請檢查網址是否有打錯？例如把
 		<strong>www</strong>.example.com 打成
 		<strong>ww</strong>.example.com</li>
-		<li>若無法載入任何網站，請檢查您的網路連線狀態。</li>
-	</ul>
-	]]></string>
+		<li>若無法載入任何網站，請檢查裝置的網路連線狀態。</li>
+	</ul>]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_no_internet_title">沒有網路連線</string>
@@ -240,14 +228,12 @@
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_proxy_host_title">找不到 Proxy 伺服器</string>
-    <string name="mozac_browser_errorpages_unknown_proxy_host_message"><![CDATA[
-	<p>瀏覽器被設定為使用 Proxy 代理伺服器，但找不到該伺服器。</p>
+    <string name="mozac_browser_errorpages_unknown_proxy_host_message"><![CDATA[<p>有設定瀏覽器使用 Proxy 代理伺服器，但找不到該伺服器。</p>
 	<ul>
 		<li>瀏覽器的 Proxy 設定正確嗎？請檢查並重試。</li>
-		<li>網路連線正常嗎？</li>
+		<li>裝置的網路連線正常嗎？</li>
 		<li>仍有問題？請洽詢您的網路管理員或網路業者。</li>
-	</ul>
-	]]></string>
+	</ul>]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_safe_browsing_malware_uri_title">惡意軟體網站問題</string>

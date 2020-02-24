@@ -6,7 +6,7 @@
     <!-- Text shown on the second row of a paused download notification. -->
     <string name="mozac_feature_downloads_paused_notification_text">Download en pausa</string>
     <!-- Text shown on the second row of an completed download notification. The filename is shown on the first row. -->
-    <string name="mozac_feature_downloads_completed_notification_text2">Download completà</string>
+    <string name="mozac_feature_downloads_completed_notification_text2">Download conpletà</string>
     <!-- Text shown on the second row of an failed download notification. The filename is shown on the first row. -->
     <string name="mozac_feature_downloads_failed_notification_text2">Download falìo</string>
 
@@ -34,5 +34,5 @@
     <string name="mozac_feature_downloads_button_try_again">Prova ancora</string>
 
     <!-- Content description for close button -->
-    <string name="mozac_feature_downloads_button_close">Sara</string>
+    <string name="mozac_feature_downloads_button_close">Sara su</string>
 </resources>

@@ -19,6 +19,6 @@
     <string name="mozac_feature_findindpage_previous_result">Risultato presedente</string>
 
     <!-- String to be read by the accessibility service when focusing the dismiss button in the "find in page" UI. -->
-    <string name="mozac_feature_findindpage_dismiss">Sara cata ne la pàgina</string>
+    <string name="mozac_feature_findindpage_dismiss">Sara su cata ne ƚa pàgina</string>
 
 </resources>

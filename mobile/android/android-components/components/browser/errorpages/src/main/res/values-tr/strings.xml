@@ -56,7 +56,7 @@
     <string name="mozac_browser_errorpages_net_timeout_title">Bağlantı zaman aşımına uğradı</string>
 
     <!-- The error message shown when a website took long to load. -->
-    <string name="mozac_browser_errorpages_net_timeout_message"><![CDATA[<p>İstenen site bağlantı isteğine yanıt vermeyince tarayıcı da beklemeyi bıraktı.</p><ul><li>Sunucu, yoğun talep veya geçici bir kesinti nedeniyle hizmet veremiyor olabilir. Daha sonra yeniden deneyin.</li><li>Diğer siteler de mi açılmıyor? Öyleyse bilgisayarınızın ağ bağlantısın kontrol edin.</li><li>Bilgisayarınız veya ağınız bir güvenlik duvarıyla veya vekil sunucuyla korunuyorsa hatalı ayarlar internete erişmenizi engelleyebilir.</li><li>Her yolu denemenize rağmen hâlâ bağlantı kuramıyorsanız ağ yöneticinize veya internet servis sağlayıcınıza başvurun.</li></ul>]]></string>
+    <string name="mozac_browser_errorpages_net_timeout_message"><![CDATA[<p>İstenen site bağlantı isteğine yanıt vermeyince tarayıcı da beklemeyi bıraktı.</p><ul><li>Sunucu, yoğun talep veya geçici bir kesinti nedeniyle hizmet veremiyor olabilir. Daha sonra yeniden deneyin.</li><li>Diğer siteler de mi açılmıyor? Öyleyse cihazınızın ağ bağlantısın kontrol edin.</li><li>Cihazınız veya ağınız bir güvenlik duvarıyla veya vekil sunucuyla korunuyorsa hatalı ayarlar internete erişmenizi engelleyebilir.</li><li>Her yolu denemenize rağmen hâlâ bağlantı kuramıyorsanız ağ yöneticinize veya internet servis sağlayıcınıza başvurun.</li></ul>]]></string>
 
     <!-- The document title and heading of the error page shown when a website could not be reached. -->
     <string name="mozac_browser_errorpages_connection_failure_title">Bağlanılamadı</string>
@@ -77,13 +77,13 @@
     <string name="mozac_browser_errorpages_redirect_loop_title">Sayfa doğru bir şekilde yönlendirilmiyor</string>
 
     <!-- The error message shown when the browser gets stuck in an infinite loop when loading a website. -->
-    <string name="mozac_browser_errorpages_redirect_loop_message"><![CDATA[<p>Tarayıcı istenen öğeye ulaşmayı denemeyi bıraktı. Site tarayıcının isteğine hiçbir zaman sona ermeyecek bir yönlendirme döngüsü ile yanıt veriyor.</p><ul><li>Site tarafından bırakılmak istenen çerezleri engellemiş ya da etkisizleştirmiş olabilirsiniz.</li><li>Çerezleri kabul etmek sorununuzu çözmeye yetmiyorsa, sorun büyük olasılıkla bilgisayarınızdan değil, sunucu yapılandırmasından kaynaklanıyordur.</li></ul>]]></string>
+    <string name="mozac_browser_errorpages_redirect_loop_message"><![CDATA[<p>Tarayıcı istenen öğeye ulaşmayı denemeyi bıraktı. Site tarayıcının isteğine hiçbir zaman sona ermeyecek bir yönlendirme döngüsü ile yanıt veriyor.</p><ul><li>Site tarafından bırakılmak istenen çerezleri engellemiş ya da etkisizleştirmiş olabilirsiniz.</li><li>Çerezleri kabul etmek sorununuzu çözmeye yetmiyorsa sorun büyük olasılıkla cihazınızdan değil, sunucu yapılandırmasından kaynaklanıyordur.</li></ul>]]></string>
 
     <!-- The document title and heading of the error page shown when a website cannot be loaded because the browser is in offline mode. -->
     <string name="mozac_browser_errorpages_offline_title">Çevrimdışı kip</string>
 
     <!-- The error message shown when a website cannot be loaded because the browser is in offline mode. -->
-    <string name="mozac_browser_errorpages_offline_message"><![CDATA[<p>Tarayıcı şu an çevrimdışı kipte çalışıyor ve istenen öğeye bağlanamaz.</p><ul><li>Bilgisayarınız etkin bir ağa bağlı mı?</li><li>Çevrimiçi kipe geçerek sayfayı tazelemek için “Yeniden dene” düğmesine tıklayın.</li></ul>]]></string>
+    <string name="mozac_browser_errorpages_offline_message"><![CDATA[<p>Tarayıcı şu an çevrimdışı kipte çalışıyor ve istenen öğeye bağlanamaz.</p><ul><li>Cihazınız etkin bir ağa bağlı mı?</li><li>Çevrimiçi kipe geçerek sayfayı tazelemek için “Yeniden dene” düğmesine tıklayın.</li></ul>]]></string>
 
     <!-- The document title and heading of the error page shown when the browser prevents loading a website on a restricted port. -->
     <string name="mozac_browser_errorpages_port_blocked_title">Güvenlik nedeniyle bağlantı noktası kısıtlanmış</string>
@@ -189,7 +189,7 @@
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_proxy_host_title">Vekil sunucu bulunamadı</string>
 
-    <string name="mozac_browser_errorpages_unknown_proxy_host_message"><![CDATA[<p>Tarayıcı vekil sunucu kullanmak üzere yapılandırılmış, ancak vekil sunucu bulunamadı.</p><ul><li>Vekil sunucu ayarları düzgün yapılmamış olabilir. Ayarlarınızı gözden geçirip yeniden deneyin.</li><li>Bilgisayarınız etkin bir ağ bağlantısına sahip olmayabilir.</li><li>Hâlâ sorun yaşıyorsanız ağ yöneticinize ya da internet servis sağlayıcınıza başvurun.</li></ul>]]></string>
+    <string name="mozac_browser_errorpages_unknown_proxy_host_message"><![CDATA[<p>Tarayıcı vekil sunucu kullanmak üzere yapılandırılmış, ancak vekil sunucu bulunamadı.</p><ul><li>Vekil sunucu ayarları düzgün yapılmamış olabilir. Ayarlarınızı gözden geçirip yeniden deneyin.</li><li>Cihazınız etkin bir ağ bağlantısına sahip olmayabilir.</li><li>Hâlâ sorun yaşıyorsanız ağ yöneticinize ya da internet servis sağlayıcınıza başvurun.</li></ul>]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_safe_browsing_malware_uri_title">Kötü amaçlı yazılım sitesi sorunu</string>

@@ -24,6 +24,8 @@
     <string name="mozac_feature_prompt_update_confirmation">Posodobi</string>
     <!-- Error text displayed underneath the password field when it is in an error case -->
     <string name="mozac_feature_prompt_error_empty_password">Polje za geslo ne sme biti prazno</string>
+    <!-- Error text displayed underneath the password field when it is in an error case -->
+    <string name="mozac_feature_prompt_error_unknown_cause">Ni mogoče shraniti povezave</string>
     <!-- Prompt message displayed when app detects a user has entered a password and user decides if app should save it. The first parameter is the name of the application (For example: Fenix)  -->
     <string name="mozac_feature_prompt_logins_save_message">Ali želite, da %s shrani to prijavo?</string>
     <!-- Title of a color picker dialog, this text is shown above a color picker. -->

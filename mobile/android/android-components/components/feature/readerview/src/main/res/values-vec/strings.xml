@@ -17,13 +17,13 @@
     <!-- Color option for the background -->
     <string name="mozac_feature_readerview_dark">Scuro</string>
     <!-- Accessible description for the color option -->
-    <string name="mozac_feature_readerview_dark_color_scheme_desc">Combinasion de coƚori scura</string>
+    <string name="mozac_feature_readerview_dark_color_scheme_desc">Conbinasion de coƚori scura</string>
     <!-- Color option for the background -->
     <string name="mozac_feature_readerview_sephia">Sepa</string>
     <!-- Accessible description for the color option -->
-    <string name="mozac_feature_readerview_sepia_color_scheme_desc">Combinasion de coƚori sepa</string>
+    <string name="mozac_feature_readerview_sepia_color_scheme_desc">Conbinasion de coƚori sepa</string>
     <!-- Color option for the background -->
     <string name="mozac_feature_readerview_light">Ciaro</string>
     <!-- Accessible description for the color option -->
-    <string name="mozac_feature_readerview_light_color_scheme_desc">Combinasion de coƚori ciara</string>
+    <string name="mozac_feature_readerview_light_color_scheme_desc">Conbinasion de coƚori ciara</string>
 </resources>
