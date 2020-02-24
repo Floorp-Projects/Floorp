@@ -1590,12 +1590,13 @@ security.ui.app_menu:
   click:
     bug_numbers:
       - 1603545 
+      - 1616229
     description: >
       Privacy and Security click events on app menu.
     objects: [
       "open_full_report",
     ]
-    expiry_version: "76"
+    expiry_version: "80"
     record_in_processes: 
       - main
     release_channel_collection: opt-out
