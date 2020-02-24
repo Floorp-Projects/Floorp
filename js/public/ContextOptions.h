@@ -32,6 +32,7 @@ class JS_PUBLIC_API ContextOptions {
 #endif
         throwOnAsmJSValidationFailure_(false),
         disableIon_(false),
+        disableEvalSecurityChecks_(false),
         asyncStack_(true),
         throwOnDebuggeeWouldRun_(true),
         dumpStackOnDebuggeeWouldRun_(false),
@@ -128,6 +129,14 @@ class JS_PUBLIC_API ContextOptions {
     return *this;
   }
 
+  // Override to allow disabling the eval restriction security checks for
+  // this context.
+  bool disableEvalSecurityChecks() const { return disableEvalSecurityChecks_; }
+  ContextOptions& setDisableEvalSecurityChecks() {
+    disableEvalSecurityChecks_ = true;
+    return *this;
+  }
+
   bool asyncStack() const { return asyncStack_; }
   ContextOptions& setAsyncStack(bool flag) {
     asyncStack_ = flag;
@@ -205,6 +214,7 @@ class JS_PUBLIC_API ContextOptions {
 #endif
   bool throwOnAsmJSValidationFailure_ : 1;
   bool disableIon_ : 1;
+  bool disableEvalSecurityChecks_ : 1;
   bool asyncStack_ : 1;
   bool throwOnDebuggeeWouldRun_ : 1;
   bool dumpStackOnDebuggeeWouldRun_ : 1;
