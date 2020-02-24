@@ -21,13 +21,6 @@ const logError = (error) => {
 
 runWithMSE(async (ms, v) => {
   await once(ms, "sourceopen");
-
-  const supported = MediaSource.isTypeSupported(VIDEO_CODEC_STRING);
-  if (!supported) {
-    info("vp9 isn't supported on this platform, abort");
-    SimpleTest.finish();
-    return;
-  }
   const sb = ms.addSourceBuffer(VIDEO_CODEC_STRING);
 
   const arrayBuffer = await fetchWithXHR("1516754.webm");
