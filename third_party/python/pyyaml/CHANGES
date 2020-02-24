@@ -1,6 +1,21 @@
 
-For a complete Mercurial changelog, see
-'https://bitbucket.org/xi/pyyaml/commits'.
+For a complete changelog, see https://github.com/yaml/pyyaml/commits/
+
+3.13 (2018-07-05)
+-----------------
+
+* Rebuilt with the latest Cython to support the new Python 3.7 release.
+* No functionality is different from PyYAML 3.12 in this release.
+
+3.12 (2016-08-28)
+-----------------
+
+* Wheel packages for Windows binaries.
+* Adding an implicit resolver to a derived loader should not affect the base
+  loader (fixes issue #57).
+* Uniform representation for OrderedDict across different versions of Python
+  (fixes issue #61).
+* Fixed comparison to None warning (closes issue #64).
 
 3.11 (2014-03-26)
 -----------------

@@ -286,7 +286,7 @@ class Scanner(object):
                     or self.index-key.index > 1024:
                 if key.required:
                     raise ScannerError("while scanning a simple key", key.mark,
-                            "could not found expected ':'", self.get_mark())
+                            "could not find expected ':'", self.get_mark())
                 del self.possible_simple_keys[level]
 
     def save_possible_simple_key(self):
@@ -296,10 +296,6 @@ class Scanner(object):
 
         # Check if a simple key is required at the current position.
         required = not self.flow_level and self.indent == self.column
-
-        # A simple key is required only if it is the first token in the current
-        # line. Therefore it is always allowed.
-        assert self.allow_simple_key or not required
 
         # The next token might be a simple key. Let's save it's number and
         # position.
@@ -317,7 +313,7 @@ class Scanner(object):
             
             if key.required:
                 raise ScannerError("while scanning a simple key", key.mark,
-                        "could not found expected ':'", self.get_mark())
+                        "could not find expected ':'", self.get_mark())
 
             del self.possible_simple_keys[self.flow_level]
 

@@ -28,7 +28,7 @@ Post your questions and opinions to the YAML-Core mailing list:
 'http://lists.sourceforge.net/lists/listinfo/yaml-core'.
 
 Submit bug reports and feature requests to the PyYAML bug tracker:
-'http://pyyaml.org/newticket?component=pyyaml'.
+'https://bitbucket.org/xi/pyyaml/issues/new'.
 
 PyYAML is written by Kirill Simonov <xi@resolvent.net>.  It is released
 under the MIT license. See the file LICENSE for more details.
