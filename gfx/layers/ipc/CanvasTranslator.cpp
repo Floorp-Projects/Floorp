@@ -7,6 +7,7 @@
 #include "CanvasTranslator.h"
 
 #include "mozilla/gfx/2D.h"
+#include "mozilla/gfx/GPUParent.h"
 #include "mozilla/gfx/Logging.h"
 #include "mozilla/layers/TextureClient.h"
 #include "mozilla/SyncRunnable.h"
@@ -42,27 +43,20 @@ class RingBufferReaderServices final
   RefPtr<CanvasTranslator> mCanvasTranslator;
 };
 
-static TextureData* CreateTextureData(TextureType aTextureType,
-                                      const gfx::IntSize& aSize,
-                                      gfx::SurfaceFormat aFormat) {
+TextureData* CanvasTranslator::CreateTextureData(TextureType aTextureType,
+                                                 const gfx::IntSize& aSize,
+                                                 gfx::SurfaceFormat aFormat) {
   TextureData* textureData = nullptr;
   switch (aTextureType) {
 #ifdef XP_WIN
     case TextureType::D3D11: {
-      RefPtr<ID3D11Device> device =
-          gfx::DeviceManagerDx::Get()->GetCanvasDevice();
-      MOZ_RELEASE_ASSERT(device, "Failed to get a device for canvas drawing.");
       textureData =
-          D3D11TextureData::Create(aSize, aFormat, ALLOC_CLEAR_BUFFER, device);
+          D3D11TextureData::Create(aSize, aFormat, ALLOC_CLEAR_BUFFER, mDevice);
       break;
     }
 #endif
     default:
       MOZ_CRASH("Unsupported TextureType for CanvasTranslator.");
-  }
-
-  if (!textureData) {
-    MOZ_CRASH("Failed to create TextureData.");
   }
 
   return textureData;
@@ -126,15 +120,26 @@ mozilla::ipc::IPCResult CanvasTranslator::RecvInitTranslator(
     const ipc::SharedMemoryBasic::Handle& aReadHandle,
     const CrossProcessSemaphoreHandle& aReaderSem,
     const CrossProcessSemaphoreHandle& aWriterSem) {
+#if defined(XP_WIN)
+  if (!CheckForFreshCanvasDevice(__LINE__)) {
+    gfxCriticalNote << "GFX: CanvasTranslator failed to get device";
+    return IPC_FAIL(this, "Failed to get canvas device.");
+  }
+#endif
+
   mTextureType = aTextureType;
   mReferenceTextureData.reset(CreateTextureData(
       aTextureType, gfx::IntSize(1, 1), gfx::SurfaceFormat::B8G8R8A8));
+  if (!mReferenceTextureData) {
+    return IPC_FAIL(this, "Failed to create reference texture.");
+  }
+
   mReferenceTextureData->Lock(OpenMode::OPEN_READ_WRITE);
   mBaseDT = mReferenceTextureData->BorrowDrawTarget();
   mStream = MakeUnique<CanvasEventRingBuffer>();
   if (!mStream->InitReader(aReadHandle, aReaderSem, aWriterSem,
                            MakeUnique<RingBufferReaderServices>(this))) {
-    return IPC_FAIL(this, "Failed to initialize CanvasTranslator.");
+    return IPC_FAIL(this, "Failed to initialize ring buffer reader.");
   }
 
   mTranslationTaskQueue = mCanvasThreadHolder->CreateWorkerTaskQueue();
@@ -192,10 +197,10 @@ bool CanvasTranslator::TranslateRecording() {
         });
 
     if (!success && !HandleExtensionEvent(eventType)) {
-      gfxDevCrash(gfx::LogReason::PlayEventFailed)
-          << "Failed to play canvas event type: " << eventType;
-      mIsValid = false;
-      return true;
+      gfxCriticalNote << "Failed to play canvas event type: " << eventType;
+      if (!mStream->good()) {
+        return true;
+      }
     }
 
     if (!mIsInTransaction) {
@@ -243,16 +248,52 @@ void CanvasTranslator::Flush() {
 #if defined(XP_WIN)
   gfx::AutoSerializeWithMoz2D serializeWithMoz2D(
       GetReferenceDrawTarget()->GetBackendType());
-  RefPtr<ID3D11Device> device = gfx::DeviceManagerDx::Get()->GetCanvasDevice();
   RefPtr<ID3D11DeviceContext> deviceContext;
-  device->GetImmediateContext(getter_AddRefs(deviceContext));
+  mDevice->GetImmediateContext(getter_AddRefs(deviceContext));
   deviceContext->Flush();
 #endif
 }
 
 void CanvasTranslator::EndTransaction() {
   Flush();
+  // At the end of a transaction is a good time to check if a new canvas device
+  // has been created, even if a reset did not occur.
+  Unused << CheckForFreshCanvasDevice(__LINE__);
   mIsInTransaction = false;
+}
+
+bool CanvasTranslator::CheckForFreshCanvasDevice(int aLineNumber) {
+#if defined(XP_WIN)
+  // If a new device has already been created, use that one.
+  RefPtr<ID3D11Device> device = gfx::DeviceManagerDx::Get()->GetCanvasDevice();
+  if (device && device != mDevice) {
+    mDevice = device.forget();
+    return true;
+  }
+
+  if (mDevice) {
+    if (mDevice->GetDeviceRemovedReason() == S_OK) {
+      return false;
+    }
+
+    gfxCriticalNote << "GFX: CanvasTranslator detected a device reset at "
+                    << aLineNumber;
+  }
+
+  RefPtr<Runnable> runnable = NS_NewRunnableFunction(
+      "CanvasTranslator NotifyDeviceReset",
+      []() { gfx::GPUParent::GetSingleton()->NotifyDeviceReset(); });
+
+  // It is safe to wait here because only the Compositor thread waits on us and
+  // the main thread doesn't wait on the compositor thread in the GPU process.
+  SyncRunnable::DispatchToThread(GetMainThreadEventTarget(), runnable,
+                                 /*aForceDispatch*/ true);
+
+  mDevice = gfx::DeviceManagerDx::Get()->GetCanvasDevice();
+  return !!mDevice;
+#else
+  return false;
+#endif
 }
 
 void CanvasTranslator::AddSurfaceDescriptor(gfx::ReferencePtr aRefPtr,
@@ -270,13 +311,21 @@ void CanvasTranslator::AddSurfaceDescriptor(gfx::ReferencePtr aRefPtr,
 already_AddRefed<gfx::DrawTarget> CanvasTranslator::CreateDrawTarget(
     gfx::ReferencePtr aRefPtr, const gfx::IntSize& aSize,
     gfx::SurfaceFormat aFormat) {
-  gfx::AutoSerializeWithMoz2D serializeWithMoz2D(
-      GetReferenceDrawTarget()->GetBackendType());
-  TextureData* textureData = CreateTextureData(mTextureType, aSize, aFormat);
-  textureData->Lock(OpenMode::OPEN_READ_WRITE);
-  mTextureDatas[aRefPtr] = UniquePtr<TextureData>(textureData);
-  AddSurfaceDescriptor(aRefPtr, textureData);
-  RefPtr<gfx::DrawTarget> dt = textureData->BorrowDrawTarget();
+  RefPtr<gfx::DrawTarget> dt;
+  do {
+    // It is important that AutoSerializeWithMoz2D is called within the loop
+    // and doesn't hold during calls to CheckForFreshCanvasDevice, because that
+    // might cause a deadlock with device reset code on the main thread.
+    gfx::AutoSerializeWithMoz2D serializeWithMoz2D(
+        GetReferenceDrawTarget()->GetBackendType());
+    TextureData* textureData = CreateTextureData(mTextureType, aSize, aFormat);
+    if (textureData) {
+      textureData->Lock(OpenMode::OPEN_READ_WRITE);
+      mTextureDatas[aRefPtr] = UniquePtr<TextureData>(textureData);
+      AddSurfaceDescriptor(aRefPtr, textureData);
+      dt = textureData->BorrowDrawTarget();
+    }
+  } while (!dt && CheckForFreshCanvasDevice(__LINE__));
   AddDrawTarget(aRefPtr, dt);
 
   return dt.forget();
