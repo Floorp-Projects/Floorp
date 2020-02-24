@@ -10,7 +10,6 @@
 #include "nsINetworkLinkService.h"
 #include "nsIObserver.h"
 #include "../netlink/NetlinkService.h"
-#include "mozilla/TimeStamp.h"
 
 class nsAndroidNetworkLinkService
     : public nsINetworkLinkService,
@@ -44,9 +43,6 @@ class nsAndroidNetworkLinkService
   mozilla::Atomic<bool, mozilla::Relaxed> mStatusIsKnown;
 
   RefPtr<mozilla::net::NetlinkService> mNetlinkSvc;
-
-  // Time stamp of last NS_NETWORK_LINK_DATA_CHANGED event
-  mozilla::TimeStamp mNetworkChangeTime;
 };
 
 #endif /* NSANDROIDNETWORKLINKSERVICE_H_ */
