@@ -874,7 +874,7 @@ class ContentParent final
   //
   // See nsIPermissionManager::GetPermissionsForKey for more information on
   // these keys.
-  void EnsurePermissionsByKey(const nsCString& aKey);
+  void EnsurePermissionsByKey(const nsCString& aKey, const nsCString& aOrigin);
 
   static void ForceKillTimerCallback(nsITimer* aTimer, void* aClosure);
 

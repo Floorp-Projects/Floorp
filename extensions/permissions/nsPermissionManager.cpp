@@ -3040,8 +3040,9 @@ void nsPermissionManager::UpdateDB(
   MOZ_ASSERT(NS_SUCCEEDED(rv));
 }
 
-bool nsPermissionManager::GetPermissionsWithKey(
-    const nsACString& aPermissionKey, nsTArray<IPC::Permission>& aPerms) {
+bool nsPermissionManager::GetPermissionsFromOriginOrKey(
+    const nsACString& aOrigin, const nsACString& aKey,
+    nsTArray<IPC::Permission>& aPerms) {
   aPerms.Clear();
   if (NS_WARN_IF(XRE_IsContentProcess())) {
     return false;
@@ -3051,28 +3052,41 @@ bool nsPermissionManager::GetPermissionsWithKey(
     PermissionHashKey* entry = iter.Get();
 
     nsAutoCString permissionKey;
-    // We can't check for individual OA strip perms here.
-    // Don't force strip origin attributes.
-    GetKeyForOrigin(entry->GetKey()->mOrigin, false, permissionKey);
+    if (aOrigin.IsEmpty()) {
+      // We can't check for individual OA strip perms here.
+      // Don't force strip origin attributes.
+      GetKeyForOrigin(entry->GetKey()->mOrigin, false, permissionKey);
 
-    // If the keys don't match, and we aren't getting the default "" key, then
-    // we can exit early. We have to keep looking if we're getting the default
-    // key, as we may see a preload permission which should be transmitted.
-    if (aPermissionKey != permissionKey && !aPermissionKey.IsEmpty()) {
+      // If the keys don't match, and we aren't getting the default "" key, then
+      // we can exit early. We have to keep looking if we're getting the default
+      // key, as we may see a preload permission which should be transmitted.
+      if (aKey != permissionKey && !aKey.IsEmpty()) {
+        continue;
+      }
+    } else if (aOrigin != entry->GetKey()->mOrigin) {
+      // If the origins don't match, then we can exit early. We have to keep
+      // looking if we're getting the default origin, as we may see a preload
+      // permission which should be transmitted.
       continue;
     }
 
     for (const auto& permEntry : entry->GetPermissions()) {
-      // Given how "default" permissions work and the possibility of them being
-      // overridden with UNKNOWN_ACTION, we might see this value here - but we
-      // do not want to send it to the content process.
+      // Given how "default" permissions work and the possibility of them
+      // being overridden with UNKNOWN_ACTION, we might see this value here -
+      // but we do not want to send it to the content process.
       if (permEntry.mPermission == nsIPermissionManager::UNKNOWN_ACTION) {
         continue;
       }
 
       bool isPreload = IsPreloadPermission(mTypeArray[permEntry.mType]);
-      if ((isPreload && aPermissionKey.IsEmpty()) ||
-          (!isPreload && aPermissionKey == permissionKey)) {
+      bool shouldAppend;
+      if (aOrigin.IsEmpty()) {
+        shouldAppend = (isPreload && aKey.IsEmpty()) ||
+                       (!isPreload && aKey == permissionKey);
+      } else {
+        shouldAppend = (!isPreload && aOrigin == entry->GetKey()->mOrigin);
+      }
+      if (shouldAppend) {
         aPerms.AppendElement(
             IPC::Permission(entry->GetKey()->mOrigin,
                             mTypeArray[permEntry.mType], permEntry.mPermission,
@@ -3205,26 +3219,30 @@ void nsPermissionManager::GetKeyForPermission(nsIPrincipal* aPrincipal,
 }
 
 /* static */
-nsTArray<nsCString> nsPermissionManager::GetAllKeysForPrincipal(
-    nsIPrincipal* aPrincipal) {
+nsTArray<Pair<nsCString, nsCString>>
+nsPermissionManager::GetAllKeysForPrincipal(nsIPrincipal* aPrincipal) {
   MOZ_ASSERT(aPrincipal);
 
-  nsTArray<nsCString> keys;
+  nsTArray<Pair<nsCString, nsCString>> pairs;
   nsCOMPtr<nsIPrincipal> prin = aPrincipal;
   while (prin) {
-    // Add the key to the list
-    nsCString* key = keys.AppendElement();
+    // Add the pair to the list
+    Pair<nsCString, nsCString>* pair =
+        pairs.AppendElement(MakePair(EmptyCString(), EmptyCString()));
+    GetKeyForPrincipal(prin, false, pair->first());
     // We can't check for individual OA strip perms here.
     // Don't force strip origin attributes.
-    GetKeyForPrincipal(prin, false, *key);
+    GetKeyForPrincipal(prin, false, pair->first());
+
+    Unused << prin->GetOrigin(pair->second());
 
     // Get the next subdomain principal and loop back around.
     prin = GetNextSubDomainPrincipal(prin);
   }
 
-  MOZ_ASSERT(keys.Length() >= 1,
-             "Every principal should have at least one key.");
-  return keys;
+  MOZ_ASSERT(pairs.Length() >= 1,
+             "Every principal should have at least one pair item.");
+  return pairs;
 }
 
 NS_IMETHODIMP
@@ -3274,16 +3292,17 @@ void nsPermissionManager::WhenPermissionsAvailable(nsIPrincipal* aPrincipal,
   }
 
   nsTArray<RefPtr<GenericNonExclusivePromise>> promises;
-  for (auto& key : GetAllKeysForPrincipal(aPrincipal)) {
+  for (auto& pair : GetAllKeysForPrincipal(aPrincipal)) {
     RefPtr<GenericNonExclusivePromise::Private> promise;
-    if (!mPermissionKeyPromiseMap.Get(key, getter_AddRefs(promise))) {
+    if (!mPermissionKeyPromiseMap.Get(pair.first(), getter_AddRefs(promise))) {
       // In this case we have found a permission which isn't available in the
       // content process and hasn't been requested yet. We need to create a new
       // promise, and send the request to the parent (if we have not already
       // done so).
       promise = new GenericNonExclusivePromise::Private(__func__);
       mPermissionKeyPromiseMap.Put(
-          key, RefPtr<GenericNonExclusivePromise::Private>(promise).forget());
+          pair.first(),
+          RefPtr<GenericNonExclusivePromise::Private>(promise).forget());
     }
 
     if (promise) {
