@@ -12,12 +12,6 @@
 # being used for anything, and recent changes to the CSS loader have
 # made it fail to link.  Further changes are planned which should make
 # it buildable again.
-#
-# TestCSSPropertyLookup.cpp needs the internal XPCOM APIs and so cannot
-# be built with libxul enabled.
-#
-#CPP_UNIT_TESTS = TestCSSPropertyLookup.cpp
-#LIBS += ../nsCSSKeywords.$(OBJ_SUFFIX) ../nsCSSProps.$(OBJ_SUFFIX) $(XPCOM_LIBS)
 
 DIRS += ['gtest']
 

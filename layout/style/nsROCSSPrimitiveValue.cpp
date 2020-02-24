@@ -33,13 +33,7 @@ void nsROCSSPrimitiveValue::GetCssText(nsString& aCssText, ErrorResult& aRv) {
       tmpStr.AppendLiteral("px");
       break;
     }
-    case CSS_IDENT: {
-      AppendUTF8toUTF16(nsCSSKeywords::GetStringValue(mValue.mKeyword), tmpStr);
-      break;
-    }
-    case CSS_STRING:
-    case CSS_COUNTER: /* FIXME: COUNTER should use an object */
-    {
+    case CSS_STRING: {
       tmpStr.Append(mValue.mString);
       break;
     }
@@ -63,12 +57,6 @@ void nsROCSSPrimitiveValue::GetCssText(nsString& aCssText, ErrorResult& aRv) {
         // for invalid URLs.
         tmpStr.AssignLiteral(u"url(about:invalid)");
       }
-      break;
-    }
-    case CSS_ATTR: {
-      tmpStr.AppendLiteral("attr(");
-      tmpStr.Append(mValue.mString);
-      tmpStr.Append(char16_t(')'));
       break;
     }
     case CSS_PERCENTAGE: {
@@ -162,35 +150,22 @@ void nsROCSSPrimitiveValue::SetAppUnits(float aValue) {
   SetAppUnits(NSToCoordRound(aValue));
 }
 
-void nsROCSSPrimitiveValue::SetIdent(nsCSSKeyword aKeyword) {
-  MOZ_ASSERT(aKeyword != eCSSKeyword_UNKNOWN && 0 <= aKeyword &&
-                 aKeyword < eCSSKeyword_COUNT,
-             "bad keyword");
-  Reset();
-  mValue.mKeyword = aKeyword;
-  mType = CSS_IDENT;
-}
-
-// FIXME: CSS_STRING should imply a string with "" and a need for escaping.
-void nsROCSSPrimitiveValue::SetString(const nsACString& aString,
-                                      uint16_t aType) {
+void nsROCSSPrimitiveValue::SetString(const nsACString& aString) {
   Reset();
   mValue.mString = ToNewUnicode(aString);
   if (mValue.mString) {
-    mType = aType;
+    mType = CSS_STRING;
   } else {
     // XXXcaa We should probably let the caller know we are out of memory
     mType = CSS_UNKNOWN;
   }
 }
 
-// FIXME: CSS_STRING should imply a string with "" and a need for escaping.
-void nsROCSSPrimitiveValue::SetString(const nsAString& aString,
-                                      uint16_t aType) {
+void nsROCSSPrimitiveValue::SetString(const nsAString& aString) {
   Reset();
   mValue.mString = ToNewUnicode(aString);
   if (mValue.mString) {
-    mType = aType;
+    mType = CSS_STRING;
   } else {
     // XXXcaa We should probably let the caller know we are out of memory
     mType = CSS_UNKNOWN;
@@ -212,11 +187,7 @@ void nsROCSSPrimitiveValue::SetTime(float aValue) {
 
 void nsROCSSPrimitiveValue::Reset() {
   switch (mType) {
-    case CSS_IDENT:
-      break;
     case CSS_STRING:
-    case CSS_ATTR:
-    case CSS_COUNTER:  // FIXME: Counter should use an object
       NS_ASSERTION(mValue.mString, "Null string should never happen");
       free(mValue.mString);
       mValue.mString = nullptr;

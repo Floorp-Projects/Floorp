@@ -1576,20 +1576,6 @@ void Gecko_LoadStyleSheetAsync(SheetLoadDataHolder* aParentData,
       }));
 }
 
-nsCSSKeyword Gecko_LookupCSSKeyword(const uint8_t* aString, uint32_t aLength) {
-  nsDependentCSubstring keyword(reinterpret_cast<const char*>(aString),
-                                aLength);
-  return nsCSSKeywords::LookupKeyword(keyword);
-}
-
-const char* Gecko_CSSKeywordString(nsCSSKeyword aKeyword, uint32_t* aLength) {
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aLength);
-  const nsCString& value = nsCSSKeywords::GetStringValue(aKeyword);
-  *aLength = value.Length();
-  return value.get();
-}
-
 void Gecko_AddPropertyToSet(nsCSSPropertyIDSet* aPropertySet,
                             nsCSSPropertyID aProperty) {
   aPropertySet->AddProperty(aProperty);

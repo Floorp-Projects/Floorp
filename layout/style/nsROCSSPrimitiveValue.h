@@ -9,10 +9,9 @@
 #ifndef nsROCSSPrimitiveValue_h___
 #define nsROCSSPrimitiveValue_h___
 
-#include "nsCSSKeywords.h"
 #include "CSSValue.h"
-#include "nsCOMPtr.h"
 #include "nsCoord.h"
+#include "nsString.h"
 
 class nsIURI;
 
@@ -42,9 +41,6 @@ class nsROCSSPrimitiveValue final : public mozilla::dom::CSSValue {
     CSS_DIMENSION,
     CSS_STRING,
     CSS_URI,
-    CSS_IDENT,
-    CSS_ATTR,
-    CSS_COUNTER,
     CSS_RGBCOLOR,
     CSS_NUMBER_INT32,
     CSS_NUMBER_UINT32,
@@ -67,11 +63,14 @@ class nsROCSSPrimitiveValue final : public mozilla::dom::CSSValue {
   void SetDegree(float aValue);
   void SetAppUnits(nscoord aValue);
   void SetAppUnits(float aValue);
-  void SetIdent(nsCSSKeyword aKeyword);
-  // FIXME: CSS_STRING should imply a string with "" and a need for escaping.
-  void SetString(const nsACString& aString, uint16_t aType = CSS_STRING);
-  // FIXME: CSS_STRING should imply a string with "" and a need for escaping.
-  void SetString(const nsAString& aString, uint16_t aType = CSS_STRING);
+  void SetString(const nsACString& aString);
+  void SetString(const nsAString& aString);
+
+  template <size_t N>
+  void SetString(const char (&aString)[N]) {
+    SetString(nsLiteralCString(aString));
+  }
+
   void SetURI(nsIURI* aURI);
   void SetTime(float aValue);
   void Reset();
@@ -88,7 +87,6 @@ class nsROCSSPrimitiveValue final : public mozilla::dom::CSSValue {
     uint32_t mUint32;
     char16_t* mString;
     nsIURI* MOZ_OWNING_REF mURI;
-    nsCSSKeyword mKeyword;
   } mValue;
 };
 
