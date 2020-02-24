@@ -199,8 +199,7 @@ class CanvasEventRingBuffer final : public gfx::EventRingBuffer {
 
   void IncrementWriteCountBy(uint32_t aCount);
 
-  bool WaitForReadCount(uint32_t aReadCount, TimeDuration aTimeout,
-                        int32_t aRetryCount);
+  bool WaitForReadCount(uint32_t aReadCount, TimeDuration aTimeout);
 
   bool WaitForAndRecalculateAvailableData();
 
