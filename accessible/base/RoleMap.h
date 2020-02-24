@@ -204,7 +204,7 @@ ROLE(GROUPING,
      ROLE_SYSTEM_GROUPING,
      ROLE_SYSTEM_GROUPING,
      java::SessionAccessibility::CLASSNAME_VIEW,
-     eNoNameRule)
+     eNameFromSubtreeIfReqRule)
 
 ROLE(SEPARATOR,
      "separator",
