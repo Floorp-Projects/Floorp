@@ -27,9 +27,9 @@ class DNSRequestParent : public PDNSRequestParent, public nsIDNSListener {
   // Pass args here rather than storing them in the parent; they are only
   // needed if the request is to be canceled.
   mozilla::ipc::IPCResult RecvCancelDNSRequest(
-      const nsCString& hostName, const nsCString& trrServer, const uint16_t& type,
-      const OriginAttributes& originAttributes, const uint32_t& flags,
-      const nsresult& reason);
+      const nsCString& hostName, const nsCString& trrServer,
+      const uint16_t& type, const OriginAttributes& originAttributes,
+      const uint32_t& flags, const nsresult& reason);
 
  private:
   virtual ~DNSRequestParent() = default;

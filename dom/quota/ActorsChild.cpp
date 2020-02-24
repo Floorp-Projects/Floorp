@@ -309,7 +309,8 @@ mozilla::ipc::IPCResult QuotaRequestChild::Recv__delete__(
       break;
 
     case RequestResponse::TTemporaryStorageInitializedResponse:
-      HandleResponse(aResponse.get_TemporaryStorageInitializedResponse().initialized());
+      HandleResponse(
+          aResponse.get_TemporaryStorageInitializedResponse().initialized());
       break;
 
     case RequestResponse::TInitResponse:

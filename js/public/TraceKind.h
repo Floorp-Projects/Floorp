@@ -191,7 +191,8 @@ struct MapTypeToRootKind<jsid> {
 template <>
 struct MapTypeToRootKind<JSFunction*> : public MapTypeToRootKind<JSObject*> {};
 template <>
-struct MapTypeToRootKind<JSScript*> : public MapTypeToRootKind<js::BaseScript*> {};
+struct MapTypeToRootKind<JSScript*>
+    : public MapTypeToRootKind<js::BaseScript*> {};
 
 // Fortunately, few places in the system need to deal with fully abstract
 // cells. In those places that do, we generally want to move to a layout

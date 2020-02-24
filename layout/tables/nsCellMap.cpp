@@ -226,8 +226,9 @@ nsCellMap* nsTableCellMap::GetMapFor(const nsTableRowGroupFrame* aRowGroup,
     if (auto* rgOrig = findOtherRowGroupOfType(&mTableFrame)) {
       return GetMapFor(rgOrig, aStartHint);
     }
-    MOZ_ASSERT_UNREACHABLE("A repeated header/footer should always have an "
-                           "original header/footer it was repeated from");
+    MOZ_ASSERT_UNREACHABLE(
+        "A repeated header/footer should always have an "
+        "original header/footer it was repeated from");
   }
 
   return nullptr;

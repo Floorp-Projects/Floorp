@@ -1970,8 +1970,7 @@ nsStyleImageLayers::Layer::Layer()
       mAttachment(StyleImageLayerAttachment::Scroll),
       mBlendMode(NS_STYLE_BLEND_NORMAL),
       mComposite(NS_STYLE_MASK_COMPOSITE_ADD),
-      mMaskMode(StyleMaskMode::MatchSource) {
-}
+      mMaskMode(StyleMaskMode::MatchSource) {}
 
 nsStyleImageLayers::Layer::~Layer() {}
 
@@ -3118,7 +3117,8 @@ void nsStyleUI::TriggerImageLoads(Document& aDocument,
   MOZ_ASSERT(NS_IsMainThread());
 
   auto cursorImages = mCursor.images.AsSpan();
-  auto oldCursorImages = aOldStyle ? aOldStyle->mCursor.images.AsSpan() : Span<const StyleCursorImage>();
+  auto oldCursorImages = aOldStyle ? aOldStyle->mCursor.images.AsSpan()
+                                   : Span<const StyleCursorImage>();
   for (size_t i = 0; i < cursorImages.Length(); ++i) {
     auto& cursor = cursorImages[i];
 
@@ -3474,7 +3474,8 @@ ResultT StyleCalcNode::ResolveInternal(ResultT aPercentageBasis,
       auto children = AsMinMax()._0.AsSpan();
       StyleMinMaxOp op = AsMinMax()._1;
 
-      ResultT result = children[0].ResolveInternal(aPercentageBasis, aConverter);
+      ResultT result =
+          children[0].ResolveInternal(aPercentageBasis, aConverter);
       for (auto& child : children.From(1)) {
         ResultT candidate = child.ResolveInternal(aPercentageBasis, aConverter);
         if (op == StyleMinMaxOp::Max) {
@@ -3498,12 +3499,12 @@ ResultT StyleCalcNode::ResolveInternal(ResultT aPercentageBasis,
   return 0;
 }
 
-template<>
+template <>
 CSSCoord StyleCalcNode::ResolveToCSSPixels(CSSCoord aBasis) const {
   return ResolveInternal(aBasis, [](CSSCoord aPercent) { return aPercent; });
 }
 
-template<>
+template <>
 nscoord StyleCalcNode::Resolve(nscoord aBasis,
                                CoordPercentageRounder aRounder) const {
   return ResolveInternal(aBasis, aRounder);

@@ -709,8 +709,8 @@ void APZCTreeManager::SampleForWebRender(wr::TransactionWrapper& aTxn,
       // for now we only support zooming on root content APZCs
       MOZ_ASSERT(apzc->IsRootContent());
 
-      LayoutDeviceToParentLayerScale zoom =
-        apzc->GetCurrentPinchZoomScale(AsyncPanZoomController::eForCompositing);
+      LayoutDeviceToParentLayerScale zoom = apzc->GetCurrentPinchZoomScale(
+          AsyncPanZoomController::eForCompositing);
 
       AsyncTransform asyncVisualTransform = apzc->GetCurrentAsyncTransform(
           AsyncPanZoomController::eForCompositing,
@@ -733,7 +733,8 @@ void APZCTreeManager::SampleForWebRender(wr::TransactionWrapper& aTxn,
     // async zoom. However, we only use LayoutAndVisual for non-zoomable APZCs,
     // so it makes no difference.
     LayoutDeviceToParentLayerScale resolution =
-        apzc->GetCumulativeResolution().ToScaleFactor() * LayerToParentLayerScale(1.0f);
+        apzc->GetCumulativeResolution().ToScaleFactor() *
+        LayerToParentLayerScale(1.0f);
     // The positive translation means the painted content is supposed to
     // move down (or to the right), and that corresponds to a reduction in
     // the scroll offset. Since we are effectively giving WR the async

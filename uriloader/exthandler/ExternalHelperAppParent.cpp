@@ -81,7 +81,8 @@ void ExternalHelperAppParent::Init(
                            referrer);
 
   if (aContext) {
-    WindowGlobalParent* parent = aContext->Canonical()->GetCurrentWindowGlobal();
+    WindowGlobalParent* parent =
+        aContext->Canonical()->GetCurrentWindowGlobal();
     if (parent) {
       RefPtr<BrowserParent> browser = parent->GetBrowserParent();
       if (browser) {

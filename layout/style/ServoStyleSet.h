@@ -91,9 +91,9 @@ class ServoStyleSet {
 
   // We assert that these match the Servo ones in the definition of this array.
   static constexpr Origin kOrigins[] = {
-    Origin(static_cast<uint8_t>(OriginFlags::UserAgent)),
-    Origin(static_cast<uint8_t>(OriginFlags::User)),
-    Origin(static_cast<uint8_t>(OriginFlags::Author)),
+      Origin(static_cast<uint8_t>(OriginFlags::UserAgent)),
+      Origin(static_cast<uint8_t>(OriginFlags::User)),
+      Origin(static_cast<uint8_t>(OriginFlags::Author)),
   };
 
  public:

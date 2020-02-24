@@ -580,8 +580,7 @@ class VsyncRefreshDriverTimer : public RefreshDriverTimer {
           }
           mPendingParentProcessVsync = true;
         }
-        nsCOMPtr<nsIRunnable> vsyncEvent =
-            new ParentProcessVsyncNotifier(this);
+        nsCOMPtr<nsIRunnable> vsyncEvent = new ParentProcessVsyncNotifier(this);
         NS_DispatchToMainThread(vsyncEvent);
       } else {
         mRecentVsync = aVsync.mTime;
@@ -651,13 +650,10 @@ class VsyncRefreshDriverTimer : public RefreshDriverTimer {
       mVsyncRefreshDriverTimer = nullptr;
     }
 
-    void OnTimerStart() {
-      mLastTick = TimeStamp::Now();
-    }
+    void OnTimerStart() { mLastTick = TimeStamp::Now(); }
 
     void NormalPriorityNotify() {
-      if (mLastProcessedTick.IsNull() ||
-          mRecentVsync > mLastProcessedTick) {
+      if (mLastProcessedTick.IsNull() || mRecentVsync > mLastProcessedTick) {
         // mBlockUntil is for high priority vsync notifications only.
         mBlockUntil = TimeStamp();
         TickRefreshDriver(mRecentVsyncId, mRecentVsync);
@@ -681,8 +677,7 @@ class VsyncRefreshDriverTimer : public RefreshDriverTimer {
             Telemetry::FX_REFRESH_DRIVER_SYNC_SCROLL_FRAME_DELAY_MS, sample);
         RecordJank(sample);
       } else if (mVsyncRate != TimeDuration::Forever()) {
-        TimeDuration contentDelay =
-            (TimeStamp::Now() - mLastTick) - mVsyncRate;
+        TimeDuration contentDelay = (TimeStamp::Now() - mLastTick) - mVsyncRate;
         if (contentDelay.ToMilliseconds() < 0) {
           // Vsyncs are noisy and some can come at a rate quicker than
           // the reported hardware rate. In those cases, consider that we have 0

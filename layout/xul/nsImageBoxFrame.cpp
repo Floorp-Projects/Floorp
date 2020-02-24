@@ -65,8 +65,8 @@ using namespace mozilla::gfx;
 using namespace mozilla::image;
 using namespace mozilla::layers;
 
-using mozilla::dom::Element;
 using mozilla::dom::Document;
+using mozilla::dom::Element;
 using mozilla::dom::ReferrerInfo;
 
 class nsImageBoxFrameEvent : public Runnable {
