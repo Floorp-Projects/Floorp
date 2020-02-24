@@ -73,9 +73,56 @@ job-defaults:
 browsertime-tp6m:
     description: "Raptor (browsertime) tp6 page-load tests on android"
     raptor-test: tp6m
-    raptor-subtests: ['amazon', 'youtube']
+    raptor-subtests:
+        by-app:
+            fenix:
+                - aframe
+                - allrecipes
+                - amazon
+                - amazon-search
+                - bbc
+                - bing
+                - bing-search-restaurants
+                - booking
+                - cnn
+                - cnn-ampstories
+                - ebay-kleinanzeigen
+                - ebay-kleinanzeigen-search
+                - espn
+                - facebook
+                - facebook-cristiano
+                - google
+                - google-maps
+                - google-search-restaurants
+                - instagram
+                - imdb
+                - jianshu
+                - microsoft-support
+                - reddit
+                - stackoverflow
+                - web-de
+                - wikipedia
+                - youtube
+                - youtube-watch
+            default:
+                - amazon
+                - youtube
     apps: ["geckoview", "fenix", "fennec"]
-    pageload: cold
+    run-on-projects:
+        by-raptor-test:
+            amazon:
+                by-test-platform:
+                    android-hw-p2-.*aarch64.*/pgo: ["mozilla-central", "try"]
+                    default: []
+            youtube:
+                by-test-platform:
+                    android-hw-p2-.*aarch64.*/pgo: ["mozilla-central", "try"]
+                    default: []
+            default: []
+    pageload:
+        by-app:
+            fenix: both
+            default: cold
     run-visual-metrics:
         by-app:
             fennec: false
