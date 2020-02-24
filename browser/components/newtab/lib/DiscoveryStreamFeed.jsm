@@ -1749,238 +1749,123 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
 // This function generates a hardcoded layout each call.
 // This is because modifying the original object would
 // persist across pref changes and system_tick updates.
-getHardcodedLayout = basic => {
-  if (basic) {
-    // Hardcoded version of layout_variant `basic`
-    return {
-      lastUpdate: Date.now(),
-      spocs: {
-        url: "https://spocs.getpocket.com/spocs",
-        spocs_per_domain: 1,
-      },
-      layout: [
+//
+// NOTE: There is some branching logic in the template based on `isBasicLayout`
+//
+getHardcodedLayout = isBasicLayout => ({
+  lastUpdate: Date.now(),
+  spocs: {
+    url: "https://spocs.getpocket.com/spocs",
+    spocs_per_domain: 1,
+  },
+  layout: [
+    {
+      width: 12,
+      components: [
         {
-          width: 12,
-          components: [
-            {
-              type: "TopSites",
-              header: {
-                title: {
-                  id: "newtab-section-header-topsites",
-                },
-              },
-              properties: {},
+          type: "TopSites",
+          header: {
+            title: {
+              id: "newtab-section-header-topsites",
             },
-            {
-              type: "Message",
-              header: {
-                title: {
-                  id: "newtab-section-header-pocket",
-                  values: { provider: "Pocket" },
-                },
-                subtitle: "",
-                link_text: {
-                  id: "newtab-pocket-learn-more",
-                },
-                link_url: "https://getpocket.com/firefox/new_tab_learn_more",
-                icon:
-                  "resource://activity-stream/data/content/assets/glyph-pocket-16.svg",
-              },
-              properties: {},
-              styles: {
-                ".ds-message": "margin-bottom: -20px",
-              },
+          },
+          properties: {},
+        },
+        {
+          type: "Message",
+          header: {
+            title: {
+              id: "newtab-section-header-pocket",
+              values: { provider: "Pocket" },
             },
-            {
-              type: "CardGrid",
-              properties: {
-                items: 3,
+            subtitle: "",
+            link_text: {
+              id: "newtab-pocket-learn-more",
+            },
+            link_url: "https://getpocket.com/firefox/new_tab_learn_more",
+            icon:
+              "resource://activity-stream/data/content/assets/glyph-pocket-16.svg",
+          },
+          properties: {},
+          styles: {
+            ".ds-message": "margin-bottom: -20px",
+          },
+        },
+        {
+          type: "CardGrid",
+          properties: {
+            items: isBasicLayout ? 3 : 21,
+          },
+          header: {
+            title: "",
+          },
+          feed: {
+            embed_reference: null,
+            url:
+              "https://getpocket.cdn.mozilla.net/v3/firefox/global-recs?version=3&consumer_key=$apiKey&locale_lang=$locale&count=30",
+          },
+          spocs: {
+            probability: 1,
+            positions: [
+              {
+                index: 2,
               },
-              header: {
-                title: "",
+              {
+                index: 4,
               },
-              feed: {
-                embed_reference: null,
+              {
+                index: 11,
+              },
+              {
+                index: 20,
+              },
+            ],
+          },
+        },
+        {
+          type: "Navigation",
+          properties: {
+            alignment: "left-align",
+            links: [
+              {
+                name: "Must Reads",
+                url: "https://getpocket.com/explore/must-reads?src=fx_new_tab",
+              },
+              {
+                name: "Productivity",
                 url:
-                  "https://getpocket.cdn.mozilla.net/v3/firefox/global-recs?version=3&consumer_key=$apiKey&locale_lang=$locale",
+                  "https://getpocket.com/explore/productivity?src=fx_new_tab",
               },
-              spocs: {
-                probability: 1,
-                positions: [
-                  {
-                    index: 2,
-                  },
-                ],
+              {
+                name: "Health",
+                url: "https://getpocket.com/explore/health?src=fx_new_tab",
               },
+              {
+                name: "Finance",
+                url: "https://getpocket.com/explore/finance?src=fx_new_tab",
+              },
+              {
+                name: "Technology",
+                url: "https://getpocket.com/explore/technology?src=fx_new_tab",
+              },
+              {
+                name: "More Recommendations ›",
+                url: "https://getpocket.com/explore/trending?src=fx_new_tab",
+              },
+            ],
+          },
+          header: {
+            title: {
+              id: "newtab-pocket-read-more",
             },
-            {
-              type: "Navigation",
-              properties: {
-                alignment: "left-align",
-                links: [
-                  {
-                    name: "Must Reads",
-                    url:
-                      "https://getpocket.com/explore/must-reads?src=fx_new_tab",
-                  },
-                  {
-                    name: "Productivity",
-                    url:
-                      "https://getpocket.com/explore/productivity?src=fx_new_tab",
-                  },
-                  {
-                    name: "Health",
-                    url: "https://getpocket.com/explore/health?src=fx_new_tab",
-                  },
-                  {
-                    name: "Finance",
-                    url: "https://getpocket.com/explore/finance?src=fx_new_tab",
-                  },
-                  {
-                    name: "Technology",
-                    url:
-                      "https://getpocket.com/explore/technology?src=fx_new_tab",
-                  },
-                  {
-                    name: "More Recommendations ›",
-                    url:
-                      "https://getpocket.com/explore/trending?src=fx_new_tab",
-                  },
-                ],
-              },
-            },
-          ],
+          },
+          styles: {
+            ".ds-navigation": "margin-top: -10px;",
+          },
         },
       ],
-    };
-  }
-  // Hardcoded version of layout_variant `3-col-7-row-octr`
-  return {
-    lastUpdate: Date.now(),
-    spocs: {
-      url: "https://spocs.getpocket.com/spocs",
-      spocs_per_domain: 1,
     },
-    layout: [
-      {
-        width: 12,
-        components: [
-          {
-            type: "TopSites",
-            header: {
-              title: {
-                id: "newtab-section-header-topsites",
-              },
-            },
-          },
-        ],
-      },
-      {
-        width: 12,
-        components: [
-          {
-            type: "Message",
-            header: {
-              title: {
-                id: "newtab-section-header-pocket",
-                values: { provider: "Pocket" },
-              },
-              subtitle: "",
-              link_text: {
-                id: "newtab-pocket-learn-more",
-              },
-              link_url: "https://getpocket.com/firefox/new_tab_learn_more",
-              icon:
-                "resource://activity-stream/data/content/assets/glyph-pocket-16.svg",
-            },
-            properties: {},
-            styles: {
-              ".ds-message": "margin-bottom: -20px",
-            },
-          },
-        ],
-      },
-      {
-        width: 12,
-        components: [
-          {
-            type: "CardGrid",
-            properties: {
-              items: 21,
-            },
-            header: {
-              title: "",
-            },
-            feed: {
-              embed_reference: null,
-              url:
-                "https://getpocket.cdn.mozilla.net/v3/firefox/global-recs?version=3&consumer_key=$apiKey&locale_lang=$locale&count=30",
-            },
-            spocs: {
-              probability: 1,
-              positions: [
-                {
-                  index: 2,
-                },
-                {
-                  index: 4,
-                },
-                {
-                  index: 11,
-                },
-                {
-                  index: 20,
-                },
-              ],
-            },
-          },
-          {
-            type: "Navigation",
-            properties: {
-              alignment: "left-align",
-              links: [
-                {
-                  name: "Must Reads",
-                  url:
-                    "https://getpocket.com/explore/must-reads?src=fx_new_tab",
-                },
-                {
-                  name: "Productivity",
-                  url:
-                    "https://getpocket.com/explore/productivity?src=fx_new_tab",
-                },
-                {
-                  name: "Health",
-                  url: "https://getpocket.com/explore/health?src=fx_new_tab",
-                },
-                {
-                  name: "Finance",
-                  url: "https://getpocket.com/explore/finance?src=fx_new_tab",
-                },
-                {
-                  name: "Technology",
-                  url:
-                    "https://getpocket.com/explore/technology?src=fx_new_tab",
-                },
-                {
-                  name: "More Recommendations ›",
-                  url: "https://getpocket.com/explore/trending?src=fx_new_tab",
-                },
-              ],
-            },
-            header: {
-              title: {
-                id: "newtab-pocket-read-more",
-              },
-            },
-            styles: {
-              ".ds-navigation": "margin-top: -10px;",
-            },
-          },
-        ],
-      },
-    ],
-  };
-};
+  ],
+});
 
 const EXPORTED_SYMBOLS = ["DiscoveryStreamFeed"];
