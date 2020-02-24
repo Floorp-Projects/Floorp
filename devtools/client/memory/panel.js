@@ -31,7 +31,6 @@ MemoryPanel.prototype = {
     }
 
     this.panelWin.gToolbox = this._toolbox;
-    this.panelWin.gTarget = this.target;
     this.panelWin.gFront = await this.target.getFront("memory");
     this.panelWin.gHeapAnalysesClient = new HeapAnalysesClient();
 
