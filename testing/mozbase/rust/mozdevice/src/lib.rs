@@ -21,7 +21,7 @@ use std::num::{ParseIntError, TryFromIntError};
 use std::path::Path;
 use std::str::Utf8Error;
 use std::time::{Duration, SystemTime};
-use walkdir::{WalkDir};
+use walkdir::WalkDir;
 
 use crate::adb::{DeviceSerial, SyncCommand};
 
@@ -43,13 +43,12 @@ impl fmt::Display for DeviceError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
             DeviceError::Adb(ref message) => message.fmt(f),
-            DeviceError::MultipleDevices =>
-                write!(f, "Multiple Android devices online"),
-            DeviceError::UnknownDevice(ref serial) =>
-                write!(f, "Unknown Android device with serial '{}'", serial),
-            _ => self.to_string().fmt(f)
+            DeviceError::MultipleDevices => write!(f, "Multiple Android devices online"),
+            DeviceError::UnknownDevice(ref serial) => {
+                write!(f, "Unknown Android device with serial '{}'", serial)
+            }
+            _ => self.to_string().fmt(f),
         }
-
     }
 }
 
@@ -84,8 +83,7 @@ impl From<walkdir::Error> for DeviceError {
 }
 
 fn encode_message(payload: &str) -> Result<String> {
-    let hex_length = u16::try_from(payload.len())
-        .map(|len| format!("{:0>4X}", len))?;
+    let hex_length = u16::try_from(payload.len()).map(|len| format!("{:0>4X}", len))?;
 
     Ok(format!("{}{}", hex_length, payload).to_owned())
 }
@@ -147,15 +145,10 @@ fn write_length_little_endian(writer: &mut dyn Write, n: usize) -> Result<usize>
     bytes[2] = ((n >> 16) & 0xFF) as u8;
     bytes[3] = ((n >> 24) & 0xFF) as u8;
 
-    writer.write(&bytes[..])
-        .map_err(DeviceError::Io)
+    writer.write(&bytes[..]).map_err(DeviceError::Io)
 }
 
-fn read_response(
-    stream: &mut TcpStream,
-    has_output: bool,
-    has_length: bool,
-) -> Result<Vec<u8>> {
+fn read_response(stream: &mut TcpStream, has_output: bool, has_length: bool) -> Result<Vec<u8>> {
     let mut bytes: [u8; 1024] = [0; 1024];
 
     stream.read_exact(&mut bytes[0..4])?;
@@ -164,8 +157,7 @@ fn read_response(
         let n = bytes.len().min(read_length(stream)?);
         stream.read_exact(&mut bytes[0..n])?;
 
-        let message = std::str::from_utf8(&bytes[0..n])
-            .map(|s| format!("adb error: {}", s))?;
+        let message = std::str::from_utf8(&bytes[0..n]).map(|s| format!("adb error: {}", s))?;
 
         return Err(DeviceError::Adb(message));
     }
@@ -186,8 +178,7 @@ fn read_response(
             // command failed. First split-off the `FAIL` and length of the message.
             response = response.split_off(8);
 
-            let message = std::str::from_utf8(&*response)
-                .map(|s| format!("adb error: {}", s))?;
+            let message = std::str::from_utf8(&*response).map(|s| format!("adb error: {}", s))?;
 
             return Err(DeviceError::Adb(message));
         }
@@ -208,12 +199,10 @@ fn read_response(
 
                 return Ok(message);
             } else {
-                return Err(DeviceError::Adb(
-                    format!(
-                        "adb server response did not contain expected hexstring length: {:?}",
-                        std::str::from_utf8(&response)?
-                    ),
-                ));
+                return Err(DeviceError::Adb(format!(
+                    "adb server response did not contain expected hexstring length: {:?}",
+                    std::str::from_utf8(&response)?
+                )));
             }
         }
     }
@@ -259,7 +248,8 @@ impl Host {
     /// If multiple devices are online, and no device has been specified,
     /// the `ANDROID_SERIAL` environment variable can be used to select one.
     pub fn device_or_default<T: AsRef<str>>(self, device_serial: Option<&T>) -> Result<Device> {
-        let serials: Vec<String> = self.devices::<Vec<_>>()?
+        let serials: Vec<String> = self
+            .devices::<Vec<_>>()?
             .into_iter()
             .map(|d| d.serial)
             .collect();
@@ -272,7 +262,10 @@ impl Host {
                 return Err(DeviceError::UnknownDevice(serial.clone()));
             }
 
-            return Ok(Device { host: self, serial: serial.to_owned() });
+            return Ok(Device {
+                host: self,
+                serial: serial.to_owned(),
+            });
         }
 
         if serials.len() > 1 {
@@ -334,10 +327,7 @@ impl Host {
     pub fn devices<B: FromIterator<DeviceInfo>>(&self) -> Result<B> {
         let response = self.execute_host_command("devices-l", true, true)?;
 
-        let infos: B = response
-            .lines()
-            .filter_map(parse_device_info)
-            .collect();
+        let infos: B = response.lines().filter_map(parse_device_info).collect();
 
         Ok(infos)
     }
@@ -432,11 +422,15 @@ impl Device {
 
     pub fn kill_forward_port(&self, local: u16) -> Result<()> {
         let command = format!("killforward:tcp:{}", local);
-        self.host.execute_host_command(&command, true, false).and(Ok(()))
+        self.host
+            .execute_host_command(&command, true, false)
+            .and(Ok(()))
     }
 
     pub fn kill_forward_all_ports(&self) -> Result<()> {
-        self.host.execute_host_command(&"killforward-all".to_owned(), false, false).and(Ok(()))
+        self.host
+            .execute_host_command(&"killforward-all".to_owned(), false, false)
+            .and(Ok(()))
     }
 
     pub fn reverse_port(&self, remote: u16, local: u16) -> Result<u16> {
@@ -457,7 +451,8 @@ impl Device {
 
     pub fn kill_reverse_all_ports(&self) -> Result<()> {
         let command = "reverse:killforward-all".to_owned();
-        self.execute_host_command(&command, false, false).and(Ok(()))
+        self.execute_host_command(&command, false, false)
+            .and(Ok(()))
     }
 
     pub fn push(&self, buffer: &mut dyn Read, dest: &Path, mode: u32) -> Result<()> {
@@ -535,9 +530,7 @@ impl Device {
     }
 
     pub fn push_dir(&self, source: &Path, dest_dir: &Path, mode: u32) -> Result<()> {
-        let walker = WalkDir::new(source)
-            .follow_links(false)
-            .into_iter();
+        let walker = WalkDir::new(source).follow_links(false).into_iter();
 
         for entry in walker {
             let entry = entry?;
@@ -550,8 +543,10 @@ impl Device {
             let mut file = File::open(path)?;
 
             let mut dest = dest_dir.to_path_buf();
-            dest.push(path.strip_prefix(source)
-                .map_err(|e| io::Error::new(io::ErrorKind::Other, e.to_string()))?);
+            dest.push(
+                path.strip_prefix(source)
+                    .map_err(|e| io::Error::new(io::ErrorKind::Other, e.to_string()))?,
+            );
 
             self.push(&mut file, &dest, mode)?;
         }

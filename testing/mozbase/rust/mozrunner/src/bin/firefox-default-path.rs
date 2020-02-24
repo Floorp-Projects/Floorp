@@ -10,7 +10,7 @@ fn main() {
 
     let mut writer: Box<dyn Write> = match code {
         0 => Box::new(std::io::stdout()),
-        _ => Box::new(std::io::stderr())
+        _ => Box::new(std::io::stderr()),
     };
     writeln!(&mut writer, "{}", &*path).unwrap();
     std::process::exit(code);

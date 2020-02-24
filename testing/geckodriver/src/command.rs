@@ -340,10 +340,7 @@ where
 {
     let val = f64::deserialize(deserializer)?;
     if val < 0.1 || val > 2.0 {
-        return Err(de::Error::custom(format!(
-            "{} is outside range 0.1-2",
-            val
-        )));
+        return Err(de::Error::custom(format!("{} is outside range 0.1-2", val)));
     };
     Ok(val)
 }

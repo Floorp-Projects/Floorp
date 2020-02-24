@@ -10,8 +10,7 @@ rust:
         - servo/components/to_shmem_derive/
         - testing/mozbase/rust/mozprofile/
         - testing/mozbase/rust/mozversion/
-        - testing/webdriver/
-        - testing/webdriver/
+        - testing/
         - toolkit/components/telemetry/fog/
         - toolkit/crashreporter/
         - toolkit/library/
@@ -38,10 +37,6 @@ rust:
         - servo/components/style_traits/
         - servo/components/to_shmem/
         - servo/tests/unit/style/
-        - testing/geckodriver/
-        - testing/mozbase/rust/mozdevice/
-        - testing/mozbase/rust/mozrunner/
-        - testing/webdriver/
         - xpcom/rust/gtest/bench-collections/
         - xpcom/rust/xpcom/xpcom_macros/
     extensions:
