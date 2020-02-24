@@ -1775,7 +1775,6 @@ class UrlbarInput {
       event.target == this._inputContainer ||
       event.target.id == SEARCH_BUTTON_ID
     ) {
-      this.startLayoutExtend();
       this._maybeSelectAll();
     }
   }
@@ -1796,14 +1795,12 @@ class UrlbarInput {
       this.setAttribute("focused", "true");
     }
 
-    // We handle mouse-based expansion events separately in _on_click.
+    this.startLayoutExtend();
+
     if (this.focusedViaMousedown) {
       this.view.autoOpen({ event });
-    } else {
-      this.startLayoutExtend();
-      if (this.inputField.hasAttribute("refocused-by-panel")) {
-        this._maybeSelectAll(true);
-      }
+    } else if (this.inputField.hasAttribute("refocused-by-panel")) {
+      this._maybeSelectAll(true);
     }
 
     this._updateUrlTooltip();
