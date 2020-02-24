@@ -2913,8 +2913,8 @@ static StyleRGBA DefaultColor(const Document& aDocument) {
 nsStyleText::nsStyleText(const Document& aDocument)
     : mColor(DefaultColor(aDocument)),
       mTextTransform(StyleTextTransform::None()),
-      mTextAlign(NS_STYLE_TEXT_ALIGN_START),
-      mTextAlignLast(NS_STYLE_TEXT_ALIGN_AUTO),
+      mTextAlign(StyleTextAlign::Start),
+      mTextAlignLast(StyleTextAlignLast::Auto),
       mTextJustify(StyleTextJustify::Auto),
       mWhiteSpace(StyleWhiteSpace::Normal),
       mHyphens(StyleHyphens::Manual),

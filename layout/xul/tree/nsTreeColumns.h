@@ -23,6 +23,8 @@ class nsIContent;
 struct nsRect;
 
 namespace mozilla {
+enum class StyleTextAlignKeyword : uint8_t;
+using StyleTextAlign = StyleTextAlignKeyword;
 class ErrorResult;
 namespace dom {
 class Element;
@@ -111,7 +113,7 @@ class nsTreeColumn final : public nsISupports, public nsWrapperCache {
   int16_t GetType() { return mType; }
 
   int8_t GetCropStyle() { return mCropStyle; }
-  int32_t GetTextAlignment() { return mTextAlignment; }
+  mozilla::StyleTextAlign GetTextAlignment() { return mTextAlignment; }
 
   void SetNext(nsTreeColumn* aNext) {
     NS_ASSERTION(!mNext, "already have a next sibling");
@@ -140,7 +142,7 @@ class nsTreeColumn final : public nsISupports, public nsWrapperCache {
   int16_t mType;
 
   int8_t mCropStyle;
-  int8_t mTextAlignment;
+  mozilla::StyleTextAlign mTextAlignment;
 
   RefPtr<nsTreeColumn> mNext;
   nsTreeColumn* mPrevious;

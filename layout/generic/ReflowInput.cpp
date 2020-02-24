@@ -2722,19 +2722,19 @@ void ReflowInput::CalculateBlockSideMargins(LayoutFrameType aFrameType) {
       // of the table wrapper's parent.
       pri = pri->mParentReflowInput;
     }
-    if (pri && (pri->mStyleText->mTextAlign == NS_STYLE_TEXT_ALIGN_MOZ_LEFT ||
-                pri->mStyleText->mTextAlign == NS_STYLE_TEXT_ALIGN_MOZ_CENTER ||
-                pri->mStyleText->mTextAlign == NS_STYLE_TEXT_ALIGN_MOZ_RIGHT)) {
+    if (pri && (pri->mStyleText->mTextAlign == StyleTextAlign::MozLeft ||
+                pri->mStyleText->mTextAlign == StyleTextAlign::MozCenter ||
+                pri->mStyleText->mTextAlign == StyleTextAlign::MozRight)) {
       if (pri->mWritingMode.IsBidiLTR()) {
         isAutoStartMargin =
-            pri->mStyleText->mTextAlign != NS_STYLE_TEXT_ALIGN_MOZ_LEFT;
+            pri->mStyleText->mTextAlign != StyleTextAlign::MozLeft;
         isAutoEndMargin =
-            pri->mStyleText->mTextAlign != NS_STYLE_TEXT_ALIGN_MOZ_RIGHT;
+            pri->mStyleText->mTextAlign != StyleTextAlign::MozRight;
       } else {
         isAutoStartMargin =
-            pri->mStyleText->mTextAlign != NS_STYLE_TEXT_ALIGN_MOZ_RIGHT;
+            pri->mStyleText->mTextAlign != StyleTextAlign::MozRight;
         isAutoEndMargin =
-            pri->mStyleText->mTextAlign != NS_STYLE_TEXT_ALIGN_MOZ_LEFT;
+            pri->mStyleText->mTextAlign != StyleTextAlign::MozLeft;
       }
     }
     // Otherwise apply the CSS rules, and ignore one margin by forcing

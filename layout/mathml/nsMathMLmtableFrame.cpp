@@ -34,33 +34,40 @@ using mozilla::dom::Element;
 static int8_t ParseStyleValue(nsAtom* aAttribute,
                               const nsAString& aAttributeValue) {
   if (aAttribute == nsGkAtoms::rowalign_) {
-    if (aAttributeValue.EqualsLiteral("top"))
+    if (aAttributeValue.EqualsLiteral("top")) {
       return static_cast<int8_t>(StyleVerticalAlignKeyword::Top);
-    else if (aAttributeValue.EqualsLiteral("bottom"))
+    }
+    if (aAttributeValue.EqualsLiteral("bottom")) {
       return static_cast<int8_t>(StyleVerticalAlignKeyword::Bottom);
-    else if (aAttributeValue.EqualsLiteral("center"))
+    }
+    if (aAttributeValue.EqualsLiteral("center")) {
       return static_cast<int8_t>(StyleVerticalAlignKeyword::Middle);
-    else
-      return static_cast<int8_t>(StyleVerticalAlignKeyword::Baseline);
-  } else if (aAttribute == nsGkAtoms::columnalign_) {
-    if (aAttributeValue.EqualsLiteral("left"))
-      return NS_STYLE_TEXT_ALIGN_LEFT;
-    else if (aAttributeValue.EqualsLiteral("right"))
-      return NS_STYLE_TEXT_ALIGN_RIGHT;
-    else
-      return NS_STYLE_TEXT_ALIGN_CENTER;
-  } else if (aAttribute == nsGkAtoms::rowlines_ ||
-             aAttribute == nsGkAtoms::columnlines_) {
-    if (aAttributeValue.EqualsLiteral("solid"))
-      return static_cast<int8_t>(StyleBorderStyle::Solid);
-    else if (aAttributeValue.EqualsLiteral("dashed"))
-      return static_cast<int8_t>(StyleBorderStyle::Dashed);
-    else
-      return static_cast<int8_t>(StyleBorderStyle::None);
-  } else {
-    MOZ_CRASH("Unrecognized attribute.");
+    }
+    return static_cast<int8_t>(StyleVerticalAlignKeyword::Baseline);
   }
 
+  if (aAttribute == nsGkAtoms::columnalign_) {
+    if (aAttributeValue.EqualsLiteral("left")) {
+      return int8_t(StyleTextAlign::Left);
+    }
+    if (aAttributeValue.EqualsLiteral("right")) {
+      return int8_t(StyleTextAlign::Right);
+    }
+    return int8_t(StyleTextAlign::Center);
+  }
+
+  if (aAttribute == nsGkAtoms::rowlines_ ||
+      aAttribute == nsGkAtoms::columnlines_) {
+    if (aAttributeValue.EqualsLiteral("solid")) {
+      return static_cast<int8_t>(StyleBorderStyle::Solid);
+    }
+    if (aAttributeValue.EqualsLiteral("dashed")) {
+      return static_cast<int8_t>(StyleBorderStyle::Dashed);
+    }
+    return static_cast<int8_t>(StyleBorderStyle::None);
+  }
+
+  MOZ_CRASH("Unrecognized attribute.");
   return -1;
 }
 
@@ -1202,7 +1209,7 @@ void nsMathMLmtdInnerFrame::Reflow(nsPresContext* aPresContext,
 
 const nsStyleText* nsMathMLmtdInnerFrame::StyleTextForLineLayout() {
   // Set the default alignment in case nothing was specified
-  uint8_t alignment = StyleText()->mTextAlign;
+  auto alignment = uint8_t(StyleText()->mTextAlign);
 
   nsTArray<int8_t>* alignmentList =
       FindCellProperty(this, ColumnAlignProperty());
@@ -1219,7 +1226,7 @@ const nsStyleText* nsMathMLmtdInnerFrame::StyleTextForLineLayout() {
       alignment = alignmentList->ElementAt(alignmentList->Length() - 1);
   }
 
-  mUniqueStyleText->mTextAlign = alignment;
+  mUniqueStyleText->mTextAlign = StyleTextAlign(alignment);
   return mUniqueStyleText.get();
 }
 

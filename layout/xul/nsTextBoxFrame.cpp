@@ -1031,12 +1031,12 @@ void nsTextBoxFrame::CalcDrawRect(gfxContext& aRenderingContext) {
 
   // Align our text within the overall rect by checking our text-align property.
   const nsStyleText* textStyle = StyleText();
-  if (textStyle->mTextAlign == NS_STYLE_TEXT_ALIGN_CENTER) {
+  if (textStyle->mTextAlign == StyleTextAlign::Center) {
     textRect.IStart(wm) += (outerISize - textRect.ISize(wm)) / 2;
-  } else if (textStyle->mTextAlign == NS_STYLE_TEXT_ALIGN_END ||
-             (textStyle->mTextAlign == NS_STYLE_TEXT_ALIGN_LEFT &&
+  } else if (textStyle->mTextAlign == StyleTextAlign::End ||
+             (textStyle->mTextAlign == StyleTextAlign::Left &&
               wm.IsBidiRTL()) ||
-             (textStyle->mTextAlign == NS_STYLE_TEXT_ALIGN_RIGHT &&
+             (textStyle->mTextAlign == StyleTextAlign::Right &&
               wm.IsBidiLTR())) {
     textRect.IStart(wm) += (outerISize - textRect.ISize(wm));
   }
