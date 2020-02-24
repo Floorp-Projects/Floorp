@@ -26,10 +26,7 @@ void StyleInfo::Display(nsAString& aValue) {
 
 void StyleInfo::TextAlign(nsAString& aValue) {
   aValue.Truncate();
-  AppendASCIItoUTF16(
-      nsCSSProps::ValueToKeyword(mComputedStyle->StyleText()->mTextAlign,
-                                 nsCSSProps::kTextAlignKTable),
-      aValue);
+  Servo_GetPropertyValue(mComputedStyle, eCSSProperty_text_align, &aValue);
 }
 
 void StyleInfo::TextIndent(nsAString& aValue) {
