@@ -1,0 +1,9 @@
+<script>
+    window.addEventListener('load', () => {
+      var a = document.createElementNS('http://www.w3.org/1999/xhtml', 'div')
+      var b = new CSSStyleSheet({'disabled': true})
+      var c = a.attachShadow({'mode': 'closed'})
+      c.adoptedStyleSheets = [new CSSStyleSheet(), b, b]
+      b.disabled = false
+    })
+</script>

@@ -13,6 +13,7 @@
 #include "mozilla/dom/HTMLInputElement.h"
 #include "mozilla/dom/ShadowRoot.h"
 #include "mozilla/dom/StyleSheetList.h"
+#include "nsTHashtable.h"
 #include "nsFocusManager.h"
 #include "nsIRadioVisitor.h"
 #include "nsIFormControl.h"
@@ -98,6 +99,9 @@ already_AddRefed<StyleSheet> DocumentOrShadowRoot::RemoveSheet(
 void DocumentOrShadowRoot::EnsureAdoptedSheetsAreValid(
     const Sequence<OwningNonNull<StyleSheet>>& aAdoptedStyleSheets,
     ErrorResult& aRv) {
+  nsTHashtable<nsPtrHashKey<const StyleSheet>> set(
+      aAdoptedStyleSheets.Length());
+
   for (const OwningNonNull<StyleSheet>& sheet : aAdoptedStyleSheets) {
     // 2.1 Check if all sheets are constructed, else throw NotAllowedError
     if (!sheet->IsConstructed()) {
@@ -111,6 +115,15 @@ void DocumentOrShadowRoot::EnsureAdoptedSheetsAreValid(
       return aRv.ThrowNotAllowedError(
           "Each adopted style sheet's constructor document must match the "
           "document or shadow root's node document");
+    }
+
+    // FIXME(nordzilla): This is temporary code to disallow duplicate sheets.
+    // This exists to ensure that the fuzzers aren't blocked.
+    // This code will eventually be removed.
+    // https://bugzilla.mozilla.org/show_bug.cgi?id=1617302
+    if (!set.EnsureInserted(sheet.get())) {
+      return aRv.ThrowNotAllowedError(
+          "Temporarily disallowing duplicate stylesheets.");
     }
   }
 }
