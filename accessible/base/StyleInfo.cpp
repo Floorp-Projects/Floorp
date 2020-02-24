@@ -71,7 +71,23 @@ void StyleInfo::FormatColor(const nscolor& aValue, nsString& aFormattedValue) {
 
 void StyleInfo::FormatTextDecorationStyle(uint8_t aValue,
                                           nsAString& aFormattedValue) {
-  nsCSSKeyword keyword = nsCSSProps::ValueToKeywordEnum(
-      aValue, nsCSSProps::kTextDecorationStyleKTable);
-  AppendUTF8toUTF16(nsCSSKeywords::GetStringValue(keyword), aFormattedValue);
+  // TODO: When these are enum classes that rust also understands we should just
+  // make an FFI call here.
+  switch (aValue) {
+    case NS_STYLE_TEXT_DECORATION_STYLE_NONE:
+      return aFormattedValue.AssignASCII("-moz-none");
+    case NS_STYLE_TEXT_DECORATION_STYLE_SOLID:
+      return aFormattedValue.AssignASCII("solid");
+    case NS_STYLE_TEXT_DECORATION_STYLE_DOUBLE:
+      return aFormattedValue.AssignASCII("double");
+    case NS_STYLE_TEXT_DECORATION_STYLE_DOTTED:
+      return aFormattedValue.AssignASCII("dotted");
+    case NS_STYLE_TEXT_DECORATION_STYLE_DASHED:
+      return aFormattedValue.AssignASCII("dashed");
+    case NS_STYLE_TEXT_DECORATION_STYLE_WAVY:
+      return aFormattedValue.AssignASCII("wavy");
+    default:
+      MOZ_ASSERT_UNREACHABLE("Unknown decoration style");
+      break;
+  }
 }

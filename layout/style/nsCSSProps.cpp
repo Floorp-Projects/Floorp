@@ -166,16 +166,6 @@ const nsCString& nsCSSProps::GetStringValue(nsCSSCounterDesc aCounterDesc) {
 
 /***************************************************************************/
 
-const KTableEntry nsCSSProps::kTextDecorationStyleKTable[] = {
-    {eCSSKeyword__moz_none, NS_STYLE_TEXT_DECORATION_STYLE_NONE},
-    {eCSSKeyword_solid, NS_STYLE_TEXT_DECORATION_STYLE_SOLID},
-    {eCSSKeyword_double, NS_STYLE_TEXT_DECORATION_STYLE_DOUBLE},
-    {eCSSKeyword_dotted, NS_STYLE_TEXT_DECORATION_STYLE_DOTTED},
-    {eCSSKeyword_dashed, NS_STYLE_TEXT_DECORATION_STYLE_DASHED},
-    {eCSSKeyword_wavy, NS_STYLE_TEXT_DECORATION_STYLE_WAVY},
-    {eCSSKeyword_UNKNOWN, nsCSSKTableEntry::SENTINEL_VALUE},
-};
-
 int32_t nsCSSProps::FindIndexOfKeyword(nsCSSKeyword aKeyword,
                                        const KTableEntry aTable[]) {
   if (eCSSKeyword_UNKNOWN == aKeyword) {
