@@ -10,6 +10,12 @@
 
 #ifdef WR_VERTEX_SHADER
 
+#ifdef WR_FEATURE_TEXTURE_RECT
+    #define TEX_SIZE(sampler) vec2(1.0)
+#else
+    #define TEX_SIZE(sampler) vec2(textureSize(sampler, 0).xy)
+#endif
+
 #define YUV_COLOR_SPACE_REC601      0
 #define YUV_COLOR_SPACE_REC709      1
 #define YUV_COLOR_SPACE_REC2020     2
@@ -67,6 +73,26 @@ mat3 get_yuv_color_matrix(int color_space) {
         default:
             return YuvColorMatrixRec2020;
     }
+}
+
+void write_uv_rect(
+    vec2 uv0,
+    vec2 uv1,
+    float layer,
+    vec2 f,
+    vec2 texture_size,
+    out vec3 uv,
+    out vec4 uv_bounds
+) {
+    uv.xy = mix(uv0, uv1, f);
+    uv.z = layer;
+
+    uv_bounds = vec4(uv0 + vec2(0.5), uv1 - vec2(0.5));
+
+    #ifndef WR_FEATURE_TEXTURE_RECT
+        uv.xy /= texture_size;
+        uv_bounds /= texture_size.xyxy;
+    #endif
 }
 #endif
 
