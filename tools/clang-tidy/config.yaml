@@ -173,6 +173,8 @@ clang_checkers:
     reliability: low
     # Too noisy because of the way how we implement NS_IMETHOD. See Bug 1420366.
     publish: !!bool no
+  - name: modernize-use-using
+    reliability: high
   - name: mozilla-*
     reliability: high
   - name: performance-faster-string-find
