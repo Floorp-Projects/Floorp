@@ -462,9 +462,6 @@ function ignoreContents(entry)
         // These all create static strings in local storage, which is threadsafe
         // to do but not understood by the analysis yet.
         / EmptyString\(\)/,
-        /nsCSSProps::LookupPropertyValue/,
-        /nsCSSProps::ValueToKeyword/,
-        /nsCSSKeywords::GetStringValue/,
 
         // These could probably be handled by treating the scope of PSAutoLock
         // aka BaseAutoLock<PSMutex> as threadsafe.

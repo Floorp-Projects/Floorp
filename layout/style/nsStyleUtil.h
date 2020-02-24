@@ -59,11 +59,6 @@ class nsStyleUtil {
                                    nsAString& aResult);
 
  public:
-  // Append a bitmask-valued property's value(s) (space-separated) to aResult.
-  static void AppendBitmaskCSSValue(const nsCSSKTableEntry aTable[],
-                                    int32_t aMaskedValue, int32_t aFirstMask,
-                                    int32_t aLastMask, nsAString& aResult);
-
   static void AppendCSSNumber(float aNumber, nsAString& aResult) {
     aResult.AppendFloat(aNumber);
   }
