@@ -72,6 +72,7 @@ class GPUVideoTextureHost : public TextureHost {
 
   RefPtr<TextureHost> mWrappedTextureHost;
   SurfaceDescriptorGPUVideo mDescriptor;
+  wr::MaybeExternalImageId mExternalImageId;
 };
 
 }  // namespace layers
