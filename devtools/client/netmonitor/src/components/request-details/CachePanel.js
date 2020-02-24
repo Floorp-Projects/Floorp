@@ -18,7 +18,7 @@ const {
 // Components
 const TreeViewClass = require("devtools/client/shared/components/tree/TreeView");
 const PropertiesView = createFactory(
-  require("devtools/client/netmonitor/src/components/PropertiesView")
+  require("devtools/client/netmonitor/src/components/request-details/PropertiesView")
 );
 
 const { div, input } = dom;
@@ -99,7 +99,7 @@ class CachePanel extends Component {
   }
 
   render() {
-    const { request, openLink } = this.props;
+    const { request } = this.props;
     const { responseCache } = request;
 
     let object;
@@ -132,7 +132,6 @@ class CachePanel extends Component {
         object,
         enableFilter: false,
         expandedNodes: TreeViewClass.getExpandedNodes(object),
-        openLink,
       })
     );
   }
