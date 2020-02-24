@@ -189,6 +189,10 @@ void Animation::SetEffectNoUpdate(AnimationEffect* aEffect) {
 }
 
 void Animation::SetTimeline(AnimationTimeline* aTimeline) {
+#ifndef NIGHTLY_BUILD
+  MOZ_ASSERT_UNREACHABLE(
+      "Animation.timeline setter is supported only on nightly");
+#endif
   SetTimelineNoUpdate(aTimeline);
   PostUpdate();
 }
