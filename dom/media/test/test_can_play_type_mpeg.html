@@ -94,7 +94,11 @@ function check_mp4(v, enabled) {
   ].forEach((codec) => {
     // canPlayType should support VP9 in MP4...
     check(codec, "probably");
-    ok(MediaSource.isTypeSupported(codec), "VP9 in MP4 should be supported in MSE");
+    if (!IsSupportedAndroid()) {
+      // VP9 codec is disabled on Android devices with no HW decoder. So skip it
+      // on Android for now.
+      ok(MediaSource.isTypeSupported(codec), "VP9 in MP4 should be supported in MSE");
+    }
   });
   check("video/mp4; codecs=\"av1\"", "probably");
 }
