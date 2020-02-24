@@ -632,16 +632,16 @@ impl YamlFrameReader {
             Ok(image) => {
                 let (image_width, image_height) = image.dimensions();
                 let (format, bytes) = match image {
-                    image::ImageLuma8(_) => {
-                        (ImageFormat::R8, image.raw_pixels())
+                    image::DynamicImage::ImageLuma8(_) => {
+                        (ImageFormat::R8, image.to_bytes())
                     }
-                    image::ImageRgba8(_) => {
-                        let mut pixels = image.raw_pixels();
+                    image::DynamicImage::ImageRgba8(_) => {
+                        let mut pixels = image.to_bytes();
                         premultiply(pixels.as_mut_slice());
                         (ImageFormat::BGRA8, pixels)
                     }
-                    image::ImageRgb8(_) => {
-                        let bytes = image.raw_pixels();
+                    image::DynamicImage::ImageRgb8(_) => {
+                        let bytes = image.to_bytes();
                         let mut pixels = Vec::with_capacity(image_width as usize * image_height as usize * 4);
                         for bgr in bytes.chunks(3) {
                             pixels.extend_from_slice(&[

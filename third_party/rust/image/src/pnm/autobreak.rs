@@ -4,7 +4,7 @@ use std::io;
 // The pnm standard says to insert line breaks after 70 characters. Assumes that no line breaks
 // are actually written. We have to be careful to fully commit buffers or not commit them at all,
 // otherwise we might insert a newline in the middle of a token.
-pub struct AutoBreak<W: io::Write> {
+pub(crate) struct AutoBreak<W: io::Write> {
     wrapped: W,
     line_capacity: usize,
     line: Vec<u8>,

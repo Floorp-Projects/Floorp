@@ -3,7 +3,6 @@
 extern crate getopts;
 extern crate glob;
 extern crate png;
-extern crate term;
 
 use std::io;
 use std::io::prelude::*;

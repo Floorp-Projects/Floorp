@@ -1,32 +1,32 @@
-extern crate jpeg_decoder;
-
+use std::convert::TryFrom;
 use std::io::{self, Cursor, Read};
 use std::marker::PhantomData;
 use std::mem;
 
-use color::ColorType;
-use image::{ImageDecoder, ImageError, ImageResult};
+use crate::color::ColorType;
+use crate::image::ImageDecoder;
+use crate::error::{ImageError, ImageResult};
 
 /// JPEG decoder
-pub struct JPEGDecoder<R> {
-    decoder: jpeg_decoder::Decoder<R>,
-    metadata: jpeg_decoder::ImageInfo,
+pub struct JpegDecoder<R> {
+    decoder: jpeg::Decoder<R>,
+    metadata: jpeg::ImageInfo,
 }
 
-impl<R: Read> JPEGDecoder<R> {
+impl<R: Read> JpegDecoder<R> {
     /// Create a new decoder that decodes from the stream ```r```
-    pub fn new(r: R) -> ImageResult<JPEGDecoder<R>> {
-        let mut decoder = jpeg_decoder::Decoder::new(r);
+    pub fn new(r: R) -> ImageResult<JpegDecoder<R>> {
+        let mut decoder = jpeg::Decoder::new(r);
 
-        decoder.read_info()?;
+        decoder.read_info().map_err(ImageError::from_jpeg)?;
         let mut metadata = decoder.info().unwrap();
 
         // We convert CMYK data to RGB before returning it to the user.
-        if metadata.pixel_format == jpeg_decoder::PixelFormat::CMYK32 {
-            metadata.pixel_format = jpeg_decoder::PixelFormat::RGB24;
+        if metadata.pixel_format == jpeg::PixelFormat::CMYK32 {
+            metadata.pixel_format = jpeg::PixelFormat::RGB24;
         }
 
-        Ok(JPEGDecoder {
+        Ok(JpegDecoder {
             decoder,
             metadata,
         })
@@ -49,29 +49,38 @@ impl<R> Read for JpegReader<R> {
     }
 }
 
-impl<'a, R: 'a + Read> ImageDecoder<'a> for JPEGDecoder<R> {
+impl<'a, R: 'a + Read> ImageDecoder<'a> for JpegDecoder<R> {
     type Reader = JpegReader<R>;
 
-    fn dimensions(&self) -> (u64, u64) {
-        (self.metadata.width as u64, self.metadata.height as u64)
+    fn dimensions(&self) -> (u32, u32) {
+        (u32::from(self.metadata.width), u32::from(self.metadata.height))
     }
 
-    fn colortype(&self) -> ColorType {
-        self.metadata.pixel_format.into()
+    fn color_type(&self) -> ColorType {
+        ColorType::from_jpeg(self.metadata.pixel_format)
     }
 
-    fn into_reader(self) -> ImageResult<Self::Reader> {
-        Ok(JpegReader(Cursor::new(self.read_image()?), PhantomData))
-    }
-
-    fn read_image(mut self) -> ImageResult<Vec<u8>> {
-        let mut data = self.decoder.decode()?;
+    fn into_reader(mut self) -> ImageResult<Self::Reader> {
+        let mut data = self.decoder.decode().map_err(ImageError::from_jpeg)?;
         data = match self.decoder.info().unwrap().pixel_format {
-            jpeg_decoder::PixelFormat::CMYK32 => cmyk_to_rgb(&data),
+            jpeg::PixelFormat::CMYK32 => cmyk_to_rgb(&data),
             _ => data,
         };
 
-        Ok(data)
+        Ok(JpegReader(Cursor::new(data), PhantomData))
+    }
+
+    fn read_image(mut self, buf: &mut [u8]) -> ImageResult<()> {
+        assert_eq!(u64::try_from(buf.len()), Ok(self.total_bytes()));
+
+        let mut data = self.decoder.decode().map_err(ImageError::from_jpeg)?;
+        data = match self.decoder.info().unwrap().pixel_format {
+            jpeg::PixelFormat::CMYK32 => cmyk_to_rgb(&data),
+            _ => data,
+        };
+
+        buf.copy_from_slice(&data);
+        Ok(())
     }
 }
 
@@ -103,25 +112,25 @@ fn cmyk_to_rgb(input: &[u8]) -> Vec<u8> {
     output
 }
 
-impl From<jpeg_decoder::PixelFormat> for ColorType {
-    fn from(pixel_format: jpeg_decoder::PixelFormat) -> ColorType {
-        use self::jpeg_decoder::PixelFormat::*;
+impl ColorType {
+    fn from_jpeg(pixel_format: jpeg::PixelFormat) -> ColorType {
+        use jpeg::PixelFormat::*;
         match pixel_format {
-            L8 => ColorType::Gray(8),
-            RGB24 => ColorType::RGB(8),
+            L8 => ColorType::L8,
+            RGB24 => ColorType::Rgb8,
             CMYK32 => panic!(),
         }
     }
 }
 
-impl From<jpeg_decoder::Error> for ImageError {
-    fn from(err: jpeg_decoder::Error) -> ImageError {
-        use self::jpeg_decoder::Error::*;
+impl ImageError {
+    fn from_jpeg(err: jpeg::Error) -> ImageError {
+        use jpeg::Error::*;
         match err {
             Format(desc) => ImageError::FormatError(desc),
             Unsupported(desc) => ImageError::UnsupportedError(format!("{:?}", desc)),
             Io(err) => ImageError::IoError(err),
-            Internal(err) => ImageError::FormatError(err.description().to_owned()),
+            Internal(err) => ImageError::FormatError(err.to_string()),
         }
     }
 }

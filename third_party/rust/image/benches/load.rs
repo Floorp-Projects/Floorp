@@ -16,7 +16,7 @@ struct BenchDef<'a> {
 const IMAGE_DIR: [&'static str; 3] = [".", "tests", "images"];
 const BMP: BenchDef<'static> = BenchDef {
     dir: &["bmp", "images"],
-    format: ImageFormat::BMP,
+    format: ImageFormat::Bmp,
 };
 
 fn bench_load(b: &mut test::Bencher, def: &BenchDef, filename: &str) {

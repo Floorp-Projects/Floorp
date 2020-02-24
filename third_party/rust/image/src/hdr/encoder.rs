@@ -1,6 +1,8 @@
-use color::Rgb;
-use hdr::{rgbe8, RGBE8Pixel, SIGNATURE};
+use crate::color::Rgb;
+use crate::error::ImageResult;
+use crate::hdr::{rgbe8, RGBE8Pixel, SIGNATURE};
 use std::io::{Result, Write};
+use std::cmp::Ordering;
 
 /// Radiance HDR encoder
 pub struct HDREncoder<W: Write> {
@@ -15,7 +17,7 @@ impl<W: Write> HDREncoder<W> {
 
     /// Encodes the image ```data```
     /// that has dimensions ```width``` and ```height```
-    pub fn encode(mut self, data: &[Rgb<f32>], width: usize, height: usize) -> Result<()> {
+    pub fn encode(mut self, data: &[Rgb<f32>], width: usize, height: usize) -> ImageResult<()> {
         assert!(data.len() >= width * height);
         let w = &mut self.w;
         w.write_all(SIGNATURE)?;
@@ -32,15 +34,11 @@ impl<W: Write> HDREncoder<W> {
             // new RLE marker contains scanline width
             let marker = rgbe8(2, 2, (width / 256) as u8, (width % 256) as u8);
             // buffers for encoded pixels
-            let mut bufr = Vec::with_capacity(width);
-            bufr.resize(width, 0);
-            let mut bufg = Vec::with_capacity(width);
-            bufg.resize(width, 0);
-            let mut bufb = Vec::with_capacity(width);
-            bufb.resize(width, 0);
-            let mut bufe = Vec::with_capacity(width);
-            bufe.resize(width, 0);
-            let mut rle_buf = Vec::with_capacity(width);
+            let mut bufr = vec![0; width];
+            let mut bufg = vec![0; width];
+            let mut bufb = vec![0; width];
+            let mut bufe = vec![0; width];
+            let mut rle_buf = vec![0; width];
             for scanline in data.chunks(width) {
                 for ((((r, g), b), e), &pix) in bufr.iter_mut()
                     .zip(bufg.iter_mut())
@@ -148,17 +146,19 @@ impl<'a> Iterator for NorunCombineIterator<'a> {
                         Some(Norun(_, len1)) => {
                             // norun continues
                             let clen = len + len1; // combined length
-                            if clen == NORUN_MAX_LEN {
-                                return Some(Norun(idx, clen));
-                            } else if clen > NORUN_MAX_LEN {
-                                // combined norun exceeds maximum length. store extra part of norun
-                                self.prev = Some(Norun(idx + NORUN_MAX_LEN, clen - NORUN_MAX_LEN));
-                                // then return maximal norun
-                                return Some(Norun(idx, NORUN_MAX_LEN));
-                            } else {
-                                // len + len1 < NORUN_MAX_LEN
-                                self.prev = Some(Norun(idx, len + len1));
-                                // combine and continue loop
+                            match clen.cmp(&NORUN_MAX_LEN) {
+                                Ordering::Equal => return Some(Norun(idx, clen)),
+                                Ordering::Greater => {
+                                    // combined norun exceeds maximum length. store extra part of norun
+                                    self.prev = Some(Norun(idx + NORUN_MAX_LEN, clen - NORUN_MAX_LEN));
+                                    // then return maximal norun
+                                    return Some(Norun(idx, NORUN_MAX_LEN));
+                                }
+                                Ordering::Less => {
+                                    // len + len1 < NORUN_MAX_LEN
+                                    self.prev = Some(Norun(idx, len + len1));
+                                    // combine and continue loop
+                                }
                             }
                         }
                         Some(Run(c, len1)) => {
@@ -247,7 +247,7 @@ pub fn to_rgbe8(pix: Rgb<f32>) -> RGBE8Pixel {
 
 #[test]
 fn to_rgbe8_test() {
-    use hdr::rgbe8;
+    use crate::hdr::rgbe8;
     let test_cases = vec![rgbe8(0, 0, 0, 0), rgbe8(1, 1, 128, 128)];
     for &pix in &test_cases {
         assert_eq!(pix, to_rgbe8(pix.to_hdr()));

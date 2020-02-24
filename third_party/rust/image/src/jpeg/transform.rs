@@ -67,7 +67,7 @@ static FIX_2_053119869: i32 = 16_819;
 static FIX_2_562915447: i32 = 20_995;
 static FIX_3_072711026: i32 = 25_172;
 
-pub fn fdct(samples: &[u8], coeffs: &mut [i32]) {
+pub(crate) fn fdct(samples: &[u8], coeffs: &mut [i32]) {
     // Pass 1: process rows.
     // Results are scaled by sqrt(8) compared to a true DCT
     // furthermore we scale the results by 2**PASS1_BITS
