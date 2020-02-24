@@ -2270,7 +2270,7 @@ class MacroAssembler : public js::jit::Assembler {
     return sp_;
   }
 
-  const js::jit::RegisterOrSP getStackPointer() const {
+  js::jit::RegisterOrSP getStackPointer() const {
       return js::jit::RegisterOrSP(sp_.code());
   }
 

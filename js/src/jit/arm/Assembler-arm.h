@@ -1303,7 +1303,7 @@ class Assembler : public AssemblerShared {
 #endif
   }
 
-  static const Register getStackPointer() { return StackPointer; }
+  Register getStackPointer() const { return StackPointer; }
 
  private:
   bool isFinished;
