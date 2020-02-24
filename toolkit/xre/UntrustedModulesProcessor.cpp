@@ -983,7 +983,7 @@ RefPtr<ModulesTrustPromise> UntrustedModulesProcessor::GetModulesTrustInternal(
           NS_ERROR_ILLEGAL_DURING_SHUTDOWN, __func__);
     }
 
-    modMap.Put(resolvedNtPath, module.forget());
+    modMap.Put(resolvedNtPath, std::move(module));
   }
 
   return ModulesTrustPromise::CreateAndResolve(std::move(result), __func__);
