@@ -1160,6 +1160,7 @@ class ContentSandboxPolicy : public SandboxPolicyCommon {
 
       case __NR_getpriority:
       case __NR_setpriority:
+      case __NR_sched_getattr:
       case __NR_sched_get_priority_min:
       case __NR_sched_get_priority_max:
       case __NR_sched_getscheduler:
