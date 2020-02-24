@@ -231,6 +231,12 @@ interface nsIPrincipal : nsISerializable
 
 
     /**
+     * Returns the "host" portion of the 
+     * Principals URI, if any.
+     */
+    [noscript] readonly attribute ACString host;
+
+    /**
         * Returns the prepath of the principals uri
         * follows the format scheme:
         * "scheme://username:password@hostname:portnumber/"

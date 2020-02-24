@@ -265,14 +265,8 @@ StorageObserver::Observe(nsISupports* aSubject, const char* aTopic,
     BasePrincipal::Cast(principal)->OriginAttributesRef().CreateSuffix(
         originSuffix);
 
-    nsCOMPtr<nsIURI> origin;
-    principal->GetURI(getter_AddRefs(origin));
-    if (!origin) {
-      return NS_OK;
-    }
-
     nsAutoCString host;
-    origin->GetHost(host);
+    principal->GetHost(host);
     if (host.IsEmpty()) {
       return NS_OK;
     }
