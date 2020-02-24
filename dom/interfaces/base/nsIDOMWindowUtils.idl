@@ -944,6 +944,10 @@ interface nsIDOMWindowUtils : nsISupports {
 
   /**
    * Get the number of screen pixels per CSS pixel.
+   *
+   * This is the same as window.devicePixelRatio, except it bypasses
+   * the fingerprinting resistance efforts that window.devicePixelRatio
+   * does (which is fine as this is only exposed to browser internals).
    */
   readonly attribute float screenPixelsPerCSSPixel;
 
