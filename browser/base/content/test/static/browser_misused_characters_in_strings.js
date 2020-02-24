@@ -268,45 +268,65 @@ add_task(async function checkAllTheDTDs() {
 
 add_task(async function checkAllTheFluents() {
   let uris = await getAllTheFiles(".ftl");
-  let { FluentResource } = ChromeUtils.import(
-    "resource://gre/modules/Fluent.jsm",
+  let { FluentParser, Visitor } = ChromeUtils.import(
+    "resource://testing-common/FluentSyntax.jsm",
     {}
   );
-  let domParser = new DOMParser();
-  domParser.forceEnableDTD();
+
+  class TextElementVisitor extends Visitor {
+    constructor() {
+      super();
+      let domParser = new DOMParser();
+      domParser.forceEnableDTD();
+
+      this.domParser = domParser;
+      this.uri = null;
+      this.id = null;
+      this.attr = null;
+    }
+
+    visitMessage(node) {
+      this.id = node.id.name;
+      this.attr = null;
+      this.genericVisit(node);
+    }
+
+    visitTerm(node) {
+      this.id = node.id.name;
+      this.attr = null;
+      this.genericVisit(node);
+    }
+
+    visitAttribute(node) {
+      this.attr = node.id.name;
+      this.genericVisit(node);
+    }
+
+    get key() {
+      if (this.attr) {
+        return `${this.id}.${this.attr}`;
+      }
+      return this.id;
+    }
+
+    visitTextElement(node) {
+      let stripped_val = this.domParser.parseFromString(node.value, "text/html")
+        .documentElement.textContent;
+      testForErrors(this.uri, this.key, stripped_val);
+    }
+  }
+
+  const ftlParser = new FluentParser({ withSpans: false });
+  const visitor = new TextElementVisitor();
+
   for (let uri of uris) {
     let rawContents = await fetchFile(uri.spec);
-    let resource = new FluentResource(rawContents);
-    if (!resource) {
-      return;
-    }
+    let ast = ftlParser.parse(rawContents);
 
-    for (let message of resource.body) {
-      CheckError(domParser, uri, message.id, message);
-    }
+    visitor.uri = uri.spec;
+    visitor.visit(ast);
   }
 });
-
-/**
- * A recursive function which can check if a value is valid
- *
- * @param domParser The DOMParser object
- * @param uri The URI of the locale file
- * @param key The key of the entity that is being checked
- * @param val The value of the entity that is being checked
- */
-function CheckError(domParser, uri, key, val) {
-  if (typeof val === "string") {
-    let stripped_val = domParser.parseFromString(val, "text/html")
-      .documentElement.textContent;
-    testForErrors(uri.spec, key, stripped_val);
-  } else if (typeof val === "object" && val) {
-    let new_vals = Object.values(val);
-    for (let new_val of new_vals) {
-      CheckError(domParser, uri, key, new_val);
-    }
-  }
-}
 
 add_task(async function ensureWhiteListIsEmpty() {
   is(gWhitelist.length, 0, "No remaining whitelist entries exist");
