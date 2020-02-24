@@ -63,6 +63,7 @@ class TestGetFlavor(unittest.TestCase):
     self.assertFlavor('solaris', 'sunos'    , {});
     self.assertFlavor('linux'  , 'linux2'   , {});
     self.assertFlavor('linux'  , 'linux3'   , {});
+    self.assertFlavor('linux'  , 'linux'    , {});
 
   def test_param(self):
     self.assertFlavor('foobar', 'linux2' , {'flavor': 'foobar'})

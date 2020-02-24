@@ -8,6 +8,8 @@
 Verifies that a failing postbuild step lets the build fail.
 """
 
+from __future__ import print_function
+
 import TestGyp
 
 import sys
@@ -37,9 +39,10 @@ if sys.platform == 'darwin':
   job = subprocess.Popen(['xcodebuild', '-version'],
                          stdout=subprocess.PIPE,
                          stderr=subprocess.STDOUT)
-  out, err = job.communicate()
+  out, _ = job.communicate()
+  out = out.decode('utf-8')
   if job.returncode != 0:
-    print out
+    print(out)
     raise Exception('Error %d running xcodebuild' % job.returncode)
   if out.startswith('Xcode 3.'):
     test.pass_test()

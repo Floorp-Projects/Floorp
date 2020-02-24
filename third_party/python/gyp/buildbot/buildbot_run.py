@@ -5,6 +5,8 @@
 
 """Argument-less script to select what to run on the buildbots."""
 
+from __future__ import print_function
+
 import os
 import shutil
 import subprocess
@@ -24,14 +26,14 @@ def CallSubProcess(*args, **kwargs):
   with open(os.devnull) as devnull_fd:
     retcode = subprocess.call(stdin=devnull_fd, *args, **kwargs)
   if retcode != 0:
-    print '@@@STEP_EXCEPTION@@@'
+    print('@@@STEP_EXCEPTION@@@')
     sys.exit(1)
 
 
 def PrepareCmake():
   """Build CMake 2.8.8 since the version in Precise is 2.8.7."""
   if os.environ['BUILDBOT_CLOBBER'] == '1':
-    print '@@@BUILD_STEP Clobber CMake checkout@@@'
+    print('@@@BUILD_STEP Clobber CMake checkout@@@')
     shutil.rmtree(CMAKE_DIR)
 
   # We always build CMake 2.8.8, so no need to do anything
@@ -39,10 +41,10 @@ def PrepareCmake():
   if os.path.isdir(CMAKE_DIR):
     return
 
-  print '@@@BUILD_STEP Initialize CMake checkout@@@'
+  print('@@@BUILD_STEP Initialize CMake checkout@@@')
   os.mkdir(CMAKE_DIR)
 
-  print '@@@BUILD_STEP Sync CMake@@@'
+  print('@@@BUILD_STEP Sync CMake@@@')
   CallSubProcess(
       ['git', 'clone',
        '--depth', '1',
@@ -53,7 +55,7 @@ def PrepareCmake():
        CMAKE_DIR],
       cwd=CMAKE_DIR)
 
-  print '@@@BUILD_STEP Build CMake@@@'
+  print('@@@BUILD_STEP Build CMake@@@')
   CallSubProcess(
       ['/bin/bash', 'bootstrap', '--prefix=%s' % CMAKE_DIR],
       cwd=CMAKE_DIR)
@@ -74,7 +76,7 @@ def GypTestFormat(title, format=None, msvs_version=None, tests=[]):
   if not format:
     format = title
 
-  print '@@@BUILD_STEP ' + title + '@@@'
+  print('@@@BUILD_STEP ' + title + '@@@')
   sys.stdout.flush()
   env = os.environ.copy()
   if msvs_version:
@@ -89,17 +91,17 @@ def GypTestFormat(title, format=None, msvs_version=None, tests=[]):
   retcode = subprocess.call(command, cwd=ROOT_DIR, env=env, shell=True)
   if retcode:
     # Emit failure tag, and keep going.
-    print '@@@STEP_FAILURE@@@'
+    print('@@@STEP_FAILURE@@@')
     return 1
   return 0
 
 
 def GypBuild():
   # Dump out/ directory.
-  print '@@@BUILD_STEP cleanup@@@'
-  print 'Removing %s...' % OUT_DIR
+  print('@@@BUILD_STEP cleanup@@@')
+  print('Removing %s...' % OUT_DIR)
   shutil.rmtree(OUT_DIR, ignore_errors=True)
-  print 'Done.'
+  print('Done.')
 
   retcode = 0
   if sys.platform.startswith('linux'):
@@ -128,7 +130,7 @@ def GypBuild():
     #     after the build proper that could be used for cumulative failures),
     #     use that instead of this. This isolates the final return value so
     #     that it isn't misattributed to the last stage.
-    print '@@@BUILD_STEP failures@@@'
+    print('@@@BUILD_STEP failures@@@')
     sys.exit(retcode)
 
 

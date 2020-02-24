@@ -28,8 +28,19 @@ _deepcopy_dispatch = d = {}
 def _deepcopy_atomic(x):
   return x
 
-for x in (type(None), int, long, float,
-          bool, str, unicode, type):
+try:
+  _string_types = (str, unicode)
+# There's no unicode in python3
+except NameError:
+  _string_types = (str, )
+
+try:
+  _integer_types = (int, long)
+# There's no long in python3
+except NameError:
+  _integer_types = (int, )
+
+for x in (type(None), float, bool, type) + _integer_types + _string_types:
   d[x] = _deepcopy_atomic
 
 def _deepcopy_list(x):
@@ -38,7 +49,7 @@ d[list] = _deepcopy_list
 
 def _deepcopy_dict(x):
   y = {}
-  for key, value in x.iteritems():
+  for key, value in x.items():
     y[deepcopy(key)] = deepcopy(value)
   return y
 d[dict] = _deepcopy_dict

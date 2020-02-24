@@ -5,10 +5,10 @@
 """
 TestGyp.py:  a testing framework for GYP integration tests.
 """
+from __future__ import print_function
 
-import errno
 import collections
-from contextlib import contextmanager
+import errno
 import itertools
 import os
 import re
@@ -16,6 +16,8 @@ import shutil
 import subprocess
 import sys
 import tempfile
+
+from contextlib import contextmanager
 
 import TestCmd
 import TestCommon
@@ -283,13 +285,13 @@ class TestGypBase(TestCommon.TestCommon):
     that expect exact output from the command (make) can
     just set stdout= when they call the run_build() method.
     """
-    print "Build is not up-to-date:"
-    print self.banner('STDOUT ')
-    print self.stdout()
+    print("Build is not up-to-date:")
+    print(self.banner('STDOUT '))
+    print(self.stdout())
     stderr = self.stderr()
     if stderr:
-      print self.banner('STDERR ')
-      print stderr
+      print(self.banner('STDERR '))
+      print(stderr)
 
   def run_gyp(self, gyp_file, *args, **kw):
     """
@@ -328,7 +330,7 @@ class TestGypBase(TestCommon.TestCommon):
     the tool-specific subclasses or clutter the tests themselves
     with platform-specific code.
     """
-    if kw.has_key('SYMROOT'):
+    if 'SYMROOT' in kw:
       del kw['SYMROOT']
     super(TestGypBase, self).run(*args, **kw)
 
@@ -558,7 +560,7 @@ class TestGypMake(TestGypBase):
     # Makefile.gyp_filename), so use that if there is no Makefile.
     chdir = kw.get('chdir', '')
     if not os.path.exists(os.path.join(chdir, 'Makefile')):
-      print "NO Makefile in " + os.path.join(chdir, 'Makefile')
+      print("NO Makefile in " + os.path.join(chdir, 'Makefile'))
       arguments.insert(0, '-f')
       arguments.insert(1, os.path.splitext(gyp_file)[0] + '.Makefile')
     kw['arguments'] = arguments
@@ -571,7 +573,7 @@ class TestGypMake(TestGypBase):
       message_target = 'all'
     else:
       message_target = target
-    kw['stdout'] = "make: Nothing to be done for `%s'.\n" % message_target
+    kw['stdout'] = "make: Nothing to be done for '%s'.\n" % message_target
     return self.build(gyp_file, target, **kw)
   def run_built_executable(self, name, *args, **kw):
     """
@@ -646,7 +648,8 @@ def GetDefaultKeychainPath():
   # Format is:
   # $ security default-keychain
   #     "/Some/Path/To/default.keychain"
-  path = subprocess.check_output(['security', 'default-keychain']).strip()
+  path = subprocess.check_output(['security', 'default-keychain']).decode(
+      'utf-8', 'ignore').strip()
   return path[1:-1]
 
 def FindMSBuildInstallation(msvs_version = 'auto'):
@@ -665,7 +668,7 @@ def FindMSBuildInstallation(msvs_version = 'auto'):
 
   msbuild_basekey = r'HKLM\SOFTWARE\Microsoft\MSBuild\ToolsVersions'
   if not registry.KeyExists(msbuild_basekey):
-    print 'Error: could not find MSBuild base registry entry'
+    print('Error: could not find MSBuild base registry entry')
     return None
 
   msbuild_version = None
@@ -674,9 +677,9 @@ def FindMSBuildInstallation(msvs_version = 'auto'):
     if registry.KeyExists(msbuild_basekey + '\\' + msbuild_test_version):
       msbuild_version = msbuild_test_version
     else:
-      print ('Warning: Environment variable GYP_MSVS_VERSION specifies "%s" '
-             'but corresponding MSBuild "%s" was not found.' %
-             (msvs_version, msbuild_version))
+      print('Warning: Environment variable GYP_MSVS_VERSION specifies "%s" '
+            'but corresponding MSBuild "%s" was not found.' %
+            (msvs_version, msbuild_version))
   if not msbuild_version:
     for msvs_version in sorted(msvs_to_msbuild, reverse=True):
       msbuild_test_version = msvs_to_msbuild[msvs_version]
@@ -684,13 +687,13 @@ def FindMSBuildInstallation(msvs_version = 'auto'):
         msbuild_version = msbuild_test_version
         break
   if not msbuild_version:
-    print 'Error: could not find MSBuild registry entry'
+    print('Error: could not find MSBuild registry entry')
     return None
 
   msbuild_path = registry.GetValue(msbuild_basekey + '\\' + msbuild_version,
                                    'MSBuildToolsPath')
   if not msbuild_path:
-    print 'Error: could not get MSBuild registry entry value'
+    print('Error: could not get MSBuild registry entry value')
     return None
 
   return os.path.join(msbuild_path, 'MSBuild.exe')
@@ -741,13 +744,15 @@ def FindVisualStudioInstallation():
         args1 = ['reg', 'query',
                     'HKLM\Software\Microsoft\VisualStudio\SxS\VS7',
                     '/v', '15.0', '/reg:32']
-        build_tool = subprocess.check_output(args1)\
-          .strip().split('\r\n').pop().split(' ').pop()
+        build_tool = subprocess.check_output(args1).decode(
+            'utf-8', 'ignore').strip().split(b'\r\n').pop().split(b' ').pop()
+        build_tool = build_tool.decode('utf-8')
       if build_tool:
         args2 = ['cmd.exe', '/d', '/c',
                 'cd', '/d', build_tool,
                 '&', 'dir', '/b', '/s', 'msbuild.exe']
-        msbuild_exes = subprocess.check_output(args2).strip().split('\r\n')
+        msbuild_exes = subprocess.check_output(args2).strip().split(b'\r\n')
+        msbuild_exes = [m.decode('utf-8') for m in msbuild_exes]
       if len(msbuild_exes):
         msbuild_Path = os.path.join(build_tool, msbuild_exes[0])
         if os.path.exists(msbuild_Path):
@@ -767,8 +772,8 @@ def FindVisualStudioInstallation():
         msbuild_path = FindMSBuildInstallation(msvs_version)
         return build_tool, uses_msbuild, msbuild_path
     else:
-      print ('Warning: Environment variable GYP_MSVS_VERSION specifies "%s" '
-              'but corresponding "%s" was not found.' % (msvs_version, path))
+      print('Warning: Environment variable GYP_MSVS_VERSION specifies "%s" '
+            'but corresponding "%s" was not found.' % (msvs_version, path))
   # Neither GYP_MSVS_VERSION nor the path help us out.  Iterate through
   # the choices looking for a match.
   for version in sorted(possible_paths, reverse=True):
@@ -779,7 +784,7 @@ def FindVisualStudioInstallation():
         uses_msbuild = msvs_version >= '2010'
         msbuild_path = FindMSBuildInstallation(msvs_version)
         return build_tool, uses_msbuild, msbuild_path
-  print 'Error: could not find devenv'
+  print('Error: could not find devenv')
   sys.exit(1)
 
 class TestGypOnMSToolchain(TestGypBase):
@@ -790,8 +795,16 @@ class TestGypOnMSToolchain(TestGypBase):
   @staticmethod
   def _ComputeVsvarsPath(devenv_path):
     devenv_dir = os.path.split(devenv_path)[0]
-    vsvars_path = os.path.join(devenv_path, '../../Tools/vsvars32.bat')
-    return vsvars_path
+
+    # Check for location of Community install (in VS2017, at least).
+    vcvars_path = os.path.join(devenv_path, '..', '..', '..', '..', 'VC',
+                               'Auxiliary', 'Build', 'vcvars32.bat')
+    if os.path.exists(vcvars_path):
+      return os.path.abspath(vcvars_path)
+
+    vsvars_path = os.path.join(devenv_path, '..', '..', 'Tools',
+                               'vsvars32.bat')
+    return os.path.abspath(vsvars_path)
 
   def initialize_build_tool(self):
     super(TestGypOnMSToolchain, self).initialize_build_tool()
@@ -809,7 +822,7 @@ class TestGypOnMSToolchain(TestGypBase):
     arguments = [cmd, '/c', self.vsvars_path, '&&', 'dumpbin']
     arguments.extend(dumpbin_args)
     proc = subprocess.Popen(arguments, stdout=subprocess.PIPE)
-    output = proc.communicate()[0]
+    output = proc.communicate()[0].decode('utf-8', 'ignore')
     assert not proc.returncode
     return output
 
@@ -936,7 +949,7 @@ class TestGypMSVS(TestGypOnMSToolchain):
     kw['arguments'] = arguments
     return self.run(program=self.build_tool, **kw)
   def up_to_date(self, gyp_file, target=None, **kw):
-    """
+    r"""
     Verifies that a build of the specified Visual Studio target is up to date.
 
     Beware that VS2010 will behave strangely if you build under
@@ -1054,7 +1067,7 @@ class TestGypXcode(TestGypBase):
                             "PhaseScriptExecution /\\S+/Script-[0-9A-F]+\\.sh\n"
                             "    cd /\\S+\n"
                             "    /bin/sh -c /\\S+/Script-[0-9A-F]+\\.sh\n"
-                            "(make: Nothing to be done for `all'\\.\n)?")
+                            "(make: Nothing to be done for .all.\\.\n)?")
 
   strip_up_to_date_expressions = [
     # Various actions or rules can run even when the overall build target
@@ -1243,4 +1256,4 @@ def TestGyp(*args, **kw):
   for format_class in format_class_list:
     if format == format_class.format:
       return format_class(*args, **kw)
-  raise Exception, "unknown format %r" % format
+  raise Exception("unknown format %r" % format)

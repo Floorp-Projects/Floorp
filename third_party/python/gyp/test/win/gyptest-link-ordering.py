@@ -8,6 +8,8 @@
 Make sure the link order of object files is the same between msvs and ninja.
 """
 
+from __future__ import print_function
+
 import TestGyp
 
 import sys
@@ -48,7 +50,7 @@ _main:
 '''
 
   if expected_disasm_basic not in GetDisasm('test_ordering_exe.exe'):
-    print GetDisasm('test_ordering_exe.exe')
+    print(GetDisasm('test_ordering_exe.exe'))
     test.fail_test()
 
   # Similar to above. The VS generator handles subdirectories differently.
@@ -69,7 +71,7 @@ _main:
 '''
 
   if expected_disasm_subdirs not in GetDisasm('test_ordering_subdirs.exe'):
-    print GetDisasm('test_ordering_subdirs.exe')
+    print(GetDisasm('test_ordering_subdirs.exe'))
     test.fail_test()
 
   # Similar, but with directories mixed into folders (crt and main at the same
@@ -95,7 +97,7 @@ _main:
 
   if (expected_disasm_subdirs_mixed not in
       GetDisasm('test_ordering_subdirs_mixed.exe')):
-    print GetDisasm('test_ordering_subdirs_mixed.exe')
+    print(GetDisasm('test_ordering_subdirs_mixed.exe'))
     test.fail_test()
 
   test.pass_test()

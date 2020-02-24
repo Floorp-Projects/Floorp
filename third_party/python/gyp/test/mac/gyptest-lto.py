@@ -38,7 +38,7 @@ if sys.platform == 'darwin':
 
   def ObjType(p, t_expected):
     r = re.compile(r'nsyms\s+(\d+)')
-    o = subprocess.check_output(['file', p])
+    o = subprocess.check_output(['file', p]).decode('utf-8')
     objtype = 'unknown'
     if ': Mach-O ' in o:
       objtype = 'mach-o'

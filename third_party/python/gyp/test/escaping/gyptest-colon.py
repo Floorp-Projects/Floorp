@@ -9,11 +9,13 @@ Tests that filenames that contain colons are handled correctly.
 (This is important for absolute paths on Windows.)
 """
 
+from __future__ import print_function
+
 import os
 import sys
 
 if sys.platform == 'win32':
-  print "This test is currently disabled: https://crbug.com/483696."
+  print("This test is currently disabled: https://crbug.com/483696.")
   sys.exit(0)
 
 

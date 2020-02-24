@@ -40,7 +40,8 @@ if sys.platform == 'win32':
     Returns None is there is no such manifest."""
     with LoadLibrary(path) as handle:
       try:
-        return win32api.LoadResource(handle, RT_MANIFEST, resource_name)
+        return win32api.LoadResource(
+            handle, RT_MANIFEST, resource_name).decode('utf-8', 'ignore')
       except pywintypes.error as error:
         if error.args[0] == winerror.ERROR_RESOURCE_DATA_NOT_FOUND:
           return None

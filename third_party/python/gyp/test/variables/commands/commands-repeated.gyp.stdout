@@ -15,58 +15,58 @@ VARIABLES:input.py:964:ExpandVariables Found output '<(letters_list)EFGHIJK', re
 VARIABLES:input.py:724:ExpandVariables Matches: {'content': 'letters_list', 'is_array': '', 'replace': '<(letters_list)', 'type': '<', 'command_string': None}
 VARIABLES:input.py:964:ExpandVariables Found output 'ABCDEFGHIJK', recursing.
 VARIABLES:input.py:724:ExpandVariables Matches: {'content': 'letters_list', 'is_array': '', 'replace': '<(letters_list)', 'type': '<', 'command_string': None}
-VARIABLES:input.py:724:ExpandVariables Matches: {'content': 'python -c "print \'<!(python -c "<(pi', 'is_array': '', 'replace': '<!(python -c "print \'<!(python -c "<(pi)', 'type': '<!', 'command_string': None}
+VARIABLES:input.py:724:ExpandVariables Matches: {'content': 'python -c "print(\'<!(python -c "<(pi', 'is_array': '', 'replace': '<!(python -c "print(\'<!(python -c "<(pi)', 'type': '<!', 'command_string': None}
 VARIABLES:input.py:724:ExpandVariables Matches: {'content': 'python -c "<(pi', 'is_array': '', 'replace': '<!(python -c "<(pi)', 'type': '<!', 'command_string': None}
 VARIABLES:input.py:724:ExpandVariables Matches: {'content': 'pi', 'is_array': '', 'replace': '<(pi)', 'type': '<', 'command_string': None}
-VARIABLES:input.py:964:ExpandVariables Found output 'python -c "import math; print math.pi"', recursing.
-VARIABLES:input.py:838:ExpandVariables Executing command 'python -c "import math; print math.pi"' in directory 'None'
-VARIABLES:input.py:964:ExpandVariables Found output 'python -c "print \'3.14159265359 ABCD\'"', recursing.
-VARIABLES:input.py:838:ExpandVariables Executing command 'python -c "print '3.14159265359 ABCD'"' in directory 'None'
+VARIABLES:input.py:964:ExpandVariables Found output 'python -c "import math; print(math.pi)"', recursing.
+VARIABLES:input.py:838:ExpandVariables Executing command 'python -c "import math; print(math.pi)"' in directory 'None'
+VARIABLES:input.py:964:ExpandVariables Found output 'python -c "print(\'3.14159265359 ABCD\')"', recursing.
+VARIABLES:input.py:838:ExpandVariables Executing command 'python -c "print('3.14159265359 ABCD')"' in directory 'None'
 VARIABLES:input.py:964:ExpandVariables Found output '3.14159265359 ABCD', recursing.
 VARIABLES:input.py:724:ExpandVariables Matches: {'content': '"python", "-c", "<(pi', 'is_array': '[', 'replace': '<!(["python", "-c", "<(pi)', 'type': '<!', 'command_string': None}
 VARIABLES:input.py:724:ExpandVariables Matches: {'content': 'pi', 'is_array': '', 'replace': '<(pi)', 'type': '<', 'command_string': None}
-VARIABLES:input.py:964:ExpandVariables Found output '["python", "-c", "import math; print math.pi"]', recursing.
-VARIABLES:input.py:838:ExpandVariables Executing command '['python', '-c', 'import math; print math.pi']' in directory 'None'
+VARIABLES:input.py:964:ExpandVariables Found output '["python", "-c", "import math; print(math.pi)"]', recursing.
+VARIABLES:input.py:838:ExpandVariables Executing command '['python', '-c', 'import math; print(math.pi)']' in directory 'None'
 VARIABLES:input.py:964:ExpandVariables Found output '3.14159265359', recursing.
-VARIABLES:input.py:724:ExpandVariables Matches: {'content': '<!(python -c "print \'letters_list\'"', 'is_array': '', 'replace': '<(<!(python -c "print \'letters_list\'")', 'type': '<', 'command_string': None}
-VARIABLES:input.py:724:ExpandVariables Matches: {'content': 'python -c "print \'letters_list\'"', 'is_array': '', 'replace': '<!(python -c "print \'letters_list\'")', 'type': '<!', 'command_string': None}
-VARIABLES:input.py:838:ExpandVariables Executing command 'python -c "print 'letters_list'"' in directory 'None'
+VARIABLES:input.py:724:ExpandVariables Matches: {'content': '<!(python -c "print(\'letters_list\'', 'is_array': '', 'replace': '<(<!(python -c "print(\'letters_list\')', 'type': '<', 'command_string': None}
+VARIABLES:input.py:724:ExpandVariables Matches: {'content': 'python -c "print(\'letters_list\'', 'is_array': '', 'replace': '<!(python -c "print(\'letters_list\')', 'type': '<!', 'command_string': None}
+VARIABLES:input.py:838:ExpandVariables Executing command 'python -c "print('letters_list')"' in directory 'None'
 VARIABLES:input.py:964:ExpandVariables Found output 'letters_list', recursing.
 VARIABLES:input.py:964:ExpandVariables Found output 'ABCD', recursing.
 VARIABLES:input.py:724:ExpandVariables Matches: {'content': 'check_int', 'is_array': '', 'replace': '<(check_int)', 'type': '<', 'command_string': None}
 VARIABLES:input.py:964:ExpandVariables Found output '5', recursing.
 VARIABLES:input.py:724:ExpandVariables Matches: {'content': '"python", "-c", "<(pi', 'is_array': '[', 'replace': '<!(["python", "-c", "<(pi)', 'type': '<!', 'command_string': None}
 VARIABLES:input.py:724:ExpandVariables Matches: {'content': 'pi', 'is_array': '', 'replace': '<(pi)', 'type': '<', 'command_string': None}
-VARIABLES:input.py:964:ExpandVariables Found output '["python", "-c", "import math; print math.pi"]', recursing.
-VARIABLES:input.py:889:ExpandVariables Had cache value for command '['python', '-c', 'import math; print math.pi']' in directory 'None'
+VARIABLES:input.py:964:ExpandVariables Found output '["python", "-c", "import math; print(math.pi)"]', recursing.
+VARIABLES:input.py:889:ExpandVariables Had cache value for command '['python', '-c', 'import math; print(math.pi)']' in directory 'None'
 VARIABLES:input.py:964:ExpandVariables Found output '3.14159265359', recursing.
-VARIABLES:input.py:724:ExpandVariables Matches: {'content': 'python -c "print \'<(letters_list', 'is_array': '', 'replace': '<!(python -c "print \'<(letters_list)', 'type': '<!', 'command_string': None}
+VARIABLES:input.py:724:ExpandVariables Matches: {'content': 'python -c "print(\'<(letters_list', 'is_array': '', 'replace': '<!(python -c "print(\'<(letters_list)', 'type': '<!', 'command_string': None}
 VARIABLES:input.py:724:ExpandVariables Matches: {'content': 'letters_list', 'is_array': '', 'replace': '<(letters_list)', 'type': '<', 'command_string': None}
-VARIABLES:input.py:964:ExpandVariables Found output 'python -c "print \'ABCD\'"', recursing.
-VARIABLES:input.py:838:ExpandVariables Executing command 'python -c "print 'ABCD'"' in directory 'None'
+VARIABLES:input.py:964:ExpandVariables Found output 'python -c "print(\'ABCD\')"', recursing.
+VARIABLES:input.py:838:ExpandVariables Executing command 'python -c "print('ABCD')"' in directory 'None'
 VARIABLES:input.py:964:ExpandVariables Found output 'ABCD', recursing.
 VARIABLES:input.py:724:ExpandVariables Matches: {'content': 'letters_list', 'is_array': '', 'replace': '<(letters_list)', 'type': '<', 'command_string': None}
-VARIABLES:input.py:724:ExpandVariables Matches: {'content': 'python -c "print \'<!(python -c "<(pi', 'is_array': '', 'replace': '<!(python -c "print \'<!(python -c "<(pi)', 'type': '<!', 'command_string': None}
+VARIABLES:input.py:724:ExpandVariables Matches: {'content': 'python -c "print(\'<!(python -c "<(pi', 'is_array': '', 'replace': '<!(python -c "print(\'<!(python -c "<(pi)', 'type': '<!', 'command_string': None}
 VARIABLES:input.py:724:ExpandVariables Matches: {'content': 'python -c "<(pi', 'is_array': '', 'replace': '<!(python -c "<(pi)', 'type': '<!', 'command_string': None}
 VARIABLES:input.py:724:ExpandVariables Matches: {'content': 'pi', 'is_array': '', 'replace': '<(pi)', 'type': '<', 'command_string': None}
-VARIABLES:input.py:964:ExpandVariables Found output 'python -c "import math; print math.pi"', recursing.
-VARIABLES:input.py:889:ExpandVariables Had cache value for command 'python -c "import math; print math.pi"' in directory 'None'
-VARIABLES:input.py:964:ExpandVariables Found output 'python -c "print \'3.14159265359 ABCD\'"', recursing.
-VARIABLES:input.py:889:ExpandVariables Had cache value for command 'python -c "print '3.14159265359 ABCD'"' in directory 'None'
+VARIABLES:input.py:964:ExpandVariables Found output 'python -c "import math; print(math.pi)"', recursing.
+VARIABLES:input.py:889:ExpandVariables Had cache value for command 'python -c "import math; print(math.pi)"' in directory 'None'
+VARIABLES:input.py:964:ExpandVariables Found output 'python -c "print(\'3.14159265359 ABCD\')"', recursing.
+VARIABLES:input.py:889:ExpandVariables Had cache value for command 'python -c "print('3.14159265359 ABCD')"' in directory 'None'
 VARIABLES:input.py:964:ExpandVariables Found output '3.14159265359 ABCD', recursing.
 VARIABLES:input.py:724:ExpandVariables Matches: {'content': 'check_str_int', 'is_array': '', 'replace': '<(check_str_int)', 'type': '<', 'command_string': None}
 VARIABLES:input.py:964:ExpandVariables Found output '6', recursing.
 VARIABLES:input.py:724:ExpandVariables Matches: {'content': 'check_int', 'is_array': '', 'replace': '<(check_int)', 'type': '<', 'command_string': None}
 VARIABLES:input.py:964:ExpandVariables Found output '5blah', recursing.
-VARIABLES:input.py:724:ExpandVariables Matches: {'content': '<!(python -c "print \'letters_list\'"', 'is_array': '', 'replace': '<(<!(python -c "print \'letters_list\'")', 'type': '<', 'command_string': None}
-VARIABLES:input.py:724:ExpandVariables Matches: {'content': 'python -c "print \'letters_list\'"', 'is_array': '', 'replace': '<!(python -c "print \'letters_list\'")', 'type': '<!', 'command_string': None}
-VARIABLES:input.py:889:ExpandVariables Had cache value for command 'python -c "print 'letters_list'"' in directory 'None'
+VARIABLES:input.py:724:ExpandVariables Matches: {'content': '<!(python -c "print(\'letters_list\'', 'is_array': '', 'replace': '<(<!(python -c "print(\'letters_list\')', 'type': '<', 'command_string': None}
+VARIABLES:input.py:724:ExpandVariables Matches: {'content': 'python -c "print(\'letters_list\'', 'is_array': '', 'replace': '<!(python -c "print(\'letters_list\')', 'type': '<!', 'command_string': None}
+VARIABLES:input.py:889:ExpandVariables Had cache value for command 'python -c "print('letters_list')"' in directory 'None'
 VARIABLES:input.py:964:ExpandVariables Found output 'letters_list', recursing.
 VARIABLES:input.py:964:ExpandVariables Found output 'ABCD', recursing.
-VARIABLES:input.py:724:ExpandVariables Matches: {'content': 'python -c "print \'<(letters_list', 'is_array': '', 'replace': '<!(python -c "print \'<(letters_list)', 'type': '<!', 'command_string': None}
+VARIABLES:input.py:724:ExpandVariables Matches: {'content': 'python -c "print(\'<(letters_list', 'is_array': '', 'replace': '<!(python -c "print(\'<(letters_list)', 'type': '<!', 'command_string': None}
 VARIABLES:input.py:724:ExpandVariables Matches: {'content': 'letters_list', 'is_array': '', 'replace': '<(letters_list)', 'type': '<', 'command_string': None}
-VARIABLES:input.py:964:ExpandVariables Found output 'python -c "print \'ABCD\'"', recursing.
-VARIABLES:input.py:889:ExpandVariables Had cache value for command 'python -c "print 'ABCD'"' in directory 'None'
+VARIABLES:input.py:964:ExpandVariables Found output 'python -c "print(\'ABCD\')"', recursing.
+VARIABLES:input.py:889:ExpandVariables Had cache value for command 'python -c "print('ABCD')"' in directory 'None'
 VARIABLES:input.py:964:ExpandVariables Found output 'ABCD', recursing.
 VARIABLES:input.py:724:ExpandVariables Matches: {'content': 'not_int_4', 'is_array': '', 'replace': '<(not_int_4)', 'type': '<', 'command_string': None}
 VARIABLES:input.py:964:ExpandVariables Found output '13.0', recursing.

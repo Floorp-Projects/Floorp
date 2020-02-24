@@ -27,7 +27,7 @@
         {
           'action_name': 'action1',
           'inputs': [
-            'copy.py',
+            'copyfile.py',
             'input.txt',
           ],
           'outputs': [
@@ -42,7 +42,7 @@
         {
           'action_name': 'action2',
           'inputs': [
-            'copy.py',
+            'copyfile.py',
             'input.txt',
           ],
           'outputs': [
@@ -57,7 +57,7 @@
         {
           'action_name': 'action3',
           'inputs': [
-            'copy.py',
+            'copyfile.py',
             'input.txt',
           ],
           'outputs': [
@@ -72,7 +72,7 @@
         {
           'action_name': 'action4',
           'inputs': [
-            'copy.py',
+            'copyfile.py',
             'input.txt',
           ],
           'outputs': [
@@ -168,7 +168,7 @@
         {
           'action_name': 'action1',
           'inputs': [
-            'copy.py',
+            'copyfile.py',
             'input.txt',
           ],
           'outputs': [
@@ -183,7 +183,7 @@
         {
           'action_name': 'action2',
           'inputs': [
-            'copy.py',
+            'copyfile.py',
             'input.txt',
           ],
           'outputs': [
@@ -207,7 +207,7 @@
         {
           'action_name': 'multi_dep',
           'inputs': [
-            'copy.py',
+            'copyfile.py',
             'input.txt',
           ],
           'outputs': [

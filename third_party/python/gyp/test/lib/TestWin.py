@@ -37,7 +37,7 @@ class Registry(object):
     p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     # Get the stdout from reg.exe, reading to the end so p.returncode is valid
     # Note that the error text may be in [1] in some cases
-    text = p.communicate()[0]
+    text = p.communicate()[0].decode('utf-8', 'ignore')
     # Check return code from reg.exe; officially 0==success and 1==error
     if p.returncode:
       return None
@@ -63,7 +63,7 @@ class Registry(object):
     text = None
     try:
       text = self._QueryBase('Sysnative', key, value)
-    except OSError, e:
+    except OSError as e:
       if e.errno == errno.ENOENT:
         text = self._QueryBase('System32', key, value)
       else:

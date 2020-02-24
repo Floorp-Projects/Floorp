@@ -28,8 +28,8 @@ if sys.platform != 'win32':
   # symlinked back and processed. Note that we don't ask gyp to touch the
   # original files at all; they are only there as source material for the copy.
   # That's why hello.gyp references symlink_hello.c instead of hello.c.
-  with tempfile.NamedTemporaryFile() as gyp_file:
-    with tempfile.NamedTemporaryFile() as c_file:
+  with tempfile.NamedTemporaryFile(mode='w+') as gyp_file:
+    with tempfile.NamedTemporaryFile(mode='w+') as c_file:
       with open('hello.gyp') as orig_gyp_file:
         gyp_file.write(orig_gyp_file.read())
         gyp_file.flush()
