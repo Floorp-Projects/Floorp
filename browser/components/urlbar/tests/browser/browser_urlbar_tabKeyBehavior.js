@@ -1,204 +1,188 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-// This test makes sure that tab keys properly adjust the selection given that
-// the appropriate prefs are enabled.
+// This test makes sure that the tab key properly adjusts the selection or moves
+// through toolbar items, depending on the urlbar state.
+// When the view is open, tab should go through results if the urlbar was
+// focused with the mouse, or has a typed string.
 
 "use strict";
-
-const MAX_RESULTS = UrlbarPrefs.get("maxRichResults");
 
 add_task(async function init() {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["browser.urlbar.update1", true],
-      ["browser.urlbar.update1.restrictTabAfterKeyboardFocus", true],
       ["browser.urlbar.openViewOnFocus", true],
     ],
   });
 
-  for (let i = 0; i < MAX_RESULTS; i++) {
+  for (let i = 0; i < UrlbarPrefs.get("maxRichResults"); i++) {
     await PlacesTestUtils.addVisits("http://example.com/" + i);
   }
 
-  registerCleanupFunction(async function() {
-    await PlacesUtils.history.clear();
-    await SpecialPowers.popPrefEnv();
-  });
+  registerCleanupFunction(PlacesUtils.history.clear);
 });
 
-add_task(async function tabKey() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.urlbar.update1.restrictTabAfterKeyboardFocus", false]],
-  });
-
+add_task(async function tabWithSearchString() {
+  info("Tab with a search string");
   await promiseAutocompleteResultPopup("exam", window, true);
-  await tabThroughResults();
-  await SpecialPowers.popPrefEnv();
-});
-
-add_task(async function tabKeyReverse() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.urlbar.update1.restrictTabAfterKeyboardFocus", false]],
-  });
-
+  await expectTabThroughResults();
+  info("Reverse Tab with a search string");
   await promiseAutocompleteResultPopup("exam", window, true);
-  await tabThroughResults(/* reverse */ true);
-  await SpecialPowers.popPrefEnv();
+  await expectTabThroughResults({ reverse: true });
 });
 
-add_task(async function tabKeyBlur() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.urlbar.update1.restrictTabAfterKeyboardFocus", false]],
-  });
+add_task(async function tabNoSearchString() {
+  info("Tab without a search string");
+  await promiseAutocompleteResultPopup("", window, true);
+  await expectTabThroughToolbar();
+  info("Reverse Tab without a search string");
+  await promiseAutocompleteResultPopup("", window, true);
+  await expectTabThroughToolbar({ reverse: true });
+});
 
+add_task(async function tabAfterBlur() {
+  info("Tab after closing the view");
   await promiseAutocompleteResultPopup("exam", window, true);
   await UrlbarTestUtils.promisePopupClose(window);
-  Assert.equal(document.activeElement, gURLBar.inputField);
-  EventUtils.synthesizeKey("KEY_Tab");
-  Assert.notEqual(document.activeElement, gURLBar.inputField);
-  await SpecialPowers.popPrefEnv();
+  await expectTabThroughToolbar();
 });
 
-add_task(async function tabKeyRestrictedMouse() {
-  await populateAndReopenUrlbarView(/* useKeyboardShortcut */ false);
-  await tabThroughResults();
+add_task(async function tabNoSearchStringMouseFocus() {
+  info("Tab in a new blank tab after mouse focus");
+  await BrowserTestUtils.withNewTab("about:blank", async () => {
+    await UrlbarTestUtils.promisePopupOpen(window, () => {
+      EventUtils.synthesizeMouseAtCenter(gURLBar.inputField, {});
+    });
+    await UrlbarTestUtils.promiseSearchComplete(window);
+    await expectTabThroughResults();
+  });
+  info("Tab in a loaded tab after mouse focus");
+  await BrowserTestUtils.withNewTab("example.com", async () => {
+    await UrlbarTestUtils.promisePopupOpen(window, () => {
+      EventUtils.synthesizeMouseAtCenter(gURLBar.inputField, {});
+    });
+    await UrlbarTestUtils.promiseSearchComplete(window);
+    await expectTabThroughResults();
+  });
 });
 
-add_task(async function tabKeyRestrictedKeyboard() {
-  await populateAndReopenUrlbarView(/* useKeyboardShortcut */ true);
-  let focusPromise = waitForFocusOnNextFocusableElement();
-  EventUtils.synthesizeKey("KEY_Tab");
-  await focusPromise;
-
-  Assert.ok(
-    !UrlbarTestUtils.isPopupOpen(window),
-    "UrlbarView should be closed."
-  );
+add_task(async function tabNoSearchStringKeyboardFocus() {
+  info("Tab in a new blank tab after keyboard focus");
+  await BrowserTestUtils.withNewTab("about:blank", async () => {
+    await UrlbarTestUtils.promisePopupOpen(window, () => {
+      EventUtils.synthesizeKey("l", { accelKey: true });
+    });
+    await UrlbarTestUtils.promiseSearchComplete(window);
+    await expectTabThroughToolbar();
+  });
+  info("Tab in a loaded tab after keyboard focus");
+  await BrowserTestUtils.withNewTab("example.com", async () => {
+    await UrlbarTestUtils.promisePopupOpen(window, () => {
+      EventUtils.synthesizeKey("l", { accelKey: true });
+    });
+    await UrlbarTestUtils.promiseSearchComplete(window);
+    await expectTabThroughToolbar();
+  });
 });
 
-add_task(async function tabKeyRestrictedKeyboardThenMouse() {
-  await populateAndReopenUrlbarView(/* useKeyboardShortcut */ true);
-
-  // Going by the previous subtest, TAB should not move the results. Now we
-  // click on the input to reenable TAB.
-  EventUtils.synthesizeMouseAtCenter(gURLBar.inputField, {});
+add_task(async function tabRetainedResultMouseFocus() {
+  info("Tab after retained results with mouse focus");
+  await promiseAutocompleteResultPopup("exam", window, true);
+  await UrlbarTestUtils.promisePopupClose(window);
+  await UrlbarTestUtils.promisePopupOpen(window, () => {
+    EventUtils.synthesizeMouseAtCenter(gURLBar.inputField, {});
+  });
   await UrlbarTestUtils.promiseSearchComplete(window);
-
-  await tabThroughResults();
+  await expectTabThroughResults();
 });
 
-add_task(async function tabKeyRestrictedMouseThenKeyboard() {
-  // First we test focusing the Urlbar with the mouse. The user should be able
-  // to TAB through results.
-  await populateAndReopenUrlbarView(/* useKeyboardShortcut */ false);
-  await tabThroughResults();
-
-  // Then we test focusing the Urlbar with the keyboard. The user should not be
-  // able to TAB through results.
+add_task(async function tabRetainedResultsKeyboardFocus() {
+  info("Tab after retained results with keyboard focus");
+  await promiseAutocompleteResultPopup("exam", window, true);
+  await UrlbarTestUtils.promisePopupClose(window);
   await UrlbarTestUtils.promisePopupOpen(window, () => {
     EventUtils.synthesizeKey("l", { accelKey: true });
   });
   await UrlbarTestUtils.promiseSearchComplete(window);
-
-  let focusPromise = waitForFocusOnNextFocusableElement();
-  EventUtils.synthesizeKey("KEY_Tab");
-  await focusPromise;
-
-  Assert.ok(
-    !UrlbarTestUtils.isPopupOpen(window),
-    "UrlbarView should be closed."
-  );
+  await expectTabThroughResults();
 });
 
-// Testing that focusing with the mouse then the keyboard still allows tabbing
-// through the toolbar even when openViewOnFocus is disabled.
-add_task(async function tabKeyRestrictedNoOpenViewOnFocus() {
+add_task(async function tabNoOpenViewOnFocus() {
+  info("Tab with a search string after mouse focus but no openViewOnFocus");
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.urlbar.openViewOnFocus", false]],
+  });
+  await promiseAutocompleteResultPopup("exam", window, true);
+  await UrlbarTestUtils.promisePopupClose(window);
   EventUtils.synthesizeMouseAtCenter(gURLBar.inputField, {});
-  gURLBar.blur();
-
-  window.document.getElementById("Browser:OpenLocation").doCommand();
-  Assert.ok(gURLBar.focused, "The Urlbar should be focused");
-
-  let focusPromise = waitForFocusOnNextFocusableElement();
-  EventUtils.synthesizeKey("KEY_Tab");
-  await focusPromise;
-
-  Assert.ok(
-    !UrlbarTestUtils.isPopupOpen(window),
-    "UrlbarView should be closed."
-  );
+  await expectTabThroughToolbar();
+  await SpecialPowers.popPrefEnv();
 });
 
-async function tabThroughResults(reverse = false) {
+async function expectTabThroughResults(options = { reverse: false }) {
+  let resultCount = UrlbarTestUtils.getResultCount(window);
+  Assert.ok(resultCount > 0, "There should be results");
+
+  let result = await UrlbarTestUtils.getDetailsOfResultAt(window, 0);
+
+  let initiallySelectedIndex = result.heuristic ? 0 : -1;
   Assert.equal(
     UrlbarTestUtils.getSelectedRowIndex(window),
-    0,
-    "The heuristic autofill result should be selected initially."
+    initiallySelectedIndex,
+    "Check the initial selection."
   );
 
-  for (let i = 1; i < MAX_RESULTS; i++) {
-    EventUtils.synthesizeKey("KEY_Tab", { shiftKey: reverse });
+  for (let i = initiallySelectedIndex + 1; i < resultCount; i++) {
+    EventUtils.synthesizeKey("KEY_Tab", { shiftKey: options.reverse });
     Assert.equal(
       UrlbarTestUtils.getSelectedRowIndex(window),
-      reverse ? MAX_RESULTS - i : i
+      options.reverse ? resultCount - i : i
     );
   }
 
   EventUtils.synthesizeKey("KEY_Tab");
 
-  if (!reverse) {
+  if (!options.reverse) {
     Assert.equal(
       UrlbarTestUtils.getSelectedRowIndex(window),
-      0,
-      "The heuristic autofill result should be selected again."
+      initiallySelectedIndex,
+      "Should be back at the initial selection."
     );
   }
 
   await UrlbarTestUtils.promisePopupClose(window, () => {
-    window.gURLBar.blur();
+    gURLBar.blur();
   });
 }
 
-/**
- * Populates the Urlbar with results then reopens the view. We expect that the
- * results will persist in the second opening due to the Urlbar's retained
- * results feature. This helper expects that the pref
- * "browser.urlbar.openViewOnFocus" be `true`.
- * @param {boolean} useKeyboardShortcut
- *   If true, the Urlbar is opened with a keyboard shortcut. Otherwise, the
- *   Urlbar is opened with a click.
- */
-async function populateAndReopenUrlbarView(useKeyboardShortcut) {
-  // Populate the view with results.
-  await promiseAutocompleteResultPopup("exam", window, true);
-  Assert.equal(UrlbarTestUtils.getResultCount(window), MAX_RESULTS);
-  await UrlbarTestUtils.promisePopupClose(window, () => {
-    window.gURLBar.blur();
-  });
-
-  // Reopen the view knowing we'll have MAX_RESULTS results because of retained
-  // results.
-  await UrlbarTestUtils.promisePopupOpen(window, () => {
-    if (useKeyboardShortcut) {
-      EventUtils.synthesizeKey("l", { accelKey: true });
-    } else {
-      EventUtils.synthesizeMouseAtCenter(gURLBar.inputField, {});
-    }
-  });
-  await UrlbarTestUtils.promiseSearchComplete(window);
-  Assert.equal(UrlbarTestUtils.getResultCount(window), MAX_RESULTS);
+async function expectTabThroughToolbar(options = { reverse: false }) {
+  if (gURLBar.getAttribute("pageproxystate") == "valid") {
+    Assert.equal(document.activeElement, gURLBar.inputField);
+    EventUtils.synthesizeKey("KEY_Tab");
+    Assert.notEqual(document.activeElement, gURLBar.inputField);
+  } else {
+    let focusPromise = waitForFocusOnNextFocusableElement(options.reverse);
+    EventUtils.synthesizeKey("KEY_Tab", { shiftKey: options.reverse });
+    await focusPromise;
+  }
+  Assert.ok(!gURLBar.view.isOpen, "The urlbar view should be closed.");
 }
 
-async function waitForFocusOnNextFocusableElement() {
-  let nextFocusableElement = document.getElementById("urlbar-container")
-    .nextElementSibling;
+async function waitForFocusOnNextFocusableElement(reverse = false) {
+  let urlbar = document.getElementById("urlbar-container");
+  let nextFocusableElement = reverse
+    ? urlbar.previousElementSibling
+    : urlbar.nextElementSibling;
+  info(nextFocusableElement);
   while (
     nextFocusableElement &&
     (!nextFocusableElement.classList.contains("toolbarbutton-1") ||
       nextFocusableElement.hasAttribute("hidden"))
   ) {
-    nextFocusableElement = nextFocusableElement.nextElementSibling;
+    nextFocusableElement = reverse
+      ? nextFocusableElement.previousElementSibling
+      : nextFocusableElement.nextElementSibling;
   }
 
   Assert.ok(
@@ -206,7 +190,7 @@ async function waitForFocusOnNextFocusableElement() {
     "We should have a reference to the next focusable element after the Urlbar."
   );
 
-  return BrowserTestUtils.waitForCondition(() => {
-    return nextFocusableElement.tabIndex == -1;
-  });
+  return BrowserTestUtils.waitForCondition(
+    () => nextFocusableElement.tabIndex == -1
+  );
 }

@@ -314,13 +314,20 @@ class UrlbarController {
         event.preventDefault();
         break;
       case KeyEvent.DOM_VK_TAB:
+        // It's always possible to tab through results when the urlbar was
+        // focused with the mouse, or has a search string.
+        // When there's no search string, we want to focus the next toolbar item
+        // instead, for accessibility reasons.
+        let allowTabbingThroughResults =
+          !UrlbarPrefs.get("update1") ||
+          this.input.focusedViaMousedown ||
+          (this.input.value &&
+            this.input.getAttribute("pageproxystate") != "valid");
         if (
           this.view.isOpen &&
           !event.ctrlKey &&
           !event.altKey &&
-          (!UrlbarPrefs.get("update1") ||
-            !UrlbarPrefs.get("update1.restrictTabAfterKeyboardFocus") ||
-            this.allowTabbingResults)
+          allowTabbingThroughResults
         ) {
           if (executeAction) {
             this.userSelectionBehavior = "tab";

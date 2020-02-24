@@ -1717,6 +1717,7 @@ class UrlbarInput {
   }
 
   _on_blur(event) {
+    this.focusedViaMousedown = false;
     // We cannot count every blur events after a missed engagement as abandoment
     // because the user may have clicked on some view element that executes
     // a command causing a focus change. For example opening preferences from
@@ -1728,7 +1729,6 @@ class UrlbarInput {
     });
 
     this.removeAttribute("focused");
-    this.controller.allowTabbingResults = false;
     this.endLayoutExtend();
 
     if (this._autofillPlaceholder && this.window.gBrowser.userTypedValue) {
@@ -1797,8 +1797,7 @@ class UrlbarInput {
     }
 
     // We handle mouse-based expansion events separately in _on_click.
-    if (this._focusedViaMousedown) {
-      this._focusedViaMousedown = false;
+    if (this.focusedViaMousedown) {
       this.view.autoOpen({ event });
     } else {
       this.startLayoutExtend();
@@ -1835,9 +1834,8 @@ class UrlbarInput {
           break;
         }
 
-        this._focusedViaMousedown = !this.focused;
+        this.focusedViaMousedown = !this.focused;
         this._preventClickSelectsAll = this.focused;
-        this.controller.allowTabbingResults = true;
 
         if (event.target != this.inputField) {
           this.focus();
@@ -1850,7 +1848,7 @@ class UrlbarInput {
 
         // Clear any previous selection unless we are focused, to ensure it
         // doesn't affect drag selection.
-        if (this._focusedViaMousedown) {
+        if (this.focusedViaMousedown) {
           this.selectionStart = this.selectionEnd = 0;
         }
 
