@@ -9,6 +9,8 @@ Verify that relinking a solib doesn't relink a dependent executable if the
 solib's public API hasn't changed.
 """
 
+from __future__ import print_function
+
 import os
 import sys
 import TestCommon
@@ -24,7 +26,7 @@ test = TestGyp.TestGyp(formats=['ninja'])
 
 if not os.environ.get('ProgramFiles(x86)'):
   # TODO(scottmg)
-  print 'Skipping test on x86, http://crbug.com/365833'
+  print('Skipping test on x86, http://crbug.com/365833')
   test.pass_test()
 
 test.run_gyp('solibs_avoid_relinking.gyp')

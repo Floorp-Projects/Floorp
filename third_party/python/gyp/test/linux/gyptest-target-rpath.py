@@ -25,7 +25,7 @@ if sys.platform.startswith('linux'):
     p = test.built_file_path(p, chdir=CHDIR)
     r = re.compile(r'Library rpath: \[([^\]]+)\]')
     proc = subprocess.Popen(['readelf', '-d', p], stdout=subprocess.PIPE)
-    o = proc.communicate()[0]
+    o = proc.communicate()[0].decode('utf-8')
     assert not proc.returncode
     return r.findall(o)
 

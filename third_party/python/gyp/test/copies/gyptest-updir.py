@@ -9,12 +9,14 @@ Verifies file copies where the destination is one level above an expansion that
 yields a make variable.
 """
 
+from __future__ import print_function
+
 import sys
 
 import TestGyp
 
 if sys.platform == 'darwin':
-  print "This test is currently disabled: https://crbug.com/483696."
+  print("This test is currently disabled: https://crbug.com/483696.")
   sys.exit(0)
 
 test = TestGyp.TestGyp()

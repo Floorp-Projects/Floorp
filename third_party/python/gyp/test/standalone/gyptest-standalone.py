@@ -9,6 +9,8 @@ Verifies that a project hierarchy created with the --generator-output=
 option can be built even when it's relocated to a different path.
 """
 
+from __future__ import print_function
+
 import TestGyp
 import os
 
@@ -24,9 +26,9 @@ for root, dirs, files in os.walk("."):
     if os.path.splitext(__file__)[0] in file:
       continue
     file = os.path.join(root, file)
-    contents = open(file).read()
+    contents = open(file, 'rb').read().decode('utf-8', 'ignore')
     if 'standalone.gyp' in contents:
-      print 'gyp file referenced in generated output: %s' % file
+      print('gyp file referenced in generated output: %s' % file)
       test.fail_test()
 
 

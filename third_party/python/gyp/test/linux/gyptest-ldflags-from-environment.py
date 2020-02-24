@@ -32,7 +32,7 @@ if sys.platform.startswith('linux'):
     p = test.built_file_path(p, chdir=CHDIR)
     r = re.compile(r'\[Requesting program interpreter: ([^\]]+)\]')
     proc = subprocess.Popen(['readelf', '-l', p], stdout=subprocess.PIPE)
-    o = proc.communicate()[0]
+    o = proc.communicate()[0].decode('utf-8')
     assert not proc.returncode
     return r.search(o).group(1)
 

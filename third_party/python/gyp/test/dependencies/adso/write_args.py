@@ -6,6 +6,6 @@
 
 import sys
 
-f = open(sys.argv[1], 'wb')
+f = open(sys.argv[1], 'w')
 f.write(' '.join(sys.argv[2:]))
 f.close()

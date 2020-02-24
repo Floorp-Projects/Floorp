@@ -7,6 +7,8 @@ This module contains classes that help to emulate xcodebuild behavior on top of
 other build systems, such as make and ninja.
 """
 
+from __future__ import print_function
+
 import copy
 import gyp.common
 import os
@@ -73,7 +75,7 @@ class XcodeArchsDefault(object):
             if arch not in expanded_archs:
               expanded_archs.append(arch)
         except KeyError as e:
-          print 'Warning: Ignoring unsupported variable "%s".' % variable
+          print('Warning: Ignoring unsupported variable "%s".' % variable)
       elif arch not in expanded_archs:
         expanded_archs.append(arch)
     return expanded_archs
@@ -171,7 +173,7 @@ class XcodeSettings(object):
     # the same for all configs are implicitly per-target settings.
     self.xcode_settings = {}
     configs = spec['configurations']
-    for configname, config in configs.iteritems():
+    for configname, config in configs.items():
       self.xcode_settings[configname] = config.get('xcode_settings', {})
       self._ConvertConditionalKeys(configname)
       if self.xcode_settings[configname].get('IPHONEOS_DEPLOYMENT_TARGET',
@@ -197,8 +199,8 @@ class XcodeSettings(object):
           new_key = key.split("[")[0]
           settings[new_key] = settings[key]
       else:
-        print 'Warning: Conditional keys not implemented, ignoring:', \
-              ' '.join(conditional_keys)
+        print('Warning: Conditional keys not implemented, ignoring:', \
+              ' '.join(conditional_keys))
       del settings[key]
 
   def _Settings(self):
@@ -216,7 +218,7 @@ class XcodeSettings(object):
 
   def _WarnUnimplemented(self, test_key):
     if test_key in self._Settings():
-      print 'Warning: Ignoring not yet implemented key "%s".' % test_key
+      print('Warning: Ignoring not yet implemented key "%s".' % test_key)
 
   def IsBinaryOutputFormat(self, configname):
     default = "binary" if self.isIOS else "xml"
@@ -924,7 +926,7 @@ class XcodeSettings(object):
       # extensions and provide loader and main function.
       # These flags reflect the compilation options used by xcode to compile
       # extensions.
-      if XcodeVersion() < '0900':
+      if XcodeVersion()[0] < '0900':
         ldflags.append('-lpkstart')
         ldflags.append(sdk_root +
             '/System/Library/PrivateFrameworks/PlugInKit.framework/PlugInKit')
@@ -963,7 +965,7 @@ class XcodeSettings(object):
         result = dict(self.xcode_settings[configname])
         first_pass = False
       else:
-        for key, value in self.xcode_settings[configname].iteritems():
+        for key, value in self.xcode_settings[configname].items():
           if key not in result:
             continue
           elif result[key] != value:
@@ -1084,8 +1086,8 @@ class XcodeSettings(object):
     unimpl = ['OTHER_CODE_SIGN_FLAGS']
     unimpl = set(unimpl) & set(self.xcode_settings[configname].keys())
     if unimpl:
-      print 'Warning: Some codesign keys not implemented, ignoring: %s' % (
-          ', '.join(sorted(unimpl)))
+      print('Warning: Some codesign keys not implemented, ignoring: %s' % (
+          ', '.join(sorted(unimpl))))
 
     if self._IsXCTest():
       # For device xctests, Xcode copies two extra frameworks into $TEST_HOST.
@@ -1131,8 +1133,9 @@ class XcodeSettings(object):
       output = subprocess.check_output(
           ['security', 'find-identity', '-p', 'codesigning', '-v'])
       for line in output.splitlines():
-        if identity in line:
-          fingerprint = line.split()[1]
+        line_decoded = line.decode('utf-8')
+        if identity in line_decoded:
+          fingerprint = line_decoded.split()[1]
           cache = XcodeSettings._codesigning_key_cache
           assert identity not in cache or fingerprint == cache[identity], (
               "Multiple codesigning fingerprints for identity: %s" % identity)
@@ -1448,9 +1451,9 @@ def GetStdout(cmdlist):
   job = subprocess.Popen(cmdlist, stdout=subprocess.PIPE)
   out = job.communicate()[0]
   if job.returncode != 0:
-    sys.stderr.write(out + '\n')
+    sys.stderr.write(out + b'\n')
     raise GypError('Error %d running %s' % (job.returncode, cmdlist[0]))
-  return out.rstrip('\n')
+  return out.rstrip(b'\n').decode('utf-8')
 
 
 def MergeGlobalXcodeSettingsToSpec(global_dict, spec):
@@ -1658,7 +1661,7 @@ def _GetXcodeEnv(xcode_settings, built_products_dir, srcroot, configuration,
   install_name_base = xcode_settings.GetInstallNameBase()
   if install_name_base:
     env['DYLIB_INSTALL_NAME_BASE'] = install_name_base
-  if XcodeVersion() >= '0500' and not env.get('SDKROOT'):
+  if XcodeVersion()[0] >= '0500' and not env.get('SDKROOT'):
     sdk_root = xcode_settings._SdkRoot(configuration)
     if not sdk_root:
       sdk_root = xcode_settings._XcodeSdkPath('')
@@ -1737,7 +1740,7 @@ def _TopologicallySortedEnvVarKeys(env):
     order = gyp.common.TopologicallySorted(env.keys(), GetEdges)
     order.reverse()
     return order
-  except gyp.common.CycleError, e:
+  except gyp.common.CycleError as e:
     raise GypError(
         'Xcode environment variables are cyclically dependent: ' + str(e.nodes))
 
@@ -1774,10 +1777,11 @@ def _HasIOSTarget(targets):
 def _AddIOSDeviceConfigurations(targets):
   """Clone all targets and append -iphoneos to the name. Configure these targets
   to build for iOS devices and use correct architectures for those builds."""
-  for target_dict in targets.itervalues():
+  for target_dict in targets.values():
     toolset = target_dict['toolset']
     configs = target_dict['configurations']
-    for config_name, simulator_config_dict in dict(configs).iteritems():
+
+    for config_name, simulator_config_dict in dict(configs).items():
       iphoneos_config_dict = copy.deepcopy(simulator_config_dict)
       configs[config_name + '-iphoneos'] = iphoneos_config_dict
       configs[config_name + '-iphonesimulator'] = simulator_config_dict

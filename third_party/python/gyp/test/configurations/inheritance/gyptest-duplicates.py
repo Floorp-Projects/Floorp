@@ -8,6 +8,8 @@
 Verifies that configurations do not duplicate other settings.
 """
 
+from __future__ import print_function
+
 import TestGyp
 
 test = TestGyp.TestGyp(format='gypd')
@@ -27,7 +29,7 @@ contents = test.read('duplicates.gypd').replace(
     '\r', '').replace('\\\\', '/')
 expect = test.read('duplicates.gypd.golden').replace('\r', '')
 if not test.match(contents, expect):
-  print "Unexpected contents of `duplicates.gypd'"
+  print("Unexpected contents of `duplicates.gypd'")
   test.diff(expect, contents, 'duplicates.gypd ')
   test.fail_test()
 

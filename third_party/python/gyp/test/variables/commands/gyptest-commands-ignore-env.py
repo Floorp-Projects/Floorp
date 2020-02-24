@@ -9,6 +9,7 @@ Test that environment variables are ignored when --ignore-environment is
 specified.
 """
 
+from __future__ import print_function
 import os
 
 import TestGyp
@@ -39,7 +40,7 @@ test.run_gyp('commands.gyp',
 contents = test.read('commands.gypd').replace('\r', '')
 expect = test.read('commands.gypd.golden').replace('\r', '')
 if not test.match(contents, expect):
-  print "Unexpected contents of `commands.gypd'"
+  print("Unexpected contents of `commands.gypd'")
   test.diff(expect, contents, 'commands.gypd ')
   test.fail_test()
 

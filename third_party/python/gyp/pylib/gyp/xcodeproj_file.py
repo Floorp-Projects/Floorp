@@ -137,6 +137,7 @@ Strings of class unicode are handled properly and encoded in UTF-8 when
 a project file is output.
 """
 
+import functools
 import gyp.common
 import posixpath
 import re
@@ -154,6 +155,18 @@ except ImportError:
   import sha
   _new_sha1 = sha.new
 
+try:
+  # basestring was removed in python3.
+  basestring
+except NameError:
+  basestring = str
+
+try:
+  # cmp was removed in python3.
+  cmp
+except NameError:
+  def cmp(a, b):
+    return (a > b) - (a < b)
 
 # See XCObject._EncodeString.  This pattern is used to determine when a string
 # can be printed unquoted.  Strings that match this pattern may be printed
@@ -314,7 +327,7 @@ class XCObject(object):
     """
 
     that = self.__class__(id=self.id, parent=self.parent)
-    for key, value in self._properties.iteritems():
+    for key, value in self._properties.items():
       is_strong = self._schema[key][2]
 
       if isinstance(value, XCObject):
@@ -324,8 +337,7 @@ class XCObject(object):
           that._properties[key] = new_value
         else:
           that._properties[key] = value
-      elif isinstance(value, str) or isinstance(value, unicode) or \
-           isinstance(value, int):
+      elif isinstance(value, basestring) or isinstance(value, int):
         that._properties[key] = value
       elif isinstance(value, list):
         if is_strong:
@@ -419,7 +431,7 @@ class XCObject(object):
       """
 
       hash.update(struct.pack('>i', len(data)))
-      hash.update(data)
+      hash.update(data.encode('utf-8'))
 
     if seed_hash is None:
       seed_hash = _new_sha1()
@@ -449,10 +461,10 @@ class XCObject(object):
       # is 160 bits.  Instead of throwing out 64 bits of the digest, xor them
       # into the portion that gets used.
       assert hash.digest_size % 4 == 0
-      digest_int_count = hash.digest_size / 4
+      digest_int_count = hash.digest_size // 4
       digest_ints = struct.unpack('>' + 'I' * digest_int_count, hash.digest())
       id_ints = [0, 0, 0]
-      for index in xrange(0, digest_int_count):
+      for index in range(0, digest_int_count):
         id_ints[index % 3] ^= digest_ints[index]
       self.id = '%08X%08X%08X' % tuple(id_ints)
 
@@ -475,7 +487,7 @@ class XCObject(object):
     """Returns a list of all of this object's owned (strong) children."""
 
     children = []
-    for property, attributes in self._schema.iteritems():
+    for property, attributes in self._schema.items():
       (is_list, property_type, is_strong) = attributes[0:3]
       if is_strong and property in self._properties:
         if not is_list:
@@ -603,7 +615,12 @@ class XCObject(object):
       comment = value.Comment()
     elif isinstance(value, str):
       printable += self._EncodeString(value)
-    elif isinstance(value, unicode):
+    # A python3 compatible way of saying isinstance(value, unicode).
+    # basestring is str in python3 so this is equivalent to the above
+    # isinstance. Thus if it failed above it will fail here.
+    # In python2 we test against str and unicode at this point. str has already
+    # failed in the above isinstance so we test against unicode.
+    elif isinstance(value, basestring):
       printable += self._EncodeString(value.encode('utf-8'))
     elif isinstance(value, int):
       printable += str(value)
@@ -622,7 +639,7 @@ class XCObject(object):
         printable += end_tabs + ')'
     elif isinstance(value, dict):
       printable = '{' + sep
-      for item_key, item_value in sorted(value.iteritems()):
+      for item_key, item_value in sorted(value.items()):
         printable += element_tabs + \
             self._XCPrintableValue(tabs + 1, item_key, flatten_list) + ' = ' + \
             self._XCPrintableValue(tabs + 1, item_value, flatten_list) + ';' + \
@@ -691,7 +708,7 @@ class XCObject(object):
           printable_value[0] == '"' and printable_value[-1] == '"':
         printable_value = printable_value[1:-1]
       printable += printable_key + ' = ' + printable_value + ';' + after_kv
-    except TypeError, e:
+    except TypeError as e:
       gyp.common.ExceptionAppend(e,
                                  'while printing key "%s"' % key)
       raise
@@ -730,7 +747,7 @@ class XCObject(object):
     self._XCKVPrint(file, 3, 'isa', self.__class__.__name__)
 
     # The remaining elements of an object dictionary are sorted alphabetically.
-    for property, value in sorted(self._properties.iteritems()):
+    for property, value in sorted(self._properties.items()):
       self._XCKVPrint(file, 3, property, value)
 
     # End the object.
@@ -752,7 +769,7 @@ class XCObject(object):
     if properties is None:
       return
 
-    for property, value in properties.iteritems():
+    for property, value in properties.items():
       # Make sure the property is in the schema.
       if not property in self._schema:
         raise KeyError(property + ' not in ' + self.__class__.__name__)
@@ -766,7 +783,7 @@ class XCObject(object):
                 ' must be list, not ' + value.__class__.__name__)
         for item in value:
           if not isinstance(item, property_type) and \
-             not (item.__class__ == unicode and property_type == str):
+             not (isinstance(item, basestring) and property_type == str):
             # Accept unicode where str is specified.  str is treated as
             # UTF-8-encoded.
             raise TypeError(
@@ -774,7 +791,7 @@ class XCObject(object):
                   ' must be ' + property_type.__name__ + ', not ' + \
                   item.__class__.__name__)
       elif not isinstance(value, property_type) and \
-           not (value.__class__ == unicode and property_type == str):
+           not (isinstance(value, basestring) and property_type == str):
         # Accept unicode where str is specified.  str is treated as
         # UTF-8-encoded.
         raise TypeError(
@@ -788,8 +805,7 @@ class XCObject(object):
             self._properties[property] = value.Copy()
           else:
             self._properties[property] = value
-        elif isinstance(value, str) or isinstance(value, unicode) or \
-             isinstance(value, int):
+        elif isinstance(value, basestring) or isinstance(value, int):
           self._properties[property] = value
         elif isinstance(value, list):
           if is_strong:
@@ -865,7 +881,7 @@ class XCObject(object):
 
     # TODO(mark): A stronger verification mechanism is needed.  Some
     # subclasses need to perform validation beyond what the schema can enforce.
-    for property, attributes in self._schema.iteritems():
+    for property, attributes in self._schema.items():
       (is_list, property_type, is_strong, is_required) = attributes[0:4]
       if is_required and not property in self._properties:
         raise KeyError(self.__class__.__name__ + ' requires ' + property)
@@ -875,7 +891,7 @@ class XCObject(object):
     overwrite properties that have already been set."""
 
     defaults = {}
-    for property, attributes in self._schema.iteritems():
+    for property, attributes in self._schema.items():
       (is_list, property_type, is_strong, is_required) = attributes[0:4]
       if is_required and len(attributes) >= 5 and \
           not property in self._properties:
@@ -1402,7 +1418,8 @@ class PBXGroup(XCHierarchicalElement):
 
   def SortGroup(self):
     self._properties['children'] = \
-        sorted(self._properties['children'], cmp=lambda x,y: x.Compare(y))
+        sorted(self._properties['children'],
+               key=functools.cmp_to_key(XCHierarchicalElement.Compare))
 
     # Recurse.
     for child in self._properties['children']:
@@ -1426,8 +1443,8 @@ class XCFileLikeElement(XCHierarchicalElement):
     xche = self
     while xche != None and isinstance(xche, XCHierarchicalElement):
       xche_hashables = xche.Hashables()
-      for index in xrange(0, len(xche_hashables)):
-        hashables.insert(index, xche_hashables[index])
+      for index, xche_hashable in enumerate(xche_hashables):
+        hashables.insert(index, xche_hashable)
       xche = xche.parent
     return hashables
 
@@ -1516,6 +1533,7 @@ class PBXFileReference(XCFileLikeElement, XCContainerPortal, XCRemoteObject):
         'xcdatamodeld':'wrapper.xcdatamodeld',
         'xib':         'file.xib',
         'y':           'sourcecode.yacc',
+        'tbd':         'sourcecode.text-based-dylib-definition',
       }
 
       prop_map = {
@@ -2468,8 +2486,7 @@ class PBXNativeTarget(XCTarget):
       # The headers phase should come before the resources, sources, and
       # frameworks phases, if any.
       insert_at = len(self._properties['buildPhases'])
-      for index in xrange(0, len(self._properties['buildPhases'])):
-        phase = self._properties['buildPhases'][index]
+      for index, phase in enumerate(self._properties['buildPhases']):
         if isinstance(phase, PBXResourcesBuildPhase) or \
            isinstance(phase, PBXSourcesBuildPhase) or \
            isinstance(phase, PBXFrameworksBuildPhase):
@@ -2489,8 +2506,7 @@ class PBXNativeTarget(XCTarget):
       # The resources phase should come before the sources and frameworks
       # phases, if any.
       insert_at = len(self._properties['buildPhases'])
-      for index in xrange(0, len(self._properties['buildPhases'])):
-        phase = self._properties['buildPhases'][index]
+      for index, phase in enumerate(self._properties['buildPhases']):
         if isinstance(phase, PBXSourcesBuildPhase) or \
            isinstance(phase, PBXFrameworksBuildPhase):
           insert_at = index
@@ -2708,7 +2724,7 @@ class PBXProject(XCContainerPortal):
     # according to their defined order.
     self._properties['mainGroup']._properties['children'] = \
         sorted(self._properties['mainGroup']._properties['children'],
-               cmp=lambda x,y: x.CompareRootGroup(y))
+               key=functools.cmp_to_key(XCHierarchicalElement.CompareRootGroup))
 
     # Sort everything else by putting group before files, and going
     # alphabetically by name within sections of groups and files.  SortGroup
@@ -2799,9 +2815,8 @@ class PBXProject(XCContainerPortal):
 
       # Xcode seems to sort this list case-insensitively
       self._properties['projectReferences'] = \
-          sorted(self._properties['projectReferences'], cmp=lambda x,y:
-                 cmp(x['ProjectRef'].Name().lower(),
-                     y['ProjectRef'].Name().lower()))
+          sorted(self._properties['projectReferences'],
+                 key=lambda x: x['ProjectRef'].Name().lower())
     else:
       # The link already exists.  Pull out the relevnt data.
       project_ref_dict = self._other_pbxprojects[other_pbxproject]
@@ -2898,20 +2913,7 @@ class PBXProject(XCContainerPortal):
     # same order that the targets are sorted in the remote project file.  This
     # is the sort order used by Xcode.
 
-    def CompareProducts(x, y, remote_products):
-      # x and y are PBXReferenceProxy objects.  Go through their associated
-      # PBXContainerItem to get the remote PBXFileReference, which will be
-      # present in the remote_products list.
-      x_remote = x._properties['remoteRef']._properties['remoteGlobalIDString']
-      y_remote = y._properties['remoteRef']._properties['remoteGlobalIDString']
-      x_index = remote_products.index(x_remote)
-      y_index = remote_products.index(y_remote)
-
-      # Use the order of each remote PBXFileReference in remote_products to
-      # determine the sort order.
-      return cmp(x_index, y_index)
-
-    for other_pbxproject, ref_dict in self._other_pbxprojects.iteritems():
+    for other_pbxproject, ref_dict in self._other_pbxprojects.items():
       # Build up a list of products in the remote project file, ordered the
       # same as the targets that produce them.
       remote_products = []
@@ -2925,7 +2927,7 @@ class PBXProject(XCContainerPortal):
       product_group = ref_dict['ProductGroup']
       product_group._properties['children'] = sorted(
           product_group._properties['children'],
-          cmp=lambda x, y, rp=remote_products: CompareProducts(x, y, rp))
+          key=lambda x: remote_products.index(x._properties['remoteRef']._properties['remoteGlobalIDString']))
 
 
 class XCProjectFile(XCObject):
@@ -2956,8 +2958,7 @@ class XCProjectFile(XCObject):
       self._XCPrint(file, 0, '{ ')
     else:
       self._XCPrint(file, 0, '{\n')
-    for property, value in sorted(self._properties.iteritems(),
-                                  cmp=lambda x, y: cmp(x, y)):
+    for property, value in sorted(self._properties.items()):
       if property == 'objects':
         self._PrintObjects(file)
       else:
@@ -2984,7 +2985,7 @@ class XCProjectFile(XCObject):
       self._XCPrint(file, 0, '\n')
       self._XCPrint(file, 0, '/* Begin ' + class_name + ' section */\n')
       for object in sorted(objects_by_class[class_name],
-                           cmp=lambda x, y: cmp(x.id, y.id)):
+                           key=lambda x: x.id):
         object.Print(file)
       self._XCPrint(file, 0, '/* End ' + class_name + ' section */\n')
 

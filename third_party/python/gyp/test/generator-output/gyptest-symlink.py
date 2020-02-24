@@ -12,10 +12,12 @@ symlink.
 
 import TestGyp
 import os
+import sys
 
 test = TestGyp.TestGyp()
-if not hasattr(os, 'symlink'):
-  test.skip_test('Missing os.symlink -- skipping test.\n')
+if not hasattr(os, 'symlink') or sys.platform == 'win32':
+  # Python3 on windows has symlink but it doesn't work reliably.
+  test.skip_test('Missing or bad os.symlink -- skipping test.\n')
 
 test.writable(test.workpath('src'), False)
 

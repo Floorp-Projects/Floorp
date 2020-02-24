@@ -9,6 +9,8 @@ Make sure we don't cause unnecessary builds due to import libs appearing
 to be out of date.
 """
 
+from __future__ import print_function
+
 import TestGyp
 
 import os
@@ -20,7 +22,7 @@ if sys.platform == 'win32':
 
   if not os.environ.get('ProgramFiles(x86)'):
     # TODO(scottmg)
-    print 'Skipping test on x86, http://crbug.com/365833'
+    print('Skipping test on x86, http://crbug.com/365833')
     test.pass_test()
 
   CHDIR = 'importlib'

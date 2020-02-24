@@ -22,7 +22,7 @@ if sys.platform == 'win32':
 
   def GetFirstFreeDriveLetter():
     """ Returns the first unused Windows drive letter in [A, Z] """
-    all_letters = [c for c in string.uppercase]
+    all_letters = [c for c in string.ascii_uppercase]
     in_use = win32api.GetLogicalDriveStrings()
     free = list(set(all_letters) - set(in_use))
     return free[0]

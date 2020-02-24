@@ -16,8 +16,25 @@
           'outputs': [
             'output.txt',
           ],
-          'depfile': 'depfile.d',
-          'action': [ ]
+          'depfile': 'depfile_action.d',
+          'action': [
+            'python', 'touch.py', '<(PRODUCT_DIR)/<(_depfile)',
+          ],
+          'msvs_cygwin_shell': 0,
+        },
+        {
+          'action_name': 'depfile_action_intermediate_dir',
+          'inputs': [
+            'input.txt',
+          ],
+          'outputs': [
+            'output-intermediate.txt',
+          ],
+          'depfile': '<(INTERMEDIATE_DIR)/depfile_action_intermediate_dir.d',
+          'action': [
+            'python', 'touch.py', '<(_depfile)',
+          ],
+          'msvs_cygwin_shell': 0,
         },
       ],
     },
