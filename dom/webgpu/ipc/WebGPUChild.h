@@ -19,10 +19,8 @@ class CompositorBridgeChild;
 namespace webgpu {
 namespace ffi {
 struct WGPUClient;
-struct WGPUTextureViewDescriptor;
 }  // namespace ffi
 
-struct TextureInfo;
 typedef MozPromise<RawId, Maybe<ipc::ResponseRejectReason>, true> RawIdPromise;
 
 class WebGPUChild final : public PWebGPUChild {
@@ -36,51 +34,38 @@ class WebGPUChild final : public PWebGPUChild {
   explicit WebGPUChild();
 
   bool IsOpen() const { return mIPCOpen; }
-
   RefPtr<RawIdPromise> InstanceRequestAdapter(
       const dom::GPURequestAdapterOptions& aOptions);
   Maybe<RawId> AdapterRequestDevice(RawId aSelfId,
                                     const dom::GPUDeviceDescriptor& aDesc);
-  void DestroyAdapter(RawId aId);
   RawId DeviceCreateBuffer(RawId aSelfId,
                            const dom::GPUBufferDescriptor& aDesc);
-  void DestroyBuffer(RawId aId);
-  static UniquePtr<ffi::WGPUTextureViewDescriptor> GetDefaultViewDescriptor(
-      const dom::GPUTextureDescriptor& aDesc);
-  RawId DeviceCreateTexture(RawId aSelfId,
-                            const dom::GPUTextureDescriptor& aDesc);
-  RawId TextureCreateView(
-      RawId aSelfId, const dom::GPUTextureViewDescriptor& aDesc,
-      const ffi::WGPUTextureViewDescriptor& aDefaultViewDesc);
-  void DestroyTexture(RawId aId);
-  void DestroyTextureView(RawId aId);
-  RawId DeviceCreateSampler(RawId aSelfId,
-                            const dom::GPUSamplerDescriptor& aDesc);
-  void DestroySampler(RawId aId);
   RawId DeviceCreateCommandEncoder(
       RawId aSelfId, const dom::GPUCommandEncoderDescriptor& aDesc);
   RawId CommandEncoderFinish(RawId aSelfId,
                              const dom::GPUCommandBufferDescriptor& aDesc);
-  void DestroyCommandEncoder(RawId aId);
-  void DestroyCommandBuffer(RawId aId);
   RawId DeviceCreateBindGroupLayout(
       RawId aSelfId, const dom::GPUBindGroupLayoutDescriptor& aDesc);
-  void DestroyBindGroupLayout(RawId aId);
   RawId DeviceCreatePipelineLayout(
       RawId aSelfId, const dom::GPUPipelineLayoutDescriptor& aDesc);
-  void DestroyPipelineLayout(RawId aId);
   RawId DeviceCreateBindGroup(RawId aSelfId,
                               const dom::GPUBindGroupDescriptor& aDesc);
-  void DestroyBindGroup(RawId aId);
   RawId DeviceCreateShaderModule(RawId aSelfId,
                                  const dom::GPUShaderModuleDescriptor& aDesc);
-  void DestroyShaderModule(RawId aId);
   RawId DeviceCreateComputePipeline(
       RawId aSelfId, const dom::GPUComputePipelineDescriptor& aDesc);
-  void DestroyComputePipeline(RawId aId);
 
   void QueueSubmit(RawId aSelfId, const nsTArray<RawId>& aCommandBufferIds);
 
+  void DestroyAdapter(RawId aId);
+  void DestroyBuffer(RawId aId);
+  void DestroyCommandEncoder(RawId aId);
+  void DestroyCommandBuffer(RawId aId);
+  void DestroyBindGroupLayout(RawId aId);
+  void DestroyPipelineLayout(RawId aId);
+  void DestroyBindGroup(RawId aId);
+  void DestroyShaderModule(RawId aId);
+  void DestroyComputePipeline(RawId aId);
   void DestroyRenderPipeline(RawId aId);
 
  private:
