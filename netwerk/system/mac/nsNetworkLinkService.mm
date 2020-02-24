@@ -1016,6 +1016,12 @@ void nsNetworkLinkService::OnIPConfigChanged() {
     return;
   }
 
+  if (!mNetworkChangeTime.IsNull()) {
+    Telemetry::AccumulateTimeDelta(Telemetry::NETWORK_TIME_BETWEEN_NETWORK_CHANGE_EVENTS,
+                                   mNetworkChangeTime);
+  }
+  mNetworkChangeTime = TimeStamp::Now();
+
   NotifyObservers(NS_NETWORK_LINK_TOPIC, NS_NETWORK_LINK_DATA_CHANGED);
 }
 
