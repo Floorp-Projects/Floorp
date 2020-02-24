@@ -247,7 +247,7 @@ class Browsers private constructor(
             intent.data = uri
             intent.setPackage(browser.packageName)
 
-            val info = packageManager.resolveActivity(intent, 0)
+            val info = packageManager.resolveActivity(intent, PackageManager.MATCH_DEFAULT_ONLY)
                 ?: continue
 
             if (info.activityInfo == null || !info.activityInfo.exported) {
@@ -261,7 +261,7 @@ class Browsers private constructor(
     private fun findDefault(context: Context, packageManager: PackageManager, uri: Uri): ActivityInfo? {
         val intent = Intent(Intent.ACTION_VIEW, uri)
 
-        val resolveInfo = packageManager.resolveActivity(intent, 0)
+        val resolveInfo = packageManager.resolveActivity(intent, PackageManager.MATCH_DEFAULT_ONLY)
             ?: return null
 
         if (resolveInfo.activityInfo == null || !resolveInfo.activityInfo.exported) {
