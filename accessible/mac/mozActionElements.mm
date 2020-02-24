@@ -79,17 +79,13 @@ enum CheckboxValue {
 - (NSArray*)accessibilityActionNames {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
-  NSArray* actions = [super accessibilityActionNames];
   if ([self isEnabled]) {
-    // VoiceOver expects the press action to be the first in the list.
-    if ([self hasPopup]) {
-      return [@[ NSAccessibilityPressAction, NSAccessibilityShowMenuAction ]
-          arrayByAddingObjectsFromArray:actions];
-    }
-    return [@[ NSAccessibilityPressAction ] arrayByAddingObjectsFromArray:actions];
+    if ([self hasPopup])
+      return
+          [NSArray arrayWithObjects:NSAccessibilityPressAction, NSAccessibilityShowMenuAction, nil];
+    return [NSArray arrayWithObject:NSAccessibilityPressAction];
   }
-
-  return actions;
+  return nil;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
@@ -120,8 +116,6 @@ enum CheckboxValue {
     //       once msaa and atk have merged better, they will implement
     //       the action needed to show the menu.
     [self click];
-  } else {
-    [super accessibilityPerformAction:action];
   }
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
