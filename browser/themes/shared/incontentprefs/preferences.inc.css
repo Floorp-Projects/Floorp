@@ -143,7 +143,7 @@ button > hbox > label {
 }
 
 .accessory-button {
-  height: 30px;
+  min-height: 30px;
   min-width: 150px;
   margin: 4px 0;
 }
@@ -938,7 +938,7 @@ image.update-throbber {
 }
 
 menulist {
-  height: 30px;
+  min-height: 30px;
   margin-block: 4px;
 }
 
