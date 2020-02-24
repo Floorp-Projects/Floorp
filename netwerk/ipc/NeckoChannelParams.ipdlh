@@ -445,6 +445,7 @@ struct RedirectToRealChannelArgs {
   nsIPropertyBag2 properties;
   LastVisitInfo lastVisitInfo;
   uint32_t loadStateLoadFlags;
+  uint32_t loadStateLoadType;
   nsDOMNavigationTiming? timing;
   nsString srcdocData;
   nsIURI baseUri;

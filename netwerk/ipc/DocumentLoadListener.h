@@ -320,9 +320,10 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
   nsString mSrcdocData;
   nsCOMPtr<nsIURI> mBaseURI;
 
-  // Flags from nsDocShellLoadState::LoadFlags that we want to make available
-  // to the new docshell if we switch processes.
+  // Flags from nsDocShellLoadState::LoadFlags/Type that we want to make
+  // available to the new docshell if we switch processes.
   uint32_t mLoadStateLoadFlags = 0;
+  uint32_t mLoadStateLoadType = 0;
 
   // Corresponding redirect channel registrar Id for the final channel that
   // we want to use when redirecting the child, or doing a process switch.
