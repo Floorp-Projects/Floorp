@@ -60,6 +60,7 @@ class WebExtensionSupportTest {
     fun tearDown() {
         Dispatchers.resetMain()
         testDispatcher.cleanupTestCoroutines()
+        WebExtensionSupport.installedExtensions.clear()
     }
 
     @Test
@@ -539,5 +540,50 @@ class WebExtensionSupportTest {
         verify(engine).registerWebExtensionDelegate(delegateCaptor.capture())
         delegateCaptor.value.onUpdatePermissionRequest(mock(), mock(), mock(), mock())
         assertTrue(executed)
+    }
+
+    @Test
+    fun `reacts to extension list being updated in the engine`() {
+        val store = spy(BrowserStore())
+        val ext: WebExtension = mock()
+        whenever(ext.id).thenReturn("test")
+        whenever(ext.isEnabled()).thenReturn(true)
+        val installedList = mutableListOf(ext)
+
+        val engine: Engine = mock()
+        val callbackCaptor = argumentCaptor<((List<WebExtension>) -> Unit)>()
+        whenever(engine.listInstalledWebExtensions(callbackCaptor.capture(), any())).thenAnswer {
+            callbackCaptor.value.invoke(installedList)
+        }
+
+        val delegateCaptor = argumentCaptor<WebExtensionDelegate>()
+        WebExtensionSupport.initialize(engine, store)
+        assertEquals(1, WebExtensionSupport.installedExtensions.size)
+        assertEquals(ext, WebExtensionSupport.installedExtensions[ext.id])
+        verify(engine).registerWebExtensionDelegate(delegateCaptor.capture())
+
+        delegateCaptor.value.onExtensionListUpdated()
+        store.waitUntilIdle()
+
+        val actionCaptor = argumentCaptor<WebExtensionAction>()
+        verify(store, times(3)).dispatch(actionCaptor.capture())
+        assertEquals(3, actionCaptor.allValues.size)
+        // Initial install
+        assertTrue(actionCaptor.allValues[0] is WebExtensionAction.InstallWebExtensionAction)
+        assertEquals(WebExtensionState(ext.id), (actionCaptor.allValues[0] as WebExtensionAction.InstallWebExtensionAction).extension)
+
+        // Uninstall all
+        assertTrue(actionCaptor.allValues[1] is WebExtensionAction.UninstallAllWebExtensionsAction)
+
+        // Reinstall
+        assertTrue(actionCaptor.allValues[2] is WebExtensionAction.InstallWebExtensionAction)
+        assertEquals(WebExtensionState(ext.id), (actionCaptor.allValues[2] as WebExtensionAction.InstallWebExtensionAction).extension)
+        assertEquals(ext, WebExtensionSupport.installedExtensions[ext.id])
+
+        // Verify installed extensions are cleared
+        installedList.clear()
+        delegateCaptor.value.onExtensionListUpdated()
+        store.waitUntilIdle()
+        assertTrue(WebExtensionSupport.installedExtensions.isEmpty())
     }
 }

@@ -204,6 +204,12 @@ object WebExtensionSupport {
                     onPermissionsGranted
                 )
             }
+
+            override fun onExtensionListUpdated() {
+                installedExtensions.clear()
+                store.dispatch(WebExtensionAction.UninstallAllWebExtensionsAction)
+                registerInstalledExtensions(store, runtime)
+            }
         })
     }
 

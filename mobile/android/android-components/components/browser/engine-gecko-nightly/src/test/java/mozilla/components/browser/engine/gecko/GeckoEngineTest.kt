@@ -940,6 +940,23 @@ class GeckoEngineTest {
     }
 
     @Test
+    fun `web extension delegate notified of extension list change`() {
+        val runtime: GeckoRuntime = mock()
+        val webExtensionController: WebExtensionController = mock()
+        whenever(runtime.webExtensionController).thenReturn(webExtensionController)
+
+        val webExtensionsDelegate: WebExtensionDelegate = mock()
+        val engine = GeckoEngine(context, runtime = runtime)
+        engine.registerWebExtensionDelegate(webExtensionsDelegate)
+
+        val debuggerDelegateCaptor = argumentCaptor<WebExtensionController.DebuggerDelegate>()
+        verify(webExtensionController).setDebuggerDelegate(debuggerDelegateCaptor.capture())
+
+        debuggerDelegateCaptor.value.onExtensionListUpdated()
+        verify(webExtensionsDelegate).onExtensionListUpdated()
+    }
+
+    @Test
     fun `update web extension successfully`() {
         val runtime = mock<GeckoRuntime>()
         val extensionController: WebExtensionController = mock()
