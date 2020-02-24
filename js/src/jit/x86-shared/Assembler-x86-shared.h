@@ -423,7 +423,7 @@ class AssemblerX86Shared : public AssemblerShared {
 
   void setPrinter(Sprinter* sp) { masm.setPrinter(sp); }
 
-  static const Register getStackPointer() { return StackPointer; }
+  Register getStackPointer() const { return StackPointer; }
 
   void executableCopy(void* buffer);
   void processCodeLabels(uint8_t* rawCode);

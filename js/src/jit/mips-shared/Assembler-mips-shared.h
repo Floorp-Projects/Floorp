@@ -892,7 +892,7 @@ class AssemblerMIPSShared : public AssemblerShared {
   }
 #endif
 
-  static const Register getStackPointer() { return StackPointer; }
+  Register getStackPointer() const { return StackPointer; }
 
  protected:
   bool isFinished;
