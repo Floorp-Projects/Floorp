@@ -53,11 +53,6 @@ class nsRefPtrHashtable
   // Overload Put, rather than overriding it.
   using base_type::Put;
 
-  void Put(KeyType aKey, already_AddRefed<PtrType> aData);
-
-  MOZ_MUST_USE bool Put(KeyType aKey, already_AddRefed<PtrType> aData,
-                        const mozilla::fallible_t&);
-
   template <typename U,
             typename = std::enable_if_t<std::is_base_of_v<PtrType, U>>>
   void Put(KeyType aKey, RefPtr<U>&& aData);
@@ -152,19 +147,6 @@ PtrType* nsRefPtrHashtable<KeyClass, PtrType>::GetWeak(KeyType aKey,
   }
 
   return nullptr;
-}
-
-template <class KeyClass, class PtrType>
-void nsRefPtrHashtable<KeyClass, PtrType>::Put(
-    KeyType aKey, already_AddRefed<PtrType> aData) {
-  Put(aKey, RefPtr<PtrType>{aData});
-}
-
-template <class KeyClass, class PtrType>
-bool nsRefPtrHashtable<KeyClass, PtrType>::Put(KeyType aKey,
-                                               already_AddRefed<PtrType> aData,
-                                               const mozilla::fallible_t&) {
-  return Put(aKey, RefPtr<PtrType>{aData}, mozilla::fallible);
 }
 
 template <class KeyClass, class PtrType>
