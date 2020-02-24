@@ -12,6 +12,15 @@ Use Gradle to download the library from [maven.mozilla.org](https://maven.mozill
 implementation "org.mozilla.components:support-migration:{latest-version}"
 ```
 
+## Facts
+
+This component emits the following [Facts](../../support/migration/README.md#Facts):
+
+| Action       | Item                | Description              |
+|--------------|---------------------|--------------------------|
+| Interaction  | migration_started   | Migration was started.   |
+| Interaction  | migration_completed | Migration was completed. |
+
 ## License
 
     This Source Code Form is subject to the terms of the Mozilla Public
