@@ -3827,7 +3827,18 @@ impl PrimitiveInstance {
                 });
             }
 
-            if segments.is_empty() {
+            // If only a single segment is produced, there is no benefit to writing
+            // a segment instance array. Instead, just use the main primitive rect
+            // written into the GPU cache.
+            // TODO(gw): This is (sortof) a bandaid - due to a limitation in the current
+            //           brush encoding, we can only support a total of up to 2^16 segments.
+            //           This should be (more than) enough for any real world case, so for
+            //           now we can handle this by skipping cases where we were generating
+            //           segments where there is no benefit. The long term / robust fix
+            //           for this is to move the segment building to be done as a more
+            //           limited nine-patch system during scene building, removing arbitrary
+            //           segmentation during frame-building (see bug #1617491).
+            if segments.len() <= 1 {
                 *segment_instance_index = SegmentInstanceIndex::UNUSED;
             } else {
                 let segments_range = segments_store.extend(segments);
