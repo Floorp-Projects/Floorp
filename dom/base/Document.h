@@ -1017,9 +1017,6 @@ class Document : public nsINode,
   void SetIsInitialDocument(bool aIsInitialDocument);
 
   void SetLoadedAsData(bool aLoadedAsData) { mLoadedAsData = aLoadedAsData; }
-  void SetLoadedAsInteractiveData(bool aLoadedAsInteractiveData) {
-    mLoadedAsInteractiveData = aLoadedAsInteractiveData;
-  }
 
   /**
    * Normally we assert if a runnable labeled with one DocGroup touches data
@@ -2148,9 +2145,7 @@ class Document : public nsINode,
   bool IsHTMLOrXHTML() const { return mType == eHTML || mType == eXHTML; }
   bool IsXMLDocument() const { return !IsHTMLDocument(); }
   bool IsSVGDocument() const { return mType == eSVG; }
-  bool IsUnstyledDocument() {
-    return IsLoadedAsData() || IsLoadedAsInteractiveData();
-  }
+  bool IsUnstyledDocument() { return IsLoadedAsData(); }
   bool LoadsFullXULStyleSheetUpFront() {
     if (IsSVGDocument()) {
       return false;
@@ -2489,8 +2484,6 @@ class Document : public nsINode,
   }
 
   bool IsLoadedAsData() { return mLoadedAsData; }
-
-  bool IsLoadedAsInteractiveData() { return mLoadedAsInteractiveData; }
 
   bool MayStartLayout() { return mMayStartLayout; }
 
@@ -4325,11 +4318,6 @@ class Document : public nsINode,
   // True if we're loaded as data and therefor has any dangerous stuff, such
   // as scripts and plugins, disabled.
   bool mLoadedAsData : 1;
-
-  // This flag is only set in XMLDocument, for e.g. documents used in XBL. We
-  // don't want animations to play in such documents, so we need to store the
-  // flag here so that we can check it in Document::GetAnimationController.
-  bool mLoadedAsInteractiveData : 1;
 
   // If true, whoever is creating the document has gotten it to the
   // point where it's safe to start layout on it.

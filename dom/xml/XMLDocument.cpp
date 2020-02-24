@@ -251,11 +251,6 @@ nsresult XMLDocument::StartDocumentLoad(const char* aCommand,
       aCommand, aChannel, aLoadGroup, aContainer, aDocListener, aReset, aSink);
   if (NS_FAILED(rv)) return rv;
 
-  if (nsCRT::strcmp("loadAsInteractiveData", aCommand) == 0) {
-    mLoadedAsInteractiveData = true;
-    aCommand = kLoadAsData;  // XBL, for example, needs scripts and styles
-  }
-
   int32_t charsetSource = kCharsetFromDocTypeDefault;
   NotNull<const Encoding*> encoding = UTF_8_ENCODING;
   TryChannelCharset(aChannel, charsetSource, encoding, nullptr);
@@ -303,7 +298,7 @@ nsresult XMLDocument::StartDocumentLoad(const char* aCommand,
 void XMLDocument::EndLoad() {
   mChannelIsPending = false;
 
-  mSynchronousDOMContentLoaded = (mLoadedAsData || mLoadedAsInteractiveData);
+  mSynchronousDOMContentLoaded = mLoadedAsData;
   Document::EndLoad();
   if (mSynchronousDOMContentLoaded) {
     mSynchronousDOMContentLoaded = false;
