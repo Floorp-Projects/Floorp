@@ -166,12 +166,6 @@ const nsCString& nsCSSProps::GetStringValue(nsCSSCounterDesc aCounterDesc) {
 
 /***************************************************************************/
 
-const KTableEntry nsCSSProps::kFontSmoothingKTable[] = {
-    {eCSSKeyword_auto, NS_FONT_SMOOTHING_AUTO},
-    {eCSSKeyword_grayscale, NS_FONT_SMOOTHING_GRAYSCALE},
-    {eCSSKeyword_UNKNOWN, nsCSSKTableEntry::SENTINEL_VALUE},
-};
-
 const KTableEntry nsCSSProps::kTextAlignKTable[] = {
     {eCSSKeyword_left, NS_STYLE_TEXT_ALIGN_LEFT},
     {eCSSKeyword_right, NS_STYLE_TEXT_ALIGN_RIGHT},
