@@ -77,8 +77,7 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
             bool aHasNonEmptySandboxingFlags,
             const Maybe<ipc::URIParams>& aTopWindowURI,
             const Maybe<ipc::PrincipalInfo>& aContentBlockingAllowListPrincipal,
-            const nsString& aCustomUserAgent, const uint64_t& aChannelId,
-            const TimeStamp& aAsyncOpenTime,
+            const uint64_t& aChannelId, const TimeStamp& aAsyncOpenTime,
             const Maybe<uint32_t>& aDocumentOpenFlags, bool aPluginsAllowed,
             nsDOMNavigationTiming* aTiming, nsresult* aRv);
 

@@ -2343,14 +2343,7 @@ nsDocShell::NameEquals(const nsAString& aName, bool* aResult) {
 }
 
 NS_IMETHODIMP
-nsDocShell::GetCustomUserAgent(nsAString& aCustomUserAgent) {
-  aCustomUserAgent = mCustomUserAgent;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocShell::SetCustomUserAgent(const nsAString& aCustomUserAgent) {
-  mCustomUserAgent = aCustomUserAgent;
+nsDocShell::ClearCachedUserAgent() {
   RefPtr<nsGlobalWindowInner> win =
       mScriptGlobal ? mScriptGlobal->GetCurrentInnerWindowInternal() : nullptr;
   if (win) {
@@ -2360,13 +2353,6 @@ nsDocShell::SetCustomUserAgent(const nsAString& aCustomUserAgent) {
     }
   }
 
-  uint32_t childCount = mChildList.Length();
-  for (uint32_t i = 0; i < childCount; ++i) {
-    nsCOMPtr<nsIDocShell> childShell = do_QueryInterface(ChildAt(i));
-    if (childShell) {
-      childShell->SetCustomUserAgent(aCustomUserAgent);
-    }
-  }
   return NS_OK;
 }
 
@@ -2628,7 +2614,6 @@ nsresult nsDocShell::SetDocLoaderParent(nsDocLoader* aParent) {
   // If parent is another docshell, we inherit all their flags for
   // allowing plugins, scripting etc.
   bool value;
-  nsString customUserAgent;
   nsCOMPtr<nsIDocShell> parentAsDocShell(do_QueryInterface(parent));
 
   if (parentAsDocShell) {
@@ -2662,10 +2647,6 @@ nsresult nsDocShell::SetDocLoaderParent(nsDocLoader* aParent) {
         parentAsDocShell->GetAllowContentRetargetingOnChildren());
     if (NS_SUCCEEDED(parentAsDocShell->GetIsActive(&value))) {
       SetIsActive(value);
-    }
-    if (NS_SUCCEEDED(parentAsDocShell->GetCustomUserAgent(customUserAgent)) &&
-        !customUserAgent.IsEmpty()) {
-      SetCustomUserAgent(customUserAgent);
     }
     if (NS_FAILED(parentAsDocShell->GetAllowDNSPrefetch(&value))) {
       value = false;

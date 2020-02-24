@@ -403,7 +403,6 @@ struct DocumentChannelCreationArgs {
   PrincipalInfo? contentBlockingAllowListPrincipal;
   TimeStamp asyncOpenTime;
   nsString? initiatorType;
-  nsString customUserAgent;
   uint64_t channelId;
   uint32_t loadFlags;
   uint32_t loadType;

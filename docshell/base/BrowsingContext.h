@@ -107,7 +107,8 @@ class WindowProxyHolder;
   FIELD(GVInaudibleAutoplayRequestStatus, GVAutoplayRequestStatus)           \
   /* ScreenOrientation-related APIs */                                       \
   FIELD(CurrentOrientationAngle, float)                                      \
-  FIELD(CurrentOrientationType, mozilla::dom::OrientationType)
+  FIELD(CurrentOrientationType, mozilla::dom::OrientationType)               \
+  FIELD(UserAgentOverride, nsString)
 
 // BrowsingContext, in this context, is the cross process replicated
 // environment in which information about documents is stored. In
@@ -466,6 +467,11 @@ class BrowsingContext : public nsISupports, public nsWrapperCache {
                       const WindowPostMessageOptions& aOptions,
                       nsIPrincipal& aSubjectPrincipal, ErrorResult& aError);
 
+  void GetCustomUserAgent(nsString& aUserAgent) {
+    aUserAgent = Top()->GetUserAgentOverride();
+  }
+  void SetCustomUserAgent(const nsAString& aUserAgent);
+
   JSObject* WrapObject(JSContext* aCx);
 
   static JSObject* ReadStructuredClone(JSContext* aCx,
@@ -626,6 +632,10 @@ class BrowsingContext : public nsISupports, public nsWrapperCache {
   void DidSet(FieldIndex<IDX_Loading>);
 
   void DidSet(FieldIndex<IDX_AncestorLoading>);
+
+  void DidSet(FieldIndex<IDX_UserAgentOverride>);
+  bool CanSet(FieldIndex<IDX_UserAgentOverride>, const nsString& aUserAgent,
+              ContentParent* aSource);
 
   template <size_t I, typename T>
   bool CanSet(FieldIndex<I>, const T&, ContentParent*) {

@@ -255,9 +255,9 @@ bool DocumentLoadListener::Open(
     bool aIsActive, bool aIsTopLevelDoc, bool aHasNonEmptySandboxingFlags,
     const Maybe<URIParams>& aTopWindowURI,
     const Maybe<PrincipalInfo>& aContentBlockingAllowListPrincipal,
-    const nsString& aCustomUserAgent, const uint64_t& aChannelId,
-    const TimeStamp& aAsyncOpenTime, const Maybe<uint32_t>& aDocumentOpenFlags,
-    bool aPluginsAllowed, nsDOMNavigationTiming* aTiming, nsresult* aRv) {
+    const uint64_t& aChannelId, const TimeStamp& aAsyncOpenTime,
+    const Maybe<uint32_t>& aDocumentOpenFlags, bool aPluginsAllowed,
+    nsDOMNavigationTiming* aTiming, nsresult* aRv) {
   LOG(("DocumentLoadListener Open [this=%p, uri=%s]", this,
        aLoadState->URI()->GetSpecOrDefault().get()));
 
@@ -284,15 +284,6 @@ bool DocumentLoadListener::Open(
           PrincipalInfoToPrincipal(*aContentBlockingAllowListPrincipal);
       httpBaseChannel->SetContentBlockingAllowListPrincipal(
           contentBlockingAllowListPrincipal);
-    }
-
-    // The content process docshell can specify a custom override
-    // for the user agent value. If we had one, then add it to
-    // the header now.
-    if (!aCustomUserAgent.IsEmpty()) {
-      NS_ConvertUTF16toUTF8 utf8CustomUserAgent(aCustomUserAgent);
-      *aRv = httpBaseChannel->SetRequestHeader(NS_LITERAL_CSTRING("User-Agent"),
-                                               utf8CustomUserAgent, false);
     }
   }
 
