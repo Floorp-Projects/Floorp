@@ -238,8 +238,7 @@ void ActiveLayerTracker::TransferActivityToContent(nsIFrame* aFrame,
   if (!aFrame->HasAnyStateBits(NS_FRAME_HAS_LAYER_ACTIVITY_PROPERTY)) {
     return;
   }
-  LayerActivity* layerActivity =
-      aFrame->TakeProperty(LayerActivityProperty());
+  LayerActivity* layerActivity = aFrame->TakeProperty(LayerActivityProperty());
   aFrame->RemoveStateBits(NS_FRAME_HAS_LAYER_ACTIVITY_PROPERTY);
   if (!layerActivity) {
     return;

@@ -9398,7 +9398,8 @@ void StorageInitializedOp::GetResponse(RequestResponse& aResponse) {
   aResponse = storageInitializedResponse;
 }
 
-nsresult TemporaryStorageInitializedOp::DoDirectoryWork(QuotaManager* aQuotaManager) {
+nsresult TemporaryStorageInitializedOp::DoDirectoryWork(
+    QuotaManager* aQuotaManager) {
   AssertIsOnIOThread();
 
   AUTO_PROFILER_LABEL("TemporaryStorageInitializedOp::DoDirectoryWork", OTHER);

@@ -609,8 +609,7 @@ static void AddImageURL(const StyleComputedUrl& aURL,
   }
 }
 
-static void AddImageURL(const StyleImage& aImage,
-                        nsTArray<nsCString>& aURLs) {
+static void AddImageURL(const StyleImage& aImage, nsTArray<nsCString>& aURLs) {
   if (auto* urlValue = aImage.GetImageRequestURLValue()) {
     AddImageURL(*urlValue, aURLs);
   }

@@ -32,15 +32,16 @@ void DNSRequestParent::DoAsyncResolve(const nsACString& hostname,
     nsCOMPtr<nsIEventTarget> main = GetMainThreadEventTarget();
     nsCOMPtr<nsICancelable> unused;
     if (type != nsIDNSService::RESOLVE_TYPE_DEFAULT) {
-        rv = dns->AsyncResolveByTypeNative(hostname, type, flags, this, main,
-                                           originAttributes, getter_AddRefs(unused));
+      rv = dns->AsyncResolveByTypeNative(hostname, type, flags, this, main,
+                                         originAttributes,
+                                         getter_AddRefs(unused));
     } else if (trrServer.IsEmpty()) {
-        rv = dns->AsyncResolveNative(hostname, flags, this, main, originAttributes,
-                                     getter_AddRefs(unused));
+      rv = dns->AsyncResolveNative(hostname, flags, this, main,
+                                   originAttributes, getter_AddRefs(unused));
     } else {
-        rv = dns->AsyncResolveWithTrrServerNative(hostname, trrServer, flags, this,
-                                                  main, originAttributes,
-                                                  getter_AddRefs(unused));
+      rv = dns->AsyncResolveWithTrrServerNative(hostname, trrServer, flags,
+                                                this, main, originAttributes,
+                                                getter_AddRefs(unused));
     }
   }
 
@@ -63,8 +64,8 @@ mozilla::ipc::IPCResult DNSRequestParent::RecvCancelDNSRequest(
       rv = dns->CancelAsyncResolveNative(hostName, flags, this, reason,
                                          originAttributes);
     } else {
-      rv = dns->CancelAsyncResolveWithTrrServerNative(hostName, aTrrServer, flags,
-                                                      this, reason, originAttributes);
+      rv = dns->CancelAsyncResolveWithTrrServerNative(
+          hostName, aTrrServer, flags, this, reason, originAttributes);
     }
   }
   return IPC_OK();

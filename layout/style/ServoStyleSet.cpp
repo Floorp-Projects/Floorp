@@ -51,9 +51,12 @@ bool ServoStyleSet::IsCurrentThreadInServoTraversal() {
 #endif
 
 // The definition of kOrigins relies on this.
-static_assert(static_cast<uint8_t>(StyleOrigin::UserAgent) == static_cast<uint8_t>(OriginFlags::UserAgent));
-static_assert(static_cast<uint8_t>(StyleOrigin::User) == static_cast<uint8_t>(OriginFlags::User));
-static_assert(static_cast<uint8_t>(StyleOrigin::Author) == static_cast<uint8_t>(OriginFlags::Author));
+static_assert(static_cast<uint8_t>(StyleOrigin::UserAgent) ==
+              static_cast<uint8_t>(OriginFlags::UserAgent));
+static_assert(static_cast<uint8_t>(StyleOrigin::User) ==
+              static_cast<uint8_t>(OriginFlags::User));
+static_assert(static_cast<uint8_t>(StyleOrigin::Author) ==
+              static_cast<uint8_t>(OriginFlags::Author));
 
 constexpr const StyleOrigin ServoStyleSet::kOrigins[];
 

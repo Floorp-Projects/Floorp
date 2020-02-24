@@ -1260,7 +1260,7 @@ nsresult nsFrameSelection::TakeFocus(nsIContent* aNewFocus,
   // traverse through document and unselect crap here
   if (aFocusMode !=
       FocusMode::kExtendSelection) {  // single click? setting cursor down
-    uint32_t batching = mBatching;  // hack to use the collapse code.
+    uint32_t batching = mBatching;    // hack to use the collapse code.
     bool changes = mChangesDuringBatching;
     mBatching = 1;
 

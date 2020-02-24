@@ -155,12 +155,12 @@ class AddrInfo {
   unsigned int IsTRR() { return mFromTRR; }
 
   double GetTrrFetchDuration() { return mTrrFetchDuration; }
-  double GetTrrFetchDurationNetworkOnly() { return mTrrFetchDurationNetworkOnly; }
-  void SetTrrFetchDuration(double aTime) {
-      mTrrFetchDuration = aTime;
+  double GetTrrFetchDurationNetworkOnly() {
+    return mTrrFetchDurationNetworkOnly;
   }
+  void SetTrrFetchDuration(double aTime) { mTrrFetchDuration = aTime; }
   void SetTrrFetchDurationNetworkOnly(double aTime) {
-      mTrrFetchDurationNetworkOnly = aTime;
+    mTrrFetchDurationNetworkOnly = aTime;
   }
 
  private:

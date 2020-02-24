@@ -49,7 +49,8 @@ class AudioBufferSourceNode final : public AudioScheduledSourceNode,
   AudioBuffer* GetBuffer(JSContext* aCx) const { return mBuffer; }
   void SetBuffer(JSContext* aCx, AudioBuffer* aBuffer, ErrorResult& aRv) {
     if (aBuffer && mBufferSet) {
-      aRv.ThrowInvalidStateError("Cannot set the buffer attribute of an AudioBufferSourceNode "
+      aRv.ThrowInvalidStateError(
+          "Cannot set the buffer attribute of an AudioBufferSourceNode "
           "with an AudioBuffer more than once");
       return;
     }
