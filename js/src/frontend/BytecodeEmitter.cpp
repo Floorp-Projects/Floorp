@@ -5531,11 +5531,14 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitFunction(
     // from the parent. The remaining values will use their defaults.
     MOZ_ASSERT(script->mutedErrors() == parser->options().mutedErrors());
     const JS::TransitiveCompileOptions& transitiveOptions = parser->options();
-    JS::CompileOptions options(cx, transitiveOptions);
 
     RootedFunction fun(cx, funbox->function());
     RootedScript innerScript(
-        cx, JSScript::Create(cx, fun, options, compilationInfo.sourceObject,
+        cx, JSScript::Create(cx, fun, compilationInfo.sourceObject,
+                             /* noScriptRval (non-transitive option) = */ false,
+                             transitiveOptions.selfHostingMode,
+                             /* isRunOnce (non-transitive option) = */ false,
+                             transitiveOptions.hideScriptFromDebugger,
                              funbox->extent));
     if (!innerScript) {
       return false;
