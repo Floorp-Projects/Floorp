@@ -184,7 +184,8 @@ class nsPermissionManager final : public nsIPermissionManager,
                        int64_t aExpireTime, int64_t aModificationTime,
                        NotifyOperationType aNotifyOperation,
                        DBOperationType aDBOperation,
-                       const bool aIgnoreSessionPermissions = false);
+                       const bool aIgnoreSessionPermissions = false,
+                       const nsACString* aOriginString = nullptr);
 
   // Similar to TestPermissionFromPrincipal, except that it is used only for
   // permissions which can never have default values.

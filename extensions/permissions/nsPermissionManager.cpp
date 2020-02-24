@@ -408,7 +408,8 @@ class MOZ_STACK_CLASS UpgradeHostToOriginHostfileImport final
 
     return mPm->AddInternal(principal, aType, aPermission, mID, aExpireType,
                             aExpireTime, aModificationTime,
-                            nsPermissionManager::eDontNotify, mOperation);
+                            nsPermissionManager::eDontNotify, mOperation, false,
+                            &aOrigin);
   }
 
  private:
@@ -1723,11 +1724,24 @@ nsresult nsPermissionManager::AddInternal(
     nsIPrincipal* aPrincipal, const nsACString& aType, uint32_t aPermission,
     int64_t aID, uint32_t aExpireType, int64_t aExpireTime,
     int64_t aModificationTime, NotifyOperationType aNotifyOperation,
-    DBOperationType aDBOperation, const bool aIgnoreSessionPermissions) {
+    DBOperationType aDBOperation, const bool aIgnoreSessionPermissions,
+    const nsACString* aOriginString) {
+  nsresult rv = NS_OK;
   nsAutoCString origin;
-  nsresult rv = GetOriginFromPrincipal(aPrincipal,
-                                       IsOAForceStripPermission(aType), origin);
-  NS_ENSURE_SUCCESS(rv, rv);
+  // Only attempt to compute the origin string when it is going to be needed
+  // later on in the function.
+  if (!IsChildProcess() ||
+      (aDBOperation == eWriteToDB && IsPersistentExpire(aExpireType, aType))) {
+    if (aOriginString) {
+      // Use the origin string provided by the caller.
+      origin = *aOriginString;
+    } else {
+      // Compute it from the principal provided.
+      rv = GetOriginFromPrincipal(aPrincipal, IsOAForceStripPermission(aType),
+                                  origin);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+  }
 
   // For private browsing only store permissions for the session
   if (aExpireType != EXPIRE_SESSION) {
@@ -2054,7 +2068,7 @@ nsPermissionManager::RemoveAllSince(int64_t aSince) {
 
 template <class T>
 nsresult nsPermissionManager::RemovePermissionEntries(T aCondition) {
-  Vector<Pair<nsCOMPtr<nsIPrincipal>, nsCString>, 10> array;
+  Vector<Tuple<nsCOMPtr<nsIPrincipal>, nsCString, nsCString>, 10> array;
   for (auto iter = mPermissionTable.Iter(); !iter.Done(); iter.Next()) {
     PermissionHashKey* entry = iter.Get();
     for (const auto& permEntry : entry->GetPermissions()) {
@@ -2071,7 +2085,8 @@ nsresult nsPermissionManager::RemovePermissionEntries(T aCondition) {
         continue;
       }
 
-      if (!array.emplaceBack(principal, mTypeArray[permEntry.mType])) {
+      if (!array.emplaceBack(principal, mTypeArray[permEntry.mType],
+                             entry->GetKey()->mOrigin)) {
         continue;
       }
     }
@@ -2079,9 +2094,10 @@ nsresult nsPermissionManager::RemovePermissionEntries(T aCondition) {
 
   for (auto& i : array) {
     // AddInternal handles removal, so let it do the work...
-    AddInternal(i.first(), i.second(), nsIPermissionManager::UNKNOWN_ACTION, 0,
+    AddInternal(Get<0>(i), Get<1>(i), nsIPermissionManager::UNKNOWN_ACTION, 0,
                 nsIPermissionManager::EXPIRE_NEVER, 0, 0,
-                nsPermissionManager::eNotify, nsPermissionManager::eWriteToDB);
+                nsPermissionManager::eNotify, nsPermissionManager::eWriteToDB,
+                false, &Get<2>(i));
   }
   // now re-import any defaults as they may now be required if we just deleted
   // an override.
@@ -2675,7 +2691,7 @@ nsPermissionManager::RemovePermissionsWithAttributes(
 
 nsresult nsPermissionManager::RemovePermissionsWithAttributes(
     mozilla::OriginAttributesPattern& aPattern) {
-  Vector<Pair<nsCOMPtr<nsIPrincipal>, nsCString>, 10> permissions;
+  Vector<Tuple<nsCOMPtr<nsIPrincipal>, nsCString, nsCString>, 10> permissions;
   for (auto iter = mPermissionTable.Iter(); !iter.Done(); iter.Next()) {
     PermissionHashKey* entry = iter.Get();
 
@@ -2691,16 +2707,18 @@ nsresult nsPermissionManager::RemovePermissionsWithAttributes(
     }
 
     for (const auto& permEntry : entry->GetPermissions()) {
-      if (!permissions.emplaceBack(principal, mTypeArray[permEntry.mType])) {
+      if (!permissions.emplaceBack(principal, mTypeArray[permEntry.mType],
+                                   entry->GetKey()->mOrigin)) {
         continue;
       }
     }
   }
 
   for (auto& i : permissions) {
-    AddInternal(i.first(), i.second(), nsIPermissionManager::UNKNOWN_ACTION, 0,
+    AddInternal(Get<0>(i), Get<1>(i), nsIPermissionManager::UNKNOWN_ACTION, 0,
                 nsIPermissionManager::EXPIRE_NEVER, 0, 0,
-                nsPermissionManager::eNotify, nsPermissionManager::eWriteToDB);
+                nsPermissionManager::eNotify, nsPermissionManager::eWriteToDB,
+                false, &Get<2>(i));
   }
 
   return NS_OK;
@@ -2824,7 +2842,8 @@ nsresult nsPermissionManager::Read() {
     }
 
     rv = AddInternal(principal, type, permission, id, expireType, expireTime,
-                     modificationTime, eDontNotify, eNoDBOperation);
+                     modificationTime, eDontNotify, eNoDBOperation, false,
+                     &origin);
     if (NS_FAILED(rv)) {
       readError = true;
       continue;
