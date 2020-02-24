@@ -19,7 +19,7 @@ ac_add_options --enable-optimize
 
 # Wrap all compiler invocations in order to enable the plugin and send
 # information to a common database.
-ac_add_options --with-compiler-wrapper=$MOZBUILD_STATE_PATH/sixgill/usr/libexec/sixgill/scripts/wrap_gcc/basecc
+ac_add_options --with-compiler-wrapper=$MOZBUILD_STATE_PATH/hazard-tools/sixgill/usr/libexec/sixgill/scripts/wrap_gcc/basecc
 
 # Stuff that gets in the way.
 ac_add_options --without-ccache
