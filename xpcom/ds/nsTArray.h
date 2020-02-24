@@ -1658,15 +1658,13 @@ class nsTArray_Impl
 
   // Append a new element, constructed in place from the provided arguments.
  protected:
-  template <typename ActualAlloc, class... Args>
-  elem_type* EmplaceBackInternal(Args&&... aItem);
+  template <class... Args, typename ActualAlloc = Alloc>
+  elem_type* EmplaceBack(Args&&... aItem);
 
  public:
   template <class... Args>
-  MOZ_MUST_USE elem_type* EmplaceBack(const mozilla::fallible_t&,
-                                      Args&&... aArgs) {
-    return EmplaceBackInternal<FallibleAlloc, Args...>(
-        std::forward<Args>(aArgs)...);
+  MOZ_MUST_USE elem_type* EmplaceBack(Args&&... aArgs, mozilla::fallible_t&) {
+    return EmplaceBack<Args..., FallibleAlloc>(std::forward<Args>(aArgs)...);
   }
 
   // Append a new element, move constructing if possible.
@@ -2464,9 +2462,8 @@ auto nsTArray_Impl<E, Alloc>::AppendElement(Item&& aItem) -> elem_type* {
 }
 
 template <typename E, class Alloc>
-template <typename ActualAlloc, class... Args>
-auto nsTArray_Impl<E, Alloc>::EmplaceBackInternal(Args&&... aArgs)
-    -> elem_type* {
+template <class... Args, typename ActualAlloc>
+auto nsTArray_Impl<E, Alloc>::EmplaceBack(Args&&... aArgs) -> elem_type* {
   // Length() + 1 is guaranteed to not overflow, so EnsureCapacity is OK.
   if (!ActualAlloc::Successful(this->template EnsureCapacity<ActualAlloc>(
           Length() + 1, sizeof(elem_type)))) {
@@ -2547,13 +2544,6 @@ class nsTArray : public nsTArray_Impl<E, nsTArrayInfallibleAllocator> {
   using base_type::ReplaceElementsAt;
   using base_type::SetCapacity;
   using base_type::SetLength;
-
-  template <class... Args>
-  typename base_type::elem_type* EmplaceBack(Args&&... aArgs) {
-    return this
-        ->template EmplaceBackInternal<nsTArrayInfallibleAllocator, Args...>(
-            std::forward<Args>(aArgs)...);
-  }
 };
 
 //

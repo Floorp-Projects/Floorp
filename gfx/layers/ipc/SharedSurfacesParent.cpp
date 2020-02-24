@@ -192,7 +192,7 @@ void SharedSurfacesParent::Add(const wr::ExternalImageId& aId,
   wr::RenderThread::Get()->RegisterExternalImage(id, texture.forget());
 
   surface->AddConsumer();
-  sInstance->mSurfaces.Put(id, std::move(surface));
+  sInstance->mSurfaces.Put(id, surface.forget());
 }
 
 /* static */

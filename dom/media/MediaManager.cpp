@@ -2757,7 +2757,7 @@ RefPtr<MediaManager::StreamPromise> MediaManager::GetUserMedia(
                 focusSource);
 
             // Store the task w/callbacks.
-            self->mActiveCallbacks.Put(callID, std::move(task));
+            self->mActiveCallbacks.Put(callID, task.forget());
 
             // Add a WindowID cross-reference so OnNavigation can tear
             // things down
@@ -3376,7 +3376,7 @@ void MediaManager::AddWindowID(uint64_t aWindowId,
     return;
   }
 
-  GetActiveWindows()->Put(aWindowId, std::move(aListener));
+  GetActiveWindows()->Put(aWindowId, aListener.forget());
 }
 
 void MediaManager::RemoveWindowID(uint64_t aWindowId) {
