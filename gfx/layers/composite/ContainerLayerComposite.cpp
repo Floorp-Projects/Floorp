@@ -43,8 +43,8 @@
 #  include "ProfilerMarkerPayload.h"  // for LayerTranslationMarkerPayload
 #endif
 
-#define CULLING_LOG(...)
-// #define CULLING_LOG(...) printf_stderr("CULLING: " __VA_ARGS__)
+static mozilla::LazyLogModule sGfxCullLog("gfx.culling");
+#define CULLING_LOG(...) MOZ_LOG(sGfxCullLog, LogLevel::Debug, (__VA_ARGS__))
 
 #define DUMP(...)                 \
   do {                            \

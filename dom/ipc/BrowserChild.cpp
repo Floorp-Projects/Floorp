@@ -21,6 +21,7 @@
 #include "EventStateManager.h"
 #include "FrameLayerBuilder.h"
 #include "Layers.h"
+#include "LayersLogging.h"
 #include "MMPrinter.h"
 #include "PermissionMessageUtils.h"
 #include "PuppetWidget.h"
@@ -146,8 +147,7 @@
 #define BROWSER_ELEMENT_CHILD_SCRIPT \
   NS_LITERAL_STRING("chrome://global/content/BrowserElementChild.js")
 
-#define TABC_LOG(...)
-// #define TABC_LOG(...) printf_stderr("TABC: " __VA_ARGS__)
+static mozilla::LazyLogModule sApzChildLog("apz.child");
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -1369,11 +1369,12 @@ mozilla::ipc::IPCResult BrowserChild::RecvSuppressDisplayport(
 void BrowserChild::HandleDoubleTap(const CSSPoint& aPoint,
                                    const Modifiers& aModifiers,
                                    const ScrollableLayerGuid& aGuid) {
-  TABC_LOG("Handling double tap at %s with %p %p\n", Stringify(aPoint).c_str(),
-           mBrowserChildMessageManager
-               ? mBrowserChildMessageManager->GetWrapper()
-               : nullptr,
-           mBrowserChildMessageManager.get());
+  MOZ_LOG(
+      sApzChildLog, LogLevel::Debug,
+      ("Handling double tap at %s with %p %p\n", Stringify(aPoint).c_str(),
+       mBrowserChildMessageManager ? mBrowserChildMessageManager->GetWrapper()
+                                   : nullptr,
+       mBrowserChildMessageManager.get()));
 
   if (!mBrowserChildMessageManager) {
     return;
@@ -1873,7 +1874,8 @@ mozilla::ipc::IPCResult BrowserChild::RecvNormalPriorityMouseWheelEvent(
 mozilla::ipc::IPCResult BrowserChild::RecvRealTouchEvent(
     const WidgetTouchEvent& aEvent, const ScrollableLayerGuid& aGuid,
     const uint64_t& aInputBlockId, const nsEventStatus& aApzResponse) {
-  TABC_LOG("Receiving touch event of type %d\n", aEvent.mMessage);
+  MOZ_LOG(sApzChildLog, LogLevel::Debug,
+          ("Receiving touch event of type %d\n", aEvent.mMessage));
 
   WidgetTouchEvent localEvent(aEvent);
   localEvent.mWidget = mPuppetWidget;
@@ -3456,7 +3458,6 @@ nsresult BrowserChild::CanCancelContentJS(
   if (aEpoch <= mCancelContentJSEpoch) {
     // The next page loaded before we got here, so we shouldn't try to cancel
     // the content JS.
-    TABC_LOG("Unable to cancel content JS; the next page is already loaded!\n");
     return NS_OK;
   }
 
