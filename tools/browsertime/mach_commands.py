@@ -31,6 +31,8 @@ All arguments are passed through to browsertime.
 from __future__ import absolute_import, print_function, unicode_literals
 
 import argparse
+import collections
+import json
 import logging
 import os
 import stat
@@ -45,6 +47,7 @@ from mozbuild.util import mkdir
 import mozpack.path as mozpath
 
 
+AUTOMATION = "MOZ_AUTOMATION" in os.environ
 BROWSERTIME_ROOT = os.path.dirname(__file__)
 PILLOW_VERSION = "6.0.0"
 PYSSIM_VERSION = "0.4"
@@ -168,17 +171,13 @@ class MachBrowsertime(MachCommandBase):
         # The convention is $MOZBUILD_STATE_PATH/$FEATURE.
         return mozpath.join(self._mach_context.state_dir, 'browsertime')
 
-    def setup(self, should_clobber=False):
-        r'''Install browsertime and visualmetrics.py requirements.'''
-
-        automation = bool(os.environ.get('MOZ_AUTOMATION'))
+    def setup_prerequisites(self):
+        r'''Install browsertime and visualmetrics.py prerequisites.'''
 
         from mozbuild.action.tooltool import unpack_file
         from mozbuild.artifact_cache import ArtifactCache
-        sys.path.append(mozpath.join(self.topsrcdir, 'tools', 'lint', 'eslint'))
-        import setup_helper
 
-        if not os.environ.get('MOZ_AUTOMATION') and host_platform().startswith('linux'):
+        if not AUTOMATION and host_platform().startswith('linux'):
             # On Linux ImageMagick needs to be installed manually, and `mach bootstrap` doesn't
             # do that (yet).  Provide some guidance.
             try:
@@ -251,6 +250,39 @@ class MachBrowsertime(MachCommandBase):
                 finally:
                     os.chdir(cwd)
 
+    def setup(self, should_clobber=False, new_upstream_url=''):
+        r'''Install browsertime and visualmetrics.py prerequisites and the Node.js package.'''
+
+        sys.path.append(mozpath.join(self.topsrcdir, 'tools', 'lint', 'eslint'))
+        import setup_helper
+
+        if not new_upstream_url:
+            self.setup_prerequisites()
+
+        if new_upstream_url:
+            package_json_path = os.path.join(BROWSERTIME_ROOT, 'package.json')
+
+            self.log(
+                logging.INFO,
+                'browsertime',
+                {'new_upstream_url': new_upstream_url, 'package_json_path': package_json_path},
+                'Updating browsertime node module version in {package_json_path} '
+                'to {new_upstream_url}')
+
+            if not re.search('/tarball/[a-f0-9]{40}$', new_upstream_url):
+                raise ValueError("New upstream URL does not end with /tarball/[a-f0-9]{40}: '{}'"
+                                 .format(new_upstream_url))
+
+            with open(package_json_path) as f:
+                existing_body = json.loads(f.read(), object_pairs_hook=collections.OrderedDict)
+
+            existing_body['devDependencies']['browsertime'] = new_upstream_url
+
+            updated_body = json.dumps(existing_body)
+
+            with open(package_json_path, 'w') as f:
+                f.write(updated_body)
+
         # Install the browsertime Node.js requirements.
         if not setup_helper.check_node_executables_valid():
             return 1
@@ -259,7 +291,7 @@ class MachBrowsertime(MachCommandBase):
         # os.environ[b"GECKODRIVER_BASE_URL"] = bytes(url)
         # to an endpoint with binaries named like
         # https://github.com/sitespeedio/geckodriver/blob/master/install.js#L31.
-        if automation:
+        if AUTOMATION:
             os.environ[b"CHROMEDRIVER_SKIP_DOWNLOAD"] = b"true"
             os.environ[b"GECKODRIVER_SKIP_DOWNLOAD"] = b"true"
 
@@ -271,13 +303,14 @@ class MachBrowsertime(MachCommandBase):
         status = setup_helper.package_setup(
             BROWSERTIME_ROOT,
             'browsertime',
+            should_update=new_upstream_url != '',
             should_clobber=should_clobber,
-            no_optional=automation)
+            no_optional=new_upstream_url or AUTOMATION)
 
         if status:
             return status
 
-        if automation:
+        if new_upstream_url or AUTOMATION:
             return 0
 
         return self.check()
@@ -505,6 +538,7 @@ class MachBrowsertime(MachCommandBase):
                          'performance tests.')
     @CommandArgument('--verbose', action='store_true',
                      help='Verbose output for what commands the build is running.')
+    @CommandArgument('--update-upstream-url', default='')
     @CommandArgument('--setup', default=False, action='store_true')
     @CommandArgument('--clobber', default=False, action='store_true')
     @CommandArgument('--skip-cache', action='store_true',
@@ -513,11 +547,13 @@ class MachBrowsertime(MachCommandBase):
     @CommandArgument('--check', default=False, action='store_true')
     @CommandArgument('args', nargs=argparse.REMAINDER)
     def browsertime(self, args, verbose=False,
-                    setup=False, clobber=False, skip_cache=False,
-                    check=False):
+                    update_upstream_url='', setup=False, clobber=False,
+                    skip_cache=False, check=False):
         self._set_log_level(verbose)
 
-        if setup:
+        if update_upstream_url:
+            return self.setup(new_upstream_url=update_upstream_url)
+        elif setup:
             return self.setup(should_clobber=clobber)
         else:
             if not self._verify_node_install():

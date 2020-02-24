@@ -8,11 +8,9 @@ import json
 import os
 import platform
 import re
-import shutil
 import subprocess
 import sys
-import tempfile
-from distutils.version import LooseVersion, StrictVersion
+from distutils.version import LooseVersion
 from filecmp import dircmp
 
 from mozbuild.nodeutil import (find_node_executable, find_npm_executable,
@@ -75,13 +73,22 @@ def eslint_setup(should_clobber=False):
     package_setup(get_project_root(), 'eslint', should_clobber=should_clobber)
 
 
-def package_setup(package_root, package_name, should_clobber=False, no_optional=False):
+def package_setup(package_root, package_name, should_update=False, should_clobber=False,
+                  no_optional=False):
     """Ensure `package_name` at `package_root` is installed.
 
+    When `should_update` is true, clobber, install, and produce a new
+    "package-lock.json" file.
+
     This populates `package_root/node_modules`.
+
     """
     orig_project_root = get_project_root()
     orig_cwd = os.getcwd()
+
+    if should_update:
+        should_clobber = True
+
     try:
         set_project_root(package_root)
         sys.path.append(os.path.dirname(__file__))
@@ -100,7 +107,7 @@ def package_setup(package_root, package_name, should_clobber=False, no_optional=
             else:
                 mozfileremove(node_modules_path)
 
-        npm_path, version = find_npm_executable()
+        npm_path, _ = find_npm_executable()
         if not npm_path:
             return 1
 
@@ -114,15 +121,10 @@ def package_setup(package_root, package_name, should_clobber=False, no_optional=
             extra_parameters.append('--no-optional')
 
         package_lock_json_path = os.path.join(get_project_root(), "package-lock.json")
-        package_lock_json_tmp_path = os.path.join(tempfile.gettempdir(), "package-lock.json.tmp")
 
-        # If we have an npm version newer than 5.8.0, just use 'ci', as that's much
-        # simpler and does exactly what we want.
-        npm_is_older_version = version < StrictVersion("5.8.0").version
-
-        if npm_is_older_version:
+        if should_update:
             cmd = [npm_path, "install"]
-            shutil.copy2(package_lock_json_path, package_lock_json_tmp_path)
+            mozfileremove(package_lock_json_path)
         else:
             cmd = [npm_path, "ci"]
 
@@ -140,9 +142,6 @@ def package_setup(package_root, package_name, should_clobber=False, no_optional=
 
         print("Installing %s for mach using \"%s\"..." % (package_name, " ".join(cmd)))
         result = call_process(package_name, cmd)
-
-        if npm_is_older_version:
-            shutil.move(package_lock_json_tmp_path, package_lock_json_path)
 
         if not result:
             return 1
