@@ -455,13 +455,26 @@ add_task(async function test_loadflags() {
   );
   await check_history();
 
+  info("5");
+  // Load another remote page from a different origin
+  await waitForLoadWithFlags(
+    "http://example.com/" + DUMMY_PATH,
+    Ci.nsIWebNavigation.LOAD_FLAGS_REPLACE_HISTORY
+  );
+  is(
+    gBrowser.selectedBrowser.isRemoteBrowser,
+    expectedRemote,
+    "Remote attribute should be correct"
+  );
+  await check_history();
+
   is(
     gExpectedHistory.entries.length,
     2,
     "Should end with the right number of history entries"
   );
 
-  info("5");
+  info("6");
   gBrowser.removeCurrentTab();
   clear_history();
 });
