@@ -12,20 +12,19 @@
 namespace mozilla {
 namespace webgpu {
 
-class Texture;
+class Device;
 
-class TextureView final : public ObjectBase, public ChildOf<Texture> {
+class TextureView final : public ObjectBase, public ChildOf<Device> {
  public:
   GPU_DECL_CYCLE_COLLECTION(TextureView)
   GPU_DECL_JS_WRAP(TextureView)
 
-  TextureView(Texture* const aParent, RawId aId);
-
   const RawId mId;
 
  private:
+  TextureView() = delete;
   virtual ~TextureView();
-  void Cleanup();
+  void Cleanup() {}
 };
 
 }  // namespace webgpu

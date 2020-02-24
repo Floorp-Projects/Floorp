@@ -111,10 +111,9 @@ interface GPUDevice {
     GPUBuffer createBuffer(GPUBufferDescriptor descriptor);
     [NewObject, Throws]
     GPUMappedBuffer createBufferMapped(GPUBufferDescriptor descriptor);
-    [NewObject]
-    GPUTexture createTexture(GPUTextureDescriptor descriptor);
-    [NewObject]
-    GPUSampler createSampler(optional GPUSamplerDescriptor descriptor = {});
+    //Promise<GPUMappedBuffer> createBufferMappedAsync(GPUBufferDescriptor descriptor);
+    //GPUTexture createTexture(GPUTextureDescriptor descriptor);
+    //GPUSampler createSampler(optional GPUSamplerDescriptor descriptor = {});
 
     GPUBindGroupLayout createBindGroupLayout(GPUBindGroupLayoutDescriptor descriptor);
     GPUPipelineLayout createPipelineLayout(GPUPipelineLayoutDescriptor descriptor);
@@ -303,8 +302,7 @@ dictionary GPUTextureDescriptor {
 [Pref="dom.webgpu.enabled",
  Exposed=Window]
 interface GPUTexture {
-    [NewObject]
-    GPUTextureView createView(optional GPUTextureViewDescriptor descriptor = {});
+    //GPUTextureView createView(GPUTextureViewDescriptor descriptor);
 
     //void destroy();
 };
@@ -327,9 +325,9 @@ enum GPUTextureAspect {
 };
 
 dictionary GPUTextureViewDescriptor : GPUObjectDescriptorBase {
-    GPUTextureFormat format;
-    GPUTextureViewDimension dimension;
-    GPUTextureAspect aspect = "all";
+    required GPUTextureFormat format;
+    required GPUTextureViewDimension dimension;
+    required GPUTextureAspect aspect;
     u32 baseMipLevel = 0;
     u32 mipLevelCount = 1;
     u32 baseArrayLayer = 0;

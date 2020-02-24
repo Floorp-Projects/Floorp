@@ -5,16 +5,12 @@
 
 #include "js/ArrayBuffer.h"
 #include "js/Value.h"
-#include "mozilla/Logging.h"
-#include "mozilla/ipc/Shmem.h"
 #include "mozilla/dom/WebGPUBinding.h"
+#include "mozilla/ipc/Shmem.h"
+#include "mozilla/Logging.h"
 #include "Device.h"
 
 #include "Adapter.h"
-#include "Buffer.h"
-#include "Sampler.h"
-#include "Texture.h"
-#include "TextureView.h"
 #include "Queue.h"
 #include "ipc/WebGPUChild.h"
 
@@ -129,20 +125,6 @@ RefPtr<MappingPromise> Device::MapBufferForReadAsync(RawId aId, size_t aSize,
 
 void Device::UnmapBuffer(RawId aId, UniquePtr<ipc::Shmem> aShmem) {
   mBridge->SendDeviceUnmapBuffer(mId, aId, std::move(*aShmem));
-}
-
-already_AddRefed<Texture> Device::CreateTexture(
-    const dom::GPUTextureDescriptor& aDesc) {
-  RawId id = mBridge->DeviceCreateTexture(mId, aDesc);
-  RefPtr<Texture> texture = new Texture(this, id, aDesc);
-  return texture.forget();
-}
-
-already_AddRefed<Sampler> Device::CreateSampler(
-    const dom::GPUSamplerDescriptor& aDesc) {
-  RawId id = mBridge->DeviceCreateSampler(mId, aDesc);
-  RefPtr<Sampler> sampler = new Sampler(this, id);
-  return sampler.forget();
 }
 
 already_AddRefed<CommandEncoder> Device::CreateCommandEncoder(
