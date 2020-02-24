@@ -16,7 +16,6 @@ sys.path.insert(0, raptor_dir)
 
 from manifest import (
     add_test_url_params,
-    bool_from_str,
     get_browser_test_list,
     get_raptor_test_list,
     validate_test_ini,
@@ -141,24 +140,6 @@ INVALID_MANIFESTS = [{
     'type': 'pageload',
     'unit': 'ms',
 }]
-
-
-@pytest.mark.parametrize('value, expected_result', [
-    ('true', True),
-    ('TRUE', True),
-    ('True', True),
-    ('false', False),
-    ('FALSE', False),
-    ('False', False)
-])
-def test_bool_from_str(value, expected_result):
-    assert expected_result == bool_from_str(value)
-
-
-@pytest.mark.parametrize('invalid_value', ['yes', 'no', '1', '0', 'invalid_str', ''])
-def test_bool_from_str_with_invalid_values(invalid_value):
-    with pytest.raises(ValueError):
-        bool_from_str(invalid_value)
 
 
 @pytest.mark.parametrize('app', ['firefox', 'chrome', 'chromium', 'geckoview', 'refbrow', 'fenix'])
