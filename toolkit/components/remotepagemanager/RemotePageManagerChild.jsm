@@ -47,6 +47,9 @@ class ChildMessagePort extends MessagePort {
     Cu.exportFunction(this.setBoolPref.bind(this), window, {
       defineAs: "RPMSetBoolPref",
     });
+    Cu.exportFunction(this.prefIsLocked.bind(this), window, {
+      defineAs: "RPMPrefIsLocked",
+    });
     Cu.exportFunction(this.getFormatURLPref.bind(this), window, {
       defineAs: "RPMGetFormatURLPref",
     });
