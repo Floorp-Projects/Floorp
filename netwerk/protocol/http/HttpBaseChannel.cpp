@@ -25,6 +25,7 @@
 #include "mozilla/Services.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/Tokenizer.h"
+#include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/Performance.h"
 #include "mozilla/dom/PerformanceStorage.h"
 #include "mozilla/net/PartiallySeekableInputStream.h"
@@ -42,6 +43,7 @@
 #include "nsICachingChannel.h"
 #include "nsIChannelEventSink.h"
 #include "nsIConsoleService.h"
+#include "nsIContentPolicy.h"
 #include "nsICookieService.h"
 #include "nsIDOMWindowUtils.h"
 #include "nsIDocShell.h"
@@ -485,35 +487,20 @@ HttpBaseChannel::SetTRRMode(nsIRequest::TRRMode aTRRMode) {
 
 NS_IMETHODIMP
 HttpBaseChannel::SetDocshellUserAgentOverride() {
-  // This sets the docshell specific user agent override
-  nsresult rv;
-  nsCOMPtr<nsILoadContext> loadContext;
-  NS_QueryNotificationCallbacks(this, loadContext);
-  if (!loadContext) {
+  RefPtr<dom::BrowsingContext> bc;
+  MOZ_ALWAYS_SUCCEEDS(mLoadInfo->GetBrowsingContext(getter_AddRefs(bc)));
+  if (!bc) {
     return NS_OK;
   }
 
-  nsCOMPtr<mozIDOMWindowProxy> domWindow;
-  loadContext->GetAssociatedWindow(getter_AddRefs(domWindow));
-  if (!domWindow) {
-    return NS_OK;
-  }
-
-  auto* pDomWindow = nsPIDOMWindowOuter::From(domWindow);
-  nsIDocShell* docshell = pDomWindow->GetDocShell();
-  if (!docshell) {
-    return NS_OK;
-  }
-
-  nsString customUserAgent;
-  docshell->GetCustomUserAgent(customUserAgent);
-  if (customUserAgent.IsEmpty()) {
+  const nsString& customUserAgent = bc->GetUserAgentOverride();
+  if (customUserAgent.IsEmpty() || customUserAgent.IsVoid()) {
     return NS_OK;
   }
 
   NS_ConvertUTF16toUTF8 utf8CustomUserAgent(customUserAgent);
-  rv = SetRequestHeader(NS_LITERAL_CSTRING("User-Agent"), utf8CustomUserAgent,
-                        false);
+  nsresult rv = SetRequestHeader(NS_LITERAL_CSTRING("User-Agent"),
+                                 utf8CustomUserAgent, false);
   if (NS_FAILED(rv)) return rv;
 
   return NS_OK;

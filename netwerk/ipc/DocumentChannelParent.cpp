@@ -43,8 +43,8 @@ bool DocumentChannelParent::Init(BrowserParent* aBrowser,
           aArgs.loadFlags(), aArgs.loadType(), aArgs.cacheKey(),
           aArgs.isActive(), aArgs.isTopLevelDoc(),
           aArgs.hasNonEmptySandboxingFlags(), aArgs.topWindowURI(),
-          aArgs.contentBlockingAllowListPrincipal(), aArgs.customUserAgent(),
-          aArgs.channelId(), aArgs.asyncOpenTime(), aArgs.documentOpenFlags(),
+          aArgs.contentBlockingAllowListPrincipal(), aArgs.channelId(),
+          aArgs.asyncOpenTime(), aArgs.documentOpenFlags(),
           aArgs.pluginsAllowed(), aArgs.timing().refOr(nullptr), &rv)) {
     return SendFailedAsyncOpen(rv);
   }

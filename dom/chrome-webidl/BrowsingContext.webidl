@@ -34,6 +34,8 @@ interface BrowsingContext {
 
   readonly attribute WindowProxy? window;
 
+  attribute [TreatNullAs=EmptyString] DOMString customUserAgent;
+
   /**
    * The sandbox flags on the browsing context. These reflect the value of the
    * sandbox attribute of the associated IFRAME or CSP-protectable content, if
