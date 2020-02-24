@@ -341,7 +341,7 @@ uint32_t CanvasEventRingBuffer::CreateCheckpoint() {
 }
 
 bool CanvasEventRingBuffer::WaitForCheckpoint(uint32_t aCheckpoint) {
-  return WaitForReadCount(aCheckpoint, kTimeout, kTimeoutRetryCount);
+  return WaitForReadCount(aCheckpoint, kTimeout);
 }
 
 void CanvasEventRingBuffer::CheckAndSignalWriter() {
@@ -371,8 +371,7 @@ void CanvasEventRingBuffer::CheckAndSignalWriter() {
 }
 
 bool CanvasEventRingBuffer::WaitForReadCount(uint32_t aReadCount,
-                                             TimeDuration aTimeout,
-                                             int32_t aRetryCount) {
+                                             TimeDuration aTimeout) {
   uint32_t requiredDifference = mOurCount - aReadCount;
   uint32_t spinCount = kMaxSpinCount;
   do {
@@ -392,26 +391,20 @@ bool CanvasEventRingBuffer::WaitForReadCount(uint32_t aReadCount,
   mWrite->requiredDifference = requiredDifference;
   mWrite->state = State::Waiting;
 
-  do {
+  // Wait unless we detect the reading side has closed.
+  while (!mWriterServices->ReaderClosed()) {
     if (mWriterSemaphore->Wait(Some(aTimeout))) {
       MOZ_ASSERT(mOurCount - mRead->count <= requiredDifference);
       return true;
     }
-
-    if (mWriterServices->ReaderClosed()) {
-      // Something has gone wrong on the reading side, just return false so
-      // that we can hopefully recover.
-      return false;
-    }
-  } while (aRetryCount-- > 0);
+  }
 
   return false;
 }
 
 uint32_t CanvasEventRingBuffer::WaitForBytesToWrite() {
   uint32_t streamFullReadCount = mOurCount - kStreamSize;
-  if (!WaitForReadCount(streamFullReadCount + 1, kTimeout,
-                        kTimeoutRetryCount)) {
+  if (!WaitForReadCount(streamFullReadCount + 1, kTimeout)) {
     mGood = false;
     return 0;
   }
