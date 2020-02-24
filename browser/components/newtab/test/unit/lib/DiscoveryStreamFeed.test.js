@@ -315,7 +315,7 @@ describe("DiscoveryStreamFeed", () => {
       const { layout } = feed.store.getState().DiscoveryStream;
       assert.equal(layout[0].components[2].properties.items, 3);
     });
-    it("should use 1 row layout if locale lang doesn't support 7 row layout", async () => {
+    it("should use 1 row layout if specified", async () => {
       feed.config.hardcoded_layout = true;
       feed.store = createStore(combineReducers(reducers), {
         Prefs: {
@@ -327,11 +327,10 @@ describe("DiscoveryStreamFeed", () => {
             }),
             [ENDPOINTS_PREF_NAME]: DUMMY_ENDPOINT,
             "discoverystream.enabled": true,
-            "discoverystream.lang-layout-config": "en",
+            "discoverystream.region-basic-layout": true,
           },
         },
       });
-      feed.locale = "de-DE";
       sandbox.stub(feed, "fetchLayout").returns(Promise.resolve(""));
 
       await feed.loadLayout(feed.store.dispatch);
@@ -339,7 +338,7 @@ describe("DiscoveryStreamFeed", () => {
       const { layout } = feed.store.getState().DiscoveryStream;
       assert.equal(layout[0].components[2].properties.items, 3);
     });
-    it("should use 7 row layout if locale lang supports it", async () => {
+    it("should use 7 row layout if specified", async () => {
       feed.config.hardcoded_layout = true;
       feed.store = createStore(combineReducers(reducers), {
         Prefs: {
@@ -351,11 +350,10 @@ describe("DiscoveryStreamFeed", () => {
             }),
             [ENDPOINTS_PREF_NAME]: DUMMY_ENDPOINT,
             "discoverystream.enabled": true,
-            "discoverystream.lang-layout-config": "en,de",
+            "discoverystream.region-basic-layout": false,
           },
         },
       });
-      feed.locale = "de-DE";
       sandbox.stub(feed, "fetchLayout").returns(Promise.resolve(""));
 
       await feed.loadLayout(feed.store.dispatch);
