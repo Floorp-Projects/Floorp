@@ -270,6 +270,44 @@ describe("ActivityStream", () => {
       );
     });
   });
+  describe("discoverystream.region-basic-layout config", () => {
+    let getStringPrefStub;
+    beforeEach(() => {
+      sandbox.stub(global.Services.prefs, "prefHasUserValue").returns(true);
+      getStringPrefStub = sandbox.stub(global.Services.prefs, "getStringPref");
+      getStringPrefStub.withArgs("browser.search.region").returns("CA");
+
+      sandbox
+        .stub(global.Services.locale, "appLocaleAsBCP47")
+        .get(() => "en-CA");
+    });
+    it("should enable 1 row layout pref based on region layout pref", () => {
+      getStringPrefStub
+        .withArgs(
+          "browser.newtabpage.activity-stream.discoverystream.region-layout-config"
+        )
+        .returns("US");
+
+      as._updateDynamicPrefs();
+
+      assert.isTrue(
+        PREFS_CONFIG.get("discoverystream.region-basic-layout").value
+      );
+    });
+    it("should enable 7 row layout pref based on region layout pref", () => {
+      getStringPrefStub
+        .withArgs(
+          "browser.newtabpage.activity-stream.discoverystream.region-layout-config"
+        )
+        .returns("US,CA");
+
+      as._updateDynamicPrefs();
+
+      assert.isFalse(
+        PREFS_CONFIG.get("discoverystream.region-basic-layout").value
+      );
+    });
+  });
   describe("_updateDynamicPrefs topstories default value", () => {
     let getStringPrefStub;
     let appLocaleAsBCP47Stub;

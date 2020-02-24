@@ -141,6 +141,8 @@ const REGION_STORIES_CONFIG =
   "browser.newtabpage.activity-stream.discoverystream.region-stories-config";
 const REGION_SPOCS_CONFIG =
   "browser.newtabpage.activity-stream.discoverystream.region-spocs-config";
+const REGION_LAYOUT_CONFIG =
+  "browser.newtabpage.activity-stream.discoverystream.region-layout-config";
 
 // Determine if spocs should be shown for a geo/locale
 function showSpocs({ geo }) {
@@ -512,6 +514,21 @@ const PREFS_CONFIG = new Map([
       title:
         "Allow the display of engagement labels for discovery stream components (eg: Trending, Popular, etc)",
       value: false,
+    },
+  ],
+  [
+    "discoverystream.region-basic-layout",
+    {
+      title: "Decision to use basic layout based on region.",
+      getValue: ({ geo }) => {
+        const preffedRegionsString =
+          Services.prefs.getStringPref(REGION_LAYOUT_CONFIG) || "";
+        const preffedRegions = preffedRegionsString
+          .split(",")
+          .map(s => s.trim());
+
+        return !preffedRegions.includes(geo);
+      },
     },
   ],
   [
