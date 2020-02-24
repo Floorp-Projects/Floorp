@@ -18,6 +18,8 @@ enum class AppShutdownMode {
 
 class AppShutdown {
  public:
+  static bool IsShuttingDown();
+
   /**
    * Save environment variables that we might need if the app initiates a
    * restart later in its lifecycle.

@@ -30,6 +30,7 @@ namespace mozilla {
 static ShutdownPhase sFastShutdownPhase = ShutdownPhase::NotInShutdown;
 static ShutdownPhase sLateWriteChecksPhase = ShutdownPhase::NotInShutdown;
 static AppShutdownMode sShutdownMode = AppShutdownMode::Normal;
+static bool sIsShuttingDown = false;
 
 // These environment variable strings are all deliberately copied and leaked
 // due to requirements of PR_SetEnv and similar.
@@ -54,6 +55,8 @@ ShutdownPhase GetShutdownPhaseFromPrefValue(int32_t aPrefValue) {
   }
   return ShutdownPhase::NotInShutdown;
 }
+
+bool AppShutdown::IsShuttingDown() { return sIsShuttingDown; }
 
 void AppShutdown::SaveEnvVarsForPotentialRestart() {
   const char* s = PR_GetEnv("XUL_APP_FILE");
@@ -156,6 +159,7 @@ void AppShutdown::MaybeFastShutdown(ShutdownPhase aPhase) {
 }
 
 void AppShutdown::OnShutdownConfirmed() {
+  sIsShuttingDown = true;
   // If we're restarting, we need to save environment variables correctly
   // while everything is still alive to do so.
   if (sShutdownMode == AppShutdownMode::Restart) {
