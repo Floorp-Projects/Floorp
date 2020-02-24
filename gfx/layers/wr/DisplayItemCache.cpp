@@ -82,27 +82,22 @@ void DisplayItemCache::MaybeStartCaching(nsPaintedDisplayItem* aItem,
   MOZ_ASSERT(CanCacheItem(aItem));
   MOZ_ASSERT(mCurrentIndex && CurrentCacheSize() > *mCurrentIndex);
 
+  auto& state = mCachedItemState[*mCurrentIndex];
+  MOZ_ASSERT(!state.mCached);
+  state.mCached = true;
+  MOZ_ASSERT(!state.mUsed);
+  state.mUsed = true;
+  state.mSpaceAndClip = aBuilder.CurrentSpaceAndClipChain();
+
+  Stats().AddCached();
   aBuilder.StartCachedItem(*mCurrentIndex);
 }
 
 void DisplayItemCache::MaybeEndCaching(wr::DisplayListBuilder& aBuilder) {
-  if (!IsEnabled() || !mCurrentIndex) {
-    return;
+  if (IsEnabled() && mCurrentIndex) {
+    aBuilder.EndCachedItem(*mCurrentIndex);
+    mCurrentIndex = Nothing();
   }
-
-  if (aBuilder.EndCachedItem(*mCurrentIndex)) {
-    // Caching of the item succeeded, update the cached item state.
-    auto& state = mCachedItemState[*mCurrentIndex];
-    MOZ_ASSERT(!state.mCached);
-    state.mCached = true;
-    MOZ_ASSERT(!state.mUsed);
-    state.mUsed = true;
-    state.mSpaceAndClip = aBuilder.CurrentSpaceAndClipChain();
-
-    Stats().AddCached();
-  }
-
-  mCurrentIndex = Nothing();
 }
 
 bool DisplayItemCache::ReuseItem(nsPaintedDisplayItem* aItem,

@@ -3557,16 +3557,14 @@ pub extern "C" fn wr_dp_start_cached_item(state: &mut WrState,
 
 #[no_mangle]
 pub extern "C" fn wr_dp_end_cached_item(state: &mut WrState,
-                                        key: ItemKey) -> bool {
-    let _previous = state.current_item_key.take().expect("Nested item keys");
-    debug_assert!(_previous == key, "Item key changed during caching");
-
-    if !state.frame_builder.dl_builder.end_extra_data_chunk() {
-        return false
+                                        key: ItemKey) {
+    // Avoid pushing reuse item marker when no extra data was written.
+    if state.frame_builder.dl_builder.end_extra_data_chunk() > 0 {
+        state.frame_builder.dl_builder.push_reuse_item(key);
     }
 
-    state.frame_builder.dl_builder.push_reuse_item(key);
-    true
+    debug_assert!(state.current_item_key.is_some(), "Nested item keys");
+    state.current_item_key = None;
 }
 
 #[no_mangle]
