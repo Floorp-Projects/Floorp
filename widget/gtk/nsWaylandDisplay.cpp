@@ -26,6 +26,8 @@ namespace widget {
 #define DMABUF_BASIC_PREF "widget.wayland_dmabuf_basic_compositor.enabled"
 // Enable dmabuf for WebGL backend
 #define DMABUF_WEBGL_PREF "widget.wayland_dmabuf_webgl.enabled"
+// Enable dmabuf for VA-API backend
+#define DMABUF_VAAPI_PREF "widget.wayland_dmabuf_vaapi.enabled"
 // See WindowSurfaceWayland::RenderingCacheMode for details.
 #define CACHE_MODE_PREF "widget.wayland_cache_mode"
 
@@ -33,6 +35,7 @@ bool nsWaylandDisplay::sIsDMABufEnabled = false;
 int nsWaylandDisplay::sIsDMABufPrefTextState = false;
 int nsWaylandDisplay::sIsDMABufPrefBasicCompositorState = false;
 int nsWaylandDisplay::sIsDMABufPrefWebGLState = false;
+int nsWaylandDisplay::sIsDMABufPrefVAAPIState = false;
 bool nsWaylandDisplay::sIsDMABufConfigured = false;
 int nsWaylandDisplay::sRenderingCacheModePref = -1;
 bool nsWaylandDisplay::sIsPrefLoaded = false;
@@ -423,6 +426,7 @@ nsWaylandDisplay::nsWaylandDisplay(wl_display* aDisplay)
       sIsDMABufPrefBasicCompositorState =
           Preferences::GetBool(DMABUF_BASIC_PREF, false);
       sIsDMABufPrefWebGLState = Preferences::GetBool(DMABUF_WEBGL_PREF, false);
+      sIsDMABufPrefVAAPIState = Preferences::GetBool(DMABUF_VAAPI_PREF, false);
       sRenderingCacheModePref = Preferences::GetInt(CACHE_MODE_PREF, 0);
       sIsPrefLoaded = true;
     }
@@ -504,6 +508,9 @@ bool nsWaylandDisplay::IsDMABufTexturesEnabled() {
 }
 bool nsWaylandDisplay::IsDMABufWebGLEnabled() {
   return IsDMABufEnabled() && sIsDMABufPrefWebGLState;
+}
+bool nsWaylandDisplay::IsDMABufVAAPIEnabled() {
+  return IsDMABufEnabled() && sIsDMABufPrefVAAPIState;
 }
 
 void* nsGbmLib::sGbmLibHandle = nullptr;

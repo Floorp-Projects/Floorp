@@ -95,6 +95,7 @@ class gfxPlatformGtk : public gfxPlatform {
 #ifdef MOZ_WAYLAND
   bool UseWaylandDMABufTextures();
   bool UseWaylandDMABufWebGL();
+  bool UseWaylandHardwareVideoDecoding();
 #endif
 
   bool IsX11Display() { return mIsX11Display; }

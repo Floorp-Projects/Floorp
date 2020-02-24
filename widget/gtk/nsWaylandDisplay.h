@@ -90,6 +90,7 @@ class nsWaylandDisplay {
   static bool IsDMABufBasicEnabled();
   static bool IsDMABufTexturesEnabled();
   static bool IsDMABufWebGLEnabled();
+  static bool IsDMABufVAAPIEnabled();
 
   // See WindowSurfaceWayland::CacheMode for details.
   int GetRenderingCacheModePref() { return sRenderingCacheModePref; };
@@ -121,6 +122,7 @@ class nsWaylandDisplay {
   static int sIsDMABufPrefTextState;
   static int sIsDMABufPrefBasicCompositorState;
   static int sIsDMABufPrefWebGLState;
+  static int sIsDMABufPrefVAAPIState;
   static bool sIsDMABufConfigured;
   static int sRenderingCacheModePref;
   static bool sIsPrefLoaded;

@@ -733,4 +733,8 @@ bool gfxPlatformGtk::UseWaylandDMABufTextures() {
 bool gfxPlatformGtk::UseWaylandDMABufWebGL() {
   return IsWaylandDisplay() && nsWaylandDisplay::IsDMABufWebGLEnabled();
 }
+bool gfxPlatformGtk::UseWaylandHardwareVideoDecoding() {
+  return IsWaylandDisplay() && nsWaylandDisplay::IsDMABufVAAPIEnabled() &&
+         gfxPlatform::CanUseHardwareVideoDecoding();
+}
 #endif
