@@ -41,8 +41,6 @@ using namespace mozilla::a11y;
 #define NSAccessibilityMathUnderAttribute @"AXMathUnder"
 #define NSAccessibilityMathOverAttribute @"AXMathOver"
 #define NSAccessibilityMathLineThicknessAttribute @"AXMathLineThickness"
-#define NSAccessibilityScrollToVisibleAction @"AXScrollToVisible"
-
 // XXX WebKit also defines the following attributes.
 // See bugs 1176970 and 1176983.
 // - NSAccessibilityMathFencedOpenAttribute @"AXMathFencedOpen"
@@ -478,7 +476,7 @@ static inline NSMutableArray* ConvertToNSArray(nsTArray<ProxyAccessible*>& aArra
 }
 
 - (NSArray*)accessibilityActionNames {
-  return @[NSAccessibilityScrollToVisibleAction];
+  return nil;
 }
 
 - (NSString*)accessibilityActionDescription:(NSString*)action {
@@ -525,15 +523,6 @@ static inline NSMutableArray* ConvertToNSArray(nsTArray<ProxyAccessible*>& aArra
 }
 
 - (void)accessibilityPerformAction:(NSString*)action {
-  if ([action isEqualToString:NSAccessibilityScrollToVisibleAction]) {
-    AccessibleWrap* accWrap = [self getGeckoAccessible];
-    ProxyAccessible* proxy = [self getProxyAccessible];
-    if (accWrap) {
-      accWrap->ScrollTo(nsIAccessibleScrollType::SCROLL_TYPE_ANYWHERE);
-    } else if (proxy) {
-      proxy->ScrollTo(nsIAccessibleScrollType::SCROLL_TYPE_ANYWHERE);
-    }
-  }
 }
 
 - (id)accessibilityFocusedUIElement {
