@@ -24,9 +24,6 @@ include apng-mime/reftest.list
 
 include async-scrolling/reftest.list
 
-# backgrounds/
-include backgrounds/reftest.list
-
 # bidi/
 include bidi/reftest.list
 
