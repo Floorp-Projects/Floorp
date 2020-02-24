@@ -65,13 +65,21 @@ class MachCommands(MachCommandBase):
     def tools_dir(self):
         return os.path.join(self.state_dir, 'hazard-tools')
 
+    def ensure_tools_dir(self):
+        dir = self.tools_dir
+        try:
+            os.mkdir(dir)
+        except OSError:
+            pass
+        return dir
+
     @property
     def sixgill_dir(self):
         return os.path.join(self.tools_dir, 'sixgill')
 
     @property
     def gcc_dir(self):
-        return os.path.join(self.state_dir, 'gcc')
+        return os.path.join(self.tools_dir, 'gcc')
 
     @property
     def work_dir(self):
@@ -100,7 +108,7 @@ class MachCommands(MachCommandBase):
                 description='Install prerequisites for the hazard analysis')
     def bootstrap(self, **kwargs):
         orig_dir = os.getcwd()
-        os.chdir(self.tools_dir)
+        os.chdir(self.ensure_tools_dir())
         try:
             kwargs['from_build'] = ('linux64-gcc-sixgill', 'linux64-gcc-8')
             self._mach_context.commands.dispatch(
@@ -214,12 +222,14 @@ class MachCommands(MachCommandBase):
                 source = "{srcdir}"
                 sixgill = "{sixgill_dir}/usr/libexec/sixgill"
                 sixgill_bin = "{sixgill_dir}/usr/bin"
+                gcc_bin = "{gcc_dir}/bin"
             ''').format(
                 js=shell_path,
                 script_dir=self.script_dir,
                 objdir=objdir,
                 srcdir=self.topsrcdir,
-                sixgill_dir=self.sixgill_dir)
+                sixgill_dir=self.sixgill_dir,
+                gcc_dir=self.gcc_dir)
             fh.write(data)
 
         buildscript = '{srcdir}/mach hazards compile --application={app}'.format(
