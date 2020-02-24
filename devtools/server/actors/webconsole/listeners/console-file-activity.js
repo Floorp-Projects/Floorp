@@ -17,13 +17,13 @@ const ChromeUtils = require("ChromeUtils");
  *        The listener owner which needs to implement:
  *        - onFileActivity(aFileURI)
  */
-function ConsoleProgressListener(window, owner) {
+function ConsoleFileActivityListener(window, owner) {
   this.window = window;
   this.owner = owner;
 }
-exports.ConsoleProgressListener = ConsoleProgressListener;
+exports.ConsoleFileActivityListener = ConsoleFileActivityListener;
 
-ConsoleProgressListener.prototype = {
+ConsoleFileActivityListener.prototype = {
   /**
    * Tells if the console progress listener is initialized or not.
    * @private
@@ -39,7 +39,7 @@ ConsoleProgressListener.prototype = {
   ]),
 
   /**
-   * Initialize the ConsoleProgressListener.
+   * Initialize the ConsoleFileActivityListener.
    * @private
    */
   _init: function() {
@@ -107,7 +107,7 @@ ConsoleProgressListener.prototype = {
   },
 
   /**
-   * Destroy the ConsoleProgressListener.
+   * Destroy the ConsoleFileActivityListener.
    */
   destroy: function() {
     if (!this._initialized) {
