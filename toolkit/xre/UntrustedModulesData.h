@@ -358,7 +358,7 @@ struct ParamTraits<mozilla::ModulesMap> {
         return false;
       }
 
-      aResult->Put(key, std::move(rec));
+      aResult->Put(key, rec.forget());
     }
 
     return true;
