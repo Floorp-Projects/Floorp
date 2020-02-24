@@ -1339,12 +1339,15 @@ already_AddRefed<nsROCSSPrimitiveValue> nsComputedDOMStyle::MatrixToCSSValue(
 
 already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetOsxFontSmoothing() {
   if (nsContentUtils::ShouldResistFingerprinting(
-          mPresShell->GetPresContext()->GetDocShell()))
+          mPresShell->GetPresContext()->GetDocShell())) {
     return nullptr;
+  }
 
+  nsAutoString result;
+  Servo_GetPropertyValue(mComputedStyle, eCSSProperty__moz_osx_font_smoothing,
+                         &result);
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-  val->SetIdent(nsCSSProps::ValueToKeywordEnum(
-      StyleFont()->mFont.smoothing, nsCSSProps::kFontSmoothingKTable));
+  val->SetString(result);
   return val.forget();
 }
 
