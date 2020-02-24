@@ -265,13 +265,13 @@ HTMLCanvasElementObserver::HTMLCanvasElementObserver(
     HTMLCanvasElement* aElement)
     : mElement(aElement) {
   RegisterVisibilityChangeEvent();
-  RegisterMemoryPressureEvent();
+  RegisterObserverEvents();
 }
 
 HTMLCanvasElementObserver::~HTMLCanvasElementObserver() { Destroy(); }
 
 void HTMLCanvasElementObserver::Destroy() {
-  UnregisterMemoryPressureEvent();
+  UnregisterObserverEvents();
   UnregisterVisibilityChangeEvent();
   mElement = nullptr;
 }
@@ -296,7 +296,7 @@ void HTMLCanvasElementObserver::UnregisterVisibilityChangeEvent() {
                                       this, true);
 }
 
-void HTMLCanvasElementObserver::RegisterMemoryPressureEvent() {
+void HTMLCanvasElementObserver::RegisterObserverEvents() {
   if (!mElement) {
     return;
   }
@@ -306,11 +306,13 @@ void HTMLCanvasElementObserver::RegisterMemoryPressureEvent() {
 
   MOZ_ASSERT(observerService);
 
-  if (observerService)
+  if (observerService) {
     observerService->AddObserver(this, "memory-pressure", false);
+    observerService->AddObserver(this, "canvas-device-reset", false);
+  }
 }
 
-void HTMLCanvasElementObserver::UnregisterMemoryPressureEvent() {
+void HTMLCanvasElementObserver::UnregisterObserverEvents() {
   if (!mElement) {
     return;
   }
@@ -321,17 +323,24 @@ void HTMLCanvasElementObserver::UnregisterMemoryPressureEvent() {
   // Do not assert on observerService here. This might be triggered by
   // the cycle collector at a late enough time, that XPCOM services are
   // no longer available. See bug 1029504.
-  if (observerService) observerService->RemoveObserver(this, "memory-pressure");
+  if (observerService) {
+    observerService->RemoveObserver(this, "memory-pressure");
+    observerService->RemoveObserver(this, "canvas-device-reset");
+  }
 }
 
 NS_IMETHODIMP
 HTMLCanvasElementObserver::Observe(nsISupports*, const char* aTopic,
                                    const char16_t*) {
-  if (!mElement || strcmp(aTopic, "memory-pressure")) {
+  if (!mElement) {
     return NS_OK;
   }
 
-  mElement->OnMemoryPressure();
+  if (strcmp(aTopic, "memory-pressure") == 0) {
+    mElement->OnMemoryPressure();
+  } else if (strcmp(aTopic, "canvas-device-reset") == 0) {
+    mElement->OnDeviceReset();
+  }
 
   return NS_OK;
 }
@@ -399,7 +408,8 @@ HTMLCanvasElement::CreateContext(CanvasContextType aContextType) {
 
   // Add Observer for webgl canvas.
   if (aContextType == CanvasContextType::WebGL1 ||
-      aContextType == CanvasContextType::WebGL2) {
+      aContextType == CanvasContextType::WebGL2 ||
+      aContextType == CanvasContextType::Canvas2D) {
     if (!mContextObserver) {
       mContextObserver = new HTMLCanvasElementObserver(this);
     }
@@ -1442,6 +1452,12 @@ void HTMLCanvasElement::OnMemoryPressure() {
 
   if (mCurrentContext) {
     mCurrentContext->OnMemoryPressure();
+  }
+}
+
+void HTMLCanvasElement::OnDeviceReset() {
+  if (!mOffscreenCanvas && mCurrentContext) {
+    mCurrentContext->Reset();
   }
 }
 

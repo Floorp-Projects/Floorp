@@ -197,7 +197,13 @@ bool CanvasTranslator::TranslateRecording() {
         });
 
     if (!success && !HandleExtensionEvent(eventType)) {
-      gfxCriticalNote << "Failed to play canvas event type: " << eventType;
+      if (mDeviceResetInProgress) {
+        // We've notified the recorder of a device change, so we are expecting
+        // failures. Log as a warning to prevent crash reporting being flooded.
+        gfxWarning() << "Failed to play canvas event type: " << eventType;
+      } else {
+        gfxCriticalNote << "Failed to play canvas event type: " << eventType;
+      }
       if (!mStream->good()) {
         return true;
       }
@@ -262,11 +268,19 @@ void CanvasTranslator::EndTransaction() {
   mIsInTransaction = false;
 }
 
+void CanvasTranslator::DeviceChangeAcknowledged() {
+  mDeviceResetInProgress = false;
+}
+
 bool CanvasTranslator::CheckForFreshCanvasDevice(int aLineNumber) {
 #if defined(XP_WIN)
   // If a new device has already been created, use that one.
   RefPtr<ID3D11Device> device = gfx::DeviceManagerDx::Get()->GetCanvasDevice();
   if (device && device != mDevice) {
+    if (mDevice) {
+      // We already had a device, notify child of change.
+      NotifyDeviceChanged();
+    }
     mDevice = device.forget();
     return true;
   }
@@ -278,6 +292,7 @@ bool CanvasTranslator::CheckForFreshCanvasDevice(int aLineNumber) {
 
     gfxCriticalNote << "GFX: CanvasTranslator detected a device reset at "
                     << aLineNumber;
+    NotifyDeviceChanged();
   }
 
   RefPtr<Runnable> runnable = NS_NewRunnableFunction(
@@ -294,6 +309,13 @@ bool CanvasTranslator::CheckForFreshCanvasDevice(int aLineNumber) {
 #else
   return false;
 #endif
+}
+
+void CanvasTranslator::NotifyDeviceChanged() {
+  mDeviceResetInProgress = true;
+  mCanvasThreadHolder->DispatchToCanvasThread(
+      NewRunnableMethod("CanvasTranslator::SendNotifyDeviceChanged", this,
+                        &CanvasTranslator::SendNotifyDeviceChanged));
 }
 
 void CanvasTranslator::AddSurfaceDescriptor(gfx::ReferencePtr aRefPtr,

@@ -128,6 +128,11 @@ class CanvasTranslator final : public gfx::InlineTranslator,
   void Flush();
 
   /**
+   * Marks that device change processing in the writing process has finished.
+   */
+  void DeviceChangeAcknowledged();
+
+  /**
    * Used to send data back to the writer. This is done through the same shared
    * memory so the writer must wait and read the response after it has submitted
    * the event that uses this.
@@ -259,6 +264,7 @@ class CanvasTranslator final : public gfx::InlineTranslator,
   bool HandleExtensionEvent(int32_t aType);
 
   bool CheckForFreshCanvasDevice(int aLineNumber);
+  void NotifyDeviceChanged();
 
   RefPtr<CanvasThreadHolder> mCanvasThreadHolder;
   RefPtr<TaskQueue> mTranslationTaskQueue;
@@ -281,6 +287,7 @@ class CanvasTranslator final : public gfx::InlineTranslator,
       "CanvasTranslator::mSurfaceDescriptorsMonitor"};
   bool mIsValid = true;
   bool mIsInTransaction = false;
+  bool mDeviceResetInProgress = false;
 };
 
 }  // namespace layers

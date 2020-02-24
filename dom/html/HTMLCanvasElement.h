@@ -69,8 +69,8 @@ class HTMLCanvasElementObserver final : public nsIObserver,
   void RegisterVisibilityChangeEvent();
   void UnregisterVisibilityChangeEvent();
 
-  void RegisterMemoryPressureEvent();
-  void UnregisterMemoryPressureEvent();
+  void RegisterObserverEvents();
+  void UnregisterObserverEvents();
 
  private:
   ~HTMLCanvasElementObserver();
@@ -327,6 +327,8 @@ class HTMLCanvasElement final : public nsGenericHTMLElement,
   void OnVisibilityChange();
 
   void OnMemoryPressure();
+
+  void OnDeviceReset();
 
   static void SetAttrFromAsyncCanvasRenderer(AsyncCanvasRenderer* aRenderer);
   static void InvalidateFromAsyncCanvasRenderer(AsyncCanvasRenderer* aRenderer);

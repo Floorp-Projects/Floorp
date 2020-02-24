@@ -31,6 +31,12 @@ parent:
    * stopped due to a timeout waiting for events.
    */
   async ResumeTranslation();
+
+  child:
+  /**
+   * Notify that the canvas device used by the translator has changed.
+   */
+  async NotifyDeviceChanged();
 };
 
 } // layers
