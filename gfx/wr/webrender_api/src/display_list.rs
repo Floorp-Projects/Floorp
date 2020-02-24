@@ -658,8 +658,8 @@ impl<'a> BuiltDisplayListIter<'a> {
     pub fn as_ref<'b>(&'b self) -> DisplayItemRef<'a, 'b> {
         let cached_item = match self.cur_item {
             di::DisplayItem::ReuseItem(key) => {
-                debug_assert!(self.cache.is_some(), "Cache marker without cache!");
-                self.cache.and_then(|c| c.get_item(key))
+                let cache = self.cache.expect("Cache marker without cache!");
+                cache.get_item(key)
             }
             _ => None
         };
