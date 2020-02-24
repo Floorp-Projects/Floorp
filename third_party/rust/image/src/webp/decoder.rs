@@ -1,33 +1,33 @@
 use byteorder::{LittleEndian, ReadBytesExt};
+use std::convert::TryFrom;
 use std::default::Default;
 use std::io::{self, Cursor, Read};
 use std::marker::PhantomData;
 use std::mem;
 
-use image;
-use image::ImageDecoder;
-use image::ImageResult;
+use crate::image::ImageDecoder;
+use crate::error::{ImageError, ImageResult};
 
-use color;
+use crate::color;
 
 use super::vp8::Frame;
-use super::vp8::VP8Decoder;
+use super::vp8::Vp8Decoder;
 
-/// Webp Image format decoder. Currently only supportes the luma channel (meaning that decoded
+/// WebP Image format decoder. Currently only supportes the luma channel (meaning that decoded
 /// images will be grayscale).
-pub struct WebpDecoder<R> {
+pub struct WebPDecoder<R> {
     r: R,
     frame: Frame,
     have_frame: bool,
 }
 
-impl<R: Read> WebpDecoder<R> {
-    /// Create a new WebpDecoder from the Reader ```r```.
+impl<R: Read> WebPDecoder<R> {
+    /// Create a new WebPDecoder from the Reader ```r```.
     /// This function takes ownership of the Reader.
-    pub fn new(r: R) -> ImageResult<WebpDecoder<R>> {
+    pub fn new(r: R) -> ImageResult<WebPDecoder<R>> {
         let f: Frame = Default::default();
 
-        let mut decoder = WebpDecoder {
+        let mut decoder = WebPDecoder {
             r,
             have_frame: false,
             frame: f,
@@ -44,13 +44,13 @@ impl<R: Read> WebpDecoder<R> {
         self.r.by_ref().take(4).read_to_end(&mut webp)?;
 
         if &*riff != b"RIFF" {
-            return Err(image::ImageError::FormatError(
+            return Err(ImageError::FormatError(
                 "Invalid RIFF signature.".to_string(),
             ));
         }
 
         if &*webp != b"WEBP" {
-            return Err(image::ImageError::FormatError(
+            return Err(ImageError::FormatError(
                 "Invalid WEBP signature.".to_string(),
             ));
         }
@@ -63,7 +63,7 @@ impl<R: Read> WebpDecoder<R> {
         self.r.by_ref().take(4).read_to_end(&mut vp8)?;
 
         if &*vp8 != b"VP8 " {
-            return Err(image::ImageError::FormatError(
+            return Err(ImageError::FormatError(
                 "Invalid VP8 signature.".to_string(),
             ));
         }
@@ -78,7 +78,7 @@ impl<R: Read> WebpDecoder<R> {
         self.r.read_to_end(&mut framedata)?;
         let m = io::Cursor::new(framedata);
 
-        let mut v = VP8Decoder::new(m);
+        let mut v = Vp8Decoder::new(m);
         let frame = v.decode_frame()?;
 
         self.frame = frame.clone();
@@ -115,22 +115,24 @@ impl<R> Read for WebpReader<R> {
     }
 }
 
-impl<'a, R: 'a + Read> ImageDecoder<'a> for WebpDecoder<R> {
+impl<'a, R: 'a + Read> ImageDecoder<'a> for WebPDecoder<R> {
     type Reader = WebpReader<R>;
 
-    fn dimensions(&self) -> (u64, u64) {
-        (self.frame.width as u64, self.frame.height as u64)
+    fn dimensions(&self) -> (u32, u32) {
+        (u32::from(self.frame.width), u32::from(self.frame.height))
     }
 
-    fn colortype(&self) -> color::ColorType {
-        color::ColorType::Gray(8)
+    fn color_type(&self) -> color::ColorType {
+        color::ColorType::L8
     }
 
     fn into_reader(self) -> ImageResult<Self::Reader> {
         Ok(WebpReader(Cursor::new(self.frame.ybuf), PhantomData))
     }
 
-    fn read_image(self) -> ImageResult<Vec<u8>> {
-        Ok(self.frame.ybuf)
+    fn read_image(self, buf: &mut [u8]) -> ImageResult<()> {
+        assert_eq!(u64::try_from(buf.len()), Ok(self.total_bytes()));
+        buf.copy_from_slice(&self.frame.ybuf);
+        Ok(())
     }
 }

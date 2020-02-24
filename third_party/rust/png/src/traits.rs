@@ -42,7 +42,7 @@ impl<W: io::Read + ?Sized> ReadBytesExt<u16> for W {
 	fn read_be(&mut self) -> io::Result<u16> {
         let mut bytes = [0, 0];
 		read_all(self, &mut bytes)?;
-        Ok((bytes[0] as u16) << 8 | bytes[1] as u16)
+        Ok((u16::from(bytes[0])) << 8 | u16::from(bytes[1]))
 	}
 }
 
@@ -51,10 +51,10 @@ impl<W: io::Read + ?Sized> ReadBytesExt<u32> for W {
 	fn read_be(&mut self) -> io::Result<u32> {
         let mut bytes = [0, 0, 0, 0];
 		read_all(self, &mut bytes)?;
-        Ok(  (bytes[0] as u32) << 24 
-           | (bytes[1] as u32) << 16
-           | (bytes[2] as u32) << 8
-           |  bytes[3] as u32
+        Ok(  (u32::from(bytes[0])) << 24 
+           | (u32::from(bytes[1])) << 16
+           | (u32::from(bytes[2])) << 8
+           |  u32::from(bytes[3])
         )
 	}
 }

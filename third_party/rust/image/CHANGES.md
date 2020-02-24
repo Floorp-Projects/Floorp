@@ -3,10 +3,123 @@
 Rust image aims to be a pure-Rust implementation of various popular image formats. Accompanying reading/write support, rust image provides basic imaging processing function. See `README.md` for further details.
 
 ## Known issues
- - Interlaced (progressive) or animated images are not well supported.
- - Images with *n* bit/channel (*n ≠ 8*) are not well supported.
+ - Images with *n* bit/channel (*n ≠ 8*) are not well supported but basic
+     support for 16-bit is available and implemented for PNG.
+ - Not all Interlaced (progressive) or animated images are well supported.
+ - The color space information of pixels is not clearly communicated.
 
 ## Changes
+
+### Version 0.23.0
+
+This major release intends to improve the interface with regards to handling of
+color format data and errors for both decoding and encoding. This necessitated
+many breaking changes anyways so it was used to improve the compliance to the
+interface guidelines such as outstanding renaming.
+
+It is not yet perfect with regards to color spaces but it was designed mainly
+as an improvement over the current interface with regards to in-memory color
+formats, first. We'll get to color spaces in a later major version.
+
+- Heavily reworked `ColorType`:
+  - This type is now used for denoting formats for which we support operations
+      on buffers in these memory representations. Particularly, all channels in
+      pixel types are assumed to be an integer number of bytes (In terms of the
+      Rust type system, these are `Sized` and one can crate slices of channel
+      values).
+  - An `ExtendedColorType` is used to express more generic color formats for
+      which the library has limited support but can be converted/scaled/mapped
+      into a `ColorType` buffer. This operation might be fallible but, for
+      example, includes sources with 1/2/4-bit components.
+  - Both types are non-exhaustive to add more formats in a minor release.
+  - A work-in-progress (#1085) will further separate the color model from the
+      specific channel instantiation, e.g. both `8-bit RGB` and `16-bit BGR`
+      are instantiations of `RGB` color model.
+- Heavily rework `ImageError`:
+  - The top-level enum type now serves to differentiate cause with multiple
+      opaque representations for the actual error. These are no longer simple
+      Strings but contains useful types. Third-party decoders that have no
+      variant in `ImageFormat` have also been considered.
+  - Support for `Error::source` that can be downcast to an error from a
+      matching version of the underlying decoders. Note that the version is not
+      part of the stable interface guarantees, this should not be relied upon
+      for correctness and only be used as an optimization.
+  - Added image format indications to errors.
+  - The error values produced by decoder will be upgraded incrementally. See
+      something that still produces plain old String messages? Feel free to
+      send a PR.
+- Reworked the `ImageDecoder` trait:
+  - `read_image` takes an output buffer argument instead of allocating all
+      memory on its own.
+  - The return type of `dimensions` now aligns with `GenericImage` sizes.
+  - The `colortype` method was renamed to `color_type` for conformity.
+- The enums `ColorType`, `DynamicImage`, `imageops::FilterType`, `ImageFormat`
+  no longer re-export all of their variants in the top-level of the crate. This
+  removes the growing pollution in the documentation and usage. You can still
+  insert the equivalent statement on your own:
+  `use image::ImageFormat::{self, *};`
+- The result of `encode` operations is now uniformly an `ImageResult<()>`.
+- Removed public converters from some `tiff`, `png`, `gif`, `jpeg` types,
+  mainly such as error conversion. This allows upgrading the dependency across
+  major versions without a major release in `image` itself.
+- On that note, the public interface of `gif` encoder no longer takes a
+  `gif::Frame` but rather deals with `image::Frame` only. If you require to
+  specify the disposal method, transparency, etc. then you may want to wait
+  with upgrading but (see next change).
+- The `gif` encoder now errors on invalid dimensions or unsupported color
+  formats. It would previously silently reinterpret bytes as RGB/RGBA.
+- The capitalization of  `ImageFormat` and other enum variants has been
+  adjusted to adhere to the API guidelines. These variants are now spelled
+  `Gif`, `Png`, etc. The same change has been made to the name of types such as
+  `HDRDecoder`.
+- The `Progress` type has finally received public accessor method. Strange that
+  no one reported them missing.
+- Introduced `PixelDensity` and `PixelDensityUnit` to store DPI information in
+  formats that support encoding this form of meta data (e.g. in `jpeg`).
+
+### Version 0.22.5
+
+- Added `GenericImage::copy_within`, specialized for `ImageBuffer`
+- Fixed decoding of interlaced `gif` files
+- Prepare for future compatibility of array `IntoIterator` in example code
+
+### Version 0.22.4
+
+- Added in-place variants for flip and rotate operations.
+- The bmp encoder now checks if dimensions are valid for the format. It would
+  previously write a subset or panic.
+- Removed deprecated implementations of `Error::description`
+- Added `DynamicImage::into_*` which convert without an additional allocation.
+- The PNG encoder errors on unsupported color types where it had previously
+  silently swapped color channels.
+- Enabled saving images as `gif` with `save_buffer`.
+
+### Version 0.22.3
+
+- Added a new module `io` containing a configurable `Reader`. It can replace
+  the bunch of free functions: `image::{load_*, open, image_dimensions}` while
+  enabling new combinations such as `open` but with format deduced from content
+  instead of file path.
+- Fixed `const_err` lint in the macro expanded implementations of `Pixel`. This
+  can only affect your crate if `image` is used as a path dependency.
+
+### Version 0.22.2
+
+- Undeprecate `unsafe` trait accessors. Further evaluation showed that their
+  deprecation should be delayed until trait `impl` specialization is available.
+- Fixed magic bytes used to detect `tiff` images.
+- Added `DynamicImage::from_decoder`.
+- Fixed a bug in the `PNGReader` that caused an infinite loop.
+- Added `ColorType::{bits_per_pixel, num_components}`.
+- Added `ImageFormat::from_path`, same format deduction as the `open` method.
+- Fixed a panic in the gif decoder.
+- Aligned background color handling of `gif` to web browser implementations.
+- Fixed handling of partial frames in animated `gif`.
+- Removed unused direct `lzw` dependency, an indirect dependency in `tiff`.
+
+### Version 0.22.1
+
+- Fixed build without no features enabled
 
 ### Version 0.22
 

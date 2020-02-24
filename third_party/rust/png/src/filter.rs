@@ -30,9 +30,9 @@ pub enum FilterType {
 }
 
 fn filter_paeth(a: u8, b: u8, c: u8) -> u8 {
-    let ia = a as i16;
-    let ib = b as i16;
-    let ic = c as i16;
+    let ia = i16::from(a);
+    let ib = i16::from(b);
+    let ic = i16::from(c);
 
     let p = ia + ib - ic;
 
@@ -90,7 +90,7 @@ pub fn unfilter(filter: FilterType, bpp: usize, previous: &[u8], current: &mut [
 
                 for i in bpp..len {
                     current[i] = current[i].wrapping_add(
-                        ((current[i - bpp] as i16 + previous[i] as i16) / 2) as u8
+                        ((i16::from(current[i - bpp]) + i16::from(previous[i])) / 2) as u8
                     );
                 }
                 Ok(())

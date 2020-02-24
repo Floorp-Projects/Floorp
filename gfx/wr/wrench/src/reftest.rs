@@ -235,7 +235,7 @@ impl ReftestImage {
         {
             let encoder = PNGEncoder::new(&mut png);
             encoder
-                .encode(&self.data[..], width as u32, height as u32, ColorType::RGBA(8))
+                .encode(&self.data[..], width as u32, height as u32, ColorType::Rgba8)
                 .expect("Unable to encode PNG!");
         }
         let png_base64 = base64::encode(&png);
@@ -581,7 +581,7 @@ impl<'a> ReftestHarness<'a> {
         let window_size = self.window.get_inner_size();
         let reference_image = match t.reference.extension().unwrap().to_str().unwrap() {
             "yaml" => None,
-            "png" => Some(self.load_image(t.reference.as_path(), ImageFormat::PNG)),
+            "png" => Some(self.load_image(t.reference.as_path(), ImageFormat::Png)),
             other => panic!("Unknown reftest extension: {}", other),
         };
         let test_size = reference_image.as_ref().map_or(window_size, |img| img.size);

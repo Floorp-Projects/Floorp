@@ -4,7 +4,7 @@
 //! VP8 video format as defined in RFC-6386.
 //!
 //! It decodes Keyframes only sans Loop Filtering.
-//! VP8 is the underpinning of the Webp image format
+//! VP8 is the underpinning of the WebP image format
 //!
 //! # Related Links
 //! * [rfc-6386](http://tools.ietf.org/html/rfc6386) - The VP8 Data Format and Decoding Guide
@@ -18,9 +18,9 @@ use std::cmp;
 use std::io::Read;
 
 use super::transform;
-use ::{ImageError, ImageResult};
+use crate::{ImageError, ImageResult};
 
-use math::utils::clamp;
+use crate::math::utils::clamp;
 
 const MAX_SEGMENTS: usize = 4;
 const NUM_DCT_TOKENS: usize = 12;
@@ -620,7 +620,7 @@ static PROB_DCT_CAT: [[Prob; 12]; 6] = [
 static DCT_CAT_BASE: [u8; 6] = [5, 7, 11, 19, 35, 67];
 static COEFF_BANDS: [u8; 16] = [0, 1, 2, 3, 6, 4, 5, 6, 6, 6, 6, 6, 6, 6, 6, 7];
 
-#[cfg_attr(rustfmt, rustfmt_skip)]
+#[rustfmt::skip]
 static DC_QUANT: [i16; 128] = [
       4,   5,   6,   7,   8,   9,  10,  10,
      11,  12,  13,  14,  15,  16,  17,  17,
@@ -640,7 +640,7 @@ static DC_QUANT: [i16; 128] = [
     138, 140, 143, 145, 148, 151, 154, 157,
 ];
 
-#[cfg_attr(rustfmt, rustfmt_skip)]
+#[rustfmt::skip]
 static AC_QUANT: [i16; 128] = [
       4,   5,   6,   7,   8,    9,  10,  11,
       12,  13,  14,  15,  16,  17,  18,  19,
@@ -672,7 +672,7 @@ struct BoolReader {
 }
 
 impl BoolReader {
-    pub fn new() -> BoolReader {
+    pub(crate) fn new() -> BoolReader {
         BoolReader {
             buf: Vec::new(),
             range: 0,
@@ -682,7 +682,7 @@ impl BoolReader {
         }
     }
 
-    pub fn init(&mut self, buf: Vec<u8>) -> ImageResult<()> {
+    pub(crate) fn init(&mut self, buf: Vec<u8>) -> ImageResult<()> {
         if buf.len() < 2 {
             return Err(ImageError::FormatError(
                 "Expected at least 2 bytes of decoder initialization data".into()));
@@ -698,7 +698,7 @@ impl BoolReader {
         Ok(())
     }
 
-    pub fn read_bool(&mut self, probability: u8) -> bool {
+    pub(crate) fn read_bool(&mut self, probability: u8) -> bool {
         let split = 1 + (((self.range - 1) * u32::from(probability)) >> 8);
         let bigsplit = split << 8;
 
@@ -731,7 +731,7 @@ impl BoolReader {
         retval
     }
 
-    pub fn read_literal(&mut self, n: u8) -> u8 {
+    pub(crate) fn read_literal(&mut self, n: u8) -> u8 {
         let mut v = 0u8;
         let mut n = n;
 
@@ -743,7 +743,7 @@ impl BoolReader {
         v
     }
 
-    pub fn read_magnitude_and_sign(&mut self, n: u8) -> i32 {
+    pub(crate) fn read_magnitude_and_sign(&mut self, n: u8) -> i32 {
         let magnitude = self.read_literal(n);
         let sign = self.read_literal(1);
 
@@ -754,7 +754,7 @@ impl BoolReader {
         }
     }
 
-    pub fn read_with_tree(&mut self, tree: &[i8], probs: &[Prob], start: isize) -> i8 {
+    pub(crate) fn read_with_tree(&mut self, tree: &[i8], probs: &[Prob], start: isize) -> i8 {
         let mut index = start;
 
         loop {
@@ -770,7 +770,7 @@ impl BoolReader {
         -index as i8
     }
 
-    pub fn read_flag(&mut self) -> bool {
+    pub(crate) fn read_flag(&mut self) -> bool {
         0 != self.read_literal(1)
     }
 }
@@ -835,7 +835,7 @@ struct Segment {
 /// VP8 Decoder
 ///
 /// Only decodes keyframes
-pub struct VP8Decoder<R> {
+pub struct Vp8Decoder<R> {
     r: R,
     b: BoolReader,
 
@@ -867,15 +867,15 @@ pub struct VP8Decoder<R> {
     left_border: Vec<u8>,
 }
 
-impl<R: Read> VP8Decoder<R> {
+impl<R: Read> Vp8Decoder<R> {
     /// Create a new decoder.
     /// The reader must present a raw vp8 bitstream to the decoder
-    pub fn new(r: R) -> VP8Decoder<R> {
+    pub fn new(r: R) -> Vp8Decoder<R> {
         let f = Frame::default();
         let s = Segment::default();
         let m = MacroBlock::default();
 
-        VP8Decoder {
+        Vp8Decoder {
             r,
             b: BoolReader::new(),
 
@@ -1143,7 +1143,7 @@ impl<R: Read> VP8Decoder<R> {
 
             if color_space != 0 {
                 return Err(ImageError::FormatError(
-                    format!("Only YUV color space is specified.")))
+                    "Only YUV color space is specified.".to_string()))
             }
         }
 

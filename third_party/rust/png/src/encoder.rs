@@ -61,7 +61,7 @@ impl<W: Write> Encoder<W> {
         let mut info = Info::default();
         info.width = width;
         info.height = height;
-        Encoder { w: w, info: info }
+        Encoder { w, info }
     }
 
     pub fn write_header(self) -> Result<Writer<W>> {
@@ -111,11 +111,18 @@ pub struct Writer<W: Write> {
 
 impl<W: Write> Writer<W> {
     fn new(w: W, info: Info) -> Writer<W> {
-        let w = Writer { w: w, info: info };
-        w
+        Writer { w, info }
     }
 
     fn init(mut self) -> Result<Self> {
+        if self.info.width == 0 {
+            return Err(EncodingError::Format("Zero width not allowed".into()));
+        }
+
+        if self.info.height == 0 {
+            return Err(EncodingError::Format("Zero height not allowed".into()));
+        }
+
         self.w.write_all(&[137, 80, 78, 71, 13, 10, 26, 10])?;
         let mut data = [0; 13];
         (&mut data[..]).write_be(self.info.width)?;
@@ -140,6 +147,7 @@ impl<W: Write> Writer<W> {
 
     /// Writes the image data.
     pub fn write_image_data(&mut self, data: &[u8]) -> Result<()> {
+        const MAX_CHUNK_LEN: u32 = (1u32 << 31) - 1;
         let bpp = self.info.bytes_per_pixel();
         let in_len = self.info.raw_row_length() - 1;
         let mut prev = vec![0; in_len];
@@ -158,7 +166,11 @@ impl<W: Write> Writer<W> {
             zlib.write_all(&current)?;
             mem::swap(&mut prev, &mut current);
         }
-        self.write_chunk(chunk::IDAT, &zlib.finish()?)
+        let zlib_encoded = zlib.finish()?;
+        for chunk in zlib_encoded.chunks(MAX_CHUNK_LEN as usize) {
+            self.write_chunk(chunk::IDAT, &chunk)?;
+        }
+        Ok(())
     }
 
     /// Create an stream writer.
@@ -216,7 +228,7 @@ impl<'a, W: Write> Write for ChunkWriter<'a, W> {
 
     fn flush(&mut self) -> io::Result<()> {
         if self.index > 0 {
-            self.writer.write_chunk(chunk::IDAT, &self.buffer[..self.index+1])?;
+            self.writer.write_chunk(chunk::IDAT, &self.buffer[..=self.index])?;
         }
         self.index = 0;
         Ok(())
@@ -232,8 +244,8 @@ impl<'a, W: Write> Drop for ChunkWriter<'a, W> {
 
 /// Streaming png writer
 ///
-/// This may may silently fail in the destructor so it is a good idea to call
-/// `finish` or `flush` before droping. 
+/// This may silently fail in the destructor, so it is a good idea to call
+/// [`finish`](#method.finish) or [`flush`](https://doc.rust-lang.org/stable/std/io/trait.Write.html#tymethod.flush) before dropping. 
 pub struct StreamWriter<'a, W: Write> {
     writer: deflate::write::ZlibEncoder<ChunkWriter<'a, W>>,
     prev_buf: Vec<u8>,
@@ -308,10 +320,9 @@ impl<'a, W: Write> Drop for StreamWriter<'a, W> {
 mod tests {
     use super::*;
 
-    extern crate rand;
     extern crate glob;
 
-    use self::rand::Rng;
+    use rand::{thread_rng, Rng};
     use std::{io, cmp};
     use std::io::Write;
     use std::fs::File;
@@ -338,7 +349,7 @@ mod tests {
                 let mut out = Vec::new();
                 {
                     let mut wrapper = RandomChunkWriter {
-                        rng: self::rand::thread_rng(),
+                        rng: thread_rng(),
                         w: &mut out
                     };
 
@@ -378,7 +389,7 @@ mod tests {
                 let mut out = Vec::new();
                 {
                     let mut wrapper = RandomChunkWriter {
-                        rng: self::rand::thread_rng(),
+                        rng: thread_rng(),
                         w: &mut out
                     };
 
@@ -386,7 +397,7 @@ mod tests {
                     let mut stream_writer = encoder.stream_writer();
 
                     let mut outer_wrapper = RandomChunkWriter {
-                        rng: self::rand::thread_rng(),
+                        rng: thread_rng(),
                         w: &mut stream_writer
                     };
                     
@@ -421,6 +432,25 @@ mod tests {
         let image = vec![0u8; correct_image_size + 1];
         let result = png_writer.write_image_data(image.as_ref());
         assert!(result.is_err());
+
+        Ok(())
+    }
+
+    #[test]
+    fn expect_error_on_empty_image() -> Result<()> {
+        use std::io::Cursor;
+
+        let output = vec![0u8; 1024];
+        let mut writer = Cursor::new(output);
+
+        let encoder = Encoder::new(&mut writer, 0, 0);
+        assert!(encoder.write_header().is_err());
+
+        let encoder = Encoder::new(&mut writer, 100, 0);
+        assert!(encoder.write_header().is_err());
+
+        let encoder = Encoder::new(&mut writer, 0, 100);
+        assert!(encoder.write_header().is_err());
 
         Ok(())
     }
