@@ -67,6 +67,7 @@ let RPMAccessManager = {
         "security.certerrors.tls.version.show-override",
       ],
       setBoolPref: ["security.ssl.errorReporting.automatic"],
+      prefIsLocked: ["security.tls.version.min"],
       addToHistogram: ["yes"],
     },
     "about:privatebrowsing": {
@@ -498,6 +499,14 @@ class MessagePort {
 
   setBoolPref(aPref, aVal) {
     return this.wrapPromise(AsyncPrefs.set(aPref, aVal));
+  }
+
+  prefIsLocked(aPref) {
+    let doc = this.window.document;
+    if (!RPMAccessManager.checkAllowAccess(doc, "prefIsLocked", aPref)) {
+      throw new Error("RPMAccessManager does not allow access to prefIsLocked");
+    }
+    return Services.prefs.prefIsLocked(aPref);
   }
 
   getFormatURLPref(aFormatURL) {
