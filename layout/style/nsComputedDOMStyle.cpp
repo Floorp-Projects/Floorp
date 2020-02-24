@@ -2493,8 +2493,7 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetMask() {
       firstLayer.mOrigin != StyleGeometryBox::BorderBox ||
       firstLayer.mComposite != NS_STYLE_MASK_COMPOSITE_ADD ||
       firstLayer.mMaskMode != StyleMaskMode::MatchSource ||
-      !nsStyleImageLayers::IsInitialPositionForLayerType(
-          firstLayer.mPosition, nsStyleImageLayers::LayerType::Mask) ||
+      firstLayer.mPosition != Position::FromPercentage(0.0f) ||
       !firstLayer.mRepeat.IsInitialValue() ||
       !firstLayer.mSize.IsInitialValue() ||
       !(firstLayer.mImage.IsNone() || firstLayer.mImage.IsUrl())) {
