@@ -570,7 +570,7 @@ class MacroAssemblerNone : public Assembler {
   Operand ToPayload(Operand base) { MOZ_CRASH(); }
   Address ToPayload(Address) { MOZ_CRASH(); }
 
-  static const Register getStackPointer() { MOZ_CRASH(); }
+  Register getStackPointer() const { MOZ_CRASH(); }
 
   // Instrumentation for entering and leaving the profiler.
   void profilerEnterFrame(Register, Register) { MOZ_CRASH(); }
