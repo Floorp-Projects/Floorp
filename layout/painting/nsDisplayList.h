@@ -6405,7 +6405,9 @@ class nsDisplayTableFixedPosition : public nsDisplayFixedPosition {
 class nsDisplayScrollInfoLayer : public nsDisplayWrapList {
  public:
   nsDisplayScrollInfoLayer(nsDisplayListBuilder* aBuilder,
-                           nsIFrame* aScrolledFrame, nsIFrame* aScrollFrame);
+                           nsIFrame* aScrolledFrame, nsIFrame* aScrollFrame,
+                           const CompositorHitTestInfo& aHitInfo,
+                           const nsRect& aHitArea);
 
   MOZ_COUNTED_DTOR_OVERRIDE(nsDisplayScrollInfoLayer)
 
@@ -6436,11 +6438,19 @@ class nsDisplayScrollInfoLayer : public nsDisplayWrapList {
   bool UpdateScrollData(
       mozilla::layers::WebRenderScrollData* aData,
       mozilla::layers::WebRenderLayerScrollData* aLayerData) override;
+  bool CreateWebRenderCommands(
+      mozilla::wr::DisplayListBuilder& aBuilder,
+      mozilla::wr::IpcResourceUpdateQueue& aResources,
+      const StackingContextHelper& aSc,
+      mozilla::layers::RenderRootStateManager* aManager,
+      nsDisplayListBuilder* aDisplayListBuilder) override;
 
  protected:
   nsIFrame* mScrollFrame;
   nsIFrame* mScrolledFrame;
   ViewID mScrollParentId;
+  CompositorHitTestInfo mHitInfo;
+  nsRect mHitArea;
 };
 
 /**

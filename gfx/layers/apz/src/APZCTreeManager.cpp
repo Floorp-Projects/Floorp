@@ -2715,6 +2715,8 @@ APZCTreeManager::HitTestResult APZCTreeManager::GetAPZCAtPointWR(
   ScrollableLayerGuid::ViewID scrollId;
   gfx::CompositorHitTestInfo hitInfo;
   SideBits sideBits = SideBits::eNone;
+  APZCTM_LOG("Hit-testing point %s with WR\n",
+             Stringify(aHitTestPoint).c_str());
   bool hitSomething = wr->HitTest(wr::ToWorldPoint(aHitTestPoint), pipelineId,
                                   scrollId, hitInfo, sideBits);
   if (!hitSomething) {
