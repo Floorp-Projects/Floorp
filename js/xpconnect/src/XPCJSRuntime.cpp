@@ -126,7 +126,6 @@ const char* const XPCJSRuntime::mStrings[] = {
     "classId",           // IDX_CLASS_ID
     "interfaceId",       // IDX_INTERFACE_ID
     "initializer",       // IDX_INITIALIZER
-    "print",             // IDX_PRINT
 };
 
 /***************************************************************************/
