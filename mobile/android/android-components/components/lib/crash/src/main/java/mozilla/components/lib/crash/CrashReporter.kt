@@ -153,13 +153,15 @@ class CrashReporter(
 
         logger.info("Received crash: $crash")
 
-        if (shouldSendIntent(crash)) {
-            // This crash was not fatal and the app has registered a pending intent
-            launchCrashIntent(context, crash)
-        }
-
         if (telemetryServices.isNotEmpty()) {
             sendCrashTelemetry(context, crash)
+        }
+
+        // If crash is native code and non fatal then the view will handle the user prompt
+        if (shouldSendIntent(crash)) {
+            // App has registered a pending intent
+            sendNonFatalCrashIntent(context, crash)
+            return
         }
 
         if (services.isNotEmpty()) {
@@ -171,7 +173,8 @@ class CrashReporter(
         }
     }
 
-    private fun launchCrashIntent(context: Context, crash: Crash) {
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal fun sendNonFatalCrashIntent(context: Context, crash: Crash) {
         logger.info("Invoking non-fatal PendingIntent")
 
         val additionalIntent = Intent()

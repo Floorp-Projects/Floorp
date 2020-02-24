@@ -21,6 +21,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.doNothing
+import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 
@@ -41,6 +42,7 @@ class CrashHandlerServiceTest {
         reporter = spy(CrashReporter(
             shouldPrompt = CrashReporter.Prompt.NEVER,
             services = listOf(mock()),
+            nonFatalCrashIntent = mock(),
             scope = scope
         )).install(testContext)
 
@@ -72,7 +74,9 @@ class CrashHandlerServiceTest {
 
         intent?.putExtra("fatal", true)
         service?.onStartCommand(intent, 0, 0)
+        verify(reporter)?.onCrash(any(), any())
         verify(reporter)?.sendCrashReport(any(), any())
+        verify(reporter, never())?.sendNonFatalCrashIntent(any(), any())
     }
 
     @Test
@@ -81,6 +85,8 @@ class CrashHandlerServiceTest {
 
         intent?.putExtra("fatal", false)
         service?.onStartCommand(intent, 0, 0)
-        verify(reporter)?.sendCrashReport(any(), any())
+        verify(reporter)?.onCrash(any(), any())
+        verify(reporter)?.sendNonFatalCrashIntent(any(), any())
+        verify(reporter, never())?.sendCrashReport(any(), any())
     }
 }
