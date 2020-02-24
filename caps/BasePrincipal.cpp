@@ -72,6 +72,17 @@ BasePrincipal::GetHostPort(nsACString& aRes) {
 }
 
 NS_IMETHODIMP
+BasePrincipal::GetHost(nsACString& aRes) {
+  aRes.Truncate();
+  nsCOMPtr<nsIURI> prinURI;
+  nsresult rv = GetURI(getter_AddRefs(prinURI));
+  if (NS_FAILED(rv) || !prinURI) {
+    return NS_OK;
+  }
+  return prinURI->GetHost(aRes);
+}
+
+NS_IMETHODIMP
 BasePrincipal::GetOriginNoSuffix(nsACString& aOrigin) {
   MOZ_ASSERT(mInitialized);
   mOriginNoSuffix->ToUTF8String(aOrigin);
