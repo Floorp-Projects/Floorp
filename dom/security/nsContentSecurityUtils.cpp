@@ -338,6 +338,12 @@ bool nsContentSecurityUtils::IsEvalAllowed(JSContext* cx,
     return true;
   }
 
+  if (JS::ContextOptionsRef(cx).disableEvalSecurityChecks()) {
+    MOZ_LOG(sCSMLog, LogLevel::Debug,
+            ("Allowing eval() because this JSContext was set to allow it"));
+    return true;
+  }
+
   if (aIsSystemPrincipal &&
       StaticPrefs::security_allow_eval_with_system_principal()) {
     MOZ_LOG(sCSMLog, LogLevel::Debug,
