@@ -60,7 +60,7 @@ impl hash::Hash for GradientStopKey {
     }
 }
 
-/// Identifying key for a line decoration.
+/// Identifying key for a linear gradient.
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 #[derive(Debug, Clone, Eq, PartialEq, Hash, MallocSizeOf)]
@@ -364,7 +364,7 @@ impl hash::Hash for RadialGradientParams {
     }
 }
 
-/// Identifying key for a line decoration.
+/// Identifying key for a radial gradient.
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 #[derive(Debug, Clone, Eq, PartialEq, Hash, MallocSizeOf)]
