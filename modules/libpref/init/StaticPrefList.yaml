@@ -2236,7 +2236,7 @@
 # HTMLIFrameElement objects.
 - name: dom.security.featurePolicy.enabled
   type: bool
-  value: @IS_EARLY_BETA_OR_EARLIER@
+  value: true
   mirror: always
 
 # This pref enables the featurePolicy header support.
@@ -7332,7 +7332,7 @@
 
 - name: permissions.delegation.enabled
   type: bool
-  value: @IS_EARLY_BETA_OR_EARLIER@
+  value: true
   mirror: always
 
 - name: permissions.isolateBy.userContext
