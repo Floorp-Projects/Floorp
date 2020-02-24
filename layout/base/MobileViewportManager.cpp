@@ -17,8 +17,8 @@
 #include "nsViewportInfo.h"
 #include "UnitTransforms.h"
 
-#define MVM_LOG(...)
-// #define MVM_LOG(...) printf_stderr("MVM: " __VA_ARGS__)
+static mozilla::LazyLogModule sApzMvmLog("apz.mobileviewport");
+#define MVM_LOG(...) MOZ_LOG(sApzMvmLog, LogLevel::Debug, (__VA_ARGS__))
 
 NS_IMPL_ISUPPORTS(MobileViewportManager, nsIDOMEventListener, nsIObserver)
 
@@ -36,7 +36,7 @@ MobileViewportManager::MobileViewportManager(MVMContext* aContext)
     : mContext(aContext), mIsFirstPaint(false), mPainted(false) {
   MOZ_ASSERT(mContext);
 
-  MVM_LOG("%p: creating with context %p\n", this, mContext);
+  MVM_LOG("%p: creating with context %p\n", this, mContext.get());
 
   mContext->AddEventListener(DOM_META_ADDED, this, false);
   mContext->AddEventListener(DOM_META_CHANGED, this, false);

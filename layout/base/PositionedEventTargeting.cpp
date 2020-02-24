@@ -12,6 +12,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/dom/MouseEventBinding.h"
+#include "nsFrameList.h"  // for DEBUG_FRAME_DUMP
 #include "nsHTMLParts.h"
 #include "nsLayoutUtils.h"
 #include "nsGkAtoms.h"
@@ -28,10 +29,11 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
-// If debugging this code you may wish to enable this logging, and also
-// uncomment the DumpFrameTree call near the bottom of the file.
-#define PET_LOG(...)
-// #define PET_LOG(...) printf_stderr("PET: " __VA_ARGS__);
+// If debugging this code you may wish to enable this logging, via
+// the env var MOZ_LOG="event.retarget:4". For extra logging (getting
+// frame dumps, use MOZ_LOG="event.retarget:5".
+static mozilla::LazyLogModule sEvtTgtLog("event.retarget");
+#define PET_LOG(...) MOZ_LOG(sEvtTgtLog, LogLevel::Debug, (__VA_ARGS__))
 
 namespace mozilla {
 
@@ -616,10 +618,14 @@ nsIFrame* FindFrameTargetedByInputEvent(
   }
   PET_LOG("Final target is %p\n", target);
 
-  // Uncomment this to dump the frame tree to help with debugging.
+#ifdef DEBUG_FRAME_DUMP
+  // At verbose logging level, dump the frame tree to help with debugging.
   // Note that dumping the frame tree at the top of the function may flood
   // logcat on Android devices and cause the PET_LOGs to get dropped.
-  // aRootFrame->DumpFrameTree();
+  if (MOZ_LOG_TEST(sEvtTgtLog, LogLevel::Verbose)) {
+    aRootFrame->DumpFrameTree();
+  }
+#endif
 
   if (!target || !prefs->mRepositionEventCoords) {
     // No repositioning required for this event
