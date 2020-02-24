@@ -46,6 +46,8 @@ ShutdownPhase GetShutdownPhaseFromPrefValue(int32_t aPrefValue) {
   switch (aPrefValue) {
     case 1:
       return ShutdownPhase::ShutdownPostLastCycleCollection;
+    case 2:
+      return ShutdownPhase::ShutdownThreads;
       // NOTE: the remaining values from the ShutdownPhase enum will be added
       // when we're at least reasonably confident that the world won't come
       // crashing down if we do a fast shutdown at that point.
