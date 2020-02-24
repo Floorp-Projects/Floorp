@@ -241,8 +241,10 @@ class RecordedCacheDataSurface final
 
 inline bool RecordedCacheDataSurface::PlayCanvasEvent(
     CanvasTranslator* aTranslator) const {
-  RefPtr<gfx::SourceSurface> surface =
-      aTranslator->LookupSourceSurface(mSurface);
+  gfx::SourceSurface* surface = aTranslator->LookupSourceSurface(mSurface);
+  if (!surface) {
+    return false;
+  }
 
   RefPtr<gfx::DataSourceSurface> dataSurface = surface->GetDataSurface();
 
@@ -286,8 +288,7 @@ inline bool RecordedPrepareDataForSurface::PlayCanvasEvent(
   RefPtr<gfx::DataSourceSurface> dataSurface =
       aTranslator->LookupDataSurface(mSurface);
   if (!dataSurface) {
-    RefPtr<gfx::SourceSurface> surface =
-        aTranslator->LookupSourceSurface(mSurface);
+    gfx::SourceSurface* surface = aTranslator->LookupSourceSurface(mSurface);
     if (!surface) {
       return false;
     }
@@ -338,14 +339,16 @@ class RecordedGetDataForSurface final
 
 inline bool RecordedGetDataForSurface::PlayCanvasEvent(
     CanvasTranslator* aTranslator) const {
-  RefPtr<gfx::SourceSurface> surface =
-      aTranslator->LookupSourceSurface(mSurface);
+  gfx::SourceSurface* surface = aTranslator->LookupSourceSurface(mSurface);
   if (!surface) {
     return false;
   }
 
   UniquePtr<gfx::DataSourceSurface::ScopedMap> map =
       aTranslator->GetPreparedMap(mSurface);
+  if (!map) {
+    return false;
+  }
 
   gfx::IntSize ssSize = surface->GetSize();
   size_t dataFormatWidth = ssSize.width * BytesPerPixel(surface->GetFormat());

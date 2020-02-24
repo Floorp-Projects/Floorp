@@ -446,7 +446,19 @@ void CanvasEventRingBuffer::ReturnWrite(const char* aData, size_t aSize) {
 }
 
 void CanvasEventRingBuffer::ReturnRead(char* aOut, size_t aSize) {
+  // First wait for the event returning the data to be read.
+  WaitForCheckpoint(mOurCount);
   uint32_t readCount = mWrite->returnCount;
+
+  // If the event sending back data fails to play then it will ReturnWrite
+  // nothing. So, wait until something has been written or the reader has
+  // stopped processing.
+  while (readCount == mRead->returnCount) {
+    if (mRead->state != State::Processing) {
+      return;
+    }
+  }
+
   uint32_t bufPos = readCount % kStreamSize;
   uint32_t bufRemaining = kStreamSize - bufPos;
   uint32_t availableToRead =
@@ -460,9 +472,6 @@ void CanvasEventRingBuffer::ReturnRead(char* aOut, size_t aSize) {
       bufRemaining = kStreamSize - bufPos;
       aOut += availableToRead;
       aSize -= availableToRead;
-    } else {
-      // Double-check that the reader isn't waiting.
-      CheckAndSignalReader();
     }
 
     availableToRead = std::min(bufRemaining, (mRead->returnCount - readCount));
