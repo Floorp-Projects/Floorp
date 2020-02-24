@@ -69,7 +69,7 @@ interface nsIPrincipal : nsISerializable
     /*
     * Returns whether the Principals URI is equal to the other URI
     */
-    boolean EqualsURI(in nsIURI aOtherURI);
+    boolean equalsURI(in nsIURI aOtherURI);
 
     /**
      * Returns a hash value for the principal.
@@ -256,7 +256,7 @@ interface nsIPrincipal : nsISerializable
     /* Returns the Pre Path of the Principals URI with
     * user:pass stripped for privacy and spoof prevention
     */
-    readonly attribute ACString ExposablePrePath;
+    readonly attribute ACString exposablePrePath;
 
     /**
     * Checks if the Principal's URI Scheme matches with the parameter
@@ -278,13 +278,13 @@ interface nsIPrincipal : nsISerializable
     * Checks if the Principal's URI is contained in the given Pref
     * @param pref    The pref to be checked
     */
-    bool IsURIInPrefList(in string pref);
+    bool isURIInPrefList(in string pref);
 
     /*
     * Uses NS_Security Compare to determine if the
     * other URI is same-origin as the uri of the Principal
     */
-    bool IsSameOrigin(in nsIURI otherURI, in bool aIsPrivateWin);
+    bool isSameOrigin(in nsIURI otherURI, in bool aIsPrivateWin);
 
 
     /*
@@ -308,7 +308,7 @@ interface nsIPrincipal : nsISerializable
      * Returns the Flags of the Principals 
      * associated AboutModule, in case there is one.
      */
-    uint32_t GetAboutModuleFlags();
+    uint32_t getAboutModuleFlags();
 
     /**
      * The base part of |origin| without the concatenation with |originSuffix|.
