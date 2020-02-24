@@ -1430,6 +1430,11 @@ void SVGElement::DidChangeLength(uint8_t aAttrEnum,
 }
 
 void SVGElement::DidAnimateLength(uint8_t aAttrEnum) {
+  // We need to do this here. Normally the SMIL restyle would also cause us to
+  // do this from DidSetComputedStyle, but we don't have that guarantee if our
+  // frame gets reconstructed.
+  ClearAnyCachedPath();
+
   if (SVGGeometryProperty::ElementMapsLengthsToStyle(this)) {
     nsCSSPropertyID propId =
         SVGGeometryProperty::AttrEnumToCSSPropId(this, aAttrEnum);
@@ -1438,8 +1443,6 @@ void SVGElement::DidAnimateLength(uint8_t aAttrEnum) {
                                       GetLengthInfo().mLengths[aAttrEnum]);
     return;
   }
-
-  ClearAnyCachedPath();
 
   nsIFrame* frame = GetPrimaryFrame();
 
