@@ -166,19 +166,6 @@ const nsCString& nsCSSProps::GetStringValue(nsCSSCounterDesc aCounterDesc) {
 
 /***************************************************************************/
 
-const KTableEntry nsCSSProps::kTextAlignKTable[] = {
-    {eCSSKeyword_left, StyleTextAlign::Left},
-    {eCSSKeyword_right, StyleTextAlign::Right},
-    {eCSSKeyword_center, StyleTextAlign::Center},
-    {eCSSKeyword_justify, StyleTextAlign::Justify},
-    {eCSSKeyword__moz_center, StyleTextAlign::MozCenter},
-    {eCSSKeyword__moz_right, StyleTextAlign::MozRight},
-    {eCSSKeyword__moz_left, StyleTextAlign::MozLeft},
-    {eCSSKeyword_start, StyleTextAlign::Start},
-    {eCSSKeyword_end, StyleTextAlign::End},
-    {eCSSKeyword_UNKNOWN, nsCSSKTableEntry::SENTINEL_VALUE},
-};
-
 const KTableEntry nsCSSProps::kTextDecorationStyleKTable[] = {
     {eCSSKeyword__moz_none, NS_STYLE_TEXT_DECORATION_STYLE_NONE},
     {eCSSKeyword_solid, NS_STYLE_TEXT_DECORATION_STYLE_SOLID},
