@@ -38,6 +38,14 @@ describe("SimpleSnippet", () => {
     sandbox.restore();
   });
 
+  it("should have the correct defaults", () => {
+    const wrapper = mountAndCheckProps();
+    [["button", "title", "block_button_text"]].forEach(prop => {
+      const props = wrapper.find(prop[0]).props();
+      assert.propertyVal(props, prop[1], schema.properties[prop[2]].default);
+    });
+  });
+
   it("should render .text", () => {
     const wrapper = mountAndCheckProps({ text: "bar" });
     assert.equal(wrapper.find(".body").text(), "bar");

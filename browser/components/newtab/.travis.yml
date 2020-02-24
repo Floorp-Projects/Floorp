@@ -2,7 +2,7 @@ language: node_js
 
 node_js:
   # when changing this, be sure to edit .nvrmc and package.json too
-  - 8.17.*
+  - 10.19.*
 
 python:
   - "2.7"
