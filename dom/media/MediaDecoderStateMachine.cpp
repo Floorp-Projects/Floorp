@@ -2879,8 +2879,14 @@ void MediaDecoderStateMachine::MaybeStartPlayback() {
     return;
   }
 
+  if (mIsMediaSinkSuspended) {
+    LOG("MaybeStartPlayback: Not starting playback when sink is suspended");
+    return;
+  }
+
   if (mPlayState != MediaDecoder::PLAY_STATE_PLAYING) {
-    LOG("Not starting playback [mPlayState=%d]", mPlayState.Ref());
+    LOG("MaybeStartPlayback: Not starting playback [mPlayState=%d]",
+        mPlayState.Ref());
     return;
   }
 
@@ -3611,6 +3617,11 @@ RefPtr<GenericPromise> MediaDecoderStateMachine::InvokeSetSink(
 RefPtr<GenericPromise> MediaDecoderStateMachine::SetSink(
     RefPtr<AudioDeviceInfo> aSinkDevice) {
   MOZ_ASSERT(OnTaskQueue());
+  if (mIsMediaSinkSuspended) {
+    // Don't change sink id in a suspended sink.
+    return GenericPromise::CreateAndReject(NS_ERROR_ABORT, __func__);
+  }
+
   if (mOutputCaptured) {
     // Not supported yet.
     return GenericPromise::CreateAndReject(NS_ERROR_ABORT, __func__);
@@ -3641,6 +3652,40 @@ RefPtr<GenericPromise> MediaDecoderStateMachine::SetSink(
     }
   }
   return GenericPromise::CreateAndResolve(wasPlaying, __func__);
+}
+
+void MediaDecoderStateMachine::InvokeSuspendMediaSink() {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  nsresult rv = OwnerThread()->Dispatch(
+      NewRunnableMethod("MediaDecoderStateMachine::SuspendMediaSink", this,
+                        &MediaDecoderStateMachine::SuspendMediaSink));
+  MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+  Unused << rv;
+}
+
+void MediaDecoderStateMachine::SuspendMediaSink() {
+  MOZ_ASSERT(OnTaskQueue());
+  mIsMediaSinkSuspended = true;
+  StopMediaSink();
+  mMediaSink->Shutdown();
+}
+
+void MediaDecoderStateMachine::InvokeResumeMediaSink() {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  nsresult rv = OwnerThread()->Dispatch(
+      NewRunnableMethod("MediaDecoderStateMachine::ResumeMediaSink", this,
+                        &MediaDecoderStateMachine::ResumeMediaSink));
+  MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+  Unused << rv;
+}
+
+void MediaDecoderStateMachine::ResumeMediaSink() {
+  MOZ_ASSERT(OnTaskQueue());
+  mMediaSink = CreateMediaSink();
+  mIsMediaSinkSuspended = false;
+  MaybeStartPlayback();
 }
 
 void MediaDecoderStateMachine::UpdateSecondaryVideoContainer() {
