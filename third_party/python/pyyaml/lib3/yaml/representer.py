@@ -5,7 +5,7 @@ __all__ = ['BaseRepresenter', 'SafeRepresenter', 'Representer',
 from .error import *
 from .nodes import *
 
-import datetime, sys, copyreg, types, base64
+import datetime, sys, copyreg, types, base64, collections
 
 class RepresenterError(YAMLError):
     pass
@@ -132,7 +132,9 @@ class BaseRepresenter:
 class SafeRepresenter(BaseRepresenter):
 
     def ignore_aliases(self, data):
-        if data in [None, ()]:
+        if data is None:
+            return True
+        if isinstance(data, tuple) and data == ():
             return True
         if isinstance(data, (str, bytes, bool, int, float)):
             return True
@@ -351,6 +353,14 @@ class Representer(SafeRepresenter):
             value['dictitems'] = dictitems
         return self.represent_mapping(tag+function_name, value)
 
+    def represent_ordered_dict(self, data):
+        # Provide uniform representation across different Python versions.
+        data_type = type(data)
+        tag = 'tag:yaml.org,2002:python/object/apply:%s.%s' \
+                % (data_type.__module__, data_type.__name__)
+        items = [[key, value] for key, value in data.items()]
+        return self.represent_sequence(tag, [items])
+
 Representer.add_representer(complex,
         Representer.represent_complex)
 
@@ -359,6 +369,9 @@ Representer.add_representer(tuple,
 
 Representer.add_representer(type,
         Representer.represent_name)
+
+Representer.add_representer(collections.OrderedDict,
+        Representer.represent_ordered_dict)
 
 Representer.add_representer(types.FunctionType,
         Representer.represent_name)

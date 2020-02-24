@@ -1,6 +1,6 @@
 
 NAME = 'PyYAML'
-VERSION = '3.11'
+VERSION = '3.13'
 DESCRIPTION = "YAML parser and emitter for Python"
 LONG_DESCRIPTION = """\
 YAML is a data serialization format designed for human readability
@@ -27,13 +27,10 @@ CLASSIFIERS = [
     "Operating System :: OS Independent",
     "Programming Language :: Python",
     "Programming Language :: Python :: 2",
-    "Programming Language :: Python :: 2.5",
-    "Programming Language :: Python :: 2.6",
     "Programming Language :: Python :: 2.7",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.0",
-    "Programming Language :: Python :: 3.1",
-    "Programming Language :: Python :: 3.2",
+    "Programming Language :: Python :: 3.4",
+    "Programming Language :: Python :: 3.5",
     "Topic :: Software Development :: Libraries :: Python Modules",
     "Topic :: Text Processing :: Markup",
 ]
@@ -57,7 +54,7 @@ int main(void) {
 """
 
 
-import sys, os.path
+import sys, os.path, platform
 
 from distutils import log
 from distutils.core import setup, Command
@@ -66,7 +63,7 @@ from distutils.core import Extension as _Extension
 from distutils.dir_util import mkpath
 from distutils.command.build_ext import build_ext as _build_ext
 from distutils.command.bdist_rpm import bdist_rpm as _bdist_rpm
-from distutils.errors import CompileError, LinkError, DistutilsPlatformError
+from distutils.errors import DistutilsError, CompileError, LinkError, DistutilsPlatformError
 
 if 'setuptools.extension' in sys.modules:
     _Extension = sys.modules['setuptools.extension']._Extension
@@ -74,21 +71,18 @@ if 'setuptools.extension' in sys.modules:
     sys.modules['distutils.extension'].Extension = _Extension
     sys.modules['distutils.command.build_ext'].Extension = _Extension
 
-with_pyrex = None
-if sys.version_info[0] < 3:
-    try:
-        from Cython.Distutils.extension import Extension as _Extension
-        from Cython.Distutils import build_ext as _build_ext
-        with_pyrex = 'cython'
-    except ImportError:
-        try:
-            # Pyrex cannot build _yaml.c at the moment,
-            # but it may get fixed eventually.
-            from Pyrex.Distutils import Extension as _Extension
-            from Pyrex.Distutils import build_ext as _build_ext
-            with_pyrex = 'pyrex'
-        except ImportError:
-            pass
+with_cython = False
+try:
+    from Cython.Distutils.extension import Extension as _Extension
+    from Cython.Distutils import build_ext as _build_ext
+    with_cython = True
+except ImportError:
+    pass
+
+try:
+    from wheel.bdist_wheel import bdist_wheel
+except ImportError:
+    bdist_wheel = None
 
 
 class Distribution(_Distribution):
@@ -122,7 +116,8 @@ class Distribution(_Distribution):
         return False
 
     def ext_status(self, ext):
-        if 'Java' in sys.version or 'IronPython' in sys.version or 'PyPy' in sys.version:
+        implementation = platform.python_implementation()
+        if implementation != 'CPython':
             return False
         if isinstance(ext, Extension):
             with_ext = getattr(self, ext.attr_name)
@@ -135,7 +130,7 @@ class Extension(_Extension):
 
     def __init__(self, name, sources, feature_name, feature_description,
             feature_check, **kwds):
-        if not with_pyrex:
+        if not with_cython:
             for filename in sources[:]:
                 base, ext = os.path.splitext(filename)
                 if ext == '.pyx':
@@ -179,9 +174,7 @@ class build_ext(_build_ext):
         self.check_extensions_list(self.extensions)
         filenames = []
         for ext in self.extensions:
-            if with_pyrex == 'pyrex':
-                self.pyrex_sources(ext.sources, ext)
-            elif with_pyrex == 'cython':
+            if with_cython:
                 self.cython_sources(ext.sources, ext)
             for filename in ext.sources:
                 filenames.append(filename)
@@ -211,9 +204,7 @@ class build_ext(_build_ext):
                 with_ext = self.check_extension_availability(ext)
             if not with_ext:
                 continue
-            if with_pyrex == 'pyrex':
-                ext.sources = self.pyrex_sources(ext.sources, ext)
-            elif with_pyrex == 'cython':
+            if with_cython:
                 ext.sources = self.cython_sources(ext.sources, ext)
             self.build_extension(ext)
 
@@ -308,7 +299,17 @@ class test(Command):
         else:
             sys.path.insert(0, 'tests/lib3')
         import test_all
-        test_all.main([])
+        if not test_all.main([]):
+            raise DistutilsError("Tests failed")
+
+
+cmdclass = {
+    'build_ext': build_ext,
+    'bdist_rpm': bdist_rpm,
+    'test': test,
+}
+if bdist_wheel:
+    cmdclass['bdist_wheel'] = bdist_wheel
 
 
 if __name__ == '__main__':
@@ -335,11 +336,6 @@ if __name__ == '__main__':
         ],
 
         distclass=Distribution,
-
-        cmdclass={
-            'build_ext': build_ext,
-            'bdist_rpm': bdist_rpm,
-            'test': test,
-        },
+        cmdclass=cmdclass,
     )
 
