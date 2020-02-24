@@ -428,7 +428,7 @@ checkbox:-moz-focusring {
   color: var(--theme-toolbarbutton-color);
 }
 
-.devtools-togglebutton:not([aria-pressed="true"]):hover {
+.devtools-togglebutton:not([aria-pressed="true"]):hover:not(:active) {
   background-color: var(--theme-toolbarbutton-hover-background);
 }
 
@@ -447,19 +447,17 @@ checkbox:-moz-focusring {
   background-color: var(--toolbarbutton-checked-focus-background);
 }
 
-.devtools-togglebutton[aria-pressed="true"],
-.devtools-togglebutton:focus {
+.devtools-togglebutton[aria-pressed="true"] {
   background-color: var(--theme-toolbarbutton-checked-background);
   color: var(--theme-toolbarbutton-checked-color);
 }
 
-.devtools-togglebutton[aria-pressed="true"]:hover {
+.devtools-togglebutton[aria-pressed="true"]:hover:not(:active) {
   background: var(--theme-toolbarbutton-checked-hover-background);
   color: var(--theme-toolbarbutton-checked-hover-color);
 }
 
-.devtools-togglebutton:active,
-.devtools-togglebutton:hover:active {
+.devtools-togglebutton:active {
   background: var(--theme-toolbarbutton-active-background);
   color: var(--theme-toolbarbutton-active-color);
 }
