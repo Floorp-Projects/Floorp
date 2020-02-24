@@ -33,7 +33,7 @@ const ParamsPanel = createFactory(
   require("devtools/client/netmonitor/src/components/request-details/ParamsPanel")
 );
 const CachePanel = createFactory(
-  require("devtools/client/netmonitor/src/components/CachePanel")
+  require("devtools/client/netmonitor/src/components/request-details/CachePanel")
 );
 const ResponsePanel = createFactory(
   require("devtools/client/netmonitor/src/components/ResponsePanel")
