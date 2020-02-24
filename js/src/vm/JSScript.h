@@ -2582,6 +2582,11 @@ class JSScript : public js::BaseScript {
                           js::HandleScriptSourceObject sourceObject,
                           const js::SourceExtent& extent);
 
+  static JSScript* Create(JSContext* cx, js::HandleObject functionOrGlobal,
+                          js::HandleScriptSourceObject sourceObject,
+                          bool noScriptRval, bool selfHosted, bool isRunOnce,
+                          bool hideScriptFromDebugger, js::SourceExtent extent);
+
   static JSScript* CreateFromLazy(JSContext* cx,
                                   js::Handle<js::LazyScript*> lazy);
 
