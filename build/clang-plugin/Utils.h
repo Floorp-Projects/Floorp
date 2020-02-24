@@ -7,7 +7,6 @@
 
 #include "CustomAttributes.h"
 #include "ThirdPartyPaths.h"
-#include "ThreadAllows.h"
 #include "plugin.h"
 
 inline StringRef getFilename(const SourceManager &SM, SourceLocation Loc) {
