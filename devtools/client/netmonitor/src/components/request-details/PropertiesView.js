@@ -50,7 +50,7 @@ const { div } = dom;
 class PropertiesView extends Component {
   static get propTypes() {
     return {
-      object: PropTypes.object,
+      object: PropTypes.oneOfType([PropTypes.object, PropTypes.array]),
       provider: PropTypes.object,
       enableInput: PropTypes.bool,
       expandableStrings: PropTypes.bool,

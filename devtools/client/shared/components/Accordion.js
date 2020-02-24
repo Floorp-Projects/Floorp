@@ -25,7 +25,7 @@ class Accordion extends Component {
         PropTypes.shape({
           buttons: PropTypes.arrayOf(PropTypes.object),
           className: PropTypes.string,
-          component: PropTypes.object,
+          component: PropTypes.oneOfType([PropTypes.object, PropTypes.func]),
           componentProps: PropTypes.object,
           contentClassName: PropTypes.string,
           header: PropTypes.string.isRequired,
@@ -37,74 +37,86 @@ class Accordion extends Component {
     };
   }
 
-  /**
-   * Add initial data to the state.opened map, and inject new data
-   * when receiving updated props.
-   */
-  static getDerivedStateFromProps(props, state) {
-    const newItems = props.items.filter(
-      ({ id }) => typeof state.opened[id] !== "boolean"
-    );
-
-    if (newItems.length) {
-      const everOpened = { ...state.everOpened };
-      const opened = { ...state.opened };
-      for (const item of newItems) {
-        everOpened[item.id] = item.opened;
-        opened[item.id] = item.opened;
-      }
-      return { everOpened, opened };
-    }
-
-    return null;
-  }
-
   constructor(props) {
     super(props);
 
     this.state = {
       opened: {},
+      everOpened: {},
     };
 
     this.onHeaderClick = this.onHeaderClick.bind(this);
     this.onHeaderKeyDown = this.onHeaderKeyDown.bind(this);
+    this.setCollapseState = this.setCollapseState.bind(this);
+  }
+
+  componentDidMount() {
+    this.setCollapseState();
+  }
+
+  /**
+   * Add initial data to the state.opened map, and inject new data
+   * when receiving updated props.
+   */
+  componentDidUpdate(prevProps) {
+    if (prevProps.items !== this.props.items) {
+      this.setCollapseState();
+    }
+  }
+
+  setCollapseState() {
+    // Add initial data (when empty), inject new data and update the
+    // state.opened map whenever the props updates.
+    const changedItems = this.props.items.filter(
+      ({ id, opened }) =>
+        typeof this.state.opened[id] !== "boolean" ||
+        this.state.opened[id] !== opened
+    );
+
+    if (changedItems.length) {
+      const everOpened = { ...this.state.everOpened };
+      const opened = { ...this.state.opened };
+
+      for (const item of changedItems) {
+        everOpened[item.id] = item.opened;
+        opened[item.id] = item.opened;
+      }
+
+      this.setState({ everOpened, opened });
+    }
   }
 
   /**
    * @param {Event} event Click event.
+   * @param {Object} item The item to be collapsed/expanded.
    */
-  onHeaderClick(event) {
+  onHeaderClick(event, item) {
     event.preventDefault();
     // In the Browser Toolbox's Inspector/Layout view, handleHeaderClick is
     // called twice unless we call stopPropagation, making the accordion item
     // open-and-close or close-and-open
     event.stopPropagation();
-    this.toggleItem(event.currentTarget.parentElement.id);
+    this.toggleItem(item);
   }
 
   /**
    * @param {Event} event Keyboard event.
    * @param {Object} item The item to be collapsed/expanded.
    */
-  onHeaderKeyDown(event) {
+  onHeaderKeyDown(event, item) {
     if (event.key === " " || event.key === "Enter") {
       event.preventDefault();
-      this.toggleItem(event.currentTarget.parentElement.id);
+      this.toggleItem(item);
     }
   }
 
   /**
    * Expand or collapse an accordion list item.
-   * @param  {String} id Id of the item to be collapsed or expanded.
+   * @param  {Object} item The item to be collapsed or expanded.
    */
-  toggleItem(id) {
-    const item = this.props.items.find(x => x.id === id);
+  toggleItem(item) {
+    const { id } = item;
     const opened = !this.state.opened[id];
-    // We could have no item if props just changed
-    if (!item) {
-      return;
-    }
-
     this.setState({
       everOpened: {
         ...this.state.everOpened,
@@ -162,8 +174,8 @@ class Accordion extends Component {
           // If the header contains buttons, make sure the heading name only
           // contains the "header" text and not the button text
           "aria-label": header,
-          onKeyDown: this.onHeaderKeyDown,
-          onClick: this.onHeaderClick,
+          onKeyDown: event => this.onHeaderKeyDown(event, item),
+          onClick: event => this.onHeaderClick(event, item),
         },
         span({
           className: `theme-twisty${opened ? " open" : ""}`,

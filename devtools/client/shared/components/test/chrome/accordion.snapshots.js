@@ -27,8 +27,8 @@ window._snapshots = {
               tabIndex: 0,
               "aria-expanded": false,
               "aria-label": "Test Accordion Item 1",
-              onKeyDown: "function() {\n    [native code]\n}",
-              onClick: "function() {\n    [native code]\n}",
+              onKeyDown: "event => this.onHeaderKeyDown(event, item)",
+              onClick: "event => this.onHeaderClick(event, item)",
             },
             children: [
               {
@@ -73,8 +73,8 @@ window._snapshots = {
               tabIndex: 0,
               "aria-expanded": false,
               "aria-label": "Test Accordion Item 2",
-              onKeyDown: "function() {\n    [native code]\n}",
-              onClick: "function() {\n    [native code]\n}",
+              onKeyDown: "event => this.onHeaderKeyDown(event, item)",
+              onClick: "event => this.onHeaderClick(event, item)",
             },
             children: [
               {
@@ -133,8 +133,8 @@ window._snapshots = {
               tabIndex: 0,
               "aria-expanded": true,
               "aria-label": "Test Accordion Item 3",
-              onKeyDown: "function() {\n    [native code]\n}",
-              onClick: "function() {\n    [native code]\n}",
+              onKeyDown: "event => this.onHeaderKeyDown(event, item)",
+              onClick: "event => this.onHeaderClick(event, item)",
             },
             children: [
               {
