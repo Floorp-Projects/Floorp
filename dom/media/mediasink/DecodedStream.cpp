@@ -381,16 +381,13 @@ DecodedStream::DecodedStream(
       mPlaying(false, "DecodedStream::mPlaying"),
       mPrincipalHandle(aStateMachine->OwnerThread(), PRINCIPAL_HANDLE_NONE,
                        "DecodedStream::mPrincipalHandle (Mirror)"),
+      mCanonicalOutputPrincipal(aStateMachine->CanonicalOutputPrincipal()),
       mOutputTracks(std::move(aOutputTracks)),
       mVolume(aVolume),
       mPlaybackRate(aPlaybackRate),
       mPreservesPitch(aPreservesPitch),
       mAudioQueue(aAudioQueue),
-      mVideoQueue(aVideoQueue) {
-  mPrincipalHandle.Connect(aStateMachine->CanonicalOutputPrincipal());
-
-  mWatchManager.Watch(mPlaying, &DecodedStream::PlayingChanged);
-}
+      mVideoQueue(aVideoQueue) {}
 
 DecodedStream::~DecodedStream() {
   MOZ_ASSERT(mStartTime.isNothing(), "playback should've ended.");
@@ -421,6 +418,8 @@ nsresult DecodedStream::Start(const TimeUnit& aStartTime,
   mLastOutputTime = TimeUnit::Zero();
   mInfo = aInfo;
   mPlaying = true;
+  mPrincipalHandle.Connect(mCanonicalOutputPrincipal);
+  mWatchManager.Watch(mPlaying, &DecodedStream::PlayingChanged);
   ConnectListener();
 
   class R : public Runnable {
@@ -516,6 +515,9 @@ void DecodedStream::Stop() {
   // Clear mData immediately when this playback session ends so we won't
   // send data to the wrong track in SendData() in next playback session.
   DestroyData(std::move(mData));
+
+  mPrincipalHandle.DisconnectIfConnected();
+  mWatchManager.Unwatch(mPlaying, &DecodedStream::PlayingChanged);
 }
 
 bool DecodedStream::IsStarted() const {
