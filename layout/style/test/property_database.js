@@ -2631,6 +2631,18 @@ var gCSSProperties = {
       "calc(2em / (4 / 3))",
       "calc(4 * (2em / 3))",
 
+      "min(5px)",
+      "min(5px,2em)",
+
+      "max(5px)",
+      "max(5px,2em)",
+
+      "calc(min(5px))",
+      "calc(min(5px,2em))",
+
+      "calc(max(5px))",
+      "calc(max(5px,2em))",
+
       // Valid cases with unitless zero (which is never
       // a length).
       "calc(0 * 2em)",
@@ -2664,13 +2676,9 @@ var gCSSProperties = {
       "-moz-max()",
       "calc(max())",
       "-moz-min(5px)",
-      "calc(min(5px))",
       "-moz-max(5px)",
-      "calc(max(5px))",
       "-moz-min(5px,2em)",
-      "calc(min(5px,2em))",
       "-moz-max(5px,2em)",
-      "calc(max(5px,2em))",
       "calc(50px/(2 - 2))",
       "calc(5 + 5)",
       "calc(5 * 5)",
@@ -3725,6 +3733,9 @@ var gCSSProperties = {
       "translate(calc(5px - 10% * 3))",
       "translate(calc(5px - 3 * 10%), 50px)",
       "translate(-50px, calc(5px - 10% * 3))",
+      "translate(10px, calc(min(5px,10%)))",
+      "translate(calc(max(5px,10%)), 10%)",
+      "translate(max(5px,10%), 10%)",
       "translatez(1px)",
       "translatez(4em)",
       "translatez(-4px)",
@@ -3779,8 +3790,6 @@ var gCSSProperties = {
       /* invalid calc() values */
       "translatey(-moz-min(5px,10%))",
       "translatex(-moz-max(5px,10%))",
-      "translate(10px, calc(min(5px,10%)))",
-      "translate(calc(max(5px,10%)), 10%)",
       "matrix(1, 0, 0, 1, max(5px * 3), calc(10% - 3px))",
       "perspective(-10px)",
       "matrix3d(dinosaur)",
@@ -8455,6 +8464,14 @@ var gCSSProperties = {
       "calc(50%)",
       "calc(50px/2)",
       "calc(50px/(2 - 1))",
+      "calc(min(5px))",
+      "calc(min(5px,2em))",
+      "calc(max(5px))",
+      "calc(max(5px,2em))",
+      "min(5px)",
+      "min(5px,2em)",
+      "max(5px)",
+      "max(5px,2em)",
     ],
     invalid_values: [
       "none",
@@ -8469,13 +8486,9 @@ var gCSSProperties = {
       "-moz-max()",
       "calc(max())",
       "-moz-min(5px)",
-      "calc(min(5px))",
       "-moz-max(5px)",
-      "calc(max(5px))",
       "-moz-min(5px,2em)",
-      "calc(min(5px,2em))",
       "-moz-max(5px,2em)",
-      "calc(max(5px,2em))",
       "calc(50px/(2 - 2))",
       /* If we ever support division by values, which is
        * complicated for the reasons described in
@@ -9705,6 +9718,14 @@ var gCSSProperties = {
       "calc(50%)",
       "calc(50px/2)",
       "calc(50px/(2 - 1))",
+      "calc(min(5px))",
+      "calc(min(5px,2em))",
+      "calc(max(5px))",
+      "calc(max(5px,2em))",
+      "min(5px)",
+      "min(5px,2em)",
+      "max(5px)",
+      "max(5px,2em)",
     ],
     invalid_values: [
       "none",
@@ -9718,13 +9739,9 @@ var gCSSProperties = {
       "-moz-max()",
       "calc(max())",
       "-moz-min(5px)",
-      "calc(min(5px))",
       "-moz-max(5px)",
-      "calc(max(5px))",
       "-moz-min(5px,2em)",
-      "calc(min(5px,2em))",
       "-moz-max(5px,2em)",
-      "calc(max(5px,2em))",
       "calc(50px/(2 - 2))",
       // If we ever support division by values, which is
       // complicated for the reasons described in
@@ -11573,6 +11590,7 @@ if (IsCSSPropertyPrefEnabled("layout.css.individual-transform.enabled")) {
       "calc(5px - 10% * 3)",
       "calc(5px - 3 * 10%) 50px",
       "-50px calc(5px - 10% * 3)",
+      "10px calc(min(5px,10%))",
     ],
     invalid_values: [
       "1",
@@ -11581,7 +11599,6 @@ if (IsCSSPropertyPrefEnabled("layout.css.individual-transform.enabled")) {
       "3px 4px 1px 7px",
       "4px 5px 10%",
       /* invalid calc() values */
-      "10px calc(min(5px,10%))",
       "calc(max(5px,10%) 10%)",
       "calc(nonsense)",
     ],
@@ -12743,6 +12760,9 @@ if (false) {
       "perspective(0px)",
       "perspective(1000px)",
       "matrix3d(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16)",
+      "translate(10px, calc(min(5px,10%)))",
+      "translate(calc(max(5px,10%)), 10%)",
+      "translate(max(5px,10%), 10%)",
     ],
     invalid_values: [
       "1px",
@@ -12771,8 +12791,6 @@ if (false) {
       /* invalid calc() values */
       "translatey(-moz-min(5px,10%))",
       "translatex(-moz-max(5px,10%))",
-      "translate(10px, calc(min(5px,10%)))",
-      "translate(calc(max(5px,10%)), 10%)",
       "matrix(1, 0, 0, 1, max(5px * 3), calc(10% - 3px))",
       "perspective(-10px)",
       "matrix3d(dinosaur)",
