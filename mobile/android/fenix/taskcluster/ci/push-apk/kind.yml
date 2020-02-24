@@ -27,10 +27,7 @@ job-template:
     description: Publish Fenix
     worker-type: push-apk
     worker:
-        commit:
-            by-build-type:
-                fennec-beta: false
-                default: true
+        commit: true
         channel:
             by-build-type:
                 fennec-nightly: fennec-nightly
