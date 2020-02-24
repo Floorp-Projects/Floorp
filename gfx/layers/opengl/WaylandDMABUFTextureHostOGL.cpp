@@ -41,7 +41,7 @@ GLTextureSource* WaylandDMABUFTextureHostOGL::CreateTextureSourceForPlane(
       gfx::IntSize(mSurface->GetWidth(aPlane), mSurface->GetHeight(aPlane)),
       // XXX: This isn't really correct (but isn't used), we should be using the
       // format of the individual plane, not of the whole buffer.
-      mSurface->GetFormat());
+      mSurface->GetFormatGL());
 }
 
 bool WaylandDMABUFTextureHostOGL::Lock() {
