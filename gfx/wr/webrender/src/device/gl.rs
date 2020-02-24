@@ -830,7 +830,8 @@ impl ProgramBinary {
 
 /// The interfaces that an application can implement to handle ProgramCache update
 pub trait ProgramCacheObserver {
-    fn update_disk_cache(&self, entries: Vec<Arc<ProgramBinary>>);
+    fn save_shaders_to_disk(&self, entries: Vec<Arc<ProgramBinary>>);
+    fn set_startup_shaders(&self, entries: Vec<Arc<ProgramBinary>>);
     fn try_load_shader_from_disk(&self, digest: &ProgramSourceDigest, program_cache: &Rc<ProgramCache>);
     fn notify_program_binary_failed(&self, program_binary: &Arc<ProgramBinary>);
 }
@@ -845,12 +846,12 @@ struct ProgramCacheEntry {
 pub struct ProgramCache {
     entries: RefCell<FastHashMap<ProgramSourceDigest, ProgramCacheEntry>>,
 
-    /// True if we've already updated the disk cache with the shaders used during startup.
-    updated_disk_cache: Cell<bool>,
-
     /// Optional trait object that allows the client
     /// application to handle ProgramCache updating
     program_cache_handler: Option<Box<dyn ProgramCacheObserver>>,
+
+    /// Programs that have not yet been cached to disk (by program_cache_handler)
+    pending_entries: RefCell<Vec<Arc<ProgramBinary>>>,
 }
 
 impl ProgramCache {
@@ -858,27 +859,42 @@ impl ProgramCache {
         Rc::new(
             ProgramCache {
                 entries: RefCell::new(FastHashMap::default()),
-                updated_disk_cache: Cell::new(false),
                 program_cache_handler: program_cache_observer,
+                pending_entries: RefCell::new(Vec::default()),
             }
         )
     }
 
-    /// Notify that we've rendered the first few frames, and that the shaders
-    /// we've loaded correspond to the shaders needed during startup, and thus
-    /// should be the ones cached to disk.
-    fn startup_complete(&self) {
-        if self.updated_disk_cache.get() {
-            return;
-        }
-
+    /// Save any new program binaries to the disk cache, and if startup has
+    /// just completed then write the list of shaders to load on next startup.
+    fn update_disk_cache(&self, startup_complete: bool) {
         if let Some(ref handler) = self.program_cache_handler {
-            let active_shaders = self.entries.borrow().values()
-                .filter(|e| e.linked).map(|e| e.binary.clone())
-                .collect::<Vec<_>>();
-            handler.update_disk_cache(active_shaders);
-            self.updated_disk_cache.set(true);
+            if !self.pending_entries.borrow().is_empty() {
+                let pending_entries = self.pending_entries.replace(Vec::default());
+                handler.save_shaders_to_disk(pending_entries);
+            }
+
+            if startup_complete {
+                let startup_shaders = self.entries.borrow().values()
+                    .filter(|e| e.linked).map(|e| e.binary.clone())
+                    .collect::<Vec<_>>();
+                handler.set_startup_shaders(startup_shaders);
+            }
         }
+    }
+
+    /// Add a new ProgramBinary to the cache.
+    /// This function is typically used after compiling and linking a new program.
+    /// The binary will be saved to disk the next time update_disk_cache() is called.
+    fn add_new_program_binary(&self, program_binary: Arc<ProgramBinary>) {
+        self.pending_entries.borrow_mut().push(program_binary.clone());
+
+        let digest = program_binary.source_digest.clone();
+        let entry = ProgramCacheEntry {
+            binary: program_binary,
+            linked: true,
+        };
+        self.entries.borrow_mut().insert(digest, entry);
     }
 
     /// Load ProgramBinary to ProgramCache.
@@ -2020,11 +2036,8 @@ impl Device {
                 if !cached_programs.entries.borrow().contains_key(&info.digest) {
                     let (buffer, format) = self.gl.get_program_binary(program.id);
                     if buffer.len() > 0 {
-                        let entry = ProgramCacheEntry {
-                            binary: Arc::new(ProgramBinary::new(buffer, format, info.digest.clone())),
-                            linked: true,
-                        };
-                        cached_programs.entries.borrow_mut().insert(info.digest.clone(), entry);
+                        let binary = Arc::new(ProgramBinary::new(buffer, format, info.digest.clone()));
+                        cached_programs.add_new_program_binary(binary);
                     }
                 }
             }
@@ -3281,13 +3294,11 @@ impl Device {
 
         self.frame_id.0 += 1;
 
-        // Declare startup complete after the first ten frames. This number is
-        // basically a heuristic, which dictates how early a shader needs to be
-        // used in order to be cached to disk.
-        if self.frame_id.0 == 10 {
-            if let Some(ref cache) = self.cached_programs {
-                cache.startup_complete();
-            }
+        // Save any shaders compiled this frame to disk.
+        // If this is the tenth frame then treat startup as complete, meaning the
+        // current set of in-use shaders are the ones to load on the next startup.
+        if let Some(ref cache) = self.cached_programs {
+            cache.update_disk_cache(self.frame_id.0 == 10);
         }
     }
 
