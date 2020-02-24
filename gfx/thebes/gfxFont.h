@@ -1682,7 +1682,7 @@ class gfxFont {
   nsExpirationState* GetExpirationState() { return &mExpirationState; }
 
   // Get the glyphID of a space
-  virtual uint32_t GetSpaceGlyph() = 0;
+  uint16_t GetSpaceGlyph() { return mSpaceGlyph; }
 
   gfxGlyphExtents* GetOrCreateGlyphExtents(int32_t aAppUnitsPerDevUnit);
 
@@ -2115,6 +2115,9 @@ class gfxFont {
   float mFUnitsConvFactor;
 
   nsExpirationState mExpirationState;
+
+  // Glyph ID of the font's <space> glyph, zero if missing
+  uint16_t mSpaceGlyph = 0;
 
   // the AA setting requested for this font - may affect glyph bounds
   AntialiasOption mAntialiasOption;
