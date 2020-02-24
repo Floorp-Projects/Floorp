@@ -17,8 +17,8 @@ the session manager.
 
 | Name | Summary |
 |---|---|
-| [onTabClosed](on-tab-closed.md) | `fun onTabClosed(session: `[`Session`](../../mozilla.components.browser.session/-session/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>A tab has been closed. |
-| [onTabSelected](on-tab-selected.md) | `fun onTabSelected(session: `[`Session`](../../mozilla.components.browser.session/-session/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>A new tab has been selected. |
+| [onTabClosed](on-tab-closed.md) | `fun onTabClosed(tab: `[`Tab`](../../mozilla.components.concept.tabstray/-tab/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>A tab has been closed. |
+| [onTabSelected](on-tab-selected.md) | `fun onTabSelected(tab: `[`Tab`](../../mozilla.components.concept.tabstray/-tab/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>A new tab has been selected. |
 | [start](start.md) | `fun start(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
 | [stop](stop.md) | `fun stop(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
 

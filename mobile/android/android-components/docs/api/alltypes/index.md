@@ -678,6 +678,7 @@
 | [mozilla.components.feature.downloads.manager.SystemRequest](../mozilla.components.feature.downloads.manager/-system-request.md) |  |
 | [mozilla.components.browser.engine.system.window.SystemWindowRequest](../mozilla.components.browser.engine.system.window/-system-window-request/index.md) | WebView-based implementation of [WindowRequest](../mozilla.components.concept.engine.window/-window-request/index.md). |
 | [mozilla.components.browser.storage.sync.Tab](../mozilla.components.browser.storage.sync/-tab/index.md) | A tab, which is defined by an history (think the previous/next button in your web browser) and a currently active history entry. |
+| [mozilla.components.concept.tabstray.Tab](../mozilla.components.concept.tabstray/-tab/index.md) | Data class representing a tab to be displayed in a [TabsTray](../mozilla.components.concept.tabstray/-tabs-tray/index.md). |
 | [mozilla.components.feature.tab.collections.Tab](../mozilla.components.feature.tab.collections/-tab/index.md) | A tab of a [TabCollection](../mozilla.components.feature.tab.collections/-tab-collection/index.md). |
 | [mozilla.components.feature.tab.collections.TabCollection](../mozilla.components.feature.tab.collections/-tab-collection/index.md) | A collection of tabs. |
 | [mozilla.components.feature.tab.collections.TabCollectionStorage](../mozilla.components.feature.tab.collections/-tab-collection-storage/index.md) | A storage implementation that saves snapshots of tabs / sessions in named collections. |
@@ -693,6 +694,7 @@
 | [mozilla.components.browser.tabstray.thumbnail.TabThumbnailView](../mozilla.components.browser.tabstray.thumbnail/-tab-thumbnail-view/index.md) |  |
 | [mozilla.components.browser.tabstray.TabTouchCallback](../mozilla.components.browser.tabstray/-tab-touch-callback/index.md) | An [ItemTouchHelper.Callback](#) for support gestures on tabs in the tray. |
 | [mozilla.components.browser.tabstray.TabViewHolder](../mozilla.components.browser.tabstray/-tab-view-holder/index.md) | A RecyclerView ViewHolder implementation for "tab" items. |
+| [mozilla.components.concept.tabstray.Tabs](../mozilla.components.concept.tabstray/-tabs/index.md) | Aggregate data type keeping a reference to the list of tabs and the index of the selected tab. |
 | [mozilla.components.browser.tabstray.TabsAdapter](../mozilla.components.browser.tabstray/-tabs-adapter/index.md) | RecyclerView adapter implementation to display a list/grid of tabs. |
 | [mozilla.components.feature.tabs.tabstray.TabsFeature](../mozilla.components.feature.tabs.tabstray/-tabs-feature/index.md) | Feature implementation for connecting a tabs tray implementation with the session module. |
 | [mozilla.components.feature.tabs.toolbar.TabsToolbarFeature](../mozilla.components.feature.tabs.toolbar/-tabs-toolbar-feature/index.md) | Feature implementation for connecting a tabs tray implementation with a toolbar implementation. |

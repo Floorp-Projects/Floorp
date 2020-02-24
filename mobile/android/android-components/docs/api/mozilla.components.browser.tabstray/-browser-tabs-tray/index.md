@@ -23,7 +23,6 @@ A customizable tabs tray for browsers.
 | Name | Summary |
 |---|---|
 | [asView](as-view.md) | `fun asView(): <ERROR CLASS>`<br>Convenience method to cast this object to an Android View object. |
-| [onDetachedFromWindow](on-detached-from-window.md) | `fun onDetachedFromWindow(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
 
 ### Extension Functions
 
