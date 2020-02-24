@@ -70,6 +70,11 @@ interface AwesomeBarInteractor {
     fun onExistingSessionSelected(session: Session)
 
     /**
+     * Called whenever an existing session is selected from the sessionSuggestionProvider
+     */
+    fun onExistingSessionSelected(tabId: String)
+
+    /**
      * Called whenever the Shortcuts button is clicked
      */
     fun onSearchShortcutsButtonClicked()
@@ -119,6 +124,10 @@ class AwesomeBarView(
     private val selectTabUseCase = object : TabsUseCases.SelectTabUseCase {
         override fun invoke(session: Session) {
             interactor.onExistingSessionSelected(session)
+        }
+
+        override fun invoke(tabId: String) {
+            interactor.onExistingSessionSelected(tabId)
         }
     }
 

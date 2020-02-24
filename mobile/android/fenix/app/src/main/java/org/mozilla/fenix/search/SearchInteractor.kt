@@ -52,4 +52,8 @@ class SearchInteractor(
     override fun onExistingSessionSelected(session: Session) {
         searchController.handleExistingSessionSelected(session)
     }
+
+    override fun onExistingSessionSelected(tabId: String) {
+        searchController.handleExistingSessionSelected(tabId)
+    }
 }

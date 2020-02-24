@@ -34,6 +34,7 @@ interface SearchController {
     fun handleSearchShortcutEngineSelected(searchEngine: SearchEngine)
     fun handleClickSearchEngineSettings()
     fun handleExistingSessionSelected(session: Session)
+    fun handleExistingSessionSelected(tabId: String)
     fun handleSearchShortcutsButtonClicked()
 }
 
@@ -150,5 +151,12 @@ class DefaultSearchController(
         (context as HomeActivity).openToBrowser(
             from = BrowserDirection.FromSearch
         )
+    }
+
+    override fun handleExistingSessionSelected(tabId: String) {
+        val session = context.components.core.sessionManager.findSessionById(tabId)
+        if (session != null) {
+            handleExistingSessionSelected(session)
+        }
     }
 }
