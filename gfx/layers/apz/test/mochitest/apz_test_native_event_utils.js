@@ -164,7 +164,9 @@ function getBoundingClientRectRelativeToVisualViewport(aElement) {
 // to device pixels relative to the screen.
 function coordinatesRelativeToScreen(aX, aY, aTarget) {
   var targetWindow = windowForTarget(aTarget);
-  var deviceScale = targetWindow.devicePixelRatio;
+  var utils = SpecialPowers.getDOMWindowUtils(window);
+  var deviceScale = utils.screenPixelsPerCSSPixel;
+  var deviceScaleNoOverride = utils.screenPixelsPerCSSPixelNoOverride;
   var resolution = getResolution();
   var rect =
     aTarget instanceof Window
@@ -172,18 +174,24 @@ function coordinatesRelativeToScreen(aX, aY, aTarget) {
       : getBoundingClientRectRelativeToVisualViewport(aTarget);
   // moxInnerScreen{X,Y} are in CSS coordinates of the browser chrome.
   // The device scale applies to them, but the resolution only zooms the content.
+  // In addition, if we're inside RDM, RDM overrides the device scale;
+  // the overridden scale only applies to the content inside the RDM
+  // document, not to mozInnerScreen{X,Y}.
   return {
     x:
-      (targetWindow.mozInnerScreenX + (rect.left + aX) * resolution) *
-      deviceScale,
+      targetWindow.mozInnerScreenX * deviceScaleNoOverride +
+      (rect.left + aX) * resolution * deviceScale,
     y:
-      (targetWindow.mozInnerScreenY + (rect.top + aY) * resolution) *
-      deviceScale,
+      targetWindow.mozInnerScreenY * deviceScaleNoOverride +
+      (rect.top + aY) * resolution * deviceScale,
   };
 }
 
 // Get the bounding box of aElement, and return it in device pixels
 // relative to the screen.
+// TODO: This function should probably take into account the resolution
+//       and use getBoundingClientRectRelativeToVisualViewport()
+//       like coordinatesRelativeToScreen() does.
 function rectRelativeToScreen(aElement) {
   var targetWindow = aElement.ownerDocument.defaultView;
   var scale = targetWindow.devicePixelRatio;
