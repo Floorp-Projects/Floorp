@@ -17,9 +17,9 @@ import mozilla.components.concept.sync.Device
 import mozilla.components.concept.sync.DeviceCapability
 import mozilla.components.concept.sync.DeviceConstellation
 import mozilla.components.concept.sync.DeviceConstellationObserver
-import mozilla.components.concept.sync.DeviceEvent
-import mozilla.components.concept.sync.DeviceEventOutgoing
-import mozilla.components.concept.sync.DeviceEventsObserver
+import mozilla.components.concept.sync.AccountEvent
+import mozilla.components.concept.sync.AccountEventsObserver
+import mozilla.components.concept.sync.DeviceCommandOutgoing
 import mozilla.components.concept.sync.DevicePushSubscription
 import mozilla.components.concept.sync.DeviceType
 import mozilla.components.support.base.log.logger.Logger
@@ -33,7 +33,7 @@ import mozilla.components.support.base.observer.ObserverRegistry
 class FxaDeviceConstellation(
     private val account: FirefoxAccount,
     private val scope: CoroutineScope
-) : DeviceConstellation, Observable<DeviceEventsObserver> by ObserverRegistry() {
+) : DeviceConstellation, Observable<AccountEventsObserver> by ObserverRegistry() {
     private val logger = Logger("FxaDeviceConstellation")
 
     private val deviceObserverRegistry = ObserverRegistry<DeviceConstellationObserver>()
@@ -65,7 +65,7 @@ class FxaDeviceConstellation(
 
     override fun processRawEventAsync(payload: String): Deferred<Boolean> {
         return scope.async {
-            handleFxaExceptions(logger, "processing raw events") {
+            handleFxaExceptions(logger, "processing raw commands") {
                 processEvents(account.handlePushMessage(payload).map { it.into() })
             }
         }
@@ -102,23 +102,25 @@ class FxaDeviceConstellation(
         }
     }
 
-    override fun sendEventToDeviceAsync(targetDeviceId: String, outgoingEvent: DeviceEventOutgoing): Deferred<Boolean> {
+    override fun sendCommandToDeviceAsync(targetDeviceId: String, outgoingCommand: DeviceCommandOutgoing): Deferred<Boolean> {
         return scope.async {
-            handleFxaExceptions(logger, "sending device event") {
-                when (outgoingEvent) {
-                    is DeviceEventOutgoing.SendTab -> {
-                        account.sendSingleTab(targetDeviceId, outgoingEvent.title, outgoingEvent.url)
+            handleFxaExceptions(logger, "sending device command") {
+                when (outgoingCommand) {
+                    is DeviceCommandOutgoing.SendTab -> {
+                        account.sendSingleTab(targetDeviceId, outgoingCommand.title, outgoingCommand.url)
                     }
-                    else -> logger.debug("Skipped sending unsupported event type: $outgoingEvent")
+                    else -> logger.debug("Skipped sending unsupported command type: $outgoingCommand")
                 }
             }
         }
     }
 
-    override fun pollForEventsAsync(): Deferred<Boolean> {
+    // Poll for missed commands. Commands are the only event-type that can be
+    // polled for, although missed commands will be delivered as AccountEvents.
+    override fun pollForCommandsAsync(): Deferred<Boolean> {
         return scope.async {
-            val events = handleFxaExceptions(logger, "polling for device events", { null }) {
-                account.pollDeviceCommands().map { it.into() }
+            val events = handleFxaExceptions(logger, "polling for device commands", { null }) {
+                account.pollDeviceCommands().map { AccountEvent.DeviceCommandIncoming(command=it.into()) }
             }
 
             if (events == null) {
@@ -130,7 +132,7 @@ class FxaDeviceConstellation(
         }
     }
 
-    private fun processEvents(events: List<DeviceEvent>) = CoroutineScope(Dispatchers.Main).launch {
+    private fun processEvents(events: List<AccountEvent>) = CoroutineScope(Dispatchers.Main).launch {
         notifyObservers { onEvents(events) }
     }
 

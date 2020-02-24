@@ -67,12 +67,13 @@ accountManager.register(accountObserver, owner = this, autoPause = true)
 // Observe sync state changes.
 accountManager.registerForSyncEvents(syncObserver, owner = this, autoPause = true)
 
-// Observe incoming device events (e.g. SEND_TAB events from other devices).
+// Observe incoming account events (e.g. when another device connects or
+// disconnects to/from the account, SEND_TAB commands from other devices, etc).
 // Note that since the device is configured with a SEND_TAB capability, device constellation will be
 // automatically updated during any account initialization flow (restore, login, sign-up, recovery).
 // It is up to the application to keep it up-to-date beyond that.
 // See `account.deviceConstellation().refreshDeviceStateAsync()`.
-accountManager.registerForDeviceEvents(deviceEventsObserver, owner = this, autoPause = true)
+accountManager.registerForAccountEvents(accountEventsObserver, owner = this, autoPause = true)
 
 // Now that all of the observers we care about are registered, kick off the account manager.
 // If we're already authenticated
@@ -167,15 +168,21 @@ val syncObserver = object : SyncStatusObserver {
     }
 }
 
-// Observe incoming device events.
-val deviceEventsObserver = object : DeviceEventsObserver {
-    override fun onEvents(events: List<DeviceEvent>) {
-        // device received some events; for example, here's how you can process incoming Send Tab events:
-        events.filter { it is DeviceEvent.TabReceived }.forEach {
-            val tabReceivedEvent = it as DeviceEvent.TabReceived
-            val fromDeviceName = tabReceivedEvent.from?.displayName
-            showNotification("Tab ${tab.title}, received from: ${fromDisplayName}", tab.url)
-        }
+// Observe incoming account events.
+val accountEventsObserver = object : AccountEventsObserver {
+    override fun onEvents(event: List<AccountEvent>) {
+        // device received some commands; for example, here's how you can process incoming Send Tab commands:
+        commands
+            .filter { it is AccountEvent.IncomingDeviceCommand }
+            .map { it.command }
+            .filter { it is DeviceCommandIncoming.TabReceived }
+            .forEach {
+                val tabReceivedCommand = it as DeviceCommandIncoming.TabReceived
+                val fromDeviceName = tabReceivedCommand.from?.displayName
+                showNotification("Tab ${tab.title}, received from: ${fromDisplayName}", tab.url)
+            }
+            // (although note the SendTabFeature makes dealing with these commands
+            // easier still.)
     }
 }
 ```

@@ -12,15 +12,17 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.plus
 import kotlinx.coroutines.runBlocking
-import mozilla.appservices.fxaclient.AccountEvent
+import mozilla.appservices.fxaclient.AccountEvent as ASAccountEvent // the app-services variation
+import mozilla.appservices.fxaclient.IncomingDeviceCommand
 import mozilla.appservices.fxaclient.TabHistoryEntry
 import mozilla.appservices.syncmanager.DeviceSettings
 import mozilla.components.concept.sync.ConstellationState
 import mozilla.components.concept.sync.DeviceCapability
 import mozilla.components.concept.sync.DeviceConstellationObserver
-import mozilla.components.concept.sync.DeviceEvent
-import mozilla.components.concept.sync.DeviceEventOutgoing
-import mozilla.components.concept.sync.DeviceEventsObserver
+import mozilla.components.concept.sync.DeviceCommandIncoming
+import mozilla.components.concept.sync.DeviceCommandOutgoing
+import mozilla.components.concept.sync.AccountEventsObserver
+import mozilla.components.concept.sync.AccountEvent
 import mozilla.components.concept.sync.DevicePushSubscription
 import mozilla.components.concept.sync.DeviceType
 import mozilla.components.concept.sync.TabData
@@ -128,42 +130,45 @@ class FxaDeviceConstellationTest {
 
     @Test
     @ExperimentalCoroutinesApi
-    fun `process raw device event`() = runBlocking(coroutinesTestRule.testDispatcher) {
-        // No events, no observer.
+    fun `process raw device command`() = runBlocking(coroutinesTestRule.testDispatcher) {
+        // No commands, no observer.
         `when`(account.handlePushMessage("raw events payload")).thenReturn(emptyArray())
         assertTrue(constellation.processRawEventAsync("raw events payload").await())
 
-        // No events, with observer.
-        val eventsObserver = object : DeviceEventsObserver {
-            var latestEvents: List<DeviceEvent>? = null
+        // No commands, with observer.
+        val eventsObserver = object : AccountEventsObserver {
+            var latestEvents: List<AccountEvent>? = null
 
-            override fun onEvents(events: List<DeviceEvent>) {
+            override fun onEvents(events: List<AccountEvent>) {
                 latestEvents = events
             }
         }
 
-        // No events, with an observer.
+        // No commands, with an observer.
         constellation.register(eventsObserver)
         assertTrue(constellation.processRawEventAsync("raw events payload").await())
-        assertEquals(listOf<DeviceEvent>(), eventsObserver.latestEvents)
+        assertEquals(listOf<AccountEvent.DeviceCommandIncoming>(), eventsObserver.latestEvents)
 
-        // Some events, with an observer. More detailed event handling tests below.
+        // Some commands, with an observer. More detailed command handling tests below.
         val testDevice1 = testDevice("test1", false)
         val testTab1 = TabHistoryEntry("Hello", "http://world.com/1")
         `when`(account.handlePushMessage("raw events payload")).thenReturn(arrayOf(
-            AccountEvent.TabReceived(testDevice1, arrayOf(testTab1))
+            ASAccountEvent.IncomingDeviceCommand(
+                command=IncomingDeviceCommand.TabReceived(testDevice1, arrayOf(testTab1))
+            )
         ))
         assertTrue(constellation.processRawEventAsync("raw events payload").await())
 
         val events = eventsObserver.latestEvents!!
-        assertEquals(testDevice1.into(), (events[0] as DeviceEvent.TabReceived).from)
-        assertEquals(listOf(testTab1.into()), (events[0] as DeviceEvent.TabReceived).entries)
+        val command = (events[0] as AccountEvent.DeviceCommandIncoming).command;
+        assertEquals(testDevice1.into(), (command as DeviceCommandIncoming.TabReceived).from)
+        assertEquals(listOf(testTab1.into()), command.entries)
     }
 
     @Test
-    fun `send event to device`() = runBlocking(coroutinesTestRule.testDispatcher) {
-        assertTrue(constellation.sendEventToDeviceAsync(
-            "targetID", DeviceEventOutgoing.SendTab("Mozilla", "https://www.mozilla.org")
+    fun `send command to device`() = runBlocking(coroutinesTestRule.testDispatcher) {
+        assertTrue(constellation.sendCommandToDeviceAsync(
+            "targetID", DeviceCommandOutgoing.SendTab("Mozilla", "https://www.mozilla.org")
         ).await())
 
         verify(account).sendSingleTab("targetID", "Mozilla", "https://www.mozilla.org")
@@ -229,33 +234,33 @@ class FxaDeviceConstellationTest {
 
     @Test
     @ExperimentalCoroutinesApi
-    fun `polling for events triggers observers`() = runBlocking(coroutinesTestRule.testDispatcher) {
-        // No events, no observers.
+    fun `polling for commands triggers observers`() = runBlocking(coroutinesTestRule.testDispatcher) {
+        // No commands, no observers.
         `when`(account.pollDeviceCommands()).thenReturn(emptyArray())
-        assertTrue(constellation.pollForEventsAsync().await())
+        assertTrue(constellation.pollForCommandsAsync().await())
 
-        val eventsObserver = object : DeviceEventsObserver {
-            var latestEvents: List<DeviceEvent>? = null
+        val eventsObserver = object : AccountEventsObserver {
+            var latestEvents: List<AccountEvent>? = null
 
-            override fun onEvents(events: List<DeviceEvent>) {
+            override fun onEvents(events: List<AccountEvent>) {
                 latestEvents = events
             }
         }
 
-        // No events, with an observer.
+        // No commands, with an observer.
         constellation.register(eventsObserver)
-        assertTrue(constellation.pollForEventsAsync().await())
-        assertEquals(listOf<DeviceEvent>(), eventsObserver.latestEvents)
+        assertTrue(constellation.pollForCommandsAsync().await())
+        assertEquals(listOf<AccountEvent>(), eventsObserver.latestEvents)
 
-        // Some events.
+        // Some commands.
         `when`(account.pollDeviceCommands()).thenReturn(arrayOf(
-            AccountEvent.TabReceived(null, emptyArray())
+            IncomingDeviceCommand.TabReceived(null, emptyArray())
         ))
-        assertTrue(constellation.pollForEventsAsync().await())
+        assertTrue(constellation.pollForCommandsAsync().await())
 
-        var events = eventsObserver.latestEvents!!
-        assertEquals(null, (events[0] as DeviceEvent.TabReceived).from)
-        assertEquals(listOf<TabData>(), (events[0] as DeviceEvent.TabReceived).entries)
+        var command = (eventsObserver.latestEvents!![0] as AccountEvent.DeviceCommandIncoming).command;
+        assertEquals(null, (command as DeviceCommandIncoming.TabReceived).from)
+        assertEquals(listOf<TabData>(), command.entries)
 
         val testDevice1 = testDevice("test1", false)
         val testDevice2 = testDevice("test2", false)
@@ -265,51 +270,52 @@ class FxaDeviceConstellationTest {
 
         // Zero tabs from a single device.
         `when`(account.pollDeviceCommands()).thenReturn(arrayOf(
-            AccountEvent.TabReceived(testDevice1, emptyArray())
+            IncomingDeviceCommand.TabReceived(testDevice1, emptyArray())
         ))
-        assertTrue(constellation.pollForEventsAsync().await())
+        assertTrue(constellation.pollForCommandsAsync().await())
 
         Assert.assertNotNull(eventsObserver.latestEvents)
         assertEquals(1, eventsObserver.latestEvents!!.size)
-        events = eventsObserver.latestEvents!!
-        assertEquals(testDevice1.into(), (events[0] as DeviceEvent.TabReceived).from)
-        assertEquals(listOf<TabData>(), (events[0] as DeviceEvent.TabReceived).entries)
+        command = (eventsObserver.latestEvents!![0] as AccountEvent.DeviceCommandIncoming).command;
+        assertEquals(testDevice1.into(), (command as DeviceCommandIncoming.TabReceived).from)
+        assertEquals(listOf<TabData>(), command.entries)
 
         // Single tab from a single device.
         `when`(account.pollDeviceCommands()).thenReturn(arrayOf(
-            AccountEvent.TabReceived(testDevice2, arrayOf(testTab1))
+            IncomingDeviceCommand.TabReceived(testDevice2, arrayOf(testTab1))
         ))
-        assertTrue(constellation.pollForEventsAsync().await())
+        assertTrue(constellation.pollForCommandsAsync().await())
 
-        events = eventsObserver.latestEvents!!
-        assertEquals(testDevice2.into(), (events[0] as DeviceEvent.TabReceived).from)
-        assertEquals(listOf(testTab1.into()), (events[0] as DeviceEvent.TabReceived).entries)
+        command = (eventsObserver.latestEvents!![0] as AccountEvent.DeviceCommandIncoming).command;
+        assertEquals(testDevice2.into(), (command as DeviceCommandIncoming.TabReceived).from)
+        assertEquals(listOf(testTab1.into()), command.entries)
 
         // Multiple tabs from a single device.
         `when`(account.pollDeviceCommands()).thenReturn(arrayOf(
-            AccountEvent.TabReceived(testDevice2, arrayOf(testTab1, testTab3))
+            IncomingDeviceCommand.TabReceived(testDevice2, arrayOf(testTab1, testTab3))
         ))
-        assertTrue(constellation.pollForEventsAsync().await())
+        assertTrue(constellation.pollForCommandsAsync().await())
 
-        events = eventsObserver.latestEvents!!
-        assertEquals(testDevice2.into(), (events[0] as DeviceEvent.TabReceived).from)
-        assertEquals(listOf(testTab1.into(), testTab3.into()), (events[0] as DeviceEvent.TabReceived).entries)
+        command = (eventsObserver.latestEvents!![0] as AccountEvent.DeviceCommandIncoming).command;
+        assertEquals(testDevice2.into(), (command as DeviceCommandIncoming.TabReceived).from)
+        assertEquals(listOf(testTab1.into(), testTab3.into()), command.entries)
 
         // Multiple tabs received from multiple devices.
         `when`(account.pollDeviceCommands()).thenReturn(arrayOf(
-            AccountEvent.TabReceived(testDevice2, arrayOf(testTab1, testTab2)),
-            AccountEvent.TabReceived(testDevice1, arrayOf(testTab3))
+            IncomingDeviceCommand.TabReceived(testDevice2, arrayOf(testTab1, testTab2)),
+            IncomingDeviceCommand.TabReceived(testDevice1, arrayOf(testTab3))
         ))
-        assertTrue(constellation.pollForEventsAsync().await())
+        assertTrue(constellation.pollForCommandsAsync().await())
 
-        events = eventsObserver.latestEvents!!
-        assertEquals(testDevice2.into(), (events[0] as DeviceEvent.TabReceived).from)
-        assertEquals(listOf(testTab1.into(), testTab2.into()), (events[0] as DeviceEvent.TabReceived).entries)
-        assertEquals(testDevice1.into(), (events[1] as DeviceEvent.TabReceived).from)
-        assertEquals(listOf(testTab3.into()), (events[1] as DeviceEvent.TabReceived).entries)
+        command = (eventsObserver.latestEvents!![0] as AccountEvent.DeviceCommandIncoming).command;
+        assertEquals(testDevice2.into(), (command as DeviceCommandIncoming.TabReceived).from)
+        assertEquals(listOf(testTab1.into(), testTab2.into()), command.entries)
+        command = (eventsObserver.latestEvents!![1] as AccountEvent.DeviceCommandIncoming).command;
+        assertEquals(testDevice1.into(), (command as DeviceCommandIncoming.TabReceived).from)
+        assertEquals(listOf(testTab3.into()), command.entries)
 
         // TODO FirefoxAccount needs @Throws annotations for these tests to actually work.
-        // Failure to poll for events. Panics are re-thrown.
+        // Failure to poll for commands. Panics are re-thrown.
 //        `when`(account.pollDeviceCommands()).thenThrow(FxaPanicException("Don't panic!"))
 //        try {
 //            runBlocking(coroutinesTestRule.testDispatcher) {

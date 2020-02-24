@@ -29,7 +29,7 @@ class SendTabFeatureKtTest {
             onTabsReceived = mock()
         )
 
-        verify(accountManager).registerForDeviceEvents(any(), any(), anyBoolean())
+        verify(accountManager).registerForAccountEvents(any(), any(), anyBoolean())
     }
 
     @Test
@@ -41,7 +41,7 @@ class SendTabFeatureKtTest {
             onTabsReceived = mock()
         )
 
-        verify(accountManager).registerForDeviceEvents(any(), any(), anyBoolean())
+        verify(accountManager).registerForAccountEvents(any(), any(), anyBoolean())
 
         verify(accountManager, never()).register(any(), any(), anyBoolean())
     }

@@ -4,6 +4,7 @@
 
 package org.mozilla.samples.sync
 
+import android.annotation.SuppressLint
 import android.os.Bundle
 import android.text.method.ScrollingMovementMethod
 import android.view.View
@@ -25,10 +26,11 @@ import mozilla.components.concept.sync.ConstellationState
 import mozilla.components.concept.sync.Device
 import mozilla.components.concept.sync.DeviceCapability
 import mozilla.components.concept.sync.DeviceConstellationObserver
-import mozilla.components.concept.sync.DeviceEvent
-import mozilla.components.concept.sync.DeviceEventOutgoing
+import mozilla.components.concept.sync.DeviceCommandIncoming
+import mozilla.components.concept.sync.DeviceCommandOutgoing
 import mozilla.components.concept.sync.DeviceType
-import mozilla.components.concept.sync.DeviceEventsObserver
+import mozilla.components.concept.sync.AccountEventsObserver
+import mozilla.components.concept.sync.AccountEvent
 import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.concept.sync.Profile
 import mozilla.components.lib.dataprotect.SecureAbove22Preferences
@@ -161,8 +163,8 @@ class MainActivity :
                     }
 
                     targets?.forEach {
-                        constellation.sendEventToDeviceAsync(
-                            it.id, DeviceEventOutgoing.SendTab("Sample tab", "https://www.mozilla.org")
+                        constellation.sendCommandToDeviceAsync(
+                            it.id, DeviceCommandOutgoing.SendTab("Sample tab", "https://www.mozilla.org")
                         ).await()
                     }
 
@@ -181,8 +183,8 @@ class MainActivity :
         accountManager.register(accountObserver, owner = this, autoPause = true)
         // Observe sync state changes.
         accountManager.registerForSyncEvents(syncObserver, owner = this, autoPause = true)
-        // Observe incoming device events.
-        accountManager.registerForDeviceEvents(deviceEventsObserver, owner = this, autoPause = true)
+        // Observe incoming device commands.
+        accountManager.registerForAccountEvents(accountEventsObserver, owner = this, autoPause = true)
 
         // Now that our account state observer is registered, we can kick off the account manager.
         launch { accountManager.initAsync().await() }
@@ -250,18 +252,46 @@ class MainActivity :
         }
     }
 
-    private val deviceEventsObserver = object : DeviceEventsObserver {
-        override fun onEvents(events: List<DeviceEvent>) {
+    @SuppressLint("SetTextI18n")
+    private val accountEventsObserver = object : AccountEventsObserver {
+        override fun onEvents(events: List<AccountEvent>) {
             val txtView: TextView = findViewById(R.id.latestTabs)
-            var tabsStringified = ""
-            events.filter { it is DeviceEvent.TabReceived }.forEach {
-                val tabReceivedEvent = it as DeviceEvent.TabReceived
-                tabsStringified += "Tab(s) from: ${tabReceivedEvent.from?.displayName}\n"
-                tabReceivedEvent.entries.forEach { tab ->
-                    tabsStringified += "${tab.title}: ${tab.url}\n"
+            events.forEach {
+                when (it) {
+                    is AccountEvent.DeviceCommandIncoming -> {
+                        when (it.command) {
+                            is DeviceCommandIncoming.TabReceived -> {
+                                val cmd = it.command as DeviceCommandIncoming.TabReceived
+                                txtView.text = "A tab was received"
+                                var tabsStringified = "Tab(s) from: ${cmd.from?.displayName}\n"
+                                cmd.entries.forEach { tab ->
+                                    tabsStringified += "${tab.title}: ${tab.url}\n"
+                                }
+                                txtView.text = tabsStringified
+                            }
+                        }
+                    }
+                    is AccountEvent.ProfileUpdated -> {
+                        txtView.text = "The user's profile was updated"
+                    }
+                    is AccountEvent.AccountAuthStateChanged -> {
+                        txtView.text = "The account auth state changed"
+                    }
+                    is AccountEvent.AccountDestroyed -> {
+                        txtView.text = "The account was destroyed"
+                    }
+                    is AccountEvent.DeviceConnected -> {
+                        txtView.text = "Another device connected to the account"
+                    }
+                    is AccountEvent.DeviceDisconnected -> {
+                        if (it.isLocalDevice) {
+                            txtView.text = "This device disconnected"
+                        } else {
+                            txtView.text = "The device ${it.deviceId} disconnected"
+                        }
+                    }
                 }
             }
-            txtView.text = tabsStringified
         }
     }
 

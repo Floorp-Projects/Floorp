@@ -5,7 +5,8 @@
 package mozilla.components.feature.accounts.push
 
 import mozilla.components.concept.sync.Device
-import mozilla.components.concept.sync.DeviceEvent
+import mozilla.components.concept.sync.AccountEvent
+import mozilla.components.concept.sync.DeviceCommandIncoming
 import mozilla.components.concept.sync.TabData
 import mozilla.components.support.test.any
 import mozilla.components.support.test.eq
@@ -14,30 +15,30 @@ import org.junit.Test
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 
-class DeviceObserverTest {
+class EventsObserverTest {
     @Test
     fun `events are delivered successfully`() {
         val callback: (Device?, List<TabData>) -> Unit = mock()
-        val observer = DeviceObserver(callback)
-        val events = listOf(DeviceEvent.TabReceived(mock(), mock()))
+        val observer = EventsObserver(callback)
+        val events = listOf(AccountEvent.DeviceCommandIncoming(command=DeviceCommandIncoming.TabReceived(mock(), mock())))
 
         observer.onEvents(events)
 
         verify(callback).invoke(any(), any())
 
-        observer.onEvents(listOf(DeviceEvent.TabReceived(null, mock())))
+        observer.onEvents(listOf(AccountEvent.DeviceCommandIncoming(command=DeviceCommandIncoming.TabReceived(null, mock()))))
 
         verify(callback).invoke(eq(null), any())
     }
 
     @Test
-    fun `only TabReceived events are delivered`() {
-        // we don't have other event types right now so this is a basic test.
+    fun `only TabReceived commands are delivered`() {
         val callback: (Device?, List<TabData>) -> Unit = mock()
-        val observer = DeviceObserver(callback)
+        val observer = EventsObserver(callback)
         val events = listOf(
-            DeviceEvent.TabReceived(mock(), mock()),
-            DeviceEvent.TabReceived(mock(), mock())
+            AccountEvent.ProfileUpdated(),
+            AccountEvent.DeviceCommandIncoming(command=DeviceCommandIncoming.TabReceived(mock(), mock())),
+            AccountEvent.DeviceCommandIncoming(command=DeviceCommandIncoming.TabReceived(mock(), mock()))
         )
 
         observer.onEvents(events)

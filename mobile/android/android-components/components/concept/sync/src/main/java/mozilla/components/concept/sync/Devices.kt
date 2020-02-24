@@ -12,7 +12,7 @@ import mozilla.components.support.base.observer.Observable
 /**
  * Describes available interactions with the current device and other devices associated with an [OAuthAccount].
  */
-interface DeviceConstellation : Observable<DeviceEventsObserver> {
+interface DeviceConstellation : Observable<AccountEventsObserver> {
     /**
      * Register current device in the associated [DeviceConstellation].
      *
@@ -65,12 +65,12 @@ interface DeviceConstellation : Observable<DeviceEventsObserver> {
     fun setDevicePushSubscriptionAsync(subscription: DevicePushSubscription): Deferred<Boolean>
 
     /**
-     * Send an event to a specified device.
+     * Send a command to a specified device.
      * @param targetDeviceId A device ID of the recipient.
-     * @param outgoingEvent An event to send.
+     * @param outgoingCommand An event to send.
      * @return A [Deferred] that will be resolved with a success flag once operation is complete.
      */
-    fun sendEventToDeviceAsync(targetDeviceId: String, outgoingEvent: DeviceEventOutgoing): Deferred<Boolean>
+    fun sendCommandToDeviceAsync(targetDeviceId: String, outgoingCommand: DeviceCommandOutgoing): Deferred<Boolean>
 
     /**
      * Process a raw event, obtained via a push message or some other out-of-band mechanism.
@@ -87,12 +87,12 @@ interface DeviceConstellation : Observable<DeviceEventsObserver> {
     fun refreshDevicesAsync(): Deferred<Boolean>
 
     /**
-     * Polls for any pending [DeviceEvent] events.
-     * In case of new events, registered [DeviceEventsObserver] observers will be notified.
+     * Polls for any pending [DeviceCommandIncoming] commands.
+     * In case of new commands, registered [AccountEventsObserver] observers will be notified.
      *
      * @return A [Deferred] that will be resolved with a success flag once operation is complete.
      */
-    fun pollForEventsAsync(): Deferred<Boolean>
+    fun pollForCommandsAsync(): Deferred<Boolean>
 }
 
 /**

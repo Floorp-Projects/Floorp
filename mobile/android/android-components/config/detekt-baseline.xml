@@ -24,6 +24,9 @@
     <ID>LongMethod:PromptFeature.kt$PromptFeature$@Suppress("ComplexMethod") @VisibleForTesting(otherwise = PRIVATE) internal fun handleDialogsRequest( promptRequest: PromptRequest, session: Session )</ID>
     <ID>LongMethod:SystemEngineSession.kt$SystemEngineSession$private fun initSettings(webView: WebView, s: WebSettings)</ID>
     <ID>LongMethod:TabListReducer.kt$TabListReducer$ fun reduce(state: BrowserState, action: TabListAction): BrowserState</ID>
+    <ID>UndocumentedPublicClass:AccountEvents.kt$IncomingDeviceCommand$TabReceived : IncomingDeviceCommand</ID>
+    <ID>UndocumentedPublicClass:AccountEvents.kt$DeviceCommandOutgoing$SendTab : DeviceCommandOutgoing</ID>
+    <ID>UndocumentedPublicClass:AccountEvents.kt$TabData</ID>
     <ID>UndocumentedPublicClass:AccountStorage.kt$AccountStorage</ID>
     <ID>UndocumentedPublicClass:AccountStorage.kt$SharedPrefAccountStorage : AccountStorage</ID>
     <ID>UndocumentedPublicClass:AllSessionsObserver.kt$AllSessionsObserver$Observer : Observer</ID>
@@ -52,9 +55,6 @@
     <ID>UndocumentedPublicClass:Dependencies.kt$Versions</ID>
     <ID>UndocumentedPublicClass:Dependencies.kt$Versions$AndroidX</ID>
     <ID>UndocumentedPublicClass:Dependencies.kt$Versions$Firebase</ID>
-    <ID>UndocumentedPublicClass:DeviceEvents.kt$DeviceEvent$TabReceived : DeviceEvent</ID>
-    <ID>UndocumentedPublicClass:DeviceEvents.kt$DeviceEventOutgoing$SendTab : DeviceEventOutgoing</ID>
-    <ID>UndocumentedPublicClass:DeviceEvents.kt$TabData</ID>
     <ID>UndocumentedPublicClass:DeviceRecyclerViewAdapter.kt$DeviceRecyclerViewAdapter$ViewHolder : ViewHolder</ID>
     <ID>UndocumentedPublicClass:DiskIconLoader.kt$DiskIconLoader$LoaderDiskCache</ID>
     <ID>UndocumentedPublicClass:DiskIconPreparer.kt$DiskIconPreparer$PreparerDiskCache</ID>

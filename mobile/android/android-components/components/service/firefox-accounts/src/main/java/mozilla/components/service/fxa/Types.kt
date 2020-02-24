@@ -7,6 +7,7 @@ package mozilla.components.service.fxa
 import mozilla.appservices.fxaclient.AccessTokenInfo
 import mozilla.appservices.fxaclient.AccountEvent
 import mozilla.appservices.fxaclient.Device
+import mozilla.appservices.fxaclient.IncomingDeviceCommand
 import mozilla.appservices.fxaclient.MigrationState
 import mozilla.appservices.fxaclient.Profile
 import mozilla.appservices.fxaclient.ScopedKey
@@ -206,23 +207,27 @@ fun mozilla.components.concept.sync.TabData.into(): TabHistoryEntry {
     )
 }
 
-fun AccountEvent.into(): mozilla.components.concept.sync.DeviceEvent {
+fun AccountEvent.into(): mozilla.components.concept.sync.AccountEvent {
     return when (this) {
-        is AccountEvent.TabReceived -> this.into()
+        is AccountEvent.IncomingDeviceCommand -> mozilla.components.concept.sync.AccountEvent.DeviceCommandIncoming(command=this.command.into())
+        is AccountEvent.ProfileUpdated -> mozilla.components.concept.sync.AccountEvent.ProfileUpdated()
+        is AccountEvent.AccountAuthStateChanged -> mozilla.components.concept.sync.AccountEvent.AccountAuthStateChanged()
+        is AccountEvent.AccountDestroyed -> mozilla.components.concept.sync.AccountEvent.AccountDestroyed()
+        is AccountEvent.DeviceConnected -> mozilla.components.concept.sync.AccountEvent.DeviceConnected(deviceName = this.deviceName)
+        is AccountEvent.DeviceDisconnected -> mozilla.components.concept.sync.AccountEvent.DeviceDisconnected(deviceId = this.deviceId, isLocalDevice = this.isLocalDevice)
     }
 }
 
-fun AccountEvent.TabReceived.into(): mozilla.components.concept.sync.DeviceEvent.TabReceived {
-    return mozilla.components.concept.sync.DeviceEvent.TabReceived(
-        from = this.from?.into(),
-        entries = this.entries.map { it.into() }
-    )
+fun IncomingDeviceCommand.into(): mozilla.components.concept.sync.DeviceCommandIncoming {
+    return when (this) {
+        is IncomingDeviceCommand.TabReceived -> this.into()
+    }
 }
 
-fun mozilla.components.concept.sync.DeviceEvent.TabReceived.into(): AccountEvent.TabReceived {
-    return AccountEvent.TabReceived(
+fun IncomingDeviceCommand.TabReceived.into(): mozilla.components.concept.sync.DeviceCommandIncoming.TabReceived {
+    return mozilla.components.concept.sync.DeviceCommandIncoming.TabReceived(
         from = this.from?.into(),
-        entries = this.entries.map { it.into() }.toTypedArray()
+        entries = this.entries.map { it.into() }
     )
 }
 
