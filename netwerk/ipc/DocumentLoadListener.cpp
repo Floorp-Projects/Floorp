@@ -330,6 +330,7 @@ bool DocumentLoadListener::Open(
 
   mChannelCreationURI = aLoadState->URI();
   mLoadStateLoadFlags = aLoadState->LoadFlags();
+  mLoadStateLoadType = aLoadState->LoadType();
   mTiming = aTiming;
   mSrcdocData = aLoadState->SrcdocData();
   mBaseURI = aLoadState->BaseURI();
@@ -716,6 +717,7 @@ void DocumentLoadListener::SerializeRedirectData(
   aArgs.srcdocData() = mSrcdocData;
   aArgs.baseUri() = mBaseURI;
   aArgs.loadStateLoadFlags() = mLoadStateLoadFlags;
+  aArgs.loadStateLoadType() = mLoadStateLoadType;
 }
 
 void DocumentLoadListener::TriggerCrossProcessSwitch() {
