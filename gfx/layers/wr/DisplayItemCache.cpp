@@ -44,20 +44,13 @@ void DisplayItemCache::PopulateFreeList(const bool aAddAll) {
   }
 }
 
-static bool CanCacheItem(const nsDisplayItem* aItem) {
+static bool CanCacheItem(const nsPaintedDisplayItem* aItem) {
   // Only cache leaf display items that can be reused.
   if (!aItem->CanBeReused()) {
     return false;
   }
 
-  switch (aItem->GetType()) {
-    case DisplayItemType::TYPE_BACKGROUND_COLOR:
-      // case DisplayItemType::TYPE_TEXT:
-      MOZ_ASSERT(!aItem->HasChildren());
-      return true;
-    default:
-      return false;
-  }
+  return aItem->CanBeCached();
 }
 
 void DisplayItemCache::MaybeStartCaching(nsPaintedDisplayItem* aItem,
