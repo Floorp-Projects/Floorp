@@ -636,6 +636,8 @@ nsresult ShutdownXPCOM(nsIServiceManager* aServMgr) {
 
     if (observerService) {
       mozilla::KillClearOnShutdown(ShutdownPhase::ShutdownThreads);
+      mozilla::AppShutdown::MaybeFastShutdown(
+          mozilla::ShutdownPhase::ShutdownThreads);
       observerService->NotifyObservers(
           nullptr, NS_XPCOM_SHUTDOWN_THREADS_OBSERVER_ID, nullptr);
     }

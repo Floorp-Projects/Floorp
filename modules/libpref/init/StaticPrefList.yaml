@@ -8011,10 +8011,14 @@
 # be found in AppShutdown.h in the AppShutdownPhase enum.
 - name: toolkit.shutdown.lateWriteChecksStage
   type: int32_t
-#if defined(NIGHTLY_BUILD) && !defined(MOZ_CODE_COVERAGE)
-  value: 1
-#else
+#ifdef MOZ_CODE_COVERAGE
   value: 0
+#else
+#  ifdef NIGHTLY_BUILD
+  value: 2
+#  else
+  value: 1
+#  endif
 #endif
   mirror: always
 
