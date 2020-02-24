@@ -8,7 +8,7 @@
 |---|---|
 | [BrowserTabsTray](-browser-tabs-tray/index.md) | `class BrowserTabsTray : RecyclerView, `[`TabsTray`](../mozilla.components.concept.tabstray/-tabs-tray/index.md)<br>A customizable tabs tray for browsers. |
 | [TabTouchCallback](-tab-touch-callback/index.md) | `open class TabTouchCallback : SimpleCallback`<br>An [ItemTouchHelper.Callback](#) for support gestures on tabs in the tray. |
-| [TabViewHolder](-tab-view-holder/index.md) | `class TabViewHolder : ViewHolder, `[`Observer`](../mozilla.components.browser.session/-session/-observer/index.md)<br>A RecyclerView ViewHolder implementation for "tab" items. |
+| [TabViewHolder](-tab-view-holder/index.md) | `class TabViewHolder : ViewHolder`<br>A RecyclerView ViewHolder implementation for "tab" items. |
 | [TabsAdapter](-tabs-adapter/index.md) | `class TabsAdapter : Adapter<`[`TabViewHolder`](-tab-view-holder/index.md)`>, `[`TabsTray`](../mozilla.components.concept.tabstray/-tabs-tray/index.md)`, `[`Observable`](../mozilla.components.support.base.observer/-observable/index.md)`<`[`Observer`](../mozilla.components.concept.tabstray/-tabs-tray/-observer/index.md)`>`<br>RecyclerView adapter implementation to display a list/grid of tabs. |
 
 ### Properties
