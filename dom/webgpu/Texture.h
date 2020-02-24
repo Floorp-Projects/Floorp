@@ -11,10 +11,14 @@
 
 namespace mozilla {
 namespace dom {
+struct GPUTextureDescriptor;
 struct GPUTextureViewDescriptor;
 }  // namespace dom
 
 namespace webgpu {
+namespace ffi {
+struct WGPUTextureViewDescriptor;
+}  // namespace ffi
 
 class Device;
 class TextureView;
@@ -24,12 +28,20 @@ class Texture final : public ObjectBase, public ChildOf<Device> {
   GPU_DECL_CYCLE_COLLECTION(Texture)
   GPU_DECL_JS_WRAP(Texture)
 
+  Texture(Device* const aParent, RawId aId,
+          const dom::GPUTextureDescriptor& aDesc);
+
+  const RawId mId;
+
  private:
-  Texture() = delete;
   virtual ~Texture();
-  void Cleanup() {}
+  void Cleanup();
+
+  const UniquePtr<ffi::WGPUTextureViewDescriptor> mDefaultViewDescriptor;
 
  public:
+  already_AddRefed<TextureView> CreateView(
+      const dom::GPUTextureViewDescriptor& aDesc);
 };
 
 }  // namespace webgpu
