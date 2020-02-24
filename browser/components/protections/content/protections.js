@@ -359,6 +359,34 @@ document.addEventListener("DOMContentLoaded", e => {
     createGraph(message.data);
   });
 
+  let exitIcon = document.querySelector("#mobile-hanger .exit-icon");
+  // hide the mobile promotion and keep hidden with a pref.
+  exitIcon.addEventListener("click", () => {
+    RPMSetBoolPref("browser.contentblocking.report.show_mobile_app", false);
+    document.getElementById("mobile-hanger").classList.add("hidden");
+  });
+
+  if (RPMGetBoolPref("browser.contentblocking.report.show_mobile_app")) {
+    document.getElementById("mobile-hanger").classList.remove("hidden");
+  }
+
+  let androidMobileAppLink = document.getElementById(
+    "android-mobile-inline-link"
+  );
+  androidMobileAppLink.href = RPMGetStringPref(
+    "browser.contentblocking.report.mobile-android.url"
+  );
+  androidMobileAppLink.addEventListener("click", () => {
+    document.sendTelemetryEvent("click", "mobile_app_link", "android");
+  });
+  let iosMobileAppLink = document.getElementById("ios-mobile-inline-link");
+  iosMobileAppLink.href = RPMGetStringPref(
+    "browser.contentblocking.report.mobile-ios.url"
+  );
+  iosMobileAppLink.addEventListener("click", () => {
+    document.sendTelemetryEvent("click", "mobile_app_link", "ios");
+  });
+
   let lockwiseEnabled = RPMGetBoolPref(
     "browser.contentblocking.report.lockwise.enabled",
     true
