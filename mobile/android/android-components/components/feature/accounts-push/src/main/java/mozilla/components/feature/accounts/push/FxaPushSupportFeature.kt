@@ -8,7 +8,6 @@ import android.content.Context
 import androidx.annotation.VisibleForTesting
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ProcessLifecycleOwner
-import mozilla.components.concept.push.Bus
 import mozilla.components.concept.push.PushProcessor
 import mozilla.components.concept.sync.AuthType
 import mozilla.components.concept.sync.ConstellationState
@@ -18,18 +17,17 @@ import mozilla.components.concept.sync.DeviceConstellationObserver
 import mozilla.components.concept.sync.DevicePushSubscription
 import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.feature.push.AutoPushFeature
-import mozilla.components.feature.push.AutoPushSubscription
-import mozilla.components.feature.push.PushSubscriptionObserver
-import mozilla.components.feature.push.PushType
 import mozilla.components.concept.sync.AccountObserver as SyncAccountObserver
 import mozilla.components.service.fxa.manager.FxaAccountManager
 import mozilla.components.service.fxa.manager.ext.withConstellation
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.base.utils.SharedPreferencesCache
 import org.json.JSONObject
+import java.util.UUID
 
-internal const val PREFERENCE_NAME = "mozac_feature_accounts"
-internal const val LAST_VERIFIED = "last_verified_push_subscription"
+internal const val PREFERENCE_NAME = "mozac_feature_accounts_push"
+internal const val PREF_LAST_VERIFIED = "last_verified_push_subscription"
+internal const val PREF_FXA_SCOPE = "fxa_push_scope"
 
 /**
  * A feature used for supporting FxA and push integration where needed. One of the main functions is when FxA notifies
@@ -44,29 +42,47 @@ internal const val LAST_VERIFIED = "last_verified_push_subscription"
  * Defaults to false so that observers are always notified.
  */
 class FxaPushSupportFeature(
-    context: Context,
+    private val context: Context,
     accountManager: FxaAccountManager,
     pushFeature: AutoPushFeature,
     owner: LifecycleOwner = ProcessLifecycleOwner.get(),
     autoPause: Boolean = false
 ) {
+
+    /**
+     * A unique scope for the FxA push subscription that is generated once and stored in SharedPreferences.
+     *
+     * This scope is randomly generated and unique to the account on that particular device.
+     */
+    private val fxaPushScope: String by lazy {
+        // Generate a unique scope if one doesn't exist.
+        val scope = UUID.randomUUID().toString().replace("-", "")
+        val prefs = preference(context)
+
+        if (!prefs.contains(PREF_FXA_SCOPE)) {
+            prefs.edit().putString(PREF_FXA_SCOPE, scope).apply()
+
+            return@lazy scope
+        }
+
+        // The default string is non-null, so we can safely cast.
+        prefs.getString(PREF_FXA_SCOPE, scope) as String
+    }
+
     init {
-        val pushObserver = PushObserver(accountManager)
+        val autoPushObserver = AutoPushObserver(accountManager, fxaPushScope)
 
         val accountObserver = AccountObserver(
             context,
-            accountManager,
             pushFeature,
+            fxaPushScope,
             owner,
             autoPause
         )
 
         accountManager.register(accountObserver)
 
-        pushFeature.apply {
-            registerForPushMessages(PushType.Services, pushObserver, owner, autoPause)
-            registerForSubscriptions(pushObserver, owner, autoPause)
-        }
+        pushFeature.register(autoPushObserver, owner, autoPause)
     }
 }
 
@@ -76,36 +92,45 @@ class FxaPushSupportFeature(
  */
 internal class AccountObserver(
     private val context: Context,
-    private val accountManager: FxaAccountManager,
     private val push: AutoPushFeature,
+    private val fxaPushScope: String,
     private val lifecycleOwner: LifecycleOwner,
     private val autoPause: Boolean
 ) : SyncAccountObserver {
 
-    private val logger = Logger("AccountObserver")
+    private val logger = Logger(AccountObserver::class.java.simpleName)
     private val constellationObserver = ConstellationObserver(context, push)
 
     override fun onAuthenticated(account: OAuthAccount, authType: AuthType) {
         // We need a new subscription only when we have a new account.
         // The subscription is removed when an account logs out.
         if (authType != AuthType.Existing && authType != AuthType.Recovered) {
-            logger.debug("Subscribing for ${PushType.Services} events.")
+            logger.debug("Subscribing for FxaPushScope ($fxaPushScope) events.")
 
-            push.subscribeForType(PushType.Services)
+            push.subscribe(fxaPushScope) { subscription ->
+                account.deviceConstellation().setDevicePushSubscriptionAsync(
+                    DevicePushSubscription(
+                        endpoint = subscription.endpoint,
+                        publicKey = subscription.publicKey,
+                        authKey = subscription.authKey
+                    )
+                )
+            }
         }
 
-        accountManager.withConstellation { constellation ->
-            constellation.registerDeviceObserver(constellationObserver, lifecycleOwner, autoPause)
-        }
+        account.deviceConstellation().registerDeviceObserver(constellationObserver, lifecycleOwner, autoPause)
     }
 
     override fun onLoggedOut() {
-        logger.debug("Un-subscribing for ${PushType.Services} events.")
+        logger.debug("Un-subscribing for FxA scope $fxaPushScope events.")
 
-        push.unsubscribeForType(PushType.Services)
+        push.unsubscribe(fxaPushScope)
 
-        // Delete cached value of last verified timestamp when we log out.
-        preference(context).edit().remove(LAST_VERIFIED).apply()
+        // Delete cached value of last verified timestamp and scope when we log out.
+        preference(context).edit()
+            .remove(PREF_LAST_VERIFIED)
+            .remove(PREF_FXA_SCOPE)
+            .apply()
     }
 }
 
@@ -119,7 +144,7 @@ internal class ConstellationObserver(
     private val verifier: VerificationDelegate = VerificationDelegate(context)
 ) : DeviceConstellationObserver {
 
-    private val logger = Logger("ConstellationObserver")
+    private val logger = Logger(ConstellationObserver::class.java.simpleName)
 
     override fun onDevicesUpdate(constellation: ConstellationState) {
         val updateSubscription = constellation.currentDevice?.subscriptionExpired ?: false
@@ -141,33 +166,25 @@ internal class ConstellationObserver(
 /**
  * An [AutoPushFeature] observer to handle [FxaAccountManager] subscriptions and push events.
  */
-internal class PushObserver(
-    private val accountManager: FxaAccountManager
-) : Bus.Observer<PushType, String>, PushSubscriptionObserver {
+internal class AutoPushObserver(
+    private val accountManager: FxaAccountManager,
+    private val fxaPushScope: String
+) : AutoPushFeature.Observer {
+    private val logger = Logger(AutoPushObserver::class.java.simpleName)
 
-    private val logger = Logger("PushObserver")
+    override fun onMessageReceived(scope: String, message: ByteArray?) {
+        logger.info("Received new push message for $scope")
 
-    override fun onSubscriptionAvailable(subscription: AutoPushSubscription) {
-        logger.debug("Received new push subscription from $subscription.type")
-
-        if (subscription.type == PushType.Services) {
-            accountManager.withConstellation {
-                it.setDevicePushSubscriptionAsync(
-                    DevicePushSubscription(
-                        endpoint = subscription.endpoint,
-                        publicKey = subscription.publicKey,
-                        authKey = subscription.authKey
-                    )
-                )
-            }
+        // Ignore messages that are not meant for us.
+        if (scope != fxaPushScope) {
+            return
         }
-    }
 
-    override fun onEvent(type: PushType, message: String) {
-        logger.debug("Received new push message for $type")
+        // Ignore push messages that do not have data.
+        val rawEvent = message ?: return
 
         accountManager.withConstellation {
-            it.processRawEventAsync(message)
+            it.processRawEventAsync(String(rawEvent))
         }
     }
 }
@@ -179,8 +196,8 @@ internal class PushObserver(
  * registration within the [PERIODIC_INTERVAL_MILLISECONDS] interval of time.
  */
 internal class VerificationDelegate(context: Context) : SharedPreferencesCache<VerificationState>(context) {
-    override val logger: Logger = Logger("VerificationDelegate")
-    override val cacheKey: String = LAST_VERIFIED
+    override val logger: Logger = Logger(VerificationDelegate::class.java.simpleName)
+    override val cacheKey: String = PREF_LAST_VERIFIED
     override val cacheName: String = PREFERENCE_NAME
 
     override fun VerificationState.toJSON() =

@@ -46,5 +46,15 @@ fun <T> capture(value: ArgumentCaptor<T>): T {
     return uninitialized()
 }
 
+/**
+ * Mockito matcher that matches <strong>anything</strong> as nullable.
+ *
+ * (The version from Mockito doesn't work correctly with Kotlin code.)
+ */
+inline fun <reified T> nullable(): T {
+    Mockito.nullable(T::class.java)
+    return uninitialized()
+}
+
 @Suppress("UNCHECKED_CAST")
-private fun <T> uninitialized(): T = null as T
+fun <T> uninitialized(): T = null as T
