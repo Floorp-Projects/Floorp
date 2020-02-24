@@ -475,7 +475,10 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
     private fun adjustBackgroundAndNavigate(directions: NavDirections) {
         context?.let {
             engineView.captureThumbnail { bitmap ->
-                lifecycleScope.launch {
+                viewLifecycleOwner.lifecycleScope.launch {
+                    // isAdded check is necessary because of a bug in viewLifecycleOwner. See AC#3828
+                    if (!this@BaseBrowserFragment.isAdded) return@launch
+
                     // If the bitmap is null, the best we can do to reduce the flash is set transparent
                     swipeRefresh.background = bitmap?.toDrawable(it.resources)
                         ?: ColorDrawable(Color.TRANSPARENT)
