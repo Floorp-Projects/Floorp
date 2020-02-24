@@ -3894,46 +3894,19 @@ void CacheIndex::DoTelemetryReport() {
           NS_LITERAL_CSTRING("MEDIA"),      NS_LITERAL_CSTRING("STYLESHEET"),
           NS_LITERAL_CSTRING("WASM")};
 
-  // size in kB of all entries
-  uint32_t size = 0;
-  // count of all entries
-  uint32_t count = 0;
-
-  // the same stats as above split by content type
-  uint32_t sizeByType[nsICacheEntry::CONTENT_TYPE_LAST];
-  uint32_t countByType[nsICacheEntry::CONTENT_TYPE_LAST];
-
-  memset(&sizeByType, 0, sizeof(sizeByType));
-  memset(&countByType, 0, sizeof(countByType));
-
-  for (auto iter = mIndex.Iter(); !iter.Done(); iter.Next()) {
-    CacheIndexEntry* entry = iter.Get();
-    if (entry->IsRemoved() || !entry->IsInitialized() || entry->IsFileEmpty()) {
-      continue;
-    }
-
-    uint32_t entrySize = entry->GetFileSize();
-    uint8_t contentType = entry->GetContentType();
-
-    ++count;
-    ++countByType[contentType];
-    size += entrySize;
-    sizeByType[contentType] += entrySize;
-  }
-
   for (uint32_t i = 0; i < nsICacheEntry::CONTENT_TYPE_LAST; ++i) {
-    if (size > 0) {
-      Telemetry::Accumulate(Telemetry::NETWORK_CACHE_SIZE_SHARE,
-                            contentTypeNames[i],
-                            round(static_cast<double>(sizeByType[i]) * 100.0 /
-                                  static_cast<double>(size)));
+    if (mIndexStats.Size() > 0) {
+      Telemetry::Accumulate(
+          Telemetry::NETWORK_CACHE_SIZE_SHARE, contentTypeNames[i],
+          round(static_cast<double>(mIndexStats.SizeByType(i)) * 100.0 /
+                static_cast<double>(mIndexStats.Size())));
     }
 
-    if (count > 0) {
-      Telemetry::Accumulate(Telemetry::NETWORK_CACHE_ENTRY_COUNT_SHARE,
-                            contentTypeNames[i],
-                            round(static_cast<double>(countByType[i]) * 100.0 /
-                                  static_cast<double>(count)));
+    if (mIndexStats.Count() > 0) {
+      Telemetry::Accumulate(
+          Telemetry::NETWORK_CACHE_ENTRY_COUNT_SHARE, contentTypeNames[i],
+          round(static_cast<double>(mIndexStats.CountByType(i)) * 100.0 /
+                static_cast<double>(mIndexStats.Count())));
     }
   }
 
@@ -3943,8 +3916,10 @@ void CacheIndex::DoTelemetryReport() {
   } else {
     probeKey = NS_LITERAL_CSTRING("USERDEFINEDSIZE");
   }
-  Telemetry::Accumulate(Telemetry::NETWORK_CACHE_ENTRY_COUNT, probeKey, count);
-  Telemetry::Accumulate(Telemetry::NETWORK_CACHE_SIZE, probeKey, size >> 10);
+  Telemetry::Accumulate(Telemetry::NETWORK_CACHE_ENTRY_COUNT, probeKey,
+                        mIndexStats.Count());
+  Telemetry::Accumulate(Telemetry::NETWORK_CACHE_SIZE, probeKey,
+                        mIndexStats.Size() >> 10);
 }
 
 // static
