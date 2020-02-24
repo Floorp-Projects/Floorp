@@ -29,34 +29,6 @@ flat varying int vFormat;
 
 #ifdef WR_VERTEX_SHADER
 
-#ifdef WR_FEATURE_TEXTURE_RECT
-    #define TEX_SIZE(sampler) vec2(1.0)
-#else
-    #define TEX_SIZE(sampler) vec2(textureSize(sampler, 0).xy)
-#endif
-
-void write_uv_rect(
-    int resource_id,
-    vec2 f,
-    vec2 texture_size,
-    out vec3 uv,
-    out vec4 uv_bounds
-) {
-    ImageResource res = fetch_image_resource(resource_id);
-    vec2 uv0 = res.uv_rect.p0;
-    vec2 uv1 = res.uv_rect.p1;
-
-    uv.xy = mix(uv0, uv1, f);
-    uv.z = res.layer;
-
-    uv_bounds = vec4(uv0 + vec2(0.5), uv1 - vec2(0.5));
-
-    #ifndef WR_FEATURE_TEXTURE_RECT
-        uv.xy /= texture_size;
-        uv_bounds /= texture_size.xyxy;
-    #endif
-}
-
 struct YuvPrimitive {
     float coefficient;
     int color_space;
@@ -93,14 +65,20 @@ void yuv_brush_vs(
 #endif
 
     if (vFormat == YUV_FORMAT_PLANAR) {
-        write_uv_rect(prim_user_data.x, f, TEX_SIZE(sColor0), vUv_Y, vUvBounds_Y);
-        write_uv_rect(prim_user_data.y, f, TEX_SIZE(sColor1), vUv_U, vUvBounds_U);
-        write_uv_rect(prim_user_data.z, f, TEX_SIZE(sColor2), vUv_V, vUvBounds_V);
+        ImageResource res_y = fetch_image_resource(prim_user_data.x);
+        ImageResource res_u = fetch_image_resource(prim_user_data.y);
+        ImageResource res_v = fetch_image_resource(prim_user_data.z);
+        write_uv_rect(res_y.uv_rect.p0, res_y.uv_rect.p1, res_y.layer, f, TEX_SIZE(sColor0), vUv_Y, vUvBounds_Y);
+        write_uv_rect(res_u.uv_rect.p0, res_u.uv_rect.p1, res_u.layer, f, TEX_SIZE(sColor1), vUv_U, vUvBounds_U);
+        write_uv_rect(res_v.uv_rect.p0, res_v.uv_rect.p1, res_v.layer, f, TEX_SIZE(sColor2), vUv_V, vUvBounds_V);
     } else if (vFormat == YUV_FORMAT_NV12) {
-        write_uv_rect(prim_user_data.x, f, TEX_SIZE(sColor0), vUv_Y, vUvBounds_Y);
-        write_uv_rect(prim_user_data.y, f, TEX_SIZE(sColor1), vUv_U, vUvBounds_U);
+        ImageResource res_y = fetch_image_resource(prim_user_data.x);
+        ImageResource res_u = fetch_image_resource(prim_user_data.y);
+        write_uv_rect(res_y.uv_rect.p0, res_y.uv_rect.p1, res_y.layer, f, TEX_SIZE(sColor0), vUv_Y, vUvBounds_Y);
+        write_uv_rect(res_u.uv_rect.p0, res_u.uv_rect.p1, res_u.layer, f, TEX_SIZE(sColor1), vUv_U, vUvBounds_U);
     } else if (vFormat == YUV_FORMAT_INTERLEAVED) {
-        write_uv_rect(prim_user_data.x, f, TEX_SIZE(sColor0), vUv_Y, vUvBounds_Y);
+        ImageResource res_y = fetch_image_resource(prim_user_data.x);
+        write_uv_rect(res_y.uv_rect.p0, res_y.uv_rect.p1, res_y.layer, f, TEX_SIZE(sColor0), vUv_Y, vUvBounds_Y);
     }
 }
 #endif
