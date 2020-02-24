@@ -122,7 +122,3 @@ add_task(async function() {
     "popup was filtered case-sensitively, as expected"
   );
 });
-
-function getAutocompletePopupLabels(autocompletePopup) {
-  return autocompletePopup.items.map(i => i.label);
-}

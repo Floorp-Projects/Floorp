@@ -36,7 +36,7 @@ add_task(async function() {
   EventUtils.synthesizeKey("d");
   await onUpdated;
   ok(
-    !getPopupLabels(popup).includes("docfoobar"),
+    !getAutocompletePopupLabels(popup).includes("docfoobar"),
     "autocomplete popup does not contain docfoobar. List has not been updated"
   );
 
@@ -45,7 +45,7 @@ add_task(async function() {
   EventUtils.synthesizeKey("o");
   await onUpdated;
   ok(
-    !getPopupLabels(popup).includes("docfoobar"),
+    !getAutocompletePopupLabels(popup).includes("docfoobar"),
     "autocomplete popup does not contain docfoobar. List has not been updated"
   );
 
@@ -54,7 +54,7 @@ add_task(async function() {
   EventUtils.synthesizeKey("KEY_Backspace");
   await onUpdated;
   ok(
-    !getPopupLabels(popup).includes("docfoobar"),
+    !getAutocompletePopupLabels(popup).includes("docfoobar"),
     "autocomplete cached results do not contain docfoobar. list has not been updated"
   );
 
@@ -66,7 +66,7 @@ add_task(async function() {
   await jstermComplete("window.");
   await jstermComplete("window.getC");
   ok(
-    getPopupLabels(popup).includes("getComputedStyle"),
+    getAutocompletePopupLabels(popup).includes("getComputedStyle"),
     "autocomplete results do contain getComputedStyle"
   );
 
@@ -92,7 +92,7 @@ add_task(async function() {
   await onUpdated;
 
   ok(
-    !getPopupLabels(popup).includes("docfoobar"),
+    !getAutocompletePopupLabels(popup).includes("docfoobar"),
     "autocomplete cached results do not contain docfoobar. list has not been updated"
   );
 
@@ -109,7 +109,7 @@ add_task(async function() {
   await jstermComplete("window.testObject.");
   await jstermComplete("window.testObject.z");
   is(
-    getPopupLabels(popup).join("-"),
+    getAutocompletePopupLabels(popup).join("-"),
     "zz-zzz-zzzz",
     "results are the expected ones"
   );
@@ -118,7 +118,7 @@ add_task(async function() {
   EventUtils.sendString("z");
   await onUpdated;
   is(
-    getPopupLabels(popup).join("-"),
+    getAutocompletePopupLabels(popup).join("-"),
     "zz-zzz-zzzz",
     "filtering from the cache works - step 1"
   );
@@ -127,12 +127,8 @@ add_task(async function() {
   EventUtils.sendString("z");
   await onUpdated;
   is(
-    getPopupLabels(popup).join("-"),
+    getAutocompletePopupLabels(popup).join("-"),
     "zzz-zzzz",
     "filtering from the cache works - step 2"
   );
 });
-
-function getPopupLabels(popup) {
-  return popup.getItems().map(item => item.label);
-}

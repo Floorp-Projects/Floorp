@@ -55,7 +55,3 @@ add_task(async function() {
     "autocomplete popup has expected items"
   );
 });
-
-function getAutocompletePopupLabels(autocompletePopup) {
-  return autocompletePopup.items.map(i => i.label);
-}

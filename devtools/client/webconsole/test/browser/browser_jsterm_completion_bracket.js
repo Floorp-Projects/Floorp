@@ -233,7 +233,3 @@ async function testAcceptCompletionExistingClosingBracket(hud) {
     `input was completed as expected, without adding a closing bracket`
   );
 }
-
-function getAutocompletePopupLabels(autocompletePopup) {
-  return autocompletePopup.items.map(i => i.label);
-}
