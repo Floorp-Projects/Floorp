@@ -159,11 +159,11 @@ Specify a relative path to your local `android-components` checkout via `autoPub
 If enabled, during a Fenix build android-components will be compiled and locally published if it has been modified,
 and published versions of android-components modules will be automatically used instead of whatever is declared in Dependencies.kt.
 
-### application-services composite builds
-Specify a relative path to your local `application-services` checkout via `substitutions.application-services.dir`.
+### application-services auto-publication workflow
+Specify a relative path to your local `application-services` checkout via `autoPublish.application-services.dir`.
 
-If enabled, a multi-project gradle build will be configured, and any application-services dependency will be substituted
-for the local version. Any changes to `application-services` will be automatically included in Fenix builds.
+If enabled, during a Fenix build application-services will be compiled and locally published,
+and published versions of application-services modules will be automatically used instead of whatever is declared in Dependencies.kt.
 
 ### GeckoView
 Specify a relative path to your local `mozilla-central` checkout via `dependencySubstitutions.geckoviewTopsrcdir`,

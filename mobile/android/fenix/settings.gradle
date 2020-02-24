@@ -5,19 +5,18 @@ def log(message) {
     logger.lifecycle("[settings] ${message}")
 }
 
-def runCmd(cmd, workingDir, successMessage) {
+def runCmd(cmd, workingDir, successMessage, captureStdout=true) {
     def proc = cmd.execute(null, new File(workingDir))
-    def standardOutput = new ByteArrayOutputStream()
-    def standardError = new ByteArrayOutputStream()
-    proc.consumeProcessOutput(standardOutput, standardError)
+    def standardOutput = captureStdout ? new ByteArrayOutputStream() : System.out
+    proc.consumeProcessOutput(standardOutput, System.err)
     proc.waitFor()
 
     if (proc.exitValue() != 0) {
-        throw new GradleException("Process '${cmd}' finished with non-zero exit value ${proc.exitValue()}:\n\nstdout:\n${standardOutput.toString()}\n\nstderr:\n${standardError.toString()}")
+        throw new GradleException("Process '${cmd}' finished with non-zero exit value ${proc.exitValue()}");
     } else {
         log(successMessage)
     }
-    return standardOutput
+    return captureStdout ? standardOutput : null
 }
 
 def gradlew = './gradlew'
@@ -29,7 +28,7 @@ if (System.properties['os.name'].toLowerCase().contains('windows')) {
 //////////////////////////////////////////////////////////////////////////
 
 Properties localProperties = null
-String settingAppServicesPath = "substitutions.application-services.dir"
+String settingAppServicesPath = "autoPublish.application-services.dir"
 String settingAndroidComponentsPath = "autoPublish.android-components.dir"
 
 if (file('local.properties').canRead()) {
@@ -48,10 +47,11 @@ if (localProperties != null) {
     String appServicesLocalPath = localProperties.getProperty(settingAppServicesPath)
 
     if (appServicesLocalPath != null) {
-        log("Enabling composite build with application-services modules from: $appServicesLocalPath")
-        includeBuild(appServicesLocalPath)
+        log("Enabling automatic publication of application-services from: $appServicesLocalPath")
+        def publishAppServicesCmd = ["./gradlew", "autoPublishForLocalDevelopment"]
+        runCmd(publishAppServicesCmd, appServicesLocalPath, "Published application-services for local development.", false)
     } else {
-        log("Disabled composite builds with application-services. Enable them by settings '$settingAppServicesPath' in local.properties")
+        log("Disabled auto-publication of application-services. Enable it by settings '$settingAppServicesPath' in local.properties")
     }
 
     String androidComponentsLocalPath = localProperties.getProperty(settingAndroidComponentsPath)
@@ -69,7 +69,7 @@ if (localProperties != null) {
         } else {
             log("android-components changed, publishing locally...")
             def publishAcCmd = ["${androidComponentsLocalPath}/${gradlew}", "publishToMavenLocal", "-Plocal=true"]
-            runCmd(publishAcCmd, androidComponentsLocalPath, "Published android-components.")
+            runCmd(publishAcCmd, androidComponentsLocalPath, "Published android-components.", false)
         }
     } else {
         log("Disabled auto-publication of android-components. Enable it by settings '$settingAndroidComponentsPath' in local.properties")
