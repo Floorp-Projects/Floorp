@@ -112,8 +112,6 @@ class DefaultThemeManager(
             if (currentTheme != value) {
                 field = value
 
-                setActivityTheme(activity)
-
                 val intent = activity.intent ?: Intent().also { activity.intent = it }
                 intent.putExtra(HomeActivity.PRIVATE_BROWSING_MODE, value == BrowsingMode.Private)
 
