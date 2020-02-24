@@ -602,6 +602,8 @@ class FxaAccountManagerTest {
 
         assertNull(account.persistenceCallback)
         manager.initAsync().await()
+        // Make sure a persistence callback was registered while pumping the state machine.
+        assertNotNull(account.persistenceCallback)
 
         // Assert that neither ensureCapabilities nor initialization fired.
         verify(constellation, never()).ensureCapabilitiesAsync(setOf(DeviceCapability.SEND_TAB))
@@ -638,6 +640,8 @@ class FxaAccountManagerTest {
 
         assertNull(account.persistenceCallback)
         manager.initAsync().await()
+        // Make sure a persistence callback was registered while pumping the state machine.
+        assertNotNull(account.persistenceCallback)
 
         verify(constellation).ensureCapabilitiesAsync(setOf(DeviceCapability.SEND_TAB))
         verify(constellation, never()).initDeviceAsync(any(), any(), any())
