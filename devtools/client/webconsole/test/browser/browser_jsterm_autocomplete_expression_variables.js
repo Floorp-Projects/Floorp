@@ -28,7 +28,7 @@ add_task(async function() {
   );
 
   is(
-    getPopupLabels(autocompletePopup).join("\n"),
+    getAutocompletePopupLabels(autocompletePopup).join("\n"),
     [
       "testClass",
       "testConst",
@@ -47,7 +47,3 @@ add_task(async function() {
     "Autocomplete popup displays both global and local variables"
   );
 });
-
-function getPopupLabels(popup) {
-  return popup.getItems().map(item => item.label);
-}

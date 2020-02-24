@@ -39,7 +39,3 @@ add_task(async function() {
     "popup has expected item, in expected order"
   );
 });
-
-function getAutocompletePopupLabels(autocompletePopup) {
-  return autocompletePopup.items.map(i => i.label);
-}

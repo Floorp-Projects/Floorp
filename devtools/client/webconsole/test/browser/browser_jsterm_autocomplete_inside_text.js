@@ -50,7 +50,7 @@ add_task(async function() {
   is(popup.selectedIndex, 1, "popup.selectedIndex is correct");
   ok(!getInputCompletionValue(hud), "completeNode.value is empty");
 
-  const items = popup.getItems().map(e => e.label);
+  const items = getAutocompletePopupLabels(popup);
   const expectedItems = ["testBugAA", "testBugBB"];
   is(
     items.join("-"),

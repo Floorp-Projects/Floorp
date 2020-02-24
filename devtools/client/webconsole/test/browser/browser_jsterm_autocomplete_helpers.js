@@ -25,14 +25,10 @@ async function testInspectAutoCompletion(hud, inputValue, expectInspect) {
   EventUtils.sendString(inputValue);
   await updated;
   is(
-    getPopupItemsLabel(jsterm.autocompletePopup).includes("inspect"),
+    getAutocompletePopupLabels(jsterm.autocompletePopup).includes("inspect"),
     expectInspect,
     `autocomplete results${
       expectInspect ? "" : " does not"
     } contain helper 'inspect'`
   );
-}
-
-function getPopupItemsLabel(popup) {
-  return popup.getItems().map(item => item.label);
 }

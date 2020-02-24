@@ -129,7 +129,3 @@ add_task(async function() {
     setInputValue(hud, "");
   }
 });
-
-function getAutocompletePopupLabels(autocompletePopup) {
-  return autocompletePopup.items.map(i => i.label);
-}
