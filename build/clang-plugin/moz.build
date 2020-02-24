@@ -29,7 +29,6 @@ HOST_SOURCES += [
     'NoAutoTypeChecker.cpp',
     'NoDuplicateRefCntMemberChecker.cpp',
     'NoExplicitMoveConstructorChecker.cpp',
-    'NoNewThreadsChecker.cpp',
     'NonMemMovableMemberChecker.cpp',
     'NonMemMovableTemplateArgChecker.cpp',
     'NonParamInsideFunctionDeclChecker.cpp',
@@ -66,12 +65,6 @@ GeneratedFile('ThirdPartyPaths.cpp', script="ThirdPartyPaths.py",
               entry_point="generate", inputs=[
                   '/tools/rewriting/ThirdPartyPaths.txt',
                   '/tools/rewriting/Generated.txt',
-              ])
-
-GeneratedFile('ThreadAllows.h', script="generate_thread_allows.py",
-              entry_point="generate_allows", inputs=[
-              '/build/clang-plugin/ThreadAllows.txt',
-              '/build/clang-plugin/ThreadFileAllows.txt'
               ])
 
 HOST_COMPILE_FLAGS['STL'] = []
