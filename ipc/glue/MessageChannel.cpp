@@ -20,12 +20,11 @@
 #include "mozilla/Sprintf.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/TimeStamp.h"
-#include "mozilla/UniquePtr.h"
+#include "mozilla/UniquePtrExtensions.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/ipc/ProcessChild.h"
 #include "mozilla/ipc/ProtocolUtils.h"
 #include "nsAppRunner.h"
-#include "nsAutoPtr.h"
 #include "nsContentUtils.h"
 #include "nsDataHashtable.h"
 #include "nsDebug.h"
@@ -1114,7 +1113,7 @@ bool MessageChannel::SendBuildIDsMatchMessage(const char* aParentBuildID) {
     return false;
   }
 
-  nsAutoPtr<BuildIDsMatchMessage> msg(new BuildIDsMatchMessage());
+  auto msg = MakeUnique<BuildIDsMatchMessage>();
 
   MOZ_RELEASE_ASSERT(!msg->is_sync());
   MOZ_RELEASE_ASSERT(msg->nested_level() != IPC::Message::NESTED_INSIDE_SYNC);
@@ -1125,10 +1124,10 @@ bool MessageChannel::SendBuildIDsMatchMessage(const char* aParentBuildID) {
 
   MonitorAutoLock lock(*mMonitor);
   if (!Connected()) {
-    ReportConnectionError("MessageChannel", msg);
+    ReportConnectionError("MessageChannel", msg.get());
     return false;
   }
-  mLink->SendMessage(msg.forget());
+  mLink->SendMessage(msg.release());
   return true;
 }
 
@@ -2108,7 +2107,7 @@ void MessageChannel::DispatchMessage(Message&& aMsg) {
     nojsapi.emplace();
   }
 
-  nsAutoPtr<Message> reply;
+  UniquePtr<Message> reply;
 
   IPC_LOG("DispatchMessage: seqno=%d, xid=%d", aMsg.seqno(),
           aMsg.transaction_id());
@@ -2153,7 +2152,7 @@ void MessageChannel::DispatchMessage(Message&& aMsg) {
             aMsg.transaction_id());
     AddProfilerMarker(reply.get(), MessageDirection::eSending);
 
-    mLink->SendMessage(reply.forget());
+    mLink->SendMessage(reply.release());
   }
 }
 
@@ -2241,21 +2240,21 @@ void MessageChannel::DispatchInterruptMessage(ActorLifecycleProxy* aProxy,
   SyncStackFrame frame(this, true);
 #endif
 
-  nsAutoPtr<Message> reply;
+  UniquePtr<Message> reply;
 
   ++mRemoteStackDepthGuess;
   Result rv = aProxy->Get()->OnCallReceived(aMsg, *getter_Transfers(reply));
   --mRemoteStackDepthGuess;
 
   if (!MaybeHandleError(rv, aMsg, "DispatchInterruptMessage")) {
-    reply = Message::ForInterruptDispatchError();
+    reply = WrapUnique(Message::ForInterruptDispatchError());
   }
   reply->set_seqno(aMsg.seqno());
 
   MonitorAutoLock lock(*mMonitor);
   if (ChannelConnected == mChannelState) {
     AddProfilerMarker(reply.get(), MessageDirection::eSending);
-    mLink->SendMessage(reply.forget());
+    mLink->SendMessage(reply.release());
   }
 }
 
