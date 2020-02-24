@@ -182,6 +182,14 @@ bool CanvasTranslator::TranslateRecording() {
         [&](RecordedEvent* recordedEvent) -> bool {
           // Make sure that the whole event was read from the stream.
           if (!mStream->good()) {
+            if (GetIPCChannel()->Unsound_IsClosed()) {
+              // The other side has closed only warn about read failure.
+              gfxWarning() << "Failed to read event type: "
+                           << recordedEvent->GetType();
+            } else {
+              gfxCriticalNote << "Failed to read event type: "
+                              << recordedEvent->GetType();
+            }
             return false;
           }
 
@@ -221,13 +229,19 @@ bool CanvasTranslator::TranslateRecording() {
   return true;
 }
 
-#define READ_AND_PLAY_CANVAS_EVENT_TYPE(_typeenum, _class) \
-  case _typeenum: {                                        \
-    auto e = _class(*mStream);                             \
-    if (!mStream->good()) {                                \
-      return false;                                        \
-    }                                                      \
-    return e.PlayCanvasEvent(this);                        \
+#define READ_AND_PLAY_CANVAS_EVENT_TYPE(_typeenum, _class)             \
+  case _typeenum: {                                                    \
+    auto e = _class(*mStream);                                         \
+    if (!mStream->good()) {                                            \
+      if (GetIPCChannel()->Unsound_IsClosed()) {                       \
+        /* The other side has closed only warn about read failure. */  \
+        gfxWarning() << "Failed to read event type: " << _typeenum;    \
+      } else {                                                         \
+        gfxCriticalNote << "Failed to read event type: " << _typeenum; \
+      }                                                                \
+      return false;                                                    \
+    }                                                                  \
+    return e.PlayCanvasEvent(this);                                    \
   }
 
 bool CanvasTranslator::HandleExtensionEvent(int32_t aType) {
