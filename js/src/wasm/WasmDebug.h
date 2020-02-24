@@ -147,7 +147,7 @@ class DebugState {
                      Code::SeenSet* seenCode, size_t* code, size_t* data) const;
 };
 
-typedef UniquePtr<DebugState> UniqueDebugState;
+using UniqueDebugState = UniquePtr<DebugState>;
 
 }  // namespace wasm
 }  // namespace js

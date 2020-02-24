@@ -367,7 +367,7 @@ class ObjectPolicy final : public TypePolicy {
 
 // Single-object input. If the input is a Value, it is unboxed. If it is
 // a primitive, we use ValueToNonNullObject.
-typedef ObjectPolicy<0> SingleObjectPolicy;
+using SingleObjectPolicy = ObjectPolicy<0>;
 
 template <unsigned Op>
 class BoxPolicy final : public TypePolicy {

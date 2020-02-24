@@ -67,7 +67,7 @@ static const JSConstDoubleSpec math_constants[] = {
     // clang-format on
 };
 
-typedef double (*UnaryMathFunctionType)(double);
+using UnaryMathFunctionType = double (*)(double);
 
 template <UnaryMathFunctionType F>
 static bool math_function(JSContext* cx, HandleValue val,
@@ -541,7 +541,7 @@ template <typename T>
 T js::GetBiggestNumberLessThan(T x) {
   MOZ_ASSERT(!IsNegative(x));
   MOZ_ASSERT(IsFinite(x));
-  typedef typename mozilla::FloatingPoint<T>::Bits Bits;
+  using Bits = typename mozilla::FloatingPoint<T>::Bits;
   Bits bits = mozilla::BitwiseCast<Bits>(x);
   MOZ_ASSERT(bits > 0, "will underflow");
   return mozilla::BitwiseCast<T>(bits - 1);

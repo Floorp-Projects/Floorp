@@ -13,7 +13,7 @@
 
 namespace js {
 
-typedef uint32_t RawBytecodeLocationOffset;
+using RawBytecodeLocationOffset = uint32_t;
 
 class PropertyName;
 
@@ -27,7 +27,7 @@ class BytecodeLocationOffset {
   RawBytecodeLocationOffset rawOffset() const { return rawOffset_; }
 };
 
-typedef jsbytecode* RawBytecode;
+using RawBytecode = jsbytecode*;
 
 // A immutable representation of a program location
 //

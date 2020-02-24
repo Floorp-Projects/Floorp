@@ -42,7 +42,7 @@ using namespace js::jit;
 using namespace js::wasm;
 using mozilla::BitwiseCast;
 
-typedef CheckedInt<uint32_t> CheckedU32;
+using CheckedU32 = CheckedInt<uint32_t>;
 
 class FuncTypeIdSet {
   typedef HashMap<const FuncType*, uint32_t, FuncTypeHashPolicy,
@@ -558,7 +558,8 @@ inline int32_t WasmMemoryCopy(T memBase, uint32_t memLen,
                                              uint32_t len, uint8_t* memBase) {
   MOZ_ASSERT(SASigMemCopy.failureMode == FailureMode::FailOnNegI32);
 
-  typedef void (*RacyMemMove)(SharedMem<uint8_t*>, SharedMem<uint8_t*>, size_t);
+  using RacyMemMove =
+      void (*)(SharedMem<uint8_t*>, SharedMem<uint8_t*>, size_t);
 
   const SharedArrayRawBuffer* rawBuf =
       SharedArrayRawBuffer::fromDataPtr(memBase);

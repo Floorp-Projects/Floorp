@@ -66,7 +66,7 @@ struct EvalCacheLookup {
 };
 
 struct EvalCacheHashPolicy {
-  typedef EvalCacheLookup Lookup;
+  using Lookup = EvalCacheLookup;
 
   static HashNumber hash(const Lookup& l);
   static bool match(const EvalCacheEntry& entry, const EvalCacheLookup& l);

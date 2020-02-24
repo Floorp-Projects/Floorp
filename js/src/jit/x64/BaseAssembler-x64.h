@@ -983,7 +983,7 @@ class BaseAssemblerX64 : public BaseAssembler {
   }
 };
 
-typedef BaseAssemblerX64 BaseAssemblerSpecific;
+using BaseAssemblerSpecific = BaseAssemblerX64;
 
 }  // namespace X86Encoding
 

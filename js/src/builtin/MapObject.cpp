@@ -461,7 +461,7 @@ void MapObject::trace(JSTracer* trc, JSObject* obj) {
 }
 
 struct js::UnbarrieredHashPolicy {
-  typedef Value Lookup;
+  using Lookup = Value;
   static HashNumber hash(const Lookup& v,
                          const mozilla::HashCodeScrambler& hcs) {
     return HashValue(v, hcs);

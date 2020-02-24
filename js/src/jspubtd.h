@@ -69,8 +69,8 @@ class JSLinearString;
 
 template <typename T>
 struct JSConstScalarSpec;
-typedef JSConstScalarSpec<double> JSConstDoubleSpec;
-typedef JSConstScalarSpec<int32_t> JSConstIntegerSpec;
+using JSConstDoubleSpec = JSConstScalarSpec<double>;
+using JSConstIntegerSpec = JSConstScalarSpec<int32_t>;
 
 namespace js {
 
@@ -113,7 +113,7 @@ class MOZ_STACK_CLASS JS_PUBLIC_API AutoEnterCycleCollection {
 extern "C" {
 
 // Defined in NSPR prio.h.
-typedef struct PRFileDesc PRFileDesc;
+using PRFileDesc = struct PRFileDesc;
 }
 
 #endif /* jspubtd_h */

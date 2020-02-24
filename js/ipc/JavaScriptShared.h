@@ -80,7 +80,7 @@ class JavaScriptShared;
 // ObjectId do that, but doing so would weaken our type invariants, so we just
 // reimplement it manually.
 struct ObjectIdHasher {
-  typedef ObjectId Lookup;
+  using Lookup = ObjectId;
   static js::HashNumber hash(const Lookup& l) {
     return mozilla::HashGeneric(l.serialize());
   }

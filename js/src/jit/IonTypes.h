@@ -42,9 +42,9 @@ class IonCompilationId {
 
 namespace jit {
 
-typedef uint32_t RecoverOffset;
-typedef uint32_t SnapshotOffset;
-typedef uint32_t BailoutId;
+using RecoverOffset = uint32_t;
+using SnapshotOffset = uint32_t;
+using BailoutId = uint32_t;
 
 // The maximum size of any buffer associated with an assembler or code object.
 // This is chosen to not overflow a signed integer, leaving room for an extra
@@ -414,7 +414,7 @@ class SimdConstant {
   bool operator!=(const SimdConstant& rhs) const { return !operator==(rhs); }
 
   // SimdConstant is a HashPolicy
-  typedef SimdConstant Lookup;
+  using Lookup = SimdConstant;
   static HashNumber hash(const SimdConstant& val) {
     uint32_t hash = mozilla::HashBytes(&val.u, sizeof(val.u));
     return mozilla::AddToHash(hash, val.type_);
@@ -923,7 +923,7 @@ enum class RoundingMode { Down, Up, NearestTiesToEven, TowardsZero };
 static const uint32_t MAX_UNCHECKED_LEAF_FRAME_SIZE = 64;
 
 // Truncating conversion modifiers.
-typedef uint32_t TruncFlags;
+using TruncFlags = uint32_t;
 static const TruncFlags TRUNC_UNSIGNED = TruncFlags(1) << 0;
 static const TruncFlags TRUNC_SATURATING = TruncFlags(1) << 1;
 

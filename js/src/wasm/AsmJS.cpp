@@ -387,7 +387,7 @@ struct js::AsmJSMetadata : Metadata, AsmJSMetadataCacheablePod {
   const AsmJSMetadataCacheablePod& pod() const { return *this; }
 };
 
-typedef RefPtr<AsmJSMetadata> MutableAsmJSMetadata;
+using MutableAsmJSMetadata = RefPtr<AsmJSMetadata>;
 
 /*****************************************************************************/
 // ParseNode utilities

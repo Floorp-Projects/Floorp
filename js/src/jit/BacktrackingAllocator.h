@@ -152,7 +152,7 @@ struct UsePosition : public TempObject,
   }
 };
 
-typedef InlineForwardListIterator<UsePosition> UsePositionIterator;
+using UsePositionIterator = InlineForwardListIterator<UsePosition>;
 
 // Backtracking allocator data structures overview.
 //
@@ -186,8 +186,8 @@ class LiveRange : public TempObject {
   class BundleLink : public InlineForwardListNode<BundleLink> {};
   class RegisterLink : public InlineForwardListNode<RegisterLink> {};
 
-  typedef InlineForwardListIterator<BundleLink> BundleLinkIterator;
-  typedef InlineForwardListIterator<RegisterLink> RegisterLinkIterator;
+  using BundleLinkIterator = InlineForwardListIterator<BundleLink>;
+  using RegisterLinkIterator = InlineForwardListIterator<RegisterLink>;
 
   // Links in the lists in LiveBundle and VirtualRegister.
   BundleLink bundleLink;
@@ -573,7 +573,7 @@ class BacktrackingAllocator : protected RegisterAllocator {
   };
 
   // Ranges where all registers must be spilled due to call instructions.
-  typedef InlineList<CallRange> CallRangeList;
+  using CallRangeList = InlineList<CallRange>;
   CallRangeList callRangesList;
   SplayTree<CallRange*, CallRange> callRanges;
 
@@ -586,7 +586,7 @@ class BacktrackingAllocator : protected RegisterAllocator {
     SpillSlot(uint32_t slot, LifoAlloc* alloc)
         : alloc(slot), allocated(alloc) {}
   };
-  typedef InlineForwardList<SpillSlot> SpillSlotList;
+  using SpillSlotList = InlineForwardList<SpillSlot>;
 
   // All allocated slots of each width.
   SpillSlotList normalSlots, doubleSlots, quadSlots;

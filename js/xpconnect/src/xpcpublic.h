@@ -43,7 +43,7 @@ class Exception;
 }  // namespace dom
 }  // namespace mozilla
 
-typedef void (*xpcGCCallback)(JSGCStatus status);
+using xpcGCCallback = void (*)(JSGCStatus);
 
 namespace xpc {
 

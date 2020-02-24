@@ -109,7 +109,7 @@ class FrozenAtomSet {
     return mSet->shallowSizeOfIncludingThis(mallocSizeOf);
   }
 
-  typedef AtomSet::Range Range;
+  using Range = AtomSet::Range;
 
   AtomSet::Range all() const { return mSet->all(); }
 };

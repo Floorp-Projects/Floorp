@@ -93,7 +93,7 @@ struct AllocationIntegrityState {
     // Order of insertion into seen, for sorting.
     uint32_t index;
 
-    typedef IntegrityItem Lookup;
+    using Lookup = IntegrityItem;
     static HashNumber hash(const IntegrityItem& item) {
       HashNumber hash = item.alloc.hash();
       hash = mozilla::RotateLeft(hash, 4) ^ item.vreg;

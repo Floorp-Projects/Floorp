@@ -207,7 +207,7 @@ static const char* const callbackNames[] = {
 
 enum YieldKind { Delegating, NotDelegating };
 
-typedef RootedValueVector NodeVector;
+using NodeVector = RootedValueVector;
 
 /*
  * ParseNode is a somewhat intricate data structure, and its invariants have
@@ -260,7 +260,7 @@ enum class GeneratorStyle { None, ES6 };
  * Bug 569487: generalize builder interface
  */
 class NodeBuilder {
-  typedef AutoValueArray<AST_LIMIT> CallbackArray;
+  using CallbackArray = AutoValueArray<AST_LIMIT>;
 
   JSContext* cx;
   frontend::Parser<frontend::FullParseHandler, char16_t>* parser;

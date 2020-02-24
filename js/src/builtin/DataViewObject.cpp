@@ -292,47 +292,47 @@ static inline uint64_t swapBytes(uint64_t x) {
 
 template <typename DataType>
 struct DataToRepType {
-  typedef DataType result;
+  using result = DataType;
 };
 template <>
 struct DataToRepType<int8_t> {
-  typedef uint8_t result;
+  using result = uint8_t;
 };
 template <>
 struct DataToRepType<uint8_t> {
-  typedef uint8_t result;
+  using result = uint8_t;
 };
 template <>
 struct DataToRepType<int16_t> {
-  typedef uint16_t result;
+  using result = uint16_t;
 };
 template <>
 struct DataToRepType<uint16_t> {
-  typedef uint16_t result;
+  using result = uint16_t;
 };
 template <>
 struct DataToRepType<int32_t> {
-  typedef uint32_t result;
+  using result = uint32_t;
 };
 template <>
 struct DataToRepType<uint32_t> {
-  typedef uint32_t result;
+  using result = uint32_t;
 };
 template <>
 struct DataToRepType<int64_t> {
-  typedef uint64_t result;
+  using result = uint64_t;
 };
 template <>
 struct DataToRepType<uint64_t> {
-  typedef uint64_t result;
+  using result = uint64_t;
 };
 template <>
 struct DataToRepType<float> {
-  typedef uint32_t result;
+  using result = uint32_t;
 };
 template <>
 struct DataToRepType<double> {
-  typedef uint64_t result;
+  using result = uint64_t;
 };
 
 static inline void Memcpy(uint8_t* dest, uint8_t* src, size_t nbytes) {
@@ -351,7 +351,7 @@ static inline void Memcpy(SharedMem<uint8_t*> dest, uint8_t* src,
 
 template <typename DataType, typename BufferPtrType>
 struct DataViewIO {
-  typedef typename DataToRepType<DataType>::result ReadWriteType;
+  using ReadWriteType = typename DataToRepType<DataType>::result;
 
   static constexpr auto alignMask =
       std::min<size_t>(MOZ_ALIGNOF(void*), sizeof(DataType)) - 1;

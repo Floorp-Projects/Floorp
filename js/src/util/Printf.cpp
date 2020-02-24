@@ -18,7 +18,7 @@
 
 using namespace js;
 
-typedef mozilla::SmprintfPolicyPointer<js::SystemAllocPolicy> JSSmprintfPointer;
+using JSSmprintfPointer = mozilla::SmprintfPolicyPointer<js::SystemAllocPolicy>;
 
 JS_PUBLIC_API JS::UniqueChars JS_smprintf(const char* fmt, ...) {
   va_list ap;

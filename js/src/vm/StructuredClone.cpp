@@ -173,7 +173,7 @@ namespace js {
 
 template <typename T, typename AllocPolicy>
 struct BufferIterator {
-  typedef mozilla::BufferList<AllocPolicy> BufferList;
+  using BufferList = mozilla::BufferList<AllocPolicy>;
 
   explicit BufferIterator(const BufferList& buffer)
       : mBuffer(buffer), mIter(buffer.Iter()) {

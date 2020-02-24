@@ -25,10 +25,10 @@ namespace js {
 class ModuleEnvironmentObject;
 class ModuleObject;
 
-typedef Rooted<ModuleObject*> RootedModuleObject;
-typedef Handle<ModuleObject*> HandleModuleObject;
-typedef Rooted<ModuleEnvironmentObject*> RootedModuleEnvironmentObject;
-typedef Handle<ModuleEnvironmentObject*> HandleModuleEnvironmentObject;
+using RootedModuleObject = Rooted<ModuleObject*>;
+using HandleModuleObject = Handle<ModuleObject*>;
+using RootedModuleEnvironmentObject = Rooted<ModuleEnvironmentObject*>;
+using HandleModuleEnvironmentObject = Handle<ModuleEnvironmentObject*>;
 
 class ImportEntryObject : public NativeObject {
  public:
@@ -53,10 +53,10 @@ class ImportEntryObject : public NativeObject {
   uint32_t columnNumber() const;
 };
 
-typedef Rooted<ImportEntryObject*> RootedImportEntryObject;
-typedef Handle<ImportEntryObject*> HandleImportEntryObject;
-typedef Rooted<GCVector<ImportEntryObject*>> RootedImportEntryVector;
-typedef MutableHandle<ImportEntryObject*> MutableHandleImportEntryObject;
+using RootedImportEntryObject = Rooted<ImportEntryObject*>;
+using HandleImportEntryObject = Handle<ImportEntryObject*>;
+using RootedImportEntryVector = Rooted<GCVector<ImportEntryObject*> >;
+using MutableHandleImportEntryObject = MutableHandle<ImportEntryObject*>;
 
 template <XDRMode mode>
 XDRResult XDRImportEntryObject(XDRState<mode>* xdr,
@@ -92,8 +92,8 @@ class ExportEntryObject : public NativeObject {
 template <XDRMode mode>
 XDRResult XDRExportEntries(XDRState<mode>* xdr, MutableHandleArrayObject vec);
 
-typedef Rooted<ExportEntryObject*> RootedExportEntryObject;
-typedef Handle<ExportEntryObject*> HandleExportEntryObject;
+using RootedExportEntryObject = Rooted<ExportEntryObject*>;
+using HandleExportEntryObject = Handle<ExportEntryObject*>;
 
 class RequestedModuleObject : public NativeObject {
  public:
@@ -110,11 +110,11 @@ class RequestedModuleObject : public NativeObject {
   uint32_t columnNumber() const;
 };
 
-typedef Rooted<RequestedModuleObject*> RootedRequestedModuleObject;
-typedef Handle<RequestedModuleObject*> HandleRequestedModuleObject;
-typedef Rooted<GCVector<RequestedModuleObject*>> RootedRequestedModuleVector;
-typedef MutableHandle<RequestedModuleObject*>
-    MutableHandleRequestedModuleObject;
+using RootedRequestedModuleObject = Rooted<RequestedModuleObject*>;
+using HandleRequestedModuleObject = Handle<RequestedModuleObject*>;
+using RootedRequestedModuleVector = Rooted<GCVector<RequestedModuleObject*> >;
+using MutableHandleRequestedModuleObject =
+    MutableHandle<RequestedModuleObject*>;
 
 template <XDRMode mode>
 XDRResult XDRRequestedModuleObject(XDRState<mode>* xdr,
@@ -221,8 +221,8 @@ class ModuleNamespaceObject : public ProxyObject {
   static const ProxyHandler proxyHandler;
 };
 
-typedef Rooted<ModuleNamespaceObject*> RootedModuleNamespaceObject;
-typedef Handle<ModuleNamespaceObject*> HandleModuleNamespaceObject;
+using RootedModuleNamespaceObject = Rooted<ModuleNamespaceObject*>;
+using HandleModuleNamespaceObject = Handle<ModuleNamespaceObject*>;
 
 struct FunctionDeclaration {
   FunctionDeclaration(HandleAtom name, uint32_t funIndex);
