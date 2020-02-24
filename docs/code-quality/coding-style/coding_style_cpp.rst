@@ -159,7 +159,7 @@ C++ classes
    };
 
    class MyClass
-     : public X 
+     : public X
      , public Y
    {
    public:
@@ -365,8 +365,12 @@ C/C++ practices
 -  Include guards are named per the Google coding style and should not
    include a leading ``MOZ_`` or ``MOZILLA_``. For example
    ``dom/media/foo.h`` would use the guard ``DOM_MEDIA_FOO_H_``.
+-  Avoid the usage of ``typedef``, instead, please use ``using`` instead.
 
+.. note::
 
+   For parts of this rule, clang-tidy provides the ``modernize-use-using``
+   check with autofixes.
 
 
 COM and pointers
