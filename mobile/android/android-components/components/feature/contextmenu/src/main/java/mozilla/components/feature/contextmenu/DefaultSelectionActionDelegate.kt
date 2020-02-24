@@ -13,8 +13,10 @@ import mozilla.components.concept.engine.selection.SelectionActionDelegate
 internal const val SEARCH = "CUSTOM_CONTEXT_MENU_SEARCH"
 @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
 internal const val SEARCH_PRIVATELY = "CUSTOM_CONTEXT_MENU_SEARCH_PRIVATELY"
+@VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+internal const val SHARE = "CUSTOM_CONTEXT_MENU_SHARE"
 
-private val customActions = arrayOf(SEARCH, SEARCH_PRIVATELY)
+private val customActions = arrayOf(SEARCH, SEARCH_PRIVATELY, SHARE)
 
 /**
  * Adds normal and private search buttons to text selection context menus.
@@ -22,23 +24,29 @@ private val customActions = arrayOf(SEARCH, SEARCH_PRIVATELY)
 class DefaultSelectionActionDelegate(
     private val searchAdapter: SearchAdapter,
     resources: Resources,
-    appName: String
+    appName: String,
+    private val shareTextClicked: ((String) -> Unit)? = null
 ) : SelectionActionDelegate {
 
-    private val normalSearchText = resources.getString(R.string.mozac_selection_context_menu_search, appName)
-    private val privateSearchText = resources.getString(R.string.mozac_selection_context_menu_search_privately, appName)
+    private val normalSearchText =
+        resources.getString(R.string.mozac_selection_context_menu_search, appName)
+    private val privateSearchText =
+        resources.getString(R.string.mozac_selection_context_menu_search_privately, appName)
+    private val shareText = resources.getString(R.string.mozac_selection_context_menu_share)
 
     override fun getAllActions(): Array<String> = customActions
 
     override fun isActionAvailable(id: String): Boolean {
         val isPrivate = searchAdapter.isPrivateSession()
-        return (id == SEARCH && !isPrivate) ||
-            (id == SEARCH_PRIVATELY && isPrivate)
+        return (id == SHARE && shareTextClicked != null) ||
+                (id == SEARCH && !isPrivate) ||
+                (id == SEARCH_PRIVATELY && isPrivate)
     }
 
     override fun getActionTitle(id: String): CharSequence? = when (id) {
         SEARCH -> normalSearchText
         SEARCH_PRIVATELY -> privateSearchText
+        SHARE -> shareText
         else -> null
     }
 
@@ -49,6 +57,10 @@ class DefaultSelectionActionDelegate(
         }
         SEARCH_PRIVATELY -> {
             searchAdapter.sendSearch(true, selectedText)
+            true
+        }
+        SHARE -> {
+            shareTextClicked?.invoke(selectedText)
             true
         }
         else -> false
