@@ -4,7 +4,6 @@
 
 import { isEmailOrPhoneNumber } from "./isEmailOrPhoneNumber";
 import React from "react";
-import schema from "./SendToDeviceSnippet.schema.json";
 import { SubmitFormSnippet } from "../SubmitFormSnippet/SubmitFormSnippet.jsx";
 
 function validateInput(value, content) {
@@ -41,17 +40,15 @@ function addDefaultValues(props) {
   return {
     ...props,
     content: {
-      scene1_button_label: schema.properties.scene1_button_label.default,
-      retry_button_label: schema.properties.retry_button_label.default,
-      scene2_dismiss_button_text:
-        schema.properties.scene2_dismiss_button_text.default,
-      scene2_button_label: schema.properties.scene2_button_label.default,
-      scene2_input_placeholder:
-        schema.properties.scene2_input_placeholder.default,
-      locale: schema.properties.locale.default,
-      country: schema.properties.country.default,
+      scene1_button_label: "Learn more",
+      retry_button_label: "Try again",
+      scene2_dismiss_button_text: "Dismiss",
+      scene2_button_label: "Send",
+      scene2_input_placeholder: "Your email here",
+      locale: "en-US",
+      country: "us",
       message_id_email: "",
-      include_sms: schema.properties.include_sms.default,
+      include_sms: false,
       ...props.content,
     },
   };

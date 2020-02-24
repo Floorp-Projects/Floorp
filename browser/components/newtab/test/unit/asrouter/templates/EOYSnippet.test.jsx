@@ -12,7 +12,6 @@ const DEFAULT_CONTENT = {
   donation_amount_fourth: 5,
   donation_form_url: "https://submit.form",
   button_label: "Donate",
-  currency_code: "usd",
 };
 
 describe("EOYSnippet", () => {

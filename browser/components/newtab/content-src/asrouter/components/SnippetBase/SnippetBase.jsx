@@ -3,7 +3,6 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import React from "react";
-import schema from "../../templates/SimpleSnippet/SimpleSnippet.schema.json";
 
 export class SnippetBase extends React.PureComponent {
   constructor(props) {
@@ -92,9 +91,7 @@ export class SnippetBase extends React.PureComponent {
       );
     }
 
-    const label =
-      this.props.content.block_button_text ||
-      schema.properties.block_button_text.default;
+    const label = this.props.content.block_button_text || "Remove this";
     return (
       <button
         className="blockButton"
