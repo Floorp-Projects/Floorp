@@ -464,9 +464,8 @@ HTMLTooltip.prototype = {
   },
 
   /**
-   * Show the tooltip next to the provided anchor element, or update the tooltip position
-   * if it was already visible. A preferred position can be set.
-   * The event "shown" will be fired after the tooltip is displayed.
+   * Show the tooltip next to the provided anchor element. A preferred position
+   * can be set. The event "shown" will be fired after the tooltip is displayed.
    *
    * @param {Element} anchor
    *        The reference element with which the tooltip should be aligned
@@ -484,21 +483,12 @@ HTMLTooltip.prototype = {
    */
   async show(anchor, options) {
     const { left, top } = this._updateContainerBounds(anchor, options);
-    const isTooltipVisible = this.isVisible();
 
     if (this.useXulWrapper) {
-      if (!isTooltipVisible) {
-        await this._showXulWrapperAt(left, top);
-      } else {
-        this._moveXulWrapperTo(left, top);
-      }
+      await this._showXulWrapperAt(left, top);
     } else {
       this.container.style.left = left + "px";
       this.container.style.top = top + "px";
-    }
-
-    if (isTooltipVisible) {
-      return;
     }
 
     this.container.classList.add("tooltip-visible");
@@ -506,19 +496,14 @@ HTMLTooltip.prototype = {
     // Keep a pointer on the focused element to refocus it when hiding the tooltip.
     this._focusedElement = this.doc.activeElement;
 
-    if (this.doc.defaultView) {
-      if (this.attachEventsTimer) {
-        this.doc.defaultView.clearTimeout(this.attachEventsTimer);
-      }
-
-      this.attachEventsTimer = this.doc.defaultView.setTimeout(() => {
-        // Update the top window reference each time in case the host changes.
-        this.topWindow = this._getTopWindow();
-        this.topWindow.addEventListener("click", this._onClick, true);
-        this.topWindow.addEventListener("mouseup", this._onMouseup, true);
-        this.emit("shown");
-      }, 0);
-    }
+    this.doc.defaultView.clearTimeout(this.attachEventsTimer);
+    this.attachEventsTimer = this.doc.defaultView.setTimeout(() => {
+      // Update the top window reference each time in case the host changes.
+      this.topWindow = this._getTopWindow();
+      this.topWindow.addEventListener("click", this._onClick, true);
+      this.topWindow.addEventListener("mouseup", this._onMouseup, true);
+      this.emit("shown");
+    }, 0);
   },
 
   startTogglingOnHover(baseNode, targetNodeCb, options) {
@@ -527,6 +512,27 @@ HTMLTooltip.prototype = {
 
   stopTogglingOnHover() {
     this.toggle.stop();
+  },
+
+  /**
+   * Recalculate the dimensions and position of the tooltip in response to
+   * changes to its content.
+   *
+   * Parameters are identical to show().
+   */
+  updateContainerBounds(anchor, options) {
+    if (!this.isVisible()) {
+      return;
+    }
+
+    const { left, top } = this._updateContainerBounds(anchor, options);
+
+    if (this.useXulWrapper) {
+      this._moveXulWrapperTo(left, top);
+    } else {
+      this.container.style.left = left + "px";
+      this.container.style.top = top + "px";
+    }
   },
 
   _updateContainerBounds(anchor, { position, x = 0, y = 0 } = {}) {
