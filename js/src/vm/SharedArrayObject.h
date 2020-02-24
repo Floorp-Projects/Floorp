@@ -247,10 +247,10 @@ bool IsSharedArrayBuffer(JSObject* o);
 
 SharedArrayBufferObject& AsSharedArrayBuffer(HandleObject o);
 
-typedef Rooted<SharedArrayBufferObject*> RootedSharedArrayBufferObject;
-typedef Handle<SharedArrayBufferObject*> HandleSharedArrayBufferObject;
-typedef MutableHandle<SharedArrayBufferObject*>
-    MutableHandleSharedArrayBufferObject;
+using RootedSharedArrayBufferObject = Rooted<SharedArrayBufferObject*>;
+using HandleSharedArrayBufferObject = Handle<SharedArrayBufferObject*>;
+using MutableHandleSharedArrayBufferObject =
+    MutableHandle<SharedArrayBufferObject*>;
 
 }  // namespace js
 

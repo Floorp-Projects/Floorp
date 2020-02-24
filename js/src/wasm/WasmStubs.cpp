@@ -39,7 +39,7 @@ using namespace js::wasm;
 using mozilla::ArrayLength;
 
 typedef Vector<jit::MIRType, 8, SystemAllocPolicy> MIRTypeVector;
-typedef jit::ABIArgIter<MIRTypeVector> ABIArgMIRTypeIter;
+using ABIArgMIRTypeIter = jit::ABIArgIter<MIRTypeVector>;
 
 /*****************************************************************************/
 // ABIResultIter implementation
@@ -1585,7 +1585,7 @@ static void StackCopy(MacroAssembler& masm, MIRType type, Register scratch,
   }
 }
 
-typedef bool ToValue;
+using ToValue = bool;
 
 // Note, when toValue is true then this may destroy the values in incoming
 // argument registers as a result of Spectre mitigation.

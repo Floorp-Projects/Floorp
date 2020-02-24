@@ -41,7 +41,7 @@ struct SectionRange {
   }
 };
 
-typedef Maybe<SectionRange> MaybeSectionRange;
+using MaybeSectionRange = Maybe<SectionRange>;
 
 // CompilerEnvironment holds any values that will be needed to compute
 // compilation parameters once the module's feature opt-in sections have been

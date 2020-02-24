@@ -72,7 +72,7 @@ struct Tier2GeneratorTask : public RunnableTask {
   virtual void cancel() = 0;
 };
 
-typedef UniquePtr<Tier2GeneratorTask> UniqueTier2GeneratorTask;
+using UniqueTier2GeneratorTask = UniquePtr<Tier2GeneratorTask>;
 typedef Vector<Tier2GeneratorTask*, 0, SystemAllocPolicy>
     Tier2GeneratorTaskPtrVector;
 
@@ -98,10 +98,10 @@ class GlobalHelperThreadState {
   typedef Vector<jit::IonCompileTask*, 0, SystemAllocPolicy>
       IonCompileTaskVector;
   typedef Vector<ParseTask*, 0, SystemAllocPolicy> ParseTaskVector;
-  typedef mozilla::LinkedList<ParseTask> ParseTaskList;
+  using ParseTaskList = mozilla::LinkedList<ParseTask>;
   typedef Vector<UniquePtr<SourceCompressionTask>, 0, SystemAllocPolicy>
       SourceCompressionTaskVector;
-  typedef mozilla::LinkedList<GCParallelTask> GCParallelTaskList;
+  using GCParallelTaskList = mozilla::LinkedList<GCParallelTask>;
   typedef Vector<PromiseHelperTask*, 0, SystemAllocPolicy>
       PromiseHelperTaskVector;
   typedef Vector<JSContext*, 0, SystemAllocPolicy> ContextVector;

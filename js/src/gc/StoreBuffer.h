@@ -236,7 +236,7 @@ class StoreBuffer {
 
   template <typename Edge>
   struct PointerEdgeHasher {
-    typedef Edge Lookup;
+    using Lookup = Edge;
     static HashNumber hash(const Lookup& l) {
       return mozilla::HashGeneric(l.edge);
     }
@@ -294,7 +294,7 @@ class StoreBuffer {
 
     explicit operator bool() const { return edge != nullptr; }
 
-    typedef PointerEdgeHasher<ValueEdge> Hasher;
+    using Hasher = PointerEdgeHasher<ValueEdge>;
   };
 
   struct SlotsEdge {
@@ -370,7 +370,7 @@ class StoreBuffer {
     explicit operator bool() const { return objectAndKind_ != 0; }
 
     typedef struct Hasher {
-      typedef SlotsEdge Lookup;
+      using Lookup = SlotsEdge;
       static HashNumber hash(const Lookup& l) {
         return mozilla::HashGeneric(l.objectAndKind_, l.start_, l.count_);
       }

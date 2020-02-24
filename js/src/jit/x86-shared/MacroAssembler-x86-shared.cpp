@@ -121,7 +121,7 @@ const MacroAssembler& MacroAssemblerX86Shared::asMasm() const {
 template <class T, class Map>
 T* MacroAssemblerX86Shared::getConstant(const typename T::Pod& value, Map& map,
                                         Vector<T, 0, SystemAllocPolicy>& vec) {
-  typedef typename Map::AddPtr AddPtr;
+  using AddPtr = typename Map::AddPtr;
   size_t index;
   if (AddPtr p = map.lookupForAdd(value)) {
     index = p->value();

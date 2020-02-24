@@ -50,7 +50,7 @@ class LIRGeneratorX64 : public LIRGeneratorX86Shared {
   void lowerUModI64(MMod* mod);
 };
 
-typedef LIRGeneratorX64 LIRGeneratorSpecific;
+using LIRGeneratorSpecific = LIRGeneratorX64;
 
 }  // namespace jit
 }  // namespace js

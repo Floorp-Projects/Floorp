@@ -73,14 +73,11 @@ extern unsigned NotifyGCPreSwap(JSObject* a, JSObject* b);
 
 extern void NotifyGCPostSwap(JSObject* a, JSObject* b, unsigned preResult);
 
-typedef void (*IterateChunkCallback)(JSRuntime* rt, void* data,
-                                     gc::Chunk* chunk);
-typedef void (*IterateZoneCallback)(JSRuntime* rt, void* data, JS::Zone* zone);
-typedef void (*IterateArenaCallback)(JSRuntime* rt, void* data,
-                                     gc::Arena* arena, JS::TraceKind traceKind,
-                                     size_t thingSize);
-typedef void (*IterateCellCallback)(JSRuntime* rt, void* data,
-                                    JS::GCCellPtr cellptr, size_t thingSize);
+using IterateChunkCallback = void (*)(JSRuntime*, void*, gc::Chunk*);
+using IterateZoneCallback = void (*)(JSRuntime*, void*, JS::Zone*);
+using IterateArenaCallback = void (*)(JSRuntime*, void*, gc::Arena*,
+                                      JS::TraceKind, size_t);
+using IterateCellCallback = void (*)(JSRuntime*, void*, JS::GCCellPtr, size_t);
 
 /*
  * This function calls |zoneCallback| on every zone, |realmCallback| on
@@ -110,12 +107,10 @@ extern void IterateHeapUnbarrieredForZone(
 extern void IterateChunks(JSContext* cx, void* data,
                           IterateChunkCallback chunkCallback);
 
-typedef void (*IterateScriptCallback)(JSRuntime* rt, void* data,
-                                      JSScript* script,
-                                      const JS::AutoRequireNoGC& nogc);
-typedef void (*IterateLazyScriptCallback)(JSRuntime* rt, void* data,
-                                          LazyScript* lazyScript,
-                                          const JS::AutoRequireNoGC& nogc);
+using IterateScriptCallback = void (*)(JSRuntime*, void*, JSScript*,
+                                       const JS::AutoRequireNoGC&);
+using IterateLazyScriptCallback = void (*)(JSRuntime*, void*, LazyScript*,
+                                           const JS::AutoRequireNoGC&);
 
 /*
  * Invoke scriptCallback on every in-use script for the given realm or for all

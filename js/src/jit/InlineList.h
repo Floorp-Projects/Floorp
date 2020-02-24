@@ -35,7 +35,7 @@ template <typename T>
 class InlineForwardList : protected InlineForwardListNode<T> {
   friend class InlineForwardListIterator<T>;
 
-  typedef InlineForwardListNode<T> Node;
+  using Node = InlineForwardListNode<T>;
 
   Node* tail_;
 #ifdef DEBUG
@@ -52,7 +52,7 @@ class InlineForwardList : protected InlineForwardListNode<T> {
   }
 
  public:
-  typedef InlineForwardListIterator<T> iterator;
+  using iterator = InlineForwardListIterator<T>;
 
  public:
   iterator begin() const { return iterator(this); }
@@ -144,7 +144,7 @@ class InlineForwardListIterator {
  private:
   friend class InlineForwardList<T>;
 
-  typedef InlineForwardListNode<T> Node;
+  using Node = InlineForwardListNode<T>;
 
   explicit InlineForwardListIterator<T>(const InlineForwardList<T>* owner)
       : prev(const_cast<Node*>(static_cast<const Node*>(owner))),
@@ -252,14 +252,14 @@ class InlineListNode : public InlineForwardListNode<T> {
 
 template <typename T>
 class InlineList : protected InlineListNode<T> {
-  typedef InlineListNode<T> Node;
+  using Node = InlineListNode<T>;
 
  public:
   InlineList() : InlineListNode<T>(this, this) {}
 
  public:
-  typedef InlineListIterator<T> iterator;
-  typedef InlineListReverseIterator<T> reverse_iterator;
+  using iterator = InlineListIterator<T>;
+  using reverse_iterator = InlineListReverseIterator<T>;
 
  public:
   iterator begin() const { return iterator(static_cast<Node*>(this->next)); }
@@ -351,7 +351,7 @@ class InlineListIterator {
  private:
   friend class InlineList<T>;
 
-  typedef InlineListNode<T> Node;
+  using Node = InlineListNode<T>;
 
   explicit InlineListIterator(const Node* iter)
       : iter(const_cast<Node*>(iter)) {}
@@ -393,7 +393,7 @@ class InlineListReverseIterator {
  private:
   friend class InlineList<T>;
 
-  typedef InlineListNode<T> Node;
+  using Node = InlineListNode<T>;
 
   explicit InlineListReverseIterator(const Node* iter)
       : iter(const_cast<Node*>(iter)) {}
@@ -438,14 +438,14 @@ class InlineConcatListIterator;
 template <typename T>
 class InlineConcatList {
  private:
-  typedef InlineConcatList<T> Node;
+  using Node = InlineConcatList<T>;
 
   InlineConcatList<T>* thisFromConstructor() { return this; }
 
  public:
   InlineConcatList() : next(nullptr), tail(thisFromConstructor()) {}
 
-  typedef InlineConcatListIterator<T> iterator;
+  using iterator = InlineConcatListIterator<T>;
 
   iterator begin() const { return iterator(this); }
 
@@ -473,7 +473,7 @@ class InlineConcatListIterator {
  private:
   friend class InlineConcatList<T>;
 
-  typedef InlineConcatList<T> Node;
+  using Node = InlineConcatList<T>;
 
   explicit InlineConcatListIterator(const Node* iter)
       : iter(const_cast<Node*>(iter)) {}
@@ -510,7 +510,7 @@ class InlineSpaghettiStackIterator;
 
 template <typename T>
 class InlineSpaghettiStackNode : public InlineForwardListNode<T> {
-  typedef InlineForwardListNode<T> Parent;
+  using Parent = InlineForwardListNode<T>;
 
  public:
   InlineSpaghettiStackNode() : Parent() {}
@@ -529,13 +529,13 @@ template <typename T>
 class InlineSpaghettiStack : protected InlineSpaghettiStackNode<T> {
   friend class InlineSpaghettiStackIterator<T>;
 
-  typedef InlineSpaghettiStackNode<T> Node;
+  using Node = InlineSpaghettiStackNode<T>;
 
  public:
   InlineSpaghettiStack() {}
 
  public:
-  typedef InlineSpaghettiStackIterator<T> iterator;
+  using iterator = InlineSpaghettiStackIterator<T>;
 
  public:
   iterator begin() const { return iterator(this); }
@@ -557,7 +557,7 @@ class InlineSpaghettiStackIterator {
  private:
   friend class InlineSpaghettiStack<T>;
 
-  typedef InlineSpaghettiStackNode<T> Node;
+  using Node = InlineSpaghettiStackNode<T>;
 
   explicit InlineSpaghettiStackIterator<T>(const InlineSpaghettiStack<T>* owner)
       : iter(owner ? static_cast<Node*>(owner->next) : nullptr) {}

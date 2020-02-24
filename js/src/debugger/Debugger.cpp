@@ -3197,7 +3197,7 @@ bool Debugger::updateExecutionObservabilityOfScripts(
                                                        observing);
   }
 
-  typedef DebugAPI::ExecutionObservableSet::ZoneRange ZoneRange;
+  using ZoneRange = DebugAPI::ExecutionObservableSet::ZoneRange;
   for (ZoneRange r = obs.zones()->all(); !r.empty(); r.popFront()) {
     if (!UpdateExecutionObservabilityOfScriptsInZone(cx, r.front(), obs,
                                                      observing)) {
@@ -5632,7 +5632,7 @@ class MOZ_STACK_CLASS Debugger::ObjectQuery {
    * |ubi::Node::BreadthFirst| interface.
    */
   class NodeData {};
-  typedef JS::ubi::BreadthFirst<ObjectQuery> Traversal;
+  using Traversal = JS::ubi::BreadthFirst<ObjectQuery>;
   bool operator()(Traversal& traversal, JS::ubi::Node origin,
                   const JS::ubi::Edge& edge, NodeData*, bool first) {
     if (!first) {

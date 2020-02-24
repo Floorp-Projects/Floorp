@@ -53,7 +53,7 @@ struct DebugModeOSREntry {
   }
 };
 
-typedef Vector<DebugModeOSREntry> DebugModeOSREntryVector;
+using DebugModeOSREntryVector = Vector<DebugModeOSREntry>;
 
 class UniqueScriptOSREntryIter {
   const DebugModeOSREntryVector& entries_;
@@ -519,7 +519,7 @@ bool jit::RecompileOnStackBaselineScriptsForDebugMode(
       return false;
     }
   } else {
-    typedef DebugAPI::ExecutionObservableSet::ZoneRange ZoneRange;
+    using ZoneRange = DebugAPI::ExecutionObservableSet::ZoneRange;
     for (ZoneRange r = obs.zones()->all(); !r.empty(); r.popFront()) {
       if (!InvalidateScriptsInZone(cx, r.front(), entries)) {
         return false;

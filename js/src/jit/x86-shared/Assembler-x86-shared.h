@@ -285,8 +285,8 @@ class AssemblerX86Shared : public AssemblerShared {
  protected:
   X86Encoding::BaseAssemblerSpecific masm;
 
-  typedef X86Encoding::JmpSrc JmpSrc;
-  typedef X86Encoding::JmpDst JmpDst;
+  using JmpSrc = X86Encoding::JmpSrc;
+  using JmpDst = X86Encoding::JmpDst;
 
  public:
   AssemblerX86Shared() {

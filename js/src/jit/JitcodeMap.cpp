@@ -1119,7 +1119,7 @@ uint32_t JitcodeRegionEntry::findPcOffset(uint32_t queryNativeOffset,
 bool JitcodeIonTable::makeIonEntry(JSContext* cx, JitCode* code,
                                    uint32_t numScripts, JSScript** scripts,
                                    JitcodeGlobalEntry::IonEntry& out) {
-  typedef JitcodeGlobalEntry::IonEntry::SizedScriptList SizedScriptList;
+  using SizedScriptList = JitcodeGlobalEntry::IonEntry::SizedScriptList;
 
   MOZ_ASSERT(numScripts > 0);
 

@@ -2702,8 +2702,8 @@ static AstConst* ParseNaNLiteral(WasmParseContext& c, WasmToken token,
 
   MOZ_ALWAYS_TRUE(*cur++ == 'n' && *cur++ == 'a' && *cur++ == 'n');
 
-  typedef FloatingPoint<Float> Traits;
-  typedef typename Traits::Bits Bits;
+  using Traits = FloatingPoint<Float>;
+  using Bits = typename Traits::Bits;
 
   Bits value;
   if (cur != end) {
@@ -2750,8 +2750,8 @@ template <typename Float>
 static bool ParseHexFloatLiteral(const char16_t* cur, const char16_t* end,
                                  Float* result) {
   MOZ_ALWAYS_TRUE(*cur++ == '0' && *cur++ == 'x');
-  typedef FloatingPoint<Float> Traits;
-  typedef typename Traits::Bits Bits;
+  using Traits = FloatingPoint<Float>;
+  using Bits = typename Traits::Bits;
   static const unsigned numBits = sizeof(Float) * CHAR_BIT;
   static const Bits allOnes = ~Bits(0);
   static const Bits mostSignificantBit = ~(allOnes >> 1);

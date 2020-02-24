@@ -12,7 +12,7 @@
 
 #include "jstypes.h"
 
-typedef uint8_t jssrcnote;
+using jssrcnote = uint8_t;
 
 namespace js {
 

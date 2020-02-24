@@ -457,12 +457,12 @@ class NothingVector {
 };
 
 struct ValidatingPolicy {
-  typedef Nothing Value;
-  typedef NothingVector ValueVector;
-  typedef Nothing ControlItem;
+  using Value = Nothing;
+  using ValueVector = NothingVector;
+  using ControlItem = Nothing;
 };
 
-typedef OpIter<ValidatingPolicy> ValidatingOpIter;
+using ValidatingOpIter = OpIter<ValidatingPolicy>;
 
 static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
                                     uint32_t funcIndex,

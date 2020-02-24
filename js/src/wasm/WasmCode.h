@@ -77,7 +77,7 @@ struct LinkData : LinkDataCacheablePod {
   WASM_DECLARE_SERIALIZABLE(LinkData)
 };
 
-typedef UniquePtr<LinkData> UniqueLinkData;
+using UniqueLinkData = UniquePtr<LinkData>;
 
 // Executable code must be deallocated specially.
 
@@ -160,7 +160,7 @@ class CodeSegment {
 
 // A wasm ModuleSegment owns the allocated executable code for a wasm module.
 
-typedef UniquePtr<ModuleSegment> UniqueModuleSegment;
+using UniqueModuleSegment = UniquePtr<ModuleSegment>;
 
 class ModuleSegment : public CodeSegment {
   const Tier tier_;
@@ -402,8 +402,8 @@ struct Metadata : public ShareableBase<Metadata>, public MetadataCacheablePod {
   WASM_DECLARE_SERIALIZABLE(Metadata);
 };
 
-typedef RefPtr<Metadata> MutableMetadata;
-typedef RefPtr<const Metadata> SharedMetadata;
+using MutableMetadata = RefPtr<Metadata>;
+using SharedMetadata = RefPtr<const Metadata>;
 
 struct MetadataTier {
   explicit MetadataTier(Tier tier) : tier(tier) {}
@@ -538,8 +538,8 @@ class LazyStubTier {
 // CodeTier contains all the data related to a given compilation tier. It is
 // built during module generation and then immutably stored in a Code.
 
-typedef UniquePtr<CodeTier> UniqueCodeTier;
-typedef UniquePtr<const CodeTier> UniqueConstCodeTier;
+using UniqueCodeTier = UniquePtr<CodeTier>;
+using UniqueConstCodeTier = UniquePtr<const CodeTier>;
 
 class CodeTier {
   const Code* code_;
@@ -643,8 +643,8 @@ class JumpTables {
 //
 // profilingLabels_ is lazily initialized, but behind a lock.
 
-typedef RefPtr<const Code> SharedCode;
-typedef RefPtr<Code> MutableCode;
+using SharedCode = RefPtr<const Code>;
+using MutableCode = RefPtr<Code>;
 
 class Code : public ShareableBase<Code> {
   UniqueCodeTier tier1_;

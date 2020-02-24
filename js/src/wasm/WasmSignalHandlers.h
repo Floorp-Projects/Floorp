@@ -27,7 +27,7 @@
 namespace js {
 namespace wasm {
 
-typedef JS::ProfilingFrameIterator::RegisterState RegisterState;
+using RegisterState = JS::ProfilingFrameIterator::RegisterState;
 
 // This function performs the low-overhead signal handler initialization that we
 // want to do eagerly to ensure a more-deterministic global process state. This

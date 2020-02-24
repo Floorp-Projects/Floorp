@@ -21,7 +21,7 @@ namespace js {
 class FunctionExtended;
 struct SelfHostedLazyScript;
 
-typedef JSNative Native;
+using Native = JSNative;
 }  // namespace js
 
 static const uint32_t JSSLOT_BOUND_FUNCTION_TARGET = 2;
@@ -431,9 +431,9 @@ class JSFunction : public js::NativeObject {
 
     // Note: this should be kept in sync with
     // FunctionBox::needsCallObjectRegardlessOfBindings().
-    MOZ_ASSERT_IF(baseScript()->funHasExtensibleScope() ||
-                      isGenerator() || isAsync(),
-                  nonLazyScript()->bodyScope()->hasEnvironment());
+    MOZ_ASSERT_IF(
+        baseScript()->funHasExtensibleScope() || isGenerator() || isAsync(),
+        nonLazyScript()->bodyScope()->hasEnvironment());
 
     return nonLazyScript()->bodyScope()->hasEnvironment();
   }

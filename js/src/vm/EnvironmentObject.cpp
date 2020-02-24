@@ -38,8 +38,8 @@
 
 using namespace js;
 
-typedef Rooted<ArgumentsObject*> RootedArgumentsObject;
-typedef MutableHandle<ArgumentsObject*> MutableHandleArgumentsObject;
+using RootedArgumentsObject = Rooted<ArgumentsObject*>;
+using MutableHandleArgumentsObject = MutableHandle<ArgumentsObject*>;
 
 /*****************************************************************************/
 

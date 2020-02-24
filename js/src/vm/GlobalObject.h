@@ -548,7 +548,7 @@ class GlobalObject : public NativeObject {
   }
 
  private:
-  typedef bool (*ObjectInitOp)(JSContext* cx, Handle<GlobalObject*> global);
+  using ObjectInitOp = bool (*)(JSContext*, Handle<GlobalObject*>);
 
   static JSObject* getOrCreateObject(JSContext* cx,
                                      Handle<GlobalObject*> global,

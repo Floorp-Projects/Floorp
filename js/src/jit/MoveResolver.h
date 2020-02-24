@@ -255,7 +255,7 @@ class MoveResolver {
     }
   };
 
-  typedef InlineList<MoveResolver::PendingMove>::iterator PendingMoveIterator;
+  using PendingMoveIterator = InlineList<MoveResolver::PendingMove>::iterator;
 
   js::Vector<MoveOp, 16, SystemAllocPolicy> orderedMoves_;
   int numCycles_;
