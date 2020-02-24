@@ -7,7 +7,8 @@
 #include "mozilla/dom/HTMLHRElement.h"
 #include "mozilla/dom/HTMLHRElementBinding.h"
 
-#include "nsCSSProps.h"
+#include "nsStyleConsts.h"
+#include "mozilla/MappedDeclarations.h"
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(HR)
 
@@ -27,9 +28,9 @@ bool HTMLHRElement::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
                                    nsIPrincipal* aMaybeScriptedPrincipal,
                                    nsAttrValue& aResult) {
   static const nsAttrValue::EnumTable kAlignTable[] = {
-      {"left", NS_STYLE_TEXT_ALIGN_LEFT},
-      {"right", NS_STYLE_TEXT_ALIGN_RIGHT},
-      {"center", NS_STYLE_TEXT_ALIGN_CENTER},
+      {"left", StyleTextAlign::Left},
+      {"right", StyleTextAlign::Right},
+      {"center", StyleTextAlign::Center},
       {nullptr, 0}};
 
   if (aNamespaceID == kNameSpaceID_None) {
@@ -69,18 +70,21 @@ void HTMLHRElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
   const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::align);
   if (value && value->Type() == nsAttrValue::eEnum) {
     // Map align attribute into auto side margins
-    switch (value->GetEnumValue()) {
-      case NS_STYLE_TEXT_ALIGN_LEFT:
+    switch (StyleTextAlign(value->GetEnumValue())) {
+      case StyleTextAlign::Left:
         aDecls.SetPixelValueIfUnset(eCSSProperty_margin_left, 0.0f);
         aDecls.SetAutoValueIfUnset(eCSSProperty_margin_right);
         break;
-      case NS_STYLE_TEXT_ALIGN_RIGHT:
+      case StyleTextAlign::Right:
         aDecls.SetAutoValueIfUnset(eCSSProperty_margin_left);
         aDecls.SetPixelValueIfUnset(eCSSProperty_margin_right, 0.0f);
         break;
-      case NS_STYLE_TEXT_ALIGN_CENTER:
+      case StyleTextAlign::Center:
         aDecls.SetAutoValueIfUnset(eCSSProperty_margin_left);
         aDecls.SetAutoValueIfUnset(eCSSProperty_margin_right);
+        break;
+      default:
+        MOZ_ASSERT_UNREACHABLE("Unknown <hr align> value");
         break;
     }
   }
