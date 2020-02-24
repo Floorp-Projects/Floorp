@@ -15,6 +15,7 @@ import mozilla.components.feature.addons.update.AddonUpdater
 import mozilla.components.feature.addons.update.AddonUpdater.Status
 import mozilla.components.support.webextensions.WebExtensionSupport
 import mozilla.components.support.webextensions.WebExtensionSupport.installedExtensions
+import java.lang.IllegalArgumentException
 import java.lang.IllegalStateException
 import java.util.Collections.newSetFromMap
 import java.util.concurrent.ConcurrentHashMap
@@ -113,6 +114,16 @@ class AddonManager(
         onSuccess: ((Addon) -> Unit) = { },
         onError: ((String, Throwable) -> Unit) = { _, _ -> }
     ) {
+
+        // Verify the add-on doesn't require blocked permissions
+        // only available to built-in extensions
+        BLOCKED_PERMISSIONS.forEach { blockedPermission ->
+            if (addon.permissions.any { it.equals(blockedPermission, ignoreCase = true) }) {
+                onError(addon.id, IllegalArgumentException("Addon requires invalid permission $blockedPermission"))
+                return
+            }
+        }
+
         val pendingAction = addPendingAddonAction()
         engine.installWebExtension(
             id = addon.id,
@@ -267,6 +278,12 @@ class AddonManager(
     private fun completePendingAddonAction(action: CompletableDeferred<Unit>) {
         action.complete(Unit)
         pendingAddonActions.remove(action)
+    }
+
+    companion object {
+        // List of invalid permissions for external add-ons i.e. permissions only
+        // granted to built-in extensions:
+        val BLOCKED_PERMISSIONS = listOf("geckoViewAddons", "nativeMessaging")
     }
 }
 

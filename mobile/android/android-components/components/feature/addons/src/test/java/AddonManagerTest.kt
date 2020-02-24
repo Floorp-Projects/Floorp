@@ -427,6 +427,32 @@ class AddonManagerTest {
     }
 
     @Test
+    fun `installAddon fails for blocked permission`() {
+        val addon = Addon(
+            id = "ext1",
+            permissions = listOf("bookmarks", "geckoviewaddons", "nativemessaging")
+        )
+
+        val engine: Engine = mock()
+
+        var throwable: Throwable? = null
+        var msg: String? = null
+        val manager = AddonManager(mock(), engine, mock(), mock())
+        manager.installAddon(addon, onError = { errorMsg, caught ->
+            throwable = caught
+            msg = errorMsg
+        })
+
+        verify(engine, never()).installWebExtension(
+            any(), any(), anyBoolean(), anyBoolean(), any(), any()
+        )
+
+        assertNotNull(throwable!!)
+        assertEquals(msg, addon.id)
+        assertTrue(manager.pendingAddonActions.isEmpty())
+    }
+
+    @Test
     fun `uninstallAddon successfully`() {
         val installedAddon = Addon(
             id = "ext1",
