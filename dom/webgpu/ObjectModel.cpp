@@ -31,6 +31,7 @@ template class ChildOf<Adapter>;
 template class ChildOf<CommandEncoder>;
 template class ChildOf<Device>;
 template class ChildOf<Instance>;
+template class ChildOf<Texture>;
 
 }  // namespace webgpu
 }  // namespace mozilla

@@ -14,7 +14,20 @@ namespace webgpu {
 GPU_IMPL_CYCLE_COLLECTION(Sampler, mParent)
 GPU_IMPL_JS_WRAP(Sampler)
 
-Sampler::~Sampler() = default;
+Sampler::Sampler(Device* const aParent, RawId aId)
+    : ChildOf(aParent), mId(aId) {}
+
+Sampler::~Sampler() { Cleanup(); }
+
+void Sampler::Cleanup() {
+  if (mValid && mParent) {
+    mValid = false;
+    WebGPUChild* bridge = mParent->mBridge;
+    if (bridge && bridge->IsOpen()) {
+      bridge->DestroySampler(mId);
+    }
+  }
+}
 
 }  // namespace webgpu
 }  // namespace mozilla
