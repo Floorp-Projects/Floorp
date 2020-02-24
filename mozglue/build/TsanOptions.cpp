@@ -127,6 +127,19 @@ extern "C" const char* __tsan_default_suppressions() {
          "race:nsHttpChannel::OnCacheEntryCheck\n"
          "race:~AutoCacheWaitFlags\n"
 
+         // Deadlock reports on single-threaded runtime.
+         //
+         // This is a known false positive from TSan where it reports
+         // a potential deadlock even though all mutexes are only
+         // taken by a single thread. For applications/tasks where we
+         // are absolutely sure that no second thread will be involved
+         // we should suppress these issues.
+         //
+         // See also https://github.com/google/sanitizers/issues/488
+         // Bug 1614605 - permanent
+         "deadlock:SanctionsTestServer\n"
+         "deadlock:OCSPStaplingServer\n"
+
          // Bug 1153409
          "race:third_party/sqlite3/*\n"
          "deadlock:third_party/sqlite3/*\n"
@@ -291,10 +304,6 @@ extern "C" const char* __tsan_default_suppressions() {
          // Bug 1613384
          "race:GCRuntime::setPerformanceHint\n"
          "race:GCHeapThreshold::updateAfterGC\n"
-
-         // Bug 1614605
-         "deadlock:SanctionsTestServer\n"
-         "deadlock:OCSPStaplingServer\n"
 
          // Bug 1614646
          "race:nsCookieService::CountCookiesFromHostInternal\n"
