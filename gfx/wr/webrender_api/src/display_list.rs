@@ -658,8 +658,8 @@ impl<'a> BuiltDisplayListIter<'a> {
     pub fn as_ref<'b>(&'b self) -> DisplayItemRef<'a, 'b> {
         let cached_item = match self.cur_item {
             di::DisplayItem::ReuseItem(key) => {
-                let cache = self.cache.expect("Cache marker without cache!");
-                cache.get_item(key)
+                debug_assert!(self.cache.is_some(), "Cache marker without cache!");
+                self.cache.and_then(|c| c.get_item(key))
             }
             _ => None
         };
@@ -1737,10 +1737,10 @@ impl DisplayListBuilder {
         self.extra_data_chunk_len = self.extra_data.len();
     }
 
-    /// Returns true, if any bytes were written to extra data buffer.
-    pub fn end_extra_data_chunk(&mut self) -> bool {
+    // Returns the amount of bytes written to extra data buffer.
+    pub fn end_extra_data_chunk(&mut self) -> usize {
         self.writing_extra_data_chunk = false;
-        (self.extra_data.len() - self.extra_data_chunk_len) > 0
+        self.extra_data.len() - self.extra_data_chunk_len
     }
 
     pub fn push_reuse_item(
