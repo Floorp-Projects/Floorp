@@ -1890,11 +1890,6 @@ bool nsStyleImageLayers::operator==(const nsStyleImageLayers& aOther) const {
   return true;
 }
 
-bool nsStyleImageLayers::IsInitialPositionForLayerType(Position aPosition,
-                                                       LayerType aType) {
-  return aPosition == Position::FromPercentage(0.);
-}
-
 static bool SizeDependsOnPositioningAreaSize(const StyleBackgroundSize& aSize,
                                              const StyleImage& aImage) {
   MOZ_ASSERT(!aImage.IsNone(), "caller should have handled this");

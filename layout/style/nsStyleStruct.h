@@ -171,30 +171,11 @@ struct CachedBorderImageData {
 };
 
 struct nsStyleImageLayers {
-  // Indices into kBackgroundLayerTable and kMaskLayerTable
-  enum {
-    shorthand = 0,
-    color,
-    image,
-    repeat,
-    positionX,
-    positionY,
-    clip,
-    origin,
-    size,
-    attachment,
-    maskMode,
-    composite
-  };
-
   enum class LayerType : uint8_t { Background = 0, Mask };
 
   explicit nsStyleImageLayers(LayerType aType);
   nsStyleImageLayers(const nsStyleImageLayers& aSource);
   MOZ_COUNTED_DTOR(nsStyleImageLayers)
-
-  static bool IsInitialPositionForLayerType(mozilla::Position aPosition,
-                                            LayerType aType);
 
   struct Repeat {
     mozilla::StyleImageLayerRepeat mXRepeat, mYRepeat;
