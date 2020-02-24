@@ -5,10 +5,11 @@
 package mozilla.components.feature.tabs.tabstray
 
 import androidx.annotation.VisibleForTesting
-import mozilla.components.browser.session.Session
-import mozilla.components.browser.session.SessionManager
+import mozilla.components.browser.state.state.TabSessionState
+import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.tabstray.TabsTray
 import mozilla.components.feature.tabs.TabsUseCases
+import mozilla.components.feature.tabs.ext.toTabs
 import mozilla.components.support.base.feature.LifecycleAwareFeature
 
 /**
@@ -16,14 +17,14 @@ import mozilla.components.support.base.feature.LifecycleAwareFeature
  */
 class TabsFeature(
     tabsTray: TabsTray,
-    sessionManager: SessionManager,
+    private val store: BrowserStore,
     tabsUseCases: TabsUseCases,
     closeTabsTray: () -> Unit
 ) : LifecycleAwareFeature {
     @VisibleForTesting
     internal var presenter = TabsTrayPresenter(
         tabsTray,
-        sessionManager,
+        store,
         closeTabsTray
     )
 
@@ -44,8 +45,16 @@ class TabsFeature(
         interactor.stop()
     }
 
-    fun filterTabs(tabsFilter: (Session) -> Boolean) {
-        presenter.sessionsFilter = tabsFilter
-        presenter.calculateDiffAndUpdateTabsTray()
+    /**
+     * Filter the list of tabs using [tabsFilter].
+     *
+     * @param tabsFilter A filter function returning `true` for all tabs that should be displayed in
+     * the tabs tray.
+     */
+    fun filterTabs(tabsFilter: (TabSessionState) -> Boolean) {
+        presenter.tabsFilter = tabsFilter
+
+        val state = store.state
+        presenter.updateTabs(state.toTabs(tabsFilter))
     }
 }

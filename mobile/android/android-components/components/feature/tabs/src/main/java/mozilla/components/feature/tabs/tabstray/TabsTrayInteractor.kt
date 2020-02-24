@@ -4,7 +4,7 @@
 
 package mozilla.components.feature.tabs.tabstray
 
-import mozilla.components.browser.session.Session
+import mozilla.components.concept.tabstray.Tab
 import mozilla.components.concept.tabstray.TabsTray
 import mozilla.components.feature.tabs.TabsUseCases
 
@@ -27,12 +27,12 @@ class TabsTrayInteractor(
         tabsTray.unregister(this)
     }
 
-    override fun onTabSelected(session: Session) {
-        selectTabUseCase.invoke(session)
+    override fun onTabSelected(tab: Tab) {
+        selectTabUseCase.invoke(tab.id)
         closeTabsTray.invoke()
     }
 
-    override fun onTabClosed(session: Session) {
-        removeTabUseCase.invoke(session)
+    override fun onTabClosed(tab: Tab) {
+        removeTabUseCase.invoke(tab.id)
     }
 }

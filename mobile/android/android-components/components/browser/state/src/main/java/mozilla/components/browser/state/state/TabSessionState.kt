@@ -4,6 +4,7 @@
 
 package mozilla.components.browser.state.state
 
+import android.graphics.Bitmap
 import java.util.UUID
 
 /**
@@ -40,11 +41,18 @@ fun createTab(
     id: String = UUID.randomUUID().toString(),
     parent: TabSessionState? = null,
     extensions: Map<String, WebExtensionState> = emptyMap(),
-    readerState: ReaderState = ReaderState()
+    readerState: ReaderState = ReaderState(),
+    title: String = "",
+    thumbnail: Bitmap? = null
 ): TabSessionState {
     return TabSessionState(
         id = id,
-        content = ContentState(url, private),
+        content = ContentState(
+            url,
+            private,
+            title = title,
+            thumbnail = thumbnail
+        ),
         parentId = parent?.id,
         extensionState = extensions,
         readerState = readerState

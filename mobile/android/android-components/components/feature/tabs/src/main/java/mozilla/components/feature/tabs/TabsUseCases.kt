@@ -21,7 +21,15 @@ class TabsUseCases(
      * Contract for use cases that select a tab.
      */
     interface SelectTabUseCase {
+        /**
+         * Select given [session].
+         */
         operator fun invoke(session: Session)
+
+        /**
+         * Select [Session] with the given [tabId].
+         */
+        operator fun invoke(tabId: String)
     }
 
     class DefaultSelectTabUseCase internal constructor(
@@ -35,6 +43,13 @@ class TabsUseCases(
          */
         override operator fun invoke(session: Session) {
             sessionManager.select(session)
+        }
+
+        override fun invoke(tabId: String) {
+            val session = sessionManager.findSessionById(tabId)
+            if (session != null) {
+                invoke(session)
+            }
         }
     }
 

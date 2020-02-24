@@ -5,53 +5,38 @@
 package mozilla.components.browser.tabstray
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import mozilla.components.browser.session.Session
+import mozilla.components.concept.tabstray.Tabs
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.verify
-import org.robolectric.Shadows
 
 @RunWith(AndroidJUnit4::class)
 class BrowserTabsTrayTest {
-
-    @Test
-    fun `holders will unsubscribe if view gets detached`() {
-        val adapter: TabsAdapter = mock()
-        val tabsTray = BrowserTabsTray(testContext, tabsAdapter = adapter)
-
-        val shadow = Shadows.shadowOf(tabsTray)
-        shadow.callOnDetachedFromWindow()
-
-        verify(adapter).unsubscribeHolders()
-    }
 
     @Test
     fun `TabsTray concept methods are forwarded to adapter`() {
         val adapter: TabsAdapter = mock()
         val tabsTray = BrowserTabsTray(testContext, tabsAdapter = adapter)
 
-        val sessions = listOf<Session>()
+        val tabs = Tabs(emptyList(), -1)
 
-        tabsTray.displaySessions(sessions, -1)
-        verify(adapter).displaySessions(sessions, -1)
+        tabsTray.updateTabs(tabs)
+        verify(adapter).updateTabs(tabs)
 
-        tabsTray.updateSessions(sessions, -2)
-        verify(adapter).updateSessions(sessions, -2)
+        tabsTray.onTabsInserted(2, 5)
+        verify(adapter).onTabsInserted(2, 5)
 
-        tabsTray.onSessionsInserted(2, 5)
-        verify(adapter).onSessionsInserted(2, 5)
+        tabsTray.onTabsRemoved(4, 1)
+        verify(adapter).onTabsRemoved(4, 1)
 
-        tabsTray.onSessionsRemoved(4, 1)
-        verify(adapter).onSessionsRemoved(4, 1)
+        tabsTray.onTabsMoved(7, 1)
+        verify(adapter).onTabsMoved(7, 1)
 
-        tabsTray.onSessionMoved(7, 1)
-        verify(adapter).onSessionMoved(7, 1)
-
-        tabsTray.onSessionsChanged(0, 1)
-        verify(adapter).onSessionsChanged(0, 1)
+        tabsTray.onTabsChanged(0, 1)
+        verify(adapter).onTabsChanged(0, 1)
     }
 
     @Test
