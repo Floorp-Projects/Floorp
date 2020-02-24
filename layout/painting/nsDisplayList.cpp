@@ -7752,11 +7752,14 @@ bool nsDisplayStickyPosition::CreateWebRenderCommands(
 
 nsDisplayScrollInfoLayer::nsDisplayScrollInfoLayer(
     nsDisplayListBuilder* aBuilder, nsIFrame* aScrolledFrame,
-    nsIFrame* aScrollFrame)
+    nsIFrame* aScrollFrame, const CompositorHitTestInfo& aHitInfo,
+    const nsRect& aHitArea)
     : nsDisplayWrapList(aBuilder, aScrollFrame),
       mScrollFrame(aScrollFrame),
       mScrolledFrame(aScrolledFrame),
-      mScrollParentId(aBuilder->GetCurrentScrollParentId()) {
+      mScrollParentId(aBuilder->GetCurrentScrollParentId()),
+      mHitInfo(aHitInfo),
+      mHitArea(aHitArea) {
 #ifdef NS_BUILD_REFCNT_LOGGING
   MOZ_COUNT_CTOR(nsDisplayScrollInfoLayer);
 #endif
@@ -7810,6 +7813,27 @@ bool nsDisplayScrollInfoLayer::UpdateScrollData(
     MOZ_ASSERT(metadata);
     aLayerData->AppendScrollMetadata(*aData, *metadata);
   }
+  return true;
+}
+
+bool nsDisplayScrollInfoLayer::CreateWebRenderCommands(
+    mozilla::wr::DisplayListBuilder& aBuilder,
+    mozilla::wr::IpcResourceUpdateQueue& aResources,
+    const StackingContextHelper& aSc,
+    mozilla::layers::RenderRootStateManager* aManager,
+    nsDisplayListBuilder* aDisplayListBuilder) {
+  ScrollableLayerGuid::ViewID scrollId =
+      nsLayoutUtils::FindOrCreateIDFor(mScrollFrame->GetContent());
+
+  aBuilder.SetHitTestInfo(scrollId, mHitInfo, SideBits::eNone);
+  const LayoutDeviceRect devRect = LayoutDeviceRect::FromAppUnits(
+      mHitArea, mScrollFrame->PresContext()->AppUnitsPerDevPixel());
+
+  const wr::LayoutRect rect = wr::ToLayoutRect(devRect);
+
+  aBuilder.PushHitTest(rect, rect, !BackfaceIsHidden());
+  aBuilder.ClearHitTestInfo();
+
   return true;
 }
 
