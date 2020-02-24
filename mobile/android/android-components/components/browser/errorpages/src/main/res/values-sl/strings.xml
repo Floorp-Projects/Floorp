@@ -184,6 +184,15 @@
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_host_title">Naslova ni mogoče najti</string>
 
+    <!-- In the example, the two URLs in markup do not need to be translated. -->
+    <string name="mozac_browser_errorpages_unknown_host_message"><![CDATA[<p>Strani ni bilo mogoče najti.</p>
+      <ul>
+        <li>Morda ste se zmotili pri črkovanju naslova, npr. 
+          <strong>ww</strong>.example.com namesto
+          <strong>www</strong>.example.com.</li>
+        <li>Če ne morete naložiti nobene strani, preverite nastavitve podatkovne povezave ali Wi-Fi.</li>
+      </ul>]]></string>
+
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_no_internet_title">Ni internetne povezave</string>
     <!-- The main body text of this error page. It will be shown beneath the title -->
@@ -261,6 +270,8 @@
       </ul>
     ]]></string>
 
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_title">Težava zlonamerne strani</string>
     <!-- The %1$s will be replaced by the malicious website URL-->
     <string name="mozac_browser_errorpages_safe_browsing_malware_uri_message"><![CDATA[
       <p>Spletno mesto %1$s je bilo prijavljeno kot napadalno in je zaradi vaših varnostnih nastavitev zavrnjeno.</p>

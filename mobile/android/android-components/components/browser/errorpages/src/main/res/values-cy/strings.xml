@@ -52,6 +52,7 @@
 
     <!-- The document title and heading of the error page shown when the user's network connection is interrupted while connecting to a website. -->
     <string name="mozac_browser_errorpages_net_interrupt_title">Cafodd y cysylltiad ei darfu</string>
+
     <!-- The error message shown when the user's network connection is interrupted while connecting to a website. -->
     <string name="mozac_browser_errorpages_net_interrupt_message"><![CDATA[
       <p>Cysylltodd y porwr yn llwyddiannus, ond amharwyd ar y cysylltiad wrth drosglwyddo gwybodaeth. Rhowch gynnig arall arni.</p>
@@ -64,25 +65,21 @@
     <!-- The document title and heading of the error page shown when a website takes too long to load. -->
     <string name="mozac_browser_errorpages_net_timeout_title">Mae cyfnod y cyswllt wedi dod i ben</string>
     <!-- The error message shown when a website took long to load. -->
-    <string name="mozac_browser_errorpages_net_timeout_message"><![CDATA[
-      <p>Nid yw’r wefan wedi ymateb i gais am gyswllt ac mae’r porwr wedi peidio aros am ateb.</p>
+    <string name="mozac_browser_errorpages_net_timeout_message"><![CDATA[<p>Nid yw’r wefan wedi ymateb i gais am gyswllt ac mae’r porwr wedi peidio aros am ateb.</p>
       <ul>
         <li>Gall fod y gweinydd yn profi galw sylweddol neu ataliad dros dro?  Ceisiwch eto.</li>
-        <li>A ydych yn methu pori i wefannau eraill? Gwiriwch gysylltiad rhwydwaith y cyfrifiadur.</li>
-        <li>A yw eich cyfrifiadur wedi ei ddiogelu gan fur cadarn neu ddirprwy?  Gall osodiadau anghywir effeithio ar bori\'r we.</li>
+        <li>A ydych yn methu pori i wefannau eraill? Gwiriwch gysylltiad rhwydwaith y ddyfais.</li>
+        <li>A yw eich dyfais wedi ei ddiogelu gan fur cadarn neu ddirprwy?  Gall osodiadau anghywir effeithio ar bori\'r we.</li>
         <li>Yn dal yn cael problemau? Cysylltwch â’ch gweinyddwr rhwydwaith neu ddarparwr rhyngrwyd am gymorth.</li>
-      </ul>
-    ]]></string>
+      </ul>]]></string>
 
     <!-- The document title and heading of the error page shown when a website could not be reached. -->
     <string name="mozac_browser_errorpages_connection_failure_title">Methu cysylltu</string>
     <!-- The error message shown when a website could not be reached. -->
-    <string name="mozac_browser_errorpages_connection_failure_message"><![CDATA[
-    <ul>
+    <string name="mozac_browser_errorpages_connection_failure_message"><![CDATA[<ul>
      <li>Mae’n bosib fod y wefan yn rhy brysur neu ddim ar gael dros dro. Ceisiwch eto cyn bo hir.</li>
-     <li>Os nad oes modd i chi lwytho unrhyw dudalennau, gwiriwch gysylltiad data neu ddiwifr eich dyfais symudol.</li>
-      </ul>
-    ]]></string>
+     <li>Os nad oes modd i chi lwytho unrhyw dudalennau, gwiriwch gysylltiad data neu ddiwifr eich dyfais.</li>
+      </ul>]]></string>
 
     <!-- The document title and heading of the error page shown when a website responds in an unexpected way and the browser cannot continue. -->
     <string name="mozac_browser_errorpages_unknown_socket_type_title">Ymateb annisgwyl gan y gweinydd</string>
@@ -95,25 +92,21 @@
     <!-- The document title and heading of the error page shown when the browser gets stuck in an infinite loop when loading a website. -->
     <string name="mozac_browser_errorpages_redirect_loop_title">Nid yw’r dudalen yn ailgyfeirio’n iawn</string>
     <!-- The error message shown when the browser gets stuck in an infinite loop when loading a website. -->
-    <string name="mozac_browser_errorpages_redirect_loop_message"><![CDATA[
-      <p>Mae’r porwr wedi rhoi’r gorau i geisio adfer yr eitem y gofynnwyd amdani. Mae’r wefan yn ailgyfeirio’r cais mewn ffordd na fydd byth yn ei gwblhau.</p>
+    <string name="mozac_browser_errorpages_redirect_loop_message"><![CDATA[<p>Mae’r porwr wedi rhoi’r gorau i geisio adfer yr eitem y gofynnwyd amdani. Mae’r wefan yn ailgyfeirio’r cais mewn ffordd na fydd byth yn ei gwblhau.</p>
       <ul>
         <li>A ydych wedi analluogi neu rwystro cwcis sy’n ofynnol gan y wefan hon?</li>
-        <li>Os nad yw derbyn cwcis y wefan yn datrys y broblem, mae’n debygol mai mater ffurfweddiad y gweinydd ydyw ac nid eich cyfrifiadur chi.</li>
-      </ul>
-    ]]></string>
+        <li>Os nad yw derbyn cwcis y wefan yn datrys y broblem, mae’n debygol mai mater ffurfweddiad y gweinydd ydyw ac nid eich dyfais chi.</li>
+      </ul>]]></string>
 
     <!-- The document title and heading of the error page shown when a website cannot be loaded because the browser is in offline mode. -->
     <string name="mozac_browser_errorpages_offline_title">Modd All-lein</string>
 
     <!-- The error message shown when a website cannot be loaded because the browser is in offline mode. -->
-    <string name="mozac_browser_errorpages_offline_message"><![CDATA[
-      <p>Mae’r porwr yn gweithredu yn ei fodd all-lein ac nid yw’n gallu cysylltu â’r eitem y gofynnwyd amdani.</p>
+    <string name="mozac_browser_errorpages_offline_message"><![CDATA[<p>Mae’r porwr yn gweithredu yn ei fodd all-lein ac nid yw’n gallu cysylltu â’r eitem y gofynnwyd amdani.</p>
       <ul>
-        <li>A yw’r cyfrifiadur wedi’i gysylltu â rhwydwaith gweithredol?</li>
+        <li>A yw’r ddyfais wedi’i chysylltu â rhwydwaith gweithredol?</li>
         <li>Pwyswch “Ceisiwch Eto” i newid i’r modd ar-lein ac ail-lwytho’r dudalen</li>
-      </ul>
-    ]]></string>
+      </ul>]]></string>
 
     <!-- The document title and heading of the error page shown when the browser prevents loading a website on a restricted port. -->
     <string name="mozac_browser_errorpages_port_blocked_title">Porth wedi’i gyfyngu am resymau diogelwch</string>
@@ -251,14 +244,12 @@
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_proxy_host_title">Heb Ganfod y Gweinydd Dirprwyol</string>
 
-    <string name="mozac_browser_errorpages_unknown_proxy_host_message"><![CDATA[
-      <p>Mae’r porwr wedi ei ffurfweddu i ddefnyddio gweinydd dirprwy, ond nid oes modd canfod y dirprwy.</p>
+    <string name="mozac_browser_errorpages_unknown_proxy_host_message"><![CDATA[<p>Mae’r porwr wedi ei ffurfweddu i ddefnyddio gweinydd dirprwy, ond nid oes modd canfod y dirprwy.</p>
       <ul>
         <li>A yw ffurfweddiad dirprwy’r porwr yn gywir? Gwiriwch y gosodiadau a cheisio eto.</li>
-        <li>A yw’r gwasanaeth dirprwy yn caniatáu cysylltiadau o’r rhwydwaith?</li>
+        <li>A yw’r ddyfais wedi ei chysylltu i rwydwaith weithredol?</li>
         <li>Dal yn cael problemau? Cysylltwch â’ch gweinyddwr rhwydwaith neu ddarparwr rhyngrwyd am gymorth.</li>
-      </ul>
-    ]]></string>
+      </ul>]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_safe_browsing_malware_uri_title">Mater gwefan drwgwar</string>

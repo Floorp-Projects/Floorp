@@ -10,6 +10,10 @@
     <string name="mozac_feature_addons_permissions_history_description">برائوزنگ سابقات تک رسائی  حاصل کریں</string>
     <!-- Description for proxy permission. -->
     <string name="mozac_feature_addons_permissions_proxy_description">برائوزر کی پراکسی ترتیبات کو کنٹرول کریں</string>
+    <!-- Description for tab_hide permission. -->
+    <string name="mozac_feature_addons_permissions_tab_hide_description">براؤزر ٹیبز کو چھپائیں اور دکھائیں</string>
+    <!-- Description for top_sites permission. -->
+    <string name="mozac_feature_addons_permissions_top_sites_description">براؤزنگ کی تاریخ تک رسائی</string>
     <!-- The version on of add-on. -->
     <string name="mozac_feature_addons_version">ورژن</string>
     <!-- The authors of an add-on. -->

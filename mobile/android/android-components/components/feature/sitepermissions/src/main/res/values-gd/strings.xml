@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Title of a dialog for a notification permission request. -->
+    <string name="mozac_feature_sitepermissions_notification_title">A bheil thu airson cead a thoirt dha %1$s brathan a chur?</string>
+    <!-- Title of a dialog for a camera permission request. -->
+    <string name="mozac_feature_sitepermissions_camera_title">A bheil thu airson cead a thoirt dha %1$s an camara agad a chleachdadh?</string>
+    <!-- Title of a dialog for a microphone permission request. -->
+    <string name="mozac_feature_sitepermissions_microfone_title">A bheil thu airson cead a thoirt dha %1$s am micreofon agad a chleachdadh?</string>
+    <!-- Title of a dialog for a location permission request. -->
+    <string name="mozac_feature_sitepermissions_location_title">A bheil thu airson cothrom air d’ ionad a thoirt dha %1$s?</string>
+    <!-- Title of a dialog for a camera and microphone permission request. -->
+    <string name="mozac_feature_sitepermissions_camera_and_microphone">A bheil thu airson cead a thoirt dha %1$s an camara ’s am micreofon agad a chleachdadh?</string>
+    <!-- Option in a dialog for requesting a microphone permission, this option will give access to
+         the first microphone-->
+    <string name="mozac_feature_sitepermissions_option_microphone_one">Micreofon 1</string>
+    <!-- Option in a dialog for requesting a camera permission, this option will give access to
+         back facing camera-->
+    <string name="mozac_feature_sitepermissions_back_facing_camera2">An camara cùil</string>
+    <!-- Option in a dialog for requesting a camera permission, this option will give access to
+     front facing camera-->
+    <string name="mozac_feature_sitepermissions_selfie_camera2">An camara beòil</string>
+    <!-- Text for a positive button in a permission request dialog, this button will give
+        access to this permission-->
+    <string name="mozac_feature_sitepermissions_allow">Ceadaich</string>
+    <!-- Text for a negative button in a permission request dialog, this button will do not give
+    access to this permission-->
+    <string name="mozac_feature_sitepermissions_not_allow">Na ceadaich</string>
+    <!-- Text for a checkbox in a permission request dialog, this will allow to not show again the prompt-->
+    <string name="mozac_feature_sitepermissions_do_not_ask_again_on_this_site2">Cuimhnich mo cho-dhùnadh airson na làraich seo</string>
+    <!-- Text for a positive button in a permission request dialog. This will always allow and remember the decision of the user, this is the special case of the notification permission, that is only ask one time-->
+    <string name="mozac_feature_sitepermissions_always_allow">An-còmhnaidh</string>
+    <!-- Text for a negative button in a permission request dialog. This will never allow and remember the decision of the user, this is the special case of the notification permission, that is only ask one time-->
+    <string name="mozac_feature_sitepermissions_never_allow">Chan ann idir</string>
+</resources>

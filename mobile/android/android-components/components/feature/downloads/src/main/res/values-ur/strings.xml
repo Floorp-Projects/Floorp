@@ -3,6 +3,9 @@
     <!-- Name of the "notification channel" used for displaying download notification. See https://developer.android.com/training/notify-user/channels -->
     <string name="mozac_feature_downloads_notification_channel">ڈاؤن لوڈز</string>
 
+    <!-- Text shown on the second row of an failed download notification. The filename is shown on the first row. -->
+    <string name="mozac_feature_downloads_failed_notification_text2">ڈاؤن لوڈ ناکام</string>
+
     <!-- Alert dialog confirmation before download a file, this is the positive action. -->
     <string name="mozac_feature_downloads_dialog_download">ڈاؤن لوڈ</string>
     <!-- Alert dialog confirmation before download a file, this is the negative action. -->

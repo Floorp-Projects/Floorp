@@ -9,10 +9,21 @@
     <!-- Accessible description for the font option -->
     <string name="mozac_feature_readerview_serif_font_desc">Pisava Serif</string>
 
+    <!-- Accessible description for decreasing the font size -->
+    <string name="mozac_feature_readerview_font_size_decrease_desc">Zmanjšanje velikosti pisave</string>
+
+    <!-- Accessible description for increasing the font size -->
+    <string name="mozac_feature_readerview_font_size_increase_desc">Povečanje velikosti pisave</string>
     <!-- Color option for the background -->
     <string name="mozac_feature_readerview_dark">Temna</string>
     <!-- Accessible description for the color option -->
     <string name="mozac_feature_readerview_dark_color_scheme_desc">Temna barvna shema</string>
     <!-- Color option for the background -->
     <string name="mozac_feature_readerview_sephia">Sepia</string>
-    </resources>
+    <!-- Accessible description for the color option -->
+    <string name="mozac_feature_readerview_sepia_color_scheme_desc">Sepia barvna shema</string>
+    <!-- Color option for the background -->
+    <string name="mozac_feature_readerview_light">Svetla</string>
+    <!-- Accessible description for the color option -->
+    <string name="mozac_feature_readerview_light_color_scheme_desc">Svetla barvna shema</string>
+</resources>

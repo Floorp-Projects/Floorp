@@ -3,7 +3,7 @@
     <!-- Description for privacy add-on permission. -->
     <string name="mozac_feature_addons_permissions_privacy_description">개인 정보 설정 읽고 수정하기</string>
     <!-- Description for all_urls add-on permission. -->
-    <string name="mozac_feature_addons_permissions_all_urls_description">모든 웹사이트에 대한 사용자 데이터에 접근</string>
+    <string name="mozac_feature_addons_permissions_all_urls_description">모든 웹 사이트에 대한 사용자 데이터에 접근</string>
     <!-- Description for tabs add-on permission. -->
     <string name="mozac_feature_addons_permissions_tabs_description">브라우저 탭에 접근</string>
     <!-- Description for unlimited_storage permission. -->
@@ -31,7 +31,7 @@
     <!-- Description for history permission. -->
     <string name="mozac_feature_addons_permissions_history_description">브라우징 기록에 접근</string>
     <!-- Description for management permission. -->
-    <string name="mozac_feature_addons_permissions_management_description">확장기능 사용 모니터와 테마 관리</string>
+    <string name="mozac_feature_addons_permissions_management_description">확장 기능 사용 모니터와 테마 관리</string>
     <!-- Description for native_messaging permission. -->
     <string name="mozac_feature_addons_permissions_native_messaging_description">이 앱 이외의 앱과 메시지를 주고 받음</string>
     <!-- Description for notifications permission. -->
@@ -85,7 +85,7 @@
     <!-- This is button that remove (uninstall an add-on). -->
     <string name="mozac_feature_addons_remove">제거</string>
     <!-- This is the title of a dialog that asks the users if they to install or not an add-on. %1$s is the add-on name. -->
-    <string name="mozac_feature_addons_permissions_dialog_title">%1$s 부가기능을 추가하시겠습니까?</string>
+    <string name="mozac_feature_addons_permissions_dialog_title">%1$s 부가 기능을 추가하시겠습니까?</string>
     <!-- This is the subtitle of a dialog that asks the users if they want to install or not an add-on, the subtitle lists the permissions that this add-on requires, the permissions will dynamically be listed after the ":". -->
     <string name="mozac_feature_addons_permissions_dialog_subtitle">다음의 권한 필요:</string>
     <!-- This is a button to add (install) an add-on . -->
@@ -105,7 +105,7 @@
     <!-- The label of the deny button on a notification, this will be shown to the user when an add-on needs new permissions. Indicates the user denies the new permissions and prevents the add-on from be updated-->
     <string name="mozac_feature_addons_updater_notification_deny_button">거부</string>
     <!-- The tile of the notification, this will be shown to the user when an add-on needs new permissions, to be updated. %1$s is the name of the add-ons-->
-    <string name="mozac_feature_addons_updater_notification_title">%1$s 부가기능이 새 업데이트가 있습니다</string>
+    <string name="mozac_feature_addons_updater_notification_title">%1$s 부가 기능이 새 업데이트가 있습니다</string>
     <!-- The content of the notification, this will be shown when an add-on needs new permissions, to be updated. %1$d is the amount of new permissions-->
     <string name="mozac_feature_addons_updater_notification_content" tools:ignore="PluralsCandidate">%1$d개의 새로운 권한이 필요합니다</string>
     <!-- Name of the "notification channel" used for displaying a notification for updating an add-on. See https://developer.android.com/training/notify-user/channels -->
@@ -113,29 +113,29 @@
     <!-- This is the caption for not yet supported screen caption -->
     <string name="mozac_feature_addons_not_yet_supported_caption">Firefox 부가 기능 기술은 현대화되고 있습니다. 이 부가 기능은 Firefox 버전 75 이상부터는 호환되지 않는 프레임워크를 사용하고있습니다.</string>
     <!-- This is the caption for the add-on installation progress overlay -->
-    <string name="mozac_add_on_install_progress_caption">부가기능 다운로드 및 검증 중…</string>
+    <string name="mozac_add_on_install_progress_caption">부가 기능 다운로드 및 검증 중…</string>
     <!-- Error shown when something unexpected happened while trying to get the add-on list from the server -->
     <string name="mozac_feature_addons_failed_to_query_add_ons">부가 기능 쿼리에 실패했습니다!</string>
     <!-- Text shown after successfully installed an add-on. %1$s is the add-on name. -->
-    <string name="mozac_feature_addons_successfully_installed">%1$s 부가기능 설치에 성공했습니다</string>
+    <string name="mozac_feature_addons_successfully_installed">%1$s 부가 기능 설치에 성공했습니다</string>
     <!-- Text shown after failed to install an add-on. %1$s is the add-on name. -->
-    <string name="mozac_feature_addons_failed_to_install">%1$s 부가기능 설치에 실패했습니다</string>
+    <string name="mozac_feature_addons_failed_to_install">%1$s 부가 기능 설치에 실패했습니다</string>
     <!-- Text shown after successfully enabled an add-on. %1$s is the add-on name. -->
-    <string name="mozac_feature_addons_successfully_enabled">%1$s 부가기능 활성화에 성공했습니다</string>
+    <string name="mozac_feature_addons_successfully_enabled">%1$s 부가 기능 활성화에 성공했습니다</string>
     <!-- Text shown after failed to enable an add-on. %1$s is the add-on name. -->
-    <string name="mozac_feature_addons_failed_to_enable">%1$s 부가기능 활성화에 실패했습니다</string>
+    <string name="mozac_feature_addons_failed_to_enable">%1$s 부가 기능 활성화에 실패했습니다</string>
     <!-- Text shown after successfully disabled an add-on. %1$s is the add-on name. -->
-    <string name="mozac_feature_addons_successfully_disabled">%1$s 부가기능 비활성화에 성공했습니다</string>
+    <string name="mozac_feature_addons_successfully_disabled">%1$s 부가 기능 비활성화에 성공했습니다</string>
     <!-- Text shown after failed to disable an add-on. %1$s is the add-on name. -->
-    <string name="mozac_feature_addons_failed_to_disable">%1$s 부가기능 비활성화에 실패했습니다</string>
+    <string name="mozac_feature_addons_failed_to_disable">%1$s 부가 기능 비활성화에 실패했습니다</string>
     <!-- Text shown after successfully uninstalled an add-on. %1$s is the add-on name. -->
-    <string name="mozac_feature_addons_successfully_uninstalled">%1$s 부가기능 설치 제거에 성공했습니다</string>
+    <string name="mozac_feature_addons_successfully_uninstalled">%1$s 부가 기능 설치 제거에 성공했습니다</string>
     <!-- Text shown after failed to uninstall an add-on. %1$s is the add-on name. -->
-    <string name="mozac_feature_addons_failed_to_uninstall">%1$s 부가기능 설치 제거에 실패했습니다</string>
+    <string name="mozac_feature_addons_failed_to_uninstall">%1$s 부가 기능 설치 제거에 실패했습니다</string>
     <!-- Text shown after successfully removed an add-on. %1$s is the add-on name. -->
-    <string name="mozac_feature_addons_successfully_removed" tools:ignore="UnusedResources">%1$s 부가기능 제거에 성공했습니다</string>
+    <string name="mozac_feature_addons_successfully_removed" tools:ignore="UnusedResources">%1$s 부가 기능 제거에 성공했습니다</string>
     <!-- Text shown after failed to remove an add-on. %1$s is the add-on name. -->
-    <string name="mozac_feature_addons_failed_to_remove" tools:ignore="UnusedResources">%1$s 부가기능 제거에 실패했습니다</string>
+    <string name="mozac_feature_addons_failed_to_remove" tools:ignore="UnusedResources">%1$s 부가 기능 제거에 실패했습니다</string>
     <!-- Label shown to indicate that the add-on was migrated from a previous version of the app. %1$s is the app name most of the case it will be FireFox. -->
     <string name="mozac_feature_addons_migrated_from_a_previous_version_label" tools:ignore="UnusedResources">이 부가 기능은 %1$s의 이전 버전에서 마이그레이션되었습니다</string>
     <!-- Text shown in not yet supported add-ons section in AddonsManagerAdapter. -->

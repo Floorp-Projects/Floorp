@@ -30,8 +30,19 @@
     <!-- The document title and heading of the error page shown when a website sends has an invalid or expired SSL certificate. -->
     <string name="mozac_browser_errorpages_security_bad_cert_title">Suojattu yhteys epäonnistui</string>
 
+    <!-- The error message shown when a website sends has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[<ul>
+<li>Ongelma voi johtua palvelimen asetuksista tai jonkin toisen palvelimen vilpillisestä yrityksestä tekeytyä palvelimeksi.</li>
+<li>Jos yhteyden muodostuminen palvelimeen on aiemmin onnistunut, vika voi olla väliaikainen. Yritä tällöin myöhemmin uudestaan.</li>
+</ul>
+]]></string>
+
     <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website has an invalid SSL certificate. -->
     <string name="mozac_browser_errorpages_security_bad_cert_advanced">Lisäasetukset…</string>
+    <!-- The advanced certificate information shown when a website sends has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[<label>Jokin toinen osapuoli saattaa tekeytyä sivustoksi. Ei ole suositeltavaa jatkaa sivustolle.</label>
+<br><br>
+<label>Sivustot todistavat identiteettinsä varmenteella. %1$s ei luota sivustoon <b>%2$s</b>, koska sen käyttämän varmenteen myöntäjä on tuntematon, varmenne on itse allekirjoitettu tai palvelin ei lähetä oikeita välivarmenteita.</label>]]></string>
     <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
     <string name="mozac_browser_errorpages_security_bad_cert_back">Palaa (suositellaan)</string>
     <!-- The text shown inside the advanced options button used to bypass the invalid SSL certificate. It's only shown if the user has expanded the advanced options. -->
@@ -42,6 +53,9 @@
 
     <!-- The document title and heading of the error page shown when a website takes too long to load. -->
     <string name="mozac_browser_errorpages_net_timeout_title">Yhteys aikakatkaistiin</string>
+
+    <!-- The error message shown when a website took long to load. -->
+    <string name="mozac_browser_errorpages_net_timeout_message"><![CDATA[<p>Palvelin ei vastannut yhteyspyyntöön, ja selain lopetti vastauksen odottamisen.</p><ul><li>Palvelin voi olla kovan rasituksen alainen tai väliaikaisesti huollettavana. Yritä myöhemmin uudestaan.</li><li>Jos muutkaan sivustot eivät toimi, tarkista laitteen verkkoasetukset.</li><li>Onko laite tai verkko suojattu palomuurilla tai käytetäänkö välityspalvelinta?  Virheelliset asetukset voivat haitata selaamista.</li><li>Jos ongelmat jatkuvat, ota yhteyttä verkon ylläpitoon tai verkkoyhteyden palveluntarjoajaan.</li></ul>]]></string>
 
     <!-- The document title and heading of the error page shown when a website could not be reached. -->
     <string name="mozac_browser_errorpages_connection_failure_title">Yhdistäminen ei onnistu</string>

@@ -1,21 +1,79 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Description for privacy add-on permission. -->
+    <string name="mozac_feature_addons_permissions_privacy_description">Lleer y modificar los axustes de la privacidá</string>
+    <!-- Description for all_urls add-on permission. -->
+    <string name="mozac_feature_addons_permissions_all_urls_description">Acceder a los datos de tolos sitios web</string>
+    <!-- Description for tabs add-on permission. -->
+    <string name="mozac_feature_addons_permissions_tabs_description">Acceder a les llingüetes del restolador</string>
+    <!-- Description for unlimited_storage permission. -->
+    <string name="mozac_feature_addons_permissions_unlimited_storage_description">Atroxar una cantidá infinita de datos del llau del veceru</string>
+    <!-- Description for navigation permission. -->
+    <string name="mozac_feature_addons_permissions_web_navigation_description">Acceder a la actividá del restolador demientres navegues</string>
+    <!-- Description for bookmarks permission. -->
+    <string name="mozac_feature_addons_permissions_bookmarks_description">Lleer y modificar los marcadores</string>
+    <!-- Description for browser_setting permission. -->
+    <string name="mozac_feature_addons_permissions_browser_setting_description">Lleer y modificar los axustes del restolador</string>
+    <!-- Description for clipboard_read permission. -->
+    <string name="mozac_feature_addons_permissions_clipboard_read_description">Consiguir datos del cartafueyu</string>
+    <!-- Description for clipboard_write permission. -->
+    <string name="mozac_feature_addons_permissions_clipboard_write_description">Introducir datos nel cartafueyu</string>
+    <!-- Description for downloads permission. -->
+    <string name="mozac_feature_addons_permissions_downloads_description">Baxar ficheros y lleer y modificar l\'historial de descargues del restolador</string>
+    <!-- Description for downloads_open permission. -->
+    <string name="mozac_feature_addons_permissions_downloads_open_description">Abrir los ficheros baxaos al preséu</string>
+    <!-- Description for find permission. -->
+    <string name="mozac_feature_addons_permissions_find_description">Lleer el testu de toles llingüetes abiertes</string>
+    <!-- Description for geolocation permission. -->
+    <string name="mozac_feature_addons_permissions_geolocation_description">Acceder al to allugamientu</string>
+    <!-- Description for history permission. -->
+    <string name="mozac_feature_addons_permissions_history_description">Acceder al historial de restolar</string>
+    <!-- Description for management permission. -->
+    <string name="mozac_feature_addons_permissions_management_description">Supervisar l\'usu d\'estensiones y xestionar estilos</string>
+    <!-- Description for notifications permission. -->
+    <string name="mozac_feature_addons_permissions_notifications_description">Amosate avisos</string>
+    <!-- Description for pkcs11 permission. -->
+    <string name="mozac_feature_addons_permissions_pkcs11_description">Fornir servicios d\'autenticación criptográfica</string>
+    <!-- Description for sessions permission. -->
+    <string name="mozac_feature_addons_permissions_sessions_description">Acceder a les llingüetes zarraes apocayá</string>
+    <!-- Description for tab_hide permission. -->
+    <string name="mozac_feature_addons_permissions_tab_hide_description">Anubrir y amosar les llingüetes del restolador</string>
+    <!-- Description for top_sites permission. -->
+    <string name="mozac_feature_addons_permissions_top_sites_description">Acceder al historial de restolar</string>
+    <!-- Description for devtools permission. -->
+    <string name="mozac_feature_addons_permissions_devtools_description">Permitir que les ferramientes pa desendolcadores accedan a los datos de les llingüetes abiertes</string>
     <!-- The version on of add-on. -->
     <string name="mozac_feature_addons_version">Versión</string>
     <!-- The authors of an add-on. -->
     <string name="mozac_feature_addons_authors">Autores</string>
     <!-- The developer website (Homepage) of the add-on. -->
     <string name="mozac_feature_addons_home_page">Páxina d\'aniciu</string>
+    <!-- A link where users can find more information about add-ons permissions. -->
+    <string name="mozac_feature_addons_learn_more">Deprender más tocante a los permisos</string>
     <!-- The rating of the add-on. -->
     <string name="mozac_feature_addons_rating">Valoración</string>
     <!-- The settings of the add-on. -->
     <string name="mozac_feature_addons_settings">Axustes</string>
+    <!-- Indicates the add-on is enabled. -->
+    <string name="mozac_feature_addons_enabled">Activóse</string>
+    <!-- Indicates the add-on is disabled. -->
+    <string name="mozac_feature_addons_disabled">Desactivóse</string>
+    <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the installed section. -->
+    <string name="mozac_feature_addons_installed_section">Instalóse</string>
+    <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the recommended section. -->
+    <string name="mozac_feature_addons_recommended_section">Aconséyase</string>
+    <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the not yet supported section. -->
+    <string name="mozac_feature_addons_unsupported_section">Entá nun se sofita</string>
     <!-- Displays a page with all the details of an add-on. -->
     <string name="mozac_feature_addons_details">Detalles</string>
     <!-- Displays a page with all the permissions of an add-on. -->
     <string name="mozac_feature_addons_permissions">Permisos</string>
     <!-- This is button that remove (uninstall an add-on). -->
     <string name="mozac_feature_addons_remove">Desaniciar</string>
+    <!-- This is the subtitle of a dialog that asks the users if they want to install or not an add-on, the subtitle lists the permissions that this add-on requires, the permissions will dynamically be listed after the ":". -->
+    <string name="mozac_feature_addons_permissions_dialog_subtitle">Rique\'l to permisu pa:</string>
+    <!-- This is a button to add (install) an add-on . -->
+    <string name="mozac_feature_addons_permissions_dialog_add">Amestar</string>
     <!-- This is a button to cancel the add-on installation . -->
     <string name="mozac_feature_addons_permissions_dialog_cancel">Encaboxar</string>
     <!-- Indicates how many users have rated an add-on. %1$s will be replaced with number of users -->
@@ -34,14 +92,26 @@
     <string name="mozac_feature_addons_updater_notification_content" tools:ignore="PluralsCandidate">Ríquense %1$d permisos nuevos</string>
     <!-- This is the caption for not yet supported screen caption -->
     <string name="mozac_feature_addons_not_yet_supported_caption">La teunoloxía de complementos pa Firefox ta modernizándose. Estos complementos usen frameworks que nun son compatibles a partir de Firefox 75.</string>
+    <!-- This is the caption for the add-on installation progress overlay -->
+    <string name="mozac_add_on_install_progress_caption">Baxando y verificando\'l complementu…</string>
+    <!-- Text shown after successfully installed an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_successfully_installed">%1$s instalóse con ésitu</string>
     <!-- Text shown after failed to install an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_failed_to_install">Fallu al instalar %1$s</string>
+    <!-- Text shown after successfully enabled an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_successfully_enabled">%1$s activóse con ésitu</string>
     <!-- Text shown after failed to enable an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_failed_to_enable">Fallu al activar %1$s</string>
+    <!-- Text shown after successfully disabled an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_successfully_disabled">%1$s desactivóse con ésitu</string>
     <!-- Text shown after failed to disable an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_failed_to_disable">Fallu al desactivar %1$s</string>
+    <!-- Text shown after successfully uninstalled an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_successfully_uninstalled">%1$s desinstalóse con ésitu</string>
     <!-- Text shown after failed to uninstall an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_failed_to_uninstall">Fallu al desinstalar %1$s</string>
+    <!-- Text shown after successfully removed an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_successfully_removed" tools:ignore="UnusedResources">%1$s desanicióse con ésitu</string>
     <!-- Text shown after failed to remove an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_failed_to_remove" tools:ignore="UnusedResources">Fallu al desaniciar %1$s</string>
     <!-- Label shown to indicate that the add-on was migrated from a previous version of the app. %1$s is the app name most of the case it will be FireFox. -->
