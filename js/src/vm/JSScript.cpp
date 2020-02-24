@@ -4336,6 +4336,17 @@ JSScript* JSScript::Create(JSContext* cx, HandleObject functionOrGlobal,
                            const ReadOnlyCompileOptions& options,
                            HandleScriptSourceObject sourceObject,
                            const SourceExtent& extent) {
+  return JSScript::Create(cx, functionOrGlobal, sourceObject,
+                          options.noScriptRval, options.selfHostingMode,
+                          options.isRunOnce, options.hideScriptFromDebugger,
+                          extent);
+}
+
+/*static*/
+JSScript* JSScript::Create(JSContext* cx, js::HandleObject functionOrGlobal,
+                           js::HandleScriptSourceObject sourceObject,
+                           bool noScriptRval, bool selfHosted, bool isRunOnce,
+                           bool hideScriptFromDebugger, SourceExtent extent) {
   RootedScript script(
       cx, JSScript::New(cx, functionOrGlobal, sourceObject, extent));
   if (!script) {
@@ -4343,11 +4354,10 @@ JSScript* JSScript::Create(JSContext* cx, HandleObject functionOrGlobal,
   }
 
   // Record compile options that get checked at runtime.
-  script->setFlag(ImmutableFlags::NoScriptRval, options.noScriptRval);
-  script->setFlag(ImmutableFlags::SelfHosted, options.selfHostingMode);
-  script->setFlag(ImmutableFlags::TreatAsRunOnce, options.isRunOnce);
-  script->setFlag(MutableFlags::HideScriptFromDebugger,
-                  options.hideScriptFromDebugger);
+  script->setFlag(ImmutableFlags::NoScriptRval, noScriptRval);
+  script->setFlag(ImmutableFlags::SelfHosted, selfHosted);
+  script->setFlag(ImmutableFlags::TreatAsRunOnce, isRunOnce);
+  script->setFlag(MutableFlags::HideScriptFromDebugger, hideScriptFromDebugger);
 
   script->setFlag(MutableFlags::TrackRecordReplayProgress,
                   ShouldTrackRecordReplayProgress(script));
