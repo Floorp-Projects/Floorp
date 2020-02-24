@@ -232,7 +232,11 @@ void CanvasEventRingBuffer::CheckAndSignalReader() {
         return;
       case State::AboutToWait:
         // The reader is making a decision about whether to wait. So, we must
-        // wait until it has decided to avoid races.
+        // wait until it has decided to avoid races. Check if the reader is
+        // closed to avoid hangs.
+        if (mWriterServices->ReaderClosed()) {
+          return;
+        }
         continue;
       case State::Waiting:
         if (mRead->count != mOurCount) {
@@ -347,7 +351,11 @@ void CanvasEventRingBuffer::CheckAndSignalWriter() {
         return;
       case State::AboutToWait:
         // The writer is making a decision about whether to wait. So, we must
-        // wait until it has decided to avoid races.
+        // wait until it has decided to avoid races. Check if the writer is
+        // closed to avoid hangs.
+        if (mReaderServices->WriterClosed()) {
+          return;
+        }
         continue;
       case State::Waiting:
         if (mWrite->count - mOurCount <= mWrite->requiredDifference) {
