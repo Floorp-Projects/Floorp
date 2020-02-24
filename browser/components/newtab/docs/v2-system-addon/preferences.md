@@ -193,6 +193,22 @@ A comma separated list of geos that by default have stories enabled in newtab. I
 
 A comma separated list of geos that by default have spocs enabled in newtab. It matches the client's geo with that list.
 
+#### `browser.newtabpage.activity-stream.discoverystream.region-layout-config`
+
+- Type: `string`
+- Default: `US,CA`
+- Pref Type: Firefox
+
+A comma separated list of geos that have 7 rows of stories enabled in newtab. It matches the client's geo with that list.
+
+#### `browser.newtabpage.activity-stream.discoverystream.region-basic-layout`
+
+- Type: `boolean`
+- Default: false
+- Pref Type: AS
+
+If this is `true` newtabs with stories enabled see 1 row. It is set programmatically based on the result from region-layout-config.
+
 #### `browser.newtabpage.activity-stream.discoverystream.spocs-endpoint`
 
 - Type: `string`

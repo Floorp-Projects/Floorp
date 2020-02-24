@@ -58,7 +58,7 @@ const PREF_IMPRESSION_ID = "browser.newtabpage.activity-stream.impressionId";
 const PREF_ENABLED = "discoverystream.enabled";
 const PREF_HARDCODED_BASIC_LAYOUT = "discoverystream.hardcoded-basic-layout";
 const PREF_SPOCS_ENDPOINT = "discoverystream.spocs-endpoint";
-const PREF_LANG_LAYOUT_CONFIG = "discoverystream.lang-layout-config";
+const PREF_REGION_BASIC_LAYOUT = "discoverystream.region-basic-layout";
 const PREF_TOPSTORIES = "feeds.section.topstories";
 const PREF_SPOCS_CLEAR_ENDPOINT = "discoverystream.endpointSpocsClear";
 const PREF_SHOW_SPONSORED = "showSponsored";
@@ -376,15 +376,10 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
     }
 
     if (!layoutResp || !layoutResp.layout) {
-      const langLayoutConfig =
-        this.store.getState().Prefs.values[PREF_LANG_LAYOUT_CONFIG] || "";
-
       const isBasic =
         this.config.hardcoded_basic_layout ||
         this.store.getState().Prefs.values[PREF_HARDCODED_BASIC_LAYOUT] ||
-        !langLayoutConfig
-          .split(",")
-          .find(lang => this.locale.startsWith(lang.trim()));
+        this.store.getState().Prefs.values[PREF_REGION_BASIC_LAYOUT];
 
       // Set a hardcoded layout if one is needed.
       // Changing values in this layout in memory object is unnecessary.
@@ -1551,7 +1546,6 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
       case PREF_ENABLED:
       case PREF_HARDCODED_BASIC_LAYOUT:
       case PREF_SPOCS_ENDPOINT:
-      case PREF_LANG_LAYOUT_CONFIG:
         // This is a config reset directly related to Discovery Stream pref.
         this.configReset();
         break;
