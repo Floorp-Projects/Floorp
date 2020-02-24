@@ -1073,6 +1073,18 @@ pref("privacy.restrict3rdpartystorage.url_decorations", "");
 // opened more than this number of popups.
 pref("privacy.popups.maxReported", 100);
 
+// Enable Purge Tracking Cookie Jars feature.
+pref("privacy.purge_trackers.enabled", false);
+// Enable logging for Purge Tracking Cookie Jars feature.
+#ifdef NIGHTLY_BUILD
+  pref("privacy.purge_trackers.logging.enabled", true);
+#else
+  pref("privacy.purge_trackers.logging.enabled", false);
+#endif
+// Allowable amount of cookies to purge in a batch.
+pref("privacy.purge_trackers.max_purge_count", 100);
+
+
 pref("dom.event.contextmenu.enabled",       true);
 pref("dom.event.coalesce_mouse_move",       true);
 
