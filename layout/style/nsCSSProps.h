@@ -276,9 +276,6 @@ class nsCSSProps {
           es_ = (nsCSSPropertyID)((enabledstate_) | CSSEnabledState(0)); \
        *it_ != eCSSProperty_UNKNOWN; ++it_)                              \
     if (nsCSSProps::IsEnabled(*it_, (mozilla::CSSEnabledState)es_))
-
-  // Keyword/Enum value tables
-  static const KTableEntry kTextDecorationStyleKTable[];
 };
 
 // MOZ_DBG support for nsCSSPropertyID
