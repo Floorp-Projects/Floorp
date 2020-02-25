@@ -1737,10 +1737,10 @@ impl DisplayListBuilder {
         self.extra_data_chunk_len = self.extra_data.len();
     }
 
-    // Returns the amount of bytes written to extra data buffer.
-    pub fn end_extra_data_chunk(&mut self) -> usize {
+    /// Returns true, if any bytes were written to extra data buffer.
+    pub fn end_extra_data_chunk(&mut self) -> bool {
         self.writing_extra_data_chunk = false;
-        self.extra_data.len() - self.extra_data_chunk_len
+        (self.extra_data.len() - self.extra_data_chunk_len) > 0
     }
 
     pub fn push_reuse_item(

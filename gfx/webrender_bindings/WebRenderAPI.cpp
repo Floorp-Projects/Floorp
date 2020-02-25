@@ -1438,8 +1438,8 @@ void DisplayListBuilder::StartCachedItem(wr::ItemKey aKey) {
   wr_dp_start_cached_item(mWrState, aKey);
 }
 
-void DisplayListBuilder::EndCachedItem(wr::ItemKey aKey) {
-  wr_dp_end_cached_item(mWrState, aKey);
+bool DisplayListBuilder::EndCachedItem(wr::ItemKey aKey) {
+  return wr_dp_end_cached_item(mWrState, aKey);
 }
 
 void DisplayListBuilder::SetDisplayListCacheSize(const size_t aCacheSize) {
