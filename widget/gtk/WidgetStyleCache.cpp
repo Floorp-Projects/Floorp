@@ -758,11 +758,10 @@ GtkWidget* GetWidget(WidgetNodeType aAppearance) {
   if (!widget) {
     widget = CreateWidget(aAppearance);
     // Some widgets (MOZ_GTK_COMBOBOX_SEPARATOR for instance) may not be
-    // available or implemented. Use GtkInvisible as a fallback to avoid
-    // potential crashes.
+    // available or implemented.
     if (!widget) {
       NS_WARNING(nsPrintfCString("Missing GtkWidget %d\n", aAppearance).get());
-      widget = gtk_invisible_new();
+      return nullptr;
     }
     // In GTK versions prior to 3.18, automatic invalidation of style contexts
     // for widgets was delayed until the next resize event.  Gecko however,
