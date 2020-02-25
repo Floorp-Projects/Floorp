@@ -553,7 +553,7 @@ mozilla::ipc::IPCResult HttpTransactionParent::RecvOnH2PushStream(
     const nsCString& aRequestString) {
   MOZ_ASSERT(mOnPushCallback);
 
-  mOnPushCallback(aPushedStreamId, aResourceUrl, aRequestString);
+  mOnPushCallback(aPushedStreamId, aResourceUrl, aRequestString, this);
   return IPC_OK();
 }  // namespace net
 

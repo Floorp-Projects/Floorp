@@ -49,8 +49,8 @@ class HttpTransactionShell : public nsISupports {
   NS_DECLARE_STATIC_IID_ACCESSOR(HTTPTRANSACTIONSHELL_IID)
 
   using TransactionObserverFunc = std::function<void()>;
-  using OnPushCallback =
-      std::function<nsresult(uint32_t, const nsACString&, const nsACString&)>;
+  using OnPushCallback = std::function<nsresult(
+      uint32_t, const nsACString&, const nsACString&, HttpTransactionShell*)>;
 
   //
   // called to initialize the transaction

@@ -71,7 +71,8 @@ nsresult HttpTransactionChild::InitInternal(
   if (caps & NS_HTTP_ONPUSH_LISTENER) {
     RefPtr<HttpTransactionChild> self = this;
     pushCallback = [self](uint32_t aPushedStreamId, const nsACString& aUrl,
-                          const nsACString& aRequestString) {
+                          const nsACString& aRequestString,
+                          HttpTransactionShell* aTransaction) {
       bool res = false;
       if (self->CanSend()) {
         res =
