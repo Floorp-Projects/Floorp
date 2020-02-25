@@ -1,0 +1,23 @@
+<html>
+<head>
+  <style>
+    * {
+      transition-duration: 2s;
+    }
+  </style>
+  <script>
+    function start () {
+      const element = document.createElementNS('', 's');
+      const effect = new KeyframeEffect(document.documentElement, {}, 196);
+      document.documentElement.setAttribute('style', 'padding-left:3');
+      effect.updateTiming({ 'delay': 2723 });
+      const animations = document.getAnimations();
+      animations[0].effect = effect;
+      animations[0].updatePlaybackRate(-129);
+      effect.target = element;
+    }
+
+    document.addEventListener('DOMContentLoaded', start);
+  </script>
+</head>
+</html>
