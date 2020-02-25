@@ -112,15 +112,6 @@ def make_task_description(config, jobs):
 @transforms.add
 def make_task_worker(config, jobs):
     for job in jobs:
-        valid_beetmover_job = set(job['dependencies'].keys()) == {'build', 'build-signing'}
-        if not valid_beetmover_job:
-            raise NotImplementedError(
-                'Beetmover-geckoview must have 2 dependencies: build and build-signing. '
-                'Got: {}'.format(
-                    job['dependencies']
-                )
-            )
-
         job['worker'] = {
             'artifact-map': generate_beetmover_artifact_map(
                 config,
