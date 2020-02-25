@@ -18,6 +18,17 @@ transforms.add(check_if_partners_enabled)
 
 
 @transforms.add
+def set_mac_label(config, jobs):
+    for job in jobs:
+        dep_job = job['primary-dependency']
+        job.setdefault('label', dep_job.label.replace('notarization-part-1', 'signing'))
+        assert job['label'] != dep_job.label, "Unable to determine label for {}".format(
+            config.kind
+        )
+        yield job
+
+
+@transforms.add
 def define_upstream_artifacts(config, jobs):
     partner_configs = get_partner_config_by_kind(config, config.kind)
     if not partner_configs:
