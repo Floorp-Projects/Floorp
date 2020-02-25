@@ -139,7 +139,7 @@ add_task(async function() {
 
     let browsingContext = gBrowser.selectedBrowser.browsingContext;
     if (test.frameIndex != null) {
-      browsingContext = browsingContext.getChildren()[test.frameIndex];
+      browsingContext = browsingContext.children[test.frameIndex];
     }
 
     await new Promise(r => {

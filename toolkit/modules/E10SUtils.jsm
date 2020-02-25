@@ -938,7 +938,7 @@ var E10SUtils = {
       let stack = [aBrowser.browsingContext];
       while (stack.length) {
         let bc = stack.pop();
-        stack.push(...bc.getChildren());
+        stack.push(...bc.children);
         if (bc.currentWindowGlobal) {
           let pid = bc.currentWindowGlobal.osPid;
           if (pid != tabPid) {
