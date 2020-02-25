@@ -185,6 +185,29 @@ Release Promotion
 ``signoff_urls``
    A dictionary of signoff keys to url values. These are the urls marking the corresponding ``required_signoffs`` as signed off.
 
+
+Repository Merge Day
+--------------------
+
+``merge_config``
+   Merge config describes the repository merge behaviour, using an alias to cover which set of file replacements and version increments are required, along with overrides for the source and target repository URIs.
+
+``source_repo``
+   The clone/push URI of the source repository, such as https://hg.mozilla.org/mozilla-central
+ 
+``target_repo``
+   The clone/push URI of the target repository, such as https://hg.mozilla.org/releases/mozilla-beta
+ 
+``source_branch``
+   The firefoxtree alias of the source branch, such as 'central', 'beta'
+ 
+``target_branch``
+   The firefoxtree alias of the target branch, such as 'beta', 'release'
+
+``force-dry-run``
+   Don't push any results to target repositories.
+ 
+
 Comm Push Information
 ---------------------
 
