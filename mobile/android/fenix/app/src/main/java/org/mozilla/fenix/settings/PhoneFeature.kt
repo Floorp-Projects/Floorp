@@ -21,19 +21,21 @@ const val ID_CAMERA_PERMISSION = 0
 const val ID_LOCATION_PERMISSION = 1
 const val ID_MICROPHONE_PERMISSION = 2
 const val ID_NOTIFICATION_PERMISSION = 3
-const val ID_AUTOPLAY_PERMISSION = 4
+const val ID_AUTOPLAY_AUDIBLE_PERMISSION = 4
+const val ID_AUTOPLAY_INAUDIBLE_PERMISSION = 5
 
 enum class PhoneFeature(val id: Int, val androidPermissionsList: Array<String>) {
     CAMERA(ID_CAMERA_PERMISSION, arrayOf(CAMERA_PERMISSION)),
     LOCATION(ID_LOCATION_PERMISSION, arrayOf(ACCESS_COARSE_LOCATION, ACCESS_FINE_LOCATION)),
     MICROPHONE(ID_MICROPHONE_PERMISSION, arrayOf(RECORD_AUDIO)),
     NOTIFICATION(ID_NOTIFICATION_PERMISSION, emptyArray()),
-    AUTOPLAY(ID_AUTOPLAY_PERMISSION, emptyArray());
+    AUTOPLAY_AUDIBLE(ID_AUTOPLAY_AUDIBLE_PERMISSION, emptyArray()),
+    AUTOPLAY_INAUDIBLE(ID_AUTOPLAY_INAUDIBLE_PERMISSION, emptyArray());
 
     fun isAndroidPermissionGranted(context: Context): Boolean {
         return when (this) {
             CAMERA, LOCATION, MICROPHONE -> context.isPermissionGranted(androidPermissionsList.asIterable())
-            NOTIFICATION, AUTOPLAY -> true
+            NOTIFICATION, AUTOPLAY_AUDIBLE, AUTOPLAY_INAUDIBLE -> true
         }
     }
 
@@ -47,7 +49,7 @@ enum class PhoneFeature(val id: Int, val androidPermissionsList: Array<String>) 
             when (isAndroidPermissionGranted(context)) {
                 false -> R.string.phone_feature_blocked_by_android
                 else -> when (this) {
-                    AUTOPLAY -> {
+                    AUTOPLAY_AUDIBLE, AUTOPLAY_INAUDIBLE -> {
                         when (getStatus(sitePermissions, settings)) {
                             SitePermissions.Status.BLOCKED -> R.string.preference_option_autoplay_blocked
                             SitePermissions.Status.ALLOWED -> R.string.preference_option_autoplay_allowed
@@ -80,7 +82,7 @@ enum class PhoneFeature(val id: Int, val androidPermissionsList: Array<String>) 
             LOCATION -> context.getString(R.string.preference_phone_feature_location)
             MICROPHONE -> context.getString(R.string.preference_phone_feature_microphone)
             NOTIFICATION -> context.getString(R.string.preference_phone_feature_notification)
-            AUTOPLAY -> context.getString(R.string.preference_browser_feature_autoplay)
+            AUTOPLAY_AUDIBLE, AUTOPLAY_INAUDIBLE -> context.getString(R.string.preference_browser_feature_autoplay)
         }
     }
 
@@ -90,7 +92,8 @@ enum class PhoneFeature(val id: Int, val androidPermissionsList: Array<String>) 
             LOCATION -> context.getPreferenceKey(R.string.pref_key_phone_feature_location)
             MICROPHONE -> context.getPreferenceKey(R.string.pref_key_phone_feature_microphone)
             NOTIFICATION -> context.getPreferenceKey(R.string.pref_key_phone_feature_notification)
-            AUTOPLAY -> context.getPreferenceKey(R.string.pref_key_browser_feature_autoplay)
+            AUTOPLAY_AUDIBLE -> context.getPreferenceKey(R.string.pref_key_browser_feature_autoplay_audible)
+            AUTOPLAY_INAUDIBLE -> context.getPreferenceKey(R.string.pref_key_browser_feature_autoplay_inaudible)
         }
     }
 
@@ -99,7 +102,8 @@ enum class PhoneFeature(val id: Int, val androidPermissionsList: Array<String>) 
 
     fun getDefault(): SitePermissionsRules.Action {
         return when (this) {
-            AUTOPLAY -> SitePermissionsRules.Action.BLOCKED
+            AUTOPLAY_AUDIBLE -> SitePermissionsRules.Action.BLOCKED
+            AUTOPLAY_INAUDIBLE -> SitePermissionsRules.Action.ALLOWED
             else -> SitePermissionsRules.Action.ASK_TO_ALLOW
         }
     }
@@ -111,7 +115,8 @@ enum class PhoneFeature(val id: Int, val androidPermissionsList: Array<String>) 
             LOCATION -> sitePermissions.location
             MICROPHONE -> sitePermissions.microphone
             NOTIFICATION -> sitePermissions.notification
-            AUTOPLAY -> SitePermissions.Status.NO_DECISION // No support from GV or A-C yet
+            AUTOPLAY_AUDIBLE -> sitePermissions.autoplayAudible
+            AUTOPLAY_INAUDIBLE -> sitePermissions.autoplayInaudible
         }
     }
 

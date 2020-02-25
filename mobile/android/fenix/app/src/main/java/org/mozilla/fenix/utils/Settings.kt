@@ -14,6 +14,7 @@ import androidx.annotation.VisibleForTesting
 import androidx.annotation.VisibleForTesting.PRIVATE
 import mozilla.components.feature.sitepermissions.SitePermissionsRules
 import mozilla.components.feature.sitepermissions.SitePermissionsRules.Action
+import mozilla.components.feature.sitepermissions.SitePermissionsRules.AutoplayAction
 import mozilla.components.support.ktx.android.content.PreferencesHolder
 import mozilla.components.support.ktx.android.content.booleanPreference
 import mozilla.components.support.ktx.android.content.floatPreference
@@ -47,18 +48,32 @@ class Settings private constructor(
 
         private const val BLOCKED_INT = 0
         private const val ASK_TO_ALLOW_INT = 1
+        private const val ALLOWED_INT = 2
         private const val CFR_COUNT_CONDITION_FOCUS_INSTALLED = 1
         private const val CFR_COUNT_CONDITION_FOCUS_NOT_INSTALLED = 3
 
-        private fun actionToInt(action: Action) = when (action) {
+        private fun Action.toInt() = when (this) {
             Action.BLOCKED -> BLOCKED_INT
             Action.ASK_TO_ALLOW -> ASK_TO_ALLOW_INT
+            Action.ALLOWED -> ALLOWED_INT
         }
 
-        private fun intToAction(action: Int) = when (action) {
+        private fun AutoplayAction.toInt() = when (this) {
+            AutoplayAction.BLOCKED -> BLOCKED_INT
+            AutoplayAction.ALLOWED -> ALLOWED_INT
+        }
+
+        private fun Int.toAction() = when (this) {
             BLOCKED_INT -> Action.BLOCKED
             ASK_TO_ALLOW_INT -> Action.ASK_TO_ALLOW
-            else -> throw InvalidParameterException("$action is not a valid SitePermissionsRules.Action")
+            ALLOWED_INT -> Action.ALLOWED
+            else -> throw InvalidParameterException("$this is not a valid SitePermissionsRules.Action")
+        }
+
+        private fun Int.toAutoplayAction() = when (this) {
+            BLOCKED_INT -> AutoplayAction.BLOCKED
+            ALLOWED_INT -> AutoplayAction.ALLOWED
+            else -> throw InvalidParameterException("$this is not a valid SitePermissionsRules.AutoplayAction")
         }
 
         @VisibleForTesting
@@ -145,7 +160,7 @@ class Settings private constructor(
     )
 
     val isAutoPlayEnabled = getSitePermissionsPhoneFeatureAction(
-        PhoneFeature.AUTOPLAY, Action.BLOCKED
+        PhoneFeature.AUTOPLAY_AUDIBLE, Action.BLOCKED
     ) != Action.BLOCKED
 
     private var trackingProtectionOnboardingShownThisSession = false
@@ -418,13 +433,18 @@ class Settings private constructor(
         feature: PhoneFeature,
         default: Action = Action.ASK_TO_ALLOW
     ) =
-        intToAction(preferences.getInt(feature.getPreferenceKey(appContext), actionToInt(default)))
+        preferences.getInt(feature.getPreferenceKey(appContext), default.toInt()).toAction()
+
+    fun getSitePermissionsPhoneFeatureAutoplayAction(
+        feature: PhoneFeature,
+        default: AutoplayAction = AutoplayAction.BLOCKED
+    ) = preferences.getInt(feature.getPreferenceKey(appContext), default.toInt()).toAutoplayAction()
 
     fun setSitePermissionsPhoneFeatureAction(
         feature: PhoneFeature,
         value: Action
     ) {
-        preferences.edit().putInt(feature.getPreferenceKey(appContext), actionToInt(value)).apply()
+        preferences.edit().putInt(feature.getPreferenceKey(appContext), value.toInt()).apply()
     }
 
     fun getSitePermissionsCustomSettingsRules(): SitePermissionsRules {
@@ -432,7 +452,10 @@ class Settings private constructor(
             notification = getSitePermissionsPhoneFeatureAction(PhoneFeature.NOTIFICATION),
             microphone = getSitePermissionsPhoneFeatureAction(PhoneFeature.MICROPHONE),
             location = getSitePermissionsPhoneFeatureAction(PhoneFeature.LOCATION),
-            camera = getSitePermissionsPhoneFeatureAction(PhoneFeature.CAMERA)
+            camera = getSitePermissionsPhoneFeatureAction(PhoneFeature.CAMERA),
+            autoplayAudible = getSitePermissionsPhoneFeatureAutoplayAction(PhoneFeature.AUTOPLAY_AUDIBLE),
+            // TODO autoplayInaudible will be hardcoded until additional options are added in #8017
+            autoplayInaudible = AutoplayAction.ALLOWED
         )
     }
 

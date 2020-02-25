@@ -21,7 +21,8 @@ fun SitePermissions.toggle(featurePhone: PhoneFeature): SitePermissions {
         PhoneFeature.LOCATION -> copy(location = location.toggle())
         PhoneFeature.MICROPHONE -> copy(microphone = microphone.toggle())
         PhoneFeature.NOTIFICATION -> copy(notification = notification.toggle())
-        PhoneFeature.AUTOPLAY -> copy() // not supported by GV or A-C yet
+        PhoneFeature.AUTOPLAY_AUDIBLE -> copy(autoplayAudible = autoplayAudible.toggle())
+        PhoneFeature.AUTOPLAY_INAUDIBLE -> copy(autoplayInaudible = autoplayInaudible.toggle())
     }
 }
 

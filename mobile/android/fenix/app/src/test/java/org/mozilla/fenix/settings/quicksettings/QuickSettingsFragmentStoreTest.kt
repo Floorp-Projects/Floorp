@@ -119,6 +119,8 @@ class QuickSettingsFragmentStoreTest {
         every { permissions.microphone } returns SitePermissions.Status.NO_DECISION
         every { permissions.notification } returns SitePermissions.Status.BLOCKED
         every { permissions.location } returns SitePermissions.Status.ALLOWED
+        every { permissions.autoplayAudible } returns SitePermissions.Status.BLOCKED
+        every { permissions.autoplayInaudible } returns SitePermissions.Status.BLOCKED
 
         val state = QuickSettingsFragmentStore.createWebsitePermissionState(
             context, permissions, appSettings
@@ -132,6 +134,8 @@ class QuickSettingsFragmentStoreTest {
             assertThat(state.microphone).isNotNull()
             assertThat(state.notification).isNotNull()
             assertThat(state.location).isNotNull()
+            assertThat(state.autoplayAudible).isNotNull()
+            assertThat(state.autoplayInaudible).isNotNull()
         }
     }
 
@@ -190,10 +194,14 @@ class QuickSettingsFragmentStoreTest {
             val microphonePermissionName = "Microphone"
             val notificationPermissionName = "Notification"
             val locationPermissionName = "Location"
+            val autoplayAudiblePermissionName = "AutoplayAudible"
+            val autoplayInaudiblePermissionName = "AutoplayInaudible"
             val initialCameraStatus = "initialCameraStatus"
             val initialMicStatus = "initialMicStatus"
             val initialNotificationStatus = "initialNotificationStatus"
             val initialLocationStatus = "initialLocationStatus"
+            val initialAutoplayAudibleStatus = "initialAutoplayAudibleStatus"
+            val initialAutoplayInaudibleStatus = "initialAutoplayInaudibleStatus"
             val updatedMicrophoneStatus = "updatedNotificationStatus"
             val updatedMicrophoneEnabledStatus = false
             val defaultVisibilityStatus = true
@@ -217,6 +225,14 @@ class QuickSettingsFragmentStoreTest {
                 location = WebsitePermission.Location(
                     initialLocationStatus, defaultVisibilityStatus,
                     defaultEnabledStatus, defaultBlockedByAndroidStatus, locationPermissionName
+                ),
+                autoplayAudible = WebsitePermission.AutoplayAudible(
+                    initialAutoplayAudibleStatus, defaultVisibilityStatus,
+                    defaultEnabledStatus, defaultBlockedByAndroidStatus, autoplayAudiblePermissionName
+                ),
+                autoplayInaudible = WebsitePermission.AutoplayInaudible(
+                    initialAutoplayInaudibleStatus, defaultVisibilityStatus,
+                    defaultEnabledStatus, defaultBlockedByAndroidStatus, autoplayInaudiblePermissionName
                 )
             )
             val initialState = QuickSettingsFragmentState(

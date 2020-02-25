@@ -162,6 +162,8 @@ class DefaultQuickSettingsController(
         is WebsitePermission.Microphone -> PhoneFeature.MICROPHONE
         is WebsitePermission.Notification -> PhoneFeature.NOTIFICATION
         is WebsitePermission.Location -> PhoneFeature.LOCATION
+        is WebsitePermission.AutoplayAudible -> PhoneFeature.AUTOPLAY_AUDIBLE
+        is WebsitePermission.AutoplayInaudible -> PhoneFeature.AUTOPLAY_INAUDIBLE
     }
 
     /**
@@ -176,7 +178,6 @@ class DefaultQuickSettingsController(
         val defaultEnabled = false
         val defaultVisible = false
         val defaultBlockedByAndroid = false
-        val defaultWebsitePermission: WebsitePermission? = null
 
         return when (this) {
             PhoneFeature.CAMERA -> WebsitePermission.Camera(
@@ -191,7 +192,12 @@ class DefaultQuickSettingsController(
             PhoneFeature.NOTIFICATION -> WebsitePermission.Notification(
                 defaultStatus, defaultVisible, defaultEnabled, defaultBlockedByAndroid
             )
-            PhoneFeature.AUTOPLAY -> defaultWebsitePermission!! // fail-fast
+            PhoneFeature.AUTOPLAY_AUDIBLE -> WebsitePermission.AutoplayAudible(
+                defaultStatus, defaultVisible, defaultEnabled, defaultBlockedByAndroid
+            )
+            PhoneFeature.AUTOPLAY_INAUDIBLE -> WebsitePermission.AutoplayInaudible(
+                defaultStatus, defaultVisible, defaultEnabled, defaultBlockedByAndroid
+            )
         }
     }
 

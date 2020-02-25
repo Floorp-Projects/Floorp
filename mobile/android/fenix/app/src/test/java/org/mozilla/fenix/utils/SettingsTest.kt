@@ -6,8 +6,10 @@ package org.mozilla.fenix.utils
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.feature.sitepermissions.SitePermissionsRules
+import mozilla.components.feature.sitepermissions.SitePermissionsRules.Action.ALLOWED
 import mozilla.components.feature.sitepermissions.SitePermissionsRules.Action.ASK_TO_ALLOW
 import mozilla.components.feature.sitepermissions.SitePermissionsRules.Action.BLOCKED
+import mozilla.components.feature.sitepermissions.SitePermissionsRules.AutoplayAction
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -388,7 +390,7 @@ class SettingsTest {
         // When just created
         // Then
         assertEquals(
-            allAskToAllow(),
+            defaultPermissions(),
             settings.getSitePermissionsCustomSettingsRules()
         )
     }
@@ -400,7 +402,7 @@ class SettingsTest {
 
         // Then
         assertEquals(
-            allAskToAllow().copy(camera = BLOCKED),
+            defaultPermissions().copy(camera = BLOCKED),
             settings.getSitePermissionsCustomSettingsRules()
         )
     }
@@ -412,7 +414,7 @@ class SettingsTest {
 
         // Then
         assertEquals(
-            allAskToAllow().copy(notification = BLOCKED),
+            defaultPermissions().copy(notification = BLOCKED),
             settings.getSitePermissionsCustomSettingsRules()
         )
     }
@@ -424,7 +426,7 @@ class SettingsTest {
 
         // Then
         assertEquals(
-            allAskToAllow().copy(location = BLOCKED),
+            defaultPermissions().copy(location = BLOCKED),
             settings.getSitePermissionsCustomSettingsRules()
         )
     }
@@ -436,7 +438,34 @@ class SettingsTest {
 
         // Then
         assertEquals(
-            allAskToAllow().copy(microphone = BLOCKED),
+            defaultPermissions().copy(microphone = BLOCKED),
+            settings.getSitePermissionsCustomSettingsRules()
+        )
+    }
+
+    @Test
+    fun getSitePermissionsCustomSettingsRules_autoplayAudible() {
+        settings.setSitePermissionsPhoneFeatureAction(PhoneFeature.AUTOPLAY_AUDIBLE, ALLOWED)
+
+        assertEquals(
+            defaultPermissions().copy(autoplayAudible = ALLOWED),
+            settings.getSitePermissionsCustomSettingsRules()
+        )
+    }
+
+    @Test
+    fun getSitePermissionsCustomSettingsRules_autoplayInaudible() {
+        settings.setSitePermissionsPhoneFeatureAction(PhoneFeature.AUTOPLAY_INAUDIBLE, ALLOWED)
+
+        assertEquals(
+            defaultPermissions(),
+            settings.getSitePermissionsCustomSettingsRules()
+        )
+
+        settings.setSitePermissionsPhoneFeatureAction(PhoneFeature.AUTOPLAY_INAUDIBLE, BLOCKED)
+
+        assertEquals(
+            defaultPermissions(),
             settings.getSitePermissionsCustomSettingsRules()
         )
     }
@@ -450,9 +479,11 @@ private fun Settings.clear() {
     preferences.clearAndCommit()
 }
 
-private fun allAskToAllow() = SitePermissionsRules(
+private fun defaultPermissions() = SitePermissionsRules(
     camera = ASK_TO_ALLOW,
     location = ASK_TO_ALLOW,
     microphone = ASK_TO_ALLOW,
-    notification = ASK_TO_ALLOW
+    notification = ASK_TO_ALLOW,
+    autoplayAudible = AutoplayAction.BLOCKED,
+    autoplayInaudible = AutoplayAction.ALLOWED
 )

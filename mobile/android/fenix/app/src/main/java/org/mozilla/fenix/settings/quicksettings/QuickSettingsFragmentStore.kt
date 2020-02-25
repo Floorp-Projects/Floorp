@@ -140,12 +140,18 @@ class QuickSettingsFragmentStore(
                 PhoneFeature.NOTIFICATION.toWebsitePermission(context, permissions, settings)
             val locationPermission =
                 PhoneFeature.LOCATION.toWebsitePermission(context, permissions, settings)
+            val autoplayAudiblePermission =
+                PhoneFeature.AUTOPLAY_AUDIBLE.toWebsitePermission(context, permissions, settings)
+            val autoplayInaudiblePermission =
+                PhoneFeature.AUTOPLAY_INAUDIBLE.toWebsitePermission(context, permissions, settings)
             val shouldBeVisible = cameraPermission.isVisible || microphonePermission.isVisible ||
-                    notificationPermission.isVisible || locationPermission.isVisible
+                    notificationPermission.isVisible || locationPermission.isVisible ||
+                    autoplayAudiblePermission.isVisible || autoplayInaudiblePermission.isVisible
 
             return WebsitePermissionsState(
                 shouldBeVisible, cameraPermission, microphonePermission,
-                notificationPermission, locationPermission
+                notificationPermission, locationPermission, autoplayAudiblePermission,
+                autoplayInaudiblePermission
             )
         }
 
@@ -159,7 +165,6 @@ class QuickSettingsFragmentStore(
             settings: Settings
         ): WebsitePermission {
             val status = getPermissionStatus(context, permissions, settings)
-            val nonexistentPermission: WebsitePermission? = null
             return when (this) {
                 PhoneFeature.CAMERA -> WebsitePermission.Camera(
                     status.status, status.isVisible, status.isEnabled, status.isBlockedByAndroid
@@ -173,7 +178,12 @@ class QuickSettingsFragmentStore(
                 PhoneFeature.NOTIFICATION -> WebsitePermission.Notification(
                     status.status, status.isVisible, status.isEnabled, status.isBlockedByAndroid
                 )
-                PhoneFeature.AUTOPLAY -> nonexistentPermission!! // fail-fast
+                PhoneFeature.AUTOPLAY_AUDIBLE -> WebsitePermission.AutoplayAudible(
+                    status.status, status.isVisible, status.isEnabled, status.isBlockedByAndroid
+                )
+                PhoneFeature.AUTOPLAY_INAUDIBLE -> WebsitePermission.AutoplayInaudible(
+                    status.status, status.isVisible, status.isEnabled, status.isBlockedByAndroid
+                )
             }
         }
 
@@ -254,7 +264,9 @@ data class WebsitePermissionsState(
     val camera: WebsitePermission,
     val microphone: WebsitePermission,
     val notification: WebsitePermission,
-    val location: WebsitePermission
+    val location: WebsitePermission,
+    val autoplayAudible: WebsitePermission,
+    val autoplayInaudible: WebsitePermission
 ) : State
 
 /**
@@ -390,6 +402,55 @@ sealed class WebsitePermission {
             name = name
         )
     }
+
+    /**
+     * Contains all information about the *autoplay audible* permission.
+     */
+    data class AutoplayAudible(
+        override val status: String,
+        override val isVisible: Boolean,
+        override val isEnabled: Boolean,
+        override val isBlockedByAndroid: Boolean,
+        val name: String = "AutoplayAudible" // helps to resolve the overload resolution ambiguity for the copy() method
+    ) : WebsitePermission() {
+        override fun copy(
+            status: String,
+            isVisible: Boolean,
+            isEnabled: Boolean,
+            isBlockedByAndroid: Boolean
+        ) = copy(
+            status = status,
+            isVisible = isVisible,
+            isEnabled = isEnabled,
+            isBlockedByAndroid = isBlockedByAndroid,
+            name = name
+        )
+    }
+
+    /**
+     * Contains all information about the *autoplay inaudible* permission.
+     */
+    data class AutoplayInaudible(
+        override val status: String,
+        override val isVisible: Boolean,
+        override val isEnabled: Boolean,
+        override val isBlockedByAndroid: Boolean,
+        // helps to resolve the overload resolution ambiguity for the copy() method
+        val name: String = "AutoplayInaudible"
+    ) : WebsitePermission() {
+        override fun copy(
+            status: String,
+            isVisible: Boolean,
+            isEnabled: Boolean,
+            isBlockedByAndroid: Boolean
+        ) = copy(
+            status = status,
+            isVisible = isVisible,
+            isEnabled = isEnabled,
+            isBlockedByAndroid = isBlockedByAndroid,
+            name = name
+        )
+    }
 }
 
 // -------------------------------------------------------------------------------------------------
@@ -504,6 +565,22 @@ object WebsitePermissionsStateReducer {
                             isEnabled = action.updatedEnabledStatus
                         )
                     )
+                    is WebsitePermission.AutoplayAudible -> {
+                        return state.copy(
+                            autoplayAudible = state.autoplayAudible.copy(
+                                status = action.updatedStatus,
+                                isEnabled = action.updatedEnabledStatus
+                            )
+                        )
+                    }
+                    is WebsitePermission.AutoplayInaudible -> {
+                        return state.copy(
+                            autoplayInaudible = state.autoplayInaudible.copy(
+                                status = action.updatedStatus,
+                                isEnabled = action.updatedEnabledStatus
+                            )
+                        )
+                    }
                 }
             }
         }

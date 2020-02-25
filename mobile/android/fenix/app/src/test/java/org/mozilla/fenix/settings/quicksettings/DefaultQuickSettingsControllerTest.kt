@@ -9,7 +9,6 @@ import androidx.navigation.NavDirections
 import assertk.assertAll
 import assertk.assertThat
 import assertk.assertions.isEqualTo
-import assertk.assertions.isFailure
 import assertk.assertions.isInstanceOf
 import assertk.assertions.isSameAs
 import assertk.assertions.isTrue
@@ -270,8 +269,10 @@ class DefaultQuickSettingsControllerTest {
                     .isInstanceOf(WebsitePermission.Notification::class)
                 assertThat(PhoneFeature.LOCATION.getCorrespondingPermission())
                     .isInstanceOf(WebsitePermission.Location::class)
-                assertThat { PhoneFeature.AUTOPLAY.getCorrespondingPermission() }
-                    .isFailure().isInstanceOf(KotlinNullPointerException::class)
+                assertThat(PhoneFeature.AUTOPLAY_AUDIBLE.getCorrespondingPermission())
+                    .isInstanceOf(WebsitePermission.AutoplayAudible::class)
+                assertThat(PhoneFeature.AUTOPLAY_INAUDIBLE.getCorrespondingPermission())
+                    .isInstanceOf(WebsitePermission.AutoplayInaudible::class)
             }
         }
     }
