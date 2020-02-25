@@ -225,7 +225,6 @@ define(function(require, exports, module) {
 
       this.toggle = this.toggle.bind(this);
       this.isExpanded = this.isExpanded.bind(this);
-      this.onFocus = this.onFocus.bind(this);
       this.onKeyDown = this.onKeyDown.bind(this);
       this.onClickRow = this.onClickRow.bind(this);
       this.getSelectedRow = this.getSelectedRow.bind(this);
@@ -305,23 +304,9 @@ define(function(require, exports, module) {
 
     // Event Handlers
 
-    onFocus(_event) {
-      // Set focus to the first element, if none is selected
-      // This is needed because keyboard navigation won't work without an element being selected
-      this.componentDidUpdate();
-    }
-
     // eslint-disable-next-line complexity
     onKeyDown(event) {
-      const keyEligibleForFirstLetterNavigation =
-        event.key.length === 1 &&
-        !event.ctrlKey &&
-        !event.metaKey &&
-        !event.altKey;
-      if (
-        !SUPPORTED_KEYS.includes(event.key) &&
-        !keyEligibleForFirstLetterNavigation
-      ) {
+      if (!SUPPORTED_KEYS.includes(event.key)) {
         return;
       }
 
@@ -332,25 +317,15 @@ define(function(require, exports, module) {
 
       const rows = this.visibleRows;
       const index = rows.indexOf(row);
-      const { hasChildren, open } = row.props.member;
-
       switch (event.key) {
         case "ArrowRight":
-          if (hasChildren) {
-            if (open) {
-              const firstChildRow = this.rows
-                .slice(index + 1)
-                .find(r => r.props.member.level > row.props.member.level);
-              if (firstChildRow) {
-                this.selectRow(firstChildRow, { alignTo: "bottom" });
-              }
-            } else {
-              this.toggle(this.state.selected);
-            }
+          const { hasChildren, open } = row.props.member;
+          if (hasChildren && !open) {
+            this.toggle(this.state.selected);
           }
           break;
         case "ArrowLeft":
-          if (hasChildren && open) {
+          if (row && row.props.member.open) {
             this.toggle(this.state.selected);
           } else {
             const parentRow = rows
@@ -409,15 +384,6 @@ define(function(require, exports, module) {
             this.activateRow(null);
           }
           break;
-      }
-
-      if (keyEligibleForFirstLetterNavigation) {
-        const next = rows
-          .slice(index + 1)
-          .find(r => r.props.member.name.startsWith(event.key));
-        if (next) {
-          this.selectRow(next, { alignTo: "bottom" });
-        }
       }
 
       // Focus should always remain on the tree container itself.
@@ -707,7 +673,6 @@ define(function(require, exports, module) {
           role: "tree",
           ref: this.treeRef,
           tabIndex: 0,
-          onFocus: this.onFocus,
           onKeyDown: this.onKeyDown,
           onContextMenu: onContextMenuTree && onContextMenuTree.bind(this),
           onClick: () => {
