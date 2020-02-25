@@ -9,7 +9,7 @@ using namespace mozilla;
 GUID StringToGuid(const std::string& str) {
   GUID guid;
   sscanf(str.c_str(),
-         "{%8lx-%4hx-%4hx-%2hhx%2hhx-%2hhx%2hhx%2hhx%2hhx%2hhx%2hhx}",
+         "%8lx-%4hx-%4hx-%2hhx%2hhx-%2hhx%2hhx%2hhx%2hhx%2hhx%2hhx",
          &guid.Data1, &guid.Data2, &guid.Data3, &guid.Data4[0], &guid.Data4[1],
          &guid.Data4[2], &guid.Data4[3], &guid.Data4[4], &guid.Data4[5],
          &guid.Data4[6], &guid.Data4[7]);
@@ -47,10 +47,10 @@ TEST(TestNetworkLinkIdHashingWindows, Multiple)
   SHA1Sum::Hash expected_digest;
 
   std::vector<GUID> nwGUIDS;
-  nwGUIDS.push_back(StringToGuid("00000000-0000-0000-0000-000000000004"));
-  nwGUIDS.push_back(StringToGuid("00000000-0000-0000-0000-000000000003"));
-  nwGUIDS.push_back(StringToGuid("00000000-0000-0000-0000-000000000002"));
   nwGUIDS.push_back(StringToGuid("00000000-0000-0000-0000-000000000001"));
+  nwGUIDS.push_back(StringToGuid("00000000-0000-0000-0000-000000000002"));
+  nwGUIDS.push_back(StringToGuid("00000000-0000-0000-0000-000000000003"));
+  nwGUIDS.push_back(StringToGuid("00000000-0000-0000-0000-000000000004"));
 
   for (const auto& guid : nwGUIDS) {
     expected_sha1.update(&guid, sizeof(GUID));
