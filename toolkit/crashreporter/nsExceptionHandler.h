@@ -75,7 +75,6 @@ void SetProfileDirectory(nsIFile* aDir);
 void UpdateCrashEventsDir();
 void SetMemoryReportFile(nsIFile* aFile);
 nsresult GetDefaultMemoryReportFile(nsIFile** aFile);
-void SetTelemetrySessionId(const nsACString& id);
 
 /**
  * Get the path where crash event files should be written.
