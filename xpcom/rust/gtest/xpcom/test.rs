@@ -9,14 +9,14 @@ extern crate xpcom;
 
 extern crate nserror;
 
+use nserror::{nsresult, NS_OK};
+use std::ffi::{CStr, CString};
 use std::os::raw::c_char;
 use std::ptr;
-use std::ffi::{CStr, CString};
 use xpcom::interfaces;
-use nserror::{nsresult, NS_OK};
 
 #[no_mangle]
-pub unsafe extern fn Rust_ObserveFromRust() -> *const interfaces::nsIObserverService {
+pub unsafe extern "C" fn Rust_ObserveFromRust() -> *const interfaces::nsIObserverService {
     let obssvc = xpcom::services::get_ObserverService().unwrap();
 
     // Define an observer
@@ -24,14 +24,14 @@ pub unsafe extern fn Rust_ObserveFromRust() -> *const interfaces::nsIObserverSer
     #[xpimplements(nsIObserver)]
     #[refcnt = "nonatomic"]
     struct InitObserver {
-        run: *mut bool
+        run: *mut bool,
     }
     impl Observer {
         unsafe fn Observe(
             &self,
             _subject: *const interfaces::nsISupports,
             topic: *const c_char,
-            _data: *const i16
+            _data: *const i16,
         ) -> nsresult {
             *self.run = true;
             assert!(CStr::from_ptr(topic).to_str() == Ok("test-rust-observe"));
@@ -42,8 +42,12 @@ pub unsafe extern fn Rust_ObserveFromRust() -> *const interfaces::nsIObserverSer
     let topic = CString::new("test-rust-observe").unwrap();
 
     let mut run = false;
-    let observer = Observer::allocate(InitObserver{ run: &mut run });
-    let rv = obssvc.AddObserver(observer.coerce::<interfaces::nsIObserver>(), topic.as_ptr(), false);
+    let observer = Observer::allocate(InitObserver { run: &mut run });
+    let rv = obssvc.AddObserver(
+        observer.coerce::<interfaces::nsIObserver>(),
+        topic.as_ptr(),
+        false,
+    );
     assert!(rv.succeeded());
 
     let rv = obssvc.NotifyObservers(ptr::null(), topic.as_ptr(), ptr::null());
@@ -53,15 +57,21 @@ pub unsafe extern fn Rust_ObserveFromRust() -> *const interfaces::nsIObserverSer
     let rv = obssvc.RemoveObserver(observer.coerce::<interfaces::nsIObserver>(), topic.as_ptr());
     assert!(rv.succeeded());
 
-    assert!(observer.coerce::<interfaces::nsISupports>() as *const _==
-            &*observer.query_interface::<interfaces::nsISupports>().unwrap() as *const _);
+    assert!(
+        observer.coerce::<interfaces::nsISupports>() as *const _
+            == &*observer
+                .query_interface::<interfaces::nsISupports>()
+                .unwrap() as *const _
+    );
 
     &*obssvc
 }
 
 #[no_mangle]
-pub unsafe extern fn Rust_ImplementRunnableInRust(it_worked: *mut bool,
-                                                  runnable: *mut *const interfaces::nsIRunnable) {
+pub unsafe extern "C" fn Rust_ImplementRunnableInRust(
+    it_worked: *mut bool,
+    runnable: *mut *const interfaces::nsIRunnable,
+) {
     // Define a type which implements nsIRunnable in rust.
     #[derive(xpcom)]
     #[xpimplements(nsIRunnable)]
@@ -79,7 +89,10 @@ pub unsafe extern fn Rust_ImplementRunnableInRust(it_worked: *mut bool,
 
     // Create my runnable type, and forget it into the outparameter!
     let my_runnable = MyRunnable::allocate(InitMyRunnable {
-        it_worked: it_worked
+        it_worked: it_worked,
     });
-    my_runnable.query_interface::<interfaces::nsIRunnable>().unwrap().forget(&mut *runnable);
+    my_runnable
+        .query_interface::<interfaces::nsIRunnable>()
+        .unwrap()
+        .forget(&mut *runnable);
 }

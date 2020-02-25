@@ -304,7 +304,8 @@ impl nsAString {
     /// into UTF-16 and fallibly append the conversion result to this string.
     pub fn fallible_append_latin1(&mut self, other: &[u8]) -> Result<(), ()> {
         let len = self.len();
-        self.fallible_append_latin1_impl(other, len, false).map(|_| ())
+        self.fallible_append_latin1_impl(other, len, false)
+            .map(|_| ())
     }
 }
 
@@ -330,35 +331,35 @@ impl nsACString {
         } else {
             None
         };
-        let (filled, read, mut handle) = if worst_case_needed.is_none() &&
-                                                 long_string_stars_with_basic_latin(other) {
-            let new_len_with_ascii = old_len.checked_add(other.len()).ok_or(())?;
-            let mut handle = unsafe { self.bulk_write(new_len_with_ascii, old_len, false)? };
-            let (read, written) = convert_utf16_to_utf8_partial(other, &mut handle.as_mut_slice()[old_len..]);
-            let left = other.len() - read;
-            if left == 0 {
-                return Ok(handle.finish(old_len + written, true));
-            }
-            let filled = old_len + written;
-            let needed = times_three(left).ok_or(())?;
-            let new_len = filled.checked_add(needed).ok_or(())?;
-            unsafe {
-                handle.restart_bulk_write(new_len, filled, false)?;
-            }
-            (filled, read, handle)
-        } else {
-            // Started with non-ASCII. Compute worst case
-            let needed = if let Some(n) = worst_case_needed {
-                n
+        let (filled, read, mut handle) =
+            if worst_case_needed.is_none() && long_string_stars_with_basic_latin(other) {
+                let new_len_with_ascii = old_len.checked_add(other.len()).ok_or(())?;
+                let mut handle = unsafe { self.bulk_write(new_len_with_ascii, old_len, false)? };
+                let (read, written) =
+                    convert_utf16_to_utf8_partial(other, &mut handle.as_mut_slice()[old_len..]);
+                let left = other.len() - read;
+                if left == 0 {
+                    return Ok(handle.finish(old_len + written, true));
+                }
+                let filled = old_len + written;
+                let needed = times_three(left).ok_or(())?;
+                let new_len = filled.checked_add(needed).ok_or(())?;
+                unsafe {
+                    handle.restart_bulk_write(new_len, filled, false)?;
+                }
+                (filled, read, handle)
             } else {
-                times_three(other.len()).ok_or(())?
+                // Started with non-ASCII. Compute worst case
+                let needed = if let Some(n) = worst_case_needed {
+                    n
+                } else {
+                    times_three(other.len()).ok_or(())?
+                };
+                let new_len = old_len.checked_add(needed).ok_or(())?;
+                let handle = unsafe { self.bulk_write(new_len, old_len, false)? };
+                (old_len, 0, handle)
             };
-            let new_len = old_len.checked_add(needed).ok_or(())?;
-            let handle = unsafe { self.bulk_write(new_len, old_len, false)? };
-            (old_len, 0, handle)
-        };
-        let written =
-            convert_utf16_to_utf8(&other[read..], &mut handle.as_mut_slice()[filled..]);
+        let written = convert_utf16_to_utf8(&other[read..], &mut handle.as_mut_slice()[filled..]);
         Ok(handle.finish(filled + written, true))
     }
 
@@ -605,7 +606,8 @@ impl nsACString {
                 // with optimism that it's ASCII-only.
                 let new_len_with_ascii = old_len.checked_add(other.len()).ok_or(())?;
                 let mut handle = unsafe { self.bulk_write(new_len_with_ascii, old_len, false)? };
-                let (read, written) = convert_latin1_to_utf8_partial(other, &mut handle.as_mut_slice()[old_len..]);
+                let (read, written) =
+                    convert_latin1_to_utf8_partial(other, &mut handle.as_mut_slice()[old_len..]);
                 let left = other.len() - read;
                 let filled = old_len + written;
                 if left == 0 {
@@ -630,8 +632,7 @@ impl nsACString {
                 (old_len, 0, handle)
             }
         };
-        let written =
-            convert_latin1_to_utf8(&other[read..], &mut handle.as_mut_slice()[filled..]);
+        let written = convert_latin1_to_utf8(&other[read..], &mut handle.as_mut_slice()[filled..]);
         Ok(handle.finish(filled + written, true))
     }
 
