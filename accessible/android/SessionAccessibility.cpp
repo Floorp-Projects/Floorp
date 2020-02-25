@@ -330,11 +330,9 @@ void SessionAccessibility::SendTextTraversedEvent(AccessibleWrap* aAccessible,
 }
 
 void SessionAccessibility::SendClickedEvent(AccessibleWrap* aAccessible,
-                                            bool aChecked) {
+                                            uint32_t aFlags) {
   GECKOBUNDLE_START(eventInfo);
-  // Boolean::FALSE/TRUE gets clobbered by a macro, so ugh.
-  GECKOBUNDLE_PUT(eventInfo, "checked",
-                  java::sdk::Integer::ValueOf(aChecked ? 1 : 0));
+  GECKOBUNDLE_PUT(eventInfo, "flags", java::sdk::Integer::ValueOf(aFlags));
   GECKOBUNDLE_FINISH(eventInfo);
 
   mSessionAccessibility->SendEvent(
