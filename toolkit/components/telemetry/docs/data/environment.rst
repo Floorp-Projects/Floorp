@@ -151,6 +151,8 @@ Structure:
             windowsUBR: <number>, // windows 10 only or null on failure
             installYear: <number>, // windows only or null on failure
             locale: <string>, // "en" or null on failure
+            hasPrefetch: <bool>, // windows only, or null on failure
+            hasSuperfetch: <bool>, // windows only, or nul on failure
         },
         hdd: {
           profile: { // hdd where the profile folder is located
@@ -473,6 +475,8 @@ This object contains operating system information.
 - ``windowsUBR``: the Windows UBR number, only available for Windows >= 10. This value is incremented by Windows cumulative updates patches.
 - ``installYear``: the Windows only integer representing the year the OS was installed.
 - ``locale``: the string representing the OS locale.
+- ``hasPrefetch``: the Windows-only boolean representing whether or not the OS-based prefetch application start-up optimization is set to use the default settings.
+- ``hasSuperfetch``: the Windows-only boolean representing whether or not the OS-based superfetch application start-up optimization service is running and using the default settings.
 
 addons
 ------
