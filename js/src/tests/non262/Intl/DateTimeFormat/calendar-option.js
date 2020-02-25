@@ -49,12 +49,18 @@ const calendars = [
   "persian", "roc", "islamicc",
 ];
 
+// https://github.com/tc39/proposal-intl-locale/issues/96
+const canonical = {
+  "islamicc": "islamic-civil",
+  "ethiopic-amete-alem": "ethioaa",
+};
+
 for (let calendar of calendars) {
   let dtf1 = new Intl.DateTimeFormat(`${defaultLocale}-u-ca-${calendar}`);
   let dtf2 = new Intl.DateTimeFormat(defaultLocale, {calendar});
 
-  assertEq(dtf1.resolvedOptions().calendar, calendar);
-  assertEq(dtf2.resolvedOptions().calendar, calendar);
+  assertEq(dtf1.resolvedOptions().calendar, canonical[calendar] ?? calendar);
+  assertEq(dtf2.resolvedOptions().calendar, canonical[calendar] ?? calendar);
 
   assertEq(dtf2.format(0), dtf1.format(0));
 }

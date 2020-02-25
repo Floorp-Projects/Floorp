@@ -672,8 +672,7 @@ static bool Locale(JSContext* cx, unsigned argc, Value* vp) {
 
   // ApplyOptionsToTag, steps 9 and 13.
   // ApplyUnicodeExtensionToTag, step 9.
-  if (!tag.canonicalizeExtensions(
-          cx, LanguageTag::UnicodeExtensionCanonicalForm::Yes)) {
+  if (!tag.canonicalizeExtensions(cx)) {
     return false;
   }
 
@@ -1292,7 +1291,7 @@ bool js::intl_ValidateAndCanonicalizeLanguageTag(JSContext* cx, unsigned argc,
     return false;
   }
 
-  if (!tag.canonicalize(cx, LanguageTag::UnicodeExtensionCanonicalForm::No)) {
+  if (!tag.canonicalize(cx)) {
     return false;
   }
 
@@ -1325,7 +1324,7 @@ bool js::intl_TryValidateAndCanonicalizeLanguageTag(JSContext* cx,
     return true;
   }
 
-  if (!tag.canonicalize(cx, LanguageTag::UnicodeExtensionCanonicalForm::No)) {
+  if (!tag.canonicalize(cx)) {
     return false;
   }
 
@@ -1341,17 +1340,24 @@ bool js::intl_ValidateAndCanonicalizeUnicodeExtensionType(JSContext* cx,
                                                           unsigned argc,
                                                           Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
-  MOZ_ASSERT(args.length() == 2);
-  MOZ_ASSERT(args[0].isString());
-  MOZ_ASSERT(args[1].isString());
+  MOZ_ASSERT(args.length() == 3);
 
-  RootedLinearString unicodeType(cx, args[0].toString()->ensureLinear(cx));
+  HandleValue typeArg = args[0];
+  MOZ_ASSERT(typeArg.isString(), "type must be a string");
+
+  HandleValue optionArg = args[1];
+  MOZ_ASSERT(optionArg.isString(), "option name must be a string");
+
+  HandleValue keyArg = args[2];
+  MOZ_ASSERT(keyArg.isString(), "key must be a string");
+
+  RootedLinearString unicodeType(cx, typeArg.toString()->ensureLinear(cx));
   if (!unicodeType) {
     return false;
   }
 
   if (!IsValidUnicodeExtensionValue(unicodeType)) {
-    UniqueChars optionChars = EncodeAscii(cx, args[1].toString());
+    UniqueChars optionChars = EncodeAscii(cx, optionArg.toString());
     if (!optionChars) {
       return false;
     }
@@ -1367,7 +1373,44 @@ bool js::intl_ValidateAndCanonicalizeUnicodeExtensionType(JSContext* cx,
     return false;
   }
 
-  JSString* result = StringToLowerCase(cx, unicodeType);
+  char unicodeKey[UnicodeKeyLength];
+  {
+    JSLinearString* str = keyArg.toString()->ensureLinear(cx);
+    if (!str) {
+      return false;
+    }
+    MOZ_ASSERT(str->length() == UnicodeKeyLength);
+
+    for (size_t i = 0; i < UnicodeKeyLength; i++) {
+      char16_t ch = str->latin1OrTwoByteChar(i);
+      MOZ_ASSERT(mozilla::IsAscii(ch));
+      unicodeKey[i] = char(ch);
+    }
+  }
+
+  UniqueChars unicodeTypeChars = EncodeAscii(cx, unicodeType);
+  if (!unicodeTypeChars) {
+    return false;
+  }
+
+  size_t unicodeTypeLength = unicodeType->length();
+  MOZ_ASSERT(strlen(unicodeTypeChars.get()) == unicodeTypeLength);
+
+  // Convert into canonical case before searching for replacements.
+  intl::AsciiToLowerCase(unicodeTypeChars.get(), unicodeTypeLength,
+                         unicodeTypeChars.get());
+
+  auto key = mozilla::MakeSpan(unicodeKey, UnicodeKeyLength);
+  auto type = mozilla::MakeSpan(unicodeTypeChars.get(), unicodeTypeLength);
+
+  // Search if there's a replacement for the current Unicode keyword.
+  JSString* result;
+  if (const char* replacement =
+          LanguageTag::replaceUnicodeExtensionType(key, type)) {
+    result = NewStringCopyZ<CanGC>(cx, replacement);
+  } else {
+    result = StringToLowerCase(cx, unicodeType);
+  }
   if (!result) {
     return false;
   }

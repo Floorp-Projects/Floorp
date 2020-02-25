@@ -464,7 +464,8 @@ function InitializeNumberFormat(numberFormat, thisValue, locales, options) {
 
     if (numberingSystem !== undefined) {
         numberingSystem = intl_ValidateAndCanonicalizeUnicodeExtensionType(numberingSystem,
-                                                                           "numberingSystem");
+                                                                           "numberingSystem",
+                                                                           "nu");
     }
 
     opt.nu = numberingSystem;

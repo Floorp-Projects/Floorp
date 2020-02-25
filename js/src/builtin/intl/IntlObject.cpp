@@ -647,8 +647,7 @@ bool js::intl_BestAvailableLocale(JSContext* cx, unsigned argc, Value* vp) {
     MOZ_ASSERT(!tag.unicodeExtension(),
                "locale must contain no Unicode extensions");
 
-    if (!tag.canonicalize(
-            cx, intl::LanguageTag::UnicodeExtensionCanonicalForm::No)) {
+    if (!tag.canonicalize(cx)) {
       return false;
     }
 
@@ -709,8 +708,7 @@ bool js::intl_supportedLocaleOrFallback(JSContext* cx, unsigned argc,
       return false;
     }
   } else {
-    if (!tag.canonicalize(
-            cx, intl::LanguageTag::UnicodeExtensionCanonicalForm::No)) {
+    if (!tag.canonicalize(cx)) {
       return false;
     }
 

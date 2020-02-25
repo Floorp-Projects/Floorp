@@ -367,8 +367,7 @@ bool LanguageTag::canonicalizeBaseName(JSContext* cx) {
   return true;
 }
 
-bool LanguageTag::canonicalizeExtensions(
-    JSContext* cx, UnicodeExtensionCanonicalForm canonicalForm) {
+bool LanguageTag::canonicalizeExtensions(JSContext* cx) {
   // The canonical case for all extension subtags is lowercase.
   for (UniqueChars& extension : extensions_) {
     char* extensionChars = extension.get();
@@ -387,7 +386,7 @@ bool LanguageTag::canonicalizeExtensions(
 
   for (UniqueChars& extension : extensions_) {
     if (extension[0] == 'u') {
-      if (!canonicalizeUnicodeExtension(cx, extension, canonicalForm)) {
+      if (!canonicalizeUnicodeExtension(cx, extension)) {
         return false;
       }
     } else if (extension[0] == 't') {
@@ -425,8 +424,7 @@ bool LanguageTag::canonicalizeExtensions(
  *   see Section 3.6.4 U Extension Data Files).
  */
 bool LanguageTag::canonicalizeUnicodeExtension(
-    JSContext* cx, JS::UniqueChars& unicodeExtension,
-    UnicodeExtensionCanonicalForm canonicalForm) {
+    JSContext* cx, JS::UniqueChars& unicodeExtension) {
   const char* const extension = unicodeExtension.get();
   MOZ_ASSERT(extension[0] == 'u');
   MOZ_ASSERT(extension[1] == '-');
@@ -523,7 +521,7 @@ bool LanguageTag::canonicalizeUnicodeExtension(
     const auto& attribute = attributes[i];
 
     // Skip duplicate attributes.
-    if (canonicalForm == UnicodeExtensionCanonicalForm::Yes && i > 0) {
+    if (i > 0) {
       const auto& lastAttribute = attributes[i - 1];
       if (attribute.length() == lastAttribute.length() &&
           std::char_traits<char>::compare(attribute.begin(extension),
@@ -589,7 +587,7 @@ bool LanguageTag::canonicalizeUnicodeExtension(
     const auto& keyword = keywords[i];
 
     // Skip duplicate keywords.
-    if (canonicalForm == UnicodeExtensionCanonicalForm::Yes && i > 0) {
+    if (i > 0) {
       const auto& lastKeyword = keywords[i - 1];
       if (std::char_traits<char>::compare(keyword.begin(extension),
                                           lastKeyword.begin(extension),
@@ -613,17 +611,10 @@ bool LanguageTag::canonicalizeUnicodeExtension(
       StringSpan type(keyword.begin(extension) + UnicodeKeyWithSepLength,
                       keyword.length() - UnicodeKeyWithSepLength);
 
-      if (canonicalForm == UnicodeExtensionCanonicalForm::Yes) {
-        // Search if there's a replacement for the current Unicode keyword.
-        if (const char* replacement = replaceUnicodeExtensionType(key, type)) {
-          if (!appendReplacement(keyword,
-                                 mozilla::MakeStringSpan(replacement))) {
-            return false;
-          }
-        } else {
-          if (!appendKeyword(keyword, type)) {
-            return false;
-          }
+      // Search if there's a replacement for the current Unicode keyword.
+      if (const char* replacement = replaceUnicodeExtensionType(key, type)) {
+        if (!appendReplacement(keyword, mozilla::MakeStringSpan(replacement))) {
+          return false;
         }
       } else {
         if (!appendKeyword(keyword, type)) {
