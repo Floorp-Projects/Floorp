@@ -225,6 +225,9 @@ class MOZ_STACK_CLASS LanguageTag final {
 
   MOZ_MUST_USE bool updateGrandfatheredMappings(JSContext* cx);
 
+  static const char* replaceTransformExtensionType(
+      mozilla::Span<const char> key, mozilla::Span<const char> type);
+
  public:
   /**
    * Given a Unicode key and type, return the null-terminated preferred
@@ -342,11 +345,19 @@ class MOZ_STACK_CLASS LanguageTag final {
     privateuse_ = std::move(privateuse);
   }
 
+ private:
+  enum class DuplicateVariants { Reject, Accept };
+
+  bool canonicalizeBaseName(JSContext* cx, DuplicateVariants duplicateVariants);
+
+ public:
   /**
    * Canonicalize the base-name subtags, that means the language, script,
    * region, and variant subtags.
    */
-  bool canonicalizeBaseName(JSContext* cx);
+  bool canonicalizeBaseName(JSContext* cx) {
+    return canonicalizeBaseName(cx, DuplicateVariants::Reject);
+  }
 
   /**
    * Canonicalize all extension subtags.

@@ -52,9 +52,11 @@ const valid = [
     {locale: "en-t-en-emodeng", canonical: "en-t-en-emodeng"},
     {locale: "en-t-en-latn-emodeng", canonical: "en-t-en-latn-emodeng"},
     {locale: "en-t-en-latn-ca-emodeng", canonical: "en-t-en-latn-ca-emodeng"},
-    {locale: "sl-t-sl-rozaj-biske-1994", canonical: "sl-t-sl-rozaj-biske-1994"},
+    {locale: "sl-t-sl-rozaj-biske-1994", canonical: "sl-t-sl-1994-biske-rozaj"},
     {locale: "DE-T-M0-DIN-K0-QWERTZ", canonical: "de-t-k0-qwertz-m0-din"},
     {locale: "en-t-m0-true", canonical: "en-t-m0-true"},
+    {locale: "en-t-iw", canonical: "en-t-he"},
+    {locale: "und-Latn-t-und-hani-m0-names", canonical: "und-Latn-t-und-hani-m0-prprname"},
 ];
 
 for (let locale of invalid) {
