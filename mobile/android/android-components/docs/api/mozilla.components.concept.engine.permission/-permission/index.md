@@ -2,7 +2,7 @@
 
 # Permission
 
-`sealed class Permission` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/permission/PermissionRequest.kt#L60)
+`sealed class Permission` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/permission/PermissionRequest.kt#L61)
 
 Represents all the different supported permission types.
 
@@ -17,6 +17,8 @@ Represents all the different supported permission types.
 | [ContentAudioCapture](-content-audio-capture/index.md) | `data class ContentAudioCapture : `[`Permission`](./index.md) |
 | [ContentAudioMicrophone](-content-audio-microphone/index.md) | `data class ContentAudioMicrophone : `[`Permission`](./index.md) |
 | [ContentAudioOther](-content-audio-other/index.md) | `data class ContentAudioOther : `[`Permission`](./index.md) |
+| [ContentAutoPlayAudible](-content-auto-play-audible/index.md) | `data class ContentAutoPlayAudible : `[`Permission`](./index.md) |
+| [ContentAutoPlayInaudible](-content-auto-play-inaudible/index.md) | `data class ContentAutoPlayInaudible : `[`Permission`](./index.md) |
 | [ContentGeoLocation](-content-geo-location/index.md) | `data class ContentGeoLocation : `[`Permission`](./index.md) |
 | [ContentNotification](-content-notification/index.md) | `data class ContentNotification : `[`Permission`](./index.md) |
 | [ContentProtectedMediaId](-content-protected-media-id/index.md) | `data class ContentProtectedMediaId : `[`Permission`](./index.md) |
@@ -53,6 +55,8 @@ Represents all the different supported permission types.
 | [ContentAudioCapture](-content-audio-capture/index.md) | `data class ContentAudioCapture : `[`Permission`](./index.md) |
 | [ContentAudioMicrophone](-content-audio-microphone/index.md) | `data class ContentAudioMicrophone : `[`Permission`](./index.md) |
 | [ContentAudioOther](-content-audio-other/index.md) | `data class ContentAudioOther : `[`Permission`](./index.md) |
+| [ContentAutoPlayAudible](-content-auto-play-audible/index.md) | `data class ContentAutoPlayAudible : `[`Permission`](./index.md) |
+| [ContentAutoPlayInaudible](-content-auto-play-inaudible/index.md) | `data class ContentAutoPlayInaudible : `[`Permission`](./index.md) |
 | [ContentGeoLocation](-content-geo-location/index.md) | `data class ContentGeoLocation : `[`Permission`](./index.md) |
 | [ContentNotification](-content-notification/index.md) | `data class ContentNotification : `[`Permission`](./index.md) |
 | [ContentProtectedMediaId](-content-protected-media-id/index.md) | `data class ContentProtectedMediaId : `[`Permission`](./index.md) |

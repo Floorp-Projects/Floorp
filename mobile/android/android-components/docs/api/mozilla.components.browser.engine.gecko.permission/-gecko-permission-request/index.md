@@ -2,7 +2,7 @@
 
 # GeckoPermissionRequest
 
-`sealed class GeckoPermissionRequest : `[`PermissionRequest`](../../mozilla.components.concept.engine.permission/-permission-request/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-gecko-beta/src/main/java/mozilla/components/browser/engine/gecko/permission/GeckoPermissionRequest.kt#L29)
+`sealed class GeckoPermissionRequest : `[`PermissionRequest`](../../mozilla.components.concept.engine.permission/-permission-request/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-gecko-beta/src/main/java/mozilla/components/browser/engine/gecko/permission/GeckoPermissionRequest.kt#L31)
 
 Gecko-based implementation of [PermissionRequest](../../mozilla.components.concept.engine.permission/-permission-request/index.md).
 

@@ -45,6 +45,7 @@
 | [mozilla.components.feature.app.links.AppLinksFeature](../mozilla.components.feature.app.links/-app-links-feature/index.md) | This feature implements observer for handling redirects to external apps. The users are asked to confirm their intention before leaving the app if in private session.  These include the Android Intents, custom schemes and support for [Intent.CATEGORY_BROWSABLE](#) `http(s)` URLs. |
 | [mozilla.components.feature.app.links.AppLinksInterceptor](../mozilla.components.feature.app.links/-app-links-interceptor/index.md) | This feature implements use cases for detecting and handling redirects to external apps. The user is asked to confirm her intention before leaving the app. These include the Android Intents, custom schemes and support for [Intent.CATEGORY_BROWSABLE](#) `http(s)` URLs. |
 | [mozilla.components.feature.app.links.AppLinksUseCases](../mozilla.components.feature.app.links/-app-links-use-cases/index.md) | These use cases allow for the detection of, and opening of links that other apps have registered an [IntentFilter](#)s to open. |
+| [mozilla.components.feature.push.AppServerKey](../mozilla.components.feature.push/-app-server-key.md) |  |
 | [org.mozilla.telemetry.measurement.ArchMeasurement](../org.mozilla.telemetry.measurement/-arch-measurement/index.md) |  |
 | [mozilla.components.browser.search.provider.AssetsSearchEngineProvider](../mozilla.components.browser.search.provider/-assets-search-engine-provider/index.md) | SearchEngineProvider implementation to load the included search engines from assets. |
 | [mozilla.components.lib.jexl.ast.AstNode](../mozilla.components.lib.jexl.ast/-ast-node/index.md) | A node of the abstract syntax tree. |
@@ -102,7 +103,6 @@
 | [mozilla.components.browser.toolbar.behavior.BrowserToolbarBottomBehavior](../mozilla.components.browser.toolbar.behavior/-browser-toolbar-bottom-behavior/index.md) | A [CoordinatorLayout.Behavior](#) implementation to be used when placing [BrowserToolbar](../mozilla.components.browser.toolbar/-browser-toolbar/index.md) at the bottom of the screen. |
 | [mozilla.components.support.utils.Browsers](../mozilla.components.support.utils/-browsers/index.md) | Helpful tools for dealing with other browsers on this device. |
 | [mozilla.components.Build](../mozilla.components/-build/index.md) | Information about the current Android Components build. |
-| [mozilla.components.concept.push.Bus](../mozilla.components.concept.push/-bus/index.md) | Interface for a basic bus that is implemented by MessageBus so that classes can observe particular event types. |
 | [kotlin.ByteArray](../mozilla.components.support.ktx.kotlin/kotlin.-byte-array/index.md) (extensions in package mozilla.components.support.ktx.kotlin) |  |
 | [mozilla.appservices.fxaclient.Device.Capability](../mozilla.components.service.fxa/mozilla.appservices.fxaclient.-device.-capability/index.md) (extensions in package mozilla.components.service.fxa) |  |
 | [mozilla.components.support.ktx.android.notification.ChannelData](../mozilla.components.support.ktx.android.notification/-channel-data/index.md) | Wraps the data of a NotificationChannel as this class is available after API 26. |
@@ -430,7 +430,6 @@
 | [mozilla.components.browser.menu2.candidate.MenuEffect](../mozilla.components.browser.menu2.candidate/-menu-effect.md) | Describes an effect for the menu. Effects can also alter the button to open the menu. |
 | [mozilla.components.browser.menu2.candidate.MenuIcon](../mozilla.components.browser.menu2.candidate/-menu-icon.md) | Menu option data classes to be shown alongside menu options |
 | [mozilla.components.browser.menu2.candidate.MenuIconEffect](../mozilla.components.browser.menu2.candidate/-menu-icon-effect.md) | Describes an effect for a menu icon. Effects can also alter the button that opens the menu. |
-| [mozilla.components.feature.push.MessageBus](../mozilla.components.feature.push/-message-bus/index.md) | An implementation of [Bus](../mozilla.components.concept.push/-bus/index.md) where the event type is restricted to an enum. |
 | [mozilla.components.concept.engine.webextension.MessageHandler](../mozilla.components.concept.engine.webextension/-message-handler/index.md) | A handler for all messaging related events, usable for both content and background scripts. |
 | [mozilla.components.concept.engine.webextension.Metadata](../mozilla.components.concept.engine.webextension/-metadata/index.md) | Provides information about a [WebExtension](../mozilla.components.concept.engine.webextension/-web-extension/index.md). |
 | [org.mozilla.telemetry.measurement.MetricsMeasurement](../org.mozilla.telemetry.measurement/-metrics-measurement/index.md) |  |
@@ -518,10 +517,9 @@
 | [mozilla.components.feature.push.PushConnection](../mozilla.components.feature.push/-push-connection/index.md) | An interface that wraps the [PushAPI](#). |
 | [mozilla.components.concept.push.PushError](../mozilla.components.concept.push/-push-error/index.md) | Various error types. |
 | [mozilla.components.concept.push.PushProcessor](../mozilla.components.concept.push/-push-processor/index.md) | A push notification processor that handles registration and new messages from the [PushService](../mozilla.components.concept.push/-push-service/index.md) provided. Starting Push in the Application's onCreate is recommended. |
+| [mozilla.components.feature.push.PushScope](../mozilla.components.feature.push/-push-scope.md) |  |
 | [mozilla.components.concept.push.PushService](../mozilla.components.concept.push/-push-service/index.md) | Implemented by push services like Firebase Cloud Messaging and Amazon Device Messaging SDKs to allow the [PushProcessor](../mozilla.components.concept.push/-push-processor/index.md) to manage their lifecycle. |
 | [mozilla.appservices.fxaclient.Device.PushSubscription](../mozilla.components.service.fxa/mozilla.appservices.fxaclient.-device.-push-subscription/index.md) (extensions in package mozilla.components.service.fxa) |  |
-| [mozilla.components.feature.push.PushSubscriptionObserver](../mozilla.components.feature.push/-push-subscription-observer/index.md) | Observers that want to receive updates for new subscriptions. |
-| [mozilla.components.feature.push.PushType](../mozilla.components.feature.push/-push-type/index.md) | The different kind of message types that a [EncryptedPushMessage](../mozilla.components.concept.push/-encrypted-push-message/index.md) can be: |
 | [mozilla.components.feature.qr.QrFeature](../mozilla.components.feature.qr/-qr-feature/index.md) | Feature implementation that provides QR scanning functionality via the [QrFragment](../mozilla.components.feature.qr/-qr-fragment/index.md). |
 | [mozilla.components.feature.qr.QrFragment](../mozilla.components.feature.qr/-qr-fragment/index.md) | A [Fragment](#) that displays a QR scanner. |
 | [mozilla.components.service.glean.private.QuantityMetricType](../mozilla.components.service.glean.private/-quantity-metric-type.md) |  |
@@ -539,7 +537,6 @@
 | [mozilla.components.concept.storage.RedirectSource](../mozilla.components.concept.storage/-redirect-source/index.md) | A redirect source describes how a page redirected to another page. |
 | [mozilla.components.lib.state.Reducer](../mozilla.components.lib.state/-reducer.md) | Reducers specify how the application's [State](../mozilla.components.lib.state/-state.md) changes in response to [Action](../mozilla.components.lib.state/-action.md)s sent to the [Store](../mozilla.components.lib.state/-store/index.md). |
 | [mozilla.components.service.location.search.RegionSearchLocalizationProvider](../mozilla.components.service.location.search/-region-search-localization-provider/index.md) | [SearchLocalizationProvider](../mozilla.components.browser.search.provider.localization/-search-localization-provider/index.md) implementation that uses a [MozillaLocationService](../mozilla.components.service.location/-mozilla-location-service/index.md) instance to do a region lookup via GeoIP. |
-| [mozilla.components.feature.push.Registry](../mozilla.components.feature.push/-registry.md) |  |
 | [mozilla.components.browser.storage.sync.RemoteTabsStorage](../mozilla.components.browser.storage.sync/-remote-tabs-storage/index.md) | An interface which defines read/write methods for remote tabs data. |
 | [mozilla.components.concept.fetch.Request](../mozilla.components.concept.fetch/-request/index.md) | The [Request](../mozilla.components.concept.fetch/-request/index.md) data class represents a resource request to be send by a [Client](../mozilla.components.concept.fetch/-client/index.md). |
 | [mozilla.components.lib.fetch.okhttp.RequestBuilder](../mozilla.components.lib.fetch.okhttp/-request-builder.md) |  |

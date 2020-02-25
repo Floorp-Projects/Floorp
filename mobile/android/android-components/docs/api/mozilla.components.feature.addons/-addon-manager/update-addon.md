@@ -2,7 +2,7 @@
 
 # updateAddon
 
-`fun updateAddon(id: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, onFinish: (`[`Status`](../../mozilla.components.feature.addons.update/-addon-updater/-status/index.md)`) -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/addons/src/main/java/mozilla/components/feature/addons/AddonManager.kt#L238)
+`fun updateAddon(id: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, onFinish: (`[`Status`](../../mozilla.components.feature.addons.update/-addon-updater/-status/index.md)`) -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/addons/src/main/java/mozilla/components/feature/addons/AddonManager.kt#L249)
 
 Updates the addon with the provided [id](update-addon.md#mozilla.components.feature.addons.AddonManager$updateAddon(kotlin.String, kotlin.Function1((mozilla.components.feature.addons.update.AddonUpdater.Status, kotlin.Unit)))/id) if an update is available.
 

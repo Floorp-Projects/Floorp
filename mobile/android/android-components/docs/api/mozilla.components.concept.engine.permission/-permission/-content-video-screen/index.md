@@ -2,7 +2,7 @@
 
 # ContentVideoScreen
 
-`data class ContentVideoScreen : `[`Permission`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/permission/PermissionRequest.kt#L72)
+`data class ContentVideoScreen : `[`Permission`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/permission/PermissionRequest.kt#L73)
 
 ### Constructors
 

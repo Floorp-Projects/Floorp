@@ -2,7 +2,7 @@
 
 # Media
 
-`data class Media : `[`GeckoPermissionRequest`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-gecko-beta/src/main/java/mozilla/components/browser/engine/gecko/permission/GeckoPermissionRequest.kt#L95)
+`data class Media : `[`GeckoPermissionRequest`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-gecko-beta/src/main/java/mozilla/components/browser/engine/gecko/permission/GeckoPermissionRequest.kt#L99)
 
 Represents a gecko-based media permission request.
 

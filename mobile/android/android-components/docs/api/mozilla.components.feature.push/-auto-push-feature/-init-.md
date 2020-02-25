@@ -8,13 +8,13 @@
         socketProtocol = config.protocol,
         serviceType = config.serviceType,
         databasePath = File(context.filesDir, DB_NAME).canonicalPath
-    ), crashReporter: `[`CrashReporter`](../../mozilla.components.lib.crash/-crash-reporter/index.md)`? = null)`
+    ), crashReporter: `[`CrashReporter`](../../mozilla.components.lib.crash/-crash-reporter/index.md)`? = null, delegate: `[`Observable`](../../mozilla.components.support.base.observer/-observable/index.md)`<`[`Observer`](-observer/index.md)`> = ObserverRegistry())`
 
 A implementation of a [PushProcessor](../../mozilla.components.concept.push/-push-processor/index.md) that should live as a singleton by being installed
 in the Application's onCreate. It receives messages from a service and forwards them
 to be decrypted and routed.
 
-Listen for subscription information changes for each registered [PushType](../-push-type/index.md):
+Listen for subscription information changes for each registered scope:
 
-Listen also for push messages for each registered [PushType](../-push-type/index.md):
+Listen also for push messages:
 

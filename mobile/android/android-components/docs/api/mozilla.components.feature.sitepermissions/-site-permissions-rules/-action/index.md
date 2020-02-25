@@ -2,12 +2,13 @@
 
 # Action
 
-`enum class Action` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/sitepermissions/src/main/java/mozilla/components/feature/sitepermissions/SitePermissionsRules.kt#L21)
+`enum class Action` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/sitepermissions/src/main/java/mozilla/components/feature/sitepermissions/SitePermissionsRules.kt#L40)
 
 ### Enum Values
 
 | Name | Summary |
 |---|---|
+| [ALLOWED](-a-l-l-o-w-e-d.md) |  |
 | [BLOCKED](-b-l-o-c-k-e-d.md) |  |
 | [ASK_TO_ALLOW](-a-s-k_-t-o_-a-l-l-o-w.md) |  |
 

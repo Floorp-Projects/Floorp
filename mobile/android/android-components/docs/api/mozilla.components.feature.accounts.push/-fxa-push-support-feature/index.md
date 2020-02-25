@@ -2,7 +2,7 @@
 
 # FxaPushSupportFeature
 
-`class FxaPushSupportFeature` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/accounts-push/src/main/java/mozilla/components/feature/accounts/push/FxaPushSupportFeature.kt#L46)
+`class FxaPushSupportFeature` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/accounts-push/src/main/java/mozilla/components/feature/accounts/push/FxaPushSupportFeature.kt#L44)
 
 A feature used for supporting FxA and push integration where needed. One of the main functions is when FxA notifies
 the device during a sync, that it's unable to reach the device via push messaging; triggering a push

@@ -2,15 +2,21 @@
 
 # AutoPushFeature
 
-`class AutoPushFeature : `[`PushProcessor`](../../mozilla.components.concept.push/-push-processor/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/push/src/main/java/mozilla/components/feature/push/AutoPushFeature.kt#L77)
+`class AutoPushFeature : `[`PushProcessor`](../../mozilla.components.concept.push/-push-processor/index.md)`, `[`Observable`](../../mozilla.components.support.base.observer/-observable/index.md)`<`[`Observer`](-observer/index.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/push/src/main/java/mozilla/components/feature/push/AutoPushFeature.kt#L72)
 
 A implementation of a [PushProcessor](../../mozilla.components.concept.push/-push-processor/index.md) that should live as a singleton by being installed
 in the Application's onCreate. It receives messages from a service and forwards them
 to be decrypted and routed.
 
-Listen for subscription information changes for each registered [PushType](../-push-type/index.md):
+Listen for subscription information changes for each registered scope:
 
-Listen also for push messages for each registered [PushType](../-push-type/index.md):
+Listen also for push messages:
+
+### Types
+
+| Name | Summary |
+|---|---|
+| [Observer](-observer/index.md) | `interface Observer`<br>Observers that want to receive updates for new subscriptions and messages. |
 
 ### Constructors
 
@@ -22,23 +28,20 @@ Listen also for push messages for each registered [PushType](../-push-type/index
         socketProtocol = config.protocol,
         serviceType = config.serviceType,
         databasePath = File(context.filesDir, DB_NAME).canonicalPath
-    ), crashReporter: `[`CrashReporter`](../../mozilla.components.lib.crash/-crash-reporter/index.md)`? = null)`<br>A implementation of a [PushProcessor](../../mozilla.components.concept.push/-push-processor/index.md) that should live as a singleton by being installed in the Application's onCreate. It receives messages from a service and forwards them to be decrypted and routed. |
+    ), crashReporter: `[`CrashReporter`](../../mozilla.components.lib.crash/-crash-reporter/index.md)`? = null, delegate: `[`Observable`](../../mozilla.components.support.base.observer/-observable/index.md)`<`[`Observer`](-observer/index.md)`> = ObserverRegistry())`<br>A implementation of a [PushProcessor](../../mozilla.components.concept.push/-push-processor/index.md) that should live as a singleton by being installed in the Application's onCreate. It receives messages from a service and forwards them to be decrypted and routed. |
 
 ### Functions
 
 | Name | Summary |
 |---|---|
-| [initialize](initialize.md) | `fun initialize(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Starts the push feature and initialization work needed. |
+| [initialize](initialize.md) | `fun initialize(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Starts the push feature and initialization work needed. Also starts the [PushService](../../mozilla.components.concept.push/-push-service/index.md) to ensure new messages come through. |
 | [onError](on-error.md) | `fun onError(error: `[`PushError`](../../mozilla.components.concept.push/-push-error/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>An error has occurred. |
 | [onMessageReceived](on-message-received.md) | `fun onMessageReceived(message: `[`EncryptedPushMessage`](../../mozilla.components.concept.push/-encrypted-push-message/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>New encrypted messages received from a supported push messaging service. |
-| [onNewToken](on-new-token.md) | `fun onNewToken(newToken: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>New registration tokens are received and sent to the Autopush server which also performs subscriptions for each push type and notifies the subscribers. |
-| [registerForPushMessages](register-for-push-messages.md) | `fun registerForPushMessages(type: `[`PushType`](../-push-type/index.md)`, observer: `[`Observer`](../../mozilla.components.concept.push/-bus/-observer/index.md)`<`[`PushType`](../-push-type/index.md)`, `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`>, owner: LifecycleOwner = ProcessLifecycleOwner.get(), autoPause: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)` = false): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Register to receive push messages for the associated [PushType](../-push-type/index.md). |
-| [registerForSubscriptions](register-for-subscriptions.md) | `fun registerForSubscriptions(observer: `[`PushSubscriptionObserver`](../-push-subscription-observer/index.md)`, owner: LifecycleOwner = ProcessLifecycleOwner.get(), autoPause: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)` = false): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Register to receive push subscriptions when requested or when they have been re-registered. |
+| [onNewToken](on-new-token.md) | `fun onNewToken(newToken: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>New registration tokens are received and sent to the AutoPush server which also performs subscriptions for each push type and notifies the subscribers. |
 | [renewRegistration](renew-registration.md) | `fun renewRegistration(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Deletes the registration token locally so that it forces the service to get a new one the next time hits it's messaging server. |
-| [shutdown](shutdown.md) | `fun shutdown(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Un-subscribes from all push message channels, stops the push service, and stops periodic verifications. This should only be done on an account logout or app data deletion. |
-| [subscribeAll](subscribe-all.md) | `fun subscribeAll(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Returns all subscription for the push type if available. |
-| [subscribeForType](subscribe-for-type.md) | `fun subscribeForType(type: `[`PushType`](../-push-type/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Notifies observers about the subscription information for the push type if available. |
-| [unsubscribeForType](unsubscribe-for-type.md) | `fun unsubscribeForType(type: `[`PushType`](../-push-type/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Returns subscription information for the push type if available. |
+| [shutdown](shutdown.md) | `fun shutdown(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Un-subscribes from all push message channels and stops periodic verifications. |
+| [subscribe](subscribe.md) | `fun subscribe(scope: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, appServerKey: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`? = null, onSubscribeError: () -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)` = {}, onSubscribe: (`[`AutoPushSubscription`](../-auto-push-subscription/index.md)`) -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)` = {}): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Subscribes for push notifications and invokes the [onSubscribe](subscribe.md#mozilla.components.feature.push.AutoPushFeature$subscribe(kotlin.String, kotlin.String, kotlin.Function0((kotlin.Unit)), kotlin.Function1((mozilla.components.feature.push.AutoPushSubscription, kotlin.Unit)))/onSubscribe) callback with the subscription information. |
+| [unsubscribe](unsubscribe.md) | `fun unsubscribe(scope: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, onUnsubscribeError: () -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)` = {}, onUnsubscribe: (`[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`) -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)` = {}): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Un-subscribes from a valid subscription and invokes the [onUnsubscribe](unsubscribe.md#mozilla.components.feature.push.AutoPushFeature$unsubscribe(kotlin.String, kotlin.Function0((kotlin.Unit)), kotlin.Function1((kotlin.Boolean, kotlin.Unit)))/onUnsubscribe) callback with the result. |
 
 ### Extension Functions
 

@@ -11,17 +11,20 @@ Indicate how site permissions must behave by permission category.
 | Name | Summary |
 |---|---|
 | [Action](-action/index.md) | `enum class Action` |
+| [AutoplayAction](-autoplay-action/index.md) | `enum class AutoplayAction`<br>Autoplay requests will never prompt the user |
 
 ### Constructors
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `SitePermissionsRules(camera: `[`Action`](-action/index.md)`, location: `[`Action`](-action/index.md)`, notification: `[`Action`](-action/index.md)`, microphone: `[`Action`](-action/index.md)`)`<br>Indicate how site permissions must behave by permission category. |
+| [&lt;init&gt;](-init-.md) | `SitePermissionsRules(camera: `[`Action`](-action/index.md)`, location: `[`Action`](-action/index.md)`, notification: `[`Action`](-action/index.md)`, microphone: `[`Action`](-action/index.md)`, autoplayAudible: `[`AutoplayAction`](-autoplay-action/index.md)`, autoplayInaudible: `[`AutoplayAction`](-autoplay-action/index.md)`)` |
 
 ### Properties
 
 | Name | Summary |
 |---|---|
+| [autoplayAudible](autoplay-audible.md) | `val autoplayAudible: `[`Action`](-action/index.md) |
+| [autoplayInaudible](autoplay-inaudible.md) | `val autoplayInaudible: `[`Action`](-action/index.md) |
 | [camera](camera.md) | `val camera: `[`Action`](-action/index.md) |
 | [location](location.md) | `val location: `[`Action`](-action/index.md) |
 | [microphone](microphone.md) | `val microphone: `[`Action`](-action/index.md) |

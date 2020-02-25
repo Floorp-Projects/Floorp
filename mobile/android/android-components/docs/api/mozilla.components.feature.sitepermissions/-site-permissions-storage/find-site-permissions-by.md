@@ -2,7 +2,7 @@
 
 # findSitePermissionsBy
 
-`fun findSitePermissionsBy(origin: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`SitePermissions`](../-site-permissions/index.md)`?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/sitepermissions/src/main/java/mozilla/components/feature/sitepermissions/SitePermissionsStorage.kt#L63)
+`fun findSitePermissionsBy(origin: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`SitePermissions`](../-site-permissions/index.md)`?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/sitepermissions/src/main/java/mozilla/components/feature/sitepermissions/SitePermissionsStorage.kt#L65)
 
 Finds all SitePermissions that match the [origin](find-site-permissions-by.md#mozilla.components.feature.sitepermissions.SitePermissionsStorage$findSitePermissionsBy(kotlin.String)/origin).
 

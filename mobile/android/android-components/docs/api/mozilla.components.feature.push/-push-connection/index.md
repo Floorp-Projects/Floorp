@@ -2,7 +2,7 @@
 
 # PushConnection
 
-`interface PushConnection : `[`Closeable`](https://developer.android.com/reference/java/io/Closeable.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/push/src/main/java/mozilla/components/feature/push/Connection.kt#L24)
+`interface PushConnection : `[`Closeable`](https://developer.android.com/reference/java/io/Closeable.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/push/src/main/java/mozilla/components/feature/push/Connection.kt#L27)
 
 An interface that wraps the [PushAPI](#).
 
@@ -13,13 +13,13 @@ on the API.
 
 | Name | Summary |
 |---|---|
-| [decrypt](decrypt.md) | `abstract fun decrypt(channelId: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, body: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, encoding: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)` = "", salt: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)` = "", cryptoKey: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)` = ""): `[`ByteArray`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-byte-array/index.html) |
-| [isInitialized](is-initialized.md) | `abstract fun isInitialized(): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) |
-| [subscribe](subscribe.md) | `abstract suspend fun subscribe(channelId: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, scope: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)` = ""): SubscriptionResponse` |
-| [unsubscribe](unsubscribe.md) | `abstract suspend fun unsubscribe(channelId: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) |
-| [unsubscribeAll](unsubscribe-all.md) | `abstract suspend fun unsubscribeAll(): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) |
-| [updateToken](update-token.md) | `abstract suspend fun updateToken(token: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) |
-| [verifyConnection](verify-connection.md) | `abstract suspend fun verifyConnection(): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) |
+| [decryptMessage](decrypt-message.md) | `abstract suspend fun decryptMessage(channelId: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, body: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, encoding: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)` = "", salt: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)` = "", cryptoKey: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)` = ""): `[`Pair`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-pair/index.html)`<`[`PushScope`](../-push-scope.md)`, `[`ByteArray`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-byte-array/index.html)`>?`<br>Decrypts a received message. |
+| [isInitialized](is-initialized.md) | `abstract fun isInitialized(): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Checks if the native Push API has already been initialized. |
+| [subscribe](subscribe.md) | `abstract suspend fun subscribe(scope: `[`PushScope`](../-push-scope.md)`, appServerKey: `[`AppServerKey`](../-app-server-key.md)`? = null): `[`AutoPushSubscription`](../-auto-push-subscription/index.md)<br>Creates a push subscription for the given scope. |
+| [unsubscribe](unsubscribe.md) | `abstract suspend fun unsubscribe(scope: `[`PushScope`](../-push-scope.md)`): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Un-subscribes a push subscription for the given scope. |
+| [unsubscribeAll](unsubscribe-all.md) | `abstract suspend fun unsubscribeAll(): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Un-subscribes all push subscriptions. |
+| [updateToken](update-token.md) | `abstract suspend fun updateToken(token: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Updates the registration token to the native Push API if it changes. |
+| [verifyConnection](verify-connection.md) | `abstract suspend fun verifyConnection(): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Checks validity of current push subscriptions. |
 
 ### Extension Functions
 
