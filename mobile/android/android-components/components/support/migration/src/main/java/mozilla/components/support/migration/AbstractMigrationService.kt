@@ -4,10 +4,11 @@
 
 package mozilla.components.support.migration
 
-import android.app.NotificationChannel
+import android.app.Activity
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.Service
+import android.app.NotificationChannel
 import android.content.Context
 import android.content.Intent
 import android.os.Build
@@ -38,7 +39,7 @@ private const val TEMPORARY_NOTIFICATION_CHANNEL_NAME = "Migration"
 abstract class AbstractMigrationService : Service() {
     protected abstract val migrator: FennecMigrator
     protected abstract val store: MigrationStore
-    protected abstract val migrationActivity: Class<out AbstractMigrationProgressActivity>
+    protected abstract val migrationDecisionActivity: Class<out Activity>
 
     private val logger = Logger("MigrationService")
     private val scope = MainScope()
@@ -123,7 +124,7 @@ abstract class AbstractMigrationService : Service() {
                 .setContentTitle(getString(titleRes))
                 .setContentText(getString(contentRes))
                 .setContentIntent(PendingIntent.getActivity(this, 0,
-                        Intent(this, migrationActivity), 0))
+                        Intent(this, migrationDecisionActivity), 0))
                 .setPriority(NotificationCompat.PRIORITY_LOW)
                 .setCategory(NotificationCompat.CATEGORY_PROGRESS)
                 .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
