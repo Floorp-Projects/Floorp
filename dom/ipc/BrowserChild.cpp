@@ -1292,6 +1292,9 @@ mozilla::ipc::IPCResult BrowserChild::RecvSizeModeChanged(
     return IPC_OK();
   }
   nsCOMPtr<Document> document(GetTopLevelDocument());
+  if (!document) {
+    return IPC_OK();
+  }
   nsPresContext* presContext = document->GetPresContext();
   if (presContext) {
     presContext->SizeModeChanged(aSizeMode);
