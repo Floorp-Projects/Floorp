@@ -44,7 +44,6 @@
 #include "jit/RangeAnalysis.h"
 #include "jit/ScalarReplacement.h"
 #include "jit/Sink.h"
-#include "jit/StupidAllocator.h"
 #include "jit/ValueNumbering.h"
 #include "jit/WasmBCE.h"
 #include "js/Printf.h"
@@ -1428,24 +1427,6 @@ LIRGraph* GenerateLIR(MIRGenerator* mir) {
 #endif
 
         gs.spewPass("Allocate Registers [Backtracking]");
-        break;
-      }
-
-      case RegisterAllocator_Stupid: {
-        // Use the integrity checker to populate safepoint information, so
-        // run it in all builds.
-        if (!integrity.record()) {
-          return nullptr;
-        }
-
-        StupidAllocator regalloc(mir, &lirgen, *lir);
-        if (!regalloc.go()) {
-          return nullptr;
-        }
-        if (!integrity.check(true)) {
-          return nullptr;
-        }
-        gs.spewPass("Allocate Registers [Stupid]");
         break;
       }
 
