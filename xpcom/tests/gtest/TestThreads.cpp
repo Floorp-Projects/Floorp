@@ -97,7 +97,12 @@ NS_IMPL_ISUPPORTS(nsStressRunner, nsIRunnable)
 
 TEST(Threads, Stress)
 {
+#if defined(XP_WIN) && defined(MOZ_ASAN)  // Easily hits OOM
+  const int loops = 250;
+#else
   const int loops = 1000;
+#endif
+
   const int threads = 50;
 
   for (int i = 0; i < loops; i++) {
@@ -240,7 +245,12 @@ static void threadProc(void* arg) {
 
 TEST(Threads, StressNSPR)
 {
+#if defined(XP_WIN) && defined(MOZ_ASAN)  // Easily hits OOM
+  const int loops = 250;
+#else
   const int loops = 1000;
+#endif
+
   const int threads = 50;
 
   for (int i = 0; i < loops; i++) {

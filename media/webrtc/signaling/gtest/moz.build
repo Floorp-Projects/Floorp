@@ -6,7 +6,9 @@
 include('/media/webrtc/webrtc.mozbuild')
 
 # TODO: bug 1172551 - get these tests working on iOS
-if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'uikit' and CONFIG['OS_TARGET'] != 'Android':
+# Also, these lengthy tests are prone to OOM on Windows ASan.
+if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'uikit' and CONFIG['OS_TARGET'] != 'Android' \
+  and not (CONFIG['OS_TARGET'] == 'WINNT' and CONFIG['MOZ_ASAN']):
     LOCAL_INCLUDES += [
       '/dom/media',
       '/ipc/chromium/src',
