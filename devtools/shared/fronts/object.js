@@ -315,14 +315,6 @@ function getAdHocFrontOrPrimitiveGrip(packet, parentFront) {
   }
 
   const { conn, targetFront } = parentFront;
-
-  // We may have already created a front for this object actor since some actor (e.g. the
-  // thread actor) cache the object actors they create.
-  const existingFront = conn.getFrontByID(packet.actor);
-  if (existingFront) {
-    return existingFront;
-  }
-
   const { type } = packet;
 
   if (type === "longString") {
