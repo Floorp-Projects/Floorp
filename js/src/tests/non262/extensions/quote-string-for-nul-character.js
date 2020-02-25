@@ -19,14 +19,6 @@ assertErrorMessageIncludes(() => "foo\0bar" in "asdf\0qwertz", "bar");
 assertErrorMessageIncludes(() => "foo\0bar" in "asdf\0qwertz", "qwertz");
 
 if (this.Intl) {
-    if (typeof addIntlExtras === "function") {
-        const extras = {};
-        addIntlExtras(extras);
-        if (extras.Locale) {
-            Intl.Locale = extras.Locale;
-        }
-    }
-
     assertErrorMessageIncludes(() => Intl.getCanonicalLocales("de\0Latn"), "Latn");
 
     assertErrorMessageIncludes(() => Intl.Collator.supportedLocalesOf([], {localeMatcher:"lookup\0cookie"}), "cookie");
@@ -65,18 +57,16 @@ if (this.Intl) {
     assertErrorMessageIncludes(() => new Intl.RelativeTimeFormat("en", {numeric: "auto\0cookie"}), "cookie");
     assertErrorMessageIncludes(() => new Intl.RelativeTimeFormat().format(1, "day\0cookie"), "cookie");
 
-    if (Intl.Locale) {
-        assertErrorMessageIncludes(() => new Intl.Locale("de\0keks"), "keks");
-        assertErrorMessageIncludes(() => new Intl.Locale("de", {language: "it\0biscotto"}), "biscotto");
-        assertErrorMessageIncludes(() => new Intl.Locale("th", {script: "Thai\0คุกกี้"}), "\\u0E04\\u0E38\\u0E01\\u0E01\\u0E35\\u0E49");
-        assertErrorMessageIncludes(() => new Intl.Locale("en", {region: "GB\0biscuit"}), "biscuit");
+    assertErrorMessageIncludes(() => new Intl.Locale("de\0keks"), "keks");
+    assertErrorMessageIncludes(() => new Intl.Locale("de", {language: "it\0biscotto"}), "biscotto");
+    assertErrorMessageIncludes(() => new Intl.Locale("th", {script: "Thai\0คุกกี้"}), "\\u0E04\\u0E38\\u0E01\\u0E01\\u0E35\\u0E49");
+    assertErrorMessageIncludes(() => new Intl.Locale("en", {region: "GB\0biscuit"}), "biscuit");
 
-        assertErrorMessageIncludes(() => new Intl.Locale("und", {calendar: "gregory\0F1"}), "F1");
-        assertErrorMessageIncludes(() => new Intl.Locale("und", {collation: "phonebk\0F2"}), "F2");
-        assertErrorMessageIncludes(() => new Intl.Locale("und", {hourCycle: "h24\0F3"}), "F3");
-        assertErrorMessageIncludes(() => new Intl.Locale("und", {caseFirst: "false\0F4"}), "F4");
-        assertErrorMessageIncludes(() => new Intl.Locale("und", {numberingSystem: "arab\0F5"}), "F5");
-    }
+    assertErrorMessageIncludes(() => new Intl.Locale("und", {calendar: "gregory\0F1"}), "F1");
+    assertErrorMessageIncludes(() => new Intl.Locale("und", {collation: "phonebk\0F2"}), "F2");
+    assertErrorMessageIncludes(() => new Intl.Locale("und", {hourCycle: "h24\0F3"}), "F3");
+    assertErrorMessageIncludes(() => new Intl.Locale("und", {caseFirst: "false\0F4"}), "F4");
+    assertErrorMessageIncludes(() => new Intl.Locale("und", {numberingSystem: "arab\0F5"}), "F5");
 }
 
 // Shell and helper functions.

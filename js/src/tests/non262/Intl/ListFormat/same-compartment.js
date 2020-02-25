@@ -1,4 +1,4 @@
-// |reftest| skip-if(!this.hasOwnProperty('Intl')||(!this.Intl.Locale&&!this.hasOwnProperty('addIntlExtras')))
+// |reftest| skip-if(!this.hasOwnProperty('Intl')||(!this.Intl.ListFormat&&!this.hasOwnProperty('addIntlExtras')))
 
 var locale = "en";
 var list = ["a", "b", "c"];

@@ -2594,11 +2594,6 @@ extern JS_FRIEND_API JSObject* ToWindowIfWindowProxy(JSObject* obj);
 extern bool AddMozDateTimeFormatConstructor(JSContext* cx,
                                             JS::Handle<JSObject*> intl);
 
-// Create and add the Intl.Locale constructor function to the provided object.
-// If JS was built without JS_HAS_INTL_API, this function will throw an
-// exception.
-extern bool AddLocaleConstructor(JSContext* cx, JS::Handle<JSObject*> intl);
-
 // Create and add the Intl.ListFormat constructor function to the provided
 // object.
 // If JS was built without JS_HAS_INTL_API, this function will throw an

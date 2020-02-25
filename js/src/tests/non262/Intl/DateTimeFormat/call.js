@@ -1,12 +1,9 @@
 // |reftest| skip-if(!this.hasOwnProperty("Intl"))
 
-function IsConstructor(o) {
-  try {
-    new (new Proxy(o, {construct: () => ({})}));
-    return true;
-  } catch (e) {
-    return false;
-  }
+function IsIntlService(c) {
+    return typeof c === "function" &&
+           c.hasOwnProperty("prototype") &&
+           c.prototype.hasOwnProperty("resolvedOptions");
 }
 
 function IsObject(o) {
@@ -18,7 +15,7 @@ function IsPrimitive(o) {
 }
 
 function thisValues() {
-    const intlConstructors = Object.getOwnPropertyNames(Intl).map(name => Intl[name]).filter(IsConstructor);
+    const intlConstructors = Object.getOwnPropertyNames(Intl).map(name => Intl[name]).filter(IsIntlService);
 
     return [
         // Primitive values.
