@@ -51,7 +51,6 @@
 #include "mozilla/layers/TextureClient.h"
 #include "mozilla/layers/TextureWrapperImage.h"
 #include "mozilla/layers/WebRenderUserData.h"
-#include "nsAnimationManager.h"
 #include "nsDisplayList.h"
 #include "nsDocShell.h"
 #include "nsIScrollableFrame.h"
@@ -420,9 +419,9 @@ void DisplayItemData::NotifyRemoved() {
     }
   }
 
-  // FIXME: Bug 1530857: Add background_color.
   if (type != DisplayItemType::TYPE_TRANSFORM &&
-      type != DisplayItemType::TYPE_OPACITY) {
+      type != DisplayItemType::TYPE_OPACITY &&
+      type != DisplayItemType::TYPE_BACKGROUND_COLOR) {
     return;
   }
 
