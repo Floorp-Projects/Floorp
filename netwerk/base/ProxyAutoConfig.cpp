@@ -23,6 +23,7 @@
 #include "js/Warnings.h"  // JS::SetWarningReporter
 #include "prnetdb.h"
 #include "nsITimer.h"
+#include "mozilla/Atomics.h"
 #include "mozilla/net/DNS.h"
 #include "mozilla/Utf8.h"  // mozilla::Utf8Unit
 #include "nsServiceManagerUtils.h"
@@ -281,15 +282,18 @@ static const char sAsciiPacUtils[] =
 // sRunning is defined for the helper functions only while the
 // Javascript engine is running and the PAC object cannot be deleted
 // or reset.
-static uint32_t sRunningIndex = 0xdeadbeef;
+static Atomic<uint32_t, Relaxed>& RunningIndex() {
+  static Atomic<uint32_t, Relaxed> sRunningIndex(0xdeadbeef);
+  return sRunningIndex;
+}
 static ProxyAutoConfig* GetRunning() {
-  MOZ_ASSERT(sRunningIndex != 0xdeadbeef);
-  return static_cast<ProxyAutoConfig*>(PR_GetThreadPrivate(sRunningIndex));
+  MOZ_ASSERT(RunningIndex() != 0xdeadbeef);
+  return static_cast<ProxyAutoConfig*>(PR_GetThreadPrivate(RunningIndex()));
 }
 
 static void SetRunning(ProxyAutoConfig* arg) {
-  MOZ_ASSERT(sRunningIndex != 0xdeadbeef);
-  PR_SetThreadPrivate(sRunningIndex, arg);
+  MOZ_ASSERT(RunningIndex() != 0xdeadbeef);
+  PR_SetThreadPrivate(RunningIndex(), arg);
 }
 
 // The PACResolver is used for dnsResolve()
@@ -661,7 +665,7 @@ const JSClass JSContextWrapper::sGlobalClass = {"PACResolutionThreadGlobal",
                                                 &JS::DefaultGlobalClassOps};
 
 void ProxyAutoConfig::SetThreadLocalIndex(uint32_t index) {
-  sRunningIndex = index;
+  RunningIndex() = index;
 }
 
 nsresult ProxyAutoConfig::Init(const nsCString& aPACURI,
