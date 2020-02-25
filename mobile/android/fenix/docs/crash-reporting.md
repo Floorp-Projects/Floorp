@@ -4,7 +4,7 @@ Firefox Preview uses a few libraries for crash and exception reporting. This kin
 
 This page documents the types of crash reporting, how the various parts interact, and what kind of data is sent back to Mozilla.
 
-Documentation for the specific libraries is included in the [https://github.com/mozilla-mobile/android-components/blob/master/components/lib/crash/README.md](Android Components Crash Reporting README).
+Documentation for the specific libraries is included in the [Android Components Crash Reporting README](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/crash/README.md).
 
 ## Glean crash ping
 
@@ -102,6 +102,7 @@ Sentry collects basic information about the Firefox Preview app.
         "version":"1.7.10-598d4",
         "name":"sentry-java"
     }
+```
 
 ### Crash Information
 
