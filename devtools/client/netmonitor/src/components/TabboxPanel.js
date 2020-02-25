@@ -39,7 +39,7 @@ const ResponsePanel = createFactory(
   require("devtools/client/netmonitor/src/components/ResponsePanel")
 );
 const SecurityPanel = createFactory(
-  require("devtools/client/netmonitor/src/components/SecurityPanel")
+  require("devtools/client/netmonitor/src/components/request-details/SecurityPanel")
 );
 const StackTracePanel = createFactory(
   require("devtools/client/netmonitor/src/components/StackTracePanel")
