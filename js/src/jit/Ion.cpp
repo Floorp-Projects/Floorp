@@ -1393,7 +1393,9 @@ LIRGraph* GenerateLIR(MIRGenerator* mir) {
     }
   }
 
+#ifdef DEBUG
   AllocationIntegrityState integrity(*lir);
+#endif
 
   {
     AutoTraceLog log(logger, TraceLogger_RegisterAllocation);

@@ -21,6 +21,7 @@ namespace jit {
 
 class LIRGenerator;
 
+#ifdef DEBUG
 // Structure for running a liveness analysis on a finished register allocation.
 // This analysis can be used for two purposes:
 //
@@ -122,6 +123,7 @@ struct AllocationIntegrityState {
 
   void dump();
 };
+#endif  // DEBUG
 
 // Represents with better-than-instruction precision a position in the
 // instruction stream.
