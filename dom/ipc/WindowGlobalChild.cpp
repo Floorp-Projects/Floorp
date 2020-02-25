@@ -465,7 +465,7 @@ already_AddRefed<JSWindowActorChild> WindowGlobalChild::GetActor(
   MOZ_RELEASE_ASSERT(!actor->GetManager(),
                      "mManager was already initialized once!");
   actor->Init(aName, this);
-  mWindowActors.Put(aName, actor);
+  mWindowActors.Put(aName, RefPtr{actor});
   return actor.forget();
 }
 

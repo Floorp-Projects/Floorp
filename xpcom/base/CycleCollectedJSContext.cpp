@@ -331,7 +331,7 @@ void CycleCollectedJSContext::PromiseRejectionTrackerCallback(
       RefPtr<Promise> promise =
           Promise::CreateFromExisting(xpc::NativeGlobal(aPromise), aPromise);
       aboutToBeNotified.AppendElement(promise);
-      unhandled.Put(promiseID, promise);
+      unhandled.Put(promiseID, std::move(promise));
     }
   } else {
     PromiseDebugging::AddConsumedRejection(aPromise);

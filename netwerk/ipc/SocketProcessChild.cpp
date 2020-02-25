@@ -175,8 +175,8 @@ mozilla::ipc::IPCResult SocketProcessChild::RecvInitSocketProcessBridgeParent(
   MOZ_ASSERT(!mSocketProcessBridgeParentMap.Get(aContentProcessId, nullptr));
 
   mSocketProcessBridgeParentMap.Put(
-      aContentProcessId,
-      new SocketProcessBridgeParent(aContentProcessId, std::move(aEndpoint)));
+      aContentProcessId, MakeRefPtr<SocketProcessBridgeParent>(
+                             aContentProcessId, std::move(aEndpoint)));
   return IPC_OK();
 }
 

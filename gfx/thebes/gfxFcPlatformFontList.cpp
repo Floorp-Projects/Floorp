@@ -1359,7 +1359,7 @@ void gfxFcPlatformFontList::AddPatternToFontList(
         static_cast<gfxFontconfigFontFamily*>(mFontFamilies.GetWeak(keyName));
     if (!aFontFamily) {
       aFontFamily = new gfxFontconfigFontFamily(aFamilyName);
-      mFontFamilies.Put(keyName, aFontFamily);
+      mFontFamilies.Put(keyName, RefPtr{aFontFamily});
     }
     // Record if the family contains fonts from the app font set
     // (in which case we won't rely on fontconfig's charmap, due to

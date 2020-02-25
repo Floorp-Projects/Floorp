@@ -136,7 +136,7 @@ nsDNSServiceDiscovery::StartDiscovery(const nsACString& aServiceType,
     return rv;
   }
 
-  mDiscoveryMap.Put(aListener, browserOp);
+  mDiscoveryMap.Put(aListener, std::move(browserOp));
 
   req.forget(aRetVal);
 
@@ -180,7 +180,7 @@ nsDNSServiceDiscovery::RegisterService(nsIDNSServiceInfo* aServiceInfo,
     return rv;
   }
 
-  mRegisterMap.Put(aListener, registerOp);
+  mRegisterMap.Put(aListener, std::move(registerOp));
 
   req.forget(aRetVal);
 

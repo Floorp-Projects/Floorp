@@ -50,8 +50,8 @@ class nsRefPtrHashtable
    */
   PtrType* GetWeak(KeyType aKey, bool* aFound = nullptr) const;
 
-  // Overload Put, rather than overriding it.
-  using base_type::Put;
+  // Hide base class' Put overloads intentionally, to make any necessary
+  // refcounting explicit when calling Put.
 
   template <typename U,
             typename = std::enable_if_t<std::is_base_of_v<PtrType, U>>>

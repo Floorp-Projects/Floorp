@@ -444,7 +444,7 @@ void JSWindowActorService::LoadJSWindowActorInfos(
     // Create our JSWindowActorProtocol, register it in mDescriptors.
     RefPtr<JSWindowActorProtocol> proto =
         JSWindowActorProtocol::FromIPC(aInfos[i]);
-    mDescriptors.Put(aInfos[i].name(), proto);
+    mDescriptors.Put(aInfos[i].name(), RefPtr{proto});
 
     // Register listeners for each chrome target.
     for (EventTarget* target : mChromeEventTargets) {

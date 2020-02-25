@@ -1246,7 +1246,7 @@ void DocAccessible::BindToDocument(Accessible* aAccessible,
     mNodeToAccessibleMap.Put(aAccessible->GetNode(), aAccessible);
 
   // Put into unique ID cache.
-  mAccessibleCache.Put(aAccessible->UniqueID(), aAccessible);
+  mAccessibleCache.Put(aAccessible->UniqueID(), RefPtr{aAccessible});
 
   aAccessible->SetRoleMapEntry(aRoleMapEntry);
 

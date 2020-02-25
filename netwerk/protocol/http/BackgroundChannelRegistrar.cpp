@@ -74,7 +74,7 @@ void BackgroundChannelRegistrar::LinkHttpChannel(uint64_t aKey,
   bool found = mBgChannels.Remove(aKey, getter_AddRefs(bgParent));
 
   if (!found) {
-    mChannels.Put(aKey, aChannel);
+    mChannels.Put(aKey, RefPtr{aChannel});
     return;
   }
 
@@ -91,7 +91,7 @@ void BackgroundChannelRegistrar::LinkBackgroundChannel(
   bool found = mChannels.Remove(aKey, getter_AddRefs(parent));
 
   if (!found) {
-    mBgChannels.Put(aKey, aBgChannel);
+    mBgChannels.Put(aKey, RefPtr{aBgChannel});
     return;
   }
 

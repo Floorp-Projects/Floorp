@@ -3348,7 +3348,7 @@ void ContentChild::CreateGetFilesRequest(const nsAString& aDirectoryPath,
 
   Unused << SendGetFilesRequest(aUUID, nsString(aDirectoryPath),
                                 aRecursiveFlag);
-  mGetFilesPendingRequests.Put(aUUID, aChild);
+  mGetFilesPendingRequests.Put(aUUID, RefPtr{aChild});
 }
 
 void ContentChild::DeleteGetFilesRequest(nsID& aUUID,

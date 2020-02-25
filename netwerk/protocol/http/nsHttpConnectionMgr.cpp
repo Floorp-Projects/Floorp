@@ -3877,7 +3877,7 @@ nsHttpConnectionMgr::GetOrCreateConnectionEntry(
   if (!specificEnt) {
     RefPtr<nsHttpConnectionInfo> clone(specificCI->Clone());
     specificEnt = new nsConnectionEntry(clone);
-    mCT.Put(clone->HashKey(), specificEnt);
+    mCT.Put(clone->HashKey(), RefPtr{specificEnt});
   }
   return specificEnt;
 }

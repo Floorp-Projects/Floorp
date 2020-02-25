@@ -510,7 +510,7 @@ void KeyframeEffect::EnsureBaseStyle(
       Servo_ComputedValues_ExtractAnimationValue(aBaseComputedStyle,
                                                  aProperty.mProperty)
           .Consume();
-  mBaseValues.Put(aProperty.mProperty, baseValue);
+  mBaseValues.Put(aProperty.mProperty, std::move(baseValue));
 }
 
 void KeyframeEffect::WillComposeStyle() {
@@ -990,7 +990,9 @@ already_AddRefed<KeyframeEffect> KeyframeEffect::Constructor(
   effect->mKeyframes = aSource.mKeyframes;
   effect->mProperties = aSource.mProperties;
   for (auto iter = aSource.mBaseValues.ConstIter(); !iter.Done(); iter.Next()) {
-    effect->mBaseValues.Put(iter.Key(), iter.Data());
+    // XXX Should this use non-const Iter() and then pass
+    // std::move(iter.Data())? Otherwise aSource might be a const&...
+    effect->mBaseValues.Put(iter.Key(), RefPtr{iter.Data()});
   }
   return effect.forget();
 }

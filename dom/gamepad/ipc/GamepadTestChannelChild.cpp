@@ -12,7 +12,7 @@ namespace dom {
 void GamepadTestChannelChild::AddPromise(const uint32_t& aID,
                                          Promise* aPromise) {
   MOZ_ASSERT(!mPromiseList.Get(aID, nullptr));
-  mPromiseList.Put(aID, aPromise);
+  mPromiseList.Put(aID, RefPtr{aPromise});
 }
 
 mozilla::ipc::IPCResult GamepadTestChannelChild::RecvReplyGamepadIndex(

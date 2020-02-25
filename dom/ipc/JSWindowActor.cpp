@@ -225,7 +225,7 @@ already_AddRefed<Promise> JSWindowActor::SendQuery(
   meta.queryId() = mNextQueryId++;
   meta.kind() = JSWindowActorMessageKind::Query;
 
-  mPendingQueries.Put(meta.queryId(), promise);
+  mPendingQueries.Put(meta.queryId(), RefPtr{promise});
 
   SendRawMessage(meta, std::move(data), CaptureJSStack(aCx), aRv);
   return promise.forget();

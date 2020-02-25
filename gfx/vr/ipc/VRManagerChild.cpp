@@ -578,7 +578,7 @@ void VRManagerChild::HandleFatalError(const char* aMsg) const {
 
 void VRManagerChild::AddPromise(const uint32_t& aID, dom::Promise* aPromise) {
   MOZ_ASSERT(!mGamepadPromiseList.Get(aID, nullptr));
-  mGamepadPromiseList.Put(aID, aPromise);
+  mGamepadPromiseList.Put(aID, RefPtr{aPromise});
 }
 
 mozilla::ipc::IPCResult VRManagerChild::RecvReplyGamepadVibrateHaptic(

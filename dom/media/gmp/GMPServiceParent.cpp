@@ -1045,7 +1045,7 @@ already_AddRefed<GMPStorage> GeckoMediaPluginServiceParent::GetMemoryStorageFor(
   RefPtr<GMPStorage> s;
   if (!mTempGMPStorage.Get(aNodeId, getter_AddRefs(s))) {
     s = CreateGMPMemoryStorage();
-    mTempGMPStorage.Put(aNodeId, s);
+    mTempGMPStorage.Put(aNodeId, RefPtr{s});
   }
   return s.forget();
 }

@@ -309,7 +309,7 @@ MaskOperation* FrameBuilder::AddMaskOperation(LayerMLGPU* aLayer) {
   RefPtr<MLGTexture> wrapped = mDevice->CreateTexture(texture);
 
   op = new MaskOperation(this, wrapped);
-  mSingleTextureMasks.Put(texture, op);
+  mSingleTextureMasks.Put(texture, RefPtr{op});
   return op;
 }
 

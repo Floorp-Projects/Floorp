@@ -924,7 +924,7 @@ void NotificationController::EventMap::PutEvent(AccTreeMutationEvent* aEvent) {
   uint64_t addr = reinterpret_cast<uintptr_t>(aEvent->GetAccessible());
   MOZ_ASSERT((addr & 0x3) == 0, "accessible is not 4 byte aligned");
   addr |= type;
-  mTable.Put(addr, aEvent);
+  mTable.Put(addr, RefPtr{aEvent});
 }
 
 AccTreeMutationEvent* NotificationController::EventMap::GetEvent(

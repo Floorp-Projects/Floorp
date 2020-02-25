@@ -850,7 +850,7 @@ void gfxMacPlatformFontList::AddFamily(const nsACString& aFamilyName, bool aSyst
   ToLowerCase(aFamilyName, key);
 
   RefPtr<gfxFontFamily> familyEntry = new gfxMacFontFamily(aFamilyName, sizeHint);
-  table.Put(key, familyEntry);
+  table.Put(key, RefPtr{familyEntry});
 
   // check the bad underline blacklist
   if (mBadUnderlineFamilyNames.ContainsSorted(key)) {
@@ -1103,7 +1103,7 @@ void gfxMacPlatformFontList::InitSingleFaceList() {
           fe->Name(), fe->Weight(), true, static_cast<const MacOSFontEntry*>(fe)->mSizeHint);
       familyEntry->AddFontEntry(fontEntry);
       familyEntry->SetHasStyles(true);
-      mFontFamilies.Put(key, familyEntry);
+      mFontFamilies.Put(key, std::move(familyEntry));
       LOG_FONTLIST(
           ("(fontlist-singleface) added new family: %s, key: %s\n", familyName.get(), key.get()));
     }

@@ -156,8 +156,8 @@ nsresult nsXULPrototypeCache::PutPrototype(nsXULPrototypeDocument* aDocument) {
   nsCOMPtr<nsIURI> uri;
   NS_GetURIWithoutRef(aDocument->GetURI(), getter_AddRefs(uri));
 
-  // Put() releases any old value and addrefs the new one
-  mPrototypeTable.Put(uri, aDocument);
+  // Put() releases any old value
+  mPrototypeTable.Put(uri, RefPtr{aDocument});
 
   return NS_OK;
 }
@@ -168,7 +168,7 @@ mozilla::StyleSheet* nsXULPrototypeCache::GetStyleSheet(nsIURI* aURI) {
 
 nsresult nsXULPrototypeCache::PutStyleSheet(StyleSheet* aStyleSheet) {
   nsIURI* uri = aStyleSheet->GetSheetURI();
-  mStyleSheetTable.Put(uri, aStyleSheet);
+  mStyleSheetTable.Put(uri, RefPtr{aStyleSheet});
   return NS_OK;
 }
 

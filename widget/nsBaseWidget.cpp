@@ -2064,7 +2064,7 @@ void nsBaseWidget::RegisterPluginWindowForRemoteUpdates() {
     return;
   }
   MOZ_ASSERT(sPluginWidgetList);
-  sPluginWidgetList->Put(id, this);
+  sPluginWidgetList->Put(id, RefPtr{this});
 #endif
 }
 
