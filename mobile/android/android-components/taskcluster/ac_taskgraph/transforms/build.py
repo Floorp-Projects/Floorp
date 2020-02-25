@@ -119,19 +119,6 @@ def _deep_format(object, field, **format_kwargs):
 
 @transforms.add
 def add_artifacts(config, tasks):
-
-    def _craft_path_version(version, build_type, nightly_version):
-        """Helper function to craft the correct version to bake in the artifacts full
-        path section"""
-        ret = "{}{}".format(
-            version,
-            "-SNAPSHOT" if build_type == "snapshot" else ''
-        )
-        if build_type == 'nightly':
-            if version in ret:
-                ret = ret.replace(version, nightly_version)
-        return ret
-
     timestamp = _get_timestamp(config)
     version = get_version()
     nightly_version = _get_nightly_version(config, version)
@@ -154,7 +141,6 @@ def add_artifacts(config, tasks):
                 )
                 for extension in all_extensions
             }
-
             # XXX: rather than adding more complex logic above, we simply post-adjust the
             # dictionary for `nightly` types of graphs
             if task['attributes']['build-type'] == 'nightly':
@@ -172,8 +158,10 @@ def add_artifacts(config, tasks):
                     "path": artifact_template["path"].format(
                         component_path=get_path(component),
                         component=component,
-                        version_with_snapshot=_craft_path_version(version,
-                            task['attributes']['build-type'], nightly_version),
+                        version_with_snapshot="{}{}".format(
+                            version,
+                            "-SNAPSHOT" if task["attributes"]["build-type"] == "snapshot" else ''
+                        ),
                         artifact_file_name=artifact_file_name,
                     ),
                 })

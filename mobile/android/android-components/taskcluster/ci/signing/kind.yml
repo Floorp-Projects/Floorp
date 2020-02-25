@@ -19,6 +19,7 @@ group-by: component
 
 only-for-build-types:
     - release
+    - nightly
     - snapshot
 
 job-template:
@@ -38,5 +39,6 @@ job-template:
             by-build-type:
                 release: BRs
                 snapshot: BSnaps
+                nightly: BNs
                 default: Bs
         kind: build

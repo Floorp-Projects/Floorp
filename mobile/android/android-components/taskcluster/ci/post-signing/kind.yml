@@ -24,5 +24,6 @@ job-template:
             by-build-type:
                 release: post-signing-release
                 snapshot: post-signing-snapshot
+                nightly: post-signing-nightly
                 default: post-signing
         tier: 1
