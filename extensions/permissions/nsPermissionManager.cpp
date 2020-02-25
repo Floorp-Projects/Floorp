@@ -3319,9 +3319,7 @@ void nsPermissionManager::WhenPermissionsAvailable(nsIPrincipal* aPrincipal,
       // promise, and send the request to the parent (if we have not already
       // done so).
       promise = new GenericNonExclusivePromise::Private(__func__);
-      mPermissionKeyPromiseMap.Put(
-          pair.first(),
-          RefPtr<GenericNonExclusivePromise::Private>(promise).forget());
+      mPermissionKeyPromiseMap.Put(pair.first(), promise);
     }
 
     if (promise) {
