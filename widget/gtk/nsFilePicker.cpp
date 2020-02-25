@@ -342,8 +342,7 @@ nsFilePicker::Open(nsIFilePickerShownCallback* aCallback) {
   // Can't show two dialogs concurrently with the same filepicker
   if (mRunning) return NS_ERROR_NOT_AVAILABLE;
 
-  nsCString title;
-  title.Adopt(ToNewUTF8String(mTitle));
+  NS_ConvertUTF16toUTF8 title(mTitle);
 
   GtkWindow* parent_widget =
       GTK_WINDOW(mParentWidget->GetNativeData(NS_NATIVE_SHELLWIDGET));

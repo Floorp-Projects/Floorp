@@ -89,8 +89,7 @@ NS_IMETHODIMP nsColorPicker::Open(
   }
   mCallback = aColorPickerShownCallback;
 
-  nsCString title;
-  title.Adopt(ToNewUTF8String(mTitle));
+  NS_ConvertUTF16toUTF8 title(mTitle);
   GtkWindow* parent_window =
       GTK_WINDOW(mParentWidget->GetNativeData(NS_NATIVE_SHELLWIDGET));
 
