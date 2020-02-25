@@ -71,7 +71,7 @@ class Worker {
       clearTimeout(this.idleTimeoutId);
     }
     return new Promise((resolve, reject) => {
-      const callbackId = ++this.lastCallbackId;
+      const callbackId = `${method}-${++this.lastCallbackId}`;
       this.callbacks.set(callbackId, [resolve, reject]);
       this.worker.postMessage({ callbackId, method, args });
     });
@@ -156,7 +156,9 @@ try {
     },
     {
       fetchState() {
-        return `Remaining: ${RemoteSettingsWorker.callbacks.size} callbacks.`;
+        const remainingCallbacks = RemoteSettingsWorker.callbacks;
+        const details = Array.from(remainingCallbacks.keys()).join(", ");
+        return `Remaining: ${remainingCallbacks.size} callbacks (${details}).`;
       },
     }
   );
