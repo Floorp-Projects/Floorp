@@ -126,6 +126,7 @@ class SettingsBasicsTest {
         }
     }
 
+    @Ignore("Currently failing on firebase: https://github.com/mozilla-mobile/fenix/issues/8747")
     @Test
     fun toggleShowVisitedSitesAndBookmarks() {
         // Bookmarks a few websites, toggles the history and bookmarks setting to off, then verifies if the visited and bookmarked websites do not show in the suggestions.
