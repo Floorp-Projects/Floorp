@@ -113,7 +113,7 @@ nsresult SVGAnimatedPointList::SetAnimValue(const SVGPointList& aNewAnimValue,
     domWrapper->InternalListWillChangeTo(aNewAnimValue);
   }
   if (!mAnimVal) {
-    mAnimVal = new SVGPointList();
+    mAnimVal = MakeUnique<SVGPointList>();
   }
   nsresult rv = mAnimVal->CopyFrom(aNewAnimValue);
   if (NS_FAILED(rv)) {

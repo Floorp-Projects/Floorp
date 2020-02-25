@@ -151,9 +151,9 @@ already_AddRefed<DOMSVGAnimatedLength> SVGLinearGradientElement::Y2() {
 SVGAnimatedTransformList* SVGGradientElement::GetAnimatedTransformList(
     uint32_t aFlags) {
   if (!mGradientTransform && (aFlags & DO_ALLOCATE)) {
-    mGradientTransform = new SVGAnimatedTransformList();
+    mGradientTransform = MakeUnique<SVGAnimatedTransformList>();
   }
-  return mGradientTransform;
+  return mGradientTransform.get();
 }
 
 SVGElement::LengthAttributesInfo SVGLinearGradientElement::GetLengthInfo() {

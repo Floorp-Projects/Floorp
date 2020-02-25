@@ -355,7 +355,7 @@ void SVGSVGElement::SetZoomAndPan(uint16_t aZoomAndPan, ErrorResult& rv) {
 //----------------------------------------------------------------------
 SMILTimeContainer* SVGSVGElement::GetTimedDocumentRoot() {
   if (mTimedDocumentRoot) {
-    return mTimedDocumentRoot;
+    return mTimedDocumentRoot.get();
   }
 
   // We must not be the outermost <svg> element, try to find it
@@ -379,7 +379,7 @@ nsresult SVGSVGElement::BindToTree(BindContext& aContext, nsINode& aParent) {
       if (WillBeOutermostSVG(aParent)) {
         // We'll be the outermost <svg> element.  We'll need a time container.
         if (!mTimedDocumentRoot) {
-          mTimedDocumentRoot = new SMILTimeContainer();
+          mTimedDocumentRoot = MakeUnique<SMILTimeContainer>();
         }
       } else {
         // We're a child of some other <svg> element, so we don't need our own
@@ -416,7 +416,7 @@ void SVGSVGElement::UnbindFromTree(bool aNullParent) {
 SVGAnimatedTransformList* SVGSVGElement::GetAnimatedTransformList(
     uint32_t aFlags) {
   if (!(aFlags & DO_ALLOCATE) && mSVGView && mSVGView->mTransforms) {
-    return mSVGView->mTransforms;
+    return mSVGView->mTransforms.get();
   }
   return SVGGraphicsElement::GetAnimatedTransformList(aFlags);
 }
@@ -648,8 +648,8 @@ const SVGAnimatedViewBox& SVGSVGElement::GetViewBoxInternal() const {
 }
 
 SVGAnimatedTransformList* SVGSVGElement::GetTransformInternal() const {
-  return (mSVGView && mSVGView->mTransforms) ? mSVGView->mTransforms
-                                             : mTransforms;
+  return (mSVGView && mSVGView->mTransforms) ? mSVGView->mTransforms.get()
+                                             : mTransforms.get();
 }
 
 }  // namespace dom

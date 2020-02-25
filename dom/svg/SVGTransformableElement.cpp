@@ -100,7 +100,8 @@ gfxMatrix SVGTransformableElement::PrependLocalTransformsTo(
     // must override this function and handle that themselves.)
     return aMatrix;
   }
-  return GetUserToParentTransform(mAnimateMotionTransform, mTransforms) *
+  return GetUserToParentTransform(mAnimateMotionTransform.get(),
+                                  mTransforms.get()) *
          aMatrix;
 }
 
@@ -117,7 +118,8 @@ void SVGTransformableElement::SetAnimateMotionTransform(
   }
   bool transformSet = mTransforms && mTransforms->IsExplicitlySet();
   bool prevSet = mAnimateMotionTransform || transformSet;
-  mAnimateMotionTransform = aMatrix ? new gfx::Matrix(*aMatrix) : nullptr;
+  mAnimateMotionTransform =
+      aMatrix ? MakeUnique<gfx::Matrix>(*aMatrix) : nullptr;
   bool nowSet = mAnimateMotionTransform || transformSet;
   int32_t modType;
   if (prevSet && !nowSet) {
@@ -143,9 +145,9 @@ void SVGTransformableElement::SetAnimateMotionTransform(
 SVGAnimatedTransformList* SVGTransformableElement::GetAnimatedTransformList(
     uint32_t aFlags) {
   if (!mTransforms && (aFlags & DO_ALLOCATE)) {
-    mTransforms = new SVGAnimatedTransformList();
+    mTransforms = MakeUnique<SVGAnimatedTransformList>();
   }
-  return mTransforms;
+  return mTransforms.get();
 }
 
 SVGElement* SVGTransformableElement::GetNearestViewportElement() {

@@ -18,7 +18,6 @@
 #include "mozilla/SMILTypes.h"
 #include "mozilla/UniquePtr.h"
 #include "nsAttrValue.h"
-#include "nsAutoPtr.h"
 #include "nsHashKeys.h"
 #include "nsTArray.h"
 #include "nsTHashtable.h"

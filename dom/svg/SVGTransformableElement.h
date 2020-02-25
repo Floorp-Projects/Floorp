@@ -7,12 +7,12 @@
 #ifndef SVGTransformableElement_h
 #define SVGTransformableElement_h
 
-#include "nsAutoPtr.h"
 #include "SVGAnimatedTransformList.h"
 #include "gfxMatrix.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/SVGElement.h"
 #include "mozilla/gfx/Matrix.h"
+#include "mozilla/UniquePtr.h"
 
 namespace mozilla {
 namespace dom {
@@ -78,10 +78,10 @@ class SVGTransformableElement : public SVGElement {
       const gfx::Matrix* aAnimateMotionTransform,
       const SVGAnimatedTransformList* aTransforms);
 
-  nsAutoPtr<SVGAnimatedTransformList> mTransforms;
+  UniquePtr<SVGAnimatedTransformList> mTransforms;
 
   // XXX maybe move this to property table, to save space on un-animated elems?
-  nsAutoPtr<gfx::Matrix> mAnimateMotionTransform;
+  UniquePtr<gfx::Matrix> mAnimateMotionTransform;
 };
 
 }  // namespace dom

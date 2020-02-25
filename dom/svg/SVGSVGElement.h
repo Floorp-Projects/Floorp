@@ -36,7 +36,7 @@ class SVGView {
   SVGAnimatedEnumeration mZoomAndPan;
   SVGAnimatedViewBox mViewBox;
   SVGAnimatedPreserveAspectRatio mPreserveAspectRatio;
-  nsAutoPtr<SVGAnimatedTransformList> mTransforms;
+  UniquePtr<SVGAnimatedTransformList> mTransforms;
 };
 
 class DOMSVGTranslatePoint final : public nsISVGPoint {
@@ -233,7 +233,7 @@ class SVGSVGElement final : public SVGSVGElementBase {
 
   // The time container for animations within this SVG document fragment. Set
   // for all outermost <svg> elements (not nested <svg> elements).
-  nsAutoPtr<SMILTimeContainer> mTimedDocumentRoot;
+  UniquePtr<SMILTimeContainer> mTimedDocumentRoot;
 
   // zoom and pan
   // IMPORTANT: see the comment in RecordCurrentScaleTranslate before writing
@@ -253,8 +253,8 @@ class SVGSVGElement final : public SVGSVGElementBase {
 
   // mCurrentViewID and mSVGView are mutually exclusive; we can have
   // at most one non-null.
-  nsAutoPtr<nsString> mCurrentViewID;
-  nsAutoPtr<SVGView> mSVGView;
+  UniquePtr<nsString> mCurrentViewID;
+  UniquePtr<SVGView> mSVGView;
 };
 
 }  // namespace dom

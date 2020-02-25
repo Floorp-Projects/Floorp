@@ -7,7 +7,6 @@
 #ifndef __NS_SVGVIEWBOX_H__
 #define __NS_SVGVIEWBOX_H__
 
-#include "nsAutoPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsError.h"
 #include "SVGAttrTearoffTable.h"
@@ -88,7 +87,7 @@ class SVGAnimatedViewBox {
 
  private:
   SVGViewBox mBaseVal;
-  nsAutoPtr<SVGViewBox> mAnimVal;
+  UniquePtr<SVGViewBox> mAnimVal;
   bool mHasBaseVal;
 
  public:

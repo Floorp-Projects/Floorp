@@ -9,7 +9,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/FromParser.h"
-#include "nsAutoPtr.h"
+#include "mozilla/UniquePtr.h"
 #include "nsIContentInlines.h"
 #include "SVGAnimatedEnumeration.h"
 #include "SVGAnimatedLength.h"
@@ -184,7 +184,7 @@ class SVGViewportElement : public SVGGraphicsElement {
     return mViewBox;
   }
   virtual SVGAnimatedTransformList* GetTransformInternal() const {
-    return mTransforms;
+    return mTransforms.get();
   }
   SVGAnimatedViewBox mViewBox;
   SVGAnimatedPreserveAspectRatio mPreserveAspectRatio;
