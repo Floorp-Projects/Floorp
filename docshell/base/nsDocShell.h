@@ -501,10 +501,9 @@ class nsDocShell final : public nsDocLoader,
   static bool CreateAndConfigureRealChannelForLoadState(
       nsDocShellLoadState* aLoadState, mozilla::net::LoadInfo* aLoadInfo,
       nsIInterfaceRequestor* aCallbacks, nsDocShell* aDocShell,
-      const nsString* aInitiatorType, nsLoadFlags aLoadFlags,
-      uint32_t aLoadType, uint32_t aCacheKey, bool aIsActive,
-      bool aIsTopLevelDoc, bool aHasNonEmptySandboxingFlags, nsresult& rv,
-      nsIChannel** aChannel);
+      nsLoadFlags aLoadFlags, uint32_t aLoadType, uint32_t aCacheKey,
+      bool aIsActive, bool aIsTopLevelDoc, bool aHasNonEmptySandboxingFlags,
+      nsresult& rv, nsIChannel** aChannel);
 
   // Notify consumers of a search being loaded through the observer service:
   static void MaybeNotifyKeywordSearchLoading(const nsString& aProvider,

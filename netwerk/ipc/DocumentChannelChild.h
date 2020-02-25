@@ -25,8 +25,7 @@ class DocumentChannelChild final : public DocumentChannel,
                                    public PDocumentChannelChild {
  public:
   DocumentChannelChild(nsDocShellLoadState* aLoadState,
-                       class LoadInfo* aLoadInfo,
-                       const nsString* aInitiatorType, nsLoadFlags aLoadFlags,
+                       class LoadInfo* aLoadInfo, nsLoadFlags aLoadFlags,
                        uint32_t aLoadType, uint32_t aCacheKey, bool aIsActive,
                        bool aIsTopLevelDoc, bool aHasNonEmptySandboxingFlags);
 

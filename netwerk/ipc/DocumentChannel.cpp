@@ -85,14 +85,12 @@ NS_INTERFACE_MAP_END
 
 DocumentChannel::DocumentChannel(nsDocShellLoadState* aLoadState,
                                  net::LoadInfo* aLoadInfo,
-                                 const nsString* aInitiatorType,
                                  nsLoadFlags aLoadFlags, uint32_t aLoadType,
                                  uint32_t aCacheKey, bool aIsActive,
                                  bool aIsTopLevelDoc,
                                  bool aHasNonEmptySandboxingFlags)
     : mAsyncOpenTime(TimeStamp::Now()),
       mLoadState(aLoadState),
-      mInitiatorType(aInitiatorType ? Some(*aInitiatorType) : Nothing()),
       mLoadType(aLoadType),
       mCacheKey(aCacheKey),
       mIsActive(aIsActive),
