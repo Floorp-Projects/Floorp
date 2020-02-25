@@ -200,6 +200,12 @@ class MOZ_STACK_CLASS WSRunScanner {
     PriorVisibleNode(aPoint, nullptr, nullptr, outType);
   }
 
+  /**
+   * TODO: Document us!
+   */
+  nsIContent* GetStartReasonContent() const { return mStartReasonContent; }
+  nsIContent* GetEndReasonContent() const { return mEndReasonContent; }
+
  protected:
   // WSFragment represents a single run of ws (all leadingws, or all normalws,
   // or all trailingws, or all leading+trailingws).  Note that this single run
@@ -343,16 +349,12 @@ class MOZ_STACK_CLASS WSRunScanner {
   int32_t mStartOffset;
   // Reason why ws starts (eText, eOtherBlock, etc.).
   WSType mStartReason;
-  // The node that implicated by start reason.
-  nsCOMPtr<nsINode> mStartReasonNode;
 
   // Node/offset where ws ends.
   nsCOMPtr<nsINode> mEndNode;
   int32_t mEndOffset;
   // Reason why ws ends (eText, eOtherBlock, etc.).
   WSType mEndReason;
-  // The node that implicated by end reason.
-  nsCOMPtr<nsINode> mEndReasonNode;
 
   // Location of first nbsp in ws run, if any.
   RefPtr<dom::Text> mFirstNBSPNode;
@@ -367,6 +369,9 @@ class MOZ_STACK_CLASS WSRunScanner {
 
   // The last WSFragment in the run, may be same as first.
   WSFragment* mEndRun;
+
+  nsCOMPtr<nsIContent> mStartReasonContent;
+  nsCOMPtr<nsIContent> mEndReasonContent;
 
   // Non-owning.
   const HTMLEditor* mHTMLEditor;

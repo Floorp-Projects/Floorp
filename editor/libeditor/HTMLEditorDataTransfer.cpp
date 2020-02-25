@@ -373,11 +373,11 @@ nsresult HTMLEditor::DoInsertHTMLWithContext(
   // element at end of what we paste, it will make the existing invisible
   // `<br>` element visible.
   WSRunObject wsObj(this, pointToInsert);
-  if (wsObj.mEndReasonNode &&
-      wsObj.mEndReasonNode->IsHTMLElement(nsGkAtoms::br) &&
-      !IsVisibleBRElement(wsObj.mEndReasonNode)) {
+  if (wsObj.GetEndReasonContent() &&
+      wsObj.GetEndReasonContent()->IsHTMLElement(nsGkAtoms::br) &&
+      !IsVisibleBRElement(wsObj.GetEndReasonContent())) {
     AutoEditorDOMPointChildInvalidator lockOffset(pointToInsert);
-    rv = DeleteNodeWithTransaction(MOZ_KnownLive(*wsObj.mEndReasonNode));
+    rv = DeleteNodeWithTransaction(MOZ_KnownLive(*wsObj.GetEndReasonContent()));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -635,8 +635,10 @@ nsresult HTMLEditor::DoInsertHTMLWithContext(
   WSRunObject wsRunObj(this, pointToPutCaret);
   WSType visType;
   wsRunObj.PriorVisibleNode(pointToPutCaret, &visType);
-  if (visType == WSType::br && !IsVisibleBRElement(wsRunObj.mStartReasonNode)) {
-    WSRunObject wsRunObj2(this, EditorDOMPoint(wsRunObj.mStartReasonNode));
+  if (visType == WSType::br &&
+      !IsVisibleBRElement(wsRunObj.GetStartReasonContent())) {
+    WSRunObject wsRunObj2(this,
+                          EditorDOMPoint(wsRunObj.GetStartReasonContent()));
     nsCOMPtr<nsINode> visibleNode;
     int32_t visibleNodeOffset;
     wsRunObj2.PriorVisibleNode(pointToPutCaret, address_of(visibleNode),
@@ -644,7 +646,7 @@ nsresult HTMLEditor::DoInsertHTMLWithContext(
     if (visType == WSType::text || visType == WSType::normalWS) {
       pointToPutCaret.Set(visibleNode, visibleNodeOffset);
     } else if (visType == WSType::special) {
-      pointToPutCaret.Set(wsRunObj2.mStartReasonNode);
+      pointToPutCaret.Set(wsRunObj2.GetStartReasonContent());
       DebugOnly<bool> advanced = pointToPutCaret.AdvanceOffset();
       NS_WARNING_ASSERTION(advanced,
                            "Failed to advance offset from found object");

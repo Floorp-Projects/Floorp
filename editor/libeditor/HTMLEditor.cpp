@@ -3134,15 +3134,15 @@ nsresult HTMLEditor::DeleteParentBlocksWithTransactionIfEmpty(
     // parent block.
     return NS_SUCCESS_EDITOR_ELEMENT_NOT_FOUND;
   }
-  if (NS_WARN_IF(!wsObj.mStartReasonNode) ||
-      NS_WARN_IF(!wsObj.mStartReasonNode->GetParentNode())) {
+  if (NS_WARN_IF(!wsObj.GetStartReasonContent()) ||
+      NS_WARN_IF(!wsObj.GetStartReasonContent()->GetParentNode())) {
     return NS_ERROR_FAILURE;
   }
-  if (wsObj.GetEditingHost() == wsObj.mStartReasonNode) {
+  if (wsObj.GetEditingHost() == wsObj.GetStartReasonContent()) {
     // If we reach editing host, there is no parent blocks which can be removed.
     return NS_SUCCESS_EDITOR_ELEMENT_NOT_FOUND;
   }
-  if (HTMLEditUtils::IsTableCellOrCaption(*wsObj.mStartReasonNode)) {
+  if (HTMLEditUtils::IsTableCellOrCaption(*wsObj.GetStartReasonContent())) {
     // If we reach a <td>, <th> or <caption>, we shouldn't remove it even
     // becomes empty because removing such element changes the structure of
     // the <table>.
@@ -3154,12 +3154,12 @@ nsresult HTMLEditor::DeleteParentBlocksWithTransactionIfEmpty(
   wsObj.NextVisibleNode(aPoint, &wsType);
   if (wsType == WSType::br) {
     // If the <br> element is visible, we shouldn't remove the parent block.
-    if (IsVisibleBRElement(wsObj.mEndReasonNode)) {
+    if (IsVisibleBRElement(wsObj.GetEndReasonContent())) {
       return NS_SUCCESS_EDITOR_ELEMENT_NOT_FOUND;
     }
-    if (wsObj.mEndReasonNode->GetNextSibling()) {
+    if (wsObj.GetEndReasonContent()->GetNextSibling()) {
       EditorRawDOMPoint afterBRElement;
-      afterBRElement.SetAfter(wsObj.mEndReasonNode);
+      afterBRElement.SetAfter(wsObj.GetEndReasonContent());
       WSRunObject wsRunObjAfterBR(this, afterBRElement);
       WSType wsTypeAfterBR = WSType::none;
       wsRunObjAfterBR.NextVisibleNode(afterBRElement, &wsTypeAfterBR);
@@ -3175,9 +3175,9 @@ nsresult HTMLEditor::DeleteParentBlocksWithTransactionIfEmpty(
   }
 
   // Delete the parent block.
-  EditorDOMPoint nextPoint(wsObj.mStartReasonNode->GetParentNode(), 0);
+  EditorDOMPoint nextPoint(wsObj.GetStartReasonContent()->GetParentNode(), 0);
   nsresult rv =
-      DeleteNodeWithTransaction(MOZ_KnownLive(*wsObj.mStartReasonNode));
+      DeleteNodeWithTransaction(MOZ_KnownLive(*wsObj.GetStartReasonContent()));
   if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
     return NS_ERROR_EDITOR_DESTROYED;
   }
