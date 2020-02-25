@@ -326,7 +326,7 @@ already_AddRefed<SourceSurface> nsSVGPatternFrame::PaintPattern(
                             patternHeight / surfaceSize.height);
   }
 
-  RefPtr<DrawTarget> dt = aDrawTarget->CreateSimilarDrawTarget(
+  RefPtr<DrawTarget> dt = aDrawTarget->CreateSimilarDrawTargetWithBacking(
       surfaceSize, SurfaceFormat::B8G8R8A8);
   if (!dt || !dt->IsValid()) {
     return nullptr;
@@ -377,7 +377,7 @@ already_AddRefed<SourceSurface> nsSVGPatternFrame::PaintPattern(
   }
 
   // caller now owns the surface
-  return dt->Snapshot();
+  return dt->GetBackingSurface();
 }
 
 /* Will probably need something like this... */
