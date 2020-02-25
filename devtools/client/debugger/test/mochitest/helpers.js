@@ -1299,6 +1299,7 @@ const selectors = {
   },
   columnBreakpoints: ".column-breakpoint",
   scopes: ".scopes-list",
+  scopeNodes: ".scopes-list .object-label",
   scopeNode: i => `.scopes-list .tree-node:nth-child(${i}) .object-label`,
   scopeValue: i =>
     `.scopes-list .tree-node:nth-child(${i}) .object-delimiter + *`,

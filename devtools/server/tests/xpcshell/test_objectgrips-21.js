@@ -310,6 +310,7 @@ async function test_unsafe_grips(
           );
         }
       }
+      await objClient.release();
     }
 
     await threadFront.resume();
