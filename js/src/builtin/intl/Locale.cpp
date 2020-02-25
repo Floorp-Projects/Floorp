@@ -671,7 +671,7 @@ static bool Locale(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   // ApplyOptionsToTag, steps 9 and 13.
-  // ApplyUnicodeExtensionToTag, step 8.
+  // ApplyUnicodeExtensionToTag, step 9.
   if (!tag.canonicalizeExtensions(
           cx, LanguageTag::UnicodeExtensionCanonicalForm::Yes)) {
     return false;
@@ -955,10 +955,7 @@ static bool Locale_toString(JSContext* cx, unsigned argc, Value* vp) {
 static bool Locale_baseName(JSContext* cx, const CallArgs& args) {
   MOZ_ASSERT(IsLocale(args.thisv()));
 
-  // FIXME: spec bug - invalid assertion in step 4.
-  // FIXME: spec bug - subtag production names not updated.
-
-  // Steps 3, 5.
+  // Steps 3-4.
   auto* locale = &args.thisv().toObject().as<LocaleObject>();
   args.rval().setString(locale->baseName());
   return true;
@@ -985,6 +982,22 @@ static bool Locale_calendar(JSContext* cx, unsigned argc, Value* vp) {
   // Steps 1-2.
   CallArgs args = CallArgsFromVp(argc, vp);
   return CallNonGenericMethod<IsLocale, Locale_calendar>(cx, args);
+}
+
+// get Intl.Locale.prototype.caseFirst
+static bool Locale_caseFirst(JSContext* cx, const CallArgs& args) {
+  MOZ_ASSERT(IsLocale(args.thisv()));
+
+  // Step 3.
+  auto* locale = &args.thisv().toObject().as<LocaleObject>();
+  return GetUnicodeExtension(cx, locale, "kf", args.rval());
+}
+
+// get Intl.Locale.prototype.caseFirst
+static bool Locale_caseFirst(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsLocale, Locale_caseFirst>(cx, args);
 }
 
 // get Intl.Locale.prototype.collation
@@ -1019,22 +1032,6 @@ static bool Locale_hourCycle(JSContext* cx, unsigned argc, Value* vp) {
   return CallNonGenericMethod<IsLocale, Locale_hourCycle>(cx, args);
 }
 
-// get Intl.Locale.prototype.caseFirst
-static bool Locale_caseFirst(JSContext* cx, const CallArgs& args) {
-  MOZ_ASSERT(IsLocale(args.thisv()));
-
-  // Step 3.
-  auto* locale = &args.thisv().toObject().as<LocaleObject>();
-  return GetUnicodeExtension(cx, locale, "kf", args.rval());
-}
-
-// get Intl.Locale.prototype.caseFirst
-static bool Locale_caseFirst(JSContext* cx, unsigned argc, Value* vp) {
-  // Steps 1-2.
-  CallArgs args = CallArgsFromVp(argc, vp);
-  return CallNonGenericMethod<IsLocale, Locale_caseFirst>(cx, args);
-}
-
 // get Intl.Locale.prototype.numeric
 static bool Locale_numeric(JSContext* cx, const CallArgs& args) {
   MOZ_ASSERT(IsLocale(args.thisv()));
@@ -1046,8 +1043,13 @@ static bool Locale_numeric(JSContext* cx, const CallArgs& args) {
     return false;
   }
 
-  // FIXME: spec bug - comparison should be against the empty string, too.
+  // Compare against the empty string per Intl.Locale, step 36.a. The Unicode
+  // extension is already canonicalized, so we don't need to compare against
+  // "true" at this point.
   MOZ_ASSERT(value.isUndefined() || value.isString());
+  MOZ_ASSERT_IF(value.isString(),
+                !StringEqualsLiteral(&value.toString()->asLinear(), "true"));
+
   args.rval().setBoolean(value.isString() && value.toString()->empty());
   return true;
 }
@@ -1094,7 +1096,6 @@ static bool Locale_language(JSContext* cx, const CallArgs& args) {
   size_t length = language.length;
 
   // Step 5.
-  // FIXME: spec bug - not all production names updated.
   JSString* str = NewDependentString(cx, baseName, index, length);
   if (!str) {
     return false;
@@ -1127,7 +1128,6 @@ static bool Locale_script(JSContext* cx, const CallArgs& args) {
   auto script = BaseNameParts(baseName).script;
 
   // Step 5.
-  // FIXME: spec bug - not all production names updated.
   if (!script) {
     args.rval().setUndefined();
     return true;
@@ -1209,9 +1209,9 @@ static const JSFunctionSpec locale_methods[] = {
 static const JSPropertySpec locale_properties[] = {
     JS_PSG("baseName", Locale_baseName, 0),
     JS_PSG("calendar", Locale_calendar, 0),
+    JS_PSG("caseFirst", Locale_caseFirst, 0),
     JS_PSG("collation", Locale_collation, 0),
     JS_PSG("hourCycle", Locale_hourCycle, 0),
-    JS_PSG("caseFirst", Locale_caseFirst, 0),
     JS_PSG("numeric", Locale_numeric, 0),
     JS_PSG("numberingSystem", Locale_numberingSystem, 0),
     JS_PSG("language", Locale_language, 0),
