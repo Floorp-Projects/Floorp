@@ -59,6 +59,7 @@ signing_description_schema = schema.extend({
     Optional('shipping-phase'): task_description_schema['shipping-phase'],
     Optional('shipping-product'): task_description_schema['shipping-product'],
     Optional('dependent-tasks'): {text_type: object},
+    Optional('run-on-projects'): task_description_schema['run-on-projects'],
 
     # Optional control for how long a task may run (aka maxRunTime)
     Optional('max-run-time'): int,
@@ -171,7 +172,8 @@ def make_task_description(config, jobs):
             'scopes': [signing_cert_scope] + signing_format_scopes,
             'dependencies': _generate_dependencies(job),
             'attributes': attributes,
-            'run-on-projects': dep_job.attributes.get('run_on_projects'),
+            'run-on-projects': job.get('run-on-projects',
+                                       dep_job.attributes.get('run_on_projects')),
             'optimization': dep_job.optimization,
             'routes': job.get('routes', []),
             'shipping-product': job.get('shipping-product'),
