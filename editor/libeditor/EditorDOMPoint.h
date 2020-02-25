@@ -373,6 +373,11 @@ class EditorDOMPointBase final {
     }
     SetToEndOf(parentNode);
   }
+  static SelfType After(const nsINode& aContainer) {
+    SelfType point;
+    point.SetAfter(&aContainer);
+    return point;
+  }
 
   /**
    * Clear() makes the instance not point anywhere.

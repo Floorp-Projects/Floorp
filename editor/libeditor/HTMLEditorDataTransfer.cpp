@@ -632,24 +632,21 @@ nsresult HTMLEditor::DoInsertHTMLWithContext(
 
   // Make sure we don't end up with selection collapsed after an invisible
   // `<br>` element.
-  WSRunObject wsRunObj(this, pointToPutCaret);
-  WSType visType;
-  wsRunObj.PriorVisibleNode(pointToPutCaret, &visType);
-  if (visType == WSType::br &&
-      !IsVisibleBRElement(wsRunObj.GetStartReasonContent())) {
-    WSRunObject wsRunObj2(this,
-                          EditorDOMPoint(wsRunObj.GetStartReasonContent()));
-    nsCOMPtr<nsINode> visibleNode;
-    int32_t visibleNodeOffset;
-    wsRunObj2.PriorVisibleNode(pointToPutCaret, address_of(visibleNode),
-                               &visibleNodeOffset, &visType);
-    if (visType == WSType::text || visType == WSType::normalWS) {
-      pointToPutCaret.Set(visibleNode, visibleNodeOffset);
-    } else if (visType == WSType::special) {
-      pointToPutCaret.Set(wsRunObj2.GetStartReasonContent());
-      DebugOnly<bool> advanced = pointToPutCaret.AdvanceOffset();
-      NS_WARNING_ASSERTION(advanced,
-                           "Failed to advance offset from found object");
+  WSRunScanner wsRunScannerAtCaret(this, pointToPutCaret);
+  if (wsRunScannerAtCaret
+          .ScanPreviousVisibleNodeOrBlockBoundaryFrom(pointToPutCaret)
+          .ReachedBRElement() &&
+      !IsVisibleBRElement(wsRunScannerAtCaret.GetStartReasonContent())) {
+    WSRunScanner wsRunScannerAtStartReason(
+        this, EditorDOMPoint(wsRunScannerAtCaret.GetStartReasonContent()));
+    WSScanResult backwardScanFromPointToCaretResult =
+        wsRunScannerAtStartReason.ScanPreviousVisibleNodeOrBlockBoundaryFrom(
+            pointToPutCaret);
+    if (backwardScanFromPointToCaretResult.InNormalWhiteSpacesOrText()) {
+      pointToPutCaret = backwardScanFromPointToCaretResult.Point();
+    } else if (backwardScanFromPointToCaretResult.ReachedSpecialContent()) {
+      pointToPutCaret.SetAfter(
+          wsRunScannerAtStartReason.GetStartReasonContent());
     }
   }
   DebugOnly<nsresult> rvIgnored =
