@@ -9,6 +9,7 @@
 using namespace js;
 using namespace js::jit;
 
+#ifdef DEBUG
 bool AllocationIntegrityState::record() {
   // Ignore repeated record() calls.
   if (!instructions.empty()) {
@@ -92,12 +93,11 @@ bool AllocationIntegrityState::record() {
 bool AllocationIntegrityState::check() {
   MOZ_ASSERT(!instructions.empty());
 
-#ifdef JS_JITSPEW
+#  ifdef JS_JITSPEW
   if (JitSpewEnabled(JitSpew_RegAlloc)) {
     dump();
   }
-#endif
-#ifdef DEBUG
+#  endif
   for (size_t blockIndex = 0; blockIndex < graph.numBlocks(); blockIndex++) {
     LBlock* block = graph.getBlock(blockIndex);
 
@@ -133,7 +133,6 @@ bool AllocationIntegrityState::check() {
       }
     }
   }
-#endif
 
   // Check that the register assignment and move groups preserve the original
   // semantics of the virtual registers. Each virtual register has a single
@@ -316,7 +315,7 @@ void AllocationIntegrityState::checkSafepointAllocation(LInstruction* ins,
     case LDefinition::SLOTS:
       MOZ_ASSERT(safepoint->hasSlotsOrElementsPointer(alloc));
       break;
-#ifdef JS_NUNBOX32
+#  ifdef JS_NUNBOX32
     // Do not assert that safepoint information for nunbox types is complete,
     // as if a vreg for a value's components are copied in multiple places
     // then the safepoint information may not reflect all copies. All copies
@@ -326,11 +325,11 @@ void AllocationIntegrityState::checkSafepointAllocation(LInstruction* ins,
     case LDefinition::PAYLOAD:
       MOZ_ASSERT(safepoint->hasNunboxPayload(alloc));
       break;
-#else
+#  else
     case LDefinition::BOX:
       MOZ_ASSERT(safepoint->hasBoxedValue(alloc));
       break;
-#endif
+#  endif
     default:
       break;
   }
@@ -359,7 +358,7 @@ bool AllocationIntegrityState::addPredecessor(LBlock* block, uint32_t vreg,
 }
 
 void AllocationIntegrityState::dump() {
-#ifdef JS_JITSPEW
+#  ifdef JS_JITSPEW
   fprintf(stderr, "Register Allocation Integrity State:\n");
 
   for (size_t blockIndex = 0; blockIndex < graph.numBlocks(); blockIndex++) {
@@ -463,8 +462,9 @@ void AllocationIntegrityState::dump() {
   }
 
   fprintf(stderr, "\n");
-#endif
+#  endif
 }
+#endif  // DEBUG
 
 const CodePosition CodePosition::MAX(UINT_MAX);
 const CodePosition CodePosition::MIN(0);
