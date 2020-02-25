@@ -553,12 +553,12 @@ nsresult HTMLEditor::MaybeCollapseSelectionAtFirstEditableNode(
       break;
     }
 
-    // WSRunScanner::ScanNextVisibleNodeOrBlockBoundary() returns
-    // WSType::special and the "special" node when it meets empty inline
-    // element.  In this case, we should go to next sibling.  For example, if
-    // current editor is: <div contenteditable><span></span><b><br></b></div>
-    // then, we should put caret at the <br> element.  So, let's check if
-    // found node is an empty inline container element.
+    // WSRunScanner::ScanNextVisibleNodeOrBlockBoundary() reaches "special
+    // content" when it meets empty inline element.  In this case, we should go
+    // to next sibling.  For example, if current editor is: <div
+    // contenteditable><span></span><b><br></b></div> then, we should put caret
+    // at the <br> element.  So, let's check if found node is an empty inline
+    // container element.
     if (forwardScanFromPointToPutCaretResult.ReachedSpecialContent() &&
         forwardScanFromPointToPutCaretResult.GetContent() &&
         TagCanContainTag(*forwardScanFromPointToPutCaretResult.GetContent()
@@ -3118,7 +3118,7 @@ nsresult HTMLEditor::DeleteParentBlocksWithTransactionIfEmpty(
 
   // First, check there is visible contents before the point in current block.
   WSRunScanner wsScannerForPoint(this, aPoint);
-  if (wsScannerForPoint.StartReason() != WSType::thisBlock) {
+  if (!wsScannerForPoint.StartsFromCurrentBlockBoundary()) {
     // If there is visible node before the point, we shouldn't remove the
     // parent block.
     return NS_SUCCESS_EDITOR_ELEMENT_NOT_FOUND;

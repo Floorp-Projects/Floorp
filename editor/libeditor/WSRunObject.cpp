@@ -75,7 +75,9 @@ WSRunScanner::WSRunScanner(const HTMLEditor* aHTMLEditor,
       mLastNBSPOffset(0),
       mStartRun(nullptr),
       mEndRun(nullptr),
-      mHTMLEditor(aHTMLEditor) {
+      mHTMLEditor(aHTMLEditor),
+      mStartReason(WSType::none),
+      mEndReason(WSType::none) {
   MOZ_ASSERT(
       *nsContentUtils::ComparePoints(aScanStartPoint.ToRawRangeBoundary(),
                                      aScanEndPoint.ToRawRangeBoundary()) <= 0);
@@ -335,7 +337,7 @@ nsresult WSRunObject::InsertText(Document& aDocument,
           theString.SetCharAt(kNBSP, 0);
         }
       }
-    } else if (mStartReason & WSType::block || mStartReason == WSType::br) {
+    } else if (StartsFromHardLineBreak()) {
       theString.SetCharAt(kNBSP, 0);
     }
   }
@@ -354,7 +356,7 @@ nsresult WSRunObject::InsertText(Document& aDocument,
           theString.SetCharAt(kNBSP, lastCharIndex);
         }
       }
-    } else if (afterRunObject.mEndReason & WSType::block) {
+    } else if (afterRunObject.EndsByBlockBoundary()) {
       // When afterRun is null, it means that mScanEndPoint is last point in
       // editing host or editing block.
       // If this text insertion replaces composition, this.mEndReason is
@@ -896,9 +898,8 @@ void WSRunScanner::GetRuns() {
   // if it's preformatedd, or if we are surrounded by text or special, it's all
   // one big normal ws run
   if (mPRE ||
-      ((mStartReason == WSType::text || mStartReason == WSType::special) &&
-       (mEndReason == WSType::text || mEndReason == WSType::special ||
-        mEndReason == WSType::br))) {
+      ((StartsFromNormalText() || StartsFromSpecialContent()) &&
+       (EndsByNormalText() || EndsBySpecialContent() || EndsByBRElement()))) {
     MakeSingleWSRun(WSType::normalWS);
     return;
   }
@@ -906,13 +907,12 @@ void WSRunScanner::GetRuns() {
   // if we are before or after a block (or after a break), and there are no
   // nbsp's, then it's all non-rendering ws.
   if (!mFirstNBSPNode && !mLastNBSPNode &&
-      ((mStartReason & WSType::block) || mStartReason == WSType::br ||
-       (mEndReason & WSType::block))) {
+      (StartsFromHardLineBreak() || EndsByBlockBoundary())) {
     WSType wstype;
-    if ((mStartReason & WSType::block) || mStartReason == WSType::br) {
+    if (StartsFromHardLineBreak()) {
       wstype = WSType::leadingWS;
     }
-    if (mEndReason & WSType::block) {
+    if (EndsByBlockBoundary()) {
       wstype |= WSType::trailingWS;
     }
     MakeSingleWSRun(wstype);
@@ -924,7 +924,7 @@ void WSRunScanner::GetRuns() {
   mStartRun->mStartNode = mStartNode;
   mStartRun->mStartOffset = mStartOffset;
 
-  if (mStartReason & WSType::block || mStartReason == WSType::br) {
+  if (StartsFromHardLineBreak()) {
     // set up mStartRun
     mStartRun->mType = WSType::leadingWS;
     mStartRun->mEndNode = mFirstNBSPNode;
@@ -940,7 +940,7 @@ void WSRunScanner::GetRuns() {
     normalRun->mStartOffset = mFirstNBSPOffset;
     normalRun->mLeftType = WSType::leadingWS;
     normalRun->mLeft = mStartRun;
-    if (mEndReason != WSType::block) {
+    if (!EndsByBlockBoundary()) {
       // then no trailing ws.  this normal run ends the overall ws run.
       normalRun->mRightType = mEndReason;
       normalRun->mEndNode = mEndNode;
@@ -977,7 +977,7 @@ void WSRunScanner::GetRuns() {
       }
     }
   } else {
-    // mStartReason is not WSType::block or WSType::br; set up mStartRun
+    MOZ_ASSERT(!StartsFromHardLineBreak());
     mStartRun->mType = WSType::normalWS;
     mStartRun->mEndNode = mLastNBSPNode;
     mStartRun->mEndOffset = mLastNBSPOffset + 1;
@@ -1244,8 +1244,7 @@ nsresult WSRunObject::PrepareToDeleteRangePriv(WSRunObject* aEndObject) {
   // adjust normal ws in afterRun if needed
   if (afterRun && afterRun->mType == WSType::normalWS && !aEndObject->mPRE) {
     if ((beforeRun && (beforeRun->mType & WSType::leadingWS)) ||
-        (!beforeRun &&
-         ((mStartReason & WSType::block) || mStartReason == WSType::br))) {
+        (!beforeRun && StartsFromHardLineBreak())) {
       // make sure leading char of following ws is an nbsp, so that it will show
       // up
       WSPoint point = aEndObject->GetNextCharPoint(aEndObject->mScanStartPoint);
@@ -1267,7 +1266,7 @@ nsresult WSRunObject::PrepareToDeleteRangePriv(WSRunObject* aEndObject) {
   } else if (beforeRun && beforeRun->mType == WSType::normalWS && !mPRE) {
     if ((afterRun && (afterRun->mType & WSType::trailingWS)) ||
         (afterRun && afterRun->mType == WSType::normalWS) ||
-        (!afterRun && (aEndObject->mEndReason & WSType::block))) {
+        (!afterRun && aEndObject->EndsByBlockBoundary())) {
       // make sure trailing char of starting ws is an nbsp, so that it will show
       // up
       WSPoint point = GetPreviousCharPoint(mScanStartPoint);
