@@ -8,6 +8,7 @@
 #include "CrashReporterMetadataShmem.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/recordreplay/ParentIPC.h"
+#include "mozilla/EnumeratedRange.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/SyncRunnable.h"
 #include "mozilla/Telemetry.h"
@@ -239,6 +240,22 @@ void CrashReporterHost::AddAnnotation(CrashReporter::Annotation aKey,
 void CrashReporterHost::AddAnnotation(CrashReporter::Annotation aKey,
                                       const nsACString& aValue) {
   mExtraAnnotations[aKey] = aValue;
+}
+
+bool CrashReporterHost::IsLikelyOOM() {
+  // The data is only populated during the call to `FinalizeCrashReport()`.
+  MOZ_ASSERT(mFinalized);
+  if (mExtraAnnotations[CrashReporter::Annotation::OOMAllocationSize].Length() >
+      0) {
+    // If `OOMAllocationSize` was set, we know that the crash happened
+    // because an allocation failed (`malloc` returned `nullptr`).
+    //
+    // As Unix systems generally allow `malloc` to return a non-null value
+    // even when no virtual memory is available, this doesn't cover all
+    // cases of OOM under Unix (far from it).
+    return true;
+  }
+  return false;
 }
 
 }  // namespace ipc
