@@ -27,7 +27,7 @@ add_task(async () => {
           await loadPromise;
         });
 
-        let iframeBc = browser.browsingContext.children[0];
+        let iframeBc = browser.browsingContext.getChildren()[0];
         let pipWin = await triggerPictureInPicture(iframeBc, videoID);
         ok(pipWin, "Got Picture-in-Picture window.");
 

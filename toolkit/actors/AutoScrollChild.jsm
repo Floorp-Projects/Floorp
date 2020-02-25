@@ -346,7 +346,7 @@ class AutoScrollChild extends JSWindowActorChild {
     let data = msg.data;
     switch (msg.name) {
       case "Autoscroll:MaybeStart":
-        for (let child of this.browsingContext.children) {
+        for (let child of this.browsingContext.getChildren()) {
           if (data.browsingContextId == child.id) {
             this.startScroll({
               screenX: data.screenX,
