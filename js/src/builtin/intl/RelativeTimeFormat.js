@@ -134,7 +134,8 @@ function InitializeRelativeTimeFormat(relativeTimeFormat, locales, options) {
     let numberingSystem = GetOption(options, "numberingSystem", "string", undefined, undefined);
     if (numberingSystem !== undefined) {
         numberingSystem = intl_ValidateAndCanonicalizeUnicodeExtensionType(numberingSystem,
-                                                                           "numberingSystem");
+                                                                           "numberingSystem",
+                                                                           "nu");
     }
     opt.nu = numberingSystem;
 #endif

@@ -21,7 +21,7 @@ assertEqArray(gCL({'a': 0}), []);
 
 assertEqArray(gCL({}), []);
 
-assertEqArray(gCL(['ar-ma-u-ca-islamicc']), ['ar-MA-u-ca-islamicc']);
+assertEqArray(gCL(['ar-ma-u-ca-islamicc']), ['ar-MA-u-ca-islamic-civil']);
 
 assertEqArray(gCL(['th-th-u-nu-thai']), ['th-TH-u-nu-thai']);
 

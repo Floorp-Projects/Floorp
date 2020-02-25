@@ -37,8 +37,10 @@ assertEqArray(Intl.getCanonicalLocales("en-u-kf-false-kn-false"), ["en-u-kf-fals
 //    extension, duplicate attributes or keywords are ignored in the
 //    following way: ignore any attribute that has already appeared in the
 //    tag and ignore any keyword whose key has already occurred in the tag.
-assertEqArray(Intl.getCanonicalLocales("en-u-kn-false-kn-false"), ["en-u-kn-false-kn-false"]);
-assertEqArray(Intl.getCanonicalLocales("en-u-attr1-attr2-attr2"), ["en-u-attr1-attr2-attr2"]);
+//
+// The duplicates itself are removed in CanonicalizeUnicodeLocaleId, step 2-3.
+assertEqArray(Intl.getCanonicalLocales("en-u-kn-false-kn-false"), ["en-u-kn-false"]);
+assertEqArray(Intl.getCanonicalLocales("en-u-attr1-attr2-attr2"), ["en-u-attr1-attr2"]);
 
 if (typeof reportCompare === "function")
     reportCompare(0, 0);

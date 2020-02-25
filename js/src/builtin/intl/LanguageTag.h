@@ -205,14 +205,8 @@ class MOZ_STACK_CLASS LanguageTag final {
 
   friend class LanguageTagParser;
 
- public:
-  // Flag to request canonicalized Unicode extensions.
-  enum class UnicodeExtensionCanonicalForm : bool { No, Yes };
-
- private:
-  bool canonicalizeUnicodeExtension(
-      JSContext* cx, JS::UniqueChars& unicodeExtension,
-      UnicodeExtensionCanonicalForm canonicalForm);
+  bool canonicalizeUnicodeExtension(JSContext* cx,
+                                    JS::UniqueChars& unicodeExtension);
 
   bool canonicalizeTransformExtension(JSContext* cx,
                                       JS::UniqueChars& transformExtension);
@@ -231,6 +225,15 @@ class MOZ_STACK_CLASS LanguageTag final {
 
   MOZ_MUST_USE bool updateGrandfatheredMappings(JSContext* cx);
 
+ public:
+  /**
+   * Given a Unicode key and type, return the null-terminated preferred
+   * replacement for that type if there is one, or null if there is none, e.g.
+   * in effect
+   * |replaceUnicodeExtensionType("ca", "islamicc") == "islamic-civil"|
+   * and
+   * |replaceUnicodeExtensionType("ca", "islamic-civil") == nullptr|.
+   */
   static const char* replaceUnicodeExtensionType(
       mozilla::Span<const char> key, mozilla::Span<const char> type);
 
@@ -348,8 +351,7 @@ class MOZ_STACK_CLASS LanguageTag final {
   /**
    * Canonicalize all extension subtags.
    */
-  bool canonicalizeExtensions(JSContext* cx,
-                              UnicodeExtensionCanonicalForm canonicalForm);
+  bool canonicalizeExtensions(JSContext* cx);
 
   /**
    * Canonicalizes the given structurally valid Unicode BCP 47 locale
@@ -368,21 +370,10 @@ class MOZ_STACK_CLASS LanguageTag final {
    *
    * becomes zh-Hans-MM-variant1-variant2-t-zh-latn-u-ca-chinese-x-private
    *
-   * UTS 35 specifies two different canonicalization algorithms. There's one to
-   * canonicalize BCP 47 language tags and other one to canonicalize Unicode
-   * locale identifiers. ECMA-402 was previously using the former, but has since
-   * been changed to use the latter to canonicalize Unicode BCP 47 locale
-   * identifiers.
-   *
    * Spec: ECMAScript Internationalization API Specification, 6.2.3.
-   * Spec:
-   * https://unicode.org/reports/tr35/#Canonical_Unicode_Locale_Identifiers
-   * Spec: https://unicode.org/reports/tr35/#BCP_47_Language_Tag_Conversion
    */
-  bool canonicalize(JSContext* cx,
-                    UnicodeExtensionCanonicalForm canonicalForm) {
-    return canonicalizeBaseName(cx) &&
-           canonicalizeExtensions(cx, canonicalForm);
+  bool canonicalize(JSContext* cx) {
+    return canonicalizeBaseName(cx) && canonicalizeExtensions(cx);
   }
 
   /**

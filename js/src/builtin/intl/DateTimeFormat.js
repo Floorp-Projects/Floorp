@@ -359,7 +359,7 @@ function InitializeDateTimeFormat(dateTimeFormat, thisValue, locales, options, m
     var calendar = GetOption(options, "calendar", "string", undefined, undefined);
 
     if (calendar !== undefined) {
-        calendar = intl_ValidateAndCanonicalizeUnicodeExtensionType(calendar, "calendar");
+        calendar = intl_ValidateAndCanonicalizeUnicodeExtensionType(calendar, "calendar", "ca");
     }
 
     localeOpt.ca = calendar;
@@ -368,7 +368,8 @@ function InitializeDateTimeFormat(dateTimeFormat, thisValue, locales, options, m
 
     if (numberingSystem !== undefined) {
         numberingSystem = intl_ValidateAndCanonicalizeUnicodeExtensionType(numberingSystem,
-                                                                           "numberingSystem");
+                                                                           "numberingSystem",
+                                                                           "nu");
     }
 
     localeOpt.nu = numberingSystem;
