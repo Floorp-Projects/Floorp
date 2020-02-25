@@ -1846,6 +1846,8 @@ AttachDecision GetPropIRGenerator::tryAttachModuleNamespace(HandleObject obj,
 
 AttachDecision GetPropIRGenerator::tryAttachPrimitive(ValOperandId valId,
                                                       HandleId id) {
+  MOZ_ASSERT(!isSuper(), "SuperBase is guaranteed to be an object");
+
   JSProtoKey protoKey;
   switch (val_.type()) {
     case ValueType::String:
@@ -1916,11 +1918,6 @@ AttachDecision GetPropIRGenerator::tryAttachPrimitive(ValOperandId valId,
     case CanAttachScriptedGetter:
     case CanAttachNativeGetter: {
       MOZ_ASSERT(!idempotent());
-
-      // The primitive stubs don't currently support |super| access.
-      if (isSuper()) {
-        return AttachDecision::NoAction;
-      }
 
       if (val_.isNumber()) {
         writer.guardIsNumber(valId);
