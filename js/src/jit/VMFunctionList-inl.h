@@ -271,6 +271,8 @@ namespace jit {
   _(SubValues, js::SubValues)                                                  \
   _(SubstringKernel, js::SubstringKernel)                                      \
   _(ThrowBadDerivedReturn, js::jit::ThrowBadDerivedReturn)                     \
+  _(ThrowBadDerivedReturnOrUninitializedThis,                                  \
+    js::jit::ThrowBadDerivedReturnOrUninitializedThis)                         \
   _(ThrowCheckIsObject, js::ThrowCheckIsObject)                                \
   _(ThrowHomeObjectNotObject, js::ThrowHomeObjectNotObject)                    \
   _(ThrowInitializedThis, js::ThrowInitializedThis)                            \

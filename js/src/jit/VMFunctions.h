@@ -1070,6 +1070,9 @@ MOZ_MUST_USE bool ThrowRuntimeLexicalError(JSContext* cx, unsigned errorNumber);
 
 MOZ_MUST_USE bool ThrowBadDerivedReturn(JSContext* cx, HandleValue v);
 
+MOZ_MUST_USE bool ThrowBadDerivedReturnOrUninitializedThis(JSContext* cx,
+                                                           HandleValue v);
+
 MOZ_MUST_USE bool BaselineGetFunctionThis(JSContext* cx, BaselineFrame* frame,
                                           MutableHandleValue res);
 
