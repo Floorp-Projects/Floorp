@@ -381,6 +381,20 @@ TEST(Hashtables, DataHashtable_STLIterators)
   }
 }
 
+TEST(Hashtables, DataHashtable_RemoveIf)
+{
+  // check a data-hashtable
+  nsDataHashtable<nsUint32HashKey, const char*> UniToEntity(ENTITY_COUNT);
+
+  for (auto& entity : gEntities) {
+    UniToEntity.Put(entity.mUnicode, entity.mStr);
+  }
+
+  UniToEntity.RemoveIf([](const auto& iter) { return iter.Key() >= 170; });
+
+  ASSERT_EQ(10u, UniToEntity.Count());
+}
+
 TEST(Hashtables, ClassHashtable)
 {
   // check a class-hashtable
