@@ -111,6 +111,10 @@ TEST(CompatVersionCompare, CompareVersionChange) {
     "67.0.1", "1", "1",
     false, true);
 
+#if !defined(XP_WIN) || !defined(MOZ_ASAN)
+  // These tests rely on the `errno` behavior in `ns_strtol`, which is broken
+  // by ASan interceptors on Windows. (https://llvm.org/pr35137)
+
   // These support an upgrade case from a normal-style build ID to the one
   // we're suggesting Ubuntu use.
   CheckExpectedResult(
@@ -121,6 +125,7 @@ TEST(CompatVersionCompare, CompareVersionChange) {
     "67.0.1", "1build1", "1build1",
     "67.0.1", "20000000000000", "20000000000000",
     false, true);
+#endif
 
   // The actual case from bug 1554029:
   CheckExpectedResult(
