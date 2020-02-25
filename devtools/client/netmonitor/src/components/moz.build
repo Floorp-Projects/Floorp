@@ -23,7 +23,6 @@ DevToolsModules(
     'NetworkDetailsPanel.js',
     'PropertiesView.js',
     'ResponsePanel.js',
-    'SecurityPanel.js',
     'SecurityState.js',
     'SourceEditor.js',
     'StackTracePanel.js',
