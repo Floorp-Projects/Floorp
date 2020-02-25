@@ -654,22 +654,26 @@ nsresult WSRunObject::AdjustWhitespace() {
 //   protected methods
 //--------------------------------------------------------------------------------------------
 
-nsINode* WSRunScanner::GetWSBoundingParent() const {
-  if (NS_WARN_IF(!mScanStartPoint.IsSet())) {
+nsIContent* WSRunScanner::GetEditableBlockParentOrTopmotEditableInlineContent(
+    nsIContent* aContent) const {
+  if (NS_WARN_IF(!aContent)) {
     return nullptr;
   }
+  NS_ASSERTION(mHTMLEditor->IsEditable(aContent),
+               "Given content is not editable");
   // XXX What should we do if scan range crosses block boundary?  Currently,
   //     it's not collapsed only when inserting composition string so that
   //     it's possible but shouldn't occur actually.
-  OwningNonNull<nsINode> wsBoundingParent = *mScanStartPoint.GetContainer();
-  while (!IsBlockNode(wsBoundingParent)) {
-    nsCOMPtr<nsINode> parent = wsBoundingParent->GetParentNode();
-    if (!parent || !mHTMLEditor->IsEditable(parent)) {
+  nsIContent* editableBlockParentOrTopmotEditableInlineContent = nullptr;
+  for (nsIContent* content = aContent;
+       content && mHTMLEditor->IsEditable(content);
+       content = content->GetParent()) {
+    editableBlockParentOrTopmotEditableInlineContent = content;
+    if (IsBlockNode(editableBlockParentOrTopmotEditableInlineContent)) {
       break;
     }
-    wsBoundingParent = parent;
   }
-  return wsBoundingParent;
+  return editableBlockParentOrTopmotEditableInlineContent;
 }
 
 nsresult WSRunScanner::GetWSNodes() {
@@ -677,7 +681,20 @@ nsresult WSRunScanner::GetWSNodes() {
   // and which contain only whitespace.  Stop if you reach non-ws text or a new
   // block boundary.
   EditorDOMPoint start(mScanStartPoint), end(mScanStartPoint);
-  nsCOMPtr<nsINode> wsBoundingParent = GetWSBoundingParent();
+  nsIContent* scanStartContent = mScanStartPoint.GetContainerAsContent();
+  if (NS_WARN_IF(!scanStartContent)) {
+    // Meaning container of mScanStartPoint is a Document or DocumentFragment.
+    // I.e., we're try to modify outside of root element.  We don't need to
+    // support such odd case because web apps cannot append text nodes as
+    // direct child of Document node.
+    return NS_ERROR_FAILURE;
+  }
+  nsIContent* editableBlockParentOrTopmotEditableInlineContent =
+      GetEditableBlockParentOrTopmotEditableInlineContent(scanStartContent);
+  if (NS_WARN_IF(!editableBlockParentOrTopmotEditableInlineContent)) {
+    // Meaning that the container of `mScanStartPoint` is not editable.
+    editableBlockParentOrTopmotEditableInlineContent = scanStartContent;
+  }
 
   // first look backwards to find preceding ws nodes
   if (Text* textNode = mScanStartPoint.GetContainerAsText()) {
@@ -715,7 +732,8 @@ nsresult WSRunScanner::GetWSNodes() {
 
   while (!mStartNode) {
     // we haven't found the start of ws yet.  Keep looking
-    nsCOMPtr<nsIContent> priorNode = GetPreviousWSNode(start, wsBoundingParent);
+    nsCOMPtr<nsIContent> priorNode = GetPreviousWSNode(
+        start, editableBlockParentOrTopmotEditableInlineContent);
     if (priorNode) {
       if (IsBlockNode(priorNode)) {
         mStartNode = start.GetContainer();
@@ -776,11 +794,14 @@ nsresult WSRunScanner::GetWSNodes() {
         mStartReasonNode = priorNode;
       }
     } else {
-      // no prior node means we exhausted wsBoundingParent
+      // no prior node means we exhausted
+      // editableBlockParentOrTopmotEditableInlineContent
       mStartNode = start.GetContainer();
       mStartOffset = start.Offset();
       mStartReason = WSType::thisBlock;
-      mStartReasonNode = wsBoundingParent;
+      // mStartReasonNode can be either a block element or any non-editable
+      // content in this case.
+      mStartReasonNode = editableBlockParentOrTopmotEditableInlineContent;
     }
   }
 
@@ -820,7 +841,8 @@ nsresult WSRunScanner::GetWSNodes() {
 
   while (!mEndNode) {
     // we haven't found the end of ws yet.  Keep looking
-    nsCOMPtr<nsIContent> nextNode = GetNextWSNode(end, wsBoundingParent);
+    nsCOMPtr<nsIContent> nextNode =
+        GetNextWSNode(end, editableBlockParentOrTopmotEditableInlineContent);
     if (nextNode) {
       if (IsBlockNode(nextNode)) {
         // we encountered a new block.  therefore no more ws.
@@ -883,11 +905,14 @@ nsresult WSRunScanner::GetWSNodes() {
         mEndReasonNode = nextNode;
       }
     } else {
-      // no next node means we exhausted wsBoundingParent
+      // no next node means we exhausted
+      // editableBlockParentOrTopmotEditableInlineContent
       mEndNode = end.GetContainer();
       mEndOffset = end.Offset();
       mEndReason = WSType::thisBlock;
-      mEndReasonNode = wsBoundingParent;
+      // mEndReasonNode can be either a block element or any non-editable
+      // content in this case.
+      mEndReasonNode = editableBlockParentOrTopmotEditableInlineContent;
     }
   }
 
@@ -1839,7 +1864,9 @@ nsresult WSRunObject::CheckTrailingNBSPOfRun(WSFragment* aRun) {
         rightCheck = true;
       }
       if ((aRun->mRightType & WSType::block) &&
-          IsBlockNode(GetWSBoundingParent())) {
+          (IsBlockNode(GetEditableBlockParentOrTopmotEditableInlineContent(
+               mScanStartPoint.GetContainerAsContent())) ||
+           IsBlockNode(mScanStartPoint.GetContainerAsContent()))) {
         RefPtr<Selection> selection = htmlEditor->GetSelection();
         if (NS_WARN_IF(!selection)) {
           return NS_ERROR_FAILURE;
