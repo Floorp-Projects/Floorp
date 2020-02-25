@@ -59,11 +59,13 @@ interface LoginValidationDelegate {
          * with its information can be made.
          */
         object CanBeCreated : Result()
+
         /**
          * Indicates that a matching [Login] was found in storage, and the [Login] can be used
          * to update its information.
          */
         object CanBeUpdated : Result()
+
         /**
          * The [Login] cannot be saved.
          */
@@ -72,6 +74,7 @@ interface LoginValidationDelegate {
              * The passed [Login] had an empty password field, and so cannot be saved.
              */
             object EmptyPassword : Error()
+
             /**
              * Something went wrong in GeckoView. We have no way to handle this type of error. See
              * [exception] for details.
@@ -100,13 +103,15 @@ interface LoginStorageDelegate {
      * Called after a [login] has been autofilled into web content.
      */
     fun onLoginUsed(login: Login)
+
     /**
      * Given a [domain], returns a [GeckoResult] of the matching [LoginEntry]s found in
      * [loginStorage].
      *
      * This is called when the engine believes a field should be autofilled.
      */
-    fun onLoginFetch(domain: String): List<Login>
+    fun onLoginFetch(domain: String): Deferred<List<Login>>
+
     /**
      * Called when a [login] should be saved or updated.
      */

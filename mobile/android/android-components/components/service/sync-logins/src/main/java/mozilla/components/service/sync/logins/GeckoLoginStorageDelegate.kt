@@ -5,11 +5,12 @@
 package mozilla.components.service.sync.logins
 
 import androidx.annotation.VisibleForTesting
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import mozilla.components.concept.storage.Login
 import mozilla.components.concept.storage.LoginStorageDelegate
 import mozilla.components.lib.dataprotect.SecureAbove22Preferences
@@ -74,11 +75,9 @@ class GeckoLoginStorageDelegate(
         }
     }
 
-    override fun onLoginFetch(domain: String): List<Login> {
-        if (!isAutofillEnabled.invoke()) return listOf()
-        return runBlocking {
-            // GV expects a synchronous response. Blocking here hasn't caused problems during
-            // testing, but we should add telemetry to verify. See #5531
+    override fun onLoginFetch(domain: String): Deferred<List<Login>> {
+        if (!isAutofillEnabled()) return CompletableDeferred(listOf())
+        return scope.async {
             loginStorage.withUnlocked(password) {
                 loginStorage.getByBaseDomain(domain).await()
                     .map { it.toLogin() }
