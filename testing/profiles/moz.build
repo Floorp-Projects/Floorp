@@ -7,7 +7,6 @@
 profile_files = [
     'base/*',
     'common/*',
-    'mochitest/*',
     'perf/*',
     'profiles.json',
     'profileserver/*',
