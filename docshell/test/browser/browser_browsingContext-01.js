@@ -106,7 +106,7 @@ add_task(async function() {
 
     await removeFrame(browser, "frame2");
 
-    is(browsingContext1.getChildren().indexOf(browsingContext2), -1);
+    is(browsingContext1.children.indexOf(browsingContext2), -1);
 
     // TODO(farre): Handle browsingContext removal [see Bug 1486719].
     todo_isnot(browsingContext2.parent, browsingContext1);
@@ -190,7 +190,7 @@ add_task(async function() {
           "BF cached BC's have same id"
         );
         is(
-          win.docShell.browsingContext.getChildren()[0],
+          win.docShell.browsingContext.children[0],
           frameBC,
           "BF cached BC's should still be a child of its parent"
         );
