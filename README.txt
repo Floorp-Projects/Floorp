@@ -8,7 +8,8 @@ For information on how to build Mozilla from the source code and create the patc
     https://firefox-source-docs.mozilla.org/contributing/how_to_contribute_firefox.html
 
 If you have a question about developing Mozilla, and can't find the solution
-on https://developer.mozilla.org, you can try asking your question on IRC at irc.mozilla.org in #introduction channel.
+on https://developer.mozilla.org, you can try asking your question on Matrix at chat.mozilla.org in `Introduction` (https://chat.mozilla.org/#/room/#introduction:mozilla.org) channel.
+
 
 Nightly development builds can be downloaded from:
 
@@ -18,4 +19,3 @@ Nightly development builds can be downloaded from:
 
 Keep in mind that nightly builds, which are used by Mozilla developers for
 testing, may be buggy.
-
