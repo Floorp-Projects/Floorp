@@ -181,6 +181,7 @@ function initializedValues(state = null, action) {
         perfFront: action.perfFront,
         receiveProfile: action.receiveProfile,
         setRecordingPreferences: action.setRecordingPreferences,
+        presets: action.presets,
         pageContext: action.pageContext,
         getSymbolTableGetter: action.getSymbolTableGetter,
         supportedFeatures: action.supportedFeatures,
