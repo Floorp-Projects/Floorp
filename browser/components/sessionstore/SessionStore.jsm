@@ -2624,15 +2624,10 @@ var SessionStoreInternal = {
     }
 
     // Check that the document has a corresponding BrowsingContext.
-    let browsingContext;
-    let isSubframe = false;
-    let cp = channel.loadInfo.externalContentPolicyType;
-    if (cp == Ci.nsIContentPolicy.TYPE_DOCUMENT) {
-      browsingContext = channel.loadInfo.browsingContext;
-    } else {
-      browsingContext = channel.loadInfo.frameBrowsingContext;
-      isSubframe = true;
-    }
+    let browsingContext = channel.loadInfo.targetBrowsingContext;
+    let isSubframe =
+      channel.loadInfo.externalContentPolicyType !=
+      Ci.nsIContentPolicy.TYPE_DOCUMENT;
 
     if (!browsingContext) {
       debug(`[process-switch]: no BrowsingContext - ignoring`);
@@ -2648,7 +2643,7 @@ var SessionStoreInternal = {
 
     let topDocShell = topBC.embedderElement.ownerGlobal.docShell;
     let { useRemoteSubframes } = topDocShell.QueryInterface(Ci.nsILoadContext);
-    if (!useRemoteSubframes && cp != Ci.nsIContentPolicy.TYPE_DOCUMENT) {
+    if (!useRemoteSubframes && isSubframe) {
       debug(`[process-switch]: remote subframes disabled - ignoring`);
       return;
     }

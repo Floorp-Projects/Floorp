@@ -663,6 +663,15 @@ interface nsILoadInfo : nsISupports
   readonly attribute BrowsingContext frameBrowsingContext;
 
   /**
+   * If the element being loaded is a nsFrameLoaderOwner,
+   * `targetBrowsingContext` is the Browsing Context which will contain the
+   * loading document (see `frameBrowsingContext`). Otherwise, it is the
+   * Browsing Context performing the load (see `browsingContext`).
+   */
+  [infallible] readonly attribute unsigned long long targetBrowsingContextID;
+  readonly attribute BrowsingContext targetBrowsingContext;
+
+  /**
    * Resets the PrincipalToInherit to a freshly created NullPrincipal
    * which inherits the origin attributes from the loadInfo.
    *
