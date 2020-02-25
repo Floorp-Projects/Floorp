@@ -141,7 +141,7 @@ add_task(
         BrowserTestUtils.synthesizeMouseAtCenter(
           "#test-create-new-tab-from-mouse-click-subframe",
           { ctrlKey: true, metaKey: true },
-          tab.linkedBrowser.browsingContext.children[0]
+          tab.linkedBrowser.browsingContext.getChildren()[0]
         );
       },
       expectedWebNavProps: {
@@ -159,7 +159,7 @@ add_task(
         BrowserTestUtils.synthesizeMouseAtCenter(
           "#test-create-new-window-from-mouse-click-subframe",
           { shiftKey: true },
-          tab.linkedBrowser.browsingContext.children[0]
+          tab.linkedBrowser.browsingContext.getChildren()[0]
         );
       },
       expectedWebNavProps: {
@@ -177,7 +177,7 @@ add_task(
         BrowserTestUtils.synthesizeMouseAtCenter(
           "#test-create-new-tab-from-targetblank-click-subframe",
           {},
-          tab.linkedBrowser.browsingContext.children[0]
+          tab.linkedBrowser.browsingContext.getChildren()[0]
         );
       },
       expectedWebNavProps: {

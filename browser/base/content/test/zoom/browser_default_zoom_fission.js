@@ -42,7 +42,7 @@ add_task(async function test_sitespecific_iframe_global_zoom() {
   is(loadedURL, TEST_IFRAME_URL, "got the load event for the iframe");
 
   let frameZoom = await SpecialPowers.spawn(
-    gBrowser.selectedBrowser.browsingContext.children[0],
+    gBrowser.selectedBrowser.browsingContext.getChildren()[0],
     [],
     async () => {
       await ContentTaskUtils.waitForCondition(() => {
@@ -94,7 +94,7 @@ add_task(async function test_sitespecific_global_zoom_enlarge() {
   is(ZoomManager.getZoomForBrowser(tabBrowser), 0.8, "Local zoom is increased");
 
   let frameZoom = await SpecialPowers.spawn(
-    gBrowser.selectedBrowser.browsingContext.children[0],
+    gBrowser.selectedBrowser.browsingContext.getChildren()[0],
     [],
     async () => {
       await ContentTaskUtils.waitForCondition(() => {

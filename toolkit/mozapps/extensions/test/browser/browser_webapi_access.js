@@ -7,7 +7,7 @@ registerCleanupFunction(() => {
 });
 
 function check_frame_availability(browser) {
-  return check_availability(browser.browsingContext.children[0]);
+  return check_availability(browser.browsingContext.getChildren()[0]);
 }
 
 function check_availability(browser) {

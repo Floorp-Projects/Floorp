@@ -60,7 +60,7 @@ async function openPage(shouldClick) {
       await BrowserTestUtils.loadURI(browser, PAGE_URL);
       await BrowserTestUtils.browserLoaded(browser);
 
-      let frameBC = browser.browsingContext.children[0];
+      let frameBC = browser.browsingContext.getChildren()[0];
       if (shouldClick) {
         await BrowserTestUtils.synthesizeMouse("body", 2, 2, {}, frameBC);
       }
