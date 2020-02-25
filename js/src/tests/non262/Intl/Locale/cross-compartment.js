@@ -1,7 +1,6 @@
-// |reftest| skip-if(!this.hasOwnProperty('Intl')||(!this.Intl.Locale&&!this.hasOwnProperty('addIntlExtras')))
+// |reftest| skip-if(!this.hasOwnProperty('Intl'))
 
 var g = newGlobal();
-addIntlLocale(g);
 
 var tag = "de-Latn-AT-u-ca-gregory-nu-latn-co-phonebk-kf-false-kn-hc-h23";
 var locale = new Intl.Locale(tag);
