@@ -56,17 +56,6 @@
 
 /* General output styles */
 
-a {
-  -moz-user-focus: normal;
-  cursor: pointer;
-  text-decoration: underline;
-}
-
-/* Workaround for Bug 575675 - FindChildWithRules aRelevantLinkVisited
- * assertion when loading HTML page with links in XUL iframe */
-*:visited {
-}
-
 * {
   box-sizing: border-box;
 }
