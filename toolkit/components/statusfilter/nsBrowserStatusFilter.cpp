@@ -35,7 +35,7 @@ nsBrowserStatusFilter::~nsBrowserStatusFilter() {
 // nsBrowserStatusFilter::nsISupports
 //-----------------------------------------------------------------------------
 
-NS_IMPL_CYCLE_COLLECTION(nsBrowserStatusFilter, mListener, mTarget)
+NS_IMPL_CYCLE_COLLECTION_WEAK(nsBrowserStatusFilter, mListener, mTarget)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsBrowserStatusFilter)
   NS_INTERFACE_MAP_ENTRY(nsIWebProgress)

@@ -377,8 +377,8 @@ NS_INTERFACE_TABLE_HEAD(TextInputSelectionController)
   NS_INTERFACE_TABLE_TO_MAP_SEGUE_CYCLE_COLLECTION(TextInputSelectionController)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_CYCLE_COLLECTION(TextInputSelectionController, mFrameSelection,
-                         mLimiter)
+NS_IMPL_CYCLE_COLLECTION_WEAK(TextInputSelectionController, mFrameSelection,
+                              mLimiter)
 
 TextInputSelectionController::TextInputSelectionController(
     nsFrameSelection* aSel, PresShell* aPresShell, nsIContent* aLimiter)
@@ -828,7 +828,12 @@ NS_INTERFACE_MAP_BEGIN(TextInputListener)
   NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(TextInputListener)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_CYCLE_COLLECTION_0(TextInputListener)
+NS_IMPL_CYCLE_COLLECTION_CLASS(TextInputListener)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(TextInputListener)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_WEAK_REFERENCE
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(TextInputListener)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 void TextInputListener::OnSelectionChange(Selection& aSelection,
                                           int16_t aReason) {

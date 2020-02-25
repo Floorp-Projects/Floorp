@@ -224,9 +224,9 @@ NS_IMPL_QUERY_INTERFACE_CYCLE_COLLECTION_INHERITED(nsGeolocationRequest,
 
 NS_IMPL_ADDREF_INHERITED(nsGeolocationRequest, ContentPermissionRequestBase)
 NS_IMPL_RELEASE_INHERITED(nsGeolocationRequest, ContentPermissionRequestBase)
-NS_IMPL_CYCLE_COLLECTION_INHERITED(nsGeolocationRequest,
-                                   ContentPermissionRequestBase, mCallback,
-                                   mErrorCallback, mLocator)
+NS_IMPL_CYCLE_COLLECTION_WEAK_PTR_INHERITED(nsGeolocationRequest,
+                                            ContentPermissionRequestBase,
+                                            mCallback, mErrorCallback, mLocator)
 
 void nsGeolocationRequest::Notify() {
   SetTimeoutTimer();
