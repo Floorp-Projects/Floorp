@@ -313,23 +313,6 @@ class AboutLoginsParent extends JSWindowActorParent {
         ownerGlobal.openPreferences("privacy-logins");
         break;
       }
-      case "AboutLogins:OpenSite": {
-        let guid = message.data.login.guid;
-        let logins = LoginHelper.searchLoginsWithObject({ guid });
-        if (logins.length != 1) {
-          log.warn(
-            `AboutLogins:OpenSite: expected to find a login for guid: ${guid} but found ${
-              logins.length
-            }`
-          );
-          return;
-        }
-
-        ownerGlobal.openWebLinkIn(logins[0].origin, "tab", {
-          relatedToCurrent: true,
-        });
-        break;
-      }
       case "AboutLogins:MasterPasswordRequest": {
         // This does no harm if master password isn't set.
         let tokendb = Cc["@mozilla.org/security/pk11tokendb;1"].createInstance(
