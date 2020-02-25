@@ -31,6 +31,7 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(nsCommandManager)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsCommandManager)
   tmp->mObserversTable.Clear();
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_WEAK_REFERENCE
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsCommandManager)
   for (auto iter = tmp->mObserversTable.Iter(); !iter.Done(); iter.Next()) {

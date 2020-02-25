@@ -33,6 +33,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(TransactionManager)
   tmp->mDoStack.DoUnlink();
   tmp->mUndoStack.DoUnlink();
   tmp->mRedoStack.DoUnlink();
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_WEAK_REFERENCE
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(TransactionManager)
