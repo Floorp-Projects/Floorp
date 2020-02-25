@@ -40,4 +40,4 @@ Starting Push in the Application's onCreate is recommended.
 
 | Name | Summary |
 |---|---|
-| [AutoPushFeature](../../mozilla.components.feature.push/-auto-push-feature/index.md) | `class AutoPushFeature : `[`PushProcessor`](./index.md)<br>A implementation of a [PushProcessor](./index.md) that should live as a singleton by being installed in the Application's onCreate. It receives messages from a service and forwards them to be decrypted and routed. |
+| [AutoPushFeature](../../mozilla.components.feature.push/-auto-push-feature/index.md) | `class AutoPushFeature : `[`PushProcessor`](./index.md)`, `[`Observable`](../../mozilla.components.support.base.observer/-observable/index.md)`<`[`Observer`](../../mozilla.components.feature.push/-auto-push-feature/-observer/index.md)`>`<br>A implementation of a [PushProcessor](./index.md) that should live as a singleton by being installed in the Application's onCreate. It receives messages from a service and forwards them to be decrypted and routed. |

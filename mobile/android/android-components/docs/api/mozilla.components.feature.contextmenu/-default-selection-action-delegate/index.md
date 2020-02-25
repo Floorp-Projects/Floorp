@@ -2,7 +2,7 @@
 
 # DefaultSelectionActionDelegate
 
-`class DefaultSelectionActionDelegate : `[`SelectionActionDelegate`](../../mozilla.components.concept.engine.selection/-selection-action-delegate/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/contextmenu/src/main/java/mozilla/components/feature/contextmenu/DefaultSelectionActionDelegate.kt#L22)
+`class DefaultSelectionActionDelegate : `[`SelectionActionDelegate`](../../mozilla.components.concept.engine.selection/-selection-action-delegate/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/contextmenu/src/main/java/mozilla/components/feature/contextmenu/DefaultSelectionActionDelegate.kt#L24)
 
 Adds normal and private search buttons to text selection context menus.
 
@@ -10,7 +10,7 @@ Adds normal and private search buttons to text selection context menus.
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `DefaultSelectionActionDelegate(searchAdapter: `[`SearchAdapter`](../../mozilla.components.feature.search/-search-adapter/index.md)`, resources: <ERROR CLASS>, appName: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`)`<br>Adds normal and private search buttons to text selection context menus. |
+| [&lt;init&gt;](-init-.md) | `DefaultSelectionActionDelegate(searchAdapter: `[`SearchAdapter`](../../mozilla.components.feature.search/-search-adapter/index.md)`, resources: <ERROR CLASS>, appName: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, shareTextClicked: (`[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`) -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)` = null)`<br>Adds normal and private search buttons to text selection context menus. |
 
 ### Functions
 

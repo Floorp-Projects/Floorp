@@ -2,7 +2,7 @@
 
 # SitePermissionsStorage
 
-`class SitePermissionsStorage` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/sitepermissions/src/main/java/mozilla/components/feature/sitepermissions/SitePermissionsStorage.kt#L25)
+`class SitePermissionsStorage` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/sitepermissions/src/main/java/mozilla/components/feature/sitepermissions/SitePermissionsStorage.kt#L27)
 
 A storage implementation to save [SitePermissions](../-site-permissions/index.md).
 

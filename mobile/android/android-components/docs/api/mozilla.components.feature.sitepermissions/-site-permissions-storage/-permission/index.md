@@ -2,7 +2,7 @@
 
 # Permission
 
-`enum class Permission` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/sitepermissions/src/main/java/mozilla/components/feature/sitepermissions/SitePermissionsStorage.kt#L153)
+`enum class Permission` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/sitepermissions/src/main/java/mozilla/components/feature/sitepermissions/SitePermissionsStorage.kt#L157)
 
 ### Enum Values
 
@@ -14,3 +14,5 @@
 | [LOCAL_STORAGE](-l-o-c-a-l_-s-t-o-r-a-g-e.md) |  |
 | [NOTIFICATION](-n-o-t-i-f-i-c-a-t-i-o-n.md) |  |
 | [LOCATION](-l-o-c-a-t-i-o-n.md) |  |
+| [AUTOPLAY_AUDIBLE](-a-u-t-o-p-l-a-y_-a-u-d-i-b-l-e.md) |  |
+| [AUTOPLAY_INAUDIBLE](-a-u-t-o-p-l-a-y_-i-n-a-u-d-i-b-l-e.md) |  |

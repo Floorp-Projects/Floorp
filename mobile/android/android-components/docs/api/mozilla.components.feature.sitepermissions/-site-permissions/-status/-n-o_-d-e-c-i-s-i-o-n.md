@@ -2,7 +2,7 @@
 
 # NO_DECISION
 
-`NO_DECISION` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/sitepermissions/src/main/java/mozilla/components/feature/sitepermissions/SitePermissions.kt#L29)
+`NO_DECISION` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/sitepermissions/src/main/java/mozilla/components/feature/sitepermissions/SitePermissions.kt#L31)
 
 ### Inherited Functions
 

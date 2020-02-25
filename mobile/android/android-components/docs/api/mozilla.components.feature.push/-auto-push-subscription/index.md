@@ -2,7 +2,7 @@
 
 # AutoPushSubscription
 
-`data class AutoPushSubscription` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/push/src/main/java/mozilla/components/feature/push/AutoPushFeature.kt#L450)
+`data class AutoPushSubscription` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/push/src/main/java/mozilla/components/feature/push/AutoPushFeature.kt#L415)
 
 The subscription information from AutoPush that can be used to send push messages to other devices.
 
@@ -10,7 +10,7 @@ The subscription information from AutoPush that can be used to send push message
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `AutoPushSubscription(type: `[`PushType`](../-push-type/index.md)`, endpoint: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, publicKey: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, authKey: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`)`<br>The subscription information from AutoPush that can be used to send push messages to other devices. |
+| [&lt;init&gt;](-init-.md) | `AutoPushSubscription(scope: `[`PushScope`](../-push-scope.md)`, endpoint: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, publicKey: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, authKey: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`)`<br>The subscription information from AutoPush that can be used to send push messages to other devices. |
 
 ### Properties
 
@@ -19,7 +19,7 @@ The subscription information from AutoPush that can be used to send push message
 | [authKey](auth-key.md) | `val authKey: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
 | [endpoint](endpoint.md) | `val endpoint: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
 | [publicKey](public-key.md) | `val publicKey: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
-| [type](type.md) | `val type: `[`PushType`](../-push-type/index.md) |
+| [scope](scope.md) | `val scope: `[`PushScope`](../-push-scope.md) |
 
 ### Extension Functions
 

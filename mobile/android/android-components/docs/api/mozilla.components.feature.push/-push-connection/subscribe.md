@@ -2,4 +2,10 @@
 
 # subscribe
 
-`abstract suspend fun subscribe(channelId: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, scope: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)` = ""): SubscriptionResponse` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/push/src/main/java/mozilla/components/feature/push/Connection.kt#L25)
+`abstract suspend fun subscribe(scope: `[`PushScope`](../-push-scope.md)`, appServerKey: `[`AppServerKey`](../-app-server-key.md)`? = null): `[`AutoPushSubscription`](../-auto-push-subscription/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/push/src/main/java/mozilla/components/feature/push/Connection.kt#L33)
+
+Creates a push subscription for the given scope.
+
+**Return**
+A push subscription.
+

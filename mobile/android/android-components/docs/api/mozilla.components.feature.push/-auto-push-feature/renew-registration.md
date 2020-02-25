@@ -2,7 +2,7 @@
 
 # renewRegistration
 
-`fun renewRegistration(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/push/src/main/java/mozilla/components/feature/push/AutoPushFeature.kt#L271)
+`fun renewRegistration(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/push/src/main/java/mozilla/components/feature/push/AutoPushFeature.kt#L243)
 
 Overrides [PushProcessor.renewRegistration](../../mozilla.components.concept.push/-push-processor/renew-registration.md)
 

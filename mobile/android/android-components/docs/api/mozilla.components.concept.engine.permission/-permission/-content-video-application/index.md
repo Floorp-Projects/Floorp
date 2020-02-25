@@ -2,7 +2,7 @@
 
 # ContentVideoApplication
 
-`data class ContentVideoApplication : `[`Permission`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/permission/PermissionRequest.kt#L83)
+`data class ContentVideoApplication : `[`Permission`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/permission/PermissionRequest.kt#L86)
 
 ### Constructors
 

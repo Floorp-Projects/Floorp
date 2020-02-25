@@ -16,12 +16,14 @@ A site permissions and its state.
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `SitePermissions(origin: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, location: `[`Status`](-status/index.md)` = NO_DECISION, notification: `[`Status`](-status/index.md)` = NO_DECISION, microphone: `[`Status`](-status/index.md)` = NO_DECISION, camera: `[`Status`](-status/index.md)` = NO_DECISION, bluetooth: `[`Status`](-status/index.md)` = NO_DECISION, localStorage: `[`Status`](-status/index.md)` = NO_DECISION, savedAt: `[`Long`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html)`)`<br>A site permissions and its state. |
+| [&lt;init&gt;](-init-.md) | `SitePermissions(origin: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, location: `[`Status`](-status/index.md)` = NO_DECISION, notification: `[`Status`](-status/index.md)` = NO_DECISION, microphone: `[`Status`](-status/index.md)` = NO_DECISION, camera: `[`Status`](-status/index.md)` = NO_DECISION, bluetooth: `[`Status`](-status/index.md)` = NO_DECISION, localStorage: `[`Status`](-status/index.md)` = NO_DECISION, autoplayAudible: `[`Status`](-status/index.md)` = NO_DECISION, autoplayInaudible: `[`Status`](-status/index.md)` = NO_DECISION, savedAt: `[`Long`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html)`)`<br>A site permissions and its state. |
 
 ### Properties
 
 | Name | Summary |
 |---|---|
+| [autoplayAudible](autoplay-audible.md) | `val autoplayAudible: `[`Status`](-status/index.md) |
+| [autoplayInaudible](autoplay-inaudible.md) | `val autoplayInaudible: `[`Status`](-status/index.md) |
 | [bluetooth](bluetooth.md) | `val bluetooth: `[`Status`](-status/index.md) |
 | [camera](camera.md) | `val camera: `[`Status`](-status/index.md) |
 | [localStorage](local-storage.md) | `val localStorage: `[`Status`](-status/index.md) |

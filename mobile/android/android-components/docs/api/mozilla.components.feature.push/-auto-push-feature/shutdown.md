@@ -6,6 +6,10 @@
 
 Overrides [PushProcessor.shutdown](../../mozilla.components.concept.push/-push-processor/shutdown.md)
 
-Un-subscribes from all push message channels, stops the push service, and stops periodic verifications.
+Un-subscribes from all push message channels and stops periodic verifications.
+
+We do not stop the push service in case there are other consumers are using it as well. The app should
+explicitly stop the service if desired.
+
 This should only be done on an account logout or app data deletion.
 

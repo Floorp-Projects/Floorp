@@ -2,7 +2,7 @@
 
 # Content
 
-`data class Content : `[`GeckoPermissionRequest`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-gecko-beta/src/main/java/mozilla/components/browser/engine/gecko/permission/GeckoPermissionRequest.kt#L42)
+`data class Content : `[`GeckoPermissionRequest`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-gecko-beta/src/main/java/mozilla/components/browser/engine/gecko/permission/GeckoPermissionRequest.kt#L44)
 
 Represents a gecko-based content permission request.
 

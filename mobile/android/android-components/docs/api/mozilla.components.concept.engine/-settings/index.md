@@ -18,7 +18,6 @@ whether a setting is applied on an engine or session instance.
 
 | Name | Summary |
 |---|---|
-| [allowAutoplayMedia](allow-autoplay-media.md) | `open var allowAutoplayMedia: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Setting to control whether media is allowed to auto-play on page load. |
 | [allowContentAccess](allow-content-access.md) | `open var allowContentAccess: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Setting to control whether or not the engine is allowed to load content from a content provider installed in the system. |
 | [allowFileAccess](allow-file-access.md) | `open var allowFileAccess: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Setting to control whether or not file access is allowed. |
 | [allowFileAccessFromFileURLs](allow-file-access-from-file-u-r-ls.md) | `open var allowFileAccessFromFileURLs: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Setting to control whether or not JavaScript running in the context of a file scheme URL should be allowed to access content from other file scheme URLs. |
