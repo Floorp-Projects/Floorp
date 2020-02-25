@@ -402,16 +402,16 @@ nsresult TextEditor::OnDrop(DragEvent* aDropEvent) {
     }
     droppedAt = rangeAtDropPoint->StartRef();
     MOZ_ASSERT(droppedAt.IsSetAndValid());
-  }
 
-  // If focus is changed to different element and we're handling drop in
-  // contenteditable, we cannot handle it without focus.  So, we should give
-  // it up.
-  if (NS_WARN_IF(newFocusedElement !=
-                     nsFocusManager::GetFocusManager()->GetFocusedElement() &&
-                 AsHTMLEditor() && !AsHTMLEditor()->IsInDesignMode())) {
-    editActionData.Abort();
-    return NS_OK;
+    // If focus is changed to different element and we're handling drop in
+    // contenteditable, we cannot handle it without focus.  So, we should give
+    // it up.
+    if (AsHTMLEditor() && !AsHTMLEditor()->IsInDesignMode() &&
+        NS_WARN_IF(newFocusedElement !=
+                   AsHTMLEditor()->GetActiveEditingHost())) {
+      editActionData.Abort();
+      return NS_OK;
+    }
   }
 
   if (!AsHTMLEditor()) {
