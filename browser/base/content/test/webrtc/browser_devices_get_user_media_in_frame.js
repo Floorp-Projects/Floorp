@@ -505,6 +505,74 @@ var gTests = [
       await reloadAndAssertClosedStreams();
     },
   },
+
+  {
+    desc:
+      "getUserMedia audio+video: closing a window with two frames sharing at the same time, closes the indicator",
+    skipObserverVerification: true,
+    run: async function checkFrameIndicatorClosedUI() {
+      // This tests a case where the indicator didn't close when audio/video is
+      // shared in two subframes and then the tabs are closed.
+
+      let tabsToRemove = [gBrowser.selectedTab];
+
+      for (let t = 0; t < 2; t++) {
+        let frame1BC = gShouldObserveSubframes
+          ? gBrowser.selectedBrowser.browsingContext.getChildren()[0]
+          : undefined;
+
+        let observerPromise = expectObserverCalled(
+          "getUserMedia:request",
+          1,
+          frame1BC
+        );
+        let promise = promisePopupNotificationShown("webRTC-shareDevices");
+        await promiseRequestDevice(true, true, "frame1");
+        await promise;
+        await observerPromise;
+        checkDeviceSelectors(true, true);
+
+        // During the second pass, the indicator is already open.
+        let indicator = t == 0 ? promiseIndicatorWindow() : Promise.resolve();
+
+        let observerPromise1 = expectObserverCalled(
+          "getUserMedia:response:allow",
+          1,
+          frame1BC
+        );
+        let observerPromise2 = expectObserverCalled(
+          "recording-device-events",
+          1,
+          frame1BC
+        );
+        await promiseMessage("ok", () => {
+          PopupNotifications.panel.firstElementChild.button.click();
+        });
+        await observerPromise1;
+        await observerPromise2;
+        Assert.deepEqual(
+          await getMediaCaptureState(),
+          { audio: true, video: true },
+          "expected camera and microphone to be shared"
+        );
+
+        await indicator;
+        await checkSharingUI({ video: true, audio: true });
+
+        // The first time around, open another tab with the same uri.
+        // The second time, just open a normal test tab.
+        let uri = t == 0 ? gBrowser.selectedBrowser.currentURI.spec : undefined;
+        tabsToRemove.push(
+          await BrowserTestUtils.openNewForegroundTab(gBrowser, uri)
+        );
+      }
+
+      BrowserTestUtils.removeTab(tabsToRemove[0]);
+      BrowserTestUtils.removeTab(tabsToRemove[1]);
+
+      await checkNotSharing();
+    },
+  },
 ];
 
 add_task(async function test_inprocess() {
