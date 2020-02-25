@@ -276,6 +276,20 @@ class nsBaseHashtable
   };
 
   /**
+   * Removes all entries matching a predicate.
+   *
+   * The predicate must be compatible with signature bool (const Iterator &).
+   */
+  template <typename Pred>
+  void RemoveIf(Pred&& aPred) {
+    for (auto iter = Iter(); !iter.Done(); iter.Next()) {
+      if (aPred(const_cast<std::add_const_t<decltype(iter)>&>(iter))) {
+        iter.Remove();
+      }
+    }
+  }
+
+  /**
    * Looks up aKey in the hashtable and returns an object that allows you to
    * read/modify the value of the entry, or remove the entry (if found).
    *
