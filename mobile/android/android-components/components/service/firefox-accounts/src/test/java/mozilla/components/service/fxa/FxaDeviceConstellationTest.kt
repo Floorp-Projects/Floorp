@@ -154,13 +154,13 @@ class FxaDeviceConstellationTest {
         val testTab1 = TabHistoryEntry("Hello", "http://world.com/1")
         `when`(account.handlePushMessage("raw events payload")).thenReturn(arrayOf(
             ASAccountEvent.IncomingDeviceCommand(
-                command=IncomingDeviceCommand.TabReceived(testDevice1, arrayOf(testTab1))
+                command = IncomingDeviceCommand.TabReceived(testDevice1, arrayOf(testTab1))
             )
         ))
         assertTrue(constellation.processRawEventAsync("raw events payload").await())
 
         val events = eventsObserver.latestEvents!!
-        val command = (events[0] as AccountEvent.DeviceCommandIncoming).command;
+        val command = (events[0] as AccountEvent.DeviceCommandIncoming).command
         assertEquals(testDevice1.into(), (command as DeviceCommandIncoming.TabReceived).from)
         assertEquals(listOf(testTab1.into()), command.entries)
     }
@@ -258,7 +258,7 @@ class FxaDeviceConstellationTest {
         ))
         assertTrue(constellation.pollForCommandsAsync().await())
 
-        var command = (eventsObserver.latestEvents!![0] as AccountEvent.DeviceCommandIncoming).command;
+        var command = (eventsObserver.latestEvents!![0] as AccountEvent.DeviceCommandIncoming).command
         assertEquals(null, (command as DeviceCommandIncoming.TabReceived).from)
         assertEquals(listOf<TabData>(), command.entries)
 
@@ -276,7 +276,7 @@ class FxaDeviceConstellationTest {
 
         Assert.assertNotNull(eventsObserver.latestEvents)
         assertEquals(1, eventsObserver.latestEvents!!.size)
-        command = (eventsObserver.latestEvents!![0] as AccountEvent.DeviceCommandIncoming).command;
+        command = (eventsObserver.latestEvents!![0] as AccountEvent.DeviceCommandIncoming).command
         assertEquals(testDevice1.into(), (command as DeviceCommandIncoming.TabReceived).from)
         assertEquals(listOf<TabData>(), command.entries)
 
@@ -286,7 +286,7 @@ class FxaDeviceConstellationTest {
         ))
         assertTrue(constellation.pollForCommandsAsync().await())
 
-        command = (eventsObserver.latestEvents!![0] as AccountEvent.DeviceCommandIncoming).command;
+        command = (eventsObserver.latestEvents!![0] as AccountEvent.DeviceCommandIncoming).command
         assertEquals(testDevice2.into(), (command as DeviceCommandIncoming.TabReceived).from)
         assertEquals(listOf(testTab1.into()), command.entries)
 
@@ -296,7 +296,7 @@ class FxaDeviceConstellationTest {
         ))
         assertTrue(constellation.pollForCommandsAsync().await())
 
-        command = (eventsObserver.latestEvents!![0] as AccountEvent.DeviceCommandIncoming).command;
+        command = (eventsObserver.latestEvents!![0] as AccountEvent.DeviceCommandIncoming).command
         assertEquals(testDevice2.into(), (command as DeviceCommandIncoming.TabReceived).from)
         assertEquals(listOf(testTab1.into(), testTab3.into()), command.entries)
 
@@ -307,10 +307,10 @@ class FxaDeviceConstellationTest {
         ))
         assertTrue(constellation.pollForCommandsAsync().await())
 
-        command = (eventsObserver.latestEvents!![0] as AccountEvent.DeviceCommandIncoming).command;
+        command = (eventsObserver.latestEvents!![0] as AccountEvent.DeviceCommandIncoming).command
         assertEquals(testDevice2.into(), (command as DeviceCommandIncoming.TabReceived).from)
         assertEquals(listOf(testTab1.into(), testTab2.into()), command.entries)
-        command = (eventsObserver.latestEvents!![1] as AccountEvent.DeviceCommandIncoming).command;
+        command = (eventsObserver.latestEvents!![1] as AccountEvent.DeviceCommandIncoming).command
         assertEquals(testDevice1.into(), (command as DeviceCommandIncoming.TabReceived).from)
         assertEquals(listOf(testTab3.into()), command.entries)
 

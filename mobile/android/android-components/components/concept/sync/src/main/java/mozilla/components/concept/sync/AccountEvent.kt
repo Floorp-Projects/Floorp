@@ -8,18 +8,27 @@ package mozilla.components.concept.sync
  * Allows monitoring events targeted at the current account/device.
  */
 interface AccountEventsObserver {
+    /** The callback called when an account event is received */
     fun onEvents(events: List<AccountEvent>)
 }
 
-typealias OuterDeviceCommandIncoming = DeviceCommandIncoming;
+typealias OuterDeviceCommandIncoming = DeviceCommandIncoming
 
+/**
+ * Incoming account events.
+ */
 sealed class AccountEvent {
-    // A tab with all its history entries (back button).
+    /** An incoming command from another device */
     class DeviceCommandIncoming(val command: OuterDeviceCommandIncoming) : AccountEvent()
+    /** The account's profile was updated */
     class ProfileUpdated : AccountEvent()
+    /** The authentication state of the account changed - eg, the password changed */
     class AccountAuthStateChanged : AccountEvent()
+    /** The account itself was destroyed */
     class AccountDestroyed : AccountEvent()
+    /** Another device connected to the account */
     class DeviceConnected(val deviceName: String) : AccountEvent()
+    /** A device (possibly this one) disconnected from the account */
     class DeviceDisconnected(val deviceId: String, val isLocalDevice: Boolean) : AccountEvent()
 }
 
@@ -27,6 +36,7 @@ sealed class AccountEvent {
  * Incoming device commands (ie, targeted at the current device.)
  */
 sealed class DeviceCommandIncoming {
+    /** A command to open a list of tabs on the current device */
     class TabReceived(val from: Device?, val entries: List<TabData>) : DeviceCommandIncoming()
 }
 
@@ -34,9 +44,13 @@ sealed class DeviceCommandIncoming {
  * Outgoing device commands (ie, targeted at other devices.)
  */
 sealed class DeviceCommandOutgoing {
+    /** A command to open a tab on another device */
     class SendTab(val title: String, val url: String) : DeviceCommandOutgoing()
 }
 
+/**
+ * Information about a tab sent with tab related commands.
+ */
 data class TabData(
     val title: String,
     val url: String

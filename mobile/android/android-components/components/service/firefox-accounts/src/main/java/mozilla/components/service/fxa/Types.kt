@@ -209,12 +209,19 @@ fun mozilla.components.concept.sync.TabData.into(): TabHistoryEntry {
 
 fun AccountEvent.into(): mozilla.components.concept.sync.AccountEvent {
     return when (this) {
-        is AccountEvent.IncomingDeviceCommand -> mozilla.components.concept.sync.AccountEvent.DeviceCommandIncoming(command=this.command.into())
-        is AccountEvent.ProfileUpdated -> mozilla.components.concept.sync.AccountEvent.ProfileUpdated()
-        is AccountEvent.AccountAuthStateChanged -> mozilla.components.concept.sync.AccountEvent.AccountAuthStateChanged()
-        is AccountEvent.AccountDestroyed -> mozilla.components.concept.sync.AccountEvent.AccountDestroyed()
-        is AccountEvent.DeviceConnected -> mozilla.components.concept.sync.AccountEvent.DeviceConnected(deviceName = this.deviceName)
-        is AccountEvent.DeviceDisconnected -> mozilla.components.concept.sync.AccountEvent.DeviceDisconnected(deviceId = this.deviceId, isLocalDevice = this.isLocalDevice)
+        is AccountEvent.IncomingDeviceCommand ->
+            mozilla.components.concept.sync.AccountEvent.DeviceCommandIncoming(command = this.command.into())
+        is AccountEvent.ProfileUpdated ->
+            mozilla.components.concept.sync.AccountEvent.ProfileUpdated()
+        is AccountEvent.AccountAuthStateChanged ->
+            mozilla.components.concept.sync.AccountEvent.AccountAuthStateChanged()
+        is AccountEvent.AccountDestroyed ->
+            mozilla.components.concept.sync.AccountEvent.AccountDestroyed()
+        is AccountEvent.DeviceConnected ->
+            mozilla.components.concept.sync.AccountEvent.DeviceConnected(deviceName = this.deviceName)
+        is AccountEvent.DeviceDisconnected ->
+            mozilla.components.concept.sync.AccountEvent.DeviceDisconnected(deviceId = this.deviceId,
+                                                                            isLocalDevice = this.isLocalDevice)
     }
 }
 

@@ -24,9 +24,6 @@
     <ID>LongMethod:PromptFeature.kt$PromptFeature$@Suppress("ComplexMethod") @VisibleForTesting(otherwise = PRIVATE) internal fun handleDialogsRequest( promptRequest: PromptRequest, session: Session )</ID>
     <ID>LongMethod:SystemEngineSession.kt$SystemEngineSession$private fun initSettings(webView: WebView, s: WebSettings)</ID>
     <ID>LongMethod:TabListReducer.kt$TabListReducer$ fun reduce(state: BrowserState, action: TabListAction): BrowserState</ID>
-    <ID>UndocumentedPublicClass:AccountEvents.kt$IncomingDeviceCommand$TabReceived : IncomingDeviceCommand</ID>
-    <ID>UndocumentedPublicClass:AccountEvents.kt$DeviceCommandOutgoing$SendTab : DeviceCommandOutgoing</ID>
-    <ID>UndocumentedPublicClass:AccountEvents.kt$TabData</ID>
     <ID>UndocumentedPublicClass:AccountStorage.kt$AccountStorage</ID>
     <ID>UndocumentedPublicClass:AccountStorage.kt$SharedPrefAccountStorage : AccountStorage</ID>
     <ID>UndocumentedPublicClass:AllSessionsObserver.kt$AllSessionsObserver$Observer : Observer</ID>
@@ -375,7 +372,7 @@
     <ID>UndocumentedPublicFunction:FxaAccountManager.kt$FxaAccountManager$fun accountProfile(): Profile?</ID>
     <ID>UndocumentedPublicFunction:FxaAccountManager.kt$FxaAccountManager$fun beginAuthenticationAsync(pairingUrl: String? = null): Deferred&lt;String?&gt;</ID>
     <ID>UndocumentedPublicFunction:FxaAccountManager.kt$FxaAccountManager$fun logoutAsync(): Deferred&lt;Unit&gt;</ID>
-    <ID>UndocumentedPublicFunction:FxaAccountManager.kt$FxaAccountManager$fun registerForDeviceEvents(observer: DeviceEventsObserver, owner: LifecycleOwner, autoPause: Boolean)</ID>
+    <ID>UndocumentedPublicFunction:FxaAccountManager.kt$FxaAccountManager$fun registerForAccountEvents(observer: AccountEventsObserver, owner: LifecycleOwner, autoPause: Boolean)</ID>
     <ID>UndocumentedPublicFunction:FxaAccountManager.kt$FxaAccountManager$fun registerForSyncEvents(observer: SyncStatusObserver, owner: LifecycleOwner, autoPause: Boolean)</ID>
     <ID>UndocumentedPublicFunction:FxaAccountManager.kt$FxaAccountManager$fun updateProfileAsync(): Deferred&lt;Unit&gt;</ID>
     <ID>UndocumentedPublicFunction:GeckoEngineSession.kt$GeckoEngineSession$@Suppress("ComplexMethod") fun handleLongClick(elementSrc: String?, elementType: Int, uri: String? = null, title: String? = null): HitResult?</ID>
@@ -579,14 +576,15 @@
     <ID>UndocumentedPublicFunction:ToolbarAutocompleteFeature.kt$ToolbarAutocompleteFeature$fun addHistoryStorageProvider(provider: HistoryStorage)</ID>
     <ID>UndocumentedPublicFunction:ToolbarPresenter.kt$ToolbarPresenter$fun stop()</ID>
     <ID>UndocumentedPublicFunction:Types.kt$fun AccessTokenInfo.into(): mozilla.components.concept.sync.AccessTokenInfo</ID>
-    <ID>UndocumentedPublicFunction:Types.kt$fun AccountEvent.TabReceived.into(): mozilla.components.concept.sync.DeviceEvent.TabReceived</ID>
-    <ID>UndocumentedPublicFunction:Types.kt$fun AccountEvent.into(): mozilla.components.concept.sync.DeviceEvent</ID>
+    <ID>UndocumentedPublicFunction:Types.kt$fun AccountEvent.into(): mozilla.components.concept.sync.AccountEvent</ID>
     <ID>UndocumentedPublicFunction:Types.kt$fun Device.Capability.into(): DeviceCapability</ID>
     <ID>UndocumentedPublicFunction:Types.kt$fun Device.PushSubscription.into(): mozilla.components.concept.sync.DevicePushSubscription</ID>
     <ID>UndocumentedPublicFunction:Types.kt$fun Device.Type.into(): mozilla.components.concept.sync.DeviceType</ID>
     <ID>UndocumentedPublicFunction:Types.kt$fun Device.into(): mozilla.components.concept.sync.Device</ID>
     <ID>UndocumentedPublicFunction:Types.kt$fun DeviceCapability.into(): Device.Capability</ID>
     <ID>UndocumentedPublicFunction:Types.kt$fun DeviceType.into(): Device.Type</ID>
+    <ID>UndocumentedPublicFunction:Types.kt$fun IncomingDeviceCommand.TabReceived.into(): mozilla.components.concept.sync.DeviceCommandIncoming.TabReceived</ID>
+    <ID>UndocumentedPublicFunction:Types.kt$fun IncomingDeviceCommand.into(): mozilla.components.concept.sync.DeviceCommandIncoming</ID>
     <ID>UndocumentedPublicFunction:Types.kt$fun Profile.into(): mozilla.components.concept.sync.Profile</ID>
     <ID>UndocumentedPublicFunction:Types.kt$fun ScopedKey.into(): OAuthScopedKey</ID>
     <ID>UndocumentedPublicFunction:Types.kt$fun TabHistoryEntry.into(): mozilla.components.concept.sync.TabData</ID>

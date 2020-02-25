@@ -102,7 +102,10 @@ class FxaDeviceConstellation(
         }
     }
 
-    override fun sendCommandToDeviceAsync(targetDeviceId: String, outgoingCommand: DeviceCommandOutgoing): Deferred<Boolean> {
+    override fun sendCommandToDeviceAsync(
+        targetDeviceId: String,
+        outgoingCommand: DeviceCommandOutgoing
+    ): Deferred<Boolean> {
         return scope.async {
             handleFxaExceptions(logger, "sending device command") {
                 when (outgoingCommand) {
@@ -120,7 +123,7 @@ class FxaDeviceConstellation(
     override fun pollForCommandsAsync(): Deferred<Boolean> {
         return scope.async {
             val events = handleFxaExceptions(logger, "polling for device commands", { null }) {
-                account.pollDeviceCommands().map { AccountEvent.DeviceCommandIncoming(command=it.into()) }
+                account.pollDeviceCommands().map { AccountEvent.DeviceCommandIncoming(command = it.into()) }
             }
 
             if (events == null) {

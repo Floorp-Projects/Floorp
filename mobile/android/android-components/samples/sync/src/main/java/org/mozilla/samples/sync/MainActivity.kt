@@ -4,7 +4,6 @@
 
 package org.mozilla.samples.sync
 
-import android.annotation.SuppressLint
 import android.os.Bundle
 import android.text.method.ScrollingMovementMethod
 import android.view.View
@@ -252,7 +251,7 @@ class MainActivity :
         }
     }
 
-    @SuppressLint("SetTextI18n")
+    @Suppress("SetTextI18n", "NestedBlockDepth")
     private val accountEventsObserver = object : AccountEventsObserver {
         override fun onEvents(events: List<AccountEvent>) {
             val txtView: TextView = findViewById(R.id.latestTabs)
