@@ -32,6 +32,7 @@ import mozilla.components.concept.engine.EngineView
 import mozilla.components.feature.contextmenu.ext.DefaultSelectionActionDelegate
 import mozilla.components.service.fxa.sync.SyncReason
 import mozilla.components.support.base.feature.UserInteractionHandler
+import mozilla.components.support.ktx.android.content.share
 import mozilla.components.support.ktx.kotlin.isUrl
 import mozilla.components.support.ktx.kotlin.toNormalizedUrl
 import mozilla.components.support.locale.LocaleAwareAppCompatActivity
@@ -189,7 +190,9 @@ open class HomeActivity : LocaleAwareAppCompatActivity() {
                 store = components.core.store,
                 context = context,
                 appName = getString(R.string.app_name)
-            )
+            ) {
+                share(it)
+            }
         }.asView()
         else -> super.onCreateView(parent, name, context, attrs)
     }
