@@ -261,7 +261,8 @@ static bool SortAlphabetically(JSContext* cx,
   return true;
 }
 
-bool LanguageTag::canonicalizeBaseName(JSContext* cx) {
+bool LanguageTag::canonicalizeBaseName(JSContext* cx,
+                                       DuplicateVariants duplicateVariants) {
   // Per 6.2.3 CanonicalizeUnicodeLocaleId, the very first step is to
   // canonicalize the syntax by normalizing the case and ordering all subtags.
   // The canonical syntax form is specified in UTS 35, 3.2.1.
@@ -301,17 +302,20 @@ bool LanguageTag::canonicalizeBaseName(JSContext* cx) {
       return false;
     }
 
-    // Reject the Locale identifier if a duplicate variant was found, e.g.
-    // "en-variant-Variant".
-    const UniqueChars* duplicate = std::adjacent_find(
-        variants().begin(), variants().end(), [](const auto& a, const auto& b) {
-          return strcmp(a.get(), b.get()) == 0;
-        });
-    if (duplicate != variants().end()) {
-      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                                JSMSG_DUPLICATE_VARIANT_SUBTAG,
-                                duplicate->get());
-      return false;
+    if (duplicateVariants == DuplicateVariants::Reject) {
+      // Reject the Locale identifier if a duplicate variant was found, e.g.
+      // "en-variant-Variant".
+      const UniqueChars* duplicate =
+          std::adjacent_find(variants().begin(), variants().end(),
+                             [](const auto& a, const auto& b) {
+                               return strcmp(a.get(), b.get()) == 0;
+                             });
+      if (duplicate != variants().end()) {
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                  JSMSG_DUPLICATE_VARIANT_SUBTAG,
+                                  duplicate->get());
+        return false;
+      }
     }
   }
 
@@ -367,6 +371,19 @@ bool LanguageTag::canonicalizeBaseName(JSContext* cx) {
   return true;
 }
 
+#ifdef DEBUG
+template <typename CharT>
+static bool IsAsciiLowercaseAlphanumericOrDash(
+    mozilla::Span<const CharT> span) {
+  const CharT* ptr = span.data();
+  size_t length = span.size();
+  return std::all_of(ptr, ptr + length, [](auto c) {
+    return mozilla::IsAsciiLowercaseAlpha(c) || mozilla::IsAsciiDigit(c) ||
+           c == '-';
+  });
+}
+#endif
+
 bool LanguageTag::canonicalizeExtensions(JSContext* cx) {
   // The canonical case for all extension subtags is lowercase.
   for (UniqueChars& extension : extensions_) {
@@ -394,6 +411,9 @@ bool LanguageTag::canonicalizeExtensions(JSContext* cx) {
         return false;
       }
     }
+
+    MOZ_ASSERT(IsAsciiLowercaseAlphanumericOrDash(
+        mozilla::MakeStringSpan(extension.get())));
   }
 
   // The canonical case for privateuse subtags is lowercase.
@@ -771,25 +791,34 @@ bool LanguageTag::canonicalizeTransformExtension(
 
   // Append the language subtag if present.
   //
-  // [1] is a bit unclear whether or not the `tlang` subtag also needs to be
-  // canonicalized (and case-adjusted). For now simply append it as is.
-  // (|parseTransformExtension| doesn't alter case from the lowercased form we
-  // have previously taken pains to ensure is present in the extension, so no
-  // special effort is required to ensure lowercasing.) If we switch to [2], the
-  // `tlang` subtag also needs to be canonicalized according to the same rules
-  // as `unicode_language_id` subtags are canonicalized. Also see [3].
-  //
-  // [1] https://unicode.org/reports/tr35/#Language_Tag_to_Locale_Identifier
-  // [2] https://unicode.org/reports/tr35/#Canonical_Unicode_Locale_Identifiers
-  // [3] https://github.com/tc39/ecma402/issues/330
+  // Replace aliases in tlang per
+  // <https://unicode.org/reports/tr35/#Canonical_Unicode_Locale_Identifiers>.
   if (tag.language().present()) {
     if (!sb.append('-')) {
       return false;
     }
+
+    // ECMA-402 is unclear whether or not duplicate variants are allowed in
+    // transform extensions. Tentatively allow duplicates until
+    // https://github.com/tc39/ecma402/issues/330 has been addressed.
+    if (!tag.canonicalizeBaseName(cx, DuplicateVariants::Accept)) {
+      return false;
+    }
+
+    // The canonical case for Transform extensions is lowercase per
+    // <https://unicode.org/reports/tr35/#BCP47_T_Extension>. Convert the two
+    // subtags which don't use lowercase for their canonical syntax.
+    tag.script_.toLowerCase();
+    tag.region_.toLowerCase();
+
     if (!LanguageTagToString(cx, tag, sb)) {
       return false;
     }
   }
+
+  static constexpr size_t TransformKeyWithSepLength = TransformKeyLength + 1;
+
+  using StringSpan = mozilla::Span<const char>;
 
   // Append all fields.
   //
@@ -803,8 +832,23 @@ bool LanguageTag::canonicalizeTransformExtension(
     if (!sb.append('-')) {
       return false;
     }
-    if (!sb.append(field.begin(extension), field.length())) {
-      return false;
+
+    StringSpan key(field.begin(extension), TransformKeyLength);
+    StringSpan value(field.begin(extension) + TransformKeyWithSepLength,
+                     field.length() - TransformKeyWithSepLength);
+
+    // Search if there's a replacement for the current transform keyword.
+    if (const char* replacement = replaceTransformExtensionType(key, value)) {
+      if (!sb.append(field.begin(extension), TransformKeyWithSepLength)) {
+        return false;
+      }
+      if (!sb.append(replacement, strlen(replacement))) {
+        return false;
+      }
+    } else {
+      if (!sb.append(field.begin(extension), field.length())) {
+        return false;
+      }
     }
   }
 

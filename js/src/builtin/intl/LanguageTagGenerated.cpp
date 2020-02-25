@@ -10,6 +10,7 @@
 #include <cstdint>
 #include <cstring>
 #include <iterator>
+#include <string>
 #include <type_traits>
 
 #include "builtin/intl/LanguageTag.h"
@@ -52,6 +53,14 @@ static inline const char* SearchReplacement(
 }
 
 #ifdef DEBUG
+static bool IsAsciiLowercaseAlphanumeric(char c) {
+  return mozilla::IsAsciiLowercaseAlpha(c) || mozilla::IsAsciiDigit(c);
+}
+
+static bool IsAsciiLowercaseAlphanumericOrDash(char c) {
+  return IsAsciiLowercaseAlphanumeric(c) || c == '-';
+}
+
 static bool IsCanonicallyCasedLanguageTag(mozilla::Span<const char> span) {
   // Tell the analysis the |std::all_of| function can't GC.
   JS::AutoSuppressGCAnalysis nogc;
@@ -68,14 +77,26 @@ static bool IsCanonicallyCasedRegionTag(mozilla::Span<const char> span) {
 }
 
 static bool IsCanonicallyCasedVariantTag(mozilla::Span<const char> span) {
-  auto isAsciiLowercaseAlphaOrDigit = [](char c) {
-    return mozilla::IsAsciiLowercaseAlpha(c) || mozilla::IsAsciiDigit(c);
-  };
-
   // Tell the analysis the |std::all_of| function can't GC.
   JS::AutoSuppressGCAnalysis nogc;
 
-  return std::all_of(span.begin(), span.end(), isAsciiLowercaseAlphaOrDigit);
+  return std::all_of(span.begin(), span.end(), IsAsciiLowercaseAlphanumeric);
+}
+
+static bool IsCanonicallyCasedUnicodeKey(mozilla::Span<const char> key) {
+  return std::all_of(key.begin(), key.end(), IsAsciiLowercaseAlphanumeric);
+}
+
+static bool IsCanonicallyCasedUnicodeType(mozilla::Span<const char> type) {
+  return std::all_of(type.begin(), type.end(), IsAsciiLowercaseAlphanumericOrDash);
+}
+
+static bool IsCanonicallyCasedTransformKey(mozilla::Span<const char> key) {
+  return std::all_of(key.begin(), key.end(), IsAsciiLowercaseAlphanumeric);
+}
+
+static bool IsCanonicallyCasedTransformType(mozilla::Span<const char> type) {
+  return std::all_of(type.begin(), type.end(), IsAsciiLowercaseAlphanumericOrDash);
 }
 #endif
 
@@ -731,16 +752,16 @@ bool js::intl::LanguageTag::updateGrandfatheredMappings(JSContext* cx) {
 }
 
 template <size_t Length>
-static inline bool IsUnicodeKey(mozilla::Span<const char> key,
-                                const char (&str)[Length]) {
+static inline bool IsUnicodeKey(
+  mozilla::Span<const char> key, const char (&str)[Length]) {
   static_assert(Length == UnicodeKeyLength + 1,
                 "Unicode extension key is two characters long");
   return memcmp(key.data(), str, Length - 1) == 0;
 }
 
 template <size_t Length>
-static inline bool IsUnicodeType(mozilla::Span<const char> type,
-                                 const char (&str)[Length]) {
+static inline bool IsUnicodeType(
+  mozilla::Span<const char> type, const char (&str)[Length]) {
   static_assert(Length > UnicodeKeyLength + 1,
                 "Unicode extension type contains more than two characters");
   return type.size() == (Length - 1) &&
@@ -748,13 +769,7 @@ static inline bool IsUnicodeType(mozilla::Span<const char> type,
 }
 
 static int32_t CompareUnicodeType(const char* a, mozilla::Span<const char> b) {
-#ifdef DEBUG
-  auto isNull = [](char c) {
-    return c == '\0';
-  };
-#endif
-
-  MOZ_ASSERT(std::none_of(b.begin(), b.end(), isNull),
+  MOZ_ASSERT(!std::char_traits<char>::find(b.data(), b.size(), '\0'),
              "unexpected null-character in string");
 
   using UnsignedChar = unsigned char;
@@ -770,12 +785,12 @@ static int32_t CompareUnicodeType(const char* a, mozilla::Span<const char> b) {
   // Return zero if both strings are equal or a negative number if |b| is a
   // prefix of |a|.
   return -int32_t(UnsignedChar(a[b.size()]));
-};
+}
 
 template <size_t Length>
-static inline const char* SearchReplacement(const char* (&types)[Length],
-                                            const char* (&aliases)[Length],
-                                            mozilla::Span<const char> type) {
+static inline const char* SearchUnicodeReplacement(
+  const char* (&types)[Length], const char* (&aliases)[Length],
+  mozilla::Span<const char> type) {
 
   auto p = std::lower_bound(std::begin(types), std::end(types), type,
                             [](const auto& a, const auto& b) {
@@ -792,26 +807,15 @@ static inline const char* SearchReplacement(const char* (&types)[Length],
  * values.
  *
  * Spec: https://www.unicode.org/reports/tr35/#Unicode_Locale_Extension_Data_Files
+ * Spec: https://www.unicode.org/reports/tr35/#t_Extension
  */
 const char* js::intl::LanguageTag::replaceUnicodeExtensionType(
     mozilla::Span<const char> key, mozilla::Span<const char> type) {
-#ifdef DEBUG
-  static auto isAsciiLowercaseAlphanumeric = [](char c) {
-    return mozilla::IsAsciiLowercaseAlpha(c) || mozilla::IsAsciiDigit(c);
-  };
-
-  static auto isAsciiLowercaseAlphanumericOrDash = [](char c) {
-    return isAsciiLowercaseAlphanumeric(c) || c == '-';
-  };
-#endif
-
   MOZ_ASSERT(key.size() == UnicodeKeyLength);
-  MOZ_ASSERT(std::all_of(key.begin(), key.end(),
-                         isAsciiLowercaseAlphanumeric));
+  MOZ_ASSERT(IsCanonicallyCasedUnicodeKey(key));
 
   MOZ_ASSERT(type.size() > UnicodeKeyLength);
-  MOZ_ASSERT(std::all_of(type.begin(), type.end(),
-                         isAsciiLowercaseAlphanumericOrDash));
+  MOZ_ASSERT(IsCanonicallyCasedUnicodeType(type));
 
   if (IsUnicodeKey(key, "ca")) {
     if (IsUnicodeType(type, "ethiopic-amete-alem")) {
@@ -879,7 +883,7 @@ const char* js::intl::LanguageTag::replaceUnicodeExtensionType(
        "pl22",  "pl26",  "pl24",  "pl28",  "pl30",  "pl32", "tttob", "ttmrc",
       "tttob", "twkhh", "twtnn", "twnwt", "twtxg",
     };
-    return SearchReplacement(types, aliases, type);
+    return SearchUnicodeReplacement(types, aliases, type);
   }
   else if (IsUnicodeKey(key, "tz")) {
     static const char* types[28] = {
@@ -896,7 +900,52 @@ const char* js::intl::LanguageTag::replaceUnicodeExtensionType(
          "usden",    "plwaw",    "ptlis",    "cnsha",    "twtpe",    "krsel",
          "trist",      "utc",    "usden",      "utc",
     };
-    return SearchReplacement(types, aliases, type);
+    return SearchUnicodeReplacement(types, aliases, type);
+  }
+  return nullptr;
+}
+
+template <size_t Length>
+static inline bool IsTransformKey(
+  mozilla::Span<const char> key, const char (&str)[Length]) {
+  static_assert(Length == TransformKeyLength + 1,
+                "Transform extension key is two characters long");
+  return memcmp(key.data(), str, Length - 1) == 0;
+}
+
+template <size_t Length>
+static inline bool IsTransformType(
+  mozilla::Span<const char> type, const char (&str)[Length]) {
+  static_assert(Length > TransformKeyLength + 1,
+                "Transform extension type contains more than two characters");
+  return type.size() == (Length - 1) &&
+         memcmp(type.data(), str, Length - 1) == 0;
+}
+
+/**
+ * Mapping from deprecated BCP 47 Transform extension types to their preferred
+ * values.
+ *
+ * Spec: https://www.unicode.org/reports/tr35/#Unicode_Locale_Extension_Data_Files
+ * Spec: https://www.unicode.org/reports/tr35/#t_Extension
+ */
+const char* js::intl::LanguageTag::replaceTransformExtensionType(
+    mozilla::Span<const char> key, mozilla::Span<const char> type) {
+  MOZ_ASSERT(key.size() == TransformKeyLength);
+  MOZ_ASSERT(IsCanonicallyCasedTransformKey(key));
+
+  MOZ_ASSERT(type.size() > TransformKeyLength);
+  MOZ_ASSERT(IsCanonicallyCasedTransformType(type));
+
+  if (IsTransformKey(key, "d0")) {
+    if (IsTransformType(type, "name")) {
+      return "charname";
+    }
+  }
+  else if (IsTransformKey(key, "m0")) {
+    if (IsTransformType(type, "names")) {
+      return "prprname";
+    }
   }
   return nullptr;
 }
