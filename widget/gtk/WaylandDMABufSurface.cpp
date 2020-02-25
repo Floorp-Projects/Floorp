@@ -328,8 +328,8 @@ void WaylandDMABufSurfaceRGBA::ImportSurfaceDescriptor(
     mOffsets[i] = desc.offsets()[i];
   }
 
-  int fd = desc.fence().ClonePlatformHandle().release();
-  if (fd > 0) {
+  if (desc.fence().Length() > 0) {
+    int fd = desc.fence()[0].ClonePlatformHandle().release();
     if (!FenceCreate(fd)) {
       close(fd);
     }
@@ -373,7 +373,7 @@ bool WaylandDMABufSurfaceRGBA::Serialize(
   AutoTArray<uint32_t, DMABUF_BUFFER_PLANES> strides;
   AutoTArray<uint32_t, DMABUF_BUFFER_PLANES> offsets;
   AutoTArray<uintptr_t, DMABUF_BUFFER_PLANES> images;
-  ipc::FileDescriptor fenceFD;
+  AutoTArray<ipc::FileDescriptor, 1> fenceFDs;
 
   width.AppendElement(mWidth);
   height.AppendElement(mHeight);
@@ -386,13 +386,13 @@ bool WaylandDMABufSurfaceRGBA::Serialize(
 
   if (mSync) {
     auto* egl = gl::GLLibraryEGL::Get();
-    fenceFD = ipc::FileDescriptor(
-        egl->fDupNativeFenceFDANDROID(egl->Display(), mSync));
+    fenceFDs.AppendElement(ipc::FileDescriptor(
+        egl->fDupNativeFenceFDANDROID(egl->Display(), mSync)));
   }
 
   aOutDescriptor = SurfaceDescriptorDMABuf(
       mSurfaceType, mBufferModifier, mGbmBufferFlags, fds, width, height,
-      format, strides, offsets, GetYUVColorSpace(), fenceFD);
+      format, strides, offsets, GetYUVColorSpace(), fenceFDs);
 
   return true;
 }
@@ -719,8 +719,8 @@ void WaylandDMABufSurfaceNV12::ImportSurfaceDescriptor(
     mOffsets[i] = aDesc.offsets()[i];
   }
 
-  int fd = aDesc.fence().ClonePlatformHandle().release();
-  if (fd > 0) {
+  if (aDesc.fence().Length() > 0) {
+    int fd = aDesc.fence()[0].ClonePlatformHandle().release();
     if (!FenceCreate(fd)) {
       close(fd);
     }
@@ -735,7 +735,7 @@ bool WaylandDMABufSurfaceNV12::Serialize(
   AutoTArray<ipc::FileDescriptor, DMABUF_BUFFER_PLANES> fds;
   AutoTArray<uint32_t, DMABUF_BUFFER_PLANES> strides;
   AutoTArray<uint32_t, DMABUF_BUFFER_PLANES> offsets;
-  ipc::FileDescriptor fenceFD;
+  AutoTArray<ipc::FileDescriptor, 1> fenceFDs;
 
   for (int i = 0; i < mBufferPlaneCount; i++) {
     width.AppendElement(mWidth[i]);
@@ -748,13 +748,13 @@ bool WaylandDMABufSurfaceNV12::Serialize(
 
   if (mSync) {
     auto* egl = gl::GLLibraryEGL::Get();
-    fenceFD = ipc::FileDescriptor(
-        egl->fDupNativeFenceFDANDROID(egl->Display(), mSync));
+    fenceFDs.AppendElement(ipc::FileDescriptor(
+        egl->fDupNativeFenceFDANDROID(egl->Display(), mSync)));
   }
 
   aOutDescriptor = SurfaceDescriptorDMABuf(
       mSurfaceType, mBufferModifier, 0, fds, width, height, format, strides,
-      offsets, GetYUVColorSpace(), fenceFD);
+      offsets, GetYUVColorSpace(), fenceFDs);
   return true;
 }
 

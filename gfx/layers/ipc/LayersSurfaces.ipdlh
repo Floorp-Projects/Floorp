@@ -70,7 +70,7 @@ struct SurfaceDescriptorDMABuf {
   uint32_t[] strides;
   uint32_t[] offsets;
   YUVColorSpace yUVColorSpace;
-  FileDescriptor fence;
+  FileDescriptor[] fence;
 };
 
 struct SurfaceTextureDescriptor {
