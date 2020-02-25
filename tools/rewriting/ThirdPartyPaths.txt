@@ -100,6 +100,7 @@ media/libvorbis/
 media/libvpx/
 media/libwebp/
 media/libyuv/
+media/mp4parse-rust/
 media/mtransport/third_party/
 media/openmax_dl/
 media/openmax_il/
