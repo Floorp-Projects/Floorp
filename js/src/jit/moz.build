@@ -84,7 +84,6 @@ UNIFIED_SOURCES += [
     'shared/Lowering-shared.cpp',
     'Sink.cpp',
     'Snapshots.cpp',
-    'StupidAllocator.cpp',
     'TIOracle.cpp',
     'TypePolicy.cpp',
     'ValueNumbering.cpp',
