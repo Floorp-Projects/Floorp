@@ -169,114 +169,6 @@ static_assert(static_cast<uint16_t>(ServiceWorkerUpdateViaCache::None) ==
 
 static StaticRefPtr<ServiceWorkerManager> gInstance;
 
-struct ServiceWorkerManager::RegistrationDataPerPrincipal final {
-  // Implements a container of keys for the "scope to registration map":
-  // https://w3c.github.io/ServiceWorker/#dfn-scope-to-registration-map
-  //
-  // where each key is an absolute URL.
-  //
-  // The properties of this map that the spec uses are
-  // 1) insertion,
-  // 2) removal,
-  // 3) iteration of scopes in FIFO order (excluding removed scopes),
-  // 4) and finding, for a given path, the maximal length scope which is a
-  //    prefix of the path.
-  //
-  // Additionally, because this is a container of keys for a map, there
-  // shouldn't be duplicate scopes.
-  //
-  // The current implementation uses a dynamic array as the underlying
-  // container, which is not optimal for unbounded container sizes (all
-  // supported operations are in linear time) but may be superior for small
-  // container sizes.
-  //
-  // If this is proven to be too slow, the underlying storage should be replaced
-  // with a linked list of scopes in combination with an ordered map that maps
-  // scopes to linked list elements/iterators. This would reduce all of the
-  // above operations besides iteration (necessarily linear) to logarithmic
-  // time.
-  class ScopeContainer final : private nsTArray<nsCString> {
-    using Base = nsTArray<nsCString>;
-
-   public:
-    using Base::Contains;
-    using Base::IsEmpty;
-    using Base::Length;
-
-    // No using-declaration to avoid importing the non-const overload.
-    decltype(auto) operator[](Base::index_type aIndex) const {
-      return Base::operator[](aIndex);
-    }
-
-    void InsertScope(const nsACString& aScope) {
-      MOZ_DIAGNOSTIC_ASSERT(nsContentUtils::IsAbsoluteURL(aScope));
-
-      if (Contains(aScope)) {
-        return;
-      }
-
-      AppendElement(aScope);
-    }
-
-    void RemoveScope(const nsACString& aScope) {
-      MOZ_DIAGNOSTIC_ALWAYS_TRUE(RemoveElement(aScope));
-    }
-
-    // Implements most of "Match Service Worker Registration":
-    // https://w3c.github.io/ServiceWorker/#scope-match-algorithm
-    Maybe<nsCString> MatchScope(const nsACString& aClientUrl) const {
-      Maybe<nsCString> match;
-
-      for (const nsCString& scope : *this) {
-        if (StringBeginsWith(aClientUrl, scope)) {
-          if (!match || scope.Length() > match->Length()) {
-            match = Some(scope);
-          }
-        }
-      }
-
-      // Step 7.2:
-      // "Assert: matchingScope’s origin and clientURL’s origin are same
-      // origin."
-      MOZ_DIAGNOSTIC_ASSERT_IF(match, IsSameOrigin(*match, aClientUrl));
-
-      return match;
-    }
-
-   private:
-    bool IsSameOrigin(const nsACString& aMatchingScope,
-                      const nsACString& aClientUrl) const {
-      RefPtr<BasePrincipal> scopePrincipal =
-          BasePrincipal::CreateContentPrincipal(aMatchingScope);
-
-      if (NS_WARN_IF(!scopePrincipal)) {
-        return false;
-      }
-
-      RefPtr<BasePrincipal> clientPrincipal =
-          BasePrincipal::CreateContentPrincipal(aClientUrl);
-
-      if (NS_WARN_IF(!clientPrincipal)) {
-        return false;
-      }
-
-      return scopePrincipal->FastEquals(clientPrincipal);
-    }
-  };
-
-  ScopeContainer mScopeContainer;
-
-  // Scope to registration.
-  // The scope should be a fully qualified valid URL.
-  nsRefPtrHashtable<nsCStringHashKey, ServiceWorkerRegistrationInfo> mInfos;
-
-  // Maps scopes to job queues.
-  nsRefPtrHashtable<nsCStringHashKey, ServiceWorkerJobQueue> mJobQueues;
-
-  // Map scopes to scheduled update timers.
-  nsInterfaceHashtable<nsCStringHashKey, nsITimer> mUpdateTimers;
-};
-
 namespace {
 
 nsresult PopulateRegistrationData(
@@ -398,6 +290,123 @@ Result<nsCOMPtr<nsIPrincipal>, nsresult> ScopeToPrincipal(
 }
 
 }  // namespace
+
+struct ServiceWorkerManager::RegistrationDataPerPrincipal final {
+  // Implements a container of keys for the "scope to registration map":
+  // https://w3c.github.io/ServiceWorker/#dfn-scope-to-registration-map
+  //
+  // where each key is an absolute URL.
+  //
+  // The properties of this map that the spec uses are
+  // 1) insertion,
+  // 2) removal,
+  // 3) iteration of scopes in FIFO order (excluding removed scopes),
+  // 4) and finding, for a given path, the maximal length scope which is a
+  //    prefix of the path.
+  //
+  // Additionally, because this is a container of keys for a map, there
+  // shouldn't be duplicate scopes.
+  //
+  // The current implementation uses a dynamic array as the underlying
+  // container, which is not optimal for unbounded container sizes (all
+  // supported operations are in linear time) but may be superior for small
+  // container sizes.
+  //
+  // If this is proven to be too slow, the underlying storage should be replaced
+  // with a linked list of scopes in combination with an ordered map that maps
+  // scopes to linked list elements/iterators. This would reduce all of the
+  // above operations besides iteration (necessarily linear) to logarithmic
+  // time.
+  class ScopeContainer final : private nsTArray<nsCString> {
+    using Base = nsTArray<nsCString>;
+
+   public:
+    using Base::Contains;
+    using Base::IsEmpty;
+    using Base::Length;
+
+    // No using-declaration to avoid importing the non-const overload.
+    decltype(auto) operator[](Base::index_type aIndex) const {
+      return Base::operator[](aIndex);
+    }
+
+    void InsertScope(const nsACString& aScope) {
+      MOZ_DIAGNOSTIC_ASSERT(nsContentUtils::IsAbsoluteURL(aScope));
+
+      if (Contains(aScope)) {
+        return;
+      }
+
+      AppendElement(aScope);
+    }
+
+    void RemoveScope(const nsACString& aScope) {
+      MOZ_DIAGNOSTIC_ALWAYS_TRUE(RemoveElement(aScope));
+    }
+
+    // Implements most of "Match Service Worker Registration":
+    // https://w3c.github.io/ServiceWorker/#scope-match-algorithm
+    Maybe<nsCString> MatchScope(const nsACString& aClientUrl) const {
+      Maybe<nsCString> match;
+
+      for (const nsCString& scope : *this) {
+        if (StringBeginsWith(aClientUrl, scope)) {
+          if (!match || scope.Length() > match->Length()) {
+            match = Some(scope);
+          }
+        }
+      }
+
+      // Step 7.2:
+      // "Assert: matchingScope’s origin and clientURL’s origin are same
+      // origin."
+      MOZ_DIAGNOSTIC_ASSERT_IF(match, IsSameOrigin(*match, aClientUrl));
+
+      return match;
+    }
+
+   private:
+    bool IsSameOrigin(const nsACString& aMatchingScope,
+                      const nsACString& aClientUrl) const {
+      auto parseResult = ScopeToPrincipal(aMatchingScope, OriginAttributes());
+
+      if (NS_WARN_IF(parseResult.isErr())) {
+        return false;
+      }
+
+      auto scopePrincipal = parseResult.unwrap();
+
+      parseResult = ScopeToPrincipal(aClientUrl, OriginAttributes());
+
+      if (NS_WARN_IF(parseResult.isErr())) {
+        return false;
+      }
+
+      auto clientPrincipal = parseResult.unwrap();
+
+      bool equals = false;
+
+      if (NS_WARN_IF(
+              NS_FAILED(scopePrincipal->Equals(clientPrincipal, &equals)))) {
+        return false;
+      }
+
+      return equals;
+    }
+  };
+
+  ScopeContainer mScopeContainer;
+
+  // Scope to registration.
+  // The scope should be a fully qualified valid URL.
+  nsRefPtrHashtable<nsCStringHashKey, ServiceWorkerRegistrationInfo> mInfos;
+
+  // Maps scopes to job queues.
+  nsRefPtrHashtable<nsCStringHashKey, ServiceWorkerJobQueue> mJobQueues;
+
+  // Map scopes to scheduled update timers.
+  nsInterfaceHashtable<nsCStringHashKey, nsITimer> mUpdateTimers;
+};
 
 //////////////////////////
 // ServiceWorkerManager //
