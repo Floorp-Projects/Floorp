@@ -1292,6 +1292,7 @@ def build_push_addons_payload(config, task, task_def):
     Required('force-dry-run', default=True): bool,
     Required('push', default=False): bool,
     Optional('source-repo'): text_type,
+    Optional('ssh-user'): text_type,
     Optional('l10n-bump-info'): {
         Required('name'): text_type,
         Required('path'): text_type,
@@ -1304,6 +1305,7 @@ def build_push_addons_payload(config, task, task_def):
             Optional('format'): text_type,
         }],
     },
+    Optional('merge-info'): object,
 })
 def build_treescript_payload(config, task, task_def):
     worker = task['worker']
@@ -1348,6 +1350,13 @@ def build_treescript_payload(config, task, task_def):
         task_def['payload']['l10n_bump_info'] = [l10n_bump_info]
         actions.append('l10n_bump')
 
+    if worker.get('merge-info'):
+        merge_info = {}
+        for k, v in worker['merge-info'].items():
+            merge_info[k.replace('-', '_')] = worker['merge-info'][k]
+        task_def['payload']['merge_info'] = merge_info
+        actions.append('merge_day')
+
     if worker['push']:
         actions.append('push')
 
@@ -1362,6 +1371,9 @@ def build_treescript_payload(config, task, task_def):
 
     if worker.get('source-repo'):
         task_def['payload']['source_repo'] = worker['source-repo']
+
+    if worker.get('ssh-user'):
+        task_def['payload']['ssh_user'] = worker['ssh-user']
 
 
 @payload_builder('invalid', schema={

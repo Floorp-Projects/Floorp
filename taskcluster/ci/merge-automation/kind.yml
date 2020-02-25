@@ -1,0 +1,30 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+loader: taskgraph.loader.transform:loader
+
+transforms:
+    - taskgraph.transforms.merge_automation:transforms
+    - taskgraph.transforms.task:transforms
+
+
+jobs:
+    merge-automation:
+        name: merge-automation
+        label: merge-automation
+        treeherder:
+            symbol: Rel(merge-automation)
+            tier: 1
+            kind: build
+            platform: firefox-release/opt
+        description: Merge repositories for release management.
+        worker-type: tree
+        scopes: []
+        worker:
+            implementation: treescript
+            tags: []
+            bump: false
+            dontbuild: true
+            push: false
+        run-on-projects: []

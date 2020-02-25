@@ -692,6 +692,10 @@ l10n-bump
 ---------
 Cron-driven tasks that bump l10n-changesets files in-tree, using data from the l10n dashboard.
 
+merge-automation
+----------------
+Hook-driven tasks that automate "Merge Day" tasks during the release cycle.
+
 system-symbols
 --------------
 Generate missing macOS and windows system symbols from crash reports.
