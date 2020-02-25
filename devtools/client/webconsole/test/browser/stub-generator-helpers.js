@@ -433,6 +433,7 @@ function parsePacketAndCreateFronts(packet) {
           conn: {
             poolFor: () => {},
             addActorPool: () => {},
+            getFrontByID: () => {},
           },
           manage: () => {},
         });
