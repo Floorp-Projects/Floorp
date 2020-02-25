@@ -31,7 +31,7 @@ add_task(async function test_toplevel_frame_permission() {
       });
 
       // Show a plugin notification from the iframe's actor:
-      let { currentWindowGlobal } = browser.browsingContext.getChildren()[0];
+      let { currentWindowGlobal } = browser.browsingContext.children[0];
       let actor = currentWindowGlobal.getActor("Plugin");
       const kHost = Cc["@mozilla.org/plugin/host;1"].getService(
         Ci.nsIPluginHost

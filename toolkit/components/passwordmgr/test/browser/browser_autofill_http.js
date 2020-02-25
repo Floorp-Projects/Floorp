@@ -71,7 +71,7 @@ add_task(async function test_iframe_in_http_autofill() {
     await formFilled;
 
     let [username, password] = await SpecialPowers.spawn(
-      gBrowser.selectedBrowser.browsingContext.getChildren()[0],
+      gBrowser.selectedBrowser.browsingContext.children[0],
       [],
       async function() {
         let doc = this.content.document;
