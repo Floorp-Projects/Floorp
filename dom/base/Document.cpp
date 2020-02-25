@@ -11410,7 +11410,7 @@ void Document::MaybePreLoadImage(nsIURI* uri, const nsAString& aCrossOriginAttr,
   // the "real" load occurs. Unpinned in DispatchContentLoadedEvents and
   // unlink
   if (NS_SUCCEEDED(rv)) {
-    mPreloadingImages.Put(uri, request.forget());
+    mPreloadingImages.Put(uri, std::move(request));
   }
 }
 
