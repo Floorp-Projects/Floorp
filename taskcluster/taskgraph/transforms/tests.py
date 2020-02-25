@@ -171,20 +171,6 @@ TEST_VARIANTS = {
             },
         },
     },
-    'serviceworker': {
-        'description': "{description} with serviceworker-e10s redesign enabled",
-        'filterfn': runs_on_central,
-        'suffix': 'sw',
-        'replace': {
-            'run-on-projects': ['mozilla-central'],
-        },
-        'merge': {
-            'tier': 2,
-            'mozharness': {
-                'extra-options': ['--setpref="dom.serviceWorkers.parent_intercept=true"'],
-            },
-        },
-    },
     'socketprocess': {
         'description': "{description} with socket process enabled",
         'suffix': 'spi',
