@@ -29,60 +29,59 @@ char-for-char with spaces and newlines.
 */
 
 std::string CommentsToSpaces(const std::string& src) {
+// `.` is any-excluding-newline
 // `[^]` is any-including-newline
 // `*?` is non-greedy `*`, matching the fewest characters, instead of the most.
 // `??` is non-greedy `?`, preferring to match zero times, instead of once.
-// Non-continuing line comment is: `//[^]*?\n`
+// Non-continuing line comment is: `//.*\n`
+// But we need to support hitting EOF instead of just newline: `//.*(?:\n|$)`
 // But line-continuation is `\\\n`
-// So we need to match `//[^]*?[^\\]\n`
-// But we need to recognize "//\n", thus: `//([^]*?[^\\])??\n`
-#define LINE_COMMENT "//(?:[^]*?[^\\\\])??\n"
+// So we need to match `//(?:\\\n|.)*(?:\n|$)`
+#define LINE_COMMENT R"(//(?:\\\n|.)*(?:\n|$))"
 
 // The fewest characters that match /*...*/
-#define BLOCK_COMMENT "/[*][^]*?[*]/"
+#define BLOCK_COMMENT R"(/\*[^]*?\*/)"
+
+  constexpr auto flags = std::regex::ECMAScript | std::regex::nosubs | std::regex::optimize;
 
   static const std::regex COMMENT_RE(
       "(?:" LINE_COMMENT ")|(?:" BLOCK_COMMENT ")",
-      std::regex::ECMAScript | std::regex::nosubs | std::regex::optimize);
+      flags);
 
 #undef LINE_COMMENT
 #undef BLOCK_COMMENT
 
-  static const std::regex TRAILING_RE("/[*/]", std::regex::ECMAScript |
-                                                   std::regex::nosubs |
-                                                   std::regex::optimize);
-
   std::string ret;
   ret.reserve(src.size());
 
+  // Replace all comments with block comments with the right number of newlines.
+  // Line positions may be off, but line numbers will be accurate, which is more important.
+
   auto itr = src.begin();
-  auto end = src.end();
+  const auto end = src.end();
   std::smatch match;
   while (std::regex_search(itr, end, match, COMMENT_RE)) {
+    MOZ_ASSERT(match.length() >= 2);
     const auto matchBegin = itr + match.position();
     const auto matchEnd = matchBegin + match.length();
+    const auto matchLast = matchEnd - 1;
     ret.append(itr, matchBegin);
-    for (itr = matchBegin; itr != matchEnd; ++itr) {
-      auto cur = *itr;
-      switch (cur) {
-        case '/':
-        case '*':
-        case '\n':
-        case '\\':
-          break;
-        default:
-          cur = ' ';
-          break;
+    ret += "/*";
+    for (itr = matchBegin; itr != matchLast; ++itr) {
+      const auto cur = *itr;
+      if (cur == '\n') {
+        ret += cur;
       }
+    }
+    const auto cur = *itr;
+    ret += "*/";
+    if (cur == '\n') { // Must be a line-comment, so do the '\n' after the '*/'
       ret += cur;
     }
+    ++itr;
+    MOZ_ASSERT(itr == matchEnd);
   }
 
-  // Check for a trailing comment that hits EOF instead of the end of the
-  // comment.
-  if (std::regex_search(itr, end, match, TRAILING_RE)) {
-    end = itr + match.position();
-  }
   ret.append(itr, end);
   return ret;
 }
