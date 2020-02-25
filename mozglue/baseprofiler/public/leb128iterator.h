@@ -145,6 +145,63 @@ T ReadULEB128(It& aIterator) {
   }
 }
 
+// constexpr ULEB128 reader class.
+// Mostly useful when dealing with non-trivial byte feeds.
+template <typename T>
+class ULEB128Reader {
+  static_assert(!std::numeric_limits<T>::is_signed,
+                "ULEB128Reader must handle an unsigned type");
+
+ public:
+  constexpr ULEB128Reader() = default;
+
+  // Don't allow copy/assignment, it doesn't make sense for a stateful parser.
+  constexpr ULEB128Reader(const ULEB128Reader&) = delete;
+  constexpr ULEB128Reader& operator=(const ULEB128Reader&) = delete;
+
+  // Feed a byte into the parser.
+  // Returns true if this was the last byte.
+  constexpr MOZ_MUST_USE bool FeedByteIsComplete(unsigned aByte) {
+    MOZ_ASSERT(!IsComplete());
+    // Extract the 7 bits of value, and shift them in place into the value.
+    mValue |= static_cast<T>(aByte & 0x7fu) << mShift;
+    // If the 8th bit is *not* set, this was the last byte.
+    // Expecting small values, so it should be more likely that the bit is off.
+    if (MOZ_LIKELY((aByte & 0x80u) == 0)) {
+      mShift = mCompleteShift;
+      return true;
+    }
+    // There are more bytes to read.
+    // Next byte will contain more significant bits above the past 7.
+    mShift += 7;
+    // Safety check that we're not going to shift by >= than the type size,
+    // which is Undefined Behavior in C++.
+    MOZ_ASSERT(mShift < CHAR_BIT * sizeof(T));
+    return false;
+  }
+
+  constexpr void Reset() {
+    mValue = 0;
+    mShift = 0;
+  }
+
+  constexpr MOZ_MUST_USE bool IsComplete() const {
+    return mShift == mCompleteShift;
+  }
+
+  constexpr MOZ_MUST_USE T Value() const {
+    MOZ_ASSERT(IsComplete());
+    return mValue;
+  }
+
+ private:
+  // Special value of `mShift` indicating that parsing is complete.
+  constexpr static unsigned mCompleteShift = 0x10000u;
+
+  T mValue = 0;
+  unsigned mShift = 0;
+};
+
 }  // namespace mozilla
 
 #endif  // leb128iterator_h
