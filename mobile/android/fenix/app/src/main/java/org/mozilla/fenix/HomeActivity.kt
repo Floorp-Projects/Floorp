@@ -366,7 +366,7 @@ open class HomeActivity : LocaleAwareAppCompatActivity() {
 
     fun updateThemeForSession(session: Session) {
         val sessionMode = BrowsingMode.fromBoolean(session.private)
-            browsingModeManager.mode = sessionMode
+        browsingModeManager.mode = sessionMode
     }
 
     protected open fun createBrowsingModeManager(initialMode: BrowsingMode): BrowsingModeManager {

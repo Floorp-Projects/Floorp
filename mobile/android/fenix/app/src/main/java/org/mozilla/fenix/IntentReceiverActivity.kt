@@ -46,6 +46,7 @@ class IntentReceiverActivity : Activity() {
             )
         } else {
             components.analytics.metrics.track(Event.OpenedLink(Event.OpenedLink.Mode.NORMAL))
+            intent.putExtra(HomeActivity.PRIVATE_BROWSING_MODE, false)
             listOf(
                 components.intentProcessors.customTabIntentProcessor,
                 components.intentProcessors.intentProcessor

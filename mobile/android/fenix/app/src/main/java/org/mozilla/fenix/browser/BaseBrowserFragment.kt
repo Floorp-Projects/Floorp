@@ -87,7 +87,6 @@ import org.mozilla.fenix.ext.sessionsOfType
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.theme.ThemeManager
-import org.mozilla.fenix.utils.FragmentPreDrawManager
 
 /**
  * Base fragment extended by [BrowserFragment].
@@ -139,23 +138,10 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
             )
         }
 
-        // We don't need to wait on shared element transitions for view intents or custom tabs
-        if (getSessionById()?.source == Session.Source.ACTION_VIEW ||
-            getSessionById()?.isCustomTabSession() == true
-        ) {
-            startPostponedEnterTransition()
-        }
-
         return view
     }
 
     final override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        // We don't need to wait on shared element transitions for view intents or custom tabs
-        if (getSessionById()?.source != Session.Source.ACTION_VIEW &&
-            getSessionById()?.isCustomTabSession() != true
-        ) {
-            FragmentPreDrawManager(this).execute {}
-        }
         browserInitialized = initializeUI(view) != null
     }
 

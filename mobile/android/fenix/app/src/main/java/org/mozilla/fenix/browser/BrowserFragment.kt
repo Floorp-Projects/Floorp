@@ -26,7 +26,6 @@ import mozilla.components.feature.tabs.WindowFeature
 import mozilla.components.lib.state.ext.consumeFrom
 import mozilla.components.support.base.feature.UserInteractionHandler
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
-import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.TabCollectionStorage
@@ -64,6 +63,7 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
     ): View {
         val view = super.onCreateView(inflater, container, savedInstanceState)
         view.browserLayout.transitionName = "$TAB_ITEM_TRANSITION_NAME${getSessionById()?.id}"
+        startPostponedEnterTransition()
         return view
     }
 
@@ -146,14 +146,6 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
 
     override fun onResume() {
         super.onResume()
-        getSessionById()?.let {
-            /**
-             * The session mode may be changed if the user is originally in Normal Mode and then
-             * opens a 3rd party link in Private Browsing Mode. Hence, we update the theme here.
-             * This fixes issue #5254.
-             */
-            (activity as HomeActivity).updateThemeForSession(it)
-        }
         requireComponents.core.tabCollectionStorage.register(collectionStorageObserver, this)
     }
 
