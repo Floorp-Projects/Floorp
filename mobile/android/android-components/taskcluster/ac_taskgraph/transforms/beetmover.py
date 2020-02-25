@@ -10,7 +10,7 @@ from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.schema import resolve_keyed_by
 
 from ..build_config import get_version
-from .build import _get_nightly_version
+from .build import get_nightly_version
 
 transforms = TransformSequence()
 
@@ -36,20 +36,21 @@ def set_artifact_map(config, tasks):
     def _craft_path_version(version, build_type, nightly_version):
         """Helper function to craft the correct version to bake in the artifacts full
         path section"""
-        ret = "{}{}".format(
+        path_version = "{}{}".format(
             version,
             "-SNAPSHOT" if build_type == "snapshot" else ''
         )
-        # XXX: for nightly releases we need to s/X.0.0/X.0.<buildid>/g for the
-        # version within the destination path
-        # e.g. maven2/org/mozilla/components/browser-awesomebar/34.0.20200212190116/
+        # XXX: for nightly releases we need to s/X.0.0/X.0.<buildid>/g in version
+        # within the destination path. This change is needed to ensure the version folder is set correctly so that
+        # maven2/org/mozilla/components/<component>/34.0.0/<component>-34.0.20200212190116-sources.jar
+        # becomes ->
+        # maven2/org/mozilla/components/<component>/34.0.20200212190116/<component>-34.0.20200212190116-sources.jar
         if build_type == 'nightly':
-            if version in ret:
-                ret = ret.replace(version, nightly_version)
-        return ret
+            path_version = path_version.replace(version, nightly_version)
+        return path_version
 
     version = get_version()
-    nightly_version = _get_nightly_version(config, version)
+    nightly_version = get_nightly_version(config, version)
 
     for task in tasks:
         maven_destination = task.pop("maven-destination")

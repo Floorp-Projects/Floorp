@@ -59,7 +59,7 @@ def handle_coverage(config, tasks):
 def interpolate_missing_values(config, tasks):
     timestamp = _get_timestamp(config)
     version = get_version()
-    nightly_version = _get_nightly_version(config, version)
+    nightly_version = get_nightly_version(config, version)
 
     for task in tasks:
         for field in ('description', 'run.gradlew', 'treeherder.symbol'):
@@ -81,7 +81,7 @@ def _get_buildid(config):
     return config.params.moz_build_date.strftime('%Y%m%d%H%M%S')
 
 
-def _get_nightly_version(config, version):
+def get_nightly_version(config, version):
     buildid = _get_buildid(config)
     # TODO: to replace here with mozilla-version sanity check and parsing
     pattern = re.compile(r"""
@@ -121,7 +121,7 @@ def _deep_format(object, field, **format_kwargs):
 def add_artifacts(config, tasks):
     timestamp = _get_timestamp(config)
     version = get_version()
-    nightly_version = _get_nightly_version(config, version)
+    nightly_version = get_nightly_version(config, version)
 
     for task in tasks:
         artifact_template = task.pop("artifact-template", {})
