@@ -456,6 +456,13 @@ release-partner-repack-signing
 ------------------------------
 Internal signing of partner repacks.
 
+For mac notarization, we download the signed bits that have been notarized by Apple, and we staple the notarization to the app and pkg.
+
+release-partner-repack-notarization-part-1
+------------------------------------------
+
+We switched to a 3-part mac notarization workflow in bug 1562412. This is the first task, which signs the files and submits them for notarization.
+
 release-partner-repack-repackage
 --------------------------------
 Repackaging of partner repacks.
@@ -484,6 +491,13 @@ Generates customized versions of releases for eme-free repacks.
 release-eme-free-repack-signing
 -------------------------------
 Internal signing of eme-free repacks
+
+For mac notarization, we download the signed bits that have been notarized by Apple, and we staple the notarization to the app and pkg.
+
+release-eme-free-repack-notarization-part-1
+-------------------------------------------
+
+We switched to a 3-part mac notarization workflow in bug 1562412. This is the first task, which signs the files and submits them for notarization.
 
 release-eme-free-repack-repackage
 ---------------------------------

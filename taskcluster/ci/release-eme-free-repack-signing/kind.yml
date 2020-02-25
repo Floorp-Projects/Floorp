@@ -21,6 +21,5 @@ only-for-build-platforms:
 job-template:
     shipping-product: firefox
     shipping-phase: promote
-    depname: release-eme-free-repack
     max-run-time: 3600
     repacks-per-chunk: 5
