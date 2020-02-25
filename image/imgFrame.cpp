@@ -950,7 +950,9 @@ void imgFrame::AddSizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
 
 RecyclingSourceSurface::RecyclingSourceSurface(imgFrame* aParent,
                                                DataSourceSurface* aSurface)
-    : mParent(aParent), mSurface(aSurface), mType(SurfaceType::DATA) {
+    : mParent(WrapNotNull(aParent)),
+      mSurface(WrapNotNull(aSurface)),
+      mType(SurfaceType::DATA) {
   mParent->mMonitor.AssertCurrentThreadOwns();
   ++mParent->mRecycleLockCount;
 
