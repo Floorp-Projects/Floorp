@@ -645,6 +645,14 @@ nsresult HTMLEditor::DoInsertHTMLWithContext(
     if (backwardScanFromPointToCaretResult.InNormalWhiteSpacesOrText()) {
       pointToPutCaret = backwardScanFromPointToCaretResult.Point();
     } else if (backwardScanFromPointToCaretResult.ReachedSpecialContent()) {
+      // XXX In my understanding, this is odd.  The end reason may not be
+      //     same as the reached special content because the equality is
+      //     guaranteed only when ReachedCurrentBlockBoundary() returns true.
+      //     However, looks like that this code assumes that
+      //     GetStartReasonContent() returns the content.
+      NS_ASSERTION(wsRunScannerAtStartReason.GetStartReasonContent() ==
+                       backwardScanFromPointToCaretResult.GetContent(),
+                   "Start reason is not the reached special content");
       pointToPutCaret.SetAfter(
           wsRunScannerAtStartReason.GetStartReasonContent());
     }
