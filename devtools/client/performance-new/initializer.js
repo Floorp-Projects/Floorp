@@ -53,7 +53,10 @@ const {
   createMultiModalGetSymbolTableFn,
 } = require("devtools/client/performance-new/browser");
 
-const { getDefaultRecordingPreferencesForOlderFirefox } = ChromeUtils.import(
+const {
+  getDefaultRecordingPreferencesForOlderFirefox,
+  presets,
+} = ChromeUtils.import(
   "resource://devtools/client/performance-new/popup/background.jsm.js"
 );
 
@@ -100,6 +103,7 @@ async function gInit(perfFront, preferenceFront) {
       perfFront,
       receiveProfile,
       recordingPreferences,
+      presets,
       supportedFeatures,
       pageContext: "devtools",
 
