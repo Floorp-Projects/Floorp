@@ -553,6 +553,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   ShellService: "resource:///modules/ShellService.jsm",
   TabCrashHandler: "resource:///modules/ContentCrashHandlers.jsm",
   TabUnloader: "resource:///modules/TabUnloader.jsm",
+  TRRRacer: "resource:///modules/TRRPerformance.jsm",
   UIState: "resource://services-sync/UIState.jsm",
   WebChannel: "resource://gre/modules/WebChannel.jsm",
   WindowsRegistry: "resource://gre/modules/WindowsRegistry.jsm",
@@ -2154,6 +2155,46 @@ BrowserGlue.prototype = {
       {
         task: () => {
           Services.obs.notifyObservers(null, "marionette-startup-requested");
+        },
+      },
+
+      // Run TRR performance measurements for DoH.
+      {
+        task: () => {
+          if (
+            Services.prefs.getBoolPref("doh-rollout.trrRace.enabled", false)
+          ) {
+            if (
+              !Services.prefs.getBoolPref("doh-rollout.trrRace.complete", false)
+            ) {
+              new TRRRacer().run();
+            }
+          } else {
+            Services.prefs.addObserver(
+              "doh-rollout.trrRace.enabled",
+              function observer() {
+                if (
+                  Services.prefs.getBoolPref(
+                    "doh-rollout.trrRace.enabled",
+                    false
+                  )
+                ) {
+                  Services.prefs.removeObserver(
+                    "doh-rollout.trrRace.enabled",
+                    observer
+                  );
+                  if (
+                    !Services.prefs.getBoolPref(
+                      "doh-rollout.trrRace.complete",
+                      false
+                    )
+                  ) {
+                    new TRRRacer().run();
+                  }
+                }
+              }
+            );
+          }
         },
       },
     ];
