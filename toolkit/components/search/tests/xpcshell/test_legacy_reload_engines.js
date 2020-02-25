@@ -7,6 +7,7 @@ const SEARCH_SERVICE_TOPIC = "browser-search-service";
 const SEARCH_ENGINE_TOPIC = "browser-search-engine-modified";
 
 add_task(async function setup() {
+  Services.prefs.setBoolPref("browser.search.geoSpecificDefaults", true);
   await AddonTestUtils.promiseStartupManager();
 });
 

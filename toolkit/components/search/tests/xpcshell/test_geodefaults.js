@@ -44,8 +44,6 @@ add_task(async function should_get_geo_defaults_only_once() {
     // (Re)initializing the search service should trigger a request,
     // and set the default engine based on it.
     // Due to the previous initialization, we expect the region to already be set.
-    Assert.ok(Services.prefs.prefHasUserValue("browser.search.region"));
-    Assert.equal(Services.prefs.getCharPref("browser.search.region"), "FR");
     await Promise.all([
       asyncReInit({ awaitRegionFetch: true }),
       promiseAfterCache(),

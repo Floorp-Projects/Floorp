@@ -56,13 +56,6 @@ add_task(async function test_location_timeout_xhr() {
   // should be no result recorded at all.
   checkCountryResultTelemetry(null);
 
-  // should have set the flag indicating we saw a timeout.
-  let histogram = Services.telemetry.getHistogramById(
-    "SEARCH_SERVICE_COUNTRY_TIMEOUT"
-  );
-  let snapshot = histogram.snapshot();
-  deepEqual(snapshot.values, { 0: 0, 1: 1, 2: 0 });
-
   // should not have SEARCH_SERVICE_COUNTRY_FETCH_TIME_MS recorded as our
   // test server is still blocked on our promise.
   verifyProbeSum("SEARCH_SERVICE_COUNTRY_FETCH_TIME_MS", 0);
