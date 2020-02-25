@@ -280,8 +280,17 @@ var webrtcUI = {
       }
     }
 
-    if (aBrowsingContext == aBrowsingContext.top) {
-      this.perTabIndicators.delete(aBrowsingContext);
+    // Remove the per-tab indicator if it no longer needs to be displayed.
+    let topBC = aBrowsingContext.top;
+    if (this.perTabIndicators.has(topBC)) {
+      let tabState = this.getCombinedStateForBrowser(topBC);
+      if (
+        !tabState.showCameraIndicator &&
+        !tabState.showMicrophoneIndicator &&
+        !tabState.showScreenSharingIndicator
+      ) {
+        this.perTabIndicators.delete(topBC);
+      }
     }
 
     this.updateGlobalIndicator();
