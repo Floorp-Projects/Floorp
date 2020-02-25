@@ -1049,6 +1049,16 @@ class DrawTarget : public external::AtomicRefCounted<DrawTarget> {
    */
   virtual already_AddRefed<SourceSurface> Snapshot() = 0;
 
+  /**
+   * Returns a SourceSurface which wraps the buffer backing the DrawTarget. The
+   * contents of the buffer may change if there are drawing operations after
+   * calling but only guarantees that it reflects the state at the time it was
+   * called.
+   */
+  virtual already_AddRefed<SourceSurface> GetBackingSurface() {
+    return Snapshot();
+  }
+
   // Snapshots the contents and returns an alpha mask
   // based on the RGB values.
   virtual already_AddRefed<SourceSurface> IntoLuminanceSource(
@@ -1429,6 +1439,15 @@ class DrawTarget : public external::AtomicRefCounted<DrawTarget> {
    */
   virtual already_AddRefed<DrawTarget> CreateSimilarDrawTarget(
       const IntSize& aSize, SurfaceFormat aFormat) const = 0;
+
+  /**
+   * Create a DrawTarget whose backing surface is optimized for use with this
+   * DrawTarget.
+   */
+  virtual already_AddRefed<DrawTarget> CreateSimilarDrawTargetWithBacking(
+      const IntSize& aSize, SurfaceFormat aFormat) const {
+    return CreateSimilarDrawTarget(aSize, aFormat);
+  }
 
   /**
    * Create a DrawTarget whose snapshot is optimized for use with this
