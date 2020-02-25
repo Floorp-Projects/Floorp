@@ -369,10 +369,9 @@ class MOZ_STACK_CLASS LanguageTag final {
    *
    * UTS 35 specifies two different canonicalization algorithms. There's one to
    * canonicalize BCP 47 language tags and other one to canonicalize Unicode
-   * locale identifiers. The latter one wasn't present when ECMA-402 was changed
-   * to use Unicode BCP 47 locale identifiers instead of BCP 47 language tags,
-   * so ECMA-402 currently only uses the former to canonicalize Unicode BCP 47
-   * locale identifiers.
+   * locale identifiers. ECMA-402 was previously using the former, but has since
+   * been changed to use the latter to canonicalize Unicode BCP 47 locale
+   * identifiers.
    *
    * Spec: ECMAScript Internationalization API Specification, 6.2.3.
    * Spec:
