@@ -7314,7 +7314,7 @@ def getRetvalDeclarationForType(returnType, descriptorProvider,
             typeName = "Promise"
         if isMember:
             conversion = None
-            result = CGGeneric("StrongPtrForMember<%s>::Type" % typeName)
+            result = CGGeneric("StrongPtrForMember<%s>" % typeName)
         else:
             conversion = CGGeneric("StrongOrRawPtr<%s>" % typeName)
             result = CGGeneric("auto")

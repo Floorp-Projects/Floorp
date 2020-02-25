@@ -3066,10 +3066,8 @@ template <class T, template <typename> class SmartPtr, class S>
 inline void StrongOrRawPtr(SmartPtr<S>&& aPtr) = delete;
 
 template <class T>
-struct StrongPtrForMember {
-  typedef typename Conditional<IsRefcounted<T>::value, RefPtr<T>,
-                               nsAutoPtr<T>>::Type Type;
-};
+using StrongPtrForMember =
+    typename Conditional<IsRefcounted<T>::value, RefPtr<T>, nsAutoPtr<T>>::Type;
 
 namespace binding_detail {
 inline JSObject* GetHackedNamespaceProtoObject(JSContext* aCx) {
