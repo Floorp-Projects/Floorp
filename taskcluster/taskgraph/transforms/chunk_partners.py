@@ -55,7 +55,9 @@ def chunk_partners(config, jobs):
             platform_repack_ids = _get_repack_ids_by_platform(partner_configs, build_platform)
             # we chunk mac signing
             if config.kind in ("release-partner-repack-signing",
-                               "release-eme-free-repack-signing"):
+                               "release-eme-free-repack-signing",
+                               "release-partner-repack-notarization-part-1",
+                               "release-eme-free-repack-notarization-part-1"):
                 repacks_per_chunk = job.get('repacks-per-chunk')
                 chunks, remainder = divmod(len(platform_repack_ids), repacks_per_chunk)
                 if remainder:
