@@ -191,10 +191,10 @@ open class FenixApplication : LocaleAwareApplication() {
     /**
      * Initiate Megazord sequence! Megazord Battle Mode!
      *
-     * The application-services combined libraries are known as the "megazord". The default megazord
-     * contains several features that fenix doesn't need, and so we swap out with a customized fenix-specific
-     * version of the megazord. The best explanation for what this is, and why it's done is the a-s
-     * documentation on the topic:
+     * The application-services combined libraries are known as the "megazord". We use the default `full`
+     * megazord - it contains everything that fenix needs, and (currently) nothing more.
+     *
+     * Documentation on what megazords are, and why they're needed:
      * - https://github.com/mozilla/application-services/blob/master/docs/design/megazords.md
      * - https://mozilla.github.io/application-services/docs/applications/consuming-megazord-libraries.html
      */

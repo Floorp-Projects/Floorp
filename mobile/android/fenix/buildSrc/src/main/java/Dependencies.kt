@@ -33,13 +33,6 @@ object Versions {
     const val google_material = "1.1.0"
 
     const val mozilla_android_components = "34.0.0-SNAPSHOT"
-    // Note that android-components also depends on application-services,
-    // and in fact is our main source of appservices-related functionality.
-    // The version number below tracks the application-services version
-    // that we depend on directly for the fenix-megazord (and for it's
-    // forUnitTest variant), and it's important that it be kept in
-    // sync with the version used by android-components above.
-    const val mozilla_appservices = "0.50.0"
 
     const val mozilla_glean = "25.0.0"
 
@@ -206,9 +199,6 @@ object Deps {
     const val robolectric = "org.robolectric:robolectric:${Versions.robolectric}"
     const val androidx_junit = "androidx.test.ext:junit:${Versions.androidx_test_ext}"
     const val androidx_test_core = "androidx.test:core:${Versions.androidx_testing}"
-
-    const val fenix_megazord = "org.mozilla.appservices:fenix-megazord:${Versions.mozilla_appservices}"
-    const val fenix_megazord_forUnitTests = "org.mozilla.appservices:fenix-megazord-forUnitTests:${Versions.mozilla_appservices}"
 
     const val google_ads_id = "com.google.android.gms:play-services-ads-identifier:${Versions.google_ads_id_version}"
 
