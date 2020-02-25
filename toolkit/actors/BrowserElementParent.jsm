@@ -267,7 +267,7 @@ var PermitUnloader = {
         roots.push(windowGlobal);
       }
 
-      contextsToWalk.push(...currentContext.children);
+      contextsToWalk.push(...currentContext.getChildren());
     }
 
     return roots;
