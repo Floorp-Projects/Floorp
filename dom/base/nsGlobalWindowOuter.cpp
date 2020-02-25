@@ -4798,15 +4798,15 @@ void nsGlobalWindowOuter::PromptOuter(const nsAString& aMessage,
     DisableDialogs();
   }
 
+  // XXX Doesn't this leak inoutValue?
   if (aError.Failed()) {
     return;
   }
 
   nsString outValue;
   outValue.Adopt(inoutValue);
-
   if (ok && inoutValue) {
-    aReturn.Assign(outValue);
+    aReturn = std::move(outValue);
   }
 }
 
