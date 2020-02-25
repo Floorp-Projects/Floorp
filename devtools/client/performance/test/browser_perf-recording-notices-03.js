@@ -79,6 +79,7 @@ add_task(async function() {
       EVENTS.UI_RECORDING_PROFILER_STATUS_RENDERED,
       { spreadArgs: true }
     );
+
     return gPercent > 0;
   });
 
@@ -87,8 +88,10 @@ add_task(async function() {
   let bufferUsage = PerformanceController.getBufferUsageForRecording(
     PerformanceController.getCurrentRecording()
   );
+
+  let bufferStatus = DETAILS_CONTAINER.getAttribute("buffer-status");
   either(
-    DETAILS_CONTAINER.getAttribute("buffer-status"),
+    bufferStatus,
     "in-progress",
     "full",
     "Container has [buffer-status=in-progress] or [buffer-status=full]."
@@ -107,6 +110,15 @@ add_task(async function() {
       EVENTS.UI_RECORDING_PROFILER_STATUS_RENDERED,
       { spreadArgs: true }
     );
+
+    // In some slow environments (eg ccov) it can happen that the buffer is full
+    // during the test run. In that case, the next condition can never be true
+    // because bufferUsage is 1, so we introduced a special condition to account
+    // for this special case.
+    if (bufferStatus === "full") {
+      return gPercent === 100;
+    }
+
     return gPercent > Math.floor(bufferUsage * 100);
   });
 
@@ -115,8 +127,9 @@ add_task(async function() {
   bufferUsage = PerformanceController.getBufferUsageForRecording(
     PerformanceController.getCurrentRecording()
   );
+  bufferStatus = DETAILS_CONTAINER.getAttribute("buffer-status");
   either(
-    DETAILS_CONTAINER.getAttribute("buffer-status"),
+    bufferStatus,
     "in-progress",
     "full",
     "Container has [buffer-status=in-progress] or [buffer-status=full]."
@@ -142,8 +155,9 @@ add_task(async function() {
 
   ok(true, "Percentage updated for newly selected recording.");
 
+  bufferStatus = DETAILS_CONTAINER.getAttribute("buffer-status");
   either(
-    DETAILS_CONTAINER.getAttribute("buffer-status"),
+    bufferStatus,
     "in-progress",
     "full",
     "Container has [buffer-status=in-progress] or [buffer-status=full]."
@@ -160,19 +174,30 @@ add_task(async function() {
   setSelectedRecording(panel, 0);
   await selected;
 
+  bufferStatus = DETAILS_CONTAINER.getAttribute("buffer-status");
   await waitUntil(async function() {
     [gPercent] = await once(
       PerformanceView,
       EVENTS.UI_RECORDING_PROFILER_STATUS_RENDERED,
       { spreadArgs: true }
     );
+
+    // In some slow environments (eg ccov) it can happen that the buffer is full
+    // during the test run. In that case, the next condition can never be true
+    // because bufferUsage is 1, so we introduced a special condition to account
+    // for this special case.
+    if (bufferStatus === "full") {
+      return gPercent === 100;
+    }
+
     return gPercent > Math.floor(bufferUsage * 100);
   });
 
   ok(true, "Buffer percentage increased in display (3).");
 
+  bufferStatus = DETAILS_CONTAINER.getAttribute("buffer-status");
   either(
-    DETAILS_CONTAINER.getAttribute("buffer-status"),
+    bufferStatus,
     "in-progress",
     "full",
     "Container has [buffer-status=in-progress] or [buffer-status=full]."
