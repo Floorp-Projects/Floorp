@@ -172,7 +172,7 @@ StorageDBChild* StorageDBChild::GetOrCreate() {
 
 nsTHashtable<nsCStringHashKey>& StorageDBChild::OriginsHavingData() {
   if (!mOriginsHavingData) {
-    mOriginsHavingData = new nsTHashtable<nsCStringHashKey>;
+    mOriginsHavingData = MakeUnique<nsTHashtable<nsCStringHashKey>>();
   }
 
   return *mOriginsHavingData;

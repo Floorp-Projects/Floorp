@@ -1415,7 +1415,7 @@ class Connection final {
   RefPtr<QuotaClient> mQuotaClient;
   nsCOMPtr<nsITimer> mFlushTimer;
   nsCOMPtr<mozIStorageConnection> mStorageConnection;
-  nsAutoPtr<ArchivedOriginScope> mArchivedOriginScope;
+  UniquePtr<ArchivedOriginScope> mArchivedOriginScope;
   nsInterfaceHashtable<nsCStringHashKey, mozIStorageStatement>
       mCachedStatements;
   ConnectionWriteOptimizer mWriteOptimizer;
@@ -1451,7 +1451,7 @@ class Connection final {
   }
 
   ArchivedOriginScope* GetArchivedOriginScope() const {
-    return mArchivedOriginScope;
+    return mArchivedOriginScope.get();
   }
 
   const nsCString& Origin() const { return mOrigin; }
@@ -1515,7 +1515,7 @@ class Connection final {
   // Only created by ConnectionThread.
   Connection(ConnectionThread* aConnectionThread, const nsACString& aSuffix,
              const nsACString& aGroup, const nsACString& aOrigin,
-             nsAutoPtr<ArchivedOriginScope>&& aArchivedOriginScope,
+             UniquePtr<ArchivedOriginScope>&& aArchivedOriginScope,
              bool aDatabaseWasNotAvailable);
 
   ~Connection();
@@ -1642,7 +1642,7 @@ class ConnectionThread final {
   already_AddRefed<Connection> CreateConnection(
       const nsACString& aSuffix, const nsACString& aGroup,
       const nsACString& aOrigin,
-      nsAutoPtr<ArchivedOriginScope>&& aArchivedOriginScope,
+      UniquePtr<ArchivedOriginScope>&& aArchivedOriginScope,
       bool aDatabaseWasNotAvailable);
 
   void Shutdown();
@@ -2382,7 +2382,7 @@ class PrepareDatastoreOp
   RefPtr<DirectoryLock> mDirectoryLock;
   RefPtr<Connection> mConnection;
   RefPtr<Datastore> mDatastore;
-  nsAutoPtr<ArchivedOriginScope> mArchivedOriginScope;
+  UniquePtr<ArchivedOriginScope> mArchivedOriginScope;
   LoadDataOp* mLoadDataOp;
   nsDataHashtable<nsStringHashKey, LSValue> mValues;
   nsTArray<LSItemInfo> mOrderedItems;
@@ -2678,15 +2678,16 @@ class ArchivedOriginScope {
   DataType mData;
 
  public:
-  static ArchivedOriginScope* CreateFromOrigin(
+  static UniquePtr<ArchivedOriginScope> CreateFromOrigin(
       const nsACString& aOriginAttrSuffix, const nsACString& aOriginKey);
 
-  static ArchivedOriginScope* CreateFromPrefix(const nsACString& aOriginKey);
+  static UniquePtr<ArchivedOriginScope> CreateFromPrefix(
+      const nsACString& aOriginKey);
 
-  static ArchivedOriginScope* CreateFromPattern(
+  static UniquePtr<ArchivedOriginScope> CreateFromPattern(
       const OriginAttributesPattern& aPattern);
 
-  static ArchivedOriginScope* CreateFromNull();
+  static UniquePtr<ArchivedOriginScope> CreateFromNull();
 
   bool IsOrigin() const { return mData.is<Origin>(); }
 
@@ -2825,7 +2826,7 @@ class QuotaClient final : public mozilla::dom::quota::Client {
 
   nsresult CreateArchivedOriginScope(
       const OriginScope& aOriginScope,
-      nsAutoPtr<ArchivedOriginScope>& aArchivedOriginScope);
+      UniquePtr<ArchivedOriginScope>& aArchivedOriginScope);
 
   nsresult PerformDelete(mozIStorageConnection* aConnection,
                          const nsACString& aSchemaName,
@@ -3016,8 +3017,7 @@ nsresult LoadArchivedOrigins() {
     return rv;
   }
 
-  nsAutoPtr<ArchivedOriginHashtable> archivedOrigins(
-      new ArchivedOriginHashtable());
+  auto archivedOrigins = MakeUnique<ArchivedOriginHashtable>();
 
   bool hasResult;
   while (NS_SUCCEEDED(rv = stmt->ExecuteStep(&hasResult)) && hasResult) {
@@ -3040,16 +3040,14 @@ nsresult LoadArchivedOrigins() {
       return NS_ERROR_FAILURE;
     }
 
-    nsAutoPtr<ArchivedOriginInfo> archivedOriginInfo(
-        new ArchivedOriginInfo(originAttributes, originNoSuffix));
-
-    archivedOrigins->Put(hashKey, archivedOriginInfo.forget());
+    archivedOrigins->Put(hashKey, MakeUnique<ArchivedOriginInfo>(
+                                      originAttributes, originNoSuffix));
   }
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  gArchivedOrigins = archivedOrigins.forget();
+  gArchivedOrigins = archivedOrigins.release();
   return NS_OK;
 }
 
@@ -4106,7 +4104,7 @@ ConnectionDatastoreOperationBase::Run() {
 Connection::Connection(ConnectionThread* aConnectionThread,
                        const nsACString& aSuffix, const nsACString& aGroup,
                        const nsACString& aOrigin,
-                       nsAutoPtr<ArchivedOriginScope>&& aArchivedOriginScope,
+                       UniquePtr<ArchivedOriginScope>&& aArchivedOriginScope,
                        bool aDatabaseWasNotAvailable)
     : mConnectionThread(aConnectionThread),
       mQuotaClient(QuotaClient::GetInstance()),
@@ -4739,7 +4737,7 @@ void ConnectionThread::AssertIsOnConnectionThread() {
 already_AddRefed<Connection> ConnectionThread::CreateConnection(
     const nsACString& aSuffix, const nsACString& aGroup,
     const nsACString& aOrigin,
-    nsAutoPtr<ArchivedOriginScope>&& aArchivedOriginScope,
+    UniquePtr<ArchivedOriginScope>&& aArchivedOriginScope,
     bool aDatabaseWasNotAvailable) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(!aOrigin.IsEmpty());
@@ -7426,7 +7424,7 @@ nsresult PrepareDatastoreOp::DatabaseWork() {
     }
 
     int64_t newUsage;
-    rv = GetUsage(connection, mArchivedOriginScope, &newUsage);
+    rv = GetUsage(connection, mArchivedOriginScope.get(), &newUsage);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -7884,20 +7882,20 @@ void PrepareDatastoreOp::GetResponse(LSRequestResponse& aResponse) {
 
   mDatastoreId = ++gLastDatastoreId;
 
-  nsAutoPtr<PreparedDatastore> preparedDatastore(
-      new PreparedDatastore(mDatastore, mContentParentId, mOrigin, mDatastoreId,
-                            /* aForPreload */ mForPreload));
+  auto preparedDatastore = MakeUnique<PreparedDatastore>(
+      mDatastore, mContentParentId, mOrigin, mDatastoreId,
+      /* aForPreload */ mForPreload);
 
   if (!gPreparedDatastores) {
     gPreparedDatastores = new PreparedDatastoreHashtable();
   }
-  gPreparedDatastores->Put(mDatastoreId, preparedDatastore);
+  gPreparedDatastores->Put(mDatastoreId, preparedDatastore.get());
 
   if (mInvalidated) {
     preparedDatastore->Invalidate();
   }
 
-  preparedDatastore.forget();
+  Unused << preparedDatastore.release();
 
   if (mForPreload) {
     LSRequestPreloadDatastoreResponse preloadDatastoreResponse;
@@ -8475,27 +8473,27 @@ void PreloadedOp::GetResponse(LSSimpleRequestResponse& aResponse) {
  ******************************************************************************/
 
 // static
-ArchivedOriginScope* ArchivedOriginScope::CreateFromOrigin(
+UniquePtr<ArchivedOriginScope> ArchivedOriginScope::CreateFromOrigin(
     const nsACString& aOriginAttrSuffix, const nsACString& aOriginKey) {
-  return new ArchivedOriginScope(
-      std::move(Origin(aOriginAttrSuffix, aOriginKey)));
+  return WrapUnique(
+      new ArchivedOriginScope(Origin(aOriginAttrSuffix, aOriginKey)));
 }
 
 // static
-ArchivedOriginScope* ArchivedOriginScope::CreateFromPrefix(
+UniquePtr<ArchivedOriginScope> ArchivedOriginScope::CreateFromPrefix(
     const nsACString& aOriginKey) {
-  return new ArchivedOriginScope(std::move(Prefix(aOriginKey)));
+  return WrapUnique(new ArchivedOriginScope(Prefix(aOriginKey)));
 }
 
 // static
-ArchivedOriginScope* ArchivedOriginScope::CreateFromPattern(
+UniquePtr<ArchivedOriginScope> ArchivedOriginScope::CreateFromPattern(
     const OriginAttributesPattern& aPattern) {
-  return new ArchivedOriginScope(std::move(Pattern(aPattern)));
+  return WrapUnique(new ArchivedOriginScope(Pattern(aPattern)));
 }
 
 // static
-ArchivedOriginScope* ArchivedOriginScope::CreateFromNull() {
-  return new ArchivedOriginScope(std::move(Null()));
+UniquePtr<ArchivedOriginScope> ArchivedOriginScope::CreateFromNull() {
+  return WrapUnique(new ArchivedOriginScope(Null()));
 }
 
 void ArchivedOriginScope::GetBindingClause(nsACString& aBindingClause) const {
@@ -9011,7 +9009,7 @@ nsresult QuotaClient::AboutToClearOrigins(
 
   bool shadowWrites = gShadowWrites;
 
-  nsAutoPtr<ArchivedOriginScope> archivedOriginScope;
+  UniquePtr<ArchivedOriginScope> archivedOriginScope;
   nsresult rv = CreateArchivedOriginScope(aOriginScope, archivedOriginScope);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -9081,7 +9079,7 @@ nsresult QuotaClient::AboutToClearOrigins(
 
     if (shadowWrites) {
       rv = PerformDelete(connection, NS_LITERAL_CSTRING("main"),
-                         archivedOriginScope);
+                         archivedOriginScope.get());
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
@@ -9089,7 +9087,7 @@ nsresult QuotaClient::AboutToClearOrigins(
 
     if (hasDataForRemoval) {
       rv = PerformDelete(connection, NS_LITERAL_CSTRING("archive"),
-                         archivedOriginScope);
+                         archivedOriginScope.get());
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
@@ -9374,12 +9372,12 @@ void QuotaClient::ShutdownTimedOut() {
 
 nsresult QuotaClient::CreateArchivedOriginScope(
     const OriginScope& aOriginScope,
-    nsAutoPtr<ArchivedOriginScope>& aArchivedOriginScope) {
+    UniquePtr<ArchivedOriginScope>& aArchivedOriginScope) {
   AssertIsOnIOThread();
 
   nsresult rv;
 
-  nsAutoPtr<ArchivedOriginScope> archivedOriginScope;
+  UniquePtr<ArchivedOriginScope> archivedOriginScope;
 
   if (aOriginScope.IsOrigin()) {
     nsCString spec;

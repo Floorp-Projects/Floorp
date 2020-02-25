@@ -17,7 +17,7 @@
 #include "LocalStorageCache.h"
 #include "StorageObserver.h"
 #include "mozilla/Mutex.h"
-#include "nsAutoPtr.h"
+#include "mozilla/UniquePtr.h"
 
 namespace mozilla {
 
@@ -160,7 +160,7 @@ class StorageDBChild final : public PBackgroundStorageChild {
   RefPtr<LocalStorageManager> mManager;
 
   // Origins having data hash, for optimization purposes only
-  nsAutoPtr<nsTHashtable<nsCStringHashKey>> mOriginsHavingData;
+  UniquePtr<nsTHashtable<nsCStringHashKey>> mOriginsHavingData;
 
   // List of caches waiting for preload.  This ensures the contract that
   // AsyncPreload call references the cache for time of the preload.

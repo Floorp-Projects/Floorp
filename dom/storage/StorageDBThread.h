@@ -15,7 +15,7 @@
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/storage/StatementCache.h"
 #include "mozilla/TimeStamp.h"
-#include "nsAutoPtr.h"
+#include "mozilla/UniquePtr.h"
 #include "nsString.h"
 #include "nsCOMPtr.h"
 #include "nsClassHashtable.h"
@@ -256,7 +256,7 @@ class StorageDBThread final {
     nsClassHashtable<nsCStringHashKey, DBOperation> mUpdates;
 
     // Collection of all tasks, valid only between Prepare() and Execute()
-    nsTArray<nsAutoPtr<DBOperation> > mExecList;
+    nsTArray<UniquePtr<DBOperation> > mExecList;
 
     // Number of failing flush attempts
     uint32_t mFlushFailureCount;

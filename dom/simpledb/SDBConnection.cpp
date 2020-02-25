@@ -209,8 +209,8 @@ SDBConnection::Init(nsIPrincipal* aPrincipal) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aPrincipal);
 
-  nsAutoPtr<PrincipalInfo> principalInfo(new PrincipalInfo());
-  nsresult rv = PrincipalToPrincipalInfo(aPrincipal, principalInfo);
+  UniquePtr<PrincipalInfo> principalInfo(new PrincipalInfo());
+  nsresult rv = PrincipalToPrincipalInfo(aPrincipal, principalInfo.get());
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
