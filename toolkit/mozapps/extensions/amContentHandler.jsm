@@ -37,8 +37,7 @@ amContentHandler.prototype = {
 
     let { loadInfo } = aRequest;
     const { triggeringPrincipal } = loadInfo;
-    let browsingContext =
-      loadInfo.frameBrowsingContext || loadInfo.browsingContext;
+    let browsingContext = loadInfo.targetBrowsingContext;
 
     let sourceHost;
     let sourceURL;
