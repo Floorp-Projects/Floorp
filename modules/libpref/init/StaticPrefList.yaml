@@ -7246,6 +7246,24 @@
   value: false
   mirror: always
 
+# Whether to use the network process or not
+# Start a separate socket process. Performing networking on the socket process
+# is control by a sepparate pref
+# ("network.http.network_access_on_socket_process.enabled").
+# Changing these prefs requires a restart.
+- name: network.process.enabled
+  type: bool
+  mirror: always
+#ifdef ANDROID
+  value: false
+#else
+#ifdef NIGHTLY_BUILD
+  value: true
+#else
+  value: false
+#endif
+#endif
+
 # Telemetry of traffic categories. Whether or not to enable HttpTrafficAnalyzer.
 - name: network.traffic_analyzer.enabled
   type: RelaxedAtomicBool
