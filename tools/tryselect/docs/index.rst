@@ -60,6 +60,8 @@ Phabricator.
 
 This run is created for static analysis, linting and other tasks. Attaching new jobs to the run is
 easy and doesn't require more actions from the developer.
+Click on the down-arrow to access the actions menu, select the relevant jobs
+and, click on ``Trigger X new jobs`` (located on the top of the job).
 
 .. image:: img/add-new-jobs.png
 
