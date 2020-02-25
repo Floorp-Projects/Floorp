@@ -38,6 +38,10 @@ class TestUniChar  // for nsClassHashtable
   uint32_t mWord;
 };
 
+class TestUniCharDerived : public TestUniChar {
+  using TestUniChar::TestUniChar;
+};
+
 class TestUniCharRefCounted  // for nsRefPtrHashtable
 {
  public:
@@ -383,8 +387,9 @@ TEST(Hashtables, ClassHashtable)
   nsClassHashtable<nsCStringHashKey, TestUniChar> EntToUniClass(ENTITY_COUNT);
 
   for (auto& entity : gEntities) {
-    auto* temp = new TestUniChar(entity.mUnicode);
-    EntToUniClass.Put(nsDependentCString(entity.mStr), temp);
+    // Insert a sub-class of TestUniChar to test if this is accepted by Put.
+    EntToUniClass.Put(nsDependentCString(entity.mStr),
+                      mozilla::MakeUnique<TestUniCharDerived>(entity.mUnicode));
   }
 
   TestUniChar* myChar;
