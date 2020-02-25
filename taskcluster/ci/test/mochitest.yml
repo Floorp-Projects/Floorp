@@ -12,7 +12,7 @@ job-defaults:
             default: null
     variants:
         by-test-platform:
-            linux.*64/debug: ['fission', 'serviceworker']
+            linux.*64/debug: ['fission']
             default: ['fission']
     run-on-projects:
         by-test-platform:
@@ -268,7 +268,7 @@ mochitest-media:
     variants:
         by-test-platform:
             android.*: ['socketprocess']
-            linux1804-64/debug: ['fission', 'serviceworker', 'socketprocess']
+            linux1804-64/debug: ['fission', 'socketprocess']
             default: ['fission', 'socketprocess']
     loopback-video: true
     instance-size: large
