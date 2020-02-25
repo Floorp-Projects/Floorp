@@ -586,7 +586,7 @@ class MOZ_NON_MEMMOVABLE JS_PUBLIC_API JSStructuredCloneData {
  * Note: If `data` contains transferable objects, it can be read only once.
  */
 JS_PUBLIC_API bool JS_ReadStructuredClone(
-    JSContext* cx, JSStructuredCloneData& data, uint32_t version,
+    JSContext* cx, const JSStructuredCloneData& data, uint32_t version,
     JS::StructuredCloneScope scope, JS::MutableHandleValue vp,
     const JS::CloneDataPolicy& cloneDataPolicy,
     const JSStructuredCloneCallbacks* optionalCallbacks, void* closure);
