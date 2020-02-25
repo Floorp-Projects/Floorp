@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.migration
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -15,6 +16,7 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.activity_migration.*
 import kotlinx.android.synthetic.main.migration_list_item.view.*
+import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.migration.AbstractMigrationProgressActivity
 import mozilla.components.support.migration.AbstractMigrationService
 import mozilla.components.support.migration.Migration
@@ -32,6 +34,7 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
 
 class MigrationProgressActivity : AbstractMigrationProgressActivity() {
+    private val logger = Logger("MigrationProgressActivity")
     private val statusAdapter = MigrationStatusAdapter()
     override val store: MigrationStore by lazy { components.migrationStore }
 
@@ -69,11 +72,16 @@ class MigrationProgressActivity : AbstractMigrationProgressActivity() {
                 finish()
                 overridePendingTransition(0, 0)
 
+                store.dispatch(MigrationAction.Clear)
+
                 // If we received a user-initiated intent, throw this back to the intent receiver.
                 if (intent.hasExtra(HomeActivity.OPEN_TO_BROWSER)) {
-                    store.dispatch(MigrationAction.Clear)
                     intent.setClassName(applicationContext, IntentReceiverActivity::class.java.name)
                     startActivity(intent)
+                } else {
+                    // Fallback: Just launch the browser
+                    logger.warn("Intent does not contain OPEN_TO_BROWSER extra, launching HomeActivity")
+                    startActivity(Intent(this@MigrationProgressActivity, HomeActivity::class.java))
                 }
             }
             text = getString(R.string.migration_update_app_button, getString(R.string.app_name))
