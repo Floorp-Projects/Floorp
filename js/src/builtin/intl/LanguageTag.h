@@ -227,6 +227,7 @@ class MOZ_STACK_CLASS LanguageTag final {
 
   void performComplexLanguageMappings();
   void performComplexRegionMappings();
+  MOZ_MUST_USE bool performVariantMappings(JSContext* cx);
 
   MOZ_MUST_USE bool updateGrandfatheredMappings(JSContext* cx);
 

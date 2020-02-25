@@ -353,7 +353,11 @@ bool LanguageTag::canonicalizeBaseName(JSContext* cx) {
     }
   }
 
-  // No variant subtag replacements are currently present.
+  // Replace deprecated variant subtags with their preferred values.
+  if (!performVariantMappings(cx)) {
+    return false;
+  }
+
   // No extension replacements are currently present.
   // Private use sequences are left as is.
 
