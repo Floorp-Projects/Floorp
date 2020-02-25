@@ -1043,7 +1043,7 @@ void nsHttpTransaction::OnPush(Http2PushedStreamWrapper* aStream) {
   }
 
   if (NS_FAILED(mOnPushCallback(stream->StreamID(), stream->GetResourceUrl(),
-                                stream->GetRequestString()))) {
+                                stream->GetRequestString(), this))) {
     stream->OnPushFailed();
     mIDToStreamMap.Remove(stream->StreamID());
   }
