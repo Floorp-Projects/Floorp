@@ -1,5 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+
+    <string name="social">social</string>
+    <string name="unvisited">unvisited</string>
+    <string name="third_party">third-party</string>
+    <string name="all">all</string>
+    <string name="private_string">private</string>
+
     <string-array name="cookies_options_entries">
         <item>@string/preference_enhanced_tracking_protection_custom_cookies_1</item>
         <item>@string/preference_enhanced_tracking_protection_custom_cookies_2</item>
@@ -8,10 +15,10 @@
     </string-array>
 
     <string-array name="cookies_options_entry_values">
-        <item>social</item>
-        <item>unvisited</item>
-        <item>third-party</item>
-        <item>all</item>
+        <item>@string/social</item>
+        <item>@string/unvisited</item>
+        <item>@string/third_party</item>
+        <item>@string/all</item>
     </string-array>
 
     <string-array name="tracking_content_options_entries">
@@ -20,7 +27,7 @@
     </string-array>
 
     <string-array name="tracking_content_options_entry_values">
-        <item>all</item>
-        <item>private</item>
+        <item>@string/all</item>
+        <item>@string/private_string</item>
     </string-array>
 </resources>
