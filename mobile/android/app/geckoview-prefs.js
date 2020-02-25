@@ -25,6 +25,8 @@ pref("dom.ipc.processPrelaunch.enabled", false);
 pref("toolkit.telemetry.isGeckoViewMode", true);
 // Disable the Telemetry Event Ping
 pref("toolkit.telemetry.eventping.enabled", false);
+// Don't create the hidden window during startup.
+pref("toolkit.lazyHiddenWindow", true);
 
 pref("geckoview.console.enabled", false);
 
