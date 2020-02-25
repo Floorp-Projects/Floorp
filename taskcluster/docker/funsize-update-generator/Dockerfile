@@ -7,7 +7,7 @@ ENV DEBIAN_FRONTEND noninteractive
 # to make sure that files are removed within a single docker layer
 RUN apt-get update -q && \
     apt-get install -yyq --no-install-recommends \
-    python3.8 python3-setuptools python3-cryptography libgetopt-simple-perl \
+    python3.8 libpython3.8-dev python3-setuptools python3-cryptography libgetopt-simple-perl \
     bzip2 python3-requests python3-sh curl \
     python3-dev gcc liblzma-dev xz-utils jq libdpkg-perl locales && \
     apt-get clean
@@ -22,8 +22,8 @@ ENV LC_ALL en_CA.UTF-8
 
 # python-pip installs a lot of dependencies increasing the size of an image
 # drastically. Install it like this saves us almost 200M.
-RUN bash -c "curl -L https://bootstrap.pypa.io/get-pip.py | python3"
-RUN ["pip", "install", "pipenv<2018.10.9", "pip==18.0"]
+RUN bash -c "curl -L https://bootstrap.pypa.io/get-pip.py | python3.8"
+RUN ["pip", "install", "pipenv"]
 
 # scripts
 RUN mkdir /home/worker/bin
