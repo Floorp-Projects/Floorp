@@ -250,12 +250,12 @@ public class SessionAccessibility {
                     return true;
                 case AccessibilityNodeInfo.ACTION_NEXT_HTML_ELEMENT:
                     requestViewFocus();
-                    return nativeProvider.pivot(virtualViewId, arguments != null ?
+                    return pivot(virtualViewId, arguments != null ?
                             arguments.getString(AccessibilityNodeInfo.ACTION_ARGUMENT_HTML_ELEMENT_STRING) : "",
                             true, false);
                 case AccessibilityNodeInfo.ACTION_PREVIOUS_HTML_ELEMENT:
                     requestViewFocus();
-                    return nativeProvider.pivot(virtualViewId, arguments != null ?
+                    return pivot(virtualViewId, arguments != null ?
                             arguments.getString(AccessibilityNodeInfo.ACTION_ARGUMENT_HTML_ELEMENT_STRING) : "",
                             false, false);
                 case AccessibilityNodeInfo.ACTION_NEXT_AT_MOVEMENT_GRANULARITY:
@@ -904,6 +904,28 @@ public class SessionAccessibility {
         return null;
     }
 
+    private boolean pivot(final int id, final String granularity, final boolean forward, final boolean inclusive) {
+        final int gran = java.util.Arrays.asList(sHtmlGranularities).indexOf(granularity);
+        if (forward && id == mLastAccessibilityFocusable) {
+            return false;
+        }
+
+        if (!forward) {
+            if (id == View.NO_ID) {
+                return false;
+            }
+
+            if (id == mFirstAccessibilityFocusable) {
+                sendEvent(AccessibilityEvent.TYPE_VIEW_ACCESSIBILITY_FOCUSED, View.NO_ID, CLASSNAME_WEBVIEW, null);
+                return true;
+            }
+
+        }
+
+        nativeProvider.pivotNative(id, gran, forward, inclusive);
+        return true;
+    }
+
     /* package */ final class NativeProvider extends JNIObject {
         @WrapForJNI(calledFrom = "ui")
         private void setAttached(final boolean attached) {
@@ -924,16 +946,6 @@ public class SessionAccessibility {
 
         @WrapForJNI(dispatchTo = "gecko")
         public native void click(int id);
-
-        public boolean pivot(final int id, final String granularity, final boolean forward, final boolean inclusive) {
-            final int gran = java.util.Arrays.asList(sHtmlGranularities).indexOf(granularity);
-            if ((forward && id == mLastAccessibilityFocusable) ||
-                    (!forward && id == mFirstAccessibilityFocusable)) {
-                return false;
-            }
-            pivotNative(id, gran, forward, inclusive);
-            return true;
-        }
 
         @WrapForJNI(dispatchTo = "gecko", stubName = "Pivot")
         public native void pivotNative(int id, int granularity, boolean forward, boolean inclusive);
