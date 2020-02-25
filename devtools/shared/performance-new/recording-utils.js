@@ -11,7 +11,6 @@
 
 /**
  * @typedef {import("../../client/performance-new/@types/perf").GetActiveBrowsingContextID} GetActiveBrowsingContextID
- * @typedef {import("../../client/performance-new/@types/perf").PresetDefinitions} PresetDefinitions
  */
 
 /**
@@ -65,39 +64,6 @@ function getActiveBrowsingContextID() {
   return 0;
 }
 
-/** @type {PresetDefinitions} */
-const presets = {
-  "web-developer": {
-    label: "Web Developer",
-    description:
-      "Recommended preset for most web app debuggging, with low overhead.",
-    entries: 10000000,
-    interval: 1,
-    features: ["js"],
-    threads: ["GeckoMain", "Compositor", "Renderer", "DOM Worker"],
-    duration: 0,
-  },
-  "firefox-platform": {
-    label: "Firefox Platform",
-    description: "Recommended preset for internal Firefox platform debugging.",
-    entries: 10000000,
-    interval: 1,
-    features: ["js", "leaf", "stackwalk"],
-    threads: ["GeckoMain", "Compositor", "Renderer"],
-    duration: 0,
-  },
-  "firefox-front-end": {
-    label: "Firefox Front-End",
-    description: "Recommended preset for internal Firefox front-end debugging.",
-    entries: 10000000,
-    interval: 1,
-    features: ["js", "leaf", "stackwalk"],
-    threads: ["GeckoMain", "Compositor", "Renderer", "DOM Worker"],
-    duration: 0,
-  },
-};
-
 module.exports = {
   getActiveBrowsingContextID,
-  presets,
 };
