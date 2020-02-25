@@ -5,10 +5,9 @@ const kUrlPref = "geoSpecificDefaults.url";
 
 add_task(async function setup() {
   await useTestEngines("simple-engines");
-
   // Geo specific defaults won't be fetched if there's no country code.
   Services.prefs.setCharPref(
-    "browser.search.geoip.url",
+    "geo.provider-country.network.url",
     'data:application/json,{"country_code": "US"}'
   );
 
@@ -22,6 +21,7 @@ add_task(async function setup() {
         visibleDefaultEngines: ["hidden"],
       },
     });
+  Services.prefs.setBoolPref("browser.search.geoSpecificDefaults", true);
   Services.prefs
     .getDefaultBranch(SearchUtils.BROWSER_SEARCH_PREF)
     .setCharPref(kUrlPref, url);
