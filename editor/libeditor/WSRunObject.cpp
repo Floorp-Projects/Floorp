@@ -573,10 +573,10 @@ void WSRunScanner::PriorVisibleNode(const EditorDOMPointBase<PT, CT>& aPoint,
 
   if (outVisNode) {
     // If we get here, then nothing in ws data to find.  Return start reason.
-    *outVisNode = mStartReasonNode;
+    *outVisNode = mStartReasonContent;
   }
   if (outVisOffset) {
-    // This really isn't meaningful if mStartReasonNode != mStartNode
+    // This really isn't meaningful if mStartReasonContent != mStartNode
     *outVisOffset = mStartOffset;
   }
   *outType = mStartReason;
@@ -619,10 +619,10 @@ void WSRunScanner::NextVisibleNode(const EditorDOMPointBase<PT, CT>& aPoint,
 
   if (outVisNode) {
     // If we get here, then nothing in ws data to find.  Return end reason
-    *outVisNode = mEndReasonNode;
+    *outVisNode = mEndReasonContent;
   }
   if (outVisOffset) {
-    // This really isn't meaningful if mEndReasonNode != mEndNode
+    // This really isn't meaningful if mEndReasonContent != mEndNode
     *outVisOffset = mEndOffset;
   }
   *outType = mEndReason;
@@ -713,7 +713,7 @@ nsresult WSRunScanner::GetWSNodes() {
             mStartNode = textNode;
             mStartOffset = i;
             mStartReason = WSType::text;
-            mStartReasonNode = textNode;
+            mStartReasonContent = textNode;
             break;
           }
           // as we look backwards update our earliest found nbsp
@@ -739,7 +739,7 @@ nsresult WSRunScanner::GetWSNodes() {
         mStartNode = start.GetContainer();
         mStartOffset = start.Offset();
         mStartReason = WSType::otherBlock;
-        mStartReasonNode = priorNode;
+        mStartReasonContent = priorNode;
       } else if (priorNode->IsText() && priorNode->IsEditable()) {
         RefPtr<Text> textNode = priorNode->GetAsText();
         mNodeArray.InsertElementAt(0, textNode);
@@ -766,7 +766,7 @@ nsresult WSRunScanner::GetWSNodes() {
                 mStartNode = textNode;
                 mStartOffset = pos + 1;
                 mStartReason = WSType::text;
-                mStartReasonNode = textNode;
+                mStartReasonContent = textNode;
                 break;
               }
               // as we look backwards update our earliest found nbsp
@@ -791,7 +791,7 @@ nsresult WSRunScanner::GetWSNodes() {
         } else {
           mStartReason = WSType::special;
         }
-        mStartReasonNode = priorNode;
+        mStartReasonContent = priorNode;
       }
     } else {
       // no prior node means we exhausted
@@ -799,9 +799,9 @@ nsresult WSRunScanner::GetWSNodes() {
       mStartNode = start.GetContainer();
       mStartOffset = start.Offset();
       mStartReason = WSType::thisBlock;
-      // mStartReasonNode can be either a block element or any non-editable
+      // mStartReasonContent can be either a block element or any non-editable
       // content in this case.
-      mStartReasonNode = editableBlockParentOrTopmotEditableInlineContent;
+      mStartReasonContent = editableBlockParentOrTopmotEditableInlineContent;
     }
   }
 
@@ -822,7 +822,7 @@ nsresult WSRunScanner::GetWSNodes() {
             mEndNode = textNode;
             mEndOffset = i;
             mEndReason = WSType::text;
-            mEndReasonNode = textNode;
+            mEndReasonContent = textNode;
             break;
           }
           // as we look forwards update our latest found nbsp
@@ -849,7 +849,7 @@ nsresult WSRunScanner::GetWSNodes() {
         mEndNode = end.GetContainer();
         mEndOffset = end.Offset();
         mEndReason = WSType::otherBlock;
-        mEndReasonNode = nextNode;
+        mEndReasonContent = nextNode;
       } else if (nextNode->IsText() && nextNode->IsEditable()) {
         RefPtr<Text> textNode = nextNode->GetAsText();
         mNodeArray.AppendElement(textNode);
@@ -876,7 +876,7 @@ nsresult WSRunScanner::GetWSNodes() {
                 mEndNode = textNode;
                 mEndOffset = pos;
                 mEndReason = WSType::text;
-                mEndReasonNode = textNode;
+                mEndReasonContent = textNode;
                 break;
               }
               // as we look forwards update our latest found nbsp
@@ -902,7 +902,7 @@ nsresult WSRunScanner::GetWSNodes() {
         } else {
           mEndReason = WSType::special;
         }
-        mEndReasonNode = nextNode;
+        mEndReasonContent = nextNode;
       }
     } else {
       // no next node means we exhausted
@@ -910,9 +910,9 @@ nsresult WSRunScanner::GetWSNodes() {
       mEndNode = end.GetContainer();
       mEndOffset = end.Offset();
       mEndReason = WSType::thisBlock;
-      // mEndReasonNode can be either a block element or any non-editable
+      // mEndReasonContent can be either a block element or any non-editable
       // content in this case.
-      mEndReasonNode = editableBlockParentOrTopmotEditableInlineContent;
+      mEndReasonContent = editableBlockParentOrTopmotEditableInlineContent;
     }
   }
 

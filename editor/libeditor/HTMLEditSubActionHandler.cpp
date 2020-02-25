@@ -6836,7 +6836,7 @@ Element* HTMLEditor::GetInvisibleBRElementAt(
 
   WSRunObject wsTester(this, aPoint);
   return WSType::br == wsTester.mStartReason
-             ? wsTester.mStartReasonNode->AsElement()
+             ? wsTester.GetStartReasonContent()->AsElement()
              : nullptr;
 }
 
@@ -6903,12 +6903,12 @@ HTMLEditor::GetExtendedRangeToIncludeInvisibleNodes(
       }
       // We want to keep looking up.  But stop if we are crossing table
       // element boundaries, or if we hit the root.
-      if (HTMLEditUtils::IsTableElement(wsObj.mStartReasonNode) ||
-          wsObj.mStartReasonNode == commonAncestorBlock ||
-          wsObj.mStartReasonNode == editingHost) {
+      if (HTMLEditUtils::IsTableElement(wsObj.GetStartReasonContent()) ||
+          wsObj.GetStartReasonContent() == commonAncestorBlock ||
+          wsObj.GetStartReasonContent() == editingHost) {
         break;
       }
-      atStart.Set(wsObj.mStartReasonNode);
+      atStart.Set(wsObj.GetStartReasonContent());
     }
   }
 
@@ -6925,13 +6925,13 @@ HTMLEditor::GetExtendedRangeToIncludeInvisibleNodes(
       WSType wsType;
       wsObj.NextVisibleNode(atEnd, &wsType);
       if (wsType == WSType::br) {
-        if (IsVisibleBRElement(wsObj.mEndReasonNode)) {
+        if (IsVisibleBRElement(wsObj.GetEndReasonContent())) {
           break;
         }
         if (!atFirstInvisibleBRElement.IsSet()) {
           atFirstInvisibleBRElement = atEnd;
         }
-        atEnd.Set(wsObj.mEndReasonNode);
+        atEnd.Set(wsObj.GetEndReasonContent());
         atEnd.AdvanceOffset();
         continue;
       }
@@ -6939,12 +6939,12 @@ HTMLEditor::GetExtendedRangeToIncludeInvisibleNodes(
       if (wsType == WSType::thisBlock) {
         // We want to keep looking up.  But stop if we are crossing table
         // element boundaries, or if we hit the root.
-        if (HTMLEditUtils::IsTableElement(wsObj.mEndReasonNode) ||
-            wsObj.mEndReasonNode == commonAncestorBlock ||
-            wsObj.mEndReasonNode == editingHost) {
+        if (HTMLEditUtils::IsTableElement(wsObj.GetEndReasonContent()) ||
+            wsObj.GetEndReasonContent() == commonAncestorBlock ||
+            wsObj.GetEndReasonContent() == editingHost) {
           break;
         }
-        atEnd.Set(wsObj.mEndReasonNode);
+        atEnd.Set(wsObj.GetEndReasonContent());
         atEnd.AdvanceOffset();
         continue;
       }
@@ -7035,7 +7035,8 @@ nsresult HTMLEditor::MaybeExtendSelectionToHardLineEdgesForBlockEditAction() {
     // of going "down" into a block and "up" out of a block.
     if (wsEndObj.mStartReason == WSType::otherBlock) {
       // endpoint is just after the close of a block.
-      nsINode* child = GetRightmostChild(wsEndObj.mStartReasonNode, true);
+      nsINode* child =
+          GetRightmostChild(wsEndObj.GetStartReasonContent(), true);
       if (child) {
         newEndPoint.SetAfter(child);
       }
@@ -7049,7 +7050,7 @@ nsresult HTMLEditor::MaybeExtendSelectionToHardLineEdgesForBlockEditAction() {
       // else block is empty - we can leave selection alone here, i think.
     } else if (wsEndObj.mStartReason == WSType::br) {
       // endpoint is just after break.  lets adjust it to before it.
-      newEndPoint.Set(wsEndObj.mStartReasonNode);
+      newEndPoint.Set(wsEndObj.GetStartReasonContent());
     }
   }
 
@@ -7063,7 +7064,7 @@ nsresult HTMLEditor::MaybeExtendSelectionToHardLineEdgesForBlockEditAction() {
     // of going "down" into a block and "up" out of a block.
     if (wsStartObj.mEndReason == WSType::otherBlock) {
       // startpoint is just before the start of a block.
-      nsINode* child = GetLeftmostChild(wsStartObj.mEndReasonNode, true);
+      nsINode* child = GetLeftmostChild(wsStartObj.GetEndReasonContent(), true);
       if (child) {
         newStartPoint.Set(child);
       }
@@ -7077,7 +7078,7 @@ nsresult HTMLEditor::MaybeExtendSelectionToHardLineEdgesForBlockEditAction() {
       // else block is empty - we can leave selection alone here, i think.
     } else if (wsStartObj.mEndReason == WSType::br) {
       // startpoint is just before a break.  lets adjust it to after it.
-      newStartPoint.SetAfter(wsStartObj.mEndReasonNode);
+      newStartPoint.SetAfter(wsStartObj.GetEndReasonContent());
     }
   }
 
