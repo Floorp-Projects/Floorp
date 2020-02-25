@@ -6,8 +6,10 @@ package mozilla.components.feature.awesomebar.provider
 
 import android.content.res.Resources
 import kotlinx.coroutines.runBlocking
-import mozilla.components.browser.session.Session
-import mozilla.components.browser.session.SessionManager
+import mozilla.components.browser.state.action.TabListAction
+import mozilla.components.browser.state.state.BrowserState
+import mozilla.components.browser.state.state.createTab
+import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
@@ -32,42 +34,43 @@ class SessionSuggestionProviderTest {
 
     @Test
     fun `Provider returns Sessions with matching URLs`() = runBlocking {
-        val sessionManager = SessionManager(mock())
-        val resources: Resources = mock()
-        val session1 = Session("https://www.mozilla.org")
-        val session2 = Session("https://example.com")
-        val session3 = Session("https://firefox.com")
-        val session4 = Session("https://example.org/")
+        val store = BrowserStore()
 
+        val tab1 = createTab("https://www.mozilla.org")
+        val tab2 = createTab("https://example.com")
+        val tab3 = createTab("https://firefox.com")
+        val tab4 = createTab("https://example.org/")
+
+        val resources: Resources = mock()
         `when`(resources.getString(anyInt())).thenReturn("Switch to tab")
 
-        val provider = SessionSuggestionProvider(resources, sessionManager, mock())
+        val provider = SessionSuggestionProvider(resources, store, mock())
 
         run {
             val suggestions = provider.onInputChanged("Example")
             assertTrue(suggestions.isEmpty())
         }
 
-        sessionManager.add(session1)
-        sessionManager.add(session2)
-        sessionManager.add(session3)
+        store.dispatch(TabListAction.AddTabAction(tab1)).join()
+        store.dispatch(TabListAction.AddTabAction(tab2)).join()
+        store.dispatch(TabListAction.AddTabAction(tab3)).join()
 
         run {
             val suggestions = provider.onInputChanged("Example")
             assertEquals(1, suggestions.size)
 
-            assertEquals(session2.id, suggestions[0].id)
+            assertEquals(tab2.id, suggestions[0].id)
             assertEquals("Switch to tab", suggestions[0].description)
         }
 
-        sessionManager.add(session4)
+        store.dispatch(TabListAction.AddTabAction(tab4)).join()
 
         run {
             val suggestions = provider.onInputChanged("Example")
             assertEquals(2, suggestions.size)
 
-            assertEquals(session2.id, suggestions[0].id)
-            assertEquals(session4.id, suggestions[1].id)
+            assertEquals(tab2.id, suggestions[0].id)
+            assertEquals(tab4.id, suggestions[1].id)
             assertEquals("Switch to tab", suggestions[0].description)
             assertEquals("Switch to tab", suggestions[1].description)
         }
@@ -75,28 +78,24 @@ class SessionSuggestionProviderTest {
 
     @Test
     fun `Provider returns Sessions with matching titles`() = runBlocking {
-        val sessionManager = SessionManager(mock())
-        val resources: Resources = mock()
-        val session1 = Session("https://allizom.org").apply {
-            title = "Internet for people, not profit — Mozilla" }
-        val session2 = Session("https://getpocket.com").apply {
-            title = "Pocket: My List" }
-        val session3 = Session("https://firefox.com").apply {
-            title = "Download Firefox — Free Web Browser" }
+        val tab1 = createTab("https://allizom.org", title = "Internet for people, not profit — Mozilla")
+        val tab2 = createTab("https://getpocket.com", title = "Pocket: My List")
+        val tab3 = createTab("https://firefox.com", title = "Download Firefox — Free Web Browser")
 
+        val store = BrowserStore(BrowserState(
+            tabs = listOf(tab1, tab2, tab3)
+        ))
+
+        val resources: Resources = mock()
         `when`(resources.getString(anyInt())).thenReturn("Switch to tab")
 
-        sessionManager.add(session1)
-        sessionManager.add(session2)
-        sessionManager.add(session3)
-
-        val provider = SessionSuggestionProvider(resources, sessionManager, mock())
+        val provider = SessionSuggestionProvider(resources, store, mock())
 
         run {
             val suggestions = provider.onInputChanged("Browser")
             assertEquals(1, suggestions.size)
 
-            assertEquals(suggestions.first().id, session3.id)
+            assertEquals(suggestions.first().id, tab3.id)
             assertEquals("Switch to tab", suggestions.first().description)
             assertEquals("Download Firefox — Free Web Browser", suggestions[0].title)
         }
@@ -105,7 +104,7 @@ class SessionSuggestionProviderTest {
             val suggestions = provider.onInputChanged("Mozilla")
             assertEquals(1, suggestions.size)
 
-            assertEquals(session1.id, suggestions.first().id)
+            assertEquals(tab1.id, suggestions.first().id)
             assertEquals("Switch to tab", suggestions.first().description)
             assertEquals("Internet for people, not profit — Mozilla", suggestions[0].title)
         }
@@ -113,19 +112,20 @@ class SessionSuggestionProviderTest {
 
     @Test
     fun `Provider only returns non-private Sessions`() = runBlocking {
-        val sessionManager = SessionManager(mock())
-        val session = Session("https://www.mozilla.org")
-        val privateSession1 = Session("https://mozilla.org/firefox", true)
-        val privateSession2 = Session("https://mozilla.org/projects", true)
+        val tab = createTab("https://www.mozilla.org")
+        val privateTab1 = createTab("https://mozilla.org/firefox", private = true)
+        val privateTab2 = createTab("https://mozilla.org/projects", private = true)
+
+        val store = BrowserStore(BrowserState(
+            tabs = listOf(tab, privateTab1, privateTab2)
+        ))
+
         val resources: Resources = mock()
         `when`(resources.getString(anyInt())).thenReturn("Switch to tab")
-        sessionManager.add(privateSession1)
-        sessionManager.add(session)
-        sessionManager.add(privateSession2)
 
         val useCase: TabsUseCases.SelectTabUseCase = mock()
 
-        val provider = SessionSuggestionProvider(resources, sessionManager, useCase)
+        val provider = SessionSuggestionProvider(resources, store, useCase)
         val suggestions = provider.onInputChanged("mozilla")
 
         assertEquals(1, suggestions.size)
@@ -133,25 +133,28 @@ class SessionSuggestionProviderTest {
 
     @Test
     fun `Clicking suggestion invokes SelectTabUseCase`() = runBlocking {
-        val sessionManager = SessionManager(mock())
-        val session = Session("https://www.mozilla.org")
         val resources: Resources = mock()
         `when`(resources.getString(anyInt())).thenReturn("Switch to tab")
-        sessionManager.add(session)
+
+        val tab = createTab("https://www.mozilla.org")
+
+        val store = BrowserStore(BrowserState(
+            tabs = listOf(tab)
+        ))
 
         val useCase: TabsUseCases.SelectTabUseCase = mock()
 
-        val provider = SessionSuggestionProvider(resources, sessionManager, useCase)
+        val provider = SessionSuggestionProvider(resources, store, useCase)
         val suggestions = provider.onInputChanged("mozilla")
         assertEquals(1, suggestions.size)
 
         val suggestion = suggestions[0]
 
-        verify(useCase, never()).invoke(session)
+        verify(useCase, never()).invoke(tab.id)
 
         suggestion.onSuggestionClicked!!.invoke()
 
-        verify(useCase).invoke(session)
+        verify(useCase).invoke(tab.id)
     }
 
     @Test
@@ -166,45 +169,47 @@ class SessionSuggestionProviderTest {
 
     @Test
     fun `When excludeSelectedSession is true provider should not include the selected session`() = runBlocking {
-        val sessionManager = SessionManager(mock())
-        val session = Session("https://wikipedia.org")
-        val selectedSession = Session("https://www.mozilla.org")
+        val store = BrowserStore(BrowserState(
+            tabs = listOf(
+                createTab(id = "a", url = "https://wikipedia.org"),
+                createTab(id = "b", url = "https://www.mozilla.org")
+            ),
+            selectedTabId = "b"
+        ))
+
         val resources: Resources = mock()
         `when`(resources.getString(anyInt())).thenReturn("Switch to tab")
 
-        sessionManager.add(selectedSession)
-        sessionManager.add(session)
-        sessionManager.select(selectedSession)
-
         val useCase: TabsUseCases.SelectTabUseCase = mock()
 
-        val provider = SessionSuggestionProvider(resources, sessionManager, useCase, excludeSelectedSession = true)
+        val provider = SessionSuggestionProvider(resources, store, useCase, excludeSelectedSession = true)
         val suggestions = provider.onInputChanged("org")
 
         assertEquals(1, suggestions.size)
-        assertEquals(session.id, suggestions.first().id)
+        assertEquals("a", suggestions.first().id)
         assertEquals("Switch to tab", suggestions.first().description)
     }
 
     @Test
     fun `When excludeSelectedSession is false provider should include the selected session`() = runBlocking {
-        val sessionManager = SessionManager(mock())
-        val session = Session("https://wikipedia.org")
-        val selectedSession = Session("https://www.mozilla.org")
+        val store = BrowserStore(BrowserState(
+            tabs = listOf(
+                createTab(id = "a", url = "https://wikipedia.org"),
+                createTab(id = "b", url = "https://www.mozilla.org")
+            ),
+            selectedTabId = "b"
+        ))
+
         val resources: Resources = mock()
         `when`(resources.getString(anyInt())).thenReturn("Switch to tab")
 
-        sessionManager.add(selectedSession)
-        sessionManager.add(session)
-        sessionManager.select(selectedSession)
-
         val useCase: TabsUseCases.SelectTabUseCase = mock()
 
-        val provider = SessionSuggestionProvider(resources, sessionManager, useCase, excludeSelectedSession = false)
+        val provider = SessionSuggestionProvider(resources, store, useCase, excludeSelectedSession = false)
         val suggestions = provider.onInputChanged("mozilla")
 
         assertEquals(1, suggestions.size)
-        assertEquals(selectedSession.id, suggestions.first().id)
+        assertEquals("b", suggestions.first().id)
         assertEquals("Switch to tab", suggestions.first().description)
     }
 }

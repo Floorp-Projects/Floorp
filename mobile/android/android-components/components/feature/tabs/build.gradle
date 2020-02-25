@@ -30,7 +30,7 @@ tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
 }
 
 dependencies {
-    api project(':browser-session')
+    implementation project(':browser-session')
     api project(':feature-session')
     implementation project(':concept-engine')
     implementation project(':concept-tabstray')
