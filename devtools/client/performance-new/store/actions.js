@@ -12,6 +12,7 @@ const {
 const {
   getEnvironmentVariable,
 } = require("devtools/client/performance-new/browser");
+const { presets } = require("devtools/shared/performance-new/recording-utils");
 
 /**
  * @typedef {import("../@types/perf").Action} Action
@@ -20,7 +21,6 @@ const {
  * @typedef {import("../@types/perf").SymbolTableAsTuple} SymbolTableAsTuple
  * @typedef {import("../@types/perf").RecordingState} RecordingState
  * @typedef {import("../@types/perf").InitializeStoreValues} InitializeStoreValues
- * @typedef {import("../@types/perf").Presets} Presets
  */
 
 /**
@@ -108,9 +108,9 @@ exports.changeEntries = entries =>
 exports.changeFeatures = features => {
   return (dispatch, getState) => {
     let promptEnvRestart = null;
-    if (selectors.getPageContext(getState()) === "aboutprofiling") {
-      // TODO Bug 1615431 - The popup supported restarting the browser, but
-      // this hasn't been updated yet for the about:profiling workflow.
+    if (selectors.getPageContext(getState()) === "popup") {
+      // The popup supports checks to restart the browser for environment
+      // variables.
       if (
         !getEnvironmentVariable("JS_TRACE_LOGGING") &&
         features.includes("jstracer")
@@ -142,11 +142,10 @@ exports.changeThreads = threads =>
 
 /**
  * Change the preset.
- * @param {Presets} presets
  * @param {string} presetName
  * @return {ThunkAction<void>}
  */
-exports.changePreset = (presets, presetName) =>
+exports.changePreset = presetName =>
   _dispatchAndUpdatePreferences({
     type: "CHANGE_PRESET",
     presetName,

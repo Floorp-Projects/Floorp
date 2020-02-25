@@ -14,7 +14,7 @@ add_task(async function test() {
     return;
   }
 
-  await withAboutProfiling(async document => {
+  await openAboutProfiling(async document => {
     const webdevPreset = await getNearestInputFromText(
       document,
       "Web Developer"
