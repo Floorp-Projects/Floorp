@@ -11,7 +11,6 @@
 /**
  * @typedef {Object} StateProps
  * @property {string} presetName
- * @property {import("../@types/perf").Presets} presets
  */
 
 /**
@@ -35,7 +34,7 @@ const {
 const selectors = require("devtools/client/performance-new/store/selectors");
 const actions = require("devtools/client/performance-new/store/actions");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
-
+const { presets } = require("devtools/shared/performance-new/recording-utils");
 /**
  * Switch between various profiler presets, which will override the individualized
  * settings for the profiler.
@@ -54,8 +53,7 @@ class Presets extends PureComponent {
    * @param {React.ChangeEvent<HTMLInputElement>} event
    */
   onChange(event) {
-    const { presets } = this.props;
-    this.props.changePreset(presets, event.target.value);
+    this.props.changePreset(event.target.value);
   }
 
   /**
@@ -63,7 +61,7 @@ class Presets extends PureComponent {
    * @returns {React.ReactNode}
    */
   renderPreset(presetName) {
-    const preset = this.props.presets[presetName];
+    const preset = presets[presetName];
     let labelText, description;
     if (preset) {
       labelText = preset.label;
@@ -112,7 +110,6 @@ class Presets extends PureComponent {
 function mapStateToProps(state) {
   return {
     presetName: selectors.getPresetName(state),
-    presets: selectors.getPresets(state),
   };
 }
 
