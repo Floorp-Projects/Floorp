@@ -25,3 +25,4 @@ job-template:
     treeherder:
         symbol: BN
     enable-signing-routes: false
+    run-on-projects: [release]
