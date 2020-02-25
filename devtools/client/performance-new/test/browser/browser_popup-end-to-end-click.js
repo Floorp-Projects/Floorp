@@ -13,16 +13,16 @@ add_task(async function test() {
     "http://example.com/browser/devtools/client/performance-new/test/browser/fake-frontend.html"
   );
   await makeSureProfilerPopupIsEnabled();
-  await toggleOpenProfilerPopup();
+  toggleOpenProfilerPopup();
 
   {
-    const button = await getElementByLabel(document, "Start Recording");
+    const button = await getElementFromPopupByText("Start recording");
     info("Click the button to start recording.");
     button.click();
   }
 
   {
-    const button = await getElementByLabel(document, "Capture");
+    const button = await getElementFromPopupByText("Capture recording");
     info("Click the button to capture the recording.");
     button.click();
   }

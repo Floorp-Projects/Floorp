@@ -9,8 +9,11 @@
 "use strict";
 
 /**
- * This file initializes the about:profiling page, which can be used to tweak the
- * profiler's settings.
+ * This file initializes the profiler popup UI. It is in charge of initializing
+ * the browser specific environment, and then passing those requirements into
+ * the UI. The popup is enabled by toggle the following in the browser menu:
+ *
+ * Tools -> Web Developer -> Enable Profiler Toolbar Icon
  */
 
 {
@@ -22,7 +25,7 @@
     "resource://devtools/client/shared/browser-loader.js"
   );
   const browserLoader = BrowserLoader({
-    baseURI: "resource://devtools/client/performance-new/aboutprofiling",
+    baseURI: "resource://devtools/client/performance-new/popup",
     window,
   });
 
@@ -37,7 +40,7 @@
 
 /**
  * The background.jsm.js manages the profiler state, and can be loaded multiple time
- * for various components. This page needs a copy, and it is also used by the
+ * for various components. This pop-up needs a copy, and it is also used by the
  * profiler shortcuts. In order to do this, the background code needs to live in a
  * JSM module, that can be shared with the DevTools keyboard shortcut manager.
  */
@@ -45,16 +48,18 @@ const {
   getRecordingPreferencesFromBrowser,
   setRecordingPreferencesOnBrowser,
   getSymbolsFromThisBrowser,
-} = ChromeUtils.import(
-  "resource://devtools/client/performance-new/popup/background.jsm.js"
-);
+} =
+  /** @type {import("resource://devtools/client/performance-new/popup/background.jsm.js")} */
+  (ChromeUtils.import(
+    "resource://devtools/client/performance-new/popup/background.jsm.js"
+  ));
 
 const { receiveProfile } = require("devtools/client/performance-new/browser");
 
 const ReactDOM = require("devtools/client/shared/vendor/react-dom");
 const React = require("devtools/client/shared/vendor/react");
-const AboutProfiling = React.createFactory(
-  require("devtools/client/performance-new/components/AboutProfiling")
+const DevToolsAndPopup = React.createFactory(
+  require("devtools/client/performance-new/components/DevToolsAndPopup")
 );
 const ProfilerEventHandling = React.createFactory(
   require("devtools/client/performance-new/components/ProfilerEventHandling")
@@ -67,11 +72,27 @@ const {
   ActorReadyGeckoProfilerInterface,
 } = require("devtools/shared/performance-new/gecko-profiler-interface");
 
+/* Force one of our two themes depending on what theme the browser is
+ * currently using. This might be different from the selected theme in
+ * the devtools panel. By forcing a theme here, we're unaffected by
+ * the devtools setting when we show the popup.
+ */
+{
+  const popupWindow = /** @type {PopupWindow} */ (window);
+  document.documentElement.setAttribute(
+    "force-theme",
+    popupWindow.gIsDarkMode ? "dark" : "light"
+  );
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  gInit();
+});
+
 /**
  * Initialize the panel by creating a redux store, and render the root component.
  */
-
-document.addEventListener("DOMContentLoaded", async () => {
+async function gInit() {
   const store = createStore(reducers);
   const perfFrontInterface = new ActorReadyGeckoProfilerInterface();
   const supportedFeatures = await perfFrontInterface.getSupportedFeatures();
@@ -90,7 +111,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       // The popup doesn't need to support remote symbol tables from the debuggee.
       // Only get the symbols from this browser.
       getSymbolTableGetter: () => getSymbolsFromThisBrowser,
-      pageContext: "aboutprofiling",
+      pageContext: "popup",
     })
   );
 
@@ -102,7 +123,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         React.Fragment,
         null,
         ProfilerEventHandling(),
-        AboutProfiling()
+        DevToolsAndPopup()
       )
     ),
     document.querySelector("#root")
@@ -113,4 +134,19 @@ document.addEventListener("DOMContentLoaded", async () => {
     // Not doing so leads to leaks.
     perfFrontInterface.destroy();
   });
-});
+
+  resizeWindow();
+}
+
+function resizeWindow() {
+  window.requestAnimationFrame(() => {
+    // Coerce the window object into the PopupWindow interface.
+    /** @type {any} */
+    const anyWindow = window;
+    /** @type {PopupWindow} */
+    const { gResizePopup } = anyWindow;
+    if (gResizePopup) {
+      gResizePopup(document.body.clientHeight);
+    }
+  });
+}
