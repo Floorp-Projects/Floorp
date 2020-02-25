@@ -13,11 +13,13 @@ var  blob = new Blob(['hello world']);
 ok(blob, "We have a blob.");
 
 var tests = [
-  { part: "", revoke: true },
-  { part: "?aa", revoke: false },
-  { part: "#bb", revoke: false },
-  { part: "?cc#dd", revoke: false },
-  { part: "#ee?ff", revoke: false }
+  { part: "", revoke: false, ok: true },
+  { part: "", revoke: true, ok: false },
+  { part: "?aa", revoke: false, ok: false },
+  { part: "?cc#dd", revoke: false, ok: false },
+  // Stripping #fragment on fetch
+  { part: "#bb", revoke: false, ok: true },
+  { part: "#ee?ff", revoke: false, ok: true }
 ];
 
 function runTest() {
@@ -39,13 +41,13 @@ function runTest() {
   xhr.open('GET', url + test.part);
 
   xhr.onload = function() {
-    ok(!test.revoke, "Not-revoked URL should send()");
+    ok(test.ok, `URL with "${test.part}" should send()`);
     is(xhr.responseText, 'hello world', 'URL: ' + url + test.part);
     runTest();
   }
 
   xhr.onerror = function() {
-    ok(test.revoke, "Revoked URL should fail on send()");
+    ok(!test.ok, `URL with "${test.part}" should fail on send()`);
     runTest();
   }
 
