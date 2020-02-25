@@ -164,7 +164,8 @@
         // Iterate as long as scope in assigned. Note that we use the original
         // passed in scope, not childScope here.
         if (scope) {
-          for (let context of browsingContext.children) {
+          let contexts = browsingContext.getChildren();
+          for (let context of contexts) {
             sendToChildren(context, scope);
           }
         }

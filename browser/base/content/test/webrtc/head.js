@@ -378,7 +378,7 @@ async function getMediaCaptureState() {
   function gatherBrowsingContexts(aBrowsingContext) {
     let list = [aBrowsingContext];
 
-    let children = aBrowsingContext.children;
+    let children = aBrowsingContext.getChildren();
     for (let child of children) {
       list.push(...gatherBrowsingContexts(child));
     }
