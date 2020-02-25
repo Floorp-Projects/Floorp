@@ -156,6 +156,22 @@ ExtensionPreferencesManager.addSetting("useDocumentFonts", {
   },
 });
 
+ExtensionPreferencesManager.addSetting("zoomFullPage", {
+  prefNames: ["browser.zoom.full"],
+
+  setCallback(value) {
+    return { [this.prefNames[0]]: value };
+  },
+});
+
+ExtensionPreferencesManager.addSetting("zoomSiteSpecific", {
+  prefNames: ["browser.zoom.siteSpecific"],
+
+  setCallback(value) {
+    return { [this.prefNames[0]]: value };
+  },
+});
+
 this.browserSettings = class extends ExtensionAPI {
   getAPI(context) {
     let { extension } = context;
@@ -417,6 +433,20 @@ this.browserSettings = class extends ExtensionAPI {
             },
           }
         ),
+        zoomFullPage: getSettingsAPI({
+          context,
+          name: "zoomFullPage",
+          callback() {
+            return Services.prefs.getBoolPref("browser.zoom.full");
+          },
+        }),
+        zoomSiteSpecific: getSettingsAPI({
+          context,
+          name: "zoomSiteSpecific",
+          callback() {
+            return Services.prefs.getBoolPref("browser.zoom.siteSpecific");
+          },
+        }),
       },
     };
   }
