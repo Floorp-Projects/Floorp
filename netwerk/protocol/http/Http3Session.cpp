@@ -513,7 +513,7 @@ bool Http3Session::AddStream(nsAHttpTransaction* aHttpTransaction,
 
   LOG3(("Http3Session::AddStream %p atrans=%p.\n", this, aHttpTransaction));
   Http3Stream* stream = new Http3Stream(aHttpTransaction, this);
-  mStreamTransactionHash.Put(aHttpTransaction, stream);
+  mStreamTransactionHash.Put(aHttpTransaction, RefPtr{stream});
 
   mReadyForWrite.Push(stream);
 
@@ -618,7 +618,7 @@ nsresult Http3Session::TryActivating(
        *aStreamId, aStream, this));
 
   MOZ_ASSERT(*aStreamId != UINT64_MAX);
-  mStreamIdHash.Put(*aStreamId, aStream);
+  mStreamIdHash.Put(*aStreamId, RefPtr{aStream});
   mHttp3Connection->ProcessHttp3();
   return NS_OK;
 }

@@ -1862,7 +1862,7 @@ void Loader::DoSheetComplete(SheetLoadData& aLoadData,
       SheetLoadDataHashKey key(aLoadData);
       NS_ASSERTION(sheet->IsComplete(),
                    "Should only be caching complete sheets");
-      mSheets->mCompleteSheets.Put(&key, sheet);
+      mSheets->mCompleteSheets.Put(&key, RefPtr{sheet});
 #ifdef MOZ_XUL
     }
 #endif
@@ -1977,7 +1977,7 @@ Result<Loader::LoadSheetResult, nsresult> Loader::LoadInlineStyle(
     if (completed == Completed::Yes) {
       // TODO(emilio): Try to cache sheets with @import rules, maybe?
       if (isWorthCaching) {
-        mSheets->mInlineSheets.Put(aBuffer, sheet);
+        mSheets->mInlineSheets.Put(aBuffer, std::move(sheet));
       }
     } else {
       data->mMustNotify = true;
@@ -2090,7 +2090,7 @@ Result<Loader::LoadSheetResult, nsresult> Loader::LoadStyleLink(
       mSheets->mLoadingDatas.Count() != 0 && !result.ShouldBlock()) {
     LOG(("  Deferring sheet load"));
     SheetLoadDataHashKey key(*data);
-    mSheets->mPendingDatas.Put(&key, data);
+    mSheets->mPendingDatas.Put(&key, RefPtr{data});
     data->mMustNotify = true;
     return result;
   }

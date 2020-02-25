@@ -4748,7 +4748,7 @@ already_AddRefed<Connection> ConnectionThread::CreateConnection(
   RefPtr<Connection> connection =
       new Connection(this, aSuffix, aGroup, aOrigin,
                      std::move(aArchivedOriginScope), aDatabaseWasNotAvailable);
-  mConnections.Put(aOrigin, connection);
+  mConnections.Put(aOrigin, RefPtr{connection});
 
   return connection.forget();
 }
@@ -8260,7 +8260,7 @@ void PrepareObserverOp::GetResponse(LSRequestResponse& aResponse) {
   if (!gPreparedObsevers) {
     gPreparedObsevers = new PreparedObserverHashtable();
   }
-  gPreparedObsevers->Put(observerId, observer);
+  gPreparedObsevers->Put(observerId, std::move(observer));
 
   LSRequestPrepareObserverResponse prepareObserverResponse;
   prepareObserverResponse.observerId() = observerId;

@@ -278,7 +278,7 @@ already_AddRefed<gfxPattern> SVGContextPaintImpl::Paint::GetPattern(
       return nullptr;
   }
 
-  mPatternCache.Put(aOpacity, pattern);
+  mPatternCache.Put(aOpacity, RefPtr{pattern});
   return pattern.forget();
 }
 

@@ -149,7 +149,7 @@ already_AddRefed<nsHyphenator> nsHyphenationManager::GetHyphenator(
   hyphCapPref.Append(nsAtomCString(aLocale));
   hyph = new nsHyphenator(uri, Preferences::GetBool(hyphCapPref.get()));
   if (hyph->IsValid()) {
-    mHyphenators.Put(aLocale, hyph);
+    mHyphenators.Put(aLocale, RefPtr{hyph});
     return hyph.forget();
   }
 #ifdef DEBUG
@@ -321,7 +321,7 @@ void nsHyphenationManager::LoadAliases() {
         ToLowerCase(value);
         RefPtr<nsAtom> aliasAtom = NS_Atomize(alias);
         RefPtr<nsAtom> valueAtom = NS_Atomize(value);
-        mHyphAliases.Put(aliasAtom, valueAtom);
+        mHyphAliases.Put(aliasAtom, std::move(valueAtom));
       }
     }
   }

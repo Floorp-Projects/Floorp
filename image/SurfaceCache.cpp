@@ -275,7 +275,8 @@ class ImageSurfaceCache {
   MOZ_MUST_USE bool Insert(NotNull<CachedSurface*> aSurface) {
     MOZ_ASSERT(!mLocked || aSurface->IsPlaceholder() || aSurface->IsLocked(),
                "Inserting an unlocked surface for a locked image");
-    return mSurfaces.Put(aSurface->GetSurfaceKey(), aSurface, fallible);
+    return mSurfaces.Put(aSurface->GetSurfaceKey(),
+                         RefPtr<CachedSurface>{aSurface}, fallible);
   }
 
   already_AddRefed<CachedSurface> Remove(NotNull<CachedSurface*> aSurface) {
@@ -806,7 +807,8 @@ class SurfaceCacheImpl final : public nsIMemoryReporter {
     RefPtr<ImageSurfaceCache> cache = GetImageCache(imageKey);
     if (!cache) {
       cache = new ImageSurfaceCache(imageKey);
-      if (!mImageCaches.Put(aProvider->GetImageKey(), cache, fallible)) {
+      if (!mImageCaches.Put(aProvider->GetImageKey(), RefPtr{cache},
+                            fallible)) {
         mTableFailureCount++;
         return InsertOutcome::FAILURE;
       }
@@ -1055,7 +1057,7 @@ class SurfaceCacheImpl final : public nsIMemoryReporter {
     RefPtr<ImageSurfaceCache> cache = GetImageCache(aImageKey);
     if (!cache) {
       cache = new ImageSurfaceCache(aImageKey);
-      mImageCaches.Put(aImageKey, cache);
+      mImageCaches.Put(aImageKey, RefPtr{cache});
     }
 
     cache->SetLocked(true);

@@ -2059,7 +2059,7 @@ HTMLFormElement::IndexOfControl(nsIFormControl* aControl) {
 
 void HTMLFormElement::SetCurrentRadioButton(const nsAString& aName,
                                             HTMLInputElement* aRadio) {
-  mSelectedRadioButtons.Put(aName, aRadio);
+  mSelectedRadioButtons.Put(aName, RefPtr{aRadio});
 }
 
 HTMLInputElement* HTMLFormElement::GetCurrentRadioButton(
