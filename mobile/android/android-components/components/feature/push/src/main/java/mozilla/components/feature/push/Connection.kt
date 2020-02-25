@@ -131,7 +131,7 @@ internal class RustPushConnection(
         val channelId = scope.toChannelId()
         val response = pushApi.subscribe(channelId, scope, appServerKey)
 
-        return response.toPushSubscription(scope)
+        return response.toPushSubscription(scope, appServerKey)
     }
 
     @GuardedBy("this")
@@ -256,11 +256,15 @@ internal fun PushScope.toChannelId() =
 /**
  * A helper to convert the internal data class.
  */
-internal fun SubscriptionResponse.toPushSubscription(scope: String): AutoPushSubscription {
+internal fun SubscriptionResponse.toPushSubscription(
+    scope: String,
+    appServerKey: AppServerKey? = null
+): AutoPushSubscription {
     return AutoPushSubscription(
         scope = scope,
         endpoint = subscriptionInfo.endpoint,
         authKey = subscriptionInfo.keys.auth,
-        publicKey = subscriptionInfo.keys.p256dh
+        publicKey = subscriptionInfo.keys.p256dh,
+        appServerKey = appServerKey
     )
 }
