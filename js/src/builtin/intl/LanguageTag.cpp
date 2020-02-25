@@ -262,9 +262,9 @@ static bool SortAlphabetically(JSContext* cx,
 }
 
 bool LanguageTag::canonicalizeBaseName(JSContext* cx) {
-  // Per UTS 35, 3.3.1, the very first step is to canonicalize the syntax by
-  // normalizing the case and ordering all subtags. The canonical syntax form
-  // itself is specified in UTS 35, 3.2.1.
+  // Per 6.2.3 CanonicalizeUnicodeLocaleId, the very first step is to
+  // canonicalize the syntax by normalizing the case and ordering all subtags.
+  // The canonical syntax form is specified in UTS 35, 3.2.1.
 
   // Language codes need to be in lower case. "JA" -> "ja"
   language_.toLowerCase();
@@ -316,10 +316,24 @@ bool LanguageTag::canonicalizeBaseName(JSContext* cx) {
   }
 
   // 2. Any extensions are in alphabetical order by their singleton.
-  // - A subsequent call to canonicalizeExtensions() will perform this.
+  // 3. All attributes are sorted in alphabetical order.
+  // 4. All keywords and tfields are sorted by alphabetical order of their keys,
+  //    within their respective extensions.
+  // 5. Any type or tfield value "true" is removed.
+  // - A subsequent call to canonicalizeExtensions() will perform these steps.
 
-  // The next two steps in 3.3.1 replace deprecated language and region
-  // subtags with their preferred mappings.
+  // 6.2.3 CanonicalizeUnicodeLocaleId, step 2 transforms the locale identifier
+  // into its canonical form per UTS 3.2.1.
+
+  // 1. Use the bcp47 data to replace keys, types, tfields, and tvalues by their
+  // canonical forms.
+  // - A subsequent call to canonicalizeExtensions() will perform this step.
+
+  // 2. Replace aliases in the unicode_language_id and tlang (if any).
+  // - tlang is handled in canonicalizeExtensions().
+
+  // Replace deprecated language, region, and variant subtags with their
+  // preferred mappings.
 
   if (!updateGrandfatheredMappings(cx)) {
     return false;
@@ -343,9 +357,8 @@ bool LanguageTag::canonicalizeBaseName(JSContext* cx) {
   // No extension replacements are currently present.
   // Private use sequences are left as is.
 
-  // The two final steps in 3.3.1, handling irregular grandfathered and
-  // private-use only language tags, don't apply, because these two forms
-  // can't occur in Unicode BCP 47 locale identifiers.
+  // 3. Replace aliases in special key values.
+  // - A subsequent call to canonicalizeExtensions() will perform this step.
 
   return true;
 }
