@@ -51,6 +51,9 @@ export default class LoginItem extends HTMLElement {
     );
     this._form = this.shadowRoot.querySelector("form");
     this._originInput = this.shadowRoot.querySelector("input[name='origin']");
+    this._originDisplayInput = this.shadowRoot.querySelector(
+      "a[name='origin']"
+    );
     this._usernameInput = this.shadowRoot.querySelector(
       "input[name='username']"
     );
@@ -100,6 +103,7 @@ export default class LoginItem extends HTMLElement {
     this._originInput.addEventListener("click", this);
     this._originInput.addEventListener("mousedown", this, true);
     this._originInput.addEventListener("auxclick", this);
+    this._originDisplayInput.addEventListener("click", this);
     this._revealCheckbox.addEventListener("click", this);
     window.addEventListener("AboutLoginsInitialLoginSelected", this);
     window.addEventListener("AboutLoginsLoadInitialFavicon", this);
@@ -169,6 +173,11 @@ export default class LoginItem extends HTMLElement {
     this._title.textContent = this._login.title;
     this._title.title = this._login.title;
     this._originInput.defaultValue = this._login.origin || "";
+    if (this._login.origin) {
+      // Creates anchor element with origin URL
+      this._originDisplayInput.href = this._login.origin || "";
+      this._originDisplayInput.innerText = this._login.origin || "";
+    }
     this._usernameInput.defaultValue = this._login.username || "";
     if (this._login.password) {
       // We use .value instead of .defaultValue since the latter updates the
@@ -205,6 +214,7 @@ export default class LoginItem extends HTMLElement {
         : "login-item-save-changes-button"
     );
     this._updatePasswordRevealState();
+    this._updateOriginDisplayState();
   }
 
   setBreaches(breachesByLoginGUID) {
@@ -680,13 +690,6 @@ export default class LoginItem extends HTMLElement {
   }
 
   _handleOriginClick() {
-    document.dispatchEvent(
-      new CustomEvent("AboutLoginsOpenSite", {
-        bubbles: true,
-        detail: this._login,
-      })
-    );
-
     this._recordTelemetryEvent({
       object: "existing_login",
       method: "open_site",
@@ -809,6 +812,16 @@ export default class LoginItem extends HTMLElement {
         this._passwordDisplayInput
       );
       this._passwordInput.remove();
+    }
+  }
+
+  _updateOriginDisplayState() {
+    // Switches between the origin input and anchor tag depending
+    // if a new login is being created.
+    if (this.dataset.editing) {
+      this._originDisplayInput.replaceWith(this._originInput);
+    } else {
+      this._originInput.replaceWith(this._originDisplayInput);
     }
   }
 }

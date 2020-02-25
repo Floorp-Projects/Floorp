@@ -133,12 +133,6 @@ class AboutLoginsChild extends JSWindowActorChild {
         this.sendAsyncMessage("AboutLogins:OpenPreferences");
         break;
       }
-      case "AboutLoginsOpenSite": {
-        this.sendAsyncMessage("AboutLogins:OpenSite", {
-          login: event.detail,
-        });
-        break;
-      }
       case "AboutLoginsRecordTelemetryEvent": {
         let { method, object, extra = {} } = event.detail;
 
