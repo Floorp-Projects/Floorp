@@ -499,7 +499,7 @@ async function openContextMenuInFrame(selector = "body", frameIndex = 0) {
   await BrowserTestUtils.synthesizeMouseAtCenter(
     selector,
     { type: "contextmenu" },
-    gBrowser.selectedBrowser.browsingContext.getChildren()[frameIndex]
+    gBrowser.selectedBrowser.browsingContext.children[frameIndex]
   );
   await popupShownPromise;
   return contentAreaContextMenu;
