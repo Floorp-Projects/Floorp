@@ -30,10 +30,13 @@ class TrackingProtectionBlockingFragment :
         super.onViewCreated(view, savedInstanceState)
 
         when (args.protectionMode) {
-            getString(R.string.preference_enhanced_tracking_protection_strict) -> {
-                category_fingerprinters.isVisible = true
-                category_tracking_content.isVisible = true
+
+            getString(R.string.preference_enhanced_tracking_protection_standard_option) -> {
+                category_fingerprinters.isVisible = false
+                category_tracking_content.isVisible = false
             }
+
+            getString(R.string.preference_enhanced_tracking_protection_strict) -> return
 
             getString(R.string.preference_enhanced_tracking_protection_custom) -> {
                 category_fingerprinters.isVisible =
@@ -42,9 +45,9 @@ class TrackingProtectionBlockingFragment :
                     requireContext().settings().blockCryptominersInCustomTrackingProtection
                 category_cookies.isVisible =
                     requireContext().settings().blockCookiesInCustomTrackingProtection
+                category_tracking_content.isVisible =
+                    requireContext().settings().blockTrackingContentInCustomTrackingProtection
             }
-
-            getString(R.string.preference_enhanced_tracking_protection_standard) -> return
 
             else -> return
         }

@@ -149,7 +149,7 @@ class TrackingProtectionFragment : PreferenceFragmentCompat() {
                 R.id.trackingProtectionFragment,
                 TrackingProtectionFragmentDirections
                     .actionTrackingProtectionFragmentToTrackingProtectionBlockingFragment(
-                        getString(R.string.preference_enhanced_tracking_protection_standard)
+                        getString(R.string.preference_enhanced_tracking_protection_standard_option)
                     )
             )
         }
