@@ -1371,8 +1371,7 @@ def updateCLDRLangTags(args):
     with io.open(test_file, mode="w", encoding="utf-8", newline="") as f:
         println = partial(print, file=f)
 
-        println(u"// |reftest| skip-if(!this.hasOwnProperty('Intl')||"
-                u"(!this.Intl.Locale&&!this.hasOwnProperty('addIntlExtras')))")
+        println(u"// |reftest| skip-if(!this.hasOwnProperty('Intl'))")
         writeCLDRLanguageTagLikelySubtagsTest(println, data, url)
 
 
