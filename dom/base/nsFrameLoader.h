@@ -62,7 +62,6 @@ class Promise;
 class BrowserParent;
 class MutableTabContext;
 class BrowserBridgeChild;
-class RemoteFrameChild;
 struct RemotenessOptions;
 
 namespace ipc {
