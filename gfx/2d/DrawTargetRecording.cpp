@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "DrawTargetRecording.h"
+#include "DrawTargetSkia.h"
 #include "PathRecording.h"
 #include <stdio.h>
 
@@ -12,6 +13,7 @@
 #include "Tools.h"
 #include "Filters.h"
 #include "mozilla/gfx/DataSurfaceHelpers.h"
+#include "mozilla/layers/SourceSurfaceSharedData.h"
 #include "mozilla/UniquePtr.h"
 #include "RecordingTypes.h"
 #include "RecordedEventImpl.h"
@@ -494,6 +496,34 @@ DrawTargetRecording::CreateSourceSurfaceFromNativeSurface(
     const NativeSurface& aSurface) const {
   MOZ_ASSERT(false);
   return nullptr;
+}
+
+already_AddRefed<DrawTarget>
+DrawTargetRecording::CreateSimilarDrawTargetWithBacking(
+    const IntSize& aSize, SurfaceFormat aFormat) const {
+  RefPtr<DrawTarget> similarDT;
+  if (mFinalDT->CanCreateSimilarDrawTarget(aSize, aFormat)) {
+    // If the requested similar draw target is too big, then we should try to
+    // rasterize on the content side to avoid duplicating the effort when a
+    // blob image gets tiled. If we fail somehow to produce it, we can fall
+    // back to recording.
+    constexpr int32_t kRasterThreshold = 256 * 256 * 4;
+    int32_t stride = aSize.width * BytesPerPixel(aFormat);
+    int32_t surfaceBytes = aSize.height * stride;
+    if (surfaceBytes >= kRasterThreshold) {
+      auto surface = MakeRefPtr<SourceSurfaceSharedData>();
+      if (surface->Init(aSize, stride, aFormat)) {
+        auto dt = MakeRefPtr<DrawTargetSkia>();
+        if (dt->Init(std::move(surface))) {
+          return dt.forget();
+        } else {
+          MOZ_ASSERT_UNREACHABLE("Skia should initialize given surface!");
+        }
+      }
+    }
+  }
+
+  return CreateSimilarDrawTarget(aSize, aFormat);
 }
 
 already_AddRefed<DrawTarget> DrawTargetRecording::CreateSimilarDrawTarget(
