@@ -2629,8 +2629,6 @@ static UniquePtr<dom::RTCStatsCollection> GetReceiverStats_s(
     ssrc = Some(ssrcval);
   }
 
-  RTCInboundRtpStreamStats mInboundRtp;
-  nsTArray<RTCRTPContributingSourceStats> mCsrcs;
   // First, fill in remote stat with rtcp sender data, if present.
   uint32_t packetsSent;
   uint64_t bytesSent;
