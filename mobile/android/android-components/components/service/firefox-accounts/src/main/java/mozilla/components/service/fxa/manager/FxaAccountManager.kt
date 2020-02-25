@@ -711,6 +711,8 @@ open class FxaAccountManager(
                 when (via) {
                     Event.RetryMigration,
                     Event.InFlightReuseMigration -> {
+                        logger.info("Registering persistence callback")
+                        account.registerPersistenceCallback(statePersistenceCallback)
                         return retryMigration(reuseAccount = true)
                     }
                     else -> null
@@ -720,6 +722,8 @@ open class FxaAccountManager(
                 when (via) {
                     Event.RetryMigration,
                     Event.InFlightCopyMigration -> {
+                        logger.info("Registering persistence callback")
+                        account.registerPersistenceCallback(statePersistenceCallback)
                         return retryMigration(reuseAccount = false)
                     }
                     else -> null
@@ -774,7 +778,9 @@ open class FxaAccountManager(
                     is Event.SignedInShareableAccount -> {
                         // Note that we are not registering an account persistence callback here like
                         // we do in other `AuthenticatedNoProfile` methods, because it would have been
-                        // already registered while handling `Event.SignInShareableAccount`.
+                        // already registered while handling any of the pre-cursor events, such as
+                        // `Event.SignInShareableAccount`, `Event.InFlightCopyMigration`
+                        // or `Event.InFlightReuseMigration`.
                         logger.info("Registering device constellation observer")
                         account.deviceConstellation().register(deviceEventsIntegration)
 
