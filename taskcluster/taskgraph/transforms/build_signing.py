@@ -22,9 +22,10 @@ def add_signed_routes(config, jobs):
 
     for job in jobs:
         dep_job = job['primary-dependency']
+        enable_signing_routes = job.pop('enable-signing-routes', True)
 
         job['routes'] = []
-        if dep_job.attributes.get('shippable'):
+        if dep_job.attributes.get('shippable') and enable_signing_routes:
             for dep_route in dep_job.task.get('routes', []):
                 if not dep_route.startswith('index.gecko.v2'):
                     continue
@@ -32,7 +33,7 @@ def add_signed_routes(config, jobs):
                 rest = ".".join(dep_route.split(".")[4:])
                 job['routes'].append(
                     'index.gecko.v2.{}.signed.{}'.format(branch, rest))
-        if dep_job.attributes.get('nightly'):
+        if dep_job.attributes.get('nightly') and enable_signing_routes:
             for dep_route in dep_job.task.get('routes', []):
                 if not dep_route.startswith('index.gecko.v2'):
                     continue
