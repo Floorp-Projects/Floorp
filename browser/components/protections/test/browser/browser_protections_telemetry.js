@@ -463,6 +463,29 @@ add_task(async function checkTelemetryClickEvents() {
   );
   is(events.length, 1, `recorded telemetry for lw_sync_link`);
 
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+    // Show all elements, so we can click on them, even though our user is not logged in.
+    let hidden_elements = content.document.querySelectorAll(".hidden");
+    for (let el of hidden_elements) {
+      el.style.display = "block ";
+    }
+
+    const mobileAppLink = await ContentTaskUtils.waitForCondition(() => {
+      return content.document.getElementById("mobile-app-link");
+    }, "mobile-app-link exists");
+
+    mobileAppLink.click();
+  });
+
+  events = await waitForTelemetryEventCount(15);
+  events = events.filter(
+    e =>
+      e[1] == "security.ui.protections" &&
+      e[2] == "click" &&
+      e[3] == "mobile_app_link"
+  );
+  is(events.length, 1, `recorded telemetry for mobile_app_link`);
+
   await BrowserTestUtils.removeTab(tab);
   // We open three extra tabs with the click events.
   // 1. Monitor's "Viewed Saved Logins" link (goes to about:logins)
