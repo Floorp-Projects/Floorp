@@ -71,6 +71,16 @@ class nsClassHashtable : public nsBaseHashtable<KeyClass, mozilla::UniquePtr<T>,
    * @returns nullptr if the key is not present.
    */
   UserDataType Get(KeyType aKey) const;
+
+  // For now, overload Put, rather than hiding it.
+  using base_type::Put;
+
+  template <typename U, typename = std::enable_if_t<std::is_base_of_v<T, U>>>
+  void Put(KeyType aKey, mozilla::UniquePtr<U>&& aData);
+
+  template <typename U, typename = std::enable_if_t<std::is_base_of_v<T, U>>>
+  MOZ_MUST_USE bool Put(KeyType aKey, mozilla::UniquePtr<U>&& aData,
+                        const mozilla::fallible_t&);
 };
 
 template <typename K, typename T>
@@ -132,6 +142,31 @@ T* nsClassHashtable<KeyClass, T>::Get(KeyType aKey) const {
   }
 
   return ent->GetData().get();
+}
+
+template <class KeyClass, class T>
+template <typename U, typename>
+void nsClassHashtable<KeyClass, T>::Put(KeyType aKey,
+                                        mozilla::UniquePtr<U>&& aData) {
+  if (!Put(aKey, std::move(aData), mozilla::fallible)) {
+    NS_ABORT_OOM(this->mTable.EntrySize() * this->mTable.EntryCount());
+  }
+}
+
+template <class KeyClass, class T>
+template <typename U, typename>
+bool nsClassHashtable<KeyClass, T>::Put(KeyType aKey,
+                                        mozilla::UniquePtr<U>&& aData,
+                                        const mozilla::fallible_t&) {
+  typename base_type::EntryType* ent = this->PutEntry(aKey, mozilla::fallible);
+
+  if (!ent) {
+    return false;
+  }
+
+  ent->SetData(std::move(aData));
+
+  return true;
 }
 
 #endif  // nsClassHashtable_h__
