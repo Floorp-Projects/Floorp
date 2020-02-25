@@ -416,7 +416,8 @@ data class AutoPushSubscription(
     val scope: PushScope,
     val endpoint: String,
     val publicKey: String,
-    val authKey: String
+    val authKey: String,
+    val appServerKey: String?
 )
 
 /**

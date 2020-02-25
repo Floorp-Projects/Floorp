@@ -12,12 +12,12 @@ interface WebPushDelegate {
     /**
      * Requests a WebPush subscription for the given Service Worker scope.
      */
-    fun onGetSubscription(scope: String, onSubscription: (WebPushSubscription) -> Unit) = Unit
+    fun onGetSubscription(scope: String, onSubscription: (WebPushSubscription?) -> Unit) = Unit
 
     /**
      * Create a WebPush subscription for the given Service Worker scope.
      */
-    fun onSubscribe(scope: String, serverKey: ByteArray?, onSubscribe: (WebPushSubscription) -> Unit) = Unit
+    fun onSubscribe(scope: String, serverKey: ByteArray?, onSubscribe: (WebPushSubscription?) -> Unit) = Unit
 
     /**
      * Remove a subscription for the given Service Worker scope.

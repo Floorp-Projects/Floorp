@@ -9,6 +9,7 @@ import mozilla.appservices.push.KeyInfo
 import mozilla.appservices.push.SubscriptionInfo
 import mozilla.appservices.push.SubscriptionResponse
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Test
 
 class ConnectionKtTest {
@@ -25,6 +26,15 @@ class ConnectionKtTest {
         assertEquals(response.subscriptionInfo.keys.auth, sub.authKey)
         assertEquals(response.subscriptionInfo.keys.p256dh, sub.publicKey)
         assertEquals("scope", sub.scope)
+        assertNull(sub.appServerKey)
+
+        val sub2 = response.toPushSubscription("scope", "key")
+
+        assertEquals(response.subscriptionInfo.endpoint, sub.endpoint)
+        assertEquals(response.subscriptionInfo.keys.auth, sub.authKey)
+        assertEquals(response.subscriptionInfo.keys.p256dh, sub.publicKey)
+        assertEquals("scope", sub2.scope)
+        assertEquals("key", sub2.appServerKey)
     }
 
     @Test

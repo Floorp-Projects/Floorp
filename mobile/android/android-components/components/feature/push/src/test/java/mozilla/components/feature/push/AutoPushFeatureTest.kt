@@ -327,7 +327,8 @@ class AutoPushFeatureTest {
             scope = scope,
             endpoint = "https://foo",
             publicKey = "p256dh",
-            authKey = "auth"
+            authKey = "auth",
+            appServerKey = null
         )
 
         override suspend fun unsubscribe(scope: String): Boolean = true
