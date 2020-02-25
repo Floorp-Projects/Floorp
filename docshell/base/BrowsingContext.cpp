@@ -383,7 +383,13 @@ void BrowsingContext::Attach(bool aFromIPC) {
   MOZ_DIAGNOSTIC_ASSERT(!mGroup->IsContextCached(this));
   MOZ_DIAGNOSTIC_ASSERT(!mIsDiscarded);
 
-  auto* children = mParent ? &mParent->mChildren : &mGroup->Toplevels();
+  Children* children = nullptr;
+  if (mParent) {
+    children = &mParent->mChildren;
+    BrowsingContext_Binding::ClearCachedChildrenValue(mParent);
+  } else {
+    children = &mGroup->Toplevels();
+  }
   MOZ_DIAGNOSTIC_ASSERT(!children->Contains(this));
 
   children->AppendElement(this);
@@ -423,6 +429,7 @@ void BrowsingContext::Detach(bool aFromIPC) {
     Children* children = nullptr;
     if (mParent) {
       children = &mParent->mChildren;
+      BrowsingContext_Binding::ClearCachedChildrenValue(mParent);
     } else {
       children = &mGroup->Toplevels();
     }
@@ -433,6 +440,7 @@ void BrowsingContext::Detach(bool aFromIPC) {
   if (!mChildren.IsEmpty()) {
     mGroup->CacheContexts(mChildren);
     mChildren.Clear();
+    BrowsingContext_Binding::ClearCachedChildrenValue(this);
   }
 
   {
@@ -521,6 +529,7 @@ void BrowsingContext::CacheChildren(bool aFromIPC) {
 
   mGroup->CacheContexts(mChildren);
   mChildren.Clear();
+  BrowsingContext_Binding::ClearCachedChildrenValue(this);
 
   if (!aFromIPC && XRE_IsContentProcess()) {
     auto cc = ContentChild::GetSingleton();
@@ -542,6 +551,7 @@ void BrowsingContext::RestoreChildren(Children&& aChildren, bool aFromIPC) {
   }
 
   mChildren.AppendElements(aChildren);
+  BrowsingContext_Binding::ClearCachedChildrenValue(this);
 
   if (!aFromIPC && XRE_IsContentProcess()) {
     auto cc = ContentChild::GetSingleton();

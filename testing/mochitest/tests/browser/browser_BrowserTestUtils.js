@@ -99,12 +99,10 @@ add_task(async function mouse_in_iframe() {
     5,
     10,
     {},
-    browser.browsingContext.getChildren()[0]
+    browser.browsingContext.children[0]
   );
 
-  let details = await getLastEventDetails(
-    browser.browsingContext.getChildren()[0]
-  );
+  let details = await getLastEventDetails(browser.browsingContext.children[0]);
   is(details, "two", "synthesizeMouse");
 
   await BrowserTestUtils.synthesizeMouse(
@@ -112,9 +110,9 @@ add_task(async function mouse_in_iframe() {
     5,
     10,
     {},
-    browser.browsingContext.getChildren()[1]
+    browser.browsingContext.children[1]
   );
-  details = await getLastEventDetails(browser.browsingContext.getChildren()[1]);
+  details = await getLastEventDetails(browser.browsingContext.children[1]);
   is(details, "four", "synthesizeMouse");
 
   gBrowser.removeTab(tab);

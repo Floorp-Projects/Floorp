@@ -16,7 +16,7 @@ var gTests = [
     desc: "getUserMedia audio+video",
     run: async function checkAudioVideo() {
       let frame1BC = gShouldObserveSubframes
-        ? gBrowser.selectedBrowser.browsingContext.getChildren()[0]
+        ? gBrowser.selectedBrowser.browsingContext.children[0]
         : undefined;
 
       let observerPromise = expectObserverCalled(
@@ -73,7 +73,7 @@ var gTests = [
     desc: "getUserMedia audio+video: stop sharing",
     run: async function checkStopSharing() {
       let frame1BC = gShouldObserveSubframes
-        ? gBrowser.selectedBrowser.browsingContext.getChildren()[0]
+        ? gBrowser.selectedBrowser.browsingContext.children[0]
         : undefined;
 
       let observerPromise = expectObserverCalled(
@@ -148,7 +148,7 @@ var gTests = [
       "getUserMedia audio+video: reloading the frame removes all sharing UI",
     run: async function checkReloading() {
       let frame1BC = gShouldObserveSubframes
-        ? gBrowser.selectedBrowser.browsingContext.getChildren()[0]
+        ? gBrowser.selectedBrowser.browsingContext.children[0]
         : undefined;
 
       let observerPromise = expectObserverCalled(
@@ -209,7 +209,7 @@ var gTests = [
     desc: "getUserMedia audio+video: reloading the frame removes prompts",
     run: async function checkReloadingRemovesPrompts() {
       let frame1BC = gShouldObserveSubframes
-        ? gBrowser.selectedBrowser.browsingContext.getChildren()[0]
+        ? gBrowser.selectedBrowser.browsingContext.children[0]
         : undefined;
 
       let observerPromise = expectObserverCalled(
@@ -247,7 +247,7 @@ var gTests = [
       // The WebRTC UI should still show both video and audio indicators.
 
       let frame1BC = gShouldObserveSubframes
-        ? gBrowser.selectedBrowser.browsingContext.getChildren()[0]
+        ? gBrowser.selectedBrowser.browsingContext.children[0]
         : undefined;
 
       let observerPromise = expectObserverCalled(
@@ -289,7 +289,7 @@ var gTests = [
       // Check that requesting a new device from a different frame
       // doesn't override sharing UI.
       let frame2BC = gShouldObserveSubframes
-        ? gBrowser.selectedBrowser.browsingContext.getChildren()[1]
+        ? gBrowser.selectedBrowser.browsingContext.children[1]
         : undefined;
 
       observerPromise = expectObserverCalled(
@@ -358,7 +358,7 @@ var gTests = [
       // second frame, then reload the second frame. After each step, we'll check
       // the UI is in the correct state.
       let frame1BC = gShouldObserveSubframes
-        ? gBrowser.selectedBrowser.browsingContext.getChildren()[0]
+        ? gBrowser.selectedBrowser.browsingContext.children[0]
         : undefined;
 
       let observerPromise = expectObserverCalled(
@@ -398,7 +398,7 @@ var gTests = [
       await checkSharingUI({ video: true, audio: false });
 
       let frame2BC = gShouldObserveSubframes
-        ? gBrowser.selectedBrowser.browsingContext.getChildren()[1]
+        ? gBrowser.selectedBrowser.browsingContext.children[1]
         : undefined;
 
       observerPromise = expectObserverCalled(
@@ -463,7 +463,7 @@ var gTests = [
       "getUserMedia audio+video: reloading the top level page removes all sharing UI",
     run: async function checkReloading() {
       let frame1BC = gShouldObserveSubframes
-        ? gBrowser.selectedBrowser.browsingContext.getChildren()[0]
+        ? gBrowser.selectedBrowser.browsingContext.children[0]
         : undefined;
 
       let observerPromise = expectObserverCalled(

@@ -20,7 +20,8 @@ interface BrowsingContext {
 
   readonly attribute BrowsingContext top;
 
-  sequence<BrowsingContext> getChildren();
+  [Cached, Frozen, Pure]
+  readonly attribute sequence<BrowsingContext> children;
 
   readonly attribute nsIDocShell? docShell;
 
