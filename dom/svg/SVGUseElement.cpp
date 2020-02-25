@@ -472,8 +472,8 @@ gfxMatrix SVGUseElement::PrependLocalTransformsTo(
   gfxMatrix userToParent;
 
   if (aWhich == eUserSpaceToParent || aWhich == eAllTransforms) {
-    userToParent =
-        GetUserToParentTransform(mAnimateMotionTransform, mTransforms);
+    userToParent = GetUserToParentTransform(mAnimateMotionTransform.get(),
+                                            mTransforms.get());
     if (aWhich == eUserSpaceToParent) {
       return userToParent * aMatrix;
     }

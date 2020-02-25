@@ -259,7 +259,7 @@ gfxMatrix SVGViewportElement::PrependLocalTransformsTo(
   gfxMatrix userToParent;
 
   if (aWhich == eUserSpaceToParent || aWhich == eAllTransforms) {
-    userToParent = GetUserToParentTransform(mAnimateMotionTransform,
+    userToParent = GetUserToParentTransform(mAnimateMotionTransform.get(),
                                             GetTransformInternal());
     if (aWhich == eUserSpaceToParent) {
       return userToParent * aMatrix;

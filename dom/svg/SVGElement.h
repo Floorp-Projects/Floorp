@@ -19,7 +19,7 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/SVGAnimatedClass.h"
 #include "mozilla/gfx/MatrixFwd.h"
-#include "nsAutoPtr.h"
+#include "mozilla/UniquePtr.h"
 #include "nsChangeHint.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsError.h"
@@ -306,7 +306,7 @@ class SVGElement : public SVGElementBase  // nsIContent
     if (!mClassAttribute.IsAnimated()) {
       return nullptr;
     }
-    return mClassAnimAttr;
+    return mClassAnimAttr.get();
   }
 
   virtual void ClearAnyCachedPath() {}
@@ -609,7 +609,7 @@ class SVGElement : public SVGElementBase  // nsIContent
   void UnsetAttrInternal(int32_t aNameSpaceID, nsAtom* aName, bool aNotify);
 
   SVGAnimatedClass mClassAttribute;
-  nsAutoPtr<nsAttrValue> mClassAnimAttr;
+  UniquePtr<nsAttrValue> mClassAnimAttr;
   RefPtr<mozilla::DeclarationBlock> mContentDeclarationBlock;
 };
 

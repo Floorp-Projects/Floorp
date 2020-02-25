@@ -140,9 +140,9 @@ SVGPatternElement::IsAttributeMapped(const nsAtom* name) const {
 SVGAnimatedTransformList* SVGPatternElement::GetAnimatedTransformList(
     uint32_t aFlags) {
   if (!mPatternTransform && (aFlags & DO_ALLOCATE)) {
-    mPatternTransform = new SVGAnimatedTransformList();
+    mPatternTransform = MakeUnique<SVGAnimatedTransformList>();
   }
-  return mPatternTransform;
+  return mPatternTransform.get();
 }
 
 /* virtual */
