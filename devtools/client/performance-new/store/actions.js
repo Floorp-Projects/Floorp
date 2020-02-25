@@ -108,9 +108,9 @@ exports.changeEntries = entries =>
 exports.changeFeatures = features => {
   return (dispatch, getState) => {
     let promptEnvRestart = null;
-    if (selectors.getPageContext(getState()) === "popup") {
-      // The popup supports checks to restart the browser for environment
-      // variables.
+    if (selectors.getPageContext(getState()) === "aboutprofiling") {
+      // TODO Bug 1615431 - The popup supported restarting the browser, but
+      // this hasn't been updated yet for the about:profiling workflow.
       if (
         !getEnvironmentVariable("JS_TRACE_LOGGING") &&
         features.includes("jstracer")
