@@ -34,6 +34,7 @@ DIRS += [
     'contextualidentity',
     'customizableui',
     'dirprovider',
+    'doh',
     'downloads',
     'enterprisepolicies',
     'extensions',
