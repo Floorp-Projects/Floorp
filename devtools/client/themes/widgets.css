@@ -211,16 +211,12 @@
 }
 
 .variable-or-property-non-writable-icon {
-  background: url("chrome://devtools/skin/images/vview-lock.png") no-repeat;
+  background: url("chrome://devtools/skin/images/vview-lock.svg") no-repeat;
   background-size: cover;
   width: 16px;
   height: 16px;
-}
-
-@media (min-resolution: 1.1dppx) {
-  .variable-or-property-non-writable-icon {
-    background-image: url("chrome://devtools/skin/images/vview-lock@2x.png");
-  }
+  -moz-context-properties: fill;
+  fill: var(--theme-icon-dimmed-color);
 }
 
 .variable-or-property-frozen-label,
@@ -315,14 +311,14 @@
   width: 16px;
   height: 16px;
   background-size: cover;
+  background-repeat: no-repeat;
   cursor: pointer;
+  -moz-context-properties: fill;
+  fill: var(--theme-icon-dimmed-color);
 }
 
 .variables-view-open-inspector {
   background-size: 15px;
-  background-repeat: no-repeat;
-  -moz-context-properties: fill;
-  fill: var(--theme-icon-dimmed-color);
 }
 
 .variables-view-delete:hover,
