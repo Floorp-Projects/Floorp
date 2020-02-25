@@ -4600,8 +4600,8 @@ void LIRGenerator::visitCheckReturn(MCheckReturn* ins) {
 
   auto* lir =
       new (alloc()) LCheckReturn(useBoxAtStart(retVal), useBoxAtStart(thisVal));
-  assignSnapshot(lir, Bailout_BadDerivedConstructorReturn);
   defineBox(lir, ins);
+  assignSafepoint(lir, ins);
 }
 
 void LIRGenerator::visitCheckIsObj(MCheckIsObj* ins) {

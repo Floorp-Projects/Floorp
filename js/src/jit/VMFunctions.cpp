@@ -1448,9 +1448,18 @@ bool ThrowRuntimeLexicalError(JSContext* cx, unsigned errorNumber) {
 }
 
 bool ThrowBadDerivedReturn(JSContext* cx, HandleValue v) {
+  MOZ_ASSERT(!v.isObject() && !v.isUndefined());
   ReportValueError(cx, JSMSG_BAD_DERIVED_RETURN, JSDVG_IGNORE_STACK, v,
                    nullptr);
   return false;
+}
+
+bool ThrowBadDerivedReturnOrUninitializedThis(JSContext* cx, HandleValue v) {
+  MOZ_ASSERT(!v.isObject());
+  if (v.isUndefined()) {
+    return js::ThrowUninitializedThis(cx);
+  }
+  return ThrowBadDerivedReturn(cx, v);
 }
 
 bool BaselineGetFunctionThis(JSContext* cx, BaselineFrame* frame,

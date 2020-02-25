@@ -10646,6 +10646,8 @@ class MCheckReturn : public MBinaryInstruction, public BoxInputsPolicy::Data {
   INSTRUCTION_HEADER(CheckReturn)
   TRIVIAL_NEW_WRAPPERS
   NAMED_OPERANDS((0, returnValue), (1, thisValue))
+
+  AliasSet getAliasSet() const override { return AliasSet::None(); }
 };
 
 class MCheckThis : public MUnaryInstruction, public BoxInputsPolicy::Data {

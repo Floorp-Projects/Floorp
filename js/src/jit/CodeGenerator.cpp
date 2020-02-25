@@ -13226,17 +13226,19 @@ void CodeGenerator::visitCheckReturn(LCheckReturn* ins) {
   ValueOperand thisValue = ToValue(ins, LCheckReturn::ThisValue);
   ValueOperand output = ToOutValue(ins);
 
-  Label bail, noChecks, done;
+  using Fn = bool (*)(JSContext*, HandleValue);
+  OutOfLineCode* ool = oolCallVM<Fn, ThrowBadDerivedReturnOrUninitializedThis>(
+      ins, ArgList(returnValue), StoreNothing());
+
+  Label noChecks;
   masm.branchTestObject(Assembler::Equal, returnValue, &noChecks);
-  masm.branchTestUndefined(Assembler::NotEqual, returnValue, &bail);
-  masm.branchTestMagic(Assembler::Equal, thisValue, &bail);
+  masm.branchTestUndefined(Assembler::NotEqual, returnValue, ool->entry());
+  masm.branchTestMagic(Assembler::Equal, thisValue, ool->entry());
   masm.moveValue(thisValue, output);
-  masm.jump(&done);
+  masm.jump(ool->rejoin());
   masm.bind(&noChecks);
   masm.moveValue(returnValue, output);
-  masm.bind(&done);
-
-  bailoutFrom(&bail, ins->snapshot());
+  masm.bind(ool->rejoin());
 }
 
 void CodeGenerator::visitCheckIsObj(LCheckIsObj* ins) {
