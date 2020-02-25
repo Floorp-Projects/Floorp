@@ -2025,7 +2025,6 @@ bool jit::FinishBailoutToBaseline(BaselineBailoutInfo* bailoutInfoArg) {
     case Bailout_NonSharedTypedArrayInput:
     case Bailout_Debugger:
     case Bailout_UninitializedThis:
-    case Bailout_BadDerivedConstructorReturn:
       // Do nothing.
       break;
 

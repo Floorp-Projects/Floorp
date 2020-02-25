@@ -140,9 +140,6 @@ enum BailoutKind {
   // |this| used uninitialized in a derived constructor
   Bailout_UninitializedThis,
 
-  // Derived constructors must return object or undefined
-  Bailout_BadDerivedConstructorReturn,
-
   // We hit this code for the first time.
   Bailout_FirstExecution,
 
@@ -238,8 +235,6 @@ inline const char* BailoutKindString(BailoutKind kind) {
       return "Bailout_Debugger";
     case Bailout_UninitializedThis:
       return "Bailout_UninitializedThis";
-    case Bailout_BadDerivedConstructorReturn:
-      return "Bailout_BadDerivedConstructorReturn";
     case Bailout_FirstExecution:
       return "Bailout_FirstExecution";
 
