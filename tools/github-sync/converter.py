@@ -162,7 +162,8 @@ def get_real_base_hg_rev(hg_data, commit_map):
 
 
 # Now we prune out all the uninteresting changesets from hg_commits. The
-# uninteresting ones are ones that don't touch the target code and are not merges.
+# uninteresting ones are ones that don't touch the target code, are not merges,
+# and are not referenced by mozilla tags in the git repo.
 # We do this by rewriting the parents to the "interesting" ancestor.
 def prune_boring(rev):
     while rev in hg_commits:
@@ -174,6 +175,8 @@ def prune_boring(rev):
             if hg_commits[parent_rev].touches_sync_code:
                 continue
             if len(hg_commits[parent_rev].parents) > 1:
+                continue
+            if parent_rev in hg_to_git_commit_map:
                 continue
 
             # If we get here, then `parent_rev` is a boring revision and we can
