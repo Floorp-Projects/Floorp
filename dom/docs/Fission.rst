@@ -399,7 +399,7 @@ However, if any of the frames on the page are running in their own process, they
       let actor = global.getActor("PageInfo");
       actor.sendAsyncMessage("PageInfo:getInfoForFrame", { someArgument: 123 });
 
-      contextsToVisit.push(...currentContext.getChildren());
+      contextsToVisit.push(...currentContext.children);
     }
 
 The original ``"PageInfo:info"`` message listener will need to be updated, too. Any responses from the ``PageInfoChild`` actor will end up being passed to the ``receiveMessage`` method of the ``PageInfoParent`` actor. It will be necessary to pass that information along to the interested party (in this case, the dialog code which is showing the table of interesting Page Info).

@@ -188,7 +188,7 @@ add_task(async function test_alt_click_in_frame() {
   await BrowserTestUtils.synthesizeMouseAtCenter(
     "#linkToExample",
     { altKey: true },
-    gBrowser.selectedBrowser.browsingContext.getChildren()[0]
+    gBrowser.selectedBrowser.browsingContext.children[0]
   );
 
   // Wait for all downloads to be added to the download list.
