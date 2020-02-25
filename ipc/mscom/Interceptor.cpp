@@ -49,7 +49,7 @@ class LiveSet final {
 
   void Put(IUnknown* aKey, already_AddRefed<IWeakReference> aValue) {
     mMutex.AssertCurrentThreadOwns();
-    mLiveSet.Put(aKey, std::move(aValue));
+    mLiveSet.Put(aKey, RefPtr<IWeakReference>{std::move(aValue)});
   }
 
   RefPtr<IWeakReference> Get(IUnknown* aKey) {
