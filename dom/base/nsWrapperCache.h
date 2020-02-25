@@ -421,6 +421,30 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsWrapperCache, NS_WRAPPERCACHE_IID)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END                    \
   NS_IMPL_CYCLE_COLLECTION_TRACE_WRAPPERCACHE(_class)
 
+#define NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_WEAK(_class, ...) \
+  NS_IMPL_CYCLE_COLLECTION_CLASS(_class)                        \
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(_class)                 \
+    NS_IMPL_CYCLE_COLLECTION_UNLINK(__VA_ARGS__)                \
+    NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER           \
+    NS_IMPL_CYCLE_COLLECTION_UNLINK_WEAK_REFERENCE              \
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_END                           \
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(_class)               \
+    NS_IMPL_CYCLE_COLLECTION_TRAVERSE(__VA_ARGS__)              \
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END                         \
+  NS_IMPL_CYCLE_COLLECTION_TRACE_WRAPPERCACHE(_class)
+
+#define NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_WEAK_PTR(_class, ...) \
+  NS_IMPL_CYCLE_COLLECTION_CLASS(_class)                            \
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(_class)                     \
+    NS_IMPL_CYCLE_COLLECTION_UNLINK(__VA_ARGS__)                    \
+    NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER               \
+    NS_IMPL_CYCLE_COLLECTION_UNLINK_WEAK_PTR                        \
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_END                               \
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(_class)                   \
+    NS_IMPL_CYCLE_COLLECTION_TRAVERSE(__VA_ARGS__)                  \
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END                             \
+  NS_IMPL_CYCLE_COLLECTION_TRACE_WRAPPERCACHE(_class)
+
 // This is used for wrapper cached classes that inherit from cycle
 // collected non-wrapper cached classes.
 #define NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_INHERITED(_class, _base, ...) \
