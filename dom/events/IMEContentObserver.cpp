@@ -153,6 +153,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(IMEContentObserver)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocumentObserver)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mEndOfAddedTextCache.mContainerNode)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mStartOfRemovingTextRangeCache.mContainerNode)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_WEAK_REFERENCE
 
   tmp->mIMENotificationRequests = nullptr;
   tmp->mESM = nullptr;

@@ -154,13 +154,13 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsFocusManager)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsFocusManager)
 
-NS_IMPL_CYCLE_COLLECTION(nsFocusManager, mActiveWindow,
-                         mActiveBrowsingContextInContent,
-                         mActiveBrowsingContextInChrome, mFocusedWindow,
-                         mFocusedBrowsingContextInContent,
-                         mFocusedBrowsingContextInChrome, mFocusedElement,
-                         mFirstBlurEvent, mFirstFocusEvent, mWindowBeingLowered,
-                         mDelayedBlurFocusEvents)
+NS_IMPL_CYCLE_COLLECTION_WEAK(nsFocusManager, mActiveWindow,
+                              mActiveBrowsingContextInContent,
+                              mActiveBrowsingContextInChrome, mFocusedWindow,
+                              mFocusedBrowsingContextInContent,
+                              mFocusedBrowsingContextInChrome, mFocusedElement,
+                              mFirstBlurEvent, mFirstFocusEvent,
+                              mWindowBeingLowered, mDelayedBlurFocusEvents)
 
 nsFocusManager* nsFocusManager::sInstance = nullptr;
 bool nsFocusManager::sMouseFocusesFormControl = false;

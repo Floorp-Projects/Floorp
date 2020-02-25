@@ -5578,7 +5578,7 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTING_ADDREF(ClientWebGLContext)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(ClientWebGLContext)
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_WEAK_PTR(
     ClientWebGLContext, mExtLoseContext, mNotLost,
     // Don't forget nsICanvasRenderingContextInternal:
     mCanvasElement, mOffscreenCanvas)

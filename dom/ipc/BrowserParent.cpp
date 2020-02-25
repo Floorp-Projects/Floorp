@@ -170,8 +170,8 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(BrowserParent)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMEventListener)
 NS_INTERFACE_MAP_END
-NS_IMPL_CYCLE_COLLECTION(BrowserParent, mFrameElement, mBrowserDOMWindow,
-                         mLoadContext, mFrameLoader, mBrowsingContext)
+NS_IMPL_CYCLE_COLLECTION_WEAK(BrowserParent, mLoadContext, mFrameLoader,
+                              mBrowsingContext)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(BrowserParent)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(BrowserParent)
 

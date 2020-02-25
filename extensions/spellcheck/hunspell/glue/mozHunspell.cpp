@@ -87,7 +87,7 @@ NS_INTERFACE_MAP_BEGIN(mozHunspell)
   NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(mozHunspell)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_CYCLE_COLLECTION(mozHunspell, mPersonalDictionary)
+NS_IMPL_CYCLE_COLLECTION_WEAK(mozHunspell, mPersonalDictionary)
 
 NS_IMPL_COMPONENT_FACTORY(mozHunspell) {
   auto hunspell = MakeRefPtr<mozHunspell>();

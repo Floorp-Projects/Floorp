@@ -115,6 +115,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(CSSStyleRule)
   //
   // Note that this has to happen before unlinking css::Rule.
   tmp->UnlinkDeclarationWrapper(tmp->mDecls);
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_WEAK_PTR
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END_INHERITED(css::Rule)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(CSSStyleRule, css::Rule)
