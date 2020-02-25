@@ -1040,6 +1040,37 @@ promise_test(async t => {
 }, 'background-color animation runs on the compositor');
 
 promise_test(async t => {
+  const div = addDiv(t);
+  const animation = div.animate({ backgroundColor: ['blue', 'green'] },
+                                100 * MS_PER_SEC);
+
+  await waitForAnimationReadyToRestyle(animation);
+  await waitForPaints();
+
+  if (!isWebRender) {
+    assert_animation_is_running_on_compositor(animation,
+      'background-color animation should be running on the compositor');
+  } else {
+    assert_animation_is_not_running_on_compositor(animation,
+      'background-color animation is not yet able to run on the compositor ' +
+      'on WebRender');
+  }
+
+  // Add a red opaque background image covering the background color animation.
+  div.style.backgroundImage =
+    'url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAIAAAAC64' +
+    'paAAAAG0lEQVR42mP8z0A%2BYKJA76jmUc2jmkc1U0EzACKcASfOgGoMAAAAAElFTkSuQmCC)';
+
+  await waitForAnimationReadyToRestyle(animation);
+  await waitForPaints();
+
+  assert_animation_is_not_running_on_compositor(animation,
+    'Opaque background image stops background-color animations from running ' +
+    'on the compositor');
+}, 'Opaque background image stops background-color animations from running ' +
+   ' on the compositor');
+
+promise_test(async t => {
   await SpecialPowers.pushPrefEnv({
     set: [["gfx.omta.background-color", false]]
   });
