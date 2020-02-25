@@ -188,7 +188,7 @@ class AccessibleNode : public nsISupports, public nsWrapperCache {
     if (!aValue) {
       mRelationProperties.Remove(static_cast<int>(aProperty));
     } else {
-      mRelationProperties.Put(static_cast<int>(aProperty), aValue);
+      mRelationProperties.Put(static_cast<int>(aProperty), RefPtr{aValue});
     }
   }
 

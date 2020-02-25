@@ -305,7 +305,7 @@ bool SapiService::RegisterVoices() {
       continue;
     }
 
-    mVoices.Put(uri, voiceToken);
+    mVoices.Put(uri, std::move(voiceToken));
   }
 
   registry->NotifyVoicesChanged();

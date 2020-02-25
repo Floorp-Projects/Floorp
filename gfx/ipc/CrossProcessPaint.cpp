@@ -418,7 +418,7 @@ nsresult CrossProcessPaint::ResolveInternal(dom::TabId aTabId,
     aResolved->Remove(dependency);
   }
 
-  aResolved->Put(aTabId, snapshot);
+  aResolved->Put(aTabId, std::move(snapshot));
   return NS_OK;
 }
 

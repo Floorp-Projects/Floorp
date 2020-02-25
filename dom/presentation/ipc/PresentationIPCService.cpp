@@ -251,11 +251,11 @@ PresentationIPCService::RegisterSessionListener(
 
   nsCOMPtr<nsIPresentationSessionListener> listener;
   if (mSessionListeners.Get(aSessionId, getter_AddRefs(listener))) {
-    mSessionListeners.Put(aSessionId, aListener);
+    mSessionListeners.Put(aSessionId, RefPtr{aListener});
     return NS_OK;
   }
 
-  mSessionListeners.Put(aSessionId, aListener);
+  mSessionListeners.Put(aSessionId, RefPtr{aListener});
   if (sPresentationChild) {
     Unused << NS_WARN_IF(!sPresentationChild->SendRegisterSessionHandler(
         nsString(aSessionId), aRole));
@@ -283,7 +283,7 @@ PresentationIPCService::RegisterRespondingListener(
     uint64_t aWindowId, nsIPresentationRespondingListener* aListener) {
   MOZ_ASSERT(NS_IsMainThread());
 
-  mRespondingListeners.Put(aWindowId, aListener);
+  mRespondingListeners.Put(aWindowId, RefPtr{aListener});
   if (sPresentationChild) {
     Unused << NS_WARN_IF(
         !sPresentationChild->SendRegisterRespondingHandler(aWindowId));
@@ -314,9 +314,9 @@ nsresult PresentationIPCService::NotifySessionTransport(
   }
 
   if (aRole == nsIPresentationService::ROLE_CONTROLLER) {
-    mSessionInfoAtController.Put(aSessionId, info);
+    mSessionInfoAtController.Put(aSessionId, std::move(info));
   } else {
-    mSessionInfoAtReceiver.Put(aSessionId, info);
+    mSessionInfoAtReceiver.Put(aSessionId, std::move(info));
   }
   return NS_OK;
 }

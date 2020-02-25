@@ -5514,7 +5514,7 @@ mozilla::ipc::IPCResult ContentParent::RecvGetFilesRequest(
     return IPC_OK();
   }
 
-  mGetFilesPendingRequests.Put(aUUID, helper);
+  mGetFilesPendingRequests.Put(aUUID, std::move(helper));
   return IPC_OK();
 }
 

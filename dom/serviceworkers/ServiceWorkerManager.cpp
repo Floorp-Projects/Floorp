@@ -1844,7 +1844,7 @@ void ServiceWorkerManager::AddScopeAndRegistration(
       []() { return new RegistrationDataPerPrincipal(); });
 
   data->mScopeContainer.InsertScope(aScope);
-  data->mInfos.Put(aScope, aInfo);
+  data->mInfos.Put(aScope, RefPtr{aInfo});
   swm->NotifyListenersOnRegister(aInfo);
 }
 

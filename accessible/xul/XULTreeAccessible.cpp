@@ -439,7 +439,7 @@ Accessible* XULTreeAccessible::GetTreeItemAccessible(int32_t aRow) const {
 
   RefPtr<Accessible> treeItem = CreateTreeItemAccessible(aRow);
   if (treeItem) {
-    mAccessibleCache.Put(key, treeItem);
+    mAccessibleCache.Put(key, RefPtr{treeItem});
     Document()->BindToDocument(treeItem, nullptr);
     return treeItem;
   }

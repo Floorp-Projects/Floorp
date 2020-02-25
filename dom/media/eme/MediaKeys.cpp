@@ -119,7 +119,8 @@ void MediaKeys::Terminated() {
   // Remove entries during iteration will screw it. Make a copy first.
   for (auto iter = mKeySessions.Iter(); !iter.Done(); iter.Next()) {
     RefPtr<MediaKeySession>& session = iter.Data();
-    keySessions.Put(session->GetSessionId(), session);
+    // XXX Could the RefPtr still be moved here?
+    keySessions.Put(session->GetSessionId(), RefPtr{session});
   }
   for (auto iter = keySessions.Iter(); !iter.Done(); iter.Next()) {
     RefPtr<MediaKeySession>& session = iter.Data();
@@ -222,7 +223,7 @@ PromiseId MediaKeys::StorePromise(DetailedPromise* aPromise) {
   }
 #endif
 
-  mPromises.Put(id, aPromise);
+  mPromises.Put(id, RefPtr{aPromise});
   return id;
 }
 
@@ -310,7 +311,7 @@ void MediaKeys::OnSessionIdReady(MediaKeySession* aSession) {
         "MediaKeySession with invalid sessionId passed to OnSessionIdReady()");
     return;
   }
-  mKeySessions.Put(aSession->GetSessionId(), aSession);
+  mKeySessions.Put(aSession->GetSessionId(), RefPtr{aSession});
 }
 
 void MediaKeys::ResolvePromise(PromiseId aId) {
@@ -345,7 +346,7 @@ void MediaKeys::ResolvePromise(PromiseId aId) {
         "CDM LoadSession() returned a different session ID than requested");
     return;
   }
-  mKeySessions.Put(session->GetSessionId(), session);
+  mKeySessions.Put(session->GetSessionId(), RefPtr{session});
   promise->MaybeResolve(session);
 }
 
@@ -541,7 +542,7 @@ already_AddRefed<MediaKeySession> MediaKeys::CreateSession(
   EME_LOG("MediaKeys[%p]::CreateSession(aCx=%p, aSessionType=%" PRIu8
           ") putting session with token=%" PRIu32 " into mPendingSessions",
           this, aCx, static_cast<uint8_t>(aSessionType), session->Token());
-  mPendingSessions.Put(session->Token(), session);
+  mPendingSessions.Put(session->Token(), RefPtr{session});
 
   return session.forget();
 }

@@ -493,7 +493,7 @@ nsresult PresentationService::HandleSessionRequest(
     return rv;
   }
 
-  mSessionInfoAtReceiver.Put(sessionId, info);
+  mSessionInfoAtReceiver.Put(sessionId, RefPtr{info});
 
   // Notify the receiver to launch.
   nsCOMPtr<nsIPresentationRequestUIGlue> glue =
@@ -709,7 +709,7 @@ PresentationService::CreateControllingSessionInfo(const nsAString& aUrl,
   RefPtr<PresentationSessionInfo> info =
       new PresentationControllingInfo(aUrl, aSessionId);
 
-  mSessionInfoAtController.Put(aSessionId, info);
+  mSessionInfoAtController.Put(aSessionId, RefPtr{info});
   AddRespondingSessionId(aWindowId, aSessionId,
                          nsIPresentationService::ROLE_CONTROLLER);
   return info.forget();
@@ -961,7 +961,7 @@ PresentationService::RegisterRespondingListener(
     aListener->NotifySessionConnect(aWindowId, id);
   }
 
-  mRespondingListeners.Put(aWindowId, aListener);
+  mRespondingListeners.Put(aWindowId, RefPtr{aListener});
   return NS_OK;
 }
 
