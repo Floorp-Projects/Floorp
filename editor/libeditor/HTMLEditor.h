@@ -54,6 +54,8 @@ class ResizerSelectionListener;
 class SplitRangeOffFromNodeResult;
 class SplitRangeOffResult;
 class WSRunObject;
+class WSRunScanner;
+class WSScanResult;
 enum class EditSubAction : int32_t;
 struct PropItem;
 template <class T>
@@ -2246,14 +2248,14 @@ class HTMLEditor final : public TextEditor,
    * @param aAtomicContent      The atomic content to be deleted.
    * @param aCaretPoint         The caret point (i.e., selection start or
    *                            end).
-   * @param aWSRunObjectAtCaret WSRunObject instance which was initialized with
-   *                            the caret point.
+   * @param aWSRunScannerAtCaret WSRunScanner instance which was initialized
+   *                             with the caret point.
    */
   MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE EditActionResult
   HandleDeleteCollapsedSelectionAtAtomicContent(
       nsIEditor::EDirection aDirectionAndAmount,
       nsIEditor::EStripWrappers aStripWrappers, nsIContent& aAtomicContent,
-      const EditorDOMPoint& aCaretPoint, WSRunObject& aWSRunObjectAtCaret);
+      const EditorDOMPoint& aCaretPoint, WSRunScanner& aWSRunScannerAtCaret);
 
   /**
    * HandleDeleteCollapsedSelectionAtOtherBlockBoundary() handles deletion at
@@ -2267,14 +2269,14 @@ class HTMLEditor final : public TextEditor,
    *                            is followed by caret.
    * @param aCaretPoint         The caret point (i.e., selection start or
    *                            end).
-   * @param aWSRunObjectAtCaret WSRunObject instance which was initialized with
-   *                            the caret point.
+   * @param aWSRunScannerAtCaret WSRunScanner instance which was initialized
+   *                             with the caret point.
    */
   MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE EditActionResult
   HandleDeleteCollapsedSelectionAtOtherBlockBoundary(
       nsIEditor::EDirection aDirectionAndAmount,
       nsIEditor::EStripWrappers aStripWrappers, Element& aOtherBlockElement,
-      const EditorDOMPoint& aCaretPoint, WSRunObject& aWSRunObjectAtCaret);
+      const EditorDOMPoint& aCaretPoint, WSRunScanner& aWSRunScannerAtCaret);
 
   /**
    * HandleDeleteCollapsedSelectionAtCurrentBlockBoundary() handles deletion
@@ -4577,6 +4579,7 @@ class HTMLEditor final : public TextEditor,
   friend class TextEditor;
   friend class WSRunObject;
   friend class WSRunScanner;
+  friend class WSScanResult;
 };
 
 /**

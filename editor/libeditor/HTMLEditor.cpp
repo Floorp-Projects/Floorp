@@ -541,49 +541,47 @@ nsresult HTMLEditor::MaybeCollapseSelectionAtFirstEditableNode(
   // Find first editable and visible node.
   EditorRawDOMPoint pointToPutCaret(editingHost, 0);
   for (;;) {
-    WSRunObject wsObj(this, pointToPutCaret.GetContainer(),
-                      pointToPutCaret.Offset());
-    int32_t visOffset = 0;
-    WSType visType;
-    nsCOMPtr<nsINode> visNode;
-    wsObj.NextVisibleNode(pointToPutCaret, address_of(visNode), &visOffset,
-                          &visType);
-
+    WSScanResult forwardScanFromPointToPutCaretResult =
+        WSRunScanner::ScanNextVisibleNodeOrBlockBoundary(*this,
+                                                         pointToPutCaret);
     // If we meet a non-editable node first, we should move caret to start of
     // the editing host (perhaps, user may want to insert something before
     // the first non-editable node? Chromium behaves so).
-    if (visNode && !visNode->IsEditable()) {
+    if (forwardScanFromPointToPutCaretResult.GetContent() &&
+        !forwardScanFromPointToPutCaretResult.IsContentEditable()) {
       pointToPutCaret.Set(editingHost, 0);
       break;
     }
 
-    // WSRunObject::NextVisibleNode() returns WSType::special and the "special"
-    // node when it meets empty inline element.  In this case, we should go to
-    // next sibling.  For example, if current editor is:
-    // <div contenteditable><span></span><b><br></b></div>
+    // WSRunScanner::ScanNextVisibleNodeOrBlockBoundary() returns
+    // WSType::special and the "special" node when it meets empty inline
+    // element.  In this case, we should go to next sibling.  For example, if
+    // current editor is: <div contenteditable><span></span><b><br></b></div>
     // then, we should put caret at the <br> element.  So, let's check if
     // found node is an empty inline container element.
-    if (visType == WSType::special && visNode &&
-        TagCanContainTag(*visNode->NodeInfo()->NameAtom(),
+    if (forwardScanFromPointToPutCaretResult.ReachedSpecialContent() &&
+        forwardScanFromPointToPutCaretResult.GetContent() &&
+        TagCanContainTag(*forwardScanFromPointToPutCaretResult.GetContent()
+                              ->NodeInfo()
+                              ->NameAtom(),
                          *nsGkAtoms::textTagName)) {
-      pointToPutCaret.Set(visNode);
-      DebugOnly<bool> advanced = pointToPutCaret.AdvanceOffset();
-      NS_WARNING_ASSERTION(
-          advanced,
-          "Failed to advance offset from found empty inline container element");
+      pointToPutCaret =
+          forwardScanFromPointToPutCaretResult.RawPointAfterContent();
       continue;
     }
 
     // If there is editable and visible text node, move caret at start of it.
-    if (visType == WSType::normalWS || visType == WSType::text) {
-      pointToPutCaret.Set(visNode, visOffset);
+    if (forwardScanFromPointToPutCaretResult.InNormalWhiteSpacesOrText()) {
+      pointToPutCaret = forwardScanFromPointToPutCaretResult.RawPoint();
       break;
     }
 
     // If there is editable <br> or something inline special element like
     // <img>, <input>, etc, move caret before it.
-    if (visType == WSType::br || visType == WSType::special) {
-      pointToPutCaret.Set(visNode);
+    if (forwardScanFromPointToPutCaretResult.ReachedBRElement() ||
+        forwardScanFromPointToPutCaretResult.ReachedSpecialContent()) {
+      pointToPutCaret =
+          forwardScanFromPointToPutCaretResult.RawPointAtContent();
       break;
     }
 
@@ -592,34 +590,34 @@ nsresult HTMLEditor::MaybeCollapseSelectionAtFirstEditableNode(
     // host.
     // XXX This may not make sense, but Chromium behaves so.  Therefore, the
     //     reason why we do this is just compatibility with Chromium.
-    if (visType != WSType::otherBlock) {
+    if (!forwardScanFromPointToPutCaretResult.ReachedOtherBlockElement()) {
       pointToPutCaret.Set(editingHost, 0);
       break;
     }
 
-    // By definition of WSRunObject, a block element terminates a whitespace
+    // By definition of WSRunScanner, a block element terminates a whitespace
     // run. That is, although we are calling a method that is named
-    // "NextVisibleNode", the node returned might not be visible/editable!
+    // "ScanNextVisibleNodeOrBlockBoundary", the node returned might not
+    // be visible/editable!
 
     // However, we were given a block that is not a container.  Since the
     // block can not contain anything that's visible, such a block only
     // makes sense if it is visible by itself, like a <hr>.  We want to
     // place the caret in front of that block.
-    if (!IsContainer(visNode)) {
-      pointToPutCaret.Set(visNode);
+    if (!IsContainer(forwardScanFromPointToPutCaretResult.GetContent())) {
+      pointToPutCaret =
+          forwardScanFromPointToPutCaretResult.RawPointAtContent();
       break;
     }
 
     // If the given block does not contain any visible/editable items, we want
     // to skip it and continue our search.
-    if (IsEmptyNode(*visNode)) {
+    if (IsEmptyNode(*forwardScanFromPointToPutCaretResult.GetContent())) {
       // Skip the empty block
-      pointToPutCaret.Set(visNode);
-      DebugOnly<bool> advanced = pointToPutCaret.AdvanceOffset();
-      NS_WARNING_ASSERTION(
-          advanced, "Failed to advance offset from the found empty block node");
+      pointToPutCaret =
+          forwardScanFromPointToPutCaretResult.RawPointAfterContent();
     } else {
-      pointToPutCaret.Set(visNode, 0);
+      pointToPutCaret.Set(forwardScanFromPointToPutCaretResult.GetContent(), 0);
     }
   }
   nsresult rv = SelectionRefPtr()->Collapse(pointToPutCaret);
@@ -934,18 +932,13 @@ bool HTMLEditor::IsVisibleBRElement(nsINode* aNode) {
 
   // Sigh.  We have to use expensive whitespace calculation code to
   // determine what is going on
-  int32_t selOffset;
-  nsCOMPtr<nsINode> selNode = GetNodeLocation(aNode, &selOffset);
-  // Let's look after the break
-  selOffset++;
-  WSRunObject wsObj(this, selNode, selOffset);
-  WSType visType;
-  wsObj.NextVisibleNode(EditorRawDOMPoint(selNode, selOffset), &visType);
-  if (visType & WSType::block) {
+  EditorRawDOMPoint afterBRElement(EditorRawDOMPoint::After(*aNode));
+  if (NS_WARN_IF(!afterBRElement.IsSet())) {
     return false;
   }
-
-  return true;
+  return !WSRunScanner::ScanNextVisibleNodeOrBlockBoundary(*this,
+                                                           afterBRElement)
+              .ReachedBlockBoundary();
 }
 
 NS_IMETHODIMP
@@ -1474,18 +1467,18 @@ EditorRawDOMPoint HTMLEditor::GetBetterInsertionPointFor(
     return pointToInsert;
   }
 
-  WSRunObject wsObj(this, pointToInsert.GetContainer(), pointToInsert.Offset());
+  WSRunScanner wsScannerForPointToInsert(this, pointToInsert);
 
   // If the insertion position is after the last visible item in a line,
   // i.e., the insertion position is just before a visible line break <br>,
   // we want to skip to the position just after the line break (see bug 68767).
-  nsCOMPtr<nsINode> nextVisibleNode;
-  WSType nextVisibleType;
-  wsObj.NextVisibleNode(pointToInsert, address_of(nextVisibleNode), nullptr,
-                        &nextVisibleType);
+  WSScanResult forwardScanFromPointToInsertResult =
+      wsScannerForPointToInsert.ScanNextVisibleNodeOrBlockBoundaryFrom(
+          pointToInsert);
   // So, if the next visible node isn't a <br> element, we can insert the block
   // level element to the point.
-  if (!nextVisibleNode || !(nextVisibleType & WSType::br)) {
+  if (!forwardScanFromPointToInsertResult.GetContent() ||
+      !forwardScanFromPointToInsertResult.ReachedBRElement()) {
     return pointToInsert;
   }
 
@@ -1493,25 +1486,21 @@ EditorRawDOMPoint HTMLEditor::GetBetterInsertionPointFor(
   // positioned at the beginning of a block, in that case skipping the <br>
   // would not insert the <br> at the caret position, but after the current
   // empty line.
-  nsCOMPtr<nsINode> previousVisibleNode;
-  WSType previousVisibleType;
-  wsObj.PriorVisibleNode(pointToInsert, address_of(previousVisibleNode),
-                         nullptr, &previousVisibleType);
+  WSScanResult backwardScanFromPointToInsertResult =
+      wsScannerForPointToInsert.ScanPreviousVisibleNodeOrBlockBoundaryFrom(
+          pointToInsert);
   // So, if there is no previous visible node,
   // or, if both nodes of the insertion point is <br> elements,
   // or, if the previous visible node is different block,
   // we need to skip the following <br>.  So, otherwise, we can insert the
   // block at the insertion point.
-  if (!previousVisibleNode || (previousVisibleType & WSType::br) ||
-      (previousVisibleType & WSType::thisBlock)) {
+  if (!backwardScanFromPointToInsertResult.GetContent() ||
+      backwardScanFromPointToInsertResult.ReachedBRElement() ||
+      backwardScanFromPointToInsertResult.ReachedCurrentBlockBoundary()) {
     return pointToInsert;
   }
 
-  EditorRawDOMPoint afterBRNode(nextVisibleNode);
-  DebugOnly<bool> advanced = afterBRNode.AdvanceOffset();
-  NS_WARNING_ASSERTION(advanced,
-                       "Failed to advance offset to after the <br> node");
-  return afterBRNode;
+  return forwardScanFromPointToInsertResult.RawPointAfterContent();
 }
 
 NS_IMETHODIMP
@@ -3128,21 +3117,23 @@ nsresult HTMLEditor::DeleteParentBlocksWithTransactionIfEmpty(
   MOZ_ASSERT(mPlaceholderBatch);
 
   // First, check there is visible contents before the point in current block.
-  WSRunObject wsObj(this, aPoint);
-  if (!(wsObj.mStartReason & WSType::thisBlock)) {
+  WSRunScanner wsScannerForPoint(this, aPoint);
+  if (wsScannerForPoint.StartReason() != WSType::thisBlock) {
     // If there is visible node before the point, we shouldn't remove the
     // parent block.
     return NS_SUCCESS_EDITOR_ELEMENT_NOT_FOUND;
   }
-  if (NS_WARN_IF(!wsObj.GetStartReasonContent()) ||
-      NS_WARN_IF(!wsObj.GetStartReasonContent()->GetParentNode())) {
+  if (NS_WARN_IF(!wsScannerForPoint.GetStartReasonContent()) ||
+      NS_WARN_IF(!wsScannerForPoint.GetStartReasonContent()->GetParentNode())) {
     return NS_ERROR_FAILURE;
   }
-  if (wsObj.GetEditingHost() == wsObj.GetStartReasonContent()) {
+  if (wsScannerForPoint.GetEditingHost() ==
+      wsScannerForPoint.GetStartReasonContent()) {
     // If we reach editing host, there is no parent blocks which can be removed.
     return NS_SUCCESS_EDITOR_ELEMENT_NOT_FOUND;
   }
-  if (HTMLEditUtils::IsTableCellOrCaption(*wsObj.GetStartReasonContent())) {
+  if (HTMLEditUtils::IsTableCellOrCaption(
+          *wsScannerForPoint.GetStartReasonContent())) {
     // If we reach a <td>, <th> or <caption>, we shouldn't remove it even
     // becomes empty because removing such element changes the structure of
     // the <table>.
@@ -3150,34 +3141,33 @@ nsresult HTMLEditor::DeleteParentBlocksWithTransactionIfEmpty(
   }
 
   // Next, check there is visible contents after the point in current block.
-  WSType wsType = WSType::none;
-  wsObj.NextVisibleNode(aPoint, &wsType);
-  if (wsType == WSType::br) {
+  WSScanResult forwardScanFromPointResult =
+      wsScannerForPoint.ScanNextVisibleNodeOrBlockBoundaryFrom(aPoint);
+  if (forwardScanFromPointResult.ReachedBRElement()) {
     // If the <br> element is visible, we shouldn't remove the parent block.
-    if (IsVisibleBRElement(wsObj.GetEndReasonContent())) {
+    if (IsVisibleBRElement(wsScannerForPoint.GetEndReasonContent())) {
       return NS_SUCCESS_EDITOR_ELEMENT_NOT_FOUND;
     }
-    if (wsObj.GetEndReasonContent()->GetNextSibling()) {
-      EditorRawDOMPoint afterBRElement;
-      afterBRElement.SetAfter(wsObj.GetEndReasonContent());
-      WSRunObject wsRunObjAfterBR(this, afterBRElement);
-      WSType wsTypeAfterBR = WSType::none;
-      wsRunObjAfterBR.NextVisibleNode(afterBRElement, &wsTypeAfterBR);
-      if (wsTypeAfterBR != WSType::thisBlock) {
+    if (wsScannerForPoint.GetEndReasonContent()->GetNextSibling()) {
+      if (!WSRunScanner::ScanNextVisibleNodeOrBlockBoundary(
+               *this, EditorRawDOMPoint::After(
+                          *wsScannerForPoint.GetEndReasonContent()))
+               .ReachedCurrentBlockBoundary()) {
         // If we couldn't reach the block's end after the invisible <br>,
         // that means that there is visible content.
         return NS_SUCCESS_EDITOR_ELEMENT_NOT_FOUND;
       }
     }
-  } else if (wsType != WSType::thisBlock) {
+  } else if (!forwardScanFromPointResult.ReachedCurrentBlockBoundary()) {
     // If we couldn't reach the block's end, the block has visible content.
     return NS_SUCCESS_EDITOR_ELEMENT_NOT_FOUND;
   }
 
   // Delete the parent block.
-  EditorDOMPoint nextPoint(wsObj.GetStartReasonContent()->GetParentNode(), 0);
-  nsresult rv =
-      DeleteNodeWithTransaction(MOZ_KnownLive(*wsObj.GetStartReasonContent()));
+  EditorDOMPoint nextPoint(
+      wsScannerForPoint.GetStartReasonContent()->GetParentNode(), 0);
+  nsresult rv = DeleteNodeWithTransaction(
+      MOZ_KnownLive(*wsScannerForPoint.GetStartReasonContent()));
   if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
     return NS_ERROR_EDITOR_DESTROYED;
   }
@@ -3185,7 +3175,7 @@ nsresult HTMLEditor::DeleteParentBlocksWithTransactionIfEmpty(
     return rv;
   }
   // If we reach editing host, return NS_OK.
-  if (nextPoint.GetContainer() == wsObj.GetEditingHost()) {
+  if (nextPoint.GetContainer() == wsScannerForPoint.GetEditingHost()) {
     return NS_OK;
   }
 
@@ -3199,7 +3189,7 @@ nsresult HTMLEditor::DeleteParentBlocksWithTransactionIfEmpty(
           NS_EVENT_BITS_MUTATION_SUBTREEMODIFIED)) {
     Element* editingHost = GetActiveEditingHost();
     if (NS_WARN_IF(!editingHost) ||
-        NS_WARN_IF(editingHost != wsObj.GetEditingHost())) {
+        NS_WARN_IF(editingHost != wsScannerForPoint.GetEditingHost())) {
       return NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE;
     }
     if (NS_WARN_IF(!EditorUtils::IsDescendantOf(*nextPoint.GetContainer(),
@@ -3970,15 +3960,11 @@ bool HTMLEditor::IsVisibleTextNode(Text& aText) const {
     return true;
   }
 
-  WSRunScanner wsRunScanner(this, &aText, 0);
-  nsCOMPtr<nsINode> nextVisibleNode;
-  WSType visibleNodeType;
-  wsRunScanner.NextVisibleNode(EditorRawDOMPoint(&aText, 0),
-                               address_of(nextVisibleNode), nullptr,
-                               &visibleNodeType);
-  return (visibleNodeType == WSType::normalWS ||
-          visibleNodeType == WSType::text) &&
-         &aText == nextVisibleNode;
+  WSScanResult nextWSScanResult =
+      WSRunScanner::ScanNextVisibleNodeOrBlockBoundary(
+          *this, EditorRawDOMPoint(&aText, 0));
+  return nextWSScanResult.InNormalWhiteSpacesOrText() &&
+         nextWSScanResult.TextPtr() == &aText;
 }
 
 bool HTMLEditor::IsEmpty() const {

@@ -6,14 +6,19 @@
 #ifndef WSRunObject_h
 #define WSRunObject_h
 
-#include "mozilla/dom/Text.h"
+#include "mozilla/Assertions.h"
 #include "mozilla/EditAction.h"
 #include "mozilla/EditorBase.h"
 #include "mozilla/EditorDOMPoint.h"  // for EditorDOMPoint
+#include "mozilla/HTMLEditor.h"
+#include "mozilla/Maybe.h"
+#include "mozilla/dom/Element.h"
+#include "mozilla/dom/HTMLBRElement.h"
+#include "mozilla/dom/Text.h"
+#include "nsCOMPtr.h"
+#include "nsIContent.h"
 
 namespace mozilla {
-
-class HTMLEditor;
 
 // class WSRunObject represents the entire whitespace situation
 // around a given point.  It collects up a list of nodes that contain
@@ -131,6 +136,201 @@ inline const WSType operator|(const WSType::Enum& aLeft,
   return WSType(aLeft) | WSType(aRight);
 }
 
+/**
+ * WSScanResult is result of ScanNextVisibleNodeOrBlockBoundaryFrom(),
+ * ScanPreviousVisibleNodeOrBlockBoundaryFrom(), and their static wrapper
+ * methods.  This will have information of found visible content (and its
+ * position) or reached block element or topmost editable content at the
+ * start of scanner.
+ */
+class MOZ_STACK_CLASS WSScanResult final {
+ public:
+  WSScanResult() = delete;
+  MOZ_NEVER_INLINE_DEBUG WSScanResult(nsIContent* aContent, WSType aReason)
+      : mContent(aContent), mReason(aReason) {
+    AssertIfInvalidData();
+  }
+  MOZ_NEVER_INLINE_DEBUG WSScanResult(nsIContent* aContent, uint32_t aOffset,
+                                      WSType aReason)
+      : mContent(aContent), mOffset(Some(aOffset)), mReason(aReason) {
+    AssertIfInvalidData();
+  }
+
+  void AssertIfInvalidData() const {
+#ifdef DEBUG
+    MOZ_ASSERT(mReason == WSType::text || mReason == WSType::normalWS ||
+               mReason == WSType::br || mReason == WSType::special ||
+               mReason == WSType::thisBlock || mReason == WSType::otherBlock);
+    MOZ_ASSERT_IF(mReason == WSType::text || mReason == WSType::normalWS,
+                  mContent && mContent->IsText());
+    MOZ_ASSERT_IF(mReason == WSType::br,
+                  mContent && mContent->IsHTMLElement(nsGkAtoms::br));
+    MOZ_ASSERT_IF(
+        mReason == WSType::special,
+        mContent && ((mContent->IsText() && !mContent->IsEditable()) ||
+                     (!mContent->IsHTMLElement(nsGkAtoms::br) &&
+                      !HTMLEditor::NodeIsBlockStatic(*mContent))));
+    MOZ_ASSERT_IF(mReason == WSType::otherBlock,
+                  mContent && HTMLEditor::NodeIsBlockStatic(*mContent));
+    // If mReason is WSType::thisBlock, mContent can be any content.  In most
+    // cases, it's current block element which is editable.  However, if there
+    // is no editable block parent, this is topmost editable inline content.
+    // Additionally, if there is no editable content, this is the container
+    // start of scanner and is not editable.
+    MOZ_ASSERT_IF(
+        mReason == WSType::thisBlock,
+        !mContent || !mContent->GetParentElement() ||
+            HTMLEditor::NodeIsBlockStatic(*mContent) ||
+            HTMLEditor::NodeIsBlockStatic(*mContent->GetParentElement()) ||
+            !mContent->GetParentElement()->IsEditable());
+#endif  // #ifdef DEBUG
+  }
+
+  /**
+   * GetContent() returns found visible and editable content/element.
+   * See MOZ_ASSERT_IF()s in AssertIfInvalidData() for the detail.
+   */
+  nsIContent* GetContent() const { return mContent; }
+
+  /**
+   * The following accessors makes it easier to understand each callers.
+   */
+  MOZ_NEVER_INLINE_DEBUG dom::Element* ElementPtr() const {
+    MOZ_DIAGNOSTIC_ASSERT(mContent->IsElement());
+    return mContent->AsElement();
+  }
+  MOZ_NEVER_INLINE_DEBUG dom::HTMLBRElement* BRElementPtr() const {
+    MOZ_DIAGNOSTIC_ASSERT(mContent->IsHTMLElement(nsGkAtoms::br));
+    return static_cast<dom::HTMLBRElement*>(mContent.get());
+  }
+  MOZ_NEVER_INLINE_DEBUG dom::Text* TextPtr() const {
+    MOZ_DIAGNOSTIC_ASSERT(mContent->IsText());
+    return mContent->AsText();
+  }
+
+  /**
+   * Returns true if found or reached content is ediable.
+   */
+  bool IsContentEditable() const { return mContent && mContent->IsEditable(); }
+
+  /**
+   *  Offset() returns meaningful value only when InNormalWhiteSpacesOrText()
+   * returns true or the scanner reached to start or end of its scanning
+   * range and that is same as start or end container which are specified
+   * when the scanner is initialized.  If it's result of scanning backward,
+   * this offset means before the found point.  Otherwise, i.e., scanning
+   * forward, this offset means after the found point.
+   */
+  MOZ_NEVER_INLINE_DEBUG uint32_t Offset() const {
+    NS_ASSERTION(mOffset.isSome(), "Retrieved non-meaningful offset");
+    return mOffset.valueOr(0);
+  }
+
+  /**
+   * Point() and RawPoint() return the position in found visible node or
+   * reached block boundary.  So, they return meaningful point only when
+   * Offset() returns meaningful value.
+   */
+  MOZ_NEVER_INLINE_DEBUG EditorDOMPoint Point() const {
+    NS_ASSERTION(mOffset.isSome(), "Retrieved non-meaningful point");
+    return EditorDOMPoint(mContent, mOffset.valueOr(0));
+  }
+  MOZ_NEVER_INLINE_DEBUG EditorRawDOMPoint RawPoint() const {
+    NS_ASSERTION(mOffset.isSome(), "Retrieved non-meaningful raw point");
+    return EditorRawDOMPoint(mContent, mOffset.valueOr(0));
+  }
+
+  /**
+   * PointAtContent() and RawPointAtContent() return the position of found
+   * visible content or reached block element.
+   */
+  MOZ_NEVER_INLINE_DEBUG EditorDOMPoint PointAtContent() const {
+    MOZ_ASSERT(mContent);
+    return EditorDOMPoint(mContent);
+  }
+  MOZ_NEVER_INLINE_DEBUG EditorRawDOMPoint RawPointAtContent() const {
+    MOZ_ASSERT(mContent);
+    return EditorRawDOMPoint(mContent);
+  }
+
+  /**
+   * PointAfterContent() and RawPointAfterContent() retrun the position after
+   * found visible content or reached block element.
+   */
+  MOZ_NEVER_INLINE_DEBUG EditorDOMPoint PointAfterContent() const {
+    MOZ_ASSERT(mContent);
+    return mContent ? EditorDOMPoint::After(*mContent) : EditorDOMPoint();
+  }
+  MOZ_NEVER_INLINE_DEBUG EditorRawDOMPoint RawPointAfterContent() const {
+    MOZ_ASSERT(mContent);
+    return mContent ? EditorRawDOMPoint::After(*mContent) : EditorRawDOMPoint();
+  }
+
+  /**
+   * The scanner reached <img> or something which is inline and is not a
+   * container.
+   */
+  bool ReachedSpecialContent() const { return mReason == WSType::special; }
+
+  /**
+   * The point is in normal whitespaces or text.
+   */
+  bool InNormalWhiteSpacesOrText() const {
+    return mReason == WSType::normalWS || mReason == WSType::text;
+  }
+
+  /**
+   * The point is in normal whitespaces.
+   */
+  bool InNormalWhiteSpaces() const { return mReason == WSType::normalWS; }
+
+  /**
+   * The point is in normal text.
+   */
+  bool InNormalText() const { return mReason == WSType::text; }
+
+  /**
+   * The scanner reached a <br> element.
+   */
+  bool ReachedBRElement() const { return mReason == WSType::br; }
+
+  /**
+   * The scanner reached a <hr> element.
+   */
+  bool ReachedHRElement() const {
+    return mContent && mContent->IsHTMLElement(nsGkAtoms::hr);
+  }
+
+  /**
+   * The scanner reached current block boundary or other block element.
+   */
+  bool ReachedBlockBoundary() const { return !!(mReason & WSType::block); }
+
+  /**
+   * The scanner reached current block element boundary.
+   */
+  bool ReachedCurrentBlockBoundary() const {
+    return mReason == WSType::thisBlock;
+  }
+
+  /**
+   * The scanner reached other block element.
+   */
+  bool ReachedOtherBlockElement() const {
+    return mReason == WSType::otherBlock;
+  }
+
+  /**
+   * The scanner reached something non-text node.
+   */
+  bool ReachedSomething() const { return !InNormalWhiteSpacesOrText(); }
+
+ private:
+  nsCOMPtr<nsIContent> mContent;
+  Maybe<uint32_t> mOffset;
+  WSType mReason;
+};
+
 class MOZ_STACK_CLASS WSRunScanner {
  public:
   /**
@@ -166,45 +366,61 @@ class MOZ_STACK_CLASS WSRunScanner {
                      EditorRawDOMPoint(aScanStartNode, aScanStartOffset)) {}
   ~WSRunScanner();
 
-  // NextVisibleNode() returns the first piece of visible thing after aPoint.
-  // If there is no visible ws qualifying it returns what is after the ws run.
-  // If outVisNode and/or outvisOffset is unused, callers can use nullptr.
-  // Note that {outVisNode,outVisOffset} is set to just BEFORE the visible
-  // object. Also outVisOffset might be invalid offset unless outVisNode is
-  // end reason node.
+  // ScanNextVisibleNodeOrBlockBoundaryForwardFrom() returns the first visible
+  // node after aPoint.  If there is no visible nodes after aPoint, returns
+  // topmost editable inline ancestor at end of current block.  See comments
+  // around WSScanResult for the detail.
   template <typename PT, typename CT>
-  void NextVisibleNode(const EditorDOMPointBase<PT, CT>& aPoint,
-                       nsCOMPtr<nsINode>* outVisNode, int32_t* outVisOffset,
-                       WSType* outType) const;
-
+  WSScanResult ScanNextVisibleNodeOrBlockBoundaryFrom(
+      const EditorDOMPointBase<PT, CT>& aPoint) const;
   template <typename PT, typename CT>
-  void NextVisibleNode(const EditorDOMPointBase<PT, CT>& aPoint,
-                       WSType* outType) const {
-    NextVisibleNode(aPoint, nullptr, nullptr, outType);
+  static WSScanResult ScanNextVisibleNodeOrBlockBoundary(
+      const HTMLEditor& aHTMLEditor, const EditorDOMPointBase<PT, CT>& aPoint) {
+    return WSRunScanner(&aHTMLEditor, aPoint)
+        .ScanNextVisibleNodeOrBlockBoundaryFrom(aPoint);
   }
 
-  // PriorVisibleNode() returns the first piece of visible thing before aPoint.
-  // If there is no visible ws qualifying it returns what is before the ws run.
-  // If outVisNode and/or outvisOffset is unused, callers can use nullptr.
-  // Note that {outVisNode,outVisOffset} is set to just AFTER the visible
-  // object. Also outVisOffset might be invalid offset unless outVisNode is
-  // start reason node.
+  // ScanPreviousVisibleNodeOrBlockBoundaryFrom() returns the first visible node
+  // before aPoint. If there is no visible nodes before aPoint, returns topmost
+  // editable inline ancestor at start of current block.  See comments around
+  // WSScanResult for the detail.
   template <typename PT, typename CT>
-  void PriorVisibleNode(const EditorDOMPointBase<PT, CT>& aPoint,
-                        nsCOMPtr<nsINode>* outVisNode, int32_t* outVisOffset,
-                        WSType* outType) const;
-
+  WSScanResult ScanPreviousVisibleNodeOrBlockBoundaryFrom(
+      const EditorDOMPointBase<PT, CT>& aPoint) const;
   template <typename PT, typename CT>
-  void PriorVisibleNode(const EditorDOMPointBase<PT, CT>& aPoint,
-                        WSType* outType) const {
-    PriorVisibleNode(aPoint, nullptr, nullptr, outType);
+  static WSScanResult ScanPreviousVisibleNodeOrBlockBoundary(
+      const HTMLEditor& aHTMLEditor, const EditorDOMPointBase<PT, CT>& aPoint) {
+    return WSRunScanner(&aHTMLEditor, aPoint)
+        .ScanPreviousVisibleNodeOrBlockBoundaryFrom(aPoint);
   }
 
   /**
-   * TODO: Document us!
+   * GetStartReasonContent() and GetEndReasonContent() return a node which
+   * was found by scanning from mScanStartPoint backward or mScanEndPoint
+   * forward.  If there was whitespaces or text from the point, returns the
+   * text node.  Otherwise, returns an element which is explained by
+   * StartReason() or EndReason().  Note that when the reason is
+   * WSType::thisBlock, In most cases, it's current block element which is
+   * editable, but also may be non-element and/or non-editable.  See
+   * MOZ_ASSERT_IF()s in WSScanResult::AssertIfInvalidData() for the detail.
    */
   nsIContent* GetStartReasonContent() const { return mStartReasonContent; }
   nsIContent* GetEndReasonContent() const { return mEndReasonContent; }
+
+  /**
+   * StartReason() and EndReason() return one of WSType::normalWS, WSType::text,
+   * WSType::br, WSType::special, WSType::thisBlock, WSType::otherBlock.
+   * If WSType::normalWS or WSType::text, scanning from mScanStartPoint backward
+   * or mScanEndPoint forward stopped in a text node.
+   * Otherwise, they reached an element which is what the WSType indicates.
+   */
+  WSType StartReason() const { return mStartReason; }
+  WSType EndReason() const { return mEndReason; }
+
+  /**
+   * Active editing host when this instance is created.
+   */
+  Element* GetEditingHost() const { return mEditingHost; }
 
  protected:
   // WSFragment represents a single run of ws (all leadingws, or all normalws,
@@ -304,7 +520,9 @@ class MOZ_STACK_CLASS WSRunScanner {
   nsIContent* GetEditableBlockParentOrTopmotEditableInlineContent(
       nsIContent* aContent) const;
 
-  static bool IsBlockNode(nsINode* aNode);
+  static bool IsBlockNode(nsINode* aNode) {
+    return aNode && aNode->IsElement() && HTMLEditor::NodeIsBlockStatic(*aNode);
+  }
 
   nsIContent* GetPreviousWSNodeInner(nsINode* aStartNode,
                                      nsINode* aBlockParent) const;
@@ -370,6 +588,7 @@ class MOZ_STACK_CLASS WSRunScanner {
   // The last WSFragment in the run, may be same as first.
   WSFragment* mEndRun;
 
+  // See above comment for GetStartReasonContent() and GetEndReasonContent().
   nsCOMPtr<nsIContent> mStartReasonContent;
   nsCOMPtr<nsIContent> mEndReasonContent;
 
@@ -525,8 +744,6 @@ class MOZ_STACK_CLASS WSRunObject final : public WSRunScanner {
   // AdjustWhitespace examines the ws object for nbsp's that can
   // be safely converted to regular ascii space and converts them.
   MOZ_CAN_RUN_SCRIPT nsresult AdjustWhitespace();
-
-  Element* GetEditingHost() const { return mEditingHost; }
 
  protected:
   using WSPoint = WSRunScanner::WSPoint;
