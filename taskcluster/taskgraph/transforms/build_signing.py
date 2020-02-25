@@ -22,10 +22,9 @@ def add_signed_routes(config, jobs):
 
     for job in jobs:
         dep_job = job['primary-dependency']
-        enable_signing_routes = job.pop('enable-signing-routes', True)
 
         job['routes'] = []
-        if dep_job.attributes.get('shippable') and enable_signing_routes:
+        if dep_job.attributes.get('shippable'):
             for dep_route in dep_job.task.get('routes', []):
                 if not dep_route.startswith('index.gecko.v2'):
                     continue
@@ -33,7 +32,7 @@ def add_signed_routes(config, jobs):
                 rest = ".".join(dep_route.split(".")[4:])
                 job['routes'].append(
                     'index.gecko.v2.{}.signed.{}'.format(branch, rest))
-        if dep_job.attributes.get('nightly') and enable_signing_routes:
+        if dep_job.attributes.get('nightly'):
             for dep_route in dep_job.task.get('routes', []):
                 if not dep_route.startswith('index.gecko.v2'):
                     continue
@@ -49,7 +48,6 @@ def add_signed_routes(config, jobs):
 def define_upstream_artifacts(config, jobs):
     for job in jobs:
         dep_job = job['primary-dependency']
-        upstream_artifact_task = job.pop('upstream-artifact-task', dep_job)
 
         job['attributes'] = copy_attributes_from_dependent_job(dep_job)
 
@@ -58,17 +56,11 @@ def define_upstream_artifacts(config, jobs):
             job,
             keep_locale_template=False,
             kind=config.kind,
-            dep_kind=upstream_artifact_task.kind
         )
 
-        task_ref = '<{}>'.format(upstream_artifact_task.kind)
-        task_type = 'build'
-        if 'notarization' in upstream_artifact_task.kind:
-            task_type = 'scriptworker'
-
         job['upstream-artifacts'] = [{
-            'taskId': {'task-reference': task_ref},
-            'taskType': task_type,
+            'taskId': {'task-reference': '<build>'},
+            'taskType': 'build',
             'paths': spec['artifacts'],
             'formats': spec['formats'],
         } for spec in artifacts_specifications]

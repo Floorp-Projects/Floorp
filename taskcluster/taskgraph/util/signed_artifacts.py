@@ -21,13 +21,8 @@ def is_partner_kind(kind):
         return True
 
 
-def is_notarization_kind(kind):
-    if kind and 'notarization' in kind:
-        return True
-
-
 def generate_specifications_of_artifacts_to_sign(
-    config, job, keep_locale_template=True, kind=None, dep_kind=None
+    config, job, keep_locale_template=True, kind=None,
 ):
     build_platform = job['attributes'].get('build_platform')
     use_stub = job['attributes'].get('stub-installer')
@@ -48,35 +43,19 @@ def generate_specifications_of_artifacts_to_sign(
     # XXX: Mars aren't signed here (on any platform) because internals will be
     # signed at after this stage of the release
     elif 'macosx' in build_platform:
-        if is_notarization_kind(dep_kind):
-            # This task is notarization part 3: download signed bits,
-            # and staple notarization.
-            artifacts_specifications = [{
-                'artifacts': [
-                    get_artifact_path(job, '{locale}/target.tar.gz'),
-                    get_artifact_path(job, '{locale}/target.pkg'),
-                ],
-                'formats': [],
-            }]
-            langpack_formats = []
+        if is_partner_kind(kind):
+            extension = 'tar.gz'
         else:
-            # This task is either depsigning, or notarization part 1:
-            # download unsigned bits, and sign. If notarization part 1,
-            # submit for notarization and create a uuid_manifest.json
-            if is_partner_kind(kind):
-                extension = 'tar.gz'
-            else:
-                extension = 'dmg'
-            artifacts_specifications = [{
-                'artifacts': [get_artifact_path(job, '{{locale}}/target.{}'.format(extension))],
-                'formats': ['macapp', 'autograph_widevine', 'autograph_omnija'],
-            }]
-            langpack_formats = ['autograph_langpack']
+            extension = 'dmg'
+        artifacts_specifications = [{
+            'artifacts': [get_artifact_path(job, '{{locale}}/target.{}'.format(extension))],
+            'formats': ['macapp', 'autograph_widevine', 'autograph_omnija'],
+        }]
 
         if 'ja-JP-mac' in locales and build_platform in LANGPACK_SIGN_PLATFORMS:
             artifacts_specifications += [{
                 'artifacts': [get_artifact_path(job, 'ja-JP-mac/target.langpack.xpi')],
-                'formats': langpack_formats,
+                'formats': ['autograph_langpack'],
             }]
     elif 'win' in build_platform:
         artifacts_specifications = [{
