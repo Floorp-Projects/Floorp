@@ -8,7 +8,6 @@ default_locales:  # Ignored for geckoview
     - en-US
 tasktype_map:  # Map task reference to task type.
     build: build
-    build-fat-aar: build
     build-signing: signing
 
 # A default entry, which the mappings below extend and override.
