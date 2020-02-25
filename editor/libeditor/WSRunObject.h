@@ -398,8 +398,8 @@ class MOZ_STACK_CLASS WSRunScanner {
    * GetStartReasonContent() and GetEndReasonContent() return a node which
    * was found by scanning from mScanStartPoint backward or mScanEndPoint
    * forward.  If there was whitespaces or text from the point, returns the
-   * text node.  Otherwise, returns an element which is explained by
-   * StartReason() or EndReason().  Note that when the reason is
+   * text node.  Otherwise, returns an element which is explained by the
+   * following methods.  Note that when the reason is
    * WSType::thisBlock, In most cases, it's current block element which is
    * editable, but also may be non-element and/or non-editable.  See
    * MOZ_ASSERT_IF()s in WSScanResult::AssertIfInvalidData() for the detail.
@@ -407,15 +407,50 @@ class MOZ_STACK_CLASS WSRunScanner {
   nsIContent* GetStartReasonContent() const { return mStartReasonContent; }
   nsIContent* GetEndReasonContent() const { return mEndReasonContent; }
 
-  /**
-   * StartReason() and EndReason() return one of WSType::normalWS, WSType::text,
-   * WSType::br, WSType::special, WSType::thisBlock, WSType::otherBlock.
-   * If WSType::normalWS or WSType::text, scanning from mScanStartPoint backward
-   * or mScanEndPoint forward stopped in a text node.
-   * Otherwise, they reached an element which is what the WSType indicates.
-   */
-  WSType StartReason() const { return mStartReason; }
-  WSType EndReason() const { return mEndReason; }
+  bool StartsFromNormalText() const { return mStartReason == WSType::text; }
+  bool StartsFromSpecialContent() const {
+    return mStartReason == WSType::special;
+  }
+  bool StartsFromBRElement() const { return mStartReason == WSType::br; }
+  bool StartsFromCurrentBlockBoundary() const {
+    return mStartReason == WSType::thisBlock;
+  }
+  bool StartsFromOtherBlockElement() const {
+    return mStartReason == WSType::otherBlock;
+  }
+  bool StartsFromBlockBoundary() const {
+    return !!(mStartReason & WSType::block);
+  }
+  bool StartsFromHardLineBreak() const {
+    return !!(mStartReason & (WSType::block | WSType::br));
+  }
+  bool EndsByNormalText() const { return mEndReason == WSType::text; }
+  bool EndsBySpecialContent() const { return mEndReason == WSType::special; }
+  bool EndsByBRElement() const { return mEndReason == WSType::br; }
+  bool EndsByCurrentBlockBoundary() const {
+    return mEndReason == WSType::thisBlock;
+  }
+  bool EndsByOtherBlockElement() const {
+    return mEndReason == WSType::otherBlock;
+  }
+  bool EndsByBlockBoundary() const { return !!(mEndReason & WSType::block); }
+
+  MOZ_NEVER_INLINE_DEBUG dom::Element* StartReasonOtherBlockElementPtr() const {
+    MOZ_DIAGNOSTIC_ASSERT(mStartReasonContent->IsElement());
+    return mStartReasonContent->AsElement();
+  }
+  MOZ_NEVER_INLINE_DEBUG dom::HTMLBRElement* StartReasonBRElementPtr() const {
+    MOZ_DIAGNOSTIC_ASSERT(mStartReasonContent->IsHTMLElement(nsGkAtoms::br));
+    return static_cast<dom::HTMLBRElement*>(mStartReasonContent.get());
+  }
+  MOZ_NEVER_INLINE_DEBUG dom::Element* EndReasonOtherBlockElementPtr() const {
+    MOZ_DIAGNOSTIC_ASSERT(mEndReasonContent->IsElement());
+    return mEndReasonContent->AsElement();
+  }
+  MOZ_NEVER_INLINE_DEBUG dom::HTMLBRElement* EndReasonBRElementPtr() const {
+    MOZ_DIAGNOSTIC_ASSERT(mEndReasonContent->IsHTMLElement(nsGkAtoms::br));
+    return static_cast<dom::HTMLBRElement*>(mEndReasonContent.get());
+  }
 
   /**
    * Active editing host when this instance is created.
@@ -565,14 +600,10 @@ class MOZ_STACK_CLASS WSRunScanner {
   // Node/offset where ws starts and ends.
   nsCOMPtr<nsINode> mStartNode;
   int32_t mStartOffset;
-  // Reason why ws starts (eText, eOtherBlock, etc.).
-  WSType mStartReason;
 
   // Node/offset where ws ends.
   nsCOMPtr<nsINode> mEndNode;
   int32_t mEndOffset;
-  // Reason why ws ends (eText, eOtherBlock, etc.).
-  WSType mEndReason;
 
   // Location of first nbsp in ws run, if any.
   RefPtr<dom::Text> mFirstNBSPNode;
@@ -594,6 +625,13 @@ class MOZ_STACK_CLASS WSRunScanner {
 
   // Non-owning.
   const HTMLEditor* mHTMLEditor;
+
+ private:
+  // Must be one of WSType::text, WSType::special, WSType::br,
+  // WSType::thisBlock or WSType::otherBlock.  Access these values with
+  // StartsFrom*() and EndsBy*() accessors.
+  WSType mStartReason;
+  WSType mEndReason;
 };
 
 class MOZ_STACK_CLASS WSRunObject final : public WSRunScanner {
@@ -823,9 +861,6 @@ class MOZ_STACK_CLASS WSRunObject final : public WSRunScanner {
 
   // Non-owning.
   HTMLEditor* mHTMLEditor;
-
-  // Opening this class up for more pillaging.
-  friend class HTMLEditor;
 };
 
 }  // namespace mozilla

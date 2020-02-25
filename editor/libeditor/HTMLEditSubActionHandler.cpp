@@ -2463,7 +2463,7 @@ EditActionResult HTMLEditor::HandleDeleteAroundCollapsedSelection(
     return result;
   }
 
-  MOZ_ASSERT_UNREACHABLE("New WSType value hasn't been handled yet");
+  MOZ_ASSERT_UNREACHABLE("New type of reached content hasn't been handled yet");
   return EditActionIgnored();
 }
 
@@ -3368,12 +3368,12 @@ nsresult HTMLEditor::InsertBRElementIfHardLineIsEmptyAndEndsWithBlockBoundary(
   WSRunObject wsObj(this, aPointToInsert);
   // If the point is not start of a hard line, we don't need to put a `<br>`
   // element here.
-  if (!(wsObj.mStartReason & (WSType::block | WSType::br))) {
+  if (!wsObj.StartsFromHardLineBreak()) {
     return NS_OK;
   }
   // If the point is not end of a hard line or the hard line does not end with
   // block boundary, we don't need to put a `<br>` element here.
-  if (!(wsObj.mEndReason & WSType::block)) {
+  if (!wsObj.EndsByBlockBoundary()) {
     return NS_OK;
   }
 
@@ -6811,9 +6811,9 @@ Element* HTMLEditor::GetInvisibleBRElementAt(
     return nullptr;
   }
 
-  WSRunObject wsTester(this, aPoint);
-  return WSType::br == wsTester.mStartReason
-             ? wsTester.GetStartReasonContent()->AsElement()
+  WSRunScanner wsScannerForPoint(this, aPoint);
+  return wsScannerForPoint.StartsFromBRElement()
+             ? wsScannerForPoint.StartReasonBRElementPtr()
              : nullptr;
 }
 
@@ -7017,24 +7017,24 @@ nsresult HTMLEditor::MaybeExtendSelectionToHardLineEdgesForBlockEditAction() {
           .ReachedSomething()) {
     // eThisBlock and eOtherBlock conveniently distinguish cases
     // of going "down" into a block and "up" out of a block.
-    if (wsScannerAtEnd.StartReason() == WSType::otherBlock) {
+    if (wsScannerAtEnd.StartsFromOtherBlockElement()) {
       // endpoint is just after the close of a block.
-      nsINode* child =
-          GetRightmostChild(wsScannerAtEnd.GetStartReasonContent(), true);
+      nsINode* child = GetRightmostChild(
+          wsScannerAtEnd.StartReasonOtherBlockElementPtr(), true);
       if (child) {
         newEndPoint.SetAfter(child);
       }
       // else block is empty - we can leave selection alone here, i think.
-    } else if (wsScannerAtEnd.StartReason() == WSType::thisBlock) {
+    } else if (wsScannerAtEnd.StartsFromCurrentBlockBoundary()) {
       // endpoint is just after start of this block
       nsINode* child = GetPreviousEditableHTMLNode(endPoint);
       if (child) {
         newEndPoint.SetAfter(child);
       }
       // else block is empty - we can leave selection alone here, i think.
-    } else if (wsScannerAtEnd.StartReason() == WSType::br) {
+    } else if (wsScannerAtEnd.StartsFromBRElement()) {
       // endpoint is just after break.  lets adjust it to before it.
-      newEndPoint.Set(wsScannerAtEnd.GetStartReasonContent());
+      newEndPoint.Set(wsScannerAtEnd.StartReasonBRElementPtr());
     }
   }
 
@@ -7045,24 +7045,24 @@ nsresult HTMLEditor::MaybeExtendSelectionToHardLineEdgesForBlockEditAction() {
           .ReachedSomething()) {
     // eThisBlock and eOtherBlock conveniently distinguish cases
     // of going "down" into a block and "up" out of a block.
-    if (wsScannerAtStart.EndReason() == WSType::otherBlock) {
+    if (wsScannerAtStart.EndsByOtherBlockElement()) {
       // startpoint is just before the start of a block.
-      nsINode* child =
-          GetLeftmostChild(wsScannerAtStart.GetEndReasonContent(), true);
+      nsINode* child = GetLeftmostChild(
+          wsScannerAtStart.EndReasonOtherBlockElementPtr(), true);
       if (child) {
         newStartPoint.Set(child);
       }
       // else block is empty - we can leave selection alone here, i think.
-    } else if (wsScannerAtStart.EndReason() == WSType::thisBlock) {
+    } else if (wsScannerAtStart.EndsByCurrentBlockBoundary()) {
       // startpoint is just before end of this block
       nsINode* child = GetNextEditableHTMLNode(startPoint);
       if (child) {
         newStartPoint.Set(child);
       }
       // else block is empty - we can leave selection alone here, i think.
-    } else if (wsScannerAtStart.EndReason() == WSType::br) {
+    } else if (wsScannerAtStart.EndsByBRElement()) {
       // startpoint is just before a break.  lets adjust it to after it.
-      newStartPoint.SetAfter(wsScannerAtStart.GetEndReasonContent());
+      newStartPoint.SetAfter(wsScannerAtStart.EndReasonBRElementPtr());
     }
   }
 
