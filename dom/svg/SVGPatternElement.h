@@ -7,7 +7,6 @@
 #ifndef mozilla_dom_SVGPatternElement_h
 #define mozilla_dom_SVGPatternElement_h
 
-#include "nsAutoPtr.h"
 #include "SVGAnimatedEnumeration.h"
 #include "SVGAnimatedLength.h"
 #include "SVGAnimatedPreserveAspectRatio.h"
@@ -15,6 +14,7 @@
 #include "SVGAnimatedTransformList.h"
 #include "SVGAnimatedViewBox.h"
 #include "mozilla/dom/SVGElement.h"
+#include "mozilla/UniquePtr.h"
 
 class nsSVGPatternFrame;
 
@@ -85,7 +85,7 @@ class SVGPatternElement final : public SVGPatternElementBase {
   SVGAnimatedEnumeration mEnumAttributes[2];
   static EnumInfo sEnumInfo[2];
 
-  nsAutoPtr<mozilla::SVGAnimatedTransformList> mPatternTransform;
+  UniquePtr<mozilla::SVGAnimatedTransformList> mPatternTransform;
 
   enum { HREF, XLINK_HREF };
   SVGAnimatedString mStringAttributes[2];

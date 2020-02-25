@@ -284,7 +284,7 @@ void DOMSVGTransform::RemovingFromList() {
   MOZ_ASSERT(!mTransform,
              "Item in list also has another non-list value associated with it");
 
-  mTransform = new SVGTransform(InternalItem());
+  mTransform = MakeUnique<SVGTransform>(InternalItem());
   mList = nullptr;
   mIsAnimValItem = false;
 }

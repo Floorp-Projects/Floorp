@@ -111,7 +111,7 @@ nsresult SVGAnimatedPathSegList::SetAnimValue(const SVGPathData& aNewAnimValue,
     domWrapper->InternalListWillChangeTo(aNewAnimValue);
   }
   if (!mAnimVal) {
-    mAnimVal = new SVGPathData();
+    mAnimVal = MakeUnique<SVGPathData>();
   }
   nsresult rv = mAnimVal->CopyFrom(aNewAnimValue);
   if (NS_FAILED(rv)) {

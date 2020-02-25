@@ -8,7 +8,6 @@
 #define __NS_SVGSTRING_H__
 
 #include "DOMSVGAnimatedString.h"
-#include "nsAutoPtr.h"
 #include "nsError.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/UniquePtr.h"
@@ -53,7 +52,7 @@ class SVGAnimatedString {
   mozilla::UniquePtr<SMILAttr> ToSMILAttr(SVGElement* aSVGElement);
 
  private:
-  nsAutoPtr<nsString> mAnimVal;
+  UniquePtr<nsString> mAnimVal;
   uint8_t mAttrEnum;  // element specified tracking for attribute
   bool mIsBaseSet;
 

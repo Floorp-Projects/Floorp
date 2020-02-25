@@ -119,7 +119,7 @@ void SVGElement::DidAnimateClass() {
   nsAutoString src;
   mClassAttribute.GetAnimValue(src, this);
   if (!mClassAnimAttr) {
-    mClassAnimAttr = new nsAttrValue();
+    mClassAnimAttr = MakeUnique<nsAttrValue>();
   }
   mClassAnimAttr->ParseAtomArray(src);
 

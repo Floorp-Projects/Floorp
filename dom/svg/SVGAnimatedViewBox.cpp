@@ -87,7 +87,7 @@ void SVGAnimatedViewBox::Init() {
 bool SVGAnimatedViewBox::HasRect() const {
   // Check mAnimVal if we have one; otherwise, check mBaseVal if we have one;
   // otherwise, just return false (we clearly do not have a rect).
-  const SVGViewBox* rect = mAnimVal;
+  const SVGViewBox* rect = mAnimVal.get();
   if (!rect) {
     if (!mHasBaseVal) {
       // no anim val, no base val --> no viewbox rect
@@ -103,7 +103,7 @@ void SVGAnimatedViewBox::SetAnimValue(const SVGViewBox& aRect,
                                       SVGElement* aSVGElement) {
   if (!mAnimVal) {
     // it's okay if allocation fails - and no point in reporting that
-    mAnimVal = new SVGViewBox(aRect);
+    mAnimVal = MakeUnique<SVGViewBox>(aRect);
   } else {
     if (aRect == *mAnimVal) {
       return;

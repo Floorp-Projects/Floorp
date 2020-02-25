@@ -107,7 +107,7 @@ nsresult SVGAnimatedTransformList::SetAnimValue(const SVGTransformList& aValue,
     domWrapper->InternalAnimValListWillChangeLengthTo(aValue.Length());
   }
   if (!mAnimVal) {
-    mAnimVal = new SVGTransformList();
+    mAnimVal = MakeUnique<SVGTransformList>();
   }
   nsresult rv = mAnimVal->CopyFrom(aValue);
   if (NS_FAILED(rv)) {
