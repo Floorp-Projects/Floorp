@@ -156,8 +156,6 @@ nsresult GetDefaultMemoryReportFile(nsIFile** aFile) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-void SetTelemetrySessionId(const nsACString& id) {}
-
 void DeleteMinidumpFilesForID(const nsAString& id) {}
 
 bool GetMinidumpForID(const nsAString& id, nsIFile** minidump) { return false; }

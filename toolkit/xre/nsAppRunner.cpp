@@ -1148,12 +1148,6 @@ nsXULAppInfo::SaveMemoryReport() {
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsXULAppInfo::SetTelemetrySessionId(const nsACString& id) {
-  CrashReporter::SetTelemetrySessionId(id);
-  return NS_OK;
-}
-
 // This method is from nsIFInishDumpingCallback.
 NS_IMETHODIMP
 nsXULAppInfo::Callback(nsISupports* aData) {
