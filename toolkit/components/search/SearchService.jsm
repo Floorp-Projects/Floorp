@@ -18,8 +18,10 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   DeferredTask: "resource://gre/modules/DeferredTask.jsm",
   ExtensionParent: "resource://gre/modules/ExtensionParent.jsm",
   getVerificationHash: "resource://gre/modules/SearchEngine.jsm",
-  OS: "resource://gre/modules/osfile.jsm",
   IgnoreLists: "resource://gre/modules/IgnoreLists.jsm",
+  NetworkGeolocationProvider:
+    "resource://gre/modules/NetworkGeolocationProvider.jsm",
+  OS: "resource://gre/modules/osfile.jsm",
   SearchEngine: "resource://gre/modules/SearchEngine.jsm",
   SearchEngineSelector: "resource://gre/modules/SearchEngineSelector.jsm",
   SearchStaticData: "resource://gre/modules/SearchStaticData.jsm",
@@ -127,7 +129,7 @@ var ensureKnownRegion = async function(ss, awaitRegionCheck) {
   // If we have a region already stored in our prefs we trust it.
   let region = Services.prefs.getCharPref("browser.search.region", "");
   try {
-    if (!region) {
+    if (gGeoSpecificDefaultsEnabled && !region) {
       // We don't have it cached, so fetch it. fetchRegion() will call
       // storeRegion if it gets a result (even if that happens after the
       // promise resolves) and fetchRegionDefault.
@@ -148,7 +150,7 @@ var ensureKnownRegion = async function(ss, awaitRegionCheck) {
       if (expired || !hasValidHashes) {
         await new Promise(resolve => {
           let timeoutMS = Services.prefs.getIntPref(
-            "browser.search.geoip.timeout"
+            "geo.provider.network.timeToWaitBeforeSending"
           );
           let timerId = setTimeout(() => {
             timerId = null;
@@ -246,134 +248,87 @@ async function storeRegion(region) {
 }
 
 // Get the region we are in via a XHR geoip request.
-function fetchRegion(ss, awaitRegionCheck) {
+async function fetchRegion(ss, awaitRegionCheck) {
   // values for the SEARCH_SERVICE_COUNTRY_FETCH_RESULT 'enum' telemetry probe.
   const TELEMETRY_RESULT_ENUM = {
-    SUCCESS: 0,
-    SUCCESS_WITHOUT_DATA: 1,
-    XHRTIMEOUT: 2,
-    ERROR: 3,
+    success: 0,
+    "xhr-empty": 1,
+    "xhr-timeout": 2,
+    "xhr-error": 3,
     // Note that we expect to add finer-grained error types here later (eg,
     // dns error, network error, ssl error, etc) with .ERROR remaining as the
     // generic catch-all that doesn't fit into other categories.
   };
-  let endpoint = Services.urlFormatter.formatURLPref(
-    "browser.search.geoip.url"
-  );
-  SearchUtils.log("_fetchRegion starting with endpoint " + endpoint);
-  // As an escape hatch, no endpoint means no geoip.
-  if (!endpoint) {
-    return Promise.resolve();
-  }
   let startTime = Date.now();
-  return new Promise(resolve => {
-    // Instead of using a timeout on the xhr object itself, we simulate one
-    // using a timer and let the XHR request complete.  This allows us to
-    // capture reliable telemetry on what timeout value should actually be
-    // used to ensure most users don't see one while not making it so large
-    // that many users end up doing a sync init of the search service and thus
-    // would see the jank that implies.
-    // (Note we do actually use a timeout on the XHR, but that's set to be a
-    // large value just incase the request never completes - we don't want the
-    // XHR object to live forever)
-    let timeoutMS = Services.prefs.getIntPref("browser.search.geoip.timeout");
-    let geoipTimeoutPossible = true;
-    let timerId = setTimeout(() => {
-      SearchUtils.log("_fetchRegion: timeout fetching region information");
-      if (geoipTimeoutPossible) {
-        Services.telemetry
-          .getHistogramById("SEARCH_SERVICE_COUNTRY_TIMEOUT")
-          .add(1);
-      }
-      timerId = null;
-      resolve();
-    }, timeoutMS);
 
-    let resolveAndReportSuccess = (result, reason) => {
-      // Even if we timed out, we want to save the region and everything
-      // related so next startup sees the value and doesn't retry this dance.
-      if (result) {
-        storeRegion(result).catch(Cu.reportError);
-      }
-      Services.telemetry
-        .getHistogramById("SEARCH_SERVICE_COUNTRY_FETCH_RESULT")
-        .add(reason);
+  let statusCallback = status => {
+    switch (status) {
+      case "xhr-start":
+        // This notification is just for tests...
+        Services.obs.notifyObservers(
+          null,
+          SearchUtils.TOPIC_SEARCH_SERVICE,
+          "geoip-lookup-xhr-starting"
+        );
+        break;
+      case "wifi-timeout":
+        SearchUtils.log("_fetchRegion: timeout fetching wifi information");
+        // Do nothing for now.
+        break;
+    }
+  };
 
-      // This notification is just for tests...
-      Services.obs.notifyObservers(
-        null,
-        SearchUtils.TOPIC_SEARCH_SERVICE,
-        "geoip-lookup-xhr-complete"
-      );
+  let networkGeo = new NetworkGeolocationProvider();
+  let result, errorResult;
+  try {
+    result = await networkGeo.getCountry(statusCallback);
+  } catch (ex) {
+    errorResult = ex;
+    Cu.reportError(ex);
+  }
 
-      if (timerId) {
-        Services.telemetry
-          .getHistogramById("SEARCH_SERVICE_COUNTRY_TIMEOUT")
-          .add(0);
-        geoipTimeoutPossible = false;
-      }
+  let took = Date.now() - startTime;
+  // Even if we timed out, we want to save the region and everything
+  // related so next startup sees the value and doesn't retry this dance.
+  if (result) {
+    // As long as the asynchronous codepath in `storeRegion` is only used for
+    // telemetry, we don't need to await its completion.
+    storeRegion(result).catch(Cu.reportError);
+  }
+  SearchUtils.log(
+    "_fetchRegion got success response in " + took + "ms: " + result
+  );
+  Services.telemetry
+    .getHistogramById("SEARCH_SERVICE_COUNTRY_FETCH_TIME_MS")
+    .add(took);
 
-      let callback = () => {
-        // If we've already timed out then we've already resolved the promise,
-        // so there's nothing else to do.
-        if (timerId == null) {
-          return;
-        }
-        clearTimeout(timerId);
-        resolve();
-      };
+  // This notification is just for tests...
+  Services.obs.notifyObservers(
+    null,
+    SearchUtils.TOPIC_SEARCH_SERVICE,
+    "geoip-lookup-xhr-complete"
+  );
 
-      if (result && gGeoSpecificDefaultsEnabled && gModernConfig) {
-        ss._maybeReloadEngines(awaitRegionCheck).then(callback);
-      } else if (result && gGeoSpecificDefaultsEnabled && !gModernConfig) {
-        fetchRegionDefault(ss, awaitRegionCheck)
-          .then(callback)
-          .catch(err => {
-            Cu.reportError(err);
-            callback();
-          });
-      } else {
-        callback();
-      }
-    };
+  // Now that we know the current region, it's possible to fetch defaults,
+  // which we couldn't do before in `ensureKnownRegion`.
+  try {
+    if (result && gModernConfig) {
+      await ss._maybeReloadEngines(awaitRegionCheck);
+    } else if (result && !gModernConfig) {
+      await fetchRegionDefault(ss, awaitRegionCheck);
+    }
+  } catch (ex) {
+    Cu.reportError(ex);
+  }
 
-    let request = new XMLHttpRequest();
-    // This notification is just for tests...
-    Services.obs.notifyObservers(
-      request,
-      SearchUtils.TOPIC_SEARCH_SERVICE,
-      "geoip-lookup-xhr-starting"
-    );
-    request.timeout = 100000; // 100 seconds as the last-chance fallback
-    request.onload = function(event) {
-      let took = Date.now() - startTime;
-      let region = event.target.response && event.target.response.country_code;
-      SearchUtils.log(
-        "_fetchRegion got success response in " + took + "ms: " + region
-      );
-      Services.telemetry
-        .getHistogramById("SEARCH_SERVICE_COUNTRY_FETCH_TIME_MS")
-        .add(took);
-      let reason = region
-        ? TELEMETRY_RESULT_ENUM.SUCCESS
-        : TELEMETRY_RESULT_ENUM.SUCCESS_WITHOUT_DATA;
-      resolveAndReportSuccess(region, reason);
-    };
-    request.ontimeout = function(event) {
-      SearchUtils.log(
-        "_fetchRegion: XHR finally timed-out fetching region information"
-      );
-      resolveAndReportSuccess(null, TELEMETRY_RESULT_ENUM.XHRTIMEOUT);
-    };
-    request.onerror = function(event) {
-      SearchUtils.log("_fetchRegion: failed to retrieve region information");
-      resolveAndReportSuccess(null, TELEMETRY_RESULT_ENUM.ERROR);
-    };
-    request.open("POST", endpoint, true);
-    request.setRequestHeader("Content-Type", "application/json");
-    request.responseType = "json";
-    request.send("{}");
-  });
+  let telemetryResult = TELEMETRY_RESULT_ENUM.success;
+  if (errorResult) {
+    telemetryResult =
+      TELEMETRY_RESULT_ENUM[errorResult] || TELEMETRY_RESULT_ENUM["xhr-error"];
+  }
+  Services.telemetry
+    .getHistogramById("SEARCH_SERVICE_COUNTRY_FETCH_RESULT")
+    .add(telemetryResult);
 }
 
 // This converts our legacy google engines to the
@@ -1498,7 +1453,7 @@ SearchService.prototype = {
   },
 
   _reInit(origin, awaitRegionCheck = false) {
-    SearchUtils.log("_reInit");
+    SearchUtils.log("_reInit: " + awaitRegionCheck);
     // Re-entrance guard, because we're using an async lambda below.
     if (gReinitializing) {
       SearchUtils.log("_reInit: already re-initializing, bailing out.");

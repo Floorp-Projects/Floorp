@@ -3,13 +3,14 @@
 
 add_task(async function setup() {
   await AddonTestUtils.promiseStartupManager();
+  Services.prefs.setBoolPref("browser.search.geoSpecificDefaults", true);
 });
 
 add_task(async function test_location_error() {
   // We use an invalid port that parses but won't open
   let url = "http://localhost:0";
 
-  Services.prefs.setCharPref("browser.search.geoip.url", url);
+  Services.prefs.setCharPref("geo.provider-country.network.url", url);
   await Services.search.init();
   try {
     Services.prefs.getCharPref("browser.search.region");
@@ -17,10 +18,4 @@ add_task(async function test_location_error() {
   } catch (ex) {}
   // should have an error recorded.
   checkCountryResultTelemetry(TELEMETRY_RESULT_ENUM.ERROR);
-  // but false values for timeout
-  let histogram = Services.telemetry.getHistogramById(
-    "SEARCH_SERVICE_COUNTRY_TIMEOUT"
-  );
-  let snapshot = histogram.snapshot();
-  deepEqual(snapshot.values, { 0: 1, 1: 0 }); // boolean probe so 3 buckets, expect 1 result for |0|.
 });

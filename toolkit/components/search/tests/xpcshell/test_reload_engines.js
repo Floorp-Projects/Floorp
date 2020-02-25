@@ -58,6 +58,7 @@ function listenFor(name, key) {
 
 add_task(async function setup() {
   Services.prefs.setBoolPref("browser.search.separatePrivateDefault", true);
+  Services.prefs.setBoolPref("browser.search.geoSpecificDefaults", true);
 
   await useTestEngines("data", null, CONFIG);
   await AddonTestUtils.promiseStartupManager();
@@ -66,7 +67,7 @@ add_task(async function setup() {
 add_task(async function test_regular_init() {
   let reloadObserved = listenFor(SEARCH_SERVICE_TOPIC, "engines-reloaded");
   let geoUrl = `data:application/json,{"country_code": "FR"}`;
-  Services.prefs.setCharPref("browser.search.geoip.url", geoUrl);
+  Services.prefs.setCharPref("geo.provider-country.network.url", geoUrl);
 
   await Promise.all([
     Services.search.init(true),
@@ -103,7 +104,7 @@ add_task(async function test_init_with_slow_region_lookup() {
   });
 
   Services.prefs.setCharPref(
-    "browser.search.geoip.url",
+    "geo.provider-country.network.url",
     `http://localhost:${srv.identity.primaryPort}/fetch_region`
   );
 

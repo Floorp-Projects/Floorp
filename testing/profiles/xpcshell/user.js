@@ -3,7 +3,7 @@
 /* eslint quotes: 0 */
 user_pref("app.normandy.api_url", "https://%(server)s/selfsupport-dummy/");
 user_pref("browser.safebrowsing.downloads.remote.url", "https://%(server)s/safebrowsing-dummy");
-user_pref("browser.search.geoip.url", "https://%(server)s/geoip-dummy");
+user_pref("browser.search.geoSpecificDefaults", false);
 user_pref("extensions.systemAddon.update.url", "http://%(server)s/dummy-system-addons.xml");
 // Treat WebExtension API/schema warnings as errors.
 user_pref("extensions.webextensions.warnings-as-errors", true);
