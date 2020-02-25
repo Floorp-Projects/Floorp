@@ -1401,7 +1401,9 @@ class PictureInPictureChild extends JSWindowActorChild {
     if (focusedWindow) {
       let doc = focusedWindow.document;
       if (doc) {
-        let video = doc.querySelector("video");
+        let listOfVideos = doc.querySelectorAll("video");
+        let video =
+          Array.from(listOfVideos).filter(v => !v.paused)[0] || listOfVideos[0];
         if (video) {
           this.togglePictureInPicture(video);
         }
