@@ -567,6 +567,80 @@ void js::intl::LanguageTag::performComplexRegionMappings() {
   }
 }
 
+static const char* ToCharPointer(const char* str) {
+  return str;
+}
+
+static const char* ToCharPointer(const js::UniqueChars& str) {
+  return str.get();
+}
+
+template <typename T, typename U = T>
+static bool IsLessThan(const T& a, const U& b) {
+  return strcmp(ToCharPointer(a), ToCharPointer(b)) < 0;
+}
+
+// Mappings from variant subtags to preferred values.
+// Derived from CLDR Supplemental Data, version 36.
+// https://unicode.org/Public/cldr/36/core.zip
+bool js::intl::LanguageTag::performVariantMappings(JSContext* cx) {
+  // The variant subtags need to be sorted for binary search.
+  MOZ_ASSERT(std::is_sorted(variants_.begin(), variants_.end(),
+                            IsLessThan<decltype(variants_)::ElementType>));
+
+  auto insertVariantSortedIfNotPresent = [&](const char* variant) {
+    auto* p = std::lower_bound(variants_.begin(), variants_.end(), variant,
+                               IsLessThan<decltype(variants_)::ElementType,
+                                          decltype(variant)>);
+
+    // Don't insert the replacement when already present.
+    if (p != variants_.end() && strcmp(p->get(), variant) == 0) {
+      return true;
+    }
+
+    // Insert the preferred variant in sort order.
+    auto preferred = DuplicateString(cx, variant);
+    if (!preferred) {
+      return false;
+    }
+    return !!variants_.insert(p, std::move(preferred));
+  };
+
+  for (size_t i = 0; i < variants_.length(); ) {
+    auto& variant = variants_[i];
+    MOZ_ASSERT(IsCanonicallyCasedVariantTag(mozilla::MakeStringSpan(variant.get())));
+
+    if (strcmp(variant.get(), "aaland") == 0) {
+      variants_.erase(variants_.begin() + i);
+      setRegion("AX");
+    }
+    else if (strcmp(variant.get(), "arevela") == 0) {
+      variants_.erase(variants_.begin() + i);
+      setLanguage("hy");
+    }
+    else if (strcmp(variant.get(), "arevmda") == 0) {
+      variants_.erase(variants_.begin() + i);
+      setLanguage("hyw");
+    }
+    else if (strcmp(variant.get(), "heploc") == 0) {
+      variants_.erase(variants_.begin() + i);
+      if (!insertVariantSortedIfNotPresent("alalc97")) {
+        return false;
+      }
+    }
+    else if (strcmp(variant.get(), "polytoni") == 0) {
+      variants_.erase(variants_.begin() + i);
+      if (!insertVariantSortedIfNotPresent("polyton")) {
+        return false;
+      }
+    }
+    else {
+      i++;
+    }
+  }
+  return true;
+}
+
 // Canonicalize grandfathered locale identifiers.
 // Derived from CLDR Supplemental Data, version 36.
 // https://unicode.org/Public/cldr/36/core.zip
