@@ -2914,7 +2914,8 @@ bool CanvasRenderingContext2D::DrawCustomFocusRing(
     return false;
   }
 
-  if (nsFocusManager* fm = nsFocusManager::GetFocusManager()) {
+  nsFocusManager* fm = nsFocusManager::GetFocusManager();
+  if (fm) {
     // check that the element is focused
     if (&aElement == fm->GetFocusedElement()) {
       if (nsPIDOMWindowOuter* window = aElement.OwnerDoc()->GetWindow()) {

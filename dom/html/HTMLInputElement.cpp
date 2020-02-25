@@ -2172,8 +2172,7 @@ void HTMLInputElement::SetFocusState(bool aIsFocused) {
     return;
   }
 
-  EventStates focusStates = NS_EVENT_STATE_FOCUS | NS_EVENT_STATE_FOCUSRING |
-                            NS_EVENT_STATE_FOCUS_VISIBLE;
+  EventStates focusStates = NS_EVENT_STATE_FOCUS | NS_EVENT_STATE_FOCUSRING;
   if (aIsFocused) {
     AddStates(focusStates);
   } else {
