@@ -192,7 +192,19 @@ nsresult AccessibleWrap::HandleAccEvent(AccEvent* aEvent) {
       AccStateChangeEvent* event = downcast_accEvent(aEvent);
       auto state = event->GetState();
       if (state & states::CHECKED) {
-        sessionAcc->SendClickedEvent(accessible, event->IsStateEnabled());
+        sessionAcc->SendClickedEvent(
+            accessible, java::SessionAccessibility::FLAG_CHECKABLE |
+                            (event->IsStateEnabled()
+                                 ? java::SessionAccessibility::FLAG_CHECKED
+                                 : 0));
+      }
+
+      if (state & states::EXPANDED) {
+        sessionAcc->SendClickedEvent(
+            accessible, java::SessionAccessibility::FLAG_EXPANDABLE |
+                            (event->IsStateEnabled()
+                                 ? java::SessionAccessibility::FLAG_EXPANDED
+                                 : 0));
       }
 
       if (state & states::SELECTED) {
@@ -498,6 +510,14 @@ uint32_t AccessibleWrap::GetFlags(role aRole, uint64_t aState,
 
   if (aState & states::SELECTED) {
     flags |= java::SessionAccessibility::FLAG_SELECTED;
+  }
+
+  if (aState & states::EXPANDABLE) {
+    flags |= java::SessionAccessibility::FLAG_EXPANDABLE;
+  }
+
+  if (aState & states::EXPANDED) {
+    flags |= java::SessionAccessibility::FLAG_EXPANDED;
   }
 
   if ((aState & (states::INVISIBLE | states::OFFSCREEN)) == 0) {

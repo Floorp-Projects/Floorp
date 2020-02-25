@@ -80,7 +80,7 @@ class SessionAccessibility final
                             int32_t aStart, uint32_t aLen, bool aIsInsert,
                             bool aFromUser);
   void SendSelectedEvent(AccessibleWrap* aAccessible, bool aSelected);
-  void SendClickedEvent(AccessibleWrap* aAccessible, bool aChecked);
+  void SendClickedEvent(AccessibleWrap* aAccessible, uint32_t aFlags);
   void SendWindowContentChangedEvent();
   void SendWindowStateChangedEvent(AccessibleWrap* aAccessible);
   void SendAnnouncementEvent(AccessibleWrap* aAccessible,

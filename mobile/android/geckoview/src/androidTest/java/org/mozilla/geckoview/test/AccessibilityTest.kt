@@ -773,6 +773,50 @@ class AccessibilityTest : BaseSessionTest() {
         waitUntilClick(false)
     }
 
+    @Test fun testExpandable() {
+        var nodeId = AccessibilityNodeProvider.HOST_VIEW_ID;
+        loadTestPage("test-expandable")
+        waitForInitialFocus(true)
+
+        sessionRule.waitUntilCalled(object : EventDelegate {
+            @AssertCalled(count = 1)
+            override fun onAccessibilityFocused(event: AccessibilityEvent) {
+                nodeId = getSourceId(event)
+                if (Build.VERSION.SDK_INT >= 21) {
+                    val node = createNodeInfo(nodeId)
+                    assertThat("button is expandable", node.actionList, hasItem(AccessibilityNodeInfo.AccessibilityAction.ACTION_EXPAND))
+                    assertThat("button is not collapsable", node.actionList, not(hasItem(AccessibilityNodeInfo.AccessibilityAction.ACTION_COLLAPSE)))
+                }
+            }
+        })
+
+        provider.performAction(nodeId, AccessibilityNodeInfo.ACTION_EXPAND, null)
+        sessionRule.waitUntilCalled(object : EventDelegate {
+            @AssertCalled(count = 1)
+            override fun onClicked(event: AccessibilityEvent) {
+                assertThat("Clicked event is from same node", getSourceId(event), equalTo(nodeId))
+                if (Build.VERSION.SDK_INT >= 21) {
+                    val node = createNodeInfo(nodeId)
+                    assertThat("button is collapsable", node.actionList, hasItem(AccessibilityNodeInfo.AccessibilityAction.ACTION_COLLAPSE))
+                    assertThat("button is not expandable", node.actionList, not(hasItem(AccessibilityNodeInfo.AccessibilityAction.ACTION_EXPAND)))
+                }
+            }
+        })
+
+        provider.performAction(nodeId, AccessibilityNodeInfo.ACTION_COLLAPSE, null)
+        sessionRule.waitUntilCalled(object : EventDelegate {
+            @AssertCalled(count = 1)
+            override fun onClicked(event: AccessibilityEvent) {
+                assertThat("Clicked event is from same node", getSourceId(event), equalTo(nodeId))
+                if (Build.VERSION.SDK_INT >= 21) {
+                    val node = createNodeInfo(nodeId)
+                    assertThat("button is expandable", node.actionList, hasItem(AccessibilityNodeInfo.AccessibilityAction.ACTION_EXPAND))
+                    assertThat("button is not collapsable", node.actionList, not(hasItem(AccessibilityNodeInfo.AccessibilityAction.ACTION_COLLAPSE)))
+                }
+            }
+        })
+    }
+
     @Test fun testSelectable() {
         var nodeId = View.NO_ID
         loadTestPage("test-selectable")
