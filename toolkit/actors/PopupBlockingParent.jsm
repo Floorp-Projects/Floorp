@@ -55,7 +55,7 @@ class PopupBlocker {
       let popupCountForGlobal =
         this._allBlockedPopupCounts.get(windowGlobal) || 0;
       totalBlockedPopups += popupCountForGlobal;
-      contextsToVisit.push(...currentBC.getChildren());
+      contextsToVisit.push(...currentBC.children);
     }
 
     return totalBlockedPopups;
@@ -112,7 +112,7 @@ class PopupBlocker {
         }
       }
 
-      contextsToVisit.push(...currentBC.getChildren());
+      contextsToVisit.push(...currentBC.children);
     }
 
     return result;

@@ -82,7 +82,7 @@ async function submitSomeCrossSiteFrames(locationMode) {
   );
 
   let outerFrameBC = firsttab.linkedBrowser.browsingContext;
-  let innerFrameBC = outerFrameBC.getChildren()[0];
+  let innerFrameBC = outerFrameBC.children[0];
 
   await verifyNotifications(notifyPromise, [
     "FormProcessed: " + outerFrameBC.id,
@@ -123,7 +123,7 @@ async function submitSomeCrossSiteFrames(locationMode) {
   );
 
   let outerFrameBC2 = secondtab.linkedBrowser.browsingContext;
-  let innerFrameBC2 = outerFrameBC2.getChildren()[0];
+  let innerFrameBC2 = outerFrameBC2.children[0];
   await verifyNotifications(notifyPromise, [
     "FormProcessed: " + outerFrameBC2.id,
     "FormProcessed: " + innerFrameBC2.id,
@@ -160,7 +160,7 @@ async function submitSomeCrossSiteFrames(locationMode) {
   );
 
   let outerFrameBC3 = thirdtab.linkedBrowser.browsingContext;
-  let innerFrameBC3 = outerFrameBC3.getChildren()[0];
+  let innerFrameBC3 = outerFrameBC3.children[0];
   await verifyNotifications(notifyPromise, [
     "FormProcessed: " + outerFrameBC3.id,
     "FormProcessed: " + innerFrameBC3.id,
