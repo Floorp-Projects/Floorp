@@ -319,7 +319,6 @@ class BrowserMenuTest {
         doReturn(Int.MAX_VALUE).`when`(containerView).measuredHeight
 
         popupWindow.displayPopup(containerView, anchor, BrowserMenu.Orientation.DOWN)
-        assertEquals(popupWindow.animationStyle, -1)
         verify(popupWindow).showAtLocation(anchor, Gravity.START or Gravity.TOP, 0, 0)
     }
 
