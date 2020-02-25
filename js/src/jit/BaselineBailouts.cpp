@@ -2024,7 +2024,6 @@ bool jit::FinishBailoutToBaseline(BaselineBailoutInfo* bailoutInfoArg) {
     case Bailout_NonBigIntInput:
     case Bailout_NonSharedTypedArrayInput:
     case Bailout_Debugger:
-    case Bailout_UninitializedThis:
       // Do nothing.
       break;
 
@@ -2047,7 +2046,6 @@ bool jit::FinishBailoutToBaseline(BaselineBailoutInfo* bailoutInfoArg) {
       // Do nothing, bailout will resume before the argument monitor ICs.
       break;
     case Bailout_BoundsCheck:
-    case Bailout_Detached:
       HandleBoundsCheckFailure(cx, outerScript, innerScript);
       break;
     case Bailout_ShapeGuard:
