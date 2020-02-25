@@ -912,8 +912,7 @@ def build_generic_worker_payload(config, task, task_def):
 
     # behavior for mac iscript
     Optional('mac-behavior'): Any(
-        "mac_notarize_part_1", "mac_notarize_part_3", "mac_sign_and_pkg",
-        "mac_geckodriver",
+        "mac_notarize", "mac_sign", "mac_sign_and_pkg", "mac_geckodriver",
     ),
     Optional('entitlements-url'): text_type,
 })
@@ -937,16 +936,6 @@ def build_scriptworker_signing_payload(config, task, task_def):
                 behavior=worker.get('mac-behavior'),
             ))
     task['release-artifacts'] = list(artifacts)
-
-
-@payload_builder('notarization-poller', schema={
-    Required('uuid-manifest'): taskref_or_string,
-})
-def notarization_poller_payload(config, task, task_def):
-    worker = task['worker']
-    task_def['payload'] = {
-        'uuid_manifest':  worker['uuid-manifest']
-    }
 
 
 @payload_builder('beetmover', schema={

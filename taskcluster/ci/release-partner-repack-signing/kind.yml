@@ -2,21 +2,17 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 ---
-loader: taskgraph.loader.multi_dep:loader
-
-group-by: partner-repack-ids
+loader: taskgraph.loader.single_dep:loader
 
 transforms:
     - taskgraph.transforms.chunk_partners:transforms
+    - taskgraph.transforms.name_sanity:transforms
     - taskgraph.transforms.partner_signing:transforms
     - taskgraph.transforms.signing:transforms
     - taskgraph.transforms.task:transforms
 
 kind-dependencies:
-    - release-partner-repack-notarization-part-1
-    - release-partner-repack-notarization-poller
-
-primary-dependency: release-partner-repack-notarization-part-1
+    - release-partner-repack
 
 only-for-build-platforms:
     - macosx64-nightly/opt
@@ -25,5 +21,6 @@ only-for-build-platforms:
 job-template:
     shipping-product: firefox
     shipping-phase: promote
+    depname: release-partner-repack
     max-run-time: 3600
-    copy-repack-ids: true
+    repacks-per-chunk: 5

@@ -18,17 +18,6 @@ transforms.add(check_if_partners_enabled)
 
 
 @transforms.add
-def set_mac_label(config, jobs):
-    for job in jobs:
-        dep_job = job['primary-dependency']
-        job.setdefault('label', dep_job.label.replace('notarization-part-1', 'signing'))
-        assert job['label'] != dep_job.label, "Unable to determine label for {}".format(
-            config.kind
-        )
-        yield job
-
-
-@transforms.add
 def define_upstream_artifacts(config, jobs):
     partner_configs = get_partner_config_by_kind(config, config.kind)
     if not partner_configs:
@@ -36,7 +25,6 @@ def define_upstream_artifacts(config, jobs):
 
     for job in jobs:
         dep_job = job['primary-dependency']
-        job['depname'] = dep_job.label
         job['attributes'] = copy_attributes_from_dependent_job(dep_job)
 
         repack_ids = job['extra']['repack_ids']
@@ -46,12 +34,9 @@ def define_upstream_artifacts(config, jobs):
             keep_locale_template=True,
             kind=config.kind,
         )
-        task_type = 'build'
-        if 'notarization' in job['depname']:
-            task_type = 'scriptworker'
         job['upstream-artifacts'] = [{
-            'taskId': {'task-reference': '<{}>'.format(dep_job.kind)},
-            'taskType': task_type,
+            'taskId': {'task-reference': '<{}>'.format(job['depname'])},
+            'taskType': 'build',
             'paths': [
                 path_template.format(locale=repack_id)
                 for path_template in spec['artifacts']
