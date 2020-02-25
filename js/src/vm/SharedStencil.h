@@ -153,6 +153,101 @@ class ImmutableScriptFlags : public ScriptFlagBase<ImmutableScriptFlagsEnum> {
   void operator=(uint32_t flag) { flags_ = flag; }
 };
 
+enum class MutableScriptFlagsEnum : uint32_t {
+  // Number of times the |warmUpCount| was forcibly discarded. The counter is
+  // reset when a script is successfully jit-compiled.
+  WarmupResets_MASK = 0xFF,
+
+  // Have warned about uses of undefined properties in this script.
+  WarnedAboutUndefinedProp = 1 << 8,
+
+  // If treatAsRunOnce, whether script has executed.
+  HasRunOnce = 1 << 9,
+
+  // Script has been reused for a clone.
+  HasBeenCloned = 1 << 10,
+
+  // Whether the record/replay execution progress counter (see RecordReplay.h)
+  // should be updated as this script runs.
+  TrackRecordReplayProgress = 1 << 11,
+
+  // Script has an entry in Realm::scriptCountsMap.
+  HasScriptCounts = 1 << 12,
+
+  // Script has an entry in Realm::debugScriptMap.
+  HasDebugScript = 1 << 13,
+
+  // Do not relazify this script. This is used by the relazify() testing
+  // function for scripts that are on the stack and also by the AutoDelazify
+  // RAII class. Usually we don't relazify functions in compartments with
+  // scripts on the stack, but the relazify() testing function overrides that,
+  // and sometimes we're working with a cross-compartment function and need to
+  // keep it from relazifying.
+  DoNotRelazify = 1 << 14,
+
+  // IonMonkey compilation hints.
+
+  // Script has had hoisted bounds checks fail.
+  FailedBoundsCheck = 1 << 15,
+
+  // Script has had hoisted shape guard fail.
+  FailedShapeGuard = 1 << 16,
+
+  HadFrequentBailouts = 1 << 17,
+  HadOverflowBailout = 1 << 18,
+
+  // Whether Baseline or Ion compilation has been disabled for this script.
+  // IonDisabled is equivalent to |jitScript->canIonCompile() == false| but
+  // JitScript can be discarded on GC and we don't want this to affect
+  // observable behavior (see ArgumentsGetterImpl comment).
+  BaselineDisabled = 1 << 19,
+  IonDisabled = 1 << 20,
+
+  // Explicitly marked as uninlineable.
+  Uninlineable = 1 << 21,
+
+  // Idempotent cache has triggered invalidation.
+  InvalidatedIdempotentCache = 1 << 22,
+
+  // Lexical check did fail and bail out.
+  FailedLexicalCheck = 1 << 23,
+
+  // See comments below.
+  NeedsArgsAnalysis = 1 << 24,
+  NeedsArgsObj = 1 << 25,
+
+  // Set if the debugger's onNewScript hook has not yet been called.
+  HideScriptFromDebugger = 1 << 26,
+
+  // Set if the script has opted into spew
+  SpewEnabled = 1 << 27,
+
+  // Set for LazyScripts which have been wrapped by some Debugger.
+  WrappedByDebugger = 1 << 28,
+};
+
+class MutableScriptFlags : public ScriptFlagBase<MutableScriptFlagsEnum> {
+ public:
+  MutableScriptFlags() = default;
+
+  void static_asserts() {
+    static_assert(sizeof(MutableScriptFlags) == sizeof(flags_),
+                  "No extra members allowed");
+    static_assert(offsetof(MutableScriptFlags, flags_) == 0,
+                  "Required for JIT flag access");
+  }
+
+  MutableScriptFlags& operator&=(const uint32_t rhs) {
+    flags_ &= rhs;
+    return *this;
+  }
+
+  MutableScriptFlags& operator|=(const uint32_t rhs) {
+    flags_ |= rhs;
+    return *this;
+  }
+};
+
 }  // namespace js
 
 #endif /* vm_SharedStencil_h */
