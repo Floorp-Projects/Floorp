@@ -313,7 +313,7 @@ add_task(async function test_hotkey_insubframe() {
 
   // Focus the editable area within the frame.
   let browser = gBrowser.selectedBrowser;
-  let frameBC = browser.browsingContext.children[0];
+  let frameBC = browser.browsingContext.getChildren()[0];
   await SpecialPowers.spawn(frameBC, [], async () => {
     content.document.body.focus();
     content.document.defaultView.focus();

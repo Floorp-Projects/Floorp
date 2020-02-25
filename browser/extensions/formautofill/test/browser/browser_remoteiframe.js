@@ -24,7 +24,7 @@ add_task(async function test_iframe_autocomplete() {
     true
   );
   let browser = tab.linkedBrowser;
-  let iframeBC = browser.browsingContext.children[1];
+  let iframeBC = browser.browsingContext.getChildren()[1];
   await openPopupForSubframe(browser, iframeBC, "#street-address");
 
   // Highlight the first item in the list. We want to verify
@@ -115,7 +115,7 @@ add_task(async function test_iframe_autocomplete_preferences() {
     true
   );
   let browser = tab.linkedBrowser;
-  let iframeBC = browser.browsingContext.children[1];
+  let iframeBC = browser.browsingContext.getChildren()[1];
   await openPopupForSubframe(browser, iframeBC, "#organization");
 
   await expectWarningText(browser, "Also autofills address, email");

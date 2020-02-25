@@ -7629,7 +7629,7 @@ var gPageStyleMenu = {
       let actor = global.getActor("PageStyle");
       actor.sendAsyncMessage(message, data);
 
-      contextsToVisit.push(...currentContext.children);
+      contextsToVisit.push(...currentContext.getChildren());
     }
   },
 
@@ -8457,7 +8457,7 @@ function ReportFalseDeceptiveSite() {
       });
     }
 
-    contextsToVisit.push(...currentContext.children);
+    contextsToVisit.push(...currentContext.getChildren());
   }
 }
 

@@ -297,13 +297,13 @@
         }
 
         let parentIFrameBC = SpecialPowers.wrap(window).windowGlobalChild
-                                          .browsingContext.children[0];
+                                          .browsingContext.getChildren()[0];
 
-        let childIFrame = SpecialPowers.unwrap(parentIFrameBC.children[0]);
+        let childIFrame = SpecialPowers.unwrap(parentIFrameBC.getChildren()[0]);
         await SpecialPowers.spawn(childIFrame, ["iframe1"], checkIframe);
-        childIFrame = SpecialPowers.unwrap(parentIFrameBC.children[1]);
+        childIFrame = SpecialPowers.unwrap(parentIFrameBC.getChildren()[1]);
         await SpecialPowers.spawn(childIFrame, ["iframe2"], checkIframe);
-        childIFrame = SpecialPowers.unwrap(parentIFrameBC.children[2]);
+        childIFrame = SpecialPowers.unwrap(parentIFrameBC.getChildren()[2]);
         await SpecialPowers.spawn(childIFrame, ["iframe3"], checkIframe);
       });
 

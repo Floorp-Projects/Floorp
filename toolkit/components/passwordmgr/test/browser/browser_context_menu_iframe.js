@@ -40,7 +40,7 @@ add_task(async function test_context_menu_iframe_fill() {
         browser,
         "#form-basic-password",
         () => true,
-        browser.browsingContext.children[0]
+        browser.browsingContext.getChildren()[0]
       );
 
       let popupMenu = document.getElementById("fill-login-popup");
@@ -48,7 +48,7 @@ add_task(async function test_context_menu_iframe_fill() {
       // Stores the original value of username
       function promiseFrameInputValue(name) {
         return SpecialPowers.spawn(
-          browser.browsingContext.children[0],
+          browser.browsingContext.getChildren()[0],
           [name],
           function(inputname) {
             return content.document.getElementById(inputname).value;
@@ -127,7 +127,7 @@ add_task(async function test_context_menu_iframe_sandbox() {
           );
           return false;
         },
-        browser.browsingContext.children[1]
+        browser.browsingContext.getChildren()[1]
       );
       let contextMenu = document.getElementById("contentAreaContextMenu");
       contextMenu.hidePopup();
@@ -160,7 +160,7 @@ add_task(async function test_context_menu_iframe_sandbox_same_origin() {
           );
           return false;
         },
-        browser.browsingContext.children[2]
+        browser.browsingContext.getChildren()[2]
       );
 
       let contextMenu = document.getElementById("contentAreaContextMenu");

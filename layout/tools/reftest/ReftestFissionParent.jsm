@@ -18,7 +18,7 @@ class ReftestFissionParent extends JSWindowActorParent {
       }
     }
 
-    for (let context of browsingContext.children) {
+    for (let context of browsingContext.getChildren()) {
       this.tellChildrenToFlushRenderingRecursive(context, ignoreThrottledAnimations, promises);
     }
   }
@@ -39,7 +39,7 @@ class ReftestFissionParent extends JSWindowActorParent {
       }
     }
 
-    for (let context of browsingContext.children) {
+    for (let context of browsingContext.getChildren()) {
       this.tellChildrenToUpdateLayerTreeRecursive(context, promises);
     }
   }

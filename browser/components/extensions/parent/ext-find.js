@@ -35,7 +35,7 @@ function gatherActors(browsingContext) {
     list.push({ actor, result: null });
   }
 
-  let children = browsingContext.children;
+  let children = browsingContext.getChildren();
   for (let child of children) {
     list.push(...gatherActors(child));
   }

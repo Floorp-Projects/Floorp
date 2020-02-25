@@ -169,7 +169,8 @@ FinderParent.prototype = {
   gatherBrowsingContexts(aBrowsingContext) {
     let list = [aBrowsingContext];
 
-    for (let child of aBrowsingContext.children) {
+    let children = aBrowsingContext.getChildren();
+    for (let child of children) {
       list.push(...this.gatherBrowsingContexts(child));
     }
 
