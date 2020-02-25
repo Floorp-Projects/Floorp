@@ -20,6 +20,7 @@ import kotlinx.coroutines.runBlocking
 import mozilla.appservices.Megazord
 import mozilla.components.browser.session.Session
 import mozilla.components.concept.push.PushProcessor
+import mozilla.components.feature.addons.update.GlobalAddonDependencyProvider
 import mozilla.components.service.glean.Glean
 import mozilla.components.service.glean.config.Configuration
 import mozilla.components.service.glean.net.ConceptFetchHttpUploader
@@ -289,6 +290,10 @@ open class FenixApplication : LocaleAwareApplication() {
 
     private fun initializeWebExtensionSupport() {
         try {
+            GlobalAddonDependencyProvider.initialize(
+                components.addonManager,
+                components.addonUpdater
+            )
             WebExtensionSupport.initialize(
                 components.core.engine,
                 components.core.store,

@@ -63,8 +63,9 @@ class Components(private val context: Context) {
         AddonCollectionProvider(context, core.client, maxCacheAgeInMinutes = DAY_IN_MINUTES)
     }
 
+    @Suppress("MagicNumber")
     val addonUpdater by lazy {
-        DefaultAddonUpdater(context, AddonUpdater.Frequency(1, TimeUnit.DAYS))
+        DefaultAddonUpdater(context, AddonUpdater.Frequency(12, TimeUnit.HOURS))
     }
 
     val addonManager by lazy {
