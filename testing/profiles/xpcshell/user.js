@@ -28,3 +28,5 @@ user_pref("idle.lastDailyNotification", -1);
 // Enable telemetry event ping during tests, even for geckoview, where it
 // is normally disabled.
 user_pref("toolkit.telemetry.eventping.enabled", true);
+// XXX: Bug 1617611 - Fix all the tests broken by "cookies sameSite=lax by default"
+user_pref("network.cookie.sameSite.laxByDefault", false);
