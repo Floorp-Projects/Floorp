@@ -63,9 +63,11 @@ assertEq(Object.getOwnPropertyNames(group).length, 0);
 
 // Get a cleanup iterator.
 let iterator;
-new FinalizationGroup(it => iterator = it).register({}, 0);
+group = new FinalizationGroup(it => iterator = it);
+group.register({}, 0);
 gc();
 drainJobQueue();
+assertEq(typeof group, 'object');
 assertEq(typeof iterator, 'object');
 
 // 3.5.2 The %FinalizationGroupCleanupIteratorPrototype% Object
@@ -88,9 +90,7 @@ assertEq(Object.getOwnPropertyNames(iterator).length, 0);
 
 let heldValues = [];
 group = new FinalizationGroup(iterator => {
-  for (const heldValue of iterator) {
-    heldValues.push(heldValue);
-  }
+  heldValues.push(...iterator);
 });
 
 // Test a single target.
@@ -118,9 +118,7 @@ for (let i = 0; i < 100; i++) {
 heldValues = [];
 let heldValues2 = [];
 let group2 = new FinalizationGroup(iterator => {
-  for (const heldValue of iterator) {
-    heldValues2.push(heldValue);
-  }
+  heldValues2.push(...iterator);
 });
 {
   let object = {};
@@ -199,9 +197,7 @@ class MyGroup extends FinalizationGroup {
   }
 }
 let g2 = new MyGroup(iterator => {
-  for (const heldValue of iterator) {
-    heldValues.push(heldValue);
-  }
+  heldValues.push(...iterator);
 });
 heldValues = [];
 g2.register({}, 42);
@@ -248,3 +244,36 @@ let g6 = new FinalizationGroup(x => {
 g6.register({}, 1);
 gc();
 drainJobQueue();
+
+// Test that targets don't keep the finalization group alive.
+let target = {};
+group = new FinalizationGroup(iterator => undefined);
+group.register(target, 1);
+let weakRef = new WeakRef(group);
+group = undefined;
+assertEq(typeof weakRef.deref(), 'object');
+drainJobQueue();
+gc();
+assertEq(weakRef.deref(), undefined);
+assertEq(typeof target, 'object');
+
+// Test that targets don't keep the finalization group alive when also
+// used as the unregister token.
+group = new FinalizationGroup(iterator => undefined);
+group.register(target, 1, target);
+weakRef = new WeakRef(group);
+group = undefined;
+assertEq(typeof weakRef.deref(), 'object');
+drainJobQueue();
+gc();
+assertEq(weakRef.deref(), undefined);
+assertEq(typeof target, 'object');
+
+// Test that cleanup doesn't happen if the finalization group dies.
+heldValues = [];
+new FinalizationGroup(iterator => {
+  heldValues.push(...iterator);
+}).register({}, 1);
+gc();
+drainJobQueue();
+assertEq(heldValues.length, 0);
