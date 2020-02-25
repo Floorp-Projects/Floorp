@@ -347,6 +347,96 @@ void js::intl::LanguageTag::performComplexRegionMappings() {
 """.strip("\n"))
 
 
+def writeVariantTagMappings(println, variant_mappings, description, source,
+                            url):
+    """ Writes a function definition that maps variant subtags. """
+    println(u"""
+static const char* ToCharPointer(const char* str) {
+  return str;
+}
+
+static const char* ToCharPointer(const js::UniqueChars& str) {
+  return str.get();
+}
+
+template <typename T, typename U = T>
+static bool IsLessThan(const T& a, const U& b) {
+  return strcmp(ToCharPointer(a), ToCharPointer(b)) < 0;
+}
+""")
+    writeMappingHeader(println, description, source, url)
+    println(u"""
+bool js::intl::LanguageTag::performVariantMappings(JSContext* cx) {
+  // The variant subtags need to be sorted for binary search.
+  MOZ_ASSERT(std::is_sorted(variants_.begin(), variants_.end(),
+                            IsLessThan<decltype(variants_)::ElementType>));
+
+  auto insertVariantSortedIfNotPresent = [&](const char* variant) {
+    auto* p = std::lower_bound(variants_.begin(), variants_.end(), variant,
+                               IsLessThan<decltype(variants_)::ElementType,
+                                          decltype(variant)>);
+
+    // Don't insert the replacement when already present.
+    if (p != variants_.end() && strcmp(p->get(), variant) == 0) {
+      return true;
+    }
+
+    // Insert the preferred variant in sort order.
+    auto preferred = DuplicateString(cx, variant);
+    if (!preferred) {
+      return false;
+    }
+    return !!variants_.insert(p, std::move(preferred));
+  };
+
+  for (size_t i = 0; i < variants_.length(); ) {
+    auto& variant = variants_[i];
+    MOZ_ASSERT(IsCanonicallyCasedVariantTag(mozilla::MakeStringSpan(variant.get())));
+""".lstrip())
+
+    first_variant = True
+
+    for (deprecated_variant, (type, replacement)) in (
+        sorted(variant_mappings.items(), key=itemgetter(0))
+    ):
+        if_kind = u"if" if first_variant else u"else if"
+        first_variant = False
+
+        println(u"""
+    {} (strcmp(variant.get(), "{}") == 0) {{
+      variants_.erase(variants_.begin() + i);
+""".format(if_kind, deprecated_variant).strip("\n"))
+
+        if type == "language":
+            println(u"""
+      setLanguage("{}");
+""".format(replacement).strip("\n"))
+        elif type == "region":
+            println(u"""
+      setRegion("{}");
+""".format(replacement).strip("\n"))
+        else:
+            assert type == "variant"
+            println(u"""
+      if (!insertVariantSortedIfNotPresent("{}")) {{
+        return false;
+      }}
+""".format(replacement).strip("\n"))
+
+        println(u"""
+    }
+""".strip("\n"))
+
+    println(u"""
+    else {
+      i++;
+    }
+  }
+  return true;
+}
+""".strip("\n"))
+
+
 def writeGrandfatheredMappingsFunction(println, grandfathered_mappings,
                                        description, source, url):
     """ Writes a function definition that maps grandfathered language tags. """
@@ -514,6 +604,7 @@ def readSupplementalData(core_file):
         - complexLanguageMappings: mappings from language subtags with complex rules
         - regionMappings: mappings from region subtags to preferred subtags
         - complexRegionMappings: mappings from region subtags with complex rules
+        - variantMappings: mappings from variant subtags to preferred subtags
         - likelySubtags: likely subtags used for generating test data only
         Returns these mappings as dictionaries.
     """
@@ -554,6 +645,14 @@ def readSupplementalData(core_file):
         ^
         # unicode_region_subtag = (alpha{2} | digit{3})
         ([a-z]{2}|[0-9]{3})
+        $
+        """, re.IGNORECASE | re.VERBOSE)
+
+    re_unicode_variant_subtag = re.compile(
+        r"""
+        ^
+        # unicode_variant_subtag = (alphanum{5,8} | digit alphanum{3})
+        ([a-z0-9]{5,8}|(?:[0-9][a-z0-9]{3}))
         $
         """, re.IGNORECASE | re.VERBOSE)
 
@@ -605,6 +704,11 @@ def readSupplementalData(core_file):
     # replacement, e.g. "SU" -> ("RU", ["AM", "AZ", "BY", ...]).
     complex_region_mappings = {}
 
+    # Dictionary of aliased variant subtags to a tuple of preferred replacement
+    # type and replacement, e.g. "arevela" -> ("language", "hy") or
+    # "aaland" -> ("region", "AX") or "heploc" -> ("variant", "alalc97").
+    variant_mappings = {}
+
     # Dictionary of grandfathered mappings to preferred values.
     grandfathered_mappings = {}
 
@@ -640,6 +744,8 @@ def readSupplementalData(core_file):
         if re_unicode_language_subtag.match(type) is None:
             continue
 
+        assert type.islower()
+
         if re_unicode_language_subtag.match(replacement) is not None:
             # Canonical case for language subtags is lower-case.
             language_mappings[type] = replacement.lower()
@@ -663,6 +769,8 @@ def readSupplementalData(core_file):
         if re_unicode_region_subtag.match(type) is None:
             continue
 
+        assert type.isupper() or type.isdigit()
+
         if re_unicode_region_subtag.match(replacement) is not None:
             # Canonical case for region subtags is upper-case.
             region_mappings[type] = replacement.upper()
@@ -673,6 +781,33 @@ def readSupplementalData(core_file):
                 re_unicode_region_subtag.match(loc) is not None for loc in replacements
             ), "{} invalid region subtags".format(replacement)
             complex_region_mappings[type] = replacements
+
+    for variant_alias in tree.iterfind(".//variantAlias"):
+        type = variant_alias.get("type")
+        replacement = variant_alias.get("replacement")
+
+        assert re_unicode_variant_subtag.match(type) is not None, (
+               "{} invalid variant subtag".format(type))
+
+        # Normalize the case, because some variants are in upper case.
+        type = type.lower()
+
+        # The replacement can be a language, a region, or a variant subtag.
+        # Language and region subtags are case normalized, variant subtags can
+        # be in any case.
+
+        if re_unicode_language_subtag.match(replacement) is not None and replacement.islower():
+            variant_mappings[type] = ("language", replacement)
+
+        elif re_unicode_region_subtag.match(replacement) is not None:
+            assert replacement.isupper() or replacement.isdigit(), (
+                   "{} invalid variant subtag replacement".format(replacement))
+            variant_mappings[type] = ("region", replacement)
+
+        else:
+            assert re_unicode_variant_subtag.match(replacement) is not None, (
+                   "{} invalid variant subtag replacement".format(replacement))
+            variant_mappings[type] = ("variant", replacement.lower())
 
     tree = ET.parse(core_file.open("common/supplemental/likelySubtags.xml"))
 
@@ -740,6 +875,7 @@ def readSupplementalData(core_file):
             "complexLanguageMappings": complex_language_mappings,
             "regionMappings": region_mappings,
             "complexRegionMappings": complex_region_mappings_final,
+            "variantMappings": variant_mappings,
             "likelySubtags": likely_subtags,
             }
 
@@ -978,6 +1114,7 @@ static bool IsCanonicallyCasedVariantTag(mozilla::Span<const char> span) {
     complex_language_mappings = data["complexLanguageMappings"]
     region_mappings = data["regionMappings"]
     complex_region_mappings = data["complexRegionMappings"]
+    variant_mappings = data["variantMappings"]
     unicode_mappings = data["unicodeMappings"]
 
     # unicode_language_subtag = alpha{2,3} | alpha{5,8} ;
@@ -1015,6 +1152,9 @@ static bool IsCanonicallyCasedVariantTag(mozilla::Span<const char> span) {
                                     "Language subtags with complex mappings.", source, url)
     writeComplexRegionTagMappings(println, complex_region_mappings,
                                   "Region subtags with complex mappings.", source, url)
+
+    writeVariantTagMappings(println, variant_mappings,
+                            "Mappings from variant subtags to preferred values.", source, url)
 
     writeGrandfatheredMappingsFunction(println, grandfathered_mappings,
                                        "Canonicalize grandfathered locale identifiers.", source,

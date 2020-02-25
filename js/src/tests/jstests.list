@@ -508,3 +508,8 @@ skip script test262/language/expressions/super/call-proto-not-ctor.js
 
 # Tests expects RangeError, but should instead expect TypeError.
 skip script test262/intl402/NumberFormat/constructor-order.js
+
+# Tests not updated to follow new language tag canonicalisation.
+skip script test262/intl402/Locale/constructor-non-iana-canon.js
+skip script test262/intl402/Intl/getCanonicalLocales/preferred-variant.js
+skip script test262/intl402/Intl/getCanonicalLocales/non-iana-canon.js
