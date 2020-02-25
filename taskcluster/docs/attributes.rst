@@ -340,10 +340,3 @@ run-visual-metrics
 ==================
 If set to true, will run the visual metrics task on the provided
 video files.
-
-skip-verify-test-packaging
-==================
-If set to true, this task will not be checked to see that
-MOZ_AUTOMATION_PACKAGE_TESTS is set correctly based on whether or not the task
-has dependent tests. This should only be used in very unique situations, such
-as Windows AArch64 builds that copy test packages between build tasks.
