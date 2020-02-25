@@ -57,6 +57,7 @@ def load_git_repository():
         hg_rev = desc[18:]
         commit_map[hg_rev] = GitCommit(hg_rev, commit)
         debugprint("Loaded pre-existing tag hg %s -> git %s" % (hg_rev, commit.oid))
+
     # Next, scan the commits for a specific message format
     re_commitmsg = re.compile(
         r"^\[(ghsync|wrupdater)\] From https://hg.mozilla.org/mozilla-central/rev/([0-9a-fA-F]+)$",
@@ -101,7 +102,7 @@ def get_multiple_revs(revset, template):
 
 def get_base_hg_rev(commit_map):
     base_hg_rev = find_newest_commit(commit_map)
-    eprint("Using %s as base hg revisions" % base_hg_rev)
+    eprint("Using %s as base hg revision" % base_hg_rev)
     return base_hg_rev
 
 
@@ -351,6 +352,16 @@ def build_git_commits(rev):
     return commit_obj.oid
 
 
+def pretty_print(rev, cset):
+    desc = "  %s" % rev
+    desc += " parents: %s" % cset.parents
+    if rev in hg_to_git_commit_map:
+        desc += " git: %s" % hg_to_git_commit_map[rev].commit_obj.oid
+    if rev == hg_tip:
+        desc += " (tip)"
+    return desc
+
+
 if len(sys.argv) < 3:
     eprint("Usage: %s <local-checkout-path> <repo-relative-path>" % sys.argv[0])
     eprint("Current dir must be the mozilla hg repo")
@@ -368,6 +379,7 @@ base_hg_rev = get_base_hg_rev(hg_to_git_commit_map)
 if base_hg_rev is None:
     eprint("Found no sync commits or 'mozilla-xxx' tags")
     exit(1)
+
 hg_commits = load_hg_commits(dict(), 'only(.,' + base_hg_rev + ')')
 eprint("Initial set has %s changesets" % len(hg_commits))
 base_hg_rev = get_real_base_hg_rev(hg_commits, hg_to_git_commit_map)
@@ -379,33 +391,42 @@ wider_range = "%s::%s" % (base_hg_rev, hg_tip)
 hg_commits = load_hg_commits(hg_commits, wider_range)
 eprint("Updated set has %s changesets" % len(hg_commits))
 
+if DEBUG:
+    eprint("Graph of descendants of %s" % base_hg_rev)
+    output = subprocess.check_output(
+        ['hg', 'log', '--graph',
+         '-r', 'descendants(' + base_hg_rev + ')',
+         '--template', '{node} {desc|firstline}\\n'])
+    for line in output.splitlines():
+        eprint(str(line, "ascii"))
+
 # Also flag any changes that touch the project
 query = '(' + wider_range + ') & modifies("glob:' + relative_path + '/**")'
 for cset in get_multiple_revs(query, '{node}'):
+    debugprint("Changeset %s modifies %s" % (cset, relative_path))
     hg_commits[cset].touches_sync_code = True
 eprint(
     "Identified %s changesets that touch the target code" %
     sum([1 if v.touches_sync_code else 0 for (k, v) in hg_commits.items()]))
 
 prune_boring(hg_tip)
+
 # hg_tip itself might be boring
 if not hg_commits[hg_tip].touches_sync_code and len(hg_commits[hg_tip].parents) == 1:
     new_tip = hg_commits[hg_tip].parents[0]
     eprint("Pruned tip %s as boring, using %s now" % (hg_tip, new_tip))
     hg_tip = new_tip
 
-# Extra logging, disabled by default
+eprint("--- Interesting changesets ---")
+for (rev, cset) in hg_commits.items():
+    if cset.touches_sync_code or len(cset.parents) > 1 or rev in hg_to_git_commit_map:
+        eprint(pretty_print(rev, cset))
 if DEBUG:
+    eprint("--- Other changesets (not really interesting) ---")
     for (rev, cset) in hg_commits.items():
-        desc = "  %s" % rev
-        desc += " touches code to sync: %s" % cset.touches_sync_code
-        desc += " parents: %s" % cset.parents
-        if rev in hg_to_git_commit_map:
-            desc += " git: %s" % hg_to_git_commit_map[rev].commit_obj.oid
-        if rev == hg_tip:
-            desc += " (tip)"
-        eprint(desc)
-#
+        if not (cset.touches_sync_code or len(cset.parents) > 1 or rev in hg_to_git_commit_map):
+            eprint(pretty_print(rev, cset))
+
 git_tip = build_git_commits(hg_tip)
 if git_tip is None:
     eprint("No new changesets generated, exiting.")
