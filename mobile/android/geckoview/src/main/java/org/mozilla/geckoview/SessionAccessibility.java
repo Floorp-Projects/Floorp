@@ -66,6 +66,8 @@ public class SessionAccessibility {
     @WrapForJNI static final int FLAG_SELECTED = 1 << 14;
     @WrapForJNI static final int FLAG_VISIBLE_TO_USER = 1 << 15;
     @WrapForJNI static final int FLAG_SELECTABLE = 1 << 16;
+    @WrapForJNI static final int FLAG_EXPANDABLE = 1 << 17;
+    @WrapForJNI static final int FLAG_EXPANDED = 1 << 18;
 
     static final int CLASSNAME_UNKNOWN = -1;
     @WrapForJNI static final int CLASSNAME_VIEW = 0;
@@ -208,10 +210,12 @@ public class SessionAccessibility {
                             virtualViewId == View.NO_ID ? CLASSNAME_WEBVIEW : CLASSNAME_UNKNOWN, null);
                     return true;
                 case AccessibilityNodeInfo.ACTION_CLICK:
+                case AccessibilityNodeInfo.ACTION_EXPAND:
+                case AccessibilityNodeInfo.ACTION_COLLAPSE:
                     nativeProvider.click(virtualViewId);
                     GeckoBundle nodeInfo = getMostRecentBundle(virtualViewId);
                     if (nodeInfo != null) {
-                        if ((nodeInfo.getInt("flags") & (FLAG_SELECTABLE | FLAG_CHECKABLE)) == 0) {
+                        if ((nodeInfo.getInt("flags") & (FLAG_SELECTABLE | FLAG_CHECKABLE | FLAG_EXPANDABLE)) == 0) {
                             sendEvent(AccessibilityEvent.TYPE_VIEW_CLICKED, virtualViewId, nodeInfo.getInt("className"), null);
                         }
                     }
@@ -539,6 +543,19 @@ public class SessionAccessibility {
                 node.setInputType(nodeInfo.getInt("inputType"));
             }
 
+            // SDK 21 and above
+            if (Build.VERSION.SDK_INT >= 21) {
+                if ((flags & FLAG_EXPANDABLE) != 0) {
+                    if ((flags & FLAG_EXPANDED) != 0) {
+                        node.removeAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_EXPAND);
+                        node.addAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_COLLAPSE);
+                    } else {
+                        node.removeAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_COLLAPSE);
+                        node.addAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_EXPAND);
+                    }
+                }
+            }
+
             // SDK 23 and above
             if (Build.VERSION.SDK_INT >= 23) {
                 node.setContextClickable((flags & FLAG_CONTEXT_CLICKABLE) != 0);
@@ -789,17 +806,28 @@ public class SessionAccessibility {
             event.setScrollY(eventData.getInt("scrollY", -1));
             event.setMaxScrollX(eventData.getInt("maxScrollX", -1));
             event.setMaxScrollY(eventData.getInt("maxScrollY", -1));
-            event.setChecked(eventData.getInt("checked") != 0);
+            event.setChecked((eventData.getInt("flags") & FLAG_CHECKED) != 0);
         }
 
         // Update cache and stored state from this event.
         switch (eventType) {
             case AccessibilityEvent.TYPE_VIEW_CLICKED:
-                if (cachedBundle != null && eventData != null && eventData.containsKey("checked")) {
-                    if (eventData.getInt("checked") != 0) {
-                        cachedBundle.putInt("flags", cachedBundle.getInt("flags") | FLAG_CHECKED);
-                    } else {
-                        cachedBundle.putInt("flags", cachedBundle.getInt("flags") & ~FLAG_CHECKED);
+                if (cachedBundle != null && eventData != null && eventData.containsKey("flags")) {
+                    final int flags = eventData.getInt("flags");
+                    if ((flags & FLAG_CHECKABLE) != 0) {
+                        if ((flags & FLAG_CHECKED) != 0) {
+                            cachedBundle.putInt("flags", cachedBundle.getInt("flags") | FLAG_CHECKED);
+                        } else {
+                            cachedBundle.putInt("flags", cachedBundle.getInt("flags") & ~FLAG_CHECKED);
+                        }
+                    }
+
+                    if ((flags & FLAG_EXPANDABLE) != 0) {
+                        if ((flags & FLAG_EXPANDED) != 0) {
+                            cachedBundle.putInt("flags", cachedBundle.getInt("flags") | FLAG_EXPANDED);
+                        } else {
+                            cachedBundle.putInt("flags", cachedBundle.getInt("flags") & ~FLAG_EXPANDED);
+                        }
                     }
                 }
                 break;
