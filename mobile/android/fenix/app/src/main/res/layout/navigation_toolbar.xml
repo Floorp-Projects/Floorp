@@ -11,6 +11,6 @@
     app:titleMarginStart="16dp"
     app:titleMarginEnd="16dp"
     app:titleTextAppearance="@style/ToolbarTitleTextStyle"
-    android:background="?above"
+    android:background="?foundation"
     android:elevation="8dp">
 </androidx.appcompat.widget.Toolbar>
