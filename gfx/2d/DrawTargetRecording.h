@@ -291,6 +291,13 @@ class DrawTargetRecording : public DrawTarget {
   virtual already_AddRefed<DrawTarget> CreateSimilarDrawTarget(
       const IntSize& aSize, SurfaceFormat aFormat) const override;
 
+  /**
+   * Create a DrawTarget whose backing surface is optimized for use with this
+   * DrawTarget.
+   */
+  virtual already_AddRefed<DrawTarget> CreateSimilarDrawTargetWithBacking(
+      const IntSize& aSize, SurfaceFormat aFormat) const override;
+
   bool CanCreateSimilarDrawTarget(const IntSize& aSize,
                                   SurfaceFormat aFormat) const override;
   /**
