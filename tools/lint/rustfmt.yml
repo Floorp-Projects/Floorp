@@ -13,6 +13,8 @@ rust:
         - testing/webdriver/
         - testing/webdriver/
         - toolkit/components/telemetry/fog/
+        - toolkit/crashreporter/
+        - toolkit/library/
         - tools/fuzzing/rust/
     exclude:
         - dom/media/gtest/
