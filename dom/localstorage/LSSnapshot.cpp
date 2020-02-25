@@ -199,9 +199,9 @@ nsresult LSSnapshot::Init(const nsAString& aKey,
 #endif
 
   if (mHasOtherProcessObservers) {
-    mWriteAndNotifyInfos = new nsTArray<LSWriteAndNotifyInfo>();
+    mWriteAndNotifyInfos = MakeUnique<nsTArray<LSWriteAndNotifyInfo>>();
   } else {
-    mWriteOptimizer = new SnapshotWriteOptimizer();
+    mWriteOptimizer = MakeUnique<SnapshotWriteOptimizer>();
   }
 
   if (!mExplicit) {

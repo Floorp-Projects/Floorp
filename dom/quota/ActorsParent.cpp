@@ -6706,7 +6706,7 @@ void QuotaManager::OpenDirectoryInternal(
 
   // All the locks that block this new exclusive lock need to be invalidated.
   // We also need to notify clients to abort operations for them.
-  AutoTArray<nsAutoPtr<nsTHashtable<nsCStringHashKey>>, Client::TYPE_MAX>
+  AutoTArray<UniquePtr<nsTHashtable<nsCStringHashKey>>, Client::TYPE_MAX>
       origins;
   origins.SetLength(Client::TypeMax());
 
@@ -6717,10 +6717,9 @@ void QuotaManager::OpenDirectoryInternal(
     if (!blockedOnLock->IsInternal()) {
       blockedOnLock->Invalidate();
 
-      nsAutoPtr<nsTHashtable<nsCStringHashKey>>& clientOrigins =
-          origins[blockedOnLock->ClientType()];
+      auto& clientOrigins = origins[blockedOnLock->ClientType()];
       if (!clientOrigins) {
-        clientOrigins = new nsTHashtable<nsCStringHashKey>();
+        clientOrigins = MakeUnique<nsTHashtable<nsCStringHashKey>>();
       }
       clientOrigins->PutEntry(blockedOnLock->Origin());
     }
