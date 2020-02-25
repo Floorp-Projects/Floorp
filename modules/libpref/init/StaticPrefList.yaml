@@ -8447,6 +8447,26 @@
   value: true
   mirror: always
 
+#ifdef MOZ_WAYLAND
+# Enable dynamic vsync rate on Wayland instead of a default 60fps.
+- name: widget.wayland_vsync.enabled
+  type: bool
+  value: false
+  mirror: always
+
+# Use DMABuf backend for WebGL on Wayland.
+- name: widget.wayland_dmabuf_webgl.enabled
+  type: bool
+  value: false
+  mirror: always
+
+# Use VA-API for video playback on Wayland.
+- name: widget.wayland_dmabuf_vaapi.enabled
+  type: bool
+  value: false
+  mirror: always
+#endif
+
 #---------------------------------------------------------------------------
 # Prefs starting with "xul."
 #---------------------------------------------------------------------------
