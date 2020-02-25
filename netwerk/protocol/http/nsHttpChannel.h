@@ -137,7 +137,8 @@ class nsHttpChannel final : public HttpBaseChannel,
        nsContentPolicyType aContentPolicyType) override;
 
   MOZ_MUST_USE nsresult OnPush(uint32_t aPushedStreamId, const nsACString& aUrl,
-                               const nsACString& aRequestString);
+                               const nsACString& aRequestString,
+                               HttpTransactionShell* aTransaction);
 
   static bool IsRedirectStatus(uint32_t status);
   static bool WillRedirect(const nsHttpResponseHead& response);
