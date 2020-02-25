@@ -307,8 +307,6 @@ JS_FOR_EACH_TRACEKIND(IMPL_CHECK_TRACED_THING);
 #undef IMPL_CHECK_TRACED_THING
 }  // namespace js
 
-static bool UnmarkGrayGCThing(JSRuntime* rt, JS::GCCellPtr thing);
-
 static inline bool ShouldMarkCrossCompartment(GCMarker* marker, JSObject* src,
                                               Cell* dstCell) {
   MarkColor color = marker->markColor();
@@ -348,8 +346,8 @@ static inline bool ShouldMarkCrossCompartment(GCMarker* marker, JSObject* src,
      * as part of normal marking.
      */
     if (dst.isMarkedGray() && !dstZone->isGCMarking()) {
-      UnmarkGrayGCThing(marker->runtime(),
-                        JS::GCCellPtr(&dst, dst.getTraceKind()));
+      UnmarkGrayGCThingUnchecked(marker->runtime(),
+                                 JS::GCCellPtr(&dst, dst.getTraceKind()));
       return false;
     }
 
@@ -3894,7 +3892,7 @@ void UnmarkGrayTracer::unmark(JS::GCCellPtr cell) {
   }
 }
 
-static bool UnmarkGrayGCThing(JSRuntime* rt, JS::GCCellPtr thing) {
+bool js::gc::UnmarkGrayGCThingUnchecked(JSRuntime* rt, JS::GCCellPtr thing) {
   MOZ_ASSERT(thing);
   MOZ_ASSERT(thing.asCell()->isMarkedGray());
 
@@ -3920,7 +3918,7 @@ JS_FRIEND_API bool JS::UnmarkGrayGCThingRecursively(JS::GCCellPtr thing) {
 
   JSRuntime* rt = thing.asCell()->runtimeFromMainThread();
   gcstats::AutoPhase outerPhase(rt->gc.stats(), gcstats::PhaseKind::BARRIER);
-  return UnmarkGrayGCThing(rt, thing);
+  return UnmarkGrayGCThingUnchecked(rt, thing);
 }
 
 bool js::UnmarkGrayShapeRecursively(Shape* shape) {

@@ -672,7 +672,7 @@ class GCRuntime {
   void traceRuntimeCommon(JSTracer* trc, TraceOrMarkRuntime traceOrMark);
   void traceEmbeddingBlackRoots(JSTracer* trc);
   void traceEmbeddingGrayRoots(JSTracer* trc);
-  void markFinalizationGroupData(JSTracer* trc);
+  void markFinalizationGroupRoots(JSTracer* trc);
   void checkNoRuntimeRoots(AutoGCSession& session);
   void maybeDoCycleCollection();
   void findDeadCompartments();

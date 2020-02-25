@@ -40,11 +40,12 @@ bool GCRuntime::registerWithFinalizationGroup(JSContext* cx,
   return true;
 }
 
-void GCRuntime::markFinalizationGroupData(JSTracer* trc) {
-  // The finalization groups and held values for all targets are marked as
-  // roots.
+void GCRuntime::markFinalizationGroupRoots(JSTracer* trc) {
+  // The held values for all finalization records store in zone maps are marked
+  // as roots. Finalization records store a finalization group as a weak pointer
+  // in a private value, which does not get marked.
   for (GCZonesIter zone(this); !zone.done(); zone.next()) {
-    auto& map = zone->finalizationRecordMap();
+    Zone::FinalizationRecordMap& map = zone->finalizationRecordMap();
     for (Zone::FinalizationRecordMap::Enum e(map); !e.empty(); e.popFront()) {
       e.front().value().trace(trc);
     }
@@ -63,32 +64,35 @@ static FinalizationRecordObject* UnwrapFinalizationRecord(JSObject* obj) {
 }
 
 void GCRuntime::sweepFinalizationGroups(Zone* zone) {
-  // Queue finalization records for cleanup for any entries whose target is
-  // dying and remove them from the map. Sweep remaining unregister tokens.
+  // Sweep finalization group data and queue finalization records for cleanup
+  // for any entries whose target is dying and remove them from the map.
 
-  auto& map = zone->finalizationRecordMap();
+  Zone::FinalizationRecordMap& map = zone->finalizationRecordMap();
   for (Zone::FinalizationRecordMap::Enum e(map); !e.empty(); e.popFront()) {
-    auto& records = e.front().value();
+    FinalizationRecordVector& records = e.front().value();
+
+    // Update any pointers moved by the GC.
+    records.sweep();
+
+    // Sweep finalization records and remove records for:
+    records.eraseIf([](JSObject* obj) {
+      FinalizationRecordObject* record = UnwrapFinalizationRecord(obj);
+      return !record ||              // Nuked CCW to record.
+             !record->isActive() ||  // Unregistered record or dead finalization
+                                     // group in previous sweep group.
+             !record->sweep();       // Dead finalization group in this sweep
+                                     // group.
+    });
+
+    // Queue finalization records for targets that are dying.
     if (IsAboutToBeFinalized(&e.front().mutableKey())) {
-      // Queue finalization records for targets that are dying.
       for (JSObject* obj : records) {
-        if (FinalizationRecordObject* record = UnwrapFinalizationRecord(obj)) {
-          FinalizationGroupObject* group = record->group();
-          if (group) {
-            group->queueRecordToBeCleanedUp(record);
-            queueFinalizationGroupForCleanup(group);
-          }
-        }
+        FinalizationRecordObject* record = UnwrapFinalizationRecord(obj);
+        FinalizationGroupObject* group = record->groupDuringGC(this);
+        group->queueRecordToBeCleanedUp(record);
+        queueFinalizationGroupForCleanup(group);
       }
       e.removeFront();
-    } else {
-      // Update any pointers moved by the GC.
-      records.sweep();
-      // Remove records that have been unregistered.
-      records.eraseIf([](JSObject* obj) {
-        FinalizationRecordObject* record = UnwrapFinalizationRecord(obj);
-        return !record || !record->group();
-      });
     }
   }
 }

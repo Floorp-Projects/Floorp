@@ -108,6 +108,8 @@ inline Cell* ToMarkable(const Value& v) {
 
 inline Cell* ToMarkable(Cell* cell) { return cell; }
 
+bool UnmarkGrayGCThingUnchecked(JSRuntime* rt, JS::GCCellPtr thing);
+
 } /* namespace gc */
 
 // The return value indicates if anything was unmarked.
