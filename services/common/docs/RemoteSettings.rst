@@ -142,7 +142,6 @@ The provided helper will:
 
     The following aspects are not taken care of (yet! help welcome):
 
-    - report Telemetry when download fails
     - check available disk space
     - preserve bandwidth
     - resume downloads of large files
@@ -295,6 +294,12 @@ The synchronization of every known remote settings clients can be triggered manu
 
     await RemoteSettings.pollChanges()
 
+In order to ignore last synchronization status during polling for changes, set the ``full`` option:
+
+.. code-block:: js
+
+    await RemoteSettings.pollChanges({ full: true })
+
 The synchronization of a single client can be forced with the ``.sync()`` method:
 
 .. code-block:: js
@@ -312,6 +317,16 @@ Inspect local data
 The internal IndexedDB of Remote Settings can be accessed via the Storage Inspector in the `browser toolbox <https://developer.mozilla.org/en-US/docs/Tools/Browser_Toolbox>`_.
 
 For example, the local data of the ``"key"`` collection can be accessed in the ``remote-settings`` database at *Browser Toolbox* > *Storage* > *IndexedDB* > *chrome*, in the ``records`` store.
+
+
+Delete all local data
+---------------------
+
+All local data, of **every collection**, including downloaded attachments, can be deleted with:
+
+.. code-block:: js
+
+    await RemoteSettings.clearAll();
 
 
 Unit Tests
