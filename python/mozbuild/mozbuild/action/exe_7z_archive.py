@@ -22,7 +22,13 @@ def archive_exe(pkg_dir, tagfile, sfx_package, package, use_upx):
 
         if use_upx:
             final_sfx = mozpath.join(tmpdir, '7zSD.sfx')
-            subprocess.check_call(['upx', '--best', '-o', final_sfx, sfx_package])
+            subprocess.check_call([
+                buildconfig.substs['UPX'],
+                '--best',
+                '-o',
+                final_sfx,
+                sfx_package,
+            ])
         else:
             final_sfx = sfx_package
 
