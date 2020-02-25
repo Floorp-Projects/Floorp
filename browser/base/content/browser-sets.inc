@@ -101,8 +101,8 @@
     <command id="History:UndoCloseTab" oncommand="undoCloseTab();"/>
     <command id="History:UndoCloseWindow" oncommand="undoCloseWindow();"/>
 
+    <command id="wrCaptureCmd" oncommand="gGfxUtils.webrenderCapture();" disabled="true"/>
 #ifdef NIGHTLY_BUILD
-    <command id="wrCaptureCmd" oncommand="gGfxUtils.webrenderCapture();"/>
     <command id="windowRecordingCmd" oncommand="gGfxUtils.toggleWindowRecording();"/>
     <command id="wrTransactionLoggingCmd" oncommand="gGfxUtils.toggleTransactionLogging();"/>
 #endif
@@ -327,7 +327,6 @@
 #expand    <key id="key_selectTab8" oncommand="gBrowser.selectTabAtIndex(7, event);" key="8" modifiers="__NUM_SELECT_TAB_MODIFIER__"/>
 #expand    <key id="key_selectLastTab" oncommand="gBrowser.selectTabAtIndex(-1, event);" key="9" modifiers="__NUM_SELECT_TAB_MODIFIER__"/>
 
-#ifdef NIGHTLY_BUILD
     <key id="key_wrCaptureCmd"
 #ifdef XP_MACOSX
     key="3" modifiers="control,shift"
@@ -335,6 +334,7 @@
     key="#" modifiers="control"
 #endif
     command="wrCaptureCmd"/>
+#ifdef NIGHTLY_BUILD
     <key id="key_windowRecordingCmd"
 #ifdef XP_MACOSX
     key="4" modifiers="control,shift"
