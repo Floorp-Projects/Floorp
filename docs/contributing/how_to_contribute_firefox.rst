@@ -121,7 +121,7 @@ To visualize your patch in the repository, run:
     $ git show
 
 
-`More information <https://developer.mozilla.org/docs/Mozilla/Mercurial>`__
+:ref:`More information <Mercurial Overview>`
 
 
 To test a change locally

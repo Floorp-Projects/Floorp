@@ -1,5 +1,5 @@
-Mercurial
-=========
+Mercurial Overview
+==================
 
 Mercurial is a source-code management tool which allows users to keep track of changes to the source code locally and share their changes with others.
 We use it for the development of Firefox.
