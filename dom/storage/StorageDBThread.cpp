@@ -139,14 +139,14 @@ StorageDBThread* StorageDBThread::GetOrCreate(const nsString& aProfilePath) {
     return sStorageThread;
   }
 
-  nsAutoPtr<StorageDBThread> storageThread(new StorageDBThread());
+  auto storageThread = MakeUnique<StorageDBThread>();
 
   nsresult rv = storageThread->Init(aProfilePath);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return nullptr;
   }
 
-  sStorageThread = storageThread.forget();
+  sStorageThread = storageThread.release();
 
   return sStorageThread;
 }
@@ -322,7 +322,7 @@ nsresult StorageDBThread::InsertDBOp(StorageDBThread::DBOperation* aOperation) {
   MonitorAutoLock monitor(mThreadObserver->GetMonitor());
 
   // Sentinel to don't forget to delete the operation when we exit early.
-  nsAutoPtr<StorageDBThread::DBOperation> opScope(aOperation);
+  UniquePtr<StorageDBThread::DBOperation> opScope(aOperation);
 
   if (NS_FAILED(mStatus)) {
     MonitorAutoUnlock unlock(mThreadObserver->GetMonitor());
@@ -371,7 +371,7 @@ nsresult StorageDBThread::InsertDBOp(StorageDBThread::DBOperation* aOperation) {
       }
 
       // DB operation adopted, don't delete it.
-      opScope.forget();
+      Unused << opScope.release();
 
       // Immediately start executing this.
       monitor.Notify();
@@ -383,7 +383,7 @@ nsresult StorageDBThread::InsertDBOp(StorageDBThread::DBOperation* aOperation) {
       mPendingTasks.Add(aOperation);
 
       // DB operation adopted, don't delete it.
-      opScope.forget();
+      Unused << opScope.release();
 
       ScheduleFlush();
       break;
@@ -468,7 +468,7 @@ void StorageDBThread::ThreadFunc() {
       }
       NotifyFlushCompletion();
     } else if (MOZ_LIKELY(mPreloads.Length())) {
-      nsAutoPtr<DBOperation> op(mPreloads[0]);
+      UniquePtr<DBOperation> op(mPreloads[0]);
       mPreloads.RemoveElementAt(0);
       {
         MonitorAutoUnlock unlockMonitor(mThreadObserver->GetMonitor());
@@ -1341,12 +1341,12 @@ bool StorageDBThread::PendingOperations::Prepare() {
   // all scope-related update operations we have here now were
   // scheduled after the clear operations.
   for (auto iter = mClears.Iter(); !iter.Done(); iter.Next()) {
-    mExecList.AppendElement(iter.Data().release());
+    mExecList.AppendElement(std::move(iter.Data()));
   }
   mClears.Clear();
 
   for (auto iter = mUpdates.Iter(); !iter.Done(); iter.Next()) {
-    mExecList.AppendElement(iter.Data().release());
+    mExecList.AppendElement(std::move(iter.Data()));
   }
   mUpdates.Clear();
 
@@ -1361,7 +1361,7 @@ nsresult StorageDBThread::PendingOperations::Execute(StorageDBThread* aThread) {
   nsresult rv;
 
   for (uint32_t i = 0; i < mExecList.Length(); ++i) {
-    StorageDBThread::DBOperation* task = mExecList[i];
+    const auto& task = mExecList[i];
     rv = task->Perform(aThread);
     if (NS_FAILED(rv)) {
       return rv;
@@ -1444,7 +1444,7 @@ bool StorageDBThread::PendingOperations::IsOriginClearPending(
 
   for (uint32_t i = 0; i < mExecList.Length(); ++i) {
     if (FindPendingClearForOrigin(aOriginSuffix, aOriginNoSuffix,
-                                  mExecList[i])) {
+                                  mExecList[i].get())) {
       return true;
     }
   }
@@ -1485,7 +1485,7 @@ bool StorageDBThread::PendingOperations::IsOriginUpdatePending(
 
   for (uint32_t i = 0; i < mExecList.Length(); ++i) {
     if (FindPendingUpdateForOrigin(aOriginSuffix, aOriginNoSuffix,
-                                   mExecList[i])) {
+                                   mExecList[i].get())) {
       return true;
     }
   }

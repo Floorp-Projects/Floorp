@@ -8,6 +8,7 @@
 
 #include "LSObject.h"
 #include "mozilla/dom/Promise.h"
+#include "mozilla/UniquePtr.h"
 
 namespace mozilla {
 namespace dom {
@@ -273,8 +274,8 @@ LocalStorageManager2::Preload(nsIPrincipal* aPrincipal, JSContext* aContext,
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  nsAutoPtr<PrincipalInfo> principalInfo(new PrincipalInfo());
-  rv = CheckedPrincipalToPrincipalInfo(aPrincipal, *principalInfo);
+  PrincipalInfo principalInfo;
+  rv = CheckedPrincipalToPrincipalInfo(aPrincipal, principalInfo);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -289,8 +290,8 @@ LocalStorageManager2::Preload(nsIPrincipal* aPrincipal, JSContext* aContext,
   }
 
   LSRequestCommonParams commonParams;
-  commonParams.principalInfo() = *principalInfo;
-  commonParams.storagePrincipalInfo() = *principalInfo;
+  commonParams.principalInfo() = principalInfo;
+  commonParams.storagePrincipalInfo() = principalInfo;
   commonParams.originKey() = originKey;
 
   LSRequestPreloadDatastoreParams params(commonParams);

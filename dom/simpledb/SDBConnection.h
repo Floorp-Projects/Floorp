@@ -7,7 +7,7 @@
 #ifndef mozilla_dom_simpledb_SDBConnection_h
 #define mozilla_dom_simpledb_SDBConnection_h
 
-#include "nsAutoPtr.h"
+#include "mozilla/UniquePtr.h"
 #include "nsISDBConnection.h"
 #include "nsTArray.h"
 
@@ -36,7 +36,7 @@ class SDBConnection final : public nsISDBConnection {
 
   nsCOMPtr<nsISDBCloseCallback> mCloseCallback;
 
-  nsAutoPtr<PrincipalInfo> mPrincipalInfo;
+  UniquePtr<PrincipalInfo> mPrincipalInfo;
 
   SDBConnectionChild* mBackgroundActor;
 

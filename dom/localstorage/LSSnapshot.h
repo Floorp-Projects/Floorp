@@ -9,7 +9,8 @@
 
 #include "LSValue.h"
 
-#include "nsAutoPtr.h"
+#include "mozilla/UniquePtr.h"
+
 #include "nsCOMPtr.h"
 #include "nsDataHashtable.h"
 #include "nsIRunnable.h"
@@ -93,8 +94,8 @@ class LSSnapshot final : public nsIRunnable {
   nsTHashtable<nsStringHashKey> mLoadedItems;
   nsTHashtable<nsStringHashKey> mUnknownItems;
   nsDataHashtable<nsStringHashKey, nsString> mValues;
-  nsAutoPtr<SnapshotWriteOptimizer> mWriteOptimizer;
-  nsAutoPtr<nsTArray<LSWriteAndNotifyInfo>> mWriteAndNotifyInfos;
+  UniquePtr<SnapshotWriteOptimizer> mWriteOptimizer;
+  UniquePtr<nsTArray<LSWriteAndNotifyInfo>> mWriteAndNotifyInfos;
 
   uint32_t mInitLength;
   uint32_t mLength;
