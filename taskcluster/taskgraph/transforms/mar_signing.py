@@ -140,7 +140,7 @@ def make_task_description(config, jobs):
             'label': label,
             'description': "{} {}".format(
                 dep_job.task["metadata"]["description"], job['description-suffix']),
-            'worker-type': 'linux-signing',
+            'worker-type': job.get('worker-type', 'linux-signing'),
             'worker': {'implementation': 'scriptworker-signing',
                        'upstream-artifacts': upstream_artifacts,
                        'max-run-time': 3600},

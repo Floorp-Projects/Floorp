@@ -27,3 +27,4 @@ job-template:
     nightly: false
     attributes:
         retrigger: true
+    worker-type: linux-depsigning
