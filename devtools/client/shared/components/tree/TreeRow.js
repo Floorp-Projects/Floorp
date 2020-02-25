@@ -219,17 +219,12 @@ define(function(require, exports, module) {
 
       if (member.hasChildren) {
         classNames.push("hasChildren");
-
-        // There are 2 situations where hasChildren is true:
-        // 1. it is an object with children. Only set aria-expanded in this situation
-        // 2. It is a long string (> 50 chars) that can be expanded to fully display it
-        if (member.type !== "string") {
-          props["aria-expanded"] = member.open;
-        }
+        props["aria-expanded"] = false;
       }
 
       if (member.open) {
         classNames.push("opened");
+        props["aria-expanded"] = true;
       }
 
       if (member.loading) {
