@@ -2083,17 +2083,16 @@ var gBrowserInit = {
 
     CaptivePortalWatcher.delayedStartup();
 
-    this.delayedStartupFinished = true;
-
-    _resolveDelayedStartup();
-
     SessionStore.promiseAllWindowsRestored.then(() => {
       this._schedulePerWindowIdleTasks();
       document.documentElement.setAttribute("sessionrestored", "true");
     });
 
+    this.delayedStartupFinished = true;
+    _resolveDelayedStartup();
     Services.obs.notifyObservers(window, "browser-delayed-startup-finished");
     TelemetryTimestamps.add("delayedStartupFinished");
+    // We've announced that delayed startup has finished. Do not add code past this point.
   },
 
   _setInitialFocus() {
