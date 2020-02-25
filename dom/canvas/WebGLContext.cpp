@@ -964,6 +964,20 @@ Maybe<ICRData> WebGLContext::InitializeCanvasRenderer(
 
   gl->Screen()->Morph(std::move(factory));
 
+  bool needsResize = false;
+#if defined(MOZ_WIDGET_ANDROID)
+  // If drawing buffer size and screen size are equal, the first back buffer
+  // will still be the one created with SurfaceFactory_Basic factory.
+  // We resize here to ensure that GLScreenBuffer back buffer
+  // is created using the newly attached factory.
+  // See bug #1617751
+  needsResize = true;
+#endif
+  if (needsResize) {
+    const auto& size = DrawingBufferSize();
+    gl->Screen()->Resize({size.x, size.y});
+  }
+
   mVRReady = true;
   return Some(ret);
 }
