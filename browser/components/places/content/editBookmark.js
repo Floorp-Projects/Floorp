@@ -768,11 +768,12 @@ var gEditItemOverlay = {
   },
 
   toggleFolderTreeVisibility() {
-    var expander = this._element("foldersExpander");
-    var folderTreeRow = this._element("folderTreeRow");
-    expander.classList.toggle("expander-up", folderTreeRow.collapsed);
-    expander.classList.toggle("expander-down", !folderTreeRow.collapsed);
-    if (!folderTreeRow.collapsed) {
+    let expander = this._element("foldersExpander");
+    let folderTreeRow = this._element("folderTreeRow");
+    let wasCollapsed = folderTreeRow.collapsed;
+    expander.classList.toggle("expander-up", wasCollapsed);
+    expander.classList.toggle("expander-down", !wasCollapsed);
+    if (!wasCollapsed) {
       expander.setAttribute(
         "tooltiptext",
         expander.getAttribute("tooltiptextdown")
@@ -781,6 +782,9 @@ var gEditItemOverlay = {
       this._element("chooseFolderSeparator").hidden = this._element(
         "chooseFolderMenuItem"
       ).hidden = false;
+      // Unlinking the view will break the connection with the result. We don't
+      // want to pay for live updates while the view is not visible.
+      this._folderTree.view = null;
     } else {
       expander.setAttribute(
         "tooltiptext",
@@ -888,6 +892,12 @@ var gEditItemOverlay = {
   },
 
   onFolderTreeSelect() {
+    // Ignore this event when the folder tree is hidden, even if the tree is
+    // alive, it's clearly not a user activated action.
+    if (this._element("folderTreeRow").collapsed) {
+      return;
+    }
+
     var selectedNode = this._folderTree.selectedNode;
 
     // Disable the "New Folder" button if we cannot create a new folder
