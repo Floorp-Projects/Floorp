@@ -19,7 +19,7 @@ const {
 // Components
 const TreeViewClass = require("devtools/client/shared/components/tree/TreeView");
 const PropertiesView = createFactory(
-  require("devtools/client/netmonitor/src/components/PropertiesView")
+  require("devtools/client/netmonitor/src/components/request-details/PropertiesView")
 );
 
 loader.lazyGetter(this, "Rep", function() {
@@ -254,7 +254,7 @@ class SecurityPanel extends Component {
   }
 
   render() {
-    const { openLink, request } = this.props;
+    const { request } = this.props;
     const { securityInfo, url } = request;
 
     if (!securityInfo || !url) {
@@ -270,7 +270,6 @@ class SecurityPanel extends Component {
           this.renderValue(props, securityInfo.weaknessReasons),
         enableFilter: false,
         expandedNodes: TreeViewClass.getExpandedNodes(object),
-        openLink,
       })
     );
   }
