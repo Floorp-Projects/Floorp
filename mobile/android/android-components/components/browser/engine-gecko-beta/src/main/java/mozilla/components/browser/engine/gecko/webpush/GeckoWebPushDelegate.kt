@@ -22,7 +22,11 @@ internal class GeckoWebPushDelegate(private val delegate: WebPushDelegate) : Gec
         val result: GeckoResult<GeckoWebPushSubscription> = GeckoResult()
 
         delegate.onGetSubscription(scope) { subscription ->
-            result.complete(subscription.toGeckoSubscription())
+            if (subscription != null) {
+                result.complete(subscription.toGeckoSubscription())
+            } else {
+                result.completeExceptionally(WebPushException("Retrieving subscription failed."))
+            }
         }
 
         return result
@@ -35,7 +39,11 @@ internal class GeckoWebPushDelegate(private val delegate: WebPushDelegate) : Gec
         val result: GeckoResult<GeckoWebPushSubscription> = GeckoResult()
 
         delegate.onSubscribe(scope, appServerKey) { subscription ->
-            result.complete(subscription.toGeckoSubscription())
+            if (subscription != null) {
+                result.complete(subscription.toGeckoSubscription())
+            } else {
+                result.completeExceptionally(WebPushException("Creating subscription failed."))
+            }
         }
 
         return result
@@ -51,7 +59,7 @@ internal class GeckoWebPushDelegate(private val delegate: WebPushDelegate) : Gec
             if (success) {
                 result.complete(null)
             } else {
-                result.completeExceptionally(IllegalStateException("Un-subscribing from subscription failed."))
+                result.completeExceptionally(WebPushException("Un-subscribing from subscription failed."))
             }
         }
 
@@ -69,3 +77,5 @@ internal fun WebPushSubscription.toGeckoSubscription() = GeckoWebPushSubscriptio
     publicKey,
     authSecret
 )
+
+internal class WebPushException(message: String) : IllegalStateException(message)

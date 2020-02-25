@@ -11,6 +11,7 @@ import mozilla.components.support.test.any
 import mozilla.components.support.test.eq
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.isNull
@@ -44,7 +45,7 @@ class GeckoWebPushDelegateTest {
 
     @Test
     fun `onGetSubscription result is completed`() {
-        val subscription = WebPushSubscription(
+        var subscription: WebPushSubscription? = WebPushSubscription(
             "test",
             "https://example.com",
             null,
@@ -54,7 +55,7 @@ class GeckoWebPushDelegateTest {
         val delegate: WebPushDelegate = object : WebPushDelegate {
             override fun onGetSubscription(
                 scope: String,
-                onSubscription: (WebPushSubscription) -> Unit
+                onSubscription: (WebPushSubscription?) -> Unit
             ) {
                 onSubscription(subscription)
             }
@@ -64,13 +65,22 @@ class GeckoWebPushDelegateTest {
         val result = geckoDelegate.onGetSubscription("test")
 
         result?.accept { sub ->
-            assert(sub!!.scope == subscription.scope)
+            assert(sub!!.scope == subscription!!.scope)
+        }
+
+        subscription = null
+
+        val nullResult = geckoDelegate.onGetSubscription("test")
+
+        nullResult?.exceptionally { throwable: Throwable ->
+            assertTrue(throwable.localizedMessage == "Retrieving subscription failed.")
+            GeckoResult.fromValue(null)
         }
     }
 
     @Test
     fun `onSubscribe result is completed`() {
-        val subscription = WebPushSubscription(
+        var subscription: WebPushSubscription? = WebPushSubscription(
             "test",
             "https://example.com",
             null,
@@ -81,7 +91,7 @@ class GeckoWebPushDelegateTest {
             override fun onSubscribe(
                 scope: String,
                 serverKey: ByteArray?,
-                onSubscribe: (WebPushSubscription) -> Unit
+                onSubscribe: (WebPushSubscription?) -> Unit
             ) {
                 onSubscribe(subscription)
             }
@@ -91,8 +101,16 @@ class GeckoWebPushDelegateTest {
         val result = geckoDelegate.onSubscribe("test", null)
 
         result?.accept { sub ->
-            assert(sub!!.scope == subscription.scope)
+            assert(sub!!.scope == subscription!!.scope)
             assertNull(sub.appServerKey)
+        }
+
+        subscription = null
+
+        val nullResult = geckoDelegate.onSubscribe("test", null)
+        nullResult?.exceptionally { throwable: Throwable ->
+            assertTrue(throwable.localizedMessage == "Creating subscription failed.")
+            GeckoResult.fromValue(null)
         }
     }
 
@@ -130,8 +148,8 @@ class GeckoWebPushDelegateTest {
 
         val result = geckoDelegate.onUnsubscribe("test")
 
-        result?.exceptionally<Void> { ex ->
-            assert(ex.toString().contains("Un-subscribing from subscription failed"))
+        result?.exceptionally<Void> { throwable ->
+            assertTrue(throwable.localizedMessage == "Un-subscribing from subscription failed.")
             GeckoResult.fromValue(null)
         }
     }
