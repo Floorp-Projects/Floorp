@@ -2000,9 +2000,6 @@ struct SourceExtent {
 // derived classes in order for the 'jitCodeRaw' mechanism to work with the
 // JITs.
 class BaseScript : public gc::TenuredCell {
- public:
-  using ImmutableFlags = frontend::ImmutableScriptFlags;
-
  protected:
   // Pointer to baseline->method()->raw(), ion->method()->raw(), a wasm jit
   // entry, the JIT's EnterInterpreter stub, or the lazy link stub. Must be
@@ -2030,6 +2027,12 @@ class BaseScript : public gc::TenuredCell {
 
   SourceExtent extent_;
 
+ public:
+  // Alias the enum into JSScript to provide easy translation for various
+  // consumers
+  using ImmutableFlags = ImmutableScriptFlagsEnum;
+
+ protected:
   // Immutable flags should not be modified after this script has been
   // initialized. These flags should likely be preserved when serializing
   // (XDR) or copying (CopyScript) this script. This is only public for the
@@ -2037,12 +2040,11 @@ class BaseScript : public gc::TenuredCell {
   //
   // Specific accessors for flag values are defined with
   // IMMUTABLE_FLAG_* macros below.
-  ImmutableFlags immutableScriptFlags_;
-
   // See MutableFlags below for definitions. This is stored
   // as uint32_t instead of bitfields to make it more predictable to access
   // from JIT code.
   uint32_t mutableFlags_ = 0;
+  ImmutableScriptFlags immutableScriptFlags_;
 
   ScriptWarmUpData warmUpData_ = {};
 
@@ -2232,42 +2234,32 @@ class BaseScript : public gc::TenuredCell {
   uint32_t column() const { return extent_.column; }
 
  public:
-  ImmutableFlags immutableFlags() const { return immutableScriptFlags_; }
+  ImmutableScriptFlags immutableFlags() const { return immutableScriptFlags_; }
 
-  void setImmutableFlags(ImmutableFlags flags) {
-    immutableScriptFlags_ = flags;
-  }
+  void setImmutableFlags(uint32_t flags) { immutableScriptFlags_ = flags; }
 
-  // ImmutableFlags accessors.
-  MOZ_MUST_USE bool hasFlag(ImmutableFlags flag) const {
-    return immutableScriptFlags_ & flag;
-  }
-  void setFlag(ImmutableFlags flag) {
-    immutableScriptFlags_.scriptFlags_ |= flag;
-  }
-  void setFlag(ImmutableFlags flag, bool b) {
+  // Generic set/unset for Immutable and Mutable Flags
+  template <typename T>
+  void setFlag(T flag, bool b) {
     if (b) {
       setFlag(flag);
     } else {
       clearFlag(flag);
     }
   }
-  void clearFlag(ImmutableFlags flag) {
-    immutableScriptFlags_.scriptFlags_ &= ~flag;
+
+  // ImmutableFlags accessors.
+  MOZ_MUST_USE bool hasFlag(ImmutableFlags flag) const {
+    return immutableScriptFlags_.hasFlag(flag);
   }
+  void setFlag(ImmutableFlags flag) { immutableScriptFlags_.setFlag(flag); }
+  void clearFlag(ImmutableFlags flag) { immutableScriptFlags_.clearFlag(flag); }
 
   // MutableFlags accessors.
   MOZ_MUST_USE bool hasFlag(MutableFlags flag) const {
     return mutableFlags_ & uint32_t(flag);
   }
   void setFlag(MutableFlags flag) { mutableFlags_ |= uint32_t(flag); }
-  void setFlag(MutableFlags flag, bool b) {
-    if (b) {
-      setFlag(flag);
-    } else {
-      clearFlag(flag);
-    }
-  }
   void clearFlag(MutableFlags flag) { mutableFlags_ &= ~uint32_t(flag); }
 
   // Specific flag accessors
@@ -2478,7 +2470,7 @@ setterLevel:                                                                  \
     return offsetof(BaseScript, sharedData_);
   }
   static size_t offsetOfImmutableFlags() {
-    static_assert(offsetof(ImmutableFlags, scriptFlags_) == 0,
+    static_assert(offsetof(ImmutableScriptFlags, flags_) == 0,
                   "Required for JIT flag access");
     return offsetof(BaseScript, immutableScriptFlags_);
   }
