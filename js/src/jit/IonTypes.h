@@ -137,9 +137,6 @@ enum BailoutKind {
   // We hit a |debugger;| statement.
   Bailout_Debugger,
 
-  // |this| used uninitialized in a derived constructor
-  Bailout_UninitializedThis,
-
   // We hit this code for the first time.
   Bailout_FirstExecution,
 
@@ -165,8 +162,6 @@ enum BailoutKind {
 
   // A bailout triggered by a bounds-check failure.
   Bailout_BoundsCheck,
-  // A bailout triggered by a typed object whose backing buffer was detached.
-  Bailout_Detached,
 
   // A shape guard based on TI information failed.
   // (We saw an object whose shape does not match that / any of those observed
@@ -233,8 +228,6 @@ inline const char* BailoutKindString(BailoutKind kind) {
       return "Bailout_NonSharedTypedArrayInput";
     case Bailout_Debugger:
       return "Bailout_Debugger";
-    case Bailout_UninitializedThis:
-      return "Bailout_UninitializedThis";
     case Bailout_FirstExecution:
       return "Bailout_FirstExecution";
 
@@ -249,8 +242,6 @@ inline const char* BailoutKindString(BailoutKind kind) {
       return "Bailout_ArgumentCheck";
     case Bailout_BoundsCheck:
       return "Bailout_BoundsCheck";
-    case Bailout_Detached:
-      return "Bailout_Detached";
     case Bailout_ShapeGuard:
       return "Bailout_ShapeGuard";
     case Bailout_UninitializedLexical:
