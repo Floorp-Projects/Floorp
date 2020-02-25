@@ -1527,7 +1527,13 @@ class AccessibilityTest : BaseSessionTest() {
         })
 
         performedAction = provider.performAction(nodeId, AccessibilityNodeInfo.ACTION_PREVIOUS_HTML_ELEMENT, null)
-        assertThat("Should fail to move a11y focus before first node", performedAction, equalTo(false))
+        assertThat("Successfully moved a11y focus past first node", performedAction, equalTo(true))
+        sessionRule.waitUntilCalled(object : EventDelegate {
+            @AssertCalled(count = 1)
+            override fun onAccessibilityFocused(event: AccessibilityEvent) {
+                assertThat("Accessibility focus on web view", getSourceId(event), equalTo(View.NO_ID))
+            }
+        })
 
         performedAction = provider.performAction(nodeId, AccessibilityNodeInfo.ACTION_NEXT_HTML_ELEMENT, null)
         assertThat("Successfully moved a11y focus to second node", performedAction, equalTo(true))
@@ -1549,7 +1555,13 @@ class AccessibilityTest : BaseSessionTest() {
         })
 
         performedAction = provider.performAction(nodeId, AccessibilityNodeInfo.ACTION_PREVIOUS_HTML_ELEMENT, null)
-        assertThat("Should fail to move a11y focus before first node", performedAction, equalTo(false))
+        assertThat("Successfully moved a11y focus past first visible node", performedAction, equalTo(true))
+        sessionRule.waitUntilCalled(object : EventDelegate {
+            @AssertCalled(count = 1)
+            override fun onAccessibilityFocused(event: AccessibilityEvent) {
+                assertThat("Accessibility focus on web view", getSourceId(event), equalTo(View.NO_ID))
+            }
+        })
 
 
         provider.performAction(nodeId, AccessibilityNodeInfo.ACTION_NEXT_HTML_ELEMENT, null)
@@ -1612,6 +1624,9 @@ class AccessibilityTest : BaseSessionTest() {
 
         performedAction = provider.performAction(nodeId, AccessibilityNodeInfo.ACTION_NEXT_HTML_ELEMENT, null)
         assertThat("Should fail to move a11y focus beyond last node", performedAction, equalTo(false))
+
+        performedAction = provider.performAction(View.NO_ID, AccessibilityNodeInfo.ACTION_PREVIOUS_HTML_ELEMENT, null)
+        assertThat("Should fail to move a11y focus before web content", performedAction, equalTo(false))
     }
 
 }
