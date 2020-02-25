@@ -15,6 +15,7 @@ rust:
         - toolkit/crashreporter/
         - toolkit/library/
         - tools/fuzzing/rust/
+        - xpcom/
     exclude:
         - dom/media/gtest/
         - dom/webauthn/libudev-sys/
@@ -37,8 +38,6 @@ rust:
         - servo/components/style_traits/
         - servo/components/to_shmem/
         - servo/tests/unit/style/
-        - xpcom/rust/gtest/bench-collections/
-        - xpcom/rust/xpcom/xpcom_macros/
     extensions:
         - rs
     support-files:

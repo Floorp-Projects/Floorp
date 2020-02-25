@@ -234,11 +234,7 @@ impl<'a, T: 'a> Ensure<*const T> for Result<&'a T, nsresult> {
 
 impl<'a, T: 'a> Ensure<*const T> for Result<Option<&'a T>, nsresult> {
     unsafe fn ensure(ptr: *const T) -> Result<Option<&'a T>, nsresult> {
-        Ok(if ptr.is_null() {
-            None
-        } else {
-            Some(&*ptr)
-        })
+        Ok(if ptr.is_null() { None } else { Some(&*ptr) })
     }
 }
 

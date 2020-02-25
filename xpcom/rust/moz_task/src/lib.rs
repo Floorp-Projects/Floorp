@@ -15,10 +15,10 @@ extern crate xpcom;
 use nserror::{nsresult, NS_OK};
 use nsstring::{nsACString, nsCString};
 use std::{
+    ffi::CStr,
     marker::PhantomData,
     mem, ptr,
     sync::atomic::{AtomicBool, Ordering},
-    ffi::CStr,
 };
 use xpcom::{
     getter_addrefs,

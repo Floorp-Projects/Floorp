@@ -7,7 +7,6 @@
 /// not be `extern crate`-ed into the crate the macros are expanded into. This
 /// module re-exports those types from `xpcom` so that they can be used from the
 /// macro.
-
 // re-export libc so it can be used by the procedural macro.
 pub extern crate libc;
 
