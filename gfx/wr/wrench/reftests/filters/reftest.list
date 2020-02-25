@@ -36,6 +36,7 @@ platform(linux,mac) == filter-drop-shadow-on-viewport-edge.yaml filter-drop-shad
 platform(linux,mac) == blend-clipped.yaml blend-clipped.png
 platform(linux,mac) == filter-drop-shadow-clip.yaml filter-drop-shadow-clip.png
 platform(linux,mac) == filter-drop-shadow-clip-2.yaml filter-drop-shadow-clip-2.png
+fuzzy(5,100000) == filter-drop-shadow-scaled.yaml filter-drop-shadow-scaled-ref.yaml
 == filter-segments.yaml filter-segments-ref.yaml
 == iframe-dropshadow.yaml iframe-dropshadow-ref.yaml
 skip_on(android,device) == filter-mix-blend-mode.yaml filter-mix-blend-mode-ref.yaml  # fails on Pixel2
