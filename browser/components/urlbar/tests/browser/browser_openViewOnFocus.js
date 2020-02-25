@@ -9,9 +9,7 @@ async function checkOpensOnFocus(win = window) {
   win.gURLBar.blur();
   win.gURLBar.focus();
   Assert.ok(!win.gURLBar.view.isOpen, "check urlbar panel is not open");
-  Assert.ok(win.gURLBar.dropmarker.hidden, "The dropmarker should be hidden");
   win.gURLBar.blur();
-  Assert.ok(win.gURLBar.dropmarker.hidden, "The dropmarker should be hidden");
 
   // Check the keyboard shortcut.
   await UrlbarTestUtils.promisePopupOpen(win, () => {
@@ -35,9 +33,7 @@ async function checkDoesNotOpenOnFocus(win = window) {
   win.gURLBar.blur();
   win.gURLBar.focus();
   Assert.ok(!win.gURLBar.view.isOpen, "check urlbar panel is not open");
-  Assert.ok(win.gURLBar.dropmarker.hidden, "The dropmarker should be hidden");
   win.gURLBar.blur();
-  Assert.ok(win.gURLBar.dropmarker.hidden, "The dropmarker should be hidden");
 
   // Check the keyboard shortcut.
   win.document.getElementById("Browser:OpenLocation").doCommand();
