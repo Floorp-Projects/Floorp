@@ -1334,7 +1334,7 @@ pub mod test_helpers {
         ($T:ty, $fname:ident) => {
             #[no_mangle]
             #[allow(non_snake_case)]
-            pub extern fn $fname(size: *mut usize, align: *mut usize) {
+            pub extern "C" fn $fname(size: *mut usize, align: *mut usize) {
                 unsafe {
                     *size = mem::size_of::<$T>();
                     *align = mem::align_of::<$T>();
@@ -1344,7 +1344,7 @@ pub mod test_helpers {
         ($T:ty, $U:ty, $V:ty, $fname:ident) => {
             #[no_mangle]
             #[allow(non_snake_case)]
-            pub extern fn $fname(size: *mut usize, align: *mut usize) {
+            pub extern "C" fn $fname(size: *mut usize, align: *mut usize) {
                 unsafe {
                     *size = mem::size_of::<$T>();
                     *align = mem::align_of::<$T>();
@@ -1355,13 +1355,21 @@ pub mod test_helpers {
                     assert_eq!(*align, mem::align_of::<$V>());
                 }
             }
-        }
+        };
     }
 
-    size_align_check!(nsStringRepr, nsString, nsStr<'static>,
-                      Rust_Test_ReprSizeAlign_nsString);
-    size_align_check!(nsCStringRepr, nsCString, nsCStr<'static>,
-                      Rust_Test_ReprSizeAlign_nsCString);
+    size_align_check!(
+        nsStringRepr,
+        nsString,
+        nsStr<'static>,
+        Rust_Test_ReprSizeAlign_nsString
+    );
+    size_align_check!(
+        nsCStringRepr,
+        nsCString,
+        nsCStr<'static>,
+        Rust_Test_ReprSizeAlign_nsCString
+    );
 
     /// Generates a $[no_mangle] extern "C" function which returns the size,
     /// alignment and offset in the parent struct of a given member, with the
@@ -1373,9 +1381,7 @@ pub mod test_helpers {
         ($T:ty, $U:ty, $V:ty, $member:ident, $method:ident) => {
             #[no_mangle]
             #[allow(non_snake_case)]
-            pub extern fn $method(size: *mut usize,
-                                  align: *mut usize,
-                                  offset: *mut usize) {
+            pub extern "C" fn $method(size: *mut usize, align: *mut usize, offset: *mut usize) {
                 unsafe {
                     // Create a temporary value of type T to get offsets, sizes
                     // and alignments from.
@@ -1387,57 +1393,99 @@ pub mod test_helpers {
                     let tmp = &*tmp.as_ptr();
                     *size = mem::size_of_val(&tmp.$member);
                     *align = mem::align_of_val(&tmp.$member);
-                    *offset =
-                        (&tmp.$member as *const _ as usize) -
-                        (tmp as *const $T as usize);
+                    *offset = (&tmp.$member as *const _ as usize) - (tmp as *const $T as usize);
 
                     let tmp: mem::MaybeUninit<$U> = mem::MaybeUninit::uninit();
                     let tmp = &*tmp.as_ptr();
                     assert_eq!(*size, mem::size_of_val(&tmp.hdr.$member));
                     assert_eq!(*align, mem::align_of_val(&tmp.hdr.$member));
-                    assert_eq!(*offset,
-                               (&tmp.hdr.$member as *const _ as usize) -
-                               (tmp as *const $U as usize));
+                    assert_eq!(
+                        *offset,
+                        (&tmp.hdr.$member as *const _ as usize) - (tmp as *const $U as usize)
+                    );
 
                     let tmp: mem::MaybeUninit<$V> = mem::MaybeUninit::uninit();
                     let tmp = &*tmp.as_ptr();
                     assert_eq!(*size, mem::size_of_val(&tmp.hdr.$member));
                     assert_eq!(*align, mem::align_of_val(&tmp.hdr.$member));
-                    assert_eq!(*offset,
-                               (&tmp.hdr.$member as *const _ as usize) -
-                               (tmp as *const $V as usize));
+                    assert_eq!(
+                        *offset,
+                        (&tmp.hdr.$member as *const _ as usize) - (tmp as *const $V as usize)
+                    );
                 }
             }
-        }
+        };
     }
 
-    member_check!(nsStringRepr, nsString, nsStr<'static>,
-                  data, Rust_Test_Member_nsString_mData);
-    member_check!(nsStringRepr, nsString, nsStr<'static>,
-                  length, Rust_Test_Member_nsString_mLength);
-    member_check!(nsStringRepr, nsString, nsStr<'static>,
-                  dataflags, Rust_Test_Member_nsString_mDataFlags);
-    member_check!(nsStringRepr, nsString, nsStr<'static>,
-                  classflags, Rust_Test_Member_nsString_mClassFlags);
-    member_check!(nsCStringRepr, nsCString, nsCStr<'static>,
-                  data, Rust_Test_Member_nsCString_mData);
-    member_check!(nsCStringRepr, nsCString, nsCStr<'static>,
-                  length, Rust_Test_Member_nsCString_mLength);
-    member_check!(nsCStringRepr, nsCString, nsCStr<'static>,
-                  dataflags, Rust_Test_Member_nsCString_mDataFlags);
-    member_check!(nsCStringRepr, nsCString, nsCStr<'static>,
-                  classflags, Rust_Test_Member_nsCString_mClassFlags);
+    member_check!(
+        nsStringRepr,
+        nsString,
+        nsStr<'static>,
+        data,
+        Rust_Test_Member_nsString_mData
+    );
+    member_check!(
+        nsStringRepr,
+        nsString,
+        nsStr<'static>,
+        length,
+        Rust_Test_Member_nsString_mLength
+    );
+    member_check!(
+        nsStringRepr,
+        nsString,
+        nsStr<'static>,
+        dataflags,
+        Rust_Test_Member_nsString_mDataFlags
+    );
+    member_check!(
+        nsStringRepr,
+        nsString,
+        nsStr<'static>,
+        classflags,
+        Rust_Test_Member_nsString_mClassFlags
+    );
+    member_check!(
+        nsCStringRepr,
+        nsCString,
+        nsCStr<'static>,
+        data,
+        Rust_Test_Member_nsCString_mData
+    );
+    member_check!(
+        nsCStringRepr,
+        nsCString,
+        nsCStr<'static>,
+        length,
+        Rust_Test_Member_nsCString_mLength
+    );
+    member_check!(
+        nsCStringRepr,
+        nsCString,
+        nsCStr<'static>,
+        dataflags,
+        Rust_Test_Member_nsCString_mDataFlags
+    );
+    member_check!(
+        nsCStringRepr,
+        nsCString,
+        nsCStr<'static>,
+        classflags,
+        Rust_Test_Member_nsCString_mClassFlags
+    );
 
     #[no_mangle]
     #[allow(non_snake_case)]
-    pub extern fn Rust_Test_NsStringFlags(f_terminated: *mut u16,
-                                          f_voided: *mut u16,
-                                          f_refcounted: *mut u16,
-                                          f_owned: *mut u16,
-                                          f_inline: *mut u16,
-                                          f_literal: *mut u16,
-                                          f_class_inline: *mut u16,
-                                          f_class_null_terminated: *mut u16) {
+    pub extern "C" fn Rust_Test_NsStringFlags(
+        f_terminated: *mut u16,
+        f_voided: *mut u16,
+        f_refcounted: *mut u16,
+        f_owned: *mut u16,
+        f_inline: *mut u16,
+        f_literal: *mut u16,
+        f_class_inline: *mut u16,
+        f_class_null_terminated: *mut u16,
+    ) {
         unsafe {
             *f_terminated = DataFlags::TERMINATED.bits();
             *f_voided = DataFlags::VOIDED.bits();
@@ -1452,10 +1500,12 @@ pub mod test_helpers {
 
     #[no_mangle]
     #[allow(non_snake_case)]
-    pub extern fn Rust_InlineCapacityFromRust(cstring: *const nsACString,
-                                              string: *const nsAString,
-                                              cstring_capacity: *mut usize,
-                                              string_capacity: *mut usize) {
+    pub extern "C" fn Rust_InlineCapacityFromRust(
+        cstring: *const nsACString,
+        string: *const nsAString,
+        cstring_capacity: *mut usize,
+        string_capacity: *mut usize,
+    ) {
         unsafe {
             *cstring_capacity = (*cstring).inline_capacity().unwrap();
             *string_capacity = (*string).inline_capacity().unwrap();
