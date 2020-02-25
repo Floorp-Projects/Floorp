@@ -95,7 +95,7 @@ def create_suite(name, node, data_path, checkpoints=CHECKPOINTS,
         'name': name,
         'subtests': [],
         'lowerIsBetter': True,
-        'units': 'bytes'
+        'unit': 'bytes'
     }
 
     if alertThreshold:
@@ -153,7 +153,7 @@ def create_suite(name, node, data_path, checkpoints=CHECKPOINTS,
             'name': checkpoint['name'],
             'value': value,
             'lowerIsBetter': True,
-            'units': 'bytes'
+            'unit': 'bytes'
         }
         suite['subtests'].append(subtest)
         total += math.log(subtest['value'])
