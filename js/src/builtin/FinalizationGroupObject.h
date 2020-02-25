@@ -95,8 +95,17 @@ using RootedFinalizationIteratorObject = Rooted<FinalizationIteratorObject*>;
 using RootedFinalizationRecordObject = Rooted<FinalizationRecordObject*>;
 
 // A finalization record: a pair of finalization group and held value.
+//
+// A finalization record represents the registered interest of a finalization
+// group in a target's finalization.
+//
+// Finalization records are initially 'active' but may be cleared and become
+// inactive. This happens when:
+//  - the heldValue is passed to the group's cleanup callback
+//  - the group's unregister method removes the registration
+//  - the FinalizationGroup dies
 class FinalizationRecordObject : public NativeObject {
-  enum { GroupSlot = 0, HeldValueSlot, SlotCount };
+  enum { WeakGroupSlot = 0, HeldValueSlot, SlotCount };
 
  public:
   static const JSClass class_;
@@ -106,10 +115,20 @@ class FinalizationRecordObject : public NativeObject {
                                           HandleFinalizationGroupObject group,
                                           HandleValue heldValue);
 
-  FinalizationGroupObject* group() const;
+  // Read weak group pointer and perform read barrier during GC.
+  FinalizationGroupObject* groupDuringGC(gc::GCRuntime* gc) const;
+
   Value heldValue() const;
-  bool wasCleared() const;
+  bool isActive() const;
   void clear();
+  bool sweep();
+
+ private:
+  static const JSClassOps classOps_;
+
+  static void trace(JSTracer* trc, JSObject* obj);
+
+  FinalizationGroupObject* groupUnbarriered() const;
 };
 
 // A vector of FinalizationRecordObjects.
@@ -143,11 +162,15 @@ class FinalizationRecordVectorObject : public NativeObject {
   static void finalize(JSFreeOp* fop, JSObject* obj);
 };
 
+using FinalizationRecordSet =
+    GCHashSet<HeapPtrObject, MovableCellHasher<HeapPtrObject>, ZoneAllocPolicy>;
+
 // The FinalizationGroup object itself.
 class FinalizationGroupObject : public NativeObject {
   enum {
     CleanupCallbackSlot = 0,
     RegistrationsSlot,
+    ActiveRecords,
     RecordsToBeCleanedUpSlot,
     IsQueuedForCleanupSlot,
     IsCleanupJobActiveSlot,
@@ -160,6 +183,7 @@ class FinalizationGroupObject : public NativeObject {
 
   JSObject* cleanupCallback() const;
   ObjectWeakMap* registrations() const;
+  FinalizationRecordSet* activeRecords() const;
   FinalizationRecordVector* recordsToBeCleanedUp() const;
   bool isQueuedForCleanup() const;
   bool isCleanupJobActive() const;
