@@ -38,9 +38,8 @@ struct AllocationIntegrityState {
 
   // Perform the liveness analysis on the graph, and assert on an invalid
   // allocation. This must be called after register allocation, to pick up
-  // all assigned physical values. If populateSafepoints is specified,
-  // safepoints will be filled in with liveness information.
-  MOZ_MUST_USE bool check(bool populateSafepoints);
+  // all assigned physical values.
+  MOZ_MUST_USE bool check();
 
  private:
   LIRGraph& graph;
@@ -115,11 +114,9 @@ struct AllocationIntegrityState {
   IntegrityItemSet seen;
 
   MOZ_MUST_USE bool checkIntegrity(LBlock* block, LInstruction* ins,
-                                   uint32_t vreg, LAllocation alloc,
-                                   bool populateSafepoints);
-  MOZ_MUST_USE bool checkSafepointAllocation(LInstruction* ins, uint32_t vreg,
-                                             LAllocation alloc,
-                                             bool populateSafepoints);
+                                   uint32_t vreg, LAllocation alloc);
+  void checkSafepointAllocation(LInstruction* ins, uint32_t vreg,
+                                LAllocation alloc);
   MOZ_MUST_USE bool addPredecessor(LBlock* block, uint32_t vreg,
                                    LAllocation alloc);
 
