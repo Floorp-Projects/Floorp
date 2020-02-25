@@ -58,6 +58,7 @@ signing_description_schema = schema.extend({
 
     Optional('shipping-phase'): task_description_schema['shipping-phase'],
     Optional('shipping-product'): task_description_schema['shipping-product'],
+    Optional('dependent-tasks'): {text_type: object},
 
     # Optional control for how long a task may run (aka maxRunTime)
     Optional('max-run-time'): int,
@@ -74,7 +75,9 @@ signing_description_schema = schema.extend({
 @transforms.add
 def set_defaults(config, jobs):
     for job in jobs:
-        job.setdefault('depname', 'build')
+        if not job.get('depname'):
+            dep_job = job['primary-dependency']
+            job['depname'] = dep_job.kind
         yield job
 
 
@@ -166,7 +169,7 @@ def make_task_description(config, jobs):
                        'upstream-artifacts': job['upstream-artifacts'],
                        'max-run-time': job.get('max-run-time', 3600)},
             'scopes': [signing_cert_scope] + signing_format_scopes,
-            'dependencies': {job['depname']: dep_job.label},
+            'dependencies': _generate_dependencies(job),
             'attributes': attributes,
             'run-on-projects': dep_job.attributes.get('run_on_projects'),
             'optimization': dep_job.optimization,
@@ -214,6 +217,15 @@ def make_task_description(config, jobs):
             task['priority'] = job['priority']
 
         yield task
+
+
+def _generate_dependencies(job):
+    if isinstance(job.get('dependent-tasks'), dict):
+        deps = {}
+        for k, v in job['dependent-tasks'].items():
+            deps[k] = v.label
+        return deps
+    return {job['depname']: job['primary-dependency'].label}
 
 
 def _generate_treeherder_platform(dep_th_platform, build_platform, build_type):
