@@ -1600,7 +1600,7 @@ security.ui.app_menu:
     release_channel_collection: opt-out
     notification_emails:
       - chsiang@mozilla.com
-      - ewright@mozilla.com 
+      - ewright@mozilla.com
       - seceng-telemetry@mozilla.com
     products:
       - firefox
@@ -1855,3 +1855,29 @@ pictureinpicture:
       - 1560590
     expiry_version: "78"
     release_channel_collection: opt-in
+
+security.doh.trrPerformance:
+  resolved:
+    objects: ["record"]
+    bug_numbers:
+      - 1613790
+    description: >
+      How long it took to resolve a test domain using TRR.
+    expiry_version: "80"
+    record_in_processes:
+      - main
+    release_channel_collection: opt-out
+    notification_emails:
+      - nhnt11@mozilla.com
+      - ddamjanovic@mozilla.com
+      - seceng-telemetry@mozilla.com
+    products:
+      - firefox
+    extra_keys:
+      domain: The resolved domain.
+      trr: The TRR provider used.
+      time: The network time for the resolution.
+      status: The DNS status code.
+      retryCount: The number of lookup attempts before success.
+      networkUnstable: Whether there was network fluctuation while gathering the results.
+      captivePortal: Whether there a captive portal was detected during the run.
