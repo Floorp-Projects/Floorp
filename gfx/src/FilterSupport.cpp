@@ -989,8 +989,8 @@ static already_AddRefed<FilterNode> FilterNodeFromPrimitiveDescription(
       RefPtr<FilterNode> alpha = FilterWrappers::ToAlpha(mDT, mSources[0]);
       RefPtr<FilterNode> blur =
           FilterWrappers::GaussianBlur(mDT, alpha, aDropShadow.mStdDeviation);
-      RefPtr<FilterNode> offsetBlur =
-          FilterWrappers::Offset(mDT, blur, aDropShadow.mOffset);
+      RefPtr<FilterNode> offsetBlur = FilterWrappers::Offset(
+          mDT, blur, IntPoint::Truncate(aDropShadow.mOffset));
       RefPtr<FilterNode> flood = mDT->CreateFilter(FilterType::FLOOD);
       if (!flood) {
         return nullptr;
@@ -1453,7 +1453,7 @@ static nsIntRegion ResultChangeRegionForPrimitive(
     }
 
     nsIntRegion operator()(const DropShadowAttributes& aDropShadow) {
-      IntPoint offset = aDropShadow.mOffset;
+      IntPoint offset = IntPoint::Truncate(aDropShadow.mOffset);
       nsIntRegion offsetRegion =
           mInputChangeRegions[0].MovedBy(offset.x, offset.y);
       Size stdDeviation = aDropShadow.mStdDeviation;
@@ -1833,7 +1833,7 @@ static nsIntRegion SourceNeededRegionForPrimitive(
     }
 
     nsIntRegion operator()(const DropShadowAttributes& aDropShadow) {
-      IntPoint offset = aDropShadow.mOffset;
+      IntPoint offset = IntPoint::Truncate(aDropShadow.mOffset);
       nsIntRegion offsetRegion =
           mResultNeededRegion.MovedBy(-nsIntPoint(offset.x, offset.y));
       Size stdDeviation = aDropShadow.mStdDeviation;
