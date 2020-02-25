@@ -24,6 +24,7 @@
 namespace mozilla {
 namespace gfx {
 
+class DataSourceSurface;
 class SourceSurfaceSkia;
 class BorrowedCGContext;
 
@@ -38,6 +39,7 @@ class DrawTargetSkia : public DrawTarget {
     return BackendType::SKIA;
   }
   virtual already_AddRefed<SourceSurface> Snapshot() override;
+  already_AddRefed<SourceSurface> GetBackingSurface() override;
   virtual IntSize GetSize() const override { return mSize; };
   virtual bool LockBits(uint8_t** aData, IntSize* aSize, int32_t* aStride,
                         SurfaceFormat* aFormat,
@@ -132,6 +134,7 @@ class DrawTargetSkia : public DrawTarget {
   bool Init(unsigned char* aData, const IntSize& aSize, int32_t aStride,
             SurfaceFormat aFormat, bool aUninitialized = false);
   bool Init(SkCanvas* aCanvas);
+  bool Init(RefPtr<DataSourceSurface>&& aSurface);
 
   // Skia assumes that texture sizes fit in 16-bit signed integers.
   static size_t GetMaxSurfaceSize() { return 32767; }
@@ -144,6 +147,8 @@ class DrawTargetSkia : public DrawTarget {
 
  private:
   friend class SourceSurfaceSkia;
+
+  static void ReleaseMappedSkSurface(void* aPixels, void* aContext);
 
   void MarkChanged();
 
@@ -163,6 +168,7 @@ class DrawTargetSkia : public DrawTarget {
   IntSize mSize;
   sk_sp<SkSurface> mSurface;
   SkCanvas* mCanvas;
+  RefPtr<DataSourceSurface> mBackingSurface;
   RefPtr<SourceSurfaceSkia> mSnapshot;
   Mutex mSnapshotLock;
 
