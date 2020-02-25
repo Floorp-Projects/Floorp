@@ -12,34 +12,40 @@
  *
  * To arrange this, the following data structures are used:
  *
- *   +--------------------------------+----------------------------+
- *   |  FinalizationGroup compartment |  Target zone / compartment |
- *   |                                |                            |
- *   |      +-------------------+     |    +------------------+    |
- *   |  +-->+ FinalizationGroup |     |    |       Zone       |    |
- *   |  |   +---------+---------+     |    +---------+--------+    |
- *   |  |             |               |              |             |
- *   |  |             |               |              |             |
- *   |  |             v               |              v             |
- *   |  |  +----------+----------+    |   +----------+---------+   |
- *   |  |  |    Registrations    |    |   | FinalizationRecord |   |
- *   |  |  |      weak map       |    |   |        map         |   |
- *   |  |  +---------------------+    |   +--------------------+   |
- *   |  |  | Unregister : Record |    |   |  Target  : Record  |   |
- *   |  |  |   token    :  list  |    |   |          :  list   |   |
- *   |  |  +-----------------+---+    |   +-----+---------+----+   |
- *   |  |                    |        |         |         |        |
- *   |  |             +------+        |         |         |        |
- *   |  |           * v               |         |         |        |
- *   |  |  +----------+----------+ *  |         |         |        |
- *   |  |  | FinalizationRecord  +<-----------------------+        |
- *   |  |  +---------------------+    |         |                  |
- *   |  +--+ Group               |    |         v                  |
- *   |     +---------------------+    |     +---+---------+        |
- *   |     | Held value          |    |     |   Target    |        |
- *   |     +---------------------+    |     +-------------+        |
- *   |                                |                            |
- *   +--------------------------------+----------------------------+
+ *   +-------------------------------------+---------------------------------+
+ *   |    FinalizationGroup compartment    |    Target zone / compartment    |
+ *   |                                     |                                 |
+ *   |         +-------------------+       |      +------------------+       |
+ *   |  +----->+ FinalizationGroup |       |      |       Zone       |       |
+ *   |  |      +---------+---------+       |      +---------+--------+       |
+ *   |  |                |                 |                |                |
+ *   |  |                v                 |                v                |
+ *   |  |  +-------------+-------------+   |   +------------+------------+   |
+ *   |  |  |       Registrations       |   |   |  FinalizationRecordMap  |   |
+ *   |  |  |         weak map          |   |   |           map           |   |
+ *   |  |  +---------------------------+   |   +-------------------------+   |
+ *   |  |  | Unregister  :   Records   |   |   |  Target  : Finalization-|   |
+ *   |  |  |   token     :   object    |   |   |  object  : RecordVector |   |
+ *   |  |  +--------------------+------+   |   +----+-------------+------+   |
+ *   |  |                       |          |        |             |          |
+ *   |  |                       v          |        v             |          |
+ *   |  |  +--------------------+------+   |   +----+-----+       |          |
+ *   |  |  |       Finalization-       |   |   |  Target  |       |          |
+ *   |  |  |     RecordVectorObject    |   |   | JSObject |       |          |
+ *   |  |  +-------------+-------------+   |   +----------+       |          |
+ *   |  |  |       RecordVector        |   |                      |          |
+ *   |  |  +-------------+-------------+   |                      |          |
+ *   |  |                |                 |                      |          |
+ *   |  |              * v                 |                      |          |
+ *   |  |  +-------------+-------------+ * |                      |          |
+ *   |  |  | FinalizationRecordObject  +<-------------------------+          |
+ *   |  |  +---------------------------+   |                                 |
+ *   |  +--+ Group                     |   |                                 |
+ *   |     +---------------------------+   |                                 |
+ *   |     | Held value                |   |                                 |
+ *   |     +---------------------------+   |                                 |
+ *   |                                     |                                 |
+ *   +-------------------------------------+---------------------------------+
  *
  * Registering a target with a FinalizationGroup creates a FinalizationRecord
  * containing the group and the heldValue. This is added to a vector of records
@@ -48,7 +54,7 @@
  *
  * When a target is registered an unregister token may be supplied. If so, this
  * is also recorded by the group and is stored in a weak map of
- * registrations. The values of this map are FinalizationRecordVector
+ * registrations. The values of this map are FinalizationRecordVectorObject
  * objects. It's necessary to have another JSObject here because our weak map
  * implementation only supports JS types as values.
  *
