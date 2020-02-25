@@ -11,4 +11,4 @@ EXTRA_JS_MODULES += [
   'TRRPerformance.jsm',
 ]
 
-
+XPCSHELL_TESTS_MANIFESTS += ['test/unit/xpcshell.ini']
