@@ -75,6 +75,8 @@ add_task(async function test_selectChoose() {
     () => !folderTreeRow.collapsed,
     "Should show the folder tree"
   );
+  let folderTree = win.document.getElementById("editBMPanel_folderTree");
+  Assert.ok(folderTree.view, "The view should have been connected");
 
   Assert.equal(
     menuList.getAttribute("selectedGuid"),
@@ -88,6 +90,7 @@ add_task(async function test_selectChoose() {
   );
 
   await hideBookmarksPanel(win);
+  Assert.ok(!folderTree.view, "The view should have been disconnected");
 });
 
 add_task(async function test_selectBookmarksMenu() {
