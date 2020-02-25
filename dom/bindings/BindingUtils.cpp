@@ -14,6 +14,7 @@
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/StaticPrefs_dom.h"
+#include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"
 #include "mozilla/UseCounter.h"
 
@@ -222,7 +223,7 @@ bool TErrorResult<CleanupPolicy>::DeserializeMessage(const IPC::Message* aMsg,
                                                      PickleIterator* aIter) {
   using namespace IPC;
   AssertInOwningThread();
-  nsAutoPtr<Message> readMessage(new Message());
+  auto readMessage = MakeUnique<Message>();
   if (!ReadParam(aMsg, aIter, &readMessage->mArgs) ||
       !ReadParam(aMsg, aIter, &readMessage->mErrorNumber)) {
     return false;
@@ -232,7 +233,7 @@ bool TErrorResult<CleanupPolicy>::DeserializeMessage(const IPC::Message* aMsg,
   }
 
   MOZ_ASSERT(mUnionState == HasNothing);
-  InitMessage(readMessage.forget());
+  InitMessage(readMessage.release());
 #ifdef DEBUG
   mUnionState = HasMessage;
 #endif  // DEBUG
