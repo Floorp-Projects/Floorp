@@ -224,14 +224,11 @@ XPCOMUtils.defineLazyScriptGetter(
   "SearchOneOffs",
   "chrome://browser/content/search/search-one-offs.js"
 );
-if (AppConstants.NIGHTLY_BUILD) {
-  XPCOMUtils.defineLazyScriptGetter(
-    this,
-    "gGfxUtils",
-    "chrome://browser/content/browser-graphics-utils.js"
-  );
-}
-
+XPCOMUtils.defineLazyScriptGetter(
+  this,
+  "gGfxUtils",
+  "chrome://browser/content/browser-graphics-utils.js"
+);
 XPCOMUtils.defineLazyScriptGetter(
   this,
   "pktUI",
@@ -2308,6 +2305,10 @@ var gBrowserInit = {
         FissionTestingUI.init();
       });
     }
+
+    scheduleIdleTask(() => {
+      gGfxUtils.init();
+    });
 
     // This should always go last, since the idle tasks (except for the ones with
     // timeouts) should execute in order. Note that this observer notification is

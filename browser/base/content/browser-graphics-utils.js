@@ -11,6 +11,13 @@
 var gGfxUtils = {
   _isRecording: false,
   _isTransactionLogging: false,
+
+  init() {
+    if (Services.prefs.getBoolPref("gfx.webrender.enable-capture")) {
+      document.getElementById("wrCaptureCmd").removeAttribute("disabled");
+    }
+  },
+
   /**
    * Toggle composition recording for the current window.
    */
