@@ -233,6 +233,9 @@ class WebExecutorTest {
 
     @Test
     fun testCookies() {
+        sessionRule.setPrefsUntilTestEnd(mapOf(
+                "network.cookie.sameSite.laxByDefault" to false));
+
         val uptimeMillis = SystemClock.uptimeMillis()
         val response = fetch(WebRequest("$TEST_ENDPOINT/cookies/set/uptimeMillis/$uptimeMillis"))
 
@@ -253,6 +256,9 @@ class WebExecutorTest {
 
     @Test
     fun testAnonymous() {
+        sessionRule.setPrefsUntilTestEnd(mapOf(
+                "network.cookie.sameSite.laxByDefault" to false));
+
         // Ensure a cookie is set for the test server
         testCookies();
 
