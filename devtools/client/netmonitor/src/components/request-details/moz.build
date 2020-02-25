@@ -6,6 +6,5 @@ DevToolsModules(
     'CachePanel.js',
     'CookiesPanel.js',
     'ParamsPanel.js',
-    'PropertiesView.js',
-    'SecurityPanel.js',
+    'PropertiesView.js'
 )
