@@ -19,7 +19,6 @@ namespace jit {
 enum IonRegisterAllocator {
   RegisterAllocator_Backtracking,
   RegisterAllocator_Testbed,
-  RegisterAllocator_Stupid
 };
 
 static inline mozilla::Maybe<IonRegisterAllocator> LookupRegisterAllocator(
@@ -29,9 +28,6 @@ static inline mozilla::Maybe<IonRegisterAllocator> LookupRegisterAllocator(
   }
   if (!strcmp(name, "testbed")) {
     return mozilla::Some(RegisterAllocator_Testbed);
-  }
-  if (!strcmp(name, "stupid")) {
-    return mozilla::Some(RegisterAllocator_Stupid);
   }
   return mozilla::Nothing();
 }
