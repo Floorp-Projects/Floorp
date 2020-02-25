@@ -53,7 +53,7 @@ class TextureHost;
 #undef OPAQUE
 
 struct LayersId {
-  uint64_t mId;
+  uint64_t mId = 0;
 
   bool IsValid() const { return mId != 0; }
 
