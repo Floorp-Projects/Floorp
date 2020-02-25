@@ -6872,20 +6872,22 @@ HTMLEditor::GetExtendedRangeToIncludeInvisibleNodes(
   if (atStart.GetContainer() != commonAncestorBlock &&
       atStart.GetContainer() != editingHost) {
     for (;;) {
-      WSRunScanner wsScannerAtStart(this, atStart);
-      if (!wsScannerAtStart.ScanPreviousVisibleNodeOrBlockBoundaryFrom(atStart)
-               .ReachedCurrentBlockBoundary()) {
+      WSScanResult backwardScanFromStartResult =
+          WSRunScanner::ScanPreviousVisibleNodeOrBlockBoundary(*this, atStart);
+      if (!backwardScanFromStartResult.ReachedCurrentBlockBoundary()) {
         break;
       }
+      MOZ_ASSERT(backwardScanFromStartResult.GetContent() ==
+                 WSRunScanner(this, atStart).GetStartReasonContent());
       // We want to keep looking up.  But stop if we are crossing table
       // element boundaries, or if we hit the root.
       if (HTMLEditUtils::IsTableElement(
-              wsScannerAtStart.GetStartReasonContent()) ||
-          wsScannerAtStart.GetStartReasonContent() == commonAncestorBlock ||
-          wsScannerAtStart.GetStartReasonContent() == editingHost) {
+              backwardScanFromStartResult.GetContent()) ||
+          backwardScanFromStartResult.GetContent() == commonAncestorBlock ||
+          backwardScanFromStartResult.GetContent() == editingHost) {
         break;
       }
-      atStart.Set(wsScannerAtStart.GetStartReasonContent());
+      atStart = backwardScanFromStartResult.PointAtContent();
     }
   }
 
@@ -6902,6 +6904,14 @@ HTMLEditor::GetExtendedRangeToIncludeInvisibleNodes(
       WSScanResult forwardScanFromEndResult =
           wsScannerAtEnd.ScanNextVisibleNodeOrBlockBoundaryFrom(atEnd);
       if (forwardScanFromEndResult.ReachedBRElement()) {
+        // XXX In my understanding, this is odd.  The end reason may not be
+        //     same as the reached <br> element because the equality is
+        //     guaranteed only when ReachedCurrentBlockBoundary() returns true.
+        //     However, looks like that this code assumes that
+        //     GetEndReasonContent() returns the (or a) <br> element.
+        NS_ASSERTION(wsScannerAtEnd.GetEndReasonContent() ==
+                         forwardScanFromEndResult.BRElementPtr(),
+                     "End reason is not the reached <br> element");
         if (IsVisibleBRElement(wsScannerAtEnd.GetEndReasonContent())) {
           break;
         }
@@ -6913,15 +6923,17 @@ HTMLEditor::GetExtendedRangeToIncludeInvisibleNodes(
       }
 
       if (forwardScanFromEndResult.ReachedCurrentBlockBoundary()) {
+        MOZ_ASSERT(forwardScanFromEndResult.GetContent() ==
+                   wsScannerAtEnd.GetEndReasonContent());
         // We want to keep looking up.  But stop if we are crossing table
         // element boundaries, or if we hit the root.
         if (HTMLEditUtils::IsTableElement(
-                wsScannerAtEnd.GetEndReasonContent()) ||
-            wsScannerAtEnd.GetEndReasonContent() == commonAncestorBlock ||
-            wsScannerAtEnd.GetEndReasonContent() == editingHost) {
+                forwardScanFromEndResult.GetContent()) ||
+            forwardScanFromEndResult.GetContent() == commonAncestorBlock ||
+            forwardScanFromEndResult.GetContent() == editingHost) {
           break;
         }
-        atEnd.SetAfter(wsScannerAtEnd.GetEndReasonContent());
+        atEnd = forwardScanFromEndResult.PointAfterContent();
         continue;
       }
 

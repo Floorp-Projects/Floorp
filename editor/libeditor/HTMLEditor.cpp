@@ -3144,6 +3144,14 @@ nsresult HTMLEditor::DeleteParentBlocksWithTransactionIfEmpty(
   WSScanResult forwardScanFromPointResult =
       wsScannerForPoint.ScanNextVisibleNodeOrBlockBoundaryFrom(aPoint);
   if (forwardScanFromPointResult.ReachedBRElement()) {
+    // XXX In my understanding, this is odd.  The end reason may not be
+    //     same as the reached <br> element because the equality is
+    //     guaranteed only when ReachedCurrentBlockBoundary() returns true.
+    //     However, looks like that this code assumes that
+    //     GetEndReasonContent() returns the (or a) <br> element.
+    NS_ASSERTION(wsScannerForPoint.GetEndReasonContent() ==
+                     forwardScanFromPointResult.BRElementPtr(),
+                 "End reason is not the reached <br> element");
     // If the <br> element is visible, we shouldn't remove the parent block.
     if (IsVisibleBRElement(wsScannerForPoint.GetEndReasonContent())) {
       return NS_SUCCESS_EDITOR_ELEMENT_NOT_FOUND;
