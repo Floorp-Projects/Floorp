@@ -12,6 +12,7 @@ import androidx.sqlite.db.framework.FrameworkSQLiteOpenHelperFactory
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.platform.app.InstrumentationRegistry
 import mozilla.components.feature.sitepermissions.SitePermissions
+import mozilla.components.feature.sitepermissions.SitePermissions.Status
 import mozilla.components.feature.sitepermissions.SitePermissionsStorage
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -54,14 +55,14 @@ class OnDeviceSitePermissionsStorageTest {
         val origin = "https://www.mozilla.org".toUri().host!!
         val sitePermissions = SitePermissions(
             origin = origin,
-            camera = SitePermissions.Status.BLOCKED,
+            camera = Status.BLOCKED,
             savedAt = System.currentTimeMillis()
         )
         storage.save(sitePermissions)
         val sitePermissionsFromStorage = storage.findSitePermissionsBy(origin)!!
 
         assertEquals(origin, sitePermissionsFromStorage.origin)
-        assertEquals(SitePermissions.Status.BLOCKED, sitePermissionsFromStorage.camera)
+        assertEquals(Status.BLOCKED, sitePermissionsFromStorage.camera)
     }
 
     @Test
@@ -98,6 +99,32 @@ class OnDeviceSitePermissionsStorageTest {
 
             cursor.moveToFirst()
             assertEquals(1, cursor.getInt(cursor.getColumnIndexOrThrow("camera")))
+        }
+    }
+
+    @Test
+    fun migrate2to3() {
+        helper.createDatabase(MIGRATION_TEST_DB, 2).apply {
+            query("SELECT * FROM site_permissions").use { cursor ->
+                assertEquals(8, cursor.columnCount)
+            }
+            execSQL(
+                    "INSERT INTO " +
+                            "site_permissions " +
+                            "(origin, location, notification, microphone,camera,bluetooth,local_storage,saved_at) " +
+                            "VALUES " +
+                            "('mozilla.org',1,1,1,1,1,1,1)"
+            )
+        }
+
+        val dbVersion3 = helper.runMigrationsAndValidate(MIGRATION_TEST_DB, 3, true, Migrations.migration_2_3)
+
+        dbVersion3.query("SELECT * FROM site_permissions").use { cursor ->
+            assertEquals(10, cursor.columnCount)
+
+            cursor.moveToFirst()
+            assertEquals(Status.BLOCKED.id, cursor.getInt(cursor.getColumnIndexOrThrow("autoplay_audible")))
+            assertEquals(Status.ALLOWED.id, cursor.getInt(cursor.getColumnIndexOrThrow("autoplay_inaudible")))
         }
     }
 }

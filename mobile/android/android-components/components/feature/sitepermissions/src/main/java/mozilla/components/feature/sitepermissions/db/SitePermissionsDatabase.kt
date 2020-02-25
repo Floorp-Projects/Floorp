@@ -17,7 +17,7 @@ import mozilla.components.feature.sitepermissions.SitePermissions
 /**
  * Internal database for saving site permissions.
  */
-@Database(entities = [SitePermissionsEntity::class], version = 2)
+@Database(entities = [SitePermissionsEntity::class], version = 3)
 @TypeConverters(StatusConverter::class)
 internal abstract class SitePermissionsDatabase : RoomDatabase() {
     abstract fun sitePermissionsDao(): SitePermissionsDao
@@ -36,6 +36,8 @@ internal abstract class SitePermissionsDatabase : RoomDatabase() {
                 "site_permissions_database"
             ).addMigrations(
                 Migrations.migration_1_2
+            ).addMigrations(
+                Migrations.migration_2_3
             ).build().also { instance = it }
         }
     }
@@ -75,6 +77,25 @@ internal object Migrations {
                     "`saved_at` INTEGER NOT NULL," +
                     " PRIMARY KEY(`origin`))"
             )
+        }
+    }
+    @Suppress("MagicNumber")
+    val migration_2_3 = object : Migration(2, 3) {
+        override fun migrate(database: SupportSQLiteDatabase) {
+            val haveAutoPlayColumns = database.query("SELECT * FROM site_permissions").columnCount == 10
+            // We just want to apply this migration for user that do not have
+            // the new autoplay fields autoplay_audible and autoplay_inaudible
+            if (!haveAutoPlayColumns) {
+                database.execSQL(
+                        "ALTER TABLE site_permissions ADD COLUMN autoplay_audible INTEGER NOT NULL DEFAULT ''")
+                database.execSQL(
+                        "ALTER TABLE site_permissions ADD COLUMN autoplay_inaudible INTEGER NOT NULL DEFAULT ''")
+
+                database.execSQL(" UPDATE site_permissions" +
+                        " SET autoplay_audible = -1, " + // BLOCKED by default
+                        " `autoplay_inaudible` = 1" // ALLOWED by default
+                )
+            }
         }
     }
 }
