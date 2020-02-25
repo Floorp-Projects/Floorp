@@ -320,6 +320,14 @@ already_AddRefed<SourceSurface> DrawTargetSkia::Snapshot() {
   return snapshot.forget();
 }
 
+already_AddRefed<SourceSurface> DrawTargetSkia::GetBackingSurface() {
+  if (mBackingSurface) {
+    RefPtr<SourceSurface> snapshot = mBackingSurface;
+    return snapshot.forget();
+  }
+  return Snapshot();
+}
+
 bool DrawTargetSkia::LockBits(uint8_t** aData, IntSize* aSize, int32_t* aStride,
                               SurfaceFormat* aFormat, IntPoint* aOrigin) {
   SkImageInfo info;
@@ -1705,6 +1713,43 @@ bool DrawTargetSkia::Init(unsigned char* aData, const IntSize& aSize,
   mCanvas = mSurface->getCanvas();
   SetPermitSubpixelAA(IsOpaque(mFormat));
   return true;
+}
+
+bool DrawTargetSkia::Init(RefPtr<DataSourceSurface>&& aSurface) {
+  auto map =
+      new DataSourceSurface::ScopedMap(aSurface, DataSourceSurface::READ_WRITE);
+  if (!map->IsMapped()) {
+    delete map;
+    return false;
+  }
+
+  SurfaceFormat format = aSurface->GetFormat();
+  IntSize size = aSurface->GetSize();
+  MOZ_ASSERT((format != SurfaceFormat::B8G8R8X8) ||
+             VerifyRGBXFormat(map->GetData(), size, map->GetStride(), format));
+
+  SkSurfaceProps props(0, GetSkPixelGeometry());
+  mSurface = SkSurface::MakeRasterDirectReleaseProc(
+      MakeSkiaImageInfo(size, format), map->GetData(), map->GetStride(),
+      DrawTargetSkia::ReleaseMappedSkSurface, map, &props);
+  if (!mSurface) {
+    delete map;
+    return false;
+  }
+
+  // map is now owned by mSurface
+  mBackingSurface = std::move(aSurface);
+  mSize = size;
+  mFormat = format;
+  mCanvas = mSurface->getCanvas();
+  SetPermitSubpixelAA(IsOpaque(format));
+  return true;
+}
+
+/* static */ void DrawTargetSkia::ReleaseMappedSkSurface(void* aPixels,
+                                                         void* aContext) {
+  auto map = reinterpret_cast<DataSourceSurface::ScopedMap*>(aContext);
+  delete map;
 }
 
 void DrawTargetSkia::SetTransform(const Matrix& aTransform) {
