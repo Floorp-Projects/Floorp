@@ -1420,7 +1420,7 @@ LIRGraph* GenerateLIR(MIRGenerator* mir) {
 
 #ifdef DEBUG
         if (JitOptions.fullDebugChecks) {
-          if (!integrity.check(false)) {
+          if (!integrity.check()) {
             return nullptr;
           }
         }
