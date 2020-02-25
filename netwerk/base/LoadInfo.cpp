@@ -1056,6 +1056,14 @@ LoadInfo::GetFrameBrowsingContextID(uint64_t* aResult) {
 }
 
 NS_IMETHODIMP
+LoadInfo::GetTargetBrowsingContextID(uint64_t* aResult) {
+  return (nsILoadInfo::GetExternalContentPolicyType() ==
+          nsIContentPolicy::TYPE_SUBDOCUMENT)
+             ? GetFrameBrowsingContextID(aResult)
+             : GetBrowsingContextID(aResult);
+}
+
+NS_IMETHODIMP
 LoadInfo::GetBrowsingContext(dom::BrowsingContext** aResult) {
   *aResult = BrowsingContext::Get(mBrowsingContextID).take();
   return NS_OK;
@@ -1064,6 +1072,14 @@ LoadInfo::GetBrowsingContext(dom::BrowsingContext** aResult) {
 NS_IMETHODIMP
 LoadInfo::GetFrameBrowsingContext(dom::BrowsingContext** aResult) {
   *aResult = BrowsingContext::Get(mFrameBrowsingContextID).take();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+LoadInfo::GetTargetBrowsingContext(dom::BrowsingContext** aResult) {
+  uint64_t targetBrowsingContextID = 0;
+  MOZ_ALWAYS_SUCCEEDS(GetTargetBrowsingContextID(&targetBrowsingContextID));
+  *aResult = BrowsingContext::Get(targetBrowsingContextID).take();
   return NS_OK;
 }
 

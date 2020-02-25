@@ -2687,14 +2687,15 @@ void nsHttpChannel::AssertNotDocumentChannel() {
     return;
   }
 
-  nsContentPolicyType contentPolicy;
-  MOZ_ALWAYS_SUCCEEDS(mLoadInfo->GetExternalContentPolicyType(&contentPolicy));
-  RefPtr<BrowsingContext> bc;
-  if (contentPolicy == CSPService::TYPE_DOCUMENT) {
-    MOZ_ALWAYS_SUCCEEDS(mLoadInfo->GetBrowsingContext(getter_AddRefs(bc)));
-  } else {
-    MOZ_ALWAYS_SUCCEEDS(mLoadInfo->GetFrameBrowsingContext(getter_AddRefs(bc)));
+  auto contentPolicy = mLoadInfo->GetExternalContentPolicyType();
+  if (contentPolicy != nsIContentPolicy::TYPE_DOCUMENT &&
+      contentPolicy != nsIContentPolicy::TYPE_SUBDOCUMENT) {
+    return;
   }
+
+  RefPtr<BrowsingContext> bc;
+  MOZ_ALWAYS_SUCCEEDS(mLoadInfo->GetTargetBrowsingContext(getter_AddRefs(bc)));
+  MOZ_ASSERT(bc);  // It shouldn't be possible.
   if (!bc) {
     return;
   }
