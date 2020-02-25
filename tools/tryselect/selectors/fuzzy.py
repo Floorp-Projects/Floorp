@@ -39,6 +39,7 @@ TARGET_TASK_FILTERS = (
     '.*android-geckoview-docs.*',
     'linux1804-32.*',   # hide linux32 tests - bug 1599197
     r'linux-.*',  # hide all linux32 tasks by default - bug 1599197
+    r'linux.*web-platform-tests.*-fis-.*',  # hide wpt linux fission tests - bug 1610879
 )
 
 
