@@ -34,6 +34,8 @@
 namespace mozilla {
 namespace net {
 
+class LoadInfo;
+
 /**
  * DocumentLoadListener represents a connecting document load for a
  * CanonicalBrowsingContext (in the parent process).
@@ -71,9 +73,8 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
   // expect Necko to pass it again so that we don't need a member var for
   // it.
   bool Open(dom::BrowserParent* aBrowser, nsDocShellLoadState* aLoadState,
-            class LoadInfo* aLoadInfo, const nsString* aInitiatorType,
-            nsLoadFlags aLoadFlags, uint32_t aLoadType, uint32_t aCacheKey,
-            bool aIsActive, bool aIsTopLevelDoc,
+            LoadInfo* aLoadInfo, nsLoadFlags aLoadFlags, uint32_t aLoadType,
+            uint32_t aCacheKey, bool aIsActive, bool aIsTopLevelDoc,
             bool aHasNonEmptySandboxingFlags,
             const Maybe<ipc::URIParams>& aTopWindowURI,
             const Maybe<ipc::PrincipalInfo>& aContentBlockingAllowListPrincipal,

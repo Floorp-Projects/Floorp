@@ -39,9 +39,8 @@ bool DocumentChannelParent::Init(BrowserParent* aBrowser,
 
   rv = NS_ERROR_UNEXPECTED;
   if (!mParent->Open(
-          aBrowser, loadState, loadInfo, aArgs.initiatorType().ptrOr(nullptr),
-          aArgs.loadFlags(), aArgs.loadType(), aArgs.cacheKey(),
-          aArgs.isActive(), aArgs.isTopLevelDoc(),
+          aBrowser, loadState, loadInfo, aArgs.loadFlags(), aArgs.loadType(),
+          aArgs.cacheKey(), aArgs.isActive(), aArgs.isTopLevelDoc(),
           aArgs.hasNonEmptySandboxingFlags(), aArgs.topWindowURI(),
           aArgs.contentBlockingAllowListPrincipal(), aArgs.channelId(),
           aArgs.asyncOpenTime(), aArgs.documentOpenFlags(),

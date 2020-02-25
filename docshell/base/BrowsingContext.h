@@ -32,6 +32,7 @@
 
 class nsDocShellLoadState;
 class nsGlobalWindowOuter;
+class nsILoadInfo;
 class nsIPrincipal;
 class nsOuterWindowProxy;
 class PickleIterator;
@@ -108,7 +109,8 @@ class WindowProxyHolder;
   /* ScreenOrientation-related APIs */                                       \
   FIELD(CurrentOrientationAngle, float)                                      \
   FIELD(CurrentOrientationType, mozilla::dom::OrientationType)               \
-  FIELD(UserAgentOverride, nsString)
+  FIELD(UserAgentOverride, nsString)                                         \
+  FIELD(EmbedderElementType, Maybe<nsString>)
 
 // BrowsingContext, in this context, is the cross process replicated
 // environment in which information about documents is stored. In
@@ -637,6 +639,9 @@ class BrowsingContext : public nsISupports, public nsWrapperCache {
   bool CanSet(FieldIndex<IDX_UserAgentOverride>, const nsString& aUserAgent,
               ContentParent* aSource);
 
+  bool CanSet(FieldIndex<IDX_EmbedderElementType>,
+              const Maybe<nsString>& aInitiatorType, ContentParent* aSource);
+
   template <size_t I, typename T>
   bool CanSet(FieldIndex<I>, const T&, ContentParent*) {
     return true;
@@ -644,6 +649,10 @@ class BrowsingContext : public nsISupports, public nsWrapperCache {
 
   template <size_t I>
   void DidSet(FieldIndex<I>) {}
+
+  // True if the process attempting to set field is the same as the embedder's
+  // process.
+  bool CheckOnlyEmbedderCanSet(ContentParent* aSource);
 
   // Type of BrowsingContent
   const Type mType;
@@ -693,6 +702,10 @@ class BrowsingContext : public nsISupports, public nsWrapperCache {
   // If true, the docShell has not been fully initialized, and may not be used
   // as the target of a load.
   bool mPendingInitialization : 1;
+
+  // True if this BrowsingContext has been embedded in a element in this
+  // process.
+  bool mEmbeddedByThisProcess : 1;
 
   // The start time of user gesture, this is only available if the browsing
   // context is in process.

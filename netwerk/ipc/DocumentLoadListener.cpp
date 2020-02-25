@@ -250,10 +250,9 @@ DocumentLoadListener::~DocumentLoadListener() {
 
 bool DocumentLoadListener::Open(
     BrowserParent* aBrowser, nsDocShellLoadState* aLoadState,
-    class LoadInfo* aLoadInfo, const nsString* aInitiatorType,
-    nsLoadFlags aLoadFlags, uint32_t aLoadType, uint32_t aCacheKey,
-    bool aIsActive, bool aIsTopLevelDoc, bool aHasNonEmptySandboxingFlags,
-    const Maybe<URIParams>& aTopWindowURI,
+    LoadInfo* aLoadInfo, nsLoadFlags aLoadFlags, uint32_t aLoadType,
+    uint32_t aCacheKey, bool aIsActive, bool aIsTopLevelDoc,
+    bool aHasNonEmptySandboxingFlags, const Maybe<URIParams>& aTopWindowURI,
     const Maybe<PrincipalInfo>& aContentBlockingAllowListPrincipal,
     const uint64_t& aChannelId, const TimeStamp& aAsyncOpenTime,
     const Maybe<uint32_t>& aDocumentOpenFlags, bool aPluginsAllowed,
@@ -262,10 +261,9 @@ bool DocumentLoadListener::Open(
        aLoadState->URI()->GetSpecOrDefault().get()));
 
   if (!nsDocShell::CreateAndConfigureRealChannelForLoadState(
-          aLoadState, aLoadInfo, mParentChannelListener, nullptr,
-          aInitiatorType, aLoadFlags, aLoadType, aCacheKey, aIsActive,
-          aIsTopLevelDoc, aHasNonEmptySandboxingFlags, *aRv,
-          getter_AddRefs(mChannel))) {
+          aLoadState, aLoadInfo, mParentChannelListener, nullptr, aLoadFlags,
+          aLoadType, aCacheKey, aIsActive, aIsTopLevelDoc,
+          aHasNonEmptySandboxingFlags, *aRv, getter_AddRefs(mChannel))) {
     mParentChannelListener = nullptr;
     return false;
   }
