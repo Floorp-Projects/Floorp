@@ -653,6 +653,8 @@ class BrowsingContext : public nsISupports, public nsWrapperCache {
 
   RefPtr<BrowsingContextGroup> mGroup;
   RefPtr<BrowsingContext> mParent;
+  // Note: BrowsingContext_Binding::ClearCachedChildrenValue must be called any
+  // time this array is mutated to keep the JS-exposed reflection in sync.
   Children mChildren;
   nsCOMPtr<nsIDocShell> mDocShell;
 

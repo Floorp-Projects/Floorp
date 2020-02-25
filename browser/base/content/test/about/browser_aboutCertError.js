@@ -39,7 +39,7 @@ add_task(async function checkReturnToAboutHome() {
     info("Clicking the go back button on about:certerror");
     let bc = browser.browsingContext;
     if (useFrame) {
-      bc = bc.getChildren()[0];
+      bc = bc.children[0];
     }
     let locationChangePromise = BrowserTestUtils.waitForLocationChange(
       gBrowser,
@@ -114,7 +114,7 @@ add_task(async function checkReturnToPreviousPage() {
     info("Clicking the go back button on about:certerror");
     let bc = browser.browsingContext;
     if (useFrame) {
-      bc = bc.getChildren()[0];
+      bc = bc.children[0];
     }
 
     let pageShownPromise = BrowserTestUtils.waitForContentEvent(
@@ -159,7 +159,7 @@ add_task(async function checkAdvancedDetails() {
 
     let bc = browser.browsingContext;
     if (useFrame) {
-      bc = bc.getChildren()[0];
+      bc = bc.children[0];
     }
 
     let message = await SpecialPowers.spawn(bc, [], async function() {
@@ -246,7 +246,7 @@ add_task(async function checkAdvancedDetailsForHSTS() {
 
     let bc = browser.browsingContext;
     if (useFrame) {
-      bc = bc.getChildren()[0];
+      bc = bc.children[0];
     }
 
     let message = await SpecialPowers.spawn(bc, [], async function() {
@@ -335,7 +335,7 @@ add_task(async function checkUnknownIssuerLearnMoreLink() {
 
     let bc = browser.browsingContext;
     if (useFrame) {
-      bc = bc.getChildren()[0];
+      bc = bc.children[0];
     }
 
     let href = await SpecialPowers.spawn(bc, [], async function() {
@@ -356,7 +356,7 @@ add_task(async function checkCautionClass() {
 
     let bc = browser.browsingContext;
     if (useFrame) {
-      bc = bc.getChildren()[0];
+      bc = bc.children[0];
     }
 
     await SpecialPowers.spawn(bc, [useFrame], async function(subFrame) {
@@ -397,7 +397,7 @@ add_task(async function checkViewCertificate() {
 
     let bc = browser.browsingContext;
     if (useFrame) {
-      bc = bc.getChildren()[0];
+      bc = bc.children[0];
     }
 
     let loaded = BrowserTestUtils.waitForNewTab(gBrowser, null, true);
@@ -462,7 +462,7 @@ add_task(async function checkBadStsCertHeadline() {
 
     let bc = browser.browsingContext;
     if (useFrame) {
-      bc = bc.getChildren()[0];
+      bc = bc.children[0];
     }
 
     let titleContent = await SpecialPowers.spawn(bc, [], async function() {
@@ -493,7 +493,7 @@ add_task(async function checkSandboxedIframe() {
   let tab = await openErrorPage(BAD_CERT, useFrame, sandboxed);
   let browser = tab.linkedBrowser;
 
-  let bc = browser.browsingContext.getChildren()[0];
+  let bc = browser.browsingContext.children[0];
   await SpecialPowers.spawn(bc, [], async function() {
     let doc = content.document;
     let titleText = doc.querySelector(".title-text");

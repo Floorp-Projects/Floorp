@@ -16,7 +16,7 @@ add_task(async function partial_source() {
       "data:text/html," + source
     );
 
-    let frameBC = gBrowser.selectedBrowser.browsingContext.getChildren()[0];
+    let frameBC = gBrowser.selectedBrowser.browsingContext.children[0];
 
     await SpecialPowers.spawn(frameBC, [], () => {
       let element = content.document.getElementById("other");
