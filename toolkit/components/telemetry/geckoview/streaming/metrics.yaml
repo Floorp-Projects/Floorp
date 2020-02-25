@@ -14,7 +14,10 @@ geckoview:
     description: >
       The version of the Gecko engine, example: 74.0a1
     type: string
-    lifetime: application
+    # Temporary misuse of the user lifetime approved by Glean team
+    # due to limitations in Geckoview streaming telemetry.
+    # DO NOT DUPLICATE unless approved by Glean team.
+    lifetime: user
     gecko_datapoint: gecko.version
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1611240
@@ -23,13 +26,16 @@ geckoview:
     notification_emails:
       - gfx-telemetry-alerts@mozilla.com
       - ktaeleman@mozilla.com
-    expires: never
+    expires: 2021-02-01
 
   build_id:
     description: >
       The Buildid of the Gecko engine, example: 20200205124310
     type: string
-    lifetime: application
+    # Temporary misuse of the user lifetime approved by Glean team
+    # due to limitations in Geckoview streaming telemetry.
+    # DO NOT DUPLICATE unless approved by Glean team.
+    lifetime: user
     gecko_datapoint: gecko.build_id
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1611240
@@ -38,7 +44,7 @@ geckoview:
     notification_emails:
       - gfx-telemetry-alerts@mozilla.com
       - ktaeleman@mozilla.com
-    expires: never
+    expires: 2021-02-01
 
   page_load_progress_time:
     type: timing_distribution
@@ -470,7 +476,10 @@ gfx.display:
       Amount of displays connected to the device
     type: quantity
     unit: Display count
-    lifetime: application
+    # Temporary misuse of the user lifetime approved by Glean team
+    # due to limitations in Geckoview streaming telemetry.
+    # DO NOT DUPLICATE unless approved by Glean team.
+    lifetime: user
     gecko_datapoint: gfx.display.count
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1594145
@@ -479,13 +488,16 @@ gfx.display:
     notification_emails:
       - gfx-telemetry-alerts@mozilla.com
       - ktaeleman@mozilla.com
-    expires: never
+    expires: 2021-02-01
   primary_width:
     description: >
       Width of the primary display, takes device rotation into account.
     type: quantity
     unit: Pixels
-    lifetime: application
+    # Temporary misuse of the user lifetime approved by Glean team
+    # due to limitations in Geckoview streaming telemetry.
+    # DO NOT DUPLICATE unless approved by Glean team.
+    lifetime: user
     gecko_datapoint: gfx.display.primary_width
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1594145
@@ -494,13 +506,16 @@ gfx.display:
     notification_emails:
       - gfx-telemetry-alerts@mozilla.com
       - ktaeleman@mozilla.com
-    expires: never
+    expires: 2021-02-01
   primary_height:
     description: >
       Height of the primary display, takes device rotation into account.
     type: quantity
     unit: Pixels
-    lifetime: application
+    # Temporary misuse of the user lifetime approved by Glean team
+    # due to limitations in Geckoview streaming telemetry.
+    # DO NOT DUPLICATE unless approved by Glean team.
+    lifetime: user
     gecko_datapoint: gfx.display.primary_height
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1594145
@@ -509,13 +524,16 @@ gfx.display:
     notification_emails:
       - gfx-telemetry-alerts@mozilla.com
       - ktaeleman@mozilla.com
-    expires: never
+    expires: 2021-02-01
 gfx.adapter.primary:
   description:
     description: >
       Long form description of the Graphics adapter
     type: string
-    lifetime: application
+    # Temporary misuse of the user lifetime approved by Glean team
+    # due to limitations in Geckoview streaming telemetry.
+    # DO NOT DUPLICATE unless approved by Glean team.
+    lifetime: user
     gecko_datapoint: gfx.adapter.description
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1594145
@@ -524,12 +542,15 @@ gfx.adapter.primary:
     notification_emails:
       - gfx-telemetry-alerts@mozilla.com
       - ktaeleman@mozilla.com
-    expires: never
+    expires: 2021-02-01
   vendor_id:
     description: >
       Graphics adapter vendor identification
     type: string
-    lifetime: application
+    # Temporary misuse of the user lifetime approved by Glean team
+    # due to limitations in Geckoview streaming telemetry.
+    # DO NOT DUPLICATE unless approved by Glean team.
+    lifetime: user
     gecko_datapoint: gfx.adapter.vendor_id
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1594145
@@ -538,12 +559,15 @@ gfx.adapter.primary:
     notification_emails:
       - gfx-telemetry-alerts@mozilla.com
       - ktaeleman@mozilla.com
-    expires: never
+    expires: 2021-02-01
   device_id:
     description: >
       Graphics adapter device identification
     type: string
-    lifetime: application
+    # Temporary misuse of the user lifetime approved by Glean team
+    # due to limitations in Geckoview streaming telemetry.
+    # DO NOT DUPLICATE unless approved by Glean team.
+    lifetime: user
     gecko_datapoint: gfx.adapter.device_id
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1594145
@@ -552,28 +576,15 @@ gfx.adapter.primary:
     notification_emails:
       - gfx-telemetry-alerts@mozilla.com
       - ktaeleman@mozilla.com
-    expires: never
-  device_id_last_seen:
-    description: >
-      Graphics adapter device identification last seen
-      This is a temporary workaround for some early telemetry system issues.
-      See Bug 1601091 for more information
-    type: string
-    lifetime: user
-    gecko_datapoint: gfx.adapter.device_id_last_seen
-    bugs:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1601091
-    data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1594145#c4
-    notification_emails:
-      - gfx-telemetry-alerts@mozilla.com
-      - ktaeleman@mozilla.com
-    expires: "2020-04-01"
+    expires: 2021-02-01
   subsystem_id:
     description: >
       Graphics adapter subsystem identification
     type: string
-    lifetime: application
+    # Temporary misuse of the user lifetime approved by Glean team
+    # due to limitations in Geckoview streaming telemetry.
+    # DO NOT DUPLICATE unless approved by Glean team.
+    lifetime: user
     gecko_datapoint: gfx.adapter.subsystem_id
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1594145
@@ -582,13 +593,16 @@ gfx.adapter.primary:
     notification_emails:
       - gfx-telemetry-alerts@mozilla.com
       - ktaeleman@mozilla.com
-    expires: never
+    expires: 2021-02-01
   ram:
     description: >
       Graphics adapter dedicated memory
     type: quantity
     unit: Megabytes
-    lifetime: application
+    # Temporary misuse of the user lifetime approved by Glean team
+    # due to limitations in Geckoview streaming telemetry.
+    # DO NOT DUPLICATE unless approved by Glean team.
+    lifetime: user
     gecko_datapoint: gfx.adapter.ram
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1594145
@@ -597,12 +611,15 @@ gfx.adapter.primary:
     notification_emails:
       - gfx-telemetry-alerts@mozilla.com
       - ktaeleman@mozilla.com
-    expires: never
+    expires: 2021-02-01
   driver_files:
     description: >
       List of graphics adapter driver files
     type: string
-    lifetime: application
+    # Temporary misuse of the user lifetime approved by Glean team
+    # due to limitations in Geckoview streaming telemetry.
+    # DO NOT DUPLICATE unless approved by Glean team.
+    lifetime: user
     gecko_datapoint: gfx.adapter.driver_files
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1594145
@@ -611,12 +628,15 @@ gfx.adapter.primary:
     notification_emails:
       - gfx-telemetry-alerts@mozilla.com
       - ktaeleman@mozilla.com
-    expires: never
+    expires: 2021-02-01
   driver_vendor:
     description: >
       Graphics adapter driver vendor identification
     type: string
-    lifetime: application
+    # Temporary misuse of the user lifetime approved by Glean team
+    # due to limitations in Geckoview streaming telemetry.
+    # DO NOT DUPLICATE unless approved by Glean team.
+    lifetime: user
     gecko_datapoint: gfx.adapter.driver_vendor
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1594145
@@ -625,12 +645,15 @@ gfx.adapter.primary:
     notification_emails:
       - gfx-telemetry-alerts@mozilla.com
       - ktaeleman@mozilla.com
-    expires: never
+    expires: 2021-02-01
   driver_version:
     description: >
       Graphics adapter driver version
     type: string
-    lifetime: application
+    # Temporary misuse of the user lifetime approved by Glean team
+    # due to limitations in Geckoview streaming telemetry.
+    # DO NOT DUPLICATE unless approved by Glean team.
+    lifetime: user
     gecko_datapoint: gfx.adapter.driver_version
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1594145
@@ -639,12 +662,15 @@ gfx.adapter.primary:
     notification_emails:
       - gfx-telemetry-alerts@mozilla.com
       - ktaeleman@mozilla.com
-    expires: never
+    expires: 2021-02-01
   driver_date:
     description: >
       Graphics adapter driver date
     type: string
-    lifetime: application
+    # Temporary misuse of the user lifetime approved by Glean team
+    # due to limitations in Geckoview streaming telemetry.
+    # DO NOT DUPLICATE unless approved by Glean team.
+    lifetime: user
     gecko_datapoint: gfx.adapter.driver_date
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1594145
@@ -653,7 +679,7 @@ gfx.adapter.primary:
     notification_emails:
       - gfx-telemetry-alerts@mozilla.com
       - ktaeleman@mozilla.com
-    expires: never
+    expires: 2021-02-01
 
 gfx.status:
   compositor:
@@ -661,7 +687,10 @@ gfx.status:
       Name of the graphics compositor in use.
       Possible values are "opengl, d3d11, client, webrender or basic"
     type: string
-    lifetime: application
+    # Temporary misuse of the user lifetime approved by Glean team
+    # due to limitations in Geckoview streaming telemetry.
+    # DO NOT DUPLICATE unless approved by Glean team.
+    lifetime: user
     gecko_datapoint: gfx.compositor
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1594145
@@ -670,30 +699,16 @@ gfx.status:
     notification_emails:
       - gfx-telemetry-alerts@mozilla.com
       - ktaeleman@mozilla.com
-    expires: never
-  compositor_last_seen:
-    description: >
-      Name of the graphics compositor last seen in use.
-      Possible values are "opengl, d3d11, client, webrender or basic"
-      This is a temporary workaround for some early telemetry system issues.
-      See Bug 1601091 for more information
-    type: string
-    lifetime: user
-    gecko_datapoint: gfx.compositor_last_seen
-    bugs:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1601091
-    data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1594145#c4
-    notification_emails:
-      - gfx-telemetry-alerts@mozilla.com
-      - ktaeleman@mozilla.com
-    expires: "2020-04-01"
+    expires: 2021-02-01
   headless:
     description: >
       Boolean indicated whether graphics is running in
       headless (no display) mode
     type: boolean
-    lifetime: application
+    # Temporary misuse of the user lifetime approved by Glean team
+    # due to limitations in Geckoview streaming telemetry.
+    # DO NOT DUPLICATE unless approved by Glean team.
+    lifetime: user
     gecko_datapoint: gfx.headless
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1594145
@@ -702,7 +717,7 @@ gfx.status:
     notification_emails:
       - gfx-telemetry-alerts@mozilla.com
       - ktaeleman@mozilla.com
-    expires: never
+    expires: 2021-02-01
 
   sceneswap_time:
     type: timing_distribution
