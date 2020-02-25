@@ -21,7 +21,7 @@ addAccessibleTask(
     ok(iframeDocAcc, "IFRAME document accessible is present");
     (gIsRemoteIframe ? isnot : is)(
       browser.browsingContext.currentWindowGlobal.osPid,
-      browser.browsingContext.children[0].currentWindowGlobal.osPid,
+      browser.browsingContext.getChildren()[0].currentWindowGlobal.osPid,
       `Content and IFRAME documents are in ${
         gIsRemoteIframe ? "separate processes" : "same process"
       }.`

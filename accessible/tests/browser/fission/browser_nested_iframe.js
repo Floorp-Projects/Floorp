@@ -58,35 +58,35 @@ addAccessibleTask(
     if (gIsRemoteIframe) {
       isnot(
         getOsPid(browser.browsingContext),
-        getOsPid(browser.browsingContext.children[0]),
+        getOsPid(browser.browsingContext.getChildren()[0]),
         `Content and IFRAME documents are in separate processes.`
       );
       isnot(
         getOsPid(browser.browsingContext),
-        getOsPid(browser.browsingContext.children[0].children[0]),
+        getOsPid(browser.browsingContext.getChildren()[0].getChildren()[0]),
         `Content and nested IFRAME documents are in separate processes.`
       );
       isnot(
-        getOsPid(browser.browsingContext.children[0]),
-        getOsPid(browser.browsingContext.children[0].children[0]),
+        getOsPid(browser.browsingContext.getChildren()[0]),
+        getOsPid(browser.browsingContext.getChildren()[0].getChildren()[0]),
         `IFRAME and nested IFRAME documents are in separate processes.`
       );
     } else {
       is(
         getOsPid(browser.browsingContext),
-        getOsPid(browser.browsingContext.children[0]),
+        getOsPid(browser.browsingContext.getChildren()[0]),
         `Content and IFRAME documents are in same processes.`
       );
       if (gFissionBrowser) {
         isnot(
-          getOsPid(browser.browsingContext.children[0]),
-          getOsPid(browser.browsingContext.children[0].children[0]),
+          getOsPid(browser.browsingContext.getChildren()[0]),
+          getOsPid(browser.browsingContext.getChildren()[0].getChildren()[0]),
           `IFRAME and nested IFRAME documents are in separate processes.`
         );
       } else {
         is(
           getOsPid(browser.browsingContext),
-          getOsPid(browser.browsingContext.children[0].children[0]),
+          getOsPid(browser.browsingContext.getChildren()[0].getChildren()[0]),
           `Content and nested IFRAME documents are in same processes.`
         );
       }

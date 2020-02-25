@@ -247,8 +247,9 @@ add_task(async function testFind() {
   let { top, left } = rectData[5].rectsAndTexts.rectList[0];
   await extension.unload();
 
-  let subFrameBrowsingContext =
-    gBrowser.selectedBrowser.browsingContext.children[0].children[1];
+  let subFrameBrowsingContext = gBrowser.selectedBrowser.browsingContext
+    .getChildren()[0]
+    .getChildren()[1];
   let result = await SpecialPowers.spawn(
     subFrameBrowsingContext,
     [],
@@ -330,8 +331,9 @@ add_task(async function testRemoveHighlighting() {
   await extension.awaitMessage("test:find:WebExtensionFinished");
   await extension.unload();
 
-  let subFrameBrowsingContext =
-    gBrowser.selectedBrowser.browsingContext.children[0].children[1];
+  let subFrameBrowsingContext = gBrowser.selectedBrowser.browsingContext
+    .getChildren()[0]
+    .getChildren()[1];
   let result = await SpecialPowers.spawn(
     subFrameBrowsingContext,
     [],
