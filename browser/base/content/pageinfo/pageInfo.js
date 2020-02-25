@@ -387,7 +387,7 @@ async function loadPageInfo(browsingContext, imageElement, browser) {
       addImage(item);
     }
     selectImage();
-    contextsToVisit.push(...currContext.getChildren());
+    contextsToVisit.push(...currContext.children);
   }
 
   /* Call registered overlay init functions */

@@ -613,8 +613,7 @@ exports.RootActor = protocol.ActorClassWithSpec(rootSpec, {
     // a different type, we can just get the children directly from
     // the BrowsingContext.
     return (
-      parentBrowsingContext
-        .getChildren()
+      parentBrowsingContext.children
         // For now, we only return the "remote frames".
         // i.e. the frames which are in a distinct process compared to their parent document
         .filter(browsingContext => {
@@ -647,7 +646,7 @@ exports.RootActor = protocol.ActorClassWithSpec(rootSpec, {
       }
       pool.manage(frameDescriptor);
       frames.push(frameDescriptor);
-      contextsToWalk.push(...currentContext.getChildren());
+      contextsToWalk.push(...currentContext.children);
     }
     // Do not destroy the pool before transfering ownership to the newly created
     // pool, so that we do not accidently destroy actors that are still in use.
