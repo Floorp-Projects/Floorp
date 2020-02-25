@@ -352,12 +352,17 @@ workers:
                     staging: gecko-t-signing
         mac-depsigning:
             provisioner: scriptworker-prov-v1
-            implementation: scriptworker-iscript
+            implementation: scriptworker-signing
             os: macosx
             worker-type: depsigning-mac-v1
+        mac-notarization-poller:
+            provisioner: scriptworker-prov-v1
+            implementation: notarization-poller
+            os: macosx
+            worker-type: mac-notarization-poller
         mac-signing:
             provisioner: scriptworker-prov-v1
-            implementation: scriptworker-iscript
+            implementation: scriptworker-signing
             os: macosx
             worker-type:
                 by-release-level:
