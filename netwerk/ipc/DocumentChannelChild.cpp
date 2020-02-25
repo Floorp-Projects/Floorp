@@ -28,12 +28,10 @@ NS_IMPL_RELEASE_INHERITED(DocumentChannelChild, DocumentChannel)
 
 DocumentChannelChild::DocumentChannelChild(
     nsDocShellLoadState* aLoadState, net::LoadInfo* aLoadInfo,
-    const nsString* aInitiatorType, nsLoadFlags aLoadFlags, uint32_t aLoadType,
-    uint32_t aCacheKey, bool aIsActive, bool aIsTopLevelDoc,
-    bool aHasNonEmptySandboxingFlags)
-    : DocumentChannel(aLoadState, aLoadInfo, aInitiatorType, aLoadFlags,
-                      aLoadType, aCacheKey, aIsActive, aIsTopLevelDoc,
-                      aHasNonEmptySandboxingFlags) {
+    nsLoadFlags aLoadFlags, uint32_t aLoadType, uint32_t aCacheKey,
+    bool aIsActive, bool aIsTopLevelDoc, bool aHasNonEmptySandboxingFlags)
+    : DocumentChannel(aLoadState, aLoadInfo, aLoadFlags, aLoadType, aCacheKey,
+                      aIsActive, aIsTopLevelDoc, aHasNonEmptySandboxingFlags) {
   LOG(("DocumentChannelChild ctor [this=%p, uri=%s]", this,
        aLoadState->URI()->GetSpecOrDefault().get()));
 }
@@ -116,7 +114,6 @@ DocumentChannelChild::AsyncOpen(nsIStreamListener* aListener) {
 
   args.loadInfo() = *maybeArgs;
   args.loadFlags() = mLoadFlags;
-  args.initiatorType() = mInitiatorType;
   args.loadType() = mLoadType;
   args.cacheKey() = mCacheKey;
   args.isActive() = mIsActive;
