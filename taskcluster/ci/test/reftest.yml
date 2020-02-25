@@ -12,7 +12,7 @@ job-defaults:
             default: null
     variants:
         by-test-platform:
-            linux1804-64/debug: ['fission', 'serviceworker']
+            linux1804-64/debug: ['fission']
             default: ['fission']
     fission-tier: 2
     run-on-projects:
