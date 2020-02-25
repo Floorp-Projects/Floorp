@@ -37,6 +37,8 @@ add_task(async function test_browser_settings() {
     "browser.tabs.insertAfterCurrent": false,
     "browser.display.document_color_use": 1,
     "browser.display.use_document_fonts": 1,
+    "browser.zoom.full": true,
+    "browser.zoom.siteSpecific": true,
   };
 
   async function background() {
@@ -249,6 +251,20 @@ add_task(async function test_browser_settings() {
   });
   await testSetting("useDocumentFonts", true, {
     "browser.display.use_document_fonts": 1,
+  });
+
+  await testSetting("zoomFullPage", true, {
+    "browser.zoom.full": true,
+  });
+  await testSetting("zoomFullPage", false, {
+    "browser.zoom.full": false,
+  });
+
+  await testSetting("zoomSiteSpecific", true, {
+    "browser.zoom.siteSpecific": true,
+  });
+  await testSetting("zoomSiteSpecific", false, {
+    "browser.zoom.siteSpecific": false,
   });
 
   await extension.unload();
