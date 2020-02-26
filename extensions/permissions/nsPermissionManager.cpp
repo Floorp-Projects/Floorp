@@ -3253,7 +3253,7 @@ nsPermissionManager::GetAllKeysForPrincipal(nsIPrincipal* aPrincipal) {
     // Don't force strip origin attributes.
     GetKeyForPrincipal(prin, false, pair->first());
 
-    Unused << prin->GetOrigin(pair->second());
+    Unused << GetOriginFromPrincipal(prin, false, pair->second());
 
     // Get the next subdomain principal and loop back around.
     prin = GetNextSubDomainPrincipal(prin);
