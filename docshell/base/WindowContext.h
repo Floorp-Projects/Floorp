@@ -29,6 +29,7 @@ class WindowContext : public nsISupports, public nsWrapperCache {
   BrowsingContextGroup* Group() const;
   uint64_t Id() const { return InnerWindowId(); }
   uint64_t InnerWindowId() const { return mInnerWindowId; }
+  uint64_t OuterWindowId() const { return GetOuterWindowId(); }
   bool IsDiscarded() const { return mIsDiscarded; }
 
   // Cast this object to it's parent-process canonical form.

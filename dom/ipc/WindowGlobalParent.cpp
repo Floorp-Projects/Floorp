@@ -53,8 +53,6 @@ WindowGlobalParent::WindowGlobalParent(const WindowGlobalInit& aInit,
     : WindowContext(aInit.browsingContext().get(), aInit.innerWindowId(), {}),
       mDocumentPrincipal(aInit.principal()),
       mDocumentURI(aInit.documentURI()),
-      mInnerWindowId(aInit.innerWindowId()),
-      mOuterWindowId(aInit.outerWindowId()),
       mInProcess(aInProcess),
       mIsInitialDocument(false),
       mHasBeforeUnload(false) {
