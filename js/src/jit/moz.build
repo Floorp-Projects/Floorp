@@ -88,6 +88,8 @@ UNIFIED_SOURCES += [
     'TypePolicy.cpp',
     'ValueNumbering.cpp',
     'VMFunctions.cpp',
+    'WarpBuilder.cpp',
+    'WarpOracle.cpp',
     'WasmBCE.cpp',
 ]
 

@@ -1473,6 +1473,14 @@ bool js::FinishCompilation(JSContext* cx, HandleScript script,
                            IonCompilationId compilationId, bool* isValidOut) {
   MOZ_ASSERT(*cx->zone()->types.currentCompilationId() == compilationId);
 
+  if (!IsTypeInferenceEnabled()) {
+    MOZ_ASSERT(!constraints->failed());
+    MOZ_ASSERT(constraints->length() == 0);
+    MOZ_ASSERT(constraints->numFrozenScripts() == 0);
+    *isValidOut = true;
+    return true;
+  }
+
   if (constraints->failed()) {
     return false;
   }
