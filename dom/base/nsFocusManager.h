@@ -671,7 +671,7 @@ class nsFocusManager final : public nsIFocusManager,
   static void NotifyFocusStateChange(nsIContent* aContent,
                                      nsIContent* aContentToFocus,
                                      bool aWindowShouldShowFocusRing,
-                                     bool aGettingFocus);
+                                     int32_t aFlags, bool aGettingFocus);
 
   void SetFocusedWindowInternal(nsPIDOMWindowOuter* aWindow);
 
