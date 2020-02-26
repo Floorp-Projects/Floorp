@@ -1,3 +1,26 @@
+- 12/18/2019: version 1.1.0
+  * API changes:
+    - libwebp:
+      WebPMalloc (issue #442)
+    - extras:
+      WebPUnmultiplyARGB
+  * alpha decode fix (issue #439)
+  * toolchain updates and bug fixes
+    (chromium: #1026858, #1027136, #1027409, #1028620, #1028716, #995200)
+    (oss-fuzz: #19430, #19447)
+
+- 7/4/2019: version 1.0.3
+  This is a binary compatible release.
+  * resize fixes for Nx1 sizes and the addition of non-opaque alpha values for
+    odd sizes (issues #418, #434)
+  * lossless encode/decode performance improvements
+  * lossy compression performance improvement at low quality levels with flat
+    content (issue #432)
+  * python swig files updated to support python 3
+  Tool updates:
+    vwebp will now preserve the aspect ratio of images that exceed monitor
+    resolution by scaling the image to fit (issue #433)
+
 - 1/14/2019: version 1.0.2
   This is a binary compatible release.
   * (Windows) unicode file support in the tools (linux and mac already had
