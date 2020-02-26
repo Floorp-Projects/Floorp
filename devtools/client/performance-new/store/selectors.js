@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 // @ts-check
 "use strict";
+const { presets } = require("devtools/shared/performance-new/recording-utils");
 
 /**
  * @typedef {import("../@types/perf").RecordingState} RecordingState
@@ -15,7 +16,6 @@
  * @typedef {import("../@types/perf").RestartBrowserWithEnvironmentVariable} RestartBrowserWithEnvironmentVariable
  * @typedef {import("../@types/perf").GetEnvironmentVariable} GetEnvironmentVariable
  * @typedef {import("../@types/perf").PageContext} PageContext
- * @typedef {import("../@types/perf").Presets} Presets
  */
 /**
  * @template S
@@ -50,9 +50,6 @@ const getThreadsString = state => getThreads(state).join(",");
 /** @type {Selector<string[]>} */
 const getObjdirs = state => state.objdirs;
 
-/** @type {Selector<Presets>} */
-const getPresets = state => getInitializedValues(state).presets;
-
 /** @type {Selector<string>} */
 const getPresetName = state => state.presetName;
 
@@ -63,7 +60,6 @@ const getPresetName = state => state.presetName;
  * @type {Selector<RecordingStateFromPreferences>}
  */
 const getRecordingSettings = state => {
-  const presets = getPresets(state);
   const presetName = getPresetName(state);
   const preset = presets[presetName];
   if (preset) {
@@ -136,7 +132,6 @@ module.exports = {
   getThreads,
   getThreadsString,
   getObjdirs,
-  getPresets,
   getPresetName,
   getRecordingSettings,
   getInitializedValues,

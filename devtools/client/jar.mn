@@ -25,6 +25,8 @@ devtools.jar:
     content/performance/index.xhtml (performance/index.xhtml)
     content/performance-new/index.xhtml (performance-new/index.xhtml)
     content/performance-new/frame-script.js (performance-new/frame-script.js)
+    content/performance-new/popup/initializer.js (performance-new/popup/initializer.js)
+    content/performance-new/popup/popup.xhtml (performance-new/popup/popup.xhtml)
     content/memory/index.xhtml (memory/index.xhtml)
     content/framework/toolbox-window.xhtml (framework/toolbox-window.xhtml)
     content/framework/toolbox-options.html (framework/toolbox-options.html)
@@ -98,7 +100,6 @@ devtools.jar:
     skin/images/performance-details-waterfall.svg (themes/images/performance-details-waterfall.svg)
     skin/images/performance-details-call-tree.svg (themes/images/performance-details-call-tree.svg)
     skin/images/performance-details-flamegraph.svg (themes/images/performance-details-flamegraph.svg)
-    skin/images/performance-new-popup-backdrop.png (themes/images/performance-new-popup-backdrop.png)
     skin/breadcrumbs.css (themes/breadcrumbs.css)
     skin/chart.css (themes/chart.css)
     skin/widgets.css (themes/widgets.css)
@@ -248,7 +249,13 @@ devtools.jar:
     # WhatsNew panel
     content/whats-new/index.html (whats-new/index.html)
 
+#if !defined(ANDROID) && defined(NIGHTLY_BUILD)
     # about:profiling
+
+    # This page is still Nightly only while under active development.
+    # The about:profiling page is also has an ifdef in:
+    # browser/components/about/AboutRedirector.cpp
     skin/aboutprofiling.css (themes/aboutprofiling.css)
     content/performance-new/aboutprofiling/initializer.js (performance-new/aboutprofiling/initializer.js)
     content/performance-new/aboutprofiling/index.xhtml (performance-new/aboutprofiling/index.xhtml)
+#endif
