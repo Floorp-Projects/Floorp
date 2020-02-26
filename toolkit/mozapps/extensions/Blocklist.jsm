@@ -644,7 +644,12 @@ this.GfxBlocklistRS = {
     if (!gBlocklistEnabled) {
       return []; // return value expected by tests.
     }
-    let entries = await this._client.get();
+    let entries = await this._client.get().catch(ex => Cu.reportError(ex));
+    // Handle error silently. This can happen if our request to fetch data is aborted,
+    // e.g. by application shutdown.
+    if (!entries) {
+      return [];
+    }
     // Trim helper (spaces, tabs, no-break spaces..)
     const trim = s =>
       (s || "").replace(/(^[\s\uFEFF\xA0]+)|([\s\uFEFF\xA0]+$)/g, "");
