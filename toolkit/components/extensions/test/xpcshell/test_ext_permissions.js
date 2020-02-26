@@ -561,12 +561,13 @@ add_task(async function test_alreadyGranted() {
 
 const GRANTED_WITHOUT_USER_PROMPT = [
   "activeTab",
+  "activityLog",
   "alarms",
   "captivePortal",
   "contextMenus",
   "contextualIdentities",
   "cookies",
-  "activityLog",
+  "dns",
   "geckoProfiler",
   "identity",
   "idle",
