@@ -14,6 +14,7 @@
 #include "nsIStreamListener.h"
 #include "nsIMultiPartChannel.h"
 #include "mozilla/dom/BrowserParent.h"
+#include "mozilla/dom/CanonicalBrowsingContext.h"
 
 namespace mozilla {
 namespace net {
@@ -93,6 +94,7 @@ class ParentChannelListener final : public nsIInterfaceRequestor,
   nsCOMPtr<nsINetworkInterceptController> mInterceptController;
 
   RefPtr<mozilla::dom::BrowserParent> mBrowserParent;
+  RefPtr<mozilla::dom::CanonicalBrowsingContext> mBrowsingContext;
 
   // True if we received OnStartRequest for a nsIMultiPartChannel, and are
   // expected AllPartsStopped to be called when complete.
