@@ -20,6 +20,7 @@ user-friendly error messages in the case of errors.
 from __future__ import absolute_import, print_function, unicode_literals
 
 import os
+import six
 import sys
 import weakref
 
@@ -154,7 +155,7 @@ class Sandbox(dict):
         assert os.path.isabs(path)
 
         try:
-            source = self._finder.get(path).read()
+            source = six.ensure_text(self._finder.get(path).read())
         except Exception:
             raise SandboxLoadError(self._context.source_stack,
                                    sys.exc_info()[2], read_error=path)
@@ -298,9 +299,6 @@ class Sandbox(dict):
             dict.__setitem__(self, key, value)
 
     def get(self, key, default=None):
-        raise NotImplementedError('Not supported')
-
-    def __len__(self):
         raise NotImplementedError('Not supported')
 
     def __iter__(self):
