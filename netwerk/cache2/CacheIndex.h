@@ -482,9 +482,20 @@ class CacheIndexStats {
         mDisableLogging(false)
 #endif
   {
+    for (uint32_t i = 0; i < nsICacheEntry::CONTENT_TYPE_LAST; ++i) {
+      mCountByType[i] = 0;
+      mSizeByType[i] = 0;
+    }
   }
 
   bool operator==(const CacheIndexStats& aOther) const {
+    for (uint32_t i = 0; i < nsICacheEntry::CONTENT_TYPE_LAST; ++i) {
+      if (mCountByType[i] != aOther.mCountByType[i] ||
+          mSizeByType[i] != aOther.mSizeByType[i]) {
+        return false;
+      }
+    }
+
     return
 #ifdef DEBUG
         aOther.mStateLogged == mStateLogged &&
@@ -516,6 +527,10 @@ class CacheIndexStats {
     mFresh = 0;
     mEmpty = 0;
     mSize = 0;
+    for (uint32_t i = 0; i < nsICacheEntry::CONTENT_TYPE_LAST; ++i) {
+      mCountByType[i] = 0;
+      mSizeByType[i] = 0;
+    }
   }
 
 #ifdef DEBUG
