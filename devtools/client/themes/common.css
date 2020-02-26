@@ -494,7 +494,7 @@ checkbox:-moz-focusring {
   height: 14px;
   display: block;
   position: absolute;
-  top: 0;
+  top: -2px;
   right: 0;
 }
 
