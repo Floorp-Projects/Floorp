@@ -455,7 +455,7 @@ using Env = JSObject;
 // does point to something okay. Instead, we immediately build an instance of
 // this type from the Cell* and use that instead, so we can benefit from
 // Variant's static checks.
-typedef mozilla::Variant<JSScript*, LazyScript*, WasmInstanceObject*>
+typedef mozilla::Variant<BaseScript*, WasmInstanceObject*>
     DebuggerScriptReferent;
 
 // The referent of a Debugger.Source.
