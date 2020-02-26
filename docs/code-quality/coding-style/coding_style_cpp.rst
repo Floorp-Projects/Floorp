@@ -134,6 +134,13 @@ the fully qualified namespace. That is, to use ``Foo::Bar`` do not
 write ``using namespace Foo; using namespace Bar;``, write
 ``using namespace Foo::Bar;``
 
+Use nested namespaces (ex: ``namespace mozilla::widget {``
+
+.. note::
+
+   clang-tidy provides the ``modernize-concat-nested-namespaces``
+   check with autofixes.
+
 
 Anonymous namespaces
 ~~~~~~~~~~~~~~~~~~~~
