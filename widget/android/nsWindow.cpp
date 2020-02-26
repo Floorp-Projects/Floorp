@@ -1814,14 +1814,15 @@ void nsWindow::SetFocus(Raise, mozilla::dom::CallerType aCallerType) {
 }
 
 void nsWindow::BringToFront() {
+  MOZ_ASSERT(XRE_IsParentProcess());
   // If the window to be raised is the same as the currently raised one,
   // do nothing. We need to check the focus manager as well, as the first
   // window that is created will be first in the window list but won't yet
   // be focused.
-  nsCOMPtr<nsIFocusManager> fm = do_GetService(FOCUSMANAGER_CONTRACTID);
-  nsCOMPtr<mozIDOMWindowProxy> existingTopWindow;
-  fm->GetActiveWindow(getter_AddRefs(existingTopWindow));
-  if (existingTopWindow && FindTopLevel() == nsWindow::TopWindow()) return;
+  nsFocusManager* fm = nsFocusManager::GetFocusManager();
+  if (fm && fm->GetActiveWindow() && FindTopLevel() == nsWindow::TopWindow()) {
+    return;
+  }
 
   if (!IsTopLevel()) {
     FindTopLevel()->BringToFront();
