@@ -1,0 +1,4 @@
+# can't use defaults prior to include
+defaults pref(foo.bar,1)
+== foo.html bar.html
+include defaults.list
