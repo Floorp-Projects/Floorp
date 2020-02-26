@@ -140,6 +140,9 @@ DefaultJitOptions::DefaultJitOptions() {
   SET_DEFAULT(typeInference, true);
 #endif
 
+  // Whether Ion uses WarpBuilder as MIR builder.
+  SET_DEFAULT(warpBuilder, false);
+
   // Whether the IonMonkey and Baseline JITs are enabled for Trusted Principals.
   // (Ignored if ion or baselineJit is set to true.)
   SET_DEFAULT(jitForTrustedPrincipals, false);
