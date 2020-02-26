@@ -51,36 +51,6 @@ NS_INTERFACE_MAP_BEGIN(DocumentChannel)
   NS_INTERFACE_MAP_ENTRY(nsITraceableChannel)
   NS_INTERFACE_MAP_ENTRY_CONCRETE(DocumentChannel)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIRequest)
-  /* previous macro end with "else" keyword */ {
-    foundInterface = 0;
-    if (mWasOpened && aIID == NS_GET_IID(nsIHttpChannel)) {
-      // DocumentChannel generally is doing an http connection
-      // internally, but doesn't implement the interface. Everything
-      // before AsyncOpen should be duplicated in the parent process
-      // on the real http channel, but anything trying to QI to nsIHttpChannel
-      // after that will be failing and get confused.
-      NS_WARNING(
-          "Trying to request nsIHttpChannel from DocumentChannel, this is "
-          "likely broken");
-    } else if (aIID == NS_GET_IID(nsIPropertyBag)) {
-      NS_WARNING(
-          "Trying to request nsIPropertyBag from DocumentChanneld, this "
-          "will be broken");
-    } else if (aIID == NS_GET_IID(nsIPropertyBag2)) {
-      NS_WARNING(
-          "Trying to request nsIPropertyBag2 from DocumentChannel, this "
-          "will be broken");
-    } else if (aIID == NS_GET_IID(nsIWritablePropertyBag)) {
-      NS_WARNING(
-          "Trying to request nsIWritablePropertyBag from DocumentChannel, "
-          "this will be broken");
-    } else if (aIID == NS_GET_IID(nsIWritablePropertyBag2)) {
-      NS_WARNING(
-          "Trying to request nsIWritablePropertyBag2 from "
-          "DocumentChannel, this will be broken");
-    }
-  }
-  if (false)  // So we fallback properly in the final macro
 NS_INTERFACE_MAP_END
 
 DocumentChannel::DocumentChannel(nsDocShellLoadState* aLoadState,
