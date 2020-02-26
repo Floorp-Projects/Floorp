@@ -34,6 +34,14 @@ static uint32_t SharedArrayAccessibleSize(uint32_t length) {
   return AlignBytes(length, gc::SystemPageSize());
 }
 
+// The mapped size for a plain shared array buffer, used only for tracking
+// memory usage. This is incorrect for some WASM cases, and for hypothetical
+// callers of js::SharedArrayBufferObject::createFromNewRawBuffer that do not
+// currently exist, but it's fine as a signal of GC pressure.
+static size_t SharedArrayMappedSize(uint32_t length) {
+  return SharedArrayAccessibleSize(length) + gc::SystemPageSize();
+}
+
 // `maxSize` must be something for wasm, nothing for other cases.
 SharedArrayRawBuffer* SharedArrayRawBuffer::Allocate(
     uint32_t length, const Maybe<uint32_t>& maxSize,
@@ -264,7 +272,7 @@ SharedArrayBufferObject* SharedArrayBufferObject::New(
 
 bool SharedArrayBufferObject::acceptRawBuffer(SharedArrayRawBuffer* buffer,
                                               uint32_t length) {
-  if (!zone()->addSharedMemory(buffer, length,
+  if (!zone()->addSharedMemory(buffer, SharedArrayMappedSize(length),
                                MemoryUse::SharedArrayRawBuffer)) {
     return false;
   }
@@ -275,7 +283,8 @@ bool SharedArrayBufferObject::acceptRawBuffer(SharedArrayRawBuffer* buffer,
 }
 
 void SharedArrayBufferObject::dropRawBuffer() {
-  zoneFromAnyThread()->removeSharedMemory(rawBufferObject(), byteLength(),
+  size_t size = SharedArrayMappedSize(byteLength());
+  zoneFromAnyThread()->removeSharedMemory(rawBufferObject(), size,
                                           MemoryUse::SharedArrayRawBuffer);
   setReservedSlot(RAWBUF_SLOT, UndefinedValue());
 }
