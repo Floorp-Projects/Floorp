@@ -449,6 +449,7 @@ function ReadTests() {
     } catch(e) {
         ++g.testResults.Exception;
         logger.error("EXCEPTION: " + e);
+        DoneTests();
     }
 }
 
