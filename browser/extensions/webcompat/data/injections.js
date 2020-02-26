@@ -444,6 +444,21 @@ const AVAILABLE_INJECTIONS = [
       ],
     },
   },
+  {
+    id: "bug1610344",
+    platform: "android",
+    domain: "directv.com.co",
+    bug: "1610344",
+    contentScripts: {
+      matches: ["https://*.directv.com.co/*"],
+      css: [
+        {
+          file:
+            "injections/css/bug1610344-directv.com.co-hide-unsupported-message.css",
+        },
+      ],
+    },
+  },
 ];
 
 module.exports = AVAILABLE_INJECTIONS;
