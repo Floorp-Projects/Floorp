@@ -504,14 +504,15 @@ pref("browser.tabs.delayHidingAudioPlayingIconMS", 3000);
   // types of privileged content processes, each with different privileges.
   // types of privleged content processes, each with different privleges.
   pref("browser.tabs.remote.separatePrivilegedContentProcess", false);
-  // Pref to control whether we use a separate privileged content process
-  // for certain mozilla webpages (which are listed in the pref
-  // browser.tabs.remote.separatedMozillaDomains).
-  pref("browser.tabs.remote.separatePrivilegedMozillaWebContentProcess", true);
   // This pref will cause assertions when a remoteType triggers a process switch
   // to a new remoteType it should not be able to trigger.
   pref("browser.tabs.remote.enforceRemoteTypeRestrictions", true);
 #endif
+
+// Pref to control whether we use a separate privileged content process
+// for certain mozilla webpages (which are listed in the pref
+// browser.tabs.remote.separatedMozillaDomains).
+pref("browser.tabs.remote.separatePrivilegedMozillaWebContentProcess", true);
 
 // allow_eval_* is enabled on Firefox Desktop only at this
 // point in time
