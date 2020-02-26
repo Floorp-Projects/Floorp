@@ -1193,9 +1193,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
    * needed. The context |cx| must be in the debugger realm; |script| must be
    * a script in a debuggee realm.
    */
-  DebuggerScript* wrapScript(JSContext* cx, HandleScript script);
-
-  DebuggerScript* wrapLazyScript(JSContext* cx, Handle<LazyScript*> script);
+  DebuggerScript* wrapScript(JSContext* cx, Handle<BaseScript*> script);
 
   /*
    * Return the Debugger.Script object for |wasmInstance| (the toplevel
