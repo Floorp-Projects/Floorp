@@ -72,6 +72,8 @@ class Settings private constructor(
         private fun Int.toAutoplayAction() = when (this) {
             BLOCKED_INT -> AutoplayAction.BLOCKED
             ALLOWED_INT -> AutoplayAction.ALLOWED
+            // Users from older versions may have saved invalid values. Migrate them to BLOCKED
+            ASK_TO_ALLOW_INT -> AutoplayAction.BLOCKED
             else -> throw InvalidParameterException("$this is not a valid SitePermissionsRules.AutoplayAction")
         }
 
