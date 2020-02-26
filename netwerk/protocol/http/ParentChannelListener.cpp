@@ -25,6 +25,8 @@
 #include "Element.h"
 #include "nsILoginManagerAuthPrompter.h"
 #include "mozilla/dom/CanonicalBrowsingContext.h"
+#include "mozilla/dom/LoadURIOptionsBinding.h"
+#include "nsIWebNavigation.h"
 
 using mozilla::Unused;
 using mozilla::dom::ServiceWorkerInterceptController;
@@ -49,6 +51,8 @@ ParentChannelListener::ParentChannelListener(nsIStreamListener* aListener,
   }
   if (mBrowserParent) {
     mBrowsingContext = mBrowserParent->GetBrowsingContext();
+    nsCOMPtr<nsILoadContext> loadContext = mBrowserParent->GetLoadContext();
+    mUsePrivateBrowsing = loadContext && loadContext->UsePrivateBrowsing();
   }
 }
 
@@ -69,6 +73,7 @@ NS_INTERFACE_MAP_BEGIN(ParentChannelListener)
   NS_INTERFACE_MAP_ENTRY(nsIMultiPartChannelListener)
   NS_INTERFACE_MAP_ENTRY(nsINetworkInterceptController)
   NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIAuthPromptProvider, mBrowsingContext)
+  NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIRemoteWindowContext, mBrowsingContext)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIInterfaceRequestor)
   NS_INTERFACE_MAP_ENTRY_CONCRETE(ParentChannelListener)
 NS_INTERFACE_MAP_END
@@ -154,7 +159,8 @@ ParentChannelListener::OnAfterLastPart(nsresult aStatus) {
 
 NS_IMETHODIMP
 ParentChannelListener::GetInterface(const nsIID& aIID, void** result) {
-  if (aIID.Equals(NS_GET_IID(nsINetworkInterceptController))) {
+  if (aIID.Equals(NS_GET_IID(nsINetworkInterceptController)) ||
+      aIID.Equals(NS_GET_IID(nsIRemoteWindowContext))) {
     return QueryInterface(aIID, result);
   }
 
@@ -187,13 +193,6 @@ ParentChannelListener::GetInterface(const nsIID& aIID, void** result) {
   if (mBrowsingContext && (aIID.Equals(NS_GET_IID(nsIAuthPrompt)) ||
                            aIID.Equals(NS_GET_IID(nsIAuthPrompt2)))) {
     return GetAuthPrompt(nsIAuthPromptProvider::PROMPT_NORMAL, aIID, result);
-  }
-
-  if (aIID.Equals(NS_GET_IID(nsIRemoteWindowContext)) && mBrowserParent) {
-    nsCOMPtr<nsIRemoteWindowContext> ctx(
-        new dom::RemoteWindowContext(mBrowserParent));
-    ctx.forget(result);
-    return NS_OK;
   }
 
   nsCOMPtr<nsIInterfaceRequestor> ir;
@@ -414,6 +413,32 @@ ParentChannelListener::GetAuthPrompt(uint32_t aPromptReason, const nsIID& iid,
   }
 
   *aResult = prompt.forget().take();
+  return NS_OK;
+}
+
+//-----------------------------------------------------------------------------
+// ParentChannelListener::nsIRemoteWindowContext
+//
+
+NS_IMETHODIMP
+ParentChannelListener::OpenURI(nsIURI* aURI) {
+  nsCString spec;
+  aURI->GetSpec(spec);
+
+  dom::LoadURIOptions loadURIOptions;
+  loadURIOptions.mTriggeringPrincipal = nsContentUtils::GetSystemPrincipal();
+  loadURIOptions.mLoadFlags =
+      nsIWebNavigation::LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP |
+      nsIWebNavigation::LOAD_FLAGS_DISALLOW_INHERIT_PRINCIPAL;
+
+  ErrorResult rv;
+  mBrowsingContext->LoadURI(NS_ConvertUTF8toUTF16(spec), loadURIOptions, rv);
+  return rv.StealNSResult();
+}
+
+NS_IMETHODIMP
+ParentChannelListener::GetUsePrivateBrowsing(bool* aUsePrivateBrowsing) {
+  *aUsePrivateBrowsing = mUsePrivateBrowsing;
   return NS_OK;
 }
 
