@@ -14,7 +14,7 @@
 #include "mozilla/net/PDocumentChannelParent.h"
 #include "mozilla/net/ParentChannelListener.h"
 #include "mozilla/net/ADocumentChannelBridge.h"
-#include "mozilla/dom/BrowserParent.h"
+#include "mozilla/dom/CanonicalBrowsingContext.h"
 #include "nsDOMNavigationTiming.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIObserver.h"
@@ -63,18 +63,23 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
                              public nsIProcessSwitchRequestor,
                              public nsIMultiPartChannelListener {
  public:
-  explicit DocumentLoadListener(dom::BrowserParent* aBrowser,
-                                nsILoadContext* aLoadContext,
-                                PBOverrideStatus aOverrideStatus,
-                                ADocumentChannelBridge* aBridge);
+  // aProcessTopBrowsingContext should be the top BrowsingContext in the same
+  // process as the load, which would be the owner of the BrowserParent (if
+  // has been created).
+  // This is weird legacy behaviour, that will be cleaned up with bug 1618057.
+  explicit DocumentLoadListener(
+      dom::CanonicalBrowsingContext* aProcessTopBrowsingContext,
+      nsILoadContext* aLoadContext, PBOverrideStatus aOverrideStatus,
+      ADocumentChannelBridge* aBridge);
 
   // Creates the channel, and then calls AsyncOpen on it.
-  // Must be the same BrowserParent as was passed to the constructor, we
+  // Must be the same BrowsingContext as was passed to the constructor, we
   // expect Necko to pass it again so that we don't need a member var for
   // it.
-  bool Open(dom::BrowserParent* aBrowser, nsDocShellLoadState* aLoadState,
-            LoadInfo* aLoadInfo, nsLoadFlags aLoadFlags, uint32_t aLoadType,
-            uint32_t aCacheKey, bool aIsActive, bool aIsTopLevelDoc,
+  bool Open(dom::CanonicalBrowsingContext* aProcessTopBrowsingContext,
+            nsDocShellLoadState* aLoadState, class LoadInfo* aLoadInfo,
+            nsLoadFlags aLoadFlags, uint32_t aLoadType, uint32_t aCacheKey,
+            bool aIsActive, bool aIsTopLevelDoc,
             bool aHasNonEmptySandboxingFlags,
             const Maybe<ipc::URIParams>& aTopWindowURI,
             const Maybe<ipc::PrincipalInfo>& aContentBlockingAllowListPrincipal,
