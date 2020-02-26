@@ -9,8 +9,10 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.transition.TransitionInflater
 import com.google.android.material.snackbar.Snackbar
+import kotlinx.android.synthetic.main.fragment_browser.*
 import kotlinx.android.synthetic.main.fragment_browser.view.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import mozilla.components.browser.session.Session
@@ -24,6 +26,7 @@ import mozilla.components.feature.tabs.WindowFeature
 import mozilla.components.lib.state.ext.consumeFrom
 import mozilla.components.support.base.feature.UserInteractionHandler
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
+import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.FenixSnackbar
@@ -126,6 +129,16 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
     }
 
     private fun updateEngineBottomMargin() {
+        if (!FeatureFlags.dynamicBottomToolbar) {
+            val browserEngine = swipeRefresh.layoutParams as CoordinatorLayout.LayoutParams
+
+            browserEngine.bottomMargin = if (requireContext().settings().shouldUseBottomToolbar) {
+                requireContext().resources.getDimensionPixelSize(R.dimen.browser_toolbar_height)
+            } else {
+                0
+            }
+        }
+
         val toolbarSessionObserver = TrackingProtectionOverlay(
             context = requireContext(),
             settings = requireContext().settings()

@@ -25,6 +25,7 @@ import mozilla.components.browser.toolbar.behavior.BrowserToolbarBottomBehavior
 import mozilla.components.concept.storage.HistoryStorage
 import mozilla.components.feature.toolbar.ToolbarAutocompleteFeature
 import mozilla.components.support.ktx.android.util.dpToPx
+import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.getColorFromAttr
 import org.mozilla.fenix.ext.settings
@@ -181,11 +182,12 @@ class ToolbarView(
 fun BrowserToolbar.setScrollFlagsForTopToolbar() {
     // Don't set scroll flags for bottom toolbar
     if (context.settings().shouldUseBottomToolbar) {
-        if (layoutParams is CoordinatorLayout.LayoutParams) {
+        if (FeatureFlags.dynamicBottomToolbar && layoutParams is CoordinatorLayout.LayoutParams) {
             (layoutParams as CoordinatorLayout.LayoutParams).apply {
                 behavior = BrowserToolbarBottomBehavior(context, null)
             }
         }
+
         return
     }
 

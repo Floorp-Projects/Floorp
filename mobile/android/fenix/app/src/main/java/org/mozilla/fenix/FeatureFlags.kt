@@ -45,6 +45,11 @@ object FeatureFlags {
     const val asFeatureFxAPairingDisabled = false
 
     /**
+     * Enables dynamic bottom toolbar
+     */
+    val dynamicBottomToolbar = Config.channel.isNightlyOrDebug
+
+    /**
      * Enables the new language picker
      */
     val fenixLanguagePicker = Config.channel.isNightlyOrDebug
