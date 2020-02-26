@@ -2146,8 +2146,8 @@ js_option(env='AS', nargs=1, help='Path to the assembler')
 def as_info(target, c_compiler):
     if c_compiler.type == 'clang-cl':
         ml = {
-            'x86': 'ml',
-            'x86_64': 'ml64',
+            'x86': 'ml.exe',
+            'x86_64': 'ml64.exe',
             'aarch64': 'armasm64.exe',
         }.get(target.cpu)
         return namespace(
