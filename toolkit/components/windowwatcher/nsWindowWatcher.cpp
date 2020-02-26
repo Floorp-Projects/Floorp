@@ -1703,13 +1703,14 @@ uint32_t nsWindowWatcher::CalculateChromeFlagsHelper(
   NS_CALCULATE_CHROME_FLAG_FOR("minimizable",
                                nsIWebBrowserChrome::CHROME_WINDOW_MIN);
 
-  // default scrollbar to "on," unless explicitly turned off
-  bool scrollbarsPresent = false;
-  if (WinHasOption(aFeatures, "scrollbars", 1, &scrollbarsPresent) ||
-      !scrollbarsPresent) {
+  // Force "scrollbars" to be always enabled for new windows
+  if (!aDialog && !aHasChromeParent && !aChromeURL) {
     chromeFlags |= nsIWebBrowserChrome::CHROME_SCROLLBARS;
+  } else {
+    chromeFlags |= WinHasOption(aFeatures, "scrollbars", 1, &presenceFlag)
+                       ? nsIWebBrowserChrome::CHROME_SCROLLBARS
+                       : 0;
   }
-  presenceFlag = presenceFlag || scrollbarsPresent;
 
   return chromeFlags;
 }
