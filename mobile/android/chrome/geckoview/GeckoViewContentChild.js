@@ -255,7 +255,7 @@ class GeckoViewContentChild extends GeckoViewChildModule {
               delete this._savedState;
               removeEventListener("pageshow", scrollRestore, {
                 capture: true,
-                mozSystemGroup: true
+                mozSystemGroup: true,
               });
             }
           };
