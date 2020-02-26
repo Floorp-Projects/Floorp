@@ -735,6 +735,8 @@
     <string name="snackbar_tab_closed">Välilehti suljettu</string>
     <!-- Text shown in snackbar when user closes all tabs -->
     <string name="snackbar_tabs_closed">Välilehdet suljettu</string>
+    <!-- Text shown in snackbar when user adds a site to top sites -->
+    <string name="snackbar_added_to_top_sites">Lisätty ykkössivustoihin!</string>
     <!-- Text shown in snackbar when user closes a private tab -->
     <string name="snackbar_private_tab_closed">Yksityinen välilehti suljettu</string>
     <!-- Text shown in snackbar when user closes all private tabs -->
@@ -987,7 +989,35 @@
     <string name="preference_enhanced_tracking_protection_strict_description">Vahvempi suojaus, mutta jotkin sivustot tai sisällöt voivat rikkoutua.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">Mitä tiukka seurannan suojaus estää</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom">Mukautettu</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom_description">Valitse, mitkä seuraimet ja komentosarjat estetään</string>
+    <!--  Accessibility text for the Strict protection information icon  -->
+    <string name="preference_enhanced_tracking_protection_custom_info_button">Mitä mukautettu seurannan suojaus estää</string>
     <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
+    <!-- Preference for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies">Evästeet</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_1">Sivustorajat ylittävät ja sosiaalisen median seuraimet</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_2">Evästeet sivustoilta, joilla ei ole käyty</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_3">Kaikki 3. osapuolen evästeet (voi aiheuttaa sivustovirheitä)</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_4">Kaikki evästeet (aiheuttaa sivustovirheitä)</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings for tracking content -->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content">Seurantaan tarkoitettu sisältö</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content_1">Kaikissa välilehdissä</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content_2">Vain yksityisissä välilehdissä</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content_3">Vain mukautetuissa välilehdissä</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom_cryptominers">Kryptolouhijat</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom_fingerprinters">Yksilöijät</string>
     <string name="enhanced_tracking_protection_blocked">Estetty</string>
     <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
     <string name="enhanced_tracking_protection_allowed">Sallittu</string>
@@ -1182,6 +1212,11 @@
     <!-- Text for the button to learn more about adding a custom search engine -->
     <string name="search_add_custom_engine_learn_more_label">Lue lisää</string>
 
+    <!-- Accessibility description for the form in which details about the custom search engine are entered -->
+    <string name="search_add_custom_engine_form_description">Mukautetun hakukoneen tiedot</string>
+    <!-- Accessibility description for the 'Learn more' link -->
+    <string name="search_add_custom_engine_learn_more_description">Lue lisää -linkki</string>
+
     <!-- Text shown when a user leaves the name field empty -->
     <string name="search_add_custom_engine_error_empty_name">Anna hakukoneen nimi</string>
     <!-- Text shown when a user tries to add a search engine that already exists -->
@@ -1205,6 +1240,8 @@
     <string name="migration_updating_app_button_text">Päivitetään %s…</string>
     <!-- Text on the enabled button. Placeholder replaced with app name-->
     <string name="migration_update_app_button">Käynnistä %s</string>
+    <!-- Accessibility description text for a completed migration item -->
+    <string name="migration_icon_description">Migraatio valmistui</string>
     <!--Text on list of migrated items (e.g. Settings, History, etc.)-->
     <string name="migration_text_passwords">Salasanat</string>
 

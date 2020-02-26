@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- App name for private browsing mode, only the "Private" portion should be localized. -->
+    <string name="app_name_private_2">Zasebni Firefox Preview</string>
+    <!-- App name for private browsing mode, only the "Private" portion should be localized. -->
+    <string name="app_name_private_3">Firefox Preview (zasebno)</string>
     <!-- Home Fragment -->
     <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
     <string name="content_description_menu">Več možnosti</string>
@@ -52,6 +56,8 @@
     <string name="browser_menu_edit_bookmark">Uredi zaznamek</string>
     <!-- Browser menu button that opens the addon manager -->
     <string name="browser_menu_addon_manager">Upravitelj dodatkov</string>
+    <!-- Text displayed when there are no add-ons to be shown -->
+    <string name="no_add_ons">Tukaj ni dodatkov</string>
     <!-- Browser menu button that sends a user to help articles -->
     <string name="browser_menu_help">Pomoč</string>
     <!-- Browser menu button that sends a to a the what's new article -->
@@ -60,6 +66,8 @@
     <string name="browser_menu_settings">Nastavitve</string>
     <!-- Browser menu button that opens a user's library -->
     <string name="browser_menu_your_library">Vaša knjižnica</string>
+    <!-- Browser menu toggle that requests a desktop site -->
+    <string name="browser_menu_desktop_site">Stran za namizja</string>
     <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
     <string name="browser_menu_add_to_homescreen">Dodaj na domač zaslon</string>
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
@@ -76,9 +84,17 @@
     <string name="browser_menu_report_issue">Prijavi napako strani</string>
     <!-- Browser menu button that open a share menu to share the current site -->
     <string name="browser_menu_share">Deli</string>
+    <!-- Share menu title, displayed when a user is sharing their current site -->
+    <string name="menu_share_with">Deli z …</string>
     <!-- Browser menu button shown in custom tabs that opens the current tab in Fenix
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="browser_menu_open_in_fenix">Odpri v %1$s</string>
+    <!-- Browser menu text shown in custom tabs to indicate this is a Fenix tab
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="browser_menu_powered_by">OMOGOČA: %1$s</string>
+    <!-- Browser menu text shown in custom tabs to indicate this is a Fenix tab
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="browser_menu_powered_by2">Omogoča: %1$s</string>
     <!-- Browser menu button to put the the current page in reader mode -->
     <string name="browser_menu_read">Bralni pogled</string>
     <!-- Browser menu button to open the current page in an external app -->
@@ -86,8 +102,18 @@
     <!-- Browser menu button to configure reader mode appearance e.g. the used font type and size -->
     <string name="browser_menu_read_appearance">Videz</string>
 
+    <!-- Locale Settings Fragment -->
+    <!-- Content description for tick mark on selected language -->
+    <string name="a11y_selected_locale_content_description">Izbrani jezik</string>
+    <!-- Text for default locale item -->
+    <string name="default_locale_text">Uporabi jezik naprave</string>
+    <!-- Placeholder text shown in the search bar before a user enters text -->
+    <string name="locale_search_hint">Išči jezik</string>
+
     <!-- Button in the search view that lets a user search by using a shortcut -->
     <string name="search_shortcuts_button">Bližnjice</string>
+    <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
+    <string name="search_shortcuts_engine_settings">Nastavitve iskalnika</string>
     <!-- Header displayed when selecting a shortcut search engine -->
     <string name="search_shortcuts_search_with_2">Tokrat išči z iskalnikom:</string>
     <!-- Button in the search suggestions onboarding that allows search suggestions in private sessions -->
@@ -118,6 +144,8 @@
     <string name="preferences_search_address_bar">Naslovna vrstica</string>
     <!-- Preference linking to help about Fenix -->
     <string name="preferences_help">Pomoč</string>
+    <!-- Preference for giving feedback about Fenix -->
+    <string name="preferences_feedback">Sporočite nam svoje mnenje</string>
     <!-- Preference linking to about page for Fenix
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="preferences_about">O %1$su</string>
@@ -135,10 +163,14 @@
     <string name="preferences_category_privacy">Zasebnost</string>
     <!-- Preference category for privacy and security settings -->
     <string name="preferences_category_privacy_security">Zasebnost in varnost</string>
+    <!-- Preference for advanced site permissions -->
+    <string name="preferences_site_permissions">Dovoljenja strani</string>
     <!-- Preference for private browsing options -->
     <string name="preferences_private_browsing_options">Zasebno brskanje</string>
     <!-- Preference for opening links in a private tab-->
     <string name="preferences_open_links_in_a_private_tab">Odpri povezave v zasebnem zavihku</string>
+    <!-- Preference for adding private browsing shortcut -->
+    <string name="preferences_add_private_browsing_shortcut">Dodaj bližnjico zasebnega brskanja</string>
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">Dostopnost</string>
     <!-- Preference category for account information -->
@@ -157,9 +189,15 @@
     <string name="preferences_privacy_link">Obvestilo o zasebnosti</string>
     <!-- Preference category for developer tools -->
     <string name="developer_tools_category">Razvojna orodja</string>
+    <!-- Preference title for switch preference to show search shortcuts -->
+    <string name="preferences_show_search_shortcuts">Prikaži bližnjice za iskanje</string>
     <!-- Preference title for switch preference to show search suggestions -->
     <string name="preferences_show_search_suggestions">Prikaži predloge iskanja</string>
 
+    <!-- Preference title for switch preference to show search suggestions also in private mode -->
+    <string name="preferences_show_search_suggestions_in_private">Prikaži v zasebnih sejah</string>
+    <!-- Preference title for switch preference to show a clipboard suggestion when searching -->
+    <string name="preferences_show_clipboard_suggestions">Prikaži predloge odložišča</string>
     <!-- Preference title for switch preference to suggest bookmarks when searching -->
     <string name="preferences_search_bookmarks">Iskanje po zaznamkih</string>
     <!-- Preference for account settings -->
@@ -194,6 +232,9 @@
     <!-- Send Tab -->
     <!-- Name of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="fxa_received_tab_channel_name">Prejeti zavihki</string>
+
+    <!-- %s is the device name -->
+    <string name="fxa_tab_received_from_notification_name">Zavihek iz naprave %s</string>
 
     <!-- Advanced Preferences -->
     <!-- Preference for tracking protection settings -->
@@ -252,6 +293,8 @@
     <string name="library_history">Zgodovina</string>
     <!-- Option in Library to open Reading List -->
     <string name="library_reading_list">Bralni seznam</string>
+    <!-- Menu Item Label for Search in Library -->
+    <string name="library_search">Iskanje</string>
     <!-- Library Page Title -->
     <string name="library_title">Knjižnica</string>
     <!-- Settings Page Title -->
@@ -259,6 +302,9 @@
     <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
     <string name="content_description_close_button">Zapri</string>
 
+    <!-- Sessions -->
+    <!-- Title for the list of tabs -->
+    <string name="tab_header_label">Odprti zavihki</string>
     <!-- Title for the list of tabs in the current private session -->
     <string name="tabs_header_private_tabs_title">Zasebni zavihki</string>
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
@@ -267,16 +313,24 @@
     <string name="close_tab">Zapri zavihek</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab <title> button. First parameter is tab title  -->
     <string name="close_tab_title">Zapri zavihek %s</string>
+    <!-- Content description (not visible, for screen readers etc.): Opens the open tabs menu when pressed -->
+    <string name="open_tabs_menu">Meni odprtih zavihkov</string>
     <!-- Open tabs menu item to close all tabs -->
     <string name="tabs_menu_close_all_tabs">Zapri vse zavihke</string>
+    <!-- Open tabs menu item to share all tabs -->
+    <string name="tabs_menu_share_tabs">Deli zavihke</string>
     <!-- Open tabs menu item to save tabs to collection -->
     <string name="tabs_menu_save_to_collection">Shrani v zbirko</string>
+    <!-- Tab menu item to share the tab -->
+    <string name="tab_share">Deli zavihek</string>
     <!-- Button in the current session menu. Deletes the session when pressed -->
     <string name="current_session_delete">Izbriši</string>
     <!-- Button in the current session menu. Saves the session when pressed -->
     <string name="current_session_save">Shrani</string>
     <!-- Button in the current session menu. Opens the share menu when pressed -->
     <string name="current_session_share">Deli</string>
+    <!-- Content description (not visible, for screen readers etc.): Title icon for current session menu -->
+    <string name="current_session_image">Slika trenutne seje</string>
     <!-- Button to save the current set of tabs into a collection -->
     <string name="save_to_collection">Shrani v zbirko</string>
 
@@ -313,6 +367,9 @@
     <!-- Restore tab button text on the tab crash page -->
     <string name="tab_crash_restore">Obnovi zavihek</string>
 
+    <!-- Content Description for session item menu button -->
+    <string name="content_description_session_menu">Možnosti seje</string>
+
     <!-- Bookmarks -->
     <!-- Content description for bookmarks library menu -->
     <string name="bookmark_menu_content_description">Meni zaznamkov</string>
@@ -342,6 +399,8 @@
     <string name="bookmark_menu_open_in_private_tab_button">Odpri v zasebnem zavihku</string>
     <!-- Bookmark overflow menu delete button -->
     <string name="bookmark_menu_delete_button">Izbriši</string>
+    <!--Bookmark overflow menu save button -->
+    <string name="bookmark_menu_save_button">Shrani</string>
     <!-- Bookmark editing screen title -->
     <string name="edit_bookmark_fragment_title">Uredi zaznamek</string>
     <!-- Bookmark folder editing screen title -->
@@ -360,6 +419,9 @@
     <string name="bookmark_empty_title_error">Mora imeti naslov</string>
     <!-- Bookmark editing error missing or improper URL -->
     <string name="bookmark_invalid_url_error">Neveljaven URL</string>
+
+    <!-- Bookmark undo button for deletion snackbar action -->
+    <string name="bookmark_undo_deletion">RAZVELJAVI</string>
 
     <!-- Site Permissions -->
     <!-- Site permissions preferences header -->
@@ -383,6 +445,9 @@
     <!-- Preference for showing a list of websites that the default configurations won't apply to them -->
     <string name="preference_exceptions">Izjeme</string>
 
+    <!-- Collections -->
+    <!-- Label to describe what collections are to a new user without any collections -->
+    <string name="collections_description">Zbirajte stvari, ki so pomembne. Za začetek shranite odprte zavihke v novo zbirko.</string>
     <!-- Collections header on home fragment -->
     <string name="collections_header">Zbirke</string>
     <!-- No Open Tabs Message Header -->
@@ -448,6 +513,19 @@
     <!-- Title for Accessibility Text Size Scaling Preference -->
     <string name="preference_accessibility_font_size_title">Velikost pisave</string>
 
+    <!-- Title for Accessibility Text Automatic Size Scaling Preference -->
+    <string name="preference_accessibility_auto_size">Samodejna velikost pisave</string>
+
+    <!-- Title for the tabs item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_tabs_title">Odprti zavihki</string>
+    <!-- Title for history items in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_browsing_history_title">Zgodovina</string>
+    <!-- Title for the cookies item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cookies">Piškotki</string>
+
+    <!-- Category for history items to delete on quit in delete browsing data on quit -->
+    <string name="preferences_delete_browsing_data_on_quit_browsing_history">Zgodovina brskanja</string>
+
     <!-- Text for the cancel button for the data deletion dialog -->
     <string name="delete_browsing_data_prompt_cancel">Prekliči</string>
     <!-- Text for the allow button for the data deletion dialog -->
@@ -485,6 +563,14 @@
     <!-- Theme setting for light mode -->
     <string name="onboarding_theme_light_title">Svetla tema</string>
 
+    <!-- Text shown in snackbar for the "retry" action that the user has after sharing tabs failed -->
+    <string name="sync_sent_tab_error_snackbar_action">POSKUSI ZNOVA</string>
+    <!-- Instructions on how to access pairing -->
+    <string name="sign_in_instructions"><![CDATA[Na računalniku odprite Firefox in obiščite <b>https://firefox.com/pair</b>]]></string>
+    <!-- Text shown for settings option for sign with pairing -->
+    <string name="sign_in_with_camera">Prijavite se s kamero</string>
+    <!-- Text shown for settings option for sign with email -->
+    <string name="sign_in_with_email">Namesto tega uporabite e-pošto</string>
     <!-- Option to cancel signing out shown in confirmation dialog to sign out of account -->
     <string name="sign_out_cancel">Prekliči</string>
 
@@ -513,6 +599,10 @@
     <string name="preference_enhanced_tracking_protection_strict_recommended">Strogo (priporočljivo)</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict_description">Močnejša zaščita, ki pa lahko povzroči nedelovanje nekaterih strani ali vsebine.</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom">Po meri</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom_description">Izberite, katere sledilce in skripte želite zavračati</string>
     <!-- About page Your rights link text -->
     <string name="about_your_rights">Vaše pravice</string>
 
@@ -540,6 +630,16 @@
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords">Prijave in gesla</string>
+    <!-- Preference for managing the saving of logins and passwords in Fenix -->
+    <string name="preferences_passwords_save_logins">Shranjevanje prijav in gesel</string>
+    <!-- Preference option for asking to save passwords in Fenix -->
+    <string name="preferences_passwords_save_logins_ask_to_save">Vprašaj pred shranjevanjem</string>
+    <!-- Preference option for never saving passwords in Fenix -->
+    <string name="preferences_passwords_save_logins_never_save">Nikoli ne shranjuj</string>
+    <!-- Preference for autofilling saved logins in Fenix -->
+    <string name="preferences_passwords_autofill">Samodejno izpolnjevanje</string>
+    <!-- Preference for syncing saved logins in Fenix -->
+    <string name="preferences_passwords_sync_logins">Sinhronizacija prijav</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins">Shranjene prijave</string>
     <!-- Preference to access list of login exceptions that we never save logins for -->
@@ -584,7 +684,26 @@
 
     <!-- Placeholder text shown in the Search Engine Name TextField before a user enters text -->
     <string name="search_add_custom_engine_name_hint">Ime</string>
+    <!-- Placeholder text shown in the Search String TextField before a user enters text -->
+    <string name="search_add_custom_engine_search_string_hint">Iskalni niz za uporabo</string>
     <!-- Text for the button to learn more about adding a custom search engine -->
     <string name="search_add_custom_engine_learn_more_label">Več o tem</string>
 
+    <!-- Text shown when a user leaves the name field empty -->
+    <string name="search_add_custom_engine_error_empty_name">Vnesite ime iskalnika</string>
+    <!-- Text shown when a user tries to add a search engine that already exists -->
+    <string name="search_add_custom_engine_error_existing_name">Iskalnik z imenom “%s” že obstaja.</string>
+    <!-- Text shown when a user leaves the search string field empty -->
+    <string name="search_add_custom_engine_error_empty_search_string">Vnesite iskalni niz</string>
+    <!-- Text shown when a user leaves out the required template string -->
+    <string name="search_add_custom_engine_error_missing_template">Prepričajte se, da se iskalni niz ujema z obliko primera</string>
+    <!-- Text shown when a user creates a new search engine -->
+    <string name="search_add_custom_engine_success_message">Ustvarjeno %s</string>
+
+    <!-- Label that indicates a site is using a secure connection -->
+    <string name="quick_settings_sheet_secure_connection">Varna povezava</string>
+    <!-- Label that indicates a site is using a insecure connection -->
+    <string name="quick_settings_sheet_insecure_connection">Nevarna povezava</string>
+    <!-- Browser menu button that adds a top site to the home fragment -->
+    <string name="browser_menu_add_to_top_sites">Dodaj med glavne strani</string>
     </resources>

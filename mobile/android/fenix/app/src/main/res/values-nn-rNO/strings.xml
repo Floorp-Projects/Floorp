@@ -354,6 +354,8 @@
     <!-- Preference for using dark theme -->
     <string name="preference_dark_theme">Mørkt</string>
 
+    <!-- Preference for using using dark or light theme automatically set by battery -->
+    <string name="preference_auto_battery_theme">Innstilt av straumstyring</string>
     <!-- Preference for using following device theme -->
     <string name="preference_follow_device_theme">Same som tema til eininga</string>
 
@@ -532,6 +534,8 @@
     <!-- Bookmark snackbar message on deletion
      The first parameter is the host part of the URL of the bookmark deleted, if any -->
     <string name="bookmark_deletion_snackbar_message">Sletta %1$s</string>
+    <!-- Bookmark snackbar message on deleting multiple bookmarks -->
+    <string name="bookmark_deletion_multiple_snackbar_message">Slettar valde bokmerke</string>
     <!-- Bookmark undo button for deletion snackbar action -->
     <string name="bookmark_undo_deletion">ANGRE</string>
 
@@ -542,6 +546,14 @@
     <string name="phone_feature_go_to_settings">Gå til Innstillingar</string>
     <!-- Label that indicates that this option it the recommended one -->
     <string name="phone_feature_recommended">Tilrådd</string>
+    <!-- button that allows editing site permissions settings -->
+    <string name="quick_settings_sheet_manage_site_permissions">Handter nettstadløyve</string>
+    <!-- Button label for clearing all the information of site permissions-->
+    <string name="clear_permissions">Fjern løyve</string>
+    <!-- Button label for clearing a site permission-->
+    <string name="clear_permission">Fjern løyve</string>
+    <!-- Button label for clearing all the information on all sites-->
+    <string name="clear_permissions_on_all_sites">Fjern løyve på alle nettstadar</string>
     <!-- Preference for altering video and audio autoplay for all websites -->
     <string name="preference_browser_feature_autoplay">Automatisk avspeling</string>
     <!-- Preference for altering the camera access for all websites -->
@@ -689,8 +701,6 @@
     <string name="snackbar_tab_closed">Fane attlaten</string>
     <!-- Text shown in snackbar when user closes all tabs -->
     <string name="snackbar_tabs_closed">Faner attlatne</string>
-    <!-- Text shown in snackbar when user adds a site to home fragment. Placeholder replaced with app name -->
-    <string name="snackbar_added_to_firefox_home">Lagt til %s-startside!</string>
     <!-- Text shown in snackbar when user closes a private tab -->
     <string name="snackbar_private_tab_closed">Privat fane attlaten</string>
     <!-- Text shown in snackbar when user closes all private tabs -->
@@ -887,8 +897,24 @@
     <string name="preference_enhanced_tracking_protection_strict">Streng</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings, default setting -->
     <string name="preference_enhanced_tracking_protection_strict_default">Streng (standard)</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom">Tilpassa</string>
     <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
+    <!-- Preference for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies">Infokapslar</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings for tracking content -->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content">Sporingsinnhald</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content_1">I alle faner</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content_2">Berre i private faner</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content_3">Berre i tilpassa faner</string>
     <string name="enhanced_tracking_protection_blocked">Blokkert</string>
+    <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
+    <string name="enhanced_tracking_protection_allowed">Tillatne</string>
+    <!-- Category of trackers (social media trackers) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_social_media_trackers_title">Sporing via sosiale medium</string>
     <!-- Category of trackers (tracking content) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_title">Sporingsinnhald</string>
     <!-- About page Your rights link text -->
@@ -900,6 +926,8 @@
     The first parameter is the app name -->
     <string name="open_source_licenses_title">%s | OSS-bibliotek</string>
 
+    <!-- About page link text to open support link -->
+    <string name="about_support">Brukarstøtte</string>
     <!-- About page link text to open privacy notice link -->
     <string name="about_privacy_notice">Personvernmerknad</string>
     <!-- About page link text to open know your rights link -->
@@ -917,9 +945,16 @@
     <!-- Browser long press popup menu -->
     <!-- Copy the current url -->
     <string name="browser_toolbar_long_press_popup_copy">Kopier</string>
+    <!-- Paste & go the text in the clipboard. '&amp;' is replaced with the ampersand symbol: & -->
+    <string name="browser_toolbar_long_press_popup_paste_and_go">Lim inn og opne</string>
     <!-- Paste the text in the clipboard -->
     <string name="browser_toolbar_long_press_popup_paste">Lim inn</string>
 
+    <!-- Snackbar message shown after an URL has been copied to clipboard. -->
+    <string name="browser_toolbar_url_copied_to_clipboard_snackbar">URL kopiert til utklippstavla</string>
+
+    <!-- Title text for the Add To Homescreen dialog -->
+    <string name="add_to_homescreen_title">Legg til på startskjermen</string>
     <!-- Cancel button text for the Add to Homescreen dialog -->
     <string name="add_to_homescreen_cancel">Avbryt</string>
     <!-- Add button text for the Add to Homescreen dialog -->
@@ -935,6 +970,10 @@
     <string name="preferences_passwords_save_logins_ask_to_save">Spør om å lagre</string>
     <!-- Preference option for never saving passwords in Fenix -->
     <string name="preferences_passwords_save_logins_never_save">Aldri lagre</string>
+    <!-- Preference for autofilling saved logins in Fenix -->
+    <string name="preferences_passwords_autofill">Autofyll</string>
+    <!-- Preference for syncing saved logins in Fenix -->
+    <string name="preferences_passwords_sync_logins">Synkroniser innloggingar</string>
     <!-- Syncing saved logins in Fenix is on -->
     <string name="preferences_passwords_sync_logins_on">På</string>
     <!-- Syncing saved logins in Fenix is off -->
@@ -1010,6 +1049,12 @@
     <string name="search_add_custom_engine_name_hint">Namn</string>
     <!-- Text for the button to learn more about adding a custom search engine -->
     <string name="search_add_custom_engine_learn_more_label">Les meir</string>
+
+    <!-- Accessibility description for the 'Learn more' link -->
+    <string name="search_add_custom_engine_learn_more_description">Lenke til les meir</string>
+
+    <!-- Text shown when a user leaves the name field empty -->
+    <string name="search_add_custom_engine_error_empty_name">Skriv inn namn på søkjemotor</string>
 
     <!-- Description text followed by a list of things migrating (e.g. Bookmarks, History). Placeholder replaced with app name-->
     <string name="migration_description">Ein heilt nyutforma nettlesar ventarpå deg! Du får både forbetra yting og nye funksjonar, slik at du får meir ut av nettet.\n\n Gjer vel og vent medan vi oppdaterer %s med dine</string>

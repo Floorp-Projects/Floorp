@@ -738,8 +738,8 @@
     <string name="snackbar_tab_closed">タブを閉じました</string>
     <!-- Text shown in snackbar when user closes all tabs -->
     <string name="snackbar_tabs_closed">すべてのタブを閉じました</string>
-    <!-- Text shown in snackbar when user adds a site to home fragment. Placeholder replaced with app name -->
-    <string name="snackbar_added_to_firefox_home">%s ホームに追加されました！</string>
+    <!-- Text shown in snackbar when user adds a site to top sites -->
+    <string name="snackbar_added_to_top_sites">トップサイトに追加しました。</string>
     <!-- Text shown in snackbar when user closes a private tab -->
     <string name="snackbar_private_tab_closed">プライベートタブを閉じました</string>
     <!-- Text shown in snackbar when user closes all private tabs -->
@@ -876,8 +876,19 @@
     <string name="onboarding_tracking_protection_standard_button">標準</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_button">厳格 (推奨)</string>
+    <!-- text for the toolbar position card header
+        In English this is an idiom for "choose a side as in an argument or fight"
+        but it is ok to make this more literally about "choosing a position in a physical space -->
+    <string name="onboarding_toolbar_position_header">ツールバーをお好みの配置に</string>
+    <!-- text for the toolbar position card description -->
+    <string name="onboarding_toolbar_position_description">ツールバーを下部に置いて片手でブラウジングをお試しください。上部にも移動できます。</string>
     <!-- text for the private browsing onboarding card header -->
     <string name="onboarding_private_browsing_header">プライベートなブラウジング</string>
+    <!-- text for the private browsing onboarding card description
+    The first parameter is an icon that represents private browsing -->
+    <string name="onboarding_private_browsing_description1">プライベートタブを今回のみ開く: %s アイコンをタップします。</string>
+    <!-- text for the private browsing onboarding card description, explaining how to always using private browsing -->
+    <string name="onboarding_private_browsing_always_description">プライベートタブを毎回開く: プライベートブラウジング設定を変更してください。</string>
     <!-- text for the private browsing onbording card button, that launches settings -->
     <string name="onboarding_private_browsing_button">設定を開く</string>
     <!-- text for the privacy notice onboarding card header -->
@@ -894,6 +905,8 @@
     <!-- Onboarding theme -->
     <!-- text for the theme picker onboarding card header -->
     <string name="onboarding_theme_picker_header">テーマを選んでください</string>
+    <!-- text for the theme picker onboarding card description -->
+    <string name="onboarding_theme_picker_description1">ダークモードによって、バッテリーを節約し、目にも優しい配色にします。</string>
     <!-- Automatic theme setting (will follow device setting) -->
     <string name="onboarding_theme_automatic_title">自動設定</string>
     <!-- Summary of automatic theme setting (will follow device setting) -->
@@ -963,7 +976,35 @@
     <string name="preference_enhanced_tracking_protection_strict_description">強力な追跡防止。ただし、一部のサイトまたはコンテンツが破損する可能性があります。</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">厳格なトラッキング防止でブロックされるもの</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom">カスタム</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom_description">ブロックするトラッカーとスクリプトを選択してください</string>
+    <!--  Accessibility text for the Strict protection information icon  -->
+    <string name="preference_enhanced_tracking_protection_custom_info_button">カスタム設定のトラッキング防止でブロックされるもの</string>
     <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
+    <!-- Preference for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies">Cookie</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_1">クロスサイトトラッカーとソーシャルメディアトラッカー</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_2">未訪問のサイトの Cookie</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_3">すべてのサードパーティ Cookie (ウェブサイトが動作しない可能性があります)</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_4">すべての Cookie (ウェブサイトが動作しない可能性があります)</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings for tracking content -->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content">トラッキングコンテンツ</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content_1">すべてのタブに適用</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content_2">プライベートタブのみ適用</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content_3">カスタムタブのみ適用</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom_cryptominers">暗号通貨マイニング</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom_fingerprinters">フィンガープリント採取</string>
     <string name="enhanced_tracking_protection_blocked">ブロック済み</string>
     <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
     <string name="enhanced_tracking_protection_allowed">許可済み</string>
@@ -1064,6 +1105,8 @@
     <string name="preferences_passwords_sync_logins_sign_in">Sync にログイン</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins">保存されたログイン情報</string>
+    <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
+    <string name="preferences_passwords_saved_logins_description_empty_text">端末に保存または %s と同期したログイン情報がここに表示されます。</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins_description_empty_learn_more_link">Sync についての詳細情報。</string>
     <!-- Preference to access list of login exceptions that we never save logins for -->
@@ -1155,6 +1198,11 @@
     <string name="search_add_custom_engine_search_string_example">クエリーを “%s” に置き換えます。例:\nhttps://www.google.com/search?q=%s</string>
     <!-- Text for the button to learn more about adding a custom search engine -->
     <string name="search_add_custom_engine_learn_more_label">詳細情報</string>
+
+    <!-- Accessibility description for the form in which details about the custom search engine are entered -->
+    <string name="search_add_custom_engine_form_description">カスタム検索エンジンの詳細</string>
+    <!-- Accessibility description for the 'Learn more' link -->
+    <string name="search_add_custom_engine_learn_more_description">詳細情報へのリンク</string>
 
     <!-- Text shown when a user leaves the name field empty -->
     <string name="search_add_custom_engine_error_empty_name">検索エンジン名を入力してください</string>

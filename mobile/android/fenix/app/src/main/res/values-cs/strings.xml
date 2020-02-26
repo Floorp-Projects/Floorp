@@ -66,6 +66,8 @@
     <string name="browser_menu_edit_bookmark">Upravit záložku</string>
     <!-- Browser menu button that opens the addon manager -->
     <string name="browser_menu_addon_manager">Správce doplňků</string>
+    <!-- Text displayed when there are no add-ons to be shown -->
+    <string name="no_add_ons">Žádné doplňky</string>
     <!-- Browser menu button that sends a user to help articles -->
     <string name="browser_menu_help">Nápověda</string>
     <!-- Browser menu button that sends a to a the what's new article -->
@@ -194,7 +196,7 @@
     <!-- Preference category for privacy and security settings -->
     <string name="preferences_category_privacy_security">Soukromí a zabezpečení</string>
     <!-- Preference for advanced site permissions -->
-    <string name="preferences_site_permissions">Oprávnění webových stránek</string>
+    <string name="preferences_site_permissions">Oprávnění serverů</string>
     <!-- Preference for private browsing options -->
     <string name="preferences_private_browsing_options">Anonymní prohlížení</string>
     <!-- Preference for opening links in a private tab-->
@@ -741,8 +743,8 @@
     <string name="snackbar_tab_closed">Panel zavřen</string>
     <!-- Text shown in snackbar when user closes all tabs -->
     <string name="snackbar_tabs_closed">Panely zavřen</string>
-    <!-- Text shown in snackbar when user adds a site to home fragment. Placeholder replaced with app name -->
-    <string name="snackbar_added_to_firefox_home">Přidáno na domovskou stránku!</string>
+    <!-- Text shown in snackbar when user adds a site to top sites -->
+    <string name="snackbar_added_to_top_sites">Přidáno do top stránek</string>
     <!-- Text shown in snackbar when user closes a private tab -->
     <string name="snackbar_private_tab_closed">Anonymní panel zavřen</string>
     <!-- Text shown in snackbar when user closes all private tabs -->
@@ -813,7 +815,7 @@
     <!-- Subtitle for the cached images and files item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cached_files_subtitle">Uvolní využitý prostor na zařízení</string>
     <!-- Title for the site permissions item in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_site_permissions">Oprávnění webových stránek</string>
+    <string name="preferences_delete_browsing_data_site_permissions">Oprávnění serverů</string>
     <!-- Text for the button to delete browsing data -->
     <string name="preferences_delete_browsing_data_button">Smazat soukromá data</string>
 
@@ -853,6 +855,11 @@
     <string name="onboarding_feature_section_header">Poznejte aplikaci %s</string>
     <!-- text for the "What's New" onboarding card header -->
     <string name="onboarding_whats_new_header1">Co je nového</string>
+    <!-- text for the "what's new" onboarding card description
+    The first parameter is the short name of the app (e.g. Firefox) -->
+    <string name="onboarding_whats_new_description">Zajímají vás novinky v přepracované aplikaci %s? Chcete vědět, co se změnilo?</string>
+    <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
+    <string name="onboarding_whats_new_description_linktext">Zde najdete všechny odpovědi</string>
     <!-- text for the firefox account onboarding card header
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_firefox_account_header">Využijte aplikaci %s naplno.</string>
@@ -879,12 +886,25 @@
     <string name="onboarding_tracking_protection_description1">%s brání stránkám, aby vás sledovaly online.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button">Standardní</string>
+    <!-- text for standard blocking option button description -->
+    <string name="onboarding_tracking_protection_standard_button_description">Blokuje méně sledovacích prvků, díky čemuž umožňuje, aby se některé stránky načítaly správně</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_button">Striktní (doporučeno)</string>
     <!-- text for strict blocking option button description -->
     <string name="onboarding_tracking_protection_strict_button_description">Blokuje více sledovacích prvků pro vaši ochranu a lepší výkon, ale může rozbít některé stránky</string>
+    <!-- text for the toolbar position card header
+        In English this is an idiom for "choose a side as in an argument or fight"
+        but it is ok to make this more literally about "choosing a position in a physical space -->
+    <string name="onboarding_toolbar_position_header">Vyberte si svou stranu</string>
+    <!-- text for the toolbar position card description -->
+    <string name="onboarding_toolbar_position_description">Zkuste po webu brouzdat jednou rukou s adresním řádkem vespod obrazovky, nebo ho přesuňte nahoru.</string>
     <!-- text for the private browsing onboarding card header -->
     <string name="onboarding_private_browsing_header">Prohlížejte v soukromí</string>
+    <!-- text for the private browsing onboarding card description
+    The first parameter is an icon that represents private browsing -->
+    <string name="onboarding_private_browsing_description1">Pro jednorázové otevření anonymního panelu stačí použít ikonku %s.</string>
+    <!-- text for the private browsing onboarding card description, explaining how to always using private browsing -->
+    <string name="onboarding_private_browsing_always_description">Pokud chcete anonymní panel otevírat pokaždé, můžete změnit nastavení anonymního prohlížení.</string>
     <!-- text for the private browsing onbording card button, that launches settings -->
     <string name="onboarding_private_browsing_button">Otevřít nastavení</string>
     <!-- text for the privacy notice onboarding card header -->
@@ -973,7 +993,35 @@
     <string name="preference_enhanced_tracking_protection_strict_description">Silnější ochrana. Může omezit fungování některých stránek.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">Co blokuje přísné nastavení ochrany proti sledování</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom">Vlastní</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom_description">Vyberte sledovací prvky a skripty, které chcete blokovat</string>
+    <!--  Accessibility text for the Strict protection information icon  -->
+    <string name="preference_enhanced_tracking_protection_custom_info_button">Co blokuje vlastní nastavení ochrany proti sledování</string>
     <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
+    <!-- Preference for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies">Cookies</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_1">Sledovací cookies, např. sociálních sítí</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_2">Cookies z dosud nenavštívených stránek</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_3">Všechny cookies třetích stran (může omezit fungování některých stránek)</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_4">Všechny cookies (omezí fungování některých stránek)</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings for tracking content -->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content">Sledující obsah</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content_1">Ve všech panelech</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content_2">jen v anonymních panelech</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content_3">Jen ve vlastních panelech</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom_cryptominers">Těžbu kryptoměn</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom_fingerprinters">Vytváření otisku prohlížeče</string>
     <string name="enhanced_tracking_protection_blocked">Blokováno</string>
     <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
     <string name="enhanced_tracking_protection_allowed">Povoleno</string>
@@ -1168,6 +1216,11 @@
     <!-- Text for the button to learn more about adding a custom search engine -->
     <string name="search_add_custom_engine_learn_more_label">Zjistit více</string>
 
+    <!-- Accessibility description for the form in which details about the custom search engine are entered -->
+    <string name="search_add_custom_engine_form_description">Podrobnosti vlastního vyhledávače</string>
+    <!-- Accessibility description for the 'Learn more' link -->
+    <string name="search_add_custom_engine_learn_more_description">Odkaz s více podrobnostmi</string>
+
     <!-- Text shown when a user leaves the name field empty -->
     <string name="search_add_custom_engine_error_empty_name">Zadejte název vyhledávače</string>
     <!-- Text shown when a user tries to add a search engine that already exists -->
@@ -1188,4 +1241,47 @@
     <!-- Title text shown for the migration screen to the new browser. Placeholder replaced with app name -->
     <string name="migration_title">Vítá vás úplně nová aplikace %s</string>
 
-    </resources>
+    <!-- Description text followed by a list of things migrating (e.g. Bookmarks, History). Placeholder replaced with app name-->
+    <string name="migration_description">Zcela přepracovaný prohlížeč už na vás čeká. Je rychlejší a přináší funkce, která vám usnadní práci i zábavu.\n\nPočkejte, než se prohlížeč %s aktualizuje</string>
+    <!-- Text on the disabled button while in progress. Placeholder replaced with app name -->
+    <string name="migration_updating_app_button_text">Probíhá aktualizace aplikace %s…</string>
+    <!-- Text on the enabled button. Placeholder replaced with app name-->
+    <string name="migration_update_app_button">Spustit %s</string>
+    <!-- Accessibility description text for a completed migration item -->
+    <string name="migration_icon_description">Přesun dat dokončen</string>
+    <!--Text on list of migrated items (e.g. Settings, History, etc.)-->
+    <string name="migration_text_passwords">Hesla</string>
+
+    <!-- Heading for the instructions to allow a permission -->
+    <string name="phone_feature_blocked_intro">Pro povolení:</string>
+    <!-- First step for the allowing a permission -->
+    <string name="phone_feature_blocked_step_settings">1. Otevřete nastavení systému Android</string>
+    <!-- Second step for the allowing a permission -->
+    <string name="phone_feature_blocked_step_permissions"><![CDATA[2. Zvolte <b>Oprávnění</b>]]></string>
+    <!-- Third step for the allowing a permission (Fore example: Camera) -->
+    <string name="phone_feature_blocked_step_feature"><![CDATA[3. Přepněte nastavení u <b>%1$s</b> na ZAP.]]></string>
+
+    <!-- Label that indicates a site is using a secure connection -->
+    <string name="quick_settings_sheet_secure_connection">Zabezpečené spojení</string>
+    <!-- Label that indicates a site is using a insecure connection -->
+    <string name="quick_settings_sheet_insecure_connection">Nezabezpečené spojení</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for all sites-->
+    <string name="confirm_clear_permissions_on_all_sites">Opravdu chcete všem serverům odebrat všechna oprávnění?</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for a site-->
+    <string name="confirm_clear_permissions_site">Opravdu chcete tomuto serveru odebrat všechna oprávnění?</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to set default value a permission for a site-->
+    <string name="confirm_clear_permission_site">Opravdu chcete tomuto serveru odebrat toto oprávnění?</string>
+    <!-- label shown when there are not site exceptions to show in the site exception settings -->
+    <string name="no_site_exceptions">Žádné výjimky</string>
+    <!-- Label for the Pocket default top site -->
+    <string name="pocket_top_articles">Top články</string>
+    <!-- Bookmark deletion confirmation -->
+    <string name="bookmark_deletion_confirmation">Opravdu chcete tuto záložku smazat?</string>
+    <!-- Browser menu button that adds a top site to the home fragment -->
+    <string name="browser_menu_add_to_top_sites">Přidat do top stránek</string>
+    <!-- text shown before the issuer name to indicate who its verified by, parameter is the name of
+     the certificate authority that verified the ticket-->
+    <string name="certificate_info_verified_by">Ověřil: %1$s</string>
+    <!-- Login overflow menu delete button -->
+    <string name="login_menu_delete_button">Odstranit</string>
+</resources>

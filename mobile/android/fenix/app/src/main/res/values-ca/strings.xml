@@ -59,6 +59,8 @@
     <string name="browser_menu_bookmark">Adreça d’interès</string>
     <!-- Content description (not visible, for screen readers etc.): Un-bookmark the current page -->
     <string name="browser_menu_edit_bookmark">Edita l’adreça d’interès</string>
+    <!-- Browser menu button that opens the addon manager -->
+    <string name="browser_menu_addon_manager">Gestor de complements</string>
     <!-- Browser menu button that sends a user to help articles -->
     <string name="browser_menu_help">Ajuda</string>
     <!-- Browser menu button that sends a to a the what's new article -->
@@ -104,6 +106,16 @@
     <!-- Browser menu button to configure reader mode appearance e.g. the used font type and size -->
     <string name="browser_menu_read_appearance">Aparença</string>
 
+    <!-- Locale Settings Fragment -->
+    <!-- Content description for tick mark on selected language -->
+    <string name="a11y_selected_locale_content_description">Llengua seleccionada</string>
+    <!-- Content description for search icon -->
+    <string name="a11y_search_icon_content_description">Cerca</string>
+    <!-- Text for default locale item -->
+    <string name="default_locale_text">Segons la llengua del dispositiu</string>
+    <!-- Placeholder text shown in the search bar before a user enters text -->
+    <string name="locale_search_hint">Cerca una llengua</string>
+
     <!-- Search Fragment -->
     <!-- Button in the search view that lets a user search by scanning a QR code -->
     <string name="search_scan_button">Escaneja</string>
@@ -141,6 +153,8 @@
     <string name="settings">Paràmetres</string>
     <!-- Preference category for basic settings -->
     <string name="preferences_category_basics">Bàsics</string>
+    <!-- Preference category for general settings -->
+    <string name="preferences_category_general">General</string>
     <!-- Preference category for all links about Fenix -->
     <string name="preferences_category_about">Quant a</string>
     <!-- Preference for settings related to changing the default search engine -->
@@ -172,8 +186,12 @@
     <string name="preferences_category_advanced">Avançat</string>
     <!-- Preference category for privacy settings -->
     <string name="preferences_category_privacy">Privadesa</string>
+    <!-- Preference category for privacy and security settings -->
+    <string name="preferences_category_privacy_security">Privadesa i seguretat</string>
     <!-- Preference for advanced site permissions -->
     <string name="preferences_site_permissions">Permisos dels llocs</string>
+    <!-- Preference for private browsing options -->
+    <string name="preferences_private_browsing_options">Navegació privada</string>
     <!-- Preference for opening links in a private tab-->
     <string name="preferences_open_links_in_a_private_tab">Obre els enllaços en una pestanya privada</string>
     <!-- Preference for adding private browsing shortcut -->
@@ -188,6 +206,8 @@
     <string name="preferences_toolbar">Barra d’eines</string>
     <!-- Preference for changing default theme to dark or light mode -->
     <string name="preferences_theme">Tema</string>
+    <!-- Preference for settings related to visual options -->
+    <string name="preferences_customize">Personalitza</string>
     <!-- Preference description for banner about signing in -->
     <string name="preferences_sign_in_description">Sincronitzeu les adreces d’interès, l’historial i molt més amb el vostre compte del Firefox</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
@@ -220,6 +240,11 @@
     <string name="preferences_search_bookmarks">Cerca en les adreces d’interès</string>
     <!-- Preference for account settings -->
     <string name="preferences_account_settings">Paràmetres del compte</string>
+
+    <!-- Preference for open links in third party apps -->
+    <string name="preferences_open_links_in_apps">Obre els enllaços en les aplicacions</string>
+    <!-- Preference for add_ons -->
+    <string name="preferences_addons">Complements</string>
 
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
@@ -414,6 +439,9 @@
     <!-- Text for the button to open tabs of the selected collection -->
     <string name="collection_open_tabs">Obre les pestanyes</string>
 
+    <!-- Text for the menu button to remove a top site -->
+    <string name="remove_top_site">Elimina</string>
+
     <!-- History -->
     <!-- Text for the button to clear all history -->
     <string name="history_delete_all">Suprimeix l’historial</string>
@@ -488,6 +516,8 @@
     <string name="bookmark_menu_open_in_private_tab_button">Obre en una pestanya privada</string>
     <!-- Bookmark overflow menu delete button -->
     <string name="bookmark_menu_delete_button">Suprimeix</string>
+    <!--Bookmark overflow menu save button -->
+    <string name="bookmark_menu_save_button">Desa</string>
     <!-- Bookmark multi select title in app bar
      The first parameter is the number of bookmarks selected -->
     <string name="bookmarks_multi_select_title">%1$d seleccionats</string>
@@ -630,6 +660,10 @@
     <!-- Sub-header in the dialog to share a link to another sync device -->
     <string name="share_device_subheader">Envia a un dispositiu</string>
 
+    <!-- Sub-header in the dialog to share a link to an app from the full list -->
+    <string name="share_link_all_apps_subheader">Totes les accions</string>
+    <!-- Sub-header in the dialog to share a link to an app from the most-recent sorted list -->
+    <string name="share_link_recent_apps_subheader">Usades recentment</string>
     <!-- An option from the share dialog to sign into sync -->
     <string name="sync_sign_in">Inicia la sessió al Sync</string>
     <!-- An option from the share dialog to send link to all other sync devices -->
@@ -680,14 +714,18 @@
     <string name="snackbar_tab_closed">S’ha tancat la pestanya</string>
     <!-- Text shown in snackbar when user closes all tabs -->
     <string name="snackbar_tabs_closed">S’han tancat les pestanyes</string>
+    <!-- Text shown in snackbar when user adds a site to top sites -->
+    <string name="snackbar_added_to_top_sites">S’ha afegit als llocs principals</string>
     <!-- Text shown in snackbar when user closes a private tab -->
     <string name="snackbar_private_tab_closed">S’ha tancat la pestanya privada</string>
     <!-- Text shown in snackbar when user closes all private tabs -->
     <string name="snackbar_private_tabs_closed">S’han tancat les pestanyes privades</string>
     <!-- Text shown in snackbar when user deletes all private tabs -->
     <string name="snackbar_private_tabs_deleted">S’han suprimit les pestanyes privades</string>
-    <!-- Text for action to undo deleting a tab or collection shown in snackbar -->
+    <!-- Text shown in snackbar to undo deleting a tab, top site or collection -->
     <string name="snackbar_deleted_undo">DESFÉS</string>
+    <!-- Text shown in snackbar when user removes a top site -->
+    <string name="snackbar_top_site_removed">S’ha eliminat el lloc</string>
     <!-- Text for action to undo deleting a tab or collection shown in a11y dialog -->
     <string name="a11y_dialog_deleted_undo">Desfés</string>
     <!-- Text for action to confirm deleting a tab or collection shown in a11y dialog -->
@@ -710,8 +748,6 @@
     <!-- Message for copying the URL via long press on the toolbar -->
     <string name="url_copied">S’ha copiat l’URL</string>
 
-    <!-- Sample text for accessibility font size -->
-    <string name="accessibility_text_size_sample_text">Jove xef, porti whisky amb quinze glaçons d’hidrogen, coi! Jove xef, porti whisky amb quinze glaçons d’hidrogen, coi! Jove xef, porti whisky amb quinze glaçons d’hidrogen, coi! Jove xef, porti whisky amb quinze glaçons d’hidrogen, coi!</string>
     <!-- Summary for Accessibility Text Size Scaling Preference -->
     <string name="preference_accessibility_text_size_summary">Augmenteu o disminuïu la mida del text dels llocs web</string>
     <!-- Title for Accessibility Text Size Scaling Preference -->
@@ -738,11 +774,6 @@
     <!-- Subtitle for the history items in delete browsing data, parameter will be replaced with the
         number of history pages the user has -->
     <string name="preferences_delete_browsing_data_browsing_history_subtitle">%d pàgines</string>
-    <!-- Title for the collections item in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_collections_title">Col·leccions</string>
-    <!-- Subtitle for the collections item in Delete browsing data, parameter will be replaced with the
-        number of collections that will be deleted -->
-    <string name="preferences_delete_browsing_data_collections_subtitle">%d col·leccions</string>
     <!-- Title for the cookies item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cookies">Galetes</string>
     <!-- Subtitle for the cookies item in Delete browsing data -->
@@ -791,10 +822,6 @@
     <!-- text for the Firefox Preview feature section header
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_feature_section_header">Coneixeu el %s</string>
-    <!-- text for the theme picker onboarding card header -->
-    <string name="onboarding_theme_picker_header">Trieu el tema</string>
-    <!-- text for the theme picker onboarding card description -->
-    <string name="onboarding_theme_picker_description">Proveu el tema fosc: és millor per a la bateria i per als vostres ulls.</string>
     <!-- text for the firefox account onboarding card header
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_firefox_account_header">Traieu tot el profit al %s.</string>
@@ -816,16 +843,14 @@
     <string name="onboarding_firefox_account_automatic_signin_failed">No s’ha pogut iniciar la sessió</string>
     <!-- text for the tracking protection onboarding card header -->
     <string name="onboarding_tracking_protection_header">Protegiu-vos</string>
-    <!-- text for the tracking protection card description
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_tracking_protection_description">El %s bloca els elements publicitaris que us fan el seguiment mentre navegueu.
-    </string>
+    <!-- text for tracking protection radio button option for standard level of blocking -->
+    <string name="onboarding_tracking_protection_standard_button">Estàndard</string>
+    <!-- text for tracking protection radio button option for strict level of blocking -->
+    <string name="onboarding_tracking_protection_strict_button">Estricta (recomanat)</string>
     <!-- text for the private browsing onboarding card header -->
     <string name="onboarding_private_browsing_header">Navegueu amb privadesa</string>
-    <!-- text for the private browsing onboarding card description
-    The first parameter is an icon that represents private browsing -->
-    <string name="onboarding_private_browsing_description">Quan veieu la icona %s, la navegació privada és a només un toc.
-   </string>
+    <!-- text for the private browsing onbording card button, that launches settings -->
+    <string name="onboarding_private_browsing_button">Obre els paràmetres</string>
     <!-- text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header">La vostra privadesa</string>
     <!-- text for the privacy notice onboarding card description
@@ -839,6 +864,8 @@
     <string name="onboarding_finish">Comença a navegar</string>
 
     <!-- Onboarding theme -->
+    <!-- text for the theme picker onboarding card header -->
+    <string name="onboarding_theme_picker_header">Trieu el tema</string>
     <!-- Automatic theme setting (will follow device setting) -->
     <string name="onboarding_theme_automatic_title">Automàtic</string>
     <!-- Summary of automatic theme setting (will follow device setting) -->
@@ -909,7 +936,35 @@
     <string name="preference_enhanced_tracking_protection_strict_description">Més protecció, però pot fer que alguns llocs o algun contingut no funcionin correctament.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">Què es bloca en la protecció contra el seguiment estricta</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom">Personalitzada</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom_description">Trieu quins elements de seguiment i scripts cal blocar</string>
+    <!--  Accessibility text for the Strict protection information icon  -->
+    <string name="preference_enhanced_tracking_protection_custom_info_button">Què es bloca en la protecció contra el seguiment personalitzada</string>
     <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
+    <!-- Preference for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies">Galetes</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_1">Elements de seguiment de xarxes socials i entre llocs</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_2">Galetes de llocs no visitats</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_3">Totes les galetes de tercers (pot fer que alguns llocs web no funcionin)</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_4">Totes les galetes (farà que alguns llocs web no funcionin)</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings for tracking content -->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content">Contingut que fa seguiment</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content_1">En totes les pestanyes</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content_2">Només en pestanyes privades</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content_3">Només en pestanyes personalitzades</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom_cryptominers">Miners de criptomonedes</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom_fingerprinters">Generadors d’empremtes digitals</string>
     <string name="enhanced_tracking_protection_blocked">Blocat</string>
     <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
     <string name="enhanced_tracking_protection_allowed">Permès</string>
@@ -1089,7 +1144,7 @@
     <string name="search_engine_delete">Suprimeix</string>
 
     <!-- Text for the button to create a custom search engine on the Add search engine screen -->
-    <string name="search_add_custom_engine_label">Personalitzat</string>
+    <string name="search_add_custom_engine_label_other">Altres</string>
     <!-- Placeholder text shown in the Search Engine Name TextField before a user enters text -->
     <string name="search_add_custom_engine_name_hint">Nom</string>
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
@@ -1115,4 +1170,27 @@
     <string name="search_edit_custom_engine_success_message">S’ha desat %s</string>
     <!-- Text shown when a user successfully deletes a custom search engine -->
     <string name="search_delete_search_engine_success_message">S’ha suprimit %s</string>
+
+    <!-- Text on the disabled button while in progress. Placeholder replaced with app name -->
+    <string name="migration_updating_app_button_text">S’està actualitzant el %s…</string>
+    <!-- Text on the enabled button. Placeholder replaced with app name-->
+    <string name="migration_update_app_button">Inicia el %s</string>
+    <!--Text on list of migrated items (e.g. Settings, History, etc.)-->
+    <string name="migration_text_passwords">Contrasenyes</string>
+
+    <!-- Label that indicates a site is using a secure connection -->
+    <string name="quick_settings_sheet_secure_connection">Connexió segura</string>
+    <!-- Label that indicates a site is using a insecure connection -->
+    <string name="quick_settings_sheet_insecure_connection">Connexió insegura</string>
+    <!-- Label for the Pocket default top site -->
+    <string name="pocket_top_articles">Articles principals</string>
+    <!-- Bookmark deletion confirmation -->
+    <string name="bookmark_deletion_confirmation">Segur que voleu suprimir aquesta adreça d’interès?</string>
+    <!-- Browser menu button that adds a top site to the home fragment -->
+    <string name="browser_menu_add_to_top_sites">Afegeix als llocs principals</string>
+    <!-- text shown before the issuer name to indicate who its verified by, parameter is the name of
+     the certificate authority that verified the ticket-->
+    <string name="certificate_info_verified_by">Verificat per: %1$s</string>
+    <!-- Login overflow menu delete button -->
+    <string name="login_menu_delete_button">Suprimeix</string>
 </resources>

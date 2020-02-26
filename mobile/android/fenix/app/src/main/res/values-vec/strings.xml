@@ -23,8 +23,8 @@
     <string name="private_browsing_title">Te sì en na sesion anonima</string>
     <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="private_browsing_placeholder_description"> %1$s scanseƚa ƚa cronologìa de reserca e navigasion pena te ve fora da l&amp;apos;app o sara tute ƚe schede anonime. Nonostante sta modalità no ƚa te renda conpletamente anonimo ne i confronti de i siti web o de&amp;apos;l tò fornitore de servizi internet, se trata lo steso de on stromento utiƚe par inpedire a altri utilixatori de sto dispoxitivo de otegnerenere informasion so ƚa tò atività online.</string>
-    <string name="private_browsing_common_myths">Miti da sfatare so la navigasion anonima</string>
+    <string name="private_browsing_placeholder_description">%1$s scanseƚa ƚa cronoƚogìa de reserca e navigasion pena te ve fora da ƚ’app o te sari su tute cuante ƚe schede anonime. Anca se sta modalità no ƚa te rende conpletamente anonimo ne i confronti de i siti web o de’l tò fornitore de servisi internet, se trata ƚo steso de on stromento utiƚe par inpedire a altri utilixatori de sto dispoxitivo de otegnere informasion so ƚa tò atività online.</string>
+    <string name="private_browsing_common_myths">Miti da sfatare so ƚa navigasion anonima</string>
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">Scanseƚa sesion</string>
 
@@ -74,7 +74,7 @@
     <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
     <string name="browser_menu_add_to_homescreen">Xonta a schermata principaƚe</string>
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
-    <string name="browser_menu_install_on_homescreen">Installa</string>
+    <string name="browser_menu_install_on_homescreen">Instaƚa</string>
     <!-- Browser menu button that opens the find in page menu -->
     <string name="browser_menu_find_in_page">Cata ne ƚa pàgina</string>
     <!-- Browser menu button that creates a private tab -->
@@ -82,9 +82,9 @@
     <!-- Browser menu button that creates a new tab -->
     <string name="browser_menu_new_tab">Nova scheda</string>
     <!-- Browser menu button that saves the current tab to a collection -->
-    <string name="browser_menu_save_to_collection">Salva en na racolta</string>
+    <string name="browser_menu_save_to_collection">Salva en na rancura</string>
     <!-- Browser menu button that opens a dialog to report issues with the current site -->
-    <string name="browser_menu_report_issue">Segnala problema co&amp;apos;l sito</string>
+    <string name="browser_menu_report_issue">Segnaƚa problema co’l sito</string>
     <!-- Browser menu button that open a share menu to share the current site -->
     <string name="browser_menu_share">Condividi</string>
     <!-- Share menu title, displayed when a user is sharing their current site -->
@@ -97,7 +97,7 @@
     <string name="browser_menu_powered_by">CO TECNOLOGIA %1$s</string>
     <!-- Browser menu text shown in custom tabs to indicate this is a Fenix tab
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="browser_menu_powered_by2">Co tecnologia %1$s</string>
+    <string name="browser_menu_powered_by2">Co tecnoƚogia %1$s</string>
     <!-- Browser menu button to put the the current page in reader mode -->
     <string name="browser_menu_read">Modalità ƚetura</string>
     <!-- Browser menu button to open the current page in an external app -->
@@ -111,7 +111,7 @@
     <!-- Content description for search icon -->
     <string name="a11y_search_icon_content_description">Serca</string>
     <!-- Text for default locale item -->
-    <string name="default_locale_text">Usa ƚa ƚengua de&amp;apos;l dispoxitivo</string>
+    <string name="default_locale_text">Usa ƚa ƚengua de’l dispoxitivo</string>
     <!-- Placeholder text shown in the search bar before a user enters text -->
     <string name="locale_search_hint">Serca ƚengua</string>
 
@@ -135,7 +135,7 @@
     <!-- Search suggestion onboarding hint title text -->
     <string name="search_suggestions_onboarding_title">Parmetare sugerimenti de reserca in sesion anonime?</string>
     <!-- Search suggestion onboarding hint description text, first parameter is the name of the app defined in app_name (for example: Fenix)-->
-    <string name="search_suggestions_onboarding_text">Cualsiasi testo digità ne ƚa bara degli indirisi de %s el vegnerà condivixo co&amp;apos;l motore de reserca predefinìo.</string>
+    <string name="search_suggestions_onboarding_text">Cualsiasi testo digità ne ƚa bara degli indirisi de %s el vegnerà condivixo co’l motore de reserca predefinìo.</string>
     <!-- Search suggestion onboarding hint Learn more link text -->
     <string name="search_suggestions_onboarding_learn_more_link">Ulteriori informasion</string>
 
@@ -176,7 +176,7 @@
     <!-- Preference for settings related to saved credit cards and addresses -->
     <string name="preferences_credit_cards_addresses">Carte de credito e indirisi</string>
     <!-- Preference for settings related to changing the default browser -->
-    <string name="preferences_set_as_default_browser">Inposta come browser predefinìo</string>
+    <string name="preferences_set_as_default_browser">Inposta cofà browser predefinìo</string>
     <!-- Preference category for advanced settings -->
     <string name="preferences_category_advanced">Avanzate</string>
     <!-- Preference category for privacy settings -->
@@ -192,7 +192,7 @@
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">Xonta scorciatoia nav. anonima</string>
     <!-- Preference for accessibility -->
-    <string name="preferences_accessibility">Acesibilità</string>
+    <string name="preferences_accessibility">Acesibiƚità</string>
     <!-- Preference category for account information -->
     <string name="preferences_category_account">Account</string>
     <!-- Preference shown on banner to sign into account -->
@@ -204,7 +204,7 @@
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">Personalixa</string>
     <!-- Preference description for banner about signing in -->
-    <string name="preferences_sign_in_description">Sincronixa segnaƚibri, cronologìa e molto altro co&amp;apos;l tò account Firefox</string>
+    <string name="preferences_sign_in_description">Sincronixa segnaƚibri, cronoƚogìa e molto altro co’l tò account Firefox</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
     <string name="preferences_account_default_name">Account Firefox</string>
     <!-- Preference text for account title when there was an error syncing FxA -->
@@ -214,11 +214,11 @@
     <!-- Preference for data choices -->
     <string name="preferences_data_choices">Condivixion dati</string>
     <!-- Preference for data collection -->
-    <string name="preferences_data_collection">Racolta dati</string>
+    <string name="preferences_data_collection">Rancura dati</string>
     <!-- Preference linking to the privacy notice -->
     <string name="preferences_privacy_link">Informativa so ƚa privacy</string>
     <!-- Preference category for developer tools -->
-    <string name="developer_tools_category">Stromenti de sviluppo</string>
+    <string name="developer_tools_category">Stromenti de sviƚupo</string>
     <!-- Preference for developers -->
     <string name="preferences_remote_debugging">Debug remoto tramite USB</string>
     <!-- Preference title for switch preference to show search shortcuts -->
@@ -230,7 +230,7 @@
     <!-- Preference title for switch preference to show a clipboard suggestion when searching -->
     <string name="preferences_show_clipboard_suggestions">Mostra sugerimenti da i scarabòci</string>
     <!-- Preference title for switch preference to suggest browsing history when searching -->
-    <string name="preferences_search_browsing_history">Serca ne ƚa cronologìa</string>
+    <string name="preferences_search_browsing_history">Serca ne ƚa cronoƚogìa</string>
     <!-- Preference title for switch preference to suggest bookmarks when searching -->
     <string name="preferences_search_bookmarks">Serca ne i segnaƚibri</string>
     <!-- Preference for account settings -->
@@ -247,7 +247,7 @@
     <!-- Preference category for sync -->
     <string name="preferences_sync_category">Sèji cosa sincronixare</string>
     <!-- Preference for syncing history -->
-    <string name="preferences_sync_history">Cronologìa</string>
+    <string name="preferences_sync_history">Cronoƚogìa</string>
     <!-- Preference for syncing bookmarks -->
     <string name="preferences_sync_bookmarks">Segnaƚibri</string>
     <!-- Preference for syncing logins -->
@@ -304,14 +304,14 @@
     <string name="exceptions_empty_message_learn_more_link">Ulteriori informasion</string>
 
     <!-- Description in Quick Settings that tells user tracking protection is off globally for all sites, and links to Settings to turn it on -->
-    <string name="preferences_tracking_protection_turned_off_globally">Dixativà a livello globaƚe, vèrxere ƚe inpostasion par ativarƚa.</string>
+    <string name="preferences_tracking_protection_turned_off_globally">Dixativà a liveƚo globaƚe, vèrxere ƚe inpostasion par ativarƚa.</string>
 
     <!-- Preference switch for Telemetry -->
     <string name="preferences_telemetry">Teƚemetria</string>
     <!-- Preference switch for usage and technical data collection -->
     <string name="preference_usage_data">Dati tecnici e statistiche de utilixo</string>
     <!-- Preference description for usage and technical data collection -->
-    <string name="preferences_usage_data_description">Condividi co Mozilla informasion relative a prestasion, utilixo, hardware e personalixasion de&amp;apos;l browser par contribuire al mijoramento de %1$s</string>
+    <string name="preferences_usage_data_description">Condividi co Mozilla informasion reƚative a prestasion, utilixo, hardware e personalixasion de’l browser par contribuire al mijoramento de %1$s</string>
     <!-- Preference switch for marketing data collection -->
     <string name="preferences_marketing_data">Dati de marketing</string>
     <!-- Preference description for marketing data collection, parameter is the app name (e.g. Firefox) -->
@@ -319,9 +319,9 @@
     <!-- Title for experiments preferences -->
     <string name="preference_experiments">Esperimenti</string>
     <!-- Summary for experiments preferences -->
-    <string name="preference_experiments_summary">Parmeti a Mozilla de instalare e racojere dati par funsionaƚità sperimentaƚi</string>
+    <string name="preference_experiments_summary">Parmeti a Mozilla de instaƚare e racojere dati par funsionaƚità sperimentaƚi</string>
     <!-- Preference switch for crash reporter -->
-    <string name="preferences_crash_reporter">Segnalasion de arresto anomalo</string>
+    <string name="preferences_crash_reporter">Segnaƚasion de aresto anomaƚo</string>
     <!-- Preference switch for Mozilla location service -->
     <string name="preferences_mozilla_location_service">Servisio de georiƚevasion Mozilla</string>
     <!-- Preference switch for app health report. The first parameter is the name of the application (For example: Fenix) -->
@@ -341,7 +341,7 @@
 
     <!-- Pairing Feature strings -->
     <!-- Instructions on how to access pairing -->
-    <string name="pair_instructions"><![CDATA[Par ottenere el còdexe QR vèrxi <b>firefox.com/pair</b> in Firefox so&apos;l computer.]]></string>
+    <string name="pair_instructions"><![CDATA[Par ottenere el còdexe QR vèrxi <b>firefox.com/pair</b> in Firefox so’l computer.]]></string>
     <!-- Button to open camera for pairing -->
     <string name="pair_open_camera">Vèrxi fotocamera</string>
     <!-- Button to cancel pairing -->
@@ -361,7 +361,7 @@
     <!-- Preference for using using dark or light theme automatically set by battery -->
     <string name="preference_auto_battery_theme">Inpostà da risparmio bateria</string>
     <!-- Preference for using following device theme -->
-    <string name="preference_follow_device_theme">Uxa el tema de&amp;apos;l dispoxitivo</string>
+    <string name="preference_follow_device_theme">Uxa el tema de’l dispoxitivo</string>
 
     <!-- Library -->
     <!-- Option in Library to open Sessions page -->
@@ -381,7 +381,7 @@
     <!-- Option in library to open Desktop Bookmarks "unfiled" page -->
     <string name="library_desktop_bookmarks_unfiled">Altri segnaƚibri</string>
     <!-- Option in Library to open History page -->
-    <string name="library_history">Cronologìa</string>
+    <string name="library_history">Cronoƚogìa</string>
     <!-- Option in Library to open Reading List -->
     <string name="library_reading_list">Eƚenco ƚetura</string>
     <!-- Menu Item Label for Search in Library -->
@@ -391,9 +391,9 @@
     <!-- Settings Page Title -->
     <string name="settings_title">Inpostasion</string>
     <!-- Content description (not visible, for screen readers etc.): "Menu icon for items on a history item" -->
-    <string name="content_description_history_menu">Menu cronologìa</string>
+    <string name="content_description_history_menu">Menu cronoƚogìa</string>
     <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
-    <string name="content_description_close_button">Sara</string>
+    <string name="content_description_close_button">Sara su</string>
 
     <!-- Sessions -->
     <!-- Title for the list of tabs -->
@@ -405,17 +405,17 @@
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
     <string name="add_tab">Xonta scheda</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
-    <string name="close_tab">Sara scheda</string>
+    <string name="close_tab">Sara su scheda</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab <title> button. First parameter is tab title  -->
-    <string name="close_tab_title">Sara scheda %s</string>
+    <string name="close_tab_title">Sara su scheda %s</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the open tabs menu when pressed -->
     <string name="open_tabs_menu">Menu schede vèrte</string>
     <!-- Open tabs menu item to close all tabs -->
-    <string name="tabs_menu_close_all_tabs">Sara tute ƚe schede</string>
+    <string name="tabs_menu_close_all_tabs">Sara su tute cuante ƚe schede</string>
     <!-- Open tabs menu item to share all tabs -->
     <string name="tabs_menu_share_tabs">Condividi schede</string>
     <!-- Open tabs menu item to save tabs to collection -->
-    <string name="tabs_menu_save_to_collection">Salva en na racolta</string>
+    <string name="tabs_menu_save_to_collection">Salva en na rancura</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
     <string name="tab_menu">Menu scheda</string>
     <!-- Tab menu item to share the tab -->
@@ -429,11 +429,11 @@
     <!-- Content description (not visible, for screen readers etc.): Title icon for current session menu -->
     <string name="current_session_image">Immagine sesion corente</string>
     <!-- Button to save the current set of tabs into a collection -->
-    <string name="save_to_collection">Salva en na racolta</string>
+    <string name="save_to_collection">Salva en na rancura</string>
     <!-- Text for the menu button to delete a collection -->
-    <string name="collection_delete">Scanseƚa racolta</string>
+    <string name="collection_delete">Scanseƚa rancura</string>
     <!-- Text for the menu button to rename a collection -->
-    <string name="collection_rename">Rinomina racolta</string>
+    <string name="collection_rename">Rinomina rancura</string>
     <!-- Text for the button to open tabs of the selected collection -->
     <string name="collection_open_tabs">Vèrxi schede</string>
 
@@ -442,9 +442,9 @@
 
     <!-- History -->
     <!-- Text for the button to clear all history -->
-    <string name="history_delete_all">Scanseƚa cronologìa</string>
+    <string name="history_delete_all">Scanseƚa cronoƚogìa</string>
     <!-- Text for the dialog to confirm clearing all history -->
-    <string name="history_delete_all_dialog">Scanseƚare ƚa cronologìa?</string>
+    <string name="history_delete_all_dialog">Scanseƚare ƚa cronoƚogìa?</string>
     <!-- Text for positive action to delete history in deleting history dialog -->
     <string name="history_clear_dialog">Scanseƚa</string>
     <!-- Text for the button to delete a single history item -->
@@ -464,17 +464,17 @@
     <!-- Text for the header that groups the history older than the last month -->
     <string name="history_older">Pì veci</string>
     <!-- Text shown when no history exists -->
-    <string name="history_empty_message">Nisuna cronologìa disponibiƚe.</string>
+    <string name="history_empty_message">Nisuna cronoƚogìa disponibiƚe.</string>
 
     <!-- Crashes -->
     <!-- Title text displayed on the tab crash page. This first parameter is the name of the application (For example: Fenix) -->
     <string name="tab_crash_title_2">No xe posibiƚe cargare ƚa pàgina in %1$s.</string>
     <!-- Description text displayed on the tab crash page -->
-    <string name="tab_crash_description">Serca de repristinare o sara ƚa seguente scheda.</string>
+    <string name="tab_crash_description">Serca de repristinare o sara su ƚa seguente scheda.</string>
     <!-- Send crash report checkbox text on the tab crash page -->
-    <string name="tab_crash_send_report">Manda ƚa segnalasion de aresto anomalo a Mozilla</string>
+    <string name="tab_crash_send_report">Manda ƚa segnaƚasion de aresto anomaƚo a Mozilla</string>
     <!-- Close tab button text on the tab crash page -->
-    <string name="tab_crash_close">Sara scheda</string>
+    <string name="tab_crash_close">Sara su scheda</string>
     <!-- Restore tab button text on the tab crash page -->
     <string name="tab_crash_restore">Ripristina scheda</string>
 
@@ -602,23 +602,23 @@
 
     <!-- Collections -->
     <!-- Label to describe what collections are to a new user without any collections -->
-    <string name="collections_description">Ragrupa i contenuti che ritieni inportanti. Par inisiare, salva ƚe schede vèrte en na nova colesion.</string>
+    <string name="collections_description">Ragrupa i contenuti che ritieni inportanti. Par scomisiare, salva ƚe schede vèrte en na nova coƚesion.</string>
     <!-- Collections header on home fragment -->
-    <string name="collections_header">Racolte</string>
+    <string name="collections_header">Rancure</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
-    <string name="collection_menu_button_content_description">Menu racolta</string>
+    <string name="collection_menu_button_content_description">Menu rancura</string>
     <!-- No Open Tabs Message Header -->
-    <string name="no_collections_header">Nisuna racolta</string>
+    <string name="no_collections_header">Nisuna rancura</string>
     <!-- No Open Tabs Message Description -->
-    <string name="no_collections_description">Ƚe racolte ƚe vegnerà mostrà chive.</string>
+    <string name="no_collections_description">Ƚe rancure ƚe vegnerà mostrà chive.</string>
     <!-- Title for the "select tabs" step of the collection creator -->
     <string name="create_collection_select_tabs">Seƚesiona schede</string>
     <!-- Title for the "select collection" step of the collection creator -->
-    <string name="create_collection_select_collection">Seƚesiona racolta</string>
+    <string name="create_collection_select_collection">Seƚesiona rancura</string>
     <!-- Title for the "name collection" step of the collection creator -->
-    <string name="create_collection_name_collection">Nòme racolta</string>
+    <string name="create_collection_name_collection">Nòme rancura</string>
     <!-- Button to add new collection for the "select collection" step of the collection creator -->
-    <string name="create_collection_add_new_collection">Xonta nova racolta</string>
+    <string name="create_collection_add_new_collection">Xonta nova rancura</string>
     <!-- Button to select all tabs in the "select tabs" step of the collection creator -->
     <string name="create_collection_select_all">Seƚesiona tuto</string>
     <!-- Button to deselect all tabs in the "select tabs" step of the collection creator -->
@@ -636,12 +636,12 @@
     <!-- Text shown in snackbar when one tab has been saved in a collection -->
     <string name="create_collection_tab_saved">Scheda salvà.</string>
     <!-- Content description (not visible, for screen readers etc.): button to close the collection creator -->
-    <string name="create_collection_close">Sara</string>
+    <string name="create_collection_close">Sara su</string>
     <!-- Button to save currently selected tabs in the "select tabs" step of the collection creator-->
     <string name="create_collection_save">Salva</string>
 
     <!-- Default name for a new collection in "name new collection" step of the collection creator. %d is a placeholder for the number of collections-->
-    <string name="create_collection_default_name">Racolta %d</string>
+    <string name="create_collection_default_name">Rancura %d</string>
 
     <!-- Share -->
     <!-- Share screen header -->
@@ -666,15 +666,15 @@
     <!-- An option from the share dialog to reconnect to sync -->
     <string name="sync_reconnect">Riconete a Sync</string>
     <!-- Text displayed when sync is offline and cannot be accessed -->
-    <string name="sync_offline">No en linea</string>
+    <string name="sync_offline">No en ƚinea</string>
     <!-- An option to connect additional devices -->
     <string name="sync_connect_device">Coneti on altro dispoxitivo</string>
     <!-- The dialog text shown when additional devices are not available -->
-    <string name="sync_connect_device_dialog">Par mandare na scheda, và rento a&amp;apos;l account Firefox o almanco on altro dispoxitivo.</string>
+    <string name="sync_connect_device_dialog">Par mandare na scheda, và rento a’l account Firefox o almanco on altro dispoxitivo.</string>
     <!-- Confirmation dialog button -->
     <string name="sync_confirmation_button">Tuto ciaro</string>
     <!-- Share error message -->
-    <string name="share_error_snackbar">Inpossibiƚe condividare co sta app</string>
+    <string name="share_error_snackbar">Inposibiƚe condividare co sta app</string>
     <!-- Add new device screen title -->
     <string name="sync_add_new_device_title">Manda a dispoxitivo</string>
     <!-- Text for the warning message on the Add new device screen -->
@@ -690,7 +690,7 @@
     <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
     <string name="notification_pbm_delete_text">Scanseƚa schede anonime</string>
     <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
-    <string name="notification_pbm_delete_text_2">Sara ƚe schede anonime</string>
+    <string name="notification_pbm_delete_text_2">Sara su ƚe schede anonime</string>
     <!-- Notification action to open Fenix and resume the current browsing session. -->
     <string name="notification_pbm_action_open">Vèrxi</string>
     <!-- Notification action to delete all current private browsing sessions AND switch to Fenix (bring it to the foreground) -->
@@ -698,9 +698,9 @@
     <!-- Name of the "Powered by Fenix" notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="notification_powered_by_channel_name">Co tecnologia</string>
     <!-- Text shown in snackbar when user deletes a collection -->
-    <string name="snackbar_collection_deleted">Racolta scanseƚà</string>
+    <string name="snackbar_collection_deleted">Rancura scanseƚà</string>
     <!-- Text shown in snackbar when user renames a collection -->
-    <string name="snackbar_collection_renamed">Racolta rinominà</string>
+    <string name="snackbar_collection_renamed">Rancura rinominà</string>
     <!-- Text shown in snackbar when user deletes a tab -->
     <string name="snackbar_tab_deleted">Scheda scanseƚà</string>
     <!-- Text shown in snackbar when user deletes all tabs -->
@@ -709,8 +709,8 @@
     <string name="snackbar_tab_closed">Scheda sarà</string>
     <!-- Text shown in snackbar when user closes all tabs -->
     <string name="snackbar_tabs_closed">Schede sarà</string>
-    <!-- Text shown in snackbar when user adds a site to home fragment. Placeholder replaced with app name -->
-    <string name="snackbar_added_to_firefox_home">Xontà a ƚa pàgina inisiaƚe de %s</string>
+    <!-- Text shown in snackbar when user adds a site to top sites -->
+    <string name="snackbar_added_to_top_sites">Xontà a i siti principaƚi</string>
     <!-- Text shown in snackbar when user closes a private tab -->
     <string name="snackbar_private_tab_closed">Scheda anonima sarà</string>
     <!-- Text shown in snackbar when user closes all private tabs -->
@@ -743,9 +743,9 @@
     <!-- Message for copying the URL via long press on the toolbar -->
     <string name="url_copied">Indiriso copià</string>
     <!-- Sample text for accessibility font size -->
-    <string name="accessibility_text_size_sample_text_1">Sto cua el xe on testo de exempio. Mostra n’anteprima de cofà aparirà el testo cò te aumenti o riduxi ƚe dimension de i caratari co sta inpostasion.</string>
+    <string name="accessibility_text_size_sample_text_1">Sto cua el xe on testo de exenpio. Mostra n’anteprima de cofà aparirà el testo cò te aumenti o riduxi ƚe dimension de i caratari co sta inpostasion.</string>
     <!-- Summary for Accessibility Text Size Scaling Preference -->
-    <string name="preference_accessibility_text_size_summary">Aumenta o ridusi ƚa dimension de&amp;apos;l testo de i siti web</string>
+    <string name="preference_accessibility_text_size_summary">Aumenta o ridusi ƚa dimension de’l testo de i siti web</string>
     <!-- Title for Accessibility Text Size Scaling Preference -->
     <string name="preference_accessibility_font_size_title">Dimension caràtari</string>
 
@@ -761,12 +761,12 @@
     <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
     <string name="preferences_delete_browsing_data_tabs_subtitle">%d schede</string>
     <!-- Title for the data and history items in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_browsing_data_title">Cronologìa de navigasion e dati de i siti web</string>
+    <string name="preferences_delete_browsing_data_browsing_data_title">Cronoƚogìa de navigasion e dati de i siti web</string>
     <!-- Subtitle for the data and history items in delete browsing data, parameter will be replaced with the
         number of history items the user has -->
     <string name="preferences_delete_browsing_data_browsing_data_subtitle">%d indirisi</string>
     <!-- Title for history items in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_browsing_history_title">Cronologìa</string>
+    <string name="preferences_delete_browsing_data_browsing_history_title">Cronoƚogìa</string>
     <!-- Subtitle for the history items in delete browsing data, parameter will be replaced with the
         number of history pages the user has -->
     <string name="preferences_delete_browsing_data_browsing_history_subtitle">%d pàgine</string>
@@ -783,13 +783,13 @@
     <!-- Text for the button to delete browsing data -->
     <string name="preferences_delete_browsing_data_button">Scanseƚa dati de navigasion</string>
     <!-- Title for the Delete browsing data on quit preference -->
-    <string name="preferences_delete_browsing_data_on_quit">Scanseƚa i dati de navigasion nando fora</string>
+    <string name="preferences_delete_browsing_data_on_quit">Naxendo fora vegnerà scanseƚà i dati de navigasion</string>
     <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
     <string name="preference_summary_delete_browsing_data_on_quit">Scanseƚa otomàticamente i dati de navigasion cò vien seƚesionà “Va fora” nel menu principaƚe</string>
     <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
     <string name="preference_summary_delete_browsing_data_on_quit_2">Scanseƚa otomàticamente i dati de navigasion cò viene seƚesionà “Va fora” nel menu principaƚe</string>
     <!-- Category for history items to delete on quit in delete browsing data on quit -->
-    <string name="preferences_delete_browsing_data_on_quit_browsing_history">Cronologìa de navigasion</string>
+    <string name="preferences_delete_browsing_data_on_quit_browsing_history">Cronoƚogìa de navigasion</string>
     <!-- Action item in menu for the Delete browsing data on quit feature -->
     <string name="delete_browsing_data_on_quit_action">Va fora</string>
 
@@ -819,7 +819,7 @@
     <string name="onboarding_whats_new_header1">Scoverxi ƚe novità</string>
     <!-- text for the "what's new" onboarding card description
     The first parameter is the short name of the app (e.g. Firefox) -->
-    <string name="onboarding_whats_new_description">Gheto dimande so el novo %s? Vuto savere che roba xe cambià?</string>
+    <string name="onboarding_whats_new_description">Gheto dimande so el novo %s? Vuto savere che roba xe canbià?</string>
     <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
     <string name="onboarding_whats_new_description_linktext">Cata tute ƚe risposte chive</string>
     <!-- text for the firefox account onboarding card header
@@ -828,7 +828,7 @@
     <!-- text for the firefox account onboarding card header when we detect you're already signed in to
         another Firefox browser. (The word `Firefox` should not be translated)
         The first parameter is the email of the detected user's account -->
-    <string name="onboarding_firefox_account_auto_signin_header_2">Te sì xà coneso cofà %s en &amp;apos;n altro browser Firefox so&amp;apos;l dispoxitivo en uxo. Desiderito asedere co sto account?</string>
+    <string name="onboarding_firefox_account_auto_signin_header_2">Te sì xà coneso cofà %s en ’n altro browser Firefox so’l dispoxitivo en uxo. Desiderito asedere co sto account?</string>
     <!-- text for the button to confirm automatic sign-in -->
     <string name="onboarding_firefox_account_auto_signin_confirm">Sì, va rento</string>
     <!-- text for the automatic sign-in button while signing in is in process -->
@@ -845,7 +845,7 @@
     <string name="onboarding_tracking_protection_header">Protegete</string>
     <!-- text for the tracking protection card description
     The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_tracking_protection_description1">%s inpedise a i siti web de traciarte durante la navigasion.</string>
+    <string name="onboarding_tracking_protection_description1">%s inpedise a i siti web de traciarte durante ƚa navigasion.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button">Normaƚe</string>
     <!-- text for standard blocking option button description -->
@@ -861,7 +861,7 @@
     <!-- text for the toolbar position card description -->
     <string name="onboarding_toolbar_position_description">Prova ƚa bara de i stromenti en baso par navigare co na soƚa man, o spostaƚa en alto.</string>
     <!-- text for the private browsing onboarding card header -->
-    <string name="onboarding_private_browsing_header">Naviga en modo riservà</string>
+    <string name="onboarding_private_browsing_header">Nàviga en modo riservà</string>
     <!-- text for the private browsing onboarding card description
     The first parameter is an icon that represents private browsing -->
     <string name="onboarding_private_browsing_description1">Vèrxi na scheda anonima na soƚa volta: toca ƚ’icona %s</string>
@@ -873,7 +873,7 @@
     <string name="onboarding_privacy_notice_header">Ƚa tò privacy</string>
     <!-- text for the privacy notice onboarding card description
     The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_privacy_notice_description">%s el xe progetà par darte el pieno controlo su ƚe informasion che te condividi online e co noialtri.</string>
+    <string name="onboarding_privacy_notice_description">%s el xe progetà par darte el pieno controƚo su ƚe informasion che te condividi online e co noialtri.</string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">Lèxi ƚa nòstra informativa so ƚa privacy</string>
 
@@ -888,7 +888,7 @@
     <!-- Automatic theme setting (will follow device setting) -->
     <string name="onboarding_theme_automatic_title">Otomàtico</string>
     <!-- Summary of automatic theme setting (will follow device setting) -->
-    <string name="onboarding_theme_automatic_summary">Si adata a ƚe inpostasion de&amp;apos;l dispoxitivo</string>
+    <string name="onboarding_theme_automatic_summary">Si adata a ƚe inpostasion de’l dispoxitivo</string>
     <!-- Theme setting for dark mode -->
     <string name="onboarding_theme_dark_title">Tema scuro</string>
     <!-- Theme setting for light mode -->
@@ -913,13 +913,13 @@
     <!-- Text shown for settings option for sign with email -->
     <string name="sign_in_with_email">Asedi co l’email</string>
     <!-- Text shown in confirmation dialog to sign out of account -->
-    <string name="sign_out_confirmation_message">I dati de navigasion no i vegnerà pì sincronixà co l’account Firefox, ma no i sarà rimossi da sto dispoxitivo.</string>
+    <string name="sign_out_confirmation_message">I dati de navigasion no i vegnerà pì sincronixà co l’account Firefox, ma no i sarà cavà da sto dispoxitivo.</string>
     <!-- Option to continue signing out of account shown in confirmation dialog to sign out of account -->
     <string name="sign_out_disconnect">Disconeti</string>
     <!-- Option to cancel signing out shown in confirmation dialog to sign out of account -->
     <string name="sign_out_cancel">Anuƚa</string>
     <!-- Error message snackbar shown after the user tried to select a default folder which cannot be altered -->
-    <string name="bookmark_cannot_edit_root">Inpossibiƚe modìfegare ƚe carteƚe predefinìe</string>
+    <string name="bookmark_cannot_edit_root">Inposibiƚe modìfegare ƚe carteƚe predefinìe</string>
 
     <!-- Enhanced Tracking Protection -->
     <!-- Link displayed in enhanced tracking protection panel to access tracking protection settings -->
@@ -927,9 +927,9 @@
     <!-- Preference title for enhanced tracking protection settings -->
     <string name="preference_enhanced_tracking_protection">Protesion antitraciamento avansà</string>
     <!-- Title for the description of enhanced tracking protection -->
-    <string name="preference_enhanced_tracking_protection_explanation_title">Naviga sensa lasarte seguire</string>
+    <string name="preference_enhanced_tracking_protection_explanation_title">Nàviga sensa ƚasarte seguire</string>
     <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="preference_enhanced_tracking_protection_explanation">Tìen i tò dati a&amp;apos;l riparo da òci curioxi. %s te protege da i eƚementi tracianti pì comuni che i cerca de seguire cueƚo che te fè online.</string>
+    <string name="preference_enhanced_tracking_protection_explanation">Tìen i tò dati a’l riparo da òci curioxi. %s te protege da i eƚementi tracianti pì comuni che i cerca de seguire cueƚo che te fè online.</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">Ulteriori informasion</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
@@ -939,7 +939,7 @@
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_description">Equilibrio tra protesion e prestasion.</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_2">Ƚe pàgine ƚe vegnerà caricà normalmente, però vegnerà blocà meno eƚementi tracianti.</string>
+    <string name="preference_enhanced_tracking_protection_standard_description_2">Ƚe pàgine ƚe vegnerà caricà normalmente, però vegnerà blocà manco eƚementi tracianti.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">Eƚementi blocà ne ƚa protesion antitraciamento normaƚe</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
@@ -947,21 +947,49 @@
     <!-- Preference for enhanced tracking protection for the strict protection settings, default setting -->
     <string name="preference_enhanced_tracking_protection_strict_default">Restritiva (predefinìa)</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_default_description">Majore protesion da&amp;apos;l traciamento e prestasion pì veloci, cualche sito el poderìa no funsionare coretamente.</string>
+    <string name="preference_enhanced_tracking_protection_strict_default_description">Majore protesion da’l traciamento e prestasion pì veƚoci, cualche sito el poderìa no funsionare coretamente.</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_strict_recommended">Restritiva (consijà)</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict_description">Majore protesion, cualche sito o contenùo i poderìa no funsionare coretamente.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">Eƚementi blocà ne ƚa protesion antitraciamento restritiva</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom">Personalixà</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom_description">Sèji che tracianti e script blocare</string>
+    <!--  Accessibility text for the Strict protection information icon  -->
+    <string name="preference_enhanced_tracking_protection_custom_info_button">Eƚementi blocà ne ƚa protesion antitraciamento</string>
     <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
+    <!-- Preference for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies">Cookies</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_1">Tracianti intersito e de i social media</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_2">Cookie da siti web no vixità</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_3">Tuti cuanti i cookie de terse parti (cualche sito el poderìa no funsionare coretamente)</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_4">Tutti i cookie (cualche sito no el funsionerà coretamente)</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings for tracking content -->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content">Contenudi tracianti</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content_1">En tute cuante ƚe schede</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content_2">Soƚo en schede anonime</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content_3">Soƚo en schede personalixà</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom_cryptominers">Cryptominer</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom_fingerprinters">Fingerprinter</string>
     <string name="enhanced_tracking_protection_blocked">Blocà</string>
     <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
     <string name="enhanced_tracking_protection_allowed">Consentìi</string>
     <!-- Category of trackers (social media trackers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_social_media_trackers_title">Tracianti de i social media</string>
     <!-- Description of social media trackers that can be blocked by Enhanced Tracking Protection -->
-    <string name="etp_social_media_trackers_description">Limita ƚa capacità de i social network de traciare ƚe tò atività so&amp;apos;l web.</string>
+    <string name="etp_social_media_trackers_description">Limita ƚa capacità de i social network de traciare ƚe tò atività so’l web.</string>
     <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_title">Cookie tracianti intersito</string>
     <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
@@ -969,17 +997,17 @@
     <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cryptominers_title">Cryptominer</string>
     <!-- Description of cryptominers that can be blocked by Enhanced Tracking Protection -->
-    <string name="etp_cryptominers_description">Impedise a i script danosi de asedere al dispoxitivo par produre moneda digitaƚe.</string>
+    <string name="etp_cryptominers_description">Inpedise a i script danosi de asedere al dispoxitivo par produre moneda digitaƚe.</string>
     <!-- Category of trackers (fingerprinters) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_fingerprinters_title">Fingerprinter</string>
     <!-- Description of fingerprinters that can be blocked by Enhanced Tracking Protection -->
-    <string name="etp_fingerprinters_description">Impedisce ƚa racolta de dati identificativi univoci so el dispoxitivo che i pole èsare utilixà a scopo de tracciamento.</string>
+    <string name="etp_fingerprinters_description">Impedisce ƚa rancura de dati identificativi univoci so el dispoxitivo che i poƚe èsare utilixà a scopo de tracciamento.</string>
     <!-- Category of trackers (tracking content) that can be blocked by Enhanced Tracking Protection -->
-    <string name="etp_tracking_content_title">Contenudi traccianti</string>
+    <string name="etp_tracking_content_title">Contenudi tracianti</string>
     <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
-    <string name="etp_tracking_content_description">Fa smetere el caricamento de anunci esterni, video e altri contenùi che i contien còdexe de traciamento. Pol influire so alcune funsionalità de&amp;apos;l sito web.</string>
+    <string name="etp_tracking_content_description">Faghe moƚare el caricamento de anunci esterni, video e altri contenùi che i contien còdexe de traciamento. Pol influire so alcune funsionaƚità de’l sito web.</string>
     <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="etp_onboarding_message_2">El scudo viola el indica che %s sta bloccando i eƚementi tracianti de sto sito. Tocalo par védere i eƚementi blocà.</string>
+    <string name="etp_onboarding_message_2">El scudo viòƚa el vol dire che %s el xe drio blocare i eƚementi tracianti de sto sito. Tocaƚo par védere i eƚementi blocà.</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
     <string name="etp_panel_on">Ƚe protesion ƚe xe ative par sto sito</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
@@ -989,7 +1017,7 @@
     <!-- About page Your rights link text -->
     <string name="about_your_rights">I to diriti</string>
     <!-- About page link text to open open source licenses screen -->
-    <string name="about_open_source_licenses">Librarie open source utilixà</string>
+    <string name="about_open_source_licenses">Librarie open source utiƚixà</string>
     <!-- About page link text to open what's new link -->
     <string name="about_whats_new">Novità en %s</string>
     <!-- Open source licenses page title
@@ -1005,7 +1033,7 @@
     <!-- About page link text to open licensing information link -->
     <string name="about_licensing_information">Informasion so ƚa licensa</string>
     <!-- About page link text to open a screen with libraries that are used -->
-    <string name="about_other_open_source_libraries">Librarie utilixà</string>
+    <string name="about_other_open_source_libraries">Librarie utiƚixà</string>
 
     <!-- Content description of the tab counter toolbar button when one tab is open -->
     <string name="tab_counter_content_description_one_tab">1 scheda</string>
@@ -1040,7 +1068,7 @@
     <!-- Preference option for never saving passwords in Fenix -->
     <string name="preferences_passwords_save_logins_never_save">No salvare mai</string>
     <!-- Preference for autofilling saved logins in Fenix -->
-    <string name="preferences_passwords_autofill">Compilasion otomàtica</string>
+    <string name="preferences_passwords_autofill">Conpiƚasion otomàtica</string>
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">Sincronixa ƚe credensiaƚi</string>
     <!-- Syncing saved logins in Fenix is on -->
@@ -1054,7 +1082,7 @@
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins">Credensiaƚi salvate</string>
     <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
-    <string name="preferences_passwords_saved_logins_description_empty_text">Ƚe credensiaƚi salvà o sincronixà en %s le vegnerà visualixà chive.</string>
+    <string name="preferences_passwords_saved_logins_description_empty_text">Ƚe credensiaƚi salvà o sincronixà en %s ƚe vegnerà visuaƚixà chive.</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins_description_empty_learn_more_link">Altre informasion so Sync.</string>
     <!-- Preference to access list of login exceptions that we never save logins for -->
@@ -1068,7 +1096,7 @@
     <!-- Option to sort logins list A-Z, alphabetically -->
     <string name="preferences_passwords_saved_logins_alphabetically">Alfabeticamente</string>
     <!-- Option to sort logins list by most recently used -->
-    <string name="preferences_passwords_saved_logins_recently_used">Utilixà de recente</string>
+    <string name="preferences_passwords_saved_logins_recently_used">Utiƚixà de recente</string>
     <!-- The header for the site that a login is for -->
     <string name="preferences_passwords_saved_logins_site">Sito</string>
     <!-- The header for the username for a login -->
@@ -1110,7 +1138,7 @@
     <!-- Title of warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_title">Protegi ƚe credensiaƚi de aceso</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_message">Inposta na secuenza de bloco, PIN o password par inpedire a chi se inposesa de&amp;apos;l dispoxitivo de visualixare ƚe to credensiaƚi.</string>
+    <string name="logins_warning_dialog_message">Inposta na secuenza de bloco, PIN o password par inpedire a chi se inposesa de’l dispoxitivo de visualixare ƚe to credensiaƚi.</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_later">Pì tardi</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
@@ -1146,14 +1174,19 @@
     <!-- Text for the button to learn more about adding a custom search engine -->
     <string name="search_add_custom_engine_learn_more_label">Altre informasion</string>
 
+    <!-- Accessibility description for the form in which details about the custom search engine are entered -->
+    <string name="search_add_custom_engine_form_description">Informasioni so’l motore de riserca personaƚixa</string>
+    <!-- Accessibility description for the 'Learn more' link -->
+    <string name="search_add_custom_engine_learn_more_description">Link altre informasioni</string>
+
     <!-- Text shown when a user leaves the name field empty -->
-    <string name="search_add_custom_engine_error_empty_name">Meter rento el nòme de&amp;apos;l motore de reserca</string>
+    <string name="search_add_custom_engine_error_empty_name">Meter rento el nòme de’l motore de reserca</string>
     <!-- Text shown when a user tries to add a search engine that already exists -->
     <string name="search_add_custom_engine_error_existing_name">Existe xà on motore de reserca co nòme “%s”.</string>
     <!-- Text shown when a user leaves the search string field empty -->
     <string name="search_add_custom_engine_error_empty_search_string">Meter rento na stringa de reserca</string>
     <!-- Text shown when a user leaves out the required template string -->
-    <string name="search_add_custom_engine_error_missing_template">Verificare che ƚa stringa de reserca corisponda al formato de exempio</string>
+    <string name="search_add_custom_engine_error_missing_template">Verificare che ƚa stringa de reserca corisponda al formato de exenpio</string>
     <!-- Text shown when we aren't able to validate the custom search query. The first parameter is the url of the custom search engine -->
     <string name="search_add_custom_engine_error_cannot_reach">Erore de conesion a “%s”</string>
     <!-- Text shown when a user creates a new search engine -->
@@ -1166,13 +1199,13 @@
     <!-- Title text shown for the migration screen to the new browser. Placeholder replaced with app name -->
     <string name="migration_title">Benvegnu en on %s conpletamente rinovà</string>
     <!-- Description text followed by a list of things migrating (e.g. Bookmarks, History). Placeholder replaced with app name-->
-    <string name="migration_description">Te speta on browser conpletamente ridisegnà, co mejo prestasion e funsioni che i renderà la to vita online pì fasile.\n\nSpeta mentre axornemo %s co</string>
+    <string name="migration_description">Te speta on browser conpletamente ridisegnà, co mejo prestasion e funsioni che i renderà ƚa to vita online pì fasiƚe.\n\nSpeta mentre axornemo %s co</string>
     <!-- Text on the disabled button while in progress. Placeholder replaced with app name -->
     <string name="migration_updating_app_button_text">Axornamento de %s…</string>
     <!-- Text on the enabled button. Placeholder replaced with app name-->
     <string name="migration_update_app_button">Invìa %s</string>
     <!-- Accessibility description text for a completed migration item -->
-    <string name="migration_icon_description">Migrasion completà</string>
+    <string name="migration_icon_description">Migrasion conpletà</string>
     <!--Text on list of migrated items (e.g. Settings, History, etc.)-->
     <string name="migration_text_passwords">Password</string>
 

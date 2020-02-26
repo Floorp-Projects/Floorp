@@ -324,6 +324,8 @@
     <string name="preferences_usage_data_description">%1$s tarayıcınızı iyileştirmemize yardımcı olmak için tarayıcınızla ilgili performans, kullanım, donanım ve özelleştirme verilerini Mozilla ile paylaşır</string>
     <!-- Preference switch for marketing data collection -->
     <string name="preferences_marketing_data">Pazarlama verileri</string>
+    <!-- Preference description for marketing data collection, parameter is the app name (e.g. Firefox) -->
+    <string name="preferences_marketing_data_description">Kullandığınız %1$s özellikleri ile ilgili verileri mobil pazarlama hizmeti aldığımız Leanplum ile paylaşır.</string>
     <!-- Title for experiments preferences -->
     <string name="preference_experiments">Deneyler</string>
     <!-- Summary for experiments preferences -->
@@ -719,8 +721,8 @@
     <string name="snackbar_tab_closed">Sekme kapatıldı</string>
     <!-- Text shown in snackbar when user closes all tabs -->
     <string name="snackbar_tabs_closed">Sekmeler kapatıldı</string>
-    <!-- Text shown in snackbar when user adds a site to home fragment. Placeholder replaced with app name -->
-    <string name="snackbar_added_to_firefox_home">%s ana ekranına eklendi!</string>
+    <!-- Text shown in snackbar when user adds a site to top sites -->
+    <string name="snackbar_added_to_top_sites">Sık kullanılanlara eklendi!</string>
     <!-- Text shown in snackbar when user closes a private tab -->
     <string name="snackbar_private_tab_closed">Gizli sekme kapatıldı</string>
     <!-- Text shown in snackbar when user closes all private tabs -->
@@ -752,6 +754,8 @@
     <string name="full_screen_notification">Tam ekran moduna geçiliyor</string>
     <!-- Message for copying the URL via long press on the toolbar -->
     <string name="url_copied">Adres kopyalandı</string>
+    <!-- Sample text for accessibility font size -->
+    <string name="accessibility_text_size_sample_text_1">Bu örnek bir metindir. Bu ayarı kullanarak boyutu artırıp azalttığınızda sonucun nasıl görüneceğini görebilirsiniz.</string>
     <!-- Summary for Accessibility Text Size Scaling Preference -->
     <string name="preference_accessibility_text_size_summary">Web sitelerinde metinleri büyütün veya küçültün</string>
     <!-- Title for Accessibility Text Size Scaling Preference -->
@@ -827,6 +831,11 @@
     <string name="onboarding_feature_section_header">%s ile tanışın</string>
     <!-- text for the "What's New" onboarding card header -->
     <string name="onboarding_whats_new_header1">Yenilikleri görün</string>
+    <!-- text for the "what's new" onboarding card description
+    The first parameter is the short name of the app (e.g. Firefox) -->
+    <string name="onboarding_whats_new_description">Yeni %s hakkında sorularınız mı var? Nelerin değiştiğini bilmek ister misiniz?</string>
+    <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
+    <string name="onboarding_whats_new_description_linktext">Yanıtlar burada</string>
     <!-- text for the firefox account onboarding card header
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_firefox_account_header">%s’dan en iyi şekilde yararlanın.</string>
@@ -848,12 +857,32 @@
     <string name="onboarding_firefox_account_automatic_signin_failed">Giriş başarısız</string>
     <!-- text for the tracking protection onboarding card header -->
     <string name="onboarding_tracking_protection_header">Kendinizi koruyun</string>
+    <!-- text for the tracking protection card description
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_tracking_protection_description1">%s, web sitelerinin internette yaptıklarınızı izlemesini önler.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button">Standart</string>
+    <!-- text for standard blocking option button description -->
+    <string name="onboarding_tracking_protection_standard_button_description">Daha az takipçiyi engeller ama sayfaların normal şekilde yüklenmesini sağlar.</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_button">Sıkı (önerilen)</string>
+    <!-- text for strict blocking option button description -->
+    <string name="onboarding_tracking_protection_strict_button_description">Daha iyi koruma ve performans için daha fazla takipçiyi engeller, ancak bazı sitelerin düzgün çalışmamasına yol açabilir.</string>
+    <!-- text for the toolbar position card header
+        In English this is an idiom for "choose a side as in an argument or fight"
+        but it is ok to make this more literally about "choosing a position in a physical space -->
+    <string name="onboarding_toolbar_position_header">Tarafınızı seçin</string>
+    <!-- text for the toolbar position card description -->
+    <string name="onboarding_toolbar_position_description">Araç çubuğunun altta olması tek elle gezinmeyi kolaylaştırır ama çubuğu üste de taşıyabilirsiniz.</string>
     <!-- text for the private browsing onboarding card header -->
     <string name="onboarding_private_browsing_header">Daha gizli gezinin</string>
+    <!-- text for the private browsing onboarding card description
+    The first parameter is an icon that represents private browsing -->
+    <string name="onboarding_private_browsing_description1">Bir kereliğine gizli sekme açmak için %s simgesine dokunun.</string>
+    <!-- text for the private browsing onboarding card description, explaining how to always using private browsing -->
+    <string name="onboarding_private_browsing_always_description">Her seferinde gizli sekme açmak isterseniz gizli gezinti ayarlarınızı güncelleyin.</string>
+    <!-- text for the private browsing onbording card button, that launches settings -->
+    <string name="onboarding_private_browsing_button">Ayarları aç</string>
     <!-- text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header">Gizliliğiniz</string>
     <!-- text for the privacy notice onboarding card description
@@ -868,6 +897,8 @@
     <!-- Onboarding theme -->
     <!-- text for the theme picker onboarding card header -->
     <string name="onboarding_theme_picker_header">Temanızı seçin</string>
+    <!-- text for the theme picker onboarding card description -->
+    <string name="onboarding_theme_picker_description1">Koyu modu etkinleştirerek pilden tasarruf ederken gözlerinizi rahatlatabilirsiniz.</string>
     <!-- Automatic theme setting (will follow device setting) -->
     <string name="onboarding_theme_automatic_title">Otomatik</string>
     <!-- Summary of automatic theme setting (will follow device setting) -->
@@ -938,7 +969,35 @@
     <string name="preference_enhanced_tracking_protection_strict_description">Daha güçlü koruma, ama bazı siteler ve içerikler düzgün çalışmayabilir.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">Sıkı izlenme korumasında neler engellenir?</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom">Özel</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom_description">Hangi takipçilerin ve betiklerin engelleneceğini seçin</string>
+    <!--  Accessibility text for the Strict protection information icon  -->
+    <string name="preference_enhanced_tracking_protection_custom_info_button">Özel izlenme korumasında neler engellenir?</string>
     <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
+    <!-- Preference for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies">Çerezler</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_1">Siteler arası takipçiler ve sosyal medya takipçileri</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_2">Ziyaret etmediğim sitelerden gelen çerezler</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_3">Tüm üçüncü taraf çerezleri (Bazı web siteleri bozulabilir.)</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_4">Tüm çerezler (Bazı web siteleri bozulabilir.)</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings for tracking content -->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content">Takip amaçlı içerikler</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content_1">Tüm sekmelerde</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content_2">Yalnızca gizli sekmelerde</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content_3">Yalnızca özel sekmelerde</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom_cryptominers">Kripto madencileri</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom_fingerprinters">Parmak izi toplayıcılar</string>
     <string name="enhanced_tracking_protection_blocked">Engellenenler</string>
     <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
     <string name="enhanced_tracking_protection_allowed">İzin verilenler</string>
@@ -1038,6 +1097,8 @@
     <string name="preferences_passwords_sync_logins_sign_in">Sync’e giriş yap</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins">Kayıtlı hesaplar</string>
+    <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
+    <string name="preferences_passwords_saved_logins_description_empty_text">Kaydettiğiniz veya %s ile eşitlediğiniz hesaplar burada görünecektir.</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins_description_empty_learn_more_link">Sync hakkında bilgi alın.</string>
     <!-- Preference to access list of login exceptions that we never save logins for -->
@@ -1130,6 +1191,11 @@
     <!-- Text for the button to learn more about adding a custom search engine -->
     <string name="search_add_custom_engine_learn_more_label">Daha fazla bilgi al</string>
 
+    <!-- Accessibility description for the form in which details about the custom search engine are entered -->
+    <string name="search_add_custom_engine_form_description">Özel arama motoru ayrıntıları</string>
+    <!-- Accessibility description for the 'Learn more' link -->
+    <string name="search_add_custom_engine_learn_more_description">Daha fazla bilgi al bağlantısı</string>
+
     <!-- Text shown when a user leaves the name field empty -->
     <string name="search_add_custom_engine_error_empty_name">Arama motoru adını yazın</string>
     <!-- Text shown when a user tries to add a search engine that already exists -->
@@ -1149,6 +1215,8 @@
 
     <!-- Title text shown for the migration screen to the new browser. Placeholder replaced with app name -->
     <string name="migration_title">Yepyeni %s tarayıcınıza hoş geldiniz</string>
+    <!-- Description text followed by a list of things migrating (e.g. Bookmarks, History). Placeholder replaced with app name-->
+    <string name="migration_description">Tarayıcınızı baştan tasarladık. Performansını artırırken internette rahat etmenizi sağlayacak yeni özellikler de ekledik.\n\n%s aşağıdaki öğeleri güncellerken lütfen bekleyin…</string>
     <!-- Text on the disabled button while in progress. Placeholder replaced with app name -->
     <string name="migration_updating_app_button_text">%s güncelleniyor…</string>
     <!-- Text on the enabled button. Placeholder replaced with app name-->
@@ -1171,6 +1239,18 @@
     <string name="quick_settings_sheet_secure_connection">Güvenli bağlantı</string>
     <!-- Label that indicates a site is using a insecure connection -->
     <string name="quick_settings_sheet_insecure_connection">Güvensiz bağlantı</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for all sites-->
+    <string name="confirm_clear_permissions_on_all_sites">Tüm sitelerdeki tüm izinleri silmek istediğinizden emin misiniz?</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for a site-->
+    <string name="confirm_clear_permissions_site">Bu site için tüm izinleri silmek istediğinizden emin misiniz?</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to set default value a permission for a site-->
+    <string name="confirm_clear_permission_site">Bu site için bu izni silmek istediğinizden emin misiniz?</string>
+    <!-- label shown when there are not site exceptions to show in the site exception settings -->
+    <string name="no_site_exceptions">Site istisnası yok</string>
+    <!-- Label for the Pocket default top site -->
+    <string name="pocket_top_articles">Önerilen makaleler</string>
+    <!-- Bookmark deletion confirmation -->
+    <string name="bookmark_deletion_confirmation">Bu yer imini silmek istediğinizden emin misiniz?</string>
     <!-- Browser menu button that adds a top site to the home fragment -->
     <string name="browser_menu_add_to_top_sites">Sık kullanılanlara ekle</string>
     <!-- text shown before the issuer name to indicate who its verified by, parameter is the name of

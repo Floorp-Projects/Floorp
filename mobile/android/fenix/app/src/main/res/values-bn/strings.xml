@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Text for the negative button -->
+    <string name="cfr_neg_button_text">না ধন্যবাদ</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Navigate backward (browsing history) -->
+    <string name="browser_menu_back">পিছনে</string>
+    <!-- Content description (not visible, for screen readers etc.): Navigate forward (browsing history) -->
+    <string name="browser_menu_forward">সামনে</string>
+    <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
+    <string name="browser_menu_stop">থামুন</string>
+    <!-- Browser menu button that sends a user to help articles -->
+    <string name="browser_menu_help">সাহায্য</string>
+
+    <!-- Content description for search icon -->
+    <string name="a11y_search_icon_content_description">অনুসন্ধান করুন</string>
+    <!-- Placeholder text shown in the search bar before a user enters text -->
+    <string name="locale_search_hint">ভাষা অনুসন্ধান করুন</string>
+
+    <!-- Search Fragment -->
+    <!-- Button in the search view that lets a user search by scanning a QR code -->
+    <string name="search_scan_button">স্ক্যান</string>
+    <!-- Button in the search suggestions onboarding that allows search suggestions in private sessions -->
+    <string name="search_suggestions_onboarding_allow_button">অনুমতি দিন</string>
+    <!-- Search suggestion onboarding hint Learn more link text -->
+    <string name="search_suggestions_onboarding_learn_more_link">আরও জানুন</string>
+
+    <!-- Search Widget -->
+    <!-- Text preview for smaller sized widgets -->
+    <string name="search_widget_text_short">অনুসন্ধান করুন</string>
+
+    <!-- Preference linking to the your rights SUMO page -->
+    <string name="preferences_your_rights">আপনার অধিকারগুলো</string>
+    <!-- Preference shown on banner to sign into account -->
+    <string name="preferences_sign_in">সাইন ইন</string>
+    <!-- Preference for language -->
+    <string name="preferences_language">ভাষা</string>
+
+    <!-- Preference for signing out -->
+    <string name="preferences_sign_out">সাইন আউট</string>
+
+    <!-- Button in Exceptions Preference to turn on tracking protection for all sites (remove all exceptions) -->
+    <string name="preferences_tracking_protection_exceptions_turn_on_for_all">সমস্ত সাইটের জন্য চালু করুন</string>
+
+    <!-- Preference switch for crash reporter -->
+    <string name="preferences_crash_reporter">ক্র্যাশ রিপোর্টার</string>
+    <!-- Preference switch for Mozilla location service -->
+    <string name="preferences_mozilla_location_service">Mozilla লোকেশন সার্ভিস</string>
+    <!-- Preference switch for app health report. The first parameter is the name of the application (For example: Fenix) -->
+    <string name="preferences_fenix_health_report">%s স্বাস্থ্য রিপোর্ট</string>
+
+    <!-- Turn On Sync Preferences -->
+    <!-- Header of the Turn on Sync preference view -->
+    <string name="preferences_sync">Sync চালু করুন</string>
+    <!-- Preference for account login -->
+    <string name="preferences_sync_sign_in">সাইন ইন</string>
+    <!-- Preference for removing FxA account -->
+    <string name="preferences_sync_remove_account">অ্যাকাউন্ট মুছুন</string>
+
+    <!-- Button to cancel pairing -->
+    <string name="pair_cancel">বাতিল</string>
+
+    <!-- Toolbar Preferences -->
+    <!-- Preference for using top toolbar -->
+    <string name="preference_top_toolbar">উপরে</string>
+    <!-- Preference for using bottom toolbar -->
+    <string name="preference_bottom_toolbar">নিচে</string>
+
+    <!-- Menu Item Label for Search in Library -->
+    <string name="library_search">অনুসন্ধান</string>
+    <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
+    <string name="content_description_close_button">বন্ধ করুন</string>
+
+    <!-- Text for the header that groups the history for last 24 hours -->
+    <string name="history_24_hours">শেষ 24 ঘন্টা</string>
+    <!-- Text for the header that groups the history the past 7 days -->
+    <string name="history_7_days">গত 7 দিন</string>
+    <!-- Text for the header that groups the history the past 30 days -->
+    <string name="history_30_days">গত 30 দিন</string>
+    <!-- Text for the header that groups the history older than the last month -->
+    <string name="history_older">পুরানো</string>
+
+    <!-- Bookmark URL editing field label -->
+    <string name="bookmark_url_label">URL</string>
+
+    <!-- Summary of delete browsing data on quit preference if it is set to on -->
+    <string name="delete_browsing_data_quit_on">চালু</string>
+    <!-- Summary of delete browsing data on quit preference if it is set to off -->
+    <string name="delete_browsing_data_quit_off">বন্ধ</string>
+
+    <!-- Login overflow menu delete button -->
+    <string name="login_menu_delete_button">মুছুন</string>
+</resources>

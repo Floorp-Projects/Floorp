@@ -28,9 +28,7 @@
 
     <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="private_browsing_placeholder_description">
-         %1$s는 앱을 종료하거나 모든 사생활 보호 탭을 닫을 때 검색과 브라우징 기록을 지웁니다. 이것이 사용자를 웹사이트나 인터넷 서비스 제공자로부터 익명으로 만들지는 않지만, 사용자가 온라인에서 한 일을 이 기기를 사용하는 다른 사용자로부터 보호 할 수 있게 합니다.
-    </string>
+    <string name="private_browsing_placeholder_description">%1$s는 앱을 종료하거나 모든 사생활 보호 탭을 닫을 때 검색과 브라우징 기록을 지웁니다. 이것이 사용자를 웹 사이트나 인터넷 서비스 제공자로부터 익명으로 만들지는 않지만, 사용자가 온라인에서 한 일을 이 기기를 사용하는 다른 사용자로부터 보호 할 수 있게 합니다.</string>
     <string name="private_browsing_common_myths">
 
        사생활 보호 모드에 관한 흔한 오해
@@ -60,7 +58,7 @@
     <!-- Content description (not visible, for screen readers etc.): Navigate forward (browsing history) -->
     <string name="browser_menu_forward">앞으로</string>
     <!-- Content description (not visible, for screen readers etc.): Refresh current website -->
-    <string name="browser_menu_refresh">새로고침</string>
+    <string name="browser_menu_refresh">새로 고침</string>
     <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
     <string name="browser_menu_stop">중지</string>
     <!-- Content description (not visible, for screen readers etc.): Bookmark the current page -->
@@ -316,7 +314,7 @@
     <string name="preferences_tracking_protection_exceptions">예외 목록</string>
 
     <!-- Preference description for tracking protection exceptions -->
-    <string name="preferences_tracking_protection_exceptions_description">이 웹사이트에서 추적 방지 기능이 꺼져 있습니다.</string>
+    <string name="preferences_tracking_protection_exceptions_description">이 웹 사이트에서 추적 방지 기능이 꺼져 있습니다.</string>
     <!-- Button in Exceptions Preference to turn on tracking protection for all sites (remove all exceptions) -->
     <string name="preferences_tracking_protection_exceptions_turn_on_for_all">모든 사이트에서 사용</string>
 
@@ -1032,9 +1030,9 @@
     <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
     <string name="preference_enhanced_tracking_protection_custom_cookies_2">방문하지 않은 사이트의 쿠키</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
-    <string name="preference_enhanced_tracking_protection_custom_cookies_3">모든 제3자 쿠키 (웹사이트가 깨질 수 있음)</string>
+    <string name="preference_enhanced_tracking_protection_custom_cookies_3">모든 제3자 쿠키 (웹 사이트가 깨질 수 있음)</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
-    <string name="preference_enhanced_tracking_protection_custom_cookies_4">모든 쿠키 (웹사이트가 깨질 수 있음)</string>
+    <string name="preference_enhanced_tracking_protection_custom_cookies_4">모든 쿠키 (웹 사이트가 깨질 수 있음)</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings for tracking content -->
     <string name="preference_enhanced_tracking_protection_custom_tracking_content">추적 콘텐츠</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
@@ -1212,10 +1210,10 @@
     <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their logins -->
     <string name="logins_biometric_prompt_message_pin">기기 잠금 해제</string>
     <!-- Title for Accessibility Force Enable Zoom Preference -->
-    <string name="preference_accessibility_force_enable_zoom">모든 웹사이트에서 확대/축소</string>
+    <string name="preference_accessibility_force_enable_zoom">모든 웹 사이트에서 확대/축소</string>
 
     <!-- Summary for Accessibility Force Enable Zoom Preference -->
-    <string name="preference_accessibility_force_enable_zoom_summary">손가락을 모아 확대/축소 기능 허용(이 제스쳐 금지 웹사이트 포함).</string>
+    <string name="preference_accessibility_force_enable_zoom_summary">손가락을 모아 확대/축소 기능 허용(이 제스쳐 금지 웹 사이트 포함).</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">검색 엔진 추가</string>
@@ -1240,6 +1238,11 @@
     <string name="search_add_custom_engine_search_string_example">쿼리를 “%s”로 바꾸세요. 예:\nhttps://www.google.com/search?q=%s</string>
     <!-- Text for the button to learn more about adding a custom search engine -->
     <string name="search_add_custom_engine_learn_more_label">더 알아보기</string>
+
+    <!-- Accessibility description for the form in which details about the custom search engine are entered -->
+    <string name="search_add_custom_engine_form_description">사용자 지정 검색 엔진 상세 정보</string>
+    <!-- Accessibility description for the 'Learn more' link -->
+    <string name="search_add_custom_engine_learn_more_description">더 알아보기 링크</string>
 
     <!-- Text shown when a user leaves the name field empty -->
     <string name="search_add_custom_engine_error_empty_name">검색 엔진 이름을 입력하세요</string>

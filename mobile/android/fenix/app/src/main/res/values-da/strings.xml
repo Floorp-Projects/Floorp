@@ -709,8 +709,8 @@
     <string name="snackbar_tab_closed">Faneblad lukket</string>
     <!-- Text shown in snackbar when user closes all tabs -->
     <string name="snackbar_tabs_closed">Faneblade lukket</string>
-    <!-- Text shown in snackbar when user adds a site to home fragment. Placeholder replaced with app name -->
-    <string name="snackbar_added_to_firefox_home">Føjet til startskærmen i %s!</string>
+    <!-- Text shown in snackbar when user adds a site to top sites -->
+    <string name="snackbar_added_to_top_sites">Føjet til foretrukne websteder!</string>
     <!-- Text shown in snackbar when user closes a private tab -->
     <string name="snackbar_private_tab_closed">Privat faneblad lukket</string>
     <!-- Text shown in snackbar when user closes all private tabs -->
@@ -851,11 +851,11 @@
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button">Standard</string>
     <!-- text for standard blocking option button description -->
-    <string name="onboarding_tracking_protection_standard_button_description">Blokerer færre sporings-mekanismer, men gør det muligt for sider at indlæses normalt</string>
+    <string name="onboarding_tracking_protection_standard_button_description">Blokerer færre sporings-teknologier, men gør det muligt for sider at indlæses normalt</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_button">Striks (anbefalet)</string>
     <!-- text for strict blocking option button description -->
-    <string name="onboarding_tracking_protection_strict_button_description">Blokerer flere sporings-mekanismer for at opnå bedre beskyttelse og ydelse, men kan forhindre nogle websteder fra at fungere optimalt</string>
+    <string name="onboarding_tracking_protection_strict_button_description">Blokerer flere sporings-teknologier for at opnå bedre beskyttelse og ydelse, men kan forhindre nogle websteder fra at fungere optimalt</string>
     <!-- text for the toolbar position card header
         In English this is an idiom for "choose a side as in an argument or fight"
         but it is ok to make this more literally about "choosing a position in a physical space -->
@@ -942,7 +942,7 @@
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_description">Balanceret mellem beskyttelse og ydelse.</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_2">Sider indlæses normalt, men færre sporings-mekanismer blokeres.</string>
+    <string name="preference_enhanced_tracking_protection_standard_description_2">Sider indlæses normalt, men færre sporings-teknologier blokeres.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">Hvad der bliver blokeret af standard-opsætningen af beskyttelse mod sporing</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
@@ -957,7 +957,35 @@
     <string name="preference_enhanced_tracking_protection_strict_description">Stærkere beskyttelse, men nogle websteder eller noget indhold indlæses måske ikke korrekt.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">Hvad der bliver blokeret af striks beskyttelse mod sporing</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom">Tilpasset</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom_description">Vælg selv, hvilke sporings-teknologier og scripts der skal blokeres</string>
+    <!--  Accessibility text for the Strict protection information icon  -->
+    <string name="preference_enhanced_tracking_protection_custom_info_button">Hvad der bliver blokeret af tilpasset beskyttelse mod sporing</string>
     <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
+    <!-- Preference for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies">Cookies</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_1">Sporings-teknologier på tværs af websteder og sociale medier</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_2">Cookies fra ikke-besøgte websteder</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_3">Alle tredjeparts-cookies (kan forhindre websteder i at fungere)</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_4">Alle cookies (vil forhindre websteder i at fungere)</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings for tracking content -->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content">Sporings-indhold</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content_1">I alle faneblade</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content_2">Kun i private faneblade</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content_3">Kun i tilpassede faneblade</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom_cryptominers">Cryptominers</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom_fingerprinters">Fingerprinters</string>
     <string name="enhanced_tracking_protection_blocked">Blokeret</string>
     <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
     <string name="enhanced_tracking_protection_allowed">Tilladt</string>
@@ -982,7 +1010,7 @@
     <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_description">Stopper indlæsning af eksterne reklamer, videoer og andet indhold, der indeholder sporings-kode. Kan påvirke nogle websteders funktionalitet.</string>
     <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="etp_onboarding_message_2">%s blokerer sporings-mekanismer på dette websted, når skjoldet er lilla. Tryk på ikonet for at se, hvad der er blokeret.</string>
+    <string name="etp_onboarding_message_2">%s blokerer sporings-teknologier på dette websted, når skjoldet er lilla. Tryk på ikonet for at se, hvad der er blokeret.</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
     <string name="etp_panel_on">Beskyttelse er slået TIL for dette websted</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
@@ -1148,6 +1176,11 @@
     <string name="search_add_custom_engine_search_string_example">Erstat forespørgslen med “%s”, Eksempel: \n https://www.google.com/search?q= %s</string>
     <!-- Text for the button to learn more about adding a custom search engine -->
     <string name="search_add_custom_engine_learn_more_label">Læs mere</string>
+
+    <!-- Accessibility description for the form in which details about the custom search engine are entered -->
+    <string name="search_add_custom_engine_form_description">Detaljer om tilpasset søgetjeneste</string>
+    <!-- Accessibility description for the 'Learn more' link -->
+    <string name="search_add_custom_engine_learn_more_description">Læs mere-link</string>
 
     <!-- Text shown when a user leaves the name field empty -->
     <string name="search_add_custom_engine_error_empty_name">Indtast søgetjenestens navn</string>

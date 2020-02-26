@@ -60,7 +60,7 @@
     <!-- Content description (not visible, for screen readers etc.): Un-bookmark the current page -->
     <string name="browser_menu_edit_bookmark">Editar favorito</string>
     <!-- Browser menu button that opens the addon manager -->
-    <string name="browser_menu_addon_manager">Gerenciador de extensões</string>
+    <string name="browser_menu_addon_manager">Extensões</string>
     <!-- Text displayed when there are no add-ons to be shown -->
     <string name="no_add_ons">Nenhuma extensão aqui</string>
     <!-- Browser menu button that sends a user to help articles -->
@@ -72,7 +72,7 @@
     <!-- Browser menu button that opens a user's library -->
     <string name="browser_menu_your_library">Sua biblioteca</string>
     <!-- Browser menu toggle that requests a desktop site -->
-    <string name="browser_menu_desktop_site">Site desktop</string>
+    <string name="browser_menu_desktop_site">Site do desktop</string>
     <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
     <string name="browser_menu_add_to_homescreen">Adicionar à tela inicial</string>
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
@@ -117,7 +117,7 @@
     <string name="default_locale_text">Acompanhar o idioma do dispositivo</string>
 
     <!-- Placeholder text shown in the search bar before a user enters text -->
-    <string name="locale_search_hint">Idioma de pesquisa</string>
+    <string name="locale_search_hint">Pesquisar idioma</string>
 
     <!-- Search Fragment -->
     <!-- Button in the search view that lets a user search by scanning a QR code -->
@@ -320,7 +320,7 @@
     <!-- Preference switch for marketing data collection -->
     <string name="preferences_marketing_data">Dados de marketing</string>
     <!-- Preference description for marketing data collection, parameter is the app name (e.g. Firefox) -->
-    <string name="preferences_marketing_data_description">Compartilha dados sobre que recursos você usa no %1$s com o Leanplum, nosso fornecedor de marketing para celular.</string>
+    <string name="preferences_marketing_data_description">Compartilhar dados sobre que recursos você usa no %1$s com o Leanplum, nosso fornecedor de marketing para celular.</string>
     <!-- Title for experiments preferences -->
     <string name="preference_experiments">Experimentos</string>
 
@@ -1024,7 +1024,7 @@
     <string name="etp_tracking_content_title">Conteúdo de rastreamento</string>
 
     <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
-    <string name="etp_tracking_content_description">Interrompe o carregamento de anúncios, vídeos e outros conteúdos externos que contenham código de rastreamento. Pode afetar algumas funcionalidades de sites.</string>
+    <string name="etp_tracking_content_description">Impede o carregamento de anúncios, vídeos e outros conteúdos externos que contenham código de rastreamento. Pode afetar algumas funcionalidades de sites.</string>
     <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
     <string name="etp_onboarding_message_2">O %s está bloqueando rastreadores neste site quando o escudo aparece roxo. Toque nele para ver o que foi bloqueado.</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
@@ -1168,7 +1168,7 @@
     <!-- Title for Accessibility Force Enable Zoom Preference -->
     <string name="preference_accessibility_force_enable_zoom">Zoom em todos os sites</string>
     <!-- Summary for Accessibility Force Enable Zoom Preference -->
-    <string name="preference_accessibility_force_enable_zoom_summary">Ativar permite zoom com movimento de pinça com dois dedos, mesmo em sites que impedem esse gesto.</string>
+    <string name="preference_accessibility_force_enable_zoom_summary">Ativar permite zoom com movimento de pinça com dois dedos, mesmo em sites que tentam impedir esse gesto.</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Adicionar mecanismo de pesquisa</string>
@@ -1193,6 +1193,11 @@
     <string name="search_add_custom_engine_search_string_example">Substitua a consulta por “%s”. Por exemplo:\nhttps://www.google.com/search?q=%s</string>
     <!-- Text for the button to learn more about adding a custom search engine -->
     <string name="search_add_custom_engine_learn_more_label">Saiba mais</string>
+
+    <!-- Accessibility description for the form in which details about the custom search engine are entered -->
+    <string name="search_add_custom_engine_form_description">Detalhes do mecanismo de pesquisa personalizado</string>
+    <!-- Accessibility description for the 'Learn more' link -->
+    <string name="search_add_custom_engine_learn_more_description">Link para mais informações</string>
 
     <!-- Text shown when a user leaves the name field empty -->
     <string name="search_add_custom_engine_error_empty_name">Digite o nome do mecanismo de pesquisa</string>
@@ -1250,7 +1255,7 @@
     <!-- Bookmark deletion confirmation -->
     <string name="bookmark_deletion_confirmation">Tem certeza que deseja excluir este favorito?</string>
     <!-- Browser menu button that adds a top site to the home fragment -->
-    <string name="browser_menu_add_to_top_sites">Adicionar aos sites preferidos</string>
+    <string name="browser_menu_add_to_top_sites">Adicionar site preferido</string>
     <!-- text shown before the issuer name to indicate who its verified by, parameter is the name of
      the certificate authority that verified the ticket-->
     <string name="certificate_info_verified_by">Homologado por: %1$s </string>

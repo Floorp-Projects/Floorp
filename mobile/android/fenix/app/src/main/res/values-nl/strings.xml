@@ -27,11 +27,8 @@
     <string name="private_browsing_title">U bevindt zich in een privésessie</string>
     <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="private_browsing_placeholder_description">
-         %1$s wist uw zoek- en browsergeschiedenis zodra u de toepassing afsluit of alle privétabbladen sluit. Hoewel privénavigatie u niet anoniem maakt voor websites of uw internetprovider, maakt dit het
-        makkelijker om wat u online doet privé te houden ten opzichte van anderen die dit apparaat gebruiken.
-    
-    </string>
+    <string name="private_browsing_placeholder_description">%1$s wist uw zoek- en browsergeschiedenis zodra u de toepassing afsluit of alle privétabbladen sluit. Hoewel privénavigatie u niet anoniem maakt voor websites of uw internetprovider, maakt dit het
+        makkelijker om wat u online doet privé te houden ten opzichte van anderen die dit apparaat gebruiken.</string>
     <string name="private_browsing_common_myths">
        
        Veelgehoorde mythes over privénavigatie
@@ -1206,6 +1203,11 @@
     <string name="search_add_custom_engine_search_string_example">Zoekvraag vervangen door ‘%s’. Bijvoorbeeld: \nhttps://www.google.com/search?q=%s</string>
     <!-- Text for the button to learn more about adding a custom search engine -->
     <string name="search_add_custom_engine_learn_more_label">Meer info</string>
+
+    <!-- Accessibility description for the form in which details about the custom search engine are entered -->
+    <string name="search_add_custom_engine_form_description">Details aangepaste zoekmachine</string>
+    <!-- Accessibility description for the 'Learn more' link -->
+    <string name="search_add_custom_engine_learn_more_description">Koppeling naar meer info</string>
 
     <!-- Text shown when a user leaves the name field empty -->
     <string name="search_add_custom_engine_error_empty_name">Voer naam van zoekmachine in</string>

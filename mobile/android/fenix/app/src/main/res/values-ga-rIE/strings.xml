@@ -720,8 +720,8 @@
     <string name="snackbar_tab_closed">Dúnadh an cluaisín</string>
     <!-- Text shown in snackbar when user closes all tabs -->
     <string name="snackbar_tabs_closed">Dúnadh na cluaisíní</string>
-    <!-- Text shown in snackbar when user adds a site to home fragment. Placeholder replaced with app name -->
-    <string name="snackbar_added_to_firefox_home">Cuireadh le baile %s</string>
+    <!-- Text shown in snackbar when user adds a site to top sites -->
+    <string name="snackbar_added_to_top_sites">Cuireadh leis na barrshuímh é!</string>
     <!-- Text shown in snackbar when user closes a private tab -->
     <string name="snackbar_private_tab_closed">Dúnadh an cluaisín príobháideach</string>
     <!-- Text shown in snackbar when user closes all private tabs -->
@@ -967,7 +967,12 @@
     <string name="preference_enhanced_tracking_protection_strict_description">Cosaint níos láidre, ach d\'fhéadfadh sé suímh nó ábhar a bhriseadh.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">Rudaí a bhfuil cosc orthu le cosaint dhian</string>
-    <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
+    <!-- Preference for enhanced tracking protection for the custom protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom">Saincheaptha</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom_description">Roghnaigh na lorgairí agus na scripteanna le cosc a chur orthu</string>
+    <!--  Accessibility text for the Strict protection information icon  -->
+    <string name="preference_enhanced_tracking_protection_custom_info_button">Rudaí a bhfuil cosc orthu le cosaint dhian</string>
     <string name="enhanced_tracking_protection_blocked">Coiscthe</string>
     <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
     <string name="enhanced_tracking_protection_allowed">Ceadaithe</string>

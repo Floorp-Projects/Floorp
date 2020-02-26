@@ -1101,7 +1101,7 @@
     <!-- Preference option for never saving passwords in Fenix -->
     <string name="preferences_passwords_save_logins_never_save">Neukladať</string>
     <!-- Preference for autofilling saved logins in Fenix -->
-    <string name="preferences_passwords_autofill">Automatické vypĺňanie</string>
+    <string name="preferences_passwords_autofill">Automatické dopĺňanie</string>
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">Synchronizácia prihlasovacích údajov</string>
     <!-- Syncing saved logins in Fenix is on -->
@@ -1206,6 +1206,11 @@
     <string name="search_add_custom_engine_search_string_example">Nahraďte výraz s „%s“. Príklad:\nhttps://www.google.com/search?q=%s</string>
     <!-- Text for the button to learn more about adding a custom search engine -->
     <string name="search_add_custom_engine_learn_more_label">Ďalšie informácie</string>
+
+    <!-- Accessibility description for the form in which details about the custom search engine are entered -->
+    <string name="search_add_custom_engine_form_description">Podrobnosti vlastného vyhľadávacieho modulu</string>
+    <!-- Accessibility description for the 'Learn more' link -->
+    <string name="search_add_custom_engine_learn_more_description">Odkaz s ďalšími podrobnosťami</string>
 
     <!-- Text shown when a user leaves the name field empty -->
     <string name="search_add_custom_engine_error_empty_name">Zadajte názov vyhľadávacieho modulu</string>

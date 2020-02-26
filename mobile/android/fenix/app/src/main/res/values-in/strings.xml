@@ -1213,6 +1213,11 @@
     <!-- Text for the button to learn more about adding a custom search engine -->
     <string name="search_add_custom_engine_learn_more_label">Pelajari Lebih Lanjut</string>
 
+    <!-- Accessibility description for the form in which details about the custom search engine are entered -->
+    <string name="search_add_custom_engine_form_description">Rincian mesin pencari kustom</string>
+    <!-- Accessibility description for the 'Learn more' link -->
+    <string name="search_add_custom_engine_learn_more_description">Tautan untuk pelajari lebih lanjut</string>
+
     <!-- Text shown when a user leaves the name field empty -->
     <string name="search_add_custom_engine_error_empty_name">Masukkan nama mesin pencari</string>
     <!-- Text shown when a user tries to add a search engine that already exists -->
@@ -1232,6 +1237,8 @@
 
     <!-- Title text shown for the migration screen to the new browser. Placeholder replaced with app name -->
     <string name="migration_title">Selamat datang ke %s yang benar-benar baru</string>
+    <!-- Description text followed by a list of things migrating (e.g. Bookmarks, History). Placeholder replaced with app name-->
+    <string name="migration_description">Sebuah peramban yang telah didesain ulang sepenuhnya, dengan peningkatan kinerja dan fitur untuk membantu anda dalam melakukan sesuatu secara daring.\n\nHarap tunggu selama kami memperbarui %s dengan milik anda</string>
     <!-- Text on the disabled button while in progress. Placeholder replaced with app name -->
     <string name="migration_updating_app_button_text">Memperbarui %s…</string>
     <!-- Text on the enabled button. Placeholder replaced with app name-->
@@ -1245,6 +1252,8 @@
     <string name="phone_feature_blocked_intro">Untuk mengizinkannya:</string>
     <!-- First step for the allowing a permission -->
     <string name="phone_feature_blocked_step_settings">1. Buka Pengaturan Android</string>
+    <!-- Second step for the allowing a permission -->
+    <string name="phone_feature_blocked_step_permissions"><![CDATA[2. Ketuk <b>Perizinan</b>]]></string>
     <!-- Third step for the allowing a permission (Fore example: Camera) -->
     <string name="phone_feature_blocked_step_feature"><![CDATA[3. Ubah <b>%1$s</b> ke NYALA]]></string>
 

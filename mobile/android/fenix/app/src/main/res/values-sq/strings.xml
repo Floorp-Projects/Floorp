@@ -60,6 +60,10 @@
     <string name="browser_menu_bookmark">Faqerojtës</string>
     <!-- Content description (not visible, for screen readers etc.): Un-bookmark the current page -->
     <string name="browser_menu_edit_bookmark">Përpunoni faqerojtësin</string>
+    <!-- Browser menu button that opens the addon manager -->
+    <string name="browser_menu_addon_manager">Përgjegjës Shtesash</string>
+    <!-- Text displayed when there are no add-ons to be shown -->
+    <string name="no_add_ons">S’ka shtesa këtu</string>
     <!-- Browser menu button that sends a user to help articles -->
     <string name="browser_menu_help">Ndihmë</string>
     <!-- Browser menu button that sends a to a the what's new article -->
@@ -151,6 +155,8 @@
     <!-- Preference category for basic settings -->
     <string name="preferences_category_basics">Bazat</string>
 
+    <!-- Preference category for general settings -->
+    <string name="preferences_category_general">Të përgjithshme</string>
     <!-- Preference category for all links about Fenix -->
     <string name="preferences_category_about">Mbi</string>
     <!-- Preference for settings related to changing the default search engine -->
@@ -180,8 +186,12 @@
     <string name="preferences_category_advanced">Të mëtejshme</string>
     <!-- Preference category for privacy settings -->
     <string name="preferences_category_privacy">Privatësi</string>
+    <!-- Preference category for privacy and security settings -->
+    <string name="preferences_category_privacy_security">Privatësi dhe siguri</string>
     <!-- Preference for advanced site permissions -->
     <string name="preferences_site_permissions">Leje sajti</string>
+    <!-- Preference for private browsing options -->
+    <string name="preferences_private_browsing_options">Shfletim privat</string>
     <!-- Preference for opening links in a private tab-->
     <string name="preferences_open_links_in_a_private_tab">Hapi lidhjet në skedë private</string>
     <!-- Preference for adding private browsing shortcut -->
@@ -196,6 +206,8 @@
     <string name="preferences_toolbar">Panel</string>
     <!-- Preference for changing default theme to dark or light mode -->
     <string name="preferences_theme">Temë</string>
+    <!-- Preference for settings related to visual options -->
+    <string name="preferences_customize">Përshtateni</string>
     <!-- Preference description for banner about signing in -->
     <string name="preferences_sign_in_description">Njëkohësoni faqerojtës, historik, etj me Llogarinë tuaj Firefox</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
@@ -230,6 +242,9 @@
     <string name="preferences_account_settings">Rregullime llogarie</string>
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">Hapi lidhjet në aplikacione</string>
+
+    <!-- Preference for add_ons -->
+    <string name="preferences_addons">Shtesa</string>
 
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
@@ -303,6 +318,10 @@
     <string name="preference_usage_data">Të dhëna përdorimi dhe teknike</string>
     <!-- Preference description for usage and technical data collection -->
     <string name="preferences_usage_data_description">I jep Mozilla-s të dhëna rreth funksionimit, përdorimit, hardware-it dhe përshtatjeve të shfletuesit tuaj, për ta ndihmuar në përmirësimin e %1$s-it</string>
+    <!-- Preference switch for marketing data collection -->
+    <string name="preferences_marketing_data">Të dhëna marketingu</string>
+    <!-- Preference description for marketing data collection, parameter is the app name (e.g. Firefox) -->
+    <string name="preferences_marketing_data_description">Ndan me Leanplum-in, furnizuesi ynë i marketingut për celular, të dhëna rreth se cilat veçori përdorni në %1$s.</string>
     <!-- Title for experiments preferences -->
     <string name="preference_experiments">Eksperimente</string>
     <!-- Summary for experiments preferences -->
@@ -425,6 +444,9 @@
     <!-- Text for the button to open tabs of the selected collection -->
     <string name="collection_open_tabs">Hapi skedat</string>
 
+    <!-- Text for the menu button to remove a top site -->
+    <string name="remove_top_site">Hiqe</string>
+
     <!-- History -->
     <!-- Text for the button to clear all history -->
     <string name="history_delete_all">Fshije historikun</string>
@@ -498,6 +520,8 @@
     <string name="bookmark_menu_open_in_private_tab_button">Hape në skedë private</string>
     <!-- Bookmark overflow menu delete button -->
     <string name="bookmark_menu_delete_button">Fshije</string>
+    <!--Bookmark overflow menu save button -->
+    <string name="bookmark_menu_save_button">Ruaje</string>
     <!-- Bookmark multi select title in app bar
      The first parameter is the number of bookmarks selected -->
     <string name="bookmarks_multi_select_title">%1$d të përzgjedhur</string>
@@ -639,6 +663,10 @@
     <string name="share_link_subheader">Ndani lidhje me të tjerë</string>
     <!-- Sub-header in the dialog to share a link to another sync device -->
     <string name="share_device_subheader">Dërgojeni në pajisje</string>
+    <!-- Sub-header in the dialog to share a link to an app from the full list -->
+    <string name="share_link_all_apps_subheader">Krejt veprimet</string>
+    <!-- Sub-header in the dialog to share a link to an app from the most-recent sorted list -->
+    <string name="share_link_recent_apps_subheader">Përdorur së fundi</string>
     <!-- An option from the share dialog to sign into sync -->
     <string name="sync_sign_in">Që të Njëkohësoni, bëni hyrjen</string>
     <!-- An option from the share dialog to send link to all other sync devices -->
@@ -689,14 +717,18 @@
     <string name="snackbar_tab_closed">Skeda u mbyll</string>
     <!-- Text shown in snackbar when user closes all tabs -->
     <string name="snackbar_tabs_closed">Skedat u mbyllën</string>
+    <!-- Text shown in snackbar when user adds a site to top sites -->
+    <string name="snackbar_added_to_top_sites">U shtua te sajtet kryesuese!</string>
     <!-- Text shown in snackbar when user closes a private tab -->
     <string name="snackbar_private_tab_closed">Skeda private u mbyll</string>
     <!-- Text shown in snackbar when user closes all private tabs -->
     <string name="snackbar_private_tabs_closed">Skedat private u mbyllën</string>
     <!-- Text shown in snackbar when user deletes all private tabs -->
     <string name="snackbar_private_tabs_deleted">Skedat private u fshinë</string>
-    <!-- Text for action to undo deleting a tab or collection shown in snackbar -->
+    <!-- Text shown in snackbar to undo deleting a tab, top site or collection -->
     <string name="snackbar_deleted_undo">ZHBËJE</string>
+    <!-- Text shown in snackbar when user removes a top site -->
+    <string name="snackbar_top_site_removed">Sajti u hoq</string>
     <!-- Text for action to undo deleting a tab or collection shown in a11y dialog -->
     <string name="a11y_dialog_deleted_undo">Zhbëje</string>
     <!-- Text for action to confirm deleting a tab or collection shown in a11y dialog -->
@@ -719,7 +751,7 @@
     <!-- Message for copying the URL via long press on the toolbar -->
     <string name="url_copied">URL-ja u kopjua</string>
     <!-- Sample text for accessibility font size -->
-    <string name="accessibility_text_size_sample_text">Dhëntë e dhitë e Zeres, nami i Hasan Qeres. Dhëntë e dhitë e Zeres, nami i Hasan Qeres. Dhëntë e dhitë e Zeres, nami i Hasan Qeres. Dhëntë e dhitë e Zeres, nami i Hasan Qeres.</string>
+    <string name="accessibility_text_size_sample_text_1">Ky është një shembull teksti. Gjendet këtu për të treguar se si do të duket teksti kur zmadhoni ose zvogëloni madhësinë përmes këtij rregullimi.</string>
     <!-- Summary for Accessibility Text Size Scaling Preference -->
     <string name="preference_accessibility_text_size_summary">Bëjeni tekstin në sajte më të madh ose më të vogël</string>
     <!-- Title for Accessibility Text Size Scaling Preference -->
@@ -747,11 +779,6 @@
     <!-- Subtitle for the history items in delete browsing data, parameter will be replaced with the
         number of history pages the user has -->
     <string name="preferences_delete_browsing_data_browsing_history_subtitle">%d faqe</string>
-    <!-- Title for the collections item in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_collections_title">Koleksione</string>
-    <!-- Subtitle for the collections item in Delete browsing data, parameter will be replaced with the
-        number of collections that will be deleted -->
-    <string name="preferences_delete_browsing_data_collections_subtitle">%d koleksione</string>
     <!-- Title for the cookies item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cookies">&lt;em&gt;Cookies&lt;/em&gt;</string>
     <!-- Subtitle for the cookies item in Delete browsing data -->
@@ -799,10 +826,13 @@
     <!-- text for the Firefox Preview feature section header
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_feature_section_header">Njihuni me %s</string>
-    <!-- text for the theme picker onboarding card header -->
-    <string name="onboarding_theme_picker_header">Zgjidhni temën tuaj</string>
-    <!-- text for the theme picker onboarding card description -->
-    <string name="onboarding_theme_picker_description">Provoni temë të errët: më e lehtë për baterinë dhe sytë tuaj.</string>
+    <!-- text for the "What's New" onboarding card header -->
+    <string name="onboarding_whats_new_header1">Shihni ç’ka të re</string>
+    <!-- text for the "what's new" onboarding card description
+    The first parameter is the short name of the app (e.g. Firefox) -->
+    <string name="onboarding_whats_new_description">Keni pyetje rreth %s-it të rikonceptuar? Doni të dini se ç’është ndryshuar?</string>
+    <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
+    <string name="onboarding_whats_new_description_linktext">Merrni përgjigje këtu</string>
     <!-- text for the firefox account onboarding card header
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_firefox_account_header">Përfitoni maksimumin nga %s.</string>
@@ -826,14 +856,30 @@
     <string name="onboarding_tracking_protection_header">Mbroni veten</string>
     <!-- text for the tracking protection card description
     The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_tracking_protection_description">%s bllokon gjurmues reklamash që ju ndjekin nëpër internet.
-    </string>
+    <string name="onboarding_tracking_protection_description1">%s ndihmon të ndalen sajtet nga ndjekja juaj në internet.</string>
+    <!-- text for tracking protection radio button option for standard level of blocking -->
+    <string name="onboarding_tracking_protection_standard_button">Standarde</string>
+    <!-- text for standard blocking option button description -->
+    <string name="onboarding_tracking_protection_standard_button_description">Bllokon më pak gjurmues por lejon që faqet të ngarkohen normalisht</string>
+    <!-- text for tracking protection radio button option for strict level of blocking -->
+    <string name="onboarding_tracking_protection_strict_button">Strikte (e këshilluar)</string>
+    <!-- text for strict blocking option button description -->
+    <string name="onboarding_tracking_protection_strict_button_description">Bllokon më shumë gjurmues për mbrojtje dhe punim më të mirë, por mund të bëjë që disa sajte të mos funksionojnë siç duhet</string>
+    <!-- text for the toolbar position card header
+        In English this is an idiom for "choose a side as in an argument or fight"
+        but it is ok to make this more literally about "choosing a position in a physical space -->
+    <string name="onboarding_toolbar_position_header">Zini një pozicion</string>
+    <!-- text for the toolbar position card description -->
+    <string name="onboarding_toolbar_position_description">Provoni shfletim me një dorë, me panelin në fund, ose ngjiteni sipër.</string>
     <!-- text for the private browsing onboarding card header -->
     <string name="onboarding_private_browsing_header">Shfletoni privatisht</string>
     <!-- text for the private browsing onboarding card description
     The first parameter is an icon that represents private browsing -->
-    <string name="onboarding_private_browsing_description">Kur shihni ikonën %s, shfletimi privat është larg një prekje ekrani.
-   </string>
+    <string name="onboarding_private_browsing_description1">Hapni një skedë private: Prekni ikonën %s.</string>
+    <!-- text for the private browsing onboarding card description, explaining how to always using private browsing -->
+    <string name="onboarding_private_browsing_always_description">Hapni skeda private përherë: Përditësoni rregullimet tuaja të shfletimit privat.</string>
+    <!-- text for the private browsing onbording card button, that launches settings -->
+    <string name="onboarding_private_browsing_button">Hap rregullimet</string>
     <!-- text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header">Privatësia juaj</string>
     <!-- text for the privacy notice onboarding card description
@@ -848,6 +894,10 @@
     <string name="onboarding_finish">Nisni shfletimin</string>
 
     <!-- Onboarding theme -->
+    <!-- text for the theme picker onboarding card header -->
+    <string name="onboarding_theme_picker_header">Zgjidhni temën tuaj</string>
+    <!-- text for the theme picker onboarding card description -->
+    <string name="onboarding_theme_picker_description1">Kurseni pak bateri dhe shikimin tuaj, duke aktivizuar mënyrën e errët.</string>
     <!-- Automatic theme setting (will follow device setting) -->
     <string name="onboarding_theme_automatic_title">Vetvetiu</string>
     <!-- Summary of automatic theme setting (will follow device setting) -->
@@ -919,7 +969,35 @@
     <string name="preference_enhanced_tracking_protection_strict_description">Mbrojtje më e fortë, mund të shkaktojë mosfunksionim për disa sajte ose lëndë.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">Ç’bllokohet nga mbrojtje strikte kundër gjurmimit</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom">Vetjake</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom_description">Zgjidhni cilët gjurmues dhe programthe të bllokohen</string>
+    <!--  Accessibility text for the Strict protection information icon  -->
+    <string name="preference_enhanced_tracking_protection_custom_info_button">Ç’bllokohet nga mbrojtje vetjake kundër gjurmimit</string>
     <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
+    <!-- Preference for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies">Cookies</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_1">Gjurmues nga sajte në sajte dhe mediash shoqërore</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_2">Cookies nga sajte të pavizituar</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_3">Krejt cookie-t nga palë të treta (mund të shkaktojë mosfunksionim të disa sajteve)</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_4">Krejt cookie-t (do të shkaktojë mosfunksionim sajtesh)</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings for tracking content -->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content">Lëndë gjurmimi</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content_1">Në krejt skedat</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content_2">Vetëm në skeda Private</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content_3">Vetëm në skeda Vetjake</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom_cryptominers">Nxjerrës kriptomonedhash</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom_fingerprinters">Krijues shenjash gishtash</string>
     <string name="enhanced_tracking_protection_blocked">Të bllokuara</string>
     <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
     <string name="enhanced_tracking_protection_allowed">Të lejuara</string>
@@ -1020,6 +1098,10 @@
     <string name="preferences_passwords_sync_logins_sign_in">Bëni hyrjen që të Njëkohësoni</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins">Kredenciale hyrjesh të ruajtur</string>
+    <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
+    <string name="preferences_passwords_saved_logins_description_empty_text">Këtu do të shfaqen kredencialet e hyrjeve që ruani ose njëkohësoni në %s.</string>
+    <!-- Preference to access list of saved logins -->
+    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link">Mësoni më tepër mbi Sync-un.</string>
     <!-- Preference to access list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions">Përjashtime</string>
     <!-- Empty description of list of login exceptions that we never save logins for -->
@@ -1110,6 +1192,11 @@
     <!-- Text for the button to learn more about adding a custom search engine -->
     <string name="search_add_custom_engine_learn_more_label">Mësoni Më Tepër</string>
 
+    <!-- Accessibility description for the form in which details about the custom search engine are entered -->
+    <string name="search_add_custom_engine_form_description">Hollësi motori vetjak kërkimesh</string>
+    <!-- Accessibility description for the 'Learn more' link -->
+    <string name="search_add_custom_engine_learn_more_description">Lidhje “Lexoni më tepër”</string>
+
     <!-- Text shown when a user leaves the name field empty -->
     <string name="search_add_custom_engine_error_empty_name">Jepni emër motori kërkimesh</string>
     <!-- Text shown when a user tries to add a search engine that already exists -->
@@ -1126,4 +1213,51 @@
     <string name="search_edit_custom_engine_success_message">U ruajt %s</string>
     <!-- Text shown when a user successfully deletes a custom search engine -->
     <string name="search_delete_search_engine_success_message">U fshi %s</string>
+
+    <!-- Title text shown for the migration screen to the new browser. Placeholder replaced with app name -->
+    <string name="migration_title">Mirë se vini te një %s fringo i ri</string>
+
+    <!-- Description text followed by a list of things migrating (e.g. Bookmarks, History). Placeholder replaced with app name-->
+    <string name="migration_description">Ju pret një shfletues tërësisht i rikonceptuar, me funksionim të përmirësuar dhe veçori për t’ju ndihmuar të bëni më shumë gjëra në internet.\n\nJu lutemi, prisni, teksa përditësojmë %s me</string>
+    <!-- Text on the disabled button while in progress. Placeholder replaced with app name -->
+    <string name="migration_updating_app_button_text">Po përditësohet %s…</string>
+    <!-- Text on the enabled button. Placeholder replaced with app name-->
+    <string name="migration_update_app_button">Nise %s</string>
+    <!-- Accessibility description text for a completed migration item -->
+    <string name="migration_icon_description">Migrimi u plotësua</string>
+    <!--Text on list of migrated items (e.g. Settings, History, etc.)-->
+    <string name="migration_text_passwords">Fjalëkalime</string>
+
+    <!-- Heading for the instructions to allow a permission -->
+    <string name="phone_feature_blocked_intro">Që ta lejoni:</string>
+    <!-- First step for the allowing a permission -->
+    <string name="phone_feature_blocked_step_settings">1. Shkoni te Android Settings</string>
+    <!-- Second step for the allowing a permission -->
+    <string name="phone_feature_blocked_step_permissions"><![CDATA[2. Prekni <b>Permissions</b>]]></string>
+    <!-- Third step for the allowing a permission (Fore example: Camera) -->
+    <string name="phone_feature_blocked_step_feature"><![CDATA[3. Kalojeni <b>%1$s</b> si ON]]></string>
+
+    <!-- Label that indicates a site is using a secure connection -->
+    <string name="quick_settings_sheet_secure_connection">Lidhje e Sigurt</string>
+    <!-- Label that indicates a site is using a insecure connection -->
+    <string name="quick_settings_sheet_insecure_connection">Lidhje e Pasigurt</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for all sites-->
+    <string name="confirm_clear_permissions_on_all_sites">Jeni i sigurt se doni të spastrohen krejt lejet në krejt sajtet?</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for a site-->
+    <string name="confirm_clear_permissions_site">Jeni i sigurt se doni të spastrohen krejt lejet për këtë sajt?</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to set default value a permission for a site-->
+    <string name="confirm_clear_permission_site">Jeni i sigurt se doni të spastrohet kjo leje për këtë sajt?</string>
+    <!-- label shown when there are not site exceptions to show in the site exception settings -->
+    <string name="no_site_exceptions">Pa përjashtime sajti</string>
+    <!-- Label for the Pocket default top site -->
+    <string name="pocket_top_articles">Artikujt Kryesues</string>
+    <!-- Bookmark deletion confirmation -->
+    <string name="bookmark_deletion_confirmation">Jeni i sigurt se doni të fshihet ky faqerojtës?</string>
+    <!-- Browser menu button that adds a top site to the home fragment -->
+    <string name="browser_menu_add_to_top_sites">Shtoje te sajtet kryesuese</string>
+    <!-- text shown before the issuer name to indicate who its verified by, parameter is the name of
+     the certificate authority that verified the ticket-->
+    <string name="certificate_info_verified_by">Verifikuar Nga: %1$s</string>
+    <!-- Login overflow menu delete button -->
+    <string name="login_menu_delete_button">Fshije</string>
 </resources>

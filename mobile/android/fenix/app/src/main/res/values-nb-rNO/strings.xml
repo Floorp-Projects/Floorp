@@ -877,6 +877,33 @@
         but it is ok to make this more literally about "choosing a position in a physical space -->
     <string name="onboarding_toolbar_position_header">Velg side</string>
 
+    <!-- text for the private browsing onboarding card header -->
+    <string name="onboarding_private_browsing_header">Surf privat</string>
+
+    <!-- text for the private browsing onbording card button, that launches settings -->
+    <string name="onboarding_private_browsing_button">Åpne innstillinger</string>
+    <!-- text for the privacy notice onboarding card header -->
+    <string name="onboarding_privacy_notice_header">Ditt personvern</string>
+
+    <!-- Theme setting for dark mode -->
+    <string name="onboarding_theme_dark_title">Mørkt tema</string>
+    <!-- Theme setting for light mode -->
+    <string name="onboarding_theme_light_title">Lyst tema</string>
+
+    <!-- Text shown in snackbar when multiple tabs have been sent to device -->
+    <string name="sync_sent_tabs_snackbar">Faner sendt!</string>
+    <!-- Text shown in snackbar when one tab has been sent to device  -->
+    <string name="sync_sent_tab_snackbar">Fane er sendt!</string>
+    <!-- Text shown in snackbar when sharing tabs failed  -->
+    <string name="sync_sent_tab_error_snackbar">Kan ikke å sende</string>
+    <!-- Text shown in snackbar for the "retry" action that the user has after sharing tabs failed -->
+    <string name="sync_sent_tab_error_snackbar_action">PRØV IGJEN</string>
+    <!-- Title of QR Pairing Fragment -->
+    <string name="sync_scan_code">Skann koden</string>
+    <!-- Instructions on how to access pairing -->
+    <string name="sign_in_instructions"><![CDATA[Åpne Firefox på datamaskinen din og gå til <b>https://firefox.com/pair</b>]]></string>
+    <!-- Text shown for sign in pairing when ready -->
+    <string name="sign_in_ready_for_scan">Klar til å skanne</string>
     <!-- Text shown for settings option for sign with pairing -->
     <string name="sign_in_with_camera">Logg inn med kameraet ditt</string>
     <!-- Text shown for settings option for sign with email -->
@@ -1011,6 +1038,10 @@
 
     <!-- Syncing saved logins in Fenix needs login -->
     <string name="preferences_passwords_sync_logins_sign_in">Logg inn på Sync</string>
+    <!-- Learn more link that will link to a page with more information displayed when a connection is insecure and we detect the user is entering a password -->
+    <string name="logins_insecure_connection_warning_learn_more">Les mer</string>
+    <!-- Prompt message displayed when Fenix detects a user has entered a password and user decides if Fenix should save it. The first parameter is the name of the application (For example: Fenix)  -->
+    <string name="logins_doorhanger_save">Vil du at %s skal lagre denne innloggingen?</string>
     <!-- Positive confirmation that Fenix should save the new or updated login -->
     <string name="logins_doorhanger_save_confirmation">Lagre</string>
     <!-- Negative confirmation that Fenix should not save the new or updated login -->
@@ -1034,6 +1065,8 @@
     <string name="saved_login_hide_password">Skjul passord</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their logins -->
     <string name="logins_biometric_prompt_message">Lås opp for å se dine lagrede innlogginger</string>
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_title">Sikre dine innlogginger og passord</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_later">Senere</string>
 
@@ -1065,5 +1098,14 @@
     <string name="search_add_custom_engine_search_string_hint">Søkestreng å bruke</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
     <string name="search_add_custom_engine_search_string_example">Bytt ut spørringen med «%s». Eksempel:\nhttps://www.google.com/search?q=%s</string>
+
+    <!-- Text on the disabled button while in progress. Placeholder replaced with app name -->
+    <string name="migration_updating_app_button_text">Oppdaterer %s…</string>
+    <!-- Text on the enabled button. Placeholder replaced with app name-->
+    <string name="migration_update_app_button">Start %s</string>
+    <!-- Accessibility description text for a completed migration item -->
+    <string name="migration_icon_description">Migreringen er ferdig</string>
+    <!--Text on list of migrated items (e.g. Settings, History, etc.)-->
+    <string name="migration_text_passwords">Passord</string>
 
     </resources>
