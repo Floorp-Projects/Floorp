@@ -43,6 +43,17 @@ var XULRuntime = Cc["@mozilla.org/xre/runtime;1"].getService(Ci.nsIXULRuntime);
 // Expand the amount of information available in error logs
 Services.prefs.setBoolPref("browser.search.log", true);
 
+// The geo-specific search tests assume certain prefs are already setup, which
+// might not be true when run in comm-central etc.  So create them here.
+Services.prefs.setBoolPref("browser.search.geoSpecificDefaults", true);
+Services.prefs.setIntPref("browser.search.geoip.timeout", 3000);
+// But still disable geoip lookups - tests that need it will re-configure this.
+Services.prefs.setCharPref("browser.search.geoip.url", "");
+// Also disable region defaults - tests using it will also re-configure it.
+Services.prefs
+  .getDefaultBranch(SearchUtils.BROWSER_SEARCH_PREF)
+  .setCharPref("geoSpecificDefaults.url", "");
+
 XPCOMUtils.defineLazyPreferenceGetter(
   this,
   "gModernConfig",
@@ -438,7 +449,7 @@ async function withGeoServer(
   let geoLookupUrl = geoLookupData
     ? `http://localhost:${srv.identity.primaryPort}/lookup_geoip`
     : 'data:application/json,{"country_code": "FR"}';
-  Services.prefs.setCharPref("geo.provider-country.network.url", geoLookupUrl);
+  Services.prefs.setCharPref("browser.search.geoip.url", geoLookupUrl);
 
   try {
     await testFn(gRequests);
@@ -448,7 +459,7 @@ async function withGeoServer(
     Services.prefs.clearUserPref(
       SearchUtils.BROWSER_SEARCH_PREF + PREF_SEARCH_URL
     );
-    Services.prefs.clearUserPref("geo.provider-country.network.url");
+    Services.prefs.clearUserPref("browser.search.geoip.url");
   }
 }
 
