@@ -27,15 +27,19 @@ async function performTests_false() {
   await wait(2000);
   ok(!popup.isOpen, "popup is not open");
 
+  let onPopUpOpen = popup.once("popup-opened");
+
   info("Check that Ctrl+Space opens the popup when preference is false");
-  let onUpdated = jsterm.once("autocomplete-updated");
+  onPopUpOpen = popup.once("popup-opened");
   EventUtils.synthesizeKey(" ", { ctrlKey: true });
-  await onUpdated;
+  await onPopUpOpen;
 
   ok(popup.isOpen, "popup opens on Ctrl+Space");
+
+  const onUpdated = jsterm.once("autocomplete-updated");
+
   ok(popup.getItems().length > 0, "'w' gave a list of suggestions");
 
-  onUpdated = jsterm.once("autocomplete-updated");
   EventUtils.synthesizeKey("in");
   await onUpdated;
   ok(popup.getItems().length == 2, "'win' gave a list of suggestions");
