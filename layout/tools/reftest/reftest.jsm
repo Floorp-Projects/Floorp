@@ -531,8 +531,12 @@ function StartTests()
         }
 
         if (g.manageSuite && !g.suiteStarted) {
-            var ids = g.urls.map(function(obj) {
-                return obj.identifier;
+            var ids = {};
+            g.urls.forEach(function(test) {
+                if (!(test.manifestID in ids)) {
+                    ids[test.manifestID] = [];
+                }
+                ids[test.manifestID].push(test.identifier);
             });
             var suite = prefs.getStringPref('reftest.suite', 'reftest');
             logger.suiteStart(ids, suite, {"skipped": g.urls.length - numActiveTests});

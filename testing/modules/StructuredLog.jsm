@@ -109,14 +109,18 @@ StructuredLogger.prototype = {
   },
 
   suiteStart(
-    tests,
+    ids,
     name = null,
     runinfo = null,
     versioninfo = null,
     deviceinfo = null,
     extra = null
   ) {
-    var data = { tests: tests.map(x => this._testId(x)) };
+    Object.keys(ids).map(function(manifest) {
+      ids[manifest] = ids[manifest].map(x => this._testId(x));
+    }, this);
+    var data = { tests: ids };
+
     if (name !== null) {
       data.name = name;
     }
