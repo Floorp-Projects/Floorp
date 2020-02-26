@@ -102,10 +102,6 @@ class WindowGlobalParent final : public WindowContext,
 
   const nsString& GetDocumentTitle() const { return mDocumentTitle; }
 
-  // Window IDs for inner/outer windows.
-  uint64_t OuterWindowId() { return mOuterWindowId; }
-  uint64_t InnerWindowId() { return mInnerWindowId; }
-
   uint64_t ContentParentId();
 
   int32_t OsPid();
@@ -196,8 +192,6 @@ class WindowGlobalParent final : public WindowContext,
 
   RefPtr<CanonicalBrowsingContext> mBrowsingContext;
   nsRefPtrHashtable<nsStringHashKey, JSWindowActorParent> mWindowActors;
-  uint64_t mInnerWindowId;
-  uint64_t mOuterWindowId;
   bool mInProcess;
   bool mIsInitialDocument;
 
