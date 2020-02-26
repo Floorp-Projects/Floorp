@@ -217,8 +217,7 @@ function runOneTest(gl, info) {
       log("*** Error linking program '"+program+"':"+error);
     }
     if (!info.ignoreResults && linked != info.linkSuccess) {
-      testFailed("[unexpected link status] (expected: " +
-                info.linkSuccess + ") " + passMsg);
+      testFailed("[unexpected link status] " + passMsg);
       return;
     }
   } else {
