@@ -2,7 +2,7 @@
 
 # OAuthScopedKey
 
-`data class OAuthScopedKey` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/sync/src/main/java/mozilla/components/concept/sync/OAuthAccount.kt#L341)
+`data class OAuthScopedKey` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/sync/src/main/java/mozilla/components/concept/sync/OAuthAccount.kt#L343)
 
 Scoped key data.
 

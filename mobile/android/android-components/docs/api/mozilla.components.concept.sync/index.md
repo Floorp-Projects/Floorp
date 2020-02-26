@@ -8,7 +8,9 @@
 |---|---|
 | [AccessTokenInfo](-access-token-info/index.md) | `data class AccessTokenInfo`<br>The result of authentication with FxA via an OAuth flow. |
 | [AccessType](-access-type/index.md) | `enum class AccessType`<br>The access-type determines whether the code can be exchanged for a refresh token for offline use or not. |
-| [AccountObserver](-account-observer/index.md) | `interface AccountObserver`<br>Observer interface which lets its users monitor account state changes and major events. |
+| [AccountEvent](-account-event/index.md) | `sealed class AccountEvent`<br>Incoming account events. |
+| [AccountEventsObserver](-account-events-observer/index.md) | `interface AccountEventsObserver`<br>Allows monitoring events targeted at the current account/device. |
+| [AccountObserver](-account-observer/index.md) | `interface AccountObserver`<br>Observer interface which lets its users monitor account state changes and major events. (XXX - there's some tension between this and the mozilla.components.concept.sync.AccountEvent we should resolve!) |
 | [AuthExceptionType](-auth-exception-type/index.md) | `enum class AuthExceptionType`<br>An auth-related exception type, for use with [AuthException](-auth-exception/index.md). |
 | [AuthFlowUrl](-auth-flow-url/index.md) | `data class AuthFlowUrl`<br>An object that represents a login flow initiated by [OAuthAccount](-o-auth-account/index.md). |
 | [AuthType](-auth-type/index.md) | `sealed class AuthType` |
@@ -16,11 +18,10 @@
 | [ConstellationState](-constellation-state/index.md) | `data class ConstellationState`<br>Describes current device and other devices in the constellation. |
 | [Device](-device/index.md) | `data class Device`<br>Describes a device in the [DeviceConstellation](-device-constellation/index.md). |
 | [DeviceCapability](-device-capability/index.md) | `enum class DeviceCapability`<br>Capabilities that a [Device](-device/index.md) may have. |
-| [DeviceConstellation](-device-constellation/index.md) | `interface DeviceConstellation : `[`Observable`](../mozilla.components.support.base.observer/-observable/index.md)`<`[`DeviceEventsObserver`](-device-events-observer/index.md)`>`<br>Describes available interactions with the current device and other devices associated with an [OAuthAccount](-o-auth-account/index.md). |
+| [DeviceCommandIncoming](-device-command-incoming/index.md) | `sealed class DeviceCommandIncoming`<br>Incoming device commands (ie, targeted at the current device.) |
+| [DeviceCommandOutgoing](-device-command-outgoing/index.md) | `sealed class DeviceCommandOutgoing`<br>Outgoing device commands (ie, targeted at other devices.) |
+| [DeviceConstellation](-device-constellation/index.md) | `interface DeviceConstellation : `[`Observable`](../mozilla.components.support.base.observer/-observable/index.md)`<`[`AccountEventsObserver`](-account-events-observer/index.md)`>`<br>Describes available interactions with the current device and other devices associated with an [OAuthAccount](-o-auth-account/index.md). |
 | [DeviceConstellationObserver](-device-constellation-observer/index.md) | `interface DeviceConstellationObserver`<br>Allows monitoring constellation state. |
-| [DeviceEvent](-device-event/index.md) | `sealed class DeviceEvent`<br>Incoming device events, targeted at the current device. |
-| [DeviceEventOutgoing](-device-event-outgoing/index.md) | `sealed class DeviceEventOutgoing`<br>Outgoing device events, targeted at other devices. |
-| [DeviceEventsObserver](-device-events-observer/index.md) | `interface DeviceEventsObserver`<br>Allows monitoring events targeted at the current device. |
 | [DevicePushSubscription](-device-push-subscription/index.md) | `data class DevicePushSubscription`<br>Describes an Autopush-compatible push channel subscription. |
 | [DeviceType](-device-type/index.md) | `enum class DeviceType`<br>Describes a type of the physical device in the constellation. |
 | [InFlightMigrationState](-in-flight-migration-state/index.md) | `enum class InFlightMigrationState`<br>Represents a specific type of an "in-flight" migration state that could result from intermittent issues during [OAuthAccount.migrateFromSessionTokenAsync](-o-auth-account/migrate-from-session-token-async.md) or [OAuthAccount.copyFromSessionTokenAsync](-o-auth-account/copy-from-session-token-async.md). |
@@ -33,7 +34,7 @@
 | [SyncAuthInfo](-sync-auth-info/index.md) | `data class SyncAuthInfo`<br>A Firefox Sync friendly auth object which can be obtained from [OAuthAccount](-o-auth-account/index.md). |
 | [SyncStatus](-sync-status/index.md) | `sealed class SyncStatus`<br>Results of running a sync via [SyncableStore.sync](#). |
 | [SyncableStore](-syncable-store/index.md) | `interface SyncableStore`<br>Describes a "sync" entry point for a storage layer. |
-| [TabData](-tab-data/index.md) | `data class TabData` |
+| [TabData](-tab-data/index.md) | `data class TabData`<br>Information about a tab sent with tab related commands. |
 
 ### Exceptions
 
@@ -45,4 +46,5 @@
 
 | Name | Summary |
 |---|---|
+| [OuterDeviceCommandIncoming](-outer-device-command-incoming.md) | `typealias OuterDeviceCommandIncoming = `[`DeviceCommandIncoming`](-device-command-incoming/index.md) |
 | [SyncResult](-sync-result.md) | `typealias SyncResult = `[`Map`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-map/index.html)`<`[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, `[`StoreSyncStatus`](-store-sync-status/index.md)`>`<br>A set of results of running a sync operation for multiple instances of [SyncableStore](-syncable-store/index.md). |

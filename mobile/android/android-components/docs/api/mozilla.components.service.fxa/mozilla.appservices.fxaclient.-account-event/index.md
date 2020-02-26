@@ -4,4 +4,4 @@
 
 | Name | Summary |
 |---|---|
-| [into](into.md) | `fun AccountEvent.into(): `[`DeviceEvent`](../../mozilla.components.concept.sync/-device-event/index.md) |
+| [into](into.md) | `fun AccountEvent.into(): `[`AccountEvent`](../../mozilla.components.concept.sync/-account-event/index.md) |

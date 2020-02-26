@@ -18,10 +18,11 @@ $dokka.location:mozilla.components.lib.publicsuffixlist.ext$urlToTrimmedHost(kot
 $dokka.location:mozilla.components.lib.state.ext$consumeFrom(androidx.fragment.app.Fragment, mozilla.components.lib.state.Store((mozilla.components.lib.state.ext.consumeFrom.S, mozilla.components.lib.state.ext.consumeFrom.A)), kotlin.Function1((mozilla.components.lib.state.ext.consumeFrom.S, kotlin.Unit)))mozilla.components.lib.state.ext/androidx.fragment.app.-fragment/consume-from.md
 $dokka.location:mozilla.components.service.fxa$into(mozilla.appservices.fxaclient.AccessTokenInfo)mozilla.components.service.fxa/mozilla.appservices.fxaclient.-access-token-info/into.md
 $dokka.location:mozilla.components.service.fxa$into(mozilla.appservices.fxaclient.AccountEvent)mozilla.components.service.fxa/mozilla.appservices.fxaclient.-account-event/into.md
-$dokka.location:mozilla.components.service.fxa$into(mozilla.appservices.fxaclient.AccountEvent.TabReceived)mozilla.components.service.fxa/mozilla.appservices.fxaclient.-account-event.-tab-received/into.md
 $dokka.location:mozilla.components.service.fxa$into(mozilla.appservices.fxaclient.Device)mozilla.components.service.fxa/mozilla.appservices.fxaclient.-device/into.md
 $dokka.location:mozilla.components.service.fxa$into(mozilla.appservices.fxaclient.Device.Capability)mozilla.components.service.fxa/mozilla.appservices.fxaclient.-device.-capability/into.md
 $dokka.location:mozilla.components.service.fxa$into(mozilla.appservices.fxaclient.Device.PushSubscription)mozilla.components.service.fxa/mozilla.appservices.fxaclient.-device.-push-subscription/into.md
+$dokka.location:mozilla.components.service.fxa$into(mozilla.appservices.fxaclient.IncomingDeviceCommand)mozilla.components.service.fxa/mozilla.appservices.fxaclient.-incoming-device-command/into.md
+$dokka.location:mozilla.components.service.fxa$into(mozilla.appservices.fxaclient.IncomingDeviceCommand.TabReceived)mozilla.components.service.fxa/mozilla.appservices.fxaclient.-incoming-device-command.-tab-received/into.md
 $dokka.location:mozilla.components.service.fxa$into(mozilla.appservices.fxaclient.MigrationState)mozilla.components.service.fxa/mozilla.appservices.fxaclient.-migration-state/into.md
 $dokka.location:mozilla.components.service.fxa$into(mozilla.appservices.fxaclient.Profile)mozilla.components.service.fxa/mozilla.appservices.fxaclient.-profile/into.md
 $dokka.location:mozilla.components.service.fxa$into(mozilla.appservices.fxaclient.ScopedKey)mozilla.components.service.fxa/mozilla.appservices.fxaclient.-scoped-key/into.md

@@ -2,7 +2,7 @@
 
 # SendTabFeature
 
-`class SendTabFeature` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/accounts-push/src/main/java/mozilla/components/feature/accounts/push/SendTabFeature.kt#L33)
+`class SendTabFeature` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/accounts-push/src/main/java/mozilla/components/feature/accounts/push/SendTabFeature.kt#L34)
 
 A feature that uses the [FxaAccountManager](../../mozilla.components.service.fxa.manager/-fxa-account-manager/index.md) to receive tabs.
 

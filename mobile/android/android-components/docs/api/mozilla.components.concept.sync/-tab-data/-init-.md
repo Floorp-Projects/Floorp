@@ -3,3 +3,6 @@
 # &lt;init&gt;
 
 `TabData(title: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, url: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`)`
+
+Information about a tab sent with tab related commands.
+

@@ -18,3 +18,9 @@
 | [BrowserMenuSwitch](-browser-menu-switch/index.md) | `class BrowserMenuSwitch : `[`BrowserMenuCompoundButton`](-browser-menu-compound-button/index.md)<br>A simple browser menu switch. |
 | [SimpleBrowserMenuItem](-simple-browser-menu-item/index.md) | `class SimpleBrowserMenuItem : `[`BrowserMenuItem`](../mozilla.components.browser.menu/-browser-menu-item/index.md)<br>A simple browser menu item displaying text. |
 | [WebExtensionBrowserMenuItem](-web-extension-browser-menu-item/index.md) | `class WebExtensionBrowserMenuItem : `[`BrowserMenuItem`](../mozilla.components.browser.menu/-browser-menu-item/index.md)<br>A browser menu item displaying a web extension action. |
+
+### Functions
+
+| Name | Summary |
+|---|---|
+| [setBadgeText](set-badge-text.md) | `fun <ERROR CLASS>.setBadgeText(badgeText: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`?): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Sets the badgeText and the visibility of the TextView based on empty/nullability of the badgeText. |

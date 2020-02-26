@@ -2,9 +2,11 @@
 
 # AccountObserver
 
-`interface AccountObserver` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/sync/src/main/java/mozilla/components/concept/sync/OAuthAccount.kt#L297)
+`interface AccountObserver` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/sync/src/main/java/mozilla/components/concept/sync/OAuthAccount.kt#L299)
 
 Observer interface which lets its users monitor account state changes and major events.
+(XXX - there's some tension between this and the
+mozilla.components.concept.sync.AccountEvent we should resolve!)
 
 ### Functions
 

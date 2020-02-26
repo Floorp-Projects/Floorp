@@ -2,7 +2,7 @@
 
 # FxaAuthData
 
-`data class FxaAuthData` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/Types.kt#L46)
+`data class FxaAuthData` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/Types.kt#L47)
 
 Captures basic OAuth authentication data (code, state) and any additional data FxA passes along.
 
