@@ -25,6 +25,7 @@ class TopSiteViewHolder(
         view.top_sites_list.apply {
             adapter = topSitesAdapter
             layoutManager = GridLayoutManager(view.context, NUM_COLUMNS)
+            isNestedScrollingEnabled = false
         }
     }
 
