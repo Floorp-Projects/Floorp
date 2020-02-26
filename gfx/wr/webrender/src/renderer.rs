@@ -49,7 +49,8 @@ use api::channel::MsgSender;
 use crate::batch::{AlphaBatchContainer, BatchKind, BatchFeatures, BatchTextures, BrushBatchKind, ClipBatchList};
 #[cfg(any(feature = "capture", feature = "replay"))]
 use crate::capture::{CaptureConfig, ExternalCaptureImage, PlainExternalImage};
-use crate::composite::{CompositeState, CompositeTileSurface, CompositeTile, CompositorKind, Compositor, NativeTileId};
+use crate::composite::{CompositeState, CompositeTileSurface, CompositeTile};
+use crate::composite::{CompositorKind, Compositor, NativeTileId, CompositeSurfaceFormat};
 use crate::composite::{CompositorConfig, NativeSurfaceOperationDetails, NativeSurfaceId, NativeSurfaceOperation};
 use crate::debug_colors;
 use crate::debug_render::{DebugItem, DebugRenderer};
@@ -843,13 +844,28 @@ pub(crate) mod desc {
                 kind: VertexAttributeKind::F32,
             },
             VertexAttribute {
-                name: "aLayer",
-                count: 1,
+                name: "aParams",
+                count: 4,
                 kind: VertexAttributeKind::F32,
             },
             VertexAttribute {
-                name: "aZId",
-                count: 1,
+                name: "aUvRect0",
+                count: 4,
+                kind: VertexAttributeKind::F32,
+            },
+            VertexAttribute {
+                name: "aUvRect1",
+                count: 4,
+                kind: VertexAttributeKind::F32,
+            },
+            VertexAttribute {
+                name: "aUvRect2",
+                count: 4,
+                kind: VertexAttributeKind::F32,
+            },
+            VertexAttribute {
+                name: "aTextureLayers",
+                count: 3,
                 kind: VertexAttributeKind::F32,
             },
         ],
@@ -4221,11 +4237,16 @@ impl Renderer {
         partial_present_mode: Option<PartialPresentMode>,
         stats: &mut RendererStats,
     ) {
-        self.shaders.borrow_mut().composite.bind(
-            &mut self.device,
-            projection,
-            &mut self.renderer_errors
-        );
+        self.shaders
+            .borrow_mut()
+            .get_composite_shader(
+                CompositeSurfaceFormat::Rgba,
+                ImageBufferKind::Texture2DArray,
+            ).bind(
+                &mut self.device,
+                projection,
+                &mut self.renderer_errors
+            );
 
         let mut current_textures = BatchTextures::no_texture();
         let mut instances = Vec::new();
@@ -4305,6 +4326,88 @@ impl Renderer {
         }
     }
 
+    /// Draw a list of external compositor surfaces
+    fn draw_external_surface_list(
+        &mut self,
+        composite_state: &CompositeState,
+        projection: &default::Transform3D<f32>,
+        stats: &mut RendererStats,
+    ) {
+        // Only opaque compositor surfaces are supported
+        let opaque_sampler = self.gpu_profile.start_sampler(GPU_SAMPLER_TAG_OPAQUE);
+        self.set_blend(false, FramebufferKind::Main);
+
+        let mut current_textures = BatchTextures::no_texture();
+        let mut instances = Vec::new();
+
+        for surface in &composite_state.external_surfaces {
+            // Bind an appropriate YUV shader for the texture format kind
+            self.shaders
+                .borrow_mut()
+                .get_composite_shader(
+                    CompositeSurfaceFormat::Yuv,
+                    surface.image_buffer_kind,
+                ).bind(
+                    &mut self.device,
+                    projection,
+                    &mut self.renderer_errors
+                );
+
+            let textures = BatchTextures {
+                colors: [
+                    surface.yuv_planes[0].texture,
+                    surface.yuv_planes[1].texture,
+                    surface.yuv_planes[2].texture,
+                ],
+            };
+
+            // Flush this batch if the textures aren't compatible
+            if !current_textures.is_compatible_with(&textures) {
+                self.draw_instanced_batch(
+                    &instances,
+                    VertexArrayKind::Composite,
+                    &current_textures,
+                    stats,
+                );
+                instances.clear();
+            }
+            current_textures = textures;
+
+            // Create the instance and add to current batch
+            let instance = CompositeInstance::new_yuv(
+                surface.device_rect,
+                surface.clip_rect,
+                surface.z_id,
+                surface.yuv_color_space,
+                surface.yuv_format,
+                surface.yuv_rescale,
+                [
+                    surface.yuv_planes[0].texture_layer as f32,
+                    surface.yuv_planes[1].texture_layer as f32,
+                    surface.yuv_planes[2].texture_layer as f32,
+                ],
+                [
+                    surface.yuv_planes[0].uv_rect,
+                    surface.yuv_planes[1].uv_rect,
+                    surface.yuv_planes[2].uv_rect,
+                ],
+            );
+            instances.push(instance);
+        }
+
+        // Flush the last batch
+        if !instances.is_empty() {
+            self.draw_instanced_batch(
+                &instances,
+                VertexArrayKind::Composite,
+                &current_textures,
+                stats,
+            );
+        }
+
+        self.gpu_profile.finish_sampler(opaque_sampler);
+    }
+
     /// Composite picture cache tiles into the framebuffer. This is currently
     /// the only way that picture cache tiles get drawn. In future, the tiles
     /// will often be handed to the OS compositor, and this method will be
@@ -4339,6 +4442,19 @@ impl Renderer {
                 // what the device supports.
                 for tile in composite_state.opaque_tiles.iter().chain(composite_state.alpha_tiles.iter()) {
                     let dirty_rect = tile.dirty_rect.translate(tile.rect.origin.to_vector());
+                    combined_dirty_rect = combined_dirty_rect.union(&dirty_rect);
+                }
+
+                // Include any external surfaces in the partial present dirty rect. For now,
+                // we assume that the external surfaces are always dirty / updating and always
+                // need to be presented.
+                // TODO(gw): We could check if the epoch of the external image has changed, and
+                //           skip including the external surface in the partial present dirty
+                //           rect if it hasn't changed.
+                for surface in &composite_state.external_surfaces {
+                    let dirty_rect = surface.device_rect
+                        .intersection(&surface.clip_rect)
+                        .unwrap_or_else(DeviceRect::zero);
                     combined_dirty_rect = combined_dirty_rect.union(&dirty_rect);
                 }
 
@@ -4391,6 +4507,15 @@ impl Renderer {
         let num_tiles = composite_state.opaque_tiles.len()
             + composite_state.alpha_tiles.len();
         self.profile_counters.total_picture_cache_tiles.set(num_tiles);
+
+        // Draw external compositor surfaces
+        if !composite_state.external_surfaces.is_empty() {
+            self.draw_external_surface_list(
+                composite_state,
+                projection,
+                &mut results.stats,
+            );
+        }
 
         // Draw opaque tiles first, front-to-back to get maxmum
         // z-reject efficiency.
