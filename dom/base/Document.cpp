@@ -13372,45 +13372,28 @@ static bool IsInActiveTab(Document* aDoc) {
     return false;
   }
 
-  nsFocusManager* fm = nsFocusManager::GetFocusManager();
+  nsCOMPtr<nsIDocShellTreeItem> rootItem;
+  docshell->GetInProcessRootTreeItem(getter_AddRefs(rootItem));
+  if (!rootItem) {
+    return false;
+  }
+  nsCOMPtr<nsPIDOMWindowOuter> rootWin = rootItem->GetWindow();
+  if (!rootWin) {
+    return false;
+  }
+
+  nsIFocusManager* fm = nsFocusManager::GetFocusManager();
   if (!fm) {
     return false;
   }
 
-  if (XRE_IsParentProcess()) {
-    // Keep dom/tests/mochitest/chrome/test_MozDomFullscreen_event.xhtml happy
-    // by retaining the old code path for the parent process.
-
-    nsCOMPtr<nsIDocShellTreeItem> rootItem;
-    docshell->GetInProcessRootTreeItem(getter_AddRefs(rootItem));
-    if (!rootItem) {
-      return false;
-    }
-    nsCOMPtr<nsPIDOMWindowOuter> rootWin = rootItem->GetWindow();
-    if (!rootWin) {
-      return false;
-    }
-
-    nsCOMPtr<nsPIDOMWindowOuter> activeWindow;
-    activeWindow = fm->GetActiveWindow();
-    if (!activeWindow) {
-      return false;
-    }
-
-    return activeWindow == rootWin;
-  }
-
-  BrowsingContext* bc = aDoc->GetBrowsingContext();
-  if (!bc) {
+  nsCOMPtr<mozIDOMWindowProxy> activeWindow;
+  fm->GetActiveWindow(getter_AddRefs(activeWindow));
+  if (!activeWindow) {
     return false;
   }
 
-  BrowsingContext* activeBrowsingContext = fm->GetActiveBrowsingContext();
-  if (!activeBrowsingContext) {
-    return false;
-  }
-
-  return activeBrowsingContext == bc->Top();
+  return activeWindow == rootWin;
 }
 
 void Document::RemoteFrameFullscreenChanged(Element* aFrameElement) {
