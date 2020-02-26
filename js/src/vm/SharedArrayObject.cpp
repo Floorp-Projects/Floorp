@@ -225,6 +225,7 @@ SharedArrayBufferObject* SharedArrayBufferObject::New(JSContext* cx,
   SharedArrayRawBuffer* buffer =
       SharedArrayRawBuffer::Allocate(length, Nothing(), Nothing());
   if (!buffer) {
+    js::ReportOutOfMemory(cx);
     return nullptr;
   }
 
@@ -254,6 +255,7 @@ SharedArrayBufferObject* SharedArrayBufferObject::New(
   cx->runtime()->incSABCount();
 
   if (!obj->acceptRawBuffer(buffer, length)) {
+    js::ReportOutOfMemory(cx);
     return nullptr;
   }
 
