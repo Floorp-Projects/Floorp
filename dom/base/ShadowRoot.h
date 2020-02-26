@@ -41,8 +41,6 @@ class HTMLInputElement;
 class ShadowRoot final : public DocumentFragment,
                          public DocumentOrShadowRoot,
                          public nsIRadioGroupContainer {
-  friend class DocumentOrShadowRoot;
-
  public:
   NS_IMPL_FROMNODE_HELPER(ShadowRoot, IsShadowRoot());
 
@@ -88,6 +86,7 @@ class ShadowRoot final : public DocumentFragment,
    */
   void CloneInternalDataFrom(ShadowRoot* aOther);
   void InsertSheetAt(size_t aIndex, StyleSheet&);
+  void InsertAdoptedSheetAt(size_t aIndex, StyleSheet&);
 
   // Calls UnbindFromTree for each of our kids, and also flags us as no longer
   // being connected.
@@ -109,6 +108,10 @@ class ShadowRoot final : public DocumentFragment,
 
   void AppendStyleSheet(StyleSheet& aSheet) {
     InsertSheetAt(SheetCount(), aSheet);
+  }
+
+  void AppendAdoptedStyleSheet(StyleSheet& aSheet) {
+    InsertAdoptedSheetAt(AdoptedSheetCount(), aSheet);
   }
 
   /**
@@ -252,6 +255,12 @@ class ShadowRoot final : public DocumentFragment,
                                     bool aValue) override {
     return DocumentOrShadowRoot::SetValueMissingState(aName, aValue);
   }
+
+  void SetAdoptedStyleSheets(
+      const Sequence<OwningNonNull<StyleSheet>>& aAdoptedStyleSheets,
+      ErrorResult& aRv);
+
+  void ClearAdoptedStyleSheets();
 
  protected:
   // FIXME(emilio): This will need to become more fine-grained.

@@ -134,7 +134,7 @@ void ServoStyleSet::ShellDetachedFromDocument() {
   // Remove all our stylesheets...
   for (auto origin : kOrigins) {
     for (size_t count = SheetCount(origin); count--;) {
-      RemoveStyleSheet(*SheetAt(origin, count));
+      RemoveStyleSheet(origin, SheetAt(origin, count));
     }
   }
 
@@ -563,60 +563,66 @@ already_AddRefed<ComputedStyle> ServoStyleSet::ResolveXULTreePseudoStyle(
 #endif
 
 // manage the set of style sheets in the style set
-void ServoStyleSet::AppendStyleSheet(StyleSheet& aSheet) {
-  MOZ_ASSERT(aSheet.IsApplicable());
-  MOZ_ASSERT(aSheet.RawContents(),
+void ServoStyleSet::AppendStyleSheet(StyleOrigin aOrigin, StyleSheet* aSheet) {
+  MOZ_ASSERT(aSheet);
+  MOZ_ASSERT(aSheet->IsApplicable());
+  MOZ_ASSERT(aSheet->RawContents(),
              "Raw sheet should be in place before insertion.");
 
-  aSheet.AddStyleSet(this);
+  aSheet->AddStyleSet(this);
 
   // Maintain a mirrored list of sheets on the servo side.
   // Servo will remove aSheet from its original position as part of the call
   // to Servo_StyleSet_AppendStyleSheet.
-  Servo_StyleSet_AppendStyleSheet(mRawSet.get(), &aSheet);
+  Servo_StyleSet_AppendStyleSheet(mRawSet.get(), aSheet);
   SetStylistStyleSheetsDirty();
 
   if (mStyleRuleMap) {
-    mStyleRuleMap->SheetAdded(aSheet);
+    mStyleRuleMap->SheetAdded(*aSheet);
   }
 }
 
-void ServoStyleSet::RemoveStyleSheet(StyleSheet& aSheet) {
-  aSheet.DropStyleSet(this);
+void ServoStyleSet::RemoveStyleSheet(StyleOrigin aOrigin, StyleSheet* aSheet) {
+  MOZ_ASSERT(aSheet);
+
+  aSheet->DropStyleSet(this);
 
   // Maintain a mirrored list of sheets on the servo side.
-  Servo_StyleSet_RemoveStyleSheet(mRawSet.get(), &aSheet);
+  Servo_StyleSet_RemoveStyleSheet(mRawSet.get(), aSheet);
   SetStylistStyleSheetsDirty();
 
   if (mStyleRuleMap) {
-    mStyleRuleMap->SheetRemoved(aSheet);
+    mStyleRuleMap->SheetRemoved(*aSheet);
   }
 }
 
-void ServoStyleSet::InsertStyleSheetBefore(StyleSheet& aNewSheet,
-                                           StyleSheet& aReferenceSheet) {
-  MOZ_ASSERT(aNewSheet.IsApplicable());
-  MOZ_ASSERT(aReferenceSheet.IsApplicable());
-  MOZ_ASSERT(&aNewSheet != &aReferenceSheet,
-             "Can't place sheet before itself.");
-  MOZ_ASSERT(aNewSheet.GetOrigin() == aReferenceSheet.GetOrigin(),
-             "Sheets should be in the same origin");
-  MOZ_ASSERT(aNewSheet.RawContents(),
+void ServoStyleSet::RemoveDocStyleSheet(StyleSheet* aSheet) {
+  RemoveStyleSheet(Origin::Author, aSheet);
+}
+
+void ServoStyleSet::InsertStyleSheetBefore(Origin aOrigin,
+                                           StyleSheet* aNewSheet,
+                                           StyleSheet* aReferenceSheet) {
+  MOZ_ASSERT(aNewSheet);
+  MOZ_ASSERT(aReferenceSheet);
+  MOZ_ASSERT(aNewSheet->IsApplicable());
+  MOZ_ASSERT(aNewSheet != aReferenceSheet, "Can't place sheet before itself.");
+  MOZ_ASSERT(aNewSheet->RawContents(),
              "Raw sheet should be in place before insertion.");
-  MOZ_ASSERT(aReferenceSheet.RawContents(),
+  MOZ_ASSERT(aReferenceSheet->RawContents(),
              "Reference sheet should have a raw sheet.");
 
   // Servo will remove aNewSheet from its original position as part of the
   // call to Servo_StyleSet_InsertStyleSheetBefore.
-  aNewSheet.AddStyleSet(this);
+  aNewSheet->AddStyleSet(this);
 
   // Maintain a mirrored list of sheets on the servo side.
-  Servo_StyleSet_InsertStyleSheetBefore(mRawSet.get(), &aNewSheet,
-                                        &aReferenceSheet);
+  Servo_StyleSet_InsertStyleSheetBefore(mRawSet.get(), aNewSheet,
+                                        aReferenceSheet);
   SetStylistStyleSheetsDirty();
 
   if (mStyleRuleMap) {
-    mStyleRuleMap->SheetAdded(aNewSheet);
+    mStyleRuleMap->SheetAdded(*aNewSheet);
   }
 }
 
@@ -638,29 +644,31 @@ void ServoStyleSet::AppendAllNonDocumentAuthorSheets(
   });
 }
 
-void ServoStyleSet::AddDocStyleSheet(StyleSheet& aSheet) {
-  MOZ_ASSERT(aSheet.IsApplicable());
-  MOZ_ASSERT(aSheet.RawContents(),
+void ServoStyleSet::AddDocStyleSheet(StyleSheet* aSheet) {
+  MOZ_ASSERT(aSheet->IsApplicable());
+  MOZ_ASSERT(aSheet->RawContents(),
              "Raw sheet should be in place by this point.");
 
-  size_t index = mDocument->FindDocStyleSheetInsertionPoint(aSheet);
-  aSheet.AddStyleSet(this);
+  RefPtr<StyleSheet> strong(aSheet);
+
+  size_t index = mDocument->FindDocStyleSheetInsertionPoint(*aSheet);
+  aSheet->AddStyleSet(this);
 
   if (index < SheetCount(Origin::Author)) {
     // This case is insert before.
     StyleSheet* beforeSheet = SheetAt(Origin::Author, index);
 
     // Maintain a mirrored list of sheets on the servo side.
-    Servo_StyleSet_InsertStyleSheetBefore(mRawSet.get(), &aSheet, beforeSheet);
+    Servo_StyleSet_InsertStyleSheetBefore(mRawSet.get(), aSheet, beforeSheet);
     SetStylistStyleSheetsDirty();
   } else {
     // Maintain a mirrored list of sheets on the servo side.
-    Servo_StyleSet_AppendStyleSheet(mRawSet.get(), &aSheet);
+    Servo_StyleSet_AppendStyleSheet(mRawSet.get(), aSheet);
     SetStylistStyleSheetsDirty();
   }
 
   if (mStyleRuleMap) {
-    mStyleRuleMap->SheetAdded(aSheet);
+    mStyleRuleMap->SheetAdded(*aSheet);
   }
 }
 
