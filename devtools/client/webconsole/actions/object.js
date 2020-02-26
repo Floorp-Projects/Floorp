@@ -21,9 +21,11 @@ function storeAsGlobal(actor) {
       "temp" + i;
     }`;
 
-    const res = await client.evaluateJSAsync(evalString, {
+    const options = {
       selectedObjectActor: actor,
-    });
+    };
+
+    const res = await client.evaluateJSAsync(evalString, options);
     hud.focusInput();
     hud.setInputValue(res.result);
   };
