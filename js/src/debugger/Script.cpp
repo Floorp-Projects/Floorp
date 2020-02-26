@@ -428,16 +428,10 @@ class DebuggerScript::GetSourceMatcher {
   using ReturnType = DebuggerSource*;
 
   ReturnType match(HandleScript script) {
-    // JSScript holds the refefence to possibly wrapped ScriptSourceObject.
-    // It's wrapped when the script is cloned.
-    // See CreateEmptyScriptForClone for more info.
-    RootedScriptSourceObject source(
-        cx_,
-        &UncheckedUnwrap(script->sourceObject())->as<ScriptSourceObject>());
+    RootedScriptSourceObject source(cx_, script->sourceObject());
     return dbg_->wrapSource(cx_, source);
   }
   ReturnType match(Handle<LazyScript*> lazyScript) {
-    // LazyScript holds the reference to the unwrapped ScriptSourceObject.
     RootedScriptSourceObject source(cx_, lazyScript->sourceObject());
     return dbg_->wrapSource(cx_, source);
   }
