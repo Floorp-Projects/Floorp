@@ -2322,6 +2322,14 @@ setterLevel:                                                                  \
   }
   void setEnclosingLazyScript(LazyScript* enclosingLazyScript);
 
+  // Returns true if the enclosing script has ever been compiled. Once the
+  // enclosing script is compiled, the scope chain is created. This LazyScript
+  // is delazify-able as long as it has the enclosing scope, even if the
+  // enclosing JSScript is GCed.
+  bool enclosingScriptHasEverBeenCompiled() const {
+    return warmUpData_.isEnclosingScope();
+  }
+
   Scope* enclosingScope() const {
     MOZ_ASSERT(!warmUpData_.isEnclosingScript(),
                "Enclosing scope is not computed yet");
@@ -3233,16 +3241,6 @@ class LazyScript : public BaseScript {
     return u.script_.unbarrieredGet();
   }
   bool hasScript() const { return bool(u.script_); }
-
-  // Returns true if the enclosing script has ever been compiled.
-  // Once the enclosing script is compiled, the scope chain is created.
-  // This LazyScript is delazify-able as long as it has the enclosing scope,
-  // even if the enclosing JSScript is GCed.
-  // The enclosing JSScript can be GCed later if the enclosing scope is not
-  // FunctionScope or ModuleScope.
-  bool enclosingScriptHasEverBeenCompiled() const {
-    return warmUpData_.isEnclosingScope();
-  }
 };
 
 /* If this fails, add/remove padding within LazyScript. */

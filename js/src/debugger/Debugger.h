@@ -291,9 +291,7 @@ typedef HashSet<WeakHeapPtrGlobalObject,
     WeakGlobalObjectSet;
 
 #ifdef DEBUG
-extern void CheckDebuggeeThing(JSScript* script, bool invisibleOk);
-
-extern void CheckDebuggeeThing(LazyScript* script, bool invisibleOk);
+extern void CheckDebuggeeThing(BaseScript* script, bool invisibleOk);
 
 extern void CheckDebuggeeThing(JSObject* obj, bool invisibleOk);
 #endif
@@ -1551,7 +1549,6 @@ MOZ_MUST_USE bool ReportObjectRequired(JSContext* cx);
 
 JSObject* IdVectorToArray(JSContext* cx, Handle<IdVector> ids);
 bool IsInterpretedNonSelfHostedFunction(JSFunction* fun);
-bool EnsureFunctionHasScript(JSContext* cx, HandleFunction fun);
 JSScript* GetOrCreateFunctionScript(JSContext* cx, HandleFunction fun);
 bool ValueToIdentifier(JSContext* cx, HandleValue v, MutableHandleId id);
 bool ValueToStableChars(JSContext* cx, const char* fnname, HandleValue value,
