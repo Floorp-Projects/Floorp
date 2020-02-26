@@ -6,9 +6,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "DocumentChannelParent.h"
+#include "mozilla/dom/BrowserParent.h"
 
 extern mozilla::LazyLogModule gDocumentChannelLog;
 #define LOG(fmt) MOZ_LOG(gDocumentChannelLog, mozilla::LogLevel::Verbose, fmt)
+
+using namespace mozilla::dom;
 
 namespace mozilla {
 namespace net {
@@ -17,8 +20,8 @@ DocumentChannelParent::DocumentChannelParent(BrowserParent* aBrowser,
                                              nsILoadContext* aLoadContext,
                                              PBOverrideStatus aOverrideStatus) {
   LOG(("DocumentChannelParent ctor [this=%p]", this));
-  mParent =
-      new DocumentLoadListener(aBrowser, aLoadContext, aOverrideStatus, this);
+  mParent = new DocumentLoadListener(aBrowser->GetBrowsingContext(),
+                                     aLoadContext, aOverrideStatus, this);
 }
 
 DocumentChannelParent::~DocumentChannelParent() {
@@ -38,13 +41,14 @@ bool DocumentChannelParent::Init(BrowserParent* aBrowser,
   MOZ_ASSERT(NS_SUCCEEDED(rv));
 
   rv = NS_ERROR_UNEXPECTED;
-  if (!mParent->Open(
-          aBrowser, loadState, loadInfo, aArgs.loadFlags(), aArgs.loadType(),
-          aArgs.cacheKey(), aArgs.isActive(), aArgs.isTopLevelDoc(),
-          aArgs.hasNonEmptySandboxingFlags(), aArgs.topWindowURI(),
-          aArgs.contentBlockingAllowListPrincipal(), aArgs.channelId(),
-          aArgs.asyncOpenTime(), aArgs.documentOpenFlags(),
-          aArgs.pluginsAllowed(), aArgs.timing().refOr(nullptr), &rv)) {
+  if (!mParent->Open(aBrowser->GetBrowsingContext(), loadState, loadInfo,
+                     aArgs.loadFlags(), aArgs.loadType(), aArgs.cacheKey(),
+                     aArgs.isActive(), aArgs.isTopLevelDoc(),
+                     aArgs.hasNonEmptySandboxingFlags(), aArgs.topWindowURI(),
+                     aArgs.contentBlockingAllowListPrincipal(),
+                     aArgs.channelId(), aArgs.asyncOpenTime(),
+                     aArgs.documentOpenFlags(), aArgs.pluginsAllowed(),
+                     aArgs.timing().refOr(nullptr), &rv)) {
     return SendFailedAsyncOpen(rv);
   }
 
