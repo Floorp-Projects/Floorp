@@ -97,8 +97,9 @@ function isObject(value) {
  *        in the Inspector (or null, if there is no selection). This is used
  *        for helper functions that make reference to the currently selected
  *        node, like $0.
- *         - url: the url to evaluate the script as. Defaults to
- *         "debugger eval code".
+ *        - eager: Set to true if you want the evaluation to bail if it may have side effects.
+ *        - url: the url to evaluate the script as. Defaults to "debugger eval code",
+ *        or "debugger eager eval code" if eager is true.
  * @return object
  *         An object that holds the following properties:
  *         - dbg: the debugger where the string was evaluated.
@@ -139,8 +140,10 @@ exports.evalWithDebugger = function(string, options = {}, webConsole) {
   helpers.evalInput = string;
   const evalOptions = {};
 
-  if (typeof options.url === "string") {
-    evalOptions.url = options.url;
+  const urlOption =
+    options.url || (options.eager ? "debugger eager eval code" : null);
+  if (typeof urlOption === "string") {
+    evalOptions.url = urlOption;
   }
 
   if (typeof options.lineNumber === "number") {
