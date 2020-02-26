@@ -2236,7 +2236,7 @@ setterLevel:                                                                  \
   // N.B.: no setter -- custom logic in JSScript.
   IMMUTABLE_FLAG_GETTER(argumentsHasVarBinding, ArgumentsHasVarBinding)
   // IsForEval: custom logic below.
-  // IsModule: custom logic below.
+  IMMUTABLE_FLAG_GETTER(isModule, IsModule)
   IMMUTABLE_FLAG_GETTER(needsFunctionEnvironmentObjects,
                         NeedsFunctionEnvironmentObjects)
   IMMUTABLE_FLAG_GETTER_SETTER_PUBLIC(shouldDeclareArguments,
@@ -2731,11 +2731,6 @@ class JSScript : public js::BaseScript {
   void setLazyScript(js::LazyScript* lazy) { u.lazyScript = lazy; }
   js::LazyScript* maybeLazyScript() { return u.lazyScript; }
 
-  bool isModule() const {
-    MOZ_ASSERT(hasFlag(ImmutableFlags::IsModule) ==
-               bodyScope()->is<js::ModuleScope>());
-    return hasFlag(ImmutableFlags::IsModule);
-  }
   js::ModuleObject* module() const {
     if (bodyScope()->is<js::ModuleScope>()) {
       return bodyScope()->as<js::ModuleScope>().module();
