@@ -83,6 +83,11 @@ ConsoleServiceListener.prototype = {
       }
     }
 
+    // Don't display messages triggered by eager evaluation.
+    if (message.sourceName === "debugger eager eval code") {
+      return;
+    }
+
     this.listener.onConsoleServiceMessage(message);
   },
 
