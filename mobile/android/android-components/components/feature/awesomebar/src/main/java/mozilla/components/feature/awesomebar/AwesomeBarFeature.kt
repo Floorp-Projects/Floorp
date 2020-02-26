@@ -12,8 +12,10 @@ import mozilla.components.browser.search.SearchEngine
 import mozilla.components.browser.search.SearchEngineManager
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.awesomebar.AwesomeBar
+import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineView
 import mozilla.components.concept.fetch.Client
+import mozilla.components.concept.storage.BookmarksStorage
 import mozilla.components.concept.storage.HistoryStorage
 import mozilla.components.concept.toolbar.Toolbar
 import mozilla.components.feature.awesomebar.provider.ClipboardSuggestionProvider
@@ -62,15 +64,25 @@ class AwesomeBarFeature(
 
     /**
      * Adds a [AwesomeBar.SuggestionProvider] for search engine suggestions to the [AwesomeBar].
+     *
+     * @param searchEngine The search engine to request suggestions from.
+     * @param searchUseCase The use case to invoke for searches.
+     * @param fetchClient The HTTP client for requesting suggestions from the search engine.
+     * @param limit The maximum number of suggestions that should be returned. It needs to be >= 1.
+     * @param mode Whether to return a single search suggestion (with chips) or one suggestion per item.
+     * @param engine optional [Engine] instance to call [Engine.speculativeConnect] for the
+     * highest scored search suggestion URL.
      */
+    @Suppress("LongParameterList")
     fun addSearchProvider(
         searchEngine: SearchEngine,
         searchUseCase: SearchUseCases.SearchUseCase,
         fetchClient: Client,
         limit: Int = 15,
-        mode: SearchSuggestionProvider.Mode = SearchSuggestionProvider.Mode.SINGLE_SUGGESTION
+        mode: SearchSuggestionProvider.Mode = SearchSuggestionProvider.Mode.SINGLE_SUGGESTION,
+        engine: Engine? = null
     ): AwesomeBarFeature {
-        awesomeBar.addProviders(SearchSuggestionProvider(searchEngine, searchUseCase, fetchClient, limit, mode))
+        awesomeBar.addProviders(SearchSuggestionProvider(searchEngine, searchUseCase, fetchClient, limit, mode, engine))
         return this
     }
 
@@ -79,6 +91,15 @@ class AwesomeBarFeature(
      * If the default search engine is to be used for fetching search engine suggestions then
      * this method is preferable over [addSearchProvider], as it will lazily load the default
      * search engine using the provided [SearchEngineManager].
+     *
+     * @param context the activity or application context, required to load search engines.
+     * @param searchEngineManager The search engine manager to look up search engines.
+     * @param searchUseCase The use case to invoke for searches.
+     * @param fetchClient The HTTP client for requesting suggestions from the search engine.
+     * @param limit The maximum number of suggestions that should be returned. It needs to be >= 1.
+     * @param mode Whether to return a single search suggestion (with chips) or one suggestion per item.
+     * @param engine optional [Engine] instance to call [Engine.speculativeConnect] for the
+     * highest scored search suggestion URL.
      */
     @Suppress("LongParameterList")
     fun addSearchProvider(
@@ -87,30 +108,47 @@ class AwesomeBarFeature(
         searchUseCase: SearchUseCases.SearchUseCase,
         fetchClient: Client,
         limit: Int = 15,
-        mode: SearchSuggestionProvider.Mode = SearchSuggestionProvider.Mode.SINGLE_SUGGESTION
+        mode: SearchSuggestionProvider.Mode = SearchSuggestionProvider.Mode.SINGLE_SUGGESTION,
+        engine: Engine? = null
     ): AwesomeBarFeature {
         awesomeBar.addProviders(
-            SearchSuggestionProvider(context, searchEngineManager, searchUseCase, fetchClient, limit, mode)
+            SearchSuggestionProvider(context, searchEngineManager, searchUseCase, fetchClient, limit, mode, engine)
         )
         return this
     }
 
     /**
      * Add a [AwesomeBar.SuggestionProvider] for browsing history to the [AwesomeBar].
+     *
+     * @param historyStorage and instance of the [BookmarksStorage] used to query matching bookmarks.
+     * @param loadUrlUseCase the use case invoked to load the url when the user clicks on the suggestion.
+     * @param engine optional [Engine] instance to call [Engine.speculativeConnect] for the
+     * highest scored suggestion URL.
      */
     fun addHistoryProvider(
         historyStorage: HistoryStorage,
-        loadUrlUseCase: SessionUseCases.LoadUrlUseCase
+        loadUrlUseCase: SessionUseCases.LoadUrlUseCase,
+        engine: Engine? = null
     ): AwesomeBarFeature {
-        awesomeBar.addProviders(HistoryStorageSuggestionProvider(historyStorage, loadUrlUseCase, icons))
+        awesomeBar.addProviders(HistoryStorageSuggestionProvider(historyStorage, loadUrlUseCase, icons, engine))
         return this
     }
 
+    /**
+     * Add a [AwesomeBar.SuggestionProvider] for clipboard items to the [AwesomeBar].
+     *
+     * @param context the activity or application context, required to look up the clipboard manager.
+     * @param loadUrlUseCase the use case invoked to load the url when
+     * the user clicks on the suggestion.
+     * @param engine optional [Engine] instance to call [Engine.speculativeConnect] for the
+     * highest scored suggestion URL.
+     */
     fun addClipboardProvider(
         context: Context,
-        loadUrlUseCase: SessionUseCases.LoadUrlUseCase
+        loadUrlUseCase: SessionUseCases.LoadUrlUseCase,
+        engine: Engine? = null
     ): AwesomeBarFeature {
-        awesomeBar.addProviders(ClipboardSuggestionProvider(context, loadUrlUseCase))
+        awesomeBar.addProviders(ClipboardSuggestionProvider(context, loadUrlUseCase, engine = engine))
         return this
     }
 

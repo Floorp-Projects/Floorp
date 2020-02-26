@@ -11,6 +11,7 @@ import mozilla.components.browser.search.SearchEngine
 import mozilla.components.browser.search.SearchEngineManager
 import mozilla.components.browser.search.suggestions.SearchSuggestionClient
 import mozilla.components.concept.awesomebar.AwesomeBar
+import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.fetch.Client
 import mozilla.components.concept.fetch.Request
 import mozilla.components.concept.fetch.isSuccess
@@ -36,11 +37,15 @@ class SearchSuggestionProvider : AwesomeBar.SuggestionProvider {
     private val icon: Bitmap?
     private val showDescription: Boolean
 
+    @VisibleForTesting
+    internal val engine: Engine?
+
     private constructor(
         client: SearchSuggestionClient,
         searchUseCase: SearchUseCases.SearchUseCase,
         limit: Int = 15,
         mode: Mode = Mode.SINGLE_SUGGESTION,
+        engine: Engine? = null,
         icon: Bitmap? = null,
         showDescription: Boolean = true
     ) {
@@ -52,6 +57,7 @@ class SearchSuggestionProvider : AwesomeBar.SuggestionProvider {
         this.mode = mode
         this.icon = icon
         this.showDescription = showDescription
+        this.engine = engine
     }
 
     /**
@@ -62,7 +68,10 @@ class SearchSuggestionProvider : AwesomeBar.SuggestionProvider {
      * @param fetchClient The HTTP client for requesting suggestions from the search engine.
      * @param limit The maximum number of suggestions that should be returned. It needs to be >= 1.
      * @param mode Whether to return a single search suggestion (with chips) or one suggestion per item.
-     * @param icon The image to display next to the result. If not specified, the engine icon is used
+     * @param engine optional [Engine] instance to call [Engine.speculativeConnect] for the
+     * highest scored search suggestion URL.
+     * @param icon The image to display next to the result. If not specified, the engine icon is used.
+     * @param showDescription whether or not to add the search engine name as description.
      */
     constructor(
         searchEngine: SearchEngine,
@@ -70,6 +79,7 @@ class SearchSuggestionProvider : AwesomeBar.SuggestionProvider {
         fetchClient: Client,
         limit: Int = 15,
         mode: Mode = Mode.SINGLE_SUGGESTION,
+        engine: Engine? = null,
         icon: Bitmap? = null,
         showDescription: Boolean = true
     ) : this (
@@ -77,6 +87,7 @@ class SearchSuggestionProvider : AwesomeBar.SuggestionProvider {
         searchUseCase,
         limit,
         mode,
+        engine,
         icon,
         showDescription
     )
@@ -91,7 +102,10 @@ class SearchSuggestionProvider : AwesomeBar.SuggestionProvider {
      * @param fetchClient The HTTP client for requesting suggestions from the search engine.
      * @param limit The maximum number of suggestions that should be returned. It needs to be >= 1.
      * @param mode Whether to return a single search suggestion (with chips) or one suggestion per item.
-     * @param icon The image to display next to the result. If not specified, the engine icon is used
+     * @param engine optional [Engine] instance to call [Engine.speculativeConnect] for the
+     * highest scored search suggestion URL.
+     * @param icon The image to display next to the result. If not specified, the engine icon is used.
+     * @param showDescription whether or not to add the search engine name as description.
      */
     constructor(
         context: Context,
@@ -100,6 +114,7 @@ class SearchSuggestionProvider : AwesomeBar.SuggestionProvider {
         fetchClient: Client,
         limit: Int = 15,
         mode: Mode = Mode.SINGLE_SUGGESTION,
+        engine: Engine? = null,
         icon: Bitmap? = null,
         showDescription: Boolean = true
     ) : this (
@@ -107,6 +122,7 @@ class SearchSuggestionProvider : AwesomeBar.SuggestionProvider {
         searchUseCase,
         limit,
         mode,
+        engine,
         icon,
         showDescription
     )
@@ -120,8 +136,20 @@ class SearchSuggestionProvider : AwesomeBar.SuggestionProvider {
         val suggestions = fetchSuggestions(text)
 
         return when (mode) {
-            Mode.MULTIPLE_SUGGESTIONS -> createMultipleSuggestions(text, suggestions)
-            Mode.SINGLE_SUGGESTION -> createSingleSearchSuggestion(text, suggestions)
+            Mode.MULTIPLE_SUGGESTIONS -> createMultipleSuggestions(text, suggestions).also {
+                // Call speculativeConnect for URL of first (highest scored) suggestion
+                it.firstOrNull()?.title?.let { searchTerms -> maybeCallSpeculativeConnect(searchTerms) }
+            }
+            Mode.SINGLE_SUGGESTION -> createSingleSearchSuggestion(text, suggestions).also {
+                // Call speculativeConnect for URL of first (highest scored) chip
+                it.firstOrNull()?.chips?.firstOrNull()?.let { chip -> maybeCallSpeculativeConnect(chip.title) }
+            }
+        }
+    }
+
+    private fun maybeCallSpeculativeConnect(searchTerms: String) {
+        client.searchEngine?.let { searchEngine ->
+            engine?.speculativeConnect(searchEngine.buildSearchUrl(searchTerms))
         }
     }
 

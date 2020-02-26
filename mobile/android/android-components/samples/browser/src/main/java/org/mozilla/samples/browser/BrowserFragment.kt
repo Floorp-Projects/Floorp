@@ -31,10 +31,11 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
     private val webExtToolbarFeature = ViewBoundFeatureWrapper<WebExtensionToolbarFeature>()
     private val searchFeature = ViewBoundFeatureWrapper<SearchFeature>()
 
+    @Suppress("LongMethod")
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         val layout = super.onCreateView(inflater, container, savedInstanceState)
 
-        ToolbarAutocompleteFeature(layout.toolbar).apply {
+        ToolbarAutocompleteFeature(layout.toolbar, components.engine).apply {
             addHistoryStorageProvider(components.historyStorage)
             addDomainProvider(components.shippedDomainsProvider)
         }
@@ -44,15 +45,26 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
         AwesomeBarFeature(layout.awesomeBar, layout.toolbar, layout.engineView, components.icons)
             .addHistoryProvider(
                 components.historyStorage,
-                components.sessionUseCases.loadUrl)
-            .addSessionProvider(resources, components.sessionManager, components.tabsUseCases.selectTab)
+                components.sessionUseCases.loadUrl,
+                components.engine
+            )
+            .addSessionProvider(
+                resources,
+                components.sessionManager,
+                components.tabsUseCases.selectTab
+            )
             .addSearchProvider(
                 requireContext(),
                 components.searchEngineManager,
                 components.searchUseCases.defaultSearch,
                 fetchClient = components.client,
-                mode = SearchSuggestionProvider.Mode.MULTIPLE_SUGGESTIONS)
-            .addClipboardProvider(requireContext(), components.sessionUseCases.loadUrl)
+                mode = SearchSuggestionProvider.Mode.MULTIPLE_SUGGESTIONS,
+                engine = components.engine)
+            .addClipboardProvider(
+                requireContext(),
+                components.sessionUseCases.loadUrl,
+                components.engine
+            )
 
         readerViewFeature.set(
             feature = ReaderViewIntegration(

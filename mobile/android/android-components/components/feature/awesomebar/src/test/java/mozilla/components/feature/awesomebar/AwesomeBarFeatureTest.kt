@@ -10,7 +10,10 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.search.SearchEngine
 import mozilla.components.browser.search.SearchEngineManager
 import mozilla.components.concept.awesomebar.AwesomeBar
+import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.toolbar.Toolbar
+import mozilla.components.feature.awesomebar.provider.ClipboardSuggestionProvider
+import mozilla.components.feature.awesomebar.provider.HistoryStorageSuggestionProvider
 import mozilla.components.feature.awesomebar.provider.SearchSuggestionProvider
 import mozilla.components.support.test.any
 import mozilla.components.support.test.argumentCaptor
@@ -26,6 +29,7 @@ import org.mockito.Mockito
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.never
+import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 
 @RunWith(AndroidJUnit4::class)
@@ -131,6 +135,23 @@ class AwesomeBarFeatureTest {
     }
 
     @Test
+    fun `addSearchProvider adds browser engine to suggestion provider`() {
+        val engine: Engine = mock()
+        val awesomeBar: AwesomeBar = mock()
+
+        val feature = AwesomeBarFeature(awesomeBar, mock())
+        feature.addSearchProvider(testContext, mock(), mock(), mock(), engine = engine)
+
+        val provider = argumentCaptor<SearchSuggestionProvider>()
+        verify(awesomeBar).addProviders(provider.capture())
+        assertSame(engine, provider.value.engine)
+
+        feature.addSearchProvider(mock(), mock(), mock(), engine = engine)
+        verify(awesomeBar, times(2)).addProviders(provider.capture())
+        assertSame(engine, provider.allValues.last().engine)
+    }
+
+    @Test
     fun `addHistoryProvider adds provider`() {
         val awesomeBar: AwesomeBar = mock()
 
@@ -144,6 +165,19 @@ class AwesomeBarFeatureTest {
     }
 
     @Test
+    fun `addHistoryProvider adds browser engine to suggestion provider`() {
+        val engine: Engine = mock()
+        val awesomeBar: AwesomeBar = mock()
+
+        val feature = AwesomeBarFeature(awesomeBar, mock())
+        feature.addHistoryProvider(mock(), mock(), engine = engine)
+
+        val provider = argumentCaptor<HistoryStorageSuggestionProvider>()
+        verify(awesomeBar).addProviders(provider.capture())
+        assertSame(engine, provider.value.engine)
+    }
+
+    @Test
     fun `addClipboardProvider adds provider`() {
         val awesomeBar: AwesomeBar = mock()
 
@@ -154,6 +188,19 @@ class AwesomeBarFeatureTest {
         feature.addClipboardProvider(testContext, mock())
 
         verify(awesomeBar).addProviders(any())
+    }
+
+    @Test
+    fun `addClipboardProvider adds browser engine to suggestion provider`() {
+        val engine: Engine = mock()
+        val awesomeBar: AwesomeBar = mock()
+
+        val feature = AwesomeBarFeature(awesomeBar, mock())
+        feature.addClipboardProvider(testContext, mock(), engine = engine)
+
+        val provider = argumentCaptor<ClipboardSuggestionProvider>()
+        verify(awesomeBar).addProviders(provider.capture())
+        assertSame(engine, provider.value.engine)
     }
 
     @Test

@@ -6,6 +6,7 @@ package mozilla.components.feature.toolbar
 
 import mozilla.components.browser.domains.autocomplete.DomainAutocompleteProvider
 import mozilla.components.browser.domains.autocomplete.DomainAutocompleteResult
+import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.storage.HistoryAutocompleteResult
 import mozilla.components.concept.storage.HistoryStorage
 import mozilla.components.concept.toolbar.AutocompleteResult
@@ -13,8 +14,15 @@ import mozilla.components.concept.toolbar.Toolbar
 
 /**
  * Feature implementation for connecting a toolbar with a list of autocomplete providers.
+ *
+ * @property toolbar the [Toolbar] to connect to autocomplete providers.
+ * @property engine (optional) instance of a browser [Engine] to issue
+ * [Engine.speculativeConnect] calls on successful URL autocompletion.
  */
-class ToolbarAutocompleteFeature(val toolbar: Toolbar) {
+class ToolbarAutocompleteFeature(
+    val toolbar: Toolbar,
+    val engine: Engine? = null
+) {
     private val historyProviders: MutableList<HistoryStorage> = mutableListOf()
     private val domainProviders: MutableList<DomainAutocompleteProvider> = mutableListOf()
 
@@ -27,7 +35,9 @@ class ToolbarAutocompleteFeature(val toolbar: Toolbar) {
 
             val result = (historyResults + domainResults).firstOrNull()
             if (result != null) {
-                delegate.applyAutocompleteResult(result)
+                delegate.applyAutocompleteResult(result) {
+                    engine?.speculativeConnect(result.url)
+                }
             } else {
                 delegate.noAutocompleteResult(query)
             }
