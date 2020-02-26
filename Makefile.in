@@ -31,7 +31,8 @@ GARBAGE_DIRS += _javagen _profile staticlib
 # subdirectories to remove.  So we add to GARBAGE_DIRS once here, globally,
 # for it to have the desired effect.
 GARBAGE_DIRS += $(RUST_TARGET)
-DIST_GARBAGE = config.cache config.log config.status* config-defs.h \
+GARBAGE_DIRS += config.statusd
+DIST_GARBAGE = config.cache config.log config.status config-defs.h \
    config/autoconf.mk \
    mozilla-config.h \
    netwerk/necko-config.h xpcom/xpcom-config.h xpcom/xpcom-private.h \

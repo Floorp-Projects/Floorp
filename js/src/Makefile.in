@@ -74,7 +74,8 @@ ifndef HAVE_DTRACE
 endif
 endif
 
-DIST_GARBAGE = config.cache config.log config.status* \
+GARBAGE_DIRS += config.statusd
+DIST_GARBAGE = config.cache config.log config.status \
    config/autoconf.mk config/emptyvars.mk \
    js-config.h js-confdefs.h \
    backend.mk config/backend.mk devtools/backend.mk editline/backend.mk \
