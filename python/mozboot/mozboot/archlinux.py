@@ -183,6 +183,7 @@ class ArchlinuxBootstrapper(
     def makepkg(self, name):
         command = ['makepkg', '-s']
         makepkg_env = os.environ.copy()
+        makepkg_env['PKGDEST'] = '.'
         makepkg_env['PKGEXT'] = '.pkg.tar.xz'
         self.run(command, env=makepkg_env)
         pack = glob.glob(name + '*.pkg.tar.xz')[0]
