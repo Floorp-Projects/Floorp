@@ -776,23 +776,26 @@ toolbar:not(#TabsToolbar) > #personal-bookmarks {
   margin-inline-end: 0.25em !important;
 }
 
-/* Flexible spacer sizing (matching url bar) */
+/* Flexible spacer sizing (gets overridden in the navbar) */
 toolbarpaletteitem[place=toolbar][id^=wrapper-customizableui-special-spring],
 toolbarspring {
   -moz-box-flex: 1;
+  min-width: 28px;
   max-width: 112px;
 }
 
 :root[customizing] toolbarpaletteitem[place=toolbar][id^=wrapper-customizableui-special-spring],
 :root[customizing] toolbarspring {
-  /* At very small window widths, expand the springs slightly so that they
+  /* In customize mode, expand the springs slightly so that they
      can be manipulated with the mouse. */
   min-width: 10px;
 }
 
-#nav-bar toolbarpaletteitem[id^=wrapper-customizableui-special-spring],
-#nav-bar toolbarspring {
+#nav-bar:not([customizing]) toolbarpaletteitem[id^=wrapper-customizableui-special-spring],
+#nav-bar:not([customizing]) toolbarspring {
+  /* In the navbar allow them to shrink further, making space for the url. */
   -moz-box-flex: 80;
+  min-width: 1px;
 }
 
 #widget-overflow-list > toolbarspring {
