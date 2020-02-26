@@ -23,6 +23,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.hamcrest.MatcherAssert
 import org.hamcrest.Matchers.*
 import org.json.JSONObject
+import org.junit.Assume.assumeThat
 import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -359,6 +360,26 @@ class NavigationDelegateTest : BaseSessionTest() {
             @AssertCalled(count = 1, order = [1])
             override fun onPageStart(session: GeckoSession, url: String) {
                 assertThat("URL should match", url, equalTo(uri))
+            }
+        })
+    }
+
+    @Test fun redirectIntentLoad() {
+        assumeThat(sessionRule.env.isAutomation, equalTo(true))
+
+        val redirectUri = "intent://test"
+        val uri = "http://example.org/tests/junit/simple_redirect.sjs?$redirectUri"
+
+        sessionRule.session.loadUri(uri)
+        sessionRule.waitForPageStop()
+
+        sessionRule.forCallbacksDuringWait(object : Callbacks.NavigationDelegate {
+            @AssertCalled(count = 2, order = [1, 2])
+            override fun onLoadRequest(session: GeckoSession,
+                                       request: LoadRequest):
+                                       GeckoResult<AllowOrDeny>? {
+                assertThat("URL should match", request.uri, equalTo(forEachCall(uri, redirectUri)))
+                return null
             }
         })
     }
