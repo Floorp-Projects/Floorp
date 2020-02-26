@@ -24,6 +24,7 @@
 #include "nsIPromptFactory.h"
 #include "Element.h"
 #include "nsILoginManagerAuthPrompter.h"
+#include "mozilla/dom/CanonicalBrowsingContext.h"
 
 using mozilla::Unused;
 using mozilla::dom::ServiceWorkerInterceptController;
@@ -45,6 +46,9 @@ ParentChannelListener::ParentChannelListener(nsIStreamListener* aListener,
 
   if (ServiceWorkerParentInterceptEnabled()) {
     mInterceptController = new ServiceWorkerInterceptController();
+  }
+  if (mBrowserParent) {
+    mBrowsingContext = mBrowserParent->GetBrowsingContext();
   }
 }
 
@@ -154,8 +158,9 @@ ParentChannelListener::GetInterface(const nsIID& aIID, void** result) {
     return QueryInterface(aIID, result);
   }
 
-  if (mBrowserParent && aIID.Equals(NS_GET_IID(nsIPrompt))) {
-    nsCOMPtr<dom::Element> frameElement = mBrowserParent->GetOwnerElement();
+  if (mBrowsingContext && aIID.Equals(NS_GET_IID(nsIPrompt))) {
+    nsCOMPtr<dom::Element> frameElement =
+        mBrowsingContext->Top()->GetEmbedderElement();
     if (frameElement) {
       nsCOMPtr<nsPIDOMWindowOuter> win = frameElement->OwnerDoc()->GetWindow();
       NS_ENSURE_TRUE(win, NS_ERROR_UNEXPECTED);
@@ -179,8 +184,8 @@ ParentChannelListener::GetInterface(const nsIID& aIID, void** result) {
     }
   }
 
-  if (mBrowserParent && (aIID.Equals(NS_GET_IID(nsIAuthPrompt)) ||
-                         aIID.Equals(NS_GET_IID(nsIAuthPrompt2)))) {
+  if (mBrowsingContext && (aIID.Equals(NS_GET_IID(nsIAuthPrompt)) ||
+                           aIID.Equals(NS_GET_IID(nsIAuthPrompt2)))) {
     return GetAuthPrompt(nsIAuthPromptProvider::PROMPT_NORMAL, aIID, result);
   }
 
@@ -384,7 +389,7 @@ void ParentChannelListener::ClearInterceptedChannel(
 NS_IMETHODIMP
 ParentChannelListener::GetAuthPrompt(uint32_t aPromptReason, const nsIID& iid,
                                      void** aResult) {
-  if (!mBrowserParent) {
+  if (!mBrowsingContext) {
     return NS_ERROR_NOT_AVAILABLE;
   }
   // we're either allowing auth, or it's a proxy request
@@ -394,7 +399,7 @@ ParentChannelListener::GetAuthPrompt(uint32_t aPromptReason, const nsIID& iid,
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsPIDOMWindowOuter> window;
-  RefPtr<dom::Element> frame = mBrowserParent->GetOwnerElement();
+  RefPtr<dom::Element> frame = mBrowsingContext->Top()->GetEmbedderElement();
   if (frame) window = frame->OwnerDoc()->GetWindow();
 
   // Get an auth prompter for our window so that the parenting
