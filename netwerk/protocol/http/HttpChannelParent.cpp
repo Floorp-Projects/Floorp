@@ -511,9 +511,8 @@ bool HttpChannelParent::DoAsyncOpen(
     }
   }
 
-  RefPtr<ParentChannelListener> parentListener = new ParentChannelListener(
-      this, mBrowserParent ? mBrowserParent->GetBrowsingContext() : nullptr,
-      mLoadContext && mLoadContext->UsePrivateBrowsing());
+  RefPtr<ParentChannelListener> parentListener =
+      new ParentChannelListener(this, mBrowserParent);
 
   httpChannel->SetRequestMethod(nsDependentCString(requestMethod.get()));
 

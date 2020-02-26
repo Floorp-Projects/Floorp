@@ -9,6 +9,7 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/LoadInfo.h"
 #include "mozilla/MozPromiseInlines.h"  // For MozPromise::FromDomPromise
+#include "mozilla/dom/BrowserParent.h"
 #include "mozilla/dom/CanonicalBrowsingContext.h"
 #include "mozilla/dom/ClientChannelHelper.h"
 #include "mozilla/dom/ContentParent.h"
@@ -233,14 +234,13 @@ NS_INTERFACE_MAP_BEGIN(DocumentLoadListener)
   NS_INTERFACE_MAP_ENTRY_CONCRETE(DocumentLoadListener)
 NS_INTERFACE_MAP_END
 
-DocumentLoadListener::DocumentLoadListener(
-    CanonicalBrowsingContext* aProcessTopBrowsingContext,
-    nsILoadContext* aLoadContext, PBOverrideStatus aOverrideStatus,
-    ADocumentChannelBridge* aBridge)
+DocumentLoadListener::DocumentLoadListener(BrowserParent* aBrowser,
+                                           nsILoadContext* aLoadContext,
+                                           PBOverrideStatus aOverrideStatus,
+                                           ADocumentChannelBridge* aBridge)
     : mLoadContext(aLoadContext), mPBOverride(aOverrideStatus) {
   LOG(("DocumentLoadListener ctor [this=%p]", this));
-  mParentChannelListener = new ParentChannelListener(
-      this, aProcessTopBrowsingContext, aLoadContext->UsePrivateBrowsing());
+  mParentChannelListener = new ParentChannelListener(this, aBrowser);
   mDocumentChannelBridge = aBridge;
 }
 
@@ -249,11 +249,10 @@ DocumentLoadListener::~DocumentLoadListener() {
 }
 
 bool DocumentLoadListener::Open(
-    CanonicalBrowsingContext* aProcessTopBrowsingContext,
-    nsDocShellLoadState* aLoadState, class LoadInfo* aLoadInfo,
-    nsLoadFlags aLoadFlags, uint32_t aLoadType, uint32_t aCacheKey,
-    bool aIsActive, bool aIsTopLevelDoc, bool aHasNonEmptySandboxingFlags,
-    const Maybe<URIParams>& aTopWindowURI,
+    BrowserParent* aBrowser, nsDocShellLoadState* aLoadState,
+    LoadInfo* aLoadInfo, nsLoadFlags aLoadFlags, uint32_t aLoadType,
+    uint32_t aCacheKey, bool aIsActive, bool aIsTopLevelDoc,
+    bool aHasNonEmptySandboxingFlags, const Maybe<URIParams>& aTopWindowURI,
     const Maybe<PrincipalInfo>& aContentBlockingAllowListPrincipal,
     const uint64_t& aChannelId, const TimeStamp& aAsyncOpenTime,
     const Maybe<uint32_t>& aDocumentOpenFlags, bool aPluginsAllowed,
@@ -315,7 +314,7 @@ bool DocumentLoadListener::Open(
     RefPtr<ParentProcessDocumentOpenInfo> openInfo =
         new ParentProcessDocumentOpenInfo(mParentChannelListener,
                                           aPluginsAllowed, *aDocumentOpenFlags,
-                                          aProcessTopBrowsingContext);
+                                          aBrowser->GetBrowsingContext());
     openInfo->Prepare();
 
     *aRv = mChannel->AsyncOpen(openInfo);
