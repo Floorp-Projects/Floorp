@@ -4950,8 +4950,6 @@ class DatabaseConnection::UpdateRefcountFunction::DatabaseUpdateFunction final {
 };
 
 class DatabaseConnection::UpdateRefcountFunction::FileInfoEntry final {
-  friend class UpdateRefcountFunction;
-
   RefPtr<FileInfo> mFileInfo;
   int32_t mDelta;
   int32_t mSavepointDelta;
@@ -4961,6 +4959,29 @@ class DatabaseConnection::UpdateRefcountFunction::FileInfoEntry final {
       : mFileInfo(aFileInfo), mDelta(0), mSavepointDelta(0) {
     MOZ_COUNT_CTOR(DatabaseConnection::UpdateRefcountFunction::FileInfoEntry);
   }
+
+  void IncDeltas(bool aUpdateSavepointDelta) {
+    ++mDelta;
+    if (aUpdateSavepointDelta) {
+      ++mSavepointDelta;
+    }
+  }
+  void DecDeltas(bool aUpdateSavepointDelta) {
+    --mDelta;
+    if (aUpdateSavepointDelta) {
+      --mSavepointDelta;
+    }
+  }
+  void DecBySavepointDelta() { mDelta -= mSavepointDelta; }
+  RefPtr<FileInfo> ReleaseFileInfo() { return std::move(mFileInfo); }
+  void MaybeUpdateDBRefs() {
+    if (mDelta) {
+      mFileInfo->UpdateDBRefs(mDelta);
+    }
+  }
+
+  int32_t Delta() const { return mDelta; }
+  int32_t SavepointDelta() const { return mSavepointDelta; }
 
   ~FileInfoEntry() {
     MOZ_COUNT_DTOR(DatabaseConnection::UpdateRefcountFunction::FileInfoEntry);
@@ -10999,7 +11020,8 @@ nsresult DatabaseConnection::UpdateRefcountFunction::WillCommit() {
     const auto& value = entry.GetData();
     MOZ_ASSERT(value);
 
-    if (value->mDelta && !function.Update(entry.GetKey(), value->mDelta)) {
+    const auto delta = value->Delta();
+    if (delta && !function.Update(entry.GetKey(), delta)) {
       break;
     }
   }
@@ -11028,10 +11050,7 @@ void DatabaseConnection::UpdateRefcountFunction::DidCommit() {
     const auto& value = entry.GetData();
 
     MOZ_ASSERT(value);
-
-    if (value->mDelta) {
-      value->mFileInfo->UpdateDBRefs(value->mDelta);
-    }
+    value->MaybeUpdateDBRefs();
   }
 
   if (NS_FAILED(RemoveJournals(mJournalsToRemoveAfterCommit))) {
@@ -11077,7 +11096,7 @@ void DatabaseConnection::UpdateRefcountFunction::RollbackSavepoint() {
 
   for (const auto& entry : mSavepointEntriesIndex) {
     auto* const value = entry.GetData();
-    value->mDelta -= value->mSavepointDelta;
+    value->DecBySavepointDelta();
   }
 
   mInSavepoint = false;
@@ -11165,7 +11184,9 @@ void DatabaseConnection::UpdateRefcountFunction::Reset() {
     const auto& value = entry.GetData();
     MOZ_ASSERT(value);
 
-    FileInfo* const fileInfo = value->mFileInfo.forget().take();
+    // We need to move mFileInfo into a raw pointer in order to release it
+    // explicitly with CustomCleanupCallback.
+    FileInfo* const fileInfo = value->ReleaseFileInfo().forget().take();
     MOZ_ASSERT(fileInfo);
 
     CustomCleanupCallback customCleanupCallback;
@@ -11221,16 +11242,10 @@ nsresult DatabaseConnection::UpdateRefcountFunction::ProcessValue(
 
     switch (aUpdateType) {
       case UpdateType::Increment:
-        entry->mDelta++;
-        if (mInSavepoint) {
-          entry->mSavepointDelta++;
-        }
+        entry->IncDeltas(mInSavepoint);
         break;
       case UpdateType::Decrement:
-        entry->mDelta--;
-        if (mInSavepoint) {
-          entry->mSavepointDelta--;
-        }
+        entry->DecDeltas(mInSavepoint);
         break;
       default:
         MOZ_CRASH("Unknown update type!");
