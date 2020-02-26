@@ -68,7 +68,6 @@ class JitScript;
 }  // namespace jit
 
 class AutoSweepJitScript;
-class GCParallelTask;
 class LazyScript;
 class ModuleObject;
 class RegExpObject;
@@ -83,10 +82,6 @@ class FunctionBox;
 class ModuleSharedContext;
 class ScriptStencil;
 }  // namespace frontend
-
-namespace gc {
-void SweepLazyScripts(GCParallelTask* task);
-}  // namespace gc
 
 namespace detail {
 
@@ -2380,13 +2375,15 @@ setterLevel:                                                                  \
   }
 
  public:
-  friend class GCMarker;
-  friend void js::gc::SweepLazyScripts(GCParallelTask* task);
-
   static const JS::TraceKind TraceKind = JS::TraceKind::Script;
 
   void traceChildren(JSTracer* trc);
   void finalize(JSFreeOp* fop);
+
+  WeakHeapPtrScript* getLazyScriptScriptEdgeForTracing() {
+    MOZ_ASSERT(isLazyScript());
+    return &u.script_;
+  }
 
   size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) {
     return mallocSizeOf(data_);
