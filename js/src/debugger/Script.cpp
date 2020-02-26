@@ -195,7 +195,7 @@ struct MOZ_STACK_CLASS DebuggerScript::CallData {
         script(cx) {}
 
   MOZ_MUST_USE bool ensureScriptMaybeLazy() {
-    if (!referent.is<JSScript*>() && !referent.is<LazyScript*>()) {
+    if (!referent.is<BaseScript*>()) {
       ReportValueError(cx, JSMSG_DEBUG_BAD_REFERENT, JSDVG_SEARCH_STACK,
                        args.thisv(), nullptr, "a JS script");
       return false;
@@ -207,14 +207,9 @@ struct MOZ_STACK_CLASS DebuggerScript::CallData {
     if (!ensureScriptMaybeLazy()) {
       return false;
     }
-    if (referent.is<JSScript*>()) {
-      script = referent.as<JSScript*>();
-    } else {
-      Rooted<LazyScript*> lazyScript(cx, referent.as<LazyScript*>());
-      script = DelazifyScript(cx, lazyScript);
-      if (!script) {
-        return false;
-      }
+    script = DelazifyScript(cx, referent.as<BaseScript*>());
+    if (!script) {
+      return false;
     }
     return true;
   }
@@ -303,8 +298,9 @@ bool DebuggerScript::CallData::getIsModule() {
   if (!ensureScriptMaybeLazy()) {
     return false;
   }
-  args.rval().setBoolean(referent.is<JSScript*>() &&
-                         referent.as<JSScript*>()->isModule());
+  BaseScript* script = referent.as<BaseScript*>();
+
+  args.rval().setBoolean(script->isModule());
   return true;
 }
 
@@ -334,12 +330,7 @@ bool DebuggerScript::CallData::getUrl() {
     return false;
   }
 
-  Rooted<BaseScript*> script(cx);
-  if (referent.is<JSScript*>()) {
-    script = referent.as<JSScript*>();
-  } else {
-    script = referent.as<LazyScript*>();
-  }
+  Rooted<BaseScript*> script(cx, referent.as<BaseScript*>());
 
   if (script->filename()) {
     JSString* str;
@@ -361,16 +352,14 @@ bool DebuggerScript::CallData::getUrl() {
 
 bool DebuggerScript::CallData::getStartLine() {
   args.rval().setNumber(
-      referent.get().match([](JSScript*& s) { return s->lineno(); },
-                           [](LazyScript*& s) { return s->lineno(); },
+      referent.get().match([](BaseScript*& s) { return s->lineno(); },
                            [](WasmInstanceObject*&) { return (uint32_t)1; }));
   return true;
 }
 
 bool DebuggerScript::CallData::getStartColumn() {
   args.rval().setNumber(
-      referent.get().match([](JSScript*& s) { return s->column(); },
-                           [](LazyScript*& s) { return s->column(); },
+      referent.get().match([](BaseScript*& s) { return s->column(); },
                            [](WasmInstanceObject*&) { return (uint32_t)0; }));
   return true;
 }
@@ -389,12 +378,6 @@ struct DebuggerScript::GetLineCountMatcher {
     }
     totalLines = double(GetScriptLineExtent(script));
     return true;
-  }
-  ReturnType match(HandleScript script) {
-    return match(static_cast<Handle<BaseScript*>>(script));
-  }
-  ReturnType match(Handle<LazyScript*> lazyScript) {
-    return match(static_cast<Handle<BaseScript*>>(lazyScript));
   }
   ReturnType match(Handle<WasmInstanceObject*> instanceObj) {
     wasm::Instance& instance = instanceObj->instance();
@@ -428,12 +411,6 @@ class DebuggerScript::GetSourceMatcher {
   ReturnType match(Handle<BaseScript*> script) {
     RootedScriptSourceObject source(cx_, script->sourceObject());
     return dbg_->wrapSource(cx_, source);
-  }
-  ReturnType match(HandleScript script) {
-    return match(static_cast<Handle<BaseScript*>>(script));
-  }
-  ReturnType match(Handle<LazyScript*> lazyScript) {
-    return match(static_cast<Handle<BaseScript*>>(lazyScript));
   }
   ReturnType match(Handle<WasmInstanceObject*> wasmInstance) {
     return dbg_->wrapWasmSource(cx_, wasmInstance);
@@ -493,8 +470,7 @@ bool DebuggerScript::CallData::getGlobal() {
 
 bool DebuggerScript::CallData::getFormat() {
   args.rval().setString(referent.get().match(
-      [=](JSScript*&) { return cx->names().js.get(); },
-      [=](LazyScript*&) { return cx->names().js.get(); },
+      [=](BaseScript*&) { return cx->names().js.get(); },
       [=](WasmInstanceObject*&) { return cx->names().wasm.get(); }));
   return true;
 }
@@ -548,16 +524,9 @@ bool DebuggerScript::CallData::getChildScripts() {
     return false;
   }
 
-  if (obj->getReferent().is<JSScript*>()) {
-    RootedScript script(cx, obj->getReferent().as<JSScript*>());
-    if (!PushInnerFunctions(cx, dbg, result, script->gcthings())) {
-      return false;
-    }
-  } else {
-    Rooted<LazyScript*> lazy(cx, obj->getReferent().as<LazyScript*>());
-    if (!PushInnerFunctions(cx, dbg, result, lazy->gcthings())) {
-      return false;
-    }
+  Rooted<BaseScript*> script(cx, obj->getReferent().as<BaseScript*>());
+  if (!PushInnerFunctions(cx, dbg, result, script->gcthings())) {
+    return false;
   }
 
   args.rval().setObject(*result);
@@ -873,12 +842,6 @@ class DebuggerScript::GetPossibleBreakpointsMatcher {
 
     return true;
   }
-  ReturnType match(HandleScript script) {
-    return match(static_cast<Handle<BaseScript*>>(script));
-  }
-  ReturnType match(Handle<LazyScript*> lazyScript) {
-    return match(static_cast<Handle<BaseScript*>>(lazyScript));
-  }
   ReturnType match(Handle<WasmInstanceObject*> instanceObj) {
     wasm::Instance& instance = instanceObj->instance();
 
@@ -990,12 +953,6 @@ class DebuggerScript::GetOffsetMetadataMatcher {
     }
 
     return true;
-  }
-  ReturnType match(HandleScript script) {
-    return match(static_cast<Handle<BaseScript*>>(script));
-  }
-  ReturnType match(Handle<LazyScript*> lazyScript) {
-    return match(static_cast<Handle<BaseScript*>>(lazyScript));
   }
   ReturnType match(Handle<WasmInstanceObject*> instanceObj) {
     wasm::Instance& instance = instanceObj->instance();
@@ -1309,12 +1266,6 @@ class DebuggerScript::GetOffsetLocationMatcher {
 
     return true;
   }
-  ReturnType match(HandleScript script) {
-    return match(static_cast<Handle<BaseScript*>>(script));
-  }
-  ReturnType match(Handle<LazyScript*> lazyScript) {
-    return match(static_cast<Handle<BaseScript*>>(lazyScript));
-  }
   ReturnType match(Handle<WasmInstanceObject*> instanceObj) {
     wasm::Instance& instance = instanceObj->instance();
     if (!instance.debugEnabled()) {
@@ -1423,12 +1374,6 @@ class DebuggerScript::GetSuccessorOrPredecessorOffsetsMatcher {
       }
     }
     return true;
-  }
-  ReturnType match(HandleScript script) {
-    return match(static_cast<Handle<BaseScript*>>(script));
-  }
-  ReturnType match(Handle<LazyScript*> lazyScript) {
-    return match(static_cast<Handle<BaseScript*>>(lazyScript));
   }
   ReturnType match(Handle<WasmInstanceObject*> instance) {
     JS_ReportErrorASCII(
@@ -1878,12 +1823,6 @@ class DebuggerScript::GetAllColumnOffsetsMatcher {
     }
     return true;
   }
-  ReturnType match(HandleScript script) {
-    return match(static_cast<Handle<BaseScript*>>(script));
-  }
-  ReturnType match(Handle<LazyScript*> lazyScript) {
-    return match(static_cast<Handle<BaseScript*>>(lazyScript));
-  }
   ReturnType match(Handle<WasmInstanceObject*> instanceObj) {
     wasm::Instance& instance = instanceObj->instance();
 
@@ -1967,12 +1906,6 @@ class DebuggerScript::GetLineOffsetsMatcher {
     }
 
     return true;
-  }
-  ReturnType match(HandleScript script) {
-    return match(static_cast<Handle<BaseScript*>>(script));
-  }
-  ReturnType match(Handle<LazyScript*> lazyScript) {
-    return match(static_cast<Handle<BaseScript*>>(lazyScript));
   }
   ReturnType match(Handle<WasmInstanceObject*> instanceObj) {
     wasm::Instance& instance = instanceObj->instance();
@@ -2108,12 +2041,6 @@ struct DebuggerScript::SetBreakpointMatcher {
 
     return true;
   }
-  ReturnType match(HandleScript script) {
-    return match(static_cast<Handle<BaseScript*>>(script));
-  }
-  ReturnType match(Handle<LazyScript*> lazyScript) {
-    return match(static_cast<Handle<BaseScript*>>(lazyScript));
-  }
   ReturnType match(Handle<WasmInstanceObject*> wasmInstance) {
     wasm::Instance& instance = wasmInstance->instance();
     if (!instance.debugEnabled() ||
@@ -2245,12 +2172,6 @@ class DebuggerScript::ClearBreakpointMatcher {
                                     dbg_, handler_);
     return true;
   }
-  ReturnType match(HandleScript script) {
-    return match(static_cast<Handle<BaseScript*>>(script));
-  }
-  ReturnType match(Handle<LazyScript*> lazyScript) {
-    return match(static_cast<Handle<BaseScript*>>(lazyScript));
-  }
   ReturnType match(Handle<WasmInstanceObject*> instanceObj) {
     wasm::Instance& instance = instanceObj->instance();
     if (!instance.debugEnabled()) {
@@ -2334,12 +2255,6 @@ class DebuggerScript::IsInCatchScopeMatcher {
 
     isInCatch_ = false;
     return true;
-  }
-  ReturnType match(HandleScript script) {
-    return match(static_cast<Handle<BaseScript*>>(script));
-  }
-  ReturnType match(Handle<LazyScript*> lazyScript) {
-    return match(static_cast<Handle<BaseScript*>>(lazyScript));
   }
   ReturnType match(Handle<WasmInstanceObject*> instance) {
     isInCatch_ = false;

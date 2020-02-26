@@ -2355,7 +2355,8 @@ void DebugAPI::slowPathOnNewScript(JSContext* cx, HandleScript script) {
         return dbg->observesNewScript() && dbg->observesScript(script);
       },
       [&](Debugger* dbg) -> bool {
-        Rooted<DebuggerScriptReferent> scriptReferent(cx, script.get());
+        BaseScript* base = script.get();
+        Rooted<DebuggerScriptReferent> scriptReferent(cx, base);
         return dbg->fireNewScript(cx, scriptReferent);
       });
 }
@@ -3608,13 +3609,9 @@ bool DebugAPI::edgeIsInDebuggerWeakmap(JSRuntime* rt, JSObject* src,
   }
   if (src->is<DebuggerScript>()) {
     return src->as<DebuggerScript>().getReferent().match(
-        [=](JSScript* script) {
-          return dst.is<JSScript>() && script == &dst.as<JSScript>() &&
+        [=](BaseScript* script) {
+          return dst.is<BaseScript>() && script == &dst.as<BaseScript>() &&
                  dbg->scripts.hasEntry(script, src);
-        },
-        [=](LazyScript* lazy) {
-          return dst.is<LazyScript>() && lazy == &dst.as<LazyScript>() &&
-                 dbg->scripts.hasEntry(lazy, src);
         },
         [=](WasmInstanceObject* instance) {
           return dst.is<JSObject>() && instance == &dst.as<JSObject>() &&
@@ -6114,33 +6111,36 @@ DebuggerScript* Debugger::wrapVariantReferent(
   //
   // The LazyScript is canonical in all other cases.
 
-  if (referent.is<JSScript*>()) {
-    Handle<JSScript*> untaggedReferent = referent.template as<JSScript*>();
-    if (untaggedReferent->maybeLazyScript()) {
-      // This JSScript has a LazyScript, so the LazyScript is canonical.
-      Rooted<LazyScript*> lazyScript(cx, untaggedReferent->maybeLazyScript());
-      return wrapScript(cx, lazyScript);
-    }
-    // This JSScript doesn't have a LazyScript, so the JSScript is canonical.
-    obj = wrapVariantReferent<JSScript>(cx, scripts, referent);
-  } else if (referent.is<LazyScript*>()) {
-    Handle<LazyScript*> untaggedReferent = referent.template as<LazyScript*>();
-    if (untaggedReferent->maybeScript()) {
-      RootedScript script(cx, untaggedReferent->maybeScript());
-      if (!script->maybeLazyScript()) {
-        // Even though we have a LazyScript, we found a JSScript which doesn't
-        // have a LazyScript (which also means that no Debugger has wrapped this
-        // LazyScript), and the JSScript is canonical.
-        MOZ_ASSERT(!untaggedReferent->isWrappedByDebugger());
-        return wrapScript(cx, script);
+  if (referent.is<BaseScript*>()) {
+    Rooted<BaseScript*> base(cx, referent.as<BaseScript*>());
+    if (!base->isLazyScript()) {
+      RootedScript untaggedReferent(cx, static_cast<JSScript*>(base.get()));
+      if (untaggedReferent->maybeLazyScript()) {
+        // This JSScript has a LazyScript, so the LazyScript is canonical.
+        Rooted<LazyScript*> lazyScript(cx, untaggedReferent->maybeLazyScript());
+        return wrapScript(cx, lazyScript);
       }
+      // This JSScript doesn't have a LazyScript, so the JSScript is canonical.
+      obj = wrapVariantReferent<BaseScript>(cx, scripts, referent);
+    } else {
+      Rooted<LazyScript*> untaggedReferent(
+          cx, static_cast<LazyScript*>(base.get()));
+      if (untaggedReferent->maybeScript()) {
+        RootedScript script(cx, untaggedReferent->maybeScript());
+        if (!script->maybeLazyScript()) {
+          // Even though we have a LazyScript, we found a JSScript which doesn't
+          // have a LazyScript (which also means that no Debugger has wrapped
+          // this LazyScript), and the JSScript is canonical.
+          MOZ_ASSERT(!untaggedReferent->isWrappedByDebugger());
+          return wrapScript(cx, script);
+        }
+      }
+      // If there is an associated JSScript, this LazyScript is reachable from
+      // it, so this LazyScript is canonical.
+      untaggedReferent->setWrappedByDebugger();
+      obj = wrapVariantReferent<BaseScript>(cx, scripts, referent);
     }
-    // If there is an associated JSScript, this LazyScript is reachable from it,
-    // so this LazyScript is canonical.
-    untaggedReferent->setWrappedByDebugger();
-    obj = wrapVariantReferent<LazyScript>(cx, scripts, referent);
   } else {
-    referent.template as<WasmInstanceObject*>();
     obj = wrapVariantReferent<WasmInstanceObject>(cx, wasmInstanceScripts,
                                                   referent);
   }
@@ -6150,14 +6150,8 @@ DebuggerScript* Debugger::wrapVariantReferent(
 
 DebuggerScript* Debugger::wrapScript(JSContext* cx,
                                      Handle<BaseScript*> script) {
-  if (script->isLazyScript()) {
-    Rooted<DebuggerScriptReferent> referent(
-        cx, DebuggerScriptReferent(static_cast<LazyScript*>(script.get())));
-    return wrapVariantReferent(cx, referent);
-  }
-
-  Rooted<DebuggerScriptReferent> referent(
-      cx, DebuggerScriptReferent(static_cast<JSScript*>(script.get())));
+  Rooted<DebuggerScriptReferent> referent(cx,
+                                          DebuggerScriptReferent(script.get()));
   return wrapVariantReferent(cx, referent);
 }
 

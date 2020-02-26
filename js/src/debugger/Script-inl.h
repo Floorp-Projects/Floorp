@@ -30,16 +30,13 @@ js::gc::Cell* js::DebuggerScript::getReferentCell() const {
 js::DebuggerScriptReferent js::DebuggerScript::getReferent() const {
   if (gc::Cell* cell = getReferentCell()) {
     if (cell->is<BaseScript>()) {
-      if (cell->as<BaseScript>()->isLazyScript()) {
-        return mozilla::AsVariant(cell->as<LazyScript>());
-      }
-      return mozilla::AsVariant(cell->as<JSScript>());
+      return mozilla::AsVariant(cell->as<BaseScript>());
     }
     MOZ_ASSERT(cell->is<JSObject>());
     return mozilla::AsVariant(
         &static_cast<NativeObject*>(cell)->as<WasmInstanceObject>());
   }
-  return mozilla::AsVariant(static_cast<JSScript*>(nullptr));
+  return mozilla::AsVariant(static_cast<BaseScript*>(nullptr));
 }
 
 js::BaseScript* js::DebuggerScript::getReferentScript() const {
