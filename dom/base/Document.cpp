@@ -2705,34 +2705,69 @@ size_t Document::FindDocStyleSheetInsertionPoint(const StyleSheet& aSheet) {
   return index;
 }
 
+void Document::AppendAdoptedStyleSheet(StyleSheet& aSheet) {
+  DocumentOrShadowRoot::InsertAdoptedSheetAt(mAdoptedStyleSheets.Length(),
+                                             aSheet);
+  if (aSheet.IsApplicable()) {
+    AddStyleSheetToStyleSets(&aSheet);
+  }
+}
+
+void Document::RemoveDocStyleSheetsFromStyleSets() {
+  MOZ_ASSERT(mStyleSetFilled);
+  // The stylesheets should forget us
+  for (StyleSheet* sheet : Reversed(mStyleSheets)) {
+    sheet->ClearAssociatedDocumentOrShadowRoot();
+    if (sheet->IsApplicable()) {
+      mStyleSet->RemoveDocStyleSheet(sheet);
+    }
+    // XXX Tell observers?
+  }
+}
+
+void Document::RemoveStyleSheetsFromStyleSets(
+    const nsTArray<RefPtr<StyleSheet>>& aSheets, StyleOrigin aType) {
+  // The stylesheets should forget us
+  for (StyleSheet* sheet : Reversed(aSheets)) {
+    sheet->ClearAssociatedDocumentOrShadowRoot();
+    if (mStyleSetFilled && sheet->IsApplicable()) {
+      mStyleSet->RemoveStyleSheet(aType, sheet);
+    }
+    // XXX Tell observers?
+  }
+}
+
 void Document::ResetStylesheetsToURI(nsIURI* aURI) {
   MOZ_ASSERT(aURI);
 
-  ClearAdoptedStyleSheets();
-
-  auto ClearSheetList = [&](nsTArray<RefPtr<StyleSheet>>& aSheetList) {
-    for (auto& sheet : Reversed(aSheetList)) {
-      sheet->ClearAssociatedDocumentOrShadowRoot();
-      if (mStyleSetFilled) {
-        mStyleSet->RemoveStyleSheet(*sheet);
-      }
-    }
-    aSheetList.Clear();
-  };
-  ClearSheetList(mStyleSheets);
-  for (auto& sheets : mAdditionalSheets) {
-    ClearSheetList(sheets);
-  }
   if (mStyleSetFilled) {
-    if (auto* ss = nsStyleSheetService::GetInstance()) {
-      for (auto& sheet : Reversed(*ss->AuthorStyleSheets())) {
-        MOZ_ASSERT(!sheet->GetAssociatedDocumentOrShadowRoot());
-        if (sheet->IsApplicable()) {
-          mStyleSet->RemoveStyleSheet(*sheet);
-        }
-      }
+    // Skip removing style sheets from the style set if we know we haven't
+    // filled the style set.  (This allows us to avoid calling
+    // GetStyleBackendType() too early.)
+    RemoveDocStyleSheetsFromStyleSets();
+    RemoveStyleSheetsFromStyleSets(mAdditionalSheets[eAgentSheet],
+                                   StyleOrigin::UserAgent);
+    RemoveStyleSheetsFromStyleSets(mAdditionalSheets[eUserSheet],
+                                   StyleOrigin::User);
+    RemoveStyleSheetsFromStyleSets(mAdditionalSheets[eAuthorSheet],
+                                   StyleOrigin::Author);
+
+    if (nsStyleSheetService* sheetService =
+            nsStyleSheetService::GetInstance()) {
+      RemoveStyleSheetsFromStyleSets(*sheetService->AuthorStyleSheets(),
+                                     StyleOrigin::Author);
     }
   }
+
+  // Release all the sheets
+  mStyleSheets.Clear();
+  for (auto& sheets : mAdditionalSheets) {
+    sheets.Clear();
+  }
+
+  // NOTE:  We don't release the catalog sheets.  It doesn't really matter
+  // now, but it could in the future -- in which case not releasing them
+  // is probably the right thing to do.
 
   // Now reset our inline style and attribute sheets.
   if (mAttrStyleSheet) {
@@ -2755,10 +2790,11 @@ void Document::ResetStylesheetsToURI(nsIURI* aURI) {
   }
 }
 
-static void AppendSheetsToStyleSet(
-    ServoStyleSet* aStyleSet, const nsTArray<RefPtr<StyleSheet>>& aSheets) {
+static void AppendSheetsToStyleSet(ServoStyleSet* aStyleSet,
+                                   const nsTArray<RefPtr<StyleSheet>>& aSheets,
+                                   StyleOrigin aOrigin) {
   for (StyleSheet* sheet : Reversed(aSheets)) {
-    aStyleSet->AppendStyleSheet(*sheet);
+    aStyleSet->AppendStyleSheet(aOrigin, sheet);
   }
 }
 
@@ -2775,57 +2811,59 @@ void Document::FillStyleSetUserAndUASheets() {
              "service has gone");
 
   for (StyleSheet* sheet : *sheetService->UserStyleSheets()) {
-    mStyleSet->AppendStyleSheet(*sheet);
+    mStyleSet->AppendStyleSheet(StyleOrigin::User, sheet);
   }
 
   StyleSheet* sheet = IsInChromeDocShell() ? cache->GetUserChromeSheet()
                                            : cache->GetUserContentSheet();
   if (sheet) {
-    mStyleSet->AppendStyleSheet(*sheet);
+    mStyleSet->AppendStyleSheet(StyleOrigin::User, sheet);
   }
 
-  mStyleSet->AppendStyleSheet(*cache->UASheet());
+  mStyleSet->AppendStyleSheet(StyleOrigin::UserAgent, cache->UASheet());
 
   if (MOZ_LIKELY(NodeInfoManager()->MathMLEnabled())) {
-    mStyleSet->AppendStyleSheet(*cache->MathMLSheet());
+    mStyleSet->AppendStyleSheet(StyleOrigin::UserAgent, cache->MathMLSheet());
   }
 
   if (MOZ_LIKELY(NodeInfoManager()->SVGEnabled())) {
-    mStyleSet->AppendStyleSheet(*cache->SVGSheet());
+    mStyleSet->AppendStyleSheet(StyleOrigin::UserAgent, cache->SVGSheet());
   }
 
-  mStyleSet->AppendStyleSheet(*cache->HTMLSheet());
+  mStyleSet->AppendStyleSheet(StyleOrigin::UserAgent, cache->HTMLSheet());
 
   if (nsLayoutUtils::ShouldUseNoFramesSheet(this)) {
-    mStyleSet->AppendStyleSheet(*cache->NoFramesSheet());
+    mStyleSet->AppendStyleSheet(StyleOrigin::UserAgent, cache->NoFramesSheet());
   }
 
   if (nsLayoutUtils::ShouldUseNoScriptSheet(this)) {
-    mStyleSet->AppendStyleSheet(*cache->NoScriptSheet());
+    mStyleSet->AppendStyleSheet(StyleOrigin::UserAgent, cache->NoScriptSheet());
   }
 
-  mStyleSet->AppendStyleSheet(*cache->CounterStylesSheet());
+  mStyleSet->AppendStyleSheet(StyleOrigin::UserAgent,
+                              cache->CounterStylesSheet());
 
   // Load the minimal XUL rules for scrollbars and a few other XUL things
   // that non-XUL (typically HTML) documents commonly use.
-  mStyleSet->AppendStyleSheet(*cache->MinimalXULSheet());
+  mStyleSet->AppendStyleSheet(StyleOrigin::UserAgent, cache->MinimalXULSheet());
 
   // Only load the full XUL sheet if we'll need it.
   if (LoadsFullXULStyleSheetUpFront()) {
-    mStyleSet->AppendStyleSheet(*cache->XULSheet());
+    mStyleSet->AppendStyleSheet(StyleOrigin::UserAgent, cache->XULSheet());
   }
 
-  mStyleSet->AppendStyleSheet(*cache->FormsSheet());
-  mStyleSet->AppendStyleSheet(*cache->ScrollbarsSheet());
-  mStyleSet->AppendStyleSheet(*cache->PluginProblemSheet());
+  mStyleSet->AppendStyleSheet(StyleOrigin::UserAgent, cache->FormsSheet());
+  mStyleSet->AppendStyleSheet(StyleOrigin::UserAgent, cache->ScrollbarsSheet());
+  mStyleSet->AppendStyleSheet(StyleOrigin::UserAgent,
+                              cache->PluginProblemSheet());
 
   for (StyleSheet* sheet : *sheetService->AgentStyleSheets()) {
-    mStyleSet->AppendStyleSheet(*sheet);
+    mStyleSet->AppendStyleSheet(StyleOrigin::UserAgent, sheet);
   }
 
   MOZ_ASSERT(!mQuirkSheetAdded);
   if (NeedsQuirksSheet()) {
-    mStyleSet->AppendStyleSheet(*cache->QuirkSheet());
+    mStyleSet->AppendStyleSheet(StyleOrigin::UserAgent, cache->QuirkSheet());
     mQuirkSheetAdded = true;
   }
 }
@@ -2843,12 +2881,14 @@ void Document::RemoveContentEditableStyleSheets() {
   auto* cache = GlobalStyleSheetCache::Singleton();
   bool changed = false;
   if (mDesignModeSheetAdded) {
-    mStyleSet->RemoveStyleSheet(*cache->DesignModeSheet());
+    mStyleSet->RemoveStyleSheet(StyleOrigin::UserAgent,
+                                cache->DesignModeSheet());
     mDesignModeSheetAdded = false;
     changed = true;
   }
   if (mContentEditableSheetAdded) {
-    mStyleSet->RemoveStyleSheet(*cache->ContentEditableSheet());
+    mStyleSet->RemoveStyleSheet(StyleOrigin::UserAgent,
+                                cache->ContentEditableSheet());
     mContentEditableSheetAdded = false;
     changed = true;
   }
@@ -2866,15 +2906,18 @@ void Document::AddContentEditableStyleSheetsToStyleSet(bool aDesignMode) {
   auto* cache = GlobalStyleSheetCache::Singleton();
   bool changed = false;
   if (!mContentEditableSheetAdded) {
-    mStyleSet->AppendStyleSheet(*cache->ContentEditableSheet());
+    mStyleSet->AppendStyleSheet(StyleOrigin::UserAgent,
+                                cache->ContentEditableSheet());
     mContentEditableSheetAdded = true;
     changed = true;
   }
   if (mDesignModeSheetAdded != aDesignMode) {
     if (mDesignModeSheetAdded) {
-      mStyleSet->RemoveStyleSheet(*cache->DesignModeSheet());
+      mStyleSet->RemoveStyleSheet(StyleOrigin::UserAgent,
+                                  cache->DesignModeSheet());
     } else {
-      mStyleSet->AppendStyleSheet(*cache->DesignModeSheet());
+      mStyleSet->AppendStyleSheet(StyleOrigin::UserAgent,
+                                  cache->DesignModeSheet());
     }
     mDesignModeSheetAdded = !mDesignModeSheetAdded;
     changed = true;
@@ -2888,32 +2931,31 @@ void Document::FillStyleSetDocumentSheets() {
   MOZ_ASSERT(mStyleSet->SheetCount(StyleOrigin::Author) == 0,
              "Style set already has document sheets?");
 
-  // Sheets are added in reverse order to avoid worst-case time complexity when
-  // looking up the index of a sheet.
-  //
-  // Note that usually appending is faster (rebuilds less stuff in the
-  // styleset), but in this case it doesn't matter since we're filling the
-  // styleset from scratch anyway.
+  // Sheets are added in reverse order to avoid worst-case
+  // time complexity when looking up the index of a sheet
   for (StyleSheet* sheet : Reversed(mStyleSheets)) {
     if (sheet->IsApplicable()) {
-      mStyleSet->AddDocStyleSheet(*sheet);
+      mStyleSet->AddDocStyleSheet(sheet);
     }
   }
 
-  EnumerateUniqueAdoptedStyleSheetsBackToFront([&](StyleSheet& aSheet) {
-    if (aSheet.IsApplicable()) {
-      mStyleSet->AddDocStyleSheet(aSheet);
+  for (StyleSheet* sheet : Reversed(mAdoptedStyleSheets)) {
+    if (sheet->IsApplicable()) {
+      mStyleSet->AddDocStyleSheet(sheet);
     }
-  });
+  }
 
   nsStyleSheetService* sheetService = nsStyleSheetService::GetInstance();
   for (StyleSheet* sheet : *sheetService->AuthorStyleSheets()) {
-    mStyleSet->AppendStyleSheet(*sheet);
+    mStyleSet->AppendStyleSheet(StyleOrigin::Author, sheet);
   }
 
-  AppendSheetsToStyleSet(mStyleSet.get(), mAdditionalSheets[eAgentSheet]);
-  AppendSheetsToStyleSet(mStyleSet.get(), mAdditionalSheets[eUserSheet]);
-  AppendSheetsToStyleSet(mStyleSet.get(), mAdditionalSheets[eAuthorSheet]);
+  AppendSheetsToStyleSet(mStyleSet.get(), mAdditionalSheets[eAgentSheet],
+                         StyleOrigin::UserAgent);
+  AppendSheetsToStyleSet(mStyleSet.get(), mAdditionalSheets[eUserSheet],
+                         StyleOrigin::User);
+  AppendSheetsToStyleSet(mStyleSet.get(), mAdditionalSheets[eAuthorSheet],
+                         StyleOrigin::Author);
 }
 
 void Document::CompatibilityModeChanged() {
@@ -2935,9 +2977,9 @@ void Document::CompatibilityModeChanged() {
   auto* cache = GlobalStyleSheetCache::Singleton();
   StyleSheet* sheet = cache->QuirkSheet();
   if (mQuirkSheetAdded) {
-    mStyleSet->RemoveStyleSheet(*sheet);
+    mStyleSet->RemoveStyleSheet(StyleOrigin::UserAgent, sheet);
   } else {
-    mStyleSet->AppendStyleSheet(*sheet);
+    mStyleSet->AppendStyleSheet(StyleOrigin::UserAgent, sheet);
   }
   mQuirkSheetAdded = !mQuirkSheetAdded;
   ApplicableStylesChanged();
@@ -6501,7 +6543,7 @@ void Document::RemoveChildNode(nsIContent* aKid, bool aNotify) {
              "(maybe somebody called GetRootElement() too early?)");
 }
 
-void Document::AddStyleSheetToStyleSets(StyleSheet& aSheet) {
+void Document::AddStyleSheetToStyleSets(StyleSheet* aSheet) {
   if (mStyleSetFilled) {
     mStyleSet->AddDocStyleSheet(aSheet);
     ApplicableStylesChanged();
@@ -6537,9 +6579,9 @@ void Document::ApplicableStylesChanged() {
   pc->RestyleManager()->NextRestyleIsForCSSRuleChanges();
 }
 
-void Document::RemoveStyleSheetFromStyleSets(StyleSheet& aSheet) {
+void Document::RemoveStyleSheetFromStyleSets(StyleSheet* aSheet) {
   if (mStyleSetFilled) {
-    mStyleSet->RemoveStyleSheet(aSheet);
+    mStyleSet->RemoveDocStyleSheet(aSheet);
     ApplicableStylesChanged();
   }
 }
@@ -6553,7 +6595,7 @@ void Document::RemoveStyleSheet(StyleSheet& aSheet) {
   }
 
   if (!mIsGoingAway && sheet->IsApplicable()) {
-    RemoveStyleSheetFromStyleSets(*sheet);
+    RemoveStyleSheetFromStyleSets(sheet);
   }
 
   sheet->ClearAssociatedDocumentOrShadowRoot();
@@ -6563,7 +6605,7 @@ void Document::InsertSheetAt(size_t aIndex, StyleSheet& aSheet) {
   DocumentOrShadowRoot::InsertSheetAt(aIndex, aSheet);
 
   if (aSheet.IsApplicable()) {
-    AddStyleSheetToStyleSets(aSheet);
+    AddStyleSheetToStyleSets(&aSheet);
   }
 }
 
@@ -6572,9 +6614,9 @@ void Document::StyleSheetApplicableStateChanged(StyleSheet& aSheet) {
   // If we're actually in the document style sheet list
   if (StyleOrderIndexOfSheet(aSheet) >= 0) {
     if (applicable) {
-      AddStyleSheetToStyleSets(aSheet);
+      AddStyleSheetToStyleSets(&aSheet);
     } else {
-      RemoveStyleSheetFromStyleSets(aSheet);
+      RemoveStyleSheetFromStyleSets(&aSheet);
     }
   }
 
@@ -6613,6 +6655,20 @@ void Document::NotifyStyleSheetApplicableStateChanged() {
   if (observerService) {
     observerService->NotifyObservers(
         ToSupports(this), "style-sheet-applicable-state-changed", nullptr);
+  }
+}
+
+static StyleOrigin ConvertAdditionalSheetType(
+    Document::additionalSheetType aType) {
+  switch (aType) {
+    case Document::eAgentSheet:
+      return StyleOrigin::UserAgent;
+    case Document::eUserSheet:
+      return StyleOrigin::User;
+    case Document::eAuthorSheet:
+      return StyleOrigin::Author;
+    default:
+      MOZ_CRASH("Wrong sheet type");
   }
 }
 
@@ -6686,7 +6742,7 @@ nsresult Document::AddAdditionalStyleSheet(additionalSheetType aType,
   mAdditionalSheets[aType].AppendElement(aSheet);
 
   if (mStyleSetFilled) {
-    mStyleSet->AppendStyleSheet(*aSheet);
+    mStyleSet->AppendStyleSheet(ConvertAdditionalSheetType(aType), aSheet);
     ApplicableStylesChanged();
   }
   return NS_OK;
@@ -6700,13 +6756,14 @@ void Document::RemoveAdditionalStyleSheet(additionalSheetType aType,
 
   int32_t i = FindSheet(mAdditionalSheets[aType], aSheetURI);
   if (i >= 0) {
-    RefPtr<StyleSheet> sheetRef = std::move(sheets[i]);
+    RefPtr<StyleSheet> sheetRef = sheets[i];
     sheets.RemoveElementAt(i);
 
     if (!mIsGoingAway) {
       MOZ_ASSERT(sheetRef->IsApplicable());
       if (mStyleSetFilled) {
-        mStyleSet->RemoveStyleSheet(*sheetRef);
+        mStyleSet->RemoveStyleSheet(ConvertAdditionalSheetType(aType),
+                                    sheetRef);
         ApplicableStylesChanged();
       }
     }
@@ -16111,6 +16168,35 @@ Document::RecomputeContentBlockingAllowListPrincipal(
 
   nsCOMPtr<nsIPrincipal> copy = mContentBlockingAllowListPrincipal;
   return copy.forget();
+}
+
+// https://wicg.github.io/construct-stylesheets/#dom-documentorshadowroot-adoptedstylesheets
+void Document::SetAdoptedStyleSheets(
+    const Sequence<OwningNonNull<StyleSheet>>& aAdoptedStyleSheets,
+    ErrorResult& aRv) {
+  // Step 1 is a variable declaration
+
+  // 2.1 Check if all sheets are constructed, else throw NotAllowedError
+  // 2.2 Check if all sheets' constructor documents match the
+  // DocumentOrShadowRoot's node document, else throw NotAlloweError
+  EnsureAdoptedSheetsAreValid(aAdoptedStyleSheets, aRv);
+  if (aRv.Failed()) {
+    return;
+  }
+
+  // 3. Set the adopted style sheets to the new sheets
+  for (const RefPtr<StyleSheet>& sheet : mAdoptedStyleSheets) {
+    if (sheet->IsApplicable()) {
+      RemoveStyleSheetFromStyleSets(sheet);
+    }
+    sheet->RemoveAdopter(*this);
+  }
+  mAdoptedStyleSheets.ClearAndRetainStorage();
+  mAdoptedStyleSheets.SetCapacity(aAdoptedStyleSheets.Length());
+  for (const OwningNonNull<StyleSheet>& sheet : aAdoptedStyleSheets) {
+    sheet->AddAdopter(*this);
+    AppendAdoptedStyleSheet(*sheet);
+  }
 }
 
 }  // namespace dom
