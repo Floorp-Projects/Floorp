@@ -25,15 +25,16 @@ def valid_windows_version(value):
 
 
 option(env='WINDOWSSDKDIR', nargs=1,
-       help='Directory containing the Windows SDK',
-       when=host_is_windows)
+       help='Directory containing the Windows SDK')
 
 
-@depends('WINDOWSSDKDIR', host, when=host_is_windows)
-def windows_sdk_dir(value, host):
+@depends('WINDOWSSDKDIR', host, c_compiler)
+def windows_sdk_dir(value, host, compiler):
     if value:
         return value
-    if host.kernel != 'WINNT':
+    # Ideally, we'd actually check for host/target ABI being MSVC, but
+    # that's waiting for bug 1617793.
+    if host.kernel != 'WINNT' or compiler.type != 'clang-cl':
         return ()
 
     return set(x[1] for x in get_registry_values(
@@ -95,14 +96,17 @@ def valid_windows_sdk_dir_result(value):
         return '0x%04x in %s' % (value.version, quote(value.path))
 
 
-@depends(c_compiler, windows_sdk_dir, valid_windows_version, 'WINDOWSSDKDIR',
-         when=host_is_windows)
+@depends(c_compiler, windows_sdk_dir, valid_windows_version, 'WINDOWSSDKDIR')
 @checking('for Windows SDK', valid_windows_sdk_dir_result)
 @imports(_from='__builtin__', _import='sorted')
 @imports(_from='__builtin__', _import='Exception')
 @imports(_from='textwrap', _import='dedent')
 def valid_windows_sdk_dir(compiler, windows_sdk_dir, target_version,
                           windows_sdk_dir_env):
+    # Ideally, we'd actually check for host/target ABI being MSVC, but
+    # that's waiting for bug 1617793.
+    if compiler.type != 'clang-cl':
+        return None
     if windows_sdk_dir_env:
         windows_sdk_dir_env = windows_sdk_dir_env[0]
     sdks = {}
@@ -165,12 +169,16 @@ def valid_ucrt_sdk_dir_result(value):
         return '%s in %s' % (value.version, quote(value.path))
 
 
-@depends(windows_sdk_dir, 'WINDOWSSDKDIR', when=host_is_windows)
+@depends(windows_sdk_dir, 'WINDOWSSDKDIR', c_compiler)
 @checking('for Universal CRT SDK', valid_ucrt_sdk_dir_result)
 @imports('os')
 @imports(_from='__builtin__', _import='sorted')
 @imports(_import='mozpack.path', _as='mozpath')
-def valid_ucrt_sdk_dir(windows_sdk_dir, windows_sdk_dir_env):
+def valid_ucrt_sdk_dir(windows_sdk_dir, windows_sdk_dir_env, compiler):
+    # Ideally, we'd actually check for host/target ABI being MSVC, but
+    # that's waiting for bug 1617793.
+    if compiler.type != 'clang-cl':
+        return None
     if windows_sdk_dir_env:
         windows_sdk_dir_env = windows_sdk_dir_env[0]
     sdks = {}
@@ -488,6 +496,6 @@ host_link = check_prog('HOST_LINKER', ('lld-link',), input='HOST_LINKER',
 add_old_configure_assignment('LINKER', link)
 
 
-check_prog('MAKECAB', ('makecab.exe',), when=host_is_windows)
+check_prog('MAKECAB', ('makecab.exe',), allow_missing=True, when=target_is_windows)
 
 check_prog('UPX', ('upx',), allow_missing=True, when=target_is_windows)
