@@ -5,9 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "BodyStream.h"
-#include "mozilla/CycleCollectedJSContext.h"
 #include "mozilla/dom/DOMException.h"
-#include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/WorkerCommon.h"
 #include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/dom/WorkerRunnable.h"
@@ -370,15 +368,19 @@ BodyStream::OnInputStreamReady(nsIAsyncInputStream* aStream) {
   MOZ_DIAGNOSTIC_ASSERT(mInputStream);
   MOZ_DIAGNOSTIC_ASSERT(mState == eReading || mState == eChecking);
 
-  nsAutoMicroTask mt;
-  AutoEntryScript aes(mGlobal, "fetch body data available");
+  AutoJSAPI jsapi;
+  if (NS_WARN_IF(!jsapi.Init(mGlobal))) {
+    // Without JSContext we are not able to close the stream or to propagate the
+    // error.
+    return NS_ERROR_FAILURE;
+  }
 
   JSObject* streamObj = mStreamHolder->GetReadableStreamBody();
   if (!streamObj) {
     return NS_ERROR_FAILURE;
   }
 
-  JSContext* cx = aes.cx();
+  JSContext* cx = jsapi.cx();
   JS::Rooted<JSObject*> stream(cx, streamObj);
 
   uint64_t size = 0;
@@ -407,6 +409,9 @@ BodyStream::OnInputStreamReady(nsIAsyncInputStream* aStream) {
     MutexAutoUnlock unlock(mMutex);
     DebugOnly<bool> ok =
         JS::ReadableStreamUpdateDataAvailableFromSource(cx, stream, size);
+
+    // The WriteInto callback changes mState to eChecking.
+    MOZ_ASSERT_IF(ok, mState == eChecking);
   }
 
   return NS_OK;
