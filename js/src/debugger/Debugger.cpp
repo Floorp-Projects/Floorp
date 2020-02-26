@@ -4832,7 +4832,6 @@ class MOZ_STACK_CLASS Debugger::ScriptQuery : public Debugger::QueryBase {
         innermost(false),
         innermostForRealm(cx, cx->zone()),
         scriptVector(cx, BaseScriptVector(cx)),
-        lazyScriptVector(cx, BaseScriptVector(cx)),
         wasmInstanceVector(cx, WasmInstanceObjectVector(cx)) {}
 
   /*
@@ -5019,7 +5018,6 @@ class MOZ_STACK_CLASS Debugger::ScriptQuery : public Debugger::QueryBase {
 
     // Search each realm for debuggee scripts.
     MOZ_ASSERT(scriptVector.empty());
-    MOZ_ASSERT(lazyScriptVector.empty());
     oom = false;
     IterateScripts(cx, singletonRealm, this, considerScript);
     if (!delazified) {
@@ -5030,11 +5028,10 @@ class MOZ_STACK_CLASS Debugger::ScriptQuery : public Debugger::QueryBase {
       return false;
     }
 
-    // For most queries, we just accumulate results in 'scriptVector' and
-    // 'lazyScriptVector' as we find them. But if this is an 'innermost'
-    // query, then we've accumulated the results in the 'innermostForRealm'
-    // map. In that case, we now need to walk that map and
-    // populate 'scriptVector'.
+    // For most queries, we just accumulate results in 'scriptVector' as we find
+    // them. But if this is an 'innermost' query, then we've accumulated the
+    // results in the 'innermostForRealm' map. In that case, we now need to walk
+    // that map and populate 'scriptVector'.
     if (innermost) {
       for (RealmToScriptMap::Range r = innermostForRealm.all(); !r.empty();
            r.popFront()) {
@@ -5062,7 +5059,6 @@ class MOZ_STACK_CLASS Debugger::ScriptQuery : public Debugger::QueryBase {
   }
 
   Handle<BaseScriptVector> foundScripts() const { return scriptVector; }
-  Handle<BaseScriptVector> foundLazyScripts() const { return lazyScriptVector; }
 
   Handle<WasmInstanceObjectVector> foundWasmInstances() const {
     return wasmInstanceVector;
@@ -5112,7 +5108,6 @@ class MOZ_STACK_CLASS Debugger::ScriptQuery : public Debugger::QueryBase {
    * we use the CellIter.
    */
   Rooted<BaseScriptVector> scriptVector;
-  Rooted<BaseScriptVector> lazyScriptVector;
 
   /*
    * Like above, but for wasm modules.
@@ -5286,8 +5281,8 @@ class MOZ_STACK_CLASS Debugger::ScriptQuery : public Debugger::QueryBase {
       return;
     }
 
-    /* Record this matching script in the results lazyScriptVector. */
-    if (!lazyScriptVector.append(lazyScript)) {
+    /* Record this matching script in the results scriptVector. */
+    if (!scriptVector.append(lazyScript)) {
       oom = true;
     }
   }
@@ -5330,11 +5325,9 @@ bool Debugger::CallData::findScripts() {
   }
 
   Handle<BaseScriptVector> scripts(query.foundScripts());
-  Handle<BaseScriptVector> lazyScripts(query.foundLazyScripts());
   Handle<WasmInstanceObjectVector> wasmInstances(query.foundWasmInstances());
 
-  size_t resultLength =
-      scripts.length() + lazyScripts.length() + wasmInstances.length();
+  size_t resultLength = scripts.length() + wasmInstances.length();
   RootedArrayObject result(cx, NewDenseFullyAllocatedArray(cx, resultLength));
   if (!result) {
     return false;
@@ -5350,16 +5343,7 @@ bool Debugger::CallData::findScripts() {
     result->setDenseElement(i, ObjectValue(*scriptObject));
   }
 
-  size_t lazyStart = scripts.length();
-  for (size_t i = 0; i < lazyScripts.length(); i++) {
-    JSObject* scriptObject = dbg->wrapScript(cx, lazyScripts[i]);
-    if (!scriptObject) {
-      return false;
-    }
-    result->setDenseElement(lazyStart + i, ObjectValue(*scriptObject));
-  }
-
-  size_t wasmStart = scripts.length() + lazyScripts.length();
+  size_t wasmStart = scripts.length();
   for (size_t i = 0; i < wasmInstances.length(); i++) {
     JSObject* scriptObject = dbg->wrapWasmScript(cx, wasmInstances[i]);
     if (!scriptObject) {
