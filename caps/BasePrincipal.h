@@ -146,7 +146,7 @@ class BasePrincipal : public nsJSPrincipals {
   NS_IMETHOD GetPrefLightCacheKey(nsIURI* aURI, bool aWithCredentials,
                                   nsACString& _retval) override;
   NS_IMETHOD GetAsciiHost(nsACString& aAsciiHost) override;
-  NS_IMETHOD AllowsRelaxStrictFileOriginPolicy(nsIURI* aURI, bool* aRes);
+
   nsresult ToJSON(nsACString& aJSON);
   static already_AddRefed<BasePrincipal> FromJSON(const nsACString& aJSON);
   // Method populates a passed Json::Value with serializable fields

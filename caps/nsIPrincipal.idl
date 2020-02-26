@@ -286,12 +286,6 @@ interface nsIPrincipal : nsISerializable
     */
     bool isSameOrigin(in nsIURI otherURI, in bool aIsPrivateWin);
 
-    /*
-    * Checks if the Principal is allowed to load the Provided file:// URI
-    * using NS_RelaxStrictFileOriginPolicy
-    */
-    bool allowsRelaxStrictFileOriginPolicy(in nsIURI aURI);
-
 
     /*
     *  Generates a Cache-Key for the Cors-Preflight Cache

@@ -324,24 +324,21 @@ bool WorkerLoadInfo::PrincipalURIMatchesScriptURL() {
     return true;
   }
 
-  bool isSameOrigin = false;
-  rv = mPrincipal->IsSameOrigin(mBaseURI, false, &isSameOrigin);
+  nsCOMPtr<nsIURI> principalURI;
+  rv = mPrincipal->GetURI(getter_AddRefs(principalURI));
+  NS_ENSURE_SUCCESS(rv, false);
+  NS_ENSURE_TRUE(principalURI, false);
 
-  if (NS_SUCCEEDED(rv) && isSameOrigin) {
+  if (nsScriptSecurityManager::SecurityCompareURIs(mBaseURI, principalURI)) {
     return true;
   }
 
   // If strict file origin policy is in effect, local files will always fail
-  // IsSameOrigin unless they are identical. Explicitly check file origin
+  // SecurityCompareURIs unless they are identical. Explicitly check file origin
   // policy, in that case.
-
-  bool allowsRelaxedOriginPolicy = false;
-  rv = mPrincipal->AllowsRelaxStrictFileOriginPolicy(
-      mBaseURI, &allowsRelaxedOriginPolicy);
-
   if (nsScriptSecurityManager::GetStrictFileOriginPolicy() &&
       NS_URIIsLocalFile(mBaseURI) &&
-      (NS_SUCCEEDED(rv) && allowsRelaxedOriginPolicy)) {
+      NS_RelaxStrictFileOriginPolicy(mBaseURI, principalURI)) {
     return true;
   }
 
