@@ -475,6 +475,8 @@ class Document : public nsINode,
                  public nsStubMutationObserver,
                  public DispatcherTrait,
                  public SupportsWeakPtr<Document> {
+  friend class DocumentOrShadowRoot;
+
  protected:
   explicit Document(const char* aContentType);
   virtual ~Document();
@@ -1725,8 +1727,6 @@ class Document : public nsINode,
   StyleSheet* GetFirstAdditionalAuthorSheet() {
     return mAdditionalSheets[eAuthorSheet].SafeElementAt(0);
   }
-
-  void AppendAdoptedStyleSheet(StyleSheet& aSheet);
 
   /**
    * Returns the index that aSheet should be inserted at to maintain document
@@ -3881,10 +3881,6 @@ class Document : public nsINode,
   static bool AutomaticStorageAccessCanBeGranted(nsIPrincipal* aPrincipal);
 
   already_AddRefed<Promise> AddCertException(bool aIsTemporary);
-
-  void SetAdoptedStyleSheets(
-      const Sequence<OwningNonNull<StyleSheet>>& aAdoptedStyleSheets,
-      ErrorResult& aRv);
 
  protected:
   void DoUpdateSVGUseElementShadowTrees();
