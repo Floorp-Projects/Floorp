@@ -24,11 +24,12 @@ class EOYSnippetBase extends React.PureComponent {
 
   handleSubmit(event) {
     event.preventDefault();
+    this.props.sendClick(event);
     this.setFrequencyValue();
-    this.refs.form.submit();
     if (!this.props.content.do_not_autoblock) {
       this.props.onBlock();
     }
+    this.refs.form.submit();
   }
 
   renderDonations() {
@@ -61,6 +62,7 @@ class EOYSnippetBase extends React.PureComponent {
         action={this.props.content.donation_form_url}
         method={this.props.form_method}
         onSubmit={this.handleSubmit}
+        data-metric="EOYSnippetForm"
         ref="form"
       >
         {donationURLParams.map(([key, value], idx) => (

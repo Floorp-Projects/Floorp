@@ -12067,12 +12067,14 @@ class EOYSnippet_EOYSnippetBase extends external_React_default.a.PureComponent {
 
   handleSubmit(event) {
     event.preventDefault();
+    this.props.sendClick(event);
     this.setFrequencyValue();
-    this.refs.form.submit();
 
     if (!this.props.content.do_not_autoblock) {
       this.props.onBlock();
     }
+
+    this.refs.form.submit();
   }
 
   renderDonations() {
@@ -12102,6 +12104,7 @@ class EOYSnippet_EOYSnippetBase extends external_React_default.a.PureComponent {
       action: this.props.content.donation_form_url,
       method: this.props.form_method,
       onSubmit: this.handleSubmit,
+      "data-metric": "EOYSnippetForm",
       ref: "form"
     }, donationURLParams.map(([key, value], idx) => external_React_default.a.createElement("input", {
       type: "hidden",
