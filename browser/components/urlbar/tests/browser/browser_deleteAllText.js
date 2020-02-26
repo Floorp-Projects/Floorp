@@ -18,7 +18,10 @@ add_task(async function test() {
   await promiseAutocompleteResultPopup("x", window, true);
   await checkResults();
 
-  await deleteInput();
+  // Backspace.  The popup should close.
+  await UrlbarTestUtils.promisePopupClose(window, () =>
+    EventUtils.synthesizeKey("KEY_Backspace")
+  );
 
   // Type "x".  A new search should start.  Don't use
   // promiseAutocompleteResultPopup, which has some logic that starts the search
@@ -31,16 +34,18 @@ add_task(async function test() {
 
   // Now repeat the backspace + x two more times.  Same thing should happen.
   for (let i = 0; i < 2; i++) {
-    await deleteInput();
+    await UrlbarTestUtils.promisePopupClose(window, () =>
+      EventUtils.synthesizeKey("KEY_Backspace")
+    );
     EventUtils.synthesizeKey("x");
     await UrlbarTestUtils.promiseSearchComplete(window);
     await checkResults();
   }
 
-  await deleteInput();
-  if (!gURLBar.openViewOnFocus) {
-    gURLBar.view.close();
-  }
+  // Finally, backspace to close the popup.
+  await UrlbarTestUtils.promisePopupClose(window, () =>
+    EventUtils.synthesizeKey("KEY_Backspace")
+  );
 });
 
 async function checkResults() {
@@ -51,35 +56,4 @@ async function checkResults() {
   details = await UrlbarTestUtils.getDetailsOfResultAt(window, 1);
   Assert.equal(details.type, UrlbarUtils.RESULT_TYPE.URL);
   Assert.equal(details.url, "http://example.com/");
-}
-
-async function deleteInput() {
-  if (gURLBar.openViewOnFocus) {
-    // The popup should remain open and show top sites.
-    while (gURLBar.value.length) {
-      EventUtils.synthesizeKey("KEY_Backspace");
-    }
-    Assert.ok(
-      window.gURLBar.view.isOpen,
-      "View should remain open when deleting all input text"
-    );
-    let queryContext = await UrlbarTestUtils.promiseSearchComplete(window);
-    Assert.notEqual(
-      queryContext.results.length,
-      0,
-      "View should show results when deleting all input text"
-    );
-    Assert.equal(
-      queryContext.searchString,
-      "",
-      "Results should be for the empty search string (i.e. top sites) when deleting all input text"
-    );
-  } else {
-    // Deleting all text should close the view.
-    await UrlbarTestUtils.promisePopupClose(window, () => {
-      while (gURLBar.value.length) {
-        EventUtils.synthesizeKey("KEY_Backspace");
-      }
-    });
-  }
 }
