@@ -116,7 +116,6 @@ class JSTerm extends Component {
       showEditorOnboarding: PropTypes.bool,
       autocomplete: PropTypes.bool,
       showEvaluationSelector: PropTypes.bool,
-      autocompletePopupPosition: PropTypes.string,
     };
   }
 
@@ -174,9 +173,8 @@ class JSTerm extends Component {
       onSelect: this.onAutocompleteSelect.bind(this),
       onClick: this.acceptProposedCompletion.bind(this),
       listId: "webConsole_autocompletePopupListBox",
-      position: this.props.autocompletePopupPosition,
+      position: "bottom",
       autoSelect: true,
-      useXulWrapper: true,
     };
 
     const doc = this.webConsoleUI.document;
@@ -565,14 +563,6 @@ class JSTerm extends Component {
         this.setEditorWidth(null);
       }
     }
-
-    if (
-      nextProps.autocompletePopupPosition !==
-        this.props.autocompletePopupPosition &&
-      this.autocompletePopup
-    ) {
-      this.autocompletePopup.position = nextProps.autocompletePopupPosition;
-    }
   }
 
   /**
@@ -944,7 +934,7 @@ class JSTerm extends Component {
    *        }
    * @fires autocomplete-updated
    */
-  async updateAutocompletionPopup(data) {
+  updateAutocompletionPopup(data) {
     if (!this.editor) {
       return;
     }
@@ -1013,7 +1003,7 @@ class JSTerm extends Component {
       const xOffset = -1 * matchProp.length * this._inputCharWidth;
       const yOffset = 5;
       const popupAlignElement = this.props.serviceContainer.getJsTermTooltipAnchor();
-      await popup.openPopup(popupAlignElement, xOffset, yOffset, 0, {
+      popup.openPopup(popupAlignElement, xOffset, yOffset, 0, {
         preventSelectCallback: true,
       });
     } else if (items.length < minimumAutoCompleteLength && popup.isOpen) {
@@ -1397,7 +1387,6 @@ function mapStateToProps(state) {
     autocompleteData: getAutocompleteState(state),
     showEditorOnboarding: state.ui.showEditorOnboarding,
     showEvaluationSelector: state.ui.showEvaluationSelector,
-    autocompletePopupPosition: state.prefs.eagerEvaluation ? "top" : "bottom",
   };
 }
 

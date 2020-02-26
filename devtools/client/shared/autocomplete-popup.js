@@ -27,8 +27,6 @@ let itemIdCounter = 0;
  *        An object consiting any of the following options:
  *        - listId {String} The id for the list <LI> element.
  *        - position {String} The position for the tooltip ("top" or "bottom").
- *        - useXulWrapper {Boolean} If the tooltip is hosted in a XUL document, use a
- *          XUL panel in order to use all the screen viewport available (defaults to false).
  *        - autoSelect {Boolean} Boolean to allow the first entry of the popup
  *          panel to be automatically selected when the popup shows.
  *        - onSelect {String} Callback called when the selected index is updated.
@@ -39,10 +37,10 @@ function AutocompletePopup(toolboxDoc, options = {}) {
   EventEmitter.decorate(this);
 
   this._document = toolboxDoc;
+
   this.autoSelect = options.autoSelect || false;
   this.listId = options.listId || null;
   this.position = options.position || "bottom";
-  this.useXulWrapper = options.useXulWrapper || false;
 
   this.onSelectCallback = options.onSelect;
   this.onClickCallback = options.onClick;
@@ -101,10 +99,7 @@ AutocompletePopup.prototype = {
       return this._tooltip;
     }
 
-    this._tooltip = new HTMLTooltip(this._document, {
-      useXulWrapper: this.useXulWrapper,
-    });
-
+    this._tooltip = new HTMLTooltip(this._document);
     this._tooltip.panel.classList.add(
       "devtools-autocomplete-popup",
       "devtools-monospace"
@@ -112,7 +107,7 @@ AutocompletePopup.prototype = {
     // Stop this appearing as an alert to accessibility.
     this._tooltip.panel.setAttribute("role", "presentation");
     this._tooltip.panel.appendChild(this.list);
-    this._tooltip.setContentSize({ height: "auto" });
+    this._tooltip.setContentSize({ height: Infinity });
 
     return this._tooltip;
   },
@@ -150,7 +145,7 @@ AutocompletePopup.prototype = {
    *        The position of item to select.
    * @param {Object} options: Check `selectItemAtIndex` for more information.
    */
-  openPopup: async function(anchor, xOffset = 0, yOffset = 0, index, options) {
+  openPopup: function(anchor, xOffset = 0, yOffset = 0, index, options) {
     // Retrieve the anchor's document active element to add accessibility metadata.
     this._activeElement = anchor.ownerDocument.activeElement;
 
@@ -158,26 +153,19 @@ AutocompletePopup.prototype = {
     // user entered, so we need to remove the left-padding and the left-border from
     // the xOffset.
     const leftBorderSize = 1;
-
-    // If we have another call to openPopup while the previous one isn't over yet, we
-    // need to wait until it's settled to not be in a compromised state.
-    if (this._pendingShowPromise) {
-      await this._pendingShowPromise;
-    }
-
-    this._pendingShowPromise = this.tooltip.show(anchor, {
+    this.tooltip.show(anchor, {
       x: xOffset - this._listPadding - leftBorderSize,
       y: yOffset,
       position: this.position,
     });
-    await this._pendingShowPromise;
-    this._pendingShowPromise = null;
 
-    if (this.autoSelect) {
-      this.selectItemAtIndex(index, options);
-    }
+    this.tooltip.once("shown", () => {
+      if (this.autoSelect) {
+        this.selectItemAtIndex(index, options);
+      }
 
-    this.emit("popup-opened");
+      this.emit("popup-opened");
+    });
   },
 
   /**
@@ -231,7 +219,6 @@ AutocompletePopup.prototype = {
    * Hide the autocomplete popup panel.
    */
   hidePopup: function() {
-    this._pendingShowPromise = null;
     this.tooltip.once("hidden", () => {
       this.emit("popup-closed");
     });
@@ -255,7 +242,6 @@ AutocompletePopup.prototype = {
    * cleanup.
    */
   destroy: function() {
-    this._pendingShowPromise = null;
     if (this.isOpen) {
       this.hidePopup();
     }
