@@ -6080,14 +6080,14 @@ DebuggerScript* Debugger::newDebuggerScript(
   return DebuggerScript::create(cx, proto, referent, debugger);
 }
 
-template <typename Map>
+template <typename ReferentType, typename Map>
 typename Map::WrapperType* Debugger::wrapVariantReferent(
     JSContext* cx, Map& map,
     Handle<typename Map::WrapperType::ReferentVariant> referent) {
   cx->check(object);
 
-  Handle<typename Map::ReferentType*> untaggedReferent =
-      referent.template as<typename Map::ReferentType*>();
+  Handle<ReferentType*> untaggedReferent =
+      referent.template as<ReferentType*>();
   MOZ_ASSERT(cx->compartment() != untaggedReferent->compartment());
 
   DependentAddPtr<Map> p(cx, map, untaggedReferent);
@@ -6140,7 +6140,7 @@ DebuggerScript* Debugger::wrapVariantReferent(
       return wrapLazyScript(cx, lazyScript);
     }
     // This JSScript doesn't have a LazyScript, so the JSScript is canonical.
-    obj = wrapVariantReferent(cx, scripts, referent);
+    obj = wrapVariantReferent<JSScript>(cx, scripts, referent);
   } else if (referent.is<LazyScript*>()) {
     Handle<LazyScript*> untaggedReferent = referent.template as<LazyScript*>();
     if (untaggedReferent->maybeScript()) {
@@ -6156,10 +6156,11 @@ DebuggerScript* Debugger::wrapVariantReferent(
     // If there is an associated JSScript, this LazyScript is reachable from it,
     // so this LazyScript is canonical.
     untaggedReferent->setWrappedByDebugger();
-    obj = wrapVariantReferent(cx, lazyScripts, referent);
+    obj = wrapVariantReferent<LazyScript>(cx, lazyScripts, referent);
   } else {
     referent.template as<WasmInstanceObject*>();
-    obj = wrapVariantReferent(cx, wasmInstanceScripts, referent);
+    obj = wrapVariantReferent<WasmInstanceObject>(cx, wasmInstanceScripts,
+                                                  referent);
   }
   MOZ_ASSERT_IF(obj, obj->getReferent() == referent);
   return obj;
@@ -6197,9 +6198,10 @@ DebuggerSource* Debugger::wrapVariantReferent(
     JSContext* cx, Handle<DebuggerSourceReferent> referent) {
   DebuggerSource* obj;
   if (referent.is<ScriptSourceObject*>()) {
-    obj = wrapVariantReferent(cx, sources, referent);
+    obj = wrapVariantReferent<ScriptSourceObject>(cx, sources, referent);
   } else {
-    obj = wrapVariantReferent(cx, wasmInstanceSources, referent);
+    obj = wrapVariantReferent<WasmInstanceObject>(cx, wasmInstanceSources,
+                                                  referent);
   }
   MOZ_ASSERT_IF(obj, obj->getReferent() == referent);
   return obj;
