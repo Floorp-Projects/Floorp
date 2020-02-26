@@ -18,12 +18,16 @@ object GlobalAddonDependencyProvider {
     @VisibleForTesting
     internal var updater: AddonUpdater? = null
 
+    @VisibleForTesting
+    internal var onCrash: ((Throwable) -> Unit)? = null
+
     /**
-     * Initializes the AddonManager and AddonUpdater references.
+     * Initializes the AddonManager, AddonUpdater and an optional onCrash lambda function.
      */
-    fun initialize(manager: AddonManager, updater: AddonUpdater) {
-        addonManager = manager
+    fun initialize(manager: AddonManager, updater: AddonUpdater, onCrash: ((Throwable) -> Unit)? = null) {
+        this.addonManager = manager
         this.updater = updater
+        this.onCrash = onCrash
     }
 
     internal fun requireAddonManager(): AddonManager {

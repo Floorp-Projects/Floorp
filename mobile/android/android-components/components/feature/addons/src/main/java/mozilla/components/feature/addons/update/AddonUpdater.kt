@@ -33,6 +33,7 @@ import mozilla.components.support.base.ids.SharedIdsHelper
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.ktx.android.notification.ChannelData
 import mozilla.components.support.ktx.android.notification.ensureNotificationChannelExists
+import java.lang.Exception
 import java.util.concurrent.TimeUnit
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
@@ -470,36 +471,46 @@ internal class AddonUpdaterWorker(
     @Suppress("OverridingDeprecatedMember")
     override val coroutineContext = Dispatchers.Main
 
+    @Suppress("TooGenericExceptionCaught", "MaxLineLength")
     override suspend fun doWork(): Result {
         val extensionId = params.inputData.getString(KEY_DATA_EXTENSIONS_ID) ?: ""
         logger.info("Trying to update extension $extensionId")
 
         return suspendCoroutine { continuation ->
-            val manager = GlobalAddonDependencyProvider.requireAddonManager()
+            try {
+                val manager = GlobalAddonDependencyProvider.requireAddonManager()
 
-            manager.updateAddon(extensionId) { status ->
-                val result = when (status) {
-                    AddonUpdater.Status.NotInstalled -> {
-                        logger.error("Not installed extension with id $extensionId removing from the updating queue")
-                        Result.failure()
+                manager.updateAddon(extensionId) { status ->
+                    val result = when (status) {
+                        AddonUpdater.Status.NotInstalled -> {
+                            logger.error("Not installed extension with id $extensionId removing from the updating queue")
+                            Result.failure()
+                        }
+                        AddonUpdater.Status.NoUpdateAvailable -> {
+                            logger.info("There is no new updates for the $extensionId")
+                            Result.success()
+                        }
+                        AddonUpdater.Status.SuccessfullyUpdated -> {
+                            logger.info("Extension $extensionId SuccessFullyUpdated")
+                            Result.success()
+                        }
+                        is AddonUpdater.Status.Error -> {
+                            logger.error(
+                                    "Unable to update extension $extensionId, re-schedule ${status.message}",
+                                    status.exception
+                            )
+                            Result.retry()
+                        }
                     }
-                    AddonUpdater.Status.NoUpdateAvailable -> {
-                        logger.info("There is no new updates for the $extensionId")
-                        Result.success()
-                    }
-                    AddonUpdater.Status.SuccessfullyUpdated -> {
-                        logger.info("Extension $extensionId SuccessFullyUpdated")
-                        Result.success()
-                    }
-                    is AddonUpdater.Status.Error -> {
-                        logger.error(
-                            "Unable to update extension $extensionId, re-schedule ${status.message}",
-                            status.exception
-                        )
-                        Result.retry()
-                    }
+                    continuation.resume(result)
                 }
-                continuation.resume(result)
+            } catch (exception: Exception) {
+                logger.error(
+                        "Unable to update extension $extensionId, re-schedule ${exception.message}",
+                        exception
+                )
+                GlobalAddonDependencyProvider.onCrash?.invoke(exception)
+                continuation.resume(Result.retry())
             }
         }
     }
