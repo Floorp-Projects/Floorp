@@ -5354,7 +5354,7 @@ bool Debugger::CallData::findScripts() {
 
   size_t lazyStart = scripts.length();
   for (size_t i = 0; i < lazyScripts.length(); i++) {
-    JSObject* scriptObject = dbg->wrapLazyScript(cx, lazyScripts[i]);
+    JSObject* scriptObject = dbg->wrapScript(cx, lazyScripts[i]);
     if (!scriptObject) {
       return false;
     }
@@ -6137,7 +6137,7 @@ DebuggerScript* Debugger::wrapVariantReferent(
     if (untaggedReferent->maybeLazyScript()) {
       // This JSScript has a LazyScript, so the LazyScript is canonical.
       Rooted<LazyScript*> lazyScript(cx, untaggedReferent->maybeLazyScript());
-      return wrapLazyScript(cx, lazyScript);
+      return wrapScript(cx, lazyScript);
     }
     // This JSScript doesn't have a LazyScript, so the JSScript is canonical.
     obj = wrapVariantReferent<JSScript>(cx, scripts, referent);
@@ -6166,14 +6166,16 @@ DebuggerScript* Debugger::wrapVariantReferent(
   return obj;
 }
 
-DebuggerScript* Debugger::wrapScript(JSContext* cx, HandleScript script) {
-  Rooted<DebuggerScriptReferent> referent(cx, script.get());
-  return wrapVariantReferent(cx, referent);
-}
+DebuggerScript* Debugger::wrapScript(JSContext* cx,
+                                     Handle<BaseScript*> script) {
+  if (script->isLazyScript()) {
+    Rooted<DebuggerScriptReferent> referent(
+        cx, DebuggerScriptReferent(static_cast<LazyScript*>(script.get())));
+    return wrapVariantReferent(cx, referent);
+  }
 
-DebuggerScript* Debugger::wrapLazyScript(JSContext* cx,
-                                         Handle<LazyScript*> lazyScript) {
-  Rooted<DebuggerScriptReferent> referent(cx, lazyScript.get());
+  Rooted<DebuggerScriptReferent> referent(
+      cx, DebuggerScriptReferent(static_cast<JSScript*>(script.get())));
   return wrapVariantReferent(cx, referent);
 }
 
