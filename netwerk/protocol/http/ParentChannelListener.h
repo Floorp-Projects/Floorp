@@ -8,14 +8,11 @@
 #ifndef mozilla_net_ParentChannelListener_h
 #define mozilla_net_ParentChannelListener_h
 
-#include "nsIAuthPromptProvider.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsINetworkInterceptController.h"
 #include "nsIStreamListener.h"
 #include "nsIMultiPartChannel.h"
-#include "nsIRemoteWindowContext.h"
-#include "mozilla/dom/CanonicalBrowsingContext.h"
-#include "mozilla/dom/CanonicalBrowsingContext.h"
+#include "mozilla/dom/BrowserParent.h"
 
 namespace mozilla {
 namespace net {
@@ -34,9 +31,7 @@ namespace net {
 class ParentChannelListener final : public nsIInterfaceRequestor,
                                     public nsIStreamListener,
                                     public nsIMultiPartChannelListener,
-                                    public nsINetworkInterceptController,
-                                    private nsIAuthPromptProvider,
-                                    private nsIRemoteWindowContext {
+                                    public nsINetworkInterceptController {
  public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIINTERFACEREQUESTOR
@@ -44,15 +39,11 @@ class ParentChannelListener final : public nsIInterfaceRequestor,
   NS_DECL_NSISTREAMLISTENER
   NS_DECL_NSIMULTIPARTCHANNELLISTENER
   NS_DECL_NSINETWORKINTERCEPTCONTROLLER
-  NS_DECL_NSIAUTHPROMPTPROVIDER
-  NS_DECL_NSIREMOTEWINDOWCONTEXT
 
   NS_DECLARE_STATIC_IID_ACCESSOR(PARENT_CHANNEL_LISTENER)
 
-  explicit ParentChannelListener(
-      nsIStreamListener* aListener,
-      dom::CanonicalBrowsingContext* aBrowsingContext,
-      bool aUsePrivateBrowsing);
+  explicit ParentChannelListener(nsIStreamListener* aListener,
+                                 dom::BrowserParent* aBrowserParent);
 
   // For channel diversion from child to parent.
   void DivertTo(nsIStreamListener* aListener);
@@ -98,14 +89,11 @@ class ParentChannelListener final : public nsIInterfaceRequestor,
   // interception is enabled.
   nsCOMPtr<nsINetworkInterceptController> mInterceptController;
 
-  RefPtr<mozilla::dom::CanonicalBrowsingContext> mBrowsingContext;
+  RefPtr<mozilla::dom::BrowserParent> mBrowserParent;
 
   // True if we received OnStartRequest for a nsIMultiPartChannel, and are
   // expected AllPartsStopped to be called when complete.
   bool mIsMultiPart = false;
-
-  // True if the nsILoadContext for this channel has private browsing enabled.
-  bool mUsePrivateBrowsing = false;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(ParentChannelListener, PARENT_CHANNEL_LISTENER)
