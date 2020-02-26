@@ -502,17 +502,13 @@ static bool PushFunctionScript(JSContext* cx, Debugger* dbg, HandleFunction fun,
     return true;
   }
 
-  RootedObject wrapped(cx);
-
-  if (fun->isInterpretedLazy()) {
-    Rooted<LazyScript*> lazy(cx, fun->lazyScript());
-    wrapped = dbg->wrapLazyScript(cx, lazy);
-  } else {
-    RootedScript script(cx, fun->nonLazyScript());
-    wrapped = dbg->wrapScript(cx, script);
+  Rooted<BaseScript*> script(cx, fun->baseScript());
+  RootedObject wrapped(cx, dbg->wrapScript(cx, script));
+  if (!wrapped) {
+    return false;
   }
 
-  return wrapped && NewbornArrayPush(cx, array, ObjectValue(*wrapped));
+  return NewbornArrayPush(cx, array, ObjectValue(*wrapped));
 }
 
 static bool PushInnerFunctions(JSContext* cx, Debugger* dbg, HandleObject array,
