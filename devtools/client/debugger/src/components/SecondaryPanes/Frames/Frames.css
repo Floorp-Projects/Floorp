@@ -9,7 +9,7 @@
 }
 
 .frames [role="list"] [role="listitem"] {
-  padding: 2px 10px 2px 20px;
+  padding-bottom: 2px;
   overflow: hidden;
   display: flex;
   justify-content: space-between;
@@ -49,6 +49,7 @@
 
 .theme-light .frames .location {
   color: var(--theme-comment);
+  padding-right: 20px;
 }
 
 :root.theme-dark .frames .location {
@@ -59,6 +60,7 @@
 .frames .title {
   text-overflow: ellipsis;
   overflow: hidden;
+  padding-left: 10px;
 }
 
 .frames [role="list"] [role="listitem"]:hover,
@@ -66,11 +68,19 @@
   background-color: var(--theme-toolbar-background-alt);
 }
 
-.theme-dark .frames [role="list"] [role="listitem"]:focus {
+.frames [role="list"] [role="listitem"]:hover .location-async-cause,
+.frames [role="list"] [role="listitem"]:focus .location-async-cause {
+  background-color: var(--theme-body-background);
+}
+
+.theme-dark .frames [role="list"] [role="listitem"]:focus,
+.theme-dark .frames [role="list"] [role="listitem"]:focus .async-label,
+.theme-dark .frames [role="list"] [role="listitem"]:focus .async-label {
   background-color: var(--theme-tab-toolbar-background);
 }
 
-.frames [role="list"] [role="listitem"].selected {
+.frames [role="list"] [role="listitem"].selected,
+.frames [role="list"] [role="listitem"].selected .async-label {
   background-color: var(--theme-selection-background);
   color: white;
 }
@@ -124,4 +134,34 @@
 .frames .clipboard-only {
   position: absolute;
   left: -9999px;
+}
+
+.call-stack-pane [role="listitem"] .location-async-cause {
+  height: 20px;
+  line-height: 20px;
+  color: var(--theme-icon-dimmed-color);
+  display: block;
+  z-index: 4;
+  position: relative;
+  padding-left: 17px;
+  width: 100%;
+  pointer-events: none;
+}
+
+.call-stack-pane [role="listitem"] .location-async-cause::after {
+  content: " ";
+  position: absolute;
+  left: 0;
+  z-index: -1;
+  height: 30px;
+  top: 50%;
+  width: 100%;
+  border-top: 1px solid var(--theme-tab-toolbar-background);;
+}
+
+.call-stack-pane .async-label {
+  z-index: 1;
+  background-color: var(--theme-body-background);
+  padding: 0 3px;
+  display: inline-block;
 }

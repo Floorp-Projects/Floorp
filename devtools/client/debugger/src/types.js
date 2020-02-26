@@ -261,6 +261,7 @@ export type Frame = {
   library?: string,
   index: number,
   asyncCause: null | string,
+  state: "on-stack" | "suspended" | "dead",
 };
 
 export type ChromeFrame = {

@@ -176,9 +176,11 @@ export default class FrameComponent extends Component<FrameComponentProps> {
         {frame.asyncCause && (
           <span className="location-async-cause">
             {this.isSelectable && <FrameIndent />}
-            {this.isDebugger
-              ? frame.asyncCause
-              : l10n.getFormatStr("stacktrace.asyncStack", frame.asyncCause)}
+            {this.isDebugger ? (
+              <span className="async-label">{frame.asyncCause}</span>
+            ) : (
+              l10n.getFormatStr("stacktrace.asyncStack", frame.asyncCause)
+            )}
             {this.isSelectable && <br className="clipboard-only" />}
           </span>
         )}

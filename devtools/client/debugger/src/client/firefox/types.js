@@ -89,7 +89,7 @@ export type FrameFront = {
   displayName: string,
   this: any,
   asyncCause: null | string,
-  state: "on-stack" | "suspended",
+  state: "on-stack" | "suspended" | "dead",
 };
 
 /**
