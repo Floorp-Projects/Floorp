@@ -918,7 +918,6 @@ class nsContextMenu {
   initPasswordManagerItems() {
     let showFill = false;
     let showGenerate = false;
-    let enableGeneration = Services.logins.isLoggedIn;
     try {
       let loginFillInfo = this.contentData && this.contentData.loginFillInfo;
       let documentURI = this.contentData.documentURIObject;
@@ -994,11 +993,6 @@ class nsContextMenu {
     } finally {
       this.showItem("fill-login", showFill);
       this.showItem("fill-login-generated-password", showGenerate);
-      this.setItemAttr(
-        "fill-login-generated-password",
-        "disabled",
-        !enableGeneration
-      );
       this.showItem(
         "fill-login-and-generated-password-separator",
         showFill || showGenerate
