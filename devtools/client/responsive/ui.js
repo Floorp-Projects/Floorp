@@ -307,6 +307,39 @@ class ResponsiveUI {
 
     this.resizeHandleY = resizeHandleY;
     this.resizeHandleY.addEventListener("mousedown", this.onResizeStart);
+
+    // Setup a ResizeObserver that sets the width of the toolbar to the width of the
+    // .browserStack.
+    this.resizeToolbarObserver = new this.browserWindow.ResizeObserver(
+      entries => {
+        for (const entry of entries) {
+          const { width } = entry.contentRect;
+
+          this.rdmFrame.style.setProperty("width", `${width}px`);
+
+          // If the device modal/selector is opened, resize the toolbar height to
+          // the size of the stack.
+          if (
+            this.browserStackEl.classList.contains(
+              "device-selector-menu-opened"
+            )
+          ) {
+            const style = this.browserWindow.getComputedStyle(
+              this.browserStackEl
+            );
+            this.rdmFrame.style.height = style.height;
+          } else {
+            // If the toolbar needs extra space for the UA input, then set a class that
+            // will accomodate its height. We should also make sure to keep the width
+            // value we're toggling against in sync with the media-query in
+            // devtools/client/responsive/index.css
+            this.rdmFrame.classList.toggle("accomodate-ua", width < 520);
+          }
+        }
+      }
+    );
+
+    this.resizeToolbarObserver.observe(this.browserStackEl);
   }
 
   /**
@@ -364,6 +397,10 @@ class ResponsiveUI {
     } else {
       this.browserWindow.removeEventListener("FullZoomChange", this);
       this.rdmFrame.contentWindow.removeEventListener("message", this);
+
+      // Remove observers on the stack.
+      this.resizeToolbarObserver.unobserve(this.browserStackEl);
+
       this.rdmFrame.remove();
 
       // Clean up resize handlers
@@ -410,6 +447,7 @@ class ResponsiveUI {
     this.resizeHandleY = null;
     this.toolWindow = null;
     this.swap = null;
+    this.resizeToolbarObserver = null;
 
     // Close the devtools client used to speak with responsive emulation actor.
     // The actor handles clearing any overrides itself, so it's not necessary to clear
@@ -542,8 +580,8 @@ class ResponsiveUI {
       case "update-device-modal":
         this.onUpdateDeviceModal(event);
         break;
-      case "update-device-selector-menu":
-        this.onUpdateDeviceSelectorMenu(event);
+      case "update-device-toolbar-height":
+        this.onUpdateToolbarHeight(event);
     }
   }
 
@@ -756,17 +794,32 @@ class ResponsiveUI {
   }
 
   onUpdateDeviceModal(event) {
-    this.browserStackEl.classList.toggle(
-      "device-modal-opened",
-      event.data.isOpen
-    );
+    // Restore the toolbar height if closing
+    if (!event.data.isOpen) {
+      this.restoreToolbarHeight();
+    }
   }
 
-  onUpdateDeviceSelectorMenu(event) {
-    this.browserStackEl.classList.toggle(
-      "device-selector-menu-opened",
-      event.data.isOpen
-    );
+  /**
+   * Handles setting the height of the toolbar when it's closed. This can happen when
+   * an event occurs outside of the device selector menu component, such as opening the
+   * device modal.
+   */
+  onUpdateToolbarHeight(event) {
+    if (!event.data.isOpen) {
+      const {
+        isModalOpen,
+      } = this.rdmFrame.contentWindow.store.getState().devices;
+
+      // Don't remove the device-selector-menu-opened class if it was closed because
+      // the device modal was opened. We still want to preserve the current height of
+      // toolbar.
+      if (isModalOpen) {
+        return;
+      }
+
+      this.restoreToolbarHeight();
+    }
   }
 
   async hasDeviceState() {
@@ -774,6 +827,14 @@ class ResponsiveUI {
       "devtools.responsive.deviceState"
     );
     return !!deviceState;
+  }
+
+  /**
+   * Restores the toolbar's height to it's original class styling.
+   */
+  restoreToolbarHeight() {
+    this.rdmFrame.style.removeProperty("height");
+    this.browserStackEl.classList.remove("device-selector-menu-opened");
   }
 
   /**
