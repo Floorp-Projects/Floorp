@@ -345,7 +345,8 @@ abstract class EngineSession(
             trackingCategories = trackingCategories,
             useForPrivateSessions = true,
             useForRegularSessions = false,
-            cookiePolicy = cookiePolicy
+            cookiePolicy = cookiePolicy,
+            strictSocialTrackingProtection = strictSocialTrackingProtection
         )
 
         /**
@@ -355,7 +356,8 @@ abstract class EngineSession(
             trackingCategories = trackingCategories,
             useForPrivateSessions = false,
             useForRegularSessions = true,
-            cookiePolicy = cookiePolicy
+            cookiePolicy = cookiePolicy,
+            strictSocialTrackingProtection = strictSocialTrackingProtection
         )
     }
 
