@@ -316,6 +316,7 @@ class ObjectGroup : public gc::TenuredCell {
   }
 
   void setInterpretedFunction(JSFunction* fun) {
+    MOZ_ASSERT(!gc::IsInsideNursery(reinterpret_cast<gc::Cell*>(fun)));
     setAddendum(Addendum_InterpretedFunction, fun);
   }
 
