@@ -17,7 +17,6 @@
 #include "nsIStreamListener.h"
 #include "nsIURI.h"
 #include "nsIViewSourceChannel.h"
-#include "nsIWrapperChannel.h"
 #include "nsIChildChannel.h"
 #include "nsString.h"
 
@@ -29,7 +28,6 @@ class nsViewSourceChannel final : public nsIViewSourceChannel,
                                   public nsIApplicationCacheChannel,
                                   public nsIFormPOSTActionChannel,
                                   public nsIChildChannel,
-                                  public nsIWrapperChannel,
                                   public nsIInterfaceRequestor,
                                   public nsIChannelEventSink {
  public:
@@ -42,7 +40,6 @@ class nsViewSourceChannel final : public nsIViewSourceChannel,
   NS_DECL_NSIREQUESTOBSERVER
   NS_DECL_NSIHTTPCHANNEL
   NS_DECL_NSICHILDCHANNEL
-  NS_DECL_NSIWRAPPERCHANNEL
   NS_DECL_NSIINTERFACEREQUESTOR
   NS_DECL_NSICHANNELEVENTSINK
   NS_FORWARD_SAFE_NSICACHEINFOCHANNEL(mCacheInfoChannel)
@@ -55,7 +52,10 @@ class nsViewSourceChannel final : public nsIViewSourceChannel,
 
   // nsViewSourceChannel methods:
   nsViewSourceChannel()
-      : mIsDocument(false), mOpened(false), mIsSrcdocChannel(false) {}
+      : mIsDocument(false),
+        mOpened(false),
+        mIsSrcdocChannel(false),
+        mReplaceRequest(true) {}
 
   MOZ_MUST_USE nsresult Init(nsIURI* uri, nsILoadInfo* aLoadInfo);
 
@@ -94,6 +94,7 @@ class nsViewSourceChannel final : public nsIViewSourceChannel,
   bool mIsDocument;  // keeps track of the LOAD_DOCUMENT_URI flag
   bool mOpened;
   bool mIsSrcdocChannel;
+  bool mReplaceRequest;
 };
 
 #endif /* nsViewSourceChannel_h___ */

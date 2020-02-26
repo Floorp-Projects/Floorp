@@ -28,7 +28,6 @@ NS_INTERFACE_MAP_BEGIN(nsViewSourceChannel)
   NS_INTERFACE_MAP_ENTRY(nsIViewSourceChannel)
   NS_INTERFACE_MAP_ENTRY(nsIStreamListener)
   NS_INTERFACE_MAP_ENTRY(nsIRequestObserver)
-  NS_INTERFACE_MAP_ENTRY(nsIWrapperChannel)
   NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
   NS_INTERFACE_MAP_ENTRY(nsIChannelEventSink)
   NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIHttpChannel, mHttpChannel)
@@ -647,6 +646,18 @@ nsViewSourceChannel::GetProtocolVersion(nsACString& aProtocolVersion) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP
+nsViewSourceChannel::GetReplaceRequest(bool* aReplaceRequest) {
+  *aReplaceRequest = mReplaceRequest;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsViewSourceChannel::SetReplaceRequest(bool aReplaceRequest) {
+  mReplaceRequest = aReplaceRequest;
+  return NS_OK;
+}
+
 // nsIRequestObserver methods
 NS_IMETHODIMP
 nsViewSourceChannel::OnStartRequest(nsIRequest* aRequest) {
@@ -663,7 +674,10 @@ nsViewSourceChannel::OnStartRequest(nsIRequest* aRequest) {
     Cancel(rv);
   }
 
-  return mListener->OnStartRequest(static_cast<nsIViewSourceChannel*>(this));
+  if (mReplaceRequest) {
+    return mListener->OnStartRequest(static_cast<nsIViewSourceChannel*>(this));
+  }
+  return mListener->OnStartRequest(aRequest);
 }
 
 NS_IMETHODIMP
@@ -677,8 +691,11 @@ nsViewSourceChannel::OnStopRequest(nsIRequest* aRequest, nsresult aStatus) {
                                nullptr, aStatus);
     }
   }
-  return mListener->OnStopRequest(static_cast<nsIViewSourceChannel*>(this),
-                                  aStatus);
+  if (mReplaceRequest) {
+    return mListener->OnStopRequest(static_cast<nsIViewSourceChannel*>(this),
+                                    aStatus);
+  }
+  return mListener->OnStopRequest(aRequest, aStatus);
 }
 
 // nsIStreamListener methods
@@ -687,8 +704,12 @@ nsViewSourceChannel::OnDataAvailable(nsIRequest* aRequest,
                                      nsIInputStream* aInputStream,
                                      uint64_t aSourceOffset, uint32_t aLength) {
   NS_ENSURE_TRUE(mListener, NS_ERROR_FAILURE);
-  return mListener->OnDataAvailable(static_cast<nsIViewSourceChannel*>(this),
-                                    aInputStream, aSourceOffset, aLength);
+  if (mReplaceRequest) {
+    return mListener->OnDataAvailable(static_cast<nsIViewSourceChannel*>(this),
+                                      aInputStream, aSourceOffset, aLength);
+  }
+  return mListener->OnDataAvailable(aRequest, aInputStream, aSourceOffset,
+                                    aLength);
 }
 
 // nsIHttpChannel methods
@@ -1086,17 +1107,6 @@ nsViewSourceChannel::CompleteRedirectSetup(nsIStreamListener* aListener,
   }
 
   return rv;
-}
-
-// nsIWrapperChannel
-
-NS_IMETHODIMP
-nsViewSourceChannel::GetInnerChannel(nsIChannel** aChannel) {
-  NS_ENSURE_TRUE(mChannel, NS_ERROR_NOT_INITIALIZED);
-
-  nsCOMPtr<nsIChannel> chan = mChannel;
-  chan.forget(aChannel);
-  return NS_OK;
 }
 
 // nsIChannelEventSink
