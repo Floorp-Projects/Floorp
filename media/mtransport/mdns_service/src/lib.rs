@@ -131,6 +131,61 @@ fn create_query(id: u16, queries: &Vec<String>) -> Result<Vec<u8>, io::Error> {
     Ok(buf)
 }
 
+fn handle_queries(
+    socket: &std::net::UdpSocket,
+    mdns_addr: &std::net::SocketAddr,
+    pending_queries: &mut HashMap<String, Query>,
+    unsent_queries: &mut LinkedList<Query>,
+) {
+    if pending_queries.len() < 50 {
+        let mut queries: Vec<Query> = Vec::new();
+        while queries.len() < 5 && !unsent_queries.is_empty() {
+            if let Some(query) = unsent_queries.pop_front() {
+                if !pending_queries.contains_key(&query.hostname) {
+                    queries.push(query);
+                }
+            }
+        }
+        if !queries.is_empty() {
+            if let Ok(buf) =
+                create_query(0, &queries.iter().map(|q| q.hostname.to_string()).collect())
+            {
+                match socket.send_to(&buf, &mdns_addr) {
+                    Ok(_) => {
+                        for query in queries {
+                            pending_queries.insert(query.hostname.to_string(), query);
+                        }
+                    }
+                    Err(err) => {
+                        warn!("Sending mDNS query failed: {}", err);
+                        for query in queries {
+                            unsent_queries.push_back(query);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    let now = time::Instant::now();
+    let expired: Vec<String> = pending_queries
+        .iter()
+        .filter(|(_, query)| now.duration_since(query.timestamp).as_secs() >= 3)
+        .map(|(hostname, _)| hostname.to_string())
+        .collect();
+    for hostname in expired {
+        if let Some(mut query) = pending_queries.remove(&hostname) {
+            query.attempts += 1;
+            if query.attempts < 3 {
+                query.timestamp = now;
+                unsent_queries.push_back(query);
+            } else {
+                hostname_timedout(&query.callback, &hostname);
+            }
+        }
+    }
+}
+
 fn validate_hostname(hostname: &str) -> bool {
     match hostname.find(".local") {
         Some(index) => match hostname.get(0..index) {
@@ -330,54 +385,13 @@ impl MDNSService {
                     }
                     Err(std::sync::mpsc::TryRecvError::Empty) => {}
                 }
-                if pending_queries.len() < 50 {
-                    let mut queries: Vec<Query> = Vec::new();
-                    while queries.len() < 5 && !unsent_queries.is_empty() {
-                        if let Some(query) = unsent_queries.pop_front() {
-                            if !pending_queries.contains_key(&query.hostname) {
-                                queries.push(query);
-                            }
-                        }
-                    }
-                    if !queries.is_empty() {
-                        if let Ok(buf) = create_query(
-                            0,
-                            &queries.iter().map(|q| q.hostname.to_string()).collect(),
-                        ) {
-                            match socket.send_to(&buf, &mdns_addr) {
-                                Ok(_) => {
-                                    for query in queries {
-                                        pending_queries.insert(query.hostname.to_string(), query);
-                                    }
-                                }
-                                Err(err) => {
-                                    warn!("Sending mDNS query failed: {}", err);
-                                    for query in queries {
-                                        unsent_queries.push_back(query);
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
 
-                let now = time::Instant::now();
-                let expired: Vec<String> = pending_queries
-                    .iter()
-                    .filter(|(_, query)| now.duration_since(query.timestamp).as_secs() >= 3)
-                    .map(|(hostname, _)| hostname.to_string())
-                    .collect();
-                for hostname in expired {
-                    if let Some(mut query) = pending_queries.remove(&hostname) {
-                        query.attempts += 1;
-                        if query.attempts < 3 {
-                            query.timestamp = now;
-                            unsent_queries.push_back(query);
-                        } else {
-                            hostname_timedout(&query.callback, &hostname);
-                        }
-                    }
-                }
+                handle_queries(
+                    &socket,
+                    &mdns_addr,
+                    &mut pending_queries,
+                    &mut unsent_queries,
+                );
 
                 match socket.recv_from(&mut buffer) {
                     Ok((amt, _)) => {
