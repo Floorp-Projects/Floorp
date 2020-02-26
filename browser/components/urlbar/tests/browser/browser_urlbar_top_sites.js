@@ -188,3 +188,65 @@ add_task(async function topSitesBookmarksAndTabs() {
     window.gURLBar.blur();
   });
 });
+
+add_task(async function topSitesDisabled() {
+  // Disable top sites.
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.newtabpage.activity-stream.feeds.topsites", false]],
+  });
+
+  // Add some visits.
+  await PlacesUtils.bookmarks.eraseEverything();
+  await PlacesUtils.history.clear();
+  let urlCount = 5;
+  for (let i = 0; i < urlCount; i++) {
+    await PlacesTestUtils.addVisits(`http://example.com/${i}`);
+  }
+
+  // Open the view.
+  await UrlbarTestUtils.promisePopupOpen(window, () => {
+    EventUtils.synthesizeMouseAtCenter(window.gURLBar.inputField, {});
+  });
+  Assert.ok(window.gURLBar.view.isOpen, "UrlbarView should be open.");
+  await UrlbarTestUtils.promiseSearchComplete(window);
+
+  // Check the results.  We should show the most frecent sites from history via
+  // the UnifiedComplete provider.
+  Assert.equal(
+    UrlbarTestUtils.getResultCount(window),
+    urlCount,
+    "The number of results should be the same as the number of URLs added"
+  );
+
+  for (let i = 0; i < urlCount; i++) {
+    let result = await UrlbarTestUtils.getDetailsOfResultAt(window, i);
+    Assert.equal(
+      result.url,
+      `http://example.com/${urlCount - i - 1}`,
+      `Expected URL at index ${i}`
+    );
+    Assert.equal(
+      result.source,
+      UrlbarUtils.RESULT_SOURCE.HISTORY,
+      "The result should be from history"
+    );
+    Assert.equal(
+      result.type,
+      UrlbarUtils.RESULT_TYPE.URL,
+      "The result should be a URL"
+    );
+    Assert.strictEqual(
+      result.heuristic,
+      false,
+      "The result should not be heuristic"
+    );
+  }
+
+  await UrlbarTestUtils.promisePopupClose(window, () => {
+    window.gURLBar.blur();
+  });
+
+  await PlacesUtils.bookmarks.eraseEverything();
+  await PlacesUtils.history.clear();
+  await SpecialPowers.popPrefEnv();
+});
