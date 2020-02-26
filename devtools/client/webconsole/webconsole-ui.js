@@ -584,22 +584,13 @@ class WebConsoleUI {
     return frame.actor;
   }
 
-  getWebconsoleFront({ frameActorId } = {}) {
-    if (frameActorId) {
-      const frameFront = this.hud.getFrontByID(frameActorId);
-      return frameFront.getWebConsoleFront();
-    }
-
-    if (!this.hud.toolbox) {
+  getWebConsoleFront({ frameActorId } = {}) {
+    if (!frameActorId) {
       return this.webConsoleFront;
     }
 
-    const threadFront = this.hud.toolbox.getSelectedThreadFront();
-    if (!threadFront) {
-      return this.webConsoleFront;
-    }
-
-    return threadFront.getWebconsoleFront();
+    const frameFront = this.hud.getFrontByID(frameActorId);
+    return frameFront.getWebConsoleFront();
   }
 
   getSelectedNodeActor() {
