@@ -8,7 +8,7 @@
 const TEST_URI =
   "data:text/html,<meta charset=utf8>Test in-line console layout";
 
-const MINIMUM_MESSAGE_HEIGHT = 19;
+const MINIMUM_MESSAGE_HEIGHT = 20;
 
 add_task(async function() {
   await pushPref("devtools.webconsole.input.eagerEvaluation", true);

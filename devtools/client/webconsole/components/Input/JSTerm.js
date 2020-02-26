@@ -1359,7 +1359,7 @@ class JSTerm extends Component {
 
     return dom.div(
       {
-        className: "jsterm-input-container devtools-input devtools-monospace",
+        className: "jsterm-input-container devtools-input",
         key: "jsterm-container",
         "aria-live": "off",
         tabIndex: -1,

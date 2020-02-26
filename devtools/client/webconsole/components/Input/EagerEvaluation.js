@@ -81,13 +81,21 @@ class EagerEvaluation extends Component {
   render() {
     const hasResult = this.props.terminalEagerResult !== null;
 
-    return dom.span(
-      {
-        className: "devtools-monospace eager-evaluation-result",
-        key: "eager-evaluation-result",
-      },
-      hasResult ? dom.span({ className: "icon", key: "icon" }) : null,
-      hasResult ? this.renderRepsResult() : null
+    return dom.div(
+      { className: "eager-evaluation-result", key: "eager-evaluation-result" },
+      hasResult
+        ? dom.span(
+            { className: "eager-evaluation-result__row" },
+            dom.span({
+              className: "eager-evaluation-result__icon",
+              key: "icon",
+            }),
+            dom.span(
+              { className: "eager-evaluation-result__text", key: "text" },
+              this.renderRepsResult()
+            )
+          )
+        : null
     );
   }
 }

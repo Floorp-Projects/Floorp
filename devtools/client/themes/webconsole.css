@@ -4,8 +4,15 @@
 
 /* Webconsole specific theme variables */
 :root {
+  /* Minimum height of a message (excluding borders) */
+  --console-row-height: 20px;
+  /* We need a unitless line-height to render formatted messages correctly.
+   * Target line-height computed value is 14px, for a 11px font-size. */
   --console-output-line-height: calc(14 / 11);
   --console-output-vertical-padding: 3px;
+  /* Additional vertical padding used on the JSTerm and EagerEvaluation
+   * containers. Set to 0 to make the messages and input seamless. */
+  --console-input-extra-padding: 2px;
   /* Width of the left gutter where icons appear */
   --console-inline-start-gutter: 32px;
   /* Icons perfectly centered in the left gutter "feel" closer to the window
@@ -91,6 +98,8 @@
   width: 100%;
   /* Make the top border cover the previous message's bottom border */
   margin-top: -1px;
+  /* Min height is the target row height plus borders */
+  min-height: calc(var(--console-row-height) + 2px);
   border-top: 1px solid var(--console-message-border);
   border-bottom: 1px solid var(--console-message-border);
   /* Avoid vertical padding, so that we can draw full-height items (e.g. indent guides).
@@ -113,10 +122,17 @@
   }
 }
 
+/* Always hide the border of the first message, but keep its spacing */
+.message:first-child {
+  border-top-color: transparent !important;
+}
+
 /* We already paint a top border on jsterm-input-container (and we need to keep
  * it when scrolling console content), so remove the last item's border. */
-.webconsole-app:not(.jsterm-editor) .message:last-child {
+ .webconsole-app:not(.jsterm-editor) .message:last-child {
   border-bottom-width: 0;
+  /* Adjust the min-height since we now only have a single border. */
+  min-height: calc(var(--console-row-height) + 1px);
 }
 
 /*
@@ -220,8 +236,7 @@
   margin-inline-end: calc(11px - var(--console-icon-horizontal-offset));
 }
 
-.message > .icon,
-.eager-evaluation-result > .icon {
+.message > .icon {
   flex: none;
   align-self: flex-start;
   /* Width and height must be a multiples of 2px to avoid blurry images.
@@ -435,16 +450,16 @@ html #webconsole-notificationbox {
 }
 
 .jsterm-input-container {
+  position: relative;
   max-width: 100%;
   background-color: var(--console-input-background);
-  border-top: 1px solid var(--theme-splitter-color);
-  position: relative;
+  font-family: var(--monospace-font-family);
+  font-size: var(--theme-code-font-size);
+  line-height: var(--console-output-line-height);
 }
 
 /* CodeMirror-powered JsTerm */
-.webconsole-app .jsterm-input-container > .CodeMirror {
-  font-size: var(--theme-code-font-size);
-  line-height: var(--console-output-line-height);
+.jsterm-input-container > .CodeMirror {
   /* aim for a 32px left space (a descendent has 4px padding) */
   padding-inline-start: calc(var(--console-inline-start-gutter) - 4px);
   /* Create a new stacking context */
@@ -453,15 +468,19 @@ html #webconsole-notificationbox {
   /* input icon */
   background-image: url(chrome://devtools/skin/images/webconsole/input.svg);
   background-position-x: calc(10px + var(--console-icon-horizontal-offset));
-  background-position-y: 5px;
+  background-position-y: 4px;
   background-repeat: no-repeat;
   background-size: 12px 12px;
   -moz-context-properties: fill;
   fill: var(--theme-icon-dimmed-color);
 }
 
-.webconsole-app .jsterm-input-container > .CodeMirror-focused {
+.jsterm-input-container > .CodeMirror-focused {
   fill: var(--theme-icon-checked-color);
+}
+
+.jsterm-input-container .CodeMirror-lines {
+  padding-block: var(--console-output-vertical-padding);
 }
 
 .webconsole-app .cm-auto-complete-shadow-text::after {
