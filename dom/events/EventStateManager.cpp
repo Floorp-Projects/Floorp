@@ -2185,43 +2185,6 @@ bool EventStateManager::DoDefaultDragStart(
   return true;
 }
 
-nsresult EventStateManager::GetContentViewer(nsIContentViewer** aCv) {
-  *aCv = nullptr;
-
-  nsPIDOMWindowOuter* window = mDocument->GetWindow();
-  if (!window) return NS_ERROR_FAILURE;
-  nsCOMPtr<nsPIDOMWindowOuter> rootWindow = window->GetPrivateRoot();
-  if (!rootWindow) return NS_ERROR_FAILURE;
-
-  BrowserChild* browserChild = BrowserChild::GetFrom(rootWindow);
-  if (!browserChild) {
-    nsIFocusManager* fm = nsFocusManager::GetFocusManager();
-    if (!fm) return NS_ERROR_FAILURE;
-
-    nsCOMPtr<mozIDOMWindowProxy> activeWindow;
-    fm->GetActiveWindow(getter_AddRefs(activeWindow));
-    if (rootWindow != activeWindow) return NS_OK;
-  } else {
-    if (!browserChild->ParentIsActive()) return NS_OK;
-  }
-
-  nsCOMPtr<nsPIDOMWindowOuter> contentWindow =
-      nsGlobalWindowOuter::Cast(rootWindow)->GetContent();
-  if (!contentWindow) return NS_ERROR_FAILURE;
-
-  Document* doc = contentWindow->GetDoc();
-  if (!doc) return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsISupports> container = doc->GetContainer();
-  if (!container) return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIDocShell> docshell = do_QueryInterface(container);
-  docshell->GetContentViewer(aCv);
-  if (!*aCv) return NS_ERROR_FAILURE;
-
-  return NS_OK;
-}
-
 nsresult EventStateManager::ChangeZoom(int32_t change) {
   MOZ_ASSERT(change == 1 || change == -1, "Can only change by +/- 10%.");
 
