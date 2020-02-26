@@ -45,6 +45,8 @@
 #include "jit/ScalarReplacement.h"
 #include "jit/Sink.h"
 #include "jit/ValueNumbering.h"
+#include "jit/WarpBuilder.h"
+#include "jit/WarpOracle.h"
 #include "jit/WasmBCE.h"
 #include "js/Printf.h"
 #include "js/UniquePtr.h"
@@ -1460,10 +1462,19 @@ CodeGenerator* GenerateCode(MIRGenerator* mir, LIRGraph* lir) {
   return codegen.release();
 }
 
-CodeGenerator* CompileBackEnd(MIRGenerator* mir) {
+CodeGenerator* CompileBackEnd(MIRGenerator* mir, WarpSnapshot* snapshot) {
   // Everything in CompileBackEnd can potentially run on a helper thread.
   AutoEnterIonBackend enter(mir->safeForMinorGC());
   AutoSpewEndFunction spewEndFunction(mir);
+
+  MOZ_ASSERT(!!snapshot == JitOptions.warpBuilder);
+
+  if (snapshot) {
+    WarpBuilder builder(*snapshot, *mir);
+    if (!builder.build()) {
+      return nullptr;
+    }
+  }
 
   if (!OptimizeMIR(mir)) {
     return nullptr;
@@ -1580,6 +1591,25 @@ static AbortReason BuildMIR(JSContext* cx, MIRGenerator* mirGen,
   return AbortReason::NoAbort;
 }
 
+static AbortReasonOr<WarpSnapshot*> CreateWarpSnapshot(JSContext* cx,
+                                                       MIRGenerator* mirGen,
+                                                       HandleScript script) {
+  // Suppress GC. This matches the AutoEnterAnalysis (which suppresses GC) in
+  // BuildMIR.
+  gc::AutoSuppressGC suppressGC(cx);
+
+  WarpOracle oracle(cx, *mirGen, script);
+
+  AbortReasonOr<WarpSnapshot*> result = oracle.createSnapshot();
+
+  MOZ_ASSERT_IF(result.isErr(), result.unwrapErr() == AbortReason::Alloc ||
+                                    result.unwrapErr() == AbortReason::Error ||
+                                    result.unwrapErr() == AbortReason::Disable);
+  MOZ_ASSERT_IF(!result.isErr(), result.unwrap());
+
+  return result;
+}
+
 static AbortReason IonCompile(JSContext* cx, HandleScript script,
                               BaselineFrame* baselineFrame,
                               uint32_t baselineFrameSize, jsbytecode* osrPc,
@@ -1660,10 +1690,20 @@ static AbortReason IonCompile(JSContext* cx, HandleScript script,
     script->ionScript()->setRecompiling();
   }
 
-  AbortReason reason =
-      BuildMIR(cx, mirGen, info, constraints, baselineFrame, baselineFrameSize);
-  if (reason != AbortReason::NoAbort) {
-    return reason;
+  WarpSnapshot* snapshot = nullptr;
+  if (JitOptions.warpBuilder) {
+    AbortReasonOr<WarpSnapshot*> result =
+        CreateWarpSnapshot(cx, mirGen, script);
+    if (result.isErr()) {
+      return result.unwrapErr();
+    }
+    snapshot = result.unwrap();
+  } else {
+    AbortReason reason = BuildMIR(cx, mirGen, info, constraints, baselineFrame,
+                                  baselineFrameSize);
+    if (reason != AbortReason::NoAbort) {
+      return reason;
+    }
   }
 
   // If possible, compile the script off thread.
@@ -1673,14 +1713,16 @@ static AbortReason IonCompile(JSContext* cx, HandleScript script,
             ". (Compiled on background thread.)",
             script->filename(), script->lineno(), script->column());
 
-    IonCompileTask* task =
-        alloc->new_<IonCompileTask>(*mirGen, scriptHasIonScript, constraints);
+    IonCompileTask* task = alloc->new_<IonCompileTask>(
+        *mirGen, scriptHasIonScript, constraints, snapshot);
     if (!task) {
       return AbortReason::Alloc;
     }
 
-    if (!CreateMIRRootList(*task)) {
-      return AbortReason::Alloc;
+    if (!JitOptions.warpBuilder) {
+      if (!CreateMIRRootList(*task)) {
+        return AbortReason::Alloc;
+      }
     }
 
     AutoLockHelperThreadState lock;
@@ -1704,7 +1746,7 @@ static AbortReason IonCompile(JSContext* cx, HandleScript script,
   bool succeeded = false;
   {
     AutoEnterAnalysis enter(cx);
-    UniquePtr<CodeGenerator> codegen(CompileBackEnd(mirGen));
+    UniquePtr<CodeGenerator> codegen(CompileBackEnd(mirGen, snapshot));
     if (!codegen) {
       JitSpew(JitSpew_IonAbort, "Failed during back-end compilation.");
       if (cx->isExceptionPending()) {

@@ -35,6 +35,7 @@ class IonCompileTask final : public RunnableTask,
 
   CompilerConstraintList* constraints_ = nullptr;
   MRootList* rootList_ = nullptr;
+  WarpSnapshot* snapshot_ = nullptr;
 
   // script->hasIonScript() at the start of the compilation. Used to avoid
   // calling hasIonScript() from background compilation threads.
@@ -42,7 +43,8 @@ class IonCompileTask final : public RunnableTask,
 
  public:
   explicit IonCompileTask(MIRGenerator& mirGen, bool scriptHasIonScript,
-                          CompilerConstraintList* constraints);
+                          CompilerConstraintList* constraints,
+                          WarpSnapshot* snapshot);
 
   JSScript* script() { return mirGen_.outerInfo().script(); }
   MIRGenerator& mirGen() { return mirGen_; }

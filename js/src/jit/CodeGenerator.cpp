@@ -5703,6 +5703,10 @@ void CodeGenerator::generateArgumentsChecks(bool assert) {
   // For debug purpose, this is can also be used to force/check that the
   // arguments are correct. Upon fail it will hit a breakpoint.
 
+  if (!IsTypeInferenceEnabled()) {
+    return;
+  }
+
   MIRGraph& mir = gen->graph();
   MResumePoint* rp = mir.entryResumePoint();
 
@@ -10448,20 +10452,22 @@ bool CodeGenerator::generate() {
     deoptTable_.emplace(gen->jitRuntime()->getBailoutTable(frameClass_));
   }
 
-  // Skip over the alternative entry to IonScript code.
-  Label skipPrologue;
-  masm.jump(&skipPrologue);
+  if (IsTypeInferenceEnabled()) {
+    // Skip over the alternative entry to IonScript code.
+    Label skipPrologue;
+    masm.jump(&skipPrologue);
 
-  // An alternative entry to the IonScript code, which doesn't test the
-  // arguments.
-  masm.flushBuffer();
-  setSkipArgCheckEntryOffset(masm.size());
-  masm.setFramePushed(0);
-  if (!generatePrologue()) {
-    return false;
+    // An alternative entry to the IonScript code, which doesn't test the
+    // arguments.
+    masm.flushBuffer();
+    setSkipArgCheckEntryOffset(masm.size());
+    masm.setFramePushed(0);
+    if (!generatePrologue()) {
+      return false;
+    }
+
+    masm.bind(&skipPrologue);
   }
-
-  masm.bind(&skipPrologue);
 
 #ifdef DEBUG
   // Assert that the argument types are correct.
