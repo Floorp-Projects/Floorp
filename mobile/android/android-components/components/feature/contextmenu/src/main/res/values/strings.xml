@@ -17,6 +17,8 @@
     <string name="mozac_feature_contextmenu_copy_image_location">Copy image location</string>
     <!-- Text for context menu item to save / download the image. -->
     <string name="mozac_feature_contextmenu_save_image">Save image</string>
+    <!-- Text for context menu item to save / download the file. -->
+    <string name="mozac_feature_contextmenu_save_file_to_device">Save file to device</string>
     <!-- Text for confirmation "snackbar" shown after opening a link in a new tab.  -->
     <string name="mozac_feature_contextmenu_snackbar_new_tab_opened">New tab opened</string>
     <!-- Text for confirmation "snackbar" shown after opening a link in a new private tab.  -->
@@ -25,6 +27,7 @@
     <string name="mozac_feature_contextmenu_snackbar_link_copied">Link copied to clipboard</string>
     <!-- Action shown in a "snacbkar" after opening a new/private tab. Clicking this action will switch to the newly opened tab. -->
     <string name="mozac_feature_contextmenu_snackbar_action_switch">Switch</string>
+    <!-- Text for context menu item to open the link in an external app. -->
     <string name="mozac_feature_contextmenu_open_link_in_external_app">Open link in external app</string>
     <!-- Action shown in a text selection context menu. This will prompt a search using the selected text. The first parameter is the name of the application (For example: Fenix)-->
     <string name="mozac_selection_context_menu_search">%s Search</string>

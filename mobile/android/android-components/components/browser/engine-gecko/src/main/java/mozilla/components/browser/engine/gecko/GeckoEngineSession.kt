@@ -787,11 +787,11 @@ class GeckoEngineSession(
         return when (elementType) {
             GeckoSession.ContentDelegate.ContextElement.TYPE_AUDIO ->
                 elementSrc?.let {
-                    HitResult.AUDIO(it)
+                    HitResult.AUDIO(it, title)
                 }
             GeckoSession.ContentDelegate.ContextElement.TYPE_VIDEO ->
                 elementSrc?.let {
-                    HitResult.VIDEO(it)
+                    HitResult.VIDEO(it, title)
                 }
             GeckoSession.ContentDelegate.ContextElement.TYPE_IMAGE -> {
                 when {
