@@ -139,10 +139,11 @@ function run_test() {
   });
 
   // Suite start and end messages.
-  logger.suiteStart(["aTest"]);
+  var ids = { aManifest: ["aTest"] };
+  logger.suiteStart(ids);
   assertLastMsg({
     action: "suite_start",
-    tests: ["aTest"],
+    tests: { aManifest: ["aTest"] },
   });
 
   logger.suiteEnd();
