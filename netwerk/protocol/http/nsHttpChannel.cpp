@@ -6855,8 +6855,9 @@ nsresult nsHttpChannel::BeginConnect() {
   // if this somehow fails we can go on without it
   Unused << gHttpHandler->AddConnectionHeader(&mRequestHead, mCaps);
 
-  if (mLoadFlags & VALIDATE_ALWAYS ||
-      BYPASS_LOCAL_CACHE(mLoadFlags, mPreferCacheLoadOverBypass))
+  if (!mIsTRRServiceChannel &&
+      (mLoadFlags & VALIDATE_ALWAYS ||
+       BYPASS_LOCAL_CACHE(mLoadFlags, mPreferCacheLoadOverBypass)))
     mCaps |= NS_HTTP_REFRESH_DNS;
 
   // Adjust mCaps according to our request headers:
