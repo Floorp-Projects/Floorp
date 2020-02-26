@@ -189,6 +189,9 @@
       // details
       testRelation("has_details", RELATION_DETAILS, "details");
       testRelation("details", RELATION_DETAILS_FOR, "has_details");
+      testRelation("has_multiple_details", RELATION_DETAILS, ["details2", "details3"]);
+      testRelation("details2", RELATION_DETAILS_FOR, "has_multiple_details");
+      testRelation("details3", RELATION_DETAILS_FOR, "has_multiple_details");
 
       // error
       testRelation("has_error", RELATION_ERRORMSG, "error");
@@ -399,6 +402,7 @@
   </fieldset>
 
   <input id="has_details" aria-details="details"><section id="details"></section>
+  <input id="has_multiple_details" aria-details="details2 details3"><section id="details2"></section><section id="details3"></section>
   <input id="has_error" aria-errormessage="error"><section id="error"></section>
 </body>
 </html>
