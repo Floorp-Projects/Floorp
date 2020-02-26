@@ -4507,6 +4507,11 @@ bool jit::AnalyzeArgumentsUsage(JSContext* cx, JSScript* scriptArg) {
     return true;
   }
 
+  if (JitOptions.warpBuilder) {
+    // TODO: support using WarpBuilder for arguments analysis.
+    return true;
+  }
+
   static const uint32_t MAX_SCRIPT_SIZE = 10000;
   if (script->length() > MAX_SCRIPT_SIZE) {
     return true;

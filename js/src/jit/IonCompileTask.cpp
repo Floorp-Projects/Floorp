@@ -23,7 +23,7 @@ void IonCompileTask::runTask() {
   AutoTraceLog logCompile(logger, TraceLogger_IonCompilation);
 
   jit::JitContext jctx(mirGen_.realm->runtime(), mirGen_.realm, &alloc());
-  setBackgroundCodegen(jit::CompileBackEnd(&mirGen_));
+  setBackgroundCodegen(jit::CompileBackEnd(&mirGen_, snapshot_));
 }
 
 void IonCompileTask::trace(JSTracer* trc) {
@@ -31,14 +31,18 @@ void IonCompileTask::trace(JSTracer* trc) {
     return;
   }
 
-  MOZ_ASSERT(rootList_);
-  rootList_->trace(trc);
+  if (!JitOptions.warpBuilder) {
+    MOZ_ASSERT(rootList_);
+    rootList_->trace(trc);
+  }
 }
 
 IonCompileTask::IonCompileTask(MIRGenerator& mirGen, bool scriptHasIonScript,
-                               CompilerConstraintList* constraints)
+                               CompilerConstraintList* constraints,
+                               WarpSnapshot* snapshot)
     : mirGen_(mirGen),
       constraints_(constraints),
+      snapshot_(snapshot),
       scriptHasIonScript_(scriptHasIonScript) {}
 
 size_t IonCompileTask::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) {

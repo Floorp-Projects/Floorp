@@ -64,11 +64,12 @@ class MIRGenerator;
 class LIRGraph;
 class CodeGenerator;
 class LazyLinkExitFrameLayout;
+class WarpSnapshot;
 
 MOZ_MUST_USE bool OptimizeMIR(MIRGenerator* mir);
 LIRGraph* GenerateLIR(MIRGenerator* mir);
 CodeGenerator* GenerateCode(MIRGenerator* mir, LIRGraph* lir);
-CodeGenerator* CompileBackEnd(MIRGenerator* mir);
+CodeGenerator* CompileBackEnd(MIRGenerator* mir, WarpSnapshot* snapshot);
 
 void LinkIonScript(JSContext* cx, HandleScript calleescript);
 uint8_t* LazyLinkTopActivation(JSContext* cx, LazyLinkExitFrameLayout* frame);
