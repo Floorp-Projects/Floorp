@@ -730,7 +730,7 @@ fn test_get_preferred_channel_layout_output() {
         ("ispk", STEREO.to_vec()),
         ("FApd", STEREO.to_vec()),
     ]
-    .into_iter()
+    .iter()
     .cloned()
     .collect();
 
@@ -766,7 +766,7 @@ fn test_get_current_channel_layout_output() {
         ("ispk", STEREO.to_vec()),
         ("FApd", STEREO.to_vec()),
     ]
-    .into_iter()
+    .iter()
     .cloned()
     .collect();
 
