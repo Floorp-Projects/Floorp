@@ -16,6 +16,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
   PlacesSearchAutocompleteProvider:
     "resource://gre/modules/PlacesSearchAutocompleteProvider.jsm",
+  Services: "resource://gre/modules/Services.jsm",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
   UrlbarProvider: "resource:///modules/UrlbarUtils.jsm",
   UrlbarProviderOpenTabs: "resource:///modules/UrlbarProviderOpenTabs.jsm",
@@ -69,13 +70,18 @@ class ProviderTopSites extends UrlbarProvider {
    * @returns {boolean} Whether this provider should be invoked for the search.
    */
   isActive(queryContext) {
-    // We don't want to show Top sites in private windows or if they are
-    // disabled in about:newtab, but the provider is not disabled in those cases
-    // because the user may still want to show them by pressing down.
+    // If top sites on new tab are disabled, the pref below will be false, and
+    // activity stream's top sites will be unavailable (an empty array), so we
+    // make this provider inactive.  For empty search strings, we instead show
+    // the most frecent URLs in the user's history from the UnifiedComplete
+    // provider.
     return (
       UrlbarPrefs.get("update1") &&
       UrlbarPrefs.get("openViewOnFocus") &&
-      !queryContext.searchString
+      !queryContext.searchString &&
+      Services.prefs.getBoolPref(
+        "browser.newtabpage.activity-stream.feeds.topsites"
+      )
     );
   }
 
