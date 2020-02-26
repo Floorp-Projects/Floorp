@@ -104,6 +104,9 @@ def bindgen_clang_compiler(clang_path, c_compiler, cxx_compiler,
                               toolchain_search_path)
     if not clang_path:
         return
+    # Hack before bug 1617793: if the compiler is clang-cl, hack the target
+    if cxx_compiler.type == 'clang-cl':
+        target = split_triplet('%s-pc-windows-msvc' % target.raw_cpu, allow_msvc=True)
     flags = prepare_flags(target, macos_sdk)
     info = check_compiler([clang_path] + flags, 'C++', target)
     return namespace(
