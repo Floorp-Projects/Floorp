@@ -245,6 +245,7 @@ void TestLEB128() {
     for (unsigned i = 0; i < test.mSize; ++i) {
       MOZ_RELEASE_ASSERT(buffer[i] == uint8_t(test.mBytes[i]));
     }
+
     // Move pointer (iterator) back to start of buffer.
     p = buffer;
     // And read the LEB128 we wrote above.
@@ -254,10 +255,114 @@ void TestLEB128() {
     MOZ_RELEASE_ASSERT(p == buffer + test.mSize);
     // And check the read value.
     MOZ_RELEASE_ASSERT(read == test.mValue);
+
+    // Testing ULEB128 reader.
+    ULEB128Reader<uint64_t> reader;
+    MOZ_RELEASE_ASSERT(!reader.IsComplete());
+    // Move pointer back to start of buffer.
+    p = buffer;
+    for (;;) {
+      // Read a byte and feed it to the reader.
+      if (reader.FeedByteIsComplete(*p++)) {
+        break;
+      }
+      // Not complete yet, we shouldn't have reached the end pointer.
+      MOZ_RELEASE_ASSERT(!reader.IsComplete());
+      MOZ_RELEASE_ASSERT(p < buffer + test.mSize);
+    }
+    MOZ_RELEASE_ASSERT(reader.IsComplete());
+    // Pointer should have advanced just past the expected LEB128 size.
+    MOZ_RELEASE_ASSERT(p == buffer + test.mSize);
+    // And check the read value.
+    MOZ_RELEASE_ASSERT(reader.Value() == test.mValue);
+
+    // And again after a Reset.
+    reader.Reset();
+    MOZ_RELEASE_ASSERT(!reader.IsComplete());
+    p = buffer;
+    for (;;) {
+      if (reader.FeedByteIsComplete(*p++)) {
+        break;
+      }
+      MOZ_RELEASE_ASSERT(!reader.IsComplete());
+      MOZ_RELEASE_ASSERT(p < buffer + test.mSize);
+    }
+    MOZ_RELEASE_ASSERT(reader.IsComplete());
+    MOZ_RELEASE_ASSERT(p == buffer + test.mSize);
+    MOZ_RELEASE_ASSERT(reader.Value() == test.mValue);
   }
 
   printf("TestLEB128 done\n");
 }
+
+template <uint8_t byte, uint8_t... tail>
+constexpr bool TestConstexprULEB128Reader(ULEB128Reader<uint64_t>& aReader) {
+  if (aReader.IsComplete()) {
+    return false;
+  }
+  const bool isComplete = aReader.FeedByteIsComplete(byte);
+  if (aReader.IsComplete() != isComplete) {
+    return false;
+  }
+  if constexpr (sizeof...(tail) == 0) {
+    return isComplete;
+  } else {
+    if (isComplete) {
+      return false;
+    }
+    return TestConstexprULEB128Reader<tail...>(aReader);
+  }
+}
+
+template <uint64_t expected, uint8_t... bytes>
+constexpr bool TestConstexprULEB128Reader() {
+  ULEB128Reader<uint64_t> reader;
+  if (!TestConstexprULEB128Reader<bytes...>(reader)) {
+    return false;
+  }
+  if (!reader.IsComplete()) {
+    return false;
+  }
+  if (reader.Value() != expected) {
+    return false;
+  }
+
+  reader.Reset();
+  if (!TestConstexprULEB128Reader<bytes...>(reader)) {
+    return false;
+  }
+  if (!reader.IsComplete()) {
+    return false;
+  }
+  if (reader.Value() != expected) {
+    return false;
+  }
+
+  return true;
+}
+
+static_assert(TestConstexprULEB128Reader<0x0u, 0x0u>());
+static_assert(!TestConstexprULEB128Reader<0x0u, 0x0u, 0x0u>());
+static_assert(TestConstexprULEB128Reader<0x1u, 0x1u>());
+static_assert(TestConstexprULEB128Reader<0x7Fu, 0x7Fu>());
+static_assert(TestConstexprULEB128Reader<0x80u, 0x80u, 0x01u>());
+static_assert(!TestConstexprULEB128Reader<0x80u, 0x80u>());
+static_assert(!TestConstexprULEB128Reader<0x80u, 0x01u>());
+static_assert(TestConstexprULEB128Reader<0x81u, 0x81u, 0x01u>());
+static_assert(TestConstexprULEB128Reader<0xFFu, 0xFFu, 0x01u>());
+static_assert(TestConstexprULEB128Reader<0x100u, 0x80u, 0x02u>());
+static_assert(TestConstexprULEB128Reader<0xFFFFFFFFu, 0xFFu, 0xFFu, 0xFFu,
+                                         0xFFu, 0x0Fu>());
+static_assert(
+    !TestConstexprULEB128Reader<0xFFFFFFFFu, 0xFFu, 0xFFu, 0xFFu, 0xFFu>());
+static_assert(!TestConstexprULEB128Reader<0xFFFFFFFFu, 0xFFu, 0xFFu, 0xFFu,
+                                          0xFFu, 0xFFu, 0x0Fu>());
+static_assert(
+    TestConstexprULEB128Reader<0xFFFFFFFFFFFFFFFFu, 0xFFu, 0xFFu, 0xFFu, 0xFFu,
+                               0xFFu, 0xFFu, 0xFFu, 0xFFu, 0xFFu, 0x01u>());
+static_assert(
+    !TestConstexprULEB128Reader<0xFFFFFFFFFFFFFFFFu, 0xFFu, 0xFFu, 0xFFu, 0xFFu,
+                                0xFFu, 0xFFu, 0xFFu, 0xFFu, 0xFFu>());
 
 static void TestModuloBuffer(ModuloBuffer<>& mb, uint32_t MBSize) {
   using MB = ModuloBuffer<>;
