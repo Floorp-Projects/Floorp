@@ -797,7 +797,7 @@ nr_reg_is_valid(NR_registry name)
 
     /* all characters cannot be space, and must be printable and not / */
     for (i = 0; i < length; ++i) {
-      if (isspace(name[i]) || ! (isprint(name[i]) || name[i] == '/'))
+      if (isspace(name[i]) || !isprint(name[i]) || name[i] == '/')
         ABORT(R_BAD_ARGS);
     }
 
