@@ -6,6 +6,7 @@
 
 UNIFIED_SOURCES += [
     'TestOriginAttributes.cpp',
+    'TestPrincipalAttributes.cpp',
     'TestPrincipalSerialization.cpp'
 ]
 

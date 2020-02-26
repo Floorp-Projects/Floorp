@@ -429,6 +429,11 @@ interface nsIPrincipal : nsISerializable
     * Returns true if the URI is an Onion URI
     */
     [infallible] readonly attribute boolean isOnion;
+
+    /**
+     * Returns if the principal is for an IP address.
+     */
+    [infallible] readonly attribute boolean isIpAddress;
 };
 
 /**
