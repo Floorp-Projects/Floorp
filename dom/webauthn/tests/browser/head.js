@@ -38,3 +38,103 @@ function memcmp(x, y) {
 
   return true;
 }
+
+function arrivingHereIsBad(aResult) {
+  ok(false, "Bad result! Received a: " + aResult);
+}
+
+function expectError(aType) {
+  let expected = `${aType}Error`;
+  return function(aResult) {
+    is(
+      aResult.slice(0, expected.length),
+      expected,
+      `Expecting a ${aType}Error`
+    );
+  };
+}
+
+/* eslint-disable no-shadow */
+function promiseWebAuthnMakeCredential(
+  tab,
+  attestation = "none",
+  extensions = {}
+) {
+  return ContentTask.spawn(
+    tab.linkedBrowser,
+    [attestation, extensions],
+    ([attestation, extensions]) => {
+      const cose_alg_ECDSA_w_SHA256 = -7;
+
+      let challenge = content.crypto.getRandomValues(new Uint8Array(16));
+
+      let pubKeyCredParams = [
+        {
+          type: "public-key",
+          alg: cose_alg_ECDSA_w_SHA256,
+        },
+      ];
+
+      let publicKey = {
+        rp: { id: content.document.domain, name: "none", icon: "none" },
+        user: {
+          id: new Uint8Array(),
+          name: "none",
+          icon: "none",
+          displayName: "none",
+        },
+        pubKeyCredParams,
+        extensions,
+        attestation,
+        challenge,
+      };
+
+      return content.navigator.credentials
+        .create({ publicKey })
+        .then(credential => {
+          return {
+            attObj: credential.response.attestationObject,
+            rawId: credential.rawId,
+          };
+        });
+    }
+  );
+}
+
+function promiseWebAuthnGetAssertion(tab, key_handle = null, extensions = {}) {
+  return ContentTask.spawn(
+    tab.linkedBrowser,
+    [key_handle, extensions],
+    ([key_handle, extensions]) => {
+      let challenge = content.crypto.getRandomValues(new Uint8Array(16));
+      if (key_handle == null) {
+        key_handle = content.crypto.getRandomValues(new Uint8Array(16));
+      }
+
+      let credential = {
+        id: key_handle,
+        type: "public-key",
+        transports: ["usb"],
+      };
+
+      let publicKey = {
+        challenge,
+        extensions,
+        rpId: content.document.domain,
+        allowCredentials: [credential],
+      };
+
+      return content.navigator.credentials
+        .get({ publicKey })
+        .then(assertion => {
+          return {
+            authenticatorData: assertion.response.authenticatorData,
+            clientDataJSON: assertion.response.clientDataJSON,
+            extensions: assertion.getClientExtensionResults(),
+            signature: assertion.response.signature,
+          };
+        });
+    }
+  );
+}
+/* eslint-enable no-shadow */
