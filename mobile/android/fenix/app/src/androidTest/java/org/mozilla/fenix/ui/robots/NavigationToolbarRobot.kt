@@ -54,6 +54,10 @@ class NavigationToolbarRobot {
                 waitingTime
             )
             urlBar().click()
+            mDevice.waitNotNull(
+                Until.findObject(By.res("org.mozilla.fenix.debug:id/mozac_browser_toolbar_edit_url_view")),
+                waitingTime
+            )
             awesomeBar().perform(replaceText(url.toString()), pressImeActionButton())
 
             BrowserRobot().interact()
