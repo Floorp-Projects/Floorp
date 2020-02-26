@@ -266,35 +266,45 @@ def verify_nightly_no_sccache(task, taskgraph, scratch_pad, graph_config):
 @verifications.add('full_task_graph')
 def verify_test_packaging(task, taskgraph, scratch_pad, graph_config):
     if task is None:
+        exceptions = []
         for task in taskgraph.tasks.itervalues():
             if task.kind == 'build' and not task.attributes.get('skip-verify-test-packaging'):
                 build_env = task.task.get('payload', {}).get('env', {})
                 package_tests = build_env.get('MOZ_AUTOMATION_PACKAGE_TESTS')
                 shippable = task.attributes.get('shippable', False)
+                nightly = task.attributes.get('nightly', False)
                 build_has_tests = scratch_pad.get(task.label)
 
                 if package_tests != '1':
                     # Shippable builds should always package tests.
                     if shippable:
-                        raise Exception('Build job {} is shippable and does not specify '
-                                        'MOZ_AUTOMATION_PACKAGE_TESTS=1 in the '
-                                        'environment.'.format(task.label))
+                        exceptions.append('Build job {} is shippable and does not specify '
+                                          'MOZ_AUTOMATION_PACKAGE_TESTS=1 in the '
+                                          'environment.'.format(task.label))
+                    if nightly:
+                        exceptions.append('Build job {} is nightly and does not specify '
+                                          'MOZ_AUTOMATION_PACKAGE_TESTS=1 in the '
+                                          'environment.'.format(task.label))
 
                     # Build tasks in the scratch pad have tests dependent on
                     # them, so we need to package tests during build.
                     if build_has_tests:
-                        raise Exception(
+                        exceptions.append(
                             'Build job {} has tests dependent on it and does not specify '
                             'MOZ_AUTOMATION_PACKAGE_TESTS=1 in the environment'.format(task.label))
                 else:
                     # Build tasks that aren't in the scratch pad have no
                     # dependent tests, so we shouldn't package tests.
-                    if not build_has_tests:
-                        raise Exception(
+                    # With the caveat that we expect shippable and nightly jobs to always
+                    # produce tests.
+                    if not build_has_tests and not any([shippable, nightly]):
+                        exceptions.append(
                             'Build job {} has no tests, but specifies '
                             'MOZ_AUTOMATION_PACKAGE_TESTS={} in the environment. '
                             'Unset MOZ_AUTOMATION_PACKAGE_TESTS in the task definition '
                             'to fix.'.format(task.label, package_tests))
+        if exceptions:
+            raise Exception("\n".join(exceptions))
         return
     if task.kind == 'test':
         build_task = taskgraph[task.dependencies['build']]
