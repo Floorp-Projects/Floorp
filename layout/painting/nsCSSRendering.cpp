@@ -4061,6 +4061,16 @@ void nsCSSRendering::PaintDecorationLine(
   int32_t spacingOffset = isRTL ? aParams.glyphRange.Length() - 1 : 0;
   gfxTextRun::GlyphRunIterator iter(textRun, aParams.glyphRange, isRTL);
 
+  // For any glyph run where we don't actually do skipping, we'll need to
+  // advance the current position by its width.
+  // (For runs we do process, CreateTextBlob will update the position.)
+  auto currentGlyphRunAdvance = [&]() {
+    return textRun->GetAdvanceWidth(
+               gfxTextRun::Range(iter.GetStringStart(), iter.GetStringEnd()),
+               aParams.provider) /
+           appUnitsPerDevPixel;
+  };
+
   while (iter.NextRun()) {
     if (iter.GetGlyphRun()->mOrientation ==
             mozilla::gfx::ShapedTextFlags::TEXT_ORIENT_VERTICAL_UPRIGHT ||
@@ -4072,11 +4082,7 @@ void nsCSSRendering::PaintDecorationLine(
       // We also don't apply skip-ink to CJK text runs because many fonts
       // have an underline that looks really bad if this is done
       // (see https://bugzilla.mozilla.org/show_bug.cgi?id=1573249).
-      textPos.fX +=
-          textRun->GetAdvanceWidth(
-              gfxTextRun::Range(iter.GetStringStart(), iter.GetStringEnd()),
-              aParams.provider) /
-          appUnitsPerDevPixel;
+      textPos.fX += currentGlyphRunAdvance();
       continue;
     }
 
@@ -4085,6 +4091,7 @@ void nsCSSRendering::PaintDecorationLine(
     // because old macOS (10.9) may crash trying to retrieve glyph paths
     // that don't exist.
     if (font->GetFontEntry()->HasFontTable(TRUETYPE_TAG('s', 'b', 'i', 'x'))) {
+      textPos.fX += currentGlyphRunAdvance();
       continue;
     }
 
@@ -4103,6 +4110,7 @@ void nsCSSRendering::PaintDecorationLine(
                        (float)appUnitsPerDevPixel, textPos, spacingOffset);
 
     if (!textBlob) {
+      textPos.fX += currentGlyphRunAdvance();
       continue;
     }
 
