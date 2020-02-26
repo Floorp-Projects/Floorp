@@ -44,13 +44,17 @@ pub fn get_channel_order(channel_layout: ChannelLayout) -> Vec<audio_mixer::Chan
 fn get_default_channel_order(channel_count: usize) -> Vec<audio_mixer::Channel> {
     assert_ne!(channel_count, 0);
     let mut channels = Vec::with_capacity(channel_count);
-    for i in 0..channel_count {
-        channels.push(if i < CHANNEL_OERDER.len() {
-            CHANNEL_OERDER[i]
-        } else {
-            audio_mixer::Channel::Silence
-        });
+    for channel in CHANNEL_OERDER.iter().take(channel_count) {
+        channels.push(*channel);
     }
+
+    if channel_count > CHANNEL_OERDER.len() {
+        channels.extend(vec![
+            audio_mixer::Channel::Silence;
+            channel_count - CHANNEL_OERDER.len()
+        ]);
+    }
+
     channels
 }
 
@@ -202,7 +206,7 @@ impl Mixer {
         }
 
         let all_silence = vec![audio_mixer::Channel::Silence; out_channel_count];
-        if output_channels.len() == 0
+        if output_channels.is_empty()
             || out_channel_count != output_channels.len()
             || all_silence == output_channels
         {
@@ -429,4 +433,18 @@ fn test_get_channel_order() {
             Channel::SideRight
         ]
     );
+}
+
+#[test]
+fn test_get_default_channel_order() {
+    for len in 1..CHANNEL_OERDER.len() + 10 {
+        let channels = get_default_channel_order(len);
+        if len <= CHANNEL_OERDER.len() {
+            assert_eq!(channels, &CHANNEL_OERDER[..len]);
+        } else {
+            let silences = vec![audio_mixer::Channel::Silence; len - CHANNEL_OERDER.len()];
+            assert_eq!(channels[..CHANNEL_OERDER.len()], CHANNEL_OERDER);
+            assert_eq!(&channels[CHANNEL_OERDER.len()..], silences.as_slice());
+        }
+    }
 }

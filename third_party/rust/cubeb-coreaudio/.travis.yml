@@ -5,9 +5,12 @@ rust:
   - nightly
 os:
   - osx
+env:
+  - RUST_BACKTRACE=1
 before_script:
   - rustc --version
   - cargo --version
+  - sh install_rustfmt_clippy.sh
 script:
   - cargo build --verbose
   - sh run_tests.sh

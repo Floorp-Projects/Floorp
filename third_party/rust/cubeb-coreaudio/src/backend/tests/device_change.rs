@@ -337,6 +337,7 @@ fn test_register_device_changed_callback_to_check_default_device_changed(stm_typ
 
     if !run_available {
         println!("No enough devices to run the test!");
+        return;
     }
 
     let changed_count = Arc::new(Mutex::new(0u32));

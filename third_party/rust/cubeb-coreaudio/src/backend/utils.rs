@@ -5,18 +5,14 @@
 use cubeb_backend::SampleFormat as fmt;
 use std::mem;
 
-pub fn allocate_array_by_size<T>(size: usize) -> Vec<T> {
+pub fn allocate_array_by_size<T: Clone + Default>(size: usize) -> Vec<T> {
     assert_eq!(size % mem::size_of::<T>(), 0);
     let elements = size / mem::size_of::<T>();
     allocate_array::<T>(elements)
 }
 
-pub fn allocate_array<T>(elements: usize) -> Vec<T> {
-    let mut array = Vec::<T>::with_capacity(elements);
-    unsafe {
-        array.set_len(elements);
-    }
-    array
+pub fn allocate_array<T: Clone + Default>(elements: usize) -> Vec<T> {
+    vec![T::default(); elements]
 }
 
 pub fn forget_vec<T>(v: Vec<T>) -> (*mut T, usize) {
@@ -43,7 +39,9 @@ struct Finalizer<F: FnOnce()>(Option<F>);
 
 impl<F: FnOnce()> Drop for Finalizer<F> {
     fn drop(&mut self) {
-        self.0.take().map(|f| f());
+        if let Some(f) = self.0.take() {
+            f()
+        }
     }
 }
 
