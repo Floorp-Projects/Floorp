@@ -33,6 +33,14 @@ interface nsIViewSourceChannel : nsIChannel
      * srcdoc channel.
      */
     [must_use] attribute nsIURI baseURI;
+
+    /**
+     * If true (default), then replaces the nsIRequest* passed to
+     * nsIStreamListener callback functions with itself, so that
+     * nsIViewSourceChannel is available.
+     * Otherwise passes through the the nsIRequest* from the inner channel.
+     */
+    attribute boolean replaceRequest;
 };
 
 

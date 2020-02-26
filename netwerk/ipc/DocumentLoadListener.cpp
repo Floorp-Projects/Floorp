@@ -32,7 +32,7 @@
 #include "nsExternalHelperAppService.h"
 #include "nsCExternalHandlerService.h"
 #include "nsMimeTypes.h"
-#include "nsIWrapperChannel.h"
+#include "nsIViewSourceChannel.h"
 
 mozilla::LazyLogModule gDocumentChannelLog("DocumentChannel");
 #define LOG(fmt) MOZ_LOG(gDocumentChannelLog, mozilla::LogLevel::Verbose, fmt)
@@ -305,6 +305,15 @@ bool DocumentLoadListener::Open(
   nsCOMPtr<nsITimedChannel> timedChannel = do_QueryInterface(mChannel);
   if (timedChannel) {
     timedChannel->SetAsyncOpen(aAsyncOpenTime);
+  }
+
+  // nsViewSourceChannel normally replaces the nsIRequest passed to
+  // OnStart/StopRequest with itself. We don't need this, and instead
+  // we want the original request so that we get different ones for
+  // each part of a multipart channel.
+  if (nsCOMPtr<nsIViewSourceChannel> viewSourceChannel =
+          do_QueryInterface(mChannel)) {
+    viewSourceChannel->SetReplaceRequest(false);
   }
 
   // Setup a ClientChannelHelper to watch for redirects, and copy
@@ -650,11 +659,7 @@ void DocumentLoadListener::SerializeRedirectData(
   nsCOMPtr<nsIRedirectChannelRegistrar> registrar =
       RedirectChannelRegistrar::GetOrCreate();
   MOZ_ASSERT(registrar);
-  nsCOMPtr<nsIChannel> chan = mChannel;
-  if (nsCOMPtr<nsIWrapperChannel> wrapper = do_QueryInterface(chan)) {
-    wrapper->GetInnerChannel(getter_AddRefs(chan));
-  }
-  nsresult rv = registrar->RegisterChannel(chan, &mRedirectChannelId);
+  nsresult rv = registrar->RegisterChannel(mChannel, &mRedirectChannelId);
   NS_ENSURE_SUCCESS_VOID(rv);
   aArgs.registrarId() = mRedirectChannelId;
 

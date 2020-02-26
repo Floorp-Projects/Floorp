@@ -53,7 +53,6 @@
 #include "nsThreadUtils.h"
 #include "nsQueryObject.h"
 #include "nsIMultiPartChannel.h"
-#include "nsIWrapperChannel.h"
 
 using mozilla::BasePrincipal;
 using namespace mozilla::dom;
@@ -1383,11 +1382,6 @@ HttpChannelParent::OnStartRequest(nsIRequest* aRequest) {
       multiPartChannel->GetPartID(&partID);
       multiPartID = Some(partID);
       multiPartChannel->GetIsLastPart(&isLastPartOfMultiPart);
-    } else if (nsCOMPtr<nsIWrapperChannel> wrapperChannel =
-                   do_QueryInterface(aRequest)) {
-      nsCOMPtr<nsIChannel> inner;
-      wrapperChannel->GetInnerChannel(getter_AddRefs(inner));
-      chan = do_QueryObject(inner);
     }
   }
   MOZ_ASSERT(multiPartID || !mIsMultiPart, "Changed multi-part state?");
