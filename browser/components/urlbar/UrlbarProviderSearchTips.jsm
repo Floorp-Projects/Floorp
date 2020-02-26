@@ -201,7 +201,7 @@ class ProviderSearchTips extends UrlbarProvider {
       case TIPS.REDIRECT:
         result.heuristic = false;
         result.payload.textData = {
-          id: "urlbar-search-tips-redirect",
+          id: "urlbar-search-tips-redirect-2",
           args: {
             engineName: defaultEngine.name,
           },
