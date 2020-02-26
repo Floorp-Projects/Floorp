@@ -324,10 +324,18 @@ bool DebuggerScript::CallData::getDisplayName() {
   return true;
 }
 
-template <typename T>
-/* static */
-bool DebuggerScript::getUrlImpl(JSContext* cx, const CallArgs& args,
-                                Handle<T*> script) {
+bool DebuggerScript::CallData::getUrl() {
+  if (!ensureScriptMaybeLazy()) {
+    return false;
+  }
+
+  Rooted<BaseScript*> script(cx);
+  if (referent.is<JSScript*>()) {
+    script = referent.as<JSScript*>();
+  } else {
+    script = referent.as<LazyScript*>();
+  }
+
   if (script->filename()) {
     JSString* str;
     if (script->scriptSource()->introducerFilename()) {
@@ -344,20 +352,6 @@ bool DebuggerScript::getUrlImpl(JSContext* cx, const CallArgs& args,
     args.rval().setNull();
   }
   return true;
-}
-
-bool DebuggerScript::CallData::getUrl() {
-  if (!ensureScriptMaybeLazy()) {
-    return false;
-  }
-
-  if (referent.is<JSScript*>()) {
-    RootedScript script(cx, referent.as<JSScript*>());
-    return getUrlImpl<JSScript>(cx, args, script);
-  }
-
-  Rooted<LazyScript*> lazyScript(cx, referent.as<LazyScript*>());
-  return getUrlImpl<LazyScript>(cx, args, lazyScript);
 }
 
 bool DebuggerScript::CallData::getStartLine() {
