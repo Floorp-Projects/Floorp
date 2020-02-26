@@ -68,6 +68,31 @@
 //! list contains more than some arbitrary number of slices (currently 8), the
 //! content will all be squashed into a single slice, in order to save GPU memory
 //! and compositing performance.
+//!
+//! ## Overlay Tiles
+//!
+//! Sometimes, a primitive would prefer to exist as a native compositor surface.
+//! This allows a large and/or regularly changing primitive (such as a video, or
+//! webgl canvas) to be updated each frame without invalidating the content of
+//! tiles, and can provide a significant performance win and battery saving.
+//!
+//! Since drawing a primitive as a compositor surface alters the ordering of
+//! primitives in a tile, we use 'overlay tiles' to ensure correctness. If a
+//! tile has a compositor surface, _and_ that tile has primitives that overlap
+//! the compositor surface rect, the tile switches to be drawn in overlay mode.
+//!
+//! We rely on only promoting compositor surfaces that are opaque primitives.
+//! With this assumption, the tile(s) that intersect the compositor surface get
+//! a 'cutout' in the rectangle where the compositor surface exists (not the
+//! entire tile), allowing that tile to be drawn as an overlay after the
+//! compositor surface.
+//!
+//! Tiles are only drawn in overlay mode if there is content that exists on top
+//! of the compositor surface. Otherwise, we can draw the tiles in the normal fast
+//! path before the compositor surface is drawn. Use of the per-tile valid and
+//! dirty rects ensure that we do a minimal amount of per-pixel work here to
+//! blend the overlay tile (this is not always optimal right now, but will be
+//! improved as a follow up).
 
 use api::{MixBlendMode, PipelineId, PremultipliedColorF, FilterPrimitiveKind};
 use api::{PropertyBinding, PropertyBindingId, FilterPrimitive, FontRenderMode};
@@ -79,6 +104,7 @@ use crate::spatial_tree::{ROOT_SPATIAL_NODE_INDEX,
     SpatialTree, CoordinateSpaceMapping, SpatialNodeIndex, VisibleFace
 };
 use crate::composite::{CompositorKind, CompositeState, NativeSurfaceId, NativeTileId};
+use crate::composite::{ExternalSurfaceDescriptor};
 use crate::debug_colors;
 use euclid::{vec3, Point2D, Scale, Size2D, Vector2D, Rect, Transform3D};
 use euclid::approxeq::ApproxEq;
@@ -101,11 +127,12 @@ use crate::render_target::RenderTargetKind;
 use crate::render_task::{RenderTask, RenderTaskLocation, BlurTaskCache, ClearMode};
 use crate::resource_cache::{ResourceCache, ImageGeneration};
 use crate::scene::SceneProperties;
+use crate::spatial_tree::CoordinateSystemId;
 use smallvec::SmallVec;
 use std::{mem, u8, marker, u32};
 use std::sync::atomic::{AtomicUsize, Ordering};
 use crate::texture_cache::TextureCacheHandle;
-use crate::util::{MaxRect, scale_factors, VecHelper, RectHelpers};
+use crate::util::{MaxRect, scale_factors, VecHelper, RectHelpers, MatrixHelpers};
 use crate::filterdata::{FilterDataHandle};
 #[cfg(any(feature = "capture", feature = "replay"))]
 use ron;
@@ -145,12 +172,17 @@ use crate::scene_building::{SliceFlags};
 use std::collections::HashMap;
 
 /// Specify whether a surface allows subpixel AA text rendering.
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum SubpixelMode {
     /// This surface allows subpixel AA text
     Allow,
     /// Subpixel AA text cannot be drawn on this surface
     Deny,
+    /// Subpixel AA can be drawn on this surface, if not intersecting
+    /// with the excluded regions
+    Conditional {
+        excluded_rects: Vec<PictureRect>,
+    },
 }
 
 /// A comparable transform matrix, that compares with epsilon checks.
@@ -282,6 +314,11 @@ pub struct TileCoordinate;
 pub type TileOffset = Point2D<i32, TileCoordinate>;
 pub type TileSize = Size2D<i32, TileCoordinate>;
 pub type TileRect = Rect<i32, TileCoordinate>;
+
+/// The maximum number of compositor surfaces that are allowed per picture cache. This
+/// is an arbitrary number that should be enough for common cases, but low enough to
+/// prevent performance and memory usage drastically degrading in pathological cases.
+const MAX_COMPOSITOR_SURFACES: usize = 4;
 
 /// The size in device pixels of a normal cached tile.
 pub const TILE_SIZE_DEFAULT: DeviceIntSize = DeviceIntSize {
@@ -483,6 +520,9 @@ struct PrimitiveDependencyInfo {
 
     /// Spatial nodes references by the clip dependencies of this primitive.
     spatial_nodes: SmallVec<[SpatialNodeIndex; 4]>,
+
+    /// If true, this primitive has been promoted to be a compositor surface.
+    is_compositor_surface: bool,
 }
 
 impl PrimitiveDependencyInfo {
@@ -501,6 +541,7 @@ impl PrimitiveDependencyInfo {
             prim_clip_rect,
             clips: SmallVec::new(),
             spatial_nodes: SmallVec::new(),
+            is_compositor_surface: false,
         }
     }
 }
@@ -789,6 +830,8 @@ pub struct Tile {
     background_color: Option<ColorF>,
     /// The first reason the tile was invalidated this frame.
     invalidation_reason: Option<InvalidationReason>,
+    /// If true, this tile has one or more compositor surfaces affecting it.
+    pub has_compositor_surface: bool,
 }
 
 impl Tile {
@@ -814,6 +857,7 @@ impl Tile {
             root: TileNode::new_leaf(Vec::new()),
             background_color: None,
             invalidation_reason: None,
+            has_compositor_surface: false,
         }
     }
 
@@ -931,6 +975,7 @@ impl Tile {
             ctx.tile_size,
         );
         self.invalidation_reason  = None;
+        self.has_compositor_surface = false;
 
         self.world_tile_rect = ctx.pic_to_world_mapper
             .map(&self.local_tile_rect)
@@ -985,11 +1030,17 @@ impl Tile {
             return;
         }
 
-        // Incorporate the bounding rect of the primitive in the local valid rect
-        // for this tile. This is used to minimize the size of the scissor rect
-        // during rasterization and the draw rect during composition of partial tiles.
-        self.current_descriptor.local_valid_rect =
-            self.current_descriptor.local_valid_rect.union(&info.prim_clip_rect);
+        // If this primitive is a compositor surface, any tile it affects must be
+        // drawn as an overlay tile.
+        if info.is_compositor_surface {
+            self.has_compositor_surface = true;
+        } else {
+            // Incorporate the bounding rect of the primitive in the local valid rect
+            // for this tile. This is used to minimize the size of the scissor rect
+            // during rasterization and the draw rect during composition of partial tiles.
+            self.current_descriptor.local_valid_rect =
+                self.current_descriptor.local_valid_rect.union(&info.prim_clip_rect);
+        }
 
         // Include any image keys this tile depends on.
         self.current_descriptor.images.extend_from_slice(&info.images);
@@ -2031,6 +2082,9 @@ pub struct TileCacheInstance {
     /// The currently considered tile size override. Used to check if we should
     /// re-evaluate tile size, even if the frame timer hasn't expired.
     tile_size_override: Option<DeviceIntSize>,
+    /// List of external surfaces that have been promoted from primitives
+    /// in this tile cache.
+    pub external_surfaces: Vec<ExternalSurfaceDescriptor>,
 }
 
 impl TileCacheInstance {
@@ -2082,6 +2136,7 @@ impl TileCacheInstance {
             device_position: DevicePoint::zero(),
             is_opaque: true,
             tile_size_override: None,
+            external_surfaces: Vec::new(),
         }
     }
 
@@ -2128,6 +2183,7 @@ impl TileCacheInstance {
         frame_context: &FrameVisibilityContext,
         frame_state: &mut FrameVisibilityState,
     ) -> WorldRect {
+        self.external_surfaces.clear();
         self.surface_index = surface_index;
         self.local_rect = pic_rect;
         self.local_clip_rect = PictureRect::max_rect();
@@ -2473,7 +2529,7 @@ impl TileCacheInstance {
     /// Update the dependencies for each tile for a given primitive instance.
     pub fn update_prim_dependencies(
         &mut self,
-        prim_instance: &PrimitiveInstance,
+        prim_instance: &mut PrimitiveInstance,
         prim_spatial_node_index: SpatialNodeIndex,
         prim_clip_chain: Option<&ClipChainInstance>,
         local_prim_rect: LayoutRect,
@@ -2485,6 +2541,7 @@ impl TileCacheInstance {
         opacity_binding_store: &OpacityBindingStorage,
         image_instances: &ImageInstanceStorage,
         surface_stack: &[SurfaceIndex],
+        composite_state: &CompositeState,
     ) -> bool {
         // This primitive exists on the last element on the current surface stack.
         let prim_surface_index = *surface_stack.last().unwrap();
@@ -2663,16 +2720,116 @@ impl TileCacheInstance {
                     generation: resource_cache.get_image_generation(image_data.key),
                 });
             }
-            PrimitiveInstanceKind::YuvImage { data_handle, .. } => {
-                let yuv_image_data = &data_stores.yuv_image[data_handle].kind;
-                prim_info.images.extend(
-                    yuv_image_data.yuv_key.iter().map(|key| {
-                        ImageDependency {
-                            key: *key,
-                            generation: resource_cache.get_image_generation(*key),
+            PrimitiveInstanceKind::YuvImage { data_handle, ref mut is_compositor_surface, .. } => {
+                let prim_data = &data_stores.yuv_image[data_handle];
+                // TODO(gw): For now, we only support promoting YUV primitives to be compositor
+                //           surfaces. However, some videos are RGBA images. As a follow up,
+                //           extract the logic below and support RGBA compositor surfaces too.
+                let mut promote_to_surface = false;
+
+                // For initial implementation, only the simple (draw) compositor mode
+                // supports primitives as compositor surfaces. We can remove this restriction
+                // as a follow up, when we support this for native compositor modes.
+                if let CompositorKind::Draw { .. } = composite_state.compositor_kind {
+                    // Check if this primitive _wants_ to be promoted to a compositor surface.
+                    if prim_data.common.flags.contains(PrimitiveFlags::PREFER_COMPOSITOR_SURFACE) {
+                        promote_to_surface = true;
+
+                        // For now, only support a small (arbitrary) number of compositor surfaces.
+                        if self.external_surfaces.len() == MAX_COMPOSITOR_SURFACES {
+                            promote_to_surface = false;
                         }
-                    })
-                );
+
+                        // If a complex clip is being applied to this primitive, it can't be
+                        // promoted directly to a compositor surface (we might be able to
+                        // do this in limited cases in future, some native compositors do
+                        // support rounded rect clips, for example)
+                        if prim_clip_chain.needs_mask {
+                            promote_to_surface = false;
+                        }
+
+                        // If not on the same surface as the picture cache, it has some kind of
+                        // complex effect (such as a filter, mix-blend-mode or 3d transform).
+                        if !on_picture_surface {
+                            promote_to_surface = false;
+                        }
+
+                        // If the primitive is not axis-aligned with the root coordinate system,
+                        // it can't be promoted to a native compositor surface (could potentially
+                        // be supported in future on some platforms).
+                        let prim_spatial_node = &frame_context.spatial_tree
+                            .spatial_nodes[prim_spatial_node_index.0 as usize];
+                        if prim_spatial_node.coordinate_system_id != CoordinateSystemId::root() {
+                            promote_to_surface = false;
+                        }
+
+                        // If the transform has scale, we can't currently handle
+                        // it in the native compositor - we can support this in future though.
+                        if !self.map_local_to_surface.get_transform().is_simple_2d_translation() {
+                            promote_to_surface = false;
+                        }
+
+                        // TODO(gw): When we support RGBA images for external surfaces, we also
+                        //           need to check if opaque (YUV images are implicitly opaque).
+                    }
+                }
+
+                // Store on the YUV primitive instance whether this is a promoted surface.
+                // This is used by the batching code to determine whether to draw the
+                // image to the content tiles, or just a transparent z-write.
+                *is_compositor_surface = promote_to_surface;
+
+                // If this primitive is being promoted to a surface, construct an external
+                // surface descriptor for use later during batching and compositing. We only
+                // add the image keys for this primitive as a dependency if this is _not_
+                // a promoted surface, since we don't want the tiles to invalidate when the
+                // video content changes, if it's a compositor surface!
+                if promote_to_surface {
+                    prim_info.is_compositor_surface = true;
+
+                    let pic_to_world_mapper = SpaceMapper::new_with_target(
+                        ROOT_SPATIAL_NODE_INDEX,
+                        self.spatial_node_index,
+                        frame_context.global_screen_world_rect,
+                        frame_context.spatial_tree,
+                    );
+
+                    let world_rect = pic_to_world_mapper
+                        .map(&prim_rect)
+                        .expect("bug: unable to map the primitive to world space");
+                    let world_clip_rect = pic_to_world_mapper
+                        .map(&prim_info.prim_clip_rect)
+                        .expect("bug: unable to map clip to world space");
+
+                    let is_visible = world_clip_rect.intersects(&frame_context.global_screen_world_rect);
+                    if is_visible {
+                        // TODO(gw): Is there any case where if the primitive ends up on a fractional
+                        //           boundary we want to _skip_ promoting to a compositor surface and
+                        //           draw it as part of the content?
+                        let device_rect = (world_rect * frame_context.global_device_pixel_scale).round();
+                        let clip_rect = (world_clip_rect * frame_context.global_device_pixel_scale).round();
+
+                        self.external_surfaces.push(ExternalSurfaceDescriptor {
+                            local_rect: prim_info.prim_clip_rect,
+                            image_keys: prim_data.kind.yuv_key,
+                            image_rendering: prim_data.kind.image_rendering,
+                            device_rect,
+                            clip_rect,
+                            yuv_color_space: prim_data.kind.color_space,
+                            yuv_format: prim_data.kind.format,
+                            yuv_rescale: prim_data.kind.color_depth.rescaling_factor(),
+                        });
+                    }
+                } else {
+                    prim_info.images.extend(
+                        prim_data.kind.yuv_key.iter().map(|key| {
+                            ImageDependency {
+                                key: *key,
+                                generation: resource_cache.get_image_generation(*key),
+                            }
+                        })
+                    );
+                }
             }
             PrimitiveInstanceKind::ImageBorder { data_handle, .. } => {
                 let border_data = &data_stores.image_border[data_handle].kind;
@@ -2824,6 +2981,27 @@ impl TileCacheInstance {
         frame_state: &mut FrameVisibilityState,
     ) {
         self.dirty_region.clear();
+
+        // Update subpixel mode if compositor surfaces are present. If we have some compositor
+        // surfaces, and subpixel AA mode is allowed, switch the subpixel mode to conditional,
+        // and include rects of any compositor surfaces as excluded rects where subpixel AA
+        // is not allowed.
+        // TODO(gw): If a text run gets animated such that it's moving in a way that is
+        //           sometimes intersecting with the video rect, this can result in subpixel
+        //           AA flicking on/off for that text run. It's probably very rare, but
+        //           something we should handle in future.
+        if !self.external_surfaces.is_empty() && self.subpixel_mode == SubpixelMode::Allow {
+            let excluded_rects = self.external_surfaces
+                .iter()
+                .map(|s| {
+                    s.local_rect
+                })
+                .collect();
+
+            self.subpixel_mode = SubpixelMode::Conditional {
+                excluded_rects,
+            };
+        }
 
         // Register the opaque region of this tile cache as an occluder, which
         // is used later in the frame to occlude other tiles.
@@ -3881,7 +4059,7 @@ impl PicturePrimitive {
         surface_spatial_node_index: SpatialNodeIndex,
         raster_spatial_node_index: SpatialNodeIndex,
         parent_surface_index: SurfaceIndex,
-        parent_subpixel_mode: SubpixelMode,
+        parent_subpixel_mode: &SubpixelMode,
         frame_state: &mut FrameBuildingState,
         frame_context: &FrameBuildingContext,
         scratch: &mut PrimitiveScratchBuffer,
@@ -4613,7 +4791,7 @@ impl PicturePrimitive {
             Some(RasterConfig { ref composite_mode, .. }) => {
                 let subpixel_mode = match composite_mode {
                     PictureCompositeMode::TileCache { .. } => {
-                        self.tile_cache.as_ref().unwrap().subpixel_mode
+                        self.tile_cache.as_ref().unwrap().subpixel_mode.clone()
                     }
                     PictureCompositeMode::Blit(..) |
                     PictureCompositeMode::ComponentTransferFilter(..) |
@@ -4637,8 +4815,29 @@ impl PicturePrimitive {
 
         // Still disable subpixel AA if parent forbids it
         let subpixel_mode = match (parent_subpixel_mode, subpixel_mode) {
-            (SubpixelMode::Allow, SubpixelMode::Allow) => SubpixelMode::Allow,
-            _ => SubpixelMode::Deny,
+            (SubpixelMode::Allow, SubpixelMode::Allow) => {
+                // Both parent and this surface unconditionally allow subpixel AA
+                SubpixelMode::Allow
+            }
+            (SubpixelMode::Allow, SubpixelMode::Conditional { excluded_rects }) => {
+                // Parent allows, but we are conditional subpixel AA
+                SubpixelMode::Conditional {
+                    excluded_rects: excluded_rects,
+                }
+            }
+            (SubpixelMode::Conditional { excluded_rects }, SubpixelMode::Allow) => {
+                // Propagate conditional subpixel mode to child pictures that allow subpixel AA
+                SubpixelMode::Conditional {
+                    excluded_rects: excluded_rects.clone(),
+                }
+            }
+            (SubpixelMode::Conditional { .. }, SubpixelMode::Conditional { ..}) => {
+                unreachable!("bug: only top level picture caches have conditional subpixel");
+            }
+            (SubpixelMode::Deny, _) | (_, SubpixelMode::Deny) => {
+                // Either parent or this surface explicitly deny subpixel, these take precedence
+                SubpixelMode::Deny
+            }
         };
 
         let context = PictureContext {

@@ -512,7 +512,8 @@ impl InternablePrimitive for YuvImage {
     ) -> PrimitiveInstanceKind {
         PrimitiveInstanceKind::YuvImage {
             data_handle,
-            segment_instance_index: SegmentInstanceIndex::INVALID
+            segment_instance_index: SegmentInstanceIndex::INVALID,
+            is_compositor_surface: false,
         }
     }
 }

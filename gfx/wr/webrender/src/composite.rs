@@ -2,11 +2,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::ColorF;
-use api::units::{DeviceRect, DeviceIntSize, DeviceIntRect, DeviceIntPoint, WorldRect, DevicePixelScale, DevicePoint};
+use api::{ColorF, ImageKey, YuvColorSpace, YuvFormat, ImageRendering};
+use api::units::{DeviceRect, DeviceIntSize, DeviceIntRect, DeviceIntPoint, WorldRect};
+use api::units::{DevicePixelScale, DevicePoint, PictureRect};
+use crate::batch::{resolve_image, get_buffer_kind};
+use crate::gpu_cache::GpuCache;
 use crate::gpu_types::{ZBufferId, ZBufferIdGenerator};
+use crate::internal_types::TextureSource;
 use crate::picture::{ResolvedSurfaceTexture, TileCacheInstance, TileSurface};
-use crate::resource_cache::ResourceCache;
+use crate::prim_store::DeferredResolve;
+use crate::renderer::ImageBufferKind;
+use crate::resource_cache::{ImageRequest, ResourceCache};
 use std::{ops, u64};
 
 /*
@@ -58,6 +64,24 @@ pub enum CompositeTileSurface {
     Clear,
 }
 
+/// The surface format for a tile being composited.
+#[derive(Debug, Copy, Clone)]
+pub enum CompositeSurfaceFormat {
+    Rgba,
+    Yuv,
+}
+
+/// The ordering that this tile should be composited with.
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+#[derive(Debug, Copy, Clone)]
+pub enum TileCompositeMode {
+    /// Normal z-ordering for this tile
+    Default,
+    /// This tile overlaps a compositor surface - draw it after them
+    Over,
+}
+
 /// Describes the geometry and surface of a tile to be composited
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
@@ -69,6 +93,60 @@ pub struct CompositeTile {
     pub valid_rect: DeviceRect,
     pub z_id: ZBufferId,
     pub tile_id: Option<NativeTileId>,
+    pub mode: TileCompositeMode,
+}
+
+/// Describes information about drawing a primitive as a compositor surface.
+/// For now, we support only YUV images as compositor surfaces, but in future
+/// this will also support RGBA images.
+pub struct ExternalSurfaceDescriptor {
+    pub local_rect: PictureRect,
+    pub device_rect: DeviceRect,
+    pub clip_rect: DeviceRect,
+    pub image_keys: [ImageKey; 3],
+    pub image_rendering: ImageRendering,
+    pub yuv_color_space: YuvColorSpace,
+    pub yuv_format: YuvFormat,
+    pub yuv_rescale: f32,
+}
+
+/// Information about a plane in a YUV surface.
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+pub struct YuvPlaneDescriptor {
+    pub texture: TextureSource,
+    pub texture_layer: i32,
+    pub uv_rect: DeviceRect,
+}
+
+impl YuvPlaneDescriptor {
+    fn invalid() -> Self {
+        YuvPlaneDescriptor {
+            texture: TextureSource::Invalid,
+            texture_layer: 0,
+            uv_rect: DeviceRect::zero(),
+        }
+    }
+}
+
+/// An ExternalSurfaceDescriptor that has had image keys
+/// resolved to texture handles. This contains all the
+/// information that the compositor step in renderer
+/// needs to know.
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+pub struct ResolvedExternalSurface {
+    // Common information
+    pub device_rect: DeviceRect,
+    pub clip_rect: DeviceRect,
+    pub z_id: ZBufferId,
+
+    // YUV specific information
+    pub yuv_planes: [YuvPlaneDescriptor; 3],
+    pub yuv_color_space: YuvColorSpace,
+    pub yuv_format: YuvFormat,
+    pub yuv_rescale: f32,
+    pub image_buffer_kind: ImageBufferKind,
 }
 
 /// Public interface specified in `RendererOptions` that configures
@@ -195,6 +273,8 @@ pub struct CompositeState {
     pub alpha_tiles: Vec<CompositeTile>,
     /// List of clear tiles to be drawn by the Draw compositor.
     pub clear_tiles: Vec<CompositeTile>,
+    /// List of primitives that were promoted to be compositor surfaces.
+    pub external_surfaces: Vec<ResolvedExternalSurface>,
     /// Used to generate z-id values for tiles in the Draw compositor mode.
     pub z_generator: ZBufferIdGenerator,
     // If false, we can't rely on the dirty rects in the CompositeTile
@@ -244,6 +324,7 @@ impl CompositeState {
             global_device_pixel_scale,
             occluders: Vec::new(),
             descriptor: CompositeDescriptor::empty(),
+            external_surfaces: Vec::new(),
         }
     }
 
@@ -301,6 +382,8 @@ impl CompositeState {
         z_id: ZBufferId,
         global_device_pixel_scale: DevicePixelScale,
         resource_cache: &ResourceCache,
+        gpu_cache: &mut GpuCache,
+        deferred_resolves: &mut Vec<DeferredResolve>,
     ) {
         let mut visible_tile_count = 0;
 
@@ -339,6 +422,24 @@ impl CompositeState {
                 }
             });
 
+            // Determine ordering of this tile, based on presence of compositor
+            // surfaces that intersect the tile.
+            let mut mode = TileCompositeMode::Default;
+
+            if tile.has_compositor_surface {
+                // TODO(gw): This will almost always select over blend, due to the
+                //           background rectangle. In future, we can optimize this
+                //           case to only check items that come _after_ the compositor
+                //           surface z_id? A better option might be to tweak the z_id
+                //           values so that the alpha pixels get z-rejected?
+                for surface in &tile_cache.external_surfaces {
+                    if surface.device_rect.intersects(&tile.device_valid_rect) {
+                        mode = TileCompositeMode::Over;
+                        break;
+                    }
+                }
+            }
+
             let tile = CompositeTile {
                 surface,
                 rect: device_rect,
@@ -347,9 +448,81 @@ impl CompositeState {
                 clip_rect: device_clip_rect,
                 z_id,
                 tile_id,
+                mode,
             };
 
             self.push_tile(tile, is_opaque);
+        }
+
+        // For each compositor surface that was promoted, build the
+        // information required for the compositor to draw it
+        for external_surface in &tile_cache.external_surfaces {
+            let mut yuv_planes = [
+                YuvPlaneDescriptor::invalid(),
+                YuvPlaneDescriptor::invalid(),
+                YuvPlaneDescriptor::invalid(),
+            ];
+
+            // Step through the image keys, and build a yuv plane descriptor for each
+            let required_plane_count = external_surface.yuv_format.get_plane_num();
+            let mut valid_plane_count = 0;
+
+            for i in 0 .. required_plane_count {
+                let key = external_surface.image_keys[i];
+                let plane = &mut yuv_planes[i];
+
+                let request = ImageRequest {
+                    key,
+                    rendering: external_surface.image_rendering,
+                    tile: None,
+                };
+
+                let cache_item = resolve_image(
+                    request,
+                    resource_cache,
+                    gpu_cache,
+                    deferred_resolves,
+                );
+
+                if cache_item.texture_id != TextureSource::Invalid {
+                    valid_plane_count += 1;
+
+                    *plane = YuvPlaneDescriptor {
+                        texture: cache_item.texture_id,
+                        texture_layer: cache_item.texture_layer,
+                        uv_rect: cache_item.uv_rect.to_f32(),
+                    };
+                }
+            }
+
+            // Check if there are valid images added for each YUV plane
+            if valid_plane_count < required_plane_count {
+                warn!("Warnings: skip a YUV compositor surface, found {}/{} valid images",
+                    valid_plane_count,
+                    required_plane_count,
+                );
+                continue;
+            }
+
+            let clip_rect = external_surface
+                .clip_rect
+                .intersection(&device_clip_rect)
+                .unwrap_or_else(DeviceRect::zero);
+
+            // z_id for compositor surfaces can be the same as the surface it
+            // exists on, because we use LessEqual depth function. We could
+            // in future consider disabling z-read completely for drawing
+            // surface overlay tiles, since it doesn't do anything useful.
+            self.external_surfaces.push(ResolvedExternalSurface {
+                device_rect: external_surface.device_rect,
+                clip_rect,
+                z_id,
+                yuv_color_space: external_surface.yuv_color_space,
+                yuv_format: external_surface.yuv_format,
+                yuv_rescale: external_surface.yuv_rescale,
+                image_buffer_kind: get_buffer_kind(yuv_planes[0].texture),
+                yuv_planes,
+            });
         }
 
         if visible_tile_count > 0 {
@@ -381,12 +554,19 @@ impl CompositeState {
                 self.clear_tiles.push(tile);
             }
             CompositeTileSurface::Texture { .. } => {
-                // Texture surfaces get bucketed by opaque/alpha, for z-rejection
-                // on the Draw compositor mode.
-                if is_opaque {
-                    self.opaque_tiles.push(tile);
-                } else {
-                    self.alpha_tiles.push(tile);
+                match tile.mode {
+                    TileCompositeMode::Default => {
+                        // Texture surfaces get bucketed by opaque/alpha, for z-rejection
+                        // on the Draw compositor mode.
+                        if is_opaque {
+                            self.opaque_tiles.push(tile);
+                        } else {
+                            self.alpha_tiles.push(tile);
+                        }
+                    }
+                    TileCompositeMode::Over => {
+                        self.alpha_tiles.push(tile);
+                    }
                 }
             }
         }

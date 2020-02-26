@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{DocumentLayer, PremultipliedColorF, AlphaType};
+use api::{AlphaType, DocumentLayer, PremultipliedColorF, YuvFormat, YuvColorSpace};
 use api::units::*;
 use crate::spatial_tree::{SpatialTree, ROOT_SPATIAL_NODE_INDEX, SpatialNodeIndex};
 use crate::gpu_cache::{GpuCacheAddress, GpuDataRequest};
@@ -13,6 +13,7 @@ use crate::renderer::ShaderColorMode;
 use std::i32;
 use crate::util::{TransformedRectKind, MatrixHelpers};
 use crate::glyph_rasterizer::SubpixelDirection;
+use crate::util::pack_as_float;
 
 // Contains type that must exactly match the same structures declared in GLSL.
 
@@ -240,11 +241,24 @@ impl ResolveInstanceData {
 #[derive(Debug, Clone)]
 #[repr(C)]
 pub struct CompositeInstance {
+    // Device space rectangle of surface
     rect: DeviceRect,
+    // Device space clip rect for this surface
     clip_rect: DeviceRect,
+    // Color for solid color tiles, white otherwise
     color: PremultipliedColorF,
-    layer: f32,
+
+    // Packed into a single vec4 (aParams)
     z_id: f32,
+    yuv_color_space: f32,       // YuvColorSpace
+    yuv_format: f32,            // YuvFormat
+    yuv_rescale: f32,
+
+    // UV rectangles (pixel space) for color / yuv texture planes
+    uv_rects: [DeviceRect; 3],
+
+    // Texture array layers for color / yuv texture planes
+    texture_layers: [f32; 3],
 }
 
 impl CompositeInstance {
@@ -259,8 +273,35 @@ impl CompositeInstance {
             rect,
             clip_rect,
             color,
-            layer,
             z_id: z_id.0 as f32,
+            yuv_color_space: 0.0,
+            yuv_format: 0.0,
+            yuv_rescale: 0.0,
+            texture_layers: [layer, 0.0, 0.0],
+            uv_rects: [DeviceRect::zero(); 3],
+        }
+    }
+
+    pub fn new_yuv(
+        rect: DeviceRect,
+        clip_rect: DeviceRect,
+        z_id: ZBufferId,
+        yuv_color_space: YuvColorSpace,
+        yuv_format: YuvFormat,
+        yuv_rescale: f32,
+        texture_layers: [f32; 3],
+        uv_rects: [DeviceRect; 3],
+    ) -> Self {
+        CompositeInstance {
+            rect,
+            clip_rect,
+            color: PremultipliedColorF::WHITE,
+            z_id: z_id.0 as f32,
+            yuv_color_space: pack_as_float(yuv_color_space as u32),
+            yuv_format: pack_as_float(yuv_format as u32),
+            yuv_rescale,
+            texture_layers,
+            uv_rects,
         }
     }
 }
