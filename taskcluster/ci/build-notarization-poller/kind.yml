@@ -17,4 +17,3 @@ job-template:
     description-suffix: 'Mac Notarization Poller'
     worker:
         implementation: notarization-poller
-    run-on-projects: [release]
