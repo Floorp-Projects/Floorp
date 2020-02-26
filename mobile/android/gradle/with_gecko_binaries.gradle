@@ -72,10 +72,11 @@ ext.configureVariantWithGeckoBinaries = { variant ->
     }
 
     def assetGenTask = tasks.findByName("generate${variant.name.capitalize()}Assets")
+    def jniLibFoldersTask = tasks.findByName("merge${variant.name.capitalize()}JniLibFolders")
     if ((variant.productFlavors*.name).contains('withGeckoBinaries')) {
         assetGenTask.dependsOn syncOmnijarFromDistDir
-        assetGenTask.dependsOn syncLibsFromDistDir
         assetGenTask.dependsOn syncAssetsFromDistDir
+        jniLibFoldersTask.dependsOn syncLibsFromDistDir
 
         android.sourceSets."${variant.name}".assets.srcDir syncOmnijarFromDistDir.destinationDir
         android.sourceSets."${variant.name}".assets.srcDir syncAssetsFromDistDir.destinationDir
