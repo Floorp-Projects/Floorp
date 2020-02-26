@@ -8,6 +8,7 @@
 #ifndef mozilla_net_ParentChannelListener_h
 #define mozilla_net_ParentChannelListener_h
 
+#include "nsIAuthPromptProvider.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsINetworkInterceptController.h"
 #include "nsIStreamListener.h"
@@ -31,7 +32,8 @@ namespace net {
 class ParentChannelListener final : public nsIInterfaceRequestor,
                                     public nsIStreamListener,
                                     public nsIMultiPartChannelListener,
-                                    public nsINetworkInterceptController {
+                                    public nsINetworkInterceptController,
+                                    private nsIAuthPromptProvider {
  public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIINTERFACEREQUESTOR
@@ -39,6 +41,7 @@ class ParentChannelListener final : public nsIInterfaceRequestor,
   NS_DECL_NSISTREAMLISTENER
   NS_DECL_NSIMULTIPARTCHANNELLISTENER
   NS_DECL_NSINETWORKINTERCEPTCONTROLLER
+  NS_DECL_NSIAUTHPROMPTPROVIDER
 
   NS_DECLARE_STATIC_IID_ACCESSOR(PARENT_CHANNEL_LISTENER)
 
