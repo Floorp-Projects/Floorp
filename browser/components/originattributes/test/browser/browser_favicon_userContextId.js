@@ -2,7 +2,7 @@
  * Bug 1277803 - A test caes for testing favicon loading across different userContextId.
  */
 
-if (Services.prefs.getBoolPref("fission.autostart")) {
+if (SpecialPowers.useRemoteSubframes) {
   requestLongerTimeout(2);
 }
 

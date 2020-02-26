@@ -3196,7 +3196,8 @@ nsresult Document::StartDocumentLoad(const char* aCommand, nsIChannel* aChannel,
   // frame-ancestors and x-frame-options here in the content process
   // but if we run in fission-mode then we do those two security
   // checks within DOMSecurityManager::Observe in the parent.
-  bool fissionEnabled = StaticPrefs::fission_autostart();
+  bool fissionEnabled =
+      docShell && nsDocShell::Cast(docShell)->UseRemoteSubframes();
   if (!fissionEnabled) {
     nsContentPolicyType contentType = loadInfo->GetExternalContentPolicyType();
     // frame-ancestor check only makes sense for subdocument and object loads,
