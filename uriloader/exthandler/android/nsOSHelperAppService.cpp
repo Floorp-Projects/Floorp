@@ -34,9 +34,11 @@ nsresult nsOSHelperAppService::GetMIMEInfoFromOS(const nsACString& aMIMEType,
 
 nsresult nsOSHelperAppService::OSProtocolHandlerExists(const char* aScheme,
                                                        bool* aExists) {
-  // We don't want to get protocol handlers from the OS in GV; the app
-  // should take care of that in NavigationDelegate.onLoadRequest().
-  return NS_ERROR_NOT_IMPLEMENTED;
+  // Hard-code support for intent URIs until we have a more general solution
+  // for letting the app decide which schemes to handle.
+  nsAutoCString scheme(aScheme);
+  *aExists = scheme.Equals(NS_LITERAL_CSTRING("intent"));
+  return NS_OK;
 }
 
 NS_IMETHODIMP
