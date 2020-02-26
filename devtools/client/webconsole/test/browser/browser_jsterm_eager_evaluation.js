@@ -284,16 +284,18 @@ add_task(async function() {
     false
   );
 
+  // Wait for the autocomplete popup to be displayed so we know the eager evaluation could
+  // have occured.
+  const onPopupOpen = hud.jsterm.autocompletePopup.once("popup-opened");
+  await setInputValueForAutocompletion(hud, "x + y");
+  await onPopupOpen;
+
   is(
     getEagerEvaluationElement(hud),
     null,
     "There's no eager evaluation element"
   );
-
-  // Wait for the autocomplete popup to be displayed so we know the eager evaluation could
-  // have occured.
-  await setInputValueForAutocompletion(hud, "x + y");
-  ok(true, "Eager evaluation is disabled");
+  hud.jsterm.autocompletePopup.hidePopup();
 
   info("Turn on the eager evaluation");
   toggleConsoleSetting(

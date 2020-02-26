@@ -85,9 +85,9 @@ add_task(async function() {
   info(
     "Type a space, then backspace and ensure the autocomplete popup is displayed"
   );
-  let onAutocompleteUpdate = jsterm.once("autocomplete-updated");
+  onPopUpOpen = autocompletePopup.once("popup-opened");
   EventUtils.synthesizeKey(" ");
-  await onAutocompleteUpdate;
+  await onPopUpOpen;
   is(autocompletePopup.isOpen, true, "Autocomplete popup is still opened");
   is(
     getAutocompletePopupLabels(autocompletePopup).join("-"),
@@ -95,9 +95,9 @@ add_task(async function() {
     "popup has expected items"
   );
 
-  onAutocompleteUpdate = jsterm.once("autocomplete-updated");
+  onPopUpOpen = autocompletePopup.once("popup-opened");
   EventUtils.synthesizeKey("KEY_Backspace");
-  await onAutocompleteUpdate;
+  await onPopUpOpen;
   is(autocompletePopup.isOpen, true, "Autocomplete popup is still opened");
   is(
     getAutocompletePopupLabels(autocompletePopup).join("-"),
