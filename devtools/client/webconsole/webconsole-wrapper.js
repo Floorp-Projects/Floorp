@@ -95,11 +95,11 @@ class WebConsoleWrapper {
     return new Promise(resolve => {
       store = configureStore(this.webConsoleUI, {
         // We may not have access to the toolbox (e.g. in the browser console).
-        sessionId: (this.toolbox && this.toolbox.sessionId) || -1,
         telemetry: this.telemetry,
         thunkArgs: {
           webConsoleUI,
           hud: this.hud,
+          toolbox: this.toolbox,
           client: this.webConsoleUI._commands,
         },
       });
