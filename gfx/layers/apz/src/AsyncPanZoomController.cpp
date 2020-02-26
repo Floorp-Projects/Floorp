@@ -99,13 +99,19 @@
 
 static mozilla::LazyLogModule sApzCtlLog("apz.controller");
 #define APZC_LOG(...) MOZ_LOG(sApzCtlLog, LogLevel::Debug, (__VA_ARGS__))
-#define APZC_LOG_FM(fm, prefix, ...)                  \
-  if (MOZ_LOG_TEST(sApzCtlLog, LogLevel::Debug)) {    \
-    std::stringstream ss;                             \
-    ss << nsPrintfCString(prefix, __VA_ARGS__).get(); \
-    AppendToString(ss, fm, ":", "", true);            \
-    APZC_LOG("%s\n", ss.str().c_str());               \
+#define APZC_LOGV(...) MOZ_LOG(sApzCtlLog, LogLevel::Verbose, (__VA_ARGS__))
+
+#define APZC_LOG_FM_COMMON(fm, prefix, level, ...)          \
+  if (MOZ_LOG_TEST(sApzCtlLog, level)) {                    \
+    std::stringstream ss;                                   \
+    ss << nsPrintfCString(prefix, __VA_ARGS__).get();       \
+    AppendToString(ss, fm, ":", "", true);                  \
+    MOZ_LOG(sApzCtlLog, level, ("%s\n", ss.str().c_str())); \
   }
+#define APZC_LOG_FM(fm, prefix, ...) \
+  APZC_LOG_FM_COMMON(fm, prefix, LogLevel::Debug, __VA_ARGS__)
+#define APZC_LOGV_FM(fm, prefix, ...) \
+  APZC_LOG_FM_COMMON(fm, prefix, LogLevel::Verbose, __VA_ARGS__)
 
 namespace mozilla {
 namespace layers {
@@ -3825,7 +3831,7 @@ const ScreenMargin AsyncPanZoomController::CalculatePendingDisplayPort(
   float paintFactor = kDefaultEstimatedPaintDurationMs;
   displayPort.MoveBy(velocity * paintFactor * StaticPrefs::apz_velocity_bias());
 
-  APZC_LOG_FM(
+  APZC_LOGV_FM(
       aFrameMetrics,
       "Calculated displayport as %s from velocity %s paint time %f metrics",
       Stringify(displayPort).c_str(), ToString(aVelocity).c_str(), paintFactor);
@@ -3980,7 +3986,7 @@ void AsyncPanZoomController::RequestContentRepaint(
     return;
   }
 
-  APZC_LOG_FM(aFrameMetrics, "%p requesting content repaint", this);
+  APZC_LOGV_FM(aFrameMetrics, "%p requesting content repaint", this);
   {  // scope lock
     MutexAutoLock lock(mCheckerboardEventLock);
     if (mCheckerboardEvent && mCheckerboardEvent->IsRecordingTrace()) {
@@ -4420,7 +4426,7 @@ void AsyncPanZoomController::NotifyLayersUpdated(
 
   if ((aScrollMetadata == mLastContentPaintMetadata) && !isDefault) {
     // No new information here, skip it.
-    APZC_LOG("%p NotifyLayersUpdated short-circuit\n", this);
+    APZC_LOGV("%p NotifyLayersUpdated short-circuit\n", this);
     return;
   }
 
@@ -4444,10 +4450,10 @@ void AsyncPanZoomController::NotifyLayersUpdated(
   }
 
   mScrollMetadata.SetScrollParentId(aScrollMetadata.GetScrollParentId());
-  APZC_LOG_FM(aLayerMetrics,
-              "%p got a NotifyLayersUpdated with aIsFirstPaint=%d, "
-              "aThisLayerTreeUpdated=%d",
-              this, aIsFirstPaint, aThisLayerTreeUpdated);
+  APZC_LOGV_FM(aLayerMetrics,
+               "%p got a NotifyLayersUpdated with aIsFirstPaint=%d, "
+               "aThisLayerTreeUpdated=%d",
+               this, aIsFirstPaint, aThisLayerTreeUpdated);
 
   {  // scope lock
     MutexAutoLock lock(mCheckerboardEventLock);
