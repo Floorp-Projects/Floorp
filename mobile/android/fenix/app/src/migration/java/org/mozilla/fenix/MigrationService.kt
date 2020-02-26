@@ -14,5 +14,5 @@ import org.mozilla.fenix.ext.components
 class MigrationService : AbstractMigrationService() {
     override val migrator by lazy { getMigratorFromApplication() }
     override val store: MigrationStore by lazy { components.migrationStore }
-    override val migrationActivity = MigrationDecisionActivity::class.java
+    override val migrationDecisionActivity = MigrationDecisionActivity::class.java
 }
