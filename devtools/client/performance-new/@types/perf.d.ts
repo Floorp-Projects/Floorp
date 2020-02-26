@@ -97,7 +97,7 @@ export type RecordingState =
 // We are currently migrating to a new UX workflow with about:profiling.
 // This type provides an easy way to change the implementation based
 // on context.
-export type PageContext = "devtools" | "aboutprofiling";
+export type PageContext = "popup" | "devtools" | "aboutprofiling";
 
 export interface State {
   recordingState: RecordingState;
@@ -210,8 +210,6 @@ export interface InitializedValues {
   receiveProfile: ReceiveProfile;
   // A function to set the recording settings.
   setRecordingPreferences: SetRecordingPreferences;
-  // The current list of presets, loaded in from a JSM.
-  presets: Presets;
   // Determine the current page context.
   pageContext: PageContext;
   // The popup and devtools panel use different codepaths for getting symbol tables.
@@ -266,7 +264,6 @@ export type Action =
       perfFront: PerfFront;
       receiveProfile: ReceiveProfile;
       setRecordingPreferences: SetRecordingPreferences;
-      presets: Presets;
       pageContext: PageContext;
       recordingSettingsFromPreferences: RecordingStateFromPreferences;
       getSymbolTableGetter: (profile: object) => GetSymbolTableCallback;
@@ -282,7 +279,6 @@ export interface InitializeStoreValues {
   perfFront: PerfFront;
   receiveProfile: ReceiveProfile;
   setRecordingPreferences: SetRecordingPreferences;
-  presets: Presets;
   pageContext: PageContext;
   recordingPreferences: RecordingStateFromPreferences;
   supportedFeatures: string[] | null;
@@ -368,11 +364,6 @@ export interface PerformancePref {
    * and update it elsewhere.
    */
   PopupEnabled: "devtools.performance.popup.enabled";
-  /**
-   * The profiler popup has some introductory text explaining what it is the first
-   * time that you open it. After that, it is not displayed by default.
-   */
-  PopupIntroDisplayed: "devtools.performance.popup.intro-displayed";
 }
 
 /**
@@ -408,7 +399,7 @@ export interface PresetDefinition {
   duration: number;
 }
 
-export interface Presets {
+export interface PresetDefinitions {
   [presetName: string]: PresetDefinition;
 }
 

@@ -12,7 +12,7 @@ add_task(async function test() {
     return;
   }
 
-  await withAboutProfiling(async document => {
+  await openAboutProfiling(async document => {
     const webdev = await getNearestInputFromText(document, "Web Developer");
     ok(webdev.checked, "By default the Web Developer preset is selected.");
 

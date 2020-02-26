@@ -156,8 +156,8 @@ declare namespace MockedExports {
 
   // TS-TODO
   const CustomizableUIJSM: any;
+
   const CustomizableWidgetsJSM: any;
-  const PanelMultiViewJSM: any;
 
   const Services: Services;
 
@@ -267,10 +267,6 @@ declare module "resource:///modules/CustomizableWidgets.jsm" {
   export = MockedExports.CustomizableWidgetsJSM;
 }
 
-declare module "resource:///modules/PanelMultiView.jsm" {
-  export = MockedExports.PanelMultiViewJSM;
-}
-
 declare var ChromeUtils: MockedExports.ChromeUtils;
 declare var Cu: MockedExports.ChromeUtils;
 
@@ -302,31 +298,4 @@ declare interface XULIframeElement extends XULElement {
   src: string;
 }
 
-declare interface ChromeWindow extends Window {
-  openWebLinkIn: (
-    url: string,
-    where: "current" | "tab" | "tabshifted" | "window" | "save",
-    // TS-TODO
-    params?: unknown
-  ) => void;
-  openTrustedLinkIn: (
-    url: string,
-    where: "current" | "tab" | "tabshifted" | "window" | "save",
-    // TS-TODO
-    params?: unknown
-  ) => void;
-}
-
-declare interface MenuListElement extends XULElement {
-  value: string;
-  disabled: boolean;
-}
-
-declare interface XULCommandEvent extends Event {
-  target: XULElement
-}
-
-declare interface XULElementWithCommandHandler {
-  addEventListener: (type: "command", handler: (event: XULCommandEvent) => void, isCapture?: boolean) => void
-  removeEventListener: (type: "command", handler: (event: XULCommandEvent) => void, isCapture?: boolean) => void
-}
+declare interface ChromeWindow extends Window {}
