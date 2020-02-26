@@ -2,7 +2,7 @@
  * Bug 1277803 - A test case for testing favicon loading across different first party domains.
  */
 
-if (Services.prefs.getBoolPref("fission.autostart")) {
+if (SpecialPowers.useRemoteSubframes) {
   requestLongerTimeout(2);
 }
 

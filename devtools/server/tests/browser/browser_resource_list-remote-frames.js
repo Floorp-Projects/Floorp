@@ -24,7 +24,7 @@ async function testLocalListFrames(tabTarget) {
   // tabDescriptors
   const { frames } = await tabTarget.listRemoteFrames();
 
-  if (Services.prefs.getBoolPref("fission.autostart")) {
+  if (SpecialPowers.useRemoteSubframes) {
     // With fission, one frame is running out of process
     is(frames.length, 1, "Got one remote frame with fission");
 
