@@ -2781,6 +2781,27 @@ static void HardwareTooOldForWR(FeatureState& aFeature) {
                    NS_LITERAL_CSTRING("FEATURE_FAILURE_DEVICE_TOO_OLD"));
 }
 
+#if defined(XP_WIN)
+static bool RecentWindows10() {
+      // Windows version is 10.0.<dwBuildNumber>
+      const uint32_t kMinOSBuildNumber = 18362;
+      OSVERSIONINFO vinfo;
+      vinfo.dwOSVersionInfoSize = sizeof(vinfo);
+#      ifdef _MSC_VER
+      // Disable warning about GetVersionEx being deprecated.
+#        pragma warning(push)
+#        pragma warning(disable : 4996)
+#      endif
+      if (!GetVersionEx(&vinfo) || vinfo.dwBuildNumber < kMinOSBuildNumber) {
+#      ifdef _MSC_VER
+#        pragma warning(pop)
+#      endif
+        return false;
+      }
+      return true;
+}
+#endif
+
 static void UpdateWRQualificationForNvidia(FeatureState& aFeature,
                                            nsIGfxInfo* aGfxInfo,
                                            int32_t aDeviceId, bool aHasBattery,
@@ -2822,19 +2843,7 @@ static void UpdateWRQualificationForNvidia(FeatureState& aFeature,
       // Battery and small screen, it should be only on for recent Windows 10
       // builds and NVIDIA driver versions in late beta and release.
 
-      // Windows version is 10.0.<dwBuildNumber>
-      const uint32_t kMinOSBuildNumber = 18362;
-      OSVERSIONINFO vinfo;
-      vinfo.dwOSVersionInfoSize = sizeof(vinfo);
-#      ifdef _MSC_VER
-      // Disable warning about GetVersionEx being deprecated.
-#        pragma warning(push)
-#        pragma warning(disable : 4996)
-#      endif
-      if (!GetVersionEx(&vinfo) || vinfo.dwBuildNumber < kMinOSBuildNumber) {
-#      ifdef _MSC_VER
-#        pragma warning(pop)
-#      endif
+      if (!RecentWindows10()) {
         aFeature.Disable(
             FeatureStatus::BlockedHasBattery,
             "Has battery and old Windows 10 build",
@@ -3410,6 +3419,11 @@ void gfxPlatform::InitWebRenderConfig() {
   }
 
 #ifdef XP_WIN
+  if (!RecentWindows10()) {
+    featureComp.ForceDisable(FeatureStatus::Blocked, "Old Windows",
+                             NS_LITERAL_CSTRING("FEATURE_FAILURE_OLD_WINDOWS"));
+  }
+
   if (!gfxVars::UseWebRenderDCompWin()) {
     featureComp.ForceDisable(
         FeatureStatus::Unavailable, "No DirectComposition usage",
