@@ -240,7 +240,8 @@ DocumentLoadListener::DocumentLoadListener(BrowserParent* aBrowser,
                                            ADocumentChannelBridge* aBridge)
     : mLoadContext(aLoadContext), mPBOverride(aOverrideStatus) {
   LOG(("DocumentLoadListener ctor [this=%p]", this));
-  mParentChannelListener = new ParentChannelListener(this, aBrowser);
+  mParentChannelListener = new ParentChannelListener(
+      this, aBrowser->GetBrowsingContext(), aLoadContext->UsePrivateBrowsing());
   mDocumentChannelBridge = aBridge;
 }
 

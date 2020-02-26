@@ -14,7 +14,7 @@
 #include "nsIStreamListener.h"
 #include "nsIMultiPartChannel.h"
 #include "nsIRemoteWindowContext.h"
-#include "mozilla/dom/BrowserParent.h"
+#include "mozilla/dom/CanonicalBrowsingContext.h"
 #include "mozilla/dom/CanonicalBrowsingContext.h"
 
 namespace mozilla {
@@ -49,8 +49,10 @@ class ParentChannelListener final : public nsIInterfaceRequestor,
 
   NS_DECLARE_STATIC_IID_ACCESSOR(PARENT_CHANNEL_LISTENER)
 
-  explicit ParentChannelListener(nsIStreamListener* aListener,
-                                 dom::BrowserParent* aBrowserParent);
+  explicit ParentChannelListener(
+      nsIStreamListener* aListener,
+      dom::CanonicalBrowsingContext* aBrowsingContext,
+      bool aUsePrivateBrowsing);
 
   // For channel diversion from child to parent.
   void DivertTo(nsIStreamListener* aListener);
@@ -96,7 +98,6 @@ class ParentChannelListener final : public nsIInterfaceRequestor,
   // interception is enabled.
   nsCOMPtr<nsINetworkInterceptController> mInterceptController;
 
-  RefPtr<mozilla::dom::BrowserParent> mBrowserParent;
   RefPtr<mozilla::dom::CanonicalBrowsingContext> mBrowsingContext;
 
   // True if we received OnStartRequest for a nsIMultiPartChannel, and are

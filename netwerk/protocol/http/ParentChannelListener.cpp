@@ -35,24 +35,21 @@ using mozilla::dom::ServiceWorkerParentInterceptEnabled;
 namespace mozilla {
 namespace net {
 
-ParentChannelListener::ParentChannelListener(nsIStreamListener* aListener,
-                                             dom::BrowserParent* aBrowserParent)
+ParentChannelListener::ParentChannelListener(
+    nsIStreamListener* aListener,
+    dom::CanonicalBrowsingContext* aBrowsingContext, bool aUsePrivateBrowsing)
     : mNextListener(aListener),
       mSuspendedForDiversion(false),
       mShouldIntercept(false),
       mShouldSuspendIntercept(false),
       mInterceptCanceled(false),
-      mBrowserParent(aBrowserParent) {
+      mBrowsingContext(aBrowsingContext),
+      mUsePrivateBrowsing(aUsePrivateBrowsing) {
   LOG(("ParentChannelListener::ParentChannelListener [this=%p, next=%p]", this,
        aListener));
 
   if (ServiceWorkerParentInterceptEnabled()) {
     mInterceptController = new ServiceWorkerInterceptController();
-  }
-  if (mBrowserParent) {
-    mBrowsingContext = mBrowserParent->GetBrowsingContext();
-    nsCOMPtr<nsILoadContext> loadContext = mBrowserParent->GetLoadContext();
-    mUsePrivateBrowsing = loadContext && loadContext->UsePrivateBrowsing();
   }
 }
 
