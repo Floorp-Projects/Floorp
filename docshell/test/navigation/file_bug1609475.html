@@ -30,7 +30,8 @@
           // Replace load listener to catch page loads from the session history.
           ifr.onload = loadListener;
           // Need to use setTimeout, because triggering loads inside
-          // load event listener has special behavior.
+          // load event listener has special behavior since at the moment
+          // the docshell keeps track of whether it is executing a load handler or not.
           setTimeout(resolve);
         }
         ifr.contentWindow.location.href = "frame2.html";
