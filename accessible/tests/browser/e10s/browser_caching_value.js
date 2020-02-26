@@ -136,7 +136,13 @@ const valueTests = [
     id: "range",
     async action(browser) {
       await invokeFocus(browser, "range");
-      await BrowserTestUtils.synthesizeKey("VK_LEFT", {}, browser);
+      await invokeContentTask(browser, [], () => {
+        const { ContentTaskUtils } = ChromeUtils.import(
+          "resource://testing-common/ContentTaskUtils.jsm"
+        );
+        const EventUtils = ContentTaskUtils.getEventUtils(content);
+        EventUtils.synthesizeKey("VK_LEFT", {}, content);
+      });
     },
     waitFor: EVENT_VALUE_CHANGE,
     expected: "5",
