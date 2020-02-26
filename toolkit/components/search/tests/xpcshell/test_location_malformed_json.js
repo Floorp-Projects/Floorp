@@ -23,13 +23,12 @@ function promiseTimezoneMessage() {
 
 add_task(async function setup() {
   await AddonTestUtils.promiseStartupManager();
-  Services.prefs.setBoolPref("browser.search.geoSpecificDefaults", true);
 });
 
 add_task(async function test_location_malformed_json() {
   // Here we have malformed JSON
   Services.prefs.setCharPref(
-    "geo.provider-country.network.url",
+    "browser.search.geoip.url",
     'data:application/json,{"country_code"'
   );
   await Services.search.init();
@@ -45,4 +44,10 @@ add_task(async function test_location_malformed_json() {
   );
   // should have recorded SUCCESS_WITHOUT_DATA
   checkCountryResultTelemetry(TELEMETRY_RESULT_ENUM.SUCCESS_WITHOUT_DATA);
+  // and false values for timeout.
+  let histogram = Services.telemetry.getHistogramById(
+    "SEARCH_SERVICE_COUNTRY_TIMEOUT"
+  );
+  let snapshot = histogram.snapshot();
+  deepEqual(snapshot.values, { 0: 1, 1: 0 }); // boolean probe so 3 buckets, expect 1 result for |0|.
 });

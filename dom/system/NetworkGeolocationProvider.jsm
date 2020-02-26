@@ -14,16 +14,28 @@ XPCOMUtils.defineLazyGlobalGetters(this, ["XMLHttpRequest"]);
 // GeolocationPositionError has no interface object, so we can't use that here.
 const POSITION_UNAVAILABLE = 2;
 
-XPCOMUtils.defineLazyPreferenceGetter(
-  this,
-  "gLoggingEnabled",
-  "geo.provider.network.logging.enabled",
-  false
-);
+var gLoggingEnabled = false;
+
+/*
+   The gLocationRequestTimeout controls how long we wait on receiving an update
+   from the Wifi subsystem.  If this timer fires, we believe the Wifi scan has
+   had a problem and we no longer can use Wifi to position the user this time
+   around (we will continue to be hopeful that Wifi will recover).
+
+   This timeout value is also used when Wifi scanning is disabled (see
+   gWifiScanningEnabled).  In this case, we use this timer to collect cell/ip
+   data and xhr it to the location server.
+*/
+
+var gLocationRequestTimeout = 5000;
+
+var gWifiScanningEnabled = true;
 
 function LOG(aMsg) {
   if (gLoggingEnabled) {
-    dump("*** WIFI GEO: " + aMsg + "\n");
+    aMsg = "*** WIFI GEO: " + aMsg + "\n";
+    Services.console.logStringMessage(aMsg);
+    dump(aMsg);
   }
 }
 
@@ -239,35 +251,16 @@ NetworkGeoPositionObject.prototype = {
 };
 
 function NetworkGeolocationProvider() {
-  this.mode = "provider";
-  /*
-    The _wifiMonitorTimeout controls how long we wait on receiving an update
-    from the Wifi subsystem.  If this timer fires, we believe the Wifi scan has
-    had a problem and we no longer can use Wifi to position the user this time
-    around (we will continue to be hopeful that Wifi will recover).
-
-    This timeout value is also used when Wifi scanning is disabled (see
-    isWifiScanningEnabled).  In this case, we use this timer to collect cell/ip
-    data and xhr it to the location server.
-  */
-  XPCOMUtils.defineLazyPreferenceGetter(
-    this,
-    "_wifiMonitorTimeout",
+  gLoggingEnabled = Services.prefs.getBoolPref(
+    "geo.provider.network.logging.enabled",
+    false
+  );
+  gLocationRequestTimeout = Services.prefs.getIntPref(
     "geo.provider.network.timeToWaitBeforeSending",
     5000
   );
-
-  XPCOMUtils.defineLazyPreferenceGetter(
-    this,
-    "_wifiScanningEnabled",
+  gWifiScanningEnabled = Services.prefs.getBoolPref(
     "geo.provider.network.scan",
-    true
-  );
-
-  XPCOMUtils.defineLazyPreferenceGetter(
-    this,
-    "_wifiScanningEnabledCountry",
-    "geo.provider-country.network.scan",
     true
   );
 
@@ -286,12 +279,6 @@ NetworkGeolocationProvider.prototype = {
   ]),
   listener: null,
 
-  get isWifiScanningEnabled() {
-    return Cc["@mozilla.org/wifi/monitor;1"] && this.mode == "provider"
-      ? this._wifiScanningEnabled
-      : this._wifiScanningEnabledCountry;
-  },
-
   resetTimer() {
     if (this.timer) {
       this.timer.cancel();
@@ -302,7 +289,7 @@ NetworkGeolocationProvider.prototype = {
     this.timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
     this.timer.initWithCallback(
       this,
-      this._wifiMonitorTimeout,
+      gLocationRequestTimeout,
       this.timer.TYPE_REPEATING_SLACK
     );
   },
@@ -314,7 +301,7 @@ NetworkGeolocationProvider.prototype = {
 
     this.started = true;
 
-    if (this.isWifiScanningEnabled) {
+    if (gWifiScanningEnabled && Cc["@mozilla.org/wifi/monitor;1"]) {
       if (this.wifiService) {
         this.wifiService.stopWatching(this);
       }
@@ -395,142 +382,53 @@ NetworkGeolocationProvider.prototype = {
     this.sendLocationRequest(null);
   },
 
-  onStatus(err, statusMessage) {
-    if (!this.listener) {
-      return;
-    }
-    LOG("onStatus called." + statusMessage);
-
-    if (statusMessage && this.listener.notifyStatus) {
-      this.listener.notifyStatus(statusMessage);
-    }
-
-    if (err && this.listener.notifyError) {
-      this.listener.notifyError(POSITION_UNAVAILABLE, statusMessage);
-    }
-  },
-
   notify(timer) {
-    this.onStatus(false, "wifi-timeout");
     this.sendLocationRequest(null);
   },
 
-  /**
-   * One-shot country identifier fetch.
-   *
-   * @param  {Function} statusCallback This method is called for each
-   *                                   intermediate result with the current
-   *                                   state of the request as argument.
-   * @return {Promise<String>} A promise that is resolved with a country code or
-   *                           rejected with an error.
-   */
-  async getCountry(statusCallback) {
-    this.mode = "provider-country";
-
-    let self = this;
-    let promise = new Promise((resolve, reject) => {
-      this.watch({
-        update(country) {
-          resolve(country);
-          self.shutdown();
-        },
-        notifyError(code, message) {
-          reject(message);
-          self.shutdown();
-        },
-        notifyStatus(status) {
-          if (statusCallback) {
-            statusCallback(status);
-          }
-        },
-      });
-    }).finally(() => {
-      this.mode = "provider";
-    });
-
-    this.startup();
-    Services.tm.dispatchToMainThread(() => this.sendLocationRequest(null));
-
-    return promise;
-  },
-
-  /**
-   * After wifi (and possible cell tower) data has been gathered, this method is
-   * invoked to perform the request to network geolocation provider.
-   * The result of each request is sent to all registered listener (@see watch)
-   * by invoking its respective `update`, `notifyError` or `notifyStatus`
-   * callbacks.
-   * `update` is called upon a successful request with its response data; in the
-   * 'provider-country' mode this will be a country code string and in the
-   * 'provider' mode - the default mode of  operation for this class - this will
-   * be a `NetworkGeoPositionObject` instance.
-   * `notifyError` is called whenever the request gets an error from the local
-   * network subsystem, the server or simply times out.
-   * `notifyStatus` is called for each status change of the request that may be
-   * of interest to the consumer of this class. Currently the following status
-   * changes are reported: 'xhr-start', 'xhr-timeout', 'xhr-error' and
-   * 'xhr-empty'.
-   *
-   * @param  {Array} wifiData Optional set of publicly available wifi networks
-   *                          in the following structure:
-   *                          <code>
-   *                          [
-   *                            { macAddress: <mac1>, signalStrength: <signal1> },
-   *                            { macAddress: <mac2>, signalStrength: <signal2> }
-   *                          ]
-   *                          </code>
-   */
   sendLocationRequest(wifiData) {
     let data = { cellTowers: undefined, wifiAccessPoints: undefined };
     if (wifiData && wifiData.length >= 2) {
       data.wifiAccessPoints = wifiData;
     }
 
-    // The 'provider' mode is the only one that supports response caching at the
-    // moment.
-    if (this.mode == "provider") {
-      let useCached = isCachedRequestMoreAccurateThanServerRequest(
-        data.cellTowers,
-        data.wifiAccessPoints
-      );
+    let useCached = isCachedRequestMoreAccurateThanServerRequest(
+      data.cellTowers,
+      data.wifiAccessPoints
+    );
 
-      LOG("Use request cache:" + useCached + " reason:" + gDebugCacheReasoning);
+    LOG("Use request cache:" + useCached + " reason:" + gDebugCacheReasoning);
 
-      if (useCached) {
-        gCachedRequest.location.timestamp = Date.now();
-        if (this.listener) {
-          this.listener.update(gCachedRequest.location);
-        }
-        return;
+    if (useCached) {
+      gCachedRequest.location.timestamp = Date.now();
+      if (this.listener) {
+        this.listener.update(gCachedRequest.location);
       }
+      return;
     }
 
     // From here on, do a network geolocation request //
-    let url = Services.urlFormatter.formatURLPref(
-      "geo." + this.mode + ".network.url"
-    );
+    let url = Services.urlFormatter.formatURLPref("geo.provider.network.url");
     LOG("Sending request");
 
     let xhr = new XMLHttpRequest();
-    this.onStatus(false, "xhr-start");
     try {
       xhr.open("POST", url, true);
       xhr.channel.loadFlags = Ci.nsIChannel.LOAD_ANONYMOUS;
     } catch (e) {
-      this.onStatus(true, "xhr-error");
+      notifyPositionUnavailable(this.listener);
       return;
     }
     xhr.setRequestHeader("Content-Type", "application/json; charset=UTF-8");
     xhr.responseType = "json";
     xhr.mozBackgroundRequest = true;
-    // The timeout value doesn't need to change in a different mode.
     xhr.timeout = Services.prefs.getIntPref("geo.provider.network.timeout");
     xhr.ontimeout = () => {
       LOG("Location request XHR timed out.");
-      this.onStatus(true, "xhr-timeout");
+      notifyPositionUnavailable(this.listener);
     };
     xhr.onerror = () => {
-      this.onStatus(true, "xhr-error");
+      notifyPositionUnavailable(this.listener);
     };
     xhr.onload = () => {
       LOG(
@@ -541,39 +439,38 @@ NetworkGeolocationProvider.prototype = {
       );
       if (
         (xhr.channel instanceof Ci.nsIHttpChannel && xhr.status != 200) ||
-        !xhr.response
+        !xhr.response ||
+        !xhr.response.location
       ) {
-        this.onStatus(true, !xhr.response ? "xhr-empty" : "xhr-error");
+        notifyPositionUnavailable(this.listener);
         return;
       }
 
-      let newLocation;
-      if (this.mode == "provider-country") {
-        newLocation = xhr.response && xhr.response.country_code;
-      } else {
-        newLocation = new NetworkGeoPositionObject(
-          xhr.response.location.lat,
-          xhr.response.location.lng,
-          xhr.response.accuracy
-        );
-      }
+      let newLocation = new NetworkGeoPositionObject(
+        xhr.response.location.lat,
+        xhr.response.location.lng,
+        xhr.response.accuracy
+      );
 
       if (this.listener) {
         this.listener.update(newLocation);
       }
-
-      if (this.mode == "provider") {
-        gCachedRequest = new CachedRequest(
-          newLocation,
-          data.cellTowers,
-          data.wifiAccessPoints
-        );
-      }
+      gCachedRequest = new CachedRequest(
+        newLocation,
+        data.cellTowers,
+        data.wifiAccessPoints
+      );
     };
 
     var requestData = JSON.stringify(data);
     LOG("sending " + requestData);
     xhr.send(requestData);
+
+    function notifyPositionUnavailable(listener) {
+      if (listener) {
+        listener.notifyError(POSITION_UNAVAILABLE);
+      }
+    }
   },
 };
 
