@@ -489,3 +489,5 @@ add_old_configure_assignment('LINKER', link)
 
 
 check_prog('MAKECAB', ('makecab.exe',), when=host_is_windows)
+
+check_prog('UPX', ('upx',), allow_missing=True, when=target_is_windows)

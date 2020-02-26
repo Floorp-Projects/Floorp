@@ -13,7 +13,9 @@ SFX_MODULE ?= $(error SFX_MODULE is not defined)
 ifeq ($(CPU_ARCH), aarch64)
 USE_UPX := 
 else
+ifneq (,$(UPX)$(MOZ_AUTOMATION))
 USE_UPX := --use-upx
+endif
 endif
 
 TOOLKIT_NSIS_FILES = \
