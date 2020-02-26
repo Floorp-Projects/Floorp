@@ -24,7 +24,7 @@ object Versions {
     const val androidx_fragment = "1.2.1"
     const val androidx_navigation = "2.2.1"
     const val androidx_recyclerview = "1.1.0"
-    const val androidx_testing = "1.2.1-alpha02"
+    const val androidx_testing = "1.3.0-alpha04"
     const val androidx_test_ext = "1.0.0"
     const val androidx_core = "1.2.0"
     const val androidx_paging = "2.1.0"
