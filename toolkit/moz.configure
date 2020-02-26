@@ -1153,10 +1153,10 @@ midl = check_prog('MIDL', midl_names, when=check_for_midl, allow_missing=True,
                   paths=sdk_bin_path)
 
 
-@depends(c_compiler, target, toolchain_search_path,
+@depends(c_compiler, target,
          when=depends(midl, target)(lambda m, t: m and t.kernel == 'WINNT'))
 @imports(_from='mozbuild.shellutil', _import='quote')
-def midl_flags(c_compiler, target, toolchain_search_path):
+def midl_flags(c_compiler, target):
     if c_compiler and c_compiler.type == 'clang-cl':
         env = {
             'x86': 'win32',
@@ -1165,17 +1165,7 @@ def midl_flags(c_compiler, target, toolchain_search_path):
         }[target.cpu]
         flags = ['-env', env]
 
-        if c_compiler.version >= '8':
-            return flags + ['-cpp_cmd', c_compiler.compiler]
-
-        # clang-cl didn't work as a preprocessor for midl before version 8
-        # so we need to find cl if we use an older version.
-        # find cl. https://bugs.llvm.org/show_bug.cgi?id=40140
-        cl = find_program('cl', paths=toolchain_search_path)
-        if not cl:
-            die('Could not find Microsoft Visual C/C++ compiler for MIDL')
-        flags += ['-cpp_cmd', cl]
-        return flags
+        return flags + ['-cpp_cmd', c_compiler.compiler]
 
     # mingw
     return {
