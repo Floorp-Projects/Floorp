@@ -506,8 +506,9 @@ class SandboxValidationError(Exception):
         s.write('The error occurred when validating the result of ')
         s.write('the execution. The reported error is:\n')
         s.write('\n')
-        s.write(''.join('    %s\n' % l
-                        for l in self.message.splitlines()))
+        s.write(''.join(
+            '    %s\n' % l
+            for l in super(SandboxValidationError, self).__str__().splitlines()))
         s.write('\n')
 
         return s.getvalue()
@@ -589,8 +590,9 @@ class BuildReaderError(Exception):
             s.write('The error occurred when validating the result of ')
             s.write('the execution. The reported error is:\n')
             s.write('\n')
-            s.write(''.join('    %s\n' % l
-                            for l in self.validation_error.message.splitlines()))
+            s.write(''.join(
+                '    %s\n' % l
+                for l in six.text_type(self.validation_error).splitlines()))
             s.write('\n')
         else:
             s.write('The error appears to be part of the %s ' % __name__)
@@ -1315,7 +1317,8 @@ class BuildReader(object):
 
         result = {}
         for path, paths in path_mozbuilds.items():
-            result[path] = reduce(lambda x, y: x + y, (contexts[p] for p in paths), [])
+            result[path] = six.moves.reduce(
+                lambda x, y: x + y, (contexts[p] for p in paths), [])
 
         return result, all_contexts
 
