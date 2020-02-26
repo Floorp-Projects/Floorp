@@ -9,6 +9,7 @@ import androidx.work.ListenableWorker
 import androidx.work.await
 import androidx.work.testing.TestListenableWorkerBuilder
 import junit.framework.TestCase.assertEquals
+import junit.framework.TestCase.assertTrue
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking
 import mozilla.components.feature.addons.AddonManager
@@ -129,6 +130,34 @@ class AddonUpdaterWorkerTest {
             val result = worker.startWork().await()
 
             assertEquals(ListenableWorker.Result.retry(), result)
+        }
+    }
+
+    @Test
+    fun `doWork - will try pass any exceptions to the crashReporter`() {
+        val addonId = "addonId"
+        val onFinishCaptor = argumentCaptor<((AddonUpdater.Status) -> Unit)>()
+        val addonManager = mock<AddonManager>()
+        val worker = TestListenableWorkerBuilder<AddonUpdaterWorker>(testContext)
+                .setInputData(AddonUpdaterWorker.createWorkerData(addonId))
+                .build()
+        var crashWasReported = false
+        val crashReporter: ((Throwable) -> Unit) = { _ ->
+            crashWasReported = true
+        }
+
+        GlobalAddonDependencyProvider.initialize(addonManager, mock(), crashReporter)
+        GlobalAddonDependencyProvider.addonManager = null
+
+        whenever(addonManager.updateAddon(anyString(), onFinishCaptor.capture())).then {
+            onFinishCaptor.value.invoke(AddonUpdater.Status.Error("error", Exception()))
+        }
+
+        runBlocking {
+            val result = worker.startWork().await()
+
+            assertEquals(ListenableWorker.Result.retry(), result)
+            assertTrue(crashWasReported)
         }
     }
 }
