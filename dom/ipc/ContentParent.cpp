@@ -814,7 +814,7 @@ already_AddRefed<ContentParent> ContentParent::MinTabSelect(
 
   for (uint32_t i = 0; i < maxSelectable; i++) {
     ContentParent* p = aContentParents[i];
-    NS_ASSERTION(p->IsDead(), "Dead contentparent in sBrowserContentParents?");
+    NS_ASSERTION(!p->IsDead(), "Dead contentparent in sBrowserContentParents?");
     if (!p->mShutdownPending && p->mOpener == aOpener) {
       uint32_t tabCount = cpm->GetBrowserParentCountByProcessId(p->ChildID());
       if (tabCount < min) {
