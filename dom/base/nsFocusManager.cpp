@@ -872,7 +872,8 @@ nsresult nsFocusManager::ContentRemoved(Document* aDocument,
       }
     }
 
-    NotifyFocusStateChange(content, nullptr, shouldShowFocusRing, false);
+    NotifyFocusStateChange(content, nullptr, shouldShowFocusRing, 0,
+                           /* aGettingFocus = */ false);
   }
 
   return NS_OK;
@@ -975,7 +976,7 @@ nsFocusManager::WindowHidden(mozIDOMWindowProxy* aWindow) {
 
   if (oldFocusedElement && oldFocusedElement->IsInComposedDoc()) {
     NotifyFocusStateChange(oldFocusedElement, nullptr,
-                           mFocusedWindow->ShouldShowFocusRing(), false);
+                           mFocusedWindow->ShouldShowFocusRing(), 0, false);
     window->UpdateCommands(NS_LITERAL_STRING("focus"), nullptr, 0);
 
     if (presShell) {
@@ -1088,10 +1089,41 @@ nsFocusManager::ParentActivated(mozIDOMWindowProxy* aWindow, bool aActive) {
   return NS_OK;
 }
 
+static bool ShouldMatchFocusVisible(const Element& aElement,
+                                    int32_t aFocusFlags) {
+  if (StaticPrefs::browser_display_show_focus_rings()) {
+    // FIXME: Spec is ambiguous about whether we should take platform
+    // conventions into account. This branch does make us account for them.
+    return true;
+  }
+
+  switch (nsFocusManager::GetFocusMoveActionCause(aFocusFlags)) {
+    case InputContextAction::CAUSE_UNKNOWN:
+    case InputContextAction::CAUSE_KEY:
+      return true;
+    case InputContextAction::CAUSE_MOUSE:
+    case InputContextAction::CAUSE_TOUCH:
+    case InputContextAction::CAUSE_LONGPRESS:
+      break;
+    case InputContextAction::CAUSE_UNKNOWN_CHROME:
+    case InputContextAction::CAUSE_UNKNOWN_DURING_KEYBOARD_INPUT:
+    case InputContextAction::CAUSE_UNKNOWN_DURING_NON_KEYBOARD_INPUT:
+      // TODO(emilio): We could return some of these though, looking at
+      // UserActivation. We may want to suppress focus rings for unknown /
+      // programatic focus if the user is interacting with the page but not
+      // during keyboard input, or such.
+      MOZ_ASSERT_UNREACHABLE(
+          "These don't get returned by GetFocusMoveActionCause");
+      break;
+  }
+  return false;
+}
+
 /* static */
 void nsFocusManager::NotifyFocusStateChange(nsIContent* aContent,
                                             nsIContent* aContentToFocus,
                                             bool aWindowShouldShowFocusRing,
+                                            int32_t aFlags,
                                             bool aGettingFocus) {
   MOZ_ASSERT_IF(aContentToFocus, !aGettingFocus);
   if (!aContent->IsElement()) {
@@ -1104,24 +1136,29 @@ void nsFocusManager::NotifyFocusStateChange(nsIContent* aContent,
         aContent, aContentToFocus);
   }
 
-  EventStates eventState = NS_EVENT_STATE_FOCUS;
-  if (aWindowShouldShowFocusRing) {
-    eventState |= NS_EVENT_STATE_FOCUSRING;
-  }
-
   if (aGettingFocus) {
-    aContent->AsElement()->AddStates(eventState);
+    EventStates eventStateToAdd = NS_EVENT_STATE_FOCUS;
+    if (aWindowShouldShowFocusRing) {
+      eventStateToAdd |= NS_EVENT_STATE_FOCUSRING;
+    }
+    if (ShouldMatchFocusVisible(*aContent->AsElement(), aFlags)) {
+      eventStateToAdd |= NS_EVENT_STATE_FOCUS_VISIBLE;
+    }
+    aContent->AsElement()->AddStates(eventStateToAdd);
   } else {
-    aContent->AsElement()->RemoveStates(eventState);
+    EventStates eventStateToRemove = NS_EVENT_STATE_FOCUS |
+                                     NS_EVENT_STATE_FOCUSRING |
+                                     NS_EVENT_STATE_FOCUS_VISIBLE;
+    aContent->AsElement()->RemoveStates(eventStateToRemove);
   }
 
   for (nsIContent* content = aContent; content && content != commonAncestor;
        content = content->GetFlattenedTreeParent()) {
-    if (!content->IsElement()) {
+    Element* element = Element::FromNode(content);
+    if (!element) {
       continue;
     }
 
-    Element* element = content->AsElement();
     if (aGettingFocus) {
       if (element->State().HasState(NS_EVENT_STATE_FOCUS_WITHIN)) {
         break;
@@ -1950,7 +1987,7 @@ bool nsFocusManager::BlurImpl(BrowsingContext* aBrowsingContextToClear,
       element && element->IsInComposedDoc() && !IsNonFocusableRoot(element);
   if (element) {
     if (sendBlurEvent) {
-      NotifyFocusStateChange(element, aContentToFocus, shouldShowFocusRing,
+      NotifyFocusStateChange(element, aContentToFocus, shouldShowFocusRing, 0,
                              false);
     }
 
@@ -2231,7 +2268,7 @@ void nsFocusManager::Focus(nsPIDOMWindowOuter* aWindow, Element* aElement,
     nsPresContext* presContext = presShell->GetPresContext();
     if (sendFocusEvent) {
       NotifyFocusStateChange(aElement, nullptr, aWindow->ShouldShowFocusRing(),
-                             true);
+                             aFlags, /* aGettingFocus = */ true);
 
       // if this is an object/plug-in/remote browser, focus its widget.  Note
       // that we might no longer be in the same document, due to the events we

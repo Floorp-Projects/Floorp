@@ -170,14 +170,8 @@ bool nsIConstraintValidation::ReportValidity() {
     }
   }
 
-  if (element->IsHTMLElement(nsGkAtoms::input) &&
-      // We don't use nsContentUtils::IsFocusedContent here, because it doesn't
-      // really do what we want for number controls: it's true for the
-      // anonymous textnode inside, but not the number control itself.  We can
-      // use the focus state, though, because that gets synced to the number
-      // control by the anonymous text control.
-      element->State().HasState(NS_EVENT_STATE_FOCUS)) {
-    HTMLInputElement* inputElement = HTMLInputElement::FromNode(element);
+  auto* inputElement = HTMLInputElement::FromNode(element);
+  if (inputElement && inputElement->State().HasState(NS_EVENT_STATE_FOCUS)) {
     inputElement->UpdateValidityUIBits(true);
   }
 
