@@ -88,9 +88,9 @@ add_task(async function() {
   for (const test of tests) {
     info(test.description);
 
-    let onPopupUpdate = jsterm.once("autocomplete-updated");
+    const onPopUpOpen = autocompletePopup.once("popup-opened");
     EventUtils.sendString(test.initialInput);
-    await onPopupUpdate;
+    await onPopUpOpen;
 
     is(
       getAutocompletePopupLabels(autocompletePopup).join("|"),
@@ -107,7 +107,7 @@ add_task(async function() {
       expectedItems,
       expectedCompletionText,
     } of test.sequence) {
-      onPopupUpdate = jsterm.once("autocomplete-updated");
+      const onPopupUpdate = jsterm.once("autocomplete-updated");
       EventUtils.sendString(char);
       await onPopupUpdate;
 

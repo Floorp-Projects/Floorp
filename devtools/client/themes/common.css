@@ -132,6 +132,7 @@ button::selection {
   padding: 0;
   overflow-x: hidden;
   max-height: 20rem;
+  height: 100%;
   box-sizing: border-box;
 }
 
