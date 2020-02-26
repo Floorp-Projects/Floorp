@@ -17,6 +17,9 @@
 #include "mozilla/gfx/GPUProcessManager.h"
 #include "mozilla/Unused.h"
 #include "Units.h"
+#ifdef MOZ_WIDGET_ANDROID
+#include "mozilla/jni/Utils.h"
+#endif
 
 static mozilla::LazyLogModule sApzRemoteLog("apz.cc.remote");
 
@@ -115,15 +118,25 @@ void RemoteContentController::HandleTap(TapType aTapType,
   if (NS_IsMainThread()) {
     HandleTapOnMainThread(aTapType, aPoint, aModifiers, aGuid, aInputBlockId);
   } else {
+    // We must be on Android, running on the Java UI thread
+#ifndef MOZ_WIDGET_ANDROID
+    MOZ_ASSERT(false);
+#else
     // We don't want to get the BrowserParent or call
-    // BrowserParent::SendHandleTap() from a non-main thread (this might happen
-    // on Android, where this is called from the Java UI thread)
-    NS_DispatchToMainThread(
+    // BrowserParent::SendHandleTap() from a non-main thread, so we need to
+    // redispatch to the main thread. However, we should use the same mechanism
+    // that the Android widget uses when dispatching input events to Gecko,
+    // which is nsAppShell::PostEvent. Note in particular that using
+    // NS_DispatchToMainThread would post to a different message loop, and
+    // introduces the possibility of this tap event getting processed out of
+    // order with respect to the touch events that synthesized it.
+    mozilla::jni::DispatchToGeckoPriorityQueue(
         NewRunnableMethod<TapType, LayoutDevicePoint, Modifiers,
                           ScrollableLayerGuid, uint64_t>(
             "layers::RemoteContentController::HandleTapOnMainThread", this,
             &RemoteContentController::HandleTapOnMainThread, aTapType, aPoint,
             aModifiers, aGuid, aInputBlockId));
+#endif
   }
 }
 
