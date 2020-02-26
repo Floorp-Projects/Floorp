@@ -40,60 +40,6 @@ function validateHistogramEntryCount(aHistogramName, aExpectedCount) {
   );
 }
 
-function promiseMakeCredentialRequest(tab) {
-  return SpecialPowers.spawn(tab.linkedBrowser, [], () => {
-    const cose_alg_ECDSA_w_SHA256 = -7;
-
-    let publicKey = {
-      rp: { id: content.document.domain, name: "none", icon: "none" },
-      user: {
-        id: new Uint8Array(),
-        name: "none",
-        icon: "none",
-        displayName: "none",
-      },
-      challenge: content.crypto.getRandomValues(new Uint8Array(16)),
-      timeout: 5000, // the minimum timeout is actually 15 seconds
-      pubKeyCredParams: [{ type: "public-key", alg: cose_alg_ECDSA_w_SHA256 }],
-      attestation: "direct",
-    };
-
-    return content.navigator.credentials.create({ publicKey }).then(cred => {
-      return {
-        attObj: cred.response.attestationObject,
-        rawId: cred.rawId,
-      };
-    });
-  });
-}
-
-function promiseGetAssertionRequest(tab, rawId) {
-  /* eslint-disable no-shadow */
-  return SpecialPowers.spawn(tab.linkedBrowser, [[rawId]], ([rawId]) => {
-    let newCredential = {
-      type: "public-key",
-      transports: ["usb"],
-      id: rawId,
-    };
-
-    let publicKey = {
-      challenge: content.crypto.getRandomValues(new Uint8Array(16)),
-      timeout: 5000, // the minimum timeout is actually 15 seconds
-      rpId: content.document.domain,
-      allowCredentials: [newCredential],
-    };
-
-    return content.navigator.credentials.get({ publicKey }).then(assertion => {
-      return {
-        clientDataJSON: assertion.response.clientDataJSON,
-        authData: assertion.response.authenticatorData,
-        signature: assertion.response.signature,
-      };
-    });
-  });
-  /* eslint-enable no-shadow */
-}
-
 function checkRpIdHash(rpIdHash) {
   return crypto.subtle
     .digest("SHA-256", string2buffer("example.com"))
@@ -131,7 +77,7 @@ add_task(async function test() {
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_URL);
 
   // Create a new credential.
-  let { attObj, rawId } = await promiseMakeCredentialRequest(tab);
+  let { attObj, rawId } = await promiseWebAuthnMakeCredential(tab);
   let { authDataObj } = await webAuthnDecodeCBORAttestation(attObj);
 
   // Make sure the RP ID hash matches what we calculate.
@@ -140,15 +86,17 @@ add_task(async function test() {
   // Get a new assertion.
   let {
     clientDataJSON,
-    authData,
+    authenticatorData,
     signature,
-  } = await promiseGetAssertionRequest(tab, rawId);
+  } = await promiseWebAuthnGetAssertion(tab, rawId);
 
   // Check the we can parse clientDataJSON.
   JSON.parse(buffer2string(clientDataJSON));
 
   // Check auth data.
-  let attestation = await webAuthnDecodeAuthDataArray(new Uint8Array(authData));
+  let attestation = await webAuthnDecodeAuthDataArray(
+    new Uint8Array(authenticatorData)
+  );
   is(
     attestation.flags,
     flag_TUP,

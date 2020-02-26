@@ -19,88 +19,24 @@ function promiseNotification(id) {
   });
 }
 
-function arrivingHereIsBad(aResult) {
-  ok(false, "Bad result! Received a: " + aResult);
-}
+let expectAbortError = expectError("Abort");
 
-function expectAbortError(aResult) {
-  let expected = "AbortError";
-  is(aResult.slice(0, expected.length), expected, `Expecting a ${expected}`);
-}
-
-function verifyAnonymizedCertificate(attestationObject) {
-  return webAuthnDecodeCBORAttestation(attestationObject).then(
-    ({ fmt, attStmt }) => {
-      is("none", fmt, "Is a None Attestation");
-      is("object", typeof attStmt, "attStmt is a map");
-      is(0, Object.keys(attStmt).length, "attStmt is empty");
-    }
-  );
-}
-
-function verifyDirectCertificate(attestationObject) {
-  return webAuthnDecodeCBORAttestation(attestationObject).then(
-    ({ fmt, attStmt }) => {
-      is("fido-u2f", fmt, "Is a FIDO U2F Attestation");
-      is("object", typeof attStmt, "attStmt is a map");
-      ok(attStmt.hasOwnProperty("x5c"), "attStmt.x5c exists");
-      ok(attStmt.hasOwnProperty("sig"), "attStmt.sig exists");
-    }
-  );
-}
-
-function promiseWebAuthnRegister(tab, attestation = "indirect") {
-  /* eslint-disable no-shadow */
-  return ContentTask.spawn(tab.linkedBrowser, attestation, attestation => {
-    const cose_alg_ECDSA_w_SHA256 = -7;
-
-    let challenge = content.crypto.getRandomValues(new Uint8Array(16));
-
-    let pubKeyCredParams = [
-      {
-        type: "public-key",
-        alg: cose_alg_ECDSA_w_SHA256,
-      },
-    ];
-
-    let publicKey = {
-      rp: { id: content.document.domain, name: "none", icon: "none" },
-      user: {
-        id: new Uint8Array(),
-        name: "none",
-        icon: "none",
-        displayName: "none",
-      },
-      pubKeyCredParams,
-      attestation,
-      challenge,
-    };
-
-    return content.navigator.credentials
-      .create({ publicKey })
-      .then(cred => cred.response.attestationObject);
+function verifyAnonymizedCertificate(result) {
+  let { attObj, rawId } = result;
+  return webAuthnDecodeCBORAttestation(attObj).then(({ fmt, attStmt }) => {
+    is("none", fmt, "Is a None Attestation");
+    is("object", typeof attStmt, "attStmt is a map");
+    is(0, Object.keys(attStmt).length, "attStmt is empty");
   });
-  /* eslint-enable no-shadow */
 }
 
-function promiseWebAuthnSign(tab) {
-  return ContentTask.spawn(tab.linkedBrowser, null, () => {
-    let challenge = content.crypto.getRandomValues(new Uint8Array(16));
-    let key_handle = content.crypto.getRandomValues(new Uint8Array(16));
-
-    let credential = {
-      id: key_handle,
-      type: "public-key",
-      transports: ["usb"],
-    };
-
-    let publicKey = {
-      challenge,
-      rpId: content.document.domain,
-      allowCredentials: [credential],
-    };
-
-    return content.navigator.credentials.get({ publicKey });
+function verifyDirectCertificate(result) {
+  let { attObj, rawId } = result;
+  return webAuthnDecodeCBORAttestation(attObj).then(({ fmt, attStmt }) => {
+    is("fido-u2f", fmt, "Is a FIDO U2F Attestation");
+    is("object", typeof attStmt, "attStmt is a map");
+    ok(attStmt.hasOwnProperty("x5c"), "attStmt.x5c exists");
+    ok(attStmt.hasOwnProperty("sig"), "attStmt.sig exists");
   });
 }
 
@@ -122,7 +58,7 @@ add_task(async function test_register() {
 
   // Request a new credential and wait for the prompt.
   let active = true;
-  let request = promiseWebAuthnRegister(tab)
+  let request = promiseWebAuthnMakeCredential(tab, "indirect", {})
     .then(arrivingHereIsBad)
     .catch(expectAbortError)
     .then(() => (active = false));
@@ -143,7 +79,7 @@ add_task(async function test_sign() {
 
   // Request a new assertion and wait for the prompt.
   let active = true;
-  let request = promiseWebAuthnSign(tab)
+  let request = promiseWebAuthnGetAssertion(tab)
     .then(arrivingHereIsBad)
     .catch(expectAbortError)
     .then(() => (active = false));
@@ -164,7 +100,7 @@ add_task(async function test_register_direct_cancel() {
 
   // Request a new credential with direct attestation and wait for the prompt.
   let active = true;
-  let promise = promiseWebAuthnRegister(tab, "direct")
+  let promise = promiseWebAuthnMakeCredential(tab, "direct", {})
     .then(arrivingHereIsBad)
     .catch(expectAbortError)
     .then(() => (active = false));
@@ -195,7 +131,7 @@ add_task(async function test_register_direct_proceed() {
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_URL);
 
   // Request a new credential with direct attestation and wait for the prompt.
-  let request = promiseWebAuthnRegister(tab, "direct");
+  let request = promiseWebAuthnMakeCredential(tab, "direct", {});
   await promiseNotification("webauthn-prompt-register-direct");
 
   // Proceed.
@@ -213,7 +149,7 @@ add_task(async function test_register_direct_proceed_anon() {
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_URL);
 
   // Request a new credential with direct attestation and wait for the prompt.
-  let request = promiseWebAuthnRegister(tab, "direct");
+  let request = promiseWebAuthnMakeCredential(tab, "direct", {});
   await promiseNotification("webauthn-prompt-register-direct");
 
   // Check "anonymize anyway" and proceed.

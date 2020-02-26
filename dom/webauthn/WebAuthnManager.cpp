@@ -96,6 +96,10 @@ nsresult GetOrigin(nsPIDOMWindowInner* aParent,
     return NS_ERROR_FAILURE;
   }
 
+  if (principal->GetIsIpAddress()) {
+    return NS_ERROR_DOM_SECURITY_ERR;
+  }
+
   if (aOrigin.EqualsLiteral("null")) {
     // 4.1.1.3 If callerOrigin is an opaque origin, reject promise with a
     // DOMException whose name is "NotAllowedError", and terminate this
