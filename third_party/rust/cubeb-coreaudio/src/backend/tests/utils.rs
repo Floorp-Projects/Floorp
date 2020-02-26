@@ -503,6 +503,7 @@ pub fn test_audiounit_scope_is_enabled(unit: AudioUnit, scope: Scope) -> bool {
         Scope::Input => (kAudioUnitScope_Input, AU_IN_BUS),
         Scope::Output => (kAudioUnitScope_Output, AU_OUT_BUS),
     };
+    let mut size = mem::size_of::<UInt32>();
     assert_eq!(
         audio_unit_get_property(
             unit,
@@ -510,7 +511,7 @@ pub fn test_audiounit_scope_is_enabled(unit: AudioUnit, scope: Scope) -> bool {
             scope,
             element,
             &mut has_io,
-            &mut mem::size_of::<UInt32>()
+            &mut size
         ),
         NO_ERR
     );

@@ -7,7 +7,9 @@ use crate::backend::AudioUnitContext;
 use cubeb_backend::{capi, ffi};
 use std::os::raw::{c_char, c_int};
 
-// Entry point from C code.
+/// # Safety
+///
+/// This function should only be called once per process.
 #[no_mangle]
 pub unsafe extern "C" fn audiounit_rust_init(
     c: *mut *mut ffi::cubeb,

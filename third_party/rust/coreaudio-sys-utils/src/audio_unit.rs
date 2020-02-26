@@ -1,23 +1,26 @@
 use coreaudio_sys::*;
+use std::convert::TryFrom;
 use std::os::raw::c_void;
+use std::ptr;
 
 pub fn audio_unit_get_property_info(
     unit: AudioUnit,
     property: AudioUnitPropertyID,
     scope: AudioUnitScope,
     element: AudioUnitElement,
-    size: *mut usize,
-    writable: *mut Boolean,
+    size: &mut usize,
+    writable: Option<&mut bool>, // Use `Option` since `writable` is nullable.
 ) -> OSStatus {
     assert!(!unit.is_null());
+    assert!(UInt32::try_from(*size).is_ok()); // Check if `size` can be converted to a UInt32.
     unsafe {
         AudioUnitGetPropertyInfo(
             unit,
             property,
             scope,
             element,
-            size as *mut UInt32,
-            writable,
+            size as *mut usize as *mut UInt32,
+            writable.map_or(ptr::null_mut(), |v| v as *mut bool as *mut Boolean),
         )
     }
 }
@@ -27,18 +30,19 @@ pub fn audio_unit_get_property<T>(
     property: AudioUnitPropertyID,
     scope: AudioUnitScope,
     element: AudioUnitElement,
-    data: *mut T,
-    size: *mut usize,
+    data: &mut T,
+    size: &mut usize,
 ) -> OSStatus {
     assert!(!unit.is_null());
+    assert!(UInt32::try_from(*size).is_ok()); // Check if `size` can be converted to a UInt32.
     unsafe {
         AudioUnitGetProperty(
             unit,
             property,
             scope,
             element,
-            data as *mut c_void,
-            size as *mut UInt32,
+            data as *mut T as *mut c_void,
+            size as *mut usize as *mut UInt32,
         )
     }
 }
@@ -48,7 +52,7 @@ pub fn audio_unit_set_property<T>(
     property: AudioUnitPropertyID,
     scope: AudioUnitScope,
     element: AudioUnitElement,
-    data: *const T,
+    data: &T,
     size: usize,
 ) -> OSStatus {
     assert!(!unit.is_null());
@@ -58,7 +62,7 @@ pub fn audio_unit_set_property<T>(
             property,
             scope,
             element,
-            data as *const c_void,
+            data as *const T as *const c_void,
             size as UInt32,
         )
     }
@@ -121,11 +125,11 @@ pub fn audio_output_unit_stop(unit: AudioUnit) -> OSStatus {
 
 pub fn audio_unit_render(
     in_unit: AudioUnit,
-    io_action_flags: *mut AudioUnitRenderActionFlags,
-    in_time_stamp: *const AudioTimeStamp,
+    io_action_flags: &mut AudioUnitRenderActionFlags,
+    in_time_stamp: &AudioTimeStamp,
     in_output_bus_number: u32,
     in_number_frames: u32,
-    io_data: *mut AudioBufferList,
+    io_data: &mut AudioBufferList,
 ) -> OSStatus {
     assert!(!in_unit.is_null());
     unsafe {

@@ -194,7 +194,7 @@ fn create_device_info(id: AudioDeviceID, devtype: DeviceType) -> Result<device_i
     assert_ne!(id, kAudioObjectSystemObject);
 
     let mut info = device_info {
-        id: id,
+        id,
         flags: match devtype {
             DeviceType::INPUT => device_flags::DEV_INPUT,
             DeviceType::OUTPUT => device_flags::DEV_OUTPUT,
@@ -328,9 +328,9 @@ fn get_volume(unit: AudioUnit) -> Result<f32> {
 }
 
 fn minimum_resampling_input_frames(input_rate: f64, output_rate: f64, output_frames: i64) -> i64 {
-    assert_ne!(input_rate, 0_f64);
-    assert_ne!(output_rate, 0_f64);
-    if input_rate == output_rate {
+    assert!(!approx_eq!(f64, input_rate, 0_f64));
+    assert!(!approx_eq!(f64, output_rate, 0_f64));
+    if approx_eq!(f64, input_rate, output_rate) {
         return output_frames;
     }
     (input_rate * output_frames as f64 / output_rate).ceil() as i64
@@ -382,6 +382,12 @@ extern "C" fn audiounit_input_callback(
             stm.core_stream_data.stm_ptr,
             user_ptr as *const AudioUnitStream
         );
+
+        // `flags` and `tstamp` must be non-null so they can be casted into the references.
+        assert!(!flags.is_null());
+        let flags = unsafe { &mut (*flags) };
+        assert!(!tstamp.is_null());
+        let tstamp = unsafe { &(*tstamp) };
 
         // Create the AudioBufferList to store input.
         let mut input_buffer_list = AudioBufferList::default();
@@ -533,21 +539,20 @@ extern "C" fn audiounit_input_callback(
         }
     }
 
-    let status = match handle {
+    match handle {
         ErrorHandle::Reinit => {
             stm.reinit_async();
             NO_ERR
         }
         ErrorHandle::Return(s) => s,
-    };
-    status
+    }
 }
 
 fn host_time_to_ns(host_time: u64) -> u64 {
     let mut rv: f64 = host_time as f64;
     rv *= HOST_TIME_TO_NS_RATIO.0 as f64;
     rv /= HOST_TIME_TO_NS_RATIO.1 as f64;
-    return rv as u64;
+    rv as u64
 }
 
 fn compute_output_latency(stm: &AudioUnitStream, host_time: u64) -> u32 {
@@ -748,8 +753,8 @@ extern "C" fn audiounit_output_callback(
                 )
             };
             let start = frames_to_bytes(outframes as usize);
-            for i in start..out_bytes.len() {
-                out_bytes[i] = 0;
+            for byte in out_bytes.iter_mut().skip(start) {
+                *byte = 0;
             }
         }
 
@@ -926,7 +931,7 @@ fn audiounit_get_preferred_channel_layout(output_unit: AudioUnit) -> Vec<mixer::
         kAudioUnitScope_Output,
         AU_OUT_BUS,
         &mut size,
-        ptr::null_mut(),
+        None,
     );
     if rv != NO_ERR {
         cubeb_log!(
@@ -968,7 +973,7 @@ fn audiounit_get_current_channel_layout(output_unit: AudioUnit) -> Vec<mixer::Ch
         kAudioUnitScope_Output,
         AU_OUT_BUS,
         &mut size,
-        ptr::null_mut(),
+        None,
     );
     if rv != NO_ERR {
         cubeb_log!(
@@ -1226,6 +1231,7 @@ fn set_buffer_size(
     }
 }
 
+#[allow(clippy::mutex_atomic)] // The mutex needs to be fed into Condvar::wait_timeout.
 fn set_buffer_size_sync(unit: AudioUnit, devtype: DeviceType, frames: u32) -> Result<()> {
     let current_frames = get_buffer_size(unit, devtype).map_err(|e| {
         cubeb_log!(
@@ -1392,7 +1398,7 @@ fn get_range_of_sample_rates(
 ) -> std::result::Result<(f64, f64), String> {
     let result = get_ranges_of_device_sample_rate(devid, devtype);
     if let Err(e) = result {
-        return Err(format!("status {}", e).to_string());
+        return Err(format!("status {}", e));
     }
     let rates = result.unwrap();
     if rates.is_empty() {
@@ -1766,9 +1772,7 @@ impl DevicesData {
     }
 
     fn is_empty(&self) -> bool {
-        self.changed_callback == None
-            && self.callback_user_ptr == ptr::null_mut()
-            && self.devices.is_empty()
+        self.changed_callback == None && self.callback_user_ptr.is_null() && self.devices.is_empty()
     }
 }
 
@@ -2138,7 +2142,7 @@ impl ContextOps for AudioUnitContext {
                     cubeb_log!("Fail to create device info for input.");
                     e
                 })?;
-            let stm_params = StreamParams::from(unsafe { (*params.as_ptr()) });
+            let stm_params = StreamParams::from(unsafe { *params.as_ptr() });
             Some((stm_params, in_device))
         } else {
             None
@@ -2150,7 +2154,7 @@ impl ContextOps for AudioUnitContext {
                     cubeb_log!("Fail to create device info for output.");
                     e
                 })?;
-            let stm_params = StreamParams::from(unsafe { (*params.as_ptr()) });
+            let stm_params = StreamParams::from(unsafe { *params.as_ptr() });
             Some((stm_params, out_device))
         } else {
             None
@@ -2391,6 +2395,7 @@ impl<'ctx> CoreStreamData<'ctx> {
             && !is_device_a_type_of(self.output_device.id, DeviceType::INPUT)
     }
 
+    #[allow(clippy::cognitive_complexity)] // TODO: Refactoring.
     fn setup(&mut self) -> Result<()> {
         if self
             .input_stream_params
@@ -2756,14 +2761,14 @@ impl<'ctx> CoreStreamData<'ctx> {
         };
 
         let resampler_input_params = if self.has_input() {
-            let mut params = unsafe { (*(self.input_stream_params.as_ptr())) };
+            let mut params = unsafe { *(self.input_stream_params.as_ptr()) };
             params.rate = self.input_hw_rate as u32;
             Some(params)
         } else {
             None
         };
         let resampler_output_params = if self.has_output() {
-            let params = unsafe { (*(self.output_stream_params.as_ptr())) };
+            let params = unsafe { *(self.output_stream_params.as_ptr()) };
             Some(params)
         } else {
             None
@@ -3061,6 +3066,8 @@ impl<'ctx> Drop for CoreStreamData<'ctx> {
 // #[repr(C)] is used to prevent any padding from being added in the beginning of the AudioUnitStream.
 #[repr(C)]
 #[derive(Debug)]
+// Allow exposing this private struct in public interfaces when running tests.
+#[cfg_attr(test, allow(private_in_public))]
 struct AudioUnitStream<'ctx> {
     context: &'ctx mut AudioUnitContext,
     user_ptr: *mut c_void,
@@ -3231,8 +3238,8 @@ impl<'ctx> AudioUnitStream<'ctx> {
             }
         }
 
-        if vol_rv.is_ok() {
-            set_volume(self.core_stream_data.output_unit, vol_rv.unwrap());
+        if let Ok(volume) = vol_rv {
+            set_volume(self.core_stream_data.output_unit, volume);
         }
 
         // If the stream was running, start it again.
@@ -3295,6 +3302,29 @@ impl<'ctx> AudioUnitStream<'ctx> {
     }
 
     fn destroy(&mut self) {
+        if self
+            .core_stream_data
+            .uninstall_system_changed_callback()
+            .is_err()
+        {
+            cubeb_log!(
+                "({:p}) Could not uninstall the system changed callback",
+                self as *const AudioUnitStream
+            );
+        }
+
+        if self
+            .core_stream_data
+            .uninstall_device_changed_callback()
+            .is_err()
+        {
+            cubeb_log!(
+                "({:p}) Could not uninstall all device change listeners",
+                self as *const AudioUnitStream
+            );
+        }
+
+        // Execute the stream destroy work.
         self.destroy_pending.store(true, Ordering::SeqCst);
 
         let queue = self.context.serial_queue;
@@ -3407,10 +3437,10 @@ impl<'ctx> StreamOps for AudioUnitStream<'ctx> {
 
         let mut device: Box<ffi::cubeb_device> = Box::new(ffi::cubeb_device::default());
 
-        let input_name = input_name.unwrap_or(CString::default());
+        let input_name = input_name.unwrap_or_default();
         device.input_name = input_name.into_raw();
 
-        let output_name = output_name.unwrap_or(CString::default());
+        let output_name = output_name.unwrap_or_default();
         device.output_name = output_name.into_raw();
 
         Ok(unsafe { DeviceRef::from_ptr(Box::into_raw(device)) })
