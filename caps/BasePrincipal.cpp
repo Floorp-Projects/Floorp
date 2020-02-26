@@ -25,6 +25,8 @@
 #include "mozilla/Components.h"
 #include "nsIURIFixup.h"
 
+#include "prnetdb.h"
+
 #include "json/json.h"
 #include "nsSerializationHelper.h"
 
@@ -618,6 +620,31 @@ NS_IMETHODIMP BasePrincipal::GetIsOnion(bool* aIsOnion) {
     return NS_OK;
   }
   *aIsOnion = StringEndsWith(host, NS_LITERAL_CSTRING(".onion"));
+  return NS_OK;
+}
+
+NS_IMETHODIMP BasePrincipal::GetIsIpAddress(bool* aIsIpAddress) {
+  *aIsIpAddress = false;
+
+  nsCOMPtr<nsIURI> prinURI;
+  nsresult rv = GetURI(getter_AddRefs(prinURI));
+  if (NS_FAILED(rv) || !prinURI) {
+    return NS_OK;
+  }
+
+  nsAutoCString host;
+  rv = prinURI->GetHost(host);
+  if (NS_FAILED(rv)) {
+    return NS_OK;
+  }
+
+  PRNetAddr prAddr;
+  memset(&prAddr, 0, sizeof(prAddr));
+
+  if (PR_StringToNetAddr(host.get(), &prAddr) == PR_SUCCESS) {
+    *aIsIpAddress = true;
+  }
+
   return NS_OK;
 }
 
