@@ -25,9 +25,6 @@ import mozilla.components.browser.storage.sync.PlacesBookmarksStorage
 import mozilla.components.browser.storage.sync.PlacesHistoryStorage
 import mozilla.components.concept.engine.DefaultSettings
 import mozilla.components.concept.engine.Engine
-import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy
-import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy.CookiePolicy
-import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy.TrackingCategory
 import mozilla.components.concept.engine.mediaquery.PreferredColorScheme
 import mozilla.components.concept.fetch.Client
 import mozilla.components.feature.customtabs.store.CustomTabsServiceStore
@@ -67,7 +64,7 @@ class Core(private val context: Context) {
             requestInterceptor = AppRequestInterceptor(context),
             remoteDebuggingEnabled = context.settings().isRemoteDebuggingEnabled,
             testingModeEnabled = false,
-            trackingProtectionPolicy = createTrackingProtectionPolicy(),
+            trackingProtectionPolicy = trackingProtectionPolicyFactory.createTrackingProtectionPolicy(),
             historyTrackingDelegate = HistoryDelegate(historyStorage),
             preferredColorScheme = getPreferredColorScheme(),
             automaticFontSizeAdjustment = context.settings().shouldUseAutoSize,
@@ -252,74 +249,7 @@ class Core(private val context: Context) {
                 getSecureAbove22Preferences().putString(PASSWORDS_KEY, it)
             }
 
-    /**
-     * Constructs a [TrackingProtectionPolicy] based on current preferences.
-     *
-     * @param normalMode whether or not tracking protection should be enabled
-     * in normal browsing mode, defaults to the current preference value.
-     * @param privateMode whether or not tracking protection should be enabled
-     * in private browsing mode, default to the current preference value.
-     * @return the constructed tracking protection policy based on preferences.
-     */
-    @Suppress("ComplexMethod")
-    fun createTrackingProtectionPolicy(
-        normalMode: Boolean = context.settings().shouldUseTrackingProtection,
-        privateMode: Boolean = true
-    ): TrackingProtectionPolicy {
-        val trackingProtectionPolicy =
-            when {
-                context.settings().useStrictTrackingProtection -> TrackingProtectionPolicy.strict()
-                context.settings().useCustomTrackingProtection -> return TrackingProtectionPolicy.select(
-                    cookiePolicy = geCustomCookiePolicy(),
-                    trackingCategories = getCustomTrackingCategories()
-                ).apply {
-                    if (context.settings().blockTrackingContentSelectionInCustomTrackingProtection == "private") {
-                        forPrivateSessionsOnly()
-                    }
-                }
-                else -> TrackingProtectionPolicy.recommended()
-            }
-
-        return when {
-            normalMode && privateMode -> trackingProtectionPolicy
-            normalMode && !privateMode -> trackingProtectionPolicy.forRegularSessionsOnly()
-            !normalMode && privateMode -> trackingProtectionPolicy.forPrivateSessionsOnly()
-            else -> TrackingProtectionPolicy.none()
-        }
-    }
-
-    private fun geCustomCookiePolicy(): CookiePolicy {
-        return when (context.settings().blockCookiesSelectionInCustomTrackingProtection) {
-            "all" -> CookiePolicy.ACCEPT_NONE
-            "social" -> CookiePolicy.ACCEPT_NON_TRACKERS
-            "unvisited" -> CookiePolicy.ACCEPT_VISITED
-            "third-party" -> CookiePolicy.ACCEPT_ONLY_FIRST_PARTY
-            else -> CookiePolicy.ACCEPT_NONE
-        }
-    }
-
-    private fun getCustomTrackingCategories(): Array<TrackingCategory> {
-        val categories = arrayListOf(
-            TrackingCategory.AD,
-            TrackingCategory.ANALYTICS,
-            TrackingCategory.SOCIAL,
-            TrackingCategory.MOZILLA_SOCIAL
-        )
-
-        if (context.settings().blockTrackingContentInCustomTrackingProtection) {
-            categories.add(TrackingCategory.SCRIPTS_AND_SUB_RESOURCES)
-        }
-
-        if (context.settings().blockFingerprintersInCustomTrackingProtection) {
-            categories.add(TrackingCategory.FINGERPRINTING)
-        }
-
-        if (context.settings().blockCryptominersInCustomTrackingProtection) {
-            categories.add(TrackingCategory.CRYPTOMINING)
-        }
-
-        return categories.toTypedArray()
-    }
+    val trackingProtectionPolicyFactory = TrackingProtectionPolicyFactory(context.settings())
 
     /**
      * Sets Preferred Color scheme based on Dark/Light Theme Settings or Current Configuration

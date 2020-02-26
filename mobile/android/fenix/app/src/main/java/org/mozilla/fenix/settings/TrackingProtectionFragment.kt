@@ -23,8 +23,8 @@ import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.showToolbar
 
 /**
- * Displays the toggle for tracking protection and a button to open
- * the tracking protection [org.mozilla.fenix.exceptions.ExceptionsFragment].
+ * Displays the toggle for tracking protection, options for tracking protection policy and a button
+ * to open info about the tracking protection [org.mozilla.fenix.exceptions.ExceptionsFragment].
  */
 class TrackingProtectionFragment : PreferenceFragmentCompat() {
 
@@ -66,7 +66,8 @@ class TrackingProtectionFragment : PreferenceFragmentCompat() {
             preference.context.settings().shouldUseTrackingProtection =
                 trackingProtectionOn
             with(preference.context.components) {
-                val policy = core.createTrackingProtectionPolicy(trackingProtectionOn)
+                val policy = core.trackingProtectionPolicyFactory
+                    .createTrackingProtectionPolicy(trackingProtectionOn)
                 useCases.settingsUseCases.updateTrackingProtection(policy)
                 useCases.sessionUseCases.reload()
             }
@@ -100,20 +101,17 @@ class TrackingProtectionFragment : PreferenceFragmentCompat() {
         radioStrict = requireNotNull(findPreference(keyStrict))
         radioStrict.contentDescription =
             getString(R.string.preference_enhanced_tracking_protection_strict_info_button)
-        radioStrict.onPreferenceChangeListener = object : SharedPreferenceUpdater() {
-            override fun onPreferenceChange(preference: Preference, newValue: Any?): Boolean {
-                if (newValue == true) {
-                    updateTrackingProtectionPolicy()
-                    context?.metrics?.track(
-                        Event.TrackingProtectionSettingChanged(
-                            Event.TrackingProtectionSettingChanged.Setting.STRICT
-                        )
-                    )
-                }
-                updateCustomOptionsVisibility()
-                return super.onPreferenceChange(preference, newValue)
-            }
+
+        radioStrict.onClickListener {
+            updateCustomOptionsVisibility()
+            updateTrackingProtectionPolicy()
+            context?.metrics?.track(
+                Event.TrackingProtectionSettingChanged(
+                    Event.TrackingProtectionSettingChanged.Setting.STRICT
+                )
+            )
         }
+
         radioStrict.onInfoClickListener {
             nav(
                 R.id.trackingProtectionFragment,
@@ -130,20 +128,17 @@ class TrackingProtectionFragment : PreferenceFragmentCompat() {
         radioStandard = requireNotNull(findPreference(keyStandard))
         radioStandard.contentDescription =
             getString(R.string.preference_enhanced_tracking_protection_standard_info_button)
-        radioStandard.onPreferenceChangeListener = object : SharedPreferenceUpdater() {
-            override fun onPreferenceChange(preference: Preference, newValue: Any?): Boolean {
-                if (newValue == true) {
-                    updateTrackingProtectionPolicy()
-                    context?.metrics?.track(
-                        Event.TrackingProtectionSettingChanged(
-                            Event.TrackingProtectionSettingChanged.Setting.STANDARD
-                        )
-                    )
-                }
-                updateCustomOptionsVisibility()
-                return super.onPreferenceChange(preference, newValue)
-            }
+
+        radioStandard.onClickListener {
+            updateCustomOptionsVisibility()
+            updateTrackingProtectionPolicy()
+            context?.metrics?.track(
+                Event.TrackingProtectionSettingChanged(
+                    Event.TrackingProtectionSettingChanged.Setting.STANDARD
+                )
+            )
         }
+
         radioStandard.onInfoClickListener {
             nav(
                 R.id.trackingProtectionFragment,
@@ -160,14 +155,10 @@ class TrackingProtectionFragment : PreferenceFragmentCompat() {
         radioCustom = requireNotNull(findPreference(keyCustom))
         radioCustom.contentDescription =
             getString(R.string.preference_enhanced_tracking_protection_custom_info_button)
-        radioCustom.onPreferenceChangeListener = object : SharedPreferenceUpdater() {
-            override fun onPreferenceChange(preference: Preference, newValue: Any?): Boolean {
-                if (newValue == true) {
-                    updateTrackingProtectionPolicy()
-                }
-                updateCustomOptionsVisibility()
-                return super.onPreferenceChange(preference, newValue)
-            }
+
+        radioCustom.onClickListener {
+            updateCustomOptionsVisibility()
+            updateTrackingProtectionPolicy()
         }
         radioCustom.onInfoClickListener {
             nav(
@@ -213,34 +204,52 @@ class TrackingProtectionFragment : PreferenceFragmentCompat() {
 
         customCookies.onPreferenceChangeListener = object : SharedPreferenceUpdater() {
             override fun onPreferenceChange(preference: Preference, newValue: Any?): Boolean {
-                    updateTrackingProtectionPolicy()
                 customCookiesSelect.isVisible = !customCookies.isChecked
-                return super.onPreferenceChange(preference, newValue)
+                return super.onPreferenceChange(preference, newValue).also {
+                    updateTrackingProtectionPolicy()
+                }
             }
         }
 
         customTracking.onPreferenceChangeListener = object : SharedPreferenceUpdater() {
             override fun onPreferenceChange(preference: Preference, newValue: Any?): Boolean {
-                    updateTrackingProtectionPolicy()
                 customTrackingSelect.isVisible = !customTracking.isChecked
-                return super.onPreferenceChange(preference, newValue)
+                return super.onPreferenceChange(preference, newValue).also {
+                    updateTrackingProtectionPolicy()
+                }
             }
         }
 
         customCookiesSelect.onPreferenceChangeListener = object : StringSharedPreferenceUpdater() {
             override fun onPreferenceChange(preference: Preference, newValue: Any?): Boolean {
-                updateTrackingProtectionPolicy()
-                val newValueEntry = (preference as DropDownListPreference).findEntry(key = newValue)
-                return super.onPreferenceChange(preference, newValueEntry)
+                return super.onPreferenceChange(preference, newValue).also {
+                    updateTrackingProtectionPolicy()
+                }
             }
         }
 
         customTrackingSelect.onPreferenceChangeListener = object : StringSharedPreferenceUpdater() {
             override fun onPreferenceChange(preference: Preference, newValue: Any?): Boolean {
-                updateTrackingProtectionPolicy()
-                val newValueEntry = (preference as DropDownListPreference).findEntry(key = newValue)
 
-                return super.onPreferenceChange(preference, newValueEntry)
+                return super.onPreferenceChange(preference, newValue).also {
+                    updateTrackingProtectionPolicy()
+                }
+            }
+        }
+
+        customCryptominers.onPreferenceChangeListener = object : SharedPreferenceUpdater() {
+            override fun onPreferenceChange(preference: Preference, newValue: Any?): Boolean {
+                return super.onPreferenceChange(preference, newValue).also {
+                    updateTrackingProtectionPolicy()
+                }
+            }
+        }
+
+        customFingerprinters.onPreferenceChangeListener = object : SharedPreferenceUpdater() {
+            override fun onPreferenceChange(preference: Preference, newValue: Any?): Boolean {
+                return super.onPreferenceChange(preference, newValue).also {
+                    updateTrackingProtectionPolicy()
+                }
             }
         }
 
@@ -249,7 +258,8 @@ class TrackingProtectionFragment : PreferenceFragmentCompat() {
 
     private fun updateTrackingProtectionPolicy() {
         context?.components?.let {
-            val policy = it.core.createTrackingProtectionPolicy()
+            val policy = it.core.trackingProtectionPolicyFactory
+                .createTrackingProtectionPolicy()
             it.useCases.settingsUseCases.updateTrackingProtection.invoke(policy)
             it.useCases.sessionUseCases.reload.invoke()
         }

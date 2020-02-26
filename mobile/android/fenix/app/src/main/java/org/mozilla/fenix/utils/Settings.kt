@@ -247,9 +247,10 @@ class Settings private constructor(
         appContext.getPreferenceKey(R.string.pref_key_tracking_protection_custom_cookies),
         true
     )
+
     val blockCookiesSelectionInCustomTrackingProtection by stringPreference(
         appContext.getPreferenceKey(R.string.pref_key_tracking_protection_custom_cookies_select),
-        ""
+        "social"
     )
 
     val blockTrackingContentInCustomTrackingProtection by booleanPreference(
@@ -259,7 +260,7 @@ class Settings private constructor(
 
     val blockTrackingContentSelectionInCustomTrackingProtection by stringPreference(
         appContext.getPreferenceKey(R.string.pref_key_tracking_protection_custom_tracking_content_select),
-        ""
+        "all"
     )
 
     val blockCryptominersInCustomTrackingProtection by booleanPreference(

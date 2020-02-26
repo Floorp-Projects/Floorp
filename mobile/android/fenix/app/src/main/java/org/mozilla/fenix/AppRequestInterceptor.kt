@@ -47,7 +47,8 @@ class AppRequestInterceptor(private val context: Context) : RequestInterceptor {
             session.disableTrackingProtection()
         } else {
             val core = context.components.core
-            val policy = core.createTrackingProtectionPolicy(normalMode = true)
+            val policy = core.trackingProtectionPolicyFactory
+                .createTrackingProtectionPolicy(normalMode = true)
             core.engine.settings.trackingProtectionPolicy = policy
             session.enableTrackingProtection(policy)
         }
