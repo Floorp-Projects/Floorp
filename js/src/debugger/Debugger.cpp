@@ -169,20 +169,10 @@ bool js::IsInterpretedNonSelfHostedFunction(JSFunction* fun) {
   return fun->isInterpreted() && !fun->isSelfHostedBuiltin();
 }
 
-bool js::EnsureFunctionHasScript(JSContext* cx, HandleFunction fun) {
-  if (fun->isInterpretedLazy()) {
-    AutoRealm ar(cx, fun);
-    return !!JSFunction::getOrCreateScript(cx, fun);
-  }
-  return true;
-}
-
 JSScript* js::GetOrCreateFunctionScript(JSContext* cx, HandleFunction fun) {
   MOZ_ASSERT(IsInterpretedNonSelfHostedFunction(fun));
-  if (!EnsureFunctionHasScript(cx, fun)) {
-    return nullptr;
-  }
-  return fun->nonLazyScript();
+  AutoRealm ar(cx, fun);
+  return JSFunction::getOrCreateScript(cx, fun);
 }
 
 bool js::ValueToIdentifier(JSContext* cx, HandleValue v, MutableHandleId id) {
@@ -6666,11 +6656,7 @@ static void CheckDebuggeeThingRealm(Realm* realm, bool invisibleOk) {
   MOZ_ASSERT_IF(!invisibleOk, !realm->creationOptions().invisibleToDebugger());
 }
 
-void js::CheckDebuggeeThing(JSScript* script, bool invisibleOk) {
-  CheckDebuggeeThingRealm(script->realm(), invisibleOk);
-}
-
-void js::CheckDebuggeeThing(LazyScript* script, bool invisibleOk) {
+void js::CheckDebuggeeThing(BaseScript* script, bool invisibleOk) {
   CheckDebuggeeThingRealm(script->realm(), invisibleOk);
 }
 
