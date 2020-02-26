@@ -43,7 +43,6 @@ using ZoneVector = Vector<JS::Zone*, 4, SystemAllocPolicy>;
 class AutoCallGCCallbacks;
 class AutoGCSession;
 class AutoHeapSession;
-class AutoRunParallelTask;
 class AutoTraceSession;
 class MarkingValidator;
 struct MovingTracer;
@@ -246,8 +245,6 @@ class ZoneList {
   ZoneList(const ZoneList& other) = delete;
   ZoneList& operator=(const ZoneList& other) = delete;
 };
-
-void SweepWeakRefs(GCParallelTask* task);
 
 class GCRuntime {
   friend GCMarker::MarkQueueProgress GCMarker::processMarkQueue();
@@ -545,8 +542,6 @@ class GCRuntime {
 
   void setParallelAtomsAllocEnabled(bool enabled);
 
-  void bufferGrayRoots();
-
   /*
    * Concurrent sweep infrastructure.
    */
@@ -657,6 +652,8 @@ class GCRuntime {
   void purgeRuntime();
   MOZ_MUST_USE bool beginMarkPhase(JS::GCReason reason, AutoGCSession& session);
   bool prepareZonesForCollection(JS::GCReason reason, bool* isFullOut);
+  void bufferGrayRoots();
+  void unmarkCollectedZones();
   bool shouldPreserveJITCode(JS::Realm* realm,
                              const mozilla::TimeStamp& currentTime,
                              JS::GCReason reason, bool canAllocateMoreCode);
@@ -702,13 +699,19 @@ class GCRuntime {
   IncrementalProgress beginSweepingSweepGroup(JSFreeOp* fop,
                                               SliceBudget& budget);
   void updateAtomsBitmap();
+  void sweepCCWrappers();
+  void sweepObjectGroups();
+  void sweepMisc();
+  void sweepCompressionTasks();
+  void sweepLazyScripts();
+  void sweepWeakMaps();
+  void sweepUniqueIds();
   void sweepDebuggerOnMainThread(JSFreeOp* fop);
   void sweepJitDataOnMainThread(JSFreeOp* fop);
   void sweepFinalizationGroupsOnMainThread();
   void sweepFinalizationGroups(Zone* zone);
   void queueFinalizationGroupForCleanup(FinalizationGroupObject* group);
-  void sweepWeakRefs(Zone* zone);
-  friend void SweepWeakRefs(GCParallelTask* task);
+  void sweepWeakRefs();
   IncrementalProgress endSweepingSweepGroup(JSFreeOp* fop, SliceBudget& budget);
   IncrementalProgress performSweepActions(SliceBudget& sliceBudget);
   IncrementalProgress sweepTypeInformation(JSFreeOp* fop, SliceBudget& budget);
