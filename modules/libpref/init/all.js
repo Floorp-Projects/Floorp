@@ -4034,6 +4034,12 @@ pref("network.psl.onUpdate_notify", false);
 
 #ifdef MOZ_WIDGET_GTK
   pref("gfx.xrender.enabled",false);
+  pref("widget.content.gtk-theme-override", "");
+#endif
+#ifdef MOZ_WAYLAND
+  pref("widget.wayland_vsync.enabled", false);
+  pref("widget.wayland_dmabuf_webgl.enabled", false);
+  pref("widget.wayland_dmabuf_vaapi.enabled", false);
 #endif
 
 // All the Geolocation preferences are here.
