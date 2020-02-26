@@ -2300,13 +2300,10 @@ SearchService.prototype = {
       }
     }
 
-    let collation = Cc["@mozilla.org/intl/collation-factory;1"]
-      .createInstance(Ci.nsICollationFactory)
-      .CreateCollation();
-    const strength = Ci.nsICollation.kCollationCaseInsensitiveAscii;
-    let comparator = (a, b) =>
-      collation.compareString(strength, a.name, b.name);
-    alphaEngines.sort(comparator);
+    const collator = new Intl.Collator();
+    alphaEngines.sort((a, b) => {
+      return collator.compare(a.name, b.name);
+    });
     return (this.__sortedEngines = this.__sortedEngines.concat(alphaEngines));
   },
 
