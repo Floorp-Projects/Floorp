@@ -186,6 +186,97 @@ fn handle_queries(
     }
 }
 
+fn handle_mdns_socket(
+    socket: &std::net::UdpSocket,
+    mdns_addr: &std::net::SocketAddr,
+    mut buffer: &mut [u8],
+    hosts: &mut HashMap<String, Vec<u8>>,
+    pending_queries: &mut HashMap<String, Query>,
+) -> bool {
+    match socket.recv_from(&mut buffer) {
+        Ok((amt, _)) => {
+            if amt > 0 {
+                let buffer = &buffer[0..amt];
+                match dns_parser::Packet::parse(&buffer) {
+                    Ok(parsed) => {
+                        let mut answers: Vec<(String, &[u8])> = Vec::new();
+
+                        // If a packet contains both both questions and
+                        // answers, the questions should be ignored.
+                        if parsed.answers.len() == 0 {
+                            parsed
+                                .questions
+                                .iter()
+                                .filter(|question| question.qtype == dns_parser::QueryType::A)
+                                .for_each(|question| {
+                                    let qname = question.qname.to_string();
+                                    trace!("mDNS question: {} {:?}", qname, question.qtype);
+                                    if let Some(octets) = hosts.get(&qname) {
+                                        trace!("Sending mDNS answer for {}: {:?}", qname, octets);
+                                        answers.push((qname, &octets));
+                                    }
+                                });
+                        }
+                        for answer in parsed.answers {
+                            let hostname = answer.name.to_string();
+                            match pending_queries.get(&hostname) {
+                                Some(query) => {
+                                    match answer.data {
+                                        dns_parser::RData::A(dns_parser::rdata::a::Record(
+                                            addr,
+                                        )) => {
+                                            let addr = addr.to_string();
+                                            trace!("mDNS response: {} {}", hostname, addr);
+                                            hostname_resolved(&query.callback, &hostname, &addr);
+                                        }
+                                        dns_parser::RData::AAAA(
+                                            dns_parser::rdata::aaaa::Record(addr),
+                                        ) => {
+                                            let addr = addr.to_string();
+                                            trace!("mDNS response: {} {}", hostname, addr);
+                                            hostname_resolved(&query.callback, &hostname, &addr);
+                                        }
+                                        _ => {}
+                                    }
+                                    pending_queries.remove(&hostname);
+                                }
+                                None => {
+                                    continue;
+                                }
+                            }
+                        }
+                        // TODO: If we did not answer every query in this
+                        // question, we should wait for a random amount of time
+                        // so as to not collide with someone else responding to
+                        // this query.
+                        if answers.len() > 0 {
+                            if let Ok(buf) = create_answer(parsed.header.id, &answers) {
+                                if let Err(err) = socket.send_to(&buf, &mdns_addr) {
+                                    warn!("Sending mDNS answer failed: {}", err);
+                                }
+                            }
+                        }
+                    }
+                    Err(err) => {
+                        warn!("Could not parse mDNS packet: {}", err);
+                    }
+                }
+            }
+        }
+        Err(err) => {
+            if err.kind() != io::ErrorKind::Interrupted
+                && err.kind() != io::ErrorKind::TimedOut
+                && err.kind() != io::ErrorKind::WouldBlock
+            {
+                error!("Socket error: {}", err);
+                return false;
+            }
+        }
+    }
+
+    true
+}
+
 fn validate_hostname(hostname: &str) -> bool {
     match hostname.find(".local") {
         Some(index) => match hostname.get(0..index) {
@@ -393,112 +484,14 @@ impl MDNSService {
                     &mut unsent_queries,
                 );
 
-                match socket.recv_from(&mut buffer) {
-                    Ok((amt, _)) => {
-                        if amt > 0 {
-                            let buffer = &buffer[0..amt];
-                            match dns_parser::Packet::parse(&buffer) {
-                                Ok(parsed) => {
-                                    let mut answers: Vec<(String, &[u8])> = Vec::new();
-
-                                    // If a packet contains both both questions and
-                                    // answers, the questions should be ignored.
-                                    if parsed.answers.len() == 0 {
-                                        parsed
-                                            .questions
-                                            .iter()
-                                            .filter(|question| {
-                                                question.qtype == dns_parser::QueryType::A
-                                            })
-                                            .for_each(|question| {
-                                                let qname = question.qname.to_string();
-                                                trace!(
-                                                    "mDNS question: {} {:?}",
-                                                    qname,
-                                                    question.qtype
-                                                );
-                                                if let Some(octets) = hosts.get(&qname) {
-                                                    trace!(
-                                                        "Sending mDNS answer for {}: {:?}",
-                                                        qname,
-                                                        octets
-                                                    );
-                                                    answers.push((qname, &octets));
-                                                }
-                                            });
-                                    }
-                                    for answer in parsed.answers {
-                                        let hostname = answer.name.to_string();
-                                        match pending_queries.get(&hostname) {
-                                            Some(query) => {
-                                                match answer.data {
-                                                    dns_parser::RData::A(
-                                                        dns_parser::rdata::a::Record(addr),
-                                                    ) => {
-                                                        let addr = addr.to_string();
-                                                        trace!(
-                                                            "mDNS response: {} {}",
-                                                            hostname,
-                                                            addr
-                                                        );
-                                                        hostname_resolved(
-                                                            &query.callback,
-                                                            &hostname,
-                                                            &addr,
-                                                        );
-                                                    }
-                                                    dns_parser::RData::AAAA(
-                                                        dns_parser::rdata::aaaa::Record(addr),
-                                                    ) => {
-                                                        let addr = addr.to_string();
-                                                        trace!(
-                                                            "mDNS response: {} {}",
-                                                            hostname,
-                                                            addr
-                                                        );
-                                                        hostname_resolved(
-                                                            &query.callback,
-                                                            &hostname,
-                                                            &addr,
-                                                        );
-                                                    }
-                                                    _ => {}
-                                                }
-                                                pending_queries.remove(&hostname);
-                                            }
-                                            None => {
-                                                continue;
-                                            }
-                                        }
-                                    }
-                                    // TODO: If we did not answer every query
-                                    // in this question, we should wait for a
-                                    // random amount of time so as to not
-                                    // collide with someone else responding to
-                                    // this query.
-                                    if answers.len() > 0 {
-                                        if let Ok(buf) = create_answer(parsed.header.id, &answers) {
-                                            if let Err(err) = socket.send_to(&buf, &mdns_addr) {
-                                                warn!("Sending mDNS answer failed: {}", err);
-                                            }
-                                        }
-                                    }
-                                }
-                                Err(err) => {
-                                    warn!("Could not parse mDNS packet: {}", err);
-                                }
-                            }
-                        }
-                    }
-                    Err(err) => {
-                        if err.kind() != io::ErrorKind::Interrupted
-                            && err.kind() != io::ErrorKind::TimedOut
-                            && err.kind() != io::ErrorKind::WouldBlock
-                        {
-                            error!("Socket error: {}", err);
-                            break;
-                        }
-                    }
+                if !handle_mdns_socket(
+                    &socket,
+                    &mdns_addr,
+                    &mut buffer,
+                    &mut hosts,
+                    &mut pending_queries,
+                ) {
+                    break;
                 }
             }
         })?);
