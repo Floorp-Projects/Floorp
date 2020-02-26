@@ -38,6 +38,9 @@
 #ifndef leb128iterator_h
 #define leb128iterator_h
 
+#include "mozilla/Assertions.h"
+#include "mozilla/Likely.h"
+
 #include <climits>
 #include <cstdint>
 #include <limits>
