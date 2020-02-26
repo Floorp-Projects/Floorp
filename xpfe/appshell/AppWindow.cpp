@@ -2190,8 +2190,7 @@ NS_IMETHODIMP AppWindow::CreateNewChromeWindow(int32_t aChromeFlags,
 
   NS_ENSURE_TRUE(newWindow, NS_ERROR_FAILURE);
 
-  *_retval = newWindow;
-  NS_ADDREF(*_retval);
+  newWindow.forget(_retval);
 
   return NS_OK;
 }
@@ -2266,8 +2265,7 @@ NS_IMETHODIMP AppWindow::CreateNewContentWindow(int32_t aChromeFlags,
                   appWin->mPrimaryBrowserParent);
   MOZ_ASSERT_IF(appWin->mPrimaryContentShell, aNextRemoteTabId == 0);
 
-  *_retval = newWindow;
-  NS_ADDREF(*_retval);
+  newWindow.forget(_retval);
 
   return NS_OK;
 }
