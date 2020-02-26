@@ -2786,6 +2786,7 @@ nsEventStatus AsyncPanZoomController::GenerateSingleTap(
       // the corresponding touch-up. To avoid that we schedule the singletap
       // message to run on the next spin of the event loop. See bug 965381 for
       // the issue this was causing.
+      APZC_LOG("posting runnable for HandleTap from GenerateSingleTap");
       RefPtr<Runnable> runnable =
           NewRunnableMethod<TapType, LayoutDevicePoint, mozilla::Modifiers,
                             ScrollableLayerGuid, uint64_t>(
