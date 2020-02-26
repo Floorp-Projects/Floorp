@@ -13,7 +13,6 @@
 #include "WebGLContext.h"
 #include "WebGLProgram.h"
 #include "WebGLVertexArray.h"
-#include "WebGLVertexAttribData.h"
 
 namespace mozilla {
 

@@ -627,11 +627,9 @@ class HostWebGLContext final : public SupportsWeakPtr<HostWebGLContext> {
     return mContext->GetVertexAttrib(index, pname);
   }
 
-  void VertexAttribPointer(bool isFuncInt, GLuint index, GLint size,
-                           GLenum type, bool normalized, uint32_t stride,
-                           uint64_t byteOffset) const {
-    mContext->VertexAttribPointer(isFuncInt, index, size, type, normalized,
-                                  stride, byteOffset);
+  void VertexAttribPointer(GLuint index,
+                           const webgl::VertAttribPointerDesc& desc) const {
+    mContext->VertexAttribPointer(index, desc);
   }
 
   // --------------------------- Buffer Operations --------------------------

@@ -16,38 +16,42 @@ WebGLVertexArrayFake::WebGLVertexArrayFake(WebGLContext* webgl)
 void WebGLVertexArrayFake::BindVertexArray() {
   // Go through and re-bind all buffers and setup all
   // vertex attribute pointers
-  gl::GLContext* gl = mContext->gl;
-
-  RefPtr<WebGLVertexArray> prevVertexArray = mContext->mBoundVertexArray;
+  const auto& gl = mContext->gl;
 
   mContext->mBoundVertexArray = this;
 
-  RefPtr<WebGLBuffer> prevBuffer = mContext->mBoundArrayBuffer;
-  mContext->BindBuffer(LOCAL_GL_ELEMENT_ARRAY_BUFFER, mElementArrayBuffer);
+  static_assert(IsBufferTargetLazilyBound(LOCAL_GL_ARRAY_BUFFER));
+  static_assert(!IsBufferTargetLazilyBound(LOCAL_GL_ELEMENT_ARRAY_BUFFER));
 
-  size_t i = 0;
-  for (const auto& vd : mAttribs) {
-    mContext->BindBuffer(LOCAL_GL_ARRAY_BUFFER, vd.mBuf);
-    vd.DoVertexAttribPointer(gl, i);
+  const auto fnBind = [&](const GLenum target, WebGLBuffer* const buffer) {
+    gl->fBindBuffer(target, buffer ? buffer->mGLName : 0);
+  };
 
-    if (vd.mEnabled) {
+  fnBind(LOCAL_GL_ELEMENT_ARRAY_BUFFER, mElementArrayBuffer);
+
+  const bool useDivisor =
+      mContext->IsWebGL2() ||
+      mContext->IsExtensionEnabled(WebGLExtensionID::ANGLE_instanced_arrays);
+
+  for (const auto i : IntegerRange(mContext->MaxVertexAttribs())) {
+    const auto& binding = mBindings[i];
+    const auto& desc = mDescs[i];
+
+    if (binding.layout.isArray) {
       gl->fEnableVertexAttribArray(i);
     } else {
       gl->fDisableVertexAttribArray(i);
     }
-    ++i;
-  }
 
-  size_t len = prevVertexArray->mAttribs.size();
-  for (; i < len; ++i) {
-    const auto& vd = prevVertexArray->mAttribs[i];
-
-    if (vd.mEnabled) {
-      gl->fDisableVertexAttribArray(i);
+    if (useDivisor) {
+      gl->fVertexAttribDivisor(i, binding.layout.divisor);
     }
+
+    fnBind(LOCAL_GL_ARRAY_BUFFER, binding.buffer);
+    DoVertexAttribPointer(*gl, i, desc);
   }
 
-  mContext->BindBuffer(LOCAL_GL_ARRAY_BUFFER, prevBuffer);
+  fnBind(LOCAL_GL_ARRAY_BUFFER, nullptr);
 }
 
 }  // namespace mozilla

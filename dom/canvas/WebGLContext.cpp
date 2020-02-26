@@ -80,7 +80,6 @@
 #include "WebGLTransformFeedback.h"
 #include "WebGLValidateStrings.h"
 #include "WebGLVertexArray.h"
-#include "WebGLVertexAttribData.h"
 
 #ifdef MOZ_WIDGET_COCOA
 #  include "nsCocoaFeatures.h"
@@ -1496,22 +1495,9 @@ ScopedFBRebinder::~ScopedFBRebinder() {
 
 ////////////////////
 
-static GLenum IsVirtualBufferTarget(GLenum target) {
-  return target != LOCAL_GL_ELEMENT_ARRAY_BUFFER;
-}
-
-ScopedLazyBind::ScopedLazyBind(gl::GLContext* const gl, const GLenum target,
-                               const WebGLBuffer* const buf)
-    : mGL(gl), mTarget(IsVirtualBufferTarget(target) ? target : 0) {
-  if (mTarget) {
-    mGL->fBindBuffer(mTarget, buf ? buf->mGLName : 0);
-  }
-}
-
-ScopedLazyBind::~ScopedLazyBind() {
-  if (mTarget) {
-    mGL->fBindBuffer(mTarget, 0);
-  }
+void DoBindBuffer(gl::GLContext& gl, const GLenum target,
+                  const WebGLBuffer* const buffer) {
+  gl.fBindBuffer(target, buffer ? buffer->mGLName : 0);
 }
 
 ////////////////////////////////////////
@@ -2033,6 +2019,7 @@ webgl::LinkActiveInfo GetLinkActiveInfo(
         info.elemCount = elemCount;
         info.name = userName;
         info.location = loc;
+        info.baseType = webgl::ToAttribBaseType(info.elemType);
         ret.activeAttribs.push_back(std::move(info));
       }
     }

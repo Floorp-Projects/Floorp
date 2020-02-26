@@ -20,7 +20,6 @@
 #include "WebGLTexture.h"
 #include "WebGLTransformFeedback.h"
 #include "WebGLVertexArray.h"
-#include "WebGLVertexAttribData.h"
 
 #include <algorithm>
 
@@ -309,10 +308,9 @@ bool WebGLContext::ValidateBuffersForTf(
 
   fnCheck(mBoundVertexArray->mElementArrayBuffer.get(),
           LOCAL_GL_ELEMENT_ARRAY_BUFFER, -1);
-  const auto& vertAttribs = mBoundVertexArray->mAttribs;
-  for (const auto i : IntegerRange(vertAttribs.size())) {
-    const auto& cur = vertAttribs[i];
-    fnCheck(cur.mBuf.get(), LOCAL_GL_ARRAY_BUFFER, i);
+  for (const auto i : IntegerRange(MaxVertexAttribs())) {
+    const auto& binding = mBoundVertexArray->AttribBinding(i);
+    fnCheck(binding.buffer.get(), LOCAL_GL_ARRAY_BUFFER, i);
   }
 
   return !dupe;
@@ -964,7 +962,8 @@ WebGLVertexAttrib0Status WebGLContext::WhatDoesVertexAttrib0Need() const {
     return WebGLVertexAttrib0Status::EmulatedUninitializedArray;
   }
 
-  const auto& isAttribArray0Enabled = mBoundVertexArray->mAttribs[0].mEnabled;
+  const auto& isAttribArray0Enabled =
+      mBoundVertexArray->AttribBinding(0).layout.isArray;
   return isAttribArray0Enabled
              ? WebGLVertexAttrib0Status::Default
              : WebGLVertexAttrib0Status::EmulatedInitializedArray;
@@ -1082,16 +1081,18 @@ void WebGLContext::UndoFakeVertexAttrib0() {
   if (MOZ_LIKELY(whatDoesAttrib0Need == WebGLVertexAttrib0Status::Default))
     return;
 
-  if (mBoundVertexArray->mAttribs[0].mBuf) {
-    const WebGLVertexAttribData& attrib0 = mBoundVertexArray->mAttribs[0];
-    gl->fBindBuffer(LOCAL_GL_ARRAY_BUFFER, attrib0.mBuf->mGLName);
-    attrib0.DoVertexAttribPointer(gl, 0);
-  } else {
+  const auto& binding = mBoundVertexArray->AttribBinding(0);
+  const auto& buffer = binding.buffer;
+
+  static_assert(IsBufferTargetLazilyBound(LOCAL_GL_ARRAY_BUFFER));
+
+  if (buffer) {
+    const auto& desc = mBoundVertexArray->AttribDesc(0);
+
+    gl->fBindBuffer(LOCAL_GL_ARRAY_BUFFER, buffer->mGLName);
+    DoVertexAttribPointer(*gl, 0, desc);
     gl->fBindBuffer(LOCAL_GL_ARRAY_BUFFER, 0);
   }
-
-  gl->fBindBuffer(LOCAL_GL_ARRAY_BUFFER,
-                  mBoundArrayBuffer ? mBoundArrayBuffer->mGLName : 0);
 }
 
 }  // namespace mozilla
