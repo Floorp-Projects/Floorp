@@ -33,6 +33,7 @@
 #include "nsCSSValue.h"
 #include "nsColor.h"
 #include "mozilla/ServoStyleSet.h"
+#include "nsLayoutUtils.h"
 #include "nsStyleUtil.h"
 #include "nsQueryObject.h"
 #include "mozilla/ServoBindings.h"
@@ -582,19 +583,13 @@ already_AddRefed<ComputedStyle> InspectorUtils::GetCleanComputedStyleForElement(
 }
 
 /* static */
-void InspectorUtils::GetUsedFontFaces(
-    GlobalObject& aGlobalObject, nsRange& aRange, uint32_t aMaxRanges,
-    bool aSkipCollapsedWhitespace,
-    nsTArray<nsAutoPtr<InspectorFontFace>>& aResult, ErrorResult& aRv) {
-  nsLayoutUtils::UsedFontFaceList faces;
+void InspectorUtils::GetUsedFontFaces(GlobalObject& aGlobalObject,
+                                      nsRange& aRange, uint32_t aMaxRanges,
+                                      bool aSkipCollapsedWhitespace,
+                                      nsLayoutUtils::UsedFontFaceList& aResult,
+                                      ErrorResult& aRv) {
   nsresult rv =
-      aRange.GetUsedFontFaces(faces, aMaxRanges, aSkipCollapsedWhitespace);
-
-  // Move the UniquePtr results to the nsAutoPtr results.
-  aResult.SetCapacity(faces.Length() + aResult.Length());
-  for (auto& face : faces) {
-    aResult.AppendElement(face.release());
-  }
+      aRange.GetUsedFontFaces(aResult, aMaxRanges, aSkipCollapsedWhitespace);
 
   if (NS_FAILED(rv)) {
     aRv.Throw(rv);

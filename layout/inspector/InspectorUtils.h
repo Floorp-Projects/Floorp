@@ -10,6 +10,7 @@
 
 #include "mozilla/dom/InspectorUtilsBinding.h"
 #include "mozilla/UniquePtr.h"
+#include "nsLayoutUtils.h"
 
 class nsAtom;
 class nsINode;
@@ -206,13 +207,11 @@ class InspectorUtils {
                                  ErrorResult& aRv);
   static uint64_t GetContentState(GlobalObject& aGlobal, Element& aElement);
 
-  // TODO(ER): aResult needs to use nsAutoPtr until webidl bindings support
-  // UniquePtr.
   static void GetUsedFontFaces(GlobalObject& aGlobal, nsRange& aRange,
                                uint32_t aMaxRanges,  // max number of ranges to
                                                      // record for each face
                                bool aSkipCollapsedWhitespace,
-                               nsTArray<nsAutoPtr<InspectorFontFace>>& aResult,
+                               nsLayoutUtils::UsedFontFaceList& aResult,
                                ErrorResult& aRv);
 
   /**
