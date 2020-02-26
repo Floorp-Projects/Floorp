@@ -1346,8 +1346,11 @@ IPCResult BrowserParent::RecvIndexedDBPermissionRequest(
 IPCResult BrowserParent::RecvNewWindowGlobal(
     ManagedEndpoint<PWindowGlobalParent>&& aEndpoint,
     const WindowGlobalInit& aInit) {
-  if (aInit.browsingContext().IsNullOrDiscarded()) {
-    return IPC_OK();
+  if (!aInit.browsingContext().GetMaybeDiscarded()) {
+    return IPC_FAIL(this, "Cannot create for missing BrowsingContext");
+  }
+  if (!aInit.principal()) {
+    return IPC_FAIL(this, "Cannot create without valid principal");
   }
 
   // Construct our new WindowGlobalParent, bind, and initialize it.

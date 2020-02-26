@@ -48,13 +48,13 @@ static StaticAutoPtr<WGCByIdMap> gWindowGlobalChildById;
 WindowGlobalChild::WindowGlobalChild(const WindowGlobalInit& aInit,
                                      nsGlobalWindowInner* aWindow)
     : mWindowGlobal(aWindow),
-      mBrowsingContext(aInit.browsingContext().get()),
+      mBrowsingContext(aInit.browsingContext().GetMaybeDiscarded()),
       mDocumentPrincipal(aInit.principal()),
       mDocumentURI(aInit.documentURI()),
       mInnerWindowId(aInit.innerWindowId()),
       mOuterWindowId(aInit.outerWindowId()),
       mBeforeUnloadListeners(0) {
-  MOZ_DIAGNOSTIC_ASSERT(!aInit.browsingContext().IsNullOrDiscarded());
+  MOZ_DIAGNOSTIC_ASSERT(mBrowsingContext);
   MOZ_DIAGNOSTIC_ASSERT(mDocumentPrincipal);
 
   MOZ_ASSERT_IF(aWindow, mInnerWindowId == aWindow->WindowID());

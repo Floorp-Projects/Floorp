@@ -3447,6 +3447,9 @@ mozilla::ipc::IPCResult ContentParent::RecvConstructPopupBrowser(
   if (aInitialWindowInit.browsingContext().IsNullOrDiscarded()) {
     return IPC_FAIL(this, "Null or discarded initial BrowsingContext");
   }
+  if (!aInitialWindowInit.principal()) {
+    return IPC_FAIL(this, "Cannot create without valid initial principal");
+  }
 
   uint32_t chromeFlags = aChromeFlags;
   TabId openerTabId(0);
