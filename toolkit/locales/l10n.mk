@@ -208,7 +208,7 @@ endif
 langpack-%: IS_LANGUAGE_REPACK=1
 langpack-%: IS_LANGPACK=1
 langpack-%: AB_CD=$*
-langpack-%:
+langpack-%: clobber-%
 	@echo 'Making langpack $(LANGPACK_FILE)'
 	@$(MAKE) libs-$(AB_CD)
 	@$(MAKE) package-langpack-$(AB_CD)
