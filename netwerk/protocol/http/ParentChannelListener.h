@@ -13,6 +13,7 @@
 #include "nsINetworkInterceptController.h"
 #include "nsIStreamListener.h"
 #include "nsIMultiPartChannel.h"
+#include "nsIRemoteWindowContext.h"
 #include "mozilla/dom/BrowserParent.h"
 #include "mozilla/dom/CanonicalBrowsingContext.h"
 
@@ -34,7 +35,8 @@ class ParentChannelListener final : public nsIInterfaceRequestor,
                                     public nsIStreamListener,
                                     public nsIMultiPartChannelListener,
                                     public nsINetworkInterceptController,
-                                    private nsIAuthPromptProvider {
+                                    private nsIAuthPromptProvider,
+                                    private nsIRemoteWindowContext {
  public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIINTERFACEREQUESTOR
@@ -43,6 +45,7 @@ class ParentChannelListener final : public nsIInterfaceRequestor,
   NS_DECL_NSIMULTIPARTCHANNELLISTENER
   NS_DECL_NSINETWORKINTERCEPTCONTROLLER
   NS_DECL_NSIAUTHPROMPTPROVIDER
+  NS_DECL_NSIREMOTEWINDOWCONTEXT
 
   NS_DECLARE_STATIC_IID_ACCESSOR(PARENT_CHANNEL_LISTENER)
 
@@ -99,6 +102,9 @@ class ParentChannelListener final : public nsIInterfaceRequestor,
   // True if we received OnStartRequest for a nsIMultiPartChannel, and are
   // expected AllPartsStopped to be called when complete.
   bool mIsMultiPart = false;
+
+  // True if the nsILoadContext for this channel has private browsing enabled.
+  bool mUsePrivateBrowsing = false;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(ParentChannelListener, PARENT_CHANNEL_LISTENER)
