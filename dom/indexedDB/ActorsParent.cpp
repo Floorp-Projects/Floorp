@@ -16023,8 +16023,7 @@ FileManager::FileManager(PersistenceType aPersistenceType,
       mOrigin(aOrigin),
       mDatabaseName(aDatabaseName),
       mLastFileId(0),
-      mEnforcingQuota(aEnforcingQuota),
-      mInvalidated(false) {}
+      mEnforcingQuota(aEnforcingQuota) {}
 
 nsresult FileManager::Init(nsIFile* aDirectory,
                            mozIStorageConnection* aConnection) {
@@ -16055,9 +16054,13 @@ nsresult FileManager::Init(nsIFile* aDirectory,
     }
   }
 
-  rv = aDirectory->GetPath(mDirectoryPath);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+  {
+    nsString directoryPath;
+    rv = aDirectory->GetPath(directoryPath);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+    mDirectoryPath.init(std::move(directoryPath));
   }
 
   nsCOMPtr<nsIFile> journalDirectory;
@@ -16088,9 +16091,13 @@ nsresult FileManager::Init(nsIFile* aDirectory,
     }
   }
 
-  rv = journalDirectory->GetPath(mJournalDirectoryPath);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+  {
+    nsString journalDirectoryPath;
+    rv = journalDirectory->GetPath(journalDirectoryPath);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+    mJournalDirectoryPath.init(std::move(journalDirectoryPath));
   }
 
   nsCOMPtr<mozIStorageStatement> stmt;
@@ -16139,8 +16146,7 @@ nsresult FileManager::Invalidate() {
 
   MutexAutoLock lock(IndexedDatabaseManager::FileMutex());
 
-  MOZ_ASSERT(!mInvalidated);
-  mInvalidated = true;
+  mInvalidated.Flip();
 
   for (auto iter = mFileInfos.Iter(); !iter.Done(); iter.Next()) {
     FileInfo* info = iter.Data();
@@ -16155,7 +16161,7 @@ nsresult FileManager::Invalidate() {
 }
 
 nsCOMPtr<nsIFile> FileManager::GetDirectory() {
-  return GetFileForPath(mDirectoryPath);
+  return GetFileForPath(*mDirectoryPath);
 }
 
 nsCOMPtr<nsIFile> FileManager::GetCheckedDirectory() {
@@ -16176,14 +16182,14 @@ nsCOMPtr<nsIFile> FileManager::GetCheckedDirectory() {
 }
 
 nsCOMPtr<nsIFile> FileManager::GetJournalDirectory() {
-  return GetFileForPath(mJournalDirectoryPath);
+  return GetFileForPath(*mJournalDirectoryPath);
 }
 
 nsCOMPtr<nsIFile> FileManager::EnsureJournalDirectory() {
   // This can happen on the IO or on a transaction thread.
   MOZ_ASSERT(!NS_IsMainThread());
 
-  auto journalDirectory = GetFileForPath(mJournalDirectoryPath);
+  auto journalDirectory = GetFileForPath(*mJournalDirectoryPath);
   if (NS_WARN_IF(!journalDirectory)) {
     return nullptr;
   }

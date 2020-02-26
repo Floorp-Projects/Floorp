@@ -12,6 +12,8 @@
 #include "nsDataHashtable.h"
 #include "nsHashKeys.h"
 #include "nsISupportsImpl.h"
+#include "FlippedOnce.h"
+#include "InitializedOnce.h"
 
 class nsIFile;
 class mozIStorageConnection;
@@ -28,13 +30,13 @@ class FileManager final {
 
   typedef mozilla::dom::quota::PersistenceType PersistenceType;
 
-  PersistenceType mPersistenceType;
-  nsCString mGroup;
-  nsCString mOrigin;
-  nsString mDatabaseName;
+  const PersistenceType mPersistenceType;
+  const nsCString mGroup;
+  const nsCString mOrigin;
+  const nsString mDatabaseName;
 
-  nsString mDirectoryPath;
-  nsString mJournalDirectoryPath;
+  InitializedOnce<const nsString, LazyInit::Allow> mDirectoryPath;
+  InitializedOnce<const nsString, LazyInit::Allow> mJournalDirectoryPath;
 
   int64_t mLastFileId;
 
@@ -42,7 +44,7 @@ class FileManager final {
   nsDataHashtable<nsUint64HashKey, FileInfo*> mFileInfos;
 
   const bool mEnforcingQuota;
-  bool mInvalidated;
+  FlippedOnce<false> mInvalidated;
 
  public:
   static MOZ_MUST_USE nsCOMPtr<nsIFile> GetFileForId(nsIFile* aDirectory,
