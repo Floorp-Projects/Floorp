@@ -249,7 +249,7 @@ class PackageFrontend(MachCommandBase):
                     cot.raise_for_status()
 
                 digest = algorithm = None
-                data = json.loads(cot.content)
+                data = json.loads(cot.text)
                 for algorithm, digest in (data.get('artifacts', {})
                                               .get(artifact_name, {}).items()):
                     pass
