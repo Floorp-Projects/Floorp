@@ -28,10 +28,17 @@ exclude: true
   [`GeckoSession.PermissionDelegate#PERMISSION_AUTOPLAY_INAUDIBLE`][73.13] to
   control autoplay.
   ([bug 1614894]({{bugzilla}}1614894))
+- Added [`GeckoRuntimeSettings.setWebManifestEnabled`][75.4],
+  [`GeckoRuntimeSettings.webManifest`][75.5], and
+  [`GeckoRuntimeSettings.getWebManifestEnabled`][75.6]
+  ([bug 1614894]({{bugzilla}}1603673)), to enable or check Web Manifest support.
 
 [75.1]: {{javadoc_uri}}/GeckoRuntimeSettings.Builder.html#useMultiprocess-boolean-
 [75.2]: {{javadoc_uri}}/WebExtensionController.DebuggerDelegate.html#onExtensionListUpdated--
 [75.3]: {{javadoc_uri}}/GeckoRuntimeSettings.Builder.html#autoplayDefault-boolean-
+[75.4]: {{javadoc_uri}}/GeckoRuntimeSettings.Builder.html#setWebManifestEnabled-boolean-
+[75.5]: {{javadoc_uri}}/GeckoRuntimeSettings.Builder.html#webManifest-boolean-
+[75.6]: {{javadoc_uri}}/GeckoRuntimeSettings.Builder.html#getWebManifestEnabled--
 
 ## v74
 - Added [`WebExtensionController.enable`][74.1] and [`disable`][74.2] to
@@ -595,4 +602,4 @@ exclude: true
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: 898e8783e858824b7af7e4e9763bf5aaa54c0b0c
+[api-version]: 82255b8fdbc57e73920690426bdb4dd261cfe4ff
