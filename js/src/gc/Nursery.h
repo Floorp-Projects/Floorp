@@ -73,9 +73,9 @@ namespace jit {
 class MacroAssembler;
 }  // namespace jit
 
-class NurseryDecommitTask : public GCParallelTaskHelper<NurseryDecommitTask> {
+class NurseryDecommitTask : public GCParallelTask {
  public:
-  explicit NurseryDecommitTask(gc::GCRuntime* gc) : GCParallelTaskHelper(gc) {}
+  explicit NurseryDecommitTask(gc::GCRuntime* gc) : GCParallelTask(gc) {}
 
   void queueChunk(NurseryChunk* chunk, const AutoLockHelperThreadState& lock);
 
@@ -84,7 +84,7 @@ class NurseryDecommitTask : public GCParallelTaskHelper<NurseryDecommitTask> {
   void queueRange(size_t newCapacity, NurseryChunk& chunk,
                   const AutoLockHelperThreadState& lock);
 
-  void run();
+  void run() override;
   void decommitChunk(gc::Chunk* chunk);
   void decommitRange(AutoLockHelperThreadState& lock);
 

@@ -119,21 +119,21 @@ class ChunkPool {
   };
 };
 
-class BackgroundSweepTask : public GCParallelTaskHelper<BackgroundSweepTask> {
+class BackgroundSweepTask : public GCParallelTask {
  public:
-  explicit BackgroundSweepTask(GCRuntime* gc) : GCParallelTaskHelper(gc) {}
-  void run();
+  explicit BackgroundSweepTask(GCRuntime* gc) : GCParallelTask(gc) {}
+  void run() override;
 };
 
-class BackgroundFreeTask : public GCParallelTaskHelper<BackgroundFreeTask> {
+class BackgroundFreeTask : public GCParallelTask {
  public:
-  explicit BackgroundFreeTask(GCRuntime* gc) : GCParallelTaskHelper(gc) {}
-  void run();
+  explicit BackgroundFreeTask(GCRuntime* gc) : GCParallelTask(gc) {}
+  void run() override;
 };
 
 // Performs extra allocation off thread so that when memory is required on the
 // main thread it will already be available and waiting.
-class BackgroundAllocTask : public GCParallelTaskHelper<BackgroundAllocTask> {
+class BackgroundAllocTask : public GCParallelTask {
   // Guarded by the GC lock.
   GCLockData<ChunkPool&> chunkPool_;
 
@@ -143,30 +143,29 @@ class BackgroundAllocTask : public GCParallelTaskHelper<BackgroundAllocTask> {
   BackgroundAllocTask(GCRuntime* gc, ChunkPool& pool);
   bool enabled() const { return enabled_; }
 
-  void run();
+  void run() override;
 };
 
 // Search the provided Chunks for free arenas and decommit them.
-class BackgroundDecommitTask
-    : public GCParallelTaskHelper<BackgroundDecommitTask> {
+class BackgroundDecommitTask : public GCParallelTask {
  public:
   using ChunkVector = mozilla::Vector<Chunk*>;
 
-  explicit BackgroundDecommitTask(GCRuntime* gc) : GCParallelTaskHelper(gc) {}
+  explicit BackgroundDecommitTask(GCRuntime* gc) : GCParallelTask(gc) {}
   void setChunksToScan(ChunkVector& chunks);
 
-  void run();
+  void run() override;
 
  private:
   MainThreadOrGCTaskData<ChunkVector> toDecommit;
 };
 
-class SweepMarkTask : public GCParallelTaskHelper<SweepMarkTask> {
+class SweepMarkTask : public GCParallelTask {
  public:
   explicit SweepMarkTask(GCRuntime* gc)
-      : GCParallelTaskHelper(gc), budget(SliceBudget::unlimited()) {}
+      : GCParallelTask(gc), budget(SliceBudget::unlimited()) {}
   void setBudget(const SliceBudget& budget) { this->budget = budget; }
-  void run();
+  void run() override;
 
  private:
   SliceBudget budget;

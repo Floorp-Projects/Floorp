@@ -797,7 +797,7 @@ Chunk* GCRuntime::pickChunk(AutoLockGCBgAlloc& lock) {
 }
 
 BackgroundAllocTask::BackgroundAllocTask(GCRuntime* gc, ChunkPool& pool)
-    : GCParallelTaskHelper(gc),
+    : GCParallelTask(gc),
       chunkPool_(pool),
       enabled_(CanUseExtraThreads() && GetCPUCount() >= 2) {}
 
