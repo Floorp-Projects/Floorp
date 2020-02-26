@@ -466,7 +466,7 @@ async function nextCycle() {
 }
 
 async function timeoutAlarmListener() {
-  console.error(`raptor-page-timeout on ${testURL}`);
+  raptorLog(`raptor-page-timeout on ${testURL}`, "error");
 
   var pendingMetrics = {
     hero: isHeroPending,
@@ -512,14 +512,14 @@ async function cancelTimeoutAlarm(timeoutName) {
     if (alarm) {
       raptorLog(`cancelled raptor alarm ${timeoutName}`);
     } else {
-      console.error(`failed to clear raptor alarm ${timeoutName}`);
+      raptorLog(`failed to clear raptor alarm ${timeoutName}`, "error");
     }
   } else {
     chrome.alarms.clear(timeoutName, function(wasCleared) {
       if (wasCleared) {
         raptorLog(`cancelled raptor alarm ${timeoutName}`);
       } else {
-        console.error(`failed to clear raptor alarm ${timeoutName}`);
+        raptorLog(`failed to clear raptor alarm ${timeoutName}`, "error");
       }
     });
   }
@@ -598,8 +598,8 @@ async function verifyResults() {
       raptorLog(`have ${count} results for ${x}, as expected`);
     } else {
       raptorLog(
-        `ERROR: expected ${pageCycles} results for ${x} ` +
-          `but only have ${count}`
+        `expected ${pageCycles} results for ${x} but only have ${count}`,
+        "error"
       );
     }
   }
@@ -625,9 +625,7 @@ async function postToControlServer(msgType, msgData = "") {
           if (msgType != "screenshot") {
             msg += ` with '${msgData}'`;
           }
-          console.error(
-            `[raptor-runnerjs] failed to post ${msg} to control server`
-          );
+          raptorLog(`failed to post ${msg} to control server`, "error");
         }
 
         resolve();
@@ -729,8 +727,14 @@ async function raptorRunner() {
   }
 }
 
-function raptorLog(logText) {
-  console.log(`[raptor-runnerjs] ${logText}`);
+function raptorLog(text, level = "info") {
+  let prefix = "";
+
+  if (level == "error") {
+    prefix = "ERROR: ";
+  }
+
+  console[level](`${prefix}[raptor-runnerjs] ${text}`);
 }
 
 if (window.addEventListener) {

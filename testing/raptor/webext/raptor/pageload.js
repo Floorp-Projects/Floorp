@@ -191,7 +191,8 @@ function measureFNBPaint() {
 
   if (typeof x == "undefined") {
     raptorLog(
-      "ERROR: timeToNonBlankPaint is undefined; ensure the pref is enabled"
+      "timeToNonBlankPaint is undefined; ensure the pref is enabled",
+      "error"
     );
     return;
   }
@@ -220,7 +221,8 @@ function measureDCF() {
 
   if (typeof x == "undefined") {
     raptorLog(
-      "ERROR: domContentFlushed is undefined; ensure the pref is enabled"
+      "domContentFlushed is undefined; ensure the pref is enabled",
+      "error"
     );
     return;
   }
@@ -247,7 +249,8 @@ function measureTTFI() {
 
   if (typeof x == "undefined") {
     raptorLog(
-      "ERROR: timeToFirstInteractive is undefined; ensure the pref is enabled"
+      "timeToFirstInteractive is undefined; ensure the pref is enabled",
+      "error"
     );
     return;
   }
@@ -329,7 +332,7 @@ function measureLoadTime() {
   var x = window.performance.timing.loadEventStart;
 
   if (typeof x == "undefined") {
-    raptorLog("ERROR: loadEventStart is undefined");
+    raptorLog("loadEventStart is undefined", "error");
     return;
   }
   if (x > 0) {
@@ -364,8 +367,14 @@ function sendResult(_type, _value) {
   });
 }
 
-function raptorLog(logText) {
-  console.log(`[raptor-pageloadjs] ${logText}`);
+function raptorLog(text, level = "info") {
+  let prefix = "";
+
+  if (level == "error") {
+    prefix = "ERROR: ";
+  }
+
+  console[level](`${prefix}[raptor-pageloadjs] ${text}`);
 }
 
 if (window.addEventListener) {

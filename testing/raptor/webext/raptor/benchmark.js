@@ -24,8 +24,14 @@ function sendResult(_type, _value) {
   });
 }
 
-function raptorLog(logText) {
-  console.log(`[raptor-benchmarkjs] ${logText}`);
+function raptorLog(text, level = "info") {
+  let prefix = "";
+
+  if (level == "error") {
+    prefix = "ERROR: ";
+  }
+
+  console[level](`${prefix}[raptor-benchmarkjs] ${text}`);
 }
 
 raptorLog("raptor benchmark content loaded");
