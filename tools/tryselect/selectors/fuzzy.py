@@ -13,6 +13,7 @@ from distutils.spawn import find_executable
 from distutils.version import StrictVersion
 
 from mozbuild.base import MozbuildObject
+from mozbuild.util import ensure_subprocess_env
 from mozboot.util import get_state_dir
 from mozterm import Terminal
 
@@ -270,7 +271,9 @@ def format_header():
 def run_fzf(cmd, tasks):
     env = dict(os.environ)
     env.update({'PYTHONPATH': os.pathsep.join([p for p in sys.path if 'requests' in p])})
-    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stdin=subprocess.PIPE, env=env)
+    proc = subprocess.Popen(
+        cmd, stdout=subprocess.PIPE, stdin=subprocess.PIPE, env=ensure_subprocess_env(env)
+    )
     out = proc.communicate('\n'.join(tasks))[0].splitlines()
 
     selected = []
