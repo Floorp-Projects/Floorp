@@ -2857,6 +2857,10 @@ void Document::FillStyleSetUserAndUASheets() {
   mStyleSet->AppendStyleSheet(StyleOrigin::UserAgent,
                               cache->PluginProblemSheet());
 
+  if (StyleSheet* sheet = cache->GetGeckoViewSheet()) {
+    mStyleSet->AppendStyleSheet(StyleOrigin::UserAgent, sheet);
+  }
+
   for (StyleSheet* sheet : *sheetService->AgentStyleSheets()) {
     mStyleSet->AppendStyleSheet(StyleOrigin::UserAgent, sheet);
   }

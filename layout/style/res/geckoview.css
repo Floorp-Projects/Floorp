@@ -64,8 +64,7 @@ xul|scrollbarbutton {
   visibility: hidden;
 }
 
-xul|scrollbarbutton[sbattr="scrollbar-up-top"],
-xul|scrollbarbutton[sbattr="scrollbar-bottom-top"] {
+xul|scrollbarbutton[sbattr="scrollbar-up-top"] {
   display: none;
 }
 
