@@ -19,6 +19,7 @@
 #endif
 
 #include "js/Array.h"  // JS::GetArrayLength
+#include "mozilla/ExtensionPolicyService.h"
 #include "mozilla/Logging.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/StaticPrefs_extensions.h"
@@ -150,7 +151,7 @@ nsString OptimizeFileName(const nsAString& aFileName) {
 
 /* static */
 FilenameTypeAndDetails nsContentSecurityUtils::FilenameToFilenameType(
-    const nsString& fileName) {
+    const nsString& fileName, bool collectAdditionalExtensionData) {
   // These are strings because the Telemetry Events API only accepts strings
   static NS_NAMED_LITERAL_CSTRING(kChromeURI, "chromeuri");
   static NS_NAMED_LITERAL_CSTRING(kResourceURI, "resourceuri");
@@ -249,6 +250,40 @@ FilenameTypeAndDetails nsContentSecurityUtils::FilenameToFilenameType(
       if (sanitizedPathAndScheme == NS_LITERAL_STRING("file")) {
         sanitizedPathAndScheme.Append(NS_LITERAL_STRING("://.../"));
         sanitizedPathAndScheme.Append(strSanitizedPath);
+      } else if (sanitizedPathAndScheme == NS_LITERAL_STRING("moz-extension") &&
+                 collectAdditionalExtensionData) {
+        sanitizedPathAndScheme.Append(NS_LITERAL_STRING("://["));
+
+        nsCOMPtr<nsIURI> uri;
+        nsresult rv = NS_NewURI(getter_AddRefs(uri), fileName);
+        if (NS_FAILED(rv)) {
+          // Return after adding ://[ so we know we failed here.
+          return FilenameTypeAndDetails(kSanitizedWindowsURL,
+                                        Some(sanitizedPathAndScheme));
+        }
+
+        mozilla::extensions::URLInfo url(uri);
+        if (NS_IsMainThread()) {
+          // EPS is only usable on main thread
+          auto* policy =
+              ExtensionPolicyService::GetSingleton().GetByHost(url.Host());
+          if (policy) {
+            nsString addOnId;
+            policy->GetId(addOnId);
+
+            sanitizedPathAndScheme.Append(addOnId);
+            sanitizedPathAndScheme.Append(NS_LITERAL_STRING(": "));
+            sanitizedPathAndScheme.Append(policy->Name());
+          } else {
+            sanitizedPathAndScheme.Append(
+                NS_LITERAL_STRING("failed finding addon by host"));
+          }
+        } else {
+          sanitizedPathAndScheme.Append(
+              NS_LITERAL_STRING("can't get addon off main thread"));
+        }
+        sanitizedPathAndScheme.Append(NS_LITERAL_STRING("]"));
+        sanitizedPathAndScheme.Append(url.FilePath());
       }
       return FilenameTypeAndDetails(kSanitizedWindowsURL,
                                     Some(sanitizedPathAndScheme));
@@ -488,7 +523,7 @@ void nsContentSecurityUtils::NotifyEvalUsage(bool aIsSystemPrincipal,
                          : Telemetry::EventID::Security_Evalusage_Parentprocess;
 
   FilenameTypeAndDetails fileNameTypeAndDetails =
-      FilenameToFilenameType(aFileNameA);
+      FilenameToFilenameType(aFileNameA, false);
   mozilla::Maybe<nsTArray<EventExtraEntry>> extra;
   if (fileNameTypeAndDetails.second().isSome()) {
     extra = Some<nsTArray<EventExtraEntry>>({EventExtraEntry{
@@ -792,7 +827,7 @@ bool nsContentSecurityUtils::ValidateScriptFilename(const char* aFilename,
 
   // Send Telemetry
   FilenameTypeAndDetails fileNameTypeAndDetails =
-      FilenameToFilenameType(filenameU);
+      FilenameToFilenameType(filenameU, true);
 
   Telemetry::EventID eventType =
       Telemetry::EventID::Security_Javascriptload_Parentprocess;
