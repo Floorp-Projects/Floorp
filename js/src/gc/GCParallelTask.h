@@ -25,21 +25,13 @@ class AutoLockHelperThreadState;
 struct HelperThread;
 
 // A generic task used to dispatch work to the helper thread system.
-// Users supply a function pointer to call.
-//
-// Note that we don't use virtual functions here because destructors can write
-// the vtable pointer on entry, which can causes races if synchronization
-// happens there.
+// Users override the pure-virtual run() method.
 class GCParallelTask : public mozilla::LinkedListElement<GCParallelTask>,
                        public RunnableTask {
  public:
-  using TaskFunc = void (*)(GCParallelTask*);
-
   gc::GCRuntime* const gc;
 
  private:
-  TaskFunc func_;
-
   // The state of the parallel computation.
   enum class State {
     // The task is idle. Either start() has not been called or join() has
@@ -76,15 +68,10 @@ class GCParallelTask : public mozilla::LinkedListElement<GCParallelTask>,
       cancel_;
 
  public:
-  explicit GCParallelTask(gc::GCRuntime* gc, TaskFunc func)
-      : gc(gc),
-        func_(func),
-        state_(State::Idle),
-        duration_(nullptr),
-        cancel_(false) {}
+  explicit GCParallelTask(gc::GCRuntime* gc)
+      : gc(gc), state_(State::Idle), duration_(nullptr), cancel_(false) {}
   GCParallelTask(GCParallelTask&& other)
       : gc(other.gc),
-        func_(other.func_),
         state_(other.state_),
         duration_(nullptr),
         cancel_(false) {}
@@ -146,6 +133,9 @@ class GCParallelTask : public mozilla::LinkedListElement<GCParallelTask>,
   }
 
  protected:
+  // Override this method to provide the task's functionality.
+  virtual void run() = 0;
+
   // Can be called to indicate that although the task is still running, it is
   // about to finish.
   void setFinishing(const AutoLockHelperThreadState& lock) {
@@ -192,21 +182,6 @@ class GCParallelTask : public mozilla::LinkedListElement<GCParallelTask>,
 
   friend struct HelperThread;
   void runFromHelperThread(AutoLockHelperThreadState& locked);
-};
-
-// CRTP template to handle cast to derived type when calling run().
-template <typename Derived>
-class GCParallelTaskHelper : public GCParallelTask {
- public:
-  explicit GCParallelTaskHelper(gc::GCRuntime* gc)
-      : GCParallelTask(gc, &runTaskTyped) {}
-  GCParallelTaskHelper(GCParallelTaskHelper&& other)
-      : GCParallelTask(std::move(other)) {}
-
- private:
-  static void runTaskTyped(GCParallelTask* task) {
-    static_cast<Derived*>(task)->run();
-  }
 };
 
 } /* namespace js */
