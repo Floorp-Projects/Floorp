@@ -200,7 +200,8 @@ object DownloadUtils {
         }
         if (extension == null) {
             extension = if (mimeType?.startsWith("text/", ignoreCase = true) == true) {
-                if (mimeType.equals("text/html", ignoreCase = true)) {
+                // checking startsWith to ignoring encoding value such as "text/html; charset=utf-8"
+                if (mimeType.startsWith("text/html", ignoreCase = true)) {
                     ".html"
                 } else {
                     ".txt"

@@ -100,6 +100,10 @@ class DownloadUtilsTest {
             "compressed.TAR.GZ",
             DownloadUtils.guessFileName(null, null, "http://example.com/compressed.TAR.GZ", "application/gzip")
         )
+        assertEquals("file.html", DownloadUtils.guessFileName(null, null, "http://example.com/file?abc", "text/html"))
+        assertEquals("file.html", DownloadUtils.guessFileName(null, null, "http://example.com/file", "text/html"))
+        assertEquals("file.html", DownloadUtils.guessFileName(null, null, "http://example.com/file", "text/html; charset=utf-8"))
+        assertEquals("file.txt", DownloadUtils.guessFileName(null, null, "http://example.com/file.txt", "text/html"))
     }
 
     companion object {

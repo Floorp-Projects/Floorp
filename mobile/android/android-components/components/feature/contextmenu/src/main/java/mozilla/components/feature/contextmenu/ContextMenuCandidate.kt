@@ -25,6 +25,7 @@ import mozilla.components.feature.app.links.AppLinksUseCases
  * will be displayed in the context menu.
  * @property action The action to be invoked once the user selects this item.
  */
+@Suppress("TooManyFunctions")
 data class ContextMenuCandidate(
     val id: String,
     val label: String,
@@ -47,6 +48,7 @@ data class ContextMenuCandidate(
             createOpenInNewTabCandidate(context, tabsUseCases, snackBarParentView, snackbarDelegate),
             createOpenInPrivateTabCandidate(context, tabsUseCases, snackBarParentView, snackbarDelegate),
             createCopyLinkCandidate(context, snackBarParentView, snackbarDelegate),
+            createDownloadLinkCandidate(context, contextMenuUseCases),
             createShareLinkCandidate(context),
             createOpenImageInNewTabCandidate(context, tabsUseCases, snackBarParentView, snackbarDelegate),
             createSaveImageCandidate(context, contextMenuUseCases),
@@ -191,6 +193,24 @@ data class ContextMenuCandidate(
             id = "mozac.feature.contextmenu.save_video",
             label = context.getString(R.string.mozac_feature_contextmenu_save_file_to_device),
             showFor = { _, hitResult -> hitResult.isVideoAudio() },
+            action = { tab, hitResult ->
+                contextMenuUseCases.injectDownload(
+                    tab.id,
+                    DownloadState(hitResult.src, skipConfirmation = true)
+                )
+            }
+        )
+
+        /**
+         * Context Menu item: "Save link".
+         */
+        fun createDownloadLinkCandidate(
+            context: Context,
+            contextMenuUseCases: ContextMenuUseCases
+        ) = ContextMenuCandidate(
+            id = "mozac.feature.contextmenu.download_link",
+            label = context.getString(R.string.mozac_feature_contextmenu_download_link),
+            showFor = { _, hitResult -> hitResult.isLink() },
             action = { tab, hitResult ->
                 contextMenuUseCases.injectDownload(
                     tab.id,
