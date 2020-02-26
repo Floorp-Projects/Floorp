@@ -12,6 +12,7 @@ atomic = "0.4"
 bitflags = "1.0"
 coreaudio-sys-utils = { path = "coreaudio-sys-utils" }
 cubeb-backend = "0.6"
+float-cmp = "0.6"
 libc = "0.2"
 lazy_static = "1.2"
 mach = "0.3"
