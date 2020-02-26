@@ -799,6 +799,7 @@ win64-asan-reporter-nightly/opt:
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/releng.manifest"
             PERFHERDER_EXTRA_OPTIONS: "asan-reporter"
+            MOZ_AUTOMATION_PACKAGE_TESTS: "1"
     run:
         options: [append-env-variables-from-configs]
         script: mozharness/scripts/fx_desktop_build.py
@@ -1243,6 +1244,7 @@ win64-aarch64-devedition/opt:
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/aarch64.manifest"
             PERFHERDER_EXTRA_OPTIONS: aarch64-devedition
+            MOZ_AUTOMATION_PACKAGE_TESTS: "1"
     run:
         actions: [get-secrets, build]
         options: [append-env-variables-from-configs]
