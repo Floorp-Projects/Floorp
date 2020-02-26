@@ -9,21 +9,18 @@
  */
 
 /**
- * Display an existing HTMLTooltip on an anchor. After the tooltip "shown"
- * event has been fired a reflow will be triggered.
+ * Display an existing HTMLTooltip on an anchor and properly wait for the popup to be
+ * repainted.
  *
  * @param {HTMLTooltip} tooltip
  *        The tooltip instance to display
  * @param {Node} anchor
  *        The anchor that should be used to display the tooltip
  * @param {Object} see HTMLTooltip:show documentation
- * @return {Promise} promise that resolves when "shown" has been fired, reflow
- *         and repaint done.
+ * @return {Promise} promise that resolves when reflow and repaint are done.
  */
 async function showTooltip(tooltip, anchor, { position, x, y } = {}) {
-  const onShown = tooltip.once("shown");
-  tooltip.show(anchor, { position, x, y });
-  await onShown;
+  await tooltip.show(anchor, { position, x, y });
   return waitForReflow(tooltip);
 }
 
