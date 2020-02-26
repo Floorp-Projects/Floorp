@@ -7,7 +7,6 @@ geckoview.jar:
 
 % skin geckoview classic/1.0 %skin/
   skin/config.css                           (config.css)
-  skin/content.css                          (content.css)
   skin/defines.css                          (defines.css)
   skin/images/accessiblecaret-normal-hdpi.png       (images/accessiblecaret-normal-hdpi.png)
   skin/images/accessiblecaret-normal-xhdpi.png      (images/accessiblecaret-normal-xhdpi.png)
