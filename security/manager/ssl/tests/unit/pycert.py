@@ -30,7 +30,7 @@ keyUsage:[digitalSignature,nonRepudiation,keyEncipherment,
 extKeyUsage:[serverAuth,clientAuth,codeSigning,emailProtection
              nsSGC, # Netscape Server Gated Crypto
              OCSPSigning,timeStamping]
-subjectAlternativeName:[<dNSName|directoryName>,...]
+subjectAlternativeName:[<dNSName|directoryName|"ip4:"iPV4Address>,...]
 authorityInformationAccess:<OCSP URI>
 certificatePolicies:[<policy OID>,...]
 nameConstraints:{permitted,excluded}:[<dNSName|directoryName>,...]
@@ -93,11 +93,11 @@ import base64
 import datetime
 import hashlib
 import re
+import socket
 import sys
 
 import pyct
 import pykey
-
 
 class Error(Exception):
     """Base class for exceptions in this module."""
@@ -581,6 +581,8 @@ class Certificate(object):
         self.addExtension(rfc2459.id_ce_extKeyUsage, extKeyUsageExtension, critical)
 
     def addSubjectAlternativeName(self, names, critical):
+        IPV4_PREFIX = 'ip4:'
+
         subjectAlternativeName = rfc2459.SubjectAltName()
         for count, name in enumerate(names.split(',')):
             generalName = rfc2459.GeneralName()
@@ -590,6 +592,8 @@ class Certificate(object):
                 generalName['directoryName'] = directoryName
             elif '@' in name:
                 generalName['rfc822Name'] = name
+            elif name.startswith(IPV4_PREFIX):
+                generalName['iPAddress'] = socket.inet_pton(socket.AF_INET, name[len(IPV4_PREFIX):])
             else:
                 # The string may have things like '\0' (i.e. a slash
                 # followed by the number zero) that have to be decoded into

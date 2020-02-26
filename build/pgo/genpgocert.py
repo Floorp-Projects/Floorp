@@ -77,6 +77,9 @@ def writeCertspecForServerLocations(fd):
             customCertOption = True
             break
 
+        if "ipV4Address" in loc.options:
+            loc.host = "ip4:" + loc.host
+
         if not customCertOption:
             SAN.append(loc.host)
 
