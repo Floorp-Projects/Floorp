@@ -10485,6 +10485,11 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
   if (op.getBoolOption("no-ti")) {
     jit::JitOptions.typeInference = false;
   }
+  if (op.getBoolOption("warp")) {
+    // WarpBuilder requires TI to be disabled.
+    jit::JitOptions.typeInference = false;
+    jit::JitOptions.warpBuilder = true;
+  }
 #endif
 
   if (const char* str = op.getStringOption("ion-regalloc")) {
@@ -11005,6 +11010,7 @@ int main(int argc, char** argv, char** envp) {
                         "Disable IonMonkey for the main context only") ||
 #ifdef NIGHTLY_BUILD
       !op.addBoolOption('\0', "no-ti", "Disable Type Inference") ||
+      !op.addBoolOption('\0', "warp", "Use WarpBuilder as MIR builder") ||
 #endif
       !op.addBoolOption('\0', "no-asmjs", "Disable asm.js compilation") ||
       !op.addStringOption(
