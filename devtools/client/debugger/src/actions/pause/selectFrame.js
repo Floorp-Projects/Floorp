@@ -20,8 +20,9 @@ export function selectFrame(cx: ThreadContext, frame: Frame) {
   return async ({ dispatch, client, getState, sourceMaps }: ThunkArgs) => {
     assert(cx.thread == frame.thread, "Thread mismatch");
 
-    // Frames with an async cause are not selected
-    if (frame.asyncCause) {
+    // Frames that aren't on-stack do not support evalling and may not
+    // have live inspectable scopes, so we do not allow selecting them.
+    if (frame.state !== "on-stack") {
       return dispatch(selectLocation(cx, frame.location));
     }
 
