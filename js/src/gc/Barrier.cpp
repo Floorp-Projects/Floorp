@@ -194,7 +194,7 @@ template struct JS_PUBLIC_API MovableCellHasher<AbstractGeneratorObject*>;
 template struct JS_PUBLIC_API MovableCellHasher<EnvironmentObject*>;
 template struct JS_PUBLIC_API MovableCellHasher<GlobalObject*>;
 template struct JS_PUBLIC_API MovableCellHasher<JSScript*>;
-template struct JS_PUBLIC_API MovableCellHasher<LazyScript*>;
+template struct JS_PUBLIC_API MovableCellHasher<BaseScript*>;
 template struct JS_PUBLIC_API MovableCellHasher<ScriptSourceObject*>;
 template struct JS_PUBLIC_API MovableCellHasher<SavedFrame*>;
 template struct JS_PUBLIC_API MovableCellHasher<WasmInstanceObject*>;
