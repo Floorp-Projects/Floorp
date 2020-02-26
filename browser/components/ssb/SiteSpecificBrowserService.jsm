@@ -463,7 +463,7 @@ class SiteSpecificBrowser extends SiteSpecificBrowserBase {
     }
 
     let manifest = await buildManifestForBrowser(browser);
-    let ssb = SiteSpecificBrowser.createFromManifest(manifest);
+    let ssb = await SiteSpecificBrowser.createFromManifest(manifest);
 
     if (!manifest.name) {
       ssb.name = browser.contentTitle;
