@@ -150,11 +150,6 @@ extern "C" const char* __tsan_default_suppressions() {
          "race:sync..Arc\n"
          "race:alloc::sync::Arc\n"
 
-         // Bug 1598342
-         "race:_PR_DestroyThreadPrivate\n"
-         "race:_pt_thread_death_internal\n"
-         "race:nsThread::ShutdownComplete\n"
-
          // Bug 1600572
          "race:SchedulerGroup::CreateEventTargetFor\n"
          "race:SystemGroupImpl::AddRef\n"
