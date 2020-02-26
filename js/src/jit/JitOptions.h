@@ -60,6 +60,7 @@ struct DefaultJitOptions {
 #ifdef NIGHTLY_BUILD
   bool typeInference;
 #endif
+  bool warpBuilder;
   bool jitForTrustedPrincipals;
   bool nativeRegExp;
   bool forceInlineCaches;
