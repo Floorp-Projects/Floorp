@@ -15,7 +15,7 @@ import kotlinx.coroutines.plus
 import mozilla.components.concept.sync.Device
 import mozilla.components.concept.sync.DeviceCapability
 import mozilla.components.concept.sync.DeviceConstellation
-import mozilla.components.concept.sync.DeviceEventOutgoing.SendTab
+import mozilla.components.concept.sync.DeviceCommandOutgoing.SendTab
 import mozilla.components.concept.sync.TabData
 import mozilla.components.service.fxa.manager.FxaAccountManager
 import mozilla.components.support.ktx.kotlin.crossProduct
@@ -75,7 +75,7 @@ class SendTabUseCases(
                     it.id == deviceId
                 }
                 device?.let {
-                    return constellation.sendEventToDeviceAsync(
+                    return constellation.sendCommandToDeviceAsync(
                         device.id,
                         SendTab(tab.title, tab.url)
                     ).await()
@@ -131,7 +131,7 @@ class SendTabUseCases(
                 // Get a list of device-tab combinations that we want to send.
                 return block(devices).map { (device, tab) ->
                     // Send the tab!
-                    constellation.sendEventToDeviceAsync(
+                    constellation.sendCommandToDeviceAsync(
                         device.id,
                         SendTab(tab.title, tab.url)
                     ).await()

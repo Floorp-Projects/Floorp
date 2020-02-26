@@ -24,8 +24,8 @@ import mozilla.components.concept.sync.AuthExceptionType
 import mozilla.components.concept.sync.DeviceCapability
 import mozilla.components.concept.sync.AuthFlowUrl
 import mozilla.components.concept.sync.AuthType
-import mozilla.components.concept.sync.DeviceEvent
-import mozilla.components.concept.sync.DeviceEventsObserver
+import mozilla.components.concept.sync.AccountEvent
+import mozilla.components.concept.sync.AccountEventsObserver
 import mozilla.components.concept.sync.InFlightMigrationState
 import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.concept.sync.Profile
@@ -217,8 +217,8 @@ open class FxaAccountManager(
     @Volatile private var state = AccountState.Start
     private val eventQueue = ConcurrentLinkedQueue<Event>()
 
-    private val deviceEventObserverRegistry = ObserverRegistry<DeviceEventsObserver>()
-    private val deviceEventsIntegration = DeviceEventsIntegration(deviceEventObserverRegistry)
+    private val accountEventObserverRegistry = ObserverRegistry<AccountEventsObserver>()
+    private val accountEventsIntegration = AccountEventsIntegration(accountEventObserverRegistry)
 
     private val syncStatusObserverRegistry = ObserverRegistry<SyncStatusObserver>()
 
@@ -522,8 +522,8 @@ open class FxaAccountManager(
         return processQueueAsync(Event.Logout)
     }
 
-    fun registerForDeviceEvents(observer: DeviceEventsObserver, owner: LifecycleOwner, autoPause: Boolean) {
-        deviceEventObserverRegistry.register(observer, owner, autoPause)
+    fun registerForAccountEvents(observer: AccountEventsObserver, owner: LifecycleOwner, autoPause: Boolean) {
+        accountEventObserverRegistry.register(observer, owner, autoPause)
     }
 
     fun registerForSyncEvents(observer: SyncStatusObserver, owner: LifecycleOwner, autoPause: Boolean) {
@@ -745,7 +745,7 @@ open class FxaAccountManager(
                         account.completeOAuthFlowAsync(via.authData.code, via.authData.state).await()
 
                         logger.info("Registering device constellation observer")
-                        account.deviceConstellation().register(deviceEventsIntegration)
+                        account.deviceConstellation().register(accountEventsIntegration)
 
                         logger.info("Initializing device")
                         // NB: underlying API is expected to 'ensureCapabilities' as part of device initialization.
@@ -762,7 +762,7 @@ open class FxaAccountManager(
                         account.registerPersistenceCallback(statePersistenceCallback)
 
                         logger.info("Registering device constellation observer")
-                        account.deviceConstellation().register(deviceEventsIntegration)
+                        account.deviceConstellation().register(accountEventsIntegration)
 
                         // If this is the first time ensuring our capabilities,
                         logger.info("Ensuring device capabilities...")
@@ -782,7 +782,7 @@ open class FxaAccountManager(
                         // `Event.SignInShareableAccount`, `Event.InFlightCopyMigration`
                         // or `Event.InFlightReuseMigration`.
                         logger.info("Registering device constellation observer")
-                        account.deviceConstellation().register(deviceEventsIntegration)
+                        account.deviceConstellation().register(accountEventsIntegration)
 
                         if (via.reuseAccount) {
                             logger.info("Configuring migrated account's device")
@@ -810,7 +810,7 @@ open class FxaAccountManager(
                         account.registerPersistenceCallback(statePersistenceCallback)
 
                         logger.info("Registering device constellation observer")
-                        account.deviceConstellation().register(deviceEventsIntegration)
+                        account.deviceConstellation().register(accountEventsIntegration)
 
                         logger.info("Initializing device")
                         // NB: underlying API is expected to 'ensureCapabilities' as part of device initialization.
@@ -1022,12 +1022,12 @@ open class FxaAccountManager(
      * E.g., once we grow events such as "please logout".
      * For now, we just pass everything downstream as-is.
      */
-    private class DeviceEventsIntegration(
-        private val listenerRegistry: ObserverRegistry<DeviceEventsObserver>
-    ) : DeviceEventsObserver {
-        private val logger = Logger("DeviceEventsIntegration")
+    private class AccountEventsIntegration(
+        private val listenerRegistry: ObserverRegistry<AccountEventsObserver>
+    ) : AccountEventsObserver {
+        private val logger = Logger("AccountEventsIntegration")
 
-        override fun onEvents(events: List<DeviceEvent>) {
+        override fun onEvents(events: List<AccountEvent>) {
             logger.info("Received events, notifying listeners")
             listenerRegistry.notifyObservers { onEvents(events) }
         }

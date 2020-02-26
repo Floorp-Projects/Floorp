@@ -6,9 +6,10 @@ package mozilla.components.feature.accounts.push
 
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ProcessLifecycleOwner
+import mozilla.components.concept.sync.AccountEventsObserver
+import mozilla.components.concept.sync.AccountEvent
 import mozilla.components.concept.sync.Device
-import mozilla.components.concept.sync.DeviceEvent
-import mozilla.components.concept.sync.DeviceEventsObserver
+import mozilla.components.concept.sync.DeviceCommandIncoming
 import mozilla.components.concept.sync.TabData
 import mozilla.components.feature.push.AutoPushFeature
 import mozilla.components.service.fxa.manager.FxaAccountManager
@@ -37,25 +38,28 @@ class SendTabFeature(
     onTabsReceived: (Device?, List<TabData>) -> Unit
 ) {
     init {
-        val deviceObserver = DeviceObserver(onTabsReceived)
+        val observer = EventsObserver(onTabsReceived)
 
-        // Always observe the account for device events.
-        accountManager.registerForDeviceEvents(deviceObserver, owner, autoPause)
+        // Observe the account for all account events, although we'll ignore
+        // non send-tab command events.
+        accountManager.registerForAccountEvents(observer, owner, autoPause)
     }
 }
 
-internal class DeviceObserver(
+internal class EventsObserver(
     private val onTabsReceived: (Device?, List<TabData>) -> Unit
-) : DeviceEventsObserver {
-    private val logger = Logger("DeviceObserver")
+) : AccountEventsObserver {
+    private val logger = Logger("EventsObserver")
 
-    override fun onEvents(events: List<DeviceEvent>) {
+    override fun onEvents(events: List<AccountEvent>) {
         events.asSequence()
-            .filterIsInstance<DeviceEvent.TabReceived>()
-            .forEach { event ->
-                logger.debug("Showing ${event.entries.size} tab(s) received from deviceID=${event.from?.id}")
+            .filterIsInstance<AccountEvent.DeviceCommandIncoming>()
+            .map({ it.command })
+            .filterIsInstance<DeviceCommandIncoming.TabReceived>()
+            .forEach { command ->
+                logger.debug("Showing ${command.entries.size} tab(s) received from deviceID=${command.from?.id}")
 
-                onTabsReceived(event.from, event.entries)
+                onTabsReceived(command.from, command.entries)
             }
     }
 }

@@ -293,6 +293,8 @@ sealed class AuthType {
 
 /**
  * Observer interface which lets its users monitor account state changes and major events.
+ * (XXX - there's some tension between this and the
+ * mozilla.components.concept.sync.AccountEvent we should resolve!)
  */
 interface AccountObserver {
     /**

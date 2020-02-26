@@ -49,12 +49,12 @@ class SendTabUseCasesTest {
         val device: Device = generateDevice()
 
         `when`(state.otherDevices).thenReturn(listOf(device))
-        `when`(constellation.sendEventToDeviceAsync(any(), any()))
+        `when`(constellation.sendCommandToDeviceAsync(any(), any()))
             .thenReturn(CompletableDeferred(true))
 
         useCases.sendToDeviceAsync(device.id, TabData("Title", "http://example.com"))
 
-        verify(constellation).sendEventToDeviceAsync(any(), any())
+        verify(constellation).sendCommandToDeviceAsync(any(), any())
     }
 
     @Test
@@ -64,12 +64,12 @@ class SendTabUseCasesTest {
         val tab = TabData("Title", "http://example.com")
 
         `when`(state.otherDevices).thenReturn(listOf(device))
-        `when`(constellation.sendEventToDeviceAsync(any(), any()))
+        `when`(constellation.sendCommandToDeviceAsync(any(), any()))
             .thenReturn(CompletableDeferred(true))
 
         useCases.sendToDeviceAsync(device.id, listOf(tab, tab))
 
-        verify(constellation, times(2)).sendEventToDeviceAsync(any(), any())
+        verify(constellation, times(2)).sendCommandToDeviceAsync(any(), any())
     }
 
     @Test
@@ -80,16 +80,16 @@ class SendTabUseCasesTest {
 
         useCases.sendToDeviceAsync("123", listOf(tab, tab))
 
-        verify(constellation, never()).sendEventToDeviceAsync(any(), any())
+        verify(constellation, never()).sendCommandToDeviceAsync(any(), any())
 
         `when`(device.id).thenReturn("123")
         `when`(state.otherDevices).thenReturn(listOf(device))
-        `when`(constellation.sendEventToDeviceAsync(any(), any()))
+        `when`(constellation.sendCommandToDeviceAsync(any(), any()))
             .thenReturn(CompletableDeferred(false))
 
         useCases.sendToDeviceAsync("123", listOf(tab, tab))
 
-        verify(constellation, never()).sendEventToDeviceAsync(any(), any())
+        verify(constellation, never()).sendCommandToDeviceAsync(any(), any())
     }
 
     @Test
@@ -100,19 +100,19 @@ class SendTabUseCasesTest {
 
         useCases.sendToDeviceAsync("123", tab)
 
-        verify(constellation, never()).sendEventToDeviceAsync(any(), any())
+        verify(constellation, never()).sendCommandToDeviceAsync(any(), any())
 
         `when`(state.otherDevices).thenReturn(listOf(device))
-        `when`(constellation.sendEventToDeviceAsync(any(), any()))
+        `when`(constellation.sendCommandToDeviceAsync(any(), any()))
             .thenReturn(CompletableDeferred(false))
 
         useCases.sendToDeviceAsync("456", tab)
 
-        verify(constellation, never()).sendEventToDeviceAsync(any(), any())
+        verify(constellation, never()).sendCommandToDeviceAsync(any(), any())
 
         useCases.sendToDeviceAsync("123", tab)
 
-        verify(constellation).sendEventToDeviceAsync(any(), any())
+        verify(constellation).sendCommandToDeviceAsync(any(), any())
     }
 
     @Test
@@ -123,19 +123,19 @@ class SendTabUseCasesTest {
 
         useCases.sendToDeviceAsync("123", listOf(tab))
 
-        verify(constellation, never()).sendEventToDeviceAsync(any(), any())
+        verify(constellation, never()).sendCommandToDeviceAsync(any(), any())
 
         `when`(state.otherDevices).thenReturn(listOf(device))
-        `when`(constellation.sendEventToDeviceAsync(any(), any()))
+        `when`(constellation.sendCommandToDeviceAsync(any(), any()))
             .thenReturn(CompletableDeferred(false))
 
         useCases.sendToDeviceAsync("456", listOf(tab))
 
-        verify(constellation, never()).sendEventToDeviceAsync(any(), any())
+        verify(constellation, never()).sendCommandToDeviceAsync(any(), any())
 
         useCases.sendToDeviceAsync("123", listOf(tab))
 
-        verify(constellation).sendEventToDeviceAsync(any(), any())
+        verify(constellation).sendCommandToDeviceAsync(any(), any())
     }
 
     @Test
@@ -145,14 +145,14 @@ class SendTabUseCasesTest {
         val device2: Device = generateDevice()
 
         `when`(state.otherDevices).thenReturn(listOf(device, device2))
-        `when`(constellation.sendEventToDeviceAsync(any(), any()))
+        `when`(constellation.sendCommandToDeviceAsync(any(), any()))
             .thenReturn(CompletableDeferred(false))
 
         val tab = TabData("Mozilla", "https://mozilla.org")
 
         useCases.sendToAllAsync(tab)
 
-        verify(constellation, times(2)).sendEventToDeviceAsync(any(), any())
+        verify(constellation, times(2)).sendCommandToDeviceAsync(any(), any())
     }
 
     @Test
@@ -162,7 +162,7 @@ class SendTabUseCasesTest {
         val device2: Device = generateDevice()
 
         `when`(state.otherDevices).thenReturn(listOf(device, device2))
-        `when`(constellation.sendEventToDeviceAsync(any(), any()))
+        `when`(constellation.sendCommandToDeviceAsync(any(), any()))
             .thenReturn(CompletableDeferred(false))
 
         val tab = TabData("Mozilla", "https://mozilla.org")
@@ -170,7 +170,7 @@ class SendTabUseCasesTest {
 
         useCases.sendToAllAsync(listOf(tab, tab2))
 
-        verify(constellation, times(4)).sendEventToDeviceAsync(any(), any())
+        verify(constellation, times(4)).sendCommandToDeviceAsync(any(), any())
     }
 
     @Test
@@ -183,7 +183,7 @@ class SendTabUseCasesTest {
         runBlocking {
             useCases.sendToAllAsync(tab)
 
-            verify(constellation, never()).sendEventToDeviceAsync(any(), any())
+            verify(constellation, never()).sendCommandToDeviceAsync(any(), any())
 
             `when`(device.id).thenReturn("123")
             `when`(device2.id).thenReturn("456")
@@ -191,7 +191,7 @@ class SendTabUseCasesTest {
 
             useCases.sendToAllAsync(tab)
 
-            verify(constellation, never()).sendEventToDeviceAsync(any(), any())
+            verify(constellation, never()).sendCommandToDeviceAsync(any(), any())
         }
     }
 
@@ -206,7 +206,7 @@ class SendTabUseCasesTest {
         runBlocking {
             useCases.sendToAllAsync(tab)
 
-            verify(constellation, never()).sendEventToDeviceAsync(any(), any())
+            verify(constellation, never()).sendCommandToDeviceAsync(any(), any())
 
             `when`(device.id).thenReturn("123")
             `when`(device2.id).thenReturn("456")
@@ -214,8 +214,8 @@ class SendTabUseCasesTest {
 
             useCases.sendToAllAsync(listOf(tab, tab2))
 
-            verify(constellation, never()).sendEventToDeviceAsync(eq("123"), any())
-            verify(constellation, never()).sendEventToDeviceAsync(eq("456"), any())
+            verify(constellation, never()).sendCommandToDeviceAsync(eq("123"), any())
+            verify(constellation, never()).sendCommandToDeviceAsync(eq("456"), any())
         }
     }
 
@@ -227,17 +227,17 @@ class SendTabUseCasesTest {
 
         useCases.sendToDeviceAsync("123", listOf(tab, tab))
 
-        verify(constellation, never()).sendEventToDeviceAsync(any(), any())
+        verify(constellation, never()).sendCommandToDeviceAsync(any(), any())
 
         `when`(device.id).thenReturn("123")
         `when`(state.otherDevices).thenReturn(listOf(device))
-        `when`(constellation.sendEventToDeviceAsync(any(), any()))
+        `when`(constellation.sendCommandToDeviceAsync(any(), any()))
             .thenReturn(CompletableDeferred(true))
             .thenReturn(CompletableDeferred(true))
 
         val result = useCases.sendToDeviceAsync("123", listOf(tab, tab))
 
-        verify(constellation, never()).sendEventToDeviceAsync(any(), any())
+        verify(constellation, never()).sendCommandToDeviceAsync(any(), any())
         Assert.assertFalse(result.await())
     }
 
