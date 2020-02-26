@@ -984,6 +984,8 @@ nsresult CacheFile::OpenAlternativeOutputStream(
 }
 
 nsresult CacheFile::SetMemoryOnly() {
+  CacheFileAutoLock lock(this);
+
   LOG(("CacheFile::SetMemoryOnly() mMemoryOnly=%d [this=%p]", mMemoryOnly,
        this));
 
@@ -2350,6 +2352,8 @@ bool CacheFile::IsWriteInProgress() {
 
 bool CacheFile::EntryWouldExceedLimit(int64_t aOffset, int64_t aSize,
                                       bool aIsAltData) {
+  CacheFileAutoLock lock(this);
+
   if (mSkipSizeCheck || aSize < 0) {
     return false;
   }
