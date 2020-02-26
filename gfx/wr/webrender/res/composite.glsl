@@ -4,18 +4,36 @@
 
 // Composite a picture cache tile into the framebuffer.
 
-#include shared
+#include shared,yuv
 
-varying vec2 vUv;
+#ifdef WR_FEATURE_YUV
+flat varying mat3 vYuvColorMatrix;
+flat varying float vYuvCoefficient;
+flat varying int vYuvFormat;
+varying vec3 vUV_y;
+varying vec3 vUV_u;
+varying vec3 vUV_v;
+flat varying vec4 vUVBounds_y;
+flat varying vec4 vUVBounds_u;
+flat varying vec4 vUVBounds_v;
+#else
 flat varying vec4 vColor;
 flat varying float vLayer;
+varying vec2 vUv;
+#endif
 
 #ifdef WR_VERTEX_SHADER
 in vec4 aDeviceRect;
 in vec4 aDeviceClipRect;
 in vec4 aColor;
-in float aLayer;
-in float aZId;
+in vec4 aParams;
+in vec3 aTextureLayers;
+
+#ifdef WR_FEATURE_YUV
+in vec4 aUvRect0;
+in vec4 aUvRect1;
+in vec4 aUvRect2;
+#endif
 
 void main(void) {
 	// Get world position
@@ -25,20 +43,74 @@ void main(void) {
     vec2 clipped_world_pos = clamp(world_pos, aDeviceClipRect.xy, aDeviceClipRect.xy + aDeviceClipRect.zw);
 
     // Derive the normalized UV from the clipped vertex position
-    vUv = (clipped_world_pos - aDeviceRect.xy) / aDeviceRect.zw;
+    vec2 uv = (clipped_world_pos - aDeviceRect.xy) / aDeviceRect.zw;
 
+#ifdef WR_FEATURE_YUV
+    int yuv_color_space = int(aParams.y);
+    int yuv_format = int(aParams.z);
+    float yuv_coefficient = aParams.w;
+
+    vYuvColorMatrix = get_yuv_color_matrix(yuv_color_space);
+    vYuvCoefficient = yuv_coefficient;
+    vYuvFormat = yuv_format;
+
+    write_uv_rect(
+        aUvRect0.xy,
+        aUvRect0.xy + aUvRect0.zw,
+        aTextureLayers.x,
+        uv,
+        TEX_SIZE(sColor0),
+        vUV_y,
+        vUVBounds_y
+    );
+    write_uv_rect(
+        aUvRect1.xy,
+        aUvRect1.xy + aUvRect1.zw,
+        aTextureLayers.y,
+        uv,
+        TEX_SIZE(sColor1),
+        vUV_u,
+        vUVBounds_u
+    );
+    write_uv_rect(
+        aUvRect2.xy,
+        aUvRect2.xy + aUvRect2.zw,
+        aTextureLayers.z,
+        uv,
+        TEX_SIZE(sColor2),
+        vUV_v,
+        vUVBounds_v
+    );
+#else
+    vUv = uv;
     // Pass through color and texture array layer
     vColor = aColor;
-    vLayer = aLayer;
-    gl_Position = uTransform * vec4(clipped_world_pos, aZId, 1.0);
+    vLayer = aTextureLayers.x;
+#endif
+
+    gl_Position = uTransform * vec4(clipped_world_pos, aParams.x /* z_id */, 1.0);
 }
 #endif
 
 #ifdef WR_FRAGMENT_SHADER
 void main(void) {
-	// The color is just the texture sample modulated by a supplied color
+#ifdef WR_FEATURE_YUV
+    vec4 color = sample_yuv(
+        vYuvFormat,
+        vYuvColorMatrix,
+        vYuvCoefficient,
+        vUV_y,
+        vUV_u,
+        vUV_v,
+        vUVBounds_y,
+        vUVBounds_u,
+        vUVBounds_v
+    );
+#else
+    // The color is just the texture sample modulated by a supplied color
 	vec4 texel = textureLod(sColor0, vec3(vUv, vLayer), 0.0);
     vec4 color = vColor * texel;
+#endif
 	write_output(color);
 }
 #endif
