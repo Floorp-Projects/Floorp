@@ -3,7 +3,6 @@ const { E10SUtils } = ChromeUtils.import(
 );
 
 const DOCUMENT_CHANNEL_PREF = "browser.tabs.documentchannel";
-const FISSION_PREF = "fission.autostart";
 const HISTORY = [
   { url: httpURL("dummy_page.html") },
   { url: fileURL("dummy_page.html") },

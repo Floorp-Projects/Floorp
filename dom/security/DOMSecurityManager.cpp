@@ -93,7 +93,9 @@ DOMSecurityManager::Observe(nsISupports* aSubject, const char* aTopic,
   // additional carveouts for downloads but if we run in
   // non-fission-mode then we do those two security checks within
   // Document::StartDocumentLoad in the content process.
-  bool fissionEnabled = StaticPrefs::fission_autostart();
+  nsCOMPtr<nsILoadContext> loadContext;
+  NS_QueryNotificationCallbacks(channel, loadContext);
+  bool fissionEnabled = loadContext && loadContext->UseRemoteSubframes();
   if (fissionEnabled) {
     nsCOMPtr<nsIContentSecurityPolicy> csp;
     nsresult rv =

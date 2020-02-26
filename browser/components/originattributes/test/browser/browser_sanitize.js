@@ -2,7 +2,7 @@
  * Bug 1270338 - Add a mochitest to ensure Sanitizer clears data for all containers
  */
 
-if (Services.prefs.getBoolPref("fission.autostart")) {
+if (SpecialPowers.useRemoteSubframes) {
   requestLongerTimeout(4);
 }
 
