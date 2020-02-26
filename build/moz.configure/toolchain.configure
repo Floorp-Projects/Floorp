@@ -2175,7 +2175,7 @@ assembler = check_prog('_AS', input=provided_assembler.program,
 def as_with_flags(as_info, assembler, provided_assembler, c_compiler):
     if provided_assembler:
         return provided_assembler.wrapper + \
-            [provided_assembler.program] + \
+            [assembler] + \
             provided_assembler.flags
 
     if as_info.type == 'masm':
