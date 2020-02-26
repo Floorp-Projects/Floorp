@@ -2,6 +2,17 @@
 <script>
   dump("Content running top level script " + window.location.href + "\n");
 
+  SpecialPowers.registerObservers("inner-window-nuked");
+
+  var observer = {
+    observe(subject, topic) {
+      // We should be able to wrap the inner window when the outer
+      // window has navigated out of process.
+      SpecialPowers.Cu.getGlobalForObject({});
+    }
+  };
+  SpecialPowers.addObserver(observer, "inner-window-nuked");
+
   // Unfortunately, we don't currently fire the onload event on a remote iframe,
   // so we can't listen for the load event directly on the iframe. Instead, we
   // postMessage from the iframe when the load event would be fired.

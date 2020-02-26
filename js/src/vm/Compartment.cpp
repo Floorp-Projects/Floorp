@@ -244,7 +244,7 @@ bool Compartment::getNonWrapperObjectForCurrentCompartment(
       return !!obj;
     }
 
-    MOZ_ASSERT(IsWindowProxy(obj));
+    MOZ_ASSERT(IsWindowProxy(obj) || IsDOMRemoteProxyObject(obj));
 
     // We crossed a compartment boundary there, so may now have a gray object.
     // This function is not allowed to return gray objects, so don't do that.
