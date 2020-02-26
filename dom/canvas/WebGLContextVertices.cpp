@@ -16,7 +16,6 @@
 #include "WebGLTexture.h"
 #include "WebGLTypes.h"
 #include "WebGLVertexArray.h"
-#include "WebGLVertexAttribData.h"
 
 #include "mozilla/Casting.h"
 
@@ -93,8 +92,7 @@ void WebGLContext::EnableVertexAttribArray(GLuint index) {
   gl->fEnableVertexAttribArray(index);
 
   MOZ_ASSERT(mBoundVertexArray);
-  mBoundVertexArray->mAttribs[index].mEnabled = true;
-  mBoundVertexArray->InvalidateCaches();
+  mBoundVertexArray->SetAttribIsArray(index, true);
 }
 
 void WebGLContext::DisableVertexAttribArray(GLuint index) {
@@ -108,8 +106,7 @@ void WebGLContext::DisableVertexAttribArray(GLuint index) {
   }
 
   MOZ_ASSERT(mBoundVertexArray);
-  mBoundVertexArray->mAttribs[index].mEnabled = false;
-  mBoundVertexArray->InvalidateCaches();
+  mBoundVertexArray->SetAttribIsArray(index, false);
 }
 
 Maybe<double> WebGLContext::GetVertexAttrib(GLuint index, GLenum pname) {
@@ -119,182 +116,182 @@ Maybe<double> WebGLContext::GetVertexAttrib(GLuint index, GLenum pname) {
   if (!ValidateAttribIndex(*this, index)) return Nothing();
 
   MOZ_ASSERT(mBoundVertexArray);
+  auto ret = mBoundVertexArray->GetVertexAttrib(index, pname);
 
   switch (pname) {
-    case LOCAL_GL_VERTEX_ATTRIB_ARRAY_STRIDE:
-      return Some(
-          static_cast<int32_t>(mBoundVertexArray->mAttribs[index].Stride()));
-
-    case LOCAL_GL_VERTEX_ATTRIB_ARRAY_SIZE:
-      return Some(
-          static_cast<int32_t>(mBoundVertexArray->mAttribs[index].Size()));
-
-    case LOCAL_GL_VERTEX_ATTRIB_ARRAY_TYPE:
-      return Some(
-          static_cast<int32_t>(mBoundVertexArray->mAttribs[index].Type()));
-
     case LOCAL_GL_VERTEX_ATTRIB_ARRAY_INTEGER:
-      if (IsWebGL2())
-        return Some(static_cast<bool>(
-            mBoundVertexArray->mAttribs[index].IntegerFunc()));
-
-      break;
-
-    case LOCAL_GL_VERTEX_ATTRIB_ARRAY_DIVISOR:
-      if (IsWebGL2() ||
-          IsExtensionEnabled(WebGLExtensionID::ANGLE_instanced_arrays)) {
-        return Some(
-            static_cast<int32_t>(mBoundVertexArray->mAttribs[index].mDivisor));
+      if (!IsWebGL2()) {
+        ret = {};
       }
       break;
 
-    case LOCAL_GL_VERTEX_ATTRIB_ARRAY_ENABLED:
-      return Some(mBoundVertexArray->mAttribs[index].mEnabled);
-
-    case LOCAL_GL_VERTEX_ATTRIB_ARRAY_NORMALIZED:
-      return Some(mBoundVertexArray->mAttribs[index].Normalized());
-
-    case LOCAL_GL_VERTEX_ATTRIB_ARRAY_POINTER:
-      return Some(mBoundVertexArray->mAttribs[index].ByteOffset());
-
-    default:
+    case LOCAL_GL_VERTEX_ATTRIB_ARRAY_DIVISOR:
+      if (!IsWebGL2() &&
+          !IsExtensionEnabled(WebGLExtensionID::ANGLE_instanced_arrays)) {
+        ret = {};
+      }
       break;
   }
 
-  ErrorInvalidEnumInfo("pname", pname);
-  return Nothing();
+  if (!ret) {
+    ErrorInvalidEnumInfo("pname", pname);
+  }
+  return ret;
 }
 
 ////////////////////////////////////////
 
-Maybe<webgl::ErrorInfo> CheckVertexAttribPointer(bool webgl2, bool isFuncInt,
-                                                 GLint size, GLenum type,
-                                                 bool normalized,
-                                                 uint32_t stride,
-                                                 uint64_t byteOffset) {
-  if (size < 1 || size > 4) {
-    return Some(
-        webgl::ErrorInfo{LOCAL_GL_INVALID_VALUE, "Invalid element size."});
-  }
-
-  // see WebGL spec section 6.6 "Vertex Attribute Data Stride"
-  if (stride > 255) {
-    return Some(webgl::ErrorInfo{LOCAL_GL_INVALID_VALUE,
-                                 "Negative or too large stride."});
+Result<webgl::VertAttribPointerCalculated, webgl::ErrorInfo>
+CheckVertexAttribPointer(const bool isWebgl2,
+                         const webgl::VertAttribPointerDesc& desc) {
+  if (desc.channels < 1 || desc.channels > 4) {
+    return Err(webgl::ErrorInfo{LOCAL_GL_INVALID_VALUE,
+                                "Channel count `size` must be within [1,4]."});
   }
 
   ////
 
+  webgl::VertAttribPointerCalculated calc;
+
   bool isTypeValid = true;
-  uint8_t typeAlignment;
-  switch (type) {
+  bool isPackedType = false;
+  uint8_t bytesPerType = 0;
+  switch (desc.type) {
     // WebGL 1:
     case LOCAL_GL_BYTE:
+      bytesPerType = 1;
+      calc.baseType = webgl::AttribBaseType::Int;
+      break;
     case LOCAL_GL_UNSIGNED_BYTE:
-      typeAlignment = 1;
+      bytesPerType = 1;
+      calc.baseType = webgl::AttribBaseType::Uint;
       break;
 
     case LOCAL_GL_SHORT:
+      bytesPerType = 2;
+      calc.baseType = webgl::AttribBaseType::Int;
+      break;
     case LOCAL_GL_UNSIGNED_SHORT:
-      typeAlignment = 2;
+      bytesPerType = 2;
+      calc.baseType = webgl::AttribBaseType::Uint;
       break;
 
     case LOCAL_GL_FLOAT:
-      if (isFuncInt) {
-        isTypeValid = false;
-      }
-      typeAlignment = 4;
+      bytesPerType = 4;
+      calc.baseType = webgl::AttribBaseType::Float;
       break;
 
     // WebGL 2:
     case LOCAL_GL_INT:
+      isTypeValid = isWebgl2;
+      bytesPerType = 4;
+      calc.baseType = webgl::AttribBaseType::Int;
+      break;
     case LOCAL_GL_UNSIGNED_INT:
-      if (!webgl2) {
-        isTypeValid = false;
-      }
-      typeAlignment = 4;
+      isTypeValid = isWebgl2;
+      bytesPerType = 4;
+      calc.baseType = webgl::AttribBaseType::Uint;
       break;
 
     case LOCAL_GL_HALF_FLOAT:
-      if (isFuncInt || !webgl2) {
-        isTypeValid = false;
-      }
-      typeAlignment = 2;
+      isTypeValid = isWebgl2;
+      bytesPerType = 2;
+      calc.baseType = webgl::AttribBaseType::Float;
       break;
 
     case LOCAL_GL_FIXED:
-      if (isFuncInt || !webgl2) {
-        isTypeValid = false;
-      }
-      typeAlignment = 4;
+      isTypeValid = isWebgl2;
+      bytesPerType = 4;
+      calc.baseType = webgl::AttribBaseType::Float;
       break;
 
     case LOCAL_GL_INT_2_10_10_10_REV:
     case LOCAL_GL_UNSIGNED_INT_2_10_10_10_REV:
-      if (isFuncInt || !webgl2) {
-        isTypeValid = false;
-        break;
+      if (desc.channels != 4) {
+        return Err(webgl::ErrorInfo{LOCAL_GL_INVALID_OPERATION,
+                                    "Size must be 4 for this type."});
       }
-      if (size != 4) {
-        return Some(webgl::ErrorInfo{LOCAL_GL_INVALID_OPERATION,
-                                     "Size must be 4 for this type."});
-      }
-      typeAlignment = 4;
+      isTypeValid = isWebgl2;
+      bytesPerType = 4;
+      calc.baseType =
+          webgl::AttribBaseType::Float;  // Invalid for intFunc:true.
+      isPackedType = true;
       break;
 
     default:
       isTypeValid = false;
       break;
   }
+  if (desc.intFunc) {
+    isTypeValid = (calc.baseType != webgl::AttribBaseType::Float);
+  } else {
+    calc.baseType = webgl::AttribBaseType::Float;
+  }
   if (!isTypeValid) {
     const auto info =
-        nsPrintfCString("Bad `type`: %s", EnumString(type).c_str());
-    return Some(webgl::ErrorInfo{LOCAL_GL_INVALID_ENUM, info.BeginReading()});
+        nsPrintfCString("Bad `type`: %s", EnumString(desc.type).c_str());
+    return Err(webgl::ErrorInfo{LOCAL_GL_INVALID_ENUM, info.BeginReading()});
   }
 
   ////
 
-  // `alignment` should always be a power of two.
-  MOZ_ASSERT(IsPowerOfTwo(typeAlignment));
-  const auto typeAlignmentMask = typeAlignment - 1;
+  calc.byteSize = bytesPerType;
+  if (!isPackedType) {
+    calc.byteSize *= desc.channels;
+  }
 
-  if (stride & typeAlignmentMask || byteOffset & typeAlignmentMask) {
-    return Some(
+  calc.byteStride =
+      desc.byteStrideOrZero ? desc.byteStrideOrZero : calc.byteSize;
+
+  // `alignment` should always be a power of two.
+  MOZ_ASSERT(IsPowerOfTwo(bytesPerType));
+  const auto typeAlignmentMask = bytesPerType - 1;
+
+  if (calc.byteStride & typeAlignmentMask ||
+      desc.byteOffset & typeAlignmentMask) {
+    return Err(
         webgl::ErrorInfo{LOCAL_GL_INVALID_OPERATION,
                          "`stride` and `byteOffset` must satisfy the alignment"
                          " requirement of `type`."});
   }
 
-  return {};
+  return calc;
 }
 
-void WebGLContext::VertexAttribPointer(bool isFuncInt, GLuint index, GLint size,
-                                       GLenum type, bool normalized,
-                                       uint32_t stride, uint64_t byteOffset) {
+void DoVertexAttribPointer(GLContext& gl, const uint32_t index,
+                           const webgl::VertAttribPointerDesc& desc) {
+  if (desc.intFunc) {
+    gl.fVertexAttribIPointer(index, desc.channels, desc.type,
+                             desc.byteStrideOrZero,
+                             reinterpret_cast<const void*>(desc.byteOffset));
+  } else {
+    gl.fVertexAttribPointer(index, desc.channels, desc.type, desc.normalized,
+                            desc.byteStrideOrZero,
+                            reinterpret_cast<const void*>(desc.byteOffset));
+  }
+}
+
+void WebGLContext::VertexAttribPointer(
+    const uint32_t index, const webgl::VertAttribPointerDesc& desc) {
   if (IsContextLost()) return;
   if (!ValidateAttribIndex(*this, index)) return;
 
-  const auto err = CheckVertexAttribPointer(IsWebGL2(), isFuncInt, size, type,
-                                            normalized, stride, byteOffset);
-  if (err) {
-    GenerateError(err->type, "%s", err->info.c_str());
+  const auto res = CheckVertexAttribPointer(IsWebGL2(), desc);
+  if (res.isErr()) {
+    const auto& err = res.inspectErr();
+    GenerateError(err.type, "%s", err.info.c_str());
     return;
   }
+  const auto& calc = res.inspect();
 
   ////
 
   const auto& buffer = mBoundArrayBuffer;
-  if (!buffer && byteOffset) {
-    byteOffset = 0;
-  }
 
-  ////
+  mBoundVertexArray->AttribPointer(index, buffer, desc, calc);
 
-  WebGLVertexAttribData& vd = mBoundVertexArray->mAttribs[index];
-  vd.VertexAttribPointer(isFuncInt, buffer, AutoAssertCast(size), type,
-                         normalized, stride, byteOffset);
-  vd.DoVertexAttribPointer(gl, index);
-  mBoundVertexArray->InvalidateCaches();
+  const ScopedLazyBind lazyBind(gl, LOCAL_GL_ARRAY_BUFFER, buffer);
+  DoVertexAttribPointer(*gl, index, desc);
 }
 
 ////////////////////////////////////////
@@ -306,9 +303,7 @@ void WebGLContext::VertexAttribDivisor(GLuint index, GLuint divisor) {
   if (!ValidateAttribIndex(*this, index)) return;
 
   MOZ_ASSERT(mBoundVertexArray);
-  mBoundVertexArray->mAttribs[index].mDivisor = divisor;
-  mBoundVertexArray->InvalidateCaches();
-
+  mBoundVertexArray->AttribDivisor(index, divisor);
   gl->fVertexAttribDivisor(index, divisor);
 }
 

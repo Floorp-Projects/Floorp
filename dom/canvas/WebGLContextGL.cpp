@@ -8,7 +8,6 @@
 
 #include "WebGLContextUtils.h"
 #include "WebGLBuffer.h"
-#include "WebGLVertexAttribData.h"
 #include "WebGLShader.h"
 #include "WebGLProgram.h"
 #include "WebGLFormats.h"

@@ -123,9 +123,6 @@ struct LinkedProgramInfo final : public RefCounted<LinkedProgramInfo>,
  private:
   mutable CachedDrawFetchLimits mScratchFetchLimits;
 
-  mutable CacheWeakMap<const WebGLVertexArray*, CachedDrawFetchLimits>
-      mDrawFetchCache;
-
  public:
   const CachedDrawFetchLimits* GetDrawFetchLimits() const;
 
