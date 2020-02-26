@@ -1445,7 +1445,6 @@ void JSContext::setPendingException(HandleValue v, HandleSavedFrame stack) {
   this->throwing = true;
   this->unwrappedException() = v;
   this->unwrappedExceptionStack() = stack;
-  check(v);
 }
 
 void JSContext::setPendingExceptionAndCaptureStack(HandleValue value) {

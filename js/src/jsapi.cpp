@@ -4941,7 +4941,9 @@ JS_PUBLIC_API void JS_SetPendingException(JSContext* cx, HandleValue value,
                                           JS::ExceptionStackBehavior behavior) {
   AssertHeapIsIdle();
   CHECK_THREAD(cx);
-  cx->releaseCheck(value);
+  // We don't check the compartment of `value` here, because we're not
+  // doing anything with it other than storing it, and stored
+  // exception values can be in an abitrary compartment.
 
   if (behavior == JS::ExceptionStackBehavior::Capture) {
     cx->setPendingExceptionAndCaptureStack(value);
@@ -4960,8 +4962,11 @@ JS_PUBLIC_API void JS::SetPendingExceptionAndStack(JSContext* cx,
                                                    HandleObject stack) {
   AssertHeapIsIdle();
   CHECK_THREAD(cx);
-  cx->releaseCheck(value);
-  cx->releaseCheck(stack);
+  // We don't check the compartments of `value` and `stack` here,
+  // because we're not doing anything with them other than storing
+  // them, and stored exception values can be in an abitrary
+  // compartment while stored stack values are always the unwrapped
+  // object anyway.
 
   RootedSavedFrame nstack(cx);
   if (stack) {
