@@ -32,7 +32,7 @@ def test_parse_defaults(parse):
 
     # invalid defaults
     with pytest.raises(ValueError):
-        parse('defaults-invalid.list')
+        parse('invalid-defaults.list')
 
 
 if __name__ == '__main__':
