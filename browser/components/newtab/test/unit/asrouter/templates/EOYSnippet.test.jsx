@@ -30,6 +30,7 @@ describe("EOYSnippet", () => {
       provider,
       onAction: sandbox.stub(),
       onBlock: sandbox.stub(),
+      sendClick: sandbox.stub(),
     };
     const comp = mount(<EOYSnippet {...props} />);
     // Check schema with the final props the component receives (including defaults)
@@ -62,6 +63,10 @@ describe("EOYSnippet", () => {
 
   it("should render 4 donation options", () => {
     assert.lengthOf(wrapper.find("input[type='radio']"), 4);
+  });
+
+  it("should have a data-metric field", () => {
+    assert.ok(wrapper.find("form[data-metric='EOYSnippetForm']"));
   });
 
   it("should select the second donation option", () => {
@@ -101,6 +106,19 @@ describe("EOYSnippet", () => {
     wrapper.find("form").simulate("submit");
 
     assert.notCalled(onBlockStub);
+  });
+
+  it("should report form submissions", () => {
+    wrapper = mountAndCheckProps();
+    const { sendClick } = wrapper.props();
+
+    wrapper.find("form").simulate("submit");
+
+    assert.calledOnce(sendClick);
+    assert.equal(
+      sendClick.firstCall.args[0].target.dataset.metric,
+      "EOYSnippetForm"
+    );
   });
 
   it("it should preserve URL GET params as hidden inputs", () => {
