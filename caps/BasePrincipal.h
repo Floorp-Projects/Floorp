@@ -132,6 +132,7 @@ class BasePrincipal : public nsJSPrincipals {
   NS_IMETHOD GetHost(nsACString& aRes) override;
   NS_IMETHOD GetPrepath(nsACString& aResult) override;
   NS_IMETHOD GetOriginSuffix(nsACString& aOriginSuffix) final;
+  NS_IMETHOD GetIsIpAddress(bool* aIsIpAddress) override;
   NS_IMETHOD GetIsOnion(bool* aIsOnion) override;
   NS_IMETHOD GetIsInIsolatedMozBrowserElement(
       bool* aIsInIsolatedMozBrowserElement) final;
