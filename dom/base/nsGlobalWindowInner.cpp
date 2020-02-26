@@ -1080,6 +1080,7 @@ void nsGlobalWindowInner::FreeInnerObjects() {
   mChromeEventHandler = nullptr;
 
   if (mListenerManager) {
+    mListenerManager->RemoveAllListeners();
     mListenerManager->Disconnect();
     mListenerManager = nullptr;
   }
