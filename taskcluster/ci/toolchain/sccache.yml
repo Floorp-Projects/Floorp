@@ -23,7 +23,7 @@ linux64-sccache:
         toolchain-artifact: public/build/sccache.tar.xz
     fetches:
         toolchain:
-            - linux64-rust-1.39
+            - linux64-rust-1.41
             - linux64-binutils
 
 macosx64-sccache:
