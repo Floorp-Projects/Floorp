@@ -210,8 +210,8 @@ class BrowserTestUtilsChild extends JSWindowActorChild {
 
       case "BrowserTestUtils:CrashFrame": {
         // This is to intentionally crash the frame.
-        // We crash by using js-ctypes and dereferencing
-        // a bad pointer. The crash should happen immediately
+        // We crash by using js-ctypes. The crash
+        // should happen immediately
         // upon loading this frame script.
 
         const { ctypes } = ChromeUtils.import(
@@ -220,9 +220,40 @@ class BrowserTestUtilsChild extends JSWindowActorChild {
 
         let dies = function() {
           ChromeUtils.privateNoteIntentionalCrash();
-          let zero = new ctypes.intptr_t(8);
-          let badptr = ctypes.cast(zero, ctypes.PointerType(ctypes.int32_t));
-          badptr.contents;
+
+          switch (aMessage.data.crashType) {
+            case "CRASH_OOM": {
+              // Allocate waaaaaay too much memory to encourage the system
+              // to crash with an OOM.
+              const OS = ChromeUtils.import(
+                "resource://gre/modules/osfile/osfile_shared_allthreads.jsm"
+              );
+              let lib = OS.Constants.Win
+                ? ctypes.open("mozglue")
+                : ctypes.open(OS.Constants.Path.libxul);
+              let moz_xmalloc = lib.declare(
+                "moz_xmalloc",
+                ctypes.default_abi,
+                /* return type */ ctypes.voidptr_t,
+                /* size */ ctypes.size_t
+              );
+              let max_value = ctypes.cast(ctypes.ssize_t(-1), ctypes.size_t);
+              moz_xmalloc(max_value);
+              moz_xmalloc(max_value);
+              moz_xmalloc(max_value);
+              break;
+            }
+            case "CRASH_INVALID_POINTER_DEREF": // Fallthrough
+            default: {
+              // Dereference a bad pointer.
+              let zero = new ctypes.intptr_t(8);
+              let badptr = ctypes.cast(
+                zero,
+                ctypes.PointerType(ctypes.int32_t)
+              );
+              badptr.contents;
+            }
+          }
         };
 
         dump("\nEt tu, Brute?\n");
