@@ -35,6 +35,13 @@ class ScriptFlagBase {
   }
   void setFlag(EnumType flag) { flags_ |= static_cast<uint32_t>(flag); }
   void clearFlag(EnumType flag) { flags_ &= ~static_cast<uint32_t>(flag); }
+  void setFlag(EnumType flag, bool b) {
+    if (b) {
+      setFlag(flag);
+    } else {
+      clearFlag(flag);
+    }
+  }
 
   operator uint32_t() const { return flags_; }
 };
