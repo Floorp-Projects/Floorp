@@ -2279,7 +2279,7 @@ ArenaListSegment ArenasToUpdate::getArenasToUpdate(
   return {begin, last->next};
 }
 
-struct UpdatePointersTask : public GCParallelTaskHelper<UpdatePointersTask> {
+struct UpdatePointersTask : public GCParallelTask {
   // Maximum number of arenas to update in one block.
 #ifdef DEBUG
   static const unsigned MaxArenasToProcess = 16;
@@ -2289,12 +2289,12 @@ struct UpdatePointersTask : public GCParallelTaskHelper<UpdatePointersTask> {
 
   UpdatePointersTask(GCRuntime* gc, ArenasToUpdate* source,
                      AutoLockHelperThreadState& lock)
-      : GCParallelTaskHelper(gc), source_(source) {
+      : GCParallelTask(gc), source_(source) {
     arenas_.begin = nullptr;
     arenas_.end = nullptr;
   }
 
-  void run();
+  void run() override;
 
  private:
   ArenasToUpdate* source_;
@@ -3648,17 +3648,28 @@ void ArenaLists::checkEmptyArenaList(AllocKind kind) {
 }
 
 class MOZ_RAII js::gc::AutoRunParallelTask : public GCParallelTask {
+  using TaskFunc = void (*)(GCParallelTask*);
+
+  TaskFunc func_;
   gcstats::PhaseKind phase_;
   AutoLockHelperThreadState& lock_;
 
  public:
   AutoRunParallelTask(GCRuntime* gc, TaskFunc func, gcstats::PhaseKind phase,
                       AutoLockHelperThreadState& lock)
-      : GCParallelTask(gc, func), phase_(phase), lock_(lock) {
+      : GCParallelTask(gc), func_(func), phase_(phase), lock_(lock) {
     gc->startTask(*this, phase_, lock_);
   }
 
   ~AutoRunParallelTask() { gc->joinTask(*this, phase_, lock_); }
+
+  void run() override {
+    // The hazard analysis can't tell what the call to func_ will do but it's
+    // not allowed to GC.
+    JS::AutoSuppressGCAnalysis nogc;
+
+    func_(this);
+  }
 };
 
 void GCRuntime::purgeRuntimeForMinorGC() {
@@ -4854,8 +4865,7 @@ IncrementalProgress GCRuntime::endMarkingSweepGroup(JSFreeOp* fop,
 }
 
 // Causes the given WeakCache to be swept when run.
-class ImmediateSweepWeakCacheTask
-    : public GCParallelTaskHelper<ImmediateSweepWeakCacheTask> {
+class ImmediateSweepWeakCacheTask : public GCParallelTask {
   Zone* zone;
   JS::detail::WeakCacheBase& cache;
 
@@ -4864,14 +4874,14 @@ class ImmediateSweepWeakCacheTask
  public:
   ImmediateSweepWeakCacheTask(GCRuntime* gc, Zone* zone,
                               JS::detail::WeakCacheBase& wc)
-      : GCParallelTaskHelper(gc), zone(zone), cache(wc) {}
+      : GCParallelTask(gc), zone(zone), cache(wc) {}
 
   ImmediateSweepWeakCacheTask(ImmediateSweepWeakCacheTask&& other)
-      : GCParallelTaskHelper(std::move(other)),
+      : GCParallelTask(std::move(other)),
         zone(other.zone),
         cache(other.cache) {}
 
-  void run() {
+  void run() override {
     AutoSetThreadIsSweeping threadIsSweeping(zone);
     cache.sweep();
   }
@@ -5666,8 +5676,7 @@ class js::gc::WeakCacheSweepIterator {
   }
 };
 
-class IncrementalSweepWeakCacheTask
-    : public GCParallelTaskHelper<IncrementalSweepWeakCacheTask> {
+class IncrementalSweepWeakCacheTask : public GCParallelTask {
   WeakCacheSweepIterator& work_;
   SliceBudget& budget_;
   AutoLockHelperThreadState& lock_;
@@ -5677,7 +5686,7 @@ class IncrementalSweepWeakCacheTask
   IncrementalSweepWeakCacheTask(GCRuntime* gc, WeakCacheSweepIterator& work,
                                 SliceBudget& budget,
                                 AutoLockHelperThreadState& lock)
-      : GCParallelTaskHelper(gc),
+      : GCParallelTask(gc),
         work_(work),
         budget_(budget),
         lock_(lock),
@@ -5690,7 +5699,7 @@ class IncrementalSweepWeakCacheTask
     gc->joinTask(*this, gcstats::PhaseKind::SWEEP_WEAK_CACHES, lock_);
   }
 
-  void run() {
+  void run() override {
     do {
       JS::detail::WeakCacheBase* cache = item_.cache;
       AutoSetThreadIsSweeping threadIsSweeping(item_.zone);
