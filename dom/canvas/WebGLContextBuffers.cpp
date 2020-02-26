@@ -141,7 +141,7 @@ void WebGLContext::BindBuffer(GLenum target, WebGLBuffer* buffer) {
 
   if (buffer && !buffer->ValidateCanBindToTarget(target)) return;
 
-  if (!IsVirtualBufferTarget(target)) {
+  if (!IsBufferTargetLazilyBound(target)) {
     gl->fBindBuffer(target, buffer ? buffer->mGLName : 0);
   }
 

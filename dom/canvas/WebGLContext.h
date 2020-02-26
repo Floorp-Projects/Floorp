@@ -117,6 +117,7 @@ class ShaderValidator;
 class TexUnpackBlob;
 struct UniformInfo;
 struct UniformBlockInfo;
+struct VertAttribPointerDesc;
 }  // namespace webgl
 
 struct WebGLTexImageData {
@@ -813,11 +814,8 @@ class WebGLContext : public VRefCounted, public SupportsWeakPtr<WebGLContext> {
 
   ////
 
-  void VertexAttribPointer(bool isFuncInt, GLuint index, GLint size,
-                           GLenum type, bool normalized, uint32_t stride,
-                           uint64_t byteOffset);
+  void VertexAttribPointer(uint32_t index, const webgl::VertAttribPointerDesc&);
 
- public:
   void VertexAttribDivisor(GLuint index, GLuint divisor);
 
  private:
@@ -1333,14 +1331,33 @@ class ScopedFBRebinder final {
   ~ScopedFBRebinder();
 };
 
+// -
+
+constexpr inline bool IsBufferTargetLazilyBound(const GLenum target) {
+  return target != LOCAL_GL_ELEMENT_ARRAY_BUFFER;
+}
+
+void DoBindBuffer(gl::GLContext&, GLenum target, const WebGLBuffer*);
+
 class ScopedLazyBind final {
  private:
-  gl::GLContext* const mGL;
+  gl::GLContext& mGL;
   const GLenum mTarget;
 
  public:
-  ScopedLazyBind(gl::GLContext* gl, GLenum target, const WebGLBuffer* buf);
-  ~ScopedLazyBind();
+  ScopedLazyBind(gl::GLContext* const gl, const GLenum target,
+                 const WebGLBuffer* const buf)
+      : mGL(*gl), mTarget(IsBufferTargetLazilyBound(target) ? target : 0) {
+    if (mTarget) {
+      DoBindBuffer(mGL, mTarget, buf);
+    }
+  }
+
+  ~ScopedLazyBind() {
+    if (mTarget) {
+      DoBindBuffer(mGL, mTarget, nullptr);
+    }
+  }
 };
 
 ////

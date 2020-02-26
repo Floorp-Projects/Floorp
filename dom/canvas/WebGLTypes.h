@@ -628,6 +628,7 @@ struct ActiveInfo {
 
 struct ActiveAttribInfo final : public ActiveInfo {
   int32_t location = -1;
+  AttribBaseType baseType = AttribBaseType::Float;
 };
 
 struct ActiveUniformInfo final : public ActiveInfo {
@@ -676,6 +677,21 @@ struct TypedQuad final {
 struct GetUniformData final {
   alignas(alignof(float)) uint8_t data[4 * 4 * sizeof(float)] = {};
   GLenum type = 0;
+};
+
+struct VertAttribPointerDesc final {
+  bool intFunc = false;
+  uint8_t channels = 4;
+  bool normalized = false;
+  uint8_t byteStrideOrZero = 0;
+  GLenum type = LOCAL_GL_FLOAT;
+  uint64_t byteOffset = 0;
+};
+
+struct VertAttribPointerCalculated final {
+  uint8_t byteSize = 4 * 4;
+  uint8_t byteStride = 4 * 4;  // at-most 255
+  webgl::AttribBaseType baseType = webgl::AttribBaseType::Float;
 };
 
 }  // namespace webgl
@@ -855,6 +871,15 @@ inline typename C::mapped_type Find(
 
 // -
 
+template <typename T, typename U>
+inline Maybe<T> MaybeAs(const U val) {
+  const auto checked = CheckedInt<T>(val);
+  if (!checked.isValid()) return {};
+  return Some(checked.value());
+}
+
+// -
+
 inline GLenum ImageToTexTarget(const GLenum imageTarget) {
   switch (imageTarget) {
     case LOCAL_GL_TEXTURE_CUBE_MAP_NEGATIVE_X:
@@ -946,11 +971,8 @@ Maybe<webgl::ErrorInfo> CheckFramebufferAttach(const GLenum bindImageTarget,
                                                const uint32_t zLayerCount,
                                                const webgl::Limits& limits);
 
-Maybe<webgl::ErrorInfo> CheckVertexAttribPointer(bool webgl2, bool isFuncInt,
-                                                 GLint size, GLenum type,
-                                                 bool normalized,
-                                                 uint32_t stride,
-                                                 uint64_t byteOffset);
+Result<webgl::VertAttribPointerCalculated, webgl::ErrorInfo>
+CheckVertexAttribPointer(bool isWebgl2, const webgl::VertAttribPointerDesc&);
 
 uint8_t ElemTypeComponents(GLenum elemType);
 

@@ -24,7 +24,6 @@
 #include "WebGLTexture.h"
 #include "WebGLValidateStrings.h"
 #include "WebGLVertexArray.h"
-#include "WebGLVertexAttribData.h"
 
 #if defined(MOZ_WIDGET_COCOA)
 #  include "nsCocoaFeatures.h"
@@ -575,7 +574,6 @@ bool WebGLContext::InitAndValidateGL(FailureReason* const out_failReason) {
   // vertex array object (the name zero) is also deprecated. [...]"
   mDefaultVertexArray = WebGLVertexArray::Create(this);
   mDefaultVertexArray->BindVertexArray();
-  mDefaultVertexArray->mAttribs.resize(limits.maxVertexAttribs);
 
   mPixelStore.mFlipY = false;
   mPixelStore.mPremultiplyAlpha = false;

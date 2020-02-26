@@ -3839,23 +3839,39 @@ void ClientWebGLContext::VertexAttribDivisor(GLuint index, GLuint divisor) {
 // -
 
 void ClientWebGLContext::VertexAttribPointerImpl(bool isFuncInt, GLuint index,
-                                                 GLint size, GLenum type,
+                                                 GLint rawChannels, GLenum type,
                                                  bool normalized,
-                                                 GLsizei iStride,
-                                                 WebGLintptr iByteOffset) {
+                                                 GLsizei rawByteStrideOrZero,
+                                                 WebGLintptr rawByteOffset) {
   const FuncScope funcScope(*this, "vertexAttribI?Pointer");
   if (IsContextLost()) return;
   auto& state = State();
 
-  if (!ValidateNonNegative("stride", iStride)) return;
-  if (!ValidateNonNegative("byteOffset", iByteOffset)) return;
-  const auto stride = static_cast<uint64_t>(iStride);
-  const auto byteOffset = static_cast<uint64_t>(iByteOffset);
+  const auto channels = MaybeAs<uint8_t>(rawChannels);
+  if (!channels) {
+    EnqueueError(LOCAL_GL_INVALID_VALUE,
+                 "Channel count `size` must be within [1,4].");
+    return;
+  }
 
-  const auto err = CheckVertexAttribPointer(mIsWebGL2, isFuncInt, size, type,
-                                            normalized, stride, byteOffset);
-  if (err) {
-    EnqueueError(err->type, "%s", err->info.c_str());
+  const auto byteStrideOrZero = MaybeAs<uint8_t>(rawByteStrideOrZero);
+  if (!byteStrideOrZero) {
+    EnqueueError(LOCAL_GL_INVALID_VALUE, "`stride` must be within [0,255].");
+    return;
+  }
+
+  if (!ValidateNonNegative("byteOffset", rawByteOffset)) return;
+  const auto byteOffset = static_cast<uint64_t>(rawByteOffset);
+
+  // -
+
+  const webgl::VertAttribPointerDesc desc{
+      isFuncInt, *channels, normalized, *byteStrideOrZero, type, byteOffset};
+
+  const auto res = CheckVertexAttribPointer(mIsWebGL2, desc);
+  if (res.isErr()) {
+    const auto& err = res.inspectErr();
+    EnqueueError(err.type, "%s", err.info.c_str());
     return;
   }
 
@@ -3872,8 +3888,7 @@ void ClientWebGLContext::VertexAttribPointerImpl(bool isFuncInt, GLuint index,
                         "If ARRAY_BUFFER is null, byteOffset must be zero.");
   }
 
-  Run<RPROC(VertexAttribPointer)>(isFuncInt, index, size, type, normalized,
-                                  stride, byteOffset);
+  Run<RPROC(VertexAttribPointer)>(index, desc);
 
   list[index] = buffer;
 }
