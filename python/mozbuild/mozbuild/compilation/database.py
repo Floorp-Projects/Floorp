@@ -85,13 +85,11 @@ class CompileDBBackend(CommonBackend):
 
         db = []
 
-        for (directory, filename, unified), cmd in self._db.iteritems():
+        for (directory, filename), cmd in self._db.iteritems():
             env = self._envs[directory]
             cmd = list(cmd)
-            if unified is None:
-                cmd.append(filename)
-            else:
-                cmd.append(unified)
+            cmd.append(filename)
+
             variables = {
                 'DIST': mozpath.join(env.topobjdir, 'dist'),
                 'DEPTH': env.topobjdir,
@@ -143,20 +141,10 @@ class CompileDBBackend(CommonBackend):
             json.dump(db, jsonout, indent=0)
 
     def _process_unified_sources(self, obj):
-        if not obj.have_unified_mapping:
-            for f in list(sorted(obj.files)):
-                self._build_db_line(obj.objdir, obj.relsrcdir, obj.config, f,
-                                    obj.canonical_suffix)
-            return
-
-        # For unified sources, only include the unified source file.
-        # Note that unified sources are never used for host sources.
-        for f in obj.unified_source_mapping:
-            self._build_db_line(obj.objdir, obj.relsrcdir, obj.config, f[0],
+        for f in list(sorted(obj.files)):
+            self._build_db_line(obj.objdir, obj.relsrcdir, obj.config, f,
                                 obj.canonical_suffix)
-            for entry in f[1]:
-                self._build_db_line(obj.objdir, obj.relsrcdir, obj.config,
-                                    entry, obj.canonical_suffix, unified=f[0])
+        return
 
     def _handle_idl_manager(self, idl_manager):
         pass
@@ -189,10 +177,10 @@ class CompileDBBackend(CommonBackend):
     }
 
     def _build_db_line(self, objdir, reldir, cenv, filename,
-                       canonical_suffix, unified=None):
+                       canonical_suffix):
         if canonical_suffix not in self.COMPILERS:
             return
-        db = self._db.setdefault((objdir, filename, unified),
+        db = self._db.setdefault((objdir, filename),
                                  cenv.substs[self.COMPILERS[canonical_suffix]].split() +
                                  ['-o', '/dev/null', '-c'])
         reldir = reldir or mozpath.relpath(objdir, cenv.topobjdir)
