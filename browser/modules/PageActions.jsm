@@ -1269,7 +1269,7 @@ if (SiteSpecificBrowserService.isEnabled) {
   gBuiltInActions.push({
     id: "launchSSB",
     // Hardcoded for now. Localization tracked in bug 1602528.
-    title: "Launch Site Specific Browser",
+    title: "Install Website as App",
     onLocationChange(browserWindow) {
       browserPageActions(browserWindow).launchSSB.updateState();
     },
