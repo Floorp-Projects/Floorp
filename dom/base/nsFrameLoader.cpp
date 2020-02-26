@@ -3066,6 +3066,19 @@ nsIFrame* nsFrameLoader::GetDetachedSubdocFrame(
 }
 
 void nsFrameLoader::ApplySandboxFlags(uint32_t sandboxFlags) {
+  // If our BrowsingContext doesn't exist yet, it means we haven't been
+  // initialized yet. This method will be called again once we're initialized
+  // from MaybeCreateDocShell. <iframe> BrowsingContexts are never created as
+  // initially remote, so we don't need to worry about updating sandbox flags
+  // for an uninitialized initially-remote iframe.
+  BrowsingContext* context = GetExtantBrowsingContext();
+  if (!context) {
+    MOZ_ASSERT(!IsRemoteFrame(),
+               "cannot apply sandbox flags to an uninitialized "
+               "initially-remote frame");
+    return;
+  }
+
   uint32_t parentSandboxFlags = mOwnerContent->OwnerDoc()->GetSandboxFlags();
 
   // The child can only add restrictions, never remove them.
@@ -3082,9 +3095,8 @@ void nsFrameLoader::ApplySandboxFlags(uint32_t sandboxFlags) {
       sandboxFlags |= SANDBOXED_AUXILIARY_NAVIGATION;
     }
   }
-  if (BrowsingContext* context = GetBrowsingContext()) {
-    context->SetSandboxFlags(sandboxFlags);
-  }
+
+  context->SetSandboxFlags(sandboxFlags);
 }
 
 /* virtual */
