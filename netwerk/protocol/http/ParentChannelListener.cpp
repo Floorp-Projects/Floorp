@@ -150,9 +150,7 @@ ParentChannelListener::GetInterface(const nsIID& aIID, void** result) {
     return QueryInterface(aIID, result);
   }
 
-  if (aIID.Equals(NS_GET_IID(nsIAuthPromptProvider)) ||
-      aIID.Equals(NS_GET_IID(nsISecureBrowserUI)) ||
-      aIID.Equals(NS_GET_IID(nsIRemoteTab))) {
+  if (aIID.Equals(NS_GET_IID(nsIAuthPromptProvider))) {
     if (mBrowserParent) {
       return mBrowserParent->QueryInterface(aIID, result);
     }
