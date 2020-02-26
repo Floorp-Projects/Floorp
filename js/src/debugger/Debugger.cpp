@@ -500,7 +500,6 @@ Debugger::Debugger(JSContext* cx, NativeObject* dbg)
       frames(cx->zone()),
       generatorFrames(cx),
       scripts(cx),
-      lazyScripts(cx),
       sources(cx),
       objects(cx),
       environments(cx),
@@ -3518,7 +3517,6 @@ inline void Debugger::forEachWeakMap(const F& f) {
   f(objects);
   f(environments);
   f(scripts);
-  f(lazyScripts);
   f(sources);
   f(wasmInstanceScripts);
   f(wasmInstanceSources);
@@ -3616,7 +3614,7 @@ bool DebugAPI::edgeIsInDebuggerWeakmap(JSRuntime* rt, JSObject* src,
         },
         [=](LazyScript* lazy) {
           return dst.is<LazyScript>() && lazy == &dst.as<LazyScript>() &&
-                 dbg->lazyScripts.hasEntry(lazy, src);
+                 dbg->scripts.hasEntry(lazy, src);
         },
         [=](WasmInstanceObject* instance) {
           return dst.is<JSObject>() && instance == &dst.as<JSObject>() &&
@@ -6156,7 +6154,7 @@ DebuggerScript* Debugger::wrapVariantReferent(
     // If there is an associated JSScript, this LazyScript is reachable from it,
     // so this LazyScript is canonical.
     untaggedReferent->setWrappedByDebugger();
-    obj = wrapVariantReferent<LazyScript>(cx, lazyScripts, referent);
+    obj = wrapVariantReferent<LazyScript>(cx, scripts, referent);
   } else {
     referent.template as<WasmInstanceObject*>();
     obj = wrapVariantReferent<WasmInstanceObject>(cx, wasmInstanceScripts,
