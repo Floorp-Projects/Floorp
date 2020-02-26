@@ -36,6 +36,8 @@
   margin-block-end: 12px;
 }
 #autofill-credit-card-notification popupnotificationcontent > .desc-message-box > image {
+  -moz-context-properties: fill;
+  fill: currentColor;
   margin-inline-start: 6px;
   width: 16px;
   height: 16px;
