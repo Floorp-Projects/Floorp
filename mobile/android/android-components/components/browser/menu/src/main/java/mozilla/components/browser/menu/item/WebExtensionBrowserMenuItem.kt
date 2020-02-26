@@ -52,7 +52,7 @@ class WebExtensionBrowserMenuItem(
             imageView.contentDescription = it
             labelView.text = it
         }
-        action.badgeText?.let { badgeView.text = it }
+        badgeView.setBadgeText(action.badgeText)
         action.badgeTextColor?.let { badgeView.setTextColor(it) }
         action.badgeBackgroundColor?.let { badgeView.setBackgroundColor(it) }
 
@@ -75,10 +75,7 @@ class WebExtensionBrowserMenuItem(
         action.title?.let {
             labelView.text = it
         }
-
-        action.badgeText?.let {
-            badgeView.text = it
-        }
+        badgeView.setBadgeText(action.badgeText)
 
         labelView.invalidate()
         badgeView.invalidate()
@@ -118,5 +115,17 @@ class WebExtensionBrowserMenuItem(
 
             getDrawable(context, R.drawable.mozac_ic_web_extension_default_icon)
         }
+    }
+}
+
+/**
+ * Sets the badgeText and the visibility of the TextView based on empty/nullability of the badgeText.
+ */
+fun TextView.setBadgeText(badgeText: String?) {
+    if (badgeText.isNullOrEmpty()) {
+        visibility = View.INVISIBLE
+    } else {
+        visibility = View.VISIBLE
+        text = badgeText
     }
 }

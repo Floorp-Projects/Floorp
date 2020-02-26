@@ -43,6 +43,7 @@
         android:id="@+id/badge_text"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:visibility="invisible"
         android:padding="3dp"
         android:textSize="12sp"
         tools:text="18" />

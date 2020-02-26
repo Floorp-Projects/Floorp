@@ -22,6 +22,7 @@ import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.rule.MainCoroutineRule
 import mozilla.components.support.test.whenever
 import org.junit.Assert
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
@@ -29,6 +30,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.notNull
+import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 
 @RunWith(AndroidJUnit4::class)
@@ -124,6 +126,39 @@ class WebExtensionBrowserMenuItemTest {
         verify(badgeView).setText("badgeText")
         verify(badgeView).setTextColor(Color.WHITE)
         verify(badgeView).setBackgroundColor(Color.BLUE)
+    }
+
+    @Test
+    fun `badge text view is invisible if action badge text is empty`() {
+        val icon: Bitmap = mock()
+        val imageView: ImageView = mock()
+        val badgeView: TextView = spy(TextView(testContext))
+        val labelView: TextView = mock()
+        val container = View(testContext)
+        val view: View = mock()
+
+        whenever(view.findViewById<ImageView>(R.id.action_image)).thenReturn(imageView)
+        whenever(view.findViewById<TextView>(R.id.badge_text)).thenReturn(badgeView)
+        whenever(view.findViewById<TextView>(R.id.action_label)).thenReturn(labelView)
+        whenever(view.findViewById<View>(R.id.container)).thenReturn(container)
+        whenever(view.context).thenReturn(testContext)
+
+        val badgeText = ""
+        val browserAction = Action(
+                title = "title",
+                loadIcon = { icon },
+                enabled = true,
+                badgeText = badgeText,
+                badgeTextColor = Color.WHITE,
+                badgeBackgroundColor = Color.BLUE
+        ) {}
+
+        val action = WebExtensionBrowserMenuItem(browserAction) {}
+        action.bind(mock(), view)
+        testDispatcher.advanceUntilIdle()
+
+        verify(badgeView).setBadgeText(badgeText)
+        assertEquals(View.INVISIBLE, badgeView.visibility)
     }
 
     @Test
