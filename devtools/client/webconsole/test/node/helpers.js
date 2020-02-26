@@ -50,7 +50,7 @@ function setupStore(
   }
   const store = configureStore(webConsoleUI, {
     ...storeOptions,
-    thunkArgs: { toolbox: { sessionId: -1 } },
+    sessionId: -1,
     telemetry: new Telemetry(),
   });
 
@@ -140,9 +140,6 @@ function getWebConsoleUiMock(hud, proxyOverrides) {
     releaseActor: proxy.releaseActor,
     getProxy: () => proxy,
     inspectObjectActor: () => {},
-    toolbox: {
-      sessionId: 1,
-    },
   };
 }
 

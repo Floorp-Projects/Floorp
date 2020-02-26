@@ -21,14 +21,14 @@ const {
  * @param {Array<String>} expressionVars: Array of the variables defined in the expression.
  */
 function autocompleteUpdate(force, getterPath, expressionVars) {
-  return async ({ dispatch, getState, toolbox, webConsoleUI, hud }) => {
+  return async ({ dispatch, getState, webConsoleUI, hud }) => {
     if (hud.inputHasSelection()) {
       return dispatch(autocompleteClear());
     }
 
     const inputValue = hud.getInputValue();
     const frameActorId = await webConsoleUI.getFrameActor();
-    const webconsoleFront = await webConsoleUI.getWebconsoleFront({
+    const webConsoleFront = await webConsoleUI.getWebConsoleFront({
       frameActorId,
     });
 
@@ -81,7 +81,7 @@ function autocompleteUpdate(force, getterPath, expressionVars) {
       autocompleteDataFetch({
         input,
         frameActorId,
-        webconsoleFront,
+        webConsoleFront,
         authorizedEvaluations,
         force,
         expressionVars,
@@ -134,16 +134,15 @@ function autocompleteDataFetch({
   input,
   frameActorId,
   force,
-  webconsoleFront,
+  webConsoleFront,
   authorizedEvaluations,
   expressionVars,
 }) {
-  return async ({ dispatch, webConsoleUI }) => {
+  return ({ dispatch, webConsoleUI }) => {
     const selectedNodeActor = webConsoleUI.getSelectedNodeActor();
     const id = generateRequestId();
     dispatch({ type: AUTOCOMPLETE_PENDING_REQUEST, id });
-
-    webconsoleFront
+    webConsoleFront
       .autocomplete(
         input,
         undefined,

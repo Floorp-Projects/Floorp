@@ -12,39 +12,20 @@ class ConsoleCommands {
     this.currentTarget = currentTarget;
   }
 
-  getFrontByID(id) {
-    return this.devToolsClient.getFrontByID(id);
-  }
-
   async evaluateJSAsync(expression, options = {}) {
-    const {
-      selectedNodeFront,
-      selectedThreadFront,
-      frameActor,
-      selectedObjectActor,
-    } = options;
+    const { selectedNodeFront, webConsoleFront, selectedObjectActor } = options;
     let front = this.proxy.webConsoleFront;
 
     // Defer to the selected paused thread front
-    if (frameActor) {
-      const frameFront = this.getFrontByID(frameActor);
-      if (frameFront) {
-        front = await frameFront.targetFront.getFront("console");
-      }
+    if (webConsoleFront) {
+      front = webConsoleFront;
     }
 
-    // NOTE: once we handle the other tasks in console evaluation,
-    // all of the implicit actions like pausing, selecting a frame in the inspector,
-    // etc will update the selected thread and we will no longer need to support these other
-    // cases.
-    if (selectedThreadFront) {
-      front = await selectedThreadFront.targetFront.getFront("console");
-
-      // If there's a selectedObjectActor option, this means the user intend to do a
-      // given action on a specific object, so it should take precedence over selected
-      // node front.
-    } else if (selectedObjectActor) {
-      const objectFront = this.getFrontByID(selectedObjectActor);
+    // If there's a selectedObjectActor option, this means the user intend to do a
+    // given action on a specific object, so it should take precedence over selected
+    // node front.
+    if (selectedObjectActor) {
+      const objectFront = this.devToolsClient.getFrontByID(selectedObjectActor);
       if (objectFront) {
         front = await objectFront.targetFront.getFront("console");
       }

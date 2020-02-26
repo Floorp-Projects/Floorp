@@ -136,12 +136,6 @@ loader.lazyRequireGetter(
 );
 loader.lazyRequireGetter(
   this,
-  "getSelectedThread",
-  "devtools/client/framework/reducers/threads",
-  true
-);
-loader.lazyRequireGetter(
-  this,
   "remoteClientManager",
   "devtools/client/shared/remote-debugging/remote-client-manager.js",
   true
@@ -597,15 +591,6 @@ Toolbox.prototype = {
 
   isBrowserToolbox: function() {
     return this.hostType === Toolbox.HostType.BROWSERTOOLBOX;
-  },
-
-  getSelectedThreadFront: function() {
-    const thread = getSelectedThread(this.store.getState());
-    if (!thread) {
-      return null;
-    }
-
-    return this.target.client.getFrontByID(thread.actor);
   },
 
   _onPausedState: function(packet, threadFront) {
