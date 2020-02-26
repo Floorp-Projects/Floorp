@@ -15,6 +15,11 @@ add_task(async () => {
   );
 
   Assert.equal(tab.parentNode, null, "The tab should have been closed");
-  await getSSB(ssbwin).uninstall();
+  let ssb = getSSB(ssbwin);
+
+  // This title comes from the test_page.html title tag as there is no manifest.
+  Assert.equal(ssb.name, "Test site", "The name should be correct.");
+
+  await ssb.uninstall();
   await BrowserTestUtils.closeWindow(ssbwin);
 });
