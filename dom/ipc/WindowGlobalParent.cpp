@@ -50,18 +50,19 @@ namespace dom {
 
 WindowGlobalParent::WindowGlobalParent(const WindowGlobalInit& aInit,
                                        bool aInProcess)
-    : WindowContext(aInit.browsingContext().get(), aInit.innerWindowId(), {}),
+    : WindowContext(aInit.browsingContext().GetMaybeDiscarded(),
+                    aInit.innerWindowId(), {}),
       mDocumentPrincipal(aInit.principal()),
       mDocumentURI(aInit.documentURI()),
       mInProcess(aInProcess),
       mIsInitialDocument(false),
       mHasBeforeUnload(false) {
   MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess(), "Parent process only");
-  MOZ_RELEASE_ASSERT(mDocumentPrincipal, "Must have a valid principal");
 
-  // NOTE: mBrowsingContext initialized in Init()
-  MOZ_RELEASE_ASSERT(!aInit.browsingContext().IsNullOrDiscarded(),
-                     "Must be made in BrowsingContext");
+  MOZ_RELEASE_ASSERT(
+      BrowsingContext(),
+      "Must be made in BrowsingContext, though it may be discarded");
+  MOZ_RELEASE_ASSERT(mDocumentPrincipal, "Must have a valid principal");
 
   mFields.SetWithoutSyncing<IDX_OuterWindowId>(aInit.outerWindowId());
 }
