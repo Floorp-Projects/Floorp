@@ -218,30 +218,8 @@ const AVAILABLE_UA_OVERRIDES = [
   },
   {
     /*
-     * Bug 1480710 - m.imgur.com - Build UA override
-     * WebCompat issue #13154 - https://webcompat.com/issues/13154
-     *
-     * imgur returns a 404 for requests to CSS and JS file if requested with a Fennec
-     * User Agent. By removing the Fennec identifies and adding Chrome Mobile's, we
-     * receive the correct CSS and JS files.
-     */
-    id: "bug1480710",
-    platform: "android",
-    domain: "m.imgur.com",
-    bug: "1480710",
-    config: {
-      matches: ["*://m.imgur.com/*"],
-      uaTransformer: originalUA => {
-        return (
-          UAHelpers.getPrefix(originalUA) +
-          " AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.85 Mobile Safari/537.36"
-        );
-      },
-    },
-  },
-  {
-    /*
      * Bug 945963 - tieba.baidu.com serves simplified mobile content to Firefox Android
+     * additionally, Bug 1525839 for more domains
      * WebCompat issue #18455 - https://webcompat.com/issues/18455
      *
      * tieba.baidu.com and tiebac.baidu.com serve a heavily simplified and less functional
@@ -254,8 +232,12 @@ const AVAILABLE_UA_OVERRIDES = [
     bug: "945963",
     config: {
       matches: [
+        "*://baike.baidu.com/*",
+        "*://image.baidu.com/*",
+        "*://news.baidu.com/*",
         "*://tieba.baidu.com/*",
         "*://tiebac.baidu.com/*",
+        "*://wenku.baidu.com/*",
         "*://zhidao.baidu.com/*",
       ],
       uaTransformer: originalUA => {
@@ -298,25 +280,6 @@ const AVAILABLE_UA_OVERRIDES = [
       matches: ["*://*.nhk.or.jp/*"],
       uaTransformer: originalUA => {
         return originalUA + " AppleWebKit";
-      },
-    },
-  },
-  {
-    /*
-     * Bug 1338260 - Add UA override for directTV
-     * (Imported from ua-update.json.in)
-     *
-     * DirectTV has issues with scrolling and cut-off images. Pretending to be
-     * Chrome for Android fixes those issues.
-     */
-    id: "bug1338260",
-    platform: "android",
-    domain: "directv.com",
-    bug: "1338260",
-    config: {
-      matches: ["*://*.directv.com/*"],
-      uaTransformer: _ => {
-        return "Mozilla/5.0 (Linux; Android 6.0.1; SM-G920F Build/MMB29K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.91 Mobile Safari/537.36";
       },
     },
   },
@@ -438,25 +401,6 @@ const AVAILABLE_UA_OVERRIDES = [
       matches: ["*://posts.google.com/*"],
       uaTransformer: _ => {
         return "Mozilla/5.0 (Linux; Android 6.0.1; SM-G900M) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.101 Mobile Safari/537.36";
-      },
-    },
-  },
-  {
-    /*
-     * Bug 1567945 - Create UA override for beeg.com on Firefox Android
-     * WebCompat issue #16648 - https://webcompat.com/issues/16648
-     *
-     * beeg.com is hiding content of a page with video if Firefox exists in UA,
-     * replacing "Firefox" with an empty string makes the page load
-     */
-    id: "bug1567945",
-    platform: "android",
-    domain: "beeg.com",
-    bug: "1567945",
-    config: {
-      matches: ["*://beeg.com/*"],
-      uaTransformer: originalUA => {
-        return originalUA.replace(/Firefox.+$/, "");
       },
     },
   },
@@ -644,6 +588,27 @@ const AVAILABLE_UA_OVERRIDES = [
       matches: ["*://*.uniqlo.com/*"],
       uaTransformer: originalUA => {
         return originalUA + " Mobile Safari";
+      },
+    },
+  },
+  {
+    /*
+     * Bug 1442050 - UA overrides for my.nintendo.com
+     * Webcompat issue #12887 - https://webcompat.com/issues/12887
+     *
+     * Nintendo ships a broken version of their mobile interface to mobile
+     * browsers that are not Chrome or Safari. In our tests, appending the
+     * "AppleWebKit" identifier to the UA string results in a version that
+     * works very well.
+     */
+    id: "bug1442050",
+    platform: "android",
+    domain: "nintendo.com",
+    bug: "1442050",
+    config: {
+      matches: ["*://my.nintendo.com/*"],
+      uaTransformer: originalUA => {
+        return originalUA + " AppleWebKit";
       },
     },
   },

@@ -61,6 +61,7 @@ FINAL_TARGET_FILES.features['webcompat@mozilla.org']['injections']['css'] += [
   'injections/css/bug1605611-maps.google.com-directions-time.css',
   'injections/css/bug1609991-cracked.com-flex-basis-fix.css',
   'injections/css/bug1610016-gaana.com-input-position-fix.css',
+  'injections/css/bug1610344-directv.com.co-hide-unsupported-message.css',
 ]
 
 FINAL_TARGET_FILES.features['webcompat@mozilla.org']['injections']['js'] += [
