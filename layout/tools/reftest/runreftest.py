@@ -888,6 +888,10 @@ class RefTest(object):
         cmdargs = []
         self.runApp(options, cmdargs=cmdargs, prefs=prefs)
 
+        if not os.path.isfile(self.testDumpFile):
+            print("Error: parsing manifests failed!")
+            sys.exit(1)
+
         with open(self.testDumpFile, 'r') as fh:
             tests = json.load(fh)
 
