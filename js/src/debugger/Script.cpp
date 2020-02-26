@@ -122,6 +122,11 @@ DebuggerScript* DebuggerScript::create(JSContext* cx, HandleObject proto,
 }
 
 static JSScript* DelazifyScript(JSContext* cx, Handle<BaseScript*> script) {
+  if (script->hasBytecode()) {
+    return static_cast<JSScript*>(script.get());
+  }
+  MOZ_ASSERT(script->isFunction());
+
   // JSFunction::getOrCreateScript requires an enclosing scope. This requires
   // the enclosing script to be non-lazy.
   if (script->hasEnclosingLazyScript()) {
@@ -377,16 +382,19 @@ struct DebuggerScript::GetLineCountMatcher {
   explicit GetLineCountMatcher(JSContext* cx) : cx_(cx), totalLines(0.0) {}
   using ReturnType = bool;
 
-  ReturnType match(HandleScript script) {
-    totalLines = double(GetScriptLineExtent(script));
-    return true;
-  }
-  ReturnType match(Handle<LazyScript*> lazyScript) {
-    RootedScript script(cx_, DelazifyScript(cx_, lazyScript));
+  ReturnType match(Handle<BaseScript*> base) {
+    RootedScript script(cx_, DelazifyScript(cx_, base));
     if (!script) {
       return false;
     }
-    return match(script);
+    totalLines = double(GetScriptLineExtent(script));
+    return true;
+  }
+  ReturnType match(HandleScript script) {
+    return match(static_cast<Handle<BaseScript*>>(script));
+  }
+  ReturnType match(Handle<LazyScript*> lazyScript) {
+    return match(static_cast<Handle<BaseScript*>>(lazyScript));
   }
   ReturnType match(Handle<WasmInstanceObject*> instanceObj) {
     wasm::Instance& instance = instanceObj->instance();
@@ -417,13 +425,15 @@ class DebuggerScript::GetSourceMatcher {
 
   using ReturnType = DebuggerSource*;
 
-  ReturnType match(HandleScript script) {
+  ReturnType match(Handle<BaseScript*> script) {
     RootedScriptSourceObject source(cx_, script->sourceObject());
     return dbg_->wrapSource(cx_, source);
   }
+  ReturnType match(HandleScript script) {
+    return match(static_cast<Handle<BaseScript*>>(script));
+  }
   ReturnType match(Handle<LazyScript*> lazyScript) {
-    RootedScriptSourceObject source(cx_, lazyScript->sourceObject());
-    return dbg_->wrapSource(cx_, source);
+    return match(static_cast<Handle<BaseScript*>>(lazyScript));
   }
   ReturnType match(Handle<WasmInstanceObject*> wasmInstance) {
     return dbg_->wrapWasmSource(cx_, wasmInstance);
@@ -834,7 +844,12 @@ class DebuggerScript::GetPossibleBreakpointsMatcher {
   }
 
   using ReturnType = bool;
-  ReturnType match(HandleScript script) {
+  ReturnType match(Handle<BaseScript*> base) {
+    RootedScript script(cx_, DelazifyScript(cx_, base));
+    if (!script) {
+      return false;
+    }
+
     // Second pass: build the result array.
     result_.set(NewDenseEmptyArray(cx_));
     if (!result_) {
@@ -858,12 +873,11 @@ class DebuggerScript::GetPossibleBreakpointsMatcher {
 
     return true;
   }
+  ReturnType match(HandleScript script) {
+    return match(static_cast<Handle<BaseScript*>>(script));
+  }
   ReturnType match(Handle<LazyScript*> lazyScript) {
-    RootedScript script(cx_, DelazifyScript(cx_, lazyScript));
-    if (!script) {
-      return false;
-    }
-    return match(script);
+    return match(static_cast<Handle<BaseScript*>>(lazyScript));
   }
   ReturnType match(Handle<WasmInstanceObject*> instanceObj) {
     wasm::Instance& instance = instanceObj->instance();
@@ -935,7 +949,12 @@ class DebuggerScript::GetOffsetMetadataMatcher {
                                     MutableHandlePlainObject result)
       : cx_(cx), offset_(offset), result_(result) {}
   using ReturnType = bool;
-  ReturnType match(HandleScript script) {
+  ReturnType match(Handle<BaseScript*> base) {
+    RootedScript script(cx_, DelazifyScript(cx_, base));
+    if (!script) {
+      return false;
+    }
+
     if (!EnsureScriptOffsetIsValid(cx_, script, offset_)) {
       return false;
     }
@@ -972,12 +991,11 @@ class DebuggerScript::GetOffsetMetadataMatcher {
 
     return true;
   }
+  ReturnType match(HandleScript script) {
+    return match(static_cast<Handle<BaseScript*>>(script));
+  }
   ReturnType match(Handle<LazyScript*> lazyScript) {
-    RootedScript script(cx_, DelazifyScript(cx_, lazyScript));
-    if (!script) {
-      return false;
-    }
-    return match(script);
+    return match(static_cast<Handle<BaseScript*>>(lazyScript));
   }
   ReturnType match(Handle<WasmInstanceObject*> instanceObj) {
     wasm::Instance& instance = instanceObj->instance();
@@ -1219,7 +1237,12 @@ class DebuggerScript::GetOffsetLocationMatcher {
                                     MutableHandlePlainObject result)
       : cx_(cx), offset_(offset), result_(result) {}
   using ReturnType = bool;
-  ReturnType match(HandleScript script) {
+  ReturnType match(Handle<BaseScript*> base) {
+    RootedScript script(cx_, DelazifyScript(cx_, base));
+    if (!script) {
+      return false;
+    }
+
     if (!EnsureScriptOffsetIsValid(cx_, script, offset_)) {
       return false;
     }
@@ -1286,12 +1309,11 @@ class DebuggerScript::GetOffsetLocationMatcher {
 
     return true;
   }
+  ReturnType match(HandleScript script) {
+    return match(static_cast<Handle<BaseScript*>>(script));
+  }
   ReturnType match(Handle<LazyScript*> lazyScript) {
-    RootedScript script(cx_, DelazifyScript(cx_, lazyScript));
-    if (!script) {
-      return false;
-    }
-    return match(script);
+    return match(static_cast<Handle<BaseScript*>>(lazyScript));
   }
   ReturnType match(Handle<WasmInstanceObject*> instanceObj) {
     wasm::Instance& instance = instanceObj->instance();
@@ -1366,7 +1388,12 @@ class DebuggerScript::GetSuccessorOrPredecessorOffsetsMatcher {
 
   using ReturnType = bool;
 
-  ReturnType match(HandleScript script) {
+  ReturnType match(Handle<BaseScript*> base) {
+    RootedScript script(cx_, DelazifyScript(cx_, base));
+    if (!script) {
+      return false;
+    }
+
     if (!EnsureScriptOffsetIsValid(cx_, script, offset_)) {
       return false;
     }
@@ -1397,15 +1424,12 @@ class DebuggerScript::GetSuccessorOrPredecessorOffsetsMatcher {
     }
     return true;
   }
-
-  ReturnType match(Handle<LazyScript*> lazyScript) {
-    RootedScript script(cx_, DelazifyScript(cx_, lazyScript));
-    if (!script) {
-      return false;
-    }
-    return match(script);
+  ReturnType match(HandleScript script) {
+    return match(static_cast<Handle<BaseScript*>>(script));
   }
-
+  ReturnType match(Handle<LazyScript*> lazyScript) {
+    return match(static_cast<Handle<BaseScript*>>(lazyScript));
+  }
   ReturnType match(Handle<WasmInstanceObject*> instance) {
     JS_ReportErrorASCII(
         cx_, "getSuccessorOrPredecessorOffsets NYI on wasm instances");
@@ -1818,7 +1842,12 @@ class DebuggerScript::GetAllColumnOffsetsMatcher {
   explicit GetAllColumnOffsetsMatcher(JSContext* cx, MutableHandleObject result)
       : cx_(cx), result_(result) {}
   using ReturnType = bool;
-  ReturnType match(HandleScript script) {
+  ReturnType match(Handle<BaseScript*> base) {
+    RootedScript script(cx_, DelazifyScript(cx_, base));
+    if (!script) {
+      return false;
+    }
+
     // First pass: determine which offsets in this script are jump targets
     // and which positions jump to them.
     FlowGraphSummary flowData(cx_);
@@ -1849,12 +1878,11 @@ class DebuggerScript::GetAllColumnOffsetsMatcher {
     }
     return true;
   }
+  ReturnType match(HandleScript script) {
+    return match(static_cast<Handle<BaseScript*>>(script));
+  }
   ReturnType match(Handle<LazyScript*> lazyScript) {
-    RootedScript script(cx_, DelazifyScript(cx_, lazyScript));
-    if (!script) {
-      return false;
-    }
-    return match(script);
+    return match(static_cast<Handle<BaseScript*>>(lazyScript));
   }
   ReturnType match(Handle<WasmInstanceObject*> instanceObj) {
     wasm::Instance& instance = instanceObj->instance();
@@ -1903,7 +1931,12 @@ class DebuggerScript::GetLineOffsetsMatcher {
                                  MutableHandleObject result)
       : cx_(cx), lineno_(lineno), result_(result) {}
   using ReturnType = bool;
-  ReturnType match(HandleScript script) {
+  ReturnType match(Handle<BaseScript*> base) {
+    RootedScript script(cx_, DelazifyScript(cx_, base));
+    if (!script) {
+      return false;
+    }
+
     // First pass: determine which offsets in this script are jump targets and
     // which line numbers jump to them.
     FlowGraphSummary flowData(cx_);
@@ -1935,12 +1968,11 @@ class DebuggerScript::GetLineOffsetsMatcher {
 
     return true;
   }
+  ReturnType match(HandleScript script) {
+    return match(static_cast<Handle<BaseScript*>>(script));
+  }
   ReturnType match(Handle<LazyScript*> lazyScript) {
-    RootedScript script(cx_, DelazifyScript(cx_, lazyScript));
-    if (!script) {
-      return false;
-    }
-    return match(script);
+    return match(static_cast<Handle<BaseScript*>>(lazyScript));
   }
   ReturnType match(Handle<WasmInstanceObject*> instanceObj) {
     wasm::Instance& instance = instanceObj->instance();
@@ -2030,7 +2062,12 @@ struct DebuggerScript::SetBreakpointMatcher {
 
   using ReturnType = bool;
 
-  ReturnType match(HandleScript script) {
+  ReturnType match(Handle<BaseScript*> base) {
+    RootedScript script(cx_, DelazifyScript(cx_, base));
+    if (!script) {
+      return false;
+    }
+
     if (!dbg_->observesScript(script)) {
       JS_ReportErrorNumberASCII(cx_, GetErrorMessage, nullptr,
                                 JSMSG_DEBUG_NOT_DEBUGGING);
@@ -2071,12 +2108,11 @@ struct DebuggerScript::SetBreakpointMatcher {
 
     return true;
   }
+  ReturnType match(HandleScript script) {
+    return match(static_cast<Handle<BaseScript*>>(script));
+  }
   ReturnType match(Handle<LazyScript*> lazyScript) {
-    RootedScript script(cx_, DelazifyScript(cx_, lazyScript));
-    if (!script) {
-      return false;
-    }
-    return match(script);
+    return match(static_cast<Handle<BaseScript*>>(lazyScript));
   }
   ReturnType match(Handle<WasmInstanceObject*> wasmInstance) {
     wasm::Instance& instance = wasmInstance->instance();
@@ -2189,7 +2225,12 @@ class DebuggerScript::ClearBreakpointMatcher {
       : cx_(cx), dbg_(dbg), handler_(cx, handler) {}
   using ReturnType = bool;
 
-  ReturnType match(HandleScript script) {
+  ReturnType match(Handle<BaseScript*> base) {
+    RootedScript script(cx_, DelazifyScript(cx_, base));
+    if (!script) {
+      return false;
+    }
+
     // A Breakpoint belongs logically to its script's compartment, so it holds
     // its handler via a cross-compartment wrapper. But the handler passed to
     // `clearBreakpoint` is same-compartment with the Debugger. Wrap it here, so
@@ -2204,12 +2245,11 @@ class DebuggerScript::ClearBreakpointMatcher {
                                     dbg_, handler_);
     return true;
   }
+  ReturnType match(HandleScript script) {
+    return match(static_cast<Handle<BaseScript*>>(script));
+  }
   ReturnType match(Handle<LazyScript*> lazyScript) {
-    RootedScript script(cx_, DelazifyScript(cx_, lazyScript));
-    if (!script) {
-      return false;
-    }
-    return match(script);
+    return match(static_cast<Handle<BaseScript*>>(lazyScript));
   }
   ReturnType match(Handle<WasmInstanceObject*> instanceObj) {
     wasm::Instance& instance = instanceObj->instance();
@@ -2274,7 +2314,12 @@ class DebuggerScript::IsInCatchScopeMatcher {
 
   inline bool isInCatch() const { return isInCatch_; }
 
-  ReturnType match(HandleScript script) {
+  ReturnType match(Handle<BaseScript*> base) {
+    RootedScript script(cx_, DelazifyScript(cx_, base));
+    if (!script) {
+      return false;
+    }
+
     if (!EnsureScriptOffsetIsValid(cx_, script, offset_)) {
       return false;
     }
@@ -2290,12 +2335,11 @@ class DebuggerScript::IsInCatchScopeMatcher {
     isInCatch_ = false;
     return true;
   }
+  ReturnType match(HandleScript script) {
+    return match(static_cast<Handle<BaseScript*>>(script));
+  }
   ReturnType match(Handle<LazyScript*> lazyScript) {
-    RootedScript script(cx_, DelazifyScript(cx_, lazyScript));
-    if (!script) {
-      return false;
-    }
-    return match(script);
+    return match(static_cast<Handle<BaseScript*>>(lazyScript));
   }
   ReturnType match(Handle<WasmInstanceObject*> instance) {
     isInCatch_ = false;
