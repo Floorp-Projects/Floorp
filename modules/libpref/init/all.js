@@ -2730,6 +2730,10 @@ pref("browser.tabs.remote.autostart", false);
 // Disable fission for Gecko by default. Lock it on release and beta because
 // it is not ready for use and can leak URIs to telemetry until bug 1561653 is
 // fixed.
+// IMPORTANT: This preference should *almost never* be checked directly, since
+// any session can contain a mix of Fission and non-Fission windows. Instead,
+// callers should check whether the relevant nsILoadContext has the
+// `useRemoteSubframes` flag set.
 #ifdef RELEASE_OR_BETA
   pref("fission.autostart", false, locked);
 #else

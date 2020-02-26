@@ -3099,8 +3099,13 @@
 # Prefs starting with "fission."
 #---------------------------------------------------------------------------
 
-# Whether to enable Fission.
-# Overridden in all.js on RELEASE_OR_BETA in order to add the locked attribute.
+# Whether to enable Fission in new windows by default.
+# IMPORTANT: This preference should *almost never* be checked directly, since
+# any session can contain a mix of Fission and non-Fission windows. Instead,
+# callers should check whether the relevant nsILoadContext has the
+# `useRemoteSubframes` flag set.
+# Note: This is overridden in all.js on RELEASE_OR_BETA in order to add the
+# locked attribute.
 - name: fission.autostart
   type: bool
   value: false
