@@ -2430,12 +2430,11 @@ static void InvalidateActivation(JSFreeOp* fop,
         } else if (frame.isBailoutJS()) {
           type = "Bailing";
         }
+        JSScript* script = MaybeForwarded(frame.script());
         JitSpew(JitSpew_IonInvalidate,
                 "#%zu %s JS frame @ %p, %s:%u:%u (fun: %p, script: %p, pc %p)",
-                frameno, type, frame.fp(),
-                frame.script()->maybeForwardedFilename(),
-                frame.script()->lineno(), frame.script()->column(),
-                frame.maybeCallee(), (JSScript*)frame.script(),
+                frameno, type, frame.fp(), script->maybeForwardedFilename(),
+                script->lineno(), script->column(), frame.maybeCallee(), script,
                 frame.resumePCinCurrentFrame());
         break;
       }
@@ -2471,7 +2470,7 @@ static void InvalidateActivation(JSFreeOp* fop,
       continue;
     }
 
-    JSScript* script = frame.script();
+    JSScript* script = MaybeForwarded(frame.script());
     if (!script->hasIonScript()) {
       continue;
     }
