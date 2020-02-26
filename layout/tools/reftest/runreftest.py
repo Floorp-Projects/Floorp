@@ -957,7 +957,10 @@ class RefTest(object):
         ids_by_manifest = defaultdict(list)
         for t in tests:
             tests_by_manifest[t['manifest']].append(t)
-            ids_by_manifest[t['manifestID']].append(t['identifier'])
+            test_id = t['identifier']
+            if not isinstance(test_id, string_types):
+                test_id = ' '.join(test_id)
+            ids_by_manifest[t['manifestID']].append(test_id)
 
         self.log.suite_start(ids_by_manifest, name=options.suite)
 
