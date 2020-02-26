@@ -1101,6 +1101,15 @@ class UrlbarView {
     let helpIcon = item._elements.get("helpButton");
     helpIcon.id = item.id + "-tip-help";
     helpIcon.style.display = result.payload.helpUrl ? "" : "none";
+
+    if (result.providerName == "UrlbarProviderSearchTips") {
+      // For a11y, we treat search tips as alerts.  We use A11yUtils.announce
+      // instead of role="alert" because role="alert" will only fire an alert
+      // event when the alert (or something inside it) is the root of an
+      // insertion.  In this case, the entire tip result gets inserted into the
+      // a11y tree as a single insertion, so no alert event would be fired.
+      this.window.A11yUtils.announce(result.payload.textData);
+    }
   }
 
   _updateIndices() {

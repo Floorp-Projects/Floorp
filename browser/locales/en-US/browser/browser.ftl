@@ -106,7 +106,7 @@ urlbar-tip-icon-description =
 ## Variables:
 ##  $engineName (String): The name of the user's default search engine. e.g. "Google" or "DuckDuckGo".
 urlbar-search-tips-onboard = Type less, find more: Search { $engineName } right from your address bar.
-urlbar-search-tips-redirect = Start your search here to see suggestions from { $engineName } and your browsing history.
+urlbar-search-tips-redirect-2 = Start your search in the address bar to see suggestions from { $engineName } and your browsing history.
 
 ##
 

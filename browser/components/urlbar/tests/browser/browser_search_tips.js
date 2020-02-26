@@ -804,8 +804,8 @@ async function checkTip(win, expectedTip, closeView = true) {
     case UrlbarProviderSearchTips.TIP_TYPE.REDIRECT:
       heuristic = false;
       title =
-        `Start your search here to see suggestions from ${name} ` +
-        `and your browsing history.`;
+        `Start your search in the address bar to see suggestions from ` +
+        `${name} and your browsing history.`;
       break;
   }
   Assert.equal(result.heuristic, heuristic);
