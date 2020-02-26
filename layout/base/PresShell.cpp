@@ -1477,13 +1477,13 @@ void PresShell::UpdatePreferenceStyles() {
   // it to be modifiable from devtools and similar, see bugs 1239336 and
   // 1436782. I think it conceptually should be a user sheet, and could be
   // without too much trouble I'd think.
-  StyleSet()->AppendStyleSheet(*newPrefSheet);
+  StyleSet()->AppendStyleSheet(StyleOrigin::UserAgent, newPrefSheet);
   mPrefStyleSheet = newPrefSheet;
 }
 
 void PresShell::RemovePreferenceStyles() {
   if (mPrefStyleSheet) {
-    StyleSet()->RemoveStyleSheet(*mPrefStyleSheet);
+    StyleSet()->RemoveStyleSheet(StyleOrigin::UserAgent, mPrefStyleSheet);
     mPrefStyleSheet = nullptr;
   }
 }
@@ -1514,10 +1514,10 @@ void PresShell::AddUserSheet(StyleSheet* aSheet) {
   }
 
   if (index == static_cast<size_t>(StyleSet()->SheetCount(StyleOrigin::User))) {
-    StyleSet()->AppendStyleSheet(*aSheet);
+    StyleSet()->AppendStyleSheet(StyleOrigin::User, aSheet);
   } else {
     StyleSheet* ref = StyleSet()->SheetAt(StyleOrigin::User, index);
-    StyleSet()->InsertStyleSheetBefore(*aSheet, *ref);
+    StyleSet()->InsertStyleSheetBefore(StyleOrigin::User, aSheet, ref);
   }
 
   mDocument->ApplicableStylesChanged();
@@ -1526,7 +1526,7 @@ void PresShell::AddUserSheet(StyleSheet* aSheet) {
 void PresShell::AddAgentSheet(StyleSheet* aSheet) {
   // Make sure this does what nsDocumentViewer::CreateStyleSet does
   // wrt ordering.
-  StyleSet()->AppendStyleSheet(*aSheet);
+  StyleSet()->AppendStyleSheet(StyleOrigin::UserAgent, aSheet);
   mDocument->ApplicableStylesChanged();
 }
 
@@ -1535,11 +1535,17 @@ void PresShell::AddAuthorSheet(StyleSheet* aSheet) {
   // ones added with the StyleSheetService.
   StyleSheet* firstAuthorSheet = mDocument->GetFirstAdditionalAuthorSheet();
   if (firstAuthorSheet) {
-    StyleSet()->InsertStyleSheetBefore(*aSheet, *firstAuthorSheet);
+    StyleSet()->InsertStyleSheetBefore(StyleOrigin::Author, aSheet,
+                                       firstAuthorSheet);
   } else {
-    StyleSet()->AppendStyleSheet(*aSheet);
+    StyleSet()->AppendStyleSheet(StyleOrigin::Author, aSheet);
   }
 
+  mDocument->ApplicableStylesChanged();
+}
+
+void PresShell::RemoveSheet(StyleOrigin aOrigin, StyleSheet* aSheet) {
+  StyleSet()->RemoveStyleSheet(aOrigin, aSheet);
   mDocument->ApplicableStylesChanged();
 }
 
@@ -8871,12 +8877,12 @@ bool PresShell::IsDisplayportSuppressed() {
 }
 
 nsresult PresShell::AddOverrideStyleSheet(StyleSheet* aSheet) {
-  StyleSet()->AppendStyleSheet(*aSheet);
+  StyleSet()->AppendStyleSheet(aSheet->GetOrigin(), aSheet);
   return NS_OK;
 }
 
 nsresult PresShell::RemoveOverrideStyleSheet(StyleSheet* aSheet) {
-  StyleSet()->RemoveStyleSheet(*aSheet);
+  StyleSet()->RemoveStyleSheet(aSheet->GetOrigin(), aSheet);
   return NS_OK;
 }
 
@@ -10920,6 +10926,21 @@ void PresShell::SyncWindowProperties(nsView* aView) {
   }
 }
 
+static StyleOrigin ToOrigin(uint32_t aServiceSheetType) {
+  switch (aServiceSheetType) {
+    case nsIStyleSheetService::AGENT_SHEET:
+      return StyleOrigin::UserAgent;
+      break;
+    case nsIStyleSheetService::USER_SHEET:
+      return StyleOrigin::User;
+      break;
+    default:
+      MOZ_FALLTHROUGH_ASSERT("unexpected aSheetType value");
+    case nsIStyleSheetService::AUTHOR_SHEET:
+      return StyleOrigin::Author;
+  }
+}
+
 nsresult PresShell::HasRuleProcessorUsedByMultipleStyleSets(uint32_t aSheetType,
                                                             bool* aRetVal) {
   *aRetVal = false;
@@ -10946,8 +10967,7 @@ void PresShell::NotifyStyleSheetServiceSheetAdded(StyleSheet* aSheet,
 
 void PresShell::NotifyStyleSheetServiceSheetRemoved(StyleSheet* aSheet,
                                                     uint32_t aSheetType) {
-  StyleSet()->RemoveStyleSheet(*aSheet);
-  mDocument->ApplicableStylesChanged();
+  RemoveSheet(ToOrigin(aSheetType), aSheet);
 }
 
 void PresShell::SetIsUnderHiddenEmbedderElement(

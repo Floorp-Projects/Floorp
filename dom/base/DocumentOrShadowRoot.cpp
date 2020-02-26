@@ -78,6 +78,11 @@ void DocumentOrShadowRoot::InsertSheetAt(size_t aIndex, StyleSheet& aSheet) {
   mStyleSheets.InsertElementAt(aIndex, &aSheet);
 }
 
+void DocumentOrShadowRoot::InsertAdoptedSheetAt(size_t aIndex,
+                                                StyleSheet& aSheet) {
+  mAdoptedStyleSheets.InsertElementAt(aIndex, &aSheet);
+}
+
 already_AddRefed<StyleSheet> DocumentOrShadowRoot::RemoveSheet(
     StyleSheet& aSheet) {
   auto index = mStyleSheets.IndexOf(&aSheet);
@@ -90,24 +95,13 @@ already_AddRefed<StyleSheet> DocumentOrShadowRoot::RemoveSheet(
   return sheet.forget();
 }
 
-void DocumentOrShadowRoot::RemoveSheetFromStylesIfApplicable(
-    StyleSheet& aSheet) {
-  if (!aSheet.IsApplicable()) {
-    return;
-  }
-  if (mKind == Kind::Document) {
-    AsNode().AsDocument()->RemoveStyleSheetFromStyleSets(aSheet);
-  } else {
-    MOZ_ASSERT(AsNode().IsShadowRoot());
-    static_cast<ShadowRoot&>(AsNode()).RemoveSheetFromStyles(aSheet);
-  }
-}
-
 // https://wicg.github.io/construct-stylesheets/#dom-documentorshadowroot-adoptedstylesheets
-void DocumentOrShadowRoot::SetAdoptedStyleSheets(
+void DocumentOrShadowRoot::EnsureAdoptedSheetsAreValid(
     const Sequence<OwningNonNull<StyleSheet>>& aAdoptedStyleSheets,
     ErrorResult& aRv) {
-  Document& doc = *AsNode().OwnerDoc();
+  nsTHashtable<nsPtrHashKey<const StyleSheet>> set(
+      aAdoptedStyleSheets.Length());
+
   for (const OwningNonNull<StyleSheet>& sheet : aAdoptedStyleSheets) {
     // 2.1 Check if all sheets are constructed, else throw NotAllowedError
     if (!sheet->IsConstructed()) {
@@ -117,49 +111,21 @@ void DocumentOrShadowRoot::SetAdoptedStyleSheets(
     }
     // 2.2 Check if all sheets' constructor documents match the
     // DocumentOrShadowRoot's node document, else throw NotAlloweError
-    if (!sheet->ConstructorDocumentMatches(doc)) {
+    if (!sheet->ConstructorDocumentMatches(AsNode().OwnerDoc())) {
       return aRv.ThrowNotAllowedError(
           "Each adopted style sheet's constructor document must match the "
           "document or shadow root's node document");
     }
-  }
 
-  auto* shadow = ShadowRoot::FromNode(AsNode());
-  MOZ_ASSERT((mKind == Kind::ShadowRoot) == !!shadow);
-
-  ClearAdoptedStyleSheets();
-
-  // 3. Set the adopted style sheets to the new sheets
-  mAdoptedStyleSheets.SetCapacity(aAdoptedStyleSheets.Length());
-
-  AdoptedStyleSheetSet set(aAdoptedStyleSheets.Length());
-  for (const OwningNonNull<StyleSheet>& sheet : aAdoptedStyleSheets) {
-    if (MOZ_UNLIKELY(!set.EnsureInserted(sheet.get()))) {
-      // The idea is that this case is rare, so we pay the price of removing the
-      // old sheet from the styles and append it later rather than the other way
-      // around.
-      RemoveSheetFromStylesIfApplicable(*sheet);
-    } else {
-      sheet->AddAdopter(*this);
-    }
-    mAdoptedStyleSheets.AppendElement(sheet);
-    if (sheet->IsApplicable()) {
-      if (mKind == Kind::Document) {
-        doc.AddStyleSheetToStyleSets(*sheet);
-      } else {
-        shadow->InsertSheetIntoAuthorData(mAdoptedStyleSheets.Length() - 1,
-                                          *sheet, mAdoptedStyleSheets);
-      }
+    // FIXME(nordzilla): This is temporary code to disallow duplicate sheets.
+    // This exists to ensure that the fuzzers aren't blocked.
+    // This code will eventually be removed.
+    // https://bugzilla.mozilla.org/show_bug.cgi?id=1617302
+    if (!set.EnsureInserted(sheet.get())) {
+      return aRv.ThrowNotAllowedError(
+          "Temporarily disallowing duplicate stylesheets.");
     }
   }
-}
-
-void DocumentOrShadowRoot::ClearAdoptedStyleSheets() {
-  EnumerateUniqueAdoptedStyleSheetsBackToFront([&](StyleSheet& aSheet) {
-    RemoveSheetFromStylesIfApplicable(aSheet);
-    aSheet.RemoveAdopter(*this);
-  });
-  mAdoptedStyleSheets.Clear();
 }
 
 Element* DocumentOrShadowRoot::GetElementById(const nsAString& aElementId) {
@@ -696,9 +662,7 @@ nsRadioGroupStruct* DocumentOrShadowRoot::GetOrCreateRadioGroup(
 int32_t DocumentOrShadowRoot::StyleOrderIndexOfSheet(
     const StyleSheet& aSheet) const {
   if (aSheet.IsConstructed()) {
-    // NOTE: constructable sheets can have duplicates, so we need to start
-    // looking from behind.
-    int32_t index = mAdoptedStyleSheets.LastIndexOf(&aSheet);
+    int32_t index = mAdoptedStyleSheets.IndexOf(&aSheet);
     return (index < 0) ? index : index + SheetCount();
   }
   return mStyleSheets.IndexOf(&aSheet);
@@ -715,27 +679,26 @@ void DocumentOrShadowRoot::Traverse(DocumentOrShadowRoot* tmp,
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDOMStyleSheets)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mAdoptedStyleSheets)
 
-  auto NoteSheetIfApplicable = [&](StyleSheet& aSheet) {
-    if (!aSheet.IsApplicable()) {
-      return;
-    }
-    // The style set or mServoStyles keep more references to it if the sheet
-    // is applicable.
-    if (tmp->mKind == Kind::ShadowRoot) {
-      NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mServoStyles->sheets[i]");
-      cb.NoteXPCOMChild(&aSheet);
-    } else if (tmp->AsNode().AsDocument()->StyleSetFilled()) {
-      NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(
-          cb, "mStyleSet->mRawSet.stylist.stylesheets.author[i]");
-      cb.NoteXPCOMChild(&aSheet);
+  auto NoteSheets = [tmp, &cb = cb](nsTArray<RefPtr<StyleSheet>>& sheetList) {
+    for (StyleSheet* sheet : sheetList) {
+      if (!sheet->IsApplicable()) {
+        continue;
+      }
+      // The style set or mServoStyles keep more references to it if the sheet
+      // is applicable.
+      if (tmp->mKind == Kind::ShadowRoot) {
+        NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mServoStyles->sheets[i]");
+        cb.NoteXPCOMChild(sheet);
+      } else if (tmp->AsNode().AsDocument()->StyleSetFilled()) {
+        NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(
+            cb, "mStyleSet->mRawSet.stylist.stylesheets.author[i]");
+        cb.NoteXPCOMChild(sheet);
+      }
     }
   };
 
-  for (auto& sheet : tmp->mStyleSheets) {
-    NoteSheetIfApplicable(*sheet);
-  }
-
-  tmp->EnumerateUniqueAdoptedStyleSheetsBackToFront(NoteSheetIfApplicable);
+  NoteSheets(tmp->mStyleSheets);
+  NoteSheets(tmp->mAdoptedStyleSheets);
 
   for (auto iter = tmp->mIdentifierMap.ConstIter(); !iter.Done(); iter.Next()) {
     iter.Get()->Traverse(&cb);
