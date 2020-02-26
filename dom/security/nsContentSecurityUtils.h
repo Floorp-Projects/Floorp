@@ -24,7 +24,7 @@ typedef mozilla::Pair<nsCString, mozilla::Maybe<nsString>>
 class nsContentSecurityUtils {
  public:
   static FilenameTypeAndDetails FilenameToFilenameType(
-      const nsString& fileName);
+      const nsString& fileName, bool collectAdditionalExtensionData);
   static bool IsEvalAllowed(JSContext* cx, bool aIsSystemPrincipal,
                             const nsAString& aScript);
   static void NotifyEvalUsage(bool aIsSystemPrincipal,
