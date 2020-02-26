@@ -15,6 +15,12 @@
 #include "js/Utility.h"
 #include "threading/ProtectedData.h"
 
+#define JS_MEMBER_FN_PTR_TYPE(ClassT, ReturnT, /* ArgTs */...) \
+  ReturnT (ClassT::*)(__VA_ARGS__)
+
+#define JS_CALL_MEMBER_FN_PTR(Receiver, Ptr, /* Args */...) \
+  ((Receiver)->*(Ptr))(__VA_ARGS__)
+
 namespace js {
 
 namespace gc {
