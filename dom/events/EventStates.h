@@ -287,9 +287,10 @@ class EventStates {
 #define NS_EVENT_STATE_AUTOFILL NS_DEFINE_EVENT_STATE_MACRO(50)
 // Element is filled with preview data by Autofill feature.
 #define NS_EVENT_STATE_AUTOFILL_PREVIEW NS_DEFINE_EVENT_STATE_MACRO(51)
-
-// Event state that is used for values that need to be parsed but do nothing.
-#define NS_EVENT_STATE_IGNORE NS_DEFINE_EVENT_STATE_MACRO(63)
+// Element matches the :focus-visible pseudo-class.
+//
+// TODO(emilio): We should eventually unify this and FOCUSRING.
+#define NS_EVENT_STATE_FOCUS_VISIBLE NS_DEFINE_EVENT_STATE_MACRO(52)
 
 /**
  * NOTE: do not go over 63 without updating EventStates::InternalType!
@@ -324,7 +325,8 @@ class EventStates {
    REQUIRED_STATES | NS_EVENT_STATE_ACTIVE | NS_EVENT_STATE_DEFINED |          \
    NS_EVENT_STATE_DRAGOVER | NS_EVENT_STATE_FOCUS | NS_EVENT_STATE_FOCUSRING | \
    NS_EVENT_STATE_FOCUS_WITHIN | NS_EVENT_STATE_FULLSCREEN |                   \
-   NS_EVENT_STATE_HOVER | NS_EVENT_STATE_URLTARGET)
+   NS_EVENT_STATE_HOVER | NS_EVENT_STATE_URLTARGET |                           \
+   NS_EVENT_STATE_FOCUS_VISIBLE)
 
 #define INTRINSIC_STATES (~EXTERNALLY_MANAGED_STATES)
 
