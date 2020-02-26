@@ -59,10 +59,6 @@ class DebuggerScript : public NativeObject {
 
   struct CallData;
 
-  template <typename T>
-  static bool getUrlImpl(JSContext* cx, const CallArgs& args,
-                         Handle<T*> script);
-
   static bool getSuccessorOrPredecessorOffsets(JSContext* cx, unsigned argc,
                                                Value* vp, const char* name,
                                                bool successor);
