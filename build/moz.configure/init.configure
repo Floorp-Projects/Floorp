@@ -783,7 +783,7 @@ option('--target', nargs=1,
 @imports(_from='mozbuild.configure.constants', _import='Kernel')
 @imports(_from='mozbuild.configure.constants', _import='OS')
 @imports(_from='__builtin__', _import='ValueError')
-def split_triplet(triplet):
+def split_triplet(triplet, allow_msvc=False):
     # The standard triplet is defined as
     #   CPU_TYPE-VENDOR-OPERATING_SYSTEM
     # There is also a quartet form:
@@ -822,7 +822,9 @@ def split_triplet(triplet):
         canonical_kernel = 'kFreeBSD'
     elif os.startswith('gnu'):
         canonical_os = canonical_kernel = 'GNU'
-    elif os.startswith('mingw'):
+    elif os.startswith('mingw') or (allow_msvc and os == 'windows-msvc'):
+        # windows-msvc is only opt-in for the caller of this function until
+        # full support in bug 1617793.
         canonical_os = canonical_kernel = 'WINNT'
     elif os.startswith('darwin'):
         canonical_kernel = 'Darwin'
