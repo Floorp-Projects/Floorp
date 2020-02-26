@@ -272,7 +272,7 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
             accountManager.authenticatedAccount()
                 ?.deviceConstellation()?.run {
                     refreshDevicesAsync().await()
-                    pollForEventsAsync().await()
+                    pollForCommandsAsync().await()
                 }
         }
     }
