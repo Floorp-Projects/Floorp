@@ -5,7 +5,7 @@ Getting reviews
 Thorough code reviews are one of Mozilla's ways of ensuring code quality.
 Every patch must be reviewed by the module owner of the code, or one of their designated peers.
 
-To request a review, you will need to specify a review group. If there is not, you should select one or more usernames either when you submit the patch, or afterward in the UI.
+To request a review, you will need to specify a review group (starts with #). If there is not, you should select one or more usernames either when you submit the patch, or afterward in the UI.
 If you have a mentor, the mentor can usually either also review or find a suitable reviewer on your behalf.
 
 Getting attention: If a reviewer doesn't respond within a week, or so of the review request:
@@ -39,6 +39,9 @@ Review groups
    * - #firefox-source-docs-reviewers
      - Documentation files and its build
      - `Member list <https://phabricator.services.mozilla.com/project/members/118/>`__
+   * - #firefox-style-system-reviewers
+     - Firefox style system
+     - `Member list <https://phabricator.services.mozilla.com/project/members/90/>`__
    * - #firefox-ux-team
      - User experience (UX)
      - `Member list <https://phabricator.services.mozilla.com/project/members/91/>`__
@@ -48,6 +51,9 @@ Review groups
    * - #geckoview-reviewers
      - Changes to GeckoView
      - `Member list <https://phabricator.services.mozilla.com/project/members/92/>`__
+   * - #intermittent-reviewers
+     - Test manifest changes
+     - `Member list <https://phabricator.services.mozilla.com/project/members/110/>`__
    * - #linter-reviewers
      - tools/lint/*
      - `Member list <https://phabricator.services.mozilla.com/project/members/119/>`__
@@ -79,5 +85,5 @@ Review groups
      - Changes related to WebIDL
      - `Member list <https://phabricator.services.mozilla.com/project/members/112/>`__
 
-To create a new group, fill a `new bug in Conduit::Phabricator <https://bugzilla.mozilla.org/enter_bug.cgi?product=Conduit&component=Administration>`__.
+To create a new group, fill a `new bug in Conduit::Administration <https://bugzilla.mozilla.org/enter_bug.cgi?product=Conduit&component=Administration>`__.
 See `bug 1613306 <https://bugzilla.mozilla.org/show_bug.cgi?id=1613306>`__ as example.
