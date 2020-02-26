@@ -1923,10 +1923,10 @@ class UrlbarInput {
     }
     this.removeAttribute("actiontype");
 
-    if (!this.view.isOpen) {
+    if (!this.view.isOpen || !value) {
       this.view.clear();
-    } else if (!value && !this.openViewOnFocus) {
-      this.view.clear();
+    }
+    if (this.view.isOpen && !value) {
       this.view.close();
       return;
     }
