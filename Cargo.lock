@@ -672,7 +672,7 @@ dependencies = [
 [[package]]
 name = "coreaudio-sys-utils"
 version = "0.1.0"
-source = "git+https://github.com/ChunMinChang/cubeb-coreaudio-rs?rev=7fe03b4201160f84aad1c12536affe6b05f8839f#7fe03b4201160f84aad1c12536affe6b05f8839f"
+source = "git+https://github.com/ChunMinChang/cubeb-coreaudio-rs?rev=4acd80233efa645ac79769f37b07d495c1b42070#4acd80233efa645ac79769f37b07d495c1b42070"
 dependencies = [
  "core-foundation-sys",
  "coreaudio-sys",
@@ -909,13 +909,14 @@ dependencies = [
 [[package]]
 name = "cubeb-coreaudio"
 version = "0.1.0"
-source = "git+https://github.com/ChunMinChang/cubeb-coreaudio-rs?rev=7fe03b4201160f84aad1c12536affe6b05f8839f#7fe03b4201160f84aad1c12536affe6b05f8839f"
+source = "git+https://github.com/ChunMinChang/cubeb-coreaudio-rs?rev=4acd80233efa645ac79769f37b07d495c1b42070#4acd80233efa645ac79769f37b07d495c1b42070"
 dependencies = [
  "atomic",
  "audio-mixer",
  "bitflags",
  "coreaudio-sys-utils",
  "cubeb-backend",
+ "float-cmp",
  "lazy_static",
  "libc",
  "mach",
@@ -1252,6 +1253,15 @@ dependencies = [
  "libc",
  "miniz-sys",
  "miniz_oxide",
+]
+
+[[package]]
+name = "float-cmp"
+version = "0.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "da62c4f1b81918835a8c6a484a397775fff5953fe83529afd51b05f5c6a6617d"
+dependencies = [
+ "num-traits",
 ]
 
 [[package]]

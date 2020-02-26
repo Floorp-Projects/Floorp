@@ -1,6 +1,29 @@
 # display backtrace for debugging
 export RUST_BACKTRACE=1
 
+# Run tests in the sub crate
+# -------------------------------------------------------------------------------------------------
+cd coreaudio-sys-utils
+
+# Format check
+cargo fmt --all -- --check
+
+# Lints check
+cargo clippy -- -D warnings
+
+# Regular Tests
+cargo test
+
+cd ..
+
+# Run tests in the main crate
+# -------------------------------------------------------------------------------------------------
+# Format check
+cargo fmt --all -- --check
+
+# Lints check
+cargo clippy -- -D warnings
+
 # Regular Tests
 cargo test --verbose
 cargo test test_configure_output -- --ignored
