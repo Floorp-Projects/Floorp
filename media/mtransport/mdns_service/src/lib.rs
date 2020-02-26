@@ -20,8 +20,8 @@ extern crate log;
 
 struct Callback {
     data: *const c_void,
-    resolved: extern "C" fn(*const c_void, *const c_char, *const c_char),
-    timedout: extern "C" fn(*const c_void, *const c_char),
+    resolved: unsafe extern "C" fn(*const c_void, *const c_char, *const c_char),
+    timedout: unsafe extern "C" fn(*const c_void, *const c_char),
 }
 
 unsafe impl Send for Callback {}
@@ -29,23 +29,27 @@ unsafe impl Send for Callback {}
 fn hostname_resolved(callback: &Callback, hostname: &str, addr: &str) {
     if let Ok(hostname) = CString::new(hostname) {
         if let Ok(addr) = CString::new(addr) {
-            (callback.resolved)(callback.data, hostname.as_ptr(), addr.as_ptr());
+            unsafe {
+                (callback.resolved)(callback.data, hostname.as_ptr(), addr.as_ptr());
+            }
         }
     }
 }
 
 fn hostname_timedout(callback: &Callback, hostname: &str) {
     if let Ok(hostname) = CString::new(hostname) {
-        (callback.timedout)(callback.data, hostname.as_ptr());
+        unsafe {
+            (callback.timedout)(callback.data, hostname.as_ptr());
+        }
     }
 }
 
 // This code is derived from code for creating questions in the dns-parser
 // crate. It would be nice to upstream this, or something similar.
-fn create_answer(id: u16, answers: &Vec<(String, &[u8])>) -> Result<Vec<u8>, io::Error> {
+fn create_answer(id: u16, answers: &[(String, &[u8])]) -> Result<Vec<u8>, io::Error> {
     let mut buf = Vec::with_capacity(512);
     let head = dns_parser::Header {
-        id: id,
+        id,
         query: false,
         opcode: dns_parser::Opcode::StandardQuery,
         authoritative: true,
@@ -93,10 +97,10 @@ fn create_answer(id: u16, answers: &Vec<(String, &[u8])>) -> Result<Vec<u8>, io:
     Ok(buf)
 }
 
-fn create_query(id: u16, queries: &Vec<String>) -> Result<Vec<u8>, io::Error> {
+fn create_query(id: u16, queries: &[String]) -> Result<Vec<u8>, io::Error> {
     let mut buf = Vec::with_capacity(512);
     let head = dns_parser::Header {
-        id: id,
+        id,
         query: true,
         opcode: dns_parser::Opcode::StandardQuery,
         authoritative: false,
@@ -147,9 +151,10 @@ fn handle_queries(
             }
         }
         if !queries.is_empty() {
-            if let Ok(buf) =
-                create_query(0, &queries.iter().map(|q| q.hostname.to_string()).collect())
-            {
+            let query_hostnames: Vec<String> =
+                queries.iter().map(|q| q.hostname.to_string()).collect();
+
+            if let Ok(buf) = create_query(0, &query_hostnames) {
                 match socket.send_to(&buf, &mdns_addr) {
                     Ok(_) => {
                         for query in queries {
@@ -203,7 +208,7 @@ fn handle_mdns_socket(
 
                         // If a packet contains both both questions and
                         // answers, the questions should be ignored.
-                        if parsed.answers.len() == 0 {
+                        if parsed.answers.is_empty() {
                             parsed
                                 .questions
                                 .iter()
@@ -249,7 +254,7 @@ fn handle_mdns_socket(
                         // question, we should wait for a random amount of time
                         // so as to not collide with someone else responding to
                         // this query.
-                        if answers.len() > 0 {
+                        if !answers.is_empty() {
                             if let Ok(buf) = create_answer(parsed.header.id, &answers) {
                                 if let Err(err) = socket.send_to(&buf, &mdns_addr) {
                                     warn!("Sending mDNS answer failed: {}", err);
@@ -292,14 +297,12 @@ fn validate_hostname(hostname: &str) -> bool {
                                         return false;
                                     }
                                 }
-                                return true;
+                                true
                             }
                             None => true,
                         }
                     }
-                    Err(_) => {
-                        return false;
-                    }
+                    Err(_) => false,
                 },
                 None => false,
             },
@@ -335,7 +338,7 @@ impl Query {
     fn new(hostname: &str, callback: Callback) -> Query {
         Query {
             hostname: hostname.to_string(),
-            callback: callback,
+            callback,
             timestamp: time::Instant::now(),
             attempts: 0,
         }
@@ -365,7 +368,7 @@ impl MDNSService {
     fn query_hostname(&mut self, callback: Callback, hostname: &str) {
         if let Some(sender) = &self.sender {
             if let Err(err) = sender.send(ServiceControl::Query {
-                callback: callback,
+                callback,
                 hostname: hostname.to_string(),
             }) {
                 warn!(
@@ -505,7 +508,7 @@ impl MDNSService {
                 warn!("Could not stop mDNS Service: {}", err);
             }
             if let Some(handle) = self.handle {
-                if let Err(_) = handle.join() {
+                if handle.join().is_err() {
                     error!("Error on thread join");
                 }
             }
@@ -520,8 +523,12 @@ impl MDNSService {
     }
 }
 
+/// # Safety
+///
+/// This function must only be called with a valid MDNSService pointer.
+/// This hostname and address arguments must be zero terminated strings.
 #[no_mangle]
-pub extern "C" fn mdns_service_register_hostname(
+pub unsafe extern "C" fn mdns_service_register_hostname(
     serv: *mut MDNSService,
     hostname: *const c_char,
     address: *const c_char,
@@ -529,73 +536,80 @@ pub extern "C" fn mdns_service_register_hostname(
     assert!(!serv.is_null());
     assert!(!hostname.is_null());
     assert!(!address.is_null());
-    unsafe {
-        let hostname = CStr::from_ptr(hostname).to_string_lossy();
-        let address = CStr::from_ptr(address).to_string_lossy();
-        (*serv).register_hostname(&hostname, &address);
-    }
+    let hostname = CStr::from_ptr(hostname).to_string_lossy();
+    let address = CStr::from_ptr(address).to_string_lossy();
+    (*serv).register_hostname(&hostname, &address);
 }
 
+/// # Safety
+///
+/// This ifaddrs argument must be a zero terminated string.
 #[no_mangle]
-pub extern "C" fn mdns_service_start(ifaddrs: *const c_char) -> *mut MDNSService {
+pub unsafe extern "C" fn mdns_service_start(ifaddrs: *const c_char) -> *mut MDNSService {
     assert!(!ifaddrs.is_null());
     let mut r = Box::new(MDNSService::new());
-    unsafe {
-        let ifaddrs = CStr::from_ptr(ifaddrs).to_string_lossy();
-        let addrs: Vec<std::net::Ipv4Addr> =
-            ifaddrs.split(';').filter_map(|x| x.parse().ok()).collect();
+    let ifaddrs = CStr::from_ptr(ifaddrs).to_string_lossy();
+    let addrs: Vec<std::net::Ipv4Addr> =
+        ifaddrs.split(';').filter_map(|x| x.parse().ok()).collect();
 
-        if addrs.len() == 0 {
-            warn!("Could not parse interface addresses from: {}", ifaddrs);
-        } else if let Err(err) = r.start(addrs) {
-            warn!("Could not start mDNS Service: {}", err);
-        }
+    if addrs.is_empty() {
+        warn!("Could not parse interface addresses from: {}", ifaddrs);
+    } else if let Err(err) = r.start(addrs) {
+        warn!("Could not start mDNS Service: {}", err);
     }
+
     Box::into_raw(r)
 }
 
+/// # Safety
+///
+/// This function must only be called with a valid MDNSService pointer.
 #[no_mangle]
-pub extern "C" fn mdns_service_stop(serv: *mut MDNSService) {
+pub unsafe extern "C" fn mdns_service_stop(serv: *mut MDNSService) {
     assert!(!serv.is_null());
-    unsafe {
-        let boxed = Box::from_raw(serv);
-        boxed.stop();
-    }
+    let boxed = Box::from_raw(serv);
+    boxed.stop();
 }
 
+/// # Safety
+///
+/// This function must only be called with a valid MDNSService pointer.
+/// The data argument will be passed back into the resolved and timedout
+/// functions. The object it points to must not be freed until the MDNSService
+/// has stopped.
 #[no_mangle]
-pub extern "C" fn mdns_service_query_hostname(
+pub unsafe extern "C" fn mdns_service_query_hostname(
     serv: *mut MDNSService,
     data: *const c_void,
-    resolved: extern "C" fn(*const c_void, *const c_char, *const c_char),
-    timedout: extern "C" fn(*const c_void, *const c_char),
+    resolved: unsafe extern "C" fn(*const c_void, *const c_char, *const c_char),
+    timedout: unsafe extern "C" fn(*const c_void, *const c_char),
     hostname: *const c_char,
 ) {
     assert!(!serv.is_null());
     assert!(!data.is_null());
     assert!(!hostname.is_null());
-    unsafe {
-        let hostname = CStr::from_ptr(hostname).to_string_lossy();
-        let callback = Callback {
-            data: data,
-            resolved: resolved,
-            timedout: timedout,
-        };
-        (*serv).query_hostname(callback, &hostname);
-    }
+    let hostname = CStr::from_ptr(hostname).to_string_lossy();
+    let callback = Callback {
+        data,
+        resolved,
+        timedout,
+    };
+    (*serv).query_hostname(callback, &hostname);
 }
 
+/// # Safety
+///
+/// This function must only be called with a valid MDNSService pointer.
+/// This function should only be called once per hostname.
 #[no_mangle]
-pub extern "C" fn mdns_service_unregister_hostname(
+pub unsafe extern "C" fn mdns_service_unregister_hostname(
     serv: *mut MDNSService,
     hostname: *const c_char,
 ) {
     assert!(!serv.is_null());
     assert!(!hostname.is_null());
-    unsafe {
-        let hostname = CStr::from_ptr(hostname).to_string_lossy();
-        (*serv).unregister_hostname(&hostname);
-    }
+    let hostname = CStr::from_ptr(hostname).to_string_lossy();
+    (*serv).unregister_hostname(&hostname);
 }
 
 #[no_mangle]
@@ -607,12 +621,13 @@ pub extern "C" fn mdns_service_generate_uuid() -> *const c_char {
     }
 }
 
+/// # Safety
+///
+/// This function should only be called once, with a valid uuid.
 #[no_mangle]
-pub extern "C" fn mdns_service_free_uuid(uuid: *mut c_char) {
+pub unsafe extern "C" fn mdns_service_free_uuid(uuid: *mut c_char) {
     assert!(!uuid.is_null());
-    unsafe {
-        CString::from_raw(uuid);
-    }
+    CString::from_raw(uuid);
 }
 
 #[cfg(test)]
@@ -632,7 +647,7 @@ mod tests {
     use uuid::Uuid;
 
     #[no_mangle]
-    pub extern "C" fn mdns_service_resolved(
+    pub unsafe extern "C" fn mdns_service_resolved(
         _: *const c_void,
         _: *const c_char,
         _: *const c_char,
@@ -640,7 +655,7 @@ mod tests {
     }
 
     #[no_mangle]
-    pub extern "C" fn mdns_service_timedout(_: *const c_void, _: *const c_char) -> () {}
+    pub unsafe extern "C" fn mdns_service_timedout(_: *const c_void, _: *const c_char) -> () {}
 
     fn listen_until(addr: &std::net::Ipv4Addr, stop: u64) -> thread::JoinHandle<Vec<String>> {
         let port = 5353;
