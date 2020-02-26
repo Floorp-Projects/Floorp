@@ -474,7 +474,13 @@ nsresult RemoteWorkerChild::ExecWorkerOnMainThread(RemoteWorkerData&& aData) {
     nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
         __func__, [initializeWorkerRunnable = std::move(runnable),
                    self = std::move(self)] {
-          if (NS_WARN_IF(!initializeWorkerRunnable->Dispatch())) {
+          // Checking RemoteWorkerChild.mState
+          bool isPending;
+          {
+            auto lock = self->mState.Lock();
+            isPending = lock->is<Pending>();
+          }
+          if (NS_WARN_IF(!isPending || !initializeWorkerRunnable->Dispatch())) {
             self->TransitionStateToTerminated();
             self->CreationFailedOnAnyThread();
           }
