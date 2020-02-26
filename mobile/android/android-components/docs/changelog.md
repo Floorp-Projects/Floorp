@@ -59,6 +59,15 @@ permalink: /changelog/
 * **feature-accounts-push**
   * Updated `FxaPushSupportFeature` to use the new `AutoPushFeature` APIs.
 
+* **concept-sync**
+ * ⚠️ **This is a breaking change**:
+  * `DeviceEvent` and related classes were expanded/refactored, and renamed to `AccountEvent`.
+  * `DeviceConstellation` "event" related APIs were renamed to be "command"-centric.
+
+* **service-firefox-accounts**
+ * ⚠️ **This is a breaking change**:
+  * `FxaAccountManager.registerForDeviceEvents` renamed to `FxaAccountManager.registerForAccountEvents`.
+
 # 33.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v32.0.0...v33.0.0)
