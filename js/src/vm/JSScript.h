@@ -2499,7 +2499,7 @@ class JSScript : public js::BaseScript {
 
   static JSScript* Create(JSContext* cx, js::HandleObject functionOrGlobal,
                           js::HandleScriptSourceObject sourceObject,
-                          bool noScriptRval, bool selfHosted, bool isRunOnce,
+                          js::ImmutableScriptFlags flags,
                           bool hideScriptFromDebugger, js::SourceExtent extent);
 
   static JSScript* CreateFromLazy(JSContext* cx,
