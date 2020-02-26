@@ -57,7 +57,7 @@ async function getMappedExpression(hud, expression) {
 }
 
 function evaluateExpression(expression) {
-  return async ({ dispatch, webConsoleUI, hud, client }) => {
+  return async ({ dispatch, toolbox, webConsoleUI, hud, client }) => {
     if (!expression) {
       expression = hud.getInputSelection() || hud.getInputValue();
     }
@@ -84,10 +84,8 @@ function evaluateExpression(expression) {
     let mapped;
     ({ expression, mapped } = await getMappedExpression(hud, expression));
 
-    const frameActorId = await webConsoleUI.getFrameActor();
-    const webConsoleFront = await webConsoleUI.getWebConsoleFront({
-      frameActorId,
-    });
+    const frameActor = await webConsoleUI.getFrameActor();
+    const selectedThreadFront = toolbox && toolbox.getSelectedThreadFront();
 
     // Even if the evaluation fails,
     // we still need to pass the error response to onExpressionEvaluated.
@@ -95,9 +93,9 @@ function evaluateExpression(expression) {
 
     const response = await client
       .evaluateJSAsync(expression, {
-        frameActor: frameActorId,
+        selectedThreadFront,
+        frameActor,
         selectedNodeFront: webConsoleUI.getSelectedNodeFront(),
-        webConsoleFront,
         mapped,
       })
       .then(onSettled, onSettled);
@@ -211,7 +209,7 @@ function setInputValue(value) {
 }
 
 function terminalInputChanged(expression) {
-  return async ({ dispatch, webConsoleUI, hud, client, getState }) => {
+  return async ({ dispatch, webConsoleUI, hud, toolbox, client, getState }) => {
     const prefs = getAllPrefs(getState());
     if (!prefs.eagerEvaluation) {
       return;
@@ -242,15 +240,13 @@ function terminalInputChanged(expression) {
     let mapped;
     ({ expression, mapped } = await getMappedExpression(hud, expression));
 
-    const frameActorId = await webConsoleUI.getFrameActor();
-    const webConsoleFront = await webConsoleUI.getWebConsoleFront({
-      frameActorId,
-    });
+    const frameActor = await webConsoleUI.getFrameActor();
+    const selectedThreadFront = toolbox && toolbox.getSelectedThreadFront();
 
     const response = await client.evaluateJSAsync(expression, {
-      frameActor: frameActorId,
+      frameActor,
+      selectedThreadFront,
       selectedNodeFront: webConsoleUI.getSelectedNodeFront(),
-      webConsoleFront,
       mapped,
       eager: true,
     });
