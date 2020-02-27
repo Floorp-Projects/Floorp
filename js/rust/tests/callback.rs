@@ -8,13 +8,13 @@ extern crate libc;
 
 use js::ar::AutoRealm;
 use js::glue::JSEncodeStringToUTF8;
-use js::jsapi::root::JS::CallArgs;
-use js::jsapi::root::JS::RealmOptions;
 use js::jsapi::root::JSContext;
 use js::jsapi::root::JS_DefineFunction;
 use js::jsapi::root::JS_NewGlobalObject;
 use js::jsapi::root::JS_ReportErrorASCII;
+use js::jsapi::root::JS::CallArgs;
 use js::jsapi::root::JS::OnNewGlobalHookOption;
+use js::jsapi::root::JS::RealmOptions;
 use js::jsapi::root::JS::Value;
 use js::jsval::UndefinedValue;
 use js::rust::{Runtime, SIMPLE_GLOBAL_CLASS};
@@ -31,12 +31,24 @@ fn callback() {
     let c_option = RealmOptions::default();
 
     unsafe {
-        let global = JS_NewGlobalObject(context, &SIMPLE_GLOBAL_CLASS, ptr::null_mut(), h_option, &c_option);
+        let global = JS_NewGlobalObject(
+            context,
+            &SIMPLE_GLOBAL_CLASS,
+            ptr::null_mut(),
+            h_option,
+            &c_option,
+        );
         rooted!(in(context) let global_root = global);
         let global = global_root.handle();
         let _ar = AutoRealm::with_obj(context, global.get());
-        let function = JS_DefineFunction(context, global, b"puts\0".as_ptr() as *const libc::c_char,
-                                         Some(puts), 1, 0);
+        let function = JS_DefineFunction(
+            context,
+            global,
+            b"puts\0".as_ptr() as *const libc::c_char,
+            Some(puts),
+            1,
+            0,
+        );
         assert!(!function.is_null());
         let javascript = "puts('Test Iñtërnâtiônàlizætiøn ┬─┬ノ( º _ ºノ) ');";
         rooted!(in(context) let mut rval = UndefinedValue());
@@ -48,7 +60,10 @@ unsafe extern "C" fn puts(context: *mut JSContext, argc: u32, vp: *mut Value) ->
     let args = CallArgs::from_vp(vp, argc);
 
     if args._base.argc_ != 1 {
-        JS_ReportErrorASCII(context, b"puts() requires exactly 1 argument\0".as_ptr() as *const libc::c_char);
+        JS_ReportErrorASCII(
+            context,
+            b"puts() requires exactly 1 argument\0".as_ptr() as *const libc::c_char,
+        );
         return false;
     }
 

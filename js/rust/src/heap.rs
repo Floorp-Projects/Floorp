@@ -51,7 +51,8 @@ pub struct Heap<T: GCMethods + Copy> {
 
 impl<T: GCMethods + Copy> Heap<T> {
     pub fn new(v: T) -> Heap<T>
-        where Heap<T>: Default
+    where
+        Heap<T>: Default,
     {
         let ptr = Heap::default();
         ptr.set(v);
@@ -68,9 +69,7 @@ impl<T: GCMethods + Copy> Heap<T> {
     }
 
     pub fn get(&self) -> T {
-        unsafe {
-            *self.ptr.get()
-        }
+        unsafe { *self.ptr.get() }
     }
 
     pub unsafe fn get_unsafe(&self) -> *mut T {
@@ -78,20 +77,17 @@ impl<T: GCMethods + Copy> Heap<T> {
     }
 
     pub fn handle(&self) -> JS::Handle<T> {
-        unsafe {
-            JS::Handle::from_marked_location(self.ptr.get() as *const _)
-        }
+        unsafe { JS::Handle::from_marked_location(self.ptr.get() as *const _) }
     }
 
     pub fn handle_mut(&self) -> JS::MutableHandle<T> {
-        unsafe {
-            JS::MutableHandle::from_marked_location(self.ptr.get())
-        }
+        unsafe { JS::MutableHandle::from_marked_location(self.ptr.get()) }
     }
 }
 
 impl<T: GCMethods + Copy> Clone for Heap<T>
-    where Heap<T>: Default
+where
+    Heap<T>: Default,
 {
     fn clone(&self) -> Self {
         Heap::new(self.get())
@@ -105,11 +101,12 @@ impl<T: GCMethods + Copy + PartialEq> PartialEq for Heap<T> {
 }
 
 impl<T> Default for Heap<*mut T>
-    where *mut T: GCMethods + Copy
+where
+    *mut T: GCMethods + Copy,
 {
     fn default() -> Heap<*mut T> {
         Heap {
-            ptr: UnsafeCell::new(ptr::null_mut())
+            ptr: UnsafeCell::new(ptr::null_mut()),
         }
     }
 }
@@ -117,7 +114,7 @@ impl<T> Default for Heap<*mut T>
 impl Default for Heap<JS::Value> {
     fn default() -> Heap<JS::Value> {
         Heap {
-            ptr: UnsafeCell::new(JS::Value::default())
+            ptr: UnsafeCell::new(JS::Value::default()),
         }
     }
 }
@@ -135,7 +132,7 @@ impl<T: GCMethods + Copy> Drop for Heap<T> {
 macro_rules! c_str {
     ($str:expr) => {
         concat!($str, "\0").as_ptr() as *const ::std::os::raw::c_char
-    }
+    };
 }
 
 unsafe impl Trace for Heap<*mut JSFunction> {
