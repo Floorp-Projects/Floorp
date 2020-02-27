@@ -26,6 +26,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   UrlbarProviderInterventions:
     "resource:///modules/UrlbarProviderInterventions.jsm",
   UrlbarTestUtils: "resource://testing-common/UrlbarTestUtils.jsm",
+  TelemetryTestUtils: "resource://testing-common/TelemetryTestUtils.jsm",
 });
 
 // For each intervention type, a search string that trigger the intervention.
