@@ -205,6 +205,7 @@ bool BackgroundChildImpl::DeallocPBackgroundIndexedDBUtilsChild(
 
 BackgroundChildImpl::PBackgroundSDBConnectionChild*
 BackgroundChildImpl::AllocPBackgroundSDBConnectionChild(
+    const PersistenceType& aPersistenceType,
     const PrincipalInfo& aPrincipalInfo) {
   MOZ_CRASH(
       "PBackgroundSDBConnectionChild actor should be manually "

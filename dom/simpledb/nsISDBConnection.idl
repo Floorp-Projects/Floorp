@@ -14,7 +14,7 @@ interface nsISDBRequest;
 interface nsISDBConnection : nsISupports
 {
   [must_use] void
-  init(in nsIPrincipal aPrincipal);
+  init(in nsIPrincipal aPrincipal, [optional] in ACString aPersistenceType);
 
   [must_use] nsISDBRequest
   open(in AString aName);

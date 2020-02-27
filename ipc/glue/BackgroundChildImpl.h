@@ -73,6 +73,7 @@ class BackgroundChildImpl : public PBackgroundChild,
       PBackgroundIndexedDBUtilsChild* aActor) override;
 
   virtual PBackgroundSDBConnectionChild* AllocPBackgroundSDBConnectionChild(
+      const PersistenceType& aPersistenceType,
       const PrincipalInfo& aPrincipalInfo) override;
 
   virtual bool DeallocPBackgroundSDBConnectionChild(

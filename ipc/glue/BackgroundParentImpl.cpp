@@ -233,23 +233,26 @@ mozilla::ipc::IPCResult BackgroundParentImpl::RecvFlushPendingFileDeletions() {
 
 BackgroundParentImpl::PBackgroundSDBConnectionParent*
 BackgroundParentImpl::AllocPBackgroundSDBConnectionParent(
+    const PersistenceType& aPersistenceType,
     const PrincipalInfo& aPrincipalInfo) {
   AssertIsInMainOrSocketProcess();
   AssertIsOnBackgroundThread();
 
-  return mozilla::dom::AllocPBackgroundSDBConnectionParent(aPrincipalInfo);
+  return mozilla::dom::AllocPBackgroundSDBConnectionParent(aPersistenceType,
+                                                           aPrincipalInfo);
 }
 
 mozilla::ipc::IPCResult
 BackgroundParentImpl::RecvPBackgroundSDBConnectionConstructor(
     PBackgroundSDBConnectionParent* aActor,
+    const PersistenceType& aPersistenceType,
     const PrincipalInfo& aPrincipalInfo) {
   AssertIsInMainOrSocketProcess();
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aActor);
 
-  if (!mozilla::dom::RecvPBackgroundSDBConnectionConstructor(aActor,
-                                                             aPrincipalInfo)) {
+  if (!mozilla::dom::RecvPBackgroundSDBConnectionConstructor(
+          aActor, aPersistenceType, aPrincipalInfo)) {
     return IPC_FAIL_NO_REASON(this);
   }
   return IPC_OK();
