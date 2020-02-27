@@ -174,8 +174,6 @@ class BaselineCodeGen {
                                    Register scratch);
   void emitJumpToInterpretOpLabel();
 
-  MOZ_MUST_USE bool emitIncExecutionProgressCounter(Register scratch);
-
   MOZ_MUST_USE bool emitCheckThis(ValueOperand val, bool reinit = false);
   void emitLoadReturnValue(ValueOperand val);
   void emitPushNonArrowFunctionNewTarget();

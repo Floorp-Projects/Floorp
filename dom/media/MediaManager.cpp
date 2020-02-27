@@ -295,8 +295,8 @@ class SourceListener : public SupportsWeakPtr<SourceListener> {
       SourceListenerPromise;
 
   MOZ_DECLARE_WEAKREFERENCE_TYPENAME(SourceListener)
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING_WITH_MAIN_THREAD_DESTRUCTION_AND_RECORDING(
-      SourceListener, recordreplay::Behavior::Preserve)
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING_WITH_MAIN_THREAD_DESTRUCTION(
+      SourceListener)
 
   SourceListener();
 

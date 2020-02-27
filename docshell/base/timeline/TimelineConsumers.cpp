@@ -15,7 +15,7 @@ namespace mozilla {
 
 NS_IMPL_ISUPPORTS(TimelineConsumers, nsIObserver);
 
-StaticMutexNotRecorded TimelineConsumers::sMutex;
+StaticMutex TimelineConsumers::sMutex;
 
 // Manually manage this singleton's lifetime and destroy it before shutdown.
 // This avoids the leakchecker detecting false-positive memory leaks when

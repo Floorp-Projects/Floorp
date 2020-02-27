@@ -165,9 +165,8 @@ void ObjectElements::FreezeOrSeal(JSContext* cx, NativeObject* obj,
 }
 
 #ifdef DEBUG
-static mozilla::Atomic<bool, mozilla::Relaxed,
-                       mozilla::recordreplay::Behavior::DontPreserve>
-    gShapeConsistencyChecksEnabled(false);
+static mozilla::Atomic<bool, mozilla::Relaxed> gShapeConsistencyChecksEnabled(
+    false);
 
 /* static */
 void js::NativeObject::enableShapeConsistencyChecks() {

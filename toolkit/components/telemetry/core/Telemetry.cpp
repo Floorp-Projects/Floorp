@@ -188,10 +188,8 @@ class TelemetryImpl final : public nsITelemetry, public nsIMemoryReporter {
   AutoHashtable<SlowSQLEntryType> mPrivateSQL;
   AutoHashtable<SlowSQLEntryType> mSanitizedSQL;
   Mutex mHashMutex;
-  Atomic<bool, SequentiallyConsistent, recordreplay::Behavior::DontPreserve>
-      mCanRecordBase;
-  Atomic<bool, SequentiallyConsistent, recordreplay::Behavior::DontPreserve>
-      mCanRecordExtended;
+  Atomic<bool, SequentiallyConsistent> mCanRecordBase;
+  Atomic<bool, SequentiallyConsistent> mCanRecordExtended;
 
 #if defined(MOZ_GECKO_PROFILER)
   // Stores data about stacks captured on demand.
@@ -1101,9 +1099,6 @@ TelemetryImpl::GetCanRecordBase(bool* ret) {
 
 NS_IMETHODIMP
 TelemetryImpl::SetCanRecordBase(bool canRecord) {
-  if (recordreplay::IsRecordingOrReplaying()) {
-    return NS_OK;
-  }
 #ifndef FUZZING
   if (canRecord != mCanRecordBase) {
     TelemetryHistogram::SetCanRecordBase(canRecord);
@@ -1130,9 +1125,6 @@ TelemetryImpl::GetCanRecordExtended(bool* ret) {
 
 NS_IMETHODIMP
 TelemetryImpl::SetCanRecordExtended(bool canRecord) {
-  if (recordreplay::IsRecordingOrReplaying()) {
-    return NS_OK;
-  }
 #ifndef FUZZING
   if (canRecord != mCanRecordExtended) {
     TelemetryHistogram::SetCanRecordExtended(canRecord);
@@ -1177,13 +1169,8 @@ already_AddRefed<nsITelemetry> TelemetryImpl::CreateTelemetryInstance() {
 
   bool useTelemetry = false;
 #ifndef FUZZING
-  if ((XRE_IsParentProcess() || XRE_IsContentProcess() || XRE_IsGPUProcess() ||
-       XRE_IsSocketProcess()) &&
-      // Telemetry is never accumulated when recording or replaying, both
-      // because the resulting measurements might be biased and because
-      // measurements might occur at non-deterministic points in execution
-      // (e.g. garbage collections).
-      !recordreplay::IsRecordingOrReplaying()) {
+  if (XRE_IsParentProcess() || XRE_IsContentProcess() || XRE_IsGPUProcess() ||
+      XRE_IsSocketProcess()) {
     useTelemetry = true;
   }
 #endif

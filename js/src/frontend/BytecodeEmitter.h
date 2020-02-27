@@ -15,8 +15,9 @@
 #include "mozilla/Span.h"    // mozilla::Span
 #include "mozilla/Vector.h"  // mozilla::Vector
 
-#include <stddef.h>  // ptrdiff_t
-#include <stdint.h>  // uint16_t, uint32_t
+#include <functional>  // std::function
+#include <stddef.h>    // ptrdiff_t
+#include <stdint.h>    // uint16_t, uint32_t
 
 #include "jsapi.h"  // CompletionKind
 

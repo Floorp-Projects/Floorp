@@ -360,7 +360,7 @@ CompositorBridgeParent::CompositorBridgeParent(
 
 void CompositorBridgeParent::InitSameProcess(widget::CompositorWidget* aWidget,
                                              const LayersId& aLayerTreeId) {
-  MOZ_ASSERT(XRE_IsParentProcess() || recordreplay::IsRecordingOrReplaying());
+  MOZ_ASSERT(XRE_IsParentProcess());
   MOZ_ASSERT(NS_IsMainThread());
 
   mWidget = aWidget;
@@ -1021,11 +1021,7 @@ void CompositorBridgeParent::CompositeToTarget(VsyncId aId, DrawTarget* aTarget,
   bool requestNextFrame =
       mCompositionManager->TransformShadowTree(time, mVsyncRate);
 
-  // Don't eagerly schedule new compositions here when recording or replaying.
-  // Recording/replaying processes schedule composites at the top of the main
-  // thread's event loop rather than via PVsync, which can cause the composites
-  // scheduled here to pile up without any drawing actually happening.
-  if (requestNextFrame && !recordreplay::IsRecordingOrReplaying()) {
+  if (requestNextFrame) {
     ScheduleComposition();
 #if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
     // If we have visible windowed plugins then we need to wait for content (and

@@ -145,9 +145,7 @@ class CountingAllocatorBase {
   // |sAmount| can be (implicitly) accessed by multiple threads, so it
   // must be thread-safe. It may be written during GC, so accesses are not
   // recorded.
-  typedef Atomic<size_t, SequentiallyConsistent,
-                 recordreplay::Behavior::DontPreserve>
-      AmountType;
+  typedef Atomic<size_t, SequentiallyConsistent> AmountType;
   static AmountType sAmount;
 
   MOZ_DEFINE_MALLOC_SIZE_OF_ON_ALLOC(MallocSizeOfOnAlloc)
