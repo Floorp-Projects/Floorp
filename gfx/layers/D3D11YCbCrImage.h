@@ -41,10 +41,8 @@ class MOZ_RAII DXGIYCbCrTextureAllocationHelper
 
 class D3D11YCbCrRecycleAllocator : public TextureClientRecycleAllocator {
  public:
-  explicit D3D11YCbCrRecycleAllocator(KnowsCompositor* aAllocator)
-      : TextureClientRecycleAllocator(aAllocator) {}
-
-  KnowsCompositor* GetAllocator() const { return mSurfaceAllocator; }
+  explicit D3D11YCbCrRecycleAllocator(KnowsCompositor* aKnowsCompositor)
+      : TextureClientRecycleAllocator(aKnowsCompositor) {}
 
  protected:
   already_AddRefed<TextureClient> Allocate(
