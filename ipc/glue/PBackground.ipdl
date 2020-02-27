@@ -126,7 +126,8 @@ parent:
   // Use only for testing!
   async FlushPendingFileDeletions();
 
-  async PBackgroundSDBConnection(PrincipalInfo principalInfo);
+  async PBackgroundSDBConnection(PersistenceType persistenceType,
+                                 PrincipalInfo principalInfo);
 
   async PBackgroundLSDatabase(PrincipalInfo principalInfo,
                               uint32_t privateBrowsingId,
