@@ -8,7 +8,7 @@ const { Component } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
-class AutocompletePopup extends Component {
+class SearchBoxAutocompletePopup extends Component {
   static get propTypes() {
     return {
       /**
@@ -144,4 +144,4 @@ class AutocompletePopup extends Component {
   }
 }
 
-module.exports = AutocompletePopup;
+module.exports = SearchBoxAutocompletePopup;
