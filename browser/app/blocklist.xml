@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1582301451440">
+<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1582726440807">
   <emItems>
     <emItem blockID="i334" id="{0F827075-B026-42F3-885D-98981EE7B1AE}">
       <prefs/>
@@ -2948,10 +2948,6 @@
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
-    <emItem blockID="3c782d96-5d25-45d3-8f07-016a791e316c" id="@searchencrypt">
-      <prefs/>
-      <versionRange minVersion="0" maxVersion="3.5.0" severity="3"/>
-    </emItem>
     <emItem blockID="72464ab8-9b51-420f-8e54-bc0f8bb01cf1" id="/^((ehfiibbkgllccnbifchmillffgdlmidi@chrome-store-foxified-3843796584)|(ehfiibbkgllccnbifchmillffgdlmidi@chrome-store-foxified-3264908934))$/">
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
@@ -3685,6 +3681,30 @@
       <versionRange minVersion="0" maxVersion="2.10.1" severity="3"/>
     </emItem>
     <emItem blockID="b12eaf8d-77ff-4bd6-8b9f-797af110f86c" id="/^((\{d551e6af-55af-4295-92f0-ba0e3d15bb00\})|(\{36858137-f125-47fc-8e0c-499f161abaf0\})|(\{7edb2ea5-61a9-4447-87b2-d37ed4198d1c\})|(\{0ea11f50-96b6-4a8b-92f4-1eb6ca77acac\})|(\{1449de8a-cdb8-4f65-b909-c6391e49615f\})|(\{e7cdc797-edcb-46a0-a66e-f5dab3c808d6\})|(\{d57b5f9f-b35d-4879-84a3-3547d44249ec\})|(\{d4e41bc4-cb00-42d0-b756-ed8deb827cbc\})|(\{083acfab-6228-439a-b796-62647803b216\})|(\{ed2df6fc-df45-43ac-a923-bd3fbc3534c2\})|(\{ebc63925-e43d-4cc1-b234-4c8b6abc331c\})|(\{231652e4-ad9a-4dd7-89b1-d79876c0dca7\})|(\{2cb0bdaf-5789-415b-a92d-2adbc695cb63\})|(\{429a08cf-84c4-4eae-9ecf-fc6c3a07249c\})|(\{ec4fb55e-d94d-4196-9ee6-a6f19e3c9405\})|(\{bd55549f-9853-427c-a45d-6aba2b4776d2\})|(\{bbfa0b1d-c75b-4483-8331-b5b01c82fe5d\}))$/">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="414cf401-fbc9-4218-85fe-5880068e8452" id="{6ac0938d-7ca6-43ac-9c26-653d37820440}">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="1406ee6a-4eab-441d-ad1f-ce09b650ce2d" id="/^((bazaarhero@jetpack)|(boingdeals@jetpack)|(boingdeals-1@jetpack)|(boingdeals-200@jetpack)|(\{e9edde2d-5dda-46b5-b6ca-f732d96d941a\})|(\{29c11376-f72c-489b-a9eb-8fe309b1623e\}))$/">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="f8ce5794-a1db-4a63-af32-1750de36a383" id="/^((\{374c327c-fbd0-4769-a378-1cb0fef54b1c\})|(\{11d9b7d9-acea-4a66-94ff-3fbbcca15abc\})|(\{e9e3ac53-8384-4f2a-a451-78af21417b13\})|(\{61539a14-2728-448f-a071-45043287cf10\})|(\{9ca7082d-0e18-465e-8588-8d3990c5b9ae\})|(\{0444bcb0-66d3-49b1-ac1f-b79f7f682f15\}))$/">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="3c782d96-5d25-45d3-8f07-016a791e316c" id="@searchencrypt">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="e15a83e1-60c6-475d-977c-83e180646e6a" id="{6059d268-eb5b-491c-9879-964e1c67c854}">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="98dbf563-0a8e-4796-ac48-1be0e4520610" id="/^((jid1-C96jkOWH1jEZ5A@jetpack)|(@pdfit)|(@youtube_downloader)|(\{503b5ae9-dcb1-41c4-9cf8-0c70a5c2bc70\})|(\{a9de7157-1c27-45bf-ab59-bedcbf57cff9\})|(\{908c4278-9f44-4b59-ad6f-91e2aabc8682\}))$/">
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
