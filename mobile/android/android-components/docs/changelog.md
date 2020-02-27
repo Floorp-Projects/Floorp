@@ -12,6 +12,9 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Config.kt)
 
+* **feature-downloads**
+  * Fixed APK downloads not prompting to install when the notification is clicked.
+
 * **service-location**
   * Created `LocationService` interface and made `MozillaLocationService` implement it.
   * `RegionSearchLocalizationProvider` now accepts any `LocationService` implementation.
@@ -48,11 +51,11 @@ permalink: /changelog/
   * ⚠️ **This is a breaking change**: `alwaysAllowedSchemes` is removed as a parameter for `AppLinksInterceptor`.
   * Added `engineSupportedSchemes` as a parameter for `AppLinksInterceptor`.  This allows the caller to specify which protocol is supported by the engine.
     * Using this information, app links can decide if a protocol should be launched in a third party app or not regardless of user preference.
-    
+
 * **feature-sitepermissions**
   * ⚠️ **This is a breaking change**: add parameters `autoplayAudible` and `autoplayInaudible` to `SitePermissionsRules`.
     * This allows autoplay settings to be controlled for specific sites, rather than globally.
-  
+
 * **concept-engine**
   * ⚠️ **This is a breaking change**: remove deprecated GeckoView setting `allowAutoplayMedia`
     * This should now be controlled for individual sites via `SitePermissionsRules`
@@ -62,7 +65,7 @@ permalink: /changelog/
 
 * **feature-contextmenu**
   * ⚠️ **This is a breaking change**: `customTabId` is renamed to `tabId`.
-  
+
 * **browser-menu**
   * Emit fact on the web extension id when a web extension menu item is clicked.
 
