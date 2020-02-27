@@ -77,6 +77,12 @@ class nsIScrollableFrame : public nsIScrollbarMediator {
   virtual mozilla::ScrollStyles GetScrollStyles() const = 0;
 
   /**
+   * Returns whether this scroll frame is for a text control element with no
+   * scrollbars (for <input>, basically).
+   */
+  virtual bool IsForTextControlWithNoScrollbars() const = 0;
+
+  /**
    * Get the overscroll-behavior styles.
    */
   virtual mozilla::layers::OverscrollBehaviorInfo GetOverscrollBehaviorInfo()
