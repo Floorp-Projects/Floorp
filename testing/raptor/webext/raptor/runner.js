@@ -19,6 +19,9 @@ const TEST_BENCHMARK = "benchmark";
 const TEST_PAGE_LOAD = "pageload";
 const TEST_SCENARIO = "scenario";
 
+const GECKOVIEW_BROWSERS = ["fenix", "geckoview", "refbrow"];
+const GECKO_BROWSERS = GECKOVIEW_BROWSERS + ["firefox"];
+
 // when the browser starts this webext runner will start automatically; we
 // want to give the browser some time (ms) to settle before starting tests
 var postStartupDelay;
@@ -33,6 +36,8 @@ var reuseTab = false;
 var foregroundDelay = 5000;
 
 var browserName;
+var isGecko;
+var isGeckoView;
 var ext;
 var testName = null;
 var settingsURL = null;
@@ -180,7 +185,7 @@ async function getTestSettings() {
   }
 
   // write options to storage that our content script needs to know
-  if (["firefox", "geckoview", "refbrow", "fenix"].includes(browserName)) {
+  if (isGecko) {
     await ext.storage.local.clear();
     await ext.storage.local.set({ settings });
   } else {
@@ -194,12 +199,10 @@ async function getTestSettings() {
 }
 
 async function getBrowserInfo() {
-  if (["firefox", "geckoview", "refbrow", "fenix"].includes(browserName)) {
-    ext = browser;
-    const info = await browser.runtime.getBrowserInfo();
+  if (isGecko) {
+    const info = await ext.runtime.getBrowserInfo();
     results.browser = `${info.name} ${info.version} ${info.buildID}`;
   } else {
-    ext = chrome;
     const info = window.navigator.userAgent.split(" ");
     for (const entry in info) {
       if (info[entry].indexOf("Chrome") > -1) {
@@ -324,7 +327,7 @@ async function getScreenCapture() {
   try {
     let screenshotUri;
 
-    if (["firefox", "geckoview", "refbrow", "fenix"].includes(browserName)) {
+    if (isGecko) {
       screenshotUri = await ext.tabs.captureVisibleTab();
     } else {
       screenshotUri = await new Promise(resolve =>
@@ -347,7 +350,7 @@ async function startGeckoProfiling() {
     "status",
     `starting Gecko profiling for threads: ${geckoThreads}`
   );
-  await browser.geckoProfiler.start({
+  await ext.geckoProfiler.start({
     bufferSize: geckoEntries,
     interval: geckoInterval,
     features: ["js", "leaf", "stackwalk", "threads", "responsiveness"],
@@ -357,7 +360,7 @@ async function startGeckoProfiling() {
 
 async function stopGeckoProfiling() {
   await postToControlServer("status", "stopping gecko profiling");
-  await browser.geckoProfiler.stop();
+  await ext.geckoProfiler.stop();
 }
 
 async function getGeckoProfile() {
@@ -365,7 +368,7 @@ async function getGeckoProfile() {
   const fileName = `${testName}_pagecycle_${pageCycle}.profile`;
 
   await postToControlServer("status", `saving gecko profile ${fileName}`);
-  await browser.geckoProfiler.dumpProfileToFile(fileName);
+  await ext.geckoProfiler.dumpProfileToFile(fileName);
   await postToControlServer("gecko_profile", fileName);
 
   // must stop the profiler so it clears the buffer before next cycle
@@ -502,12 +505,7 @@ function setTimeoutAlarm(timeoutName, timeoutMS) {
 }
 
 async function cancelTimeoutAlarm(timeoutName) {
-  if (
-    browserName === "firefox" ||
-    browserName === "geckoview" ||
-    browserName === "refbrow" ||
-    browserName === "fenix"
-  ) {
+  if (isGecko) {
     const alarm = await ext.alarms.clear(timeoutName);
     if (alarm) {
       raptorLog(`cancelled raptor alarm ${timeoutName}`);
@@ -682,6 +680,11 @@ async function raptorRunner() {
   debugMode = config.debug_mode;
   browserCycle = config.browser_cycle;
 
+  isGecko = GECKO_BROWSERS.includes(browserName);
+  isGeckoView = GECKOVIEW_BROWSERS.includes(browserName);
+
+  ext = isGecko ? browser : chrome;
+
   raptorLog(`test name is: ${testName}`);
   raptorLog(`test settings url is: ${settingsURL}`);
 
@@ -710,12 +713,8 @@ async function raptorRunner() {
     1000} seconds to let browser settle... *`;
   await postToControlServer("status", text);
 
-  // on geckoview you can't create a new tab; only using existing tab - set it blank first
-  if (
-    config.browser == "geckoview" ||
-    config.browser == "refbrow" ||
-    config.browser == "fenix"
-  ) {
+  // GeckoView doesn't support tabs; set existing tab as blank first
+  if (isGeckoView) {
     setTimeout(function() {
       nextCycle();
     }, postStartupDelay);
