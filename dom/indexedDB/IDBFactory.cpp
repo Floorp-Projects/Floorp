@@ -416,13 +416,6 @@ bool IDBFactory::IsChrome() const {
   return mPrincipalInfo->type() == PrincipalInfo::TSystemPrincipalInfo;
 }
 
-void IDBFactory::IncrementParentLoggingRequestSerialNumber() {
-  AssertIsOnOwningThread();
-  MOZ_ASSERT(mBackgroundActor);
-
-  mBackgroundActor->SendIncrementLoggingRequestSerialNumber();
-}
-
 RefPtr<IDBOpenDBRequest> IDBFactory::Open(JSContext* aCx,
                                           const nsAString& aName,
                                           uint64_t aVersion,
