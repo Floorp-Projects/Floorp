@@ -16,7 +16,7 @@ MIDL_GENERATED_FILES = \
 $(MIDL_GENERATED_FILES): done_gen ;
 
 done_gen: $(srcdir)/Accessible.idl
-	$(MIDL) $(MIDL_FLAGS) -Oicf $(srcdir)/Accessible.idl
+	$(call WINEWRAP,$(MIDL)) $(MIDL_FLAGS) -Oicf $(srcdir_rel)/Accessible.idl
 	touch $@
 
 export:: done_gen

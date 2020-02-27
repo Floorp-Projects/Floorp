@@ -20,8 +20,7 @@ done_gen: $(srcdir)/ISimpleDOM.idl \
           $(srcdir)/ISimpleDOMNode.idl \
           $(srcdir)/ISimpleDOMDocument.idl \
           $(srcdir)/ISimpleDOMText.idl
-
-	$(MIDL) $(MIDL_FLAGS) -I $(srcdir) -robust -Oicf $(srcdir)/ISimpleDOM.idl
+	$(call WINEWRAP,$(MIDL)) $(MIDL_FLAGS) -I $(srcdir_rel) -robust -Oicf $(srcdir_rel)/ISimpleDOM.idl
 	touch $@
 
 export:: done_gen
