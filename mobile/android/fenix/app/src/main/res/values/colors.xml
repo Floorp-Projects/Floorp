@@ -8,7 +8,7 @@
     <color name="secondary_text_light_theme">@color/photonGrey50</color>
     <color name="contrast_text_light_theme">@color/primary_text_dark_theme</color>
     <color name="foundation_light_theme">#F9F9FB</color>
-    <color name="inset_light_theme">#E6E8E8</color>
+    <color name="inset_light_theme">#E0E0E6</color>
     <color name="above_light_theme">#FFF</color>
     <color name="accent_light_theme">#312A65</color>
     <color name="accent_bright_light_theme">#592ACB</color>
@@ -32,7 +32,7 @@
     <color name="toolbar_start_gradient_light_theme">@color/foundation_light_theme</color>
     <color name="toolbar_center_gradient_light_theme">@color/foundation_light_theme</color>
     <color name="toolbar_end_gradient_light_theme">@color/foundation_light_theme</color>
-    <color name="toolbar_divider_color_light_theme">#CDCCCF</color>
+    <color name="toolbar_divider_color_light_theme">#BFBFC9</color>
     <color name="fill_link_from_clipboard_light_theme">@color/accent_light_theme</color>
     <color name="sync_disconnected_icon_fill_light_theme">#C45A27</color>
     <color name="sync_disconnected_background_light_theme">#FFFDE2</color>
@@ -42,7 +42,7 @@
     <color name="secondary_text_dark_theme">#A7A2B7</color>
     <color name="contrast_text_dark_theme">@color/primary_text_dark_theme</color>
     <color name="foundation_dark_theme">#1C1B22</color>
-    <color name="inset_dark_theme">#3F3E46</color>
+    <color name="inset_dark_theme">#32313C</color>
     <color name="above_dark_theme">#32313C</color>
     <color name="accent_dark_theme">#9059FF</color>
     <color name="accent_bright_dark_theme">#592ACB</color>
@@ -64,7 +64,7 @@
     <color name="toolbar_start_gradient_dark_theme">@color/foundation_dark_theme</color>
     <color name="toolbar_center_gradient_dark_theme">@color/foundation_dark_theme</color>
     <color name="toolbar_end_gradient_dark_theme">@color/foundation_dark_theme</color>
-    <color name="toolbar_divider_color_dark_theme">@color/neutral_faded_dark_theme</color>
+    <color name="toolbar_divider_color_dark_theme">#52525E</color>
     <color name="fill_link_from_clipboard_dark_theme">@color/accent_on_dark_background_normal_theme</color>
     <color name="sync_disconnected_icon_fill_dark_theme">#FFF36E</color>
     <color name="sync_disconnected_background_dark_theme">#5B5846</color>
@@ -74,7 +74,7 @@
     <color name="secondary_text_private_theme">#A7A2B7</color>
     <color name="contrast_text_private_theme">@color/primary_text_private_theme</color>
     <color name="foundation_private_theme">#261E4B</color>
-    <color name="inset_private_theme">#362A5C</color>
+    <color name="inset_private_theme">#291D4F</color>
     <color name="above_private_theme">#291D4F</color>
     <color name="accent_private_theme">#9059FF</color>
     <color name="accent_bright_private_theme">#592ACB</color>
@@ -93,7 +93,7 @@
     <color name="toolbar_start_gradient_private_theme">#7529A7</color>
     <color name="toolbar_center_gradient_private_theme">#492E85</color>
     <color name="toolbar_end_gradient_private_theme">#383372</color>
-    <color name="toolbar_divider_color_private_theme">#403760</color>
+    <color name="toolbar_divider_color_private_theme">#52525E</color>
     <color name="fill_link_from_clipboard_private_theme">@color/accent_on_dark_background_private_theme</color>
     <color name="menu_category_private_theme">@color/primary_text_private_theme</color>
     <color name="sync_disconnected_icon_fill_private_theme">#C45A27</color>
