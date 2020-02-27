@@ -41,10 +41,6 @@ int64_t vp9_block_error_fp_neon(const tran_low_t *coeff, const tran_low_t *dqcoe
 int vp9_diamond_search_sad_c(const struct macroblock *x, const struct search_site_config *cfg,  struct mv *ref_mv, struct mv *best_mv, int search_param, int sad_per_bit, int *num00, const struct vp9_variance_vtable *fn_ptr, const struct mv *center_mv);
 #define vp9_diamond_search_sad vp9_diamond_search_sad_c
 
-void vp9_fdct8x8_quant_c(const int16_t *input, int stride, tran_low_t *coeff_ptr, intptr_t n_coeffs, int skip_block, const int16_t *round_ptr, const int16_t *quant_ptr, tran_low_t *qcoeff_ptr, tran_low_t *dqcoeff_ptr, const int16_t *dequant_ptr, uint16_t *eob_ptr, const int16_t *scan, const int16_t *iscan);
-void vp9_fdct8x8_quant_neon(const int16_t *input, int stride, tran_low_t *coeff_ptr, intptr_t n_coeffs, int skip_block, const int16_t *round_ptr, const int16_t *quant_ptr, tran_low_t *qcoeff_ptr, tran_low_t *dqcoeff_ptr, const int16_t *dequant_ptr, uint16_t *eob_ptr, const int16_t *scan, const int16_t *iscan);
-#define vp9_fdct8x8_quant vp9_fdct8x8_quant_neon
-
 void vp9_fht16x16_c(const int16_t *input, tran_low_t *output, int stride, int tx_type);
 #define vp9_fht16x16 vp9_fht16x16_c
 
@@ -57,8 +53,9 @@ void vp9_fht8x8_c(const int16_t *input, tran_low_t *output, int stride, int tx_t
 void vp9_fwht4x4_c(const int16_t *input, tran_low_t *output, int stride);
 #define vp9_fwht4x4 vp9_fwht4x4_c
 
-void vp9_iht16x16_256_add_c(const tran_low_t *input, uint8_t *output, int pitch, int tx_type);
-#define vp9_iht16x16_256_add vp9_iht16x16_256_add_c
+void vp9_iht16x16_256_add_c(const tran_low_t *input, uint8_t *dest, int stride, int tx_type);
+void vp9_iht16x16_256_add_neon(const tran_low_t *input, uint8_t *dest, int stride, int tx_type);
+#define vp9_iht16x16_256_add vp9_iht16x16_256_add_neon
 
 void vp9_iht4x4_16_add_c(const tran_low_t *input, uint8_t *dest, int stride, int tx_type);
 void vp9_iht4x4_16_add_neon(const tran_low_t *input, uint8_t *dest, int stride, int tx_type);
