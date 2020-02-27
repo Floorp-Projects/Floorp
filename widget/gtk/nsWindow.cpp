@@ -474,6 +474,8 @@ nsWindow::nsWindow() {
 
   mWindowScaleFactorChanged = true;
   mWindowScaleFactor = 1;
+
+  mIsAccelerated = false;
 }
 
 nsWindow::~nsWindow() {
@@ -3848,8 +3850,8 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
       bool useWebRender =
           gfx::gfxVars::UseWebRender() && AllowWebRenderForThisWindow();
 
-      bool shouldAccelerate = ComputeShouldAccelerate();
-      MOZ_ASSERT(shouldAccelerate | !useWebRender);
+      mIsAccelerated = ComputeShouldAccelerate();
+      MOZ_ASSERT(mIsAccelerated | !useWebRender);
 
       if (mWindowType == eWindowType_toplevel) {
         // We enable titlebar rendering for toplevel windows only.
@@ -3873,7 +3875,7 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
             // Wayland uses ARGB visual by default
             needsAlphaVisual = true;
           } else if (mCSDSupportLevel != CSD_SUPPORT_NONE) {
-            if (shouldAccelerate) {
+            if (mIsAccelerated) {
               needsAlphaVisual = true;
             } else {
               // We want to draw a transparent titlebar but we can't use
@@ -3893,7 +3895,7 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
 
       // Use GL/WebRender compatible visual only when it is necessary, since
       // the visual consumes more memory.
-      if (mIsX11Display && shouldAccelerate) {
+      if (mIsX11Display && mIsAccelerated) {
         auto display = GDK_DISPLAY_XDISPLAY(gtk_widget_get_display(mShell));
         auto screen = gtk_widget_get_screen(mShell);
         int screenNumber = GDK_SCREEN_XNUMBER(screen);
@@ -4043,13 +4045,14 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
       GtkWidget* container = moz_container_new();
       mContainer = MOZ_CONTAINER(container);
 #ifdef MOZ_WAYLAND
-      if (!mIsX11Display && ComputeShouldAccelerate()) {
+      if (!mIsX11Display && mIsAccelerated) {
         mCompositorInitiallyPaused = true;
         RefPtr<nsWindow> self(this);
         moz_container_add_initial_draw_callback(mContainer, [self]() -> void {
           self->mNeedsCompositorResume = true;
           self->MaybeResumeCompositor();
         });
+        moz_container_set_accelerated(mContainer);
       }
 #endif
 
