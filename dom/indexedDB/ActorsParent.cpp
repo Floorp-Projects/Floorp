@@ -6306,7 +6306,9 @@ class TransactionBase {
   FlippedOnce<false> mCommitOrAbortReceived;
   FlippedOnce<false> mCommittedOrAborted;
   FlippedOnce<false> mForceAborted;
-  bool mHasFailedRequest = false;
+  InitializedOnce<const Maybe<int64_t>, LazyInit::Allow>
+      mLastRequestBeforeCommit;
+  Maybe<int64_t> mLastFailedRequest;
 
  public:
   void AssertIsOnConnectionThread() const {
@@ -6397,7 +6399,7 @@ class TransactionBase {
 
   void NoteActiveRequest();
 
-  void NoteFinishedRequest(nsresult aResultCode);
+  void NoteFinishedRequest(int64_t aRequestId, nsresult aResultCode);
 
   void Invalidate();
 
@@ -6417,11 +6419,11 @@ class TransactionBase {
   void FakeActorDestroyed() { mActorDestroyed.EnsureFlipped(); }
 #endif
 
-  bool RecvCommit();
+  bool RecvCommit(Maybe<int64_t> aLastRequest);
 
   bool RecvAbort(nsresult aResultCode);
 
-  void MaybeCommitOrAbort(const nsresult aResultCode) {
+  void MaybeCommitOrAbort() {
     AssertIsOnBackgroundThread();
 
     // If we've already committed or aborted then there's nothing else to do.
@@ -6440,13 +6442,6 @@ class TransactionBase {
     // abort.
     if (!mCommitOrAbortReceived && !mForceAborted) {
       return;
-    }
-
-    // Note failed request, but ignore requests that failed before we were
-    // committing (cf. https://w3c.github.io/IndexedDB/#async-execute-request
-    // step 5.3 vs. 5.4).
-    if (NS_FAILED(aResultCode)) {
-      mHasFailedRequest = true;
     }
 
     CommitOrAbort();
@@ -6548,7 +6543,8 @@ class NormalTransaction final : public TransactionBase,
 
   mozilla::ipc::IPCResult RecvDeleteMe() override;
 
-  mozilla::ipc::IPCResult RecvCommit() override;
+  mozilla::ipc::IPCResult RecvCommit(
+      const Maybe<int64_t>& aLastRequest) override;
 
   mozilla::ipc::IPCResult RecvAbort(const nsresult& aResultCode) override;
 
@@ -6608,7 +6604,8 @@ class VersionChangeTransaction final
 
   mozilla::ipc::IPCResult RecvDeleteMe() override;
 
-  mozilla::ipc::IPCResult RecvCommit() override;
+  mozilla::ipc::IPCResult RecvCommit(
+      const Maybe<int64_t>& aLastRequest) override;
 
   mozilla::ipc::IPCResult RecvAbort(const nsresult& aResultCode) override;
 
@@ -14081,10 +14078,10 @@ void TransactionBase::Abort(nsresult aResultCode, bool aForce) {
     mForceAborted.EnsureFlipped();
   }
 
-  MaybeCommitOrAbort(mResultCode);
+  MaybeCommitOrAbort();
 }
 
-bool TransactionBase::RecvCommit() {
+bool TransactionBase::RecvCommit(const Maybe<int64_t> aLastRequest) {
   AssertIsOnBackgroundThread();
 
   if (NS_WARN_IF(mCommitOrAbortReceived)) {
@@ -14093,8 +14090,9 @@ bool TransactionBase::RecvCommit() {
   }
 
   mCommitOrAbortReceived.Flip();
+  mLastRequestBeforeCommit.init(aLastRequest);
 
-  MaybeCommitOrAbort(NS_OK);
+  MaybeCommitOrAbort();
   return true;
 }
 
@@ -14130,6 +14128,17 @@ void TransactionBase::CommitOrAbort() {
 
   if (!mInitialized) {
     return;
+  }
+
+  // In case of a failed request that was started after committing was
+  // initiated, abort (cf.
+  // https://w3c.github.io/IndexedDB/#async-execute-request step 5.3 vs. 5.4).
+  // Note this can only happen here when we are committing explicitly, otherwise
+  // the decision is made by the child.
+  if (NS_SUCCEEDED(mResultCode) && mLastFailedRequest &&
+      *mLastRequestBeforeCommit &&
+      *mLastFailedRequest >= **mLastRequestBeforeCommit) {
+    mResultCode = NS_ERROR_DOM_INDEXEDDB_ABORT_ERR;
   }
 
   RefPtr<CommitOp> commitOp = new CommitOp(this, ClampResultCode(mResultCode));
@@ -14641,13 +14650,18 @@ void TransactionBase::NoteActiveRequest() {
   mActiveRequestCount++;
 }
 
-void TransactionBase::NoteFinishedRequest(const nsresult aResultCode) {
+void TransactionBase::NoteFinishedRequest(const int64_t aRequestId,
+                                          const nsresult aResultCode) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(mActiveRequestCount);
 
   mActiveRequestCount--;
 
-  MaybeCommitOrAbort(aResultCode);
+  if (NS_FAILED(aResultCode)) {
+    mLastFailedRequest = Some(aRequestId);
+  }
+
+  MaybeCommitOrAbort();
 }
 
 void TransactionBase::Invalidate() {
@@ -14923,7 +14937,7 @@ void NormalTransaction::ActorDestroy(ActorDestroyReason aWhy) {
 
     mForceAborted.EnsureFlipped();
 
-    MaybeCommitOrAbort(mResultCode);
+    MaybeCommitOrAbort();
   }
 }
 
@@ -14938,10 +14952,11 @@ mozilla::ipc::IPCResult NormalTransaction::RecvDeleteMe() {
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult NormalTransaction::RecvCommit() {
+mozilla::ipc::IPCResult NormalTransaction::RecvCommit(
+    const Maybe<int64_t>& aLastRequest) {
   AssertIsOnBackgroundThread();
 
-  if (!TransactionBase::RecvCommit()) {
+  if (!TransactionBase::RecvCommit(aLastRequest)) {
     return IPC_FAIL_NO_REASON(this);
   }
   return IPC_OK();
@@ -15184,7 +15199,7 @@ void VersionChangeTransaction::ActorDestroy(ActorDestroyReason aWhy) {
 
     mForceAborted.EnsureFlipped();
 
-    MaybeCommitOrAbort(mResultCode);
+    MaybeCommitOrAbort();
   }
 }
 
@@ -15199,10 +15214,11 @@ mozilla::ipc::IPCResult VersionChangeTransaction::RecvDeleteMe() {
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult VersionChangeTransaction::RecvCommit() {
+mozilla::ipc::IPCResult VersionChangeTransaction::RecvCommit(
+    const Maybe<int64_t>& aLastRequest) {
   AssertIsOnBackgroundThread();
 
-  if (!TransactionBase::RecvCommit()) {
+  if (!TransactionBase::RecvCommit(aLastRequest)) {
     return IPC_FAIL_NO_REASON(this);
   }
   return IPC_OK();
@@ -22743,7 +22759,7 @@ void TransactionDatabaseOperationBase::SendPreprocessInfoOrResults(
     mWaitingForContinue = true;
   } else {
     if (mLoggingSerialNumber) {
-      (*mTransaction)->NoteFinishedRequest(ResultCode());
+      (*mTransaction)->NoteFinishedRequest(mLoggingSerialNumber, ResultCode());
     }
 
     Cleanup();
@@ -22925,10 +22941,6 @@ NS_IMETHODIMP
 TransactionBase::CommitOp::Run() {
   MOZ_ASSERT(mTransaction);
   mTransaction->AssertIsOnConnectionThread();
-
-  if (NS_SUCCEEDED(mResultCode) && mTransaction->mHasFailedRequest) {
-    mResultCode = NS_ERROR_DOM_INDEXEDDB_ABORT_ERR;
-  }
 
   AUTO_PROFILER_LABEL("TransactionBase::CommitOp::Run", DOM);
 
