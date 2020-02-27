@@ -55,9 +55,13 @@ class FxaPushSupportFeature(
      * This scope is randomly generated and unique to the account on that particular device.
      */
     private val fxaPushScope: String by lazy {
-        // Generate a unique scope if one doesn't exist.
-        val scope = UUID.randomUUID().toString().replace("-", "")
         val prefs = preference(context)
+
+        // Generate a unique scope if one doesn't exist.
+        val randomUuid = UUID.randomUUID().toString().replace("-", "")
+
+        // Return a scope in the format example: "fxa_push_scope_a62d5f27c9d74af4996d057f0e0e9c38"
+        val scope = PUSH_SCOPE_PREFIX + randomUuid
 
         if (!prefs.contains(PREF_FXA_SCOPE)) {
             prefs.edit().putString(PREF_FXA_SCOPE, scope).apply()
@@ -83,6 +87,10 @@ class FxaPushSupportFeature(
         accountManager.register(accountObserver)
 
         pushFeature.register(autoPushObserver, owner, autoPause)
+    }
+
+    companion object {
+        const val PUSH_SCOPE_PREFIX = "fxa_push_scope_"
     }
 }
 
