@@ -82,25 +82,42 @@ typedef struct IA2TextSegment {
 */
 
 enum IA2TextBoundaryType {
-  IA2_TEXT_BOUNDARY_CHAR,       /**< Typically, a single character is returned.  In some cases more than
-                                 one character is returned, for example, when a document contains field
-                                 data such as a field containing a date, time, or footnote reference.
-                                 In this case the caret can move over several characters in one movement
-                                 of the caret.  Note that after the caret moves, the caret offset changes
-                                 by the number of characters in the field, e.g. by 8 characters in the 
-                                 following date: 03/26/07. */
-  IA2_TEXT_BOUNDARY_WORD,       /**< The range provided matches the range observed when the application
-                                 processes the Ctrl + left arrow and Ctrl + right arrow key sequences.
-                                 Typically this is from the start of one word to the start of the next, but
-                                 various applications are inconsistent in the handling of the end of a line. */
-  IA2_TEXT_BOUNDARY_SENTENCE,   ///< Range is from start of one sentence to the start of another sentence.
-  IA2_TEXT_BOUNDARY_PARAGRAPH,  ///< Range is from start of one paragraph to the start of another paragraph.
-  IA2_TEXT_BOUNDARY_LINE,       /**< Range is from start of one line to the start of another line. This
-                                 often means that an end-of-line character will appear at the end of the
-                                 range. However in the case of some applications an end-of-line character
-                                 indicates the end of a paragraph and the lines composing the paragraph,
-                                 other than the last line, do not contain an end of line character. */
-  IA2_TEXT_BOUNDARY_ALL         ///< Using this value will cause all text to be returned.
+  /** Typically, a single character is returned. In some cases more than one
+   character is returned, for example, when a document contains field data such
+   as a field containing a date, time, or footnote reference. In this case
+   the caret can move over several characters in one movement of the caret.
+   Note, that after the caret moves, the caret offset changes by the number of
+  characters in the field, e.g. by 8 characters in the following date: 03/26/07.
+  */
+  IA2_TEXT_BOUNDARY_CHAR,
+
+  /** The range provided matches the range observed when the application
+   processes the Ctrl + left arrow and Ctrl + right arrow key sequences.
+   Typically this is from the start of one word to the start of the next, but
+   various applications are inconsistent in the handling of the end of a line.
+  */
+  IA2_TEXT_BOUNDARY_WORD,
+
+  /** Range is from start of one sentence to the start of another sentence.
+  */
+  IA2_TEXT_BOUNDARY_SENTENCE,
+
+  /** Range is from start of one paragraph to the start of another paragraph.
+  */
+  IA2_TEXT_BOUNDARY_PARAGRAPH,
+
+  /** Range is from start of one line to the start of another line. This often
+   means that an end-of-line character will appear at the end of the range.
+   However in the case of some applications an end-of-line character indicates
+   the end of a paragraph and the lines composing the paragraph, other than
+   the last line, do not contain an end of line character.
+  */
+  IA2_TEXT_BOUNDARY_LINE,
+
+  /** <b>Deprecated.</b> Using this value will cause all text to be returned.
+   Note: IAccessibleText::text should be used instead.
+  */
+  IA2_TEXT_BOUNDARY_ALL
 };
 
 /** @brief This interface gives read-only access to text.
@@ -111,7 +128,7 @@ enum IA2TextBoundaryType {
   provides access to the text's content, attributes, and spatial location.  
   However, text can not be modified with this interface.  That is the task 
   of the IAccessibleEditableText interface.
-        
+
  The text length, i.e. the number of characters in the text, is
   returned by IAccessibleText::nCharacters. All methods that operate 
   on particular characters (e.g. IAccessibleText::textAtOffset) use character 

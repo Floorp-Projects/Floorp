@@ -225,6 +225,11 @@ enum IA2EventID {
     of an accessible object.  This includes for example most of the
     attributes available via the IAccessibleComponent interface.
   */
-  IA2_EVENT_VISIBLE_DATA_CHANGED
+  IA2_EVENT_VISIBLE_DATA_CHANGED,
 
+  /** The role changed. This should only be used if the interfaces supported by the object
+   did not also change. If the interfaces need to change, the object should be destroyed
+   and a new object created.
+  */
+  IA2_EVENT_ROLE_CHANGED
 };

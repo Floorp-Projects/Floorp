@@ -56,6 +56,7 @@
  @section _interfaces Interfaces
   IAccessible2\n
   IAccessible2_2\n
+  IAccessible2_3\n
   IAccessibleAction\n
   IAccessibleApplication\n
   IAccessibleComponent\n
@@ -75,6 +76,7 @@
 
  @section _structs Structs
   IA2Locale\n
+  IA2Range\n
   IA2TableModelChange\n
   IA2TextSegment
 

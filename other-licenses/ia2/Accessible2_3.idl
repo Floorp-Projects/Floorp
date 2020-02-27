@@ -34,8 +34,11 @@ interface IAccessible2_3 : IAccessible2_2
 {
   /**
    * @brief Returns an array of ranges for selections within the accessible.
-   * @param [out] the array of selection ranges
-   * @param [out] the array length
+   * @param [out] ranges
+     The array of selection ranges, allocated by the server. The client must
+     free it with CoTaskMemFree.
+   * @param [out] nRanges
+     the array length
    * @retval S_OK
    * @retval S_FALSE returned if there is no selection within the accessible
   */

@@ -315,5 +315,34 @@ enum IA2Role {
   IA2_ROLE_CONTENT_INSERTION,
 
   /// A section of content that is quoted from another source.
-  IA2_ROLE_BLOCK_QUOTE
+  IA2_ROLE_BLOCK_QUOTE,
+
+  /** A run of content that is marked or highlighted, such as for reference
+   purposes, or to call it out as having a special purpose that is clear from
+   context. If the mark is used in conjuction with a related content section
+   in the document, then IA2_RELATION_DETAILS should be used to link the
+   related content (and the reverse relation IA2_RELATION_DETAILS_FOR should
+   link back to the IA2_ROLE_MARK object). If the mark has related information
+   in a tooltip, or as hidden text, then accDescription should be used to
+   provide this information.
+  */
+  IA2_ROLE_MARK,
+
+  /** A grouping for content that is called out as a proposed change from the
+   current version of the document, such as by a reviewer of the content.
+   Should include as children one or both of:
+   IA2_ROLE_CONTENT_DELETION and IA2_ROLE_CONTENT_INSERTION, in any order,
+   to indicate what the actual change is.
+   If the suggestion is accepted, the implementation should change the role to
+   a generic one such as IA2_ROLE_SECTION or IA2_ROLE_TEXT_FRAME.
+  */
+  IA2_ROLE_SUGGESTION,
+
+  /** A single comment, typically user-generated content. Supports reply
+  hierarchies via descendant structure, e.g. a child comment is a reply
+  to the parent comment. Supports groupPosition() method to determine
+  reply level (top comment is 1), as well as set size and position in set
+  within that level.
+  */
+  IA2_ROLE_COMMENT  
 };
