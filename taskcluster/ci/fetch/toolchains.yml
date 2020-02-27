@@ -253,6 +253,22 @@ nsis-3.01:
         sha256: 604c011593be484e65b2141c50a018f1b28ab28c994268e4ecd377773f3ffba1
         size: 1649428
 
+nsis-3.01-win:
+    description: nsis 3.01 for windows
+    fetch:
+        type: static-url
+        url: https://hg.mozilla.org/mozilla-build/raw-file/3b8c537ca3c879551956ad47ca9f089583f647c5/nsis-3.01.zip
+        sha256: daa17556c8690a34fb13af25c87ced89c79a36a935bf6126253a9d9a5226367c
+        size: 2505205
+
+upx-3.95-win:
+    description: upx 3.95 for windows
+    fetch:
+        type: static-url
+        url: https://hg.mozilla.org/mozilla-build/raw-file/3b8c537ca3c879551956ad47ca9f089583f647c5/upx-3.95-win64.zip
+        sha256: 5c076f87ba64d82f11513f4af0ceb07246a3540aa3c72ca3ffc2d53971fa56e3
+        size: 462820
+
 wine-3.0.3:
     description: wine-3.0.3.tar.xz
     fetch:
