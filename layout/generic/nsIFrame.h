@@ -1768,9 +1768,15 @@ class nsIFrame : public nsQueryFrame {
 
   /**
    * True if this frame has any animation of transform in effect.
-   *
    */
   bool HasAnimationOfTransform() const;
+
+  /**
+   * True if this frame has any animation of opacity in effect.
+   *
+   * EffectSet is just an optimization.
+   */
+  bool HasAnimationOfOpacity(mozilla::EffectSet* = nullptr) const;
 
   /**
    * Returns true if the frame is translucent or the frame has opacity

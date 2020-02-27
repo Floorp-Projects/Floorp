@@ -347,6 +347,10 @@ class KeyframeEffect : public AnimationEffect {
       const Nullable<double>& aProgressOnLastCompose,
       uint64_t aCurrentIterationOnLastCompose);
 
+  bool HasOpacityChange() const {
+    return mCumulativeChangeHint & nsChangeHint_UpdateOpacityLayer;
+  }
+
  protected:
   ~KeyframeEffect() override = default;
 
