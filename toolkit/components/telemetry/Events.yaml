@@ -1814,7 +1814,7 @@ pictureinpicture:
     bug_numbers:
       - 1560590
     expiry_version: "78"
-    release_channel_collection: opt-in
+    release_channel_collection: opt-out
   resize:
     objects: ["player"]
     description: >
@@ -1834,7 +1834,7 @@ pictureinpicture:
     bug_numbers:
       - 1560590
     expiry_version: "78"
-    release_channel_collection: opt-in
+    release_channel_collection: opt-out
   move:
     objects: ["player"]
     description: >
@@ -1854,7 +1854,7 @@ pictureinpicture:
     bug_numbers:
       - 1560590
     expiry_version: "78"
-    release_channel_collection: opt-in
+    release_channel_collection: opt-out
 
 security.doh.trrPerformance:
   resolved:

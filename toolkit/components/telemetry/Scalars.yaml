@@ -1031,7 +1031,7 @@ pictureinpicture:
     notification_emails:
       - mconley@mozilla.com
       - astevenson@mozilla.com
-    release_channel_collection: opt-in
+    release_channel_collection: opt-out
     products:
       - 'firefox'
       - 'fennec'
@@ -1053,7 +1053,7 @@ pictureinpicture:
     notification_emails:
       - mconley@mozilla.com
       - astevenson@mozilla.com
-    release_channel_collection: opt-in
+    release_channel_collection: opt-out
     products:
       - 'firefox'
       - 'fennec'

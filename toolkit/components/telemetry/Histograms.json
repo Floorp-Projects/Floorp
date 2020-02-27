@@ -7273,7 +7273,8 @@
     "kind": "exponential",
     "high": 10000,
     "n_buckets": 100,
-    "description": "The length of time (in seconds) that a Picture-in-Picture window was open."
+    "description": "The length of time (in seconds) that a Picture-in-Picture window was open.",
+    "releaseChannelCollection": "opt-out"
   },
   "INPUT_EVENT_RESPONSE_MS": {
     "record_in_processes": ["main", "content"],
