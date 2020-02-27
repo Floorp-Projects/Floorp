@@ -25,9 +25,9 @@ Once you have downloaded the repository bundle, follow the steps below to recrea
 
 2. Un-bundle the bundle file to that repository:
 
-To use the below command in Windows, export the `\path\to\hg` and invoke the command from command prompt.
+To use the below command in Windows, export the ``\path\to\hg`` and invoke the command from command prompt.
 
-On Ubuntu click on the properties of the file and you can find the path. In case the name of the file is not bundle.hg rename it.
+On Linux/Mac click on the properties of the file and you can find the path. In case the name of the file is not bundle.hg rename it.
 
 .. code-block:: shell
 
@@ -56,3 +56,6 @@ Get comfortable. Grab a coffee (or your favorite tasty beverage). Maybe a nap. T
                hg update
 
 You now have a clone of ``mozilla-central`` that is identical to one made via ``hg clone``. You can adjust your build settings, or you can go straight ahead and build Firefox!
+
+If at any point you are stuck, feel free to ask on Riot/Matrix at `https://chat.mozilla.org <https://chat.mozilla.org>`__
+in `#introduction <https://chat.mozilla.org/#/room/#introduction:mozilla.org>`__ channel.
