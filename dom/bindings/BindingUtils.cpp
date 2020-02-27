@@ -161,8 +161,8 @@ static bool ThrowInvalidThis(JSContext* aCx, const JS::CallArgs& aArgs,
   return false;
 }
 
-static bool ThrowInvalidThis(JSContext* aCx, const JS::CallArgs& aArgs,
-                             bool aSecurityError, prototypes::ID aProtoId) {
+bool ThrowInvalidThis(JSContext* aCx, const JS::CallArgs& aArgs,
+                      bool aSecurityError, prototypes::ID aProtoId) {
   return ThrowInvalidThis(aCx, aArgs, aSecurityError,
                           NamesOfInterfacesWithProtos(aProtoId));
 }
