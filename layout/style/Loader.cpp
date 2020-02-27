@@ -1402,14 +1402,13 @@ nsresult Loader::LoadSheet(SheetLoadData& aLoadData, SheetState aSheetState,
 
     // snapshot the nonce at load start time for performing CSP checks
     if (contentPolicyType == nsIContentPolicy::TYPE_INTERNAL_STYLESHEET) {
-      if (aLoadData.mRequestingNode) {
+      nsCOMPtr<Element> element = do_QueryInterface(aLoadData.mRequestingNode);
+      if (element && element->IsHTMLElement()) {
+        nsAutoString cspNonce;
         // TODO(bug 1607009) move to SheetLoadData
-        nsString* cspNonce = static_cast<nsString*>(
-            aLoadData.mRequestingNode->GetProperty(nsGkAtoms::nonce));
-        if (cspNonce) {
-          nsCOMPtr<nsILoadInfo> loadInfo = channel->LoadInfo();
-          loadInfo->SetCspNonce(*cspNonce);
-        }
+        element->GetAttr(nsGkAtoms::nonce, cspNonce);
+        nsCOMPtr<nsILoadInfo> loadInfo = channel->LoadInfo();
+        loadInfo->SetCspNonce(cspNonce);
       }
     }
 
@@ -1535,14 +1534,13 @@ nsresult Loader::LoadSheet(SheetLoadData& aLoadData, SheetState aSheetState,
 
   // snapshot the nonce at load start time for performing CSP checks
   if (contentPolicyType == nsIContentPolicy::TYPE_INTERNAL_STYLESHEET) {
-    if (aLoadData.mRequestingNode) {
+    nsCOMPtr<Element> element = do_QueryInterface(aLoadData.mRequestingNode);
+    if (element && element->IsHTMLElement()) {
+      nsAutoString cspNonce;
       // TODO(bug 1607009) move to SheetLoadData
-      nsString* cspNonce = static_cast<nsString*>(
-          aLoadData.mRequestingNode->GetProperty(nsGkAtoms::nonce));
-      if (cspNonce) {
-        nsCOMPtr<nsILoadInfo> loadInfo = channel->LoadInfo();
-        loadInfo->SetCspNonce(*cspNonce);
-      }
+      element->GetAttr(nsGkAtoms::nonce, cspNonce);
+      nsCOMPtr<nsILoadInfo> loadInfo = channel->LoadInfo();
+      loadInfo->SetCspNonce(cspNonce);
     }
   }
 

@@ -109,15 +109,7 @@ nsresult nsGenericHTMLElement::CopyInnerTo(Element* aDst) {
 
   auto reparse = aDst->OwnerDoc() == OwnerDoc() ? ReparseAttributes::No
                                                 : ReparseAttributes::Yes;
-  nsresult rv = Element::CopyInnerTo(aDst, reparse);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // cloning a node must retain its internal nonce slot
-  nsString* nonce = static_cast<nsString*>(GetProperty(nsGkAtoms::nonce));
-  if (nonce) {
-    static_cast<nsGenericHTMLElement*>(aDst)->SetNonce(*nonce);
-  }
-  return NS_OK;
+  return Element::CopyInnerTo(aDst, reparse);
 }
 
 static const nsAttrValue::EnumTable kDirTable[] = {
@@ -394,21 +386,6 @@ nsresult nsGenericHTMLElement::BindToTree(BindContext& aContext,
     aContext.OwnerDoc().ChangeContentEditableCount(this, +1);
   }
 
-  // Hide any nonce from the DOM, but keep the internal value of the
-  // nonce by copying and resetting the internal nonce value.
-  if (HasFlag(NODE_HAS_NONCE_AND_HEADER_CSP) && IsInComposedDoc() &&
-      OwnerDoc()->GetBrowsingContext()) {
-    nsContentUtils::AddScriptRunner(NS_NewRunnableFunction(
-        "nsGenericHTMLElement::ResetNonce::Runnable",
-        [self = RefPtr<nsGenericHTMLElement>(this)]() {
-          nsAutoString nonce;
-          self->GetNonce(nonce);
-          self->SetAttr(kNameSpaceID_None, nsGkAtoms::nonce, EmptyString(),
-                        true);
-          self->SetNonce(nonce);
-        }));
-  }
-
   // We need to consider a labels element is moved to another subtree
   // with different root, it needs to update labels list and its root
   // as well.
@@ -662,20 +639,6 @@ nsresult nsGenericHTMLElement::AfterSetAttr(
         if (CanHaveName(NodeInfo()->NameAtom())) {
           AddToNameTable(aValue->GetAtomValue());
         }
-      }
-    }
-
-    // The nonce will be copied over to an internal slot and cleared from the
-    // Element within BindToTree to avoid CSS Selector nonce exfiltration if
-    // the CSP list contains a header-delivered CSP.
-    if (nsGkAtoms::nonce == aName) {
-      if (aValue) {
-        SetNonce(aValue->GetStringValue());
-        if (OwnerDoc()->GetHasCSPDeliveredThroughHeader()) {
-          SetFlags(NODE_HAS_NONCE_AND_HEADER_CSP);
-        }
-      } else {
-        RemoveNonce();
       }
     }
   }
