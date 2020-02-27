@@ -991,7 +991,7 @@ com.fj
 gov.fj
 info.fj
 mil.fj
-name.fj 
+name.fj
 net.fj
 org.fj
 pro.fj
@@ -7090,7 +7090,7 @@ org.zw
 
 // newGTLDs
 
-// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2020-02-06T17:49:42Z
+// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2020-02-25T18:19:40Z
 // This list is auto-generated, don't edit it manually.
 // aaa : 2015-02-26 American Automobile Association, Inc.
 aaa
@@ -10065,7 +10065,7 @@ trading
 // training : 2013-11-07 Binky Moon, LLC
 training
 
-// travel :  Dog Beach, LLC
+// travel : 2015-10-09 Dog Beach, LLC
 travel
 
 // travelchannel : 2015-07-02 Lifestyle Domain Holdings, Inc.
