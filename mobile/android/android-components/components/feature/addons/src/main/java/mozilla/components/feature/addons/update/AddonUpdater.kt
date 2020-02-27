@@ -33,6 +33,7 @@ import mozilla.components.support.base.ids.SharedIdsHelper
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.ktx.android.notification.ChannelData
 import mozilla.components.support.ktx.android.notification.ensureNotificationChannelExists
+import mozilla.components.support.webextensions.WebExtensionSupport
 import java.lang.Exception
 import java.util.concurrent.TimeUnit
 import kotlin.coroutines.resume
@@ -77,6 +78,18 @@ interface AddonUpdater {
         newPermissions: List<String>,
         onPermissionsGranted: ((Boolean) -> Unit)
     )
+
+    /**
+     * Registers the given [extensions] for periodic updates.
+     * @param extensions The extensions to be registered for updates.
+     */
+    fun registerForFutureUpdates(extensions: List<WebExtension>) {
+        extensions.forEach { extension ->
+            if (!extension.isBuiltIn()) {
+                registerForFutureUpdates(extension.id)
+            }
+        }
+    }
 
     /**
      * Indicates the status of a request for updating an addon.
@@ -130,7 +143,7 @@ class DefaultAddonUpdater(
     internal val updateStatusStorage = UpdateStatusStorage()
 
     /**
-     * See [AddonUpdater.registerForFutureUpdates]
+     * See [AddonUpdater.registerForFutureUpdates]. If an add-on is already registered nothing will happen.
      */
     override fun registerForFutureUpdates(addonId: String) {
         WorkManager.getInstance(applicationContext).enqueueUniquePeriodicWork(
@@ -475,6 +488,9 @@ internal class AddonUpdaterWorker(
     override suspend fun doWork(): Result {
         val extensionId = params.inputData.getString(KEY_DATA_EXTENSIONS_ID) ?: ""
         logger.info("Trying to update extension $extensionId")
+
+        // We need to guarantee that we are not trying to update without all the required state being initialized first.
+        WebExtensionSupport.awaitInitialization()
 
         return suspendCoroutine { continuation ->
             try {

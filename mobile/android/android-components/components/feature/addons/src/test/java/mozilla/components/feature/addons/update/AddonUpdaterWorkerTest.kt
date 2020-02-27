@@ -12,21 +12,27 @@ import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertTrue
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking
+import mozilla.components.browser.state.store.BrowserStore
+import mozilla.components.concept.engine.Engine
+import mozilla.components.concept.engine.webextension.WebExtension
 import mozilla.components.feature.addons.AddonManager
 import mozilla.components.feature.addons.update.AddonUpdater
 import mozilla.components.feature.addons.update.AddonUpdaterWorker
 import mozilla.components.feature.addons.update.GlobalAddonDependencyProvider
+import mozilla.components.support.test.any
 import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.rule.MainCoroutineRule
 import mozilla.components.support.test.whenever
+import mozilla.components.support.webextensions.WebExtensionSupport
 import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.anyString
+import org.mockito.Mockito
 
 @RunWith(AndroidJUnit4::class)
 class AddonUpdaterWorkerTest {
@@ -38,6 +44,20 @@ class AddonUpdaterWorkerTest {
     @Before
     fun setUp() {
         GlobalAddonDependencyProvider.addonManager = null
+
+        initWebExtensionSupport()
+    }
+
+    private fun initWebExtensionSupport() {
+        val store = Mockito.spy(BrowserStore())
+        val engine: Engine = mock()
+        val extension: WebExtension = mock()
+        whenever(extension.id).thenReturn("addonId")
+        val callbackCaptor = argumentCaptor<((List<WebExtension>) -> Unit)>()
+        whenever(engine.listInstalledWebExtensions(callbackCaptor.capture(), any())).thenAnswer {
+            callbackCaptor.value.invoke(listOf(extension))
+        }
+        WebExtensionSupport.initialize(engine, store)
     }
 
     @After
