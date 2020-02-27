@@ -1164,16 +1164,17 @@ class FunctionExtended : public JSFunction {
 extern bool CanReuseScriptForClone(JS::Realm* realm, HandleFunction fun,
                                    HandleObject newParent);
 
-extern JSFunction* CloneFunctionReuseScript(
-    JSContext* cx, HandleFunction fun, HandleObject parent,
-    gc::AllocKind kind = gc::AllocKind::FUNCTION,
-    NewObjectKind newKindArg = GenericObject, HandleObject proto = nullptr);
+extern JSFunction* CloneFunctionReuseScript(JSContext* cx, HandleFunction fun,
+                                            HandleObject parent,
+                                            gc::AllocKind kind,
+                                            NewObjectKind newKindArg,
+                                            HandleObject proto);
 
 // Functions whose scripts are cloned are always given singleton types.
 extern JSFunction* CloneFunctionAndScript(
     JSContext* cx, HandleFunction fun, HandleObject parent,
     HandleScope newScope, Handle<ScriptSourceObject*> sourceObject,
-    gc::AllocKind kind = gc::AllocKind::FUNCTION, HandleObject proto = nullptr);
+    gc::AllocKind kind, HandleObject proto = nullptr);
 
 extern JSFunction* CloneAsmJSModuleFunction(JSContext* cx, HandleFunction fun);
 
