@@ -1,4 +1,69 @@
-2017-01-04 v1.7.0 "Mandarin Duck"
+2019-12-09 v1.8.2 "Pekin Duck"
+  This release collects incremental improvements to many aspects of the library.
+
+  - Upgrading:
+    ARCH_* defines have been removed in favor of VPX_ARCH_*.
+
+2019-07-15 v1.8.1 "Orpington Duck"
+  This release collects incremental improvements to many aspects of the library.
+
+  - Upgrading:
+    VP8E_SET_CPUUSED now accepts values up to 9 for vp9.
+    VPX_CTRL_VP9E_SET_MAX_INTER_BITRATE_PCT had a spelling fix (was VP8E).
+    The --sdk-path option has been removed. If you were using it to build for
+      Android please read build/make/Android.mk for alternatives.
+    All PPC optimizations have been disabled:
+      https://bugs.chromium.org/p/webm/issues/detail?id=1522.
+
+  - Enhancements:
+    Various changes to improve encoder rate control, quality and speed
+      for practically every use case.
+
+  - Bug fixes:
+    vp9-rtc: Fix color artifacts for speed >= 8.
+
+2019-01-31 v1.8.0 "Northern Shoveler Duck"
+  This release focused on encoding performance for realtime and VOD use cases.
+
+  - Upgrading:
+    This adds and improves several vp9 controls. Most are related to SVC:
+      VP9E_SET_SVC_FRAME_DROP_LAYER:
+        - Frame dropping in SVC.
+      VP9E_SET_SVC_INTER_LAYER_PRED:
+        - Inter-layer prediction in SVC.
+      VP9E_SET_SVC_GF_TEMPORAL_REF:
+        - Enable long term temporal reference in SVC.
+      VP9E_SET_SVC_REF_FRAME_CONFIG/VP9E_GET_SVC_REF_FRAME_CONFIG:
+        - Extend and improve this control for better flexibility in setting SVC
+          pattern dynamically.
+      VP9E_SET_POSTENCODE_DROP:
+        - Allow for post-encode frame dropping (applies to non-SVC too).
+      VP9E_SET_SVC_SPATIAL_LAYER_SYNC:
+        - Enable spatial layer sync frames.
+      VP9E_SET_SVC_LAYER_ID:
+        - Extend api to specify temporal id for each spatial layers.
+      VP9E_SET_ROI_MAP:
+        - Extend Region of Interest functionality to VP9.
+
+  - Enhancements:
+    2 pass vp9 encoding has improved substantially. When using --auto-alt-ref=6,
+    we see approximately 8% for VBR and 10% for CQ. When using --auto-alt-ref=1,
+    the gains are approximately 4% for VBR and 5% for CQ.
+
+    For real-time encoding, speed 7 has improved by ~5-10%. Encodes targeted at
+    screen sharing have improved when the content changes significantly (slide
+    sharing) or scrolls. There is a new speed 9 setting for mobile devices which
+    is about 10-20% faster than speed 8.
+
+  - Bug fixes:
+    VP9 denoiser issue.
+    VP9 partition issue for 1080p.
+    VP9 rate control improvments.
+    Postprocessing Multi Frame Quality Enhancement (MFQE) issue.
+    VP8 multithread decoder issues.
+    A variety of fuzzing issues.
+
+2018-01-04 v1.7.0 "Mandarin Duck"
   This release focused on high bit depth performance (10/12 bit) and vp9
   encoding improvements.
 

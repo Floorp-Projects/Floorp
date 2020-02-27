@@ -124,8 +124,8 @@ void vpx_highbd_idct8x8_64_add_sse2(const tran_low_t *input, uint16_t *dest,
     io_short[6] = _mm_packs_epi32(io[10], io[14]);
     io_short[7] = _mm_packs_epi32(io[11], io[15]);
 
-    idct8_sse2(io_short);
-    idct8_sse2(io_short);
+    vpx_idct8_sse2(io_short);
+    vpx_idct8_sse2(io_short);
     round_shift_8x8(io_short, io);
   } else {
     __m128i temp[4];

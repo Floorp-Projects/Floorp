@@ -19,44 +19,41 @@
 void vpx_idct4x4_16_add_neon(const tran_low_t *input, uint8_t *dest,
                              int stride) {
   const uint8_t *dst = dest;
-  const int16x4_t cospis = vld1_s16(kCospi);
-  uint8x8_t dest01_u8;
-  uint32x2_t dest32_u32 = vdup_n_u32(0);
-  int16x8_t a0, a1;
-  uint8x8_t d01, d32;
-  uint16x8_t d01_u16, d32_u16;
+  uint32x2_t s32 = vdup_n_u32(0);
+  int16x8_t a[2];
+  uint8x8_t s, d[2];
+  uint16x8_t sum[2];
 
   assert(!((intptr_t)dest % sizeof(uint32_t)));
   assert(!(stride % sizeof(uint32_t)));
 
   // Rows
-  a0 = load_tran_low_to_s16q(input);
-  a1 = load_tran_low_to_s16q(input + 8);
-  idct4x4_16_kernel_bd8(cospis, &a0, &a1);
+  a[0] = load_tran_low_to_s16q(input);
+  a[1] = load_tran_low_to_s16q(input + 8);
+  transpose_idct4x4_16_bd8(a);
 
   // Columns
-  a1 = vcombine_s16(vget_high_s16(a1), vget_low_s16(a1));
-  idct4x4_16_kernel_bd8(cospis, &a0, &a1);
-  a0 = vrshrq_n_s16(a0, 4);
-  a1 = vrshrq_n_s16(a1, 4);
+  a[1] = vcombine_s16(vget_high_s16(a[1]), vget_low_s16(a[1]));
+  transpose_idct4x4_16_bd8(a);
+  a[0] = vrshrq_n_s16(a[0], 4);
+  a[1] = vrshrq_n_s16(a[1], 4);
 
-  dest01_u8 = load_u8(dst, stride);
+  s = load_u8(dst, stride);
   dst += 2 * stride;
   // The elements are loaded in reverse order.
-  dest32_u32 = vld1_lane_u32((const uint32_t *)dst, dest32_u32, 1);
+  s32 = vld1_lane_u32((const uint32_t *)dst, s32, 1);
   dst += stride;
-  dest32_u32 = vld1_lane_u32((const uint32_t *)dst, dest32_u32, 0);
+  s32 = vld1_lane_u32((const uint32_t *)dst, s32, 0);
 
-  d01_u16 = vaddw_u8(vreinterpretq_u16_s16(a0), dest01_u8);
-  d32_u16 =
-      vaddw_u8(vreinterpretq_u16_s16(a1), vreinterpret_u8_u32(dest32_u32));
-  d01 = vqmovun_s16(vreinterpretq_s16_u16(d01_u16));
-  d32 = vqmovun_s16(vreinterpretq_s16_u16(d32_u16));
+  sum[0] = vaddw_u8(vreinterpretq_u16_s16(a[0]), s);
+  sum[1] = vaddw_u8(vreinterpretq_u16_s16(a[1]), vreinterpret_u8_u32(s32));
+  d[0] = vqmovun_s16(vreinterpretq_s16_u16(sum[0]));
+  d[1] = vqmovun_s16(vreinterpretq_s16_u16(sum[1]));
 
-  store_u8(dest, stride, d01);
+  store_u8(dest, stride, d[0]);
   dest += 2 * stride;
   // The elements are stored in reverse order.
-  vst1_lane_u32((uint32_t *)dest, vreinterpret_u32_u8(d32), 1);
+  vst1_lane_u32((uint32_t *)dest, vreinterpret_u32_u8(d[1]), 1);
   dest += stride;
-  vst1_lane_u32((uint32_t *)dest, vreinterpret_u32_u8(d32), 0);
+  vst1_lane_u32((uint32_t *)dest, vreinterpret_u32_u8(d[1]), 0);
 }

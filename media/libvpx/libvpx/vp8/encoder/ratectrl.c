@@ -996,7 +996,7 @@ static void calc_pframe_target_size(VP8_COMP *cpi) {
            * bits on this frame even if it is a contructed arf.
            * The active maximum quantizer insures that an appropriate
            * number of bits will be spent if needed for contstructed ARFs.
-          */
+           */
           cpi->this_frame_target = 0;
         }
 
@@ -1052,9 +1052,8 @@ void vp8_update_rate_correction_factors(VP8_COMP *cpi, int damp_var) {
    * overflow when values are large
    */
   projected_size_based_on_q =
-      (int)(((.5 +
-              rate_correction_factor *
-                  vp8_bits_per_mb[cpi->common.frame_type][Q]) *
+      (int)(((.5 + rate_correction_factor *
+                       vp8_bits_per_mb[cpi->common.frame_type][Q]) *
              cpi->common.MBs) /
             (1 << BPER_MB_NORMBITS));
 
@@ -1124,6 +1123,14 @@ void vp8_update_rate_correction_factors(VP8_COMP *cpi, int damp_var) {
       cpi->rate_correction_factor = rate_correction_factor;
     }
   }
+}
+
+static int limit_q_cbr_inter(int last_q, int current_q) {
+  int limit_down = 12;
+  if (last_q - current_q > limit_down)
+    return (last_q - limit_down);
+  else
+    return current_q;
 }
 
 int vp8_regulate_q(VP8_COMP *cpi, int target_bits_per_frame) {
@@ -1264,6 +1271,12 @@ int vp8_regulate_q(VP8_COMP *cpi, int target_bits_per_frame) {
       }
     }
   }
+
+  // Limit decrease in Q for 1 pass CBR screen content mode.
+  if (cpi->common.frame_type != KEY_FRAME && cpi->pass == 0 &&
+      cpi->oxcf.end_usage == USAGE_STREAM_FROM_SERVER &&
+      cpi->oxcf.screen_content_mode)
+    Q = limit_q_cbr_inter(cpi->last_q[1], Q);
 
   return Q;
 }
@@ -1465,7 +1478,7 @@ int vp8_drop_encodedframe_overshoot(VP8_COMP *cpi, int Q) {
       (cpi->oxcf.screen_content_mode == 2 ||
        (cpi->drop_frames_allowed &&
         (force_drop_overshoot ||
-         (cpi->rate_correction_factor < (4.0f * MIN_BPB_FACTOR) &&
+         (cpi->rate_correction_factor < (8.0f * MIN_BPB_FACTOR) &&
           cpi->frames_since_last_drop_overshoot > (int)cpi->framerate))))) {
     // Note: the "projected_frame_size" from encode_frame() only gives estimate
     // of mode/motion vector rate (in non-rd mode): so below we only require
@@ -1485,7 +1498,8 @@ int vp8_drop_encodedframe_overshoot(VP8_COMP *cpi, int Q) {
     if (cpi->drop_frames_allowed && pred_err_mb > (thresh_pred_err_mb << 4))
       thresh_rate = thresh_rate >> 3;
     if ((Q < thresh_qp && cpi->projected_frame_size > thresh_rate &&
-         pred_err_mb > thresh_pred_err_mb) ||
+         pred_err_mb > thresh_pred_err_mb &&
+         pred_err_mb > 2 * cpi->last_pred_err_mb) ||
         force_drop_overshoot) {
       unsigned int i;
       double new_correction_factor;

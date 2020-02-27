@@ -8,8 +8,8 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef VPX_DSP_X86_HIGHBD_INV_TXFM_SSE4_H_
-#define VPX_DSP_X86_HIGHBD_INV_TXFM_SSE4_H_
+#ifndef VPX_VPX_DSP_X86_HIGHBD_INV_TXFM_SSE4_H_
+#define VPX_VPX_DSP_X86_HIGHBD_INV_TXFM_SSE4_H_
 
 #include <smmintrin.h>  // SSE4.1
 
@@ -84,4 +84,29 @@ static INLINE void highbd_partial_butterfly_sse4_1(const __m128i in,
   *out1 = multiplication_round_shift_sse4_1(temp, c1);
 }
 
-#endif  // VPX_DSP_X86_HIGHBD_INV_TXFM_SSE4_H_
+static INLINE void highbd_idct4_sse4_1(__m128i *const io) {
+  __m128i temp[2], step[4];
+
+  transpose_32bit_4x4(io, io);
+
+  // stage 1
+  temp[0] = _mm_add_epi32(io[0], io[2]);  // input[0] + input[2]
+  extend_64bit(temp[0], temp);
+  step[0] = multiplication_round_shift_sse4_1(temp, cospi_16_64);
+  temp[0] = _mm_sub_epi32(io[0], io[2]);  // input[0] - input[2]
+  extend_64bit(temp[0], temp);
+  step[1] = multiplication_round_shift_sse4_1(temp, cospi_16_64);
+  highbd_butterfly_sse4_1(io[1], io[3], cospi_24_64, cospi_8_64, &step[2],
+                          &step[3]);
+
+  // stage 2
+  io[0] = _mm_add_epi32(step[0], step[3]);  // step[0] + step[3]
+  io[1] = _mm_add_epi32(step[1], step[2]);  // step[1] + step[2]
+  io[2] = _mm_sub_epi32(step[1], step[2]);  // step[1] - step[2]
+  io[3] = _mm_sub_epi32(step[0], step[3]);  // step[0] - step[3]
+}
+
+void vpx_highbd_idct8x8_half1d_sse4_1(__m128i *const io);
+void vpx_highbd_idct16_4col_sse4_1(__m128i *const io /*io[16]*/);
+
+#endif  // VPX_VPX_DSP_X86_HIGHBD_INV_TXFM_SSE4_H_

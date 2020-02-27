@@ -20,8 +20,7 @@ static void copy_and_extend_plane(unsigned char *s, /* source */
                                   int et,           /* extend top border */
                                   int el,           /* extend left border */
                                   int eb,           /* extend bottom border */
-                                  int er            /* extend right border */
-                                  ) {
+                                  int er) {         /* extend right border */
   int i;
   unsigned char *src_ptr1, *src_ptr2;
   unsigned char *dest_ptr1, *dest_ptr2;
