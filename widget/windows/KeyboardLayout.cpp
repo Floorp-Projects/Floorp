@@ -3495,12 +3495,18 @@ void NativeKey::ComputeInputtingStringWithKeyboardLayout() {
   // mUnshiftedString for keeping traditional behavior at WM_SYSKEYDOWN.
   // FYI: I guess that it's okay that mUnshiftedString stays empty.  So,
   //      if its value breaks something, you must be able to just return here.
-  if (IsTypingUnicodeScalarValue()) {
-    MOZ_ASSERT(mMsg.message == WM_SYSKEYDOWN);
-    MOZ_ASSERT(!mCommittedCharsAndModifiers.IsEmpty());
-    char16_t num = mCommittedCharsAndModifiers.CharAt(0);
-    MOZ_ASSERT(num >= '0' && num <= '9');
-    mUnshiftedString.Append(num, MODIFIER_NONE);
+  if (MaybeTypingUnicodeScalarValue()) {
+    if (!mCommittedCharsAndModifiers.IsEmpty()) {
+      MOZ_ASSERT(mMsg.message == WM_SYSKEYDOWN);
+      char16_t num = mCommittedCharsAndModifiers.CharAt(0);
+      MOZ_ASSERT(num >= '0' && num <= '9');
+      mUnshiftedString.Append(num, MODIFIER_NONE);
+      return;
+    }
+    // If user presses a function key without NumLock or 3rd party utility
+    // synthesizes a function key on numpad, we should handle it as-is because
+    // the user's intention may be performing `Alt` + foo.
+    MOZ_ASSERT(!KeyboardLayout::IsPrintableCharKey(mVirtualKeyCode));
     return;
   }
 
@@ -3984,7 +3990,15 @@ void KeyboardLayout::InitNativeKey(NativeKey& aNativeKey) {
   // Note that we should compute the key value from the virtual key code
   // because they may be mapped to alphabets, but they should be treated as
   // Alt + [0-9] even by web apps.
-  if (aNativeKey.IsTypingUnicodeScalarValue()) {
+  // However, we shouldn't touch the key value if given virtual key code is
+  // not a printable key because it may be synthesized by 3rd party utility
+  // or just NumLock is unlocked and user tries to use shortcut key.  In the
+  // latter case, we cannot solve the conflict issue with Alt+foo shortcut key
+  // and inputting a Unicode scalar value like reported to bug 1606655, though,
+  // I have no better idea.  Perhaps, `Alt` shouldn't be used for shortcut key
+  // combination on Windows.
+  if (aNativeKey.MaybeTypingUnicodeScalarValue() &&
+      KeyboardLayout::IsPrintableCharKey(aNativeKey.mVirtualKeyCode)) {
     // If the key code value is mapped to a Numpad key, let's compute the key
     // value with it.  This is same behavior as Chrome.  In strictly speaking,
     // I think that the else block's computation is better because it seems
