@@ -186,7 +186,8 @@ class RaptorResultsHandler(PerftestResultsHandler):
 
     def add(self, new_result_json):
         # add to results
-        new_result_json["extra_options"] = []
+        if new_result_json.get("extra_options") is None:
+            new_result_json["extra_options"] = []
         LOG.info("received results in RaptorResultsHandler.add")
         if self.no_conditioned_profile:
             new_result_json["extra_options"].append("nocondprof")
