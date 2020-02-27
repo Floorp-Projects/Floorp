@@ -146,6 +146,7 @@ class WebConsoleUI {
       this._commands = new ConsoleCommands({
         devToolsClient: this.hud.currentTarget.client,
         proxy: this.getProxy(),
+        hud: this.hud,
         threadFront: this.hud.toolbox && this.hud.toolbox.threadFront,
         currentTarget: this.hud.currentTarget,
       });
@@ -584,13 +585,22 @@ class WebConsoleUI {
     return frame.actor;
   }
 
-  getWebConsoleFront({ frameActorId } = {}) {
-    if (!frameActorId) {
+  getWebconsoleFront({ frameActorId } = {}) {
+    if (frameActorId) {
+      const frameFront = this.hud.getFrontByID(frameActorId);
+      return frameFront.getWebConsoleFront();
+    }
+
+    if (!this.hud.toolbox) {
       return this.webConsoleFront;
     }
 
-    const frameFront = this.hud.getFrontByID(frameActorId);
-    return frameFront.getWebConsoleFront();
+    const threadFront = this.hud.toolbox.getSelectedThreadFront();
+    if (!threadFront) {
+      return this.webConsoleFront;
+    }
+
+    return threadFront.getWebconsoleFront();
   }
 
   getSelectedNodeActor() {
