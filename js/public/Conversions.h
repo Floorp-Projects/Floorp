@@ -139,10 +139,13 @@ MOZ_ALWAYS_INLINE bool ToNumber(JSContext* cx, HandleValue v, double* out) {
   return js::ToNumberSlow(cx, v, out);
 }
 
-/* ES6 draft 20141224, ToInteger (specialized for doubles). */
+// ES2020 draft rev 6b05bc56ba4e3c7a2b9922c4282d9eb844426d9b
+// 7.1.5 ToInteger ( argument )
+//
+// Specialized for double values.
 inline double ToInteger(double d) {
   if (d == 0) {
-    return d;
+    return 0;
   }
 
   if (!mozilla::IsFinite(d)) {
@@ -152,7 +155,7 @@ inline double ToInteger(double d) {
     return d;
   }
 
-  return d < 0 ? ceil(d) : floor(d);
+  return (d < 0 ? ceil(d) : floor(d)) + (+0.0); // Add zero to convert -0 to +0.
 }
 
 /* ES6 draft 20141224, 7.1.5. */

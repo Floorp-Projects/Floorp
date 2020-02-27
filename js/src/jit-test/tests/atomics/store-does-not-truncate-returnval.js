@@ -10,7 +10,7 @@ function f() {
     assertEq(Atomics.store(ia, 0, 3.5), 3);
     assertEq(ia[0], 3);
 
-    assertEq(Atomics.store(ia, 0, -0), -0);
+    assertEq(Atomics.store(ia, 0, -0), +0);
     assertEq(ia[0], 0);
 
     assertEq(Atomics.store(ia, 0, '4.6'), 4);

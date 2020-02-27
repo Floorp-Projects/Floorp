@@ -292,7 +292,8 @@ static MOZ_ALWAYS_INLINE bool IsDefinitelyIndex(const Value& v,
   return false;
 }
 
-/* ES5 9.4 ToInteger. */
+// ES2020 draft rev 6b05bc56ba4e3c7a2b9922c4282d9eb844426d9b
+// 7.1.5 ToInteger ( argument )
 static MOZ_MUST_USE inline bool ToInteger(JSContext* cx, HandleValue v,
                                           double* dp) {
   if (v.isInt32()) {
