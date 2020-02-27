@@ -19,8 +19,6 @@ interface SVGElement : Element {
 
   readonly attribute SVGSVGElement? ownerSVGElement;
   readonly attribute SVGElement? viewportElement;
-
-  attribute DOMString nonce;
 };
 
 SVGElement includes GlobalEventHandlers;
