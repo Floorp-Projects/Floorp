@@ -256,9 +256,7 @@ inline bool IsTypeofKind(ParseNodeKind kind) {
 /*
  * <Definitions>
  * Function (FunctionNode)
- *   funbox: ptr to js::FunctionBox holding function object containing arg and
- *           var properties.  We create the function object at parse (not emit)
- *           time to specialize arg and var bytecodes early.
+ *   funbox: ptr to js::FunctionBox
  *   body: ParamsBody or null for lazily-parsed function, ordinarily;
  *         ParseNodeKind::LexicalScope for implicit function in genexpr
  *   syntaxKind: the syntax of the function
