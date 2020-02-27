@@ -4,7 +4,7 @@ if [ -z "${VSPATH}" ]; then
 fi
 
 if [ -d "${VSPATH}" ]; then
-    VSWINPATH="$(cd ${VSPATH} && (pwd -W 2>/dev/null || pwd))"
+    VSWINPATH="$(cd ${VSPATH} && pwd -W)"
 
     export WINDOWSSDKDIR="${VSWINPATH}/SDK"
     export WIN32_REDIST_DIR=${VSPATH}/VC/redist/x64/Microsoft.VC141.CRT
