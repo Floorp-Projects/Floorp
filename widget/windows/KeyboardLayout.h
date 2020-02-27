@@ -608,8 +608,12 @@ class MOZ_STACK_CLASS NativeKey final {
   /**
    * This returns true if user types a number key in numpad with Alt key
    * to input a Unicode character from its scalar value.
+   * Note that inputting Unicode scalar value is available without NumLock.
+   * Therefore, this returns true even if user presses a function key on
+   * numpad without NumLock, but that may be intended to perform a shortcut
+   * key like Alt + Home.
    */
-  bool IsTypingUnicodeScalarValue() const {
+  bool MaybeTypingUnicodeScalarValue() const {
     return !mIsExtended && IsSysKeyDownOrKeyUpMessage() && IsAlt() &&
            !IsControl() && !IsShift() &&
            ((mScanCode >= 0x004F && mScanCode <= 0x0052) ||  // Numpad0-3
