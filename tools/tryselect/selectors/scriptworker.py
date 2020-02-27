@@ -71,13 +71,10 @@ class ScriptworkerParser(BaseTryParser):
 
 def get_releases(branch):
     response = requests.get(
-        "https://shipit-api.mozilla-releng.net/releases",
+        "https://shipitapi-public.services.mozilla.com/releases",
         params={"product": "firefox", "branch": branch, "status": "shipped"},
         headers={"Accept": ["application/json"]},
     )
-    if response.status_code == 403:
-        print("Cannont connect to ship-it. Are you on the VPN and have shipit access?")
-        sys.exit(1)
     response.raise_for_status()
     return response.json()
 
