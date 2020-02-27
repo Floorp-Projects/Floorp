@@ -1,11 +1,10 @@
-{{ApiRef}}
+Fuzzing Interface
+=================
 
 The fuzzing interface is glue code living in mozilla-central in order to
 make it easier for developers and security researchers to test C/C++
 code with either `libFuzzer <https://llvm.org/docs/LibFuzzer.html>`__ or
 `afl-fuzz <http://lcamtuf.coredump.cx/afl/>`__.
-
-.. _What_can_be_tested:
 
 What can be tested?
 ~~~~~~~~~~~~~~~~~~~
@@ -19,12 +18,10 @@ browser as a whole. It is rather meant for component-based testing
 (especially as some components cannot be easily separated out of the
 full build).
 
-.. _Getting_Started_with_libFuzzer:
 
 Getting Started with libFuzzer
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. _Using_Existing_Builds:
 
 Using Existing Builds
 ^^^^^^^^^^^^^^^^^^^^^
@@ -44,19 +41,16 @@ Afterwards, you can run
    python -m fuzzfetch -a --fuzzing --tests gtest
 
 to fetch the latest build. Afterwards, you can run any fuzzing target as
-described in the section "`How to run your code <#HowToRunYourCode>`__".
+described in the section ":ref:`How to run your code`".
 Alternatively you can make your own local build by following the steps
 below.
 
-.. _Build_Requirements:
 
 Build Requirements
 ^^^^^^^^^^^^^^^^^^
 
-You will need a Linux environment with a recent Clang (recommend at
-least Clang 5).
+You will need a Linux environment with a recent Clang (recommend at least Clang 8).
 
-.. _Build_Flags:
 
 Build Flags
 ^^^^^^^^^^^
@@ -77,7 +71,6 @@ By keeping coverage limited to the parts that are actually being tested
 using this tool, you not only increase the performance but also
 potentially reduce the amount of noise that libFuzzer sees.
 
-.. _Where_to_put_your_fuzzing_code:
 
 Where to put your fuzzing code
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -92,7 +85,6 @@ for how the ``moz.build`` in your subdirectory could look like and `this
 example <https://searchfox.org/mozilla-central/rev/de7676288a78b70d2b9927c79493adbf294faad5/media/mtransport/moz.build#18-24>`__
 for how your directory is enabled in the fuzzing build.
 
-.. _How_your_code_should_look_like:
 
 How your code should look like
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -100,7 +92,6 @@ How your code should look like
 See `this
 example <https://searchfox.org/mozilla-central/source/media/mtransport/fuzztest/stun_parser_libfuzz.cpp>`__.
 
-.. _How_to_build_your_code:
 
 How to build your code
 ^^^^^^^^^^^^^^^^^^^^^^
@@ -119,7 +110,6 @@ to your fuzzing implementation.
    with CTRL+C at that point and restart just the firefox binary as
    described below.
 
-.. _How_to_run_your_code:
 
 How to run your code
 ^^^^^^^^^^^^^^^^^^^^
@@ -161,7 +151,6 @@ You should see an output similar to this:
     max_len                        0       Maximum length of the test input. If 0, libFuzzer tries to guess a good value based on the corpus and reports it.
    ...
 
-.. _Reproducing_a_Crash:
 
 Reproducing a Crash
 '''''''''''''''''''
@@ -175,7 +164,6 @@ file as the only argument on the command line, e.g.
 
 This should reproduce the given problem.
 
-.. _FuzzManager_and_libFuzzer:
 
 FuzzManager and libFuzzer
 ^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -212,12 +200,10 @@ What this does is
    tool
 -  write statistics to the ``libfuzzer-stunparser.stats`` file
 
-.. _Troubleshooting:
 
 Troubleshooting
 ~~~~~~~~~~~~~~~
 
-.. _Fuzzing_Interface_Error_No_testing_callback_found:
 
 Fuzzing Interface: Error: No testing callback found
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -227,7 +213,6 @@ using the ``FUZZER`` environment variable could not be found. Reasons
 for are typically either a misspelled name or that your code wasn't
 built (check your ``moz.build`` file and build log).
 
-.. _mach_build_doesnt_seem_to_update_my_fuzzing_code:
 
 ``mach build`` doesn't seem to update my fuzzing code
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
