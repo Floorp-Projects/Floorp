@@ -141,8 +141,6 @@ use ron;
 use crate::scene_builder_thread::InternerUpdates;
 #[cfg(any(feature = "capture", feature = "replay"))]
 use crate::intern::{Internable, UpdateList};
-#[cfg(any(feature = "replay"))]
-use crate::intern::{UpdateKind};
 #[cfg(any(feature = "capture", feature = "replay"))]
 use api::{ClipIntern, FilterDataIntern, PrimitiveKeyKind};
 #[cfg(any(feature = "capture", feature = "replay"))]
@@ -1947,17 +1945,10 @@ macro_rules! declare_tile_cache_logger_updatelists {
                 $(
                     {
                         for list in &self.$name.1 {
-                            let mut insert_count = 0;
-                            for update in &list.updates {
-                                match update.kind {
-                                    UpdateKind::Insert => {
-                                        itemuid_to_string.insert(
-                                            update.uid,
-                                            format!("{:?}", list.data[insert_count]));
-                                        insert_count = insert_count + 1;
-                                    },
-                                    _ => {}
-                                }
+                            for insertion in &list.insertions {
+                                itemuid_to_string.insert(
+                                    insertion.uid,
+                                    format!("{:?}", insertion.value));
                             }
                         }
                     }
