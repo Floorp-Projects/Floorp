@@ -1130,8 +1130,7 @@ var gBuiltInActions = [
     id: ACTION_ID_BOOKMARK,
     urlbarIDOverride: "star-button-box",
     _urlbarNodeInMarkup: true,
-    // The title is set in browser-pageActions.js by calling
-    // BookmarkingUI.updateBookmarkPageMenuItem().
+    // The title is set by BookmarkingUI.updateBookmarkPageMenuItem().
     title: "",
     pinnedToUrlbar: true,
     onShowingInPanel(buttonNode) {
