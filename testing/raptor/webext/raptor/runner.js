@@ -362,7 +362,7 @@ async function stopGeckoProfiling() {
 
 async function getGeckoProfile() {
   // trigger saving the gecko profile, and send the file name to the control server
-  let fileName = `${testName}_pagecycle_${pageCycle}.profile`;
+  const fileName = `${testName}_pagecycle_${pageCycle}.profile`;
 
   await postToControlServer("status", `saving gecko profile ${fileName}`);
   await browser.geckoProfiler.dumpProfileToFile(fileName);
@@ -390,7 +390,7 @@ async function nextCycle() {
     await new Promise(resolve => setTimeout(resolve, foregroundDelay));
   }
   if (pageCycle == 1) {
-    let text = `running ${pageCycles} pagecycles of ${testURL}`;
+    const text = `running ${pageCycles} pagecycles of ${testURL}`;
     await postToControlServer("status", text);
     // start the profiler if enabled
     if (geckoProfiling) {
@@ -468,7 +468,7 @@ async function nextCycle() {
 async function timeoutAlarmListener() {
   raptorLog(`raptor-page-timeout on ${testURL}`, "error");
 
-  var pendingMetrics = {
+  const pendingMetrics = {
     hero: isHeroPending,
     "fnb paint": isFNBPaintPending,
     fcp: isFCPPending,
@@ -477,7 +477,7 @@ async function timeoutAlarmListener() {
     "load time": isLoadTimePending,
   };
 
-  var msgData = [testName, testURL];
+  let msgData = [testName, testURL];
   if (testType == TEST_PAGE_LOAD) {
     msgData.push(pendingMetrics);
   }
@@ -491,8 +491,8 @@ async function timeoutAlarmListener() {
 
 function setTimeoutAlarm(timeoutName, timeoutMS) {
   // webext alarms require date.now NOT performance.now
-  var now = Date.now(); // eslint-disable-line mozilla/avoid-Date-timing
-  var timeout_when = now + timeoutMS;
+  const now = Date.now(); // eslint-disable-line mozilla/avoid-Date-timing
+  const timeout_when = now + timeoutMS;
   ext.alarms.create(timeoutName, { when: timeout_when });
 
   raptorLog(
@@ -556,8 +556,8 @@ async function resultListener(request, sender, sendResponse) {
         // a single pageload measurement was received
         if (request.type.indexOf("hero") > -1) {
           results.measurements[request.type].push(request.value);
-          var _found = request.type.split("hero:")[1];
-          var index = pendingHeroes.indexOf(_found);
+          const _found = request.type.split("hero:")[1];
+          const index = pendingHeroes.indexOf(_found);
           if (index > -1) {
             pendingHeroes.splice(index, 1);
             if (pendingHeroes.length == 0) {
@@ -593,7 +593,7 @@ async function verifyResults() {
   raptorLog(results);
 
   for (var x in results.measurements) {
-    let count = results.measurements[x].length;
+    const count = results.measurements[x].length;
     if (count == pageCycles) {
       raptorLog(`have ${count} results for ${x}, as expected`);
     } else {
@@ -671,7 +671,7 @@ async function cleanUp() {
 async function raptorRunner() {
   raptorLog("starting raptorRunner");
 
-  let config = getTestConfig();
+  const config = getTestConfig();
   testName = config.test_name;
   settingsURL = config.test_settings_url;
   csPort = config.cs_port;
