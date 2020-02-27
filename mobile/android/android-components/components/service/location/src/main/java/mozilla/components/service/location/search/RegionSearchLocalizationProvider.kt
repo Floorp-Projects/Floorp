@@ -6,6 +6,7 @@ package mozilla.components.service.location.search
 
 import mozilla.components.browser.search.provider.localization.SearchLocalization
 import mozilla.components.browser.search.provider.localization.SearchLocalizationProvider
+import mozilla.components.service.location.LocationService
 import mozilla.components.service.location.MozillaLocationService
 import java.util.Locale
 
@@ -18,7 +19,7 @@ import java.util.Locale
  * provider.
  */
 class RegionSearchLocalizationProvider(
-    private val service: MozillaLocationService
+    private val service: LocationService
 ) : SearchLocalizationProvider {
     override suspend fun determineRegion(): SearchLocalization {
         val region = service.fetchRegion(readFromCache = true)

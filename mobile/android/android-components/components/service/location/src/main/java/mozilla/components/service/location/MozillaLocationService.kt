@@ -51,46 +51,33 @@ class MozillaLocationService(
     private val client: Client,
     apiKey: String,
     serviceUrl: String = GEOIP_SERVICE_URL
-) {
+) : LocationService {
     private val regionServiceUrl = (serviceUrl + "country?key=%s").format(apiKey)
 
     /**
-     * Determines the current [Region] based on the IP address used to access the service.
+     * Determines the current [LocationService.Region] based on the IP address used to access the service.
      *
      * https://mozilla.github.io/ichnaea/api/region.html
      *
      * @param readFromCache Whether a previously returned region (from the cache) can be returned
      * (default) or whether a request to the service should always be made.
      */
-    suspend fun fetchRegion(readFromCache: Boolean = true): Region? = withContext(Dispatchers.IO) {
+    override suspend fun fetchRegion(
+        readFromCache: Boolean
+    ): LocationService.Region? = withContext(Dispatchers.IO) {
         if (readFromCache) {
             context.loadCachedRegion()?.let { return@withContext it }
         }
 
         client.fetchRegion(regionServiceUrl)?.also { context.cacheRegion(it) }
     }
-
-    /**
-     * A [Region] returned by the location service.
-     *
-     * The [Region] use region codes and names from the GENC dataset, which is for the most part
-     * compatible with the ISO 3166 standard. While the API endpoint and [Region] class refers to
-     * country, no claim about the political status of any region is made by this service.
-     *
-     * @param countryCode Country code; ISO 3166.
-     * @param countryName Name of the country (English); ISO 3166.
-     */
-    data class Region(
-        val countryCode: String,
-        val countryName: String
-    )
 }
 
-private fun Context.loadCachedRegion(): MozillaLocationService.Region? {
+private fun Context.loadCachedRegion(): LocationService.Region? {
     val cache = regionCache()
 
     return if (cache.contains(KEY_COUNTRY_CODE) && cache.contains(KEY_COUNTRY_NAME)) {
-        MozillaLocationService.Region(
+        LocationService.Region(
             cache.getString(KEY_COUNTRY_CODE, null)!!,
             cache.getString(KEY_COUNTRY_NAME, null)!!
         )
@@ -99,7 +86,7 @@ private fun Context.loadCachedRegion(): MozillaLocationService.Region? {
     }
 }
 
-private fun Context.cacheRegion(region: MozillaLocationService.Region) {
+private fun Context.cacheRegion(region: LocationService.Region) {
     regionCache()
         .edit()
         .putString(KEY_COUNTRY_CODE, region.countryCode)
@@ -119,7 +106,7 @@ private fun Context.regionCache(): SharedPreferences {
     return getSharedPreferences(CACHE_FILE, Context.MODE_PRIVATE)
 }
 
-private fun Client.fetchRegion(regionServiceUrl: String): MozillaLocationService.Region? {
+private fun Client.fetchRegion(regionServiceUrl: String): LocationService.Region? {
     val request = Request(
         url = regionServiceUrl,
         method = Request.Method.POST,
@@ -143,7 +130,7 @@ private fun Client.fetchRegion(regionServiceUrl: String): MozillaLocationService
     }
 }
 
-private fun Response.toRegion(): MozillaLocationService.Region? {
+private fun Response.toRegion(): LocationService.Region? {
     if (!isSuccess) {
         return null
     }
@@ -151,7 +138,7 @@ private fun Response.toRegion(): MozillaLocationService.Region? {
     use {
         return try {
             val json = JSONObject(body.string(Charsets.UTF_8))
-            MozillaLocationService.Region(
+            LocationService.Region(
                 json.getString(KEY_COUNTRY_CODE),
                 json.getString(KEY_COUNTRY_NAME)
             )

@@ -5,6 +5,7 @@
 package mozilla.components.service.location.search
 
 import kotlinx.coroutines.runBlocking
+import mozilla.components.service.location.LocationService
 import mozilla.components.service.location.MozillaLocationService
 import mozilla.components.support.test.mock
 import org.junit.After
@@ -34,7 +35,7 @@ class RegionSearchLocalizationProviderTest {
     fun `Uses region from service`() {
         runBlocking {
             val service: MozillaLocationService = mock()
-            doReturn(MozillaLocationService.Region("RU", "Russia"))
+            doReturn(LocationService.Region("RU", "Russia"))
                 .`when`(service).fetchRegion(ArgumentMatchers.anyBoolean())
 
             val provider = RegionSearchLocalizationProvider(service)
@@ -52,7 +53,7 @@ class RegionSearchLocalizationProviderTest {
             Locale.setDefault(Locale("de", "DE"))
 
             val service: MozillaLocationService = mock()
-            doReturn(MozillaLocationService.Region("RU", "Russia"))
+            doReturn(LocationService.Region("RU", "Russia"))
                 .`when`(service).fetchRegion(ArgumentMatchers.anyBoolean())
 
             val provider = RegionSearchLocalizationProvider(service)
