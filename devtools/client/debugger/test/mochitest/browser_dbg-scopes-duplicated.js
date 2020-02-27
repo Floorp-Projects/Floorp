@@ -20,8 +20,20 @@ httpServer.registerPathHandler("/test.js", function(request, response) {
   response.setHeader("Content-Type", "application/javascript");
   response.write(`
     document.addEventListener("click", function onClick(e) {
-      var hello = {hello: "world"};
-      var x = {a: hello, b: hello, c: hello};
+      var sharedValue = {hello: "world"};
+      var x = {
+        a: sharedValue,
+        b: sharedValue,
+        c: sharedValue,
+        d: {
+          e: {
+            g: sharedValue
+          },
+          f: {
+            h: sharedValue
+          }
+        }
+      };
       debugger;
     });
   `);
@@ -43,30 +55,93 @@ add_task(async function() {
 
   await ready;
 
-  is(getLabel(dbg, 4), "e");
-  is(getLabel(dbg, 5), "hello");
-  is(getLabel(dbg, 6), "x");
+  checkScopesLabels(
+    dbg,
+    `
+    | e
+    | sharedValue
+    | x
+    `,
+    { startIndex: 3 }
+  );
 
   info("Expand `x` node");
   await toggleScopeNode(dbg, 6);
-  is(getLabel(dbg, 7), "a");
-  is(getLabel(dbg, 8), "b");
-  is(getLabel(dbg, 9), "c");
+  checkScopesLabels(
+    dbg,
+    `
+    | x
+    | | a
+    | | b
+    | | c
+    | | d
+    `,
+    { startIndex: 5 }
+  );
 
-  info("Expand `c`, `b` and `a` nodes");
+  info("Expand node `d`");
+  await toggleScopeNode(dbg, 10);
+  checkScopesLabels(
+    dbg,
+    `
+    | | d
+    | | | e
+    | | | f
+    `,
+    { startIndex: 9 }
+  );
+
+  info("Expand `f` and `e` nodes");
+  await toggleScopeNode(dbg, 12);
+  await toggleScopeNode(dbg, 11);
+  checkScopesLabels(
+    dbg,
+    `
+    | | d
+    | | | e
+    | | | | g
+    | | | | <prototype>
+    | | | f
+    | | | | h
+    | | | | <prototype>
+    `,
+    { startIndex: 9 }
+  );
+
+  info("Expand `h`, `g`, `e`, `c`, `b` and `a` nodes");
+  await toggleScopeNode(dbg, 15);
+  await toggleScopeNode(dbg, 12);
   await toggleScopeNode(dbg, 9);
   await toggleScopeNode(dbg, 8);
   await toggleScopeNode(dbg, 7);
 
-  is(getLabel(dbg, 7), "a");
-  is(getLabel(dbg, 8), "hello");
-  is(getLabel(dbg, 9), "<prototype>");
-  is(getLabel(dbg, 10), "b");
-  is(getLabel(dbg, 11), "hello");
-  is(getLabel(dbg, 12), "<prototype>");
-  is(getLabel(dbg, 13), "c");
-  is(getLabel(dbg, 14), "hello");
-  is(getLabel(dbg, 15), "<prototype>");
+  checkScopesLabels(
+    dbg,
+    `
+    | x
+    | | a
+    | | | hello
+    | | | <prototype>
+    | | b
+    | | | hello
+    | | | <prototype>
+    | | c
+    | | | hello
+    | | | <prototype>
+    | | d
+    | | | e
+    | | | | g
+    | | | | | hello
+    | | | | | <prototype>
+    | | | | <prototype>
+    | | | f
+    | | | | h
+    | | | | | hello
+    | | | | | <prototype>
+    | | | | <prototype>
+    `,
+    { startIndex: 5 }
+  );
 
   info("Expand `e`");
   await toggleScopeNode(dbg, 4);
@@ -82,8 +157,33 @@ add_task(async function() {
   ok(nodes.includes("classList"), "classList is displayed");
 });
 
-function getAllLabels(dbg) {
-  return Array.from(findAllElements(dbg, "scopeNodes")).map(el => el.innerText);
+function getAllLabels(dbg, withIndent = false) {
+  return Array.from(findAllElements(dbg, "scopeNodes")).map(el => {
+    let text = el.innerText;
+    if (withIndent) {
+      const node = el.closest(".tree-node");
+      const level = Number(node.getAttribute("aria-level"));
+      if (!Number.isNaN(level)) {
+        text = `${"| ".repeat(level - 1)}${text}`.trim();
+      }
+    }
+    return text;
+  });
+}
+
+function checkScopesLabels(dbg, expected, { startIndex = 0 } = {}) {
+  const lines = expected
+    .trim()
+    .split("\n")
+    .map(line => line.trim());
+
+  const labels = getAllLabels(dbg, true).slice(
+    startIndex,
+    startIndex + lines.length
+  );
+
+  const format = arr => `\n${arr.join("\n")}\n`;
+  is(format(labels), format(lines), "got expected scope labels");
 }
 
 function getLabel(dbg, index) {
