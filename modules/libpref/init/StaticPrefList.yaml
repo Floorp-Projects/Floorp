@@ -2791,11 +2791,6 @@
 #endif
   mirror: once
 
-- name: dom.vr.openvr.action_input
-  type: bool
-  value: true
-  mirror: once
-
 # OSVR device
 - name: dom.vr.osvr.enabled
   type: bool
