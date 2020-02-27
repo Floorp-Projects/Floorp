@@ -21,10 +21,13 @@ namespace layers {
 
 class ImageClient;
 class TextureClient;
+class TextureClientRecycleAllocator;
 
 class SharedPlanarYCbCrImage : public PlanarYCbCrImage {
  public:
   explicit SharedPlanarYCbCrImage(ImageClient* aCompositable);
+  explicit SharedPlanarYCbCrImage(
+      TextureClientRecycleAllocator* aRecycleAllocator);
 
  protected:
   virtual ~SharedPlanarYCbCrImage();
@@ -49,6 +52,8 @@ class SharedPlanarYCbCrImage : public PlanarYCbCrImage {
  private:
   RefPtr<TextureClient> mTextureClient;
   RefPtr<ImageClient> mCompositable;
+  RefPtr<TextureClientRecycleAllocator> mRecycleAllocator;
+  const TextureFlags mTextureFlags;
 };
 
 }  // namespace layers
