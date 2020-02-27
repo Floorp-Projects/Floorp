@@ -11,7 +11,7 @@ CHECK(DanglingOnTemporaryChecker, "dangling-on-temporary")
 CHECK(ExplicitImplicitChecker, "implicit-constructor")
 CHECK(ExplicitOperatorBoolChecker, "explicit-operator-bool")
 CHECK(KungFuDeathGripChecker, "kungfu-death-grip")
-#ifdef _WIN32
+#ifdef TARGET_IS_WINDOWS
 CHECK(LoadLibraryUsageChecker, "load-library-usage")
 CHECK(FopenUsageChecker, "fopen-usage")
 #endif
