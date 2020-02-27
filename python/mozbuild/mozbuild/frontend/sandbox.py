@@ -35,12 +35,12 @@ from mozpack.files import FileFinder
 default_finder = FileFinder('/')
 
 
-def alphabetical_sorted(iterable, cmp=None, key=lambda x: x.lower(),
+def alphabetical_sorted(iterable, key=lambda x: x.lower(),
                         reverse=False):
     """sorted() replacement for the sandbox, ordering alphabetically by
     default.
     """
-    return sorted(iterable, cmp, key, reverse)
+    return sorted(iterable, key=key, reverse=reverse)
 
 
 class SandboxError(Exception):
