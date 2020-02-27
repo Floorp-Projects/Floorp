@@ -107,8 +107,8 @@ class CrossProcessMutex {
 #endif
 };
 
-typedef BaseAutoLock<CrossProcessMutex&> CrossProcessMutexAutoLock;
-typedef BaseAutoUnlock<CrossProcessMutex&> CrossProcessMutexAutoUnlock;
+typedef detail::BaseAutoLock<CrossProcessMutex&> CrossProcessMutexAutoLock;
+typedef detail::BaseAutoUnlock<CrossProcessMutex&> CrossProcessMutexAutoUnlock;
 
 }  // namespace mozilla
 
