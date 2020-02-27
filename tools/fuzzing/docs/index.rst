@@ -1,6 +1,12 @@
 Fuzzing
 =======
 
+.. toctree::
+  :maxdepth: 1
+  :glob:
+
+  *
+
 This section focuses on explaining the software testing technique called
 “Fuzzing” or “Fuzz Testing” and its application to the Mozilla codebase.
 The overall goal is to educate developers about the capabilities and
