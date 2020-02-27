@@ -108,7 +108,7 @@ inline ClippedTime TimeClip(double time) {
   }
 
   // Step 3.
-  return ClippedTime(ToInteger(time) + (+0.0));
+  return ClippedTime(ToInteger(time));
 }
 
 // Produce a double Value from the given time.  Because times may be NaN,
