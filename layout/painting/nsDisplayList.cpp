@@ -8362,9 +8362,7 @@ bool nsDisplayTransform::CanUseAsyncAnimations(nsDisplayListBuilder* aBuilder) {
 
 bool nsDisplayBackgroundColor::CanUseAsyncAnimations(
     nsDisplayListBuilder* aBuilder) {
-  LayerManager* layerManager = aBuilder->GetWidgetLayerManager();
-  return layerManager &&
-         layerManager->GetBackendType() != layers::LayersBackend::LAYERS_WR;
+  return StaticPrefs::gfx_omta_background_color();
 }
 
 /* static */
