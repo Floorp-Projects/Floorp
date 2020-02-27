@@ -107,12 +107,19 @@ void IPDLParamTraits<nsIVariant*>::Write(Message* aMsg, IProtocol* aActor,
       nsCOMPtr<nsISupports> value;
       MOZ_ALWAYS_SUCCEEDS(aParam->GetAsInterface(&iid, getter_AddRefs(value)));
       free(iid);
-      nsCOMPtr<nsIURI> uri = do_QueryInterface(value);
-      if (value && !uri) {
-        // We only accept nsIURI interface type, patch welcome.
+      // We only accept nsIURI and nsIPrincipal interface types, patch welcome.
+      if (nsCOMPtr<nsIURI> uri = do_QueryInterface(value)) {
+        variant.data() = uri;
+      } else if (nsCOMPtr<nsIPrincipal> principal = do_QueryInterface(value)) {
+        variant.data() = principal;
+      } else if (value) {
         variant.type() = nsIDataType::VTYPE_EMPTY;
+        variant.data() = false;  // because we need something.
+      } else {
+        // Let's pretend like we had a null URI, though how do we know
+        // it wasn't a null principal?
+        variant.data() = (nsIURI*)nullptr;
       }
-      variant.data() = uri;
       break;
     }
     case nsIDataType::VTYPE_VOID:
@@ -191,7 +198,13 @@ bool IPDLParamTraits<nsIVariant*>::Read(const Message* aMsg,
       break;
     case nsIDataType::VTYPE_INTERFACE:
     case nsIDataType::VTYPE_INTERFACE_IS:
-      variant->SetAsISupports(value.data().get_nsIURI());
+      if (value.data().type() == IPDLVariantValue::TnsIURI) {
+        variant->SetAsISupports(value.data().get_nsIURI());
+      } else if (value.data().type() == IPDLVariantValue::TnsIPrincipal) {
+        variant->SetAsISupports(value.data().get_nsIPrincipal());
+      } else {
+        MOZ_CRASH("Unexpected interface type");
+      }
       break;
     case nsIDataType::VTYPE_VOID:
       variant->SetAsVoid();
