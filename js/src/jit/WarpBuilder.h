@@ -21,20 +21,31 @@ namespace jit {
   _(NopDestructuring)       \
   _(TryDestructuring)       \
   _(Lineno)                 \
+  _(DebugLeaveLexicalEnv)   \
   _(Undefined)              \
   _(Void)                   \
   _(Null)                   \
   _(Hole)                   \
   _(Uninitialized)          \
+  _(IsConstructing)         \
   _(False)                  \
   _(True)                   \
   _(Zero)                   \
   _(One)                    \
+  _(Int8)                   \
+  _(Uint16)                 \
+  _(Uint24)                 \
+  _(Int32)                  \
+  _(Double)                 \
+  _(ResumeIndex)            \
   _(Pop)                    \
   _(PopN)                   \
   _(Dup)                    \
   _(Dup2)                   \
+  _(DupAt)                  \
   _(Swap)                   \
+  _(Pick)                   \
+  _(Unpick)                 \
   _(GetLocal)               \
   _(SetLocal)               \
   _(InitLexical)            \
