@@ -75,7 +75,7 @@
         <action
             android:id="@+id/action_homeFragment_to_browserFragment"
             app:destination="@id/browserFragment"
-            app:exitAnim="@anim/fade_out"
+            app:exitAnim="@anim/zoom_in_fade"
             app:popEnterAnim="@anim/fade_in" />
         <action
             android:id="@+id/action_homeFragment_to_libraryFragment"
@@ -187,6 +187,10 @@
             android:name="activeSessionId"
             app:argType="string"
             app:nullable="true" />
+        <argument
+            android:name="shouldAnimate"
+            app:argType="boolean"
+            android:defaultValue="false" />
         <action
             android:id="@+id/action_browserFragment_to_settingsFragment"
             app:destination="@id/settingsFragment" />

@@ -6,8 +6,6 @@ package org.mozilla.fenix.browser
 
 import android.content.Context
 import android.content.Intent
-import android.graphics.Color
-import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import android.view.Gravity
 import android.view.LayoutInflater
@@ -15,11 +13,9 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.annotation.CallSuper
 import androidx.coordinatorlayout.widget.CoordinatorLayout
-import androidx.core.graphics.drawable.toDrawable
 import androidx.core.net.toUri
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
-import androidx.navigation.NavDirections
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.snackbar.Snackbar
@@ -89,6 +85,7 @@ import org.mozilla.fenix.ext.sessionsOfType
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.theme.ThemeManager
+import java.lang.ref.WeakReference
 
 /**
  * Base fragment extended by [BrowserFragment].
@@ -98,6 +95,7 @@ import org.mozilla.fenix.theme.ThemeManager
 @Suppress("TooManyFunctions", "LargeClass")
 abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, SessionManager.Observer {
     protected lateinit var browserFragmentStore: BrowserFragmentStore
+    private lateinit var browserAnimator: BrowserAnimator
 
     private var _browserInteractor: BrowserToolbarViewInteractor? = null
     protected val browserInteractor: BrowserToolbarViewInteractor
@@ -164,6 +162,15 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
 
         initializeEngineView(toolbarHeight)
 
+        browserAnimator = BrowserAnimator(
+            fragment = WeakReference(this),
+            engineView = WeakReference(engineView),
+            swipeRefresh = WeakReference(swipeRefresh),
+            arguments = arguments!!
+        ).apply {
+            beginAnimationIfNecessary()
+        }
+
         return getSessionById()?.also { session ->
             val browserToolbarController = DefaultBrowserToolbarController(
                 store = browserFragmentStore,
@@ -177,10 +184,9 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
                 browsingModeManager = (activity as HomeActivity).browsingModeManager,
                 sessionManager = requireComponents.core.sessionManager,
                 findInPageLauncher = { findInPageIntegration.withFeature { it.launch() } },
-                browserLayout = view.browserLayout,
                 engineView = engineView,
                 swipeRefresh = swipeRefresh,
-                adjustBackgroundAndNavigate = ::adjustBackgroundAndNavigate,
+                browserAnimator = browserAnimator,
                 customTabSession = customTabSessionId?.let { sessionManager.findSessionById(it) },
                 getSupportUrl = {
                     SupportUtils.getSumoURLForTopic(
@@ -498,26 +504,6 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
         context: Context,
         view: View
     ): List<ContextMenuCandidate>
-
-    private fun adjustBackgroundAndNavigate(directions: NavDirections) {
-        context?.let {
-            viewLifecycleOwner.lifecycleScope.launch {
-                // isAdded check is necessary because of a bug in viewLifecycleOwner. See AC#3828
-                if (!this@BaseBrowserFragment.isAdded) return@launch
-
-                engineView.captureThumbnail { bitmap ->
-                    if (!this@BaseBrowserFragment.isAdded) return@captureThumbnail
-
-                    // If the bitmap is null, the best we can do to reduce the flash is set transparent
-                    swipeRefresh.background = bitmap?.toDrawable(it.resources)
-                        ?: ColorDrawable(Color.TRANSPARENT)
-
-                    engineView.asView().visibility = View.GONE
-                    findNavController().nav(R.id.browserFragment, directions)
-                }
-            }
-        }
-    }
 
     @CallSuper
     override fun onSessionSelected(session: Session) {

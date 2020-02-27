@@ -20,18 +20,17 @@ import kotlinx.coroutines.test.setMain
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.engine.Engine
 import mozilla.components.feature.tab.collections.TabCollection
+import mozilla.components.feature.tabs.TabsUseCases
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
-import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.browsingmode.BrowsingModeManager
 import org.mozilla.fenix.components.TabCollectionStorage
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.ext.components
-import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.home.sessioncontrol.DefaultSessionControlController
 import org.mozilla.fenix.settings.SupportUtils
 import mozilla.components.feature.tab.collections.Tab as ComponentTab
@@ -61,6 +60,7 @@ class DefaultSessionControlControllerTest {
     private val sessionManager: SessionManager = mockk(relaxed = true)
     private val engine: Engine = mockk(relaxed = true)
     private val tabCollectionStorage: TabCollectionStorage = mockk(relaxed = true)
+    private val tabsUseCases: TabsUseCases = mockk(relaxed = true)
 
     private lateinit var controller: DefaultSessionControlController
 
@@ -71,6 +71,7 @@ class DefaultSessionControlControllerTest {
         every { activity.components.core.engine } returns engine
         every { activity.components.core.sessionManager } returns sessionManager
         every { activity.components.core.tabCollectionStorage } returns tabCollectionStorage
+        every { activity.components.useCases.tabsUseCases } returns tabsUseCases
 
         every { store.state } returns state
         every { state.collections } returns emptyList()
@@ -194,10 +195,24 @@ class DefaultSessionControlControllerTest {
     fun handleSelectTab() {
         val tabView: View = mockk(relaxed = true)
         val sessionId = "hello"
-        val directions = HomeFragmentDirections.actionHomeFragmentToBrowserFragment(null)
         controller.handleSelectTab(tabView, sessionId)
         verify { invokePendingDeleteJobs() }
-        verify { navController.nav(R.id.homeFragment, directions) }
+        verify { activity.openToBrowser(BrowserDirection.FromHome) }
+    }
+
+    @Test
+    fun handleSelectTopSite() {
+        val topSiteUrl = "mozilla.org"
+
+        controller.handleSelectTopSite(topSiteUrl)
+        verify { invokePendingDeleteJobs() }
+        verify { metrics.track(Event.TopSiteOpenInNewTab) }
+        verify { tabsUseCases.addTab.invoke(
+            topSiteUrl,
+            selectTab = true,
+            startLoading = true
+        ) }
+        verify { activity.openToBrowser(BrowserDirection.FromHome) }
     }
 
     @Test

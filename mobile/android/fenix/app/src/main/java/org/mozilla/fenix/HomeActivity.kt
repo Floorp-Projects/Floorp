@@ -321,7 +321,7 @@ open class HomeActivity : LocaleAwareAppCompatActivity() {
         BrowserDirection.FromGlobal ->
             NavGraphDirections.actionGlobalBrowser(customTabSessionId)
         BrowserDirection.FromHome ->
-            HomeFragmentDirections.actionHomeFragmentToBrowserFragment(customTabSessionId)
+            HomeFragmentDirections.actionHomeFragmentToBrowserFragment(customTabSessionId, true)
         BrowserDirection.FromSearch ->
             SearchFragmentDirections.actionSearchFragmentToBrowserFragment(customTabSessionId)
         BrowserDirection.FromSettings ->

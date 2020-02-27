@@ -59,11 +59,11 @@ class SearchFragment : Fragment(), UserInteractionHandler {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         postponeEnterTransition()
+
         sharedElementEnterTransition =
             TransitionInflater.from(context).inflateTransition(android.R.transition.move)
-                .setDuration(
-                    SHARED_TRANSITION_MS
-                )
+                .setDuration(SHARED_TRANSITION_MS)
+
         requireComponents.analytics.metrics.track(Event.InteractWithSearchURLArea)
     }
 
@@ -346,7 +346,7 @@ class SearchFragment : Fragment(), UserInteractionHandler {
     }
 
     companion object {
-        private const val SHARED_TRANSITION_MS = 200L
+        private const val SHARED_TRANSITION_MS = 250L
         private const val REQUEST_CODE_CAMERA_PERMISSIONS = 1
     }
 }

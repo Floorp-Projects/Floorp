@@ -6,7 +6,6 @@ package org.mozilla.fenix.home.sessioncontrol
 
 import android.view.View
 import androidx.navigation.NavController
-import androidx.navigation.fragment.FragmentNavigator
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -341,27 +340,19 @@ class DefaultSessionControlController(
         invokePendingDeleteJobs()
         val session = sessionManager.findSessionById(sessionId)
         sessionManager.select(session!!)
-        val directions = HomeFragmentDirections.actionHomeFragmentToBrowserFragment(null)
-        val extras =
-            FragmentNavigator.Extras.Builder()
-                .addSharedElement(
-                    tabView,
-                    "$TAB_ITEM_TRANSITION_NAME$sessionId"
-                )
-                .build()
-        navController.nav(R.id.homeFragment, directions, extras)
+        activity.openToBrowser(BrowserDirection.FromHome)
     }
 
     override fun handleSelectTopSite(url: String) {
+        invokePendingDeleteJobs()
         metrics.track(Event.TopSiteOpenInNewTab)
-        if (url == SupportUtils.POCKET_TRENDING_URL) {
-            metrics.track(Event.PocketTopSiteClicked)
-        }
-        activity.components.useCases.tabsUseCases.addTab.invoke(url, true, true)
-        navController.nav(
-            R.id.homeFragment,
-            HomeFragmentDirections.actionHomeFragmentToBrowserFragment(null)
+        if (url == SupportUtils.POCKET_TRENDING_URL) { metrics.track(Event.PocketTopSiteClicked) }
+        activity.components.useCases.tabsUseCases.addTab.invoke(
+            url = url,
+            selectTab = true,
+            startLoading = true
         )
+        activity.openToBrowser(BrowserDirection.FromHome)
     }
 
     override fun handleShareTabs() {

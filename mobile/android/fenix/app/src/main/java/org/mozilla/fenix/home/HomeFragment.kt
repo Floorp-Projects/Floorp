@@ -38,7 +38,6 @@ import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.SCROLL_STATE_IDLE
-import androidx.transition.TransitionInflater
 import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.synthetic.main.fragment_home.*
@@ -60,8 +59,8 @@ import mozilla.components.feature.media.ext.getSession
 import mozilla.components.feature.media.state.MediaState
 import mozilla.components.feature.media.state.MediaStateMachine
 import mozilla.components.feature.tab.collections.TabCollection
-import mozilla.components.support.ktx.android.util.dpToPx
 import mozilla.components.feature.top.sites.TopSite
+import mozilla.components.support.ktx.android.util.dpToPx
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
@@ -145,9 +144,6 @@ class HomeFragment : Fragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         postponeEnterTransition()
-        sharedElementEnterTransition =
-            TransitionInflater.from(context).inflateTransition(android.R.transition.move)
-                .setDuration(SHARED_TRANSITION_MS)
 
         val sessionObserver = BrowserSessionsObserver(sessionManager, singleSessionObserver) {
             emitSessionChanges()
@@ -270,6 +266,10 @@ class HomeFragment : Fragment() {
                 sessionControlView!!.view.layoutManager?.onRestoreInstanceState(parcelable)
             }
             homeViewModel.layoutManagerState = null
+
+            // We have to delay so that the keyboard collapses and the view is resized before the
+            // animation from SearchFragment happens
+            delay(ANIMATION_DELAY)
         }
 
         viewLifecycleOwner.lifecycleScope.launch(IO) {
@@ -309,14 +309,7 @@ class HomeFragment : Fragment() {
         view.toolbar_wrapper.setOnClickListener {
             invokePendingDeleteJobs()
             hideOnboardingIfNeeded()
-            val directions = HomeFragmentDirections.actionHomeFragmentToSearchFragment(
-                sessionId = null
-            )
-            val extras =
-                FragmentNavigator.Extras.Builder()
-                    .addSharedElement(toolbar_wrapper, "toolbar_wrapper_transition")
-                    .build()
-            nav(R.id.homeFragment, directions, extras)
+            navigateToSearch()
             requireComponents.analytics.metrics.track(Event.SearchBarTapped(Event.SearchBarTapped.Source.HOME))
         }
 
@@ -550,7 +543,12 @@ class HomeFragment : Fragment() {
         val directions = HomeFragmentDirections.actionHomeFragmentToSearchFragment(
             sessionId = null
         )
-        nav(R.id.homeFragment, directions)
+
+        val extras = FragmentNavigator.Extras.Builder()
+                .addSharedElement(toolbar_wrapper, "toolbar_wrapper_transition")
+                .build()
+
+        nav(R.id.homeFragment, directions, extras)
     }
 
     private fun openSettingsScreen() {
@@ -897,12 +895,13 @@ class HomeFragment : Fragment() {
     }
 
     companion object {
+        private const val ANIMATION_DELAY = 100L
+
         private const val NON_TAB_ITEM_NUM = 3
         private const val ANIM_SCROLL_DELAY = 100L
         private const val ANIM_ON_SCREEN_DELAY = 200L
         private const val FADE_ANIM_DURATION = 150L
         private const val ANIM_SNACKBAR_DELAY = 100L
-        private const val SHARED_TRANSITION_MS = 200L
         private const val CFR_WIDTH_DIVIDER = 1.7
         private const val CFR_Y_OFFSET = -20
 

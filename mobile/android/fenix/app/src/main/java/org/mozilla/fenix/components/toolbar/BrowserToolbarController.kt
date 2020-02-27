@@ -6,16 +6,8 @@ package org.mozilla.fenix.components.toolbar
 
 import android.app.Activity
 import android.content.Intent
-import android.graphics.Color
-import android.graphics.drawable.ColorDrawable
-import android.view.View
-import android.view.ViewGroup
 import androidx.annotation.VisibleForTesting
-import androidx.core.graphics.drawable.toDrawable
 import androidx.navigation.NavController
-import androidx.navigation.NavDirections
-import androidx.navigation.NavOptions
-import androidx.navigation.fragment.FragmentNavigator
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.CoroutineScope
@@ -30,6 +22,7 @@ import mozilla.components.concept.engine.prompt.ShareData
 import mozilla.components.support.ktx.kotlin.isUrl
 import org.mozilla.fenix.NavGraphDirections
 import org.mozilla.fenix.R
+import org.mozilla.fenix.browser.BrowserAnimator
 import org.mozilla.fenix.browser.BrowserFragment
 import org.mozilla.fenix.browser.BrowserFragmentDirections
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
@@ -57,6 +50,8 @@ interface BrowserToolbarController {
     fun handleTabCounterClick()
 }
 
+typealias onComplete = () -> Unit
+
 @Suppress("LargeClass")
 class DefaultBrowserToolbarController(
     private val store: BrowserFragmentStore,
@@ -66,9 +61,8 @@ class DefaultBrowserToolbarController(
     private val browsingModeManager: BrowsingModeManager,
     private val sessionManager: SessionManager,
     private val findInPageLauncher: () -> Unit,
-    private val browserLayout: ViewGroup,
     private val engineView: EngineView,
-    private val adjustBackgroundAndNavigate: (NavDirections) -> Unit,
+    private val browserAnimator: BrowserAnimator,
     private val swipeRefresh: SwipeRefreshLayout,
     private val customTabSession: Session?,
     private val getSupportUrl: () -> String,
@@ -89,12 +83,14 @@ class DefaultBrowserToolbarController(
     internal var ioScope: CoroutineScope = CoroutineScope(Dispatchers.IO)
 
     override fun handleToolbarPaste(text: String) {
-        adjustBackgroundAndNavigate.invoke(
-            BrowserFragmentDirections.actionBrowserFragmentToSearchFragment(
+        browserAnimator.captureEngineViewAndDrawStatically {
+            val directions = BrowserFragmentDirections.actionBrowserFragmentToSearchFragment(
                 sessionId = currentSession?.id,
                 pastedText = text
             )
-        )
+
+            navController.nav(R.id.browserFragment, directions)
+        }
     }
 
     override fun handleToolbarPasteAndGo(text: String) {
@@ -112,9 +108,14 @@ class DefaultBrowserToolbarController(
         activity.components.analytics.metrics.track(
             Event.SearchBarTapped(Event.SearchBarTapped.Source.BROWSER)
         )
-        adjustBackgroundAndNavigate.invoke(
-            BrowserFragmentDirections.actionBrowserFragmentToSearchFragment(currentSession?.id)
-        )
+
+        browserAnimator.captureEngineViewAndDrawStatically {
+            val directions = BrowserFragmentDirections.actionBrowserFragmentToSearchFragment(
+                currentSession?.id
+            )
+
+            navController.nav(R.id.browserFragment, directions)
+        }
     }
 
     override fun handleTabCounterClick() {
@@ -132,12 +133,14 @@ class DefaultBrowserToolbarController(
             ToolbarMenu.Item.Forward -> sessionUseCases.goForward.invoke(currentSession)
             ToolbarMenu.Item.Reload -> sessionUseCases.reload.invoke(currentSession)
             ToolbarMenu.Item.Stop -> sessionUseCases.stopLoading.invoke(currentSession)
-            ToolbarMenu.Item.Settings -> adjustBackgroundAndNavigate.invoke(
-                BrowserFragmentDirections.actionBrowserFragmentToSettingsFragment()
-            )
-            ToolbarMenu.Item.Library -> adjustBackgroundAndNavigate.invoke(
-                BrowserFragmentDirections.actionBrowserFragmentToLibraryFragment()
-            )
+            ToolbarMenu.Item.Settings -> browserAnimator.captureEngineViewAndDrawStatically {
+                val directions = BrowserFragmentDirections.actionBrowserFragmentToSettingsFragment()
+                navController.nav(R.id.browserFragment, directions)
+            }
+            ToolbarMenu.Item.Library -> browserAnimator.captureEngineViewAndDrawStatically {
+                val directions = BrowserFragmentDirections.actionBrowserFragmentToLibraryFragment()
+                navController.nav(R.id.browserFragment, directions)
+            }
             is ToolbarMenu.Item.RequestDesktop -> sessionUseCases.requestDesktopSite.invoke(
                 item.isChecked,
                 currentSession
@@ -297,28 +300,14 @@ class DefaultBrowserToolbarController(
     }
 
     private fun animateTabAndNavigateHome() {
-        // We need to dynamically add the options here because if you do it in XML it overwrites
-        val options = NavOptions.Builder().setPopUpTo(R.id.nav_graph, false)
-            .setEnterAnim(R.anim.fade_in).build()
-        val extras = FragmentNavigator.Extras.Builder().addSharedElement(
-            browserLayout,
-            "${TAB_ITEM_TRANSITION_NAME}${currentSession?.id}"
-        ).build()
-        engineView.captureThumbnail { bitmap ->
-            scope.launch {
-                // If the bitmap is null, the best we can do to reduce the flash is set transparent
-                swipeRefresh.background = bitmap?.toDrawable(activity.resources)
-                    ?: ColorDrawable(Color.TRANSPARENT)
-                engineView.asView().visibility = View.GONE
-                if (!navController.popBackStack(R.id.homeFragment, false)) {
-                    navController.nav(
-                        R.id.browserFragment,
-                        R.id.action_browserFragment_to_homeFragment,
-                        null,
-                        options,
-                        extras
-                    )
-                }
+        browserAnimator.captureEngineViewAndDrawStatically {
+            if (!navController.popBackStack(R.id.homeFragment, false)) {
+                val directions = BrowserFragmentDirections.actionBrowserFragmentToHomeFragment()
+                navController.nav(
+                    R.id.browserFragment,
+                    directions,
+                    null
+                )
             }
         }
     }

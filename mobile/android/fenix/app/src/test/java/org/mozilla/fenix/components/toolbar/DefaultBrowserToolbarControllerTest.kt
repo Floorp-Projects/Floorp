@@ -6,7 +6,6 @@ package org.mozilla.fenix.components.toolbar
 
 import android.content.Context
 import android.content.Intent
-import android.view.ViewGroup
 import androidx.lifecycle.LifecycleCoroutineScope
 import androidx.navigation.NavController
 import androidx.navigation.NavDirections
@@ -16,12 +15,14 @@ import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
 import io.mockk.mockkStatic
+import io.mockk.slot
 import io.mockk.verify
 import io.mockk.verifyOrder
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.ObsoleteCoroutinesApi
 import kotlinx.coroutines.newSingleThreadContext
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runBlockingTest
 import kotlinx.coroutines.test.setMain
@@ -37,6 +38,7 @@ import org.junit.Before
 import org.junit.Test
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
+import org.mozilla.fenix.browser.BrowserAnimator
 import org.mozilla.fenix.browser.BrowserFragment
 import org.mozilla.fenix.browser.BrowserFragmentDirections
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
@@ -59,7 +61,6 @@ import org.mozilla.fenix.settings.deletebrowsingdata.deleteAndQuit
 class DefaultBrowserToolbarControllerTest {
 
     private val mainThreadSurrogate = newSingleThreadContext("UI thread")
-    private var browserLayout: ViewGroup = mockk(relaxed = true)
     private var swipeRefreshLayout: SwipeRefreshLayout = mockk(relaxed = true)
     private var activity: HomeActivity = mockk(relaxed = true)
     private var analytics: Analytics = mockk(relaxed = true)
@@ -75,7 +76,7 @@ class DefaultBrowserToolbarControllerTest {
     private val searchUseCases: SearchUseCases = mockk(relaxed = true)
     private val sessionUseCases: SessionUseCases = mockk(relaxed = true)
     private val scope: LifecycleCoroutineScope = mockk(relaxed = true)
-    private val adjustBackgroundAndNavigate: (NavDirections) -> Unit = mockk(relaxed = true)
+    private val browserAnimator: BrowserAnimator = mockk(relaxed = true)
     private val snackbar = mockk<FenixSnackbar>(relaxed = true)
     private val tabCollectionStorage = mockk<TabCollectionStorage>(relaxed = true)
     private val topSiteStorage = mockk<TopSiteStorage>(relaxed = true)
@@ -92,12 +93,11 @@ class DefaultBrowserToolbarControllerTest {
             browsingModeManager = browsingModeManager,
             findInPageLauncher = findInPageLauncher,
             engineView = engineView,
-            adjustBackgroundAndNavigate = adjustBackgroundAndNavigate,
+            browserAnimator = browserAnimator,
             customTabSession = null,
             getSupportUrl = getSupportUrl,
             openInFenixIntent = openInFenixIntent,
             scope = scope,
-            browserLayout = browserLayout,
             swipeRefresh = swipeRefreshLayout,
             tabCollectionStorage = tabCollectionStorage,
             topSiteStorage = topSiteStorage,
@@ -122,7 +122,9 @@ class DefaultBrowserToolbarControllerTest {
         every { activity.components.useCases.sessionUseCases } returns sessionUseCases
         every { activity.components.useCases.searchUseCases } returns searchUseCases
         every { activity.components.core.sessionManager.selectedSession } returns currentSession
-        every { adjustBackgroundAndNavigate.invoke(any()) } just Runs
+
+        val onComplete = slot<() -> Unit>()
+        every { browserAnimator.captureEngineViewAndDrawStatically(capture(onComplete)) } answers { onComplete.captured.invoke() }
     }
 
     @Test
@@ -133,12 +135,11 @@ class DefaultBrowserToolbarControllerTest {
         controller.handleToolbarPaste(pastedText)
 
         verify {
-            adjustBackgroundAndNavigate.invoke(
-                BrowserFragmentDirections.actionBrowserFragmentToSearchFragment(
-                    sessionId = "1",
-                    pastedText = pastedText
-                )
+            val directions = BrowserFragmentDirections.actionBrowserFragmentToSearchFragment(
+                sessionId = "1",
+                pastedText = pastedText
             )
+            navController.nav(R.id.browserFragment, directions)
         }
     }
 
@@ -178,11 +179,10 @@ class DefaultBrowserToolbarControllerTest {
 
         verify { metrics.track(Event.SearchBarTapped(Event.SearchBarTapped.Source.BROWSER)) }
         verify {
-            adjustBackgroundAndNavigate.invoke(
-                BrowserFragmentDirections.actionBrowserFragmentToSearchFragment(
+                val directions = BrowserFragmentDirections.actionBrowserFragmentToSearchFragment(
                     sessionId = "1"
                 )
-            )
+                navController.nav(R.id.browserFragment, directions)
         }
     }
 
@@ -229,16 +229,15 @@ class DefaultBrowserToolbarControllerTest {
     }
 
     @Test
-    fun handleToolbarSettingsPress() {
+    fun handleToolbarSettingsPress() = runBlocking {
         val item = ToolbarMenu.Item.Settings
 
         controller.handleToolbarItemInteraction(item)
 
         verify { metrics.track(Event.BrowserMenuItemTapped(Event.BrowserMenuItemTapped.Item.SETTINGS)) }
         verify {
-            adjustBackgroundAndNavigate.invoke(
-                BrowserFragmentDirections.actionBrowserFragmentToSettingsFragment()
-            )
+            val directions = BrowserFragmentDirections.actionBrowserFragmentToSettingsFragment()
+            navController.nav(R.id.browserFragment, directions)
         }
     }
 
@@ -250,9 +249,8 @@ class DefaultBrowserToolbarControllerTest {
 
         verify { metrics.track(Event.BrowserMenuItemTapped(Event.BrowserMenuItemTapped.Item.LIBRARY)) }
         verify {
-            adjustBackgroundAndNavigate.invoke(
-                BrowserFragmentDirections.actionBrowserFragmentToLibraryFragment()
-            )
+            val directions = BrowserFragmentDirections.actionBrowserFragmentToLibraryFragment()
+            navController.nav(R.id.browserFragment, directions)
         }
     }
 
@@ -304,12 +302,11 @@ class DefaultBrowserToolbarControllerTest {
             browsingModeManager = browsingModeManager,
             findInPageLauncher = findInPageLauncher,
             engineView = engineView,
-            adjustBackgroundAndNavigate = adjustBackgroundAndNavigate,
+            browserAnimator = browserAnimator,
             customTabSession = null,
             getSupportUrl = getSupportUrl,
             openInFenixIntent = openInFenixIntent,
             scope = this,
-            browserLayout = browserLayout,
             swipeRefresh = swipeRefreshLayout,
             tabCollectionStorage = tabCollectionStorage,
             topSiteStorage = topSiteStorage,
@@ -500,12 +497,11 @@ class DefaultBrowserToolbarControllerTest {
             browsingModeManager = browsingModeManager,
             findInPageLauncher = findInPageLauncher,
             engineView = engineView,
-            adjustBackgroundAndNavigate = adjustBackgroundAndNavigate,
+            browserAnimator = browserAnimator,
             customTabSession = currentSession,
             getSupportUrl = getSupportUrl,
             openInFenixIntent = openInFenixIntent,
             scope = scope,
-            browserLayout = browserLayout,
             swipeRefresh = swipeRefreshLayout,
             tabCollectionStorage = tabCollectionStorage,
             topSiteStorage = topSiteStorage,
@@ -542,12 +538,11 @@ class DefaultBrowserToolbarControllerTest {
             browsingModeManager = browsingModeManager,
             findInPageLauncher = findInPageLauncher,
             engineView = engineView,
-            adjustBackgroundAndNavigate = adjustBackgroundAndNavigate,
+            browserAnimator = browserAnimator,
             customTabSession = null,
             getSupportUrl = getSupportUrl,
             openInFenixIntent = openInFenixIntent,
             scope = testScope,
-            browserLayout = browserLayout,
             swipeRefresh = swipeRefreshLayout,
             tabCollectionStorage = tabCollectionStorage,
             topSiteStorage = topSiteStorage,
