@@ -17,7 +17,7 @@
 #include "vpx_dsp/x86/inv_txfm_ssse3.h"
 #include "vpx_dsp/x86/transpose_sse2.h"
 
-static void highbd_idct8x8_half1d(__m128i *const io) {
+void vpx_highbd_idct8x8_half1d_sse4_1(__m128i *const io) {
   __m128i step1[8], step2[8];
 
   transpose_32bit_4x4x2(io, io);
@@ -126,13 +126,13 @@ void vpx_highbd_idct8x8_64_add_sse4_1(const tran_low_t *input, uint16_t *dest,
     io_short[6] = _mm_packs_epi32(io[10], io[14]);
     io_short[7] = _mm_packs_epi32(io[11], io[15]);
 
-    idct8_sse2(io_short);
-    idct8_sse2(io_short);
+    vpx_idct8_sse2(io_short);
+    vpx_idct8_sse2(io_short);
     round_shift_8x8(io_short, io);
   } else {
     __m128i temp[4];
 
-    highbd_idct8x8_half1d(io);
+    vpx_highbd_idct8x8_half1d_sse4_1(io);
 
     io[8] = _mm_load_si128((const __m128i *)(input + 4 * 8 + 0));
     io[12] = _mm_load_si128((const __m128i *)(input + 4 * 8 + 4));
@@ -142,7 +142,7 @@ void vpx_highbd_idct8x8_64_add_sse4_1(const tran_low_t *input, uint16_t *dest,
     io[14] = _mm_load_si128((const __m128i *)(input + 6 * 8 + 4));
     io[11] = _mm_load_si128((const __m128i *)(input + 7 * 8 + 0));
     io[15] = _mm_load_si128((const __m128i *)(input + 7 * 8 + 4));
-    highbd_idct8x8_half1d(&io[8]);
+    vpx_highbd_idct8x8_half1d_sse4_1(&io[8]);
 
     temp[0] = io[4];
     temp[1] = io[5];
@@ -152,13 +152,13 @@ void vpx_highbd_idct8x8_64_add_sse4_1(const tran_low_t *input, uint16_t *dest,
     io[5] = io[9];
     io[6] = io[10];
     io[7] = io[11];
-    highbd_idct8x8_half1d(io);
+    vpx_highbd_idct8x8_half1d_sse4_1(io);
 
     io[8] = temp[0];
     io[9] = temp[1];
     io[10] = temp[2];
     io[11] = temp[3];
-    highbd_idct8x8_half1d(&io[8]);
+    vpx_highbd_idct8x8_half1d_sse4_1(&io[8]);
 
     highbd_idct8x8_final_round(io);
   }

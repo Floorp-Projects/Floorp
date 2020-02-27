@@ -22,9 +22,7 @@ const vpx_tree_index vp9_mv_class_tree[TREE_SIZE(MV_CLASSES)] = {
   18,          -MV_CLASS_7, -MV_CLASS_8, -MV_CLASS_9, -MV_CLASS_10,
 };
 
-const vpx_tree_index vp9_mv_class0_tree[TREE_SIZE(CLASS0_SIZE)] = {
-  -0, -1,
-};
+const vpx_tree_index vp9_mv_class0_tree[TREE_SIZE(CLASS0_SIZE)] = { -0, -1 };
 
 const vpx_tree_index vp9_mv_fp_tree[TREE_SIZE(MV_FP_SIZE)] = { -0, 2,  -1,
                                                                4,  -2, -3 };

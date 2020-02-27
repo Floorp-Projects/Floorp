@@ -38,13 +38,19 @@ typedef vpx_codec_stream_info_t vp8_stream_info_t;
 
 /* Structures for handling memory allocations */
 typedef enum { VP8_SEG_ALG_PRIV = 256, VP8_SEG_MAX } mem_seg_id_t;
-#define NELEMENTS(x) ((int)(sizeof(x) / sizeof(x[0])))
+#define NELEMENTS(x) ((int)(sizeof(x) / sizeof((x)[0])))
 
 struct vpx_codec_alg_priv {
   vpx_codec_priv_t base;
   vpx_codec_dec_cfg_t cfg;
   vp8_stream_info_t si;
   int decoder_init;
+#if CONFIG_MULTITHREAD
+  // Restart threads on next frame if set to 1.
+  // This is set when error happens in multithreaded decoding and all threads
+  // are shut down.
+  int restart_threads;
+#endif
   int postproc_cfg_set;
   vp8_postproc_cfg_t postproc_cfg;
   vpx_decrypt_cb decrypt_cb;
@@ -200,9 +206,9 @@ static vpx_codec_err_t update_error_state(
 static void yuvconfig2image(vpx_image_t *img, const YV12_BUFFER_CONFIG *yv12,
                             void *user_priv) {
   /** vpx_img_wrap() doesn't allow specifying independent strides for
-    * the Y, U, and V planes, nor other alignment adjustments that
-    * might be representable by a YV12_BUFFER_CONFIG, so we just
-    * initialize all the fields.*/
+   * the Y, U, and V planes, nor other alignment adjustments that
+   * might be representable by a YV12_BUFFER_CONFIG, so we just
+   * initialize all the fields.*/
   img->fmt = VPX_IMG_FMT_I420;
   img->w = yv12->y_stride;
   img->h = (yv12->y_height + 2 * VP8BORDERINPIXELS + 15) & ~15;
@@ -268,7 +274,7 @@ static vpx_codec_err_t vp8_decode(vpx_codec_alg_priv_t *ctx,
                                   const uint8_t *data, unsigned int data_sz,
                                   void *user_priv, long deadline) {
   volatile vpx_codec_err_t res;
-  unsigned int resolution_change = 0;
+  volatile unsigned int resolution_change = 0;
   unsigned int w, h;
 
   if (!ctx->fragments.enabled && (data == NULL && data_sz == 0)) {
@@ -298,6 +304,27 @@ static vpx_codec_err_t vp8_decode(vpx_codec_alg_priv_t *ctx,
 
   if ((ctx->si.h != h) || (ctx->si.w != w)) resolution_change = 1;
 
+#if CONFIG_MULTITHREAD
+  if (!res && ctx->restart_threads) {
+    struct frame_buffers *fb = &ctx->yv12_frame_buffers;
+    VP8D_COMP *pbi = ctx->yv12_frame_buffers.pbi[0];
+    VP8_COMMON *const pc = &pbi->common;
+    if (setjmp(pbi->common.error.jmp)) {
+      vp8_remove_decoder_instances(fb);
+      vp8_zero(fb->pbi);
+      vpx_clear_system_state();
+      return VPX_CODEC_ERROR;
+    }
+    pbi->common.error.setjmp = 1;
+    pbi->max_threads = ctx->cfg.threads;
+    vp8_decoder_create_threads(pbi);
+    if (vpx_atomic_load_acquire(&pbi->b_multithreaded_rd)) {
+      vp8mt_alloc_temp_buffers(pbi, pc->Width, pc->mb_rows);
+    }
+    ctx->restart_threads = 0;
+    pbi->common.error.setjmp = 0;
+  }
+#endif
   /* Initialize the decoder instance on the first frame*/
   if (!res && !ctx->decoder_init) {
     VP8D_CONFIG oxcf;
@@ -335,8 +362,8 @@ static vpx_codec_err_t vp8_decode(vpx_codec_alg_priv_t *ctx,
 
   if (!res) {
     VP8D_COMP *pbi = ctx->yv12_frame_buffers.pbi[0];
+    VP8_COMMON *const pc = &pbi->common;
     if (resolution_change) {
-      VP8_COMMON *const pc = &pbi->common;
       MACROBLOCKD *const xd = &pbi->mb;
 #if CONFIG_MULTITHREAD
       int i;
@@ -428,11 +455,37 @@ static vpx_codec_err_t vp8_decode(vpx_codec_alg_priv_t *ctx,
       pbi->common.fb_idx_ref_cnt[0] = 0;
     }
 
+    if (setjmp(pbi->common.error.jmp)) {
+      /* We do not know if the missing frame(s) was supposed to update
+       * any of the reference buffers, but we act conservative and
+       * mark only the last buffer as corrupted.
+       */
+      pc->yv12_fb[pc->lst_fb_idx].corrupted = 1;
+
+      if (pc->fb_idx_ref_cnt[pc->new_fb_idx] > 0) {
+        pc->fb_idx_ref_cnt[pc->new_fb_idx]--;
+      }
+      pc->error.setjmp = 0;
+#if CONFIG_MULTITHREAD
+      if (pbi->restart_threads) {
+        ctx->si.w = 0;
+        ctx->si.h = 0;
+        ctx->restart_threads = 1;
+      }
+#endif
+      res = update_error_state(ctx, &pbi->common.error);
+      return res;
+    }
+
+    pbi->common.error.setjmp = 1;
+
     /* update the pbi fragment data */
     pbi->fragments = ctx->fragments;
-
+#if CONFIG_MULTITHREAD
+    pbi->restart_threads = 0;
+#endif
     ctx->user_priv = user_priv;
-    if (vp8dx_receive_compressed_data(pbi, data_sz, data, deadline)) {
+    if (vp8dx_receive_compressed_data(pbi, deadline)) {
       res = update_error_state(ctx, &pbi->common.error);
     }
 

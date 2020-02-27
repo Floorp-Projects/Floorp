@@ -23,16 +23,17 @@ use lib $FindBin::Bin;
 use thumb;
 
 my $thumb = 0;
+my $elf = 1;
 
 foreach my $arg (@ARGV) {
     $thumb = 1 if ($arg eq "-thumb");
+    $elf = 0 if ($arg eq "-noelf");
 }
 
 print "@ This file was created from a .asm file\n";
 print "@  using the ads2gas.pl script.\n";
-print "\t.equ DO1STROUNDING, 0\n";
+print "\t.syntax unified\n";
 if ($thumb) {
-    print "\t.syntax unified\n";
     print "\t.thumb\n";
 }
 
@@ -140,7 +141,11 @@ while (<STDIN>)
 
     # Make function visible to linker, and make additional symbol with
     # prepended underscore
-    s/EXPORT\s+\|([\$\w]*)\|/.global $1 \n\t.type $1, function/;
+    if ($elf) {
+        s/EXPORT\s+\|([\$\w]*)\|/.global $1 \n\t.type $1, function/;
+    } else {
+        s/EXPORT\s+\|([\$\w]*)\|/.global $1/;
+    }
     s/IMPORT\s+\|([\$\w]*)\|/.global $1/;
 
     s/EXPORT\s+([\$\w]*)/.global $1/;
@@ -181,11 +186,16 @@ while (<STDIN>)
     # eabi_attributes numerical equivalents can be found in the
     # "ARM IHI 0045C" document.
 
-    # REQUIRE8 Stack is required to be 8-byte aligned
-    s/\sREQUIRE8/.eabi_attribute 24, 1 \@Tag_ABI_align_needed/g;
+    if ($elf) {
+        # REQUIRE8 Stack is required to be 8-byte aligned
+        s/\sREQUIRE8/.eabi_attribute 24, 1 \@Tag_ABI_align_needed/g;
 
-    # PRESERVE8 Stack 8-byte align is preserved
-    s/\sPRESERVE8/.eabi_attribute 25, 1 \@Tag_ABI_align_preserved/g;
+        # PRESERVE8 Stack 8-byte align is preserved
+        s/\sPRESERVE8/.eabi_attribute 25, 1 \@Tag_ABI_align_preserved/g;
+    } else {
+        s/\sREQUIRE8//;
+        s/\sPRESERVE8//;
+    }
 
     # Use PROC and ENDP to give the symbols a .size directive.
     # This makes them show up properly in debugging tools like gdb and valgrind.
@@ -202,7 +212,7 @@ while (<STDIN>)
         my $proc;
         s/\bENDP\b/@ $&/;
         $proc = pop(@proc_stack);
-        $_ = "\t.size $proc, .-$proc".$_ if ($proc);
+        $_ = "\t.size $proc, .-$proc".$_ if ($proc and $elf);
     }
 
     # EQU directive
@@ -225,4 +235,4 @@ while (<STDIN>)
 }
 
 # Mark that this object doesn't need an executable stack.
-printf ("\t.section\t.note.GNU-stack,\"\",\%\%progbits\n");
+printf ("\t.section\t.note.GNU-stack,\"\",\%\%progbits\n") if $elf;

@@ -8,8 +8,8 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef VPX_PORTS_MEM_H_
-#define VPX_PORTS_MEM_H_
+#ifndef VPX_VPX_PORTS_MEM_H_
+#define VPX_VPX_PORTS_MEM_H_
 
 #include "vpx_config.h"
 #include "vpx/vpx_integer.h"
@@ -51,4 +51,24 @@
 #define VPX_WITH_ASAN 0
 #endif  // __has_feature(address_sanitizer) || defined(__SANITIZE_ADDRESS__)
 
-#endif  // VPX_PORTS_MEM_H_
+#if !defined(__has_attribute)
+#define __has_attribute(x) 0
+#endif  // !defined(__has_attribute)
+
+#if __has_attribute(uninitialized)
+// Attribute "uninitialized" disables -ftrivial-auto-var-init=pattern for
+// the specified variable.
+//
+// -ftrivial-auto-var-init is security risk mitigation feature, so attribute
+// should not be used "just in case", but only to fix real performance
+// bottlenecks when other approaches do not work. In general the compiler is
+// quite effective at eliminating unneeded initializations introduced by the
+// flag, e.g. when they are followed by actual initialization by a program.
+// However if compiler optimization fails and code refactoring is hard, the
+// attribute can be used as a workaround.
+#define VPX_UNINITIALIZED __attribute__((uninitialized))
+#else
+#define VPX_UNINITIALIZED
+#endif  // __has_attribute(uninitialized)
+
+#endif  // VPX_VPX_PORTS_MEM_H_

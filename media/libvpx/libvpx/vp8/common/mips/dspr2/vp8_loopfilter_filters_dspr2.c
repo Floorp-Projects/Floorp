@@ -934,8 +934,8 @@ void vp8_loop_filter_uvvertical_edge_mips(unsigned char *s, int p,
   s4 = s3 + p;
 
   /* load quad-byte vectors
-  * memory is 4 byte aligned
-  */
+   * memory is 4 byte aligned
+   */
   p2 = *((uint32_t *)(s1 - 4));
   p6 = *((uint32_t *)(s1));
   p1 = *((uint32_t *)(s2 - 4));
@@ -990,8 +990,8 @@ void vp8_loop_filter_uvvertical_edge_mips(unsigned char *s, int p,
       :);
 
   /* if (p1 - p4 == 0) and (p2 - p3 == 0)
-  * mask will be zero and filtering is not needed
-  */
+   * mask will be zero and filtering is not needed
+   */
   if (!(((p1 - p4) == 0) && ((p2 - p3) == 0))) {
     vp8_filter_mask_vec_mips(limit, flimit, p1, p2, pm1, p0, p3, p4, p5, p6,
                              thresh, &hev, &mask);
@@ -2102,8 +2102,8 @@ void vp8_mbloop_filter_uvvertical_edge_mips(unsigned char *s, int p,
   s4 = s3 + p;
 
   /* load quad-byte vectors
-  * memory is 4 byte aligned
-  */
+   * memory is 4 byte aligned
+   */
   p2 = *((uint32_t *)(s1 - 4));
   p6 = *((uint32_t *)(s1));
   p1 = *((uint32_t *)(s2 - 4));
