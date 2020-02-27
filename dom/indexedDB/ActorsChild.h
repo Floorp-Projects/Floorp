@@ -268,7 +268,7 @@ class BackgroundFactoryRequestChild final
   mozilla::ipc::IPCResult RecvPermissionChallenge(
       const PrincipalInfo& aPrincipalInfo);
 
-  mozilla::ipc::IPCResult RecvBlocked(const uint64_t& aCurrentVersion);
+  mozilla::ipc::IPCResult RecvBlocked(uint64_t aCurrentVersion);
 };
 
 class BackgroundDatabaseChild final : public PBackgroundIDBDatabaseChild {
@@ -339,9 +339,10 @@ class BackgroundDatabaseChild final : public PBackgroundIDBDatabaseChild {
       PBackgroundIDBTransactionChild* aActor);
 
   PBackgroundIDBVersionChangeTransactionChild*
-  AllocPBackgroundIDBVersionChangeTransactionChild(
-      const uint64_t& aCurrentVersion, const uint64_t& aRequestedVersion,
-      const int64_t& aNextObjectStoreId, const int64_t& aNextIndexId);
+  AllocPBackgroundIDBVersionChangeTransactionChild(uint64_t aCurrentVersion,
+                                                   uint64_t aRequestedVersion,
+                                                   int64_t aNextObjectStoreId,
+                                                   int64_t aNextIndexId);
 
   mozilla::ipc::IPCResult RecvPBackgroundIDBVersionChangeTransactionConstructor(
       PBackgroundIDBVersionChangeTransactionChild* aActor,
@@ -356,8 +357,8 @@ class BackgroundDatabaseChild final : public PBackgroundIDBDatabaseChild {
 
   bool DeallocPBackgroundMutableFileChild(PBackgroundMutableFileChild* aActor);
 
-  mozilla::ipc::IPCResult RecvVersionChange(const uint64_t& aOldVersion,
-                                            const Maybe<uint64_t>& aNewVersion);
+  mozilla::ipc::IPCResult RecvVersionChange(uint64_t aOldVersion,
+                                            Maybe<uint64_t> aNewVersion);
 
   mozilla::ipc::IPCResult RecvInvalidate();
 
@@ -456,7 +457,7 @@ class BackgroundTransactionChild final : public BackgroundTransactionBase,
   // IPDL methods are only called by IPDL.
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
-  mozilla::ipc::IPCResult RecvComplete(const nsresult& aResult);
+  mozilla::ipc::IPCResult RecvComplete(nsresult aResult);
 
   PBackgroundIDBRequestChild* AllocPBackgroundIDBRequestChild(
       const RequestParams& aParams);
@@ -502,7 +503,7 @@ class BackgroundVersionChangeTransactionChild final
   // IPDL methods are only called by IPDL.
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
-  mozilla::ipc::IPCResult RecvComplete(const nsresult& aResult);
+  mozilla::ipc::IPCResult RecvComplete(nsresult aResult);
 
   PBackgroundIDBRequestChild* AllocPBackgroundIDBRequestChild(
       const RequestParams& aParams);
@@ -788,7 +789,7 @@ class BackgroundFileHandleChild : public PBackgroundFileHandleChild {
   // IPDL methods are only called by IPDL.
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
-  mozilla::ipc::IPCResult RecvComplete(const bool& aAborted);
+  mozilla::ipc::IPCResult RecvComplete(bool aAborted);
 
   PBackgroundFileRequestChild* AllocPBackgroundFileRequestChild(
       const FileRequestParams& aParams);
@@ -834,8 +835,8 @@ class BackgroundFileRequestChild final : public PBackgroundFileRequestChild {
 
   mozilla::ipc::IPCResult Recv__delete__(const FileRequestResponse& aResponse);
 
-  mozilla::ipc::IPCResult RecvProgress(const uint64_t& aProgress,
-                                       const uint64_t& aProgressMax);
+  mozilla::ipc::IPCResult RecvProgress(uint64_t aProgress,
+                                       uint64_t aProgressMax);
 };
 
 class BackgroundUtilsChild final : public PBackgroundIndexedDBUtilsChild {
