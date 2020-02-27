@@ -134,7 +134,7 @@ function String_pad(maxLength, fillString, padEnd) {
 
     // Step 10.
     // Perform an int32 division to ensure String_repeat is not called with a
-    // double to avoid repeated bailouts in ToIntegerPositiveZero.
+    // double to avoid repeated bailouts in ToInteger.
     let truncatedStringFiller = callFunction(String_repeat, filler,
                                              (fillLen / filler.length) | 0);
 
@@ -474,10 +474,10 @@ function String_substring(start, end) {
     var len = str.length;
 
     // Step 4.
-    var intStart = ToIntegerPositiveZero(start);
+    var intStart = ToInteger(start);
 
     // Step 5.
-    var intEnd = (end === undefined) ? len : ToIntegerPositiveZero(end);
+    var intEnd = (end === undefined) ? len : ToInteger(end);
 
     // Step 6.
     var finalStart = std_Math_min(std_Math_max(intStart, 0), len);
@@ -510,13 +510,13 @@ function String_substr(start, length) {
     var str = ToString(this);
 
     // Step 3.
-    var intStart = ToIntegerPositiveZero(start);
+    var intStart = ToInteger(start);
 
     // Steps 4-5.
     var size = str.length;
     // Use |size| instead of +Infinity to avoid performing calculations with
     // doubles. (The result is the same either way.)
-    var end = (length === undefined) ? size : ToIntegerPositiveZero(length);
+    var end = (length === undefined) ? size : ToInteger(length);
 
     // Step 6.
     if (intStart < 0)
@@ -547,10 +547,10 @@ function String_slice(start, end) {
     var len = str.length;
 
     // Step 4.
-    var intStart = ToIntegerPositiveZero(start);
+    var intStart = ToInteger(start);
 
     // Step 5.
-    var intEnd = (end === undefined) ? len : ToIntegerPositiveZero(end);
+    var intEnd = (end === undefined) ? len : ToInteger(end);
 
     // Step 6.
     var from = (intStart < 0) ? std_Math_max(len + intStart, 0) : std_Math_min(intStart, len);
@@ -576,7 +576,7 @@ function String_codePointAt(pos) {
     var S = ToString(this);
 
     // Step 3.
-    var position = ToIntegerPositiveZero(pos);
+    var position = ToInteger(pos);
 
     // Step 4.
     var size = S.length;
@@ -607,7 +607,7 @@ function String_repeat(count) {
     var S = ToString(this);
 
     // Step 3.
-    var n = ToIntegerPositiveZero(count);
+    var n = ToInteger(count);
 
     // Step 4.
     if (n < 0)
