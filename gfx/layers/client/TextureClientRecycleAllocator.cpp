@@ -58,7 +58,7 @@ class MOZ_RAII DefaultTextureClientAllocationHelper
   }
 
   already_AddRefed<TextureClient> Allocate(
-      KnowsCompositor* aAllocator) override {
+      KnowsCompositor* aKnowsCompositor) override {
     return mAllocator->Allocate(mFormat, mSize, mSelector, mTextureFlags,
                                 mAllocationFlags);
   }
@@ -95,16 +95,16 @@ bool YCbCrTextureClientAllocationHelper::IsCompatible(
 }
 
 already_AddRefed<TextureClient> YCbCrTextureClientAllocationHelper::Allocate(
-    KnowsCompositor* aAllocator) {
+    KnowsCompositor* aKnowsCompositor) {
   return TextureClient::CreateForYCbCr(
-      aAllocator, mData.mYSize, mData.mYStride, mData.mCbCrSize,
+      aKnowsCompositor, mData.mYSize, mData.mYStride, mData.mCbCrSize,
       mData.mCbCrStride, mData.mStereoMode, mData.mColorDepth,
       mData.mYUVColorSpace, mData.mColorRange, mTextureFlags);
 }
 
 TextureClientRecycleAllocator::TextureClientRecycleAllocator(
-    KnowsCompositor* aAllocator)
-    : mSurfaceAllocator(aAllocator),
+    KnowsCompositor* aKnowsCompositor)
+    : mKnowsCompositor(aKnowsCompositor),
       mMaxPooledSize(kMaxPooledSized),
       mLock("TextureClientRecycleAllocatorImp.mLock"),
       mIsDestroyed(false) {}
@@ -153,7 +153,7 @@ already_AddRefed<TextureClient> TextureClientRecycleAllocator::CreateOrRecycle(
             new TextureClientReleaseTask(textureHolder->GetTextureClient());
         textureHolder->ClearTextureClient();
         textureHolder = nullptr;
-        mSurfaceAllocator->GetTextureForwarder()->GetMessageLoop()->PostTask(
+        mKnowsCompositor->GetTextureForwarder()->GetMessageLoop()->PostTask(
             task.forget());
       } else {
         textureHolder->GetTextureClient()->RecycleTexture(
@@ -164,7 +164,7 @@ already_AddRefed<TextureClient> TextureClientRecycleAllocator::CreateOrRecycle(
 
   if (!textureHolder) {
     // Allocate new TextureClient
-    RefPtr<TextureClient> texture = aHelper.Allocate(mSurfaceAllocator);
+    RefPtr<TextureClient> texture = aHelper.Allocate(mKnowsCompositor);
     if (!texture) {
       return nullptr;
     }
@@ -189,7 +189,7 @@ already_AddRefed<TextureClient> TextureClientRecycleAllocator::CreateOrRecycle(
 already_AddRefed<TextureClient> TextureClientRecycleAllocator::Allocate(
     gfx::SurfaceFormat aFormat, gfx::IntSize aSize, BackendSelector aSelector,
     TextureFlags aTextureFlags, TextureAllocationFlags aAllocFlags) {
-  return TextureClient::CreateForDrawing(mSurfaceAllocator, aFormat, aSize,
+  return TextureClient::CreateForDrawing(mKnowsCompositor, aFormat, aSize,
                                          aSelector, aTextureFlags, aAllocFlags);
 }
 
