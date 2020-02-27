@@ -12,6 +12,7 @@ from abc import (
 import errno
 import itertools
 import os
+import six
 import time
 
 from contextlib import contextmanager
@@ -311,7 +312,7 @@ class BuildBackend(LoggingMixin):
         srcdir = mozpath.dirname(obj.input_path)
         pp.context.update({
             k: ' '.join(v) if isinstance(v, list) else v
-            for k, v in obj.config.substs.iteritems()
+            for k, v in six.iteritems(obj.config.substs)
         })
         pp.context.update(
             top_srcdir=obj.topsrcdir,

@@ -446,7 +446,7 @@ class TreeMetadataEmitter(LoggingMixin):
                         libs[key] = l
                     if key not in libs:
                         libs[key] = l
-            candidates = libs.values()
+            candidates = list(libs.values())
             if force_static and not candidates:
                 if dir:
                     raise SandboxValidationError(

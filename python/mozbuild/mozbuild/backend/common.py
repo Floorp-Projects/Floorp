@@ -7,6 +7,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 import itertools
 import json
 import os
+import six
 
 from collections import defaultdict
 
@@ -99,7 +100,7 @@ class XPIDLManager(object):
 
         The stem of an IDL file is the basename of the file with no .idl extension.
         """
-        return itertools.chain(*[m.stems() for m in self.modules.itervalues()])
+        return itertools.chain(*[m.stems() for m in six.itervalues(self.modules)])
 
 
 class BinariesCollection(object):
