@@ -1335,13 +1335,13 @@ class ScriptSourceObject : public NativeObject {
     MOZ_ASSERT(!v.isMagic());
     return v;
   }
-  JSScript* unwrappedIntroductionScript() const {
+  BaseScript* unwrappedIntroductionScript() const {
     Value value =
         unwrappedCanonical()->getReservedSlot(INTRODUCTION_SCRIPT_SLOT);
     if (value.isUndefined()) {
       return nullptr;
     }
-    return value.toGCThing()->as<JSScript>();
+    return value.toGCThing()->as<BaseScript>();
   }
 
   void setPrivate(JSRuntime* rt, const Value& value);
