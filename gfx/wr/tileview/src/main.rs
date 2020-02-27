@@ -15,7 +15,7 @@
 
 use webrender::{TileNode, TileNodeKind, InvalidationReason, TileOffset};
 use webrender::{TileSerializer, TileCacheInstanceSerializer, TileCacheLoggerUpdateLists};
-use webrender::{PrimitiveCompareResultDetail, CompareHelperResult, UpdateKind, ItemUid};
+use webrender::{PrimitiveCompareResultDetail, CompareHelperResult, ItemUid};
 use serde::Deserialize;
 use std::fs::File;
 use std::io::prelude::*;
@@ -516,20 +516,15 @@ macro_rules! updatelist_to_html_macro {
                 html += &format!("<div class=\"subheader\">{}</div>\n<div class=\"intern data\">\n",
                                  stringify!($name));
                 for list in &update_lists.$name.1 {
-                    let mut insert_count = 0;
-                    for update in &list.updates {
-                        match update.kind {
-                            UpdateKind::Insert => {
-                                html += &format!("<div class=\"insert\"><b>{}</b> {}</div>\n",
-                                                 update.uid.get_uid(),
-                                                 format!("({:?})", list.data[insert_count]));
-                                insert_count = insert_count + 1;
-                            }
-                            _ => {
-                                html += &format!("<div class=\"remove\"><b>{}</b></div>\n",
-                                                 update.uid.get_uid());
-                            }
-                        };
+                    for insertion in &list.insertions {
+                        html += &format!("<div class=\"insert\"><b>{}</b> {}</div>\n",
+                                         insertion.uid.get_uid(),
+                                         format!("({:?})", insertion.value));
+                    }
+
+                    for removal in &list.removals {
+                        html += &format!("<div class=\"remove\"><b>{}</b></div>\n",
+                                         removal.uid.get_uid());
                     }
                 }
                 html += "</div><br/>\n";
