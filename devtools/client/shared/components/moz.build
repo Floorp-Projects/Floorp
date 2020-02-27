@@ -16,7 +16,6 @@ DIRS += [
 DevToolsModules(
     'Accordion.css',
     'Accordion.js',
-    'AutoCompletePopup.js',
     'Frame.js',
     'HSplitBox.js',
     'List.css',
@@ -26,6 +25,7 @@ DevToolsModules(
     'NotificationBox.css',
     'NotificationBox.js',
     'SearchBox.js',
+    'SearchBoxAutocompletePopup.js',
     'Sidebar.js',
     'SidebarToggle.css',
     'SidebarToggle.js',
