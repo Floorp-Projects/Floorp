@@ -29,7 +29,7 @@
                 android:layout_height="32dp"
                 android:layout_gravity="center"
                 android:importantForAccessibility="no"
-                android:src="@android:color/transparent"
+                app:srcCompat="@android:color/transparent"
                 android:scaleType="fitCenter" />
 
     </androidx.cardview.widget.CardView>
@@ -108,5 +108,5 @@
             android:contentDescription="@string/mozac_feature_addons_install_addon_content_description"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:tint="?android:attr/textColorPrimary"
-            android:src="@drawable/mozac_ic_new" />
+            app:srcCompat="@drawable/mozac_ic_new" />
 </RelativeLayout>

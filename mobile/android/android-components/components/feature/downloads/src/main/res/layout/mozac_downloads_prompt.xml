@@ -6,6 +6,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:background="?android:windowBackground"
     android:orientation="vertical"
     tools:ignore="Overdraw">
@@ -19,7 +20,7 @@
         android:layout_marginTop="16dp"
         android:importantForAccessibility="no"
         android:scaleType="center"
-        android:src="@drawable/mozac_feature_download_ic_download"
+        app:srcCompat="@drawable/mozac_feature_download_ic_download"
         android:tint="?android:attr/textColorPrimary" />
 
     <TextView
@@ -52,7 +53,7 @@
         android:layout_marginEnd="12dp"
         android:background="@null"
         android:contentDescription="@string/mozac_feature_downloads_button_close"
-        android:src="@drawable/mozac_ic_close"
+        app:srcCompat="@drawable/mozac_ic_close"
         android:tint="?android:attr/textColorPrimary"
         tools:textColor="#000000" />
 

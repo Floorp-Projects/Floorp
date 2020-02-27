@@ -47,7 +47,7 @@
             android:visibility="gone"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintStart_toStartOf="@id/mozac_browser_toolbar_background"
-            android:src="@drawable/mozac_ic_search"
+            app:srcCompat="@drawable/mozac_ic_search"
             tools:ignore="ContentDescription" />
 
         <mozilla.components.browser.toolbar.display.TrackingProtectionIconView
@@ -57,7 +57,7 @@
             android:layout_marginTop="8dp"
             android:scaleType="center"
             android:visibility="gone"
-            android:src="@drawable/mozac_ic_tracking_protection_on_no_trackers_blocked"
+            app:srcCompat="@drawable/mozac_ic_tracking_protection_on_no_trackers_blocked"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintStart_toEndOf="@id/mozac_browser_toolbar_empty_indicator" />
 
@@ -68,7 +68,7 @@
             android:layout_marginTop="8dp"
             android:scaleType="center"
             android:importantForAccessibility="no"
-            android:src="@drawable/mozac_browser_toolbar_icons_vertical_separator"
+            app:srcCompat="@drawable/mozac_browser_toolbar_icons_vertical_separator"
             android:visibility="gone"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintStart_toEndOf="@+id/mozac_browser_toolbar_tracking_protection_indicator" />
@@ -82,7 +82,7 @@
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintStart_toEndOf="@+id/mozac_browser_toolbar_separator"
             android:contentDescription="@string/mozac_browser_toolbar_content_description_site_info"
-            android:src="@drawable/mozac_ic_site_security" />
+            app:srcCompat="@drawable/mozac_ic_site_security" />
 
         <!-- URL & Title -->
 
