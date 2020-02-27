@@ -10,6 +10,8 @@ import android.os.Bundle
 import androidx.annotation.VisibleForTesting
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
+import mozilla.components.feature.intent.processing.IntentProcessor
+import org.mozilla.fenix.components.IntentProcessorType
 import org.mozilla.fenix.components.getType
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
@@ -30,14 +32,29 @@ class IntentReceiverActivity : Activity() {
             // assumes it is not. If it's null, then we make a new one and open
             // the HomeActivity.
             val intent = intent?.let { Intent(intent) } ?: Intent()
+            intent.stripUnwantedFlags()
             processIntent(intent)
         }
     }
 
     suspend fun processIntent(intent: Intent) {
-        val settings = settings()
+        // Call process for side effects, short on the first that returns true
+        val processor = getIntentProcessors().firstOrNull { it.process(intent) }
+        val intentProcessorType = components.intentProcessors.getType(processor)
 
-        val modeDependentProcessors = if (settings.openLinksInAPrivateTab) {
+        launch(intent, intentProcessorType)
+    }
+
+    private fun launch(intent: Intent, intentProcessorType: IntentProcessorType) {
+        intent.setClassName(applicationContext, intentProcessorType.activityClassName)
+        intent.putExtra(HomeActivity.OPEN_TO_BROWSER, intentProcessorType.shouldOpenToBrowser(intent))
+
+        startActivity(intent)
+        finish() // must finish() after starting the other activity
+    }
+
+    private fun getIntentProcessors(): List<IntentProcessor> {
+        val modeDependentProcessors = if (settings().openLinksInAPrivateTab) {
             components.analytics.metrics.track(Event.OpenedLink(Event.OpenedLink.Mode.PRIVATE))
             intent.putExtra(HomeActivity.PRIVATE_BROWSING_MODE, true)
             listOf(
@@ -53,31 +70,20 @@ class IntentReceiverActivity : Activity() {
             )
         }
 
-        val intentProcessors = listOf(components.intentProcessors.migrationIntentProcessor) +
-                components.intentProcessors.externalAppIntentProcessors +
-                modeDependentProcessors +
-                NewTabShortcutIntentProcessor()
-
-        // Explicitly remove the new task and clear task flags (Our browser activity is a single
-        // task activity and we never want to start a second task here).
-        intent.flags = intent.flags and Intent.FLAG_ACTIVITY_NEW_TASK.inv()
-        intent.flags = intent.flags and Intent.FLAG_ACTIVITY_CLEAR_TASK.inv()
-
-        // IntentReceiverActivity is started with the "excludeFromRecents" flag (set in manifest). We
-        // do not want to propagate this flag from the intent receiver activity to the browser.
-        intent.flags = intent.flags and Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS.inv()
-
-        // Call process for side effects, short on the first that returns true
-        intentProcessors.any { it.process(intent) }
-
-        val intentProcessorType =
-            components.intentProcessors.getType(intentProcessors.firstOrNull { it.matches(intent) })
-
-        intent.setClassName(applicationContext, intentProcessorType.activityClassName)
-        intent.putExtra(HomeActivity.OPEN_TO_BROWSER, intentProcessorType.shouldOpenToBrowser(intent))
-
-        startActivity(intent)
-        // must finish() after starting the other activity
-        finish()
+        return listOf(components.intentProcessors.migrationIntentProcessor) +
+            components.intentProcessors.externalAppIntentProcessors +
+            modeDependentProcessors +
+            NewTabShortcutIntentProcessor()
     }
+}
+
+private fun Intent.stripUnwantedFlags() {
+    // Explicitly remove the new task and clear task flags (Our browser activity is a single
+    // task activity and we never want to start a second task here).
+    flags = flags and Intent.FLAG_ACTIVITY_NEW_TASK.inv()
+    flags = flags and Intent.FLAG_ACTIVITY_CLEAR_TASK.inv()
+
+    // IntentReceiverActivity is started with the "excludeFromRecents" flag (set in manifest). We
+    // do not want to propagate this flag from the intent receiver activity to the browser.
+    flags = flags and Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS.inv()
 }
