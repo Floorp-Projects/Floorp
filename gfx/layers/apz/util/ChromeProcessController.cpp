@@ -21,8 +21,6 @@
 #include "nsLayoutUtils.h"
 #include "nsView.h"
 
-static mozilla::LazyLogModule sApzChromeLog("apz.cc.chrome");
-
 using namespace mozilla;
 using namespace mozilla::layers;
 using namespace mozilla::widget;
@@ -166,10 +164,7 @@ void ChromeProcessController::HandleTap(
     TapType aType, const mozilla::LayoutDevicePoint& aPoint,
     Modifiers aModifiers, const ScrollableLayerGuid& aGuid,
     uint64_t aInputBlockId) {
-  MOZ_LOG(sApzChromeLog, LogLevel::Debug,
-          ("HandleTap called with %d\n", aType));
   if (MessageLoop::current() != mUILoop) {
-    MOZ_LOG(sApzChromeLog, LogLevel::Debug, ("HandleTap redispatching\n"));
     mUILoop->PostTask(
         NewRunnableMethod<TapType, mozilla::LayoutDevicePoint, Modifiers,
                           ScrollableLayerGuid, uint64_t>(
