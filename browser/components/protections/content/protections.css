@@ -108,11 +108,12 @@ h2 {
 }
 
 /* We want to hide certain components depending on its state. */
+.no-logins .monitor-scanned-wrapper,
 .etp-card.custom-not-blocking .card-body,
 .etp-card.custom-not-blocking #protection-details,
 #manage-protections,
 .etp-card .icon.dark,
-.lockwise-mobile-app-icon.dark,
+.mobile-app-icon.dark,
 a.hidden,
 .loading .card-body.hidden,
 .lockwise-card.hidden,
@@ -160,11 +161,11 @@ a.hidden,
       display: none;
     }
 
-    .lockwise-mobile-app-icon.dark {
+    .mobile-app-icon.dark {
       display: block;
     }
 
-    .lockwise-mobile-app-icon.light {
+    .mobile-app-icon.light {
       display: none;
     }
   }
@@ -210,9 +211,12 @@ a.hidden,
   background-position: center;
   background-repeat: no-repeat;
   top: var(--exit-icon-position);
-  right: var(--exit-icon-position);
   -moz-context-properties: fill;
   fill: var(--in-content-deemphasized-text);
+}
+
+.exit-icon:dir(ltr) {
+  right: var(--exit-icon-position);
 }
 
 .exit-icon:dir(rtl) {
@@ -569,18 +573,28 @@ label[for="tab-cryptominer"]:hover ~ #highlight-hover {
   grid-area: cryptominer;
 }
 
+#mobile-hanger {
+  grid-column: 1;
+  grid-row: 3;
+}
+
+.etp-card {
+  grid-template-rows: 20% auto auto;
+}
+
 /* Lockwise Card */
 
 #lockwise-body-content > .no-logins,
-#lockwise-body-content > .has-logins {
+#lockwise-body-content > .has-logins,
+#etp-mobile-content {
   display: grid;
   font-size: 0.875em;
   align-items: center;
 }
 
-#lockwise-body-content > .no-logins {
+#lockwise-body-content > .no-logins,
+#etp-mobile-content {
   grid: 1fr / 1fr 6fr;
-  grid-gap: 0;
 }
 
 #lockwise-body-content > .has-logins {
@@ -588,12 +602,14 @@ label[for="tab-cryptominer"]:hover ~ #highlight-hover {
   grid-gap: 10px;
 }
 
-.lockwise-mobile-app-icon {
+.lockwise-mobile-app-icon,
+.mobile-app-icon {
   height: 56px;
   width: auto;
 }
 
-#lockwise-app-links {
+#lockwise-app-links,
+#mobile-app-links {
   display: block;
 }
 

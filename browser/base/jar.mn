@@ -20,6 +20,8 @@ browser.jar:
         content/browser/illustrations/error-malformed-url.svg (content/illustrations/error-malformed-url.svg)
         content/browser/illustrations/under-construction.svg (content/illustrations/under-construction.svg)
         content/browser/illustrations/blue-berror.svg (content/illustrations/blue-berror.svg)
+        content/browser/logos/etp-mobile-dark.svg     (content/logos/etp-mobile-dark.svg)
+        content/browser/logos/etp-mobile-light.svg    (content/logos/etp-mobile-light.svg)
         content/browser/logos/lockwise-light.svg      (content/logos/lockwise-light.svg)
         content/browser/logos/lockwise-dark.svg       (content/logos/lockwise-dark.svg)
         content/browser/logos/lockwise.svg             (content/logos/lockwise.svg)
