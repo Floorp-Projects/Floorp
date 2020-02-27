@@ -7,8 +7,8 @@
  *  in the file PATENTS.  All contributing project authors may
  *  be found in the AUTHORS file in the root of the source tree.
  */
-#ifndef TEST_ENCODE_TEST_DRIVER_H_
-#define TEST_ENCODE_TEST_DRIVER_H_
+#ifndef VPX_TEST_ENCODE_TEST_DRIVER_H_
+#define VPX_TEST_ENCODE_TEST_DRIVER_H_
 
 #include <string>
 #include <vector>
@@ -128,24 +128,37 @@ class Encoder {
     ASSERT_EQ(VPX_CODEC_OK, res) << EncoderError();
   }
 
+  void Control(int ctrl_id, struct vpx_svc_ref_frame_config *arg) {
+    const vpx_codec_err_t res = vpx_codec_control_(&encoder_, ctrl_id, arg);
+    ASSERT_EQ(VPX_CODEC_OK, res) << EncoderError();
+  }
+
   void Control(int ctrl_id, struct vpx_svc_parameters *arg) {
     const vpx_codec_err_t res = vpx_codec_control_(&encoder_, ctrl_id, arg);
     ASSERT_EQ(VPX_CODEC_OK, res) << EncoderError();
   }
+
+  void Control(int ctrl_id, struct vpx_svc_frame_drop *arg) {
+    const vpx_codec_err_t res = vpx_codec_control_(&encoder_, ctrl_id, arg);
+    ASSERT_EQ(VPX_CODEC_OK, res) << EncoderError();
+  }
+
+  void Control(int ctrl_id, struct vpx_svc_spatial_layer_sync *arg) {
+    const vpx_codec_err_t res = vpx_codec_control_(&encoder_, ctrl_id, arg);
+    ASSERT_EQ(VPX_CODEC_OK, res) << EncoderError();
+  }
+
 #if CONFIG_VP8_ENCODER || CONFIG_VP9_ENCODER
   void Control(int ctrl_id, vpx_active_map_t *arg) {
     const vpx_codec_err_t res = vpx_codec_control_(&encoder_, ctrl_id, arg);
     ASSERT_EQ(VPX_CODEC_OK, res) << EncoderError();
   }
-#endif
 
-#if CONFIG_VP8_ENCODER
   void Control(int ctrl_id, vpx_roi_map_t *arg) {
     const vpx_codec_err_t res = vpx_codec_control_(&encoder_, ctrl_id, arg);
     ASSERT_EQ(VPX_CODEC_OK, res) << EncoderError();
   }
 #endif
-
   void Config(const vpx_codec_enc_cfg_t *cfg) {
     const vpx_codec_err_t res = vpx_codec_enc_config_set(&encoder_, cfg);
     ASSERT_EQ(VPX_CODEC_OK, res) << EncoderError();
@@ -219,6 +232,9 @@ class EncoderTest {
   virtual void PreEncodeFrameHook(VideoSource * /*video*/,
                                   Encoder * /*encoder*/) {}
 
+  virtual void PreDecodeFrameHook(VideoSource * /*video*/,
+                                  Decoder * /*decoder*/) {}
+
   virtual void PostEncodeFrameHook(Encoder * /*encoder*/) {}
 
   // Hook to be called on every compressed data packet.
@@ -273,4 +289,4 @@ class EncoderTest {
 
 }  // namespace libvpx_test
 
-#endif  // TEST_ENCODE_TEST_DRIVER_H_
+#endif  // VPX_TEST_ENCODE_TEST_DRIVER_H_

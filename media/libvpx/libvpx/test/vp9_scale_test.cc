@@ -47,7 +47,7 @@ class ScaleTest : public VpxScaleBase,
         scale_fn_(&img_, &dst_img_, filter_type, phase_scaler));
   }
 
-  void RunTest() {
+  void RunTest(INTERP_FILTER filter_type) {
     static const int kNumSizesToTest = 20;
     static const int kNumScaleFactorsToTest = 4;
     static const int kSizesToTest[] = {
@@ -55,50 +55,48 @@ class ScaleTest : public VpxScaleBase,
       22, 24, 26, 28, 30, 32, 34, 68, 128, 134
     };
     static const int kScaleFactors[] = { 1, 2, 3, 4 };
-    for (INTERP_FILTER filter_type = 0; filter_type < 4; ++filter_type) {
-      for (int phase_scaler = 0; phase_scaler < 16; ++phase_scaler) {
-        for (int h = 0; h < kNumSizesToTest; ++h) {
-          const int src_height = kSizesToTest[h];
-          for (int w = 0; w < kNumSizesToTest; ++w) {
-            const int src_width = kSizesToTest[w];
-            for (int sf_up_idx = 0; sf_up_idx < kNumScaleFactorsToTest;
-                 ++sf_up_idx) {
-              const int sf_up = kScaleFactors[sf_up_idx];
-              for (int sf_down_idx = 0; sf_down_idx < kNumScaleFactorsToTest;
-                   ++sf_down_idx) {
-                const int sf_down = kScaleFactors[sf_down_idx];
-                const int dst_width = src_width * sf_up / sf_down;
-                const int dst_height = src_height * sf_up / sf_down;
-                if (sf_up == sf_down && sf_up != 1) {
-                  continue;
-                }
-                // I420 frame width and height must be even.
-                if (!dst_width || !dst_height || dst_width & 1 ||
-                    dst_height & 1) {
-                  continue;
-                }
-                // vpx_convolve8_c() has restriction on the step which cannot
-                // exceed 64 (ratio 1 to 4).
-                if (src_width > 4 * dst_width || src_height > 4 * dst_height) {
-                  continue;
-                }
-                ASSERT_NO_FATAL_FAILURE(ResetScaleImages(
-                    src_width, src_height, dst_width, dst_height));
-                ReferenceScaleFrame(filter_type, phase_scaler);
-                ScaleFrame(filter_type, phase_scaler);
-                if (memcmp(dst_img_.buffer_alloc, ref_img_.buffer_alloc,
-                           ref_img_.frame_size)) {
-                  printf(
-                      "filter_type = %d, phase_scaler = %d, src_width = %4d, "
-                      "src_height = %4d, dst_width = %4d, dst_height = %4d, "
-                      "scale factor = %d:%d\n",
-                      filter_type, phase_scaler, src_width, src_height,
-                      dst_width, dst_height, sf_down, sf_up);
-                  PrintDiff();
-                }
-                CompareImages(dst_img_);
-                DeallocScaleImages();
+    for (int phase_scaler = 0; phase_scaler < 16; ++phase_scaler) {
+      for (int h = 0; h < kNumSizesToTest; ++h) {
+        const int src_height = kSizesToTest[h];
+        for (int w = 0; w < kNumSizesToTest; ++w) {
+          const int src_width = kSizesToTest[w];
+          for (int sf_up_idx = 0; sf_up_idx < kNumScaleFactorsToTest;
+               ++sf_up_idx) {
+            const int sf_up = kScaleFactors[sf_up_idx];
+            for (int sf_down_idx = 0; sf_down_idx < kNumScaleFactorsToTest;
+                 ++sf_down_idx) {
+              const int sf_down = kScaleFactors[sf_down_idx];
+              const int dst_width = src_width * sf_up / sf_down;
+              const int dst_height = src_height * sf_up / sf_down;
+              if (sf_up == sf_down && sf_up != 1) {
+                continue;
               }
+              // I420 frame width and height must be even.
+              if (!dst_width || !dst_height || dst_width & 1 ||
+                  dst_height & 1) {
+                continue;
+              }
+              // vpx_convolve8_c() has restriction on the step which cannot
+              // exceed 64 (ratio 1 to 4).
+              if (src_width > 4 * dst_width || src_height > 4 * dst_height) {
+                continue;
+              }
+              ASSERT_NO_FATAL_FAILURE(ResetScaleImages(src_width, src_height,
+                                                       dst_width, dst_height));
+              ReferenceScaleFrame(filter_type, phase_scaler);
+              ScaleFrame(filter_type, phase_scaler);
+              if (memcmp(dst_img_.buffer_alloc, ref_img_.buffer_alloc,
+                         ref_img_.frame_size)) {
+                printf(
+                    "filter_type = %d, phase_scaler = %d, src_width = %4d, "
+                    "src_height = %4d, dst_width = %4d, dst_height = %4d, "
+                    "scale factor = %d:%d\n",
+                    filter_type, phase_scaler, src_width, src_height, dst_width,
+                    dst_height, sf_down, sf_up);
+                PrintDiff();
+              }
+              CompareImages(dst_img_);
+              DeallocScaleImages();
             }
           }
         }
@@ -145,7 +143,10 @@ class ScaleTest : public VpxScaleBase,
   ScaleFrameFunc scale_fn_;
 };
 
-TEST_P(ScaleTest, ScaleFrame) { ASSERT_NO_FATAL_FAILURE(RunTest()); }
+TEST_P(ScaleTest, ScaleFrame_EightTap) { RunTest(EIGHTTAP); }
+TEST_P(ScaleTest, ScaleFrame_EightTapSmooth) { RunTest(EIGHTTAP_SMOOTH); }
+TEST_P(ScaleTest, ScaleFrame_EightTapSharp) { RunTest(EIGHTTAP_SHARP); }
+TEST_P(ScaleTest, ScaleFrame_Bilinear) { RunTest(BILINEAR); }
 
 TEST_P(ScaleTest, DISABLED_Speed) {
   static const int kCountSpeedTestBlock = 100;

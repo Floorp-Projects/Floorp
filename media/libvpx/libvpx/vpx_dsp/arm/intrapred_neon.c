@@ -667,8 +667,6 @@ void vpx_d135_predictor_32x32_neon(uint8_t *dst, ptrdiff_t stride,
   d135_store_32x2(&dst, stride, row_0, row_1, row_2);
 }
 
-// -----------------------------------------------------------------------------
-
 #if !HAVE_NEON_ASM
 
 void vpx_v_predictor_4x4_neon(uint8_t *dst, ptrdiff_t stride,

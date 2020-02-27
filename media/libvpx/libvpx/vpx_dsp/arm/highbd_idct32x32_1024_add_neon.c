@@ -124,83 +124,77 @@ static INLINE void do_butterfly(const int32x4x2_t qIn0, const int32x4x2_t qIn1,
                                vrshrn_n_s64(q[3].val[1], DCT_CONST_BITS));
 }
 
-static INLINE void load_s32x4q_dual(
-    const int32_t *in, int32x4x2_t *const s0, int32x4x2_t *const s1,
-    int32x4x2_t *const s2, int32x4x2_t *const s3, int32x4x2_t *const s4,
-    int32x4x2_t *const s5, int32x4x2_t *const s6, int32x4x2_t *const s7) {
-  s0->val[0] = vld1q_s32(in);
-  s0->val[1] = vld1q_s32(in + 4);
+static INLINE void load_s32x4q_dual(const int32_t *in, int32x4x2_t *const s) {
+  s[0].val[0] = vld1q_s32(in);
+  s[0].val[1] = vld1q_s32(in + 4);
   in += 32;
-  s1->val[0] = vld1q_s32(in);
-  s1->val[1] = vld1q_s32(in + 4);
+  s[1].val[0] = vld1q_s32(in);
+  s[1].val[1] = vld1q_s32(in + 4);
   in += 32;
-  s2->val[0] = vld1q_s32(in);
-  s2->val[1] = vld1q_s32(in + 4);
+  s[2].val[0] = vld1q_s32(in);
+  s[2].val[1] = vld1q_s32(in + 4);
   in += 32;
-  s3->val[0] = vld1q_s32(in);
-  s3->val[1] = vld1q_s32(in + 4);
+  s[3].val[0] = vld1q_s32(in);
+  s[3].val[1] = vld1q_s32(in + 4);
   in += 32;
-  s4->val[0] = vld1q_s32(in);
-  s4->val[1] = vld1q_s32(in + 4);
+  s[4].val[0] = vld1q_s32(in);
+  s[4].val[1] = vld1q_s32(in + 4);
   in += 32;
-  s5->val[0] = vld1q_s32(in);
-  s5->val[1] = vld1q_s32(in + 4);
+  s[5].val[0] = vld1q_s32(in);
+  s[5].val[1] = vld1q_s32(in + 4);
   in += 32;
-  s6->val[0] = vld1q_s32(in);
-  s6->val[1] = vld1q_s32(in + 4);
+  s[6].val[0] = vld1q_s32(in);
+  s[6].val[1] = vld1q_s32(in + 4);
   in += 32;
-  s7->val[0] = vld1q_s32(in);
-  s7->val[1] = vld1q_s32(in + 4);
+  s[7].val[0] = vld1q_s32(in);
+  s[7].val[1] = vld1q_s32(in + 4);
 }
 
-static INLINE void transpose_and_store_s32_8x8(int32x4x2_t a0, int32x4x2_t a1,
-                                               int32x4x2_t a2, int32x4x2_t a3,
-                                               int32x4x2_t a4, int32x4x2_t a5,
-                                               int32x4x2_t a6, int32x4x2_t a7,
+static INLINE void transpose_and_store_s32_8x8(int32x4x2_t *const a,
                                                int32_t **out) {
-  transpose_s32_8x8(&a0, &a1, &a2, &a3, &a4, &a5, &a6, &a7);
+  transpose_s32_8x8(&a[0], &a[1], &a[2], &a[3], &a[4], &a[5], &a[6], &a[7]);
 
-  vst1q_s32(*out, a0.val[0]);
+  vst1q_s32(*out, a[0].val[0]);
   *out += 4;
-  vst1q_s32(*out, a0.val[1]);
+  vst1q_s32(*out, a[0].val[1]);
   *out += 4;
-  vst1q_s32(*out, a1.val[0]);
+  vst1q_s32(*out, a[1].val[0]);
   *out += 4;
-  vst1q_s32(*out, a1.val[1]);
+  vst1q_s32(*out, a[1].val[1]);
   *out += 4;
-  vst1q_s32(*out, a2.val[0]);
+  vst1q_s32(*out, a[2].val[0]);
   *out += 4;
-  vst1q_s32(*out, a2.val[1]);
+  vst1q_s32(*out, a[2].val[1]);
   *out += 4;
-  vst1q_s32(*out, a3.val[0]);
+  vst1q_s32(*out, a[3].val[0]);
   *out += 4;
-  vst1q_s32(*out, a3.val[1]);
+  vst1q_s32(*out, a[3].val[1]);
   *out += 4;
-  vst1q_s32(*out, a4.val[0]);
+  vst1q_s32(*out, a[4].val[0]);
   *out += 4;
-  vst1q_s32(*out, a4.val[1]);
+  vst1q_s32(*out, a[4].val[1]);
   *out += 4;
-  vst1q_s32(*out, a5.val[0]);
+  vst1q_s32(*out, a[5].val[0]);
   *out += 4;
-  vst1q_s32(*out, a5.val[1]);
+  vst1q_s32(*out, a[5].val[1]);
   *out += 4;
-  vst1q_s32(*out, a6.val[0]);
+  vst1q_s32(*out, a[6].val[0]);
   *out += 4;
-  vst1q_s32(*out, a6.val[1]);
+  vst1q_s32(*out, a[6].val[1]);
   *out += 4;
-  vst1q_s32(*out, a7.val[0]);
+  vst1q_s32(*out, a[7].val[0]);
   *out += 4;
-  vst1q_s32(*out, a7.val[1]);
+  vst1q_s32(*out, a[7].val[1]);
   *out += 4;
 }
 
 static INLINE void idct32_transpose_pair(const int32_t *input, int32_t *t_buf) {
   int i;
-  int32x4x2_t s0, s1, s2, s3, s4, s5, s6, s7;
+  int32x4x2_t s[8];
 
   for (i = 0; i < 4; i++, input += 8) {
-    load_s32x4q_dual(input, &s0, &s1, &s2, &s3, &s4, &s5, &s6, &s7);
-    transpose_and_store_s32_8x8(s0, s1, s2, s3, s4, s5, s6, s7, &t_buf);
+    load_s32x4q_dual(input, s);
+    transpose_and_store_s32_8x8(s, &t_buf);
   }
 }
 

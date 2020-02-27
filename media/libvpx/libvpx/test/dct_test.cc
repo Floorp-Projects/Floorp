@@ -11,6 +11,7 @@
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
+#include <tuple>
 
 #include "third_party/googletest/src/include/gtest/gtest.h"
 
@@ -28,8 +29,8 @@
 
 using libvpx_test::ACMRandom;
 using libvpx_test::Buffer;
-using std::tr1::tuple;
-using std::tr1::make_tuple;
+using std::make_tuple;
+using std::tuple;
 
 namespace {
 typedef void (*FdctFunc)(const int16_t *in, tran_low_t *out, int stride);
@@ -40,10 +41,60 @@ typedef void (*FhtFuncRef)(const Buffer<int16_t> &in, Buffer<tran_low_t> *out,
                            int size, int tx_type);
 typedef void (*IhtFunc)(const tran_low_t *in, uint8_t *out, int stride,
                         int tx_type);
+typedef void (*IhtWithBdFunc)(const tran_low_t *in, uint8_t *out, int stride,
+                              int tx_type, int bd);
+
+template <FdctFunc fn>
+void fdct_wrapper(const int16_t *in, tran_low_t *out, int stride, int tx_type) {
+  (void)tx_type;
+  fn(in, out, stride);
+}
+
+template <IdctFunc fn>
+void idct_wrapper(const tran_low_t *in, uint8_t *out, int stride, int tx_type,
+                  int bd) {
+  (void)tx_type;
+  (void)bd;
+  fn(in, out, stride);
+}
+
+template <IhtFunc fn>
+void iht_wrapper(const tran_low_t *in, uint8_t *out, int stride, int tx_type,
+                 int bd) {
+  (void)bd;
+  fn(in, out, stride, tx_type);
+}
+
+#if CONFIG_VP9_HIGHBITDEPTH
+typedef void (*HighbdIdctFunc)(const tran_low_t *in, uint16_t *out, int stride,
+                               int bd);
+
+typedef void (*HighbdIhtFunc)(const tran_low_t *in, uint16_t *out, int stride,
+                              int tx_type, int bd);
+
+template <HighbdIdctFunc fn>
+void highbd_idct_wrapper(const tran_low_t *in, uint8_t *out, int stride,
+                         int tx_type, int bd) {
+  (void)tx_type;
+  fn(in, CAST_TO_SHORTPTR(out), stride, bd);
+}
+
+template <HighbdIhtFunc fn>
+void highbd_iht_wrapper(const tran_low_t *in, uint8_t *out, int stride,
+                        int tx_type, int bd) {
+  fn(in, CAST_TO_SHORTPTR(out), stride, tx_type, bd);
+}
+#endif  // CONFIG_VP9_HIGHBITDEPTH
+
+struct FuncInfo {
+  FhtFunc ft_func;
+  IhtWithBdFunc it_func;
+  int size;
+  int pixel_size;
+};
 
 /* forward transform, inverse transform, size, transform type, bit depth */
-typedef tuple<FdctFunc, IdctFunc, int, int, vpx_bit_depth_t> DctParam;
-typedef tuple<FhtFunc, IhtFunc, int, int, vpx_bit_depth_t> HtParam;
+typedef tuple<int, const FuncInfo *, int, vpx_bit_depth_t> DctParam;
 
 void fdct_ref(const Buffer<int16_t> &in, Buffer<tran_low_t> *out, int size,
               int /*tx_type*/) {
@@ -81,128 +132,123 @@ void fwht_ref(const Buffer<int16_t> &in, Buffer<tran_low_t> *out, int size,
   vp9_fwht4x4_c(in.TopLeftPixel(), out->TopLeftPixel(), in.stride());
 }
 
-#if CONFIG_VP9_HIGHBITDEPTH
-#define idctNxN(n, coeffs, bitdepth)                                       \
-  void idct##n##x##n##_##bitdepth(const tran_low_t *in, uint8_t *out,      \
-                                  int stride) {                            \
-    vpx_highbd_idct##n##x##n##_##coeffs##_add_c(in, CAST_TO_SHORTPTR(out), \
-                                                stride, bitdepth);         \
-  }
-
-idctNxN(4, 16, 10);
-idctNxN(4, 16, 12);
-idctNxN(8, 64, 10);
-idctNxN(8, 64, 12);
-idctNxN(16, 256, 10);
-idctNxN(16, 256, 12);
-idctNxN(32, 1024, 10);
-idctNxN(32, 1024, 12);
-
-#define ihtNxN(n, coeffs, bitdepth)                                        \
-  void iht##n##x##n##_##bitdepth(const tran_low_t *in, uint8_t *out,       \
-                                 int stride, int tx_type) {                \
-    vp9_highbd_iht##n##x##n##_##coeffs##_add_c(in, CAST_TO_SHORTPTR(out),  \
-                                               stride, tx_type, bitdepth); \
-  }
-
-ihtNxN(4, 16, 10);
-ihtNxN(4, 16, 12);
-ihtNxN(8, 64, 10);
-ihtNxN(8, 64, 12);
-ihtNxN(16, 256, 10);
-// ihtNxN(16, 256, 12);
-
-void iwht4x4_10(const tran_low_t *in, uint8_t *out, int stride) {
-  vpx_highbd_iwht4x4_16_add_c(in, CAST_TO_SHORTPTR(out), stride, 10);
-}
-
-void iwht4x4_12(const tran_low_t *in, uint8_t *out, int stride) {
-  vpx_highbd_iwht4x4_16_add_c(in, CAST_TO_SHORTPTR(out), stride, 12);
-}
-#endif  // CONFIG_VP9_HIGHBITDEPTH
-
-class TransTestBase {
+class TransTestBase : public ::testing::TestWithParam<DctParam> {
  public:
-  virtual void TearDown() { libvpx_test::ClearSystemState(); }
+  virtual void SetUp() {
+    rnd_.Reset(ACMRandom::DeterministicSeed());
+    const int idx = GET_PARAM(0);
+    const FuncInfo *func_info = &(GET_PARAM(1)[idx]);
+    tx_type_ = GET_PARAM(2);
+    bit_depth_ = GET_PARAM(3);
+    fwd_txfm_ = func_info->ft_func;
+    inv_txfm_ = func_info->it_func;
+    size_ = func_info->size;
+    pixel_size_ = func_info->pixel_size;
+    max_pixel_value_ = (1 << bit_depth_) - 1;
+
+    // Randomize stride_ to a value less than or equal to 1024
+    stride_ = rnd_(1024) + 1;
+    if (stride_ < size_) {
+      stride_ = size_;
+    }
+    // Align stride_ to 16 if it's bigger than 16.
+    if (stride_ > 16) {
+      stride_ &= ~15;
+    }
+
+    block_size_ = size_ * stride_;
+
+    src_ = reinterpret_cast<uint8_t *>(
+        vpx_memalign(16, pixel_size_ * block_size_));
+    ASSERT_TRUE(src_ != NULL);
+    dst_ = reinterpret_cast<uint8_t *>(
+        vpx_memalign(16, pixel_size_ * block_size_));
+    ASSERT_TRUE(dst_ != NULL);
+  }
+
+  virtual void TearDown() {
+    vpx_free(src_);
+    src_ = NULL;
+    vpx_free(dst_);
+    dst_ = NULL;
+    libvpx_test::ClearSystemState();
+  }
+
+  void InitMem() {
+    if (pixel_size_ == 1 && bit_depth_ > VPX_BITS_8) return;
+    if (pixel_size_ == 1) {
+      for (int j = 0; j < block_size_; ++j) {
+        src_[j] = rnd_.Rand16() & max_pixel_value_;
+      }
+      for (int j = 0; j < block_size_; ++j) {
+        dst_[j] = rnd_.Rand16() & max_pixel_value_;
+      }
+    } else {
+      ASSERT_EQ(pixel_size_, 2);
+      uint16_t *const src = reinterpret_cast<uint16_t *>(src_);
+      uint16_t *const dst = reinterpret_cast<uint16_t *>(dst_);
+      for (int j = 0; j < block_size_; ++j) {
+        src[j] = rnd_.Rand16() & max_pixel_value_;
+      }
+      for (int j = 0; j < block_size_; ++j) {
+        dst[j] = rnd_.Rand16() & max_pixel_value_;
+      }
+    }
+  }
+
+  void RunFwdTxfm(const Buffer<int16_t> &in, Buffer<tran_low_t> *out) {
+    fwd_txfm_(in.TopLeftPixel(), out->TopLeftPixel(), in.stride(), tx_type_);
+  }
+
+  void RunInvTxfm(const Buffer<tran_low_t> &in, uint8_t *out) {
+    inv_txfm_(in.TopLeftPixel(), out, stride_, tx_type_, bit_depth_);
+  }
 
  protected:
-  virtual void RunFwdTxfm(const Buffer<int16_t> &in,
-                          Buffer<tran_low_t> *out) = 0;
-
-  virtual void RunInvTxfm(const Buffer<tran_low_t> &in, uint8_t *out) = 0;
-
   void RunAccuracyCheck(int limit) {
+    if (pixel_size_ == 1 && bit_depth_ > VPX_BITS_8) return;
     ACMRandom rnd(ACMRandom::DeterministicSeed());
     Buffer<int16_t> test_input_block =
         Buffer<int16_t>(size_, size_, 8, size_ == 4 ? 0 : 16);
     ASSERT_TRUE(test_input_block.Init());
+    ASSERT_TRUE(test_input_block.TopLeftPixel() != NULL);
     Buffer<tran_low_t> test_temp_block =
         Buffer<tran_low_t>(size_, size_, 0, 16);
     ASSERT_TRUE(test_temp_block.Init());
-    Buffer<uint8_t> dst = Buffer<uint8_t>(size_, size_, 0, 16);
-    ASSERT_TRUE(dst.Init());
-    Buffer<uint8_t> src = Buffer<uint8_t>(size_, size_, 0, 16);
-    ASSERT_TRUE(src.Init());
-#if CONFIG_VP9_HIGHBITDEPTH
-    Buffer<uint16_t> dst16 = Buffer<uint16_t>(size_, size_, 0, 16);
-    ASSERT_TRUE(dst16.Init());
-    Buffer<uint16_t> src16 = Buffer<uint16_t>(size_, size_, 0, 16);
-    ASSERT_TRUE(src16.Init());
-#endif  // CONFIG_VP9_HIGHBITDEPTH
     uint32_t max_error = 0;
     int64_t total_error = 0;
     const int count_test_block = 10000;
     for (int i = 0; i < count_test_block; ++i) {
-      if (bit_depth_ == 8) {
-        src.Set(&rnd, &ACMRandom::Rand8);
-        dst.Set(&rnd, &ACMRandom::Rand8);
-        // Initialize a test block with input range [-255, 255].
-        for (int h = 0; h < size_; ++h) {
-          for (int w = 0; w < size_; ++w) {
+      InitMem();
+      for (int h = 0; h < size_; ++h) {
+        for (int w = 0; w < size_; ++w) {
+          if (pixel_size_ == 1) {
             test_input_block.TopLeftPixel()[h * test_input_block.stride() + w] =
-                src.TopLeftPixel()[h * src.stride() + w] -
-                dst.TopLeftPixel()[h * dst.stride() + w];
+                src_[h * stride_ + w] - dst_[h * stride_ + w];
+          } else {
+            ASSERT_EQ(pixel_size_, 2);
+            const uint16_t *const src = reinterpret_cast<uint16_t *>(src_);
+            const uint16_t *const dst = reinterpret_cast<uint16_t *>(dst_);
+            test_input_block.TopLeftPixel()[h * test_input_block.stride() + w] =
+                src[h * stride_ + w] - dst[h * stride_ + w];
           }
         }
-#if CONFIG_VP9_HIGHBITDEPTH
-      } else {
-        src16.Set(&rnd, 0, max_pixel_value_);
-        dst16.Set(&rnd, 0, max_pixel_value_);
-        for (int h = 0; h < size_; ++h) {
-          for (int w = 0; w < size_; ++w) {
-            test_input_block.TopLeftPixel()[h * test_input_block.stride() + w] =
-                src16.TopLeftPixel()[h * src16.stride() + w] -
-                dst16.TopLeftPixel()[h * dst16.stride() + w];
-          }
-        }
-#endif  // CONFIG_VP9_HIGHBITDEPTH
       }
 
       ASM_REGISTER_STATE_CHECK(RunFwdTxfm(test_input_block, &test_temp_block));
-      if (bit_depth_ == VPX_BITS_8) {
-        ASM_REGISTER_STATE_CHECK(
-            RunInvTxfm(test_temp_block, dst.TopLeftPixel()));
-#if CONFIG_VP9_HIGHBITDEPTH
-      } else {
-        ASM_REGISTER_STATE_CHECK(
-            RunInvTxfm(test_temp_block, CAST_TO_BYTEPTR(dst16.TopLeftPixel())));
-#endif  // CONFIG_VP9_HIGHBITDEPTH
-      }
+      ASM_REGISTER_STATE_CHECK(RunInvTxfm(test_temp_block, dst_));
 
       for (int h = 0; h < size_; ++h) {
         for (int w = 0; w < size_; ++w) {
           int diff;
-#if CONFIG_VP9_HIGHBITDEPTH
-          if (bit_depth_ != 8) {
-            diff = dst16.TopLeftPixel()[h * dst16.stride() + w] -
-                   src16.TopLeftPixel()[h * src16.stride() + w];
+          if (pixel_size_ == 1) {
+            diff = dst_[h * stride_ + w] - src_[h * stride_ + w];
           } else {
-#endif  // CONFIG_VP9_HIGHBITDEPTH
-            diff = dst.TopLeftPixel()[h * dst.stride() + w] -
-                   src.TopLeftPixel()[h * src.stride() + w];
-#if CONFIG_VP9_HIGHBITDEPTH
+            ASSERT_EQ(pixel_size_, 2);
+            const uint16_t *const src = reinterpret_cast<uint16_t *>(src_);
+            const uint16_t *const dst = reinterpret_cast<uint16_t *>(dst_);
+            diff = dst[h * stride_ + w] - src[h * stride_ + w];
           }
-#endif  // CONFIG_VP9_HIGHBITDEPTH
           const uint32_t error = diff * diff;
           if (max_error < error) max_error = error;
           total_error += error;
@@ -211,14 +257,18 @@ class TransTestBase {
     }
 
     EXPECT_GE(static_cast<uint32_t>(limit), max_error)
-        << "Error: 4x4 FHT/IHT has an individual round trip error > " << limit;
+        << "Error: " << size_ << "x" << size_
+        << " transform/inverse transform has an individual round trip error > "
+        << limit;
 
     EXPECT_GE(count_test_block * limit, total_error)
-        << "Error: 4x4 FHT/IHT has average round trip error > " << limit
-        << " per block";
+        << "Error: " << size_ << "x" << size_
+        << " transform/inverse transform has average round trip error > "
+        << limit << " per block";
   }
 
   void RunCoeffCheck() {
+    if (pixel_size_ == 1 && bit_depth_ > VPX_BITS_8) return;
     ACMRandom rnd(ACMRandom::DeterministicSeed());
     const int count_test_block = 5000;
     Buffer<int16_t> input_block =
@@ -248,6 +298,7 @@ class TransTestBase {
   }
 
   void RunMemCheck() {
+    if (pixel_size_ == 1 && bit_depth_ > VPX_BITS_8) return;
     ACMRandom rnd(ACMRandom::DeterministicSeed());
     const int count_test_block = 5000;
     Buffer<int16_t> input_extreme_block =
@@ -265,6 +316,7 @@ class TransTestBase {
       } else if (i == 1) {
         input_extreme_block.Set(-max_pixel_value_);
       } else {
+        ASSERT_TRUE(input_extreme_block.TopLeftPixel() != NULL);
         for (int h = 0; h < size_; ++h) {
           for (int w = 0; w < size_; ++w) {
             input_extreme_block
@@ -279,13 +331,14 @@ class TransTestBase {
 
       // The minimum quant value is 4.
       EXPECT_TRUE(output_block.CheckValues(output_ref_block));
+      ASSERT_TRUE(output_block.TopLeftPixel() != NULL);
       for (int h = 0; h < size_; ++h) {
         for (int w = 0; w < size_; ++w) {
           EXPECT_GE(
               4 * DCT_MAX_VALUE << (bit_depth_ - 8),
               abs(output_block.TopLeftPixel()[h * output_block.stride() + w]))
-              << "Error: 4x4 FDCT has coefficient larger than "
-                 "4*DCT_MAX_VALUE"
+              << "Error: " << size_ << "x" << size_
+              << " transform has coefficient larger than 4*DCT_MAX_VALUE"
               << " at " << w << "," << h;
           if (::testing::Test::HasFailure()) {
             printf("Size: %d Transform type: %d\n", size_, tx_type_);
@@ -298,6 +351,7 @@ class TransTestBase {
   }
 
   void RunInvAccuracyCheck(int limit) {
+    if (pixel_size_ == 1 && bit_depth_ > VPX_BITS_8) return;
     ACMRandom rnd(ACMRandom::DeterministicSeed());
     const int count_test_block = 1000;
     Buffer<int16_t> in = Buffer<int16_t>(size_, size_, 4);
@@ -314,100 +368,85 @@ class TransTestBase {
     ASSERT_TRUE(src16.Init());
 
     for (int i = 0; i < count_test_block; ++i) {
+      InitMem();
+      ASSERT_TRUE(in.TopLeftPixel() != NULL);
       // Initialize a test block with input range [-max_pixel_value_,
       // max_pixel_value_].
-      if (bit_depth_ == VPX_BITS_8) {
-        src.Set(&rnd, &ACMRandom::Rand8);
-        dst.Set(&rnd, &ACMRandom::Rand8);
-        for (int h = 0; h < size_; ++h) {
-          for (int w = 0; w < size_; ++w) {
+      for (int h = 0; h < size_; ++h) {
+        for (int w = 0; w < size_; ++w) {
+          if (pixel_size_ == 1) {
             in.TopLeftPixel()[h * in.stride() + w] =
-                src.TopLeftPixel()[h * src.stride() + w] -
-                dst.TopLeftPixel()[h * dst.stride() + w];
+                src_[h * stride_ + w] - dst_[h * stride_ + w];
+          } else {
+            ASSERT_EQ(pixel_size_, 2);
+            const uint16_t *const src = reinterpret_cast<uint16_t *>(src_);
+            const uint16_t *const dst = reinterpret_cast<uint16_t *>(dst_);
+            in.TopLeftPixel()[h * in.stride() + w] =
+                src[h * stride_ + w] - dst[h * stride_ + w];
           }
         }
-#if CONFIG_VP9_HIGHBITDEPTH
-      } else {
-        src16.Set(&rnd, 0, max_pixel_value_);
-        dst16.Set(&rnd, 0, max_pixel_value_);
-        for (int h = 0; h < size_; ++h) {
-          for (int w = 0; w < size_; ++w) {
-            in.TopLeftPixel()[h * in.stride() + w] =
-                src16.TopLeftPixel()[h * src16.stride() + w] -
-                dst16.TopLeftPixel()[h * dst16.stride() + w];
-          }
-        }
-#endif  // CONFIG_VP9_HIGHBITDEPTH
       }
 
       fwd_txfm_ref(in, &coeff, size_, tx_type_);
 
-      if (bit_depth_ == VPX_BITS_8) {
-        ASM_REGISTER_STATE_CHECK(RunInvTxfm(coeff, dst.TopLeftPixel()));
-#if CONFIG_VP9_HIGHBITDEPTH
-      } else {
-        ASM_REGISTER_STATE_CHECK(
-            RunInvTxfm(coeff, CAST_TO_BYTEPTR(dst16.TopLeftPixel())));
-#endif  // CONFIG_VP9_HIGHBITDEPTH
-      }
+      ASM_REGISTER_STATE_CHECK(RunInvTxfm(coeff, dst_));
 
       for (int h = 0; h < size_; ++h) {
         for (int w = 0; w < size_; ++w) {
           int diff;
-#if CONFIG_VP9_HIGHBITDEPTH
-          if (bit_depth_ != 8) {
-            diff = dst16.TopLeftPixel()[h * dst16.stride() + w] -
-                   src16.TopLeftPixel()[h * src16.stride() + w];
+          if (pixel_size_ == 1) {
+            diff = dst_[h * stride_ + w] - src_[h * stride_ + w];
           } else {
-#endif  // CONFIG_VP9_HIGHBITDEPTH
-            diff = dst.TopLeftPixel()[h * dst.stride() + w] -
-                   src.TopLeftPixel()[h * src.stride() + w];
-#if CONFIG_VP9_HIGHBITDEPTH
+            ASSERT_EQ(pixel_size_, 2);
+            const uint16_t *const src = reinterpret_cast<uint16_t *>(src_);
+            const uint16_t *const dst = reinterpret_cast<uint16_t *>(dst_);
+            diff = dst[h * stride_ + w] - src[h * stride_ + w];
           }
-#endif  // CONFIG_VP9_HIGHBITDEPTH
           const uint32_t error = diff * diff;
           EXPECT_GE(static_cast<uint32_t>(limit), error)
-              << "Error: " << size_ << "x" << size_ << " IDCT has error "
-              << error << " at " << w << "," << h;
+              << "Error: " << size_ << "x" << size_
+              << " inverse transform has error " << error << " at " << w << ","
+              << h;
+          if (::testing::Test::HasFailure()) {
+            printf("Size: %d Transform type: %d\n", size_, tx_type_);
+            return;
+          }
         }
       }
     }
   }
 
+  FhtFunc fwd_txfm_;
   FhtFuncRef fwd_txfm_ref;
+  IhtWithBdFunc inv_txfm_;
+  ACMRandom rnd_;
+  uint8_t *src_;
+  uint8_t *dst_;
   vpx_bit_depth_t bit_depth_;
   int tx_type_;
   int max_pixel_value_;
   int size_;
+  int stride_;
+  int pixel_size_;
+  int block_size_;
 };
 
-class TransDCT : public TransTestBase,
-                 public ::testing::TestWithParam<DctParam> {
+/* -------------------------------------------------------------------------- */
+
+class TransDCT : public TransTestBase {
  public:
-  TransDCT() {
-    fwd_txfm_ref = fdct_ref;
-    fwd_txfm_ = GET_PARAM(0);
-    inv_txfm_ = GET_PARAM(1);
-    size_ = GET_PARAM(2);
-    tx_type_ = GET_PARAM(3);
-    bit_depth_ = GET_PARAM(4);
-    max_pixel_value_ = (1 << bit_depth_) - 1;
-  }
-
- protected:
-  void RunFwdTxfm(const Buffer<int16_t> &in, Buffer<tran_low_t> *out) {
-    fwd_txfm_(in.TopLeftPixel(), out->TopLeftPixel(), in.stride());
-  }
-
-  void RunInvTxfm(const Buffer<tran_low_t> &in, uint8_t *out) {
-    inv_txfm_(in.TopLeftPixel(), out, in.stride());
-  }
-
-  FdctFunc fwd_txfm_;
-  IdctFunc inv_txfm_;
+  TransDCT() { fwd_txfm_ref = fdct_ref; }
 };
 
-TEST_P(TransDCT, AccuracyCheck) { RunAccuracyCheck(1); }
+TEST_P(TransDCT, AccuracyCheck) {
+  int t = 1;
+  if (size_ == 16 && bit_depth_ > 10 && pixel_size_ == 2) {
+    t = 2;
+  } else if (size_ == 32 && bit_depth_ > 10 && pixel_size_ == 2) {
+    t = 7;
+  }
+  RunAccuracyCheck(t);
+}
 
 TEST_P(TransDCT, CoeffCheck) { RunCoeffCheck(); }
 
@@ -415,177 +454,150 @@ TEST_P(TransDCT, MemCheck) { RunMemCheck(); }
 
 TEST_P(TransDCT, InvAccuracyCheck) { RunInvAccuracyCheck(1); }
 
+static const FuncInfo dct_c_func_info[] = {
 #if CONFIG_VP9_HIGHBITDEPTH
-INSTANTIATE_TEST_CASE_P(
-    C, TransDCT,
-    ::testing::Values(
-        make_tuple(&vpx_highbd_fdct32x32_c, &idct32x32_10, 32, 0, VPX_BITS_10),
-        make_tuple(&vpx_highbd_fdct32x32_c, &idct32x32_12, 32, 0, VPX_BITS_10),
-        make_tuple(&vpx_fdct32x32_c, &vpx_idct32x32_1024_add_c, 32, 0,
-                   VPX_BITS_8),
-        make_tuple(&vpx_highbd_fdct16x16_c, &idct16x16_10, 16, 0, VPX_BITS_10),
-        make_tuple(&vpx_highbd_fdct16x16_c, &idct16x16_12, 16, 0, VPX_BITS_10),
-        make_tuple(&vpx_fdct16x16_c, &vpx_idct16x16_256_add_c, 16, 0,
-                   VPX_BITS_8),
-        make_tuple(&vpx_highbd_fdct8x8_c, &idct8x8_10, 8, 0, VPX_BITS_10),
-        make_tuple(&vpx_highbd_fdct8x8_c, &idct8x8_12, 8, 0, VPX_BITS_10),
-        make_tuple(&vpx_fdct8x8_c, &vpx_idct8x8_64_add_c, 8, 0, VPX_BITS_8),
-        make_tuple(&vpx_highbd_fdct4x4_c, &idct4x4_10, 4, 0, VPX_BITS_10),
-        make_tuple(&vpx_highbd_fdct4x4_c, &idct4x4_12, 4, 0, VPX_BITS_12),
-        make_tuple(&vpx_fdct4x4_c, &vpx_idct4x4_16_add_c, 4, 0, VPX_BITS_8)));
-#else
-INSTANTIATE_TEST_CASE_P(
-    C, TransDCT,
-    ::testing::Values(
-        make_tuple(&vpx_fdct32x32_c, &vpx_idct32x32_1024_add_c, 32, 0,
-                   VPX_BITS_8),
-        make_tuple(&vpx_fdct16x16_c, &vpx_idct16x16_256_add_c, 16, 0,
-                   VPX_BITS_8),
-        make_tuple(&vpx_fdct8x8_c, &vpx_idct8x8_64_add_c, 8, 0, VPX_BITS_8),
-        make_tuple(&vpx_fdct4x4_c, &vpx_idct4x4_16_add_c, 4, 0, VPX_BITS_8)));
-#endif  // CONFIG_VP9_HIGHBITDEPTH
-
-#if HAVE_SSE2
-#if !CONFIG_EMULATE_HARDWARE
-#if CONFIG_VP9_HIGHBITDEPTH
-/* TODO:(johannkoenig) Determine why these fail AccuracyCheck
-   make_tuple(&vpx_highbd_fdct32x32_sse2, &idct32x32_12, 32, 0, VPX_BITS_12),
-   make_tuple(&vpx_highbd_fdct16x16_sse2, &idct16x16_12, 16, 0, VPX_BITS_12),
-*/
-INSTANTIATE_TEST_CASE_P(
-    SSE2, TransDCT,
-    ::testing::Values(
-        make_tuple(&vpx_highbd_fdct32x32_sse2, &idct32x32_10, 32, 0,
-                   VPX_BITS_10),
-        make_tuple(&vpx_fdct32x32_sse2, &vpx_idct32x32_1024_add_sse2, 32, 0,
-                   VPX_BITS_8),
-        make_tuple(&vpx_highbd_fdct16x16_sse2, &idct16x16_10, 16, 0,
-                   VPX_BITS_10),
-        make_tuple(&vpx_fdct16x16_sse2, &vpx_idct16x16_256_add_sse2, 16, 0,
-                   VPX_BITS_8),
-        make_tuple(&vpx_highbd_fdct8x8_sse2, &idct8x8_10, 8, 0, VPX_BITS_10),
-        make_tuple(&vpx_highbd_fdct8x8_sse2, &idct8x8_12, 8, 0, VPX_BITS_12),
-        make_tuple(&vpx_fdct8x8_sse2, &vpx_idct8x8_64_add_sse2, 8, 0,
-                   VPX_BITS_8),
-        make_tuple(&vpx_highbd_fdct4x4_sse2, &idct4x4_10, 4, 0, VPX_BITS_10),
-        make_tuple(&vpx_highbd_fdct4x4_sse2, &idct4x4_12, 4, 0, VPX_BITS_12),
-        make_tuple(&vpx_fdct4x4_sse2, &vpx_idct4x4_16_add_sse2, 4, 0,
-                   VPX_BITS_8)));
-#else
-INSTANTIATE_TEST_CASE_P(
-    SSE2, TransDCT,
-    ::testing::Values(make_tuple(&vpx_fdct32x32_sse2,
-                                 &vpx_idct32x32_1024_add_sse2, 32, 0,
-                                 VPX_BITS_8),
-                      make_tuple(&vpx_fdct16x16_sse2,
-                                 &vpx_idct16x16_256_add_sse2, 16, 0,
-                                 VPX_BITS_8),
-                      make_tuple(&vpx_fdct8x8_sse2, &vpx_idct8x8_64_add_sse2, 8,
-                                 0, VPX_BITS_8),
-                      make_tuple(&vpx_fdct4x4_sse2, &vpx_idct4x4_16_add_sse2, 4,
-                                 0, VPX_BITS_8)));
-#endif  // CONFIG_VP9_HIGHBITDEPTH
-#endif  // !CONFIG_EMULATE_HARDWARE
-#endif  // HAVE_SSE2
-
-#if !CONFIG_VP9_HIGHBITDEPTH
-#if HAVE_SSSE3 && !CONFIG_EMULATE_HARDWARE
-#if !ARCH_X86_64
-// TODO(johannkoenig): high bit depth fdct8x8.
-INSTANTIATE_TEST_CASE_P(
-    SSSE3, TransDCT,
-    ::testing::Values(make_tuple(&vpx_fdct32x32_c, &vpx_idct32x32_1024_add_sse2,
-                                 32, 0, VPX_BITS_8),
-                      make_tuple(&vpx_fdct8x8_c, &vpx_idct8x8_64_add_sse2, 8, 0,
-                                 VPX_BITS_8)));
-#else
-// vpx_fdct8x8_ssse3 is only available in 64 bit builds.
-INSTANTIATE_TEST_CASE_P(
-    SSSE3, TransDCT,
-    ::testing::Values(make_tuple(&vpx_fdct32x32_c, &vpx_idct32x32_1024_add_sse2,
-                                 32, 0, VPX_BITS_8),
-                      make_tuple(&vpx_fdct8x8_ssse3, &vpx_idct8x8_64_add_sse2,
-                                 8, 0, VPX_BITS_8)));
-#endif  // !ARCH_X86_64
-#endif  // HAVE_SSSE3 && !CONFIG_EMULATE_HARDWARE
-#endif  // !CONFIG_VP9_HIGHBITDEPTH
-
-#if !CONFIG_VP9_HIGHBITDEPTH && HAVE_AVX2 && !CONFIG_EMULATE_HARDWARE
-// TODO(johannkoenig): high bit depth fdct32x32.
-INSTANTIATE_TEST_CASE_P(
-    AVX2, TransDCT, ::testing::Values(make_tuple(&vpx_fdct32x32_avx2,
-                                                 &vpx_idct32x32_1024_add_sse2,
-                                                 32, 0, VPX_BITS_8)));
-
-#endif  // !CONFIG_VP9_HIGHBITDEPTH && HAVE_AVX2 && !CONFIG_EMULATE_HARDWARE
-
-#if HAVE_NEON
-#if !CONFIG_EMULATE_HARDWARE
-INSTANTIATE_TEST_CASE_P(
-    NEON, TransDCT,
-    ::testing::Values(make_tuple(&vpx_fdct32x32_neon,
-                                 &vpx_idct32x32_1024_add_neon, 32, 0,
-                                 VPX_BITS_8),
-                      make_tuple(&vpx_fdct16x16_neon,
-                                 &vpx_idct16x16_256_add_neon, 16, 0,
-                                 VPX_BITS_8),
-                      make_tuple(&vpx_fdct8x8_neon, &vpx_idct8x8_64_add_neon, 8,
-                                 0, VPX_BITS_8),
-                      make_tuple(&vpx_fdct4x4_neon, &vpx_idct4x4_16_add_neon, 4,
-                                 0, VPX_BITS_8)));
-#endif  // !CONFIG_EMULATE_HARDWARE
-#endif  // HAVE_NEON
-
-#if HAVE_MSA
-#if !CONFIG_VP9_HIGHBITDEPTH
-#if !CONFIG_EMULATE_HARDWARE
-INSTANTIATE_TEST_CASE_P(
-    MSA, TransDCT,
-    ::testing::Values(
-        make_tuple(&vpx_fdct32x32_msa, &vpx_idct32x32_1024_add_msa, 32, 0,
-                   VPX_BITS_8),
-        make_tuple(&vpx_fdct16x16_msa, &vpx_idct16x16_256_add_msa, 16, 0,
-                   VPX_BITS_8),
-        make_tuple(&vpx_fdct8x8_msa, &vpx_idct8x8_64_add_msa, 8, 0, VPX_BITS_8),
-        make_tuple(&vpx_fdct4x4_msa, &vpx_idct4x4_16_add_msa, 4, 0,
-                   VPX_BITS_8)));
-#endif  // !CONFIG_EMULATE_HARDWARE
-#endif  // !CONFIG_VP9_HIGHBITDEPTH
-#endif  // HAVE_MSA
-
-#if HAVE_VSX && !CONFIG_VP9_HIGHBITDEPTH && !CONFIG_EMULATE_HARDWARE
-INSTANTIATE_TEST_CASE_P(VSX, TransDCT,
-                        ::testing::Values(make_tuple(&vpx_fdct4x4_c,
-                                                     &vpx_idct4x4_16_add_vsx, 4,
-                                                     0, VPX_BITS_8)));
-#endif  // HAVE_VSX && !CONFIG_VP9_HIGHBITDEPTH && !CONFIG_EMULATE_HARDWARE
-
-class TransHT : public TransTestBase, public ::testing::TestWithParam<HtParam> {
- public:
-  TransHT() {
-    fwd_txfm_ref = fht_ref;
-    fwd_txfm_ = GET_PARAM(0);
-    inv_txfm_ = GET_PARAM(1);
-    size_ = GET_PARAM(2);
-    tx_type_ = GET_PARAM(3);
-    bit_depth_ = GET_PARAM(4);
-    max_pixel_value_ = (1 << bit_depth_) - 1;
-  }
-
- protected:
-  void RunFwdTxfm(const Buffer<int16_t> &in, Buffer<tran_low_t> *out) {
-    fwd_txfm_(in.TopLeftPixel(), out->TopLeftPixel(), in.stride(), tx_type_);
-  }
-
-  void RunInvTxfm(const Buffer<tran_low_t> &in, uint8_t *out) {
-    inv_txfm_(in.TopLeftPixel(), out, in.stride(), tx_type_);
-  }
-
-  FhtFunc fwd_txfm_;
-  IhtFunc inv_txfm_;
+  { &fdct_wrapper<vpx_highbd_fdct4x4_c>,
+    &highbd_idct_wrapper<vpx_highbd_idct4x4_16_add_c>, 4, 2 },
+  { &fdct_wrapper<vpx_highbd_fdct8x8_c>,
+    &highbd_idct_wrapper<vpx_highbd_idct8x8_64_add_c>, 8, 2 },
+  { &fdct_wrapper<vpx_highbd_fdct16x16_c>,
+    &highbd_idct_wrapper<vpx_highbd_idct16x16_256_add_c>, 16, 2 },
+  { &fdct_wrapper<vpx_highbd_fdct32x32_c>,
+    &highbd_idct_wrapper<vpx_highbd_idct32x32_1024_add_c>, 32, 2 },
+#endif
+  { &fdct_wrapper<vpx_fdct4x4_c>, &idct_wrapper<vpx_idct4x4_16_add_c>, 4, 1 },
+  { &fdct_wrapper<vpx_fdct8x8_c>, &idct_wrapper<vpx_idct8x8_64_add_c>, 8, 1 },
+  { &fdct_wrapper<vpx_fdct16x16_c>, &idct_wrapper<vpx_idct16x16_256_add_c>, 16,
+    1 },
+  { &fdct_wrapper<vpx_fdct32x32_c>, &idct_wrapper<vpx_idct32x32_1024_add_c>, 32,
+    1 }
 };
 
-TEST_P(TransHT, AccuracyCheck) { RunAccuracyCheck(1); }
+INSTANTIATE_TEST_CASE_P(
+    C, TransDCT,
+    ::testing::Combine(
+        ::testing::Range(0, static_cast<int>(sizeof(dct_c_func_info) /
+                                             sizeof(dct_c_func_info[0]))),
+        ::testing::Values(dct_c_func_info), ::testing::Values(0),
+        ::testing::Values(VPX_BITS_8, VPX_BITS_10, VPX_BITS_12)));
+
+#if !CONFIG_EMULATE_HARDWARE
+
+#if HAVE_SSE2
+static const FuncInfo dct_sse2_func_info[] = {
+#if CONFIG_VP9_HIGHBITDEPTH
+  { &fdct_wrapper<vpx_highbd_fdct4x4_sse2>,
+    &highbd_idct_wrapper<vpx_highbd_idct4x4_16_add_sse2>, 4, 2 },
+  { &fdct_wrapper<vpx_highbd_fdct8x8_sse2>,
+    &highbd_idct_wrapper<vpx_highbd_idct8x8_64_add_sse2>, 8, 2 },
+  { &fdct_wrapper<vpx_highbd_fdct16x16_sse2>,
+    &highbd_idct_wrapper<vpx_highbd_idct16x16_256_add_sse2>, 16, 2 },
+  { &fdct_wrapper<vpx_highbd_fdct32x32_sse2>,
+    &highbd_idct_wrapper<vpx_highbd_idct32x32_1024_add_sse2>, 32, 2 },
+#endif
+  { &fdct_wrapper<vpx_fdct4x4_sse2>, &idct_wrapper<vpx_idct4x4_16_add_sse2>, 4,
+    1 },
+  { &fdct_wrapper<vpx_fdct8x8_sse2>, &idct_wrapper<vpx_idct8x8_64_add_sse2>, 8,
+    1 },
+  { &fdct_wrapper<vpx_fdct16x16_sse2>,
+    &idct_wrapper<vpx_idct16x16_256_add_sse2>, 16, 1 },
+  { &fdct_wrapper<vpx_fdct32x32_sse2>,
+    &idct_wrapper<vpx_idct32x32_1024_add_sse2>, 32, 1 }
+};
+
+INSTANTIATE_TEST_CASE_P(
+    SSE2, TransDCT,
+    ::testing::Combine(
+        ::testing::Range(0, static_cast<int>(sizeof(dct_sse2_func_info) /
+                                             sizeof(dct_sse2_func_info[0]))),
+        ::testing::Values(dct_sse2_func_info), ::testing::Values(0),
+        ::testing::Values(VPX_BITS_8, VPX_BITS_10, VPX_BITS_12)));
+#endif  // HAVE_SSE2
+
+#if HAVE_SSSE3 && !CONFIG_VP9_HIGHBITDEPTH && VPX_ARCH_X86_64
+// vpx_fdct8x8_ssse3 is only available in 64 bit builds.
+static const FuncInfo dct_ssse3_func_info = {
+  &fdct_wrapper<vpx_fdct8x8_ssse3>, &idct_wrapper<vpx_idct8x8_64_add_sse2>, 8, 1
+};
+
+// TODO(johannkoenig): high bit depth fdct8x8.
+INSTANTIATE_TEST_CASE_P(SSSE3, TransDCT,
+                        ::testing::Values(make_tuple(0, &dct_ssse3_func_info, 0,
+                                                     VPX_BITS_8)));
+#endif  // HAVE_SSSE3 && !CONFIG_VP9_HIGHBITDEPTH && VPX_ARCH_X86_64
+
+#if HAVE_AVX2 && !CONFIG_VP9_HIGHBITDEPTH
+static const FuncInfo dct_avx2_func_info = {
+  &fdct_wrapper<vpx_fdct32x32_avx2>, &idct_wrapper<vpx_idct32x32_1024_add_sse2>,
+  32, 1
+};
+
+// TODO(johannkoenig): high bit depth fdct32x32.
+INSTANTIATE_TEST_CASE_P(AVX2, TransDCT,
+                        ::testing::Values(make_tuple(0, &dct_avx2_func_info, 0,
+                                                     VPX_BITS_8)));
+#endif  // HAVE_AVX2 && !CONFIG_VP9_HIGHBITDEPTH
+
+#if HAVE_NEON
+static const FuncInfo dct_neon_func_info[4] = {
+  { &fdct_wrapper<vpx_fdct4x4_neon>, &idct_wrapper<vpx_idct4x4_16_add_neon>, 4,
+    1 },
+  { &fdct_wrapper<vpx_fdct8x8_neon>, &idct_wrapper<vpx_idct8x8_64_add_neon>, 8,
+    1 },
+  { &fdct_wrapper<vpx_fdct16x16_neon>,
+    &idct_wrapper<vpx_idct16x16_256_add_neon>, 16, 1 },
+  { &fdct_wrapper<vpx_fdct32x32_neon>,
+    &idct_wrapper<vpx_idct32x32_1024_add_neon>, 32, 1 }
+};
+
+INSTANTIATE_TEST_CASE_P(
+    NEON, TransDCT,
+    ::testing::Combine(::testing::Range(0, 4),
+                       ::testing::Values(dct_neon_func_info),
+                       ::testing::Values(0), ::testing::Values(VPX_BITS_8)));
+#endif  // HAVE_NEON
+
+#if HAVE_MSA && !CONFIG_VP9_HIGHBITDEPTH
+static const FuncInfo dct_msa_func_info[4] = {
+  { &fdct_wrapper<vpx_fdct4x4_msa>, &idct_wrapper<vpx_idct4x4_16_add_msa>, 4,
+    1 },
+  { &fdct_wrapper<vpx_fdct8x8_msa>, &idct_wrapper<vpx_idct8x8_64_add_msa>, 8,
+    1 },
+  { &fdct_wrapper<vpx_fdct16x16_msa>, &idct_wrapper<vpx_idct16x16_256_add_msa>,
+    16, 1 },
+  { &fdct_wrapper<vpx_fdct32x32_msa>, &idct_wrapper<vpx_idct32x32_1024_add_msa>,
+    32, 1 }
+};
+
+INSTANTIATE_TEST_CASE_P(MSA, TransDCT,
+                        ::testing::Combine(::testing::Range(0, 4),
+                                           ::testing::Values(dct_msa_func_info),
+                                           ::testing::Values(0),
+                                           ::testing::Values(VPX_BITS_8)));
+#endif  // HAVE_MSA && !CONFIG_VP9_HIGHBITDEPTH
+
+#if HAVE_VSX && !CONFIG_VP9_HIGHBITDEPTH
+static const FuncInfo dct_vsx_func_info = {
+  &fdct_wrapper<vpx_fdct4x4_c>, &idct_wrapper<vpx_idct4x4_16_add_vsx>, 4, 1
+};
+
+INSTANTIATE_TEST_CASE_P(VSX, TransDCT,
+                        ::testing::Values(make_tuple(0, &dct_vsx_func_info, 0,
+                                                     VPX_BITS_8)));
+#endif  // HAVE_VSX && !CONFIG_VP9_HIGHBITDEPTH &&
+
+#endif  // !CONFIG_EMULATE_HARDWARE
+
+/* -------------------------------------------------------------------------- */
+
+class TransHT : public TransTestBase {
+ public:
+  TransHT() { fwd_txfm_ref = fht_ref; }
+};
+
+TEST_P(TransHT, AccuracyCheck) {
+  RunAccuracyCheck(size_ == 16 && bit_depth_ > 10 && pixel_size_ == 2 ? 2 : 1);
+}
 
 TEST_P(TransHT, CoeffCheck) { RunCoeffCheck(); }
 
@@ -593,117 +605,109 @@ TEST_P(TransHT, MemCheck) { RunMemCheck(); }
 
 TEST_P(TransHT, InvAccuracyCheck) { RunInvAccuracyCheck(1); }
 
-/* TODO:(johannkoenig) Determine why these fail AccuracyCheck
-   make_tuple(&vp9_highbd_fht16x16_c, &iht16x16_12, 16, 0, VPX_BITS_12),
-   make_tuple(&vp9_highbd_fht16x16_c, &iht16x16_12, 16, 1, VPX_BITS_12),
-   make_tuple(&vp9_highbd_fht16x16_c, &iht16x16_12, 16, 2, VPX_BITS_12),
-   make_tuple(&vp9_highbd_fht16x16_c, &iht16x16_12, 16, 3, VPX_BITS_12),
-  */
+static const FuncInfo ht_c_func_info[] = {
 #if CONFIG_VP9_HIGHBITDEPTH
+  { &vp9_highbd_fht4x4_c, &highbd_iht_wrapper<vp9_highbd_iht4x4_16_add_c>, 4,
+    2 },
+  { &vp9_highbd_fht8x8_c, &highbd_iht_wrapper<vp9_highbd_iht8x8_64_add_c>, 8,
+    2 },
+  { &vp9_highbd_fht16x16_c, &highbd_iht_wrapper<vp9_highbd_iht16x16_256_add_c>,
+    16, 2 },
+#endif
+  { &vp9_fht4x4_c, &iht_wrapper<vp9_iht4x4_16_add_c>, 4, 1 },
+  { &vp9_fht8x8_c, &iht_wrapper<vp9_iht8x8_64_add_c>, 8, 1 },
+  { &vp9_fht16x16_c, &iht_wrapper<vp9_iht16x16_256_add_c>, 16, 1 }
+};
+
 INSTANTIATE_TEST_CASE_P(
     C, TransHT,
-    ::testing::Values(
-        make_tuple(&vp9_highbd_fht16x16_c, &iht16x16_10, 16, 0, VPX_BITS_10),
-        make_tuple(&vp9_highbd_fht16x16_c, &iht16x16_10, 16, 1, VPX_BITS_10),
-        make_tuple(&vp9_highbd_fht16x16_c, &iht16x16_10, 16, 2, VPX_BITS_10),
-        make_tuple(&vp9_highbd_fht16x16_c, &iht16x16_10, 16, 3, VPX_BITS_10),
-        make_tuple(&vp9_fht16x16_c, &vp9_iht16x16_256_add_c, 16, 0, VPX_BITS_8),
-        make_tuple(&vp9_fht16x16_c, &vp9_iht16x16_256_add_c, 16, 1, VPX_BITS_8),
-        make_tuple(&vp9_fht16x16_c, &vp9_iht16x16_256_add_c, 16, 2, VPX_BITS_8),
-        make_tuple(&vp9_fht16x16_c, &vp9_iht16x16_256_add_c, 16, 3, VPX_BITS_8),
-        make_tuple(&vp9_highbd_fht8x8_c, &iht8x8_10, 8, 0, VPX_BITS_10),
-        make_tuple(&vp9_highbd_fht8x8_c, &iht8x8_10, 8, 1, VPX_BITS_10),
-        make_tuple(&vp9_highbd_fht8x8_c, &iht8x8_10, 8, 2, VPX_BITS_10),
-        make_tuple(&vp9_highbd_fht8x8_c, &iht8x8_10, 8, 3, VPX_BITS_10),
-        make_tuple(&vp9_highbd_fht8x8_c, &iht8x8_12, 8, 0, VPX_BITS_12),
-        make_tuple(&vp9_highbd_fht8x8_c, &iht8x8_12, 8, 1, VPX_BITS_12),
-        make_tuple(&vp9_highbd_fht8x8_c, &iht8x8_12, 8, 2, VPX_BITS_12),
-        make_tuple(&vp9_highbd_fht8x8_c, &iht8x8_12, 8, 3, VPX_BITS_12),
-        make_tuple(&vp9_fht8x8_c, &vp9_iht8x8_64_add_c, 8, 0, VPX_BITS_8),
-        make_tuple(&vp9_fht8x8_c, &vp9_iht8x8_64_add_c, 8, 1, VPX_BITS_8),
-        make_tuple(&vp9_fht8x8_c, &vp9_iht8x8_64_add_c, 8, 2, VPX_BITS_8),
-        make_tuple(&vp9_fht8x8_c, &vp9_iht8x8_64_add_c, 8, 3, VPX_BITS_8),
-        make_tuple(&vp9_highbd_fht4x4_c, &iht4x4_10, 4, 0, VPX_BITS_10),
-        make_tuple(&vp9_highbd_fht4x4_c, &iht4x4_10, 4, 1, VPX_BITS_10),
-        make_tuple(&vp9_highbd_fht4x4_c, &iht4x4_10, 4, 2, VPX_BITS_10),
-        make_tuple(&vp9_highbd_fht4x4_c, &iht4x4_10, 4, 3, VPX_BITS_10),
-        make_tuple(&vp9_highbd_fht4x4_c, &iht4x4_12, 4, 0, VPX_BITS_12),
-        make_tuple(&vp9_highbd_fht4x4_c, &iht4x4_12, 4, 1, VPX_BITS_12),
-        make_tuple(&vp9_highbd_fht4x4_c, &iht4x4_12, 4, 2, VPX_BITS_12),
-        make_tuple(&vp9_highbd_fht4x4_c, &iht4x4_12, 4, 3, VPX_BITS_12),
-        make_tuple(&vp9_fht4x4_c, &vp9_iht4x4_16_add_c, 4, 0, VPX_BITS_8),
-        make_tuple(&vp9_fht4x4_c, &vp9_iht4x4_16_add_c, 4, 1, VPX_BITS_8),
-        make_tuple(&vp9_fht4x4_c, &vp9_iht4x4_16_add_c, 4, 2, VPX_BITS_8),
-        make_tuple(&vp9_fht4x4_c, &vp9_iht4x4_16_add_c, 4, 3, VPX_BITS_8)));
-#else
+    ::testing::Combine(
+        ::testing::Range(0, static_cast<int>(sizeof(ht_c_func_info) /
+                                             sizeof(ht_c_func_info[0]))),
+        ::testing::Values(ht_c_func_info), ::testing::Range(0, 4),
+        ::testing::Values(VPX_BITS_8, VPX_BITS_10, VPX_BITS_12)));
+
+#if !CONFIG_EMULATE_HARDWARE
+
+#if HAVE_NEON
+
+static const FuncInfo ht_neon_func_info[] = {
+#if CONFIG_VP9_HIGHBITDEPTH
+  { &vp9_highbd_fht4x4_c, &highbd_iht_wrapper<vp9_highbd_iht4x4_16_add_neon>, 4,
+    2 },
+  { &vp9_highbd_fht8x8_c, &highbd_iht_wrapper<vp9_highbd_iht8x8_64_add_neon>, 8,
+    2 },
+  { &vp9_highbd_fht16x16_c,
+    &highbd_iht_wrapper<vp9_highbd_iht16x16_256_add_neon>, 16, 2 },
+#endif
+  { &vp9_fht4x4_c, &iht_wrapper<vp9_iht4x4_16_add_neon>, 4, 1 },
+  { &vp9_fht8x8_c, &iht_wrapper<vp9_iht8x8_64_add_neon>, 8, 1 },
+  { &vp9_fht16x16_c, &iht_wrapper<vp9_iht16x16_256_add_neon>, 16, 1 }
+};
+
 INSTANTIATE_TEST_CASE_P(
-    C, TransHT,
-    ::testing::Values(
-        make_tuple(&vp9_fht16x16_c, &vp9_iht16x16_256_add_c, 16, 0, VPX_BITS_8),
-        make_tuple(&vp9_fht16x16_c, &vp9_iht16x16_256_add_c, 16, 1, VPX_BITS_8),
-        make_tuple(&vp9_fht16x16_c, &vp9_iht16x16_256_add_c, 16, 2, VPX_BITS_8),
-        make_tuple(&vp9_fht16x16_c, &vp9_iht16x16_256_add_c, 16, 3, VPX_BITS_8),
-
-        make_tuple(&vp9_fht8x8_c, &vp9_iht8x8_64_add_c, 8, 0, VPX_BITS_8),
-        make_tuple(&vp9_fht8x8_c, &vp9_iht8x8_64_add_c, 8, 1, VPX_BITS_8),
-        make_tuple(&vp9_fht8x8_c, &vp9_iht8x8_64_add_c, 8, 2, VPX_BITS_8),
-        make_tuple(&vp9_fht8x8_c, &vp9_iht8x8_64_add_c, 8, 3, VPX_BITS_8),
-
-        make_tuple(&vp9_fht4x4_c, &vp9_iht4x4_16_add_c, 4, 0, VPX_BITS_8),
-        make_tuple(&vp9_fht4x4_c, &vp9_iht4x4_16_add_c, 4, 1, VPX_BITS_8),
-        make_tuple(&vp9_fht4x4_c, &vp9_iht4x4_16_add_c, 4, 2, VPX_BITS_8),
-        make_tuple(&vp9_fht4x4_c, &vp9_iht4x4_16_add_c, 4, 3, VPX_BITS_8)));
-#endif  // CONFIG_VP9_HIGHBITDEPTH
+    NEON, TransHT,
+    ::testing::Combine(
+        ::testing::Range(0, static_cast<int>(sizeof(ht_neon_func_info) /
+                                             sizeof(ht_neon_func_info[0]))),
+        ::testing::Values(ht_neon_func_info), ::testing::Range(0, 4),
+        ::testing::Values(VPX_BITS_8, VPX_BITS_10, VPX_BITS_12)));
+#endif  // HAVE_NEON
 
 #if HAVE_SSE2
-INSTANTIATE_TEST_CASE_P(
-    SSE2, TransHT,
-    ::testing::Values(
-        make_tuple(&vp9_fht16x16_sse2, &vp9_iht16x16_256_add_sse2, 16, 0,
-                   VPX_BITS_8),
-        make_tuple(&vp9_fht16x16_sse2, &vp9_iht16x16_256_add_sse2, 16, 1,
-                   VPX_BITS_8),
-        make_tuple(&vp9_fht16x16_sse2, &vp9_iht16x16_256_add_sse2, 16, 2,
-                   VPX_BITS_8),
-        make_tuple(&vp9_fht16x16_sse2, &vp9_iht16x16_256_add_sse2, 16, 3,
-                   VPX_BITS_8),
 
-        make_tuple(&vp9_fht8x8_sse2, &vp9_iht8x8_64_add_sse2, 8, 0, VPX_BITS_8),
-        make_tuple(&vp9_fht8x8_sse2, &vp9_iht8x8_64_add_sse2, 8, 1, VPX_BITS_8),
-        make_tuple(&vp9_fht8x8_sse2, &vp9_iht8x8_64_add_sse2, 8, 2, VPX_BITS_8),
-        make_tuple(&vp9_fht8x8_sse2, &vp9_iht8x8_64_add_sse2, 8, 3, VPX_BITS_8),
+static const FuncInfo ht_sse2_func_info[3] = {
+  { &vp9_fht4x4_sse2, &iht_wrapper<vp9_iht4x4_16_add_sse2>, 4, 1 },
+  { &vp9_fht8x8_sse2, &iht_wrapper<vp9_iht8x8_64_add_sse2>, 8, 1 },
+  { &vp9_fht16x16_sse2, &iht_wrapper<vp9_iht16x16_256_add_sse2>, 16, 1 }
+};
 
-        make_tuple(&vp9_fht4x4_sse2, &vp9_iht4x4_16_add_sse2, 4, 0, VPX_BITS_8),
-        make_tuple(&vp9_fht4x4_sse2, &vp9_iht4x4_16_add_sse2, 4, 1, VPX_BITS_8),
-        make_tuple(&vp9_fht4x4_sse2, &vp9_iht4x4_16_add_sse2, 4, 2, VPX_BITS_8),
-        make_tuple(&vp9_fht4x4_sse2, &vp9_iht4x4_16_add_sse2, 4, 3,
-                   VPX_BITS_8)));
+INSTANTIATE_TEST_CASE_P(SSE2, TransHT,
+                        ::testing::Combine(::testing::Range(0, 3),
+                                           ::testing::Values(ht_sse2_func_info),
+                                           ::testing::Range(0, 4),
+                                           ::testing::Values(VPX_BITS_8)));
 #endif  // HAVE_SSE2
 
-class TransWHT : public TransTestBase,
-                 public ::testing::TestWithParam<DctParam> {
+#if HAVE_SSE4_1 && CONFIG_VP9_HIGHBITDEPTH
+static const FuncInfo ht_sse4_1_func_info[3] = {
+  { &vp9_highbd_fht4x4_c, &highbd_iht_wrapper<vp9_highbd_iht4x4_16_add_sse4_1>,
+    4, 2 },
+  { vp9_highbd_fht8x8_c, &highbd_iht_wrapper<vp9_highbd_iht8x8_64_add_sse4_1>,
+    8, 2 },
+  { &vp9_highbd_fht16x16_c,
+    &highbd_iht_wrapper<vp9_highbd_iht16x16_256_add_sse4_1>, 16, 2 }
+};
+
+INSTANTIATE_TEST_CASE_P(
+    SSE4_1, TransHT,
+    ::testing::Combine(::testing::Range(0, 3),
+                       ::testing::Values(ht_sse4_1_func_info),
+                       ::testing::Range(0, 4),
+                       ::testing::Values(VPX_BITS_8, VPX_BITS_10,
+                                         VPX_BITS_12)));
+#endif  // HAVE_SSE4_1 && CONFIG_VP9_HIGHBITDEPTH
+
+#if HAVE_VSX && !CONFIG_EMULATE_HARDWARE && !CONFIG_VP9_HIGHBITDEPTH
+static const FuncInfo ht_vsx_func_info[3] = {
+  { &vp9_fht4x4_c, &iht_wrapper<vp9_iht4x4_16_add_vsx>, 4, 1 },
+  { &vp9_fht8x8_c, &iht_wrapper<vp9_iht8x8_64_add_vsx>, 8, 1 },
+  { &vp9_fht16x16_c, &iht_wrapper<vp9_iht16x16_256_add_vsx>, 16, 1 }
+};
+
+INSTANTIATE_TEST_CASE_P(VSX, TransHT,
+                        ::testing::Combine(::testing::Range(0, 3),
+                                           ::testing::Values(ht_vsx_func_info),
+                                           ::testing::Range(0, 4),
+                                           ::testing::Values(VPX_BITS_8)));
+#endif  // HAVE_VSX
+#endif  // !CONFIG_EMULATE_HARDWARE
+
+/* -------------------------------------------------------------------------- */
+
+class TransWHT : public TransTestBase {
  public:
-  TransWHT() {
-    fwd_txfm_ref = fwht_ref;
-    fwd_txfm_ = GET_PARAM(0);
-    inv_txfm_ = GET_PARAM(1);
-    size_ = GET_PARAM(2);
-    tx_type_ = GET_PARAM(3);
-    bit_depth_ = GET_PARAM(4);
-    max_pixel_value_ = (1 << bit_depth_) - 1;
-  }
-
- protected:
-  void RunFwdTxfm(const Buffer<int16_t> &in, Buffer<tran_low_t> *out) {
-    fwd_txfm_(in.TopLeftPixel(), out->TopLeftPixel(), in.stride());
-  }
-
-  void RunInvTxfm(const Buffer<tran_low_t> &in, uint8_t *out) {
-    inv_txfm_(in.TopLeftPixel(), out, in.stride());
-  }
-
-  FdctFunc fwd_txfm_;
-  IdctFunc inv_txfm_;
+  TransWHT() { fwd_txfm_ref = fwht_ref; }
 };
 
 TEST_P(TransWHT, AccuracyCheck) { RunAccuracyCheck(0); }
@@ -714,24 +718,39 @@ TEST_P(TransWHT, MemCheck) { RunMemCheck(); }
 
 TEST_P(TransWHT, InvAccuracyCheck) { RunInvAccuracyCheck(0); }
 
+static const FuncInfo wht_c_func_info[] = {
 #if CONFIG_VP9_HIGHBITDEPTH
+  { &fdct_wrapper<vp9_highbd_fwht4x4_c>,
+    &highbd_idct_wrapper<vpx_highbd_iwht4x4_16_add_c>, 4, 2 },
+#endif
+  { &fdct_wrapper<vp9_fwht4x4_c>, &idct_wrapper<vpx_iwht4x4_16_add_c>, 4, 1 }
+};
+
 INSTANTIATE_TEST_CASE_P(
     C, TransWHT,
-    ::testing::Values(
-        make_tuple(&vp9_highbd_fwht4x4_c, &iwht4x4_10, 4, 0, VPX_BITS_10),
-        make_tuple(&vp9_highbd_fwht4x4_c, &iwht4x4_12, 4, 0, VPX_BITS_12),
-        make_tuple(&vp9_fwht4x4_c, &vpx_iwht4x4_16_add_c, 4, 0, VPX_BITS_8)));
-#else
-INSTANTIATE_TEST_CASE_P(C, TransWHT,
-                        ::testing::Values(make_tuple(&vp9_fwht4x4_c,
-                                                     &vpx_iwht4x4_16_add_c, 4,
-                                                     0, VPX_BITS_8)));
-#endif  // CONFIG_VP9_HIGHBITDEPTH
+    ::testing::Combine(
+        ::testing::Range(0, static_cast<int>(sizeof(wht_c_func_info) /
+                                             sizeof(wht_c_func_info[0]))),
+        ::testing::Values(wht_c_func_info), ::testing::Values(0),
+        ::testing::Values(VPX_BITS_8, VPX_BITS_10, VPX_BITS_12)));
 
-#if HAVE_SSE2
+#if HAVE_SSE2 && !CONFIG_EMULATE_HARDWARE
+static const FuncInfo wht_sse2_func_info = {
+  &fdct_wrapper<vp9_fwht4x4_sse2>, &idct_wrapper<vpx_iwht4x4_16_add_sse2>, 4, 1
+};
+
 INSTANTIATE_TEST_CASE_P(SSE2, TransWHT,
-                        ::testing::Values(make_tuple(&vp9_fwht4x4_sse2,
-                                                     &vpx_iwht4x4_16_add_sse2,
-                                                     4, 0, VPX_BITS_8)));
-#endif  // HAVE_SSE2
+                        ::testing::Values(make_tuple(0, &wht_sse2_func_info, 0,
+                                                     VPX_BITS_8)));
+#endif  // HAVE_SSE2 && !CONFIG_EMULATE_HARDWARE
+
+#if HAVE_VSX && !CONFIG_EMULATE_HARDWARE && !CONFIG_VP9_HIGHBITDEPTH
+static const FuncInfo wht_vsx_func_info = {
+  &fdct_wrapper<vp9_fwht4x4_c>, &idct_wrapper<vpx_iwht4x4_16_add_vsx>, 4, 1
+};
+
+INSTANTIATE_TEST_CASE_P(VSX, TransWHT,
+                        ::testing::Values(make_tuple(0, &wht_vsx_func_info, 0,
+                                                     VPX_BITS_8)));
+#endif  // HAVE_VSX && !CONFIG_EMULATE_HARDWARE
 }  // namespace

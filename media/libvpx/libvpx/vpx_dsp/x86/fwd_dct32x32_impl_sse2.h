@@ -21,7 +21,7 @@
 #define ADD_EPI16 _mm_adds_epi16
 #define SUB_EPI16 _mm_subs_epi16
 #if FDCT32x32_HIGH_PRECISION
-void vpx_fdct32x32_rows_c(const int16_t *intermediate, tran_low_t *out) {
+static void vpx_fdct32x32_rows_c(const int16_t *intermediate, tran_low_t *out) {
   int i, j;
   for (i = 0; i < 32; ++i) {
     tran_high_t temp_in[32], temp_out[32];
@@ -35,7 +35,8 @@ void vpx_fdct32x32_rows_c(const int16_t *intermediate, tran_low_t *out) {
 #define HIGH_FDCT32x32_2D_C vpx_highbd_fdct32x32_c
 #define HIGH_FDCT32x32_2D_ROWS_C vpx_fdct32x32_rows_c
 #else
-void vpx_fdct32x32_rd_rows_c(const int16_t *intermediate, tran_low_t *out) {
+static void vpx_fdct32x32_rd_rows_c(const int16_t *intermediate,
+                                    tran_low_t *out) {
   int i, j;
   for (i = 0; i < 32; ++i) {
     tran_high_t temp_in[32], temp_out[32];
@@ -101,6 +102,7 @@ void FDCT32x32_2D(const int16_t *input, tran_low_t *output_org, int stride) {
   const __m128i k__DCT_CONST_ROUNDING = _mm_set1_epi32(DCT_CONST_ROUNDING);
   const __m128i kZero = _mm_set1_epi16(0);
   const __m128i kOne = _mm_set1_epi16(1);
+
   // Do the two transform/transpose passes
   int pass;
 #if DCT_HIGH_BIT_DEPTH
@@ -1508,59 +1510,37 @@ void FDCT32x32_2D(const int16_t *input, tran_low_t *output_org, int stride) {
         __m128i lstep1[64], lstep2[64], lstep3[64];
         __m128i u[32], v[32], sign[16];
         const __m128i K32One = _mm_set_epi32(1, 1, 1, 1);
+        const __m128i k__pOne_mOne = pair_set_epi16(1, -1);
         // start using 32-bit operations
         // stage 3
         {
-          // expanding to 32-bit length priori to addition operations
-          lstep2[0] = _mm_unpacklo_epi16(step2[0], kZero);
-          lstep2[1] = _mm_unpackhi_epi16(step2[0], kZero);
-          lstep2[2] = _mm_unpacklo_epi16(step2[1], kZero);
-          lstep2[3] = _mm_unpackhi_epi16(step2[1], kZero);
-          lstep2[4] = _mm_unpacklo_epi16(step2[2], kZero);
-          lstep2[5] = _mm_unpackhi_epi16(step2[2], kZero);
-          lstep2[6] = _mm_unpacklo_epi16(step2[3], kZero);
-          lstep2[7] = _mm_unpackhi_epi16(step2[3], kZero);
-          lstep2[8] = _mm_unpacklo_epi16(step2[4], kZero);
-          lstep2[9] = _mm_unpackhi_epi16(step2[4], kZero);
-          lstep2[10] = _mm_unpacklo_epi16(step2[5], kZero);
-          lstep2[11] = _mm_unpackhi_epi16(step2[5], kZero);
-          lstep2[12] = _mm_unpacklo_epi16(step2[6], kZero);
-          lstep2[13] = _mm_unpackhi_epi16(step2[6], kZero);
-          lstep2[14] = _mm_unpacklo_epi16(step2[7], kZero);
-          lstep2[15] = _mm_unpackhi_epi16(step2[7], kZero);
-          lstep2[0] = _mm_madd_epi16(lstep2[0], kOne);
-          lstep2[1] = _mm_madd_epi16(lstep2[1], kOne);
-          lstep2[2] = _mm_madd_epi16(lstep2[2], kOne);
-          lstep2[3] = _mm_madd_epi16(lstep2[3], kOne);
-          lstep2[4] = _mm_madd_epi16(lstep2[4], kOne);
-          lstep2[5] = _mm_madd_epi16(lstep2[5], kOne);
-          lstep2[6] = _mm_madd_epi16(lstep2[6], kOne);
-          lstep2[7] = _mm_madd_epi16(lstep2[7], kOne);
-          lstep2[8] = _mm_madd_epi16(lstep2[8], kOne);
-          lstep2[9] = _mm_madd_epi16(lstep2[9], kOne);
-          lstep2[10] = _mm_madd_epi16(lstep2[10], kOne);
-          lstep2[11] = _mm_madd_epi16(lstep2[11], kOne);
-          lstep2[12] = _mm_madd_epi16(lstep2[12], kOne);
-          lstep2[13] = _mm_madd_epi16(lstep2[13], kOne);
-          lstep2[14] = _mm_madd_epi16(lstep2[14], kOne);
-          lstep2[15] = _mm_madd_epi16(lstep2[15], kOne);
+          // expanding to 32-bit length while adding and subtracting
+          lstep2[0] = _mm_unpacklo_epi16(step2[0], step2[7]);
+          lstep2[1] = _mm_unpackhi_epi16(step2[0], step2[7]);
+          lstep2[2] = _mm_unpacklo_epi16(step2[1], step2[6]);
+          lstep2[3] = _mm_unpackhi_epi16(step2[1], step2[6]);
+          lstep2[4] = _mm_unpacklo_epi16(step2[2], step2[5]);
+          lstep2[5] = _mm_unpackhi_epi16(step2[2], step2[5]);
+          lstep2[6] = _mm_unpacklo_epi16(step2[3], step2[4]);
+          lstep2[7] = _mm_unpackhi_epi16(step2[3], step2[4]);
 
-          lstep3[0] = _mm_add_epi32(lstep2[14], lstep2[0]);
-          lstep3[1] = _mm_add_epi32(lstep2[15], lstep2[1]);
-          lstep3[2] = _mm_add_epi32(lstep2[12], lstep2[2]);
-          lstep3[3] = _mm_add_epi32(lstep2[13], lstep2[3]);
-          lstep3[4] = _mm_add_epi32(lstep2[10], lstep2[4]);
-          lstep3[5] = _mm_add_epi32(lstep2[11], lstep2[5]);
-          lstep3[6] = _mm_add_epi32(lstep2[8], lstep2[6]);
-          lstep3[7] = _mm_add_epi32(lstep2[9], lstep2[7]);
-          lstep3[8] = _mm_sub_epi32(lstep2[6], lstep2[8]);
-          lstep3[9] = _mm_sub_epi32(lstep2[7], lstep2[9]);
-          lstep3[10] = _mm_sub_epi32(lstep2[4], lstep2[10]);
-          lstep3[11] = _mm_sub_epi32(lstep2[5], lstep2[11]);
-          lstep3[12] = _mm_sub_epi32(lstep2[2], lstep2[12]);
-          lstep3[13] = _mm_sub_epi32(lstep2[3], lstep2[13]);
-          lstep3[14] = _mm_sub_epi32(lstep2[0], lstep2[14]);
-          lstep3[15] = _mm_sub_epi32(lstep2[1], lstep2[15]);
+          lstep3[0] = _mm_madd_epi16(lstep2[0], kOne);
+          lstep3[1] = _mm_madd_epi16(lstep2[1], kOne);
+          lstep3[2] = _mm_madd_epi16(lstep2[2], kOne);
+          lstep3[3] = _mm_madd_epi16(lstep2[3], kOne);
+          lstep3[4] = _mm_madd_epi16(lstep2[4], kOne);
+          lstep3[5] = _mm_madd_epi16(lstep2[5], kOne);
+          lstep3[6] = _mm_madd_epi16(lstep2[6], kOne);
+          lstep3[7] = _mm_madd_epi16(lstep2[7], kOne);
+
+          lstep3[8] = _mm_madd_epi16(lstep2[6], k__pOne_mOne);
+          lstep3[9] = _mm_madd_epi16(lstep2[7], k__pOne_mOne);
+          lstep3[10] = _mm_madd_epi16(lstep2[4], k__pOne_mOne);
+          lstep3[11] = _mm_madd_epi16(lstep2[5], k__pOne_mOne);
+          lstep3[12] = _mm_madd_epi16(lstep2[2], k__pOne_mOne);
+          lstep3[13] = _mm_madd_epi16(lstep2[3], k__pOne_mOne);
+          lstep3[14] = _mm_madd_epi16(lstep2[0], k__pOne_mOne);
+          lstep3[15] = _mm_madd_epi16(lstep2[1], k__pOne_mOne);
         }
         {
           const __m128i s3_10_0 = _mm_unpacklo_epi16(step2[13], step2[10]);
@@ -1594,126 +1574,76 @@ void FDCT32x32_2D(const int16_t *input, tran_low_t *output_org, int stride) {
           lstep3[27] = _mm_srai_epi32(s3_13_5, DCT_CONST_BITS);
         }
         {
-          lstep2[40] = _mm_unpacklo_epi16(step2[20], kZero);
-          lstep2[41] = _mm_unpackhi_epi16(step2[20], kZero);
-          lstep2[42] = _mm_unpacklo_epi16(step2[21], kZero);
-          lstep2[43] = _mm_unpackhi_epi16(step2[21], kZero);
-          lstep2[44] = _mm_unpacklo_epi16(step2[22], kZero);
-          lstep2[45] = _mm_unpackhi_epi16(step2[22], kZero);
-          lstep2[46] = _mm_unpacklo_epi16(step2[23], kZero);
-          lstep2[47] = _mm_unpackhi_epi16(step2[23], kZero);
-          lstep2[48] = _mm_unpacklo_epi16(step2[24], kZero);
-          lstep2[49] = _mm_unpackhi_epi16(step2[24], kZero);
-          lstep2[50] = _mm_unpacklo_epi16(step2[25], kZero);
-          lstep2[51] = _mm_unpackhi_epi16(step2[25], kZero);
-          lstep2[52] = _mm_unpacklo_epi16(step2[26], kZero);
-          lstep2[53] = _mm_unpackhi_epi16(step2[26], kZero);
-          lstep2[54] = _mm_unpacklo_epi16(step2[27], kZero);
-          lstep2[55] = _mm_unpackhi_epi16(step2[27], kZero);
-          lstep2[40] = _mm_madd_epi16(lstep2[40], kOne);
-          lstep2[41] = _mm_madd_epi16(lstep2[41], kOne);
-          lstep2[42] = _mm_madd_epi16(lstep2[42], kOne);
-          lstep2[43] = _mm_madd_epi16(lstep2[43], kOne);
-          lstep2[44] = _mm_madd_epi16(lstep2[44], kOne);
-          lstep2[45] = _mm_madd_epi16(lstep2[45], kOne);
-          lstep2[46] = _mm_madd_epi16(lstep2[46], kOne);
-          lstep2[47] = _mm_madd_epi16(lstep2[47], kOne);
-          lstep2[48] = _mm_madd_epi16(lstep2[48], kOne);
-          lstep2[49] = _mm_madd_epi16(lstep2[49], kOne);
-          lstep2[50] = _mm_madd_epi16(lstep2[50], kOne);
-          lstep2[51] = _mm_madd_epi16(lstep2[51], kOne);
-          lstep2[52] = _mm_madd_epi16(lstep2[52], kOne);
-          lstep2[53] = _mm_madd_epi16(lstep2[53], kOne);
-          lstep2[54] = _mm_madd_epi16(lstep2[54], kOne);
-          lstep2[55] = _mm_madd_epi16(lstep2[55], kOne);
+          lstep1[32] = _mm_unpacklo_epi16(step1[16], step2[23]);
+          lstep1[33] = _mm_unpackhi_epi16(step1[16], step2[23]);
+          lstep1[34] = _mm_unpacklo_epi16(step1[17], step2[22]);
+          lstep1[35] = _mm_unpackhi_epi16(step1[17], step2[22]);
+          lstep1[36] = _mm_unpacklo_epi16(step1[18], step2[21]);
+          lstep1[37] = _mm_unpackhi_epi16(step1[18], step2[21]);
+          lstep1[38] = _mm_unpacklo_epi16(step1[19], step2[20]);
+          lstep1[39] = _mm_unpackhi_epi16(step1[19], step2[20]);
 
-          lstep1[32] = _mm_unpacklo_epi16(step1[16], kZero);
-          lstep1[33] = _mm_unpackhi_epi16(step1[16], kZero);
-          lstep1[34] = _mm_unpacklo_epi16(step1[17], kZero);
-          lstep1[35] = _mm_unpackhi_epi16(step1[17], kZero);
-          lstep1[36] = _mm_unpacklo_epi16(step1[18], kZero);
-          lstep1[37] = _mm_unpackhi_epi16(step1[18], kZero);
-          lstep1[38] = _mm_unpacklo_epi16(step1[19], kZero);
-          lstep1[39] = _mm_unpackhi_epi16(step1[19], kZero);
-          lstep1[56] = _mm_unpacklo_epi16(step1[28], kZero);
-          lstep1[57] = _mm_unpackhi_epi16(step1[28], kZero);
-          lstep1[58] = _mm_unpacklo_epi16(step1[29], kZero);
-          lstep1[59] = _mm_unpackhi_epi16(step1[29], kZero);
-          lstep1[60] = _mm_unpacklo_epi16(step1[30], kZero);
-          lstep1[61] = _mm_unpackhi_epi16(step1[30], kZero);
-          lstep1[62] = _mm_unpacklo_epi16(step1[31], kZero);
-          lstep1[63] = _mm_unpackhi_epi16(step1[31], kZero);
-          lstep1[32] = _mm_madd_epi16(lstep1[32], kOne);
-          lstep1[33] = _mm_madd_epi16(lstep1[33], kOne);
-          lstep1[34] = _mm_madd_epi16(lstep1[34], kOne);
-          lstep1[35] = _mm_madd_epi16(lstep1[35], kOne);
-          lstep1[36] = _mm_madd_epi16(lstep1[36], kOne);
-          lstep1[37] = _mm_madd_epi16(lstep1[37], kOne);
-          lstep1[38] = _mm_madd_epi16(lstep1[38], kOne);
-          lstep1[39] = _mm_madd_epi16(lstep1[39], kOne);
-          lstep1[56] = _mm_madd_epi16(lstep1[56], kOne);
-          lstep1[57] = _mm_madd_epi16(lstep1[57], kOne);
-          lstep1[58] = _mm_madd_epi16(lstep1[58], kOne);
-          lstep1[59] = _mm_madd_epi16(lstep1[59], kOne);
-          lstep1[60] = _mm_madd_epi16(lstep1[60], kOne);
-          lstep1[61] = _mm_madd_epi16(lstep1[61], kOne);
-          lstep1[62] = _mm_madd_epi16(lstep1[62], kOne);
-          lstep1[63] = _mm_madd_epi16(lstep1[63], kOne);
+          lstep1[56] = _mm_unpacklo_epi16(step1[28], step2[27]);
+          lstep1[57] = _mm_unpackhi_epi16(step1[28], step2[27]);
+          lstep1[58] = _mm_unpacklo_epi16(step1[29], step2[26]);
+          lstep1[59] = _mm_unpackhi_epi16(step1[29], step2[26]);
+          lstep1[60] = _mm_unpacklo_epi16(step1[30], step2[25]);
+          lstep1[61] = _mm_unpackhi_epi16(step1[30], step2[25]);
+          lstep1[62] = _mm_unpacklo_epi16(step1[31], step2[24]);
+          lstep1[63] = _mm_unpackhi_epi16(step1[31], step2[24]);
 
-          lstep3[32] = _mm_add_epi32(lstep2[46], lstep1[32]);
-          lstep3[33] = _mm_add_epi32(lstep2[47], lstep1[33]);
+          lstep3[32] = _mm_madd_epi16(lstep1[32], kOne);
+          lstep3[33] = _mm_madd_epi16(lstep1[33], kOne);
+          lstep3[34] = _mm_madd_epi16(lstep1[34], kOne);
+          lstep3[35] = _mm_madd_epi16(lstep1[35], kOne);
+          lstep3[36] = _mm_madd_epi16(lstep1[36], kOne);
+          lstep3[37] = _mm_madd_epi16(lstep1[37], kOne);
+          lstep3[38] = _mm_madd_epi16(lstep1[38], kOne);
+          lstep3[39] = _mm_madd_epi16(lstep1[39], kOne);
 
-          lstep3[34] = _mm_add_epi32(lstep2[44], lstep1[34]);
-          lstep3[35] = _mm_add_epi32(lstep2[45], lstep1[35]);
-          lstep3[36] = _mm_add_epi32(lstep2[42], lstep1[36]);
-          lstep3[37] = _mm_add_epi32(lstep2[43], lstep1[37]);
-          lstep3[38] = _mm_add_epi32(lstep2[40], lstep1[38]);
-          lstep3[39] = _mm_add_epi32(lstep2[41], lstep1[39]);
-          lstep3[40] = _mm_sub_epi32(lstep1[38], lstep2[40]);
-          lstep3[41] = _mm_sub_epi32(lstep1[39], lstep2[41]);
-          lstep3[42] = _mm_sub_epi32(lstep1[36], lstep2[42]);
-          lstep3[43] = _mm_sub_epi32(lstep1[37], lstep2[43]);
-          lstep3[44] = _mm_sub_epi32(lstep1[34], lstep2[44]);
-          lstep3[45] = _mm_sub_epi32(lstep1[35], lstep2[45]);
-          lstep3[46] = _mm_sub_epi32(lstep1[32], lstep2[46]);
-          lstep3[47] = _mm_sub_epi32(lstep1[33], lstep2[47]);
-          lstep3[48] = _mm_sub_epi32(lstep1[62], lstep2[48]);
-          lstep3[49] = _mm_sub_epi32(lstep1[63], lstep2[49]);
-          lstep3[50] = _mm_sub_epi32(lstep1[60], lstep2[50]);
-          lstep3[51] = _mm_sub_epi32(lstep1[61], lstep2[51]);
-          lstep3[52] = _mm_sub_epi32(lstep1[58], lstep2[52]);
-          lstep3[53] = _mm_sub_epi32(lstep1[59], lstep2[53]);
-          lstep3[54] = _mm_sub_epi32(lstep1[56], lstep2[54]);
-          lstep3[55] = _mm_sub_epi32(lstep1[57], lstep2[55]);
-          lstep3[56] = _mm_add_epi32(lstep2[54], lstep1[56]);
-          lstep3[57] = _mm_add_epi32(lstep2[55], lstep1[57]);
-          lstep3[58] = _mm_add_epi32(lstep2[52], lstep1[58]);
-          lstep3[59] = _mm_add_epi32(lstep2[53], lstep1[59]);
-          lstep3[60] = _mm_add_epi32(lstep2[50], lstep1[60]);
-          lstep3[61] = _mm_add_epi32(lstep2[51], lstep1[61]);
-          lstep3[62] = _mm_add_epi32(lstep2[48], lstep1[62]);
-          lstep3[63] = _mm_add_epi32(lstep2[49], lstep1[63]);
+          lstep3[40] = _mm_madd_epi16(lstep1[38], k__pOne_mOne);
+          lstep3[41] = _mm_madd_epi16(lstep1[39], k__pOne_mOne);
+          lstep3[42] = _mm_madd_epi16(lstep1[36], k__pOne_mOne);
+          lstep3[43] = _mm_madd_epi16(lstep1[37], k__pOne_mOne);
+          lstep3[44] = _mm_madd_epi16(lstep1[34], k__pOne_mOne);
+          lstep3[45] = _mm_madd_epi16(lstep1[35], k__pOne_mOne);
+          lstep3[46] = _mm_madd_epi16(lstep1[32], k__pOne_mOne);
+          lstep3[47] = _mm_madd_epi16(lstep1[33], k__pOne_mOne);
+
+          lstep3[48] = _mm_madd_epi16(lstep1[62], k__pOne_mOne);
+          lstep3[49] = _mm_madd_epi16(lstep1[63], k__pOne_mOne);
+          lstep3[50] = _mm_madd_epi16(lstep1[60], k__pOne_mOne);
+          lstep3[51] = _mm_madd_epi16(lstep1[61], k__pOne_mOne);
+          lstep3[52] = _mm_madd_epi16(lstep1[58], k__pOne_mOne);
+          lstep3[53] = _mm_madd_epi16(lstep1[59], k__pOne_mOne);
+          lstep3[54] = _mm_madd_epi16(lstep1[56], k__pOne_mOne);
+          lstep3[55] = _mm_madd_epi16(lstep1[57], k__pOne_mOne);
+
+          lstep3[56] = _mm_madd_epi16(lstep1[56], kOne);
+          lstep3[57] = _mm_madd_epi16(lstep1[57], kOne);
+          lstep3[58] = _mm_madd_epi16(lstep1[58], kOne);
+          lstep3[59] = _mm_madd_epi16(lstep1[59], kOne);
+          lstep3[60] = _mm_madd_epi16(lstep1[60], kOne);
+          lstep3[61] = _mm_madd_epi16(lstep1[61], kOne);
+          lstep3[62] = _mm_madd_epi16(lstep1[62], kOne);
+          lstep3[63] = _mm_madd_epi16(lstep1[63], kOne);
         }
 
         // stage 4
         {
-          // expanding to 32-bit length priori to addition operations
-          lstep2[16] = _mm_unpacklo_epi16(step2[8], kZero);
-          lstep2[17] = _mm_unpackhi_epi16(step2[8], kZero);
-          lstep2[18] = _mm_unpacklo_epi16(step2[9], kZero);
-          lstep2[19] = _mm_unpackhi_epi16(step2[9], kZero);
-          lstep2[28] = _mm_unpacklo_epi16(step2[14], kZero);
-          lstep2[29] = _mm_unpackhi_epi16(step2[14], kZero);
-          lstep2[30] = _mm_unpacklo_epi16(step2[15], kZero);
-          lstep2[31] = _mm_unpackhi_epi16(step2[15], kZero);
-          lstep2[16] = _mm_madd_epi16(lstep2[16], kOne);
-          lstep2[17] = _mm_madd_epi16(lstep2[17], kOne);
-          lstep2[18] = _mm_madd_epi16(lstep2[18], kOne);
-          lstep2[19] = _mm_madd_epi16(lstep2[19], kOne);
-          lstep2[28] = _mm_madd_epi16(lstep2[28], kOne);
-          lstep2[29] = _mm_madd_epi16(lstep2[29], kOne);
-          lstep2[30] = _mm_madd_epi16(lstep2[30], kOne);
-          lstep2[31] = _mm_madd_epi16(lstep2[31], kOne);
+          // expanding to 32-bit length prior to addition operations
+          sign[0] = _mm_cmpgt_epi16(kZero, step2[8]);
+          sign[1] = _mm_cmpgt_epi16(kZero, step2[9]);
+          sign[2] = _mm_cmpgt_epi16(kZero, step2[14]);
+          sign[3] = _mm_cmpgt_epi16(kZero, step2[15]);
+          lstep2[16] = _mm_unpacklo_epi16(step2[8], sign[0]);
+          lstep2[17] = _mm_unpackhi_epi16(step2[8], sign[0]);
+          lstep2[18] = _mm_unpacklo_epi16(step2[9], sign[1]);
+          lstep2[19] = _mm_unpackhi_epi16(step2[9], sign[1]);
+          lstep2[28] = _mm_unpacklo_epi16(step2[14], sign[2]);
+          lstep2[29] = _mm_unpackhi_epi16(step2[14], sign[2]);
+          lstep2[30] = _mm_unpacklo_epi16(step2[15], sign[3]);
+          lstep2[31] = _mm_unpackhi_epi16(step2[15], sign[3]);
 
           lstep1[0] = _mm_add_epi32(lstep3[6], lstep3[0]);
           lstep1[1] = _mm_add_epi32(lstep3[7], lstep3[1]);

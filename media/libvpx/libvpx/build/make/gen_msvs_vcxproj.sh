@@ -34,7 +34,7 @@ Options:
     --name=project_name         Name of the project (required)
     --proj-guid=GUID            GUID to use for the project
     --module-def=filename       File containing export definitions (for DLLs)
-    --ver=version               Version (10,11,12,14,15) of visual studio to generate for
+    --ver=version               Version (14-16) of visual studio to generate for
     --src-path-bare=dir         Path to root of source tree
     -Ipath/to/include           Additional include directories
     -DFLAG[=value]              Preprocessor macros to define
@@ -82,7 +82,7 @@ generate_filter() {
                        | sed -e "s,$src_path_bare,," \
                              -e 's/^[\./]\+//g' -e 's,[:/ ],_,g')
 
-                if ([ "$pat" == "asm" ] || [ "$pat" == "s" ] || [ "$pat" == "S" ]) && $asm_use_custom_step; then
+                if ([ "$pat" == "asm" ] || [ "$pat" == "s" ] || [ "$pat" == "S" ]) && $uses_asm; then
                     # Avoid object file name collisions, i.e. vpx_config.c and
                     # vpx_config.asm produce the same object file without
                     # this additional suffix.
@@ -168,7 +168,7 @@ for opt in "$@"; do
         --ver=*)
             vs_ver="$optval"
             case "$optval" in
-                10|11|12|14|15)
+                1[4-6])
                 ;;
                 *) die Unrecognized Visual Studio Version in $opt
                 ;;
@@ -215,13 +215,7 @@ fix_file_list file_list
 
 outfile=${outfile:-/dev/stdout}
 guid=${guid:-`generate_uuid`}
-asm_use_custom_step=false
 uses_asm=${uses_asm:-false}
-case "${vs_ver:-11}" in
-    10|11|12|14|15)
-       asm_use_custom_step=$uses_asm
-    ;;
-esac
 
 [ -n "$name" ] || die "Project name (--name) must be specified!"
 [ -n "$target" ] || die "Target (--target) must be specified!"
@@ -260,6 +254,11 @@ case "$target" in
         platforms[0]="Win32"
         asm_Debug_cmdline="yasm -Xvc -g cv8 -f win32 ${yasmincs} &quot;%(FullPath)&quot;"
         asm_Release_cmdline="yasm -Xvc -f win32 ${yasmincs} &quot;%(FullPath)&quot;"
+    ;;
+    arm64*)
+        platforms[0]="ARM64"
+        asm_Debug_cmdline="armasm64 -nologo -oldit &quot;%(FullPath)&quot;"
+        asm_Release_cmdline="armasm64 -nologo -oldit &quot;%(FullPath)&quot;"
     ;;
     arm*)
         platforms[0]="ARM"
@@ -307,6 +306,16 @@ generate_vcxproj() {
             tag_content ApplicationType "Windows Store"
             tag_content ApplicationTypeRevision 8.1
         fi
+        if [ "${platforms[0]}" = "ARM64" ]; then
+            # Require the first Visual Studio version to have ARM64 support.
+            tag_content MinimumVisualStudioVersion 15.9
+        fi
+        if [ $vs_ver -eq 15 ] && [ "${platforms[0]}" = "ARM64" ]; then
+            # Since VS 15 does not have a 'use latest SDK version' facility,
+            # specifically require the contemporaneous SDK with official ARM64
+            # support.
+            tag_content WindowsTargetPlatformVersion 10.0.17763.0
+        fi
     close_tag PropertyGroup
 
     tag Import \
@@ -324,31 +333,14 @@ generate_vcxproj() {
             else
                 tag_content ConfigurationType StaticLibrary
             fi
-            if [ "$vs_ver" = "11" ]; then
-                if [ "$plat" = "ARM" ]; then
-                    # Setting the wp80 toolchain automatically sets the
-                    # WINAPI_FAMILY define, which is required for building
-                    # code for arm with the windows headers. Alternatively,
-                    # one could add AppContainerApplication=true in the Globals
-                    # section and add PrecompiledHeader=NotUsing and
-                    # CompileAsWinRT=false in ClCompile and SubSystem=Console
-                    # in Link.
-                    tag_content PlatformToolset v110_wp80
-                else
-                    tag_content PlatformToolset v110
-                fi
-            fi
-            if [ "$vs_ver" = "12" ]; then
-                # Setting a PlatformToolset indicating windows phone isn't
-                # enough to build code for arm with MSVC 2013, one strictly
-                # has to enable AppContainerApplication as well.
-                tag_content PlatformToolset v120
-            fi
             if [ "$vs_ver" = "14" ]; then
                 tag_content PlatformToolset v140
             fi
             if [ "$vs_ver" = "15" ]; then
                 tag_content PlatformToolset v141
+            fi
+            if [ "$vs_ver" = "16" ]; then
+                tag_content PlatformToolset v142
             fi
             tag_content CharacterSet Unicode
             if [ "$config" = "Release" ]; then

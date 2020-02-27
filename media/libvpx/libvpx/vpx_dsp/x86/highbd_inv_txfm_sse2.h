@@ -8,8 +8,8 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef VPX_DSP_X86_HIGHBD_INV_TXFM_SSE2_H_
-#define VPX_DSP_X86_HIGHBD_INV_TXFM_SSE2_H_
+#ifndef VPX_VPX_DSP_X86_HIGHBD_INV_TXFM_SSE2_H_
+#define VPX_VPX_DSP_X86_HIGHBD_INV_TXFM_SSE2_H_
 
 #include <emmintrin.h>  // SSE2
 
@@ -18,6 +18,10 @@
 #include "vpx_dsp/inv_txfm.h"
 #include "vpx_dsp/x86/transpose_sse2.h"
 #include "vpx_dsp/x86/txfm_common_sse2.h"
+
+// Note: There is no 64-bit bit-level shifting SIMD instruction. All
+// coefficients are left shifted by 2, so that dct_const_round_shift() can be
+// done by right shifting 2 bytes.
 
 static INLINE void extend_64bit(const __m128i in,
                                 __m128i *const out /*out[2]*/) {
@@ -397,4 +401,4 @@ static INLINE void highbd_write_buffer_4(uint16_t *const dest, const __m128i in,
   recon_and_store_4(out, dest, bd);
 }
 
-#endif  // VPX_DSP_X86_HIGHBD_INV_TXFM_SSE2_H_
+#endif  // VPX_VPX_DSP_X86_HIGHBD_INV_TXFM_SSE2_H_

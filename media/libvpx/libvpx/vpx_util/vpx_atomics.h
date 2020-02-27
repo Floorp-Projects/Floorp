@@ -8,8 +8,8 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef VPX_UTIL_VPX_ATOMICS_H_
-#define VPX_UTIL_VPX_ATOMICS_H_
+#ifndef VPX_VPX_UTIL_VPX_ATOMICS_H_
+#define VPX_VPX_UTIL_VPX_ATOMICS_H_
 
 #include "./vpx_config.h"
 
@@ -51,16 +51,16 @@ extern "C" {
   do {                              \
   } while (0)
 #else
-#if ARCH_X86 || ARCH_X86_64
+#if VPX_ARCH_X86 || VPX_ARCH_X86_64
 // Use a compiler barrier on x86, no runtime penalty.
 #define vpx_atomic_memory_barrier() __asm__ __volatile__("" ::: "memory")
-#elif ARCH_ARM
+#elif VPX_ARCH_ARM
 #define vpx_atomic_memory_barrier() __asm__ __volatile__("dmb ish" ::: "memory")
-#elif ARCH_MIPS
+#elif VPX_ARCH_MIPS
 #define vpx_atomic_memory_barrier() __asm__ __volatile__("sync" ::: "memory")
 #else
 #error Unsupported architecture!
-#endif  // ARCH_X86 || ARCH_X86_64
+#endif  // VPX_ARCH_X86 || VPX_ARCH_X86_64
 #endif  // defined(_MSC_VER)
 #endif  // atomic builtin availability check
 
@@ -68,7 +68,9 @@ extern "C" {
 // on any platform (to discourage programmer errors by setting values directly).
 // This primitive MUST be initialized using vpx_atomic_init or VPX_ATOMIC_INIT
 // (NOT memset) and accessed through vpx_atomic_ functions.
-typedef struct vpx_atomic_int { volatile int value; } vpx_atomic_int;
+typedef struct vpx_atomic_int {
+  volatile int value;
+} vpx_atomic_int;
 
 #define VPX_ATOMIC_INIT(num) \
   { num }
@@ -106,4 +108,4 @@ static INLINE int vpx_atomic_load_acquire(const vpx_atomic_int *atomic) {
 }  // extern "C"
 #endif  // __cplusplus
 
-#endif  // VPX_UTIL_VPX_ATOMICS_H_
+#endif  // VPX_VPX_UTIL_VPX_ATOMICS_H_

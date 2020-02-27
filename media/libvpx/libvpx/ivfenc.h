@@ -7,8 +7,8 @@
  *  in the file PATENTS.  All contributing project authors may
  *  be found in the AUTHORS file in the root of the source tree.
  */
-#ifndef IVFENC_H_
-#define IVFENC_H_
+#ifndef VPX_IVFENC_H_
+#define VPX_IVFENC_H_
 
 #include "./tools_common.h"
 
@@ -30,4 +30,4 @@ void ivf_write_frame_size(FILE *outfile, size_t frame_size);
 } /* extern "C" */
 #endif
 
-#endif  // IVFENC_H_
+#endif  // VPX_IVFENC_H_

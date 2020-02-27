@@ -53,7 +53,7 @@ static INLINE void highbd_idct16_4col_stage6(const __m128i *const in,
   out[15] = in[15];
 }
 
-static INLINE void highbd_idct16_4col(__m128i *const io /*io[16]*/) {
+void vpx_highbd_idct16_4col_sse4_1(__m128i *const io /*io[16]*/) {
   __m128i step1[16], step2[16];
 
   // stage 2
@@ -233,7 +233,7 @@ void vpx_highbd_idct16x16_256_add_sse4_1(const tran_low_t *input,
       in = all[i];
       highbd_load_transpose_32bit_8x4(&input[0], 16, &in[0]);
       highbd_load_transpose_32bit_8x4(&input[8], 16, &in[8]);
-      highbd_idct16_4col(in);
+      vpx_highbd_idct16_4col_sse4_1(in);
       input += 4 * 16;
     }
 
@@ -243,7 +243,7 @@ void vpx_highbd_idct16x16_256_add_sse4_1(const tran_low_t *input,
       transpose_32bit_4x4(all[1] + i, out + 4);
       transpose_32bit_4x4(all[2] + i, out + 8);
       transpose_32bit_4x4(all[3] + i, out + 12);
-      highbd_idct16_4col(out);
+      vpx_highbd_idct16_4col_sse4_1(out);
 
       for (j = 0; j < 16; ++j) {
         highbd_write_buffer_4(dest + j * stride, out[j], bd);

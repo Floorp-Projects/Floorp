@@ -99,6 +99,7 @@ distclean: clean
       rm -f Makefile; \
       rm -f config.log config.mk; \
       rm -f vpx_config.[hc] vpx_config.asm; \
+      rm -f arm_neon.h; \
     else \
       rm -f $(target)-$(TOOLCHAIN).mk; \
     fi
@@ -429,10 +430,10 @@ ifneq ($(call enabled,DIST-SRCS),)
     DIST-SRCS-$(CONFIG_MSVS)  += build/make/gen_msvs_vcxproj.sh
     DIST-SRCS-$(CONFIG_MSVS)  += build/make/msvs_common.sh
     DIST-SRCS-$(CONFIG_RVCT) += build/make/armlink_adapter.sh
-    DIST-SRCS-$(ARCH_ARM)    += build/make/ads2gas.pl
-    DIST-SRCS-$(ARCH_ARM)    += build/make/ads2gas_apple.pl
-    DIST-SRCS-$(ARCH_ARM)    += build/make/ads2armasm_ms.pl
-    DIST-SRCS-$(ARCH_ARM)    += build/make/thumb.pm
+    DIST-SRCS-$(VPX_ARCH_ARM) += build/make/ads2gas.pl
+    DIST-SRCS-$(VPX_ARCH_ARM) += build/make/ads2gas_apple.pl
+    DIST-SRCS-$(VPX_ARCH_ARM) += build/make/ads2armasm_ms.pl
+    DIST-SRCS-$(VPX_ARCH_ARM) += build/make/thumb.pm
     DIST-SRCS-yes            += $(target:-$(TOOLCHAIN)=).mk
 endif
 INSTALL-SRCS := $(call cond_enabled,CONFIG_INSTALL_SRCS,INSTALL-SRCS)

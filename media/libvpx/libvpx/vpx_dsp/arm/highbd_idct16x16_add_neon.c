@@ -11,61 +11,37 @@
 #include <arm_neon.h>
 
 #include "./vpx_dsp_rtcd.h"
+#include "vpx_dsp/arm/highbd_idct_neon.h"
 #include "vpx_dsp/arm/idct_neon.h"
 #include "vpx_dsp/inv_txfm.h"
 
-static INLINE void highbd_idct16x16_add_wrap_low_8x2(const int64x2x2_t *const t,
-                                                     int32x4x2_t *const d0,
-                                                     int32x4x2_t *const d1) {
-  int32x2x2_t t32[4];
+static INLINE int32x4_t dct_const_round_shift_high_4(const int64x2x2_t in) {
+  int32x2x2_t t32;
 
-  t32[0].val[0] = vrshrn_n_s64(t[0].val[0], DCT_CONST_BITS);
-  t32[0].val[1] = vrshrn_n_s64(t[0].val[1], DCT_CONST_BITS);
-  t32[1].val[0] = vrshrn_n_s64(t[1].val[0], DCT_CONST_BITS);
-  t32[1].val[1] = vrshrn_n_s64(t[1].val[1], DCT_CONST_BITS);
-  t32[2].val[0] = vrshrn_n_s64(t[2].val[0], DCT_CONST_BITS);
-  t32[2].val[1] = vrshrn_n_s64(t[2].val[1], DCT_CONST_BITS);
-  t32[3].val[0] = vrshrn_n_s64(t[3].val[0], DCT_CONST_BITS);
-  t32[3].val[1] = vrshrn_n_s64(t[3].val[1], DCT_CONST_BITS);
-  d0->val[0] = vcombine_s32(t32[0].val[0], t32[0].val[1]);
-  d0->val[1] = vcombine_s32(t32[1].val[0], t32[1].val[1]);
-  d1->val[0] = vcombine_s32(t32[2].val[0], t32[2].val[1]);
-  d1->val[1] = vcombine_s32(t32[3].val[0], t32[3].val[1]);
+  t32.val[0] = vrshrn_n_s64(in.val[0], DCT_CONST_BITS);
+  t32.val[1] = vrshrn_n_s64(in.val[1], DCT_CONST_BITS);
+  return vcombine_s32(t32.val[0], t32.val[1]);
 }
 
-static INLINE void highbd_idct16x16_add_wrap_low_4x2(const int64x2x2_t *const t,
-                                                     int32x4_t *const d0,
-                                                     int32x4_t *const d1) {
-  int32x2x2_t t32[2];
-
-  t32[0].val[0] = vrshrn_n_s64(t[0].val[0], DCT_CONST_BITS);
-  t32[0].val[1] = vrshrn_n_s64(t[0].val[1], DCT_CONST_BITS);
-  t32[1].val[0] = vrshrn_n_s64(t[1].val[0], DCT_CONST_BITS);
-  t32[1].val[1] = vrshrn_n_s64(t[1].val[1], DCT_CONST_BITS);
-  *d0 = vcombine_s32(t32[0].val[0], t32[0].val[1]);
-  *d1 = vcombine_s32(t32[1].val[0], t32[1].val[1]);
+static INLINE void dct_const_round_shift_high_4_dual(
+    const int64x2x2_t *const in, int32x4_t *const d0, int32x4_t *const d1) {
+  *d0 = dct_const_round_shift_high_4(in[0]);
+  *d1 = dct_const_round_shift_high_4(in[1]);
 }
 
 static INLINE int32x4x2_t
-highbd_idct16x16_add_wrap_low_8x1(const int64x2x2_t *const t) {
-  int32x2x2_t t32[2];
-  int32x4x2_t d;
-
-  t32[0].val[0] = vrshrn_n_s64(t[0].val[0], DCT_CONST_BITS);
-  t32[0].val[1] = vrshrn_n_s64(t[0].val[1], DCT_CONST_BITS);
-  t32[1].val[0] = vrshrn_n_s64(t[1].val[0], DCT_CONST_BITS);
-  t32[1].val[1] = vrshrn_n_s64(t[1].val[1], DCT_CONST_BITS);
-  d.val[0] = vcombine_s32(t32[0].val[0], t32[0].val[1]);
-  d.val[1] = vcombine_s32(t32[1].val[0], t32[1].val[1]);
-  return d;
+dct_const_round_shift_high_4x2_int64x2x2(const int64x2x2_t *const in) {
+  int32x4x2_t out;
+  out.val[0] = dct_const_round_shift_high_4(in[0]);
+  out.val[1] = dct_const_round_shift_high_4(in[1]);
+  return out;
 }
 
-static INLINE int32x4_t highbd_idct16x16_add_wrap_low_4x1(const int64x2x2_t t) {
-  int32x2x2_t t32;
-
-  t32.val[0] = vrshrn_n_s64(t.val[0], DCT_CONST_BITS);
-  t32.val[1] = vrshrn_n_s64(t.val[1], DCT_CONST_BITS);
-  return vcombine_s32(t32.val[0], t32.val[1]);
+static INLINE void dct_const_round_shift_high_4x2x2(const int64x2x2_t *const in,
+                                                    int32x4x2_t *const d0,
+                                                    int32x4x2_t *const d1) {
+  *d0 = dct_const_round_shift_high_4x2_int64x2x2(in + 0);
+  *d1 = dct_const_round_shift_high_4x2_int64x2x2(in + 2);
 }
 
 static INLINE void highbd_idct_cospi_2_30(const int32x4x2_t s0,
@@ -107,7 +83,7 @@ static INLINE void highbd_idct_cospi_2_30(const int32x4x2_t s0,
                                vget_low_s32(cospi_2_30_10_22), 0);
   t[3].val[1] = vmlal_lane_s32(t[3].val[1], vget_high_s32(s0.val[1]),
                                vget_low_s32(cospi_2_30_10_22), 0);
-  highbd_idct16x16_add_wrap_low_8x2(t, d0, d1);
+  dct_const_round_shift_high_4x2x2(t, d0, d1);
 }
 
 static INLINE void highbd_idct_cospi_4_28(const int32x4x2_t s0,
@@ -149,7 +125,7 @@ static INLINE void highbd_idct_cospi_4_28(const int32x4x2_t s0,
                                vget_low_s32(cospi_4_12_20N_28), 0);
   t[3].val[1] = vmlal_lane_s32(t[3].val[1], vget_high_s32(s0.val[1]),
                                vget_low_s32(cospi_4_12_20N_28), 0);
-  highbd_idct16x16_add_wrap_low_8x2(t, d0, d1);
+  dct_const_round_shift_high_4x2x2(t, d0, d1);
 }
 
 static INLINE void highbd_idct_cospi_6_26(const int32x4x2_t s0,
@@ -191,7 +167,7 @@ static INLINE void highbd_idct_cospi_6_26(const int32x4x2_t s0,
                                vget_low_s32(cospi_6_26N_14_18N), 1);
   t[3].val[1] = vmlsl_lane_s32(t[3].val[1], vget_high_s32(s0.val[1]),
                                vget_low_s32(cospi_6_26N_14_18N), 1);
-  highbd_idct16x16_add_wrap_low_8x2(t, d0, d1);
+  dct_const_round_shift_high_4x2x2(t, d0, d1);
 }
 
 static INLINE void highbd_idct_cospi_10_22(const int32x4x2_t s0,
@@ -233,7 +209,7 @@ static INLINE void highbd_idct_cospi_10_22(const int32x4x2_t s0,
                                vget_high_s32(cospi_2_30_10_22), 0);
   t[3].val[1] = vmlal_lane_s32(t[3].val[1], vget_high_s32(s0.val[1]),
                                vget_high_s32(cospi_2_30_10_22), 0);
-  highbd_idct16x16_add_wrap_low_8x2(t, d0, d1);
+  dct_const_round_shift_high_4x2x2(t, d0, d1);
 }
 
 static INLINE void highbd_idct_cospi_12_20(const int32x4x2_t s0,
@@ -275,7 +251,7 @@ static INLINE void highbd_idct_cospi_12_20(const int32x4x2_t s0,
                                vget_high_s32(cospi_4_12_20N_28), 0);
   t[3].val[1] = vmlsl_lane_s32(t[3].val[1], vget_high_s32(s0.val[1]),
                                vget_high_s32(cospi_4_12_20N_28), 0);
-  highbd_idct16x16_add_wrap_low_8x2(t, d0, d1);
+  dct_const_round_shift_high_4x2x2(t, d0, d1);
 }
 
 static INLINE void highbd_idct_cospi_14_18(const int32x4x2_t s0,
@@ -317,7 +293,7 @@ static INLINE void highbd_idct_cospi_14_18(const int32x4x2_t s0,
                                vget_high_s32(cospi_6_26N_14_18N), 1);
   t[3].val[1] = vmlsl_lane_s32(t[3].val[1], vget_high_s32(s0.val[1]),
                                vget_high_s32(cospi_6_26N_14_18N), 1);
-  highbd_idct16x16_add_wrap_low_8x2(t, d0, d1);
+  dct_const_round_shift_high_4x2x2(t, d0, d1);
 }
 
 static INLINE void highbd_idct_cospi_8_24_q_kernel(
@@ -386,7 +362,7 @@ static INLINE void highbd_idct_cospi_8_24_q(const int32x4x2_t s0,
   int64x2x2_t t[4];
 
   highbd_idct_cospi_8_24_q_kernel(s0, s1, cospi_0_8_16_24, t);
-  highbd_idct16x16_add_wrap_low_8x2(t, d0, d1);
+  dct_const_round_shift_high_4x2x2(t, d0, d1);
 }
 
 static INLINE void highbd_idct_cospi_8_24_d(const int32x4_t s0,
@@ -397,7 +373,7 @@ static INLINE void highbd_idct_cospi_8_24_d(const int32x4_t s0,
   int64x2x2_t t[2];
 
   highbd_idct_cospi_8_24_d_kernel(s0, s1, cospi_0_8_16_24, t);
-  highbd_idct16x16_add_wrap_low_4x2(t, d0, d1);
+  dct_const_round_shift_high_4_dual(t, d0, d1);
 }
 
 static INLINE void highbd_idct_cospi_8_24_neg_q(const int32x4x2_t s0,
@@ -412,7 +388,7 @@ static INLINE void highbd_idct_cospi_8_24_neg_q(const int32x4x2_t s0,
   t[2].val[1] = vsubq_s64(vdupq_n_s64(0), t[2].val[1]);
   t[3].val[0] = vsubq_s64(vdupq_n_s64(0), t[3].val[0]);
   t[3].val[1] = vsubq_s64(vdupq_n_s64(0), t[3].val[1]);
-  highbd_idct16x16_add_wrap_low_8x2(t, d0, d1);
+  dct_const_round_shift_high_4x2x2(t, d0, d1);
 }
 
 static INLINE void highbd_idct_cospi_8_24_neg_d(const int32x4_t s0,
@@ -425,7 +401,7 @@ static INLINE void highbd_idct_cospi_8_24_neg_d(const int32x4_t s0,
   highbd_idct_cospi_8_24_d_kernel(s0, s1, cospi_0_8_16_24, t);
   t[1].val[0] = vsubq_s64(vdupq_n_s64(0), t[1].val[0]);
   t[1].val[1] = vsubq_s64(vdupq_n_s64(0), t[1].val[1]);
-  highbd_idct16x16_add_wrap_low_4x2(t, d0, d1);
+  dct_const_round_shift_high_4_dual(t, d0, d1);
 }
 
 static INLINE void highbd_idct_cospi_16_16_q(const int32x4x2_t s0,
@@ -459,7 +435,7 @@ static INLINE void highbd_idct_cospi_16_16_q(const int32x4x2_t s0,
                                vget_high_s32(cospi_0_8_16_24), 0);
   t[3].val[1] = vmlal_lane_s32(t[5].val[1], vget_high_s32(s0.val[1]),
                                vget_high_s32(cospi_0_8_16_24), 0);
-  highbd_idct16x16_add_wrap_low_8x2(t, d0, d1);
+  dct_const_round_shift_high_4x2x2(t, d0, d1);
 }
 
 static INLINE void highbd_idct_cospi_16_16_d(const int32x4_t s0,
@@ -481,7 +457,7 @@ static INLINE void highbd_idct_cospi_16_16_d(const int32x4_t s0,
                                vget_high_s32(cospi_0_8_16_24), 0);
   t[1].val[1] = vmlal_lane_s32(t[2].val[1], vget_high_s32(s0),
                                vget_high_s32(cospi_0_8_16_24), 0);
-  highbd_idct16x16_add_wrap_low_4x2(t, d0, d1);
+  dct_const_round_shift_high_4_dual(t, d0, d1);
 }
 
 static INLINE void highbd_idct16x16_add_stage7_dual(
@@ -540,62 +516,9 @@ static INLINE void highbd_idct16x16_add_stage7(const int32x4_t *const step2,
   out[15] = vsubq_s32(step2[0], step2[15]);
 }
 
-static INLINE void highbd_idct16x16_store_pass1(const int32x4x2_t *const out,
-                                                int32_t *output) {
-  // Save the result into output
-  vst1q_s32(output + 0, out[0].val[0]);
-  vst1q_s32(output + 4, out[0].val[1]);
-  output += 16;
-  vst1q_s32(output + 0, out[1].val[0]);
-  vst1q_s32(output + 4, out[1].val[1]);
-  output += 16;
-  vst1q_s32(output + 0, out[2].val[0]);
-  vst1q_s32(output + 4, out[2].val[1]);
-  output += 16;
-  vst1q_s32(output + 0, out[3].val[0]);
-  vst1q_s32(output + 4, out[3].val[1]);
-  output += 16;
-  vst1q_s32(output + 0, out[4].val[0]);
-  vst1q_s32(output + 4, out[4].val[1]);
-  output += 16;
-  vst1q_s32(output + 0, out[5].val[0]);
-  vst1q_s32(output + 4, out[5].val[1]);
-  output += 16;
-  vst1q_s32(output + 0, out[6].val[0]);
-  vst1q_s32(output + 4, out[6].val[1]);
-  output += 16;
-  vst1q_s32(output + 0, out[7].val[0]);
-  vst1q_s32(output + 4, out[7].val[1]);
-  output += 16;
-  vst1q_s32(output + 0, out[8].val[0]);
-  vst1q_s32(output + 4, out[8].val[1]);
-  output += 16;
-  vst1q_s32(output + 0, out[9].val[0]);
-  vst1q_s32(output + 4, out[9].val[1]);
-  output += 16;
-  vst1q_s32(output + 0, out[10].val[0]);
-  vst1q_s32(output + 4, out[10].val[1]);
-  output += 16;
-  vst1q_s32(output + 0, out[11].val[0]);
-  vst1q_s32(output + 4, out[11].val[1]);
-  output += 16;
-  vst1q_s32(output + 0, out[12].val[0]);
-  vst1q_s32(output + 4, out[12].val[1]);
-  output += 16;
-  vst1q_s32(output + 0, out[13].val[0]);
-  vst1q_s32(output + 4, out[13].val[1]);
-  output += 16;
-  vst1q_s32(output + 0, out[14].val[0]);
-  vst1q_s32(output + 4, out[14].val[1]);
-  output += 16;
-  vst1q_s32(output + 0, out[15].val[0]);
-  vst1q_s32(output + 4, out[15].val[1]);
-}
-
-static void vpx_highbd_idct16x16_256_add_half1d(const int32_t *input,
-                                                int32_t *output, uint16_t *dest,
-                                                const int stride,
-                                                const int bd) {
+void vpx_highbd_idct16x16_256_add_half1d(const int32_t *input, int32_t *output,
+                                         uint16_t *dest, const int stride,
+                                         const int bd) {
   const int32x4_t cospi_0_8_16_24 = vld1q_s32(kCospi32 + 0);
   const int32x4_t cospi_4_12_20N_28 = vld1q_s32(kCospi32 + 4);
   const int32x4_t cospi_2_30_10_22 = vld1q_s32(kCospi32 + 8);
@@ -815,7 +738,7 @@ static INLINE int32x4x2_t highbd_idct_cospi_lane0_dual(const int32x4x2_t s,
   t[0].val[1] = vmull_lane_s32(vget_high_s32(s.val[0]), coef, 0);
   t[1].val[0] = vmull_lane_s32(vget_low_s32(s.val[1]), coef, 0);
   t[1].val[1] = vmull_lane_s32(vget_high_s32(s.val[1]), coef, 0);
-  return highbd_idct16x16_add_wrap_low_8x1(t);
+  return dct_const_round_shift_high_4x2_int64x2x2(t);
 }
 
 static INLINE int32x4_t highbd_idct_cospi_lane0(const int32x4_t s,
@@ -824,7 +747,7 @@ static INLINE int32x4_t highbd_idct_cospi_lane0(const int32x4_t s,
 
   t.val[0] = vmull_lane_s32(vget_low_s32(s), coef, 0);
   t.val[1] = vmull_lane_s32(vget_high_s32(s), coef, 0);
-  return highbd_idct16x16_add_wrap_low_4x1(t);
+  return dct_const_round_shift_high_4(t);
 }
 
 static INLINE int32x4x2_t highbd_idct_cospi_lane1_dual(const int32x4x2_t s,
@@ -835,7 +758,7 @@ static INLINE int32x4x2_t highbd_idct_cospi_lane1_dual(const int32x4x2_t s,
   t[0].val[1] = vmull_lane_s32(vget_high_s32(s.val[0]), coef, 1);
   t[1].val[0] = vmull_lane_s32(vget_low_s32(s.val[1]), coef, 1);
   t[1].val[1] = vmull_lane_s32(vget_high_s32(s.val[1]), coef, 1);
-  return highbd_idct16x16_add_wrap_low_8x1(t);
+  return dct_const_round_shift_high_4x2_int64x2x2(t);
 }
 
 static INLINE int32x4_t highbd_idct_cospi_lane1(const int32x4_t s,
@@ -844,7 +767,7 @@ static INLINE int32x4_t highbd_idct_cospi_lane1(const int32x4_t s,
 
   t.val[0] = vmull_lane_s32(vget_low_s32(s), coef, 1);
   t.val[1] = vmull_lane_s32(vget_high_s32(s), coef, 1);
-  return highbd_idct16x16_add_wrap_low_4x1(t);
+  return dct_const_round_shift_high_4(t);
 }
 
 static void vpx_highbd_idct16x16_38_add_half1d(const int32_t *input,
@@ -1003,8 +926,8 @@ static void vpx_highbd_idct16x16_38_add_half1d(const int32_t *input,
   }
 }
 
-void vpx_highbd_idct16x16_10_add_half1d_pass1(const tran_low_t *input,
-                                              int32_t *output) {
+static void highbd_idct16x16_10_add_half1d_pass1(const tran_low_t *input,
+                                                 int32_t *output) {
   const int32x4_t cospi_0_8_16_24 = vld1q_s32(kCospi32 + 0);
   const int32x4_t cospi_4_12_20N_28 = vld1q_s32(kCospi32 + 4);
   const int32x4_t cospi_2_30_10_22 = vld1q_s32(kCospi32 + 8);
@@ -1142,10 +1065,11 @@ void vpx_highbd_idct16x16_10_add_half1d_pass1(const tran_low_t *input,
   vst1q_s32(output, out[15]);
 }
 
-void vpx_highbd_idct16x16_10_add_half1d_pass2(const int32_t *input,
-                                              int32_t *const output,
-                                              uint16_t *const dest,
-                                              const int stride, const int bd) {
+static void highbd_idct16x16_10_add_half1d_pass2(const int32_t *input,
+                                                 int32_t *const output,
+                                                 uint16_t *const dest,
+                                                 const int stride,
+                                                 const int bd) {
   const int32x4_t cospi_0_8_16_24 = vld1q_s32(kCospi32 + 0);
   const int32x4_t cospi_4_12_20N_28 = vld1q_s32(kCospi32 + 4);
   const int32x4_t cospi_2_30_10_22 = vld1q_s32(kCospi32 + 8);
@@ -1366,16 +1290,16 @@ void vpx_highbd_idct16x16_10_add_neon(const tran_low_t *input, uint16_t *dest,
 
     // pass 1
     // Parallel idct on the upper 8 rows
-    vpx_highbd_idct16x16_10_add_half1d_pass1(input, row_idct_output);
+    highbd_idct16x16_10_add_half1d_pass1(input, row_idct_output);
 
     // pass 2
     // Parallel idct to get the left 8 columns
-    vpx_highbd_idct16x16_10_add_half1d_pass2(row_idct_output, NULL, dest,
-                                             stride, bd);
+    highbd_idct16x16_10_add_half1d_pass2(row_idct_output, NULL, dest, stride,
+                                         bd);
 
     // Parallel idct to get the right 8 columns
-    vpx_highbd_idct16x16_10_add_half1d_pass2(row_idct_output + 4 * 8, NULL,
-                                             dest + 8, stride, bd);
+    highbd_idct16x16_10_add_half1d_pass2(row_idct_output + 4 * 8, NULL,
+                                         dest + 8, stride, bd);
   }
 }
 

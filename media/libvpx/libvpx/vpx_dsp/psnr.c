@@ -1,12 +1,12 @@
 /*
-*  Copyright (c) 2016 The WebM project authors. All Rights Reserved.
-*
-*  Use of this source code is governed by a BSD-style license
-*  that can be found in the LICENSE file in the root of the source
-*  tree. An additional intellectual property rights grant can be found
-*  in the file PATENTS.  All contributing project authors may
-*  be found in the AUTHORS file in the root of the source tree.
-*/
+ *  Copyright (c) 2016 The WebM project authors. All Rights Reserved.
+ *
+ *  Use of this source code is governed by a BSD-style license
+ *  that can be found in the LICENSE file in the root of the source
+ *  tree. An additional intellectual property rights grant can be found
+ *  in the file PATENTS.  All contributing project authors may
+ *  be found in the AUTHORS file in the root of the source tree.
+ */
 
 #include <math.h>
 #include <assert.h>
@@ -24,8 +24,8 @@ double vpx_sse_to_psnr(double samples, double peak, double sse) {
 }
 
 /* TODO(yaowu): The block_variance calls the unoptimized versions of variance()
-* and highbd_8_variance(). It should not.
-*/
+ * and highbd_8_variance(). It should not.
+ */
 static void encoder_variance(const uint8_t *a, int a_stride, const uint8_t *b,
                              int b_stride, int w, int h, unsigned int *sse,
                              int *sum) {

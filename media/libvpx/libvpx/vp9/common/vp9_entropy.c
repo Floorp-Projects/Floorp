@@ -42,6 +42,7 @@ const vpx_prob vp9_cat6_prob_high12[] = { 255, 255, 255, 255, 254, 254,
                                           177, 153, 140, 133, 130, 129 };
 #endif
 
+/* clang-format off */
 const uint8_t vp9_coefband_trans_8x8plus[1024] = {
   0, 1, 1, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 5,
   // beyond MAXBAND_INDEX+1 all values are filled as 5
@@ -85,6 +86,7 @@ const uint8_t vp9_coefband_trans_8x8plus[1024] = {
   5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5,
   5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5,
 };
+/* clang-format on */
 
 const uint8_t vp9_coefband_trans_4x4[16] = {
   0, 1, 1, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 5, 5, 5,

@@ -32,12 +32,12 @@ SECTION .text
 
 ; int vpx_sub_pixel_varianceNxh(const uint8_t *src, ptrdiff_t src_stride,
 ;                               int x_offset, int y_offset,
-;                               const uint8_t *dst, ptrdiff_t dst_stride,
+;                               const uint8_t *ref, ptrdiff_t ref_stride,
 ;                               int height, unsigned int *sse);
 ;
 ; This function returns the SE and stores SSE in the given pointer.
 
-%macro SUM_SSE 6 ; src1, dst1, src2, dst2, sum, sse
+%macro SUM_SSE 6 ; src1, ref1, src2, ref2, sum, sse
   psubw                %3, %4
   psubw                %1, %2
   mova                 %4, %3       ; make copies to manipulate to calc sum
@@ -78,7 +78,7 @@ SECTION .text
 %endmacro
 
 %macro INC_SRC_BY_SRC_STRIDE  0
-%if ARCH_X86=1 && CONFIG_PIC=1
+%if VPX_ARCH_X86=1 && CONFIG_PIC=1
   add                srcq, src_stridemp
   add                srcq, src_stridemp
 %else
@@ -91,81 +91,65 @@ SECTION .text
 %define filter_idx_shift 5
 
 
-%ifdef PIC    ; 64bit PIC
+%if VPX_ARCH_X86_64
   %if %2 == 1 ; avg
     cglobal highbd_sub_pixel_avg_variance%1xh, 9, 10, 13, src, src_stride, \
                                       x_offset, y_offset, \
-                                      dst, dst_stride, \
-                                      sec, sec_stride, height, sse
-    %define sec_str sec_strideq
+                                      ref, ref_stride, \
+                                      second_pred, second_stride, height, sse
+    %define second_str second_strideq
   %else
-    cglobal highbd_sub_pixel_variance%1xh, 7, 8, 13, src, src_stride, x_offset, \
-                                  y_offset, dst, dst_stride, height, sse
+    cglobal highbd_sub_pixel_variance%1xh, 7, 8, 13, src, src_stride, \
+                                  x_offset, y_offset, \
+                                  ref, ref_stride, height, sse
   %endif
   %define block_height heightd
   %define bilin_filter sseq
 %else
-  %if ARCH_X86=1 && CONFIG_PIC=1
+  %if CONFIG_PIC=1
     %if %2 == 1 ; avg
       cglobal highbd_sub_pixel_avg_variance%1xh, 7, 7, 13, src, src_stride, \
-                                  x_offset, y_offset, \
-                                  dst, dst_stride, \
-                                  sec, sec_stride, \
-                                  height, sse, g_bilin_filter, g_pw_8
+                                        x_offset, y_offset, \
+                                        ref, ref_stride, \
+                                        second_pred, second_stride, height, sse
       %define block_height dword heightm
-      %define sec_str sec_stridemp
-
-      ; Store bilin_filter and pw_8 location in stack
-      %if GET_GOT_DEFINED == 1
-        GET_GOT eax
-        add esp, 4                ; restore esp
-      %endif
-
-      lea ecx, [GLOBAL(bilin_filter_m)]
-      mov g_bilin_filterm, ecx
-
-      lea ecx, [GLOBAL(pw_8)]
-      mov g_pw_8m, ecx
-
-      LOAD_IF_USED 0, 1         ; load eax, ecx back
+      %define second_str second_stridemp
     %else
       cglobal highbd_sub_pixel_variance%1xh, 7, 7, 13, src, src_stride, \
-                                x_offset, y_offset, dst, dst_stride, height, \
-                                sse, g_bilin_filter, g_pw_8
+                                    x_offset, y_offset, \
+                                    ref, ref_stride, height, sse
       %define block_height heightd
-
-      ; Store bilin_filter and pw_8 location in stack
-      %if GET_GOT_DEFINED == 1
-        GET_GOT eax
-        add esp, 4                ; restore esp
-      %endif
-
-      lea ecx, [GLOBAL(bilin_filter_m)]
-      mov g_bilin_filterm, ecx
-
-      lea ecx, [GLOBAL(pw_8)]
-      mov g_pw_8m, ecx
-
-      LOAD_IF_USED 0, 1         ; load eax, ecx back
     %endif
+
+    ; reuse argument stack space
+    %define g_bilin_filterm x_offsetm
+    %define g_pw_8m y_offsetm
+
+    ; Store bilin_filter and pw_8 location in stack
+    %if GET_GOT_DEFINED == 1
+      GET_GOT eax
+      add esp, 4                ; restore esp
+    %endif
+
+    lea ecx, [GLOBAL(bilin_filter_m)]
+    mov g_bilin_filterm, ecx
+
+    lea ecx, [GLOBAL(pw_8)]
+    mov g_pw_8m, ecx
+
+    LOAD_IF_USED 0, 1         ; load eax, ecx back
   %else
     %if %2 == 1 ; avg
-      cglobal highbd_sub_pixel_avg_variance%1xh, 7 + 2 * ARCH_X86_64, \
-                        7 + 2 * ARCH_X86_64, 13, src, src_stride, \
-                                             x_offset, y_offset, \
-                                             dst, dst_stride, \
-                                             sec, sec_stride, \
-                                             height, sse
-      %if ARCH_X86_64
-      %define block_height heightd
-      %define sec_str sec_strideq
-      %else
+      cglobal highbd_sub_pixel_avg_variance%1xh, 7, 7, 13, src, src_stride, \
+                                        x_offset, y_offset, \
+                                        ref, ref_stride, \
+                                        second_pred, second_stride, height, sse
       %define block_height dword heightm
-      %define sec_str sec_stridemp
-      %endif
+      %define second_str second_stridemp
     %else
       cglobal highbd_sub_pixel_variance%1xh, 7, 7, 13, src, src_stride, \
-                              x_offset, y_offset, dst, dst_stride, height, sse
+                                    x_offset, y_offset, \
+                                    ref, ref_stride, height, sse
       %define block_height heightd
     %endif
 
@@ -181,7 +165,7 @@ SECTION .text
   sar                   block_height, 1
 %endif
 %if %2 == 1 ; avg
-  shl             sec_str, 1
+  shl             second_str, 1
 %endif
 
   ; FIXME(rbultje) replace by jumptable?
@@ -196,35 +180,35 @@ SECTION .text
 %if %1 == 16
   movu                 m0, [srcq]
   movu                 m2, [srcq + 16]
-  mova                 m1, [dstq]
-  mova                 m3, [dstq + 16]
+  mova                 m1, [refq]
+  mova                 m3, [refq + 16]
 %if %2 == 1 ; avg
-  pavgw                m0, [secq]
-  pavgw                m2, [secq+16]
+  pavgw                m0, [second_predq]
+  pavgw                m2, [second_predq+16]
 %endif
   SUM_SSE              m0, m1, m2, m3, m6, m7
 
   lea                srcq, [srcq + src_strideq*2]
-  lea                dstq, [dstq + dst_strideq*2]
+  lea                refq, [refq + ref_strideq*2]
 %if %2 == 1 ; avg
-  add                secq, sec_str
+  add                second_predq, second_str
 %endif
 %else ; %1 < 16
   movu                 m0, [srcq]
   movu                 m2, [srcq + src_strideq*2]
-  mova                 m1, [dstq]
-  mova                 m3, [dstq + dst_strideq*2]
+  mova                 m1, [refq]
+  mova                 m3, [refq + ref_strideq*2]
 %if %2 == 1 ; avg
-  pavgw                m0, [secq]
-  add                secq, sec_str
-  pavgw                m2, [secq]
+  pavgw                m0, [second_predq]
+  add                second_predq, second_str
+  pavgw                m2, [second_predq]
 %endif
   SUM_SSE              m0, m1, m2, m3, m6, m7
 
   lea                srcq, [srcq + src_strideq*4]
-  lea                dstq, [dstq + dst_strideq*4]
+  lea                refq, [refq + ref_strideq*4]
 %if %2 == 1 ; avg
-  add                secq, sec_str
+  add                second_predq, second_str
 %endif
 %endif
   dec                   block_height
@@ -242,40 +226,40 @@ SECTION .text
   movu                 m1, [srcq+16]
   movu                 m4, [srcq+src_strideq*2]
   movu                 m5, [srcq+src_strideq*2+16]
-  mova                 m2, [dstq]
-  mova                 m3, [dstq+16]
+  mova                 m2, [refq]
+  mova                 m3, [refq+16]
   pavgw                m0, m4
   pavgw                m1, m5
 %if %2 == 1 ; avg
-  pavgw                m0, [secq]
-  pavgw                m1, [secq+16]
+  pavgw                m0, [second_predq]
+  pavgw                m1, [second_predq+16]
 %endif
   SUM_SSE              m0, m2, m1, m3, m6, m7
 
   lea                srcq, [srcq + src_strideq*2]
-  lea                dstq, [dstq + dst_strideq*2]
+  lea                refq, [refq + ref_strideq*2]
 %if %2 == 1 ; avg
-  add                secq, sec_str
+  add                second_predq, second_str
 %endif
 %else ; %1 < 16
   movu                 m0, [srcq]
   movu                 m1, [srcq+src_strideq*2]
   movu                 m5, [srcq+src_strideq*4]
-  mova                 m2, [dstq]
-  mova                 m3, [dstq+dst_strideq*2]
+  mova                 m2, [refq]
+  mova                 m3, [refq+ref_strideq*2]
   pavgw                m0, m1
   pavgw                m1, m5
 %if %2 == 1 ; avg
-  pavgw                m0, [secq]
-  add                secq, sec_str
-  pavgw                m1, [secq]
+  pavgw                m0, [second_predq]
+  add                second_predq, second_str
+  pavgw                m1, [second_predq]
 %endif
   SUM_SSE              m0, m2, m1, m3, m6, m7
 
   lea                srcq, [srcq + src_strideq*4]
-  lea                dstq, [dstq + dst_strideq*4]
+  lea                refq, [refq + ref_strideq*4]
 %if %2 == 1 ; avg
-  add                secq, sec_str
+  add                second_predq, second_str
 %endif
 %endif
   dec                   block_height
@@ -284,19 +268,19 @@ SECTION .text
 
 .x_zero_y_nonhalf:
   ; x_offset == 0 && y_offset == bilin interpolation
-%ifdef PIC
-  lea        bilin_filter, [bilin_filter_m]
+%if VPX_ARCH_X86_64
+  lea        bilin_filter, [GLOBAL(bilin_filter_m)]
 %endif
   shl           y_offsetd, filter_idx_shift
-%if ARCH_X86_64 && mmsize == 16
+%if VPX_ARCH_X86_64 && mmsize == 16
   mova                 m8, [bilin_filter+y_offsetq]
   mova                 m9, [bilin_filter+y_offsetq+16]
-  mova                m10, [pw_8]
+  mova                m10, [GLOBAL(pw_8)]
 %define filter_y_a m8
 %define filter_y_b m9
 %define filter_rnd m10
 %else ; x86-32 or mmx
-%if ARCH_X86=1 && CONFIG_PIC=1
+%if VPX_ARCH_X86=1 && CONFIG_PIC=1
 ; x_offset == 0, reuse x_offset reg
 %define tempq x_offsetq
   add y_offsetq, g_bilin_filterm
@@ -308,7 +292,7 @@ SECTION .text
   add           y_offsetq, bilin_filter
 %define filter_y_a [y_offsetq]
 %define filter_y_b [y_offsetq+16]
-%define filter_rnd [pw_8]
+%define filter_rnd [GLOBAL(pw_8)]
 %endif
 %endif
 
@@ -318,8 +302,8 @@ SECTION .text
   movu                 m1, [srcq + 16]
   movu                 m4, [srcq+src_strideq*2]
   movu                 m5, [srcq+src_strideq*2+16]
-  mova                 m2, [dstq]
-  mova                 m3, [dstq+16]
+  mova                 m2, [refq]
+  mova                 m3, [refq+16]
   ; FIXME(rbultje) instead of out=((num-x)*in1+x*in2+rnd)>>log2(num), we can
   ; also do out=in1+(((num-x)*(in2-in1)+rnd)>>log2(num)). Total number of
   ; instructions is the same (5), but it is 1 mul instead of 2, so might be
@@ -336,23 +320,23 @@ SECTION .text
   psrlw                m1, 4
   psrlw                m0, 4
 %if %2 == 1 ; avg
-  pavgw                m0, [secq]
-  pavgw                m1, [secq+16]
+  pavgw                m0, [second_predq]
+  pavgw                m1, [second_predq+16]
 %endif
   SUM_SSE              m0, m2, m1, m3, m6, m7
 
   lea                srcq, [srcq + src_strideq*2]
-  lea                dstq, [dstq + dst_strideq*2]
+  lea                refq, [refq + ref_strideq*2]
 %if %2 == 1 ; avg
-  add                secq, sec_str
+  add                second_predq, second_str
 %endif
 %else ; %1 < 16
   movu                 m0, [srcq]
   movu                 m1, [srcq+src_strideq*2]
   movu                 m5, [srcq+src_strideq*4]
   mova                 m4, m1
-  mova                 m2, [dstq]
-  mova                 m3, [dstq+dst_strideq*2]
+  mova                 m2, [refq]
+  mova                 m3, [refq+ref_strideq*2]
   pmullw               m1, filter_y_a
   pmullw               m5, filter_y_b
   paddw                m1, filter_rnd
@@ -364,16 +348,16 @@ SECTION .text
   psrlw                m1, 4
   psrlw                m0, 4
 %if %2 == 1 ; avg
-  pavgw                m0, [secq]
-  add                secq, sec_str
-  pavgw                m1, [secq]
+  pavgw                m0, [second_predq]
+  add                second_predq, second_str
+  pavgw                m1, [second_predq]
 %endif
   SUM_SSE              m0, m2, m1, m3, m6, m7
 
   lea                srcq, [srcq + src_strideq*4]
-  lea                dstq, [dstq + dst_strideq*4]
+  lea                refq, [refq + ref_strideq*4]
 %if %2 == 1 ; avg
-  add                secq, sec_str
+  add                second_predq, second_str
 %endif
 %endif
   dec                   block_height
@@ -397,41 +381,41 @@ SECTION .text
   movu                 m1, [srcq + 16]
   movu                 m4, [srcq + 2]
   movu                 m5, [srcq + 18]
-  mova                 m2, [dstq]
-  mova                 m3, [dstq + 16]
+  mova                 m2, [refq]
+  mova                 m3, [refq + 16]
   pavgw                m0, m4
   pavgw                m1, m5
 %if %2 == 1 ; avg
-  pavgw                m0, [secq]
-  pavgw                m1, [secq+16]
+  pavgw                m0, [second_predq]
+  pavgw                m1, [second_predq+16]
 %endif
   SUM_SSE              m0, m2, m1, m3, m6, m7
 
   lea                srcq, [srcq + src_strideq*2]
-  lea                dstq, [dstq + dst_strideq*2]
+  lea                refq, [refq + ref_strideq*2]
 %if %2 == 1 ; avg
-  add                secq, sec_str
+  add                second_predq, second_str
 %endif
 %else ; %1 < 16
   movu                 m0, [srcq]
   movu                 m1, [srcq + src_strideq*2]
   movu                 m4, [srcq + 2]
   movu                 m5, [srcq + src_strideq*2 + 2]
-  mova                 m2, [dstq]
-  mova                 m3, [dstq + dst_strideq*2]
+  mova                 m2, [refq]
+  mova                 m3, [refq + ref_strideq*2]
   pavgw                m0, m4
   pavgw                m1, m5
 %if %2 == 1 ; avg
-  pavgw                m0, [secq]
-  add                secq, sec_str
-  pavgw                m1, [secq]
+  pavgw                m0, [second_predq]
+  add                second_predq, second_str
+  pavgw                m1, [second_predq]
 %endif
   SUM_SSE              m0, m2, m1, m3, m6, m7
 
   lea                srcq, [srcq + src_strideq*4]
-  lea                dstq, [dstq + dst_strideq*4]
+  lea                refq, [refq + ref_strideq*4]
 %if %2 == 1 ; avg
-  add                secq, sec_str
+  add                second_predq, second_str
 %endif
 %endif
   dec                   block_height
@@ -460,20 +444,20 @@ SECTION .text
   pavgw                m3, m5
   pavgw                m0, m2
   pavgw                m1, m3
-  mova                 m4, [dstq]
-  mova                 m5, [dstq + 16]
+  mova                 m4, [refq]
+  mova                 m5, [refq + 16]
 %if %2 == 1 ; avg
-  pavgw                m0, [secq]
-  pavgw                m1, [secq+16]
+  pavgw                m0, [second_predq]
+  pavgw                m1, [second_predq+16]
 %endif
   SUM_SSE              m0, m4, m1, m5, m6, m7
   mova                 m0, m2
   mova                 m1, m3
 
   lea                srcq, [srcq + src_strideq*2]
-  lea                dstq, [dstq + dst_strideq*2]
+  lea                refq, [refq + ref_strideq*2]
 %if %2 == 1 ; avg
-  add                secq, sec_str
+  add                second_predq, second_str
 %endif
 %else ; %1 < 16
   movu                 m0, [srcq]
@@ -489,20 +473,20 @@ SECTION .text
   pavgw                m3, m5
   pavgw                m0, m2
   pavgw                m2, m3
-  mova                 m4, [dstq]
-  mova                 m5, [dstq + dst_strideq*2]
+  mova                 m4, [refq]
+  mova                 m5, [refq + ref_strideq*2]
 %if %2 == 1 ; avg
-  pavgw                m0, [secq]
-  add                secq, sec_str
-  pavgw                m2, [secq]
+  pavgw                m0, [second_predq]
+  add                second_predq, second_str
+  pavgw                m2, [second_predq]
 %endif
   SUM_SSE              m0, m4, m2, m5, m6, m7
   mova                 m0, m3
 
   lea                srcq, [srcq + src_strideq*4]
-  lea                dstq, [dstq + dst_strideq*4]
+  lea                refq, [refq + ref_strideq*4]
 %if %2 == 1 ; avg
-  add                secq, sec_str
+  add                second_predq, second_str
 %endif
 %endif
   dec                   block_height
@@ -511,19 +495,19 @@ SECTION .text
 
 .x_half_y_nonhalf:
   ; x_offset == 0.5 && y_offset == bilin interpolation
-%ifdef PIC
-  lea        bilin_filter, [bilin_filter_m]
+%if VPX_ARCH_X86_64
+  lea        bilin_filter, [GLOBAL(bilin_filter_m)]
 %endif
   shl           y_offsetd, filter_idx_shift
-%if ARCH_X86_64 && mmsize == 16
+%if VPX_ARCH_X86_64 && mmsize == 16
   mova                 m8, [bilin_filter+y_offsetq]
   mova                 m9, [bilin_filter+y_offsetq+16]
-  mova                m10, [pw_8]
+  mova                m10, [GLOBAL(pw_8)]
 %define filter_y_a m8
 %define filter_y_b m9
 %define filter_rnd m10
 %else  ; x86_32
-%if ARCH_X86=1 && CONFIG_PIC=1
+%if VPX_ARCH_X86=1 && CONFIG_PIC=1
 ; x_offset == 0.5. We can reuse x_offset reg
 %define tempq x_offsetq
   add y_offsetq, g_bilin_filterm
@@ -535,7 +519,7 @@ SECTION .text
   add           y_offsetq, bilin_filter
 %define filter_y_a [y_offsetq]
 %define filter_y_b [y_offsetq+16]
-%define filter_rnd [pw_8]
+%define filter_rnd [GLOBAL(pw_8)]
 %endif
 %endif
 
@@ -565,21 +549,21 @@ SECTION .text
   paddw                m0, filter_rnd
   psrlw                m1, 4
   paddw                m0, m2
-  mova                 m2, [dstq]
+  mova                 m2, [refq]
   psrlw                m0, 4
-  mova                 m3, [dstq+16]
+  mova                 m3, [refq+16]
 %if %2 == 1 ; avg
-  pavgw                m0, [secq]
-  pavgw                m1, [secq+16]
+  pavgw                m0, [second_predq]
+  pavgw                m1, [second_predq+16]
 %endif
   SUM_SSE              m0, m2, m1, m3, m6, m7
   mova                 m0, m4
   mova                 m1, m5
 
   lea                srcq, [srcq + src_strideq*2]
-  lea                dstq, [dstq + dst_strideq*2]
+  lea                refq, [refq + ref_strideq*2]
 %if %2 == 1 ; avg
-  add                secq, sec_str
+  add                second_predq, second_str
 %endif
 %else ; %1 < 16
   movu                 m0, [srcq]
@@ -604,21 +588,21 @@ SECTION .text
   paddw                m0, filter_rnd
   psrlw                m4, 4
   paddw                m0, m2
-  mova                 m2, [dstq]
+  mova                 m2, [refq]
   psrlw                m0, 4
-  mova                 m3, [dstq+dst_strideq*2]
+  mova                 m3, [refq+ref_strideq*2]
 %if %2 == 1 ; avg
-  pavgw                m0, [secq]
-  add                secq, sec_str
-  pavgw                m4, [secq]
+  pavgw                m0, [second_predq]
+  add                second_predq, second_str
+  pavgw                m4, [second_predq]
 %endif
   SUM_SSE              m0, m2, m4, m3, m6, m7
   mova                 m0, m5
 
   lea                srcq, [srcq + src_strideq*4]
-  lea                dstq, [dstq + dst_strideq*4]
+  lea                refq, [refq + ref_strideq*4]
 %if %2 == 1 ; avg
-  add                secq, sec_str
+  add                second_predq, second_str
 %endif
 %endif
   dec                   block_height
@@ -633,19 +617,19 @@ SECTION .text
   jnz .x_nonhalf_y_nonzero
 
   ; x_offset == bilin interpolation && y_offset == 0
-%ifdef PIC
-  lea        bilin_filter, [bilin_filter_m]
+%if VPX_ARCH_X86_64
+  lea        bilin_filter, [GLOBAL(bilin_filter_m)]
 %endif
   shl           x_offsetd, filter_idx_shift
-%if ARCH_X86_64 && mmsize == 16
+%if VPX_ARCH_X86_64 && mmsize == 16
   mova                 m8, [bilin_filter+x_offsetq]
   mova                 m9, [bilin_filter+x_offsetq+16]
-  mova                m10, [pw_8]
+  mova                m10, [GLOBAL(pw_8)]
 %define filter_x_a m8
 %define filter_x_b m9
 %define filter_rnd m10
 %else    ; x86-32
-%if ARCH_X86=1 && CONFIG_PIC=1
+%if VPX_ARCH_X86=1 && CONFIG_PIC=1
 ; y_offset == 0. We can reuse y_offset reg.
 %define tempq y_offsetq
   add x_offsetq, g_bilin_filterm
@@ -657,7 +641,7 @@ SECTION .text
   add           x_offsetq, bilin_filter
 %define filter_x_a [x_offsetq]
 %define filter_x_b [x_offsetq+16]
-%define filter_rnd [pw_8]
+%define filter_rnd [GLOBAL(pw_8)]
 %endif
 %endif
 
@@ -667,8 +651,8 @@ SECTION .text
   movu                 m1, [srcq+16]
   movu                 m2, [srcq+2]
   movu                 m3, [srcq+18]
-  mova                 m4, [dstq]
-  mova                 m5, [dstq+16]
+  mova                 m4, [refq]
+  mova                 m5, [refq+16]
   pmullw               m1, filter_x_a
   pmullw               m3, filter_x_b
   paddw                m1, filter_rnd
@@ -680,23 +664,23 @@ SECTION .text
   psrlw                m1, 4
   psrlw                m0, 4
 %if %2 == 1 ; avg
-  pavgw                m0, [secq]
-  pavgw                m1, [secq+16]
+  pavgw                m0, [second_predq]
+  pavgw                m1, [second_predq+16]
 %endif
   SUM_SSE              m0, m4, m1, m5, m6, m7
 
   lea                srcq, [srcq+src_strideq*2]
-  lea                dstq, [dstq+dst_strideq*2]
+  lea                refq, [refq+ref_strideq*2]
 %if %2 == 1 ; avg
-  add                secq, sec_str
+  add                second_predq, second_str
 %endif
 %else ; %1 < 16
   movu                 m0, [srcq]
   movu                 m1, [srcq+src_strideq*2]
   movu                 m2, [srcq+2]
   movu                 m3, [srcq+src_strideq*2+2]
-  mova                 m4, [dstq]
-  mova                 m5, [dstq+dst_strideq*2]
+  mova                 m4, [refq]
+  mova                 m5, [refq+ref_strideq*2]
   pmullw               m1, filter_x_a
   pmullw               m3, filter_x_b
   paddw                m1, filter_rnd
@@ -708,16 +692,16 @@ SECTION .text
   psrlw                m1, 4
   psrlw                m0, 4
 %if %2 == 1 ; avg
-  pavgw                m0, [secq]
-  add                secq, sec_str
-  pavgw                m1, [secq]
+  pavgw                m0, [second_predq]
+  add                second_predq, second_str
+  pavgw                m1, [second_predq]
 %endif
   SUM_SSE              m0, m4, m1, m5, m6, m7
 
   lea                srcq, [srcq+src_strideq*4]
-  lea                dstq, [dstq+dst_strideq*4]
+  lea                refq, [refq+ref_strideq*4]
 %if %2 == 1 ; avg
-  add                secq, sec_str
+  add                second_predq, second_str
 %endif
 %endif
   dec                   block_height
@@ -732,19 +716,19 @@ SECTION .text
   jne .x_nonhalf_y_nonhalf
 
   ; x_offset == bilin interpolation && y_offset == 0.5
-%ifdef PIC
-  lea        bilin_filter, [bilin_filter_m]
+%if VPX_ARCH_X86_64
+  lea        bilin_filter, [GLOBAL(bilin_filter_m)]
 %endif
   shl           x_offsetd, filter_idx_shift
-%if ARCH_X86_64 && mmsize == 16
+%if VPX_ARCH_X86_64 && mmsize == 16
   mova                 m8, [bilin_filter+x_offsetq]
   mova                 m9, [bilin_filter+x_offsetq+16]
-  mova                m10, [pw_8]
+  mova                m10, [GLOBAL(pw_8)]
 %define filter_x_a m8
 %define filter_x_b m9
 %define filter_rnd m10
 %else    ; x86-32
-%if ARCH_X86=1 && CONFIG_PIC=1
+%if VPX_ARCH_X86=1 && CONFIG_PIC=1
 ; y_offset == 0.5. We can reuse y_offset reg.
 %define tempq y_offsetq
   add x_offsetq, g_bilin_filterm
@@ -756,7 +740,7 @@ SECTION .text
   add           x_offsetq, bilin_filter
 %define filter_x_a [x_offsetq]
 %define filter_x_b [x_offsetq+16]
-%define filter_rnd [pw_8]
+%define filter_rnd [GLOBAL(pw_8)]
 %endif
 %endif
 
@@ -789,24 +773,24 @@ SECTION .text
   paddw                m3, filter_rnd
   paddw                m2, m4
   paddw                m3, m5
-  mova                 m4, [dstq]
-  mova                 m5, [dstq+16]
+  mova                 m4, [refq]
+  mova                 m5, [refq+16]
   psrlw                m2, 4
   psrlw                m3, 4
   pavgw                m0, m2
   pavgw                m1, m3
 %if %2 == 1 ; avg
-  pavgw                m0, [secq]
-  pavgw                m1, [secq+16]
+  pavgw                m0, [second_predq]
+  pavgw                m1, [second_predq+16]
 %endif
   SUM_SSE              m0, m4, m1, m5, m6, m7
   mova                 m0, m2
   mova                 m1, m3
 
   lea                srcq, [srcq+src_strideq*2]
-  lea                dstq, [dstq+dst_strideq*2]
+  lea                refq, [refq+ref_strideq*2]
 %if %2 == 1 ; avg
-  add                secq, sec_str
+  add                second_predq, second_str
 %endif
 %else ; %1 < 16
   movu                 m0, [srcq]
@@ -830,24 +814,24 @@ SECTION .text
   paddw                m3, filter_rnd
   paddw                m2, m4
   paddw                m3, m5
-  mova                 m4, [dstq]
-  mova                 m5, [dstq+dst_strideq*2]
+  mova                 m4, [refq]
+  mova                 m5, [refq+ref_strideq*2]
   psrlw                m2, 4
   psrlw                m3, 4
   pavgw                m0, m2
   pavgw                m2, m3
 %if %2 == 1 ; avg
-  pavgw                m0, [secq]
-  add                secq, sec_str
-  pavgw                m2, [secq]
+  pavgw                m0, [second_predq]
+  add                second_predq, second_str
+  pavgw                m2, [second_predq]
 %endif
   SUM_SSE              m0, m4, m2, m5, m6, m7
   mova                 m0, m3
 
   lea                srcq, [srcq+src_strideq*4]
-  lea                dstq, [dstq+dst_strideq*4]
+  lea                refq, [refq+ref_strideq*4]
 %if %2 == 1 ; avg
-  add                secq, sec_str
+  add                second_predq, second_str
 %endif
 %endif
   dec                   block_height
@@ -859,24 +843,24 @@ SECTION .text
 
 .x_nonhalf_y_nonhalf:
 ; loading filter - this is same as in 8-bit depth
-%ifdef PIC
-  lea        bilin_filter, [bilin_filter_m]
+%if VPX_ARCH_X86_64
+  lea        bilin_filter, [GLOBAL(bilin_filter_m)]
 %endif
   shl           x_offsetd, filter_idx_shift ; filter_idx_shift = 5
   shl           y_offsetd, filter_idx_shift
-%if ARCH_X86_64 && mmsize == 16
+%if VPX_ARCH_X86_64 && mmsize == 16
   mova                 m8, [bilin_filter+x_offsetq]
   mova                 m9, [bilin_filter+x_offsetq+16]
   mova                m10, [bilin_filter+y_offsetq]
   mova                m11, [bilin_filter+y_offsetq+16]
-  mova                m12, [pw_8]
+  mova                m12, [GLOBAL(pw_8)]
 %define filter_x_a m8
 %define filter_x_b m9
 %define filter_y_a m10
 %define filter_y_b m11
 %define filter_rnd m12
 %else   ; x86-32
-%if ARCH_X86=1 && CONFIG_PIC=1
+%if VPX_ARCH_X86=1 && CONFIG_PIC=1
 ; In this case, there is NO unused register. Used src_stride register. Later,
 ; src_stride has to be loaded from stack when it is needed.
 %define tempq src_strideq
@@ -897,7 +881,7 @@ SECTION .text
 %define filter_x_b [x_offsetq+16]
 %define filter_y_a [y_offsetq]
 %define filter_y_b [y_offsetq+16]
-%define filter_rnd [pw_8]
+%define filter_rnd [GLOBAL(pw_8)]
 %endif
 %endif
 ; end of load filter
@@ -945,23 +929,23 @@ SECTION .text
   pmullw               m3, filter_y_b
   paddw                m0, m2
   paddw                m1, filter_rnd
-  mova                 m2, [dstq]
+  mova                 m2, [refq]
   paddw                m1, m3
   psrlw                m0, 4
   psrlw                m1, 4
-  mova                 m3, [dstq+16]
+  mova                 m3, [refq+16]
 %if %2 == 1 ; avg
-  pavgw                m0, [secq]
-  pavgw                m1, [secq+16]
+  pavgw                m0, [second_predq]
+  pavgw                m1, [second_predq+16]
 %endif
   SUM_SSE              m0, m2, m1, m3, m6, m7
   mova                 m0, m4
   mova                 m1, m5
 
   INC_SRC_BY_SRC_STRIDE
-  lea                dstq, [dstq + dst_strideq * 2]
+  lea                refq, [refq + ref_strideq * 2]
 %if %2 == 1 ; avg
-  add                secq, sec_str
+  add                second_predq, second_str
 %endif
 %else ; %1 < 16
   movu                 m0, [srcq]
@@ -999,23 +983,23 @@ SECTION .text
   pmullw               m3, filter_y_b
   paddw                m0, m2
   paddw                m4, filter_rnd
-  mova                 m2, [dstq]
+  mova                 m2, [refq]
   paddw                m4, m3
   psrlw                m0, 4
   psrlw                m4, 4
-  mova                 m3, [dstq+dst_strideq*2]
+  mova                 m3, [refq+ref_strideq*2]
 %if %2 == 1 ; avg
-  pavgw                m0, [secq]
-  add                secq, sec_str
-  pavgw                m4, [secq]
+  pavgw                m0, [second_predq]
+  add                second_predq, second_str
+  pavgw                m4, [second_predq]
 %endif
   SUM_SSE              m0, m2, m4, m3, m6, m7
   mova                 m0, m5
 
   INC_SRC_BY_SRC_STRIDE
-  lea                dstq, [dstq + dst_strideq * 4]
+  lea                refq, [refq + ref_strideq * 4]
 %if %2 == 1 ; avg
-  add                secq, sec_str
+  add                second_predq, second_str
 %endif
 %endif
   dec                   block_height
