@@ -161,7 +161,6 @@ const GfxDeviceFamily* GfxDriverInfo::GetDeviceFamily(DeviceFamily id) {
     case DeviceFamily::IntelAll:
     case DeviceFamily::NvidiaAll:
     case DeviceFamily::AtiAll:
-    case DeviceFamily::AmdAll:
     case DeviceFamily::MicrosoftAll:
     case DeviceFamily::ParallelsAll:
     case DeviceFamily::QualcommAll:
@@ -340,7 +339,7 @@ const GfxDeviceFamily* GfxDriverInfo::GetDeviceFamily(DeviceFamily id) {
       APPEND_DEVICE(0x7249);
       APPEND_DEVICE(0x7291);
       break;
-    case DeviceFamily::AmdRadeonCaicos:
+    case DeviceFamily::RadeonCaicos:
       APPEND_DEVICE(0x6766);
       APPEND_DEVICE(0x6767);
       APPEND_DEVICE(0x6768);
@@ -557,7 +556,6 @@ const GfxDeviceFamily* GfxDriverInfo::GetDeviceFamily(DeviceFamily id) {
     case DeviceFamily::IntelAll:
     case DeviceFamily::NvidiaAll:
     case DeviceFamily::AtiAll:
-    case DeviceFamily::AmdAll:
     case DeviceFamily::MicrosoftAll:
     case DeviceFamily::ParallelsAll:
     case DeviceFamily::QualcommAll:
@@ -684,14 +682,11 @@ const nsAString& GfxDriverInfo::GetDeviceVendor(DeviceFamily id) {
       vendor = DeviceVendor::NVIDIA;
       break;
     case DeviceFamily::AtiAll:
+    case DeviceFamily::RadeonCaicos:
     case DeviceFamily::RadeonX1000:
     case DeviceFamily::Bug1447141:
     case DeviceFamily::AtiRolloutWebRender:
       vendor = DeviceVendor::ATI;
-      break;
-    case DeviceFamily::AmdAll:
-    case DeviceFamily::AmdRadeonCaicos:
-      vendor = DeviceVendor::AMD;
       break;
     case DeviceFamily::MicrosoftAll:
       vendor = DeviceVendor::Microsoft;
@@ -728,8 +723,8 @@ const nsAString& GfxDriverInfo::GetDeviceVendor(DeviceVendor id) {
   switch (id) {
     DECLARE_VENDOR_ID(Intel, "0x8086");
     DECLARE_VENDOR_ID(NVIDIA, "0x10de");
-    DECLARE_VENDOR_ID(AMD, "0x1022");
     DECLARE_VENDOR_ID(ATI, "0x1002");
+    // AMD has 0x1022 but continues to release GPU hardware under ATI.
     DECLARE_VENDOR_ID(Microsoft, "0x1414");
     DECLARE_VENDOR_ID(Parallels, "0x1ab8");
     // Choose an arbitrary Qualcomm PCI VENdor ID for now.
