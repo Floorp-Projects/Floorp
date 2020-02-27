@@ -751,12 +751,11 @@ static already_AddRefed<FilterNode> FilterNodeFromPrimitiveDescription(
       Size radii = aMorphology.mRadii;
       int32_t rx = radii.width;
       int32_t ry = radii.height;
-      if (rx < 0 || ry < 0) {
-        // XXX SVGContentUtils::ReportToConsole()
-        return nullptr;
-      }
-      if (rx == 0 && ry == 0) {
-        return nullptr;
+
+      // Is one of the radii zero or negative, return the input image
+      if (rx <= 0 || ry <= 0) {
+        RefPtr<FilterNode> filter(mSources[0]);
+        return filter.forget();
       }
 
       // Clamp radii to prevent completely insane values:
