@@ -35,13 +35,14 @@
 #include "nsCSSPseudoElements.h"    // For PseudoStyleType
 #include "nsDOMMutationObserver.h"  // For nsAutoAnimationMutationBatch
 #include "nsIFrame.h"
+#include "nsIFrameInlines.h"
 #include "nsPresContextInlines.h"
 #include "nsRefreshDriver.h"
 
 namespace mozilla {
 
 void AnimationProperty::SetPerformanceWarning(
-    const AnimationPerformanceWarning& aWarning, const Element* aElement) {
+    const AnimationPerformanceWarning& aWarning, const dom::Element* aElement) {
   if (mPerformanceWarning && *mPerformanceWarning == aWarning) {
     return;
   }
@@ -1252,6 +1253,46 @@ KeyframeEffect::OverflowRegionRefreshInterval() {
   return kOverflowRegionRefreshInterval;
 }
 
+static bool IsDefinitivelyInvisibleDueToOpacity(const nsIFrame& aFrame) {
+  if (!aFrame.Style()->IsInOpacityZeroSubtree()) {
+    return false;
+  }
+
+  // Find the root of the opacity: 0 subtree.
+  const nsIFrame* root = &aFrame;
+  while (true) {
+    auto* parent = root->GetInFlowParent();
+    if (!parent || !parent->Style()->IsInOpacityZeroSubtree()) {
+      break;
+    }
+    root = parent;
+  }
+
+  MOZ_ASSERT(root && root->Style()->IsInOpacityZeroSubtree());
+
+  // If aFrame is the root of the opacity: zero subtree, we can't prove we can
+  // optimize it away, because it may have an opacity animation itself.
+  if (root == &aFrame) {
+    return false;
+  }
+
+  // Even if we're in an opacity: zero subtree, if the root of the subtree may
+  // have an opacity animation, we can't optimize us away, as we may become
+  // visible ourselves.
+  return !root->HasAnimationOfOpacity();
+}
+
+static bool CanOptimizeAwayDueToOpacity(const KeyframeEffect& aEffect,
+                                        const nsIFrame& aFrame) {
+  if (!aFrame.Style()->IsInOpacityZeroSubtree()) {
+    return false;
+  }
+  if (IsDefinitivelyInvisibleDueToOpacity(aFrame)) {
+    return true;
+  }
+  return !aEffect.HasOpacityChange();
+}
+
 bool KeyframeEffect::CanThrottleIfNotVisible(nsIFrame& aFrame) const {
   // Unless we are newly in-effect, we can throttle the animation if the
   // animation is paint only and the target frame is out of view or the document
@@ -1267,8 +1308,13 @@ bool KeyframeEffect::CanThrottleIfNotVisible(nsIFrame& aFrame) const {
 
   const bool isVisibilityHidden =
       !aFrame.IsVisibleOrMayHaveVisibleDescendants();
-  if ((!isVisibilityHidden || HasVisibilityChange()) &&
-      !aFrame.IsScrolledOutOfView()) {
+  const bool canOptimizeAwayVisibility =
+      isVisibilityHidden && !HasVisibilityChange();
+
+  const bool invisible = canOptimizeAwayVisibility ||
+                         CanOptimizeAwayDueToOpacity(*this, aFrame) ||
+                         aFrame.IsScrolledOutOfView();
+  if (!invisible) {
     return false;
   }
 
@@ -1890,6 +1936,7 @@ KeyframeEffect::MatchForCompositor KeyframeEffect::IsMatchForCompositor(
   // If we know that the animation is not visible, we don't need to send the
   // animation to the compositor.
   if (!aFrame->IsVisibleOrMayHaveVisibleDescendants() ||
+      IsDefinitivelyInvisibleDueToOpacity(*aFrame) ||
       aFrame->IsScrolledOutOfView()) {
     return KeyframeEffect::MatchForCompositor::NoAndBlockThisProperty;
   }
