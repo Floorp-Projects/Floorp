@@ -187,7 +187,6 @@ impl Example for App {
                                 value: self.opacity,
                             }
                         ],
-                        colors: vec![],
                     },
                 );
                 txn.generate_frame();

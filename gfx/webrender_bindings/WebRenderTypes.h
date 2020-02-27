@@ -644,14 +644,6 @@ static inline wr::WrOpacityProperty ToWrOpacityProperty(uint64_t id,
   return prop;
 }
 
-static inline wr::WrColorProperty ToWrColorProperty(uint64_t id,
-                                                    const gfx::Color& color) {
-  wr::WrColorProperty prop;
-  prop.id = id;
-  prop.color = ToColorF(color);
-  return prop;
-}
-
 // Whenever possible, use wr::ExternalImageId instead of manipulating uint64_t.
 inline uint64_t AsUint64(const ExternalImageId& aId) {
   return static_cast<uint64_t>(aId._0);

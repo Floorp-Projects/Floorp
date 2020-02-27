@@ -22,7 +22,6 @@ use std::sync::Arc;
 pub struct SceneProperties {
     transform_properties: FastHashMap<PropertyBindingId, LayoutTransform>,
     float_properties: FastHashMap<PropertyBindingId, f32>,
-    color_properties: FastHashMap<PropertyBindingId, ColorF>,
     current_properties: DynamicProperties,
     pending_properties: Option<DynamicProperties>,
 }
@@ -32,7 +31,6 @@ impl SceneProperties {
         SceneProperties {
             transform_properties: FastHashMap::default(),
             float_properties: FastHashMap::default(),
-            color_properties: FastHashMap::default(),
             current_properties: DynamicProperties::default(),
             pending_properties: None,
         }
@@ -80,11 +78,6 @@ impl SceneProperties {
                         .insert(property.key.id, property.value);
                 }
 
-                for property in &pending_properties.colors {
-                    self.color_properties
-                        .insert(property.key.id, property.value);
-                }
-
                 self.current_properties = pending_properties.clone();
                 properties_changed = true;
             }
@@ -128,27 +121,6 @@ impl SceneProperties {
     pub fn float_properties(&self) -> &FastHashMap<PropertyBindingId, f32> {
         &self.float_properties
     }
-
-    /// Get the current value for a color property.
-    pub fn resolve_color(
-        &self,
-        property: &PropertyBinding<ColorF>
-    ) -> ColorF {
-        match *property {
-            PropertyBinding::Value(value) => value,
-            PropertyBinding::Binding(ref key, v) => {
-                self.color_properties
-                    .get(&key.id)
-                    .cloned()
-                    .unwrap_or(v)
-            }
-        }
-    }
-
-    pub fn color_properties(&self) -> &FastHashMap<PropertyBindingId, ColorF> {
-        &self.color_properties
-    }
-
 }
 
 /// A representation of the layout within the display port for a given document or iframe.
