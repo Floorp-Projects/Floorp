@@ -1214,7 +1214,7 @@ impl<'a> SceneBuilder<'a> {
                 self.add_solid_rectangle(
                     clip_and_scroll,
                     &layout,
-                    PropertyBinding::Value(ColorF::TRANSPARENT),
+                    ColorF::TRANSPARENT,
                 );
             }
             DisplayItem::ClearRectangle(ref info) => {
@@ -2749,19 +2749,13 @@ impl<'a> SceneBuilder<'a> {
         &mut self,
         clip_and_scroll: ScrollNodeAndClipChain,
         info: &LayoutPrimitiveInfo,
-        color: PropertyBinding<ColorF>,
+        color: ColorF,
     ) {
-        match color {
-            PropertyBinding::Value(value) => {
-                if value.a == 0.0 {
-                    // Don't add transparent rectangles to the draw list,
-                    // but do consider them for hit testing. This allows
-                    // specifying invisible hit testing areas.
-                    self.add_primitive_to_hit_testing_list(info, clip_and_scroll);
-                    return;
-                }
-            },
-            PropertyBinding::Binding(..) => {},
+        if color.a == 0.0 {
+            // Don't add transparent rectangles to the draw list, but do consider them for hit
+            // testing. This allows specifying invisible hit testing areas.
+            self.add_primitive_to_hit_testing_list(info, clip_and_scroll);
+            return;
         }
 
         self.add_primitive(

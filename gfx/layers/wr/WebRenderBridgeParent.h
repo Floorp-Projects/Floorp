@@ -427,8 +427,7 @@ class WebRenderBridgeParent final
   bool AdvanceAnimations();
   bool SampleAnimations(
       wr::RenderRootArray<nsTArray<wr::WrOpacityProperty>>& aOpacityArrays,
-      wr::RenderRootArray<nsTArray<wr::WrTransformProperty>>& aTransformArrays,
-      wr::RenderRootArray<nsTArray<wr::WrColorProperty>>& aColorArrays);
+      wr::RenderRootArray<nsTArray<wr::WrTransformProperty>>& aTransformArrays);
 
   CompositorBridgeParent* GetRootCompositorBridgeParent() const;
 
