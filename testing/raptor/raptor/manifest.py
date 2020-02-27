@@ -11,7 +11,7 @@ from six.moves.urllib.parse import parse_qs, urlsplit, urlunsplit, urlencode, un
 
 from logger.logger import RaptorLogger
 from manifestparser import TestManifest
-from utils import transform_platform, transform_subtest
+from utils import bool_from_str, transform_platform, transform_subtest
 from constants.raptor_tests_constants import YOUTUBE_PLAYBACK_MEASURE
 
 here = os.path.abspath(os.path.dirname(__file__))
@@ -496,13 +496,3 @@ def get_raptor_test_list(args, oskey):
         LOG.critical("abort: specified test name doesn't exist")
 
     return tests_to_run
-
-
-def bool_from_str(boolean_string):
-    lower_boolean_str = boolean_string.lower()
-    if lower_boolean_str == 'true':
-        return True
-    elif lower_boolean_str == 'false':
-        return False
-    else:
-        raise ValueError("Expected either 'true' or 'false'")
