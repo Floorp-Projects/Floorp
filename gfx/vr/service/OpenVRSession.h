@@ -114,8 +114,6 @@ class OpenVRSession : public VRSession {
   ::vr::IVRSystem* mVRSystem = nullptr;
   ::vr::IVRChaperone* mVRChaperone = nullptr;
   ::vr::IVRCompositor* mVRCompositor = nullptr;
-  ::vr::TrackedDeviceIndex_t
-      mControllerDeviceIndexObsolete[kVRControllerMaxCount];
   ::vr::VRActionSetHandle_t mActionsetFirefox = vr::k_ulInvalidActionSetHandle;
   OpenVRHand mControllerDeviceIndex[kVRControllerMaxCount];
   ControllerInfo mControllerHand[OpenVRHand::Total];
@@ -129,11 +127,8 @@ class OpenVRSession : public VRSession {
   void UpdateEyeParameters(mozilla::gfx::VRSystemState& aState);
   void UpdateHeadsetPose(mozilla::gfx::VRSystemState& aState);
   void EnumerateControllers(VRSystemState& aState);
-  void EnumerateControllersObsolete(VRSystemState& aState);
   void UpdateControllerPoses(VRSystemState& aState);
-  void UpdateControllerPosesObsolete(VRSystemState& aState);
   void UpdateControllerButtons(VRSystemState& aState);
-  void UpdateControllerButtonsObsolete(VRSystemState& aState);
   void UpdateTelemetry(VRSystemState& aSystemState);
   bool SetupContollerActions();
 
@@ -148,7 +143,6 @@ class OpenVRSession : public VRSession {
                              ::vr::TrackedDeviceIndex_t aDeviceIndex,
                              nsCString& aId);
   void UpdateHaptics();
-  void UpdateHapticsObsolete();
   void StartHapticThread();
   void StopHapticThread();
   void StartHapticTimer();
