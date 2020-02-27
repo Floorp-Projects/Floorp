@@ -1613,24 +1613,13 @@ nsresult nsSocketTransport::InitiateSocket() {
 
   nsCOMPtr<nsISSLSocketControl> secCtrl = do_QueryInterface(mSecInfo);
   if (usingSSL && secCtrl && SSLTokensCache::IsEnabled()) {
-    PRIntn val;
-    // If SSL_NO_CACHE option was set, we must not use the cache
-    if (SSL_OptionGet(fd, SSL_NO_CACHE, &val) == SECSuccess && val == 0) {
-      nsTArray<uint8_t> token;
-      nsAutoCString peerId;
-      secCtrl->GetPeerId(peerId);
-      nsresult rv2 = SSLTokensCache::Get(peerId, token);
-      if (NS_SUCCEEDED(rv2) && token.Length() != 0) {
-        SECStatus srv =
-            SSL_SetResumptionToken(fd, token.Elements(), token.Length());
-        if (srv == SECFailure) {
-          SOCKET_LOG(("Setting token failed with NSS error %d [id=%s]",
-                      PORT_GetError(), PromiseFlatCString(peerId).get()));
-          SSLTokensCache::Remove(peerId);
-        }
-      }
+    rv = secCtrl->SetResumptionTokenFromExternalCache();
+    if (NS_FAILED(rv)) {
+      SOCKET_LOG(("SetResumptionTokenFromExternalCache failed [rv=%" PRIx32
+                  "]\n",
+                  static_cast<uint32_t>(rv)));
+      return rv;
     }
-
     SSL_SetResumptionTokenCallback(fd, &StoreResumptionToken, this);
     mSSLCallbackSet = true;
   }
