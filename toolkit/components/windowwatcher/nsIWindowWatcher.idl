@@ -150,14 +150,10 @@ interface nsIWindowWatcher : nsISupports {
   mozIDOMWindowProxy getWindowByName(in AString aTargetName,
                                      in mozIDOMWindowProxy aCurrentWindow);
 
-  /** The Watcher serves as a global storage facility for the current active
-      (frontmost non-floating-palette-type) window, storing and returning
-      it on demand. Users must keep this attribute current, including after
-      the topmost window is closed. This attribute obviously can return null
-      if no windows are open, but should otherwise always return a valid
-      window.
+  /**
+      Retrieves the active window from the focus manager.
   */
-  attribute mozIDOMWindowProxy activeWindow;
+  readonly attribute mozIDOMWindowProxy activeWindow;
 
 };
 
