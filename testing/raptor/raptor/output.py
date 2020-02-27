@@ -195,7 +195,7 @@ class PerftestOutput(object):
         if "gecko_profile" in extra_opts:
             LOG.info("gecko profiling enabled %s" % not_posting)
             output_perf_data = False
-        elif test_type == "scenario":
+        if test_type == "scenario":
             # if a resource-usage flag was supplied the perfherder data
             # will still be output from output_supporting_data
             LOG.info("scenario test type was run %s" % not_posting)
