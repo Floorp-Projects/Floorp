@@ -2820,7 +2820,9 @@ void Document::FillStyleSetUserAndUASheets() {
   mStyleSet->AppendStyleSheet(*cache->PluginProblemSheet());
 
   if (StyleSheet* sheet = cache->GetGeckoViewSheet()) {
-    mStyleSet->AppendStyleSheet(*sheet);
+    if (!StaticPrefs::widget_disable_native_theme_for_content()) {
+      mStyleSet->AppendStyleSheet(*sheet);
+    }
   }
 
   for (StyleSheet* sheet : *sheetService->AgentStyleSheets()) {
