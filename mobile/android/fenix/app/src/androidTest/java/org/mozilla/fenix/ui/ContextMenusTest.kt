@@ -98,6 +98,7 @@ class ContextMenusTest {
         }
     }
 
+    @Ignore("Intermittent failure - https://github.com/mozilla-mobile/fenix/issues/8832")
     @Test
     fun verifyContextCopyLink() {
         val pageLinks =
