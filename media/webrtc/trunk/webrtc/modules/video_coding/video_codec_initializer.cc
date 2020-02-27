@@ -142,7 +142,9 @@ VideoCodec VideoCodecInitializer::VideoEncoderConfigToVideoCodec(
         *video_codec.VP9() = VideoEncoder::GetDefaultVp9Settings();
       if (video_codec.mode == kScreensharing &&
           config.encoder_specific_settings) {
-        video_codec.VP9()->flexibleMode = true;
+        // See Bug 1525393 - flexibleMode is disabled until the next time we
+        // update webrtc.org due to changes in libvpx 1.8.2.
+        video_codec.VP9()->flexibleMode = false;
         // For now VP9 screensharing use 1 temporal and 2 spatial layers.
         RTC_DCHECK_EQ(1, video_codec.VP9()->numberOfTemporalLayers);
         RTC_DCHECK_EQ(2, video_codec.VP9()->numberOfSpatialLayers);

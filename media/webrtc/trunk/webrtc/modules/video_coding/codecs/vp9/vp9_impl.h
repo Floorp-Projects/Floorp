@@ -82,15 +82,6 @@ class VP9EncoderImpl : public VP9Encoder {
   bool ExplicitlyConfiguredSpatialLayers() const;
   bool SetSvcRates();
 
-  // Used for flexible mode to set the flags and buffer references used
-  // by the encoder. Also calculates the references used by the RTP
-  // packetizer.
-  //
-  // Has to be called for every frame (keyframes included) to update the
-  // state used to calculate references.
-  vpx_svc_ref_frame_config GenerateRefsAndFlags(
-      const SuperFrameRefSettings& settings);
-
   virtual int GetEncodedLayerFrame(const vpx_codec_cx_pkt* pkt);
 
   // Callback function for outputting packets per spatial layer.
@@ -126,8 +117,6 @@ class VP9EncoderImpl : public VP9Encoder {
 
   // Used for flexible mode.
   bool is_flexible_mode_;
-  int64_t buffer_updated_at_frame_[kNumVp9Buffers];
-  int64_t frames_encoded_;
   uint8_t num_ref_pics_[kMaxVp9NumberOfSpatialLayers];
   uint8_t p_diff_[kMaxVp9NumberOfSpatialLayers][kMaxVp9RefPics];
   std::unique_ptr<ScreenshareLayersVP9> spatial_layer_;
