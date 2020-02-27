@@ -58,8 +58,13 @@ void vpx_scale_rtcd(void);
 #include "vpx_config.h"
 
 #ifdef RTCD_C
+#include "vpx_ports/arm.h"
 static void setup_rtcd_internal(void)
 {
+    int flags = arm_cpu_caps();
+
+    (void)flags;
+
 }
 #endif
 
