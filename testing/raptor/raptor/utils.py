@@ -11,6 +11,8 @@ import sys
 import time
 import yaml
 
+from distutils.util import strtobool
+
 from logger.logger import RaptorLogger
 
 LOG = RaptorLogger(component='raptor-utils')
@@ -123,3 +125,7 @@ def write_yml_file(yml_file, yml_data):
             yaml.dump(yml_data, outfile, default_flow_style=False)
     except Exception as e:
         LOG.critical("failed to write yaml file, exeption: %s" % e)
+
+
+def bool_from_str(boolean_string):
+    return bool(strtobool(boolean_string))
