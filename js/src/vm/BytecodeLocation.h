@@ -197,6 +197,45 @@ class BytecodeLocation {
     return GET_UINT16(rawBytecode_);
   }
 
+  uint32_t getDupAtIndex() const {
+    MOZ_ASSERT(is(JSOp::DupAt));
+    return GET_UINT24(rawBytecode_);
+  }
+
+  uint8_t getPickDepth() const {
+    MOZ_ASSERT(is(JSOp::Pick));
+    return GET_UINT8(rawBytecode_);
+  }
+  uint8_t getUnpickDepth() const {
+    MOZ_ASSERT(is(JSOp::Unpick));
+    return GET_UINT8(rawBytecode_);
+  }
+
+  int8_t getInt8() const {
+    MOZ_ASSERT(is(JSOp::Int8));
+    return GET_INT8(rawBytecode_);
+  }
+  uint16_t getUint16() const {
+    MOZ_ASSERT(is(JSOp::Uint16));
+    return GET_UINT16(rawBytecode_);
+  }
+  uint32_t getUint24() const {
+    MOZ_ASSERT(is(JSOp::Uint24));
+    return GET_UINT24(rawBytecode_);
+  }
+  int32_t getInt32() const {
+    MOZ_ASSERT(is(JSOp::Int32));
+    return GET_INT32(rawBytecode_);
+  }
+  uint32_t getResumeIndex() const {
+    MOZ_ASSERT(is(JSOp::ResumeIndex));
+    return GET_RESUMEINDEX(rawBytecode_);
+  }
+  Value getInlineValue() const {
+    MOZ_ASSERT(is(JSOp::Double));
+    return GET_INLINE_VALUE(rawBytecode_);
+  }
+
 #ifdef DEBUG
   // To ease writing assertions
   bool isValid() const { return isValid(debugOnlyScript_); }
