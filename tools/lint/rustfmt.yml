@@ -4,7 +4,7 @@ rust:
     include:
         - build/workspace-hack/
         - gfx/wr/peek-poke/peek-poke-derive/
-        - js/src/rust/shared/
+        - js/
         - security/manager/ssl/osclientcerts/
         - servo/components/size_of_test/
         - servo/components/to_shmem_derive/
@@ -23,9 +23,6 @@ rust:
         - gfx/wr/peek-poke/
         - gfx/wr/webrender_build/
         - gfx/wr/wr_malloc_size_of/
-        - js/src/
-        - js/src/frontend/binast/
-        - js/src/wasm/cranelift/
         - media/mp4parse-rust/mp4parse/
         - media/mp4parse-rust/mp4parse_capi/
         - media/mp4parse-rust/mp4parse_fallible/

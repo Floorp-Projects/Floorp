@@ -27,8 +27,15 @@ fn typedarray() {
         let _ar = js::ar::AutoRealm::with_obj(cx, global.get());
 
         rooted!(in(cx) let mut rval = UndefinedValue());
-        assert!(rt.evaluate_script(global.handle(), "new Uint8Array([0, 2, 4])",
-                                   "test", 1, rval.handle_mut()).is_ok());
+        assert!(rt
+            .evaluate_script(
+                global.handle(),
+                "new Uint8Array([0, 2, 4])",
+                "test",
+                1,
+                rval.handle_mut()
+            )
+            .is_ok());
         assert!(rval.is_object());
 
         typedarray!(in(cx) let array: Uint8Array = rval.to_object());
@@ -38,7 +45,10 @@ fn typedarray() {
         assert!(array.is_err());
 
         typedarray!(in(cx) let view: ArrayBufferView = rval.to_object());
-        assert_eq!(view.unwrap().get_array_type(), js::jsapi::js::Scalar::Type::Uint8);
+        assert_eq!(
+            view.unwrap().get_array_type(),
+            js::jsapi::js::Scalar::Type::Uint8
+        );
 
         rooted!(in(cx) let mut rval = ptr::null_mut());
         assert!(Uint32Array::create(cx, CreateWith::Slice(&[1, 3, 5]), rval.handle_mut()).is_ok());
@@ -65,7 +75,10 @@ fn typedarray() {
         assert_eq!(array.unwrap().as_slice(), &[0, 1, 2, 3, 0]);
 
         typedarray!(in(cx) let view: ArrayBufferView = rval.get());
-        assert_eq!(view.unwrap().get_array_type(), js::jsapi::js::Scalar::Type::Uint32);
+        assert_eq!(
+            view.unwrap().get_array_type(),
+            js::jsapi::js::Scalar::Type::Uint32
+        );
     }
 }
 

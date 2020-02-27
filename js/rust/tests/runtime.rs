@@ -31,7 +31,7 @@ fn runtime() {
     assert!(Runtime::new(false).is_err());
 }
 
-unsafe extern fn finalize(_fop: *mut JSFreeOp, _object: *mut JSObject) {
+unsafe extern "C" fn finalize(_fop: *mut JSFreeOp, _object: *mut JSObject) {
     assert!(!Runtime::get().is_null());
 }
 
@@ -55,5 +55,5 @@ static CLASS: JSClass = JSClass {
     cOps: &CLASS_OPS as *const JSClassOps,
     spec: 0 as *mut _,
     ext: 0 as *mut _,
-    oOps: 0 as *mut _
+    oOps: 0 as *mut _,
 };

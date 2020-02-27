@@ -7,25 +7,26 @@ extern crate clap;
 extern crate env_logger;
 extern crate inflector;
 extern crate itertools;
-#[macro_use] extern crate log;
+#[macro_use]
+extern crate log;
 extern crate yaml_rust;
 
-use binjs_meta::export::{ ToWebidl, TypeDeanonymizer, TypeName };
+use binjs_meta::export::{ToWebidl, TypeDeanonymizer, TypeName};
 use binjs_meta::import::Importer;
 use binjs_meta::spec::*;
-use binjs_meta::util:: { Reindentable, ToCases, ToStr };
+use binjs_meta::util::{Reindentable, ToCases, ToStr};
 
 mod refgraph;
 
-use refgraph::{ ReferenceGraph };
+use refgraph::ReferenceGraph;
 
 use std::borrow::Cow;
-use std::collections::{ HashMap, HashSet };
+use std::collections::{HashMap, HashSet};
 use std::fs::*;
-use std::io::{ Read, Write };
+use std::io::{Read, Write};
 use std::rc::Rc;
 
-use clap::{ App, Arg };
+use clap::{App, Arg};
 
 use itertools::Itertools;
 
@@ -76,7 +77,6 @@ struct SumRules {
     // Disable this arm (false by default).
     disabled: bool,
 }
-
 
 /// Rules for generating the code for parsing a full node
 /// of a node.
@@ -191,8 +191,7 @@ struct GlobalRules {
 }
 impl GlobalRules {
     fn new(syntax: &Spec, yaml: &yaml_rust::yaml::Yaml) -> Self {
-        let rules = yaml.as_hash()
-            .expect("Rules are not a dictionary");
+        let rules = yaml.as_hash().expect("Rules are not a dictionary");
 
         let mut parser_class_name = None;
         let mut parser_class_template = None;
@@ -213,7 +212,8 @@ impl GlobalRules {
         let mut per_node = HashMap::new();
 
         for (node_key, node_entries) in rules.iter() {
-            let node_key = node_key.as_str()
+            let node_key = node_key
+                .as_str()
                 .expect("Could not convert node_key to string");
 
             match node_key {
@@ -250,148 +250,283 @@ impl GlobalRules {
                         .unwrap_or_else(|_| panic!("Rule hpp.tokens.header must be a string"));
                     update_rule(&mut hpp_tokens_footer, &node_entries["tokens"]["footer"])
                         .unwrap_or_else(|_| panic!("Rule hpp.tokens.footer must be a string"));
-                    update_rule(&mut hpp_tokens_kind_doc, &node_entries["tokens"]["kind"]["doc"])
-                        .unwrap_or_else(|_| panic!("Rule hpp.tokens.kind.doc must be a string"));
-                    update_rule(&mut hpp_tokens_field_doc, &node_entries["tokens"]["field"]["doc"])
-                        .unwrap_or_else(|_| panic!("Rule hpp.tokens.field.doc must be a string"));
-                    update_rule(&mut hpp_tokens_variants_doc, &node_entries["tokens"]["variants"]["doc"])
-                        .unwrap_or_else(|_| panic!("Rule hpp.tokens.variants.doc must be a string"));
+                    update_rule(
+                        &mut hpp_tokens_kind_doc,
+                        &node_entries["tokens"]["kind"]["doc"],
+                    )
+                    .unwrap_or_else(|_| panic!("Rule hpp.tokens.kind.doc must be a string"));
+                    update_rule(
+                        &mut hpp_tokens_field_doc,
+                        &node_entries["tokens"]["field"]["doc"],
+                    )
+                    .unwrap_or_else(|_| panic!("Rule hpp.tokens.field.doc must be a string"));
+                    update_rule(
+                        &mut hpp_tokens_variants_doc,
+                        &node_entries["tokens"]["variants"]["doc"],
+                    )
+                    .unwrap_or_else(|_| panic!("Rule hpp.tokens.variants.doc must be a string"));
                     continue;
                 }
                 _ => {}
             }
 
-
-            let node_name = syntax.get_node_name(&node_key)
+            let node_name = syntax
+                .get_node_name(&node_key)
                 .unwrap_or_else(|| panic!("Unknown node name {}", node_key));
 
-            let hash = node_entries.as_hash()
+            let hash = node_entries
+                .as_hash()
                 .unwrap_or_else(|| panic!("Node {} isn't a dictionary"));
 
             let mut node_rule = NodeRules::default();
             for (node_item_key, node_item_entry) in hash {
-                let as_string = node_item_key.as_str()
+                let as_string = node_item_key
+                    .as_str()
                     .unwrap_or_else(|| panic!("Keys for rule {} must be strings", node_key));
                 match as_string {
                     "inherits" => {
-                        let name = node_item_entry.as_str()
-                            .unwrap_or_else(|| panic!("Rule {}.{} must be a string", node_key, as_string));
-                        let inherits = syntax.get_node_name(name)
+                        let name = node_item_entry.as_str().unwrap_or_else(|| {
+                            panic!("Rule {}.{} must be a string", node_key, as_string)
+                        });
+                        let inherits = syntax
+                            .get_node_name(name)
                             .unwrap_or_else(|| panic!("Unknown node name {}", name));
                         node_rule.inherits = Some(inherits).cloned();
                     }
                     "extra-params" => {
                         update_rule_rc(&mut node_rule.extra_params, node_item_entry)
-                            .unwrap_or_else(|()| panic!("Rule {}.{} must be a string", node_key, as_string));
+                            .unwrap_or_else(|()| {
+                                panic!("Rule {}.{} must be a string", node_key, as_string)
+                            });
                     }
                     "extra-args" => {
-                        update_rule_rc(&mut node_rule.extra_args, node_item_entry)
-                            .unwrap_or_else(|()| panic!("Rule {}.{} must be a string", node_key, as_string));
+                        update_rule_rc(&mut node_rule.extra_args, node_item_entry).unwrap_or_else(
+                            |()| panic!("Rule {}.{} must be a string", node_key, as_string),
+                        );
                     }
                     "some" => {
                         update_rule_rc(&mut node_rule.some_before, &node_item_entry["before"])
-                            .unwrap_or_else(|()| panic!("Rule {}.{}.before must be a string", node_key, as_string));
+                            .unwrap_or_else(|()| {
+                                panic!("Rule {}.{}.before must be a string", node_key, as_string)
+                            });
                         update_rule_rc(&mut node_rule.some_after, &node_item_entry["after"])
-                            .unwrap_or_else(|()| panic!("Rule {}.{}.after must be a string", node_key, as_string));
+                            .unwrap_or_else(|()| {
+                                panic!("Rule {}.{}.after must be a string", node_key, as_string)
+                            });
                     }
                     "none" => {
                         update_rule_rc(&mut node_rule.none_replace, &node_item_entry["replace"])
-                            .unwrap_or_else(|()| panic!("Rule {}.{}.replace must be a string", node_key, as_string));
+                            .unwrap_or_else(|()| {
+                                panic!("Rule {}.{}.replace must be a string", node_key, as_string)
+                            });
                     }
                     "init" => {
-                        update_rule(&mut node_rule.init, node_item_entry)
-                            .unwrap_or_else(|()| panic!("Rule {}.{} must be a string", node_key, as_string));
+                        update_rule(&mut node_rule.init, node_item_entry).unwrap_or_else(|()| {
+                            panic!("Rule {}.{} must be a string", node_key, as_string)
+                        });
                     }
                     "build" => {
-                        update_rule(&mut node_rule.build_result, node_item_entry)
-                            .unwrap_or_else(|()| panic!("Rule {}.{} must be a string", node_key, as_string));
+                        update_rule(&mut node_rule.build_result, node_item_entry).unwrap_or_else(
+                            |()| panic!("Rule {}.{} must be a string", node_key, as_string),
+                        );
                     }
                     "append" => {
-                        update_rule(&mut node_rule.append, node_item_entry)
-                            .unwrap_or_else(|()| panic!("Rule {}.{} must be a string", node_key, as_string));
+                        update_rule(&mut node_rule.append, node_item_entry).unwrap_or_else(|()| {
+                            panic!("Rule {}.{} must be a string", node_key, as_string)
+                        });
                     }
                     "type-ok" => {
-                        update_rule_rc(&mut node_rule.type_ok, node_item_entry)
-                            .unwrap_or_else(|()| panic!("Rule {}.{} must be a string", node_key, as_string));
+                        update_rule_rc(&mut node_rule.type_ok, node_item_entry).unwrap_or_else(
+                            |()| panic!("Rule {}.{} must be a string", node_key, as_string),
+                        );
                     }
                     "default-value" => {
                         update_rule_rc(&mut node_rule.default_value, node_item_entry)
-                            .unwrap_or_else(|()| panic!("Rule {}.{} must be a string", node_key, as_string));
+                            .unwrap_or_else(|()| {
+                                panic!("Rule {}.{} must be a string", node_key, as_string)
+                            });
                     }
                     "fields" => {
-                        let fields = node_item_entry.as_hash()
-                            .unwrap_or_else(|| panic!("Rule {}.fields must be a hash, got {:?}", node_key, node_entries["fields"]));
+                        let fields = node_item_entry.as_hash().unwrap_or_else(|| {
+                            panic!(
+                                "Rule {}.fields must be a hash, got {:?}",
+                                node_key, node_entries["fields"]
+                            )
+                        });
                         for (field_key, field_entry) in fields {
-                            let field_key = field_key.as_str()
-                                .unwrap_or_else(|| panic!("In rule {}, field entries must be field names",
-                                    node_key))
+                            let field_key = field_key
+                                .as_str()
+                                .unwrap_or_else(|| {
+                                    panic!(
+                                        "In rule {}, field entries must be field names",
+                                        node_key
+                                    )
+                                })
                                 .to_string();
-                            let field_name = syntax.get_field_name(&field_key)
-                                .unwrap_or_else(|| panic!("In rule {}, can't find field {}",
-                                    node_key,
-                                    field_key));
+                            let field_name =
+                                syntax.get_field_name(&field_key).unwrap_or_else(|| {
+                                    panic!("In rule {}, can't find field {}", node_key, field_key)
+                                });
 
                             let mut field_rule = FieldRules::default();
-                            for (field_config_key, field_config_entry) in field_entry.as_hash()
-                                .unwrap_or_else(|| panic!("Rule {}.fields.{} must be a hash", node_key, field_key))
+                            for (field_config_key, field_config_entry) in
+                                field_entry.as_hash().unwrap_or_else(|| {
+                                    panic!("Rule {}.fields.{} must be a hash", node_key, field_key)
+                                })
                             {
-                                let field_config_key = field_config_key.as_str()
+                                let field_config_key = field_config_key
+                                    .as_str()
                                     .expect("Expected a string as a key");
-                                match field_config_key
-                                {
+                                match field_config_key {
                                     "block" => {
-                                        update_rule(&mut field_rule.declare, &field_config_entry["declare"])
-                                            .unwrap_or_else(|()| panic!("Rule {}.fields.{}.{}.{} must be a string", node_key, field_key, field_config_key, "declare"));
+                                        update_rule(
+                                            &mut field_rule.declare,
+                                            &field_config_entry["declare"],
+                                        )
+                                        .unwrap_or_else(
+                                            |()| {
+                                                panic!(
+                                                    "Rule {}.fields.{}.{}.{} must be a string",
+                                                    node_key,
+                                                    field_key,
+                                                    field_config_key,
+                                                    "declare"
+                                                )
+                                            },
+                                        );
 
-                                        update_rule(&mut field_rule.replace, &field_config_entry["replace"])
-                                            .unwrap_or_else(|()| panic!("Rule {}.fields.{}.{}.{} must be a string", node_key, field_key, field_config_key, "replace"));
+                                        update_rule(
+                                            &mut field_rule.replace,
+                                            &field_config_entry["replace"],
+                                        )
+                                        .unwrap_or_else(
+                                            |()| {
+                                                panic!(
+                                                    "Rule {}.fields.{}.{}.{} must be a string",
+                                                    node_key,
+                                                    field_key,
+                                                    field_config_key,
+                                                    "replace"
+                                                )
+                                            },
+                                        );
 
-                                        update_rule(&mut field_rule.block_before_field, &field_config_entry["before"])
-                                            .unwrap_or_else(|()| panic!("Rule {}.fields.{}.{}.{} must be a string", node_key, field_key, field_config_key, "before"));
+                                        update_rule(
+                                            &mut field_rule.block_before_field,
+                                            &field_config_entry["before"],
+                                        )
+                                        .unwrap_or_else(
+                                            |()| {
+                                                panic!(
+                                                    "Rule {}.fields.{}.{}.{} must be a string",
+                                                    node_key, field_key, field_config_key, "before"
+                                                )
+                                            },
+                                        );
 
-                                        update_rule(&mut field_rule.block_after_field, &field_config_entry["after"])
-                                            .unwrap_or_else(|()| panic!("Rule {}.fields.{}.{}.{} must be a string", node_key, field_key, field_config_key, "after"));
+                                        update_rule(
+                                            &mut field_rule.block_after_field,
+                                            &field_config_entry["after"],
+                                        )
+                                        .unwrap_or_else(
+                                            |()| {
+                                                panic!(
+                                                    "Rule {}.fields.{}.{}.{} must be a string",
+                                                    node_key, field_key, field_config_key, "after"
+                                                )
+                                            },
+                                        );
                                     }
                                     "before" => {
-                                        update_rule(&mut field_rule.before_field, &field_config_entry)
-                                            .unwrap_or_else(|()| panic!("Rule {}.fields.{}.{} must be a string", node_key, field_key, field_config_key));
+                                        update_rule(
+                                            &mut field_rule.before_field,
+                                            &field_config_entry,
+                                        )
+                                        .unwrap_or_else(
+                                            |()| {
+                                                panic!(
+                                                    "Rule {}.fields.{}.{} must be a string",
+                                                    node_key, field_key, field_config_key
+                                                )
+                                            },
+                                        );
                                     }
                                     "after" => {
-                                        update_rule(&mut field_rule.after_field, &field_config_entry)
-                                            .unwrap_or_else(|()| panic!("Rule {}.fields.{}.{} must be a string", node_key, field_key, field_config_key));
+                                        update_rule(
+                                            &mut field_rule.after_field,
+                                            &field_config_entry,
+                                        )
+                                        .unwrap_or_else(
+                                            |()| {
+                                                panic!(
+                                                    "Rule {}.fields.{}.{} must be a string",
+                                                    node_key, field_key, field_config_key
+                                                )
+                                            },
+                                        );
                                     }
                                     "extra-args" => {
-                                        update_rule_rc(&mut field_rule.extra_args, &field_config_entry)
-                                            .unwrap_or_else(|()| panic!("Rule {}.fields.{}.{} must be a string", node_key, field_key, field_config_key));
+                                        update_rule_rc(
+                                            &mut field_rule.extra_args,
+                                            &field_config_entry,
+                                        )
+                                        .unwrap_or_else(
+                                            |()| {
+                                                panic!(
+                                                    "Rule {}.fields.{}.{} must be a string",
+                                                    node_key, field_key, field_config_key
+                                                )
+                                            },
+                                        );
                                     }
-                                    _ => {
-                                        panic!("Unexpected {}.fields.{}.{}", node_key, field_key, field_config_key)
-                                    }
+                                    _ => panic!(
+                                        "Unexpected {}.fields.{}.{}",
+                                        node_key, field_key, field_config_key
+                                    ),
                                 }
                             }
                             node_rule.by_field.insert(field_name.clone(), field_rule);
                         }
                     }
                     "sum-arms" => {
-                        let arms = node_item_entry.as_hash()
-                            .unwrap_or_else(|| panic!("Rule {}.sum-arms must be a hash, got {:?}", node_key, node_entries["sum-arms"]));
+                        let arms = node_item_entry.as_hash().unwrap_or_else(|| {
+                            panic!(
+                                "Rule {}.sum-arms must be a hash, got {:?}",
+                                node_key, node_entries["sum-arms"]
+                            )
+                        });
                         for (sum_arm_key, sum_arm_entry) in arms {
-                            let sum_arm_key = sum_arm_key.as_str()
-                                .unwrap_or_else(|| panic!("In rule {}, sum arms must be interface names"));
-                            let sum_arm_name = syntax.get_node_name(&sum_arm_key)
-                                .unwrap_or_else(|| panic!("In rule {}. cannot find interface {}", node_key, sum_arm_key));
+                            let sum_arm_key = sum_arm_key.as_str().unwrap_or_else(|| {
+                                panic!("In rule {}, sum arms must be interface names")
+                            });
+                            let sum_arm_name =
+                                syntax.get_node_name(&sum_arm_key).unwrap_or_else(|| {
+                                    panic!(
+                                        "In rule {}. cannot find interface {}",
+                                        node_key, sum_arm_key
+                                    )
+                                });
 
                             let mut sum_rule = SumRules::default();
-                            for (arm_config_key, arm_config_entry) in sum_arm_entry.as_hash()
-                                .unwrap_or_else(|| panic!("Rule {}.sum-arms.{} must be a hash", node_key, sum_arm_key))
+                            for (arm_config_key, arm_config_entry) in
+                                sum_arm_entry.as_hash().unwrap_or_else(|| {
+                                    panic!(
+                                        "Rule {}.sum-arms.{} must be a hash",
+                                        node_key, sum_arm_key
+                                    )
+                                })
                             {
-                                let arm_config_key = arm_config_key.as_str()
-                                    .expect("Expected a string as a key");
-                                match arm_config_key
-                                {
+                                let arm_config_key =
+                                    arm_config_key.as_str().expect("Expected a string as a key");
+                                match arm_config_key {
                                     "after" => {
                                         update_rule(&mut sum_rule.after_arm, arm_config_entry)
-                                            .unwrap_or_else(|()| panic!("Rule {}.sum-arms.{}.{} must be a string", node_key, sum_arm_key, arm_config_key));
+                                            .unwrap_or_else(|()| {
+                                                panic!(
+                                                    "Rule {}.sum-arms.{}.{} must be a string",
+                                                    node_key, sum_arm_key, arm_config_key
+                                                )
+                                            });
                                     }
                                     "disabled" => {
                                         if let Some(disabled) = arm_config_entry.as_bool() {
@@ -399,18 +534,24 @@ impl GlobalRules {
                                                 sum_rule.disabled = true;
                                             }
                                         } else {
-                                            panic!("Rule {}.sum-arms.{}.{} must be a bool", node_key, sum_arm_key, arm_config_key);
+                                            panic!(
+                                                "Rule {}.sum-arms.{}.{} must be a bool",
+                                                node_key, sum_arm_key, arm_config_key
+                                            );
                                         }
                                     }
                                     _ => {
-                                        panic!("Unexpected {}.sum-arms.{}.{}", node_key, sum_arm_key, arm_config_key);
+                                        panic!(
+                                            "Unexpected {}.sum-arms.{}.{}",
+                                            node_key, sum_arm_key, arm_config_key
+                                        );
                                     }
                                 }
                             }
                             node_rule.by_sum.insert(sum_arm_name.clone(), sum_rule);
                         }
                     }
-                    _ => panic!("Unexpected node_item_key {}.{}", node_key, as_string)
+                    _ => panic!("Unexpected node_item_key {}.{}", node_key, as_string),
                 }
             }
 
@@ -418,15 +559,13 @@ impl GlobalRules {
         }
 
         Self {
-            parser_class_name: parser_class_name
-                .expect("parser.class-name should be specified"),
+            parser_class_name: parser_class_name.expect("parser.class-name should be specified"),
             parser_class_template: Rc::new(if parser_class_template.is_some() {
                 format!("{} ", parser_class_template.unwrap())
             } else {
                 "".to_string()
             }),
-            parser_type_ok: parser_type_ok
-                .expect("parser.type-ok should be specified"),
+            parser_type_ok: parser_type_ok.expect("parser.type-ok should be specified"),
             parser_default_value: parser_default_value
                 .expect("parser.default-value should be specified"),
             parser_list_append,
@@ -445,9 +584,7 @@ impl GlobalRules {
         }
     }
     fn get(&self, name: &NodeName) -> NodeRules {
-        let mut rules = self.per_node.get(name)
-            .cloned()
-            .unwrap_or_default();
+        let mut rules = self.per_node.get(name).cloned().unwrap_or_default();
         if let Some(ref parent) = rules.inherits {
             let NodeRules {
                 inherits: _,
@@ -495,12 +632,10 @@ impl GlobalRules {
                 rules.build_result = build_result;
             }
             for (key, value) in by_field {
-                rules.by_field.entry(key)
-                    .or_insert(value);
+                rules.by_field.entry(key).or_insert(value);
             }
             for (key, value) in by_sum {
-                rules.by_sum.entry(key)
-                    .or_insert(value);
+                rules.by_sum.entry(key).or_insert(value);
             }
         }
         rules
@@ -547,24 +682,19 @@ enum MethodCallKind {
 }
 
 /// Fixed parameter of interface method.
-const INTERFACE_PARAMS: &str =
-    "const size_t start";
+const INTERFACE_PARAMS: &str = "const size_t start";
 
 /// Fixed arguments of interface method.
-const INTERFACE_ARGS: &str =
-    "start";
+const INTERFACE_ARGS: &str = "start";
 
 /// Fixed parameter of sum interface method.
-const SUM_INTERFACE_PARAMS: &str =
-    "const size_t start, const BinASTKind kind";
+const SUM_INTERFACE_PARAMS: &str = "const size_t start, const BinASTKind kind";
 
 /// Fixed arguments of sum interface method.
-const SUM_INTERFACE_ARGS: &str =
-    "start, kind";
+const SUM_INTERFACE_ARGS: &str = "start, kind";
 
 /// The name of the toplevel interface for the script.
-const TOPLEVEL_INTERFACE: &str =
-    "Program";
+const TOPLEVEL_INTERFACE: &str = "Program";
 
 /// In which context an interface appears.
 #[derive(Clone, Debug, PartialEq)]
@@ -691,8 +821,14 @@ impl CPPExporter {
         for (parser_node_name, typedef) in syntax.typedefs_by_name() {
             if typedef.is_optional() {
                 let content_name = TypeName::type_spec(typedef.spec());
-                let content_node_name = syntax.get_node_name(&content_name)
-                    .unwrap_or_else(|| panic!("While generating an option parser, could not find node name \"{}\"", content_name))
+                let content_node_name = syntax
+                    .get_node_name(&content_name)
+                    .unwrap_or_else(|| {
+                        panic!(
+                            "While generating an option parser, could not find node name \"{}\"",
+                            content_name
+                        )
+                    })
                     .clone();
                 debug!(target: "generate_spidermonkey", "CPPExporter::new adding optional typedef {:?} => {:?} => {:?}",
                     parser_node_name,
@@ -700,13 +836,23 @@ impl CPPExporter {
                     content_node_name);
                 option_parsers_to_generate.push(OptionParserData {
                     name: parser_node_name.clone(),
-                    elements: content_node_name
+                    elements: content_node_name,
                 });
-            } else if let TypeSpec::Array { ref contents, ref supports_empty } = *typedef.spec() {
+            } else if let TypeSpec::Array {
+                ref contents,
+                ref supports_empty,
+            } = *typedef.spec()
+            {
                 use std::collections::hash_map::Entry::*;
                 let content_name = TypeName::type_(&**contents);
-                let content_node_name = syntax.get_node_name(&content_name)
-                    .unwrap_or_else(|| panic!("While generating an array parser, could not find node name {}", content_name))
+                let content_node_name = syntax
+                    .get_node_name(&content_name)
+                    .unwrap_or_else(|| {
+                        panic!(
+                            "While generating an array parser, could not find node name {}",
+                            content_name
+                        )
+                    })
                     .clone();
                 debug!(target: "generate_spidermonkey", "CPPExporter::new adding list typedef {:?} => {:?} => {:?}",
                     parser_node_name,
@@ -715,7 +861,7 @@ impl CPPExporter {
                 let data = ListParserData {
                     name: parser_node_name.clone(),
                     supports_empty: *supports_empty,
-                    elements: content_node_name
+                    elements: content_node_name,
                 };
 
                 match canonical_list_parsers.entry(data.elements.clone()) {
@@ -747,28 +893,35 @@ impl CPPExporter {
         // string enums that contain each symbol and come up with a unique name
         // (note that there is no guarantee of unicity – if collisions show up,
         // we may need to tweak the name generation algorithm).
-        let mut enum_by_string : HashMap<String, Vec<NodeName>> = HashMap::new();
-        let mut enum_types : HashMap<NodeName, Rc<String>> = HashMap::new();
+        let mut enum_by_string: HashMap<String, Vec<NodeName>> = HashMap::new();
+        let mut enum_types: HashMap<NodeName, Rc<String>> = HashMap::new();
         for (name, enum_) in syntax.string_enums_by_name().iter() {
-            let type_ = format!("typename {parser_class_name}::{kind}",
-                                parser_class_name = rules.parser_class_name,
-                                kind = name.to_class_cases());
+            let type_ = format!(
+                "typename {parser_class_name}::{kind}",
+                parser_class_name = rules.parser_class_name,
+                kind = name.to_class_cases()
+            );
             enum_types.insert(name.clone(), Rc::new(type_));
             for string in enum_.strings().iter() {
-                let vec = enum_by_string.entry(string.clone())
+                let vec = enum_by_string
+                    .entry(string.clone())
                     .or_insert_with(|| vec![]);
                 vec.push(name.clone());
             }
         }
-        let variants_by_symbol = enum_by_string.drain()
+        let variants_by_symbol = enum_by_string
+            .drain()
             .map(|(string, names)| {
-                let expanded = format!("{names}{symbol}",
-                    names = names.iter()
+                let expanded = format!(
+                    "{names}{symbol}",
+                    names = names
+                        .iter()
                         .map(NodeName::to_str)
                         .sorted()
                         .into_iter()
                         .format("Or"),
-                    symbol = string.to_cpp_enum_case());
+                    symbol = string.to_cpp_enum_case()
+                );
                 (string, expanded)
             })
             .collect();
@@ -798,16 +951,24 @@ impl CPPExporter {
         if let Some(NamedType::Typedef(ref typedef)) = self.syntax.get_type_by_name(name) {
             assert!(typedef.is_optional());
             if let TypeSpec::NamedType(ref named) = *typedef.spec() {
-                self.syntax.get_type_by_name(named)
-                    .unwrap_or_else(|| panic!("Internal error: Could not find type {}, which should have been generated.", named.to_str()))
+                self.syntax.get_type_by_name(named).unwrap_or_else(|| {
+                    panic!(
+                        "Internal error: Could not find type {}, which should have been generated.",
+                        named.to_str()
+                    )
+                })
             } else {
-                panic!("Internal error: In {}, type {:?} should have been a named type",
-                       name.to_str(),
-                       typedef);
+                panic!(
+                    "Internal error: In {}, type {:?} should have been a named type",
+                    name.to_str(),
+                    typedef
+                );
             }
         } else {
-            panic!("Internal error: In {}, there should be a type with that name",
-                   name.to_str());
+            panic!(
+                "Internal error: In {}, there should be a type with that name",
+                name.to_str()
+            );
         }
     }
 
@@ -829,7 +990,9 @@ impl CPPExporter {
 
             let mut sum_edges: HashSet<Rc<String>> = HashSet::new();
             for node in nodes {
-                let rule_for_this_arm = rules_for_this_sum.by_sum.get(&node)
+                let rule_for_this_arm = rules_for_this_sum
+                    .by_sum
+                    .get(&node)
                     .cloned()
                     .unwrap_or_default();
 
@@ -866,11 +1029,14 @@ impl CPPExporter {
             if is_implemented {
                 for field in interface.contents().fields() {
                     match field.type_().get_primitive(&self.syntax) {
-                        Some(IsNullable { is_nullable: _, content: Primitive::Interface(_) })
-                            | None => {
-                                let typename = TypeName::type_(field.type_());
-                                interface_edges.insert(Rc::new(typename.to_string()));
-                            },
+                        Some(IsNullable {
+                            is_nullable: _,
+                            content: Primitive::Interface(_),
+                        })
+                        | None => {
+                            let typename = TypeName::type_(field.type_());
+                            interface_edges.insert(Rc::new(typename.to_string()));
+                        }
 
                         // Don't have to handle other type of fields (string,
                         // number, bool, etc).
@@ -909,14 +1075,12 @@ impl CPPExporter {
             match named_implementation {
                 NamedType::Interface(_) => {
                     edges.insert(Rc::new(format!("Interface{}", parser.elements.to_string())));
-                },
-                NamedType::Typedef(ref type_) => {
-                    match type_.spec() {
-                        &TypeSpec::TypeSum(_) => {
-                            edges.insert(Rc::new(format!("Sum{}", parser.elements.to_string())));
-                        },
-                        _ => {}
+                }
+                NamedType::Typedef(ref type_) => match type_.spec() {
+                    &TypeSpec::TypeSum(_) => {
+                        edges.insert(Rc::new(format!("Sum{}", parser.elements.to_string())));
                     }
+                    _ => {}
                 },
                 _ => {}
             }
@@ -939,21 +1103,27 @@ impl CPPExporter {
     /// Collect context information for each interface to determine
     /// which *Context type each method should receive.
     fn collect_context(&mut self) {
-        fn add_context(map: &mut ContextMap, name: Rc<String>,
-                       context: LookupContext) {
+        fn add_context(map: &mut ContextMap, name: Rc<String>, context: LookupContext) {
             let entry = map.entry(name).or_insert(LookupContext::empty());
             (*entry).add(context);
         }
 
         // 1. Root
-        add_context(&mut self.context_map,
-                    Rc::new("Program".to_string()), LookupContext::root());
-        add_context(&mut self.context_map,
-                    Rc::new("FunctionExpressionContents".to_string()),
-                    LookupContext::root());
-        add_context(&mut self.context_map,
-                    Rc::new("FunctionOrMethodContents".to_string()),
-                    LookupContext::root());
+        add_context(
+            &mut self.context_map,
+            Rc::new("Program".to_string()),
+            LookupContext::root(),
+        );
+        add_context(
+            &mut self.context_map,
+            Rc::new("FunctionExpressionContents".to_string()),
+            LookupContext::root(),
+        );
+        add_context(
+            &mut self.context_map,
+            Rc::new("FunctionOrMethodContents".to_string()),
+            LookupContext::root(),
+        );
 
         // 2. Interface fields
         // XXX => XXX.field
@@ -966,14 +1136,18 @@ impl CPPExporter {
 
             for field in interface.contents().fields() {
                 match field.type_().get_primitive(&self.syntax) {
-                    Some(IsNullable { is_nullable: _,
-                                      content: Primitive::Interface(_) })
-                        | None => {
-                            let typename = TypeName::type_(field.type_());
-                            add_context(&mut self.context_map,
-                                        Rc::new(typename),
-                                        LookupContext::field());
-                        }
+                    Some(IsNullable {
+                        is_nullable: _,
+                        content: Primitive::Interface(_),
+                    })
+                    | None => {
+                        let typename = TypeName::type_(field.type_());
+                        add_context(
+                            &mut self.context_map,
+                            Rc::new(typename),
+                            LookupContext::field(),
+                        );
+                    }
                     _ => {}
                 }
             }
@@ -986,17 +1160,16 @@ impl CPPExporter {
                 continue;
             }
 
-            add_context(&mut self.context_map,
-                        Rc::new(parser.elements.to_class_cases()),
-                        LookupContext::list());
+            add_context(
+                &mut self.context_map,
+                Rc::new(parser.elements.to_class_cases()),
+                LookupContext::list(),
+            );
         }
 
-        fn propagate_context(map: &mut ContextMap, from: Rc<String>,
-                             to: Rc<String>) {
+        fn propagate_context(map: &mut ContextMap, from: Rc<String>, to: Rc<String>) {
             let opt_context = match map.get(&from) {
-                Some(opt_context) => {
-                    opt_context.clone()
-                }
+                Some(opt_context) => opt_context.clone(),
                 _ => {
                     return;
                 }
@@ -1015,19 +1188,21 @@ impl CPPExporter {
             let named_implementation = self.get_named_implementation(&parser.name);
             match named_implementation {
                 NamedType::Interface(_) => {
-                    propagate_context(&mut self.context_map,
-                                      Rc::new(parser.name.to_class_cases()),
-                                      Rc::new(format!("Interface{}", parser.elements.to_class_cases())));
-                },
-                NamedType::Typedef(ref type_) => {
-                    match type_.spec() {
-                        &TypeSpec::TypeSum(_) => {
-                            propagate_context(&mut self.context_map,
-                                              Rc::new(parser.name.to_class_cases()),
-                                              Rc::new(format!("Sum{}", parser.elements.to_class_cases())));
-                        },
-                        _ => {}
+                    propagate_context(
+                        &mut self.context_map,
+                        Rc::new(parser.name.to_class_cases()),
+                        Rc::new(format!("Interface{}", parser.elements.to_class_cases())),
+                    );
+                }
+                NamedType::Typedef(ref type_) => match type_.spec() {
+                    &TypeSpec::TypeSum(_) => {
+                        propagate_context(
+                            &mut self.context_map,
+                            Rc::new(parser.name.to_class_cases()),
+                            Rc::new(format!("Sum{}", parser.elements.to_class_cases())),
+                        );
                     }
+                    _ => {}
                 },
                 _ => {}
             }
@@ -1045,13 +1220,15 @@ impl CPPExporter {
             propagate_context(
                 &mut self.context_map,
                 Rc::new(name.to_class_cases()),
-                Rc::new(format!("Sum{}", name.to_class_cases())));
+                Rc::new(format!("Sum{}", name.to_class_cases())),
+            );
 
             for node in nodes {
                 propagate_context(
                     &mut self.context_map,
                     Rc::new(format!("Sum{}", name.to_class_cases())),
-                    Rc::new(format!("Interface{}", node.to_class_cases())));
+                    Rc::new(format!("Interface{}", node.to_class_cases())),
+                );
             }
         }
 
@@ -1068,15 +1245,17 @@ impl CPPExporter {
             propagate_context(
                 &mut self.context_map,
                 Rc::new(name.to_class_cases()),
-                Rc::new(format!("Interface{}", name.to_class_cases())));
+                Rc::new(format!("Interface{}", name.to_class_cases())),
+            );
             propagate_context(
                 &mut self.context_map,
                 Rc::new(format!("Interface{}", name.to_class_cases())),
-                Rc::new(name.to_class_cases()));
+                Rc::new(name.to_class_cases()),
+            );
         }
     }
 
-// ----- Generating the header
+    // ----- Generating the header
 
     /// Get the type representing a success for parsing this node.
     fn get_type_ok(&self, name: &NodeName) -> Rc<String> {
@@ -1107,14 +1286,16 @@ impl CPPExporter {
     }
 
     fn get_context_param(&self, name: &NodeName, prefix: &str) -> String {
-        let context = match self.context_map.get(&Rc::new(format!("{}{}", prefix, name.to_rc_string()))) {
-            Some(context) => {
-                context.clone()
-            }
-            _ => {
-                panic!("{}{} doesn't have context", prefix, name.to_rc_string());
-            }
-        };
+        let context =
+            match self
+                .context_map
+                .get(&Rc::new(format!("{}{}", prefix, name.to_rc_string())))
+            {
+                Some(context) => context.clone(),
+                _ => {
+                    panic!("{}{} doesn't have context", prefix, name.to_rc_string());
+                }
+            };
         if context.is_root() {
             return "const RootContext& context".to_string();
         }
@@ -1134,25 +1315,25 @@ impl CPPExporter {
         panic!("unexpected context");
     }
 
-    fn get_method_signature(&self, name: &NodeName, prefix: &str, args: &str,
-                            extra_params: &Option<Rc<String>>) -> String {
+    fn get_method_signature(
+        &self,
+        name: &NodeName,
+        prefix: &str,
+        args: &str,
+        extra_params: &Option<Rc<String>>,
+    ) -> String {
         let type_ok = self.get_type_ok(name);
         let kind = name.to_class_cases();
         let extra = match extra_params {
-            Some(s) => {
-                format!("{}\n{}",
-                        if args.len() > 0 {
-                            ","
-                        } else {
-                            ""
-                        },
-                        s.reindent("        "))
-            }
-            _ => {
-                "".to_string()
-            }
+            Some(s) => format!(
+                "{}\n{}",
+                if args.len() > 0 { "," } else { "" },
+                s.reindent("        ")
+            ),
+            _ => "".to_string(),
         };
-        format!("    JS::Result<{type_ok}> parse{prefix}{kind}({args}{extra}{before_context}{context});
+        format!(
+            "    JS::Result<{type_ok}> parse{prefix}{kind}({args}{extra}{before_context}{context});
 ",
             prefix = prefix,
             type_ok = type_ok,
@@ -1168,25 +1349,25 @@ impl CPPExporter {
         )
     }
 
-    fn get_method_definition_start(&self, name: &NodeName, prefix: &str, args: &str,
-                                   extra_params: &Option<Rc<String>>) -> String {
+    fn get_method_definition_start(
+        &self,
+        name: &NodeName,
+        prefix: &str,
+        args: &str,
+        extra_params: &Option<Rc<String>>,
+    ) -> String {
         let type_ok = self.get_type_ok(name);
         let kind = name.to_class_cases();
         let extra = match extra_params {
-            Some(s) => {
-                format!("{}\n{}",
-                        if args.len() > 0 {
-                            ","
-                        } else {
-                            ""
-                        },
-                        s.reindent("        "))
-            }
-            _ => {
-                "".to_string()
-            }
+            Some(s) => format!(
+                "{}\n{}",
+                if args.len() > 0 { "," } else { "" },
+                s.reindent("        ")
+            ),
+            _ => "".to_string(),
         };
-        format!("{parser_class_template}JS::Result<{type_ok}>
+        format!(
+            "{parser_class_template}JS::Result<{type_ok}>
 {parser_class_name}::parse{prefix}{kind}({args}{extra}{before_context}{context})",
             parser_class_template = self.rules.parser_class_template,
             prefix = prefix,
@@ -1204,18 +1385,17 @@ impl CPPExporter {
         )
     }
 
-    fn get_context_param_for_sum(&self, sum: &NodeName,
-                                 arm: &NodeName, context: &str) -> String {
+    fn get_context_param_for_sum(&self, sum: &NodeName, arm: &NodeName, context: &str) -> String {
         let sum_name = format!("Sum{}", sum);
         let arm_name = format!("Interface{}", arm);
 
         let sum_context = match self.context_map.get(&sum_name) {
             Some(context) => context.clone(),
-            _ => panic!("no context")
+            _ => panic!("no context"),
         };
         let arm_context = match self.context_map.get(&arm_name) {
             Some(context) => context.clone(),
-            _ => panic!("no context")
+            _ => panic!("no context"),
         };
 
         if sum_context == arm_context {
@@ -1232,19 +1412,23 @@ impl CPPExporter {
         return format!("FieldOrListContext({})", context);
     }
 
-    fn get_context_param_for_optional(&self, optional: &NodeName,
-                                      body_prefix: &str, body: &NodeName,
-                                      context: &str) -> String {
+    fn get_context_param_for_optional(
+        &self,
+        optional: &NodeName,
+        body_prefix: &str,
+        body: &NodeName,
+        context: &str,
+    ) -> String {
         let optional_name = optional.to_string().clone();
         let body_name = format!("{}{}", body_prefix, body);
 
         let optional_context = match self.context_map.get(&optional_name) {
             Some(context) => context.clone(),
-            _ => panic!("no context")
+            _ => panic!("no context"),
         };
         let body_context = match self.context_map.get(&body_name) {
             Some(context) => context.clone(),
-            _ => panic!("no context")
+            _ => panic!("no context"),
         };
 
         if optional_context == body_context {
@@ -1261,13 +1445,12 @@ impl CPPExporter {
         return format!("FieldOrListContext({})", context);
     }
 
-    fn get_context_param_for_list(&self, element: &NodeName,
-                                  context: &str) -> String {
+    fn get_context_param_for_list(&self, element: &NodeName, context: &str) -> String {
         let element_name = element.to_string().clone();
 
         let element_context = match self.context_map.get(&element_name) {
             Some(context) => context.clone(),
-            _ => panic!("no context")
+            _ => panic!("no context"),
         };
 
         if element_context.is_list() {
@@ -1279,13 +1462,12 @@ impl CPPExporter {
         return format!("FieldOrListContext({})", context);
     }
 
-    fn get_context_param_for_field(&self, field: &NodeName,
-                                  context: &str) -> String {
+    fn get_context_param_for_field(&self, field: &NodeName, context: &str) -> String {
         let field_name = field.to_string().clone();
 
         let field_context = match self.context_map.get(&field_name) {
             Some(context) => context.clone(),
-            _ => panic!("no context")
+            _ => panic!("no context"),
         };
 
         if field_context.is_field() {
@@ -1301,66 +1483,69 @@ impl CPPExporter {
         return format!("FieldOrListContext({})", context);
     }
 
-    fn get_method_call(&self, var_name: &str, name: &NodeName,
-                       prefix: &str, args: &str,
-                       extra_params: &Option<Rc<String>>,
-                       context_name: String,
-                       call_kind: MethodCallKind) -> String {
+    fn get_method_call(
+        &self,
+        var_name: &str,
+        name: &NodeName,
+        prefix: &str,
+        args: &str,
+        extra_params: &Option<Rc<String>>,
+        context_name: String,
+        call_kind: MethodCallKind,
+    ) -> String {
         let type_ok_is_ok = match call_kind {
-            MethodCallKind::Decl | MethodCallKind::Var => {
-                self.get_type_ok(name).to_str() == "Ok"
-            }
-            MethodCallKind::AlwaysDecl | MethodCallKind::AlwaysVar => {
-                false
-            }
+            MethodCallKind::Decl | MethodCallKind::Var => self.get_type_ok(name).to_str() == "Ok",
+            MethodCallKind::AlwaysDecl | MethodCallKind::AlwaysVar => false,
         };
         let extra = match extra_params {
-            Some(s) => {
-                format!("{}\n{}",
-                        if args.len() > 0 {
-                            ","
-                        } else {
-                            ""
-                        },
-                        s.reindent("    "))
-            }
-            _ => {
-                "".to_string()
-            }
+            Some(s) => format!(
+                "{}\n{}",
+                if args.len() > 0 { "," } else { "" },
+                s.reindent("    ")
+            ),
+            _ => "".to_string(),
         };
-        let call = format!("parse{prefix}{name}({args}{extra}{before_context}{context})",
-                           prefix = prefix,
-                           name = name.to_class_cases(),
-                           args = args,
-                           extra = extra,
-                           before_context = if extra_params.is_some() || args.len() > 0 {
-                               ", "
-                           } else {
-                               ""
-                           },
-                           context = context_name
+        let call = format!(
+            "parse{prefix}{name}({args}{extra}{before_context}{context})",
+            prefix = prefix,
+            name = name.to_class_cases(),
+            args = args,
+            extra = extra,
+            before_context = if extra_params.is_some() || args.len() > 0 {
+                ", "
+            } else {
+                ""
+            },
+            context = context_name
         );
 
         if type_ok_is_ok {
             // Special case: `Ok` means that we shouldn't bind the return value.
-            format!("MOZ_TRY({call});",
-                    call = call)
+            format!("MOZ_TRY({call});", call = call)
         } else {
             match call_kind {
-                MethodCallKind::Decl | MethodCallKind::AlwaysDecl => {
-                    format!("BINJS_MOZ_TRY_DECL({var_name}, {call});",
-                            var_name = var_name, call = call)
-                }
-                MethodCallKind::Var | MethodCallKind::AlwaysVar => {
-                    format!("MOZ_TRY_VAR({var_name}, {call});",
-                            var_name = var_name, call = call)
-                }
+                MethodCallKind::Decl | MethodCallKind::AlwaysDecl => format!(
+                    "BINJS_MOZ_TRY_DECL({var_name}, {call});",
+                    var_name = var_name,
+                    call = call
+                ),
+                MethodCallKind::Var | MethodCallKind::AlwaysVar => format!(
+                    "MOZ_TRY_VAR({var_name}, {call});",
+                    var_name = var_name,
+                    call = call
+                ),
             }
         }
     }
 
     /// Auxiliary function: get a name for a field type.
-    fn get_field_type_name(canonical_list_parsers: &HashMap<NodeName, ListParserData>, _typedef: Option<&str>, spec: &Spec, type_: &Type, make_optional: bool) -> Cow<'static, str> {
+    fn get_field_type_name(
+        canonical_list_parsers: &HashMap<NodeName, ListParserData>,
+        _typedef: Option<&str>,
+        spec: &Spec,
+        type_: &Type,
+        make_optional: bool,
+    ) -> Cow<'static, str> {
         let optional = make_optional || type_.is_optional();
         match *type_.spec() {
             TypeSpec::Boolean if optional => Cow::from("PRIMITIVE(MaybeBoolean)"),
@@ -1383,29 +1568,47 @@ impl CPPExporter {
                 let typename = TypeName::type_(contents);
                 let node_name = spec.get_node_name(&typename).unwrap();
                 let ref name = canonical_list_parsers.get(node_name).unwrap().name;
-                let contents = Self::get_field_type_name(canonical_list_parsers, None, spec, contents, false);
+                let contents =
+                    Self::get_field_type_name(canonical_list_parsers, None, spec, contents, false);
                 debug!(target: "generate_spidermonkey", "get_field_type_name for LIST {name}",
                     name = name);
-                Cow::from(format!("LIST({name}, {contents})",
+                Cow::from(format!(
+                    "LIST({name}, {contents})",
                     name = name,
-                    contents = contents))
-            },
+                    contents = contents
+                ))
+            }
             TypeSpec::NamedType(ref name) => {
                 debug!(target: "generate_spidermonkey", "get_field_type_name for named type {name} ({optional})",
                     name = name,
                     optional = if optional { "optional" } else { "required" });
-                match spec.get_type_by_name(name).expect("By now, all types MUST exist") {
+                match spec
+                    .get_type_by_name(name)
+                    .expect("By now, all types MUST exist")
+                {
                     NamedType::Typedef(alias_type) => {
                         if alias_type.is_optional() {
-                            return Self::get_field_type_name(canonical_list_parsers, Some(name.to_str()), spec, alias_type.as_ref(), true)
+                            return Self::get_field_type_name(
+                                canonical_list_parsers,
+                                Some(name.to_str()),
+                                spec,
+                                alias_type.as_ref(),
+                                true,
+                            );
                         }
                         // Keep the simple name of sums and lists if there is one.
                         match *alias_type.spec() {
                             TypeSpec::TypeSum(_) => {
                                 if optional {
-                                    Cow::from(format!("OPTIONAL_SUM({name})", name = name.to_cpp_enum_case()))
+                                    Cow::from(format!(
+                                        "OPTIONAL_SUM({name})",
+                                        name = name.to_cpp_enum_case()
+                                    ))
                                 } else {
-                                    Cow::from(format!("SUM({name})", name = name.to_cpp_enum_case()))
+                                    Cow::from(format!(
+                                        "SUM({name})",
+                                        name = name.to_cpp_enum_case()
+                                    ))
                                 }
                             }
                             TypeSpec::Array { ref contents, .. } => {
@@ -1413,36 +1616,56 @@ impl CPPExporter {
                                 let typename = TypeName::type_(contents);
                                 let node_name = spec.get_node_name(&typename).unwrap();
                                 let ref name = canonical_list_parsers.get(node_name).unwrap().name;
-                                let contents = Self::get_field_type_name(canonical_list_parsers, None, spec, contents, false);
+                                let contents = Self::get_field_type_name(
+                                    canonical_list_parsers,
+                                    None,
+                                    spec,
+                                    contents,
+                                    false,
+                                );
                                 debug!(target: "generate_spidermonkey", "get_field_type_name for typedefed LIST {name}",
                                     name = name);
                                 if optional {
-                                    Cow::from(format!("OPTIONAL_LIST({name}, {contents})",
+                                    Cow::from(format!(
+                                        "OPTIONAL_LIST({name}, {contents})",
                                         name = name.to_cpp_enum_case(),
-                                        contents = contents))
+                                        contents = contents
+                                    ))
                                 } else {
-                                    Cow::from(format!("LIST({name}, {contents})",
+                                    Cow::from(format!(
+                                        "LIST({name}, {contents})",
                                         name = name.to_cpp_enum_case(),
-                                        contents = contents))
+                                        contents = contents
+                                    ))
                                 }
                             }
-                            _ => {
-                                Self::get_field_type_name(canonical_list_parsers, Some(name.to_str()), spec, alias_type.as_ref(), optional)
-                            }
+                            _ => Self::get_field_type_name(
+                                canonical_list_parsers,
+                                Some(name.to_str()),
+                                spec,
+                                alias_type.as_ref(),
+                                optional,
+                            ),
                         }
                     }
-                NamedType::StringEnum(_) if type_.is_optional() => Cow::from(
-                    format!("OPTIONAL_STRING_ENUM({name})",
-                        name = TypeName::type_(type_))),
-                NamedType::StringEnum(_) => Cow::from(
-                    format!("STRING_ENUM({name})",
-                        name = TypeName::type_(type_))),
-                NamedType::Interface(ref interface) if type_.is_optional() => Cow::from(
-                    format!("OPTIONAL_INTERFACE({name})",
-                        name = interface.name().to_class_cases())),
-                NamedType::Interface(ref interface) => Cow::from(
-                    format!("INTERFACE({name})",
-                        name = interface.name().to_class_cases())),
+                    NamedType::StringEnum(_) if type_.is_optional() => Cow::from(format!(
+                        "OPTIONAL_STRING_ENUM({name})",
+                        name = TypeName::type_(type_)
+                    )),
+                    NamedType::StringEnum(_) => Cow::from(format!(
+                        "STRING_ENUM({name})",
+                        name = TypeName::type_(type_)
+                    )),
+                    NamedType::Interface(ref interface) if type_.is_optional() => {
+                        Cow::from(format!(
+                            "OPTIONAL_INTERFACE({name})",
+                            name = interface.name().to_class_cases()
+                        ))
+                    }
+                    NamedType::Interface(ref interface) => Cow::from(format!(
+                        "INTERFACE({name})",
+                        name = interface.name().to_class_cases()
+                    )),
                 }
             }
             TypeSpec::TypeSum(ref contents) if type_.is_optional() => {
@@ -1453,7 +1676,9 @@ impl CPPExporter {
                 let name = TypeName::type_(&non_optional_type);
                 Cow::from(format!("OPTIONAL_SUM({name})", name = name))
             }
-            TypeSpec::TypeSum(_) => Cow::from(format!("SUM({name})", name = TypeName::type_(type_))),
+            TypeSpec::TypeSum(_) => {
+                Cow::from(format!("SUM({name})", name = TypeName::type_(type_)))
+            }
         }
     }
 
@@ -1466,66 +1691,85 @@ impl CPPExporter {
             buffer.push_str(&self.rules.hpp_tokens_kind_doc.reindent(""));
         }
 
-        let node_names = self.syntax.interfaces_by_name()
+        let node_names = self
+            .syntax
+            .interfaces_by_name()
             .keys()
             .map(|n| n.to_string())
             .sorted()
             .collect_vec();
         let kind_limit = node_names.len();
-        buffer.push_str(&format!("
+        buffer.push_str(&format!(
+            "
 #define FOR_EACH_BIN_KIND(F) \\
     F(_Uninitialized, \"Uninitialized\", UNINITIALIZED) \\
 {nodes}
 ",
-            nodes = node_names.iter()
-                .map(|name| format!("    F({enum_name}, \"{spec_name}\", {macro_name})",
+            nodes = node_names
+                .iter()
+                .map(|name| format!(
+                    "    F({enum_name}, \"{spec_name}\", {macro_name})",
                     enum_name = name.to_cpp_enum_case(),
                     spec_name = name,
-                    macro_name = name.to_cpp_macro_case()))
-                .format(" \\\n")));
-        buffer.push_str("
+                    macro_name = name.to_cpp_macro_case()
+                ))
+                .format(" \\\n")
+        ));
+        buffer.push_str(
+            "
 enum class BinASTKind: uint16_t {
 #define EMIT_ENUM(name, _1, _2) name,
     FOR_EACH_BIN_KIND(EMIT_ENUM)
 #undef EMIT_ENUM
 };
-");
+",
+        );
 
-        buffer.push_str(&format!("
+        buffer.push_str(&format!(
+            "
 // The number of distinct values of BinASTKind.
 const size_t BINASTKIND_LIMIT = {};
 
-", kind_limit));
+",
+            kind_limit
+        ));
         if self.rules.hpp_tokens_field_doc.is_some() {
             buffer.push_str(&self.rules.hpp_tokens_field_doc.reindent(""));
         }
 
-        let field_names = self.syntax.field_names()
-            .keys()
-            .sorted()
-            .collect_vec();
+        let field_names = self.syntax.field_names().keys().sorted().collect_vec();
         let field_limit = field_names.len();
-        buffer.push_str(&format!("
+        buffer.push_str(&format!(
+            "
 #define FOR_EACH_BIN_FIELD(F) \\
 {nodes}
 ",
-            nodes = field_names.iter()
-                .map(|name| format!("    F({enum_name}, \"{spec_name}\")",
+            nodes = field_names
+                .iter()
+                .map(|name| format!(
+                    "    F({enum_name}, \"{spec_name}\")",
                     spec_name = name,
-                    enum_name = name.to_cpp_enum_case()))
-                .format(" \\\n")));
-        buffer.push_str("
+                    enum_name = name.to_cpp_enum_case()
+                ))
+                .format(" \\\n")
+        ));
+        buffer.push_str(
+            "
 enum class BinASTField: uint16_t {
 #define EMIT_ENUM(name, _) name,
     FOR_EACH_BIN_FIELD(EMIT_ENUM)
 #undef EMIT_ENUM
 };
-");
-        buffer.push_str(&format!("
+",
+        );
+        buffer.push_str(&format!(
+            "
 // The number of distinct values of BinASTField.
 const size_t BINASTFIELD_LIMIT = {};
 
-", field_limit));
+",
+            field_limit
+        ));
 
         buffer.push_str(&format!("
 
@@ -1550,15 +1794,19 @@ const size_t BINASTFIELD_LIMIT = {};
                         )
                 })
                 .format(" \\\n")));
-        buffer.push_str("
+        buffer.push_str(
+            "
 enum class BinASTInterfaceAndField: uint16_t {
 #define EMIT_ENUM(name, _) name,
     FOR_EACH_BIN_INTERFACE_AND_FIELD(EMIT_ENUM)
 #undef EMIT_ENUM
 };
-");
+",
+        );
 
-        for (sum_name, sum) in self.syntax.resolved_sums_of_interfaces_by_name()
+        for (sum_name, sum) in self
+            .syntax
+            .resolved_sums_of_interfaces_by_name()
             .iter()
             .sorted_by_key(|a| a.0)
         {
@@ -1592,10 +1840,7 @@ const size_t BINAST_SUM_{sum_macro_name}_LIMIT = {limit};
                         )
                     })
                     .format(" \\\n")));
-
-
         }
-
 
         buffer.push_str("
 // Strongly typed iterations through the fields of interfaces.
@@ -1617,7 +1862,12 @@ const size_t BINAST_SUM_{sum_macro_name}_LIMIT = {limit};
     F, PRIMITIVE, INTERFACE, OPTIONAL_INTERFACE, LIST, SUM, OPTIONAL_SUM, \
     STRING_ENUM, OPTIONAL_STRING_ENUM)
 ");
-        for (interface_name, interface) in self.syntax.interfaces_by_name().iter().sorted_by_key(|a| a.0) {
+        for (interface_name, interface) in self
+            .syntax
+            .interfaces_by_name()
+            .iter()
+            .sorted_by_key(|a| a.0)
+        {
             let interface_enum_name = interface_name.to_cpp_enum_case();
             let interface_spec_name = interface_name.clone();
             let interface_macro_name = interface.name().to_cpp_macro_case();
@@ -1644,15 +1894,19 @@ const size_t BINAST_SUM_{sum_macro_name}_LIMIT = {limit};
                         )
                     })
                     .format(" \\\n")));
-            buffer.push_str(&format!("
+            buffer.push_str(&format!(
+                "
 // The number of fields of interface {interface_spec_name}.
 const size_t BINAST_NUMBER_OF_FIELDS_IN_INTERFACE_{interface_macro_name} = {len};",
                 interface_spec_name = interface_spec_name,
                 interface_macro_name = interface_macro_name,
-                len = interface.contents().fields().len()));
+                len = interface.contents().fields().len()
+            ));
         }
 
-        let total_number_of_fields: usize = self.syntax.interfaces_by_name()
+        let total_number_of_fields: usize = self
+            .syntax
+            .interfaces_by_name()
             .values()
             .map(|interface| interface.contents().fields().len())
             .sum();
@@ -1671,82 +1925,107 @@ const size_t BINAST_INTERFACE_AND_FIELD_LIMIT = {number};
         if self.rules.hpp_tokens_variants_doc.is_some() {
             buffer.push_str(&self.rules.hpp_tokens_variants_doc.reindent(""));
         }
-        let enum_variants : Vec<_> = self.variants_by_symbol
+        let enum_variants: Vec<_> = self
+            .variants_by_symbol
             .iter()
             .sorted_by_key(|a| a.0)
             .collect_vec();
         let variants_limit = enum_variants.len();
 
-        buffer.push_str(&format!("
+        buffer.push_str(&format!(
+            "
 #define FOR_EACH_BIN_VARIANT(F) \\
 {nodes}
 ",
-            nodes = enum_variants.into_iter()
-                .map(|(symbol, name)| format!("    F({variant_name}, \"{spec_name}\")",
+            nodes = enum_variants
+                .into_iter()
+                .map(|(symbol, name)| format!(
+                    "    F({variant_name}, \"{spec_name}\")",
                     spec_name = symbol,
-                    variant_name = name))
-                .format(" \\\n")));
+                    variant_name = name
+                ))
+                .format(" \\\n")
+        ));
 
-        buffer.push_str("
+        buffer.push_str(
+            "
 enum class BinASTVariant: uint16_t {
 #define EMIT_ENUM(name, _) name,
     FOR_EACH_BIN_VARIANT(EMIT_ENUM)
 #undef EMIT_ENUM
 };
-");
-        buffer.push_str(&format!("
+",
+        );
+        buffer.push_str(&format!(
+            "
 // The number of distinct values of BinASTVariant.
 const size_t BINASTVARIANT_LIMIT = {};
 
 ",
-            variants_limit));
+            variants_limit
+        ));
 
-        buffer.push_str(&format!("
+        buffer.push_str(&format!(
+            "
 #define FOR_EACH_BIN_STRING_ENUM(F) \\
 {nodes}
 ",
-            nodes = self.syntax.string_enums_by_name()
+            nodes = self
+                .syntax
+                .string_enums_by_name()
                 .keys()
                 .sorted()
                 .into_iter()
-                .map(|name| format!("    F({enum_name}, \"{spec_name}\", {macro_name})",
+                .map(|name| format!(
+                    "    F({enum_name}, \"{spec_name}\", {macro_name})",
                     enum_name = name.to_cpp_enum_case(),
                     spec_name = name.to_str(),
-                    macro_name = name.to_cpp_macro_case()))
-                .format(" \\\n")));
+                    macro_name = name.to_cpp_macro_case()
+                ))
+                .format(" \\\n")
+        ));
 
-        buffer.push_str("
+        buffer.push_str(
+            "
 enum class BinASTStringEnum: uint16_t {
 #define EMIT_ENUM(NAME, _HUMAN_NAME, _MACRO_NAME) NAME,
     FOR_EACH_BIN_STRING_ENUM(EMIT_ENUM)
 #undef EMIT_ENUM
 };
-");
-        buffer.push_str(&format!("
+",
+        );
+        buffer.push_str(&format!(
+            "
 // The number of distinct values of BinASTStringEnum.
 const size_t BINASTSTRINGENUM_LIMIT = {};
 
 ",
-            self.syntax.string_enums_by_name().len()));
+            self.syntax.string_enums_by_name().len()
+        ));
 
-        for (name, enum_) in self.syntax.string_enums_by_name()
+        for (name, enum_) in self
+            .syntax
+            .string_enums_by_name()
             .iter()
             .sorted_by_key(|kv| kv.0)
             .into_iter()
         {
             let enum_name = name.to_str().to_class_cases();
             let enum_macro_name = name.to_cpp_macro_case();
-            buffer.push_str(&format!("
+            buffer.push_str(&format!(
+                "
 #define FOR_EACH_BIN_VARIANT_IN_STRING_ENUM_{enum_macro_name}_BY_STRING_ORDER(F) \\
  {variants}
 ",
                 enum_macro_name = enum_macro_name,
-                variants = enum_.strings()
+                variants = enum_
+                    .strings()
                     .iter()
                     .sorted()
                     .into_iter()
                     .map(|variant_string| {
-                        format!("   F({enum_name}, {variant_name}, \"{variant_string}\")",
+                        format!(
+                            "   F({enum_name}, {variant_name}, \"{variant_string}\")",
                             enum_name = enum_name,
                             variant_name = self.variants_by_symbol.get(variant_string).unwrap(),
                             variant_string = variant_string
@@ -1754,15 +2033,18 @@ const size_t BINASTSTRINGENUM_LIMIT = {};
                     })
                     .format("\\\n")
             ));
-            buffer.push_str(&format!("
+            buffer.push_str(&format!(
+                "
 #define FOR_EACH_BIN_VARIANT_IN_STRING_ENUM_{enum_macro_name}_BY_WEBIDL_ORDER(F) \\
  {variants}
 ",
                 enum_macro_name = enum_macro_name,
-                variants = enum_.strings()
+                variants = enum_
+                    .strings()
                     .iter()
                     .map(|variant_string| {
-                        format!("   F({enum_name}, {variant_name}, \"{variant_string}\")",
+                        format!(
+                            "   F({enum_name}, {variant_name}, \"{variant_string}\")",
                             enum_name = enum_name,
                             variant_name = self.variants_by_symbol.get(variant_string).unwrap(),
                             variant_string = variant_string
@@ -1770,7 +2052,8 @@ const size_t BINASTSTRINGENUM_LIMIT = {};
                     })
                     .format("\\\n")
             ));
-            buffer.push_str(&format!("
+            buffer.push_str(&format!(
+                "
 
 const size_t BIN_AST_STRING_ENUM_{enum_macro_name}_LIMIT = {len};
 ",
@@ -1834,27 +2117,41 @@ const size_t BINAST_NUMBER_OF_LIST_TYPES = {number};
                                  .map(|_| "(X)")
                                  .format(",")));
 
-        buffer.push_str(&format!("
+        buffer.push_str(&format!(
+            "
 #define FOR_EACH_BIN_SUM(F) \\
 {nodes}
 ",
-            nodes = self.syntax.resolved_sums_of_interfaces_by_name()
+            nodes = self
+                .syntax
+                .resolved_sums_of_interfaces_by_name()
                 .iter()
                 .sorted_by_key(|a| a.0)
                 .into_iter()
-                .map(|(name, _)| format!("    F({name}, \"{spec_name}\", {macro_name}, {type_name})",
+                .map(|(name, _)| format!(
+                    "    F({name}, \"{spec_name}\", {macro_name}, {type_name})",
                     name = name.to_cpp_enum_case(),
                     spec_name = name.to_str(),
                     macro_name = name.to_cpp_macro_case(),
-                    type_name = Self::get_field_type_name(&self.canonical_list_parsers, Some(name.to_str()), &self.syntax, self.syntax.typedefs_by_name().get(name).unwrap(), false)))
-                .format(" \\\n")));
-        buffer.push_str("
+                    type_name = Self::get_field_type_name(
+                        &self.canonical_list_parsers,
+                        Some(name.to_str()),
+                        &self.syntax,
+                        self.syntax.typedefs_by_name().get(name).unwrap(),
+                        false
+                    )
+                ))
+                .format(" \\\n")
+        ));
+        buffer.push_str(
+            "
 enum class BinASTSum: uint16_t {
 #define EMIT_ENUM(name, _user, _macro, _type) name,
     FOR_EACH_BIN_SUM(EMIT_ENUM)
 #undef EMIT_ENUM
 };
-");
+",
+        );
         buffer.push_str(&format!("
 // The number of distinct sum types in the grammar. Used typically to maintain a probability table per sum type.
 const size_t BINAST_NUMBER_OF_SUM_TYPES = {};
@@ -1864,45 +2161,59 @@ const size_t BINAST_NUMBER_OF_SUM_TYPES = {};
 
         buffer.push_str(&self.rules.hpp_tokens_footer.reindent(""));
         buffer.push_str("\n");
-
     }
 
     /// Declare string enums
     fn export_declare_string_enums(&self, buffer: &mut String) {
-        buffer.push_str("
+        buffer.push_str(
+            "
 // ----- Declaring string enums (by lexicographical order)
-");
-        let string_enums_by_name = self.syntax.string_enums_by_name()
+",
+        );
+        let string_enums_by_name = self
+            .syntax
+            .string_enums_by_name()
             .iter()
             .sorted_by(|a, b| str::cmp(a.0.to_str(), b.0.to_str()));
         for (name, enum_) in string_enums_by_name {
-            let rendered_cases = enum_.strings()
+            let rendered_cases = enum_
+                .strings()
                 .iter()
-                .map(|str| format!("    // \"{original}\"
+                .map(|str| {
+                    format!(
+                        "    // \"{original}\"
     {case},",
-                    case = str.to_cpp_enum_case(),
-                    original = str))
+                        case = str.to_cpp_enum_case(),
+                        original = str
+                    )
+                })
                 .format("\n");
-            let rendered = format!("
+            let rendered = format!(
+                "
 enum class {name} {{
 {cases}
 }};
 ",
                 cases = rendered_cases,
-                name = name.to_class_cases());
+                name = name.to_class_cases()
+            );
             buffer.push_str(&rendered);
         }
     }
 
     fn export_declare_sums_of_interface_methods(&self, buffer: &mut String) {
-        let sums_of_interfaces = self.syntax.resolved_sums_of_interfaces_by_name()
+        let sums_of_interfaces = self
+            .syntax
+            .resolved_sums_of_interfaces_by_name()
             .iter()
             .sorted_by(|a, b| a.0.cmp(&b.0))
             .collect_vec();
-        buffer.push_str("
+        buffer.push_str(
+            "
     // ----- Sums of interfaces (by lexicographical order)
     // `ParseNode*` may never be nullptr
-");
+",
+        );
         for &(ref name, _) in &sums_of_interfaces {
             if !self.refgraph.is_used(name.to_rc_string().clone()) {
                 continue;
@@ -1910,33 +2221,36 @@ enum class {name} {{
 
             let rules_for_this_sum = self.rules.get(name);
             let extra_params = rules_for_this_sum.extra_params;
-            let rendered = self.get_method_signature(name, "", "",
-                                                     &extra_params);
-            buffer.push_str(&rendered.reindent("    ")
-                            .newline_if_not_empty());
+            let rendered = self.get_method_signature(name, "", "", &extra_params);
+            buffer.push_str(&rendered.reindent("    ").newline_if_not_empty());
         }
         for (name, _) in sums_of_interfaces {
             let prefix = "Sum";
-            if !self.refgraph.is_used(Rc::new(format!("{}{}", prefix, name))) {
+            if !self
+                .refgraph
+                .is_used(Rc::new(format!("{}{}", prefix, name)))
+            {
                 continue;
             }
 
             let rules_for_this_sum = self.rules.get(name);
             let extra_params = rules_for_this_sum.extra_params;
-            let rendered = self.get_method_signature(name, prefix,
-                                                     SUM_INTERFACE_PARAMS,
-                                                     &extra_params);
-            buffer.push_str(&rendered.reindent("    ")
-                            .newline_if_not_empty());
+            let rendered =
+                self.get_method_signature(name, prefix, SUM_INTERFACE_PARAMS, &extra_params);
+            buffer.push_str(&rendered.reindent("    ").newline_if_not_empty());
         }
     }
 
     fn export_declare_single_interface_methods(&self, buffer: &mut String) {
-        buffer.push_str("
+        buffer.push_str(
+            "
     // ----- Interfaces (by lexicographical order)
     // `ParseNode*` may never be nullptr
-");
-        let interfaces_by_name = self.syntax.interfaces_by_name()
+",
+        );
+        let interfaces_by_name = self
+            .syntax
+            .interfaces_by_name()
             .iter()
             .sorted_by(|a, b| str::cmp(a.0.to_str(), b.0.to_str()))
             .collect_vec();
@@ -1954,12 +2268,14 @@ enum class {name} {{
             }
 
             let inner_prefix = "Interface";
-            if !self.refgraph.is_used(Rc::new(format!("{}{}", inner_prefix, name))) {
+            if !self
+                .refgraph
+                .is_used(Rc::new(format!("{}{}", inner_prefix, name)))
+            {
                 continue;
             }
-            let inner = self.get_method_signature(name, inner_prefix,
-                                                  INTERFACE_PARAMS,
-                                                  &extra_params);
+            let inner =
+                self.get_method_signature(name, inner_prefix, INTERFACE_PARAMS, &extra_params);
             inner_parsers.push(inner.reindent("    "));
         }
 
@@ -1975,10 +2291,14 @@ enum class {name} {{
     }
 
     fn export_declare_string_enums_methods(&self, buffer: &mut String) {
-        buffer.push_str("
+        buffer.push_str(
+            "
     // ----- String enums (by lexicographical order)
-");
-        let string_enums_by_name = self.syntax.string_enums_by_name()
+",
+        );
+        let string_enums_by_name = self
+            .syntax
+            .string_enums_by_name()
             .iter()
             .sorted_by(|a, b| str::cmp(a.0.to_str(), b.0.to_str()));
         for (kind, _) in string_enums_by_name {
@@ -1993,9 +2313,11 @@ enum class {name} {{
     }
 
     fn export_declare_list_methods(&self, buffer: &mut String) {
-        buffer.push_str("
+        buffer.push_str(
+            "
     // ----- Lists (by lexicographical order)
-");
+",
+        );
         for parser in &self.list_parsers_to_generate {
             if !self.refgraph.is_used(parser.name.to_rc_string().clone()) {
                 continue;
@@ -2003,17 +2325,18 @@ enum class {name} {{
 
             let rules_for_this_node = self.rules.get(&parser.name);
             let extra_params = rules_for_this_node.extra_params;
-            let rendered = self.get_method_signature(&parser.name, "", "",
-                                                     &extra_params);
+            let rendered = self.get_method_signature(&parser.name, "", "", &extra_params);
             buffer.push_str(&rendered.reindent("    "));
             buffer.push_str("\n");
         }
     }
 
     fn export_declare_option_methods(&self, buffer: &mut String) {
-        buffer.push_str("
+        buffer.push_str(
+            "
     // ----- Default values (by lexicographical order)
-");
+",
+        );
         for parser in &self.option_parsers_to_generate {
             if !self.refgraph.is_used(parser.name.to_rc_string().clone()) {
                 continue;
@@ -2021,17 +2344,18 @@ enum class {name} {{
 
             let rules_for_this_node = self.rules.get(&parser.name);
             let extra_params = rules_for_this_node.extra_params;
-            let rendered = self.get_method_signature(&parser.name, "", "",
-                                                     &extra_params);
+            let rendered = self.get_method_signature(&parser.name, "", "", &extra_params);
             buffer.push_str(&rendered.reindent("    "));
             buffer.push_str("\n");
         }
     }
 
     fn generate_autogenerated_warning(&self) -> String {
-        let warning = format!("// This file was autogenerated by binjs_generate_spidermonkey,
+        let warning = format!(
+            "// This file was autogenerated by binjs_generate_spidermonkey,
 // please DO NOT EDIT BY HAND.
-");
+"
+        );
         warning
     }
 
@@ -2085,26 +2409,31 @@ enum class {name} {{
 
 impl CPPExporter {
     /// Generate implementation of a single typesum.
-    fn generate_implement_sum(&self, buffer: &mut String, name: &NodeName, nodes: &HashSet<NodeName>) {
+    fn generate_implement_sum(
+        &self,
+        buffer: &mut String,
+        name: &NodeName,
+        nodes: &HashSet<NodeName>,
+    ) {
         // Generate comments (FIXME: We should use the actual webidl, not the resolved sum)
         let rules_for_this_sum = self.rules.get(name);
         let extra_params = rules_for_this_sum.extra_params;
         let extra_args = rules_for_this_sum.extra_args;
-        let nodes = nodes.iter()
-            .sorted()
-            .collect_vec();
+        let nodes = nodes.iter().sorted().collect_vec();
         let kind = name.to_class_cases();
 
         if self.refgraph.is_used(name.to_rc_string().clone()) {
-            let rendered_bnf = format!("/*
+            let rendered_bnf = format!(
+                "/*
 {name} ::= {nodes}
 */",
-                nodes = nodes.iter()
-                    .format("\n    "),
-                name = name.to_str());
+                nodes = nodes.iter().format("\n    "),
+                name = name.to_str()
+            );
 
             // Generate outer method
-            buffer.push_str(&format!("{bnf}
+            buffer.push_str(&format!(
+                "{bnf}
 {first_line}
 {{
     BinASTKind kind = BinASTKind::_Uninitialized;
@@ -2121,26 +2450,35 @@ impl CPPExporter {
 }}
 ",
                 bnf = rendered_bnf,
-                call = self.get_method_call("result", name,
-                                            "Sum", SUM_INTERFACE_ARGS,
-                                            &extra_args,
-                                            "context".to_string(),
-                                            MethodCallKind::AlwaysDecl)
+                call = self
+                    .get_method_call(
+                        "result",
+                        name,
+                        "Sum",
+                        SUM_INTERFACE_ARGS,
+                        &extra_args,
+                        "context".to_string(),
+                        MethodCallKind::AlwaysDecl
+                    )
                     .reindent("    "),
-                first_line = self.get_method_definition_start(name, "", "",
-                                                              &extra_params)
+                first_line = self.get_method_definition_start(name, "", "", &extra_params)
             ));
         }
 
         let inner_prefix = "Sum";
-        if !self.refgraph.is_used(Rc::new(format!("{}{}", inner_prefix, name))) {
+        if !self
+            .refgraph
+            .is_used(Rc::new(format!("{}{}", inner_prefix, name)))
+        {
             return;
         }
 
         // Generate inner method
         let mut buffer_cases = String::new();
         for node in nodes {
-            let rule_for_this_arm = rules_for_this_sum.by_sum.get(&node)
+            let rule_for_this_arm = rules_for_this_sum
+                .by_sum
+                .get(&node)
                 .cloned()
                 .unwrap_or_default();
 
@@ -2152,22 +2490,31 @@ impl CPPExporter {
                 continue;
             }
 
-            buffer_cases.push_str(&format!("
+            buffer_cases.push_str(&format!(
+                "
       case BinASTKind::{variant_name}:
 {call}
 {arm_after}        break;",
-                call = self.get_method_call("result", node,
-                                            "Interface", INTERFACE_ARGS,
-                                            &extra_args,
-                                            self.get_context_param_for_sum(
-                                                name, node, "context"),
-                                            MethodCallKind::AlwaysVar)
+                call = self
+                    .get_method_call(
+                        "result",
+                        node,
+                        "Interface",
+                        INTERFACE_ARGS,
+                        &extra_args,
+                        self.get_context_param_for_sum(name, node, "context"),
+                        MethodCallKind::AlwaysVar
+                    )
                     .reindent("        "),
                 variant_name = node.to_cpp_enum_case(),
-                arm_after = rule_for_this_arm.after_arm.reindent("        ")
-                    .newline_if_not_empty()));
+                arm_after = rule_for_this_arm
+                    .after_arm
+                    .reindent("        ")
+                    .newline_if_not_empty()
+            ));
         }
-        buffer.push_str(&format!("
+        buffer.push_str(&format!(
+            "
 
 {first_line}
 {{
@@ -2186,9 +2533,12 @@ impl CPPExporter {
 ",
             kind = kind,
             cases = buffer_cases,
-            first_line = self.get_method_definition_start(name, inner_prefix,
-                                                          SUM_INTERFACE_PARAMS,
-                                                          &extra_params),
+            first_line = self.get_method_definition_start(
+                name,
+                inner_prefix,
+                SUM_INTERFACE_PARAMS,
+                &extra_params
+            ),
             type_ok = self.get_type_ok(name)
         ));
     }
@@ -2211,19 +2561,22 @@ impl CPPExporter {
             (rules_for_this_list.by_sum.len() > 0, "sum-arms:"),
         ] {
             if condition {
-                warn!("In {}, rule `{}` was specified but is ignored.", parser.name, name);
+                warn!(
+                    "In {}, rule `{}` was specified but is ignored.",
+                    parser.name, name
+                );
             }
         }
 
         let kind = parser.name.to_class_cases();
-        let first_line = self.get_method_definition_start(&parser.name, "", "",
-                                                          &extra_params);
+        let first_line = self.get_method_definition_start(&parser.name, "", "", &extra_params);
 
         let init = match rules_for_this_list.init {
             Some(str) => str.reindent("    "),
             None => {
                 // We cannot generate the method if we don't know how to initialize the list.
-                let rendered = format!("
+                let rendered = format!(
+                    "
 {first_line}
 {{
     return raiseError(\"FIXME: Not implemented yet in this preview release ({kind})\");
@@ -2238,16 +2591,14 @@ impl CPPExporter {
         };
         let append = match rules_for_this_list.append {
             Some(str) => str.reindent("        ").newline_if_not_empty(),
-            None => {
-                match self.rules.parser_list_append {
-                    Some(ref str) => str.reindent("        ").newline_if_not_empty(),
-                    None => "".to_string(),
-                }
-            }
+            None => match self.rules.parser_list_append {
+                Some(ref str) => str.reindent("        ").newline_if_not_empty(),
+                None => "".to_string(),
+            },
         };
 
-
-        let rendered = format!("
+        let rendered = format!(
+            "
 
 {first_line}
 {{
@@ -2269,30 +2620,38 @@ impl CPPExporter {
 }}
 ",
             first_line = first_line,
-            content_kind =
-                self.canonical_list_parsers.get(&parser.elements).unwrap() // Each list parser has a deduplicated representative
-                    .name.to_class_cases(),
-            empty_check =
-                if parser.supports_empty {
-                    "".to_string()
-                } else {
-                    format!("
+            content_kind = self
+                .canonical_list_parsers
+                .get(&parser.elements)
+                .unwrap() // Each list parser has a deduplicated representative
+                .name
+                .to_class_cases(),
+            empty_check = if parser.supports_empty {
+                "".to_string()
+            } else {
+                format!(
+                    "
     if (MOZ_UNLIKELY(length == 0)) {{
         return raiseEmpty(\"{kind}\");
     }}
 ",
-                        kind = kind)
-                },
-            call = self.get_method_call("item",
-                                        &parser.elements, "", "",
-                                        &extra_args,
-                                        self.get_context_param_for_list(
-                                            &parser.elements,
-                                            "childContext"),
-                                        MethodCallKind::Decl)
+                    kind = kind
+                )
+            },
+            call = self
+                .get_method_call(
+                    "item",
+                    &parser.elements,
+                    "",
+                    "",
+                    &extra_args,
+                    self.get_context_param_for_list(&parser.elements, "childContext"),
+                    MethodCallKind::Decl
+                )
                 .reindent("        "),
             init = init,
-            append = append);
+            append = append
+        );
         buffer.push_str(&rendered);
     }
 
@@ -2316,7 +2675,10 @@ impl CPPExporter {
             (rules_for_this_node.by_sum.len() > 0, "sum-arms:"),
         ] {
             if condition {
-                warn!("In {}, rule `{}` was specified but is ignored.", parser.name, name);
+                warn!(
+                    "In {}, rule `{}` was specified but is ignored.",
+                    parser.name, name
+                );
             }
         }
 
@@ -2325,24 +2687,34 @@ impl CPPExporter {
 
         // At this stage, thanks to deanonymization, `contents`
         // is something like `OptionalFooBar`.
-        let named_implementation =
-            if let Some(NamedType::Typedef(ref typedef)) = self.syntax.get_type_by_name(&parser.name) {
-                assert!(typedef.is_optional());
-                if let TypeSpec::NamedType(ref named) = *typedef.spec() {
-                    self.syntax.get_type_by_name(named)
-                        .unwrap_or_else(|| panic!("Internal error: Could not find type {}, which should have been generated.", named.to_str()))
-                } else {
-                    panic!("Internal error: In {}, type {:?} should have been a named type",
-                        parser.name.to_str(),
-                        typedef);
-                }
+        let named_implementation = if let Some(NamedType::Typedef(ref typedef)) =
+            self.syntax.get_type_by_name(&parser.name)
+        {
+            assert!(typedef.is_optional());
+            if let TypeSpec::NamedType(ref named) = *typedef.spec() {
+                self.syntax.get_type_by_name(named).unwrap_or_else(|| {
+                    panic!(
+                        "Internal error: Could not find type {}, which should have been generated.",
+                        named.to_str()
+                    )
+                })
             } else {
-                panic!("Internal error: In {}, there should be a type with that name",
-                    parser.name.to_str());
-            };
+                panic!(
+                    "Internal error: In {}, type {:?} should have been a named type",
+                    parser.name.to_str(),
+                    typedef
+                );
+            }
+        } else {
+            panic!(
+                "Internal error: In {}, there should be a type with that name",
+                parser.name.to_str()
+            );
+        };
         match named_implementation {
             NamedType::Interface(_) => {
-                buffer.push_str(&format!("{first_line}
+                buffer.push_str(&format!(
+                    "{first_line}
 {{
     BinASTKind kind = BinASTKind::_Uninitialized;
     AutoTaggedTuple guard(*tokenizer_);
@@ -2368,42 +2740,46 @@ impl CPPExporter {
 }}
 
 ",
-                    first_line = self.get_method_definition_start(&parser.name, "", "",
-                                                                  &extra_params),
+                    first_line =
+                        self.get_method_definition_start(&parser.name, "", "", &extra_params),
                     null = self.syntax.get_null_name().to_cpp_enum_case(),
-                    call = self.get_method_call("result",
-                                                &parser.elements,
-                                                "Interface", INTERFACE_ARGS,
-                                                &extra_args,
-                                                self.get_context_param_for_optional(
-                                                    &parser.name,
-                                                    "Interface", &parser.elements,
-                                                    "context"),
-                                                MethodCallKind::AlwaysVar)
+                    call = self
+                        .get_method_call(
+                            "result",
+                            &parser.elements,
+                            "Interface",
+                            INTERFACE_ARGS,
+                            &extra_args,
+                            self.get_context_param_for_optional(
+                                &parser.name,
+                                "Interface",
+                                &parser.elements,
+                                "context"
+                            ),
+                            MethodCallKind::AlwaysVar
+                        )
                         .reindent("        "),
-                    before = rules_for_this_node.some_before
-                        .map_or_else(|| "".to_string(),
-                                     |s| s
-                                     .reindent("        ")
-                                     .newline_if_not_empty()),
-                    after = rules_for_this_node.some_after
-                        .map_or_else(|| "".to_string(),
-                                     |s| s
-                                     .reindent("        ")
-                                     .newline_if_not_empty()),
-                    none_block = rules_for_this_node.none_replace
-                        .map_or_else(|| format!("result = {default_value};",
-                                                default_value = default_value)
-                                            .reindent("        "),
-                                     |s| s.reindent("        ")),
+                    before = rules_for_this_node.some_before.map_or_else(
+                        || "".to_string(),
+                        |s| s.reindent("        ").newline_if_not_empty()
+                    ),
+                    after = rules_for_this_node.some_after.map_or_else(
+                        || "".to_string(),
+                        |s| s.reindent("        ").newline_if_not_empty()
+                    ),
+                    none_block = rules_for_this_node.none_replace.map_or_else(
+                        || format!("result = {default_value};", default_value = default_value)
+                            .reindent("        "),
+                        |s| s.reindent("        ")
+                    ),
                     type_ok = type_ok,
                     kind = parser.elements.to_cpp_enum_case(),
                 ));
             }
-            NamedType::Typedef(ref type_) => {
-                match type_.spec() {
-                    &TypeSpec::TypeSum(_) => {
-                buffer.push_str(&format!("{first_line}
+            NamedType::Typedef(ref type_) => match type_.spec() {
+                &TypeSpec::TypeSum(_) => {
+                    buffer.push_str(&format!(
+                        "{first_line}
 {{
     BinASTKind kind = BinASTKind::_Uninitialized;
     AutoTaggedTuple guard(*tokenizer_);
@@ -2423,51 +2799,59 @@ impl CPPExporter {
 }}
 
 ",
-                            first_line = self.get_method_definition_start(&parser.name, "", "",
-                                                                          &extra_params),
-                            call = self.get_method_call("result", &parser.elements,
-                                                        "Sum", SUM_INTERFACE_ARGS,
-                                                        &extra_args,
-                                                        self.get_context_param_for_optional(
-                                                            &parser.name,
-                                                            "Sum", &parser.elements,
-                                                            "context"),
-                                                        MethodCallKind::AlwaysVar)
+                        first_line =
+                            self.get_method_definition_start(&parser.name, "", "", &extra_params),
+                        call = self
+                            .get_method_call(
+                                "result",
+                                &parser.elements,
+                                "Sum",
+                                SUM_INTERFACE_ARGS,
+                                &extra_args,
+                                self.get_context_param_for_optional(
+                                    &parser.name,
+                                    "Sum",
+                                    &parser.elements,
+                                    "context"
+                                ),
+                                MethodCallKind::AlwaysVar
+                            )
+                            .reindent("        "),
+                        before = rules_for_this_node.some_before.map_or_else(
+                            || "".to_string(),
+                            |s| s.reindent("        ").newline_if_not_empty()
+                        ),
+                        after = rules_for_this_node.some_after.map_or_else(
+                            || "".to_string(),
+                            |s| s.reindent("        ").newline_if_not_empty()
+                        ),
+                        none_block = rules_for_this_node.none_replace.map_or_else(
+                            || format!("result = {default_value};", default_value = default_value)
                                 .reindent("        "),
-                            before = rules_for_this_node.some_before
-                                .map_or_else(|| "".to_string(),
-                                             |s| s
-                                             .reindent("        ")
-                                             .newline_if_not_empty()),
-                            after = rules_for_this_node.some_after
-                                .map_or_else(|| "".to_string(),
-                                             |s| s
-                                             .reindent("        ")
-                                             .newline_if_not_empty()),
-                            none_block = rules_for_this_node.none_replace
-                                .map_or_else(|| format!("result = {default_value};",
-                                                        default_value = default_value)
-                                                    .reindent("        "),
-                                             |s| s.reindent("        ")),
-                            type_ok = type_ok,
-                            null = self.syntax.get_null_name().to_cpp_enum_case(),
-                        ));
-                    }
-                    &TypeSpec::String => {
-                        let build_result = rules_for_this_node.init.reindent("    ");
-                        let first_line = self.get_method_definition_start(&parser.name, "", "",
-                                                                          &extra_params);
-                        if build_result.len() == 0 {
-                            buffer.push_str(&format!("{first_line}
+                            |s| s.reindent("        ")
+                        ),
+                        type_ok = type_ok,
+                        null = self.syntax.get_null_name().to_cpp_enum_case(),
+                    ));
+                }
+                &TypeSpec::String => {
+                    let build_result = rules_for_this_node.init.reindent("    ");
+                    let first_line =
+                        self.get_method_definition_start(&parser.name, "", "", &extra_params);
+                    if build_result.len() == 0 {
+                        buffer.push_str(&format!(
+                            "{first_line}
 {{
     return raiseError(\"FIXME: Not implemented yet in this preview release ({kind})\");
 }}
 
 ",
-                                first_line = first_line,
-                                kind = parser.name.to_str()));
-                        } else {
-                            buffer.push_str(&format!("{first_line}
+                            first_line = first_line,
+                            kind = parser.name.to_str()
+                        ));
+                    } else {
+                        buffer.push_str(&format!(
+                            "{first_line}
 {{
     BINJS_MOZ_TRY_DECL(result, tokenizer_->readMaybeAtom(context));
 
@@ -2477,26 +2861,29 @@ impl CPPExporter {
 }}
 
 ",
-                                first_line = first_line,
-                                build = build_result,
-                            ));
-                        }
+                            first_line = first_line,
+                            build = build_result,
+                        ));
                     }
-                    &TypeSpec::IdentifierName => {
-                        let build_result = rules_for_this_node.init.reindent("    ");
-                        let first_line = self.get_method_definition_start(&parser.name, "", "",
-                                                                          &extra_params);
-                        if build_result.len() == 0 {
-                            buffer.push_str(&format!("{first_line}
+                }
+                &TypeSpec::IdentifierName => {
+                    let build_result = rules_for_this_node.init.reindent("    ");
+                    let first_line =
+                        self.get_method_definition_start(&parser.name, "", "", &extra_params);
+                    if build_result.len() == 0 {
+                        buffer.push_str(&format!(
+                            "{first_line}
 {{
     return raiseError(\"FIXME: Not implemented yet in this preview release ({kind})\");
 }}
 
 ",
-                                first_line = first_line,
-                                kind = parser.name.to_str()));
-                        } else {
-                            buffer.push_str(&format!("{first_line}
+                            first_line = first_line,
+                            kind = parser.name.to_str()
+                        ));
+                    } else {
+                        buffer.push_str(&format!(
+                            "{first_line}
 {{
     BINJS_MOZ_TRY_DECL(result, tokenizer_->readMaybeIdentifierName(context));
 
@@ -2506,61 +2893,70 @@ impl CPPExporter {
 }}
 
 ",
-                                first_line = first_line,
-                                build = build_result,
-                            ));
-                        }
+                            first_line = first_line,
+                            build = build_result,
+                        ));
                     }
-                    &TypeSpec::PropertyKey => {
-                        debug!(target: "generate_spidermonkey", "Generating method for PropertyKey: {:?}", parser.name);
-                        let build_result = rules_for_this_node.init.reindent("    ");
-                        let first_line = self.get_method_definition_start(&parser.name, "", "",
-                                                                          &extra_params);
-                        if build_result.len() == 0 {
-                            buffer.push_str(&format!("{first_line}
+                }
+                &TypeSpec::PropertyKey => {
+                    debug!(target: "generate_spidermonkey", "Generating method for PropertyKey: {:?}", parser.name);
+                    let build_result = rules_for_this_node.init.reindent("    ");
+                    let first_line =
+                        self.get_method_definition_start(&parser.name, "", "", &extra_params);
+                    if build_result.len() == 0 {
+                        buffer.push_str(&format!(
+                            "{first_line}
 {{
     return raiseError(\"FIXME: Not implemented yet in this preview release ({kind})\");
 }}
 
 ",
-                                first_line = first_line,
-                                kind = parser.name.to_str()));
-                        } else {
-                            panic!("PropertyKey shouldn't be optional");
-                        }
+                            first_line = first_line,
+                            kind = parser.name.to_str()
+                        ));
+                    } else {
+                        panic!("PropertyKey shouldn't be optional");
                     }
-                    _else => unimplemented!("{:?}", _else)
                 }
-            }
-            NamedType::StringEnum(_) => {
-                unimplemented!()
-            }
+                _else => unimplemented!("{:?}", _else),
+            },
+            NamedType::StringEnum(_) => unimplemented!(),
         }
     }
 
-    fn generate_implement_interface(&self, buffer: &mut String, name: &NodeName, interface: &Interface) {
+    fn generate_implement_interface(
+        &self,
+        buffer: &mut String,
+        name: &NodeName,
+        interface: &Interface,
+    ) {
         let rules_for_this_interface = self.rules.get(name);
         let extra_params = rules_for_this_interface.extra_params;
         let extra_args = rules_for_this_interface.extra_args;
 
-        for &(condition, rule_name) in &[
-            (rules_for_this_interface.append.is_some(), "build:"),
-        ] {
+        for &(condition, rule_name) in &[(rules_for_this_interface.append.is_some(), "build:")] {
             if condition {
-                warn!("In {}, rule `{}` was specified but is ignored.", name, rule_name);
+                warn!(
+                    "In {}, rule `{}` was specified but is ignored.",
+                    name, rule_name
+                );
             }
         }
 
         if self.refgraph.is_used(name.to_rc_string().clone()) {
             // Generate comments
-            let comment = format!("
+            let comment = format!(
+                "
 /*
 {}*/
-", ToWebidl::interface(interface, "", "    "));
+",
+                ToWebidl::interface(interface, "", "    ")
+            );
             buffer.push_str(&comment);
 
             // Generate public method
-            buffer.push_str(&format!("{first_line}
+            buffer.push_str(&format!(
+                "{first_line}
 {{
     BinASTKind kind = BinASTKind::{kind};
     AutoTaggedTuple guard(*tokenizer_);
@@ -2575,47 +2971,65 @@ impl CPPExporter {
 }}
 
 ",
-                first_line = self.get_method_definition_start(name, "", "",
-                                                              &extra_params),
+                first_line = self.get_method_definition_start(name, "", "", &extra_params),
                 kind = name.to_cpp_enum_case(),
-                call = self.get_method_call("result", name,
-                                            "Interface", INTERFACE_ARGS,
-                                            &extra_args,
-                                            "context".to_string(),
-                                            MethodCallKind::AlwaysDecl)
+                call = self
+                    .get_method_call(
+                        "result",
+                        name,
+                        "Interface",
+                        INTERFACE_ARGS,
+                        &extra_args,
+                        "context".to_string(),
+                        MethodCallKind::AlwaysDecl
+                    )
                     .reindent("    ")
             ));
         }
 
         let inner_prefix = "Interface";
-        if !self.refgraph.is_used(Rc::new(format!("{}{}", inner_prefix, name))) {
+        if !self
+            .refgraph
+            .is_used(Rc::new(format!("{}{}", inner_prefix, name)))
+        {
             return;
         }
 
         // Generate aux method
-        let first_line = self.get_method_definition_start(name, inner_prefix,
-                                                          INTERFACE_PARAMS,
-                                                          &extra_params);
+        let first_line =
+            self.get_method_definition_start(name, inner_prefix, INTERFACE_PARAMS, &extra_params);
 
         let mut fields_implem = String::new();
         for field in interface.contents().fields() {
-            let context = format!("FieldContext(BinASTInterfaceAndField::{kind}__{field})",
+            let context = format!(
+                "FieldContext(BinASTInterfaceAndField::{kind}__{field})",
                 kind = name.to_cpp_enum_case(),
-                field = field.name().to_cpp_enum_case());
+                field = field.name().to_cpp_enum_case()
+            );
 
-            let rules_for_this_field = rules_for_this_interface.by_field.get(field.name())
+            let rules_for_this_field = rules_for_this_interface
+                .by_field
+                .get(field.name())
                 .cloned()
                 .unwrap_or_default();
-            let needs_block = rules_for_this_field.block_before_field.is_some() || rules_for_this_field.block_after_field.is_some();
+            let needs_block = rules_for_this_field.block_before_field.is_some()
+                || rules_for_this_field.block_after_field.is_some();
 
             let var_name = field.name().to_cpp_field_case();
             let (decl_var, parse_var) = match field.type_().get_primitive(&self.syntax) {
-                Some(IsNullable { is_nullable: false, content: Primitive::Number }) => {
+                Some(IsNullable {
+                    is_nullable: false,
+                    content: Primitive::Number,
+                }) => {
                     if needs_block {
-                        (Some(format!("double {var_name};", var_name = var_name)),
-                            Some(format!("MOZ_TRY_VAR({var_name}, tokenizer_->readDouble({context}));",
+                        (
+                            Some(format!("double {var_name};", var_name = var_name)),
+                            Some(format!(
+                                "MOZ_TRY_VAR({var_name}, tokenizer_->readDouble({context}));",
                                 var_name = var_name,
-                                context = context)))
+                                context = context
+                            )),
+                        )
                     } else {
                         (None,
                             Some(format!("BINJS_MOZ_TRY_DECL({var_name}, tokenizer_->readDouble({context}));",
@@ -2623,12 +3037,19 @@ impl CPPExporter {
                                 context = context)))
                     }
                 }
-                Some(IsNullable { is_nullable: false, content: Primitive::UnsignedLong }) => {
+                Some(IsNullable {
+                    is_nullable: false,
+                    content: Primitive::UnsignedLong,
+                }) => {
                     if needs_block {
-                        (Some(format!("uint32_t {var_name};", var_name = var_name)),
-                            Some(format!("MOZ_TRY_VAR({var_name}, tokenizer_->readUnsignedLong({context}));",
+                        (
+                            Some(format!("uint32_t {var_name};", var_name = var_name)),
+                            Some(format!(
+                                "MOZ_TRY_VAR({var_name}, tokenizer_->readUnsignedLong({context}));",
                                 var_name = var_name,
-                                context = context)))
+                                context = context
+                            )),
+                        )
                     } else {
                         (None,
                             Some(format!("BINJS_MOZ_TRY_DECL({var_name}, tokenizer_->readUnsignedLong({context}));",
@@ -2636,20 +3057,34 @@ impl CPPExporter {
                                 context = context)))
                     }
                 }
-                Some(IsNullable { is_nullable: false, content: Primitive::Boolean }) => {
+                Some(IsNullable {
+                    is_nullable: false,
+                    content: Primitive::Boolean,
+                }) => {
                     if needs_block {
-                        (Some(format!("bool {var_name};", var_name = var_name)),
-                        Some(format!("MOZ_TRY_VAR({var_name}, tokenizer_->readBool({context}));",
-                            var_name = var_name,
-                            context = context)))
+                        (
+                            Some(format!("bool {var_name};", var_name = var_name)),
+                            Some(format!(
+                                "MOZ_TRY_VAR({var_name}, tokenizer_->readBool({context}));",
+                                var_name = var_name,
+                                context = context
+                            )),
+                        )
                     } else {
-                        (None,
-                        Some(format!("BINJS_MOZ_TRY_DECL({var_name}, tokenizer_->readBool({context}));",
-                            var_name = var_name,
-                            context = context)))
+                        (
+                            None,
+                            Some(format!(
+                                "BINJS_MOZ_TRY_DECL({var_name}, tokenizer_->readBool({context}));",
+                                var_name = var_name,
+                                context = context
+                            )),
+                        )
                     }
                 }
-                Some(IsNullable { is_nullable: false, content: Primitive::Offset }) => {
+                Some(IsNullable {
+                    is_nullable: false,
+                    content: Primitive::Offset,
+                }) => {
                     if needs_block {
                         (Some(format!("BinASTTokenReaderBase::SkippableSubTree {var_name};", var_name = var_name)),
                         Some(format!("MOZ_TRY_VAR({var_name}, tokenizer_->readSkippableSubTree({context}));",
@@ -2662,67 +3097,110 @@ impl CPPExporter {
                             context = context)))
                     }
                 }
-                Some(IsNullable { content: Primitive::Void, .. }) => {
+                Some(IsNullable {
+                    content: Primitive::Void,
+                    ..
+                }) => {
                     warn!("Internal error: We shouldn't have any `void` types at this stage.");
-                    (Some(format!("// Skipping void field {}", field.name().to_str())),
-                        None)
+                    (
+                        Some(format!("// Skipping void field {}", field.name().to_str())),
+                        None,
+                    )
                 }
-                Some(IsNullable { is_nullable: false, content: Primitive::String }) => {
-                    (Some(format!("RootedAtom {var_name}(cx_);", var_name = var_name)),
-                        Some(format!("MOZ_TRY_VAR({var_name}, tokenizer_->readAtom({context}));",
-                            var_name = var_name,
-                            context = context)))
-                }
-                Some(IsNullable { is_nullable: false, content: Primitive::IdentifierName }) => {
-                    (Some(format!("RootedAtom {var_name}(cx_);", var_name = var_name)),
-                        Some(format!("MOZ_TRY_VAR({var_name}, tokenizer_->readIdentifierName({context}));",
-                            var_name = var_name,
-                            context = context)))
-                }
-                Some(IsNullable { is_nullable: false, content: Primitive::PropertyKey }) => {
-                    (Some(format!("RootedAtom {var_name}(cx_);", var_name = var_name)),
-                        Some(format!("MOZ_TRY_VAR({var_name}, tokenizer_->readPropertyKey({context}));",
-                            var_name = var_name,
-                            context = context)))
-                }
-                Some(IsNullable { is_nullable: true, content: Primitive::String }) => {
-                    (Some(format!("RootedAtom {var_name}(cx_);", var_name = var_name)),
-                        Some(format!("MOZ_TRY_VAR({var_name}, tokenizer_->readMaybeAtom({context}));",
-                            var_name = var_name,
-                            context = context)))
-                }
-                Some(IsNullable { is_nullable: true, content: Primitive::IdentifierName }) => {
-                    (Some(format!("RootedAtom {var_name}(cx_);", var_name = var_name)),
-                        Some(format!("MOZ_TRY_VAR({var_name}, tokenizer_->readMaybeIdentifierName({context}));",
-                            var_name = var_name,
-                            context = context)))
-                }
-                Some(IsNullable { is_nullable: true, content: Primitive::PropertyKey }) => {
+                Some(IsNullable {
+                    is_nullable: false,
+                    content: Primitive::String,
+                }) => (
+                    Some(format!("RootedAtom {var_name}(cx_);", var_name = var_name)),
+                    Some(format!(
+                        "MOZ_TRY_VAR({var_name}, tokenizer_->readAtom({context}));",
+                        var_name = var_name,
+                        context = context
+                    )),
+                ),
+                Some(IsNullable {
+                    is_nullable: false,
+                    content: Primitive::IdentifierName,
+                }) => (
+                    Some(format!("RootedAtom {var_name}(cx_);", var_name = var_name)),
+                    Some(format!(
+                        "MOZ_TRY_VAR({var_name}, tokenizer_->readIdentifierName({context}));",
+                        var_name = var_name,
+                        context = context
+                    )),
+                ),
+                Some(IsNullable {
+                    is_nullable: false,
+                    content: Primitive::PropertyKey,
+                }) => (
+                    Some(format!("RootedAtom {var_name}(cx_);", var_name = var_name)),
+                    Some(format!(
+                        "MOZ_TRY_VAR({var_name}, tokenizer_->readPropertyKey({context}));",
+                        var_name = var_name,
+                        context = context
+                    )),
+                ),
+                Some(IsNullable {
+                    is_nullable: true,
+                    content: Primitive::String,
+                }) => (
+                    Some(format!("RootedAtom {var_name}(cx_);", var_name = var_name)),
+                    Some(format!(
+                        "MOZ_TRY_VAR({var_name}, tokenizer_->readMaybeAtom({context}));",
+                        var_name = var_name,
+                        context = context
+                    )),
+                ),
+                Some(IsNullable {
+                    is_nullable: true,
+                    content: Primitive::IdentifierName,
+                }) => (
+                    Some(format!("RootedAtom {var_name}(cx_);", var_name = var_name)),
+                    Some(format!(
+                        "MOZ_TRY_VAR({var_name}, tokenizer_->readMaybeIdentifierName({context}));",
+                        var_name = var_name,
+                        context = context
+                    )),
+                ),
+                Some(IsNullable {
+                    is_nullable: true,
+                    content: Primitive::PropertyKey,
+                }) => {
                     panic!("PropertyKey shouldn't be optional");
                 }
                 _else => {
                     let typename = TypeName::type_(field.type_());
-                    let name = self.syntax.get_node_name(typename.to_str())
+                    let name = self
+                        .syntax
+                        .get_node_name(typename.to_str())
                         .expect("NodeName for the field type should exist.");
                     let field_extra_args = rules_for_this_field.extra_args;
 
                     let (decl_var, call_kind) = if needs_block {
-                        (Some(format!("{typename} {var_name};",
-                                      var_name = var_name,
-                                      typename = typename)),
-                         MethodCallKind::Var)
+                        (
+                            Some(format!(
+                                "{typename} {var_name};",
+                                var_name = var_name,
+                                typename = typename
+                            )),
+                            MethodCallKind::Var,
+                        )
                     } else {
-                        (None,
-                         MethodCallKind::Decl)
+                        (None, MethodCallKind::Decl)
                     };
 
-                    (decl_var,
-                     Some(self.get_method_call(var_name.to_str(),
-                                               &name, "", "", &field_extra_args,
-                                               self.get_context_param_for_field(
-                                                   name,
-                                                   &context),
-                                               call_kind)))
+                    (
+                        decl_var,
+                        Some(self.get_method_call(
+                            var_name.to_str(),
+                            &name,
+                            "",
+                            "",
+                            &field_extra_args,
+                            self.get_context_param_for_field(name, &context),
+                            call_kind,
+                        )),
+                    )
                 }
             };
             let rendered = {
@@ -2736,8 +3214,7 @@ impl CPPExporter {
                             warn!("In {}, rule `{}` was specified but is ignored because `replace:` is also specified.", name, rule_name);
                         }
                     }
-                    rules_for_this_field.replace.reindent("    ")
-                        .newline()
+                    rules_for_this_field.replace.reindent("    ").newline()
                 } else {
                     let before_field = rules_for_this_field.before_field.reindent("    ");
                     let after_field = rules_for_this_field.after_field.reindent("    ");
@@ -2748,27 +3225,34 @@ impl CPPExporter {
                     };
                     if needs_block {
                         let parse_var = parse_var.reindent("        ");
-                        format!("
+                        format!(
+                            "
 {before_field}{decl_var}    {{
 {block_before_field}{parse_var}{block_after_field}
     }}
 {after_field}",
                             before_field = before_field.reindent("    ").newline_if_not_empty(),
                             decl_var = decl_var.reindent("    ").newline_if_not_empty(),
-                            block_before_field = rules_for_this_field.block_before_field.reindent("        ").newline_if_not_empty(),
+                            block_before_field = rules_for_this_field
+                                .block_before_field
+                                .reindent("        ")
+                                .newline_if_not_empty(),
                             parse_var = parse_var.reindent("        ").newline_if_not_empty(),
-                            block_after_field = rules_for_this_field.block_after_field.reindent("        "),
+                            block_after_field =
+                                rules_for_this_field.block_after_field.reindent("        "),
                             after_field = after_field.reindent("    "),
                         )
                     } else {
                         // We have a before_field and an after_field. This will create newlines
                         // for them.
-                        format!("
+                        format!(
+                            "
 {before_field}{decl_var}{parse_var}{after_field}",
                             before_field = before_field.reindent("    ").newline_if_not_empty(),
                             decl_var = decl_var.reindent("    ").newline_if_not_empty(),
                             parse_var = parse_var.reindent("    ").newline_if_not_empty(),
-                            after_field = after_field.reindent("    "))
+                            after_field = after_field.reindent("    ")
+                        )
                     }
                 }
             };
@@ -2779,7 +3263,8 @@ impl CPPExporter {
         let build_result = rules_for_this_interface.build_result.reindent("    ");
 
         if build_result == "" {
-            buffer.push_str(&format!("{first_line}
+            buffer.push_str(&format!(
+                "{first_line}
 {{
     return raiseError(\"FIXME: Not implemented yet in this preview release ({class_name})\");
 }}
@@ -2789,7 +3274,8 @@ impl CPPExporter {
                 first_line = first_line,
             ));
         } else {
-            buffer.push_str(&format!("{first_line}
+            buffer.push_str(&format!(
+                "{first_line}
 {{
     BINJS_TRY(CheckRecursionLimit(cx_));
 {pre}{fields_implem}
@@ -2816,14 +3302,20 @@ impl CPPExporter {
         buffer.push_str("\n");
 
         // 1. Typesums
-        buffer.push_str("
+        buffer.push_str(
+            "
 
 // ----- Sums of interfaces (autogenerated, by lexicographical order)
-");
-        buffer.push_str("// Sums of sums are flattened.
-");
+",
+        );
+        buffer.push_str(
+            "// Sums of sums are flattened.
+",
+        );
 
-        let sums_of_interfaces = self.syntax.resolved_sums_of_interfaces_by_name()
+        let sums_of_interfaces = self
+            .syntax
+            .resolved_sums_of_interfaces_by_name()
             .iter()
             .sorted_by(|a, b| a.0.cmp(&b.0));
 
@@ -2832,13 +3324,17 @@ impl CPPExporter {
         }
 
         // 2. Single interfaces
-        buffer.push_str("
+        buffer.push_str(
+            "
 
 // ----- Interfaces (autogenerated, by lexicographical order)
-");
+",
+        );
         buffer.push_str("// When fields have a non-trivial type, implementation is deanonymized and delegated to another parser.
 ");
-        let interfaces_by_name = self.syntax.interfaces_by_name()
+        let interfaces_by_name = self
+            .syntax
+            .interfaces_by_name()
             .iter()
             .sorted_by(|a, b| str::cmp(a.0.to_str(), b.0.to_str()));
 
@@ -2847,12 +3343,16 @@ impl CPPExporter {
         }
 
         // 3. String Enums
-        buffer.push_str("
+        buffer.push_str(
+            "
 
 // ----- String enums (autogenerated, by lexicographical order)
-");
+",
+        );
         {
-            let string_enums_by_name = self.syntax.string_enums_by_name()
+            let string_enums_by_name = self
+                .syntax
+                .string_enums_by_name()
                 .iter()
                 .sorted_by(|a, b| str::cmp(a.0.to_str(), b.0.to_str()));
             for (kind, enum_) in string_enums_by_name {
@@ -2860,7 +3360,8 @@ impl CPPExporter {
                     continue;
                 }
 
-                let convert = format!("    switch (variant) {{
+                let convert = format!(
+                    "    switch (variant) {{
 {cases}
       default:
         if (isInvalidVariantPossible()) {{
@@ -2870,33 +3371,38 @@ impl CPPExporter {
         }}
     }}",
                     kind = kind,
-                    cases = enum_.strings()
+                    cases = enum_
+                        .strings()
                         .iter()
                         .map(|symbol| {
-                            format!("    case BinASTVariant::{binastvariant_variant}:
+                            format!(
+                                "    case BinASTVariant::{binastvariant_variant}:
         return {kind}::{specialized_variant};",
                                 kind = kind,
                                 specialized_variant = symbol.to_cpp_enum_case(),
-                                binastvariant_variant  = self.variants_by_symbol.get(symbol)
-                                    .unwrap()
+                                binastvariant_variant =
+                                    self.variants_by_symbol.get(symbol).unwrap()
                             )
                         })
                         .format("\n")
                 );
 
-                let rendered_doc = format!("/*
+                let rendered_doc = format!(
+                    "/*
 enum {kind} {{
 {cases}
 }};
 */
 ",
                     kind = kind,
-                    cases = enum_.strings()
-                            .iter()
-                            .map(|s| format!("    \"{}\"", s))
-                            .format(",\n")
+                    cases = enum_
+                        .strings()
+                        .iter()
+                        .map(|s| format!("    \"{}\"", s))
+                        .format(",\n")
                 );
-                buffer.push_str(&format!("{rendered_doc}{first_line}
+                buffer.push_str(&format!(
+                    "{rendered_doc}{first_line}
 {{
     BINJS_MOZ_TRY_DECL(variant, tokenizer_->readVariant(context));
 
@@ -2906,26 +3412,29 @@ enum {kind} {{
 ",
                     rendered_doc = rendered_doc,
                     convert = convert,
-                    first_line = self.get_method_definition_start(kind, "", "",
-                                                                  &None)
+                    first_line = self.get_method_definition_start(kind, "", "", &None)
                 ));
             }
         }
 
         // 4. Lists
-        buffer.push_str("
+        buffer.push_str(
+            "
 
 // ----- Lists (autogenerated, by lexicographical order)
-");
+",
+        );
         for parser in &self.list_parsers_to_generate {
             self.generate_implement_list(&mut buffer, parser);
         }
 
         // 5. Optional values
-        buffer.push_str("
+        buffer.push_str(
+            "
 
     // ----- Default values (by lexicographical order)
-");
+",
+        );
         for parser in &self.option_parsers_to_generate {
             self.generate_implement_option(&mut buffer, parser);
         }
@@ -2940,7 +3449,7 @@ enum {kind} {{
 
 fn update_rule(rule: &mut Option<String>, entry: &yaml_rust::Yaml) -> Result<Option<()>, ()> {
     if entry.is_badvalue() {
-        return Ok(None)
+        return Ok(None);
     } else if let Some(as_str) = entry.as_str() {
         *rule = Some(as_str.to_string());
         Ok(Some(()))
@@ -2948,7 +3457,10 @@ fn update_rule(rule: &mut Option<String>, entry: &yaml_rust::Yaml) -> Result<Opt
         Err(())
     }
 }
-fn update_rule_rc(rule: &mut Option<Rc<String>>, entry: &yaml_rust::Yaml) -> Result<Option<()>, ()> {
+fn update_rule_rc(
+    rule: &mut Option<Rc<String>>,
+    entry: &yaml_rust::Yaml,
+) -> Result<Option<()>, ()> {
     let mut value = None;
     let ret = update_rule(&mut value, entry)?;
     if let Some(s) = value {
@@ -2993,22 +3505,20 @@ fn main() {
         ])
     .get_matches();
 
-    let source_path = matches.value_of("INPUT.webidl")
+    let source_path = matches
+        .value_of("INPUT.webidl")
         .expect("Expected INPUT.webidl");
 
-    let mut file = File::open(source_path)
-        .expect("Could not open source");
+    let mut file = File::open(source_path).expect("Could not open source");
     let mut source = String::new();
     file.read_to_string(&mut source)
         .expect("Could not read source");
 
     println!("...verifying grammar");
-    let mut builder = Importer::import(vec![source.as_ref()])
-        .expect("Invalid grammar");
+    let mut builder = Importer::import(vec![source.as_ref()]).expect("Invalid grammar");
     let fake_root = builder.node_name("@@ROOT@@"); // Unused
     let null = builder.node_name(""); // Used
-    builder.add_interface(&null)
-        .unwrap();
+    builder.add_interface(&null).unwrap();
     let syntax = builder.into_spec(SpecOptions {
         root: &fake_root,
         null: &null,
@@ -3023,14 +3533,12 @@ fn main() {
 
     let rules_source_path = matches.value_of("INPUT.yaml").unwrap();
     println!("...generating rules");
-    let mut file = File::open(rules_source_path)
-        .expect("Could not open rules");
+    let mut file = File::open(rules_source_path).expect("Could not open rules");
     let mut data = String::new();
     file.read_to_string(&mut data)
         .expect("Could not read rules");
 
-    let yaml = yaml_rust::YamlLoader::load_from_str(&data)
-        .expect("Could not parse rules");
+    let yaml = yaml_rust::YamlLoader::load_from_str(&data).expect("Could not parse rules");
     assert_eq!(yaml.len(), 1);
 
     let global_rules = GlobalRules::new(&new_syntax, &yaml[0]);
@@ -3041,34 +3549,53 @@ fn main() {
     exporter.collect_context();
 
     let write_to = |description, arg, data: &String| {
-        let dest_path = matches.value_of(arg)
-            .unwrap();
-        print!("...exporting {description}: {path} ... ",
+        let dest_path = matches.value_of(arg).unwrap();
+        print!(
+            "...exporting {description}: {path} ... ",
             description = description,
-            path = dest_path);
+            path = dest_path
+        );
 
-        let mut dest = File::create(&dest_path)
-            .unwrap_or_else(|e| panic!("Could not create {description} at {path}: {error}",
-                            description = description,
-                            path = dest_path,
-                            error = e));
-        dest.write_all(data.as_bytes())
-            .unwrap_or_else(|e| panic!("Could not write {description} at {path}: {error}",
-                            description = description,
-                            path = dest_path,
-                            error = e));
+        let mut dest = File::create(&dest_path).unwrap_or_else(|e| {
+            panic!(
+                "Could not create {description} at {path}: {error}",
+                description = description,
+                path = dest_path,
+                error = e
+            )
+        });
+        dest.write_all(data.as_bytes()).unwrap_or_else(|e| {
+            panic!(
+                "Could not write {description} at {path}: {error}",
+                description = description,
+                path = dest_path,
+                error = e
+            )
+        });
 
         println!("done");
     };
 
-    write_to("C++ class header code", "OUT_HEADER_CLASS_FILE",
-        &exporter.to_spidermonkey_class_hpp());
-    write_to("C++ enum header code", "OUT_HEADER_ENUM_FILE",
-        &exporter.to_spidermonkey_enum_hpp());
-    write_to("C++ token header code", "OUT_TOKEN_FILE",
-        &exporter.to_spidermonkey_token_hpp());
-    write_to("C++ token implementation code", "OUT_IMPL_FILE",
-        &exporter.to_spidermonkey_cpp());
+    write_to(
+        "C++ class header code",
+        "OUT_HEADER_CLASS_FILE",
+        &exporter.to_spidermonkey_class_hpp(),
+    );
+    write_to(
+        "C++ enum header code",
+        "OUT_HEADER_ENUM_FILE",
+        &exporter.to_spidermonkey_enum_hpp(),
+    );
+    write_to(
+        "C++ token header code",
+        "OUT_TOKEN_FILE",
+        &exporter.to_spidermonkey_token_hpp(),
+    );
+    write_to(
+        "C++ token implementation code",
+        "OUT_IMPL_FILE",
+        &exporter.to_spidermonkey_cpp(),
+    );
 
     println!("...done");
 }
