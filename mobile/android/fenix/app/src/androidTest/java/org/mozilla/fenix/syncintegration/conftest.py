@@ -93,7 +93,7 @@ def tps_profile(pytestconfig, tps_addon, tps_config, tps_log, fxa_urls):
         # 'devtools.debugger.remote-enabled': True,
         'engine.bookmarks.repair.enabled': False,
         'extensions.autoDisableScopes': 10,
-        'extensions.legacy.enabled': True,
+        'extensions.experiments.enabled': True,
         'extensions.update.enabled': False,
         'extensions.update.notifyUser': False,
         # While this line is commented prod is launched instead of stage

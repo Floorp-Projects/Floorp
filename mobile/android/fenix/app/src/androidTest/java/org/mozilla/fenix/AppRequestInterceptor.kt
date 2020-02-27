@@ -1,0 +1,29 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+package org.mozilla.fenix
+
+import android.content.Context
+import mozilla.components.concept.engine.EngineSession
+import mozilla.components.concept.engine.request.RequestInterceptor
+import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.ui.robots.appContext
+
+/**
+ * This class overrides the application's request interceptor to
+ * deactivate the FxA web channel
+ * which is not supported on the staging servers.
+*/
+
+class AppRequestInterceptor(private val context: Context) : RequestInterceptor {
+    override fun onLoadRequest(
+        engineSession: EngineSession,
+        uri: String,
+        hasUserGesture: Boolean,
+        isSameDomain: Boolean
+    ): RequestInterceptor.InterceptionResponse? {
+        return appContext.components.services.accountsAuthFeature.interceptor.onLoadRequest(
+            engineSession, uri, hasUserGesture, isSameDomain)
+    }
+}

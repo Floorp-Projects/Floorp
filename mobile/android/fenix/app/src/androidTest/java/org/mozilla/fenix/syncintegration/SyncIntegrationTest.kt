@@ -62,6 +62,8 @@ class SyncIntegrationTest {
     fun checkHistoryFromDesktopTest() {
         signInFxSync()
         tapReturnToPreviousApp()
+        // Let's wait until homescreen is shown to go to three dot menu
+        mDevice.waitNotNull(Until.findObjects(By.text("Open tabs")), TestAssetHelper.waitingTime)
         homeScreen {
         }.openThreeDotMenu {
         }.openHistory { }
@@ -82,7 +84,7 @@ class SyncIntegrationTest {
     @Test
     fun checkAccountSettings() {
         signInFxSync()
-        mDevice.waitNotNull(Until.findObjects(By.text("Settings")), TestAssetHelper.waitingTime)
+        mDevice.waitNotNull(Until.findObjects(By.text("Account")), TestAssetHelper.waitingTime)
 
         goToAccountSettings()
         // This function to be added to the robot once the status of checkboxes can be checked
@@ -207,8 +209,7 @@ class SyncIntegrationTest {
     }
 
     fun historyAfterSyncIsShown() {
-        val historyEntry = mDevice.findObject(By.text("http://www.example.com/"))
-        historyEntry.isEnabled()
+        mDevice.waitNotNull(Until.findObjects(By.text("http://www.example.com/")), TestAssetHelper.waitingTime)
     }
 
     fun bookmarkAfterSyncIsShown() {
@@ -217,7 +218,12 @@ class SyncIntegrationTest {
     }
 
     fun tapReturnToPreviousApp() {
+        mDevice.waitNotNull(Until.findObjects(By.text("Save")), TestAssetHelper.waitingTime)
         mDevice.waitNotNull(Until.findObjects(By.text("Settings")), TestAssetHelper.waitingTime)
+
+        // Wait until the Settings shows the account synced
+        mDevice.waitNotNull(Until.findObjects(By.text("Account")), TestAssetHelper.waitingTime)
+        // Go to Homescreen
         mDevice.pressBack()
     }
 
