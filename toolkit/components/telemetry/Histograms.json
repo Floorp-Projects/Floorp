@@ -6109,7 +6109,7 @@
   "UPDATE_CHECK_NO_UPDATE_EXTERNAL" : {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "rstrong@mozilla.com"],
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "bytesized@mozilla.com"],
     "expires_in_version": "never",
     "kind": "count",
     "releaseChannelCollection": "opt-out",
@@ -6119,7 +6119,7 @@
   "UPDATE_CHECK_NO_UPDATE_NOTIFY" : {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "rstrong@mozilla.com"],
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "bytesized@mozilla.com"],
     "expires_in_version": "never",
     "kind": "count",
     "releaseChannelCollection": "opt-out",
@@ -6129,7 +6129,7 @@
   "UPDATE_CHECK_CODE_EXTERNAL": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "rstrong@mozilla.com"],
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "bytesized@mozilla.com"],
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 50,
@@ -6140,7 +6140,7 @@
   "UPDATE_CHECK_CODE_NOTIFY": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "rstrong@mozilla.com"],
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "bytesized@mozilla.com"],
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 50,
@@ -6151,7 +6151,7 @@
   "UPDATE_CHECK_EXTENDED_ERROR_EXTERNAL": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "rstrong@mozilla.com"],
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "bytesized@mozilla.com"],
     "expires_in_version": "never",
     "kind": "count",
     "keyed": true,
@@ -6162,7 +6162,7 @@
   "UPDATE_CHECK_EXTENDED_ERROR_NOTIFY": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "rstrong@mozilla.com"],
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "bytesized@mozilla.com"],
     "expires_in_version": "never",
     "kind": "count",
     "keyed": true,
@@ -6173,7 +6173,7 @@
   "UPDATE_INVALID_LASTUPDATETIME_EXTERNAL": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "rstrong@mozilla.com"],
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "bytesized@mozilla.com"],
     "expires_in_version": "never",
     "kind": "count",
     "releaseChannelCollection": "opt-out",
@@ -6183,7 +6183,7 @@
   "UPDATE_INVALID_LASTUPDATETIME_NOTIFY": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "rstrong@mozilla.com"],
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "bytesized@mozilla.com"],
     "expires_in_version": "never",
     "kind": "count",
     "releaseChannelCollection": "opt-out",
@@ -6193,7 +6193,7 @@
   "UPDATE_LAST_NOTIFY_INTERVAL_DAYS_EXTERNAL": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "rstrong@mozilla.com"],
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "bytesized@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
     "n_buckets": 60,
@@ -6205,7 +6205,7 @@
   "UPDATE_LAST_NOTIFY_INTERVAL_DAYS_NOTIFY": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "rstrong@mozilla.com"],
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "bytesized@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
     "n_buckets": 30,
@@ -6217,7 +6217,7 @@
   "UPDATE_PING_COUNT_EXTERNAL": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "rstrong@mozilla.com"],
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "bytesized@mozilla.com"],
     "expires_in_version": "never",
     "kind": "count",
     "releaseChannelCollection": "opt-out",
@@ -6227,7 +6227,7 @@
   "UPDATE_PING_COUNT_NOTIFY": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "rstrong@mozilla.com"],
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "bytesized@mozilla.com"],
     "expires_in_version": "never",
     "kind": "count",
     "releaseChannelCollection": "opt-out",
@@ -6237,7 +6237,7 @@
   "UPDATE_SERVICE_INSTALLED_EXTERNAL": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "rstrong@mozilla.com"],
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "bytesized@mozilla.com"],
     "expires_in_version": "never",
     "kind": "boolean",
     "releaseChannelCollection": "opt-out",
@@ -6247,7 +6247,7 @@
   "UPDATE_SERVICE_INSTALLED_NOTIFY": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "rstrong@mozilla.com"],
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "bytesized@mozilla.com"],
     "expires_in_version": "never",
     "kind": "boolean",
     "releaseChannelCollection": "opt-out",
@@ -6257,7 +6257,7 @@
   "UPDATE_SERVICE_MANUALLY_UNINSTALLED_EXTERNAL": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "rstrong@mozilla.com"],
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "bytesized@mozilla.com"],
     "expires_in_version": "never",
     "kind": "count",
     "releaseChannelCollection": "opt-out",
@@ -6267,7 +6267,7 @@
   "UPDATE_SERVICE_MANUALLY_UNINSTALLED_NOTIFY": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "rstrong@mozilla.com"],
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "bytesized@mozilla.com"],
     "expires_in_version": "never",
     "kind": "count",
     "releaseChannelCollection": "opt-out",
@@ -6277,7 +6277,7 @@
   "UPDATE_UNABLE_TO_APPLY_EXTERNAL": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "rstrong@mozilla.com"],
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "bytesized@mozilla.com"],
     "expires_in_version": "never",
     "kind": "count",
     "releaseChannelCollection": "opt-out",
@@ -6287,7 +6287,7 @@
   "UPDATE_UNABLE_TO_APPLY_NOTIFY": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "rstrong@mozilla.com"],
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "bytesized@mozilla.com"],
     "expires_in_version": "never",
     "kind": "count",
     "releaseChannelCollection": "opt-out",
@@ -6297,7 +6297,7 @@
   "UPDATE_CANNOT_STAGE_EXTERNAL": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "rstrong@mozilla.com"],
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "bytesized@mozilla.com"],
     "expires_in_version": "never",
     "kind": "count",
     "releaseChannelCollection": "opt-out",
@@ -6307,7 +6307,7 @@
   "UPDATE_CANNOT_STAGE_NOTIFY": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "rstrong@mozilla.com"],
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "bytesized@mozilla.com"],
     "expires_in_version": "never",
     "kind": "count",
     "releaseChannelCollection": "opt-out",
@@ -6317,7 +6317,7 @@
   "UPDATE_PREF_UPDATE_CANCELATIONS_EXTERNAL": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "rstrong@mozilla.com"],
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "bytesized@mozilla.com"],
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 100,
@@ -6328,7 +6328,7 @@
   "UPDATE_PREF_UPDATE_CANCELATIONS_NOTIFY": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "rstrong@mozilla.com"],
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "bytesized@mozilla.com"],
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 100,
@@ -6339,7 +6339,7 @@
   "UPDATE_PREF_SERVICE_ERRORS_EXTERNAL": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "rstrong@mozilla.com"],
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "bytesized@mozilla.com"],
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 30,
@@ -6350,7 +6350,7 @@
   "UPDATE_PREF_SERVICE_ERRORS_NOTIFY": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "rstrong@mozilla.com"],
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "bytesized@mozilla.com"],
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 30,
@@ -6361,7 +6361,7 @@
   "UPDATE_NOT_PREF_UPDATE_AUTO_EXTERNAL": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "rstrong@mozilla.com"],
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "bytesized@mozilla.com"],
     "expires_in_version": "never",
     "kind": "count",
     "releaseChannelCollection": "opt-out",
@@ -6371,7 +6371,7 @@
   "UPDATE_NOT_PREF_UPDATE_AUTO_NOTIFY": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "rstrong@mozilla.com"],
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "bytesized@mozilla.com"],
     "expires_in_version": "never",
     "kind": "count",
     "releaseChannelCollection": "opt-out",
@@ -6381,7 +6381,7 @@
   "UPDATE_NOT_PREF_UPDATE_STAGING_ENABLED_EXTERNAL": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "rstrong@mozilla.com"],
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "bytesized@mozilla.com"],
     "expires_in_version": "never",
     "kind": "count",
     "releaseChannelCollection": "opt-out",
@@ -6391,7 +6391,7 @@
   "UPDATE_NOT_PREF_UPDATE_STAGING_ENABLED_NOTIFY": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "rstrong@mozilla.com"],
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "bytesized@mozilla.com"],
     "expires_in_version": "never",
     "kind": "count",
     "releaseChannelCollection": "opt-out",
@@ -6401,7 +6401,7 @@
   "UPDATE_NOT_PREF_UPDATE_SERVICE_ENABLED_EXTERNAL": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "rstrong@mozilla.com"],
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "bytesized@mozilla.com"],
     "expires_in_version": "never",
     "kind": "count",
     "releaseChannelCollection": "opt-out",
@@ -6411,7 +6411,7 @@
   "UPDATE_NOT_PREF_UPDATE_SERVICE_ENABLED_NOTIFY": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "rstrong@mozilla.com"],
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "bytesized@mozilla.com"],
     "expires_in_version": "never",
     "kind": "count",
     "releaseChannelCollection": "opt-out",
@@ -6421,7 +6421,7 @@
   "UPDATE_DOWNLOAD_CODE_COMPLETE": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "rstrong@mozilla.com"],
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "bytesized@mozilla.com"],
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 50,
@@ -6432,7 +6432,7 @@
   "UPDATE_DOWNLOAD_CODE_PARTIAL": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "rstrong@mozilla.com"],
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "bytesized@mozilla.com"],
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 50,
@@ -6443,7 +6443,7 @@
   "UPDATE_DOWNLOAD_CODE_UNKNOWN": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "rstrong@mozilla.com"],
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "bytesized@mozilla.com"],
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 50,
@@ -6454,7 +6454,7 @@
   "UPDATE_STATE_CODE_COMPLETE_STARTUP": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "rstrong@mozilla.com"],
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "bytesized@mozilla.com"],
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 20,
@@ -6465,7 +6465,7 @@
   "UPDATE_STATE_CODE_PARTIAL_STARTUP": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "rstrong@mozilla.com"],
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "bytesized@mozilla.com"],
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 20,
@@ -6476,7 +6476,7 @@
   "UPDATE_STATE_CODE_UNKNOWN_STARTUP": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "rstrong@mozilla.com"],
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "bytesized@mozilla.com"],
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 20,
@@ -6487,7 +6487,7 @@
   "UPDATE_STATE_CODE_COMPLETE_STAGE": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "rstrong@mozilla.com"],
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "bytesized@mozilla.com"],
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 20,
@@ -6498,7 +6498,7 @@
   "UPDATE_STATE_CODE_PARTIAL_STAGE": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "rstrong@mozilla.com"],
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "bytesized@mozilla.com"],
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 20,
@@ -6509,7 +6509,7 @@
   "UPDATE_STATE_CODE_UNKNOWN_STAGE": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "rstrong@mozilla.com"],
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "bytesized@mozilla.com"],
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 20,
@@ -6520,7 +6520,7 @@
   "UPDATE_STATUS_ERROR_CODE_COMPLETE_STARTUP": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "rstrong@mozilla.com"],
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "bytesized@mozilla.com"],
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 100,
@@ -6531,7 +6531,7 @@
   "UPDATE_STATUS_ERROR_CODE_PARTIAL_STARTUP": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "rstrong@mozilla.com"],
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "bytesized@mozilla.com"],
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 100,
@@ -6542,7 +6542,7 @@
   "UPDATE_STATUS_ERROR_CODE_UNKNOWN_STARTUP": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "rstrong@mozilla.com"],
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "bytesized@mozilla.com"],
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 100,
@@ -6553,7 +6553,7 @@
   "UPDATE_STATUS_ERROR_CODE_COMPLETE_STAGE": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "rstrong@mozilla.com"],
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "bytesized@mozilla.com"],
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 100,
@@ -6564,7 +6564,7 @@
   "UPDATE_STATUS_ERROR_CODE_PARTIAL_STAGE": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "rstrong@mozilla.com"],
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "bytesized@mozilla.com"],
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 100,
@@ -6575,7 +6575,7 @@
   "UPDATE_STATUS_ERROR_CODE_UNKNOWN_STAGE": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "rstrong@mozilla.com"],
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "bytesized@mozilla.com"],
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 100,
@@ -6586,7 +6586,7 @@
   "UPDATE_WIZ_LAST_PAGE_CODE": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "rstrong@mozilla.com"],
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "bytesized@mozilla.com"],
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 30,
@@ -6597,7 +6597,7 @@
   "UPDATE_NOTIFICATION_SHOWN": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "rstrong@mozilla.com"],
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "bytesized@mozilla.com"],
     "expires_in_version": "never",
     "kind": "categorical",
     "bug_numbers": [893505, 1521427],
@@ -6608,7 +6608,7 @@
   "UPDATE_NOTIFICATION_BADGE_SHOWN": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "rstrong@mozilla.com"],
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "bytesized@mozilla.com"],
     "expires_in_version": "never",
     "kind": "categorical",
     "bug_numbers": [893505, 1365204, 1521427],
@@ -6619,7 +6619,7 @@
   "UPDATE_NOTIFICATION_DISMISSED": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "rstrong@mozilla.com"],
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "bytesized@mozilla.com"],
     "expires_in_version": "never",
     "kind": "categorical",
     "bug_numbers": [893505, 1521427],
@@ -6630,7 +6630,7 @@
   "UPDATE_NOTIFICATION_MAIN_ACTION_DOORHANGER": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "rstrong@mozilla.com"],
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "bytesized@mozilla.com"],
     "expires_in_version": "never",
     "kind": "categorical",
     "bug_numbers": [893505, 1521427],
@@ -6641,7 +6641,7 @@
   "UPDATE_NOTIFICATION_MAIN_ACTION_MENU": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "rstrong@mozilla.com"],
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "bytesized@mozilla.com"],
     "expires_in_version": "never",
     "kind": "categorical",
     "bug_numbers": [893505, 1521427],
@@ -6652,7 +6652,7 @@
   "UPDATE_CAN_USE_BITS_EXTERNAL": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "rstrong@mozilla.com"],
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "bytesized@mozilla.com"],
     "expires_in_version": "never",
     "kind": "categorical",
     "labels": [
@@ -6670,7 +6670,7 @@
   "UPDATE_CAN_USE_BITS_NOTIFY": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "rstrong@mozilla.com"],
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "bytesized@mozilla.com"],
     "expires_in_version": "never",
     "kind": "categorical",
     "labels": [
@@ -6688,7 +6688,7 @@
   "UPDATE_BITS_RESULT_COMPLETE": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "rstrong@mozilla.com"],
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "bytesized@mozilla.com"],
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 99,
@@ -6700,7 +6700,7 @@
   "UPDATE_BITS_RESULT_PARTIAL": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "rstrong@mozilla.com"],
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "bytesized@mozilla.com"],
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 99,
