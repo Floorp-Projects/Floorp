@@ -296,26 +296,6 @@ class ContentDelegateTest : BaseSessionTest() {
         })
     }
 
-    @Test fun webAppManifestPref() {
-        val initialState = sessionRule.runtime.settings.getWebManifestEnabled()
-        val jsToRun = "document.querySelector('link[rel=manifest]').relList.supports('manifest');"
-
-        // Check pref'ed off
-        sessionRule.runtime.settings.setWebManifestEnabled(false)
-        mainSession.loadTestPath(HELLO_HTML_PATH)
-        var result = equalTo(mainSession.evaluateJS(jsToRun) as Boolean)
-
-        assertThat("Disabling pref makes relList.supports('manifest') return false", false, result)
-
-        // Check pref'ed on
-        sessionRule.runtime.settings.setWebManifestEnabled(true)
-        mainSession.loadTestPath(HELLO_HTML_PATH)
-        result = equalTo(mainSession.evaluateJS(jsToRun) as Boolean)
-        assertThat("Enabling pref makes relList.supports('manifest') return true", true, result)
-
-        sessionRule.runtime.settings.setWebManifestEnabled(initialState)
-    }
-
     @Test fun webAppManifest() {
         mainSession.loadTestPath(HELLO_HTML_PATH)
         mainSession.waitUntilCalled(object : Callbacks.All {
