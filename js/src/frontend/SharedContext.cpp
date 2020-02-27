@@ -141,6 +141,7 @@ FunctionBox::FunctionBox(JSContext* cx, TraceListNode* traceListHead,
       useAsm(false),
       isAnnexB(false),
       wasEmitted(false),
+      emitBytecode(false),
       declaredArguments(false),
       usesArguments(false),
       usesApply(false),
@@ -309,7 +310,7 @@ void FunctionBox::setEnclosingScopeForInnerLazyFunction(
 }
 
 void FunctionBox::finish() {
-  if (isInterpretedLazy()) {
+  if (!emitBytecode) {
     // Lazy inner functions need to record their enclosing scope for when they
     // eventually are compiled.
     function()->setEnclosingScope(enclosingScope_.getExistingScope());

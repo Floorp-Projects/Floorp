@@ -363,8 +363,9 @@ class FunctionBox : public ObjectBox, public SharedContext {
   bool hasParameterExprs : 1;      /* parameter list contains expressions */
   bool hasDuplicateParameters : 1; /* parameter list contains duplicate names */
   bool useAsm : 1;                 /* see useAsmOrInsideUseAsm */
-  bool isAnnexB : 1;   /* need to emit a synthesized Annex B assignment */
-  bool wasEmitted : 1; /* Bytecode has been emitted for this function. */
+  bool isAnnexB : 1;     /* need to emit a synthesized Annex B assignment */
+  bool wasEmitted : 1;   /* Bytecode has been emitted for this function. */
+  bool emitBytecode : 1; /* need to generate bytecode for this function. */
 
   // Fields for use in heuristics.
   bool declaredArguments : 1; /* the Parser declared 'arguments' */
@@ -517,7 +518,6 @@ class FunctionBox : public ObjectBox, public SharedContext {
     gcThing = function;
     // After clobbering, these flags need to be updated
     setIsInterpreted(function->isInterpreted());
-    setIsInterpretedLazy(function->isInterpretedLazy());
   }
 
   Scope* compilationEnclosingScope() const override {
@@ -602,14 +602,9 @@ class FunctionBox : public ObjectBox, public SharedContext {
   void setIsInterpreted(bool interpreted) {
     flags_.setFlags(FunctionFlags::INTERPRETED, interpreted);
   }
-  bool isInterpretedLazy() const { return flags_.isInterpretedLazy(); }
-  void setIsInterpretedLazy(bool interpretedLazy) {
-    flags_.setFlags(FunctionFlags::INTERPRETED_LAZY, interpretedLazy);
-  }
 
   void initLazyScript(LazyScript* script) {
     function()->initLazyScript(script);
-    setIsInterpretedLazy(function()->isInterpretedLazy());
   }
 
   FunctionFlags::FunctionKind kind() { return flags_.kind(); }

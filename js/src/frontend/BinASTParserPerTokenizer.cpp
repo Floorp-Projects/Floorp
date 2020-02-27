@@ -333,6 +333,9 @@ JS::Result<Ok> BinASTParserPerTokenizer<Tok>::finishEagerFunction(
     funbox->setArgCount(nargs);
   }
 
+  // BCE will need to generate bytecode for this.
+  funbox->emitBytecode = true;
+
   const bool canSkipLazyClosedOverBindings = false;
   BINJS_TRY(pc_->declareFunctionArgumentsObject(usedNames_,
                                                 canSkipLazyClosedOverBindings));

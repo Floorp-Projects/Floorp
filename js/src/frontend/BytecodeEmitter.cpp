@@ -3162,7 +3162,7 @@ bool BytecodeEmitter::setFunName(FunctionBox* funbox, JSAtom* name) {
   // lazy function and we OOM'ed after we set the inferred name the first
   // time.
   if (funbox->hasInferredName()) {
-    MOZ_ASSERT(funbox->isInterpretedLazy());
+    MOZ_ASSERT(!funbox->emitBytecode);
     MOZ_ASSERT(funbox->inferredName() == name);
 
     return true;
@@ -5502,7 +5502,7 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitFunction(
   }
 
   if (funbox->isInterpreted()) {
-    if (funbox->isInterpretedLazy()) {
+    if (!funbox->emitBytecode) {
       if (!fe.emitLazy()) {
         //          [stack] FUN?
         return false;
