@@ -234,6 +234,7 @@ class InstalledAddonDetailsFragment : Fragment() {
 
     private fun setAllInteractiveViewsClickable(view: View, clickable: Boolean) {
         view.enable_switch.isClickable = clickable
+        view.settings.isClickable = clickable
         view.details.isClickable = clickable
         view.permissions.isClickable = clickable
         view.remove_add_on.isClickable = clickable
