@@ -11,7 +11,7 @@
 #include "DanglingOnTemporaryChecker.h"
 #include "ExplicitImplicitChecker.h"
 #include "ExplicitOperatorBoolChecker.h"
-#ifdef _WIN32
+#ifdef TARGET_IS_WINDOWS
 #include "LoadLibraryUsageChecker.h"
 #include "FopenUsageChecker.h"
 #endif
