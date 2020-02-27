@@ -96,7 +96,7 @@
 
 use api::{MixBlendMode, PipelineId, PremultipliedColorF, FilterPrimitiveKind};
 use api::{PropertyBinding, PropertyBindingId, FilterPrimitive, FontRenderMode};
-use api::{DebugFlags, RasterSpace, ImageKey, ColorF, ColorU, PrimitiveFlags};
+use api::{DebugFlags, RasterSpace, ImageKey, ColorF, PrimitiveFlags};
 use api::units::*;
 use crate::box_shadow::{BLUR_SAMPLE_SCALE};
 use crate::clip::{ClipStore, ClipChainInstance, ClipDataHandle, ClipChainId};
@@ -120,7 +120,6 @@ use crate::prim_store::{SpaceMapper, PrimitiveVisibilityMask, PointKey, Primitiv
 use crate::prim_store::{SpaceSnapper, PictureIndex, PrimitiveInstance, PrimitiveInstanceKind};
 use crate::prim_store::{get_raster_rects, PrimitiveScratchBuffer, RectangleKey};
 use crate::prim_store::{OpacityBindingStorage, ImageInstanceStorage, OpacityBindingIndex};
-use crate::prim_store::{ColorBindingStorage, ColorBindingIndex};
 use crate::print_tree::{PrintTree, PrintTreePrinter};
 use crate::render_backend::DataStores;
 use crate::render_task_graph::RenderTaskId;
@@ -265,8 +264,6 @@ pub struct PictureCacheState {
     spatial_nodes: FastHashMap<SpatialNodeIndex, SpatialNodeDependency>,
     /// State of opacity bindings from previous frame
     opacity_bindings: FastHashMap<PropertyBindingId, OpacityBindingInfo>,
-    /// State of color bindings from previous frame
-    color_bindings: FastHashMap<PropertyBindingId, ColorBindingInfo>,
     /// The current transform of the picture cache root spatial node
     root_transform: TransformKey,
     /// The current tile size in device pixels
@@ -281,7 +278,6 @@ pub struct PictureCacheState {
 
 pub struct PictureCacheRecycledAllocations {
     old_opacity_bindings: FastHashMap<PropertyBindingId, OpacityBindingInfo>,
-    old_color_bindings: FastHashMap<PropertyBindingId, ColorBindingInfo>,
     compare_cache: FastHashMap<PrimitiveComparisonKey, PrimitiveCompareResult>,
 }
 
@@ -405,38 +401,32 @@ fn clampf(value: f32, low: f32, high: f32) -> f32 {
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct PrimitiveDependencyIndex(pub u32);
 
-/// Information about the state of a binding.
+/// Information about the state of an opacity binding.
 #[derive(Debug)]
-pub struct BindingInfo<T> {
+pub struct OpacityBindingInfo {
     /// The current value retrieved from dynamic scene properties.
-    value: T,
+    value: f32,
     /// True if it was changed (or is new) since the last frame build.
     changed: bool,
 }
 
-/// Information stored in a tile descriptor for a binding.
+/// Information stored in a tile descriptor for an opacity binding.
 #[derive(Debug, PartialEq, Clone, Copy)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
-pub enum Binding<T> {
-    Value(T),
+pub enum OpacityBinding {
+    Value(f32),
     Binding(PropertyBindingId),
 }
 
-impl<T> From<PropertyBinding<T>> for Binding<T> {
-    fn from(binding: PropertyBinding<T>) -> Binding<T> {
+impl From<PropertyBinding<f32>> for OpacityBinding {
+    fn from(binding: PropertyBinding<f32>) -> OpacityBinding {
         match binding {
-            PropertyBinding::Binding(key, _) => Binding::Binding(key.id),
-            PropertyBinding::Value(value) => Binding::Value(value),
+            PropertyBinding::Binding(key, _) => OpacityBinding::Binding(key.id),
+            PropertyBinding::Value(value) => OpacityBinding::Value(value),
         }
     }
 }
-
-pub type OpacityBinding = Binding<f32>;
-pub type OpacityBindingInfo = BindingInfo<f32>;
-
-pub type ColorBinding = Binding<ColorU>;
-pub type ColorBindingInfo = BindingInfo<ColorU>;
 
 /// Information about the state of a spatial node value
 #[derive(Debug)]
@@ -486,9 +476,6 @@ struct TilePostUpdateContext<'a> {
     /// Information about opacity bindings from the picture cache.
     opacity_bindings: &'a FastHashMap<PropertyBindingId, OpacityBindingInfo>,
 
-    /// Information about color bindings from the picture cache.
-    color_bindings: &'a FastHashMap<PropertyBindingId, ColorBindingInfo>,
-
     /// Current size in device pixels of tiles for this cache
     current_tile_size: DeviceIntSize,
 
@@ -528,9 +515,6 @@ struct PrimitiveDependencyInfo {
     /// Opacity bindings this primitive depends on.
     opacity_bindings: SmallVec<[OpacityBinding; 4]>,
 
-    /// Color binding this primitive depends on.
-    color_binding: Option<ColorBinding>,
-
     /// Clips that this primitive depends on.
     clips: SmallVec<[ItemUid; 8]>,
 
@@ -553,7 +537,6 @@ impl PrimitiveDependencyInfo {
             prim_origin,
             images: SmallVec::new(),
             opacity_bindings: SmallVec::new(),
-            color_binding: None,
             clip_by_tile: false,
             prim_clip_rect,
             clips: SmallVec::new(),
@@ -705,8 +688,6 @@ pub enum PrimitiveCompareResult {
     Image,
     /// The value of an opacity binding changed
     OpacityBinding,
-    /// The value of a color binding changed
-    ColorBinding,
 }
 
 /// A more detailed version of PrimitiveCompareResult used when
@@ -737,11 +718,7 @@ pub enum PrimitiveCompareResultDetail {
     /// The value of an opacity binding changed
     OpacityBinding {
         detail: CompareHelperResult<OpacityBinding>,
-    },
-    /// The value of a color binding changed
-    ColorBinding {
-        detail: CompareHelperResult<ColorBinding>,
-    },
+    }
 }
 
 /// Debugging information about why a tile was invalidated
@@ -909,7 +886,6 @@ impl Tile {
             state.resource_cache,
             ctx.spatial_nodes,
             ctx.opacity_bindings,
-            ctx.color_bindings,
         );
 
         let mut dirty_rect = PictureRect::zero();
@@ -1078,12 +1054,6 @@ impl Tile {
         // Include any transforms that this primitive depends on.
         self.current_descriptor.transforms.extend_from_slice(&info.spatial_nodes);
 
-        // Include any color bindings this primitive depends on.
-        if info.color_binding.is_some() {
-            self.current_descriptor.color_bindings.insert(
-                self.current_descriptor.color_bindings.len(), info.color_binding.unwrap());
-        }
-
         // TODO(gw): The origin of background rects produced by APZ changes
         //           in Gecko during scrolling. Consider investigating this so the
         //           hack / workaround below is not required.
@@ -1136,7 +1106,6 @@ impl Tile {
             clip_dep_count: info.clips.len() as u8,
             image_dep_count: info.images.len() as u8,
             opacity_binding_dep_count: info.opacity_bindings.len() as u8,
-            color_binding_dep_count: if info.color_binding.is_some() { 1 } else { 0 } as u8,
         });
 
         // Add this primitive to the dirty rect quadtree.
@@ -1348,7 +1317,6 @@ pub struct PrimitiveDescriptor {
     image_dep_count: u8,
     opacity_binding_dep_count: u8,
     clip_dep_count: u8,
-    color_binding_dep_count: u8,
 }
 
 impl PartialEq for PrimitiveDescriptor {
@@ -1499,10 +1467,6 @@ pub struct TileDescriptor {
 
     /// Picture space rect that contains valid pixels region of this tile.
     local_valid_rect: PictureRect,
-
-    /// List of the effects of color that we care about
-    /// tracking for this tile.
-    color_bindings: Vec<ColorBinding>,
 }
 
 impl TileDescriptor {
@@ -1514,7 +1478,6 @@ impl TileDescriptor {
             images: Vec::new(),
             transforms: Vec::new(),
             local_valid_rect: PictureRect::zero(),
-            color_bindings: Vec::new(),
         }
     }
 
@@ -1532,12 +1495,11 @@ impl TileDescriptor {
                 prim.prim_clip_rect.w,
                 prim.prim_clip_rect.h,
             ));
-            pt.add_item(format!("deps: t={} i={} o={} c={} color={}",
+            pt.add_item(format!("deps: t={} i={} o={} c={}",
                 prim.transform_dep_count,
                 prim.image_dep_count,
                 prim.opacity_binding_dep_count,
                 prim.clip_dep_count,
-                prim.color_binding_dep_count,
             ));
             pt.end_level();
         }
@@ -1580,15 +1542,6 @@ impl TileDescriptor {
             pt.end_level();
         }
 
-        if !self.color_bindings.is_empty() {
-            pt.new_level("color_bindings".to_string());
-            for color_binding in &self.color_bindings {
-                pt.new_level(format!("binding={:?}", color_binding));
-                pt.end_level();
-            }
-            pt.end_level();
-        }
-
         pt.end_level();
     }
 
@@ -1601,7 +1554,6 @@ impl TileDescriptor {
         self.images.clear();
         self.transforms.clear();
         self.local_valid_rect = PictureRect::zero();
-        self.color_bindings.clear();
     }
 }
 
@@ -2074,11 +2026,6 @@ pub struct TileCacheInstance {
     /// calculate invalid relative transforms when building the spatial
     /// nodes hash above.
     used_spatial_nodes: FastHashSet<SpatialNodeIndex>,
-    /// List of color bindings, with some extra information
-    /// about whether they changed since last frame.
-    color_bindings: FastHashMap<PropertyBindingId, ColorBindingInfo>,
-    /// Switch back and forth between old and new bindings hashmaps to avoid re-allocating.
-    old_color_bindings: FastHashMap<PropertyBindingId, ColorBindingInfo>,
     /// The current dirty region tracker for this picture.
     pub dirty_region: DirtyRegion,
     /// Current size of tiles in picture units.
@@ -2167,8 +2114,6 @@ impl TileCacheInstance {
             spatial_nodes: FastHashMap::default(),
             old_spatial_nodes: FastHashMap::default(),
             used_spatial_nodes: FastHashSet::default(),
-            color_bindings: FastHashMap::default(),
-            old_color_bindings: FastHashMap::default(),
             dirty_region: DirtyRegion::new(),
             tile_size: PictureSize::zero(),
             tile_rect: TileRect::zero(),
@@ -2230,7 +2175,7 @@ impl TileCacheInstance {
         (p0, p1)
     }
 
-    /// Update transforms, opacity, color bindings and tile rects.
+    /// Update transforms, opacity bindings and tile rects.
     pub fn pre_update(
         &mut self,
         pic_rect: PictureRect,
@@ -2312,7 +2257,6 @@ impl TileCacheInstance {
             self.root_transform = prev_state.root_transform;
             self.spatial_nodes = prev_state.spatial_nodes;
             self.opacity_bindings = prev_state.opacity_bindings;
-            self.color_bindings = prev_state.color_bindings;
             self.current_tile_size = prev_state.current_tile_size;
             self.native_surface_id = prev_state.native_surface_id;
             self.is_opaque = prev_state.is_opaque;
@@ -2335,11 +2279,6 @@ impl TileCacheInstance {
                 self.opacity_bindings.len(),
                 &mut self.old_opacity_bindings,
                 prev_state.allocations.old_opacity_bindings,
-            );
-            recycle_map(
-                self.color_bindings.len(),
-                &mut self.old_color_bindings,
-                prev_state.allocations.old_color_bindings,
             );
             recycle_map(
                 prev_state.allocations.compare_cache.len(),
@@ -2437,23 +2376,6 @@ impl TileCacheInstance {
             };
             self.opacity_bindings.insert(*id, OpacityBindingInfo {
                 value: *value,
-                changed,
-            });
-        }
-
-        // Do a hacky diff of color binding values from the last frame. This is
-        // used later on during tile invalidation tests.
-        let current_properties = frame_context.scene_properties.color_properties();
-        mem::swap(&mut self.color_bindings, &mut self.old_color_bindings);
-
-        self.color_bindings.clear();
-        for (id, value) in current_properties {
-            let changed = match self.old_color_bindings.get(id) {
-                Some(old_property) => old_property.value != (*value).into(),
-                None => true,
-            };
-            self.color_bindings.insert(*id, ColorBindingInfo {
-                value: (*value).into(),
                 changed,
             });
         }
@@ -2617,7 +2539,6 @@ impl TileCacheInstance {
         pictures: &[PicturePrimitive],
         resource_cache: &ResourceCache,
         opacity_binding_store: &OpacityBindingStorage,
-        color_bindings: &ColorBindingStorage,
         image_instances: &ImageInstanceStorage,
         surface_stack: &[SurfaceIndex],
         composite_state: &CompositeState,
@@ -2754,15 +2675,13 @@ impl TileCacheInstance {
                     prim_info.opacity_bindings.push(binding.into());
                 }
             }
-            PrimitiveInstanceKind::Rectangle { data_handle, opacity_binding_index, color_binding_index, .. } => {
+            PrimitiveInstanceKind::Rectangle { data_handle, opacity_binding_index, .. } => {
                 if opacity_binding_index == OpacityBindingIndex::INVALID {
                     // Rectangles can only form a backdrop candidate if they are known opaque.
                     // TODO(gw): We could resolve the opacity binding here, but the common
                     //           case for background rects is that they don't have animated opacity.
                     let color = match data_stores.prim[data_handle].kind {
-                        PrimitiveTemplateKind::Rectangle { color, .. } => {
-                            frame_context.scene_properties.resolve_color(&color)
-                        }
+                        PrimitiveTemplateKind::Rectangle { color, .. } => color,
                         _ => unreachable!(),
                     };
                     if color.a >= 1.0 {
@@ -2773,10 +2692,6 @@ impl TileCacheInstance {
                     for binding in &opacity_binding.bindings {
                         prim_info.opacity_bindings.push(OpacityBinding::from(*binding));
                     }
-                }
-
-                if color_binding_index != ColorBindingIndex::INVALID {
-                    prim_info.color_binding = Some(color_bindings[color_binding_index].into());
                 }
 
                 prim_info.clip_by_tile = true;
@@ -3180,7 +3095,6 @@ impl TileCacheInstance {
             backdrop: self.backdrop,
             spatial_nodes: &self.spatial_nodes,
             opacity_bindings: &self.opacity_bindings,
-            color_bindings: &self.color_bindings,
             current_tile_size: self.current_tile_size,
             local_rect: self.local_rect,
         };
@@ -4064,14 +3978,12 @@ impl PicturePrimitive {
                         tiles: tile_cache.tiles,
                         spatial_nodes: tile_cache.spatial_nodes,
                         opacity_bindings: tile_cache.opacity_bindings,
-                        color_bindings: tile_cache.color_bindings,
                         root_transform: tile_cache.root_transform,
                         current_tile_size: tile_cache.current_tile_size,
                         native_surface_id: tile_cache.native_surface_id.take(),
                         is_opaque: tile_cache.is_opaque,
                         allocations: PictureCacheRecycledAllocations {
                             old_opacity_bindings: tile_cache.old_opacity_bindings,
-                            old_color_bindings: tile_cache.old_color_bindings,
                             compare_cache: tile_cache.compare_cache,
                         },
                     },
@@ -5626,11 +5538,9 @@ struct PrimitiveComparer<'a> {
     transform_comparer: CompareHelper<'a, SpatialNodeIndex>,
     image_comparer: CompareHelper<'a, ImageDependency>,
     opacity_comparer: CompareHelper<'a, OpacityBinding>,
-    color_comparer: CompareHelper<'a, ColorBinding>,
     resource_cache: &'a ResourceCache,
     spatial_nodes: &'a FastHashMap<SpatialNodeIndex, SpatialNodeDependency>,
     opacity_bindings: &'a FastHashMap<PropertyBindingId, OpacityBindingInfo>,
-    color_bindings: &'a FastHashMap<PropertyBindingId, ColorBindingInfo>,
 }
 
 impl<'a> PrimitiveComparer<'a> {
@@ -5640,7 +5550,6 @@ impl<'a> PrimitiveComparer<'a> {
         resource_cache: &'a ResourceCache,
         spatial_nodes: &'a FastHashMap<SpatialNodeIndex, SpatialNodeDependency>,
         opacity_bindings: &'a FastHashMap<PropertyBindingId, OpacityBindingInfo>,
-        color_bindings: &'a FastHashMap<PropertyBindingId, ColorBindingInfo>,
     ) -> Self {
         let clip_comparer = CompareHelper::new(
             &prev.clips,
@@ -5662,21 +5571,14 @@ impl<'a> PrimitiveComparer<'a> {
             &curr.opacity_bindings,
         );
 
-        let color_comparer = CompareHelper::new(
-            &prev.color_bindings,
-            &curr.color_bindings,
-        );
-
         PrimitiveComparer {
             clip_comparer,
             transform_comparer,
             image_comparer,
             opacity_comparer,
-            color_comparer,
             resource_cache,
             spatial_nodes,
             opacity_bindings,
-            color_bindings,
         }
     }
 
@@ -5685,7 +5587,6 @@ impl<'a> PrimitiveComparer<'a> {
         self.transform_comparer.reset();
         self.image_comparer.reset();
         self.opacity_comparer.reset();
-        self.color_comparer.reset();
     }
 
     fn advance_prev(&mut self, prim: &PrimitiveDescriptor) {
@@ -5693,7 +5594,6 @@ impl<'a> PrimitiveComparer<'a> {
         self.transform_comparer.advance_prev(prim.transform_dep_count);
         self.image_comparer.advance_prev(prim.image_dep_count);
         self.opacity_comparer.advance_prev(prim.opacity_binding_dep_count);
-        self.color_comparer.advance_prev(prim.color_binding_dep_count);
     }
 
     fn advance_curr(&mut self, prim: &PrimitiveDescriptor) {
@@ -5701,7 +5601,6 @@ impl<'a> PrimitiveComparer<'a> {
         self.transform_comparer.advance_curr(prim.transform_dep_count);
         self.image_comparer.advance_curr(prim.image_dep_count);
         self.opacity_comparer.advance_curr(prim.opacity_binding_dep_count);
-        self.color_comparer.advance_curr(prim.color_binding_dep_count);
     }
 
     /// Check if two primitive descriptors are the same.
@@ -5714,7 +5613,6 @@ impl<'a> PrimitiveComparer<'a> {
         let resource_cache = self.resource_cache;
         let spatial_nodes = self.spatial_nodes;
         let opacity_bindings = self.opacity_bindings;
-        let color_bindings = self.color_bindings;
 
         // Check equality of the PrimitiveDescriptor
         if prev != curr {
@@ -5792,30 +5690,6 @@ impl<'a> PrimitiveComparer<'a> {
                 *detail = PrimitiveCompareResultDetail::OpacityBinding{ detail: bind_result };
             }
             return PrimitiveCompareResult::OpacityBinding;
-        }
-
-        // Check if any of the color bindings this prim has are different.
-        let mut bind_result = CompareHelperResult::Equal;
-        if !self.color_comparer.is_same(
-            prev.color_binding_dep_count,
-            curr.color_binding_dep_count,
-            |curr| {
-                if let ColorBinding::Binding(id) = curr {
-                    if color_bindings
-                        .get(id)
-                        .map_or(true, |info| info.changed) {
-                        return true;
-                    }
-                }
-
-                true
-            },
-            if opt_detail.is_some() { Some(&mut bind_result) } else { None },
-        ) {
-            if let Some(detail) = opt_detail {
-                *detail = PrimitiveCompareResultDetail::ColorBinding{ detail: bind_result };
-            }
-            return PrimitiveCompareResult::ColorBinding;
         }
 
         PrimitiveCompareResult::Equal

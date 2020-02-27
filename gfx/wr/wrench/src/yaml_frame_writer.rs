@@ -1002,13 +1002,7 @@ impl YamlFrameWriter {
                 DisplayItem::Rectangle(item) => {
                     str_node(&mut v, "type", "rect");
                     common_node(&mut v, clip_id_mapper, &item.common);
-
-                    let key_label = match item.color {
-                        PropertyBinding::Value(value) => "color",
-                        PropertyBinding::Binding(..) => "animating-color",
-                    }
-                    color_node(&mut v, key_label,
-                               &scene.properties.resolve_color(&item.color));
+                    color_node(&mut v, "color", item.color);
                 }
                 DisplayItem::HitTest(item) => {
                     str_node(&mut v, "type", "hit-test");
