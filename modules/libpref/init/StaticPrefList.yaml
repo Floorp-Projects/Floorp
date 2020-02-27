@@ -3481,7 +3481,7 @@
 
 - name: gfx.canvas.remote
   type: RelaxedAtomicBool
-  value: @IS_NIGHTLY_BUILD@
+  value: false
   mirror: always
 
 - name: gfx.color_management.enablev4
