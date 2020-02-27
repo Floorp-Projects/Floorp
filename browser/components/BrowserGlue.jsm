@@ -1249,14 +1249,23 @@ BrowserGlue.prototype = {
   },
 
   _trackSlowStartup() {
-    if (
-      Services.startup.interrupted ||
-      Services.prefs.getBoolPref("browser.slowStartup.notificationDisabled")
-    ) {
+    let disabled = Services.prefs.getBoolPref(
+      "browser.slowStartup.notificationDisabled"
+    );
+
+    Services.telemetry.scalarSet(
+      "browser.startup.slow_startup_notification_disabled",
+      disabled
+    );
+
+    if (Services.startup.interrupted || disabled) {
       return;
     }
 
     let currentTime = Math.round(Cu.now());
+
+    Services.telemetry.scalarSet("browser.startup.recorded_time", currentTime);
+
     let averageTime = 0;
     let samples = 0;
     try {
@@ -1269,6 +1278,8 @@ BrowserGlue.prototype = {
     let totalTime = averageTime * samples + currentTime;
     samples++;
     averageTime = totalTime / samples;
+
+    Services.telemetry.scalarSet("browser.startup.average_time", averageTime);
 
     if (
       samples >= Services.prefs.getIntPref("browser.slowStartup.maxSamples")
@@ -1311,6 +1322,10 @@ BrowserGlue.prototype = {
   _showSlowStartupNotification(profileAge) {
     if (profileAge < 90) {
       // 3 months
+      Services.telemetry.scalarSet(
+        "browser.startup.too_new_for_notification",
+        true
+      );
       return;
     }
 
@@ -1318,6 +1333,15 @@ BrowserGlue.prototype = {
     if (!win) {
       return;
     }
+
+    Services.telemetry.scalarSet("browser.startup.slow_startup_notified", true);
+
+    const NO_ACTION = 0;
+    const OPENED_SUMO = 1;
+    const NEVER_SHOW_AGAIN = 2;
+    const DISMISS_NOTIFICATION = 3;
+
+    Services.telemetry.scalarSet("browser.startup.action", NO_ACTION);
 
     let productName = gBrandBundle.GetStringFromName("brandFullName");
     let message = win.gNavigatorBundle.getFormattedString(
@@ -1332,6 +1356,7 @@ BrowserGlue.prototype = {
           "slowStartup.helpButton.accesskey"
         ),
         callback() {
+          Services.telemetry.scalarSet("browser.startup.action", OPENED_SUMO);
           win.openTrustedLinkIn(
             "https://support.mozilla.org/kb/reset-firefox-easily-fix-most-problems",
             "tab"
@@ -1346,6 +1371,10 @@ BrowserGlue.prototype = {
           "slowStartup.disableNotificationButton.accesskey"
         ),
         callback() {
+          Services.telemetry.scalarSet(
+            "browser.startup.action",
+            NEVER_SHOW_AGAIN
+          );
           Services.prefs.setBoolPref(
             "browser.slowStartup.notificationDisabled",
             true
@@ -1354,12 +1383,22 @@ BrowserGlue.prototype = {
       },
     ];
 
+    let closeCallback = closeType => {
+      if (closeType == "dismissed") {
+        Services.telemetry.scalarSet(
+          "browser.startup.action",
+          DISMISS_NOTIFICATION
+        );
+      }
+    };
+
     win.gNotificationBox.appendNotification(
       message,
       "slow-startup",
       "chrome://browser/skin/slowStartup-16.png",
       win.gNotificationBox.PRIORITY_INFO_LOW,
-      buttons
+      buttons,
+      closeCallback
     );
   },
 
