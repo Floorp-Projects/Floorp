@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{BorderRadius, ClipMode, ColorF};
+use api::{BorderRadius, ClipMode, ColorF, ColorU};
 use api::{ImageRendering, RepeatMode, PrimitiveFlags};
 use api::{PremultipliedColorF, PropertyBinding, Shadow, GradientStop};
 use api::{BoxShadowClipMode, LineStyle, LineOrientation, BorderStyle};
@@ -720,7 +720,7 @@ impl intern::InternDebug for PrimitiveKey {}
 #[derive(MallocSizeOf)]
 pub enum PrimitiveTemplateKind {
     Rectangle {
-        color: ColorF,
+        color: PropertyBinding<ColorF>,
     },
     Clear,
 }
@@ -812,7 +812,8 @@ impl PrimitiveTemplateKind {
     /// Write any GPU blocks for the primitive template to the given request object.
     fn write_prim_gpu_blocks(
         &self,
-        request: &mut GpuDataRequest
+        request: &mut GpuDataRequest,
+        scene_properties: &SceneProperties,
     ) {
         match *self {
             PrimitiveTemplateKind::Clear => {
@@ -820,7 +821,7 @@ impl PrimitiveTemplateKind {
                 request.push(PremultipliedColorF::BLACK);
             }
             PrimitiveTemplateKind::Rectangle { ref color, .. } => {
-                request.push(color.premultiplied());
+                request.push(scene_properties.resolve_color(color).premultiplied())
             }
         }
     }
@@ -834,9 +835,10 @@ impl PrimitiveTemplate {
     pub fn update(
         &mut self,
         frame_state: &mut FrameBuildingState,
+        scene_properties: &SceneProperties,
     ) {
         if let Some(mut request) = frame_state.gpu_cache.request(&mut self.common.gpu_cache_handle) {
-            self.kind.write_prim_gpu_blocks(&mut request);
+            self.kind.write_prim_gpu_blocks(&mut request, scene_properties);
         }
 
         self.opacity = match self.kind {
@@ -844,7 +846,7 @@ impl PrimitiveTemplate {
                 PrimitiveOpacity::translucent()
             }
             PrimitiveTemplateKind::Rectangle { ref color, .. } => {
-                PrimitiveOpacity::from_alpha(color.a)
+                PrimitiveOpacity::from_alpha(scene_properties.resolve_color(color).a)
             }
         };
     }
@@ -873,7 +875,7 @@ impl InternablePrimitive for PrimitiveKeyKind {
     fn make_instance_kind(
         key: PrimitiveKey,
         data_handle: PrimitiveDataHandle,
-        _: &mut PrimitiveStore,
+        prim_store: &mut PrimitiveStore,
         _reference_frame_relative_offset: LayoutVector2D,
     ) -> PrimitiveInstanceKind {
         match key.kind {
@@ -882,11 +884,18 @@ impl InternablePrimitive for PrimitiveKeyKind {
                     data_handle
                 }
             }
-            PrimitiveKeyKind::Rectangle { .. } => {
+            PrimitiveKeyKind::Rectangle { color, .. } => {
+                let color_binding_index = match color {
+                    PropertyBinding::Binding(..) => {
+                        prim_store.color_bindings.push(color)
+                    }
+                    PropertyBinding::Value(..) => ColorBindingIndex::INVALID,
+                };
                 PrimitiveInstanceKind::Rectangle {
                     data_handle,
                     opacity_binding_index: OpacityBindingIndex::INVALID,
                     segment_instance_index: SegmentInstanceIndex::INVALID,
+                    color_binding_index,
                 }
             }
         }
@@ -1326,7 +1335,10 @@ impl IsVisible for PrimitiveKeyKind {
                 true
             }
             PrimitiveKeyKind::Rectangle { ref color, .. } => {
-                color.a > 0
+                match *color {
+                    PropertyBinding::Value(value) => value.a > 0,
+                    PropertyBinding::Binding(..) => true,
+                }
             }
         }
     }
@@ -1343,7 +1355,7 @@ impl CreateShadow for PrimitiveKeyKind {
         match *self {
             PrimitiveKeyKind::Rectangle { .. } => {
                 PrimitiveKeyKind::Rectangle {
-                    color: shadow.color.into(),
+                    color: PropertyBinding::Value(shadow.color.into()),
                 }
             }
             PrimitiveKeyKind::Clear => {
@@ -1404,6 +1416,7 @@ pub enum PrimitiveInstanceKind {
         data_handle: PrimitiveDataHandle,
         opacity_binding_index: OpacityBindingIndex,
         segment_instance_index: SegmentInstanceIndex,
+        color_binding_index: ColorBindingIndex,
     },
     YuvImage {
         /// Handle to the common interned data for this primitive.
@@ -1660,6 +1673,8 @@ pub type TextRunIndex = storage::Index<TextRunPrimitive>;
 pub type TextRunStorage = storage::Storage<TextRunPrimitive>;
 pub type OpacityBindingIndex = storage::Index<OpacityBinding>;
 pub type OpacityBindingStorage = storage::Storage<OpacityBinding>;
+pub type ColorBindingIndex = storage::Index<PropertyBinding<ColorU>>;
+pub type ColorBindingStorage = storage::Storage<PropertyBinding<ColorU>>;
 pub type BorderHandleStorage = storage::Storage<RenderTaskCacheEntryHandle>;
 pub type SegmentStorage = storage::Storage<BrushSegment>;
 pub type SegmentsRange = storage::Range<BrushSegment>;
@@ -1799,6 +1814,7 @@ pub struct PrimitiveStoreStats {
     opacity_binding_count: usize,
     image_count: usize,
     linear_gradient_count: usize,
+    color_binding_count: usize,
 }
 
 impl PrimitiveStoreStats {
@@ -1809,6 +1825,7 @@ impl PrimitiveStoreStats {
             opacity_binding_count: 0,
             image_count: 0,
             linear_gradient_count: 0,
+            color_binding_count: 0,
         }
     }
 }
@@ -1826,6 +1843,8 @@ pub struct PrimitiveStore {
 
     /// List of animated opacity bindings for a primitive.
     pub opacity_bindings: OpacityBindingStorage,
+    /// animated color bindings for this primitive.
+    pub color_bindings: ColorBindingStorage,
 }
 
 impl PrimitiveStore {
@@ -1835,6 +1854,7 @@ impl PrimitiveStore {
             text_runs: TextRunStorage::new(stats.text_run_count),
             images: ImageInstanceStorage::new(stats.image_count),
             opacity_bindings: OpacityBindingStorage::new(stats.opacity_binding_count),
+            color_bindings: ColorBindingStorage::new(stats.color_binding_count),
             linear_gradients: LinearGradientStorage::new(stats.linear_gradient_count),
         }
     }
@@ -1846,6 +1866,7 @@ impl PrimitiveStore {
             image_count: self.images.len(),
             opacity_binding_count: self.opacity_bindings.len(),
             linear_gradient_count: self.linear_gradients.len(),
+            color_binding_count: self.color_bindings.len(),
         }
     }
 
@@ -2150,6 +2171,7 @@ impl PrimitiveStore {
                             &self.pictures,
                             frame_state.resource_cache,
                             &self.opacity_bindings,
+                            &self.color_bindings,
                             &self.images,
                             &frame_state.surface_stack,
                             &frame_state.composite_state,
@@ -2975,7 +2997,7 @@ impl PrimitiveStore {
 
                 // Update the template this instane references, which may refresh the GPU
                 // cache with any shared template data.
-                prim_data.update(frame_state);
+                prim_data.update(frame_state, frame_context.scene_properties);
             }
             PrimitiveInstanceKind::NormalBorder { data_handle, ref mut cache_handles, .. } => {
                 let prim_data = &mut data_stores.normal_border[*data_handle];
@@ -3065,13 +3087,37 @@ impl PrimitiveStore {
                 // cache with any shared template data.
                 prim_data.kind.update(&mut prim_data.common, frame_state);
             }
-            PrimitiveInstanceKind::Rectangle { data_handle, segment_instance_index, opacity_binding_index, .. } => {
+            PrimitiveInstanceKind::Rectangle { data_handle, segment_instance_index, opacity_binding_index, color_binding_index, .. } => {
                 let prim_data = &mut data_stores.prim[*data_handle];
                 prim_data.common.may_need_repetition = false;
 
+                if *color_binding_index != ColorBindingIndex::INVALID {
+                    match self.color_bindings[*color_binding_index] {
+                        PropertyBinding::Binding(..) => {
+                            // We explicitly invalidate the gpu cache
+                            // if the color is animating.
+                            let gpu_cache_handle =
+                                if *segment_instance_index == SegmentInstanceIndex::INVALID {
+                                    None
+                                } else if *segment_instance_index == SegmentInstanceIndex::UNUSED {
+                                    Some(&prim_data.common.gpu_cache_handle)
+                                } else {
+                                    Some(&scratch.segment_instances[*segment_instance_index].gpu_cache_handle)
+                                };
+                            if let Some(gpu_cache_handle) = gpu_cache_handle {
+                                frame_state.gpu_cache.invalidate(gpu_cache_handle);
+                            }
+                        }
+                        PropertyBinding::Value(..) => {},
+                    }
+                }
+
                 // Update the template this instane references, which may refresh the GPU
                 // cache with any shared template data.
-                prim_data.update(frame_state);
+                prim_data.update(
+                    frame_state,
+                    frame_context.scene_properties,
+                );
 
                 update_opacity_binding(
                     &mut self.opacity_bindings,
@@ -3087,6 +3133,7 @@ impl PrimitiveStore {
                     |request| {
                         prim_data.kind.write_prim_gpu_blocks(
                             request,
+                            frame_context.scene_properties,
                         );
                     }
                 );
@@ -4342,8 +4389,8 @@ fn test_struct_sizes() {
     //     be done with care, and after checking if talos performance regresses badly.
     assert_eq!(mem::size_of::<PrimitiveInstance>(), 88, "PrimitiveInstance size changed");
     assert_eq!(mem::size_of::<PrimitiveInstanceKind>(), 40, "PrimitiveInstanceKind size changed");
-    assert_eq!(mem::size_of::<PrimitiveTemplate>(), 40, "PrimitiveTemplate size changed");
-    assert_eq!(mem::size_of::<PrimitiveTemplateKind>(), 20, "PrimitiveTemplateKind size changed");
-    assert_eq!(mem::size_of::<PrimitiveKey>(), 20, "PrimitiveKey size changed");
-    assert_eq!(mem::size_of::<PrimitiveKeyKind>(), 5, "PrimitiveKeyKind size changed");
+    assert_eq!(mem::size_of::<PrimitiveTemplate>(), 48, "PrimitiveTemplate size changed");
+    assert_eq!(mem::size_of::<PrimitiveTemplateKind>(), 28, "PrimitiveTemplateKind size changed");
+    assert_eq!(mem::size_of::<PrimitiveKey>(), 28, "PrimitiveKey size changed");
+    assert_eq!(mem::size_of::<PrimitiveKeyKind>(), 16, "PrimitiveKeyKind size changed");
 }
