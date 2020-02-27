@@ -22,16 +22,39 @@ const getDisplayedFrames = createSelector(
       return framesArray;
     }
 
+    const filter = searchFilter(frameFilterText);
+
     // If frame payload is > 10,000 characters long, we check the LongStringActor payload string
     return framesArray.filter(
       frame =>
         (frame.payload.initial
-          ? frame.payload.initial.includes(frameFilterText)
-          : frame.payload.includes(frameFilterText)) &&
+          ? filter(frame.payload.initial)
+          : filter(frame.payload)) &&
         (frameFilterType === "all" || frameFilterType === frame.type)
     );
   }
 );
+
+function searchFilter(frameFilterText) {
+  let regex;
+  if (looksLikeRegex(frameFilterText)) {
+    try {
+      regex = regexFromText(frameFilterText);
+    } catch (e) {}
+  }
+
+  return regex
+    ? payload => regex.test(payload)
+    : payload => payload.includes(frameFilterText);
+}
+
+function looksLikeRegex(text) {
+  return text.startsWith("/") && text.endsWith("/") && text.length > 2;
+}
+
+function regexFromText(text) {
+  return new RegExp(text.slice(1, -1), "im");
+}
 
 /**
  * Checks if the selected frame is visible.
