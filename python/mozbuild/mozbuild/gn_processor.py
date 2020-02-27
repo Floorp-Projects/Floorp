@@ -2,16 +2,16 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 
 from collections import defaultdict
 from copy import deepcopy
 import glob
 import json
 import os
+import six
 import subprocess
 import sys
-import types
 
 from mozbuild.backend.base import BuildBackend
 import mozpack.path as mozpath
@@ -199,7 +199,7 @@ def process_gn_config(gn_config, srcdir, config, output, non_unified_sources,
         return path.lstrip('//'), name + '_gn'
 
     # Process all targets from the given gn project and its dependencies.
-    for target_fullname, spec in targets.iteritems():
+    for target_fullname, spec in six.iteritems(targets):
 
         target_path, target_name = target_info(target_fullname)
         context_attrs = {}
@@ -210,7 +210,7 @@ def process_gn_config(gn_config, srcdir, config, output, non_unified_sources,
         if spec['type'] in ('static_library', 'shared_library', 'source_set'):
             if name.startswith('lib'):
                 name = name[3:]
-            context_attrs['LIBRARY_NAME'] = name.decode('utf-8')
+            context_attrs['LIBRARY_NAME'] = six.ensure_text(name)
         else:
             raise Exception('The following GN target type is not currently '
                             'consumed by moz.build: "%s". It may need to be '
@@ -298,7 +298,7 @@ def process_gn_config(gn_config, srcdir, config, output, non_unified_sources,
                     if not f:
                         continue
                     # the result may be a string or a list.
-                    if isinstance(f, types.StringTypes):
+                    if isinstance(f, six.string_types):
                         context_attrs.setdefault(var, []).append(f)
                     else:
                         context_attrs.setdefault(var, []).extend(f)
@@ -379,7 +379,7 @@ def find_common_attrs(config_attributes):
     def make_difference(reference, input_attrs):
         # Modifies `input_attrs` so that after calling this function it contains
         # no parts it has in common with in `reference`.
-        for k, input_value in input_attrs.items():
+        for k, input_value in list(six.iteritems(input_attrs)):
             common_value = reference.get(k)
             if common_value:
                 if isinstance(input_value, list):
@@ -449,7 +449,8 @@ def write_mozbuild(config, srcdir, output, non_unified_sources, gn_config_files,
                 for args in all_args:
                     cond = tuple(((k, args.get(k)) for k in attrs))
                     conditions.add(cond)
-                for cond in sorted(conditions):
+
+                for cond in conditions:
                     common_attrs = find_common_attrs([attrs for args, attrs in configs if
                                                       all(args.get(k) == v for k, v in cond)])
                     if any(common_attrs.values()):
@@ -511,7 +512,7 @@ def generate_gn_config(config, srcdir, output, non_unified_sources, gn_binary,
         return '"%s"' % v
 
     gn_args = '--args=%s' % ' '.join(['%s=%s' % (k, str_for_arg(v)) for k, v
-                                      in input_variables.iteritems()])
+                                      in six.iteritems(input_variables)])
     gn_arg_string = '_'.join([str(input_variables[k]) for k in sorted(input_variables.keys())])
     out_dir = mozpath.join(output, 'gn-output')
     gen_args = [
