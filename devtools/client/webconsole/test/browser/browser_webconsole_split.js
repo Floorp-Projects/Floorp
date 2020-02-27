@@ -96,41 +96,47 @@ add_task(async function() {
     };
   }
 
-  function getMenuLabel() {
-    return new Promise(resolve => {
-      const button = toolbox.doc.getElementById("toolbox-meatball-menu-button");
-      EventUtils.sendMouseEvent({ type: "click" }, button);
+  async function getMenuLabel() {
+    const button = toolbox.doc.getElementById("toolbox-meatball-menu-button");
+    const onPopupShown = new Promise(
+      resolve => {
+        toolbox.doc.addEventListener("popupshown", () => resolve());
+      },
+      { once: true }
+    );
+    info("Click on menu and wait for the popup to be visible");
+    EventUtils.sendMouseEvent({ type: "click" }, button);
+    await onPopupShown;
 
+    const menuItem = toolbox.doc.getElementById(
+      "toolbox-meatball-menu-splitconsole"
+    );
+
+    // Return undefined if the menu item is not available
+    let label;
+    if (menuItem && menuItem.querySelector(".label")) {
+      label =
+        menuItem.querySelector(".label").textContent ===
+        L10N.getStr("toolbox.meatballMenu.hideconsole.label")
+          ? "hide"
+          : "split";
+    }
+
+    // Wait for menu to close
+    const onPopupHide = new Promise(resolve => {
       toolbox.doc.addEventListener(
-        "popupshown",
+        "popuphidden",
         () => {
-          const menuItem = toolbox.doc.getElementById(
-            "toolbox-meatball-menu-splitconsole"
-          );
-
-          // Return undefined if the menu item is not available
-          let label;
-          if (menuItem && menuItem.querySelector(".label")) {
-            label =
-              menuItem.querySelector(".label").textContent ===
-              L10N.getStr("toolbox.meatballMenu.hideconsole.label")
-                ? "hide"
-                : "split";
-          }
-
-          // Wait for menu to close
-          toolbox.doc.addEventListener(
-            "popuphidden",
-            () => {
-              resolve(label);
-            },
-            { once: true }
-          );
-          EventUtils.sendKey("ESCAPE", toolbox.win);
+          resolve(label);
         },
         { once: true }
       );
     });
+    info("Hit escape and wait for the popup to be closed");
+    EventUtils.sendKey("ESCAPE", toolbox.win);
+    await onPopupHide;
+
+    return label;
   }
 
   async function checkWebconsolePanelOpened() {
