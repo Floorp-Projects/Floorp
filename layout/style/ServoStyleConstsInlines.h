@@ -816,6 +816,11 @@ const T& StyleRect<T>::Get(mozilla::Side aSide) const {
 }
 
 template <typename T>
+T& StyleRect<T>::Get(mozilla::Side aSide) {
+  return const_cast<T&>(static_cast<const StyleRect&>(*this).Get(aSide));
+}
+
+template <typename T>
 template <typename Predicate>
 bool StyleRect<T>::All(Predicate aPredicate) const {
   return aPredicate(_0) && aPredicate(_1) && aPredicate(_2) && aPredicate(_3);

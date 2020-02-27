@@ -1963,29 +1963,53 @@ class LogicalRect {
 };
 
 template <typename T>
-const T& StyleRect<T>::Get(mozilla::WritingMode aWM,
-                           mozilla::LogicalSide aSide) const {
+const T& StyleRect<T>::Get(WritingMode aWM, LogicalSide aSide) const {
   return Get(aWM.PhysicalSide(aSide));
 }
 
 template <typename T>
-const T& StyleRect<T>::GetIStart(mozilla::WritingMode aWM) const {
-  return Get(aWM, mozilla::eLogicalSideIStart);
+const T& StyleRect<T>::GetIStart(WritingMode aWM) const {
+  return Get(aWM, eLogicalSideIStart);
 }
 
 template <typename T>
-const T& StyleRect<T>::GetBStart(mozilla::WritingMode aWM) const {
-  return Get(aWM, mozilla::eLogicalSideBStart);
+const T& StyleRect<T>::GetBStart(WritingMode aWM) const {
+  return Get(aWM, eLogicalSideBStart);
 }
 
 template <typename T>
-const T& StyleRect<T>::GetIEnd(mozilla::WritingMode aWM) const {
-  return Get(aWM, mozilla::eLogicalSideIEnd);
+const T& StyleRect<T>::GetIEnd(WritingMode aWM) const {
+  return Get(aWM, eLogicalSideIEnd);
 }
 
 template <typename T>
-const T& StyleRect<T>::GetBEnd(mozilla::WritingMode aWM) const {
-  return Get(aWM, mozilla::eLogicalSideBEnd);
+const T& StyleRect<T>::GetBEnd(WritingMode aWM) const {
+  return Get(aWM, eLogicalSideBEnd);
+}
+
+template <typename T>
+T& StyleRect<T>::Get(WritingMode aWM, LogicalSide aSide) {
+  return Get(aWM.PhysicalSide(aSide));
+}
+
+template <typename T>
+T& StyleRect<T>::GetIStart(WritingMode aWM) {
+  return Get(aWM, eLogicalSideIStart);
+}
+
+template <typename T>
+T& StyleRect<T>::GetBStart(WritingMode aWM) {
+  return Get(aWM, eLogicalSideBStart);
+}
+
+template <typename T>
+T& StyleRect<T>::GetIEnd(WritingMode aWM) {
+  return Get(aWM, eLogicalSideIEnd);
+}
+
+template <typename T>
+T& StyleRect<T>::GetBEnd(WritingMode aWM) {
+  return Get(aWM, eLogicalSideBEnd);
 }
 
 }  // namespace mozilla
