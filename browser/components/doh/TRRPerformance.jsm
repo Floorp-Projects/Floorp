@@ -65,7 +65,15 @@ XPCOMUtils.defineLazyPreferenceGetter(
   "doh-rollout.trrRace.trrList",
   null,
   null,
-  val => (val ? val.split(",").map(t => t.trim()) : [])
+  val =>
+    val
+      ? val.split(",").map(t => t.trim())
+      : [
+          "https://doh.opendns.com/dns-query",
+          "https://mozilla.cloudflare-dns.com/dns-query",
+          "https://trr.dns.nextdns.io/",
+          "https://doh.xfinity.com/dns-query",
+        ]
 );
 
 // The canonical domain whose subdomains we will be resolving.
