@@ -2705,70 +2705,34 @@ size_t Document::FindDocStyleSheetInsertionPoint(const StyleSheet& aSheet) {
   return index;
 }
 
-void Document::AppendAdoptedStyleSheet(StyleSheet& aSheet) {
-  DocumentOrShadowRoot::InsertAdoptedSheetAt(mAdoptedStyleSheets.Length(),
-                                             aSheet);
-  if (aSheet.IsApplicable()) {
-    AddStyleSheetToStyleSets(aSheet);
-  }
-}
-
-void Document::RemoveDocStyleSheetsFromStyleSets() {
-  MOZ_ASSERT(mStyleSetFilled);
-  // The stylesheets should forget us
-  //
-  // FIXME: Should also deal with adopted stylesheets, probably.
-  for (StyleSheet* sheet : Reversed(mStyleSheets)) {
-    sheet->ClearAssociatedDocumentOrShadowRoot();
-    if (sheet->IsApplicable()) {
-      mStyleSet->RemoveStyleSheet(*sheet);
-    }
-    // XXX Tell observers?
-  }
-}
-
-static void RemoveStyleSheetsFromStyleSets(
-    ServoStyleSet* aSet, const nsTArray<RefPtr<StyleSheet>>& aSheets) {
-  // The stylesheets should forget us
-  for (StyleSheet* sheet : Reversed(aSheets)) {
-    sheet->ClearAssociatedDocumentOrShadowRoot();
-    if (sheet->IsApplicable()) {
-      aSet->RemoveStyleSheet(*sheet);
-    }
-  }
-}
-
 void Document::ResetStylesheetsToURI(nsIURI* aURI) {
   MOZ_ASSERT(aURI);
 
-  if (mStyleSetFilled) {
-    // Skip removing style sheets from the style set if we know we haven't
-    // filled the style set.  (This allows us to avoid calling
-    // GetStyleBackendType() too early.)
-    RemoveDocStyleSheetsFromStyleSets();
-    RemoveStyleSheetsFromStyleSets(mStyleSet.get(),
-                                   mAdditionalSheets[eAgentSheet]);
-    RemoveStyleSheetsFromStyleSets(mStyleSet.get(),
-                                   mAdditionalSheets[eUserSheet]);
-    RemoveStyleSheetsFromStyleSets(mStyleSet.get(),
-                                   mAdditionalSheets[eAuthorSheet]);
+  ClearAdoptedStyleSheets();
 
-    if (nsStyleSheetService* sheetService =
-            nsStyleSheetService::GetInstance()) {
-      RemoveStyleSheetsFromStyleSets(mStyleSet.get(),
-                                     *sheetService->AuthorStyleSheets());
+  auto ClearSheetList = [&](nsTArray<RefPtr<StyleSheet>>& aSheetList) {
+    for (auto& sheet : Reversed(aSheetList)) {
+      sheet->ClearAssociatedDocumentOrShadowRoot();
+      if (mStyleSetFilled) {
+        mStyleSet->RemoveStyleSheet(*sheet);
+      }
+    }
+    aSheetList.Clear();
+  };
+  ClearSheetList(mStyleSheets);
+  for (auto& sheets : mAdditionalSheets) {
+    ClearSheetList(sheets);
+  }
+  if (mStyleSetFilled) {
+    if (auto* ss = nsStyleSheetService::GetInstance()) {
+      for (auto& sheet : Reversed(*ss->AuthorStyleSheets())) {
+        MOZ_ASSERT(!sheet->GetAssociatedDocumentOrShadowRoot());
+        if (sheet->IsApplicable()) {
+          mStyleSet->RemoveStyleSheet(*sheet);
+        }
+      }
     }
   }
-
-  // Release all the sheets
-  mStyleSheets.Clear();
-  for (auto& sheets : mAdditionalSheets) {
-    sheets.Clear();
-  }
-
-  // NOTE:  We don't release the catalog sheets.  It doesn't really matter
-  // now, but it could in the future -- in which case not releasing them
-  // is probably the right thing to do.
 
   // Now reset our inline style and attribute sheets.
   if (mAttrStyleSheet) {
@@ -2928,19 +2892,23 @@ void Document::FillStyleSetDocumentSheets() {
   MOZ_ASSERT(mStyleSet->SheetCount(StyleOrigin::Author) == 0,
              "Style set already has document sheets?");
 
-  // Sheets are added in reverse order to avoid worst-case
-  // time complexity when looking up the index of a sheet
+  // Sheets are added in reverse order to avoid worst-case time complexity when
+  // looking up the index of a sheet.
+  //
+  // Note that usually appending is faster (rebuilds less stuff in the
+  // styleset), but in this case it doesn't matter since we're filling the
+  // styleset from scratch anyway.
   for (StyleSheet* sheet : Reversed(mStyleSheets)) {
     if (sheet->IsApplicable()) {
       mStyleSet->AddDocStyleSheet(*sheet);
     }
   }
 
-  for (StyleSheet* sheet : Reversed(mAdoptedStyleSheets)) {
-    if (sheet->IsApplicable()) {
-      mStyleSet->AddDocStyleSheet(*sheet);
+  EnumerateUniqueAdoptedStyleSheetsBackToFront([&](StyleSheet& aSheet) {
+    if (aSheet.IsApplicable()) {
+      mStyleSet->AddDocStyleSheet(aSheet);
     }
-  }
+  });
 
   nsStyleSheetService* sheetService = nsStyleSheetService::GetInstance();
   for (StyleSheet* sheet : *sheetService->AuthorStyleSheets()) {
@@ -16147,35 +16115,6 @@ Document::RecomputeContentBlockingAllowListPrincipal(
 
   nsCOMPtr<nsIPrincipal> copy = mContentBlockingAllowListPrincipal;
   return copy.forget();
-}
-
-// https://wicg.github.io/construct-stylesheets/#dom-documentorshadowroot-adoptedstylesheets
-void Document::SetAdoptedStyleSheets(
-    const Sequence<OwningNonNull<StyleSheet>>& aAdoptedStyleSheets,
-    ErrorResult& aRv) {
-  // Step 1 is a variable declaration
-
-  // 2.1 Check if all sheets are constructed, else throw NotAllowedError
-  // 2.2 Check if all sheets' constructor documents match the
-  // DocumentOrShadowRoot's node document, else throw NotAlloweError
-  EnsureAdoptedSheetsAreValid(aAdoptedStyleSheets, aRv);
-  if (aRv.Failed()) {
-    return;
-  }
-
-  // 3. Set the adopted style sheets to the new sheets
-  for (const RefPtr<StyleSheet>& sheet : mAdoptedStyleSheets) {
-    if (sheet->IsApplicable()) {
-      RemoveStyleSheetFromStyleSets(*sheet);
-    }
-    sheet->RemoveAdopter(*this);
-  }
-  mAdoptedStyleSheets.ClearAndRetainStorage();
-  mAdoptedStyleSheets.SetCapacity(aAdoptedStyleSheets.Length());
-  for (const OwningNonNull<StyleSheet>& sheet : aAdoptedStyleSheets) {
-    sheet->AddAdopter(*this);
-    AppendAdoptedStyleSheet(*sheet);
-  }
 }
 
 }  // namespace dom
