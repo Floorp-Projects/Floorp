@@ -738,6 +738,7 @@ bool TestAssemblyFunctions() {
     // Skip the stub address check as we always generate a trampoline for x86.
     TestCase("PushRet", NoStubAddressCheck),
     TestCase("MovEaxJump", NoStubAddressCheck),
+    TestCase("Opcode83", NoStubAddressCheck),
 #    endif
 #  endif  // MOZ_CODE_COVERAGE
 #endif    // defined(__clang__)
