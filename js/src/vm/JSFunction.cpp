@@ -2255,11 +2255,11 @@ static inline JSFunction* NewFunctionClone(JSContext* cx, HandleFunction fun,
   return clone;
 }
 
-JSFunction* js::CloneFunctionReuseScript(
-    JSContext* cx, HandleFunction fun, HandleObject enclosingEnv,
-    gc::AllocKind allocKind /* = FUNCTION */,
-    NewObjectKind newKind /* = GenericObject */,
-    HandleObject proto /* = nullptr */) {
+JSFunction* js::CloneFunctionReuseScript(JSContext* cx, HandleFunction fun,
+                                         HandleObject enclosingEnv,
+                                         gc::AllocKind allocKind,
+                                         NewObjectKind newKind,
+                                         HandleObject proto) {
   MOZ_ASSERT(cx->realm() == fun->realm());
   MOZ_ASSERT(NewFunctionEnvironmentIsWellFormed(cx, enclosingEnv));
   MOZ_ASSERT(fun->isInterpreted());
@@ -2302,7 +2302,7 @@ JSFunction* js::CloneFunctionAndScript(JSContext* cx, HandleFunction fun,
                                        HandleObject enclosingEnv,
                                        HandleScope newScope,
                                        Handle<ScriptSourceObject*> sourceObject,
-                                       gc::AllocKind allocKind /* = FUNCTION */,
+                                       gc::AllocKind allocKind,
                                        HandleObject proto /* = nullptr */) {
   MOZ_ASSERT(NewFunctionEnvironmentIsWellFormed(cx, enclosingEnv));
   MOZ_ASSERT(fun->isInterpreted());
