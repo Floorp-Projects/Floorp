@@ -82,12 +82,6 @@ class GeckoProfile(object):
         # start as early as possible. These are consumed by Gecko
         # itself, not by Talos JS code.
         env.update({
-            # Currently, the base profiler is controlled separately from the
-            # main profiler. When bug 1586939 is fixed, both profilers will be
-            # controlled via `MOZ_PROFILER_STARTUP`, and
-            # `MOZ_BASE_PROFILER_STARTUP` can be removed.
-            'MOZ_BASE_PROFILER_STARTUP': '1',
-
             'MOZ_PROFILER_STARTUP': '1',
             'MOZ_PROFILER_STARTUP_INTERVAL': str(self.option('interval')),
             'MOZ_PROFILER_STARTUP_ENTRIES': str(self.option('entries')),
