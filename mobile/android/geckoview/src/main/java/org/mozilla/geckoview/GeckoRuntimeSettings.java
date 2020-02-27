@@ -157,22 +157,6 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
         }
 
         /**
-         * Set whether web manifest support is enabled.
-         *
-         * This controls if Gecko actually downloads, or "obtains", web
-         * manifests and processes them. Without setting this pref, trying
-         * to obtain a manifest throws.
-         *
-         * @param enabled A flag determining whether Web Manifest processing support is
-         *                enabled.
-         * @return The builder instance.
-         */
-        public @NonNull Builder webManifest(final boolean enabled) {
-            getSettings().mWebManifest.set(enabled);
-            return this;
-        }
-
-        /**
          * Set whether or not web console messages should go to logcat.
          *
          * Note: If enabled, Gecko performance may be negatively impacted if
@@ -447,8 +431,6 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
         return mContentBlocking;
     }
 
-    /* package */ final Pref<Boolean> mWebManifest = new Pref<Boolean>(
-        "dom.manifest.enabled", true);
     /* package */ final Pref<Boolean> mJavaScript = new Pref<Boolean>(
         "javascript.enabled", true);
     /* package */ final Pref<Boolean> mRemoteDebugging = new Pref<Boolean>(
@@ -788,28 +770,6 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
         }
         // e.g. "en", "en-US", or "en-US-POSIX".
         return out.toString();
-    }
-
-    /**
-     * Sets whether Web Manifest processing support is enabled.
-     *
-     * @param enabled A flag determining whether Web Manifest processing support is
-     *                enabled.
-     *
-     * @return This GeckoRuntimeSettings instance.
-     */
-    public @NonNull GeckoRuntimeSettings setWebManifestEnabled(final boolean enabled) {
-        mWebManifest.commit(enabled);
-        return this;
-    }
-
-    /**
-     * Get whether or not Web Manifest processing support is enabled.
-     *
-     * @return True if web manifest processing support is enabled.
-     */
-    public boolean getWebManifestEnabled() {
-        return mWebManifest.get();
     }
 
     /**
