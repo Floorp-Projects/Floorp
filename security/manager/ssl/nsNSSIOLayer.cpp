@@ -1955,8 +1955,11 @@ void ClientAuthDataRunnable::RunOnTargetThread() {
 
     const nsACString& hostname = mSocketInfo->GetHostName();
 
-    RefPtr<nsClientAuthRememberService> cars =
-        mSocketInfo->SharedState().GetClientAuthRememberService();
+    nsCOMPtr<nsIClientAuthRemember> cars = nullptr;
+
+    if (mSocketInfo->GetProviderTlsFlags() == 0) {
+      cars = do_GetService(NS_CLIENTAUTHREMEMBER_CONTRACTID);
+    }
 
     bool hasRemembered = false;
     nsCString rememberedDBKey;
