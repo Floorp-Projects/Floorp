@@ -294,7 +294,8 @@
   <menu id="bookmarksMenu"
         ondragenter="PlacesMenuDNDHandler.onDragEnter(event);"
         ondragover="PlacesMenuDNDHandler.onDragOver(event);"
-        ondrop="PlacesMenuDNDHandler.onDrop(event);" data-l10n-id="menu-bookmarks-menu">
+        ondrop="PlacesMenuDNDHandler.onDrop(event);"
+        data-l10n-id="menu-bookmarks-menu">
     <menupopup id="bookmarksMenuPopup"
 #ifndef XP_MACOSX
                placespopup="true"
@@ -311,19 +312,23 @@
                tooltip="bhTooltip" popupsinherittooltip="true">
       <menuitem id="bookmarksShowAll"
                 command="Browser:ShowAllBookmarks"
-                key="manBookmarkKb" data-l10n-id="menu-bookmarks-show-all"/>
+                key="manBookmarkKb"
+                data-l10n-id="menu-bookmarks-show-all"/>
       <menuseparator id="organizeBookmarksSeparator"/>
       <menuitem id="menu_bookmarkThisPage"
                 command="Browser:AddBookmarkAs"
-                key="addBookmarkAsKb"/>
+                key="addBookmarkAsKb"
+                data-l10n-id="menu-bookmark-this-page"/>
       <menuitem id="menu_bookmarkAllTabs"
                 class="show-only-for-keyboard"
                 command="Browser:BookmarkAllTabs"
-                key="bookmarkAllTabsKb" data-l10n-id="menu-bookmarks-all-tabs"/>
+                key="bookmarkAllTabsKb"
+                data-l10n-id="menu-bookmarks-all-tabs"/>
       <menuseparator id="bookmarksToolbarSeparator"/>
       <menu id="bookmarksToolbarFolderMenu"
             class="menu-iconic bookmark-item"
-            container="true" data-l10n-id="menu-bookmarks-toolbar">
+            container="true"
+            data-l10n-id="menu-bookmarks-toolbar">
         <menupopup id="bookmarksToolbarFolderPopup"
 #ifndef XP_MACOSX
                    placespopup="true"
@@ -335,7 +340,8 @@
       </menu>
       <menu id="menu_unsortedBookmarks"
             class="menu-iconic bookmark-item"
-            container="true" data-l10n-id="menu-bookmarks-other">
+            container="true"
+            data-l10n-id="menu-bookmarks-other">
         <menupopup id="otherBookmarksFolderPopup"
 #ifndef XP_MACOSX
                    placespopup="true"
@@ -348,7 +354,8 @@
       <menu id="menu_mobileBookmarks"
             class="menu-iconic bookmark-item"
             hidden="true"
-            container="true" data-l10n-id="menu-bookmarks-mobile">
+            container="true"
+            data-l10n-id="menu-bookmarks-mobile">
         <menupopup id="mobileBookmarksFolderPopup"
 #ifndef XP_MACOSX
                    placespopup="true"
