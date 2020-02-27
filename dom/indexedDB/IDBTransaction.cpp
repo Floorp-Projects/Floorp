@@ -386,7 +386,35 @@ void IDBTransaction::SendCommit(const bool aAutoCommit) {
       LoggingSerialNumber(), requestSerialNumber,
       aAutoCommit ? "automatically" : "explicitly");
 
-  DoWithTransactionChild([](auto& actor) { actor.SendCommit(); });
+  const auto lastRequestSerialNumber =
+      [this, aAutoCommit,
+       requestSerialNumber]() -> Maybe<decltype(requestSerialNumber)> {
+    if (aAutoCommit) {
+      return Nothing();
+    }
+
+    // In case of an explicit commit, we need to note the serial number of the
+    // last request to check if a request submitted before the commit request
+    // failed. If we are currently in an event handler for a request on this
+    // transaction, ignore this request. This is used to synchronize the
+    // transaction's committing state with the parent side, to abort the
+    // transaction in case of a request resulting in an error (see
+    // https://w3c.github.io/IndexedDB/#async-execute-request, step 5.3.). With
+    // automatic commit, this is not necessary, as the transaction's state will
+    // only be set to committing after the last request completed.
+    const bool dispatchingEventForThisTransaction =
+        BackgroundChildImpl::GetThreadLocalForCurrentThread()
+            ->mIndexedDBThreadLocal->GetCurrentTransaction() == this;
+
+    return Some(requestSerialNumber
+                    ? (requestSerialNumber -
+                       (dispatchingEventForThisTransaction ? 0 : 1))
+                    : 0);
+  }();
+
+  DoWithTransactionChild([lastRequestSerialNumber](auto& actor) {
+    actor.SendCommit(lastRequestSerialNumber);
+  });
 
   mSentCommitOrAbort.Flip();
 }
