@@ -26,9 +26,8 @@ from mozpack.chrome.manifest import ManifestEntry
 import mozpack.path as mozpath
 from .context import FinalTargetValue
 
-from collections import defaultdict, OrderedDict
+from collections import defaultdict
 import itertools
-import six
 
 from ..util import (
     group_unified_files,
@@ -220,7 +219,7 @@ class BaseDefines(ContextDerived):
         self.defines = defines
 
     def get_defines(self):
-        for define, value in six.iteritems(self.defines):
+        for define, value in self.defines.iteritems():
             if value is True:
                 yield('-D%s' % define)
             elif value is False:
@@ -415,7 +414,7 @@ class Linkable(ContextDerived):
         self.cxx_link = False
         self.linked_libraries = []
         self.linked_system_libs = []
-        self.lib_defines = Defines(context, OrderedDict())
+        self.lib_defines = Defines(context, {})
         self.sources = defaultdict(list)
 
     def link_library(self, obj):

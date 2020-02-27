@@ -227,7 +227,9 @@ class FileAvoidWrite(BytesIO):
         self._binary_mode = 'b' in readmode
 
     def write(self, buf):
-        BytesIO.write(self, six.ensure_binary(buf))
+        if isinstance(buf, six.text_type):
+            buf = buf.encode('utf-8')
+        BytesIO.write(self, buf)
 
     def avoid_writing_to_file(self):
         self._write_to_file = False

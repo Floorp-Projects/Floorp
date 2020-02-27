@@ -4,9 +4,8 @@
 
 from __future__ import absolute_import, print_function
 
-import fnmatch
-import io
 import json
+import fnmatch
 import os
 import shutil
 import sys
@@ -155,9 +154,9 @@ class ManifestParser(object):
             filename = os.path.abspath(filename)
             self.source_files.add(filename)
             if self.finder:
-                fp = self.finder.get(filename).open(mode='r')
+                fp = self.finder.get(filename)
             else:
-                fp = io.open(filename, encoding='utf-8')
+                fp = open(filename)
             here = os.path.dirname(filename)
         else:
             fp = filename

@@ -2,10 +2,9 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import, print_function, unicode_literals
+from __future__ import absolute_import, print_function
 
 import os
-import six
 import unittest
 
 from mozunit import main
@@ -39,7 +38,7 @@ class TestContext(unittest.TestCase):
             'baz': (dict, dict, ''),
         })
 
-        self.assertEqual(list(test), [])
+        self.assertEqual(test.keys(), [])
 
         self.assertEqual(test['foo'], 0)
 
@@ -87,12 +86,12 @@ class TestContext(unittest.TestCase):
             'baz': (dict, list, ''),
         })
 
-        self.assertEqual(list(test), [])
+        self.assertEqual(test.keys(), [])
 
         with self.assertRaises(ValueError):
             test.update(bar=True, foo={})
 
-        self.assertEqual(list(test), [])
+        self.assertEqual(test.keys(), [])
 
         test.update(bar=True, foo=1)
 
@@ -636,7 +635,7 @@ class TestPaths(unittest.TestCase):
 class TestTypedRecord(unittest.TestCase):
 
     def test_fields(self):
-        T = ContextDerivedTypedRecord(('field1', six.text_type),
+        T = ContextDerivedTypedRecord(('field1', unicode),
                                       ('field2', list))
         inst = T(None)
         self.assertEqual(inst.field1, '')
@@ -652,7 +651,7 @@ class TestTypedRecord(unittest.TestCase):
             inst.field3 = []
 
     def test_coercion(self):
-        T = ContextDerivedTypedRecord(('field1', six.text_type),
+        T = ContextDerivedTypedRecord(('field1', unicode),
                                       ('field2', list))
         inst = T(None)
         inst.field1 = 3
