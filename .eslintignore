@@ -47,6 +47,7 @@ browser/extensions/pdfjs/content/web
 browser/components/pocket/content/panels/js/tmpl.js
 
 # Ignore newtab files
+browser/components/newtab/aboutwelcome/content/aboutwelcome.bundle.js
 browser/components/newtab/data/
 browser/components/newtab/logs/
 

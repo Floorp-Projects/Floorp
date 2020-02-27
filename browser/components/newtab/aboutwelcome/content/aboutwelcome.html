@@ -1,0 +1,26 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this file,
+   - You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; object-src 'none'; script-src resource: chrome:; connect-src https:; img-src https: data: blob:; style-src resource: chrome:;">
+    <title data-l10n-id="onboarding-welcome-header"></title>
+    <link rel="icon" type="image/png" href="chrome://branding/content/icon32.png">
+    <link rel="stylesheet" href="resource://activity-stream/css/activity-stream.css">
+    <link rel="stylesheet" href="resource://activity-stream/aboutwelcome/aboutwelcome.css">
+    <link rel="localization" href="branding/brand.ftl"/>
+    <link rel="localization" href="browser/branding/sync-brand.ftl"/>
+    <link rel="localization" href="browser/branding/brandings.ftl"/>
+    <link rel="localization" href="browser/newtab/onboarding.ftl"/>
+  </head>
+  <body>
+    <div id="root" class="welcome-container" role="presentation">
+    </div>
+    <script src="resource://activity-stream/vendor/react.js"></script>
+    <script src="resource://activity-stream/vendor/react-dom.js"></script>
+    <script src="resource://activity-stream/aboutwelcome/aboutwelcome.bundle.js"></script>
+  </body>
+</html>

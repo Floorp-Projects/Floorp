@@ -6,6 +6,7 @@ browser.jar:
 % resource activity-stream %res/activity-stream/ contentaccessible=yes
   res/activity-stream/lib/ (./lib/*)
   res/activity-stream/common/ (./common/*)
+  res/activity-stream/aboutwelcome/ (./aboutwelcome/content/*)
   res/activity-stream/vendor/Redux.jsm (./vendor/Redux.jsm)
   res/activity-stream/vendor/react.js (./vendor/react.js)
   res/activity-stream/vendor/react-dom.js (./vendor/react-dom.js)

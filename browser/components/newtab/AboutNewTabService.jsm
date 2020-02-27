@@ -7,6 +7,10 @@
 "use strict";
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+
 const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
@@ -18,6 +22,17 @@ ChromeUtils.defineModuleGetter(
   this,
   "AboutNewTab",
   "resource:///modules/AboutNewTab.jsm"
+);
+
+const PREF_SEPARATE_ABOUT_WELCOME = "browser.aboutwelcome.enabled";
+const SEPARATE_ABOUT_WELCOME_URL =
+  "resource://activity-stream/aboutwelcome/aboutwelcome.html";
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "isSeparateAboutWelcome",
+  PREF_SEPARATE_ABOUT_WELCOME,
+  false
 );
 
 const TOPIC_APP_QUIT = "quit-application-granted";
@@ -142,6 +157,14 @@ AboutNewTabService.prototype = {
           break;
         }
 
+        // Bail out early for separate about:welcome URL
+        if (
+          isSeparateAboutWelcome &&
+          win.location.pathname.includes("welcome")
+        ) {
+          break;
+        }
+
         const onLoaded = () => {
           const debugString = this._activityStreamDebug ? "-dev" : "";
 
@@ -254,6 +277,9 @@ AboutNewTabService.prototype = {
    * This is calculated in the same way the default URL is.
    */
   get welcomeURL() {
+    if (isSeparateAboutWelcome) {
+      return SEPARATE_ABOUT_WELCOME_URL;
+    }
     return this.defaultURL;
   },
 
