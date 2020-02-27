@@ -212,22 +212,21 @@ function TypedArrayCopyWithin(target, start, end = undefined) {
            "assumed by some of the math below, see also the other assertions");
 
     // Step 4.
-    var relativeTarget = ToIntegerPositiveZero(target);
+    var relativeTarget = ToInteger(target);
 
     // Step 5.
     var to = relativeTarget < 0 ? std_Math_max(len + relativeTarget, 0)
                                 : std_Math_min(relativeTarget, len);
 
     // Step 6.
-    var relativeStart = ToIntegerPositiveZero(start);
+    var relativeStart = ToInteger(start);
 
     // Step 7.
     var from = relativeStart < 0 ? std_Math_max(len + relativeStart, 0)
                                  : std_Math_min(relativeStart, len);
 
     // Step 8.
-    var relativeEnd = end === undefined ? len
-                                        : ToIntegerPositiveZero(end);
+    var relativeEnd = end === undefined ? len : ToInteger(end);
 
     // Step 9.
     var final = relativeEnd < 0 ? std_Math_max(len + relativeEnd, 0)
@@ -364,7 +363,7 @@ function TypedArrayFill(value, start = 0, end = undefined) {
     }
 
     // Step 5.
-    var relativeStart = ToIntegerPositiveZero(start);
+    var relativeStart = ToInteger(start);
 
     // Step 6.
     var k = relativeStart < 0
@@ -372,7 +371,7 @@ function TypedArrayFill(value, start = 0, end = undefined) {
             : std_Math_min(relativeStart, len);
 
     // Step 7.
-    var relativeEnd = end === undefined ? len : ToIntegerPositiveZero(end);
+    var relativeEnd = end === undefined ? len : ToInteger(end);
 
     // Step 8.
     var final = relativeEnd < 0
@@ -601,8 +600,8 @@ function TypedArrayIndexOf(searchElement, fromIndex = 0) {
     if (len === 0)
         return -1;
 
-    // Steps 4-5.  Convert -0 to +0, per step 7.a.
-    var n = ToIntegerPositiveZero(fromIndex);
+    // Steps 4-5.
+    var n = ToInteger(fromIndex);
 
     // Step 6.
     if (n >= len)
@@ -721,8 +720,8 @@ function TypedArrayLastIndexOf(searchElement/*, fromIndex*/) {
     if (len === 0)
         return -1;
 
-    // Steps 4.  Convert -0 to +0, per step 5.a.
-    var n = arguments.length > 1 ? ToIntegerPositiveZero(arguments[1]) : len - 1;
+    // Steps 4.
+    var n = arguments.length > 1 ? ToInteger(arguments[1]) : len - 1;
 
     // Steps 5-6.
     var k = n >= 0 ? std_Math_min(n, len - 1) : len + n;
@@ -930,7 +929,7 @@ function TypedArraySlice(start, end) {
     var len = TypedArrayLength(O);
 
     // Step 4.
-    var relativeStart = ToIntegerPositiveZero(start);
+    var relativeStart = ToInteger(start);
 
     // Step 5.
     var k = relativeStart < 0
@@ -938,7 +937,7 @@ function TypedArraySlice(start, end) {
             : std_Math_min(relativeStart, len);
 
     // Step 6.
-    var relativeEnd = end === undefined ? len : ToIntegerPositiveZero(end);
+    var relativeEnd = end === undefined ? len : ToInteger(end);
 
     // Step 7.
     var final = relativeEnd < 0
@@ -1310,14 +1309,14 @@ function TypedArraySubarray(begin, end) {
     var srcByteOffset = TypedArrayByteOffset(obj);
 
     // Step 6.
-    var relativeBegin = ToIntegerPositiveZero(begin);
+    var relativeBegin = ToInteger(begin);
 
     // Step 7.
     var beginIndex = relativeBegin < 0 ? std_Math_max(srcLength + relativeBegin, 0)
                                        : std_Math_min(relativeBegin, srcLength);
 
     // Step 8.
-    var relativeEnd = end === undefined ? srcLength : ToIntegerPositiveZero(end);
+    var relativeEnd = end === undefined ? srcLength : ToInteger(end);
 
     // Step 9.
     var endIndex = relativeEnd < 0 ? std_Math_max(srcLength + relativeEnd, 0)
@@ -1374,7 +1373,7 @@ function TypedArrayIncludes(searchElement, fromIndex = 0) {
         return false;
 
     // Steps 4-5.
-    var n = ToIntegerPositiveZero(fromIndex);
+    var n = ToInteger(fromIndex);
 
     // Steps 6-7
     var k;
@@ -1635,15 +1634,14 @@ function ArrayBufferSlice(start, end) {
     var len = ArrayBufferByteLength(O);
 
     // Step 6.
-    var relativeStart = ToIntegerPositiveZero(start);
+    var relativeStart = ToInteger(start);
 
     // Step 7.
     var first = relativeStart < 0 ? std_Math_max(len + relativeStart, 0)
                                   : std_Math_min(relativeStart, len);
 
     // Step 8.
-    var relativeEnd = end === undefined ? len
-                                        : ToIntegerPositiveZero(end);
+    var relativeEnd = end === undefined ? len : ToInteger(end);
 
     // Step 9.
     var final = relativeEnd < 0 ? std_Math_max(len + relativeEnd, 0)
@@ -1734,15 +1732,14 @@ function SharedArrayBufferSlice(start, end) {
     var len = SharedArrayBufferByteLength(O);
 
     // Step 5.
-    var relativeStart = ToIntegerPositiveZero(start);
+    var relativeStart = ToInteger(start);
 
     // Step 6.
     var first = relativeStart < 0 ? std_Math_max(len + relativeStart, 0)
                                   : std_Math_min(relativeStart, len);
 
     // Step 7.
-    var relativeEnd = end === undefined ? len
-                                        : ToIntegerPositiveZero(end);
+    var relativeEnd = end === undefined ? len : ToInteger(end);
 
     // Step 8.
     var final = relativeEnd < 0 ? std_Math_max(len + relativeEnd, 0)

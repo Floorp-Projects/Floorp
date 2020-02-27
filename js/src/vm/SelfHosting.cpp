@@ -155,8 +155,7 @@ static bool intrinsic_IsCrossRealmArrayConstructor(JSContext* cx, unsigned argc,
   return true;
 }
 
-static bool intrinsic_ToIntegerPositiveZero(JSContext* cx, unsigned argc,
-                                            Value* vp) {
+static bool intrinsic_ToInteger(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   double result;
   if (!ToInteger(cx, args[0], &result)) {
@@ -2149,8 +2148,7 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_INLINABLE_FN("IsCrossRealmArrayConstructor",
                     intrinsic_IsCrossRealmArrayConstructor, 1, 0,
                     IntrinsicIsCrossRealmArrayConstructor),
-    JS_INLINABLE_FN("ToIntegerPositiveZero", intrinsic_ToIntegerPositiveZero, 1,
-                    0, IntrinsicToIntegerPositiveZero),
+    JS_INLINABLE_FN("ToInteger", intrinsic_ToInteger, 1, 0, IntrinsicToInteger),
     JS_INLINABLE_FN("ToString", intrinsic_ToString, 1, 0, IntrinsicToString),
     JS_FN("ToSource", intrinsic_ToSource, 1, 0),
     JS_FN("ToPropertyKey", intrinsic_ToPropertyKey, 1, 0),

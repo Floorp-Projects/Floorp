@@ -138,7 +138,7 @@ static bool CanInlineCrossRealm(InlinableNative native) {
     case InlinableNative::IntrinsicToObject:
     case InlinableNative::IntrinsicIsObject:
     case InlinableNative::IntrinsicIsCrossRealmArrayConstructor:
-    case InlinableNative::IntrinsicToIntegerPositiveZero:
+    case InlinableNative::IntrinsicToInteger:
     case InlinableNative::IntrinsicToString:
     case InlinableNative::IntrinsicIsConstructing:
     case InlinableNative::IntrinsicSubstringKernel:
@@ -486,8 +486,8 @@ IonBuilder::InliningResult IonBuilder::inlineNativeCall(CallInfo& callInfo,
       return inlineIsObject(callInfo);
     case InlinableNative::IntrinsicIsCrossRealmArrayConstructor:
       return inlineIsCrossRealmArrayConstructor(callInfo);
-    case InlinableNative::IntrinsicToIntegerPositiveZero:
-      return inlineToIntegerPositiveZero(callInfo);
+    case InlinableNative::IntrinsicToInteger:
+      return inlineToInteger(callInfo);
     case InlinableNative::IntrinsicToString:
       return inlineToString(callInfo);
     case InlinableNative::IntrinsicIsConstructing:
@@ -3512,8 +3512,7 @@ IonBuilder::InliningResult IonBuilder::inlineIsCrossRealmArrayConstructor(
   return InliningStatus_Inlined;
 }
 
-IonBuilder::InliningResult IonBuilder::inlineToIntegerPositiveZero(
-    CallInfo& callInfo) {
+IonBuilder::InliningResult IonBuilder::inlineToInteger(CallInfo& callInfo) {
   MOZ_ASSERT(!callInfo.constructing());
   MOZ_ASSERT(callInfo.argc() == 1);
 
