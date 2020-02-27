@@ -2,7 +2,7 @@
 
 # Operation
 
-`enum class Operation` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/sync-logins/src/main/java/mozilla/components/service/sync/logins/GeckoLoginStorageDelegate.kt#L22)
+`enum class Operation` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/sync-logins/src/main/java/mozilla/components/service/sync/logins/GeckoLoginStorageDelegate.kt#L23)
 
 A type of persistence operation, either 'create' or 'update'.
 

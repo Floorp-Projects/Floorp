@@ -2,7 +2,7 @@
 
 # toLogin
 
-`fun `[`ServerPassword`](../-server-password.md)`.toLogin(): `[`Login`](../../mozilla.components.concept.storage/-login/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/sync-logins/src/main/java/mozilla/components/service/sync/logins/GeckoLoginStorageDelegate.kt#L177)
+`fun `[`ServerPassword`](../-server-password.md)`.toLogin(): `[`Login`](../../mozilla.components.concept.storage/-login/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/sync-logins/src/main/java/mozilla/components/service/sync/logins/GeckoLoginStorageDelegate.kt#L176)
 
 Converts an Application Services [ServerPassword](../-server-password.md) to an Android Components [Login](../../mozilla.components.concept.storage/-login/index.md)
 

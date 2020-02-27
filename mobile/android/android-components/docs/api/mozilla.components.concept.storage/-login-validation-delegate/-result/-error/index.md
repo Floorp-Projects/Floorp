@@ -2,7 +2,7 @@
 
 # Error
 
-`sealed class Error : `[`Result`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/storage/src/main/java/mozilla/components/concept/storage/LoginsStorage.kt#L70)
+`sealed class Error : `[`Result`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/storage/src/main/java/mozilla/components/concept/storage/LoginsStorage.kt#L72)
 
 The [Login](../../../-login/index.md) cannot be saved.
 

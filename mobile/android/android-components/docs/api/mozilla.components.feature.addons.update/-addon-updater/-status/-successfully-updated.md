@@ -2,7 +2,7 @@
 
 # SuccessfullyUpdated
 
-`object SuccessfullyUpdated : `[`Status`](index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/addons/src/main/java/mozilla/components/feature/addons/update/AddonUpdater.kt#L92)
+`object SuccessfullyUpdated : `[`Status`](index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/addons/src/main/java/mozilla/components/feature/addons/update/AddonUpdater.kt#L93)
 
 The addon was successfully updated.
 

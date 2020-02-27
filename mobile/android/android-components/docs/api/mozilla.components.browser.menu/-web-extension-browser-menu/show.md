@@ -2,7 +2,7 @@
 
 # show
 
-`@ExperimentalCoroutinesApi fun show(anchor: <ERROR CLASS>, orientation: `[`Orientation`](../-browser-menu/-orientation/index.md)`, endOfMenuAlwaysVisible: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`, onDismiss: () -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)`): <ERROR CLASS>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/menu/src/main/java/mozilla/components/browser/menu/WebExtensionBrowserMenu.kt#L32)
+`@ExperimentalCoroutinesApi fun show(anchor: <ERROR CLASS>, orientation: `[`Orientation`](../-browser-menu/-orientation/index.md)`, endOfMenuAlwaysVisible: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`, onDismiss: () -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)`): <ERROR CLASS>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/menu/src/main/java/mozilla/components/browser/menu/WebExtensionBrowserMenu.kt#L33)
 
 Overrides [BrowserMenu.show](../-browser-menu/show.md)
 

@@ -2,7 +2,7 @@
 
 # validateCanPersist
 
-`abstract fun validateCanPersist(login: `[`Login`](../-login/index.md)`): Deferred<`[`Result`](-result/index.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/storage/src/main/java/mozilla/components/concept/storage/LoginsStorage.kt#L91)
+`abstract fun validateCanPersist(login: `[`Login`](../-login/index.md)`): Deferred<`[`Result`](-result/index.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/storage/src/main/java/mozilla/components/concept/storage/LoginsStorage.kt#L94)
 
 Checks whether or not [login](validate-can-persist.md#mozilla.components.concept.storage.LoginValidationDelegate$validateCanPersist(mozilla.components.concept.storage.Login)/login) can be persisted.
 

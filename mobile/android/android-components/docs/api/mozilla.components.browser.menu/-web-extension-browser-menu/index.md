@@ -2,7 +2,7 @@
 
 # WebExtensionBrowserMenu
 
-`class WebExtensionBrowserMenu : `[`BrowserMenu`](../-browser-menu/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/menu/src/main/java/mozilla/components/browser/menu/WebExtensionBrowserMenu.kt#L25)
+`class WebExtensionBrowserMenu : `[`BrowserMenu`](../-browser-menu/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/menu/src/main/java/mozilla/components/browser/menu/WebExtensionBrowserMenu.kt#L26)
 
 A [BrowserMenu](../-browser-menu/index.md) capable of displaying browser and page actions from web extensions.
 
