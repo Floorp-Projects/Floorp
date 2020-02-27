@@ -51,6 +51,12 @@ __declspec(dllexport) __attribute__((naked)) void MovEaxJump() {
       :
       : "i"(JumpDestination));
 }
+
+__declspec(dllexport) __attribute__((naked)) void Opcode83() {
+  asm volatile(
+      "xor $0x42, %eax;"
+      "cmpl $1, 0xc(%ebp);");
+}
 #  endif
 #endif  // defined(__clang__)
 
