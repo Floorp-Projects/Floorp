@@ -4,8 +4,10 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-import cPickle as pickle
+import io
 import os
+import six.moves.cPickle as pickle
+import six
 import unittest
 
 from mozpack.manifests import (
@@ -671,7 +673,7 @@ class TestRecursiveMakeBackend(BackendTester):
         env = self._consume('test-manifest-shared-support', TestManifestBackend)
         test_installs_path = mozpath.join(env.topobjdir, 'test-installs.pkl')
 
-        with open(test_installs_path, 'r') as fh:
+        with open(test_installs_path, 'rb') as fh:
             test_installs = pickle.load(fh)
 
         self.assertEqual(set(test_installs.keys()),
@@ -954,7 +956,7 @@ class TestRecursiveMakeBackend(BackendTester):
         expected[mozpath.join(env.topobjdir, 'final-target')] = [
             'FINAL_TARGET = $(DEPTH)/random-final-target'
         ]
-        for key, expected_rules in expected.iteritems():
+        for key, expected_rules in six.iteritems(expected):
             backend_path = mozpath.join(key, 'backend.mk')
             lines = [l.strip() for l in open(backend_path, 'rt').readlines()[2:]]
             found = [str for str in lines if
@@ -1034,13 +1036,13 @@ class TestRecursiveMakeBackend(BackendTester):
         env = self._consume('prog-lib-c-only', RecursiveMakeBackend)
 
         # PROGRAM C-onlyness.
-        with open(os.path.join(env.topobjdir, 'c-program', 'backend.mk'), 'rb') as fh:
+        with open(os.path.join(env.topobjdir, 'c-program', 'backend.mk'), 'r') as fh:
             lines = fh.readlines()
             lines = [line.rstrip() for line in lines]
 
             self.assertIn('PROG_IS_C_ONLY_c_test_program := 1', lines)
 
-        with open(os.path.join(env.topobjdir, 'cxx-program', 'backend.mk'), 'rb') as fh:
+        with open(os.path.join(env.topobjdir, 'cxx-program', 'backend.mk'), 'r') as fh:
             lines = fh.readlines()
             lines = [line.rstrip() for line in lines]
 
@@ -1050,13 +1052,13 @@ class TestRecursiveMakeBackend(BackendTester):
                 self.assertNotIn('PROG_IS_C_ONLY_cxx_test_program', line)
 
         # SIMPLE_PROGRAMS C-onlyness.
-        with open(os.path.join(env.topobjdir, 'c-simple-programs', 'backend.mk'), 'rb') as fh:
+        with open(os.path.join(env.topobjdir, 'c-simple-programs', 'backend.mk'), 'r') as fh:
             lines = fh.readlines()
             lines = [line.rstrip() for line in lines]
 
             self.assertIn('PROG_IS_C_ONLY_c_simple_program := 1', lines)
 
-        with open(os.path.join(env.topobjdir, 'cxx-simple-programs', 'backend.mk'), 'rb') as fh:
+        with open(os.path.join(env.topobjdir, 'cxx-simple-programs', 'backend.mk'), 'r') as fh:
             lines = fh.readlines()
             lines = [line.rstrip() for line in lines]
 
@@ -1064,13 +1066,13 @@ class TestRecursiveMakeBackend(BackendTester):
                 self.assertNotIn('PROG_IS_C_ONLY_cxx_simple_program', line)
 
         # Libraries C-onlyness.
-        with open(os.path.join(env.topobjdir, 'c-library', 'backend.mk'), 'rb') as fh:
+        with open(os.path.join(env.topobjdir, 'c-library', 'backend.mk'), 'r') as fh:
             lines = fh.readlines()
             lines = [line.rstrip() for line in lines]
 
             self.assertIn('LIB_IS_C_ONLY := 1', lines)
 
-        with open(os.path.join(env.topobjdir, 'cxx-library', 'backend.mk'), 'rb') as fh:
+        with open(os.path.join(env.topobjdir, 'cxx-library', 'backend.mk'), 'r') as fh:
             lines = fh.readlines()
             lines = [line.rstrip() for line in lines]
 
@@ -1104,7 +1106,7 @@ class TestRecursiveMakeBackend(BackendTester):
         }
         actual_linkage = {}
         for name in expected_linkage.keys():
-            with open(os.path.join(env.topobjdir, name, 'backend.mk'), 'rb') as fh:
+            with open(os.path.join(env.topobjdir, name, 'backend.mk'), 'r') as fh:
                 actual_linkage[name] = [line.rstrip() for line in fh.readlines()]
         for name in expected_linkage:
             for var in expected_linkage[name]:
@@ -1131,7 +1133,7 @@ class TestRecursiveMakeBackend(BackendTester):
         }
         actual_list_files = {}
         for name in expected_list_files.keys():
-            with open(os.path.join(env.topobjdir, name), 'rb') as fh:
+            with open(os.path.join(env.topobjdir, name), 'r') as fh:
                 actual_list_files[name] = [line.rstrip()
                                            for line in fh.readlines()]
         for name in expected_list_files:
@@ -1140,7 +1142,7 @@ class TestRecursiveMakeBackend(BackendTester):
 
         # We don't produce a list file for a shared library composed only of
         # object files in its directory, but instead list them in a variable.
-        with open(os.path.join(env.topobjdir, 'prog', 'qux', 'backend.mk'), 'rb') as fh:
+        with open(os.path.join(env.topobjdir, 'prog', 'qux', 'backend.mk'), 'r') as fh:
             lines = [line.rstrip() for line in fh.readlines()]
 
         self.assertIn('qux.so_OBJS := qux1.o', lines)
@@ -1148,7 +1150,7 @@ class TestRecursiveMakeBackend(BackendTester):
     def test_jar_manifests(self):
         env = self._consume('jar-manifests', RecursiveMakeBackend)
 
-        with open(os.path.join(env.topobjdir, 'backend.mk'), 'rb') as fh:
+        with open(os.path.join(env.topobjdir, 'backend.mk'), 'r') as fh:
             lines = fh.readlines()
 
         lines = [line.rstrip() for line in lines]
@@ -1197,7 +1199,7 @@ class TestRecursiveMakeBackend(BackendTester):
         ]
         prefix = 'PROGRAM = '
         for (subdir, expected_program) in expected:
-            with open(os.path.join(env.topobjdir, subdir, 'backend.mk'), 'rb') as fh:
+            with io.open(os.path.join(env.topobjdir, subdir, 'backend.mk'), 'r') as fh:
                 lines = fh.readlines()
                 program = [line.rstrip().split(prefix, 1)[1] for line in lines
                            if line.startswith(prefix)][0]
