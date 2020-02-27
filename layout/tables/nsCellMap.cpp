@@ -2152,8 +2152,11 @@ void nsCellMap::RemoveCell(nsTableCellMap& aMap, nsTableCellFrame* aCellFrame,
   // originating cells, we need to assume that this the only such cell, and
   // rebuild so that there are no extraneous cols at the end. The same is true
   // for removing rows.
-  if (!aCellFrame->GetRowSpan() || !aCellFrame->GetColSpan())
-    spansCauseRebuild = true;
+  if (!spansCauseRebuild) {
+    if (!aCellFrame->GetRowSpan() || !aCellFrame->GetColSpan()) {
+      spansCauseRebuild = true;
+    }
+  }
 
   if (spansCauseRebuild) {
     aMap.RebuildConsideringCells(this, nullptr, aRowIndex, startColIndex, false,
