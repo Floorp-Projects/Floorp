@@ -546,6 +546,10 @@ inline void XPCWrappedNative::SetFlatJSObject(JSObject* object) {
 
   mFlatJSObject = object;
   mFlatJSObject.setFlags(FLAT_JS_OBJECT_VALID);
+
+  // Never collect the wrapper object while recording or replaying, to avoid
+  // non-deterministically releasing references during finalization.
+  recordreplay::HoldJSObject(object);
 }
 
 inline void XPCWrappedNative::UnsetFlatJSObject() {

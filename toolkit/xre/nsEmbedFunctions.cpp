@@ -69,6 +69,8 @@
 #include "mozilla/ipc/GeckoChildProcessHost.h"
 #include "mozilla/ipc/IOThreadChild.h"
 #include "mozilla/ipc/ProcessChild.h"
+#include "mozilla/recordreplay/ChildIPC.h"
+#include "mozilla/recordreplay/ParentIPC.h"
 #include "ScopedXREEmbed.h"
 
 #include "mozilla/plugins/PluginProcessChild.h"
@@ -286,6 +288,7 @@ XRE_SetRemoteExceptionHandler(const char* aPipe /*= 0*/,
 XRE_SetRemoteExceptionHandler(const char* aPipe /*= 0*/)
 #endif
 {
+  recordreplay::AutoPassThroughThreadEventsWithLocalReplay pt;
 #if defined(XP_WIN)
   return CrashReporter::SetRemoteExceptionHandler(nsDependentCString(aPipe),
                                                   aCrashTimeAnnotationFile);
@@ -345,6 +348,8 @@ nsresult XRE_InitChildProcess(int aArgc, char* aArgv[],
   NS_ENSURE_ARG_POINTER(aArgv);
   NS_ENSURE_ARG_POINTER(aArgv[0]);
   MOZ_ASSERT(aChildData);
+
+  recordreplay::Initialize(aArgc, aArgv);
 
   NS_SetCurrentThreadName("MainThread");
 
@@ -428,6 +433,9 @@ nsresult XRE_InitChildProcess(int aArgc, char* aArgv[],
 
   const char* const mach_port_name = aArgv[--aArgc];
 
+  Maybe<recordreplay::AutoPassThroughThreadEventsWithLocalReplay> pt;
+  pt.emplace();
+
   const int kTimeoutMs = 1000;
 
   MachSendMessage child_message(0);
@@ -507,6 +515,7 @@ nsresult XRE_InitChildProcess(int aArgc, char* aArgv[],
   }
 #  endif /* MOZ_SANDBOX */
 
+  pt.reset();
 #endif /* XP_MACOSX */
 
   SetupErrorHandling(aArgv[0]);
@@ -601,6 +610,9 @@ nsresult XRE_InitChildProcess(int aArgc, char* aArgv[],
   base::ProcessId parentPID = strtol(parentPIDString, &end, 10);
   MOZ_ASSERT(!*end, "invalid parent PID");
 
+  // While replaying, use the parent PID that existed while recording.
+  parentPID = recordreplay::RecordReplayValue(parentPID);
+
 #ifdef XP_MACOSX
   mozilla::ipc::SharedMemoryBasic::SetupMachMemory(
       parentPID, ports_in_receiver, ports_in_sender, ports_out_sender,
@@ -657,6 +669,12 @@ nsresult XRE_InitChildProcess(int aArgc, char* aArgv[],
     SandboxBroker::GeckoDependentInitialize();
   }
 #endif
+
+  // If we are recording or replaying, initialize state and update arguments
+  // according to those which were captured by the MiddlemanProcessChild in the
+  // middleman process. No argument manipulation should happen between this
+  // call and the point where the process child is initialized.
+  recordreplay::child::InitRecordingOrReplayingProcess(&aArgc, &aArgv);
 
   {
     // This is a lexical scope for the MessageLoop below.  We want it

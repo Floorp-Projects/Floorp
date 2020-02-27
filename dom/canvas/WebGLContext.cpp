@@ -321,6 +321,17 @@ bool WebGLContext::CreateAndInitGL(
     return false;
   }
 
+  // WebGL can't be used when recording/replaying.
+  if (recordreplay::IsRecordingOrReplaying()) {
+    FailureReason reason;
+    reason.info =
+        "Can't use WebGL when recording or replaying "
+        "(https://bugzil.la/1506467).";
+    out_failReasons->push_back(reason);
+    GenerateWarning("%s", reason.info.BeginReading());
+    return false;
+  }
+
   // WebGL2 is separately blocked:
   if (IsWebGL2() && !forceEnabled) {
     const nsCOMPtr<nsIGfxInfo> gfxInfo = services::GetGfxInfo();

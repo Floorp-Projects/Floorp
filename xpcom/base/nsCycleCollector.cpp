@@ -2433,6 +2433,11 @@ class SnowWhiteKiller : public TraceCallbacks {
 
  public:
   bool Visit(nsPurpleBuffer& aBuffer, nsPurpleBufferEntry* aEntry) {
+    // The cycle collector does not collect anything when recording/replaying.
+    if (recordreplay::IsRecordingOrReplaying()) {
+      return true;
+    }
+
     if (mBudget) {
       if (mBudget->isOverBudget()) {
         return false;
@@ -2640,6 +2645,11 @@ void nsCycleCollector::ForgetSkippable(js::SliceBudget& aBudget,
   // If we remove things from the purple buffer during graph building, we may
   // lose track of an object that was mutated during graph building.
   MOZ_ASSERT(IsIdle());
+
+  // The cycle collector does not collect anything when recording/replaying.
+  if (recordreplay::IsRecordingOrReplaying()) {
+    return;
+  }
 
   if (mCCJSRuntime) {
     mCCJSRuntime->PrepareForForgetSkippable();
@@ -3365,7 +3375,9 @@ bool nsCycleCollector::Collect(ccType aCCType, SliceBudget& aBudget,
   CheckThreadSafety();
 
   // This can legitimately happen in a few cases. See bug 383651.
-  if (mActivelyCollecting || mFreeingSnowWhite) {
+  // When recording/replaying we do not collect cycles.
+  if (mActivelyCollecting || mFreeingSnowWhite ||
+      recordreplay::IsRecordingOrReplaying()) {
     return false;
   }
   mActivelyCollecting = true;
@@ -3783,7 +3795,9 @@ uint32_t nsCycleCollector_suspectedCount() {
   // We should have started the cycle collector by now.
   MOZ_ASSERT(data);
 
-  if (!data->mCollector) {
+  // When recording/replaying we do not collect cycles. Return zero here so
+  // that callers behave consistently between recording and replaying.
+  if (!data->mCollector || recordreplay::IsRecordingOrReplaying()) {
     return 0;
   }
 

@@ -39,7 +39,9 @@ class ReentrantMonitor : BlockingResourceBase {
    * ReentrantMonitor
    * @param aName A name which can reference this monitor
    */
-  explicit ReentrantMonitor(const char* aName)
+  explicit ReentrantMonitor(
+      const char* aName,
+      recordreplay::Behavior aRecorded = recordreplay::Behavior::Preserve)
       : BlockingResourceBase(aName, eReentrantMonitor)
 #ifdef DEBUG
         ,
@@ -47,7 +49,12 @@ class ReentrantMonitor : BlockingResourceBase {
 #endif
   {
     MOZ_COUNT_CTOR(ReentrantMonitor);
-    mReentrantMonitor = PR_NewMonitor();
+    if (aRecorded == recordreplay::Behavior::Preserve) {
+      mReentrantMonitor = PR_NewMonitor();
+    } else {
+      recordreplay::AutoPassThroughThreadEvents pt;
+      mReentrantMonitor = PR_NewMonitor();
+    }
     if (!mReentrantMonitor) {
       MOZ_CRASH("Can't allocate mozilla::ReentrantMonitor");
     }

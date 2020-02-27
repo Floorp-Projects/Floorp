@@ -2653,6 +2653,11 @@ class MOZ_STACK_CLASS BindingJSObjectCreator {
   void InitializationSucceeded() {
     T* pointer;
     mNative.forget(&pointer);
+
+    // Never collect binding objects while recording or replaying, to avoid
+    // non-deterministically releasing references during finalization.
+    recordreplay::HoldJSObject(mReflector);
+
     mReflector = nullptr;
   }
 

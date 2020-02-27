@@ -192,8 +192,12 @@ class Checker {
   static const uint32_t kReadMax = 9999;
   static const uint32_t kWrite = 10000;
 
-  mozilla::Atomic<uint32_t, mozilla::SequentiallyConsistent> mState;
-  mozilla::Atomic<bool, mozilla::SequentiallyConsistent> mIsWritable;
+  mozilla::Atomic<uint32_t, mozilla::SequentiallyConsistent,
+                  mozilla::recordreplay::Behavior::DontPreserve>
+      mState;
+  mozilla::Atomic<bool, mozilla::SequentiallyConsistent,
+                  mozilla::recordreplay::Behavior::DontPreserve>
+      mIsWritable;
 };
 #endif
 
@@ -421,7 +425,12 @@ class PLDHashTable {
   ~PLDHashTable();
 
   // This should be used rarely.
-  const PLDHashTableOps* Ops() const { return mOps; }
+  const PLDHashTableOps* Ops() const {
+    return mozilla::recordreplay::UnwrapPLDHashTableCallbacks(mOps);
+  }
+
+  // Provide access to the raw ops to internal record/replay structures.
+  const PLDHashTableOps* RecordReplayWrappedOps() const { return mOps; }
 
   // Size in entries (gross, not net of free and removed sentinels) for table.
   // This can be zero if no elements have been added yet, in which case the

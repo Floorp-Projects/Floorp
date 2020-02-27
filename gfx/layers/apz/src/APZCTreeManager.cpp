@@ -1341,6 +1341,13 @@ APZEventResult APZCTreeManager::ReceiveInputEvent(InputData& aEvent) {
   APZThreadUtils::AssertOnControllerThread();
   APZEventResult result;
 
+  // Ignore input events when there are active tabs that are recording or
+  // replaying. APZ does not work with the special layers constructed by
+  // the middleman processes being communicated with here.
+  if (dom::BrowserParent::AreRecordReplayTabsActive()) {
+    return result;
+  }
+
   // Use a RAII class for updating the focus sequence number of this event
   AutoFocusSequenceNumberSetter focusSetter(mFocusState, aEvent);
 

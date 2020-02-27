@@ -129,6 +129,7 @@ config = {
         "mochitest-webgl2-deqp": ["--subsuite=webgl2-deqp"],
         "mochitest-webgpu": ["--subsuite=webgpu"],
         "mochitest-devtools-chrome": ["--flavor=browser", "--subsuite=devtools", "--chunk-by-runtime"],
+        "mochitest-devtools-chrome-webreplay": ["--flavor=browser", "--subsuite=devtools-webreplay"],
         "mochitest-a11y": ["--flavor=a11y", "--disable-e10s"],
         "mochitest-remote": ["--flavor=browser", "--subsuite=remote"],
     },

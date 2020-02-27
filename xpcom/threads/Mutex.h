@@ -41,8 +41,11 @@ class OffTheBooksMutex : public detail::MutexImpl, BlockingResourceBase {
    *          If success, a valid Mutex* which must be destroyed
    *          by Mutex::DestroyMutex()
    **/
-  explicit OffTheBooksMutex(const char* aName)
-      : BlockingResourceBase(aName, eMutex)
+  explicit OffTheBooksMutex(
+      const char* aName,
+      recordreplay::Behavior aRecorded = recordreplay::Behavior::Preserve)
+      : detail::MutexImpl(aRecorded),
+        BlockingResourceBase(aName, eMutex)
 #ifdef DEBUG
         ,
         mOwningThread(nullptr)
@@ -121,7 +124,9 @@ class OffTheBooksMutex : public detail::MutexImpl, BlockingResourceBase {
  */
 class Mutex : public OffTheBooksMutex {
  public:
-  explicit Mutex(const char* aName) : OffTheBooksMutex(aName) {
+  explicit Mutex(const char* aName, recordreplay::Behavior aRecorded =
+                                        recordreplay::Behavior::Preserve)
+      : OffTheBooksMutex(aName, aRecorded) {
     MOZ_COUNT_CTOR(Mutex);
   }
 

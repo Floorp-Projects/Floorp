@@ -594,6 +594,10 @@ size_t CycleCollectedJSRuntime::SizeOfExcludingThis(
 }
 
 void CycleCollectedJSRuntime::UnmarkSkippableJSHolders() {
+  // Prevent nsWrapperCaches accessed under CanSkip from adding recorded events
+  // which might not replay in the same order.
+  recordreplay::AutoDisallowThreadEvents disallow;
+
   for (auto iter = mJSHolders.Iter(); !iter.Done(); iter.Next()) {
     void* holder = iter.Get().mHolder;
     nsScriptObjectTracer* tracer = iter.Get().mTracer;
@@ -1157,7 +1161,7 @@ void CycleCollectedJSRuntime::JSObjectsTenured() {
   for (auto iter = mNurseryObjects.Iter(); !iter.Done(); iter.Next()) {
     nsWrapperCache* cache = iter.Get();
     JSObject* wrapper = cache->GetWrapperMaybeDead();
-    MOZ_DIAGNOSTIC_ASSERT(wrapper);
+    MOZ_DIAGNOSTIC_ASSERT(wrapper || recordreplay::IsReplaying());
     if (!JS::ObjectIsTenured(wrapper)) {
       MOZ_ASSERT(!cache->PreservingWrapper());
       js::gc::FinalizeDeadNurseryObject(cx, wrapper);
@@ -1248,6 +1252,9 @@ void IncrementalFinalizeRunnable::ReleaseNow(bool aLimited) {
                "We should have at least ReleaseSliceNow to run");
     MOZ_ASSERT(mFinalizeFunctionToRun < mDeferredFinalizeFunctions.Length(),
                "No more finalizers to run?");
+    if (recordreplay::IsRecordingOrReplaying()) {
+      aLimited = false;
+    }
 
     TimeDuration sliceTime = TimeDuration::FromMilliseconds(SliceMillis);
     TimeStamp started = aLimited ? TimeStamp::Now() : TimeStamp();

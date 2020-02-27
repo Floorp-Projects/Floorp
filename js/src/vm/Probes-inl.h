@@ -48,6 +48,10 @@ inline bool probes::EnterScript(JSContext* cx, JSScript* script,
     fp->setPushedGeckoProfilerFrame();
   }
 
+  if (script->trackRecordReplayProgress()) {
+    mozilla::recordreplay::AdvanceExecutionProgressCounter();
+  }
+
   return true;
 }
 

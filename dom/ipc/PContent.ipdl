@@ -831,6 +831,9 @@ child:
      */
     async PClientOpenWindowOp(ClientOpenWindowArgs aArgs);
 
+    /* Save the execution up to the current point in a recording process. */
+    async SaveRecording(FileDescriptor file);
+
     // This message is sent to content processes, and triggers the creation of a
     // new HttpChannelChild that will be connected to the parent channel
     // represented by registrarId.
@@ -876,6 +879,11 @@ child:
 
 parent:
     async InitBackground(Endpoint<PBackgroundParent> aEndpoint);
+
+    sync OpenRecordReplayChannel(uint32_t channelId)
+        returns (FileDescriptor connection);
+    async CreateReplayingProcess(uint32_t channelId);
+    async GenerateReplayCrashReport(uint32_t channelId);
 
     async CreateGMPService();
 

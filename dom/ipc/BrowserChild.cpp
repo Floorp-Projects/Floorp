@@ -86,6 +86,7 @@
 #include "mozilla/layers/ShadowLayers.h"
 #include "mozilla/layers/WebRenderLayerManager.h"
 #include "mozilla/plugins/PPluginWidgetChild.h"
+#include "mozilla/recordreplay/ParentIPC.h"
 #include "nsBrowserStatusFilter.h"
 #include "nsColorPickerProxy.h"
 #include "nsCommandParams.h"
@@ -290,7 +291,11 @@ class BrowserChild::DelayedDeleteRunnable final : public Runnable,
     }
 
     // Check in case ActorDestroy was called after RecvDestroy message.
-    if (mBrowserChild->IPCOpen()) {
+    // Middleman processes with their own recording child process avoid
+    // sending a delete message, so that the parent process does not
+    // receive two deletes for the same actor.
+    if (mBrowserChild->IPCOpen() &&
+        !recordreplay::parent::IsMiddlemanWithRecordingChild()) {
       Unused << PBrowserChild::Send__delete__(mBrowserChild);
     }
 
@@ -583,6 +588,11 @@ nsresult BrowserChild::Init(mozIDOMWindowProxy* aParent,
   mAPZEventState = new APZEventState(mPuppetWidget, std::move(callback));
 
   mIPCOpen = true;
+
+  // Recording/replaying processes use their own compositor.
+  if (recordreplay::IsRecordingOrReplaying()) {
+    mPuppetWidget->CreateCompositor();
+  }
 
 #if !defined(MOZ_WIDGET_ANDROID) && !defined(MOZ_THUNDERBIRD) && \
     !defined(MOZ_SUITE)
@@ -1175,6 +1185,13 @@ mozilla::ipc::IPCResult BrowserChild::RecvShow(
     return IPC_FAIL_NO_REASON(this);
   }
 
+  // We have now done enough initialization for the record/replay system to
+  // create checkpoints. Create a checkpoint now, in case this process never
+  // paints later on (the usual place where checkpoints occur).
+  if (recordreplay::IsRecordingOrReplaying()) {
+    recordreplay::child::CreateCheckpoint();
+  }
+
   UpdateVisibility();
 
   return IPC_OK();
@@ -1222,7 +1239,9 @@ mozilla::ipc::IPCResult BrowserChild::RecvCompositorOptionsChanged(
 
 mozilla::ipc::IPCResult BrowserChild::RecvUpdateDimensions(
     const DimensionInfo& aDimensionInfo) {
-  if (mLayersConnected.isNothing()) {
+  // When recording/replaying we need to make sure the dimensions are up to
+  // date on the compositor used in this process.
+  if (mLayersConnected.isNothing() && !recordreplay::IsRecordingOrReplaying()) {
     return IPC_OK();
   }
 
@@ -2217,6 +2236,20 @@ mozilla::ipc::IPCResult BrowserChild::RecvActivateFrameEvent(
   return IPC_OK();
 }
 
+// Return whether a remote script should be loaded in middleman processes in
+// addition to any child recording process they have.
+static bool LoadScriptInMiddleman(const nsString& aURL) {
+  return  // Middleman processes run devtools server side scripts.
+      (StringBeginsWith(aURL, NS_LITERAL_STRING("resource://devtools/")) &&
+       recordreplay::parent::DebuggerRunsInMiddleman())
+      // This script includes event listeners needed to propagate document
+      // title changes.
+      || aURL.EqualsLiteral("chrome://global/content/browser-child.js")
+      // This script is needed to respond to session store requests from the
+      // UI process.
+      || aURL.EqualsLiteral("chrome://browser/content/content-sessionStore.js");
+}
+
 mozilla::ipc::IPCResult BrowserChild::RecvLoadRemoteScript(
     const nsString& aURL, const bool& aRunInGlobalScope) {
   if (!InitBrowserChildMessageManager())
@@ -2228,6 +2261,11 @@ mozilla::ipc::IPCResult BrowserChild::RecvLoadRemoteScript(
                            mBrowserChildMessageManager->GetOrCreateWrapper());
   if (!mm) {
     // This can happen if we're half-destroyed.  It's not a fatal error.
+    return IPC_OK();
+  }
+
+  // Make sure we only load whitelisted scripts in middleman processes.
+  if (recordreplay::IsMiddleman() && !LoadScriptInMiddleman(aURL)) {
     return IPC_OK();
   }
 
@@ -2806,7 +2844,10 @@ void BrowserChild::InitAPZState() {
 
 void BrowserChild::NotifyPainted() {
   if (!mNotified) {
-    SendNotifyCompositorTransaction();
+    // Recording/replaying processes have a compositor but not a remote frame.
+    if (!recordreplay::IsRecordingOrReplaying()) {
+      SendNotifyCompositorTransaction();
+    }
     mNotified = true;
   }
 }

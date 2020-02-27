@@ -943,7 +943,8 @@ uint32_t ActivePS::sNextGeneration = 0;
 #  undef PS_GET_LOCKLESS
 #  undef PS_GET_AND_SET
 
-Atomic<uint32_t, MemoryOrdering::Relaxed> RacyFeatures::sActiveAndFeatures(0);
+Atomic<uint32_t, MemoryOrdering::Relaxed, recordreplay::Behavior::DontPreserve>
+    RacyFeatures::sActiveAndFeatures(0);
 
 /* static */
 void RacyFeatures::SetActive(uint32_t aFeatures) {

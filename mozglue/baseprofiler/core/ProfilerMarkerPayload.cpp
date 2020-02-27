@@ -29,7 +29,8 @@ static UniquePtr<ProfilerMarkerPayload> DeserializeNothing(
 // Number of currently-registered deserializers.
 // Starting at 1 for the initial `DeserializeNothing`.
 // static
-Atomic<ProfilerMarkerPayload::DeserializerTagAtomic, ReleaseAcquire>
+Atomic<ProfilerMarkerPayload::DeserializerTagAtomic, ReleaseAcquire,
+       recordreplay::Behavior::DontPreserve>
     ProfilerMarkerPayload::sDeserializerCount{1};
 
 // Initialize `sDeserializers` with `DeserializeNothing` at index 0, all others

@@ -92,7 +92,6 @@
 #  include "mozilla/TimeStamp.h"
 #  include "mozilla/UniquePtr.h"
 
-#  include <functional>
 #  include <stdint.h>
 #  include <string>
 
@@ -220,9 +219,12 @@ class RacyFeatures {
 #  undef NO_OVERLAP
 
   // We combine the active bit with the feature bits so they can be read or
-  // written in a single atomic operation.
+  // written in a single atomic operation. Accesses to this atomic are not
+  // recorded by web replay as they may occur at non-deterministic points.
   // TODO: Could this be MFBT_DATA for better inlining optimization?
-  static Atomic<uint32_t, MemoryOrdering::Relaxed> sActiveAndFeatures;
+  static Atomic<uint32_t, MemoryOrdering::Relaxed,
+                recordreplay::Behavior::DontPreserve>
+      sActiveAndFeatures;
 };
 
 MFBT_API bool IsThreadBeingProfiled();

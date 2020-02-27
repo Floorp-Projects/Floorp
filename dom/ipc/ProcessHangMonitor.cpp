@@ -140,7 +140,11 @@ class HangMonitorChild : public PProcessHangMonitorChild,
  private:
   void ShutdownOnThread();
 
-  static Atomic<HangMonitorChild*, SequentiallyConsistent> sInstance;
+  // Ordering of this atomic is not preserved while recording/replaying, as it
+  // may be accessed during the JS interrupt callback.
+  static Atomic<HangMonitorChild*, SequentiallyConsistent,
+                recordreplay::Behavior::DontPreserve>
+      sInstance;
 
   const RefPtr<ProcessHangMonitor> mHangMonitor;
   Monitor mMonitor;
@@ -173,7 +177,9 @@ class HangMonitorChild : public PProcessHangMonitorChild,
   Atomic<bool> mPaintWhileInterruptingJSActive;
 };
 
-Atomic<HangMonitorChild*, SequentiallyConsistent> HangMonitorChild::sInstance;
+Atomic<HangMonitorChild*, SequentiallyConsistent,
+       recordreplay::Behavior::DontPreserve>
+    HangMonitorChild::sInstance;
 
 /* Parent process objects */
 
@@ -304,7 +310,9 @@ class HangMonitorParent : public PProcessHangMonitorParent,
 
 HangMonitorChild::HangMonitorChild(ProcessHangMonitor* aMonitor)
     : mHangMonitor(aMonitor),
-      mMonitor("HangMonitorChild lock"),
+      // Ordering of this atomic is not preserved while recording/replaying, as
+      // it may be accessed during the JS interrupt callback.
+      mMonitor("HangMonitorChild lock", recordreplay::Behavior::DontPreserve),
       mSentReport(false),
       mTerminateScript(false),
       mTerminateGlobal(false),
@@ -332,6 +340,13 @@ HangMonitorChild::~HangMonitorChild() {
 
 bool HangMonitorChild::InterruptCallback() {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
+
+  // The interrupt callback is triggered at non-deterministic points when
+  // recording/replaying, so don't perform any operations that can interact
+  // with the recording.
+  if (recordreplay::IsRecordingOrReplaying()) {
+    return true;
+  }
 
   // Don't start painting if we're not in a good place to run script. We run
   // chrome script during layout and such, and it wouldn't be good to interrupt

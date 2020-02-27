@@ -125,7 +125,10 @@ class RacyRegisteredThread final {
   Atomic<int> mSleep;
 
   // Is this thread being profiled? (e.g., should markers be recorded?)
-  Atomic<bool, MemoryOrdering::Relaxed> mIsBeingProfiled;
+  // Accesses to this atomic are not recorded by web replay as they may occur
+  // at non-deterministic points.
+  Atomic<bool, MemoryOrdering::Relaxed, recordreplay::Behavior::DontPreserve>
+      mIsBeingProfiled;
 };
 
 // This class contains information that's relevant to a single thread only

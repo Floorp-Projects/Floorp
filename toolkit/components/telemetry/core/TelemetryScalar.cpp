@@ -37,6 +37,7 @@ using mozilla::Some;
 using mozilla::StaticAutoPtr;
 using mozilla::StaticMutex;
 using mozilla::StaticMutexAutoLock;
+using mozilla::StaticMutexNotRecorded;
 using mozilla::Telemetry::DynamicScalarDefinition;
 using mozilla::Telemetry::KeyedScalarAction;
 using mozilla::Telemetry::ProcessID;
@@ -2441,7 +2442,7 @@ void internal_ApplyPendingOperations(const StaticMutexAutoLock& lock) {
 // that, due to the nature of Telemetry, we cannot rely on having a
 // mutex initialized in InitializeGlobalState. Unfortunately, we
 // cannot make sure that no other function is called before this point.
-static StaticMutex gTelemetryScalarsMutex;
+static StaticMutexNotRecorded gTelemetryScalarsMutex;
 
 void TelemetryScalar::InitializeGlobalState(bool aCanRecordBase,
                                             bool aCanRecordExtended) {

@@ -13,7 +13,8 @@
 interface IJSDebugger : nsISupports
 {
   /**
-   * Define the global Debugger constructor on a given global.
+   * Define the global Debugger and RecordReplayControl constructors on a
+   * given global.
    */
   [implicit_jscontext]
   void addClass(in jsval global);

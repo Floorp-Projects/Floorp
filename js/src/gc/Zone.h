@@ -180,7 +180,8 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
   js::WriteOnceData<bool> isSystemZone_;
 
   enum class HelperThreadUse : uint32_t { None, Pending, Active };
-  mozilla::Atomic<HelperThreadUse, mozilla::SequentiallyConsistent>
+  mozilla::Atomic<HelperThreadUse, mozilla::SequentiallyConsistent,
+                  mozilla::recordreplay::Behavior::DontPreserve>
       helperThreadUse_;
 
   // The helper thread context with exclusive access to this zone, if
@@ -230,7 +231,9 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
   js::ZoneOrGCTaskData<js::gc::UniqueIdMap> uniqueIds_;
 
   // Number of allocations since the most recent minor GC for this thread.
-  mozilla::Atomic<uint32_t, mozilla::Relaxed> tenuredAllocsSinceMinorGC_;
+  mozilla::Atomic<uint32_t, mozilla::Relaxed,
+                  mozilla::recordreplay::Behavior::DontPreserve>
+      tenuredAllocsSinceMinorGC_;
 
   // Live weakmaps in this zone.
   js::ZoneOrGCTaskData<mozilla::LinkedList<js::WeakMapBase>> gcWeakMapList_;

@@ -84,7 +84,8 @@ class RefCountLogger {
 // This is used WeakPtr.h as well as this file.
 enum RefCountAtomicity { AtomicRefCount, NonAtomicRefCount };
 
-template <typename T, RefCountAtomicity Atomicity>
+template <typename T, RefCountAtomicity Atomicity,
+          recordreplay::Behavior Recording>
 class RC {
  public:
   explicit RC(T aCount) : mValue(aCount) {}
@@ -100,8 +101,8 @@ class RC {
   T mValue;
 };
 
-template <typename T>
-class RC<T, AtomicRefCount> {
+template <typename T, recordreplay::Behavior Recording>
+class RC<T, AtomicRefCount, Recording> {
  public:
   explicit RC(T aCount) : mValue(aCount) {}
 
@@ -114,6 +115,7 @@ class RC<T, AtomicRefCount> {
     // first increment on that thread.  The necessary memory
     // synchronization is done by the mechanism that transfers the
     // pointer between threads.
+    AutoRecordAtomicAccess<Recording> record(this);
     return mValue.fetch_add(1, std::memory_order_relaxed) + 1;
   }
 
@@ -122,6 +124,7 @@ class RC<T, AtomicRefCount> {
     // release semantics so that prior writes on this thread are visible
     // to the thread that destroys the object when it reads mValue with
     // acquire semantics.
+    AutoRecordAtomicAccess<Recording> record(this);
     T result = mValue.fetch_sub(1, std::memory_order_release) - 1;
     if (result == 0) {
       // We're going to destroy the object on this thread, so we need
@@ -143,12 +146,14 @@ class RC<T, AtomicRefCount> {
   // This method is only called in debug builds, so we're not too concerned
   // about its performance.
   void operator=(const T& aValue) {
+    AutoRecordAtomicAccess<Recording> record(this);
     mValue.store(aValue, std::memory_order_seq_cst);
   }
 
   operator T() const {
     // Use acquire semantics since we're not sure what the caller is
     // doing.
+    AutoRecordAtomicAccess<Recording> record(this);
     return mValue.load(std::memory_order_acquire);
   }
 
@@ -156,7 +161,8 @@ class RC<T, AtomicRefCount> {
   std::atomic<T> mValue;
 };
 
-template <typename T, RefCountAtomicity Atomicity>
+template <typename T, RefCountAtomicity Atomicity,
+          recordreplay::Behavior Recording = recordreplay::Behavior::Preserve>
 class RefCounted {
  protected:
   RefCounted() : mRefCnt(0) {}
@@ -213,7 +219,7 @@ class RefCounted {
   }
 
  private:
-  mutable RC<MozRefCountType, Atomicity> mRefCnt;
+  mutable RC<MozRefCountType, Atomicity, Recording> mRefCnt;
 };
 
 #ifdef MOZ_REFCOUNTED_LEAK_CHECKING
@@ -253,9 +259,11 @@ namespace external {
  * NOTE: Please do not use this class, use NS_INLINE_DECL_THREADSAFE_REFCOUNTING
  * instead.
  */
-template <typename T>
+template <typename T,
+          recordreplay::Behavior Recording = recordreplay::Behavior::Preserve>
 class AtomicRefCounted
-    : public mozilla::detail::RefCounted<T, mozilla::detail::AtomicRefCount> {
+    : public mozilla::detail::RefCounted<T, mozilla::detail::AtomicRefCount,
+                                         Recording> {
  public:
   ~AtomicRefCounted() {
     static_assert(std::is_base_of<AtomicRefCounted, T>::value,

@@ -795,7 +795,9 @@ class GCRuntime {
 
  private:
   // Any activity affecting the heap.
-  mozilla::Atomic<JS::HeapState, mozilla::SequentiallyConsistent> heapState_;
+  mozilla::Atomic<JS::HeapState, mozilla::SequentiallyConsistent,
+                  mozilla::recordreplay::Behavior::DontPreserve>
+      heapState_;
   friend class AutoHeapSession;
   friend class JS::AutoEnterCycleCollection;
 
@@ -841,12 +843,16 @@ class GCRuntime {
   MainThreadData<RootedValueMap> rootsHash;
 
   // An incrementing id used to assign unique ids to cells that require one.
-  mozilla::Atomic<uint64_t, mozilla::ReleaseAcquire> nextCellUniqueId_;
+  mozilla::Atomic<uint64_t, mozilla::ReleaseAcquire,
+                  mozilla::recordreplay::Behavior::DontPreserve>
+      nextCellUniqueId_;
 
   /*
    * Number of the committed arenas in all GC chunks including empty chunks.
    */
-  mozilla::Atomic<uint32_t, mozilla::ReleaseAcquire> numArenasFreeCommitted;
+  mozilla::Atomic<uint32_t, mozilla::ReleaseAcquire,
+                  mozilla::recordreplay::Behavior::DontPreserve>
+      numArenasFreeCommitted;
   MainThreadData<VerifyPreTracer*> verifyPreData;
 
  private:
@@ -860,7 +866,9 @@ class GCRuntime {
    */
   MainThreadData<JSGCMode> mode;
 
-  mozilla::Atomic<size_t, mozilla::ReleaseAcquire> numActiveZoneIters;
+  mozilla::Atomic<size_t, mozilla::ReleaseAcquire,
+                  mozilla::recordreplay::Behavior::DontPreserve>
+      numActiveZoneIters;
 
   /*
    * The self hosting zone is collected once after initialization. We don't
@@ -898,7 +906,9 @@ class GCRuntime {
    */
   UnprotectedData<bool> grayBitsValid;
 
-  mozilla::Atomic<JS::GCReason, mozilla::Relaxed> majorGCTriggerReason;
+  mozilla::Atomic<JS::GCReason, mozilla::Relaxed,
+                  mozilla::recordreplay::Behavior::DontPreserve>
+      majorGCTriggerReason;
 
  private:
   /* Perform full GC if rt->keepAtoms() becomes false. */

@@ -10,6 +10,7 @@ SOURCES += [
     '/mfbt/Assertions.cpp',
     '/mfbt/Poison.cpp',
     '/mfbt/RandomNum.cpp',
+    '/mfbt/RecordReplay.cpp',
     '/mfbt/TaggedAnonymousMemory.cpp',
     '/mfbt/Unused.cpp',
     'Replay.cpp',

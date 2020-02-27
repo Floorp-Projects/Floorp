@@ -85,7 +85,9 @@ class nsThreadManager : public nsIThreadManager {
   unsigned mCurThreadIndex;  // thread-local-storage index
   RefPtr<nsThread> mMainThread;
   PRThread* mMainPRThread;
-  mozilla::Atomic<bool, mozilla::SequentiallyConsistent> mInitialized;
+  mozilla::Atomic<bool, mozilla::SequentiallyConsistent,
+                  mozilla::recordreplay::Behavior::DontPreserve>
+      mInitialized;
 
   // Shared event target used for background runnables.
   RefPtr<BackgroundEventTarget> mBackgroundEventTarget;

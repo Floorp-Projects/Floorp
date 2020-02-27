@@ -58,6 +58,10 @@ bool XPCWrappedNativeProto::Init(JSContext* cx, nsIXPCScriptable* scriptable) {
   bool success = !!mJSProtoObject;
   if (success) {
     JS_SetPrivate(mJSProtoObject, this);
+
+    // Never collect the proto object while recording or replaying, to avoid
+    // non-deterministically releasing references during finalization.
+    recordreplay::HoldJSObject(mJSProtoObject);
   }
 
   return success;

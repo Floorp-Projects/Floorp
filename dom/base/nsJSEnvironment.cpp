@@ -530,7 +530,8 @@ class ScriptErrorEvent : public Runnable {
       JS::Rooted<JSObject*> stackGlobal(rootingCx);
       xpc::FindExceptionStackForConsoleReport(win, mError, mErrorStack, &stack,
                                               &stackGlobal);
-      mReport->LogToConsoleWithStack(stack, stackGlobal);
+      mReport->LogToConsoleWithStack(stack, stackGlobal,
+                                     JS::ExceptionTimeWarpTarget(mError));
     }
 
     return NS_OK;

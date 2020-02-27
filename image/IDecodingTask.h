@@ -67,7 +67,7 @@ class IDecodingTask : public IResumable {
  */
 class MetadataDecodingTask final : public IDecodingTask {
  public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MetadataDecodingTask, override)
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING_RECORDED(MetadataDecodingTask, override)
 
   explicit MetadataDecodingTask(NotNull<Decoder*> aDecoder);
 
@@ -97,7 +97,8 @@ class MetadataDecodingTask final : public IDecodingTask {
  */
 class AnonymousDecodingTask final : public IDecodingTask {
  public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(AnonymousDecodingTask, override)
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING_RECORDED(AnonymousDecodingTask,
+                                                 override)
 
   explicit AnonymousDecodingTask(NotNull<Decoder*> aDecoder, bool aResumable);
 

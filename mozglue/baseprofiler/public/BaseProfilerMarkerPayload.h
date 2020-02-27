@@ -105,7 +105,9 @@ class ProfilerMarkerPayload {
   using DeserializerTagAtomic = int;
 
   // Number of currently-registered deserializers.
-  static Atomic<DeserializerTagAtomic, ReleaseAcquire> sDeserializerCount;
+  static Atomic<DeserializerTagAtomic, ReleaseAcquire,
+                recordreplay::Behavior::DontPreserve>
+      sDeserializerCount;
 
   // List of currently-registered deserializers.
   // sDeserializers[0] is a no-payload deserializer.

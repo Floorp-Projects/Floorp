@@ -27,9 +27,12 @@ namespace baseprofiler {
 namespace detail {
 
 // Thin shell around mozglue PlatformMutex, for Base Profiler internal use.
+// Does not preserve behavior in JS record/replay.
 class BaseProfilerMutex : private ::mozilla::detail::MutexImpl {
  public:
-  BaseProfilerMutex() : ::mozilla::detail::MutexImpl() {}
+  BaseProfilerMutex()
+      : ::mozilla::detail::MutexImpl(
+            ::mozilla::recordreplay::Behavior::DontPreserve) {}
 
   BaseProfilerMutex(const BaseProfilerMutex&) = delete;
   BaseProfilerMutex& operator=(const BaseProfilerMutex&) = delete;
@@ -74,7 +77,9 @@ class BaseProfilerMutex : private ::mozilla::detail::MutexImpl {
 
 #ifdef MOZ_BASE_PROFILER_DEBUG
  private:
-  Atomic<int, MemoryOrdering::SequentiallyConsistent> mOwningThreadId{0};
+  Atomic<int, MemoryOrdering::SequentiallyConsistent,
+         recordreplay::Behavior::DontPreserve>
+      mOwningThreadId{0};
 #endif  // MOZ_BASE_PROFILER_DEBUG
 };
 
@@ -98,6 +103,7 @@ class MOZ_RAII BaseProfilerAutoLock {
 
 // Thin shell around mozglue PlatformMutex, for Base Profiler internal use.
 // Actual mutex may be disabled at construction time.
+// Does not preserve behavior in JS record/replay.
 class BaseProfilerMaybeMutex : private ::mozilla::detail::MutexImpl {
  public:
   explicit BaseProfilerMaybeMutex(bool aActivate) {
