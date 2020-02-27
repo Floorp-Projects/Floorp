@@ -30,7 +30,7 @@ linux64-rust-nightly:
         symbol: TL(rust-nightly)
     run:
         arguments: [
-            '--channel', 'nightly-2019-10-21',
+            '--channel', 'nightly-2019-12-19',
             '--host', 'x86_64-unknown-linux-gnu',
             '--target', 'x86_64-unknown-linux-gnu',
             '--target', 'i686-unknown-linux-gnu',
