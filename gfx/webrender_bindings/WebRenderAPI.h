@@ -106,8 +106,7 @@ class TransactionBuilder final {
 
   void UpdateDynamicProperties(
       const nsTArray<wr::WrOpacityProperty>& aOpacityArray,
-      const nsTArray<wr::WrTransformProperty>& aTransformArray,
-      const nsTArray<wr::WrColorProperty>& aColorArray);
+      const nsTArray<wr::WrTransformProperty>& aTransformArray);
 
   void SetDocumentView(const LayoutDeviceIntRect& aDocRect);
 
@@ -463,10 +462,6 @@ class DisplayListBuilder final {
 
   void PushRect(const wr::LayoutRect& aBounds, const wr::LayoutRect& aClip,
                 bool aIsBackfaceVisible, const wr::ColorF& aColor);
-  void PushRectWithAnimation(const wr::LayoutRect& aBounds,
-                             const wr::LayoutRect& aClip,
-                             bool aIsBackfaceVisible, const wr::ColorF& aColor,
-                             const WrAnimationProperty* aAnimation);
   void PushRoundedRect(const wr::LayoutRect& aBounds,
                        const wr::LayoutRect& aClip, bool aIsBackfaceVisible,
                        const wr::ColorF& aColor);
