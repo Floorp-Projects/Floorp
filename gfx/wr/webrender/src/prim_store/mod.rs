@@ -918,8 +918,7 @@ impl OpacityBinding {
     }
 
     // Resolve the current value of each opacity binding, and
-    // store that as a single combined opacity. Returns true
-    // if the opacity value changed from last time.
+    // store that as a single combined opacity.
     pub fn update(&mut self, scene_properties: &SceneProperties) {
         let mut new_opacity = 1.0;
 
