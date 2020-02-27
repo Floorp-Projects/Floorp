@@ -1628,10 +1628,6 @@ var BrowserTestUtils = {
    * @param (BrowsingContext) browsingContext
    *        The context where the frame leaves. Default to
    *        top level context if not supplied.
-   * @param (object?) options
-   *        An object with any of the following fields:
-   *          crashType: "CRASH_INVALID_POINTER_DEREF" | "CRASH_OOM"
-   *            The type of crash. If unspecified, default to "CRASH_INVALID_POINTER_DEREF"
    *
    * @returns (Promise)
    * @resolves An Object with key-value pairs representing the data from the
@@ -1641,8 +1637,7 @@ var BrowserTestUtils = {
     browser,
     shouldShowTabCrashPage = true,
     shouldClearMinidumps = true,
-    browsingContext,
-    options = {}
+    browsingContext
   ) {
     let extra = {};
 
@@ -1777,9 +1772,7 @@ var BrowserTestUtils = {
     this.sendAsyncMessage(
       browsingContext || browser.browsingContext,
       "BrowserTestUtils:CrashFrame",
-      {
-        crashType: options.crashType || "",
-      }
+      {}
     );
 
     await Promise.all(expectedPromises);
