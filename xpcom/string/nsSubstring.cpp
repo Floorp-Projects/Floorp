@@ -83,9 +83,7 @@ class nsStringStats {
            uintptr_t(getpid()), uintptr_t(pthread_self()));
   }
 
-  typedef Atomic<int32_t, mozilla::SequentiallyConsistent,
-                 mozilla::recordreplay::Behavior::DontPreserve>
-      AtomicInt;
+  typedef Atomic<int32_t, mozilla::SequentiallyConsistent> AtomicInt;
 
   AtomicInt mAllocCount;
   AtomicInt mReallocCount;

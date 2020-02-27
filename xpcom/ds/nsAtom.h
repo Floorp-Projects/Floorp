@@ -192,9 +192,7 @@ class nsDynamicAtom : public nsAtom {
   friend class nsAtomSubTable;
   friend int32_t NS_GetUnusedAtomCount();
 
-  static mozilla::Atomic<int32_t, mozilla::ReleaseAcquire,
-                         mozilla::recordreplay::Behavior::DontPreserve>
-      gUnusedAtomCount;
+  static mozilla::Atomic<int32_t, mozilla::ReleaseAcquire> gUnusedAtomCount;
   static void GCAtomTable();
 
   // These shouldn't be used directly, even by friend classes. The

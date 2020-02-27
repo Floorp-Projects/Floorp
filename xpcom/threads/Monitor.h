@@ -23,9 +23,8 @@ namespace mozilla {
  */
 class Monitor {
  public:
-  explicit Monitor(const char* aName, recordreplay::Behavior aRecorded =
-                                          recordreplay::Behavior::Preserve)
-      : mMutex(aName, aRecorded), mCondVar(mMutex, "[Monitor.mCondVar]") {}
+  explicit Monitor(const char* aName)
+      : mMutex(aName), mCondVar(mMutex, "[Monitor.mCondVar]") {}
 
   ~Monitor() = default;
 

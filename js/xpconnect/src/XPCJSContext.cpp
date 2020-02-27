@@ -558,12 +558,6 @@ bool XPCJSContext::RecordScriptActivity(bool aActive) {
     return oldValue;
   }
 
-  // Since the slow script dialog never activates if we are recording or
-  // replaying, don't record/replay JS activity notifications.
-  if (recordreplay::IsRecordingOrReplaying()) {
-    return oldValue;
-  }
-
   if (!aActive) {
     ProcessHangMonitor::ClearHang();
   }
@@ -582,12 +576,6 @@ AutoScriptActivity::~AutoScriptActivity() {
 
 // static
 bool XPCJSContext::InterruptCallback(JSContext* cx) {
-  // The slow script dialog never activates if we are recording or replaying,
-  // since the precise timing of the dialog cannot be replayed.
-  if (recordreplay::IsRecordingOrReplaying()) {
-    return true;
-  }
-
   XPCJSContext* self = XPCJSContext::Get();
 
   // Now is a good time to turn on profiling if it's pending.

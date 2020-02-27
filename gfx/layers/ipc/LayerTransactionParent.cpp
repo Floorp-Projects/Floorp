@@ -147,12 +147,6 @@ mozilla::ipc::IPCResult LayerTransactionParent::RecvPaintTime(
 
 mozilla::ipc::IPCResult LayerTransactionParent::RecvUpdate(
     const TransactionInfo& aInfo) {
-  auto guard = MakeScopeExit([&] {
-    if (recordreplay::IsRecordingOrReplaying()) {
-      recordreplay::child::NotifyPaintComplete();
-    }
-  });
-
   AUTO_PROFILER_TRACING_MARKER("Paint", "LayerTransaction", GRAPHICS);
   AUTO_PROFILER_LABEL("LayerTransactionParent::RecvUpdate", GRAPHICS);
   PerfStats::AutoMetricRecording<PerfStats::Metric::LayerTransactions>
@@ -496,11 +490,6 @@ mozilla::ipc::IPCResult LayerTransactionParent::RecvUpdate(
 
     mLayerManager->RecordUpdateTime(
         (TimeStamp::Now() - updateStart).ToMilliseconds());
-  }
-
-  // Compose after every update when recording/replaying.
-  if (recordreplay::IsRecordingOrReplaying()) {
-    mCompositorBridge->ForceComposeToTarget(nullptr);
   }
 
   return IPC_OK();

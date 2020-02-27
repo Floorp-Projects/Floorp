@@ -119,7 +119,6 @@ class DeadlockDetector {
    */
   explicit DeadlockDetector(uint32_t aNumResourcesGuess = kDefaultNumBuckets)
       : mOrdering(aNumResourcesGuess) {
-    recordreplay::AutoPassThroughThreadEvents pt;
     mLock = PR_NewLock();
     if (!mLock) {
       MOZ_CRASH("couldn't allocate deadlock detector lock");

@@ -42,7 +42,6 @@
 #include "mozilla/Logging.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Omnijar.h"
-#include "mozilla/RecordReplay.h"
 #include "mozilla/RDDProcessHost.h"
 #include "mozilla/Scoped.h"
 #include "mozilla/Services.h"
@@ -143,14 +142,9 @@ class BaseProcessLauncher {
     SprintfLiteral(mPidString, "%d", base::GetCurrentProcId());
 
     // Compute the serial event target we'll use for launching.
-    if (mozilla::recordreplay::IsMiddleman()) {
-      // During Web Replay, the middleman process launches the actual content
-      // processes, and doesn't initialize enough of XPCOM to use thread pools.
-      mLaunchThread = IOThread();
-    } else {
-      nsCOMPtr<nsIEventTarget> threadOrPool = GetIPCLauncher();
-      mLaunchThread = new TaskQueue(threadOrPool.forget());
-    }
+    nsCOMPtr<nsIEventTarget> threadOrPool = GetIPCLauncher();
+    mLaunchThread = new TaskQueue(threadOrPool.forget());
+
     if (ShouldHaveDirectoryService()) {
       // "Current process directory" means the app dir, not the current
       // working dir or similar.

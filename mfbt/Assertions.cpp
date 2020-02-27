@@ -23,9 +23,7 @@ static char sPrintfCrashReason[sPrintfCrashReasonSize] = {};
 // Accesses to this atomic are not included in web replay recordings, so that
 // if we crash in an area where recorded events are not allowed the true reason
 // for the crash is not obscured by a record/replay error.
-static mozilla::Atomic<bool, mozilla::SequentiallyConsistent,
-                       mozilla::recordreplay::Behavior::DontPreserve>
-    sCrashing(false);
+static mozilla::Atomic<bool, mozilla::SequentiallyConsistent> sCrashing(false);
 
 MFBT_API MOZ_COLD MOZ_NEVER_INLINE MOZ_FORMAT_PRINTF(1, 2) const
     char* MOZ_CrashPrintf(const char* aFormat, ...) {

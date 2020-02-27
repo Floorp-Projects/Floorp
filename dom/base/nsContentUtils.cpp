@@ -249,7 +249,6 @@
 #include "mozilla/HangAnnotations.h"
 #include "mozilla/Encoding.h"
 #include "nsXULElement.h"
-#include "mozilla/RecordReplay.h"
 #include "nsThreadManager.h"
 #include "nsIBidiKeyboard.h"
 #include "ReferrerInfo.h"
@@ -9904,12 +9903,6 @@ uint64_t nsContentUtils::GenerateProcessSpecificId(uint64_t aId) {
   uint64_t id = aId;
   MOZ_RELEASE_ASSERT(id < (uint64_t(1) << kIdBits));
   uint64_t bits = id & ((uint64_t(1) << kIdBits) - 1);
-
-  // Set the high bit for middleman processes so it doesn't conflict with the
-  // content process's generated IDs.
-  if (recordreplay::IsMiddleman()) {
-    bits |= uint64_t(1) << (kIdBits - 1);
-  }
 
   return (processBits << kIdBits) | bits;
 }

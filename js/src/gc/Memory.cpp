@@ -62,13 +62,9 @@ static size_t virtualMemoryLimit = size_t(-1);
  * VirtualAlloc always hands out regions of memory in increasing order.
  */
 #if defined(XP_DARWIN)
-static mozilla::Atomic<int, mozilla::Relaxed,
-                       mozilla::recordreplay::Behavior::DontPreserve>
-    growthDirection(1);
+static mozilla::Atomic<int, mozilla::Relaxed> growthDirection(1);
 #elif defined(XP_UNIX)
-static mozilla::Atomic<int, mozilla::Relaxed,
-                       mozilla::recordreplay::Behavior::DontPreserve>
-    growthDirection(0);
+static mozilla::Atomic<int, mozilla::Relaxed> growthDirection(0);
 #endif
 
 /*
@@ -268,7 +264,6 @@ static inline uint64_t GetNumberInRange(uint64_t minNum, uint64_t maxNum) {
   do {
     mozilla::Maybe<uint64_t> result;
     do {
-      mozilla::recordreplay::AutoPassThroughThreadEvents pt;
       result = mozilla::RandomUint64();
     } while (!result);
     rndNum = result.value() / binSize;
@@ -835,9 +830,6 @@ bool MarkPagesInUseHard(void* region, size_t length) {
 }
 
 size_t GetPageFaultCount() {
-  if (mozilla::recordreplay::IsRecordingOrReplaying()) {
-    return 0;
-  }
 #ifdef XP_WIN
   PROCESS_MEMORY_COUNTERS pmc;
   if (GetProcessMemoryInfo(GetCurrentProcess(), &pmc, sizeof(pmc)) == 0) {
