@@ -27,6 +27,8 @@ For git, see the `git cinnabar documentation <https://github.com/glandium/git-ci
 The clone should be around 30 minutes (depending on your connection) and
 the repository should be less than 5GB (~ 20GB after the build).
 
+If you have any network connection issues and cannot clone with command, try :ref:`Mercurial bundles <Mercurial bundles>`.
+
 `More
 information <https://developer.mozilla.org/docs/Mozilla/Developer_guide/Source_Code/Mercurial>`__
 
