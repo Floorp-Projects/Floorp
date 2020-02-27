@@ -30,6 +30,7 @@ import mozilla.components.feature.addons.ui.PermissionsDialogFragment
 import mozilla.components.feature.addons.ui.translatedName
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.ext.getRootView
 import org.mozilla.fenix.ext.showToolbar
 
 /**
@@ -175,8 +176,9 @@ class AddonsManagementFragment : Fragment(R.layout.fragment_add_ons_management),
             addon,
             onSuccess = {
                 this@AddonsManagementFragment.view?.let { view ->
+                    val rootView = activity?.getRootView() ?: view
                     showSnackBar(
-                        view,
+                        rootView,
                         getString(
                             R.string.mozac_feature_addons_successfully_installed,
                             it.translatedName
@@ -189,7 +191,11 @@ class AddonsManagementFragment : Fragment(R.layout.fragment_add_ons_management),
             },
             onError = { _, _ ->
                 this@AddonsManagementFragment.view?.let { view ->
-                    showSnackBar(view, getString(R.string.mozac_feature_addons_failed_to_install, addon.translatedName))
+                    val rootView = activity?.getRootView() ?: view
+                    showSnackBar(
+                        rootView,
+                        getString(R.string.mozac_feature_addons_failed_to_install, addon.translatedName)
+                    )
                     addonProgressOverlay?.visibility = View.GONE
                     isInstallationInProgress = false
                 }
