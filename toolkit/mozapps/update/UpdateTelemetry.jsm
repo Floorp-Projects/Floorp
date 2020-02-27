@@ -14,6 +14,14 @@ const { BitsError, BitsUnknownError } = ChromeUtils.import(
 );
 ChromeUtils.import("resource://gre/modules/Services.jsm", this);
 
+// It is possible for the update.session telemetry to be set more than once
+// which must be prevented since they are scalars and setting them more than
+// once could lead to values set in the first ping not being present in the
+// next ping which would make the values incomprehensible in relation to the
+// other values. This isn't needed for update.startup since this will only be
+// set once during startup.
+var gUpdatePhasesSetForSession = false;
+
 var AUSTLMY = {
   // Telemetry for the application update background update check occurs when
   // the background update timer fires after the update interval which is
@@ -447,6 +455,130 @@ var AUSTLMY = {
           }
         }
       }
+    }
+  },
+
+  /**
+   * Submit the update phase telemetry. These are scalars and must only be
+   * submitted once per sesssion. The update.startup is only submitted once
+   * once per session due to it only being submitted during startup and only the
+   * first call to pingUpdatePhases for update.session will be submitted.
+   *
+   * @param  aUpdate
+   *         The update object which contains the values to submit to telemetry.
+   * @param  aIsStartup
+   *         If true the telemetry will be set under update.startup and if false
+   *         the telemetry will be set under update.session. When false
+   *         subsequent calls will return early and not submit telemetry.
+   */
+  pingUpdatePhases: function UT_pingUpdatePhases(aUpdate, aIsStartup) {
+    if (!aIsStartup && !Cu.isInAutomation) {
+      if (gUpdatePhasesSetForSession) {
+        return;
+      }
+      gUpdatePhasesSetForSession = true;
+    }
+    let basePrefix = aIsStartup ? "update.startup." : "update.session.";
+    // None of the calls to getProperty should fail.
+    try {
+      let update = aUpdate.QueryInterface(Ci.nsIWritablePropertyBag);
+      let scalarSet = Services.telemetry.scalarSet;
+
+      // Though it is possible that the previous app version that was updated
+      // from could change the record is for the app version that initiated the
+      // update.
+      scalarSet(basePrefix + "from_app_version", aUpdate.previousAppVersion);
+
+      // The check interval only happens once even if the partial patch fails
+      // to apply on restart and the complete patch is downloaded.
+      scalarSet(
+        basePrefix + "intervals.check",
+        update.getProperty("checkInterval")
+      );
+
+      for (let i = 0; i < aUpdate.patchCount; ++i) {
+        let patch = aUpdate
+          .getPatchAt(i)
+          .QueryInterface(Ci.nsIWritablePropertyBag);
+        let type = patch.type;
+
+        scalarSet(basePrefix + "mar_" + type + "_size_bytes", patch.size);
+
+        let prefix = basePrefix + "intervals.";
+        let internalDownloadStart = patch.getProperty("internalDownloadStart");
+        let internalDownloadFinished = patch.getProperty(
+          "internalDownloadFinished"
+        );
+        if (
+          internalDownloadStart !== null &&
+          internalDownloadFinished !== null
+        ) {
+          scalarSet(
+            prefix + "download_internal_" + type,
+            Math.max(internalDownloadFinished - internalDownloadStart, 1)
+          );
+        }
+
+        let bitsDownloadStart = patch.getProperty("bitsDownloadStart");
+        let bitsDownloadFinished = patch.getProperty("bitsDownloadFinished");
+        if (bitsDownloadStart !== null && bitsDownloadFinished !== null) {
+          scalarSet(
+            prefix + "download_bits_" + type,
+            Math.max(bitsDownloadFinished - bitsDownloadStart, 1)
+          );
+        }
+
+        let stageStart = patch.getProperty("stageStart");
+        let stageFinished = patch.getProperty("stageFinished");
+        if (stageStart !== null && stageFinished !== null) {
+          scalarSet(
+            prefix + "stage_" + type,
+            Math.max(stageFinished - stageStart, 1)
+          );
+        }
+
+        // Both the partial and the complete patch are recorded for the apply
+        // interval because it is possible for a partial patch to fail when it
+        // is applied during a restart and then to try the complete patch.
+        let applyStart = patch.getProperty("applyStart");
+        if (applyStart !== null) {
+          let applyFinished = Math.ceil(Date.now() / 1000);
+          scalarSet(
+            prefix + "apply_" + type,
+            Math.max(applyFinished - applyStart, 1)
+          );
+        }
+
+        prefix = basePrefix + "downloads.";
+        let internalBytes = patch.getProperty("internalBytes");
+        if (internalBytes !== null) {
+          scalarSet(
+            prefix + "internal_" + type + "_bytes",
+            Math.max(internalBytes, 1)
+          );
+        }
+        let internalSeconds = patch.getProperty("internalSeconds");
+        if (internalSeconds !== null) {
+          scalarSet(
+            prefix + "internal_" + type + "_seconds",
+            Math.max(internalSeconds, 1)
+          );
+        }
+
+        let bitsBytes = patch.getProperty("bitsBytes");
+        if (bitsBytes !== null) {
+          scalarSet(prefix + "bits_" + type + "_bytes", Math.max(bitsBytes, 1));
+        }
+        let bitsSeconds = patch.getProperty("bitsSeconds");
+        if (bitsSeconds !== null) {
+          scalarSet(
+            prefix + "bits_" + type + "_seconds",
+            Math.max(bitsSeconds, 1)
+          );
+        }
+      }
+    } catch (e) {
+      Cu.reportError(e);
     }
   },
 
