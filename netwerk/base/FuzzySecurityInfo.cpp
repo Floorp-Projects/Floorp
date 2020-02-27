@@ -335,5 +335,8 @@ FuzzySecurityInfo::GetPeerId(nsACString& aResult) {
   return NS_OK;
 }
 
+NS_IMETHODIMP
+FuzzySecurityInfo::SetResumptionTokenFromExternalCache() { return NS_OK; }
+
 }  // namespace net
 }  // namespace mozilla
