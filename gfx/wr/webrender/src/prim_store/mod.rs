@@ -4306,13 +4306,10 @@ fn update_opacity_binding(
     opacity_bindings: &mut OpacityBindingStorage,
     opacity_binding_index: OpacityBindingIndex,
     scene_properties: &SceneProperties,
-) -> f32 {
-    if opacity_binding_index == OpacityBindingIndex::INVALID {
-        1.0
-    } else {
+) {
+    if opacity_binding_index != OpacityBindingIndex::INVALID {
         let binding = &mut opacity_bindings[opacity_binding_index];
         binding.update(scene_properties);
-        binding.current
     }
 }
 
