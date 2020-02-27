@@ -17,6 +17,9 @@
       "critical_section_on_gcov_flush-rG02ce9d8ef5a8.patch",
       "rG7e18aeba5062.patch",
       "llvmorg-11-init-4265-g2dcbdba8540.patch",
-      "android-mangling-error.patch"
+      "android-mangling-error.patch",
+      "unpoison-thread-stacks.patch",
+      "downgrade-mangling-error.patch",
+      "loosen-msvc-detection.patch"
     ]
 }
