@@ -1,5 +1,5 @@
-Firefox and Address Sanitizer
-=============================
+Address Sanitizer
+=================
 
 What is Address Sanitizer?
 --------------------------

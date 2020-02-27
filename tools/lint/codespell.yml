@@ -53,6 +53,7 @@ codespell:
         - tools/fuzzing/docs/
         - tools/moztreedocs/
         - tools/lint/
+        - tools/sanitizer/docs/
         - tools/tryselect/
     exclude:
         - tools/lint/test/test_codespell.py
