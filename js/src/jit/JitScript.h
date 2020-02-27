@@ -181,9 +181,7 @@ class alignas(uintptr_t) JitScript final {
   // Number of times the script has been called or has had backedges taken.
   // Reset if the script's JIT code is forcibly discarded. See also the
   // ScriptWarmUpData class.
-  mozilla::Atomic<uint32_t, mozilla::Relaxed,
-                  mozilla::recordreplay::Behavior::DontPreserve>
-      warmUpCount_ = {};
+  mozilla::Atomic<uint32_t, mozilla::Relaxed> warmUpCount_ = {};
 
   // Offset of the StackTypeSet array.
   uint32_t typeSetOffset_ = 0;

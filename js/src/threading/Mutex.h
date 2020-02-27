@@ -8,6 +8,7 @@
 #define threading_Mutex_h
 
 #include "mozilla/Assertions.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/PlatformMutex.h"
 #include "mozilla/ThreadLocal.h"
 #include "mozilla/Vector.h"
@@ -35,9 +36,7 @@ struct MutexId {
 // we must override it and make Mutex a friend.
 class MutexImpl : public mozilla::detail::MutexImpl {
  protected:
-  MutexImpl()
-      : mozilla::detail::MutexImpl(
-            mozilla::recordreplay::Behavior::DontPreserve) {}
+  MutexImpl() : mozilla::detail::MutexImpl() {}
 
   friend class Mutex;
 };

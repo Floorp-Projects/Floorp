@@ -542,13 +542,6 @@ bool InterruptCallback(JSContext* aCx) {
   WorkerPrivate* worker = GetWorkerPrivateFromContext(aCx);
   MOZ_ASSERT(worker);
 
-  // As with the main thread, the interrupt callback is triggered
-  // non-deterministically when recording/replaying, so return early to avoid
-  // performing any recorded events.
-  if (recordreplay::IsRecordingOrReplaying()) {
-    return true;
-  }
-
   // Now is a good time to turn on profiling if it's pending.
   PROFILER_JS_INTERRUPT_CALLBACK();
 

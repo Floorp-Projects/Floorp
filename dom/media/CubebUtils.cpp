@@ -433,10 +433,6 @@ cubeb* GetCubebContextUnlocked() {
              PREF_CUBEB_FORCE_NULL_CONTEXT));
     return nullptr;
   }
-  if (recordreplay::IsRecordingOrReplaying()) {
-    // Media is not supported when recording or replaying. See bug 1304146.
-    return nullptr;
-  }
   if (sCubebState != CubebState::Uninitialized) {
     // If we have already passed the initialization point (below), just return
     // the current context, which may be null (e.g., after error or shutdown.)
@@ -609,7 +605,7 @@ void InitLibrary() {
       NS_NewRunnableFunction("CubebUtils::InitLibrary", &InitBrandName));
 #endif
 #ifdef MOZ_CUBEB_REMOTING
-  if (sCubebSandbox && XRE_IsContentProcess() && !recordreplay::IsMiddleman()) {
+  if (sCubebSandbox && XRE_IsContentProcess()) {
     InitAudioIPCConnection();
   }
 #endif

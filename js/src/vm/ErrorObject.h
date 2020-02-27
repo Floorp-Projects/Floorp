@@ -51,9 +51,8 @@ class ErrorObject : public NativeObject {
   static const uint32_t COLUMNNUMBER_SLOT = LINENUMBER_SLOT + 1;
   static const uint32_t MESSAGE_SLOT = COLUMNNUMBER_SLOT + 1;
   static const uint32_t SOURCEID_SLOT = MESSAGE_SLOT + 1;
-  static const uint32_t TIME_WARP_SLOT = SOURCEID_SLOT + 1;
 
-  static const uint32_t RESERVED_SLOTS = TIME_WARP_SLOT + 1;
+  static const uint32_t RESERVED_SLOTS = SOURCEID_SLOT + 1;
 
  public:
   static const JSClass classes[JSEXN_ERROR_LIMIT];
@@ -105,7 +104,6 @@ class ErrorObject : public NativeObject {
   inline uint32_t lineNumber() const;
   inline uint32_t columnNumber() const;
   inline JSObject* stack() const;
-  inline uint64_t timeWarpTarget() const;
 
   JSString* getMessage() const {
     const HeapSlot& slot = getReservedSlotRef(MESSAGE_SLOT);

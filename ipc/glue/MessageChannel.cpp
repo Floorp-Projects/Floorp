@@ -561,18 +561,6 @@ static void TryRegisterStrongMemoryReporter() {
 
 Atomic<size_t> MessageChannel::gUnresolvedResponses;
 
-// Channels in record/replay middleman processes can forward messages that
-// originated in a child recording process. Middleman processes are given
-// a large negative sequence number so that sequence numbers on their messages
-// can be distinguished from those on recording process messages.
-static const int32_t MiddlemanStartSeqno = -(1 << 30);
-
-/* static */
-bool MessageChannel::MessageOriginatesFromMiddleman(const Message& aMessage) {
-  MOZ_ASSERT(recordreplay::IsMiddleman());
-  return aMessage.seqno() < MiddlemanStartSeqno;
-}
-
 MessageChannel::MessageChannel(const char* aName, IToplevelProtocol* aListener)
     : mName(aName),
       mListener(aListener),
@@ -622,10 +610,6 @@ MessageChannel::MessageChannel(const char* aName, IToplevelProtocol* aListener)
 
   TryRegisterStrongMemoryReporter<PendingResponseReporter>();
   TryRegisterStrongMemoryReporter<ChannelCountReporter>();
-
-  if (recordreplay::IsMiddleman()) {
-    mNextSeqno = MiddlemanStartSeqno;
-  }
 }
 
 MessageChannel::~MessageChannel() {
@@ -2055,15 +2039,6 @@ void MessageChannel::MessageTask::Clear() {
 
 NS_IMETHODIMP
 MessageChannel::MessageTask::GetPriority(uint32_t* aPriority) {
-  if (recordreplay::IsRecordingOrReplaying()) {
-    // Ignore message priorities in recording/replaying processes. Incoming
-    // messages were sorted in the middleman process according to their
-    // priority before being forwarded here, and reordering them again in this
-    // process can cause problems such as dispatching messages for an actor
-    // before the constructor for that actor.
-    *aPriority = PRIORITY_NORMAL;
-    return NS_OK;
-  }
   switch (mMessage.priority()) {
     case Message::NORMAL_PRIORITY:
       *aPriority = PRIORITY_NORMAL;
@@ -2165,10 +2140,8 @@ void MessageChannel::DispatchSyncMessage(ActorLifecycleProxy* aProxy,
 
   int nestedLevel = aMsg.nested_level();
 
-  MOZ_RELEASE_ASSERT(
-      nestedLevel == IPC::Message::NOT_NESTED || NS_IsMainThread() ||
-      // Middleman processes forward sync messages on a non-main thread.
-      recordreplay::IsMiddleman());
+  MOZ_RELEASE_ASSERT(nestedLevel == IPC::Message::NOT_NESTED ||
+                     NS_IsMainThread());
 #ifdef MOZ_TASK_TRACER
   AutoScopedLabel autolabel("sync message %s", aMsg.name());
 #endif

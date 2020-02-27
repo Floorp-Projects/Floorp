@@ -125,7 +125,7 @@ async function testToggleToolboxButtons() {
   ];
 
   // Filter out all the buttons which are not supported on the current target.
-  // (WebReplay, DevTools Fission Preferences etc...)
+  // (DevTools Fission Preferences etc...)
   const target = await TargetFactory.forTab(gBrowser.selectedTab);
   const toolbarButtons = toolbox.toolbarButtons.filter(tool =>
     tool.isTargetSupported(target)

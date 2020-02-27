@@ -58,9 +58,7 @@ static LazyLogModule gJarProtocolLog("nsJarProtocol");
 
 class nsJARInputThunk : public nsIInputStream {
  public:
-  // Preserve refcount changes when record/replaying, as otherwise the thread
-  // which destroys the thunk may vary between recording and replaying.
-  NS_DECL_THREADSAFE_ISUPPORTS_WITH_RECORDING(recordreplay::Behavior::Preserve)
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIINPUTSTREAM
 
   nsJARInputThunk(nsIZipReader* zipReader, nsIURI* fullJarURI,

@@ -38,11 +38,6 @@ void nsWrapperCache::SetWrapperJSObject(JSObject* aWrapper) {
   if (aWrapper && !JS::ObjectIsTenured(aWrapper)) {
     CycleCollectedJSRuntime::Get()->NurseryWrapperAdded(this);
   }
-
-  // Never collect the wrapper object while recording or replaying, to avoid
-  // non-deterministic behaviors if the cache is emptied and then refilled at
-  // a different point when replaying.
-  recordreplay::HoldJSObject(aWrapper);
 }
 
 void nsWrapperCache::ReleaseWrapper(void* aScriptObjectHolder) {
