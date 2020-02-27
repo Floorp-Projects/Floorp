@@ -16,7 +16,7 @@ linux64-rust-1.41:
         symbol: TL(rust)
     run:
         arguments: [
-            '--channel', '1.41.0',
+            '--channel', '1.41.1',
             '--host', 'x86_64-unknown-linux-gnu',
             '--target', 'x86_64-unknown-linux-gnu',
             '--target', 'i686-unknown-linux-gnu',
@@ -42,7 +42,7 @@ linux64-rust-cross-1.41:
         symbol: TL(rust-cross)
     run:
         arguments: [
-            '--channel', '1.41.0',
+            '--channel', '1.41.1',
             '--host', 'x86_64-unknown-linux-gnu',
             '--target', 'x86_64-unknown-linux-gnu',
             '--target', 'x86_64-apple-darwin',
@@ -57,7 +57,7 @@ linux64-rust-macos-1.41:
         symbol: TL(rust-macos)
     run:
         arguments: [
-            '--channel', '1.41.0',
+            '--channel', '1.41.1',
             '--host', 'x86_64-unknown-linux-gnu',
             '--target', 'x86_64-unknown-linux-gnu',
             '--target', 'x86_64-apple-darwin',
@@ -70,7 +70,7 @@ linux64-rust-android-1.41:
         symbol: TL(rust-android)
     run:
         arguments: [
-            '--channel', '1.41.0',
+            '--channel', '1.41.1',
             '--host', 'x86_64-unknown-linux-gnu',
             '--target', 'x86_64-unknown-linux-gnu',
             '--target', 'armv7-linux-androideabi',
@@ -87,7 +87,7 @@ linux64-rust-windows-1.41:
         symbol: TL(rust-win)
     run:
         arguments: [
-            '--channel', '1.41.0',
+            '--channel', '1.41.1',
             '--host', 'x86_64-unknown-linux-gnu',
             '--target', 'x86_64-unknown-linux-gnu',
             '--target', 'x86_64-pc-windows-msvc',
@@ -100,7 +100,7 @@ win64-rust-1.41:
         symbol: TW64(rust)
     run:
         arguments: [
-            '--channel', '1.41.0',
+            '--channel', '1.41.1',
             '--host', 'x86_64-pc-windows-msvc',
             '--target', 'x86_64-pc-windows-msvc',
             '--target', 'i686-pc-windows-msvc',
@@ -113,7 +113,7 @@ mingw32-rust-1.41:
         symbol: TMW(rust)
     run:
         arguments: [
-            '--channel', '1.41.0',
+            '--channel', '1.41.1',
             '--host', 'x86_64-unknown-linux-gnu',
             '--target', 'i686-unknown-linux-gnu',
             '--target', 'i686-pc-windows-gnu',
