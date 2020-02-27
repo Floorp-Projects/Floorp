@@ -1,20 +1,19 @@
-diff --git a/libvpx/vpx_dsp/vpx_dsp.mk b/libvpx/vpx_dsp/vpx_dsp.mk
-index 84b529136ba9..7f3111320dc9 100644
---- a/libvpx/vpx_dsp/vpx_dsp.mk
-+++ b/libvpx/vpx_dsp/vpx_dsp.mk
-@@ -133,17 +133,17 @@ DSP_SRCS-$(HAVE_DSPR2)  += mips/convolve8_avg_dspr2.c
- DSP_SRCS-$(HAVE_DSPR2)  += mips/convolve8_avg_horiz_dspr2.c
- DSP_SRCS-$(HAVE_DSPR2)  += mips/convolve8_dspr2.c
+diff --git a/media/libvpx/libvpx/vpx_dsp/vpx_dsp.mk b/media/libvpx/libvpx/vpx_dsp/vpx_dsp.mk
+--- a/media/libvpx/libvpx/vpx_dsp/vpx_dsp.mk
++++ b/media/libvpx/libvpx/vpx_dsp/vpx_dsp.mk
+@@ -160,17 +160,17 @@ DSP_SRCS-$(HAVE_DSPR2)  += mips/convolve
  DSP_SRCS-$(HAVE_DSPR2)  += mips/convolve8_horiz_dspr2.c
  DSP_SRCS-$(HAVE_DSPR2)  += mips/convolve8_vert_dspr2.c
-
+ 
+ DSP_SRCS-$(HAVE_VSX)  += ppc/vpx_convolve_vsx.c
+ 
  # loop filters
  DSP_SRCS-yes += loopfilter.c
-
--DSP_SRCS-$(ARCH_X86)$(ARCH_X86_64)   += x86/loopfilter_sse2.c
-+DSP_SRCS-$(ARCH_X86)$(ARCH_X86_64)   += x86/loopfilter_intrin_sse2.c
- DSP_SRCS-$(HAVE_AVX2)                += x86/loopfilter_avx2.c
-
+ 
+-DSP_SRCS-$(HAVE_SSE2)  += x86/loopfilter_sse2.c
++DSP_SRCS-$(HAVE_SSE2)  += x86/loopfilter_intrin_sse2.c
+ DSP_SRCS-$(HAVE_AVX2)  += x86/loopfilter_avx2.c
+ 
  ifeq ($(HAVE_NEON_ASM),yes)
  DSP_SRCS-yes  += arm/loopfilter_16_neon$(ASM)
  DSP_SRCS-yes  += arm/loopfilter_8_neon$(ASM)

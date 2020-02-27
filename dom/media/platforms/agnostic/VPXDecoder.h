@@ -10,7 +10,6 @@
 #  include "mozilla/Span.h"
 
 #  include <stdint.h>
-#  define VPX_DONT_DEFINE_STDINT_TYPES
 #  include "mozilla/gfx/Types.h"
 #  include "vpx/vp8dx.h"
 #  include "vpx/vpx_codec.h"

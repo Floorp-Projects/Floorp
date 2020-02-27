@@ -9,29 +9,27 @@ import shutil
 import sys
 import subprocess
 import tarfile
-import urllib
+import urllib.request
 from pprint import pprint
-from StringIO import StringIO
+from io import StringIO
 
 def prepare_upstream(prefix, commit=None):
     upstream_url = 'https://chromium.googlesource.com/webm/libvpx'
     shutil.rmtree(os.path.join(base, 'libvpx/'))
     print(upstream_url + '/+archive/' + commit + '.tar.gz')
-    urllib.urlretrieve(upstream_url + '/+archive/' + commit + '.tar.gz', 'libvpx.tar.gz')
+    urllib.request.urlretrieve(upstream_url + '/+archive/' + commit + '.tar.gz', 'libvpx.tar.gz')
     tarfile.open('libvpx.tar.gz').extractall(path='libvpx')
     os.remove(os.path.join(base, 'libvpx.tar.gz'))
     os.chdir(base)
     return commit
 
 def cleanup_upstream():
-    os.remove(os.path.join(base, 'libvpx/.gitattributes'))
-    os.remove(os.path.join(base, 'libvpx/.gitignore'))
-    os.remove(os.path.join(base, 'libvpx/build/.gitattributes'))
-    os.remove(os.path.join(base, 'libvpx/build/.gitignore'))
+    os.remove(os.path.join(base, 'libvpx', '.gitattributes'))
+    os.remove(os.path.join(base, 'libvpx', '.gitignore'))
+    shutil.rmtree(os.path.join(base, 'libvpx', 'third_party', 'libwebm'))
+    shutil.rmtree(os.path.join(base, 'libvpx', 'tools'))
 
 def apply_patches():
-    # Patch to permit vpx users to specify their own <stdint.h> types.
-    os.system("patch -p3 < stdint.patch")
     # Patch to fix a crash caused by MSVC 2013
     os.system("patch -p3 < bug1137614.patch")
     # Bug 1263384 - Check input frame resolution
@@ -39,13 +37,10 @@ def apply_patches():
     # Bug 1315288 - Check input frame resolution for vp9
     os.system("patch -p3 < input_frame_validation_vp9.patch")
     # Avoid c/asm name collision for loopfilter_sse2
-    os.system("patch -p1 < rename_duplicate_files.patch")
+    os.system("patch -p3 < rename_duplicate_files.patch")
     os.system("mv libvpx/vpx_dsp/x86/loopfilter_sse2.c libvpx/vpx_dsp/x86/loopfilter_intrin_sse2.c")
-    # Cherrypick fix from upstream
-    os.system("patch -p3 < bug1480092.patch")
-    # AArch64 Windows support
-    os.system("patch -p3 < aarch64-windows.patch")
-
+    # Ensure float_control_word.asm is included
+    os.system("patch -p3 < win64_build_fix.patch")
 
 def update_readme(commit):
     with open('README_MOZILLA') as f:
