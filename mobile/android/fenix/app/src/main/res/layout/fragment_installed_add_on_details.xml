@@ -39,13 +39,13 @@
                 android:layout_height="wrap_content"
                 android:layout_below="@+id/enable_switch"
                 android:background="?android:attr/selectableItemBackground"
-                android:drawablePadding="10dp"
+                android:drawablePadding="12dp"
                 android:padding="16dp"
                 android:text="@string/mozac_feature_addons_settings"
                 android:textColor="@drawable/addon_textview_selector"
                 android:textSize="18sp"
                 app:drawableStartCompat="@drawable/mozac_ic_preferences"
-                app:drawableTint="?android:attr/textColorPrimary" />
+                app:drawableTint="?primaryText" />
 
             <TextView
                 android:id="@+id/details"
@@ -53,13 +53,13 @@
                 android:layout_height="wrap_content"
                 android:layout_below="@+id/settings"
                 android:background="?android:attr/selectableItemBackground"
-                android:drawablePadding="6dp"
+                android:drawablePadding="12dp"
                 android:padding="16dp"
                 android:text="@string/mozac_feature_addons_details"
                 android:textColor="@drawable/addon_textview_selector"
                 android:textSize="18sp"
                 app:drawableStartCompat="@drawable/mozac_ic_information"
-                app:drawableTint="?android:attr/textColorPrimary" />
+                app:drawableTint="?primaryText" />
 
             <TextView
                 android:id="@+id/permissions"
@@ -67,7 +67,7 @@
                 android:layout_height="wrap_content"
                 android:layout_below="@+id/details"
                 android:background="?android:attr/selectableItemBackground"
-                android:drawablePadding="6dp"
+                android:drawablePadding="12dp"
                 android:padding="16dp"
                 android:text="@string/mozac_feature_addons_permissions"
                 android:textColor="@drawable/addon_textview_selector"
@@ -81,7 +81,7 @@
                 android:layout_height="wrap_content"
                 android:layout_below="@+id/permissions"
                 android:layout_margin="12dp"
-                android:text="@string/mozac_feature_addons_remove"/>
+                android:text="@string/mozac_feature_addons_remove" />
         </RelativeLayout>
     </ScrollView>
 </FrameLayout>
