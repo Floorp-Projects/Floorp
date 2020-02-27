@@ -68,6 +68,7 @@ FX_URLBAR_SELECTED_RESULT_TYPE
     10. extension
     11. preloaded-top-site
     12. tip
+    13. topsite
 
 FX_URLBAR_SELECTED_RESULT_INDEX_BY_TYPE
   This probe tracks picked result type, for each one it tracks the index where
