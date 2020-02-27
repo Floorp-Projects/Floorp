@@ -94,7 +94,7 @@ jobs:
             symbol: condprof(firefox)
             platform: macosx1014-64/opt
         dependencies:
-            build-macosx64/opt: build-macosx64/opt
+            build-macosx64/opt: build-macosx64-shippable/opt
         fetches:
             build-macosx64/opt:
                 - artifact: target.common.tests.tar.gz
