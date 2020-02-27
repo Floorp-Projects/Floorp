@@ -244,7 +244,6 @@ decorate_task(
     // Will timeout if notifications were not received.
     await startPromise;
     await endPromise;
-    ok(true, "The test should pass without timing out");
   }
 );
 
@@ -303,15 +302,6 @@ decorate_task(
     );
     await rsCollection.db.saveLastModified(42);
     rsCollection.db.close();
-
-    let recipesFromRS = (await RecipeRunner._remoteSettingsClientForTesting.get()).map(
-      ({ recipe, signature }) => recipe
-    );
-    Assert.deepEqual(
-      recipesFromRS,
-      [matchRecipe, noMatchRecipe, missingRecipe],
-      "The recipes should be accesible from Remote Settings"
-    );
 
     await RecipeRunner.run();
 
