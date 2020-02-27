@@ -3896,6 +3896,10 @@ bool js::gc::UnmarkGrayGCThingUnchecked(JSRuntime* rt, JS::GCCellPtr thing) {
   MOZ_ASSERT(thing);
   MOZ_ASSERT(thing.asCell()->isMarkedGray());
 
+  // Gray cell unmarking can occur at different points between recording and
+  // replay, so disallow recorded events from occurring in the tracer.
+  mozilla::recordreplay::AutoDisallowThreadEvents d;
+
   AutoGeckoProfilerEntry profilingStackFrame(
       TlsContext.get(), "UnmarkGrayGCThing", JS::ProfilingCategoryPair::GCCC);
 

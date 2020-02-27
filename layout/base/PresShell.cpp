@@ -5890,6 +5890,10 @@ void PresShell::Paint(nsView* aViewToPaint, const nsRegion& aDirtyRegion,
   AUTO_PROFILER_LABEL_DYNAMIC_NSCSTRING("PresShell::Paint", GRAPHICS, url);
 #endif
 
+  // When recording/replaying, create a checkpoint after every paint. This can
+  // cause content JS to run, so must live outside |nojs|.
+  auto createCheckpoint = MakeScopeExit(recordreplay::child::CreateCheckpoint);
+
   Maybe<js::AutoAssertNoContentJS> nojs;
 
   // On Android, Flash can call into content JS during painting, so we can't

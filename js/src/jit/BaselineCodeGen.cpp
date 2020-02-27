@@ -2248,7 +2248,23 @@ bool BaselineCodeGen<Handler>::emit_LoopHead() {
   if (!emitWarmUpCounterIncrement()) {
     return false;
   }
-  return true;
+  return emitIncExecutionProgressCounter(R0.scratchReg());
+}
+
+template <typename Handler>
+bool BaselineCodeGen<Handler>::emitIncExecutionProgressCounter(
+    Register scratch) {
+  if (!mozilla::recordreplay::IsRecordingOrReplaying()) {
+    return true;
+  }
+
+  auto incCounter = [this]() {
+    masm.inc64(
+        AbsoluteAddress(mozilla::recordreplay::ExecutionProgressCounter()));
+    return true;
+  };
+  return emitTestScriptFlag(JSScript::MutableFlags::TrackRecordReplayProgress,
+                            true, incCounter, scratch);
 }
 
 template <typename Handler>
@@ -6717,6 +6733,10 @@ bool BaselineCodeGen<Handler>::emitPrologue() {
   // case GC gets run during stack check). For global and eval scripts, the env
   // chain is in R1. For function scripts, the env chain is in the callee.
   emitInitFrameFields(R1.scratchReg());
+
+  if (!emitIncExecutionProgressCounter(R2.scratchReg())) {
+    return false;
+  }
 
   // When compiling with Debugger instrumentation, set the debuggeeness of
   // the frame before any operation that can call into the VM.

@@ -169,6 +169,9 @@ bool js::InferSpewActive(TypeSpewChannel channel) {
   if (!checked) {
     checked = true;
     PodArrayZero(active);
+    if (mozilla::recordreplay::IsRecordingOrReplaying()) {
+      return false;
+    }
     const char* env = getenv("INFERFLAGS");
     if (!env) {
       return false;
@@ -194,6 +197,9 @@ static bool InferSpewColorable() {
   static bool checked = false;
   if (!checked) {
     checked = true;
+    if (mozilla::recordreplay::IsRecordingOrReplaying()) {
+      return false;
+    }
     const char* env = getenv("TERM");
     if (!env) {
       return false;

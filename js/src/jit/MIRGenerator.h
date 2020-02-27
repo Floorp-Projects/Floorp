@@ -133,7 +133,9 @@ class MIRGenerator final {
   TempAllocator* alloc_;
   MIRGraph* graph_;
   AbortReasonOr<Ok> offThreadStatus_;
-  mozilla::Atomic<bool, mozilla::Relaxed> cancelBuild_;
+  mozilla::Atomic<bool, mozilla::Relaxed,
+                  mozilla::recordreplay::Behavior::DontPreserve>
+      cancelBuild_;
 
   uint32_t wasmMaxStackArgBytes_;
   bool needsOverrecursedCheck_;

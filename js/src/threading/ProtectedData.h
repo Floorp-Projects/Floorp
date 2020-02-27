@@ -62,7 +62,9 @@ namespace js {
 class MOZ_RAII AutoNoteSingleThreadedRegion {
  public:
 #ifdef JS_HAS_PROTECTED_DATA_CHECKS
-  static mozilla::Atomic<size_t, mozilla::SequentiallyConsistent> count;
+  static mozilla::Atomic<size_t, mozilla::SequentiallyConsistent,
+                         mozilla::recordreplay::Behavior::DontPreserve>
+      count;
   AutoNoteSingleThreadedRegion() { count++; }
   ~AutoNoteSingleThreadedRegion() { count--; }
 #else

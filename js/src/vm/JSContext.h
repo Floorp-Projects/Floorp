@@ -187,7 +187,9 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
 
   // When a helper thread is using a context, it may need to periodically
   // free unused memory.
-  mozilla::Atomic<bool, mozilla::ReleaseAcquire> freeUnusedMemory;
+  mozilla::Atomic<bool, mozilla::ReleaseAcquire,
+                  mozilla::recordreplay::Behavior::DontPreserve>
+      freeUnusedMemory;
 
  public:
   // This is used by helper threads to change the runtime their context is
@@ -642,7 +644,8 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
 
   /* Whether sampling should be enabled or not. */
  private:
-  mozilla::Atomic<bool, mozilla::SequentiallyConsistent>
+  mozilla::Atomic<bool, mozilla::SequentiallyConsistent,
+                  mozilla::recordreplay::Behavior::DontPreserve>
       suppressProfilerSampling;
 
  public:
@@ -847,7 +850,9 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
   js::ContextData<bool> interruptCallbackDisabled;
 
   // Bitfield storing InterruptReason values.
-  mozilla::Atomic<uint32_t, mozilla::Relaxed> interruptBits_;
+  mozilla::Atomic<uint32_t, mozilla::Relaxed,
+                  mozilla::recordreplay::Behavior::DontPreserve>
+      interruptBits_;
 
   // Any thread can call requestInterrupt() to request that this thread
   // stop running. To stop this thread, requestInterrupt sets two fields:
@@ -922,7 +927,9 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
     ionReturnOverride_ = v;
   }
 
-  mozilla::Atomic<uintptr_t, mozilla::Relaxed> jitStackLimit;
+  mozilla::Atomic<uintptr_t, mozilla::Relaxed,
+                  mozilla::recordreplay::Behavior::DontPreserve>
+      jitStackLimit;
 
   // Like jitStackLimit, but not reset to trigger interrupts.
   js::ContextData<uintptr_t> jitStackLimitNoInterrupt;

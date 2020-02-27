@@ -9,7 +9,6 @@
 #include <algorithm>
 
 #include "mozilla/CheckedInt.h"
-#include "mozilla/Utf8.h"
 
 #include "nscore.h"
 #include "nsMemory.h"

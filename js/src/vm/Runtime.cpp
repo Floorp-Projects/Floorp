@@ -401,6 +401,13 @@ void JSRuntime::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
 static bool HandleInterrupt(JSContext* cx, bool invokeCallback) {
   MOZ_ASSERT(!cx->zone()->isAtomsZone());
 
+  // Interrupts can occur at different points between recording and replay,
+  // so no recorded behaviors should occur while handling an interrupt.
+  // Additionally, returning false here will change subsequent behavior, so
+  // such an event cannot occur during recording or replay without
+  // invalidating the recording.
+  mozilla::recordreplay::AutoDisallowThreadEvents d;
+
   cx->runtime()->gc.gcIfRequested();
 
   // A worker thread may have requested an interrupt after finishing an Ion
@@ -434,6 +441,8 @@ static bool HandleInterrupt(JSContext* cx, bool invokeCallback) {
       if (!iter.done() && cx->compartment() == iter.compartment() &&
           DebugAPI::stepModeEnabled(iter.script())) {
         if (!DebugAPI::onSingleStep(cx)) {
+          mozilla::recordreplay::InvalidateRecording(
+              "Debugger single-step tried to change recorded behavior");
           return false;
         }
       }
@@ -463,6 +472,8 @@ static bool HandleInterrupt(JSContext* cx, bool invokeCallback) {
   JS_ReportErrorFlagsAndNumberUC(cx, JSREPORT_WARNING, GetErrorMessage, nullptr,
                                  JSMSG_TERMINATED, chars);
 
+  mozilla::recordreplay::InvalidateRecording(
+      "Interrupt callback forced return");
   return false;
 }
 

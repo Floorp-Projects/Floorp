@@ -64,7 +64,8 @@ enum class GCKind {
 // This atomic can be accessed during the GC and other places where recorded
 // events are not allowed, so its value is not preserved when recording or
 // replaying.
-Atomic<int32_t, ReleaseAcquire> nsDynamicAtom::gUnusedAtomCount;
+Atomic<int32_t, ReleaseAcquire, recordreplay::Behavior::DontPreserve>
+    nsDynamicAtom::gUnusedAtomCount;
 
 nsDynamicAtom::nsDynamicAtom(const nsAString& aString, uint32_t aHash,
                              bool aIsAsciiLowercase)

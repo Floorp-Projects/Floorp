@@ -23,6 +23,7 @@ DIRS += [
     'mozapps/preferences',
     'pluginproblem',
     'profile',
+    'recordreplay',
     'themes',
 ]
 

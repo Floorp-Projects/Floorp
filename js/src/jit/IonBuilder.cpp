@@ -1115,6 +1115,14 @@ AbortReasonOr<Ok> IonBuilder::buildInline(IonBuilder* callerBuilder,
 
   insertRecompileCheck(pc);
 
+  // Insert an interrupt check when recording or replaying, which will bump
+  // the record/replay system's progress counter.
+  if (script()->trackRecordReplayProgress()) {
+    MInterruptCheck* check = MInterruptCheck::New(alloc());
+    check->setTrackRecordReplayProgress();
+    current->add(check);
+  }
+
   // Initialize the env chain now that all resume points operands are
   // initialized.
   MOZ_TRY(initEnvironmentChain(callInfo.fun()));
@@ -1812,6 +1820,14 @@ AbortReasonOr<Ok> IonBuilder::emitLoopHeadInstructions(jsbytecode* pc) {
   MInterruptCheck* check = MInterruptCheck::New(alloc());
   current->add(check);
   insertRecompileCheck(pc);
+
+  if (script()->trackRecordReplayProgress()) {
+    check->setTrackRecordReplayProgress();
+
+    // When recording/replaying, MInterruptCheck is effectful and should
+    // not reexecute after bailing out.
+    MOZ_TRY(resumeAfter(check));
+  }
 
   return Ok();
 }
@@ -6148,6 +6164,14 @@ AbortReasonOr<bool> IonBuilder::testShouldDOMCall(TypeSet* inTypes,
     return false;
   }
 
+  // Some DOM optimizations cause execution to skip over recorded events such
+  // as wrapper cache accesses, e.g. through GVN or loop hoisting of the
+  // expression which performs the event. Disable DOM optimizations when
+  // recording or replaying to avoid this problem.
+  if (mozilla::recordreplay::IsRecordingOrReplaying()) {
+    return false;
+  }
+
   // If all the DOM objects flowing through are legal with this
   // property, we can bake in a call to the bottom half of the DOM
   // accessor
@@ -6483,10 +6507,13 @@ AbortReasonOr<Ok> IonBuilder::jsop_eval(uint32_t argc) {
 
     // Try to pattern match 'eval(v + "()")'. In this case v is likely a
     // name on the env chain and the eval is performing a call on that
-    // value. Use an env chain lookup rather than a full eval.
+    // value. Use an env chain lookup rather than a full eval. Avoid this
+    // optimization if we're tracking script progress, as this will not
+    // execute the script and give an inconsistent progress count.
     if (string->isConcat() &&
         string->getOperand(1)->type() == MIRType::String &&
-        string->getOperand(1)->maybeConstantValue()) {
+        string->getOperand(1)->maybeConstantValue() &&
+        !script()->trackRecordReplayProgress()) {
       JSAtom* atom =
           &string->getOperand(1)->maybeConstantValue()->toString()->asAtom();
 
@@ -8232,6 +8259,10 @@ AbortReasonOr<Ok> IonBuilder::loadStaticSlot(JSObject* staticObject,
 // Whether a write of the given value may need a post-write barrier for GC
 // purposes.
 bool IonBuilder::needsPostBarrier(MDefinition* value) {
+  // Generational GC is disabled for WebReplay.
+  if (mozilla::recordreplay::IsRecordingOrReplaying()) {
+    return false;
+  }
   CompileZone* zone = realm->zone();
   if (value->mightBeType(MIRType::Object)) {
     return true;
