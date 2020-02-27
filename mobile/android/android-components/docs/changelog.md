@@ -17,6 +17,9 @@ permalink: /changelog/
   * `RegionSearchLocalizationProvider` now accepts any `LocationService` implementation.
   * Added `LocationService.dummy()` which creates a dummy `LocationService` implementation that always returns `null` when asked for a `LocationService.Region`.
 
+* **feature-accounts-push**
+  * Add known prefix to FxA push scope.
+
 # 34.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v33.0.0...v34.0.0)
@@ -48,11 +51,11 @@ permalink: /changelog/
   * ⚠️ **This is a breaking change**: `alwaysAllowedSchemes` is removed as a parameter for `AppLinksInterceptor`.
   * Added `engineSupportedSchemes` as a parameter for `AppLinksInterceptor`.  This allows the caller to specify which protocol is supported by the engine.
     * Using this information, app links can decide if a protocol should be launched in a third party app or not regardless of user preference.
-    
+
 * **feature-sitepermissions**
   * ⚠️ **This is a breaking change**: add parameters `autoplayAudible` and `autoplayInaudible` to `SitePermissionsRules`.
     * This allows autoplay settings to be controlled for specific sites, rather than globally.
-  
+
 * **concept-engine**
   * ⚠️ **This is a breaking change**: remove deprecated GeckoView setting `allowAutoplayMedia`
     * This should now be controlled for individual sites via `SitePermissionsRules`
@@ -62,7 +65,7 @@ permalink: /changelog/
 
 * **feature-contextmenu**
   * ⚠️ **This is a breaking change**: `customTabId` is renamed to `tabId`.
-  
+
 * **browser-menu**
   * Emit fact on the web extension id when a web extension menu item is clicked.
 

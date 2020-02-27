@@ -6,6 +6,7 @@
 
 package mozilla.components.feature.accounts.push
 
+import mozilla.components.feature.accounts.push.FxaPushSupportFeature.Companion.PUSH_SCOPE_PREFIX
 import mozilla.components.feature.push.AutoPushFeature
 import mozilla.components.service.fxa.manager.FxaAccountManager
 import mozilla.components.support.test.any
@@ -60,5 +61,17 @@ class FxaPushSupportFeatureTest {
 
         val cachedScope = preference(testContext).getString(PREF_FXA_SCOPE, "")
         assertEquals("testScope", cachedScope!!)
+    }
+
+    @Test
+    fun `feature generates a partially predictable push scope`() {
+        val accountManager: FxaAccountManager = mock()
+        val pushFeature: AutoPushFeature = mock()
+
+        FxaPushSupportFeature(testContext, accountManager, pushFeature)
+
+        val cachedScope = preference(testContext).getString(PREF_FXA_SCOPE, "")
+
+        assertTrue(cachedScope!!.contains(PUSH_SCOPE_PREFIX))
     }
 }
