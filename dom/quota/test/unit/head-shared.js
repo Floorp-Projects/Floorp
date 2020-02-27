@@ -98,11 +98,13 @@ function continueToNextStepSync() {
 function enableTesting() {
   SpecialPowers.setBoolPref("dom.quotaManager.testing", true);
   SpecialPowers.setBoolPref("dom.simpleDB.enabled", true);
+  SpecialPowers.setBoolPref("dom.storage.next_gen", true);
 }
 
 function resetTesting() {
   SpecialPowers.clearUserPref("dom.quotaManager.testing");
   SpecialPowers.clearUserPref("dom.simpleDB.enabled");
+  SpecialPowers.clearUserPref("dom.storage.next_gen");
 }
 
 function setGlobalLimit(globalLimit) {

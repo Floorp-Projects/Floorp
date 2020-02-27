@@ -1005,7 +1005,8 @@ pref("dom.storage.enabled", true);
 // See bug 1517090 for enabling this on Nightly.
 // See bug 1534736 for changing it to EARLY_BETA_OR_EARLIER.
 // See bug 1539835 for enabling this unconditionally.
-pref("dom.storage.next_gen", true);
+// See bug 1617997 for disabling this in 74.
+pref("dom.storage.next_gen", false);
 pref("dom.storage.shadow_writes", true);
 pref("dom.storage.snapshot_prefill", 16384);
 pref("dom.storage.snapshot_gradual_prefill", 4096);
