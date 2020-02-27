@@ -573,8 +573,6 @@ void nsNSSCertificate::GetSubjectAltNames() {
     }
     current = CERT_GetNextGeneralName(current);
   } while (current != sanNameList);  // double linked
-
-  return;
 }
 
 NS_IMETHODIMP
