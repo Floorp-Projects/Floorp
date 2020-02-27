@@ -78,13 +78,15 @@ class Connection final : public PBackgroundSDBConnectionParent {
   nsCString mOrigin;
   nsString mName;
 
+  PersistenceType mPersistenceType;
   bool mRunningRequest;
   bool mOpen;
   bool mAllowedToClose;
   bool mActorDestroyed;
 
  public:
-  explicit Connection(const PrincipalInfo& aPrincipalInfo);
+  Connection(PersistenceType aPersistenceType,
+             const PrincipalInfo& aPrincipalInfo);
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(mozilla::dom::Connection)
 
@@ -93,6 +95,8 @@ class Connection final : public PBackgroundSDBConnectionParent {
 
     return mFileStream;
   }
+
+  PersistenceType GetPersistenceType() const { return mPersistenceType; }
 
   const PrincipalInfo& GetPrincipalInfo() const {
     MOZ_ASSERT(NS_IsMainThread());
@@ -485,10 +489,16 @@ StaticAutoPtr<ConnectionArray> gOpenConnections;
  ******************************************************************************/
 
 PBackgroundSDBConnectionParent* AllocPBackgroundSDBConnectionParent(
+    const PersistenceType& aPersistenceType,
     const PrincipalInfo& aPrincipalInfo) {
   AssertIsOnBackgroundThread();
 
   if (NS_WARN_IF(QuotaClient::IsShuttingDownOnBackgroundThread())) {
+    return nullptr;
+  }
+
+  if (NS_WARN_IF(aPersistenceType == PERSISTENCE_TYPE_INVALID)) {
+    ASSERT_UNLESS_FUZZING();
     return nullptr;
   }
 
@@ -502,13 +512,14 @@ PBackgroundSDBConnectionParent* AllocPBackgroundSDBConnectionParent(
     return nullptr;
   }
 
-  RefPtr<Connection> actor = new Connection(aPrincipalInfo);
+  RefPtr<Connection> actor = new Connection(aPersistenceType, aPrincipalInfo);
 
   return actor.forget().take();
 }
 
 bool RecvPBackgroundSDBConnectionConstructor(
     PBackgroundSDBConnectionParent* aActor,
+    const PersistenceType& aPersistenceType,
     const PrincipalInfo& aPrincipalInfo) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aActor);
@@ -608,8 +619,10 @@ StreamHelper::Run() {
  * Connection
  ******************************************************************************/
 
-Connection::Connection(const PrincipalInfo& aPrincipalInfo)
+Connection::Connection(PersistenceType aPersistenceType,
+                       const PrincipalInfo& aPrincipalInfo)
     : mPrincipalInfo(aPrincipalInfo),
+      mPersistenceType(aPersistenceType),
       mRunningRequest(false),
       mOpen(false),
       mAllowedToClose(false),
@@ -1103,7 +1116,8 @@ nsresult OpenOp::OpenDirectory() {
   MOZ_ASSERT(QuotaManager::Get());
 
   mState = State::DirectoryOpenPending;
-  QuotaManager::Get()->OpenDirectory(PERSISTENCE_TYPE_DEFAULT, mGroup, mOrigin,
+  QuotaManager::Get()->OpenDirectory(GetConnection()->GetPersistenceType(),
+                                     mGroup, mOrigin,
                                      mozilla::dom::quota::Client::SDB,
                                      /* aExclusive */ false, this);
 
@@ -1119,8 +1133,8 @@ nsresult OpenOp::SendToIOThread() {
     return NS_ERROR_FAILURE;
   }
 
-  mFileStream = new FileStream(PERSISTENCE_TYPE_DEFAULT, mGroup, mOrigin,
-                               mozilla::dom::quota::Client::SDB);
+  mFileStream = new FileStream(GetConnection()->GetPersistenceType(), mGroup,
+                               mOrigin, mozilla::dom::quota::Client::SDB);
 
   QuotaManager* quotaManager = QuotaManager::Get();
   MOZ_ASSERT(quotaManager);
@@ -1152,7 +1166,7 @@ nsresult OpenOp::DatabaseWork() {
 
   nsCOMPtr<nsIFile> dbDirectory;
   nsresult rv = quotaManager->EnsureStorageAndOriginIsInitialized(
-      PERSISTENCE_TYPE_DEFAULT, mSuffix, mGroup, mOrigin,
+      GetConnection()->GetPersistenceType(), mSuffix, mGroup, mOrigin,
       mozilla::dom::quota::Client::SDB, getter_AddRefs(dbDirectory));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;

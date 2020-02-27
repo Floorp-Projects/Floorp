@@ -383,7 +383,7 @@ function getCurrentPrincipal() {
   return Cc["@mozilla.org/systemprincipal;1"].createInstance(Ci.nsIPrincipal);
 }
 
-function getSimpleDatabase(principal) {
+function getSimpleDatabase(principal, persistence) {
   let connection = Cc["@mozilla.org/dom/sdb-connection;1"].createInstance(
     Ci.nsISDBConnection
   );
@@ -392,7 +392,7 @@ function getSimpleDatabase(principal) {
     principal = getCurrentPrincipal();
   }
 
-  connection.init(principal);
+  connection.init(principal, persistence);
 
   return connection;
 }
