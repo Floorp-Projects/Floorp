@@ -237,8 +237,7 @@ class PartialConfigDict(object):
     def _write_file(self, key, value):
         filename = mozpath.join(self._datadir, key)
         with FileAvoidWrite(filename) as fh:
-            to_write = json.dumps(value, indent=4)
-            fh.write(to_write.encode(system_encoding))
+            json.dump(value, fh, indent=4, encoding=system_encoding)
         return filename
 
     def _fill_group(self, values):
@@ -252,7 +251,7 @@ class PartialConfigDict(object):
         existing_files = self._load_config_track()
 
         new_files = set()
-        for k, v in six.iteritems(values):
+        for k, v in values.iteritems():
             new_files.add(self._write_file(k, v))
 
         for filename in existing_files - new_files:

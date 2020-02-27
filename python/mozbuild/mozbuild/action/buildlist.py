@@ -7,9 +7,8 @@ if the entry does not already exist.
 
 Usage: buildlist.py <filename> <entry> [<entry> ...]
 '''
-from __future__ import absolute_import, print_function, unicode_literals
+from __future__ import absolute_import, print_function
 
-import io
 import sys
 import os
 
@@ -24,10 +23,10 @@ def addEntriesToListFile(listFile, entries):
     add each entry in |entries| to the file, unless it is already
     present."""
     ensureParentDir(listFile)
-    lock = lock_file(listFile + '.lck')
+    lock = lock_file(listFile + ".lck")
     try:
         if os.path.exists(listFile):
-            f = io.open(listFile)
+            f = open(listFile)
             existing = set(x.strip() for x in f.readlines())
             f.close()
         else:
@@ -35,8 +34,8 @@ def addEntriesToListFile(listFile, entries):
         for e in entries:
             if e not in existing:
                 existing.add(e)
-        with io.open(listFile, 'w', newline='\n') as f:
-            f.write('\n'.join(sorted(existing)) + '\n')
+        with open(listFile, 'wb') as f:
+            f.write("\n".join(sorted(existing))+"\n")
     finally:
         del lock  # Explicitly release the lock_file to free it
 

@@ -7,6 +7,8 @@ DEFINES = {
 }
 
 DEFINES['BAZ'] = '"ab\'cd"'
-DEFINES['QUX'] = False
-DEFINES['BAR'] = 7
-DEFINES['VALUE'] = value
+DEFINES.update({
+    'BAR': 7,
+    'VALUE': value,
+    'QUX': False,
+})
