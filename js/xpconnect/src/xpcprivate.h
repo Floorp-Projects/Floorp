@@ -402,6 +402,7 @@ class XPCJSContext final : public mozilla::CycleCollectedJSContext,
     IDX_CLASS_ID,
     IDX_INTERFACE_ID,
     IDX_INITIALIZER,
+    IDX_PRINT,
     IDX_TOTAL_COUNT  // just a count of the above
   };
 
