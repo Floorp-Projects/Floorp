@@ -10,6 +10,7 @@
 #include "nsContentUtils.h"
 #include "nsLayoutUtils.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/ServoBindings.h"
 #include "mozilla/dom/BrowserChild.h"
 #include "mozilla/dom/BrowsingContext.h"
@@ -121,21 +122,38 @@ already_AddRefed<DOMIntersectionObserver> DOMIntersectionObserver::Constructor(
   return observer.forget();
 }
 
+static void LazyLoadCallback(
+    const Sequence<OwningNonNull<DOMIntersectionObserverEntry>>& aEntries) {
+  for (const auto& entry : aEntries) {
+    MOZ_ASSERT(entry->Target()->IsHTMLElement(nsGkAtoms::img));
+    if (entry->IsIntersecting()) {
+      static_cast<HTMLImageElement*>(entry->Target())
+          ->StopLazyLoadingAndStartLoadIfNeeded();
+    }
+  }
+}
+
+static LengthPercentage PrefMargin(float aValue, bool aIsPercentage) {
+  return aIsPercentage ? LengthPercentage::FromPercentage(aValue / 100.0f)
+                       : LengthPercentage::FromPixels(aValue);
+}
+
 already_AddRefed<DOMIntersectionObserver>
 DOMIntersectionObserver::CreateLazyLoadObserver(nsPIDOMWindowInner* aOwner) {
-  RefPtr<DOMIntersectionObserver> observer = new DOMIntersectionObserver(
-      aOwner,
-      [](const Sequence<OwningNonNull<DOMIntersectionObserverEntry>>& entries) {
-        for (const auto& entry : entries) {
-          MOZ_ASSERT(entry->Target()->IsHTMLElement(nsGkAtoms::img));
-          if (entry->IsIntersecting()) {
-            static_cast<HTMLImageElement*>(entry->Target())
-                ->StopLazyLoadingAndStartLoadIfNeeded();
-          }
-        }
-      });
-
+  RefPtr<DOMIntersectionObserver> observer =
+      new DOMIntersectionObserver(aOwner, LazyLoadCallback);
   observer->mThresholds.AppendElement(std::numeric_limits<double>::min());
+
+#define SET_MARGIN(side_, side_lower_)                                 \
+  observer->mRootMargin.Get(eSide##side_) = PrefMargin(                \
+      StaticPrefs::dom_image_lazy_loading_root_margin_##side_lower_(), \
+      StaticPrefs::                                                    \
+          dom_image_lazy_loading_root_margin_##side_lower_##_percentage());
+  SET_MARGIN(Top, top);
+  SET_MARGIN(Right, right);
+  SET_MARGIN(Bottom, bottom);
+  SET_MARGIN(Left, left);
+#undef SET_MARGIN
 
   return observer.forget();
 }
