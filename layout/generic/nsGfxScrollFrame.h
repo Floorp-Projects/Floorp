@@ -66,6 +66,8 @@ class ScrollFrameHelper : public nsIReflowCallback {
   mozilla::ScrollStyles GetScrollStylesFromFrame() const;
   mozilla::layers::OverscrollBehaviorInfo GetOverscrollBehaviorInfo() const;
 
+  bool IsForTextControlWithNoScrollbars() const;
+
   // If a child frame was added or removed on the scrollframe,
   // reload our child frame list.
   // We need this if a scrollbar frame is recreated.
@@ -728,8 +730,6 @@ class ScrollFrameHelper : public nsIReflowCallback {
   bool HasBgAttachmentLocal() const;
   mozilla::StyleDirection GetScrolledFrameDir() const;
 
-  bool IsForTextControlWithNoScrollbars() const;
-
   // Ask APZ to smooth scroll to |aDestination|.
   // This method does not clamp the destination; callers should clamp it to
   // either the layout or the visual scroll range (APZ will happily smooth
@@ -861,6 +861,9 @@ class nsHTMLScrollFrame : public nsContainerFrame,
   }
   mozilla::ScrollStyles GetScrollStyles() const override {
     return mHelper.GetScrollStylesFromFrame();
+  }
+  bool IsForTextControlWithNoScrollbars() const final {
+    return mHelper.IsForTextControlWithNoScrollbars();
   }
   mozilla::layers::OverscrollBehaviorInfo GetOverscrollBehaviorInfo()
       const final {
@@ -1329,6 +1332,9 @@ class nsXULScrollFrame final : public nsBoxFrame,
   }
   mozilla::ScrollStyles GetScrollStyles() const final {
     return mHelper.GetScrollStylesFromFrame();
+  }
+  bool IsForTextControlWithNoScrollbars() const final {
+    return mHelper.IsForTextControlWithNoScrollbars();
   }
   mozilla::layers::OverscrollBehaviorInfo GetOverscrollBehaviorInfo()
       const final {
