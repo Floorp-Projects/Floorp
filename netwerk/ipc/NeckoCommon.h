@@ -89,8 +89,7 @@ inline bool IsNeckoChild() {
 
   if (!didCheck) {
     didCheck = true;
-    amChild = (XRE_GetProcessType() == GeckoProcessType_Content) &&
-              !recordreplay::IsMiddleman();
+    amChild = (XRE_GetProcessType() == GeckoProcessType_Content);
   }
   return amChild;
 }

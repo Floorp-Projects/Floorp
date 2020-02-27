@@ -32,11 +32,6 @@ class CrashReporterClient {
   // crash reporter needs metadata), the shmem should be parsed.
   template <typename T>
   static void InitSingleton(T* aToplevelProtocol) {
-    // The crash reporter is not enabled in recording/replaying processes.
-    if (recordreplay::IsRecordingOrReplaying()) {
-      return;
-    }
-
     Shmem shmem;
     if (!AllocShmem(aToplevelProtocol, &shmem)) {
       MOZ_DIAGNOSTIC_ASSERT(false, "failed to allocate crash reporter shmem");

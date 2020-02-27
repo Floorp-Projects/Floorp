@@ -195,10 +195,6 @@ enum class MutableScriptFlagsEnum : uint32_t {
   // Script has been reused for a clone.
   HasBeenCloned = 1 << 10,
 
-  // Whether the record/replay execution progress counter (see RecordReplay.h)
-  // should be updated as this script runs.
-  TrackRecordReplayProgress = 1 << 11,
-
   // Script has an entry in Realm::scriptCountsMap.
   HasScriptCounts = 1 << 12,
 

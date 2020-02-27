@@ -12,7 +12,7 @@
 
 #include "MutexPlatformData_windows.h"
 
-mozilla::detail::MutexImpl::MutexImpl(recordreplay::Behavior aRecorded) {
+mozilla::detail::MutexImpl::MutexImpl() {
   InitializeSRWLock(&platformData()->lock);
 }
 

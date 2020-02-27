@@ -104,8 +104,7 @@ class CostEntry {
 
   bool operator<(const CostEntry& aOther) const {
     return mCost < aOther.mCost ||
-           (mCost == aOther.mCost &&
-            recordreplay::RecordReplayValue(mSurface < aOther.mSurface));
+           (mCost == aOther.mCost && mSurface < aOther.mSurface);
   }
 
  private:

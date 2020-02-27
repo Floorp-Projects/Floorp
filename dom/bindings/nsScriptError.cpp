@@ -41,7 +41,6 @@ nsScriptErrorBase::nsScriptErrorBase()
       mOuterWindowID(0),
       mInnerWindowID(0),
       mTimeStamp(0),
-      mTimeWarpTarget(0),
       mInitializedOnMainThread(false),
       mIsFromPrivateWindow(false),
       mIsFromChromeContext(false) {}
@@ -383,18 +382,6 @@ nsScriptErrorBase::GetIsFromPrivateWindow(bool* aIsFromPrivateWindow) {
   }
 
   *aIsFromPrivateWindow = mIsFromPrivateWindow;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsScriptErrorBase::SetTimeWarpTarget(uint64_t aTarget) {
-  mTimeWarpTarget = aTarget;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsScriptErrorBase::GetTimeWarpTarget(uint64_t* aTarget) {
-  *aTarget = mTimeWarpTarget;
   return NS_OK;
 }
 

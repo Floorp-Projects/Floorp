@@ -146,7 +146,6 @@ class SingleTestMixin(object):
                 #   <subsuite> comes from "subsuite" tags in some manifest entries
                 #   <full-suite> is a unique id for the suite, matching desktop mozharness configs
                 ('mochitest-browser-chrome', 'devtools', None): 'mochitest-devtools-chrome',
-                ('mochitest-browser-chrome', 'devtools-webreplay', None): 'mochitest-devtools-chrome-webreplay', # noqa
                 ('mochitest-browser-chrome', 'remote', None): 'mochitest-remote',
                 ('mochitest-browser-chrome', 'screenshots', None): 'mochitest-browser-chrome-screenshots',  # noqa
                 ('mochitest-plain', 'media', None): 'mochitest-media',

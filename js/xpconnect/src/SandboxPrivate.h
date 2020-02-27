@@ -34,10 +34,6 @@ class SandboxPrivate : public nsIGlobalObject,
     nsIScriptObjectPrincipal* sop =
         static_cast<nsIScriptObjectPrincipal*>(sbp.forget().take());
     JS_SetPrivate(global, sop);
-
-    // Never collect the global while recording or replaying, so that the
-    // principal reference is not released at a non-deterministic point.
-    mozilla::recordreplay::HoldJSObject(global);
   }
 
   static SandboxPrivate* GetPrivate(JSObject* obj) {

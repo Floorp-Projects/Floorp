@@ -318,13 +318,7 @@ inline void XPCWrappedNative::SweepTearOffs() {
     // If this tearoff does not have a live dedicated JSObject,
     // then let's recycle it.
     if (!to->GetJSObjectPreserveColor()) {
-      RefPtr<nsISupports> native = to->TakeNative();
-      if (native && mozilla::recordreplay::IsRecordingOrReplaying()) {
-        // Finalization must be deferred while recording/replaying to
-        // match the RecordReplayRegisterDeferredFinalizeThing call
-        // when the tearoff was initialized.
-        mozilla::DeferredFinalize(native.forget().take());
-      }
+      to->SetNative(nullptr);
       to->SetInterface(nullptr);
     }
   }
