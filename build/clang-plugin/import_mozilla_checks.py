@@ -10,6 +10,7 @@ import shutil
 import errno
 
 import ThirdPartyPaths
+import ThreadAllows
 
 
 def copy_dir_contents(src, dest):
@@ -101,6 +102,17 @@ def write_third_party_paths(mozilla_path, module_path):
         ThirdPartyPaths.generate(f, tpp_txt, generated_txt)
 
 
+def generate_thread_allows(mozilla_path, module_path):
+    names = os.path.join(
+        mozilla_path, '../../build/clang-plugin/ThreadAllows.txt'
+    )
+    files = os.path.join(
+        mozilla_path, '../../build/clang-plugin/ThreadFileAllows.txt'
+    )
+    with open(os.path.join(module_path, 'ThreadAllows.h'), 'w') as f:
+        f.write(ThreadAllows.generate_allows({files, names}))
+
+
 def do_import(mozilla_path, clang_tidy_path):
     module = 'mozilla'
     module_path = os.path.join(clang_tidy_path, module)
@@ -112,6 +124,7 @@ def do_import(mozilla_path, clang_tidy_path):
 
     copy_dir_contents(mozilla_path, module_path)
     write_third_party_paths(mozilla_path, module_path)
+    generate_thread_allows(mozilla_path, module_path)
     write_cmake(module_path)
     add_item_to_cmake_section(os.path.join(module_path, '..', 'plugin',
                                            'CMakeLists.txt'),
