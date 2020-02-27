@@ -2656,7 +2656,7 @@ impl PrimitiveStore {
         self.pictures[pic_index.0].requested_composite_mode = None;
     }
 
-    pub fn prepare_prim_for_render(
+    fn prepare_prim_for_render(
         &mut self,
         prim_instance: &mut PrimitiveInstance,
         prim_spatial_node_index: SpatialNodeIndex,
