@@ -112,7 +112,7 @@ android-x86-nightly/opt:
     attributes:
         enable-full-crashsymbols: true
         nightly: true
-        # Android nightlies don't actually need tests
+        # Android nightlies don't run tests in gecko, but are needed for github projects
         skip-verify-test-packaging: true
     shipping-phase: build
     shipping-product: fennec
@@ -126,6 +126,7 @@ android-x86-nightly/opt:
     worker:
         env:
             TOOLTOOL_MANIFEST: "mobile/android/config/tooltool-manifests/android-x86/releng.manifest"
+            MOZ_AUTOMATION_PACKAGE_TESTS: "1"
     run:
         actions: [get-secrets, build, multi-l10n]
         config:
@@ -188,7 +189,7 @@ android-api-16-nightly/opt:
     attributes:
         enable-full-crashsymbols: true
         nightly: true
-        # Android nightlies don't actually need tests
+        # Android nightlies don't run tests in gecko, but are needed for github projects
         skip-verify-test-packaging: true
     shipping-phase: build
     shipping-product: fennec
@@ -202,6 +203,7 @@ android-api-16-nightly/opt:
     worker:
         env:
             TOOLTOOL_MANIFEST: "mobile/android/config/tooltool-manifests/android/releng.manifest"
+            MOZ_AUTOMATION_PACKAGE_TESTS: "1"
     run:
         actions: [get-secrets, build, multi-l10n]
         config:
@@ -287,7 +289,7 @@ android-aarch64-nightly/opt:
     attributes:
         enable-full-crashsymbols: true
         nightly: true
-        # Android nightlies don't actually need tests
+        # Android nightlies don't run tests in gecko, but are needed for github projects
         skip-verify-test-packaging: true
     shipping-phase: build
     shipping-product: fennec
@@ -301,6 +303,7 @@ android-aarch64-nightly/opt:
     worker:
         env:
             TOOLTOOL_MANIFEST: "mobile/android/config/tooltool-manifests/android/releng.manifest"
+            MOZ_AUTOMATION_PACKAGE_TESTS: "1"
     run:
         actions: [get-secrets, build, multi-l10n]
         config:
@@ -339,7 +342,7 @@ android-x86_64-nightly/opt:
     attributes:
         enable-full-crashsymbols: true
         nightly: true
-        # Android nightlies don't actually need tests
+        # Android nightlies don't run tests in gecko, but are needed for github projects
         skip-verify-test-packaging: true
     shipping-phase: build
     shipping-product: fennec
@@ -353,6 +356,7 @@ android-x86_64-nightly/opt:
     worker:
         env:
             TOOLTOOL_MANIFEST: "mobile/android/config/tooltool-manifests/android-x86/releng.manifest"
+            MOZ_AUTOMATION_PACKAGE_TESTS: "1"
     run:
         actions: [get-secrets, build, multi-l10n]
         config:
