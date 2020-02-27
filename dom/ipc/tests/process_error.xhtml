@@ -14,10 +14,6 @@
     const done = window.arguments[0].done;
     const SimpleTest = window.arguments[0].SimpleTest;
 
-    // Parse test options.
-    const url = new URL(document.location);
-    const crashType = url.searchParams.get("crashType");
-
     // Allow the browser to get connected before using the messageManager to cause
     // a crash:
     addEventListener("DOMContentLoaded", () => {
@@ -33,10 +29,6 @@
           if ('nsICrashReporter' in Ci) {
             dumpID = subject.getPropertyAsAString('dumpID');
             ok(dumpID, "dumpID is present and not an empty string");
-
-            // Let's check whether we have correctly reported OOM.
-            var isLikelyOOM = subject.getPropertyAsBool('isLikelyOOM');
-            is(isLikelyOOM, crashType == 'CRASH_OOM', 'isLikelyOOM is correct');
           }
 
           Services.obs.removeObserver(crashObserver, 'ipc:content-shutdown');
@@ -54,7 +46,7 @@
            "Expected the right browsing context id on the oop-browser-crashed event.");
       })
 
-      BrowserTestUtils.crashFrame(browser, true, false, /* Default browsing context */ null, { crashType });
+      BrowserTestUtils.crashFrame(browser, true, false);
 
       Promise.all([observerPromise, eventPromise]).then(done);
     });
