@@ -72,7 +72,6 @@ web-platform-tests:
             default: built-projects
     tier:
         by-test-platform:
-            linux.*64-asan/opt: 2
             windows10-aarch64.*: 2
             .*-qr/.*: 2  # can't be tier-1 if it's not running on integration branches
             default: default
