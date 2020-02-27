@@ -88,8 +88,8 @@ class MOZ_STACK_CLASS AnyStaticMutex {
   StaticMutex* mStaticMutex;
 };
 
-typedef detail::BaseAutoLock<AnyStaticMutex> StaticMutexAutoLock;
-typedef detail::BaseAutoUnlock<AnyStaticMutex> StaticMutexAutoUnlock;
+typedef BaseAutoLock<AnyStaticMutex> StaticMutexAutoLock;
+typedef BaseAutoUnlock<AnyStaticMutex> StaticMutexAutoUnlock;
 
 }  // namespace mozilla
 
