@@ -7902,7 +7902,7 @@ bool nsGridContainerFrame::WillHaveAtLeastOneTrackInAxis(
   const auto& gridTemplate = aAxis == eLogicalAxisBlock
                                  ? pos->mGridTemplateRows
                                  : pos->mGridTemplateColumns;
-  if (!gridTemplate.IsNone()) {
+  if (gridTemplate.IsTrackList()) {
     return true;
   }
   for (nsIFrame* child : PrincipalChildList()) {
