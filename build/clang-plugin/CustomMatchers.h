@@ -159,6 +159,35 @@ AST_MATCHER(BinaryOperator, isInWhitelistForNaNExpr) {
   return false;
 }
 
+/// This matcher will match a list of files which contain NS_NewNamedThread
+/// code or names of existing threads that we would like to ignore.
+AST_MATCHER(CallExpr, isInAllowlistForThreads) {
+
+  // Get the source location of the call
+  SourceLocation Loc = Node.getRParenLoc();
+  StringRef FileName =
+      getFilename(Finder->getASTContext().getSourceManager(), Loc);
+  for (auto thread_file : allow_thread_files) {
+    if (llvm::sys::path::rbegin(FileName)->equals(thread_file)) {
+      return true;
+    }
+  }
+
+  // Now we get the first arg (the name of the thread) and we check it.
+  const StringLiteral *nameArg =
+      dyn_cast<StringLiteral>(Node.getArg(0)->IgnoreImplicit());
+  if (nameArg) {
+    const StringRef name = nameArg->getString();
+    for (auto thread_name : allow_thread_names) {
+      if (name.equals(thread_name)) {
+        return true;
+      }
+    }
+  }
+
+  return false;
+}
+
 /// This matcher will match all accesses to AddRef or Release methods.
 AST_MATCHER(MemberExpr, isAddRefOrRelease) {
   ValueDecl *Member = Node.getMemberDecl();
