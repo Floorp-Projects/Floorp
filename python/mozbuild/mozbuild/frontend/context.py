@@ -16,6 +16,7 @@ contain, you've come to the right place.
 
 from __future__ import absolute_import, print_function, unicode_literals
 
+import operator
 import os
 
 from collections import (
@@ -647,9 +648,9 @@ def Enum(*values):
 class PathMeta(type):
     """Meta class for the Path family of classes.
 
-    It handles calling __new__ and __init__ with the right arguments
-    in cases where a Path is instantiated with another instance of
-    Path instead of having received a context.
+    It handles calling __new__ with the right arguments in cases where a Path
+    is instantiated with another instance of Path instead of having received a
+    context.
 
     It also makes Path(context, value) instantiate one of the
     subclasses depending on the value, allowing callers to do
@@ -675,7 +676,7 @@ class PathMeta(type):
         return super(PathMeta, cls).__call__(context, value)
 
 
-class Path(ContextDerivedValue, six.text_type):
+class Path(six.with_metaclass(PathMeta, ContextDerivedValue, six.text_type)):
     """Stores and resolves a source path relative to a given context
 
     This class is used as a backing type for some of the sandbox variables.
@@ -686,16 +687,11 @@ class Path(ContextDerivedValue, six.text_type):
       - '!objdir/relative/paths'
       - '%/filesystem/absolute/paths'
     """
-    __metaclass__ = PathMeta
-
     def __new__(cls, context, value=None):
-        return super(Path, cls).__new__(cls, value)
-
-    def __init__(self, context, value=None):
-        # Only subclasses should be instantiated.
-        assert self.__class__ != Path
+        self = super(Path, cls).__new__(cls, value)
         self.context = context
         self.srcdir = context.srcdir
+        return self
 
     def join(self, *p):
         """ContextDerived equivalent of mozpath.join(self, *p), returning a
@@ -708,35 +704,28 @@ class Path(ContextDerivedValue, six.text_type):
         # switch from Python 2 to 3.
         raise AssertionError()
 
-    def __eq__(self, other):
+    def _cmp(self, other, op):
         if isinstance(other, Path) and self.srcdir != other.srcdir:
-            return self.full_path == other.full_path
-        return six.text_type(self) == other
+            return op(self.full_path, other.full_path)
+        return op(six.text_type(self), other)
+
+    def __eq__(self, other):
+        return self._cmp(other, operator.eq)
 
     def __ne__(self, other):
-        if isinstance(other, Path) and self.srcdir != other.srcdir:
-            return self.full_path != other.full_path
-        return six.text_type(self) != other
+        return self._cmp(other, operator.ne)
 
     def __lt__(self, other):
-        if isinstance(other, Path) and self.srcdir != other.srcdir:
-            return self.full_path < other.full_path
-        return six.text_type(self) < other
+        return self._cmp(other, operator.lt)
 
     def __gt__(self, other):
-        if isinstance(other, Path) and self.srcdir != other.srcdir:
-            return self.full_path > other.full_path
-        return six.text_type(self) > other
+        return self._cmp(other, operator.gt)
 
     def __le__(self, other):
-        if isinstance(other, Path) and self.srcdir != other.srcdir:
-            return self.full_path <= other.full_path
-        return six.text_type(self) <= other
+        return self._cmp(other, operator.le)
 
     def __ge__(self, other):
-        if isinstance(other, Path) and self.srcdir != other.srcdir:
-            return self.full_path >= other.full_path
-        return six.text_type(self) >= other
+        return self._cmp(other, operator.ge)
 
     def __repr__(self):
         return '<%s (%s)%s>' % (self.__class__.__name__, self.srcdir, self)
@@ -752,12 +741,12 @@ class Path(ContextDerivedValue, six.text_type):
 class SourcePath(Path):
     """Like Path, but limited to paths in the source directory."""
 
-    def __init__(self, context, value):
+    def __new__(cls, context, value=None):
         if value.startswith('!'):
             raise ValueError('Object directory paths are not allowed')
         if value.startswith('%'):
             raise ValueError('Filesystem absolute paths are not allowed')
-        super(SourcePath, self).__init__(context, value)
+        self = super(SourcePath, cls).__new__(cls, context, value)
 
         if value.startswith('/'):
             path = None
@@ -772,6 +761,7 @@ class SourcePath(Path):
         else:
             path = mozpath.join(self.srcdir, value)
         self.full_path = mozpath.normpath(path)
+        return self
 
     @memoized_property
     def translated(self):
@@ -793,10 +783,12 @@ class RenamedSourcePath(SourcePath):
     and is not supported by the RecursiveMake backend.
     """
 
-    def __init__(self, context, value):
+    def __new__(cls, context, value):
         assert isinstance(value, tuple)
-        source, self._target_basename = value
-        super(RenamedSourcePath, self).__init__(context, source)
+        source, target_basename = value
+        self = super(RenamedSourcePath, cls).__new__(cls, context, source)
+        self._target_basename = target_basename
+        return self
 
     @property
     def target_basename(self):
@@ -806,29 +798,30 @@ class RenamedSourcePath(SourcePath):
 class ObjDirPath(Path):
     """Like Path, but limited to paths in the object directory."""
 
-    def __init__(self, context, value=None):
+    def __new__(cls, context, value=None):
         if not value.startswith('!'):
             raise ValueError('Object directory paths must start with ! prefix')
-        super(ObjDirPath, self).__init__(context, value)
+        self = super(ObjDirPath, cls).__new__(cls, context, value)
 
         if value.startswith('!/'):
             path = mozpath.join(context.config.topobjdir, value[2:])
         else:
             path = mozpath.join(context.objdir, value[1:])
         self.full_path = mozpath.normpath(path)
+        return self
 
 
 class AbsolutePath(Path):
     """Like Path, but allows arbitrary paths outside the source and object directories."""
 
-    def __init__(self, context, value=None):
+    def __new__(cls, context, value=None):
         if not value.startswith('%'):
             raise ValueError('Absolute paths must start with % prefix')
         if not os.path.isabs(value[1:]):
             raise ValueError('Path \'%s\' is not absolute' % value[1:])
-        super(AbsolutePath, self).__init__(context, value)
-
+        self = super(AbsolutePath, cls).__new__(cls, context, value)
         self.full_path = mozpath.normpath(value[1:])
+        return self
 
 
 @memoize
