@@ -284,7 +284,7 @@ impl<'a> Drop for nsAStringBulkWriteHandle<'a> {
         // https://www.unicode.org/reports/tr36/#Substituting_for_Ill_Formed_Subsequences
         // for closely related scenario.
         unsafe {
-            let mut this = self.string.as_repr();
+            let mut this = self.string.as_repr_mut();
             this.as_mut().length = 1u32;
             *(this.as_mut().data.as_mut()) = 0xFFFDu16;
             *(this.as_mut().data.as_ptr().offset(1isize)) = 0;
@@ -313,7 +313,7 @@ impl<'a> Drop for nsACStringBulkWriteHandle<'a> {
         // https://www.unicode.org/reports/tr36/#Substituting_for_Ill_Formed_Subsequences
         // for closely related scenario.
         unsafe {
-            let mut this = self.string.as_repr();
+            let mut this = self.string.as_repr_mut();
             if self.capacity >= 3 {
                 this.as_mut().length = 3u32;
                 *(this.as_mut().data.as_mut()) = 0xEFu8;
@@ -379,7 +379,7 @@ macro_rules! define_string_types {
                     data: unsafe { ptr::NonNull::new_unchecked(&NUL as *const _ as *mut _) },
                     length: 0,
                     dataflags: DataFlags::TERMINATED | DataFlags::LITERAL,
-                    classflags: classflags,
+                    classflags,
                 }
             }
         }
@@ -415,7 +415,7 @@ macro_rules! define_string_types {
 
         impl<'a> $BulkWriteHandle<'a> {
             fn new(string: &'a mut $AString, capacity: usize) -> Self {
-                $BulkWriteHandle{ string: string, capacity: capacity }
+                $BulkWriteHandle{ string, capacity }
             }
 
             pub unsafe fn restart_bulk_write(&mut self,
@@ -449,7 +449,7 @@ macro_rules! define_string_types {
                     }
                 }
                 unsafe {
-                    let mut this = self.string.as_repr();
+                    let mut this = self.string.as_repr_mut();
                     this.as_mut().length = length as u32;
                     *(this.as_mut().data.as_ptr().offset(length as isize)) = 0;
                     if cfg!(debug_assertions) {
@@ -473,7 +473,7 @@ macro_rules! define_string_types {
 
             pub fn as_mut_slice(&mut self) -> &mut [$char_t] {
                 unsafe {
-                    let mut this = self.string.as_repr();
+                    let mut this = self.string.as_repr_mut();
                     slice::from_raw_parts_mut(this.as_mut().data.as_ptr(), self.capacity)
                 }
             }
@@ -657,29 +657,35 @@ macro_rules! define_string_types {
                 }
             }
 
-            fn as_repr(&mut self) -> ptr::NonNull<$StringRepr> {
+            fn as_repr(&self) -> &$StringRepr {
+                // All $AString values point to a struct prefix which is
+                // identical to $StringRepr, this we can transmute `self`
+                // into $StringRepr to get the reference to the underlying
+                // data.
+                unsafe {
+                    &*(self as *const _ as *const $StringRepr)
+                }
+            }
+
+            fn as_repr_mut(&mut self) -> ptr::NonNull<$StringRepr> {
                 unsafe { ptr::NonNull::new_unchecked(self as *mut _ as *mut $StringRepr)}
             }
 
-            /// If this is an autostring, returns the capacity (excluding the zero
-            /// terminator) of the inline buffer within `Some()`. Otherwise returns
-            /// `None`.
-            pub fn inline_capacity(&self) -> Option<usize> {
-                if unsafe {
-                    // All $AString values point to a struct prefix which is
-                    // identical to $StringRepr, this we can transmute `self`
-                    // into $StringRepr to get the reference to the underlying
-                    // data.
-                    let this: &$StringRepr = mem::transmute(self);
-                    this.classflags.contains(ClassFlags::INLINE)
-                } {
-                    unsafe {
-                        let this: &$AutoStringRepr = mem::transmute(self);
-                        Some(this.inline_capacity as usize)
-                    }
-                } else {
-                    None
+            fn as_auto_string_repr(&self) -> Option<&$AutoStringRepr> {
+                if !self.as_repr().classflags.contains(ClassFlags::INLINE) {
+                    return None;
                 }
+
+                unsafe {
+                    Some(&*(self as *const _ as *const $AutoStringRepr))
+                }
+            }
+
+            /// If this is an autostring, returns the capacity (excluding the
+            /// zero terminator) of the inline buffer within `Some()`. Otherwise
+            /// returns `None`.
+            pub fn inline_capacity(&self) -> Option<usize> {
+                Some(self.as_auto_string_repr()?.inline_capacity as usize)
             }
         }
 
@@ -1086,6 +1092,13 @@ define_string_types! {
 }
 
 impl nsACString {
+    /// Gets a CString as an utf-8 str or a String, trying to avoid copies, and
+    /// replacing invalid unicode sequences with replacement characters.
+    #[inline]
+    pub fn to_utf8(&self) -> borrow::Cow<str> {
+        String::from_utf8_lossy(&self[..])
+    }
+
     #[inline]
     pub unsafe fn as_str_unchecked(&self) -> &str {
         if cfg!(debug_assertions) {
@@ -1142,13 +1155,13 @@ impl fmt::Write for nsACString {
 
 impl fmt::Display for nsACString {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
-        fmt::Display::fmt(&String::from_utf8_lossy(&self[..]), f)
+        fmt::Display::fmt(&self.to_utf8(), f)
     }
 }
 
 impl fmt::Debug for nsACString {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
-        fmt::Debug::fmt(&String::from_utf8_lossy(&self[..]), f)
+        fmt::Debug::fmt(&self.to_utf8(), f)
     }
 }
 
@@ -1245,15 +1258,26 @@ impl fmt::Write for nsAString {
     }
 }
 
+impl nsAString {
+    /// Turns this utf-16 string into a string, replacing invalid unicode
+    /// sequences with replacement characters.
+    ///
+    /// This is needed because the default ToString implementation goes through
+    /// fmt::Display, and thus allocates the string twice.
+    pub fn to_string(&self) -> String {
+        String::from_utf16_lossy(&self[..])
+    }
+}
+
 impl fmt::Display for nsAString {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
-        fmt::Display::fmt(&String::from_utf16_lossy(&self[..]), f)
+        fmt::Display::fmt(&self.to_string(), f)
     }
 }
 
 impl fmt::Debug for nsAString {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
-        fmt::Debug::fmt(&String::from_utf16_lossy(&self[..]), f)
+        fmt::Debug::fmt(&self.to_string(), f)
     }
 }
 
