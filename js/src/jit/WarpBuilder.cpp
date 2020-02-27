@@ -128,7 +128,7 @@ bool WarpBuilder::buildPrologue() {
 }
 
 bool WarpBuilder::buildBody() {
-  for (const BytecodeLocation& it : AllBytecodesIterable(script_)) {
+  for (BytecodeLocation loc : AllBytecodesIterable(script_)) {
     if (mirGen_.shouldCancel("WarpBuilder (opcode loop)")) {
       return false;
     }
@@ -141,13 +141,13 @@ bool WarpBuilder::buildBody() {
       return false;
     }
 
-    JSOp op = it.getOp();
+    JSOp op = loc.getOp();
 
-#define BUILD_OP(OP)                           \
-  case JSOp::OP:                               \
-    if (MOZ_UNLIKELY(!this->build_##OP(it))) { \
-      return false;                            \
-    }                                          \
+#define BUILD_OP(OP)                            \
+  case JSOp::OP:                                \
+    if (MOZ_UNLIKELY(!this->build_##OP(loc))) { \
+      return false;                             \
+    }                                           \
     break;
     switch (op) {
       WARP_OPCODE_LIST(BUILD_OP)
@@ -163,14 +163,14 @@ bool WarpBuilder::buildBody() {
 
 bool WarpBuilder::buildEpilogue() { return true; }
 
-bool WarpBuilder::build_Nop(const BytecodeLocation&) { return true; }
+bool WarpBuilder::build_Nop(BytecodeLocation) { return true; }
 
-bool WarpBuilder::build_Zero(const BytecodeLocation&) {
+bool WarpBuilder::build_Zero(BytecodeLocation) {
   pushConstant(Int32Value(0));
   return true;
 }
 
-bool WarpBuilder::build_Return(const BytecodeLocation&) {
+bool WarpBuilder::build_Return(BytecodeLocation) {
   MDefinition* def = current->pop();
 
   MReturn* ret = MReturn::New(alloc(), def);
@@ -180,7 +180,7 @@ bool WarpBuilder::build_Return(const BytecodeLocation&) {
   return true;
 }
 
-bool WarpBuilder::build_RetRval(const BytecodeLocation&) {
+bool WarpBuilder::build_RetRval(BytecodeLocation) {
   MDefinition* rval;
   if (script_->noScriptRval()) {
     rval = constant(UndefinedValue());
