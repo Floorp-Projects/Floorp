@@ -42,6 +42,15 @@ function xhrEvent(groupID, eventType) {
     filter: "xhr",
   };
 }
+
+function webSocketEvent(groupID, eventType) {
+  return {
+    ...generalEvent(groupID, eventType),
+    message: `WebSocket '${eventType}' event`,
+    filter: "websocket",
+  };
+}
+
 function workerEvent(eventType) {
   return {
     ...generalEvent("worker", eventType),
@@ -268,6 +277,15 @@ const AVAILABLE_BREAKPOINTS = [
     ],
   },
   {
+    name: "WebSocket",
+    items: [
+      webSocketEvent("websocket", "open"),
+      webSocketEvent("websocket", "message"),
+      webSocketEvent("websocket", "error"),
+      webSocketEvent("websocket", "close"),
+    ],
+  },
+  {
     name: "Worker",
     items: [
       workerEvent("message"),
@@ -323,6 +341,8 @@ for (const eventBP of FLAT_EVENTS) {
       targetTypes = ["global"];
     } else if (filter === "xhr") {
       targetTypes = ["xhr"];
+    } else if (filter === "websocket") {
+      targetTypes = ["websocket"];
     } else if (filter === "worker") {
       targetTypes = ["worker"];
     } else if (filter === "general") {
