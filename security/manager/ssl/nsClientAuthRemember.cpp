@@ -25,8 +25,8 @@
 using namespace mozilla;
 using namespace mozilla::psm;
 
-NS_IMPL_ISUPPORTS(nsClientAuthRememberService, nsIClientAuthRemember,
-                  nsIObserver)
+NS_IMPL_ISUPPORTS(nsClientAuthRememberService, nsIObserver,
+                  nsISupportsWeakReference)
 
 nsClientAuthRememberService::nsClientAuthRememberService()
     : monitor("nsClientAuthRememberService.monitor") {}
@@ -44,8 +44,7 @@ nsresult nsClientAuthRememberService::Init() {
   nsCOMPtr<nsIObserverService> observerService =
       mozilla::services::GetObserverService();
   if (observerService) {
-    observerService->AddObserver(this, "profile-before-change", false);
-    observerService->AddObserver(this, "last-pb-context-exited", false);
+    observerService->AddObserver(this, "profile-before-change", true);
   }
 
   return NS_OK;
@@ -61,46 +60,36 @@ nsClientAuthRememberService::Observe(nsISupports* aSubject, const char* aTopic,
 
     ReentrantMonitorAutoEnter lock(monitor);
     RemoveAllFromMemory();
-  } else if (!nsCRT::strcmp(aTopic, "last-pb-context-exited")) {
-    ReentrantMonitorAutoEnter lock(monitor);
-    ClearPrivateDecisions();
   }
 
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsClientAuthRememberService::ClearRememberedDecisions() {
+void nsClientAuthRememberService::ClearRememberedDecisions() {
   ReentrantMonitorAutoEnter lock(monitor);
   RemoveAllFromMemory();
-  return NS_OK;
 }
 
-nsresult nsClientAuthRememberService::ClearPrivateDecisions() {
-  ReentrantMonitorAutoEnter lock(monitor);
-  for (auto iter = mSettingsTable.Iter(); !iter.Done(); iter.Next()) {
-    nsCString entryKey = iter.Get()->mEntryKey;
-    const int32_t separator = entryKey.Find(":", false, 0, -1);
-    nsCString suffix;
-    if (separator >= 0) {
-      entryKey.Left(suffix, separator);
-    } else {
-      suffix = entryKey;
-    }
-
-    if (OriginAttributes::IsPrivateBrowsing(suffix)) {
-      iter.Remove();
-    }
+void nsClientAuthRememberService::ClearAllRememberedDecisions() {
+  RefPtr<nsClientAuthRememberService> svc =
+      PublicSSLState()->GetClientAuthRememberService();
+  MOZ_ASSERT(svc);
+  if (svc) {
+    svc->ClearRememberedDecisions();
   }
-  return NS_OK;
+
+  svc = PrivateSSLState()->GetClientAuthRememberService();
+  MOZ_ASSERT(svc);
+  if (svc) {
+    svc->ClearRememberedDecisions();
+  }
 }
 
 void nsClientAuthRememberService::RemoveAllFromMemory() {
   mSettingsTable.Clear();
 }
 
-NS_IMETHODIMP
-nsClientAuthRememberService::RememberDecision(
+nsresult nsClientAuthRememberService::RememberDecision(
     const nsACString& aHostName, const OriginAttributes& aOriginAttributes,
     CERTCertificate* aServerCert, CERTCertificate* aClientCert) {
   // aClientCert == nullptr means: remember that user does not want to use a
@@ -134,8 +123,7 @@ nsClientAuthRememberService::RememberDecision(
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsClientAuthRememberService::HasRememberedDecision(
+nsresult nsClientAuthRememberService::HasRememberedDecision(
     const nsACString& aHostName, const OriginAttributes& aOriginAttributes,
     CERTCertificate* aCert, nsACString& aCertDBKey, bool* aRetVal) {
   if (aHostName.IsEmpty()) return NS_ERROR_INVALID_ARG;
