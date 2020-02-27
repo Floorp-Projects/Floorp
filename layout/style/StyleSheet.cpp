@@ -102,9 +102,6 @@ already_AddRefed<StyleSheet> StyleSheet::Constructor(
   }
 
   // 1. Construct a sheet and set its properties (see spec).
-  // TODO(nordzilla): Various issues with the spec's handling of aOptions:
-  // * https://github.com/WICG/construct-stylesheets/issues/113
-  // * https://github.com/WICG/construct-stylesheets/issues/105
   auto sheet =
       MakeRefPtr<StyleSheet>(css::SheetParsingMode::eAuthorSheetFeatures,
                              CORSMode::CORS_NONE, dom::SRIMetadata());
@@ -114,7 +111,6 @@ already_AddRefed<StyleSheet> StyleSheet::Constructor(
   nsIURI* originalURI = nullptr;
   sheet->SetURIs(sheetURI, originalURI, baseURI);
 
-  sheet->SetTitle(aOptions.mTitle);
   sheet->SetPrincipal(constructorDocument->NodePrincipal());
   sheet->SetReferrerInfo(constructorDocument->GetReferrerInfo());
   sheet->mConstructorDocument = constructorDocument;
