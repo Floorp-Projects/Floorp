@@ -16,7 +16,7 @@ extern "C" {
 #endif
 const CFStringRef kSecTransformInputAttributeName = CFSTR("INPUT");
 typedef CFTypeRef SecTransformRef;
-typedef struct OpaqueSecKeyRef* SecKeyRef;
+typedef OpaqueSecKeyRef* SecKeyRef;
 
 typedef SecTransformRef (*SecTransformCreateReadTransformWithReadStreamFunc)(
     CFReadStreamRef inputStream);
