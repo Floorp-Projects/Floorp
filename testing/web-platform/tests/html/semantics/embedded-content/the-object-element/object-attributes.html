@@ -28,10 +28,10 @@
       assert_equals(obj2.contentWindow, null, "The contentWindow of the object element should be null when it type attribute starts with 'image/'.");
       obj1.setAttribute("name", "o1");
       assert_equals(obj1.name, "o1", "The name of the object element should be 'o1'.");
-      assert_equals(obj1.contentWindow.name, "o1", "The contentWindow's name of the object element should be 'o1'.");
+      assert_equals(obj1.contentWindow.name, "o", "The contentWindow's name of the object element should still be 'o'.");
       obj1.removeAttribute("name");
       assert_equals(obj1.name, "", "The name of the object element should be empty string.");
-      assert_equals(obj1.contentWindow.name, "", "The contentWindow's name of the object element should be empty string.");
+      assert_equals(obj1.contentWindow.name, "o", "The contentWindow's name of the object element should still be 'o'.");
     });
     t1.done()
 
