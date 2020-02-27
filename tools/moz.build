@@ -62,6 +62,8 @@ SPHINX_TREES['try'] = 'tryselect/docs'
 
 SPHINX_TREES['fuzzing'] = 'fuzzing/docs'
 
+SPHINX_TREES['sanitizer'] = 'sanitizer/docs'
+
 with Files('tryselect/docs/**'):
     SCHEDULES.exclusive = ['docs']
 
