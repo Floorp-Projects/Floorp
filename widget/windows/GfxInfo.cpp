@@ -1261,10 +1261,6 @@ const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
         OperatingSystem::Windows, DeviceFamily::AtiAll,
         GfxDriverInfo::allFeatures, nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION,
         DRIVER_LESS_THAN, V(8, 56, 1, 15), "FEATURE_FAILURE_AMD1", "8.56.1.15");
-    APPEND_TO_DRIVER_BLOCKLIST(
-        OperatingSystem::Windows, DeviceFamily::AmdAll,
-        GfxDriverInfo::allFeatures, nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION,
-        DRIVER_LESS_THAN, V(8, 56, 1, 15), "FEATURE_FAILURE_AMD2", "8.56.1.15");
 
     // Bug 1099252
     APPEND_TO_DRIVER_BLOCKLIST2(
@@ -1287,7 +1283,7 @@ const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
     // gpu use with this particular (very old) driver, restricted
     // to Win10 since we only have reports from that platform.
     APPEND_TO_DRIVER_BLOCKLIST2(
-        OperatingSystem::Windows10, DeviceFamily::AmdAll,
+        OperatingSystem::Windows10, DeviceFamily::AtiAll,
         GfxDriverInfo::allFeatures, nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION,
         DRIVER_EQUAL, V(22, 19, 162, 4), "FEATURE_FAILURE_BUG_1587155");
 
@@ -1321,17 +1317,12 @@ const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
         GfxDriverInfo::allFeatures, nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION,
         DRIVER_BETWEEN_INCLUSIVE_START, V(8, 982, 0, 0), V(8, 983, 0, 0),
         "FEATURE_FAILURE_BUG_783517_AMD", "!= 8.982.*.*");
-    APPEND_TO_DRIVER_BLOCKLIST_RANGE(
-        OperatingSystem::Windows8, DeviceFamily::AmdAll,
-        GfxDriverInfo::allFeatures, nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION,
-        DRIVER_BETWEEN_INCLUSIVE_START, V(8, 982, 0, 0), V(8, 983, 0, 0),
-        "FEATURE_FAILURE_BUG_783517_ATI", "!= 8.982.*.*");
 
     /*
      *  Bug 1599981 - crashes in AMD driver on Windows 10
      */
     APPEND_TO_DRIVER_BLOCKLIST2(
-        OperatingSystem::Windows10, DeviceFamily::AmdRadeonCaicos,
+        OperatingSystem::Windows10, DeviceFamily::RadeonCaicos,
         nsIGfxInfo::FEATURE_DIRECT3D_11_LAYERS,
         nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION, DRIVER_LESS_THAN,
         V(15, 301, 1901, 0), "FEATURE_FAILURE_BUG_1599981");
@@ -1347,11 +1338,6 @@ const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
         nsIGfxInfo::FEATURE_OPENGL_LAYERS, nsIGfxInfo::FEATURE_DISCOURAGED,
         DRIVER_LESS_THAN, GfxDriverInfo::allDriverVersions,
         "FEATURE_FAILURE_OGL_ATI_DIS");
-    APPEND_TO_DRIVER_BLOCKLIST2(
-        OperatingSystem::Windows, DeviceFamily::AmdAll,
-        nsIGfxInfo::FEATURE_OPENGL_LAYERS, nsIGfxInfo::FEATURE_DISCOURAGED,
-        DRIVER_LESS_THAN, GfxDriverInfo::allDriverVersions,
-        "FEATURE_FAILURE_OGL_AMD_DIS");
 
 /*
  * Intel entries
@@ -1539,12 +1525,6 @@ const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
         nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION,
         DRIVER_BETWEEN_INCLUSIVE_START, V(14, 1, 0, 0), V(14, 2, 0, 0),
         "FEATURE_FAILURE_BUG_984488_1", "ATI Catalyst 14.6+");
-    APPEND_TO_DRIVER_BLOCKLIST_RANGE(
-        OperatingSystem::Windows, DeviceFamily::AmdAll,
-        nsIGfxInfo::FEATURE_DIRECT2D,
-        nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION,
-        DRIVER_BETWEEN_INCLUSIVE_START, V(14, 1, 0, 0), V(14, 2, 0, 0),
-        "FEATURE_FAILURE_BUG_984488_2", "ATI Catalyst 14.6+");
 
     /* Disable D3D9 layers on NVIDIA 6100/6150/6200 series due to glitches
      * whilst scrolling. See bugs: 612007, 644787 & 645872.
@@ -1663,7 +1643,7 @@ const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
 
     // Older than 5-15-2016
     APPEND_TO_DRIVER_BLOCKLIST2(
-        OperatingSystem::Windows, DeviceFamily::AmdAll,
+        OperatingSystem::Windows, DeviceFamily::AtiAll,
         nsIGfxInfo::FEATURE_WEBGL_OPENGL, nsIGfxInfo::FEATURE_DISCOURAGED,
         DRIVER_LESS_THAN, V(16, 200, 1010, 1002), "WEBGL_NATIVE_GL_OLD_AMD");
 
@@ -1684,7 +1664,7 @@ const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
 
     // All AMD.
     APPEND_TO_DRIVER_BLOCKLIST2(
-        OperatingSystem::Windows, DeviceFamily::AmdAll,
+        OperatingSystem::Windows, DeviceFamily::AtiAll,
         nsIGfxInfo::FEATURE_DX_INTEROP2,
         nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION, DRIVER_LESS_THAN,
         GfxDriverInfo::allDriverVersions, "DX_INTEROP2_AMD_CRASH");
@@ -1930,9 +1910,6 @@ nsresult GfxInfo::GetFeatureStatusImpl(
             nsCaseInsensitiveStringComparator()) &&
         !adapterVendorID.Equals(
             GfxDriverInfo::GetDeviceVendor(DeviceVendor::NVIDIA),
-            nsCaseInsensitiveStringComparator()) &&
-        !adapterVendorID.Equals(
-            GfxDriverInfo::GetDeviceVendor(DeviceVendor::AMD),
             nsCaseInsensitiveStringComparator()) &&
         !adapterVendorID.Equals(
             GfxDriverInfo::GetDeviceVendor(DeviceVendor::ATI),
