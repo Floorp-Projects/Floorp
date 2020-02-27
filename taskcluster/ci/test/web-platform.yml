@@ -146,7 +146,6 @@ web-platform-tests-wdspec-headless:
     schedules-component: web-platform-tests-wdspec
     treeherder-symbol: W(WdH)
     chunks: 2
-    tier: 2
     mozharness:
         extra-options:
             by-test-platform:
