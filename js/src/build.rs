@@ -2,8 +2,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-extern crate num_cpus;
 extern crate glob;
+extern crate num_cpus;
 
 use std::env;
 use std::path;
@@ -34,28 +34,29 @@ fn main() {
 
     let python = env::var("PYTHON3").unwrap_or("python3".into());
     let mut cmd = Command::new(&python);
-    cmd.args(&["./devtools/automation/autospider.py",
-               // Only build SpiderMonkey, don't run all the tests.
-               "--build-only",
-               // Disable Mozilla's jemalloc; Rust has its own jemalloc that we
-               // can swap in instead and everything using a single malloc is
-               // good.
-               "--no-jemalloc",
-               // Don't try to clobber the output directory. Without
-               // this option, the build will fail because the directory
-               // already exists but wasn't created by autospider.
-               "--dep",
-               "--objdir", &out_dir,
-               &variant])
-        .env("NO_RUST_PANIC_HOOK", "1")
-        .env("SOURCE", &js_src)
-        .env("PWD", &js_src)
-        .stdout(Stdio::inherit())
-        .stderr(Stdio::inherit());
+    cmd.args(&[
+        "./devtools/automation/autospider.py",
+        // Only build SpiderMonkey, don't run all the tests.
+        "--build-only",
+        // Disable Mozilla's jemalloc; Rust has its own jemalloc that we
+        // can swap in instead and everything using a single malloc is
+        // good.
+        "--no-jemalloc",
+        // Don't try to clobber the output directory. Without
+        // this option, the build will fail because the directory
+        // already exists but wasn't created by autospider.
+        "--dep",
+        "--objdir",
+        &out_dir,
+        &variant,
+    ])
+    .env("NO_RUST_PANIC_HOOK", "1")
+    .env("SOURCE", &js_src)
+    .env("PWD", &js_src)
+    .stdout(Stdio::inherit())
+    .stderr(Stdio::inherit());
     println!("Running command: {:?}", cmd);
-    let result = cmd
-        .status()
-        .expect("Should spawn autospider OK");
+    let result = cmd.status().expect("Should spawn autospider OK");
     assert!(result.success(), "autospider should exit OK");
 
     println!("cargo:rustc-link-search=native={}/js/src/build", out_dir);
@@ -82,8 +83,7 @@ fn main() {
 /// Find if Spidermonkey built the Spidermonkey Rust library, and add it to the
 /// link if it was the case.
 fn maybe_add_spidermonkey_rust_lib() {
-    let out_dir = env::var("OUT_DIR")
-        .expect("cargo should invoke us with the OUT_DIR env var set");
+    let out_dir = env::var("OUT_DIR").expect("cargo should invoke us with the OUT_DIR env var set");
 
     let mut target_build_dir = path::PathBuf::from(out_dir);
     target_build_dir.push("../../");
@@ -91,17 +91,19 @@ fn maybe_add_spidermonkey_rust_lib() {
     let mut build_dir = target_build_dir.display().to_string();
     build_dir.push_str("mozjs_sys-*/out/*/debug");
 
-    let entries = match glob::glob(&build_dir){
-        Err(_) => { return; }
-        Ok(entries) => entries
+    let entries = match glob::glob(&build_dir) {
+        Err(_) => {
+            return;
+        }
+        Ok(entries) => entries,
     };
 
     for entry in entries {
         if let Ok(path) = entry {
-            let path = path.canonicalize()
+            let path = path
+                .canonicalize()
                 .expect("Should canonicalize debug build path");
-            let path = path.to_str()
-                .expect("Should be utf8");
+            let path = path.to_str().expect("Should be utf8");
             println!("cargo:rustc-link-search=native={}", path);
             println!("cargo:rustc-link-lib=static=jsrust");
             return;

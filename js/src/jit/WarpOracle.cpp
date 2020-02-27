@@ -60,8 +60,8 @@ AbortReasonOr<WarpScriptSnapshot*> WarpOracle::createScriptSnapshot(
 
   // Analyze the bytecode to look for opcodes we can't compile yet. Eventually
   // this loop will also be responsible for copying IC data.
-  for (const BytecodeLocation& it : AllBytecodesIterable(script)) {
-    JSOp op = it.getOp();
+  for (BytecodeLocation loc : AllBytecodesIterable(script)) {
+    JSOp op = loc.getOp();
     switch (op) {
 #define OP_CASE(OP) case JSOp::OP:
       WARP_OPCODE_LIST(OP_CASE)

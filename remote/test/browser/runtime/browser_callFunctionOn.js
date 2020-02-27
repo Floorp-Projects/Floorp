@@ -141,23 +141,29 @@ async function testReturnByValue({ Runtime }, executionContextId) {
   }
 
   // Test non-serializable values
-  const nonSerializableNumbers = ["-0", "NaN", "Infinity", "-Infinity"];
-  for (const unserializableValue of nonSerializableNumbers) {
-    const { result } = await Runtime.callFunctionOn({
-      executionContextId,
-      functionDeclaration: "a => a",
-      arguments: [{ unserializableValue }],
-      returnByValue: true,
-    });
-    Assert.deepEqual(
-      result,
-      {
-        type: "number",
-        unserializableValue,
-        description: unserializableValue,
-      },
-      "The returned value is the same than the input value"
-    );
+  const nonSerializableNumbers = {
+    number: ["-0", "NaN", "Infinity", "-Infinity"],
+    bigint: ["42n"],
+  };
+
+  for (const type in nonSerializableNumbers) {
+    for (const unserializableValue of nonSerializableNumbers[type]) {
+      const { result } = await Runtime.callFunctionOn({
+        executionContextId,
+        functionDeclaration: "a => a",
+        arguments: [{ unserializableValue }],
+        returnByValue: true,
+      });
+      Assert.deepEqual(
+        result,
+        {
+          type,
+          unserializableValue,
+          description: unserializableValue,
+        },
+        "The returned value is the same than the input value"
+      );
+    }
   }
 
   // Test undefined individually as JSON.stringify doesn't return a string
