@@ -57,7 +57,7 @@ class MOZ_STACK_CLASS WarpBuilder {
   MOZ_MUST_USE bool buildBody();
   MOZ_MUST_USE bool buildEpilogue();
 
-#define BUILD_OP(OP) bool build_##OP(const BytecodeLocation& loc);
+#define BUILD_OP(OP) bool build_##OP(BytecodeLocation loc);
   WARP_OPCODE_LIST(BUILD_OP)
 #undef BUILD_OP
 
