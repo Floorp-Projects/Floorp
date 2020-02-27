@@ -15,13 +15,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=780847
 <body id="body" onload="setTimeout(startTest, 0)" style="margin:0; width:100%; height:100%; overflow:hidden">
 <p id="display"></p>
 <div id="content">
-  <!-- XXX Though B2G isn't supported anymore, we probably want to keep this
-       test's B2G special-cases around, and just make them apply to Android.
-       (We may need to do so, for this test to be runnable on Android...?)
-       See bug 1355206 for more.
-  -->
-  <!-- the iframe holding this test is only 300px tall on B2G, so we need to
-       make the t target shorter than normal to test the bottom edge fluffing
+  <!-- We make the `t` target shorter than normal in case because we test the
+       bottom edge fluffing on this element, and the test page may be hosted
+       inside a short iframe in the test harness on some platforms.
   -->
   <div class="target" style="height:80px" id="t" onmousedown="x=1"></div>
 
@@ -103,15 +99,14 @@ function setShowing(id, show) {
 var mm;
 function runTest() {
   let resolution = 1;
-  if (SpecialPowers.Services.appinfo.name == "B2G") {
-    // This test runs on B2G as well, zoomed out. Therefore we need to account
+  if (navigator.appVersion.includes("Android")) {
+    // This test runs on Android, zoomed out. Therefore we need to account
     // for the resolution as well, because the fluff area is relative to screen
     // pixels rather than CSS pixels.
-    let out = {};
-    SpecialPowers.getDOMWindowUtils(window.top).getResolution(out);
-    resolution = 1.0 / out.value;
+    resolution = SpecialPowers.getDOMWindowUtils(window.top).getResolution();
+    ok(resolution <= 1, "Resolution is " + resolution);
   }
-  mm = SpecialPowers.getDOMWindowUtils(window.top).physicalMillimeterInCSSPixels * resolution;
+  mm = SpecialPowers.getDOMWindowUtils(window.top).physicalMillimeterInCSSPixels / resolution;
   ok(4*mm >= 10, "WARNING: mm " + mm + " too small in this configuration. Test results will be bogus");
 
   // Test basic functionality: clicks sufficiently close to the element
