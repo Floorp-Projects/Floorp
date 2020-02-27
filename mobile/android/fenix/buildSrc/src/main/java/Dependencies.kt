@@ -32,7 +32,7 @@ object Versions {
     const val androidx_work = "2.2.0"
     const val google_material = "1.1.0"
 
-    const val mozilla_android_components = "34.0.0-SNAPSHOT"
+    const val mozilla_android_components = "35.0.0-SNAPSHOT"
 
     const val mozilla_glean = "25.0.0"
 
