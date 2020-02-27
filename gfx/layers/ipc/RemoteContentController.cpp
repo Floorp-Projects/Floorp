@@ -18,6 +18,8 @@
 #include "mozilla/Unused.h"
 #include "Units.h"
 
+static mozilla::LazyLogModule sApzRemoteLog("apz.cc.remote");
+
 namespace mozilla {
 namespace layers {
 
@@ -57,6 +59,8 @@ void RemoteContentController::HandleTapOnMainThread(TapType aTapType,
                                                     Modifiers aModifiers,
                                                     ScrollableLayerGuid aGuid,
                                                     uint64_t aInputBlockId) {
+  MOZ_LOG(sApzRemoteLog, LogLevel::Debug,
+          ("HandleTapOnMainThread(%d)", (int)aTapType));
   MOZ_ASSERT(NS_IsMainThread());
 
   dom::BrowserParent* tab =
@@ -87,6 +91,7 @@ void RemoteContentController::HandleTap(TapType aTapType,
                                         Modifiers aModifiers,
                                         const ScrollableLayerGuid& aGuid,
                                         uint64_t aInputBlockId) {
+  MOZ_LOG(sApzRemoteLog, LogLevel::Debug, ("HandleTap(%d)", (int)aTapType));
   APZThreadUtils::AssertOnControllerThread();
 
   if (XRE_GetProcessType() == GeckoProcessType_GPU) {
