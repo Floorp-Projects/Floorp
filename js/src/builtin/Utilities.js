@@ -78,7 +78,7 @@ function RequireObjectCoercible(v) {
 /* Spec: ECMAScript Draft, 6 edition May 22, 2014, 7.1.15 */
 function ToLength(v) {
     // Step 1.
-    v = ToIntegerPositiveZero(v);
+    v = ToInteger(v);
 
     // Step 2.
     // Use max(v, 0) here, because it's easier to optimize in Ion.

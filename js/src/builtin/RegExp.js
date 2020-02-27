@@ -387,7 +387,7 @@ function RegExpReplaceSlowPath(rx, S, lengthS, replaceValue,
         var matchLength = matched.length;
 
         // Steps 14.e-f.
-        var position = std_Math_max(std_Math_min(ToIntegerPositiveZero(result.index), lengthS), 0);
+        var position = std_Math_max(std_Math_min(ToInteger(result.index), lengthS), 0);
 
         var n, capN, replacement;
         if (functionalReplace || firstDollarIndex !== -1) {
