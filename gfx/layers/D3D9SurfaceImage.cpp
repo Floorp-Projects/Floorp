@@ -256,7 +256,7 @@ already_AddRefed<TextureClient> D3D9RecycleAllocator::Allocate(
   }
 
   return MakeAndAddRef<TextureClient>(data, aTextureFlags,
-                                      mSurfaceAllocator->GetTextureForwarder());
+                                      mKnowsCompositor->GetTextureForwarder());
 }
 
 already_AddRefed<TextureClient> D3D9RecycleAllocator::CreateOrRecycleClient(

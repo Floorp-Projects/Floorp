@@ -548,7 +548,7 @@ class ImageContainer final : public SupportsWeakPtr<ImageContainer> {
 
 #ifdef XP_WIN
   D3D11YCbCrRecycleAllocator* GetD3D11YCbCrRecycleAllocator(
-      KnowsCompositor* aAllocator);
+      KnowsCompositor* aKnowsCompositor);
 #endif
 
   /**

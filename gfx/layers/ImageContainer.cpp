@@ -412,18 +412,19 @@ void ImageContainer::NotifyDropped(uint32_t aDropped) {
 
 #ifdef XP_WIN
 D3D11YCbCrRecycleAllocator* ImageContainer::GetD3D11YCbCrRecycleAllocator(
-    KnowsCompositor* aAllocator) {
+    KnowsCompositor* aKnowsCompositor) {
   if (mD3D11YCbCrRecycleAllocator &&
-      aAllocator == mD3D11YCbCrRecycleAllocator->GetAllocator()) {
+      aKnowsCompositor == mD3D11YCbCrRecycleAllocator->GetKnowsCompositor()) {
     return mD3D11YCbCrRecycleAllocator;
   }
 
-  if (!aAllocator->SupportsD3D11() ||
+  if (!aKnowsCompositor->SupportsD3D11() ||
       !gfx::DeviceManagerDx::Get()->GetImageDevice()) {
     return nullptr;
   }
 
-  mD3D11YCbCrRecycleAllocator = new D3D11YCbCrRecycleAllocator(aAllocator);
+  mD3D11YCbCrRecycleAllocator =
+      new D3D11YCbCrRecycleAllocator(aKnowsCompositor);
   return mD3D11YCbCrRecycleAllocator;
 }
 #endif
