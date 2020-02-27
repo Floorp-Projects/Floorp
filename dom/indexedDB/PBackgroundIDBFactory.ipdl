@@ -52,8 +52,6 @@ parent:
 
   async PBackgroundIDBFactoryRequest(FactoryRequestParams params);
 
-  async IncrementLoggingRequestSerialNumber();
-
 child:
   async __delete__();
 

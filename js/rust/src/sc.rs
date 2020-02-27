@@ -20,30 +20,23 @@ impl StructuredCloneBuffer {
     /// # Panics
     ///
     /// Panics if the underlying JSAPI calls fail.
-    pub fn new(scope: jsapi::JS::StructuredCloneScope,
-               callbacks: &jsapi::JSStructuredCloneCallbacks)
-               -> StructuredCloneBuffer {
-        let raw = unsafe {
-            glue::NewJSAutoStructuredCloneBuffer(scope, callbacks)
-        };
+    pub fn new(
+        scope: jsapi::JS::StructuredCloneScope,
+        callbacks: &jsapi::JSStructuredCloneCallbacks,
+    ) -> StructuredCloneBuffer {
+        let raw = unsafe { glue::NewJSAutoStructuredCloneBuffer(scope, callbacks) };
         assert!(!raw.is_null());
-        StructuredCloneBuffer {
-            raw: raw,
-        }
+        StructuredCloneBuffer { raw: raw }
     }
 
     /// Get the raw `*mut JSStructuredCloneData` owned by this buffer.
     pub fn data(&self) -> *mut jsapi::JSStructuredCloneData {
-        unsafe {
-            &mut (*self.raw).data_
-        }
+        unsafe { &mut (*self.raw).data_ }
     }
 
     /// Copy this buffer's data into a vec.
     pub fn copy_to_vec(&self) -> Vec<u8> {
-        let len = unsafe {
-            glue::GetLengthOfJSStructuredCloneData(self.data())
-        };
+        let len = unsafe { glue::GetLengthOfJSStructuredCloneData(self.data()) };
         let mut vec = Vec::with_capacity(len);
         unsafe {
             glue::CopyJSStructuredCloneData(self.data(), vec.as_mut_ptr());
@@ -52,12 +45,22 @@ impl StructuredCloneBuffer {
     }
 
     /// Read a JS value out of this buffer.
-    pub fn read(&mut self,
-                vp: jsapi::JS::MutableHandleValue,
-                callbacks: &jsapi::JSStructuredCloneCallbacks)
-                -> Result<(), ()> {
+    pub fn read(
+        &mut self,
+        vp: jsapi::JS::MutableHandleValue,
+        callbacks: &jsapi::JSStructuredCloneCallbacks,
+    ) -> Result<(), ()> {
         if unsafe {
-            (*self.raw).read(Runtime::get(), vp, &jsapi::JS::CloneDataPolicy{ allowIntraClusterClonableSharedObjects_: false, allowSharedMemoryObjects_: false }, callbacks, ptr::null_mut())
+            (*self.raw).read(
+                Runtime::get(),
+                vp,
+                &jsapi::JS::CloneDataPolicy {
+                    allowIntraClusterClonableSharedObjects_: false,
+                    allowSharedMemoryObjects_: false,
+                },
+                callbacks,
+                ptr::null_mut(),
+            )
         } {
             Ok(())
         } else {
@@ -66,13 +69,12 @@ impl StructuredCloneBuffer {
     }
 
     /// Write a JS value into this buffer.
-    pub fn write(&mut self,
-                 v: jsapi::JS::HandleValue,
-                 callbacks: &jsapi::JSStructuredCloneCallbacks)
-                 -> Result<(), ()> {
-        if unsafe {
-            (*self.raw).write(Runtime::get(), v, callbacks, ptr::null_mut())
-        } {
+    pub fn write(
+        &mut self,
+        v: jsapi::JS::HandleValue,
+        callbacks: &jsapi::JSStructuredCloneCallbacks,
+    ) -> Result<(), ()> {
+        if unsafe { (*self.raw).write(Runtime::get(), v, callbacks, ptr::null_mut()) } {
             Ok(())
         } else {
             Err(())
@@ -83,9 +85,7 @@ impl StructuredCloneBuffer {
     pub fn write_bytes(&mut self, bytes: &[u8]) -> Result<(), ()> {
         let len = bytes.len();
         let src = bytes.as_ptr();
-        if unsafe {
-            glue::WriteBytesToJSStructuredCloneData(src, len, self.data())
-        } {
+        if unsafe { glue::WriteBytesToJSStructuredCloneData(src, len, self.data()) } {
             Ok(())
         } else {
             Err(())

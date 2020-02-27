@@ -35,11 +35,11 @@ use glue::RUST_JS_NumberValue;
 use heap::Heap;
 use jsapi::root::*;
 use jsval::{BooleanValue, Int32Value, NullValue, UInt32Value, UndefinedValue};
-use jsval::{ObjectValue, ObjectOrNullValue, StringValue};
-use rust::{ToBoolean, ToInt32, ToInt64, ToNumber, ToUint16, ToUint32, ToUint64};
-use rust::{ToString, maybe_wrap_object_or_null_value, maybe_wrap_value};
+use jsval::{ObjectOrNullValue, ObjectValue, StringValue};
 use libc;
 use num_traits::{Bounded, Zero};
+use rust::{maybe_wrap_object_or_null_value, maybe_wrap_value, ToString};
+use rust::{ToBoolean, ToInt32, ToInt64, ToNumber, ToUint16, ToUint32, ToUint64};
 use std::borrow::Cow;
 use std::rc::Rc;
 use std::{ptr, slice};
@@ -49,13 +49,13 @@ trait As<O>: Copy {
 }
 
 macro_rules! impl_as {
-    ($I:ty, $O:ty) => (
+    ($I:ty, $O:ty) => {
         impl As<$O> for $I {
             fn cast(self) -> $O {
                 self as $O
             }
         }
-    )
+    };
 }
 
 impl_as!(f64, u8);
@@ -105,7 +105,7 @@ impl<T> ConversionResult<T> {
     /// Map a function over the `Success` value.
     pub fn map<F, U>(self, mut f: F) -> ConversionResult<U>
     where
-        F: FnMut(T) -> U
+        F: FnMut(T) -> U,
     {
         match self {
             ConversionResult::Success(t) => ConversionResult::Success(f(t)),
@@ -131,10 +131,11 @@ pub trait FromJSValConvertible: Sized {
     /// argument.
     /// If it returns `Err(())`, a JSAPI exception is pending.
     /// If it returns `Ok(Failure(reason))`, there is no pending JSAPI exception.
-    unsafe fn from_jsval(cx: *mut JSContext,
-                         val: JS::HandleValue,
-                         option: Self::Config)
-                         -> Result<ConversionResult<Self>, ()>;
+    unsafe fn from_jsval(
+        cx: *mut JSContext,
+        val: JS::HandleValue,
+        option: Self::Config,
+    ) -> Result<ConversionResult<Self>, ()>;
 }
 
 /// Behavior for converting out-of-range integers.
@@ -154,11 +155,14 @@ pub struct Default<T>(pub T);
 
 impl<T> FromJSValConvertible for Default<T>
 where
-    T: FromJSValConvertible<Config = ConversionBehavior>
+    T: FromJSValConvertible<Config = ConversionBehavior>,
 {
     type Config = ();
-    unsafe fn from_jsval(cx: *mut JSContext, val: JS::HandleValue, _: ())
-                         -> Result<ConversionResult<Self>, ()> {
+    unsafe fn from_jsval(
+        cx: *mut JSContext,
+        val: JS::HandleValue,
+        _: (),
+    ) -> Result<ConversionResult<Self>, ()> {
         T::from_jsval(cx, val, ConversionBehavior::Default).map(|conv| conv.map(Default))
     }
 }
@@ -168,14 +172,16 @@ where
 pub struct EnforceRange<T>(pub T);
 
 impl<T> FromJSValConvertible for EnforceRange<T>
-    where
-    T: FromJSValConvertible<Config = ConversionBehavior>
+where
+    T: FromJSValConvertible<Config = ConversionBehavior>,
 {
     type Config = ();
-    unsafe fn from_jsval(cx: *mut JSContext, val: JS::HandleValue, _: ())
-                         -> Result<ConversionResult<Self>, ()> {
-        T::from_jsval(cx, val, ConversionBehavior::EnforceRange)
-            .map(|conv| conv.map(EnforceRange))
+    unsafe fn from_jsval(
+        cx: *mut JSContext,
+        val: JS::HandleValue,
+        _: (),
+    ) -> Result<ConversionResult<Self>, ()> {
+        T::from_jsval(cx, val, ConversionBehavior::EnforceRange).map(|conv| conv.map(EnforceRange))
     }
 }
 
@@ -184,22 +190,25 @@ impl<T> FromJSValConvertible for EnforceRange<T>
 pub struct Clamp<T>(pub T);
 
 impl<T> FromJSValConvertible for Clamp<T>
-    where
-    T: FromJSValConvertible<Config = ConversionBehavior>
+where
+    T: FromJSValConvertible<Config = ConversionBehavior>,
 {
     type Config = ();
-    unsafe fn from_jsval(cx: *mut JSContext, val: JS::HandleValue, _: ())
-                         -> Result<ConversionResult<Self>, ()> {
-        T::from_jsval(cx, val, ConversionBehavior::Clamp)
-            .map(|conv| conv.map(Clamp))
+    unsafe fn from_jsval(
+        cx: *mut JSContext,
+        val: JS::HandleValue,
+        _: (),
+    ) -> Result<ConversionResult<Self>, ()> {
+        T::from_jsval(cx, val, ConversionBehavior::Clamp).map(|conv| conv.map(Clamp))
     }
 }
 
 /// Try to cast the number to a smaller type, but
 /// if it doesn't fit, it will return an error.
 unsafe fn enforce_range<D>(cx: *mut JSContext, d: f64) -> Result<ConversionResult<D>, ()>
-    where D: Bounded + As<f64>,
-          f64: As<D>
+where
+    D: Bounded + As<f64>,
+    f64: As<D>,
 {
     if d.is_infinite() {
         throw_type_error(cx, "value out of range in an EnforceRange argument");
@@ -219,8 +228,9 @@ unsafe fn enforce_range<D>(cx: *mut JSContext, d: f64) -> Result<ConversionResul
 /// round it to the MAX or MIN of the source type before casting it to
 /// the destination type.
 fn clamp_to<D>(d: f64) -> D
-    where D: Bounded + As<f64> + Zero,
-          f64: As<D>
+where
+    D: Bounded + As<f64> + Zero,
+    f64: As<D>,
 {
     if d.is_nan() {
         D::zero()
@@ -244,10 +254,11 @@ impl ToJSValConvertible for () {
 impl FromJSValConvertible for JS::HandleValue {
     type Config = ();
     #[inline]
-    unsafe fn from_jsval(cx: *mut JSContext,
-                         value: JS::HandleValue,
-                         _option: ())
-                         -> Result<ConversionResult<JS::HandleValue>, ()> {
+    unsafe fn from_jsval(
+        cx: *mut JSContext,
+        value: JS::HandleValue,
+        _option: (),
+    ) -> Result<ConversionResult<JS::HandleValue>, ()> {
         if value.is_object() {
             js::AssertSameCompartment(cx, value.to_object());
         }
@@ -257,21 +268,25 @@ impl FromJSValConvertible for JS::HandleValue {
 
 impl FromJSValConvertible for JS::Value {
     type Config = ();
-    unsafe fn from_jsval(_cx: *mut JSContext,
-                         value: JS::HandleValue,
-                         _option: ())
-                         -> Result<ConversionResult<JS::Value>, ()> {
+    unsafe fn from_jsval(
+        _cx: *mut JSContext,
+        value: JS::HandleValue,
+        _option: (),
+    ) -> Result<ConversionResult<JS::Value>, ()> {
         Ok(ConversionResult::Success(value.get()))
     }
 }
 
 impl FromJSValConvertible for Heap<JS::Value> {
     type Config = ();
-    unsafe fn from_jsval(_cx: *mut JSContext,
-                         value: JS::HandleValue,
-                         _option: ())
-                         -> Result<ConversionResult<Self>, ()> {
-        Ok(ConversionResult::Success(Heap::<JS::Value>::new(value.get())))
+    unsafe fn from_jsval(
+        _cx: *mut JSContext,
+        value: JS::HandleValue,
+        _option: (),
+    ) -> Result<ConversionResult<Self>, ()> {
+        Ok(ConversionResult::Success(Heap::<JS::Value>::new(
+            value.get(),
+        )))
     }
 }
 
@@ -300,18 +315,25 @@ impl ToJSValConvertible for Heap<JS::Value> {
 }
 
 #[inline]
-unsafe fn convert_int_from_jsval<T, M>(cx: *mut JSContext, value: JS::HandleValue,
-                                       option: ConversionBehavior,
-                                       convert_fn: unsafe fn(*mut JSContext, JS::HandleValue) -> Result<M, ()>)
-                                       -> Result<ConversionResult<T>, ()>
-    where T: Bounded + Zero + As<f64>,
-          M: Zero + As<T>,
-          f64: As<T>
+unsafe fn convert_int_from_jsval<T, M>(
+    cx: *mut JSContext,
+    value: JS::HandleValue,
+    option: ConversionBehavior,
+    convert_fn: unsafe fn(*mut JSContext, JS::HandleValue) -> Result<M, ()>,
+) -> Result<ConversionResult<T>, ()>
+where
+    T: Bounded + Zero + As<f64>,
+    M: Zero + As<T>,
+    f64: As<T>,
 {
     match option {
-        ConversionBehavior::Default => Ok(ConversionResult::Success(try!(convert_fn(cx, value)).cast())),
+        ConversionBehavior::Default => Ok(ConversionResult::Success(
+            try!(convert_fn(cx, value)).cast(),
+        )),
         ConversionBehavior::EnforceRange => enforce_range(cx, try!(ToNumber(cx, value))),
-        ConversionBehavior::Clamp => Ok(ConversionResult::Success(clamp_to(try!(ToNumber(cx, value))))),
+        ConversionBehavior::Clamp => Ok(ConversionResult::Success(clamp_to(try!(ToNumber(
+            cx, value
+        ))))),
     }
 }
 
@@ -326,7 +348,11 @@ impl ToJSValConvertible for bool {
 // https://heycam.github.io/webidl/#es-boolean
 impl FromJSValConvertible for bool {
     type Config = ();
-    unsafe fn from_jsval(_cx: *mut JSContext, val: JS::HandleValue, _option: ()) -> Result<ConversionResult<bool>, ()> {
+    unsafe fn from_jsval(
+        _cx: *mut JSContext,
+        val: JS::HandleValue,
+        _option: (),
+    ) -> Result<ConversionResult<bool>, ()> {
         Ok(ToBoolean(val)).map(ConversionResult::Success)
     }
 }
@@ -342,10 +368,11 @@ impl ToJSValConvertible for i8 {
 // https://heycam.github.io/webidl/#es-byte
 impl FromJSValConvertible for i8 {
     type Config = ConversionBehavior;
-    unsafe fn from_jsval(cx: *mut JSContext,
-                         val: JS::HandleValue,
-                         option: ConversionBehavior)
-                         -> Result<ConversionResult<i8>, ()> {
+    unsafe fn from_jsval(
+        cx: *mut JSContext,
+        val: JS::HandleValue,
+        option: ConversionBehavior,
+    ) -> Result<ConversionResult<i8>, ()> {
         convert_int_from_jsval(cx, val, option, ToInt32)
     }
 }
@@ -361,10 +388,11 @@ impl ToJSValConvertible for u8 {
 // https://heycam.github.io/webidl/#es-octet
 impl FromJSValConvertible for u8 {
     type Config = ConversionBehavior;
-    unsafe fn from_jsval(cx: *mut JSContext,
-                         val: JS::HandleValue,
-                         option: ConversionBehavior)
-                         -> Result<ConversionResult<u8>, ()> {
+    unsafe fn from_jsval(
+        cx: *mut JSContext,
+        val: JS::HandleValue,
+        option: ConversionBehavior,
+    ) -> Result<ConversionResult<u8>, ()> {
         convert_int_from_jsval(cx, val, option, ToInt32)
     }
 }
@@ -380,10 +408,11 @@ impl ToJSValConvertible for i16 {
 // https://heycam.github.io/webidl/#es-short
 impl FromJSValConvertible for i16 {
     type Config = ConversionBehavior;
-    unsafe fn from_jsval(cx: *mut JSContext,
-                         val: JS::HandleValue,
-                         option: ConversionBehavior)
-                         -> Result<ConversionResult<i16>, ()> {
+    unsafe fn from_jsval(
+        cx: *mut JSContext,
+        val: JS::HandleValue,
+        option: ConversionBehavior,
+    ) -> Result<ConversionResult<i16>, ()> {
         convert_int_from_jsval(cx, val, option, ToInt32)
     }
 }
@@ -399,10 +428,11 @@ impl ToJSValConvertible for u16 {
 // https://heycam.github.io/webidl/#es-unsigned-short
 impl FromJSValConvertible for u16 {
     type Config = ConversionBehavior;
-    unsafe fn from_jsval(cx: *mut JSContext,
-                         val: JS::HandleValue,
-                         option: ConversionBehavior)
-                         -> Result<ConversionResult<u16>, ()> {
+    unsafe fn from_jsval(
+        cx: *mut JSContext,
+        val: JS::HandleValue,
+        option: ConversionBehavior,
+    ) -> Result<ConversionResult<u16>, ()> {
         convert_int_from_jsval(cx, val, option, ToUint16)
     }
 }
@@ -418,10 +448,11 @@ impl ToJSValConvertible for i32 {
 // https://heycam.github.io/webidl/#es-long
 impl FromJSValConvertible for i32 {
     type Config = ConversionBehavior;
-    unsafe fn from_jsval(cx: *mut JSContext,
-                         val: JS::HandleValue,
-                         option: ConversionBehavior)
-                         -> Result<ConversionResult<i32>, ()> {
+    unsafe fn from_jsval(
+        cx: *mut JSContext,
+        val: JS::HandleValue,
+        option: ConversionBehavior,
+    ) -> Result<ConversionResult<i32>, ()> {
         convert_int_from_jsval(cx, val, option, ToInt32)
     }
 }
@@ -437,10 +468,11 @@ impl ToJSValConvertible for u32 {
 // https://heycam.github.io/webidl/#es-unsigned-long
 impl FromJSValConvertible for u32 {
     type Config = ConversionBehavior;
-    unsafe fn from_jsval(cx: *mut JSContext,
-                         val: JS::HandleValue,
-                         option: ConversionBehavior)
-                         -> Result<ConversionResult<u32>, ()> {
+    unsafe fn from_jsval(
+        cx: *mut JSContext,
+        val: JS::HandleValue,
+        option: ConversionBehavior,
+    ) -> Result<ConversionResult<u32>, ()> {
         convert_int_from_jsval(cx, val, option, ToUint32)
     }
 }
@@ -456,10 +488,11 @@ impl ToJSValConvertible for i64 {
 // https://heycam.github.io/webidl/#es-long-long
 impl FromJSValConvertible for i64 {
     type Config = ConversionBehavior;
-    unsafe fn from_jsval(cx: *mut JSContext,
-                         val: JS::HandleValue,
-                         option: ConversionBehavior)
-                         -> Result<ConversionResult<i64>, ()> {
+    unsafe fn from_jsval(
+        cx: *mut JSContext,
+        val: JS::HandleValue,
+        option: ConversionBehavior,
+    ) -> Result<ConversionResult<i64>, ()> {
         convert_int_from_jsval(cx, val, option, ToInt64)
     }
 }
@@ -475,10 +508,11 @@ impl ToJSValConvertible for u64 {
 // https://heycam.github.io/webidl/#es-unsigned-long-long
 impl FromJSValConvertible for u64 {
     type Config = ConversionBehavior;
-    unsafe fn from_jsval(cx: *mut JSContext,
-                         val: JS::HandleValue,
-                         option: ConversionBehavior)
-                         -> Result<ConversionResult<u64>, ()> {
+    unsafe fn from_jsval(
+        cx: *mut JSContext,
+        val: JS::HandleValue,
+        option: ConversionBehavior,
+    ) -> Result<ConversionResult<u64>, ()> {
         convert_int_from_jsval(cx, val, option, ToUint64)
     }
 }
@@ -494,7 +528,11 @@ impl ToJSValConvertible for f32 {
 // https://heycam.github.io/webidl/#es-float
 impl FromJSValConvertible for f32 {
     type Config = ();
-    unsafe fn from_jsval(cx: *mut JSContext, val: JS::HandleValue, _option: ()) -> Result<ConversionResult<f32>, ()> {
+    unsafe fn from_jsval(
+        cx: *mut JSContext,
+        val: JS::HandleValue,
+        _option: (),
+    ) -> Result<ConversionResult<f32>, ()> {
         let result = ToNumber(cx, val);
         result.map(|f| f as f32).map(ConversionResult::Success)
     }
@@ -511,7 +549,11 @@ impl ToJSValConvertible for f64 {
 // https://heycam.github.io/webidl/#es-double
 impl FromJSValConvertible for f64 {
     type Config = ();
-    unsafe fn from_jsval(cx: *mut JSContext, val: JS::HandleValue, _option: ()) -> Result<ConversionResult<f64>, ()> {
+    unsafe fn from_jsval(
+        cx: *mut JSContext,
+        val: JS::HandleValue,
+        _option: (),
+    ) -> Result<ConversionResult<f64>, ()> {
         ToNumber(cx, val).map(ConversionResult::Success)
     }
 }
@@ -537,9 +579,11 @@ impl ToJSValConvertible for str {
     unsafe fn to_jsval(&self, cx: *mut JSContext, rval: JS::MutableHandleValue) {
         let mut string_utf16: Vec<u16> = Vec::with_capacity(self.len());
         string_utf16.extend(self.encode_utf16());
-        let jsstr = JS_NewUCStringCopyN(cx,
-                                        string_utf16.as_ptr(),
-                                        string_utf16.len() as libc::size_t);
+        let jsstr = JS_NewUCStringCopyN(
+            cx,
+            string_utf16.as_ptr(),
+            string_utf16.len() as libc::size_t,
+        );
         if jsstr.is_null() {
             panic!("JS_NewUCStringCopyN failed");
         }
@@ -558,7 +602,11 @@ impl ToJSValConvertible for String {
 // https://heycam.github.io/webidl/#es-USVString
 impl FromJSValConvertible for String {
     type Config = ();
-    unsafe fn from_jsval(cx: *mut JSContext, value: JS::HandleValue, _: ()) -> Result<ConversionResult<String>, ()> {
+    unsafe fn from_jsval(
+        cx: *mut JSContext,
+        value: JS::HandleValue,
+        _: (),
+    ) -> Result<ConversionResult<String>, ()> {
         let jsstr = ToString(cx, value);
         if jsstr.is_null() {
             debug!("ToString failed");
@@ -595,17 +643,20 @@ impl<T: ToJSValConvertible> ToJSValConvertible for Rc<T> {
 
 impl<T: FromJSValConvertible> FromJSValConvertible for Option<T> {
     type Config = T::Config;
-    unsafe fn from_jsval(cx: *mut JSContext,
-                         value: JS::HandleValue,
-                         option: T::Config)
-                         -> Result<ConversionResult<Option<T>>, ()> {
+    unsafe fn from_jsval(
+        cx: *mut JSContext,
+        value: JS::HandleValue,
+        option: T::Config,
+    ) -> Result<ConversionResult<Option<T>>, ()> {
         if value.get().is_null_or_undefined() {
             Ok(ConversionResult::Success(None))
         } else {
-            Ok(match try!(FromJSValConvertible::from_jsval(cx, value, option)) {
-                ConversionResult::Success(v) => ConversionResult::Success(Some(v)),
-                ConversionResult::Failure(v) => ConversionResult::Failure(v),
-            })
+            Ok(
+                match try!(FromJSValConvertible::from_jsval(cx, value, option)) {
+                    ConversionResult::Success(v) => ConversionResult::Success(Some(v)),
+                    ConversionResult::Failure(v) => ConversionResult::Failure(v),
+                },
+            )
         }
     }
 }
@@ -639,7 +690,7 @@ impl<T: ToJSValConvertible> ToJSValConvertible for Vec<T> {
 /// but borrows and allows access to the whole ForOfIterator, so
 /// that methods on ForOfIterator can still be used through it.
 struct ForOfIteratorGuard<'a> {
-    root: &'a mut JS::ForOfIterator
+    root: &'a mut JS::ForOfIterator,
 }
 
 impl<'a> ForOfIteratorGuard<'a> {
@@ -648,9 +699,7 @@ impl<'a> ForOfIteratorGuard<'a> {
             root.iterator.register_with_root_lists(cx);
             root.nextMethod.register_with_root_lists(cx);
         }
-        ForOfIteratorGuard {
-            root: root
-        }
+        ForOfIteratorGuard { root: root }
     }
 }
 
@@ -663,13 +712,14 @@ impl<'a> Drop for ForOfIteratorGuard<'a> {
     }
 }
 
-impl<C: Clone, T: FromJSValConvertible<Config=C>> FromJSValConvertible for Vec<T> {
+impl<C: Clone, T: FromJSValConvertible<Config = C>> FromJSValConvertible for Vec<T> {
     type Config = C;
 
-    unsafe fn from_jsval(cx: *mut JSContext,
-                         value: JS::HandleValue,
-                         option: C)
-                         -> Result<ConversionResult<Vec<T>>, ()> {
+    unsafe fn from_jsval(
+        cx: *mut JSContext,
+        value: JS::HandleValue,
+        option: C,
+    ) -> Result<ConversionResult<Vec<T>>, ()> {
         let mut iterator = JS::ForOfIterator {
             cx_: cx,
             iterator: JS::RootedObject::new_unrooted(),
@@ -679,8 +729,11 @@ impl<C: Clone, T: FromJSValConvertible<Config=C>> FromJSValConvertible for Vec<T
         let iterator = ForOfIteratorGuard::new(cx, &mut iterator);
         let iterator = &mut *iterator.root;
 
-        if !iterator.init(value, JS::ForOfIterator_NonIterableBehavior::AllowNonIterable) {
-            return Err(())
+        if !iterator.init(
+            value,
+            JS::ForOfIterator_NonIterableBehavior::AllowNonIterable,
+        ) {
+            return Err(());
         }
 
         if iterator.iterator.ptr.is_null() {
@@ -693,17 +746,19 @@ impl<C: Clone, T: FromJSValConvertible<Config=C>> FromJSValConvertible for Vec<T
             let mut done = false;
             rooted!(in(cx) let mut val = UndefinedValue());
             if !iterator.next(val.handle_mut(), &mut done) {
-                return Err(())
+                return Err(());
             }
 
             if done {
                 break;
             }
 
-            ret.push(match try!(T::from_jsval(cx, val.handle(), option.clone())) {
-                ConversionResult::Success(v) => v,
-                ConversionResult::Failure(e) => return Ok(ConversionResult::Failure(e)),
-            });
+            ret.push(
+                match try!(T::from_jsval(cx, val.handle(), option.clone())) {
+                    ConversionResult::Success(v) => v,
+                    ConversionResult::Failure(e) => return Ok(ConversionResult::Failure(e)),
+                },
+            );
         }
 
         Ok(ret).map(ConversionResult::Success)
@@ -778,10 +833,11 @@ impl ToJSValConvertible for JS::Handle<*mut JSFunction> {
 impl FromJSValConvertible for *mut JSFunction {
     type Config = ();
 
-    unsafe fn from_jsval(cx: *mut JSContext,
-                         val: JS::HandleValue,
-                         _: ())
-                         -> Result<ConversionResult<Self>, ()> {
+    unsafe fn from_jsval(
+        cx: *mut JSContext,
+        val: JS::HandleValue,
+        _: (),
+    ) -> Result<ConversionResult<Self>, ()> {
         let func = JS_ValueToFunction(cx, val);
         if func.is_null() {
             Ok(ConversionResult::Failure("value is not a function".into()))

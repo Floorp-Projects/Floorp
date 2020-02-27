@@ -164,11 +164,6 @@ class nsContextMenu {
     this.isContentSelected = !this.selectionInfo.docSelectionIsCollapsed;
     this.onPlainTextLink = false;
 
-    let bookmarkPage = document.getElementById("context-bookmarkpage");
-    if (bookmarkPage) {
-      BookmarkingUI.onCurrentPageContextPopupShowing();
-    }
-
     // Initialize (disable/remove) menu items.
     this.initItems();
   }

@@ -4,10 +4,13 @@
 
 #![crate_name = "js"]
 #![crate_type = "rlib"]
-
 #![cfg_attr(feature = "nonzero", feature(nonzero))]
-
-#![allow(non_upper_case_globals, non_camel_case_types, non_snake_case, improper_ctypes)]
+#![allow(
+    non_upper_case_globals,
+    non_camel_case_types,
+    non_snake_case,
+    improper_ctypes
+)]
 
 #[cfg(feature = "nonzero")]
 extern crate core;

@@ -2279,7 +2279,8 @@ bool WebRenderBridgeParent::AdvanceAnimations() {
 
 bool WebRenderBridgeParent::SampleAnimations(
     wr::RenderRootArray<nsTArray<wr::WrOpacityProperty>>& aOpacityArrays,
-    wr::RenderRootArray<nsTArray<wr::WrTransformProperty>>& aTransformArrays) {
+    wr::RenderRootArray<nsTArray<wr::WrTransformProperty>>& aTransformArrays,
+    wr::RenderRootArray<nsTArray<wr::WrColorProperty>>& aColorArrays) {
   const bool isAnimating = AdvanceAnimations();
 
   // return the animated data if has
@@ -2290,12 +2291,16 @@ bool WebRenderBridgeParent::SampleAnimations(
       wr::RenderRoot renderRoot = mAnimStorage->AnimationRenderRoot(iter.Key());
       auto& transformArray = aTransformArrays[renderRoot];
       auto& opacityArray = aOpacityArrays[renderRoot];
+      auto& colorArray = aColorArrays[renderRoot];
       if (value->Is<AnimationTransform>()) {
         transformArray.AppendElement(wr::ToWrTransformProperty(
             iter.Key(), value->Transform().mTransformInDevSpace));
       } else if (value->Is<float>()) {
         opacityArray.AppendElement(
             wr::ToWrOpacityProperty(iter.Key(), value->Opacity()));
+      } else if (value->Is<nscolor>()) {
+        colorArray.AppendElement(wr::ToWrColorProperty(
+            iter.Key(), gfx::Color::FromABGR(value->Color())));
       }
     }
   }
@@ -2425,8 +2430,9 @@ void WebRenderBridgeParent::MaybeGenerateFrame(VsyncId aId,
 
   wr::RenderRootArray<nsTArray<wr::WrOpacityProperty>> opacityArrays;
   wr::RenderRootArray<nsTArray<wr::WrTransformProperty>> transformArrays;
+  wr::RenderRootArray<nsTArray<wr::WrColorProperty>> colorArrays;
 
-  if (SampleAnimations(opacityArrays, transformArrays)) {
+  if (SampleAnimations(opacityArrays, transformArrays, colorArrays)) {
     // TODO we should have a better way of assessing whether we need a content
     // or a chrome frame generation.
     ScheduleGenerateFrameAllRenderRoots();
@@ -2439,7 +2445,8 @@ void WebRenderBridgeParent::MaybeGenerateFrame(VsyncId aId,
     }
     auto renderRoot = api->GetRenderRoot();
     fastTxns[renderRoot]->UpdateDynamicProperties(opacityArrays[renderRoot],
-                                                  transformArrays[renderRoot]);
+                                                  transformArrays[renderRoot],
+                                                  colorArrays[renderRoot]);
   }
 
   SetAPZSampleTime();
