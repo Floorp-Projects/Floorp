@@ -24,7 +24,8 @@ class DeepLinkIntentProcessor(
 ) : HomeIntentProcessor {
 
     override fun process(intent: Intent, navController: NavController, out: Intent): Boolean {
-        return if (intent.scheme == "fenix") {
+        val scheme = intent.scheme?.contains("fenix") ?: return false
+        return if (scheme) {
             intent.data?.let { handleDeepLink(it, navController) }
             true
         } else {

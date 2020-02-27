@@ -45,9 +45,12 @@ android {
         vectorDrawables.useSupportLibrary = true
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         testInstrumentationRunnerArguments clearPackageData: 'true'
-        manifestPlaceholders.isRaptorEnabled = "false"
         resValue "bool", "IS_DEBUG", "false"
         buildConfigField "boolean", "USE_RELEASE_VERSIONING", "false"
+        manifestPlaceholders = [
+                "isRaptorEnabled": "false",
+                "deepLinkScheme": "fenix"
+        ]
     }
 
     def releaseTemplate = {
@@ -74,10 +77,12 @@ android {
         fenixNightly releaseTemplate >> {
             applicationIdSuffix ".fenix.nightly"
             buildConfigField "boolean", "USE_RELEASE_VERSIONING", "true"
+            manifestPlaceholders = ["deepLinkScheme": "fenix-nightly"]
         }
         fenixBeta releaseTemplate >> {
             applicationIdSuffix ".fenix.beta"
             buildConfigField "boolean", "USE_RELEASE_VERSIONING", "true"
+            manifestPlaceholders = ["deepLinkScheme": "fenix-beta"]
         }
         fenixProduction releaseTemplate >> {
             applicationIdSuffix ".fenix"

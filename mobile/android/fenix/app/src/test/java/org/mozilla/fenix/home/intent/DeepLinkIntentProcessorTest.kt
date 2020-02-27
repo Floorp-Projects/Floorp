@@ -59,6 +59,15 @@ class DeepLinkIntentProcessorTest {
     }
 
     @Test
+    fun `return true if scheme is a fenix variant`() {
+        assertTrue(processor.process(testIntent("fenix-beta://test"), navController, out))
+
+        verify { activity wasNot Called }
+        verify { navController wasNot Called }
+        verify { out wasNot Called }
+    }
+
+    @Test
     fun `process home deep link`() {
         assertTrue(processor.process(testIntent("fenix://home"), navController, out))
 
