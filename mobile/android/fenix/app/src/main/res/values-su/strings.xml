@@ -7,6 +7,11 @@
     <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
     <string name="browser_menu_stop">Eureun</string>
 
+    <!-- Content description (not visible, for screen readers etc.): Bookmark the current page -->
+    <string name="browser_menu_bookmark">Markah</string>
+    <!-- Content description (not visible, for screen readers etc.): Un-bookmark the current page -->
+    <string name="browser_menu_edit_bookmark">Édit markah</string>
+
     <!-- Content description for search icon -->
     <string name="a11y_search_icon_content_description">Paluruh</string>
     <!-- Placeholder text shown in the search bar before a user enters text -->
@@ -49,6 +54,8 @@
     <string name="preferences_search">Paluruh</string>
     <!-- Preference for settings related to Search address bar -->
     <string name="preferences_search_address_bar">Palang alamat</string>
+    <!-- Preference description for banner about signing in -->
+    <string name="preferences_sign_in_description">Singkronkeun markah, jujutan, jeung nu lianna maké Firefox Account anjeun</string>
     <!-- Preference title for switch preference to show search shortcuts -->
     <string name="preferences_show_search_shortcuts">Témbongkeun takulan pamaluruhan</string>
     <!-- Preference title for switch preference to show search suggestions -->
@@ -63,9 +70,25 @@
     <!-- Preference title for switch preference to suggest bookmarks when searching -->
     <string name="preferences_search_bookmarks">Paluruh markah</string>
 
+    <!-- Preference for syncing bookmarks -->
+    <string name="preferences_sync_bookmarks">Markah</string>
+
     <!-- Preference description for tracking protection exceptions -->
     <string name="preferences_tracking_protection_exceptions_description">Kilung Palacakan pikeun ieu loka ayeuna pareum</string>
 
+    <!-- Button to cancel pairing -->
+    <string name="pair_cancel">Bolay</string>
+
+    <!-- Option in library to open Bookmarks page -->
+    <string name="library_bookmarks">Markah</string>
+    <!-- Option in library to open Desktop Bookmarks root page -->
+    <string name="library_desktop_bookmarks_root">Markah Déstop</string>
+    <!-- Option in library to open Desktop Bookmarks "menu" page -->
+    <string name="library_desktop_bookmarks_menu">Menu markah</string>
+    <!-- Option in library to open Desktop Bookmarks "toolbar" page -->
+    <string name="library_desktop_bookmarks_toolbar">Palang Parabot Markah</string>
+    <!-- Option in library to open Desktop Bookmarks "unfiled" page -->
+    <string name="library_desktop_bookmarks_unfiled">Markah Lianna</string>
     <!-- Menu Item Label for Search in Library -->
     <string name="library_search">Paluruh</string>
 
@@ -76,9 +99,69 @@
     <string name="history_delete_all_dialog">Yakin rék meresihan jujutan anjeun?</string>
     <!-- Text for positive action to delete history in deleting history dialog -->
     <string name="history_clear_dialog">Beresihan</string>
+    <!-- History multi select title in app bar
+    The first parameter is the number of bookmarks selected -->
+    <string name="history_multi_select_title">%1$d dipilih</string>
     <!-- Text for the button to clear selected history items. The first parameter
         is a digit showing the number of items you have selected -->
     <string name="history_delete_some">Hapus %1$d item</string>
+
+    <!-- Bookmarks -->
+    <!-- Content description for bookmarks library menu -->
+    <string name="bookmark_menu_content_description">Menu markah</string>
+    <!-- Screen title for editing bookmarks -->
+    <string name="bookmark_edit">Édit markah</string>
+    <!-- Screen title for selecting a bookmarks folder -->
+    <string name="bookmark_select_folder">Pilih map</string>
+    <!-- Screen title for adding a bookmarks folder -->
+    <string name="bookmark_add_folder">Tambah map</string>
+    <!-- deprecated: Snackbar title shown after a bookmark has been created. -->
+    <string name="bookmark_created_snackbar">Markah dijieun.</string>
+    <!-- Snackbar title shown after a bookmark has been created. -->
+    <string name="bookmark_saved_snackbar">Markah diteundeun!</string>
+    <!-- Snackbar edit button shown after a bookmark has been created. -->
+    <string name="edit_bookmark_snackbar_action">ÉDIT</string>
+    <!-- Bookmark overflow menu edit button -->
+    <string name="bookmark_menu_edit_button">Édit</string>
+    <!-- Bookmark overflow menu select button -->
+    <string name="bookmark_menu_select_button">Pilih</string>
+    <!-- Bookmark overflow menu copy button -->
+    <string name="bookmark_menu_copy_button">Tiron</string>
+    <!-- Bookmark overflow menu share button -->
+    <string name="bookmark_menu_share_button">Bagikeun</string>
+    <!-- Bookmark overflow menu open in new tab button -->
+    <string name="bookmark_menu_open_in_new_tab_button">Buka dina tab anyar</string>
+    <!-- Bookmark overflow menu open in private tab button -->
+    <string name="bookmark_menu_open_in_private_tab_button">Buka dina tab nyamuni</string>
+    <!-- Bookmark overflow menu delete button -->
+    <string name="bookmark_menu_delete_button">Pupus</string>
+    <!--Bookmark overflow menu save button -->
+    <string name="bookmark_menu_save_button">Teundeun</string>
+    <!-- Bookmark multi select title in app bar
+     The first parameter is the number of bookmarks selected -->
+    <string name="bookmarks_multi_select_title">%1$d dipilih</string>
+    <!-- Bookmark editing screen title -->
+    <string name="edit_bookmark_fragment_title">Édit markah</string>
+    <!-- Bookmark folder editing screen title -->
+    <string name="edit_bookmark_folder_fragment_title">Édit map</string>
+    <!-- Bookmark sign in button message -->
+    <string name="bookmark_sign_in_button">Asup pikeun nempo markah singkron</string>
+    <!-- Bookmark URL editing field label -->
+    <string name="bookmark_url_label">URL</string>
+    <!-- Bookmark FOLDER editing field label -->
+    <string name="bookmark_folder_label">MAP</string>
+    <!-- Bookmark NAME editing field label -->
+    <string name="bookmark_name_label">NGARAN</string>
+    <!-- Bookmark add folder screen title -->
+    <string name="bookmark_add_folder_fragment_label">Tambah map</string>
+    <!-- Bookmark select folder screen title -->
+    <string name="bookmark_select_folder_fragment_label">Pilih map</string>
+    <!-- Bookmark editing error missing title -->
+    <string name="bookmark_empty_title_error">Kudu boga judul</string>
+    <!-- Bookmark editing error missing or improper URL -->
+    <string name="bookmark_invalid_url_error">URL henteu bener</string>
+    <!-- Bookmark screen message for empty bookmarks folder -->
+    <string name="bookmarks_empty_message">Euweuh markah di dieu</string>
 
     <!-- Button label for clearing all the information of site permissions-->
     <string name="clear_permissions">Beresihan idin</string>
@@ -98,11 +181,20 @@
     <!-- Preference for showing a list of websites that the default configurations won't apply to them -->
     <string name="preference_exceptions">Iwal</string>
 
+    <!-- Tab collection deletion prompt dialog option to cancel deleting the collection -->
+    <string name="tab_collection_dialog_negative">Bolay</string>
+
     <!-- Title for the cookies item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cookies">Réréméh</string>
 
     <!-- Subtitle for the cookies item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cookies_subtitle">Anjeun bakal kaluar log ti kalolobaan loka</string>
+
+    <!-- Text for the cancel button for the data deletion dialog -->
+    <string name="delete_browsing_data_prompt_cancel">Bolay</string>
+
+    <!-- Option to cancel signing out shown in confirmation dialog to sign out of account -->
+    <string name="sign_out_cancel">Bolay</string>
 
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">Lenyepan</string>
@@ -111,6 +203,9 @@
 
     <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_description">Meungpeuk réréméh anu dipaké ku maskapé jaringan iklan jeung analitika pikeun ngumpulkeun data langlangan anjeun di loka anu kaanjangan.</string>
+
+    <!-- Cancel button text for the Add to Homescreen dialog -->
+    <string name="add_to_homescreen_cancel">Bolay</string>
 
     <!-- Hint for search box in logins list -->
     <string name="preferences_passwords_saved_logins_search">Paluruh login</string>

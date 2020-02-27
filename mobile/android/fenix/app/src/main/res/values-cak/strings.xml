@@ -230,6 +230,8 @@
     <string name="developer_tools_category">Taq rusamajib\'al nuk\'unel</string>
     <!-- Preference for developers -->
     <string name="preferences_remote_debugging">Näj chojmirisanem pa USB</string>
+    <!-- Preference title for switch preference to show search shortcuts -->
+    <string name="preferences_show_search_shortcuts">Kek\'ut retal pitz\'b\'äl richin nikanöx</string>
     <!-- Preference title for switch preference to show search suggestions -->
     <string name="preferences_show_search_suggestions">Kek\'ut pe ri taq chilab\'enïk richin yakanon</string>
 
@@ -237,5 +239,81 @@
     <string name="preferences_show_search_suggestions_in_private">Tik\'ut pan ichinan molojri\'ïl</string>
     <!-- Preference title for switch preference to show a clipboard suggestion when searching -->
     <string name="preferences_show_clipboard_suggestions">Kek\'ut pe ri taq ruchilab\'enïk molwuj</string>
+
+    <!-- Preference title for switch preference to suggest browsing history when searching -->
+    <string name="preferences_search_browsing_history">Tikanöx runatab\'al okem pa k\'amaya\'l</string>
+    <!-- Preference title for switch preference to suggest bookmarks when searching -->
+    <string name="preferences_search_bookmarks">Kekanöx taq yaketal</string>
+    <!-- Preference for account settings -->
+    <string name="preferences_account_settings">Kinuk\'ulem Rub\'i\' Taqoya\'l</string>
+    <!-- Preference for open links in third party apps -->
+    <string name="preferences_open_links_in_apps">Kejaq taq ximonel pa taq chokoy</string>
+    <!-- Preference for add_ons -->
+    <string name="preferences_addons">Taq tz’aqat</string>
+
+    <!-- Account Preferences -->
+    <!-- Preference for triggering sync -->
+    <string name="preferences_sync_now">Tixim wakami</string>
+    <!-- Preference category for sync -->
+    <string name="preferences_sync_category">Tacha\' achike naxïm</string>
+    <!-- Preference for syncing history -->
+    <string name="preferences_sync_history">Natab\'äl</string>
+    <!-- Preference for syncing bookmarks -->
+    <string name="preferences_sync_bookmarks">Taq yaketal</string>
+    <!-- Preference for syncing logins -->
+    <string name="preferences_sync_logins">Ketikirisäx molojri\'ïl</string>
+    <!-- Preference for signing out -->
+    <string name="preferences_sign_out">Titz\'apïx molojri\'ïl</string>
+    <!-- Preference displays and allows changing current FxA device name -->
+    <string name="preferences_sync_device_name">Rub\'i\' ri okisaxel</string>
+    <!-- Text shown when user enters empty device name -->
+    <string name="empty_device_name_error">Man tikirel ta kowöl rub\'i\' okisab\'äl.</string>
+    <!-- Label indicating that sync is in progress -->
+    <string name="sync_syncing_in_progress">Nixim…</string>
+
+    <!-- Label summary indicating that sync failed. The first parameter is the date stamp showing last time it succeeded -->
+    <string name="sync_failed_summary">Xsach ri ximoj. Ruk\'isib\'äl mul xok: %s</string>
+    <!-- Label summary showing never synced -->
+    <string name="sync_failed_never_synced_summary">Xsach ri ximoj. Ruk\'isib\'äl mul xok: majub\'ey</string>
+    <!-- Label summary the date we last synced. The first parameter is date stamp showing last time synced -->
+    <string name="sync_last_synced_summary">Ruk\'isib\'äl mul xxim: %s</string>
+    <!-- Label summary showing never synced -->
+    <string name="sync_never_synced_summary">Ruk\'isib\'äl mul xxim: majub\'ey</string>
+    <!-- Text for displaying the default device name.
+        The first parameter is the application name, the second is the device manufacturer name
+        and the third is the device model. -->
+    <string name="default_device_name">%s pa %s %s</string>
+
+    <!-- Send Tab -->
+    <!-- Name of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
+    <string name="fxa_received_tab_channel_name">Taq ruwi\' ek\'ulun</string>
+
+    <!-- Description of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
+    <string name="fxa_received_tab_channel_description">Taq rutzijol taq ruwi\' ek\'ulun pa ch\'aqa\' chik rokisab\'al Firefox.</string>
+    <!--  The body for these is the URL of the tab received  -->
+    <string name="fxa_tab_received_notification_name">Ruwi\' k\'ulun</string>
+    <!-- When multiple tabs have been received -->
+    <string name="fxa_tabs_received_notification_name">Taq Ruwi\' ek\'ulun</string>
+    <!-- %s is the device name -->
+    <string name="fxa_tab_received_from_notification_name">Ruwi\' %s</string>
+
+    <!-- Advanced Preferences -->
+    <!-- Preference for tracking protection settings -->
+    <string name="preferences_tracking_protection_settings">Chajinïk chuwäch Ojqanïk</string>
+    <!-- Preference switch for tracking protection -->
+    <string name="preferences_tracking_protection">Chajinïk chuwäch Ojqanïk</string>
+    <!-- Preference switch description for tracking protection -->
+    <string name="preferences_tracking_protection_description">Keq\'at rupam chuqa\' taq skrip yatkojqaj pa k\'amab\'ey</string>
+    <!-- Preference for tracking protection exceptions -->
+    <string name="preferences_tracking_protection_exceptions">Taq man relik ta</string>
+
+    <!-- Preference description for tracking protection exceptions -->
+    <string name="preferences_tracking_protection_exceptions_description">Chupül ri Chajinïk chuwäch Ojqanem pa re ajk\'amaya\'l ruxaq re\'</string>
+    <!-- Button in Exceptions Preference to turn on tracking protection for all sites (remove all exceptions) -->
+    <string name="preferences_tracking_protection_exceptions_turn_on_for_all">Titzij kichin ronojel taq ruxaq</string>
+    <!-- Text displayed when there are no exceptions -->
+    <string name="exceptions_empty_message_description">Ri taq man relik ta nikiya\' q\'ij chawe richin nachüp ri chajinïk chuwäch ojqanem pa ri taq ruxaq echa\'on.</string>
+    <!-- Text displayed when there are no exceptions, with learn more link that brings users to a tracking protection SUMO page -->
+    <string name="exceptions_empty_message_learn_more_link">Tetamäx ch\'aqa\' chik</string>
 
     </resources>

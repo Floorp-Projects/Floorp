@@ -787,6 +787,139 @@
     <!-- Title for the cookies item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cookies">Cookies</string>
 
+    <!-- Subtitle for the cookies item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cookies_subtitle">A sua sessão será encerrada na maioria dos sites</string>
+    <!-- Title for the cached images and files item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cached_files">Imagens e ficheiros em cache</string>
+    <!-- Subtitle for the cached images and files item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cached_files_subtitle">Liberta espaço de armazenamento</string>
+    <!-- Title for the site permissions item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_site_permissions">Permissões do site</string>
+    <!-- Text for the button to delete browsing data -->
+    <string name="preferences_delete_browsing_data_button">Eliminar dados de navegação</string>
+    <!-- Title for the Delete browsing data on quit preference -->
+    <string name="preferences_delete_browsing_data_on_quit">Eliminar dados de navegação ao sair</string>
+    <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
+    <string name="preference_summary_delete_browsing_data_on_quit">Exclui automaticamente os dados de navegação quando seleciona &quot;Sair&quot; no menu principal</string>
+    <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
+    <string name="preference_summary_delete_browsing_data_on_quit_2">Exclui automaticamente os dados de navegação quando seleciona \&quot;Sair\&quot; no menu principal</string>
+    <!-- Category for history items to delete on quit in delete browsing data on quit -->
+    <string name="preferences_delete_browsing_data_on_quit_browsing_history">Histórico de navegação</string>
+    <!-- Action item in menu for the Delete browsing data on quit feature -->
+    <string name="delete_browsing_data_on_quit_action">Sair</string>
+
+    <!-- Dialog message to the user asking to delete browsing data. -->
+    <string name="delete_browsing_data_prompt_message">Isto irá eliminar todos os seus dados de navegação.</string>
+    <!-- Dialog message to the user asking to delete browsing data. Parameter will be replaced by app name. -->
+    <string name="delete_browsing_data_prompt_message_3">O %s irá eliminar os dados de navegação selecionados.</string>
+    <!-- Text for the cancel button for the data deletion dialog -->
+    <string name="delete_browsing_data_prompt_cancel">Cancelar</string>
+    <!-- Text for the allow button for the data deletion dialog -->
+    <string name="delete_browsing_data_prompt_allow">Eliminar</string>
+    <!-- Text for the snackbar confirmation that the data was deleted -->
+    <string name="preferences_delete_browsing_data_snackbar">Dados de navegação eliminados</string>
+    <!-- Text for the snackbar to show the user that the deletion of browsing data is in progress -->
+    <string name="deleting_browsing_data_in_progress">A eliminar dados de navegação…</string>
+
+    <!-- Onboarding -->
+    <!-- Text for onboarding welcome message
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_header">Bem-vindo ao %s!</string>
+    <!-- text for the Firefox Accounts section header -->
+    <string name="onboarding_fxa_section_header">Já tem uma conta?</string>
+    <!-- text for the Firefox Preview feature section header
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_feature_section_header">Conheça o %s</string>
+    <!-- text for the "What's New" onboarding card header -->
+    <string name="onboarding_whats_new_header1">Veja as novidades</string>
+    <!-- text for the "what's new" onboarding card description
+    The first parameter is the short name of the app (e.g. Firefox) -->
+    <string name="onboarding_whats_new_description">Tem questões sobre o redesenhado %s? Quer saber o que mudou?</string>
+    <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
+    <string name="onboarding_whats_new_description_linktext">Obtenha respostas aqui</string>
+    <!-- text for the firefox account onboarding card header
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_firefox_account_header">Tire o máximo proveito do %s.</string>
+
+    <!-- text for the firefox account onboarding card header when we detect you're already signed in to
+        another Firefox browser. (The word `Firefox` should not be translated)
+        The first parameter is the email of the detected user's account -->
+    <string name="onboarding_firefox_account_auto_signin_header_2">Está autenticado como %s noutro navegador Firefox neste telefone. Deseja iniciar sessão com esta conta?</string>
+    <!-- text for the button to confirm automatic sign-in -->
+    <string name="onboarding_firefox_account_auto_signin_confirm">Sim, iniciar sessão</string>
+    <!-- text for the automatic sign-in button while signing in is in process -->
+    <string name="onboarding_firefox_account_signing_in">A iniciar a sessão…</string>
+    <!-- text for the button to manually sign into Firefox account. The word "Firefox" should not be translated -->
+    <string name="onboarding_firefox_account_sign_in">Iniciar sessão no Firefox</string>
+    <!-- text for the button to stay signed out when presented with an option to automatically sign-in. -->
+    <string name="onboarding_firefox_account_stay_signed_out">Permanecer sem sessão iniciada</string>
+    <!-- text to display in the snackbar once account is signed-in -->
+    <string name="onboarding_firefox_account_sync_is_on">A sincronização está ativada</string>
+
+    <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
+    <string name="onboarding_firefox_account_automatic_signin_failed">Falha ao iniciar sessão</string>
+    <!-- text for the tracking protection onboarding card header -->
+    <string name="onboarding_tracking_protection_header">Proteja-se</string>
+    <!-- text for the tracking protection card description
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_tracking_protection_description1">%s ajuda-o a impedir que sites o monitorizem na Internet.</string>
+    <!-- text for tracking protection radio button option for standard level of blocking -->
+    <string name="onboarding_tracking_protection_standard_button">Padrão</string>
+    <!-- text for standard blocking option button description -->
+    <string name="onboarding_tracking_protection_standard_button_description">Bloqueia menos rastreadores, mas permite que as páginas sejam carregadas normalmente</string>
+    <!-- text for tracking protection radio button option for strict level of blocking -->
+    <string name="onboarding_tracking_protection_strict_button">Rigoroso (recomendado)</string>
+    <!-- text for strict blocking option button description -->
+    <string name="onboarding_tracking_protection_strict_button_description">Bloqueia mais rastreadores para uma melhor proteção e desempenho, mas pode fazer com que alguns sites não funcionem corretamente</string>
+    <!-- text for the toolbar position card header
+        In English this is an idiom for "choose a side as in an argument or fight"
+        but it is ok to make this more literally about "choosing a position in a physical space -->
+    <string name="onboarding_toolbar_position_header">Escolha uma posição</string>
+    <!-- text for the toolbar position card description -->
+    <string name="onboarding_toolbar_position_description">Experimente navegar com uma mão com a barra de ferramentas em baixo ou mova-a para o topo.</string>
+    <!-- text for the private browsing onboarding card header -->
+    <string name="onboarding_private_browsing_header">Navegue em privado</string>
+    <!-- text for the private browsing onboarding card description
+    The first parameter is an icon that represents private browsing -->
+    <string name="onboarding_private_browsing_description1">Abra um separador privado: toque no ícone %s.</string>
+    <!-- text for the private browsing onboarding card description, explaining how to always using private browsing -->
+    <string name="onboarding_private_browsing_always_description">Abra sempre separadores privados: atualize as suas definições de navegação privada.</string>
+    <!-- text for the private browsing onbording card button, that launches settings -->
+    <string name="onboarding_private_browsing_button">Abrir definições</string>
+    <!-- text for the privacy notice onboarding card header -->
+    <string name="onboarding_privacy_notice_header">A sua privacidade</string>
+    <!-- text for the privacy notice onboarding card description
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_privacy_notice_description">Nós desenhamos o %s para lhe dar mais controlo sobre o que partilha
+        na Internet e conosco.</string>
+    <!-- Text for the button to read the privacy notice -->
+    <string name="onboarding_privacy_notice_read_button">Leia a nossa política de privacidade</string>
+
+    <!-- text for the button to finish onboarding -->
+    <string name="onboarding_finish">Começar a navegar</string>
+
+    <!-- Onboarding theme -->
+    <!-- text for the theme picker onboarding card header -->
+    <string name="onboarding_theme_picker_header">Escolha o seu tema</string>
+    <!-- text for the theme picker onboarding card description -->
+    <string name="onboarding_theme_picker_description1">Economize bateria e a sua visão ativando o modo escuro.</string>
+    <!-- Automatic theme setting (will follow device setting) -->
+    <string name="onboarding_theme_automatic_title">Automático</string>
+    <!-- Summary of automatic theme setting (will follow device setting) -->
+    <string name="onboarding_theme_automatic_summary">Adapta-se às configurações do seu dispositivo</string>
+    <!-- Theme setting for dark mode -->
+    <string name="onboarding_theme_dark_title">Tema escuro</string>
+    <!-- Theme setting for light mode -->
+    <string name="onboarding_theme_light_title">Tema claro</string>
+
+    <!-- Text shown in snackbar when multiple tabs have been sent to device -->
+    <string name="sync_sent_tabs_snackbar">Separadores enviados!</string>
+    <!-- Text shown in snackbar when one tab has been sent to device  -->
+    <string name="sync_sent_tab_snackbar">Separador enviado!</string>
+    <!-- Text shown in snackbar when sharing tabs failed  -->
+    <string name="sync_sent_tab_error_snackbar">Não foi possível enviar</string>
+    <!-- Text shown in snackbar for the "retry" action that the user has after sharing tabs failed -->
+    <string name="sync_sent_tab_error_snackbar_action">REPETIR</string>
     <!-- Title of QR Pairing Fragment -->
     <string name="sync_scan_code">Digitalize o código</string>
     <!-- Text shown for sign in pairing when ready -->
