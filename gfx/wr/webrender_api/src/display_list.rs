@@ -1116,19 +1116,7 @@ impl DisplayListBuilder {
     ) {
         let item = di::DisplayItem::Rectangle(di::RectangleDisplayItem {
             common: *common,
-            color: PropertyBinding::Value(color),
-        });
-        self.push_item(&item);
-    }
-
-    pub fn push_rect_with_animation(
-        &mut self,
-        common: &di::CommonItemProperties,
-        color: PropertyBinding<ColorF>,
-    ) {
-        let item = di::DisplayItem::Rectangle(di::RectangleDisplayItem {
-            common: *common,
-            color,
+            color
         });
         self.push_item(&item);
     }

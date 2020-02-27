@@ -3,7 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use api::{BorderRadius, BoxShadowClipMode, ClipMode, ColorF, PrimitiveKeyKind};
-use api::PropertyBinding;
 use api::MAX_BLUR_RADIUS;
 use api::units::*;
 use crate::clip::{ClipItemKey, ClipItemKeyKind};
@@ -164,7 +163,7 @@ impl<'a> SceneBuilder<'a> {
                 &LayoutPrimitiveInfo::with_clip_rect(final_prim_rect, prim_info.clip_rect),
                 clips,
                 PrimitiveKeyKind::Rectangle {
-                    color: PropertyBinding::Value(color.into()),
+                    color: color.into(),
                 },
             );
         } else {
@@ -190,7 +189,7 @@ impl<'a> SceneBuilder<'a> {
             // Draw the box-shadow as a solid rect, using a box-shadow
             // clip mask item.
             let prim = PrimitiveKeyKind::Rectangle {
-                color: PropertyBinding::Value(color.into()),
+                color: color.into(),
             };
 
             // Create the box-shadow clip item.
