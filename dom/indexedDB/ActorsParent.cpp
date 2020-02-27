@@ -5816,8 +5816,6 @@ class Factory final : public PBackgroundIDBFactoryParent {
 
   mozilla::ipc::IPCResult RecvDeleteMe() override;
 
-  mozilla::ipc::IPCResult RecvIncrementLoggingRequestSerialNumber() override;
-
   PBackgroundIDBFactoryRequestParent* AllocPBackgroundIDBFactoryRequestParent(
       const FactoryRequestParams& aParams) override;
 
@@ -12991,14 +12989,6 @@ mozilla::ipc::IPCResult Factory::RecvDeleteMe() {
   if (!PBackgroundIDBFactoryParent::Send__delete__(this)) {
     return IPC_FAIL_NO_REASON(mgr);
   }
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult Factory::RecvIncrementLoggingRequestSerialNumber() {
-  AssertIsOnBackgroundThread();
-  MOZ_ASSERT(mLoggingInfo);
-
-  mLoggingInfo->NextRequestSN();
   return IPC_OK();
 }
 
