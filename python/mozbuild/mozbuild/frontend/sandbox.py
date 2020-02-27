@@ -20,7 +20,6 @@ user-friendly error messages in the case of errors.
 from __future__ import absolute_import, print_function, unicode_literals
 
 import os
-import six
 import sys
 import weakref
 
@@ -35,12 +34,12 @@ from mozpack.files import FileFinder
 default_finder = FileFinder('/')
 
 
-def alphabetical_sorted(iterable, key=lambda x: x.lower(),
+def alphabetical_sorted(iterable, cmp=None, key=lambda x: x.lower(),
                         reverse=False):
     """sorted() replacement for the sandbox, ordering alphabetically by
     default.
     """
-    return sorted(iterable, key=key, reverse=reverse)
+    return sorted(iterable, cmp, key, reverse)
 
 
 class SandboxError(Exception):
@@ -155,7 +154,7 @@ class Sandbox(dict):
         assert os.path.isabs(path)
 
         try:
-            source = six.ensure_text(self._finder.get(path).read())
+            source = self._finder.get(path).read()
         except Exception:
             raise SandboxLoadError(self._context.source_stack,
                                    sys.exc_info()[2], read_error=path)
@@ -299,6 +298,9 @@ class Sandbox(dict):
             dict.__setitem__(self, key, value)
 
     def get(self, key, default=None):
+        raise NotImplementedError('Not supported')
+
+    def __len__(self):
         raise NotImplementedError('Not supported')
 
     def __iter__(self):

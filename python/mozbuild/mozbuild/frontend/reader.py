@@ -35,7 +35,6 @@ from collections import (
 from io import StringIO
 from itertools import chain
 from multiprocessing import cpu_count
-import six
 from six import string_types
 
 from mozbuild.util import (
@@ -82,9 +81,11 @@ from mozbuild.base import ExecutionSummary
 from concurrent.futures.process import ProcessPoolExecutor
 
 
-if six.PY2:
+if sys.version_info.major == 2:
+    text_type = unicode
     type_type = types.TypeType
 else:
+    text_type = str
     type_type = type
 
 
@@ -286,7 +287,7 @@ class MozbuildSandbox(Sandbox):
             raise Exception('`template` is a function decorator. You must '
                             'use it as `@template` preceding a function declaration.')
 
-        name = func.__name__
+        name = func.func_name
 
         if name in self.templates:
             raise KeyError(
@@ -383,10 +384,10 @@ class MozbuildSandbox(Sandbox):
 
 class TemplateFunction(object):
     def __init__(self, func, sandbox):
-        self.path = func.__code__.co_filename
-        self.name = func.__name__
+        self.path = func.func_code.co_filename
+        self.name = func.func_name
 
-        code = func.__code__
+        code = func.func_code
         firstlineno = code.co_firstlineno
         lines = sandbox._current_source.splitlines(True)
         if lines:
@@ -410,14 +411,13 @@ class TemplateFunction(object):
         # When using a custom dictionary for function globals/locals, Cpython
         # actually never calls __getitem__ and __setitem__, so we need to
         # modify the AST so that accesses to globals are properly directed
-        # to a dict. AST wants binary_type for this in Py2 and text_type for
-        # this in Py3, so cast to str.
-        self._global_name = str('_data')
+        # to a dict.
+        self._global_name = b'_data'  # AST wants str for this, not unicode
         # In case '_data' is a name used for a variable in the function code,
         # prepend more underscores until we find an unused name.
         while (self._global_name in code.co_names or
                 self._global_name in code.co_varnames):
-            self._global_name += str('_')
+            self._global_name += '_'
         func_ast = self.RewriteName(sandbox, self._global_name).visit(func_ast)
 
         # Execute the rewritten code. That code now looks like:
@@ -431,8 +431,8 @@ class TemplateFunction(object):
             compile(func_ast, self.path, 'exec'),
             glob,
             self.name,
-            func.__defaults__,
-            func.__closure__,
+            func.func_defaults,
+            func.func_closure,
         )
         func()
 
@@ -446,11 +446,11 @@ class TemplateFunction(object):
             '__builtins__': sandbox._builtins
         }
         func = types.FunctionType(
-            self._func.__code__,
+            self._func.func_code,
             glob,
             self.name,
-            self._func.__defaults__,
-            self._func.__closure__,
+            self._func.func_defaults,
+            self._func.func_closure
         )
         sandbox.exec_function(func, args, kwargs, self.path,
                               becomes_current_path=False)
@@ -465,7 +465,9 @@ class TemplateFunction(object):
             self._global_name = global_name
 
         def visit_Str(self, node):
-            node.s = six.ensure_text(node.s)
+            # String nodes we got from the AST parser are str, but we want
+            # unicode literals everywhere, so transform them.
+            node.s = unicode(node.s)
             return node
 
         def visit_Name(self, node):
@@ -506,9 +508,8 @@ class SandboxValidationError(Exception):
         s.write('The error occurred when validating the result of ')
         s.write('the execution. The reported error is:\n')
         s.write('\n')
-        s.write(''.join(
-            '    %s\n' % l
-            for l in super(SandboxValidationError, self).__str__().splitlines()))
+        s.write(''.join('    %s\n' % l
+                        for l in self.message.splitlines()))
         s.write('\n')
 
         return s.getvalue()
@@ -590,9 +591,8 @@ class BuildReaderError(Exception):
             s.write('The error occurred when validating the result of ')
             s.write('the execution. The reported error is:\n')
             s.write('\n')
-            s.write(''.join(
-                '    %s\n' % l
-                for l in six.text_type(self.validation_error).splitlines()))
+            s.write(''.join('    %s\n' % l
+                            for l in self.validation_error.message.splitlines()))
             s.write('\n')
         else:
             s.write('The error appears to be part of the %s ' % __name__)
@@ -602,7 +602,7 @@ class BuildReaderError(Exception):
 
             for l in traceback.format_exception(type(self.other), self.other,
                                                 self.trace):
-                s.write(six.ensure_text(l))
+                s.write(unicode(l))
 
         return s.getvalue()
 
@@ -1317,8 +1317,7 @@ class BuildReader(object):
 
         result = {}
         for path, paths in path_mozbuilds.items():
-            result[path] = six.moves.reduce(
-                lambda x, y: x + y, (contexts[p] for p in paths), [])
+            result[path] = reduce(lambda x, y: x + y, (contexts[p] for p in paths), [])
 
         return result, all_contexts
 

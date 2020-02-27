@@ -4,7 +4,6 @@
 
 from __future__ import absolute_import
 
-import io
 import os
 import sys
 
@@ -47,7 +46,7 @@ def read_ini(fp, defaults=None, default='DEFAULT', comments=None,
     key = value = None
     section_names = set()
     if isinstance(fp, string_types):
-        fp = io.open(fp, encoding='utf-8')
+        fp = open(fp)
 
     # read the lines
     for (linenum, line) in enumerate(fp.read().splitlines(), start=1):
