@@ -37,15 +37,18 @@ static mut RANGE_ERROR_FORMAT_STRING: JSErrorFormatString = JSErrorFormatString 
 
 /// Callback used to throw javascript errors.
 /// See throw_js_error for info about error_number.
-unsafe extern "C" fn get_error_message(_user_ref: *mut os::raw::c_void,
-                                       error_number: libc::c_uint)
-                                       -> *const JSErrorFormatString {
+unsafe extern "C" fn get_error_message(
+    _user_ref: *mut os::raw::c_void,
+    error_number: libc::c_uint,
+) -> *const JSErrorFormatString {
     let num: JSExnType = mem::transmute(error_number);
     match num {
         JSExnType::JSEXN_TYPEERR => &TYPE_ERROR_FORMAT_STRING as *const JSErrorFormatString,
         JSExnType::JSEXN_RANGEERR => &RANGE_ERROR_FORMAT_STRING as *const JSErrorFormatString,
-        _ => panic!("Bad js error number given to get_error_message: {}",
-                    error_number),
+        _ => panic!(
+            "Bad js error number given to get_error_message: {}",
+            error_number
+        ),
     }
 }
 
@@ -55,11 +58,13 @@ unsafe extern "C" fn get_error_message(_user_ref: *mut os::raw::c_void,
 /// c_uint is u32, so this cast is safe, as is casting to/from i32 from there.
 unsafe fn throw_js_error(cx: *mut JSContext, error: &str, error_number: u32) {
     let error = CString::new(error).unwrap();
-    JS_ReportErrorNumberUTF8(cx,
-                             Some(get_error_message),
-                             ptr::null_mut(),
-                             error_number,
-                             error.as_ptr());
+    JS_ReportErrorNumberUTF8(
+        cx,
+        Some(get_error_message),
+        ptr::null_mut(),
+        error_number,
+        error.as_ptr(),
+    );
 }
 
 /// Throw a `TypeError` with the given message.

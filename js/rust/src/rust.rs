@@ -5,27 +5,32 @@
 //! Rust wrappers around the raw JS apis
 
 use ar::AutoRealm;
-use libc::c_uint;
-use std::cell::{Cell, UnsafeCell};
-use std::char;
-use std::ffi;
-use std::ptr;
-use std::slice;
-use std::mem;
-use std::u32;
-use std::default::Default;
-use std::marker;
-use std::ops::{Deref, DerefMut};
-use std::sync::{Once, ONCE_INIT, Arc, Mutex};
-use std::sync::atomic::{AtomicBool, AtomicPtr, AtomicUsize, Ordering};
-use std::sync::mpsc::{SyncSender, sync_channel};
-use std::thread;
+use glue::{
+    AppendToRootedObjectVector, CreateCallArgsFromVp, CreateRootedObjectVector,
+    DeleteRootedObjectVector, IsDebugBuild,
+};
+use glue::{
+    CreateRootedIdVector, DestroyRootedIdVector, GetMutableHandleIdVector, SliceRootedIdVector,
+};
+use glue::{DeleteCompileOptions, NewCompileOptions};
 use jsapi::root::*;
 use jsval::{self, UndefinedValue};
-use glue::{CreateRootedObjectVector, CreateCallArgsFromVp, AppendToRootedObjectVector, DeleteRootedObjectVector, IsDebugBuild};
-use glue::{CreateRootedIdVector, SliceRootedIdVector, DestroyRootedIdVector, GetMutableHandleIdVector};
-use glue::{NewCompileOptions, DeleteCompileOptions};
+use libc::c_uint;
 use panic;
+use std::cell::{Cell, UnsafeCell};
+use std::char;
+use std::default::Default;
+use std::ffi;
+use std::marker;
+use std::mem;
+use std::ops::{Deref, DerefMut};
+use std::ptr;
+use std::slice;
+use std::sync::atomic::{AtomicBool, AtomicPtr, AtomicUsize, Ordering};
+use std::sync::mpsc::{sync_channel, SyncSender};
+use std::sync::{Arc, Mutex, Once, ONCE_INIT};
+use std::thread;
+use std::u32;
 
 const DEFAULT_HEAPSIZE: u32 = 32_u32 * 1024_u32 * 1024_u32;
 
@@ -77,9 +82,7 @@ pub struct Runtime {
 impl Runtime {
     /// Get the `JSContext` for this thread.
     pub fn get() -> *mut JSContext {
-        let cx = CONTEXT.with(|context| {
-            context.get()
-        });
+        let cx = CONTEXT.with(|context| context.get());
         assert!(!cx.is_null());
         cx
     }
@@ -112,9 +115,7 @@ impl Runtime {
                 }
 
                 fn as_atomic(&self) -> &AtomicPtr<JSContext> {
-                    unsafe {
-                        mem::transmute(&self.0)
-                    }
+                    unsafe { mem::transmute(&self.0) }
                 }
             }
 
@@ -132,12 +133,13 @@ impl Runtime {
                     let is_debug_mozjs = cfg!(feature = "debugmozjs");
                     let diagnostic = JS::detail::InitWithFailureDiagnostic(is_debug_mozjs);
                     if !diagnostic.is_null() {
-                        panic!("JS::detail::InitWithFailureDiagnostic failed: {}",
-                               ffi::CStr::from_ptr(diagnostic).to_string_lossy());
+                        panic!(
+                            "JS::detail::InitWithFailureDiagnostic failed: {}",
+                            ffi::CStr::from_ptr(diagnostic).to_string_lossy()
+                        );
                     }
 
-                    let context = JS_NewContext(
-                        DEFAULT_HEAPSIZE, ptr::null_mut());
+                    let context = JS_NewContext(DEFAULT_HEAPSIZE, ptr::null_mut());
                     assert!(!context.is_null());
                     JS::InitSelfHostedCode(context);
                     PARENT.set(context);
@@ -159,8 +161,7 @@ impl Runtime {
 
             assert_eq!(IsDebugBuild(), cfg!(feature = "debugmozjs"));
 
-            let js_context = JS_NewContext(DEFAULT_HEAPSIZE,
-                                           JS_GetParentRuntime(PARENT.get()));
+            let js_context = JS_NewContext(DEFAULT_HEAPSIZE, JS_GetParentRuntime(PARENT.get()));
             assert!(!js_context.is_null());
 
             // Unconstrain the runtime's threshold on nominal heap size, to avoid
@@ -168,14 +169,14 @@ impl Runtime {
             // finite threshold. This leaves the maximum-JS_malloc-bytes threshold
             // still in effect to cause periodical, and we hope hygienic,
             // last-ditch GCs from within the GC's allocator.
-            JS_SetGCParameter(
-                js_context, JSGCParamKey::JSGC_MAX_BYTES, u32::MAX);
+            JS_SetGCParameter(js_context, JSGCParamKey::JSGC_MAX_BYTES, u32::MAX);
 
             JS_SetNativeStackQuota(
                 js_context,
                 STACK_QUOTA,
                 STACK_QUOTA - SYSTEM_CODE_BUFFER,
-                STACK_QUOTA - SYSTEM_CODE_BUFFER - TRUSTED_SCRIPT_BUFFER);
+                STACK_QUOTA - SYSTEM_CODE_BUFFER - TRUSTED_SCRIPT_BUFFER,
+            );
 
             CONTEXT.with(|context| {
                 assert!(context.get().is_null());
@@ -190,9 +191,7 @@ impl Runtime {
 
             JS::SetWarningReporter(js_context, Some(report_warning));
 
-            Ok(Runtime {
-                cx: js_context,
-            })
+            Ok(Runtime { cx: js_context })
         }
     }
 
@@ -203,17 +202,23 @@ impl Runtime {
 
     /// Returns the underlying `JSContext`'s `JSRuntime`.
     pub fn rt(&self) -> *mut JSRuntime {
-        unsafe {
-            JS_GetRuntime(self.cx)
-        }
+        unsafe { JS_GetRuntime(self.cx) }
     }
 
-    pub fn evaluate_script(&self, glob: JS::HandleObject, script: &str, filename: &str,
-                           line_num: u32, rval: JS::MutableHandleValue)
-                    -> Result<(),()> {
+    pub fn evaluate_script(
+        &self,
+        glob: JS::HandleObject,
+        script: &str,
+        filename: &str,
+        line_num: u32,
+        rval: JS::MutableHandleValue,
+    ) -> Result<(), ()> {
         let script_utf16: Vec<u16> = script.encode_utf16().collect();
         let filename_cstr = ffi::CString::new(filename.as_bytes()).unwrap();
-        debug!("Evaluating script from {} with content {}", filename, script);
+        debug!(
+            "Evaluating script from {} with content {}",
+            filename, script
+        );
         // SpiderMonkey does not approve of null pointers.
         let (ptr, len) = if script_utf16.len() == 0 {
             static empty: &'static [u16] = &[];
@@ -230,7 +235,7 @@ impl Runtime {
                 units_: ptr,
                 length_: len as _,
                 ownsUnits_: false,
-                _phantom_0: marker::PhantomData
+                _phantom_0: marker::PhantomData,
             };
             if !JS::Evaluate(self.cx(), options.ptr, &mut srcBuf, rval) {
                 debug!("...err!");
@@ -280,53 +285,72 @@ pub trait RootKind {
 
 impl RootKind for *mut JSObject {
     #[inline(always)]
-    fn rootKind() -> JS::RootKind { JS::RootKind::Object }
+    fn rootKind() -> JS::RootKind {
+        JS::RootKind::Object
+    }
 }
 
 impl RootKind for *mut JSLinearString {
     #[inline(always)]
-    fn rootKind() -> JS::RootKind { JS::RootKind::String }
+    fn rootKind() -> JS::RootKind {
+        JS::RootKind::String
+    }
 }
 
 impl RootKind for *mut JSFunction {
     #[inline(always)]
-    fn rootKind() -> JS::RootKind { JS::RootKind::Object }
+    fn rootKind() -> JS::RootKind {
+        JS::RootKind::Object
+    }
 }
 
 impl RootKind for *mut JSString {
     #[inline(always)]
-    fn rootKind() -> JS::RootKind { JS::RootKind::String }
+    fn rootKind() -> JS::RootKind {
+        JS::RootKind::String
+    }
 }
 
 impl RootKind for *mut JS::Symbol {
     #[inline(always)]
-    fn rootKind() -> JS::RootKind { JS::RootKind::Symbol }
+    fn rootKind() -> JS::RootKind {
+        JS::RootKind::Symbol
+    }
 }
 
 #[cfg(feature = "bigint")]
 impl RootKind for *mut JS::BigInt {
     #[inline(always)]
-    fn rootKind() -> JS::RootKind { JS::RootKind::BigInt }
+    fn rootKind() -> JS::RootKind {
+        JS::RootKind::BigInt
+    }
 }
 
 impl RootKind for *mut JSScript {
     #[inline(always)]
-    fn rootKind() -> JS::RootKind { JS::RootKind::Script }
+    fn rootKind() -> JS::RootKind {
+        JS::RootKind::Script
+    }
 }
 
 impl RootKind for jsid {
     #[inline(always)]
-    fn rootKind() -> JS::RootKind { JS::RootKind::Id }
+    fn rootKind() -> JS::RootKind {
+        JS::RootKind::Id
+    }
 }
 
 impl RootKind for JS::Value {
     #[inline(always)]
-    fn rootKind() -> JS::RootKind { JS::RootKind::Value }
+    fn rootKind() -> JS::RootKind {
+        JS::RootKind::Value
+    }
 }
 
 impl<T> JS::Rooted<T> {
     pub fn new_unrooted() -> JS::Rooted<T>
-        where T: GCMethods,
+    where
+        T: GCMethods,
     {
         JS::Rooted {
             stack: ptr::null_mut(),
@@ -340,9 +364,11 @@ impl<T> JS::Rooted<T> {
         mem::transmute(cx)
     }
 
-    unsafe fn get_root_stack(cx: *mut JSContext)
-                             -> *mut *mut JS::Rooted<*mut ::std::os::raw::c_void>
-        where T: RootKind
+    unsafe fn get_root_stack(
+        cx: *mut JSContext,
+    ) -> *mut *mut JS::Rooted<*mut ::std::os::raw::c_void>
+    where
+        T: RootKind,
     {
         let kind = T::rootKind() as usize;
         let rooting_cx = Self::get_rooting_context(cx);
@@ -350,7 +376,8 @@ impl<T> JS::Rooted<T> {
     }
 
     pub unsafe fn register_with_root_lists(&mut self, cx: *mut JSContext)
-        where T: RootKind
+    where
+        T: RootKind,
     {
         self.stack = Self::get_root_stack(cx);
         let stack = self.stack.as_mut().unwrap();
@@ -369,7 +396,7 @@ impl<T> JS::Rooted<T> {
 /// Example usage: `rooted!(in(cx) let x = UndefinedValue());`.
 /// `RootedGuard::new` also works, but the macro is preferred.
 pub struct RootedGuard<'a, T: 'a + RootKind + GCMethods> {
-    root: &'a mut JS::Rooted<T>
+    root: &'a mut JS::Rooted<T>,
 }
 
 impl<'a, T: 'a + RootKind + GCMethods> RootedGuard<'a, T> {
@@ -378,24 +405,21 @@ impl<'a, T: 'a + RootKind + GCMethods> RootedGuard<'a, T> {
         unsafe {
             root.register_with_root_lists(cx);
         }
-        RootedGuard {
-            root: root
-        }
+        RootedGuard { root: root }
     }
 
     pub fn handle(&self) -> JS::Handle<T> {
-        unsafe {
-            JS::Handle::from_marked_location(&self.root.ptr)
-        }
+        unsafe { JS::Handle::from_marked_location(&self.root.ptr) }
     }
 
     pub fn handle_mut(&mut self) -> JS::MutableHandle<T> {
-        unsafe {
-            JS::MutableHandle::from_marked_location(&mut self.root.ptr)
-        }
+        unsafe { JS::MutableHandle::from_marked_location(&mut self.root.ptr) }
     }
 
-    pub fn get(&self) -> T where T: Copy {
+    pub fn get(&self) -> T
+    where
+        T: Copy,
+    {
         self.root.ptr
     }
 
@@ -435,12 +459,13 @@ macro_rules! rooted {
     (in($cx:expr) let mut $name:ident = $init:expr) => {
         let mut __root = $crate::jsapi::JS::Rooted::new_unrooted();
         let mut $name = $crate::rust::RootedGuard::new($cx, &mut __root, $init);
-    }
+    };
 }
 
 impl<T> JS::Handle<T> {
     pub fn get(&self) -> T
-        where T: Copy
+    where
+        T: Copy,
     {
         unsafe { *self.ptr }
     }
@@ -470,19 +495,19 @@ impl<T> JS::MutableHandle<T> {
     }
 
     pub fn handle(&self) -> JS::Handle<T> {
-        unsafe {
-            JS::Handle::from_marked_location(self.ptr as *const _)
-        }
+        unsafe { JS::Handle::from_marked_location(self.ptr as *const _) }
     }
 
     pub fn get(&self) -> T
-        where T: Copy
+    where
+        T: Copy,
     {
         unsafe { *self.ptr }
     }
 
     pub fn set(&self, v: T)
-        where T: Copy
+    where
+        T: Copy,
     {
         unsafe { *self.ptr = v }
     }
@@ -504,15 +529,11 @@ impl<T> DerefMut for JS::MutableHandle<T> {
 
 impl JS::HandleValue {
     pub fn null() -> JS::HandleValue {
-        unsafe {
-            JS::NullHandleValue
-        }
+        unsafe { JS::NullHandleValue }
     }
 
     pub fn undefined() -> JS::HandleValue {
-        unsafe {
-            JS::UndefinedHandleValue
-        }
+        unsafe { JS::UndefinedHandleValue }
     }
 }
 
@@ -527,7 +548,7 @@ impl JS::HandleValueArray {
     pub unsafe fn from_rooted_slice(values: &[JS::Value]) -> JS::HandleValueArray {
         JS::HandleValueArray {
             length_: values.len(),
-            elements_: values.as_ptr()
+            elements_: values.as_ptr(),
         }
     }
 }
@@ -536,9 +557,7 @@ const ConstNullValue: *mut JSObject = 0 as *mut JSObject;
 
 impl JS::HandleObject {
     pub fn null() -> JS::HandleObject {
-        unsafe {
-            JS::HandleObject::from_marked_location(&ConstNullValue)
-        }
+        unsafe { JS::HandleObject::from_marked_location(&ConstNullValue) }
     }
 }
 
@@ -551,11 +570,15 @@ impl Default for jsid {
 }
 
 impl Default for JS::Value {
-    fn default() -> JS::Value { jsval::UndefinedValue() }
+    fn default() -> JS::Value {
+        jsval::UndefinedValue()
+    }
 }
 
 impl Default for JS::RealmOptions {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 
 pub trait GCMethods {
@@ -564,55 +587,74 @@ pub trait GCMethods {
 }
 
 impl GCMethods for jsid {
-    unsafe fn initial() -> jsid { Default::default() }
+    unsafe fn initial() -> jsid {
+        Default::default()
+    }
     unsafe fn write_barriers(_: *mut jsid, _: jsid, _: jsid) {}
 }
 
 #[cfg(feature = "bigint")]
 impl GCMethods for *mut JS::BigInt {
-    unsafe fn initial() -> *mut JS::BigInt { ptr::null_mut() }
-    unsafe fn write_barriers(v: *mut *mut JS::BigInt, prev: *mut JS::BigInt,
-                             next: *mut JS::BigInt) {
+    unsafe fn initial() -> *mut JS::BigInt {
+        ptr::null_mut()
+    }
+    unsafe fn write_barriers(
+        v: *mut *mut JS::BigInt,
+        prev: *mut JS::BigInt,
+        next: *mut JS::BigInt,
+    ) {
         JS::HeapBigIntWriteBarriers(v, prev, next);
     }
 }
 
 impl GCMethods for *mut JSObject {
-    unsafe fn initial() -> *mut JSObject { ptr::null_mut() }
-    unsafe fn write_barriers(v: *mut *mut JSObject,
-                           prev: *mut JSObject, next: *mut JSObject) {
+    unsafe fn initial() -> *mut JSObject {
+        ptr::null_mut()
+    }
+    unsafe fn write_barriers(v: *mut *mut JSObject, prev: *mut JSObject, next: *mut JSObject) {
         JS::HeapObjectWriteBarriers(v, prev, next);
     }
 }
 
 impl GCMethods for *mut JSString {
-    unsafe fn initial() -> *mut JSString { ptr::null_mut() }
-    unsafe fn write_barriers(v: *mut *mut JSString, prev: *mut JSString,
-                             next: *mut JSString) {
+    unsafe fn initial() -> *mut JSString {
+        ptr::null_mut()
+    }
+    unsafe fn write_barriers(v: *mut *mut JSString, prev: *mut JSString, next: *mut JSString) {
         JS::HeapStringWriteBarriers(v, prev, next);
     }
 }
 
 impl GCMethods for *mut JSScript {
-    unsafe fn initial() -> *mut JSScript { ptr::null_mut() }
-    unsafe fn write_barriers(v: *mut *mut JSScript, prev: *mut JSScript,
-                             next: *mut JSScript) {
+    unsafe fn initial() -> *mut JSScript {
+        ptr::null_mut()
+    }
+    unsafe fn write_barriers(v: *mut *mut JSScript, prev: *mut JSScript, next: *mut JSScript) {
         JS::HeapScriptWriteBarriers(v, prev, next);
     }
 }
 
 impl GCMethods for *mut JSFunction {
-    unsafe fn initial() -> *mut JSFunction { ptr::null_mut() }
-    unsafe fn write_barriers(v: *mut *mut JSFunction,
-                             prev: *mut JSFunction, next: *mut JSFunction) {
-        JS::HeapObjectWriteBarriers(mem::transmute(v),
-                                  mem::transmute(prev),
-                                  mem::transmute(next));
+    unsafe fn initial() -> *mut JSFunction {
+        ptr::null_mut()
+    }
+    unsafe fn write_barriers(
+        v: *mut *mut JSFunction,
+        prev: *mut JSFunction,
+        next: *mut JSFunction,
+    ) {
+        JS::HeapObjectWriteBarriers(
+            mem::transmute(v),
+            mem::transmute(prev),
+            mem::transmute(next),
+        );
     }
 }
 
 impl GCMethods for JS::Value {
-    unsafe fn initial() -> JS::Value { UndefinedValue() }
+    unsafe fn initial() -> JS::Value {
+        UndefinedValue()
+    }
     unsafe fn write_barriers(v: *mut JS::Value, prev: JS::Value, next: JS::Value) {
         JS::HeapValueWriteBarriers(v, &prev, &next);
     }
@@ -623,7 +665,9 @@ impl GCMethods for JS::Value {
 
 impl Drop for JSAutoRealm {
     fn drop(&mut self) {
-        unsafe { JS::LeaveRealm(self.cx_, self.oldRealm_); }
+        unsafe {
+            JS::LeaveRealm(self.cx_, self.oldRealm_);
+        }
     }
 }
 
@@ -642,24 +686,18 @@ impl JSJitMethodCallArgs {
     #[inline]
     pub fn index(&self, i: u32) -> JS::HandleValue {
         assert!(i < self._base.argc_);
-        unsafe {
-            JS::HandleValue::from_marked_location(self._base.argv_.offset(i as isize))
-        }
+        unsafe { JS::HandleValue::from_marked_location(self._base.argv_.offset(i as isize)) }
     }
 
     #[inline]
     pub fn index_mut(&self, i: u32) -> JS::MutableHandleValue {
         assert!(i < self._base.argc_);
-        unsafe {
-            JS::MutableHandleValue::from_marked_location(self._base.argv_.offset(i as isize))
-        }
+        unsafe { JS::MutableHandleValue::from_marked_location(self._base.argv_.offset(i as isize)) }
     }
 
     #[inline]
     pub fn rval(&self) -> JS::MutableHandleValue {
-        unsafe {
-            JS::MutableHandleValue::from_marked_location(self._base.argv_.offset(-2))
-        }
+        unsafe { JS::MutableHandleValue::from_marked_location(self._base.argv_.offset(-2)) }
     }
 }
 
@@ -674,17 +712,13 @@ impl JS::CallArgs {
     #[inline]
     pub fn index(&self, i: u32) -> JS::HandleValue {
         assert!(i < self._base.argc_);
-        unsafe {
-            JS::HandleValue::from_marked_location(self._base.argv_.offset(i as isize))
-        }
+        unsafe { JS::HandleValue::from_marked_location(self._base.argv_.offset(i as isize)) }
     }
 
     #[inline]
     pub fn index_mut(&self, i: u32) -> JS::MutableHandleValue {
         assert!(i < self._base.argc_);
-        unsafe {
-            JS::MutableHandleValue::from_marked_location(self._base.argv_.offset(i as isize))
-        }
+        unsafe { JS::MutableHandleValue::from_marked_location(self._base.argv_.offset(i as isize)) }
     }
 
     #[inline]
@@ -700,23 +734,17 @@ impl JS::CallArgs {
 
     #[inline]
     pub fn rval(&self) -> JS::MutableHandleValue {
-        unsafe {
-            JS::MutableHandleValue::from_marked_location(self._base.argv_.offset(-2))
-        }
+        unsafe { JS::MutableHandleValue::from_marked_location(self._base.argv_.offset(-2)) }
     }
 
     #[inline]
     pub fn thisv(&self) -> JS::HandleValue {
-        unsafe {
-            JS::HandleValue::from_marked_location(self._base.argv_.offset(-1))
-        }
+        unsafe { JS::HandleValue::from_marked_location(self._base.argv_.offset(-1)) }
     }
 
     #[inline]
     pub fn calleev(&self) -> JS::HandleValue {
-        unsafe {
-            JS::HandleValue::from_marked_location(self._base.argv_.offset(-2))
-        }
+        unsafe { JS::HandleValue::from_marked_location(self._base.argv_.offset(-2)) }
     }
 
     #[inline]
@@ -729,7 +757,8 @@ impl JS::CallArgs {
         assert!(self._base.constructing_());
         unsafe {
             JS::MutableHandleValue::from_marked_location(
-                self._base.argv_.offset(self._base.argc_ as isize))
+                self._base.argv_.offset(self._base.argc_ as isize),
+            )
         }
     }
 }
@@ -753,22 +782,18 @@ impl JSJitSetterCallArgs {
 // Wrappers around things in jsglue.cpp
 
 pub struct RootedObjectVectorWrapper {
-    pub ptr: *mut JS::PersistentRootedObjectVector
+    pub ptr: *mut JS::PersistentRootedObjectVector,
 }
 
 impl RootedObjectVectorWrapper {
     pub fn new(cx: *mut JSContext) -> RootedObjectVectorWrapper {
         RootedObjectVectorWrapper {
-            ptr: unsafe {
-                 CreateRootedObjectVector(cx)
-            }
+            ptr: unsafe { CreateRootedObjectVector(cx) },
         }
     }
 
     pub fn append(&self, obj: *mut JSObject) -> bool {
-        unsafe {
-            AppendToRootedObjectVector(self.ptr, obj)
-        }
+        unsafe { AppendToRootedObjectVector(self.ptr, obj) }
     }
 }
 
@@ -779,13 +804,17 @@ impl Drop for RootedObjectVectorWrapper {
 }
 
 pub struct CompileOptionsWrapper {
-    pub ptr: *mut JS::ReadOnlyCompileOptions
+    pub ptr: *mut JS::ReadOnlyCompileOptions,
 }
 
 impl CompileOptionsWrapper {
-    pub fn new(cx: *mut JSContext, file: *const ::libc::c_char, line: c_uint) -> CompileOptionsWrapper {
+    pub fn new(
+        cx: *mut JSContext,
+        file: *const ::libc::c_char,
+        line: c_uint,
+    ) -> CompileOptionsWrapper {
         CompileOptionsWrapper {
-            ptr: unsafe { NewCompileOptions(cx, file, line) }
+            ptr: unsafe { NewCompileOptions(cx, file, line) },
         }
     }
 }
@@ -846,9 +875,8 @@ pub unsafe fn ToNumber(cx: *mut JSContext, v: JS::HandleValue) -> Result<f64, ()
 unsafe fn convert_from_int32<T: Default + Copy>(
     cx: *mut JSContext,
     v: JS::HandleValue,
-    conv_fn: unsafe extern "C" fn(*mut JSContext, JS::HandleValue, *mut T) -> bool)
-        -> Result<T, ()> {
-
+    conv_fn: unsafe extern "C" fn(*mut JSContext, JS::HandleValue, *mut T) -> bool,
+) -> Result<T, ()> {
     let val = *v.ptr;
     if val.is_int32() {
         let intval: i64 = val.to_int32() as i64;
@@ -900,9 +928,12 @@ pub unsafe fn ToString(cx: *mut JSContext, v: JS::HandleValue) -> *mut JSString 
     js::ToStringSlow(cx, v)
 }
 
-pub unsafe extern fn report_warning(_cx: *mut JSContext, report: *mut JSErrorReport) {
+pub unsafe extern "C" fn report_warning(_cx: *mut JSContext, report: *mut JSErrorReport) {
     fn latin1_to_string(bytes: &[u8]) -> String {
-        bytes.iter().map(|c| char::from_u32(*c as u32).unwrap()).collect()
+        bytes
+            .iter()
+            .map(|c| char::from_u32(*c as u32).unwrap())
+            .collect()
     }
 
     let fnptr = (*report)._base.filename;
@@ -917,7 +948,9 @@ pub unsafe extern fn report_warning(_cx: *mut JSContext, report: *mut JSErrorRep
     let column = (*report)._base.column;
 
     let msg_ptr = (*report)._base.message_.data_ as *const u16;
-    let msg_len = (0usize..).find(|&i| *msg_ptr.offset(i as isize) == 0).unwrap();
+    let msg_len = (0usize..)
+        .find(|&i| *msg_ptr.offset(i as isize) == 0)
+        .unwrap();
     let msg_slice = slice::from_raw_parts(msg_ptr, msg_len);
     let msg = String::from_utf16_lossy(msg_slice);
 
@@ -932,30 +965,24 @@ impl JSNativeWrapper {
 }
 
 pub struct RootedIdVectorWrapper {
-    pub ptr: *mut JS::PersistentRootedIdVector
+    pub ptr: *mut JS::PersistentRootedIdVector,
 }
 
 impl RootedIdVectorWrapper {
     pub fn new(cx: *mut JSContext) -> RootedIdVectorWrapper {
         RootedIdVectorWrapper {
-            ptr: unsafe {
-                CreateRootedIdVector(cx)
-            }
+            ptr: unsafe { CreateRootedIdVector(cx) },
         }
     }
 
     pub fn handle_mut(&self) -> JS::MutableHandleIdVector {
-        unsafe {
-            GetMutableHandleIdVector(self.ptr)
-        }
+        unsafe { GetMutableHandleIdVector(self.ptr) }
     }
 }
 
 impl Drop for RootedIdVectorWrapper {
     fn drop(&mut self) {
-        unsafe {
-            DestroyRootedIdVector(self.ptr)
-        }
+        unsafe { DestroyRootedIdVector(self.ptr) }
     }
 }
 
@@ -986,15 +1013,26 @@ impl Deref for RootedIdVectorWrapper {
 ///
 /// - `cx` must be valid.
 /// - This function calls into unaudited C++ code.
-pub unsafe fn define_methods(cx: *mut JSContext, obj: JS::HandleObject,
-                             methods: &'static [JSFunctionSpec])
-                             -> Result<(), ()> {
+pub unsafe fn define_methods(
+    cx: *mut JSContext,
+    obj: JS::HandleObject,
+    methods: &'static [JSFunctionSpec],
+) -> Result<(), ()> {
     assert!({
         match methods.last() {
-            Some(&JSFunctionSpec { name: JSFunctionSpec_Name { string_: name, }, call, nargs, flags, selfHostedName }) => {
-                name.is_null() && call.is_zeroed() && nargs == 0 && flags == 0 &&
-                selfHostedName.is_null()
-            },
+            Some(&JSFunctionSpec {
+                name: JSFunctionSpec_Name { string_: name },
+                call,
+                nargs,
+                flags,
+                selfHostedName,
+            }) => {
+                name.is_null()
+                    && call.is_zeroed()
+                    && nargs == 0
+                    && flags == 0
+                    && selfHostedName.is_null()
+            }
             None => false,
         }
     });
@@ -1017,14 +1055,18 @@ pub unsafe fn define_methods(cx: *mut JSContext, obj: JS::HandleObject,
 ///
 /// - `cx` must be valid.
 /// - This function calls into unaudited C++ code.
-pub unsafe fn define_properties(cx: *mut JSContext, obj: JS::HandleObject,
-                                properties: &'static [JSPropertySpec])
-                                -> Result<(), ()> {
+pub unsafe fn define_properties(
+    cx: *mut JSContext,
+    obj: JS::HandleObject,
+    properties: &'static [JSPropertySpec],
+) -> Result<(), ()> {
     assert!(!properties.is_empty());
     assert!({
         let spec = properties.last().unwrap();
-        let slice = slice::from_raw_parts(spec as *const _ as *const u8,
-                                          mem::size_of::<JSPropertySpec>());
+        let slice = slice::from_raw_parts(
+            spec as *const _ as *const u8,
+            mem::size_of::<JSPropertySpec>(),
+        );
         slice.iter().all(|byte| *byte == 0)
     });
 
@@ -1048,11 +1090,13 @@ static SIMPLE_GLOBAL_CLASS_OPS: JSClassOps = JSClassOps {
 /// This is a simple `JSClass` for global objects, primarily intended for tests.
 pub static SIMPLE_GLOBAL_CLASS: JSClass = JSClass {
     name: b"Global\0" as *const u8 as *const _,
-    flags: (JSCLASS_IS_GLOBAL | ((JSCLASS_GLOBAL_SLOT_COUNT & JSCLASS_RESERVED_SLOTS_MASK) << JSCLASS_RESERVED_SLOTS_SHIFT)) as u32,
+    flags: (JSCLASS_IS_GLOBAL
+        | ((JSCLASS_GLOBAL_SLOT_COUNT & JSCLASS_RESERVED_SLOTS_MASK)
+            << JSCLASS_RESERVED_SLOTS_SHIFT)) as u32,
     cOps: &SIMPLE_GLOBAL_CLASS_OPS as *const JSClassOps,
     spec: 0 as *mut _,
     ext: 0 as *mut _,
-    oOps: 0 as *mut _
+    oOps: 0 as *mut _,
 };
 
 #[inline]
@@ -1116,9 +1160,7 @@ pub unsafe fn maybe_wrap_object_value(cx: *mut JSContext, rval: JS::MutableHandl
 }
 
 #[inline]
-pub unsafe fn maybe_wrap_object_or_null_value(
-        cx: *mut JSContext,
-        rval: JS::MutableHandleValue) {
+pub unsafe fn maybe_wrap_object_or_null_value(cx: *mut JSContext, rval: JS::MutableHandleValue) {
     assert!(rval.is_object_or_null());
     if !rval.is_null() {
         maybe_wrap_object_value(cx, rval);
@@ -1136,14 +1178,14 @@ pub unsafe fn maybe_wrap_value(cx: *mut JSContext, rval: JS::MutableHandleValue)
 
 /// Equivalents of the JS_FN* macros.
 impl JSFunctionSpec {
-    pub fn js_fs(name: *const ::std::os::raw::c_char,
-                 func: JSNative,
-                 nargs: u16,
-                 flags: u16) -> JSFunctionSpec {
+    pub fn js_fs(
+        name: *const ::std::os::raw::c_char,
+        func: JSNative,
+        nargs: u16,
+        flags: u16,
+    ) -> JSFunctionSpec {
         JSFunctionSpec {
-            name: JSFunctionSpec_Name {
-                string_: name,
-            },
+            name: JSFunctionSpec_Name { string_: name },
             call: JSNativeWrapper {
                 op: func,
                 info: ptr::null(),
@@ -1154,14 +1196,14 @@ impl JSFunctionSpec {
         }
     }
 
-    pub fn js_fn(name: *const ::std::os::raw::c_char,
-                 func: JSNative,
-                 nargs: u16,
-                 flags: u16) -> JSFunctionSpec {
+    pub fn js_fn(
+        name: *const ::std::os::raw::c_char,
+        func: JSNative,
+        nargs: u16,
+        flags: u16,
+    ) -> JSFunctionSpec {
         JSFunctionSpec {
-            name: JSFunctionSpec_Name {
-                string_: name,
-            },
+            name: JSFunctionSpec_Name { string_: name },
             call: JSNativeWrapper {
                 op: func,
                 info: ptr::null(),
@@ -1188,13 +1230,14 @@ impl JSFunctionSpec {
 
 /// Equivalents of the JS_PS* macros.
 impl JSPropertySpec {
-    pub fn getter(name: *const ::std::os::raw::c_char, flags: u8, func: JSNative)
-                        -> JSPropertySpec {
+    pub fn getter(
+        name: *const ::std::os::raw::c_char,
+        flags: u8,
+        func: JSNative,
+    ) -> JSPropertySpec {
         debug_assert_eq!(flags & !(JSPROP_ENUMERATE | JSPROP_PERMANENT), 0);
         JSPropertySpec {
-            name: JSPropertySpec_Name {
-                string_: name,
-            },
+            name: JSPropertySpec_Name { string_: name },
             flags: flags,
             u: JSPropertySpec_AccessorsOrValue {
                 accessors: JSPropertySpec_AccessorsOrValue_Accessors {
@@ -1209,22 +1252,21 @@ impl JSPropertySpec {
                             op: None,
                             info: ptr::null(),
                         },
-                    }
-                }
-            }
+                    },
+                },
+            },
         }
     }
 
-    pub fn getter_setter(name: *const ::std::os::raw::c_char,
-                         flags: u8,
-                         g_f: JSNative,
-                         s_f: JSNative)
-                         -> JSPropertySpec {
+    pub fn getter_setter(
+        name: *const ::std::os::raw::c_char,
+        flags: u8,
+        g_f: JSNative,
+        s_f: JSNative,
+    ) -> JSPropertySpec {
         debug_assert_eq!(flags & !(JSPROP_ENUMERATE | JSPROP_PERMANENT), 0);
         JSPropertySpec {
-            name: JSPropertySpec_Name {
-                string_: name,
-            },
+            name: JSPropertySpec_Name { string_: name },
             flags: flags,
             u: JSPropertySpec_AccessorsOrValue {
                 accessors: JSPropertySpec_AccessorsOrValue_Accessors {
@@ -1239,9 +1281,9 @@ impl JSPropertySpec {
                             op: s_f,
                             info: ptr::null(),
                         },
-                    }
-                }
-            }
+                    },
+                },
+            },
         }
     }
 
@@ -1250,7 +1292,7 @@ impl JSPropertySpec {
             string_: 0 as *const _,
         },
         flags: 0,
-        u: JSPropertySpec_AccessorsOrValue{
+        u: JSPropertySpec_AccessorsOrValue {
             accessors: JSPropertySpec_AccessorsOrValue_Accessors {
                 getter: JSPropertySpec_Accessor {
                     native: JSNativeWrapper {
@@ -1263,8 +1305,8 @@ impl JSPropertySpec {
                         op: None,
                         info: 0 as *const _,
                     },
-                }
-            }
-        }
+                },
+            },
+        },
     };
 }

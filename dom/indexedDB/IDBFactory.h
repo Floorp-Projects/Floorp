@@ -121,8 +121,6 @@ class IDBFactory final : public nsISupports, public nsWrapperCache {
   // IDB operations in other window.
   void UpdateActiveDatabaseCount(int32_t aDelta);
 
-  void IncrementParentLoggingRequestSerialNumber();
-
   nsIGlobalObject* GetParentObject() const { return mGlobal; }
 
   BrowserChild* GetBrowserChild() const { return mBrowserChild; }

@@ -18,7 +18,26 @@ namespace jit {
 // this should be replaced with the FOR_EACH_OPCODE macro.
 #define WARP_OPCODE_LIST(_) \
   _(Nop)                    \
+  _(NopDestructuring)       \
+  _(TryDestructuring)       \
+  _(Lineno)                 \
+  _(Undefined)              \
+  _(Void)                   \
+  _(Null)                   \
+  _(Hole)                   \
+  _(Uninitialized)          \
+  _(False)                  \
+  _(True)                   \
   _(Zero)                   \
+  _(One)                    \
+  _(Pop)                    \
+  _(PopN)                   \
+  _(Dup)                    \
+  _(Dup2)                   \
+  _(Swap)                   \
+  _(GetLocal)               \
+  _(SetLocal)               \
+  _(InitLexical)            \
   _(Return)                 \
   _(RetRval)
 
@@ -57,7 +76,7 @@ class MOZ_STACK_CLASS WarpBuilder {
   MOZ_MUST_USE bool buildBody();
   MOZ_MUST_USE bool buildEpilogue();
 
-#define BUILD_OP(OP) bool build_##OP(const BytecodeLocation& loc);
+#define BUILD_OP(OP) bool build_##OP(BytecodeLocation loc);
   WARP_OPCODE_LIST(BUILD_OP)
 #undef BUILD_OP
 

@@ -1184,3 +1184,34 @@ For message impressions we concatenate the ids of all messages in the panel.
   "value": { "view": ["application_menu" | "toolbar_dropdown"] }
 }
 ```
+
+## Moments page pings
+
+This reports when a moments page message has set the user preference for
+`browser.startup.homepage_override.once`. It goes through the same policy
+as other CFR messages.
+
+```
+// Release ping
+{
+  "action": "cfr_user_event"
+  "addon_version": "20200225022813"
+  "bucket_id": "WNP_THANK_YOU"
+  "event": "MOMENTS_PAGE_SET"
+  "impression_id": "{d85d2268-b751-9543-b6d7-aad523bf2b26}"
+  "locale": "en-US"
+  "message_id": "n/a"
+  "source": "CFR"
+}
+
+// Beta and Nightly channels
+{
+  "source": "CFR",
+  "message_id": "WNP_THANK_YOU",
+  "bucket_id": "WNP_THANK_YOU",
+  "event": "MOMENTS_PAGE_SET",
+  "addon_version": "20200225022813",
+  "locale": "en-US",
+  "client_id": "21dc1375-b24e-984b-83e9-c8a9660ae4ff"
+}
+```

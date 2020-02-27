@@ -4,7 +4,7 @@
 
 use std::any::Any;
 use std::cell::RefCell;
-use std::panic::{UnwindSafe, catch_unwind, resume_unwind};
+use std::panic::{catch_unwind, resume_unwind, UnwindSafe};
 
 thread_local!(static PANIC_RESULT: RefCell<Option<Box<Any + Send>>> = RefCell::new(None));
 
@@ -17,7 +17,8 @@ pub fn maybe_resume_unwind() {
 
 /// Generic wrapper for JS engine callbacks panic-catching
 pub fn wrap_panic<F, R>(function: F, generic_return_type: R) -> R
-    where F: FnOnce() -> R + UnwindSafe
+where
+    F: FnOnce() -> R + UnwindSafe,
 {
     let result = catch_unwind(function);
     match result {

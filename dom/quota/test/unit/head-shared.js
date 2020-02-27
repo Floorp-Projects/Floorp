@@ -215,6 +215,16 @@ function reset(callback) {
   return request;
 }
 
+function resetClient(principal, client) {
+  let request = Services.qms.resetStoragesForPrincipal(
+    principal,
+    "default",
+    client
+  );
+
+  return request;
+}
+
 function persist(principal, callback) {
   let request = SpecialPowers._getQuotaManager().persist(principal);
   request.callback = callback;

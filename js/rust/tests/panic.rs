@@ -21,23 +21,30 @@ fn panic() {
     let c_option = JS::RealmOptions::default();
 
     unsafe {
-        let global = JS_NewGlobalObject(context, &SIMPLE_GLOBAL_CLASS,
-                                        ptr::null_mut(), h_option, &c_option);
+        let global = JS_NewGlobalObject(
+            context,
+            &SIMPLE_GLOBAL_CLASS,
+            ptr::null_mut(),
+            h_option,
+            &c_option,
+        );
         rooted!(in(context) let global_root = global);
         let global = global_root.handle();
         let _ar = js::ar::AutoRealm::with_obj(context, global.get());
-        let function = JS_DefineFunction(context, global,
-                                         b"test\0".as_ptr() as *const _,
-                                         Some(test), 0, 0);
+        let function = JS_DefineFunction(
+            context,
+            global,
+            b"test\0".as_ptr() as *const _,
+            Some(test),
+            0,
+            0,
+        );
         assert!(!function.is_null());
         rooted!(in(context) let mut rval = UndefinedValue());
-        let _ = runtime.evaluate_script(global, "test();", "test.js", 0,
-                                        rval.handle_mut());
+        let _ = runtime.evaluate_script(global, "test();", "test.js", 0, rval.handle_mut());
     }
 }
 
 unsafe extern "C" fn test(_cx: *mut JSContext, _argc: u32, _vp: *mut JS::Value) -> bool {
-    wrap_panic(|| {
-        panic!()
-    }, false)
+    wrap_panic(|| panic!(), false)
 }
