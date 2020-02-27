@@ -22,14 +22,12 @@ const DRIVER_PREF = "sanity-test.driver-version";
 const DEVICE_PREF = "sanity-test.device-id";
 const VERSION_PREF = "sanity-test.version";
 const ADVANCED_LAYERS_PREF = "sanity-test.advanced-layers";
-const WEBRENDER_DISABLED_PREF = "sanity-test.webrender.force-disabled";
 const DISABLE_VIDEO_PREF = "media.hardware-video-decoding.failed";
 const RUNNING_PREF = "sanity-test.running";
 const TIMEOUT_SEC = 20;
 
 const AL_ENABLED_PREF = "layers.mlgpu.enabled";
 const AL_TEST_FAILED_PREF = "layers.mlgpu.sanity-test-failed";
-const WR_DISABLED_PREF = "gfx.webrender.force-disabled";
 
 // GRAPHICS_SANITY_TEST histogram enumeration values
 const TEST_PASSED = 0;
@@ -44,7 +42,6 @@ const REASON_FIREFOX_CHANGED = 1;
 const REASON_DEVICE_CHANGED = 2;
 const REASON_DRIVER_CHANGED = 3;
 const REASON_AL_CONFIG_CHANGED = 4;
-const REASON_WR_CONFIG_CHANGED = 5;
 
 function testPixel(ctx, x, y, r, g, b, a, fuzz) {
   var data = ctx.getImageData(x, y, 1, 1);
@@ -207,17 +204,6 @@ function verifyLayersRendering(ctx) {
 }
 
 function testCompositor(test, win, ctx) {
-  if (win.windowUtils.layerManagerType == "WebRender") {
-    // When layer manger type is WebRender, drawWindow() is skipped, since
-    // drawWindow() could take long time and
-    // advanced layer is disabled from fallback candidate.
-    if (Services.prefs.getBoolPref(AL_ENABLED_PREF, false)) {
-      Services.prefs.setBoolPref(AL_TEST_FAILED_PREF, true);
-    }
-    reportResult(TEST_PASSED);
-    return true;
-  }
-
   takeWindowSnapshot(win, ctx);
   var testPassed = true;
 
@@ -357,7 +343,6 @@ SanityTest.prototype = {
     var buildId = Services.appinfo.platformBuildID;
     var gfxinfo = Cc["@mozilla.org/gfx/info;1"].getService(Ci.nsIGfxInfo);
     var hasAL = Services.prefs.getBoolPref(AL_ENABLED_PREF, false);
-    var disableWR = Services.prefs.getBoolPref(WR_DISABLED_PREF, false);
 
     if (Services.prefs.getBoolPref(RUNNING_PREF, false)) {
       Services.prefs.setBoolPref(DISABLE_VIDEO_PREF, true);
@@ -407,8 +392,7 @@ SanityTest.prototype = {
       ) &&
       checkPref(DEVICE_PREF, gfxinfo.adapterDeviceID, REASON_DEVICE_CHANGED) &&
       checkPref(VERSION_PREF, buildId, REASON_FIREFOX_CHANGED) &&
-      checkPref(ADVANCED_LAYERS_PREF, hasAL, REASON_AL_CONFIG_CHANGED) &&
-      checkPref(WEBRENDER_DISABLED_PREF, disableWR, REASON_WR_CONFIG_CHANGED)
+      checkPref(ADVANCED_LAYERS_PREF, hasAL, REASON_AL_CONFIG_CHANGED)
     ) {
       return false;
     }
@@ -420,7 +404,6 @@ SanityTest.prototype = {
     Services.prefs.setStringPref(DEVICE_PREF, gfxinfo.adapterDeviceID);
     Services.prefs.setStringPref(VERSION_PREF, buildId);
     Services.prefs.setBoolPref(ADVANCED_LAYERS_PREF, hasAL);
-    Services.prefs.setBoolPref(WEBRENDER_DISABLED_PREF, disableWR);
 
     // Update the prefs so that this test doesn't run again until the next update.
     Services.prefs.setBoolPref(RUNNING_PREF, true);
