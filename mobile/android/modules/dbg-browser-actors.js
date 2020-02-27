@@ -79,9 +79,9 @@ MobileTabList.prototype = Object.create(BrowserTabList.prototype);
 MobileTabList.prototype.constructor = MobileTabList;
 
 MobileTabList.prototype._getSelectedBrowser = function(aWindow) {
-  return aWindow.BrowserApp.selectedBrowser;
+  return aWindow.browser;
 };
 
 MobileTabList.prototype._getChildren = function(aWindow) {
-  return aWindow.BrowserApp.tabs.map(tab => tab.browser);
+  return [aWindow.browser];
 };
