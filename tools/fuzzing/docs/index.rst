@@ -3,7 +3,9 @@ Fuzzing
 
 .. toctree::
   :maxdepth: 1
+  :hidden:
   :glob:
+  :reversed:
 
   *
 
@@ -168,14 +170,18 @@ below) if your code can be exercised in this way.
 The Fuzzing Interface
 ~~~~~~~~~~~~~~~~~~~~~
 
+**Fuzzing Interface**
+
+The fuzzing interface is glue code living in mozilla-central in order to make it
+easier for developers and security researchers to test C/C++ code with either libFuzzer or afl-fuzz.
+
 This interface offers a gtest (C++ unit test) level component based
 fuzzing approach and is suitable for anything that could also be
 tested/exercised using a gtest. This method is by far the fastest, but
 usually limited to testing isolated components that can be instantiated
 on this level. Utilizing this method requires you to write a fuzzing
 target similar to writing a gtest. This target will automatically be
-usable with libFuzzer and AFLFuzz. We offer a `comprehensive
-manual <https://developer.mozilla.org/en-US/docs/Mozilla/Testing/Fuzzing_Interface>`__
+usable with libFuzzer and AFLFuzz. We offer a :ref:`comprehensive manual <Fuzzing Interface>`
 that describes how to write and utilize your own target.
 
 A simple example here is the `SDP parser
