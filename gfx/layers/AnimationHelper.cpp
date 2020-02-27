@@ -615,12 +615,6 @@ bool AnimationHelper::SampleAnimations(CompositorAnimationStorage* aStorage,
 
     // Store the AnimatedValue
     switch (lastPropertyAnimationGroup.mProperty) {
-      case eCSSProperty_background_color: {
-        aStorage->SetAnimatedValue(
-            iter.Key(), Servo_AnimationValue_GetColor(animationValues[0],
-                                                      NS_RGBA(0, 0, 0, 0)));
-        break;
-      }
       case eCSSProperty_opacity: {
         MOZ_ASSERT(animationValues.Length() == 1);
         aStorage->SetAnimatedValue(

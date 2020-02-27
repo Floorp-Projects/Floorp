@@ -433,11 +433,9 @@ pub struct WrFilterData {
 }
 
 #[repr(u32)]
-#[derive(Debug)]
 pub enum WrAnimationType {
     Transform = 0,
     Opacity = 1,
-    BackgroundColor = 2,
 }
 
 #[repr(C)]
@@ -459,13 +457,6 @@ pub struct WrTransformProperty {
 pub struct WrOpacityProperty {
     pub id: u64,
     pub opacity: f32,
-}
-
-#[repr(C)]
-#[derive(Copy, Clone, Debug)]
-pub struct WrColorProperty {
-    pub id: u64,
-    pub color: ColorF,
 }
 
 /// cbindgen:field-names=[mHandle]
@@ -1714,13 +1705,10 @@ pub extern "C" fn wr_transaction_update_dynamic_properties(
     opacity_count: usize,
     transform_array: *const WrTransformProperty,
     transform_count: usize,
-    color_array: *const WrColorProperty,
-    color_count: usize,
 ) {
     let mut properties = DynamicProperties {
         transforms: Vec::with_capacity(transform_count),
         floats: Vec::with_capacity(opacity_count),
-        colors: Vec::with_capacity(color_count),
     };
 
     if transform_count > 0 {
@@ -1747,19 +1735,6 @@ pub extern "C" fn wr_transaction_update_dynamic_properties(
                 value: element.opacity,
             };
             properties.floats.push(prop);
-        }
-    }
-
-    if color_count > 0 {
-        let color_slice = unsafe { make_slice(color_array, color_count) };
-
-        properties.colors.reserve(color_slice.len());
-        for element in color_slice.iter() {
-            let prop = PropertyValue {
-                key: PropertyBindingKey::new(element.id),
-                value: element.color,
-            };
-            properties.colors.push(prop);
         }
     }
 
@@ -2406,7 +2381,6 @@ pub extern "C" fn wr_dp_push_stacking_context(
                                                   // Same as above opacity case.
                                                   transform_ref.cloned().unwrap_or(LayoutTransform::identity())));
             },
-            _ => unreachable!("{:?} should not create a stacking context", anim.effect_type),
         }
     }
 
@@ -2639,29 +2613,6 @@ fn prim_flags(
     }
 }
 
-fn common_item_properties_for_rect(
-    state: &mut WrState,
-    rect: LayoutRect,
-    clip: LayoutRect,
-    is_backface_visible: bool,
-    parent: &WrSpaceAndClipChain
-) -> CommonItemProperties {
-    let space_and_clip = parent.to_webrender(state.pipeline_id);
-    let clip_rect = clip.intersection(&rect);
-
-    CommonItemProperties {
-        // NB: the damp-e10s talos-test will frequently crash on startup if we
-        // early-return here for empty rects. I couldn't figure out why, but
-        // it's pretty harmless to feed these through, so, uh, we do?
-        clip_rect: clip_rect.unwrap_or(LayoutRect::zero()),
-        clip_id: space_and_clip.clip_id,
-        spatial_id: space_and_clip.spatial_id,
-        flags: prim_flags(is_backface_visible),
-        hit_info: state.current_tag,
-        item_key: state.current_item_key,
-    }
-}
-
 #[no_mangle]
 pub extern "C" fn wr_dp_push_rect(state: &mut WrState,
                                   rect: LayoutRect,
@@ -2671,52 +2622,25 @@ pub extern "C" fn wr_dp_push_rect(state: &mut WrState,
                                   color: ColorF) {
     debug_assert!(unsafe { !is_in_render_thread() });
 
-    let prim_info = common_item_properties_for_rect(
-        state,
-        rect,
-        clip,
-        is_backface_visible,
-        parent,
-    );
+    let space_and_clip = parent.to_webrender(state.pipeline_id);
+    let clip_rect = clip.intersection(&rect);
+
+    let prim_info = CommonItemProperties {
+        // NB: the damp-e10s talos-test will frequently crash on startup if we
+        // early-return here for empty rects. I couldn't figure out why, but
+        // it's pretty harmless to feed these through, so, uh, we do?
+        clip_rect: clip_rect.unwrap_or(LayoutRect::zero()),
+        clip_id: space_and_clip.clip_id,
+        spatial_id: space_and_clip.spatial_id,
+        flags: prim_flags(is_backface_visible),
+        hit_info: state.current_tag,
+        item_key: state.current_item_key,
+    };
 
     state.frame_builder.dl_builder.push_rect(
         &prim_info,
         color,
     );
-}
-
-#[no_mangle]
-pub extern "C" fn wr_dp_push_rect_with_animation(
-    state: &mut WrState,
-    rect: LayoutRect,
-    clip: LayoutRect,
-    is_backface_visible: bool,
-    parent: &WrSpaceAndClipChain,
-    color: ColorF,
-    animation: *const WrAnimationProperty) {
-    debug_assert!(unsafe { !is_in_render_thread() });
-
-    let prim_info = common_item_properties_for_rect(
-        state,
-        rect,
-        clip,
-        is_backface_visible,
-        parent,
-    );
-
-    let anim = unsafe { animation.as_ref() };
-    if let Some(anim) = anim {
-        debug_assert!(anim.id > 0);
-        match anim.effect_type {
-            WrAnimationType::BackgroundColor => {
-                state.frame_builder.dl_builder.push_rect_with_animation(
-                    &prim_info,
-                    PropertyBinding::Binding(PropertyBindingKey::new(anim.id), color),
-                )
-            },
-            _ => unreachable!("Didn't expect {:?} animation", anim.effect_type),
-        }
-    }
 }
 
 #[no_mangle]

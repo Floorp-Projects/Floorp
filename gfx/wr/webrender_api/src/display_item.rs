@@ -299,11 +299,11 @@ pub struct ScrollFrameDisplayItem {
     pub external_scroll_offset: LayoutVector2D,
 }
 
-/// A solid or an animating color to draw (may not actually be a rectangle due to complex clips)
+/// A solid color to draw (may not actually be a rectangle due to complex clips)
 #[derive(Clone, Copy, Debug, Default, Deserialize, PartialEq, Serialize, PeekPoke)]
 pub struct RectangleDisplayItem {
     pub common: CommonItemProperties,
-    pub color: PropertyBinding<ColorF>,
+    pub color: ColorF,
 }
 
 /// Clears all colors from the area, making it possible to cut holes in the window.
