@@ -171,6 +171,8 @@ bool WarpBuilder::build_TryDestructuring(BytecodeLocation) { return true; }
 
 bool WarpBuilder::build_Lineno(BytecodeLocation) { return true; }
 
+bool WarpBuilder::build_DebugLeaveLexicalEnv(BytecodeLocation) { return true; }
+
 bool WarpBuilder::build_Undefined(BytecodeLocation) {
   // If this ever changes, change what JSOp::GImplicitThis does too.
   pushConstant(UndefinedValue());
@@ -195,6 +197,11 @@ bool WarpBuilder::build_Hole(BytecodeLocation) {
 
 bool WarpBuilder::build_Uninitialized(BytecodeLocation) {
   pushConstant(MagicValue(JS_UNINITIALIZED_LEXICAL));
+  return true;
+}
+
+bool WarpBuilder::build_IsConstructing(BytecodeLocation) {
+  pushConstant(MagicValue(JS_IS_CONSTRUCTING));
   return true;
 }
 
@@ -234,8 +241,25 @@ bool WarpBuilder::build_Dup2(BytecodeLocation) {
   return true;
 }
 
+bool WarpBuilder::build_DupAt(BytecodeLocation loc) {
+  current->pushSlot(current->stackDepth() - 1 - loc.getDupAtIndex());
+  return true;
+}
+
 bool WarpBuilder::build_Swap(BytecodeLocation) {
   current->swapAt(-1);
+  return true;
+}
+
+bool WarpBuilder::build_Pick(BytecodeLocation loc) {
+  int32_t depth = -int32_t(loc.getPickDepth());
+  current->pick(depth);
+  return true;
+}
+
+bool WarpBuilder::build_Unpick(BytecodeLocation loc) {
+  int32_t depth = -int32_t(loc.getUnpickDepth());
+  current->unpick(depth);
   return true;
 }
 
@@ -246,6 +270,36 @@ bool WarpBuilder::build_Zero(BytecodeLocation) {
 
 bool WarpBuilder::build_One(BytecodeLocation) {
   pushConstant(Int32Value(1));
+  return true;
+}
+
+bool WarpBuilder::build_Int8(BytecodeLocation loc) {
+  pushConstant(Int32Value(loc.getInt8()));
+  return true;
+}
+
+bool WarpBuilder::build_Uint16(BytecodeLocation loc) {
+  pushConstant(Int32Value(loc.getUint16()));
+  return true;
+}
+
+bool WarpBuilder::build_Uint24(BytecodeLocation loc) {
+  pushConstant(Int32Value(loc.getUint24()));
+  return true;
+}
+
+bool WarpBuilder::build_Int32(BytecodeLocation loc) {
+  pushConstant(Int32Value(loc.getInt32()));
+  return true;
+}
+
+bool WarpBuilder::build_Double(BytecodeLocation loc) {
+  pushConstant(loc.getInlineValue());
+  return true;
+}
+
+bool WarpBuilder::build_ResumeIndex(BytecodeLocation loc) {
+  pushConstant(Int32Value(loc.getResumeIndex()));
   return true;
 }
 
