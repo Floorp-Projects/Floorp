@@ -42,13 +42,13 @@ add_task(async function() {
   // The protocol will be TLS but the exact version depends on which protocol
   // the test server example.com supports.
   const protocol = textboxes[0].textContent;
-  ok(protocol.startsWith("TLS"), "The protocol " + protocol + " seems valid.");
+  ok(protocol.startsWith('"TLS'), "The protocol " + protocol + " seems valid.");
 
   // The cipher suite used by the test server example.com might change at any
   // moment but all of them should start with "TLS_".
   // http://www.iana.org/assignments/tls-parameters/tls-parameters.xhtml
   const suite = textboxes[1].textContent;
-  ok(suite.startsWith("TLS_"), "The suite " + suite + " seems valid.");
+  ok(suite.startsWith('"TLS_'), "The suite " + suite + " seems valid.");
 
   // Host
   is(
@@ -59,35 +59,39 @@ add_task(async function() {
   // These two values can change. So only check they're not empty.
   ok(textboxes[2].textContent !== "", "Label value is not empty.");
   ok(textboxes[3].textContent !== "", "Label value is not empty.");
-  is(textboxes[4].textContent, "Disabled", "Label has the expected value.");
-  is(textboxes[5].textContent, "Disabled", "Label has the expected value.");
+  is(textboxes[4].textContent, '"Disabled"', "Label has the expected value.");
+  is(textboxes[5].textContent, '"Disabled"', "Label has the expected value.");
 
   // Cert
-  is(textboxes[6].textContent, "example.com", "Label has the expected value.");
+  is(
+    textboxes[6].textContent,
+    '"example.com"',
+    "Label has the expected value."
+  );
   is(
     textboxes[7].textContent,
-    "<Not Available>",
+    '"<Not Available>"',
     "Label has the expected value."
   );
   is(
     textboxes[8].textContent,
-    "<Not Available>",
+    '"<Not Available>"',
     "Label has the expected value."
   );
 
   is(
     textboxes[9].textContent,
-    "Temporary Certificate Authority",
+    '"Temporary Certificate Authority"',
     "Label has the expected value."
   );
   is(
     textboxes[10].textContent,
-    "Mozilla Testing",
+    '"Mozilla Testing"',
     "Label has the expected value."
   );
   is(
     textboxes[11].textContent,
-    "Profile Guided Optimization",
+    '"Profile Guided Optimization"',
     "Label has the expected value."
   );
 
