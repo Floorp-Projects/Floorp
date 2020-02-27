@@ -27,7 +27,6 @@
     <attr name="toolbarDivider" format="reference"/>
     <attr name="menuCategoryText" format="reference"/>
 
-
     <!-- Misc -->
     <attr name="homeBackground" format="reference"/>
     <attr name="bottomBarBackground" format="reference"/>
@@ -41,6 +40,8 @@
     <attr name="toolbarEndGradient" format="reference"/>
     <attr name="shieldLottieFile" format="reference" />
     <attr name="fillLinkFromClipboard" format="reference"/>
+    <attr name="syncDisconnected" format="reference" />
+    <attr name="syncDisconnectedBackground" format="reference" />
 
     <declare-styleable name="LibraryListItem">
         <attr name="listItemTitle" format="reference" />

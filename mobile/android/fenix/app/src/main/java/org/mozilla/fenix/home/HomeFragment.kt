@@ -557,6 +557,7 @@ class HomeFragment : Fragment() {
         nav(R.id.homeFragment, directions)
     }
 
+    @SuppressWarnings("ComplexMethod")
     private fun createHomeMenu(context: Context): HomeMenu {
         return HomeMenu(context) {
             when (it) {
@@ -615,6 +616,14 @@ class HomeFragment : Fragment() {
                         activity,
                         lifecycleScope,
                         view?.let { view -> FenixSnackbar.makeWithToolbarPadding(view) }
+                    )
+                }
+                HomeMenu.Item.Sync -> {
+                    invokePendingDeleteJobs()
+                    hideOnboardingIfNeeded()
+                    nav(
+                        R.id.homeFragment,
+                        HomeFragmentDirections.actionGlobalTurnOnSync()
                     )
                 }
             }

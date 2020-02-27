@@ -14,6 +14,7 @@ import mozilla.components.browser.menu.item.BrowserMenuHighlightableItem
 import mozilla.components.browser.menu.item.BrowserMenuImageText
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.ext.getColorFromAttr
 import org.mozilla.fenix.theme.ThemeManager
 import org.mozilla.fenix.utils.Settings
 import org.mozilla.fenix.whatsnew.WhatsNew
@@ -30,6 +31,7 @@ class HomeMenu(
         object History : Item()
         object Bookmarks : Item()
         object Quit : Item()
+        object Sync : Item()
     }
 
     val menuBuilder by lazy { BrowserMenuBuilder(menuItems) }
@@ -37,85 +39,93 @@ class HomeMenu(
     private val hasAccountProblem get() = context.components.backgroundServices.accountManager.accountNeedsReauth()
     private val primaryTextColor =
         ThemeManager.resolveAttribute(R.attr.primaryText, context)
+    private val syncDisconnectedColor = ThemeManager.resolveAttribute(R.attr.syncDisconnected, context)
+    private val syncDisconnectedBackgroundColor = context.getColorFromAttr(R.attr.syncDisconnectedBackground)
 
     private val menuCategoryTextColor =
         ThemeManager.resolveAttribute(R.attr.menuCategoryText, context)
 
     private val menuItems by lazy {
-        val items = mutableListOf(
+
+        val reconnectToSyncItem = BrowserMenuHighlightableItem(
+            context.getString(R.string.sync_reconnect),
+            R.drawable.ic_sync_disconnected,
+            iconTintColorResource = syncDisconnectedColor,
+            textColorResource = primaryTextColor,
+            highlight = BrowserMenuHighlight.HighPriority(
+                backgroundTint = syncDisconnectedBackgroundColor
+            ),
+            isHighlighted = { true }
+        ) {
+            onItemTapped.invoke(Item.Sync)
+        }
+
+        val whatsNewItem = BrowserMenuHighlightableItem(
+            context.getString(R.string.browser_menu_whats_new),
+            R.drawable.ic_whats_new,
+            iconTintColorResource = primaryTextColor,
+            highlight = BrowserMenuHighlight.LowPriority(
+                notificationTint = getColor(context, R.color.whats_new_notification_color)
+            ),
+            isHighlighted = { WhatsNew.shouldHighlightWhatsNew(context) }
+        ) {
+            onItemTapped.invoke(Item.WhatsNew)
+        }
+
+        val bookmarksItem = BrowserMenuImageText(
+            context.getString(R.string.library_bookmarks),
+            R.drawable.ic_bookmark_outline,
+            primaryTextColor
+        ) {
+            onItemTapped.invoke(Item.Bookmarks)
+        }
+
+        val libraryItem = BrowserMenuImageText(
+            context.getString(R.string.library_history),
+            R.drawable.ic_history,
+            primaryTextColor) {
+            onItemTapped.invoke(Item.History)
+        }
+
+        val settingsItem = BrowserMenuImageText(
+            context.getString(R.string.browser_menu_settings),
+            R.drawable.ic_settings,
+            primaryTextColor
+        ) {
+            onItemTapped.invoke(Item.Settings)
+        }
+
+        val helpItem = BrowserMenuImageText(
+            context.getString(R.string.browser_menu_help),
+            R.drawable.ic_help,
+            primaryTextColor
+        ) {
+            onItemTapped.invoke(Item.Help)
+        }
+
+        val quitItem = BrowserMenuImageText(
+            context.getString(R.string.delete_browsing_data_on_quit_action),
+            R.drawable.ic_exit,
+            primaryTextColor
+        ) {
+            onItemTapped.invoke(Item.Quit)
+        }
+
+        val items = listOfNotNull(
+            if (hasAccountProblem) reconnectToSyncItem else null,
+            whatsNewItem,
+            BrowserMenuDivider(),
             BrowserMenuCategory(
                 context.getString(R.string.browser_menu_your_library),
                 textColorResource = menuCategoryTextColor
             ),
-
-            BrowserMenuImageText(
-                context.getString(R.string.library_bookmarks),
-                R.drawable.ic_bookmark_outline,
-                primaryTextColor
-            ) {
-                onItemTapped.invoke(Item.Bookmarks)
-            },
-
-            BrowserMenuImageText(
-                context.getString(R.string.library_history),
-                R.drawable.ic_history,
-                primaryTextColor
-            ) {
-                onItemTapped.invoke(Item.History)
-            },
-
+            bookmarksItem,
+            libraryItem,
             BrowserMenuDivider(),
-
-            BrowserMenuHighlightableItem(
-                label = context.getString(R.string.browser_menu_settings),
-                startImageResource = R.drawable.ic_settings,
-                iconTintColorResource =
-                    if (hasAccountProblem) R.color.sync_error_text_color else primaryTextColor,
-                textColorResource =
-                    if (hasAccountProblem) R.color.sync_error_text_color else primaryTextColor,
-
-                highlight = BrowserMenuHighlight.HighPriority(
-                    endImageResource = R.drawable.ic_alert,
-                    backgroundTint = getColor(context, R.color.sync_error_background_color)
-                ),
-                isHighlighted = { hasAccountProblem }
-            ) {
-                onItemTapped.invoke(Item.Settings)
-            },
-
-            BrowserMenuHighlightableItem(
-                context.getString(R.string.browser_menu_whats_new),
-                R.drawable.ic_whats_new,
-                iconTintColorResource = primaryTextColor,
-                highlight = BrowserMenuHighlight.LowPriority(
-                    notificationTint = getColor(context, R.color.whats_new_notification_color)
-                ),
-                isHighlighted = { WhatsNew.shouldHighlightWhatsNew(context) }
-            ) {
-                onItemTapped.invoke(Item.WhatsNew)
-            },
-
-            BrowserMenuImageText(
-                context.getString(R.string.browser_menu_help),
-                R.drawable.ic_help,
-                primaryTextColor
-            ) {
-                onItemTapped.invoke(Item.Help)
-            }
-
+            settingsItem,
+            helpItem,
+            if (Settings.getInstance(context).shouldDeleteBrowsingDataOnQuit) quitItem else null
         )
-
-        if (Settings.getInstance(context).shouldDeleteBrowsingDataOnQuit) {
-            items.add(
-                BrowserMenuImageText(
-                    context.getString(R.string.delete_browsing_data_on_quit_action),
-                    R.drawable.ic_exit,
-                    primaryTextColor
-                ) {
-                    onItemTapped.invoke(Item.Quit)
-                }
-            )
-        }
 
         items
     }
