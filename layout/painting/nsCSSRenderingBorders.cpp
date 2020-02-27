@@ -3388,11 +3388,12 @@ nsCSSBorderImageRenderer::CreateBorderImageRenderer(
   }
 
   // We should always get here with the frame's border, but we may construct an
-  // nsStyleBorder from the stack to deal with :visited. We copy the border
-  // image and such from the non-visited one, so there's no need to do anything
-  // with it.
-  MOZ_ASSERT(&aStyleBorder == aForFrame->StyleBorder() ||
-             aForFrame->Style()->GetStyleIfVisited());
+  // nsStyleBorder om the stack to deal with :visited and other shenaningans.
+  //
+  // We always copy the border image and such from the non-visited one, so
+  // there's no need to do anything with it.
+  MOZ_ASSERT(aStyleBorder.GetBorderImageRequest() ==
+             aForFrame->StyleBorder()->GetBorderImageRequest());
 
   nsCSSBorderImageRenderer renderer(aForFrame, aBorderArea, aStyleBorder,
                                     aSkipSides, imgRenderer);
