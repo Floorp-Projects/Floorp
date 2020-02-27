@@ -82,4 +82,3 @@ pref(layout.css.marker.restricted,false) == marker-reframe-and-animation-starts-
 == opacity-animation-in-delay.html about:blank
 == transform-animation-in-delay.html transform-animation-in-delay-ref.html
 == containing-block-on-visibility-hidden.html containing-block-on-visibility-hidden-ref.html
-== background-color.html background-color-ref.html
