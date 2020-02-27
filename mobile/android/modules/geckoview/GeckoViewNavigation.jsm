@@ -115,7 +115,7 @@ class GeckoViewNavigation extends GeckoViewModule {
         }
 
         if (flags & (1 << 2)) {
-          navFlags |= Ci.nsIWebNavigation.LOAD_FLAGS_EXTERNAL;
+          navFlags |= Ci.nsIWebNavigation.LOAD_FLAGS_FROM_EXTERNAL;
         }
 
         if (flags & (1 << 3)) {
