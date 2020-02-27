@@ -17,7 +17,7 @@ MIDL_GENERATED_FILES = \
 $(MIDL_GENERATED_FILES): done_gen ;
 
 done_gen: $(srcdir)/IGeckoCustom.idl
-	$(MIDL) $(MIDL_FLAGS) -I $(srcdir) -Oicf $(srcdir)/IGeckoCustom.idl
+	$(call WINEWRAP,$(MIDL)) $(MIDL_FLAGS) -I $(srcdir_rel) -Oicf $(srcdir_rel)/IGeckoCustom.idl
 	touch $@
 
 export:: done_gen
