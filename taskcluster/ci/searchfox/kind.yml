@@ -131,6 +131,7 @@ jobs:
                 - win64-rust
                 - win64-cbindgen
                 - win64-nasm
+                - win64-dump-syms
 
     android-armv7-searchfox/debug:
         description: "Android ARMv7 Debug Searchfox"
