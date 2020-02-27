@@ -133,10 +133,6 @@ class BrowserParent final : public PBrowserParent,
 
   static TabId GetTabIdFrom(nsIDocShell* docshell);
 
-  static bool AreRecordReplayTabsActive() {
-    return gNumActiveRecordReplayTabs != 0;
-  }
-
   const TabId GetTabId() const { return mTabId; }
 
   ContentParent* Manager() const { return mManager; }
@@ -993,15 +989,6 @@ class BrowserParent final : public PBrowserParent,
   // BrowserParent with a new one connected to a different process, and we
   // should ignore nsIWebProgressListener stop requests.
   bool mIsDestroyingForProcessSwitch : 1;
-
-  // How many record/replay tabs have active docshells in this process.
-  static size_t gNumActiveRecordReplayTabs;
-
-  // Whether this tab is contributing to gNumActiveRecordReplayTabs.
-  bool mIsActiveRecordReplayTab : 1;
-
-  // Update whether this is an active record/replay tab.
-  void SetIsActiveRecordReplayTab(bool aIsActive);
 };
 
 struct MOZ_STACK_CLASS BrowserParent::AutoUseNewTab final {

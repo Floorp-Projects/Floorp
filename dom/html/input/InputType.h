@@ -9,6 +9,7 @@
 
 #include <stdint.h>
 #include "mozilla/Decimal.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/UniquePtr.h"
 #include "nsIConstraintValidation.h"
 #include "nsString.h"

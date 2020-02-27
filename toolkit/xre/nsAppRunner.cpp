@@ -27,7 +27,6 @@
 #include "mozilla/Telemetry.h"
 #include "mozilla/Utf8.h"
 #include "mozilla/intl/LocaleService.h"
-#include "mozilla/recordreplay/ParentIPC.h"
 #include "mozilla/JSONWriter.h"
 #include "BaseProfiler.h"
 
@@ -1409,10 +1408,6 @@ static void DumpHelp() {
 #if defined(XP_WIN) || defined(MOZ_WIDGET_GTK) || defined(XP_MACOSX)
   printf("  --headless         Run without a GUI.\n");
 #endif
-
-  printf(
-      "  --save-recordings  Save recordings for all content processes to a "
-      "directory.\n");
 
   // this works, but only after the components have registered.  so if you drop
   // in a new command line handler, --help won't not until the second run. out
@@ -4781,8 +4776,6 @@ nsresult XRE_InitCommandLine(int aArgc, char* aArgv[]) {
   for (int i = 0; i < aArgc; ++i) free(canonArgs[i]);
   delete[] canonArgs;
 #endif
-
-  recordreplay::parent::InitializeUIProcess(gArgc, gArgv);
 
 #if defined(MOZ_WIDGET_ANDROID)
   const char* path = nullptr;

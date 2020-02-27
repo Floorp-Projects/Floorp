@@ -9,7 +9,6 @@
 #include "ContentProcess.h"
 #include "base/shared_memory.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/recordreplay/ParentIPC.h"
 
 #if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
 #  include <stdlib.h>
@@ -176,12 +175,6 @@ bool ContentProcess::Init(int aArgc, char* aArgv[]) {
     return false;
   }
 
-  if (recordreplay::IsMiddleman()) {
-    recordreplay::parent::InitializeMiddleman(aArgc, aArgv, ParentPid(),
-                                              deserializer.GetPrefsHandle(),
-                                              deserializer.GetPrefMapHandle());
-  }
-
   mContent.Init(IOThreadChild::message_loop(), ParentPid(), *parentBuildID,
                 IOThreadChild::TakeChannel(), *childID, *isForBrowser);
 
@@ -189,11 +182,8 @@ bool ContentProcess::Init(int aArgc, char* aArgv[]) {
 #if (defined(XP_MACOSX)) && defined(MOZ_SANDBOX)
   mContent.SetProfileDir(profileDir);
 #  if defined(DEBUG)
-  // For WebReplay middleman processes, the sandbox is
-  // started after receiving the SetProcessSandbox message.
   if (IsContentSandboxEnabled() &&
-      Preferences::GetBool("security.sandbox.content.mac.earlyinit") &&
-      !recordreplay::IsMiddleman()) {
+      Preferences::GetBool("security.sandbox.content.mac.earlyinit")) {
     AssertMacSandboxEnabled();
   }
 #  endif /* DEBUG */

@@ -7,7 +7,6 @@
 #ifndef vm_Time_h
 #define vm_Time_h
 
-#include "mozilla/RecordReplay.h"
 #include "mozilla/TimeStamp.h"
 
 #include <stddef.h>
@@ -130,19 +129,11 @@ extern size_t PRMJ_FormatTime(char* buf, size_t buflen, const char* fmt,
 #if defined(_WIN32) && (defined(_M_IX86) || defined(_M_AMD64))
 
 #  include <intrin.h>
-static __inline uint64_t ReadTimestampCounter(void) {
-  if (mozilla::recordreplay::IsRecordingOrReplaying()) {
-    return 0;
-  }
-  return __rdtsc();
-}
+static __inline uint64_t ReadTimestampCounter(void) { return __rdtsc(); }
 
 #elif defined(__i386__)
 
 static __inline__ uint64_t ReadTimestampCounter(void) {
-  if (mozilla::recordreplay::IsRecordingOrReplaying()) {
-    return 0;
-  }
   uint64_t x;
   __asm__ volatile(".byte 0x0f, 0x31" : "=A"(x));
   return x;
@@ -151,9 +142,6 @@ static __inline__ uint64_t ReadTimestampCounter(void) {
 #elif defined(__x86_64__)
 
 static __inline__ uint64_t ReadTimestampCounter(void) {
-  if (mozilla::recordreplay::IsRecordingOrReplaying()) {
-    return 0;
-  }
   unsigned hi, lo;
   __asm__ __volatile__("rdtsc" : "=a"(lo), "=d"(hi));
   return ((uint64_t)lo) | (((uint64_t)hi) << 32);
@@ -167,9 +155,7 @@ static __inline__ uint64_t ReadTimestampCounter(void) {
 
 namespace js {
 
-// Get the current time, bypassing any record/replay instrumentation.
 static inline mozilla::TimeStamp ReallyNow() {
-  mozilla::recordreplay::AutoPassThroughThreadEvents pt;
   return mozilla::TimeStamp::NowUnfuzzed();
 }
 

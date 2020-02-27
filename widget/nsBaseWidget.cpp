@@ -1402,9 +1402,6 @@ CompositorBridgeChild* nsBaseWidget::GetRemoteRenderer() {
 }
 
 already_AddRefed<gfx::DrawTarget> nsBaseWidget::StartRemoteDrawing() {
-  if (recordreplay::IsRecordingOrReplaying()) {
-    return recordreplay::child::DrawTargetForRemoteDrawing(mBounds.Size());
-  }
   return nullptr;
 }
 

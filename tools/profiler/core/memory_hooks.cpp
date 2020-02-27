@@ -160,9 +160,7 @@ class InfallibleAllocWithoutHooksPolicy {
 // Define a custom implementation here.
 class Mutex : private ::mozilla::detail::MutexImpl {
  public:
-  Mutex()
-      : ::mozilla::detail::MutexImpl(
-            ::mozilla::recordreplay::Behavior::DontPreserve) {}
+  Mutex() : ::mozilla::detail::MutexImpl() {}
 
   void Lock() { ::mozilla::detail::MutexImpl::lock(); }
   void Unlock() { ::mozilla::detail::MutexImpl::unlock(); }
@@ -265,15 +263,11 @@ class ThreadIntercept {
 
   // This is a quick flag to check and see if the allocations feature is enabled
   // or disabled.
-  static mozilla::Atomic<bool, mozilla::Relaxed,
-                         mozilla::recordreplay::Behavior::DontPreserve>
-      sAllocationsFeatureEnabled;
+  static mozilla::Atomic<bool, mozilla::Relaxed> sAllocationsFeatureEnabled;
 
   // The markers will be stored on the main thread. Retain the id to the main
   // thread of this process here.
-  static mozilla::Atomic<int, mozilla::Relaxed,
-                         mozilla::recordreplay::Behavior::DontPreserve>
-      sMainThreadId;
+  static mozilla::Atomic<int, mozilla::Relaxed> sMainThreadId;
 
   ThreadIntercept() = default;
 
@@ -333,13 +327,10 @@ class ThreadIntercept {
 
 PROFILER_THREAD_LOCAL(bool) ThreadIntercept::tlsIsBlocked;
 
-mozilla::Atomic<bool, mozilla::Relaxed,
-                mozilla::recordreplay::Behavior::DontPreserve>
+mozilla::Atomic<bool, mozilla::Relaxed>
     ThreadIntercept::sAllocationsFeatureEnabled(false);
 
-mozilla::Atomic<int, mozilla::Relaxed,
-                mozilla::recordreplay::Behavior::DontPreserve>
-    ThreadIntercept::sMainThreadId(0);
+mozilla::Atomic<int, mozilla::Relaxed> ThreadIntercept::sMainThreadId(0);
 
 // An object of this class must be created (on the stack) before running any
 // code that might allocate.

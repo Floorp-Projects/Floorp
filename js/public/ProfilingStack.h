@@ -123,42 +123,30 @@ class ProfilingStackFrame {
 
   // Descriptive label for this stack frame. Must be a static string! Can be
   // an empty string, but not a null pointer.
-  mozilla::Atomic<const char*, mozilla::ReleaseAcquire,
-                  mozilla::recordreplay::Behavior::DontPreserve>
-      label_;
+  mozilla::Atomic<const char*, mozilla::ReleaseAcquire> label_;
 
   // An additional descriptive string of this frame which is combined with
   // |label_| in profiler output. Need not be (and usually isn't) static. Can
   // be null.
-  mozilla::Atomic<const char*, mozilla::ReleaseAcquire,
-                  mozilla::recordreplay::Behavior::DontPreserve>
-      dynamicString_;
+  mozilla::Atomic<const char*, mozilla::ReleaseAcquire> dynamicString_;
 
   // Stack pointer for non-JS stack frames, the script pointer otherwise.
-  mozilla::Atomic<void*, mozilla::ReleaseAcquire,
-                  mozilla::recordreplay::Behavior::DontPreserve>
-      spOrScript;
+  mozilla::Atomic<void*, mozilla::ReleaseAcquire> spOrScript;
 
   // The bytecode offset for JS stack frames.
   // Must not be used on non-JS frames; it'll contain either the default 0,
   // or a leftover value from a previous JS stack frame that was using this
   // ProfilingStackFrame object.
-  mozilla::Atomic<int32_t, mozilla::ReleaseAcquire,
-                  mozilla::recordreplay::Behavior::DontPreserve>
-      pcOffsetIfJS_;
+  mozilla::Atomic<int32_t, mozilla::ReleaseAcquire> pcOffsetIfJS_;
 
   // ID of the JS Realm for JS stack frames.
   // Must not be used on non-JS frames; it'll contain either the default 0,
   // or a leftover value from a previous JS stack frame that was using this
   // ProfilingStackFrame object.
-  mozilla::Atomic<uint64_t, mozilla::ReleaseAcquire,
-                  mozilla::recordreplay::Behavior::DontPreserve>
-      realmID_;
+  mozilla::Atomic<uint64_t, mozilla::ReleaseAcquire> realmID_;
 
   // Bits 0...8 hold the Flags. Bits 9...31 hold the category pair.
-  mozilla::Atomic<uint32_t, mozilla::ReleaseAcquire,
-                  mozilla::recordreplay::Behavior::DontPreserve>
-      flagsAndCategoryPair_;
+  mozilla::Atomic<uint32_t, mozilla::ReleaseAcquire> flagsAndCategoryPair_;
 
   static int32_t pcToOffset(JSScript* aScript, jsbytecode* aPc);
 
@@ -493,8 +481,7 @@ class JS_FRIEND_API ProfilingStack final {
   // written from the current thread.
   //
   // This is effectively a unique pointer.
-  mozilla::Atomic<js::ProfilingStackFrame*, mozilla::SequentiallyConsistent,
-                  mozilla::recordreplay::Behavior::DontPreserve>
+  mozilla::Atomic<js::ProfilingStackFrame*, mozilla::SequentiallyConsistent>
       frames{nullptr};
 
   // This may exceed the capacity, so instead use the stackSize() method to
@@ -508,9 +495,7 @@ class JS_FRIEND_API ProfilingStack final {
   // This is an atomic variable that uses ReleaseAcquire memory ordering.
   // See the "Concurrency considerations" paragraph at the top of this file
   // for more details.
-  mozilla::Atomic<uint32_t, mozilla::ReleaseAcquire,
-                  mozilla::recordreplay::Behavior::DontPreserve>
-      stackPointer;
+  mozilla::Atomic<uint32_t, mozilla::ReleaseAcquire> stackPointer;
 };
 
 namespace js {

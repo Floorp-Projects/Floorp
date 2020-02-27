@@ -565,13 +565,6 @@ struct JSStructuredCloneWriter {
 
   struct TransferableObjectsHasher : public DefaultHasher<JSObject*> {
     static inline HashNumber hash(const Lookup& l) {
-      // Iteration order of the transferable objects table must be
-      // preserved during recording/replaying, as the callbacks used
-      // during transfer may interact with the recording. Just use the
-      // same hash number for all elements to ensure this.
-      if (mozilla::recordreplay::IsRecordingOrReplaying()) {
-        return 0;
-      }
       return DefaultHasher<JSObject*>::hash(l);
     }
   };

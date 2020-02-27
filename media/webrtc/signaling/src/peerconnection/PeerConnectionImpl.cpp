@@ -1115,11 +1115,6 @@ PeerConnectionImpl::CreateDataChannel(
   PC_AUTO_ENTER_API_CALL(false);
   MOZ_ASSERT(aRetval);
 
-  // WebRTC is not enabled when recording/replaying (being removed) bug 1304149.
-  if (recordreplay::IsRecordingOrReplaying()) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
   RefPtr<DataChannel> dataChannel;
   DataChannelConnection::Type theType =
       static_cast<DataChannelConnection::Type>(aType);

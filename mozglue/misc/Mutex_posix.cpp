@@ -36,9 +36,7 @@
 // CPU count. Read concurrently from multiple threads. Written once during the
 // first mutex initialization; re-initialization is safe hence relaxed ordering
 // is OK.
-static mozilla::Atomic<uint32_t, mozilla::MemoryOrdering::Relaxed,
-                       mozilla::recordreplay::Behavior::DontPreserve>
-    sCPUCount(0);
+static mozilla::Atomic<uint32_t, mozilla::MemoryOrdering::Relaxed> sCPUCount(0);
 
 static void EnsureCPUCount() {
   if (sCPUCount) {
@@ -60,17 +58,12 @@ static void EnsureCPUCount() {
 
 #endif  // XP_DARWIN
 
-mozilla::detail::MutexImpl::MutexImpl(recordreplay::Behavior aRecorded)
+mozilla::detail::MutexImpl::MutexImpl()
 #ifdef XP_DARWIN
     : averageSpins(0)
 #endif
 {
   pthread_mutexattr_t* attrp = nullptr;
-
-  mozilla::Maybe<mozilla::recordreplay::AutoEnsurePassThroughThreadEvents> pt;
-  if (aRecorded == recordreplay::Behavior::DontPreserve) {
-    pt.emplace();
-  }
 
   // Linux with glibc and FreeBSD support adaptive mutexes that spin
   // for a short number of tries before sleeping.  NSPR's locks did
@@ -155,7 +148,7 @@ void mozilla::detail::MutexImpl::lock() {
   // feature.
 
   MOZ_ASSERT(sCPUCount);
-  if (sCPUCount == 1 || recordreplay::IsRecordingOrReplaying()) {
+  if (sCPUCount == 1) {
     mutexLock();
     return;
   }

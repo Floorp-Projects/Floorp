@@ -125,37 +125,30 @@ class ProfilingStackFrame {
 
   // Descriptive label for this stack frame. Must be a static string! Can be
   // an empty string, but not a null pointer.
-  Atomic<const char*, ReleaseAcquire, recordreplay::Behavior::DontPreserve>
-      label_;
+  Atomic<const char*, ReleaseAcquire> label_;
 
   // An additional descriptive string of this frame which is combined with
   // |label_| in profiler output. Need not be (and usually isn't) static. Can
   // be null.
-  Atomic<const char*, ReleaseAcquire, recordreplay::Behavior::DontPreserve>
-      dynamicString_;
+  Atomic<const char*, ReleaseAcquire> dynamicString_;
 
   // Stack pointer for non-JS stack frames, the script pointer otherwise.
-  Atomic<void*, ReleaseAcquire, recordreplay::Behavior::DontPreserve>
-      spOrScript;
+  Atomic<void*, ReleaseAcquire> spOrScript;
 
   // The bytecode offset for JS stack frames.
   // Must not be used on non-JS frames; it'll contain either the default 0,
   // or a leftover value from a previous JS stack frame that was using this
   // ProfilingStackFrame object.
-  Atomic<int32_t, ReleaseAcquire, recordreplay::Behavior::DontPreserve>
-      pcOffsetIfJS_;
+  Atomic<int32_t, ReleaseAcquire> pcOffsetIfJS_;
 
   // ID of the JS Realm for JS stack frames.
   // Must not be used on non-JS frames; it'll contain either the default 0,
   // or a leftover value from a previous JS stack frame that was using this
   // ProfilingStackFrame object.
-  mozilla::Atomic<uint64_t, mozilla::ReleaseAcquire,
-                  mozilla::recordreplay::Behavior::DontPreserve>
-      realmID_;
+  mozilla::Atomic<uint64_t, mozilla::ReleaseAcquire> realmID_;
 
   // Bits 0...8 hold the Flags. Bits 9...31 hold the category pair.
-  Atomic<uint32_t, ReleaseAcquire, recordreplay::Behavior::DontPreserve>
-      flagsAndCategoryPair_;
+  Atomic<uint32_t, ReleaseAcquire> flagsAndCategoryPair_;
 
  public:
   ProfilingStackFrame() = default;
@@ -459,9 +452,7 @@ class ProfilingStack final {
   // written from the current thread.
   //
   // This is effectively a unique pointer.
-  Atomic<ProfilingStackFrame*, SequentiallyConsistent,
-         recordreplay::Behavior::DontPreserve>
-      frames{nullptr};
+  Atomic<ProfilingStackFrame*, SequentiallyConsistent> frames{nullptr};
 
   // This may exceed the capacity, so instead use the stackSize() method to
   // determine the number of valid frames in stackFrames. When this is less
@@ -474,8 +465,7 @@ class ProfilingStack final {
   // This is an atomic variable that uses ReleaseAcquire memory ordering.
   // See the "Concurrency considerations" paragraph at the top of this file
   // for more details.
-  Atomic<uint32_t, ReleaseAcquire, recordreplay::Behavior::DontPreserve>
-      stackPointer;
+  Atomic<uint32_t, ReleaseAcquire> stackPointer;
 };
 
 class AutoGeckoProfilerEntry;
