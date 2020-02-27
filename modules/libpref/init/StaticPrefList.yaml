@@ -1666,6 +1666,51 @@
   value: true
   mirror: always
 
+# The root margin for image lazy loading, defined as four (value, percentage)
+# pairs.
+#
+# (0px, 0px, 0px, 0px) by default, for now. We could also consider an
+# adaptative version of this.
+- name: dom.image-lazy-loading.root-margin.top
+  type: float
+  value: 0
+  mirror: always
+
+- name: dom.image-lazy-loading.root-margin.top.percentage
+  type: bool
+  value: false
+  mirror: always
+
+- name: dom.image-lazy-loading.root-margin.bottom
+  type: float
+  value: 0
+  mirror: always
+
+- name: dom.image-lazy-loading.root-margin.bottom.percentage
+  type: bool
+  value: false
+  mirror: always
+
+- name: dom.image-lazy-loading.root-margin.left
+  type: float
+  value: 0
+  mirror: always
+
+- name: dom.image-lazy-loading.root-margin.left.percentage
+  type: bool
+  value: false
+  mirror: always
+
+- name: dom.image-lazy-loading.root-margin.right
+  type: float
+  value: 0
+  mirror: always
+
+- name: dom.image-lazy-loading.root-margin.right.percentage
+  type: bool
+  value: false
+  mirror: always
+
 # Enable passing the "storage" option to indexedDB.open.
 - name: dom.indexedDB.storageOption.enabled
   type: RelaxedAtomicBool
