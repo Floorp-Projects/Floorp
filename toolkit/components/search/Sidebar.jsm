@@ -10,7 +10,6 @@ function nsSidebar() {}
 nsSidebar.prototype = {
   init(window) {
     this.window = window;
-    this.mm = window.docShell.messageManager;
   },
 
   // This function implements window.external.AddSearchProvider().
@@ -21,7 +20,12 @@ nsSidebar.prototype = {
       return;
     }
 
-    if (!this.mm) {
+    let sidebarActor;
+    try {
+      sidebarActor = this.window.windowGlobalChild.getActor("SidebarSearch");
+    } catch (ex) {}
+
+    if (!sidebarActor) {
       Cu.reportError(
         `Installing a search provider from this context is not currently supported: ${
           Error().stack
@@ -30,7 +34,7 @@ nsSidebar.prototype = {
       return;
     }
 
-    this.mm.sendAsyncMessage("Search:AddEngine", {
+    sidebarActor.sendAsyncMessage("Search:AddEngine", {
       pageURL: this.window.document.documentURIObject.spec,
       engineURL,
     });

@@ -274,30 +274,47 @@ add_task(async function test_AddSearchProvider() {
     Services.ww = origWindowWatcher;
   });
 
-  let engineURL = getRootDirectory(gTestPath) + "opensearchEngine.xml";
-  // AddSearchProvider will refuse to take URLs with a "chrome:" scheme
-  engineURL = engineURL.replace(
-    "chrome://mochitests/content",
-    "http://example.com"
-  );
-  await SpecialPowers.spawn(
-    gBrowser.selectedBrowser,
-    [{ engineURL }],
-    async function(args) {
-      content.window.external.AddSearchProvider(args.engineURL);
+  // Perform two passes, the first for a top-level window and the second
+  // from within a child iframe.
+  for (let t = 0; t < 2; t++) {
+    let tab, browsingContext;
+    if (t == 1) {
+      tab = await BrowserTestUtils.openNewForegroundTab(
+        gBrowser,
+        "data:text/html,<html><body><iframe src='https://example.org:443/document-builder.sjs?html=<html><body>Hello</body><html>'></iframe></body><html>"
+      );
+      browsingContext = tab.linkedBrowser.browsingContext.children[0];
+    } else {
+      browsingContext = gBrowser.selectedBrowser;
     }
-  );
 
-  is(
-    Services.search.getEngineByName("Foo"),
-    null,
-    "Engine should not have been added successfully."
-  );
-  is(
-    mockPrompter.promptCount,
-    1,
-    "Should have alerted the user of an error when installing new search engine"
-  );
+    let engineURL = getRootDirectory(gTestPath) + "opensearchEngine.xml";
+    // AddSearchProvider will refuse to take URLs with a "chrome:" scheme
+    engineURL = engineURL.replace(
+      "chrome://mochitests/content",
+      "http://example.com"
+    );
+    await SpecialPowers.spawn(browsingContext, [{ engineURL }], async function(
+      args
+    ) {
+      content.window.external.AddSearchProvider(args.engineURL);
+    });
+
+    is(
+      Services.search.getEngineByName("Foo"),
+      null,
+      "Engine should not have been added successfully."
+    );
+    is(
+      mockPrompter.promptCount,
+      t + 1,
+      "Should have alerted the user of an error when installing new search engine"
+    );
+
+    if (tab) {
+      BrowserTestUtils.removeTab(tab);
+    }
+  }
 });
 
 add_task(async function test_install_and_remove() {
