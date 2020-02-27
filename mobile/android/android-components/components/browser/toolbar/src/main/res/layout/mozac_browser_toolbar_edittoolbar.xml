@@ -31,7 +31,7 @@
         android:scaleType="center"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="@id/mozac_browser_toolbar_background"
-        android:src="@drawable/mozac_ic_search"
+        app:srcCompat="@drawable/mozac_ic_search"
         android:visibility="gone"
         tools:ignore="ContentDescription"
         android:layout_marginTop="8dp" />
@@ -72,7 +72,7 @@
         android:height="100dp"
         android:contentDescription="@string/mozac_clear_button_description"
         android:scaleType="center"
-        android:src="@drawable/mozac_ic_clear"
+        app:srcCompat="@drawable/mozac_ic_clear"
         android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="@+id/mozac_browser_toolbar_background"

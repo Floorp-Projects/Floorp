@@ -7,6 +7,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:gravity="center_vertical"
     android:orientation="horizontal"
     android:padding="16dp">
@@ -17,7 +18,7 @@
         android:layout_height="48dp"
         android:importantForAccessibility="no"
         android:scaleType="fitCenter"
-        android:src="@drawable/mozac_ic_extensions"
+        app:srcCompat="@drawable/mozac_ic_extensions"
         android:tint="?android:attr/textColorPrimary" />
 
     <RelativeLayout
@@ -45,7 +46,7 @@
             android:layout_centerVertical="true"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:contentDescription="@string/mozac_feature_addons_remove"
-            android:src="@drawable/mozac_ic_delete"
+            app:srcCompat="@drawable/mozac_ic_delete"
             android:tint="?android:attr/textColorPrimary" />
     </RelativeLayout>
 </LinearLayout>

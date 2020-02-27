@@ -5,6 +5,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="150dp"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_margin="4dp"
     android:clickable="true"
     android:focusable="true">
@@ -40,7 +41,7 @@
             android:layout_alignParentTop="true"
             android:contentDescription="@string/mozac_browser_tabstray_close_tab"
             android:background="?android:attr/selectableItemBackgroundBorderless"
-            android:src="@drawable/mozac_ic_close" />
+            app:srcCompat="@drawable/mozac_ic_close" />
 
         <mozilla.components.browser.tabstray.thumbnail.TabThumbnailView
             android:id="@+id/mozac_browser_tabstray_thumbnail"
