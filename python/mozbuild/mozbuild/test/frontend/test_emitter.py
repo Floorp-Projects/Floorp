@@ -5,6 +5,7 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import os
+import six
 import unittest
 
 from mozunit import main
@@ -348,12 +349,12 @@ class TestEmitterBasic(unittest.TestCase):
     def test_compile_flags_validation(self):
         reader = self.reader('compile-flags-field-validation')
 
-        with self.assertRaisesRegexp(BuildReaderError, 'Invalid value.'):
+        with six.assertRaisesRegex(self, BuildReaderError, 'Invalid value.'):
             self.read_topsrcdir(reader)
 
         reader = self.reader('compile-flags-type-validation')
-        with self.assertRaisesRegexp(BuildReaderError,
-                                     'A list of strings must be provided'):
+        with six.assertRaisesRegex(self, BuildReaderError,
+                                   'A list of strings must be provided'):
             self.read_topsrcdir(reader)
 
     def test_compile_flags_templates(self):
@@ -401,8 +402,8 @@ class TestEmitterBasic(unittest.TestCase):
 
     def test_resolved_flags_error(self):
         reader = self.reader('resolved-flags-error')
-        with self.assertRaisesRegexp(BuildReaderError,
-                                     "`DEFINES` may not be set in COMPILE_FLAGS from moz.build"):
+        with six.assertRaisesRegex(self, BuildReaderError,
+                                   "`DEFINES` may not be set in COMPILE_FLAGS from moz.build"):
             self.read_topsrcdir(reader)
 
     def test_includes_in_flags(self):
@@ -434,8 +435,8 @@ class TestEmitterBasic(unittest.TestCase):
     def test_use_yasm(self):
         # When yasm is not available, this should raise.
         reader = self.reader('use-yasm')
-        with self.assertRaisesRegexp(SandboxValidationError,
-                                     'yasm is not available'):
+        with six.assertRaisesRegex(self, SandboxValidationError,
+                                   'yasm is not available'):
             self.read_topsrcdir(reader)
 
         # When yasm is available, this should work.
@@ -532,9 +533,10 @@ class TestEmitterBasic(unittest.TestCase):
         LOCALIZED_FILES as an objdir path produces an error.
         """
         reader = self.reader('localized-files-not-localized-generated')
-        with self.assertRaisesRegexp(
-            SandboxValidationError,
-            'Objdir file listed in LOCALIZED_FILES not in LOCALIZED_GENERATED_FILES:'
+        with six.assertRaisesRegex(
+                self,
+                SandboxValidationError,
+                'Objdir file listed in LOCALIZED_FILES not in LOCALIZED_GENERATED_FILES:'
         ):
             self.read_topsrcdir(reader)
 
@@ -543,9 +545,10 @@ class TestEmitterBasic(unittest.TestCase):
         FINAL_TARGET_FILES as an objdir path produces an error.
         """
         reader = self.reader('localized-generated-files-final-target-files')
-        with self.assertRaisesRegexp(
-            SandboxValidationError,
-            'Outputs of LOCALIZED_GENERATED_FILES cannot be used in FINAL_TARGET_FILES:'
+        with six.assertRaisesRegex(
+                self,
+                SandboxValidationError,
+                'Outputs of LOCALIZED_GENERATED_FILES cannot be used in FINAL_TARGET_FILES:'
         ):
             self.read_topsrcdir(reader)
 
@@ -579,20 +582,20 @@ class TestEmitterBasic(unittest.TestCase):
 
     def test_generated_files_no_script(self):
         reader = self.reader('generated-files-no-script')
-        with self.assertRaisesRegexp(SandboxValidationError,
-                                     'Script for generating bar.c does not exist'):
+        with six.assertRaisesRegex(self, SandboxValidationError,
+                                   'Script for generating bar.c does not exist'):
             self.read_topsrcdir(reader)
 
     def test_generated_files_no_inputs(self):
         reader = self.reader('generated-files-no-inputs')
-        with self.assertRaisesRegexp(SandboxValidationError,
-                                     'Input for generating foo.c does not exist'):
+        with six.assertRaisesRegex(self, SandboxValidationError,
+                                   'Input for generating foo.c does not exist'):
             self.read_topsrcdir(reader)
 
     def test_generated_files_no_python_script(self):
         reader = self.reader('generated-files-no-python-script')
-        with self.assertRaisesRegexp(SandboxValidationError,
-                                     'Script for generating bar.c does not end in .py'):
+        with six.assertRaisesRegex(self, SandboxValidationError,
+                                   'Script for generating bar.c does not end in .py'):
             self.read_topsrcdir(reader)
 
     def test_exports(self):
@@ -620,8 +623,8 @@ class TestEmitterBasic(unittest.TestCase):
         Missing files in EXPORTS is an error.
         '''
         reader = self.reader('exports-missing')
-        with self.assertRaisesRegexp(SandboxValidationError,
-                                     'File listed in EXPORTS does not exist:'):
+        with six.assertRaisesRegex(self, SandboxValidationError,
+                                   'File listed in EXPORTS does not exist:'):
             self.read_topsrcdir(reader)
 
     def test_exports_missing_generated(self):
@@ -629,8 +632,8 @@ class TestEmitterBasic(unittest.TestCase):
         An objdir file in EXPORTS that is not in GENERATED_FILES is an error.
         '''
         reader = self.reader('exports-missing-generated')
-        with self.assertRaisesRegexp(SandboxValidationError,
-                                     'Objdir file listed in EXPORTS not in GENERATED_FILES:'):
+        with six.assertRaisesRegex(self, SandboxValidationError,
+                                   'Objdir file listed in EXPORTS not in GENERATED_FILES:'):
             self.read_topsrcdir(reader)
 
     def test_exports_generated(self):
@@ -666,8 +669,8 @@ class TestEmitterBasic(unittest.TestCase):
 
     def test_test_harness_files_root(self):
         reader = self.reader('test-harness-files-root')
-        with self.assertRaisesRegexp(SandboxValidationError,
-                                     'Cannot install files to the root of TEST_HARNESS_FILES'):
+        with six.assertRaisesRegex(self, SandboxValidationError,
+                                   'Cannot install files to the root of TEST_HARNESS_FILES'):
             self.read_topsrcdir(reader)
 
     def test_program(self):
@@ -728,21 +731,21 @@ class TestEmitterBasic(unittest.TestCase):
         """A missing manifest file should result in an error."""
         reader = self.reader('test-manifest-missing-manifest')
 
-        with self.assertRaisesRegexp(BuildReaderError, 'IOError: Missing files'):
+        with six.assertRaisesRegex(self, BuildReaderError, 'Missing files'):
             self.read_topsrcdir(reader)
 
     def test_empty_test_manifest_rejected(self):
         """A test manifest without any entries is rejected."""
         reader = self.reader('test-manifest-empty')
 
-        with self.assertRaisesRegexp(SandboxValidationError, 'Empty test manifest'):
+        with six.assertRaisesRegex(self, SandboxValidationError, 'Empty test manifest'):
             self.read_topsrcdir(reader)
 
     def test_test_manifest_just_support_files(self):
         """A test manifest with no tests but support-files is not supported."""
         reader = self.reader('test-manifest-just-support')
 
-        with self.assertRaisesRegexp(SandboxValidationError, 'Empty test manifest'):
+        with six.assertRaisesRegex(self, SandboxValidationError, 'Empty test manifest'):
             self.read_topsrcdir(reader)
 
     def test_test_manifest_dupe_support_files(self):
@@ -751,10 +754,11 @@ class TestEmitterBasic(unittest.TestCase):
         """
         reader = self.reader('test-manifest-dupes')
 
-        with self.assertRaisesRegexp(
-            SandboxValidationError,
-            'bar.js appears multiple times '
-            'in a test manifest under a support-files field, please omit the duplicate entry.'
+        with six.assertRaisesRegex(
+                self,
+                SandboxValidationError,
+                'bar.js appears multiple times '
+                'in a test manifest under a support-files field, please omit the duplicate entry.'
         ):
             self.read_topsrcdir(reader)
 
@@ -798,8 +802,8 @@ class TestEmitterBasic(unittest.TestCase):
         """A non-existent shared support file reference produces an error."""
         reader = self.reader('test-manifest-shared-missing')
 
-        with self.assertRaisesRegexp(SandboxValidationError,
-                                     'entry in support-files not present in the srcdir'):
+        with six.assertRaisesRegex(self, SandboxValidationError,
+                                   'entry in support-files not present in the srcdir'):
             self.read_topsrcdir(reader)
 
     def test_test_manifest_install_includes(self):
@@ -933,8 +937,8 @@ class TestEmitterBasic(unittest.TestCase):
     def test_test_manifest_unmatched_generated(self):
         reader = self.reader('test-manifest-unmatched-generated')
 
-        with self.assertRaisesRegexp(SandboxValidationError,
-                                     'entry in generated-files not present elsewhere'):
+        with six.assertRaisesRegex(self, SandboxValidationError,
+                                   'entry in generated-files not present elsewhere'):
             self.read_topsrcdir(reader),
 
     def test_test_manifest_parent_support_files_dir(self):
@@ -957,16 +961,16 @@ class TestEmitterBasic(unittest.TestCase):
         """Missing test files should result in error."""
         reader = self.reader('test-manifest-missing-test-file')
 
-        with self.assertRaisesRegexp(SandboxValidationError,
-                                     'lists test that does not exist: test_missing.html'):
+        with six.assertRaisesRegex(self, SandboxValidationError,
+                                   'lists test that does not exist: test_missing.html'):
             self.read_topsrcdir(reader)
 
     def test_test_manifest_missing_test_error_unfiltered(self):
         """Missing test files should result in error, even when the test list is not filtered."""
         reader = self.reader('test-manifest-missing-test-file-unfiltered')
 
-        with self.assertRaisesRegexp(SandboxValidationError,
-                                     'lists test that does not exist: missing.js'):
+        with six.assertRaisesRegex(self, SandboxValidationError,
+                                   'lists test that does not exist: missing.js'):
             self.read_topsrcdir(reader)
 
     def test_ipdl_sources(self):
@@ -1040,7 +1044,8 @@ class TestEmitterBasic(unittest.TestCase):
         """Test that invalid LOCAL_INCLUDES are properly detected."""
         reader = self.reader('local_includes-invalid/srcdir')
 
-        with self.assertRaisesRegexp(
+        with six.assertRaisesRegex(
+                self,
                 SandboxValidationError,
                 'Path specified in LOCAL_INCLUDES.*resolves to the '
                 'topsrcdir or topobjdir'):
@@ -1048,7 +1053,8 @@ class TestEmitterBasic(unittest.TestCase):
 
         reader = self.reader('local_includes-invalid/objdir')
 
-        with self.assertRaisesRegexp(
+        with six.assertRaisesRegex(
+                self,
                 SandboxValidationError,
                 'Path specified in LOCAL_INCLUDES.*resolves to the '
                 'topsrcdir or topobjdir'):
@@ -1058,7 +1064,8 @@ class TestEmitterBasic(unittest.TestCase):
         """Test that a filename can't be used in LOCAL_INCLUDES."""
         reader = self.reader('local_includes-filename')
 
-        with self.assertRaisesRegexp(
+        with six.assertRaisesRegex(
+                self,
                 SandboxValidationError,
                 'Path specified in LOCAL_INCLUDES is a filename'):
             self.read_topsrcdir(reader)
@@ -1114,28 +1121,28 @@ class TestEmitterBasic(unittest.TestCase):
             self.assertIsInstance(obj.path, Path)
 
     def test_jar_manifests_multiple_files(self):
-        with self.assertRaisesRegexp(SandboxValidationError, 'limited to one value'):
+        with six.assertRaisesRegex(self, SandboxValidationError, 'limited to one value'):
             reader = self.reader('jar-manifests-multiple-files')
             self.read_topsrcdir(reader)
 
     def test_xpidl_module_no_sources(self):
         """XPIDL_MODULE without XPIDL_SOURCES should be rejected."""
-        with self.assertRaisesRegexp(SandboxValidationError, 'XPIDL_MODULE '
-                                     'cannot be defined'):
+        with six.assertRaisesRegex(self, SandboxValidationError, 'XPIDL_MODULE '
+                                   'cannot be defined'):
             reader = self.reader('xpidl-module-no-sources')
             self.read_topsrcdir(reader)
 
     def test_xpidl_module_missing_sources(self):
         """Missing XPIDL_SOURCES should be rejected."""
-        with self.assertRaisesRegexp(SandboxValidationError, 'File .* '
-                                     'from XPIDL_SOURCES does not exist'):
+        with six.assertRaisesRegex(self, SandboxValidationError, 'File .* '
+                                   'from XPIDL_SOURCES does not exist'):
             reader = self.reader('missing-xpidl')
             self.read_topsrcdir(reader)
 
     def test_missing_local_includes(self):
         """LOCAL_INCLUDES containing non-existent directories should be rejected."""
-        with self.assertRaisesRegexp(SandboxValidationError, 'Path specified in '
-                                     'LOCAL_INCLUDES does not exist'):
+        with six.assertRaisesRegex(self, SandboxValidationError, 'Path specified in '
+                                   'LOCAL_INCLUDES does not exist'):
             reader = self.reader('missing-local-includes')
             self.read_topsrcdir(reader)
 
@@ -1149,7 +1156,7 @@ class TestEmitterBasic(unittest.TestCase):
                          and 'LIBRARY_DEFINES' in o.flags]
         expected = {
             'liba': '-DIN_LIBA',
-            'libb': '-DIN_LIBA -DIN_LIBB',
+            'libb': '-DIN_LIBB -DIN_LIBA',
             'libc': '-DIN_LIBA -DIN_LIBB',
             'libd': ''
         }
@@ -1431,21 +1438,22 @@ class TestEmitterBasic(unittest.TestCase):
 
             expected = {'install.rdf', 'main.js'}
             for f in files:
-                self.assertTrue(unicode(f) in expected)
+                self.assertTrue(six.text_type(f) in expected)
 
     def test_missing_final_target_pp_files(self):
         """Test that FINAL_TARGET_PP_FILES with missing files throws errors."""
-        with self.assertRaisesRegexp(SandboxValidationError, 'File listed in '
-                                     'FINAL_TARGET_PP_FILES does not exist'):
+        with six.assertRaisesRegex(self, SandboxValidationError, 'File listed in '
+                                   'FINAL_TARGET_PP_FILES does not exist'):
             reader = self.reader('dist-files-missing')
             self.read_topsrcdir(reader)
 
     def test_final_target_pp_files_non_srcdir(self):
         '''Test that non-srcdir paths in FINAL_TARGET_PP_FILES throws errors.'''
         reader = self.reader('final-target-pp-files-non-srcdir')
-        with self.assertRaisesRegexp(
-            SandboxValidationError,
-            'Only source directory paths allowed in FINAL_TARGET_PP_FILES:'
+        with six.assertRaisesRegex(
+                self,
+                SandboxValidationError,
+                'Only source directory paths allowed in FINAL_TARGET_PP_FILES:'
         ):
             self.read_topsrcdir(reader)
 
@@ -1463,15 +1471,17 @@ class TestEmitterBasic(unittest.TestCase):
 
             expected = {'en-US/bar.ini', 'en-US/code/*.js', 'en-US/foo.js'}
             for f in files:
-                self.assertTrue(unicode(f) in expected)
+                self.assertTrue(six.text_type(f) in expected)
 
     def test_localized_files_no_en_us(self):
         """Test that LOCALIZED_FILES errors if a path does not start with
         `en-US/` or contain `locales/en-US/`."""
         reader = self.reader('localized-files-no-en-us')
-        with self.assertRaisesRegexp(
-            SandboxValidationError,
-            'LOCALIZED_FILES paths must start with `en-US/` or contain `locales/en-US/`: foo.js'
+        with six.assertRaisesRegex(
+                self,
+                SandboxValidationError,
+                'LOCALIZED_FILES paths must start with `en-US/` or contain `locales/en-US/`: '
+                'foo.js'
         ):
             self.read_topsrcdir(reader)
 
@@ -1489,34 +1499,34 @@ class TestEmitterBasic(unittest.TestCase):
 
             expected = {'en-US/bar.ini', 'en-US/foo.js'}
             for f in files:
-                self.assertTrue(unicode(f) in expected)
+                self.assertTrue(six.text_type(f) in expected)
 
     def test_rust_library_no_cargo_toml(self):
         '''Test that defining a RustLibrary without a Cargo.toml fails.'''
         reader = self.reader('rust-library-no-cargo-toml')
-        with self.assertRaisesRegexp(SandboxValidationError,
-                                     'No Cargo.toml file found'):
+        with six.assertRaisesRegex(self, SandboxValidationError,
+                                   'No Cargo.toml file found'):
             self.read_topsrcdir(reader)
 
     def test_rust_library_name_mismatch(self):
         '''Test that defining a RustLibrary that doesn't match Cargo.toml fails.'''
         reader = self.reader('rust-library-name-mismatch')
-        with self.assertRaisesRegexp(SandboxValidationError,
-                                     'library.*does not match Cargo.toml-defined package'):
+        with six.assertRaisesRegex(self, SandboxValidationError,
+                                   'library.*does not match Cargo.toml-defined package'):
             self.read_topsrcdir(reader)
 
     def test_rust_library_no_lib_section(self):
         '''Test that a RustLibrary Cargo.toml with no [lib] section fails.'''
         reader = self.reader('rust-library-no-lib-section')
-        with self.assertRaisesRegexp(SandboxValidationError,
-                                     'Cargo.toml for.* has no \\[lib\\] section'):
+        with six.assertRaisesRegex(self, SandboxValidationError,
+                                   'Cargo.toml for.* has no \\[lib\\] section'):
             self.read_topsrcdir(reader)
 
     def test_rust_library_invalid_crate_type(self):
         '''Test that a RustLibrary Cargo.toml has a permitted crate-type.'''
         reader = self.reader('rust-library-invalid-crate-type')
-        with self.assertRaisesRegexp(SandboxValidationError,
-                                     'crate-type.* is not permitted'):
+        with six.assertRaisesRegex(self, SandboxValidationError,
+                                   'crate-type.* is not permitted'):
             self.read_topsrcdir(reader)
 
     def test_rust_library_dash_folding(self):
@@ -1538,7 +1548,8 @@ class TestEmitterBasic(unittest.TestCase):
         '''Test that linking multiple Rust libraries throws an error'''
         reader = self.reader('multiple-rust-libraries',
                              extra_substs=dict(RUST_TARGET='i686-pc-windows-msvc'))
-        with self.assertRaisesRegexp(
+        with six.assertRaisesRegex(
+                self,
                 SandboxValidationError,
                 'Cannot link the following Rust libraries'):
             self.read_topsrcdir(reader)
@@ -1559,38 +1570,38 @@ class TestEmitterBasic(unittest.TestCase):
     def test_rust_library_duplicate_features(self):
         '''Test that duplicate RustLibrary features are rejected.'''
         reader = self.reader('rust-library-duplicate-features')
-        with self.assertRaisesRegexp(SandboxValidationError,
-                                     'features for .* should not contain duplicates'):
+        with six.assertRaisesRegex(self, SandboxValidationError,
+                                   'features for .* should not contain duplicates'):
             self.read_topsrcdir(reader)
 
     def test_rust_program_no_cargo_toml(self):
         '''Test that specifying RUST_PROGRAMS without a Cargo.toml fails.'''
         reader = self.reader('rust-program-no-cargo-toml')
-        with self.assertRaisesRegexp(SandboxValidationError,
-                                     'No Cargo.toml file found'):
+        with six.assertRaisesRegex(self, SandboxValidationError,
+                                   'No Cargo.toml file found'):
             self.read_topsrcdir(reader)
 
     def test_host_rust_program_no_cargo_toml(self):
         '''Test that specifying HOST_RUST_PROGRAMS without a Cargo.toml fails.'''
         reader = self.reader('host-rust-program-no-cargo-toml')
-        with self.assertRaisesRegexp(SandboxValidationError,
-                                     'No Cargo.toml file found'):
+        with six.assertRaisesRegex(self, SandboxValidationError,
+                                   'No Cargo.toml file found'):
             self.read_topsrcdir(reader)
 
     def test_rust_program_nonexistent_name(self):
         '''Test that specifying RUST_PROGRAMS that don't exist in Cargo.toml
         correctly throws an error.'''
         reader = self.reader('rust-program-nonexistent-name')
-        with self.assertRaisesRegexp(SandboxValidationError,
-                                     'Cannot find Cargo.toml definition for'):
+        with six.assertRaisesRegex(self, SandboxValidationError,
+                                   'Cannot find Cargo.toml definition for'):
             self.read_topsrcdir(reader)
 
     def test_host_rust_program_nonexistent_name(self):
         '''Test that specifying HOST_RUST_PROGRAMS that don't exist in
         Cargo.toml correctly throws an error.'''
         reader = self.reader('host-rust-program-nonexistent-name')
-        with self.assertRaisesRegexp(SandboxValidationError,
-                                     'Cannot find Cargo.toml definition for'):
+        with six.assertRaisesRegex(self, SandboxValidationError,
+                                   'Cannot find Cargo.toml definition for'):
             self.read_topsrcdir(reader)
 
     def test_rust_programs(self):
@@ -1693,9 +1704,10 @@ class TestEmitterBasic(unittest.TestCase):
         from GENERATED_FILES is an error.
         """
         reader = self.reader('test-symbols-file-objdir-missing-generated')
-        with self.assertRaisesRegexp(
-            SandboxValidationError,
-            'Objdir file specified in SYMBOLS_FILE not in GENERATED_FILES:'
+        with six.assertRaisesRegex(
+                self,
+                SandboxValidationError,
+                'Objdir file specified in SYMBOLS_FILE not in GENERATED_FILES:'
         ):
             self.read_topsrcdir(reader)
 
