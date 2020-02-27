@@ -17,6 +17,7 @@ add_task(async function setup() {
 
   installDistributionEngine();
 
+  Services.prefs.setBoolPref("browser.search.geoSpecificDefaults", true);
   await AddonTestUtils.promiseStartupManager();
 });
 

@@ -8,6 +8,7 @@ const SEARCH_SERVICE_TOPIC = "browser-search-service";
 add_task(async function setup() {
   await AddonTestUtils.promiseStartupManager();
   await useTestEngines("data", "geolookup-extensions");
+  Services.prefs.setBoolPref("browser.search.geoSpecificDefaults", true);
 });
 
 add_task(async function test_maybereloadengine_update() {

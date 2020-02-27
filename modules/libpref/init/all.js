@@ -4039,6 +4039,10 @@ pref("network.psl.onUpdate_notify", false);
   pref("geo.provider.network.url", "https://location.services.mozilla.com/v1/geolocate?key=%MOZILLA_API_KEY%");
 #endif
 
+pref("geo.provider-country.network.url", "https://location.services.mozilla.com/v1/country?key=%MOZILLA_API_KEY%");
+pref("geo.provider-country.network.scan", false);
+// Timeout to wait before sending the location request.
+pref("geo.provider.network.timeToWaitBeforeSending", 5000);
 // Timeout for outbound network geolocation provider.
 pref("geo.provider.network.timeout", 60000);
 
@@ -4484,8 +4488,6 @@ pref("browser.search.update.interval", 21600);
 pref("browser.search.suggest.enabled", true);
 pref("browser.search.suggest.enabled.private", false);
 pref("browser.search.geoSpecificDefaults", false);
-pref("browser.search.geoip.url", "https://location.services.mozilla.com/v1/country?key=%MOZILLA_API_KEY%");
-pref("browser.search.geoip.timeout", 3000);
 pref("browser.search.modernConfig", false);
 pref("browser.search.separatePrivateDefault", false);
 pref("browser.search.separatePrivateDefault.ui.enabled", false);
