@@ -74,5 +74,6 @@ class AppLinkRedirectTest {
         var appLink = AppLinkRedirect(appIntent = null, fallbackUrl = null, marketplaceIntent = mock())
         assertTrue(appLink.hasMarketplaceIntent())
         assertTrue(appLink.isRedirect())
+        assertTrue(appLink.hasMarketplaceIntent())
     }
 }

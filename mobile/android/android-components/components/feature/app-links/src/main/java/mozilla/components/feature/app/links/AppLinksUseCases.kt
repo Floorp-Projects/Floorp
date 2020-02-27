@@ -118,12 +118,8 @@ class AppLinksUseCases(
                 else -> null
             }
 
-            val marketplaceIntent = when {
-                launchInApp() -> redirectData.marketplaceIntent
-                else -> null
-            }
-
-            val appLinkRedirect = AppLinkRedirect(appIntent, fallbackUrl, marketplaceIntent)
+            // no need to check marketplace intent since it is only set if a package is set in the intent
+            val appLinkRedirect = AppLinkRedirect(appIntent, fallbackUrl, redirectData.marketplaceIntent)
             redirectCache = AppLinkRedirectCache(currentTimeStamp, urlHash, appLinkRedirect)
             return appLinkRedirect
         }

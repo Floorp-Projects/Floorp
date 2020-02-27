@@ -284,4 +284,25 @@ class AppLinksUseCasesTest {
 
         verify(context, never()).startActivity(any())
     }
+
+    @Test
+    fun `A intent scheme uri with package name will have marketplace intent reguardless user preference`() {
+        val context = createContext(appUrl to browserPackage)
+        var subject = AppLinksUseCases(context, { false }, browserPackageNames = setOf(browserPackage))
+
+        val uri = "intent://scan/#Intent;scheme=zxing;package=com.google.zxing.client.android;end"
+
+        var redirect = subject.interceptedAppLinkRedirect(uri)
+        assertFalse(redirect.hasExternalApp())
+        assertFalse(redirect.hasFallback())
+        assertNotNull(redirect.marketplaceIntent)
+        assertNull(redirect.fallbackUrl)
+
+        subject = AppLinksUseCases(context, { true }, browserPackageNames = setOf(browserPackage))
+        redirect = subject.interceptedAppLinkRedirect(uri)
+        assertFalse(redirect.hasExternalApp())
+        assertFalse(redirect.hasFallback())
+        assertNotNull(redirect.marketplaceIntent)
+        assertNull(redirect.fallbackUrl)
+    }
 }
