@@ -1,0 +1,3 @@
+[include]
+path:build/liblowercase/
+path:taskcluster/scripts/misc/build-liblowercase.sh
