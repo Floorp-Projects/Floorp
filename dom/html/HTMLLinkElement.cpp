@@ -473,10 +473,7 @@ Maybe<nsStyleLinkElement::SheetInfo> HTMLLinkElement::GetStyleSheetInfo() {
   referrerInfo->InitWithNode(this);
 
   nsAutoString nonce;
-  nsString* cspNonce = static_cast<nsString*>(GetProperty(nsGkAtoms::nonce));
-  if (cspNonce) {
-    nonce = *cspNonce;
-  }
+  GetAttr(kNameSpaceID_None, nsGkAtoms::nonce, nonce);
 
   return Some(SheetInfo{
       *OwnerDoc(),
