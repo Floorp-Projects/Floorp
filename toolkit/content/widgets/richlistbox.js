@@ -595,13 +595,6 @@
       this.scrollTop += offset;
     }
 
-    scrollToIndex(aIndex) {
-      var item = this.getItemAtIndex(aIndex);
-      if (item) {
-        this.ensureElementIsVisible(item, true);
-      }
-    }
-
     getIndexOfFirstVisibleRow() {
       var children = this.itemChildren;
 
