@@ -1320,7 +1320,8 @@ class MOZ_STACK_CLASS nsGridContainerFrame::LineNameMap {
         const auto& lineNameLists = styleSubgrid->names;
         int32_t extraAutoFillLineCount = mClampMaxLine - lineNameLists.Length();
         mRepeatAutoStart = styleSubgrid->fill_idx;
-        mRepeatAutoEnd = mRepeatAutoStart + extraAutoFillLineCount + 1;
+        mRepeatAutoEnd =
+            mRepeatAutoStart + std::max(0, extraAutoFillLineCount + 1);
       }
     } else {
       mClampMinLine = kMinLine;
