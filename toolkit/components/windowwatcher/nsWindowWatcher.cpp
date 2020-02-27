@@ -1450,15 +1450,6 @@ nsWindowWatcher::GetActiveWindow(mozIDOMWindowProxy** aActiveWindow) {
 }
 
 NS_IMETHODIMP
-nsWindowWatcher::SetActiveWindow(mozIDOMWindowProxy* aActiveWindow) {
-  nsCOMPtr<nsIFocusManager> fm = do_GetService(FOCUSMANAGER_CONTRACTID);
-  if (fm) {
-    return fm->SetActiveWindow(aActiveWindow);
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsWindowWatcher::AddWindow(mozIDOMWindowProxy* aWindow,
                            nsIWebBrowserChrome* aChrome) {
   if (!aWindow) {
