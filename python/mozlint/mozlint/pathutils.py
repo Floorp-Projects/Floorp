@@ -57,16 +57,9 @@ class FilterPath(object):
         a = os.path.abspath(self.path)
         b = os.path.normpath(os.path.abspath(other))
 
-        parts_a = a.split(os.sep)
-        parts_b = b.split(os.sep)
-
-        if len(parts_a) > len(parts_b):
-            return False
-
-        for i, part in enumerate(parts_a):
-            if part != parts_b[i]:
-                return False
-        return True
+        if b.startswith(a):
+            return True
+        return False
 
     def __repr__(self):
         return repr(self.path)

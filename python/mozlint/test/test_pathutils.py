@@ -65,12 +65,6 @@ TEST_CASES = (
         'expected': ['subdir1'],
         'expected_exclude': ['subdir1/subdir3'],
     },
-    {
-        'paths': ['docshell'],
-        'include': ['docs'],
-        'exclude': [],
-        'expected': [],
-    }
 )
 
 

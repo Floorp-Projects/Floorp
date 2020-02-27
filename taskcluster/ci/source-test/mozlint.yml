@@ -35,7 +35,7 @@ codespell:
     treeherder:
         symbol: text(spell)
     run:
-        mach: lint -v -l codespell -f treeherder -f json:/builds/worker/mozlint.json *
+        mach: lint -v -l codespell -f treeherder -f json:/builds/worker/mozlint.json
     when:
         files-changed:
             - '**/*.js'
