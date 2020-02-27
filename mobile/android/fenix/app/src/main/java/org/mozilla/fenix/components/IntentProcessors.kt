@@ -70,7 +70,7 @@ class IntentProcessors(
             ),
             WebAppIntentProcessor(sessionManager, sessionUseCases.loadUrl, manifestStorage),
             FennecBookmarkShortcutsIntentProcessor(sessionManager, sessionUseCases.loadUrl),
-            FennecWebAppIntentProcessor(sessionManager, sessionUseCases.loadUrl, manifestStorage)
+            FennecWebAppIntentProcessor(context, sessionManager, sessionUseCases.loadUrl, manifestStorage)
         )
     }
 

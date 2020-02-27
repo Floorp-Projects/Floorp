@@ -4,12 +4,15 @@
 
 package org.mozilla.fenix.customtabs
 
+import android.content.Context
 import android.content.Intent
 import android.content.Intent.FLAG_ACTIVITY_NEW_DOCUMENT
 import androidx.annotation.VisibleForTesting
+import androidx.core.content.ContextCompat
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.Session.Source
 import mozilla.components.browser.session.SessionManager
+import mozilla.components.browser.state.state.CustomTabConfig
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.manifest.WebAppManifest
 import mozilla.components.concept.engine.manifest.WebAppManifestParser
@@ -20,14 +23,18 @@ import mozilla.components.feature.pwa.ManifestStorage
 import mozilla.components.feature.pwa.ext.putWebAppManifest
 import mozilla.components.feature.pwa.ext.toCustomTabConfig
 import mozilla.components.feature.session.SessionUseCases
+import mozilla.components.support.utils.SafeIntent
 import mozilla.components.support.utils.toSafeIntent
 import org.json.JSONObject
+import org.mozilla.fenix.R
 import java.io.File
+import java.io.IOException
 
 /**
  * Legacy processor for Progressive Web App shortcut intents created by Fennec.
  */
 class FennecWebAppIntentProcessor(
+    private val context: Context,
     private val sessionManager: SessionManager,
     private val loadUrlUseCase: SessionUseCases.DefaultLoadUrlUseCase,
     private val storage: ManifestStorage
@@ -50,21 +57,21 @@ class FennecWebAppIntentProcessor(
         val url = safeIntent.dataString
 
         return if (!url.isNullOrEmpty() && matches(intent)) {
-            val webAppManifest = storage.loadManifest(url)
-                ?: fromFile(safeIntent.getStringExtra(EXTRA_FENNEC_MANIFEST_PATH))?.also {
-                    storage.saveManifest(it)
-                }
-                ?: return false
+            val webAppManifest = loadManifest(safeIntent, url)
 
             val session = Session(url, private = false, source = Source.HOME_SCREEN)
             session.webAppManifest = webAppManifest
-            session.customTabConfig = webAppManifest.toCustomTabConfig()
+            session.customTabConfig = webAppManifest?.toCustomTabConfig() ?: createFallbackCustomTabConfig()
 
             sessionManager.add(session)
             loadUrlUseCase(url, session, EngineSession.LoadUrlFlags.external())
-            intent.flags = FLAG_ACTIVITY_NEW_DOCUMENT
+
             intent.putSessionId(session.id)
-            intent.putWebAppManifest(webAppManifest)
+
+            if (webAppManifest != null) {
+                intent.flags = FLAG_ACTIVITY_NEW_DOCUMENT
+                intent.putWebAppManifest(webAppManifest)
+            }
 
             true
         } else {
@@ -72,16 +79,43 @@ class FennecWebAppIntentProcessor(
         }
     }
 
+    private suspend fun loadManifest(intent: SafeIntent, url: String): WebAppManifest? {
+        // Load from our manifest storage: If we already loaded this manifest from the original
+        // Fennec file then it is in our storage now and that should have precedence.
+        storage.loadManifest(url)?.let {
+            return it
+        }
+
+        // Let's try to read the file where Fennec used to store the manifest.
+        fromFile(intent.getStringExtra(EXTRA_FENNEC_MANIFEST_PATH))?.also {
+            storage.saveManifest(it)
+            return it
+        }
+
+        // Both reads failed... let's continue without manifest.
+        return null
+    }
+
     @VisibleForTesting
     internal fun fromFile(path: String?): WebAppManifest? {
         if (path.isNullOrEmpty()) return null
 
-        // Gecko in Fennec added some add some additional data, such as cached_icon, in
-        // the toplevel object. The actual web app manifest is in the "manifest" field.
-        val manifest = JSONObject(File(path).readText())
-        val manifestField = manifest.getJSONObject("manifest")
+        return try {
+            // Gecko in Fennec added some add some additional data, such as cached_icon, in
+            // the toplevel object. The actual web app manifest is in the "manifest" field.
+            val manifest = JSONObject(File(path).readText())
+            val manifestField = manifest.getJSONObject("manifest")
 
-        return WebAppManifestParser().parse(manifestField).getOrNull()
+            WebAppManifestParser().parse(manifestField).getOrNull()
+        } catch (e: IOException) {
+            null
+        }
+    }
+
+    private fun createFallbackCustomTabConfig(): CustomTabConfig {
+        return CustomTabConfig(
+            toolbarColor = ContextCompat.getColor(context, R.color.toolbar_center_gradient_normal_theme)
+        )
     }
 
     companion object {
