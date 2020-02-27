@@ -87,6 +87,8 @@ function configureStore(webConsoleUI, options = {}) {
     }),
   };
 
+  const toolbox = options.thunkArgs.toolbox;
+  const sessionId = (toolbox && toolbox.sessionId) || -1;
   const middleware = applyMiddleware(
     ignore,
     thunkWithOptions.bind(null, {
@@ -94,7 +96,7 @@ function configureStore(webConsoleUI, options = {}) {
       ...options.thunkArgs,
     }),
     historyPersistence,
-    eventTelemetry.bind(null, options.telemetry, options.sessionId)
+    eventTelemetry.bind(null, options.telemetry, sessionId)
   );
 
   return createStore(
