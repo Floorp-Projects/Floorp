@@ -1155,6 +1155,11 @@ class MercurialFile(BaseFile):
         self._content = client.cat([six.ensure_binary(path)],
                                    rev=six.ensure_binary(rev))
 
+    def open(self, mode='rb'):
+        if 'b' in mode:
+            return BytesIO(six.ensure_binary(self._content))
+        return six.StringIO(six.ensure_text(self._content))
+
     def read(self):
         return self._content
 
