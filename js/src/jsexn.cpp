@@ -51,6 +51,8 @@
 
 #include "vm/ErrorObject-inl.h"
 #include "vm/JSContext-inl.h"
+#include "vm/JSObject-inl.h"
+#include "vm/ObjectOperations-inl.h"  // js::GetProperty
 #include "vm/SavedStacks-inl.h"
 
 using namespace js;
@@ -354,6 +356,8 @@ void js::ErrorToException(JSContext* cx, JSErrorReport* reportp,
   reportp->flags |= JSREPORT_EXCEPTION;
 }
 
+using SniffingBehavior = js::ErrorReport::SniffingBehavior;
+
 static bool IsDuckTypedErrorObject(JSContext* cx, HandleObject exnObject,
                                    const char** filename_strp) {
   /*
@@ -388,44 +392,82 @@ static bool IsDuckTypedErrorObject(JSContext* cx, HandleObject exnObject,
   return true;
 }
 
-static JSString* ErrorReportToString(JSContext* cx, JSErrorReport* reportp) {
-  /*
-   * We do NOT want to use GetErrorTypeName() here because it will not do the
-   * "right thing" for JSEXN_INTERNALERR.  That is, the caller of this API
-   * expects that "InternalError: " will be prepended but GetErrorTypeName
-   * goes out of its way to avoid this.
-   */
-  JSExnType type = static_cast<JSExnType>(reportp->exnType);
-  RootedString str(cx);
-  if (type != JSEXN_WARN && type != JSEXN_NOTE) {
-    str = ClassName(GetExceptionProtoKey(type), cx);
+static bool GetPropertyNoException(JSContext* cx, HandleObject obj,
+                                   SniffingBehavior behavior,
+                                   HandlePropertyName name,
+                                   MutableHandleValue vp) {
+  // This function has no side-effects so always use it.
+  if (GetPropertyPure(cx, obj, NameToId(name), vp.address())) {
+    return true;
   }
 
-  /*
-   * If "str" is null at this point, that means we just want to use
-   * message without prefixing it with anything.
-   */
-  if (str) {
-    RootedString separator(cx, JS_NewStringCopyN(cx, ": ", 2));
-    if (!separator) {
+  if (behavior == SniffingBehavior::WithSideEffects) {
+    AutoClearPendingException acpe(cx);
+    return GetProperty(cx, obj, obj, name, vp);
+  }
+
+  return false;
+}
+
+// Create a new error message similar to what Error.prototype.toString would
+// produce when called on an object with those property values for name and
+// message.
+static JSString* FormatErrorMessage(JSContext* cx, HandleString name,
+                                    HandleString message) {
+  if (name && message) {
+    AutoClearPendingException acpe(cx);
+    JSStringBuilder sb(cx);
+
+    // Prefix the message with the error type, if it exists.
+    if (!sb.append(name) || !sb.append(": ") || !sb.append(message)) {
       return nullptr;
     }
-    str = ConcatStrings<CanGC>(cx, str, separator);
-    if (!str) {
-      return nullptr;
+
+    return sb.finishString();
+  }
+
+  return name ? name : message;
+}
+
+static JSString* ErrorReportToString(JSContext* cx, HandleObject exn,
+                                     JSErrorReport* reportp,
+                                     SniffingBehavior behavior) {
+  // The error object might have custom `name` overwriting the exnType in the
+  // error report. Try getting that property and use the exnType as a fallback.
+  RootedString name(cx);
+  RootedValue nameV(cx);
+  if (GetPropertyNoException(cx, exn, behavior, cx->names().name, &nameV) &&
+      nameV.isString()) {
+    name = nameV.toString();
+  }
+
+  // We do NOT want to use GetErrorTypeName() here because it will not do the
+  // "right thing" for JSEXN_INTERNALERR.  That is, the caller of this API
+  // expects that "InternalError: " will be prepended but GetErrorTypeName
+  // goes out of its way to avoid this.
+  if (!name) {
+    JSExnType type = static_cast<JSExnType>(reportp->exnType);
+    if (type != JSEXN_WARN && type != JSEXN_NOTE) {
+      name = ClassName(GetExceptionProtoKey(type), cx);
     }
   }
 
-  RootedString message(cx, reportp->newMessageString(cx));
+  RootedString message(cx);
+  RootedValue messageV(cx);
+  if (GetPropertyNoException(cx, exn, behavior, cx->names().message,
+                             &messageV) &&
+      messageV.isString()) {
+    message = messageV.toString();
+  }
+
   if (!message) {
-    return nullptr;
+    message = reportp->newMessageString(cx);
+    if (!message) {
+      return nullptr;
+    }
   }
 
-  if (!str) {
-    return message;
-  }
-
-  return ConcatStrings<CanGC>(cx, str, message);
+  return FormatErrorMessage(cx, name, message);
 }
 
 ErrorReport::ErrorReport(JSContext* cx) : reportp(nullptr), exnObject(cx) {}
@@ -449,7 +491,7 @@ bool ErrorReport::init(JSContext* cx, HandleValue exn,
   // wrapper, and ToString-ing it might throw.
   RootedString str(cx);
   if (reportp) {
-    str = ErrorReportToString(cx, reportp);
+    str = ErrorReportToString(cx, exnObject, reportp, sniffingBehavior);
   } else if (exn.isSymbol()) {
     RootedValue strVal(cx);
     if (js::SymbolDescriptiveString(cx, exn.toSymbol(), &strVal)) {
@@ -498,28 +540,7 @@ bool ErrorReport::init(JSContext* cx, HandleValue exn,
     // If we have the right fields, override the ToString we performed on
     // the exception object above with something built out of its quacks
     // (i.e. as much of |NameQuack: MessageQuack| as we can make).
-    //
-    // It would be nice to use ErrorReportToString here, but we can't quite
-    // do it - mostly because we'd need to figure out what JSExnType |name|
-    // corresponds to, which may not be any JSExnType at all.
-    if (name && msg) {
-      RootedString colon(cx, JS_NewStringCopyZ(cx, ": "));
-      if (!colon) {
-        return false;
-      }
-      RootedString nameColon(cx, ConcatStrings<CanGC>(cx, name, colon));
-      if (!nameColon) {
-        return false;
-      }
-      str = ConcatStrings<CanGC>(cx, nameColon, msg);
-      if (!str) {
-        return false;
-      }
-    } else if (name) {
-      str = name;
-    } else if (msg) {
-      str = msg;
-    }
+    str = FormatErrorMessage(cx, name, msg);
 
     {
       AutoClearPendingException acpe(cx);
