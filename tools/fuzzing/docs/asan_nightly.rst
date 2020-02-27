@@ -1,4 +1,5 @@
-{{ApiRef}}
+ASan Nightly
+============
 
 The **ASan Nightly Project** involves building a Firefox Nightly browser
 with the popular
@@ -18,15 +19,14 @@ number of participants.
 
 You can download the latest build using one of the links below. The
 builds are self-updating daily like regular nightly builds (like with
-regular builds, you can go to *"Help"* → *"About Nightly"* to force an
+regular builds, you can go to *"Help"* → *"About Nightly"* to force an
 update check or confirm that you run the latest version).
 
 .. note::
 
    If you came here looking for regular ASan builds (e.g. for fuzzing or
-   as a developer to reproduce a crash), you should probably go
-   `here <https://developer.mozilla.org/en-US/docs/Mozilla/Testing/Firefox_and_Address_Sanitizer>`__
-   instead.
+   as a developer to reproduce a crash), you should probably go to the
+   :ref:`Firefox and Address Sanitizer` doc instead.
 
 .. _Requirements:
 
@@ -62,8 +62,6 @@ you should consider using a second profile.
    your /tmp directory is writable and the shipped ``llvm-symbolizer``
    binary is executable from within the Firefox process.
 
-.. _Preferences:
-
 Preferences
 ~~~~~~~~~~~
 
@@ -82,8 +80,6 @@ questions about your crash reports.
    Setting this preference helps us to get back to you in case we have
    questions about your setup/OS. Please consider using it so we can get
    back to you if necessary.
-
-.. _Bug_Bounty_Program:
 
 Bug Bounty Program
 ~~~~~~~~~~~~~~~~~~
@@ -110,7 +106,6 @@ an issue.
    We cannot reward any reports that are submitted with no email
    address.
 
-.. _Known_Issues:
 
 Known Issues
 ~~~~~~~~~~~~
@@ -145,12 +140,8 @@ When filing a bug, it greatly helps if you Cc that email address and
 make the bug block `bug
 1386297 <https://bugzilla.mozilla.org/show_bug.cgi?id=1386297>`__.
 
-.. _FAQ:
-
 FAQ
 ~~~
-
-.. _What_additional_data_is_collected:
 
 What additional data is collected?
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -166,8 +157,6 @@ is really just crash traces submitted to a remote location.
    capabilities of a regular Nightly browser. The answer above only
    refers to what this project collects **in addition** to what the
    regular Nightly browser can collect.
-
-.. _Whats_the_performance_impact:
 
 What's the performance impact?
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -186,16 +175,12 @@ connection.
    section above, in particular the problem about screen refresh rate
    slowing down Firefox.
 
-.. _What_about_stability:
-
 What about stability?
 ^^^^^^^^^^^^^^^^^^^^^
 
 The browser is as stable as a regular Nightly build. Various people have
 been surfing around with it for their daily work for weeks now and we
 have barely received any crash reports.
-
-.. _How_do_I_confirm_that_Im_running_the_correct_build:
 
 How do I confirm that I'm running the correct build?
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -208,8 +193,6 @@ with a URL. Do not modify this value.
 
    Since Firefox 64, the *"ASan Crash Reporter"*  feature is no longer
    listed in ``about:support``
-
-.. _Will_there_be_support_for_Mac:
 
 Will there be support for Mac?
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
