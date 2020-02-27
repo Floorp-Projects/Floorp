@@ -253,13 +253,6 @@ JSObject* AudioContext::WrapObject(JSContext* aCx,
 already_AddRefed<AudioContext> AudioContext::Constructor(
     const GlobalObject& aGlobal, const AudioContextOptions& aOptions,
     ErrorResult& aRv) {
-  // Audio playback is not yet supported when recording or replaying. See bug
-  // 1304147.
-  if (recordreplay::IsRecordingOrReplaying()) {
-    aRv.Throw(NS_ERROR_NOT_AVAILABLE);
-    return nullptr;
-  }
-
   nsCOMPtr<nsPIDOMWindowInner> window =
       do_QueryInterface(aGlobal.GetAsSupports());
   if (!window) {
@@ -302,13 +295,6 @@ already_AddRefed<AudioContext> AudioContext::Constructor(
 already_AddRefed<AudioContext> AudioContext::Constructor(
     const GlobalObject& aGlobal, uint32_t aNumberOfChannels, uint32_t aLength,
     float aSampleRate, ErrorResult& aRv) {
-  // Audio playback is not yet supported when recording or replaying. See bug
-  // 1304147.
-  if (recordreplay::IsRecordingOrReplaying()) {
-    aRv.Throw(NS_ERROR_NOT_AVAILABLE);
-    return nullptr;
-  }
-
   nsCOMPtr<nsPIDOMWindowInner> window =
       do_QueryInterface(aGlobal.GetAsSupports());
   if (!window) {

@@ -117,8 +117,7 @@ class ProfilerMarkerPayload {
   using DeserializerTagAtomic = int;
 
   // Number of currently-registered deserializers.
-  static mozilla::Atomic<DeserializerTagAtomic, mozilla::ReleaseAcquire,
-                         mozilla::recordreplay::Behavior::DontPreserve>
+  static mozilla::Atomic<DeserializerTagAtomic, mozilla::ReleaseAcquire>
       sDeserializerCount;
 
   // List of currently-registered deserializers.

@@ -25,9 +25,7 @@ namespace {
 StaticRefPtr<WebSocketEventService> gWebSocketEventService;
 
 bool IsChildProcess() {
-  return XRE_GetProcessType() != GeckoProcessType_Default &&
-         // Middleman processes are not Necko children.
-         !recordreplay::IsMiddleman();
+  return XRE_GetProcessType() != GeckoProcessType_Default;
 }
 
 }  // anonymous namespace

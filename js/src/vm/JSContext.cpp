@@ -293,7 +293,6 @@ JS_FRIEND_API void js::ReportOutOfMemory(JSContext* cx) {
    */
   fprintf(stderr, "ReportOutOfMemory called\n");
 #endif
-  mozilla::recordreplay::InvalidateRecording("OutOfMemory exception thrown");
 
   if (cx->isHelperThreadContext()) {
     return cx->addPendingOutOfMemory();
@@ -334,7 +333,6 @@ void js::ReportOverRecursed(JSContext* maybecx, unsigned errorNumber) {
    */
   fprintf(stderr, "ReportOverRecursed called\n");
 #endif
-  mozilla::recordreplay::InvalidateRecording("OverRecursed exception thrown");
   if (maybecx) {
     if (!maybecx->isHelperThreadContext()) {
       JS_ReportErrorNumberASCII(maybecx, GetErrorMessage, nullptr, errorNumber);

@@ -258,19 +258,6 @@ JS_PUBLIC_API JSObject* JS::ExceptionStackOrNull(HandleObject objArg) {
   return obj->stack();
 }
 
-JS_PUBLIC_API uint64_t JS::ExceptionTimeWarpTarget(JS::HandleValue value) {
-  if (!value.isObject()) {
-    return 0;
-  }
-
-  ErrorObject* obj = value.toObject().maybeUnwrapIf<ErrorObject>();
-  if (!obj) {
-    return 0;
-  }
-
-  return obj->timeWarpTarget();
-}
-
 JS_FRIEND_API JSLinearString* js::GetErrorTypeName(JSContext* cx,
                                                    int16_t exnType) {
   /*

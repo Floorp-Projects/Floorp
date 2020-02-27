@@ -100,9 +100,9 @@ class DataMutexBase {
 // Craft a version of StaticMutex that takes a const char* in its ctor.
 // We need this so it works interchangeably with Mutex which requires a const
 // char* aName in its ctor.
-class StaticMutexNameless : public StaticMutexNotRecorded {
+class StaticMutexNameless : public StaticMutex {
  public:
-  explicit StaticMutexNameless(const char* aName) : StaticMutexNotRecorded() {}
+  explicit StaticMutexNameless(const char* aName) : StaticMutex() {}
 
  private:
   // Disallow copy construction, `=`, `new`, and `delete` like BaseStaticMutex.

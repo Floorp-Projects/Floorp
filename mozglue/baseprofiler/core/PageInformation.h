@@ -68,9 +68,7 @@ class PageInformation final {
   // not.
   Maybe<uint64_t> mBufferPositionWhenUnregistered;
 
-  mutable Atomic<int32_t, MemoryOrdering::ReleaseAcquire,
-                 recordreplay::Behavior::DontPreserve>
-      mRefCnt;
+  mutable Atomic<int32_t, MemoryOrdering::ReleaseAcquire> mRefCnt;
 };
 
 }  // namespace baseprofiler
