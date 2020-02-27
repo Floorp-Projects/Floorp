@@ -37,6 +37,7 @@
 | [mozilla.components.browser.icons.utils](mozilla.components.browser.icons.utils/index.md) |  |
 | [mozilla.components.browser.menu](mozilla.components.browser.menu/index.md) |  |
 | [mozilla.components.browser.menu.ext](mozilla.components.browser.menu.ext/index.md) |  |
+| [mozilla.components.browser.menu.facts](mozilla.components.browser.menu.facts/index.md) |  |
 | [mozilla.components.browser.menu.item](mozilla.components.browser.menu.item/index.md) |  |
 | [mozilla.components.browser.menu.view](mozilla.components.browser.menu.view/index.md) |  |
 | [mozilla.components.browser.menu2](mozilla.components.browser.menu2/index.md) |  |
