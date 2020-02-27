@@ -30,6 +30,7 @@ import org.mozilla.fenix.ReleaseChannel
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.ext.asActivity
 import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.theme.ThemeManager
 import org.mozilla.fenix.utils.Settings
 
@@ -236,7 +237,9 @@ class DefaultToolbarMenu(
         ),
         isHighlighted = {
             val webAppUseCases = context.components.useCases.webAppUseCases
-            webAppUseCases.isPinningSupported() && webAppUseCases.isInstallable()
+            webAppUseCases.isPinningSupported() &&
+                    webAppUseCases.isInstallable() &&
+                    !context.settings().installPwaOpened
         }
     ) {
         onItemTapped.invoke(ToolbarMenu.Item.AddToHomeScreen)
@@ -284,7 +287,7 @@ class DefaultToolbarMenu(
             label = context.getString(R.string.browser_menu_read),
             notificationTint = getColor(context, R.color.whats_new_notification_color)
         ),
-        isHighlighted = { true }
+        isHighlighted = { !context.settings().readerModeOpened }
     ) { checked ->
         onItemTapped.invoke(ToolbarMenu.Item.ReaderMode(checked))
     }
@@ -305,7 +308,7 @@ class DefaultToolbarMenu(
             label = context.getString(R.string.browser_menu_open_app_link),
             notificationTint = getColor(context, R.color.whats_new_notification_color)
         ),
-        isHighlighted = { true }
+        isHighlighted = { !context.settings().openInAppOpened }
     ) {
         onItemTapped.invoke(ToolbarMenu.Item.OpenInApp)
     }
