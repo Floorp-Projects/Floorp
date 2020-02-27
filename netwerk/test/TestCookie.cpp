@@ -186,6 +186,11 @@ void InitPrefs(nsIPrefBranch* aPrefBranch) {
   aPrefBranch->SetIntPref(kPrefCookieQuotaPerHost, 49);
   // Set the base domain limit to 50 so we have a known value.
   aPrefBranch->SetIntPref(kCookiesMaxPerHost, 50);
+
+  // SameSite=none by default. We have other tests for lax-by-default.
+  // XXX: Bug 1617611 - Fix all the tests broken by "cookies sameSite=lax by
+  // default"
+  Preferences::SetBool("network.cookie.sameSite.laxByDefault", false);
 }
 
 TEST(TestCookie, TestCookieMain)
