@@ -6,6 +6,7 @@
 
 /* Class used to manage the wrapped native objects within a JS scope. */
 
+#include "AccessCheck.h"
 #include "xpcprivate.h"
 #include "XPCWrapper.h"
 #include "nsContentUtils.h"
