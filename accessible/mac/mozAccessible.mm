@@ -1142,8 +1142,15 @@ struct RoleDescrComparator {
   if (curNative) [mChildren addObject:curNative];
 }
 
+- (BOOL)accessibilityNotifiesWhenDestroyed {
+  return YES;
+}
+
 - (void)expire {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
+  NSAccessibilityPostNotification(
+      self, NSAccessibilityUIElementDestroyedNotification);
 
   [self invalidateChildren];
 
