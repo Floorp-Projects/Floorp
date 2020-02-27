@@ -1943,6 +1943,90 @@ waitForAllPaints(() => {
 
     await ensureElementRemoval(div);
   });
+
+  add_task_if_omta_enabled(async function no_restyling_animations_in_opacity_zero_element() {
+    const div = addDiv(null, { style: 'animation: on-main-thread 100s infinite; opacity: 0' });
+    const animation = div.getAnimations()[0];
+
+    await waitForAnimationReadyToRestyle(animation);
+    const markers = await observeStyling(5);
+    is(markers.length, 0,
+       'Animations running on the main thread in opacity: 0 element ' +
+       'should never cause restyles');
+    await ensureElementRemoval(div);
+  });
+
+  add_task_if_omta_enabled(async function no_restyling_compositor_animations_in_opacity_zero_descendant() {
+    const container = addDiv(null, { style: 'opacity: 0' });
+    const child = addDiv(null, { style: 'animation: rotate 100s infinite;' });
+    container.appendChild(child);
+
+    const animation = child.getAnimations()[0];
+    await waitForAnimationReadyToRestyle(animation);
+    ok(!SpecialPowers.wrap(animation).isRunningOnCompositor);
+
+    const markers = await observeStyling(5);
+
+    is(markers.length, 0,
+       'Animations running on the compositor in opacity zero descendant element ' +
+       'should never cause restyles');
+    await ensureElementRemoval(container);
+  });
+
+  add_task_if_omta_enabled(async function no_restyling_compositor_animations_in_opacity_zero_descendant_abspos() {
+    const container = addDiv(null, { style: 'opacity: 0' });
+    const child = addDiv(null, { style: 'position: abspos; animation: rotate 100s infinite;' });
+    container.appendChild(child);
+
+    const animation = child.getAnimations()[0];
+    await waitForAnimationReadyToRestyle(animation);
+    ok(!SpecialPowers.wrap(animation).isRunningOnCompositor);
+
+    const markers = await observeStyling(5);
+
+    is(markers.length, 0,
+       'Animations running on the compositor in opacity zero abspos descendant element ' +
+       'should never cause restyles');
+    await ensureElementRemoval(container);
+  });
+
+  add_task_if_omta_enabled(async function restyling_main_thread_animations_in_opacity_zero_descendant_after_root_opacity_animation() {
+    const container = addDiv(null, { style: 'opacity: 0' });
+
+    const child = addDiv(null, { style: 'animation: on-main-thread 100s infinite;' });
+    container.appendChild(child);
+
+    // Animate the container from 1 to zero opacity and ensure the child animation is throttled then.
+    const containerAnimation = container.animate({ opacity: [ '1', '0' ] }, 100);
+    await containerAnimation.finished;
+
+    const animation = child.getAnimations()[0];
+    await waitForAnimationReadyToRestyle(animation);
+
+    const markers = await observeStyling(5);
+
+    is(markers.length, 0,
+       'Animations running on the compositor in opacity zero descendant element ' +
+       'should never cause restyles after root animation has finished');
+    await ensureElementRemoval(container);
+  });
+
+  add_task_if_omta_enabled(async function restyling_main_thread_animations_in_opacity_zero_descendant_during_root_opacity_animation() {
+    const container = addDiv(null, { style: 'opacity: 0; animation: opacity 100s infinite' });
+
+    const child = addDiv(null, { style: 'animation: on-main-thread 100s infinite;' });
+    container.appendChild(child);
+
+    const animation = child.getAnimations()[0];
+    await waitForAnimationReadyToRestyle(animation);
+
+    const markers = await observeStyling(5);
+
+    is(markers.length, 5,
+       'Animations in opacity zero descendant element ' +
+       'should not be throttled if root is animating opacity');
+    await ensureElementRemoval(container);
+  });
 });
 
 </script>
