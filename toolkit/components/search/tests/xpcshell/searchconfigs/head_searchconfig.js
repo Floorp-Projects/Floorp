@@ -102,7 +102,6 @@ class SearchConfigTest {
 
     // Disable region checks.
     Services.prefs.setBoolPref("browser.search.geoSpecificDefaults", false);
-    Services.prefs.setCharPref("browser.search.geoip.url", "");
 
     // Enable separatePrivateDefault testing. We test with this on, as we have
     // separate tests for ensuring the normal = private when this is off.

@@ -3,11 +3,15 @@
 
 add_task(async function setup() {
   await AddonTestUtils.promiseStartupManager();
+  Services.prefs.setBoolPref("browser.search.geoSpecificDefaults", true);
+  Services.prefs
+    .getDefaultBranch(SearchUtils.BROWSER_SEARCH_PREF)
+    .setCharPref("geoSpecificDefaults.url", "");
 });
 
 add_task(async function test_location() {
   Services.prefs.setCharPref(
-    "browser.search.geoip.url",
+    "geo.provider-country.network.url",
     'data:application/json,{"country_code": "AU"}'
   );
   await Services.search.init(true);
@@ -18,12 +22,6 @@ add_task(async function test_location() {
   );
   // check we have "success" recorded in telemetry
   checkCountryResultTelemetry(TELEMETRY_RESULT_ENUM.SUCCESS);
-  // a false value for SEARCH_SERVICE_COUNTRY_TIMEOUT
-  let histogram = Services.telemetry.getHistogramById(
-    "SEARCH_SERVICE_COUNTRY_TIMEOUT"
-  );
-  let snapshot = histogram.snapshot();
-  deepEqual(snapshot.values, { 0: 1, 1: 0 }); // boolean probe so 3 buckets, expect 1 result for |0|.
 
   // simple checks for our platform-specific telemetry.  We can't influence
   // what they return (as we can't influence the countryCode the platform
@@ -62,8 +60,8 @@ add_task(async function test_location() {
         countryCode == "AU" ? { 0: 1, 1: 0 } : { 0: 0, 1: 1, 2: 0 };
     }
 
-    histogram = Services.telemetry.getHistogramById(hid);
-    snapshot = histogram.snapshot();
+    let histogram = Services.telemetry.getHistogramById(hid);
+    let snapshot = histogram.snapshot();
     deepEqual(snapshot.values, expectedResult);
   }
 });

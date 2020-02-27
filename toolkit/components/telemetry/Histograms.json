@@ -8969,14 +8969,6 @@
     "n_values": 8,
     "description": "Result of XHR request fetching the country-code. 0=SUCCESS, 1=SUCCESS_WITHOUT_DATA, 2=XHRTIMEOUT, 3=ERROR (rest reserved for finer-grained error codes later)"
   },
-  "SEARCH_SERVICE_COUNTRY_TIMEOUT": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview", "thunderbird"],
-    "alert_emails": ["mdeboer@mozilla.com", "fx-search@mozilla.com"],
-    "expires_in_version": "never",
-    "kind": "boolean",
-    "description": "True if we stopped waiting for the XHR response before it completed"
-  },
   "SEARCH_SERVICE_US_COUNTRY_MISMATCHED_TIMEZONE": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec", "geckoview"],
