@@ -128,7 +128,6 @@ pref("browser.sessionstore.backupInterval", 120000); // milliseconds -> 2 minute
 pref("browser.sessionstore.max_tabs_undo", 10);
 pref("browser.sessionstore.max_resumed_crashes", 2);
 pref("browser.sessionstore.privacy_level", 0); // saving data: 0 = all, 1 = unencrypted sites, 2 = never
-pref("browser.sessionstore.debug_logging", false);
 
 // Download protection lists are not available on Fennec.
 pref("urlclassifier.downloadAllowTable", "");
