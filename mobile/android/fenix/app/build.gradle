@@ -1,3 +1,19 @@
+// Allow installing Gradle plugins from the Mozilla Maven repositories
+buildscript {
+    repositories {
+        maven {
+            url "https://snapshots.maven.mozilla.org/maven2"
+        }
+        maven {
+            url "https://maven.mozilla.org/maven2"
+        }
+
+        dependencies {
+            classpath "org.mozilla.components:tooling-glean-gradle:${Versions.mozilla_android_components}"
+        }
+    }
+}
+
 plugins {
     id "com.jetbrains.python.envs" version "0.0.26"
 }
@@ -378,6 +394,11 @@ androidExtensions {
     experimental = true
 }
 
+// Generate Kotlin code and markdown docs for the Fenix Glean metrics.
+ext.gleanGenerateMarkdownDocs = true
+ext.gleanDocsDirectory = "$rootDir/docs"
+apply plugin: "org.mozilla.telemetry.glean-gradle-plugin"
+
 dependencies {
     geckoNightlyImplementation Deps.mozilla_browser_engine_gecko_nightly
     geckoBetaImplementation Deps.mozilla_browser_engine_gecko_beta
@@ -539,7 +560,7 @@ dependencies {
 
     // For the initial release of Glean 19, we require consumer applications to
     // depend on a separate library for unit tests. This will be removed in future releases.
-    testImplementation Deps.mozilla_service_glean_forUnitTests
+    testImplementation "org.mozilla.telemetry:glean-forUnitTests:${project.ext.glean_version}"
 }
 
 if (project.hasProperty("raptor")) {
@@ -627,17 +648,6 @@ task buildTranslationArray {
     def foundLocalesString = foundLocales.toString().replaceAll(',}','}')
     android.defaultConfig.buildConfigField "String[]", "SUPPORTED_LOCALE_ARRAY", foundLocalesString
 }
-
-def glean_android_components_tag = (
-        Versions.mozilla_android_components.endsWith('-SNAPSHOT') ?
-                'master' :
-                'v' + Versions.mozilla_android_components
-)
-
-// Generate markdown docs for the collected metrics.
-ext.gleanGenerateMarkdownDocs = true
-ext.gleanDocsDirectory = "$rootDir/docs"
-apply from: 'https://github.com/mozilla-mobile/android-components/raw/' + glean_android_components_tag + '/components/service/glean/scripts/sdk_generator.gradle'
 
 afterEvaluate {
 

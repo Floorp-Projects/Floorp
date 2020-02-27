@@ -34,8 +34,6 @@ object Versions {
 
     const val mozilla_android_components = "35.0.0-SNAPSHOT"
 
-    const val mozilla_glean = "25.0.0"
-
     const val adjust = "4.18.3"
     const val installreferrer = "1.0"
 
@@ -127,7 +125,6 @@ object Deps {
         "org.mozilla.components:service-sync-logins:${Versions.mozilla_android_components}"
     const val mozilla_service_firefox_accounts = "org.mozilla.components:service-firefox-accounts:${Versions.mozilla_android_components}"
     const val mozilla_service_glean = "org.mozilla.components:service-glean:${Versions.mozilla_android_components}"
-    const val mozilla_service_glean_forUnitTests = "org.mozilla.telemetry:glean-forUnitTests:${Versions.mozilla_glean}"
     const val mozilla_service_experiments = "org.mozilla.components:service-experiments:${Versions.mozilla_android_components}"
     const val mozilla_service_location = "org.mozilla.components:service-location:${Versions.mozilla_android_components}"
 
