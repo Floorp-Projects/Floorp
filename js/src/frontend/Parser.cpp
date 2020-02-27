@@ -1668,6 +1668,9 @@ bool PerHandlerParser<FullParseHandler>::finishFunction(
   FunctionBox* funbox = pc_->functionBox();
   funbox->synchronizeArgCount();
 
+  // BCE will need to generate bytecode for this.
+  funbox->emitBytecode = true;
+
   bool hasParameterExprs = funbox->hasParameterExprs;
 
   if (hasParameterExprs) {
@@ -1835,7 +1838,6 @@ bool LazyScriptCreationData::create(JSContext* cx, FunctionBox* funbox,
   PropagateTransitiveParseFlags(funbox, lazy);
 
   function->initLazyScript(lazy);
-  funbox->setIsInterpretedLazy(true);
 
   if (fieldInitializers) {
     lazy->setFieldInitializers(*fieldInitializers);
@@ -7221,15 +7223,17 @@ bool GeneralParser<ParseHandler, Unit>::finishClassConstructor(
     }
 
     // Set the same information, but on the lazyScript.
-    if (ctorbox->isInterpretedLazy()) {
-      ctorbox->function()->baseScript()->setToStringEnd(classEndOffset);
+    if (ctorbox->hasObject()) {
+      if (!ctorbox->emitBytecode) {
+        ctorbox->function()->baseScript()->setToStringEnd(classEndOffset);
 
-      if (numFields > 0) {
-        ctorbox->function()->baseScript()->setFunctionHasThisBinding();
+        if (numFields > 0) {
+          ctorbox->function()->baseScript()->setFunctionHasThisBinding();
+        }
+      } else {
+        // There should not be any non-lazy script yet.
+        MOZ_ASSERT(ctorbox->function()->isIncomplete());
       }
-    } else {
-      // There should not be any non-lazy script yet.
-      MOZ_ASSERT_IF(ctorbox->hasObject(), ctorbox->function()->isIncomplete());
     }
   }
 
