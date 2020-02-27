@@ -13,7 +13,7 @@ here = os.path.abspath(os.path.dirname(__file__))
 raptor_dir = os.path.join(os.path.dirname(here), 'raptor')
 sys.path.insert(0, raptor_dir)
 
-from utils import transform_platform, write_yml_file
+from utils import bool_from_str, transform_platform, write_yml_file
 
 
 @pytest.mark.parametrize('platform', ['win', 'mac', 'linux64'])
@@ -56,6 +56,24 @@ def test_write_yml_file():
     with open(yml_file, 'r') as yml_in:
         yml_loaded = yaml.load(yml_in)
         assert yml_loaded == yml_data
+
+
+@pytest.mark.parametrize('value, expected_result', [
+    ('true', True),
+    ('TRUE', True),
+    ('True', True),
+    ('false', False),
+    ('FALSE', False),
+    ('False', False)
+])
+def test_bool_from_str(value, expected_result):
+    assert expected_result == bool_from_str(value)
+
+
+@pytest.mark.parametrize('invalid_value', ['invalid_str', ''])
+def test_bool_from_str_with_invalid_values(invalid_value):
+    with pytest.raises(ValueError):
+        bool_from_str(invalid_value)
 
 
 if __name__ == '__main__':
