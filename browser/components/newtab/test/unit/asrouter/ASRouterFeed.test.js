@@ -15,6 +15,7 @@ describe("ASRouterFeed", () => {
   let FakeBookmarkPanelHub;
   let FakeToolbarBadgeHub;
   let FakeToolbarPanelHub;
+  let FakeMomentsPageHub;
   beforeEach(() => {
     sandbox = sinon.createSandbox();
     globals = new GlobalOverrider();
@@ -29,19 +30,20 @@ describe("ASRouterFeed", () => {
       init: sandbox.stub(),
       uninit: sandbox.stub(),
     };
+    FakeMomentsPageHub = {
+      init: sandbox.stub(),
+      uninit: sandbox.stub(),
+    };
     globals.set({
       GroupsConfigurationProvider: { getMessages: () => [] },
       ASRouterPreferences,
       BookmarkPanelHub: FakeBookmarkPanelHub,
       ToolbarBadgeHub: FakeToolbarBadgeHub,
       ToolbarPanelHub: FakeToolbarPanelHub,
+      MomentsPageHub: FakeMomentsPageHub,
     });
 
     Router = new _ASRouter({ providers: [FAKE_LOCAL_PROVIDER] });
-    FakeToolbarPanelHub = {
-      init: sandbox.stub(),
-      uninit: sandbox.stub(),
-    };
 
     storage = {
       get: sandbox.stub().returns(Promise.resolve([])),
