@@ -17,4 +17,6 @@ jobs:
           type: decision-task
           treeherder-symbol: nightly-D
           target-tasks-method: nightly
-      when: []  # Force hook only
+      when:
+          - {hour: 13, minute: 0}
+          - {hour: 19, minute: 0}
