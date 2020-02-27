@@ -20,6 +20,7 @@ linux64-fix-stacks:
         symbol: TL(fix-stacks)
     worker-type: b-linux
     run:
+        arguments: ['x86_64-unknown-linux-gnu']
         toolchain-artifact: public/build/fix-stacks.tar.xz
     fetches:
         toolchain:
@@ -31,11 +32,19 @@ macosx64-fix-stacks:
     treeherder:
         symbol: TM(fix-stacks)
     worker-type: b-linux
+    worker:
+        env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/macosx64/cross-clang.manifest"
     run:
+        arguments: ['x86_64-apple-darwin']
+        resources:
+            - taskcluster/scripts/misc/tooltool-download.sh
         toolchain-artifact: public/build/fix-stacks.tar.xz
+        tooltool-downloads: internal
     fetches:
         toolchain:
             - linux64-binutils
+            - linux64-cctools-port
             - linux64-clang-9
             - linux64-rust-macos
 
@@ -47,6 +56,7 @@ win64-fix-stacks:
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/vs2017.manifest"
     run:
+        arguments: ['x86_64-pc-windows-msvc']
         toolchain-artifact: public/build/fix-stacks.tar.bz2
         resources:
             - 'taskcluster/scripts/misc/tooltool-download.sh'
