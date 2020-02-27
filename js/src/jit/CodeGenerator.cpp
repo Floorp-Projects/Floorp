@@ -13020,6 +13020,11 @@ void CodeGenerator::visitInterruptCheck(LInterruptCheck* lir) {
   OutOfLineCode* ool =
       oolCallVM<Fn, InterruptCheck>(lir, ArgList(), StoreNothing());
 
+  if (lir->mir()->trackRecordReplayProgress()) {
+    masm.inc64(
+        AbsoluteAddress(mozilla::recordreplay::ExecutionProgressCounter()));
+  }
+
   const void* interruptAddr = gen->runtime->addressOfInterruptBits();
   masm.branch32(Assembler::NotEqual, AbsoluteAddress(interruptAddr), Imm32(0),
                 ool->entry());

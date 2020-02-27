@@ -45,6 +45,8 @@
 #include "replace_malloc_bridge.h"
 #endif
 
+#include "mozilla/RecordReplay.h"
+
 #ifndef __EXCEPTIONS
 // This file uses C++ try/catch (but shouldn't). Duplicate the macros from
 // <c++/4.2.1/exception_defines.h> allowing this file to work properly with
@@ -714,6 +716,12 @@ bool ExceptionHandler::InstallHandler() {
     return false;
   }
 
+  // Don't modify exception ports when recording or replaying, to avoid
+  // interfering with the record/replay system's exception handler.
+  if (mozilla::recordreplay::IsRecordingOrReplaying()) {
+    return true;
+  }
+
   // Save the current exception ports so that we can forward to them
   previous_->count = EXC_TYPES_COUNT;
   mach_port_t current_task = mach_task_self();
@@ -803,8 +811,11 @@ bool ExceptionHandler::Setup(bool install_handler) {
     if (!InstallHandler())
       return false;
 
-  if (result == KERN_SUCCESS) {
+  // Don't spawn the handler thread when replaying, as we have not set up
+  // exception ports for it to monitor.
+  if (result == KERN_SUCCESS && !mozilla::recordreplay::IsReplaying()) {
     // Install the handler in its own thread, detached as we won't be joining.
+    mozilla::recordreplay::AutoPassThroughThreadEvents pt;
     pthread_attr_t attr;
     pthread_attr_init(&attr);
     pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);

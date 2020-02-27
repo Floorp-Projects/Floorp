@@ -314,6 +314,13 @@ class ContentParent final
   // Let managees query if it is safe to send messages.
   bool IsDestroyed() const { return !mIPCOpen; }
 
+  mozilla::ipc::IPCResult RecvOpenRecordReplayChannel(
+      const uint32_t& channelId, FileDescriptor* connection);
+  mozilla::ipc::IPCResult RecvCreateReplayingProcess(
+      const uint32_t& aChannelId);
+  mozilla::ipc::IPCResult RecvGenerateReplayCrashReport(
+      const uint32_t& aChannelId);
+
   mozilla::ipc::IPCResult RecvCreateGMPService();
 
   mozilla::ipc::IPCResult RecvLoadPlugin(
@@ -738,13 +745,20 @@ class ContentParent final
       nsIReferrerInfo* aReferrerInfo, bool aLoadUri,
       nsIContentSecurityPolicy* aCsp);
 
+  enum RecordReplayState { eNotRecordingOrReplaying, eRecording, eReplaying };
+
   explicit ContentParent(int32_t aPluginID)
-      : ContentParent(nullptr, EmptyString(), aPluginID) {}
-  ContentParent(ContentParent* aOpener, const nsAString& aRemoteType)
-      : ContentParent(aOpener, aRemoteType, nsFakePluginTag::NOT_JSPLUGIN) {}
+      : ContentParent(nullptr, EmptyString(), eNotRecordingOrReplaying,
+                      EmptyString(), aPluginID) {}
+  ContentParent(ContentParent* aOpener, const nsAString& aRemoteType,
+                RecordReplayState aRecordReplayState = eNotRecordingOrReplaying,
+                const nsAString& aRecordingFile = EmptyString())
+      : ContentParent(aOpener, aRemoteType, aRecordReplayState, aRecordingFile,
+                      nsFakePluginTag::NOT_JSPLUGIN) {}
 
   ContentParent(ContentParent* aOpener, const nsAString& aRemoteType,
-                int32_t aPluginID);
+                RecordReplayState aRecordReplayState,
+                const nsAString& aRecordingFile, int32_t aPluginID);
 
   // Launch the subprocess and associated initialization.
   // Returns false if the process fails to start.
@@ -1287,6 +1301,12 @@ class ContentParent final
                                const bool& aMinimizeMemoryUsage,
                                const Maybe<FileDescriptor>& aDMDFile) override;
 
+  nsresult SaveRecording(nsIFile* aFile, bool* aRetval);
+
+  bool IsRecordingOrReplaying() const {
+    return mRecordReplayState != eNotRecordingOrReplaying;
+  }
+
   void OnBrowsingContextGroupSubscribe(BrowsingContextGroup* aGroup);
   void OnBrowsingContextGroupUnsubscribe(BrowsingContextGroup* aGroup);
 
@@ -1300,6 +1320,12 @@ class ContentParent final
   static bool ShouldSyncPreference(const char16_t* aData);
 
  private:
+  // Determine the recording/replaying state for this frame.
+  // Return `Nothing` in case of error, typically if we need
+  // to create a temporary recording file but could not.
+  static Maybe<RecordReplayState> GetRecordReplayState(
+      Element* aFrameElement, nsAString& aRecordingFile);
+
   // Return an existing ContentParent if possible. Otherwise, `nullptr`.
   static already_AddRefed<ContentParent> GetUsedBrowserProcess(
       ContentParent* aOpener, const nsAString& aRemoteType,
@@ -1375,6 +1401,16 @@ class ContentParent final
   LifecycleState mLifecycleState;
 
   bool mIsForBrowser;
+
+  // Whether this process is recording or replaying its execution, and any
+  // associated recording file.
+  RecordReplayState mRecordReplayState;
+  nsString mRecordingFile;
+
+  // When recording or replaying, the child process is a middleman. This vector
+  // stores any replaying children we have spawned on behalf of that middleman,
+  // indexed by their record/replay channel ID.
+  Vector<mozilla::ipc::GeckoChildProcessHost*> mReplayingChildren;
 
   // These variables track whether we've called Close() and KillHard() on our
   // channel.

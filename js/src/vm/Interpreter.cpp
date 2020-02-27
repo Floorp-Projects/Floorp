@@ -1955,6 +1955,9 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
           goto leave_on_safe_point;
         }
       }
+      if (script->trackRecordReplayProgress()) {
+        mozilla::recordreplay::AdvanceExecutionProgressCounter();
+      }
     }
     END_CASE(LoopHead)
 

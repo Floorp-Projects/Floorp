@@ -223,7 +223,8 @@ BrowserParent::BrowserParent(ContentParent* aManager, const TabId& aTabId,
       mHasPresented(false),
       mIsReadyToHandleInputEvents(false),
       mIsMouseEnterIntoWidgetEventSuppressed(false),
-      mIsDestroyingForProcessSwitch(false) {
+      mIsDestroyingForProcessSwitch(false),
+      mIsActiveRecordReplayTab(false) {
   MOZ_ASSERT(aManager);
   // When the input event queue is disabled, we don't need to handle the case
   // that some input events are dispatched before PBrowserConstructor.
@@ -645,6 +646,8 @@ void BrowserParent::DestroyInternal() {
         ->ParentDestroy();
   }
 #endif
+
+  SetIsActiveRecordReplayTab(false);
 }
 
 void BrowserParent::Destroy() {
@@ -3340,6 +3343,11 @@ void BrowserParent::SetDocShellIsActive(bool isActive) {
     }
   }
 #endif
+
+  // Keep track of how many active recording/replaying tabs there are.
+  if (Manager()->IsRecordingOrReplaying()) {
+    SetIsActiveRecordReplayTab(isActive);
+  }
 }
 
 bool BrowserParent::GetHasPresented() { return mHasPresented; }
@@ -3919,6 +3927,16 @@ void BrowserParent::SetBrowserHost(BrowserHost* aBrowser) {
   MOZ_ASSERT(!aBrowser ||
              (!mBrowserBridgeParent && !mBrowserHost && !mFrameElement));
   mBrowserHost = aBrowser;
+}
+
+/* static */
+size_t BrowserParent::gNumActiveRecordReplayTabs;
+
+void BrowserParent::SetIsActiveRecordReplayTab(bool aIsActive) {
+  if (aIsActive != mIsActiveRecordReplayTab) {
+    gNumActiveRecordReplayTabs += aIsActive ? 1 : -1;
+    mIsActiveRecordReplayTab = aIsActive;
+  }
 }
 
 mozilla::ipc::IPCResult BrowserParent::RecvSetSystemFont(

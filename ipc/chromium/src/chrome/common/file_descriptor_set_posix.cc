@@ -16,8 +16,13 @@ FileDescriptorSet::FileDescriptorSet() : consumed_descriptor_highwater_(0) {}
 FileDescriptorSet::~FileDescriptorSet() {
   if (consumed_descriptor_highwater_ == descriptors_.size()) return;
 
-  CHROMIUM_LOG(WARNING)
-      << "FileDescriptorSet destroyed with unconsumed descriptors";
+  // Middleman processes copy FileDescriptorSets before forwarding them to
+  // recording children, and destroying sets without using their descriptors is
+  // expected.
+  if (!mozilla::recordreplay::IsMiddleman()) {
+    CHROMIUM_LOG(WARNING)
+        << "FileDescriptorSet destroyed with unconsumed descriptors";
+  }
 
   // We close all the descriptors where the close flag is set. If this
   // message should have been transmitted, then closing those with close

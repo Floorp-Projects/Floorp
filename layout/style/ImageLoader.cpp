@@ -97,13 +97,20 @@ void ImageLoader::DropDocumentReference() {
   mDocument = nullptr;
 }
 
-// Arrays of requests and frames are sorted by their pointer address,
-// for faster lookup.
+// Normally, arrays of requests and frames are sorted by their pointer address,
+// for faster lookup. When recording or replaying, we don't do this, so that
+// the arrays retain their insertion order and are consistent between recording
+// and replaying.
 template <typename Elem, typename Item,
           typename Comparator = nsDefaultComparator<Elem, Item>>
 static size_t GetMaybeSortedIndex(const nsTArray<Elem>& aArray,
                                   const Item& aItem, bool* aFound,
                                   Comparator aComparator = Comparator()) {
+  if (recordreplay::IsRecordingOrReplaying()) {
+    size_t index = aArray.IndexOf(aItem, 0, aComparator);
+    *aFound = index != nsTArray<Elem>::NoIndex;
+    return *aFound ? index + 1 : aArray.Length();
+  }
   size_t index = aArray.IndexOfFirstElementGt(aItem, aComparator);
   *aFound = index > 0 && aComparator.Equals(aItem, aArray.ElementAt(index - 1));
   return index;
@@ -291,7 +298,11 @@ void ImageLoader::RemoveFrameToRequestMapping(imgIRequest* aRequest,
   if (auto entry = mFrameToRequestMap.Lookup(aFrame)) {
     const auto& requestSet = entry.Data();
     MOZ_ASSERT(requestSet, "This should never be null");
-    requestSet->RemoveElementSorted(aRequest);
+    if (recordreplay::IsRecordingOrReplaying()) {
+      requestSet->RemoveElement(aRequest);
+    } else {
+      requestSet->RemoveElementSorted(aRequest);
+    }
     if (requestSet->IsEmpty()) {
       aFrame->SetHasImageRequest(false);
       entry.Remove();

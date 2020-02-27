@@ -9,7 +9,6 @@
 
 #include "mozilla/Range.h"
 #include "mozilla/Span.h"
-#include "mozilla/Utf8.h"
 
 #include "js/TypeDecls.h"
 #include "js/Utility.h"

@@ -605,7 +605,9 @@ class ScriptSource {
   // Start of fields.
   //
 
-  mozilla::Atomic<uint32_t, mozilla::ReleaseAcquire> refs = {};
+  mozilla::Atomic<uint32_t, mozilla::ReleaseAcquire,
+                  mozilla::recordreplay::Behavior::DontPreserve>
+      refs = {};
 
   // An id for this source that is unique across the process. This can be used
   // to refer to this source from places that don't want to hold a strong
@@ -691,7 +693,9 @@ class ScriptSource {
   //
 
   // How many ids have been handed out to sources.
-  static mozilla::Atomic<uint32_t, mozilla::SequentiallyConsistent> idCount_;
+  static mozilla::Atomic<uint32_t, mozilla::SequentiallyConsistent,
+                         mozilla::recordreplay::Behavior::DontPreserve>
+      idCount_;
 
   template <typename Unit>
   const Unit* chunkUnits(JSContext* cx,
@@ -1837,7 +1841,9 @@ class RuntimeScriptData final {
   // This class is reference counted as follows: each pointer from a JSScript
   // counts as one reference plus there may be one reference from the shared
   // script data table.
-  mozilla::Atomic<uint32_t, mozilla::SequentiallyConsistent> refCount_ = {};
+  mozilla::Atomic<uint32_t, mozilla::SequentiallyConsistent,
+                  mozilla::recordreplay::Behavior::DontPreserve>
+      refCount_ = {};
 
   uint32_t natoms_ = 0;
 
@@ -2235,6 +2241,8 @@ setterLevel:                                                                  \
   MUTABLE_FLAG_GETTER_SETTER(warnedAboutUndefinedProp, WarnedAboutUndefinedProp)
   MUTABLE_FLAG_GETTER_SETTER(hasRunOnce, HasRunOnce)
   MUTABLE_FLAG_GETTER_SETTER(hasBeenCloned, HasBeenCloned)
+  MUTABLE_FLAG_GETTER_SETTER(trackRecordReplayProgress,
+                             TrackRecordReplayProgress)
   // N.B.: no setter -- custom logic in JSScript.
   MUTABLE_FLAG_GETTER(hasScriptCounts, HasScriptCounts)
   // Access the flag for whether this script has a DebugScript in its realm's

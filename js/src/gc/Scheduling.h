@@ -680,7 +680,9 @@ struct TriggerResult {
   size_t thresholdBytes;
 };
 
-using AtomicByteCount = mozilla::Atomic<size_t, mozilla::ReleaseAcquire>;
+using AtomicByteCount =
+    mozilla::Atomic<size_t, mozilla::ReleaseAcquire,
+                    mozilla::recordreplay::Behavior::DontPreserve>;
 
 /*
  * Tracks the size of allocated data. This is used for both GC and malloc data.

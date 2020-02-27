@@ -245,6 +245,12 @@ js::Nursery::Nursery(GCRuntime* gc)
 }
 
 bool js::Nursery::init(AutoLockGCBgAlloc& lock) {
+  // The nursery is permanently disabled when recording or replaying. Nursery
+  // collections may occur at non-deterministic points in execution.
+  if (mozilla::recordreplay::IsRecordingOrReplaying()) {
+    return true;
+  }
+
   capacity_ = roundSize(tunables().gcMinNurseryBytes());
   if (!allocateNextChunk(0, lock)) {
     capacity_ = 0;
@@ -293,7 +299,7 @@ js::Nursery::~Nursery() { disable(); }
 void js::Nursery::enable() {
   MOZ_ASSERT(isEmpty());
   MOZ_ASSERT(!gc->isVerifyPreBarriersEnabled());
-  if (isEnabled()) {
+  if (isEnabled() || mozilla::recordreplay::IsRecordingOrReplaying()) {
     return;
   }
 
@@ -957,6 +963,8 @@ static inline bool IsFullStoreBufferReason(JS::GCReason reason,
 void js::Nursery::collect(JS::GCReason reason) {
   JSRuntime* rt = runtime();
   MOZ_ASSERT(!rt->mainContextFromOwnThread()->suppressGC);
+
+  mozilla::recordreplay::AutoDisallowThreadEvents disallow;
 
   if (!isEnabled() || isEmpty()) {
     // Our barriers are not always exact, and there may be entries in the

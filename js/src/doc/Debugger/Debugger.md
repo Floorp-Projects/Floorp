@@ -517,6 +517,12 @@ The functions described below are not called with a `this` value.
     compilation - accumulate lines in a buffer until isCompilableUnit is true,
     then pass it to the compiler.
 
+### `recordReplayProcessKind()`
+:   Return the kind of record/replay firefox process that is currently
+    running: the string "RecordingReplaying" if this is a recording or
+    replaying process, the string "Middleman" if this is a middleman
+    process, or undefined for normal firefox content or UI processes.
+
 [add]: #adddebuggee-global
 [source]: Debugger.Source.md
 [script]: Debugger.Script.md

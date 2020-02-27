@@ -472,7 +472,7 @@ CompositorBridgeChild* ClientLayerManager::GetRemoteRenderer() {
 }
 
 CompositorBridgeChild* ClientLayerManager::GetCompositorBridgeChild() {
-  if (!XRE_IsParentProcess()) {
+  if (!XRE_IsParentProcess() && !recordreplay::IsRecordingOrReplaying()) {
     return CompositorBridgeChild::Get();
   }
   return GetRemoteRenderer();
@@ -495,6 +495,8 @@ void ClientLayerManager::DidComposite(TransactionId aTransactionId,
                                       const TimeStamp& aCompositeStart,
                                       const TimeStamp& aCompositeEnd) {
   if (!mWidget) {
+    // When recording/replaying this manager may have already been destroyed.
+    MOZ_ASSERT(recordreplay::IsRecordingOrReplaying());
     return;
   }
 

@@ -105,7 +105,7 @@ class IDecoderFrameRecycler {
 
 class Decoder {
  public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(Decoder)
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING_RECORDED(Decoder)
 
   explicit Decoder(RasterImage* aImage);
 

@@ -1678,7 +1678,7 @@ static constexpr size_t NextDepth(size_t aDepth) {
   return (aDepth < MAX_DEPTH) ? (aDepth + 1) : aDepth;
 }
 
-Atomic<bool, Relaxed> sStopFibonacci;
+Atomic<bool, Relaxed, recordreplay::Behavior::DontPreserve> sStopFibonacci;
 
 // Compute fibonacci the hard way (recursively: `f(n)=f(n-1)+f(n-2)`), and
 // prevent inlining.

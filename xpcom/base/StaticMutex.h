@@ -26,13 +26,14 @@ namespace mozilla {
  * initialized to 0 in order to initialize mMutex.  It is only safe to use
  * StaticMutex as a global or static variable.
  */
-class MOZ_ONLY_USED_TO_AVOID_STATIC_CONSTRUCTORS StaticMutex {
+template <recordreplay::Behavior Recording>
+class MOZ_ONLY_USED_TO_AVOID_STATIC_CONSTRUCTORS BaseStaticMutex {
  public:
   // In debug builds, check that mMutex is initialized for us as we expect by
   // the compiler.  In non-debug builds, don't declare a constructor so that
   // the compiler can see that the constructor is trivial.
 #ifdef DEBUG
-  StaticMutex() { MOZ_ASSERT(!mMutex); }
+  BaseStaticMutex() { MOZ_ASSERT(!mMutex); }
 #endif
 
   void Lock() { Mutex()->Lock(); }
@@ -51,7 +52,7 @@ class MOZ_ONLY_USED_TO_AVOID_STATIC_CONSTRUCTORS StaticMutex {
       return mMutex;
     }
 
-    OffTheBooksMutex* mutex = new OffTheBooksMutex("StaticMutex");
+    OffTheBooksMutex* mutex = new OffTheBooksMutex("StaticMutex", Recording);
     if (!mMutex.compareExchange(nullptr, mutex)) {
       delete mutex;
     }
@@ -59,33 +60,54 @@ class MOZ_ONLY_USED_TO_AVOID_STATIC_CONSTRUCTORS StaticMutex {
     return mMutex;
   }
 
-  Atomic<OffTheBooksMutex*, SequentiallyConsistent> mMutex;
+  Atomic<OffTheBooksMutex*, SequentiallyConsistent, Recording> mMutex;
 
   // Disallow copy constructor, but only in debug mode.  We only define
   // a default constructor in debug mode (see above); if we declared
   // this constructor always, the compiler wouldn't generate a trivial
   // default constructor for us in non-debug mode.
 #ifdef DEBUG
-  StaticMutex(StaticMutex& aOther);
+  BaseStaticMutex(BaseStaticMutex& aOther);
 #endif
 
   // Disallow these operators.
-  StaticMutex& operator=(StaticMutex* aRhs);
+  BaseStaticMutex& operator=(BaseStaticMutex* aRhs);
   static void* operator new(size_t) noexcept(true);
   static void operator delete(void*);
 };
 
+typedef BaseStaticMutex<recordreplay::Behavior::Preserve> StaticMutex;
+typedef BaseStaticMutex<recordreplay::Behavior::DontPreserve>
+    StaticMutexNotRecorded;
+
 // Helper for StaticMutexAutoLock/Unlock.
 class MOZ_STACK_CLASS AnyStaticMutex {
  public:
-  MOZ_IMPLICIT AnyStaticMutex(StaticMutex& aMutex) : mStaticMutex(&aMutex) {}
+  MOZ_IMPLICIT AnyStaticMutex(StaticMutex& aMutex)
+      : mStaticMutex(&aMutex), mStaticMutexNotRecorded(nullptr) {}
 
-  void Lock() { mStaticMutex->Lock(); }
+  MOZ_IMPLICIT AnyStaticMutex(StaticMutexNotRecorded& aMutex)
+      : mStaticMutex(nullptr), mStaticMutexNotRecorded(&aMutex) {}
 
-  void Unlock() { mStaticMutex->Unlock(); }
+  void Lock() {
+    if (mStaticMutex) {
+      mStaticMutex->Lock();
+    } else {
+      mStaticMutexNotRecorded->Lock();
+    }
+  }
+
+  void Unlock() {
+    if (mStaticMutex) {
+      mStaticMutex->Unlock();
+    } else {
+      mStaticMutexNotRecorded->Unlock();
+    }
+  }
 
  private:
   StaticMutex* mStaticMutex;
+  StaticMutexNotRecorded* mStaticMutexNotRecorded;
 };
 
 typedef BaseAutoLock<AnyStaticMutex> StaticMutexAutoLock;

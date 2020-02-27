@@ -712,6 +712,10 @@ bool ShadowLayerForwarder::EndTransaction(
     mShadowManager->SendRecordPaintTimes(mPaintTiming);
   }
 
+  if (recordreplay::IsRecordingOrReplaying()) {
+    recordreplay::child::NotifyPaintStart();
+  }
+
   *aSent = true;
   mIsFirstPaint = false;
   mFocusTarget = FocusTarget();
