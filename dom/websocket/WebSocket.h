@@ -54,6 +54,11 @@ class WebSocket final : public DOMEventTargetHelper {
 
   virtual void DisconnectFromOwner() override;
 
+  mozilla::Maybe<EventCallbackDebuggerNotificationType>
+  GetDebuggerNotificationType() const override {
+    return mozilla::Some(EventCallbackDebuggerNotificationType::Websocket);
+  }
+
   // nsWrapperCache
   virtual JSObject* WrapObject(JSContext* cx,
                                JS::Handle<JSObject*> aGivenProto) override;
