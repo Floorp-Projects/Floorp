@@ -227,6 +227,7 @@ void moz_container_init(MozContainer* container) {
   container->subsurface_dy = 0;
   container->surface_position_needs_update = 0;
   container->initial_draw_cbs.clear();
+  container->is_accelerated = false;
 #endif
 
   LOG(("%s [%p]\n", __FUNCTION__, (void*)container));
@@ -571,6 +572,10 @@ static void moz_container_add(GtkContainer* container, GtkWidget* widget) {
 
 #ifdef MOZ_WAYLAND
 static void moz_container_set_opaque_region(MozContainer* container) {
+  if (!container->opaque_region_needs_update || !container->surface) {
+    return;
+  }
+
   GtkAllocation allocation;
   gtk_widget_get_allocation(GTK_WIDGET(container), &allocation);
 
@@ -580,6 +585,7 @@ static void moz_container_set_opaque_region(MozContainer* container) {
                                 container->opaque_region_subtract_corners);
   wl_surface_set_opaque_region(container->surface, region);
   wl_region_destroy(region);
+  container->opaque_region_needs_update = false;
 }
 
 struct wl_surface* moz_container_get_wl_surface(MozContainer* container) {
@@ -631,11 +637,7 @@ struct wl_surface* moz_container_get_wl_surface(MozContainer* container) {
                        container->subsurface_dy);
   }
 
-  if (container->opaque_region_needs_update) {
-    moz_container_set_opaque_region(container);
-    container->opaque_region_needs_update = false;
-  }
-
+  moz_container_set_opaque_region(container);
   return container->surface;
 }
 
@@ -678,6 +680,17 @@ void moz_container_update_opaque_region(MozContainer* container,
                                         bool aSubtractCorners) {
   container->opaque_region_needs_update = true;
   container->opaque_region_subtract_corners = aSubtractCorners;
+
+  // When GL compositor / WebRender is used,
+  // moz_container_get_wl_egl_window() is called only once when window
+  // is created or resized so update opaque region now.
+  if (container->is_accelerated) {
+    moz_container_set_opaque_region(container);
+  }
+}
+
+void moz_container_set_accelerated(MozContainer* container) {
+  container->is_accelerated = true;
 }
 #endif
 

@@ -478,6 +478,7 @@ class nsWindow final : public nsBaseWidget {
 #endif
   bool mWindowScaleFactorChanged;
   int mWindowScaleFactor;
+  bool mIsAccelerated;
 
  private:
   void DestroyChildWindows();
