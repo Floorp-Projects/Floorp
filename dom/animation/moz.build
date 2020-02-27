@@ -63,4 +63,6 @@ LOCAL_INCLUDES += [
     '/layout/style',
 ]
 
+include('/ipc/chromium/chromium-config.mozbuild')
+
 FINAL_LIBRARY = 'xul'

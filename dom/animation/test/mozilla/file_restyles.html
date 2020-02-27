@@ -1116,7 +1116,7 @@ waitForAllPaints(() => {
       // running on the main thread.
       div.style.setProperty('z-index', '0', 'important');
       const markers = await observeStyling(5);
-      todo_is(markers.length, 0,
+      is(markers.length, 0,
          'Changing cascading result for the property running on the main ' +
          'thread does not cause synchronization layer of opacity animation ' +
          'running on the compositor');

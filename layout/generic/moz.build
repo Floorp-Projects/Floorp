@@ -95,6 +95,7 @@ with Files('nsVideoFrame.*'):
     BUG_COMPONENT = ('Core', 'Audio/Video')
 
 EXPORTS += [
+    'JustificationUtils.h',
     'nsAtomicContainerFrame.h',
     'nsCanvasFrame.h',
     'nsContainerFrame.h',
@@ -115,6 +116,7 @@ EXPORTS += [
     'nsIStatefulFrame.h',
     'nsLineBox.h',
     'nsPageSequenceFrame.h',
+    'nsPlaceholderFrame.h',
     'nsPluginFrame.h',
     'nsQueryFrame.h',
     'nsRubyBaseContainerFrame.h',
@@ -124,6 +126,7 @@ EXPORTS += [
     'nsRubyTextFrame.h',
     'nsSplittableFrame.h',
     'nsSubDocumentFrame.h',
+    'nsTextFrame.h',
     'nsTextFrameUtils.h',
     'nsTextRunTransformations.h',
     'RubyUtils.h',
