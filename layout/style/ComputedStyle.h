@@ -166,6 +166,10 @@ class ComputedStyle {
     return bool(Flags() & Flag::IS_ROOT_ELEMENT_STYLE);
   }
 
+  bool IsInOpacityZeroSubtree() const {
+    return bool(Flags() & Flag::IS_IN_OPACITY_ZERO_SUBTREE);
+  }
+
   ComputedStyle* GetCachedInheritingAnonBoxStyle(
       PseudoStyleType aPseudoType) const {
     MOZ_ASSERT(PseudoStyle::IsInheritingAnonBox(aPseudoType));
