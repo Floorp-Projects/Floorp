@@ -95,6 +95,7 @@ class BookmarksTest {
         }
     }
 
+    @Ignore("Intermittent failure on Nexus 6: https://github.com/mozilla-mobile/fenix/issues/8772")
     @Test
     fun createBookmarkFolderTest() {
         homeScreen {
