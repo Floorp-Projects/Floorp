@@ -676,12 +676,26 @@ $(CWASMOBJS):
 	$(REPORT_BUILD_VERBOSE)
 	$(WASM_CC) $(OUTOPTION)$@ -c $(WASM_CFLAGS) $($(notdir $<)_FLAGS) $<
 
+WINEWRAP = $(if $(and $(filter %.exe,$1),$(WINE)),$(WINE) $1,$1)
+
+# Windows program run via Wine don't like Unix absolute paths (they look
+# like command line arguments). So when needed, create relative paths
+# from absolute paths. We start with $(DEPTH), which gets us to topobjdir,
+# then add "/.." for each component of topobjdir, which gets us to /.
+# then we can add the absolute path after that and we have a relative path,
+# albeit longer than it could be.
+ifdef WINE
+relativize = $(if $(filter /%,$1),$(DEPTH)$(subst $(space),,$(foreach d,$(subst /, ,$(topobjdir)),/..))$1,$1)
+else
+relativize = $1
+endif
+
 ifdef ASFILES
 # The AS_DASH_C_FLAG is needed cause not all assemblers (Solaris) accept
 # a '-c' flag.
 $(ASOBJS):
 	$(REPORT_BUILD_VERBOSE)
-	$(AS) $(ASOUTOPTION)$@ $(ASFLAGS) $($(notdir $<)_FLAGS) $(AS_DASH_C_FLAG) $<
+	$(call WINEWRAP,$(AS)) $(ASOUTOPTION)$@ $(ASFLAGS) $($(notdir $<)_FLAGS) $(AS_DASH_C_FLAG) $(call relativize,$<)
 endif
 
 define syms_template
@@ -725,7 +739,7 @@ endif
 
 $(SOBJS):
 	$(REPORT_BUILD)
-	$(AS) $(ASOUTOPTION)$@ $(SFLAGS) $($(notdir $<)_FLAGS) -c $<
+	$(call WINEWRAP,$(AS)) $(ASOUTOPTION)$@ $(SFLAGS) $($(notdir $<)_FLAGS) -c $(call relativize,$<)
 
 $(CPPOBJS):
 	$(REPORT_BUILD_VERBOSE)
@@ -854,7 +868,7 @@ $(RESFILE): %.res: $(RCFILE)
 ifdef GNU_CC
 	$(RC) $(RCFLAGS) $(filter-out -U%,$(DEFINES)) $(INCLUDES:-I%=--include-dir %) $(OUTOPTION)$@ $<
 else
-	$(RC) $(RCFLAGS) -r $(DEFINES) $(INCLUDES) $(OUTOPTION)$@ $<
+	$(call WINEWRAP,$(RC)) $(RCFLAGS) -r $(DEFINES) $(INCLUDES:-I%=-I$(call relativize,%)) $(OUTOPTION)$@ $(call relativize,$<)
 endif
 
 # Cancel GNU make built-in implicit rules

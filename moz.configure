@@ -536,6 +536,11 @@ check_prog('HFS_TOOL', extra_programs.HFS_TOOL,
 check_prog('RPMBUILD', extra_programs.RPMBUILD,
            allow_missing=True)
 
+wine = check_prog(
+    'WINE', ['wine'], allow_missing=True,
+    when=depends(target, host, compile_environment)(
+        lambda t, h, c: c and t.kernel == 'WINNT' and h.kernel == 'Linux'))
+
 
 @depends(target)
 @imports('os')
@@ -562,13 +567,19 @@ def makensis_progs(target):
 nsis = check_prog('MAKENSISU', makensis_progs, allow_missing=True)
 
 # Make sure the version of makensis is up to date.
-@depends_if(nsis)
+@depends(nsis, wine)
 @checking('for NSIS version')
 @imports('re')
-def nsis_version(nsis):
+def nsis_version(nsis, wine):
+    if not nsis:
+        return None
     nsis_min_version = '3.0b1'
-    out = check_cmd_output(nsis, '-version',
-                           onerror=lambda: die('Failed to get nsis version.'))
+    onerror = lambda: die('Failed to get nsis version.')
+    if wine and nsis.lower().endswith('.exe'):
+        out = check_cmd_output(wine, nsis, '-version', onerror=onerror)
+    else:
+        out = check_cmd_output(nsis, '-version', onerror=onerror)
+
     m = re.search(r'(?<=v)[0-9]+\.[0-9]+((a|b|rc)[0-9]+)?', out)
 
     if not m:

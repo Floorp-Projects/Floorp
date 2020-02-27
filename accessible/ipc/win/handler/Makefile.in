@@ -2,8 +2,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-IA2DIR = $(topsrcdir)/other-licenses/ia2
-MSAADIR = $(topsrcdir)/accessible/interfaces/msaa
+IA2DIR = $(srcdir_rel)/$(DEPTH)/other-licenses/ia2
+MSAADIR = $(srcdir_rel)/$(DEPTH)/accessible/interfaces/msaa
 GARBAGE += $(MIDL_GENERATED_FILES) midl_done
 
 MIDL_GENERATED_FILES = \
@@ -22,7 +22,7 @@ export:: $(MIDL_GENERATED_FILES)
 $(MIDL_GENERATED_FILES): midl_done ;
 
 midl_done: $(srcdir)/HandlerData.acf $(srcdir)/HandlerData.idl
-	$(MIDL) $(MIDL_FLAGS) $(DEFINES) -I $(topobjdir) -I $(DIST)/include -I $(IA2DIR) -I $(MSAADIR) -Oicf -acf $(srcdir)/HandlerData.acf $(srcdir)/HandlerData.idl
+	$(call WINEWRAP,$(MIDL)) $(MIDL_FLAGS) $(DEFINES) -I $(DEPTH) -I $(DEPTH)/dist/include -I $(IA2DIR) -I $(MSAADIR) -Oicf -acf $(srcdir_rel)/HandlerData.acf $(srcdir_rel)/HandlerData.idl
 	touch $@
 
 INSTALL_TARGETS += midl

@@ -685,11 +685,14 @@ class Dumper_Win32(Dumper):
             compressed_file = path[:-1] + '_'
             # ignore makecab's output
             makecab = buildconfig.substs['MAKECAB']
-            success = subprocess.call([makecab, "-D",
-                                       "CompressionType=MSZIP",
-                                       path, compressed_file],
-                                      stdout=open(os.devnull, 'w'),
-                                      stderr=subprocess.STDOUT)
+            wine = buildconfig.substs.get('WINE')
+            if wine and makecab.lower().endswith('.exe'):
+                cmd = [wine, makecab]
+            else:
+                cmd = [makecab]
+            success = subprocess.call(
+                cmd + ["-D", "CompressionType=MSZIP", path, compressed_file],
+                stdout=open(os.devnull, 'w'), stderr=subprocess.STDOUT)
             if success == 0 and os.path.exists(compressed_file):
                 os.unlink(path)
                 return True

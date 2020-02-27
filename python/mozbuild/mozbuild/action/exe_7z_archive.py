@@ -22,8 +22,13 @@ def archive_exe(pkg_dir, tagfile, sfx_package, package, use_upx):
 
         if use_upx:
             final_sfx = mozpath.join(tmpdir, '7zSD.sfx')
-            subprocess.check_call([
-                buildconfig.substs.get('UPX', 'upx'),
+            upx = buildconfig.substs.get('UPX', 'upx')
+            wine = buildconfig.substs.get('WINE')
+            if wine and upx.lower().endswith('.exe'):
+                cmd = [wine, upx]
+            else:
+                cmd = [upx]
+            subprocess.check_call(cmd + [
                 '--best',
                 '-o',
                 final_sfx,

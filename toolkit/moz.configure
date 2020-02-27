@@ -1153,10 +1153,10 @@ midl = check_prog('MIDL', midl_names, when=check_for_midl, allow_missing=True,
                   paths=sdk_bin_path)
 
 
-@depends(c_compiler, target,
+@depends(c_compiler, target, host,
          when=depends(midl, target)(lambda m, t: m and t.kernel == 'WINNT'))
 @imports(_from='mozbuild.shellutil', _import='quote')
-def midl_flags(c_compiler, target):
+def midl_flags(c_compiler, target, host):
     if c_compiler and c_compiler.type == 'clang-cl':
         env = {
             'x86': 'win32',
@@ -1165,7 +1165,19 @@ def midl_flags(c_compiler, target):
         }[target.cpu]
         flags = ['-env', env]
 
-        return flags + ['-cpp_cmd', c_compiler.compiler]
+        if host.os == 'WINNT':
+            return flags + ['-cpp_cmd', c_compiler.compiler]
+        else:
+            # If cross-compiling, for now, we'll assume we can find the
+            # Windows version of clang-cl in the PATH. It is required because
+            # while Wine is able to spawn Linux processes from Windows
+            # programs(!), the calling program doesn't have access to the process
+            # output and can't wait for it to finish. Midl runs clang-cl as
+            # a preprocessor and expects to read its output...
+            clang_cl_exe = find_program('clang-cl.exe')
+            if not clang_cl_exe:
+                die("Cannot find clang-cl.exe")
+            return flags + ['-cpp_cmd', clang_cl_exe]
 
     # mingw
     return {
@@ -1393,8 +1405,6 @@ with only_when(compile_environment):
     fxc = check_prog('FXC', ('fxc.exe', 'fxc2.exe'), when=depends(target)
                      (lambda t: t.kernel == 'WINNT'),
                      paths=sdk_bin_path)
-    wine = check_prog('WINE', ['wine'], when=depends(target, host)
-                      (lambda t, h: t.kernel == 'WINNT' and h.kernel == 'Linux'))
 
 
 # VPX
