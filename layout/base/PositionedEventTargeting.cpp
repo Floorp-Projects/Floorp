@@ -376,12 +376,13 @@ static nsIFrame* GetClosest(
   nsRegion exposedRegion(aTargetRect);
   for (uint32_t i = 0; i < aCandidates.Length(); ++i) {
     nsIFrame* f = aCandidates[i];
-    PET_LOG("Checking candidate %p\n", f);
 
     bool preservesAxisAlignedRectangles = false;
     nsRect borderBox = nsLayoutUtils::TransformFrameRectToAncestor(
         f, nsRect(nsPoint(0, 0), f->GetSize()), aRoot,
         &preservesAxisAlignedRectangles);
+    PET_LOG("Checking candidate %p with border box %s\n", f,
+            mozilla::layers::Stringify(borderBox).c_str());
     nsRegion region;
     region.And(exposedRegion, borderBox);
     if (region.IsEmpty()) {
