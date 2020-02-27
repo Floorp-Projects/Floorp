@@ -550,6 +550,11 @@ class UrlbarController {
         Cu.reportError(`Unknown Result Type ${result.type}`);
         return;
     }
+    // The "topsite" type overrides the above ones, because it starts from a
+    // unique user interaction, that we want to count apart.
+    if (result.providerName == "UrlbarProviderTopSites") {
+      telemetryType = "topsite";
+    }
 
     Services.telemetry
       .getHistogramById("FX_URLBAR_SELECTED_RESULT_INDEX")
