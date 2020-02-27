@@ -1,0 +1,7 @@
+<script>
+    async function start() {
+      var a = new CSSStyleSheet({ })
+      document.adoptedStyleSheets = [new CSSStyleSheet({ }), a, a]
+    }
+    document.addEventListener('DOMContentLoaded', start)
+  </script>
