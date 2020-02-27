@@ -192,6 +192,11 @@ class BytecodeLocation {
     return GET_JUMP_OFFSET(rawBytecode_ + (2 * JUMP_OFFSET_LEN));
   }
 
+  uint32_t getPopCount() const {
+    MOZ_ASSERT(is(JSOp::PopN));
+    return GET_UINT16(rawBytecode_);
+  }
+
 #ifdef DEBUG
   // To ease writing assertions
   bool isValid() const { return isValid(debugOnlyScript_); }
