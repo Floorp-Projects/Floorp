@@ -105,6 +105,7 @@ class AddonsManagementFragment : Fragment(R.layout.fragment_add_ons_management),
                             this@AddonsManagementFragment,
                             addons
                         )
+                        isInstallationInProgress = false
                         view.add_ons_progress_bar.isVisible = false
                         view.add_ons_empty_message.isVisible = false
 
@@ -115,6 +116,7 @@ class AddonsManagementFragment : Fragment(R.layout.fragment_add_ons_management),
                 lifecycleScope.launch(Dispatchers.Main) {
                     runIfFragmentIsAttached {
                         showSnackBar(view, getString(R.string.mozac_feature_addons_failed_to_query_add_ons))
+                        isInstallationInProgress = false
                         view.add_ons_progress_bar.isVisible = false
                         view.add_ons_empty_message.isVisible = true
                     }
