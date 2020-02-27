@@ -4835,15 +4835,22 @@ void nsGlobalWindowOuter::FocusOuter(CallerType aCallerType) {
                    RevisePopupAbuseLevel(PopupBlocker::GetPopupControlState()) <
                        PopupBlocker::openBlocked);
 
-  nsCOMPtr<mozIDOMWindowProxy> activeDOMWindow;
-  fm->GetActiveWindow(getter_AddRefs(activeDOMWindow));
+  bool isActive = false;
+  if (XRE_IsParentProcess()) {
+    nsCOMPtr<nsPIDOMWindowOuter> activeWindow = fm->GetActiveWindow();
 
-  nsCOMPtr<nsIDocShellTreeItem> rootItem;
-  mDocShell->GetInProcessRootTreeItem(getter_AddRefs(rootItem));
-  nsCOMPtr<nsPIDOMWindowOuter> rootWin =
-      rootItem ? rootItem->GetWindow() : nullptr;
-  auto* activeWindow = nsPIDOMWindowOuter::From(activeDOMWindow);
-  bool isActive = (rootWin == activeWindow);
+    nsCOMPtr<nsIDocShellTreeItem> rootItem;
+    mDocShell->GetInProcessRootTreeItem(getter_AddRefs(rootItem));
+    nsCOMPtr<nsPIDOMWindowOuter> rootWin =
+        rootItem ? rootItem->GetWindow() : nullptr;
+    isActive = (rootWin == activeWindow);
+  } else {
+    BrowsingContext* activeBrowsingContext = fm->GetActiveBrowsingContext();
+    BrowsingContext* bc = GetBrowsingContext();
+    if (bc) {
+      isActive = (activeBrowsingContext == bc->Top());
+    }
+  }
 
   nsCOMPtr<nsIBaseWindow> treeOwnerAsWin = GetTreeOwnerWindow();
   if (treeOwnerAsWin && (canFocus || isActive)) {
