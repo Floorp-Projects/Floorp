@@ -8,20 +8,22 @@
     outline: none;
   }
   </style>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
   <script>
-    function test() {
-      focus();
-      var i = document.querySelector("input");
-      i.focus();
-    }
-    function finish() {
-      setTimeout(function() {
-        document.documentElement.removeAttribute("class");
-      }, 0);
+    async function test() {
+      let input = document.querySelector("input");
+      let waitForFocus = new Promise(resolve => {
+        input.addEventListener("focus", resolve, {once: true});
+      });
+      window.focus();
+      input.focus();
+      await waitForFocus;
+      input.select();
+      await new Promise(resolve => { SimpleTest.executeSoon(resolve); });
+      document.documentElement.removeAttribute("class");
     }
   </script>
-  <body onload="setTimeout(test, 0)">
-    <input value="text text text text text"
-           onfocus="this.select(); finish();">
+  <body onload="SimpleTest.executeSoon(test);">
+    <input value="text text text text text">
   </body>
 </html>
