@@ -933,9 +933,13 @@ void ModuleObject::fixEnvironmentsAfterRealmMerge() {
 
 JSScript* ModuleObject::maybeScript() const {
   Value value = getReservedSlot(ScriptSlot);
-  if (value.isUndefined()) return nullptr;
-
-  return value.toGCThing()->as<JSScript>();
+  if (value.isUndefined()) {
+    return nullptr;
+  }
+  BaseScript* script = value.toGCThing()->as<BaseScript>();
+  MOZ_ASSERT(script->hasBytecode(),
+             "Module scripts should always have bytecode");
+  return static_cast<JSScript*>(script);
 }
 
 JSScript* ModuleObject::script() const {
