@@ -11964,47 +11964,54 @@ AbortReasonOr<Ok> IonBuilder::jsop_setarg(uint32_t arg) {
   MOZ_ASSERT(script()->jitScript()->modifiesArguments());
   MDefinition* val = current->peek(-1);
 
-  // If an arguments object is in use, and it aliases formals, then all SETARGs
-  // must go through the arguments object.
-  if (info().argsObjAliasesFormals()) {
-    if (needsPostBarrier(val)) {
-      current->add(
-          MPostWriteBarrier::New(alloc(), current->argumentsObject(), val));
-    }
-    auto* ins = MSetArgumentsObjectArg::New(alloc(), current->argumentsObject(),
-                                            arg, val);
-    current->add(ins);
-    return resumeAfter(ins);
-  }
+  if (!info().hasArguments()) {
+    MOZ_ASSERT(!info().needsArgsObj());
+    MOZ_ASSERT(!info().argsObjAliasesFormals());
+    MOZ_ASSERT(!info().argumentsAliasesFormals());
 
-  // :TODO: if hasArguments() is true, and the script has a JSOp::SetArg, then
-  // convert all arg accesses to go through the arguments object. (see Bug
-  // 957475)
-  if (info().hasArguments()) {
-    return abort(AbortReason::Disable, "NYI: arguments & setarg.");
-  }
-
-  // Otherwise, if a magic arguments is in use, and it aliases formals, and
-  // there exist arguments[...] GetElem expressions in the script, then
-  // SetFrameArgument must be used. If no arguments[...] GetElem expressions are
-  // in the script, and an argsobj is not required, then it means that any
-  // aliased argument set can never be observed, and the frame does not actually
-  // need to be updated with the new arg value.
-  if (info().argumentsAliasesFormals()) {
-    // JSOp::SetArg with magic arguments within inline frames is not yet
-    // supported.
-    if (isInlineBuilder()) {
-      return abort(AbortReason::Disable, "setarg with magic args and inlining");
-    }
-
-    MSetFrameArgument* store = MSetFrameArgument::New(alloc(), arg, val);
-    current->add(store);
     current->setArg(arg);
     return Ok();
   }
 
-  current->setArg(arg);
-  return Ok();
+  // NOTE: The following to-do note refers to a previous version of this code
+  // and doesn't make much sense anymore. It will be removed in the near future.
+  //
+  // :TODO: if hasArguments() is true, and the script has a JSOp::SetArg, then
+  // convert all arg accesses to go through the arguments object. (see Bug
+  // 957475)
+  if (!info().hasMappedArgsObj()) {
+    return abort(AbortReason::Disable, "NYI: arguments & setarg.");
+  }
+
+  MOZ_ASSERT(info().argumentsAliasesFormals(),
+             "arguments aliases formals when an arguments binding is present "
+             "and the arguments object is mapped");
+
+  // |needsArgsObj()| is true when analyzing arguments usage, so the
+  // JSOp::SetArg bytecode will always emit a |MSetArgumentsObjectArg| node.
+  MOZ_ASSERT_IF(info().analysisMode() == Analysis_ArgumentsUsage,
+                info().needsArgsObj());
+
+  // When |ArgumentsUseCanBeLazy()| in IonAnalysis then inspects all |arguments|
+  // uses, the |MSetArgumentsObjectArg| usage will prevent the script from using
+  // lazy arguments and an actual arguments object is created.
+  MOZ_ASSERT(info().needsArgsObj(),
+             "unexpected JSOp::SetArg with lazy arguments");
+
+  MOZ_ASSERT(
+      info().argsObjAliasesFormals(),
+      "argsObjAliasesFormals() is true iff a mapped arguments object is used");
+
+  // If an arguments object is in use, and it aliases formals, then all SETARGs
+  // must go through the arguments object.
+  if (needsPostBarrier(val)) {
+    current->add(
+        MPostWriteBarrier::New(alloc(), current->argumentsObject(), val));
+  }
+  auto* ins = MSetArgumentsObjectArg::New(alloc(), current->argumentsObject(),
+                                          arg, val);
+  current->add(ins);
+  return resumeAfter(ins);
 }
 
 AbortReasonOr<Ok> IonBuilder::jsop_defvar() {
