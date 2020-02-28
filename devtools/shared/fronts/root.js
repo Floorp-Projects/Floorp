@@ -19,6 +19,12 @@ loader.lazyRequireGetter(
 );
 loader.lazyRequireGetter(
   this,
+  "TabDescriptorFront",
+  "devtools/shared/fronts/descriptors/tab",
+  true
+);
+loader.lazyRequireGetter(
+  this,
   "FrameDescriptorFront",
   "devtools/shared/fronts/descriptors/frame",
   true
@@ -304,10 +310,23 @@ class RootFront extends FrontClassWithSpec(rootSpec) {
    */
   async listTabs(options) {
     const { selected, tabs } = await super.listTabs(options);
+    const targets = [];
     for (const i in tabs) {
-      tabs[i].setIsSelected(i == selected);
+      if (!this.actorID) {
+        console.error("The root front was destroyed while processing listTabs");
+        return [];
+      }
+
+      try {
+        const form = tabs[i];
+        const target = await this._createTargetFrontForTabForm(form);
+        target.setIsSelected(i == selected);
+        targets.push(target);
+      } catch (e) {
+        console.error("Failed to get the target for tab descriptor", e);
+      }
     }
-    return tabs;
+    return targets;
   }
 
   /**
@@ -350,27 +369,49 @@ class RootFront extends FrontClassWithSpec(rootSpec) {
     }
 
     const form = await super.getTab(packet);
+    return this._createTargetFrontForTabForm(form, filter);
+  }
+
+  async _createTargetFrontForTabForm(form, filter = {}) {
     let front = this.actor(form.actor);
     if (front) {
+      if (!form.actor.includes("tabDescriptor")) {
+        // Backwards compatibility for servers FF74 and older.
+        return front;
+      }
+
+      return front.getTarget();
+    }
+
+    if (!form.actor.includes("tabDescriptor")) {
+      // Backwards compatibility for servers FF74 and older.
+
+      // Instanciate a specialized class for a local tab as it needs some more
+      // client side integration with the Firefox frontend.
+      // But ignore the fake `tab` object we receive, where there is only a
+      // `linkedBrowser` attribute, but this isn't a real <tab> element.
+      // devtools/client/framework/test/browser_toolbox_target.js is passing such
+      // a fake tab.
+      if (filter && filter.tab && filter.tab.tagName == "tab") {
+        front = new LocalTabTargetFront(this._client, null, this, filter.tab);
+      } else {
+        front = new BrowsingContextTargetFront(this._client, null, this);
+      }
+      // As these fronts aren't instantiated by protocol.js, we have to set their actor ID
+      // manually like that:
+      front.actorID = form.actor;
       front.form(form);
+      this.manage(front);
       return front;
     }
-    // Instanciate a specialized class for a local tab as it needs some more
-    // client side integration with the Firefox frontend.
-    // But ignore the fake `tab` object we receive, where there is only a
-    // `linkedBrowser` attribute, but this isn't a real <tab> element.
-    // devtools/client/framework/test/browser_toolbox_target.js is passing such
-    // a fake tab.
-    if (filter && filter.tab && filter.tab.tagName == "tab") {
-      front = new LocalTabTargetFront(this._client, null, this, filter.tab);
-    } else {
-      front = new BrowsingContextTargetFront(this._client, null, this);
-    }
+
+    const descriptorFront = new TabDescriptorFront(this._client, null, this);
     // As these fronts aren't instantiated by protocol.js, we have to set their actor ID
     // manually like that:
-    front.actorID = form.actor;
-    front.form(form);
-    this.manage(front);
+    descriptorFront.actorID = form.actor;
+    descriptorFront.form(form);
+    this.manage(descriptorFront);
+    front = await descriptorFront.getTarget(filter);
     return front;
   }
 

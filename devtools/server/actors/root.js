@@ -296,16 +296,17 @@ exports.RootActor = protocol.ActorClassWithSpec(rootSpec, {
     // pool with the one we build here, thus retiring any actors that didn't get listed
     // again, and preparing any new actors to receive packets.
     const newActorPool = new Pool(this.conn);
-    const tabDescriptorList = [];
     let selected;
 
     const tabDescriptorActors = await tabList.getList(options);
     for (const tabDescriptorActor of tabDescriptorActors) {
       if (tabDescriptorActor.selected) {
-        selected = tabDescriptorList.length;
+        const index = tabDescriptorActors.findIndex(
+          descriptor => descriptor === tabDescriptorActor
+        );
+        selected = index;
       }
       newActorPool.manage(tabDescriptorActor);
-      tabDescriptorList.push(tabDescriptorActor);
     }
 
     // Start with the root reply, which includes the global actors for the whole browser.
@@ -321,8 +322,8 @@ exports.RootActor = protocol.ActorClassWithSpec(rootSpec, {
     // We'll extend the reply here to also mention all the tabs.
     Object.assign(reply, {
       selected: selected || 0,
-      tabs: await Promise.all(
-        tabDescriptorList.map(tabDescriptor => tabDescriptor.getTarget())
+      tabs: [...this._tabDescriptorActorPool.poolChildren()].map(descriptor =>
+        descriptor.form()
       ),
     });
 
@@ -357,9 +358,8 @@ exports.RootActor = protocol.ActorClassWithSpec(rootSpec, {
 
     descriptorActor.parentID = this.actorID;
     this._tabDescriptorActorPool.manage(descriptorActor);
-    const targetActorForm = await descriptorActor.getTarget();
 
-    return { tab: targetActorForm };
+    return descriptorActor.form();
   },
 
   getWindow: function({ outerWindowID }) {
