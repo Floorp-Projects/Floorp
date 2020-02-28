@@ -460,6 +460,8 @@
     <string name="collection_open_tabs">Open tabs</string>
     <!-- Text for the menu button to remove a top site -->
     <string name="remove_top_site">Remove</string>
+    <!-- Postfix for private WebApp titles, placeholder is replaced with app name -->
+    <string name="pwa_site_controls_title_private">%1$s (Private Mode)</string>
 
     <!-- History -->
     <!-- Text for the button to clear all history -->
