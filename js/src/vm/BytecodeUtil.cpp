@@ -13,6 +13,7 @@
 #define __STDC_FORMAT_MACROS
 
 #include "mozilla/Attributes.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/ReverseIterator.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/Vector.h"
@@ -988,15 +989,20 @@ static unsigned Disassemble1(JSContext* cx, HandleScript script, jsbytecode* pc,
  * current line. If showAll is true, include the source note type and the
  * entry stack depth.
  */
-static MOZ_MUST_USE bool DisassembleAtPC(JSContext* cx, JSScript* scriptArg,
-                                         bool lines, jsbytecode* pc,
-                                         bool showAll, Sprinter* sp) {
+static MOZ_MUST_USE bool DisassembleAtPC(
+    JSContext* cx, JSScript* scriptArg, bool lines, const jsbytecode* pc,
+    bool showAll, Sprinter* sp,
+    DisassembleSkeptically skeptically = DisassembleSkeptically::No) {
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
   RootedScript script(cx, scriptArg);
-  BytecodeParser parser(cx, allocScope.alloc(), script);
-  parser.setStackDump();
-  if (!parser.parse()) {
-    return false;
+  mozilla::Maybe<BytecodeParser> parser;
+
+  if (skeptically == DisassembleSkeptically::No) {
+    parser.emplace(cx, allocScope.alloc(), script);
+    parser->setStackDump();
+    if (!parser->parse()) {
+      return false;
+    }
   }
 
   if (showAll) {
@@ -1083,8 +1089,8 @@ static MOZ_MUST_USE bool DisassembleAtPC(JSContext* cx, JSScript* scriptArg,
           return false;
         }
       }
-      if (parser.isReachable(next)) {
-        if (!sp->jsprintf("%05u ", parser.stackDepthAtPC(next))) {
+      if (parser && parser->isReachable(next)) {
+        if (!sp->jsprintf("%05u ", parser->stackDepthAtPC(next))) {
           return false;
         }
       } else {
@@ -1094,7 +1100,7 @@ static MOZ_MUST_USE bool DisassembleAtPC(JSContext* cx, JSScript* scriptArg,
       }
     }
     unsigned len = Disassemble1(cx, script, next, script->pcToOffset(next),
-                                lines, &parser, sp);
+                                lines, parser.ptrOr(nullptr), sp);
     if (!len) {
       return false;
     }
@@ -1106,8 +1112,8 @@ static MOZ_MUST_USE bool DisassembleAtPC(JSContext* cx, JSScript* scriptArg,
 }
 
 bool js::Disassemble(JSContext* cx, HandleScript script, bool lines,
-                     Sprinter* sp) {
-  return DisassembleAtPC(cx, script, lines, nullptr, false, sp);
+                     Sprinter* sp, DisassembleSkeptically skeptically) {
+  return DisassembleAtPC(cx, script, lines, nullptr, false, sp, skeptically);
 }
 
 JS_FRIEND_API bool js::DumpPC(JSContext* cx, FILE* fp) {
