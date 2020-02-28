@@ -113,6 +113,8 @@ class CookieSettings final : public nsICookieSettings {
 
   static already_AddRefed<nsICookieSettings> Create();
 
+  static already_AddRefed<nsICookieSettings> Create(uint32_t aCookieBehavior);
+
   static CookieSettings* Cast(nsICookieSettings* aCS) {
     return static_cast<CookieSettings*>(aCS);
   }

@@ -81,6 +81,16 @@ already_AddRefed<nsICookieSettings> CookieSettings::Create() {
   return cookieSettings.forget();
 }
 
+// static
+already_AddRefed<nsICookieSettings> CookieSettings::Create(
+    uint32_t aCookieBehavior) {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  RefPtr<CookieSettings> cookieSettings =
+      new CookieSettings(aCookieBehavior, eProgressive);
+  return cookieSettings.forget();
+}
+
 CookieSettings::CookieSettings(uint32_t aCookieBehavior, State aState)
     : mCookieBehavior(aCookieBehavior), mState(aState), mToBeMerged(false) {
   MOZ_ASSERT(NS_IsMainThread());
@@ -121,6 +131,23 @@ CookieSettings::GetLimitForeignContexts(bool* aLimitForeignContexts) {
       (StaticPrefs::privacy_dynamic_firstparty_limitForeign() &&
        mCookieBehavior ==
            nsICookieService::BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+CookieSettings::GetPartitionForeign(bool* aPartitionForeign) {
+  *aPartitionForeign =
+      mCookieBehavior ==
+      nsICookieService::BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+CookieSettings::SetPartitionForeign(bool aPartitionForeign) {
+  if (aPartitionForeign) {
+    mCookieBehavior =
+        nsICookieService::BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN;
+  }
   return NS_OK;
 }
 
@@ -262,11 +289,35 @@ void CookieSettings::Serialize(CookieSettingsArgs& aData) {
 
 void CookieSettings::Merge(const CookieSettingsArgs& aData) {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(mCookieBehavior == aData.cookieBehavior());
+  MOZ_ASSERT(
+      mCookieBehavior == aData.cookieBehavior() ||
+      (mCookieBehavior == nsICookieService::BEHAVIOR_REJECT_TRACKER &&
+       aData.cookieBehavior() ==
+           nsICookieService::BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN) ||
+      (mCookieBehavior ==
+           nsICookieService::BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN &&
+       aData.cookieBehavior() == nsICookieService::BEHAVIOR_REJECT_TRACKER));
 
   if (mState == eFixed) {
     return;
   }
+
+  // Merge cookie behavior pref values
+  if (mCookieBehavior == nsICookieService::BEHAVIOR_REJECT_TRACKER &&
+      aData.cookieBehavior() ==
+          nsICookieService::BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN) {
+    // If the other side has decided to partition third-party cookies, update
+    // our side.
+    mCookieBehavior =
+        nsICookieService::BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN;
+  }
+  if (mCookieBehavior ==
+          nsICookieService::BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN &&
+      aData.cookieBehavior() == nsICookieService::BEHAVIOR_REJECT_TRACKER) {
+    // If we've decided to partition third-party cookies, the other side may not
+    // have caught up yet.  Do nothing.
+  }
+  // Ignore all other cases.
 
   PermissionComparator comparator;
 
