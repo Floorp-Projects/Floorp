@@ -9,17 +9,16 @@ import { FxCards } from "./components/FxCards";
 import { DEFAULT_WELCOME_CONTENT } from "../lib/aboutwelcome-utils";
 
 class AboutWelcome extends React.PureComponent {
-  sendTelemetry(ping) {
-    // TBD: Handle telemetry messages
-  }
-
   render() {
     const { props } = this;
     return (
       <div className="trailheadCards">
         <div className="trailheadCardsInner">
           <HeroText title={props.title} subtitle={props.subtitle} />
-          <FxCards cards={props.cards} sendTelemetry={this.sendTelemetry} />
+          <FxCards
+            cards={props.cards}
+            sendTelemetry={window.AWSendEventTelemetry}
+          />
         </div>
       </div>
     );
@@ -28,4 +27,11 @@ class AboutWelcome extends React.PureComponent {
 
 AboutWelcome.defaultProps = DEFAULT_WELCOME_CONTENT;
 
-ReactDOM.render(<AboutWelcome />, document.getElementById("root"));
+function mount(settings) {
+  ReactDOM.render(
+    <AboutWelcome title={settings.title} subtitle={settings.subtitle} />,
+    document.getElementById("root")
+  );
+}
+
+mount(window.AWGetStartupData());
