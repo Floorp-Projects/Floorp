@@ -2266,6 +2266,17 @@ JSFunction* js::CloneFunctionReuseScript(JSContext* cx, HandleFunction fun,
   MOZ_ASSERT(!fun->isBoundFunction());
   MOZ_ASSERT(CanReuseScriptForClone(cx->realm(), fun, enclosingEnv));
 
+  // If an explicit prototype is present and this prototype doesn't match the
+  // original function's prototype and furthermore the original function's group
+  // has a type, then also create a type for the cloned function. This ensures
+  // derived class constructors will have a type assigned.
+  bool setTypeForFunction = proto && fun->staticPrototype() != proto &&
+                            fun->group()->maybeInterpretedFunction();
+  if (setTypeForFunction) {
+    // The function needs to be tenured when used as an object group addendum.
+    newKind = TenuredObject;
+  }
+
   RootedFunction clone(cx,
                        NewFunctionClone(cx, fun, newKind, allocKind, proto));
   if (!clone) {
@@ -2294,6 +2305,10 @@ JSFunction* js::CloneFunctionReuseScript(JSContext* cx, HandleFunction fun,
    */
   if (fun->staticPrototype() == clone->staticPrototype()) {
     clone->setGroup(fun->group());
+  } else if (setTypeForFunction) {
+    if (!JSFunction::setTypeForScriptedFunction(cx, clone)) {
+      return nullptr;
+    }
   }
   return clone;
 }
