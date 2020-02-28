@@ -14,7 +14,7 @@ inline nsHtml5HtmlAttributes* GetAttributes() { return attributes; }
  */
 bool EnsureBufferSpace(int32_t aLength);
 
-mozilla::UniquePtr<nsHtml5Highlighter> mViewSource;
+nsAutoPtr<nsHtml5Highlighter> mViewSource;
 
 /**
  * Starts handling text/plain. This is a one-way initialization. There is
