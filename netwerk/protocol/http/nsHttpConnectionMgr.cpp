@@ -2945,7 +2945,7 @@ void nsHttpConnectionMgr::OnMsgReclaimConnection(HttpConnectionBase* conn) {
       PruneDeadConnectionsAfter(timeToLive);
   } else {
     LOG(("  connection cannot be reused; closing connection\n"));
-    connTCP->Close(NS_ERROR_ABORT);
+    conn->Close(NS_ERROR_ABORT);
   }
 
   OnMsgProcessPendingQ(0, ci);

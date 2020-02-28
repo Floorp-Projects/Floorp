@@ -2746,5 +2746,7 @@ void nsHttpConnection::SetLastTransactionExpectedNoContent(bool val) {
 
 bool nsHttpConnection::IsPersistent() { return IsKeepAlive() && !mDontReuse; }
 
+nsAHttpTransaction* nsHttpConnection::Transaction() { return mTransaction; }
+
 }  // namespace net
 }  // namespace mozilla
