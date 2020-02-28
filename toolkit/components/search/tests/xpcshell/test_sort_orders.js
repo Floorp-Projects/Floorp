@@ -13,32 +13,7 @@ const modernConfig = Services.prefs.getBoolPref(
   false
 );
 
-// With modern configuration, we have a slightly different order, since the
-// default engines will get place first, regardless of the specified orders
-// of the other engines.
-const EXPECTED_ORDER_GET_DEFAULT_ENGINES = modernConfig
-  ? [
-      // Default engines
-      "Test search engine",
-      "engine-pref",
-      // Now the engines in orderHint order.
-      "engine-resourceicon",
-      "engine-chromeicon",
-      "engine-rel-searchform-purpose",
-      "Test search engine (Reordered)",
-    ]
-  : [
-      // Two engines listed in searchOrder.
-      "engine-resourceicon",
-      "engine-chromeicon",
-      // Rest of the engines in alphabetical order.
-      "engine-pref",
-      "engine-rel-searchform-purpose",
-      "Test search engine",
-      "Test search engine (Reordered)",
-    ];
-
-const EXPECTED_ORDER_GET_ENGINES = [
+const EXPECTED_ORDER = [
   // Default engines
   "Test search engine",
   "engine-pref",
@@ -76,8 +51,8 @@ async function checkOrder(type, expectedOrder) {
 }
 
 add_task(async function test_engine_sort_only_builtins() {
-  await checkOrder("getDefaultEngines", EXPECTED_ORDER_GET_DEFAULT_ENGINES);
-  await checkOrder("getEngines", EXPECTED_ORDER_GET_ENGINES);
+  await checkOrder("getDefaultEngines", EXPECTED_ORDER);
+  await checkOrder("getEngines", EXPECTED_ORDER);
 });
 
 add_task(async function test_engine_sort_with_non_builtins_sort() {
@@ -94,16 +69,12 @@ add_task(async function test_engine_sort_with_non_builtins_sort() {
   );
 
   // We should still have the same built-in engines listed.
-  await checkOrder("getDefaultEngines", EXPECTED_ORDER_GET_DEFAULT_ENGINES);
+  await checkOrder("getDefaultEngines", EXPECTED_ORDER);
 
-  const expected = [...EXPECTED_ORDER_GET_ENGINES];
+  const expected = [...EXPECTED_ORDER];
   // For modern config, all the engines in this config specify an order hint,
   // so our added engine gets sorted to the end.
-  expected.splice(
-    modernConfig ? EXPECTED_ORDER_GET_ENGINES.length : 5,
-    0,
-    "nonbuiltin1"
-  );
+  expected.splice(modernConfig ? EXPECTED_ORDER.length : 5, 0, "nonbuiltin1");
   await checkOrder("getEngines", expected);
 });
 
@@ -135,47 +106,20 @@ add_task(async function test_engine_sort_with_distro() {
     localizedStr
   );
 
-  // TODO: Bug 1590860. The order of the lists is wrong - the order prefs should
-  // be overriding it, but they don't because the code doesn't work right.
-  let expected = modernConfig
-    ? [
-        "Test search engine",
-        "engine-pref",
-        "engine-resourceicon",
-        "engine-chromeicon",
-        "engine-rel-searchform-purpose",
-        "Test search engine (Reordered)",
-      ]
-    : [
-        "engine-pref",
-        "engine-rel-searchform-purpose",
-        "engine-resourceicon",
-        "engine-chromeicon",
-        "Test search engine",
-        "Test search engine (Reordered)",
-      ];
+  const expected = [
+    "engine-pref",
+    "engine-resourceicon",
+    "engine-rel-searchform-purpose",
+    "engine-chromeicon",
+    "Test search engine",
+    "Test search engine (Reordered)",
+  ];
 
   await checkOrder("getDefaultEngines", expected);
 
-  expected = modernConfig
-    ? [
-        "engine-pref",
-        "engine-resourceicon",
-        "engine-rel-searchform-purpose",
-        "engine-chromeicon",
-        "Test search engine",
-        "Test search engine (Reordered)",
-        "nonbuiltin1",
-      ]
-    : [
-        "engine-pref",
-        "engine-resourceicon",
-        "engine-rel-searchform-purpose",
-        "engine-chromeicon",
-        "Test search engine",
-        "nonbuiltin1",
-        "Test search engine (Reordered)",
-      ];
+  // For modern config, all the engines in this config specify an order hint,
+  // so our added engine gets sorted to the end.
+  expected.splice(modernConfig ? expected.length : 5, 0, "nonbuiltin1");
 
   await checkOrder("getEngines", expected);
 });
