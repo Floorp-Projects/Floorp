@@ -320,7 +320,7 @@ def check_style(enable_fixup):
            file_kind == FileKind.H or file_kind == FileKind.INL_H:
             included_h_inclnames = set()    # type: set(inclname)
 
-            with open(filename) as f:
+            with open(filename, encoding='utf-8') as f:
                 code = read_file(f)
 
             if enable_fixup:

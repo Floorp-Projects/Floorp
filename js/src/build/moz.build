@@ -85,7 +85,6 @@ DIST_INSTALL = True
 # running the script for no-op builds.
 GeneratedFile(
     'spidermonkey_checks', script='/config/run_spidermonkey_checks.py',
-    py2=True,
     inputs=[
         '!%sjs_static.%s' % (CONFIG['LIB_PREFIX'], CONFIG['LIB_SUFFIX']),
         '/config/check_spidermonkey_style.py',

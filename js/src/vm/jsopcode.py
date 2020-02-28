@@ -200,7 +200,7 @@ def get_opcodes(dir):
     opcodes = dict()
     index = []
 
-    with open('{dir}/js/src/vm/Opcodes.h'.format(dir=dir), 'r') as f:
+    with open('{dir}/js/src/vm/Opcodes.h'.format(dir=dir), 'r', encoding='utf-8') as f:
         data = f.read()
 
     comment_info = None
