@@ -19,12 +19,12 @@ FilterButton.propTypes = {
 
 function FilterButton(props) {
   const { active, label, filterKey, dispatch, title } = props;
-  const classList = ["devtools-togglebutton", filterKey];
 
   return dom.button(
     {
       "aria-pressed": active === true,
-      className: classList.join(" "),
+      className: "devtools-togglebutton",
+      "data-category": filterKey,
       title,
       onClick: () => {
         dispatch(actions.filterToggle(filterKey));
