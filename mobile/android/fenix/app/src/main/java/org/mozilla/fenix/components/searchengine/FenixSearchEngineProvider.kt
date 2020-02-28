@@ -18,9 +18,11 @@ import mozilla.components.browser.search.provider.SearchEngineList
 import mozilla.components.browser.search.provider.SearchEngineProvider
 import mozilla.components.browser.search.provider.filter.SearchEngineFilter
 import mozilla.components.browser.search.provider.localization.SearchLocalizationProvider
+import mozilla.components.service.location.LocationService
 import mozilla.components.service.location.MozillaLocationService
 import mozilla.components.service.location.search.RegionSearchLocalizationProvider
 import org.mozilla.fenix.BuildConfig
+import org.mozilla.fenix.Config
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
 import java.util.Locale
@@ -29,16 +31,19 @@ import java.util.Locale
 open class FenixSearchEngineProvider(
     private val context: Context
 ) : SearchEngineProvider, CoroutineScope by CoroutineScope(Job() + Dispatchers.IO) {
+    private val locationService: LocationService = if (Config.channel.isDebug) {
+        LocationService.dummy()
+    } else {
+        MozillaLocationService(
+            context,
+            context.components.core.client,
+            BuildConfig.MLS_TOKEN
+        )
+    }
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     open val localizationProvider: SearchLocalizationProvider =
-        RegionSearchLocalizationProvider(
-            MozillaLocationService(
-                context,
-                context.components.core.client,
-                BuildConfig.MLS_TOKEN
-            )
-        )
+        RegionSearchLocalizationProvider(locationService)
 
     open var baseSearchEngines = async {
         AssetsSearchEngineProvider(localizationProvider).loadSearchEngines(context)
