@@ -22,7 +22,6 @@
 #include "nsIAsyncOutputStream.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsITimer.h"
-#include "Http3Session.h"
 
 class nsISocketTransport;
 class nsISSLSocketControl;

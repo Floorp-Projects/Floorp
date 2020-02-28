@@ -25,6 +25,7 @@
 #include "nsCOMPtr.h"
 #include "nsHttpConnectionMgr.h"
 #include "nsHttpHandler.h"
+#include "nsIClassOfService.h"
 #include "nsIDNSRecord.h"
 #include "nsIHttpChannelInternal.h"
 #include "nsIRequestContext.h"
@@ -35,6 +36,9 @@
 #include "nsInterfaceRequestorAgg.h"
 #include "nsNetCID.h"
 #include "nsNetUtil.h"
+#include "nsQueryObject.h"
+#include "HttpConnectionUDP.h"
+#include "TCPFastOpenLayer.h"
 
 namespace mozilla {
 namespace net {
@@ -4845,7 +4849,13 @@ nsresult nsHttpConnectionMgr::nsHalfOpenSocket::SetupConn(
   // We cannot ask for a connection for TFO and Http3 ata the same time.
   MOZ_ASSERT(!(mIsHttp3 && aFastOpen));
   // assign the new socket to the http connection
-  RefPtr<HttpConnectionBase> conn = new nsHttpConnection();
+  RefPtr<HttpConnectionBase> conn;
+  if (!mIsHttp3) {
+    conn = new nsHttpConnection();
+  } else {
+    conn = new HttpConnectionUDP();
+  }
+
   LOG(
       ("nsHalfOpenSocket::SetupConn "
        "Created new nshttpconnection %p %s\n",
@@ -5056,10 +5066,7 @@ nsresult nsHttpConnectionMgr::nsHalfOpenSocket::SetupConn(
   // If this connection has a transaction get reference to its
   // ConnectionHandler.
   RefPtr<nsHttpConnection> connTCP = do_QueryObject(conn);
-  MOZ_ASSERT(connTCP);
-  if (!connTCP) {
-    rv = NS_ERROR_UNEXPECTED;
-  } else {
+  if (connTCP) {
     if (aFastOpen) {
       MOZ_ASSERT(mEnt);
       MOZ_ASSERT(static_cast<int32_t>(mEnt->mIdleConns.IndexOf(conn)) == -1);

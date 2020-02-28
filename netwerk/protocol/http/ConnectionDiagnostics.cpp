@@ -9,6 +9,7 @@
 
 #include "nsHttpConnectionMgr.h"
 #include "nsHttpConnection.h"
+#include "HttpConnectionUDP.h"
 #include "Http2Session.h"
 #include "nsHttpHandler.h"
 #include "nsIConsoleService.h"
@@ -126,6 +127,38 @@ void nsHttpConnectionMgr::nsHalfOpenSocket::PrintDiagnostics(nsCString& log) {
 }
 
 void nsHttpConnection::PrintDiagnostics(nsCString& log) {
+  log.AppendPrintf("    CanDirectlyActivate = %d\n", CanDirectlyActivate());
+
+  log.AppendPrintf("    npncomplete = %d  setupSSLCalled = %d\n", mNPNComplete,
+                   mSetupSSLCalled);
+
+  log.AppendPrintf("    spdyVersion = %d  reportedSpdy = %d everspdy = %d\n",
+                   static_cast<int32_t>(mUsingSpdyVersion), mReportedSpdy,
+                   mEverUsedSpdy);
+
+  log.AppendPrintf("    iskeepalive = %d  dontReuse = %d isReused = %d\n",
+                   IsKeepAlive(), mDontReuse, mIsReused);
+
+  log.AppendPrintf("    mTransaction = %d mSpdySession = %d\n",
+                   !!mTransaction.get(), !!mSpdySession.get());
+
+  PRIntervalTime now = PR_IntervalNow();
+  log.AppendPrintf("    time since last read = %ums\n",
+                   PR_IntervalToMilliseconds(now - mLastReadTime));
+
+  log.AppendPrintf("    max-read/read/written %" PRId64 "/%" PRId64 "/%" PRId64
+                   "\n",
+                   mMaxBytesRead, mTotalBytesRead, mTotalBytesWritten);
+
+  log.AppendPrintf("    rtt = %ums\n", PR_IntervalToMilliseconds(mRtt));
+
+  log.AppendPrintf("    idlemonitoring = %d transactionCount=%d\n",
+                   mIdleMonitoring, mHttp1xTransactionCount);
+
+  if (mSpdySession) mSpdySession->PrintDiagnostics(log);
+}
+
+void HttpConnectionUDP::PrintDiagnostics(nsCString& log) {
   log.AppendPrintf("    CanDirectlyActivate = %d\n", CanDirectlyActivate());
 
   log.AppendPrintf("    npncomplete = %d  setupSSLCalled = %d\n", mNPNComplete,

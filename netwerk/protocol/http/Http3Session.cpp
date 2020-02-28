@@ -19,7 +19,7 @@
 #include "nsThreadUtils.h"
 #include "QuicSocketControl.h"
 #include "SSLServerCertVerification.h"
-//#include "cert.h"
+#include "HttpConnectionUDP.h"
 #include "sslerr.h"
 
 namespace mozilla {
@@ -72,7 +72,7 @@ Http3Session::Http3Session()
 
 nsresult Http3Session::Init(const nsACString& aOrigin,
                             nsISocketTransport* aSocketTransport,
-                            nsHttpConnection* readerWriter) {
+                            HttpConnectionUDP* readerWriter) {
   LOG3(("Http3Session::Init %p", this));
 
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
@@ -334,7 +334,7 @@ nsresult Http3Session::ProcessEvents(uint32_t count, uint32_t* countWritten,
           mError = NS_ERROR_NET_HTTP3_PROTOCOL_ERROR;
         }
         mIsClosedByNeqo = true;
-        // We need to return here and let nsHttpConnection close the session.
+        // We need to return here and let HttpConnectionUDP close the session.
         return mError;
         break;
       default:

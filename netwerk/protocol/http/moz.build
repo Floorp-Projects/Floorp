@@ -93,6 +93,7 @@ UNIFIED_SOURCES += [
     'HttpConnectionBase.cpp',
     'HttpConnectionMgrChild.cpp',
     'HttpConnectionMgrParent.cpp',
+    'HttpConnectionUDP.cpp',
     'HttpInfo.cpp',
     'HttpTrafficAnalyzer.cpp',
     'HttpTransactionChild.cpp',
