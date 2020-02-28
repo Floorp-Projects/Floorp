@@ -111,8 +111,8 @@ class SafeMutex {
   mozilla::Atomic<PRThread*, mozilla::Relaxed> mOwnerThread;
 };
 
-typedef mozilla::BaseAutoLock<SafeMutex&> SafeMutexAutoLock;
-typedef mozilla::BaseAutoUnlock<SafeMutex&> SafeMutexAutoUnlock;
+typedef mozilla::detail::BaseAutoLock<SafeMutex&> SafeMutexAutoLock;
+typedef mozilla::detail::BaseAutoUnlock<SafeMutex&> SafeMutexAutoUnlock;
 
 class nsComponentManagerImpl final : public nsIComponentManager,
                                      public nsIServiceManager,
