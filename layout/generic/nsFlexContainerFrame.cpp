@@ -4720,8 +4720,7 @@ void nsFlexContainerFrame::DoFlexLayout(
     if (rowIsCross) {
       crossAxisPosnTracker.SetCrossGapSize(newBlockGapSize);
     } else {
-      for (FlexLine* line = lines.getFirst(); line;
-           line = line->getNext(), ++lineIndex) {
+      for (FlexLine* line = lines.getFirst(); line; line = line->getNext()) {
         line->SetMainGapSize(newBlockGapSize);
       }
     }
