@@ -2,7 +2,7 @@
 
 # RegionSearchLocalizationProvider
 
-`class RegionSearchLocalizationProvider : `[`SearchLocalizationProvider`](../../mozilla.components.browser.search.provider.localization/-search-localization-provider/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/location/src/main/java/mozilla/components/service/location/search/RegionSearchLocalizationProvider.kt#L20)
+`class RegionSearchLocalizationProvider : `[`SearchLocalizationProvider`](../../mozilla.components.browser.search.provider.localization/-search-localization-provider/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/location/src/main/java/mozilla/components/service/location/search/RegionSearchLocalizationProvider.kt#L21)
 
 [SearchLocalizationProvider](../../mozilla.components.browser.search.provider.localization/-search-localization-provider/index.md) implementation that uses a [MozillaLocationService](../../mozilla.components.service.location/-mozilla-location-service/index.md) instance to
 do a region lookup via GeoIP.
@@ -15,7 +15,7 @@ provider.
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `RegionSearchLocalizationProvider(service: `[`MozillaLocationService`](../../mozilla.components.service.location/-mozilla-location-service/index.md)`)`<br>[SearchLocalizationProvider](../../mozilla.components.browser.search.provider.localization/-search-localization-provider/index.md) implementation that uses a [MozillaLocationService](../../mozilla.components.service.location/-mozilla-location-service/index.md) instance to do a region lookup via GeoIP. |
+| [&lt;init&gt;](-init-.md) | `RegionSearchLocalizationProvider(service: `[`LocationService`](../../mozilla.components.service.location/-location-service/index.md)`)`<br>[SearchLocalizationProvider](../../mozilla.components.browser.search.provider.localization/-search-localization-provider/index.md) implementation that uses a [MozillaLocationService](../../mozilla.components.service.location/-mozilla-location-service/index.md) instance to do a region lookup via GeoIP. |
 
 ### Functions
 

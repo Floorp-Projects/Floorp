@@ -2,7 +2,7 @@
 
 # &lt;init&gt;
 
-`RegionSearchLocalizationProvider(service: `[`MozillaLocationService`](../../mozilla.components.service.location/-mozilla-location-service/index.md)`)`
+`RegionSearchLocalizationProvider(service: `[`LocationService`](../../mozilla.components.service.location/-location-service/index.md)`)`
 
 [SearchLocalizationProvider](../../mozilla.components.browser.search.provider.localization/-search-localization-provider/index.md) implementation that uses a [MozillaLocationService](../../mozilla.components.service.location/-mozilla-location-service/index.md) instance to
 do a region lookup via GeoIP.

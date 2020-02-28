@@ -27,6 +27,12 @@ Defaults to false so that observers are always notified.
 |---|---|
 | [&lt;init&gt;](-init-.md) | `FxaPushSupportFeature(context: <ERROR CLASS>, accountManager: `[`FxaAccountManager`](../../mozilla.components.service.fxa.manager/-fxa-account-manager/index.md)`, pushFeature: `[`AutoPushFeature`](../../mozilla.components.feature.push/-auto-push-feature/index.md)`, owner: LifecycleOwner = ProcessLifecycleOwner.get(), autoPause: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)` = false)`<br>A feature used for supporting FxA and push integration where needed. One of the main functions is when FxA notifies the device during a sync, that it's unable to reach the device via push messaging; triggering a push registration renewal. |
 
+### Companion Object Properties
+
+| Name | Summary |
+|---|---|
+| [PUSH_SCOPE_PREFIX](-p-u-s-h_-s-c-o-p-e_-p-r-e-f-i-x.md) | `const val PUSH_SCOPE_PREFIX: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
+
 ### Extension Functions
 
 | Name | Summary |

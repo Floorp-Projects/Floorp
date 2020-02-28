@@ -2,7 +2,7 @@
 
 # MozillaLocationService
 
-`class MozillaLocationService` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/location/src/main/java/mozilla/components/service/location/MozillaLocationService.kt#L49)
+`class MozillaLocationService : `[`LocationService`](../-location-service/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/location/src/main/java/mozilla/components/service/location/MozillaLocationService.kt#L49)
 
 The Mozilla Location Service (MLS) is an open service which lets devices determine their location
 based on network infrastructure like Bluetooth beacons, cell towers and WiFi access points.
@@ -21,12 +21,6 @@ https://location.services.mozilla.com/contact
 
 `serviceUrl` - An optional URL override usually only needed for testing.
 
-### Types
-
-| Name | Summary |
-|---|---|
-| [Region](-region/index.md) | `data class Region`<br>A [Region](-region/index.md) returned by the location service. |
-
 ### Constructors
 
 | Name | Summary |
@@ -37,7 +31,7 @@ https://location.services.mozilla.com/contact
 
 | Name | Summary |
 |---|---|
-| [fetchRegion](fetch-region.md) | `suspend fun fetchRegion(readFromCache: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)` = true): `[`Region`](-region/index.md)`?`<br>Determines the current [Region](-region/index.md) based on the IP address used to access the service. |
+| [fetchRegion](fetch-region.md) | `suspend fun fetchRegion(readFromCache: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`): `[`Region`](../-location-service/-region/index.md)`?`<br>Determines the current [LocationService.Region](../-location-service/-region/index.md) based on the IP address used to access the service. |
 
 ### Extension Functions
 
