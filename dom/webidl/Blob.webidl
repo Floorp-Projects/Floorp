@@ -36,11 +36,11 @@ interface Blob {
   [NewObject] Promise<ArrayBuffer> arrayBuffer();
 };
 
-enum EndingTypes { "transparent", "native" };
+enum EndingType { "transparent", "native" };
 
 dictionary BlobPropertyBag {
   DOMString type = "";
-  EndingTypes endings = "transparent";
+  EndingType endings = "transparent";
 };
 
 partial interface Blob {
