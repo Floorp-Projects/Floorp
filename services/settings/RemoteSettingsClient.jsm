@@ -599,25 +599,11 @@ class RemoteSettingsClient extends EventEmitter {
             throw e;
           }
         } else {
-          // The sync has thrown, it can be related to metadata, network or a general error.
-          if (e instanceof RemoteSettingsClient.MissingSignatureError) {
-            // Collection metadata has no signature info, no need to retry.
-            reportStatus = UptakeTelemetry.STATUS.SIGNATURE_ERROR;
-          } else if (e instanceof SyncConflictError) {
-            reportStatus = UptakeTelemetry.STATUS.CONFLICT_ERROR;
-          } else if (/unparseable/.test(e.message)) {
-            reportStatus = UptakeTelemetry.STATUS.PARSE_ERROR;
-          } else if (/NetworkError/.test(e.message)) {
-            reportStatus = UptakeTelemetry.STATUS.NETWORK_ERROR;
-          } else if (/Timeout/.test(e.message)) {
-            reportStatus = UptakeTelemetry.STATUS.TIMEOUT_ERROR;
-          } else if (/HTTP 5??/.test(e.message)) {
-            reportStatus = UptakeTelemetry.STATUS.SERVER_ERROR;
-          } else if (/Backoff/.test(e.message)) {
-            reportStatus = UptakeTelemetry.STATUS.BACKOFF;
-          } else {
-            reportStatus = UptakeTelemetry.STATUS.SYNC_ERROR;
-          }
+          // The sync has thrown for other reason than signature verification.
+          // Default status for errors at this step is SYNC_ERROR.
+          reportStatus = this._telemetryFromError(e, {
+            default: UptakeTelemetry.STATUS.SYNC_ERROR,
+          });
           throw e;
         }
       }
@@ -640,20 +626,12 @@ class RemoteSettingsClient extends EventEmitter {
         );
       }
     } catch (e) {
-      // IndexedDB errors. See https://developer.mozilla.org/en-US/docs/Web/API/IDBRequest/error
-      if (
-        /(IndexedDB|AbortError|ConstraintError|QuotaExceededError|VersionError)/.test(
-          e.message
-        )
-      ) {
-        reportStatus = UptakeTelemetry.STATUS.CUSTOM_1_ERROR;
-      }
-      if (e instanceof RemoteSettingsClient.NetworkOfflineError) {
-        reportStatus = UptakeTelemetry.STATUS.NETWORK_OFFLINE_ERROR;
-      }
-      // No specific error was tracked, mark it as unknown.
-      if (reportStatus === null) {
-        reportStatus = UptakeTelemetry.STATUS.UNKNOWN_ERROR;
+      // If no Telemetry status was determined yet (ie. outside sync step),
+      // then introspect error, default status at this step is UNKNOWN.
+      if (reportStatus == null) {
+        reportStatus = this._telemetryFromError(e, {
+          default: UptakeTelemetry.STATUS.UNKNOWN_ERROR,
+        });
       }
       throw e;
     } finally {
@@ -671,6 +649,42 @@ class RemoteSettingsClient extends EventEmitter {
       console.debug(`${this.identifier} sync status is ${reportStatus}`);
       this._syncRunning = false;
     }
+  }
+
+  /**
+   * Determine the Telemetry uptake status based on the specified
+   * error.
+   */
+  _telemetryFromError(e, options = { default: null }) {
+    let reportStatus = options.default;
+
+    if (e instanceof RemoteSettingsClient.NetworkOfflineError) {
+      reportStatus = UptakeTelemetry.STATUS.NETWORK_OFFLINE_ERROR;
+    } else if (e instanceof RemoteSettingsClient.MissingSignatureError) {
+      // Collection metadata has no signature info, no need to retry.
+      reportStatus = UptakeTelemetry.STATUS.SIGNATURE_ERROR;
+    } else if (e instanceof SyncConflictError) {
+      reportStatus = UptakeTelemetry.STATUS.CONFLICT_ERROR;
+    } else if (/unparseable/.test(e.message)) {
+      reportStatus = UptakeTelemetry.STATUS.PARSE_ERROR;
+    } else if (/NetworkError/.test(e.message)) {
+      reportStatus = UptakeTelemetry.STATUS.NETWORK_ERROR;
+    } else if (/Timeout/.test(e.message)) {
+      reportStatus = UptakeTelemetry.STATUS.TIMEOUT_ERROR;
+    } else if (/HTTP 5??/.test(e.message)) {
+      reportStatus = UptakeTelemetry.STATUS.SERVER_ERROR;
+    } else if (/Backoff/.test(e.message)) {
+      reportStatus = UptakeTelemetry.STATUS.BACKOFF;
+    } else if (
+      // Errors from kinto.js IDB adapter.
+      e instanceof Kinto.adapters.IDB.IDBError ||
+      // Other IndexedDB errors (eg. RemoteSettingsWorker).
+      /IndexedDB/.test(e.message)
+    ) {
+      reportStatus = UptakeTelemetry.STATUS.CUSTOM_1_ERROR;
+    }
+
+    return reportStatus;
   }
 
   /**
