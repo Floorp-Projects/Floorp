@@ -5306,8 +5306,6 @@ AbortReasonOr<MInstruction*> IonBuilder::createCallObject(MDefinition* callee,
   current->add(
       MStoreFixedSlot::New(alloc(), callObj, CallObject::calleeSlot(), callee));
 
-  // if (!script()->functionHasParameterExprs()) {
-
   // Copy closed-over argument slots if there aren't parameter expressions.
   MSlots* slots = nullptr;
   for (PositionalFormalParameterIter fi(script()); fi; fi++) {
