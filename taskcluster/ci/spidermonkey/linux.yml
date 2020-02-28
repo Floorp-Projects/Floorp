@@ -69,6 +69,42 @@ sm-plain-linux64/opt:
     run:
         spidermonkey-variant: plain
 
+sm-smoosh-linux64/debug:
+    description: "Spidermonkey SmooshMonkey"
+    index:
+        job-name: sm-smoosh-linux64-debug
+    treeherder:
+        platform: linux64/debug
+        symbol: SM(smoosh)
+        tier: 3
+    run:
+        spidermonkey-variant: smooshdebug
+    fetches:
+        toolchain:
+            - linux64-clang
+            - linux64-gcc
+            - linux64-rust
+            - linux64-cbindgen
+    run-on-projects: ['try', 'central']
+
+sm-smoosh-linux64/opt:
+    description: "Spidermonkey SmooshMonkey"
+    index:
+        job-name: sm-smoosh-linux64-opt
+    treeherder:
+        symbol: SM(smoosh)
+        platform: linux64/opt
+        tier: 3
+    run:
+        spidermonkey-variant: smoosh
+    fetches:
+        toolchain:
+            - linux64-clang
+            - linux64-gcc
+            - linux64-rust
+            - linux64-cbindgen
+    run-on-projects: ['try', 'central']
+
 sm-nojit-linux64/opt:
     description: "Spidermonkey no JIT"
     index:
