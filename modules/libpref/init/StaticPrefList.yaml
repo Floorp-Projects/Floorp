@@ -8529,6 +8529,43 @@
   value: true
   mirror: always
 
+#ifdef MOZ_WAYLAND
+# Use DMABuf backend for Basic compositor.
+# For testing purposes only.
+- name: widget.wayland-dmabuf-basic-compositor.enabled
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
+# Use DMABuf for content textures.
+# For testing purposes only.
+- name: widget.wayland-dmabuf-textures.enabled
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
+# Use DMABuf backend for WebGL on Wayland.
+- name: widget.wayland-dmabuf-webgl.enabled
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
+# Use VA-API for video playback on Wayland.
+- name: widget.wayland-dmabuf-vaapi.enabled
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
+# Wayland basic (non-accelerated) compositor cache mode.
+# 0 = Default (everything is cached).
+# 1 = Cache only missing drawing.
+# 2 = No cache
+- name: widget.wayland-cache-mode
+  type: RelaxedAtomicInt32
+  value: 0
+  mirror: always
+#endif
+
 #---------------------------------------------------------------------------
 # Prefs starting with "xul."
 #---------------------------------------------------------------------------
