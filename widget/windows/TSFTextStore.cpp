@@ -21,6 +21,7 @@
 #include "mozilla/Telemetry.h"
 #include "mozilla/TextEventDispatcher.h"
 #include "mozilla/TextEvents.h"
+#include "mozilla/ToString.h"
 #include "mozilla/WindowsVersion.h"
 #include "nsWindow.h"
 #include "nsPrintfCString.h"
@@ -6007,20 +6008,12 @@ nsresult TSFTextStore::OnTextChangeInternal(
 
   MOZ_LOG(sTextStoreLog, LogLevel::Debug,
           ("0x%p   TSFTextStore::OnTextChangeInternal(aIMENotification={ "
-           "mMessage=0x%08X, mTextChangeData={ mStartOffset=%lu, "
-           "mRemovedEndOffset=%lu, mAddedEndOffset=%lu, "
-           "mCausedOnlyByComposition=%s, "
-           "mIncludingChangesDuringComposition=%s, "
-           "mIncludingChangesWithoutComposition=%s }), "
+           "mMessage=0x%08X, mTextChangeData=%s }), "
            "mDestroyed=%s, mSink=0x%p, mSinkMask=%s, "
            "mComposition.IsComposing()=%s",
-           this, aIMENotification.mMessage, textChangeData.mStartOffset,
-           textChangeData.mRemovedEndOffset, textChangeData.mAddedEndOffset,
-           GetBoolName(textChangeData.mCausedOnlyByComposition),
-           GetBoolName(textChangeData.mIncludingChangesDuringComposition),
-           GetBoolName(textChangeData.mIncludingChangesWithoutComposition),
-           GetBoolName(mDestroyed), mSink.get(),
-           GetSinkMaskNameStr(mSinkMask).get(),
+           this, aIMENotification.mMessage,
+           mozilla::ToString(textChangeData).c_str(), GetBoolName(mDestroyed),
+           mSink.get(), GetSinkMaskNameStr(mSinkMask).get(),
            GetBoolName(mComposition.IsComposing())));
 
   if (mDestroyed) {
@@ -6107,18 +6100,10 @@ nsresult TSFTextStore::OnSelectionChangeInternal(
       aIMENotification.mSelectionChangeData;
   MOZ_LOG(sTextStoreLog, LogLevel::Debug,
           ("0x%p   TSFTextStore::OnSelectionChangeInternal("
-           "aIMENotification={ mSelectionChangeData={ mOffset=%lu, "
-           "Length()=%lu, mReversed=%s, mWritingMode=%s, "
-           "mCausedByComposition=%s, mCausedBySelectionEvent=%s, "
-           "mOccurredDuringComposition=%s } }), mDestroyed=%s, "
+           "aIMENotification={ mSelectionChangeData=%s }), mDestroyed=%s, "
            "mSink=0x%p, mSinkMask=%s, mIsRecordingActionsWithoutLock=%s, "
            "mComposition.IsComposing()=%s",
-           this, selectionChangeData.mOffset, selectionChangeData.Length(),
-           GetBoolName(selectionChangeData.mReversed),
-           GetWritingModeName(selectionChangeData.GetWritingMode()).get(),
-           GetBoolName(selectionChangeData.mCausedByComposition),
-           GetBoolName(selectionChangeData.mCausedBySelectionEvent),
-           GetBoolName(selectionChangeData.mOccurredDuringComposition),
+           this, mozilla::ToString(selectionChangeData).c_str(),
            GetBoolName(mDestroyed), mSink.get(),
            GetSinkMaskNameStr(mSinkMask).get(),
            GetBoolName(mIsRecordingActionsWithoutLock),
