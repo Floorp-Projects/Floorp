@@ -90,6 +90,7 @@ UNIFIED_SOURCES += [
     'HttpBaseChannel.cpp',
     'HttpChannelChild.cpp',
     'HttpChannelParent.cpp',
+    'HttpConnectionBase.cpp',
     'HttpConnectionMgrChild.cpp',
     'HttpConnectionMgrParent.cpp',
     'HttpInfo.cpp',

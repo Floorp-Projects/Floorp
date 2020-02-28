@@ -39,9 +39,7 @@ struct HttpConnInfo {
   uint32_t rtt;
   nsString protocolVersion;
 
-  void SetHTTP1ProtocolVersion(HttpVersion pv);
-  void SetHTTP2ProtocolVersion(SpdyVersion pv);
-  void SetHTTP3ProtocolVersion();
+  void SetHTTPProtocolVersion(HttpVersion pv);
 };
 
 struct HttpRetParams {

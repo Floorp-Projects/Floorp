@@ -906,12 +906,12 @@ nsresult Http3Session::PushBack(const char* buf, uint32_t len) {
   return mConnection->PushBack(buf, len);
 }
 
-already_AddRefed<nsHttpConnection> Http3Session::TakeHttpConnection() {
+already_AddRefed<HttpConnectionBase> Http3Session::TakeHttpConnection() {
   MOZ_ASSERT(false, "TakeHttpConnection of Http3Session");
   return nullptr;
 }
 
-already_AddRefed<nsHttpConnection> Http3Session::HttpConnection() {
+already_AddRefed<HttpConnectionBase> Http3Session::HttpConnection() {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   if (mConnection) {
     return mConnection->HttpConnection();

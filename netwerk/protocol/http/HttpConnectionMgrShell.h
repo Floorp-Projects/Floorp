@@ -18,7 +18,7 @@ class ARefBase;
 class EventTokenBucket;
 class HttpTransactionShell;
 class nsHttpConnectionInfo;
-class nsHttpConnection;
+class HttpConnectionBase;
 class nsHttpConnectionMgr;
 class NullHttpTransaction;
 
@@ -120,7 +120,7 @@ class HttpConnectionMgrShell : public nsISupports {
   // called when a connection is done processing a transaction.  if the
   // connection can be reused then it will be added to the idle list, else
   // it will be closed.
-  MOZ_MUST_USE virtual nsresult ReclaimConnection(nsHttpConnection* conn) = 0;
+  MOZ_MUST_USE virtual nsresult ReclaimConnection(HttpConnectionBase* conn) = 0;
 
   // called to force the transaction queue to be processed once more, giving
   // preference to the specified connection.
@@ -201,7 +201,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(HttpConnectionMgrShell,
       HttpTransactionShell*, uint32_t classOfService) override;              \
   virtual nsresult CancelTransaction(HttpTransactionShell*, nsresult reason) \
       override;                                                              \
-  virtual nsresult ReclaimConnection(nsHttpConnection* conn) override;       \
+  virtual nsresult ReclaimConnection(HttpConnectionBase* conn) override;     \
   virtual nsresult ProcessPendingQ(nsHttpConnectionInfo*) override;          \
   virtual nsresult ProcessPendingQ() override;                               \
   virtual nsresult GetSocketThreadTarget(nsIEventTarget**) override;         \

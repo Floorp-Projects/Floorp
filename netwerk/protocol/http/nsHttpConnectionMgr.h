@@ -7,6 +7,7 @@
 #define nsHttpConnectionMgr_h__
 
 #include "HttpConnectionMgrShell.h"
+#include "HttpConnectionBase.h"
 #include "nsHttpConnection.h"
 #include "nsHttpTransaction.h"
 #include "nsTArray.h"
@@ -91,20 +92,20 @@ class nsHttpConnectionMgr final : public HttpConnectionMgrShell,
   // into a wildcard (i.e. http2 proxy friendy) mapping
   void MoveToWildCardConnEntry(nsHttpConnectionInfo* specificCI,
                                nsHttpConnectionInfo* wildcardCI,
-                               nsHttpConnection* conn);
+                               HttpConnectionBase* conn);
 
   MOZ_MUST_USE bool ProcessPendingQForEntry(nsHttpConnectionInfo*);
 
   // This is used to force an idle connection to be closed and removed from
   // the idle connection list. It is called when the idle connection detects
   // that the network peer has closed the transport.
-  MOZ_MUST_USE nsresult CloseIdleConnection(nsHttpConnection*);
-  MOZ_MUST_USE nsresult RemoveIdleConnection(nsHttpConnection*);
+  MOZ_MUST_USE nsresult CloseIdleConnection(HttpConnectionBase*);
+  MOZ_MUST_USE nsresult RemoveIdleConnection(HttpConnectionBase*);
 
   // The connection manager needs to know when a normal HTTP connection has been
   // upgraded to SPDY because the dispatch and idle semantics are a little
   // bit different.
-  void ReportSpdyConnection(nsHttpConnection*, bool usingSpdy);
+  void ReportSpdyConnection(HttpConnectionBase*, bool usingSpdy);
 
   bool GetConnectionData(nsTArray<HttpRetParams>*);
 
@@ -173,8 +174,8 @@ class nsHttpConnectionMgr final : public HttpConnectionMgrShell,
     // is initialized without a window.
     nsClassHashtable<nsUint64HashKey, nsTArray<RefPtr<PendingTransactionInfo>>>
         mPendingTransactionTable;
-    nsTArray<RefPtr<nsHttpConnection>> mActiveConns;  // active connections
-    nsTArray<RefPtr<nsHttpConnection>>
+    nsTArray<RefPtr<HttpConnectionBase>> mActiveConns;  // active connections
+    nsTArray<RefPtr<HttpConnectionBase>>
         mIdleConns;                          // idle persistent connections
     nsTArray<nsHalfOpenSocket*> mHalfOpens;  // half open connections
     nsTArray<RefPtr<nsHalfOpenSocket>>
@@ -267,8 +268,8 @@ class nsHttpConnectionMgr final : public HttpConnectionMgrShell,
   };
 
  public:
-  static nsAHttpConnection* MakeConnectionHandle(nsHttpConnection* aWrapped);
-  void RegisterOriginCoalescingKey(nsHttpConnection*, const nsACString& host,
+  static nsAHttpConnection* MakeConnectionHandle(HttpConnectionBase* aWrapped);
+  void RegisterOriginCoalescingKey(HttpConnectionBase*, const nsACString& host,
                                    int32_t port);
 
  private:
@@ -493,10 +494,11 @@ class nsHttpConnectionMgr final : public HttpConnectionMgrShell,
       bool respectUrgency, bool* allUrgent = nullptr);
   MOZ_MUST_USE nsresult DispatchTransaction(nsConnectionEntry*,
                                             nsHttpTransaction*,
-                                            nsHttpConnection*);
+                                            HttpConnectionBase*);
   MOZ_MUST_USE nsresult DispatchAbstractTransaction(nsConnectionEntry*,
                                                     nsAHttpTransaction*,
-                                                    uint32_t, nsHttpConnection*,
+                                                    uint32_t,
+                                                    HttpConnectionBase*,
                                                     int32_t);
   bool RestrictConnections(nsConnectionEntry*);
   MOZ_MUST_USE nsresult ProcessNewTransaction(nsHttpTransaction*);
@@ -506,8 +508,8 @@ class nsHttpConnectionMgr final : public HttpConnectionMgrShell,
   MOZ_MUST_USE nsresult
   CreateTransport(nsConnectionEntry*, nsAHttpTransaction*, uint32_t, bool, bool,
                   bool, bool, PendingTransactionInfo* pendingTransInfo);
-  void AddActiveConn(nsHttpConnection*, nsConnectionEntry*);
-  void DecrementActiveConnCount(nsHttpConnection*);
+  void AddActiveConn(HttpConnectionBase*, nsConnectionEntry*);
+  void DecrementActiveConnCount(HttpConnectionBase*);
   void StartedConnect();
   void RecvdConnect();
 
@@ -528,22 +530,22 @@ class nsHttpConnectionMgr final : public HttpConnectionMgrShell,
   MOZ_MUST_USE nsresult MakeNewConnection(
       nsConnectionEntry* ent, PendingTransactionInfo* pendingTransInfo);
 
-  // Manage h2 connection coalescing
-  // The hashtable contains arrays of weak pointers to nsHttpConnections
+  // Manage h2/3 connection coalescing
+  // The hashtable contains arrays of weak pointers to HttpConnectionBases
   nsClassHashtable<nsCStringHashKey, nsTArray<nsWeakPtr>> mCoalescingHash;
 
-  nsHttpConnection* FindCoalescableConnection(nsConnectionEntry* ent,
-                                              bool justKidding);
-  nsHttpConnection* FindCoalescableConnectionByHashKey(nsConnectionEntry* ent,
-                                                       const nsCString& key,
-                                                       bool justKidding);
-  void UpdateCoalescingForNewConn(nsHttpConnection* conn,
+  HttpConnectionBase* FindCoalescableConnection(nsConnectionEntry* ent,
+                                                bool justKidding);
+  HttpConnectionBase* FindCoalescableConnectionByHashKey(nsConnectionEntry* ent,
+                                                         const nsCString& key,
+                                                         bool justKidding);
+  void UpdateCoalescingForNewConn(HttpConnectionBase* conn,
                                   nsConnectionEntry* ent);
-  nsHttpConnection* GetH2orH3ActiveConn(nsConnectionEntry* ent);
+  HttpConnectionBase* GetH2orH3ActiveConn(nsConnectionEntry* ent);
 
   void ProcessSpdyPendingQ(nsConnectionEntry* ent);
   void DispatchSpdyPendingQ(nsTArray<RefPtr<PendingTransactionInfo>>& pendingQ,
-                            nsConnectionEntry* ent, nsHttpConnection* conn);
+                            nsConnectionEntry* ent, HttpConnectionBase* conn);
   // used to marshall events to the socket transport thread.
   MOZ_MUST_USE nsresult PostEvent(nsConnEventHandler handler,
                                   int32_t iparam = 0,
@@ -555,6 +557,8 @@ class nsHttpConnectionMgr final : public HttpConnectionMgrShell,
       nsTArray<RefPtr<PendingTransactionInfo>>& pendingQ,
       const nsHttpConnectionInfo* ci, const nsConnectionEntry* ent,
       nsresult reason);
+
+  void OnMsgReclaimConnection(HttpConnectionBase*);
 
   // message handlers
   void OnMsgShutdown(int32_t, ARefBase*);
@@ -568,7 +572,6 @@ class nsHttpConnectionMgr final : public HttpConnectionMgrShell,
   void OnMsgProcessPendingQ(int32_t, ARefBase*);
   void OnMsgPruneDeadConnections(int32_t, ARefBase*);
   void OnMsgSpeculativeConnect(int32_t, ARefBase*);
-  void OnMsgReclaimConnection(nsHttpConnection*);
   void OnMsgCompleteUpgrade(int32_t, ARefBase*);
   void OnMsgUpdateParam(int32_t, ARefBase*);
   void OnMsgDoShiftReloadConnectionCleanup(int32_t, ARefBase*);
