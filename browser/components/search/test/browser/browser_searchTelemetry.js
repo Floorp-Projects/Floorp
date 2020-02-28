@@ -152,7 +152,7 @@ add_task(async function test_simple_search_page_visit_telemetry() {
     {
       gBrowser,
       /* URL must not be in the cache */
-      url: getSERPUrl(getPageUrl(false, true)),
+      url: getSERPUrl(getPageUrl()) + `&random=${Math.random()}`,
     },
     async () => {
       let scalars = {};
