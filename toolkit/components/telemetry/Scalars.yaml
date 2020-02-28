@@ -4633,6 +4633,28 @@ browser.search:
     record_in_processes:
       - main
 
+  data_transferred:
+    bug_numbers:
+      - 1614777
+    description: >
+      Records KBs has been transferred for search requests, including
+      top-level documents, sub-resources, iframes and search suggestions.
+      The key format could be one of:
+        <search-provider-name>
+        <search-provider-name>-pb
+        sggt-<search-engine-id>
+        sggt-<search-engine-id>-pb
+    expires: "82"
+    keyed: true
+    kind: uint
+    notification_emails:
+      - gachen@mozilla.com
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'main'
+    release_channel_collection: opt-out
+
 browser.searchinit:
   engines_cache_corrupted:
     bug_numbers:

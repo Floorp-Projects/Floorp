@@ -24,6 +24,10 @@ const BROWSER_SUGGEST_PRIVATE_PREF = "browser.search.suggest.enabled.private";
 const REMOTE_TIMEOUT_PREF = "browser.search.suggest.timeout";
 const REMOTE_TIMEOUT_DEFAULT = 500; // maximum time (ms) to wait before giving up on a remote suggestions
 
+const SEARCH_DATA_TRANSFERRED_SCALAR = "browser.search.data_transferred";
+const SEARCH_TELEMETRY_KEY_PREFIX = "sggt";
+const SEARCH_TELEMETRY_PRIVATE_BROWSING_KEY_SUFFIX = "pb";
+
 XPCOMUtils.defineLazyServiceGetter(
   this,
   "UUIDGenerator",
@@ -292,8 +296,15 @@ SearchSuggestionController.prototype = {
       return;
     }
 
-    dump(
-      `SearchSuggest: ${engineId}-${privateMode} transferred ${bytesTransferred} bytes\n`
+    let telemetryKey = `${SEARCH_TELEMETRY_KEY_PREFIX}-${engineId}`;
+    if (privateMode) {
+      telemetryKey += `-${SEARCH_TELEMETRY_PRIVATE_BROWSING_KEY_SUFFIX}`;
+    }
+
+    Services.telemetry.keyedScalarAdd(
+      SEARCH_DATA_TRANSFERRED_SCALAR,
+      telemetryKey,
+      bytesTransferred
     );
   },
 
