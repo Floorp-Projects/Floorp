@@ -1807,7 +1807,6 @@
         opener,
         remoteType,
         sameProcessAsFrameLoader,
-        recordExecution,
         replaceBrowsingContext,
         redirectLoadSwitchId,
       } = {}
@@ -1894,16 +1893,6 @@
         window.docShell.nsILoadContext.useRemoteSubframes;
       if (!rebuildFrameLoaders) {
         aBrowser.remove();
-      }
-
-      if (recordExecution) {
-        aBrowser.setAttribute("recordExecution", recordExecution);
-
-        // Web Replay middleman processes need the default URL to be loaded in
-        // order to set up their rendering state.
-        aBrowser.setAttribute("nodefaultsrc", "false");
-      } else if (aBrowser.hasAttribute("recordExecution")) {
-        aBrowser.removeAttribute("recordExecution");
       }
 
       // NB: This works with the hack in the browser constructor that
@@ -2073,9 +2062,7 @@
       name,
       nextRemoteTabId,
       openerWindow,
-      recordExecution,
       remoteType,
-      replayExecution,
       sameProcessAsFrameLoader,
       uriIsAboutBlank,
       userContextId,
@@ -2107,14 +2094,6 @@
       if (remoteType) {
         b.setAttribute("remoteType", remoteType);
         b.setAttribute("remote", "true");
-      }
-
-      if (recordExecution) {
-        b.setAttribute("recordExecution", recordExecution);
-      }
-
-      if (replayExecution) {
-        b.setAttribute("replayExecution", replayExecution);
       }
 
       if (openerWindow) {
@@ -2561,8 +2540,6 @@
         skipBackgroundNotify,
         triggeringPrincipal,
         userContextId,
-        recordExecution,
-        replayExecution,
         csp,
         skipLoad,
         batchInsertingTabs,
@@ -2728,12 +2705,7 @@
 
         // If we open a new tab with the newtab URL in the default
         // userContext, check if there is a preloaded browser ready.
-        if (
-          aURI == BROWSER_NEW_TAB_URL &&
-          !userContextId &&
-          !recordExecution &&
-          !replayExecution
-        ) {
+        if (aURI == BROWSER_NEW_TAB_URL && !userContextId) {
           b = NewTabPagePreloading.getPreloadedBrowser(window);
           if (b) {
             usingPreloadedContent = true;
@@ -2750,8 +2722,6 @@
             openerWindow: opener,
             nextRemoteTabId,
             name,
-            recordExecution,
-            replayExecution,
             skipLoad,
           });
         }
