@@ -120,14 +120,6 @@ class nsColumnSetFrame final : public nsContainerFrame {
     // The last known block-size that was 'infeasible'. A column bSize is
     // infeasible if not all child content fits within the specified bSize.
     nscoord mKnownInfeasibleBSize = 0;
-
-    // block-size of the column set frame
-    nscoord mComputedBSize = NS_UNCONSTRAINEDSIZE;
-
-    // The block-size "consumed" by previous-in-flows.
-    // The computed block-size should be equal to the block-size of the element
-    // (i.e. the computed block-size itself) plus the consumed block-size.
-    nscoord mConsumedBSize = 0;
   };
 
   // Collect various block-size data calculated in ReflowChildren(), which are
