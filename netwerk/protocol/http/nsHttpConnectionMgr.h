@@ -99,8 +99,8 @@ class nsHttpConnectionMgr final : public HttpConnectionMgrShell,
   // This is used to force an idle connection to be closed and removed from
   // the idle connection list. It is called when the idle connection detects
   // that the network peer has closed the transport.
-  MOZ_MUST_USE nsresult CloseIdleConnection(HttpConnectionBase*);
-  MOZ_MUST_USE nsresult RemoveIdleConnection(HttpConnectionBase*);
+  MOZ_MUST_USE nsresult CloseIdleConnection(nsHttpConnection*);
+  MOZ_MUST_USE nsresult RemoveIdleConnection(nsHttpConnection*);
 
   // The connection manager needs to know when a normal HTTP connection has been
   // upgraded to SPDY because the dispatch and idle semantics are a little
@@ -175,7 +175,7 @@ class nsHttpConnectionMgr final : public HttpConnectionMgrShell,
     nsClassHashtable<nsUint64HashKey, nsTArray<RefPtr<PendingTransactionInfo>>>
         mPendingTransactionTable;
     nsTArray<RefPtr<HttpConnectionBase>> mActiveConns;  // active connections
-    nsTArray<RefPtr<HttpConnectionBase>>
+    nsTArray<RefPtr<nsHttpConnection>>
         mIdleConns;                          // idle persistent connections
     nsTArray<nsHalfOpenSocket*> mHalfOpens;  // half open connections
     nsTArray<RefPtr<nsHalfOpenSocket>>
