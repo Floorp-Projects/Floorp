@@ -20,6 +20,10 @@ def runCmd(cmd, workingDir, successMessage) {
     return standardOutput
 }
 
+def gradlew = './gradlew'
+if (System.properties['os.name'].toLowerCase().contains('windows')) {
+    gradlew += ".bat"
+}
 //////////////////////////////////////////////////////////////////////////
 // Local Development overrides
 //////////////////////////////////////////////////////////////////////////
@@ -55,7 +59,7 @@ if (localProperties != null) {
     if (androidComponentsLocalPath != null) {
         log("Enabling automatic publication of android-components from: $androidComponentsLocalPath")
         log("Determining if android-components are up-to-date...")
-        def compileAcCmd = ["./gradlew", "compileReleaseKotlin"]
+        def compileAcCmd = [gradlew, "compileReleaseKotlin"]
         def compileOutput = runCmd(compileAcCmd, androidComponentsLocalPath, "Compiled android-components.")
         // This is somewhat brittle: parse last line of gradle output, to fish out how many tasks were executed.
         // One executed task means gradle didn't do any work other than executing the top-level 'compile' task.
@@ -64,7 +68,7 @@ if (localProperties != null) {
             log("android-components are up-to-date, skipping publication.")
         } else {
             log("android-components changed, publishing locally...")
-            def publishAcCmd = ["${androidComponentsLocalPath}/gradlew", "publishToMavenLocal", "-Plocal=true"]
+            def publishAcCmd = ["${androidComponentsLocalPath}/{gradlew}", "publishToMavenLocal", "-Plocal=true"]
             runCmd(publishAcCmd, androidComponentsLocalPath, "Published android-components.")
         }
     } else {
