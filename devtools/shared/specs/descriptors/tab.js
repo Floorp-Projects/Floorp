@@ -3,10 +3,19 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { generateActorSpec } = require("devtools/shared/protocol");
+const { generateActorSpec, RetVal } = require("devtools/shared/protocol");
 
 const tabDescriptorSpec = generateActorSpec({
   typeName: "tabDescriptor",
+
+  methods: {
+    getTarget: {
+      request: {},
+      response: {
+        frame: RetVal("json"),
+      },
+    },
+  },
 });
 
 exports.tabDescriptorSpec = tabDescriptorSpec;

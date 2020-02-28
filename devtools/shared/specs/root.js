@@ -24,7 +24,9 @@ types.addDictType("root.listRemoteFrames", {
   frames: "array:frameDescriptor",
 });
 types.addDictType("root.listTabs", {
-  tabs: "array:browsingContextTarget",
+  // Backwards compatibility for servers FF74 and before
+  // once FF75 is merged into release, we can return tabDescriptors directly.
+  tabs: "array:json",
   selected: "number",
 });
 
@@ -50,6 +52,8 @@ const rootSpecPrototype = {
         tabId: Option(0, "number"),
       },
       response: {
+        // Backwards compatibility for servers FF74 and before
+        // once FF75 is merged into release, we can return the tabDescriptor directly.
         tab: RetVal("json"),
       },
     },

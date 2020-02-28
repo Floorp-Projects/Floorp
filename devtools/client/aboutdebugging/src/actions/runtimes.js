@@ -328,7 +328,9 @@ function watchRuntime(id) {
       await dispatch({ type: WATCH_RUNTIME_SUCCESS, runtime });
 
       dispatch(Actions.requestExtensions());
-      dispatch(Actions.requestTabs());
+      // we have to wait for tabs, otherwise the requests to getTarget may interfer
+      // with listProcesses
+      await dispatch(Actions.requestTabs());
       dispatch(Actions.requestWorkers());
 
       if (

@@ -68,6 +68,11 @@ const Types = (exports.__TypesForTests = [
     front: "devtools/shared/fronts/descriptors/process",
   },
   {
+    types: ["tabDescriptor"],
+    spec: "devtools/shared/specs/descriptors/tab",
+    front: "devtools/shared/fronts/descriptors/tab",
+  },
+  {
     types: ["webExtensionDescriptor"],
     spec: "devtools/shared/specs/descriptors/webextension",
     front: "devtools/shared/fronts/descriptors/webextension",
