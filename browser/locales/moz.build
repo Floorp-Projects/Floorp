@@ -34,7 +34,6 @@ bookmarks.inputs = [
     # The `locales/en-US/` will be rewritten to the locale-specific path.
     'en-US/profile/bookmarks.inc',
 ]
-bookmarks.py2 = True
 
 with Files("**"):
     BUG_COMPONENT = ("Firefox Build System", "General")
