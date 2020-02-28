@@ -285,7 +285,7 @@ def writeList(out, items):
 
 
 def writeEnumClass(out, name, type, items, extraItems):
-    items = ["FIRST"] + items + ["LIMIT"] + extraItems
+    items = ["FIRST"] + list(items) + ["LIMIT"] + list(extraItems)
     items[1] += " = " + items[0]
     out.write("enum class %s : %s {\n" % (name, type))
     writeList(out, items)
