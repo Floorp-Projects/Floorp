@@ -152,7 +152,13 @@ class FuzzyParser(BaseTryParser):
           'default': False,
           'help': "Show task duration estimates.",
           }],
-
+        [['--disable-target-task-filter'],
+         {'action': 'store_true',
+          'default': False,
+          'help': "Some tasks run on mozilla-central but are filtered out "
+                  "of the default list due to resource constraints. This flag "
+                  "disables this filtering."
+          }],
     ]
     common_groups = ['push', 'task', 'preset']
     task_configs = [
@@ -290,7 +296,8 @@ def filter_target_task(task):
 
 def run(update=False, query=None, intersect_query=None, try_config=None, full=False,
         parameters=None, save_query=False, push=True, message='{msg}',
-        test_paths=None, exact=False, closed_tree=False, show_estimates=False):
+        test_paths=None, exact=False, closed_tree=False, show_estimates=False,
+        disable_target_task_filter=False):
     fzf = fzf_bootstrap(update)
 
     if not fzf:
@@ -316,7 +323,7 @@ def run(update=False, query=None, intersect_query=None, try_config=None, full=Fa
         download_task_history_data(cache_dir=cache_dir)
         make_trimmed_taskgraph_cache(graph_cache, dep_cache, target_file=target_set)
 
-    if not full:
+    if not full and not disable_target_task_filter:
         all_tasks = filter(filter_target_task, all_tasks)
 
     if test_paths:
