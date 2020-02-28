@@ -16,7 +16,7 @@
 #include "mozilla/TypeTraits.h"
 #include "mozilla/WrappingOperations.h"
 
-#include <math.h>
+#include <cmath>
 #include <stddef.h>  // size_t
 #include <stdint.h>  // {u,}int{8,16,32,64}_t
 
@@ -155,7 +155,7 @@ inline double ToInteger(double d) {
     return d;
   }
 
-  return (d < 0 ? ceil(d) : floor(d)) + (+0.0); // Add zero to convert -0 to +0.
+  return std::trunc(d) + (+0.0);  // Add zero to convert -0 to +0.
 }
 
 /* ES6 draft 20141224, 7.1.5. */
