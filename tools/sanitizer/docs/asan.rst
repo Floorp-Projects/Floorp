@@ -12,6 +12,9 @@ execution. In addition, the runtime part replaces the ``malloc`` and
 information on how ASan works can be found on `the Address Sanitizer
 wiki <https://github.com/google/sanitizers/wiki/AddressSanitizer>`__.
 
+A `meta bug called asan-maintenance <https://bugzilla.mozilla.org/show_bug.cgi?id=asan-maintenance>`__
+is maintained to keep track of all the bugs found with ASan.
+
 Downloading artifact builds
 ---------------------------
 
@@ -364,3 +367,7 @@ LSan to ignore it.
 
 For some more information on LSan, see the `Leak Sanitizer wiki
 page <https://github.com/google/sanitizers/wiki/AddressSanitizerLeakSanitizer>`__.
+
+
+A `meta bug called lsan <https://bugzilla.mozilla.org/show_bug.cgi?id=lsan>`__
+is maintained to keep track of all the bugs found with LSan.
