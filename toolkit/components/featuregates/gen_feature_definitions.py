@@ -40,7 +40,7 @@ def main(output, *filenames):
     errors = False
     try:
         features = process_files(filenames)
-        json.dump(features, output)
+        json.dump(features, output, sort_keys=True)
     except ExceptionGroup as error_group:
         print(str(error_group))
         return EXIT_ERROR
