@@ -163,8 +163,8 @@ void HttpConnectionUDP::PrintDiagnostics(nsCString& log) {
 
   log.AppendPrintf("    npncomplete = %d\n", mNPNComplete);
 
-  log.AppendPrintf("    iskeepalive = %d  dontReuse = %d isReused = %d\n",
-                   IsKeepAlive(), mDontReuse, mIsReused);
+  log.AppendPrintf("    dontReuse = %d isReused = %d\n",
+                   mDontReuse, mIsReused);
 
   PRIntervalTime now = PR_IntervalNow();
   log.AppendPrintf("    time since last read = %ums\n",

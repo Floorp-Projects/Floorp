@@ -176,6 +176,7 @@ class nsHttpConnection final : public HttpConnectionBase,
   // has finished this returns false.
   bool NoClientCertAuth() const override;
 
+  bool CanAcceptWebsocket() override;
  private:
   // Value (set in mTCPKeepaliveConfig) indicates which set of prefs to use.
   enum TCPKeepaliveConfig {
@@ -226,6 +227,10 @@ class nsHttpConnection final : public HttpConnectionBase,
   MOZ_MUST_USE nsresult DisableTCPKeepalives();
 
  private:
+  // mTransaction only points to the HTTP Transaction callbacks if the
+  // transaction is open, otherwise it is null.
+  RefPtr<nsAHttpTransaction> mTransaction;
+
   nsCOMPtr<nsIAsyncInputStream> mSocketIn;
   nsCOMPtr<nsIAsyncOutputStream> mSocketOut;
 
