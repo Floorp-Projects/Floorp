@@ -51,20 +51,7 @@
 //#  undef _SECURE_SCL
 #endif
 
-// C4275: When _HAS_EXCEPTIONS is set to 0, system STL header
-//        will generate the warning which we can't modify.
-// C4530: We know that code won't be able to catch exceptions,
-//        but that's OK because we're not throwing them.
-#pragma warning( push )
-#pragma warning( disable : 4275 4530 )
-
-#ifdef __clang__
 #include_next <${HEADER}>
-#else
-#include <${HEADER_PATH}>
-#endif
-
-#pragma warning( pop )
 
 #ifdef MOZ_INCLUDE_MOZALLOC_H_FROM_${HEADER}
 // See if we're in code that can use mozalloc.

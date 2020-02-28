@@ -7,23 +7,15 @@
 #ifndef mozilla_windows_h
 #define mozilla_windows_h
 
-// Include the "real" windows.h header. On clang/gcc, this can be done with the
-// `include_next` feature, however MSVC requires a direct include path.
+// Include the "real" windows.h header.
 //
 // Also turn off deprecation warnings, as we may be wrapping deprecated fns.
 
-#if defined(__GNUC__) || defined(__clang__)
-#  pragma GCC system_header
-#  include_next <windows.h>
+#pragma GCC system_header
+#include_next <windows.h>
 
-#  pragma GCC diagnostic push
-#  pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-#else
-#  include <${header_path}>
-
-#  pragma warning(push)
-#  pragma warning(disable: 4996 4995)
-#endif // defined(__GNUC__) || defined(__clang__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 
 // Check if the header should be disabled
 #if defined(MOZ_DISABLE_WINDOWS_WRAPPER)
@@ -31,9 +23,6 @@
 
 #elif !defined(__cplusplus)
 #define MOZ_WINDOWS_WRAPPER_DISABLED_REASON "non-C++ source file"
-
-#elif !defined(__GNUC__) && !defined(__clang__) && !defined(_DLL)
-#define MOZ_WINDOWS_WRAPPER_DISABLED_REASON "non-dynamic RTL"
 
 #else
 // We're allowed to wrap in the current context. Define `MOZ_WRAPPED_WINDOWS_H`
@@ -49,10 +38,6 @@ ${decls}
 
 #endif // enabled
 
-#if defined(__GNUC__) || defined(__clang__)
-#  pragma GCC diagnostic pop
-#else
-#  pragma warning(pop)
-#endif // defined(__GNUC__) || defined(__clang__)
+#pragma GCC diagnostic pop
 
 #endif // !defined(mozilla_windows_h)
