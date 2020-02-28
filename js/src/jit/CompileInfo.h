@@ -356,6 +356,7 @@ class CompileInfo {
   bool argumentsAliasesFormals() const {
     return script()->argumentsAliasesFormals();
   }
+  bool hasMappedArgsObj() const { return script()->hasMappedArgsObj(); }
   bool needsArgsObj() const { return scriptNeedsArgsObj_; }
   bool argsObjAliasesFormals() const {
     return scriptNeedsArgsObj_ && script()->hasMappedArgsObj();
