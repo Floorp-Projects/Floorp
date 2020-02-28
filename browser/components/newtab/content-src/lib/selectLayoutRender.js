@@ -82,9 +82,7 @@ export const selectLayoutRender = ({
       return {
         ...component,
         data: {
-          spocs: {
-            items: [],
-          },
+          spocs: [],
         },
       };
     }
@@ -137,7 +135,10 @@ export const selectLayoutRender = ({
     return {
       ...component,
       data: {
-        spocs: handleSpocs([], component),
+        spocs: handleSpocs([], component).map((spoc, index) => ({
+          ...spoc,
+          pos: index,
+        })),
       },
     };
   };

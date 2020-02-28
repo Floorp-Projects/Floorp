@@ -2,21 +2,66 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+import { actionCreators as ac } from "common/Actions.jsm";
 import { CardGrid } from "content-src/components/DiscoveryStreamComponents/CardGrid/CardGrid";
+import { DSDismiss } from "content-src/components/DiscoveryStreamComponents/DSDismiss/DSDismiss";
+import { LinkMenuOptions } from "content-src/lib/link-menu-options";
 import React from "react";
-import { connect } from "react-redux";
 
-export class _CollectionCardGrid extends React.PureComponent {
+export class CollectionCardGrid extends React.PureComponent {
+  constructor(props) {
+    super(props);
+    this.onDismissClick = this.onDismissClick.bind(this);
+  }
+
+  onDismissClick() {
+    const { data, items } = this.props;
+    if (this.props.dispatch && data && data.spocs && data.spocs.length) {
+      const pos = 0;
+      const source = this.props.type.toUpperCase();
+      // Grab the displayed items in the array to dismiss.
+      // This fires a ping for all items displayed, even if below the fold.
+      // It does not fire it for items not displayed, but those items would
+      // still be filtered out because of matching flight_ids.
+      // This is otherwise just for telemetry puproses, to report which items were displayed,
+      // but not nessisarily visible, at the time of dismiss.
+      const spocsData = data.spocs.slice(0, items).map(item => ({
+        url: item.url,
+        guid: item.id,
+        shim: item.shim,
+      }));
+
+      const blockUrlOption = LinkMenuOptions.BlockUrls(spocsData, pos, source);
+      const { action, impression, userEvent } = blockUrlOption;
+      this.props.dispatch(action);
+
+      this.props.dispatch(
+        ac.UserEvent({
+          event: userEvent,
+          source,
+          action_position: pos,
+        })
+      );
+      if (impression) {
+        this.props.dispatch(impression);
+      }
+    }
+  }
+
   render() {
-    const { placement, DiscoveryStream, data, feed } = this.props;
-
-    // Handle a render before feed has been fetched by displaying nothing
-    if (!data) {
+    const { data } = this.props;
+    if (
+      !data ||
+      !data.spocs ||
+      !data.spocs[0] ||
+      // We only display complete collections.
+      data.spocs.length < 3
+    ) {
       return null;
     }
-
-    const { title, context } = DiscoveryStream.spocs.data[placement.name] || {};
-
+    const { spocs, placement, feed } = this.props;
+    // spocs.data is spocs state data, and not an array of spocs.
+    const { title, context } = spocs.data[placement.name] || {};
     // Just in case of bad data, don't display a broken collection.
     if (!title) {
       return null;
@@ -33,23 +78,32 @@ export class _CollectionCardGrid extends React.PureComponent {
     const recsData = {
       recommendations: data.spocs,
     };
+
+    // All cards inside of a collection card grid have a slightly different type.
+    // For the case of interactions to the card grid, we use the type "COLLECTIONCARDGRID".
+    // Example, you dismiss the whole collection, we use the type "COLLECTIONCARDGRID".
+    // For interactions inside the card grid, example, you dismiss a single card in the collection,
+    // we use the type "COLLECTIONCARDGRID_CARD".
+    const type = `${this.props.type}_card`;
+
     return (
-      <div className="ds-collection-card-grid">
-        <CardGrid
-          title={title}
-          context={context}
-          data={recsData}
-          feed={feed}
-          border={this.props.border}
-          type={this.props.type}
-          dispatch={this.props.dispatch}
-          items={this.props.items}
-        />
-      </div>
+      <DSDismiss
+        onDismissClick={this.onDismissClick}
+        extraClasses={`ds-dismiss-ds-collection`}
+      >
+        <div className="ds-collection-card-grid">
+          <CardGrid
+            title={title}
+            context={context}
+            data={recsData}
+            feed={feed}
+            border={this.props.border}
+            type={type}
+            dispatch={this.props.dispatch}
+            items={this.props.items}
+          />
+        </div>
+      </DSDismiss>
     );
   }
 }
-
-export const CollectionCardGrid = connect(state => ({
-  DiscoveryStream: state.DiscoveryStream,
-}))(_CollectionCardGrid);
