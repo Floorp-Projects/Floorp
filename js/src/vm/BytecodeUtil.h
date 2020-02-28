@@ -727,12 +727,15 @@ bool GetPredecessorBytecodes(JSScript* script, jsbytecode* pc,
                              PcVector& predecessors);
 
 #if defined(DEBUG) || defined(JS_JITSPEW)
+
+enum class DisassembleSkeptically { No, Yes };
+
 /*
  * Disassemblers, for debugging only.
  */
-extern MOZ_MUST_USE bool Disassemble(JSContext* cx,
-                                     JS::Handle<JSScript*> script, bool lines,
-                                     Sprinter* sp);
+extern MOZ_MUST_USE bool Disassemble(
+    JSContext* cx, JS::Handle<JSScript*> script, bool lines, Sprinter* sp,
+    DisassembleSkeptically skeptically = DisassembleSkeptically::No);
 
 unsigned Disassemble1(JSContext* cx, JS::Handle<JSScript*> script,
                       jsbytecode* pc, unsigned loc, bool lines, Sprinter* sp);
