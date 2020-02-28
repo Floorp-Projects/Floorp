@@ -8,11 +8,13 @@
 #define mozilla_net_InterceptedHttpChannel_h
 
 #include "HttpBaseChannel.h"
+#include "nsIAsyncVerifyRedirectCallback.h"
 #include "nsINetworkInterceptController.h"
 #include "nsIInputStream.h"
 #include "nsICacheInfoChannel.h"
 #include "nsIChannelWithDivertableParentListener.h"
 #include "nsIThreadRetargetableRequest.h"
+#include "nsIThreadRetargetableStreamListener.h"
 
 namespace mozilla {
 namespace net {

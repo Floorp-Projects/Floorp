@@ -20,6 +20,7 @@
 namespace mozilla {
 namespace net {
 
+class HttpConnectionUDP;
 class Http3Stream;
 class QuicSocketControl;
 
@@ -48,7 +49,7 @@ class Http3Session final : public nsAHttpTransaction,
 
   Http3Session();
   nsresult Init(const nsACString& aOrigin, nsISocketTransport* aSocketTransport,
-                nsHttpConnection* readerWriter);
+                HttpConnectionUDP* readerWriter);
 
   bool IsConnected() const { return mState == CONNECTED; }
   bool IsClosing() const { return (mState == CLOSING || mState == CLOSED); }
@@ -157,7 +158,7 @@ class Http3Session final : public nsAHttpTransaction,
 
   nsTArray<uint8_t> mPacketToSend;
 
-  RefPtr<nsHttpConnection> mSegmentReaderWriter;
+  RefPtr<HttpConnectionUDP> mSegmentReaderWriter;
 
   // The underlying socket transport object is needed to propogate some events
   RefPtr<nsISocketTransport> mSocketTransport;

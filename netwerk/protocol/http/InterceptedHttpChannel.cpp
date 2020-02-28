@@ -7,7 +7,12 @@
 #include "InterceptedHttpChannel.h"
 #include "nsContentSecurityManager.h"
 #include "nsEscape.h"
+#include "mozilla/dom/ChannelInfo.h"
 #include "mozilla/dom/PerformanceStorage.h"
+#include "nsHttpChannel.h"
+#include "nsIRedirectResultListener.h"
+#include "nsStringStream.h"
+#include "nsStreamUtils.h"
 
 namespace mozilla {
 namespace net {
