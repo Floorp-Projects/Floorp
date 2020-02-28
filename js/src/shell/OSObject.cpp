@@ -8,6 +8,7 @@
 
 #include "shell/OSObject.h"
 
+#include "mozilla/ScopeExit.h"
 #include "mozilla/TextUtils.h"
 
 #include <errno.h>
@@ -16,7 +17,10 @@
 #  include <direct.h>
 #  include <process.h>
 #  include <string.h>
+#  include <windows.h>
 #else
+#  include <dirent.h>
+#  include <sys/types.h>
 #  include <sys/wait.h>
 #  include <unistd.h>
 #endif
@@ -322,6 +326,99 @@ static bool osfile_readRelativeToScript(JSContext* cx, unsigned argc,
   return ReadFile(cx, argc, vp, true);
 }
 
+static bool osfile_listDir(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  if (args.length() != 1) {
+    JS_ReportErrorASCII(cx, "os.file.listDir requires 1 argument");
+    return false;
+  }
+
+  if (!args[0].isString()) {
+    JS_ReportErrorNumberASCII(cx, js::shell::my_GetErrorMessage, nullptr,
+                              JSSMSG_INVALID_ARGS, "os.file.listDir");
+    return false;
+  }
+
+  RootedString givenPath(cx, args[0].toString());
+  RootedString str(cx, ResolvePath(cx, givenPath, ScriptRelative));
+  if (!str) {
+    return false;
+  }
+
+  UniqueChars pathname = JS_EncodeStringToLatin1(cx, str);
+  if (!pathname) {
+    JS_ReportErrorASCII(cx, "os.file.listDir cannot convert path to Latin1");
+    return false;
+  }
+
+  RootedValueVector elems(cx);
+  auto append = [&](const char* name) -> bool {
+    if (!(str = JS_NewStringCopyZ(cx, name))) {
+      return false;
+    }
+    if (!elems.append(StringValue(str))) {
+      js::ReportOutOfMemory(cx);
+      return false;
+    }
+    return true;
+  };
+
+#if defined(XP_UNIX)
+  {
+    DIR* dir = opendir(pathname.get());
+    if (!dir) {
+      JS_ReportErrorASCII(cx, "os.file.listDir is unable to open: %s",
+                          pathname.get());
+      return false;
+    }
+    auto close = mozilla::MakeScopeExit([&] {
+      if (closedir(dir) != 0) {
+        MOZ_CRASH("Could not close dir");
+      }
+    });
+
+    while (struct dirent* entry = readdir(dir)) {
+      if (!append(entry->d_name)) {
+        return false;
+      }
+    }
+  }
+#elif defined(XP_WIN)
+  {
+    const size_t pathlen = strlen(pathname.get());
+    Vector<char> pattern(cx);
+    if (!pattern.append(pathname.get(), pathlen) ||
+        !pattern.append(PathSeparator) || !pattern.append("*", 2)) {
+      js::ReportOutOfMemory(cx);
+      return false;
+    }
+
+    WIN32_FIND_DATA FindFileData;
+    HANDLE hFind = FindFirstFile(pattern.begin(), &FindFileData);
+    auto close = mozilla::MakeScopeExit([&] {
+      if (!FindClose(hFind)) {
+        MOZ_CRASH("Could not close Find");
+      }
+    });
+    for (bool found = (hFind != INVALID_HANDLE_VALUE); found;
+         found = FindNextFile(hFind, &FindFileData)) {
+      if (!append(FindFileData.cFileName)) {
+        return false;
+      }
+    }
+  }
+#endif
+
+  JSObject* array = JS::NewArrayObject(cx, elems);
+  if (!array) {
+    return false;
+  }
+
+  args.rval().setObject(*array);
+  return true;
+}
+
 static bool osfile_writeTypedArrayToFile(JSContext* cx, unsigned argc,
                                          Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
@@ -611,6 +708,12 @@ static const JSFunctionSpecWithHelp osfile_functions[] = {
 "  Read entire contents of filename. Returns a string, unless \"binary\" is passed\n"
 "  as the second argument, in which case it returns a Uint8Array. Filename is\n"
 "  relative to the current working directory."),
+
+    JS_FN_HELP("listDir", osfile_listDir, 1, 0,
+"listDir(filename)",
+"  Read entire contents of a directory. The \"filename\" parameter is relate to the\n"
+"  current working directory.Returns a list of filenames within the given directory.\n"
+"  Note that \".\" and \"..\" are also listed."),
 
     JS_FN_HELP("readRelativeToScript", osfile_readRelativeToScript, 1, 0,
 "readRelativeToScript(filename, [\"binary\"])",
