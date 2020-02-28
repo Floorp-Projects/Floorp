@@ -8,12 +8,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
     "resource:///modules/UrlbarProviderInterventions.jsm",
 });
 
-const SEARCH_STRINGS = {
-  CLEAR: "firefox history",
-  REFRESH: "firefox slow",
-  UPDATE: "firefox update",
-};
-
 add_task(async function init() {
   makeProfileResettable();
   await SpecialPowers.pushPrefEnv({
