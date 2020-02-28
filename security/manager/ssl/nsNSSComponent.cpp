@@ -1969,6 +1969,9 @@ nsresult nsNSSComponent::InitializeNSS() {
     return NS_ERROR_UNEXPECTED;
   }
 
+  nsCOMPtr<nsIClientAuthRemember> cars =
+      do_GetService(NS_CLIENTAUTHREMEMBER_CONTRACTID);
+
   MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("NSS Initialization done\n"));
 
   {
@@ -2199,7 +2202,14 @@ nsresult nsNSSComponent::LogoutAuthenticatedPK11() {
         NS_LITERAL_CSTRING("all:temporary-certificates"), 0);
   }
 
-  nsClientAuthRememberService::ClearAllRememberedDecisions();
+  nsCOMPtr<nsIClientAuthRemember> svc =
+      do_GetService(NS_CLIENTAUTHREMEMBER_CONTRACTID);
+
+  if (svc) {
+    nsresult rv = svc->ClearRememberedDecisions();
+
+    Unused << NS_WARN_IF(NS_FAILED(rv));
+  }
 
   nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
   if (os) {
