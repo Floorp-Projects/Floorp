@@ -33,6 +33,7 @@ import six
 import sys
 
 from mozbuild.makeutil import Makefile
+from mozpack.path import normsep
 
 # hack around win32 mangling our line endings
 # http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/65443
@@ -828,9 +829,9 @@ class Preprocessor:
             self.curdir = os.path.dirname(abspath)
             self.includes.add(six.ensure_text(abspath))
             if self.topobjdir and path_starts_with(abspath, self.topobjdir):
-                abspath = '$OBJDIR' + abspath[len(self.topobjdir):]
+                abspath = '$OBJDIR' + normsep(abspath[len(self.topobjdir):])
             elif self.topsrcdir and path_starts_with(abspath, self.topsrcdir):
-                abspath = '$SRCDIR' + abspath[len(self.topsrcdir):]
+                abspath = '$SRCDIR' + normsep(abspath[len(self.topsrcdir):])
             self.context['FILE'] = abspath
             self.context['DIRECTORY'] = os.path.dirname(abspath)
         self.context['LINE'] = 0
