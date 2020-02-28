@@ -29,24 +29,9 @@ namespace layers {
 using namespace mozilla::ipc;
 
 SharedPlanarYCbCrImage::SharedPlanarYCbCrImage(ImageClient* aCompositable)
-    : mCompositable(aCompositable),
-      mTextureFlags(aCompositable->GetTextureFlags()) {
+    : mCompositable(aCompositable) {
   MOZ_COUNT_CTOR(SharedPlanarYCbCrImage);
-
-  static const uint32_t MAX_POOLED_VIDEO_COUNT = 5;
-
-  if (!mCompositable->HasTextureClientRecycler()) {
-    // Initialize TextureClientRecycler
-    mCompositable->GetTextureClientRecycler()->SetMaxPoolSize(
-        MAX_POOLED_VIDEO_COUNT);
-  }
-  mRecycleAllocator = mCompositable->GetTextureClientRecycler();
 }
-
-SharedPlanarYCbCrImage::SharedPlanarYCbCrImage(
-    TextureClientRecycleAllocator* aRecycleAllocator)
-    : mRecycleAllocator(aRecycleAllocator),
-      mTextureFlags(TextureFlags::DEFAULT) {}
 
 SharedPlanarYCbCrImage::~SharedPlanarYCbCrImage() {
   MOZ_COUNT_DTOR(SharedPlanarYCbCrImage);
@@ -109,10 +94,19 @@ bool SharedPlanarYCbCrImage::IsValid() const {
 
 bool SharedPlanarYCbCrImage::Allocate(PlanarYCbCrData& aData) {
   MOZ_ASSERT(!mTextureClient, "This image already has allocated data");
+  static const uint32_t MAX_POOLED_VIDEO_COUNT = 5;
+
+  if (!mCompositable->HasTextureClientRecycler()) {
+    // Initialize TextureClientRecycler
+    mCompositable->GetTextureClientRecycler()->SetMaxPoolSize(
+        MAX_POOLED_VIDEO_COUNT);
+  }
 
   {
-    YCbCrTextureClientAllocationHelper helper(aData, mTextureFlags);
-    mTextureClient = mRecycleAllocator->CreateOrRecycle(helper);
+    YCbCrTextureClientAllocationHelper helper(aData,
+                                              mCompositable->GetTextureFlags());
+    mTextureClient =
+        mCompositable->GetTextureClientRecycler()->CreateOrRecycle(helper);
   }
 
   if (!mTextureClient) {
