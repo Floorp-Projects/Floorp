@@ -47,6 +47,9 @@ if CONFIG['ENABLE_WASM_CRANELIFT']:
     else:
         gkrust_features += ['cranelift_none']
 
+if CONFIG['JS_ENABLE_SMOOSH']:
+    gkrust_features += ['smoosh']
+
 if CONFIG['MOZ_GECKO_PROFILER']:
     gkrust_features += ['gecko_profiler']
 

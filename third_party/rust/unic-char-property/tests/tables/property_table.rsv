@@ -1,0 +1,3 @@
+CharDataTable::Range(&[
+    (chars!(' '..='~'), ()),
+])

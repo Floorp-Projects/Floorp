@@ -1,0 +1,46 @@
+name: CI Daily
+
+on:
+  schedule:
+    # Run daily at 00:00
+    - cron:  '0 0 * * 0-6'
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Setup Python
+      uses: actions/setup-python@v1
+      with:
+        python-version: "3.7"
+    - uses: actions/checkout@v2
+      with:
+        ref: ci_results
+    - name: Get Fuzzbugs
+      run: |
+        cd .metrics
+        # Only update this if it doesn't already exist.
+        # This action is only used to calculate the days since the last fuzzbug.
+        if [ ! -f count/fuzzbug.json ]; then
+          curl "https://api.github.com/repos/mozilla-spidermonkey/jsparagus/issues?labels=libFuzzer&state=all" > count/fuzzbug.json
+        fi
+        python fuzzbug_date_badge.py
+        git add badges/since-last-fuzzbug.json
+        git add count/fuzzbug.json
+    - name: Commit files
+      # fails if no files to commit
+      continue-on-error: true
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git commit -m "update NotImplemented Count" -a
+    - name: Push changes
+      # fails if no files to commit
+      continue-on-error: true
+      uses: ad-m/github-push-action@master
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        branch: ci_results
+        force: true

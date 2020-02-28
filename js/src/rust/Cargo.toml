@@ -14,6 +14,7 @@ cranelift_arm32 = ['jsrust_shared/cranelift_arm32']
 cranelift_arm64 = ['jsrust_shared/cranelift_arm64']
 cranelift_none = ['jsrust_shared/cranelift_none']
 simd-accel = ['jsrust_shared/simd-accel']
+smoosh = ['jsrust_shared/smoosh']
 
 [dependencies]
 jsrust_shared = { path = "./shared" }

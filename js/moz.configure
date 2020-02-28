@@ -18,6 +18,21 @@ def building_js(build_project):
 option(env='JS_STANDALONE', default=building_js,
        help='Reserved for internal use')
 
+# SmooshMonkey (new frontend)
+# ==================================================
+
+# Define here in order to use the option from bindgen.configure.
+js_option('--enable-smoosh', default=False,
+          help='Enable SmooshMonkey (new JS engine frontend)')
+
+@depends('--enable-smoosh')
+def enable_smoosh(value):
+    if value:
+        return True
+
+set_config('JS_ENABLE_SMOOSH', enable_smoosh)
+set_define('JS_ENABLE_SMOOSH', enable_smoosh)
+
 include('../build/moz.configure/rust.configure',
         when='--enable-compile-environment')
 include('../build/moz.configure/bindgen.configure',

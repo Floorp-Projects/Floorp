@@ -20,6 +20,9 @@
 #include "frontend/EitherParser.h"
 #include "frontend/ErrorReporter.h"
 #include "frontend/FoldConstants.h"
+#ifdef JS_ENABLE_SMOOSH
+#  include "frontend/Frontend2.h"  // Smoosh
+#endif
 #include "frontend/ModuleSharedContext.h"
 #include "frontend/Parser.h"
 #include "js/SourceText.h"
@@ -220,6 +223,19 @@ JSScript* frontend::CompileGlobalScript(CompilationInfo& compilationInfo,
 JSScript* frontend::CompileGlobalScript(CompilationInfo& compilationInfo,
                                         GlobalSharedContext& globalsc,
                                         JS::SourceText<Utf8Unit>& srcBuf) {
+#ifdef JS_ENABLE_SMOOSH
+  if (compilationInfo.cx->options().trySmoosh()) {
+    bool unimplemented = false;
+    auto script =
+        Smoosh::compileGlobalScript(compilationInfo, srcBuf, &unimplemented);
+    if (!unimplemented) {
+      return script;
+    }
+
+    fprintf(stderr, "Falling back!\n");
+  }
+#endif  // JS_ENABLE_SMOOSH
+
   return CreateGlobalScript(compilationInfo, globalsc, srcBuf);
 }
 

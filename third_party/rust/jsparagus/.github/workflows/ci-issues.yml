@@ -1,0 +1,44 @@
+name: CI Issues
+
+on:
+  issues:
+    types: [opened, closed, reopened]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Setup Python
+      uses: actions/setup-python@v1
+      with:
+        python-version: "3.7"
+    - uses: actions/checkout@v2
+      with:
+        ref: ci_results
+    - name: Count Fuzzbugs
+      run: |
+        cd .metrics
+        # Get the new list
+        curl "https://api.github.com/repos/mozilla-spidermonkey/jsparagus/issues?labels=libFuzzer&state=all" > count/fuzzbug.json
+        python fuzzbug_count_badge.py
+        python fuzzbug_date_badge.py
+        git add badges/since-last-fuzzbug.json
+        git add badges/open-fuzzbug.json
+        git add count/fuzzbug.json
+    - name: Commit files
+      # fails if no files to commit
+      continue-on-error: true
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git commit -m "update NotImplemented Count" -a
+    - name: Push changes
+      # fails if no files to commit
+      continue-on-error: true
+      uses: ad-m/github-push-action@master
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        branch: ci_results
+        force: true

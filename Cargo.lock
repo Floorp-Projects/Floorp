@@ -404,6 +404,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8380105befe91099e6f69206164072c05bc92427ff6aa8a5171388317346dd75"
 
 [[package]]
+name = "bumpalo"
+version = "2.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ad807f2fc2bf185eeb98ff3a901bd46dc5ad58163d0fa4577ba0d25674d71708"
+
+[[package]]
 name = "byte-tools"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1958,6 +1964,57 @@ dependencies = [
 ]
 
 [[package]]
+name = "jsparagus"
+version = "0.1.0"
+source = "git+https://github.com/mozilla-spidermonkey/jsparagus?rev=0b248045fda0cc9b7323c73b81cfbcab71f4a9ef#0b248045fda0cc9b7323c73b81cfbcab71f4a9ef"
+dependencies = [
+ "jsparagus-ast",
+ "jsparagus-emitter",
+ "jsparagus-generated-parser",
+ "jsparagus-parser",
+]
+
+[[package]]
+name = "jsparagus-ast"
+version = "0.1.0"
+source = "git+https://github.com/mozilla-spidermonkey/jsparagus?rev=0b248045fda0cc9b7323c73b81cfbcab71f4a9ef#0b248045fda0cc9b7323c73b81cfbcab71f4a9ef"
+dependencies = [
+ "bumpalo",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "jsparagus-emitter"
+version = "0.1.0"
+source = "git+https://github.com/mozilla-spidermonkey/jsparagus?rev=0b248045fda0cc9b7323c73b81cfbcab71f4a9ef#0b248045fda0cc9b7323c73b81cfbcab71f4a9ef"
+dependencies = [
+ "bumpalo",
+ "byteorder",
+ "jsparagus-ast",
+]
+
+[[package]]
+name = "jsparagus-generated-parser"
+version = "0.1.0"
+source = "git+https://github.com/mozilla-spidermonkey/jsparagus?rev=0b248045fda0cc9b7323c73b81cfbcab71f4a9ef#0b248045fda0cc9b7323c73b81cfbcab71f4a9ef"
+dependencies = [
+ "bumpalo",
+ "jsparagus-ast",
+]
+
+[[package]]
+name = "jsparagus-parser"
+version = "0.1.0"
+source = "git+https://github.com/mozilla-spidermonkey/jsparagus?rev=0b248045fda0cc9b7323c73b81cfbcab71f4a9ef#0b248045fda0cc9b7323c73b81cfbcab71f4a9ef"
+dependencies = [
+ "bumpalo",
+ "jsparagus-ast",
+ "jsparagus-generated-parser",
+ "unic-ucd-ident",
+]
+
+[[package]]
 name = "jsrust"
 version = "0.1.0"
 dependencies = [
@@ -1974,6 +2031,7 @@ dependencies = [
  "encoding_c_mem",
  "mozglue-static",
  "mozilla-central-workspace-hack",
+ "smoosh",
 ]
 
 [[package]]
@@ -3810,6 +3868,14 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5c2fb2ec9bcd216a5b0d0ccf31ab17b5ed1d627960edff65bbe95d3ce221cefc"
 
 [[package]]
+name = "smoosh"
+version = "0.1.0"
+dependencies = [
+ "bumpalo",
+ "jsparagus",
+]
+
+[[package]]
 name = "socket2"
 version = "0.3.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4389,6 +4455,27 @@ dependencies = [
 ]
 
 [[package]]
+name = "unic-char-property"
+version = "0.9.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a8c57a407d9b6fa02b4795eb81c5b6652060a15a7903ea981f3d723e6c0be221"
+dependencies = [
+ "unic-char-range",
+]
+
+[[package]]
+name = "unic-char-range"
+version = "0.9.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0398022d5f700414f6b899e10b8348231abf9173fa93144cbc1a43b9793c1fbc"
+
+[[package]]
+name = "unic-common"
+version = "0.9.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "80d7ff825a6a654ee85a63e80f92f054f904f21e7d12da4e22f9834a4aaa35bc"
+
+[[package]]
 name = "unic-langid"
 version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4415,6 +4502,26 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c43c61e94492eb67f20facc7b025778a904de83d953d8fcb60dd9adfd6e2d0ea"
 dependencies = [
  "tinystr",
+]
+
+[[package]]
+name = "unic-ucd-ident"
+version = "0.9.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e230a37c0381caa9219d67cf063aa3a375ffed5bf541a452db16e744bdab6987"
+dependencies = [
+ "unic-char-property",
+ "unic-char-range",
+ "unic-ucd-version",
+]
+
+[[package]]
+name = "unic-ucd-version"
+version = "0.9.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "96bd2f2237fe450fcd0a1d2f5f4e91711124f7857ba2e964247776ebeeb7b0c4"
+dependencies = [
+ "unic-common",
 ]
 
 [[package]]

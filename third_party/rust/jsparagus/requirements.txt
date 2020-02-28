@@ -1,0 +1,4 @@
+## The following requirements were added by pip freeze:
+html5lib==1.0.1
+six==1.11.0
+webencodings==0.5.1

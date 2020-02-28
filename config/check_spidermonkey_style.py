@@ -61,6 +61,7 @@ included_inclnames_to_ignore = set([
     'double-conversion/double-conversion.h',  # strange MFBT case
     'javascript-trace.h',       # generated in $OBJDIR if HAVE_DTRACE is defined
     'frontend/ReservedWordsGenerated.h',  # generated in $OBJDIR
+    'frontend/smoosh_generated.h',        # generated in $OBJDIR
     'gc/StatsPhasesGenerated.h',         # generated in $OBJDIR
     'gc/StatsPhasesGenerated.inc',       # generated in $OBJDIR
     'jit/LOpcodes.h',           # generated in $OBJDIR

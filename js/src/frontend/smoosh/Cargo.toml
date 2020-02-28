@@ -1,0 +1,12 @@
+[package]
+name = "smoosh"
+version = "0.1.0"
+authors = ["The jsparagus Project Developers"]
+edition = "2018"
+license = "MIT/Apache-2.0"
+
+[dependencies]
+bumpalo = "2.6.0"
+jsparagus = { git = "https://github.com/mozilla-spidermonkey/jsparagus", rev = "0b248045fda0cc9b7323c73b81cfbcab71f4a9ef" }
+# For local development, replace above with
+# jsparagus = { path = "{path to jsparagus}" }

@@ -1,0 +1,14 @@
+steps:
+  - script: |
+      (test -x $HOME/.cargo/bin/cargo-install-update || cargo install cargo-update)
+    displayName: Install `cargo install-update`
+  - script: |
+      (test -x $HOME/.cargo/bin/cargo-readme || cargo install --vers "^3" cargo-readme)
+    displayName: Install `cargo readme`
+  - script: |
+      cargo install-update -a
+    displayName: Update `cargo install`ed binaries
+  - script: |
+      cargo install-update --version
+      cargo readme --version
+    displayName: Query `cargo install-update` and `cargo readme` versions

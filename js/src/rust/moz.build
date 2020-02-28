@@ -19,6 +19,9 @@ if CONFIG['ENABLE_WASM_CRANELIFT']:
 if CONFIG['MOZ_RUST_SIMD']:
     features += ['simd-accel']
 
+if CONFIG['JS_ENABLE_SMOOSH']:
+    features += ['smoosh']
+
 RustLibrary('jsrust', features)
 
 if CONFIG['JS_SHARED_LIBRARY']:

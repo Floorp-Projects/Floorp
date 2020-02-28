@@ -17,6 +17,11 @@ git = "https://github.com/mozilla/neqo"
 replace-with = "vendored-sources"
 tag = "v0.1.14"
 
+[source."https://github.com/mozilla-spidermonkey/jsparagus"]
+git = "https://github.com/mozilla-spidermonkey/jsparagus"
+replace-with = "vendored-sources"
+rev = "0b248045fda0cc9b7323c73b81cfbcab71f4a9ef"
+
 [source."https://github.com/kvark/spirv_cross"]
 branch = "wgpu"
 git = "https://github.com/kvark/spirv_cross"
