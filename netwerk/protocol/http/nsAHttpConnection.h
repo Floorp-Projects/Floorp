@@ -6,7 +6,6 @@
 #define nsAHttpConnection_h__
 
 #include "nsHttp.h"
-#include "HttpConnectionBase.h"
 #include "nsISupports.h"
 #include "nsAHttpTransaction.h"
 #include "HttpTrafficAnalyzer.h"
@@ -19,7 +18,7 @@ namespace mozilla {
 namespace net {
 
 class nsHttpConnectionInfo;
-class nsHttpConnection;
+class HttpConnectionBase;
 class nsHttpRequestHead;
 class nsHttpResponseHead;
 
