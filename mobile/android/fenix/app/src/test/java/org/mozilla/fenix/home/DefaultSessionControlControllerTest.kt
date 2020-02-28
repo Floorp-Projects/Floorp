@@ -50,6 +50,7 @@ class DefaultSessionControlControllerTest {
     private val getListOfTabs: () -> List<Tab> = { emptyList() }
     private val hideOnboarding: () -> Unit = mockk(relaxed = true)
     private val openSettingsScreen: () -> Unit = mockk(relaxed = true)
+    private val openSearchScreen: () -> Unit = mockk(relaxed = true)
     private val invokePendingDeleteJobs: () -> Unit = mockk(relaxed = true)
     private val registerCollectionStorageObserver: () -> Unit = mockk(relaxed = true)
     private val scrollToTheTop: () -> Unit = mockk(relaxed = true)
@@ -92,7 +93,8 @@ class DefaultSessionControlControllerTest {
             registerCollectionStorageObserver = registerCollectionStorageObserver,
             scrollToTheTop = scrollToTheTop,
             showDeleteCollectionPrompt = showDeleteCollectionPrompt,
-            openSettingsScreen = openSettingsScreen
+            openSettingsScreen = openSettingsScreen,
+            openSearchScreen = openSearchScreen
         )
     }
 
