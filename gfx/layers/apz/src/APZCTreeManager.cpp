@@ -642,7 +642,7 @@ APZCTreeManager::UpdateHitTestingTreeImpl(const ScrollNode& aRoot,
   }
 
   APZCTM_LOG("APZCTreeManager (%p)\n", this);
-  if (mRootNode) {
+  if (mRootNode && MOZ_LOG_TEST(sApzMgrLog, LogLevel::Debug)) {
     mRootNode->Dump("  ");
   }
   SendSubtreeTransformsToChromeMainThread(nullptr);
