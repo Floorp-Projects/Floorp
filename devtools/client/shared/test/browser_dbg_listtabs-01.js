@@ -83,7 +83,7 @@ function testAttachRemovedTab() {
       deferred.reject();
     });
 
-    gTab2Front.attach().then(null, error => {
+    gTab2Front.reconfigure({}).then(null, error => {
       ok(
         error.message.includes("noSuchActor"),
         "Actor is gone since the tab was removed."

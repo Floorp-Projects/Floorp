@@ -61,11 +61,13 @@ add_task(async function() {
       "so that the about:devtools-toolbox tab loses focus"
   );
   newNavigator.gBrowser.selectedTab = newNavigator.gBrowser.addTab(
-    "about:blank",
+    "data:text/html,<title>TEST_TAB</title>",
     {
       triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
     }
   );
+  await waitUntil(() => findDebugTargetByText("TEST_TAB", document));
+
   clickInspectButton(inspectionTarget, document);
   assertDevtoolsToolboxTabState(devtoolsURL);
 

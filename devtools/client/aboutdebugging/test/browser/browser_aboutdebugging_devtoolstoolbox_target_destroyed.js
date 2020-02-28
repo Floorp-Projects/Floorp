@@ -34,6 +34,8 @@ add_task(async function() {
 
   info("closing the toolbox");
   await removeTab(devtoolsTab);
+  await waitUntil(() => !findDebugTargetByText("Toolbox -", document));
+
   info("removing about:debugging tab");
   await removeTab(tab);
 });

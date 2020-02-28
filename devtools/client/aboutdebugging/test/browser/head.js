@@ -311,12 +311,18 @@ async function connectToRuntime(deviceName, document) {
 
 async function selectRuntime(deviceName, name, document) {
   const sidebarItem = findSidebarItemByText(deviceName, document);
+  const store = document.defaultView.AboutDebugging.store;
+  const onSelectPageSuccess = waitForDispatch(store, "SELECT_PAGE_SUCCESS");
+
   sidebarItem.querySelector(".qa-sidebar-link").click();
 
   await waitUntil(() => {
     const runtimeInfo = document.querySelector(".qa-runtime-name");
     return runtimeInfo && runtimeInfo.textContent.includes(name);
   });
+
+  info("Wait for SELECT_PAGE_SUCCESS to be dispatched");
+  await onSelectPageSuccess;
 }
 
 function getToolbox(win) {
