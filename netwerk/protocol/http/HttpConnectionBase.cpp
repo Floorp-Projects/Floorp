@@ -46,23 +46,6 @@ HttpConnectionBase::HttpConnectionBase()
   LOG(("Creating HttpConnectionBase @%p\n", this));
 }
 
-//-----------------------------------------------------------------------------
-// nsHttpConnection::nsISupports
-//-----------------------------------------------------------------------------
-
-//NS_IMPL_ADDREF(HttpConnectionBase)
-//NS_IMPL_RELEASE(HttpConnectionBase)
-
-//NS_INTERFACE_MAP_BEGIN(HttpConnectionBase)
-//  NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
-//  NS_INTERFACE_MAP_ENTRY_CONCRETE(HttpConnectionBase)
-//NS_INTERFACE_MAP_END
-
-uint32_t HttpConnectionBase::TimeToLive() {
-  static const PRIntervalTime k5Sec = PR_SecondsToInterval(5);
-  return k5Sec;
-}
-
 void HttpConnectionBase::BootstrapTimings(TimingStruct times) {
   mBootstrappedTimingsSet = true;
   mBootstrappedTimings = times;

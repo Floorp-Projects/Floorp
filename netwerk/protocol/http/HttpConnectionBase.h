@@ -75,14 +75,7 @@ class HttpConnectionBase : public nsSupportsWeakReference {
   virtual bool CanReuse() = 0;  // can this connection be reused?
   virtual bool CanDirectlyActivate() = 0;
 
-  // Returns time in seconds for how long connection can be reused.
-  virtual uint32_t TimeToLive();
-
   virtual void DontReuse() = 0;
-
-  virtual bool IsUrgentStartPreferred() const { return false; }
-
-  virtual void SetUrgentStartPreferred(bool urgent) {}
 
   nsISocketTransport* Transport() { return mSocketTransport; }
   nsAHttpTransaction* Transaction() { return mTransaction; }
@@ -100,24 +93,8 @@ class HttpConnectionBase : public nsSupportsWeakReference {
                                               nsIAsyncInputStream**,
                                               nsIAsyncOutputStream**) = 0;
 
-  virtual void SetIsReusedAfter(uint32_t afterMilliseconds) {}
-
-  virtual int64_t MaxBytesRead() { return 0; }
-
-  // When a persistent connection is in the connection manager idle
-  // connection pool, the nsHttpConnection still reads errors and hangups
-  // on the socket so that it can be proactively released if the server
-  // initiates a termination. Only call on socket thread.
-  virtual void BeginIdleMonitoring() {}
-  virtual void EndIdleMonitoring() {}
-
   virtual bool UsingSpdy() { return false; }
-  virtual bool EverUsedSpdy() { return false; }
   virtual bool UsingHttp3() { return false; }
-
-  // true when connection SSL NPN phase is complete and we know
-  // authoritatively whether UsingSpdy() or not.
-  virtual bool ReportedNPN() { return false; }
 
   virtual void SetTransactionCaps(uint32_t aCaps) { mTransactionCaps = aCaps; }
 

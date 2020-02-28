@@ -161,33 +161,19 @@ void nsHttpConnection::PrintDiagnostics(nsCString& log) {
 void HttpConnectionUDP::PrintDiagnostics(nsCString& log) {
   log.AppendPrintf("    CanDirectlyActivate = %d\n", CanDirectlyActivate());
 
-  log.AppendPrintf("    npncomplete = %d  setupSSLCalled = %d\n", mNPNComplete,
-                   mSetupSSLCalled);
-
-  log.AppendPrintf("    spdyVersion = %d  reportedSpdy = %d everspdy = %d\n",
-                   static_cast<int32_t>(mUsingSpdyVersion), mReportedSpdy,
-                   mEverUsedSpdy);
+  log.AppendPrintf("    npncomplete = %d\n", mNPNComplete);
 
   log.AppendPrintf("    iskeepalive = %d  dontReuse = %d isReused = %d\n",
                    IsKeepAlive(), mDontReuse, mIsReused);
-
-  log.AppendPrintf("    mTransaction = %d mSpdySession = %d\n",
-                   !!mTransaction.get(), !!mSpdySession.get());
 
   PRIntervalTime now = PR_IntervalNow();
   log.AppendPrintf("    time since last read = %ums\n",
                    PR_IntervalToMilliseconds(now - mLastReadTime));
 
-  log.AppendPrintf("    max-read/read/written %" PRId64 "/%" PRId64 "/%" PRId64
-                   "\n",
-                   mMaxBytesRead, mTotalBytesRead, mTotalBytesWritten);
+  log.AppendPrintf("    read/written %" PRId64 "/%" PRId64 "\n",
+                   mTotalBytesRead, mTotalBytesWritten);
 
   log.AppendPrintf("    rtt = %ums\n", PR_IntervalToMilliseconds(mRtt));
-
-  log.AppendPrintf("    idlemonitoring = %d transactionCount=%d\n",
-                   mIdleMonitoring, mHttp1xTransactionCount);
-
-  if (mSpdySession) mSpdySession->PrintDiagnostics(log);
 }
 
 void Http2Session::PrintDiagnostics(nsCString& log) {
