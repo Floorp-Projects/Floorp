@@ -36,7 +36,10 @@ job-defaults:
     run-on-tasks-for: []
     attributes:
         build-type: nightly 
-        nightly: true
+        # cannot safely run this in Firebase
+        # turning off til we can safely run test in taskcluster
+        # https://github.com/mozilla-mobile/fenix/issues/7702
+        #nightly: true
     dependencies:
         signing: signing-nightly
         signing-android-test: signing-android-test-nightly
