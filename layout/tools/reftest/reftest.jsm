@@ -1576,6 +1576,9 @@ function RegisterMessageListenersAndLoadContentScript(aReload)
         },
         child: {
           moduleURI: "resource://reftest/ReftestFissionChild.jsm",
+          events: {
+            MozAfterPaint: {},
+          },
         },
         allFrames: true,
         includeChrome: true,
