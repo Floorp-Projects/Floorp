@@ -133,6 +133,13 @@ js_option(env='MOZ_PGO', help='Build with profile guided optimizations')
 
 set_config('MOZ_PGO', depends('MOZ_PGO')(lambda x: bool(x)))
 
+
+wine = check_prog(
+    'WINE', ['wine'], allow_missing=True,
+    when=depends(target, host, compile_environment)(
+        lambda t, h, c: c and t.kernel == 'WINNT' and h.kernel == 'Linux'))
+
+
 include('build/moz.configure/toolchain.configure',
         when='--enable-compile-environment')
 
@@ -535,11 +542,6 @@ check_prog('HFS_TOOL', extra_programs.HFS_TOOL,
            allow_missing=True)
 check_prog('RPMBUILD', extra_programs.RPMBUILD,
            allow_missing=True)
-
-wine = check_prog(
-    'WINE', ['wine'], allow_missing=True,
-    when=depends(target, host, compile_environment)(
-        lambda t, h, c: c and t.kernel == 'WINNT' and h.kernel == 'Linux'))
 
 
 @depends(target)
