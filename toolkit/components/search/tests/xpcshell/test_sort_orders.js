@@ -159,20 +159,20 @@ add_task(async function test_engine_sort_with_distro() {
 
   expected = modernConfig
     ? [
-        "Test search engine",
         "engine-pref",
         "engine-resourceicon",
         "engine-rel-searchform-purpose",
         "engine-chromeicon",
+        "Test search engine",
         "Test search engine (Reordered)",
         "nonbuiltin1",
       ]
     : [
-        "Test search engine",
         "engine-pref",
         "engine-resourceicon",
         "engine-rel-searchform-purpose",
         "engine-chromeicon",
+        "Test search engine",
         "nonbuiltin1",
         "Test search engine (Reordered)",
       ];
