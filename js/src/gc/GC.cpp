@@ -221,6 +221,7 @@
 #include "gc/GCLock.h"
 #include "gc/GCTrace.h"
 #include "gc/Memory.h"
+#include "gc/ParallelWork.h"
 #include "gc/Policy.h"
 #include "gc/WeakMap.h"
 #include "jit/BaselineJIT.h"
@@ -2206,79 +2207,24 @@ static void UpdateArenaPointers(MovingTracer* trc, Arena* arena) {
   }
 }
 
-namespace js {
-namespace gc {
-
 struct ArenaListSegment {
   Arena* begin;
   Arena* end;
 };
 
-struct ArenasToUpdate {
-  ArenasToUpdate(Zone* zone, AllocKinds kinds);
-  bool done() { return kind == AllocKind::LIMIT; }
-  ArenaListSegment getArenasToUpdate(AutoLockHelperThreadState& lock,
-                                     unsigned maxLength);
-
- private:
-  AllocKinds kinds;  // Selects which thing kinds to update
-  Zone* zone;        // Zone to process
-  AllocKind kind;    // Current alloc kind to process
-  Arena* arena;      // Next arena to process
-
-  AllocKind nextAllocKind(AllocKind i) { return AllocKind(uint8_t(i) + 1); }
-  Arena* next(AutoLockHelperThreadState& lock);
-};
-
-ArenasToUpdate::ArenasToUpdate(Zone* zone, AllocKinds kinds)
-    : kinds(kinds), zone(zone), kind(AllocKind::FIRST), arena(nullptr) {
-  MOZ_ASSERT(zone->isGCCompacting());
+/*
+ * Update the internal pointers for all arenas in a segment of an arena list.
+ */
+static void UpdateArenaListSegmentPointers(GCRuntime* gc,
+                                           const ArenaListSegment& arenas) {
+  MOZ_ASSERT(arenas.begin);
+  MovingTracer trc(gc->rt);
+  for (Arena* arena = arenas.begin; arena != arenas.end; arena = arena->next) {
+    UpdateArenaPointers(&trc, arena);
+  }
 }
 
-Arena* ArenasToUpdate::next(AutoLockHelperThreadState& lock) {
-  // Find the next arena to update.
-  //
-  // This iterates through the GC thing kinds and then through the arenas of
-  // that kind.  All state is held in the object and we just return when we find
-  // an arena.
-
-  for (; kind < AllocKind::LIMIT; kind = nextAllocKind(kind)) {
-    if (kinds.contains(kind)) {
-      if (!arena) {
-        arena = zone->arenas.getFirstArena(kind);
-      } else {
-        arena = arena->next;
-      }
-      if (arena) {
-        return arena;
-      }
-    }
-  }
-
-  MOZ_ASSERT(!arena);
-  MOZ_ASSERT(done());
-  return nullptr;
-}
-
-ArenaListSegment ArenasToUpdate::getArenasToUpdate(
-    AutoLockHelperThreadState& lock, unsigned maxLength) {
-  Arena* begin = next(lock);
-  if (!begin) {
-    return {nullptr, nullptr};
-  }
-
-  Arena* last = begin;
-  unsigned count = 1;
-  while (last->next && count < maxLength) {
-    last = last->next;
-    count++;
-  }
-
-  arena = last;
-  return {begin, last->next};
-}
-
-struct UpdatePointersTask : public GCParallelTask {
+class ArenasToUpdate {
   // Maximum number of arenas to update in one block.
 #ifdef DEBUG
   static const unsigned MaxArenasToProcess = 16;
@@ -2286,60 +2232,93 @@ struct UpdatePointersTask : public GCParallelTask {
   static const unsigned MaxArenasToProcess = 256;
 #endif
 
-  UpdatePointersTask(GCRuntime* gc, ArenasToUpdate* source,
-                     AutoLockHelperThreadState& lock)
-      : GCParallelTask(gc), source_(source) {
-    arenas_.begin = nullptr;
-    arenas_.end = nullptr;
+ public:
+  ArenasToUpdate(Zone* zone, const AllocKinds& kinds);
+
+  bool done() const { return !segmentBegin; }
+
+  ArenaListSegment get() const {
+    MOZ_ASSERT(!done());
+    return {segmentBegin, segmentEnd};
   }
 
-  void run() override;
+  void next();
 
  private:
-  ArenasToUpdate* source_;
-  ArenaListSegment arenas_;
+  AllocKinds kinds;  // Selects which thing kinds to update
+  Zone* zone;        // Zone to process
+  AllocKind kind;    // Current alloc kind to process
+  Arena* segmentBegin;
+  Arena* segmentEnd;
 
-  bool getArenasToUpdate();
-  void updateArenas();
+  static AllocKind nextAllocKind(AllocKind i) {
+    return AllocKind(uint8_t(i) + 1);
+  }
+
+  void settle();
+  void findSegmentEnd();
 };
 
-bool UpdatePointersTask::getArenasToUpdate() {
-  AutoLockHelperThreadState lock;
-  arenas_ = source_->getArenasToUpdate(lock, MaxArenasToProcess);
-  return arenas_.begin != nullptr;
+ArenasToUpdate::ArenasToUpdate(Zone* zone, const AllocKinds& kinds)
+    : kinds(kinds),
+      zone(zone),
+      kind(AllocKind::FIRST),
+      segmentBegin(nullptr),
+      segmentEnd(nullptr) {
+  MOZ_ASSERT(zone->isGCCompacting());
+  settle();
 }
 
-void UpdatePointersTask::updateArenas() {
-  MovingTracer trc(gc->rt);
-  for (Arena* arena = arenas_.begin; arena != arenas_.end;
-       arena = arena->next) {
-    UpdateArenaPointers(&trc, arena);
+void ArenasToUpdate::settle() {
+  // Called when we have set |kind| to a new kind. Sets |arena| to the next
+  // arena or null if there are no more arenas to update.
+
+  MOZ_ASSERT(!segmentBegin);
+
+  for (; kind < AllocKind::LIMIT; kind = nextAllocKind(kind)) {
+    if (!kinds.contains(kind)) {
+      continue;
+    }
+
+    Arena* arena = zone->arenas.getFirstArena(kind);
+    if (arena) {
+      segmentBegin = arena;
+      findSegmentEnd();
+      break;
+    }
   }
 }
 
-void UpdatePointersTask::run() {
-  // These checks assert when run in parallel.
-  AutoDisableProxyCheck noProxyCheck;
-
-  while (getArenasToUpdate()) {
-    updateArenas();
+void ArenasToUpdate::findSegmentEnd() {
+  // Take up to MaxArenasToProcess arenas from the list starting at
+  // |segmentBegin| and set |segmentEnd|.
+  Arena* arena = segmentBegin;
+  for (size_t i = 0; arena && i < MaxArenasToProcess; i++) {
+    arena = arena->next;
   }
+  segmentEnd = arena;
 }
 
-}  // namespace gc
-}  // namespace js
+void ArenasToUpdate::next() {
+  MOZ_ASSERT(!done());
 
-static const size_t MinCellUpdateBackgroundTasks = 2;
-static const size_t MaxCellUpdateBackgroundTasks = 8;
+  segmentBegin = segmentEnd;
+  if (segmentBegin) {
+    findSegmentEnd();
+    return;
+  }
+
+  kind = nextAllocKind(kind);
+  settle();
+}
 
 static size_t CellUpdateBackgroundTaskCount() {
   if (!CanUseExtraThreads()) {
-    return 0;
+    return 1;  // GCRuntime::startTask will run the work on the main thread.
   }
 
   size_t targetTaskCount = HelperThreadState().cpuCount / 2;
-  return std::min(std::max(targetTaskCount, MinCellUpdateBackgroundTasks),
-                  MaxCellUpdateBackgroundTasks);
+  return std::min(std::max(targetTaskCount, size_t(1)), MaxParallelWorkers);
 }
 
 static bool CanUpdateKindInBackground(AllocKind kind) {
@@ -2391,34 +2370,18 @@ void GCRuntime::updateCellPointers(Zone* zone, AllocKinds kinds,
 
   ArenasToUpdate fgArenas(zone, fgKinds);
   ArenasToUpdate bgArenas(zone, bgKinds);
-  Maybe<UpdatePointersTask> fgTask;
-  Maybe<UpdatePointersTask> bgTasks[MaxCellUpdateBackgroundTasks];
 
-  size_t tasksStarted = 0;
+  AutoLockHelperThreadState lock;
 
-  {
-    AutoLockHelperThreadState lock;
+  AutoRunParallelWork bgTasks(this, UpdateArenaListSegmentPointers,
+                              gcstats::PhaseKind::COMPACT_UPDATE_CELLS,
+                              bgArenas, bgTaskCount, lock);
 
-    fgTask.emplace(this, &fgArenas, lock);
-
-    for (size_t i = 0; i < bgTaskCount && !bgArenas.done(); i++) {
-      bgTasks[i].emplace(this, &bgArenas, lock);
-      startTask(*bgTasks[i], gcstats::PhaseKind::COMPACT_UPDATE_CELLS, lock);
-      tasksStarted++;
-    }
-  }
-
-  fgTask->runFromMainThread();
+  ParallelWorker fgTask(this, UpdateArenaListSegmentPointers, fgArenas, lock);
 
   {
-    AutoLockHelperThreadState lock;
-
-    for (size_t i = 0; i < tasksStarted; i++) {
-      joinTask(*bgTasks[i], gcstats::PhaseKind::COMPACT_UPDATE_CELLS, lock);
-    }
-    for (size_t i = tasksStarted; i < MaxCellUpdateBackgroundTasks; i++) {
-      MOZ_ASSERT(bgTasks[i].isNothing());
-    }
+    AutoUnlockHelperThreadState unlock(lock);
+    fgTask.runFromMainThread();
   }
 }
 
