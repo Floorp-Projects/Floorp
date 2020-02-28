@@ -2168,7 +2168,7 @@ bool js::GetFunctionPrototype(JSContext* cx, js::GeneratorKind generatorKind,
 }
 
 bool js::CanReuseScriptForClone(JS::Realm* realm, HandleFunction fun,
-                                HandleObject newParent) {
+                                HandleObject newEnclosingEnv) {
   MOZ_ASSERT(fun->isInterpreted());
 
   if (realm != fun->realm() || fun->isSingleton() ||
@@ -2176,16 +2176,16 @@ bool js::CanReuseScriptForClone(JS::Realm* realm, HandleFunction fun,
     return false;
   }
 
-  if (newParent->is<GlobalObject>()) {
+  if (newEnclosingEnv->is<GlobalObject>()) {
     return true;
   }
 
-  // Don't need to clone the script if newParent is a syntactic scope, since
-  // in that case we have some actual scope objects on our scope chain and
+  // Don't need to clone the script if newEnclosingEnv is a syntactic scope,
+  // since in that case we have some actual scope objects on our scope chain and
   // whatnot; whoever put them there should be responsible for setting our
   // script's flags appropriately.  We hit this case for JSOp::Lambda, for
   // example.
-  if (IsSyntacticEnvironment(newParent)) {
+  if (IsSyntacticEnvironment(newEnclosingEnv)) {
     return true;
   }
 
