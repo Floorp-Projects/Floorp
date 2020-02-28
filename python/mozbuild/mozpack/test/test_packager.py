@@ -46,7 +46,7 @@ baz@SUFFIX@
 
 
 class TestPreprocessManifest(unittest.TestCase):
-    MANIFEST_PATH = os.path.join('$OBJDIR', 'manifest')
+    MANIFEST_PATH = mozpath.join('$OBJDIR', 'manifest')
 
     EXPECTED_LOG = [
         ((MANIFEST_PATH, 2), 'add', '', 'bar/*'),
