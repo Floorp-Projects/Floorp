@@ -131,7 +131,7 @@ def generate_letter_switch(opt, unprocessed_columns, reserved_word_list,
     optimal_column = columns[optimal_column_index]
 
     # Make a copy to avoid breaking passed list.
-    columns = columns[:]
+    columns = list(columns)
     columns[optimal_column_index] = columns[unprocessed_columns - 1]
 
     list_per_column = split_list_per_column(reserved_word_list, optimal_column)
