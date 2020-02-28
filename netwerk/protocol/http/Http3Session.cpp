@@ -552,7 +552,9 @@ void Http3Session::ProcessPending() {
     MOZ_ASSERT(stream->Queued());
     stream->SetQueued(false);
     mReadyForWrite.Push(stream);
-    Unused << mConnection->ResumeSend();
+    if (mConnection) {
+      Unused << mConnection->ResumeSend();
+    }
   }
 }
 
@@ -764,10 +766,12 @@ nsresult Http3Session::ReadSegmentsAgain(nsAHttpSegmentReader* reader,
   // Call neqo-transaction.
   ProcessOutput();
 
-  Unused << mConnection->ResumeRecv();
+  if (mConnection) {
+    Unused << mConnection->ResumeRecv();
+  }
   // TODO block on max_stream_data
 
-  if (mReadyForWrite.GetSize() > 0) {
+  if ((mReadyForWrite.GetSize() > 0) && mConnection) {
     Unused << mConnection->ResumeSend();
   }
   return rv;
@@ -796,7 +800,7 @@ nsresult Http3Session::WriteSegmentsAgain(nsAHttpSegmentWriter* writer,
     return rv;
   }
   rv = ProcessEvents(count, countWritten, again);
-  if (NS_SUCCEEDED(rv)) {
+  if (NS_SUCCEEDED(rv) && mConnection) {
     Unused << mConnection->ResumeRecv();
   }
 
@@ -892,14 +896,23 @@ nsresult Http3Session::OnHeadersAvailable(nsAHttpTransaction* transaction,
                                           nsHttpRequestHead* requestHead,
                                           nsHttpResponseHead* responseHead,
                                           bool* reset) {
-  return mConnection->OnHeadersAvailable(transaction, requestHead, responseHead,
-                                         reset);
+  MOZ_ASSERT(mConnection);
+  if (mConnection) {
+    return mConnection->OnHeadersAvailable(transaction, requestHead,
+                                           responseHead, reset);
+  }
+  return NS_OK;
 }
 
-bool Http3Session::IsReused() { return mConnection->IsReused(); }
+bool Http3Session::IsReused() {
+  if (mConnection) {
+    return mConnection->IsReused();
+  }
+  return true;
+}
 
 nsresult Http3Session::PushBack(const char* buf, uint32_t len) {
-  return mConnection->PushBack(buf, len);
+  return NS_ERROR_UNEXPECTED;
 }
 
 already_AddRefed<HttpConnectionBase> Http3Session::TakeHttpConnection() {
@@ -936,7 +949,9 @@ void Http3Session::CloseTransaction(nsAHttpTransaction* aTransaction,
        this, aTransaction, static_cast<uint32_t>(aResult), stream->StreamId(),
        stream.get()));
   CloseStream(stream, aResult);
-  Unused << mConnection->ResumeSend();
+  if (mConnection) {
+    Unused << mConnection->ResumeSend();
+  }
 }
 
 void Http3Session::CloseStream(Http3Stream* aStream, nsresult aResult) {
