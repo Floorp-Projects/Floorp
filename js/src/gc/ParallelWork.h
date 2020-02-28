@@ -1,0 +1,106 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#ifndef gc_ParallelWork_h
+#define gc_ParallelWork_h
+
+#include "mozilla/Maybe.h"
+
+#include "gc/GC.h"
+#include "gc/GCParallelTask.h"
+#include "vm/HelperThreads.h"
+
+namespace js {
+
+namespace gcstats {
+enum class PhaseKind : uint8_t;
+}
+
+namespace gc {
+
+template <typename WorkItem>
+using ParallelWorkFunc = void (*)(GCRuntime*, const WorkItem&);
+
+// A GCParallelTask task that executes WorkItems from a WorkItemIterator.
+//
+// The WorkItemIterator class must supply done(), next() and get() methods. The
+// get() method must return WorkItems.
+template <typename WorkItem, typename WorkItemIterator>
+class ParallelWorker : public GCParallelTask {
+ public:
+  using WorkFunc = ParallelWorkFunc<WorkItem>;
+
+  ParallelWorker(GCRuntime* gc, WorkFunc func, WorkItemIterator& work,
+                 AutoLockHelperThreadState& lock)
+      : GCParallelTask(gc), func_(func), work_(work) {}
+
+  void run() {
+    // These checks assert when run in parallel.
+    AutoDisableProxyCheck noProxyCheck;
+
+    AutoLockHelperThreadState lock;
+    while (!work().done()) {
+      WorkItem item = work().get();
+      work().next();
+      AutoUnlockHelperThreadState unlock(lock);
+      func_(gc, item);
+    }
+  }
+
+ private:
+  WorkItemIterator& work() { return work_.ref(); }
+
+  WorkFunc func_;
+  HelperThreadLockData<WorkItemIterator&> work_;
+};
+
+static constexpr size_t MaxParallelWorkers = 8;
+
+// An RAII class that starts a number of ParallelWorkers and waits for them to
+// finish.
+template <typename WorkItem, typename WorkItemIterator>
+class MOZ_RAII AutoRunParallelWork {
+ public:
+  using Worker = ParallelWorker<WorkItem, WorkItemIterator>;
+  using WorkFunc = ParallelWorkFunc<WorkItem>;
+
+  AutoRunParallelWork(GCRuntime* gc, WorkFunc func,
+                      gcstats::PhaseKind phaseKind, WorkItemIterator& work,
+                      size_t workerCount, AutoLockHelperThreadState& lock)
+      : gc(gc), phaseKind(phaseKind), lock(lock), tasksStarted(0) {
+    MOZ_ASSERT(workerCount <= MaxParallelWorkers);
+    MOZ_ASSERT_IF(workerCount == 0, work.done());
+
+    for (size_t i = 0; i < workerCount && !work.done(); i++) {
+      tasks[i].emplace(gc, func, work, lock);
+      gc->startTask(*tasks[i], phaseKind, lock);
+      tasksStarted++;
+    }
+  }
+
+  ~AutoRunParallelWork() {
+    MOZ_ASSERT(HelperThreadState().isLockedByCurrentThread());
+
+    for (size_t i = 0; i < tasksStarted; i++) {
+      gc->joinTask(*tasks[i], phaseKind, lock);
+    }
+    for (size_t i = tasksStarted; i < MaxParallelWorkers; i++) {
+      MOZ_ASSERT(tasks[i].isNothing());
+    }
+  }
+
+ private:
+  GCRuntime* gc;
+  gcstats::PhaseKind phaseKind;
+  AutoLockHelperThreadState& lock;
+  size_t tasksStarted;
+  mozilla::Maybe<Worker> tasks[MaxParallelWorkers];
+};
+
+} /* namespace gc */
+} /* namespace js */
+
+#endif /* gc_ParallelWork_h */
