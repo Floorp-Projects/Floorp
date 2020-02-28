@@ -575,6 +575,10 @@ class nsPermissionManager final : public nsIPermissionManager,
 
   nsresult OpenDatabase(nsIFile* permissionsFile);
   nsresult InitDB(bool aRemoveFile);
+  void AddIdleDailyMaintenanceJob();
+  void RemoveIdleDailyMaintenanceJob();
+  void PerformIdleDailyMaintenance();
+
   nsresult CreateTable();
   nsresult ImportDefaults();
   nsresult _DoImport(nsIInputStream* inputStream, mozIStorageConnection* aConn);
