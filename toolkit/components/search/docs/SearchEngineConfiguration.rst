@@ -3,7 +3,8 @@ Search Engine Configuration
 ===========================
 
 .. note::
-    This configuration is currently being implemented in `Bug 1542235`_.
+    This configuration is currently under testing for nightly builds only, see
+    `Bug 1542235`_ for more status information.
 
 The search engine configuration is a mapping that is used to determine the
 list of search engines for each user. The mapping is primarily based on the
