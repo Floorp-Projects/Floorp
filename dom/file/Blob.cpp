@@ -220,7 +220,7 @@ already_AddRefed<Blob> Blob::Constructor(
     nsAutoString type(aBag.mType);
     MakeValidBlobType(type);
     impl->InitializeBlob(aData.Value(), type,
-                         aBag.mEndings == EndingTypes::Native, aRv);
+                         aBag.mEndings == EndingType::Native, aRv);
   } else {
     impl->InitializeBlob(aRv);
   }
