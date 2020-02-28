@@ -322,6 +322,7 @@ win64-cross/opt:
             - linux64-nasm
             - linux64-node
             - linux64-cbindgen
+            - linux64-sccache
             - linux64-dump-syms
             - linux64-wine
             - linux64-liblowercase
