@@ -22,7 +22,9 @@ small dataset it was designed for. In the future we may want to optimize further
 """
 
 from collections import namedtuple
+from mozbuild.util import ensure_bytes
 import textwrap
+import six
 
 
 class PerfectHash(object):
@@ -114,13 +116,19 @@ class PerfectHash(object):
         stored in that table is used as the offset basis for indexing into the
         values table."""
         for byte in memoryview(key):
-            basis ^= ord(byte)      # xor-in the byte
+            # Python2 can't ^= the raw byte since it is a 'str', and Python3
+            # can't call ord(byte) because byte is an 'int'.
+            if six.PY3:
+                obyte = byte
+            else:
+                obyte = ord(byte)
+            basis ^= obyte          # xor-in the byte
             basis *= cls.FNV_PRIME  # Multiply by the FNV prime
             basis &= cls.U32_MAX    # clamp to 32-bits
         return basis
 
     def key(self, entry):
-        return memoryview(self._key(entry))
+        return memoryview(ensure_bytes(self._key(entry)))
 
     def get_raw_index(self, key):
         """Determine the index in self.entries without validating"""
