@@ -2238,6 +2238,7 @@ class ArenasToUpdate {
 #endif
 
  public:
+  explicit ArenasToUpdate(Zone* zone);
   ArenasToUpdate(Zone* zone, const AllocKinds& kinds);
 
   bool done() const { return !segmentBegin; }
@@ -2250,11 +2251,11 @@ class ArenasToUpdate {
   void next();
 
  private:
-  AllocKinds kinds;  // Selects which thing kinds to update
-  Zone* zone;        // Zone to process
-  AllocKind kind;    // Current alloc kind to process
-  Arena* segmentBegin;
-  Arena* segmentEnd;
+  Maybe<AllocKinds> kinds;            // Selects which thing kinds to update.
+  Zone* zone;                         // Zone to process.
+  AllocKind kind = AllocKind::FIRST;  // Current alloc kind to process.
+  Arena* segmentBegin = nullptr;
+  Arena* segmentEnd = nullptr;
 
   static AllocKind nextAllocKind(AllocKind i) {
     return AllocKind(uint8_t(i) + 1);
@@ -2264,13 +2265,10 @@ class ArenasToUpdate {
   void findSegmentEnd();
 };
 
+ArenasToUpdate::ArenasToUpdate(Zone* zone) : zone(zone) { settle(); }
+
 ArenasToUpdate::ArenasToUpdate(Zone* zone, const AllocKinds& kinds)
-    : kinds(kinds),
-      zone(zone),
-      kind(AllocKind::FIRST),
-      segmentBegin(nullptr),
-      segmentEnd(nullptr) {
-  MOZ_ASSERT(zone->isGCCompacting());
+    : kinds(Some(kinds)), zone(zone) {
   settle();
 }
 
@@ -2281,7 +2279,7 @@ void ArenasToUpdate::settle() {
   MOZ_ASSERT(!segmentBegin);
 
   for (; kind < AllocKind::LIMIT; kind = nextAllocKind(kind)) {
-    if (!kinds.contains(kind)) {
+    if (kinds && !kinds.ref().contains(kind)) {
       continue;
     }
 
@@ -3934,11 +3932,74 @@ void GCRuntime::purgeSourceURLsForShrinkingGC() {
   }
 }
 
-void GCRuntime::unmarkCollectedZones() {
-  for (GCZonesIter zone(this); !zone.done(); zone.next()) {
-    /* Unmark everything in the zones being collected. */
-    zone->arenas.unmarkAll();
+class ArenasToUnmark {
+ public:
+  explicit ArenasToUnmark(GCRuntime* gc);
+
+  bool done() const { return arenas.isNothing(); }
+
+  ArenaListSegment get() const {
+    MOZ_ASSERT(!done());
+    return arenas.ref().get();
   }
+
+  void next();
+
+ private:
+  void settle();
+
+  GCZonesIter zones;
+  Maybe<ArenasToUpdate> arenas;
+};
+
+ArenasToUnmark::ArenasToUnmark(GCRuntime* gc) : zones(gc) { settle(); }
+
+void ArenasToUnmark::settle() {
+  MOZ_ASSERT(arenas.isNothing());
+
+  while (!zones.done()) {
+    arenas.emplace(zones.get());
+    if (!arenas.ref().done()) {
+      break;
+    }
+
+    arenas.reset();
+    zones.next();
+  }
+
+  MOZ_ASSERT(done() || !arenas.ref().done());
+}
+
+void ArenasToUnmark::next() {
+  MOZ_ASSERT(!done());
+
+  arenas.ref().next();
+
+  if (arenas.ref().done()) {
+    arenas.reset();
+    zones.next();
+    settle();
+  }
+}
+
+static size_t UnmarkArenaListSegment(GCRuntime* gc,
+                                     const ArenaListSegment& arenas) {
+  MOZ_ASSERT(arenas.begin);
+  MovingTracer trc(gc->rt);
+  size_t count = 0;
+  for (Arena* arena = arenas.begin; arena != arenas.end; arena = arena->next) {
+    arena->unmarkAll();
+    count++;
+  }
+  return count * 256;
+}
+
+void GCRuntime::unmarkCollectedZones() {
+  ArenasToUnmark work(this);
+  AutoLockHelperThreadState lock;
+  AutoRunParallelWork unmark(
+      this, UnmarkArenaListSegment, gcstats::PhaseKind::UNMARK, work,
+      CellUpdateBackgroundTaskCount(), SliceBudget::unlimited(), lock);
 }
 
 void GCRuntime::unmarkWeakMaps() {
@@ -3985,16 +4046,15 @@ bool GCRuntime::beginMarkPhase(JS::GCReason reason, AutoGCSession& session) {
 
   {
     gcstats::AutoPhase ap1(stats(), gcstats::PhaseKind::PREPARE);
-    AutoLockHelperThreadState helperLock;
 
     /*
-     * Clear all mark state for the zones we are collecting. This is linear
-     * in the size of the heap we are collecting and so can be slow. Do this
-     * in parallel with the rest of this block.
+     * Clear all mark state for the zones we are collecting. This is linear in
+     * the size of the heap we are collecting and so can be slow. Do this in
+     * parallel across multiple helper threads before any other processing.
      */
-    AutoRunParallelTask unmarkCollectedZones(
-        this, &GCRuntime::unmarkCollectedZones, gcstats::PhaseKind::UNMARK,
-        helperLock);
+    unmarkCollectedZones();
+
+    AutoLockHelperThreadState helperLock;
 
     /* Clear mark state for WeakMaps in parallel with other work. */
     AutoRunParallelTask unmarkWeakMaps(this, &GCRuntime::unmarkWeakMaps,
