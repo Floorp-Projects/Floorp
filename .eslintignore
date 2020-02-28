@@ -198,6 +198,7 @@ toolkit/components/workerloader/tests/moduleF-syntax-error.js
 
 # External code:
 toolkit/components/reader/Readability.js
+toolkit/components/reader/Readability-readerable.js
 toolkit/components/reader/JSDOMParser.js
 
 # Uses preprocessing
