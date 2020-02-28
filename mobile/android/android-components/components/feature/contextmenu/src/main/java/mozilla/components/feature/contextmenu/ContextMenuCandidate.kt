@@ -50,6 +50,7 @@ data class ContextMenuCandidate(
             createShareLinkCandidate(context),
             createOpenImageInNewTabCandidate(context, tabsUseCases, snackBarParentView, snackbarDelegate),
             createSaveImageCandidate(context, contextMenuUseCases),
+            createSaveVideoAudioCandidate(context, contextMenuUseCases),
             createCopyImageLocationCandidate(context, snackBarParentView, snackbarDelegate)
         )
 
@@ -181,6 +182,24 @@ data class ContextMenuCandidate(
         )
 
         /**
+         * Context Menu item: "Save video".
+         */
+        fun createSaveVideoAudioCandidate(
+            context: Context,
+            contextMenuUseCases: ContextMenuUseCases
+        ) = ContextMenuCandidate(
+            id = "mozac.feature.contextmenu.save_video",
+            label = context.getString(R.string.mozac_feature_contextmenu_save_file_to_device),
+            showFor = { _, hitResult -> hitResult.isVideoAudio() },
+            action = { tab, hitResult ->
+                contextMenuUseCases.injectDownload(
+                    tab.id,
+                    DownloadState(hitResult.src, skipConfirmation = true)
+                )
+            }
+        )
+
+        /**
          * Context Menu item: "Share Link".
          */
         fun createShareLinkCandidate(
@@ -283,6 +302,9 @@ data class ContextMenuCandidate(
 private fun HitResult.isImage(): Boolean =
     (this is HitResult.IMAGE || this is HitResult.IMAGE_SRC) && src.isNotEmpty()
 
+private fun HitResult.isVideoAudio(): Boolean =
+    (this is HitResult.VIDEO || this is HitResult.AUDIO) && src.isNotEmpty()
+
 private fun HitResult.isLink(): Boolean =
     ((this is HitResult.UNKNOWN && src.isNotEmpty()) || this is HitResult.IMAGE_SRC) &&
         getLink().startsWith("http")
@@ -304,6 +326,10 @@ internal fun HitResult.getLink(): String = when (this) {
     is HitResult.UNKNOWN -> src
     is HitResult.IMAGE_SRC -> uri
     is HitResult.IMAGE ->
+        if (title.isNullOrBlank()) src else title.toString()
+    is HitResult.VIDEO ->
+        if (title.isNullOrBlank()) src else title.toString()
+    is HitResult.AUDIO ->
         if (title.isNullOrBlank()) src else title.toString()
     else -> "about:blank"
 }

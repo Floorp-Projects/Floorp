@@ -21,7 +21,6 @@ import mozilla.components.feature.app.links.AppLinksUseCases
 import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.support.test.any
 import mozilla.components.support.test.eq
-import mozilla.components.support.test.not
 import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
@@ -53,7 +52,7 @@ class ContextMenuCandidateTest {
         val candidates = ContextMenuCandidate.defaultCandidates(testContext, mock(), mock(), mock())
         // Just a sanity check: When changing the list of default candidates be aware that this will affect all
         // consumers of this component using the default list.
-        assertEquals(7, candidates.size)
+        assertEquals(8, candidates.size)
     }
 
     @Test
@@ -386,6 +385,114 @@ class ContextMenuCandidateTest {
             store.state.tabs.first().content.download!!.url)
         assertTrue(
             store.state.tabs.first().content.download!!.skipConfirmation)
+    }
+
+    @Test
+    fun `Candidate "Save video and audio"`() {
+        val store = BrowserStore()
+        val sessionManager = spy(SessionManager(mock(), store))
+        doReturn(mock<EngineSession>()).`when`(sessionManager).getOrCreateEngineSession(any())
+        sessionManager.add(Session("https://www.mozilla.org", private = true))
+
+        val saveVideoAudio = ContextMenuCandidate.createSaveVideoAudioCandidate(
+            testContext,
+            ContextMenuUseCases(sessionManager, store))
+
+        // showFor
+
+        assertFalse(saveVideoAudio.showFor(
+            createTab("https://www.mozilla.org"),
+            HitResult.UNKNOWN("https://www.mozilla.org")))
+
+        assertFalse(saveVideoAudio.showFor(
+            createTab("https://www.mozilla.org", private = true),
+            HitResult.UNKNOWN("https://www.mozilla.org")))
+
+        assertFalse(saveVideoAudio.showFor(
+            createTab("https://www.mozilla.org"),
+            HitResult.IMAGE_SRC("https://www.mozilla.org", "https://www.mozilla.org")))
+
+        assertFalse(saveVideoAudio.showFor(
+            createTab("https://www.mozilla.org"),
+            HitResult.IMAGE("https://www.mozilla.org")))
+
+        assertTrue(saveVideoAudio.showFor(
+            createTab("https://www.mozilla.org"),
+            HitResult.VIDEO("https://www.mozilla.org")))
+
+        assertTrue(saveVideoAudio.showFor(
+            createTab("https://www.mozilla.org"),
+            HitResult.AUDIO("https://www.mozilla.org")))
+
+        // action
+
+        assertNull(store.state.tabs.first().content.download)
+
+        saveVideoAudio.action.invoke(
+            store.state.tabs.first(),
+            HitResult.AUDIO("https://developer.mozilla.org/media/examples/t-rex-roar.mp3"))
+
+        store.waitUntilIdle()
+
+        assertNotNull(store.state.tabs.first().content.download)
+        assertEquals(
+            "https://developer.mozilla.org/media/examples/t-rex-roar.mp3",
+            store.state.tabs.first().content.download!!.url)
+        assertTrue(
+            store.state.tabs.first().content.download!!.skipConfirmation)
+    }
+
+    @Test
+    fun `Get link for image, video, audio gets title if title is set`() {
+        val titleString = "test title"
+
+        val hitResultImage = HitResult.IMAGE("https://www.mozilla.org", titleString)
+        var title = hitResultImage.getLink()
+        assertEquals(titleString, title)
+
+        val hitResultVideo = HitResult.VIDEO("https://www.mozilla.org", titleString)
+        title = hitResultVideo.getLink()
+        assertEquals(titleString, title)
+
+        val hitResultAudio = HitResult.AUDIO("https://www.mozilla.org", titleString)
+        title = hitResultAudio.getLink()
+        assertEquals(titleString, title)
+    }
+
+    @Test
+    fun `Get link for image, video, audio gets URL if title is blank`() {
+        val titleString = " "
+        val url = "https://www.mozilla.org"
+
+        val hitResultImage = HitResult.IMAGE(url, titleString)
+        var title = hitResultImage.getLink()
+        assertEquals(url, title)
+
+        val hitResultVideo = HitResult.VIDEO(url, titleString)
+        title = hitResultVideo.getLink()
+        assertEquals(url, title)
+
+        val hitResultAudio = HitResult.AUDIO(url, titleString)
+        title = hitResultAudio.getLink()
+        assertEquals(url, title)
+    }
+
+    @Test
+    fun `Get link for image, video, audio gets URL if title is null`() {
+        val titleString = null
+        val url = "https://www.mozilla.org"
+
+        val hitResultImage = HitResult.IMAGE(url, titleString)
+        var title = hitResultImage.getLink()
+        assertEquals(url, title)
+
+        val hitResultVideo = HitResult.VIDEO(url, titleString)
+        title = hitResultVideo.getLink()
+        assertEquals(url, title)
+
+        val hitResultAudio = HitResult.AUDIO(url, titleString)
+        title = hitResultAudio.getLink()
+        assertEquals(url, title)
     }
 
     @Test

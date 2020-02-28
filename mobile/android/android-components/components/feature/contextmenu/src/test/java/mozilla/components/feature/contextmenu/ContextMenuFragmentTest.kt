@@ -205,7 +205,22 @@ class ContextMenuFragmentTest {
     }
 
     @Test
-    fun `Fragment shows about blank as title for AUDIO HitResult`() {
+    fun `Fragment shows src as title for AUDIO HitResult with blank title`() {
+        val ids = listOf("A", "B", "C")
+        val labels = listOf("Item A", "Item B", "Item C")
+        val tab = createTab("https://www.mozilla.org")
+        val titleString = " "
+
+        val hitResult = HitResult.AUDIO("https://www.mozilla.org", titleString)
+        val title = hitResult.getLink()
+
+        val fragment = spy(ContextMenuFragment.create(tab, title, ids, labels))
+
+        assertEquals("https://www.mozilla.org", fragment.title)
+    }
+
+    @Test
+    fun `Fragment shows src as title for AUDIO HitResult with null title`() {
         val ids = listOf("A", "B", "C")
         val labels = listOf("Item A", "Item B", "Item C")
         val tab = createTab("https://www.mozilla.org")
@@ -215,11 +230,26 @@ class ContextMenuFragmentTest {
 
         val fragment = spy(ContextMenuFragment.create(tab, title, ids, labels))
 
-        assertEquals("about:blank", fragment.title)
+        assertEquals("https://www.mozilla.org", fragment.title)
     }
 
     @Test
-    fun `Fragment shows about blank as title for VIDEO HitResult`() {
+    fun `Fragment shows src as title for VIDEO HitResult with blank title`() {
+        val ids = listOf("A", "B", "C")
+        val labels = listOf("Item A", "Item B", "Item C")
+        val tab = createTab("https://www.mozilla.org")
+        val titleString = " "
+
+        val hitResult = HitResult.VIDEO("https://www.mozilla.org", titleString)
+        val title = hitResult.getLink()
+
+        val fragment = spy(ContextMenuFragment.create(tab, title, ids, labels))
+
+        assertEquals("https://www.mozilla.org", fragment.title)
+    }
+
+    @Test
+    fun `Fragment shows src as title for VIDEO HitResult with null title`() {
         val ids = listOf("A", "B", "C")
         val labels = listOf("Item A", "Item B", "Item C")
         val tab = createTab("https://www.mozilla.org")
@@ -229,7 +259,7 @@ class ContextMenuFragmentTest {
 
         val fragment = spy(ContextMenuFragment.create(tab, title, ids, labels))
 
-        assertEquals("about:blank", fragment.title)
+        assertEquals("https://www.mozilla.org", fragment.title)
     }
 
     @Test
