@@ -112,5 +112,50 @@ std::ostream& operator<<(std::ostream& aStream,
   return aStream;
 }
 
+std::ostream& operator<<(
+    std::ostream& aStream,
+    const IMENotification::SelectionChangeDataBase& aData) {
+  if (!aData.IsValid()) {
+    aStream << "{ IsValid()=false }";
+    return aStream;
+  }
+  aStream << "{ mOffset=" << aData.mOffset;
+  if (aData.mString->Length() > 20) {
+    aStream << ", mString.Length()=" << aData.mString->Length();
+  } else {
+    aStream << ", mString=\"" << NS_ConvertUTF16toUTF8(*aData.mString)
+            << "\" (Length()=" << aData.mString->Length() << ")";
+  }
+
+  aStream << ", GetWritingMode()=" << aData.GetWritingMode()
+          << ", mReversed=" << (aData.mReversed ? "true" : "false")
+          << ", mCausedByComposition="
+          << (aData.mCausedByComposition ? "true" : "false")
+          << ", mCausedBySelectionEvent="
+          << (aData.mCausedBySelectionEvent ? "true" : "false")
+          << ", mOccurredDuringComposition="
+          << (aData.mOccurredDuringComposition ? "true" : "false") << " }";
+  return aStream;
+}
+
+std::ostream& operator<<(std::ostream& aStream,
+                         const IMENotification::TextChangeDataBase& aData) {
+  if (!aData.IsValid()) {
+    aStream << "{ IsValid()=false }";
+    return aStream;
+  }
+  aStream << "{ mStartOffset=" << aData.mStartOffset
+          << ", mRemoveEndOffset=" << aData.mRemovedEndOffset
+          << ", mAddedEndOffset=" << aData.mAddedEndOffset
+          << ", mCausedOnlyByComposition="
+          << (aData.mCausedOnlyByComposition ? "true" : "false")
+          << ", mIncludingChangesDuringComposition="
+          << (aData.mIncludingChangesDuringComposition ? "true" : "false")
+          << ", mIncludingChangesWithoutComposition="
+          << (aData.mIncludingChangesWithoutComposition ? "true" : "false")
+          << " }";
+  return aStream;
+}
+
 }  // namespace widget
 }  // namespace mozilla
