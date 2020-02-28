@@ -12,6 +12,9 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Config.kt)
 
+* **feature-downloads**
+  * Fixed APK downloads not prompting to install when the notification is clicked.
+
 * **service-location**
   * Created `LocationService` interface and made `MozillaLocationService` implement it.
   * `RegionSearchLocalizationProvider` now accepts any `LocationService` implementation.
