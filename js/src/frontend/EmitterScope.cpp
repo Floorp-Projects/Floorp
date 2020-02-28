@@ -145,7 +145,7 @@ static bool NameIsOnEnvironment(Scope* scope, JSAtom* name) {
 
       if (bi.hasArgumentSlot()) {
         JSScript* script = scope->as<FunctionScope>().script();
-        if (!script->strict() && !script->functionHasParameterExprs()) {
+        if (script->functionAllowsParameterRedeclaration()) {
           // Check for duplicate positional formal parameters.
           for (BindingIter bi2(bi); bi2 && bi2.hasArgumentSlot(); bi2++) {
             if (bi2.name() == name) {
@@ -188,8 +188,8 @@ NameLocation EmitterScope::searchInEnclosingScope(JSAtom* name, Scope* scope,
             }
 
             BindingLocation bindLoc = bi.location();
-            if (bi.hasArgumentSlot() && !script->strict() &&
-                !script->functionHasParameterExprs()) {
+            if (bi.hasArgumentSlot() &&
+                script->functionAllowsParameterRedeclaration()) {
               // Check for duplicate positional formal parameters.
               for (BindingIter bi2(bi); bi2 && bi2.hasArgumentSlot(); bi2++) {
                 if (bi2.name() == name) {
