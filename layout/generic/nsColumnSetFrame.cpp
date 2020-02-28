@@ -273,21 +273,11 @@ static uint32_t ColumnBalancingDepth(const ReflowInput& aReflowInput,
 
 nsColumnSetFrame::ReflowConfig nsColumnSetFrame::ChooseColumnStrategy(
     const ReflowInput& aReflowInput, bool aForceAuto = false) const {
-  WritingMode wm = aReflowInput.GetWritingMode();
-
   const nsStyleColumn* colStyle = StyleColumn();
   nscoord availContentISize = GetAvailableContentISize(aReflowInput);
   if (aReflowInput.ComputedISize() != NS_UNCONSTRAINEDSIZE) {
     availContentISize = aReflowInput.ComputedISize();
   }
-
-  nscoord consumedBSize = ConsumedBSize(wm);
-
-  // The effective computed block-size is the block-size of the current
-  // continuation of the column set frame. This should be the same as the
-  // computed block-size if we have an unconstrained available block-size.
-  nscoord computedBSize =
-      GetEffectiveComputedBSize(aReflowInput, consumedBSize);
 
   nscoord colBSize = aReflowInput.AvailableBSize();
   nscoord colGap =
@@ -398,8 +388,6 @@ nsColumnSetFrame::ReflowConfig nsColumnSetFrame::ChooseColumnStrategy(
   config.mForceAuto = aForceAuto;
   config.mKnownFeasibleBSize = NS_UNCONSTRAINEDSIZE;
   config.mKnownInfeasibleBSize = 0;
-  config.mComputedBSize = computedBSize;
-  config.mConsumedBSize = consumedBSize;
 
   COLUMN_SET_LOG(
       "%s: this=%p, mUsedColCount=%d, mColISize=%d, "
