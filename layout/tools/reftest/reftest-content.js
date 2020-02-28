@@ -652,6 +652,20 @@ function WaitForTestEnd(contentRootElement, inPrintMode, spellCheckedElements, f
         }
     }
 
+    // true if rectA contains rectB
+    function Contains(rectA, rectB) {
+        return (rectA.left <= rectB.left && rectB.right <= rectA.right && rectA.top <= rectB.top && rectB.bottom <= rectA.bottom);
+    }
+    // true if some rect in rectList contains rect
+    function ContainedIn(rectList, rect) {
+        for (let i = 0; i < rectList.length; ++i) {
+            if (Contains(rectList[i], rect)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     function AfterPaintListener(event) {
         LogInfo("AfterPaintListener in " + event.target.document.location.href);
         if (event.target.document != currentDoc) {
@@ -660,23 +674,8 @@ function WaitForTestEnd(contentRootElement, inPrintMode, spellCheckedElements, f
             return;
         }
 
-        // true if rectA contains rectB
-        function Contains(rectA, rectB) {
-            return (rectA.left <= rectB.left && rectB.right <= rectA.right && rectA.top <= rectB.top && rectB.bottom <= rectA.bottom);
-        }
-        // true if some rect in rectList contains rect
-        function ContainedIn(rectList, rect) {
-            for (let i = 0; i < rectList.length; ++i) {
-                if (Contains(rectList[i], rect)) {
-                    return true;
-                }
-            }
-            return false;
-        }
-
         updateCanvasPending = true;
-        for (let i = 0; i < event.clientRects.length; ++i) {
-            let r = event.clientRects[i];
+        for (let r of event.clientRects) {
             if (ContainedIn(updateCanvasRects, r)) {
                 continue;
             }
@@ -690,6 +689,29 @@ function WaitForTestEnd(contentRootElement, inPrintMode, spellCheckedElements, f
         if (waitingForAnAfterPaint) {
             waitingForAnAfterPaint = false;
             OperationCompleted();
+        }
+
+        if (!operationInProgress) {
+            HandlePendingTasksAfterMakeProgress();
+        }
+        // Otherwise we know that eventually after the operation finishes we
+        // will get a MakeProgress and/or HandlePendingTasksAfterMakeProgress
+        // call, so we don't need to do anything.
+    }
+
+    function FromChildAfterPaintListener(event) {
+        LogInfo("FromChildAfterPaintListener from " + event.detail.originalTargetUri);
+
+        updateCanvasPending = true;
+        for (let r of event.detail.rects) {
+            if (ContainedIn(updateCanvasRects, r)) {
+                continue;
+            }
+
+            // Copy the rect; it's content and we are chrome, which means if the
+            // document goes away (and it can in some crashtests) our reference
+            // to it will be turned into a dead wrapper that we can't acccess.
+            updateCanvasRects.push({ left: r.left, top: r.top, right: r.right, bottom: r.bottom });
         }
 
         if (!operationInProgress) {
@@ -719,6 +741,7 @@ function WaitForTestEnd(contentRootElement, inPrintMode, spellCheckedElements, f
     function RemoveListeners() {
         // OK, we can end the test now.
         removeEventListener("MozAfterPaint", AfterPaintListener, false);
+        removeEventListener("Reftest:MozAfterPaintFromChild", FromChildAfterPaintListener, false);
         CheckForLivenessOfContentRootElement();
         if (contentRootElement) {
             contentRootElement.removeEventListener("DOMAttrModified", AttrModifiedListener);
@@ -968,6 +991,8 @@ function WaitForTestEnd(contentRootElement, inPrintMode, spellCheckedElements, f
 
     LogInfo("WaitForTestEnd: Adding listeners");
     addEventListener("MozAfterPaint", AfterPaintListener, false);
+    addEventListener("Reftest:MozAfterPaintFromChild", FromChildAfterPaintListener, false);
+
     // If contentRootElement is null then shouldWaitForReftestWaitRemoval will
     // always return false so we don't need a listener anyway
     CheckForLivenessOfContentRootElement();
