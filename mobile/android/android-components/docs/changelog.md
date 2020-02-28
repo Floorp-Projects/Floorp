@@ -12,6 +12,9 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Config.kt)
 
+* **feature-addons**
+  * Added `DefaultSupportedAddonsChecker` which checks for add-ons that were previously unsupported, and creates a notification to let the user known when they are available to be used.
+
 # 35.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v34.0.0...v35.0.0)

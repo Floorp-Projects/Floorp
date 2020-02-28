@@ -37,6 +37,8 @@ import mozilla.components.feature.addons.AddonManager
 import mozilla.components.feature.addons.amo.AddonCollectionProvider
 import mozilla.components.feature.addons.update.AddonUpdater
 import mozilla.components.feature.addons.update.DefaultAddonUpdater
+import mozilla.components.feature.addons.migration.DefaultSupportedAddonsChecker
+import mozilla.components.feature.addons.migration.SupportedAddonsChecker
 import mozilla.components.feature.app.links.AppLinksInterceptor
 import mozilla.components.feature.app.links.AppLinksUseCases
 import mozilla.components.feature.contextmenu.ContextMenuUseCases
@@ -144,6 +146,10 @@ open class DefaultComponents(private val applicationContext: Context) {
 
     val addonCollectionProvider by lazy {
         AddonCollectionProvider(applicationContext, client, maxCacheAgeInMinutes = DAY_IN_MINUTES)
+    }
+
+    val supportedAddonsChecker by lazy {
+        DefaultSupportedAddonsChecker(applicationContext, SupportedAddonsChecker.Frequency(1, TimeUnit.DAYS))
     }
 
     // Search
