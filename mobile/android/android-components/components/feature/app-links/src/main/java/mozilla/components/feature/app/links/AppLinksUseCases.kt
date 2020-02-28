@@ -9,6 +9,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.pm.ResolveInfo
+import android.net.Uri
 import androidx.annotation.VisibleForTesting
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.ktx.android.net.isHttpOrHttps
@@ -107,8 +108,8 @@ class AppLinksUseCases(
                 redirectData.resolveInfo == null -> null
                 includeHttpAppLinks && (ignoreDefaultBrowser ||
                     (redirectData.appIntent != null && isDefaultBrowser(redirectData.appIntent))) -> null
-                includeHttpAppLinks -> redirectData.appIntent
-                !launchInApp() && isAppIntentHttpOrHttps -> null
+                includeHttpAppLinks && isAppIntentHttpOrHttps -> redirectData.appIntent
+                !launchInApp() && ENGINE_SUPPORTED_SCHEMES.contains(Uri.parse(url).scheme) -> null
                 else -> redirectData.appIntent
             }
 
@@ -190,7 +191,11 @@ class AppLinksUseCases(
     inner class OpenAppLinkRedirect internal constructor(
         private val context: Context
     ) {
-        operator fun invoke(appIntent: Intent?, failedToLaunchAction: () -> Unit = {}) {
+        operator fun invoke(
+            appIntent: Intent?,
+            launchInNewTask: Boolean = true,
+            failedToLaunchAction: () -> Unit = {}
+        ) {
             appIntent?.let {
                 try {
                     val scheme = appIntent.data?.scheme
@@ -198,6 +203,9 @@ class AppLinksUseCases(
                         return
                     }
 
+                    if (launchInNewTask) {
+                        it.flags = it.flags or Intent.FLAG_ACTIVITY_NEW_TASK
+                    }
                     context.startActivity(it)
                 } catch (e: ActivityNotFoundException) {
                     failedToLaunchAction()
@@ -245,5 +253,10 @@ class AppLinksUseCases(
     companion object {
         @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
         internal var redirectCache: AppLinkRedirectCache? = null
+
+        @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+        // list of scheme from https://searchfox.org/mozilla-central/source/netwerk/build/components.conf
+        internal val ENGINE_SUPPORTED_SCHEMES: Set<String> = setOf("about", "data", "file", "ftp", "http",
+            "https", "moz-extension", "moz-safe-about", "resource", "view-source", "ws", "wss")
     }
 }

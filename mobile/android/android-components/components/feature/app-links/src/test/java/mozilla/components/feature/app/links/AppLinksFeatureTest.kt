@@ -18,9 +18,11 @@ import mozilla.components.support.test.mock
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.ArgumentMatchers.anyBoolean
 import org.mockito.ArgumentMatchers.anyString
 import org.mockito.ArgumentMatchers.eq
 import org.mockito.Mockito.`when`
+import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoMoreInteractions
@@ -141,7 +143,7 @@ class AppLinksFeatureTest {
         userTapsOnSession(intentUrl, false)
 
         verifyNoMoreInteractions(mockDialog)
-        verify(mockOpenRedirect).invoke(any(), any())
+        verify(mockOpenRedirect).invoke(any(), anyBoolean(), any())
     }
 
     @Test
@@ -150,5 +152,6 @@ class AppLinksFeatureTest {
         userTapsOnSession(intentUrl, true)
 
         verify(mockDialog).show(eq(mockFragmentManager), anyString())
+        verify(mockOpenRedirect, never()).invoke(any(), anyBoolean(), any())
     }
 }

@@ -32,6 +32,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.ArgumentMatchers.anyBoolean
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.times
@@ -693,7 +694,7 @@ class ContextMenuCandidateTest {
             mock(),
             HitResult.UNKNOWN("https://www.otherexample.com"))
 
-        verify(openAppLinkRedirectMock, times(2)).invoke(any(), any())
+        verify(openAppLinkRedirectMock, times(2)).invoke(any(), anyBoolean(), any())
     }
 }
 

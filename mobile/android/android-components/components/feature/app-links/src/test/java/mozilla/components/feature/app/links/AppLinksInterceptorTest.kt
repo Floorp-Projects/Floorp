@@ -16,6 +16,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.ArgumentMatchers.anyBoolean
 import org.mockito.Mockito.verify
 
 @RunWith(AndroidJUnit4::class)
@@ -299,7 +300,7 @@ class AppLinksInterceptorTest {
 
         val response = appLinksInterceptor.onLoadRequest(mockEngineSession, webUrlWithAppLink, true, false)
         assert(response is RequestInterceptor.InterceptionResponse.AppIntent)
-        verify(mockOpenRedirect).invoke(any(), any())
+        verify(mockOpenRedirect).invoke(any(), anyBoolean(), any())
     }
 
     @Test
