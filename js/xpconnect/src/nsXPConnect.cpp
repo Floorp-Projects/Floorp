@@ -198,9 +198,14 @@ void xpc::ErrorReport::Init(JSErrorReport* aReport, const char* aToStringResult,
                         : NS_LITERAL_CSTRING("content javascript");
   mWindowID = aWindowID;
 
-  ErrorReportToMessageString(aReport, mErrorMsg);
-  if (mErrorMsg.IsEmpty() && aToStringResult) {
+  if (aToStringResult) {
     AppendUTF8toUTF16(mozilla::MakeStringSpan(aToStringResult), mErrorMsg);
+  }
+  if (mErrorMsg.IsEmpty()) {
+    ErrorReportToMessageString(aReport, mErrorMsg);
+  }
+  if (mErrorMsg.IsEmpty()) {
+    mErrorMsg.AssignLiteral("<unknown>");
   }
 
   mSourceLine.Assign(aReport->linebuf(), aReport->linebufLength());
