@@ -225,7 +225,7 @@ if CONFIG['COMPILE_ENVIRONMENT']:
     ]
 
     GeneratedFile('gk_rust_utils_ffi_generated.h',
-                  script='/layout/style/RunCbindgen.py',
+                  script='/build/RunCbindgen.py',
                   entry_point='generate', inputs=['/xpcom/rust/gkrust_utils'])
 
 include('/ipc/chromium/chromium-config.mozbuild')

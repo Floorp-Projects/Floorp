@@ -92,7 +92,7 @@ if CONFIG['COMPILE_ENVIRONMENT']:
     ]
 
     GeneratedFile('webrender_ffi_generated.h',
-                  script='/layout/style/RunCbindgen.py', entry_point='generate',
+                  script='/build/RunCbindgen.py', entry_point='generate',
                   inputs=[
                       '/gfx/webrender_bindings',
                       '/gfx/wr/webrender',

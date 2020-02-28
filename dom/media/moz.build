@@ -378,13 +378,13 @@ if CONFIG['COMPILE_ENVIRONMENT']:
     ]
 
     GeneratedFile('audioipc_client_ffi_generated.h',
-                  script='/layout/style/RunCbindgen.py', entry_point='generate',
+                  script='/build/RunCbindgen.py', entry_point='generate',
                   inputs=[
                       '/media/audioipc/client',
                   ])
 
     GeneratedFile('audioipc_server_ffi_generated.h',
-                  script='/layout/style/RunCbindgen.py', entry_point='generate',
+                  script='/build/RunCbindgen.py', entry_point='generate',
                   inputs=[
                       '/media/audioipc/server',
                   ])

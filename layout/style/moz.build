@@ -298,7 +298,7 @@ if CONFIG['COMPILE_ENVIRONMENT']:
                   py2=True,
                   entry_point='generate',
                   inputs=['!ServoCSSPropList.py'])
-    GeneratedFile('ServoStyleConsts.h', script='RunCbindgen.py',
+    GeneratedFile('ServoStyleConsts.h', script='/build/RunCbindgen.py',
                   entry_point='generate',
                   inputs = ['/servo/ports/geckolib', '/servo/components/style'])
 

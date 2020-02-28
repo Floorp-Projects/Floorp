@@ -9,15 +9,18 @@ import os
 import subprocess
 import pytoml
 
+
 # Try to read the package name or otherwise assume same name as the crate path.
 def _get_crate_name(crate_path):
     try:
         with open(mozpath.join(crate_path, "Cargo.toml")) as f:
-          return pytoml.load(f)["package"]["name"]
-    except:
+            return pytoml.load(f)["package"]["name"]
+    except Exception:
         return mozpath.basename(crate_path)
 
+
 CARGO_LOCK = mozpath.join(buildconfig.topsrcdir, "Cargo.lock")
+
 
 def _generate(output, cbindgen_crate_path, metadata_crate_path,
               in_tree_dependencies):

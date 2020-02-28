@@ -27,7 +27,7 @@ if CONFIG['COMPILE_ENVIRONMENT']:
     ]
 
     generated = GENERATED_FILES['mapped_hyph.h']
-    generated.script = '/layout/style/RunCbindgen.py:generate'
+    generated.script = '/build/RunCbindgen.py:generate'
     generated.inputs = [
         '/third_party/rust/mapped_hyph'
     ]
