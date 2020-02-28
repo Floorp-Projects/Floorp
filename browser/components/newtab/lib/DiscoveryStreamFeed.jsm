@@ -604,7 +604,7 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
           headers,
           body: JSON.stringify({
             pocket_id: this._impressionId,
-            version: 1,
+            version: 2,
             consumer_key: apiKey,
             ...(placements.length ? { placements } : {}),
           }),
@@ -1756,7 +1756,7 @@ getHardcodedLayout = isBasicLayout => ({
   lastUpdate: Date.now(),
   spocs: {
     url: "https://spocs.getpocket.com/spocs",
-    spocs_per_domain: 1,
+    spocs_per_domain: 3,
   },
   layout: [
     {
@@ -1770,6 +1770,34 @@ getHardcodedLayout = isBasicLayout => ({
             },
           },
           properties: {},
+        },
+        {
+          type: "CollectionCardGrid",
+          properties: {
+            items: 3,
+          },
+          header: {
+            title: "",
+          },
+          placement: {
+            name: "sponsored-collection",
+            ad_types: [3617],
+            zone_ids: [217759, 218031],
+          },
+          spocs: {
+            probability: 1,
+            positions: [
+              {
+                index: 0,
+              },
+              {
+                index: 1,
+              },
+              {
+                index: 2,
+              },
+            ],
+          },
         },
         {
           type: "Message",
@@ -1798,6 +1826,11 @@ getHardcodedLayout = isBasicLayout => ({
           },
           header: {
             title: "",
+          },
+          placement: {
+            name: "spocs",
+            ad_types: [3617],
+            zone_ids: [217758, 217995],
           },
           feed: {
             embed_reference: null,
