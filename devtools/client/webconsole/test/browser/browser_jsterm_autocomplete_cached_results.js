@@ -6,8 +6,15 @@
 
 "use strict";
 
-const TEST_URI =
-  "data:text/html;charset=utf8,<p>test cached autocompletion results";
+const TEST_URI = `data:text/html;charset=utf8,<script>
+    x = Object.create(null, Object.getOwnPropertyDescriptors({
+      dog: "woof",
+      dos: "-",
+      dot: ".",
+      duh: 1,
+      wut: 2,
+    }))
+  </script>`;
 
 add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
@@ -17,50 +24,54 @@ add_task(async function() {
   const jstermComplete = (value, pos) =>
     setInputValueForAutocompletion(hud, value, pos);
 
-  // Test if 'doc' gives 'document'
-  await jstermComplete("doc");
-  is(getInputValue(hud), "doc", "'docu' completion (input.value)");
-  checkInputCompletionValue(hud, "ument", "'docu' completion (completeNode)");
+  await jstermComplete("x.");
+  is(
+    getAutocompletePopupLabels(popup).toString(),
+    ["dog", "dos", "dot", "duh", "wut"].toString(),
+    "'x.' gave a list of suggestions"
+  );
+  ok(popup.isOpen, "popup is opened");
 
-  // Test typing 'window.'.'
-  await jstermComplete("window.");
-  ok(popup.getItems().length > 0, "'window.' gave a list of suggestions");
+  info("Add a property on the object");
+  // Using the console front directly as we don't want to impact the UI state.
+  let { result } = await hud.evaluateJSAsync(
+    `x.docfoobar = "added"; x.docfoobar`
+  );
+  is(result, "added", "The property was added on the window object");
 
-  info("Add a property on the window object");
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
-    content.wrappedJSObject.window.docfoobar = true;
-  });
-
-  // Test typing d (i.e. input is now 'window.d').
+  info("Test typing d (i.e. input is now 'x.d')");
   let onUpdated = jsterm.once("autocomplete-updated");
   EventUtils.synthesizeKey("d");
   await onUpdated;
-  ok(
-    !getAutocompletePopupLabels(popup).includes("docfoobar"),
+  is(
+    getAutocompletePopupLabels(popup).toString(),
+    ["dog", "dos", "dot", "duh"].toString(),
     "autocomplete popup does not contain docfoobar. List has not been updated"
   );
 
-  // Test typing o (i.e. input is now 'window.do').
-  jsterm.once("autocomplete-updated");
+  // Test typing o (i.e. input is now 'x.do').
+  onUpdated = jsterm.once("autocomplete-updated");
   EventUtils.synthesizeKey("o");
   await onUpdated;
-  ok(
-    !getAutocompletePopupLabels(popup).includes("docfoobar"),
-    "autocomplete popup does not contain docfoobar. List has not been updated"
+  is(
+    getAutocompletePopupLabels(popup).toString(),
+    ["dog", "dos", "dot"].toString(),
+    "autocomplete popup still does not contain docfoobar. List has not been updated"
   );
 
   // Test that backspace does not cause a request to the server
   onUpdated = jsterm.once("autocomplete-updated");
   EventUtils.synthesizeKey("KEY_Backspace");
   await onUpdated;
-  ok(
-    !getAutocompletePopupLabels(popup).includes("docfoobar"),
-    "autocomplete cached results do not contain docfoobar. list has not been updated"
+  is(
+    getAutocompletePopupLabels(popup).toString(),
+    ["dog", "dos", "dot", "duh"].toString(),
+    "autocomplete does not contain docfoobar. list has not been updated on backspace"
   );
 
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
-    delete content.wrappedJSObject.window.docfoobar;
-  });
+  // Using the console front directly as we don't want to impact the UI state.
+  ({ result } = await hud.evaluateJSAsync(`delete x.docfoobar; x.docfoobar`));
+  is(result.type, "undefined", "The property was removed");
 
   // Test if 'window.getC' gives 'getComputedStyle'
   await jstermComplete("window.");
@@ -74,25 +85,32 @@ add_task(async function() {
   await jstermComplete("dump(d");
   ok(popup.getItems().length > 0, "'dump(d' gives non-zero results");
 
-  // Test that 'dump(window.)' works.
-  await jstermComplete("dump(window)", -1);
+  // Test that 'dump(x.)' works.
+  await jstermComplete("dump(x)", -1);
   onUpdated = jsterm.once("autocomplete-updated");
   EventUtils.sendString(".");
   await onUpdated;
-  ok(popup.getItems().length > 0, "'dump(window.' gave a list of suggestions");
+  is(
+    getAutocompletePopupLabels(popup).toString(),
+    ["dog", "dos", "dot", "duh", "wut"].toString(),
+    "'dump(x.' gave a list of suggestions"
+  );
 
-  info("Add a property on the window object");
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
-    content.wrappedJSObject.window.docfoobar = true;
-  });
+  info("Add a property on the x object");
+  // Using the console front directly as we don't want to impact the UI state.
+  ({ result } = await hud.evaluateJSAsync(
+    `x.docfoobar = "added"; x.docfoobar`
+  ));
+  is(result, "added", "The property was added on the x object again");
 
-  // Make sure 'dump(window.d)' does not contain 'docfoobar'.
+  // Make sure 'dump(x.d)' does not contain 'docfoobar'.
   onUpdated = jsterm.once("autocomplete-updated");
   EventUtils.sendString("d");
   await onUpdated;
 
-  ok(
-    !getAutocompletePopupLabels(popup).includes("docfoobar"),
+  is(
+    getAutocompletePopupLabels(popup).toString(),
+    ["dog", "dos", "dot", "duh"].toString(),
     "autocomplete cached results do not contain docfoobar. list has not been updated"
   );
 
