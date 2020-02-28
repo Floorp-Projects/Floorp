@@ -126,7 +126,7 @@ tls13_HkdfExpandLabel(PK11SymKey *prk, SSLHashType baseHash,
                       const PRUint8 *handshakeHash, unsigned int handshakeHashLen,
                       const char *label, unsigned int labelLen,
                       CK_MECHANISM_TYPE algorithm, unsigned int keySize,
-                      PK11SymKey **keyp)
+                      SSLProtocolVariant variant, PK11SymKey **keyp)
 {
     CK_NSS_HKDFParams params;
     SECItem paramsi = { siBuffer, NULL, 0 };
@@ -137,8 +137,12 @@ tls13_HkdfExpandLabel(PK11SymKey *prk, SSLHashType baseHash,
     sslBuffer infoBuf = SSL_BUFFER(info);
     PK11SymKey *derived;
     SECStatus rv;
-    const char *kLabelPrefix = "tls13 ";
-    const unsigned int kLabelPrefixLen = strlen(kLabelPrefix);
+    const char *kLabelPrefixTls = "tls13 ";
+    const char *kLabelPrefixDtls = "dtls13";
+    const unsigned int kLabelPrefixLen =
+        (variant == ssl_variant_stream) ? strlen(kLabelPrefixTls) : strlen(kLabelPrefixDtls);
+    const char *kLabelPrefix =
+        (variant == ssl_variant_stream) ? kLabelPrefixTls : kLabelPrefixDtls;
 
     PORT_Assert(prk);
     PORT_Assert(keyp);
@@ -229,7 +233,8 @@ SECStatus
 tls13_HkdfExpandLabelRaw(PK11SymKey *prk, SSLHashType baseHash,
                          const PRUint8 *handshakeHash, unsigned int handshakeHashLen,
                          const char *label, unsigned int labelLen,
-                         unsigned char *output, unsigned int outputLen)
+                         SSLProtocolVariant variant, unsigned char *output,
+                         unsigned int outputLen)
 {
     PK11SymKey *derived = NULL;
     SECItem *rawkey;
@@ -238,7 +243,7 @@ tls13_HkdfExpandLabelRaw(PK11SymKey *prk, SSLHashType baseHash,
     rv = tls13_HkdfExpandLabel(prk, baseHash, handshakeHash, handshakeHashLen,
                                label, labelLen,
                                kTlsHkdfInfo[baseHash].pkcs11Mech, outputLen,
-                               &derived);
+                               variant, &derived);
     if (rv != SECSuccess || !derived) {
         goto abort;
     }

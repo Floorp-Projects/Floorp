@@ -432,7 +432,7 @@ tls13_Exporter(sslSocket *ss, PK11SymKey *secret,
                                   contextHash.u.raw, contextHash.len,
                                   kExporterInnerLabel,
                                   strlen(kExporterInnerLabel),
-                                  out, outLen);
+                                  ss->protocolVariant, out, outLen);
     PK11_FreeSymKey(innerSecret);
     return rv;
 }

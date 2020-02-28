@@ -269,11 +269,12 @@ bool TlsRecordHeader::MaskSequenceNumber() {
   return MaskSequenceNumber(sn_mask());
 }
 
-bool TlsRecordHeader::MaskSequenceNumber(const DataBuffer& mask) {
-  if (mask.empty()) {
+bool TlsRecordHeader::MaskSequenceNumber(const DataBuffer& mask_buf) {
+  if (mask_buf.empty()) {
     return false;
   }
 
+  DataBuffer mask;
   if (is_dtls13_ciphertext()) {
     uint64_t seqno = sequence_number();
     uint8_t len = content_type() & kCtDtlsCiphertext16bSeqno ? 2 : 1;
@@ -283,11 +284,15 @@ bool TlsRecordHeader::MaskSequenceNumber(const DataBuffer& mask) {
       return false;
     }
 
+#ifdef UNSAFE_FUZZER_MODE
+    // Use a null mask.
+    mask.Allocate(mask_buf.len());
+#endif
+    mask.Append(mask_buf);
     val.data()[0] ^= mask.data()[0];
     if (len == 2 && mask.len() > 1) {
       val.data()[1] ^= mask.data()[1];
     }
-
     uint32_t tmp;
     if (!val.Read(0, len, &tmp)) {
       return false;
@@ -1152,5 +1157,4 @@ PacketFilter::Action SelectedCipherSuiteReplacer::FilterHandshake(
   output->Write(pos, static_cast<uint32_t>(cipher_suite_), 2);
   return CHANGE;
 }
-
 }  // namespace nss_test

@@ -26,10 +26,12 @@ TlsCipherSpec::TlsCipherSpec(bool dtls, uint16_t epoc)
 bool TlsCipherSpec::SetKeys(SSLCipherSuiteInfo* cipherinfo,
                             PK11SymKey* secret) {
   SSLAeadContext* aead_ctx;
-  SECStatus rv = SSL_MakeAead(SSL_LIBRARY_VERSION_TLS_1_3,
-                              cipherinfo->cipherSuite, secret, "",
-                              0,  // Use the default labels.
-                              &aead_ctx);
+  SSLProtocolVariant variant =
+      dtls_ ? ssl_variant_datagram : ssl_variant_stream;
+  SECStatus rv =
+      SSL_MakeVariantAead(SSL_LIBRARY_VERSION_TLS_1_3, cipherinfo->cipherSuite,
+                          variant, secret, "", 0,  // Use the default labels.
+                          &aead_ctx);
   if (rv != SECSuccess) {
     return false;
   }
@@ -37,9 +39,9 @@ bool TlsCipherSpec::SetKeys(SSLCipherSuiteInfo* cipherinfo,
 
   SSLMaskingContext* mask_ctx;
   const char kHkdfPurposeSn[] = "sn";
-  rv = SSL_CreateMaskingContext(SSL_LIBRARY_VERSION_TLS_1_3,
-                                cipherinfo->cipherSuite, secret, kHkdfPurposeSn,
-                                strlen(kHkdfPurposeSn), &mask_ctx);
+  rv = SSL_CreateVariantMaskingContext(
+      SSL_LIBRARY_VERSION_TLS_1_3, cipherinfo->cipherSuite, variant, secret,
+      kHkdfPurposeSn, strlen(kHkdfPurposeSn), &mask_ctx);
   if (rv != SECSuccess) {
     return false;
   }

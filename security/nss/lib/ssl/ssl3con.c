@@ -2445,16 +2445,6 @@ ssl_ProtectRecord(sslSocket *ss, ssl3CipherSpec *cwSpec, SSLContentType ct,
         }
         if (IS_DTLS(ss)) {
             bufLen = SSL_BUFFER_LEN(wrBuf) - bufLen;
-#ifdef UNSAFE_FUZZER_MODE
-            /* The null cipher doesn't add a tag. Make sure the "ciphertext"
-             * is long enough for mask creation. */
-            unsigned char tmpCt[AES_BLOCK_SIZE] = { 0 };
-            if (bufLen < 16) {
-                memcpy(tmpCt, cipherText, bufLen);
-                bufLen = sizeof(tmpCt);
-                cipherText = tmpCt;
-            }
-#endif
             rv = dtls13_MaskSequenceNumber(ss, cwSpec,
                                            SSL_BUFFER_BASE(wrBuf),
                                            cipherText, bufLen);
@@ -8631,14 +8621,11 @@ ssl3_HandleClientHello(sslSocket *ss, PRUint8 *b, PRUint32 length)
         goto loser; /* malformed */
     }
 
-    /* Grab the client's cookie, if present. */
+    /* Grab the client's cookie, if present. It is checked after version negotiation. */
     if (IS_DTLS(ss)) {
         rv = ssl3_ConsumeHandshakeVariable(ss, &cookieBytes, 1, &b, &length);
         if (rv != SECSuccess) {
             goto loser; /* malformed */
-        }
-        if (cookieBytes.len != 0) {
-            goto loser; /* We never send cookies in DTLS 1.2. */
         }
     }
 
@@ -8745,6 +8732,13 @@ ssl3_HandleClientHello(sslSocket *ss, PRUint8 *b, PRUint32 length)
             errCode = SSL_ERROR_RX_UNEXPECTED_CHANGE_CIPHER;
             goto alert_loser;
         }
+
+        /* A DTLS 1.3-only client MUST set the legacy_cookie field to zero length.
+         * If a DTLS 1.3 ClientHello is received with any other value in this field,
+         * the server MUST abort the handshake with an "illegal_parameter" alert. */
+        if (IS_DTLS(ss) && cookieBytes.len != 0) {
+            goto alert_loser;
+        }
     } else {
         /* HRR is TLS1.3-only. We ignore the Cookie extension here. */
         if (ss->ssl3.hs.helloRetry) {
@@ -8764,6 +8758,11 @@ ssl3_HandleClientHello(sslSocket *ss, PRUint8 *b, PRUint32 length)
         if (comps.len < 1 ||
             !memchr(comps.data, ssl_compression_null, comps.len)) {
             goto alert_loser;
+        }
+
+        /* We never send cookies in DTLS 1.2. */
+        if (IS_DTLS(ss) && cookieBytes.len != 0) {
+            goto loser;
         }
     }
 
@@ -12919,22 +12918,10 @@ ssl3_HandleRecord(sslSocket *ss, SSL3Ciphertext *cText)
     }
     isTLS = (PRBool)(spec->version > SSL_LIBRARY_VERSION_3_0);
     if (IS_DTLS(ss)) {
-        unsigned int bufLen = SSL_BUFFER_LEN(cText->buf);
-        unsigned char *cipherText = SSL_BUFFER_BASE(cText->buf);
-#ifdef UNSAFE_FUZZER_MODE
-        /* The null cipher doesn't add a tag. Make sure the "ciphertext"
-         * is long enough for mask creation. */
-        unsigned char tmpCt[AES_BLOCK_SIZE] = { 0 };
-        if (bufLen < 16) {
-            memcpy(tmpCt, cipherText, bufLen);
-            bufLen = sizeof(tmpCt);
-            cipherText = tmpCt;
-        }
-#endif
         if (dtls13_MaskSequenceNumber(ss, spec, cText->hdr,
-                                      cipherText, bufLen) != SECSuccess) {
+                                      SSL_BUFFER_BASE(cText->buf), SSL_BUFFER_LEN(cText->buf)) != SECSuccess) {
             ssl_ReleaseSpecReadLock(ss); /*****************************/
-            PORT_SetError(SSL_ERROR_DECRYPTION_FAILURE);
+            /* code already set. */
             return SECFailure;
         }
         if (!dtls_IsRelevant(ss, spec, cText, &cText->seqNum)) {

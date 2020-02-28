@@ -148,7 +148,7 @@ class TlsRecordHeader : public TlsVersioned {
   const DataBuffer& header() const { return header_; }
 
   bool MaskSequenceNumber();
-  bool MaskSequenceNumber(const DataBuffer& mask);
+  bool MaskSequenceNumber(const DataBuffer& mask_buf);
 
   // Parse the header; return true if successful; body in an outparam if OK.
   bool Parse(bool is_dtls13, uint64_t sequence_number, TlsParser* parser,

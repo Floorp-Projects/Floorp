@@ -13,6 +13,7 @@
 #include <mach/mach.h>
 #endif
 
+#include "mplogic.h"
 #include "mpi.h"
 namespace nss_test {
 
@@ -221,6 +222,54 @@ TEST_F(MPITest, MpiFixlenOctetsTooSmall) {
     ASSERT_EQ(0, memcmp(buf, ref.data(), ref.size()));
 
     mp_clear(&a);
+  }
+}
+
+TEST_F(MPITest, MpiSqrMulClamp) {
+  mp_int a, r, expect;
+  MP_DIGITS(&a) = 0;
+  MP_DIGITS(&r) = 0;
+  MP_DIGITS(&expect) = 0;
+
+  // Comba32 result is 64 mp_digits. *=2 as this is an ascii representation.
+  std::string expect_str((64 * sizeof(mp_digit)) * 2, '0');
+
+  // Set second-highest bit (0x80...^2 == 0x4000...)
+  expect_str.replace(0, 1, "4", 1);
+
+  // Test 32, 16, 8, and 4-1 mp_digit values. 32-4 (powers of two) use the comba
+  // assembly implementation, if enabled and supported. 3-1 use non-comba.
+  int n_digits = 32;
+  while (n_digits > 0) {
+    ASSERT_EQ(MP_OKAY, mp_init(&r));
+    ASSERT_EQ(MP_OKAY, mp_init(&a));
+    ASSERT_EQ(MP_OKAY, mp_init(&expect));
+    ASSERT_EQ(MP_OKAY, mp_read_radix(&expect, expect_str.c_str(), 16));
+
+    ASSERT_EQ(MP_OKAY, mp_set_int(&a, 1));
+    ASSERT_EQ(MP_OKAY, mpl_lsh(&a, &a, (n_digits * sizeof(mp_digit) * 8) - 1));
+
+    ASSERT_EQ(MP_OKAY, mp_sqr(&a, &r));
+    EXPECT_EQ(MP_USED(&expect), MP_USED(&r));
+    EXPECT_EQ(0, mp_cmp(&r, &expect));
+    mp_clear(&r);
+
+    // Take the mul path...
+    ASSERT_EQ(MP_OKAY, mp_init(&r));
+    ASSERT_EQ(MP_OKAY, mp_mul(&a, &a, &r));
+    EXPECT_EQ(MP_USED(&expect), MP_USED(&r));
+    EXPECT_EQ(0, mp_cmp(&r, &expect));
+
+    mp_clear(&a);
+    mp_clear(&r);
+    mp_clear(&expect);
+
+    // Once we're down to 4, check non-powers of two.
+    int sub = n_digits > 4 ? n_digits / 2 : 1;
+    n_digits -= sub;
+
+    // "Shift right" the string (to avoid mutating |expect_str| with MPI).
+    expect_str.resize(expect_str.size() - 2 * 2 * sizeof(mp_digit) * sub);
   }
 }
 
