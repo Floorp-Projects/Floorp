@@ -133,6 +133,7 @@ class Mutex : public OffTheBooksMutex {
   Mutex& operator=(const Mutex&);
 };
 
+namespace detail {
 template <typename T>
 class MOZ_RAII BaseAutoUnlock;
 
@@ -165,7 +166,7 @@ class MOZ_RAII BaseAutoLock {
   // Assert that aLock is the mutex passed to the constructor and that the
   // current thread owns the mutex.  In coding patterns such as:
   //
-  // void LockedMethod(const MutexAutoLock& aProofOfLock)
+  // void LockedMethod(const BaseAutoLock<T>& aProofOfLock)
   // {
   //   aProofOfLock.AssertOwns(mMutex);
   //   ...
@@ -174,9 +175,9 @@ class MOZ_RAII BaseAutoLock {
   // Without this assertion, it could be that mMutex is not actually
   // locked. It's possible to have code like:
   //
-  // MutexAutoLock lock(someMutex);
+  // BaseAutoLock lock(someMutex);
   // ...
-  // MutexAutoUnlock unlock(someMutex);
+  // BaseAutoUnlock unlock(someMutex);
   // ...
   // LockedMethod(lock);
   //
@@ -187,8 +188,8 @@ class MOZ_RAII BaseAutoLock {
   // should use this method in preference to using AssertCurrentThreadOwns on
   // the mutex you expected to be held, since this method provides stronger
   // guarantees.
-  void AssertOwns(const T& aLock) const {
-    MOZ_ASSERT(&aLock == &mLock);
+  void AssertOwns(const T& aMutex) const {
+    MOZ_ASSERT(&aMutex == &aMutex);
     mLock.AssertCurrentThreadOwns();
   }
 
@@ -204,11 +205,16 @@ class MOZ_RAII BaseAutoLock {
   MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
-typedef BaseAutoLock<Mutex&> MutexAutoLock;
-typedef BaseAutoLock<OffTheBooksMutex&> OffTheBooksMutexAutoLock;
+template <typename MutexType>
+BaseAutoLock(MutexType&)->BaseAutoLock<MutexType&>;
+}  // namespace detail
 
+typedef detail::BaseAutoLock<Mutex&> MutexAutoLock;
+typedef detail::BaseAutoLock<OffTheBooksMutex&> OffTheBooksMutexAutoLock;
+
+namespace detail {
 /**
- * MutexAutoUnlock
+ * BaseAutoUnlock
  * Releases the Mutex when it enters scope, and re-acquires it when it leaves
  * scope.
  *
@@ -243,8 +249,12 @@ class MOZ_RAII BaseAutoUnlock {
   MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
-typedef BaseAutoUnlock<Mutex&> MutexAutoUnlock;
-typedef BaseAutoUnlock<OffTheBooksMutex&> OffTheBooksMutexAutoUnlock;
+template <typename MutexType>
+BaseAutoUnlock(MutexType&)->BaseAutoUnlock<MutexType&>;
+}  // namespace detail
+
+typedef detail::BaseAutoUnlock<Mutex&> MutexAutoUnlock;
+typedef detail::BaseAutoUnlock<OffTheBooksMutex&> OffTheBooksMutexAutoUnlock;
 
 }  // namespace mozilla
 
