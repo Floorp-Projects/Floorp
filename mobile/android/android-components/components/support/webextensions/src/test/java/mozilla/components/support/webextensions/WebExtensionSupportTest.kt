@@ -23,6 +23,7 @@ import mozilla.components.concept.engine.webextension.Action
 import mozilla.components.concept.engine.webextension.Metadata
 import mozilla.components.concept.engine.webextension.WebExtension
 import mozilla.components.concept.engine.webextension.WebExtensionDelegate
+import mozilla.components.support.base.Component
 import mozilla.components.support.base.facts.Action as FactsAction
 import mozilla.components.support.base.facts.processor.CollectionProcessor
 import mozilla.components.support.test.any
@@ -100,6 +101,7 @@ class WebExtensionSupportTest {
 
             val interactionFact = facts[0]
             assertEquals(FactsAction.INTERACTION, interactionFact.action)
+            assertEquals(Component.SUPPORT_WEBEXTENSIONS, interactionFact.component)
             assertEquals(WEB_EXTENSIONS_INITIALIZED, interactionFact.item)
             assertEquals(2, interactionFact.metadata?.size)
             assertTrue(interactionFact.metadata?.containsKey("installed")!!)

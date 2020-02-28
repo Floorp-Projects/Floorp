@@ -29,7 +29,7 @@ private fun emitWebExtensionFact(
     metadata: Map<String, Any>? = null
 ) {
     Fact(
-        Component.FEATURE_ADDONS,
+        Component.SUPPORT_WEBEXTENSIONS,
         action,
         item,
         value,
