@@ -1,7 +1,10 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-/* Check the correct default engines are picked from the configuration list. */
+/**
+ * Check the correct default engines are picked from the configuration list,
+ * and have the correct orders.
+ */
 
 "use strict";
 
@@ -13,7 +16,7 @@ const modernConfig = Services.prefs.getBoolPref(
 // With modern configuration, we have a slightly different order, since the
 // default engines will get place first, regardless of the specified orders
 // of the other engines.
-const EXPECTED_ORDER = modernConfig
+const EXPECTED_ORDER_GET_DEFAULT_ENGINES = modernConfig
   ? [
       // Default engines
       "Test search engine",
@@ -35,6 +38,17 @@ const EXPECTED_ORDER = modernConfig
       "Test search engine (Reordered)",
     ];
 
+const EXPECTED_ORDER_GET_ENGINES = [
+  // Default engines
+  "Test search engine",
+  "engine-pref",
+  // Now the engines in orderHint order.
+  "engine-resourceicon",
+  "engine-chromeicon",
+  "engine-rel-searchform-purpose",
+  "Test search engine (Reordered)",
+];
+
 add_task(async function setup() {
   await AddonTestUtils.promiseStartupManager();
 
@@ -49,36 +63,51 @@ add_task(async function setup() {
   Services.prefs.getDefaultBranch("distribution.").setCharPref("id", "test");
 });
 
-async function checkOrder(expectedOrder) {
-  const sortedEngines = await Services.search.getDefaultEngines();
-  Assert.deepEqual(
-    sortedEngines.map(s => s.name),
-    expectedOrder,
-    "Should have the expected engine order"
-  );
-}
-
-add_task(async function test_getDefaultEngines_no_others() {
-  await checkOrder(EXPECTED_ORDER);
-});
-
-add_task(async function test_getDefaultEngines_with_non_builtins() {
+async function checkOrder(type, expectedOrder) {
   // Reset the sorted list.
   Services.search.wrappedJSObject.__sortedEngines = null;
 
+  const sortedEngines = await Services.search[type]();
+  Assert.deepEqual(
+    sortedEngines.map(s => s.name),
+    expectedOrder,
+    `Should have the expected engine order from ${type}`
+  );
+}
+
+add_task(async function test_engine_sort_only_builtins() {
+  await checkOrder("getDefaultEngines", EXPECTED_ORDER_GET_DEFAULT_ENGINES);
+  await checkOrder("getEngines", EXPECTED_ORDER_GET_ENGINES);
+});
+
+add_task(async function test_engine_sort_with_non_builtins_sort() {
   await Services.search.addEngineWithDetails("nonbuiltin1", {
     method: "get",
     template: "http://example.com/?search={searchTerms}",
   });
 
+  // As we've added an engine, the pref will have been set to true, but
+  // we do really want to test the default sort.
+  Services.prefs.setBoolPref(
+    SearchUtils.BROWSER_SEARCH_PREF + "useDBForOrder",
+    false
+  );
+
   // We should still have the same built-in engines listed.
-  await checkOrder(EXPECTED_ORDER);
+  await checkOrder("getDefaultEngines", EXPECTED_ORDER_GET_DEFAULT_ENGINES);
+
+  const expected = [...EXPECTED_ORDER_GET_ENGINES];
+  // For modern config, all the engines in this config specify an order hint,
+  // so our added engine gets sorted to the end.
+  expected.splice(
+    modernConfig ? EXPECTED_ORDER_GET_ENGINES.length : 5,
+    0,
+    "nonbuiltin1"
+  );
+  await checkOrder("getEngines", expected);
 });
 
-add_task(async function test_getDefaultEngines_with_distro() {
-  // Reset the sorted list.
-  Services.search.wrappedJSObject.__sortedEngines = null;
-
+add_task(async function test_engine_sort_with_distro() {
   Services.prefs.setCharPref(
     SearchUtils.BROWSER_SEARCH_PREF + "order.extra.bar",
     "engine-pref"
@@ -108,7 +137,7 @@ add_task(async function test_getDefaultEngines_with_distro() {
 
   // TODO: Bug 1590860. The order of the lists is wrong - the order prefs should
   // be overriding it, but they don't because the code doesn't work right.
-  const expected = modernConfig
+  let expected = modernConfig
     ? [
         "Test search engine",
         "engine-pref",
@@ -126,5 +155,27 @@ add_task(async function test_getDefaultEngines_with_distro() {
         "Test search engine (Reordered)",
       ];
 
-  await checkOrder(expected);
+  await checkOrder("getDefaultEngines", expected);
+
+  expected = modernConfig
+    ? [
+        "Test search engine",
+        "engine-pref",
+        "engine-resourceicon",
+        "engine-rel-searchform-purpose",
+        "engine-chromeicon",
+        "Test search engine (Reordered)",
+        "nonbuiltin1",
+      ]
+    : [
+        "Test search engine",
+        "engine-pref",
+        "engine-resourceicon",
+        "engine-rel-searchform-purpose",
+        "engine-chromeicon",
+        "nonbuiltin1",
+        "Test search engine (Reordered)",
+      ];
+
+  await checkOrder("getEngines", expected);
 });
