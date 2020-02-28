@@ -6,15 +6,15 @@ class ReftestFissionChild extends JSWindowActorChild {
     switch (msg.name) {
       case "UpdateLayerTree":
       {
-        let errorString = null;
+        let errorStrings = [];
         try {
           if (this.manager.isProcessRoot) {
             this.contentWindow.windowUtils.updateLayerTree();
           }
         } catch (e) {
-          errorString = "updateLayerTree failed: " + e;
+          errorStrings.push("updateLayerTree failed: " + e);
         }
-        return Promise.resolve({errorString});
+        return Promise.resolve({errorStrings});
       }
       case "FlushRendering":
       {
