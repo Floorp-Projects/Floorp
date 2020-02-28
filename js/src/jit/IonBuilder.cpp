@@ -11972,10 +11972,9 @@ AbortReasonOr<Ok> IonBuilder::jsop_setarg(uint32_t arg) {
           MPostWriteBarrier::New(alloc(), current->argumentsObject(), val));
     }
     auto* ins = MSetArgumentsObjectArg::New(alloc(), current->argumentsObject(),
-                                            GET_ARGNO(pc), val);
+                                            arg, val);
     current->add(ins);
-    MOZ_TRY(resumeAfter(ins));
-    return Ok();
+    return resumeAfter(ins);
   }
 
   // :TODO: if hasArguments() is true, and the script has a JSOp::SetArg, then
