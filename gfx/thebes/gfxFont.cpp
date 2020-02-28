@@ -1897,11 +1897,12 @@ void gfxFont::DrawOneGlyph(uint32_t aGlyphID, const gfx::Point& aPt,
       // origin for each glyph, not once for the whole run.
       aBuffer.Flush();
       matrixRestore.SetContext(runParams.context);
+      gfx::Point skewPt(devPt.x + mVerticalMetrics->emHeight / 2, devPt.y);
       gfx::Matrix mat =
           runParams.context->CurrentMatrix()
-              .PreTranslate(devPt)
-              .PreMultiply(gfx::Matrix(1, 0, -fontParams.obliqueSkew, 1, 0, 0))
-              .PreTranslate(-devPt);
+              .PreTranslate(skewPt)
+              .PreMultiply(gfx::Matrix(1, fontParams.obliqueSkew, 0, 1, 0, 0))
+              .PreTranslate(-skewPt);
       runParams.context->SetMatrix(mat);
     }
 
@@ -2617,14 +2618,23 @@ gfxFont::RunMetrics gfxFont::Measure(const gfxTextRun* aTextRun,
   // If the font may be rendered with a fake-italic effect, we need to allow
   // for the top-right of the glyphs being skewed to the right, and the
   // bottom-left being skewed further left.
-  gfx::Float obliqueSkew = SkewForSyntheticOblique();
-  if (obliqueSkew != 0.0f) {
-    gfxFloat extendLeftEdge =
-        obliqueSkew < 0.0f ? ceil(-obliqueSkew * -metrics.mBoundingBox.Y())
-                           : ceil(obliqueSkew * metrics.mBoundingBox.YMost());
-    gfxFloat extendRightEdge =
-        obliqueSkew < 0.0f ? ceil(-obliqueSkew * metrics.mBoundingBox.YMost())
-                           : ceil(obliqueSkew * -metrics.mBoundingBox.Y());
+  gfxFloat skew = SkewForSyntheticOblique();
+  if (skew != 0.0) {
+    gfxFloat extendLeftEdge, extendRightEdge;
+    if (orientation == nsFontMetrics::eVertical) {
+      // The glyph will actually be skewed vertically, but "left" and "right"
+      // here refer to line-left (physical top) and -right (bottom), so these
+      // are still the directions in which we need to extend the box.
+      extendLeftEdge = skew < 0.0 ? ceil(-skew * metrics.mBoundingBox.XMost())
+                                  : ceil(skew * -metrics.mBoundingBox.X());
+      extendRightEdge = skew < 0.0 ? ceil(-skew * -metrics.mBoundingBox.X())
+                                   : ceil(skew * metrics.mBoundingBox.XMost());
+    } else {
+      extendLeftEdge = skew < 0.0 ? ceil(-skew * -metrics.mBoundingBox.Y())
+                                  : ceil(skew * metrics.mBoundingBox.YMost());
+      extendRightEdge = skew < 0.0 ? ceil(-skew * metrics.mBoundingBox.YMost())
+                                   : ceil(skew * -metrics.mBoundingBox.Y());
+    }
     metrics.mBoundingBox.SetWidth(metrics.mBoundingBox.Width() +
                                   extendLeftEdge + extendRightEdge);
     metrics.mBoundingBox.MoveByX(-extendLeftEdge);
