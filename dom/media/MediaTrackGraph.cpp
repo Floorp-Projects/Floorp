@@ -2631,7 +2631,9 @@ TrackTime SourceMediaTrack::AppendData(MediaSegment* aSegment,
   mUpdateTrack->mData->AppendFrom(aSegment);  // note: aSegment is now dead
   {
     MonitorAutoLock lock(graph->GetMonitor());
-    graph->EnsureNextIteration();
+    if (graph->CurrentDriver()) {  // graph shutdown not forced
+      graph->EnsureNextIteration();
+    }
   }
 
   return appended;
