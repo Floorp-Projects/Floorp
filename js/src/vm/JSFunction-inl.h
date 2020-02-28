@@ -48,7 +48,7 @@ inline bool CanReuseFunctionForClone(JSContext* cx, HandleFunction fun) {
 }
 
 inline JSFunction* CloneFunctionObjectIfNotSingleton(
-    JSContext* cx, HandleFunction fun, HandleObject parent,
+    JSContext* cx, HandleFunction fun, HandleObject enclosingEnv,
     HandleObject proto = nullptr, NewObjectKind newKind = GenericObject) {
   /*
    * For attempts to clone functions at a function definition opcode,
@@ -84,7 +84,7 @@ inline JSFunction* CloneFunctionObjectIfNotSingleton(
         return nullptr;
       }
     }
-    fun->setEnvironment(parent);
+    fun->setEnvironment(enclosingEnv);
     return fun;
   }
 
@@ -94,8 +94,9 @@ inline JSFunction* CloneFunctionObjectIfNotSingleton(
   gc::AllocKind extendedFinalizeKind = gc::AllocKind::FUNCTION_EXTENDED;
   gc::AllocKind kind = fun->isExtended() ? extendedFinalizeKind : finalizeKind;
 
-  if (CanReuseScriptForClone(cx->realm(), fun, parent)) {
-    return CloneFunctionReuseScript(cx, fun, parent, kind, newKind, proto);
+  if (CanReuseScriptForClone(cx->realm(), fun, enclosingEnv)) {
+    return CloneFunctionReuseScript(cx, fun, enclosingEnv, kind, newKind,
+                                    proto);
   }
 
   RootedScript script(cx, JSFunction::getOrCreateScript(cx, fun));
@@ -104,8 +105,8 @@ inline JSFunction* CloneFunctionObjectIfNotSingleton(
   }
   RootedScope enclosingScope(cx, script->enclosingScope());
   Rooted<ScriptSourceObject*> sourceObject(cx, script->sourceObject());
-  return CloneFunctionAndScript(cx, fun, parent, enclosingScope, sourceObject,
-                                kind, proto);
+  return CloneFunctionAndScript(cx, fun, enclosingEnv, enclosingScope,
+                                sourceObject, kind, proto);
 }
 
 } /* namespace js */

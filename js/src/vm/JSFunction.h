@@ -1037,8 +1037,8 @@ extern bool AsyncFunctionConstructor(JSContext* cx, unsigned argc, Value* vp);
 extern bool AsyncGeneratorConstructor(JSContext* cx, unsigned argc, Value* vp);
 
 // If enclosingEnv is null, the function will have a null environment()
-// (yes, null, not the global).  In all cases, the global will be used as the
-// parent.
+// (yes, null, not the global lexical environment).  In all cases, the global
+// will be used as the terminating environment.
 
 extern JSFunction* NewFunctionWithProto(
     JSContext* cx, JSNative native, unsigned nargs, FunctionFlags flags,
@@ -1072,8 +1072,8 @@ inline JSFunction* NewNativeConstructor(
 }
 
 // Allocate a new scripted function.  If enclosingEnv is null, the
-// global will be used.  In all cases the parent of the resulting object will be
-// the global.
+// global lexical environment will be used.  In all cases the terminating
+// environment of the resulting object will be the global.
 extern JSFunction* NewScriptedFunction(
     JSContext* cx, unsigned nargs, FunctionFlags flags, HandleAtom atom,
     HandleObject proto = nullptr,
@@ -1162,17 +1162,17 @@ class FunctionExtended : public JSFunction {
 };
 
 extern bool CanReuseScriptForClone(JS::Realm* realm, HandleFunction fun,
-                                   HandleObject newParent);
+                                   HandleObject newEnclosingEnv);
 
 extern JSFunction* CloneFunctionReuseScript(JSContext* cx, HandleFunction fun,
-                                            HandleObject parent,
+                                            HandleObject enclosingEnv,
                                             gc::AllocKind kind,
                                             NewObjectKind newKindArg,
                                             HandleObject proto);
 
 // Functions whose scripts are cloned are always given singleton types.
 extern JSFunction* CloneFunctionAndScript(
-    JSContext* cx, HandleFunction fun, HandleObject parent,
+    JSContext* cx, HandleFunction fun, HandleObject enclosingEnv,
     HandleScope newScope, Handle<ScriptSourceObject*> sourceObject,
     gc::AllocKind kind, HandleObject proto = nullptr);
 
