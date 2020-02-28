@@ -13,7 +13,7 @@ UNIFIED_SOURCES += [
 
 if CONFIG['COMPILE_ENVIRONMENT']:
     GeneratedFile('wgpu_ffi_generated.h',
-                  script='/layout/style/RunCbindgen.py',
+                  script='/build/RunCbindgen.py',
                   entry_point='generate',
                   inputs=[
                     '/gfx/wgpu/wgpu-remote',
