@@ -545,7 +545,8 @@ const PDFViewerApplication = {
     const pdfLinkService = new _pdf_link_service.PDFLinkService({
       eventBus,
       externalLinkTarget: _app_options.AppOptions.get("externalLinkTarget"),
-      externalLinkRel: _app_options.AppOptions.get("externalLinkRel")
+      externalLinkRel: _app_options.AppOptions.get("externalLinkRel"),
+      ignoreDestinationZoom: _app_options.AppOptions.get("ignoreDestinationZoom")
     });
     this.pdfLinkService = pdfLinkService;
     const downloadManager = this.externalServices.createDownloadManager({
@@ -3252,6 +3253,10 @@ const defaultOptions = {
     value: false,
     kind: OptionKind.VIEWER + OptionKind.PREFERENCE
   },
+  ignoreDestinationZoom: {
+    value: false,
+    kind: OptionKind.VIEWER + OptionKind.PREFERENCE
+  },
   imageResourcesPath: {
     value: "./images/",
     kind: OptionKind.VIEWER
@@ -3861,6 +3866,8 @@ class PDFRenderingQueue {
         this.highestPriorityPage = view.renderingId;
         view.draw().finally(() => {
           this.renderHighestPriority();
+        }).catch(reason => {
+          console.error(`renderView: "${reason}"`);
         });
         break;
     }
@@ -6474,12 +6481,14 @@ class PDFLinkService {
     eventBus,
     externalLinkTarget = null,
     externalLinkRel = null,
-    externalLinkEnabled = true
+    externalLinkEnabled = true,
+    ignoreDestinationZoom = false
   } = {}) {
     this.eventBus = eventBus || (0, _ui_utils.getGlobalEventBus)();
     this.externalLinkTarget = externalLinkTarget;
     this.externalLinkRel = externalLinkRel;
     this.externalLinkEnabled = externalLinkEnabled;
+    this._ignoreDestinationZoom = ignoreDestinationZoom;
     this.baseUrl = null;
     this.pdfDocument = null;
     this.pdfViewer = null;
@@ -6567,7 +6576,8 @@ class PDFLinkService {
 
       this.pdfViewer.scrollPageIntoView({
         pageNumber,
-        destArray: explicitDest
+        destArray: explicitDest,
+        ignoreDestinationZoom: this._ignoreDestinationZoom
       });
     };
 
@@ -6849,6 +6859,7 @@ class SimpleLinkService {
     this.externalLinkTarget = null;
     this.externalLinkRel = null;
     this.externalLinkEnabled = true;
+    this._ignoreDestinationZoom = false;
   }
 
   get pagesCount() {
@@ -8139,6 +8150,15 @@ class PDFThumbnailView {
       return Promise.resolve(undefined);
     }
 
+    const {
+      pdfPage
+    } = this;
+
+    if (!pdfPage) {
+      this.renderingState = _pdf_rendering_queue.RenderingStates.FINISHED;
+      return Promise.reject(new Error("pdfPage is not loaded"));
+    }
+
     this.renderingState = _pdf_rendering_queue.RenderingStates.RUNNING;
     const renderCapability = (0, _pdfjsLib.createPromiseCapability)();
 
@@ -8188,7 +8208,7 @@ class PDFThumbnailView {
       canvasContext: ctx,
       viewport: drawViewport
     };
-    const renderTask = this.renderTask = this.pdfPage.render(renderContext);
+    const renderTask = this.renderTask = pdfPage.render(renderContext);
     renderTask.onContinue = renderContinueCallback;
     renderTask.promise.then(function () {
       finishRenderTask(null);
@@ -9000,7 +9020,8 @@ class BaseViewer {
   scrollPageIntoView({
     pageNumber,
     destArray = null,
-    allowNegativeOffset = false
+    allowNegativeOffset = false,
+    ignoreDestinationZoom = false
   }) {
     if (!this.pdfDocument) {
       return;
@@ -9081,10 +9102,12 @@ class BaseViewer {
         return;
     }
 
-    if (scale && scale !== this._currentScale) {
-      this.currentScaleValue = scale;
-    } else if (this._currentScale === _ui_utils.UNKNOWN_SCALE) {
-      this.currentScaleValue = _ui_utils.DEFAULT_SCALE_VALUE;
+    if (!ignoreDestinationZoom) {
+      if (scale && scale !== this._currentScale) {
+        this.currentScaleValue = scale;
+      } else if (this._currentScale === _ui_utils.UNKNOWN_SCALE) {
+        this.currentScaleValue = _ui_utils.DEFAULT_SCALE_VALUE;
+      }
     }
 
     if (scale === "page-fit" && !destArray[4]) {
@@ -9896,14 +9919,23 @@ class PDFPageView {
       this.reset();
     }
 
-    if (!this.pdfPage) {
+    const {
+      div,
+      pdfPage
+    } = this;
+
+    if (!pdfPage) {
       this.renderingState = _pdf_rendering_queue.RenderingStates.FINISHED;
-      return Promise.reject(new Error("Page is not loaded"));
+
+      if (this.loadingIconDiv) {
+        div.removeChild(this.loadingIconDiv);
+        delete this.loadingIconDiv;
+      }
+
+      return Promise.reject(new Error("pdfPage is not loaded"));
     }
 
     this.renderingState = _pdf_rendering_queue.RenderingStates.RUNNING;
-    const pdfPage = this.pdfPage;
-    const div = this.div;
     const canvasWrapper = document.createElement("div");
     canvasWrapper.style.width = div.style.width;
     canvasWrapper.style.height = div.style.height;
@@ -11800,6 +11832,7 @@ function getDefaultPreferences() {
       "eventBusDispatchToDOM": false,
       "externalLinkTarget": 0,
       "historyUpdateUrl": false,
+      "ignoreDestinationZoom": false,
       "pdfBugEnabled": false,
       "renderer": "canvas",
       "renderInteractiveForms": false,

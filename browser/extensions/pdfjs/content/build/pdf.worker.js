@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-const pdfjsVersion = '2.4.375';
-const pdfjsBuild = 'e2b30e9e';
+const pdfjsVersion = '2.4.392';
+const pdfjsBuild = 'e1586016';
 
 const pdfjsCoreWorker = __w_pdfjs_require__(1);
 
@@ -223,7 +223,7 @@ var WorkerMessageHandler = {
     var WorkerTasks = [];
     const verbosity = (0, _util.getVerbosityLevel)();
     const apiVersion = docParams.apiVersion;
-    const workerVersion = '2.4.375';
+    const workerVersion = '2.4.392';
 
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
@@ -1738,9 +1738,9 @@ var RefSetCache = function RefSetCacheClosure() {
     putAlias: function RefSetCache_putAlias(ref, aliasRef) {
       this.dict[ref.toString()] = this.get(aliasRef);
     },
-    forEach: function RefSetCache_forEach(fn, thisArg) {
-      for (var i in this.dict) {
-        fn.call(thisArg, this.dict[i]);
+    forEach: function RefSetCache_forEach(callback) {
+      for (const i in this.dict) {
+        callback(this.dict[i]);
       }
     },
     clear: function RefSetCache_clear() {
@@ -4239,6 +4239,7 @@ class Catalog {
   getPageDict(pageIndex) {
     const capability = (0, _util.createPromiseCapability)();
     const nodesToVisit = [this.catDict.getRaw("Pages")];
+    const visitedNodes = new _primitives.RefSet();
     const xref = this.xref,
           pageKidsCountCache = this.pageKidsCountCache;
     let count,
@@ -4256,6 +4257,12 @@ class Catalog {
             continue;
           }
 
+          if (visitedNodes.has(currentNode)) {
+            capability.reject(new _util.FormatError("Pages tree contains circular reference."));
+            return;
+          }
+
+          visitedNodes.put(currentNode);
           xref.fetchAsync(currentNode).then(function (obj) {
             if ((0, _primitives.isDict)(obj, "Page") || (0, _primitives.isDict)(obj) && !obj.has("Kids")) {
               if (pageIndex === currentPageIndex) {
@@ -21921,7 +21928,7 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
           if (!properties.file) {
             if (/Symbol/i.test(properties.name)) {
               encoding = _encodings.SymbolSetEncoding;
-            } else if (/Dingbats/i.test(properties.name)) {
+            } else if (/Dingbats|Wingdings/i.test(properties.name)) {
               encoding = _encodings.ZapfDingbatsEncoding;
             }
           }
@@ -33991,6 +33998,7 @@ const getNonStdFontMap = (0, _core_utils.getLookupTableFactory)(function (t) {
   t["NuptialScript"] = "Times-Italic";
   t["SegoeUISymbol"] = "Helvetica";
   t["Wingdings"] = "ZapfDingbats";
+  t["Wingdings-Regular"] = "ZapfDingbats";
 });
 exports.getNonStdFontMap = getNonStdFontMap;
 const getSerifFonts = (0, _core_utils.getLookupTableFactory)(function (t) {
