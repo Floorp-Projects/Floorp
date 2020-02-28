@@ -32,13 +32,12 @@ using namespace mozilla::layout;
 
 // Convenience typedefs for helper classes that we forward-declare in .h file
 // (so that nsFlexContainerFrame methods can use them as parameters):
-typedef nsFlexContainerFrame::FlexItem FlexItem;
-typedef nsFlexContainerFrame::FlexLine FlexLine;
-typedef nsFlexContainerFrame::FlexboxAxisTracker FlexboxAxisTracker;
-typedef nsFlexContainerFrame::StrutInfo StrutInfo;
-typedef nsFlexContainerFrame::CachedMeasuringReflowResult
-    CachedMeasuringReflowResult;
-typedef nsLayoutUtils::IntrinsicISizeType IntrinsicISizeType;
+using FlexItem = nsFlexContainerFrame::FlexItem;
+using FlexLine = nsFlexContainerFrame::FlexLine;
+using FlexboxAxisTracker = nsFlexContainerFrame::FlexboxAxisTracker;
+using StrutInfo = nsFlexContainerFrame::StrutInfo;
+using CachedMeasuringReflowResult =
+    nsFlexContainerFrame::CachedMeasuringReflowResult;
 
 static mozilla::LazyLogModule gFlexContainerLog("FlexContainer");
 #define FLEX_LOG(...) \
@@ -5169,8 +5168,8 @@ void nsFlexContainerFrame::ReflowPlaceholders(
   }
 }
 
-nscoord nsFlexContainerFrame::IntrinsicISize(gfxContext* aRenderingContext,
-                                             IntrinsicISizeType aType) {
+nscoord nsFlexContainerFrame::IntrinsicISize(
+    gfxContext* aRenderingContext, nsLayoutUtils::IntrinsicISizeType aType) {
   nscoord containerISize = 0;
   const nsStylePosition* stylePos = StylePosition();
   const FlexboxAxisTracker axisTracker(this, GetWritingMode());
