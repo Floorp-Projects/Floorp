@@ -18,7 +18,6 @@ include('../js-cxxflags.mozbuild')
 
 # Generate frontend/ReservedWordsGenerated.h from frontend/ReservedWords.h
 GeneratedFile('ReservedWordsGenerated.h', script='GenerateReservedWords.py',
-              py2=True,
               inputs=['ReservedWords.h'])
 
 if CONFIG['JS_ENABLE_SMOOSH']:
