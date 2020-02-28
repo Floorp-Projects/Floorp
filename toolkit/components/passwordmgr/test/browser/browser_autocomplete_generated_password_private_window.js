@@ -58,7 +58,7 @@ add_task(async function test_autocomplete_menu_item_enabled() {
         "fill-login-generated-password"
       );
       is(
-        generatedPasswordItem.hasAttribute("disabled"),
+        generatedPasswordItem.disabled,
         false,
         "Generate password context menu item should be enabled in PB mode"
       );
