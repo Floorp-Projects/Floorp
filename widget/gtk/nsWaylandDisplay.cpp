@@ -6,6 +6,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsWaylandDisplay.h"
+#include "mozilla/StaticPrefs_widget.h"
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -17,28 +18,8 @@ namespace widget {
 #define GBMLIB_NAME "libgbm.so.1"
 #define DRMLIB_NAME "libdrm.so.2"
 
-// Use dmabuf textures for GL/WebRender. Use for testing purposes only,
-// it's slow due to missing modifiers.
-#define DMABUF_TEXTURE_PREF "widget.wayland_dmabuf_textures.enabled"
-// Enables dmabuf backend for basic software compositor, i.e. we can
-// write our gfx data directly to GPU. Used for testing purposes only
-// as it's slower than shm backend due to missing dmabuf modifiers.
-#define DMABUF_BASIC_PREF "widget.wayland_dmabuf_basic_compositor.enabled"
-// Enable dmabuf for WebGL backend
-#define DMABUF_WEBGL_PREF "widget.wayland_dmabuf_webgl.enabled"
-// Enable dmabuf for VA-API backend
-#define DMABUF_VAAPI_PREF "widget.wayland_dmabuf_vaapi.enabled"
-// See WindowSurfaceWayland::RenderingCacheMode for details.
-#define CACHE_MODE_PREF "widget.wayland_cache_mode"
-
 bool nsWaylandDisplay::sIsDMABufEnabled = false;
-int nsWaylandDisplay::sIsDMABufPrefTextState = false;
-int nsWaylandDisplay::sIsDMABufPrefBasicCompositorState = false;
-int nsWaylandDisplay::sIsDMABufPrefWebGLState = false;
-int nsWaylandDisplay::sIsDMABufPrefVAAPIState = false;
 bool nsWaylandDisplay::sIsDMABufConfigured = false;
-int nsWaylandDisplay::sRenderingCacheModePref = -1;
-bool nsWaylandDisplay::sIsPrefLoaded = false;
 
 wl_display* WaylandDisplayGetWLDisplay(GdkDisplay* aGdkDisplay) {
   if (!aGdkDisplay) {
@@ -53,7 +34,7 @@ wl_display* WaylandDisplayGetWLDisplay(GdkDisplay* aGdkDisplay) {
 
 // nsWaylandDisplay needs to be created for each calling thread(main thread,
 // compositor thread and render thread)
-#define MAX_DISPLAY_CONNECTIONS 3
+#define MAX_DISPLAY_CONNECTIONS 5
 
 static nsWaylandDisplay* gWaylandDisplays[MAX_DISPLAY_CONNECTIONS];
 static StaticMutex gWaylandDisplaysMutex;
@@ -394,6 +375,20 @@ int nsWaylandDisplay::GetGbmDeviceFd() {
   return mGbmFd;
 }
 
+class nsWaylandDisplayLoopObserver : public MessageLoop::DestructionObserver {
+ public:
+  explicit nsWaylandDisplayLoopObserver(nsWaylandDisplay* aWaylandDisplay)
+      : mDisplay(aWaylandDisplay){};
+  virtual void WillDestroyCurrentMessageLoop() override {
+    mDisplay->Shutdown();
+    mDisplay = nullptr;
+    delete this;
+  }
+
+ private:
+  nsWaylandDisplay* mDisplay;
+};
+
 nsWaylandDisplay::nsWaylandDisplay(wl_display* aDisplay)
     : mDispatcherThreadLoop(nullptr),
       mThreadId(PR_GetCurrentThread()),
@@ -419,24 +414,17 @@ nsWaylandDisplay::nsWaylandDisplay(wl_display* aDisplay)
   wl_registry_add_listener(mRegistry, &registry_listener, this);
 
   if (NS_IsMainThread()) {
-    // We can't load the preference from compositor/render thread
-    // so load all Wayland prefs here.
-    if (!sIsPrefLoaded) {
-      sIsDMABufPrefTextState = Preferences::GetBool(DMABUF_TEXTURE_PREF, false);
-      sIsDMABufPrefBasicCompositorState =
-          Preferences::GetBool(DMABUF_BASIC_PREF, false);
-      sIsDMABufPrefWebGLState = Preferences::GetBool(DMABUF_WEBGL_PREF, false);
-      sIsDMABufPrefVAAPIState = Preferences::GetBool(DMABUF_VAAPI_PREF, false);
-      sRenderingCacheModePref = Preferences::GetInt(CACHE_MODE_PREF, 0);
-      sIsPrefLoaded = true;
-    }
-
     // Use default event queue in main thread operated by Gtk+.
     mEventQueue = nullptr;
     wl_display_roundtrip(mDisplay);
     wl_display_roundtrip(mDisplay);
   } else {
     mDispatcherThreadLoop = MessageLoop::current();
+    MOZ_ASSERT(mDispatcherThreadLoop);
+    if (mDispatcherThreadLoop) {
+      auto observer = new nsWaylandDisplayLoopObserver(this);
+      mDispatcherThreadLoop->AddDestructionObserver(observer);
+    }
     mEventQueue = wl_display_create_queue(mDisplay);
     wl_proxy_set_queue((struct wl_proxy*)mRegistry, mEventQueue);
     wl_display_roundtrip_queue(mDisplay, mEventQueue);
@@ -470,16 +458,11 @@ bool nsWaylandDisplay::IsDMABufEnabled() {
     return false;
   }
 
-  if (!sIsPrefLoaded) {
-    MOZ_ASSERT(false,
-               "We're missing nsWaylandDisplay preference configuration!");
-    return false;
-  }
-
   sIsDMABufConfigured = true;
-  if (!nsWaylandDisplay::sIsDMABufPrefTextState &&
-      !nsWaylandDisplay::sIsDMABufPrefBasicCompositorState &&
-      !nsWaylandDisplay::sIsDMABufPrefWebGLState) {
+  if (!StaticPrefs::widget_wayland_dmabuf_basic_compositor_enabled() &&
+      !StaticPrefs::widget_wayland_dmabuf_textures_enabled() &&
+      !StaticPrefs::widget_wayland_dmabuf_webgl_enabled() &&
+      !StaticPrefs::widget_wayland_dmabuf_vaapi_enabled()) {
     // Disabled by user, just quit.
     return false;
   }
@@ -501,16 +484,23 @@ bool nsWaylandDisplay::IsDMABufEnabled() {
 }
 
 bool nsWaylandDisplay::IsDMABufBasicEnabled() {
-  return IsDMABufEnabled() && sIsDMABufPrefBasicCompositorState;
+  return IsDMABufEnabled() &&
+         StaticPrefs::widget_wayland_dmabuf_basic_compositor_enabled();
 }
 bool nsWaylandDisplay::IsDMABufTexturesEnabled() {
-  return IsDMABufEnabled() && sIsDMABufPrefTextState;
+  return IsDMABufEnabled() &&
+         StaticPrefs::widget_wayland_dmabuf_textures_enabled();
 }
 bool nsWaylandDisplay::IsDMABufWebGLEnabled() {
-  return IsDMABufEnabled() && sIsDMABufPrefWebGLState;
+  return IsDMABufEnabled() &&
+         StaticPrefs::widget_wayland_dmabuf_webgl_enabled();
 }
 bool nsWaylandDisplay::IsDMABufVAAPIEnabled() {
-  return IsDMABufEnabled() && sIsDMABufPrefVAAPIState;
+  return IsDMABufEnabled() &&
+         StaticPrefs::widget_wayland_dmabuf_vaapi_enabled();
+}
+int nsWaylandDisplay::GetRenderingCacheModePref() {
+  return StaticPrefs::widget_wayland_cache_mode();
 }
 
 void* nsGbmLib::sGbmLibHandle = nullptr;
