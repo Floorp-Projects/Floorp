@@ -1335,6 +1335,50 @@ function getAutocompletePopupLabels(popup) {
 }
 
 /**
+ * Check if the retrieved list of autocomplete labels of the specific popup
+ * includes all of the expected labels.
+ *
+ * @param {AutocompletPopup} popup
+ * @param {Array<String>} expected the array of expected labels
+ */
+function hasExactPopupLabels(popup, expected) {
+  return hasPopupLabels(popup, expected, true);
+}
+
+/**
+ * Check if the expected label is included in the list of autocomplete labels
+ * of the specific popup.
+ *
+ * @param {AutocompletPopup} popup
+ * @param {String} label the label to check
+ */
+function hasPopupLabel(popup, label) {
+  return hasPopupLabels(popup, [label]);
+}
+
+/**
+ * Validate the expected labels against the autocomplete labels.
+ *
+ * @param {AutocompletPopup} popup
+ * @param {Array<String>} expectedLabels
+ * @param {Boolean} checkAll
+ */
+function hasPopupLabels(popup, expectedLabels, checkAll = false) {
+  const autocompleteLabels = getAutocompletePopupLabels(popup);
+  if (checkAll) {
+    return (
+      autocompleteLabels.length === expectedLabels.length &&
+      autocompleteLabels.every((autoLabel, idx) => {
+        return expectedLabels.indexOf(autoLabel) === idx;
+      })
+    );
+  }
+  return expectedLabels.every(expectedLabel => {
+    return autocompleteLabels.includes(expectedLabel);
+  });
+}
+
+/**
  * Return the "Confirm Dialog" element.
  *
  * @param toolbox

@@ -39,13 +39,9 @@ add_task(async function() {
 
   ok(popup.isOpen, "popup is open");
 
-  const popupItems = getAutocompletePopupLabels(popup);
   const expectedPopupItems = ["item00", "item1", "item2", "item3"];
-
-  is(popup.itemCount, expectedPopupItems.length, "popup.itemCount is correct");
-  is(
-    popupItems.join("-"),
-    expectedPopupItems.join("-"),
+  ok(
+    hasExactPopupLabels(popup, expectedPopupItems),
     "getItems returns the items we expect"
   );
   is(popup.selectedIndex, 0, "Index of the first item is selected.");

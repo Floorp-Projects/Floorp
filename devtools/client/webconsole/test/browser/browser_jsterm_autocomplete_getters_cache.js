@@ -55,9 +55,8 @@ add_task(async function() {
   EventUtils.synthesizeKey("KEY_Tab");
   await onPopUpOpen;
   ok(autocompletePopup.isOpen, "popup is open after Tab");
-  is(
-    getAutocompletePopupLabels(autocompletePopup).join("-"),
-    "baz-bloop",
+  ok(
+    hasExactPopupLabels(autocompletePopup, ["baz", "bloop"]),
     "popup has expected items"
   );
   checkInputValueAndCursorPosition(hud, "foo.bar.|");
@@ -74,9 +73,8 @@ add_task(async function() {
   onPopUpOpen = autocompletePopup.once("popup-opened");
   EventUtils.synthesizeKey(" ", { ctrlKey: true });
   await onPopUpOpen;
-  is(
-    getAutocompletePopupLabels(autocompletePopup).join("-"),
-    "baz-bloop",
+  ok(
+    hasExactPopupLabels(autocompletePopup, ["baz", "bloop"]),
     "popup has expected items"
   );
   checkInputValueAndCursorPosition(hud, "foo.bar.|");
@@ -89,9 +87,8 @@ add_task(async function() {
   EventUtils.synthesizeKey(" ");
   await onAutocompleteUpdate;
   is(autocompletePopup.isOpen, true, "Autocomplete popup is still opened");
-  is(
-    getAutocompletePopupLabels(autocompletePopup).join("-"),
-    "baz-bloop",
+  ok(
+    hasExactPopupLabels(autocompletePopup, ["baz", "bloop"]),
     "popup has expected items"
   );
 
@@ -99,9 +96,8 @@ add_task(async function() {
   EventUtils.synthesizeKey("KEY_Backspace");
   await onAutocompleteUpdate;
   is(autocompletePopup.isOpen, true, "Autocomplete popup is still opened");
-  is(
-    getAutocompletePopupLabels(autocompletePopup).join("-"),
-    "baz-bloop",
+  ok(
+    hasExactPopupLabels(autocompletePopup, ["baz", "bloop"]),
     "popup has expected items"
   );
 

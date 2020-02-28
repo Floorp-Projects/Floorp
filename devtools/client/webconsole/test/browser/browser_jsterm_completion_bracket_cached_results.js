@@ -92,11 +92,11 @@ add_task(async function() {
     EventUtils.sendString(test.initialInput);
     await onPopUpOpen;
 
-    is(
-      getAutocompletePopupLabels(autocompletePopup).join("|"),
-      test.expectedItems.join("|"),
+    ok(
+      hasExactPopupLabels(autocompletePopup, test.expectedItems),
       `popup has expected items, in expected order`
     );
+
     checkInputCompletionValue(
       hud,
       test.expectedCompletionText,
@@ -111,9 +111,8 @@ add_task(async function() {
       EventUtils.sendString(char);
       await onPopupUpdate;
 
-      is(
-        getAutocompletePopupLabels(autocompletePopup).join("|"),
-        expectedItems.join("|"),
+      ok(
+        hasExactPopupLabels(autocompletePopup, expectedItems),
         `popup has expected items, in expected order`
       );
       checkInputCompletionValue(

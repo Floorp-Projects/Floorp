@@ -21,9 +21,8 @@ add_task(async function() {
   await onPopUpOpen;
 
   const expectedCommands = [":help", ":screenshot"];
-  is(
-    getAutocompletePopupLabels(autocompletePopup).join("\n"),
-    expectedCommands.join("\n"),
+  ok(
+    hasExactPopupLabels(autocompletePopup, expectedCommands),
     "popup contains expected commands"
   );
 
