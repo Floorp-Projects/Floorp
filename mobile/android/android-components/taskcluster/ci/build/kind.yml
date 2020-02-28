@@ -60,7 +60,6 @@ job-defaults:
                     - ':{component}:testRelease'
                     - ':{component}:lintRelease'
                     - ':{component}:publish'
-                    - ':{component}:renameArtifacts'
                 default:
                     by-component:
                         # No lintRelease on this job, gradle task isn't defined

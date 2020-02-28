@@ -73,14 +73,4 @@ ext.configurePublish = { groupIdArg, artifactIdArg, descriptionArg ->
 
         commandLine 'python', renameScript, '--path', mavenBuildDir, '--timestamp', (project.hasProperty('timestamp') ? timestamp : '')
     }
-
-    task renameArtifacts(type: Exec) {
-        dependsOn publish
-
-        def renameScript = "${rootDir}/automation/taskcluster/rename_artifacts.py"
-        def mavenBuildDir = "${project.buildDir}/maven"
-
-        commandLine 'python', renameScript, '--path', mavenBuildDir, '--nightly-version', (project.hasProperty('nightlyVersion') ? nightlyVersion : '')
-    }
-
 }
