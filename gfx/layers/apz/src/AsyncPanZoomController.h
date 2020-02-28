@@ -1655,12 +1655,12 @@ class AsyncPanZoomController {
   CSSPoint mTestAsyncScrollOffset;
   // Extra zoom to include in the aync zoom for testing
   LayerToParentLayerScale mTestAsyncZoom;
-  int mTestAttributeAppliers : 8;
+  uint8_t mTestAttributeAppliers;
   // Flag to track whether or not the APZ transform is not used. This
   // flag is recomputed for every composition frame.
-  bool mAsyncTransformAppliedToContent : 1;
+  bool mAsyncTransformAppliedToContent;
   // Flag to track whether or not this APZC has ever async key scrolled.
-  bool mTestHasAsyncKeyScrolled : 1;
+  bool mTestHasAsyncKeyScrolled;
 
   /* ===================================================================
    * The functions and members in this section are used for checkerboard
