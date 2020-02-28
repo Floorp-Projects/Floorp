@@ -143,28 +143,28 @@ def main(args=sys.argv[1:]):
     success = raptor.run_tests(raptor_test_list, raptor_test_names)
 
     if not success:
-        # didn't get test results; test timed out or crashed, etc. we want job to fail
-        LOG.critical(
-            "TEST-UNEXPECTED-FAIL: no raptor test results were found for %s"
-            % ", ".join(raptor_test_names)
-        )
-        os.sys.exit(1)
+        # if we have results but one test page timed out (i.e. one tp6 test page didn't load
+        # but others did) we still dumped PERFHERDER_DATA for the successfull pages but we
+        # want the overall test job to marked as a failure
+        pages_that_timed_out = raptor.get_page_timeout_list()
+        if pages_that_timed_out:
+            for _page in pages_that_timed_out:
+                message = [
+                    ("TEST-UNEXPECTED-FAIL", "test '%s'" % _page["test_name"]),
+                    ("timed out loading test page", _page["url"]),
+                ]
+                if _page.get("pending_metrics") is not None:
+                    message.append(("pending metrics", _page["pending_metrics"]))
 
-    # if we have results but one test page timed out (i.e. one tp6 test page didn't load
-    # but others did) we still dumped PERFHERDER_DATA for the successfull pages but we
-    # want the overall test job to marked as a failure
-    pages_that_timed_out = raptor.get_page_timeout_list()
-    if len(pages_that_timed_out) > 0:
-        for _page in pages_that_timed_out:
-            message = [
-                ("TEST-UNEXPECTED-FAIL", "test '%s'" % _page["test_name"]),
-                ("timed out loading test page", _page["url"]),
-            ]
-            if _page.get("pending_metrics") is not None:
-                message.append(("pending metrics", _page["pending_metrics"]))
-
+                LOG.critical(
+                    " ".join("%s: %s" % (subject, msg) for subject, msg in message)
+                )
+        else:
+            # we want the job to fail when we didn't get any test results
+            # (due to test timeout/crash/etc.)
             LOG.critical(
-                " ".join("%s: %s" % (subject, msg) for subject, msg in message)
+                "TEST-UNEXPECTED-FAIL: no raptor test results were found for %s"
+                % ", ".join(raptor_test_names)
             )
         os.sys.exit(1)
 

@@ -326,6 +326,7 @@ either Raptor or browsertime."""
                 except RuntimeError as e:
                     LOG.critical("Tests failed to finish! Application timed out.")
                     LOG.error(e)
+                    os.sys.exit(1)
                 finally:
                     self.run_test_teardown(test)
             return self.process_results(tests, test_names)

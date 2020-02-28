@@ -223,7 +223,7 @@ class RaptorResultsHandler(PerftestResultsHandler):
                 output, out_sup_perfdata + out_perfdata
             )
 
-        return sup_success and success and validate_success
+        return sup_success and success and validate_success and not self.page_timeout_list
 
 
 class BrowsertimeResultsHandler(PerftestResultsHandler):
