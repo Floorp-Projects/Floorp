@@ -107,7 +107,7 @@ describe("selectLayoutRender", () => {
 
     assert.lengthOf(layoutRender, 1);
     assert.propertyVal(layoutRender[0], "width", 3);
-    assert.deepEqual(layoutRender[0].components[0].data.spocs.items, []);
+    assert.deepEqual(layoutRender[0].components[0].data.spocs, []);
   });
 
   it("should return layout with spocs data if feed isn't defined but spocs is", () => {
@@ -126,7 +126,14 @@ describe("selectLayoutRender", () => {
     store.dispatch({ type: at.DISCOVERY_STREAM_FEEDS_UPDATE });
     store.dispatch({
       type: at.DISCOVERY_STREAM_SPOCS_UPDATE,
-      data: { lastUpdated: 0, spocs: { spocs: { items: [1, 2, 3] } } },
+      data: {
+        lastUpdated: 0,
+        spocs: {
+          spocs: {
+            items: [{ id: 1 }, { id: 2 }, { id: 3 }],
+          },
+        },
+      },
     });
 
     const { layoutRender } = selectLayoutRender({
@@ -135,7 +142,9 @@ describe("selectLayoutRender", () => {
 
     assert.lengthOf(layoutRender, 1);
     assert.propertyVal(layoutRender[0], "width", 3);
-    assert.deepEqual(layoutRender[0].components[0].data.spocs, [1]);
+    assert.deepEqual(layoutRender[0].components[0].data.spocs, [
+      { id: 1, pos: 0 },
+    ]);
   });
 
   it("should return feed data offset by layout set prop", () => {

@@ -449,8 +449,12 @@ class PlacesFeed {
         this.removeObservers();
         break;
       case at.BLOCK_URL: {
-        const { url, pocket_id } = action.data;
-        NewTabUtils.activityStreamLinks.blockURL({ url, pocket_id });
+        if (action.data) {
+          action.data.forEach(site => {
+            const { url, pocket_id } = site;
+            NewTabUtils.activityStreamLinks.blockURL({ url, pocket_id });
+          });
+        }
         break;
       }
       case at.BOOKMARK_URL:

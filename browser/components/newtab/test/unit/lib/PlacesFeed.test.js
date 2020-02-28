@@ -147,7 +147,7 @@ describe("PlacesFeed", () => {
     it("should block a url on BLOCK_URL", () => {
       feed.onAction({
         type: at.BLOCK_URL,
-        data: { url: "apple.com", pocket_id: 1234 },
+        data: [{ url: "apple.com", pocket_id: 1234 }],
       });
       assert.calledWith(global.NewTabUtils.activityStreamLinks.blockURL, {
         url: "apple.com",

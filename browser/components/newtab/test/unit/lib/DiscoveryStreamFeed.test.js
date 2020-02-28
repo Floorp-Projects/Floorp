@@ -1890,9 +1890,11 @@ describe("DiscoveryStreamFeed", () => {
 
       await feed.onAction({
         type: at.BLOCK_URL,
-        data: {
-          flight_id: "1234",
-        },
+        data: [
+          {
+            flight_id: "1234",
+          },
+        ],
       });
 
       assert.calledWith(feed.recordBlockFlightId, "1234");

@@ -1,59 +1,46 @@
 import { CollectionCardGrid } from "content-src/components/DiscoveryStreamComponents/CollectionCardGrid/CollectionCardGrid";
 import { CardGrid } from "content-src/components/DiscoveryStreamComponents/CardGrid/CardGrid";
-import { combineReducers, createStore } from "redux";
-import { INITIAL_STATE, reducers } from "common/Reducers.jsm";
-import { Provider } from "react-redux";
 import React from "react";
-import { mount } from "enzyme";
-
-function mountCollectionWithProps(props, spocsState) {
-  const state = {
-    ...INITIAL_STATE,
-    DiscoveryStream: {
-      ...INITIAL_STATE.DiscoveryStream,
-      spocs: {
-        ...INITIAL_STATE.DiscoveryStream.spocs,
-        ...spocsState,
-      },
-    },
-  };
-  const store = createStore(combineReducers(reducers), state);
-
-  return mount(
-    <Provider store={store}>
-      <CollectionCardGrid {...props} />
-    </Provider>
-  );
-}
+import { shallow } from "enzyme";
 
 describe("<CollectionCardGrid>", () => {
   let wrapper;
+  let sandbox;
+  let dispatchStub;
+  const initialSpocs = [
+    { id: 123, url: "123" },
+    { id: 456, url: "456" },
+    { id: 789, url: "789" },
+  ];
 
   beforeEach(() => {
-    const initialSpocs = [{ id: 123 }, { id: 456 }, { id: 789 }];
-    wrapper = mountCollectionWithProps(
-      {
-        placement: {
+    sandbox = sinon.createSandbox();
+    dispatchStub = sandbox.stub();
+    wrapper = shallow(
+      <CollectionCardGrid
+        dispatch={dispatchStub}
+        type="COLLECTIONCARDGRID"
+        placement={{
           name: "spocs",
-        },
-        data: {
+        }}
+        data={{
           spocs: initialSpocs,
-        },
-      },
-      {
-        data: {
-          spocs: {
-            title: "title",
-            context: "context",
-            items: initialSpocs,
+        }}
+        spocs={{
+          data: {
+            spocs: {
+              title: "title",
+              context: "context",
+              items: initialSpocs,
+            },
           },
-        },
-      }
+        }}
+      />
     );
   });
 
   it("should render an empty div", () => {
-    wrapper = mountCollectionWithProps({}, {});
+    wrapper = shallow(<CollectionCardGrid />);
     assert.ok(wrapper.exists());
     assert.ok(!wrapper.exists(".ds-collection-card-grid"));
   });
@@ -102,28 +89,57 @@ describe("<CollectionCardGrid>", () => {
   });
 
   it("should render nothing without a title", () => {
-    const initialSpocs = [{ id: 123 }, { id: 456 }, { id: 789 }];
-    wrapper = mountCollectionWithProps(
-      {
-        placement: {
+    wrapper = shallow(
+      <CollectionCardGrid
+        dispatch={dispatchStub}
+        placement={{
           name: "spocs",
-        },
-        data: {
+        }}
+        data={{
           spocs: initialSpocs,
-        },
-      },
-      {
-        data: {
-          spocs: {
-            title: "",
-            context: "context",
-            items: initialSpocs,
+        }}
+        spocs={{
+          data: {
+            spocs: {
+              title: "",
+              context: "context",
+              items: initialSpocs,
+            },
           },
-        },
-      }
+        }}
+      />
     );
 
     assert.ok(wrapper.exists());
     assert.ok(!wrapper.exists(".ds-collection-card-grid"));
+  });
+
+  it("should dispath telemety events on dismiss", () => {
+    wrapper.instance().onDismissClick();
+
+    const firstCall = dispatchStub.getCall(0);
+    const secondCall = dispatchStub.getCall(1);
+    const thirdCall = dispatchStub.getCall(2);
+
+    assert.equal(firstCall.args[0].type, "BLOCK_URL");
+    assert.deepEqual(firstCall.args[0].data, [
+      { url: "123", pocket_id: undefined },
+      { url: "456", pocket_id: undefined },
+      { url: "789", pocket_id: undefined },
+    ]);
+
+    assert.equal(secondCall.args[0].type, "TELEMETRY_USER_EVENT");
+    assert.deepEqual(secondCall.args[0].data, {
+      event: "BLOCK",
+      source: "COLLECTIONCARDGRID",
+      action_position: 0,
+    });
+
+    assert.equal(thirdCall.args[0].type, "TELEMETRY_IMPRESSION_STATS");
+    assert.deepEqual(thirdCall.args[0].data, {
+      source: "COLLECTIONCARDGRID",
+      block: 0,
+      tiles: [{ id: 123, pos: 0 }, { id: 456, pos: 1 }, { id: 789, pos: 2 }],
+    });
   });
 });

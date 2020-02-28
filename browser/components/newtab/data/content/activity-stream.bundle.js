@@ -565,7 +565,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var react_redux__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(23);
 /* harmony import */ var react_redux__WEBPACK_IMPORTED_MODULE_4___default = /*#__PURE__*/__webpack_require__.n(react_redux__WEBPACK_IMPORTED_MODULE_4__);
 /* harmony import */ var content_src_components_DiscoveryStreamBase_DiscoveryStreamBase__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(26);
-/* harmony import */ var content_src_components_ErrorBoundary_ErrorBoundary__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(44);
+/* harmony import */ var content_src_components_ErrorBoundary_ErrorBoundary__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(45);
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(9);
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_7___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_7__);
 /* harmony import */ var content_src_components_Search_Search__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(72);
@@ -4063,27 +4063,25 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(2);
 /* harmony import */ var content_src_components_DiscoveryStreamComponents_CardGrid_CardGrid__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(27);
 /* harmony import */ var content_src_components_DiscoveryStreamComponents_CollectionCardGrid_CollectionCardGrid__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(42);
-/* harmony import */ var content_src_components_CollapsibleSection_CollapsibleSection__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(43);
+/* harmony import */ var content_src_components_CollapsibleSection_CollapsibleSection__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(44);
 /* harmony import */ var react_redux__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(23);
 /* harmony import */ var react_redux__WEBPACK_IMPORTED_MODULE_4___default = /*#__PURE__*/__webpack_require__.n(react_redux__WEBPACK_IMPORTED_MODULE_4__);
-/* harmony import */ var content_src_components_DiscoveryStreamComponents_DSDismiss_DSDismiss__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(48);
-/* harmony import */ var content_src_components_DiscoveryStreamComponents_DSMessage_DSMessage__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(49);
-/* harmony import */ var content_src_components_DiscoveryStreamComponents_DSPrivacyModal_DSPrivacyModal__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(50);
-/* harmony import */ var content_src_components_DiscoveryStreamComponents_DSTextPromo_DSTextPromo__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(51);
-/* harmony import */ var content_src_components_DiscoveryStreamComponents_Hero_Hero__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(52);
-/* harmony import */ var content_src_components_DiscoveryStreamComponents_Highlights_Highlights__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(54);
-/* harmony import */ var content_src_components_DiscoveryStreamComponents_HorizontalRule_HorizontalRule__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(67);
-/* harmony import */ var content_src_components_DiscoveryStreamComponents_List_List__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(53);
-/* harmony import */ var content_src_components_DiscoveryStreamComponents_Navigation_Navigation__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(68);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__(9);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_14___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_14__);
-/* harmony import */ var content_src_components_DiscoveryStreamComponents_SectionTitle_SectionTitle__WEBPACK_IMPORTED_MODULE_15__ = __webpack_require__(69);
-/* harmony import */ var content_src_lib_selectLayoutRender__WEBPACK_IMPORTED_MODULE_16__ = __webpack_require__(70);
-/* harmony import */ var content_src_components_DiscoveryStreamComponents_TopSites_TopSites__WEBPACK_IMPORTED_MODULE_17__ = __webpack_require__(71);
+/* harmony import */ var content_src_components_DiscoveryStreamComponents_DSMessage_DSMessage__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(49);
+/* harmony import */ var content_src_components_DiscoveryStreamComponents_DSPrivacyModal_DSPrivacyModal__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(50);
+/* harmony import */ var content_src_components_DiscoveryStreamComponents_DSTextPromo_DSTextPromo__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(51);
+/* harmony import */ var content_src_components_DiscoveryStreamComponents_Hero_Hero__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(52);
+/* harmony import */ var content_src_components_DiscoveryStreamComponents_Highlights_Highlights__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(54);
+/* harmony import */ var content_src_components_DiscoveryStreamComponents_HorizontalRule_HorizontalRule__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(67);
+/* harmony import */ var content_src_components_DiscoveryStreamComponents_List_List__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(53);
+/* harmony import */ var content_src_components_DiscoveryStreamComponents_Navigation_Navigation__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(68);
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(9);
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_13___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_13__);
+/* harmony import */ var content_src_components_DiscoveryStreamComponents_SectionTitle_SectionTitle__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__(69);
+/* harmony import */ var content_src_lib_selectLayoutRender__WEBPACK_IMPORTED_MODULE_15__ = __webpack_require__(70);
+/* harmony import */ var content_src_components_DiscoveryStreamComponents_TopSites_TopSites__WEBPACK_IMPORTED_MODULE_16__ = __webpack_require__(71);
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
-
 
 
 
@@ -4121,7 +4119,7 @@ function isAllowedCSS(property, value) {
   const urls = value.match(/url\("[^"]+"\)/g);
   return !urls || urls.every(url => ALLOWED_CSS_URL_PREFIXES.some(prefix => url.slice(5).startsWith(prefix)));
 }
-class _DiscoveryStreamBase extends react__WEBPACK_IMPORTED_MODULE_14___default.a.PureComponent {
+class _DiscoveryStreamBase extends react__WEBPACK_IMPORTED_MODULE_13___default.a.PureComponent {
   constructor(props) {
     super(props);
     this.onStyleMount = this.onStyleMount.bind(this);
@@ -4180,7 +4178,7 @@ class _DiscoveryStreamBase extends react__WEBPACK_IMPORTED_MODULE_14___default.a
 
     switch (component.type) {
       case "Highlights":
-        return react__WEBPACK_IMPORTED_MODULE_14___default.a.createElement(content_src_components_DiscoveryStreamComponents_Highlights_Highlights__WEBPACK_IMPORTED_MODULE_10__["Highlights"], null);
+        return react__WEBPACK_IMPORTED_MODULE_13___default.a.createElement(content_src_components_DiscoveryStreamComponents_Highlights_Highlights__WEBPACK_IMPORTED_MODULE_9__["Highlights"], null);
 
       case "TopSites":
         let promoAlignment;
@@ -4189,58 +4187,21 @@ class _DiscoveryStreamBase extends react__WEBPACK_IMPORTED_MODULE_14___default.a
           promoAlignment = component.spocs.positions[0].index === 0 ? "left" : "right";
         }
 
-        return react__WEBPACK_IMPORTED_MODULE_14___default.a.createElement(content_src_components_DiscoveryStreamComponents_TopSites_TopSites__WEBPACK_IMPORTED_MODULE_17__["TopSites"], {
+        return react__WEBPACK_IMPORTED_MODULE_13___default.a.createElement(content_src_components_DiscoveryStreamComponents_TopSites_TopSites__WEBPACK_IMPORTED_MODULE_16__["TopSites"], {
           header: component.header,
           data: component.data,
           promoAlignment: promoAlignment
         });
 
       case "TextPromo":
-        if (!component.data || !component.data.spocs || !component.data.spocs[0]) {
-          return null;
-        } // Grab the first item in the array as we only have 1 spoc position.
-
-
-        const [spoc] = component.data.spocs;
-        const {
-          image_src,
-          raw_image_src,
-          alt_text,
-          title,
-          url,
-          context,
-          cta,
-          flight_id,
-          id,
-          shim
-        } = spoc;
-        return react__WEBPACK_IMPORTED_MODULE_14___default.a.createElement(content_src_components_DiscoveryStreamComponents_DSDismiss_DSDismiss__WEBPACK_IMPORTED_MODULE_5__["DSDismiss"], {
-          data: {
-            url: spoc.url,
-            guid: spoc.id,
-            shim: spoc.shim
-          },
+        return react__WEBPACK_IMPORTED_MODULE_13___default.a.createElement(content_src_components_DiscoveryStreamComponents_DSTextPromo_DSTextPromo__WEBPACK_IMPORTED_MODULE_7__["DSTextPromo"], {
           dispatch: this.props.dispatch,
-          shouldSendImpressionStats: true,
-          extraClasses: `ds-dismiss-ds-text-promo`
-        }, react__WEBPACK_IMPORTED_MODULE_14___default.a.createElement(content_src_components_DiscoveryStreamComponents_DSTextPromo_DSTextPromo__WEBPACK_IMPORTED_MODULE_8__["DSTextPromo"], {
-          dispatch: this.props.dispatch,
-          image: image_src,
-          raw_image_src: raw_image_src,
-          alt_text: alt_text || title,
-          header: title,
-          cta_text: cta,
-          cta_url: url,
-          subtitle: context,
-          flightId: flight_id,
-          id: id,
-          pos: 0,
-          shim: shim,
-          type: component.type
-        }));
+          type: component.type,
+          data: component.data
+        });
 
       case "Message":
-        return react__WEBPACK_IMPORTED_MODULE_14___default.a.createElement(content_src_components_DiscoveryStreamComponents_DSMessage_DSMessage__WEBPACK_IMPORTED_MODULE_6__["DSMessage"], {
+        return react__WEBPACK_IMPORTED_MODULE_13___default.a.createElement(content_src_components_DiscoveryStreamComponents_DSMessage_DSMessage__WEBPACK_IMPORTED_MODULE_5__["DSMessage"], {
           title: component.header && component.header.title,
           subtitle: component.header && component.header.subtitle,
           link_text: component.header && component.header.link_text,
@@ -4249,41 +4210,36 @@ class _DiscoveryStreamBase extends react__WEBPACK_IMPORTED_MODULE_14___default.a
         });
 
       case "SectionTitle":
-        return react__WEBPACK_IMPORTED_MODULE_14___default.a.createElement(content_src_components_DiscoveryStreamComponents_SectionTitle_SectionTitle__WEBPACK_IMPORTED_MODULE_15__["SectionTitle"], {
+        return react__WEBPACK_IMPORTED_MODULE_13___default.a.createElement(content_src_components_DiscoveryStreamComponents_SectionTitle_SectionTitle__WEBPACK_IMPORTED_MODULE_14__["SectionTitle"], {
           header: component.header
         });
 
       case "Navigation":
-        return react__WEBPACK_IMPORTED_MODULE_14___default.a.createElement(content_src_components_DiscoveryStreamComponents_Navigation_Navigation__WEBPACK_IMPORTED_MODULE_13__["Navigation"], {
+        return react__WEBPACK_IMPORTED_MODULE_13___default.a.createElement(content_src_components_DiscoveryStreamComponents_Navigation_Navigation__WEBPACK_IMPORTED_MODULE_12__["Navigation"], {
           links: component.properties.links,
           alignment: component.properties.alignment,
           header: component.header
         });
 
       case "CollectionCardGrid":
-        if (!component.data || !component.data.spocs || !component.data.spocs[0] || // We only display complete collections.
-        component.data.spocs.length < 3) {
-          return null;
-        }
-
-        return react__WEBPACK_IMPORTED_MODULE_14___default.a.createElement(content_src_components_DiscoveryStreamComponents_DSDismiss_DSDismiss__WEBPACK_IMPORTED_MODULE_5__["DSDismiss"], {
-          dispatch: this.props.dispatch,
-          shouldSendImpressionStats: true,
-          extraClasses: `ds-dismiss-ds-collection`
-        }, react__WEBPACK_IMPORTED_MODULE_14___default.a.createElement(content_src_components_DiscoveryStreamComponents_CollectionCardGrid_CollectionCardGrid__WEBPACK_IMPORTED_MODULE_2__["CollectionCardGrid"], {
-          placement: component.placement,
+        const {
+          DiscoveryStream
+        } = this.props;
+        return react__WEBPACK_IMPORTED_MODULE_13___default.a.createElement(content_src_components_DiscoveryStreamComponents_CollectionCardGrid_CollectionCardGrid__WEBPACK_IMPORTED_MODULE_2__["CollectionCardGrid"], {
           data: component.data,
           feed: component.feed,
+          spocs: DiscoveryStream.spocs,
+          placement: component.placement,
           border: component.properties.border,
           type: component.type,
-          dispatch: this.props.dispatch,
           items: component.properties.items,
           cta_variant: component.cta_variant,
-          display_engagement_labels: ENGAGEMENT_LABEL_ENABLED
-        }));
+          display_engagement_labels: ENGAGEMENT_LABEL_ENABLED,
+          dispatch: this.props.dispatch
+        });
 
       case "CardGrid":
-        return react__WEBPACK_IMPORTED_MODULE_14___default.a.createElement(content_src_components_DiscoveryStreamComponents_CardGrid_CardGrid__WEBPACK_IMPORTED_MODULE_1__["CardGrid"], {
+        return react__WEBPACK_IMPORTED_MODULE_13___default.a.createElement(content_src_components_DiscoveryStreamComponents_CardGrid_CardGrid__WEBPACK_IMPORTED_MODULE_1__["CardGrid"], {
           title: component.header && component.header.title,
           data: component.data,
           feed: component.feed,
@@ -4296,7 +4252,7 @@ class _DiscoveryStreamBase extends react__WEBPACK_IMPORTED_MODULE_14___default.a
         });
 
       case "Hero":
-        return react__WEBPACK_IMPORTED_MODULE_14___default.a.createElement(content_src_components_DiscoveryStreamComponents_Hero_Hero__WEBPACK_IMPORTED_MODULE_9__["Hero"], {
+        return react__WEBPACK_IMPORTED_MODULE_13___default.a.createElement(content_src_components_DiscoveryStreamComponents_Hero_Hero__WEBPACK_IMPORTED_MODULE_8__["Hero"], {
           subComponentType: embedWidth >= 9 ? `cards` : `list`,
           feed: component.feed,
           title: component.header && component.header.title,
@@ -4308,10 +4264,10 @@ class _DiscoveryStreamBase extends react__WEBPACK_IMPORTED_MODULE_14___default.a
         });
 
       case "HorizontalRule":
-        return react__WEBPACK_IMPORTED_MODULE_14___default.a.createElement(content_src_components_DiscoveryStreamComponents_HorizontalRule_HorizontalRule__WEBPACK_IMPORTED_MODULE_11__["HorizontalRule"], null);
+        return react__WEBPACK_IMPORTED_MODULE_13___default.a.createElement(content_src_components_DiscoveryStreamComponents_HorizontalRule_HorizontalRule__WEBPACK_IMPORTED_MODULE_10__["HorizontalRule"], null);
 
       case "List":
-        return react__WEBPACK_IMPORTED_MODULE_14___default.a.createElement(content_src_components_DiscoveryStreamComponents_List_List__WEBPACK_IMPORTED_MODULE_12__["List"], {
+        return react__WEBPACK_IMPORTED_MODULE_13___default.a.createElement(content_src_components_DiscoveryStreamComponents_List_List__WEBPACK_IMPORTED_MODULE_11__["List"], {
           data: component.data,
           feed: component.feed,
           fullWidth: component.properties.full_width,
@@ -4324,7 +4280,7 @@ class _DiscoveryStreamBase extends react__WEBPACK_IMPORTED_MODULE_14___default.a
         });
 
       default:
-        return react__WEBPACK_IMPORTED_MODULE_14___default.a.createElement("div", null, component.type);
+        return react__WEBPACK_IMPORTED_MODULE_13___default.a.createElement("div", null, component.type);
     }
   }
 
@@ -4332,7 +4288,7 @@ class _DiscoveryStreamBase extends react__WEBPACK_IMPORTED_MODULE_14___default.a
     // Use json string as both the key and styles to render so React knows when
     // to unmount and mount a new instance for new styles.
     const json = JSON.stringify(styles);
-    return react__WEBPACK_IMPORTED_MODULE_14___default.a.createElement("style", {
+    return react__WEBPACK_IMPORTED_MODULE_13___default.a.createElement("style", {
       key: json,
       "data-styles": json,
       ref: this.onStyleMount
@@ -4350,7 +4306,7 @@ class _DiscoveryStreamBase extends react__WEBPACK_IMPORTED_MODULE_14___default.a
     const {
       layoutRender,
       spocsFill
-    } = Object(content_src_lib_selectLayoutRender__WEBPACK_IMPORTED_MODULE_16__["selectLayoutRender"])({
+    } = Object(content_src_lib_selectLayoutRender__WEBPACK_IMPORTED_MODULE_15__["selectLayoutRender"])({
       state: this.props.DiscoveryStream,
       prefs: this.props.Prefs.values,
       rollCache,
@@ -4413,7 +4369,7 @@ class _DiscoveryStreamBase extends react__WEBPACK_IMPORTED_MODULE_14___default.a
       }
     }; // Render a DS-style TopSites then the rest if any in a collapsible section
 
-    return react__WEBPACK_IMPORTED_MODULE_14___default.a.createElement(react__WEBPACK_IMPORTED_MODULE_14___default.a.Fragment, null, this.props.DiscoveryStream.isPrivacyInfoModalVisible && react__WEBPACK_IMPORTED_MODULE_14___default.a.createElement(content_src_components_DiscoveryStreamComponents_DSPrivacyModal_DSPrivacyModal__WEBPACK_IMPORTED_MODULE_7__["DSPrivacyModal"], {
+    return react__WEBPACK_IMPORTED_MODULE_13___default.a.createElement(react__WEBPACK_IMPORTED_MODULE_13___default.a.Fragment, null, this.props.DiscoveryStream.isPrivacyInfoModalVisible && react__WEBPACK_IMPORTED_MODULE_13___default.a.createElement(content_src_components_DiscoveryStreamComponents_DSPrivacyModal_DSPrivacyModal__WEBPACK_IMPORTED_MODULE_6__["DSPrivacyModal"], {
       dispatch: this.props.dispatch
     }), topSites && this.renderLayout([{
       width: 12,
@@ -4421,7 +4377,7 @@ class _DiscoveryStreamBase extends react__WEBPACK_IMPORTED_MODULE_14___default.a
     }]), sponsoredCollection && this.renderLayout([{
       width: 12,
       components: [sponsoredCollection]
-    }]), !!layoutRender.length && react__WEBPACK_IMPORTED_MODULE_14___default.a.createElement(content_src_components_CollapsibleSection_CollapsibleSection__WEBPACK_IMPORTED_MODULE_3__["CollapsibleSection"], {
+    }]), !!layoutRender.length && react__WEBPACK_IMPORTED_MODULE_13___default.a.createElement(content_src_components_CollapsibleSection_CollapsibleSection__WEBPACK_IMPORTED_MODULE_3__["CollapsibleSection"], {
       className: "ds-layout",
       collapsed: topStories.pref.collapsed,
       dispatch: this.props.dispatch,
@@ -4447,12 +4403,12 @@ class _DiscoveryStreamBase extends react__WEBPACK_IMPORTED_MODULE_14___default.a
 
   renderLayout(layoutRender) {
     const styles = [];
-    return react__WEBPACK_IMPORTED_MODULE_14___default.a.createElement("div", {
+    return react__WEBPACK_IMPORTED_MODULE_13___default.a.createElement("div", {
       className: "discovery-stream ds-layout"
-    }, layoutRender.map((row, rowIndex) => react__WEBPACK_IMPORTED_MODULE_14___default.a.createElement("div", {
+    }, layoutRender.map((row, rowIndex) => react__WEBPACK_IMPORTED_MODULE_13___default.a.createElement("div", {
       key: `row-${rowIndex}`,
       className: `ds-column ds-column-${row.width}`
-    }, react__WEBPACK_IMPORTED_MODULE_14___default.a.createElement("div", {
+    }, react__WEBPACK_IMPORTED_MODULE_13___default.a.createElement("div", {
       className: "ds-column-grid"
     }, row.components.map((component, componentIndex) => {
       if (!component) {
@@ -4460,7 +4416,7 @@ class _DiscoveryStreamBase extends react__WEBPACK_IMPORTED_MODULE_14___default.a
       }
 
       styles[rowIndex] = [...(styles[rowIndex] || []), component.styles];
-      return react__WEBPACK_IMPORTED_MODULE_14___default.a.createElement("div", {
+      return react__WEBPACK_IMPORTED_MODULE_13___default.a.createElement("div", {
         key: `component-${componentIndex}`
       }, this.renderComponent(component, row.width));
     })))), this.renderStyles(styles));
@@ -5442,29 +5398,33 @@ const LinkMenuOptions = {
   // but also sends a message to DiscoveryStream with flight_id.
   // If DiscoveryStream sees this message for a flight_id
   // it also blocks it on the flight_id.
-  BlockUrl: (site, index, eventSource) => ({
+  BlockUrl: (site, index, eventSource) => {
+    return LinkMenuOptions.BlockUrls([site], index, eventSource);
+  },
+  // Same as BlockUrl, cept can work on an array of sites.
+  BlockUrls: (tiles, pos, eventSource) => ({
     id: "newtab-menu-dismiss",
     icon: "dismiss",
     action: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__["actionCreators"].AlsoToMain({
       type: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__["actionTypes"].BLOCK_URL,
-      data: {
+      data: tiles.map(site => ({
         url: site.open_url || site.url,
         pocket_id: site.pocket_id,
         ...(site.flight_id ? {
           flight_id: site.flight_id
         } : {})
-      }
+      }))
     }),
     impression: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__["actionCreators"].ImpressionStats({
       source: eventSource,
       block: 0,
-      tiles: [{
+      tiles: tiles.map((site, index) => ({
         id: site.guid,
-        pos: index,
+        pos: pos + index,
         ...(site.shim && site.shim.delete ? {
           shim: site.shim.delete
         } : {})
-      }]
+      }))
     }),
     userEvent: "BLOCK"
   }),
@@ -6330,36 +6290,86 @@ class DSEmptyState extends react__WEBPACK_IMPORTED_MODULE_1___default.a.PureComp
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "_CollectionCardGrid", function() { return _CollectionCardGrid; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "CollectionCardGrid", function() { return CollectionCardGrid; });
-/* harmony import */ var content_src_components_DiscoveryStreamComponents_CardGrid_CardGrid__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(27);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(9);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_1__);
-/* harmony import */ var react_redux__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(23);
-/* harmony import */ var react_redux__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(react_redux__WEBPACK_IMPORTED_MODULE_2__);
+/* harmony import */ var common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(2);
+/* harmony import */ var content_src_components_DiscoveryStreamComponents_CardGrid_CardGrid__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(27);
+/* harmony import */ var content_src_components_DiscoveryStreamComponents_DSDismiss_DSDismiss__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(43);
+/* harmony import */ var content_src_lib_link_menu_options__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(33);
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(9);
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_4___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_4__);
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 
 
-class _CollectionCardGrid extends react__WEBPACK_IMPORTED_MODULE_1___default.a.PureComponent {
+
+
+class CollectionCardGrid extends react__WEBPACK_IMPORTED_MODULE_4___default.a.PureComponent {
+  constructor(props) {
+    super(props);
+    this.onDismissClick = this.onDismissClick.bind(this);
+  }
+
+  onDismissClick() {
+    const {
+      data,
+      items
+    } = this.props;
+
+    if (this.props.dispatch && data && data.spocs && data.spocs.length) {
+      const pos = 0;
+      const source = this.props.type.toUpperCase(); // Grab the displayed items in the array to dismiss.
+      // This fires a ping for all items displayed, even if below the fold.
+      // It does not fire it for items not displayed, but those items would
+      // still be filtered out because of matching flight_ids.
+      // This is otherwise just for telemetry puproses, to report which items were displayed,
+      // but not nessisarily visible, at the time of dismiss.
+
+      const spocsData = data.spocs.slice(0, items).map(item => ({
+        url: item.url,
+        guid: item.id,
+        shim: item.shim
+      }));
+      const blockUrlOption = content_src_lib_link_menu_options__WEBPACK_IMPORTED_MODULE_3__["LinkMenuOptions"].BlockUrls(spocsData, pos, source);
+      const {
+        action,
+        impression,
+        userEvent
+      } = blockUrlOption;
+      this.props.dispatch(action);
+      this.props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__["actionCreators"].UserEvent({
+        event: userEvent,
+        source,
+        action_position: pos
+      }));
+
+      if (impression) {
+        this.props.dispatch(impression);
+      }
+    }
+  }
+
   render() {
     const {
-      placement,
-      DiscoveryStream,
-      data,
-      feed
-    } = this.props; // Handle a render before feed has been fetched by displaying nothing
+      data
+    } = this.props;
 
-    if (!data) {
+    if (!data || !data.spocs || !data.spocs[0] || // We only display complete collections.
+    data.spocs.length < 3) {
       return null;
     }
 
     const {
+      spocs,
+      placement,
+      feed
+    } = this.props; // spocs.data is spocs state data, and not an array of spocs.
+
+    const {
       title,
       context
-    } = DiscoveryStream.spocs.data[placement.name] || {}; // Just in case of bad data, don't display a broken collection.
+    } = spocs.data[placement.name] || {}; // Just in case of bad data, don't display a broken collection.
 
     if (!title) {
       return null;
@@ -6375,25 +6385,31 @@ class _CollectionCardGrid extends react__WEBPACK_IMPORTED_MODULE_1___default.a.P
 
     const recsData = {
       recommendations: data.spocs
-    };
-    return react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement("div", {
+    }; // All cards inside of a collection card grid have a slightly different type.
+    // For the case of interactions to the card grid, we use the type "COLLECTIONCARDGRID".
+    // Example, you dismiss the whole collection, we use the type "COLLECTIONCARDGRID".
+    // For interactions inside the card grid, example, you dismiss a single card in the collection,
+    // we use the type "COLLECTIONCARDGRID_CARD".
+
+    const type = `${this.props.type}_card`;
+    return react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement(content_src_components_DiscoveryStreamComponents_DSDismiss_DSDismiss__WEBPACK_IMPORTED_MODULE_2__["DSDismiss"], {
+      onDismissClick: this.onDismissClick,
+      extraClasses: `ds-dismiss-ds-collection`
+    }, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("div", {
       className: "ds-collection-card-grid"
-    }, react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(content_src_components_DiscoveryStreamComponents_CardGrid_CardGrid__WEBPACK_IMPORTED_MODULE_0__["CardGrid"], {
+    }, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement(content_src_components_DiscoveryStreamComponents_CardGrid_CardGrid__WEBPACK_IMPORTED_MODULE_1__["CardGrid"], {
       title: title,
       context: context,
       data: recsData,
       feed: feed,
       border: this.props.border,
-      type: this.props.type,
+      type: type,
       dispatch: this.props.dispatch,
       items: this.props.items
-    }));
+    })));
   }
 
 }
-const CollectionCardGrid = Object(react_redux__WEBPACK_IMPORTED_MODULE_2__["connect"])(state => ({
-  DiscoveryStream: state.DiscoveryStream
-}))(_CollectionCardGrid);
 
 /***/ }),
 /* 43 */
@@ -6401,14 +6417,76 @@ const CollectionCardGrid = Object(react_redux__WEBPACK_IMPORTED_MODULE_2__["conn
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "DSDismiss", function() { return DSDismiss; });
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(9);
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+class DSDismiss extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureComponent {
+  constructor(props) {
+    super(props);
+    this.onDismissClick = this.onDismissClick.bind(this);
+    this.onHover = this.onHover.bind(this);
+    this.offHover = this.offHover.bind(this);
+    this.state = {
+      hovering: false
+    };
+  }
+
+  onDismissClick() {
+    if (this.props.onDismissClick) {
+      this.props.onDismissClick();
+    }
+  }
+
+  onHover() {
+    this.setState({
+      hovering: true
+    });
+  }
+
+  offHover() {
+    this.setState({
+      hovering: false
+    });
+  }
+
+  render() {
+    let className = `ds-dismiss
+      ${this.state.hovering ? ` hovering` : ``}
+      ${this.props.extraClasses ? ` ${this.props.extraClasses}` : ``}`;
+    return react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
+      className: className
+    }, this.props.children, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("button", {
+      className: "ds-dismiss-button",
+      onHover: this.onHover,
+      onClick: this.onDismissClick,
+      onMouseEnter: this.onHover,
+      onMouseLeave: this.offHover,
+      "aria-label": "dismiss"
+    }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("span", {
+      className: "icon icon-dismiss"
+    })));
+  }
+
+}
+
+/***/ }),
+/* 44 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
 /* WEBPACK VAR INJECTION */(function(global) {/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "CollapsibleSection", function() { return CollapsibleSection; });
 /* harmony import */ var common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(2);
-/* harmony import */ var content_src_components_ErrorBoundary_ErrorBoundary__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(44);
+/* harmony import */ var content_src_components_ErrorBoundary_ErrorBoundary__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(45);
 /* harmony import */ var content_src_components_FluentOrText_FluentOrText__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(40);
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(9);
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_3__);
-/* harmony import */ var content_src_components_SectionMenu_SectionMenu__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(46);
-/* harmony import */ var content_src_lib_section_menu_options__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(47);
+/* harmony import */ var content_src_components_SectionMenu_SectionMenu__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(47);
+/* harmony import */ var content_src_lib_section_menu_options__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(48);
 /* harmony import */ var content_src_components_ContextMenu_ContextMenuButton__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(34);
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
@@ -6685,14 +6763,14 @@ CollapsibleSection.defaultProps = {
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(1)))
 
 /***/ }),
-/* 44 */
+/* 45 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "ErrorBoundaryFallback", function() { return ErrorBoundaryFallback; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "ErrorBoundary", function() { return ErrorBoundary; });
-/* harmony import */ var content_src_components_A11yLinkButton_A11yLinkButton__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(45);
+/* harmony import */ var content_src_components_A11yLinkButton_A11yLinkButton__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(46);
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(9);
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_1__);
 /* This Source Code Form is subject to the terms of the Mozilla Public
@@ -6772,7 +6850,7 @@ ErrorBoundary.defaultProps = {
 };
 
 /***/ }),
-/* 45 */
+/* 46 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -6802,7 +6880,7 @@ function A11yLinkButton(props) {
 }
 
 /***/ }),
-/* 46 */
+/* 47 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -6813,7 +6891,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var content_src_components_ContextMenu_ContextMenu__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(32);
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(9);
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_2__);
-/* harmony import */ var content_src_lib_section_menu_options__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(47);
+/* harmony import */ var content_src_lib_section_menu_options__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(48);
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -6908,7 +6986,7 @@ class _SectionMenu extends react__WEBPACK_IMPORTED_MODULE_2___default.a.PureComp
 const SectionMenu = _SectionMenu;
 
 /***/ }),
-/* 47 */
+/* 48 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -7038,88 +7116,6 @@ const SectionMenuOptions = {
 };
 
 /***/ }),
-/* 48 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "DSDismiss", function() { return DSDismiss; });
-/* harmony import */ var common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(2);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(9);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_1__);
-/* harmony import */ var content_src_lib_link_menu_options__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(33);
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this file,
- * You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-
-
-class DSDismiss extends react__WEBPACK_IMPORTED_MODULE_1___default.a.PureComponent {
-  constructor(props) {
-    super(props);
-    this.onDismissClick = this.onDismissClick.bind(this);
-    this.onHover = this.onHover.bind(this);
-    this.offHover = this.offHover.bind(this);
-    this.state = {
-      hovering: false
-    };
-  }
-
-  onDismissClick() {
-    const index = 0;
-    const source = "DISCOVERY_STREAM";
-    const blockUrlOption = content_src_lib_link_menu_options__WEBPACK_IMPORTED_MODULE_2__["LinkMenuOptions"].BlockUrl(this.props.data, index, source);
-    const {
-      action,
-      impression,
-      userEvent
-    } = blockUrlOption;
-    this.props.dispatch(action);
-    const userEventData = Object.assign({
-      event: userEvent,
-      source,
-      action_position: index
-    }, this.props.data);
-    this.props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__["actionCreators"].UserEvent(userEventData));
-
-    if (impression && this.props.shouldSendImpressionStats) {
-      this.props.dispatch(impression);
-    }
-  }
-
-  onHover() {
-    this.setState({
-      hovering: true
-    });
-  }
-
-  offHover() {
-    this.setState({
-      hovering: false
-    });
-  }
-
-  render() {
-    let className = `ds-dismiss
-      ${this.state.hovering ? ` hovering` : ``}
-      ${this.props.extraClasses ? ` ${this.props.extraClasses}` : ``}`;
-    return react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement("div", {
-      className: className
-    }, this.props.children, react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement("button", {
-      className: "ds-dismiss-button",
-      onHover: this.onHover,
-      onClick: this.onDismissClick,
-      onMouseEnter: this.onHover,
-      onMouseLeave: this.offHover,
-      "aria-label": "dismiss"
-    }, react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement("span", {
-      className: "icon icon-dismiss"
-    })));
-  }
-
-}
-
-/***/ }),
 /* 49 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
@@ -7244,11 +7240,13 @@ class DSPrivacyModal extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureCo
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "DSTextPromo", function() { return DSTextPromo; });
 /* harmony import */ var common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(2);
-/* harmony import */ var _DSImage_DSImage_jsx__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(29);
-/* harmony import */ var _DiscoveryStreamImpressionStats_ImpressionStats__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(35);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(9);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_3__);
-/* harmony import */ var _SafeAnchor_SafeAnchor__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(36);
+/* harmony import */ var content_src_components_DiscoveryStreamComponents_DSDismiss_DSDismiss__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(43);
+/* harmony import */ var _DSImage_DSImage_jsx__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(29);
+/* harmony import */ var _DiscoveryStreamImpressionStats_ImpressionStats__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(35);
+/* harmony import */ var content_src_lib_link_menu_options__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(33);
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(9);
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_5___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_5__);
+/* harmony import */ var _SafeAnchor_SafeAnchor__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(36);
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -7257,59 +7255,128 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-class DSTextPromo extends react__WEBPACK_IMPORTED_MODULE_3___default.a.PureComponent {
+
+
+class DSTextPromo extends react__WEBPACK_IMPORTED_MODULE_5___default.a.PureComponent {
   constructor(props) {
     super(props);
     this.onLinkClick = this.onLinkClick.bind(this);
+    this.onDismissClick = this.onDismissClick.bind(this);
   }
 
   onLinkClick() {
-    if (this.props.dispatch) {
+    const {
+      data
+    } = this.props;
+
+    if (this.props.dispatch && data && data.spocs && data.spocs.length) {
+      const source = this.props.type.toUpperCase(); // Grab the first item in the array as we only have 1 spoc position.
+
+      const [spoc] = data.spocs;
       this.props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__["actionCreators"].UserEvent({
         event: "CLICK",
-        source: this.props.type.toUpperCase(),
-        action_position: this.props.pos
+        source,
+        action_position: 0
       }));
       this.props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__["actionCreators"].ImpressionStats({
-        source: this.props.type.toUpperCase(),
+        source,
         click: 0,
         tiles: [{
-          id: this.props.id,
-          pos: this.props.pos,
-          ...(this.props.shim && this.props.shim.click ? {
-            shim: this.props.shim.click
+          id: spoc.id,
+          pos: 0,
+          ...(spoc.shim && spoc.shim.click ? {
+            shim: spoc.shim.click
           } : {})
         }]
       }));
     }
   }
 
+  onDismissClick() {
+    const {
+      data
+    } = this.props;
+
+    if (this.props.dispatch && data && data.spocs && data.spocs.length) {
+      const index = 0;
+      const source = this.props.type.toUpperCase(); // Grab the first item in the array as we only have 1 spoc position.
+
+      const [spoc] = data.spocs;
+      const spocData = {
+        url: spoc.url,
+        guid: spoc.id,
+        shim: spoc.shim
+      };
+      const blockUrlOption = content_src_lib_link_menu_options__WEBPACK_IMPORTED_MODULE_4__["LinkMenuOptions"].BlockUrl(spocData, index, source);
+      const {
+        action,
+        impression,
+        userEvent
+      } = blockUrlOption;
+      this.props.dispatch(action);
+      this.props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__["actionCreators"].UserEvent({
+        event: userEvent,
+        source,
+        action_position: index
+      }));
+
+      if (impression) {
+        this.props.dispatch(impression);
+      }
+    }
+  }
+
   render() {
-    return react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("div", {
+    const {
+      data
+    } = this.props;
+
+    if (!data || !data.spocs || !data.spocs[0]) {
+      return null;
+    } // Grab the first item in the array as we only have 1 spoc position.
+
+
+    const [spoc] = data.spocs;
+    const {
+      image_src,
+      raw_image_src,
+      alt_text,
+      title,
+      url,
+      context,
+      cta,
+      flight_id,
+      id,
+      shim
+    } = spoc;
+    return react__WEBPACK_IMPORTED_MODULE_5___default.a.createElement(content_src_components_DiscoveryStreamComponents_DSDismiss_DSDismiss__WEBPACK_IMPORTED_MODULE_1__["DSDismiss"], {
+      onDismissClick: this.onDismissClick,
+      extraClasses: `ds-dismiss-ds-text-promo`
+    }, react__WEBPACK_IMPORTED_MODULE_5___default.a.createElement("div", {
       className: "ds-text-promo"
-    }, react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_DSImage_DSImage_jsx__WEBPACK_IMPORTED_MODULE_1__["DSImage"], {
-      alt_text: this.props.alt_text,
-      source: this.props.image,
-      rawSource: this.props.raw_image_src
-    }), react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("div", {
+    }, react__WEBPACK_IMPORTED_MODULE_5___default.a.createElement(_DSImage_DSImage_jsx__WEBPACK_IMPORTED_MODULE_2__["DSImage"], {
+      alt_text: alt_text,
+      source: image_src,
+      rawSource: raw_image_src
+    }), react__WEBPACK_IMPORTED_MODULE_5___default.a.createElement("div", {
       className: "text"
-    }, react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("h3", null, `${this.props.header}\u2003`, react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_SafeAnchor_SafeAnchor__WEBPACK_IMPORTED_MODULE_4__["SafeAnchor"], {
+    }, react__WEBPACK_IMPORTED_MODULE_5___default.a.createElement("h3", null, `${title}\u2003`, react__WEBPACK_IMPORTED_MODULE_5___default.a.createElement(_SafeAnchor_SafeAnchor__WEBPACK_IMPORTED_MODULE_6__["SafeAnchor"], {
       className: "ds-chevron-link",
       dispatch: this.props.dispatch,
       onLinkClick: this.onLinkClick,
-      url: this.props.cta_url
-    }, this.props.cta_text)), react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("p", {
+      url: url
+    }, cta)), react__WEBPACK_IMPORTED_MODULE_5___default.a.createElement("p", {
       className: "subtitle"
-    }, this.props.subtitle)), react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_DiscoveryStreamImpressionStats_ImpressionStats__WEBPACK_IMPORTED_MODULE_2__["ImpressionStats"], {
-      flightId: this.props.flightId,
+    }, context)), react__WEBPACK_IMPORTED_MODULE_5___default.a.createElement(_DiscoveryStreamImpressionStats_ImpressionStats__WEBPACK_IMPORTED_MODULE_3__["ImpressionStats"], {
+      flightId: flight_id,
       rows: [{
-        id: this.props.id,
-        pos: this.props.pos,
-        shim: this.props.shim && this.props.shim.impression
+        id,
+        pos: 0,
+        shim: shim && shim.impression
       }],
       dispatch: this.props.dispatch,
       source: this.props.type
-    }));
+    })));
   }
 
 }
@@ -7764,7 +7831,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "Sections", function() { return Sections; });
 /* harmony import */ var common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(2);
 /* harmony import */ var content_src_components_Card_Card__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(56);
-/* harmony import */ var content_src_components_CollapsibleSection_CollapsibleSection__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(43);
+/* harmony import */ var content_src_components_CollapsibleSection_CollapsibleSection__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(44);
 /* harmony import */ var content_src_components_ComponentPerfTimer_ComponentPerfTimer__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(58);
 /* harmony import */ var content_src_components_FluentOrText_FluentOrText__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(40);
 /* harmony import */ var react_redux__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(23);
@@ -8979,7 +9046,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "TopSites", function() { return TopSites; });
 /* harmony import */ var common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(2);
 /* harmony import */ var _TopSitesConstants__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(64);
-/* harmony import */ var content_src_components_CollapsibleSection_CollapsibleSection__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(43);
+/* harmony import */ var content_src_components_CollapsibleSection_CollapsibleSection__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(44);
 /* harmony import */ var content_src_components_ComponentPerfTimer_ComponentPerfTimer__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(58);
 /* harmony import */ var react_redux__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(23);
 /* harmony import */ var react_redux__WEBPACK_IMPORTED_MODULE_4___default = /*#__PURE__*/__webpack_require__.n(react_redux__WEBPACK_IMPORTED_MODULE_4__);
@@ -10286,9 +10353,7 @@ const selectLayoutRender = ({
       // TODO we now need a placeholder for topsites and textPromo.
       return { ...component,
         data: {
-          spocs: {
-            items: []
-          }
+          spocs: []
         }
       };
     }
@@ -10333,7 +10398,9 @@ const selectLayoutRender = ({
   const handleComponent = component => {
     return { ...component,
       data: {
-        spocs: handleSpocs([], component)
+        spocs: handleSpocs([], component).map((spoc, index) => ({ ...spoc,
+          pos: index
+        }))
       }
     };
   };
@@ -11544,7 +11611,7 @@ class localized_Localized extends external_React_["Component"] {
     const {
       id,
       attrs,
-      children: elem = null
+      children: elem
     } = this.props; // Validate that the child element isn't an array
 
     if (Array.isArray(elem)) {
@@ -12832,10 +12899,6 @@ const SnippetsTemplates = {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-var builtins_namespaceObject = {};
-__webpack_require__.r(builtins_namespaceObject);
-__webpack_require__.d(builtins_namespaceObject, "NUMBER", function() { return NUMBER; });
-__webpack_require__.d(builtins_namespaceObject, "DATETIME", function() { return DATETIME; });
 
 // CONCATENATED MODULE: ./node_modules/fluent/src/types.js
 /* global Intl */
@@ -12887,12 +12950,8 @@ class FluentType {
 
 }
 class FluentNone extends FluentType {
-  valueOf() {
-    return null;
-  }
-
   toString() {
-    return `{${this.value || "???"}}`;
+    return this.value || "???";
   }
 
 }
@@ -12944,6 +13003,10 @@ class FluentDateTime extends FluentType {
  * `FluentType`.  Functions must return `FluentType` objects as well.
  */
 
+/* harmony default export */ var builtins = ({
+  "NUMBER": ([arg], opts) => new FluentNumber(arg.valueOf(), merge(arg.opts, opts)),
+  "DATETIME": ([arg], opts) => new FluentDateTime(arg.valueOf(), merge(arg.opts, opts))
+});
 
 function merge(argopts, opts) {
   return Object.assign({}, argopts, values(opts));
@@ -12957,29 +13020,6 @@ function values(opts) {
   }
 
   return unwrapped;
-}
-
-function NUMBER([arg], opts) {
-  if (arg instanceof FluentNone) {
-    return arg;
-  }
-
-  if (arg instanceof FluentNumber) {
-    return new FluentNumber(arg.valueOf(), merge(arg.opts, opts));
-  }
-
-  return new FluentNone("NUMBER()");
-}
-function DATETIME([arg], opts) {
-  if (arg instanceof FluentNone) {
-    return arg;
-  }
-
-  if (arg instanceof FluentDateTime) {
-    return new FluentDateTime(arg.valueOf(), merge(arg.opts, opts));
-  }
-
-  return new FluentNone("DATETIME()");
 }
 // CONCATENATED MODULE: ./node_modules/fluent/src/resolver.js
 /* global Intl */
@@ -13191,7 +13231,7 @@ function MessageReference(scope, {
     }
 
     scope.errors.push(new ReferenceError(`Unknown attribute: ${attr}`));
-    return new FluentNone(`${name}.${attr}`);
+    return Type(scope, message);
   }
 
   return Type(scope, message);
@@ -13228,7 +13268,7 @@ function TermReference(scope, {
     }
 
     scope.errors.push(new ReferenceError(`Unknown attribute: ${attr}`));
-    return new FluentNone(`${id}.${attr}`);
+    return Type(local, term);
   }
 
   return Type(local, term);
@@ -13241,7 +13281,7 @@ function FunctionReference(scope, {
 }) {
   // Some functions are built-in. Others may be provided by the runtime via
   // the `FluentBundle` constructor.
-  const func = scope.bundle._functions[name] || builtins_namespaceObject[name];
+  const func = scope.bundle._functions[name] || builtins[name];
 
   if (!func) {
     scope.errors.push(new ReferenceError(`Unknown function: ${name}()`));
@@ -13257,7 +13297,7 @@ function FunctionReference(scope, {
     return func(...getArguments(scope, args));
   } catch (e) {
     // XXX Report errors.
-    return new FluentNone(`${name}()`);
+    return new FluentNone();
   }
 } // Resolve a select expression to the member object.
 
@@ -14186,6 +14226,32 @@ class bundle_FluentBundle {
   }
 
 }
+// CONCATENATED MODULE: ./node_modules/fluent/src/util.js
+function nonBlank(line) {
+  return !/^\s*$/.test(line);
+}
+
+function countIndent(line) {
+  const [indent] = line.match(/^\s*/);
+  return indent.length;
+}
+/**
+ * Template literal tag for dedenting FTL code.
+ *
+ * Strip the common indent of non-blank lines. Remove blank lines.
+ *
+ * @param {Array<string>} strings
+ */
+
+
+function ftl(strings) {
+  const [code] = strings;
+  const lines = code.split("\n").filter(nonBlank);
+  const indents = lines.map(countIndent);
+  const common = Math.min(...indents);
+  const indent = new RegExp(`^\\s{${common}}`);
+  return lines.map(line => line.replace(indent, "")).join("\n");
+}
 // CONCATENATED MODULE: ./node_modules/fluent/src/index.js
 /*
  * @module fluent
@@ -14195,6 +14261,7 @@ class bundle_FluentBundle {
  * framework designed to unleash the expressive power of the natural language.
  *
  */
+
 
 
 
@@ -15224,7 +15291,7 @@ var FullPageInterrupt = __webpack_require__(20);
 // EXTERNAL MODULE: ./node_modules/fluent-react/src/index.js + 14 modules
 var src = __webpack_require__(74);
 
-// EXTERNAL MODULE: ./content-src/asrouter/rich-text-strings.js + 7 modules
+// EXTERNAL MODULE: ./content-src/asrouter/rich-text-strings.js + 8 modules
 var rich_text_strings = __webpack_require__(76);
 
 // CONCATENATED MODULE: ./content-src/asrouter/templates/FirstRun/Interrupt.jsx
@@ -15493,7 +15560,7 @@ __webpack_require__.r(__webpack_exports__);
 var Actions = __webpack_require__(2);
 
 // EXTERNAL MODULE: ./content-src/components/A11yLinkButton/A11yLinkButton.jsx
-var A11yLinkButton = __webpack_require__(45);
+var A11yLinkButton = __webpack_require__(46);
 
 // EXTERNAL MODULE: external "React"
 var external_React_ = __webpack_require__(9);
