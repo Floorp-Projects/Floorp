@@ -23,6 +23,7 @@ Services.scriptloader.loadSubScript(
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
+  HttpServer: "resource://testing-common/httpd.js",
   ResetProfile: "resource://gre/modules/ResetProfile.jsm",
   UrlbarProviderInterventions:
     "resource:///modules/UrlbarProviderInterventions.jsm",
@@ -488,4 +489,162 @@ async function promiseAlertDialogOpen(buttonAction, uris, func) {
 async function promiseAlertDialog(buttonAction, uris, func) {
   let win = await promiseAlertDialogOpen(buttonAction, uris, func);
   return BrowserTestUtils.windowClosed(win);
+}
+
+async function checkTip(win, expectedTip, closeView = true) {
+  if (!expectedTip) {
+    // Wait a bit for the tip to not show up.
+    // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
+    await new Promise(resolve => setTimeout(resolve, 100));
+    Assert.ok(!win.gURLBar.view.isOpen);
+    return;
+  }
+
+  // Wait for the view to open, and then check the tip result.
+  await UrlbarTestUtils.promisePopupOpen(win, () => {});
+  Assert.ok(true, "View opened");
+  Assert.equal(UrlbarTestUtils.getResultCount(win), 1);
+  let result = await UrlbarTestUtils.getDetailsOfResultAt(win, 0);
+  Assert.equal(result.type, UrlbarUtils.RESULT_TYPE.TIP);
+  let heuristic;
+  let title;
+  let name = Services.search.defaultEngine.name;
+  switch (expectedTip) {
+    case UrlbarProviderSearchTips.TIP_TYPE.ONBOARD:
+      heuristic = true;
+      title =
+        `Type less, find more: Search ${name} right from your ` +
+        `address bar.`;
+      break;
+    case UrlbarProviderSearchTips.TIP_TYPE.REDIRECT:
+      heuristic = false;
+      title =
+        `Start your search in the address bar to see suggestions from ` +
+        `${name} and your browsing history.`;
+      break;
+  }
+  Assert.equal(result.heuristic, heuristic);
+  Assert.equal(result.displayed.title, title);
+  Assert.equal(
+    result.element.row._elements.get("tipButton").textContent,
+    `Okay, Got It`
+  );
+  Assert.ok(
+    BrowserTestUtils.is_hidden(result.element.row._elements.get("helpButton"))
+  );
+
+  const scalars = TelemetryTestUtils.getProcessScalars("parent", true, true);
+  TelemetryTestUtils.assertKeyedScalar(
+    scalars,
+    "urlbar.tips",
+    `${expectedTip}-shown`,
+    1
+  );
+
+  if (closeView) {
+    await UrlbarTestUtils.promisePopupClose(win);
+  }
+}
+
+async function checkTab(win, url, expectedTip, reset = true) {
+  // BrowserTestUtils.withNewTab always waits for tab load, which hangs on
+  // about:newtab for some reason, so don't use it.
+  let shownCount;
+  if (expectedTip) {
+    shownCount = UrlbarPrefs.get(`tipShownCount.${expectedTip}`);
+  }
+
+  let tab = await BrowserTestUtils.openNewForegroundTab({
+    gBrowser: win.gBrowser,
+    url,
+    waitForLoad: url != "about:newtab",
+  });
+
+  await checkTip(win, expectedTip, true);
+  if (expectedTip) {
+    Assert.equal(
+      UrlbarPrefs.get(`tipShownCount.${expectedTip}`),
+      shownCount + 1,
+      "The shownCount pref should have been incremented by one."
+    );
+  }
+
+  if (reset) {
+    resetSearchTipsProvider();
+  }
+
+  BrowserTestUtils.removeTab(tab);
+}
+
+/**
+ * This lets us visit www.google.com (for example) and have it redirect to
+ * our test HTTP server instead of visiting the actual site.
+ * @param {string} domain
+ *   The domain to which we are redirecting.
+ * @param {string} path
+ *   The pathname on the domain.
+ * @param {function} callback
+ *   Executed when the test suite thinks `domain` is loaded.
+ */
+async function withDNSRedirect(domain, path, callback) {
+  // Some domains have special security requirements, like www.bing.com.  We
+  // need to override them to successfully load them.  This part is adapted from
+  // testing/marionette/cert.js.
+  const certOverrideService = Cc[
+    "@mozilla.org/security/certoverride;1"
+  ].getService(Ci.nsICertOverrideService);
+  Services.prefs.setBoolPref(
+    "network.stricttransportsecurity.preloadlist",
+    false
+  );
+  Services.prefs.setIntPref("security.cert_pinning.enforcement_level", 0);
+  certOverrideService.setDisableAllSecurityChecksAndLetAttackersInterceptMyData(
+    true
+  );
+
+  // Now set network.dns.localDomains to redirect the domain to localhost and
+  // set up an HTTP server.
+  Services.prefs.setCharPref("network.dns.localDomains", domain);
+
+  let server = new HttpServer();
+  server.registerPathHandler(path, (req, resp) => {
+    resp.write(`Test! http://${domain}${path}`);
+  });
+  server.start(-1);
+  server.identity.setPrimary("http", domain, server.identity.primaryPort);
+  let url = `http://${domain}:${server.identity.primaryPort}${path}`;
+
+  await callback(url);
+
+  // Reset network.dns.localDomains and stop the server.
+  Services.prefs.clearUserPref("network.dns.localDomains");
+  await new Promise(resolve => server.stop(resolve));
+
+  // Reset the security stuff.
+  certOverrideService.setDisableAllSecurityChecksAndLetAttackersInterceptMyData(
+    false
+  );
+  Services.prefs.clearUserPref("network.stricttransportsecurity.preloadlist");
+  Services.prefs.clearUserPref("security.cert_pinning.enforcement_level");
+  const sss = Cc["@mozilla.org/ssservice;1"].getService(
+    Ci.nsISiteSecurityService
+  );
+  sss.clearAll();
+  sss.clearPreloads();
+}
+
+function resetSearchTipsProvider() {
+  Services.prefs.clearUserPref(
+    `browser.urlbar.tipShownCount.${UrlbarProviderSearchTips.TIP_TYPE.ONBOARD}`
+  );
+  Services.prefs.clearUserPref(
+    `browser.urlbar.tipShownCount.${UrlbarProviderSearchTips.TIP_TYPE.REDIRECT}`
+  );
+  UrlbarProviderSearchTips.disableTipsForCurrentSession = false;
+}
+
+async function setDefaultEngine(name) {
+  let engine = (await Services.search.getEngines()).find(e => e.name == name);
+  Assert.ok(engine);
+  await Services.search.setDefault(engine);
 }
