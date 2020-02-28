@@ -4,8 +4,14 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-# cbindgen is needed by the style system build and webrender.
-cbindgen_is_needed = depends(build_project)(lambda build_project: build_project != 'js')
+@depends(build_project, '--enable-smoosh')
+def cbindgen_is_needed(build_project, js_enable_smoosh):
+    if build_project != 'js':
+        # cbindgen is needed by the style system build and webrender.
+        return True
+
+    # cbindgen is needed by SmooshMonkey.
+    return js_enable_smoosh
 
 option(env='CBINDGEN', nargs=1, when=cbindgen_is_needed,
        help='Path to cbindgen')

@@ -1,0 +1,15 @@
+[flake8]
+
+# E721 do not compare types, use 'isinstance()'
+#     We run afoul of the heuristics that detect this on lines of code
+#     like `if method.return_type == types.UnitType:`. We are not comparing
+#     Python types. The warning is spurious for us.
+# W503 line break before binary operator
+#     Amazingly, flake8 by default warns about binary operators no matter
+#     what you do. We choose to break before operators.
+ignore = E721,W503
+
+exclude = jsparagus_build_venv,crates/target,jsparagus/parse_pgen_generated.py,js_parser/parser_tables.py
+
+# todo: get this down to 99
+max_line_length=109
