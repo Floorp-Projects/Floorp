@@ -2588,7 +2588,6 @@ HttpConnectionUDP::OnInputStreamReady(nsIAsyncInputStream* in) {
 
     if (!CanReuse()) {
       LOG(("Server initiated close of idle conn %p\n", this));
-      Unused << gHttpHandler->ConnMgr()->CloseIdleConnection(this);
       return NS_OK;
     }
 
