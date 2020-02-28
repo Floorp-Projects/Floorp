@@ -73,11 +73,7 @@ class DefaultAddonUpdaterTest {
 
             assertFalse(workData.isEmpty())
 
-            val work = workData.first()
-
-            assertEquals(WorkInfo.State.ENQUEUED, work.state)
-            assertTrue(work.tags.contains(workId))
-            assertTrue(work.tags.contains(WORK_TAG_PERIODIC))
+            assertExtensionIsRegisteredFoUpdates(updater, addonId)
 
             // Cleaning work manager
             workManger.cancelUniqueWork(workId)
@@ -198,16 +194,12 @@ class DefaultAddonUpdaterTest {
 
             assertFalse(workData.isEmpty())
 
-            val work = workData.first()
-
-            assertEquals(WorkInfo.State.ENQUEUED, work.state)
-            assertTrue(work.tags.contains(workId))
-            assertTrue(work.tags.contains(WORK_TAG_PERIODIC))
+            assertExtensionIsRegisteredFoUpdates(updater, addonId)
 
             updater.unregisterForFutureUpdates(addonId)
 
             workData = workManger.getWorkInfosForUniqueWork(workId).await()
-            assertFalse(workData.isEmpty())
+            assertEquals(WorkInfo.State.CANCELLED, workData.first().state)
         }
     }
 
@@ -227,6 +219,42 @@ class DefaultAddonUpdaterTest {
         assertEquals(updater.getWorkerConstrains(), workRequest.workSpec.constraints)
 
         assertEquals(addonId, workRequest.workSpec.input.getString(KEY_DATA_EXTENSIONS_ID))
+    }
+
+    @Test
+    fun `registerForFutureUpdates - will register only unregistered extensions`() {
+        val updater = DefaultAddonUpdater(testContext)
+        val registeredExt: WebExtension = mock()
+        val notRegisteredExt: WebExtension = mock()
+        whenever(registeredExt.id).thenReturn("registeredExt")
+        whenever(notRegisteredExt.id).thenReturn("notRegisteredExt")
+
+        updater.registerForFutureUpdates("registeredExt")
+
+        val extensions = listOf(registeredExt, notRegisteredExt)
+
+        runBlocking {
+            assertExtensionIsRegisteredFoUpdates(updater, "registeredExt")
+        }
+
+        updater.registerForFutureUpdates(extensions)
+
+        runBlocking {
+            extensions.forEach { ext ->
+                assertExtensionIsRegisteredFoUpdates(updater, ext.id)
+            }
+        }
+    }
+
+    private suspend fun assertExtensionIsRegisteredFoUpdates(updater: DefaultAddonUpdater, extId: String) {
+        val workId = updater.getUniquePeriodicWorkName(extId)
+        val workManger = WorkManager.getInstance(testContext)
+        val workData = workManger.getWorkInfosForUniqueWork(workId).await()
+        val work = workData.first()
+
+        assertEquals(WorkInfo.State.ENQUEUED, work.state)
+        assertTrue(work.tags.contains(workId))
+        assertTrue(work.tags.contains(WORK_TAG_PERIODIC))
     }
 
     private fun isNotificationVisible(notificationId: Int): Boolean {

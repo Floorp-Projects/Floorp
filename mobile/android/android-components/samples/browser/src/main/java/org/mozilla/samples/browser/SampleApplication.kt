@@ -59,7 +59,10 @@ class SampleApplication : Application() {
                         val selected = components.sessionManager.findSessionById(sessionId)
                         selected?.let { components.tabsUseCases.selectTab(it) }
                 },
-                onUpdatePermissionRequest = components.addonUpdater::onUpdatePermissionRequest
+                onUpdatePermissionRequest = components.addonUpdater::onUpdatePermissionRequest,
+                onExtensionsLoaded = { extensions ->
+                    components.addonUpdater.registerForFutureUpdates(extensions)
+                }
             )
         } catch (e: UnsupportedOperationException) {
             // Web extension support is only available for engine gecko
