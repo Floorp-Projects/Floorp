@@ -26,7 +26,7 @@
 #include "mozilla/Services.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/Unused.h"
-#include "nsAutoPtr.h"
+#include "mozilla/UniquePtr.h"
 #include "nsCRT.h"
 #include "nsIFile.h"
 #include "nsICrashService.h"
@@ -351,7 +351,7 @@ void mozilla::plugins::TerminatePlugin(uint32_t aPluginId,
 PluginLibrary* PluginModuleContentParent::LoadModule(uint32_t aPluginId,
                                                      nsPluginTag* aPluginTag) {
   PluginModuleMapping::NotifyLoadingModule loadingModule;
-  nsAutoPtr<PluginModuleMapping> mapping(new PluginModuleMapping(aPluginId));
+  UniquePtr<PluginModuleMapping> mapping(new PluginModuleMapping(aPluginId));
 
   MOZ_ASSERT(XRE_IsContentProcess());
 
@@ -378,7 +378,7 @@ PluginLibrary* PluginModuleContentParent::LoadModule(uint32_t aPluginId,
     // mapping is linked into PluginModuleMapping::sModuleListHead and is
     // needed later, so since this function is returning successfully we
     // forget it here.
-    mapping.forget();
+    Unused << mapping.release();
   }
 
   parent->mPluginId = aPluginId;
@@ -390,7 +390,7 @@ PluginLibrary* PluginModuleContentParent::LoadModule(uint32_t aPluginId,
 /* static */
 void PluginModuleContentParent::Initialize(
     Endpoint<PPluginModuleParent>&& aEndpoint) {
-  nsAutoPtr<PluginModuleMapping> moduleMapping(
+  UniquePtr<PluginModuleMapping> moduleMapping(
       PluginModuleMapping::Resolve(aEndpoint.OtherPid()));
   MOZ_ASSERT(moduleMapping);
   PluginModuleContentParent* parent = moduleMapping->GetModule();
@@ -414,7 +414,7 @@ void PluginModuleContentParent::Initialize(
   // moduleMapping is linked into PluginModuleMapping::sModuleListHead and is
   // needed later, so since this function is returning successfully we
   // forget it here.
-  moduleMapping.forget();
+  Unused << moduleMapping.release();
 }
 
 // static
@@ -423,9 +423,10 @@ PluginLibrary* PluginModuleChromeParent::LoadModule(const char* aFilePath,
                                                     nsPluginTag* aPluginTag) {
   PLUGIN_LOG_DEBUG_FUNCTION;
 
-  nsAutoPtr<PluginModuleChromeParent> parent(new PluginModuleChromeParent(
+  UniquePtr<PluginModuleChromeParent> parent(new PluginModuleChromeParent(
       aFilePath, aPluginId, aPluginTag->mSandboxLevel));
-  UniquePtr<LaunchCompleteTask> onLaunchedRunnable(new LaunchedTask(parent));
+  UniquePtr<LaunchCompleteTask> onLaunchedRunnable(
+      new LaunchedTask(parent.get()));
   bool launched = parent->mSubprocess->Launch(
       std::move(onLaunchedRunnable), aPluginTag->mSandboxLevel,
       aPluginTag->mIsSandboxLoggingEnabled);
@@ -461,7 +462,7 @@ PluginLibrary* PluginModuleChromeParent::LoadModule(const char* aFilePath,
     Unused << parent->SendInitPluginFunctionBroker(std::move(brokerChildEnd));
   }
 #endif
-  return parent.forget();
+  return parent.release();
 }
 
 static const char* gCallbackPrefs[] = {

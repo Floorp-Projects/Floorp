@@ -11,6 +11,7 @@
 #include "PluginMessageUtils.h"
 #include "npapi.h"
 #include "base/timer.h"
+#include "mozilla/UniquePtr.h"
 
 namespace mozilla {
 namespace plugins {
@@ -31,7 +32,9 @@ class ChildTimer {
 
   class IDComparator {
    public:
-    bool Equals(ChildTimer* t, uint32_t id) const { return t->ID() == id; }
+    bool Equals(const UniquePtr<ChildTimer>& t, uint32_t id) const {
+      return t->ID() == id;
+    }
   };
 
  private:
