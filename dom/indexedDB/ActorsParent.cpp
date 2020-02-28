@@ -7418,7 +7418,7 @@ class ObjectStoreAddOrPutRequestOp final : public NormalTransactionOp {
   // if we are modifying an autoIncrement objectStore.
   RefPtr<FullObjectStoreMetadata> mMetadata;
 
-  FallibleTArray<StoredFileInfo> mStoredFileInfos;
+  nsTArray<StoredFileInfo> mStoredFileInfos;
 
   Key mResponse;
   const nsCString mGroup;
@@ -7447,15 +7447,35 @@ class ObjectStoreAddOrPutRequestOp final : public NormalTransactionOp {
 };
 
 struct ObjectStoreAddOrPutRequestOp::StoredFileInfo final {
-  RefPtr<DatabaseFile> mFileActor;
-  RefPtr<FileInfo> mFileInfo;
+  const RefPtr<FileInfo> mFileInfo;
+  const RefPtr<DatabaseFile> mFileActor;
   // A non-Blob-backed inputstream to write to disk.  If null, mFileActor may
   // still have a stream for us to write.
-  nsCOMPtr<nsIInputStream> mInputStream;
-  StructuredCloneFile::FileType mType;
+  const nsCOMPtr<nsIInputStream> mInputStream;
+  const StructuredCloneFile::FileType mType;
 
-  StoredFileInfo() : mType(StructuredCloneFile::eBlob) {
+  StoredFileInfo(RefPtr<FileInfo> aFileInfo, RefPtr<DatabaseFile> aFileActor,
+                 const StructuredCloneFile::FileType aType)
+      : mFileInfo{std::move(aFileInfo)},
+        mFileActor{std::move(aFileActor)},
+        mType{aType} {
     AssertIsOnBackgroundThread();
+    MOZ_ASSERT(StructuredCloneFile::eStructuredClone != mType);
+
+    MOZ_ASSERT(mFileInfo);
+
+    MOZ_COUNT_CTOR(ObjectStoreAddOrPutRequestOp::StoredFileInfo);
+  }
+
+  StoredFileInfo(RefPtr<FileInfo> aFileInfo,
+                 nsCOMPtr<nsIInputStream> aInputStream)
+      : mFileInfo{std::move(aFileInfo)},
+        mInputStream{std::move(aInputStream)},
+        mType{StructuredCloneFile::eStructuredClone} {
+    AssertIsOnBackgroundThread();
+
+    MOZ_ASSERT(mFileInfo);
+    MOZ_ASSERT(mInputStream);
 
     MOZ_COUNT_CTOR(ObjectStoreAddOrPutRequestOp::StoredFileInfo);
   }
@@ -24865,22 +24885,17 @@ bool ObjectStoreAddOrPutRequestOp::Init(TransactionBase* aTransaction) {
 
       const DatabaseOrMutableFile& file = fileAddInfo.file();
 
-      StoredFileInfo* storedFileInfo = mStoredFileInfos.AppendElement(fallible);
-      MOZ_ASSERT(storedFileInfo);
-
       switch (fileAddInfo.type()) {
         case StructuredCloneFile::eBlob: {
           MOZ_ASSERT(file.type() ==
                      DatabaseOrMutableFile::TPBackgroundIDBDatabaseFileParent);
 
-          storedFileInfo->mFileActor = static_cast<DatabaseFile*>(
+          auto* const fileActor = static_cast<DatabaseFile*>(
               file.get_PBackgroundIDBDatabaseFileParent());
-          MOZ_ASSERT(storedFileInfo->mFileActor);
+          MOZ_ASSERT(fileActor);
 
-          storedFileInfo->mFileInfo = storedFileInfo->mFileActor->GetFileInfo();
-          MOZ_ASSERT(storedFileInfo->mFileInfo);
-
-          storedFileInfo->mType = StructuredCloneFile::eBlob;
+          mStoredFileInfos.EmplaceBack(fileActor->GetFileInfo(), fileActor,
+                                       StructuredCloneFile::eBlob);
           break;
         }
 
@@ -24892,10 +24907,9 @@ bool ObjectStoreAddOrPutRequestOp::Init(TransactionBase* aTransaction) {
               file.get_PBackgroundMutableFileParent());
           MOZ_ASSERT(mutableFileActor);
 
-          storedFileInfo->mFileInfo = mutableFileActor->GetFileInfo();
-          MOZ_ASSERT(storedFileInfo->mFileInfo);
+          mStoredFileInfos.EmplaceBack(mutableFileActor->GetFileInfo(), nullptr,
+                                       StructuredCloneFile::eMutableFile);
 
-          storedFileInfo->mType = StructuredCloneFile::eMutableFile;
           break;
         }
 
@@ -24906,19 +24920,9 @@ bool ObjectStoreAddOrPutRequestOp::Init(TransactionBase* aTransaction) {
   }
 
   if (mDataOverThreshold) {
-    StoredFileInfo* storedFileInfo = mStoredFileInfos.AppendElement(fallible);
-    MOZ_ASSERT(storedFileInfo);
-
-    RefPtr<FileManager> fileManager =
-        aTransaction->GetDatabase()->GetFileManager();
-    MOZ_ASSERT(fileManager);
-
-    storedFileInfo->mFileInfo = fileManager->GetNewFileInfo();
-
-    storedFileInfo->mInputStream =
-        new SCInputStream(mParams.cloneInfo().data().data);
-
-    storedFileInfo->mType = StructuredCloneFile::eStructuredClone;
+    mStoredFileInfos.EmplaceBack(
+        aTransaction->GetDatabase()->GetFileManager()->GetNewFileInfo(),
+        MakeRefPtr<SCInputStream>(mParams.cloneInfo().data().data));
   }
 
   return true;
