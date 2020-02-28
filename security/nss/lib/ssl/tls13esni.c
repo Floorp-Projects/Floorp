@@ -550,7 +550,7 @@ tls13_ComputeESNIKeys(const sslSocket *ss,
                                hash, hashSize,
                                kHkdfPurposeEsniKey, strlen(kHkdfPurposeEsniKey),
                                ssl3_Alg2Mech(cipherDef->calg),
-                               keySize,
+                               keySize, ss->protocolVariant,
                                &keyMat->key);
     if (rv != SECSuccess) {
         goto loser;
@@ -558,7 +558,7 @@ tls13_ComputeESNIKeys(const sslSocket *ss,
     rv = tls13_HkdfExpandLabelRaw(Zx, suite->prf_hash,
                                   hash, hashSize,
                                   kHkdfPurposeEsniIv, strlen(kHkdfPurposeEsniIv),
-                                  keyMat->iv, ivSize);
+                                  ss->protocolVariant, keyMat->iv, ivSize);
     if (rv != SECSuccess) {
         goto loser;
     }

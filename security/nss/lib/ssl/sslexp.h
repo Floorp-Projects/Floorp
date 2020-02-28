@@ -662,7 +662,11 @@ typedef SECStatus(PR_CALLBACK *SSLRecordWriteCallback)(
  * used in TLS.  The lower bits of the IV are XORed with the 64-bit counter to
  * produce the nonce.  Otherwise, this is an AEAD interface similar to that
  * described in RFC 5116.
- */
+ *
+ * Note: SSL_MakeAead internally calls SSL_MakeVariantAead with a variant of
+ * "stream", behaving as noted above. If "datagram" variant is passed instead,
+ * the Label prefix used in HKDF-Expand is "dtls13" instead of "tls13 ". See
+ * 7.1 of RFC 8446 and draft-ietf-tls-dtls13-34. */
 typedef struct SSLAeadContextStr SSLAeadContext;
 
 #define SSL_MakeAead(version, cipherSuite, secret,                  \
@@ -674,6 +678,18 @@ typedef struct SSLAeadContextStr SSLAeadContext;
                           unsigned int _labelPrefixLen,             \
                           SSLAeadContext **_ctx),                   \
                          (version, cipherSuite, secret,             \
+                          labelPrefix, labelPrefixLen, ctx))
+
+#define SSL_MakeVariantAead(version, cipherSuite, variant, secret,  \
+                            labelPrefix, labelPrefixLen, ctx)       \
+    SSL_EXPERIMENTAL_API("SSL_MakeVariantAead",                     \
+                         (PRUint16 _version, PRUint16 _cipherSuite, \
+                          SSLProtocolVariant _variant,              \
+                          PK11SymKey * _secret,                     \
+                          const char *_labelPrefix,                 \
+                          unsigned int _labelPrefixLen,             \
+                          SSLAeadContext **_ctx),                   \
+                         (version, cipherSuite, variant, secret,    \
                           labelPrefix, labelPrefixLen, ctx))
 
 #define SSL_AeadEncrypt(ctx, counter, aad, aadLen, in, inLen,            \
@@ -716,8 +732,13 @@ typedef struct SSLAeadContextStr SSLAeadContext;
                           PK11SymKey * *_keyp),                     \
                          (version, cipherSuite, salt, ikm, keyp))
 
-/* SSL_HkdfExpandLabel produces a key with a mechanism that is suitable for
- * input to SSL_HkdfExpandLabel or SSL_MakeAead. */
+/* SSL_HkdfExpandLabel and SSL_HkdfVariantExpandLabel produce a key with a
+ * mechanism that is suitable for input to SSL_HkdfExpandLabel or SSL_MakeAead.
+ *
+ * Note: SSL_HkdfVariantExpandLabel internally calls SSL_HkdfExpandLabel with
+ * a default "stream" variant. If "datagram" variant is passed instead, the
+ * Label prefix used in HKDF-Expand is "dtls13" instead of "tls13 ". See 7.1 of
+ * RFC 8446 and draft-ietf-tls-dtls13-34. */
 #define SSL_HkdfExpandLabel(version, cipherSuite, prk,                     \
                             hsHash, hsHashLen, label, labelLen, keyp)      \
     SSL_EXPERIMENTAL_API("SSL_HkdfExpandLabel",                            \
@@ -729,9 +750,28 @@ typedef struct SSLAeadContextStr SSLAeadContext;
                          (version, cipherSuite, prk,                       \
                           hsHash, hsHashLen, label, labelLen, keyp))
 
-/* SSL_HkdfExpandLabelWithMech uses the KDF from the selected TLS version and
- * cipher suite, as with the other calls, but the provided mechanism and key
- * size. This allows the key to be used more widely. */
+#define SSL_HkdfVariantExpandLabel(version, cipherSuite, prk,                   \
+                                   hsHash, hsHashLen, label, labelLen, variant, \
+                                   keyp)                                        \
+    SSL_EXPERIMENTAL_API("SSL_HkdfVariantExpandLabel",                          \
+                         (PRUint16 _version, PRUint16 _cipherSuite,             \
+                          PK11SymKey * _prk,                                    \
+                          const PRUint8 *_hsHash, unsigned int _hsHashLen,      \
+                          const char *_label, unsigned int _labelLen,           \
+                          SSLProtocolVariant _variant,                          \
+                          PK11SymKey **_keyp),                                  \
+                         (version, cipherSuite, prk,                            \
+                          hsHash, hsHashLen, label, labelLen, variant,          \
+                          keyp))
+
+/* SSL_HkdfExpandLabelWithMech and SSL_HkdfVariantExpandLabelWithMech use the KDF
+ * from the selected TLS version and cipher suite, as with the other calls, but
+ * the provided mechanism and key size. This allows the key to be used more widely.
+ *
+ * Note: SSL_HkdfExpandLabelWithMech internally calls SSL_HkdfVariantExpandLabelWithMech
+ * with a default "stream" variant. If "datagram" variant is passed instead, the
+ * Label prefix used in HKDF-Expand is "dtls13" instead of "tls13 ". See 7.1 of
+ * RFC 8446 and draft-ietf-tls-dtls13-34. */
 #define SSL_HkdfExpandLabelWithMech(version, cipherSuite, prk,             \
                                     hsHash, hsHashLen, label, labelLen,    \
                                     mech, keySize, keyp)                   \
@@ -745,6 +785,21 @@ typedef struct SSLAeadContextStr SSLAeadContext;
                          (version, cipherSuite, prk,                       \
                           hsHash, hsHashLen, label, labelLen,              \
                           mech, keySize, keyp))
+
+#define SSL_HkdfVariantExpandLabelWithMech(version, cipherSuite, prk,          \
+                                           hsHash, hsHashLen, label, labelLen, \
+                                           mech, keySize, variant, keyp)       \
+    SSL_EXPERIMENTAL_API("SSL_HkdfVariantExpandLabelWithMech",                 \
+                         (PRUint16 _version, PRUint16 _cipherSuite,            \
+                          PK11SymKey * _prk,                                   \
+                          const PRUint8 *_hsHash, unsigned int _hsHashLen,     \
+                          const char *_label, unsigned int _labelLen,          \
+                          CK_MECHANISM_TYPE _mech, unsigned int _keySize,      \
+                          SSLProtocolVariant _variant,                         \
+                          PK11SymKey **_keyp),                                 \
+                         (version, cipherSuite, prk,                           \
+                          hsHash, hsHashLen, label, labelLen,                  \
+                          mech, keySize, variant, keyp))
 
 /* SSL_SetTimeFunc overrides the default time function (PR_Now()) and provides
  * an alternative source of time for the socket. This is used in testing, and in
@@ -863,6 +918,18 @@ typedef struct SSLMaskingContextStr {
                           unsigned int _labelLen,                   \
                           SSLMaskingContext **_ctx),                \
                          (version, cipherSuite, secret, label, labelLen, ctx))
+
+#define SSL_CreateVariantMaskingContext(version, cipherSuite, variant, \
+                                        secret, label, labelLen, ctx)  \
+    SSL_EXPERIMENTAL_API("SSL_CreateVariantMaskingContext",            \
+                         (PRUint16 _version, PRUint16 _cipherSuite,    \
+                          SSLProtocolVariant _variant,                 \
+                          PK11SymKey * _secret,                        \
+                          const char *_label,                          \
+                          unsigned int _labelLen,                      \
+                          SSLMaskingContext **_ctx),                   \
+                         (version, cipherSuite, variant, secret,       \
+                          label, labelLen, ctx))
 
 #define SSL_DestroyMaskingContext(ctx)                \
     SSL_EXPERIMENTAL_API("SSL_DestroyMaskingContext", \

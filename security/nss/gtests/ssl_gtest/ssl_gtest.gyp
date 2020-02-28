@@ -104,6 +104,18 @@
             'NSS_ALLOW_SSLKEYLOGFILE',
           ],
         }],
+        # ssl_gtest fuzz defines should only be determined by the 'fuzz_tls'
+        # flag (so as to match lib/ssl). If gtest.gypi added the define due
+        # to '--fuzz' only, remove it.
+        ['fuzz_tls==1', {
+          'defines': [
+            'UNSAFE_FUZZER_MODE',
+          ],
+        }, {
+          'defines!': [
+            'UNSAFE_FUZZER_MODE',
+          ],
+        }],
       ],
     }
   ],

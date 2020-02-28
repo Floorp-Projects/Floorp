@@ -670,6 +670,7 @@ tls13_UpdateTrafficKeys(sslSocket *ss, SSLSecretDirection direction)
                                strlen(kHkdfLabelTrafficUpdate),
                                tls13_GetHmacMechanism(ss),
                                tls13_GetHashSize(ss),
+                               ss->protocolVariant,
                                &updatedSecret);
     if (rv != SECSuccess) {
         return SECFailure;
@@ -3347,7 +3348,8 @@ tls13_DeriveSecret(sslSocket *ss, PK11SymKey *key,
                                hashes->u.raw, hashes->len,
                                label, labelLen,
                                tls13_GetHkdfMechanism(ss),
-                               tls13_GetHashSize(ss), dest);
+                               tls13_GetHashSize(ss),
+                               ss->protocolVariant, dest);
     if (rv != SECSuccess) {
         LOG_ERROR(ss, SEC_ERROR_LIBRARY_FAILURE);
         return SECFailure;
@@ -3496,6 +3498,7 @@ tls13_DeriveTrafficKeys(sslSocket *ss, ssl3CipherSpec *spec,
                                NULL, 0,
                                kHkdfPurposeKey, strlen(kHkdfPurposeKey),
                                bulkAlgorithm, keySize,
+                               ss->protocolVariant,
                                &spec->keyMaterial.key);
     if (rv != SECSuccess) {
         LOG_ERROR(ss, SEC_ERROR_LIBRARY_FAILURE);
@@ -3504,8 +3507,8 @@ tls13_DeriveTrafficKeys(sslSocket *ss, ssl3CipherSpec *spec,
     }
 
     if (IS_DTLS(ss) && spec->epoch > 0) {
-        rv = ssl_CreateMaskingContextInner(spec->version,
-                                           ss->ssl3.hs.cipher_suite, prk, kHkdfPurposeSn,
+        rv = ssl_CreateMaskingContextInner(spec->version, ss->ssl3.hs.cipher_suite,
+                                           ss->protocolVariant, prk, kHkdfPurposeSn,
                                            strlen(kHkdfPurposeSn), &spec->maskContext);
         if (rv != SECSuccess) {
             LOG_ERROR(ss, SEC_ERROR_LIBRARY_FAILURE);
@@ -3517,6 +3520,7 @@ tls13_DeriveTrafficKeys(sslSocket *ss, ssl3CipherSpec *spec,
     rv = tls13_HkdfExpandLabelRaw(prk, tls13_GetHash(ss),
                                   NULL, 0,
                                   kHkdfPurposeIv, strlen(kHkdfPurposeIv),
+                                  ss->protocolVariant,
                                   spec->keyMaterial.iv, ivSize);
     if (rv != SECSuccess) {
         LOG_ERROR(ss, SEC_ERROR_LIBRARY_FAILURE);
@@ -4432,7 +4436,8 @@ tls13_ComputeFinished(sslSocket *ss, PK11SymKey *baseKey,
                                NULL, 0,
                                label, strlen(label),
                                tls13_GetHmacMechanism(ss),
-                               tls13_GetHashSize(ss), &secret);
+                               tls13_GetHashSize(ss),
+                               ss->protocolVariant, &secret);
     if (rv != SECSuccess) {
         goto abort;
     }
@@ -4970,7 +4975,8 @@ tls13_SendNewSessionTicket(sslSocket *ss, const PRUint8 *appToken,
                                kHkdfLabelResumption,
                                strlen(kHkdfLabelResumption),
                                tls13_GetHkdfMechanism(ss),
-                               tls13_GetHashSize(ss), &secret);
+                               tls13_GetHashSize(ss),
+                               ss->protocolVariant, &secret);
     if (rv != SECSuccess) {
         goto loser;
     }
@@ -5204,7 +5210,8 @@ tls13_HandleNewSessionTicket(sslSocket *ss, PRUint8 *b, PRUint32 length)
                                    kHkdfLabelResumption,
                                    strlen(kHkdfLabelResumption),
                                    tls13_GetHkdfMechanism(ss),
-                                   tls13_GetHashSize(ss), &secret);
+                                   tls13_GetHashSize(ss),
+                                   ss->protocolVariant, &secret);
         if (rv != SECSuccess) {
             return SECFailure;
         }
@@ -5393,6 +5400,11 @@ tls13_ProtectRecord(sslSocket *ss,
 
         PORT_Assert(cipher_def->type == type_aead);
 
+        /* If the following condition holds, we can skip the padding logic for
+         * DTLS 1.3 (4.2.3). This will be the case until we support a cipher
+         * with tag length < 15B. */
+        PORT_Assert(tagLen + 1 /* cType */ >= 16);
+
         /* Add the content type at the end. */
         *(SSL_BUFFER_NEXT(wrBuf) + contentLen) = type;
 
@@ -5403,9 +5415,7 @@ tls13_ProtectRecord(sslSocket *ss,
             return SECFailure;
         }
         if (needsLength) {
-            rv = sslBuffer_AppendNumber(&buf, contentLen + 1 +
-                                                  cwSpec->cipherDef->tag_size,
-                                        2);
+            rv = sslBuffer_AppendNumber(&buf, contentLen + 1 + tagLen, 2);
             if (rv != SECSuccess) {
                 return SECFailure;
             }
