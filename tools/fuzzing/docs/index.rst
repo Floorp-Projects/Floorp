@@ -371,6 +371,37 @@ falls with the quality of the samples. If the originals don’t cover
 certain parts of the implementation, then the fuzzer will also have to
 do more work to get there.
 
+
+Fuzz Blockers
+~~~~~~~~~~~~~
+
+Fuzz blockers are issues that prevent fuzzers from being as
+effective as possible. Depending on the fuzzer and its scope a fuzz blocker
+in one area (or component) can impede performance in other areas and in
+some cases block the fuzzer all together. Some examples are:
+
+- Frequent hangs / timeouts - This includes any issue that slows down
+  or blocks execution of the fuzzer or the target.
+
+- Frequent crashes - These can block code paths and waste compute
+  resources due to the need to relaunch the fuzzing target and handle
+  the results (regardless of whether it is ignored or reported)
+
+- Hard to bucket - These can be crashes such as stack overflows or
+  any issue that crashes in an inconsistent location. This also includes
+  issues that corrupt logs/debugger output or provide a broken/invalid
+  crash report.
+
+Since these types of crashes harm the overall fuzzing progress, it is important
+for them to be addressed in a timely manner. Even if the bug itself might seem
+trivial and low priority for the product, it can still have devastating effects
+on fuzzing and hence prevent finding other critical issues. 
+
+Issues in Bugzilla are marked as fuzz blockers by adding “[fuzzblocker]”
+to the “Whiteboard” field. A list of open issues marked as fuzz blockers
+can be found on `Bugzilla <https://bugzilla.mozilla.org/buglist.cgi?cmdtype=runnamed&namedcmd=fuzzblockers&list_id=15127589>`__.
+
+
 Documentation
 ~~~~~~~~~~~~~
 
