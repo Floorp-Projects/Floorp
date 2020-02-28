@@ -529,8 +529,19 @@ class nsWindow::NPZCSupport final
       window->ProcessUntransformedAPZEvent(&wheelEvent, result);
     });
 
-    return result.mHitRegionWithApzAwareListeners ? INPUT_RESULT_HANDLED_CONTENT
-                                                  : INPUT_RESULT_HANDLED;
+    if (result.mHitRegionWithApzAwareListeners) {
+      return INPUT_RESULT_HANDLED_CONTENT;
+    }
+
+    switch (result.mStatus) {
+      case nsEventStatus_eIgnore:
+        return INPUT_RESULT_UNHANDLED;
+      case nsEventStatus_eConsumeDoDefault:
+        return INPUT_RESULT_HANDLED;
+      default:
+        MOZ_ASSERT_UNREACHABLE("Unexpected nsEventStatus");
+        return INPUT_RESULT_UNHANDLED;
+    }
   }
 
  private:
@@ -642,8 +653,19 @@ class nsWindow::NPZCSupport final
       window->ProcessUntransformedAPZEvent(&mouseEvent, result);
     });
 
-    return result.mHitRegionWithApzAwareListeners ? INPUT_RESULT_HANDLED_CONTENT
-                                                  : INPUT_RESULT_HANDLED;
+    if (result.mHitRegionWithApzAwareListeners) {
+      return INPUT_RESULT_HANDLED_CONTENT;
+    }
+
+    switch (result.mStatus) {
+      case nsEventStatus_eIgnore:
+        return INPUT_RESULT_UNHANDLED;
+      case nsEventStatus_eConsumeDoDefault:
+        return INPUT_RESULT_HANDLED;
+      default:
+        MOZ_ASSERT_UNREACHABLE("Unexpected nsEventStatus");
+        return INPUT_RESULT_UNHANDLED;
+    }
   }
 
   int32_t HandleMotionEvent(
@@ -760,8 +782,19 @@ class nsWindow::NPZCSupport final
       window->DispatchHitTest(touchEvent);
     });
 
-    return result.mHitRegionWithApzAwareListeners ? INPUT_RESULT_HANDLED_CONTENT
-                                                  : INPUT_RESULT_HANDLED;
+    if (result.mHitRegionWithApzAwareListeners) {
+      return INPUT_RESULT_HANDLED_CONTENT;
+    }
+
+    switch (result.mStatus) {
+      case nsEventStatus_eIgnore:
+        return INPUT_RESULT_UNHANDLED;
+      case nsEventStatus_eConsumeDoDefault:
+        return INPUT_RESULT_HANDLED;
+      default:
+        MOZ_ASSERT_UNREACHABLE("Unexpected nsEventStatus");
+        return INPUT_RESULT_UNHANDLED;
+    }
   }
 };
 

@@ -63,14 +63,16 @@ public class PanZoomController {
     /* package */ @interface InputResult {}
 
     /**
-     * Specifies that an input event was not handled by the PanZoomController.
+     * Specifies that an input event was not handled by the PanZoomController for a panning
+     * or zooming operation. The event may have been handled by Web content or
+     * internally (e.g. text selection).
      */
     @WrapForJNI
     public static final int INPUT_RESULT_UNHANDLED = 0;
 
     /**
-     * Specifies that an input event was handled by the PanZoomController, but likely
-     * not by any touch event listeners in Web content.
+     * Specifies that an input event was handled by the PanZoomController for a
+     * panning or zooming operation, but likely not by any touch event listeners in Web content.
      */
     @WrapForJNI
     public static final int INPUT_RESULT_HANDLED = 1;
