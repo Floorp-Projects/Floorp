@@ -24,6 +24,7 @@
 #include "nsITransportSecurityInfo.h"
 #include "nsIURI.h"
 #include "nsIX509Cert.h"
+#include "nsNSSCertificateDB.h"
 #include "nsNSSComponent.h"
 #include "nsNetUtil.h"
 #include "nsPromiseFlatString.h"
