@@ -288,7 +288,7 @@ BrowserTabList.prototype._getChildren = function(window) {
   });
 };
 
-BrowserTabList.prototype.getList = function(browserActorOptions) {
+BrowserTabList.prototype.getList = async function(browserActorOptions) {
   const topAppWindow = Services.wm.getMostRecentWindow(
     DevToolsServer.chromeWindowType
   );
@@ -302,33 +302,27 @@ BrowserTabList.prototype.getList = function(browserActorOptions) {
   const initialMapSize = this._actorByBrowser.size;
   this._foundCount = 0;
 
-  // To avoid mysterious behavior if tabs are closed or opened mid-iteration,
-  // we update the map first, and then make a second pass over it to yield
-  // the actors. Thus, the sequence yielded is always a snapshot of the
-  // actors that were live when we began the iteration.
-
-  const actorPromises = [];
+  const actors = [];
 
   for (const browser of this._getBrowsers()) {
     const selected = browser === selectedBrowser;
-    actorPromises.push(
-      this._getActorForBrowser(browser, browserActorOptions).then(
-        actor => {
-          // Set the 'selected' properties on all actors correctly.
-          actor.selected = selected;
-          return actor;
-        },
-        e => {
-          if (e.error === "tabDestroyed") {
-            // Return null if a tab was destroyed while retrieving the tab list.
-            return null;
-          }
+    try {
+      const actor = await this._getActorForBrowser(
+        browser,
+        browserActorOptions
+      );
+      // Set the 'selected' properties on all actors correctly.
+      actor.selected = selected;
+      actors.push(actor);
+    } catch (e) {
+      if (e.error === "tabDestroyed") {
+        // Ignore the error if a tab was destroyed while retrieving the tab list.
+        continue;
+      }
 
-          // Forward unexpected errors.
-          throw e;
-        }
-      )
-    );
+      // Forward unexpected errors.
+      throw e;
+    }
   }
 
   if (this._testing && initialMapSize !== this._foundCount) {
@@ -338,10 +332,7 @@ BrowserTabList.prototype.getList = function(browserActorOptions) {
   this._mustNotify = true;
   this._checkListening();
 
-  return Promise.all(actorPromises).then(values => {
-    // Filter out null values if we received a tabDestroyed error.
-    return values.filter(value => value != null);
-  });
+  return actors;
 };
 
 /**
@@ -365,7 +356,7 @@ BrowserTabList.prototype._getActorForBrowser = function(
   );
   this._actorByBrowser.set(browser, actor);
   this._checkListening();
-  return actor.connect();
+  return actor;
 };
 
 BrowserTabList.prototype.getTab = function(
@@ -477,7 +468,7 @@ BrowserTabList.prototype._handleActorClose = function(actor, browser) {
   }
 
   this._actorByBrowser.delete(browser);
-  actor.exit();
+  actor.destroy();
 
   this._notifyListChanged();
   this._checkListening();
