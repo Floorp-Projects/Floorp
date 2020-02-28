@@ -40,7 +40,11 @@ add_task(async function() {
   );
 
   is(labels[0].textContent, "obj", "The first json property name is correct.");
-  is(values[0].textContent, "{…}", "The first json property value is correct.");
+  is(
+    values[0].textContent,
+    'Object { type: "string" }',
+    "The first json property value is correct."
+  );
 
   await teardown(monitor);
 });
