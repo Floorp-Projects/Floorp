@@ -163,7 +163,8 @@ TEST_VARIANTS = {
             'e10s': True,
         },
         'merge': {
-            'fission-run-on-projects': ['try'],
+            # Ensures the default state is to not run anywhere.
+            'fission-run-on-projects': [],
             'mozharness': {
                 'extra-options': ['--setpref=fission.autostart=true',
                                   '--setpref=dom.serviceWorkers.parent_intercept=true',
