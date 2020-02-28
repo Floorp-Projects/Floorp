@@ -1413,7 +1413,8 @@ nsresult GeckoEditableSupport::NotifyIME(
     }
 
     case NOTIFY_IME_OF_SELECTION_CHANGE: {
-      ALOGIME("IME: NOTIFY_IME_OF_SELECTION_CHANGE");
+      ALOGIME("IME: NOTIFY_IME_OF_SELECTION_CHANGE: SelectionChangeData=%s",
+              ToString(aNotification.mSelectionChangeData).c_str());
 
       PostFlushIMEChanges();
       mIMESelectionChanged = true;
@@ -1421,10 +1422,8 @@ nsresult GeckoEditableSupport::NotifyIME(
     }
 
     case NOTIFY_IME_OF_TEXT_CHANGE: {
-      ALOGIME("IME: NotifyIMEOfTextChange: s=%d, oe=%d, ne=%d",
-              aNotification.mTextChangeData.mStartOffset,
-              aNotification.mTextChangeData.mRemovedEndOffset,
-              aNotification.mTextChangeData.mAddedEndOffset);
+      ALOGIME("IME: NOTIFY_IME_OF_TEXT_CHANGE: TextChangeData=%s",
+              ToString(aNotification.mTextChangeData).c_str());
 
       /* Make sure Java's selection is up-to-date */
       PostFlushIMEChanges();
