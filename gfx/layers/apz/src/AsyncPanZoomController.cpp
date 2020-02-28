@@ -1501,8 +1501,7 @@ nsEventStatus AsyncPanZoomController::OnTouchEnd(
     case PANNING_LOCKED_Y:
     case PAN_MOMENTUM: {
       MOZ_ASSERT(GetCurrentTouchBlock());
-      mX.EndTouch(aEvent.mTime);
-      mY.EndTouch(aEvent.mTime);
+      EndTouch(aEvent.mTime);
       return HandleEndOfPan();
     }
     case PINCHING:
@@ -1798,8 +1797,7 @@ nsEventStatus AsyncPanZoomController::OnScaleEnd(
       ScrollSnap();
     } else {
       // when zoom is not allowed
-      mX.EndTouch(aEvent.mTime);
-      mY.EndTouch(aEvent.mTime);
+      EndTouch(aEvent.mTime);
       if (stateWasPinching) {
         // still pinching
         if (HasReadyTouchBlock()) {
@@ -2649,8 +2647,7 @@ nsEventStatus AsyncPanZoomController::OnPanEnd(const PanGestureInput& aEvent) {
   // Call into OnPan in order to process any delta included in this event.
   OnPan(aEvent, true);
 
-  mX.EndTouch(aEvent.mTime);
-  mY.EndTouch(aEvent.mTime);
+  EndTouch(aEvent.mTime);
 
   // Use HandleEndOfPan for fling on platforms that don't
   // emit momentum events (Gtk).
@@ -3540,10 +3537,16 @@ void AsyncPanZoomController::RecordScrollPayload(const TimeStamp& aTimeStamp) {
 }
 
 void AsyncPanZoomController::StartTouch(const ParentLayerPoint& aPoint,
-                                        uint32_t aTime) {
+                                        uint32_t aTimestampMs) {
   RecursiveMutexAutoLock lock(mRecursiveMutex);
-  mX.StartTouch(aPoint.x, aTime);
-  mY.StartTouch(aPoint.y, aTime);
+  mX.StartTouch(aPoint.x, aTimestampMs);
+  mY.StartTouch(aPoint.y, aTimestampMs);
+}
+
+void AsyncPanZoomController::EndTouch(uint32_t aTimestampMs) {
+  RecursiveMutexAutoLock lock(mRecursiveMutex);
+  mX.EndTouch(aTimestampMs);
+  mY.EndTouch(aTimestampMs);
 }
 
 void AsyncPanZoomController::TrackTouch(const MultiTouchInput& aEvent) {
