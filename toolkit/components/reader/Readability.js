@@ -43,6 +43,7 @@ function Readability(doc, options) {
   options = options || {};
 
   this._doc = doc;
+  this._docJSDOMParser = this._doc.firstChild.__JSDOMParser__;
   this._articleTitle = null;
   this._articleByline = null;
   this._articleDir = null;
@@ -55,6 +56,7 @@ function Readability(doc, options) {
   this._nbTopCandidates = options.nbTopCandidates || this.DEFAULT_N_TOP_CANDIDATES;
   this._charThreshold = options.charThreshold || this.DEFAULT_CHAR_THRESHOLD;
   this._classesToPreserve = this.CLASSES_TO_PRESERVE.concat(options.classesToPreserve || []);
+  this._keepClasses = !!options.keepClasses;
 
   // Start with all flags set
   this._flags = this.FLAG_STRIP_UNLIKELYS |
@@ -121,8 +123,8 @@ Readability.prototype = {
   REGEXPS: {
     // NOTE: These two regular expressions are duplicated in
     // Readability-readerable.js. Please keep both copies in sync.
-    unlikelyCandidates: /-ad-|ai2html|banner|breadcrumbs|combx|comment|community|cover-wrap|disqus|extra|foot|gdpr|header|legends|menu|related|remark|replies|rss|shoutbox|sidebar|skyscraper|social|sponsor|supplemental|ad-break|agegate|pagination|pager|popup|yom-remote/i,
-    okMaybeItsACandidate: /and|article|body|column|main|shadow/i,
+    unlikelyCandidates: /-ad-|ai2html|banner|breadcrumbs|combx|comment|community|cover-wrap|disqus|extra|footer|gdpr|header|legends|menu|related|remark|replies|rss|shoutbox|sidebar|skyscraper|social|sponsor|supplemental|ad-break|agegate|pagination|pager|popup|yom-remote/i,
+    okMaybeItsACandidate: /and|article|body|column|content|main|shadow/i,
 
     positive: /article|body|content|entry|hentry|h-entry|main|page|pagination|post|text|blog|story/i,
     negative: /hidden|^hid$| hid$| hid |^hid |banner|combx|comment|com-|contact|foot|footer|footnote|gdpr|masthead|media|meta|outbrain|promo|related|scroll|share|shoutbox|sidebar|skyscraper|sponsor|shopping|tags|tool|widget/i,
@@ -131,6 +133,7 @@ Readability.prototype = {
     replaceFonts: /<(\/?)font[^>]*>/gi,
     normalize: /\s{2,}/g,
     videos: /\/\/(www\.)?((dailymotion|youtube|youtube-nocookie|player\.vimeo|v\.qq)\.com|(archive|upload\.wikimedia)\.org|player\.twitch\.tv)/i,
+    shareElements: /(\b|_)(share|sharedaddy)(\b|_)/i,
     nextLink: /(next|weiter|continue|>([^\|]|$)|»([^\|]|$))/i,
     prevLink: /(prev|earl|old|new|<|«)/i,
     whitespace: /^\s*$/,
@@ -169,8 +172,10 @@ Readability.prototype = {
     // Readability cannot open relative uris so we convert them to absolute uris.
     this._fixRelativeUris(articleContent);
 
-    // Remove classes.
-    this._cleanClasses(articleContent);
+    if (!this._keepClasses) {
+      // Remove classes.
+      this._cleanClasses(articleContent);
+    }
   },
 
   /**
@@ -184,6 +189,10 @@ Readability.prototype = {
    * @return void
    */
   _removeNodes: function(nodeList, filterFn) {
+    // Avoid ever operating on live node lists.
+    if (this._docJSDOMParser && nodeList._isLiveNodeList) {
+      throw new Error("Do not pass live node lists to _removeNodes");
+    }
     for (var i = nodeList.length - 1; i >= 0; i--) {
       var node = nodeList[i];
       var parentNode = node.parentNode;
@@ -203,6 +212,10 @@ Readability.prototype = {
    * @return void
    */
   _replaceNodeTags: function(nodeList, newTagName) {
+    // Avoid ever operating on live node lists.
+    if (this._docJSDOMParser && nodeList._isLiveNodeList) {
+      throw new Error("Do not pass live node lists to _replaceNodeTags");
+    }
     for (var i = nodeList.length - 1; i >= 0; i--) {
       var node = nodeList[i];
       this._setNodeTag(node, newTagName);
@@ -335,11 +348,21 @@ Readability.prototype = {
     this._forEachNode(links, function(link) {
       var href = link.getAttribute("href");
       if (href) {
-        // Replace links with javascript: URIs with text content, since
+        // Remove links with javascript: URIs, since
         // they won't work after scripts have been removed from the page.
         if (href.indexOf("javascript:") === 0) {
-          var text = this._doc.createTextNode(link.textContent);
-          link.parentNode.replaceChild(text, link);
+          // if the link only contains simple text content, it can be converted to a text node
+          if (link.childNodes.length === 1 && link.childNodes[0].nodeType === this.TEXT_NODE) {
+            var text = this._doc.createTextNode(link.textContent);
+            link.parentNode.replaceChild(text, link);
+          } else {
+            // if the link has multiple children, they should all be preserved
+            var container = this._doc.createElement("span");
+            while (link.childNodes.length > 0) {
+              container.appendChild(link.childNodes[0]);
+            }
+            link.parentNode.replaceChild(container, link);
+          }
         } else {
           link.setAttribute("href", toAbsoluteURI(href));
         }
@@ -444,13 +467,13 @@ Readability.prototype = {
     var doc = this._doc;
 
     // Remove all style tags in head
-    this._removeNodes(doc.getElementsByTagName("style"));
+    this._removeNodes(this._getAllNodesWithTag(doc, ["style"]));
 
     if (doc.body) {
       this._replaceBrs(doc.body);
     }
 
-    this._replaceNodeTags(doc.getElementsByTagName("font"), "SPAN");
+    this._replaceNodeTags(this._getAllNodesWithTag(doc, ["font"]), "SPAN");
   },
 
   /**
@@ -530,7 +553,7 @@ Readability.prototype = {
 
   _setNodeTag: function (node, tag) {
     this.log("_setNodeTag", node, tag);
-    if (node.__JSDOMParser__) {
+    if (this._docJSDOMParser) {
       node.localName = tag.toLowerCase();
       node.tagName = tag.toUpperCase();
       return node;
@@ -574,6 +597,8 @@ Readability.prototype = {
     // visually linked to other content-ful elements (text, images, etc.).
     this._markDataTables(articleContent);
 
+    this._fixLazyImages(articleContent);
+
     // Clean out junk from the article content
     this._cleanConditionally(articleContent, "form");
     this._cleanConditionally(articleContent, "fieldset");
@@ -591,7 +616,7 @@ Readability.prototype = {
 
     this._forEachNode(articleContent.children, function (topCandidate) {
       this._cleanMatchedNodes(topCandidate, function (node, matchString) {
-        return /share/.test(matchString) && node.textContent.length < shareElementThreshold;
+        return this.REGEXPS.shareElements.test(matchString) && node.textContent.length < shareElementThreshold;
       });
     });
 
@@ -628,7 +653,7 @@ Readability.prototype = {
     this._cleanConditionally(articleContent, "div");
 
     // Remove extra paragraphs
-    this._removeNodes(articleContent.getElementsByTagName("p"), function (paragraph) {
+    this._removeNodes(this._getAllNodesWithTag(articleContent, ["p"]), function (paragraph) {
       var imgCount = paragraph.getElementsByTagName("img").length;
       var embedCount = paragraph.getElementsByTagName("embed").length;
       var objectCount = paragraph.getElementsByTagName("object").length;
@@ -1304,12 +1329,12 @@ Readability.prototype = {
    * @param Element
   **/
   _removeScripts: function(doc) {
-    this._removeNodes(doc.getElementsByTagName("script"), function(scriptNode) {
+    this._removeNodes(this._getAllNodesWithTag(doc, ["script"]), function(scriptNode) {
       scriptNode.nodeValue = "";
       scriptNode.removeAttribute("src");
       return true;
     });
-    this._removeNodes(doc.getElementsByTagName("noscript"));
+    this._removeNodes(this._getAllNodesWithTag(doc, ["noscript"]));
   },
 
   /**
@@ -1492,7 +1517,7 @@ Readability.prototype = {
   _clean: function(e, tag) {
     var isEmbed = ["object", "embed", "iframe"].indexOf(tag) !== -1;
 
-    this._removeNodes(e.getElementsByTagName(tag), function(element) {
+    this._removeNodes(this._getAllNodesWithTag(e, [tag]), function(element) {
       // Allow youtube and vimeo videos through as people usually want to see those.
       if (isEmbed) {
         // First, check the elements attributes to see if any of them contain youtube or vimeo
@@ -1623,6 +1648,39 @@ Readability.prototype = {
     }
   },
 
+  /* convert images and figures that have properties like data-src into images that can be loaded without JS */
+  _fixLazyImages: function (root) {
+    this._forEachNode(this._getAllNodesWithTag(root, ["img", "picture", "figure"]), function (elem) {
+      // also check for "null" to work around https://github.com/jsdom/jsdom/issues/2580
+      if ((!elem.src && (!elem.srcset || elem.srcset == "null")) || elem.className.toLowerCase().indexOf("lazy") !== -1) {
+        for (var i = 0; i < elem.attributes.length; i++) {
+          var attr = elem.attributes[i];
+          if (attr.name === "src" || attr.name === "srcset") {
+            continue;
+          }
+          var copyTo = null;
+          if (/\.(jpg|jpeg|png|webp)\s+\d/.test(attr.value)) {
+            copyTo = "srcset";
+          } else if (/^\s*\S+\.(jpg|jpeg|png|webp)\S*\s*$/.test(attr.value)) {
+            copyTo = "src";
+          }
+          if (copyTo) {
+            //if this is an img or picture, set the attribute directly
+            if (elem.tagName === "IMG" || elem.tagName === "PICTURE") {
+              elem.setAttribute(copyTo, attr.value);
+            } else if (elem.tagName === "FIGURE" && !this._getAllNodesWithTag(elem, ["img", "picture"]).length) {
+              //if the item is a <figure> that does not contain an image or picture, create one and place it inside the figure
+              //see the nytimes-3 testcase for an example
+              var img = this._doc.createElement("img");
+              img.setAttribute(copyTo, attr.value);
+              elem.appendChild(img);
+            }
+          }
+        }
+      }
+    });
+  },
+
   /**
    * Clean an element of all tags of type "tag" if they look fishy.
    * "Fishy" is an algorithm based on content length, classnames, link density, number of images & embeds, etc.
@@ -1640,7 +1698,7 @@ Readability.prototype = {
     // without effecting the traversal.
     //
     // TODO: Consider taking into account original contentScore here.
-    this._removeNodes(e.getElementsByTagName(tag), function(node) {
+    this._removeNodes(this._getAllNodesWithTag(e, [tag]), function(node) {
       // First check if this node IS data table, in which case don't remove it.
       var isDataTable = function(t) {
         return t._readabilityDataTable;
@@ -1674,10 +1732,7 @@ Readability.prototype = {
         var input = node.getElementsByTagName("input").length;
 
         var embedCount = 0;
-        var embeds = this._concatNodeLists(
-          node.getElementsByTagName("object"),
-          node.getElementsByTagName("embed"),
-          node.getElementsByTagName("iframe"));
+        var embeds = this._getAllNodesWithTag(node, ["object", "embed", "iframe"]);
 
         for (var i = 0; i < embeds.length; i++) {
           // If this embed has attribute that matches video regex, don't delete it.
@@ -1723,7 +1778,7 @@ Readability.prototype = {
     var endOfSearchMarkerNode = this._getNextNode(e, true);
     var next = this._getNextNode(e);
     while (next && next != endOfSearchMarkerNode) {
-      if (filter(next, next.className + " " + next.id)) {
+      if (filter.call(this, next, next.className + " " + next.id)) {
         next = this._removeAndGetNext(next);
       } else {
         next = this._getNextNode(next);
@@ -1738,11 +1793,9 @@ Readability.prototype = {
    * @return void
   **/
   _cleanHeaders: function(e) {
-    for (var headerIndex = 1; headerIndex < 3; headerIndex += 1) {
-      this._removeNodes(e.getElementsByTagName("h" + headerIndex), function (header) {
-        return this._getClassWeight(header) < 0;
-      });
-    }
+    this._removeNodes(this._getAllNodesWithTag(e, ["h1", "h2"]), function (header) {
+      return this._getClassWeight(header) < 0;
+    });
   },
 
   _flagIsActive: function(flag) {
@@ -1754,7 +1807,11 @@ Readability.prototype = {
   },
 
   _isProbablyVisible: function(node) {
-    return (!node.style || node.style.display != "none") && !node.hasAttribute("hidden");
+    // Have to null-check node.style and node.className.indexOf to deal with SVG and MathML nodes.
+    return (!node.style || node.style.display != "none")
+      && !node.hasAttribute("hidden")
+      //check for "fallback-image" so that wikimedia math images are displayed
+      && (!node.hasAttribute("aria-hidden") || node.getAttribute("aria-hidden") != "true" || (node.className && node.className.indexOf && node.className.indexOf("fallback-image") !== -1));
   },
 
   /**
