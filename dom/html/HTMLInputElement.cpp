@@ -169,27 +169,25 @@ static const nsAttrValue::EnumTable kInputTypeTable[] = {
 static const nsAttrValue::EnumTable* kInputDefaultType =
     &kInputTypeTable[ArrayLength(kInputTypeTable) - 2];
 
-static const uint8_t NS_INPUT_INPUTMODE_AUTO = 0;
-static const uint8_t NS_INPUT_INPUTMODE_NUMERIC = 1;
-static const uint8_t NS_INPUT_INPUTMODE_DIGIT = 2;
-static const uint8_t NS_INPUT_INPUTMODE_UPPERCASE = 3;
-static const uint8_t NS_INPUT_INPUTMODE_LOWERCASE = 4;
-static const uint8_t NS_INPUT_INPUTMODE_TITLECASE = 5;
-static const uint8_t NS_INPUT_INPUTMODE_AUTOCAPITALIZED = 6;
+static const uint8_t NS_INPUT_INPUTMODE_NONE = 1;
+static const uint8_t NS_INPUT_INPUTMODE_TEXT = 2;
+static const uint8_t NS_INPUT_INPUTMODE_TEL = 3;
+static const uint8_t NS_INPUT_INPUTMODE_URL = 4;
+static const uint8_t NS_INPUT_INPUTMODE_EMAIL = 5;
+static const uint8_t NS_INPUT_INPUTMODE_NUMERIC = 6;
+static const uint8_t NS_INPUT_INPUTMODE_DECIMAL = 7;
+static const uint8_t NS_INPUT_INPUTMODE_SEARCH = 8;
 
 static const nsAttrValue::EnumTable kInputInputmodeTable[] = {
-    {"auto", NS_INPUT_INPUTMODE_AUTO},
+    {"none", NS_INPUT_INPUTMODE_NONE},
+    {"text", NS_INPUT_INPUTMODE_TEXT},
+    {"tel", NS_INPUT_INPUTMODE_TEL},
+    {"url", NS_INPUT_INPUTMODE_URL},
+    {"email", NS_INPUT_INPUTMODE_EMAIL},
     {"numeric", NS_INPUT_INPUTMODE_NUMERIC},
-    {"digit", NS_INPUT_INPUTMODE_DIGIT},
-    {"uppercase", NS_INPUT_INPUTMODE_UPPERCASE},
-    {"lowercase", NS_INPUT_INPUTMODE_LOWERCASE},
-    {"titlecase", NS_INPUT_INPUTMODE_TITLECASE},
-    {"autocapitalized", NS_INPUT_INPUTMODE_AUTOCAPITALIZED},
+    {"decimal", NS_INPUT_INPUTMODE_DECIMAL},
+    {"search", NS_INPUT_INPUTMODE_SEARCH},
     {nullptr, 0}};
-
-// Default inputmode value is "auto".
-static const nsAttrValue::EnumTable* kInputDefaultInputmode =
-    &kInputInputmodeTable[0];
 
 static const nsAttrValue::EnumTable kCaptureTable[] = {
     {"user", static_cast<int16_t>(nsIFilePicker::captureUser)},
@@ -1386,7 +1384,7 @@ void HTMLInputElement::GetFormMethod(nsAString& aValue) {
 }
 
 void HTMLInputElement::GetInputMode(nsAString& aValue) {
-  GetEnumAttr(nsGkAtoms::inputmode, kInputDefaultInputmode->tag, aValue);
+  GetEnumAttr(nsGkAtoms::inputmode, nullptr, aValue);
 }
 
 void HTMLInputElement::GetType(nsAString& aValue) {
