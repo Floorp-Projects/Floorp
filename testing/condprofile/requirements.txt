@@ -1,6 +1,7 @@
 ./mozfile
 ./mozprofile
 ./mozdevice
+./mozlog
 
 aiohttp==3.5.4
 https://pypi.pub.build.mozilla.org/pub/arsenic-19.1-py3-none-any.whl
