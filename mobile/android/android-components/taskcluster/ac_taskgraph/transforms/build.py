@@ -100,6 +100,19 @@ def get_nightly_version(config, version):
     )
 
 
+def craft_path_version(version, build_type, nightly_version):
+    """Helper function to craft the correct version to bake in the artifacts full
+    path section"""
+    path_version = "{}{}".format(
+        version,
+        "-SNAPSHOT" if build_type == "snapshot" else ''
+    )
+    # XXX: for nightly releases we need to s/X.0.0/X.0.<buildid>/g in versions
+    if build_type == 'nightly':
+        path_version = path_version.replace(version, nightly_version)
+    return path_version
+
+
 def _deep_format(object, field, **format_kwargs):
     keys = field.split('.')
     last_key = keys[-1]
@@ -158,10 +171,8 @@ def add_artifacts(config, tasks):
                     "path": artifact_template["path"].format(
                         component_path=get_path(component),
                         component=component,
-                        version_with_snapshot="{}{}".format(
-                            version,
-                            "-SNAPSHOT" if task["attributes"]["build-type"] == "snapshot" else ''
-                        ),
+                        version_with_snapshot=craft_path_version(version,
+                                task["attributes"]["build-type"], nightly_version),
                         artifact_file_name=artifact_file_name,
                     ),
                 })
