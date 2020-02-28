@@ -4456,7 +4456,7 @@ static bool ArgumentsUseCanBeLazy(JSContext* cx, JSScript* script,
     }
   }
 
-  // arguments[i] can read fp->canonicalActualArg(i) directly.
+  // arguments[i] can read fp->unaliasedActual(i) directly.
   if (ins->isCallGetElement() && index == 0) {
     *argumentsContentsObserved = true;
     return true;
