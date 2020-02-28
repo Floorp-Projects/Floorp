@@ -3,8 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 """ Helpers to build scenarii
 """
-from condprof.util import ERROR, LOG
-
+from condprof.util import logger
 
 _SUPPORTED_MOBILE_BROWSERS = "fenix", "gecko", "fennec"
 
@@ -46,7 +45,7 @@ class TabSwitcher:
                 self.handles = await self.session.get_window_handles()
                 self.current = 0
         except Exception:
-            ERROR("Could not get window handles")
+            logger.error("Could not get window handles")
             return
 
         handle = self.handles[self.current]
@@ -57,7 +56,7 @@ class TabSwitcher:
         try:
             await self.session.switch_to_window(handle)
         except Exception:
-            ERROR("Could not switch to handle %s" % str(handle))
+            logger.error("Could not switch to handle %s" % str(handle))
 
 
 # 10 minutes
@@ -68,21 +67,21 @@ async def execute_async_script(session, script, *args):
     # switch to the right context if needed
     current_context = await session._request(url="/moz/context", method="GET")
     if current_context != "chrome":
-        LOG("Switching to chrome context")
+        logger.info("Switching to chrome context")
         await session._request(
             url="/moz/context", method="POST", data={"context": "chrome"}
         )
         switch_back = True
     else:
         switch_back = False
-    LOG("Setting up script timeout")
+    logger.info("Setting up script timeout")
     await session._request(
         url="/timeouts", method="POST", data={"script": _SCRIPT_TIMEOUT}
     )
     try:
         attempts = 0
         while True:
-            LOG("Running triggerSync()")
+            logger.info("Running triggerSync()")
             try:
                 return await session._request(
                     url="/execute/async",
@@ -91,8 +90,7 @@ async def execute_async_script(session, script, *args):
                 )
             except Exception as e:
                 attempts += 1
-                LOG("The script failed.")
-                LOG("Error:" + str(e))
+                logger.error("The script failed.", exc_info=True)
                 if attempts > 2:
                     return {
                         "result": 1,

@@ -28,7 +28,7 @@ import os
 from arsenic import get_session
 from arsenic.browsers import Firefox
 
-from condprof.util import fresh_profile, LOG, ERROR, obfuscate_file, obfuscate
+from condprof.util import fresh_profile, logger, obfuscate_file, obfuscate
 from condprof.scenarii import scenarii
 from condprof.client import get_profile, ProfileNotFoundError
 from condprof.archiver import Archiver
@@ -58,15 +58,17 @@ class ProfileCreator:
         return os.path.join(self.archive, filename)
 
     async def run(self, headless=True):
-        LOG("Building %s x %s" % (self.scenario, self.customization_data["name"]))
+        logger.info(
+            "Building %s x %s" % (self.scenario, self.customization_data["name"])
+        )
 
         if self.scenario in self.customization_data.get("ignore_scenario", []):
-            LOG("Skipping (ignored scenario in that customization)")
+            logger.info("Skipping (ignored scenario in that customization)")
             return
 
         filter_by_platform = self.customization_data.get("platforms")
         if filter_by_platform and self.env.target_platform not in filter_by_platform:
-            LOG("Skipping (ignored platform in that customization)")
+            logger.info("Skipping (ignored platform in that customization)")
             return
 
         with self.env.get_device(2828, verbose=True) as device:
@@ -79,7 +81,7 @@ class ProfileCreator:
         if not self.archive:
             return
 
-        LOG("Creating archive")
+        logger.info("Creating archive")
         archiver = Archiver(self.scenario, self.env.profile, self.archive)
         # the archive name is of the form
         # profile-<platform>-<scenario>-<customization>.tgz
@@ -90,10 +92,10 @@ class ProfileCreator:
         if not os.path.exists(dir):
             os.makedirs(dir)
         archiver.create_archive(archive_name)
-        LOG("Archive created at %s" % archive_name)
+        logger.info("Archive created at %s" % archive_name)
         statinfo = os.stat(archive_name)
-        LOG("Current size is %d" % statinfo.st_size)
-        LOG("Extracting logs")
+        logger.info("Current size is %d" % statinfo.st_size)
+        logger.info("Extracting logs")
         if "logs" in metadata:
             logs = metadata.pop("logs")
             for prefix, prefixed_logs in logs.items():
@@ -103,7 +105,7 @@ class ProfileCreator:
                         f.write(content.encode("utf-8"))
 
         if metadata.get("result", 0) != 0:
-            LOG("The scenario returned a bad exit code")
+            logger.info("The scenario returned a bad exit code")
             raise Exception(metadata.get("result_message", "scenario error"))
         self.changelog.append("update", **metadata)
 
@@ -115,7 +117,7 @@ class ProfileCreator:
         scenario_func = scenarii[scenario]
         if scenario in customization_data.get("scenario", {}):
             options = customization_data["scenario"][scenario]
-            LOG("Loaded options for that scenario %s" % str(options))
+            logger.info("Loaded options for that scenario %s" % str(options))
         else:
             options = {}
 
@@ -132,14 +134,14 @@ class ProfileCreator:
         else:
             fresh_profile(profile, customization_data)
 
-        LOG("Updating profile located at %r" % profile)
+        logger.info("Updating profile located at %r" % profile)
         metadata = Metadata(profile)
 
-        LOG("Starting the Gecko app...")
+        logger.info("Starting the Gecko app...")
         adb_logs = self._log_filename("adb")
         self.env.prepare(logfile=adb_logs)
         geckodriver_logs = self._log_filename("geckodriver")
-        LOG("Writing geckodriver logs in %s" % geckodriver_logs)
+        logger.info("Writing geckodriver logs in %s" % geckodriver_logs)
         step = START
         try:
             firefox_instance = Firefox(**self.env.get_browser_args(headless))
@@ -150,19 +152,21 @@ class ProfileCreator:
                 async with get_session(geckodriver, firefox_instance) as session:
                     step = START_SCENARIO
                     self.env.check_session(session)
-                    LOG("Running the %s scenario" % scenario)
+                    logger.info("Running the %s scenario" % scenario)
                     metadata.update(await scenario_func(session, options))
-                    LOG("%s scenario done." % scenario)
+                    logger.info("%s scenario done." % scenario)
         except Exception:
-            ERROR("%s scenario broke!" % scenario)
+            logger.error("%s scenario broke!" % scenario)
             if step == START:
-                LOG("Could not initialize the browser")
+                logger.info("Could not initialize the browser")
             elif step == INIT_GECKODRIVER:
-                LOG("Could not initialize Geckodriver")
+                logger.info("Could not initialize Geckodriver")
             elif step == START_SESSION:
-                LOG("Could not start the session, check %s first" % geckodriver_logs)
+                logger.info(
+                    "Could not start the session, check %s first" % geckodriver_logs
+                )
             else:
-                LOG("Could not run the scenario, probably a faulty scenario")
+                logger.info("Could not run the scenario, probably a faulty scenario")
             raise
         finally:
             self.env.stop_browser()
@@ -179,6 +183,5 @@ class ProfileCreator:
             platform=self.env.target_platform,
         )
 
-        LOG("Profile at %s" % profile)
-        LOG("Done.")
+        logger.info("Profile at %s.\nDone." % profile)
         return metadata

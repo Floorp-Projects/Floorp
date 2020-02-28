@@ -2,7 +2,7 @@ import random
 import os
 import asyncio
 
-from condprof.util import LOG, get_credentials
+from condprof.util import logger, get_credentials
 from condprof.helpers import TabSwitcher, execute_async_script, is_mobile
 
 
@@ -54,8 +54,8 @@ class Builder:
         if not self.syncing:
             return
         # now that we've visited all pages, we want to upload to FXSync
-        LOG("Syncing profile to FxSync")
-        LOG("Username is %s, password is %s" % (self.username, self.password))
+        logger.info("Syncing profile to FxSync")
+        logger.info("Username is %s, password is %s" % (self.username, self.password))
         script_res = await execute_async_script(
             session,
             self.sync_js,
@@ -78,7 +78,7 @@ class Builder:
         visited = 0
 
         for current, url in enumerate(self.urls):
-            LOG("%d/%d %s" % (current + 1, self.max_urls, url))
+            logger.info("%d/%d %s" % (current + 1, self.max_urls, url))
             retries = 0
             while retries < 3:
                 try:
