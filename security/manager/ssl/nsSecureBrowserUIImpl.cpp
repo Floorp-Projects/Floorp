@@ -17,6 +17,7 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsITransportSecurityInfo.h"
 #include "nsIWebProgress.h"
+#include "nsNetUtil.h"
 
 using namespace mozilla;
 

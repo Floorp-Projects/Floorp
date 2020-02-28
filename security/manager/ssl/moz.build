@@ -93,6 +93,8 @@ EXPORTS.mozilla += [
 EXPORTS.mozilla.psm += [
     'PSMContentListener.h',
     'TransportSecurityInfo.h',
+    'VerifySSLServerCertChild.h',
+    'VerifySSLServerCertParent.h',
 ]
 
 EXPORTS.ipc += [
@@ -145,6 +147,8 @@ UNIFIED_SOURCES += [
     'SharedSSLState.cpp',
     'SSLServerCertVerification.cpp',
     'TransportSecurityInfo.cpp',
+    'VerifySSLServerCertChild.cpp',
+    'VerifySSLServerCertParent.cpp',
 ]
 
 if CONFIG['OS_ARCH'] == 'WINNT':
@@ -186,6 +190,8 @@ if CONFIG['OS_ARCH'] == 'WINNT':
 
 IPDL_SOURCES += [
     'PPSMContentDownloader.ipdl',
+    'PSMIPCTypes.ipdlh',
+    'PVerifySSLServerCert.ipdl',
 ]
 
 if CONFIG['MOZ_XUL']:
