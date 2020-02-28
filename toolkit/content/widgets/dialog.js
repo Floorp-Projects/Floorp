@@ -20,20 +20,12 @@
 
       this.attachShadow({ mode: "open" });
 
-      this.addEventListener(
+      document.addEventListener(
         "keypress",
         event => {
           if (event.keyCode == KeyEvent.DOM_VK_RETURN) {
             this._hitEnter(event);
-          }
-        },
-        { mozSystemGroup: true }
-      );
-
-      this.addEventListener(
-        "keypress",
-        event => {
-          if (
+          } else if (
             event.keyCode == KeyEvent.DOM_VK_ESCAPE &&
             !event.defaultPrevented
           ) {
@@ -44,7 +36,7 @@
       );
 
       if (AppConstants.platform == "macosx") {
-        this.addEventListener(
+        document.addEventListener(
           "keypress",
           event => {
             if (event.key == "." && event.metaKey) {
