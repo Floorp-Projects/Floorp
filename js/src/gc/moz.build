@@ -18,7 +18,6 @@ include('../js-cxxflags.mozbuild')
 
 # Generate GC statistics phase data.
 GeneratedFile('StatsPhasesGenerated.h',
-              py2=True,
               script='GenerateStatsPhases.py', entry_point='generateHeader')
 GeneratedFile('StatsPhasesGenerated.inc',
               script='GenerateStatsPhases.py', entry_point='generateCpp')
