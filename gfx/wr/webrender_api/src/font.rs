@@ -179,6 +179,7 @@ bitflags! {
         const FLIP_X            = 1 << 5;
         const FLIP_Y            = 1 << 6;
         const SUBPIXEL_POSITION = 1 << 7;
+        const VERTICAL          = 1 << 8;
 
         // Windows flags
         const FORCE_GDI         = 1 << 16;
