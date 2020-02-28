@@ -90,9 +90,7 @@ class ReftestFissionParent extends JSWindowActorParent {
               continue;
             }
 
-            if (r.value.errorString != null) {
-              errorStrings.push(r.value.errorString);
-            }
+            errorStrings.concat(r.value.errorStrings);
           }
           return {errorStrings, infoStrings};
         });
