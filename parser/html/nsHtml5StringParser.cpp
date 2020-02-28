@@ -18,7 +18,7 @@ NS_IMPL_ISUPPORTS0(nsHtml5StringParser)
 nsHtml5StringParser::nsHtml5StringParser()
     : mBuilder(new nsHtml5OplessBuilder()),
       mTreeBuilder(new nsHtml5TreeBuilder(mBuilder)),
-      mTokenizer(new nsHtml5Tokenizer(mTreeBuilder.get(), false)) {
+      mTokenizer(new nsHtml5Tokenizer(mTreeBuilder, false)) {
   mTokenizer->setInterner(&mAtomTable);
 }
 
