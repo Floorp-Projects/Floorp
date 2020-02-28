@@ -10,8 +10,8 @@
 #include "nsHtml5TreeOperation.h"
 #include "nsAHtml5TreeOpSink.h"
 #include "nsTArray.h"
+#include "nsAutoPtr.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/UniquePtr.h"
 
 class nsHtml5Speculation final : public nsAHtml5TreeOpSink {
  public:
@@ -27,7 +27,7 @@ class nsHtml5Speculation final : public nsAHtml5TreeOpSink {
 
   int32_t GetStartLineNumber() { return mStartLineNumber; }
 
-  nsAHtml5TreeBuilderState* GetSnapshot() { return mSnapshot.get(); }
+  nsAHtml5TreeBuilderState* GetSnapshot() { return mSnapshot; }
 
   /**
    * Flush the operations from the tree operations from the argument
@@ -53,7 +53,7 @@ class nsHtml5Speculation final : public nsAHtml5TreeOpSink {
    */
   int32_t mStartLineNumber;
 
-  mozilla::UniquePtr<nsAHtml5TreeBuilderState> mSnapshot;
+  nsAutoPtr<nsAHtml5TreeBuilderState> mSnapshot;
 
   nsTArray<nsHtml5TreeOperation> mOpQueue;
 };

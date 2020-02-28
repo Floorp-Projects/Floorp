@@ -1431,7 +1431,7 @@ nsIContentHandle* nsHtml5TreeBuilder::getFormPointerForContext(
 
 void nsHtml5TreeBuilder::EnableViewSource(nsHtml5Highlighter* aHighlighter) {
   MOZ_ASSERT(!mBuilder, "Must not view source with builder.");
-  mViewSource = WrapUnique(aHighlighter);
+  mViewSource = aHighlighter;
 }
 
 void nsHtml5TreeBuilder::errDeepTree() {
