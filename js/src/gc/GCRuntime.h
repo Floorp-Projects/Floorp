@@ -15,7 +15,6 @@
 #include "gc/ArenaList.h"
 #include "gc/AtomMarking.h"
 #include "gc/GCMarker.h"
-#include "gc/GCParallelTask.h"
 #include "gc/Nursery.h"
 #include "gc/Scheduling.h"
 #include "gc/Statistics.h"
@@ -48,7 +47,6 @@ class MarkingValidator;
 struct MovingTracer;
 enum class ShouldCheckThresholds;
 class SweepGroupsIter;
-class WeakCacheSweepIterator;
 
 enum IncrementalProgress { NotFinished = 0, Finished };
 
@@ -244,6 +242,28 @@ class ZoneList {
 
   ZoneList(const ZoneList& other) = delete;
   ZoneList& operator=(const ZoneList& other) = delete;
+};
+
+struct WeakCacheToSweep {
+  JS::detail::WeakCacheBase* cache;
+  JS::Zone* zone;
+};
+
+class WeakCacheSweepIterator {
+  using WeakCacheBase = JS::detail::WeakCacheBase;
+
+  JS::Zone* sweepZone;
+  WeakCacheBase* sweepCache;
+
+ public:
+  explicit WeakCacheSweepIterator(JS::Zone* sweepGroup);
+
+  bool done() const;
+  WeakCacheToSweep get() const;
+  void next();
+
+ private:
+  void settle();
 };
 
 class GCRuntime {
@@ -971,14 +991,14 @@ class GCRuntime {
   /*
    * Incremental sweep state.
    */
-
   MainThreadData<JS::Zone*> sweepGroups;
   MainThreadOrGCTaskData<JS::Zone*> currentSweepGroup;
   MainThreadData<UniquePtr<SweepAction>> sweepActions;
   MainThreadOrGCTaskData<JS::Zone*> sweepZone;
   MainThreadOrGCTaskData<AllocKind> sweepAllocKind;
   MainThreadData<mozilla::Maybe<AtomsTable::SweepIterator>> maybeAtomsToSweep;
-  MainThreadOrGCTaskData<JS::detail::WeakCacheBase*> sweepCache;
+  MainThreadOrGCTaskData<mozilla::Maybe<WeakCacheSweepIterator>>
+      weakCachesToSweep;
   MainThreadData<bool> hasMarkedGrayRoots;
   MainThreadData<bool> abortSweepAfterCurrentGroup;
   MainThreadData<bool> sweepMarkTaskStarted;
@@ -994,7 +1014,6 @@ class GCRuntime {
 #endif
 
   friend class SweepGroupsIter;
-  friend class WeakCacheSweepIterator;
 
   /*
    * Incremental compacting state.
