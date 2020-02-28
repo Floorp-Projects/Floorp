@@ -4825,16 +4825,17 @@ void nsFlexContainerFrame::DoFlexLayout(
       const nscoord itemNormalBPos = framePos.B(flexWM);
 
       // Check if we actually need to reflow the item -- if we already reflowed
-      // it with the right size, and there is no need to do a reflow to clear
-      // out a -webkit-line-clamp ellipsis, we can just reposition it as-needed.
+      // it with the right content-box size, and there is no need to do a reflow
+      // to clear out a -webkit-line-clamp ellipsis, we can just reposition it
+      // as-needed.
       bool itemNeedsReflow = true;  // (Start out assuming the worst.)
       if (item->HadMeasuringReflow()) {
-        LogicalSize finalFlexItemCBSize =
+        LogicalSize finalFlexItemSize =
             aAxisTracker.LogicalSizeFromFlexRelativeSizes(item->MainSize(),
                                                           item->CrossSize());
         // We've already reflowed the child once. Was the size we gave it in
         // that reflow the same as its final (post-flexing/stretching) size?
-        if (finalFlexItemCBSize ==
+        if (finalFlexItemSize ==
             LogicalSize(flexWM,
                         item->Frame()->GetContentRectRelativeToSelf().Size())) {
           // Even if the child's size hasn't changed, some of its descendants
