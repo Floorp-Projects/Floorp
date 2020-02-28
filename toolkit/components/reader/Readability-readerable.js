@@ -31,16 +31,16 @@
 var REGEXPS = {
   // NOTE: These two regular expressions are duplicated in
   // Readability.js. Please keep both copies in sync.
-  unlikelyCandidates: /-ad-|ai2html|banner|breadcrumbs|combx|comment|community|cover-wrap|disqus|extra|foot|gdpr|header|legends|menu|related|remark|replies|rss|shoutbox|sidebar|skyscraper|social|sponsor|supplemental|ad-break|agegate|pagination|pager|popup|yom-remote/i,
-  okMaybeItsACandidate: /and|article|body|column|main|shadow/i,
+  unlikelyCandidates: /-ad-|ai2html|banner|breadcrumbs|combx|comment|community|cover-wrap|disqus|extra|footer|gdpr|header|legends|menu|related|remark|replies|rss|shoutbox|sidebar|skyscraper|social|sponsor|supplemental|ad-break|agegate|pagination|pager|popup|yom-remote/i,
+  okMaybeItsACandidate: /and|article|body|column|content|main|shadow/i,
 };
 
 function isNodeVisible(node) {
-  // Have to null-check node.style to deal with SVG and MathML nodes.
-  return (
-    (!node.style || node.style.display != "none") &&
-    !node.hasAttribute("hidden")
-  );
+  // Have to null-check node.style and node.className.indexOf to deal with SVG and MathML nodes.
+  return (!node.style || node.style.display != "none")
+    && !node.hasAttribute("hidden")
+    //check for "fallback-image" so that wikimedia math images are displayed
+    && (!node.hasAttribute("aria-hidden") || node.getAttribute("aria-hidden") != "true" || (node.className && node.className.indexOf && node.className.indexOf("fallback-image") !== -1));
 }
 
 /**
@@ -75,15 +75,12 @@ function isProbablyReaderable(doc, isVisible) {
   // This is a little cheeky, we use the accumulator 'score' to decide what to return from
   // this callback:
   return [].some.call(nodes, function(node) {
-    if (!isVisible(node)) {
+    if (!isVisible(node))
       return false;
-    }
 
     var matchString = node.className + " " + node.id;
-    if (
-      REGEXPS.unlikelyCandidates.test(matchString) &&
-      !REGEXPS.okMaybeItsACandidate.test(matchString)
-    ) {
+    if (REGEXPS.unlikelyCandidates.test(matchString) &&
+        !REGEXPS.okMaybeItsACandidate.test(matchString)) {
       return false;
     }
 
