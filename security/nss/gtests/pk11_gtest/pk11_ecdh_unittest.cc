@@ -10,11 +10,13 @@
 #include "nss_scoped_ptrs.h"
 
 #include "testvectors/p256ecdh-vectors.h"
+#include "testvectors/p384ecdh-vectors.h"
+#include "testvectors/p521ecdh-vectors.h"
 #include "gtest/gtest.h"
 
 namespace nss_test {
 
-class Pkcs11P256EcdhTest : public ::testing::TestWithParam<EcdhTestVector> {
+class Pkcs11EcdhTest : public ::testing::TestWithParam<EcdhTestVector> {
  protected:
   void Derive(const EcdhTestVector vec) {
     std::string err = "Test #" + std::to_string(vec.id) + " failed";
@@ -72,9 +74,13 @@ class Pkcs11P256EcdhTest : public ::testing::TestWithParam<EcdhTestVector> {
   };
 };
 
-TEST_P(Pkcs11P256EcdhTest, TestVectors) { Derive(GetParam()); }
+TEST_P(Pkcs11EcdhTest, TestVectors) { Derive(GetParam()); }
 
-INSTANTIATE_TEST_CASE_P(WycheproofP256EcdhTest, Pkcs11P256EcdhTest,
+INSTANTIATE_TEST_CASE_P(WycheproofP256EcdhTest, Pkcs11EcdhTest,
                         ::testing::ValuesIn(kP256EcdhWycheproofVectors));
+INSTANTIATE_TEST_CASE_P(WycheproofP384EcdhTest, Pkcs11EcdhTest,
+                        ::testing::ValuesIn(kP384EcdhWycheproofVectors));
+INSTANTIATE_TEST_CASE_P(WycheproofP521EcdhTest, Pkcs11EcdhTest,
+                        ::testing::ValuesIn(kP521EcdhWycheproofVectors));
 
 }  // namespace nss_test

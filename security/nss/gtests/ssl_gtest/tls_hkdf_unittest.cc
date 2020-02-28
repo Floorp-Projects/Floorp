@@ -192,9 +192,9 @@ class TlsHkdfTest : public ::testing::Test,
 
     std::vector<uint8_t> output(expected.len());
 
-    SECStatus rv = tls13_HkdfExpandLabelRaw(prk->get(), base_hash, session_hash,
-                                            session_hash_len, label, label_len,
-                                            &output[0], output.size());
+    SECStatus rv = tls13_HkdfExpandLabelRaw(
+        prk->get(), base_hash, session_hash, session_hash_len, label, label_len,
+        ssl_variant_stream, &output[0], output.size());
     ASSERT_EQ(SECSuccess, rv);
     DumpData("Output", &output[0], output.size());
     EXPECT_EQ(0, memcmp(expected.data(), &output[0], expected.len()));

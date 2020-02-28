@@ -269,7 +269,7 @@ tls13_IsReplay(const sslSocket *ss, const sslSessionID *sid)
                                   ss->xtnData.pskBinder.data,
                                   ss->xtnData.pskBinder.len,
                                   label, strlen(label),
-                                  buf, size);
+                                  ss->protocolVariant, buf, size);
     if (rv != SECSuccess) {
         return PR_TRUE;
     }

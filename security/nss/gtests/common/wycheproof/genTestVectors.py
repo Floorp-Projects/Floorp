@@ -126,8 +126,8 @@ class Curve25519():
 
         return result
 
-class P256_ECDH():
-    """Class that provides the generator function for a single P256_ECDH test case."""
+class ECDH():
+    """Class that provides the generator function for a single ECDH test case."""
 
     def format_testcase(self, testcase, curve):
 
@@ -135,7 +135,7 @@ class P256_ECDH():
         result += '\n// tcID: {}'.format(testcase['tcId'])
         private_key = ec.derive_private_key(
                 int(testcase["private"], 16),
-                ec.SECP256R1(),
+                curve,
                 default_backend()
             ).private_bytes(
                 encoding=serialization.Encoding.DER,
@@ -197,16 +197,20 @@ def generate_vectors_file(params):
     for group in cases['testGroups']:
         for test in group['tests']:
             if 'key' in group:
-                if 'curve' in group['key'] and group['key']['curve'] not in ['secp256r1']:
+                if 'curve' in group['key'] and group['key']['curve'] not in ['secp256r1', 'secp384r1', 'secp521r1']:
                     continue
                 vectors_file += params['formatter'].format_testcase(test, group['keyDer'], getSha(group['sha']), group['key']['keySize'])
             elif 'curve' in group:
-                if group['curve'] not in ['secp256r1', 'curve25519']:
-                    continue
-                if(group['curve'] == 'secp256r1'):
+                if group['curve'] == 'secp256r1':
                     curve = ec.SECP256R1()
-                else:
+                elif group['curve'] == 'secp384r1':
+                    curve = ec.SECP384R1()
+                elif group['curve'] == 'secp521r1':
+                    curve = ec.SECP521R1()
+                elif group['curve'] == 'curve25519':
                     curve = "curve25519"
+                else:
+                    continue
                 vectors_file += params['formatter'].format_testcase(test, curve)
             else:
                 vectors_file += params['formatter'].format_testcase(test)
@@ -309,9 +313,31 @@ p256ecdh_params = {
     'source_file': 'ecdh_secp256r1_test.json',
     'target': '../testvectors/p256ecdh-vectors.h',
     'array_init': 'const EcdhTestVectorStr kP256EcdhWycheproofVectors[] = {\n',
-    'formatter' : P256_ECDH(),
+    'formatter' : ECDH(),
     'crop_size_end': -2,
     'section': 'p256ecdh_vectors_h__',
+    'comment' : ''
+}
+
+p384ecdh_params = {
+    'source_dir': 'source_vectors/',
+    'source_file': 'ecdh_secp384r1_test.json',
+    'target': '../testvectors/p384ecdh-vectors.h',
+    'array_init': 'const EcdhTestVectorStr kP384EcdhWycheproofVectors[] = {\n',
+    'formatter' : ECDH(),
+    'crop_size_end': -2,
+    'section': 'p384ecdh_vectors_h__',
+    'comment' : ''
+}
+
+p521ecdh_params = {
+    'source_dir': 'source_vectors/',
+    'source_file': 'ecdh_secp521r1_test.json',
+    'target': '../testvectors/p521ecdh-vectors.h',
+    'array_init': 'const EcdhTestVectorStr kP521EcdhWycheproofVectors[] = {\n',
+    'formatter' : ECDH(),
+    'crop_size_end': -2,
+    'section': 'p521ecdh_vectors_h__',
     'comment' : ''
 }
 
@@ -329,7 +355,9 @@ def generate_test_vectors():
                  aes_gcm_params,
                  chacha_poly_params,
                  curve25519_params,
-                 p256ecdh_params]
+                 p256ecdh_params,
+                 p384ecdh_params,
+                 p521ecdh_params]
     update_tests(all_tests)
     for test in all_tests:
         generate_vectors_file(test)
