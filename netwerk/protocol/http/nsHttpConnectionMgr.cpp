@@ -2046,7 +2046,7 @@ void nsHttpConnectionMgr::AddActiveConn(HttpConnectionBase* conn,
 
 void nsHttpConnectionMgr::DecrementActiveConnCount(HttpConnectionBase* conn) {
   mNumActiveConns--;
- 
+
   RefPtr<nsHttpConnection> connTCP = do_QueryObject(conn);
   if (!connTCP || connTCP->EverUsedSpdy()) mNumSpdyHttp3ActiveConns--;
 }
@@ -5395,7 +5395,7 @@ bool nsHttpConnectionMgr::GetConnectionData(nsTArray<HttpRetParams>* aArg) {
       } else {
         info.ttl = 0;
       }
-      info.rtt = ent->mActiveConns[i]->Rtt(); 
+      info.rtt = ent->mActiveConns[i]->Rtt();
       info.SetHTTPProtocolVersion(ent->mActiveConns[i]->Version());
       data.active.AppendElement(info);
     }
