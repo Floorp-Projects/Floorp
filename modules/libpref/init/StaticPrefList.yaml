@@ -3057,6 +3057,12 @@
   value: false
   mirror: always
 
+# Hide the confirm dialog when a POST request is reloaded.
+- name: dom.confirm_repost.testing.always_accept
+  type: bool
+  value: false
+  mirror: always
+
 #---------------------------------------------------------------------------
 # Prefs starting with "editor"
 #---------------------------------------------------------------------------
