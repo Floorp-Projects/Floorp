@@ -259,19 +259,6 @@ static nscoord GetAvailableContentISize(const ReflowInput& aReflowInput) {
   return std::max(0, aReflowInput.AvailableISize() - borderPaddingISize);
 }
 
-nscoord nsColumnSetFrame::GetAvailableContentBSize(
-    const ReflowInput& aReflowInput) const {
-  if (aReflowInput.AvailableBSize() == NS_UNCONSTRAINEDSIZE) {
-    return NS_UNCONSTRAINEDSIZE;
-  }
-
-  WritingMode wm = aReflowInput.GetWritingMode();
-  LogicalMargin bp = aReflowInput.ComputedLogicalBorderPadding();
-  bp.ApplySkipSides(GetLogicalSkipSides(&aReflowInput));
-  bp.BEnd(wm) = aReflowInput.ComputedLogicalBorderPadding().BEnd(wm);
-  return std::max(0, aReflowInput.AvailableBSize() - bp.BStartEnd(wm));
-}
-
 static uint32_t ColumnBalancingDepth(const ReflowInput& aReflowInput,
                                      uint32_t aMaxDepth) {
   uint32_t depth = 0;
@@ -1009,7 +996,7 @@ void nsColumnSetFrame::FindBestBalanceBSize(const ReflowInput& aReflowInput,
                                             ReflowOutput& aDesiredSize,
                                             bool aUnboundedLastColumn,
                                             nsReflowStatus& aStatus) {
-  nscoord availableContentBSize = GetAvailableContentBSize(aReflowInput);
+  const nscoord availableContentBSize = aReflowInput.AvailableBSize();
 
   // Termination of the algorithm below is guaranteed because
   // aConfig.knownFeasibleBSize - aConfig.knownInfeasibleBSize decreases in
@@ -1193,6 +1180,8 @@ void nsColumnSetFrame::Reflow(nsPresContext* aPresContext,
              "The column container should have relevant column styles!");
   MOZ_ASSERT(aReflowInput.mParentReflowInput->mFrame->IsColumnSetWrapperFrame(),
              "The column container should be ColumnSetWrapperFrame!");
+  MOZ_ASSERT(aReflowInput.ComputedLogicalBorderPadding().IsAllZero(),
+             "Only the column container can have border and padding!");
 
 #ifdef DEBUG
   nsFrameList::Enumerator oc(GetChildList(kOverflowContainersList));
