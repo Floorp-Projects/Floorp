@@ -325,10 +325,6 @@ extern "C" const char* __tsan_default_suppressions() {
          "race:CacheEntry::Purge\n"
          "race:CacheEntry::MetaDataReady\n"
 
-         // Bug 1615275
-         "race:^GetVelocity$\n"
-         "race:^EndTouch$\n"
-
          // Bug 1615265
          "race:ScriptPreloader::OffThreadDecodeCallback\n"
 
