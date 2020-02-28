@@ -147,9 +147,9 @@ if (SpecialPowers.getBoolPref("dom.forms.inputmode")) {
 reflectLimitedEnumerated({
   element: document.createElement("input"),
   attribute: "inputMode",
-  validValues: [ "numeric", "digit", "uppercase", "lowercase", "titlecase", "autocapitalized", "auto" ],
+  validValues: [ "none", "text", "tel", "url", "email", "numeric", "decimal", "search" ],
   invalidValues: [ "", "foo", "tulip" ],
-  defaultValue: "auto"
+  defaultValue: ""
 });
 }
 
