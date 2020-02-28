@@ -40,7 +40,8 @@ class Provider {
  private:
   void ThreadMain();
 
-  void HandleBorrowRequest(BorrowResponseData* aResponseData);
+  void HandleBorrowRequest(BorrowResponseData* aResponseData,
+                           bool aAllowSameBuffer);
   void HandlePresentRequest(PresentResponseData* aResponseData);
 
   HWND mWindowHandle;

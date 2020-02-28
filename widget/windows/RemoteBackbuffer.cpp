@@ -19,6 +19,7 @@ enum class ResponseResult {
 
 enum class SharedDataType {
   BorrowRequest,
+  BorrowRequestAllowSameBuffer,
   BorrowResponse,
   PresentRequest,
   PresentResponse
@@ -386,10 +387,13 @@ void Provider::ThreadMain() {
     }
 
     switch (mSharedDataPtr->dataType) {
-      case SharedDataType::BorrowRequest: {
+      case SharedDataType::BorrowRequest:
+      case SharedDataType::BorrowRequestAllowSameBuffer: {
         BorrowResponseData responseData = {};
 
-        HandleBorrowRequest(&responseData);
+        HandleBorrowRequest(&responseData,
+                            mSharedDataPtr->dataType ==
+                                SharedDataType::BorrowRequestAllowSameBuffer);
 
         mSharedDataPtr->dataType = SharedDataType::BorrowResponse;
         mSharedDataPtr->data.borrowResponse = responseData;
@@ -416,7 +420,8 @@ void Provider::ThreadMain() {
   }
 }
 
-void Provider::HandleBorrowRequest(BorrowResponseData* aResponseData) {
+void Provider::HandleBorrowRequest(BorrowResponseData* aResponseData,
+                                   bool aAllowSameBuffer) {
   MOZ_ASSERT(aResponseData);
 
   aResponseData->result = ResponseResult::Error;
@@ -432,7 +437,8 @@ void Provider::HandleBorrowRequest(BorrowResponseData* aResponseData) {
   int32_t width = clientRect.right ? clientRect.right : 1;
   int32_t height = clientRect.bottom ? clientRect.bottom : 1;
 
-  bool needNewBackbuffer = !mBackbuffer || (mBackbuffer->GetWidth() != width) ||
+  bool needNewBackbuffer = !aAllowSameBuffer || !mBackbuffer ||
+                           (mBackbuffer->GetWidth() != width) ||
                            (mBackbuffer->GetHeight() != height);
 
   if (!needNewBackbuffer) {
@@ -442,13 +448,13 @@ void Provider::HandleBorrowRequest(BorrowResponseData* aResponseData) {
 
   mBackbuffer.reset();
 
-  mBackbuffer = std::make_unique<PresentableSharedImage>();
-  if (!mBackbuffer->Initialize(width, height)) {
+  auto newBackbuffer = std::make_unique<PresentableSharedImage>();
+  if (!newBackbuffer->Initialize(width, height)) {
     return;
   }
 
   HANDLE remoteFileMapping =
-      mBackbuffer->CreateRemoteFileMapping(mTargetProcessId);
+      newBackbuffer->CreateRemoteFileMapping(mTargetProcessId);
   if (!remoteFileMapping) {
     return;
   }
@@ -457,6 +463,8 @@ void Provider::HandleBorrowRequest(BorrowResponseData* aResponseData) {
   aResponseData->width = width;
   aResponseData->height = height;
   aResponseData->fileMapping = remoteFileMapping;
+
+  mBackbuffer = std::move(newBackbuffer);
 }
 
 void Provider::HandlePresentRequest(PresentResponseData* aResponseData) {
@@ -526,7 +534,10 @@ bool Client::Initialize(const RemoteBackbufferHandles& aRemoteHandles) {
 }
 
 already_AddRefed<gfx::DrawTarget> Client::BorrowDrawTarget() {
-  mSharedDataPtr->dataType = SharedDataType::BorrowRequest;
+  mSharedDataPtr->dataType = mBackbuffer
+                                 ? SharedDataType::BorrowRequestAllowSameBuffer
+                                 : SharedDataType::BorrowRequest;
+
   MOZ_ALWAYS_TRUE(::SetEvent(mRequestReadyEvent));
   MOZ_ALWAYS_TRUE(::WaitForSingleObject(mResponseReadyEvent, INFINITE) ==
                   WAIT_OBJECT_0);
@@ -545,12 +556,17 @@ already_AddRefed<gfx::DrawTarget> Client::BorrowDrawTarget() {
   if (responseData.result == ResponseResult::BorrowSuccess) {
     mBackbuffer.reset();
 
-    mBackbuffer = std::make_unique<SharedImage>();
-    if (!mBackbuffer->InitializeRemote(responseData.width, responseData.height,
-                                       responseData.fileMapping)) {
+    auto newBackbuffer = std::make_unique<SharedImage>();
+    if (!newBackbuffer->InitializeRemote(responseData.width,
+                                         responseData.height,
+                                         responseData.fileMapping)) {
       return nullptr;
     }
+
+    mBackbuffer = std::move(newBackbuffer);
   }
+
+  MOZ_ASSERT(mBackbuffer);
 
   return mBackbuffer->CreateDrawTarget();
 }
