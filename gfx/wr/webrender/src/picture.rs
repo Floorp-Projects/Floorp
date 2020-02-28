@@ -3554,7 +3554,7 @@ impl PictureCompositeMode {
                 Filter::DropShadows(shadows) => {
                     let mut max_inflation: f32 = 0.0;
                     for shadow in shadows {
-                        let inflation_factor = shadow.blur_radius.round() * BLUR_SAMPLE_SCALE;
+                        let inflation_factor = shadow.blur_radius.ceil() * BLUR_SAMPLE_SCALE;
                         max_inflation = max_inflation.max(inflation_factor);
                     }
                     result_rect = picture_rect.inflate(max_inflation, max_inflation);
@@ -3571,7 +3571,7 @@ impl PictureCompositeMode {
                             input.inflate(inflation_factor, inflation_factor)
                         }
                         FilterPrimitiveKind::DropShadow(ref primitive) => {
-                            let inflation_factor = primitive.shadow.blur_radius.round() * BLUR_SAMPLE_SCALE;
+                            let inflation_factor = primitive.shadow.blur_radius.ceil() * BLUR_SAMPLE_SCALE;
                             let input = primitive.input.to_index(cur_index).map(|index| output_rects[index]).unwrap_or(picture_rect);
                             let shadow_rect = input.inflate(inflation_factor, inflation_factor);
                             input.union(&shadow_rect.translate(primitive.shadow.offset * Scale::new(1.0)))
@@ -4329,7 +4329,6 @@ impl PicturePrimitive {
                             max_std_deviation = f32::max(max_std_deviation, shadow.blur_radius * device_pixel_scale.0);
                         }
 
-                        max_std_deviation = max_std_deviation.round();
                         let max_blur_range = (max_std_deviation * BLUR_SAMPLE_SCALE).ceil();
                         // We cast clipped to f32 instead of casting unclipped to i32
                         // because unclipped can overflow an i32.
@@ -4382,10 +4381,11 @@ impl PicturePrimitive {
                         self.extra_gpu_data_handles.resize(shadows.len(), GpuCacheHandle::new());
 
                         let mut blur_render_task_id = picture_task_id;
+                        let scale_factors = scale_factors(&transform);
                         for shadow in shadows {
-                            let std_dev = f32::round(shadow.blur_radius * device_pixel_scale.0);
+                            let std_dev = shadow.blur_radius * device_pixel_scale.0;
                             blur_render_task_id = RenderTask::new_blur(
-                                DeviceSize::new(std_dev, std_dev),
+                                DeviceSize::new(std_dev * scale_factors.0, std_dev * scale_factors.1),
                                 picture_task_id,
                                 frame_state.render_tasks,
                                 RenderTargetKind::Color,
