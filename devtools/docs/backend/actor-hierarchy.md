@@ -52,7 +52,7 @@ and returns its `actorID`. That's the main role of RootActor.
 ```
 RootActor (root.js)
    |
-   |-- FrameTargetActorProxy (frame-proxy.js)
+   |-- TabDescriptorActor (descriptors/tab.js)
    |   Targets frames (such as a tab) living in the parent or child process.
    |   Note that this is just a proxy for FrameTargetActor, which is loaded via
    |   the frame's message manager as a frame script in the process containing

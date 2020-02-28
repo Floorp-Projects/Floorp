@@ -5,7 +5,7 @@
 "use strict";
 
 /*
- * Target actor proxy that represents a frame / docShell in the parent process. It
+ * Descriptor Actor that represents a Tab in the parent process. It
  * launches a FrameTargetActor in the content process to do the real work and tunnels the
  * data.
  *
@@ -15,7 +15,6 @@
 const {
   connectToFrame,
 } = require("devtools/server/connectors/frame-connector");
-const protocol = require("devtools/shared/protocol");
 
 loader.lazyImporter(
   this,
@@ -35,28 +34,19 @@ const { AppConstants } = require("resource://gre/modules/AppConstants.jsm");
  * @param options
  *        - {Boolean} favicons: true if the form should include the favicon for the tab.
  */
-// As this proxy is returned by RootActor.listTabs, it has to be inheriting from Actor
-// class in order to be correctly marshalled by protocol.js.
-// This is related to this very particular check in protocol.js:
-// https://searchfox.org/mozilla-central/rev/b243debf6235b050b42fd2eb615fdc729636ca6b/devtools/shared/protocol/types.js#354-367
-// But this isn't a real Actor. Only `form()` method is being called when protocol.js
-// marshall the proxy. We also register the proxy into Pools and so `typeName`
-// as well as `actorID` attributes are being used in this process.
-const proxySpec = protocol.generateActorSpec({
-  typeName: "frameTargetProxy",
-  methods: {},
-  events: {},
-});
-exports.FrameTargetActorProxy = protocol.ActorClassWithSpec(proxySpec, {
-  initialize: function(conn, browser, options = {}) {
-    protocol.Actor.prototype.initialize.call(this, conn);
+function TabDescriptorActor(connection, browser, options = {}) {
+  this._conn = connection;
+  this._browser = browser;
+  this._form = null;
+  this.exited = false;
+  this.options = options;
+}
 
-    this._conn = conn;
-    this._browser = browser;
-    this._form = null;
-    this.exited = false;
-    this.options = options;
-  },
+TabDescriptorActor.prototype = {
+  // As these proxies are added to pools, they are considered as actors and should have
+  // a prefix set, even if that's never really used. TabDescriptorActor's actorID is going
+  // to be used in form().
+  actorPrefix: "tabDescriptor",
 
   async connect() {
     const onDestroy = () => {
@@ -64,8 +54,7 @@ exports.FrameTargetActorProxy = protocol.ActorClassWithSpec(proxySpec, {
         // Reject the update promise if the tab was destroyed while requesting an update
         this._deferredUpdate.reject({
           error: "tabDestroyed",
-          message:
-            "Tab destroyed while performing a FrameTargetActorProxy update",
+          message: "Tab destroyed while performing a TabDescriptorActor update",
         });
       }
       this.exit();
@@ -116,10 +105,10 @@ exports.FrameTargetActorProxy = protocol.ActorClassWithSpec(proxySpec, {
 
   /**
    * @param {Object} options
-   *        See FrameTargetActorProxy constructor.
+   *        See TabDescriptorActor constructor.
    */
   async update(options = {}) {
-    // Update the FrameTargetActorProxy options.
+    // Update the TabDescriptorActor options.
     this.options = options;
 
     // If the child happens to be crashed/close/detach, it won't have _form set,
@@ -252,4 +241,6 @@ exports.FrameTargetActorProxy = protocol.ActorClassWithSpec(proxySpec, {
     this._form = null;
     this.exited = true;
   },
-});
+};
+
+exports.TabDescriptorActor = TabDescriptorActor;
