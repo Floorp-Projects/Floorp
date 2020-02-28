@@ -77,7 +77,7 @@ prefixes = (
 for prefix in prefixes:
     input_file = prefix + '.properties'
     header = prefix + '.properties.h'
-    GeneratedFile(header, script='props2arrays.py', inputs=[input_file], py2=True)
+    GeneratedFile(header, script='props2arrays.py', inputs=[input_file])
 
 if CONFIG['ENABLE_TESTS']:
     DIRS += ['tests/gtest']
