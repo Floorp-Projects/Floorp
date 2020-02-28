@@ -643,7 +643,7 @@ var gMainPane = {
         Services.policies && !Services.policies.isAllowed("appUpdate");
       if (updateDisabled || UpdateUtils.appUpdateAutoSettingIsLocked()) {
         document.getElementById("updateAllowDescription").hidden = true;
-        document.getElementById("updateRadioGroup").hidden = true;
+        document.getElementById("updateSettingsContainer").hidden = true;
         if (updateDisabled && AppConstants.MOZ_MAINTENANCE_SERVICE) {
           document.getElementById("useService").hidden = true;
         }
