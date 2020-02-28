@@ -136,8 +136,7 @@
 
 .urlbarView[actionoverride] .urlbarView-row[has-url] > .urlbarView-row-inner > .urlbarView-no-wrap,
 .urlbarView-row[has-url]:not([type$=tab]) > .urlbarView-row-inner > .urlbarView-no-wrap,
-.urlbarView-row[has-url][type=remotetab][selected] > .urlbarView-row-inner > .urlbarView-no-wrap,
-.urlbarView-row[has-url][type=remotetab]:hover > .urlbarView-row-inner > .urlbarView-no-wrap {
+.urlbarView-row[has-url][type=remotetab]:-moz-any(:hover, [selected]) > .urlbarView-row-inner > .urlbarView-no-wrap {
   /* We prioritize icons + title + action over the url, so they can grow freely,
      but the url should never disappear when it's visible */
   flex-shrink: 0;
@@ -161,7 +160,7 @@
      remotetab only when selected or :hover */
   .urlbarView.megabar[actionoverride] .urlbarView-results[wrap] > .urlbarView-row[has-url] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-title-separator,
   .urlbarView.megabar .urlbarView-results[wrap] > .urlbarView-row[has-url]:not([type$=tab]) > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-title-separator,
-  .urlbarView.megabar .urlbarView-results[wrap] > .urlbarView-row[type=remotetab]:not([selected]):not(:hover) {
+  .urlbarView.megabar .urlbarView-results[wrap] > .urlbarView-row[type=remotetab]:-moz-any(:hover, [selected]) > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-title-separator {
     display: none;
   }
 }
