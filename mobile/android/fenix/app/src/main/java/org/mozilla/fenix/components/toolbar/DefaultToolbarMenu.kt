@@ -29,6 +29,7 @@ import org.mozilla.fenix.ReleaseChannel
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.ext.asActivity
 import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.ext.getColorFromAttr
 import org.mozilla.fenix.theme.ThemeManager
 import org.mozilla.fenix.utils.Settings
 
@@ -195,14 +196,14 @@ class DefaultToolbarMenu(
         label = context.getString(R.string.browser_menu_settings),
         startImageResource = R.drawable.ic_settings,
         iconTintColorResource = if (hasAccountProblem)
-            R.color.sync_error_text_color else
+            ThemeManager.resolveAttribute(R.attr.syncDisconnected, context) else
             primaryTextColor(),
         textColorResource = if (hasAccountProblem)
-            R.color.sync_error_text_color else
+            ThemeManager.resolveAttribute(R.attr.primaryText, context) else
             primaryTextColor(),
         highlight = BrowserMenuHighlight.HighPriority(
-            endImageResource = R.drawable.ic_alert,
-            backgroundTint = R.color.sync_error_background_color
+            endImageResource = R.drawable.ic_sync_disconnected,
+            backgroundTint = context.getColorFromAttr(R.attr.syncDisconnectedBackground)
         ),
         isHighlighted = { hasAccountProblem }
     ) {
