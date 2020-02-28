@@ -623,7 +623,7 @@ class HomeFragment : Fragment() {
                     hideOnboardingIfNeeded()
                     nav(
                         R.id.homeFragment,
-                        HomeFragmentDirections.actionGlobalTurnOnSync()
+                        HomeFragmentDirections.actionHomeFragmentToAccountProblemFragment()
                     )
                 }
             }

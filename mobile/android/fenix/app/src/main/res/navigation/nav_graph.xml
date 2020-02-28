@@ -63,6 +63,9 @@
             android:id="@+id/action_homeFragment_to_turnOnSyncFragment"
             app:destination="@+id/turnOnSyncFragment" />
         <action
+            android:id="@+id/action_homeFragment_to_accountProblemFragment"
+            app:destination="@id/accountProblemFragment" />
+        <action
             android:id="@+id/action_homeFragment_to_searchFragment"
             app:destination="@id/searchFragment"
             app:enterAnim="@anim/fade_in"
