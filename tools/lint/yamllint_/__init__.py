@@ -13,7 +13,15 @@ from mozlint import result
 from mozlint.pathutils import get_ancestors_by_name
 from mozprocess import ProcessHandlerMixin
 
+here = os.path.abspath(os.path.dirname(__file__))
+YAMLLINT_REQUIREMENTS_PATH = os.path.join(here, 'yamllint_requirements.txt')
 
+
+YAMLLINT_INSTALL_ERROR = """
+Unable to install correct version of yamllint
+Try to install it manually with:
+    $ pip install -U --require-hashes -r {}
+""".strip().format(YAMLLINT_REQUIREMENTS_PATH)
 YAMLLINT_FORMAT_REGEX = re.compile('(.*):(.*):(.*): \[(error|warning)\] (.*) \((.*)\)$')
 
 results = []
@@ -52,7 +60,7 @@ class YAMLLintProcess(ProcessHandlerMixin):
         signal.signal(signal.SIGINT, orig)
 
 
-def get_yamllint_binary(mc_root):
+def get_yamllint_binary():
     """
     Returns the path of the first yamllint binary available
     if not found returns None
@@ -61,9 +69,7 @@ def get_yamllint_binary(mc_root):
     if binary:
         return binary
 
-    # yamllint is vendored in mozilla-central: let's use this
-    # if no environment variable is found.
-    return os.path.join(mc_root, 'third_party', 'python', 'yamllint')
+    return which('yamllint')
 
 
 def _run_pip(*args):
@@ -77,6 +83,19 @@ def _run_pip(*args):
     except subprocess.CalledProcessError as e:
         print(e.output)
         return False
+
+
+def reinstall_yamllint():
+    """
+    Try to install yamllint at the target version, returns True on success
+    otherwise prints the otuput of the pip command and returns False
+    """
+    if _run_pip('install', '-U',
+                '--require-hashes', '-r',
+                YAMLLINT_REQUIREMENTS_PATH):
+        return True
+
+    return False
 
 
 def run_process(config, cmd):
@@ -99,8 +118,11 @@ def gen_yamllint_args(cmdargs, paths=None, conf_file=None):
 
 def lint(files, config, **lintargs):
     log = lintargs['log']
+    if not reinstall_yamllint():
+        print(YAMLLINT_INSTALL_ERROR)
+        return 1
 
-    binary = get_yamllint_binary(lintargs['root'])
+    binary = get_yamllint_binary()
 
     cmdargs = [
         which('python'),
