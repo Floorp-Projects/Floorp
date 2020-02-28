@@ -6,7 +6,6 @@ from __future__ import print_function
 import os
 import string
 from mozbuild.util import FileAvoidWrite
-from system_header_util import header_path
 
 
 # The 'unused' arg is the output file from the file_generate action. We actually
@@ -17,7 +16,5 @@ def gen_wrappers(unused, outdir, compiler, template_file, *header_list):
     template = open(template_file, 'r').read()
 
     for header in header_list:
-        path = header_path(header, compiler)
         with FileAvoidWrite(os.path.join(outdir, header)) as f:
-            f.write(string.Template(template).substitute(HEADER=header,
-                                                         HEADER_PATH=path))
+            f.write(string.Template(template).substitute(HEADER=header))

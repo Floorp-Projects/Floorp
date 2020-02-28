@@ -26,7 +26,6 @@ license:
         - config/external/ffi/subst_header.py
         - config/external/nspr/_pl_bld.h
         - config/external/nspr/_pr_bld.h
-        - config/system_header_util.py
         - dom/docs/Fission-IPC-Diagram.svg
         # Unknown origin
         - gfx/2d/MMIHelpers.h
