@@ -879,10 +879,6 @@ nsresult Http3Session::TakeSubTransactions(
   return NS_OK;
 }
 
-PRIntervalTime Http3Session::ResponseTimeout() {
-  return gHttpHandler->ResponseTimeout();
-}
-
 //-----------------------------------------------------------------------------
 // Pass through methods of nsAHttpConnection
 //-----------------------------------------------------------------------------

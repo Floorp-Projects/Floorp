@@ -105,7 +105,7 @@ class nsHttpConnectionMgr final : public HttpConnectionMgrShell,
   // The connection manager needs to know when a normal HTTP connection has been
   // upgraded to SPDY because the dispatch and idle semantics are a little
   // bit different.
-  void ReportSpdyConnection(HttpConnectionBase*, bool usingSpdy);
+  void ReportSpdyConnection(nsHttpConnection*, bool usingSpdy);
 
   bool GetConnectionData(nsTArray<HttpRetParams>*);
 
@@ -589,8 +589,9 @@ class nsHttpConnectionMgr final : public HttpConnectionMgrShell,
   // Total number of idle connections in all of the ConnectionEntry objects
   // that are accessed from mCT connection table.
   uint16_t mNumIdleConns;
-  // Total number of spdy connections which are a subset of the active conns
-  uint16_t mNumSpdyActiveConns;
+  // Total number of spdy or http3 connections which are a subset of the active
+  // conns
+  uint16_t mNumSpdyHttp3ActiveConns;
   // Total number of connections in mHalfOpens ConnectionEntry objects
   // that are accessed from mCT connection table
   uint32_t mNumHalfOpenConns;

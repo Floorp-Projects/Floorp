@@ -74,9 +74,6 @@ class Http3Session final : public nsAHttpTransaction,
   MOZ_MUST_USE nsresult WriteSegmentsAgain(nsAHttpSegmentWriter*, uint32_t,
                                            uint32_t*, bool*) final;
 
-  bool ResponseTimeoutEnabled() const final { return true; }
-  PRIntervalTime ResponseTimeout() final;
-
   // The folowing functions are used by Http3Stream:
   nsresult TryActivating(const nsACString& aMethod, const nsACString& aScheme,
                          const nsACString& aHost, const nsACString& aPath,
