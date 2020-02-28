@@ -674,6 +674,7 @@ class GCRuntime {
   bool prepareZonesForCollection(JS::GCReason reason, bool* isFullOut);
   void bufferGrayRoots();
   void unmarkCollectedZones();
+  void unmarkWeakMaps();
   bool shouldPreserveJITCode(JS::Realm* realm,
                              const mozilla::TimeStamp& currentTime,
                              JS::GCReason reason, bool canAllocateMoreCode);

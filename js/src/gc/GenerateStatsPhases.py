@@ -92,6 +92,7 @@ PhaseKindGraphRoots = [
     PhaseKind("WAIT_BACKGROUND_THREAD", "Wait Background Thread", 2),
     PhaseKind("PREPARE", "Prepare For Collection", 69, [
         PhaseKind("UNMARK", "Unmark", 7),
+        PhaseKind("UNMARK_WEAKMAPS", "Unmark WeakMaps", 76),
         PhaseKind("BUFFER_GRAY_ROOTS", "Buffer Gray Roots", 49),
         PhaseKind("MARK_DISCARD_CODE", "Mark Discard Code", 3),
         PhaseKind("RELAZIFY_FUNCTIONS", "Relazify Functions", 4),

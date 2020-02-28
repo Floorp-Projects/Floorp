@@ -3939,7 +3939,9 @@ void GCRuntime::unmarkCollectedZones() {
     /* Unmark everything in the zones being collected. */
     zone->arenas.unmarkAll();
   }
+}
 
+void GCRuntime::unmarkWeakMaps() {
   for (GCZonesIter zone(this); !zone.done(); zone.next()) {
     /* Unmark all weak maps in the zones being collected. */
     WeakMapBase::unmarkZone(zone);
@@ -3993,6 +3995,11 @@ bool GCRuntime::beginMarkPhase(JS::GCReason reason, AutoGCSession& session) {
     AutoRunParallelTask unmarkCollectedZones(
         this, &GCRuntime::unmarkCollectedZones, gcstats::PhaseKind::UNMARK,
         helperLock);
+
+    /* Clear mark state for WeakMaps in parallel with other work. */
+    AutoRunParallelTask unmarkWeakMaps(this, &GCRuntime::unmarkWeakMaps,
+                                       gcstats::PhaseKind::UNMARK_WEAKMAPS,
+                                       helperLock);
 
     /*
      * Buffer gray roots for incremental collections. This is linear in the
