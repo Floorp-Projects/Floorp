@@ -21,6 +21,8 @@ loader.lazyImporter(
   "PlacesUtils",
   "resource://gre/modules/PlacesUtils.jsm"
 );
+const { ActorClassWithSpec, Actor } = require("devtools/shared/protocol");
+const { tabDescriptorSpec } = require("devtools/shared/specs/descriptors/tab");
 const { AppConstants } = require("resource://gre/modules/AppConstants.jsm");
 
 /**
@@ -34,43 +36,70 @@ const { AppConstants } = require("resource://gre/modules/AppConstants.jsm");
  * @param options
  *        - {Boolean} favicons: true if the form should include the favicon for the tab.
  */
-function TabDescriptorActor(connection, browser, options = {}) {
-  this._conn = connection;
-  this._browser = browser;
-  this._form = null;
-  this.exited = false;
-  this.options = options;
-}
+const TabDescriptorActor = ActorClassWithSpec(tabDescriptorSpec, {
+  initialize(connection, browser, options = {}) {
+    Actor.prototype.initialize.call(this, connection);
+    this._conn = connection;
+    this._browser = browser;
+    this._form = null;
+    this.exited = false;
+    this.options = options;
 
-TabDescriptorActor.prototype = {
-  // As these proxies are added to pools, they are considered as actors and should have
-  // a prefix set, even if that's never really used. TabDescriptorActor's actorID is going
-  // to be used in form().
-  actorPrefix: "tabDescriptor",
+    // The update request could timeout if the descriptor is destroyed while an
+    // update is pending. This property will hold a reject callback that can be
+    // used to reject the current update promise and avoid blocking the client.
+    this._formUpdateReject = null;
+  },
 
-  async connect() {
-    const onDestroy = () => {
-      if (this._deferredUpdate) {
+  async getTarget() {
+    if (!this._conn) {
+      return {
+        error: "tabDestroyed",
+        message: "Tab destroyed while performing a TabDescriptorActor update",
+      };
+    }
+    if (this._form) {
+      return this._form;
+    }
+    /* eslint-disable-next-line no-async-promise-executor */
+    return new Promise(async (resolve, reject) => {
+      const onDestroy = () => {
         // Reject the update promise if the tab was destroyed while requesting an update
-        this._deferredUpdate.reject({
+        reject({
           error: "tabDestroyed",
           message: "Tab destroyed while performing a TabDescriptorActor update",
         });
+      };
+
+      try {
+        await this._unzombifyIfNeeded();
+
+        // Check if the browser is still connected before calling connectToFrame
+        if (!this._browser.isConnected) {
+          onDestroy();
+          return;
+        }
+
+        const connectForm = await connectToFrame(
+          this._conn,
+          this._browser,
+          onDestroy
+        );
+
+        const form = this._createTargetForm(connectForm);
+        if (this.options.favicons) {
+          form.favicon = await this.getFaviconData();
+        }
+
+        this._form = form;
+        resolve(form);
+      } catch (e) {
+        reject({
+          error: "tabDestroyed",
+          message: "Tab destroyed while connecting to the frame",
+        });
       }
-      this.exit();
-    };
-
-    await this._unzombifyIfNeeded();
-
-    const connect = connectToFrame(this._conn, this._browser, onDestroy);
-    const form = await connect;
-
-    this._form = form;
-    if (this.options.favicons) {
-      this._form.favicon = await this.getFaviconData();
-    }
-
-    return this;
+    });
   },
 
   get _tabbrowser() {
@@ -115,7 +144,7 @@ TabDescriptorActor.prototype = {
     // so only request form update if some code is still listening on the other
     // side.
     if (this.exited) {
-      return this.connect();
+      return this.getTarget();
     }
 
     // This function may be called if we are inspecting tabs and the actor proxy
@@ -123,7 +152,8 @@ TabDescriptorActor.prototype = {
     // If we are not inspecting tabs then this will be a no-op.
     await this._unzombifyIfNeeded();
 
-    const form = await new Promise(resolve => {
+    const form = await new Promise((resolve, reject) => {
+      this._formUpdateReject = reject;
       const onFormUpdate = msg => {
         // There may be more than one FrameTargetActor up and running
         if (this._form.actor != msg.json.actor) {
@@ -131,6 +161,7 @@ TabDescriptorActor.prototype = {
         }
         this._mm.removeMessageListener("debug:form", onFormUpdate);
 
+        this._formUpdateReject = null;
         resolve(msg.json);
       };
 
@@ -225,8 +256,8 @@ TabDescriptorActor.prototype = {
     }
   },
 
-  form() {
-    const form = Object.assign({}, this._form);
+  _createTargetForm(connectedForm) {
+    const form = Object.assign({}, connectedForm);
     // In case of Zombie tabs (not yet restored), look up title and url from other.
     if (this._isZombieTab()) {
       form.title = this._getZombieTabTitle() || form.title;
@@ -236,11 +267,33 @@ TabDescriptorActor.prototype = {
     return form;
   },
 
-  exit() {
+  form() {
+    return {
+      actor: this.actorID,
+      title: this._getZombieTabTitle(),
+      url: this._getZombieTabUrl(),
+      id:
+        this._browser && this._browser.browsingContext
+          ? this._browser.browsingContext.id
+          : null,
+    };
+  },
+
+  destroy() {
+    if (this._formUpdateReject) {
+      this._formUpdateReject({
+        error: "tabDestroyed",
+        message: "Tab destroyed while performing a TabDescriptorActor update",
+      });
+      this._formUpdateReject = null;
+    }
     this._browser = null;
     this._form = null;
     this.exited = true;
+    this.emit("exited");
+
+    Actor.prototype.destroy.call(this);
   },
-};
+});
 
 exports.TabDescriptorActor = TabDescriptorActor;
