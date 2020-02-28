@@ -27,6 +27,7 @@ from condprof import progress
 
 
 TASK_CLUSTER = "TASKCLUSTER_WORKER_TYPE" in os.environ.keys()
+DOWNLOAD_TIMEOUT = 30
 
 
 class ArchiveNotFound(Exception):
@@ -205,7 +206,7 @@ def download_file(url, target=None):
             logger.info("Changed!")
 
     logger.info("Downloading %s" % url)
-    req = requests.get(url, stream=True)
+    req = requests.get(url, stream=True, timeout=DOWNLOAD_TIMEOUT)
     total_length = int(req.headers.get("content-length"))
     target_dir = os.path.dirname(target)
     if target_dir != "" and not os.path.exists(target_dir):
