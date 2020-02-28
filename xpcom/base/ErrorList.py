@@ -1233,11 +1233,11 @@ def error_list_h(output):
 
     output.write("#define NS_ERROR_MODULE_BASE_OFFSET {}\n".format(MODULE_BASE_OFFSET))
 
-    for mod, val in modules.iteritems():
+    for mod, val in modules.items():
         output.write("#define NS_ERROR_MODULE_{} {}\n".format(mod, val.num))
 
     items = []
-    for error, val in errors.iteritems():
+    for error, val in errors.items():
         items.append("  {} = 0x{:X}".format(error, val))
     output.write("""
 enum class nsresult : uint32_t
@@ -1248,7 +1248,7 @@ enum class nsresult : uint32_t
 """.format(",\n".join(items)))
 
     items = []
-    for error, val in errors.iteritems():
+    for error, val in errors.items():
         items.append("  {0} = nsresult::{0}".format(error))
 
     output.write("""
@@ -1285,7 +1285,7 @@ GetErrorNameInternal(nsresult rv)
     # NOTE: Making sure we don't write out duplicate values is important as
     # we're using a switch statement to implement this.
     seen = set()
-    for error, val in errors.iteritems():
+    for error, val in errors.items():
         if val not in seen:
             output.write('  case nsresult::{0}: return "{0}";\n'.format(error))
         seen.add(val)
@@ -1312,9 +1312,9 @@ use super::nsresult;
     output.write("pub const NS_ERROR_MODULE_BASE_OFFSET: nsresult = nsresult({});\n"
                  .format(MODULE_BASE_OFFSET))
 
-    for mod, val in modules.iteritems():
+    for mod, val in modules.items():
         output.write("pub const NS_ERROR_MODULE_{}: nsresult = nsresult({});\n"
                      .format(mod, val.num))
 
-    for error, val in errors.iteritems():
+    for error, val in errors.items():
         output.write("pub const {}: nsresult = nsresult(0x{:X});\n".format(error, val))
