@@ -18,6 +18,8 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 const SEARCH_COUNTS_HISTOGRAM_KEY = "SEARCH_COUNTS";
 const SEARCH_WITH_ADS_SCALAR = "browser.search.with_ads";
 const SEARCH_AD_CLICKS_SCALAR = "browser.search.ad_clicks";
+const SEARCH_DATA_TRANSFERRED_SCALAR = "browser.search.data_transferred";
+const SEARCH_TELEMETRY_PRIVATE_BROWSING_KEY_SUFFIX = "pb";
 
 /**
  * Used to identify various parameters used with partner search providers. This
@@ -697,7 +699,19 @@ class ContentHandler {
     let bytesTransferred =
       wrappedChannel.requestSize + wrappedChannel.responseSize;
     let { provider } = info;
-    LOG(`provider=${provider} size=${bytesTransferred}`);
+
+    let isPrivate =
+      wrappedChannel.loadInfo &&
+      wrappedChannel.loadInfo.originAttributes.privateBrowsingId > 0;
+    if (isPrivate) {
+      provider += `-${SEARCH_TELEMETRY_PRIVATE_BROWSING_KEY_SUFFIX}`;
+    }
+
+    Services.telemetry.keyedScalarAdd(
+      SEARCH_DATA_TRANSFERRED_SCALAR,
+      provider,
+      bytesTransferred
+    );
   }
 
   observe(aSubject, aTopic, aData) {
