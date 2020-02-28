@@ -23,11 +23,6 @@ LOCAL_INCLUDES += [
     '../ffmpeg58/include',
 ]
 
-if CONFIG['OS_ARCH'] == 'WINNT':
-    LOCAL_INCLUDES += [
-        '../ffmpeg57/include',
-    ]
-
 CXXFLAGS += [ '-Wno-deprecated-declarations' ]
 if CONFIG['CC_TYPE'] == 'clang':
   CXXFLAGS += [
