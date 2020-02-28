@@ -60,7 +60,7 @@ class JSONPreview extends Component {
         // FIXME: A workaround for the issue in StringRep
         // Force StringRep to crop the text every time
         member: Object.assign({}, member, { open: false }),
-        mode: MODE.TINY,
+        mode: MODE.LONG,
         cropLimit: this.props.cropLimit,
         noGrip: true,
       })
