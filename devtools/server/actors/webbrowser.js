@@ -18,8 +18,8 @@ loader.lazyRequireGetter(
 );
 loader.lazyRequireGetter(
   this,
-  "FrameTargetActorProxy",
-  "devtools/server/actors/targets/frame-proxy",
+  "TabDescriptorActor",
+  "devtools/server/actors/descriptors/tab",
   true
 );
 loader.lazyRequireGetter(
@@ -110,7 +110,7 @@ exports.createRootActor = function createRootActor(connection) {
 };
 
 /**
- * A live list of FrameTargetActorProxys representing the current browser tabs,
+ * A live list of TabDescriptorActors representing the current browser tabs,
  * to be provided to the root actor to answer 'listTabs' requests.
  *
  * This object also takes care of listening for TabClose events and
@@ -345,7 +345,7 @@ BrowserTabList.prototype.getList = function(browserActorOptions) {
 };
 
 /**
- * @param browserActorOptions see options argument of FrameTargetActorProxy constructor.
+ * @param browserActorOptions see options argument of TabDescriptorActor constructor.
  */
 BrowserTabList.prototype._getActorForBrowser = function(
   browser,
@@ -358,7 +358,7 @@ BrowserTabList.prototype._getActorForBrowser = function(
     return actor.update(browserActorOptions);
   }
 
-  actor = new FrameTargetActorProxy(
+  actor = new TabDescriptorActor(
     this._connection,
     browser,
     browserActorOptions
@@ -468,7 +468,7 @@ BrowserTabList.prototype._handleActorClose = function(actor, browser) {
   if (this._testing) {
     if (this._actorByBrowser.get(browser) !== actor) {
       throw new Error(
-        "FrameTargetActorProxy not stored in map under given browser"
+        "TabDescriptorActor not stored in map under given browser"
       );
     }
     if (actor.browser !== browser) {
