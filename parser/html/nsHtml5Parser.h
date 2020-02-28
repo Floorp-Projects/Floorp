@@ -6,7 +6,7 @@
 #ifndef NS_HTML5_PARSER
 #define NS_HTML5_PARSER
 
-#include "nsAutoPtr.h"
+#include "mozilla/UniquePtr.h"
 #include "nsIParser.h"
 #include "nsDeque.h"
 #include "nsParserCIID.h"
@@ -214,7 +214,7 @@ class nsHtml5Parser final : public nsIParser, public nsSupportsWeakReference {
   virtual nsresult Initialize(mozilla::dom::Document* aDoc, nsIURI* aURI,
                               nsISupports* aContainer, nsIChannel* aChannel);
 
-  inline nsHtml5Tokenizer* GetTokenizer() { return mTokenizer; }
+  inline nsHtml5Tokenizer* GetTokenizer() { return mTokenizer.get(); }
 
   void InitializeDocWriteParserState(nsAHtml5TreeBuilderState* aState,
                                      int32_t aLine);
@@ -328,22 +328,22 @@ class nsHtml5Parser final : public nsIParser, public nsSupportsWeakReference {
   /**
    * The HTML5 tree builder
    */
-  const nsAutoPtr<nsHtml5TreeBuilder> mTreeBuilder;
+  const mozilla::UniquePtr<nsHtml5TreeBuilder> mTreeBuilder;
 
   /**
    * The HTML5 tokenizer
    */
-  const nsAutoPtr<nsHtml5Tokenizer> mTokenizer;
+  const mozilla::UniquePtr<nsHtml5Tokenizer> mTokenizer;
 
   /**
    * Another HTML5 tree builder for preloading document.written content.
    */
-  nsAutoPtr<nsHtml5TreeBuilder> mDocWriteSpeculativeTreeBuilder;
+  mozilla::UniquePtr<nsHtml5TreeBuilder> mDocWriteSpeculativeTreeBuilder;
 
   /**
    * Another HTML5 tokenizer for preloading document.written content.
    */
-  nsAutoPtr<nsHtml5Tokenizer> mDocWriteSpeculativeTokenizer;
+  mozilla::UniquePtr<nsHtml5Tokenizer> mDocWriteSpeculativeTokenizer;
 
   /**
    * The stream listener holding the stream parser.

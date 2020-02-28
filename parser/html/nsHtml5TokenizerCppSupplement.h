@@ -66,7 +66,7 @@ void nsHtml5Tokenizer::StartPlainText() {
 }
 
 void nsHtml5Tokenizer::EnableViewSource(nsHtml5Highlighter* aHighlighter) {
-  mViewSource = aHighlighter;
+  mViewSource = WrapUnique(aHighlighter);
 }
 
 bool nsHtml5Tokenizer::FlushViewSource() { return mViewSource->FlushOps(); }
