@@ -242,32 +242,7 @@ bool Gecko_MediaFeatures_PrefersReducedMotion(const Document* aDocument) {
 
 StylePrefersColorScheme Gecko_MediaFeatures_PrefersColorScheme(
     const Document* aDocument) {
-  if (nsContentUtils::ShouldResistFingerprinting(aDocument)) {
-    return StylePrefersColorScheme::Light;
-  }
-  if (nsPresContext* pc = aDocument->GetPresContext()) {
-    if (auto devtoolsOverride = pc->GetOverridePrefersColorScheme()) {
-      return *devtoolsOverride;
-    }
-
-    if (pc->IsPrintingOrPrintPreview()) {
-      return StylePrefersColorScheme::Light;
-    }
-  }
-  // If LookAndFeel::eIntID_SystemUsesDarkTheme fails then return 2
-  // (no-preference)
-  switch (LookAndFeel::GetInt(LookAndFeel::eIntID_SystemUsesDarkTheme, 2)) {
-    case 0:
-      return StylePrefersColorScheme::Light;
-    case 1:
-      return StylePrefersColorScheme::Dark;
-    case 2:
-      return StylePrefersColorScheme::NoPreference;
-    default:
-      // This only occurs if the user has set the ui.systemUsesDarkTheme pref to
-      // an invalid value.
-      return StylePrefersColorScheme::Light;
-  }
+  return aDocument->PrefersColorScheme();
 }
 
 static PointerCapabilities GetPointerCapabilities(const Document* aDocument,

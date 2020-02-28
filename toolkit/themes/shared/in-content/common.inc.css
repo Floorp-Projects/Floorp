@@ -107,6 +107,7 @@
 @supports -moz-bool-pref("browser.in-content.dark-mode") {
 @media (prefers-color-scheme: dark) {
   :root {
+    /* Keep this in sync with layout/base/PresShell.cpp! */
     --in-content-page-background: #2A2A2E;
     --in-content-page-color: rgb(249, 249, 250);
     --in-content-text-color: var(--in-content-page-color);
