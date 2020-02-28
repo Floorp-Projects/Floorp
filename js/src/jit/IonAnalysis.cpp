@@ -4638,6 +4638,15 @@ bool jit::AnalyzeArgumentsUsage(JSContext* cx, JSScript* scriptArg) {
     }
   }
 
+  // If we assign to a positional formal parameter and the arguments object is
+  // unmapped (strict mode or function with default/rest/destructing args),
+  // parameters do not alias arguments[i], and to make the arguments object
+  // reflect initial parameter values prior to any mutation we create it eagerly
+  // whenever parameters are (or might, in the case of calls to eval) assigned.
+  if (!script->hasMappedArgsObj() && script->jitScript()->modifiesArguments()) {
+    return true;
+  }
+
   script->setNeedsArgsObj(false);
   return true;
 }
