@@ -10081,37 +10081,6 @@ void CodeGenerator::visitGetFrameArgument(LGetFrameArgument* lir) {
   }
 }
 
-void CodeGenerator::visitSetFrameArgumentT(LSetFrameArgumentT* lir) {
-  size_t argOffset = frameSize() + JitFrameLayout::offsetOfActualArgs() +
-                     (sizeof(Value) * lir->mir()->argno());
-
-  MIRType type = lir->mir()->value()->type();
-
-  if (type == MIRType::Double) {
-    // Store doubles directly.
-    FloatRegister input = ToFloatRegister(lir->input());
-    masm.boxDouble(input, Address(masm.getStackPointer(), argOffset));
-
-  } else {
-    Register input = ToRegister(lir->input());
-    masm.storeValue(ValueTypeFromMIRType(type), input,
-                    Address(masm.getStackPointer(), argOffset));
-  }
-}
-
-void CodeGenerator::visitSetFrameArgumentC(LSetFrameArgumentC* lir) {
-  size_t argOffset = frameSize() + JitFrameLayout::offsetOfActualArgs() +
-                     (sizeof(Value) * lir->mir()->argno());
-  masm.storeValue(lir->val(), Address(masm.getStackPointer(), argOffset));
-}
-
-void CodeGenerator::visitSetFrameArgumentV(LSetFrameArgumentV* lir) {
-  const ValueOperand val = ToValue(lir, LSetFrameArgumentV::Input);
-  size_t argOffset = frameSize() + JitFrameLayout::offsetOfActualArgs() +
-                     (sizeof(Value) * lir->mir()->argno());
-  masm.storeValue(val, Address(masm.getStackPointer(), argOffset));
-}
-
 void CodeGenerator::emitRest(LInstruction* lir, Register array,
                              Register numActuals, Register temp0,
                              Register temp1, unsigned numFormals,

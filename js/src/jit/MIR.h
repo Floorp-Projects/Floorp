@@ -10000,29 +10000,6 @@ class MNewTarget : public MNullaryInstruction {
   AliasSet getAliasSet() const override { return AliasSet::None(); }
 };
 
-// This MIR instruction is used to set an argument value in the frame.
-class MSetFrameArgument : public MUnaryInstruction,
-                          public NoFloatPolicy<0>::Data {
-  uint32_t argno_;
-
-  MSetFrameArgument(uint32_t argno, MDefinition* value)
-      : MUnaryInstruction(classOpcode, value), argno_(argno) {
-    setMovable();
-  }
-
- public:
-  INSTRUCTION_HEADER(SetFrameArgument)
-  TRIVIAL_NEW_WRAPPERS
-  NAMED_OPERANDS((0, value))
-
-  uint32_t argno() const { return argno_; }
-
-  bool congruentTo(const MDefinition* ins) const override { return false; }
-  AliasSet getAliasSet() const override {
-    return AliasSet::Store(AliasSet::FrameArgument);
-  }
-};
-
 class MRestCommon {
   unsigned numFormals_;
   CompilerGCPointer<ArrayObject*> templateObject_;
