@@ -48,6 +48,7 @@ import shlex
 import buildconfig
 import mozpack.path as mozpath
 from mozfile import which
+from mozbuild.util import ensure_bytes
 
 
 def ToCAsciiArray(lines):
@@ -62,7 +63,7 @@ def ToCAsciiArray(lines):
 def ToCArray(lines):
     result = []
     for chr in lines:
-        result.append(str(ord(chr)))
+        result.append(str(chr))
     return ", ".join(result)
 
 
@@ -102,7 +103,7 @@ def embed(cxx, preprocessorOption, cppflags, msgs, sources, c_out, js_out, names
 
     js_out.write(processed)
     import zlib
-    compressed = zlib.compress(processed)
+    compressed = zlib.compress(ensure_bytes(processed))
     data = ToCArray(compressed)
     c_out.write(HEADER_TEMPLATE % {
         'sources_type': 'unsigned char',
@@ -128,7 +129,7 @@ def preprocess(cxx, preprocessorOption, source, args=[]):
     outputArg = shlex.split(preprocessorOption + tmpOut)
 
     with open(tmpIn, 'wb') as input:
-        input.write(source)
+        input.write(ensure_bytes(source))
     print(' '.join(cxx + outputArg + args + [tmpIn]))
     result = subprocess.Popen(cxx + outputArg + args + [tmpIn]).wait()
     if (result != 0):
