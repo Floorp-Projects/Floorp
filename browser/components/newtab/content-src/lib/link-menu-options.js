@@ -65,27 +65,29 @@ export const LinkMenuOptions = {
   // but also sends a message to DiscoveryStream with flight_id.
   // If DiscoveryStream sees this message for a flight_id
   // it also blocks it on the flight_id.
-  BlockUrl: (site, index, eventSource) => ({
+  BlockUrl: (site, index, eventSource) => {
+    return LinkMenuOptions.BlockUrls([site], index, eventSource);
+  },
+  // Same as BlockUrl, cept can work on an array of sites.
+  BlockUrls: (tiles, pos, eventSource) => ({
     id: "newtab-menu-dismiss",
     icon: "dismiss",
     action: ac.AlsoToMain({
       type: at.BLOCK_URL,
-      data: {
+      data: tiles.map(site => ({
         url: site.open_url || site.url,
         pocket_id: site.pocket_id,
         ...(site.flight_id ? { flight_id: site.flight_id } : {}),
-      },
+      })),
     }),
     impression: ac.ImpressionStats({
       source: eventSource,
       block: 0,
-      tiles: [
-        {
-          id: site.guid,
-          pos: index,
-          ...(site.shim && site.shim.delete ? { shim: site.shim.delete } : {}),
-        },
-      ],
+      tiles: tiles.map((site, index) => ({
+        id: site.guid,
+        pos: pos + index,
+        ...(site.shim && site.shim.delete ? { shim: site.shim.delete } : {}),
+      })),
     }),
     userEvent: "BLOCK",
   }),

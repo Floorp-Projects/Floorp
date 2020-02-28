@@ -577,7 +577,15 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
     const items = spocs.items || spocs;
     const title = spocs.title || "";
     const context = spocs.context || "";
-    return { items, title, context };
+    // Undefined is fine here. It's optional and only used by collections.
+    // If we leave it out, you get a collection that cannot be dismissed.
+    const { flight_id } = spocs;
+    return {
+      items,
+      title,
+      context,
+      ...(flight_id ? { flight_id } : {}),
+    };
   }
 
   async loadSpocs(sendUpdate, isStartup) {
@@ -658,6 +666,7 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
         items: normalizedSpocsItems,
         title,
         context,
+        flight_id,
       } = this.normalizeSpocsItems(freshSpocs);
 
       if (!normalizedSpocsItems || !normalizedSpocsItems.length) {
@@ -705,6 +714,7 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
         [placement.name]: {
           title,
           context,
+          ...(flight_id ? { flight_id } : {}),
           items: transformResult,
         },
       };
@@ -1733,10 +1743,12 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
         // If we block a story that also has a flight_id
         // we want to record that as blocked too.
         // This is because a single flight might have slightly different urls.
-        const { flight_id } = action.data;
-        if (flight_id) {
-          this.recordBlockFlightId(flight_id);
-        }
+        action.data.forEach(site => {
+          const { flight_id } = site;
+          if (flight_id) {
+            this.recordBlockFlightId(flight_id);
+          }
+        });
         break;
       }
       case at.PREF_CHANGED:

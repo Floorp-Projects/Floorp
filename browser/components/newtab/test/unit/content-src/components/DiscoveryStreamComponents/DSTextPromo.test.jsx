@@ -12,11 +12,16 @@ describe("<DSTextPromo>", () => {
     dispatchStub = sandbox.stub();
     wrapper = shallow(
       <DSTextPromo
-        shim={{ impression: "1234" }}
+        data={{
+          spocs: [
+            {
+              shim: { impression: "1234" },
+              id: "1234",
+            },
+          ],
+        }}
         type="TEXTPROMO"
-        pos={0}
         dispatch={dispatchStub}
-        id="1234"
       />
     );
   });
@@ -52,6 +57,36 @@ describe("<DSTextPromo>", () => {
     assert.deepEqual(dispatchStub.secondCall.args[0].data, {
       source: "TEXTPROMO",
       click: 0,
+      tiles: [{ id: "1234", pos: 0 }],
+    });
+  });
+
+  it("should dispath telemety events on dismiss", () => {
+    wrapper.instance().onDismissClick();
+
+    const firstCall = dispatchStub.getCall(0);
+    const secondCall = dispatchStub.getCall(1);
+    const thirdCall = dispatchStub.getCall(2);
+
+    assert.equal(firstCall.args[0].type, "BLOCK_URL");
+    assert.deepEqual(firstCall.args[0].data, [
+      {
+        url: undefined,
+        pocket_id: undefined,
+      },
+    ]);
+
+    assert.equal(secondCall.args[0].type, "TELEMETRY_USER_EVENT");
+    assert.deepEqual(secondCall.args[0].data, {
+      event: "BLOCK",
+      source: "TEXTPROMO",
+      action_position: 0,
+    });
+
+    assert.equal(thirdCall.args[0].type, "TELEMETRY_IMPRESSION_STATS");
+    assert.deepEqual(thirdCall.args[0].data, {
+      source: "TEXTPROMO",
+      block: 0,
       tiles: [{ id: "1234", pos: 0 }],
     });
   });
