@@ -25,7 +25,7 @@ def generate_allows(input_paths):
         with open(path) as file:
             lines.update(file.readlines())
 
-    for line in lines:
+    for line in sorted(lines):
         """
             We are assuming lines ending in .cpp, .h are files. Threads should
             NOT have names containing filenames. Please don't do that.
