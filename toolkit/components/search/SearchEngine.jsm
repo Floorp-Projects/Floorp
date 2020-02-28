@@ -918,6 +918,8 @@ SearchEngine.prototype = {
   _locale: null,
   // Built in search engine extensions.
   _isBuiltin: false,
+  // The order hint from the configuration (if any).
+  _orderHint: null,
 
   /**
    * Retrieves the data from the engine's file asynchronously.
@@ -1495,6 +1497,7 @@ SearchEngine.prototype = {
     this._extensionID = params.extensionID;
     this._locale = params.locale;
     this._isBuiltin = !!params.isBuiltin;
+    this._orderHint = params.orderHint;
 
     this._initEngineURLFromMetaData(SearchUtils.URL_TYPE.SEARCH, {
       method: (params.searchPostParams && "POST") || params.method || "GET",
@@ -1766,6 +1769,7 @@ SearchEngine.prototype = {
     this._iconMapObj = json._iconMapObj;
     this._metaData = json._metaData || {};
     this._isBuiltin = json._isBuiltin;
+    this._orderHint = json._orderHint || null;
     if (json.filePath) {
       this._filePath = json.filePath;
     }
@@ -1805,6 +1809,7 @@ SearchEngine.prototype = {
       _metaData: this._metaData,
       _urls: this._urls,
       _isBuiltin: this._isBuiltin,
+      _orderHint: this._orderHint,
     };
 
     if (this._updateInterval) {

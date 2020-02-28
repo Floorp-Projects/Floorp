@@ -162,10 +162,10 @@ add_task(async function test_cached_engine_properties() {
     ? [
         // Default engines
         "Test search engine",
-        "engine-pref",
         // Rest of engines in order
         "engine-resourceicon",
         "engine-chromeicon",
+        "engine-pref",
         "engine-rel-searchform-purpose",
         "Test search engine (Reordered)",
         "A second test engine",

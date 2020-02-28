@@ -34,39 +34,17 @@ add_task(async function test_searchOrderJSON_no_separate_private() {
     false
   );
 
-  // With modern configuration, we have a slightly different order, since the
-  // default private engine will get placed second, regardless of if the
-  // separate private engine is enabled or not.
-  if (
-    Services.prefs.getBoolPref(
-      SearchUtils.BROWSER_SEARCH_PREF + "modernConfig",
-      false
-    )
-  ) {
-    await checkOrder([
-      // Default engines
-      "Test search engine",
-      "engine-pref",
-      // Two engines listed in searchOrder.
-      "engine-resourceicon",
-      "engine-chromeicon",
-      // Rest of the engines in order.
-      "engine-rel-searchform-purpose",
-      "Test search engine (Reordered)",
-    ]);
-  } else {
-    await checkOrder([
-      // Default engine
-      "Test search engine",
-      // Two engines listed in searchOrder.
-      "engine-resourceicon",
-      "engine-chromeicon",
-      // Rest of the engines in order.
-      "engine-pref",
-      "engine-rel-searchform-purpose",
-      "Test search engine (Reordered)",
-    ]);
-  }
+  await checkOrder([
+    // Default engine
+    "Test search engine",
+    // Two engines listed in searchOrder.
+    "engine-resourceicon",
+    "engine-chromeicon",
+    // Rest of the engines in order.
+    "engine-pref",
+    "engine-rel-searchform-purpose",
+    "Test search engine (Reordered)",
+  ]);
 });
 
 add_task(async function test_searchOrderJSON_separate_private() {
