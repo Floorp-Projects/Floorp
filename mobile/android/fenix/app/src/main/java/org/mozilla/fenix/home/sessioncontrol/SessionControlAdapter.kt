@@ -23,6 +23,7 @@ import org.mozilla.fenix.home.Tab
 import org.mozilla.fenix.home.sessioncontrol.viewholders.CollectionHeaderViewHolder
 import org.mozilla.fenix.home.sessioncontrol.viewholders.CollectionViewHolder
 import org.mozilla.fenix.home.sessioncontrol.viewholders.NoContentMessageViewHolder
+import org.mozilla.fenix.home.sessioncontrol.viewholders.NoContentMessageWithActionViewHolder
 import org.mozilla.fenix.home.sessioncontrol.viewholders.PrivateBrowsingDescriptionViewHolder
 import org.mozilla.fenix.home.sessioncontrol.viewholders.SaveTabGroupViewHolder
 import org.mozilla.fenix.home.sessioncontrol.viewholders.TabHeaderViewHolder
@@ -80,6 +81,15 @@ sealed class AdapterItem(@LayoutRes val viewType: Int) {
         @StringRes val header: Int,
         @StringRes val description: Int
     ) : AdapterItem(NoContentMessageViewHolder.LAYOUT_ID)
+
+    data class NoContentMessageWithAction(
+        @DrawableRes val icon: Int,
+        @StringRes val header: Int,
+        @StringRes val description: Int,
+        @DrawableRes val buttonIcon: Int = 0,
+        @StringRes val buttonText: Int = 0,
+        val listener: (() -> Unit)? = null
+    ) : AdapterItem(NoContentMessageWithActionViewHolder.LAYOUT_ID)
 
     object CollectionHeader : AdapterItem(CollectionHeaderViewHolder.LAYOUT_ID)
     data class CollectionItem(
@@ -161,6 +171,7 @@ class SessionControlAdapter(
             SaveTabGroupViewHolder.LAYOUT_ID -> SaveTabGroupViewHolder(view, interactor)
             PrivateBrowsingDescriptionViewHolder.LAYOUT_ID -> PrivateBrowsingDescriptionViewHolder(view, interactor)
             NoContentMessageViewHolder.LAYOUT_ID -> NoContentMessageViewHolder(view)
+            NoContentMessageWithActionViewHolder.LAYOUT_ID -> NoContentMessageWithActionViewHolder(view)
             CollectionHeaderViewHolder.LAYOUT_ID -> CollectionHeaderViewHolder(view)
             CollectionViewHolder.LAYOUT_ID -> CollectionViewHolder(view, interactor)
             TabInCollectionViewHolder.LAYOUT_ID -> TabInCollectionViewHolder(view, interactor)
@@ -194,6 +205,11 @@ class SessionControlAdapter(
             }
             is TopSiteViewHolder -> {
                 holder.bind((item as AdapterItem.TopSiteList).topSites)
+            }
+            is NoContentMessageWithActionViewHolder -> {
+                val listener = { interactor.onOpenNewTabClicked() }
+                val (icon, header, description, buttonIcon, buttonText) = item as AdapterItem.NoContentMessageWithAction
+                holder.bind(icon, header, description, buttonIcon, buttonText, listener)
             }
             is NoContentMessageViewHolder -> {
                 val (icon, header, description) = item as AdapterItem.NoContentMessage

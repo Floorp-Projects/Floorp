@@ -148,6 +148,11 @@ interface SessionControlController {
      * @see [CollectionInteractor.onToggleCollectionExpanded]
      */
     fun handleToggleCollectionExpanded(collection: TabCollection, expand: Boolean)
+
+    /**
+     * @see [TabSessionInteractor.onOpenNewTabClicked]
+     */
+    fun handleonOpenNewTabClicked()
 }
 
 @SuppressWarnings("TooManyFunctions", "LargeClass")
@@ -165,7 +170,8 @@ class DefaultSessionControlController(
     private val registerCollectionStorageObserver: () -> Unit,
     private val scrollToTheTop: () -> Unit,
     private val showDeleteCollectionPrompt: (tabCollection: TabCollection) -> Unit,
-    private val openSettingsScreen: () -> Unit
+    private val openSettingsScreen: () -> Unit,
+    private val openSearchScreen: () -> Unit
 ) : SessionControlController {
     private val metrics: MetricController
         get() = activity.components.analytics.metrics
@@ -377,6 +383,10 @@ class DefaultSessionControlController(
 
     override fun handleToggleCollectionExpanded(collection: TabCollection, expand: Boolean) {
         store.dispatch(HomeFragmentAction.CollectionExpanded(collection, expand))
+    }
+
+    override fun handleonOpenNewTabClicked() {
+        openSearchScreen()
     }
 
     private fun showCollectionCreationFragment(

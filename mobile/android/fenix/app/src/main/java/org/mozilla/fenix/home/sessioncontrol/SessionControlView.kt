@@ -22,10 +22,12 @@ import org.mozilla.fenix.home.Mode
 import org.mozilla.fenix.home.OnboardingState
 import org.mozilla.fenix.home.Tab
 
-val noTabMessage = AdapterItem.NoContentMessage(
+val noTabMessage = AdapterItem.NoContentMessageWithAction(
     R.drawable.ic_tabs,
     R.string.no_open_tabs_header_2,
-    R.string.no_open_tabs_description
+    R.string.no_open_tabs_description,
+    R.drawable.ic_new,
+    R.string.home_screen_shortcut_open_new_tab_2
 )
 
 val noCollectionMessage = AdapterItem.NoContentMessage(

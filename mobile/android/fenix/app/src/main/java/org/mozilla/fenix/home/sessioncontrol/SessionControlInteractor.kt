@@ -153,6 +153,11 @@ interface TabSessionInteractor {
      * mode or tab header menu item.
      */
     fun onShareTabs()
+
+    /**
+     * Opens a new tab
+     */
+    fun onOpenNewTabClicked()
 }
 
 /**
@@ -273,5 +278,9 @@ class SessionControlInteractor(
 
     override fun onToggleCollectionExpanded(collection: TabCollection, expand: Boolean) {
         controller.handleToggleCollectionExpanded(collection, expand)
+    }
+
+    override fun onOpenNewTabClicked() {
+        controller.handleonOpenNewTabClicked()
     }
 }

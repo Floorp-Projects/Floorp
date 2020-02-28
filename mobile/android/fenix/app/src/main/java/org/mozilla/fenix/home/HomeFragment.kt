@@ -202,7 +202,8 @@ class HomeFragment : Fragment() {
                 registerCollectionStorageObserver = ::registerCollectionStorageObserver,
                 scrollToTheTop = ::scrollToTheTop,
                 showDeleteCollectionPrompt = ::showDeleteCollectionPrompt,
-                openSettingsScreen = ::openSettingsScreen
+                openSettingsScreen = ::openSettingsScreen,
+                openSearchScreen = ::navigateToSearch
             )
         )
         updateLayout(view)

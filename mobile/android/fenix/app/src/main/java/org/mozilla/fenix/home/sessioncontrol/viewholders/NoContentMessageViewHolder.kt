@@ -12,7 +12,7 @@ import kotlinx.android.synthetic.main.no_content_message.view.*
 import mozilla.components.support.ktx.android.view.putCompoundDrawablesRelativeWithIntrinsicBounds
 import org.mozilla.fenix.R
 
-class NoContentMessageViewHolder(private val view: View) : RecyclerView.ViewHolder(view) {
+open class NoContentMessageViewHolder(private val view: View) : RecyclerView.ViewHolder(view) {
 
     fun bind(
         @DrawableRes icon: Int,
