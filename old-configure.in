@@ -169,7 +169,7 @@ case "$target" in
           if test ! -d "$WIN_UCRT_REDIST_DIR"; then
             AC_MSG_ERROR([Invalid Windows UCRT Redist directory: ${WIN_UCRT_REDIST_DIR}])
           fi
-          WIN_UCRT_REDIST_DIR=`cd "$WIN_UCRT_REDIST_DIR" && pwd -W`
+          WIN_UCRT_REDIST_DIR=`cd "$WIN_UCRT_REDIST_DIR" && (pwd -W 2>/dev/null || pwd)`
         fi
 
         AC_SUBST(MSVC_C_RUNTIME_DLL)
@@ -181,7 +181,7 @@ case "$target" in
           if test ! -d "$WIN32_REDIST_DIR"; then
             AC_MSG_ERROR([Invalid Win32 Redist directory: ${WIN32_REDIST_DIR}])
           fi
-          WIN32_REDIST_DIR=`cd "$WIN32_REDIST_DIR" && pwd -W`
+          WIN32_REDIST_DIR=`cd "$WIN32_REDIST_DIR" && (pwd -W 2>/dev/null || pwd)`
         fi
 
         # Check linker version, except in lld builds

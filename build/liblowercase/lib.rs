@@ -243,4 +243,8 @@ wrappers! {
     fn access(path: *const c_char, mode: c_int) -> c_int;
 
     fn mkdir(path: *const c_char, mode: libc::mode_t) -> c_int;
+
+    fn chdir(path: *const c_char) -> c_int;
+
+    fn symlink(target: *const c_char, linkpath: *const c_char) -> c_int;
 }
