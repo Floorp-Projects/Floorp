@@ -75,21 +75,8 @@ class MOZ_ONLY_USED_TO_AVOID_STATIC_CONSTRUCTORS StaticMutex {
   static void operator delete(void*);
 };
 
-// Helper for StaticMutexAutoLock/Unlock.
-class MOZ_STACK_CLASS AnyStaticMutex {
- public:
-  MOZ_IMPLICIT AnyStaticMutex(StaticMutex& aMutex) : mStaticMutex(&aMutex) {}
-
-  void Lock() { mStaticMutex->Lock(); }
-
-  void Unlock() { mStaticMutex->Unlock(); }
-
- private:
-  StaticMutex* mStaticMutex;
-};
-
-typedef detail::BaseAutoLock<AnyStaticMutex> StaticMutexAutoLock;
-typedef detail::BaseAutoUnlock<AnyStaticMutex> StaticMutexAutoUnlock;
+typedef detail::BaseAutoLock<StaticMutex&> StaticMutexAutoLock;
+typedef detail::BaseAutoUnlock<StaticMutex&> StaticMutexAutoUnlock;
 
 }  // namespace mozilla
 
