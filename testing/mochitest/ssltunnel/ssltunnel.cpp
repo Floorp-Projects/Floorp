@@ -135,7 +135,7 @@ char* strtok2(char* string, const char* delims, char** newStr) {
 enum client_auth_option { caNone = 0, caRequire = 1, caRequest = 2 };
 
 // Structs for passing data into jobs on the thread pool
-typedef struct {
+struct server_info_t {
   int32_t listen_port;
   string cert_nickname;
   PLHashTable* host_cert_table;
@@ -148,9 +148,9 @@ typedef struct {
   PLHashTable* host_tls13_table;
   PLHashTable* host_rc4_table;
   PLHashTable* host_failhandshake_table;
-} server_info_t;
+};
 
-typedef struct {
+struct connection_info_t {
   PRFileDesc* client_sock;
   PRNetAddr client_addr;
   server_info_t* server_info;
@@ -161,12 +161,12 @@ typedef struct {
   bool http_proxy_only;
   // true if this connection is for a WebSocket
   bool iswebsocket;
-} connection_info_t;
+};
 
-typedef struct {
+struct server_match_t {
   string fullHost;
   bool matched;
-} server_match_t;
+};
 
 const int32_t BUF_SIZE = 16384;
 const int32_t BUF_MARGIN = 1024;
