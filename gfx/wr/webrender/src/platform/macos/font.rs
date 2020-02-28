@@ -385,17 +385,21 @@ impl FontContext {
                 if font.flags.contains(FontInstanceFlags::TRANSPOSE) {
                     shape = shape.swap_xy();
                 }
+                let (mut tx, mut ty) = (0.0, 0.0);
                 if font.synthetic_italics.is_enabled() {
-                    shape = shape.synthesize_italics(font.synthetic_italics);
+                    let (shape_, (tx_, ty_)) = font.synthesize_italics(shape, size.to_f64_px());
+                    shape = shape_;
+                    tx = tx_;
+                    ty = ty_;
                 }
-                let transform = if !shape.is_identity() {
+                let transform = if !shape.is_identity() || (tx, ty) != (0.0, 0.0) {
                     Some(CGAffineTransform {
                         a: shape.scale_x as f64,
                         b: -shape.skew_y as f64,
                         c: -shape.skew_x as f64,
                         d: shape.scale_y as f64,
-                        tx: 0.0,
-                        ty: 0.0,
+                        tx: tx,
+                        ty: -ty,
                     })
                 } else {
                     None
@@ -521,17 +525,21 @@ impl FontContext {
         if font.flags.contains(FontInstanceFlags::TRANSPOSE) {
             shape = shape.swap_xy();
         }
+        let (mut tx, mut ty) = (0.0, 0.0);
         if font.synthetic_italics.is_enabled() {
-            shape = shape.synthesize_italics(font.synthetic_italics);
+            let (shape_, (tx_, ty_)) = font.synthesize_italics(shape, size.to_f64_px());
+            shape = shape_;
+            tx = tx_;
+            ty = ty_;
         }
-        let transform = if !shape.is_identity() {
+        let transform = if !shape.is_identity() || (tx, ty) != (0.0, 0.0) {
             Some(CGAffineTransform {
                 a: shape.scale_x as f64,
                 b: -shape.skew_y as f64,
                 c: -shape.skew_x as f64,
                 d: shape.scale_y as f64,
-                tx: 0.0,
-                ty: 0.0,
+                tx: tx,
+                ty: -ty,
             })
         } else {
             None
@@ -640,8 +648,8 @@ impl FontContext {
 
             // CG Origin is bottom left, WR is top left. Need -y offset
             let mut draw_origin = CGPoint {
-                x: -metrics.rasterized_left as f64 + x_offset,
-                y: metrics.rasterized_descent as f64 - y_offset,
+                x: -metrics.rasterized_left as f64 + x_offset + tx,
+                y: metrics.rasterized_descent as f64 - y_offset - ty,
             };
 
             if let Some(transform) = transform {
