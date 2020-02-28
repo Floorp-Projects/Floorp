@@ -274,17 +274,13 @@ class nsFlexContainerFrame final : public nsContainerFrame {
    *   http://dev.w3.org/csswg/css-flexbox/#layout-algorithm
    * (with a few initialization pieces happening in the caller, Reflow().
    *
-   * Since this is a helper for Reflow(), this takes all the same parameters
-   * as Reflow(), plus a few more parameters that Reflow() sets up for us.
-   *
    * (The logic behind the division of work between Reflow and DoFlexLayout is
    * as follows: DoFlexLayout() begins at the step that we have to jump back
    * to, if we find any visibility:collapse children, and Reflow() does
    * everything before that point.)
    */
-  void DoFlexLayout(nsPresContext* aPresContext, ReflowOutput& aDesiredSize,
-                    const ReflowInput& aReflowInput, nsReflowStatus& aStatus,
-                    nscoord aContentBoxMainSize,
+  void DoFlexLayout(ReflowOutput& aDesiredSize, const ReflowInput& aReflowInput,
+                    nsReflowStatus& aStatus, nscoord aContentBoxMainSize,
                     nscoord aAvailableBSizeForContent,
                     nsTArray<StrutInfo>& aStruts,
                     const FlexboxAxisTracker& aAxisTracker,
@@ -321,8 +317,7 @@ class nsFlexContainerFrame final : public nsContainerFrame {
    * https://drafts.csswg.org/css-flexbox-1/#algo-flex
    */
   mozilla::UniquePtr<FlexItem> GenerateFlexItemForChild(
-      nsPresContext* aPresContext, nsIFrame* aChildFrame,
-      const ReflowInput& aParentReflowInput,
+      nsIFrame* aChildFrame, const ReflowInput& aParentReflowInput,
       const FlexboxAxisTracker& aAxisTracker, bool aHasLineClampEllipsis);
 
   /**
@@ -333,8 +328,7 @@ class nsFlexContainerFrame final : public nsContainerFrame {
    * CachedMeasuringReflowResult.
    */
   const CachedMeasuringReflowResult& MeasureAscentAndBSizeForFlexItem(
-      FlexItem& aItem, nsPresContext* aPresContext,
-      ReflowInput& aChildReflowInput);
+      FlexItem& aItem, ReflowInput& aChildReflowInput);
 
   /**
    * This method performs a "measuring" reflow to get the content BSize of
@@ -342,8 +336,7 @@ class nsFlexContainerFrame final : public nsContainerFrame {
    * and returns the resulting BSize measurement.
    * (Helper for ResolveAutoFlexBasisAndMinSize().)
    */
-  nscoord MeasureFlexItemContentBSize(nsPresContext* aPresContext,
-                                      FlexItem& aFlexItem,
+  nscoord MeasureFlexItemContentBSize(FlexItem& aFlexItem,
                                       bool aForceBResizeForMeasuringReflow,
                                       bool aHasLineClampEllipsis,
                                       const ReflowInput& aParentReflowInput);
@@ -353,8 +346,7 @@ class nsFlexContainerFrame final : public nsContainerFrame {
    * on aFlexItem, if needed.
    * (Helper for GenerateFlexItemForChild().)
    */
-  void ResolveAutoFlexBasisAndMinSize(nsPresContext* aPresContext,
-                                      FlexItem& aFlexItem,
+  void ResolveAutoFlexBasisAndMinSize(FlexItem& aFlexItem,
                                       const ReflowInput& aItemReflowInput,
                                       const FlexboxAxisTracker& aAxisTracker,
                                       bool aHasLineClampEllipsis);
@@ -383,8 +375,7 @@ class nsFlexContainerFrame final : public nsContainerFrame {
    * append that child to the outparam |aPlaceholders| for separate handling.
    * (Absolutely positioned children of a flex container are *not* flex items.)
    */
-  void GenerateFlexLines(nsPresContext* aPresContext,
-                         const ReflowInput& aReflowInput,
+  void GenerateFlexLines(const ReflowInput& aReflowInput,
                          nscoord aContentBoxMainSize,
                          nscoord aAvailableBSizeForContent,
                          const nsTArray<StrutInfo>& aStruts,
@@ -402,8 +393,7 @@ class nsFlexContainerFrame final : public nsContainerFrame {
                            nscoord aAvailableBSizeForContent, bool* aIsDefinite,
                            nsReflowStatus& aStatus);
 
-  void SizeItemInCrossAxis(nsPresContext* aPresContext,
-                           ReflowInput& aChildReflowInput, FlexItem& aItem);
+  void SizeItemInCrossAxis(ReflowInput& aChildReflowInput, FlexItem& aItem);
 
   /**
    * Moves the given flex item's frame to the given LogicalPosition (modulo any
@@ -428,7 +418,6 @@ class nsFlexContainerFrame final : public nsContainerFrame {
    * Helper-function to reflow a child frame, at its final position determined
    * by flex layout.
    *
-   * @param aPresContext    The presentation context being used in reflow.
    * @param aAxisTracker    A FlexboxAxisTracker with the flex container's axes.
    * @param aReflowInput    The flex container's reflow input.
    * @param aItem           The flex item to be reflowed.
@@ -437,8 +426,7 @@ class nsFlexContainerFrame final : public nsContainerFrame {
    * @param aContainerSize  The flex container's size (required by some methods
    *                        that we call, to interpret aFramePos correctly).
    */
-  void ReflowFlexItem(nsPresContext* aPresContext,
-                      const FlexboxAxisTracker& aAxisTracker,
+  void ReflowFlexItem(const FlexboxAxisTracker& aAxisTracker,
                       const ReflowInput& aReflowInput, const FlexItem& aItem,
                       mozilla::LogicalPoint& aFramePos,
                       const nsSize& aContainerSize, bool aHasLineClampEllipsis);
@@ -456,7 +444,6 @@ class nsFlexContainerFrame final : public nsContainerFrame {
    * position (using this origin, the OOF's size, and the CSS Align
    * properties).
    *
-   * @param aPresContext       The presentation context being used in reflow.
    * @param aReflowInput       The flex container's reflow input.
    * @param aPlaceholders      An array of all the flex container's
    *                           nsPlaceholderFrame children.
@@ -465,8 +452,7 @@ class nsFlexContainerFrame final : public nsContainerFrame {
    * @param aContainerSize     The flex container's size (required by some
    *                           reflow methods to interpret positions correctly).
    */
-  void ReflowPlaceholders(nsPresContext* aPresContext,
-                          const ReflowInput& aReflowInput,
+  void ReflowPlaceholders(const ReflowInput& aReflowInput,
                           nsTArray<nsIFrame*>& aPlaceholders,
                           const mozilla::LogicalPoint& aContentBoxOrigin,
                           const nsSize& aContainerSize);
