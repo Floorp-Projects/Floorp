@@ -2182,6 +2182,11 @@ void gfxFont::Draw(const gfxTextRun* aTextRun, uint32_t aStart, uint32_t aEnd,
       float baseAdj = (metrics.emAscent - metrics.emDescent) / 2;
       baseline += baseAdj * aTextRun->GetAppUnitsPerDevUnit() * baselineDir;
     }
+  } else if (textDrawer &&
+             aOrientation == ShapedTextFlags::TEXT_ORIENT_VERTICAL_UPRIGHT) {
+    glyphFlagsRestore.Save(textDrawer);
+    textDrawer->SetWRGlyphFlags(textDrawer->GetWRGlyphFlags() |
+                                wr::FontInstanceFlags::VERTICAL);
   }
 
   if (fontParams.obliqueSkew != 0.0f && !fontParams.isVerticalFont &&

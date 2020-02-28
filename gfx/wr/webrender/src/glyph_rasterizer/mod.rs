@@ -338,14 +338,27 @@ impl FontTransform {
         self.pre_scale(x_scale.recip() as f32, y_scale.recip() as f32)
     }
 
-    pub fn synthesize_italics(&self, angle: SyntheticItalics) -> Self {
+    pub fn synthesize_italics(&self, angle: SyntheticItalics, size: f64, vertical: bool) -> (Self, (f64, f64)) {
         let skew_factor = angle.to_skew();
-        FontTransform::new(
-            self.scale_x,
-            self.skew_x - self.scale_x * skew_factor,
-            self.skew_y,
-            self.scale_y - self.skew_y * skew_factor,
-        )
+        if vertical {
+          // origin delta to be applied so that we effectively skew around
+          // the middle rather than edge of the glyph
+          let (tx, ty) = (0.0, -size * 0.5 * skew_factor as f64);
+          (FontTransform::new(
+              self.scale_x + self.skew_x * skew_factor,
+              self.skew_x,
+              self.skew_y + self.scale_y * skew_factor,
+              self.scale_y,
+          ), (self.scale_x as f64 * tx + self.skew_x as f64 * ty,
+              self.skew_y as f64 * tx + self.scale_y as f64 * ty))
+        } else {
+          (FontTransform::new(
+              self.scale_x,
+              self.skew_x - self.scale_x * skew_factor,
+              self.skew_y,
+              self.scale_y - self.skew_y * skew_factor,
+          ), (0.0, 0.0))
+        }
     }
 
     pub fn swap_xy(&self) -> Self {
@@ -551,6 +564,10 @@ impl FontInstance {
         } else {
             0
         }
+    }
+
+    pub fn synthesize_italics(&self, transform: FontTransform, size: f64) -> (FontTransform, (f64, f64)) {
+        transform.synthesize_italics(self.synthetic_italics, size, self.flags.contains(FontInstanceFlags::VERTICAL))
     }
 }
 
