@@ -5,11 +5,11 @@
 
 #include "nsParserUtils.h"
 #include "mozilla/NullPrincipal.h"
+#include "mozilla/UniquePtr.h"
 #include "mozilla/dom/DocumentFragment.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/ScriptLoader.h"
 #include "nsAttrName.h"
-#include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsContentCID.h"
 #include "nsContentUtils.h"

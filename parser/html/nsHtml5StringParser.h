@@ -5,6 +5,7 @@
 #ifndef nsHtml5StringParser_h
 #define nsHtml5StringParser_h
 
+#include "mozilla/UniquePtr.h"
 #include "nsHtml5AtomTable.h"
 #include "nsParserBase.h"
 
@@ -70,12 +71,12 @@ class nsHtml5StringParser : public nsParserBase {
   /**
    * The HTML5 tree builder
    */
-  const nsAutoPtr<nsHtml5TreeBuilder> mTreeBuilder;
+  const mozilla::UniquePtr<nsHtml5TreeBuilder> mTreeBuilder;
 
   /**
    * The HTML5 tokenizer
    */
-  const nsAutoPtr<nsHtml5Tokenizer> mTokenizer;
+  const mozilla::UniquePtr<nsHtml5Tokenizer> mTokenizer;
 
   /**
    * The scoped atom table

@@ -49,7 +49,7 @@ nsHtml5Parser::nsHtml5Parser()
       mLastBuffer(mFirstBuffer),
       mExecutor(new nsHtml5TreeOpExecutor()),
       mTreeBuilder(new nsHtml5TreeBuilder(mExecutor, nullptr)),
-      mTokenizer(new nsHtml5Tokenizer(mTreeBuilder, false)),
+      mTokenizer(new nsHtml5Tokenizer(mTreeBuilder.get(), false)),
       mRootContextLineNumber(1),
       mReturnToStreamParserPermitted(false) {
   mTokenizer->setInterner(&mAtomTable);
@@ -412,16 +412,16 @@ nsresult nsHtml5Parser::Parse(const nsAString& aSourceBuffer, void* aKey,
       if (!mDocWriteSpeculativeTreeBuilder) {
         // Lazily initialize if uninitialized
         mDocWriteSpeculativeTreeBuilder =
-            new nsHtml5TreeBuilder(nullptr, executor->GetStage());
+            MakeUnique<nsHtml5TreeBuilder>(nullptr, executor->GetStage());
         mDocWriteSpeculativeTreeBuilder->setScriptingEnabled(
             mTreeBuilder->isScriptingEnabled());
-        mDocWriteSpeculativeTokenizer =
-            new nsHtml5Tokenizer(mDocWriteSpeculativeTreeBuilder, false);
+        mDocWriteSpeculativeTokenizer = MakeUnique<nsHtml5Tokenizer>(
+            mDocWriteSpeculativeTreeBuilder.get(), false);
         mDocWriteSpeculativeTokenizer->setInterner(&mAtomTable);
         mDocWriteSpeculativeTokenizer->start();
       }
       mDocWriteSpeculativeTokenizer->resetToDataState();
-      mDocWriteSpeculativeTreeBuilder->loadState(mTreeBuilder);
+      mDocWriteSpeculativeTreeBuilder->loadState(mTreeBuilder.get());
       mDocWriteSpeculativeLastWasCR = false;
     }
 
@@ -589,8 +589,8 @@ nsresult nsHtml5Parser::ParseUntilBlocked() {
               !mExecutor->IsScriptExecuting()) {
             mTreeBuilder->Flush();
             mReturnToStreamParserPermitted = false;
-            GetStreamParser()->ContinueAfterScripts(mTokenizer, mTreeBuilder,
-                                                    mLastWasCR);
+            GetStreamParser()->ContinueAfterScripts(
+                mTokenizer.get(), mTreeBuilder.get(), mLastWasCR);
           }
         } else {
           // Script-created parser
