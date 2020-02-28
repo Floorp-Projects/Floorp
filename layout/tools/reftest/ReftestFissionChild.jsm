@@ -4,6 +4,8 @@ class ReftestFissionChild extends JSWindowActorChild {
 
   receiveMessage(msg) {
     switch (msg.name) {
+      case "EmptyMessage":
+        return undefined;
       case "UpdateLayerTree":
       {
         let errorStrings = [];
