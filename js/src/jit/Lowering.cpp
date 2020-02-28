@@ -4000,25 +4000,6 @@ void LIRGenerator::visitNewTarget(MNewTarget* ins) {
   defineBox(lir, ins);
 }
 
-void LIRGenerator::visitSetFrameArgument(MSetFrameArgument* ins) {
-  MDefinition* input = ins->input();
-
-  if (input->type() == MIRType::Value) {
-    LSetFrameArgumentV* lir = new (alloc()) LSetFrameArgumentV(useBox(input));
-    add(lir, ins);
-  } else if (input->type() == MIRType::Undefined ||
-             input->type() == MIRType::Null) {
-    Value val =
-        input->type() == MIRType::Undefined ? UndefinedValue() : NullValue();
-    LSetFrameArgumentC* lir = new (alloc()) LSetFrameArgumentC(val);
-    add(lir, ins);
-  } else {
-    LSetFrameArgumentT* lir =
-        new (alloc()) LSetFrameArgumentT(useRegister(input));
-    add(lir, ins);
-  }
-}
-
 void LIRGenerator::visitRest(MRest* ins) {
   MOZ_ASSERT(ins->numActuals()->type() == MIRType::Int32);
 

@@ -5454,49 +5454,6 @@ class LGetFrameArgument : public LInstructionHelper<BOX_PIECES, 1, 0> {
   const LAllocation* index() { return getOperand(0); }
 };
 
-// Load a value from the actual arguments.
-class LSetFrameArgumentT : public LInstructionHelper<0, 1, 0> {
- public:
-  LIR_HEADER(SetFrameArgumentT)
-
-  explicit LSetFrameArgumentT(const LAllocation& input)
-      : LInstructionHelper(classOpcode) {
-    setOperand(0, input);
-  }
-  MSetFrameArgument* mir() const { return mir_->toSetFrameArgument(); }
-  const LAllocation* input() { return getOperand(0); }
-};
-
-// Load a value from the actual arguments.
-class LSetFrameArgumentC : public LInstructionHelper<0, 0, 0> {
-  Value val_;
-
- public:
-  LIR_HEADER(SetFrameArgumentC)
-
-  explicit LSetFrameArgumentC(const Value& val)
-      : LInstructionHelper(classOpcode) {
-    val_ = val;
-  }
-  MSetFrameArgument* mir() const { return mir_->toSetFrameArgument(); }
-  const Value& val() const { return val_; }
-};
-
-// Load a value from the actual arguments.
-class LSetFrameArgumentV : public LInstructionHelper<0, BOX_PIECES, 0> {
- public:
-  LIR_HEADER(SetFrameArgumentV)
-
-  explicit LSetFrameArgumentV(const LBoxAllocation& input)
-      : LInstructionHelper(classOpcode) {
-    setBoxOperand(Input, input);
-  }
-
-  static const size_t Input = 0;
-
-  MSetFrameArgument* mir() const { return mir_->toSetFrameArgument(); }
-};
-
 // Create the rest parameter.
 class LRest : public LCallInstructionHelper<1, 1, 3> {
  public:
