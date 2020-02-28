@@ -14,7 +14,7 @@ import attr
 from arsenic.services import Geckodriver, free_port, subprocess_based_service
 from mozdevice import ADBDevice, ADBError
 
-from condprof.util import write_yml_file, LOG, DEFAULT_PREFS, ERROR, BaseEnv
+from condprof.util import write_yml_file, logger, DEFAULT_PREFS, BaseEnv
 
 
 # XXX most of this code should migrate into mozdevice - see Bug 1574849
@@ -42,7 +42,7 @@ class AndroidDevice:
         self.log_file = log_file
         if self.log_file is None:
             return
-        LOG("Setting ADB log file to %s" % self.log_file)
+        logger.info("Setting ADB log file to %s" % self.log_file)
         adb_logger = logging.getLogger("adb")
         adb_logger.setLevel(logging.DEBUG)
         self._adb_fh = logging.FileHandler(self.log_file)
@@ -78,7 +78,7 @@ class AndroidDevice:
         try:
             self.device = ADBDevice(verbose=self.verbose, logger_name="adb")
         except Exception:
-            ERROR("Cannot initialize device")
+            logger.error("Cannot initialize device")
             raise
         device = self.device
         self.profile = profile
@@ -88,22 +88,23 @@ class AndroidDevice:
             raise Exception("%s is not installed" % self.app_name)
 
         # debug flag
-        LOG("Setting %s as the debug app on the phone" % self.app_name)
+        logger.info("Setting %s as the debug app on the phone" % self.app_name)
         device.shell(
-            "am set-debug-app --persistent %s" % self.app_name, stdout_callback=LOG
+            "am set-debug-app --persistent %s" % self.app_name,
+            stdout_callback=logger.info,
         )
 
         # creating the profile on the device
-        LOG("Creating the profile on the device")
+        logger.info("Creating the profile on the device")
         remote_test_root = posixpath.join(device.test_root, "condprof")
         remote_profile = posixpath.join(remote_test_root, "profile")
-        LOG("The profile on the phone will be at %s" % remote_profile)
+        logger.info("The profile on the phone will be at %s" % remote_profile)
         device.rm(remote_test_root, force=True, recursive=True)
         device.mkdir(remote_test_root)
         device.chmod(remote_test_root, recursive=True, root=True)
 
         device.rm(remote_profile, force=True, recursive=True)
-        LOG("Pushing %s on the phone" % self.profile)
+        logger.info("Pushing %s on the phone" % self.profile)
         device.push(profile, remote_profile)
         device.chmod(remote_profile, recursive=True, root=True)
         self.profile = profile
@@ -128,7 +129,7 @@ class AndroidDevice:
             device.push(yml_on_host, yml_on_device)
             device.chmod(yml_on_device, recursive=True, root=True)
         except Exception:
-            LOG("could not create the yaml file on device. Permission issue?")
+            logger.info("could not create the yaml file on device. Permission issue?")
             raise
 
         # command line 'extra' args not used with geckoview apps; instead we use
@@ -164,7 +165,7 @@ class AndroidDevice:
         if not device.process_exist(self.app_name):
             raise Exception("Could not start %s" % self.app_name)
 
-        LOG("Creating socket forwarding on port %d" % self.marionette_port)
+        logger.info("Creating socket forwarding on port %d" % self.marionette_port)
         device.forward(
             local="tcp:%d" % self.marionette_port,
             remote="tcp:%d" % self.marionette_port,
@@ -172,19 +173,19 @@ class AndroidDevice:
 
         # we don't have a clean way for now to check that GV or Fenix
         # is ready to handle our tests. So here we just wait 30s
-        LOG("Sleeping for 30s")
+        logger.info("Sleeping for 30s")
         time.sleep(30)
 
     def stop_browser(self):
-        LOG("Stopping %s" % self.app_name)
+        logger.info("Stopping %s" % self.app_name)
         try:
             self.device.stop_application(self.app_name, root=True)
         except ADBError:
-            LOG("Could not stop the application using force-stop")
+            logger.info("Could not stop the application using force-stop")
 
         time.sleep(5)
         if self.device.process_exist(self.app_name):
-            LOG("%s still running, trying SIGKILL" % self.app_name)
+            logger.info("%s still running, trying SIGKILL" % self.app_name)
             num_tries = 0
             while self.device.process_exist(self.app_name) and num_tries < 5:
                 try:
@@ -193,10 +194,10 @@ class AndroidDevice:
                     pass
                 num_tries += 1
                 time.sleep(1)
-        LOG("%s stopped" % self.app_name)
+        logger.info("%s stopped" % self.app_name)
 
     def collect_profile(self):
-        LOG("Collecting profile from %s" % self.remote_profile)
+        logger.info("Collecting profile from %s" % self.remote_profile)
         self.device.pull(self.remote_profile, self.profile)
 
     def close(self):
@@ -206,7 +207,7 @@ class AndroidDevice:
         try:
             self.device.remove_forwards("tcp:%d" % self.marionette_port)
         except ADBError:
-            LOG("Could not remove forward port")
+            logger.warning("Could not remove forward port")
 
 
 # XXX redundant, remove
@@ -224,8 +225,8 @@ class AndroidGeckodriver(Geckodriver):
     async def start(self):
         port = free_port()
         await self._check_version()
-        LOG("Running Webdriver on port %d" % port)
-        LOG("Running Marionette on port 2828")
+        logger.info("Running Webdriver on port %d" % port)
+        logger.info("Running Marionette on port 2828")
         pargs = [
             self.binary,
             "--log",
@@ -235,7 +236,7 @@ class AndroidGeckodriver(Geckodriver):
             "--marionette-port",
             "2828",
         ]
-        LOG("Connecting on Android device")
+        logger.info("Connecting on Android device")
         pargs.append("--connect-existing")
         return await subprocess_based_service(
             pargs, f"http://localhost:{port}", self.log_file
@@ -256,20 +257,20 @@ class AndroidEnv(BaseEnv):
         return "%s-%s" % (self.device_name, app)
 
     def dump_logs(self):
-        LOG("Dumping Android logs")
+        logger.info("Dumping Android logs")
         try:
             logcat = self.device.get_logcat()
             if logcat:
                 # local path, not using posixpath
                 logfile = os.path.join(self.archive, "logcat.log")
-                LOG("Writing logcat at %s" % logfile)
+                logger.info("Writing logcat at %s" % logfile)
                 with open(logfile, "wb") as f:
                     for line in logcat:
                         f.write(line.encode("utf8", errors="replace") + b"\n")
             else:
-                LOG("logcat came back empty")
+                logger.info("logcat came back empty")
         except Exception:
-            ERROR("Could not extract the logcat")
+            logger.error("Could not extract the logcat", exc_info=True)
 
     @contextlib.contextmanager
     def get_browser(self):

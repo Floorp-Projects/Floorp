@@ -23,8 +23,7 @@ from condprof.android import AndroidEnv  # NOQA
 from condprof.changelog import Changelog  # NOQA
 from condprof.scenarii import scenarii  # NOQA
 from condprof.util import (
-    LOG,
-    ERROR,
+    logger,
     get_version,
     get_current_platform,
     extract_from_dmg,
@@ -93,7 +92,7 @@ def main(args=sys.argv[1:]):
         raise IOError("Cannot find scenario %r" % args.scenario)
 
     if not args.android and args.firefox is not None:
-        LOG("Verifying Desktop Firefox binary")
+        logger.info("Verifying Desktop Firefox binary")
         # we want to verify we do have a firefox binary
         # XXX so lame
         if not os.path.exists(args.firefox):
@@ -106,15 +105,15 @@ def main(args=sys.argv[1:]):
             raise IOError("Cannot find %s" % args.firefox)
 
         version = get_version(args.firefox)
-        LOG("Working with Firefox %s" % version)
+        logger.info("Working with Firefox %s" % version)
 
-    LOG(os.environ)
+    logger.info(os.environ)
     args.archive = os.path.abspath(args.archive)
-    LOG("Archives directory is %s" % args.archive)
+    logger.info("Archives directory is %s" % args.archive)
     if not os.path.exists(args.archive):
         os.makedirs(args.archive, exist_ok=True)
 
-    LOG("Verifying Geckodriver binary presence")
+    logger.info("Verifying Geckodriver binary presence")
     if shutil.which(args.geckodriver) is None and not os.path.exists(args.geckodriver):
         raise IOError("Cannot find %s" % args.geckodriver)
 
@@ -124,9 +123,9 @@ def main(args=sys.argv[1:]):
         else:
             plat = get_current_platform()
         changelog = read_changelog(plat)
-        LOG("Got the changelog from TaskCluster")
+        logger.info("Got the changelog from TaskCluster")
     except ProfileNotFoundError:
-        LOG("changelog not found on TaskCluster, creating a local one.")
+        logger.info("changelog not found on TaskCluster, creating a local one.")
         changelog = Changelog(args.archive)
     loop = asyncio.get_event_loop()
 
@@ -161,30 +160,34 @@ def main(args=sys.argv[1:]):
         # for the current platform when "all" is selected
         res = []
         failures = 0
+
+        def display_error(scenario, customization):
+            logger.error("%s x %s failed." % (scenario, customization), exc_info=True)
+
         for scenario in selected_scenario:
             if args.customization != "all":
                 try:
                     res.append(await one_run(scenario, args.customization))
                 except Exception:
                     failures += 1
-                    ERROR("Something went wrong on this one.")
+                    display_error(scenario, args.customization)
                     if args.strict:
                         raise
             else:
                 for customization in get_customizations():
-                    LOG("Customization %s" % customization)
+                    logger.info("Customization %s" % customization)
                     try:
                         res.append(await one_run(scenario, customization))
                     except Exception:
                         failures += 1
-                        ERROR("Something went wrong on this one.")
+                        display_error(scenario, customization)
                         if args.strict:
                             raise
         return failures, [one_res for one_res in res if one_res]
 
     try:
         failures, results = loop.run_until_complete(run_all(args))
-        LOG("Saving changelog in %s" % args.archive)
+        logger.info("Saving changelog in %s" % args.archive)
         changelog.save(args.archive)
         if failures > 0:
             raise Exception("At least one scenario failed")

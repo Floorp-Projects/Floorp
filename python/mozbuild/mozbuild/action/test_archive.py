@@ -525,6 +525,12 @@ ARCHIVE_FILES = {
         },
         {
             'source': buildconfig.topsrcdir,
+            'base': 'testing/mozbase/mozlog',
+            'pattern': '**',
+            'dest': 'condprofile/mozlog',
+        },
+        {
+            'source': buildconfig.topsrcdir,
             'base': 'third_party/python/virtualenv',
             'pattern': '**',
             'dest': 'condprofile/virtualenv',

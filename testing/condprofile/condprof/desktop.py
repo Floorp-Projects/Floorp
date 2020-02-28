@@ -10,9 +10,8 @@ from arsenic.services import Geckodriver, free_port, subprocess_based_service
 from condprof.util import (
     BaseEnv,
     latest_nightly,
-    LOG,
+    logger,
     get_version,
-    ERROR,
     get_current_platform,
     DEFAULT_PREFS,
 )
@@ -23,8 +22,8 @@ class DesktopGeckodriver(Geckodriver):
     async def start(self):
         port = free_port()
         await self._check_version()
-        LOG("Running Webdriver on port %d" % port)
-        LOG("Running Marionette on port 2828")
+        logger.info("Running Webdriver on port %d" % port)
+        logger.info("Running Marionette on port 2828")
         pargs = [
             self.binary,
             "--log",
@@ -76,8 +75,8 @@ class DesktopEnv(BaseEnv):
     def get_browser_version(self):
         try:
             return get_version(self.firefox)
-        except Exception as e:
-            ERROR("Could not get Firefox version %s" % str(e))
+        except Exception:
+            logger.error("Could not get Firefox version", exc_info=True)
             return "unknown"
 
     def get_geckodriver(self, log_file):
