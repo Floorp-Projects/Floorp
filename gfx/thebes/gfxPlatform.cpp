@@ -1414,6 +1414,10 @@ void gfxPlatform::ShutdownLayersIPC() {
   }
   sLayersIPCIsUp = false;
 
+#ifdef MOZ_WAYLAND
+  widget::WaylandDisplayShutdown();
+#endif
+
   if (XRE_IsContentProcess()) {
     gfx::VRManagerChild::ShutDown();
     // cf bug 1215265.
@@ -1426,9 +1430,6 @@ void gfxPlatform::ShutdownLayersIPC() {
       layers::PaintThread::Shutdown();
     }
   } else if (XRE_IsParentProcess()) {
-#ifdef MOZ_WAYLAND
-    widget::WaylandDisplayShutdown();
-#endif
     gfx::VRManagerChild::ShutDown();
     layers::CompositorManagerChild::Shutdown();
     layers::ImageBridgeChild::ShutDown();

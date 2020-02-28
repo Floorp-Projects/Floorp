@@ -4026,8 +4026,6 @@ pref("network.psl.onUpdate_notify", false);
 #endif
 #ifdef MOZ_WAYLAND
   pref("widget.wayland_vsync.enabled", false);
-  pref("widget.wayland_dmabuf_webgl.enabled", false);
-  pref("widget.wayland_dmabuf_vaapi.enabled", false);
 #endif
 
 // All the Geolocation preferences are here.
