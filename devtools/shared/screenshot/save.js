@@ -116,11 +116,6 @@ function getFormattedHelpData() {
  *         Response messages from processing the screenshot
  */
 function saveScreenshot(window, args = {}, value) {
-  // Guard against missing image data.
-  if (!value.data) {
-    return [];
-  }
-
   if (args.help) {
     const message = getFormattedHelpData();
     // Wrap message in an array so that the return value is consistant with save
@@ -229,11 +224,6 @@ function saveToClipboard(base64URI) {
  */
 async function saveToFile(image) {
   let filename = image.filename;
-
-  // Guard against missing image data.
-  if (!image.data) {
-    return "";
-  }
 
   // Check there is a .png extension to filename
   if (!filename.match(/.png$/i)) {
