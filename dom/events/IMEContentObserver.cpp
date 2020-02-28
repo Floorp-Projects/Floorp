@@ -66,69 +66,6 @@ static nsIContent* PointBefore(nsINode* aContainer, nsIContent* aContent) {
   return aContainer->GetLastChild();
 }
 
-class WritingModeToString final : public nsAutoCString {
- public:
-  explicit WritingModeToString(const WritingMode& aWritingMode) {
-    if (!aWritingMode.IsVertical()) {
-      AssignLiteral("Horizontal");
-      return;
-    }
-    if (aWritingMode.IsVerticalLR()) {
-      AssignLiteral("Vertical (LR)");
-      return;
-    }
-    AssignLiteral("Vertical (RL)");
-  }
-  virtual ~WritingModeToString() = default;
-};
-
-class SelectionChangeDataToString final : public nsAutoCString {
- public:
-  explicit SelectionChangeDataToString(
-      const IMENotification::SelectionChangeDataBase& aData) {
-    if (!aData.IsValid()) {
-      AppendLiteral("{ IsValid()=false }");
-      return;
-    }
-    AppendPrintf("{ mOffset=%u, ", aData.mOffset);
-    if (aData.mString->Length() > 20) {
-      AppendPrintf("mString.Length()=%u, ", aData.mString->Length());
-    } else {
-      AppendPrintf("mString=\"%s\" (Length()=%u), ",
-                   NS_ConvertUTF16toUTF8(*aData.mString).get(),
-                   aData.mString->Length());
-    }
-    AppendPrintf(
-        "GetWritingMode()=%s, mReversed=%s, mCausedByComposition=%s, "
-        "mCausedBySelectionEvent=%s }",
-        WritingModeToString(aData.GetWritingMode()).get(),
-        ToChar(aData.mReversed), ToChar(aData.mCausedByComposition),
-        ToChar(aData.mCausedBySelectionEvent));
-  }
-  virtual ~SelectionChangeDataToString() = default;
-};
-
-class TextChangeDataToString final : public nsAutoCString {
- public:
-  explicit TextChangeDataToString(
-      const IMENotification::TextChangeDataBase& aData) {
-    if (!aData.IsValid()) {
-      AppendLiteral("{ IsValid()=false }");
-      return;
-    }
-    AppendPrintf(
-        "{ mStartOffset=%u, mRemovedEndOffset=%u, mAddedEndOffset=%u, "
-        "mCausedOnlyByComposition=%s, "
-        "mIncludingChangesDuringComposition=%s, "
-        "mIncludingChangesWithoutComposition=%s }",
-        aData.mStartOffset, aData.mRemovedEndOffset, aData.mAddedEndOffset,
-        ToChar(aData.mCausedOnlyByComposition),
-        ToChar(aData.mIncludingChangesDuringComposition),
-        ToChar(aData.mIncludingChangesWithoutComposition));
-  }
-  virtual ~TextChangeDataToString() = default;
-};
-
 /******************************************************************************
  * mozilla::IMEContentObserver
  ******************************************************************************/
@@ -1262,7 +1199,7 @@ void IMEContentObserver::PostTextChangeNotification() {
   MOZ_LOG(sIMECOLog, LogLevel::Debug,
           ("0x%p IMEContentObserver::PostTextChangeNotification("
            "mTextChangeData=%s)",
-           this, TextChangeDataToString(mTextChangeData).get()));
+           this, ToString(mTextChangeData).c_str()));
 
   MOZ_ASSERT(mTextChangeData.IsValid(),
              "mTextChangeData must have text change data");
@@ -1293,7 +1230,7 @@ void IMEContentObserver::MaybeNotifyIMEOfTextChange(
   MOZ_LOG(sIMECOLog, LogLevel::Debug,
           ("0x%p IMEContentObserver::MaybeNotifyIMEOfTextChange("
            "aTextChangeData=%s)",
-           this, TextChangeDataToString(aTextChangeData).get()));
+           this, ToString(aTextChangeData).c_str()));
 
   mTextChangeData += aTextChangeData;
   PostTextChangeNotification();
@@ -1389,7 +1326,7 @@ bool IMEContentObserver::UpdateSelectionCache(bool aRequireFlush /* = true */) {
   MOZ_LOG(sIMECOLog, LogLevel::Debug,
           ("0x%p IMEContentObserver::UpdateSelectionCache(), "
            "mSelectionData=%s",
-           this, SelectionChangeDataToString(mSelectionData).get()));
+           this, ToString(mSelectionData).c_str()));
 
   return mSelectionData.IsValid();
 }
@@ -1875,7 +1812,7 @@ void IMEContentObserver::IMENotificationSender::SendSelectionChange() {
           ("0x%p IMEContentObserver::IMENotificationSender::"
            "SendSelectionChange(), sending NOTIFY_IME_OF_SELECTION_CHANGE... "
            "newSelChangeData=%s",
-           this, SelectionChangeDataToString(newSelChangeData).get()));
+           this, ToString(newSelChangeData).c_str()));
 
   IMENotification notification(NOTIFY_IME_OF_SELECTION_CHANGE);
   notification.SetData(observer->mSelectionData);
@@ -1930,7 +1867,7 @@ void IMEContentObserver::IMENotificationSender::SendTextChange() {
           ("0x%p IMEContentObserver::IMENotificationSender::"
            "SendTextChange(), sending NOTIFY_IME_OF_TEXT_CHANGE... "
            "mIMEContentObserver={ mTextChangeData=%s }",
-           this, TextChangeDataToString(observer->mTextChangeData).get()));
+           this, ToString(observer->mTextChangeData).c_str()));
 
   IMENotification notification(NOTIFY_IME_OF_TEXT_CHANGE);
   notification.SetData(observer->mTextChangeData);

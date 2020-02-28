@@ -811,6 +811,10 @@ std::ostream& operator<<(std::ostream& aStream,
                          const InputContextAction::Cause& aCause);
 std::ostream& operator<<(std::ostream& aStream,
                          const InputContextAction::FocusChange& aFocusChange);
+std::ostream& operator<<(std::ostream& aStream,
+                         const IMENotification::SelectionChangeDataBase& aData);
+std::ostream& operator<<(std::ostream& aStream,
+                         const IMENotification::TextChangeDataBase& aData);
 
 }  // namespace widget
 }  // namespace mozilla
