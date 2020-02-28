@@ -200,6 +200,9 @@ void ChannelWrapper::ClearCachedAttributes() {
   if (!mFiredErrorEvent) {
     ChannelWrapper_Binding::ClearCachedErrorStringValue(this);
   }
+
+  ChannelWrapper_Binding::ClearCachedRequestSizeValue(this);
+  ChannelWrapper_Binding::ClearCachedResponseSizeValue(this);
 }
 
 /*****************************************************************************

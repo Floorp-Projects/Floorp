@@ -16,6 +16,17 @@ const EXTENSION_DATA = {
   async background() {
     browser.test.log("background script running");
 
+    browser.webRequest.onBeforeSendHeaders.addListener(
+      async details => {
+        browser.test.assertTrue(details.requestSize == 0, "no requestSize");
+        browser.test.assertTrue(details.responseSize == 0, "no responseSize");
+        browser.test.log(`details.requestSize: ${details.requestSize}`);
+        browser.test.log(`details.responseSize: ${details.responseSize}`);
+        browser.test.sendMessage("check");
+      },
+      { urls: ["*://*/*"] }
+    );
+
     browser.webRequest.onCompleted.addListener(
       async details => {
         browser.test.assertTrue(details.requestSize > 100, "have requestSize");
@@ -40,6 +51,7 @@ add_task(async function test_request_response_size() {
     `${gServerUrl}/dummy`,
     { ext }
   );
+  await ext.awaitMessage("check");
   await ext.awaitMessage("done");
   await contentPage.close();
   await ext.unload();
