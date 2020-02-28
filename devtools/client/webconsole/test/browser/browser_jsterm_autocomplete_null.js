@@ -23,9 +23,9 @@ add_task(async function() {
   execute(hud, "globalThis.nullVar = null;");
 
   info(`Check completion suggestions for "null"`);
-  let onAutocompleteUpdated = jsterm.once("autocomplete-updated");
+  const onPopUpOpen = popup.once("popup-opened");
   EventUtils.sendString("null", hud.iframeWindow);
-  await onAutocompleteUpdated;
+  await onPopUpOpen;
   ok(popup.isOpen, "popup is open");
   const expectedPopupItems = ["null", "nullVar"];
   is(
@@ -35,7 +35,7 @@ add_task(async function() {
   );
 
   info(`Check completion suggestions for "null."`);
-  onAutocompleteUpdated = jsterm.once("autocomplete-updated");
+  let onAutocompleteUpdated = jsterm.once("autocomplete-updated");
   EventUtils.sendString(".", hud.iframeWindow);
   await onAutocompleteUpdated;
   is(popup.itemCount, 0, "popup has no items");
