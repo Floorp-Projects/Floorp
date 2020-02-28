@@ -68,8 +68,6 @@ const uint8_t UNICODE_ID_CONTINUE = UNICODE_ID_START + UNICODE_ID_CONTINUE_ONLY;
 
 constexpr char16_t NO_BREAK_SPACE = 0x00A0;
 constexpr char16_t MICRO_SIGN = 0x00B5;
-constexpr char16_t LATIN_CAPITAL_LETTER_A_WITH_GRAVE = 0x00C0;
-constexpr char16_t MULTIPLICATION_SIGN = 0x00D7;
 constexpr char16_t LATIN_SMALL_LETTER_SHARP_S = 0x00DF;
 constexpr char16_t LATIN_SMALL_LETTER_A_WITH_GRAVE = 0x00E0;
 constexpr char16_t DIVISION_SIGN = 0x00F7;
@@ -298,6 +296,27 @@ inline char16_t ToLowerCase(char16_t ch) {
   return uint16_t(ch) + info.lowerCase;
 }
 
+extern const JS::Latin1Char latin1ToLowerCaseTable[];
+
+/*
+ * Returns the simple lower case mapping (possibly the identity mapping; see
+ * ChangesWhenUpperCasedSpecialCasing for details) of the given Latin-1 code
+ * point.
+ */
+inline JS::Latin1Char ToLowerCase(JS::Latin1Char ch) {
+  return latin1ToLowerCaseTable[ch];
+}
+
+/*
+ * Returns the simple lower case mapping (possibly the identity mapping; see
+ * ChangesWhenUpperCasedSpecialCasing for details) of the given ASCII code
+ * point.
+ */
+inline char ToLowerCase(char ch) {
+  MOZ_ASSERT(static_cast<unsigned char>(ch) < 128);
+  return latin1ToLowerCaseTable[uint8_t(ch)];
+}
+
 /**
  * Returns true iff ToUpperCase(ch) != ch.
  *
@@ -344,15 +363,7 @@ inline bool ChangesWhenLowerCased(char16_t ch) {
 
 // Returns true iff ToLowerCase(ch) != ch.
 inline bool ChangesWhenLowerCased(JS::Latin1Char ch) {
-  if (MOZ_LIKELY(ch < 128)) {
-    return ch >= 'A' && ch <= 'Z';
-  }
-
-  // U+00C0 to U+00DE, except U+00D7, have a lowercase form.
-  bool hasLower = ((ch & ~0x1F) == LATIN_CAPITAL_LETTER_A_WITH_GRAVE) &&
-                  ((ch & MULTIPLICATION_SIGN) != MULTIPLICATION_SIGN);
-  MOZ_ASSERT(hasLower == ChangesWhenLowerCased(char16_t(ch)));
-  return hasLower;
+  return latin1ToLowerCaseTable[ch] != ch;
 }
 
 #define CHECK_RANGE(FROM, TO, LEAD, TRAIL_FROM, TRAIL_TO, DIFF) \

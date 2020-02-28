@@ -876,7 +876,8 @@ def write_ascii_lookup_tables(table, index, write, println):
 
     def write_entries(name, predicate):
         println('const bool unicode::{}[] = {{'.format(name))
-        println('/*       0     1     2     3     4     5     6     7     8     9  */')
+        header = "".join("{0: <6}".format(x) for x in range(0, 10)).rstrip()
+        println('/*       {}  */'.format(header))
         for i in range(0, 13):
             write('/* {0: >2} */'.format(i))
             for j in range(0, 10):
@@ -916,6 +917,34 @@ def write_ascii_lookup_tables(table, index, write, println):
 
     println('')
     println('#undef ____')
+
+
+def write_latin1_lookup_tables(table, index, write, println):
+    def case_info(code):
+        assert 0 <= code and code <= MAX_BMP
+        (upper, lower, flags) = table[index[code]]
+        return ((code + upper) & 0xffff, (code + lower) & 0xffff, flags)
+
+    def toLowerCase(code):
+        (_, lower, _) = case_info(code)
+        assert lower <= 0xff, "lower-case of Latin-1 is always Latin-1"
+        return lower
+
+    def write_entries(name, mapper):
+        println('const JS::Latin1Char unicode::{}[] = {{'.format(name))
+        header = "".join("{0: <6}".format(x) for x in range(0, 16)).rstrip()
+        println('/*       {}  */'.format(header))
+        for i in range(0, 16):
+            write('/* {0: >2} */'.format(i))
+            for j in range(0, 16):
+                code = i * 16 + j
+                if (code <= 0xff):
+                    write(' 0x{:02X},'.format(mapper(code)))
+            println('')
+        println('};')
+
+    println('')
+    write_entries('latin1ToLowerCaseTable', toLowerCase)
 
 
 def make_bmp_mapping_test(version, codepoint_table, unconditional_tolower, unconditional_toupper):
@@ -1268,6 +1297,8 @@ def make_unicode_file(version,
         write_special_casing_methods(unconditional_toupper, codepoint_table, println)
 
         write_ascii_lookup_tables(table, index, write, println)
+
+        write_latin1_lookup_tables(table, index, write, println)
 
 
 def getsize(data):

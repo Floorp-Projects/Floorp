@@ -710,7 +710,7 @@ static size_t ToLowerCaseImpl(CharT* destChars, const CharT* srcChars,
 
   size_t j = startIndex;
   for (size_t i = startIndex; i < srcLength; i++) {
-    char16_t c = srcChars[i];
+    CharT c = srcChars[i];
     if constexpr (!IsSame<CharT, Latin1Char>::value) {
       if (unicode::IsLeadSurrogate(c) && i + 1 < srcLength) {
         char16_t trail = srcChars[i + 1];
@@ -745,8 +745,6 @@ static size_t ToLowerCaseImpl(CharT* destChars, const CharT* srcChars,
     }
 
     c = unicode::ToLowerCase(c);
-    MOZ_ASSERT_IF((IsSame<CharT, Latin1Char>::value),
-                  c <= JSString::MAX_LATIN1_CHAR);
     destChars[j++] = c;
   }
 
@@ -795,8 +793,7 @@ static JSString* ToLowerCase(JSContext* cx, JSLinearString* str) {
     // static strings cache.
     if constexpr (IsSame<CharT, Latin1Char>::value) {
       if (length == 1) {
-        char16_t lower = unicode::ToLowerCase(chars[0]);
-        MOZ_ASSERT(lower <= JSString::MAX_LATIN1_CHAR);
+        CharT lower = unicode::ToLowerCase(chars[0]);
         MOZ_ASSERT(StaticStrings::hasUnit(lower));
 
         return cx->staticStrings().getUnit(lower);
