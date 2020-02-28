@@ -10,7 +10,7 @@
 #endif
 
 #include "mozilla/plugins/PPluginWidgetParent.h"
-#include "nsAutoPtr.h"
+#include "mozilla/UniquePtr.h"
 #include "nsIWidget.h"
 #include "nsCOMPtr.h"
 
