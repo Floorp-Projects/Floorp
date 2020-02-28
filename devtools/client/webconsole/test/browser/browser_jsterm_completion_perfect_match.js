@@ -24,18 +24,16 @@ add_task(async function() {
   const onPopUpOpen = autocompletePopup.once("popup-opened");
   EventUtils.sendString("x.");
   await onPopUpOpen;
-  is(
-    getAutocompletePopupLabels(autocompletePopup).join(" - "),
-    "foo - foO - fOo - fOO",
+  ok(
+    hasExactPopupLabels(autocompletePopup, ["foo", "foO", "fOo", "fOO"]),
     "popup has expected item, in expected order"
   );
 
   const onAutoCompleteUpdated = jsterm.once("autocomplete-updated");
   EventUtils.sendString("foO");
   await onAutoCompleteUpdated;
-  is(
-    getAutocompletePopupLabels(autocompletePopup).join(" - "),
-    "foO - foo - fOo - fOO",
+  ok(
+    hasExactPopupLabels(autocompletePopup, ["foO", "foo", "fOo", "fOO"]),
     "popup has expected item, in expected order"
   );
 });

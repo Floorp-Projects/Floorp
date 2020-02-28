@@ -36,7 +36,7 @@ add_task(async function() {
   EventUtils.synthesizeKey("d");
   await onUpdated;
   ok(
-    !getAutocompletePopupLabels(popup).includes("docfoobar"),
+    !hasPopupLabel(popup, "docfoobar"),
     "autocomplete popup does not contain docfoobar. List has not been updated"
   );
 
@@ -45,7 +45,7 @@ add_task(async function() {
   EventUtils.synthesizeKey("o");
   await onUpdated;
   ok(
-    !getAutocompletePopupLabels(popup).includes("docfoobar"),
+    !hasPopupLabel(popup, "docfoobar"),
     "autocomplete popup does not contain docfoobar. List has not been updated"
   );
 
@@ -54,7 +54,7 @@ add_task(async function() {
   EventUtils.synthesizeKey("KEY_Backspace");
   await onUpdated;
   ok(
-    !getAutocompletePopupLabels(popup).includes("docfoobar"),
+    !hasPopupLabel(popup, "docfoobar"),
     "autocomplete cached results do not contain docfoobar. list has not been updated"
   );
 
@@ -66,7 +66,7 @@ add_task(async function() {
   await jstermComplete("window.");
   await jstermComplete("window.getC");
   ok(
-    getAutocompletePopupLabels(popup).includes("getComputedStyle"),
+    hasPopupLabel(popup, "getComputedStyle"),
     "autocomplete results do contain getComputedStyle"
   );
 
@@ -92,7 +92,7 @@ add_task(async function() {
   await onUpdated;
 
   ok(
-    !getAutocompletePopupLabels(popup).includes("docfoobar"),
+    !hasPopupLabel(popup, "docfoobar"),
     "autocomplete cached results do not contain docfoobar. list has not been updated"
   );
 
@@ -108,27 +108,24 @@ add_task(async function() {
   );
   await jstermComplete("window.testObject.");
   await jstermComplete("window.testObject.z");
-  is(
-    getAutocompletePopupLabels(popup).join("-"),
-    "zz-zzz-zzzz",
+  ok(
+    hasExactPopupLabels(popup, ["zz", "zzz", "zzzz"]),
     "results are the expected ones"
   );
 
   onUpdated = jsterm.once("autocomplete-updated");
   EventUtils.sendString("z");
   await onUpdated;
-  is(
-    getAutocompletePopupLabels(popup).join("-"),
-    "zz-zzz-zzzz",
+  ok(
+    hasExactPopupLabels(popup, ["zz", "zzz", "zzzz"]),
     "filtering from the cache works - step 1"
   );
 
   onUpdated = jsterm.once("autocomplete-updated");
   EventUtils.sendString("z");
   await onUpdated;
-  is(
-    getAutocompletePopupLabels(popup).join("-"),
-    "zzz-zzzz",
+  ok(
+    hasExactPopupLabels(popup, ["zzz", "zzzz"]),
     "filtering from the cache works - step 2"
   );
 });

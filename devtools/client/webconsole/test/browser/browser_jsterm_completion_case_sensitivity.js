@@ -29,11 +29,11 @@ add_task(async function() {
   EventUtils.sendString("foob");
   await onPopUpOpen;
 
-  is(
-    getAutocompletePopupLabels(autocompletePopup).join(" - "),
-    "fooBar - FooBar",
+  ok(
+    hasExactPopupLabels(autocompletePopup, ["fooBar", "FooBar"]),
     "popup has expected item, in expected order"
   );
+
   checkInputCompletionValue(hud, "ar", "completeNode has expected value");
 
   info("Check that filtering the autocomplete cache is also case insensitive");
@@ -43,9 +43,8 @@ add_task(async function() {
   await onAutoCompleteUpdated;
 
   checkInput("fooba|");
-  is(
-    getAutocompletePopupLabels(autocompletePopup).join(" - "),
-    "fooBar - FooBar",
+  ok(
+    hasExactPopupLabels(autocompletePopup, ["fooBar", "FooBar"]),
     "popup cache filtering is also case-insensitive"
   );
   checkInputCompletionValue(hud, "r", "completeNode has expected value");
@@ -68,9 +67,8 @@ add_task(async function() {
   // to display the popup so the user knows that we are matching "Foo" and not "foo".
   checkInput("fooBar.f|");
   ok(true, "The popup was opened even if there's 1 item matching");
-  is(
-    getAutocompletePopupLabels(autocompletePopup).join(" - "),
-    "Foo",
+  ok(
+    hasExactPopupLabels(autocompletePopup, ["Foo"]),
     "popup has expected item"
   );
   checkInputCompletionValue(hud, "oo", "completeNode has expected value");
@@ -88,9 +86,8 @@ add_task(async function() {
   EventUtils.sendString("func");
   await onPopUpOpen;
 
-  is(
-    getAutocompletePopupLabels(autocompletePopup).join(" - "),
-    "function - Function",
+  ok(
+    hasExactPopupLabels(autocompletePopup, ["function", "Function"]),
     "popup has expected item"
   );
   checkInputCompletionValue(hud, "tion", "completeNode has expected value");
@@ -107,18 +104,16 @@ add_task(async function() {
   onPopUpOpen = autocompletePopup.once("popup-opened");
   EventUtils.sendString("fooBar.");
   await onPopUpOpen;
-  is(
-    getAutocompletePopupLabels(autocompletePopup).join(" - "),
-    "test - Foo - Test - TEST",
-    "popup has expected items"
+  ok(
+    hasExactPopupLabels(autocompletePopup, ["test", "Foo", "Test", "TEST"]),
+    "popup has expected item"
   );
 
   onAutoCompleteUpdated = jsterm.once("autocomplete-updated");
   EventUtils.sendString("T");
   await onAutoCompleteUpdated;
-  is(
-    getAutocompletePopupLabels(autocompletePopup).join(" - "),
-    "Test - TEST",
+  ok(
+    hasExactPopupLabels(autocompletePopup, ["Test", "TEST"]),
     "popup was filtered case-sensitively, as expected"
   );
 });
