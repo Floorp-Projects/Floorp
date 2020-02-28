@@ -25,9 +25,7 @@ add_task(async function() {
     checkInputValueAndCursorPosition(hud, expected, assertionInfo);
 
   info("Check that lowercased input is case-insensitive");
-  let onPopUpOpen = autocompletePopup.once("popup-opened");
-  EventUtils.sendString("foob");
-  await onPopUpOpen;
+  await setInputValueForAutocompletion(hud, "foob");
 
   is(
     getAutocompletePopupLabels(autocompletePopup).join(" - "),
@@ -60,9 +58,10 @@ add_task(async function() {
   checkInputCompletionValue(hud, "", "completeNode is empty");
 
   info("Check that the popup is displayed with only 1 matching item");
-  onPopUpOpen = autocompletePopup.once("popup-opened");
+  onAutoCompleteUpdated = jsterm.once("autocomplete-updated");
   EventUtils.sendString(".f");
-  await onPopUpOpen;
+  await onAutoCompleteUpdated;
+  ok(autocompletePopup.isOpen, "autocomplete popup is open");
 
   // Here we want to match "Foo", and since the completion text will only be "oo", we want
   // to display the popup so the user knows that we are matching "Foo" and not "foo".
@@ -81,12 +80,8 @@ add_task(async function() {
   checkInput("fooBar.Foo|", "The input was completed with the correct casing");
   checkInputCompletionValue(hud, "", "completeNode is empty");
 
-  setInputValue(hud, "");
-
   info("Check that Javascript keywords are displayed first");
-  onPopUpOpen = autocompletePopup.once("popup-opened");
-  EventUtils.sendString("func");
-  await onPopUpOpen;
+  await setInputValueForAutocompletion(hud, "func");
 
   is(
     getAutocompletePopupLabels(autocompletePopup).join(" - "),
@@ -101,12 +96,8 @@ add_task(async function() {
   checkInput("function|", "The input was completed as expected");
   checkInputCompletionValue(hud, "", "completeNode is empty");
 
-  setInputValue(hud, "");
-
   info("Check that filtering the cache works like on the server");
-  onPopUpOpen = autocompletePopup.once("popup-opened");
-  EventUtils.sendString("fooBar.");
-  await onPopUpOpen;
+  await setInputValueForAutocompletion(hud, "fooBar.");
   is(
     getAutocompletePopupLabels(autocompletePopup).join(" - "),
     "test - Foo - Test - TEST",
