@@ -9965,7 +9965,6 @@ AbortReasonOr<Ok> IonBuilder::jsop_superbase() {
   current->add(superBase);
   current->push(superBase);
 
-  MOZ_TRY(resumeAfter(superBase));
   return Ok();
 }
 
