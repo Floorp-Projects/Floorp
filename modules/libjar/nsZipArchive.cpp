@@ -234,7 +234,7 @@ nsresult nsZipHandle::Init(nsZipArchive* zip, const char* entry,
   RefPtr<nsZipHandle> handle = new nsZipHandle();
   if (!handle) return NS_ERROR_OUT_OF_MEMORY;
 
-  handle->mBuf = new nsZipItemPtr<uint8_t>(zip, entry);
+  handle->mBuf = MakeUnique<nsZipItemPtr<uint8_t>>(zip, entry);
   if (!handle->mBuf) return NS_ERROR_OUT_OF_MEMORY;
 
   if (!handle->mBuf->Buffer()) return NS_ERROR_UNEXPECTED;
