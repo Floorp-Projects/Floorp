@@ -131,6 +131,9 @@ async function updateZoomUI(aBrowser, aAnimate = false) {
   let urlbarZoomButton = win.document.getElementById("urlbar-zoom-button");
   let zoomFactor = Math.round(win.ZoomManager.zoom * 100);
 
+  // Hide urlbar zoom button if zoom is at the default zoom level,
+  // or the customizable control is in the toolbar
+
   let defaultZoom = Math.round((await ZoomUI.getGlobalValue()) * 100);
 
   if (!win.gBrowser || win.gBrowser.selectedBrowser != aBrowser) {
@@ -142,15 +145,8 @@ async function updateZoomUI(aBrowser, aAnimate = false) {
     return;
   }
 
-  // Hide urlbar zoom button if zoom is at the default zoom level,
-  // if we're viewing an about:blank page with an empty/null
-  // principal, or if the customizable control is in the toolbar
-
   urlbarZoomButton.hidden =
     defaultZoom == zoomFactor ||
-    (aBrowser.currentURI.spec == "about:blank" &&
-      (!aBrowser.contentPrincipal ||
-        aBrowser.contentPrincipal.isNullPrincipal)) ||
     (customizableZoomControls &&
       customizableZoomControls.getAttribute("cui-areatype") == "toolbar");
 
