@@ -35,7 +35,7 @@ class BCEScriptStencil : public ScriptStencil {
 
   virtual bool finishGCThings(JSContext* cx,
                               mozilla::Span<JS::GCCellPtr> gcthings) const;
-  virtual void initAtomMap(GCPtrAtom* atoms) const;
+  virtual bool initAtomMap(JSContext* cx, GCPtrAtom* atoms) const;
   virtual void finishResumeOffsets(mozilla::Span<uint32_t> resumeOffsets) const;
   virtual void finishScopeNotes(mozilla::Span<ScopeNote> scopeNotes) const;
   virtual void finishTryNotes(mozilla::Span<JSTryNote> tryNotes) const;

@@ -86,7 +86,7 @@ bool BCEScriptStencil::finishGCThings(
                                                    gcthings);
 }
 
-void BCEScriptStencil::initAtomMap(GCPtrAtom* atoms) const {
+bool BCEScriptStencil::initAtomMap(JSContext* cx, GCPtrAtom* atoms) const {
   const AtomIndexMap& indices = *bce_.perScriptData().atomIndices();
 
   for (AtomIndexMap::Range r = indices.all(); !r.empty(); r.popFront()) {
@@ -95,6 +95,7 @@ void BCEScriptStencil::initAtomMap(GCPtrAtom* atoms) const {
     MOZ_ASSERT(index < indices.count());
     atoms[index].init(atom);
   }
+  return true;
 }
 
 void BCEScriptStencil::finishResumeOffsets(
