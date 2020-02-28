@@ -102,12 +102,24 @@ add_task(async function test_composition() {
   });
   Assert.equal(gURLBar.value, "In", "Check urlbar value");
 
-  info("If all characters are removed, the popup should be closed.");
   Assert.ok(UrlbarTestUtils.isPopupOpen(window), "Popup should be open");
-  await UrlbarTestUtils.promisePopupClose(window, () => {
+  if (gURLBar.openViewOnFocus) {
+    info(
+      "Removing all chacracters should leave the popup open, Esc should then close it."
+    );
     EventUtils.synthesizeKey("KEY_Backspace", {});
     EventUtils.synthesizeKey("KEY_Backspace", {});
-  });
+    Assert.ok(UrlbarTestUtils.isPopupOpen(window), "Popup should be open");
+    await UrlbarTestUtils.promisePopupClose(window, () => {
+      EventUtils.synthesizeKey("KEY_Escape", {});
+    });
+  } else {
+    info("If all characters are removed, the popup should be closed.");
+    await UrlbarTestUtils.promisePopupClose(window, () => {
+      EventUtils.synthesizeKey("KEY_Backspace", {});
+      EventUtils.synthesizeKey("KEY_Backspace", {});
+    });
+  }
   Assert.equal(gURLBar.value, "", "Check urlbar value");
 
   info("Composition which is canceled shouldn't cause opening the popup.");
