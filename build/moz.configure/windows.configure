@@ -433,13 +433,6 @@ set_config('HOST_LINKER_LIBPATHS', host_linker_libpaths)
 set_config('HOST_LINKER_LIBPATHS_BAT', host_linker_libpaths_bat)
 
 
-# The when is technically wrong and should be removed and the code that
-# @depends on the option will need to be adapted when actual support for
-# clang-cl cross-builds emerge.
-option(env='MT', nargs=1, help='Path to the Microsoft Manifest Tool',
-       when=host_is_windows)
-
-
 @depends(valid_windows_sdk_dir, valid_ucrt_sdk_dir, host)
 @imports(_from='os', _import='environ')
 def sdk_bin_path(valid_windows_sdk_dir, valid_ucrt_sdk_dir, host):
@@ -464,16 +457,21 @@ def sdk_bin_path(valid_windows_sdk_dir, valid_ucrt_sdk_dir, host):
     return result
 
 
-mt = check_prog('MT', ('mt.exe',), input='MT',
-                paths=sdk_bin_path, when=host_is_windows)
+# allow_missing=True for mingw builds, until bug 1617793
+mt = check_prog('MT', ('mt.exe',), allow_missing=True, paths=sdk_bin_path)
 
 
 # Check that MT is not something unexpected like "magnetic tape manipulation
 # utility".
-@depends_if(mt)
+@depends(mt, wine)
 @checking('whether MT is really Microsoft Manifest Tool', lambda x: bool(x))
-def valid_mt(path):
-    out = check_cmd_output(path, onerror=lambda: '').splitlines()
+def valid_mt(path, wine):
+    if not path:
+        return None
+    if wine and path.lower().endswith('.exe'):
+        out = check_cmd_output(wine, path, onerror=lambda: '').splitlines()
+    else:
+        out = check_cmd_output(path, onerror=lambda: '').splitlines()
     out = '\n'.join(l for l in out
                     if 'Microsoft (R) Manifest Tool' in l)
     if out:
