@@ -12,6 +12,7 @@ async function testZoomButtonAppearsAndDisappearsBasedOnZoomChanges(
 ) {
   let tab = await BrowserTestUtils.openNewForegroundTab({
     gBrowser,
+    opening: "https://example.com/",
     waitForStateStop: true,
   });
 
