@@ -648,7 +648,8 @@ async function openPasswordContextMenu(
 
   // Synthesize a mouse click over the fill login menu header.
   let popupShownPromise = BrowserTestUtils.waitForCondition(
-    () => POPUP_HEADER.open && BrowserTestUtils.is_visible(LOGIN_POPUP)
+    () => POPUP_HEADER.open && BrowserTestUtils.is_visible(LOGIN_POPUP),
+    "Waiting for header to be open and submenu to be visible"
   );
   EventUtils.synthesizeMouseAtCenter(POPUP_HEADER, {}, browser.ownerGlobal);
   await popupShownPromise;

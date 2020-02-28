@@ -115,6 +115,52 @@ add_task(async function test_fill_hidden_by_login_saving_disabled() {
   Services.logins.setLoginSavingEnabled(TEST_ORIGIN, true);
 });
 
+add_task(async function test_fill_hidden_by_locked_master_password() {
+  // test that the generated password option is not present when the user
+  // didn't unlock the master password.
+  LoginTestUtils.masterPassword.enable();
+
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url: TEST_ORIGIN + FORM_PAGE_PATH,
+    },
+    async function(browser) {
+      await SimpleTest.promiseFocus(browser.ownerGlobal);
+
+      await openPasswordContextMenu(
+        browser,
+        passwordInputSelector,
+        () => false
+      );
+
+      let generatedPasswordItem = document.getElementById(
+        "fill-login-generated-password"
+      );
+      let fillLoginItem = document.getElementById("fill-login");
+      let generatedPasswordSeparator = document.getElementById(
+        "fill-login-and-generated-password-separator"
+      );
+
+      ok(
+        BrowserTestUtils.is_visible(generatedPasswordItem),
+        "generated password item is visible"
+      );
+      ok(generatedPasswordItem.disabled, "generated password item is disabled");
+      is(
+        BrowserTestUtils.is_visible(fillLoginItem) ||
+          BrowserTestUtils.is_visible(generatedPasswordItem),
+        BrowserTestUtils.is_visible(generatedPasswordSeparator),
+        "separator should only be visible if one of the login items is visible"
+      );
+
+      CONTEXT_MENU.hidePopup();
+    }
+  );
+
+  LoginTestUtils.masterPassword.disable();
+});
+
 add_task(async function fill_generated_password_empty_field() {
   // test that we can fill with generated password into an empty password field
   await BrowserTestUtils.withNewTab(
