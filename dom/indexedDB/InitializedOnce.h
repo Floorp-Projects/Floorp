@@ -20,7 +20,7 @@
 
 namespace mozilla {
 
-enum struct LazyInit { Allow, Forbid };
+enum struct LazyInit { Allow, AllowResettable, ForbidResettable };
 
 namespace ValueCheckPolicies {
 template <typename T>
@@ -43,7 +43,7 @@ struct ConvertsToTrue {
 // to ensure that the contents cannot be modified either.
 // TODO: Make constructors constexpr when Maybe's constructors are constexpr
 // (Bug 1601336).
-template <typename T, LazyInit LazyInit = LazyInit::Forbid,
+template <typename T, LazyInit LazyInitVal = LazyInit::ForbidResettable,
           template <typename> class ValueCheckPolicy =
               ValueCheckPolicies::AllowAnyValue>
 class InitializedOnce final {
@@ -52,24 +52,46 @@ class InitializedOnce final {
  public:
   template <typename Dummy = void>
   explicit InitializedOnce(
-      std::enable_if_t<LazyInit == LazyInit::Allow, Dummy>* = nullptr) {}
+      std::enable_if_t<LazyInitVal == LazyInit::Allow ||
+                           LazyInitVal == LazyInit::AllowResettable,
+                       Dummy>* = nullptr) {}
 
-  template <typename... Args>
-  explicit InitializedOnce(Args&&... aArgs)
-      : mMaybe{Some(T{std::forward<Args>(aArgs)...})} {
+  template <typename Arg0, typename... Args>
+  explicit InitializedOnce(Arg0&& aArg0, Args&&... aArgs)
+      : mMaybe{Some(std::remove_const_t<T>{std::forward<Arg0>(aArg0),
+                                           std::forward<Args>(aArgs)...})} {
     MOZ_ASSERT(ValueCheckPolicy<T>::Check(*mMaybe));
   }
 
   InitializedOnce(const InitializedOnce&) = delete;
-  InitializedOnce(InitializedOnce&&) = default;
+  InitializedOnce(InitializedOnce&& aOther) : mMaybe{std::move(aOther.mMaybe)} {
+    static_assert(LazyInitVal == LazyInit::AllowResettable ||
+                  LazyInitVal == LazyInit::ForbidResettable);
+#ifdef DEBUG
+    aOther.mWasReset = true;
+#endif
+  }
   InitializedOnce& operator=(const InitializedOnce&) = delete;
-  InitializedOnce& operator=(InitializedOnce&&) = delete;
+  InitializedOnce& operator=(InitializedOnce&& aOther) {
+    static_assert(LazyInitVal == LazyInit::AllowResettable);
+    MOZ_ASSERT(!mWasReset);
+    MOZ_ASSERT(!mMaybe);
+    mMaybe.~Maybe<std::remove_const_t<T>>();
+    new (&mMaybe) Maybe<T>{std::move(aOther.mMaybe)};
+#ifdef DEBUG
+    aOther.mWasReset = true;
+#endif
+    return *this;
+  }
 
   template <typename... Args, typename Dummy = void>
-  std::enable_if_t<LazyInit == LazyInit::Allow, Dummy> init(Args&&... aArgs) {
+  std::enable_if_t<LazyInitVal == LazyInit::Allow ||
+                       LazyInitVal == LazyInit::AllowResettable,
+                   Dummy>
+  init(Args&&... aArgs) {
     MOZ_ASSERT(mMaybe.isNothing());
     MOZ_ASSERT(!mWasReset);
-    mMaybe.emplace(T{std::forward<Args>(aArgs)...});
+    mMaybe.emplace(std::remove_const_t<T>{std::forward<Args>(aArgs)...});
     MOZ_ASSERT(ValueCheckPolicy<T>::Check(*mMaybe));
   }
 
@@ -77,34 +99,50 @@ class InitializedOnce final {
   bool isSome() const { return mMaybe.isSome(); }
   bool isNothing() const { return mMaybe.isNothing(); }
 
-  T& operator*() { return *mMaybe; }
-  T* operator->() { return mMaybe.operator->(); }
+  T& operator*() const { return *mMaybe; }
+  T* operator->() const { return mMaybe.operator->(); }
 
-  std::add_const_t<T>& operator*() const { return *mMaybe; }
-  std::add_const_t<T>* operator->() const { return mMaybe.operator->(); }
-
-  void reset() {
+  template <typename Dummy = void>
+  std::enable_if_t<LazyInitVal == LazyInit::AllowResettable ||
+                       LazyInitVal == LazyInit::ForbidResettable,
+                   Dummy>
+  reset() {
     MOZ_ASSERT(mMaybe.isSome());
     maybeReset();
   }
 
-  void maybeReset() {
+  template <typename Dummy = void>
+  std::enable_if_t<LazyInitVal == LazyInit::AllowResettable ||
+                       LazyInitVal == LazyInit::ForbidResettable,
+                   Dummy>
+  maybeReset() {
     mMaybe.reset();
 #ifdef DEBUG
     mWasReset = true;
 #endif
   }
 
+  template <typename Dummy = T>
+  std::enable_if_t<LazyInitVal == LazyInit::AllowResettable ||
+                       LazyInitVal == LazyInit::ForbidResettable,
+                   Dummy>
+  release() {
+    MOZ_ASSERT(mMaybe.isSome());
+    auto res = std::move(mMaybe.ref());
+    maybeReset();
+    return res;
+  }
+
  private:
-  Maybe<T> mMaybe;
+  Maybe<std::remove_const_t<T>> mMaybe;
 #ifdef DEBUG
   bool mWasReset = false;
 #endif
 };
 
-template <typename T, LazyInit LazyInit = LazyInit::Forbid>
+template <typename T, LazyInit LazyInitVal = LazyInit::ForbidResettable>
 using InitializedOnceMustBeTrue =
-    InitializedOnce<T, LazyInit, ValueCheckPolicies::ConvertsToTrue>;
+    InitializedOnce<T, LazyInitVal, ValueCheckPolicies::ConvertsToTrue>;
 
 }  // namespace mozilla
 
