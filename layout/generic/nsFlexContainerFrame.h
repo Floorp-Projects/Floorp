@@ -9,9 +9,9 @@
 #ifndef nsFlexContainerFrame_h___
 #define nsFlexContainerFrame_h___
 
-#include "nsContainerFrame.h"
-#include "mozilla/UniquePtr.h"
 #include "mozilla/dom/FlexBinding.h"
+#include "mozilla/UniquePtr.h"
+#include "nsContainerFrame.h"
 
 namespace mozilla {
 template <class T>
