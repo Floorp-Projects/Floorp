@@ -8,6 +8,16 @@
 
 #include "nsFlexContainerFrame.h"
 
+#include <algorithm>
+
+#include "gfxContext.h"
+#include "mozilla/ComputedStyle.h"
+#include "mozilla/CSSOrderAwareFrameIterator.h"
+#include "mozilla/FloatingPoint.h"
+#include "mozilla/LinkedList.h"
+#include "mozilla/Logging.h"
+#include "mozilla/PresShell.h"
+#include "mozilla/WritingModes.h"
 #include "nsBlockFrame.h"
 #include "nsContentUtils.h"
 #include "nsCSSAnonBoxes.h"
@@ -16,16 +26,6 @@
 #include "nsLayoutUtils.h"
 #include "nsPlaceholderFrame.h"
 #include "nsPresContext.h"
-#include "mozilla/ComputedStyle.h"
-#include "mozilla/CSSOrderAwareFrameIterator.h"
-#include "mozilla/Logging.h"
-#include <algorithm>
-#include "gfxContext.h"
-#include "mozilla/LinkedList.h"
-#include "mozilla/FloatingPoint.h"
-#include "mozilla/PresShell.h"
-#include "mozilla/UniquePtr.h"
-#include "WritingModes.h"
 
 using namespace mozilla;
 using namespace mozilla::layout;
