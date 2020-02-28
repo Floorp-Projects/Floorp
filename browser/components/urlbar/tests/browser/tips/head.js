@@ -1,7 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-// This directory contains tests that check the update-related interventions.
+// This directory contains tests that check tips and interventions, and in
+// particular the update-related interventions.
 // We mock updates by using the test helpers in
 // toolkit/mozapps/update/tests/browser.
 //
@@ -25,7 +26,10 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   ResetProfile: "resource://gre/modules/ResetProfile.jsm",
   UrlbarProviderInterventions:
     "resource:///modules/UrlbarProviderInterventions.jsm",
+  UrlbarProvidersManager: "resource:///modules/UrlbarProvidersManager.jsm",
+  UrlbarResult: "resource:///modules/UrlbarResult.jsm",
   UrlbarTestUtils: "resource://testing-common/UrlbarTestUtils.jsm",
+  SearchTestUtils: "resource://testing-common/SearchTestUtils.jsm",
   TelemetryTestUtils: "resource://testing-common/TelemetryTestUtils.jsm",
 });
 
@@ -344,4 +348,144 @@ function makeProfileResettable() {
       "Shouldn't be able to reset from mochitest's temporary profile once removed from the profile manager."
     );
   });
+}
+
+/**
+ * Starts a search that should trigger a tip, picks the tip, and waits for the
+ * tip's action to happen.
+ *
+ * @param {string} searchString
+ *   The search string.
+ * @param {TIPS} tip
+ *   The expected tip type.
+ * @param {string} title
+ *   The expected tip title.
+ * @param {string} button
+ *   The expected button title.
+ * @param {function} awaitCallback
+ *   A function that checks the tip's action.  Should return a promise (or be
+ *   async).
+ * @returns {*}
+ *   The value returned from `awaitCallback`.
+ */
+function checkIntervention({
+  searchString,
+  tip,
+  title,
+  button,
+  awaitCallback,
+} = {}) {
+  // Opening modal dialogs confuses focus on Linux just after them, thus run
+  // these checks in separate tabs to better isolate them.
+  return BrowserTestUtils.withNewTab("about:blank", async () => {
+    // Do a search that triggers the tip.
+    let [result, element] = await awaitTip(searchString);
+    Assert.strictEqual(result.payload.type, tip);
+    await element.ownerDocument.l10n.translateFragment(element);
+
+    let actualTitle = element._elements.get("title").textContent;
+    if (typeof title == "string") {
+      Assert.equal(actualTitle, title, "Title string");
+    } else {
+      // regexp
+      Assert.ok(title.test(actualTitle), "Title regexp");
+    }
+
+    let actualButton = element._elements.get("tipButton").textContent;
+    if (typeof button == "string") {
+      Assert.equal(actualButton, button, "Button string");
+    } else {
+      // regexp
+      Assert.ok(button.test(actualButton), "Button regexp");
+    }
+
+    Assert.ok(BrowserTestUtils.is_visible(element._elements.get("helpButton")));
+
+    let values = await Promise.all([awaitCallback(), pickTip()]);
+    Assert.ok(true, "Refresh dialog opened");
+
+    // Ensure the urlbar is closed so that the engagement is ended.
+    await UrlbarTestUtils.promisePopupClose(window, () => gURLBar.blur());
+
+    const scalars = TelemetryTestUtils.getProcessScalars("parent", true, true);
+    TelemetryTestUtils.assertKeyedScalar(
+      scalars,
+      "urlbar.tips",
+      `${tip}-shown`,
+      1
+    );
+    TelemetryTestUtils.assertKeyedScalar(
+      scalars,
+      "urlbar.tips",
+      `${tip}-picked`,
+      1
+    );
+
+    return values[0] || null;
+  });
+}
+
+/**
+ * Starts a search and asserts that there are no tips.
+ *
+ * @param {string} searchString
+ *   The search string.
+ * @param {Window} win
+ */
+async function awaitNoTip(searchString, win = window) {
+  let context = await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window: win,
+    value: searchString,
+    waitForFocus,
+    fireInputEvent: true,
+  });
+  for (let result of context.results) {
+    Assert.notEqual(result.type, UrlbarUtils.RESULT_TYPE.TIP);
+  }
+}
+
+/**
+ * Copied from BrowserTestUtils.jsm, but lets you listen for any one of multiple
+ * dialog URIs instead of only one.
+ * @param {string} buttonAction
+ *   What button should be pressed on the alert dialog.
+ * @param {array} uris
+ *   The URIs for the alert dialogs.
+ * @param {function} [func]
+ *   An optional callback.
+ */
+async function promiseAlertDialogOpen(buttonAction, uris, func) {
+  let win = await BrowserTestUtils.domWindowOpened(null, async aWindow => {
+    // The test listens for the "load" event which guarantees that the alert
+    // class has already been added (it is added when "DOMContentLoaded" is
+    // fired).
+    await BrowserTestUtils.waitForEvent(aWindow, "load");
+
+    return uris.includes(aWindow.document.documentURI);
+  });
+
+  if (func) {
+    await func(win);
+    return win;
+  }
+
+  let dialog = win.document.querySelector("dialog");
+  dialog.getButton(buttonAction).click();
+
+  return win;
+}
+
+/**
+ * Copied from BrowserTestUtils.jsm, but lets you listen for any one of multiple
+ * dialog URIs instead of only one.
+ * @param {string} buttonAction
+ *   What button should be pressed on the alert dialog.
+ * @param {array} uris
+ *   The URIs for the alert dialogs.
+ * @param {function} [func]
+ *   An optional callback.
+ */
+async function promiseAlertDialog(buttonAction, uris, func) {
+  let win = await promiseAlertDialogOpen(buttonAction, uris, func);
+  return BrowserTestUtils.windowClosed(win);
 }
