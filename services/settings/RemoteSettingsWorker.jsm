@@ -35,6 +35,13 @@ ChromeUtils.defineModuleGetter(
 let gShutdown = false;
 let gShutdownResolver = null;
 
+class RemoteSettingsWorkerError extends Error {
+  constructor(message) {
+    super(message);
+    this.name = "RemoteSettingsWorkerError";
+  }
+}
+
 class Worker {
   constructor(source) {
     if (gShutdown) {
@@ -50,7 +57,7 @@ class Worker {
 
   async _execute(method, args = []) {
     if (gShutdown) {
-      throw new Error("Remote Settings has shut down.");
+      throw new RemoteSettingsWorkerError("Remote Settings has shut down.");
     }
     // (Re)instantiate the worker if it was terminated.
     if (!this.worker) {
@@ -81,7 +88,7 @@ class Worker {
     const { callbackId, result, error } = event.data;
     const [resolve, reject] = this.callbacks.get(callbackId);
     if (error) {
-      reject(new Error(error));
+      reject(new RemoteSettingsWorkerError(error));
     } else {
       resolve(result);
     }
