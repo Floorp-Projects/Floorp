@@ -1,5 +1,10 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 package mozilla.components.service.sync.logins
 
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestCoroutineScope
@@ -7,23 +12,19 @@ import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import mozilla.components.concept.storage.Login
-import mozilla.components.lib.dataprotect.SecureAbove22Preferences
+import mozilla.components.concept.storage.LoginsStorage
 import mozilla.components.support.test.any
-import mozilla.components.support.test.robolectric.testContext
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.Mockito.`when`
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
-import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
 @ExperimentalCoroutinesApi
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class GeckoLoginStorageDelegateTest {
 
-    private lateinit var loginsStorage: AsyncLoginsStorage
-    private lateinit var keystore: SecureAbove22Preferences
+    private lateinit var loginsStorage: LoginsStorage
     private lateinit var delegate: GeckoLoginStorageDelegate
     private lateinit var scope: TestCoroutineScope
 
@@ -31,9 +32,8 @@ class GeckoLoginStorageDelegateTest {
     @Config(sdk = [21])
     fun before() {
         loginsStorage = mockLoginsStorage()
-        keystore = SecureAbove22Preferences(testContext, "name")
         scope = TestCoroutineScope()
-        delegate = GeckoLoginStorageDelegate(loginsStorage, keystore, { false }, scope)
+        delegate = GeckoLoginStorageDelegate(loginsStorage, { false }, scope)
     }
 
     @Test
@@ -41,18 +41,18 @@ class GeckoLoginStorageDelegateTest {
     fun `WHEN passed false for shouldAutofill onLoginsFetch returns early`() {
         scope.launch {
             delegate.onLoginFetch("login")
-            verify(loginsStorage, times(0)).touch(any()).await()
+            verify(loginsStorage, times(0)).touch(any())
         }
     }
 
     @Test
     @Config(sdk = [21])
     fun `WHEN passed true for shouldAutofill onLoginsFetch does not return early`() {
-        delegate = GeckoLoginStorageDelegate(loginsStorage, keystore, { true }, scope)
+        delegate = GeckoLoginStorageDelegate(loginsStorage, { true }, scope)
 
         scope.launch {
             delegate.onLoginFetch("login")
-            verify(loginsStorage, times(1)).touch(any()).await()
+            verify(loginsStorage, times(1)).touch(any())
         }
     }
 
@@ -63,14 +63,14 @@ class GeckoLoginStorageDelegateTest {
             val login = createLogin("guid")
 
             delegate.onLoginUsed(login)
-            verify(loginsStorage, times(1)).touch(any()).await()
+            verify(loginsStorage, times(1)).touch(any())
         }
     }
 
     @Test
     @Config(sdk = [21])
     fun `WHEN guid is null or empty THEN should create a new record`() {
-        val serverPassword = createServerPassword()
+        val serverPassword = createLogin()
 
         val fromNull = delegate.getPersistenceOperation(createLogin(guid = null), serverPassword)
         val fromEmpty = delegate.getPersistenceOperation(createLogin(guid = ""), serverPassword)
@@ -82,7 +82,7 @@ class GeckoLoginStorageDelegateTest {
     @Test
     @Config(sdk = [21])
     fun `WHEN guid matches existing record AND saved record has an empty username THEN should update existing record`() {
-        val serverPassword = createServerPassword(id = "1", username = "")
+        val serverPassword = createLogin(guid = "1", username = "")
         val login = createLogin(guid = "1")
 
         assertEquals(Operation.UPDATE, delegate.getPersistenceOperation(login, serverPassword))
@@ -91,7 +91,7 @@ class GeckoLoginStorageDelegateTest {
     @Test
     @Config(sdk = [21])
     fun `WHEN guid matches existing record AND new username is different from saved THEN should create new record`() {
-        val serverPassword = createServerPassword(id = "1", username = "old")
+        val serverPassword = createLogin(guid = "1", username = "old")
         val login = createLogin(guid = "1", username = "new")
 
         assertEquals(Operation.CREATE, delegate.getPersistenceOperation(login, serverPassword))
@@ -100,7 +100,7 @@ class GeckoLoginStorageDelegateTest {
     @Test
     @Config(sdk = [21])
     fun `WHEN guid and username match THEN update existing record`() {
-        val serverPassword = createServerPassword(id = "1", username = "username")
+        val serverPassword = createLogin(guid = "1", username = "username")
         val login = createLogin(guid = "1", username = "username")
 
         assertEquals(Operation.UPDATE, delegate.getPersistenceOperation(login, serverPassword))
@@ -117,22 +117,22 @@ class GeckoLoginStorageDelegateTest {
             username = "username",
             password = "password"
         )
-        val serverPassword = createServerPassword(
-            id = "spId",
-            hostname = "spHost",
+        val serverPassword = createLogin(
+            guid = "spId",
+            origin = "spHost",
             username = "spUser",
             password = "spPassword",
             httpRealm = "spHttpRealm",
-            formSubmitUrl = "spFormSubmitUrl"
+            formActionOrigin = "spFormSubmitUrl"
         )
 
-        val expected = createServerPassword(
-            id = "spId",
-            hostname = "origin",
+        val expected = createLogin(
+            guid = "spId",
+            origin = "origin",
             username = "username",
             password = "password",
             httpRealm = "httpRealm",
-            formSubmitUrl = "fao"
+            formActionOrigin = "fao"
         )
 
         assertEquals(expected, serverPassword.mergeWithLogin(login))
@@ -149,22 +149,22 @@ class GeckoLoginStorageDelegateTest {
             username = "username",
             password = "password"
         )
-        val serverPassword = createServerPassword(
-            id = "spId",
-            hostname = "spHost",
+        val serverPassword = createLogin(
+            guid = "spId",
+            origin = "spHost",
             username = "spUser",
             password = "spPassword",
             httpRealm = "spHttpRealm",
-            formSubmitUrl = "spFormSubmitUrl"
+            formActionOrigin = "spFormSubmitUrl"
         )
 
-        val expected = createServerPassword(
-            id = "spId",
-            hostname = "origin",
+        val expected = createLogin(
+            guid = "spId",
+            origin = "origin",
             username = "username",
             password = "password",
             httpRealm = "spHttpRealm",
-            formSubmitUrl = "spFormSubmitUrl"
+            formActionOrigin = "spFormSubmitUrl"
         )
 
         assertEquals(expected, serverPassword.mergeWithLogin(login))
@@ -181,50 +181,30 @@ class GeckoLoginStorageDelegateTest {
             username = "",
             password = ""
         )
-        val serverPassword = createServerPassword(
-            id = "spId",
-            hostname = "spHost",
+        val serverPassword = createLogin(
+            guid = "spId",
+            origin = "spHost",
             username = "spUser",
             password = "spPassword",
             httpRealm = "spHttpRealm",
-            formSubmitUrl = "spFormSubmitUrl"
+            formActionOrigin = "spFormSubmitUrl"
         )
 
-        val expected = createServerPassword(
-            id = "spId",
-            hostname = "spHost",
+        val expected = createLogin(
+            guid = "spId",
+            origin = "spHost",
             username = "spUser",
             password = "spPassword",
             httpRealm = "spHttpRealm",
-            formSubmitUrl = "spFormSubmitUrl"
+            formActionOrigin = "spFormSubmitUrl"
         )
 
         assertEquals(expected, serverPassword.mergeWithLogin(login))
     }
 }
 
-fun mockLoginsStorage(): AsyncLoginsStorage {
-    val loginsStorage = mock<AsyncLoginsStorage>()
-    var isLocked = true
-
-    fun <T> setLockedWhen(on: T, newIsLocked: Boolean) {
-        `when`(on).thenAnswer {
-            isLocked = newIsLocked
-            Unit
-        }
-    }
-
-    setLockedWhen(loginsStorage.ensureLocked(), true)
-    setLockedWhen(loginsStorage.lock(), true)
-
-    setLockedWhen(loginsStorage.ensureUnlocked(any<ByteArray>()), false)
-    setLockedWhen(loginsStorage.ensureUnlocked(any<String>()), false)
-    setLockedWhen(loginsStorage.unlock(any<String>()), false)
-    setLockedWhen(loginsStorage.unlock(any<ByteArray>()), false)
-
-    `when`(loginsStorage.isLocked()).thenAnswer { isLocked }
-    `when`(loginsStorage.touch(any())).thenAnswer { }
-
+fun mockLoginsStorage(): LoginsStorage {
+    val loginsStorage = mock<LoginsStorage>()
     return loginsStorage
 }
 
@@ -235,23 +215,23 @@ fun createLogin(guid: String?, username: String = "username") = Login(
     origin = "origin"
 )
 
-fun createServerPassword(
-    id: String = "id",
+fun createLogin(
+    guid: String = "id",
     password: String = "password",
     username: String = "username",
-    hostname: String = "hostname",
+    origin: String = "hostname",
     httpRealm: String = "httpRealm",
-    formSubmitUrl: String = "formsubmiturl",
+    formActionOrigin: String = "formsubmiturl",
     usernameField: String = "usernameField",
     passwordField: String = "passwordField"
 
-) = ServerPassword(
-    id = id,
-    hostname = hostname,
+) = Login(
+    guid = guid,
+    origin = origin,
     password = password,
     username = username,
     httpRealm = httpRealm,
-    formSubmitURL = formSubmitUrl,
+    formActionOrigin = formActionOrigin,
     usernameField = usernameField,
     passwordField = passwordField
 )

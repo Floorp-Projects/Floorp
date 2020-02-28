@@ -26,6 +26,12 @@ permalink: /changelog/
 * **feature-accounts-push**
   * Add known prefix to FxA push scope.
 
+* **concept-storage**
+  * New interface: `LoginsStorage`, describes a logins storage. A slightly cleaned-up version of what was in the `service-sync-logins`.
+
+* **service-sync-logins**
+  * ⚠️ **This is a breaking change**: Refactored `AsyncLoginsStorage`, which is now called `SyncableLoginsStorage`. New class caches the db connection, and removes lock/unlock operations from the public API.
+
 # 34.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v33.0.0...v34.0.0)

@@ -10,8 +10,9 @@ import android.database.sqlite.SQLiteDatabase.OPEN_READONLY
 import android.util.Base64
 import androidx.annotation.VisibleForTesting
 import mozilla.components.lib.crash.CrashReporter
-import mozilla.components.service.sync.logins.AsyncLoginsStorage
+import mozilla.components.service.sync.logins.SyncableLoginsStorage
 import mozilla.components.service.sync.logins.ServerPassword
+import mozilla.components.service.sync.logins.toLogin
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.ktx.kotlin.pkcs7unpad
 import mozilla.components.support.ktx.kotlin.toHexString
@@ -135,8 +136,7 @@ internal object FennecLoginsMigration {
         crashReporter: CrashReporter,
         signonsDbPath: String,
         key4DbPath: String,
-        loginsStorage: AsyncLoginsStorage,
-        loginsStorageKey: String,
+        loginsStorage: SyncableLoginsStorage,
         masterPassword: String = DEFAULT_MASTER_PASSWORD
     ): Result<LoginsMigrationResult> {
         val noMasterPassword = try {
@@ -156,14 +156,10 @@ internal object FennecLoginsMigration {
             return Result.Failure(LoginMigrationException(LoginsMigrationResult.Failure.GetLoginsThrew(e)))
         }
 
-        loginsStorage.ensureUnlocked(loginsStorageKey).await()
-
         val migrationMetrics = try {
-            loginsStorage.importLoginsAsync(fennecRecords.records).await()
+            loginsStorage.importLoginsAsync(fennecRecords.records.map { it.toLogin() })
         } catch (e: Exception) {
             return Result.Failure(LoginMigrationException(LoginsMigrationResult.Failure.RustImportThrew(e)))
-        } finally {
-            loginsStorage.ensureLocked().await()
         }
 
         // TODO process login migration metrics properly:

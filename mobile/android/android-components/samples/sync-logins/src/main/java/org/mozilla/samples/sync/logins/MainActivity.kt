@@ -10,11 +10,9 @@ import android.widget.ArrayAdapter
 import android.widget.ListView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import mozilla.components.concept.sync.AccountObserver
 import mozilla.components.concept.sync.AuthType
@@ -34,13 +32,11 @@ import mozilla.components.service.fxa.sync.GlobalSyncableStoreProvider
 import mozilla.components.service.fxa.sync.SyncReason
 import mozilla.components.service.fxa.sync.SyncStatusObserver
 import mozilla.components.service.fxa.toAuthType
-import mozilla.components.service.sync.logins.AsyncLoginsStorageAdapter
-import mozilla.components.service.sync.logins.SyncableLoginsStore
+import mozilla.components.service.sync.logins.SyncableLoginsStorage
 import mozilla.components.support.rusthttp.RustHttpConfig
 import mozilla.components.support.base.log.Log
 import mozilla.components.support.base.log.sink.AndroidLogSink
 import mozilla.components.support.rustlog.RustLog
-import java.io.File
 import kotlin.coroutines.CoroutineContext
 
 const val CLIENT_ID = "3c49430b43dfba77"
@@ -48,7 +44,11 @@ const val REDIRECT_URL = "https://accounts.firefox.com/oauth/success/$CLIENT_ID"
 
 class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteListener, CoroutineScope, SyncStatusObserver {
     private lateinit var keyStorage: SecureAbove22Preferences
-    private lateinit var loginsStorage: SyncableLoginsStore
+
+    private val loginsStorage by lazy {
+        SyncableLoginsStorage(this, keyStorage.getString(SyncEngine.Passwords.nativeName)!!)
+    }
+
     private lateinit var listView: ListView
     private lateinit var adapter: ArrayAdapter<String>
     private lateinit var activityContext: MainActivity
@@ -87,18 +87,18 @@ class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteListener,
 
         keyStorage = SecureAbove22Preferences(this, "secret-data-storage")
         keyStorage.putString(SyncEngine.Passwords.nativeName, "my-not-so-secret-password")
-        GlobalSyncableStoreProvider.configureKeyStorage(keyStorage)
-
-        loginsStorage = SyncableLoginsStore(
-            AsyncLoginsStorageAdapter.forDatabase(File(activityContext.filesDir, "logins.sqlite").canonicalPath)
-        ) {
-            CompletableDeferred(keyStorage.getString(SyncEngine.Passwords.nativeName)!!)
-        }
-        GlobalSyncableStoreProvider.configureStore(SyncEngine.Passwords to loginsStorage)
 
         accountManager.register(accountObserver, owner = this, autoPause = true)
 
-        launch { accountManager.initAsync().await() }
+        launch {
+            // Initializing loginsStorage is an expensive operation, and is thus a deferred function.
+            // In order to avoid race conditions with the sync workers trying to access loginsStorage
+            // that's not fully initialized, we 'await' on loginsStorage initialization before
+            // kicking off the accountManager.
+            GlobalSyncableStoreProvider.configureStore(SyncEngine.Passwords to loginsStorage)
+
+            accountManager.initAsync().await()
+        }
 
         findViewById<View>(R.id.buttonWebView).setOnClickListener {
             launch {
@@ -163,13 +163,8 @@ class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteListener,
         Toast.makeText(this@MainActivity, "Logins sync success", Toast.LENGTH_SHORT).show()
 
         launch {
-            val syncedLogins = CoroutineScope(Dispatchers.IO + job).async {
-                loginsStorage.withUnlocked {
-                    it.list().await()
-                }
-            }
-
-            adapter.addAll(syncedLogins.await().map { "Login: " + it.hostname })
+            val syncedLogins = loginsStorage.list()
+            adapter.addAll(syncedLogins.map { "Login: " + it.origin })
             adapter.notifyDataSetChanged()
         }
     }

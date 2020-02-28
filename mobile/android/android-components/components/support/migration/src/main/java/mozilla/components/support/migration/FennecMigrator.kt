@@ -27,7 +27,7 @@ import mozilla.components.feature.top.sites.TopSiteStorage
 import mozilla.components.lib.crash.CrashReporter
 import mozilla.components.service.fxa.manager.FxaAccountManager
 import mozilla.components.service.glean.Glean
-import mozilla.components.service.sync.logins.AsyncLoginsStorage
+import mozilla.components.service.sync.logins.SyncableLoginsStorage
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.migration.FennecMigrator.Builder
 import mozilla.components.support.migration.GleanMetrics.MigrationAddons
@@ -212,8 +212,7 @@ class FennecMigrator private constructor(
     private val migrations: List<VersionedMigration>,
     private val historyStorage: PlacesHistoryStorage?,
     private val bookmarksStorage: PlacesBookmarksStorage?,
-    private val loginsStorage: AsyncLoginsStorage?,
-    private val loginsStorageKey: String?,
+    private val loginsStorage: SyncableLoginsStorage?,
     private val sessionManager: SessionManager?,
     private val searchEngineManager: SearchEngineManager?,
     private val accountManager: FxaAccountManager?,
@@ -235,7 +234,7 @@ class FennecMigrator private constructor(
     class Builder(private val context: Context, private val crashReporter: CrashReporter) {
         private var historyStorage: PlacesHistoryStorage? = null
         private var bookmarksStorage: PlacesBookmarksStorage? = null
-        private var loginsStorage: AsyncLoginsStorage? = null
+        private var loginsStorage: SyncableLoginsStorage? = null
         private var loginsStorageKey: String? = null
         private var sessionManager: SessionManager? = null
         private var searchEngineManager: SearchEngineManager? = null
@@ -312,15 +311,13 @@ class FennecMigrator private constructor(
          * @param storage An instance of [AsyncLoginsStorage], used for storing data.
          */
         fun migrateLogins(
-            storage: AsyncLoginsStorage,
-            storageKey: String,
+            storage: SyncableLoginsStorage,
             version: Int = Migration.Logins.currentVersion
         ): Builder {
             check(migrations.find { it.migration is Migration.FxA } == null) {
                 "FxA migration, if desired, must run after logins"
             }
             loginsStorage = storage
-            loginsStorageKey = storageKey
             migrations.add(VersionedMigration(Migration.Logins, version))
             return this
         }
@@ -424,7 +421,6 @@ class FennecMigrator private constructor(
                 historyStorage,
                 bookmarksStorage,
                 loginsStorage,
-                loginsStorageKey,
                 sessionManager,
                 searchEngineManager,
                 accountManager,
@@ -760,8 +756,7 @@ class FennecMigrator private constructor(
                 crashReporter,
                 signonsDbPath = "${profile.path}/$signonsDbName",
                 key4DbPath = "${profile.path}/$key4DbName",
-                loginsStorage = loginsStorage!!,
-                loginsStorageKey = loginsStorageKey!!
+                loginsStorage = loginsStorage!!
             )
         } catch (e: Exception) {
             crashReporter.submitCaughtException(FennecMigratorException.MigrateLoginsException(e))
