@@ -1319,6 +1319,11 @@ pref("browser.newtabpage.activity-stream.discoverystream.personalization.modelKe
 
 pref("trailhead.firstrun.branches", "");
 
+// Separate about welcome
+pref("browser.aboutwelcome.enabled", false);
+// See Console.jsm LOG_LEVELS for all possible values
+pref("browser.aboutwelcome.log", "warn");
+
 // The pref that controls if the What's New panel is enabled.
 pref("browser.messaging-system.whatsNewPanel.enabled", true);
 // Used for CFR messages with scores. See Bug 1594422.

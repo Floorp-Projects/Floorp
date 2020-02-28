@@ -9,18 +9,16 @@ import { AboutWelcomeUtils } from "../../lib/aboutwelcome-utils";
 
 export class FxCards extends React.PureComponent {
   onCardAction(action) {
-    let actionUpdates = {};
+    let { type, data } = action;
     let UTMTerm = "utm_term_separate_welcome";
 
     if (action.type === "OPEN_URL") {
       let url = new URL(action.data.args);
       addUtmParams(url, UTMTerm);
-      actionUpdates = { data: { ...action.data, args: url.toString() } };
+      data = { ...data, args: url.toString() };
     }
 
-    AboutWelcomeUtils.handleUserAction({
-      data: { ...action, ...actionUpdates },
-    });
+    AboutWelcomeUtils.handleUserAction({ type, data });
   }
 
   render() {

@@ -113,9 +113,6 @@ __webpack_require__.r(__webpack_exports__);
 
 
 class AboutWelcome extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureComponent {
-  sendTelemetry(ping) {// TBD: Handle telemetry messages
-  }
-
   render() {
     const {
       props
@@ -129,14 +126,22 @@ class AboutWelcome extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureComp
       subtitle: props.subtitle
     }), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_components_FxCards__WEBPACK_IMPORTED_MODULE_3__["FxCards"], {
       cards: props.cards,
-      sendTelemetry: this.sendTelemetry
+      sendTelemetry: window.AWSendEventTelemetry
     })));
   }
 
 }
 
 AboutWelcome.defaultProps = _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_4__["DEFAULT_WELCOME_CONTENT"];
-react_dom__WEBPACK_IMPORTED_MODULE_1___default.a.render(react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(AboutWelcome, null), document.getElementById("root"));
+
+function mount(settings) {
+  react_dom__WEBPACK_IMPORTED_MODULE_1___default.a.render(react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(AboutWelcome, {
+    title: settings.title,
+    subtitle: settings.subtitle
+  }), document.getElementById("root"));
+}
+
+mount(window.AWGetStartupData());
 
 /***/ }),
 /* 1 */
@@ -196,23 +201,23 @@ function _extends() { _extends = Object.assign || function (target) { for (var i
 
 class FxCards extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureComponent {
   onCardAction(action) {
-    let actionUpdates = {};
+    let {
+      type,
+      data
+    } = action;
     let UTMTerm = "utm_term_separate_welcome";
 
     if (action.type === "OPEN_URL") {
       let url = new URL(action.data.args);
       Object(_asrouter_templates_FirstRun_addUtmParams__WEBPACK_IMPORTED_MODULE_1__["addUtmParams"])(url, UTMTerm);
-      actionUpdates = {
-        data: { ...action.data,
-          args: url.toString()
-        }
+      data = { ...data,
+        args: url.toString()
       };
     }
 
     _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_3__["AboutWelcomeUtils"].handleUserAction({
-      data: { ...action,
-        ...actionUpdates
-      }
+      type,
+      data
     });
   }
 
@@ -347,14 +352,23 @@ __webpack_require__.r(__webpack_exports__);
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 const AboutWelcomeUtils = {
-  handleUserAction({
-    data: action
-  }) {
+  handleUserAction(action) {
     switch (action.type) {
       case "OPEN_URL":
         window.open(action.data.args);
         break;
+
+      case "SHOW_MIGRATION_WIZARD":
+        window.AWSendToParent("SHOW_MIGRATION_WIZARD");
+        break;
     }
+  },
+
+  sendEvent(type, detail) {
+    document.dispatchEvent(new CustomEvent(`AWPage:${type}`, {
+      bubbles: true,
+      detail
+    }));
   }
 
 };
@@ -417,30 +431,31 @@ const DEFAULT_WELCOME_CONTENT = {
     order: 2,
     blockOnClick: false
   }, {
+    id: "TRAILHEAD_CARD_11",
+    template: "onboarding",
+    bundled: 3,
+    order: 0,
     content: {
       title: {
-        string_id: "onboarding-mobile-phone-title"
+        string_id: "onboarding-import-browser-settings-title"
       },
       text: {
-        string_id: "onboarding-mobile-phone-text"
+        string_id: "onboarding-import-browser-settings-text"
       },
-      icon: "mobile",
+      icon: "import",
       primary_button: {
         label: {
-          string_id: "onboarding-mobile-phone-button"
+          string_id: "onboarding-import-browser-settings-button"
         },
         action: {
-          type: "OPEN_URL",
-          data: {
-            args: "https://www.mozilla.org/firefox/mobile/",
-            where: "tabshifted"
-          }
+          type: "SHOW_MIGRATION_WIZARD"
         }
       }
     },
-    id: "TRAILHEAD_CARD_6",
-    order: 6,
-    blockOnClick: false
+    targeting: "trailheadTriplet == 'dynamic_chrome'",
+    trigger: {
+      id: "showOnboarding"
+    }
   }]
 };
 
