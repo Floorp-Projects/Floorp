@@ -147,6 +147,26 @@ add_task(async function simple_remote_no_local_result() {
   Assert.equal(result.remote[2], "mom");
 });
 
+add_task(async function simple_remote_no_local_result_telemetry() {
+  Services.telemetry.clearScalars();
+
+  let controller = new SearchSuggestionController();
+  await controller.fetch("mo", false, getEngine);
+
+  let scalars = {};
+  const key = "browser.search.data_transferred";
+
+  await TestUtils.waitForCondition(() => {
+    scalars =
+      Services.telemetry.getSnapshotForKeyedScalars("main", false).parent || {};
+    return key in scalars;
+  }, "should have the expected keyed scalars");
+
+  const scalar = scalars[key];
+  Assert.ok("sggt-other" in scalar, "correct telemetry category");
+  Assert.notEqual(scalar["sggt-other"], 0, "bandwidth logged");
+});
+
 add_task(async function simple_remote_no_local_result_alternative_type() {
   let controller = new SearchSuggestionController();
   let result = await controller.fetch("mo", false, alternateJSONEngine);
