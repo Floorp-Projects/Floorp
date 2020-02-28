@@ -16,7 +16,16 @@
 
 SimpleTest.waitForExplicitFinish();
 
+const previousEnabled = window.docShell.cssErrorReportingEnabled;
+window.docShell.cssErrorReportingEnabled = true;
+
+SimpleTest.registerCleanupFunction(() => {
+  window.docShell.cssErrorReportingEnabled = previousEnabled;
+});
+
 let expectedPageErrors = [];
+
+const NO_UNCAUGHT_EXCEPTION = Symbol();
 
 function doPageErrors() {
   expectedPageErrors = {
@@ -131,11 +140,41 @@ function doPageErrors() {
         }
       ]
     },
+    [`let error = new TypeError("abc");
+      error.name = "MyError";
+      error.message = "here";
+      throw error`]: {
+      errorMessage: /MyError: here/,
+      errorMessageName: "",
+      sourceName: /test_page_errors/,
+      category: "chrome javascript",
+      timeStamp: /^\d+$/,
+      error: false,
+      warning: false,
+      exception: true,
+    },
+    [`let error2 = new TypeError("abc");
+      error2.name = "MyPromiseError";
+      error2.message = "here2";
+      Promise.reject(error2)`]: {
+      errorMessage: /MyPromiseError: here2/,
+      errorMessageName: "",
+      sourceName: /test_page_errors/,
+      category: "chrome javascript",
+      timeStamp: /^\d+$/,
+      error: false,
+      warning: false,
+      exception: true,
+      // Promise.reject doesn't produce an uncaught exception
+      // even though |exception: true|.
+      [NO_UNCAUGHT_EXCEPTION]: true
+    },
   };
 
   let container = document.createElement("script");
   for (const stmt of Object.keys(expectedPageErrors)) {
-      if (expectedPageErrors[stmt].exception) {
+      if (expectedPageErrors[stmt].exception &&
+          !expectedPageErrors[stmt][NO_UNCAUGHT_EXCEPTION]) {
           SimpleTest.expectUncaughtException();
       }
       info("starting stmt: " + stmt);

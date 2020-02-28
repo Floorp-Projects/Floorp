@@ -14,7 +14,13 @@
 <script class="testbody" type="application/javascript">
 "use strict";
 
+const previousEnabled = window.docShell.cssErrorReportingEnabled;
 window.docShell.cssErrorReportingEnabled = true;
+
+SimpleTest.registerCleanupFunction(() => {
+  window.docShell.cssErrorReportingEnabled = previousEnabled;
+});
+
 var ConsoleAPIStorage = Cc["@mozilla.org/consoleAPI-storage;1"]
                           .getService(Ci.nsIConsoleAPIStorage);
 let expectedConsoleCalls = [];
