@@ -89,9 +89,6 @@ class HttpConnectionUDP final : public HttpConnectionBase,
            (mKeepAliveMask && mKeepAlive);
   }
 
-  // Returns time in seconds for how long connection can be reused.
-  uint32_t TimeToLive() override;
-
   bool NeedSpdyTunnel() {
     return mConnInfo->UsingHttpsProxy() && !mTLSFilter &&
            mConnInfo->UsingConnect();
@@ -102,14 +99,6 @@ class HttpConnectionUDP final : public HttpConnectionBase,
   // error.
   void ForcePlainText() { mForcePlainText = true; }
 
-  bool IsUrgentStartPreferred() const override {
-    return mUrgentStartPreferredKnown && mUrgentStartPreferred;
-  }
-  void SetUrgentStartPreferred(bool urgent) override;
-
-  void SetIsReusedAfter(uint32_t afterMilliseconds) override;
-
-  int64_t MaxBytesRead() override { return mMaxBytesRead; }
   HttpVersion GetLastHttpResponseVersion() { return mLastHttpResponseVersion; }
 
   friend class HttpConnectionUDPForceIO;
@@ -118,35 +107,13 @@ class HttpConnectionUDP final : public HttpConnectionBase,
                                               const char*, uint32_t, uint32_t,
                                               uint32_t*);
 
-  // When a persistent connection is in the connection manager idle
-  // connection pool, the HttpConnectionUDP still reads errors and hangups
-  // on the socket so that it can be proactively released if the server
-  // initiates a termination. Only call on socket thread.
-  void BeginIdleMonitoring() override;
-  void EndIdleMonitoring() override;
-
   bool UsingSpdy() override { return (mUsingSpdyVersion != SpdyVersion::NONE); }
-  SpdyVersion GetSpdyVersion() { return mUsingSpdyVersion; }
-  bool EverUsedSpdy() override { return mEverUsedSpdy; }
   bool UsingHttp3() override { return mHttp3Session; }
-
-  // true when connection SSL NPN phase is complete and we know
-  // authoritatively whether UsingSpdy() or not.
-  bool ReportedNPN() override { return mReportedSpdy; }
-
-  // When the connection is active this is called up to once every 1 second
-  // return the interval (in seconds) that the connection next wants to
-  // have this invoked. It might happen sooner depending on the needs of
-  // other connections.
-  uint32_t ReadTimeoutTick(PRIntervalTime now);
 
   // For Active and Idle connections, this will be called when
   // mTCPKeepaliveTransitionTimer fires, to check if the TCP keepalive config
   // should move from short-lived (fast-detect) to long-lived.
   static void UpdateTCPKeepalive(nsITimer* aTimer, void* aClosure);
-
-  // When the connection is active this is called every second
-  void ReadTimeoutTick();
 
   int64_t ContentBytesWritten() { return mContentBytesWritten; }
 
@@ -155,21 +122,6 @@ class HttpConnectionUDP final : public HttpConnectionBase,
                                                  nsACString& result, bool h2ws);
   void SetupSecondaryTLS(nsAHttpTransaction* aSpdyConnectTransaction = nullptr);
   void SetInSpdyTunnel(bool arg);
-
-  // Check active connections for traffic (or not). SPDY connections send a
-  // ping, ordinary HTTP connections get some time to get traffic to be
-  // considered alive.
-  // Http3 has its own ping triggered by a separate timer, therefore it does not
-  // use this one.
-  void CheckForTraffic(bool check);
-
-  // NoTraffic() returns true if there's been no traffic on the (non-spdy)
-  // connection since CheckForTraffic() was called.
-  bool NoTraffic() {
-    return mTrafficStamp &&
-           (mTrafficCount == (mTotalBytesWritten + mTotalBytesRead)) &&
-           !mFastOpen;
-  }
 
   void SetFastOpenStatus(uint8_t tfoStatus);
   uint8_t GetFastOpenStatus() { return mFastOpenStatus; }
@@ -250,20 +202,12 @@ class HttpConnectionUDP final : public HttpConnectionBase,
   PRIntervalTime
       mMaxHangTime;  // max download time before dropping keep-alive status
   PRIntervalTime mIdleTimeout;  // value of keep-alive: timeout=
-  PRIntervalTime mConsiderReusedAfterInterval;
-  PRIntervalTime mConsiderReusedAfterEpoch;
-  int64_t mCurrentBytesRead;     // data read per activation
   int64_t mMaxBytesRead;         // max read in 1 activation
   int64_t mTotalBytesRead;       // total data read
   int64_t mContentBytesWritten;  // does not include CONNECT tunnel or TLS
 
   RefPtr<nsIAsyncInputStream> mInputOverflow;
 
-  // Whether the first non-null transaction dispatched on this connection was
-  // urgent-start or not
-  bool mUrgentStartPreferred;
-  // A flag to prevent reset of mUrgentStartPreferred by subsequent transactions
-  bool mUrgentStartPreferredKnown;
   bool mConnectedTransport;
   bool mKeepAlive;
   bool mKeepAliveMask;
@@ -271,14 +215,9 @@ class HttpConnectionUDP final : public HttpConnectionBase,
   bool mIsReused;
   bool mCompletedProxyConnect;
   bool mLastTransactionExpectedNoContent;
-  bool mIdleMonitoring;
   bool mProxyConnectInProgress;
   bool mInSpdyTunnel;
   bool mForcePlainText;
-
-  // A snapshot of current number of transfered bytes
-  int64_t mTrafficCount;
-  bool mTrafficStamp;  // true then the above is set
 
   // The number of <= HTTP/1.1 transactions performed on this connection. This
   // excludes spdy transactions.
@@ -309,8 +248,6 @@ class HttpConnectionUDP final : public HttpConnectionBase,
   // If a large keepalive has been requested for any trans,
   // scale the default by this factor
   uint32_t mDefaultTimeoutFactor;
-
-  bool mResponseTimeoutEnabled;
 
   // Flag to indicate connection is in inital keepalive period (fast detect).
   uint32_t mTCPKeepaliveConfig;

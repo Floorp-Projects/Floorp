@@ -89,7 +89,7 @@ class nsHttpConnection final : public HttpConnectionBase,
   }
 
   // Returns time in seconds for how long connection can be reused.
-  uint32_t TimeToLive() override;
+  uint32_t TimeToLive();
 
   bool NeedSpdyTunnel() {
     return mConnInfo->UsingHttpsProxy() && !mTLSFilter &&
@@ -101,14 +101,14 @@ class nsHttpConnection final : public HttpConnectionBase,
   // error.
   void ForcePlainText() { mForcePlainText = true; }
 
-  bool IsUrgentStartPreferred() const override {
+  bool IsUrgentStartPreferred() const {
     return mUrgentStartPreferredKnown && mUrgentStartPreferred;
   }
-  void SetUrgentStartPreferred(bool urgent) override;
+  void SetUrgentStartPreferred(bool urgent);
 
-  void SetIsReusedAfter(uint32_t afterMilliseconds) override;
+  void SetIsReusedAfter(uint32_t afterMilliseconds);
 
-  int64_t MaxBytesRead() override { return mMaxBytesRead; }
+  int64_t MaxBytesRead() { return mMaxBytesRead; }
   HttpVersion GetLastHttpResponseVersion() { return mLastHttpResponseVersion; }
 
   friend class HttpConnectionForceIO;
@@ -121,17 +121,17 @@ class nsHttpConnection final : public HttpConnectionBase,
   // connection pool, the nsHttpConnection still reads errors and hangups
   // on the socket so that it can be proactively released if the server
   // initiates a termination. Only call on socket thread.
-  void BeginIdleMonitoring() override;
-  void EndIdleMonitoring() override;
+  void BeginIdleMonitoring();
+  void EndIdleMonitoring();
 
   bool UsingSpdy() override { return (mUsingSpdyVersion != SpdyVersion::NONE); }
   SpdyVersion GetSpdyVersion() { return mUsingSpdyVersion; }
-  bool EverUsedSpdy() override { return mEverUsedSpdy; }
+  bool EverUsedSpdy() { return mEverUsedSpdy; }
   bool UsingHttp3() override { return false; }
 
   // true when connection SSL NPN phase is complete and we know
   // authoritatively whether UsingSpdy() or not.
-  bool ReportedNPN() override { return mReportedSpdy; }
+  bool ReportedNPN() { return mReportedSpdy; }
 
   // When the connection is active this is called up to once every 1 second
   // return the interval (in seconds) that the connection next wants to
