@@ -27,6 +27,7 @@
 #include "mozilla/storage.h"
 #include "mozilla/Attributes.h"
 #include "nsXULAppAPI.h"
+#include "nsIIdleService.h"
 #include "nsIPrincipal.h"
 #include "nsIURIMutator.h"
 #include "nsContentUtils.h"
@@ -82,6 +83,8 @@ static void LogToConsole(const nsAString& aMsg) {
   ENSURE_NOT_CHILD_PROCESS_({ return NS_ERROR_NOT_AVAILABLE; })
 
 #define ENSURE_NOT_CHILD_PROCESS_NORET ENSURE_NOT_CHILD_PROCESS_(;)
+
+#define EXPIRY_NOW PR_Now() / 1000
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1632,9 +1635,58 @@ nsresult nsPermissionManager::InitDB(bool aRemoveFile) {
   // Always import default permissions.
   ImportDefaults();
   // check whether to import or just read in the db
-  if (tableExists) return Read();
+  if (tableExists) {
+    rv = Read();
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    AddIdleDailyMaintenanceJob();
+  }
 
   return NS_OK;
+}
+
+void nsPermissionManager::AddIdleDailyMaintenanceJob() {
+  nsCOMPtr<nsIObserverService> observerService =
+      mozilla::services::GetObserverService();
+  NS_ENSURE_TRUE_VOID(observerService);
+
+  nsresult rv =
+      observerService->AddObserver(this, OBSERVER_TOPIC_IDLE_DAILY, false);
+  NS_ENSURE_SUCCESS_VOID(rv);
+}
+
+void nsPermissionManager::RemoveIdleDailyMaintenanceJob() {
+  nsCOMPtr<nsIObserverService> observerService =
+      mozilla::services::GetObserverService();
+  NS_ENSURE_TRUE_VOID(observerService);
+
+  nsresult rv =
+      observerService->RemoveObserver(this, OBSERVER_TOPIC_IDLE_DAILY);
+  NS_ENSURE_SUCCESS_VOID(rv);
+}
+
+void nsPermissionManager::PerformIdleDailyMaintenance() {
+  if (!mDBConn) {
+    return;
+  }
+
+  nsCOMPtr<mozIStorageAsyncStatement> stmtDeleteExpired;
+  nsresult rv = mDBConn->CreateAsyncStatement(
+      NS_LITERAL_CSTRING("DELETE FROM moz_perms WHERE expireType = "
+                         "?1 AND expireTime <= ?2"),
+      getter_AddRefs(stmtDeleteExpired));
+  NS_ENSURE_SUCCESS_VOID(rv);
+
+  rv =
+      stmtDeleteExpired->BindInt32ByIndex(0, nsIPermissionManager::EXPIRE_TIME);
+  NS_ENSURE_SUCCESS_VOID(rv);
+
+  rv = stmtDeleteExpired->BindInt64ByIndex(1, EXPIRY_NOW);
+  NS_ENSURE_SUCCESS_VOID(rv);
+
+  nsCOMPtr<mozIStoragePendingStatement> pending;
+  rv = stmtDeleteExpired->ExecuteAsync(nullptr, getter_AddRefs(pending));
+  NS_ENSURE_SUCCESS_VOID(rv);
 }
 
 // sets the schema version and creates the moz_perms table.
@@ -1692,7 +1744,7 @@ nsPermissionManager::AddFromPrincipal(nsIPrincipal* aPrincipal,
   if ((aExpireType == nsIPermissionManager::EXPIRE_TIME ||
        (aExpireType == nsIPermissionManager::EXPIRE_SESSION &&
         aExpireTime != 0)) &&
-      aExpireTime <= (PR_Now() / 1000)) {
+      aExpireTime <= EXPIRY_NOW) {
     return NS_OK;
   }
 
@@ -1839,7 +1891,7 @@ nsresult nsPermissionManager::AddInternal(
   // update the in-memory list, write to the db, and notify consumers.
   int64_t id;
   if (aModificationTime == 0) {
-    aModificationTime = PR_Now() / 1000;
+    aModificationTime = EXPIRY_NOW;
   }
 
   switch (op) {
@@ -2368,7 +2420,7 @@ nsPermissionManager::GetPermissionHashKey(nsIPrincipal* aPrincipal,
     if ((permEntry.mExpireType == nsIPermissionManager::EXPIRE_TIME ||
          (permEntry.mExpireType == nsIPermissionManager::EXPIRE_SESSION &&
           permEntry.mExpireTime != 0)) &&
-        permEntry.mExpireTime <= (PR_Now() / 1000)) {
+        permEntry.mExpireTime <= EXPIRY_NOW) {
       entry = nullptr;
       RemoveFromPrincipal(aPrincipal, mTypeArray[aType]);
     } else if (permEntry.mPermission == nsIPermissionManager::UNKNOWN_ACTION) {
@@ -2441,7 +2493,7 @@ nsPermissionManager::GetPermissionHashKey(
     if ((permEntry.mExpireType == nsIPermissionManager::EXPIRE_TIME ||
          (permEntry.mExpireType == nsIPermissionManager::EXPIRE_SESSION &&
           permEntry.mExpireTime != 0)) &&
-        permEntry.mExpireTime <= (PR_Now() / 1000)) {
+        permEntry.mExpireTime <= EXPIRY_NOW) {
       entry = nullptr;
       // If we need to remove a permission we mint a principal.  This is a bit
       // inefficient, but hopefully this code path isn't super common.
@@ -2645,6 +2697,7 @@ NS_IMETHODIMP nsPermissionManager::Observe(nsISupports* aSubject,
   if (!nsCRT::strcmp(aTopic, "profile-before-change")) {
     // The profile is about to change,
     // or is going away because the application is shutting down.
+    RemoveIdleDailyMaintenanceJob();
     gIsShuttingDown = true;
     RemoveAllFromMemory();
     CloseDB(false);
@@ -2662,6 +2715,8 @@ NS_IMETHODIMP nsPermissionManager::Observe(nsISupports* aSubject,
     RemoveAllFromMemory();
     CloseDB(false);
     InitDB(false);
+  } else if (!nsCRT::strcmp(aTopic, OBSERVER_TOPIC_IDLE_DAILY)) {
+    PerformIdleDailyMaintenance();
   }
 
   return NS_OK;
@@ -2769,34 +2824,19 @@ nsresult nsPermissionManager::Read() {
 
   nsresult rv;
 
-  // delete expired permissions before we read in the db
-  {
-    // this deletion has its own scope so the write lock is released when done.
-    nsCOMPtr<mozIStorageStatement> stmtDeleteExpired;
-    rv = mDBConn->CreateStatement(
-        NS_LITERAL_CSTRING(
-            "DELETE FROM moz_perms WHERE expireType = ?1 AND expireTime <= ?2"),
-        getter_AddRefs(stmtDeleteExpired));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = stmtDeleteExpired->BindInt32ByIndex(0,
-                                             nsIPermissionManager::EXPIRE_TIME);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = stmtDeleteExpired->BindInt64ByIndex(1, PR_Now() / 1000);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    bool hasResult;
-    rv = stmtDeleteExpired->ExecuteStep(&hasResult);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
   nsCOMPtr<mozIStorageStatement> stmt;
   rv = mDBConn->CreateStatement(
-      NS_LITERAL_CSTRING("SELECT id, origin, type, permission, expireType, "
-                         "expireTime, modificationTime "
-                         "FROM moz_perms"),
+      NS_LITERAL_CSTRING(
+          "SELECT id, origin, type, permission, expireType, "
+          "expireTime, modificationTime "
+          "FROM moz_perms WHERE expireType != ?1 OR expireTime > ?2"),
       getter_AddRefs(stmt));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = stmt->BindInt32ByIndex(0, nsIPermissionManager::EXPIRE_TIME);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = stmt->BindInt64ByIndex(1, EXPIRY_NOW);
   NS_ENSURE_SUCCESS(rv, rv);
 
   int64_t id;
