@@ -36,6 +36,8 @@ Gamepad
 GeckoProfGTest
 GraphRunner
 HTML5 Parser
+ICS parser
+IMAP
 IPC Launch
 IPDL Background
 IdentityCrypto
