@@ -1043,6 +1043,7 @@ class nsFlexContainerFrame::FlexLine : public LinkedListElement<FlexLine> {
 
   // Runs the "Resolving Flexible Lengths" algorithm from section 9.7 of the
   // CSS flexbox spec to distribute aFlexContainerMainSize among our flex items.
+  // https://drafts.csswg.org/css-flexbox-1/#resolve-flexible-lengths
   void ResolveFlexibleLengths(nscoord aFlexContainerMainSize,
                               ComputedFlexLineInfo* aLineInfo);
 
@@ -1466,7 +1467,6 @@ static nscoord PartiallyResolveAutoMinSize(
 
   // We need the smallest of:
   // * the used flex-basis, if the computed flex-basis was 'auto':
-  // XXXdholbert ('auto' might be renamed to 'main-size'; see bug 1032922)
   if (aItemReflowInput.mStylePosition->mFlexBasis.IsAuto() &&
       aFlexItem.FlexBaseSize() != NS_UNCONSTRAINEDSIZE) {
     // NOTE: We skip this if the flex base size depends on content & isn't yet
@@ -1544,7 +1544,7 @@ void nsFlexContainerFrame::ResolveAutoFlexBasisAndMinSize(
     const ReflowInput& aItemReflowInput, const FlexboxAxisTracker& aAxisTracker,
     bool aHasLineClampEllipsis) {
   // (Note: We can guarantee that the flex-basis will have already been
-  // resolved if the main axis is the same is the same as the item's inline
+  // resolved if the main axis is the same as the item's inline
   // axis. Inline-axis values should always be resolvable without reflow.)
   const bool isMainSizeAuto =
       (!aFlexItem.IsInlineAxisMainAxis() &&
@@ -2485,7 +2485,7 @@ void FlexLine::FreezeItemsEarly(bool aIsUsingFlexGrow,
   //  #    greater than its hypothetical main size
   //  #  - if using the flex shrink factor: any item that has a flex base size
   //  #    smaller than its hypothetical main size
-  //  http://dev.w3.org/csswg/css-flexbox/#resolve-flexible-lengths-flex-factors
+  //  https://drafts.csswg.org/css-flexbox/#resolve-flexible-lengths
   //
   // (NOTE: At this point, item->MainSize() *is* the item's hypothetical
   // main size, since SetFlexBaseSizeAndMainSize() sets it up that way, and the
@@ -3111,7 +3111,7 @@ CrossAxisPositionTracker::CrossAxisPositionTracker(
     //
     // SOURCE: https://drafts.csswg.org/css-flexbox/#algo-cross-line
     // NOTE: This means (by definition) that there's no packing space, which
-    // means we don't need to be concerned with "align-conent" at all and we
+    // means we don't need to be concerned with "align-content" at all and we
     // can return early. This is handy, because this is the usual case (for
     // single-line flexbox).
     if (aIsCrossSizeDefinite) {
