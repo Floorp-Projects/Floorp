@@ -18,10 +18,9 @@ const EXPECTED_ORDER = modernConfig
       // Default engines
       "Test search engine",
       "engine-pref",
-      // Two engines listed in searchOrder.
+      // Now the engines in orderHint order.
       "engine-resourceicon",
       "engine-chromeicon",
-      // Rest of the engines in order.
       "engine-rel-searchform-purpose",
       "Test search engine (Reordered)",
     ]
@@ -45,6 +44,9 @@ add_task(async function setup() {
     SearchUtils.BROWSER_SEARCH_PREF + "separatePrivateDefault",
     true
   );
+  // Even though we don't use the distro bits to begin with, we still have
+  // to set the pref now, as this gets cached.
+  Services.prefs.getDefaultBranch("distribution.").setCharPref("id", "test");
 });
 
 async function checkOrder(expectedOrder) {
@@ -58,9 +60,12 @@ async function checkOrder(expectedOrder) {
 
 add_task(async function test_getDefaultEngines_no_others() {
   await checkOrder(EXPECTED_ORDER);
-}).skip();
+});
 
 add_task(async function test_getDefaultEngines_with_non_builtins() {
+  // Reset the sorted list.
+  Services.search.wrappedJSObject.__sortedEngines = null;
+
   await Services.search.addEngineWithDetails("nonbuiltin1", {
     method: "get",
     template: "http://example.com/?search={searchTerms}",
@@ -68,10 +73,12 @@ add_task(async function test_getDefaultEngines_with_non_builtins() {
 
   // We should still have the same built-in engines listed.
   await checkOrder(EXPECTED_ORDER);
-}).skip();
+});
 
 add_task(async function test_getDefaultEngines_with_distro() {
-  Services.prefs.getDefaultBranch("distribution.").setCharPref("id", "test");
+  // Reset the sorted list.
+  Services.search.wrappedJSObject.__sortedEngines = null;
+
   Services.prefs.setCharPref(
     SearchUtils.BROWSER_SEARCH_PREF + "order.extra.bar",
     "engine-pref"
