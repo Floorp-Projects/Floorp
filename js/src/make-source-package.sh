@@ -117,6 +117,7 @@ case $cmd in
 
 # Build system and dependencies
 
++ /Cargo.lock
 + /build/**
 + /config/**
 + /python/**
@@ -147,6 +148,16 @@ case $cmd in
 + */
 - /**
 FILTER_EOF
+
+    # Copy Cargo.toml, filtering references to not-included directories out.
+    cat ${TOPSRCDIR}/Cargo.toml \
+        | grep -v security/manager/ssl/osclientcerts \
+        | grep -v testing/geckodriver \
+        | grep -v toolkit/crashreporter/rust \
+        | grep -v toolkit/library/gtest/rust \
+        | grep -v toolkit/library/rust \
+        | grep -v dom/webauthn/libudev-sys \
+        > ${tgtpath}/Cargo.toml
 
     # Generate configure files to avoid build dependency on autoconf-2.13
     cp -pPR ${TOPSRCDIR}/js/src/configure.in ${tgtpath}/js/src/configure

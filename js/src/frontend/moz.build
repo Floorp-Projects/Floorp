@@ -21,6 +21,13 @@ GeneratedFile('ReservedWordsGenerated.h', script='GenerateReservedWords.py',
               py2=True,
               inputs=['ReservedWords.h'])
 
+if CONFIG['JS_ENABLE_SMOOSH']:
+    GeneratedFile('smoosh_generated.h',
+                  script='/build/RunCbindgen.py',
+                  entry_point='generate_with_same_crate',
+                  inputs=[
+                      '/js/src/frontend/smoosh',
+                  ])
 
 UNIFIED_SOURCES += [
     'AbstractScope.cpp',
@@ -62,6 +69,12 @@ UNIFIED_SOURCES += [
     'TryEmitter.cpp',
     'WhileEmitter.cpp',
 ]
+
+if CONFIG['JS_ENABLE_SMOOSH']:
+    UNIFIED_SOURCES += [
+        'Frontend2.cpp',
+    ]
+
 
 # Parser.cpp cannot be built in unified mode because of explicit
 #   template instantiations.

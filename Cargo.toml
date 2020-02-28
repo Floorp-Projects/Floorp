@@ -5,11 +5,12 @@
 # and do not need to be listed here. Their external dependencies are vendored
 # into `third_party/rust` by `mach vendor rust`.
 members = [
+  "js/rust",
   "js/src",
+  "js/src/frontend/smoosh",
+  "js/src/frontend/binast", # Code generator.
   "js/src/rust",
   "js/src/wasm/cranelift",
-  "js/rust",
-  "js/src/frontend/binast", # Code generator.
   "security/manager/ssl/osclientcerts",
   "testing/geckodriver",
   "toolkit/crashreporter/rust",

@@ -18,3 +18,6 @@ extern crate baldrdash;
 extern crate encoding_c;
 extern crate encoding_c_mem;
 extern crate mozglue_static;
+
+#[cfg(feature = "smoosh")]
+extern crate smoosh;
