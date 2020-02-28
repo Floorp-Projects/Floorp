@@ -11957,31 +11957,27 @@ AbortReasonOr<Ok> IonBuilder::jsop_setarg(uint32_t arg) {
   MOZ_ASSERT(script()->jitScript()->modifiesArguments());
   MDefinition* val = current->peek(-1);
 
-  // |arguments| is never referenced within this function. No arguments object
-  // is created in this case, so we don't need to worry about synchronizing the
-  // argument values when writing to them.
-  if (!info().hasArguments()) {
-    MOZ_ASSERT(!info().needsArgsObj());
+  if (!info().argumentsAliasesFormals()) {
     MOZ_ASSERT(!info().argsObjAliasesFormals());
-    MOZ_ASSERT(!info().argumentsAliasesFormals());
+
+    // |arguments| is never referenced within this function. No arguments object
+    // is created in this case, so we don't need to worry about synchronizing
+    // the argument values when writing to them.
+    MOZ_ASSERT_IF(!info().hasArguments(), !info().needsArgsObj());
+
+    // The arguments object doesn't map to the actual argument values, so we
+    // also don't need to worry about synchronizing them.
+    // Directly writing to a positional formal parameter is only possible when
+    // the |arguments| contents are never observed, otherwise we can't
+    // reconstruct the original parameter values when we access them through
+    // |arguments[i]|. AnalyzeArgumentsUsage ensures this is handled correctly.
+    MOZ_ASSERT_IF(info().hasArguments(), !info().hasMappedArgsObj());
 
     current->setArg(arg);
     return Ok();
   }
 
-  // The arguments object doesn't map to the actual argument values, so we also
-  // don't need to worry about synchronizing them.
-  if (!info().hasMappedArgsObj()) {
-    // Unmapped arguments objects are eagerly created when we write to a
-    // positional formal parameter, see |AnalyzeArgumentsUsage|. That way we
-    // don't need to bother how to save the original argument value when
-    // accessing it through |arguments[i]|.
-    MOZ_ASSERT(info().needsArgsObj());
-    current->setArg(arg);
-    return Ok();
-  }
-
-  MOZ_ASSERT(info().argumentsAliasesFormals(),
+  MOZ_ASSERT(info().hasArguments() && info().hasMappedArgsObj(),
              "arguments aliases formals when an arguments binding is present "
              "and the arguments object is mapped");
 

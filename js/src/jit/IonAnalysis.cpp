@@ -4643,7 +4643,8 @@ bool jit::AnalyzeArgumentsUsage(JSContext* cx, JSScript* scriptArg) {
   // parameters do not alias arguments[i], and to make the arguments object
   // reflect initial parameter values prior to any mutation we create it eagerly
   // whenever parameters are (or might, in the case of calls to eval) assigned.
-  if (!script->hasMappedArgsObj() && script->jitScript()->modifiesArguments()) {
+  if (!script->hasMappedArgsObj() && script->jitScript()->modifiesArguments() &&
+      argumentsContentsObserved) {
     return true;
   }
 
