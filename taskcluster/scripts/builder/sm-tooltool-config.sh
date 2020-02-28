@@ -68,3 +68,11 @@ for bin in $MOZ_FETCHES_DIR/*/bin $TOOLTOOL_CHECKOUT/VC/bin/Hostx64/x86; do
     absbin=$(cd "$bin" && pwd)
     export PATH="$absbin:$PATH"
 done
+
+if [ -e $MOZ_FETCHES_DIR/rustc ]; then
+    export RUSTC="$MOZ_FETCHES_DIR/rustc/bin/rustc"
+    export CARGO="$MOZ_FETCHES_DIR/rustc/bin/cargo"
+fi
+if [ -e $MOZ_FETCHES_DIR/cbindgen ]; then
+    export CBINDGEN="$MOZ_FETCHES_DIR/cbindgen/cbindgen"
+fi
