@@ -21,7 +21,9 @@ add_task(async function() {
   const { autocompletePopup } = jsterm;
 
   info("Check that filtering the cache works like on the server");
-  await setInputValueForAutocompletion(hud, "x.");
+  const onPopUpOpen = autocompletePopup.once("popup-opened");
+  EventUtils.sendString("x.");
+  await onPopUpOpen;
   is(
     getAutocompletePopupLabels(autocompletePopup).join(" - "),
     "foo - foO - fOo - fOO",

@@ -227,7 +227,7 @@ class MenuButton extends PureComponent {
       return;
     }
 
-    this.tooltip.show(this.buttonRef.current, {
+    this.tooltip.updateContainerBounds(this.buttonRef.current, {
       position: this.props.menuPosition,
       y: this.props.menuOffset,
     });

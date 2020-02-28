@@ -12,11 +12,13 @@ add_task(async function() {
   const { jsterm } = hud;
   const { autocompletePopup } = jsterm;
 
+  const onPopUpOpen = autocompletePopup.once("popup-opened");
+
   info(`Enter ":"`);
   jsterm.focus();
-  let onAutocompleUpdated = jsterm.once("autocomplete-updated");
   EventUtils.sendString(":");
-  await onAutocompleUpdated;
+
+  await onPopUpOpen;
 
   const expectedCommands = [":help", ":screenshot"];
   is(
@@ -25,7 +27,7 @@ add_task(async function() {
     "popup contains expected commands"
   );
 
-  onAutocompleUpdated = jsterm.once("autocomplete-updated");
+  let onAutocompleUpdated = jsterm.once("autocomplete-updated");
   EventUtils.sendString("s");
   await onAutocompleUpdated;
   checkInputCompletionValue(
