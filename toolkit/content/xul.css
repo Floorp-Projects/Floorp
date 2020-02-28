@@ -383,7 +383,8 @@ stack {
   position: relative;
 }
 
-stack > *|* {
+/* We shouldn't style native anonymous children like scrollbars or what not */
+stack > *|*:not(:-moz-native-anonymous) {
   grid-area: 1 / 1;
   z-index: 0;
 
