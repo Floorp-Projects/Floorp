@@ -181,20 +181,8 @@ bool NameOpEmitter::prepareForRhs() {
       break;
     case NameLocation::Kind::NamedLambdaCallee:
       break;
-    case NameLocation::Kind::ArgumentSlot: {
-      // If we assign to a positional formal parameter and the arguments
-      // object is unmapped (strict mode or function with
-      // default/rest/destructing args), parameters do not alias
-      // arguments[i], and to make the arguments object reflect initial
-      // parameter values prior to any mutation we create it eagerly
-      // whenever parameters are (or might, in the case of calls to eval)
-      // assigned.
-      FunctionBox* funbox = bce_->sc->asFunctionBox();
-      if (funbox->argumentsHasLocalBinding() && !funbox->hasMappedArgsObj()) {
-        funbox->setDefinitelyNeedsArgsObj();
-      }
+    case NameLocation::Kind::ArgumentSlot:
       break;
-    }
     case NameLocation::Kind::FrameSlot:
       break;
     case NameLocation::Kind::EnvironmentCoordinate:

@@ -11973,8 +11973,8 @@ AbortReasonOr<Ok> IonBuilder::jsop_setarg(uint32_t arg) {
   // don't need to worry about synchronizing them.
   if (!info().hasMappedArgsObj()) {
     // Unmapped arguments objects are eagerly created when we write to a
-    // positional formal parameter, see |NameOpEmitter::prepareForRhs()|. That
-    // way we don't need to bother how to save the original argument value when
+    // positional formal parameter, see |AnalyzeArgumentsUsage|. That way we
+    // don't need to bother how to save the original argument value when
     // accessing it through |arguments[i]|.
     MOZ_ASSERT(info().needsArgsObj());
     current->setArg(arg);
