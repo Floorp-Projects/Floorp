@@ -414,9 +414,6 @@ bool HitTestingTreeNode::IsAsyncZoomContainer() const {
 }
 
 void HitTestingTreeNode::Dump(const char* aPrefix) const {
-  if (mPrevSibling) {
-    mPrevSibling->Dump(aPrefix);
-  }
   MOZ_LOG(
       sApzMgrLog, LogLevel::Debug,
       ("%sHitTestingTreeNode (%p) APZC (%p) g=(%s) %s%s%sr=(%s) t=(%s) "
@@ -434,8 +431,21 @@ void HitTestingTreeNode::Dump(const char* aPrefix) const {
        mClipRegion ? Stringify(mClipRegion.ref()).c_str() : "none",
        mScrollbarData.mDirection.isSome() ? " scrollbar" : "",
        IsScrollThumbNode() ? " scrollthumb" : ""));
-  if (mLastChild) {
-    mLastChild->Dump(nsPrintfCString("%s  ", aPrefix).get());
+
+  if (!mLastChild) {
+    return;
+  }
+
+  // Dump the children in order from first child to last child
+  std::stack<HitTestingTreeNode*> children;
+  for (HitTestingTreeNode* child = mLastChild.get(); child;
+       child = child->mPrevSibling) {
+    children.push(child);
+  }
+  nsPrintfCString childPrefix("%s  ", aPrefix);
+  while (!children.empty()) {
+    children.top()->Dump(childPrefix.get());
+    children.pop();
   }
 }
 
