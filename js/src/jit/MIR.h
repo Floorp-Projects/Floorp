@@ -353,18 +353,17 @@ class AliasSet {
     DynamicSlot = 1 << 3,     // A Value member of obj->slots.
     FixedSlot = 1 << 4,       // A Value member of obj->fixedSlots().
     DOMProperty = 1 << 5,     // A DOM property
-    FrameArgument = 1 << 6,   // An argument kept on the stack frame
-    WasmGlobalVar = 1 << 7,   // An asm.js/wasm private global var
-    WasmHeap = 1 << 8,        // An asm.js/wasm heap load
-    WasmHeapMeta = 1 << 9,    // The asm.js/wasm heap base pointer and
+    WasmGlobalVar = 1 << 6,   // An asm.js/wasm private global var
+    WasmHeap = 1 << 7,        // An asm.js/wasm heap load
+    WasmHeapMeta = 1 << 8,    // The asm.js/wasm heap base pointer and
                               // bounds check limit, in Tls.
-    TypedArrayLengthOrOffset = 1 << 10,  // A typed array's length or byteOffset
-    WasmGlobalCell = 1 << 11,            // A wasm global cell
-    WasmTableElement = 1 << 12,          // An element of a wasm table
+    TypedArrayLengthOrOffset = 1 << 9,  // A typed array's length or byteOffset
+    WasmGlobalCell = 1 << 10,           // A wasm global cell
+    WasmTableElement = 1 << 11,         // An element of a wasm table
     Last = WasmTableElement,
     Any = Last | (Last - 1),
 
-    NumCategories = 13,
+    NumCategories = 12,
 
     // Indicates load or store.
     Store_ = 1 << 31
@@ -9958,10 +9957,8 @@ class MArgumentsLength : public MNullaryInstruction {
 // This MIR instruction is used to get an argument from the actual arguments.
 class MGetFrameArgument : public MUnaryInstruction,
                           public UnboxedInt32Policy<0>::Data {
-  bool scriptHasSetArg_;
-
-  MGetFrameArgument(MDefinition* idx, bool scriptHasSetArg)
-      : MUnaryInstruction(classOpcode, idx), scriptHasSetArg_(scriptHasSetArg) {
+  explicit MGetFrameArgument(MDefinition* idx)
+      : MUnaryInstruction(classOpcode, idx) {
     setResultType(MIRType::Value);
     setMovable();
   }
@@ -9975,11 +9972,8 @@ class MGetFrameArgument : public MUnaryInstruction,
     return congruentIfOperandsEqual(ins);
   }
   AliasSet getAliasSet() const override {
-    // If the script doesn't have any JSOp::SetArg ops, then this instruction is
-    // never aliased.
-    if (scriptHasSetArg_) {
-      return AliasSet::Load(AliasSet::FrameArgument);
-    }
+    // This instruction is never aliased, because ops like JSOp::SetArg don't
+    // write to the argument frames. We create an arguments object in that case.
     return AliasSet::None();
   }
 };

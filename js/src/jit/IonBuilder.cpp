@@ -8770,6 +8770,8 @@ AbortReasonOr<Ok> IonBuilder::getElemTryArguments(bool* emitted,
 
   MOZ_ASSERT(!info().argsObjAliasesFormals());
 
+  MOZ_ASSERT(!script()->jitScript()->modifiesArguments());
+
   // Type Inference has guaranteed this is an optimized arguments object.
   obj->setImplicitlyUsedUnchecked();
 
@@ -8786,9 +8788,7 @@ AbortReasonOr<Ok> IonBuilder::getElemTryArguments(bool* emitted,
   index = addBoundsCheck(index, length);
 
   // Load the argument from the actual arguments.
-  bool modifiesArgs = script()->jitScript()->modifiesArguments();
-  MGetFrameArgument* load =
-      MGetFrameArgument::New(alloc(), index, modifiesArgs);
+  auto* load = MGetFrameArgument::New(alloc(), index);
   current->add(load);
   current->push(load);
 
