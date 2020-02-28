@@ -141,6 +141,7 @@ static inline const MDefinition* GetObject(const MDefinition* ins) {
     case MDefinition::Opcode::IsPackedArray:
     case MDefinition::Opcode::SuperFunction:
     case MDefinition::Opcode::InitHomeObject:
+    case MDefinition::Opcode::HomeObjectSuperBase:
       object = ins->getOperand(0);
       break;
     case MDefinition::Opcode::GetPropertyCache:

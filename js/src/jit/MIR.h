@@ -8460,6 +8460,10 @@ class MHomeObjectSuperBase : public MUnaryInstruction,
   INSTRUCTION_HEADER(HomeObjectSuperBase)
   TRIVIAL_NEW_WRAPPERS
   NAMED_OPERANDS((0, homeObject))
+
+  AliasSet getAliasSet() const override {
+    return AliasSet::Load(AliasSet::ObjectFields);
+  }
 };
 
 class MGetPropSuperCache
