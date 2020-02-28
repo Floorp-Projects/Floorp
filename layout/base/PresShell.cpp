@@ -178,6 +178,7 @@
 #include "nsIDragSession.h"
 #include "nsIFrameInlines.h"
 #include "mozilla/gfx/2D.h"
+#include "nsNetUtil.h"
 #include "nsSubDocumentFrame.h"
 #include "nsQueryObject.h"
 #include "mozilla/GlobalStyleSheetCache.h"
@@ -5060,7 +5061,26 @@ nscolor PresShell::GetDefaultBackgroundColorToDraw() {
   if (!mPresContext || !mPresContext->GetBackgroundColorDraw()) {
     return NS_RGB(255, 255, 255);
   }
-  return mPresContext->DefaultBackgroundColor();
+
+  nscolor backgroundColor = mPresContext->DefaultBackgroundColor();
+  if (backgroundColor != NS_RGB(255, 255, 255)) {
+    // Return non-default color.
+    return backgroundColor;
+  }
+
+  // Use a dark background for top-level about:blank that is inaccessible to
+  // content JS.
+  Document* doc = GetDocument();
+  BrowsingContext* bc = doc->GetBrowsingContext();
+  if (bc && bc->IsTop() && !bc->HasOpener() &&
+      doc->GetDocumentURI() &&
+      NS_IsAboutBlank(doc->GetDocumentURI()) &&
+      doc->PrefersColorScheme() == StylePrefersColorScheme::Dark) {
+    // Use --in-content-page-background for prefers-color-scheme: dark.
+    return NS_RGB(0x2A, 0x2A, 0x2E);
+  }
+
+  return backgroundColor;
 }
 
 void PresShell::UpdateCanvasBackground() {
