@@ -550,7 +550,23 @@ nsresult nsHttpConnectionMgr::GetSocketThreadTarget(nsIEventTarget** target) {
 
 nsresult nsHttpConnectionMgr::ReclaimConnection(nsHttpConnection* conn) {
   LOG(("nsHttpConnectionMgr::ReclaimConnection [conn=%p]\n", conn));
-  return PostEvent(&nsHttpConnectionMgr::OnMsgReclaimConnection, 0, conn);
+
+  Unused << EnsureSocketThreadTarget();
+
+  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+
+  if (!mSocketThreadTarget) {
+    NS_WARNING("cannot post event if not initialized");
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
+  RefPtr<nsHttpConnection> connRef(conn);
+  RefPtr<nsHttpConnectionMgr> self(this);
+  return mSocketThreadTarget->Dispatch(NS_NewRunnableFunction(
+      "nsHttpConnectionMgr::CallReclaimConnection",
+      [conn{std::move(connRef)}, self{std::move(self)}]() {
+        self->OnMsgReclaimConnection(conn);
+      }));
 }
 
 // A structure used to marshall 6 pointers across the various necessary
@@ -2791,10 +2807,8 @@ void nsHttpConnectionMgr::OnMsgDoShiftReloadConnectionCleanup(int32_t,
   if (ci) ResetIPFamilyPreference(ci);
 }
 
-void nsHttpConnectionMgr::OnMsgReclaimConnection(int32_t, ARefBase* param) {
+void nsHttpConnectionMgr::OnMsgReclaimConnection(nsHttpConnection* conn) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
-
-  nsHttpConnection* conn = static_cast<nsHttpConnection*>(param);
 
   //
   // 1) remove the connection from the active list
@@ -4990,7 +5004,7 @@ nsresult nsHttpConnectionMgr::nsHalfOpenSocket::SetupConn(
           ("nsHalfOpenSocket::SetupConn no transaction match "
            "returning conn %p to pool\n",
            conn.get()));
-      gHttpHandler->ConnMgr()->OnMsgReclaimConnection(0, conn);
+      gHttpHandler->ConnMgr()->OnMsgReclaimConnection(conn);
 
       // We expect that there is at least one tranasction in the pending
       // queue that can take this connection, but it can happened that

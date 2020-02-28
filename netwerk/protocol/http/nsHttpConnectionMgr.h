@@ -568,7 +568,7 @@ class nsHttpConnectionMgr final : public HttpConnectionMgrShell,
   void OnMsgProcessPendingQ(int32_t, ARefBase*);
   void OnMsgPruneDeadConnections(int32_t, ARefBase*);
   void OnMsgSpeculativeConnect(int32_t, ARefBase*);
-  void OnMsgReclaimConnection(int32_t, ARefBase*);
+  void OnMsgReclaimConnection(nsHttpConnection*);
   void OnMsgCompleteUpgrade(int32_t, ARefBase*);
   void OnMsgUpdateParam(int32_t, ARefBase*);
   void OnMsgDoShiftReloadConnectionCleanup(int32_t, ARefBase*);
