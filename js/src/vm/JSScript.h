@@ -2622,6 +2622,16 @@ class JSScript : public js::BaseScript {
     return scope->as<js::FunctionScope>().hasParameterExprs();
   }
 
+  bool functionAllowsParameterRedeclaration() const {
+    // Parameter redeclaration is only allowed for non-strict functions with
+    // simple parameter lists, which are neither arrow nor method functions. We
+    // don't have a flag at hand to test the function kind, but we can still
+    // test if the function is non-strict and has a simple parameter list by
+    // checking |hasMappedArgsObj()|. (Mapped arguments objects are only
+    // created for non-strict functions with simple parameter lists.)
+    return hasMappedArgsObj();
+  }
+
   // If there are more than MaxBytecodeTypeSets JOF_TYPESET ops in the script,
   // the first MaxBytecodeTypeSets - 1 JOF_TYPESET ops have their own TypeSet
   // and all other JOF_TYPESET ops share the last TypeSet.
