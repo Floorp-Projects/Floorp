@@ -112,6 +112,17 @@ class ReftestFissionParent extends JSWindowActorParent {
 
   receiveMessage(msg) {
     switch (msg.name) {
+      case "ForwardAfterPaintEvent":
+      {
+        let cwg = msg.data.toBrowsingContext.currentWindowGlobal;
+        if (cwg) {
+          let a = cwg.getActor("ReftestFission");
+          if (a) {
+            a.sendAsyncMessage("ForwardAfterPaintEventToSelfAndParent", msg.data);
+          }
+        }
+        break;
+      }
       case "FlushRendering":
       {
         let promise = this.tellChildrenToFlushRendering(msg.data.browsingContext, msg.data.ignoreThrottledAnimations);
