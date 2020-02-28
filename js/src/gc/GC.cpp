@@ -2214,14 +2214,19 @@ struct ArenaListSegment {
 
 /*
  * Update the internal pointers for all arenas in a segment of an arena list.
+ *
+ * Returns the number of steps to count against the slice budget.
  */
-static void UpdateArenaListSegmentPointers(GCRuntime* gc,
-                                           const ArenaListSegment& arenas) {
+static size_t UpdateArenaListSegmentPointers(GCRuntime* gc,
+                                             const ArenaListSegment& arenas) {
   MOZ_ASSERT(arenas.begin);
   MovingTracer trc(gc->rt);
+  size_t count = 0;
   for (Arena* arena = arenas.begin; arena != arenas.end; arena = arena->next) {
     UpdateArenaPointers(&trc, arena);
+    count++;
   }
+  return count * 256;
 }
 
 class ArenasToUpdate {
@@ -2375,9 +2380,11 @@ void GCRuntime::updateCellPointers(Zone* zone, AllocKinds kinds,
 
   AutoRunParallelWork bgTasks(this, UpdateArenaListSegmentPointers,
                               gcstats::PhaseKind::COMPACT_UPDATE_CELLS,
-                              bgArenas, bgTaskCount, lock);
+                              bgArenas, bgTaskCount, SliceBudget::unlimited(),
+                              lock);
 
-  ParallelWorker fgTask(this, UpdateArenaListSegmentPointers, fgArenas, lock);
+  ParallelWorker fgTask(this, UpdateArenaListSegmentPointers, fgArenas,
+                        SliceBudget::unlimited(), lock);
 
   {
     AutoUnlockHelperThreadState unlock(lock);
@@ -5087,7 +5094,7 @@ static bool PrepareWeakCacheTasks(JSRuntime* rt,
   return ok;
 }
 
-static void SweepWeakCachesOnMainThread(JSRuntime* rt) {
+static void SweepAllWeakCachesOnMainThread(JSRuntime* rt) {
   // If we ran out of memory, do all the work on the main thread.
   gcstats::AutoPhase ap(rt->gc.stats(), gcstats::PhaseKind::SWEEP_WEAK_CACHES);
   IterateWeakCaches(rt, [&](JS::detail::WeakCacheBase* cache, Zone* zone) {
@@ -5188,8 +5195,10 @@ IncrementalProgress GCRuntime::beginSweepingSweepGroup(JSFreeOp* fop,
                                       PhaseKind::SWEEP_WEAKREFS, lock);
 
     WeakCacheTaskVector sweepCacheTasks;
-    if (!PrepareWeakCacheTasks(rt, &sweepCacheTasks)) {
-      SweepWeakCachesOnMainThread(rt);
+    if (PrepareWeakCacheTasks(rt, &sweepCacheTasks)) {
+      weakCachesToSweep.ref().emplace(currentSweepGroup);
+    } else {
+      SweepAllWeakCachesOnMainThread(rt);
     }
 
     for (auto& task : sweepCacheTasks) {
@@ -5224,7 +5233,8 @@ IncrementalProgress GCRuntime::beginSweepingSweepGroup(JSFreeOp* fop,
     zone->arenas.queueForegroundThingsForSweep();
   }
 
-  sweepCache = nullptr;
+  MOZ_ASSERT(!sweepZone);
+
   safeToYield = true;
 
   return Finished;
@@ -5517,140 +5527,91 @@ IncrementalProgress GCRuntime::sweepAtomsTable(JSFreeOp* fop,
   return Finished;
 }
 
-class js::gc::WeakCacheSweepIterator {
- public:
-  using WeakCacheBase = JS::detail::WeakCacheBase;
+static size_t IncrementalSweepWeakCache(GCRuntime* gc,
+                                        const WeakCacheToSweep& item) {
+  AutoSetThreadIsSweeping threadIsSweeping(item.zone);
 
-  struct Item {
-    WeakCacheBase* cache;
-    Zone* zone;
-  };
+  JS::detail::WeakCacheBase* cache = item.cache;
+  MOZ_ASSERT(cache->needsIncrementalBarrier());
+  size_t steps = cache->sweep();
+  cache->setNeedsIncrementalBarrier(false);
 
- private:
-  JS::Zone*& sweepZone;
-  WeakCacheBase*& sweepCache;
+  return steps;
+}
 
- public:
-  explicit WeakCacheSweepIterator(GCRuntime* gc)
-      : sweepZone(gc->sweepZone.ref()), sweepCache(gc->sweepCache.ref()) {
-    // Initialize state when we start sweeping a sweep group.
-    if (!sweepZone) {
-      sweepZone = gc->currentSweepGroup;
-      MOZ_ASSERT(!sweepCache);
+WeakCacheSweepIterator::WeakCacheSweepIterator(JS::Zone* sweepGroup)
+    : sweepZone(sweepGroup), sweepCache(sweepZone->weakCaches().getFirst()) {
+  settle();
+}
+
+bool WeakCacheSweepIterator::done() const { return !sweepZone; }
+
+WeakCacheToSweep WeakCacheSweepIterator::get() const {
+  MOZ_ASSERT(!done());
+
+  return {sweepCache, sweepZone};
+}
+
+void WeakCacheSweepIterator::next() {
+  MOZ_ASSERT(!done());
+
+  sweepCache = sweepCache->getNext();
+  settle();
+}
+
+void WeakCacheSweepIterator::settle() {
+  while (sweepZone) {
+    while (sweepCache && !sweepCache->needsIncrementalBarrier()) {
+      sweepCache = sweepCache->getNext();
+    }
+
+    if (sweepCache) {
+      break;
+    }
+
+    sweepZone = sweepZone->nextNodeInGroup();
+    if (sweepZone) {
       sweepCache = sweepZone->weakCaches().getFirst();
-      settle();
-    }
-
-    checkState();
-  }
-
-  bool empty(AutoLockHelperThreadState& lock) { return !sweepZone; }
-
-  Item next(AutoLockHelperThreadState& lock) {
-    if (empty(lock)) {
-      return {nullptr, nullptr};
-    }
-
-    Item result{sweepCache, sweepZone};
-    sweepCache = sweepCache->getNext();
-    settle();
-    checkState();
-    return result;
-  }
-
-  void settle() {
-    while (sweepZone) {
-      while (sweepCache && !sweepCache->needsIncrementalBarrier()) {
-        sweepCache = sweepCache->getNext();
-      }
-
-      if (sweepCache) {
-        break;
-      }
-
-      sweepZone = sweepZone->nextNodeInGroup();
-      if (sweepZone) {
-        sweepCache = sweepZone->weakCaches().getFirst();
-      }
     }
   }
 
- private:
-  void checkState() {
-    MOZ_ASSERT((!sweepZone && !sweepCache) ||
-               (sweepCache && sweepCache->needsIncrementalBarrier()));
-  }
-};
-
-class IncrementalSweepWeakCacheTask : public GCParallelTask {
-  WeakCacheSweepIterator& work_;
-  SliceBudget& budget_;
-  AutoLockHelperThreadState& lock_;
-  WeakCacheSweepIterator::Item item_;
-
- public:
-  IncrementalSweepWeakCacheTask(GCRuntime* gc, WeakCacheSweepIterator& work,
-                                SliceBudget& budget,
-                                AutoLockHelperThreadState& lock)
-      : GCParallelTask(gc),
-        work_(work),
-        budget_(budget),
-        lock_(lock),
-        item_(work.next(lock)) {
-    MOZ_ASSERT(item_.cache);
-    gc->startTask(*this, gcstats::PhaseKind::SWEEP_WEAK_CACHES, lock_);
-  }
-
-  ~IncrementalSweepWeakCacheTask() {
-    gc->joinTask(*this, gcstats::PhaseKind::SWEEP_WEAK_CACHES, lock_);
-  }
-
-  void run() override {
-    do {
-      JS::detail::WeakCacheBase* cache = item_.cache;
-      AutoSetThreadIsSweeping threadIsSweeping(item_.zone);
-
-      MOZ_ASSERT(cache->needsIncrementalBarrier());
-      size_t steps = cache->sweep();
-      cache->setNeedsIncrementalBarrier(false);
-
-      AutoLockHelperThreadState lock;
-      budget_.step(steps);
-      if (budget_.isOverBudget()) {
-        break;
-      }
-
-      item_ = work_.next(lock);
-    } while (item_.cache);
-  }
-};
-
-static const size_t MaxWeakCacheSweepTasks = 8;
+  MOZ_ASSERT((!sweepZone && !sweepCache) ||
+             (sweepCache && sweepCache->needsIncrementalBarrier()));
+}
 
 static size_t WeakCacheSweepTaskCount() {
+  if (!CanUseExtraThreads()) {
+    return 1;
+  }
+
   size_t targetTaskCount = HelperThreadState().cpuCount;
-  return std::min(targetTaskCount, MaxWeakCacheSweepTasks);
+  return std::min(targetTaskCount, MaxParallelWorkers);
 }
 
 IncrementalProgress GCRuntime::sweepWeakCaches(JSFreeOp* fop,
                                                SliceBudget& budget) {
-  WeakCacheSweepIterator work(this);
-
-  {
-    AutoLockHelperThreadState lock;
-    gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::SWEEP_COMPARTMENTS);
-
-    Maybe<IncrementalSweepWeakCacheTask> tasks[MaxWeakCacheSweepTasks];
-    for (size_t i = 0; !work.empty(lock) && i < WeakCacheSweepTaskCount();
-         i++) {
-      tasks[i].emplace(this, work, budget, lock);
-    }
-
-    // Tasks run until budget or work is exhausted.
+  if (weakCachesToSweep.ref().isNothing()) {
+    return Finished;
   }
 
+  gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::SWEEP_COMPARTMENTS);
+
+  WeakCacheSweepIterator& work = weakCachesToSweep.ref().ref();
+
   AutoLockHelperThreadState lock;
-  return work.empty(lock) ? Finished : NotFinished;
+
+  {
+    AutoRunParallelWork runWork(this, IncrementalSweepWeakCache,
+                                gcstats::PhaseKind::SWEEP_WEAK_CACHES, work,
+                                WeakCacheSweepTaskCount(), budget, lock);
+  }
+
+  if (work.done()) {
+    weakCachesToSweep.ref().reset();
+    return Finished;
+  }
+
+  return NotFinished;
 }
 
 IncrementalProgress GCRuntime::finalizeAllocKind(JSFreeOp* fop,
@@ -6027,6 +5988,7 @@ IncrementalProgress GCRuntime::performSweepActions(SliceBudget& budget) {
     }
   }
 
+  MOZ_ASSERT_IF(progress == NotFinished, isIncremental);
   return progress;
 }
 
