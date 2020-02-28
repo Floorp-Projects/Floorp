@@ -617,6 +617,7 @@ class MOZ_STACK_CLASS IonBuilder {
   AbortReasonOr<Ok> jsop_tonumeric();
   AbortReasonOr<Ok> jsop_inc_or_dec(JSOp op);
   AbortReasonOr<Ok> jsop_tostring();
+  AbortReasonOr<Ok> jsop_getarg(uint32_t arg);
   AbortReasonOr<Ok> jsop_setarg(uint32_t arg);
   AbortReasonOr<Ok> jsop_defvar();
   AbortReasonOr<Ok> jsop_deflexical();

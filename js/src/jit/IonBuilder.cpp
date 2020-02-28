@@ -1978,15 +1978,7 @@ AbortReasonOr<Ok> IonBuilder::inspectOpcode(JSOp op, bool* restarted) {
       return jsop_rest();
 
     case JSOp::GetArg:
-      if (info().argsObjAliasesFormals()) {
-        MGetArgumentsObjectArg* getArg = MGetArgumentsObjectArg::New(
-            alloc(), current->argumentsObject(), GET_ARGNO(pc));
-        current->add(getArg);
-        current->push(getArg);
-      } else {
-        current->pushArg(GET_ARGNO(pc));
-      }
-      return Ok();
+      return jsop_getarg(GET_ARGNO(pc));
 
     case JSOp::SetArg:
       return jsop_setarg(GET_ARGNO(pc));
@@ -11948,6 +11940,18 @@ AbortReasonOr<Ok> IonBuilder::jsop_copylexicalenv(bool copySlots) {
   current->add(ins);
   current->setEnvironmentChain(ins);
 
+  return Ok();
+}
+
+AbortReasonOr<Ok> IonBuilder::jsop_getarg(uint32_t arg) {
+  if (info().argsObjAliasesFormals()) {
+    auto* getArg =
+        MGetArgumentsObjectArg::New(alloc(), current->argumentsObject(), arg);
+    current->add(getArg);
+    current->push(getArg);
+  } else {
+    current->pushArg(arg);
+  }
   return Ok();
 }
 
