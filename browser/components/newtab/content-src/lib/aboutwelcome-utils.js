@@ -3,12 +3,23 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 export const AboutWelcomeUtils = {
-  handleUserAction({ data: action }) {
+  handleUserAction(action) {
     switch (action.type) {
       case "OPEN_URL":
         window.open(action.data.args);
         break;
+      case "SHOW_MIGRATION_WIZARD":
+        window.AWSendToParent("SHOW_MIGRATION_WIZARD");
+        break;
     }
+  },
+  sendEvent(type, detail) {
+    document.dispatchEvent(
+      new CustomEvent(`AWPage:${type}`, {
+        bubbles: true,
+        detail,
+      })
+    );
   },
 };
 
@@ -75,30 +86,21 @@ export const DEFAULT_WELCOME_CONTENT = {
       blockOnClick: false,
     },
     {
+      id: "TRAILHEAD_CARD_11",
+      template: "onboarding",
+      bundled: 3,
+      order: 0,
       content: {
-        title: {
-          string_id: "onboarding-mobile-phone-title",
-        },
-        text: {
-          string_id: "onboarding-mobile-phone-text",
-        },
-        icon: "mobile",
+        title: { string_id: "onboarding-import-browser-settings-title" },
+        text: { string_id: "onboarding-import-browser-settings-text" },
+        icon: "import",
         primary_button: {
-          label: {
-            string_id: "onboarding-mobile-phone-button",
-          },
-          action: {
-            type: "OPEN_URL",
-            data: {
-              args: "https://www.mozilla.org/firefox/mobile/",
-              where: "tabshifted",
-            },
-          },
+          label: { string_id: "onboarding-import-browser-settings-button" },
+          action: { type: "SHOW_MIGRATION_WIZARD" },
         },
       },
-      id: "TRAILHEAD_CARD_6",
-      order: 6,
-      blockOnClick: false,
+      targeting: "trailheadTriplet == 'dynamic_chrome'",
+      trigger: { id: "showOnboarding" },
     },
   ],
 };

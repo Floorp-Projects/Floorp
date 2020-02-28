@@ -26,6 +26,11 @@ EXTRA_JS_MODULES += [
     'AboutNewTabService.jsm',
 ]
 
+FINAL_TARGET_FILES.actors += [
+    'aboutwelcome/AboutWelcomeChild.jsm',
+    'aboutwelcome/AboutWelcomeParent.jsm',
+]
+
 XPCOM_MANIFESTS += [
     'components.conf',
 ]
