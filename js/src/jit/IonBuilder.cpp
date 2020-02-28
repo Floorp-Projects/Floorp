@@ -11957,6 +11957,9 @@ AbortReasonOr<Ok> IonBuilder::jsop_setarg(uint32_t arg) {
   MOZ_ASSERT(script()->jitScript()->modifiesArguments());
   MDefinition* val = current->peek(-1);
 
+  // |arguments| is never referenced within this function. No arguments object
+  // is created in this case, so we don't need to worry about synchronizing the
+  // argument values when writing to them.
   if (!info().hasArguments()) {
     MOZ_ASSERT(!info().needsArgsObj());
     MOZ_ASSERT(!info().argsObjAliasesFormals());
@@ -11966,14 +11969,16 @@ AbortReasonOr<Ok> IonBuilder::jsop_setarg(uint32_t arg) {
     return Ok();
   }
 
-  // NOTE: The following to-do note refers to a previous version of this code
-  // and doesn't make much sense anymore. It will be removed in the near future.
-  //
-  // :TODO: if hasArguments() is true, and the script has a JSOp::SetArg, then
-  // convert all arg accesses to go through the arguments object. (see Bug
-  // 957475)
+  // The arguments object doesn't map to the actual argument values, so we also
+  // don't need to worry about synchronizing them.
   if (!info().hasMappedArgsObj()) {
-    return abort(AbortReason::Disable, "NYI: arguments & setarg.");
+    // Unmapped arguments objects are eagerly created when we write to a
+    // positional formal parameter, see |NameOpEmitter::prepareForRhs()|. That
+    // way we don't need to bother how to save the original argument value when
+    // accessing it through |arguments[i]|.
+    MOZ_ASSERT(info().needsArgsObj());
+    current->setArg(arg);
+    return Ok();
   }
 
   MOZ_ASSERT(info().argumentsAliasesFormals(),
