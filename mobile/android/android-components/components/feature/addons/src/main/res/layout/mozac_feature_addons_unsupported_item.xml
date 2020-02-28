@@ -29,7 +29,7 @@
 
         <TextView
             android:id="@+id/add_on_name"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_toStartOf="@+id/add_on_remove_button"
             android:layout_centerVertical="true"
