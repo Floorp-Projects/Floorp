@@ -8,9 +8,11 @@
 #define gc_ParallelWork_h
 
 #include "mozilla/Maybe.h"
+#include "mozilla/Variant.h"
 
 #include "gc/GC.h"
 #include "gc/GCParallelTask.h"
+#include "js/SliceBudget.h"
 #include "vm/HelperThreads.h"
 
 namespace js {
@@ -22,20 +24,20 @@ enum class PhaseKind : uint8_t;
 namespace gc {
 
 template <typename WorkItem>
-using ParallelWorkFunc = void (*)(GCRuntime*, const WorkItem&);
+using ParallelWorkFunc = size_t (*)(GCRuntime*, const WorkItem&);
 
 // A GCParallelTask task that executes WorkItems from a WorkItemIterator.
 //
 // The WorkItemIterator class must supply done(), next() and get() methods. The
-// get() method must return WorkItems.
+// get() method must return WorkItems objects.
 template <typename WorkItem, typename WorkItemIterator>
 class ParallelWorker : public GCParallelTask {
  public:
   using WorkFunc = ParallelWorkFunc<WorkItem>;
 
   ParallelWorker(GCRuntime* gc, WorkFunc func, WorkItemIterator& work,
-                 AutoLockHelperThreadState& lock)
-      : GCParallelTask(gc), func_(func), work_(work) {}
+                 const SliceBudget& budget, AutoLockHelperThreadState& lock)
+      : GCParallelTask(gc), func_(func), work_(work), budget_(budget) {}
 
   void run() {
     // These checks assert when run in parallel.
@@ -45,16 +47,28 @@ class ParallelWorker : public GCParallelTask {
     while (!work().done()) {
       WorkItem item = work().get();
       work().next();
+
       AutoUnlockHelperThreadState unlock(lock);
-      func_(gc, item);
+      size_t steps = func_(gc, item);
+
+      budget_.step(steps);
+      if (budget_.isOverBudget()) {
+        break;
+      }
     }
   }
 
  private:
   WorkItemIterator& work() { return work_.ref(); }
 
+  // A function to execute work items on the helper thread.
   WorkFunc func_;
+
+  // An iterator which produces work items to execute.
   HelperThreadLockData<WorkItemIterator&> work_;
+
+  // The budget that determines how long to run for.
+  SliceBudget budget_;
 };
 
 static constexpr size_t MaxParallelWorkers = 8;
@@ -69,13 +83,14 @@ class MOZ_RAII AutoRunParallelWork {
 
   AutoRunParallelWork(GCRuntime* gc, WorkFunc func,
                       gcstats::PhaseKind phaseKind, WorkItemIterator& work,
-                      size_t workerCount, AutoLockHelperThreadState& lock)
+                      size_t workerCount, const SliceBudget& budget,
+                      AutoLockHelperThreadState& lock)
       : gc(gc), phaseKind(phaseKind), lock(lock), tasksStarted(0) {
     MOZ_ASSERT(workerCount <= MaxParallelWorkers);
     MOZ_ASSERT_IF(workerCount == 0, work.done());
 
     for (size_t i = 0; i < workerCount && !work.done(); i++) {
-      tasks[i].emplace(gc, func, work, lock);
+      tasks[i].emplace(gc, func, work, budget, lock);
       gc->startTask(*tasks[i], phaseKind, lock);
       tasksStarted++;
     }
