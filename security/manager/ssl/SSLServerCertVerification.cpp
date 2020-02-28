@@ -70,6 +70,26 @@
 // an SSL handshake) and the PSM NSS I/O layer are not thread-safe, and because
 // we need the event to interrupt the PR_Poll that may waiting for I/O on the
 // socket for which we are validating the cert.
+//
+// When socket process is enabled, libssl is running on socket process. To
+// perform certificate authentication with CertVerifier, we have to send all
+// needed information to parent process and send the result back to socket
+// process via IPC. The workflow is described below.
+// 1. In AuthCertificateHookInternal(), we call RemoteProcessCertVerification()
+//    instead of SSLServerCertVerificationJob::Dispatch when we are on socket
+//    process.
+// 2. In RemoteProcessCertVerification(), PVerifySSLServerCert actors will be
+//    created on IPDL background thread for carrying needed information via IPC.
+// 3. On parent process, VerifySSLServerCertParent is created and it calls
+//    SSLServerCertVerificationJob::Dispatch for doing certificate verification
+//    on one of CertVerificationThreads.
+// 4. When validation is done, OnVerifiedSSLServerCertSuccess IPC message is
+//    sent through the IPDL background thread when
+//    CertVerifier::VerifySSLServerCert returns Success. Otherwise,
+//    OnVerifiedSSLServerCertFailure is sent.
+// 5. After setp 4, PVerifySSLServerCert actors will be released. The
+//    verification result will be dispatched via
+//    SSLServerCertVerificationResult.
 
 #include "SSLServerCertVerification.h"
 
@@ -86,6 +106,7 @@
 #include "SharedCertVerifier.h"
 #include "SharedSSLState.h"
 #include "TransportSecurityInfo.h"  // For RememberCertErrorsTable
+#include "VerifySSLServerCertChild.h"
 #include "cert.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Casting.h"
@@ -111,7 +132,6 @@
 #include "mozpkix/pkix.h"
 #include "mozpkix/pkixnss.h"
 #include "secerr.h"
-#include "secoidt.h"
 #include "secport.h"
 #include "ssl.h"
 #include "sslerr.h"
@@ -170,37 +190,6 @@ void StopSSLServerCertVerificationThreads() {
 }
 
 namespace {
-
-// Dispatched to the STS thread to notify the infoObject of the verification
-// result.
-//
-// This will cause the PR_Poll in the STS thread to return, so things work
-// correctly even if the STS thread is blocked polling (only) on the file
-// descriptor that is waiting for this result.
-class SSLServerCertVerificationResult : public Runnable {
- public:
-  NS_DECL_NSIRUNNABLE
-
-  explicit SSLServerCertVerificationResult(TransportSecurityInfo* infoObject);
-
-  void Dispatch(nsNSSCertificate* aCert,
-                nsTArray<nsTArray<uint8_t>>&& aBuiltChain,
-                nsTArray<nsTArray<uint8_t>>&& aPeerCertChain,
-                uint16_t aCertificateTransparencyStatus, EVStatus aEVStatus,
-                bool aSucceeded, PRErrorCode aFinalError,
-                uint32_t aCollectedErrors);
-
- private:
-  const RefPtr<TransportSecurityInfo> mInfoObject;
-  RefPtr<nsNSSCertificate> mCert;
-  nsTArray<nsTArray<uint8_t>> mBuiltChain;
-  nsTArray<nsTArray<uint8_t>> mPeerCertChain;
-  uint16_t mCertificateTransparencyStatus;
-  EVStatus mEVStatus;
-  bool mSucceeded;
-  PRErrorCode mFinalError;
-  uint32_t mCollectedErrors;
-};
 
 // A probe value of 1 means "no error".
 uint32_t MapOverridableErrorToProbeValue(PRErrorCode errorCode) {
@@ -476,23 +465,21 @@ class SSLServerCertVerificationJob : public Runnable {
                             Maybe<DelegatedCredentialInfo>& dcInfo,
                             uint32_t providerFlags, Time time, PRTime prtime,
                             uint32_t certVerifierFlags,
-                            SSLServerCertVerificationResult* aResultTask);
+                            BaseSSLServerCertVerificationResult* aResultTask);
 
  private:
   NS_DECL_NSIRUNNABLE
 
   // Must be called only on the socket transport thread
-  SSLServerCertVerificationJob(uint64_t addrForLogging, void* aPinArg,
-                               const UniqueCERTCertificate& cert,
-                               nsTArray<nsTArray<uint8_t>>&& peerCertChain,
-                               const nsACString& aHostName, int32_t aPort,
-                               const OriginAttributes& aOriginAttributes,
-                               Maybe<nsTArray<uint8_t>>& stapledOCSPResponse,
-                               Maybe<nsTArray<uint8_t>>& sctsFromTLSExtension,
-                               Maybe<DelegatedCredentialInfo>& dcInfo,
-                               uint32_t providerFlags, Time time, PRTime prtime,
-                               uint32_t certVerifierFlags,
-                               SSLServerCertVerificationResult* aResultTask);
+  SSLServerCertVerificationJob(
+      uint64_t addrForLogging, void* aPinArg, const UniqueCERTCertificate& cert,
+      nsTArray<nsTArray<uint8_t>>&& peerCertChain, const nsACString& aHostName,
+      int32_t aPort, const OriginAttributes& aOriginAttributes,
+      Maybe<nsTArray<uint8_t>>& stapledOCSPResponse,
+      Maybe<nsTArray<uint8_t>>& sctsFromTLSExtension,
+      Maybe<DelegatedCredentialInfo>& dcInfo, uint32_t providerFlags, Time time,
+      PRTime prtime, uint32_t certVerifierFlags,
+      BaseSSLServerCertVerificationResult* aResultTask);
   uint64_t mAddrForLogging;
   void* mPinArg;
   const UniqueCERTCertificate mCert;
@@ -507,7 +494,7 @@ class SSLServerCertVerificationJob : public Runnable {
   Maybe<nsTArray<uint8_t>> mStapledOCSPResponse;
   Maybe<nsTArray<uint8_t>> mSCTsFromTLSExtension;
   Maybe<DelegatedCredentialInfo> mDCInfo;
-  RefPtr<SSLServerCertVerificationResult> mResultTask;
+  RefPtr<BaseSSLServerCertVerificationResult> mResultTask;
 };
 
 SSLServerCertVerificationJob::SSLServerCertVerificationJob(
@@ -518,7 +505,7 @@ SSLServerCertVerificationJob::SSLServerCertVerificationJob(
     Maybe<nsTArray<uint8_t>>& sctsFromTLSExtension,
     Maybe<DelegatedCredentialInfo>& dcInfo, uint32_t providerFlags, Time time,
     PRTime prtime, uint32_t certVerifierFlags,
-    SSLServerCertVerificationResult* aResultTask)
+    BaseSSLServerCertVerificationResult* aResultTask)
     : Runnable("psm::SSLServerCertVerificationJob"),
       mAddrForLogging(addrForLogging),
       mPinArg(aPinArg),
@@ -1208,7 +1195,7 @@ SECStatus SSLServerCertVerificationJob::Dispatch(
     Maybe<nsTArray<uint8_t>>& sctsFromTLSExtension,
     Maybe<DelegatedCredentialInfo>& dcInfo, uint32_t providerFlags, Time time,
     PRTime prtime, uint32_t certVerifierFlags,
-    SSLServerCertVerificationResult* aResultTask) {
+    BaseSSLServerCertVerificationResult* aResultTask) {
   // Runs on the socket transport thread
   if (!aResultTask || !serverCert) {
     NS_ERROR("Invalid parameters for SSL server cert validation");
@@ -1468,6 +1455,15 @@ SECStatus AuthCertificateHookInternal(
   uint64_t addr = reinterpret_cast<uintptr_t>(aPtrForLogging);
   RefPtr<SSLServerCertVerificationResult> resultTask =
       new SSLServerCertVerificationResult(infoObject);
+
+  if (XRE_IsSocketProcess()) {
+    return RemoteProcessCertVerification(
+        serverCert, std::move(peerCertChain), infoObject->GetHostName(),
+        infoObject->GetPort(), infoObject->GetOriginAttributes(),
+        stapledOCSPResponse, sctsFromTLSExtension, dcInfo, providerFlags,
+        certVerifierFlags, resultTask);
+  }
+
   // We *must* do certificate verification on a background thread because
   // we need the socket transport thread to be free for our OCSP requests,
   // and we *want* to do certificate verification on a background thread
@@ -1619,6 +1615,8 @@ SECStatus AuthCertificateHookWithInfo(
                                      stapledOCSPResponse, sctsFromTLSExtension,
                                      dcInfo, providerFlags, certVerifierFlags);
 }
+
+NS_IMPL_ISUPPORTS_INHERITED0(SSLServerCertVerificationResult, Runnable)
 
 SSLServerCertVerificationResult::SSLServerCertVerificationResult(
     TransportSecurityInfo* infoObject)
