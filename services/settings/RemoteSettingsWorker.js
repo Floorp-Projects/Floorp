@@ -194,6 +194,17 @@ async function importDumpIDB(bucket, collection, records) {
 }
 
 /**
+ * Wrap IndexedDB errors to catch them more easily.
+ */
+class IndexedDBError extends Error {
+  constructor(error) {
+    super(`IndexedDB: ${error.message}`);
+    this.name = error.name;
+    this.stack = error.stack;
+  }
+}
+
+/**
  * Helper to wrap indexedDB.open() into a promise.
  */
 async function openIDB(dbname, version) {
@@ -207,7 +218,7 @@ async function openIDB(dbname, version) {
         )
       );
     };
-    request.onerror = event => reject(event.target.error);
+    request.onerror = event => reject(new IndexedDBError(event.target.error));
     request.onsuccess = event => {
       const db = event.target.result;
       resolve(db);
@@ -232,9 +243,10 @@ async function executeIDB(db, storeName, callback) {
       result = callback(store);
     } catch (e) {
       transaction.abort();
-      reject(e);
+      reject(new IndexedDBError(e));
     }
-    transaction.onerror = event => reject(event.target.error);
+    transaction.onerror = event =>
+      reject(new IndexedDBError(event.target.error));
     transaction.oncomplete = event => resolve(result);
   });
 }
