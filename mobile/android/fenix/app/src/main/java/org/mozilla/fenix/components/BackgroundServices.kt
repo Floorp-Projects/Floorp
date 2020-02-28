@@ -17,8 +17,6 @@ import mozilla.components.concept.sync.DeviceType
 import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.feature.accounts.push.FxaPushSupportFeature
 import mozilla.components.feature.accounts.push.SendTabFeature
-import mozilla.components.feature.push.AutoPushFeature
-import mozilla.components.feature.push.PushConfig
 import mozilla.components.lib.crash.CrashReporter
 import mozilla.components.service.fxa.DeviceConfig
 import mozilla.components.service.fxa.ServerConfig
@@ -30,7 +28,6 @@ import mozilla.components.service.fxa.manager.SCOPE_SYNC
 import mozilla.components.service.fxa.manager.SyncEnginesStorage
 import mozilla.components.service.fxa.sync.GlobalSyncableStoreProvider
 import mozilla.components.service.sync.logins.SyncableLoginsStorage
-import mozilla.components.support.base.log.logger.Logger
 import org.mozilla.fenix.Config
 import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.R
@@ -47,6 +44,7 @@ import org.mozilla.fenix.test.Mockable
 @Mockable
 class BackgroundServices(
     private val context: Context,
+    private val push: Push,
     crashReporter: CrashReporter,
     historyStorage: PlacesHistoryStorage,
     bookmarkStorage: PlacesBookmarksStorage,
@@ -86,10 +84,6 @@ class BackgroundServices(
             syncPeriodInMinutes = 240L) // four hours
     }
 
-    private val pushService by lazy { FirebasePushService() }
-
-    val push by lazy { makePushConfig()?.let { makePush(it) } }
-
     init {
         // Make the "history", "bookmark", and "passwords" stores accessible to workers spawned by the sync manager.
         GlobalSyncableStoreProvider.configureStore(SyncEngine.History to historyStorage)
@@ -105,30 +99,6 @@ class BackgroundServices(
     val accountAbnormalities = AccountAbnormalities(context, crashReporter)
 
     val accountManager = makeAccountManager(context, serverConfig, deviceConfig, syncConfig)
-
-    @VisibleForTesting(otherwise = PRIVATE)
-    fun makePush(pushConfig: PushConfig): AutoPushFeature {
-        return AutoPushFeature(
-            context = context,
-            service = pushService,
-            config = pushConfig
-        )
-    }
-
-    @VisibleForTesting(otherwise = PRIVATE)
-    fun makePushConfig(): PushConfig? {
-        val logger = Logger("PushConfig")
-        val projectIdKey = context.getString(R.string.pref_key_push_project_id)
-        val resId = context.resources.getIdentifier(projectIdKey, "string", context.packageName)
-        if (resId == 0) {
-            logger.warn("No firebase configuration found; cannot support push service.")
-            return null
-        }
-
-        logger.debug("Creating push configuration for autopush.")
-        val projectId = context.resources.getString(resId)
-        return PushConfig(projectId)
-    }
 
     @VisibleForTesting(otherwise = PRIVATE)
     fun makeAccountManager(
@@ -166,7 +136,7 @@ class BackgroundServices(
         accountManager.register(accountAbnormalities)
 
         // Enable push if it's configured.
-        push?.let { autoPushFeature ->
+        push.feature?.let { autoPushFeature ->
             FxaPushSupportFeature(context, accountManager, autoPushFeature)
         }
 
