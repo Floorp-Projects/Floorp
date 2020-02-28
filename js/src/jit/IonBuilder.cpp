@@ -11956,11 +11956,6 @@ AbortReasonOr<Ok> IonBuilder::jsop_getarg(uint32_t arg) {
 }
 
 AbortReasonOr<Ok> IonBuilder::jsop_setarg(uint32_t arg) {
-  // To handle this case, we should spill the arguments to the space where
-  // actual arguments are stored. The tricky part is that if we add a MIR
-  // to wrap the spilling action, we don't want the spilling to be
-  // captured by the GetArg and by the resume point, only by
-  // MGetFrameArgument.
   MOZ_ASSERT(script()->jitScript()->modifiesArguments());
   MDefinition* val = current->peek(-1);
 
