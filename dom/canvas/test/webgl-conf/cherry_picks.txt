@@ -1,3 +1,4 @@
+local
 commit 6f0b34abee8dba611c253738d955c59f703c147a
 Author: ShrekShao <shrekshao@gmail.com>
 Date:   Tue Apr 23 17:40:58 2019 -0700
@@ -3175,6 +3176,14 @@ Author: Jeff Gilbert <jdashg@gmail.com>
 Date:   Thu Sep 28 15:00:14 2017 -0700
 
     Update EXT_sRGB test to forbid GenerateMipmap as per parent spec. (#2524)
+
+commit 7ff0c2857868fafa202f7b169266dd46250afa20
+Author: Jeff Gilbert <jgilbert@mozilla.com>
+Date:   Tue Feb 25 10:43:35 2020 -0800
+
+    Add GLSL preprocessor comment behavior tests. (#3028)
+    
+    Firefox bug: https://bugzilla.mozilla.org/show_bug.cgi?id=1617512
 
 Cherries picked
 ================================================================================
