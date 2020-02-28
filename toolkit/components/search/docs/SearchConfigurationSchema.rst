@@ -3,7 +3,8 @@ Search Configuration Schema
 ===========================
 
 .. note::
-    This configuration is currently being implemented in `Bug 1542235`_.
+    This configuration is currently under testing for nightly builds only, see
+    `Bug 1542235`_ for more status information.
 
 This document outlines the details of the schema and how the various sub-parts
 interact. For the full fields and descriptions, please see the `schema itself`_.
