@@ -16,6 +16,4 @@ job-template:
     description-suffix: 'Mac Notarization Poller'
     worker:
         implementation: notarization-poller
-    attributes:
-        shipping_phase: promote
     copy-repack-ids: true
