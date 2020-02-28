@@ -538,13 +538,6 @@ void SetLastActiveTabLoadOptimizationHit(TimeStamp const& when) {
   }
 }
 
-HttpVersion GetHttpVersionFromSpdy(SpdyVersion sv) {
-  MOZ_DIAGNOSTIC_ASSERT(sv != SpdyVersion::NONE);
-  MOZ_ASSERT(sv == SpdyVersion::HTTP_2);
-
-  return HttpVersion::v2_0;
-}
-
 }  // namespace nsHttp
 
 template <typename T>

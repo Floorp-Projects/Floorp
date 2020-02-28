@@ -37,20 +37,7 @@ enum class HttpVersion {
 
 enum class SpdyVersion {
   NONE = 0,
-  // SPDY_VERSION_2 = 2, REMOVED
-  // SPDY_VERSION_3 = 3, REMOVED
-  // SPDY_VERSION_31 = 4, REMOVED
   HTTP_2 = 5
-
-  // leave room for official versions. telem goes to 48
-  // 24 was a internal spdy/3.1
-  // 25 was spdy/4a2
-  // 26 was http/2-draft08 and http/2-draft07 (they were the same)
-  // 27 was http/2-draft09, h2-10, and h2-11
-  // 28 was http/2-draft12
-  // 29 was http/2-draft13
-  // 30 was h2-14 and h2-15
-  // 31 was h2-16
 };
 
 extern const nsCString kHttp3Version;
@@ -256,8 +243,6 @@ void NotifyActiveTabLoadOptimization();
 TimeStamp const GetLastActiveTabLoadOptimizationHit();
 void SetLastActiveTabLoadOptimizationHit(TimeStamp const& when);
 bool IsBeforeLastActiveTabLoadOptimization(TimeStamp const& when);
-
-HttpVersion GetHttpVersionFromSpdy(SpdyVersion sv);
 
 // Declare all atoms
 //

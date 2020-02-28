@@ -162,7 +162,7 @@ nsresult HttpConnectionMgrParent::CancelTransaction(
   return NS_OK;
 }
 
-nsresult HttpConnectionMgrParent::ReclaimConnection(nsHttpConnection*) {
+nsresult HttpConnectionMgrParent::ReclaimConnection(HttpConnectionBase*) {
   MOZ_ASSERT_UNREACHABLE("ReclaimConnection should not be called");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
