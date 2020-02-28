@@ -29,6 +29,11 @@ interface nsICookieSettings : nsISupports
   [infallible] readonly attribute boolean limitForeignContexts;
 
   /**
+   * Whether our cookie behavior mandates partitioning third-party content.
+   */
+  [infallible] attribute boolean partitionForeign;
+
+  /**
    * CookiePermission at the loading of the document for a particular
    * principal. It returns the same cookiePermission also in case it changes
    * during the life-time of the top document.

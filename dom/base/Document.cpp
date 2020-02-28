@@ -16000,7 +16000,13 @@ nsICookieSettings* Document::CookieSettings() {
   // If we are here, this is probably a javascript: URL document. In any case,
   // we must have a nsCookieSettings. Let's create it.
   if (!mCookieSettings) {
-    mCookieSettings = net::CookieSettings::Create();
+    Document* inProcessParent = GetInProcessParentDocument();
+
+    mCookieSettings =
+        inProcessParent
+            ? net::CookieSettings::Create(
+                  inProcessParent->CookieSettings()->GetCookieBehavior())
+            : net::CookieSettings::Create();
   }
 
   return mCookieSettings;
