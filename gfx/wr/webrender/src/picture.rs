@@ -96,7 +96,7 @@
 
 use api::{MixBlendMode, PipelineId, PremultipliedColorF, FilterPrimitiveKind};
 use api::{PropertyBinding, PropertyBindingId, FilterPrimitive, FontRenderMode};
-use api::{DebugFlags, RasterSpace, ImageKey, ColorF, ColorU, PrimitiveFlags};
+use api::{DebugFlags, RasterSpace, ImageKey, ColorF, ColorU, PrimitiveFlags, MAX_BLUR_RADIUS};
 use api::units::*;
 use crate::box_shadow::{BLUR_SAMPLE_SCALE};
 use crate::clip::{ClipStore, ClipChainInstance, ClipDataHandle, ClipChainId};
@@ -4383,9 +4383,13 @@ impl PicturePrimitive {
                         let mut blur_render_task_id = picture_task_id;
                         let scale_factors = scale_factors(&transform);
                         for shadow in shadows {
-                            let std_dev = shadow.blur_radius * device_pixel_scale.0;
+                            // TODO(cbrewster): We should take the scale factors into account when clamping the max
+                            // std deviation for the blur earlier so that we don't overinflate.
                             blur_render_task_id = RenderTask::new_blur(
-                                DeviceSize::new(std_dev * scale_factors.0, std_dev * scale_factors.1),
+                                DeviceSize::new(
+                                    f32::min(shadow.blur_radius * scale_factors.0, MAX_BLUR_RADIUS) * device_pixel_scale.0,
+                                    f32::min(shadow.blur_radius * scale_factors.1, MAX_BLUR_RADIUS) * device_pixel_scale.0,
+                                ),
                                 picture_task_id,
                                 frame_state.render_tasks,
                                 RenderTargetKind::Color,
