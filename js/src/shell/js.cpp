@@ -3756,6 +3756,89 @@ static bool ThrowError(JSContext* cx, unsigned argc, Value* vp) {
   return false;
 }
 
+static bool CopyErrorReportToObject(JSContext* cx, JSErrorReport* report,
+                                    HandleObject obj) {
+  RootedString nameStr(cx);
+  if (report->exnType == JSEXN_WARN) {
+    nameStr = JS_NewStringCopyZ(cx, "Warning");
+    if (!nameStr) {
+      return false;
+    }
+  } else {
+    nameStr = GetErrorTypeName(cx, report->exnType);
+    // GetErrorTypeName doesn't set an exception, but
+    // can fail for InternalError or non-error objects.
+    if (!nameStr) {
+      nameStr = cx->runtime()->emptyString;
+    }
+  }
+  RootedValue nameVal(cx, StringValue(nameStr));
+  if (!DefineDataProperty(cx, obj, cx->names().name, nameVal)) {
+    return false;
+  }
+
+  RootedString messageStr(cx, report->newMessageString(cx));
+  if (!messageStr) {
+    return false;
+  }
+  RootedValue messageVal(cx, StringValue(messageStr));
+  if (!DefineDataProperty(cx, obj, cx->names().message, messageVal)) {
+    return false;
+  }
+
+  RootedValue linenoVal(cx, Int32Value(report->lineno));
+  if (!DefineDataProperty(cx, obj, cx->names().lineNumber, linenoVal)) {
+    return false;
+  }
+
+  RootedValue columnVal(cx, Int32Value(report->column));
+  if (!DefineDataProperty(cx, obj, cx->names().columnNumber, columnVal)) {
+    return false;
+  }
+
+  RootedObject notesArray(cx, CreateErrorNotesArray(cx, report));
+  if (!notesArray) {
+    return false;
+  }
+
+  RootedValue notesArrayVal(cx, ObjectValue(*notesArray));
+  return DefineDataProperty(cx, obj, cx->names().notes, notesArrayVal);
+}
+
+static bool CreateErrorReport(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  js::ErrorReport report(cx);
+  if (!report.init(cx, args.get(0), js::ErrorReport::WithSideEffects)) {
+    return false;
+  }
+
+  MOZ_ASSERT(!JSREPORT_IS_WARNING(report.report()->flags));
+
+  RootedObject obj(cx, JS_NewPlainObject(cx));
+  if (!obj) {
+    return false;
+  }
+
+  RootedString toString(cx,
+                        NewStringCopyUTF8Z<CanGC>(cx, report.toStringResult()));
+  if (!toString) {
+    return false;
+  }
+
+  if (!JS_DefineProperty(cx, obj, "toStringResult", toString,
+                         JSPROP_ENUMERATE)) {
+    return false;
+  }
+
+  if (!CopyErrorReportToObject(cx, report.report(), obj)) {
+    return false;
+  }
+
+  args.rval().setObject(*obj);
+  return true;
+}
+
 #define LAZY_STANDARD_CLASSES
 
 /* A class for easily testing the inner/outer object callbacks. */
@@ -8587,6 +8670,11 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
 "throwError()",
 "  Throw an error from JS_ReportError."),
 
+    JS_FN_HELP("createErrorReport", CreateErrorReport, 1, 0,
+"createErrorReport(value)",
+"  Create an js::ErrorReport object from the given value and serialize\n"
+"  to an object."),
+
 #if defined(DEBUG) || defined(JS_JITSPEW)
     JS_FN_HELP("disassemble", DisassembleToString, 1, 0,
 "disassemble([fun/code])",
@@ -9438,47 +9526,7 @@ static bool CreateLastWarningObject(JSContext* cx, JSErrorReport* report) {
     return false;
   }
 
-  RootedString nameStr(cx);
-  if (report->exnType == JSEXN_WARN) {
-    nameStr = JS_NewStringCopyZ(cx, "Warning");
-  } else {
-    nameStr = GetErrorTypeName(cx, report->exnType);
-  }
-  if (!nameStr) {
-    return false;
-  }
-  RootedValue nameVal(cx, StringValue(nameStr));
-  if (!DefineDataProperty(cx, warningObj, cx->names().name, nameVal)) {
-    return false;
-  }
-
-  RootedString messageStr(cx, report->newMessageString(cx));
-  if (!messageStr) {
-    return false;
-  }
-  RootedValue messageVal(cx, StringValue(messageStr));
-  if (!DefineDataProperty(cx, warningObj, cx->names().message, messageVal)) {
-    return false;
-  }
-
-  RootedValue linenoVal(cx, Int32Value(report->lineno));
-  if (!DefineDataProperty(cx, warningObj, cx->names().lineNumber, linenoVal)) {
-    return false;
-  }
-
-  RootedValue columnVal(cx, Int32Value(report->column));
-  if (!DefineDataProperty(cx, warningObj, cx->names().columnNumber,
-                          columnVal)) {
-    return false;
-  }
-
-  RootedObject notesArray(cx, CreateErrorNotesArray(cx, report));
-  if (!notesArray) {
-    return false;
-  }
-
-  RootedValue notesArrayVal(cx, ObjectValue(*notesArray));
-  if (!DefineDataProperty(cx, warningObj, cx->names().notes, notesArrayVal)) {
+  if (!CopyErrorReportToObject(cx, report, warningObj)) {
     return false;
   }
 
