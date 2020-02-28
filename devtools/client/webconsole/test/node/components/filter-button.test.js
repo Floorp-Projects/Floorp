@@ -23,7 +23,7 @@ describe("FilterButton component:", () => {
     const wrapper = render(FilterButton(props));
     expect(wrapper.is("button")).toBe(true);
     expect(wrapper.hasClass("devtools-togglebutton")).toBe(true);
-    expect(wrapper.hasClass("error")).toBe(true);
+    expect(wrapper.attr("data-category")).toBe("error");
     expect(wrapper.attr("aria-pressed")).toBe("true");
     expect(wrapper.text()).toBe("Error");
   });
@@ -32,7 +32,7 @@ describe("FilterButton component:", () => {
     const wrapper = render(FilterButton({ ...props, active: false }));
     expect(wrapper.is("button")).toBe(true);
     expect(wrapper.hasClass("devtools-togglebutton")).toBe(true);
-    expect(wrapper.hasClass("error")).toBe(true);
+    expect(wrapper.attr("data-category")).toBe("error");
     expect(wrapper.attr("aria-pressed")).toBe("false");
     expect(wrapper.text()).toBe("Error");
   });

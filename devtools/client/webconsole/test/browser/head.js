@@ -1016,11 +1016,8 @@ async function getFilterState(hud) {
   const result = {};
 
   for (const button of buttons) {
-    const classes = new Set(button.classList.values());
-    classes.delete("devtools-togglebutton");
-    const category = classes.values().next().value;
-
-    result[category] = button.getAttribute("aria-pressed") === "true";
+    result[button.dataset.category] =
+      button.getAttribute("aria-pressed") === "true";
   }
 
   return result;
@@ -1060,7 +1057,7 @@ async function setFilterState(hud, settings) {
 
   for (const category in settings) {
     const value = settings[category];
-    const button = filterBar.querySelector(`.${category}`);
+    const button = filterBar.querySelector(`[data-category="${category}"]`);
 
     if (category === "text") {
       const filterInput = getFilterInput(hud);
