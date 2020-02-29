@@ -127,7 +127,111 @@ let testCases = [
       doorhanger: null,
     },
   },
+  {
+    name: "Change to new username",
+    prefEnabled: true,
+    logins: [{ username: "user1", password: "pass1" }],
+    formDefaults: {},
+    formChanges: {
+      [usernameInputSelector]: "user2",
+    },
+    expected: {
+      initialForm: {
+        username: "user1",
+        password: "pass1",
+      },
+      doorhanger: {
+        type: "password-save",
+        dismissed: true,
+        anchorExtraAttr: "",
+        username: "user2",
+        password: "pass1",
+        toggle: "visible",
+      },
+    },
+  },
+  // Disabled test tracked in bug 1619030
+  // {
+  //   name: "Change to existing username, different password",
+  //   prefEnabled: true,
+  //   logins: [{ username: "user-saved", password: "pass1" }],
+  //   formDefaults: {
+  //     [usernameInputSelector]: "user-prefilled",
+  //     [passwordInputSelector]: "pass2",
+  //   },
+  //   formChanges: {
+  //     [usernameInputSelector]: "user-saved",
+  //   },
+  //   expected: {
+  //     initialForm: {
+  //       username: "user-prefilled",
+  //       password: "pass2",
+  //     },
+  //     doorhanger: {
+  //       type: "password-change",
+  //       dismissed: true,
+  //       anchorExtraAttr: "",
+  //       username: "user-saved",
+  //       password: "pass2",
+  //       toggle: "visible",
+  //     },
+  //   },
+  // },
+  {
+    name: "Add username to existing password",
+    prefEnabled: true,
+    logins: [{ username: "", password: "pass1" }],
+    formDefaults: {},
+    formChanges: {
+      [usernameInputSelector]: "user1",
+    },
+    expected: {
+      initialForm: {
+        username: "",
+        password: "pass1",
+      },
+      doorhanger: {
+        type: "password-change",
+        dismissed: true,
+        anchorExtraAttr: "",
+        username: "user1",
+        password: "pass1",
+        toggle: "visible",
+      },
+    },
+  },
+  {
+    name: "Change to existing username, password",
+    prefEnabled: true,
+    logins: [{ username: "user1", password: "pass1" }],
+    formDefaults: {
+      [usernameInputSelector]: "user",
+      [passwordInputSelector]: "pass",
+    },
+    formChanges: {
+      [passwordInputSelector]: "pass1",
+      [usernameInputSelector]: "user1",
+    },
+    expected: {
+      initialForm: {
+        username: "user",
+        password: "pass",
+      },
+      // Eventually we'll want to remove the doorhanger in this case
+      doorhanger: {
+        type: "password-change",
+        dismissed: true,
+        anchorExtraAttr: "",
+        username: "user1",
+        password: "pass1",
+        toggle: "visible",
+      },
+    },
+  },
 ];
+
+requestLongerTimeout(2);
+SimpleTest.requestCompleteLog();
 
 for (let testData of testCases) {
   let tmp = {
@@ -141,6 +245,17 @@ for (let testData of testCases) {
     },
   };
   add_task(tmp[testData.name]);
+}
+
+async function waitForPromise(promise, timeoutMs = 5000) {
+  let timedOut = new Promise((resolve, reject) => {
+    /* eslint-disable-next-line mozilla/no-arbitrary-setTimeout */
+    let timerId = setTimeout(() => {
+      clearTimeout(timerId);
+      reject(`Timed out in ${timeoutMs} ms.`);
+    }, timeoutMs);
+  });
+  await Promise.race([promise, timedOut]);
 }
 
 async function testPasswordChange({
@@ -182,27 +297,21 @@ async function testPasswordChange({
       let passwordEditedMessage = listenForTestNotification(
         "PasswordEditedOrGenerated"
       );
+
       await changeContentFormValues(browser, formChanges);
-      info("form edited, waiting for change message");
+      info(
+        "form edited, waiting for test notification of PasswordEditedOrGenerated"
+      );
 
-      let gotMessage;
-      passwordEditedMessage.then(() => (gotMessage = true));
       try {
-        await TestUtils.waitForCondition(
-          () => {
-            return gotMessage;
-          },
-          `Waiting for passwordEditedMessage`,
-          undefined,
-          5
-        );
+        await waitForPromise(passwordEditedMessage, 5000);
+        ok(expected.doorhanger, "Message sent");
       } catch (ex) {
-        ok(!expected.doorhanger, "Message not sent");
+        ok(!expected.doorhanger, "No message sent");
       }
+      info("Resolved listenForTestNotification promise");
 
-      if (expected.doorhanger) {
-        is(gotMessage, !!expected.doorhanger, "Check message was sent");
-      } else {
+      if (!expected.doorhanger) {
         let notif;
         try {
           await TestUtils.waitForCondition(
@@ -214,7 +323,7 @@ async function testPasswordChange({
             },
             `Waiting to ensure no notification`,
             undefined,
-            5
+            25
           );
         } catch (ex) {}
         ok(!notif, "No doorhanger expected");

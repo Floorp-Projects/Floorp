@@ -730,6 +730,7 @@ async function changeContentFormValues(browser, selectorValues) {
   for (let [sel, value] of Object.entries(selectorValues)) {
     info("changeContentFormValues, update: " + sel + ", to: " + value);
     await changeContentInputValue(browser, sel, value);
+    await TestUtils.waitForTick();
   }
 }
 
