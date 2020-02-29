@@ -51,6 +51,8 @@ interface HTMLElement : Element {
   [CEReactions, SetterThrows, Pure]
            attribute boolean spellcheck;
 
+  attribute DOMString nonce;
+
   // command API
   //readonly attribute DOMString? commandType;
   //readonly attribute DOMString? commandLabel;
