@@ -101,6 +101,7 @@ add_task(async function testAboutDebugging() {
   );
   debugAddonsBtn.click();
   await switched;
+  await waitForRequestsToSettle(AboutDebugging.store);
 
   info("Force about:debugging to a different hash URL");
   aboutDebuggingTab.linkedBrowser.contentWindow.location.hash = "/setup";
@@ -115,6 +116,7 @@ add_task(async function testAboutDebugging() {
   );
   debugAddonsBtn.click();
   await switched;
+  await waitForRequestsToSettle(AboutDebugging.store);
 
   info("Wait until any new about:debugging request did settle");
   // Avoid test failures due to closing the about:debugging tab
