@@ -87,7 +87,7 @@ information <https://developer.mozilla.org/docs/Mozilla/Developer_guide/Build_In
 To write a patch
 ----------------
 
-Make the changes you need in the code base.
+Make the changes you need in the codebase. You can look up UI text in `Searchfox <https://searchfox.org>`__ to find the right file.
 
 Then:
 
