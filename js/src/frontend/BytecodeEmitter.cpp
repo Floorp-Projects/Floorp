@@ -924,15 +924,6 @@ bool BytecodeEmitter::emitInternedObjectOp(uint32_t index, JSOp op) {
   return emitIndexOp(op, index);
 }
 
-bool BytecodeEmitter::emitObjectOp(ObjectBox* objbox, JSOp op) {
-  uint32_t index;
-  if (!perScriptData().gcThingList().append(objbox, &index)) {
-    return false;
-  }
-
-  return emitInternedObjectOp(index, op);
-}
-
 bool BytecodeEmitter::emitObjectPairOp(ObjectBox* objbox1, ObjectBox* objbox2,
                                        JSOp op) {
   uint32_t index1, index2;
