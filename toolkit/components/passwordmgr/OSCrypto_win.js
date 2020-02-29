@@ -183,10 +183,9 @@ OSCrypto.prototype = {
    * @param {string} data - the encrypted string that needs to be decrypted.
    * @param {?string} entropy - the entropy value of the decryption (could be null). Its value must
    * be the same as the one used when the data was encrypted.
-   * @param {?string} output - how to return the decrypted data default string
-   * @returns {string|Uint8Array} the decryption of the string.
+   * @returns {string} the decryption of the string.
    */
-  decryptData(data, entropy = null, output = "string") {
+  decryptData(data, entropy = null) {
     let array = this.stringToArray(data);
     let encryptedData = wintypes.BYTE.array(array.length)(array);
     let inData = new this._structs.DATA_BLOB(
@@ -211,15 +210,8 @@ OSCrypto.prototype = {
       }
 
       let decrypted = this._convertWinArrayToJSArray(outData);
-
-      // Return raw bytes to handle non-string results
-      const bytes = new Uint8Array(decrypted);
-      if (output === "bytes") {
-        return bytes;
-      }
-
       // Output that may include characters outside of the 0-255 (byte) range needs to use TextDecoder.
-      return new TextDecoder().decode(bytes);
+      return new TextDecoder().decode(new Uint8Array(decrypted));
     } finally {
       if (outData.pbData) {
         this._functions.get("LocalFree")(outData.pbData);
