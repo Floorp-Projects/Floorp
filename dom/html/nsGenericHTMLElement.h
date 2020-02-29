@@ -140,6 +140,18 @@ class nsGenericHTMLElement : public nsGenericHTMLElementBase {
     return false;
   }
 
+  void SetNonce(const nsAString& aNonce) {
+    SetProperty(nsGkAtoms::nonce, new nsString(aNonce),
+                nsINode::DeleteProperty<nsString>);
+  }
+  void RemoveNonce() { RemoveProperty(nsGkAtoms::nonce); }
+  void GetNonce(nsAString& aNonce) const {
+    nsString* cspNonce = static_cast<nsString*>(GetProperty(nsGkAtoms::nonce));
+    if (cspNonce) {
+      aNonce = *cspNonce;
+    }
+  }
+
   /**
    * Returns the count of descendants (inclusive of this node) in
    * the uncomposed document that are explicitly set as editable.

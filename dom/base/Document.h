@@ -1118,6 +1118,14 @@ class Document : public nsINode,
   }
 
   /**
+   * Returns true if the document holds a CSP
+   * delivered through an HTTP Header.
+   */
+  bool GetHasCSPDeliveredThroughHeader() {
+    return mHasCSPDeliveredThroughHeader;
+  }
+
+  /**
    * Return a promise which resolves to the content blocking events.
    */
   typedef MozPromise<uint32_t, bool, true> GetContentBlockingEventsPromise;
@@ -4420,6 +4428,9 @@ class Document : public nsINode,
 
   // True if a document load has a CSP with unsafe-inline attached.
   bool mHasUnsafeInlineCSP : 1;
+
+  // True if the document has a CSP delivered throuh a header
+  bool mHasCSPDeliveredThroughHeader : 1;
 
   // True if DisallowBFCaching has been called on this document.
   bool mBFCacheDisallowed : 1;
