@@ -443,7 +443,6 @@ ChromeProfileMigrator.prototype._GetPasswordsResource = async function(
   }
 
   let {
-    _chromeUserDataPathSuffix,
     _keychainServiceName,
     _keychainAccountName,
     _keychainMockPassphrase = null,
@@ -479,10 +478,10 @@ ChromeProfileMigrator.prototype._GetPasswordsResource = async function(
       let crypto;
       try {
         if (AppConstants.platform == "win") {
-          let { ChromeWindowsLoginCrypto } = ChromeUtils.import(
-            "resource:///modules/ChromeWindowsLoginCrypto.jsm"
+          let { OSCrypto } = ChromeUtils.import(
+            "resource://gre/modules/OSCrypto.jsm"
           );
-          crypto = new ChromeWindowsLoginCrypto(_chromeUserDataPathSuffix);
+          crypto = new OSCrypto();
         } else if (AppConstants.platform == "macosx") {
           let { ChromeMacOSLoginCrypto } = ChromeUtils.import(
             "resource:///modules/ChromeMacOSLoginCrypto.jsm"
@@ -517,7 +516,7 @@ ChromeProfileMigrator.prototype._GetPasswordsResource = async function(
           let loginInfo = {
             username: row.getResultByName("username_value"),
             password: await crypto.decryptData(
-              row.getResultByName("password_value"),
+              crypto.arrayToString(row.getResultByName("password_value")),
               null
             ),
             origin: origin_url.prePath,
