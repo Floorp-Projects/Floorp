@@ -69,27 +69,12 @@ add_task(async function openFromPopUp() {
 
   let [win] = await openCertDownloadDialog(cert);
   let viewCertButton = win.document.getElementById("viewC-button");
-  let newWinOpened = BrowserTestUtils.waitForNewWindow();
+  let newWinOpened = BrowserTestUtils.waitForNewWindow({
+    url: spec => spec.startsWith("about:certificate"),
+  });
   viewCertButton.click();
-
   let topWin = await newWinOpened;
-  let browser = topWin.gBrowser.selectedBrowser;
-
-  // We're racing against messages sent up from the content process that
-  // loads about:certificate. It may or may not have had the opportunity
-  // to tell the parent that it had loaded the page yet. If not, we wait
-  // for the page to load.
-  //
-  // Note that we can't use the URL parameter for
-  // BrowserTestUtils.waitForNewWindow, since we need to use a function
-  // to choose the right URL.
-  if (!browser.currentURI.spec.startsWith("about:certificate")) {
-    await BrowserTestUtils.browserLoaded(browser, false, spec =>
-      spec.startsWith("about:certificate")
-    );
-  }
-
-  let spec = browser.currentURI.spec;
+  let spec = topWin.gBrowser.selectedBrowser.currentURI.spec;
   checkSpec(spec);
 
   await BrowserTestUtils.closeWindow(topWin); // closes about:certificate
