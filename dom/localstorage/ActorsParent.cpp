@@ -7187,16 +7187,10 @@ nsresult PrepareDatastoreOp::OpenDirectory() {
   MOZ_ASSERT(QuotaManager::Get());
 
   mNestedState = NestedState::DirectoryOpenPending;
-  RefPtr<DirectoryLock> pendingDirectoryLock =
-      QuotaManager::Get()->CreateDirectoryLock(PERSISTENCE_TYPE_DEFAULT, mGroup,
-                                               mOrigin,
-                                               mozilla::dom::quota::Client::LS,
-                                               /* aExclusive */ false, this);
-  MOZ_ASSERT(pendingDirectoryLock);
-
-  if (mNestedState == NestedState::DirectoryOpenPending) {
-    mPendingDirectoryLock = std::move(pendingDirectoryLock);
-  }
+  mPendingDirectoryLock = QuotaManager::Get()->OpenDirectory(
+      PERSISTENCE_TYPE_DEFAULT, mGroup, mOrigin,
+      mozilla::dom::quota::Client::LS,
+      /* aExclusive */ false, this);
 
   mRequestedDirectoryLock = true;
 

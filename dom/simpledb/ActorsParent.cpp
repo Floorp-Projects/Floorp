@@ -1116,10 +1116,11 @@ nsresult OpenOp::OpenDirectory() {
   MOZ_ASSERT(QuotaManager::Get());
 
   mState = State::DirectoryOpenPending;
-  QuotaManager::Get()->OpenDirectory(GetConnection()->GetPersistenceType(),
-                                     mGroup, mOrigin,
-                                     mozilla::dom::quota::Client::SDB,
-                                     /* aExclusive */ false, this);
+  RefPtr<DirectoryLock> pendingDirectoryLock =
+      QuotaManager::Get()->OpenDirectory(GetConnection()->GetPersistenceType(),
+                                         mGroup, mOrigin,
+                                         mozilla::dom::quota::Client::SDB,
+                                         /* aExclusive */ false, this);
 
   return NS_OK;
 }
