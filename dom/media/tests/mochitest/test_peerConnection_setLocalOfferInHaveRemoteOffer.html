@@ -1,4 +1,4 @@
-﻿<!DOCTYPE HTML>
+<!DOCTYPE HTML>
 <html>
 <head>
   <script type="application/javascript" src="pc.js"></script>
@@ -17,11 +17,9 @@ runNetworkTest(function () {
   test.chain.removeAfter("PC_REMOTE_SET_REMOTE_DESCRIPTION");
 
   test.chain.append([
-    function PC_REMOTE_SET_LOCAL_OFFER(test) {
-      test.pcRemote.setLocalDescriptionAndFail(test.pcLocal._latest_offer)
-        .then(err => {
-          is(err.name, "InvalidStateError", "Error is InvalidStateError");
-        });
+    async function PC_REMOTE_SET_LOCAL_OFFER(test) {
+      const err = await test.pcRemote.setLocalDescriptionAndFail(test.pcLocal._latest_offer);
+      is(err.name, "InvalidModificationError", "Error is InvalidModificationError");
     }
   ]);
 
