@@ -34,6 +34,7 @@ if CONFIG['OS_ARCH'] == 'WINNT':
     ]
     EXTRA_JS_MODULES += [
         '360seProfileMigrator.jsm',
+        'ChromeWindowsLoginCrypto.jsm',
         'EdgeProfileMigrator.jsm',
         'ESEDBReader.jsm',
         'IEProfileMigrator.jsm',
