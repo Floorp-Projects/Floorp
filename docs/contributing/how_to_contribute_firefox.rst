@@ -1,16 +1,11 @@
 How to contribute to Firefox
 ============================
 
-The goal of this doc is to have a place where all simple commands
-are listed from start to end.
+This guide covers the basics of working on Firefox code. You'll learn how to set up your dev environment, build Firefox locally, and submit changes. The simplest commands are listed, with more detailed documentation linked from each section.
 
-This aims to be a simple tutorial for lazy copy and paste.
-
-Each section in this tutorial links to more detailed documentation on the topic.
-
-The whole process is a bit long, it will take time to get things right.
-If at any point you are stuck, please don't feel shy to ask on Riot/Matrix at `https://chat.mozilla.org <https://chat.mozilla.org>`__
-in `#introduction <https://chat.mozilla.org/#/room/#introduction:mozilla.org>`__ channel.
+The whole process is a bit long, and it will take time to get things right.
+If at any point you are stuck, please don't hesitate to ask at `https://chat.mozilla.org <https://chat.mozilla.org>`__
+in the `#introduction <https://chat.mozilla.org/#/room/#introduction:mozilla.org>`__ channel.
 
 Clone the sources
 -----------------
