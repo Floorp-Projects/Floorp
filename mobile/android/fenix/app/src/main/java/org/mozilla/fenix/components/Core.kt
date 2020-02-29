@@ -9,7 +9,6 @@ import android.app.Application
 import android.content.Context
 import android.content.res.Configuration
 import io.sentry.Sentry
-import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -38,8 +37,7 @@ import mozilla.components.feature.webcompat.WebCompatFeature
 import mozilla.components.feature.webnotifications.WebNotificationFeature
 import mozilla.components.lib.dataprotect.SecureAbove22Preferences
 import mozilla.components.lib.dataprotect.generateEncryptionKey
-import mozilla.components.service.sync.logins.AsyncLoginsStorageAdapter
-import mozilla.components.service.sync.logins.SyncableLoginsStore
+import mozilla.components.service.sync.logins.SyncableLoginsStorage
 import org.mozilla.fenix.AppRequestInterceptor
 import org.mozilla.fenix.Config
 import org.mozilla.fenix.FeatureFlags
@@ -47,7 +45,6 @@ import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.test.Mockable
-import java.io.File
 import java.util.concurrent.TimeUnit
 
 /**
@@ -76,9 +73,7 @@ class Core(private val context: Context) {
         GeckoEngine(
             context,
             defaultSettings,
-            GeckoProvider.getOrCreateRuntime(
-                context, asyncPasswordsStorage, getSecureAbove22Preferences()
-            )
+            GeckoProvider.getOrCreateRuntime(context, passwordsStorage)
         ).also {
             WebCompatFeature.install(it)
         }
@@ -90,11 +85,7 @@ class Core(private val context: Context) {
     val client: Client by lazy {
         GeckoViewFetchClient(
             context,
-            GeckoProvider.getOrCreateRuntime(
-                context,
-                asyncPasswordsStorage,
-                getSecureAbove22Preferences()
-            )
+            GeckoProvider.getOrCreateRuntime(context, passwordsStorage)
         )
     }
 
@@ -201,6 +192,8 @@ class Core(private val context: Context) {
 
     val bookmarksStorage by lazy { PlacesBookmarksStorage(context) }
 
+    val passwordsStorage by lazy { SyncableLoginsStorage(context, passwordsEncryptionKey) }
+
     val tabCollectionStorage by lazy { TabCollectionStorage(context, sessionManager) }
 
     val topSiteStorage by lazy { TopSiteStorage(context) }
@@ -209,36 +202,19 @@ class Core(private val context: Context) {
 
     val webAppManifestStorage by lazy { ManifestStorage(context) }
 
-    val asyncPasswordsStorage by lazy {
-        AsyncLoginsStorageAdapter.forDatabase(
-            File(
-                context.filesDir,
-                "logins.sqlite"
-            ).canonicalPath
-        )
-    }
-
-    val syncablePasswordsStorage by lazy {
-        SyncableLoginsStore(
-            asyncPasswordsStorage
-        ) {
-            CompletableDeferred(passwordsEncryptionKey)
-        }
-    }
-
     /**
      * Shared Preferences that encrypt/decrypt using Android KeyStore and lib-dataprotect for 23+
      * only on Nightly/Debug for now, otherwise simply stored.
      * See https://github.com/mozilla-mobile/fenix/issues/8324
      */
-    fun getSecureAbove22Preferences() =
+    private fun getSecureAbove22Preferences() =
         SecureAbove22Preferences(
             context = context,
             name = KEY_STORAGE_NAME,
             forceInsecure = !Config.channel.isNightlyOrDebug
         )
 
-    val passwordsEncryptionKey: String =
+    private val passwordsEncryptionKey by lazy {
         getSecureAbove22Preferences().getString(PASSWORDS_KEY)
             ?: generateEncryptionKey(KEY_STRENGTH).also {
                 if (context.settings().passwordsEncryptionKeyGenerated) {
@@ -248,6 +224,7 @@ class Core(private val context: Context) {
                 context.settings().recordPasswordsEncryptionKeyGenerated()
                 getSecureAbove22Preferences().putString(PASSWORDS_KEY, it)
             }
+    }
 
     val trackingProtectionPolicyFactory = TrackingProtectionPolicyFactory(context.settings())
 

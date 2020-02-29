@@ -6,10 +6,9 @@ import android.content.Context
 import android.os.Bundle
 import mozilla.components.browser.engine.gecko.autofill.GeckoLoginDelegateWrapper
 import mozilla.components.browser.engine.gecko.glean.GeckoAdapter
+import mozilla.components.concept.storage.LoginsStorage
 import mozilla.components.lib.crash.handler.CrashHandlerService
-import mozilla.components.lib.dataprotect.SecureAbove22Preferences
 import mozilla.components.service.experiments.Experiments
-import mozilla.components.service.sync.logins.AsyncLoginsStorage
 import mozilla.components.service.sync.logins.GeckoLoginStorageDelegate
 import org.mozilla.fenix.Config
 import org.mozilla.fenix.ext.settings
@@ -24,11 +23,10 @@ object GeckoProvider {
     @Synchronized
     fun getOrCreateRuntime(
         context: Context,
-        storage: AsyncLoginsStorage,
-        securePreferences: SecureAbove22Preferences
+        storage: LoginsStorage
     ): GeckoRuntime {
         if (runtime == null) {
-            runtime = createRuntime(context, storage, securePreferences)
+            runtime = createRuntime(context, storage)
         }
 
         return runtime!!
@@ -36,8 +34,7 @@ object GeckoProvider {
 
     private fun createRuntime(
         context: Context,
-        storage: AsyncLoginsStorage,
-        securePreferences: SecureAbove22Preferences
+        storage: LoginsStorage
     ): GeckoRuntime {
         val builder = GeckoRuntimeSettings.Builder()
 
@@ -69,7 +66,6 @@ object GeckoProvider {
         val geckoRuntime = GeckoRuntime.create(context, runtimeSettings)
         val loginStorageDelegate = GeckoLoginStorageDelegate(
             storage,
-            securePreferences,
             { context.settings().shouldAutofillLogins && context.settings().shouldPromptToSaveLogins }
         )
         geckoRuntime.loginStorageDelegate = GeckoLoginDelegateWrapper(loginStorageDelegate)

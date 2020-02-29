@@ -94,9 +94,7 @@ class SavedLoginSiteInfoFragment : Fragment(R.layout.fragment_saved_login_site_i
         var deleteLoginJob: Deferred<Boolean>? = null
         val deleteJob = lifecycleScope.launch(IO) {
             deleteLoginJob = async {
-                requireContext().components.core.syncablePasswordsStorage.withUnlocked {
-                    it.delete(args.savedLoginItem.id).await()
-                }
+                requireContext().components.core.passwordsStorage.delete(args.savedLoginItem.id)
             }
             deleteLoginJob?.await()
             withContext(Main) {

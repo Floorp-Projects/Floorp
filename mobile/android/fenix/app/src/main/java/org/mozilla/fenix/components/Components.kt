@@ -29,8 +29,7 @@ class Components(private val context: Context) {
             analytics.crashReporter,
             core.historyStorage,
             core.bookmarksStorage,
-            core.syncablePasswordsStorage,
-            core.getSecureAbove22Preferences()
+            core.passwordsStorage
         )
     }
     val services by lazy { Services(context, backgroundServices.accountManager) }

@@ -328,8 +328,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
                     customTabId = customTabSessionId,
                     fragmentManager = parentFragmentManager,
                     loginValidationDelegate = DefaultLoginValidationDelegate(
-                        context.components.core.asyncPasswordsStorage,
-                        context.components.core.getSecureAbove22Preferences()
+                        context.components.core.passwordsStorage
                     ),
                     isSaveLoginEnabled = {
                         context.settings().shouldPromptToSaveLogins

@@ -22,7 +22,7 @@ import kotlinx.coroutines.ObsoleteCoroutinesApi
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import mozilla.appservices.logins.ServerPassword
+import mozilla.components.concept.storage.Login
 import mozilla.components.lib.state.ext.consumeFrom
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
@@ -103,18 +103,16 @@ class SavedLoginsFragment : Fragment() {
     }
 
     private fun loadAndMapLogins() {
-        var deferredLogins: Deferred<List<ServerPassword>>? = null
+        var deferredLogins: Deferred<List<Login>>? = null
         val fetchLoginsJob = lifecycleScope.launch(IO) {
             deferredLogins = async {
-                requireContext().components.core.syncablePasswordsStorage.withUnlocked {
-                    it.list().await()
-                }
+                requireContext().components.core.passwordsStorage.list()
             }
             val logins = deferredLogins?.await()
             logins?.let {
                 withContext(Main) {
                     savedLoginsStore.dispatch(SavedLoginsFragmentAction.UpdateLogins(logins.map { item ->
-                        SavedLoginsItem(item.hostname, item.username, item.password, item.id)
+                        SavedLoginsItem(item.origin, item.username, item.password, item.guid!!)
                     }))
                 }
             }

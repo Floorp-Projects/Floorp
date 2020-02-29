@@ -20,7 +20,6 @@ import mozilla.components.feature.accounts.push.SendTabFeature
 import mozilla.components.feature.push.AutoPushFeature
 import mozilla.components.feature.push.PushConfig
 import mozilla.components.lib.crash.CrashReporter
-import mozilla.components.lib.dataprotect.SecureAbove22Preferences
 import mozilla.components.service.fxa.DeviceConfig
 import mozilla.components.service.fxa.ServerConfig
 import mozilla.components.service.fxa.SyncConfig
@@ -30,7 +29,7 @@ import mozilla.components.service.fxa.manager.SCOPE_SESSION
 import mozilla.components.service.fxa.manager.SCOPE_SYNC
 import mozilla.components.service.fxa.manager.SyncEnginesStorage
 import mozilla.components.service.fxa.sync.GlobalSyncableStoreProvider
-import mozilla.components.service.sync.logins.SyncableLoginsStore
+import mozilla.components.service.sync.logins.SyncableLoginsStorage
 import mozilla.components.support.base.log.logger.Logger
 import org.mozilla.fenix.Config
 import org.mozilla.fenix.FeatureFlags
@@ -51,8 +50,7 @@ class BackgroundServices(
     crashReporter: CrashReporter,
     historyStorage: PlacesHistoryStorage,
     bookmarkStorage: PlacesBookmarksStorage,
-    passwordsStorage: SyncableLoginsStore,
-    secureAbove22Preferences: SecureAbove22Preferences
+    passwordsStorage: SyncableLoginsStorage
 ) {
     fun defaultDeviceName(context: Context): String =
         context.getString(
@@ -88,7 +86,7 @@ class BackgroundServices(
             syncPeriodInMinutes = 240L) // four hours
     }
 
-    val pushService by lazy { FirebasePushService() }
+    private val pushService by lazy { FirebasePushService() }
 
     val push by lazy { makePushConfig()?.let { makePush(it) } }
 
@@ -97,7 +95,6 @@ class BackgroundServices(
         GlobalSyncableStoreProvider.configureStore(SyncEngine.History to historyStorage)
         GlobalSyncableStoreProvider.configureStore(SyncEngine.Bookmarks to bookmarkStorage)
         GlobalSyncableStoreProvider.configureStore(SyncEngine.Passwords to passwordsStorage)
-        GlobalSyncableStoreProvider.configureKeyStorage(secureAbove22Preferences)
     }
 
     private val telemetryAccountObserver = TelemetryAccountObserver(
