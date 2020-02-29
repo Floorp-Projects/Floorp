@@ -45,6 +45,7 @@
 #include "mozilla/Variant.h"
 #include "mozilla/Vector.h"
 #include "nsAppDirectoryServiceDefs.h"
+#include "nsAutoPtr.h"
 #include "nsCategoryManagerUtils.h"
 #include "nsClassHashtable.h"
 #include "nsCOMArray.h"
@@ -4300,14 +4301,16 @@ static nsresult pref_ReadPrefFromJar(nsZipArchive* aJarReader,
 
 static nsresult pref_ReadDefaultPrefs(const RefPtr<nsZipArchive> jarReader,
                                       const char* path) {
-  UniquePtr<nsZipFind> find;
+  nsZipFind* findPtr;
+  nsAutoPtr<nsZipFind> find;
   nsTArray<nsCString> prefEntries;
   const char* entryName;
   uint16_t entryNameLen;
 
-  nsresult rv = jarReader->FindInit(path, getter_Transfers(find));
+  nsresult rv = jarReader->FindInit(path, &findPtr);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  find = findPtr;
   while (NS_SUCCEEDED(find->FindNext(&entryName, &entryNameLen))) {
     prefEntries.AppendElement(Substring(entryName, entryNameLen));
   }
@@ -4470,7 +4473,8 @@ nsresult Preferences::InitInitialObjects(bool aIsStartup) {
   // preferences from omni.jar, whether or not `$app == $gre`.
 
   nsresult rv = NS_ERROR_FAILURE;
-  UniquePtr<nsZipFind> find;
+  nsZipFind* findPtr;
+  nsAutoPtr<nsZipFind> find;
   nsTArray<nsCString> prefEntries;
   const char* entryName;
   uint16_t entryNameLen;
@@ -4566,9 +4570,9 @@ nsresult Preferences::InitInitialObjects(bool aIsStartup) {
   }
 
   if (appJarReader) {
-    rv = appJarReader->FindInit("defaults/preferences/*.js$",
-                                getter_Transfers(find));
+    rv = appJarReader->FindInit("defaults/preferences/*.js$", &findPtr);
     NS_ENSURE_SUCCESS(rv, rv);
+    find = findPtr;
     prefEntries.Clear();
     while (NS_SUCCEEDED(find->FindNext(&entryName, &entryNameLen))) {
       prefEntries.AppendElement(Substring(entryName, entryNameLen));

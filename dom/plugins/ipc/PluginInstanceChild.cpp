@@ -4029,7 +4029,7 @@ void PluginInstanceChild::Destroy() {
   ClearAllSurfaces();
   mDirectBitmaps.Clear();
 
-  mDeletingHash = MakeUnique<nsTHashtable<DeletingObjectEntry>>();
+  mDeletingHash = new nsTHashtable<DeletingObjectEntry>;
   PluginScriptableObjectChild::NotifyOfInstanceShutdown(this);
 
   InvalidateObjects(*mDeletingHash);
