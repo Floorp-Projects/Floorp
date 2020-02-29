@@ -88,13 +88,30 @@ const TEST_LOGINS = [
     timePasswordChanged: 1557291348878,
     timesUsed: 1,
   },
+  {
+    id: 7,
+    version: "v10",
+    username: "username",
+    password: "password",
+    origin: "https://v10.io",
+    formActionOrigin: "https://v10.io",
+    httpRealm: null,
+    usernameField: "inputEmail",
+    passwordField: "inputPassword",
+    timeCreated: 1437418416037,
+    timePasswordChanged: 1437418416037,
+    timesUsed: 1,
+  },
 ];
 
 var loginCrypto;
 var dbConn;
 
 async function promiseSetPassword(login) {
-  let encryptedString = await loginCrypto.encryptData(login.password);
+  let encryptedString = await loginCrypto.encryptData(
+    login.password,
+    login.version
+  );
   info(`promiseSetPassword: ${encryptedString}`);
   let passwordValue = new Uint8Array(
     loginCrypto.stringToArray(encryptedString)
@@ -217,10 +234,10 @@ add_task(async function setup() {
       "Login Data",
     ];
   } else if (AppConstants.platform == "win") {
-    const { OSCrypto } = ChromeUtils.import(
-      "resource://gre/modules/OSCrypto.jsm"
+    let { ChromeWindowsLoginCrypto } = ChromeUtils.import(
+      "resource:///modules/ChromeWindowsLoginCrypto.jsm"
     );
-    loginCrypto = new OSCrypto();
+    loginCrypto = new ChromeWindowsLoginCrypto("Chrome");
     dirSvcPath = "AppData/Local/";
     pathId = "LocalAppData";
     profilePathSegments = [

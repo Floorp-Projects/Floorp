@@ -170,6 +170,11 @@ var whitelist = [
     file: "chrome://browser/locale/taskbar.properties",
     platforms: ["linux", "macosx"],
   },
+  // Bug 1619090 to clean up platform-specific crypto
+  {
+    file: "resource://gre/modules/OSCrypto.jsm",
+    platforms: ["linux", "macosx"],
+  },
   // Bug 1356031 (only used by devtools)
   { file: "chrome://global/skin/icons/error-16.png" },
   // Bug 1344267
