@@ -1744,8 +1744,8 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleSVG {
   mozilla::StyleSVGOpacity mStrokeOpacity;
 
   mozilla::StyleFillRule mClipRule;
-  uint8_t mColorInterpolation;         // NS_STYLE_COLOR_INTERPOLATION_*
-  uint8_t mColorInterpolationFilters;  // NS_STYLE_COLOR_INTERPOLATION_*
+  mozilla::StyleColorInterpolation mColorInterpolation;
+  mozilla::StyleColorInterpolation mColorInterpolationFilters;
   mozilla::StyleFillRule mFillRule;
   mozilla::StyleSVGPaintOrder mPaintOrder;
   mozilla::StyleShapeRendering mShapeRendering;
