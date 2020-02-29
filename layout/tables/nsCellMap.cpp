@@ -1824,13 +1824,16 @@ int32_t nsCellMap::GetRowSpanForNewCell(nsTableCellFrame* aCellFrameToAdd,
 bool nsCellMap::HasMoreThanOneCell(int32_t aRowIndex) const {
   const CellDataArray& row = mRows.SafeElementAt(aRowIndex, *sEmptyRow);
   uint32_t maxColIndex = row.Length();
-  uint32_t count = 0;
   uint32_t colIndex;
+  bool foundOne = false;
   for (colIndex = 0; colIndex < maxColIndex; colIndex++) {
     CellData* cellData = row[colIndex];
-    if (cellData && (cellData->GetCellFrame() || cellData->IsRowSpan()))
-      count++;
-    if (count > 1) return true;
+    if (cellData && (cellData->GetCellFrame() || cellData->IsRowSpan())) {
+      if (foundOne) {
+        return true;
+      }
+      foundOne = true;
+    }
   }
   return false;
 }
