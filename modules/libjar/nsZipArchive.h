@@ -14,6 +14,7 @@
 
 #include "zlib.h"
 #include "zipstruct.h"
+#include "nsAutoPtr.h"
 #include "nsIFile.h"
 #include "nsISupportsImpl.h"  // For mozilla::ThreadSafeAutoRefCnt
 #include "mozilla/ArenaAllocator.h"
@@ -402,7 +403,7 @@ class nsZipHandle final {
 
   PRFileMap* mMap; /* nspr datastructure for mmap */
   mozilla::AutoFDClose mNSPRFileDesc;
-  UniquePtr<nsZipItemPtr<uint8_t> > mBuf;
+  nsAutoPtr<nsZipItemPtr<uint8_t> > mBuf;
   mozilla::ThreadSafeAutoRefCnt mRefCnt; /* ref count */
   NS_DECL_OWNINGTHREAD
 
