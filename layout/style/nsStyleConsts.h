@@ -751,9 +751,11 @@ enum class StyleColorAdjust : uint8_t {
 };
 
 // color-interpolation and color-interpolation-filters
-#define NS_STYLE_COLOR_INTERPOLATION_AUTO 0
-#define NS_STYLE_COLOR_INTERPOLATION_SRGB 1
-#define NS_STYLE_COLOR_INTERPOLATION_LINEARRGB 2
+enum class StyleColorInterpolation : uint8_t {
+  Auto = 0,
+  Srgb = 1,
+  Linearrgb = 2,
+};
 
 // vector-effect
 #define NS_STYLE_VECTOR_EFFECT_NONE 0

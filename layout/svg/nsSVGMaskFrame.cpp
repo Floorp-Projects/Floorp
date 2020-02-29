@@ -98,8 +98,7 @@ already_AddRefed<SourceSurface> nsSVGMaskFrame::GetMaskForMaskedFrame(
   RefPtr<SourceSurface> surface;
   if (maskType == StyleMaskType::Luminance) {
     auto luminanceType = LuminanceType::LUMINANCE;
-    if (StyleSVG()->mColorInterpolation ==
-        NS_STYLE_COLOR_INTERPOLATION_LINEARRGB) {
+    if (StyleSVG()->mColorInterpolation == StyleColorInterpolation::Linearrgb) {
       luminanceType = LuminanceType::LINEARRGB;
     }
 

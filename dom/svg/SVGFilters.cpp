@@ -131,7 +131,7 @@ bool SVGFE::StyleIsSetToSRGB() {
 
   ComputedStyle* style = frame->Style();
   return style->StyleSVG()->mColorInterpolationFilters ==
-         NS_STYLE_COLOR_INTERPOLATION_SRGB;
+         StyleColorInterpolation::Srgb;
 }
 
 /* virtual */
