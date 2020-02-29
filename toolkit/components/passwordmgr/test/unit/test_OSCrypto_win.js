@@ -423,3 +423,25 @@ add_task(function test_decryptData_encryptData() {
     Assert.equal(arr2[i], value[i], "Checking index " + i);
   }
 });
+
+add_task(function test_decryptDataOutput() {
+  const testString = "2<FPZd";
+  const encrypted = crypto.encryptData(testString);
+
+  const decryptedString = crypto.decryptData(encrypted, null, "string");
+  Assert.equal(
+    decryptedString,
+    testString,
+    "Decrypted string matches initial value"
+  );
+
+  const decryptedBytes = crypto.decryptData(encrypted, null, "bytes");
+  testString.split("").forEach((c, i) => {
+    const code = c.charCodeAt(0);
+    Assert.equal(
+      decryptedBytes[i],
+      code,
+      `Decrypted bytes matches ${c} charCode (${code})`
+    );
+  });
+});
