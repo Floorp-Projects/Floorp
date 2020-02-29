@@ -175,8 +175,11 @@ enum {
 
   NODE_HAS_BEEN_IN_UA_WIDGET = NODE_FLAG_BIT(15),
 
+  // Set if the node has a nonce value and a header delivered CSP.
+  NODE_HAS_NONCE_AND_HEADER_CSP = NODE_FLAG_BIT(16),
+
   // Remaining bits are node type specific.
-  NODE_TYPE_SPECIFIC_BITS_OFFSET = 16
+  NODE_TYPE_SPECIFIC_BITS_OFFSET = 17
 };
 
 // Make sure we have space for our bits
