@@ -5,10 +5,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "BodyStream.h"
+#include "mozilla/CycleCollectedJSContext.h"
 #include "mozilla/dom/DOMException.h"
+#include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/WorkerCommon.h"
 #include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/dom/WorkerRunnable.h"
+#include "mozilla/Maybe.h"
 #include "nsProxyRelease.h"
 #include "nsStreamUtils.h"
 
@@ -352,29 +355,26 @@ BodyStream::OnInputStreamReady(nsIAsyncInputStream* aStream) {
   AssertIsOnOwningThread();
   MOZ_DIAGNOSTIC_ASSERT(aStream);
 
-  MutexAutoLock lock(mMutex);
+  Maybe<MutexAutoLock> lock;
+  lock.emplace(mMutex);
 
   // Already closed. We have nothing else to do here.
   if (mState == eClosed) {
     return NS_OK;
   }
 
+  nsAutoMicroTask mt;
+  AutoEntryScript aes(mGlobal, "fetch body data available");
+
   MOZ_DIAGNOSTIC_ASSERT(mInputStream);
   MOZ_DIAGNOSTIC_ASSERT(mState == eReading || mState == eChecking);
-
-  AutoJSAPI jsapi;
-  if (NS_WARN_IF(!jsapi.Init(mGlobal))) {
-    // Without JSContext we are not able to close the stream or to propagate the
-    // error.
-    return NS_ERROR_FAILURE;
-  }
 
   JSObject* streamObj = mStreamHolder->GetReadableStreamBody();
   if (!streamObj) {
     return NS_ERROR_FAILURE;
   }
 
-  JSContext* cx = jsapi.cx();
+  JSContext* cx = aes.cx();
   JS::Rooted<JSObject*> stream(cx, streamObj);
 
   uint64_t size = 0;
@@ -387,7 +387,7 @@ BodyStream::OnInputStreamReady(nsIAsyncInputStream* aStream) {
 
   // No warning for stream closed.
   if (rv == NS_BASE_STREAM_CLOSED || NS_WARN_IF(NS_FAILED(rv))) {
-    ErrorPropagation(cx, lock, stream, rv);
+    ErrorPropagation(cx, *lock, stream, rv);
     return NS_OK;
   }
 
@@ -399,14 +399,10 @@ BodyStream::OnInputStreamReady(nsIAsyncInputStream* aStream) {
 
   mState = eWriting;
 
-  {
-    MutexAutoUnlock unlock(mMutex);
-    DebugOnly<bool> ok =
-        JS::ReadableStreamUpdateDataAvailableFromSource(cx, stream, size);
+  lock.reset();
 
-    // The WriteInto callback changes mState to eChecking.
-    MOZ_ASSERT_IF(ok, mState == eChecking);
-  }
+  DebugOnly<bool> ok =
+      JS::ReadableStreamUpdateDataAvailableFromSource(cx, stream, size);
 
   return NS_OK;
 }
