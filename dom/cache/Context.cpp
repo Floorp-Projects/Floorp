@@ -224,10 +224,11 @@ void Context::QuotaInitRunnable::OpenDirectory() {
   // a listener.  We will then get DirectoryLockAcquired() on the owning
   // thread when it is safe to access our storage directory.
   mState = STATE_WAIT_FOR_DIRECTORY_LOCK;
-  QuotaManager::Get()->OpenDirectory(PERSISTENCE_TYPE_DEFAULT,
-                                     mQuotaInfo.mGroup, mQuotaInfo.mOrigin,
-                                     quota::Client::DOMCACHE,
-                                     /* aExclusive */ false, this);
+  RefPtr<DirectoryLock> pendingDirectoryLock =
+      QuotaManager::Get()->OpenDirectory(PERSISTENCE_TYPE_DEFAULT,
+                                         mQuotaInfo.mGroup, mQuotaInfo.mOrigin,
+                                         quota::Client::DOMCACHE,
+                                         /* aExclusive */ false, this);
 }
 
 void Context::QuotaInitRunnable::DirectoryLockAcquired(DirectoryLock* aLock) {
