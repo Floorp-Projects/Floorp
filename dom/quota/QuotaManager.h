@@ -279,11 +279,6 @@ class QuotaManager final : public BackgroundThreadObject {
                                             int64_t* aTimestamp,
                                             bool* aPersisted);
 
-  already_AddRefed<DirectoryLock> CreateDirectoryLock(
-      PersistenceType aPersistenceType, const nsACString& aGroup,
-      const nsACString& aOrigin, Client::Type aClientType, bool aExclusive,
-      OpenDirectoryListener* aOpenListener);
-
   // This is the main entry point into the QuotaManager API.
   // Any storage API implementation (quota client) that participates in
   // centralized quota and storage handling should call this method to get
@@ -299,16 +294,17 @@ class QuotaManager final : public BackgroundThreadObject {
   // Unlocking is simply done by dropping all references to the lock object.
   // In other words, protection which the lock represents dies with the lock
   // object itself.
-  void OpenDirectory(PersistenceType aPersistenceType, const nsACString& aGroup,
-                     const nsACString& aOrigin, Client::Type aClientType,
-                     bool aExclusive, OpenDirectoryListener* aOpenListener);
+  already_AddRefed<DirectoryLock> OpenDirectory(
+      PersistenceType aPersistenceType, const nsACString& aGroup,
+      const nsACString& aOrigin, Client::Type aClientType, bool aExclusive,
+      OpenDirectoryListener* aOpenListener);
 
   // XXX RemoveMe once bug 1170279 gets fixed.
-  void OpenDirectoryInternal(const Nullable<PersistenceType>& aPersistenceType,
-                             const OriginScope& aOriginScope,
-                             const Nullable<Client::Type>& aClientType,
-                             bool aExclusive,
-                             OpenDirectoryListener* aOpenListener);
+  already_AddRefed<DirectoryLock> OpenDirectoryInternal(
+      const Nullable<PersistenceType>& aPersistenceType,
+      const OriginScope& aOriginScope,
+      const Nullable<Client::Type>& aClientType, bool aExclusive,
+      OpenDirectoryListener* aOpenListener);
 
   // Collect inactive and the least recently used origins.
   uint64_t CollectOriginsForEviction(
@@ -483,7 +479,7 @@ class QuotaManager final : public BackgroundThreadObject {
       const Nullable<PersistenceType>& aPersistenceType,
       const nsACString& aGroup, const OriginScope& aOriginScope,
       const Nullable<Client::Type>& aClientType, bool aExclusive,
-      bool aInternal, OpenDirectoryListener* aOpenListener);
+      bool aInternal, OpenDirectoryListener* aOpenListener, bool& aBlockedOut);
 
   already_AddRefed<DirectoryLockImpl> CreateDirectoryLockForEviction(
       PersistenceType aPersistenceType, const nsACString& aGroup,
