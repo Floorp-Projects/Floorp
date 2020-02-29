@@ -24,7 +24,7 @@
 #endif
 
 #include "npfunctions.h"
-#include "mozilla/UniquePtr.h"
+#include "nsAutoPtr.h"
 #include "nsTArray.h"
 #include "ChildTimer.h"
 #include "nsRect.h"
@@ -387,14 +387,14 @@ class PluginInstanceChild : public PPluginInstanceChild {
 #if defined(OS_WIN)
   nsTArray<FlashThrottleMsg*> mPendingFlashThrottleMsgs;
 #endif
-  nsTArray<UniquePtr<ChildTimer> > mTimers;
+  nsTArray<nsAutoPtr<ChildTimer> > mTimers;
 
   /**
    * During destruction we enumerate all remaining scriptable objects and
    * invalidate/delete them. Enumeration can re-enter, so maintain a
    * hash separate from PluginModuleChild.mObjectMap.
    */
-  UniquePtr<nsTHashtable<DeletingObjectEntry> > mDeletingHash;
+  nsAutoPtr<nsTHashtable<DeletingObjectEntry> > mDeletingHash;
 
 #if defined(MOZ_WIDGET_COCOA)
  private:
