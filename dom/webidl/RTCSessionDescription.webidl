@@ -15,7 +15,7 @@ enum RTCSdpType {
 };
 
 dictionary RTCSessionDescriptionInit {
-  required RTCSdpType type;
+  RTCSdpType type;
   DOMString sdp = "";
 };
 

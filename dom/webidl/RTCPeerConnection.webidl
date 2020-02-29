@@ -94,8 +94,8 @@ interface RTCPeerConnection : EventTarget  {
   Promise<DOMString> getIdentityAssertion();
   Promise<RTCSessionDescriptionInit> createOffer (optional RTCOfferOptions options = {});
   Promise<RTCSessionDescriptionInit> createAnswer (optional RTCAnswerOptions options = {});
-  Promise<void> setLocalDescription (RTCSessionDescriptionInit description);
-  Promise<void> setRemoteDescription (RTCSessionDescriptionInit description);
+  Promise<void> setLocalDescription (optional RTCSessionDescriptionInit description = {});
+  Promise<void> setRemoteDescription (optional RTCSessionDescriptionInit description = {});
   readonly attribute RTCSessionDescription? localDescription;
   readonly attribute RTCSessionDescription? currentLocalDescription;
   readonly attribute RTCSessionDescription? pendingLocalDescription;
