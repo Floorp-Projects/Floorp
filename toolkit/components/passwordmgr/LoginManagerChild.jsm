@@ -239,20 +239,41 @@ const observer = {
 
       // Used to watch for changes to fields filled with generated passwords.
       case "change": {
-        let triggeredByFillingGenerated = docState.generatedPasswordFields.has(
-          aEvent.target
-        );
-        if (
-          aEvent.target.hasBeenTypePassword &&
-          (triggeredByFillingGenerated ||
-            LoginHelper.passwordEditCaptureEnabled)
-        ) {
-          LoginManagerChild.forWindow(window)._passwordEditedOrGenerated(
-            aEvent.target,
-            {
-              triggeredByFillingGenerated,
-            }
+        if (aEvent.target.hasBeenTypePassword) {
+          let triggeredByFillingGenerated = docState.generatedPasswordFields.has(
+            aEvent.target
           );
+          if (
+            triggeredByFillingGenerated ||
+            LoginHelper.passwordEditCaptureEnabled
+          ) {
+            LoginManagerChild.forWindow(window)._passwordEditedOrGenerated(
+              aEvent.target,
+              {
+                triggeredByFillingGenerated,
+              }
+            );
+          }
+        } else {
+          let [usernameField, passwordField] = LoginManagerChild.forWindow(
+            window
+          ).getUserNameAndPasswordFields(aEvent.target);
+          if (
+            usernameField &&
+            aEvent.target == usernameField &&
+            passwordField &&
+            passwordField.value &&
+            LoginHelper.passwordEditCaptureEnabled
+          ) {
+            LoginManagerChild.forWindow(window)._passwordEditedOrGenerated(
+              passwordField,
+              {
+                triggeredByFillingGenerated: docState.generatedPasswordFields.has(
+                  passwordField
+                ),
+              }
+            );
+          }
         }
         break;
       }
