@@ -847,7 +847,8 @@ class LoginManagerParent extends JSWindowActorParent {
           matchedLogin.username == formLogin.username)
       ) {
         log("The filled login matches the changed fields. Nothing to change.");
-        return;
+        // We may want to update an existing doorhanger
+        existingLogin = matchedLogin;
       }
     }
 
@@ -939,8 +940,9 @@ class LoginManagerParent extends JSWindowActorParent {
           shouldAutoSaveLogin = false;
           if (matchedLogin.password == formLoginWithoutUsername.password) {
             // This login is already saved so show no new UI.
+            // We may want to update an existing doorhanger though...
             log("_onPasswordEditedOrGenerated: Matching login already saved");
-            return;
+            existingLogin = matchedLogin;
           }
           log(
             "_onPasswordEditedOrGenerated: Login with empty username already saved for this site"
@@ -1092,6 +1094,23 @@ class LoginManagerParent extends JSWindowActorParent {
         );
       } else {
         log("_onPasswordEditedOrGenerated: No change to existing login");
+        // is there a doorhanger we should update?
+        let popupNotifications = promptBrowser.ownerGlobal.PopupNotifications;
+        let notif = popupNotifications.getNotification("password", browser);
+        log(
+          "_onPasswordEditedOrGenerated: Has doorhanger?",
+          notif && notif.dismissed
+        );
+        if (notif && notif.dismissed) {
+          prompter.promptToChangePassword(
+            promptBrowser,
+            existingLogin,
+            formLogin,
+            true, // dismissed prompt
+            false, // notifySaved
+            autoSavedStorageGUID // autoSavedLoginGuid
+          );
+        }
       }
       return;
     }
