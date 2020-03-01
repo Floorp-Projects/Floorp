@@ -1047,7 +1047,7 @@ enum Role {
 
   /**
    * The html:mark element.
-   * May also be used if WAI-ARIA gets an equivalent role.
+   * This is also used for the equivalent WAI-ARIA role.
    */
   MARK = 179,
 
