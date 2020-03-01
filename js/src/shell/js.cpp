@@ -5312,24 +5312,21 @@ static bool GetModuleLoadPath(JSContext* cx, unsigned argc, Value* vp) {
 
 #if defined(JS_BUILD_BINAST)
 
-using js::frontend::BinASTParser;
-using js::frontend::CompilationInfo;
-using js::frontend::Directives;
-using js::frontend::GlobalSharedContext;
-using js::frontend::ParseNode;
-
 template <typename Tok>
 static bool ParseBinASTData(JSContext* cx, uint8_t* buf_data,
-                            uint32_t buf_length, GlobalSharedContext* globalsc,
-                            CompilationInfo& compilationInfo,
+                            uint32_t buf_length,
+                            js::frontend::GlobalSharedContext* globalsc,
+                            js::frontend::CompilationInfo& compilationInfo,
                             const JS::ReadOnlyCompileOptions& options,
                             HandleScriptSourceObject sourceObj) {
   MOZ_ASSERT(globalsc);
 
   // Note: We need to keep `reader` alive as long as we can use `parsed`.
-  BinASTParser<Tok> reader(cx, compilationInfo, options, sourceObj);
+  js::frontend::BinASTParser<Tok> reader(cx, compilationInfo, options,
+                                         sourceObj);
 
-  JS::Result<ParseNode*> parsed = reader.parse(globalsc, buf_data, buf_length);
+  JS::Result<js::frontend::ParseNode*> parsed =
+      reader.parse(globalsc, buf_data, buf_length);
 
   if (parsed.isErr()) {
     return false;
@@ -5431,14 +5428,14 @@ static bool BinParse(JSContext* cx, unsigned argc, Value* vp) {
       .setFileAndLine("<ArrayBuffer>", 1);
 
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
-  CompilationInfo compilationInfo(cx, allocScope, options);
+  js::frontend::CompilationInfo compilationInfo(cx, allocScope, options);
   if (!compilationInfo.init(cx)) {
     return false;
   }
 
-  Directives directives(false);
-  GlobalSharedContext globalsc(cx, ScopeKind::Global, compilationInfo,
-                               directives, false);
+  js::frontend::Directives directives(false);
+  js::frontend::GlobalSharedContext globalsc(
+      cx, ScopeKind::Global, compilationInfo, directives, false);
 
   auto parseFunc = mode == Multipart
                        ? ParseBinASTData<frontend::BinASTTokenReaderMultipart>
@@ -5458,7 +5455,7 @@ template <typename Unit>
 static bool FullParseTest(JSContext* cx,
                           const JS::ReadOnlyCompileOptions& options,
                           const Unit* units, size_t length,
-                          CompilationInfo& compilationInfo,
+                          js::frontend::CompilationInfo& compilationInfo,
                           ScriptSourceObject* sourceObject,
                           js::frontend::ParseGoal goal) {
   using namespace js::frontend;
@@ -5470,7 +5467,7 @@ static bool FullParseTest(JSContext* cx,
     return false;
   }
 
-  ParseNode* pn;  // Deallocated once `parser` goes out of scope.
+  js::frontend::ParseNode* pn;  // Deallocated once `parser` goes out of scope.
   if (goal == frontend::ParseGoal::Script) {
     pn = parser.parse();
   } else {
@@ -5605,7 +5602,7 @@ static bool Parse(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
-  CompilationInfo compilationInfo(cx, allocScope, options);
+  js::frontend::CompilationInfo compilationInfo(cx, allocScope, options);
   if (!compilationInfo.init(cx)) {
     return false;
   }
@@ -5664,7 +5661,7 @@ static bool SyntaxParse(JSContext* cx, unsigned argc, Value* vp) {
   size_t length = scriptContents->length();
 
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
-  CompilationInfo compilationInfo(cx, allocScope, options);
+  js::frontend::CompilationInfo compilationInfo(cx, allocScope, options);
   if (!compilationInfo.init(cx)) {
     return false;
   }
