@@ -45,18 +45,21 @@ bool DocumentChannelParent::Init(BrowserParent* aBrowser,
     clientInfo.emplace(ClientInfo(aArgs.initialClientInfo().ref()));
   }
 
+  RefPtr<BrowsingContext> bc;
+  loadInfo->GetTargetBrowsingContext(getter_AddRefs(bc));
+
   MOZ_ASSERT(NS_SUCCEEDED(rv));
 
   rv = NS_ERROR_UNEXPECTED;
-  if (!mParent->Open(aBrowser->GetBrowsingContext(), loadState, loadInfo,
-                     aArgs.loadFlags(), aArgs.loadType(), aArgs.cacheKey(),
-                     aArgs.isActive(), aArgs.isTopLevelDoc(),
+  if (!mParent->Open(bc->Canonical(), aBrowser->GetBrowsingContext(), loadState,
+                     loadInfo, aArgs.loadFlags(), aArgs.loadType(),
+                     aArgs.cacheKey(), aArgs.isActive(), aArgs.isTopLevelDoc(),
                      aArgs.hasNonEmptySandboxingFlags(), aArgs.topWindowURI(),
                      aArgs.contentBlockingAllowListPrincipal(),
                      aArgs.channelId(), aArgs.asyncOpenTime(),
                      aArgs.documentOpenFlags(), aArgs.pluginsAllowed(),
                      aArgs.timing().refOr(nullptr), std::move(clientInfo),
-                     &rv)) {
+                     aArgs.outerWindowId(), &rv)) {
     return SendFailedAsyncOpen(rv);
   }
 
