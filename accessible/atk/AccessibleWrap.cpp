@@ -617,6 +617,9 @@ AtkRole getRoleCB(AtkObject* aAtkObj) {
     aAtkObj->role = ATK_ROLE_SECTION;
   else if (aAtkObj->role == ATK_ROLE_MARK && !IsAtkVersionAtLeast(2, 36)) {
     aAtkObj->role = ATK_ROLE_TEXT;
+  } else if (aAtkObj->role == ATK_ROLE_SUGGESTION &&
+             !IsAtkVersionAtLeast(2, 36)) {
+    aAtkObj->role = ATK_ROLE_SECTION;
   }
 
   return aAtkObj->role;

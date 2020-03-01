@@ -1045,4 +1045,9 @@ interface nsIAccessibleRole : nsISupports
    */
   const unsigned long ROLE_MARK = 179;
 
+  /**
+   * The WAI-ARIA suggestion role.
+   */
+  const unsigned long ROLE_SUGGESTION = 180;
+
 };

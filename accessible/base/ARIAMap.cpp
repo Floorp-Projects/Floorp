@@ -1117,6 +1117,15 @@ static const nsRoleMapEntry sWAIRoleMaps[] = {
     kGenericAccType,
     kNoReqStates
   },
+  { // suggestion
+    nsGkAtoms::suggestion,
+    roles::SUGGESTION,
+    kUseMapRole,
+    eNoValue,
+    eNoAction,
+    eNoLiveAttr,
+    kGenericAccType,
+  },
   { // switch
     nsGkAtoms::svgSwitch,
     roles::SWITCH,
