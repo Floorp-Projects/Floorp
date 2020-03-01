@@ -1149,6 +1149,7 @@ STATIC_ATOMS = [
     Atom("substringAfter", "substring-after"),
     Atom("substringBefore", "substring-before"),
     Atom("sub", "sub"),
+    Atom("suggestion", "suggestion"),
     Atom("sum", "sum"),
     Atom("sup", "sup"),
     Atom("summary", "summary"),

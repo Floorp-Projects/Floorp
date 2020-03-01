@@ -1051,7 +1051,12 @@ enum Role {
    */
   MARK = 179,
 
-  LAST_ROLE = MARK
+  /**
+   * The WAI-ARIA suggestion role.
+   */
+  SUGGESTION = 180,
+
+  LAST_ROLE = SUGGESTION
 };
 
 }  // namespace roles
