@@ -279,9 +279,8 @@ class ClientChannelHelperParent final : public ClientChannelHelper {
   }
 
  public:
-  ClientChannelHelperParent(nsIInterfaceRequestor* aOuter,
-                            nsISerialEventTarget* aEventTarget)
-      : ClientChannelHelper(aOuter, aEventTarget) {}
+  explicit ClientChannelHelperParent(nsIInterfaceRequestor* aOuter)
+      : ClientChannelHelper(aOuter, nullptr) {}
 };
 
 class ClientChannelHelperChild final : public ClientChannelHelper {
@@ -404,8 +403,7 @@ class ClientChannelHelperChild final : public ClientChannelHelper {
 nsresult AddClientChannelHelper(nsIChannel* aChannel,
                                 Maybe<ClientInfo>&& aReservedClientInfo,
                                 Maybe<ClientInfo>&& aInitialClientInfo,
-                                nsISerialEventTarget* aEventTarget,
-                                bool aManagedInParent) {
+                                nsISerialEventTarget* aEventTarget) {
   MOZ_ASSERT(NS_IsMainThread());
 
   Maybe<ClientInfo> initialClientInfo(std::move(aInitialClientInfo));
@@ -468,9 +466,7 @@ nsresult AddClientChannelHelper(nsIChannel* aChannel,
   }
 
   RefPtr<ClientChannelHelper> helper =
-      aManagedInParent
-          ? new ClientChannelHelperChild(outerCallbacks, aEventTarget)
-          : new ClientChannelHelper(outerCallbacks, aEventTarget);
+      new ClientChannelHelper(outerCallbacks, aEventTarget);
 
   // Only set the callbacks helper if we are able to reserve the client
   // successfully.
@@ -494,15 +490,74 @@ nsresult AddClientChannelHelper(nsIChannel* aChannel,
   return NS_OK;
 }
 
-nsresult AddClientChannelHelperInParent(nsIChannel* aChannel,
-                                        nsISerialEventTarget* aEventTarget) {
+nsresult AddClientChannelHelperInChild(nsIChannel* aChannel,
+                                       nsISerialEventTarget* aEventTarget) {
+  MOZ_ASSERT(NS_IsMainThread());
+
   nsCOMPtr<nsIInterfaceRequestor> outerCallbacks;
   nsresult rv =
       aChannel->GetNotificationCallbacks(getter_AddRefs(outerCallbacks));
   NS_ENSURE_SUCCESS(rv, rv);
 
   RefPtr<ClientChannelHelper> helper =
-      new ClientChannelHelperParent(outerCallbacks, aEventTarget);
+      new ClientChannelHelperChild(outerCallbacks, aEventTarget);
+
+  // Only set the callbacks helper if we are able to reserve the client
+  // successfully.
+  rv = aChannel->SetNotificationCallbacks(helper);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
+nsresult AddClientChannelHelperInParent(
+    nsIChannel* aChannel, Maybe<ClientInfo>&& aInitialClientInfo) {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  Maybe<ClientInfo> initialClientInfo(std::move(aInitialClientInfo));
+  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
+
+  nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
+  NS_ENSURE_TRUE(ssm, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsIPrincipal> channelPrincipal;
+  nsresult rv = ssm->GetChannelResultPrincipal(
+      aChannel, getter_AddRefs(channelPrincipal));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Only allow the initial ClientInfo to be set if the current channel
+  // principal matches.
+  if (initialClientInfo.isSome()) {
+    nsCOMPtr<nsIPrincipal> initialPrincipal = PrincipalInfoToPrincipal(
+        initialClientInfo.ref().PrincipalInfo(), nullptr);
+
+    bool equals = false;
+    rv = initialPrincipal ? initialPrincipal->Equals(channelPrincipal, &equals)
+                          : NS_ERROR_FAILURE;
+    if (NS_FAILED(rv) || !equals) {
+      initialClientInfo.reset();
+    }
+  }
+
+  nsCOMPtr<nsIInterfaceRequestor> outerCallbacks;
+  rv = aChannel->GetNotificationCallbacks(getter_AddRefs(outerCallbacks));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (initialClientInfo.isNothing()) {
+    // Wait to reserve the client until we are reasonably sure this method
+    // will succeed.  We should only follow this path for window clients.
+    // Workers should always provide a reserved ClientInfo since their
+    // ClientSource object is owned by a different thread.
+    Maybe<ClientInfo> reservedInfo =
+        ClientManager::CreateInfo(ClientType::Window, channelPrincipal);
+    MOZ_DIAGNOSTIC_ASSERT(reservedInfo);
+    loadInfo->SetReservedClientInfo(reservedInfo.ref());
+  } else {
+    loadInfo->SetInitialClientInfo(initialClientInfo.ref());
+  }
+
+  RefPtr<ClientChannelHelper> helper =
+      new ClientChannelHelperParent(outerCallbacks);
 
   // Only set the callbacks helper if we are able to reserve the client
   // successfully.
