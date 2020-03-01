@@ -123,14 +123,6 @@ DocumentChannelChild::AsyncOpen(nsIStreamListener* aListener) {
   args.asyncOpenTime() = mAsyncOpenTime;
   args.documentOpenFlags() = mDocumentOpenFlags;
   args.pluginsAllowed() = mPluginsAllowed;
-  args.outerWindowId() = mLoadInfo->GetOuterWindowID();
-
-  Maybe<IPCClientInfo> ipcClientInfo;
-  if (mInitialClientInfo.isSome()) {
-    ipcClientInfo.emplace(mInitialClientInfo.ref().ToIPC());
-  }
-  args.initialClientInfo() = ipcClientInfo;
-
   if (mTiming) {
     args.timing() = Some(mTiming);
   }
@@ -221,22 +213,20 @@ IPCResult DocumentChannelChild::RecvRedirectToRealChannel(
   LOG(("DocumentChannelChild RecvRedirectToRealChannel [this=%p, uri=%s]", this,
        aArgs.uri()->GetSpecOrDefault().get()));
 
-  // The document that created the cspToInherit.
-  // This is used when deserializing LoadInfo from the parent
-  // process, since we can't serialize Documents directly.
-  // TODO: For a fission OOP iframe this will be unavailable,
-  // as will the loadingContext computed in LoadInfoArgsToLoadInfo.
-  // Figure out if we need these for cross-origin subdocs.
+  RefPtr<dom::Document> loadingDocument;
+  mLoadInfo->GetLoadingDocument(getter_AddRefs(loadingDocument));
+
   RefPtr<dom::Document> cspToInheritLoadingDocument;
-  nsCOMPtr<nsIContentSecurityPolicy> policy = mLoadState->Csp();
+  nsCOMPtr<nsIContentSecurityPolicy> policy = mLoadInfo->GetCspToInherit();
   if (policy) {
     nsWeakPtr ctx =
         static_cast<nsCSPContext*>(policy.get())->GetLoadingContext();
     cspToInheritLoadingDocument = do_QueryReferent(ctx);
   }
   nsCOMPtr<nsILoadInfo> loadInfo;
-  MOZ_ALWAYS_SUCCEEDS(LoadInfoArgsToLoadInfo(
-      aArgs.loadInfo(), cspToInheritLoadingDocument, getter_AddRefs(loadInfo)));
+  MOZ_ALWAYS_SUCCEEDS(LoadInfoArgsToLoadInfo(aArgs.loadInfo(), loadingDocument,
+                                             cspToInheritLoadingDocument,
+                                             getter_AddRefs(loadInfo)));
 
   mLastVisitInfo = std::move(aArgs.lastVisitInfo());
   mRedirects = std::move(aArgs.redirects());
@@ -400,23 +390,25 @@ IPCResult DocumentChannelChild::RecvConfirmRedirect(
   // not propagating the redirect into this process, we don't have an nsIChannel
   // for the redirection and we have to do the checks manually.
   // This just checks CSP thus far, hopefully there's not much else needed.
+  RefPtr<dom::Document> loadingDocument;
+  mLoadInfo->GetLoadingDocument(getter_AddRefs(loadingDocument));
   RefPtr<dom::Document> cspToInheritLoadingDocument;
-  nsCOMPtr<nsIContentSecurityPolicy> policy = mLoadState->Csp();
+  nsCOMPtr<nsIContentSecurityPolicy> policy = mLoadInfo->GetCspToInherit();
   if (policy) {
     nsWeakPtr ctx =
         static_cast<nsCSPContext*>(policy.get())->GetLoadingContext();
     cspToInheritLoadingDocument = do_QueryReferent(ctx);
   }
   nsCOMPtr<nsILoadInfo> loadInfo;
-  MOZ_ALWAYS_SUCCEEDS(LoadInfoArgsToLoadInfo(Some(std::move(aLoadInfo)),
-                                             cspToInheritLoadingDocument,
-                                             getter_AddRefs(loadInfo)));
+  MOZ_ALWAYS_SUCCEEDS(LoadInfoArgsToLoadInfo(
+      Some(std::move(aLoadInfo)), loadingDocument, cspToInheritLoadingDocument,
+      getter_AddRefs(loadInfo)));
 
   nsCOMPtr<nsIURI> originalUri;
   GetOriginalURI(getter_AddRefs(originalUri));
   Maybe<nsresult> cancelCode;
   nsresult rv = CSPService::ConsultCSPForRedirect(originalUri, aNewUri,
-                                                  loadInfo, cancelCode);
+                                                  mLoadInfo, cancelCode);
   aResolve(Tuple<const nsresult&, const Maybe<nsresult>&>(rv, cancelCode));
   return IPC_OK();
 }
