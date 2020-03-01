@@ -10224,9 +10224,15 @@ nsresult nsDocShell::OpenInitializedChannel(nsIChannel* aChannel,
   // on redirects.  We pass no reserved client here so that the helper will
   // create the reserved ClientSource if necessary.
   Maybe<ClientInfo> noReservedClient;
-  rv = AddClientChannelHelper(
-      aChannel, std::move(noReservedClient), GetInitialClientInfo(),
-      win->EventTargetFor(TaskCategory::Other), !!docChannel);
+  if (docChannel) {
+    rv = AddClientChannelHelperInChild(
+        aChannel, win->EventTargetFor(TaskCategory::Other));
+    docChannel->SetInitialClientInfo(GetInitialClientInfo());
+  } else {
+    rv = AddClientChannelHelper(aChannel, std::move(noReservedClient),
+                                GetInitialClientInfo(),
+                                win->EventTargetFor(TaskCategory::Other));
+  }
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = aURILoader->OpenURI(aChannel, aOpenFlags, this);

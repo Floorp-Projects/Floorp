@@ -85,7 +85,8 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
             const Maybe<ipc::PrincipalInfo>& aContentBlockingAllowListPrincipal,
             const uint64_t& aChannelId, const TimeStamp& aAsyncOpenTime,
             const Maybe<uint32_t>& aDocumentOpenFlags, bool aPluginsAllowed,
-            nsDOMNavigationTiming* aTiming, nsresult* aRv);
+            nsDOMNavigationTiming* aTiming, Maybe<dom::ClientInfo>&& aInfo,
+            nsresult* aRv);
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIREQUESTOBSERVER

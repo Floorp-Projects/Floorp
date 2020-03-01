@@ -257,7 +257,7 @@ bool DocumentLoadListener::Open(
     const Maybe<PrincipalInfo>& aContentBlockingAllowListPrincipal,
     const uint64_t& aChannelId, const TimeStamp& aAsyncOpenTime,
     const Maybe<uint32_t>& aDocumentOpenFlags, bool aPluginsAllowed,
-    nsDOMNavigationTiming* aTiming, nsresult* aRv) {
+    nsDOMNavigationTiming* aTiming, Maybe<ClientInfo>&& aInfo, nsresult* aRv) {
   LOG(("DocumentLoadListener Open [this=%p, uri=%s]", this,
        aLoadState->URI()->GetSpecOrDefault().get()));
 
@@ -318,7 +318,7 @@ bool DocumentLoadListener::Open(
 
   // Setup a ClientChannelHelper to watch for redirects, and copy
   // across any serviceworker related data between channels as needed.
-  AddClientChannelHelperInParent(mChannel, GetMainThreadSerialEventTarget());
+  AddClientChannelHelperInParent(mChannel, std::move(aInfo));
 
   if (aDocumentOpenFlags) {
     RefPtr<ParentProcessDocumentOpenInfo> openInfo =

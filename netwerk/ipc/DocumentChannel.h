@@ -13,6 +13,7 @@
 #include "nsIChannel.h"
 #include "nsIChildChannel.h"
 #include "nsITraceableChannel.h"
+#include "mozilla/dom/ClientInfo.h"
 
 #define DOCUMENT_CHANNEL_IID                         \
   {                                                  \
@@ -67,6 +68,10 @@ class DocumentChannel : public nsIIdentChannel, public nsITraceableChannel {
     mTiming = aTiming;
   }
 
+  void SetInitialClientInfo(const Maybe<dom::ClientInfo>& aInfo) {
+    mInitialClientInfo = aInfo;
+  }
+
  protected:
   nsDocShell* GetDocShell();
 
@@ -98,6 +103,7 @@ class DocumentChannel : public nsIIdentChannel, public nsITraceableChannel {
   nsCOMPtr<nsISupports> mOwner;
   bool mPluginsAllowed = false;
   RefPtr<nsDOMNavigationTiming> mTiming;
+  Maybe<dom::ClientInfo> mInitialClientInfo;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(DocumentChannel, DOCUMENT_CHANNEL_IID)
