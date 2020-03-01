@@ -150,7 +150,7 @@ interface nsIContentSecurityPolicy : nsISerializable
    * Whether this policy allows a navigation subject to the navigate-to
    * policy.
    * @param aURI The target URI
-   * @param aIsFormSubmission True if the navigation was initiated by a form submission. This
+   * @param aLoadInfo used to check if the navigation was initiated by a form submission. This
    *        is important since the form-action directive overrides navigate-to in that case.  
    * @param aWasRedirect True if a redirect has happened. Important for path-sensitivity.
    * @param aEnforceWhitelist True if the whitelist of allowed targets must be enforced. If 
@@ -160,7 +160,7 @@ interface nsIContentSecurityPolicy : nsISerializable
    *     Whether or not the effects of the navigation is allowed
    */
   boolean getAllowsNavigateTo(in nsIURI aURI, 
-                              in boolean aIsFormSubmission,
+                              in nsILoadInfo aLoadInfo,
                               in boolean aWasRedirected,
                               in boolean aEnforceWhitelist);
 

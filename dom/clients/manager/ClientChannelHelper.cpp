@@ -32,14 +32,18 @@ namespace {
 // to handle redirects in the parent and one to handle the final channel
 // replacement (DocumentChannelChild 'redirects' to the final channel) in the
 // child.
+enum class Mode {
+  Mode_Default,
+  Mode_Child,
+  Mode_Parent,
+};
 
-class ClientChannelHelper : public nsIInterfaceRequestor,
-                            public nsIChannelEventSink {
- protected:
+class ClientChannelHelper final : public nsIInterfaceRequestor,
+                                  public nsIChannelEventSink {
   nsCOMPtr<nsIInterfaceRequestor> mOuter;
   nsCOMPtr<nsISerialEventTarget> mEventTarget;
 
-  virtual ~ClientChannelHelper() = default;
+  ~ClientChannelHelper() = default;
 
   NS_IMETHOD
   GetInterface(const nsIID& aIID, void** aResultOut) override {
@@ -76,29 +80,48 @@ class ClientChannelHelper : public nsIInterfaceRequestor,
     // If its a same-origin redirect we just move our reserved client to the
     // new channel.
     if (NS_SUCCEEDED(rv)) {
-      if (reservedClient) {
-        newLoadInfo->GiveReservedClientSource(std::move(reservedClient));
-      }
-
-      // It seems sometimes necko passes two channels with the same LoadInfo.
-      // We only need to move the reserved/initial ClientInfo over if we
-      // actually have a different LoadInfo.
-      else if (oldLoadInfo != newLoadInfo) {
-        const Maybe<ClientInfo>& reservedClientInfo =
-            oldLoadInfo->GetReservedClientInfo();
-
-        const Maybe<ClientInfo>& initialClientInfo =
-            oldLoadInfo->GetInitialClientInfo();
-
-        MOZ_DIAGNOSTIC_ASSERT(reservedClientInfo.isNothing() ||
-                              initialClientInfo.isNothing());
-
-        if (reservedClientInfo.isSome()) {
-          newLoadInfo->SetReservedClientInfo(reservedClientInfo.ref());
+      // If we're running in the child, but redirects are handled by the parent
+      // then our reserved/initial info should already have been moved to the
+      // new channel via the parent. If they don't match, then we need to create
+      // a new reserved client for the specified info, otherwise we can copy our
+      // reserved client source to the new channel.
+      if (mMode == Mode::Mode_Child) {
+        Maybe<ClientInfo> newClientInfo = newLoadInfo->GetReservedClientInfo();
+        if (newClientInfo) {
+          if (!reservedClient || reservedClient->Info() != *newClientInfo) {
+            // clear `reservedClient` first to ensure the same clientInfo ID has
+            // been removed before adding again.
+            reservedClient.reset(nullptr);
+            reservedClient = ClientManager::CreateSourceFromInfo(*newClientInfo,
+                                                                 mEventTarget);
+          }
+          newLoadInfo->GiveReservedClientSource(std::move(reservedClient));
+        }
+      } else {
+        if (reservedClient) {
+          newLoadInfo->GiveReservedClientSource(std::move(reservedClient));
         }
 
-        if (initialClientInfo.isSome()) {
-          newLoadInfo->SetInitialClientInfo(initialClientInfo.ref());
+        // It seems sometimes necko passes two channels with the same LoadInfo.
+        // We only need to move the reserved/initial ClientInfo over if we
+        // actually have a different LoadInfo.
+        else if (oldLoadInfo != newLoadInfo) {
+          const Maybe<ClientInfo>& reservedClientInfo =
+              oldLoadInfo->GetReservedClientInfo();
+
+          const Maybe<ClientInfo>& initialClientInfo =
+              oldLoadInfo->GetInitialClientInfo();
+
+          MOZ_DIAGNOSTIC_ASSERT(reservedClientInfo.isNothing() ||
+                                initialClientInfo.isNothing());
+
+          if (reservedClientInfo.isSome()) {
+            newLoadInfo->SetReservedClientInfo(reservedClientInfo.ref());
+          }
+
+          if (initialClientInfo.isSome()) {
+            newLoadInfo->SetInitialClientInfo(initialClientInfo.ref());
+          }
         }
       }
     }
@@ -115,16 +138,40 @@ class ClientChannelHelper : public nsIInterfaceRequestor,
                                           getter_AddRefs(principal));
       NS_ENSURE_SUCCESS(rv, rv);
 
-      reservedClient.reset();
+      // If we're managing redirects in the parent, then we don't want
+      // to create a new ClientSource (since those need to live with
+      // the global), so just allocate a new ClientInfo/id and we can
+      // create a ClientSource when the final channel propagates back
+      // to the child.
+      if (mMode == Mode::Mode_Parent) {
+        Maybe<ClientInfo> reservedInfo =
+            ClientManager::CreateInfo(ClientType::Window, principal);
+        if (reservedInfo) {
+          newLoadInfo->SetReservedClientInfo(*reservedInfo);
+        }
+      } else {
+        reservedClient.reset();
 
-      // Create the new ClientSource.  This should only happen for window
-      // Clients since support cross-origin redirects are blocked by the
-      // same-origin security policy.
-      reservedClient = ClientManager::CreateSource(ClientType::Window,
-                                                   mEventTarget, principal);
-      MOZ_DIAGNOSTIC_ASSERT(reservedClient);
+        const Maybe<ClientInfo>& reservedClientInfo =
+            newLoadInfo->GetReservedClientInfo();
+        // If we're in the child, but the parent managed redirects for
+        // us then it might have allocated an id for us already. If
+        // so, then just create the ClientSource for that existing
+        // info.
+        if (reservedClientInfo && mMode == Mode::Mode_Child) {
+          reservedClient = ClientManager::CreateSourceFromInfo(
+              *reservedClientInfo, mEventTarget);
+        } else {
+          // Create the new ClientSource.  This should only happen for window
+          // Clients since support cross-origin redirects are blocked by the
+          // same-origin security policy.
+          reservedClient = ClientManager::CreateSource(ClientType::Window,
+                                                       mEventTarget, principal);
+        }
+        MOZ_DIAGNOSTIC_ASSERT(reservedClient);
 
-      newLoadInfo->GiveReservedClientSource(std::move(reservedClient));
+        newLoadInfo->GiveReservedClientSource(std::move(reservedClient));
+      }
     }
 
     uint32_t redirectMode = nsIHttpChannelInternal::REDIRECT_MODE_MANUAL;
@@ -162,248 +209,24 @@ class ClientChannelHelper : public nsIInterfaceRequestor,
 
  public:
   ClientChannelHelper(nsIInterfaceRequestor* aOuter,
-                      nsISerialEventTarget* aEventTarget)
-      : mOuter(aOuter), mEventTarget(aEventTarget) {}
+                      nsISerialEventTarget* aEventTarget, Mode aMode)
+      : mOuter(aOuter), mEventTarget(aEventTarget), mMode(aMode) {}
 
   NS_DECL_ISUPPORTS
+
+  Mode mMode;
 };
 
 NS_IMPL_ISUPPORTS(ClientChannelHelper, nsIInterfaceRequestor,
                   nsIChannelEventSink);
-
-class ClientChannelHelperParent final : public ClientChannelHelper {
-  ~ClientChannelHelperParent() = default;
-
-  NS_IMETHOD
-  AsyncOnChannelRedirect(nsIChannel* aOldChannel, nsIChannel* aNewChannel,
-                         uint32_t aFlags,
-                         nsIAsyncVerifyRedirectCallback* aCallback) override {
-    MOZ_ASSERT(NS_IsMainThread());
-
-    nsresult rv = nsContentUtils::CheckSameOrigin(aOldChannel, aNewChannel);
-    if (NS_WARN_IF(NS_FAILED(rv) && rv != NS_ERROR_DOM_BAD_URI)) {
-      return rv;
-    }
-
-    nsCOMPtr<nsILoadInfo> oldLoadInfo = aOldChannel->LoadInfo();
-    nsCOMPtr<nsILoadInfo> newLoadInfo = aNewChannel->LoadInfo();
-
-    UniquePtr<ClientSource> reservedClient =
-        oldLoadInfo->TakeReservedClientSource();
-
-    // If its a same-origin redirect we just move our reserved client to the
-    // new channel.
-    if (NS_SUCCEEDED(rv)) {
-      if (reservedClient) {
-        newLoadInfo->GiveReservedClientSource(std::move(reservedClient));
-      }
-
-      // It seems sometimes necko passes two channels with the same LoadInfo.
-      // We only need to move the reserved/initial ClientInfo over if we
-      // actually have a different LoadInfo.
-      else if (oldLoadInfo != newLoadInfo) {
-        const Maybe<ClientInfo>& reservedClientInfo =
-            oldLoadInfo->GetReservedClientInfo();
-
-        const Maybe<ClientInfo>& initialClientInfo =
-            oldLoadInfo->GetInitialClientInfo();
-
-        MOZ_DIAGNOSTIC_ASSERT(reservedClientInfo.isNothing() ||
-                              initialClientInfo.isNothing());
-
-        if (reservedClientInfo.isSome()) {
-          newLoadInfo->SetReservedClientInfo(reservedClientInfo.ref());
-        }
-
-        if (initialClientInfo.isSome()) {
-          newLoadInfo->SetInitialClientInfo(initialClientInfo.ref());
-        }
-      }
-    }
-
-    // If it's a cross-origin redirect then we discard the old reserved client
-    // and create a new one.
-    else {
-      // If CheckSameOrigin() worked, then the security manager must exist.
-      nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
-      MOZ_DIAGNOSTIC_ASSERT(ssm);
-
-      nsCOMPtr<nsIPrincipal> principal;
-      rv = ssm->GetChannelResultPrincipal(aNewChannel,
-                                          getter_AddRefs(principal));
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      // If we're managing redirects in the parent, then we don't want
-      // to create a new ClientSource (since those need to live with
-      // the global), so just allocate a new ClientInfo/id and we can
-      // create a ClientSource when the final channel propagates back
-      // to the child.
-      Maybe<ClientInfo> reservedInfo =
-          ClientManager::CreateInfo(ClientType::Window, principal);
-      if (reservedInfo) {
-        newLoadInfo->SetReservedClientInfo(*reservedInfo);
-      }
-    }
-
-    uint32_t redirectMode = nsIHttpChannelInternal::REDIRECT_MODE_MANUAL;
-    nsCOMPtr<nsIHttpChannelInternal> http = do_QueryInterface(aOldChannel);
-    if (http) {
-      MOZ_ALWAYS_SUCCEEDS(http->GetRedirectMode(&redirectMode));
-    }
-
-    // Normally we keep the controller across channel redirects, but we must
-    // clear it when a document load redirects.  Only do this for real
-    // redirects, however.
-    //
-    // This is effectively described in step 4.2 of:
-    //
-    //  https://fetch.spec.whatwg.org/#http-fetch
-    //
-    // The spec sets the service-workers mode to none when the request is
-    // configured to *not* follow redirects.  This prevents any further
-    // service workers from intercepting.  The first service worker that
-    // had a shot at the FetchEvent remains the controller in this case.
-    if (!(aFlags & nsIChannelEventSink::REDIRECT_INTERNAL) &&
-        redirectMode != nsIHttpChannelInternal::REDIRECT_MODE_FOLLOW) {
-      newLoadInfo->ClearController();
-    }
-
-    nsCOMPtr<nsIChannelEventSink> outerSink = do_GetInterface(mOuter);
-    if (outerSink) {
-      return outerSink->AsyncOnChannelRedirect(aOldChannel, aNewChannel, aFlags,
-                                               aCallback);
-    }
-
-    aCallback->OnRedirectVerifyCallback(NS_OK);
-    return NS_OK;
-  }
-
- public:
-  ClientChannelHelperParent(nsIInterfaceRequestor* aOuter)
-      : ClientChannelHelper(aOuter, nullptr) {}
-};
-
-class ClientChannelHelperChild final : public ClientChannelHelper {
-  ~ClientChannelHelperChild() = default;
-
-  NS_IMETHOD
-  AsyncOnChannelRedirect(nsIChannel* aOldChannel, nsIChannel* aNewChannel,
-                         uint32_t aFlags,
-                         nsIAsyncVerifyRedirectCallback* aCallback) override {
-    MOZ_ASSERT(NS_IsMainThread());
-
-    nsresult rv = nsContentUtils::CheckSameOrigin(aOldChannel, aNewChannel);
-    if (NS_WARN_IF(NS_FAILED(rv) && rv != NS_ERROR_DOM_BAD_URI)) {
-      return rv;
-    }
-
-    nsCOMPtr<nsILoadInfo> oldLoadInfo = aOldChannel->LoadInfo();
-    nsCOMPtr<nsILoadInfo> newLoadInfo = aNewChannel->LoadInfo();
-
-    UniquePtr<ClientSource> reservedClient =
-        oldLoadInfo->TakeReservedClientSource();
-
-    // If its a same-origin redirect we just move our reserved client to the
-    // new channel.
-    if (NS_SUCCEEDED(rv)) {
-      // If we're running in the child, but redirects are handled by the parent
-      // then our reserved/initial info should already have been moved to the
-      // new channel via the parent. If they don't match, then we need to create
-      // a new reserved client for the specified info, otherwise we can copy our
-      // reserved client source to the new channel.
-      Maybe<ClientInfo> newClientInfo = newLoadInfo->GetReservedClientInfo();
-      if (newClientInfo) {
-        if (!reservedClient || reservedClient->Info() != *newClientInfo) {
-          // clear `reservedClient` first to ensure the same clientInfo ID has
-          // been removed before adding again.
-          reservedClient.reset(nullptr);
-          reservedClient =
-              ClientManager::CreateSourceFromInfo(*newClientInfo, mEventTarget);
-        }
-        newLoadInfo->GiveReservedClientSource(std::move(reservedClient));
-      }
-    }
-
-    // If it's a cross-origin redirect then we discard the old reserved client
-    // and create a new one.
-    else {
-      // If CheckSameOrigin() worked, then the security manager must exist.
-      nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
-      MOZ_DIAGNOSTIC_ASSERT(ssm);
-
-      nsCOMPtr<nsIPrincipal> principal;
-      rv = ssm->GetChannelResultPrincipal(aNewChannel,
-                                          getter_AddRefs(principal));
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      reservedClient.reset();
-
-      const Maybe<ClientInfo>& reservedClientInfo =
-          newLoadInfo->GetReservedClientInfo();
-      // If we're in the child, but the parent managed redirects for
-      // us then it might have allocated an id for us already. If
-      // so, then just create the ClientSource for that existing
-      // info.
-      if (reservedClientInfo) {
-        reservedClient = ClientManager::CreateSourceFromInfo(
-            *reservedClientInfo, mEventTarget);
-      } else {
-        // Create the new ClientSource.  This should only happen for window
-        // Clients since support cross-origin redirects are blocked by the
-        // same-origin security policy.
-        reservedClient = ClientManager::CreateSource(ClientType::Window,
-                                                     mEventTarget, principal);
-      }
-      MOZ_DIAGNOSTIC_ASSERT(reservedClient);
-
-      newLoadInfo->GiveReservedClientSource(std::move(reservedClient));
-    }
-
-    uint32_t redirectMode = nsIHttpChannelInternal::REDIRECT_MODE_MANUAL;
-    nsCOMPtr<nsIHttpChannelInternal> http = do_QueryInterface(aOldChannel);
-    if (http) {
-      MOZ_ALWAYS_SUCCEEDS(http->GetRedirectMode(&redirectMode));
-    }
-
-    // Normally we keep the controller across channel redirects, but we must
-    // clear it when a document load redirects.  Only do this for real
-    // redirects, however.
-    //
-    // This is effectively described in step 4.2 of:
-    //
-    //  https://fetch.spec.whatwg.org/#http-fetch
-    //
-    // The spec sets the service-workers mode to none when the request is
-    // configured to *not* follow redirects.  This prevents any further
-    // service workers from intercepting.  The first service worker that
-    // had a shot at the FetchEvent remains the controller in this case.
-    if (!(aFlags & nsIChannelEventSink::REDIRECT_INTERNAL) &&
-        redirectMode != nsIHttpChannelInternal::REDIRECT_MODE_FOLLOW) {
-      newLoadInfo->ClearController();
-    }
-
-    nsCOMPtr<nsIChannelEventSink> outerSink = do_GetInterface(mOuter);
-    if (outerSink) {
-      return outerSink->AsyncOnChannelRedirect(aOldChannel, aNewChannel, aFlags,
-                                               aCallback);
-    }
-
-    aCallback->OnRedirectVerifyCallback(NS_OK);
-    return NS_OK;
-  }
-
- public:
-  ClientChannelHelperChild(nsIInterfaceRequestor* aOuter,
-                           nsISerialEventTarget* aEventTarget)
-      : ClientChannelHelper(aOuter, aEventTarget) {}
-};
 
 }  // anonymous namespace
 
 nsresult AddClientChannelHelper(nsIChannel* aChannel,
                                 Maybe<ClientInfo>&& aReservedClientInfo,
                                 Maybe<ClientInfo>&& aInitialClientInfo,
-                                nsISerialEventTarget* aEventTarget) {
+                                nsISerialEventTarget* aEventTarget,
+                                bool aManagedInParent) {
   MOZ_ASSERT(NS_IsMainThread());
 
   Maybe<ClientInfo> initialClientInfo(std::move(aInitialClientInfo));
@@ -465,8 +288,9 @@ nsresult AddClientChannelHelper(nsIChannel* aChannel,
     MOZ_DIAGNOSTIC_ASSERT(reservedClient);
   }
 
-  RefPtr<ClientChannelHelper> helper =
-      new ClientChannelHelper(outerCallbacks, aEventTarget);
+  RefPtr<ClientChannelHelper> helper = new ClientChannelHelper(
+      outerCallbacks, aEventTarget,
+      aManagedInParent ? Mode::Mode_Child : Mode::Mode_Default);
 
   // Only set the callbacks helper if we are able to reserve the client
   // successfully.
@@ -490,74 +314,15 @@ nsresult AddClientChannelHelper(nsIChannel* aChannel,
   return NS_OK;
 }
 
-nsresult AddClientChannelHelperInChild(nsIChannel* aChannel,
-                                       nsISerialEventTarget* aEventTarget) {
-  MOZ_ASSERT(NS_IsMainThread());
-
+nsresult AddClientChannelHelperInParent(nsIChannel* aChannel,
+                                        nsISerialEventTarget* aEventTarget) {
   nsCOMPtr<nsIInterfaceRequestor> outerCallbacks;
   nsresult rv =
       aChannel->GetNotificationCallbacks(getter_AddRefs(outerCallbacks));
   NS_ENSURE_SUCCESS(rv, rv);
 
   RefPtr<ClientChannelHelper> helper =
-      new ClientChannelHelperChild(outerCallbacks, aEventTarget);
-
-  // Only set the callbacks helper if we are able to reserve the client
-  // successfully.
-  rv = aChannel->SetNotificationCallbacks(helper);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
-}
-
-nsresult AddClientChannelHelperInParent(
-    nsIChannel* aChannel, Maybe<ClientInfo>&& aInitialClientInfo) {
-  MOZ_ASSERT(NS_IsMainThread());
-
-  Maybe<ClientInfo> initialClientInfo(std::move(aInitialClientInfo));
-  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
-
-  nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
-  NS_ENSURE_TRUE(ssm, NS_ERROR_FAILURE);
-
-  nsCOMPtr<nsIPrincipal> channelPrincipal;
-  nsresult rv = ssm->GetChannelResultPrincipal(
-      aChannel, getter_AddRefs(channelPrincipal));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Only allow the initial ClientInfo to be set if the current channel
-  // principal matches.
-  if (initialClientInfo.isSome()) {
-    nsCOMPtr<nsIPrincipal> initialPrincipal = PrincipalInfoToPrincipal(
-        initialClientInfo.ref().PrincipalInfo(), nullptr);
-
-    bool equals = false;
-    rv = initialPrincipal ? initialPrincipal->Equals(channelPrincipal, &equals)
-                          : NS_ERROR_FAILURE;
-    if (NS_FAILED(rv) || !equals) {
-      initialClientInfo.reset();
-    }
-  }
-
-  nsCOMPtr<nsIInterfaceRequestor> outerCallbacks;
-  rv = aChannel->GetNotificationCallbacks(getter_AddRefs(outerCallbacks));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (initialClientInfo.isNothing()) {
-    // Wait to reserve the client until we are reasonably sure this method
-    // will succeed.  We should only follow this path for window clients.
-    // Workers should always provide a reserved ClientInfo since their
-    // ClientSource object is owned by a different thread.
-    Maybe<ClientInfo> reservedInfo =
-        ClientManager::CreateInfo(ClientType::Window, channelPrincipal);
-    MOZ_DIAGNOSTIC_ASSERT(reservedInfo);
-    loadInfo->SetReservedClientInfo(reservedInfo.ref());
-  } else {
-    loadInfo->SetInitialClientInfo(initialClientInfo.ref());
-  }
-
-  RefPtr<ClientChannelHelper> helper =
-      new ClientChannelHelperParent(outerCallbacks);
+      new ClientChannelHelper(outerCallbacks, aEventTarget, Mode::Mode_Parent);
 
   // Only set the callbacks helper if we are able to reserve the client
   // successfully.
