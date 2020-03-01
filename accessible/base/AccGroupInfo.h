@@ -55,7 +55,8 @@ class AccGroupInfo {
         role != mozilla::a11y::roles::CHECK_MENU_ITEM &&
         role != mozilla::a11y::roles::RADIO_MENU_ITEM &&
         role != mozilla::a11y::roles::RADIOBUTTON &&
-        role != mozilla::a11y::roles::PAGETAB)
+        role != mozilla::a11y::roles::PAGETAB &&
+        role != mozilla::a11y::roles::COMMENT)
       return nullptr;
 
     AccGroupInfo* info = new AccGroupInfo(aAccessible, BaseRole(role));
