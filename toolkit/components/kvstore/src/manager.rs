@@ -16,17 +16,11 @@
 use error::KeyValueError;
 use lmdb::Error as LmdbError;
 use rkv::{migrate::Migrator, Rkv, StoreError};
-use std::collections::HashMap;
 use std::collections::hash_map::Entry;
+use std::collections::HashMap;
 use std::fs::copy;
-use std::path::{
-    Path,
-    PathBuf,
-};
-use std::sync::{
-    Arc,
-    RwLock,
-};
+use std::path::{Path, PathBuf};
+use std::sync::{Arc, RwLock};
 use tempfile::tempdir;
 
 lazy_static! {
@@ -49,7 +43,11 @@ impl Manager {
     }
 
     /// Return the open env at `path`, or create it by calling `f`.
-    pub fn get_or_create<'p, F, P>(&mut self, path: P, f: F) -> Result<Arc<RwLock<Rkv>>, KeyValueError>
+    pub fn get_or_create<'p, F, P>(
+        &mut self,
+        path: P,
+        f: F,
+    ) -> Result<Arc<RwLock<Rkv>>, KeyValueError>
     where
         F: Fn(&Path) -> Result<Rkv, StoreError>,
         P: Into<&'p Path>,
@@ -67,12 +65,12 @@ impl Manager {
                         copy(temp_env.path().join("data.mdb"), path.join("data.mdb"))?;
                         copy(temp_env.path().join("lock.mdb"), path.join("lock.mdb"))?;
                         f(e.key().as_path())?
-                    },
+                    }
                     Err(err) => return Err(err.into()),
                 };
                 let k = Arc::new(RwLock::new(env));
                 e.insert(k).clone()
-            },
+            }
         })
     }
 }

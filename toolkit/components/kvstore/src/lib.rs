@@ -39,16 +39,16 @@ use std::{
     vec::IntoIter,
 };
 use task::{
-    ClearTask, DeleteTask, EnumerateTask, GetOrCreateTask, GetTask, HasTask,
-    PutTask, WriteManyTask,
+    ClearTask, DeleteTask, EnumerateTask, GetOrCreateTask, GetTask, HasTask, PutTask, WriteManyTask,
 };
 use thin_vec::ThinVec;
 use xpcom::{
+    getter_addrefs,
     interfaces::{
         nsIKeyValueDatabaseCallback, nsIKeyValueEnumeratorCallback, nsIKeyValuePair,
         nsIKeyValueVariantCallback, nsIKeyValueVoidCallback, nsISupports, nsIThread, nsIVariant,
     },
-    getter_addrefs, nsIID, RefPtr, ThreadBoundRefPtr, xpcom, xpcom_method,
+    nsIID, xpcom, xpcom_method, RefPtr, ThreadBoundRefPtr,
 };
 
 type KeyValuePairResult = Result<(String, OwnedValue), KeyValueError>;
@@ -170,8 +170,7 @@ impl KeyValueDatabase {
         key: &nsACString,
         value: &nsIVariant,
     ) -> Result<(), nsresult> {
-        let value = variant_to_owned(value)?
-            .ok_or(KeyValueError::UnexpectedValue)?;
+        let value = variant_to_owned(value)?.ok_or(KeyValueError::UnexpectedValue)?;
 
         let task = Box::new(PutTask::new(
             RefPtr::new(callback),
@@ -196,21 +195,18 @@ impl KeyValueDatabase {
     fn write_many(
         &self,
         callback: &nsIKeyValueVoidCallback,
-        pairs: &ThinVec<RefPtr<nsIKeyValuePair>>
+        pairs: &ThinVec<RefPtr<nsIKeyValuePair>>,
     ) -> Result<(), nsresult> {
         let mut entries = Vec::with_capacity(pairs.len());
 
         for pair in pairs {
             let mut key = nsCString::new();
-            unsafe {
-                pair.GetKey(&mut *key)
-            }.to_result()?;
+            unsafe { pair.GetKey(&mut *key) }.to_result()?;
             if key.is_empty() {
                 return Err(nsresult::from(KeyValueError::UnexpectedValue));
             }
 
-            let val: RefPtr<nsIVariant> =
-                getter_addrefs(|p| unsafe { pair.GetValue(p) })?;
+            let val: RefPtr<nsIVariant> = getter_addrefs(|p| unsafe { pair.GetValue(p) })?;
             let value = variant_to_owned(&val)?;
             entries.push((key, value));
         }
@@ -292,14 +288,11 @@ impl KeyValueDatabase {
         clear => Clear(callback: *const nsIKeyValueVoidCallback)
     );
 
-    fn clear(
-        &self,
-        callback: &nsIKeyValueVoidCallback,
-    ) -> Result<(), nsresult> {
+    fn clear(&self, callback: &nsIKeyValueVoidCallback) -> Result<(), nsresult> {
         let task = Box::new(ClearTask::new(
             RefPtr::new(callback),
             Arc::clone(&self.rkv),
-            self.store
+            self.store,
         ));
 
         let thread = self.thread.get_ref().ok_or(NS_ERROR_FAILURE)?;
