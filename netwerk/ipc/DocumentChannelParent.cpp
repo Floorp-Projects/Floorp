@@ -54,12 +54,10 @@ bool DocumentChannelParent::Init(BrowserParent* aBrowser,
   if (!mParent->Open(bc->Canonical(), aBrowser->GetBrowsingContext(), loadState,
                      loadInfo, aArgs.loadFlags(), aArgs.loadType(),
                      aArgs.cacheKey(), aArgs.isActive(), aArgs.isTopLevelDoc(),
-                     aArgs.hasNonEmptySandboxingFlags(), aArgs.topWindowURI(),
-                     aArgs.contentBlockingAllowListPrincipal(),
-                     aArgs.channelId(), aArgs.asyncOpenTime(),
-                     aArgs.documentOpenFlags(), aArgs.pluginsAllowed(),
-                     aArgs.timing().refOr(nullptr), std::move(clientInfo),
-                     aArgs.outerWindowId(), &rv)) {
+                     aArgs.hasNonEmptySandboxingFlags(), aArgs.channelId(),
+                     aArgs.asyncOpenTime(), aArgs.documentOpenFlags(),
+                     aArgs.pluginsAllowed(), aArgs.timing().refOr(nullptr),
+                     std::move(clientInfo), aArgs.outerWindowId(), &rv)) {
     return SendFailedAsyncOpen(rv);
   }
 

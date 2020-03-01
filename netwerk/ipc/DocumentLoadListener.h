@@ -81,10 +81,8 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
             nsDocShellLoadState* aLoadState, class LoadInfo* aLoadInfo,
             nsLoadFlags aLoadFlags, uint32_t aLoadType, uint32_t aCacheKey,
             bool aIsActive, bool aIsTopLevelDoc,
-            bool aHasNonEmptySandboxingFlags,
-            const Maybe<ipc::URIParams>& aTopWindowURI,
-            const Maybe<ipc::PrincipalInfo>& aContentBlockingAllowListPrincipal,
-            const uint64_t& aChannelId, const TimeStamp& aAsyncOpenTime,
+            bool aHasNonEmptySandboxingFlags, const uint64_t& aChannelId,
+            const TimeStamp& aAsyncOpenTime,
             const Maybe<uint32_t>& aDocumentOpenFlags, bool aPluginsAllowed,
             nsDOMNavigationTiming* aTiming, Maybe<dom::ClientInfo>&& aInfo,
             uint64_t aOuterWindowId, nsresult* aRv);
@@ -201,6 +199,8 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
   RefPtr<PDocumentChannelParent::RedirectToRealChannelPromise>
   RedirectToRealChannel(uint32_t aRedirectFlags, uint32_t aLoadFlags,
                         const Maybe<uint64_t>& aDestinationProcess);
+
+  dom::CanonicalBrowsingContext* GetBrowsingContext();
 
   // Construct a LoadInfo object to use for the internal channel.
   // TODO: This currently only supports creating top window TYPE_DOCUMENT

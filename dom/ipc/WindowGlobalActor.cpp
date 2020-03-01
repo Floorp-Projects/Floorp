@@ -8,6 +8,7 @@
 
 #include "nsContentUtils.h"
 #include "mozJSComponentLoader.h"
+#include "mozilla/AntiTrackingCommon.h"
 #include "mozilla/Logging.h"
 #include "mozilla/dom/JSWindowActorService.h"
 #include "mozilla/dom/JSWindowActorParent.h"
@@ -27,8 +28,13 @@ WindowGlobalInit WindowGlobalActor::AboutBlankInitializer(
   uint64_t outerWindowId = nsContentUtils::GenerateWindowId();
   uint64_t innerWindowId = nsContentUtils::GenerateWindowId();
 
-  return WindowGlobalInit(aPrincipal, documentURI, aBrowsingContext,
-                          innerWindowId, outerWindowId);
+  nsCOMPtr<nsIPrincipal> contentBlockingAllowListPrincipal;
+  AntiTrackingCommon::ComputeContentBlockingAllowListPrincipal(
+      aPrincipal, getter_AddRefs(contentBlockingAllowListPrincipal));
+
+  return WindowGlobalInit(aPrincipal, contentBlockingAllowListPrincipal,
+                          documentURI, aBrowsingContext, innerWindowId,
+                          outerWindowId);
 }
 
 void WindowGlobalActor::ConstructActor(const nsAString& aName,

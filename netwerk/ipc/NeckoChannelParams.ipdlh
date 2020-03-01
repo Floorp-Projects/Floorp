@@ -397,10 +397,8 @@ struct CookieStruct
 };
 
 struct DocumentChannelCreationArgs {
-  URIParams? topWindowURI;
   DocShellLoadStateInit loadState;
   LoadInfoArgs loadInfo;
-  PrincipalInfo? contentBlockingAllowListPrincipal;
   TimeStamp asyncOpenTime;
   uint64_t channelId;
   uint32_t loadFlags;

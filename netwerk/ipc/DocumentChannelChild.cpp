@@ -58,25 +58,6 @@ DocumentChannelChild::AsyncOpen(nsIStreamListener* aListener) {
   rv = NS_CheckPortSafety(mURI);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIURI> topWindowURI;
-  nsCOMPtr<nsIPrincipal> contentBlockingAllowListPrincipal;
-
-  nsCOMPtr<mozIThirdPartyUtil> util = services::GetThirdPartyUtil();
-  if (util) {
-    nsCOMPtr<nsIURI> uriBeingLoaded =
-        AntiTrackingCommon::MaybeGetDocumentURIBeingLoaded(this);
-    nsCOMPtr<mozIDOMWindowProxy> win;
-    rv =
-        util->GetTopWindowForChannel(this, uriBeingLoaded, getter_AddRefs(win));
-    if (NS_SUCCEEDED(rv)) {
-      util->GetURIFromWindow(win, getter_AddRefs(topWindowURI));
-
-      Unused << util->GetContentBlockingAllowListPrincipalFromWindow(
-          win, uriBeingLoaded,
-          getter_AddRefs(contentBlockingAllowListPrincipal));
-    }
-  }
-
   // add ourselves to the load group.
   if (mLoadGroup) {
     // During this call, we can re-enter back into the DocumentChannelChild to
@@ -95,22 +76,11 @@ DocumentChannelChild::AsyncOpen(nsIStreamListener* aListener) {
 
   DocumentChannelCreationArgs args;
 
-  SerializeURI(topWindowURI, args.topWindowURI());
   args.loadState() = mLoadState->Serialize();
   Maybe<LoadInfoArgs> maybeArgs;
   rv = LoadInfoToLoadInfoArgs(mLoadInfo, &maybeArgs);
   NS_ENSURE_SUCCESS(rv, rv);
   MOZ_DIAGNOSTIC_ASSERT(maybeArgs);
-
-  if (contentBlockingAllowListPrincipal) {
-    PrincipalInfo principalInfo;
-    rv = PrincipalToPrincipalInfo(contentBlockingAllowListPrincipal,
-                                  &principalInfo);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-    args.contentBlockingAllowListPrincipal() = Some(principalInfo);
-  }
 
   args.loadInfo() = *maybeArgs;
   args.loadFlags() = mLoadFlags;

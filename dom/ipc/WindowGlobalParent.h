@@ -104,6 +104,10 @@ class WindowGlobalParent final : public WindowContext,
 
   const nsString& GetDocumentTitle() const { return mDocumentTitle; }
 
+  nsIPrincipal* GetContentBlockingAllowListPrincipal() const {
+    return mDocContentBlockingAllowListPrincipal;
+  }
+
   uint64_t ContentParentId();
 
   int32_t OsPid();
@@ -189,6 +193,7 @@ class WindowGlobalParent final : public WindowContext,
   // NOTE: This document principal doesn't reflect possible |document.domain|
   // mutations which may have been made in the actual document.
   nsCOMPtr<nsIPrincipal> mDocumentPrincipal;
+  nsCOMPtr<nsIPrincipal> mDocContentBlockingAllowListPrincipal;
   nsCOMPtr<nsIURI> mDocumentURI;
   nsString mDocumentTitle;
 
