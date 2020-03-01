@@ -136,15 +136,13 @@ nsresult LoadInfoArgsToLoadInfo(
     nsILoadInfo** outLoadInfo);
 nsresult LoadInfoArgsToLoadInfo(
     const Maybe<mozilla::net::LoadInfoArgs>& aOptionalLoadInfoArgs,
-    nsINode* aLoadingContext, nsINode* aCspToInheritLoadingContext,
-    nsILoadInfo** outLoadInfo);
+    nsINode* aCspToInheritLoadingContext, nsILoadInfo** outLoadInfo);
 nsresult LoadInfoArgsToLoadInfo(
     const Maybe<net::LoadInfoArgs>& aOptionalLoadInfoArgs,
     mozilla::net::LoadInfo** outLoadInfo);
 nsresult LoadInfoArgsToLoadInfo(
     const Maybe<net::LoadInfoArgs>& aOptionalLoadInfoArgs,
-    nsINode* aLoadingContext, nsINode* aCspToInheritLoadingContext,
-    mozilla::net::LoadInfo** outLoadInfo);
+    nsINode* aCspToInheritLoadingContext, mozilla::net::LoadInfo** outLoadInfo);
 
 /**
  * Fills ParentLoadInfoForwarderArgs with properties we want to carry to child
