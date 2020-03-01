@@ -164,6 +164,15 @@ static const nsRoleMapEntry sWAIRoleMaps[] = {
     eARIAReadonly,
     eARIAOrientation
   },
+  { // comment
+    nsGkAtoms::comment,
+    roles::COMMENT,
+    kUseMapRole,
+    eNoValue,
+    eNoAction,
+    eNoLiveAttr,
+    kGenericAccType,
+  },
   { // complementary
     nsGkAtoms::complementary,
     roles::LANDMARK,

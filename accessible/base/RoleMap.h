@@ -1648,4 +1648,13 @@ ROLE(SUGGESTION,
      IA2_ROLE_SUGGESTION,
      java::SessionAccessibility::CLASSNAME_VIEW,
      eNoNameRule)
+
+ROLE(COMMENT,
+     "comment",
+     ATK_ROLE_COMMENT,
+     NSAccessibilityGroupRole,
+     USE_ROLE_STRING,
+     IA2_ROLE_COMMENT,
+     java::SessionAccessibility::CLASSNAME_VIEW,
+     eNoNameRule)
 // clang-format on
