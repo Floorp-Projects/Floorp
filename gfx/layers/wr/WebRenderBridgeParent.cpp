@@ -834,8 +834,7 @@ bool WebRenderBridgeParent::PushExternalImageForTexture(
     WebRenderTextureHost* wrTexture = aTexture->AsWebRenderTextureHost();
     if (wrTexture) {
       wrTexture->PushResourceUpdates(aResources, op, keys,
-                                     wrTexture->GetExternalImageKey(),
-                                     /* aPreferCompositorSurface */ false);
+                                     wrTexture->GetExternalImageKey());
       auto it = mTextureHosts.find(wr::AsUint64(aKey));
       MOZ_ASSERT((it == mTextureHosts.end() && !aIsUpdate) ||
                  (it != mTextureHosts.end() && aIsUpdate));
