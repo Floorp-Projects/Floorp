@@ -27,11 +27,13 @@
 #include "URIUtils.h"
 #include "mozilla/dom/nsCSPUtils.h"
 #include "mozilla/dom/nsCSPContext.h"
+#include "mozilla/dom/BrowsingContext.h"
 
 namespace mozilla {
 
 using mozilla::BasePrincipal;
 using mozilla::Maybe;
+using mozilla::dom::BrowsingContext;
 using mozilla::dom::ServiceWorkerDescriptor;
 using namespace mozilla::net;
 
@@ -587,16 +589,15 @@ nsresult LoadInfoToLoadInfoArgs(nsILoadInfo* aLoadInfo,
 nsresult LoadInfoArgsToLoadInfo(
     const Maybe<LoadInfoArgs>& aOptionalLoadInfoArgs,
     nsILoadInfo** outLoadInfo) {
-  return LoadInfoArgsToLoadInfo(aOptionalLoadInfoArgs, nullptr, nullptr,
-                                outLoadInfo);
+  return LoadInfoArgsToLoadInfo(aOptionalLoadInfoArgs, nullptr, outLoadInfo);
 }
 nsresult LoadInfoArgsToLoadInfo(
-    const Maybe<LoadInfoArgs>& aOptionalLoadInfoArgs, nsINode* aLoadingContext,
+    const Maybe<LoadInfoArgs>& aOptionalLoadInfoArgs,
     nsINode* aCspToInheritLoadingContext, nsILoadInfo** outLoadInfo) {
   RefPtr<LoadInfo> loadInfo;
-  nsresult rv = LoadInfoArgsToLoadInfo(aOptionalLoadInfoArgs, aLoadingContext,
-                                       aCspToInheritLoadingContext,
-                                       getter_AddRefs(loadInfo));
+  nsresult rv =
+      LoadInfoArgsToLoadInfo(aOptionalLoadInfoArgs, aCspToInheritLoadingContext,
+                             getter_AddRefs(loadInfo));
   NS_ENSURE_SUCCESS(rv, rv);
 
   loadInfo.forget(outLoadInfo);
@@ -605,11 +606,10 @@ nsresult LoadInfoArgsToLoadInfo(
 
 nsresult LoadInfoArgsToLoadInfo(
     const Maybe<LoadInfoArgs>& aOptionalLoadInfoArgs, LoadInfo** outLoadInfo) {
-  return LoadInfoArgsToLoadInfo(aOptionalLoadInfoArgs, nullptr, nullptr,
-                                outLoadInfo);
+  return LoadInfoArgsToLoadInfo(aOptionalLoadInfoArgs, nullptr, outLoadInfo);
 }
 nsresult LoadInfoArgsToLoadInfo(
-    const Maybe<LoadInfoArgs>& aOptionalLoadInfoArgs, nsINode* aLoadingContext,
+    const Maybe<LoadInfoArgs>& aOptionalLoadInfoArgs,
     nsINode* aCspToInheritLoadingContext, LoadInfo** outLoadInfo) {
   if (aOptionalLoadInfoArgs.isNothing()) {
     *outLoadInfo = nullptr;
@@ -735,6 +735,16 @@ nsresult LoadInfoArgsToLoadInfo(
     cspToInherit = CSPInfoToCSP(cspToInheritInfo.ref(), doc);
   }
 
+  // Restore the loadingContext for frames using the BrowsingContext's
+  // embedder element. Note that this only works if the embedder is
+  // same-process, so won't be fission compatible.
+  nsCOMPtr<nsINode> loadingContext;
+  RefPtr<BrowsingContext> frameBrowsingContext =
+      BrowsingContext::Get(loadInfoArgs.frameBrowsingContextID());
+  if (frameBrowsingContext) {
+    loadingContext = frameBrowsingContext->GetEmbedderElement();
+  }
+
   RefPtr<mozilla::LoadInfo> loadInfo = new mozilla::LoadInfo(
       loadingPrincipal, triggeringPrincipal, principalToInherit,
       sandboxedLoadingPrincipal, topLevelPrincipal,
@@ -767,7 +777,7 @@ nsresult LoadInfoArgsToLoadInfo(
       loadInfoArgs.documentHasLoaded(),
       loadInfoArgs.allowListFutureDocumentsCreatedFromThisRedirectChain(),
       loadInfoArgs.cspNonce(), loadInfoArgs.skipContentSniffing(),
-      loadInfoArgs.requestBlockingReason(), aLoadingContext);
+      loadInfoArgs.requestBlockingReason(), loadingContext);
 
   if (loadInfoArgs.isFromProcessingFrameAttributes()) {
     loadInfo->SetIsFromProcessingFrameAttributes();
