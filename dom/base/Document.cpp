@@ -3140,7 +3140,7 @@ nsresult Document::StartDocumentLoad(const char* aCommand, nsIChannel* aChannel,
   if (cspToInherit) {
     bool allowsNavigateTo = false;
     rv = cspToInherit->GetAllowsNavigateTo(
-        mDocumentURI, loadInfo->GetIsFormSubmission(),
+        mDocumentURI, loadInfo,
         !loadInfo->RedirectChain().IsEmpty(), /* aWasRedirected */
         true,                                 /* aEnforceWhitelist */
         &allowsNavigateTo);
