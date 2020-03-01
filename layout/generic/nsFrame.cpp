@@ -12593,7 +12593,7 @@ void ReflowInput::DisplayInitFrameTypeExit(nsIFrame* aFrame,
 
     {
       nsAutoString result;
-      Servo_GetPropertyValue(aFrame->Style(), eCSSProperty_display, &result);
+      aFrame->Style()->GetComputedPropertyValue(eCSSProperty_display, result);
       printf(" display=%s", NS_ConvertUTF16toUTF8(result).get());
     }
 

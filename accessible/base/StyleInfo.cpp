@@ -21,12 +21,12 @@ StyleInfo::StyleInfo(dom::Element* aElement) : mElement(aElement) {
 
 void StyleInfo::Display(nsAString& aValue) {
   aValue.Truncate();
-  Servo_GetPropertyValue(mComputedStyle, eCSSProperty_display, &aValue);
+  mComputedStyle->GetComputedPropertyValue(eCSSProperty_display, aValue);
 }
 
 void StyleInfo::TextAlign(nsAString& aValue) {
   aValue.Truncate();
-  Servo_GetPropertyValue(mComputedStyle, eCSSProperty_text_align, &aValue);
+  mComputedStyle->GetComputedPropertyValue(eCSSProperty_text_align, aValue);
 }
 
 void StyleInfo::TextIndent(nsAString& aValue) {
