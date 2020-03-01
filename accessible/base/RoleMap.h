@@ -1633,10 +1633,10 @@ ROLE(FORM_LANDMARK,
 
 ROLE(MARK,
      "mark",
-     ATK_ROLE_STATIC,
+     ATK_ROLE_MARK,
      NSAccessibilityGroupRole,
      USE_ROLE_STRING,
-     IA2_ROLE_TEXT_FRAME,
+     IA2_ROLE_MARK,
      java::SessionAccessibility::CLASSNAME_VIEW,
      eNameFromSubtreeIfReqRule)
 // clang-format on
