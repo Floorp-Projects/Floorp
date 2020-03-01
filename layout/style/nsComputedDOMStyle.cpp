@@ -440,7 +440,7 @@ nsComputedDOMStyle::GetPropertyValue(const nsACString& aPropertyName,
   }
 
   MOZ_ASSERT(entry->mGetter == &nsComputedDOMStyle::DummyGetter);
-  Servo_GetPropertyValue(mComputedStyle, prop, &aReturn);
+  mComputedStyle->GetComputedPropertyValue(prop, aReturn);
   return NS_OK;
 }
 
@@ -1326,8 +1326,8 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetOsxFontSmoothing() {
   }
 
   nsAutoString result;
-  Servo_GetPropertyValue(mComputedStyle, eCSSProperty__moz_osx_font_smoothing,
-                         &result);
+  mComputedStyle->GetComputedPropertyValue(
+      eCSSProperty__moz_osx_font_smoothing, result);
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
   val->SetString(result);
   return val.forget();
@@ -1713,8 +1713,8 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetGridTemplateColumns() {
     // The element doesn't have a box - return the computed value.
     // https://drafts.csswg.org/css-grid/#resolved-track-list
     nsAutoString string;
-    Servo_GetPropertyValue(mComputedStyle, eCSSProperty_grid_template_columns,
-                           &string);
+    mComputedStyle->GetComputedPropertyValue(eCSSProperty_grid_template_columns,
+                                             string);
     RefPtr<nsROCSSPrimitiveValue> value = new nsROCSSPrimitiveValue;
     value->SetString(string);
     return value.forget();
@@ -1733,8 +1733,8 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetGridTemplateRows() {
     // The element doesn't have a box - return the computed value.
     // https://drafts.csswg.org/css-grid/#resolved-track-list
     nsAutoString string;
-    Servo_GetPropertyValue(mComputedStyle, eCSSProperty_grid_template_rows,
-                           &string);
+    mComputedStyle->GetComputedPropertyValue(eCSSProperty_grid_template_rows,
+                                             string);
     RefPtr<nsROCSSPrimitiveValue> value = new nsROCSSPrimitiveValue;
     value->SetString(string);
     return value.forget();
@@ -1838,7 +1838,7 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetTextDecoration() {
   auto getPropertyValue = [&](nsCSSPropertyID aID) {
     RefPtr<nsROCSSPrimitiveValue> value = new nsROCSSPrimitiveValue;
     nsAutoString string;
-    Servo_GetPropertyValue(mComputedStyle, aID, &string);
+    mComputedStyle->GetComputedPropertyValue(aID, string);
     value->SetString(string);
     return value.forget();
   };

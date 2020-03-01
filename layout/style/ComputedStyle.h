@@ -70,6 +70,11 @@ class ComputedStyle {
   ComputedStyle(PseudoStyleType aPseudoType,
                 ServoComputedDataForgotten aComputedValues);
 
+  // Returns the computed (not resolved) value of the given property.
+  void GetComputedPropertyValue(nsCSSPropertyID aId, nsAString& aOut) const {
+    Servo_GetPropertyValue(this, aId, &aOut);
+  }
+
   // Return the ComputedStyle whose style data should be used for the R,
   // G, and B components of color, background-color, and border-*-color
   // if RelevantLinkIsVisited().
