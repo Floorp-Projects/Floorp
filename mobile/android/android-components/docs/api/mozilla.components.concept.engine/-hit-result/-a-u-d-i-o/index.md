@@ -10,10 +10,11 @@ If the HTML element was of type 'HTMLAudioElement'.
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `AUDIO(src: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`)`<br>If the HTML element was of type 'HTMLAudioElement'. |
+| [&lt;init&gt;](-init-.md) | `AUDIO(src: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, title: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`? = null)`<br>If the HTML element was of type 'HTMLAudioElement'. |
 
 ### Properties
 
 | Name | Summary |
 |---|---|
 | [src](src.md) | `val src: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
+| [title](title.md) | `val title: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`?` |
