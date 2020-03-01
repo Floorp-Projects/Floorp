@@ -413,6 +413,7 @@ struct DocumentChannelCreationArgs {
   bool pluginsAllowed;
   nsDOMNavigationTiming? timing;
   IPCClientInfo? initialClientInfo;
+  uint64_t outerWindowId;
 };
 
 struct DocumentChannelRedirect {

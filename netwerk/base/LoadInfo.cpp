@@ -9,6 +9,7 @@
 #include "js/Array.h"  // JS::NewArrayObject
 #include "mozilla/Assertions.h"
 #include "mozilla/ExpandedPrincipal.h"
+#include "mozilla/dom/CanonicalBrowsingContext.h"
 #include "mozilla/dom/ClientIPCTypes.h"
 #include "mozilla/dom/ClientSource.h"
 #include "mozilla/dom/Performance.h"
@@ -408,6 +409,84 @@ LoadInfo::LoadInfo(nsPIDOMWindowOuter* aOuterWindow,
 
 #ifdef DEBUG
   if (docShell->GetBrowsingContext()->IsChrome()) {
+    MOZ_ASSERT(mOriginAttributes.mPrivateBrowsingId == 0,
+               "chrome docshell shouldn't have mPrivateBrowsingId set.");
+  }
+#endif
+
+  // Let's take the current cookie behavior and current cookie permission
+  // for the documents' loadInfo. Note that for any other loadInfos,
+  // cookieBehavior will be BEHAVIOR_REJECT for security reasons.
+  mCookieSettings = CookieSettings::Create();
+}
+
+LoadInfo::LoadInfo(dom::CanonicalBrowsingContext* aBrowsingContext,
+                   nsIPrincipal* aTriggeringPrincipal,
+                   const OriginAttributes& aOriginAttributes,
+                   uint64_t aOuterWindowID, nsSecurityFlags aSecurityFlags,
+                   uint32_t aSandboxFlags)
+    : mLoadingPrincipal(nullptr),
+      mTriggeringPrincipal(aTriggeringPrincipal),
+      mPrincipalToInherit(nullptr),
+      mContextForTopLevelLoad(nullptr),
+      mSecurityFlags(aSecurityFlags),
+      mSandboxFlags(aSandboxFlags),
+      mInternalContentPolicyType(nsIContentPolicy::TYPE_DOCUMENT),
+      mTainting(LoadTainting::Basic),
+      mBlockAllMixedContent(false),
+      mUpgradeInsecureRequests(false),
+      mBrowserUpgradeInsecureRequests(false),
+      mBrowserWouldUpgradeInsecureRequests(false),
+      mForceAllowDataURI(false),
+      mAllowInsecureRedirectToDataURI(false),
+      mBypassCORSChecks(false),
+      mSkipContentPolicyCheckForWebRequest(false),
+      mOriginalFrameSrcLoad(false),
+      mForceInheritPrincipalDropped(false),
+      mInnerWindowID(0),
+      mOuterWindowID(0),
+      mParentOuterWindowID(0),
+      mTopOuterWindowID(0),
+      mFrameOuterWindowID(0),
+      mBrowsingContextID(0),
+      mFrameBrowsingContextID(0),
+      mInitialSecurityCheckDone(false),
+      mIsThirdPartyContext(false),  // NB: TYPE_DOCUMENT implies !third-party.
+      mIsFormSubmission(false),
+      mSendCSPViolationEvents(true),
+      mRequestBlockingReason(BLOCKING_REASON_NONE),
+      mForcePreflight(false),
+      mIsPreflight(false),
+      mLoadTriggeredFromExternal(false),
+      mServiceWorkerTaintingSynthesized(false),
+      mDocumentHasUserInteracted(false),
+      mDocumentHasLoaded(false),
+      mAllowListFutureDocumentsCreatedFromThisRedirectChain(false),
+      mSkipContentSniffing(false),
+      mIsFromProcessingFrameAttributes(false) {
+  // Top-level loads are never third-party
+  // Grab the information we can out of the window.
+  MOZ_ASSERT(aBrowsingContext);
+  MOZ_ASSERT(mTriggeringPrincipal);
+  MOZ_ASSERT(aSecurityFlags !=
+             nsILoadInfo::SEC_ONLY_FOR_EXPLICIT_CONTENTSEC_CHECK);
+
+  // if the load is sandboxed, we can not also inherit the principal
+  if (mSandboxFlags & SANDBOXED_ORIGIN) {
+    mForceInheritPrincipalDropped =
+        (mSecurityFlags & nsILoadInfo::SEC_FORCE_INHERIT_PRINCIPAL);
+    mSecurityFlags &= ~nsILoadInfo::SEC_FORCE_INHERIT_PRINCIPAL;
+  }
+
+  // NB: Ignore the current inner window since we're navigating away from it.
+  // Since this is a TYPE_DOCUMENT load, we should be the top window, and all
+  // the outer window IDs are the same.
+  mOuterWindowID = mParentOuterWindowID = mTopOuterWindowID = aOuterWindowID;
+  mBrowsingContextID = aBrowsingContext->Id();
+  mOriginAttributes = aOriginAttributes;
+
+#ifdef DEBUG
+  if (aBrowsingContext->IsChrome()) {
     MOZ_ASSERT(mOriginAttributes.mPrivateBrowsingId == 0,
                "chrome docshell shouldn't have mPrivateBrowsingId set.");
   }
