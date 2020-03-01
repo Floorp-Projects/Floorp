@@ -107,12 +107,12 @@ class DynamicsCompressor {
   float m_lastAnchor;
   float m_lastFilterStageGain;
 
-  typedef struct {
+  struct ZeroPoleFilterPack4 {
     ZeroPole filters[4];
     size_t sizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const {
       return aMallocSizeOf(this);
     }
-  } ZeroPoleFilterPack4;
+  };
 
   // Per-channel emphasis filters.
   nsTArray<UniquePtr<ZeroPoleFilterPack4> > m_preFilterPacks;

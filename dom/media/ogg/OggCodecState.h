@@ -449,15 +449,15 @@ enum EMsgHeaderType {
   eTrackDependencies
 };
 
-typedef struct {
+struct FieldPatternType {
   const char* mPatternToRecognize;
   EMsgHeaderType mMsgHeaderType;
-} FieldPatternType;
+};
 
 // Stores the message information for different logical bitstream.
-typedef struct {
+struct MessageField {
   nsClassHashtable<nsUint32HashKey, nsCString> mValuesStore;
-} MessageField;
+};
 
 class SkeletonState : public OggCodecState {
  public:
