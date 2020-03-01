@@ -412,6 +412,7 @@ struct DocumentChannelCreationArgs {
   bool hasNonEmptySandboxingFlags;
   bool pluginsAllowed;
   nsDOMNavigationTiming? timing;
+  IPCClientInfo? initialClientInfo;
 };
 
 struct DocumentChannelRedirect {
