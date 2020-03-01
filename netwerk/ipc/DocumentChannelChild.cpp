@@ -123,6 +123,7 @@ DocumentChannelChild::AsyncOpen(nsIStreamListener* aListener) {
   args.asyncOpenTime() = mAsyncOpenTime;
   args.documentOpenFlags() = mDocumentOpenFlags;
   args.pluginsAllowed() = mPluginsAllowed;
+  args.outerWindowId() = mLoadInfo->GetOuterWindowID();
 
   Maybe<IPCClientInfo> ipcClientInfo;
   if (mInitialClientInfo.isSome()) {

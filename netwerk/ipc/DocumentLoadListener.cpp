@@ -33,6 +33,7 @@
 #include "nsCExternalHandlerService.h"
 #include "nsMimeTypes.h"
 #include "nsIViewSourceChannel.h"
+#include "nsIOService.h"
 
 mozilla::LazyLogModule gDocumentChannelLog("DocumentChannel");
 #define LOG(fmt) MOZ_LOG(gDocumentChannelLog, mozilla::LogLevel::Verbose, fmt)
@@ -248,7 +249,48 @@ DocumentLoadListener::~DocumentLoadListener() {
   LOG(("DocumentLoadListener dtor [this=%p]", this));
 }
 
+already_AddRefed<LoadInfo> DocumentLoadListener::CreateLoadInfo(
+    CanonicalBrowsingContext* aBrowsingContext, nsDocShellLoadState* aLoadState,
+    uint64_t aOuterWindowId) {
+  OriginAttributes attrs;
+  mLoadContext->GetOriginAttributes(attrs);
+
+  // TODO: Block copied from nsDocShell::DoURILoad, refactor out somewhere
+  bool inheritPrincipal = false;
+
+  if (aLoadState->PrincipalToInherit()) {
+    bool isSrcdoc =
+        aLoadState->HasLoadFlags(nsDocShell::INTERNAL_LOAD_FLAGS_IS_SRCDOC);
+    bool inheritAttrs = nsContentUtils::ChannelShouldInheritPrincipal(
+        aLoadState->PrincipalToInherit(), aLoadState->URI(),
+        true,  // aInheritForAboutBlank
+        isSrcdoc);
+
+    bool isURIUniqueOrigin = nsIOService::IsDataURIUniqueOpaqueOrigin() &&
+                             SchemeIsData(aLoadState->URI());
+    inheritPrincipal = inheritAttrs && !isURIUniqueOrigin;
+  }
+
+  nsSecurityFlags securityFlags =
+      nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL;
+  uint32_t sandboxFlags = aBrowsingContext->GetSandboxFlags();
+
+  if (aLoadState->LoadType() == LOAD_ERROR_PAGE) {
+    securityFlags |= nsILoadInfo::SEC_LOAD_ERROR_PAGE;
+  }
+
+  if (inheritPrincipal) {
+    securityFlags |= nsILoadInfo::SEC_FORCE_INHERIT_PRINCIPAL;
+  }
+
+  RefPtr<LoadInfo> loadInfo =
+      new LoadInfo(aBrowsingContext, aLoadState->TriggeringPrincipal(), attrs,
+                   aOuterWindowId, securityFlags, sandboxFlags);
+  return loadInfo.forget();
+}
+
 bool DocumentLoadListener::Open(
+    CanonicalBrowsingContext* aBrowsingContext,
     CanonicalBrowsingContext* aProcessTopBrowsingContext,
     nsDocShellLoadState* aLoadState, class LoadInfo* aLoadInfo,
     nsLoadFlags aLoadFlags, uint32_t aLoadType, uint32_t aCacheKey,
@@ -257,15 +299,30 @@ bool DocumentLoadListener::Open(
     const Maybe<PrincipalInfo>& aContentBlockingAllowListPrincipal,
     const uint64_t& aChannelId, const TimeStamp& aAsyncOpenTime,
     const Maybe<uint32_t>& aDocumentOpenFlags, bool aPluginsAllowed,
-    nsDOMNavigationTiming* aTiming, Maybe<ClientInfo>&& aInfo, nsresult* aRv) {
+    nsDOMNavigationTiming* aTiming, Maybe<ClientInfo>&& aInfo,
+    uint64_t aOuterWindowId, nsresult* aRv) {
   LOG(("DocumentLoadListener Open [this=%p, uri=%s]", this,
        aLoadState->URI()->GetSpecOrDefault().get()));
 
   OriginAttributes attrs;
   mLoadContext->GetOriginAttributes(attrs);
 
+  // If this is a top-level load, then rebuild the LoadInfo from scratch,
+  // since the goal is to be able to initiate loads in the parent, where the
+  // content process won't have provided us with an existing one.
+  // TODO: Handle TYPE_SUBDOCUMENT LoadInfo construction, and stop passing
+  // aLoadInfo across IPC.
+  RefPtr<LoadInfo> loadInfo = aLoadInfo;
+  if (!aBrowsingContext->GetParent()) {
+    // If we're a top level load, then we should have not got an existing
+    // LoadInfo, or if we did, it should be TYPE_DOCUMENT.
+    MOZ_ASSERT(!aLoadInfo || aLoadInfo->InternalContentPolicyType() ==
+                                 nsIContentPolicy::TYPE_DOCUMENT);
+    loadInfo = CreateLoadInfo(aBrowsingContext, aLoadState, aOuterWindowId);
+  }
+
   if (!nsDocShell::CreateAndConfigureRealChannelForLoadState(
-          aLoadState, aLoadInfo, mParentChannelListener, nullptr, attrs,
+          aLoadState, loadInfo, mParentChannelListener, nullptr, attrs,
           aLoadFlags, aLoadType, aCacheKey, aIsActive, aIsTopLevelDoc,
           aHasNonEmptySandboxingFlags, *aRv, getter_AddRefs(mChannel))) {
     mParentChannelListener = nullptr;
