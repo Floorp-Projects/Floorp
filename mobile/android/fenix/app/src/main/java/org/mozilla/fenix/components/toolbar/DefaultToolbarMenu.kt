@@ -62,7 +62,7 @@ class DefaultToolbarMenu(
     override val menuBuilder by lazy {
         WebExtensionBrowserMenuBuilder(
             menuItems,
-            endOfMenuAlwaysVisible = true,
+            endOfMenuAlwaysVisible = !shouldReverseItems,
             store = context.components.core.store,
             appendExtensionActionAtStart = !shouldReverseItems
         )
