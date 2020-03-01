@@ -240,6 +240,17 @@
       testGroupAttrs("t1_li3", 3, 3);
       testGroupParentAttrs("aria-list_4", 3, false);
 
+      // Test group attributes of ARIA comments
+      testGroupAttrs("comm_single_1", 1, 2, 1);
+      testGroupAttrs("comm_single_2", 2, 2, 1);
+      testGroupAttrs("comm_nested_1", 1, 3, 1);
+      testGroupAttrs("comm_nested_1_1", 1, 2, 2);
+      testGroupAttrs("comm_nested_1_2", 2, 2, 2);
+      testGroupAttrs("comm_nested_2", 2, 3, 1);
+      testGroupAttrs("comm_nested_2_1", 1, 1, 2);
+      testGroupAttrs("comm_nested_2_1_1", 1, 1, 3);
+      testGroupAttrs("comm_nested_3", 3, 3, 1);
+
       // Test that group position information updates after deleting node.
       testGroupAttrs("tree4_ti1", 1, 2, 1);
       testGroupAttrs("tree4_ti2", 2, 2, 1);
@@ -512,7 +523,27 @@
   <div role="list" aria-owns="t1_li1 t1_li2 t1_li3" id="aria-list_4">
     <div role="listitem" id="t1_li2">Apples</div>
     <div role="listitem" id="t1_li1">Oranges</div>
-  </span>
+  </div>
   <div role="listitem" id="t1_li3">Bananas</div>
+
+  <!-- ARIA comments, 1 level, group pos and size calculation -->
+  <article>
+    <p id="comm_single_1" role="comment">Comment 1</p>
+    <p id="comm_single_2" role="comment">Comment 2</p>
+  </article>
+
+  <!-- Nested comments -->
+  <article>
+    <div id="comm_nested_1" role="comment"><p>Comment 1 level 1</p>
+      <div id="comm_nested_1_1" role="comment"><p>Comment 1 level 2</p></div>
+      <div id="comm_nested_1_2" role="comment"><p>Comment 2 level 2</p></div>
+    </div>
+    <div id="comm_nested_2" role="comment"><p>Comment 2 level 1</p>
+      <div id="comm_nested_2_1" role="comment"><p>Comment 3 level 2</p>
+        <div id="comm_nested_2_1_1" role="comment"><p>Comment 1 level 3</p></div>
+      </div>
+    </div>
+    <div id="comm_nested_3" role="comment"><p>Comment 3 level 1</p></div>
+  </article>
 </body>
 </html>

@@ -2648,6 +2648,18 @@ int32_t Accessible::GetLevelInternal() {
     } else {
       ++level;  // level is 1-index based
     }
+  } else if (role == roles::COMMENT) {
+    // For comments, count the ancestor elements with the same role to get the
+    // level.
+    level = 1;
+
+    Accessible* parent = this;
+    while ((parent = parent->Parent())) {
+      roles::Role parentRole = parent->Role();
+      if (parentRole == roles::COMMENT) {
+        ++level;
+      }
+    }
   }
 
   return level;
