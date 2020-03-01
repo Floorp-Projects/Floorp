@@ -1026,7 +1026,7 @@ class ScriptLoaderRunnable final : public nsIRunnable, public nsINamed {
       MOZ_DIAGNOSTIC_ASSERT(loadInfo.mReservedClientInfo.isSome());
       rv = AddClientChannelHelper(
           channel, std::move(loadInfo.mReservedClientInfo), Maybe<ClientInfo>(),
-          mWorkerPrivate->HybridEventTarget(), false);
+          mWorkerPrivate->HybridEventTarget());
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
