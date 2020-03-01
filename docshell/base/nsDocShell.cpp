@@ -8888,11 +8888,8 @@ nsresult nsDocShell::InternalLoad(nsDocShellLoadState* aLoadState,
     }
   }
 
-  bool loadFromExternal = false;
-
   // Before going any further vet loads initiated by external programs.
   if (aLoadState->LoadType() == LOAD_NORMAL_EXTERNAL) {
-    loadFromExternal = true;
     // Disallow external chrome: loads targetted at content windows
     if (SchemeIsChrome(aLoadState->URI())) {
       NS_WARNING("blocked external chrome: url -- use '--chrome' option");
@@ -9160,7 +9157,7 @@ nsresult nsDocShell::InternalLoad(nsDocShellLoadState* aLoadState,
                    nsINetworkPredictor::PREDICT_LOAD, attrs, nullptr);
 
   nsCOMPtr<nsIRequest> req;
-  rv = DoURILoad(aLoadState, loadFromExternal, aDocShell, getter_AddRefs(req));
+  rv = DoURILoad(aLoadState, aDocShell, getter_AddRefs(req));
   if (req && aRequest) {
     NS_ADDREF(*aRequest = req);
   }
@@ -9575,8 +9572,7 @@ static bool SchemeUsesDocChannel(nsIURI* aURI) {
 }
 
 nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
-                               bool aLoadFromExternal, nsIDocShell** aDocShell,
-                               nsIRequest** aRequest) {
+                               nsIDocShell** aDocShell, nsIRequest** aRequest) {
   // Double-check that we're still around to load this URI.
   if (mIsBeingDestroyed) {
     // Return NS_OK despite not doing anything to avoid throwing exceptions
@@ -9807,7 +9803,8 @@ nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
   if (aLoadState->PrincipalToInherit()) {
     loadInfo->SetPrincipalToInherit(aLoadState->PrincipalToInherit());
   }
-  loadInfo->SetLoadTriggeredFromExternal(aLoadFromExternal);
+  loadInfo->SetLoadTriggeredFromExternal(aLoadState->LoadType() ==
+                                         LOAD_NORMAL_EXTERNAL);
   loadInfo->SetForceAllowDataURI(
       aLoadState->HasLoadFlags(INTERNAL_LOAD_FLAGS_FORCE_ALLOW_DATA_URI));
   loadInfo->SetOriginalFrameSrcLoad(
