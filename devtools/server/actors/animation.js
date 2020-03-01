@@ -113,18 +113,42 @@ var AnimationPlayerActor = protocol.ActorClassWithSpec(animationPlayerSpec, {
     return !!this.player.effect.pseudoElement;
   },
 
+  get pseudoElemenName() {
+    if (!this.isPseudoElement) {
+      return null;
+    }
+
+    return `_moz_generated_content_${this.player.effect.pseudoElement.replace(
+      /^::/,
+      ""
+    )}`;
+  },
+
   get node() {
     if (!this.isPseudoElement) {
       return this.player.effect.target;
     }
 
+    const pseudoElementName = this.pseudoElemenName;
     const originatingElem = this.player.effect.target;
     const treeWalker = this.walker.getDocumentWalker(originatingElem);
-    // FIXME: Bug 1615473: It's possible to use ::before, ::after, ::marker,
-    // ::first-line, or ::first-letter pseudo selector.
-    return this.player.effect.pseudoElement === "::before"
-      ? treeWalker.firstChild()
-      : treeWalker.lastChild();
+
+    // When the animated node is a pseudo-element, we need to walk the children
+    // of the target node and look for it.
+    for (
+      let next = treeWalker.firstChild();
+      next;
+      next = treeWalker.nextSibling()
+    ) {
+      if (next.nodeName === pseudoElementName) {
+        return next;
+      }
+    }
+
+    console.warn(
+      `Pseudo element ${this.player.effect.pseudoElement} is not found`
+    );
+    return originatingElem;
   },
 
   get document() {
