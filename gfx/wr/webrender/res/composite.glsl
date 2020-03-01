@@ -56,7 +56,7 @@ void main(void) {
 
     write_uv_rect(
         aUvRect0.xy,
-        aUvRect0.xy + aUvRect0.zw,
+        aUvRect0.zw,
         aTextureLayers.x,
         uv,
         TEX_SIZE(sColor0),
@@ -65,7 +65,7 @@ void main(void) {
     );
     write_uv_rect(
         aUvRect1.xy,
-        aUvRect1.xy + aUvRect1.zw,
+        aUvRect1.zw,
         aTextureLayers.y,
         uv,
         TEX_SIZE(sColor1),
@@ -74,7 +74,7 @@ void main(void) {
     );
     write_uv_rect(
         aUvRect2.xy,
-        aUvRect2.xy + aUvRect2.zw,
+        aUvRect2.zw,
         aTextureLayers.z,
         uv,
         TEX_SIZE(sColor2),

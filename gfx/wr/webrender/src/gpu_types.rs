@@ -255,7 +255,7 @@ pub struct CompositeInstance {
     yuv_rescale: f32,
 
     // UV rectangles (pixel space) for color / yuv texture planes
-    uv_rects: [DeviceRect; 3],
+    uv_rects: [TexelRect; 3],
 
     // Texture array layers for color / yuv texture planes
     texture_layers: [f32; 3],
@@ -278,7 +278,7 @@ impl CompositeInstance {
             yuv_format: 0.0,
             yuv_rescale: 0.0,
             texture_layers: [layer, 0.0, 0.0],
-            uv_rects: [DeviceRect::zero(); 3],
+            uv_rects: [TexelRect::invalid(); 3],
         }
     }
 
@@ -290,7 +290,7 @@ impl CompositeInstance {
         yuv_format: YuvFormat,
         yuv_rescale: f32,
         texture_layers: [f32; 3],
-        uv_rects: [DeviceRect; 3],
+        uv_rects: [TexelRect; 3],
     ) -> Self {
         CompositeInstance {
             rect,
