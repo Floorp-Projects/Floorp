@@ -9946,7 +9946,8 @@ nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
 
     // Check CSP navigate-to
     bool allowsNavigateTo = false;
-    rv = csp->GetAllowsNavigateTo(aLoadState->URI(), loadInfo,
+    rv = csp->GetAllowsNavigateTo(aLoadState->URI(),
+                                  aLoadState->IsFormSubmission(),
                                   false, /* aWasRedirected */
                                   false, /* aEnforceWhitelist */
                                   &allowsNavigateTo);
