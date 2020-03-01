@@ -170,6 +170,15 @@ impl TexelRect {
     }
 }
 
+impl Into<TexelRect> for DeviceIntRect {
+    fn into(self) -> TexelRect {
+        TexelRect {
+            uv0: self.min().to_f32(),
+            uv1: self.max().to_f32(),
+        }
+    }
+}
+
 const MAX_AU_FLOAT: f32 = 1.0e6;
 
 pub trait AuHelpers<T> {

@@ -486,20 +486,31 @@ pub struct ExternalTexture {
     id: gl::GLuint,
     target: gl::GLuint,
     swizzle: Swizzle,
+    uv_rect: TexelRect,
 }
 
 impl ExternalTexture {
-    pub fn new(id: u32, target: TextureTarget, swizzle: Swizzle) -> Self {
+    pub fn new(
+        id: u32,
+        target: TextureTarget,
+        swizzle: Swizzle,
+        uv_rect: TexelRect,
+    ) -> Self {
         ExternalTexture {
             id,
             target: get_gl_target(target),
             swizzle,
+            uv_rect,
         }
     }
 
     #[cfg(feature = "replay")]
     pub fn internal_id(&self) -> gl::GLuint {
         self.id
+    }
+
+    pub fn get_uv_rect(&self) -> TexelRect {
+        self.uv_rect
     }
 }
 
@@ -618,6 +629,13 @@ impl Texture {
             id: self.id,
             target: self.target,
             swizzle: Swizzle::default(),
+            // TODO(gw): Support custom UV rect for external textures during captures
+            uv_rect: TexelRect::new(
+                0.0,
+                0.0,
+                self.size.width as f32,
+                self.size.height as f32,
+            ),
         };
         self.id = 0; // don't complain, moved out
         ext

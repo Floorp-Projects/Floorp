@@ -1253,6 +1253,26 @@ impl TextureResolver {
         }
     }
 
+    // Retrieve the deferred / resolved UV rect if an external texture, otherwise
+    // return the default supplied UV rect.
+    fn get_uv_rect(
+        &self,
+        source: &TextureSource,
+        default_value: TexelRect,
+    ) -> TexelRect {
+        match source {
+            TextureSource::External(ref external_image) => {
+                let texture = self.external_images
+                    .get(&(external_image.id, external_image.channel_index))
+                    .expect("BUG: External image should be resolved by now");
+                texture.get_uv_rect()
+            }
+            _ => {
+                default_value
+            }
+        }
+    }
+
     fn report_memory(&self) -> MemoryReport {
         let mut report = MemoryReport::default();
 
@@ -4373,6 +4393,17 @@ impl Renderer {
             }
             current_textures = textures;
 
+            // When the texture is an external texture, the UV rect is not known when
+            // the external surface descriptor is created, because external textures
+            // are not resolved until the lock() callback is invoked at the start of
+            // the frame render. To handle this, query the texture resolver for the
+            // UV rect if it's an external texture, otherwise use the default UV rect.
+            let uv_rects = [
+                self.texture_resolver.get_uv_rect(&textures.colors[0], surface.yuv_planes[0].uv_rect),
+                self.texture_resolver.get_uv_rect(&textures.colors[1], surface.yuv_planes[1].uv_rect),
+                self.texture_resolver.get_uv_rect(&textures.colors[2], surface.yuv_planes[2].uv_rect),
+            ];
+
             // Create the instance and add to current batch
             let instance = CompositeInstance::new_yuv(
                 surface.device_rect,
@@ -4386,11 +4417,7 @@ impl Renderer {
                     surface.yuv_planes[1].texture_layer as f32,
                     surface.yuv_planes[2].texture_layer as f32,
                 ],
-                [
-                    surface.yuv_planes[0].uv_rect,
-                    surface.yuv_planes[1].uv_rect,
-                    surface.yuv_planes[2].uv_rect,
-                ],
+                uv_rects,
             );
             instances.push(instance);
         }
@@ -5149,7 +5176,12 @@ impl Renderer {
 
             let texture = match image.source {
                 ExternalImageSource::NativeTexture(texture_id) => {
-                    ExternalTexture::new(texture_id, texture_target, Swizzle::default())
+                    ExternalTexture::new(
+                        texture_id,
+                        texture_target,
+                        Swizzle::default(),
+                        image.uv,
+                    )
                 }
                 ExternalImageSource::Invalid => {
                     warn!("Invalid ext-image");
@@ -5159,7 +5191,12 @@ impl Renderer {
                         ext_image.channel_index
                     );
                     // Just use 0 as the gl handle for this failed case.
-                    ExternalTexture::new(0, texture_target, Swizzle::default())
+                    ExternalTexture::new(
+                        0,
+                        texture_target,
+                        Swizzle::default(),
+                        image.uv,
+                    )
                 }
                 ExternalImageSource::RawData(_) => {
                     panic!("Raw external data is not expected for deferred resolves!");

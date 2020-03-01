@@ -4,7 +4,7 @@
 
 use api::{ColorF, ImageKey, YuvColorSpace, YuvFormat, ImageRendering};
 use api::units::{DeviceRect, DeviceIntSize, DeviceIntRect, DeviceIntPoint, WorldRect};
-use api::units::{DevicePixelScale, DevicePoint, PictureRect};
+use api::units::{DevicePixelScale, DevicePoint, PictureRect, TexelRect};
 use crate::batch::{resolve_image, get_buffer_kind};
 use crate::gpu_cache::GpuCache;
 use crate::gpu_types::{ZBufferId, ZBufferIdGenerator};
@@ -116,7 +116,7 @@ pub struct ExternalSurfaceDescriptor {
 pub struct YuvPlaneDescriptor {
     pub texture: TextureSource,
     pub texture_layer: i32,
-    pub uv_rect: DeviceRect,
+    pub uv_rect: TexelRect,
 }
 
 impl YuvPlaneDescriptor {
@@ -124,7 +124,7 @@ impl YuvPlaneDescriptor {
         YuvPlaneDescriptor {
             texture: TextureSource::Invalid,
             texture_layer: 0,
-            uv_rect: DeviceRect::zero(),
+            uv_rect: TexelRect::invalid(),
         }
     }
 }
@@ -491,7 +491,7 @@ impl CompositeState {
                     *plane = YuvPlaneDescriptor {
                         texture: cache_item.texture_id,
                         texture_layer: cache_item.texture_layer,
-                        uv_rect: cache_item.uv_rect.to_f32(),
+                        uv_rect: cache_item.uv_rect.into(),
                     };
                 }
             }
