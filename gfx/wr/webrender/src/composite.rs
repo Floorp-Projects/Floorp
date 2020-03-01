@@ -236,7 +236,6 @@ struct Occluder {
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 #[derive(PartialEq, Clone)]
 pub struct CompositeSurfaceDescriptor {
-    pub slice: usize,
     pub surface_id: Option<NativeSurfaceId>,
     pub offset: DevicePoint,
     pub clip_rect: DeviceRect,
@@ -385,7 +384,8 @@ impl CompositeState {
         gpu_cache: &mut GpuCache,
         deferred_resolves: &mut Vec<DeferredResolve>,
     ) {
-        let mut visible_tile_count = 0;
+        let mut visible_opaque_tile_count = 0;
+        let mut visible_alpha_tile_count = 0;
 
         for tile in tile_cache.tiles.values() {
             if !tile.is_visible {
@@ -393,34 +393,35 @@ impl CompositeState {
                 continue;
             }
 
-            visible_tile_count += 1;
-
             let device_rect = (tile.world_tile_rect * global_device_pixel_scale).round();
             let surface = tile.surface.as_ref().expect("no tile surface set!");
 
-            let (surface, is_opaque) = match surface {
+            let (surface, is_opaque, tile_id) = match surface {
                 TileSurface::Color { color } => {
-                    (CompositeTileSurface::Color { color: *color }, true)
+                    (CompositeTileSurface::Color { color: *color }, true, None)
                 }
                 TileSurface::Clear => {
-                    (CompositeTileSurface::Clear, false)
+                    (CompositeTileSurface::Clear, false, None)
                 }
                 TileSurface::Texture { descriptor, .. } => {
                     let surface = descriptor.resolve(resource_cache, tile_cache.current_tile_size);
+                    let tile_id = match surface {
+                        ResolvedSurfaceTexture::Native { id, .. } => Some(id),
+                        ResolvedSurfaceTexture::TextureCache { .. } => None,
+                    };
                     (
                         CompositeTileSurface::Texture { surface },
                         tile.is_opaque || tile_cache.is_opaque(),
+                        tile_id,
                     )
                 }
             };
 
-            let tile_id = tile_cache.native_surface_id.map(|surface_id| {
-                NativeTileId {
-                    surface_id,
-                    x: tile.tile_offset.x,
-                    y: tile.tile_offset.y,
-                }
-            });
+            if is_opaque {
+                visible_opaque_tile_count += 1;
+            } else {
+                visible_alpha_tile_count += 1;
+            }
 
             // Determine ordering of this tile, based on presence of compositor
             // surfaces that intersect the tile.
@@ -525,11 +526,20 @@ impl CompositeState {
             });
         }
 
-        if visible_tile_count > 0 {
+        if visible_opaque_tile_count > 0 {
             self.descriptor.surfaces.push(
                 CompositeSurfaceDescriptor {
-                    slice: tile_cache.slice,
-                    surface_id: tile_cache.native_surface_id,
+                    surface_id: tile_cache.native_surface.as_ref().map(|s| s.opaque),
+                    offset: tile_cache.device_position,
+                    clip_rect: device_clip_rect,
+                }
+            );
+        }
+
+        if visible_alpha_tile_count > 0 {
+            self.descriptor.surfaces.push(
+                CompositeSurfaceDescriptor {
+                    surface_id: tile_cache.native_surface.as_ref().map(|s| s.alpha),
                     offset: tile_cache.device_position,
                     clip_rect: device_clip_rect,
                 }
