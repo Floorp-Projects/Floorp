@@ -109,6 +109,9 @@ void WindowGlobalParent::Init(const WindowGlobalInit& aInit) {
     BrowsingContext()->SetCurrentInnerWindowId(aInit.innerWindowId());
   }
 
+  mDocContentBlockingAllowListPrincipal =
+      aInit.contentBlockingAllowListPrincipal();
+
   nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
   if (obs) {
     obs->NotifyObservers(ToSupports(this), "window-global-created", nullptr);

@@ -87,8 +87,9 @@ already_AddRefed<WindowGlobalChild> WindowGlobalChild::Create(
     bc->SetOpenerPolicy(policy);
   }
 
-  WindowGlobalInit init(principal, aWindow->GetDocumentURI(), bc,
-                        aWindow->WindowID(),
+  WindowGlobalInit init(principal,
+                        aWindow->GetDocumentContentBlockingAllowListPrincipal(),
+                        aWindow->GetDocumentURI(), bc, aWindow->WindowID(),
                         aWindow->GetOuterWindow()->WindowID());
 
   auto wgc = MakeRefPtr<WindowGlobalChild>(init, aWindow);
