@@ -123,6 +123,13 @@ DocumentChannelChild::AsyncOpen(nsIStreamListener* aListener) {
   args.asyncOpenTime() = mAsyncOpenTime;
   args.documentOpenFlags() = mDocumentOpenFlags;
   args.pluginsAllowed() = mPluginsAllowed;
+
+  Maybe<IPCClientInfo> ipcClientInfo;
+  if (mInitialClientInfo.isSome()) {
+    ipcClientInfo.emplace(mInitialClientInfo.ref().ToIPC());
+  }
+  args.initialClientInfo() = ipcClientInfo;
+
   if (mTiming) {
     args.timing() = Some(mTiming);
   }
