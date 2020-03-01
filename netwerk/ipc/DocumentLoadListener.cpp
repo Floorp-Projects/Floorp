@@ -261,9 +261,12 @@ bool DocumentLoadListener::Open(
   LOG(("DocumentLoadListener Open [this=%p, uri=%s]", this,
        aLoadState->URI()->GetSpecOrDefault().get()));
 
+  OriginAttributes attrs;
+  mLoadContext->GetOriginAttributes(attrs);
+
   if (!nsDocShell::CreateAndConfigureRealChannelForLoadState(
-          aLoadState, aLoadInfo, mParentChannelListener, nullptr, aLoadFlags,
-          aLoadType, aCacheKey, aIsActive, aIsTopLevelDoc,
+          aLoadState, aLoadInfo, mParentChannelListener, nullptr, attrs,
+          aLoadFlags, aLoadType, aCacheKey, aIsActive, aIsTopLevelDoc,
           aHasNonEmptySandboxingFlags, *aRv, getter_AddRefs(mChannel))) {
     mParentChannelListener = nullptr;
     return false;

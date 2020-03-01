@@ -501,6 +501,7 @@ class nsDocShell final : public nsDocLoader,
   static bool CreateAndConfigureRealChannelForLoadState(
       nsDocShellLoadState* aLoadState, mozilla::net::LoadInfo* aLoadInfo,
       nsIInterfaceRequestor* aCallbacks, nsDocShell* aDocShell,
+      const mozilla::OriginAttributes& aOriginAttributes,
       nsLoadFlags aLoadFlags, uint32_t aLoadType, uint32_t aCacheKey,
       bool aIsActive, bool aIsTopLevelDoc, bool aHasNonEmptySandboxingFlags,
       nsresult& rv, nsIChannel** aChannel);
