@@ -34,6 +34,7 @@
 #include "nsMimeTypes.h"
 #include "nsIViewSourceChannel.h"
 #include "nsIOService.h"
+#include "mozilla/dom/WindowGlobalParent.h"
 
 mozilla::LazyLogModule gDocumentChannelLog("DocumentChannel");
 #define LOG(fmt) MOZ_LOG(gDocumentChannelLog, mozilla::LogLevel::Verbose, fmt)
@@ -289,14 +290,64 @@ already_AddRefed<LoadInfo> DocumentLoadListener::CreateLoadInfo(
   return loadInfo.forget();
 }
 
+already_AddRefed<WindowGlobalParent> GetParentEmbedderWindowGlobal(
+    CanonicalBrowsingContext* aBrowsingContext) {
+  RefPtr<WindowGlobalParent> parent =
+      aBrowsingContext->GetEmbedderWindowGlobal();
+  if (parent && parent->BrowsingContext() == aBrowsingContext->GetParent()) {
+    return parent.forget();
+  }
+  return nullptr;
+}
+
+// parent-process implementation of
+// nsGlobalWindowOuter::GetTopExcludingExtensionAccessibleContentFrames
+already_AddRefed<WindowGlobalParent>
+GetTopWindowExcludingExtensionAccessibleContentFrames(
+    CanonicalBrowsingContext* aBrowsingContext, nsIURI* aURIBeingLoaded) {
+  CanonicalBrowsingContext* bc = aBrowsingContext;
+  RefPtr<WindowGlobalParent> prev;
+  while (RefPtr<WindowGlobalParent> parent =
+             GetParentEmbedderWindowGlobal(bc)) {
+    CanonicalBrowsingContext* parentBC = parent->BrowsingContext();
+
+    nsIPrincipal* parentPrincipal = parent->DocumentPrincipal();
+    nsIURI* uri = prev ? prev->GetDocumentURI() : aURIBeingLoaded;
+
+    // If the new parent has permission to load the current page, we're
+    // at a moz-extension:// frame which has a host permission that allows
+    // it to load the document that we've loaded.  In that case, stop at
+    // this frame and consider it the top-level frame.
+    if (uri &&
+        BasePrincipal::Cast(parentPrincipal)->AddonAllowsLoad(uri, true)) {
+      break;
+    }
+
+    bc = parentBC;
+    prev = parent;
+  }
+  if (!prev) {
+    prev = bc->GetCurrentWindowGlobal();
+  }
+  return prev.forget();
+}
+
+CanonicalBrowsingContext* DocumentLoadListener::GetBrowsingContext() {
+  MOZ_ASSERT(mChannel);
+  nsCOMPtr<nsILoadInfo> loadInfo = mChannel->LoadInfo();
+  MOZ_ASSERT(loadInfo);
+  RefPtr<BrowsingContext> bc;
+  MOZ_ALWAYS_SUCCEEDS(loadInfo->GetTargetBrowsingContext(getter_AddRefs(bc)));
+  MOZ_ASSERT(bc);
+  return bc->Canonical();
+}
+
 bool DocumentLoadListener::Open(
     CanonicalBrowsingContext* aBrowsingContext,
     CanonicalBrowsingContext* aProcessTopBrowsingContext,
     nsDocShellLoadState* aLoadState, class LoadInfo* aLoadInfo,
     nsLoadFlags aLoadFlags, uint32_t aLoadType, uint32_t aCacheKey,
     bool aIsActive, bool aIsTopLevelDoc, bool aHasNonEmptySandboxingFlags,
-    const Maybe<URIParams>& aTopWindowURI,
-    const Maybe<PrincipalInfo>& aContentBlockingAllowListPrincipal,
     const uint64_t& aChannelId, const TimeStamp& aAsyncOpenTime,
     const Maybe<uint32_t>& aDocumentOpenFlags, bool aPluginsAllowed,
     nsDOMNavigationTiming* aTiming, Maybe<ClientInfo>&& aInfo,
@@ -329,18 +380,41 @@ bool DocumentLoadListener::Open(
     return false;
   }
 
-  // Computation of the top window uses the docshell tree, so only
-  // works in the source process. We compute it manually and override
-  // it so that it gets the right value.
-  // This probably isn't fission compatible.
+  nsCOMPtr<nsIURI> uriBeingLoaded =
+      AntiTrackingCommon::MaybeGetDocumentURIBeingLoaded(mChannel);
+  CanonicalBrowsingContext* bc = GetBrowsingContext();
+  RefPtr<WindowGlobalParent> topWindow =
+      GetTopWindowExcludingExtensionAccessibleContentFrames(bc, uriBeingLoaded);
+
   RefPtr<HttpBaseChannel> httpBaseChannel = do_QueryObject(mChannel, aRv);
   if (httpBaseChannel) {
-    nsCOMPtr<nsIURI> topWindowURI = DeserializeURI(aTopWindowURI);
+    nsCOMPtr<nsIURI> topWindowURI;
+    if (topWindow) {
+      nsCOMPtr<nsIPrincipal> topWindowPrincipal =
+          topWindow->DocumentPrincipal();
+      if (topWindowPrincipal && !topWindowPrincipal->GetIsNullPrincipal()) {
+        topWindowPrincipal->GetURI(getter_AddRefs(topWindowURI));
+      }
+    }
     httpBaseChannel->SetTopWindowURI(topWindowURI);
 
-    if (aContentBlockingAllowListPrincipal) {
-      nsCOMPtr<nsIPrincipal> contentBlockingAllowListPrincipal =
-          PrincipalInfoToPrincipal(*aContentBlockingAllowListPrincipal);
+    nsCOMPtr<nsIPrincipal> contentBlockingAllowListPrincipal;
+    if (topWindow) {
+      contentBlockingAllowListPrincipal =
+          topWindow->GetContentBlockingAllowListPrincipal();
+    }
+
+    if (bc->IsTop() && contentBlockingAllowListPrincipal &&
+        contentBlockingAllowListPrincipal->GetIsNullPrincipal()) {
+      OriginAttributes attrs;
+      aLoadInfo->GetOriginAttributes(&attrs);
+      AntiTrackingCommon::RecomputeContentBlockingAllowListPrincipal(
+          uriBeingLoaded, attrs,
+          getter_AddRefs(contentBlockingAllowListPrincipal));
+    }
+
+    if (contentBlockingAllowListPrincipal &&
+        contentBlockingAllowListPrincipal->GetIsContentPrincipal()) {
       httpBaseChannel->SetContentBlockingAllowListPrincipal(
           contentBlockingAllowListPrincipal);
     }

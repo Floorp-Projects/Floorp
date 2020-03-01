@@ -225,6 +225,7 @@ struct PerformanceInfo
 struct WindowGlobalInit
 {
   nsIPrincipal principal;
+  nsIPrincipal contentBlockingAllowListPrincipal;
   nsIURI documentURI;
   MaybeDiscardedBrowsingContext browsingContext;
   uint64_t innerWindowId;
