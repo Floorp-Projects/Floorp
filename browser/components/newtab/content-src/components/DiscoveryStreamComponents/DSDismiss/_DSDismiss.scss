@@ -36,6 +36,10 @@
     &:hover {
       @include dark-theme-only {
         background: $grey-90-50;
+
+        .icon {
+          fill: $grey-10;
+        }
       }
 
       background: $grey-90-20;
