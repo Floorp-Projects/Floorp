@@ -331,8 +331,7 @@ static void DumpSerialNumbers(const SerialHash::Iterator& aHashEntry, FILE* aFd,
     // This output will be wrong if the nsStringBuffer was used to
     // store a char16_t string.
     auto* buffer = static_cast<const nsStringBuffer*>(aHashEntry.Key());
-    nsDependentCString bufferString(static_cast<char*>(buffer->Data()),
-                                    buffer->StorageSize() - 1);
+    nsDependentCString bufferString(static_cast<char*>(buffer->Data()));
     fprintf(outputFile,
             "Contents of leaked nsStringBuffer with storage size %d as a "
             "char*: %s\n",
