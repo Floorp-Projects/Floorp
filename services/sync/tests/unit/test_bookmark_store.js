@@ -584,3 +584,28 @@ add_task(async function test_delete_buffering() {
     await engine.finalize();
   }
 });
+
+add_task(async function test_calculateIndex_for_invalid_url() {
+  let engine = Service.engineManager.get("bookmarks");
+  let store = engine._store;
+
+  let folderIndex = await store._calculateIndex({
+    type: "folder",
+  });
+  equal(folderIndex, 1000000, "Should use high sort index for folders");
+
+  let toolbarIndex = await store._calculateIndex({
+    parentid: "toolbar",
+  });
+  equal(toolbarIndex, 150, "Should bump sort index for toolbar bookmarks");
+
+  let validURLIndex = await store._calculateIndex({
+    bmkUri: "http://example.com/a",
+  });
+  greaterOrEqual(validURLIndex, 0, "Should use frecency for index");
+
+  let invalidURLIndex = await store._calculateIndex({
+    bmkUri: "!@#$%",
+  });
+  equal(invalidURLIndex, 0, "Should not throw for invalid URLs");
+});

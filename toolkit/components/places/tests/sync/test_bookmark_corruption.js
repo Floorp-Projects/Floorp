@@ -3113,3 +3113,178 @@ add_task(async function test_sync_status_mismatches() {
   await PlacesUtils.bookmarks.eraseEverything();
   await PlacesSyncUtils.bookmarks.reset();
 });
+
+add_task(async function test_invalid_local_urls() {
+  let buf = await openMirror("invalid_local_urls");
+
+  info("Skip uploading local roots on first merge");
+  await PlacesTestUtils.markBookmarksAsSynced();
+
+  info("Set up local tree");
+  await PlacesUtils.bookmarks.insertTree({
+    guid: PlacesUtils.bookmarks.menuGuid,
+    children: [
+      {
+        // A has an invalid URL locally and doesn't exist remotely, so we
+        // should delete it without uploading a tombstone.
+        guid: "bookmarkAAAA",
+        title: "A (local)",
+        url: "http://example.com/a",
+      },
+      {
+        // B has an invalid URL locally and has a valid URL remotely, so
+        // we should replace our local copy with the remote one.
+        guid: "bookmarkBBBB",
+        title: "B (local)",
+        url: "http://example.com/b",
+      },
+      {
+        // C has an invalid URL on both sides, so we should delete it locally
+        // and upload a tombstone.
+        guid: "bookmarkCCCC",
+        title: "A (local)",
+        url: "http://example.com/c",
+      },
+    ],
+  });
+
+  // The public API doesn't let us insert invalid URLs (for good reason!), so
+  // we update them directly in Places.
+  info("Invalidate local URLs");
+  await buf.db.executeTransaction(async function() {
+    const invalidURLs = [
+      {
+        guid: "bookmarkAAAA",
+        invalidURL: "!@#$%",
+      },
+      {
+        guid: "bookmarkBBBB",
+        invalidURL: "^&*(",
+      },
+      {
+        guid: "bookmarkCCCC",
+        invalidURL: ")-+!@",
+      },
+    ];
+    for (let params of invalidURLs) {
+      await buf.db.execute(
+        `UPDATE moz_places SET
+           url = :invalidURL,
+           url_hash = hash(:invalidURL)
+         WHERE id = (SELECT fk FROM moz_bookmarks WHERE guid = :guid)`,
+        params
+      );
+    }
+  });
+
+  info("Set up remote tree");
+  await storeRecords(buf, [
+    {
+      id: "menu",
+      parentid: "places",
+      type: "folder",
+      children: ["bookmarkBBBB", "bookmarkCCCC", "bookmarkDDDD"],
+    },
+    {
+      id: "bookmarkBBBB",
+      parentid: "menu",
+      type: "bookmark",
+      title: "B (remote)",
+      bmkUri: "http://example.com/b",
+    },
+    {
+      // C should be marked as `VALIDITY_REPLACE` in the mirror database.
+      id: "bookmarkCCCC",
+      parentid: "menu",
+      type: "bookmark",
+      title: "C (remote)",
+      bmkUri: ")(*&^",
+    },
+    {
+      // D has an invalid URL remotely and doesn't exist locally, so we
+      // should replace it with a tombstone.
+      id: "bookmarkDDDD",
+      parentid: "menu",
+      type: "bookmark",
+      title: "D (remote)",
+      bmkUri: "^%$#@",
+    },
+  ]);
+
+  info("Apply mirror");
+  let changesToUpload = await buf.apply();
+
+  let datesAdded = await promiseManyDatesAdded([
+    PlacesUtils.bookmarks.menuGuid,
+  ]);
+  deepEqual(
+    changesToUpload,
+    {
+      menu: {
+        tombstone: false,
+        counter: 1,
+        synced: false,
+        cleartext: {
+          id: "menu",
+          type: "folder",
+          parentid: "places",
+          hasDupe: true,
+          parentName: "",
+          dateAdded: datesAdded.get(PlacesUtils.bookmarks.menuGuid),
+          title: BookmarksMenuTitle,
+          children: ["bookmarkBBBB"],
+        },
+      },
+      bookmarkCCCC: {
+        tombstone: true,
+        counter: 1,
+        synced: false,
+        cleartext: {
+          id: "bookmarkCCCC",
+          deleted: true,
+        },
+      },
+      bookmarkDDDD: {
+        tombstone: true,
+        counter: 1,
+        synced: false,
+        cleartext: {
+          id: "bookmarkDDDD",
+          deleted: true,
+        },
+      },
+    },
+    "Should reupload menu and tombstones for (C D)"
+  );
+
+  await assertLocalTree(
+    PlacesUtils.bookmarks.menuGuid,
+    {
+      guid: PlacesUtils.bookmarks.menuGuid,
+      type: PlacesUtils.bookmarks.TYPE_FOLDER,
+      index: 0,
+      title: BookmarksMenuTitle,
+      children: [
+        {
+          guid: "bookmarkBBBB",
+          type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+          index: 0,
+          title: "B (remote)",
+          url: "http://example.com/b",
+        },
+      ],
+    },
+    "Should replace B with remote and delete (A C)"
+  );
+
+  await storeChangesInMirror(buf, changesToUpload);
+  deepEqual(
+    await buf.fetchUnmergedGuids(),
+    [],
+    "Should flag all items as merged after upload"
+  );
+
+  await buf.finalize();
+  await PlacesUtils.bookmarks.eraseEverything();
+  await PlacesSyncUtils.bookmarks.reset();
+});
