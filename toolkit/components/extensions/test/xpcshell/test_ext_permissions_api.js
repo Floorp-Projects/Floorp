@@ -122,3 +122,46 @@ add_task(async function test_geo_permissions() {
   });
   await extension.unload();
 });
+
+add_task(async function test_browserSetting_permissions() {
+  async function background() {
+    const permObj = { permissions: ["browserSettings"] };
+    browser.test.onMessage.addListener(async msg => {
+      if (msg === "request") {
+        await browser.permissions.request(permObj);
+        await browser.browserSettings.cacheEnabled.set({ value: false });
+      } else if (msg === "remove") {
+        await browser.permissions.remove(permObj);
+      }
+      browser.test.sendMessage("done");
+    });
+  }
+
+  function cacheIsEnabled() {
+    return (
+      Services.prefs.getBoolPref("browser.cache.disk.enable") &&
+      Services.prefs.getBoolPref("browser.cache.memory.enable")
+    );
+  }
+
+  let extension = ExtensionTestUtils.loadExtension({
+    background,
+    manifest: {
+      optional_permissions: ["browserSettings"],
+    },
+    useAddonManager: "permanent",
+  });
+  await extension.startup();
+  ok(cacheIsEnabled(), "setting is not set after startup");
+
+  await withHandlingUserInput(extension, async () => {
+    extension.sendMessage("request");
+    await extension.awaitMessage("done");
+    ok(!cacheIsEnabled(), "setting was set after request");
+
+    extension.sendMessage("remove");
+    await extension.awaitMessage("done");
+    ok(cacheIsEnabled(), "setting is reset after remove");
+  });
+  await extension.unload();
+});
