@@ -399,7 +399,7 @@ add_task(async function testGeneralActions() {
     let shown = BrowserTestUtils.waitForEvent(menu, "shown");
     // This should perform a click on the button to ensure that works. Other
     // tests might just open the menu directly, or click items when it's closed.
-    pageOptionsButton.click();
+    EventUtils.synthesizeMouseAtCenter(pageOptionsButton, {}, win);
     await shown;
     info(`Clicking ${item.getAttribute("action")}`);
     item.click();
