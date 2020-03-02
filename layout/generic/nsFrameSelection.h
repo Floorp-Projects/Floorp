@@ -800,6 +800,12 @@ class nsFrameSelection final {
     // (according to GetFirstCellNodeInRange).
     nsRange* GetNextCellRange(const mozilla::dom::Selection& aNormalSelection);
 
+    nsresult HandleSelection(nsINode* aParentContent, int32_t aContentOffset,
+                             mozilla::TableSelectionMode aTarget,
+                             mozilla::WidgetMouseEvent* aMouseEvent,
+                             bool aDragState,
+                             mozilla::dom::Selection& aNormalSelection);
+
     nsresult SelectBlockOfCells(nsIContent* aStartCell, nsIContent* aEndCell,
                                 mozilla::dom::Selection& aNormalSelection);
 
