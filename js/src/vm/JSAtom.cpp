@@ -21,6 +21,7 @@
 
 #include "gc/GC.h"
 #include "gc/Marking.h"
+#include "gc/MaybeRooted.h"
 #include "js/CharacterEncoding.h"
 #include "js/Symbol.h"
 #include "util/Text.h"

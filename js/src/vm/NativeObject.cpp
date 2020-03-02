@@ -16,6 +16,7 @@
 
 #include "debugger/DebugAPI.h"
 #include "gc/Marking.h"
+#include "gc/MaybeRooted.h"
 #include "jit/BaselineIC.h"
 #include "js/CharacterEncoding.h"
 #include "js/Result.h"

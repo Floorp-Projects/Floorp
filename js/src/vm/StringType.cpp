@@ -28,6 +28,7 @@
 
 #include "frontend/BytecodeCompiler.h"
 #include "gc/Marking.h"
+#include "gc/MaybeRooted.h"
 #include "gc/Nursery.h"
 #include "js/CharacterEncoding.h"
 #include "js/StableStringChars.h"
