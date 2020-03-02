@@ -298,12 +298,18 @@ LexerTransition<ICOState> nsICODecoder::FinishDirEntry() {
     return Transition::TerminateSuccess();
   }
 
-  // If the resource we selected matches the output size perfectly, we don't
-  // need to do any downscaling.
   if (mDirEntry->mSize == OutputSize()) {
+    // If the resource we selected matches the output size perfectly, we don't
+    // need to do any downscaling.
     MOZ_ASSERT_IF(desiredSize, mDirEntry->mSize == *desiredSize);
     MOZ_ASSERT_IF(!desiredSize, mDirEntry->mSize == Size());
-    mDownscaler.reset();
+  } else if (OutputSize().width < mDirEntry->mSize.width ||
+             OutputSize().height < mDirEntry->mSize.height) {
+    // Create a downscaler if we need to downscale.
+    //
+    // TODO(aosmond): This is the last user of Downscaler. We should switch this
+    // to SurfacePipe as well so we can remove the code from tree.
+    mDownscaler.emplace(OutputSize());
   }
 
   size_t offsetToResource = mDirEntry->mImageOffset - FirstResourceOffset();
