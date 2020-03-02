@@ -119,8 +119,8 @@ tasks:
         # Mozilla releng doesn't have any spare OS X machines for us at this time.
         # Talk to :kats or :jrmuizel if you need more details about this. The machines
         # are hooked up to taskcluster using taskcluster-worker; they use a workerpool
-        # of webrender/ci-macos. They are set up with all the dependencies needed
-        # to build and test webrender, including Rust (currently 1.30), servo-tidy,
+        # of proj-webrender/ci-macos. They are set up with all the dependencies needed
+        # to build and test webrender, including Rust (currently 1.41.1), servo-tidy,
         # mako, zlib, etc. Note that unlike the docker-worker used for Linux, these
         # machines WILL persist state from one run to the next, so any cleanup needs
         # to be handled explicitly.
