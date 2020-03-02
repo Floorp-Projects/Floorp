@@ -72,6 +72,21 @@ async function waitUntil(condition, message) {
 }
 
 /**
+ * This function looks inside of a document for some element that has a label.
+ * It runs in a loop every requestAnimationFrame until it finds the element. If
+ * it doesn't find the element it throws an error.
+ *
+ * @param {string} label
+ * @returns {Promise<HTMLElement>}
+ */
+function getElementByLabel(document, label) {
+  return waitUntil(
+    () => document.querySelector(`[label="${label}"]`),
+    `Trying to find the button with the label "${label}".`
+  );
+}
+
+/**
  * This function will select a node from the XPath.
  * @returns {HTMLElement?}
  */
@@ -83,27 +98,6 @@ function getElementByXPath(document, path) {
     XPathResult.FIRST_ORDERED_NODE_TYPE,
     null
   ).singleNodeValue;
-}
-
-/**
- * This function looks inside of the profiler popup's iframe for some element
- * that contains some text. It runs in a loop every requestAnimationFrame until
- * it finds an element. If it doesn't find the element it throws an error.
- * It also doesn't assume the popup will be visible yet, as this popup showing
- * is an async event.
- * @param {string} text
- * @param {number} maxTicks (optional)
- * @returns {Promise<HTMLElement>}
- */
-async function getElementFromPopupByText(text) {
-  const xpath = `//*[contains(text(), '${text}')]`;
-  return waitUntil(() => {
-    const iframe = document.getElementById("PanelUI-profilerIframe");
-    if (iframe) {
-      return getElementByXPath(iframe.contentDocument, xpath);
-    }
-    return null;
-  }, `Trying to find the element with the text "${text}".`);
 }
 
 /**
@@ -122,16 +116,18 @@ async function getElementFromDocumentByText(document, text) {
     `Trying to find the element with the text "${text}".`
   );
 }
+
 /**
- * This function is similar to getElementFromPopupByText, but it immediately
+ * This function is similar to getElementFromDocumentByText, but it immediately
  * returns and does not wait for an element to exist.
+ * @param {HTMLDocument} document
  * @param {string} text
  * @returns {HTMLElement?}
  */
-function maybeGetElementFromPopupByText(text) {
+function maybeGetElementFromDocumentByText(document, text) {
   info(`Immediately trying to find the element with the text "${text}".`);
   const xpath = `//*[contains(text(), '${text}')]`;
-  return getElementByXPath(getIframeDocument(), xpath);
+  return getElementByXPath(document, xpath);
 }
 
 /**
@@ -188,9 +184,10 @@ async function makeSureProfilerPopupIsEnabled() {
 
 /**
  * This function toggles the profiler menu button, and then uses user gestures
- * to click it open.
+ * to click it open. It waits a tick to make sure it has a chance to initialize.
+ * @return {Promise<void>}
  */
-function toggleOpenProfilerPopup() {
+async function toggleOpenProfilerPopup() {
   info("Toggle open the profiler popup.");
 
   info("> Find the profiler menu button.");
@@ -201,6 +198,7 @@ function toggleOpenProfilerPopup() {
 
   info("> Trigger a click on the profiler menu button.");
   profilerButton.click();
+  await tick();
 }
 
 /**
@@ -322,7 +320,7 @@ async function closePopup() {
  * @param {(Document) => T} callback
  * @returns {Promise<T>}
  */
-function openAboutProfiling(callback) {
+function withAboutProfiling(callback) {
   info("Begin to open about:profiling in a new tab.");
   return BrowserTestUtils.withNewTab(
     "about:profiling",

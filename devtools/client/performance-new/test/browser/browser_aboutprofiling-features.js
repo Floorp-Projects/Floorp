@@ -12,7 +12,7 @@ add_task(async function test() {
     "This test assumes that the JavaScript feature is available on every platform."
   );
 
-  await openAboutProfiling(async document => {
+  await withAboutProfiling(async document => {
     const jsInput = await getNearestInputFromText(document, "JavaScript");
 
     ok(

@@ -196,7 +196,7 @@ function createPerfComponent() {
   const reducers = require("devtools/client/performance-new/store/reducers");
   const actions = require("devtools/client/performance-new/store/actions");
   const selectors = require("devtools/client/performance-new/store/selectors");
-  const { getRecordingPreferencesFromBrowser } = ChromeUtils.import(
+  const { getRecordingPreferencesFromBrowser, presets } = ChromeUtils.import(
     "resource://devtools/client/performance-new/popup/background.jsm.js"
   );
 
@@ -223,6 +223,7 @@ function createPerfComponent() {
         receiveProfile: receiveProfileMock,
         recordingPreferences: getRecordingPreferencesFromBrowser(),
         setRecordingPreferences: recordingPreferencesMock,
+        presets,
         getSymbolTableGetter: () => noop,
         pageContext: "devtools",
         supportedFeatures: perfFrontMock.getSupportedFeatures(),
