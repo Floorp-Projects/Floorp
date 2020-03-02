@@ -202,20 +202,17 @@ class LintRoller(object):
         return 0
 
     def _generate_jobs(self, paths, vcs_paths, num_procs):
-        def __get_current_paths(path=self.root):
-            return [os.path.join(path, p) for p in os.listdir(path)]
-
         """A job is of the form (<linter:dict>, <paths:list>)."""
         for linter in self.linters:
             if any(os.path.isfile(p) and mozpath.match(p, pattern)
                     for pattern in linter.get('support-files', []) for p in vcs_paths):
-                lpaths = __get_current_paths()
+                lpaths = [self.root]
                 print("warning: {} support-file modified, linting entire tree "
                       "(press ctrl-c to cancel)".format(linter['name']))
             else:
                 lpaths = paths.union(vcs_paths)
 
-            lpaths = list(lpaths) or __get_current_paths(os.getcwd())
+            lpaths = list(lpaths) or [os.getcwd()]
             chunk_size = min(self.MAX_PATHS_PER_JOB, int(ceil(len(lpaths) / num_procs))) or 1
             if linter['type'] == 'global':
                 # Global linters lint the entire tree in one job.
