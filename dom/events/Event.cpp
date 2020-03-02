@@ -146,9 +146,13 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(Event)
       case eClipboardEventClass:
         tmp->mEvent->AsClipboardEvent()->mClipboardData = nullptr;
         break;
-      case eEditorInputEventClass:
-        tmp->mEvent->AsEditorInputEvent()->mDataTransfer = nullptr;
+      case eEditorInputEventClass: {
+        InternalEditorInputEvent* inputEvent =
+            tmp->mEvent->AsEditorInputEvent();
+        inputEvent->mDataTransfer = nullptr;
+        inputEvent->mTargetRanges.Clear();
         break;
+      }
       case eMutationEventClass:
         tmp->mEvent->AsMutationEvent()->mRelatedNode = nullptr;
         break;
@@ -187,6 +191,8 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(Event)
       case eEditorInputEventClass:
         NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mEvent->mDataTransfer");
         cb.NoteXPCOMChild(tmp->mEvent->AsEditorInputEvent()->mDataTransfer);
+        NS_IMPL_CYCLE_COLLECTION_TRAVERSE(
+            mEvent->AsEditorInputEvent()->mTargetRanges);
         break;
       case eMutationEventClass:
         NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mEvent->mRelatedNode");

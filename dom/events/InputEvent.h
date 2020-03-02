@@ -8,8 +8,11 @@
 #define mozilla_dom_InputEvent_h_
 
 #include "mozilla/dom/UIEvent.h"
+
 #include "mozilla/dom/InputEventBinding.h"
+#include "mozilla/dom/StaticRange.h"
 #include "mozilla/EventForwards.h"
+#include "nsTArray.h"
 
 namespace mozilla {
 namespace dom {
@@ -36,6 +39,7 @@ class InputEvent : public UIEvent {
   void GetData(nsAString& aData, CallerType aCallerType = CallerType::System);
   already_AddRefed<DataTransfer> GetDataTransfer(
       CallerType aCallerType = CallerType::System);
+  void GetTargetRanges(nsTArray<RefPtr<StaticRange>>& aTargetRanges);
   bool IsComposing();
 
  protected:
