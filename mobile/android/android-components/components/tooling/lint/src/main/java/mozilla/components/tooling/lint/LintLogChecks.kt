@@ -55,9 +55,5 @@ class LintLogChecks : Detector(), Detector.UastScanner {
             Severity.WARNING,
             Implementation(LintLogChecks::class.java, EnumSet.of(Scope.JAVA_FILE))
         )
-
-        val issues: List<Issue> = listOf(
-            ISSUE_LOG_USAGE
-        )
     }
 }

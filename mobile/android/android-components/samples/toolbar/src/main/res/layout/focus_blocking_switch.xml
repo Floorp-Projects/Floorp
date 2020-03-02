@@ -6,6 +6,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="80dp"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:background="#272727"
     tools:ignore="Overdraw"
     android:gravity="center_vertical"
@@ -49,7 +50,7 @@
                 android:layout_width="22dp"
                 android:layout_height="22dp"
                 android:padding="4dp"
-                android:src="@drawable/mozac_ic_info"
+                app:srcCompat="@drawable/mozac_ic_info"
                 android:background="?android:attr/selectableItemBackgroundBorderless" />
 
         </LinearLayout>
