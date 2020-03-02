@@ -23,7 +23,7 @@ add_task(async function() {
 
   info("Opening a test tab and a toolbox host to create the options view in");
   await addTab("about:blank");
-  const [host, win] = await createHost("bottom", OPTIONS_VIEW_URL);
+  const { host, win } = await createHost("bottom", OPTIONS_VIEW_URL);
 
   await testOptionsView(win);
 

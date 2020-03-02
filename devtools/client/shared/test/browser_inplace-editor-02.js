@@ -10,7 +10,7 @@ loadHelperScript("helper_inplace_editor.js");
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8,inline editor tests");
-  const [host, , doc] = await createHost();
+  const { host, doc } = await createHost();
 
   await testNonTrimmed(doc);
   await testTrimmed(doc);

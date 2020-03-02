@@ -17,7 +17,7 @@ const {
 const TEST_URI = CHROME_URL_ROOT + "doc_cubic-bezier-02.html";
 
 add_task(async function() {
-  const [host, win, doc] = await createHost("bottom", TEST_URI);
+  const { host, win, doc } = await createHost("bottom", TEST_URI);
 
   // Required or widget will be clipped inside of 'bottom'
   // host by -14. Setting `fixed` zeroes this which is needed for

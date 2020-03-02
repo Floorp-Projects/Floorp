@@ -17,7 +17,7 @@ const LONG_TEXT =
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8,inplace editor max width tests");
-  const [host, , doc] = await createHost();
+  const { host, doc } = await createHost();
 
   info("Testing the maxWidth option in pixels, to precisely check the size");
   await new Promise(resolve => {

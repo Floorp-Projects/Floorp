@@ -15,7 +15,7 @@ const {
 const TEST_URI = CHROME_URL_ROOT + "doc_cubic-bezier-01.html";
 
 add_task(async function() {
-  const [host, , doc] = await createHost("bottom", TEST_URI);
+  const { host, doc } = await createHost("bottom", TEST_URI);
 
   const container = doc.querySelector("#cubic-bezier-container");
   const w = new CubicBezierWidget(container, PREDEFINED.linear);

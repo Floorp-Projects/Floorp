@@ -9,7 +9,7 @@ const { scrollIntoViewIfNeeded } = require("devtools/client/shared/scroll");
 const TEST_URI = CHROME_URL_ROOT + "doc_layoutHelpers.html";
 
 add_task(async function() {
-  const [host, win] = await createHost("bottom", TEST_URI);
+  const { host, win } = await createHost("bottom", TEST_URI);
   await runTest(win);
   host.destroy();
 });

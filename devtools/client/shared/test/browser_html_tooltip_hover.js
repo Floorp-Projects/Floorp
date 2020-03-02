@@ -17,7 +17,7 @@ const {
 loadHelperScript("helper_html_tooltip.js");
 
 add_task(async function() {
-  const [, , doc] = await createHost("bottom", TEST_URI);
+  const { doc } = await createHost("bottom", TEST_URI);
   // Wait for full page load before synthesizing events on the page.
   await waitUntil(() => doc.readyState === "complete");
 
