@@ -5,9 +5,9 @@
 
 #include "WebGLValidateStrings.h"
 
-#include <regex>
+#include "WebGLContext.h"
 
-#include "WebGLTypes.h"
+#include <regex>
 
 namespace mozilla {
 
@@ -23,56 +23,66 @@ not including, the terminating newline.
 delimiters inside of a comment, hence comments cannot be nested.
 
   - Comments are treated syntactically as a single space.
+
+However, since we want to keep line/character numbers the same, replace
+char-for-char with spaces and newlines.
 */
 
 std::string CommentsToSpaces(const std::string& src) {
-  constexpr auto flags = std::regex::ECMAScript | std::regex::nosubs | std::regex::optimize;
+// `[^]` is any-including-newline
+// `*?` is non-greedy `*`, matching the fewest characters, instead of the most.
+// `??` is non-greedy `?`, preferring to match zero times, instead of once.
+// Non-continuing line comment is: `//[^]*?\n`
+// But line-continuation is `\\\n`
+// So we need to match `//[^]*?[^\\]\n`
+// But we need to recognize "//\n", thus: `//([^]*?[^\\])??\n`
+#define LINE_COMMENT "//(?:[^]*?[^\\\\])??\n"
 
-  static const auto RE_COMMENT_BEGIN = std::regex("/[*/]", flags);
-  static const auto RE_LINE_COMMENT_END = std::regex(R"([^\\]\n)", flags);
-  static const auto RE_BLOCK_COMMENT_END = std::regex(R"(\*/)", flags);
+// The fewest characters that match /*...*/
+#define BLOCK_COMMENT "/[*][^]*?[*]/"
+
+  static const std::regex COMMENT_RE(
+      "(?:" LINE_COMMENT ")|(?:" BLOCK_COMMENT ")",
+      std::regex::ECMAScript | std::regex::nosubs | std::regex::optimize);
+
+#undef LINE_COMMENT
+#undef BLOCK_COMMENT
+
+  static const std::regex TRAILING_RE("/[*/]", std::regex::ECMAScript |
+                                                   std::regex::nosubs |
+                                                   std::regex::optimize);
 
   std::string ret;
   ret.reserve(src.size());
 
-  // Replace all comments with block comments with the right number of newlines.
-  // Line positions may be off, but line numbers will be accurate, which is more important.
-
   auto itr = src.begin();
-  const auto end = src.end();
+  auto end = src.end();
   std::smatch match;
-  while (std::regex_search(itr, end, match, RE_COMMENT_BEGIN)) {
-    MOZ_ASSERT(match.length() == 2);
-    const auto commentBegin = itr + match.position();
-    ret.append(itr, commentBegin);
-
-    itr = commentBegin + match.length();
-
-    const bool isBlockComment = (*(commentBegin + 1) == '*');
-    const auto* endRegex = &RE_LINE_COMMENT_END;
-    if (isBlockComment) {
-      endRegex = &RE_BLOCK_COMMENT_END;
-    }
-
-    if (isBlockComment) {
-      ret += "/*";
-    }
-
-    const bool isTerminated = std::regex_search(itr, end, match, *endRegex);
-    if (!isTerminated) return ret;
-
-    const auto commentEnd = itr + match.position() + match.length();
-    for (; itr != commentEnd; ++itr) {
-      const auto cur = *itr;
-      if (cur == '\n') {
-        ret += cur;
+  while (std::regex_search(itr, end, match, COMMENT_RE)) {
+    const auto matchBegin = itr + match.position();
+    const auto matchEnd = matchBegin + match.length();
+    ret.append(itr, matchBegin);
+    for (itr = matchBegin; itr != matchEnd; ++itr) {
+      auto cur = *itr;
+      switch (cur) {
+        case '/':
+        case '*':
+        case '\n':
+        case '\\':
+          break;
+        default:
+          cur = ' ';
+          break;
       }
-    }
-    if (isBlockComment) {
-      ret += "*/";
+      ret += cur;
     }
   }
 
+  // Check for a trailing comment that hits EOF instead of the end of the
+  // comment.
+  if (std::regex_search(itr, end, match, TRAILING_RE)) {
+    end = itr + match.position();
+  }
   ret.append(itr, end);
   return ret;
 }
