@@ -6,6 +6,9 @@
 
 var EXPORTED_SYMBOLS = ["RemoteSettingsClient"];
 
+const { AppConstants } = ChromeUtils.import(
+  "resource://gre/modules/AppConstants.jsm"
+);
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
@@ -429,6 +432,7 @@ class RemoteSettingsClient extends EventEmitter {
     let importedFromDump = [];
     const startedAt = new Date();
     let reportStatus = null;
+    let thrownError = null;
     try {
       // If network is offline, we can't synchronize.
       if (Utils.isOffline) {
@@ -626,6 +630,7 @@ class RemoteSettingsClient extends EventEmitter {
         );
       }
     } catch (e) {
+      thrownError = e;
       // If no Telemetry status was determined yet (ie. outside sync step),
       // then introspect error, default status at this step is UNKNOWN.
       if (reportStatus == null) {
@@ -641,11 +646,34 @@ class RemoteSettingsClient extends EventEmitter {
         reportStatus = UptakeTelemetry.STATUS.SUCCESS;
       }
       // Report success/error status to Telemetry.
-      await UptakeTelemetry.report(TELEMETRY_COMPONENT, reportStatus, {
+      let reportArgs = {
         source: this.identifier,
         trigger,
         duration: durationMilliseconds,
-      });
+      };
+      // In Bug 1617133, we will try to break down specific errors into
+      // more precise statuses by reporting the JavaScript error name
+      // ("TypeError", etc.) to Telemetry on Nightly.
+      if (
+        thrownError !== null &&
+        AppConstants.NIGHTLY_BUILD &&
+        [
+          UptakeTelemetry.STATUS.SYNC_ERROR,
+          UptakeTelemetry.STATUS.CUSTOM_1_ERROR, // IndexedDB.
+          UptakeTelemetry.STATUS.UNKNOWN_ERROR,
+        ].includes(reportStatus)
+      ) {
+        // List of possible error names for IndexedDB:
+        // https://searchfox.org/mozilla-central/rev/49ed791/dom/base/DOMException.cpp#28-53
+        reportArgs = { ...reportArgs, errorName: thrownError.name };
+      }
+
+      await UptakeTelemetry.report(
+        TELEMETRY_COMPONENT,
+        reportStatus,
+        reportArgs
+      );
+
       console.debug(`${this.identifier} sync status is ${reportStatus}`);
       this._syncRunning = false;
     }

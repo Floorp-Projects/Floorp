@@ -729,6 +729,39 @@ add_task(async function test_telemetry_reports_indexeddb_as_custom_1() {
 });
 add_task(clear_state);
 
+add_task(async function test_telemetry_reports_error_name_as_event_nightly() {
+  const backup = client.openCollection;
+  client.openCollection = () => {
+    const e = new Error("Some unknown error");
+    e.name = "ThrownError";
+    throw e;
+  };
+
+  await withFakeChannel("nightly", async () => {
+    try {
+      await client.maybeSync(2000);
+    } catch (e) {}
+
+    TelemetryTestUtils.assertEvents([
+      [
+        "uptake.remotecontent.result",
+        "uptake",
+        "remotesettings",
+        UptakeTelemetry.STATUS.UNKNOWN_ERROR,
+        {
+          source: client.identifier,
+          trigger: "manual",
+          duration: v => v >= 0,
+          errorName: "ThrownError",
+        },
+      ],
+    ]);
+  });
+
+  client.openCollection = backup;
+});
+add_task(clear_state);
+
 add_task(async function test_bucketname_changes_when_bucket_pref_changes() {
   equal(client.bucketName, "main");
 
