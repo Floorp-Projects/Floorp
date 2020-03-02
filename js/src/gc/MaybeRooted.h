@@ -100,10 +100,6 @@ struct DefineComparisonOps<FakeMutableHandle<T>> : std::true_type {
  * Types for a variable that either should or shouldn't be rooted, depending on
  * the template parameter allowGC. Used for implementing functions that can
  * operate on either rooted or unrooted data.
- *
- * The toHandle() and toMutableHandle() functions are for calling functions
- * which require handle types and are only called in the CanGC case. These
- * allow the calling code to type check.
  */
 
 template <typename T, AllowGC allowGC>
@@ -115,10 +111,6 @@ class MaybeRooted<T, CanGC> {
   using HandleType = JS::Handle<T>;
   using RootType = JS::Rooted<T>;
   using MutableHandleType = JS::MutableHandle<T>;
-
-  static JS::Handle<T> toHandle(HandleType v) { return v; }
-
-  static JS::MutableHandle<T> toMutableHandle(MutableHandleType v) { return v; }
 
   template <typename T2>
   static JS::Handle<T2*> downcastHandle(HandleType v) {
@@ -132,12 +124,6 @@ class MaybeRooted<T, NoGC> {
   using HandleType = const T&;
   using RootType = FakeRooted<T>;
   using MutableHandleType = FakeMutableHandle<T>;
-
-  static JS::Handle<T> toHandle(HandleType v) { MOZ_CRASH("Bad conversion"); }
-
-  static JS::MutableHandle<T> toMutableHandle(MutableHandleType v) {
-    MOZ_CRASH("Bad conversion");
-  }
 
   template <typename T2>
   static T2* downcastHandle(HandleType v) {

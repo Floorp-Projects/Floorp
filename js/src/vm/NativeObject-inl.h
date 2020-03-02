@@ -805,28 +805,24 @@ static MOZ_ALWAYS_INLINE bool LookupOwnPropertyInline(
   // id was not found in obj. Try obj's resolve hook, if any.
   if (obj->getClass()->getResolve()) {
     MOZ_ASSERT(!cx->isHelperThreadContext());
-    if (!allowGC) {
+    if constexpr (!allowGC) {
       return false;
-    }
+    } else {
+      bool recursed;
+      if (!CallResolveOp(cx, obj, id, propp, &recursed)) {
+        return false;
+      }
 
-    bool recursed;
-    if (!CallResolveOp(
-            cx, MaybeRooted<NativeObject*, allowGC>::toHandle(obj),
-            MaybeRooted<jsid, allowGC>::toHandle(id),
-            MaybeRooted<PropertyResult, allowGC>::toMutableHandle(propp),
-            &recursed)) {
-      return false;
-    }
+      if (recursed) {
+        propp.setNotFound();
+        *donep = true;
+        return true;
+      }
 
-    if (recursed) {
-      propp.setNotFound();
-      *donep = true;
-      return true;
-    }
-
-    if (propp) {
-      *donep = true;
-      return true;
+      if (propp) {
+        *donep = true;
+        return true;
+      }
     }
   }
 
@@ -903,14 +899,11 @@ static MOZ_ALWAYS_INLINE bool LookupPropertyInline(
     }
     if (!proto->isNative()) {
       MOZ_ASSERT(!cx->isHelperThreadContext());
-      if (!allowGC) {
+      if constexpr (!allowGC) {
         return false;
+      } else {
+        return LookupProperty(cx, proto, id, objp, propp);
       }
-      return LookupProperty(
-          cx, MaybeRooted<JSObject*, allowGC>::toHandle(proto),
-          MaybeRooted<jsid, allowGC>::toHandle(id),
-          MaybeRooted<JSObject*, allowGC>::toMutableHandle(objp),
-          MaybeRooted<PropertyResult, allowGC>::toMutableHandle(propp));
     }
 
     current = &proto->template as<NativeObject>();
