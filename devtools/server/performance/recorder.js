@@ -162,7 +162,7 @@ PerformanceRecorder.prototype = {
         this._onConsoleProfileEnd(data.details);
       }
     } else if (topic === "profiler-stopped") {
-      this._onProfilerUnexpectedlyStopped();
+      // Some other API stopped the profiler. Ignore it.
     } else if (topic === "profiler-status") {
       this.emit("profiler-status", data);
     }
@@ -241,13 +241,6 @@ PerformanceRecorder.prototype = {
     }
 
     await this.stopRecording(model);
-  },
-
-  /**
-   * TODO handle bug 1144438
-   */
-  _onProfilerUnexpectedlyStopped: function() {
-    Cu.reportError("Profiler unexpectedly stopped.", arguments);
   },
 
   /**
