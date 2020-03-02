@@ -668,9 +668,8 @@ bool nsTransitionManager::ConsiderInitiatingTransition(
                        startValue.IsInterpolableWith(aProperty, endValue);
 
   bool haveCurrentTransition = false;
-  size_t currentIndex = nsTArray<ElementPropertyTransition>::NoIndex;
+  size_t currentIndex = nsTArray<KeyframeEffect>::NoIndex;
   const CSSTransition* oldTransition = nullptr;
-  const ElementPropertyTransition* oldPT = nullptr;
   if (aElementTransitions) {
     OwningCSSTransitionPtrArray& animations = aElementTransitions->mAnimations;
     for (size_t i = 0, i_end = animations.Length(); i < i_end; ++i) {
@@ -678,9 +677,6 @@ bool nsTransitionManager::ConsiderInitiatingTransition(
         haveCurrentTransition = true;
         currentIndex = i;
         oldTransition = animations[i];
-        oldPT = oldTransition->GetEffect()
-                    ? oldTransition->GetEffect()->AsTransition()
-                    : nullptr;
         break;
       }
     }
@@ -717,8 +713,7 @@ bool nsTransitionManager::ConsiderInitiatingTransition(
       OwningCSSTransitionPtrArray& animations =
           aElementTransitions->mAnimations;
       animations[currentIndex]->CancelFromStyle(PostRestyleMode::IfNeeded);
-      oldPT = nullptr;  // Clear pointer so it doesn't dangle
-      oldTransition = nullptr;
+      oldTransition = nullptr;  // Clear pointer so it doesn't dangle
       animations.RemoveElementAt(currentIndex);
       EffectSet* effectSet = EffectSet::GetEffectSet(aElement, aPseudoType);
       if (effectSet) {
@@ -788,13 +783,14 @@ bool nsTransitionManager::ConsiderInitiatingTransition(
   }
 
   KeyframeEffectParams effectOptions;
-  RefPtr<ElementPropertyTransition> pt = new ElementPropertyTransition(
+  RefPtr<KeyframeEffect> keyframeEffect = new KeyframeEffect(
       aElement->OwnerDoc(), OwningAnimationTarget(aElement, aPseudoType),
       std::move(timing), effectOptions);
 
-  pt->SetKeyframes(GetTransitionKeyframes(aProperty, std::move(startValue),
-                                          std::move(endValue)),
-                   &aNewStyle);
+  keyframeEffect->SetKeyframes(
+      GetTransitionKeyframes(aProperty, std::move(startValue),
+                             std::move(endValue)),
+      &aNewStyle);
 
   RefPtr<CSSTransition> animation =
       new CSSTransition(mPresContext->Document()->GetScopeObject());
@@ -802,7 +798,7 @@ bool nsTransitionManager::ConsiderInitiatingTransition(
   animation->SetTimelineNoUpdate(timeline);
   animation->SetCreationSequence(
       mPresContext->RestyleManager()->GetAnimationGeneration());
-  animation->SetEffectFromStyle(pt);
+  animation->SetEffectFromStyle(keyframeEffect);
   animation->SetReverseParameters(std::move(startForReversingTest),
                                   reversePortion);
   animation->PlayFromStyle();
@@ -846,8 +842,7 @@ bool nsTransitionManager::ConsiderInitiatingTransition(
     }
 
     animations[currentIndex]->CancelFromStyle(PostRestyleMode::IfNeeded);
-    oldPT = nullptr;  // Clear pointer so it doesn't dangle
-    oldTransition = nullptr;
+    oldTransition = nullptr;  // Clear pointer so it doesn't dangle
     animations[currentIndex] = animation;
   } else {
     if (!animations.AppendElement(animation)) {
