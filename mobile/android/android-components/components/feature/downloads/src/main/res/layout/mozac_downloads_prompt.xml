@@ -11,7 +11,7 @@
     android:orientation="vertical"
     tools:ignore="Overdraw">
 
-    <ImageView
+    <androidx.appcompat.widget.AppCompatImageView
         android:id="@+id/icon"
         android:layout_width="32dp"
         android:layout_height="32dp"
@@ -21,7 +21,7 @@
         android:importantForAccessibility="no"
         android:scaleType="center"
         app:srcCompat="@drawable/mozac_feature_download_ic_download"
-        android:tint="?android:attr/textColorPrimary" />
+        app:tint="?android:attr/textColorPrimary" />
 
     <TextView
         android:id="@+id/title"
@@ -41,7 +41,7 @@
         tools:text="Download (85.7 MB)"
         tools:textColor="#000000" />
 
-    <ImageButton
+    <androidx.appcompat.widget.AppCompatImageButton
         android:id="@+id/close_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -54,7 +54,7 @@
         android:background="@null"
         android:contentDescription="@string/mozac_feature_downloads_button_close"
         app:srcCompat="@drawable/mozac_ic_close"
-        android:tint="?android:attr/textColorPrimary"
+        app:tint="?android:attr/textColorPrimary"
         tools:textColor="#000000" />
 
     <TextView
