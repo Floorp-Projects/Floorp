@@ -14,6 +14,7 @@ import pytest
 
 from mozlint.errors import LintersNotConfigured
 from mozlint.result import Issue, ResultSummary
+from itertools import chain
 
 
 here = os.path.abspath(os.path.dirname(__file__))
@@ -238,7 +239,7 @@ def test_keyboard_interrupt():
     assert 'Traceback' not in out
 
 
-def test_support_files(lint, linters, filedir, monkeypatch):
+def test_support_files(lint, linters, filedir, monkeypatch, files):
     jobs = []
 
     # Replace the original _generate_jobs with a new one that simply
@@ -253,27 +254,34 @@ def test_support_files(lint, linters, filedir, monkeypatch):
 
     linter_path = linters('support_files')[0]
     lint.read(linter_path)
+    lint.root = filedir
 
     # Modified support files only lint entire root if --outgoing or --workdir
     # are used.
     path = os.path.join(filedir, 'foobar.js')
     lint.mock_vcs([os.path.join(filedir, 'foobar.py')])
     lint.roll(path)
-    assert jobs[0] == [path]
+    actual_files = sorted(chain(*jobs))
+    assert actual_files == [path]
+
+    expected_files = sorted(files)
 
     jobs = []
     lint.roll(path, workdir=True)
-    assert jobs[0] == [lint.root]
+    actual_files = sorted(chain(*jobs))
+    assert actual_files == expected_files
 
     jobs = []
     lint.roll(path, outgoing=True)
-    assert jobs[0] == [lint.root]
+    actual_files = sorted(chain(*jobs))
+    assert actual_files == expected_files
 
     # Lint config file is implicitly added as a support file
     lint.mock_vcs([linter_path])
     jobs = []
     lint.roll(path, outgoing=True, workdir=True)
-    assert jobs[0] == [lint.root]
+    actual_files = sorted(chain(*jobs))
+    assert actual_files == expected_files
 
 
 def test_setup(lint, linters, filedir, capfd):
