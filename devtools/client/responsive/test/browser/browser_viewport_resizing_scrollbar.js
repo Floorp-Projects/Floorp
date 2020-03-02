@@ -48,58 +48,49 @@ const TEST_URL =
   "</head>" +
   '<body><div style="background:orange; width:1000px; height:1000px"></div></body>';
 
-addRDMTask(TEST_URL, async function({ ui, manager }) {
-  // Turn on the prefs that force overlay scrollbars to always be visible, and to allow
-  // data URIs to be considered as same-origin.
-  await SpecialPowers.pushPrefEnv({
-    set: [
-      ["layout.testing.overlay-scrollbars.always-visible", true],
-      ["security.data_uri.unique_opaque_origin", false],
-    ],
-  });
+addRDMTask(
+  TEST_URL,
+  async function({ ui, manager }) {
+    // Turn on the prefs that force overlay scrollbars to always be visible, and to allow
+    // data URIs to be considered as same-origin.
+    await SpecialPowers.pushPrefEnv({
+      set: [
+        ["layout.testing.overlay-scrollbars.always-visible", true],
+        ["security.data_uri.unique_opaque_origin", false],
+      ],
+    });
 
-  const store = ui.toolWindow.store;
+    info("--- Starting viewport test output ---");
 
-  // Wait until the viewport has been added.
-  await waitUntilState(store, state => state.viewports.length == 1);
+    const browser = ui.getViewportBrowser();
 
-  info("--- Starting viewport test output ---");
+    const expected = [false, true];
+    for (const e of expected) {
+      const message = "Meta Viewport " + (e ? "ON" : "OFF");
 
-  const browser = ui.getViewportBrowser();
+      // Ensure meta viewport is set.
+      info(message + " setting meta viewport support.");
+      await setTouchAndMetaViewportSupport(ui, e.metaSupport);
 
-  const expected = [
-    {
-      metaSupport: false,
-    },
-    {
-      metaSupport: true,
-    },
-  ];
+      // Get to the initial size and snapshot the window.
+      await setViewportSizeAndAwaitReflow(ui, manager, 300, 600);
+      const initialSnapshot = await snapshotWindow(browser);
 
-  for (const e of expected) {
-    const message = "Meta Viewport " + (e.metaSupport ? "ON" : "OFF");
+      // Move to the rotated size.
+      await setViewportSizeAndAwaitReflow(ui, manager, 600, 300);
 
-    // Ensure meta viewport is set.
-    info(message + " setting meta viewport support.");
-    await setTouchAndMetaViewportSupport(ui, e.metaSupport);
+      // Reload the window.
+      const reload = waitForViewportLoad(ui);
+      browser.reload();
+      await reload;
 
-    // Get to the initial size and snapshot the window.
-    await setViewportSize(ui, manager, 300, 600);
-    const initialSnapshot = await snapshotWindow(browser.contentWindow);
+      // Go back to the initial size and take another snapshot.
+      await setViewportSizeAndAwaitReflow(ui, manager, 300, 600);
+      const finalSnapshot = await snapshotWindow(browser);
 
-    // Move to the rotated size.
-    await setViewportSize(ui, manager, 600, 300);
-
-    // Reload the window.
-    const reload = waitForViewportLoad(ui);
-    browser.reload();
-    await reload;
-
-    // Go back to the initial size and take another snapshot.
-    await setViewportSize(ui, manager, 300, 600);
-    const finalSnapshot = await snapshotWindow(browser.contentWindow);
-
-    const result = compareSnapshots(initialSnapshot, finalSnapshot, true);
-    is(result[2], result[1], "Window snapshots should match.");
-  }
-});
+      const result = compareSnapshots(initialSnapshot, finalSnapshot, true);
+      is(result[2], result[1], "Window snapshots should match.");
+    }
+  },
+  { usingBrowserUI: true }
+);

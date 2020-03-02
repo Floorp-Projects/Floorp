@@ -13,84 +13,83 @@ const TEST_URL =
   '<div style="width:100%;height:1100px;background-color:lightblue"></div>' +
   "</body>";
 
-addRDMTask(TEST_URL, async function({ ui, manager }) {
-  const store = ui.toolWindow.store;
+addRDMTask(
+  TEST_URL,
+  async function({ ui, manager }) {
+    info("--- Starting viewport test output ---");
 
-  // Wait until the viewport has been added.
-  await waitUntilState(store, state => state.viewports.length == 1);
+    // We're going to take a 300,600 viewport (before), reload it,
+    // then resize it to 600,300 (after) and then resize it back.
+    // At the before and after points, we'll measure zoom and the
+    // layout viewport width and height.
+    const expected = [
+      {
+        metaSupport: false,
+        before: [1.0, 300, 600],
+        after: [1.0, 600, 300],
+      },
+      {
+        metaSupport: true,
+        before: [0.5, 300, 600],
+        after: [1.0, 600, 300],
+      },
+    ];
 
-  info("--- Starting viewport test output ---");
+    for (const e of expected) {
+      const b = e.before;
+      const a = e.after;
 
-  // We're going to take a 300,600 viewport (before), reload it,
-  // then resize it to 600,300 (after) and then resize it back.
-  // At the before and after points, we'll measure zoom and the
-  // layout viewport width and height.
-  const expected = [
-    {
-      metaSupport: false,
-      before: [1.0, 300, 600],
-      after: [1.0, 600, 300],
-    },
-    {
-      metaSupport: true,
-      before: [0.5, 300, 600],
-      after: [1.0, 600, 300],
-    },
-  ];
+      const message = "Meta Viewport " + (e.metaSupport ? "ON" : "OFF");
 
-  for (const e of expected) {
-    const b = e.before;
-    const a = e.after;
+      // Ensure meta viewport is set.
+      info(message + " setting meta viewport support.");
+      await setTouchAndMetaViewportSupport(ui, e.metaSupport);
 
-    const message = "Meta Viewport " + (e.metaSupport ? "ON" : "OFF");
+      // Get to the initial size and check values.
+      await setViewportSizeAndAwaitReflow(ui, manager, 300, 600);
+      await testViewportZoomWidthAndHeight(
+        message + " before resize",
+        ui,
+        b[0],
+        b[1],
+        b[2]
+      );
 
-    // Ensure meta viewport is set.
-    info(message + " setting meta viewport support.");
-    await setTouchAndMetaViewportSupport(ui, e.metaSupport);
+      // Force a reload.
+      const reload = waitForViewportLoad(ui);
+      const browser = ui.getViewportBrowser();
+      browser.reload();
+      await reload;
 
-    // Get to the initial size and check values.
-    await setViewportSize(ui, manager, 300, 600);
-    await testViewportZoomWidthAndHeight(
-      message + " before resize",
-      ui,
-      b[0],
-      b[1],
-      b[2]
-    );
+      // Check initial values again.
+      await testViewportZoomWidthAndHeight(
+        message + " after reload",
+        ui,
+        b[0],
+        b[1],
+        b[2]
+      );
 
-    // Force a reload.
-    const reload = waitForViewportLoad(ui);
-    const browser = ui.getViewportBrowser();
-    browser.reload();
-    await reload;
+      // Move to the smaller size.
+      await setViewportSizeAndAwaitReflow(ui, manager, 600, 300);
+      await testViewportZoomWidthAndHeight(
+        message + " after resize",
+        ui,
+        a[0],
+        a[1],
+        a[2]
+      );
 
-    // Check initial values again.
-    await testViewportZoomWidthAndHeight(
-      message + " after reload",
-      ui,
-      b[0],
-      b[1],
-      b[2]
-    );
-
-    // Move to the smaller size.
-    await setViewportSize(ui, manager, 600, 300);
-    await testViewportZoomWidthAndHeight(
-      message + " after resize",
-      ui,
-      a[0],
-      a[1],
-      a[2]
-    );
-
-    // Go back to the initial size and check again.
-    await setViewportSize(ui, manager, 300, 600);
-    await testViewportZoomWidthAndHeight(
-      message + " return to initial size",
-      ui,
-      b[0],
-      b[1],
-      b[2]
-    );
-  }
-});
+      // Go back to the initial size and check again.
+      await setViewportSizeAndAwaitReflow(ui, manager, 300, 600);
+      await testViewportZoomWidthAndHeight(
+        message + " return to initial size",
+        ui,
+        b[0],
+        b[1],
+        b[2]
+      );
+    }
+  },
+  { usingBrowserUI: true }
+);

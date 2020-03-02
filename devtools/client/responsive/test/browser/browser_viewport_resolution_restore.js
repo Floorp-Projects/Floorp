@@ -59,6 +59,6 @@ for (const { content, res_restore } of TESTS) {
         `${content} resolution should be near ${res_target}, and we got ${resolution}.`
       );
     },
-    true
+    { usingBrowserUI: true }
   );
 }
