@@ -259,11 +259,11 @@ class MOZ_STACK_CLASS WSScanResult final {
    */
   MOZ_NEVER_INLINE_DEBUG EditorDOMPoint PointAfterContent() const {
     MOZ_ASSERT(mContent);
-    return mContent ? EditorDOMPoint::After(*mContent) : EditorDOMPoint();
+    return mContent ? EditorDOMPoint::After(mContent) : EditorDOMPoint();
   }
   MOZ_NEVER_INLINE_DEBUG EditorRawDOMPoint RawPointAfterContent() const {
     MOZ_ASSERT(mContent);
-    return mContent ? EditorRawDOMPoint::After(*mContent) : EditorRawDOMPoint();
+    return mContent ? EditorRawDOMPoint::After(mContent) : EditorRawDOMPoint();
   }
 
   /**
