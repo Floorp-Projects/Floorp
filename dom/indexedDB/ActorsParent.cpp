@@ -13844,7 +13844,7 @@ Database::AllocPBackgroundIDBDatabaseFileParent(const IPCBlob& aIPCBlob) {
     actor = new DatabaseFile(fileInfo);
   } else {
     // This is a blob we haven't seen before.
-    fileInfo = mFileManager->GetNewFileInfo();
+    fileInfo = mFileManager->CreateFileInfo();
     MOZ_ASSERT(fileInfo);
 
     actor = new DatabaseFile(blobImpl, fileInfo);
@@ -16421,7 +16421,7 @@ RefPtr<FileInfo> FileManager::GetFileInfo(int64_t aId) const {
   return fileInfo;
 }
 
-RefPtr<FileInfo> FileManager::GetNewFileInfo() {
+RefPtr<FileInfo> FileManager::CreateFileInfo() {
   MOZ_ASSERT(!IndexedDatabaseManager::IsClosed());
 
   // TODO: We cannot simply change this to RefPtr<FileInfo>, because
@@ -23345,7 +23345,7 @@ nsresult CreateFileOp::DoDatabaseWork() {
 
   FileManager* fileManager = mDatabase->GetFileManager();
 
-  mFileInfo.init(fileManager->GetNewFileInfo());
+  mFileInfo.init(fileManager->CreateFileInfo());
   if (NS_WARN_IF(!*mFileInfo)) {
     IDB_REPORT_INTERNAL_ERR();
     return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
@@ -25066,7 +25066,7 @@ bool ObjectStoreAddOrPutRequestOp::Init(TransactionBase* aTransaction) {
 
   if (mDataOverThreshold) {
     mStoredFileInfos.EmplaceBack(StoredFileInfo::CreateForStructuredClone(
-        aTransaction->GetDatabase()->GetFileManager()->GetNewFileInfo(),
+        aTransaction->GetDatabase()->GetFileManager()->CreateFileInfo(),
         MakeRefPtr<SCInputStream>(mParams.cloneInfo().data().data)));
   }
 

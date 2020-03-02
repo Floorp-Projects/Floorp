@@ -91,7 +91,7 @@ class FileManager final {
 
   MOZ_MUST_USE RefPtr<FileInfo> GetFileInfo(int64_t aId) const;
 
-  MOZ_MUST_USE RefPtr<FileInfo> GetNewFileInfo();
+  MOZ_MUST_USE RefPtr<FileInfo> CreateFileInfo();
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(FileManager)
 
