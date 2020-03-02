@@ -93,7 +93,8 @@ macro_rules! variant {
                 getter_addrefs(|p| {
                     unsafe { $constructor(self.into(), p) };
                     NS_OK
-                }).unwrap()
+                })
+                .unwrap()
             }
             fn from_variant(variant: &nsIVariant) -> Result<$typ, nsresult> {
                 let mut result = $typ::default();
@@ -118,7 +119,8 @@ macro_rules! variant {
                 getter_addrefs(|p| {
                     unsafe { $constructor(&*self, p) };
                     NS_OK
-                }).unwrap()
+                })
+                .unwrap()
             }
             fn from_variant(variant: &nsIVariant) -> Result<$typ, nsresult> {
                 let mut result = $typ::new();
@@ -147,7 +149,8 @@ impl VariantType for () {
         getter_addrefs(|p| {
             unsafe { NS_NewStorageNullVariant(p) };
             NS_OK
-        }).unwrap()
+        })
+        .unwrap()
     }
     fn from_variant(_variant: &nsIVariant) -> Result<Self, nsresult> {
         Ok(())

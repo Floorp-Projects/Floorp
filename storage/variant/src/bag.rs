@@ -21,7 +21,8 @@ impl Default for HashPropertyBag {
         let bag = getter_addrefs(|p| {
             unsafe { NS_NewHashPropertyBag(p) };
             NS_OK
-        }).unwrap();
+        })
+        .unwrap();
         HashPropertyBag(bag)
     }
 }
