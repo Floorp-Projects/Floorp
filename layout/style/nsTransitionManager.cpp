@@ -45,30 +45,6 @@ using mozilla::dom::Nullable;
 using namespace mozilla;
 using namespace mozilla::css;
 
-double ElementPropertyTransition::CurrentValuePortion() const {
-  MOZ_ASSERT(!GetLocalTime().IsNull(),
-             "Getting the value portion of an animation that's not being "
-             "sampled");
-
-  // Transitions use a fill mode of 'backwards' so GetComputedTiming will
-  // never return a null time progress due to being *before* the animation
-  // interval. However, it might be possible that we're behind on flushing
-  // causing us to get called *after* the animation interval. So, just in
-  // case, we override the fill mode to 'both' to ensure the progress
-  // is never null.
-  TimingParams timingToUse = SpecifiedTiming();
-  timingToUse.SetFill(dom::FillMode::Both);
-  ComputedTiming computedTiming = GetComputedTiming(&timingToUse);
-
-  MOZ_ASSERT(!computedTiming.mProgress.IsNull(),
-             "Got a null progress for a fill mode of 'both'");
-
-  // 'transition-timing-function' corresponds to the effect timing.
-  // The transition keyframes have a linear timing function so we
-  // can ignore them for the purposes of calculating the value portion.
-  return computedTiming.mProgress.Value();
-}
-
 ////////////////////////// CSSTransition ////////////////////////////
 
 JSObject* CSSTransition::WrapObject(JSContext* aCx,
@@ -304,6 +280,31 @@ Nullable<TimeDuration> CSSTransition::GetCurrentTimeAt(
   }
 
   return result;
+}
+
+double CSSTransition::CurrentValuePortion() const {
+  if (!GetEffect()) {
+    return 0.0;
+  }
+
+  // Transitions use a fill mode of 'backwards' so GetComputedTiming will
+  // never return a null time progress due to being *before* the animation
+  // interval. However, it might be possible that we're behind on flushing
+  // causing us to get called *after* the animation interval. So, just in
+  // case, we override the fill mode to 'both' to ensure the progress
+  // is never null.
+  TimingParams timingToUse = GetEffect()->SpecifiedTiming();
+  timingToUse.SetFill(dom::FillMode::Both);
+  ComputedTiming computedTiming = GetEffect()->GetComputedTiming(&timingToUse);
+
+  if (computedTiming.mProgress.IsNull()) {
+    return 0.0;
+  }
+
+  // 'transition-timing-function' corresponds to the effect timing while
+  // the transition keyframes have a linear timing function so we can ignore
+  // them for the purposes of calculating the value portion.
+  return computedTiming.mProgress.Value();
 }
 
 void CSSTransition::UpdateStartValueFromReplacedTransition() {
@@ -739,17 +740,14 @@ bool nsTransitionManager::ConsiderInitiatingTransition(
 
   // If the new transition reverses an existing one, we'll need to
   // handle the timing differently.
-  // FIXME: Move mStartForReversingTest, mReversePortion to CSSTransition,
-  //        and set the timing function on transitions as an effect-level
-  //        easing (rather than keyframe-level easing). (Bug 1292001)
   if (haveCurrentTransition &&
       aElementTransitions->mAnimations[currentIndex]->HasCurrentEffect() &&
-      oldPT && oldPT->mStartForReversingTest == endValue) {
+      oldTransition && oldTransition->StartForReversingTest() == endValue) {
     // Compute the appropriate negative transition-delay such that right
     // now we'd end up at the current position.
     double valuePortion =
-        oldPT->CurrentValuePortion() * oldPT->mReversePortion +
-        (1.0 - oldPT->mReversePortion);
+        oldTransition->CurrentValuePortion() * oldTransition->ReversePortion() +
+        (1.0 - oldTransition->ReversePortion());
     // A timing function with negative y1 (or y2!) might make
     // valuePortion negative.  In this case, we still want to apply our
     // reversing logic based on relative distances, not make duration
@@ -792,7 +790,7 @@ bool nsTransitionManager::ConsiderInitiatingTransition(
   KeyframeEffectParams effectOptions;
   RefPtr<ElementPropertyTransition> pt = new ElementPropertyTransition(
       aElement->OwnerDoc(), OwningAnimationTarget(aElement, aPseudoType),
-      std::move(timing), startForReversingTest, reversePortion, effectOptions);
+      std::move(timing), effectOptions);
 
   pt->SetKeyframes(GetTransitionKeyframes(aProperty, std::move(startValue),
                                           std::move(endValue)),
@@ -805,6 +803,8 @@ bool nsTransitionManager::ConsiderInitiatingTransition(
   animation->SetCreationSequence(
       mPresContext->RestyleManager()->GetAnimationGeneration());
   animation->SetEffectFromStyle(pt);
+  animation->SetReverseParameters(std::move(startForReversingTest),
+                                  reversePortion);
   animation->PlayFromStyle();
 
   if (!aElementTransitions) {

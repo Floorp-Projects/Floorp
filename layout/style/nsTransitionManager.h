@@ -37,40 +37,14 @@ struct ElementPropertyTransition : public dom::KeyframeEffect {
   ElementPropertyTransition(dom::Document* aDocument,
                             OwningAnimationTarget&& aTarget,
                             TimingParams&& aTiming,
-                            AnimationValue aStartForReversingTest,
-                            double aReversePortion,
                             const KeyframeEffectParams& aEffectOptions)
       : dom::KeyframeEffect(aDocument, std::move(aTarget), std::move(aTiming),
-                            aEffectOptions),
-        mStartForReversingTest(aStartForReversingTest),
-        mReversePortion(aReversePortion) {}
+                            aEffectOptions) {}
 
   ElementPropertyTransition* AsTransition() override { return this; }
   const ElementPropertyTransition* AsTransition() const override {
     return this;
   }
-
-  // This is the start value to be used for a check for whether a
-  // transition is being reversed.  Normally the same as
-  // mProperties[0].mSegments[0].mFromValue, except when this transition
-  // started as the reversal of another in-progress transition.
-  // Needed so we can handle two reverses in a row.
-  AnimationValue mStartForReversingTest;
-  // Likewise, the portion (in value space) of the "full" reversed
-  // transition that we're actually covering.  For example, if a :hover
-  // effect has a transition that moves the element 10px to the right
-  // (by changing 'left' from 0px to 10px), and the mouse moves in to
-  // the element (starting the transition) but then moves out after the
-  // transition has advanced 4px, the second transition (from 10px/4px
-  // to 0px) will have mReversePortion of 0.4.  (If the mouse then moves
-  // in again when the transition is back to 2px, the mReversePortion
-  // for the third transition (from 0px/2px to 10px) will be 0.8.
-  double mReversePortion;
-
-  // Compute the portion of the *value* space that we should be through
-  // at the current time.  (The input to the transition timing function
-  // has time units, the output has value units.)
-  double CurrentValuePortion() const;
 };
 
 namespace dom {
@@ -168,6 +142,22 @@ class CSSTransition final : public Animation {
     QueueEvents(aActiveTime);
   }
 
+  // Compute the portion of the *value* space that we should be through
+  // at the current time.  (The input to the transition timing function
+  // has time units, the output has value units.)
+  double CurrentValuePortion() const;
+
+  const AnimationValue& StartForReversingTest() const {
+    return mStartForReversingTest;
+  }
+  double ReversePortion() const { return mReversePortion; }
+
+  void SetReverseParameters(AnimationValue&& aStartForReversingTest,
+                            double aReversePortion) {
+    mStartForReversingTest = std::move(aStartForReversingTest);
+    mReversePortion = aReversePortion;
+  }
+
   struct ReplacedTransitionProperties {
     TimeDuration mStartTime;
     double mPlaybackRate;
@@ -238,10 +228,29 @@ class CSSTransition final : public Animation {
   // Store the transition property and to-value here since we need that
   // information in order to determine if there is an existing transition
   // for a given style change. We can't store that information on the
-  // ElementPropertyTransition (effect) however since it can be replaced
-  // using the Web Animations API.
+  // effect however since it can be replaced using the Web Animations API.
   nsCSSPropertyID mTransitionProperty;
   AnimationValue mTransitionToValue;
+
+  // This is the start value to be used for a check for whether a
+  // transition is being reversed.  Normally the same as
+  // mEffect->mProperties[0].mSegments[0].mFromValue, except when this
+  // transition started as the reversal of another in-progress transition
+  // or when the effect has been mutated using the Web Animations API.
+  //
+  // Needed so we can handle two reverses in a row.
+  AnimationValue mStartForReversingTest;
+
+  // Likewise, the portion (in value space) of the "full" reversed
+  // transition that we're actually covering.  For example, if a :hover
+  // effect has a transition that moves the element 10px to the right
+  // (by changing 'left' from 0px to 10px), and the mouse moves in to
+  // the element (starting the transition) but then moves out after the
+  // transition has advanced 4px, the second transition (from 10px/4px
+  // to 0px) will have mReversePortion of 0.4.  (If the mouse then moves
+  // in again when the transition is back to 2px, the mReversePortion
+  // for the third transition (from 0px/2px to 10px) will be 0.8.
+  double mReversePortion = 1.0;
 
   Maybe<ReplacedTransitionProperties> mReplacedTransition;
 };
