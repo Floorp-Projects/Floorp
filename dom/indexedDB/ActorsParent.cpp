@@ -6195,8 +6195,6 @@ class Database::UnmapBlobCallback final
  * op is holding a reference to us.
  */
 class DatabaseFile final : public PBackgroundIDBDatabaseFileParent {
-  friend class Database;
-
   // mBlobImpl's ownership lifecycle:
   // - Initialized on the background thread at creation time.  Then
   //   responsibility is handed off to the connection thread.
@@ -6204,8 +6202,8 @@ class DatabaseFile final : public PBackgroundIDBDatabaseFileParent {
   //   the blob to disk by an add/put operation.
   // - Cleared on the connection thread once the file has successfully been
   //   written to disk.
-  RefPtr<BlobImpl> mBlobImpl;
-  RefPtr<FileInfo> mFileInfo;
+  InitializedOnce<const RefPtr<BlobImpl>> mBlobImpl;
+  const RefPtr<FileInfo> mFileInfo;
 
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(mozilla::dom::indexedDB::DatabaseFile);
@@ -6233,24 +6231,27 @@ class DatabaseFile final : public PBackgroundIDBDatabaseFileParent {
   void WriteSucceededClearBlobImpl() {
     MOZ_ASSERT(!IsOnBackgroundThread());
 
-    mBlobImpl = nullptr;
+    MOZ_ASSERT(*mBlobImpl);
+    mBlobImpl.reset();
   }
 
- private:
+ public:
   // Called when sending to the child.
-  explicit DatabaseFile(FileInfo* aFileInfo) : mFileInfo(aFileInfo) {
+  explicit DatabaseFile(FileInfo* aFileInfo)
+      : mBlobImpl{nullptr}, mFileInfo(aFileInfo) {
     AssertIsOnBackgroundThread();
-    MOZ_ASSERT(aFileInfo);
+    MOZ_ASSERT(mFileInfo);
   }
 
   // Called when receiving from the child.
   DatabaseFile(BlobImpl* aBlobImpl, FileInfo* aFileInfo)
       : mBlobImpl(aBlobImpl), mFileInfo(aFileInfo) {
     AssertIsOnBackgroundThread();
-    MOZ_ASSERT(aBlobImpl);
-    MOZ_ASSERT(aFileInfo);
+    MOZ_ASSERT(*mBlobImpl);
+    MOZ_ASSERT(mFileInfo);
   }
 
+ private:
   ~DatabaseFile() override = default;
 
   void ActorDestroy(ActorDestroyReason aWhy) override {
@@ -6268,7 +6269,7 @@ nsCOMPtr<nsIInputStream> DatabaseFile::GetInputStream(ErrorResult& rv) const {
   }
 
   nsCOMPtr<nsIInputStream> inputStream;
-  mBlobImpl->CreateInputStream(getter_AddRefs(inputStream), rv);
+  (*mBlobImpl)->CreateInputStream(getter_AddRefs(inputStream), rv);
   if (rv.Failed()) {
     return nullptr;
   }
