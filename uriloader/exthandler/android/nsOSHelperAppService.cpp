@@ -34,10 +34,11 @@ nsresult nsOSHelperAppService::GetMIMEInfoFromOS(const nsACString& aMIMEType,
 
 nsresult nsOSHelperAppService::OSProtocolHandlerExists(const char* aScheme,
                                                        bool* aExists) {
-  // Hard-code support for intent URIs until we have a more general solution
-  // for letting the app decide which schemes to handle.
+  // Support any URI barring a couple schemes we use in testing; let the
+  // app decide what to do with them.
   nsAutoCString scheme(aScheme);
-  *aExists = scheme.Equals(NS_LITERAL_CSTRING("intent"));
+  *aExists = !scheme.Equals(NS_LITERAL_CSTRING("unsupported")) &&
+             !scheme.Equals(NS_LITERAL_CSTRING("unknownextproto"));
   return NS_OK;
 }
 

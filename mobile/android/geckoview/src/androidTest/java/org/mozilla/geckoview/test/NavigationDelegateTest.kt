@@ -202,6 +202,7 @@ class NavigationDelegateTest : BaseSessionTest() {
         mainSession.waitForPageStop()
     }
 
+    @Ignore // Disabled for bug 1619344.
     @Test fun loadUnknownProtocol() {
         testLoadEarlyError(UNKNOWN_PROTOCOL_URI,
                 WebRequestError.ERROR_CATEGORY_URI,
