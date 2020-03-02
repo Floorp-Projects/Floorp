@@ -90,6 +90,9 @@ add_task(async function() {
     "We have a user Interaction Permission"
   );
 
+  // Add a cookie belonging to a non-tracking page
+  SiteDataTestUtils.addToCookies("https://example.com");
+
   // Add a cookie belonging to the tracking page.
   Services.cookies.add(
     uri.host,
