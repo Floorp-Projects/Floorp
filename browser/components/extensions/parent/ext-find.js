@@ -120,13 +120,20 @@ async function runHighlight(browser, params) {
   let highlightPromises = [];
 
   let index = params.rangeIndex;
+  const highlightAll = typeof index != "number";
+
   for (let c = 0; c < list.length; c++) {
     if (list[c].result.count) {
       hasResults = true;
     }
 
     let actor = list[c].actor;
-    if (!foundResults && index < list[c].result.count) {
+    if (highlightAll) {
+      // Highlight all ranges.
+      highlightPromises.push(
+        actor.sendQuery("ext-Finder:HighlightResults", params)
+      );
+    } else if (!foundResults && index < list[c].result.count) {
       foundResults = true;
       params.rangeIndex = index;
       highlightPromises.push(

@@ -229,6 +229,13 @@ add_task(async function testFind() {
       "rejected Promise should pass the expected error"
     );
 
+    // Test highlightResults without any arguments, especially `rangeIndex`.
+    data = await browser.find.find("example");
+    browser.test.assertEq(6, data.count, "The number of matches found:");
+    await browser.find.highlightResults();
+
+    await browser.find.removeHighlighting();
+
     data = await browser.find.find("banana", { includeRectData: true });
     await browser.find.highlightResults({ rangeIndex: 5 });
 
