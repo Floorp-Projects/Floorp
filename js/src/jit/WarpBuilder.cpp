@@ -23,7 +23,8 @@ WarpBuilder::WarpBuilder(WarpSnapshot& input, MIRGenerator& mirGen)
       graph_(mirGen.graph()),
       alloc_(mirGen.alloc()),
       info_(mirGen.outerInfo()),
-      script_(input.script()->script()) {}
+      script_(input.script()->script()),
+      loopStack_(alloc_) {}
 
 MConstant* WarpBuilder::constant(const Value& v) {
   MOZ_ASSERT_IF(v.isString(), v.toString()->isAtom());
@@ -40,30 +41,72 @@ void WarpBuilder::pushConstant(const Value& v) {
   current->push(c);
 }
 
-BytecodeSite* WarpBuilder::newBytecodeSite(jsbytecode* pc) {
+BytecodeSite* WarpBuilder::newBytecodeSite(BytecodeLocation loc) {
+  jsbytecode* pc = loc.toRawBytecode();
   MOZ_ASSERT(info().inlineScriptTree()->script()->containsPC(pc));
   return new (alloc()) BytecodeSite(info().inlineScriptTree(), pc);
 }
 
-bool WarpBuilder::startNewBlock(size_t stackDepth, jsbytecode* pc,
-                                MBasicBlock* maybePredecessor) {
-  MOZ_ASSERT_IF(maybePredecessor, maybePredecessor->stackDepth() == stackDepth);
+void WarpBuilder::initBlock(MBasicBlock* block) {
+  graph().addBlock(block);
 
+  // TODO: set block hit count (for branch pruning pass)
+  block->setLoopDepth(loopDepth_);
+
+  current = block;
+}
+
+bool WarpBuilder::startNewBlock(MBasicBlock* predecessor, BytecodeLocation loc,
+                                size_t numToPop) {
   MBasicBlock* block =
-      MBasicBlock::New(graph(), stackDepth, info(), maybePredecessor,
-                       newBytecodeSite(pc), MBasicBlock::NORMAL);
+      MBasicBlock::NewPopN(graph(), info(), predecessor, newBytecodeSite(loc),
+                           MBasicBlock::NORMAL, numToPop);
   if (!block) {
     return false;
   }
 
-  graph().addBlock(block);
-
-  // TODO: fix loop depth once we support loops
-  // TODO: set block hit count (for branch pruning pass)
-  block->setLoopDepth(0);
-
-  current = block;
+  initBlock(block);
   return true;
+}
+
+bool WarpBuilder::startNewEntryBlock(size_t stackDepth, BytecodeLocation loc) {
+  MBasicBlock* block =
+      MBasicBlock::New(graph(), stackDepth, info(), /* maybePred = */ nullptr,
+                       newBytecodeSite(loc), MBasicBlock::NORMAL);
+  if (!block) {
+    return false;
+  }
+
+  initBlock(block);
+  return true;
+}
+
+bool WarpBuilder::startNewLoopHeaderBlock(MBasicBlock* predecessor,
+                                          BytecodeLocation loc) {
+  MBasicBlock* header = MBasicBlock::NewPendingLoopHeader(
+      graph(), info(), predecessor, newBytecodeSite(loc));
+  if (!header) {
+    return false;
+  }
+
+  initBlock(header);
+  return loopStack_.emplaceBack(header);
+}
+
+bool WarpBuilder::addPendingEdge(const PendingEdge& edge,
+                                 BytecodeLocation target) {
+  jsbytecode* targetPC = target.toRawBytecode();
+  PendingEdgesMap::AddPtr p = pendingEdges_.lookupForAdd(targetPC);
+  if (p) {
+    return p->value().append(edge);
+  }
+
+  PendingEdges edges;
+  static_assert(PendingEdges::InlineLength >= 1,
+                "Appending one element should be infallible");
+  MOZ_ALWAYS_TRUE(edges.append(edge));
+
+  return pendingEdges_.add(p, targetPC, std::move(edges));
 }
 
 bool WarpBuilder::resumeAfter(MInstruction* ins, BytecodeLocation loc) {
@@ -92,11 +135,15 @@ bool WarpBuilder::build() {
     return false;
   }
 
+  MOZ_ASSERT(loopStack_.empty());
+  MOZ_ASSERT(loopDepth_ == 0);
+
   return true;
 }
 
 bool WarpBuilder::buildPrologue() {
-  if (!startNewBlock(info().firstStackSlot(), script_->code())) {
+  BytecodeLocation startLoc(script_, script_->code());
+  if (!startNewEntryBlock(info().firstStackSlot(), startLoc)) {
     return false;
   }
 
@@ -146,13 +193,36 @@ bool WarpBuilder::buildBody() {
       return false;
     }
 
+    // Skip unreachable ops (for example code after a 'return' or 'throw') until
+    // we get to the next jump target.
     if (hasTerminatedBlock()) {
-      continue;
+      // Finish any "broken" loops with an unreachable backedge. For example:
+      //
+      //   do {
+      //     ...
+      //     return;
+      //     ...
+      //   } while (x);
+      //
+      // This loop never actually loops.
+      if (loc.isBackedge() && !loopStack_.empty()) {
+        BytecodeLocation loopHead(script_, loopStack_.back().header()->pc());
+        if (loc.isBackedgeForLoophead(loopHead)) {
+          MOZ_ASSERT(loopDepth_ > 0);
+          loopDepth_--;
+          loopStack_.popBack();
+        }
+      }
+      if (!loc.isJumpTarget()) {
+        continue;
+      }
     }
 
     if (!alloc().ensureBallast()) {
       return false;
     }
+
+    // TODO: port PoppedValueUseChecker from IonBuilder
 
     JSOp op = loc.getOp();
 
@@ -403,4 +473,298 @@ bool WarpBuilder::build_StrictEq(BytecodeLocation loc) {
 
 bool WarpBuilder::build_StrictNe(BytecodeLocation loc) {
   return buildCompareOp(loc);
+}
+
+bool WarpBuilder::build_JumpTarget(BytecodeLocation loc) {
+  PendingEdgesMap::Ptr p = pendingEdges_.lookup(loc.toRawBytecode());
+  if (!p) {
+    // No (reachable) jumps so this is just a no-op.
+    return true;
+  }
+
+  PendingEdges edges(std::move(p->value()));
+  pendingEdges_.remove(p);
+
+  MOZ_ASSERT(!edges.empty());
+
+  MBasicBlock* joinBlock = nullptr;
+
+  // Create join block if there's fall-through from the previous bytecode op.
+  if (!hasTerminatedBlock()) {
+    MBasicBlock* pred = current;
+    if (!startNewBlock(pred, loc)) {
+      return false;
+    }
+    pred->end(MGoto::New(alloc(), current));
+    joinBlock = current;
+    setTerminatedBlock();
+  }
+
+  auto addEdge = [&](MBasicBlock* pred, size_t numToPop) -> bool {
+    if (joinBlock) {
+      MOZ_ASSERT(pred->stackDepth() - numToPop == joinBlock->stackDepth());
+      return joinBlock->addPredecessorPopN(alloc(), pred, numToPop);
+    }
+    if (!startNewBlock(pred, loc, numToPop)) {
+      return false;
+    }
+    joinBlock = current;
+    setTerminatedBlock();
+    return true;
+  };
+
+  // When a block is terminated with an MTest instruction we can end up with the
+  // following triangle structure:
+  //
+  //        testBlock
+  //         /    |
+  //     block    |
+  //         \    |
+  //        joinBlock
+  //
+  // Although this is fine for correctness, the FoldTests pass is unable to
+  // optimize this pattern. This matters for short-circuit operations
+  // (JSOp::And, JSOp::Coalesce, etc).
+  //
+  // To fix these issues, we create an empty block to get a diamond structure:
+  //
+  //        testBlock
+  //         /    |
+  //     block  emptyBlock
+  //         \    |
+  //        joinBlock
+  //
+  // TODO: re-evaluate this. It would probably be better to fix FoldTests to
+  // support the triangle pattern so that we can remove this. IonBuilder had
+  // other concerns that don't apply to WarpBuilder.
+  auto createEmptyBlockForTest = [&](MBasicBlock* pred, size_t successor,
+                                     size_t numToPop) -> MBasicBlock* {
+    MOZ_ASSERT(joinBlock);
+
+    if (!startNewBlock(pred, loc, numToPop)) {
+      return nullptr;
+    }
+
+    MBasicBlock* emptyBlock = current;
+    MOZ_ASSERT(emptyBlock->stackDepth() == joinBlock->stackDepth());
+
+    MTest* test = pred->lastIns()->toTest();
+    test->initSuccessor(successor, emptyBlock);
+
+    emptyBlock->end(MGoto::New(alloc(), joinBlock));
+    setTerminatedBlock();
+
+    return emptyBlock;
+  };
+
+  for (const PendingEdge& edge : edges) {
+    MBasicBlock* source = edge.block();
+    MControlInstruction* lastIns = source->lastIns();
+    switch (edge.kind()) {
+      case PendingEdge::Kind::TestTrue: {
+        // JSOp::Case must pop the value when branching to the true-target.
+        // If we create an empty block, we have to pop the value there instead
+        // of as part of the emptyBlock -> joinBlock edge so stack depths match
+        // the current depth.
+        const size_t numToPop = (edge.testOp() == JSOp::Case) ? 1 : 0;
+
+        const size_t successor = 0;  // true-branch
+        if (joinBlock && TestTrueTargetIsJoinPoint(edge.testOp())) {
+          MBasicBlock* pred =
+              createEmptyBlockForTest(source, successor, numToPop);
+          if (!pred || !addEdge(pred, /* numToPop = */ 0)) {
+            return false;
+          }
+        } else {
+          if (!addEdge(source, numToPop)) {
+            return false;
+          }
+          lastIns->toTest()->initSuccessor(successor, joinBlock);
+        }
+        continue;
+      }
+
+      case PendingEdge::Kind::TestFalse: {
+        const size_t numToPop = 0;
+        const size_t successor = 1;  // false-branch
+        if (joinBlock && !TestTrueTargetIsJoinPoint(edge.testOp())) {
+          MBasicBlock* pred =
+              createEmptyBlockForTest(source, successor, numToPop);
+          if (!pred || !addEdge(pred, /* numToPop = */ 0)) {
+            return false;
+          }
+        } else {
+          if (!addEdge(source, numToPop)) {
+            return false;
+          }
+          lastIns->toTest()->initSuccessor(successor, joinBlock);
+        }
+        continue;
+      }
+
+      case PendingEdge::Kind::Goto:
+        if (!addEdge(source, /* numToPop = */ 0)) {
+          return false;
+        }
+        lastIns->toGoto()->initSuccessor(0, joinBlock);
+        continue;
+
+      case PendingEdge::Kind::GotoWithFake:
+        if (!addEdge(source, /* numToPop = */ 0)) {
+          return false;
+        }
+        lastIns->toGotoWithFake()->initSuccessor(1, joinBlock);
+        continue;
+    }
+    MOZ_CRASH("Invalid kind");
+  }
+
+  // Start traversing the join block. Make sure it comes after predecessor
+  // blocks created by createEmptyBlockForTest.
+  MOZ_ASSERT(hasTerminatedBlock());
+  MOZ_ASSERT(joinBlock);
+  graph().moveBlockToEnd(joinBlock);
+  current = joinBlock;
+
+  return true;
+}
+
+bool WarpBuilder::build_LoopHead(BytecodeLocation loc) {
+  // All loops have the following bytecode structure:
+  //
+  //    LoopHead
+  //    ...
+  //    IfNe/Goto to LoopHead
+
+  if (hasTerminatedBlock()) {
+    // The whole loop is unreachable.
+    return true;
+  }
+
+  // TODO: support OSR
+
+  loopDepth_++;
+
+  MBasicBlock* pred = current;
+  if (!startNewLoopHeaderBlock(pred, loc)) {
+    return false;
+  }
+
+  pred->end(MGoto::New(alloc(), current));
+
+  // TODO: handle destructuring special case (IonBuilder::newPendingLoopHeader)
+
+  MInterruptCheck* check = MInterruptCheck::New(alloc());
+  current->add(check);
+
+  // TODO: recompile check
+
+  return true;
+}
+
+bool WarpBuilder::buildTestOp(BytecodeLocation loc) {
+  if (loc.isBackedge()) {
+    return buildTestBackedge(loc);
+  }
+
+  JSOp op = loc.getOp();
+  BytecodeLocation target1 = loc.next();
+  BytecodeLocation target2 = loc.getJumpTarget();
+
+  if (TestTrueTargetIsJoinPoint(op)) {
+    std::swap(target1, target2);
+  }
+
+  MDefinition* value = current->pop();
+
+  // If this op always branches to the same location we treat this as a
+  // JSOp::Goto.
+  if (target1 == target2) {
+    value->setImplicitlyUsedUnchecked();
+    return buildForwardGoto(target1);
+  }
+
+  MTest* test = MTest::New(alloc(), value, /* ifTrue = */ nullptr,
+                           /* ifFalse = */ nullptr);
+  current->end(test);
+
+  if (!addPendingEdge(PendingEdge::NewTestTrue(current, op), target1)) {
+    return false;
+  }
+  if (!addPendingEdge(PendingEdge::NewTestFalse(current, op), target2)) {
+    return false;
+  }
+
+  setTerminatedBlock();
+  return true;
+}
+
+bool WarpBuilder::buildTestBackedge(BytecodeLocation loc) {
+  JSOp op = loc.getOp();
+  MOZ_ASSERT(op == JSOp::IfNe);
+  MOZ_ASSERT(loopDepth_ > 0);
+
+  MDefinition* value = current->pop();
+
+  BytecodeLocation loopHead = loc.getJumpTarget();
+  MOZ_ASSERT(loopHead.is(JSOp::LoopHead));
+
+  BytecodeLocation successor = loc.next();
+
+  // We can finish the loop now. Use the loophead pc instead of the current pc
+  // because the stack depth at the start of that op matches the current stack
+  // depth (after popping our operand).
+  MBasicBlock* pred = current;
+  if (!startNewBlock(current, loopHead)) {
+    return false;
+  }
+
+  pred->end(MTest::New(alloc(), value, /* ifTrue = */ current,
+                       /* ifFalse = */ nullptr));
+
+  if (!addPendingEdge(PendingEdge::NewTestFalse(pred, op), successor)) {
+    return false;
+  }
+
+  return buildBackedge();
+}
+
+bool WarpBuilder::build_IfEq(BytecodeLocation loc) { return buildTestOp(loc); }
+
+bool WarpBuilder::build_IfNe(BytecodeLocation loc) { return buildTestOp(loc); }
+
+bool WarpBuilder::buildBackedge() {
+  MOZ_ASSERT(loopDepth_ > 0);
+  loopDepth_--;
+
+  MBasicBlock* header = loopStack_.popCopy().header();
+  current->end(MGoto::New(alloc(), header));
+
+  AbortReason r = header->setBackedge(alloc(), current);
+  if (r == AbortReason::NoAbort) {
+    setTerminatedBlock();
+    return true;
+  }
+
+  MOZ_ASSERT(r == AbortReason::Alloc);
+  return false;
+}
+
+bool WarpBuilder::buildForwardGoto(BytecodeLocation target) {
+  current->end(MGoto::New(alloc(), nullptr));
+
+  if (!addPendingEdge(PendingEdge::NewGoto(current), target)) {
+    return false;
+  }
+
+  setTerminatedBlock();
+  return true;
+}
+
+bool WarpBuilder::build_Goto(BytecodeLocation loc) {
+  if (loc.isBackedge()) {
+    return buildBackedge();
+  }
+
+  return buildForwardGoto(loc.getJumpTarget());
 }

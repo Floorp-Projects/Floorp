@@ -152,6 +152,12 @@ class BytecodeLocation {
 
   bool isJump() const { return IsJumpOpcode(getOp()); }
 
+  bool isBackedge() const { return IsBackedgePC(rawBytecode_); }
+
+  bool isBackedgeForLoophead(BytecodeLocation loopHead) const {
+    return IsBackedgeForLoopHead(rawBytecode_, loopHead.rawBytecode_);
+  }
+
   bool opHasTypeSet() const { return BytecodeOpHasTypeSet(getOp()); }
 
   bool fallsThrough() const { return BytecodeFallsThrough(getOp()); }
