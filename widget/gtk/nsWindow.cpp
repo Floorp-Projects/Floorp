@@ -3027,9 +3027,15 @@ void nsWindow::OnButtonPressEvent(GdkEventButton* aEvent) {
       return;
     // Map buttons 8-9 to back/forward
     case 8:
+      if (!Preferences::GetBool("mousebutton.4th.enabled", true)) {
+        return;
+      }
       DispatchCommandEvent(nsGkAtoms::Back);
       return;
     case 9:
+      if (!Preferences::GetBool("mousebutton.5th.enabled", true)) {
+        return;
+      }
       DispatchCommandEvent(nsGkAtoms::Forward);
       return;
     default:
