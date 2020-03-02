@@ -15541,15 +15541,23 @@ already_AddRefed<mozilla::dom::Promise> Document::RequestStorageAccess(
     return nullptr;
   }
 
-  // Step 1. If the document already has been granted access, resolve.
   nsCOMPtr<nsPIDOMWindowInner> inner = GetInnerWindow();
-  RefPtr<nsGlobalWindowOuter> outer;
-  if (inner) {
-    outer = nsGlobalWindowOuter::Cast(inner->GetOuterWindow());
-    if (outer->HasStorageAccess()) {
-      promise->MaybeResolveWithUndefined();
-      return promise.forget();
-    }
+  if (!inner) {
+    promise->MaybeRejectWithUndefined();
+    return promise.forget();
+  }
+
+  // Step 1. If the document already has been granted access, resolve.
+  RefPtr<nsGlobalWindowOuter> outer =
+      nsGlobalWindowOuter::Cast(inner->GetOuterWindow());
+  if (!outer) {
+    promise->MaybeRejectWithUndefined();
+    return promise.forget();
+  }
+
+  if (outer->HasStorageAccess()) {
+    promise->MaybeResolveWithUndefined();
+    return promise.forget();
   }
 
   // Step 2. If the document has a null origin, reject.
@@ -15604,7 +15612,7 @@ already_AddRefed<mozilla::dom::Promise> Document::RequestStorageAccess(
   //         user settings, anti-clickjacking heuristics, or prompting the
   //         user for explicit permission. Reject if some rule is not fulfilled.
 
-  if (CookieSettings()->GetRejectThirdPartyTrackers() && inner) {
+  if (CookieSettings()->GetRejectThirdPartyTrackers()) {
     // Only do something special for third-party tracking content.
     if (StorageDisabledByAntiTracking(this, nullptr)) {
       // Note: If this has returned true, the top-level document is guaranteed
