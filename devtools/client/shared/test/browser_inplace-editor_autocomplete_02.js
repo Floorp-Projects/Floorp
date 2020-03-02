@@ -40,7 +40,7 @@ add_task(async function() {
   await addTab(
     "data:text/html;charset=utf-8," + "inplace editor CSS value autocomplete"
   );
-  const [host, win, doc] = await createHost();
+  const { host, win, doc } = await createHost();
 
   const xulDocument = win.top.document;
   const popup = new AutocompletePopup(xulDocument, { autoSelect: true });

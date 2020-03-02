@@ -31,7 +31,7 @@ const SINGLE_BG_COLOR = {
 const ZERO_ALPHA_COLOR = [0, 255, 255, 0];
 
 add_task(async function() {
-  const [host, , doc] = await createHost("bottom", TEST_URI);
+  const { host, doc } = await createHost("bottom", TEST_URI);
 
   const container = doc.getElementById("spectrum-container");
 

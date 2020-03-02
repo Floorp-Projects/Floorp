@@ -17,7 +17,7 @@ const DEFAULT_VALUE_MULTIPLIER = 1;
 const TEST_URI = CHROME_URL_ROOT + "doc_filter-editor-01.html";
 
 add_task(async function() {
-  const [, , doc] = await createHost("bottom", TEST_URI);
+  const { doc } = await createHost("bottom", TEST_URI);
 
   const container = doc.querySelector("#filter-container");
   const initialValue = "drop-shadow(rgb(0, 0, 0) 1px 1px 0px)";

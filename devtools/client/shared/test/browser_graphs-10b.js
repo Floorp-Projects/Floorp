@@ -56,7 +56,7 @@ add_task(async function() {
 });
 
 async function performTest() {
-  const [host, , doc] = await createHost("window");
+  const { host, doc } = await createHost("window");
   doc.body.setAttribute(
     "style",
     "position: fixed; width: 100%; height: 100%; margin: 0;"

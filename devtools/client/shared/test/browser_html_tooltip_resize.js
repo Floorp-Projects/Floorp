@@ -21,7 +21,7 @@ add_task(async function() {
   await pushPref("devtools.toolbox.sidebar.width", TOOLBOX_WIDTH);
 
   // Open the host on the right so that the doorhangers hang right.
-  const [, , doc] = await createHost("right", TEST_URI);
+  const { doc } = await createHost("right", TEST_URI);
 
   info("Test resizing of a tooltip");
 

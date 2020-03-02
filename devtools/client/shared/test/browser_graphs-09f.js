@@ -16,7 +16,7 @@ add_task(async function() {
 });
 
 async function performTest() {
-  const [host, , doc] = await createHost();
+  const { host, doc } = await createHost();
 
   await testGraph(doc.body, { avg: false });
   await testGraph(doc.body, { min: false });

@@ -121,7 +121,7 @@ const createHost = async function(
     DOMHelpers.onceDOMReady(iframe.contentWindow, resolve);
   });
 
-  return [host, iframe.contentWindow, iframe.contentDocument];
+  return { host: host, win: iframe.contentWindow, doc: iframe.contentDocument };
 };
 
 /**

@@ -8,7 +8,7 @@ var { angleUtils } = require("devtools/client/shared/css-angle");
 
 add_task(async function() {
   await addTab("about:blank");
-  const [host] = await createHost("bottom");
+  const { host } = await createHost("bottom");
 
   info("Starting the test");
   testAngleUtils();
