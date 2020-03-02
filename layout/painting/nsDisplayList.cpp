@@ -788,6 +788,9 @@ static void AddAnimationsForDisplayItem(nsIFrame* aFrame,
   uint64_t animationGeneration =
       effects ? effects->GetAnimationGeneration() : 0;
   aAnimationInfo.SetAnimationGeneration(animationGeneration);
+  if (!effects || effects->IsEmpty()) {
+    return;
+  }
 
   EffectCompositor::ClearIsRunningOnCompositor(aFrame, aType);
   const nsCSSPropertyIDSet& propertySet =
