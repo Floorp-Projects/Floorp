@@ -1,4 +1,4 @@
-# Unit testing in Activity Stream
+# Unit testing
 
 ## Overview
 
@@ -6,33 +6,34 @@ Our unit tests in Activity Stream are written with mocha, chai, and sinon, and r
 with karma. They include unit tests for both content code (React components, etc.)
 and `.jsm`s.
 
-You can find unit tests in `system-addon/tests/unit`.
+You can find unit tests in `tests/unit`.
 
-## Running tests
+## Execution
 
-To run the unit tests once, run `npm run testmc`.
+To run the unit tests once, execute `npm test`.
 
 To run unit tests continuously (i.e. in "test-driven development" mode), you can
 run `npm run tddmc`.
 
-## Debugging tests
+## Debugging
 
-To debug tests, you should run them in continuous mode with `npm run tddmc`. In the
-Firefox window that is opened (it should say "Karma... - connected"), click the
-"debug" button and open your console to see test output, set breakpoints, etc.
+To debug tests, you should run them in continuous mode with `npm run tddmc`.
+In the Firefox window that is opened (it should say "Karma... - connected"),
+click the "debug" button and open your console to see test output, set
+breakpoints, etc.
 
 Unfortunately, source maps for tests do not currently work in Firefox. If you need
 to see line numbers, you can run the tests with Chrome by running
-`npm run tddmc -- --browsers Chrome`
+`npm install --save-dev karma-chrome-launcher && npm run tddmc -- --browsers Chrome`
 
 ## Where to put new tests
 
-If you are creating a new test, add it to a subdirectory of the `system-addon/tests/unit`
+If you are creating a new test, add it to a subdirectory of the `tests/unit`
 that corresponds to the file you are testing. Tests should end with `.test.js` or
 `.test.jsx` if the test includes any jsx.
 
-For example, if the file you are testing is `system-addon/lib/Foo.jsm`, the test
-file should be `system-addon/test/unit/lib/Foo.test.js`
+For example, if the file you are testing is `lib/Foo.jsm`, the test
+file should be `test/unit/lib/Foo.test.js`
 
 ## Mocha tests
 
@@ -99,7 +100,7 @@ assert.isUserEventAction(ac.UserEvent({event: "BLOOP"}));
 
 Most `.jsm`s you will be testing use `Cu.import` or `XPCOMUtils` to inject globals.
 In order to add mocks/stubs/fakes for these globals, you should use the `GlobalOverrider`
-utility in `system-addon/test/unit/utils`:
+utility in `test/unit/utils`:
 
 ```js
 const {GlobalOverrider} = require("test/unit/utils");
