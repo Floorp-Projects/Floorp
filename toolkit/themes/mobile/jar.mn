@@ -30,7 +30,7 @@ toolkit.jar:
    skin/classic/global/tooltip.css                         (global/empty.css)
    skin/classic/global/tree.css                            (global/empty.css)
    skin/classic/global/wizard.css                          (global/empty.css)
-   skin/classic/global/scrollbars.css                      (global/empty.css)
+   skin/classic/global/scrollbars.css                      (global/scrollbars.css)
 
    skin/classic/global/media/TopLevelImageDocument.css     (global/media/TopLevelImageDocument.css)
    skin/classic/global/media/TopLevelVideoDocument.css     (global/media/TopLevelVideoDocument.css)
