@@ -381,6 +381,9 @@ class PrintingChild extends ActorChild {
 
   print(contentWindow, simplifiedMode, defaultPrinterName) {
     let printSettings = this.getPrintSettings(defaultPrinterName);
+    // Set the title so that the print dialog can pick it up and
+    // use it to generate the filename for save-to-PDF.
+    printSettings.title = contentWindow.document.title;
     let printCancelled = false;
 
     // If we happen to be on simplified mode, we need to set docURL in order
