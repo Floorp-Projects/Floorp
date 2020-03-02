@@ -490,10 +490,7 @@ class SpeculativeConnectArgs : public ARefBase {
 nsresult nsHttpConnectionMgr::SpeculativeConnect(
     nsHttpConnectionInfo* ci, nsIInterfaceRequestor* callbacks, uint32_t caps,
     NullHttpTransaction* nullTransaction) {
-  MOZ_ASSERT(NS_IsMainThread(),
-             "nsHttpConnectionMgr::SpeculativeConnect called off main thread!");
-
-  if (!IsNeckoChild()) {
+  if (!IsNeckoChild() && NS_IsMainThread()) {
     // HACK: make sure PSM gets initialized on the main thread.
     net_EnsurePSMInit();
   }
