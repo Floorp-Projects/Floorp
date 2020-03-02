@@ -659,21 +659,25 @@ class MOZ_STACK_CLASS WSRunObject final : public WSRunScanner {
    *       PrepareToDeleteNode() should be redesigned with aScanEndPoint.
    */
   template <typename PT, typename CT>
-  WSRunObject(HTMLEditor* aHTMLEditor,
-              const EditorDOMPointBase<PT, CT>& aScanStartPoint,
-              const EditorDOMPointBase<PT, CT>& aScanEndPoint);
+  MOZ_CAN_RUN_SCRIPT WSRunObject(
+      HTMLEditor& aHTMLEditor,
+      const EditorDOMPointBase<PT, CT>& aScanStartPoint,
+      const EditorDOMPointBase<PT, CT>& aScanEndPoint);
   template <typename PT, typename CT>
-  WSRunObject(HTMLEditor* aHTMLEditor,
-              const EditorDOMPointBase<PT, CT>& aScanStartPoint)
+  MOZ_CAN_RUN_SCRIPT WSRunObject(
+      HTMLEditor& aHTMLEditor,
+      const EditorDOMPointBase<PT, CT>& aScanStartPoint)
       : WSRunObject(aHTMLEditor, aScanStartPoint, aScanStartPoint) {}
-  WSRunObject(HTMLEditor* aHTMLEditor, nsINode* aScanStartNode,
-              int32_t aScanStartOffset, nsINode* aScanEndNode,
-              int32_t aScanEndOffset)
+  MOZ_CAN_RUN_SCRIPT WSRunObject(HTMLEditor& aHTMLEditor,
+                                 nsINode* aScanStartNode,
+                                 int32_t aScanStartOffset,
+                                 nsINode* aScanEndNode, int32_t aScanEndOffset)
       : WSRunObject(aHTMLEditor,
                     EditorRawDOMPoint(aScanStartNode, aScanStartOffset),
                     EditorRawDOMPoint(aScanEndNode, aScanEndOffset)) {}
-  WSRunObject(HTMLEditor* aHTMLEditor, nsINode* aScanStartNode,
-              int32_t aScanStartOffset)
+  MOZ_CAN_RUN_SCRIPT WSRunObject(HTMLEditor& aHTMLEditor,
+                                 nsINode* aScanStartNode,
+                                 int32_t aScanStartOffset)
       : WSRunObject(aHTMLEditor,
                     EditorRawDOMPoint(aScanStartNode, aScanStartOffset),
                     EditorRawDOMPoint(aScanStartNode, aScanStartOffset)) {}
@@ -700,29 +704,24 @@ class MOZ_STACK_CLASS WSRunObject final : public WSRunScanner {
   // adjusting ws.
   // example of fixup: trailingws before {aStartNode,aStartOffset}
   //                   needs to be removed.
-  MOZ_CAN_RUN_SCRIPT
-  static nsresult PrepareToDeleteRange(HTMLEditor* aHTMLEditor,
-                                       nsCOMPtr<nsINode>* aStartNode,
-                                       int32_t* aStartOffset,
-                                       nsCOMPtr<nsINode>* aEndNode,
-                                       int32_t* aEndOffset);
+  MOZ_CAN_RUN_SCRIPT static nsresult PrepareToDeleteRange(
+      HTMLEditor& aHTMLEditor, nsCOMPtr<nsINode>* aStartNode,
+      int32_t* aStartOffset, nsCOMPtr<nsINode>* aEndNode, int32_t* aEndOffset);
 
   // PrepareToDeleteNode fixes up ws before and after aContent in preparation
   // for aContent to be deleted.  Example of fixup: trailingws before
   // aContent needs to be removed.
-  MOZ_CAN_RUN_SCRIPT
-  static nsresult PrepareToDeleteNode(HTMLEditor* aHTMLEditor,
-                                      nsIContent* aContent);
+  MOZ_CAN_RUN_SCRIPT static nsresult PrepareToDeleteNode(
+      HTMLEditor& aHTMLEditor, nsIContent* aContent);
 
   // PrepareToSplitAcrossBlocks fixes up ws before and after
   // {aSplitNode,aSplitOffset} in preparation for a block parent to be split.
   // Note that the aSplitNode and aSplitOffset are adjusted in response to
   // any DOM changes we make while adjusting ws.  Example of fixup: normalws
   // before {aSplitNode,aSplitOffset} needs to end with nbsp.
-  MOZ_CAN_RUN_SCRIPT
-  static nsresult PrepareToSplitAcrossBlocks(HTMLEditor* aHTMLEditor,
-                                             nsCOMPtr<nsINode>* aSplitNode,
-                                             int32_t* aSplitOffset);
+  MOZ_CAN_RUN_SCRIPT static nsresult PrepareToSplitAcrossBlocks(
+      HTMLEditor& aHTMLEditor, nsCOMPtr<nsINode>* aSplitNode,
+      int32_t* aSplitOffset);
 
   /**
    * InsertBreak() inserts a <br> node at (before) aPointToInsert and delete
@@ -861,8 +860,9 @@ class MOZ_STACK_CLASS WSRunObject final : public WSRunScanner {
     return EditorDOMPoint(mEndNode, mEndOffset);
   }
 
-  // Non-owning.
-  HTMLEditor* mHTMLEditor;
+  // Because of MOZ_CAN_RUN_SCRIPT constructors, each instanciater of this class
+  // guarantees the lifetime of the HTMLEditor.
+  HTMLEditor& mHTMLEditor;
 };
 
 }  // namespace mozilla
