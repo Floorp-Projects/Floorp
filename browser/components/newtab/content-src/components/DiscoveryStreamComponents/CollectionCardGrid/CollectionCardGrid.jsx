@@ -49,7 +49,7 @@ export class CollectionCardGrid extends React.PureComponent {
   }
 
   render() {
-    const { data } = this.props;
+    const { data, dismissible } = this.props;
     if (
       !data ||
       !data.spocs ||
@@ -86,24 +86,31 @@ export class CollectionCardGrid extends React.PureComponent {
     // we use the type "COLLECTIONCARDGRID_CARD".
     const type = `${this.props.type}_card`;
 
-    return (
-      <DSDismiss
-        onDismissClick={this.onDismissClick}
-        extraClasses={`ds-dismiss-ds-collection`}
-      >
-        <div className="ds-collection-card-grid">
-          <CardGrid
-            title={title}
-            context={context}
-            data={recsData}
-            feed={feed}
-            border={this.props.border}
-            type={type}
-            dispatch={this.props.dispatch}
-            items={this.props.items}
-          />
-        </div>
-      </DSDismiss>
+    const collectionGrid = (
+      <div className="ds-collection-card-grid">
+        <CardGrid
+          title={title}
+          context={context}
+          data={recsData}
+          feed={feed}
+          border={this.props.border}
+          type={type}
+          dispatch={this.props.dispatch}
+          items={this.props.items}
+        />
+      </div>
     );
+
+    if (dismissible) {
+      return (
+        <DSDismiss
+          onDismissClick={this.onDismissClick}
+          extraClasses={`ds-dismiss-ds-collection`}
+        >
+          {collectionGrid}
+        </DSDismiss>
+      );
+    }
+    return collectionGrid;
   }
 }

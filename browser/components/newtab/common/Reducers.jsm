@@ -13,6 +13,7 @@ const { Dedupe } = ChromeUtils.import(
 const TOP_SITES_DEFAULT_ROWS = 1;
 const TOP_SITES_MAX_SITES_PER_ROW = 8;
 const PREF_PERSONALIZATION_VERSION = "discoverystream.personalization.version";
+const PREF_COLLECTION_DISMISSIBLE = "discoverystream.isCollectionDismissible";
 
 const dedupe = new Dedupe(site => site && site.url);
 
@@ -57,6 +58,7 @@ const INITIAL_STATE = {
     layout: [],
     lastUpdated: null,
     isPrivacyInfoModalVisible: false,
+    isCollectionDismissible: false,
     feeds: {
       data: {
         // "https://foo.com/feed1": {lastUpdated: 123, data: []}
@@ -558,6 +560,7 @@ function Personalization(prevState = INITIAL_STATE.Personalization, action) {
   }
 }
 
+// eslint-disable-next-line complexity
 function DiscoveryStream(prevState = INITIAL_STATE.DiscoveryStream, action) {
   // Return if action data is empty, or spocs or feeds data is not loaded
   const isNotReady = () =>
@@ -627,6 +630,11 @@ function DiscoveryStream(prevState = INITIAL_STATE.DiscoveryStream, action) {
         ...prevState,
         lastUpdated: action.data.lastUpdated || null,
         layout: action.data.layout || [],
+      };
+    case at.DISCOVERY_STREAM_COLLECTION_DISMISSIBLE_TOGGLE:
+      return {
+        ...prevState,
+        isCollectionDismissible: action.data.value,
       };
     case at.HIDE_PRIVACY_INFO:
       return {
@@ -777,7 +785,14 @@ function DiscoveryStream(prevState = INITIAL_STATE.DiscoveryStream, action) {
       return isNotReady()
         ? prevState
         : nextState(items => items.map(removeBookmarkInfo));
-
+    case at.PREF_CHANGED:
+      if (action.data.name === PREF_COLLECTION_DISMISSIBLE) {
+        return {
+          ...prevState,
+          isCollectionDismissible: action.data.value,
+        };
+      }
+      return prevState;
     default:
       return prevState;
   }

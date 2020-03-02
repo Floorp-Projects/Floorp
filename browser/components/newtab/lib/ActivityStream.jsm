@@ -517,6 +517,13 @@ const PREFS_CONFIG = new Map([
     },
   ],
   [
+    "discoverystream.isCollectionDismissible",
+    {
+      title: "Allows Pocket story collections to be dismissed",
+      value: false,
+    },
+  ],
+  [
     "discoverystream.region-basic-layout",
     {
       title: "Decision to use basic layout based on region.",

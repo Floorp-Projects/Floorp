@@ -65,6 +65,7 @@ const PREF_SHOW_SPONSORED = "showSponsored";
 const PREF_SPOC_IMPRESSIONS = "discoverystream.spoc.impressions";
 const PREF_FLIGHT_BLOCKS = "discoverystream.flight.blocks";
 const PREF_REC_IMPRESSIONS = "discoverystream.rec.impressions";
+const PREF_COLLECTION_DISMISSIBLE = "discoverystream.isCollectionDismissible";
 
 let getHardcodedLayout;
 
@@ -198,6 +199,16 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
       ac.BroadcastToContent({
         type: at.DISCOVERY_STREAM_CONFIG_SETUP,
         data: this.config,
+      })
+    );
+    this.store.dispatch(
+      ac.BroadcastToContent({
+        type: at.DISCOVERY_STREAM_COLLECTION_DISMISSIBLE_TOGGLE,
+        data: {
+          value: this.store.getState().Prefs.values[
+            PREF_COLLECTION_DISMISSIBLE
+          ],
+        },
       })
     );
   }
@@ -1425,6 +1436,16 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
     this.store.dispatch(
       ac.BroadcastToContent({ type: at.DISCOVERY_STREAM_LAYOUT_RESET })
     );
+    this.store.dispatch(
+      ac.BroadcastToContent({
+        type: at.DISCOVERY_STREAM_COLLECTION_DISMISSIBLE_TOGGLE,
+        data: {
+          value: this.store.getState().Prefs.values[
+            PREF_COLLECTION_DISMISSIBLE
+          ],
+        },
+      })
+    );
     this.domainAffinitiesLastUpdated = null;
     this.loaded = false;
     this.layoutRequestTime = undefined;
@@ -1443,7 +1464,7 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
   }
 
   // This is a request to change the config from somewhere.
-  // Can be from a spefici pref related to Discovery Stream,
+  // Can be from a spefic pref related to Discovery Stream,
   // or can be a generic request from an external feed that
   // something changed.
   configReset() {

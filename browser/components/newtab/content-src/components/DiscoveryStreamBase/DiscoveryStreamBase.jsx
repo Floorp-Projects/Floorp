@@ -177,6 +177,7 @@ export class _DiscoveryStreamBase extends React.PureComponent {
             items={component.properties.items}
             cta_variant={component.cta_variant}
             display_engagement_labels={ENGAGEMENT_LABEL_ENABLED}
+            dismissible={this.props.DiscoveryStream.isCollectionDismissible}
             dispatch={this.props.dispatch}
           />
         );
