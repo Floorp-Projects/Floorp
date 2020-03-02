@@ -88,8 +88,8 @@ static bool IsDateTimeTextField(nsIFrame* aFrame) {
 static void ComputeCheckColors(const EventStates& aState,
                                Color& aBackgroundColor, Color& aBorderColor) {
   bool isDisabled = aState.HasState(NS_EVENT_STATE_DISABLED);
-  bool isActive =
-      aState.HasAllStates(NS_EVENT_STATE_HOVER | NS_EVENT_STATE_ACTIVE);
+  bool isPressed = !isDisabled && aState.HasAllStates(NS_EVENT_STATE_HOVER |
+                                                      NS_EVENT_STATE_ACTIVE);
   bool isHovered = !isDisabled && aState.HasState(NS_EVENT_STATE_HOVER);
   bool isChecked = aState.HasState(NS_EVENT_STATE_CHECKED);
 
@@ -97,28 +97,21 @@ static void ComputeCheckColors(const EventStates& aState,
   Color borderColor = sBorderColor;
   if (isDisabled) {
     if (isChecked) {
-      if (isActive) {
-        fillColor = borderColor = sCheckBackgroundActiveColorDisabled;
-      } else {
-        fillColor = borderColor = sCheckBackgroundColorDisabled;
-      }
-    } else if (isActive) {
-      fillColor = sBackgroundActiveColorDisabled;
-      borderColor = sBorderHoverColorDisabled;
+      fillColor = borderColor = sCheckBackgroundColorDisabled;
     } else {
       fillColor = sBackgroundColor;
       borderColor = sBorderColorDisabled;
     }
   } else {
     if (isChecked) {
-      if (isActive) {
+      if (isPressed) {
         fillColor = borderColor = sCheckBackgroundActiveColor;
       } else if (isHovered) {
         fillColor = borderColor = sCheckBackgroundHoverColor;
       } else {
         fillColor = borderColor = sCheckBackgroundColor;
       }
-    } else if (isActive) {
+    } else if (isPressed) {
       fillColor = sBackgroundActiveColor;
       borderColor = sBorderHoverColor;
     } else if (isHovered) {
@@ -312,9 +305,9 @@ static void PaintArrow(DrawTarget* aDrawTarget, const Rect& aRect,
 static void PaintMenulistButton(nsIFrame* aFrame, DrawTarget* aDrawTarget,
                                 const Rect& aRect, const EventStates& aState,
                                 uint32_t aDpi) {
-  bool isActive =
-      aState.HasAllStates(NS_EVENT_STATE_HOVER | NS_EVENT_STATE_ACTIVE);
   bool isDisabled = aState.HasState(NS_EVENT_STATE_DISABLED);
+  bool isPressed = !isDisabled && aState.HasAllStates(NS_EVENT_STATE_HOVER |
+                                                      NS_EVENT_STATE_ACTIVE);
   bool isHovered = !isDisabled && aState.HasState(NS_EVENT_STATE_HOVER);
   bool isHTML = nsNativeTheme::IsHTMLContent(aFrame);
 
@@ -330,16 +323,16 @@ static void PaintMenulistButton(nsIFrame* aFrame, DrawTarget* aDrawTarget,
   PaintArrow(
       aDrawTarget, aRect, arrowPolygonX, arrowPolygonY, arrowNumPoints,
       arrowSize,
-      isActive ? sActiveColor : isHovered ? sBorderHoverColor : sBorderColor,
+      isPressed ? sActiveColor : isHovered ? sBorderHoverColor : sBorderColor,
       aDpi);
 }
 
 static void PaintSpinnerButton(DrawTarget* aDrawTarget, const Rect& aRect,
                                const EventStates& aState,
                                StyleAppearance aAppearance, uint32_t aDpi) {
-  bool isActive =
-      aState.HasAllStates(NS_EVENT_STATE_HOVER | NS_EVENT_STATE_ACTIVE);
   bool isDisabled = aState.HasState(NS_EVENT_STATE_DISABLED);
+  bool isPressed = !isDisabled && aState.HasAllStates(NS_EVENT_STATE_HOVER |
+                                                      NS_EVENT_STATE_ACTIVE);
   bool isHovered = !isDisabled && aState.HasState(NS_EVENT_STATE_HOVER);
 
   const int32_t arrowSize = 8;
@@ -356,7 +349,7 @@ static void PaintSpinnerButton(DrawTarget* aDrawTarget, const Rect& aRect,
   PaintArrow(
       aDrawTarget, aRect, arrowPolygonX, arrowPolygonY, arrowNumPoints,
       arrowSize,
-      isActive ? sActiveColor : isHovered ? sBorderHoverColor : sBorderColor,
+      isPressed ? sActiveColor : isHovered ? sBorderHoverColor : sBorderColor,
       aDpi);
 }
 
