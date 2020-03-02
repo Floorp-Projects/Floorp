@@ -71,15 +71,19 @@
 }
 
 #messages-panel .ws-frame-rawData-payload {
-  white-space: pre-wrap;
-  overflow-wrap: break-word;
+  display: block;
+  width: 100%;
+  overflow: auto;
+  white-space: pre;
   padding: 4px 8px;
   padding-inline-start: 20px;
+  border: none;
   font-family: var(--monospace-font-family);
   font-size: var(--theme-code-font-size);
   line-height: calc(15/11);
   direction: ltr;
   text-align: left;
+  resize: none;
 }
 
 /* Styles related to JSONPreview */

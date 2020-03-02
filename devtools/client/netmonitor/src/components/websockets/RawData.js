@@ -20,12 +20,12 @@ class RawData extends Component {
 
   render() {
     const { payload } = this.props;
-    return dom.div(
-      {
-        className: "ws-frame-rawData-payload",
-      },
-      payload
-    );
+    return dom.textarea({
+      className: "ws-frame-rawData-payload",
+      rows: payload.split(/\n/g).length + 1,
+      value: payload,
+      readOnly: true,
+    });
   }
 }
 
