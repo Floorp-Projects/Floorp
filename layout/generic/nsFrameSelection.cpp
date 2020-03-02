@@ -2149,9 +2149,14 @@ nsresult nsFrameSelection::HandleTableSelection(nsINode* aParentContent,
           }
         }
 
+        const RefPtr<Selection> selection = mDomSelections[index];
+        if (!selection) {
+          return NS_ERROR_NULL_POINTER;
+        }
+
         // Reselect block of cells to new end location
-        return SelectBlockOfCells(mTableSelection.mStartSelectedCell,
-                                  childContent);
+        return mTableSelection.SelectBlockOfCells(
+            mTableSelection.mStartSelectedCell, childContent, *selection);
       }
     }
     // Do nothing if dragging in table, but outside a cell
@@ -2261,8 +2266,14 @@ nsresult nsFrameSelection::HandleTableSelection(nsINode* aParentContent,
           mTableSelection.mAppendStartSelectedCell != childContent) {
         // Shift key is down: append a block selection
         mTableSelection.mDragSelectingCells = false;
-        return SelectBlockOfCells(mTableSelection.mAppendStartSelectedCell,
-                                  childContent);
+
+        const RefPtr<Selection> selection = mDomSelections[index];
+        if (!selection) {
+          return NS_ERROR_NULL_POINTER;
+        }
+
+        return mTableSelection.SelectBlockOfCells(
+            mTableSelection.mAppendStartSelectedCell, childContent, *selection);
       }
 
       if (mTableSelection.mDragSelectingCells) {
@@ -2371,11 +2382,11 @@ nsresult nsFrameSelection::HandleTableSelection(nsINode* aParentContent,
   return result;
 }
 
-nsresult nsFrameSelection::SelectBlockOfCells(nsIContent* aStartCell,
-                                              nsIContent* aEndCell) {
+nsresult nsFrameSelection::TableSelection::SelectBlockOfCells(
+    nsIContent* aStartCell, nsIContent* aEndCell, Selection& aNormalSelection) {
   NS_ENSURE_TRUE(aStartCell, NS_ERROR_NULL_POINTER);
   NS_ENSURE_TRUE(aEndCell, NS_ERROR_NULL_POINTER);
-  mTableSelection.mEndSelectedCell = aEndCell;
+  mEndSelectedCell = aEndCell;
 
   nsresult result = NS_OK;
 
@@ -2392,23 +2403,17 @@ nsresult nsFrameSelection::SelectBlockOfCells(nsIContent* aStartCell,
   result = GetCellIndexes(aEndCell, endRowIndex, endColIndex);
   if (NS_FAILED(result)) return result;
 
-  const int8_t index = GetIndexFromSelectionType(SelectionType::eNormal);
-  const RefPtr<Selection> selection = mDomSelections[index];
-  if (!selection) {
-    return NS_ERROR_NULL_POINTER;
-  }
-
-  if (mTableSelection.mDragSelectingCells) {
+  if (mDragSelectingCells) {
     // Drag selecting: remove selected cells outside of new block limits
     // TODO: `UnselectCells`'s return value shouldn't be ignored.
-    mTableSelection.UnselectCells(table, startRowIndex, startColIndex,
-                                  endRowIndex, endColIndex, true, *selection);
+    UnselectCells(table, startRowIndex, startColIndex, endRowIndex, endColIndex,
+                  true, aNormalSelection);
   }
 
   // Note that we select block in the direction of user's mouse dragging,
   //  which means start cell may be after the end cell in either row or column
   return AddCellsToSelection(table, startRowIndex, startColIndex, endRowIndex,
-                             endColIndex, *selection);
+                             endColIndex, aNormalSelection);
 }
 
 nsresult nsFrameSelection::TableSelection::UnselectCells(
@@ -2645,7 +2650,15 @@ nsresult nsFrameSelection::SelectRowOrColumn(nsIContent* aCellContent,
       if (NS_FAILED(result)) return result;
       mTableSelection.mStartSelectedCell = firstCell;
     }
-    result = SelectBlockOfCells(mTableSelection.mStartSelectedCell, lastCell);
+
+    const int8_t index = GetIndexFromSelectionType(SelectionType::eNormal);
+    const RefPtr<Selection> selection = mDomSelections[index];
+    if (!selection) {
+      return NS_ERROR_NULL_POINTER;
+    }
+
+    result = mTableSelection.SelectBlockOfCells(
+        mTableSelection.mStartSelectedCell, lastCell, *selection);
 
     // This gets set to the cell at end of row/col,
     //   but we need it to be the cell under cursor
