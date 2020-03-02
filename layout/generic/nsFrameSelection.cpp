@@ -83,6 +83,22 @@ using namespace mozilla::dom;
 
 //#define DEBUG_TABLE 1
 
+/**
+ * Add cells to the selection inside of the given cells range.
+ *
+ * @param  aTable             [in] HTML table element
+ * @param  aStartRowIndex     [in] row index where the cells range starts
+ * @param  aStartColumnIndex  [in] column index where the cells range starts
+ * @param  aEndRowIndex       [in] row index where the cells range ends
+ * @param  aEndColumnIndex    [in] column index where the cells range ends
+ */
+static nsresult AddCellsToSelection(nsIContent* aTableContent,
+                                    int32_t aStartRowIndex,
+                                    int32_t aStartColumnIndex,
+                                    int32_t aEndRowIndex,
+                                    int32_t aEndColumnIndex,
+                                    Selection& aNormalSelection);
+
 static nsAtom* GetTag(nsINode* aNode);
 // returns the parent
 static nsINode* ParentOffset(nsINode* aNode, int32_t* aChildOffset);
@@ -2373,14 +2389,14 @@ nsresult nsFrameSelection::SelectBlockOfCells(nsIContent* aStartCell,
   result = GetCellIndexes(aEndCell, endRowIndex, endColIndex);
   if (NS_FAILED(result)) return result;
 
+  const int8_t index = GetIndexFromSelectionType(SelectionType::eNormal);
+  const RefPtr<Selection> selection = mDomSelections[index];
+  if (!selection) {
+    return NS_ERROR_NULL_POINTER;
+  }
+
   if (mDragSelectingCells) {
     // Drag selecting: remove selected cells outside of new block limits
-    const int8_t index = GetIndexFromSelectionType(SelectionType::eNormal);
-    const RefPtr<mozilla::dom::Selection> selection = mDomSelections[index];
-    if (!selection) {
-      return NS_ERROR_NULL_POINTER;
-    }
-
     // TODO: `UnselectCells`'s return value shouldn't be ignored.
     mTableSelection.UnselectCells(table, startRowIndex, startColIndex,
                                   endRowIndex, endColIndex, true, *selection);
@@ -2389,7 +2405,7 @@ nsresult nsFrameSelection::SelectBlockOfCells(nsIContent* aStartCell,
   // Note that we select block in the direction of user's mouse dragging,
   //  which means start cell may be after the end cell in either row or column
   return AddCellsToSelection(table, startRowIndex, startColIndex, endRowIndex,
-                             endColIndex);
+                             endColIndex, *selection);
 }
 
 nsresult nsFrameSelection::TableSelection::UnselectCells(
@@ -2479,15 +2495,13 @@ nsresult SelectCellElement(nsIContent* aCellElement,
   return CreateAndAddRange(parent, offset, aNormalSelection);
 }
 
-nsresult nsFrameSelection::AddCellsToSelection(nsIContent* aTableContent,
-                                               int32_t aStartRowIndex,
-                                               int32_t aStartColumnIndex,
-                                               int32_t aEndRowIndex,
-                                               int32_t aEndColumnIndex) {
-  const int8_t index = GetIndexFromSelectionType(SelectionType::eNormal);
-  if (!mDomSelections[index]) {
-    return NS_ERROR_NULL_POINTER;
-  }
+static nsresult AddCellsToSelection(nsIContent* aTableContent,
+                                    int32_t aStartRowIndex,
+                                    int32_t aStartColumnIndex,
+                                    int32_t aEndRowIndex,
+                                    int32_t aEndColumnIndex,
+                                    Selection& aNormalSelection) {
+  MOZ_ASSERT(aNormalSelection.Type() == SelectionType::eNormal);
 
   nsTableWrapperFrame* tableFrame =
       do_QueryFrame(aTableContent->GetPrimaryFrame());
@@ -2508,11 +2522,7 @@ nsresult nsFrameSelection::AddCellsToSelection(nsIContent* aTableContent,
         uint32_t origRow = cellFrame->RowIndex();
         uint32_t origCol = cellFrame->ColIndex();
         if (origRow == row && origCol == col && !cellFrame->IsSelected()) {
-          const RefPtr<Selection> selection = mDomSelections[index];
-          if (!selection) {
-            return NS_ERROR_NULL_POINTER;
-          }
-          result = ::SelectCellElement(cellFrame->GetContent(), *selection);
+          result = SelectCellElement(cellFrame->GetContent(), aNormalSelection);
           if (NS_FAILED(result)) {
             return result;
           }
