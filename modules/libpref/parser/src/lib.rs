@@ -97,7 +97,7 @@ pub enum PrefType {
 #[repr(u8)]
 pub enum PrefValueKind {
     Default,
-    User
+    User,
 }
 
 /// Keep this in sync with PrefValue in Preferences.cpp.
@@ -109,9 +109,14 @@ pub union PrefValue {
 }
 
 /// Keep this in sync with PrefsParserPrefFn in Preferences.cpp.
-type PrefFn = unsafe extern "C" fn(pref_name: *const c_char, pref_type: PrefType,
-                                   pref_value_kind: PrefValueKind, pref_value: PrefValue,
-                                   is_sticky: bool, is_locked: bool);
+type PrefFn = unsafe extern "C" fn(
+    pref_name: *const c_char,
+    pref_type: PrefType,
+    pref_value_kind: PrefValueKind,
+    pref_value: PrefValue,
+    is_sticky: bool,
+    is_locked: bool,
+);
 
 /// Keep this in sync with PrefsParserErrorFn in Preferences.cpp.
 type ErrorFn = unsafe extern "C" fn(msg: *const c_char);
@@ -128,9 +133,19 @@ type ErrorFn = unsafe extern "C" fn(msg: *const c_char);
 /// Keep this in sync with the prefs_parser_parse() declaration in
 /// Preferences.cpp.
 #[no_mangle]
-pub extern "C" fn prefs_parser_parse(path: *const c_char, kind: PrefValueKind, buf: *const c_char,
-                                     len: usize, pref_fn: PrefFn, error_fn: ErrorFn) -> bool {
-    let path = unsafe { std::ffi::CStr::from_ptr(path).to_string_lossy().into_owned() };
+pub extern "C" fn prefs_parser_parse(
+    path: *const c_char,
+    kind: PrefValueKind,
+    buf: *const c_char,
+    len: usize,
+    pref_fn: PrefFn,
+    error_fn: ErrorFn,
+) -> bool {
+    let path = unsafe {
+        std::ffi::CStr::from_ptr(path)
+            .to_string_lossy()
+            .into_owned()
+    };
 
     // Make sure `buf` ends in a '\0', and include that in the length, because
     // it represents EOF.
@@ -194,7 +209,7 @@ enum CharKind {
     Digit,      // [0-9]
     Hash,       // #
     CR,         // \r
-    Other       // Everything else; invalid except within strings and comments.
+    Other,      // Everything else; invalid except within strings and comments.
 }
 
 const C_SINGL: CharKind = CharKind::SingleChar;
@@ -203,10 +218,11 @@ const C_KEYWD: CharKind = CharKind::Keyword;
 const C_QUOTE: CharKind = CharKind::Quote;
 const C_SLASH: CharKind = CharKind::Slash;
 const C_DIGIT: CharKind = CharKind::Digit;
-const C_HASH : CharKind = CharKind::Hash;
-const C_CR   : CharKind = CharKind::CR;
+const C_HASH: CharKind = CharKind::Hash;
+const C_CR: CharKind = CharKind::CR;
 const C______: CharKind = CharKind::Other;
 
+#[rustfmt::skip]
 const CHAR_KINDS: [CharKind; 256] = [
 /*         0        1        2        3        4        5        6        7        8        9    */
 /*   0+ */ C_SINGL, C______, C______, C______, C______, C______, C______, C______, C______, C_SPCNL,
@@ -238,6 +254,7 @@ const CHAR_KINDS: [CharKind; 256] = [
 ];
 
 const _______: bool = false;
+#[rustfmt::skip]
 const SPECIAL_STRING_CHARS: [bool; 256] = [
 /*         0        1        2        3        4        5        6        7        8        9    */
 /*   0+ */    true, _______, _______, _______, _______, _______, _______, _______, _______, _______,
@@ -269,19 +286,40 @@ const SPECIAL_STRING_CHARS: [bool; 256] = [
 ];
 
 struct KeywordInfo {
-  string: &'static [u8],
-  token: Token,
+    string: &'static [u8],
+    token: Token,
 }
 
 const KEYWORD_INFOS: [KeywordInfo; 7] = [
-  // These are ordered by frequency.
-  KeywordInfo { string: b"pref",        token: Token::Pref },
-  KeywordInfo { string: b"true",        token: Token::True },
-  KeywordInfo { string: b"false",       token: Token::False },
-  KeywordInfo { string: b"user_pref",   token: Token::UserPref },
-  KeywordInfo { string: b"sticky",      token: Token::Sticky },
-  KeywordInfo { string: b"locked",      token: Token::Locked },
-  KeywordInfo { string: b"sticky_pref", token: Token::StickyPref },
+    // These are ordered by frequency.
+    KeywordInfo {
+        string: b"pref",
+        token: Token::Pref,
+    },
+    KeywordInfo {
+        string: b"true",
+        token: Token::True,
+    },
+    KeywordInfo {
+        string: b"false",
+        token: Token::False,
+    },
+    KeywordInfo {
+        string: b"user_pref",
+        token: Token::UserPref,
+    },
+    KeywordInfo {
+        string: b"sticky",
+        token: Token::Sticky,
+    },
+    KeywordInfo {
+        string: b"locked",
+        token: Token::Locked,
+    },
+    KeywordInfo {
+        string: b"sticky_pref",
+        token: Token::StickyPref,
+    },
 ];
 
 struct Parser<'t> {
@@ -299,8 +337,13 @@ struct Parser<'t> {
 const EOF: u8 = b'\0';
 
 impl<'t> Parser<'t> {
-    fn new(path: &'t str, kind: PrefValueKind, buf: &'t [u8], pref_fn: PrefFn, error_fn: ErrorFn)
-        -> Parser<'t> {
+    fn new(
+        path: &'t str,
+        kind: PrefValueKind,
+        buf: &'t [u8],
+        pref_fn: PrefFn,
+        error_fn: ErrorFn,
+    ) -> Parser<'t> {
         // Make sure these tables take up 1 byte per entry.
         assert!(std::mem::size_of_val(&CHAR_KINDS) == 256);
         assert!(std::mem::size_of_val(&SPECIAL_STRING_CHARS) == 256);
@@ -319,9 +362,9 @@ impl<'t> Parser<'t> {
 
     fn parse(&mut self) -> bool {
         // These are reused, because allocating a new Vec for every string is slow.
-        let mut name_str  = Vec::with_capacity(128); // For pref names.
+        let mut name_str = Vec::with_capacity(128); // For pref names.
         let mut value_str = Vec::with_capacity(512); // For string pref values.
-        let mut none_str  = Vec::with_capacity(0);   // For tokens that shouldn't be strings.
+        let mut none_str = Vec::with_capacity(0); // For tokens that shouldn't be strings.
 
         let mut token = self.get_token(&mut none_str);
 
@@ -336,7 +379,9 @@ impl<'t> Parser<'t> {
                 Token::SingleChar(EOF) => return !self.has_errors,
                 _ => {
                     token = self.error_and_recover(
-                        token, "expected pref specifier at start of pref definition");
+                        token,
+                        "expected pref specifier at start of pref definition",
+                    );
                     continue;
                 }
             };
@@ -367,23 +412,21 @@ impl<'t> Parser<'t> {
             // <pref-value>
             token = self.get_token(&mut value_str);
             let (pref_type, pref_value) = match token {
-                Token::True => {
-                    (PrefType::Bool, PrefValue { bool_val: true })
-                }
-                Token::False => {
-                    (PrefType::Bool, PrefValue { bool_val: false })
-                }
-                Token::String => {
-                    (PrefType::String,
-                     PrefValue { string_val: value_str.as_ptr() as *const c_char })
-                }
+                Token::True => (PrefType::Bool, PrefValue { bool_val: true }),
+                Token::False => (PrefType::Bool, PrefValue { bool_val: false }),
+                Token::String => (
+                    PrefType::String,
+                    PrefValue {
+                        string_val: value_str.as_ptr() as *const c_char,
+                    },
+                ),
                 Token::Int(u) => {
                     // Accept u <= 2147483647; anything larger will overflow i32.
                     if u <= std::i32::MAX as u32 {
                         (PrefType::Int, PrefValue { int_val: u as i32 })
                     } else {
-                        token = self.error_and_recover(
-                            Token::Error("integer literal overflowed"), "");
+                        token =
+                            self.error_and_recover(Token::Error("integer literal overflowed"), "");
                         continue;
                     }
                 }
@@ -392,20 +435,28 @@ impl<'t> Parser<'t> {
                     if let Token::Int(u) = token {
                         // Accept u <= 2147483648; anything larger will overflow i32 once negated.
                         if u <= std::i32::MAX as u32 {
-                            (PrefType::Int, PrefValue { int_val: -(u as i32) })
+                            (
+                                PrefType::Int,
+                                PrefValue {
+                                    int_val: -(u as i32),
+                                },
+                            )
                         } else if u == std::i32::MAX as u32 + 1 {
-                            (PrefType::Int, PrefValue { int_val: std::i32::MIN })
+                            (
+                                PrefType::Int,
+                                PrefValue {
+                                    int_val: std::i32::MIN,
+                                },
+                            )
                         } else {
-                            token = self.error_and_recover(
-                                Token::Error("integer literal overflowed"), "");
+                            token = self
+                                .error_and_recover(Token::Error("integer literal overflowed"), "");
                             continue;
                         }
                     } else {
-                        token = self.error_and_recover(
-                            token, "expected integer literal after '-'");
+                        token = self.error_and_recover(token, "expected integer literal after '-'");
                         continue;
                     }
-
                 }
                 Token::SingleChar(b'+') => {
                     token = self.get_token(&mut none_str);
@@ -414,15 +465,14 @@ impl<'t> Parser<'t> {
                         if u <= std::i32::MAX as u32 {
                             (PrefType::Int, PrefValue { int_val: u as i32 })
                         } else {
-                            token = self.error_and_recover(
-                                Token::Error("integer literal overflowed"), "");
+                            token = self
+                                .error_and_recover(Token::Error("integer literal overflowed"), "");
                             continue;
                         }
                     } else {
                         token = self.error_and_recover(token, "expected integer literal after '+'");
                         continue;
                     }
-
                 }
                 _ => {
                     token = self.error_and_recover(token, "expected pref value after ','");
@@ -448,7 +498,7 @@ impl<'t> Parser<'t> {
                         Token::Locked => is_locked = true,
                         _ => {
                             token =
-                              self.error_and_recover(token, "expected pref attribute after ','");
+                                self.error_and_recover(token, "expected pref attribute after ','");
                             break false;
                         }
                     }
@@ -483,8 +533,16 @@ impl<'t> Parser<'t> {
                 continue;
             }
 
-            unsafe { (self.pref_fn)(pref_name.as_ptr() as *const c_char, pref_type, pref_value_kind,
-                                    pref_value, is_sticky, is_locked) };
+            unsafe {
+                (self.pref_fn)(
+                    pref_name.as_ptr() as *const c_char,
+                    pref_type,
+                    pref_value_kind,
+                    pref_value,
+                    is_sticky,
+                    is_locked,
+                )
+            };
 
             token = self.get_token(&mut none_str);
         }
@@ -594,7 +652,7 @@ impl<'t> Parser<'t> {
                 EOF => {
                     break;
                 }
-                _ => continue
+                _ => continue,
             }
         }
     }
@@ -615,10 +673,8 @@ impl<'t> Parser<'t> {
                     self.line_num += 1;
                     self.match_char(b'\n');
                 }
-                EOF => {
-                    return false
-                }
-                _ => continue
+                EOF => return false,
+                _ => continue,
             }
         }
     }
@@ -629,9 +685,9 @@ impl<'t> Parser<'t> {
         for _ in 0..ndigits {
             value = value << 4;
             match self.get_char() {
-                c @ b'0' ..= b'9' => value += (c - b'0') as u16,
-                c @ b'A' ..= b'F' => value += (c - b'A') as u16 + 10,
-                c @ b'a' ..= b'f' => value += (c - b'a') as u16 + 10,
+                c @ b'0'..=b'9' => value += (c - b'0') as u16,
+                c @ b'A'..=b'F' => value += (c - b'A') as u16 + 10,
+                c @ b'a'..=b'f' => value += (c - b'a') as u16 + 10,
                 _ => {
                     self.unget_char();
                     return None;
@@ -714,7 +770,7 @@ impl<'t> Parser<'t> {
                                 return Token::Error("unterminated /* comment");
                             }
                         }
-                        c @ _ =>  {
+                        c @ _ => {
                             if c == b'\n' || c == b'\r' {
                                 // Unget the newline char; the outer loop will
                                 // reget it and adjust self.line_num
@@ -764,7 +820,7 @@ impl<'t> Parser<'t> {
                     continue;
                 }
                 // Error recovery will retokenize from the next character.
-                _ => return Token::Error("unexpected character")
+                _ => return Token::Error("unexpected character"),
             }
         }
     }
@@ -798,9 +854,9 @@ impl<'t> Parser<'t> {
         // If there are no special chars (the common case), we can bulk copy it
         // to str_buf. This is a lot faster than the char-by-char loop below.
         if !has_special_chars {
-          str_buf.extend(&self.buf[start..self.i - 1]);
-          str_buf.push(b'\0');
-          return Token::String;
+            str_buf.extend(&self.buf[start..self.i - 1]);
+            str_buf.push(b'\0');
+            return Token::String;
         }
 
         // There were special chars. Re-scan the string, filling in str_buf one
@@ -815,18 +871,16 @@ impl<'t> Parser<'t> {
             let c = self.get_char();
             let c2 = if !Parser::is_special_string_char(c) {
                 c
-
             } else if c == quote_char {
                 break;
-
             } else if c == b'\\' {
                 match self.get_char() {
                     b'\"' => b'\"',
                     b'\'' => b'\'',
                     b'\\' => b'\\',
-                    b'n'  => b'\n',
-                    b'r'  => b'\r',
-                    b'x'  => {
+                    b'n' => b'\n',
+                    b'r' => b'\r',
+                    b'x' => {
                         if let Some(value) = self.match_hex_digits(2) {
                             debug_assert!(value <= 0xff);
                             if value != 0 {
@@ -853,20 +907,25 @@ impl<'t> Parser<'t> {
                                         } else {
                                             self.string_error_token(
                                                 &mut token,
-                                                "invalid low surrogate after high surrogate");
+                                                "invalid low surrogate after high surrogate",
+                                            );
                                             continue;
                                         }
                                     }
                                 }
                                 if utf16.len() != 2 {
                                     self.string_error_token(
-                                        &mut token, "expected low surrogate after high surrogate");
+                                        &mut token,
+                                        "expected low surrogate after high surrogate",
+                                    );
                                     continue;
                                 }
                             } else if 0xdc00 == (0xfc00 & value) {
                                 // Unaccompanied low surrogate value.
                                 self.string_error_token(
-                                    &mut token, "expected high surrogate before low surrogate");
+                                    &mut token,
+                                    "expected high surrogate before low surrogate",
+                                );
                                 continue;
                             } else if value == 0 {
                                 self.string_error_token(&mut token, "\\u0000 is not allowed");
@@ -889,15 +948,15 @@ impl<'t> Parser<'t> {
                             self.unget_char();
                         }
                         self.string_error_token(
-                            &mut token, "unexpected escape sequence character after '\\'");
+                            &mut token,
+                            "unexpected escape sequence character after '\\'",
+                        );
                         continue;
                     }
                 }
-
             } else if c == b'\n' {
                 self.line_num += 1;
                 c
-
             } else if c == b'\r' {
                 self.line_num += 1;
                 if self.match_char(b'\n') {
@@ -906,11 +965,9 @@ impl<'t> Parser<'t> {
                 } else {
                     c
                 }
-
             } else if c == EOF {
                 self.string_error_token(&mut token, "unterminated string literal");
                 break;
-
             } else {
                 // This case is only hit for the non-closing quote char.
                 debug_assert!((c == b'\'' || c == b'\"') && c != quote_char);
