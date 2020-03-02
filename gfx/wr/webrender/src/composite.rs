@@ -71,17 +71,6 @@ pub enum CompositeSurfaceFormat {
     Yuv,
 }
 
-/// The ordering that this tile should be composited with.
-#[cfg_attr(feature = "capture", derive(Serialize))]
-#[cfg_attr(feature = "replay", derive(Deserialize))]
-#[derive(Debug, Copy, Clone)]
-pub enum TileCompositeMode {
-    /// Normal z-ordering for this tile
-    Default,
-    /// This tile overlaps a compositor surface - draw it after them
-    Over,
-}
-
 /// Describes the geometry and surface of a tile to be composited
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
@@ -93,7 +82,6 @@ pub struct CompositeTile {
     pub valid_rect: DeviceRect,
     pub z_id: ZBufferId,
     pub tile_id: Option<NativeTileId>,
-    pub mode: TileCompositeMode,
 }
 
 /// Describes information about drawing a primitive as a compositor surface.
@@ -423,24 +411,6 @@ impl CompositeState {
                 visible_alpha_tile_count += 1;
             }
 
-            // Determine ordering of this tile, based on presence of compositor
-            // surfaces that intersect the tile.
-            let mut mode = TileCompositeMode::Default;
-
-            if tile.has_compositor_surface {
-                // TODO(gw): This will almost always select over blend, due to the
-                //           background rectangle. In future, we can optimize this
-                //           case to only check items that come _after_ the compositor
-                //           surface z_id? A better option might be to tweak the z_id
-                //           values so that the alpha pixels get z-rejected?
-                for surface in &tile_cache.external_surfaces {
-                    if surface.device_rect.intersects(&tile.device_valid_rect) {
-                        mode = TileCompositeMode::Over;
-                        break;
-                    }
-                }
-            }
-
             let tile = CompositeTile {
                 surface,
                 rect: device_rect,
@@ -449,7 +419,6 @@ impl CompositeState {
                 clip_rect: device_clip_rect,
                 z_id,
                 tile_id,
-                mode,
             };
 
             self.push_tile(tile, is_opaque);
@@ -564,19 +533,12 @@ impl CompositeState {
                 self.clear_tiles.push(tile);
             }
             CompositeTileSurface::Texture { .. } => {
-                match tile.mode {
-                    TileCompositeMode::Default => {
-                        // Texture surfaces get bucketed by opaque/alpha, for z-rejection
-                        // on the Draw compositor mode.
-                        if is_opaque {
-                            self.opaque_tiles.push(tile);
-                        } else {
-                            self.alpha_tiles.push(tile);
-                        }
-                    }
-                    TileCompositeMode::Over => {
-                        self.alpha_tiles.push(tile);
-                    }
+                // Texture surfaces get bucketed by opaque/alpha, for z-rejection
+                // on the Draw compositor mode.
+                if is_opaque {
+                    self.opaque_tiles.push(tile);
+                } else {
+                    self.alpha_tiles.push(tile);
                 }
             }
         }
