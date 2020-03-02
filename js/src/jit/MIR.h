@@ -7821,13 +7821,12 @@ class MArrayJoin : public MBinaryInstruction,
   TRIVIAL_NEW_WRAPPERS
   NAMED_OPERANDS((0, array), (1, sep))
 
+  // MArrayJoin doesn't override |getAliasSet()|, because Array.prototype.join
+  // might coerce the elements of the Array to strings. This coercion might
+  // cause the evaluation of JavaScript code.
+
   bool optimizeForArray() const { return optimizeForArray_; }
   bool possiblyCalls() const override { return true; }
-  virtual AliasSet getAliasSet() const override {
-    // Array.join might coerce the elements of the Array to strings.  This
-    // coercion might cause the evaluation of the some JavaScript code.
-    return AliasSet::Store(AliasSet::Any);
-  }
   MDefinition* foldsTo(TempAllocator& alloc) override;
 };
 

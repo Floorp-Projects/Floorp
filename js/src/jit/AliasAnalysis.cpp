@@ -170,7 +170,6 @@ static inline const MDefinition* GetObject(const MDefinition* ins) {
     case MDefinition::Opcode::WasmStoreGlobalVar:
     case MDefinition::Opcode::WasmStoreGlobalCell:
     case MDefinition::Opcode::WasmStoreRef:
-    case MDefinition::Opcode::ArrayJoin:
     case MDefinition::Opcode::ArraySlice:
     case MDefinition::Opcode::StoreElementHole:
     case MDefinition::Opcode::FallibleStoreElement:
