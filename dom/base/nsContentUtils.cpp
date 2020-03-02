@@ -45,6 +45,7 @@
 #include "mozilla/Components.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/LoadInfo.h"
+#include "mozilla/dom/AncestorIterator.h"
 #include "mozilla/dom/BlobURLProtocolHandler.h"
 #include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/BrowsingContextGroup.h"
@@ -4685,8 +4686,7 @@ already_AddRefed<DocumentFragment> nsContentUtils::CreateContextualFragment(
 
   AutoTArray<nsString, 32> tagStack;
   nsAutoString uriStr, nameStr;
-  for (Element* element = aContextNode->GetAsElementOrParentElement(); element;
-       element = element->GetParentElement()) {
+  for (Element* element : InclusiveAncestorsOfType<Element>(*aContextNode)) {
     nsString& tagName = *tagStack.AppendElement();
     // It mostly doesn't actually matter what tag name we use here: XML doesn't
     // have parsing that depends on the open tag stack, apart from namespace
