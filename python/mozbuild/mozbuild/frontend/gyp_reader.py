@@ -6,10 +6,10 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import gyp
 import gyp.msvs_emulation
+import six
 import sys
 import os
 import time
-import types
 
 import mozpack.path as mozpath
 from mozpack.files import FileFinder
@@ -41,19 +41,13 @@ chrome_src = mozpath.abspath(mozpath.join(mozpath.dirname(gyp.__file__),
 script_dir = mozpath.join(chrome_src, 'build')
 
 
-def encode(value):
-    if isinstance(value, unicode):
-        return value.encode('utf-8')
-    return value
-
-
 # Default variables gyp uses when evaluating gyp files.
 generator_default_variables = {
 }
-for dirname in [b'INTERMEDIATE_DIR', b'SHARED_INTERMEDIATE_DIR', b'PRODUCT_DIR',
-                b'LIB_DIR', b'SHARED_LIB_DIR']:
+for dirname in ['INTERMEDIATE_DIR', 'SHARED_INTERMEDIATE_DIR', 'PRODUCT_DIR',
+                'LIB_DIR', 'SHARED_LIB_DIR']:
     # Some gyp steps fail if these are empty(!).
-    generator_default_variables[dirname] = b'$' + dirname
+    generator_default_variables[dirname] = '$' + dirname
 
 for unused in ['RULE_INPUT_PATH', 'RULE_INPUT_ROOT', 'RULE_INPUT_NAME',
                'RULE_INPUT_DIRNAME', 'RULE_INPUT_EXT',
@@ -61,7 +55,7 @@ for unused in ['RULE_INPUT_PATH', 'RULE_INPUT_ROOT', 'RULE_INPUT_NAME',
                'STATIC_LIB_PREFIX', 'STATIC_LIB_SUFFIX',
                'SHARED_LIB_PREFIX', 'SHARED_LIB_SUFFIX',
                'LINKER_SUPPORTS_ICF']:
-    generator_default_variables[unused] = b''
+    generator_default_variables[unused] = ''
 
 
 class GypContext(TemplateContext):
@@ -126,7 +120,7 @@ def process_gyp_result(gyp_result, gyp_dir_attrs, path, config, output,
     # Process all targets from the given gyp files and its dependencies.
     # The path given to AllTargets needs to use os.sep, while the frontend code
     # gives us paths normalized with forward slash separator.
-    for target in gyp.common.AllTargets(flat_list, targets, path.replace(b'/', os.sep)):
+    for target in gyp.common.AllTargets(flat_list, targets, path.replace('/', os.sep)):
         build_file, target_name, toolset = gyp.common.ParseQualifiedTarget(target)
 
         # Each target is given its own objdir. The base of that objdir
@@ -206,14 +200,13 @@ def process_gyp_result(gyp_result, gyp_dir_attrs, path, config, output,
         elif spec['type'] in ('static_library', 'shared_library', 'executable'):
             # Remove leading 'lib' from the target_name if any, and use as
             # library name.
-            name = spec['target_name']
+            name = six.ensure_text(spec['target_name'])
             if spec['type'] in ('static_library', 'shared_library'):
                 if name.startswith('lib'):
                     name = name[3:]
-                # The context expects an unicode string.
-                context['LIBRARY_NAME'] = name.decode('utf-8')
+                context['LIBRARY_NAME'] = name
             else:
-                context['PROGRAM'] = name.decode('utf-8')
+                context['PROGRAM'] = name
             if spec['type'] == 'shared_library':
                 context['FORCE_SHARED_LIB'] = True
             elif spec['type'] == 'static_library' and \
@@ -325,7 +318,7 @@ def process_gyp_result(gyp_result, gyp_dir_attrs, path, config, output,
                         if not f:
                             continue
                         # the result may be a string or a list.
-                        if isinstance(f, types.StringTypes):
+                        if isinstance(f, six.string_types):
                             context[var].append(f)
                         else:
                             context[var].extend(f)
@@ -393,7 +386,6 @@ class GypProcessor(object):
 
         # gyp expects plain str instead of unicode. The frontend code gives us
         # unicode strings, so convert them.
-        path = encode(path)
         if config.substs['CC_TYPE'] == 'clang-cl':
             # This isn't actually used anywhere in this generator, but it's needed
             # to override the registry detection of VC++ in gyp.
@@ -403,10 +395,10 @@ class GypProcessor(object):
             }))
 
         params = {
-            b'parallel': False,
-            b'generator_flags': {},
-            b'build_files': [path],
-            b'root_targets': None,
+            'parallel': False,
+            'generator_flags': {},
+            'build_files': [path],
+            'root_targets': None,
         }
 
         if gyp_dir_attrs.no_chromium:
@@ -415,17 +407,16 @@ class GypProcessor(object):
         else:
             depth = chrome_src
             # Files that gyp_chromium always includes
-            includes = [encode(mozpath.join(script_dir, 'gyp_includes',
-                                            'common.gypi'))]
+            includes = [mozpath.join(script_dir, 'gyp_includes',
+                                     'common.gypi')]
             finder = FileFinder(chrome_src)
-            includes.extend(encode(mozpath.join(chrome_src, name))
+            includes.extend(mozpath.join(chrome_src, name)
                             for name, _ in finder.find('*/supplement.gypi'))
 
-        str_vars = dict((name, encode(value)) for name, value in
-                        gyp_dir_attrs.variables.items())
-        self._gyp_loader_future = executor.submit(load_gyp, [path], b'mozbuild',
+        str_vars = dict(gyp_dir_attrs.variables)
+        self._gyp_loader_future = executor.submit(load_gyp, [path], 'mozbuild',
                                                   str_vars, includes,
-                                                  encode(depth), params)
+                                                  depth, params)
 
     @property
     def results(self):

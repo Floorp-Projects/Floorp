@@ -2,12 +2,13 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import, unicode_literals
+from __future__ import absolute_import, print_function, unicode_literals
 
 from collections import OrderedDict
 from itertools import groupby
 from operator import itemgetter
 from os.path import dirname
+import six
 
 WHITESPACE_CHARACTERS = ' \t'
 
@@ -36,7 +37,7 @@ def dependency_map(lines):
     deps = {}
 
     for i, (indent, target) in enumerate(pairs):
-        if not deps.has_key(target):
+        if target not in deps:
             deps[target] = []
 
         for j in range(i+1, len(pairs)):
@@ -114,7 +115,7 @@ def add_extra_dependencies(target_pairs, dependency_map):
                 make_dirs[make_dir] = True
 
     all_components = []
-    for make_dir in make_dirs.iterkeys():
+    for make_dir in six.iterkeys(make_dirs):
         all_components.extend(get_components(make_dir))
 
     for i in all_dependencies(*all_components, dependency_map=dependency_map):

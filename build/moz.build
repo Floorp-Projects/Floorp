@@ -88,7 +88,7 @@ if CONFIG['MOZ_APP_BASENAME']:
         entry_point='generate',
         inputs=['application.ini.in'],
         flags=['-D%s=%s' % (k, '1' if v is True else v)
-               for k, v in appini_defines.iteritems()])
+               for k, v in appini_defines.items()])
     
     FINAL_TARGET_FILES += ['!application.ini']
     if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'android' and CONFIG['MOZ_UPDATER']:

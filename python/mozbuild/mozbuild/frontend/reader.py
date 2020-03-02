@@ -1151,7 +1151,7 @@ class BuildReader(object):
                                                  context)
                 non_unified_sources.add(source)
             action_overrides = {}
-            for action, script in gyp_dir.action_overrides.iteritems():
+            for action, script in six.iteritems(gyp_dir.action_overrides):
                 action_overrides[action] = SourcePath(context, script)
 
             gyp_processor = GypProcessor(context.config,
