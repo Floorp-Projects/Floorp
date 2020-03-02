@@ -37,7 +37,7 @@ add_task(async function() {
   await addTab(
     "data:text/html;charset=utf-8," + "inplace editor parentheses autoclose"
   );
-  const [host, , doc] = await createHost();
+  const { host, doc } = await createHost();
 
   const popup = new AutocompletePopup(doc, { autoSelect: true });
   await new Promise(resolve => {

@@ -17,7 +17,7 @@ add_task(async function() {
   });
 
   await addTab("about:blank");
-  const [host, , doc] = await createHost("bottom", TEST_URI);
+  const { host, doc } = await createHost("bottom", TEST_URI);
 
   // Creating a host is not correctly waiting when DevTools run in content frame
   // See Bug 1571421.

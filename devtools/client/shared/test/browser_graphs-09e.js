@@ -58,7 +58,7 @@ add_task(async function() {
 });
 
 async function performTest() {
-  const [host, , doc] = await createHost();
+  const { host, doc } = await createHost();
   const graph = new LineGraphWidget(doc.body, "fps");
 
   await testGraph(graph);

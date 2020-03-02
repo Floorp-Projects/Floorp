@@ -26,7 +26,7 @@ function verifyURL(string) {
 }
 
 add_task(async function() {
-  const [, , doc] = await createHost("bottom", TEST_URI);
+  const { doc } = await createHost("bottom", TEST_URI);
 
   const container = doc.querySelector("#filter-container");
   const widget = new CSSFilterEditorWidget(container, "none");

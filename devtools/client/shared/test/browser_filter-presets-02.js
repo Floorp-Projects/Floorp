@@ -12,7 +12,7 @@ const {
 const TEST_URI = CHROME_URL_ROOT + "doc_filter-editor-01.html";
 
 add_task(async function() {
-  const [, , doc] = await createHost("bottom", TEST_URI);
+  const { doc } = await createHost("bottom", TEST_URI);
 
   const container = doc.querySelector("#filter-container");
   const widget = new CSSFilterEditorWidget(container, "none");

@@ -25,7 +25,7 @@ add_task(async function() {
   await pushPref("devtools.toolbox.footer.height", 400);
 
   await addTab("about:blank");
-  const [, , doc] = await createHost("bottom", TEST_URI);
+  const { doc } = await createHost("bottom", TEST_URI);
 
   const tooltip = new HTMLTooltip(doc, { useXulWrapper: false });
   info("Set tooltip content 50px tall, but request a container 200px tall");

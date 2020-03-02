@@ -11,7 +11,7 @@ const { TableWidget } = require("devtools/client/shared/widgets/TableWidget");
 
 add_task(async function() {
   await addTab("about:blank");
-  const [host, , doc] = await createHost("bottom", TEST_URI);
+  const { host, doc } = await createHost("bottom", TEST_URI);
 
   const table = new TableWidget(doc.querySelector("box"), {
     initialColumns: {

@@ -22,7 +22,7 @@ add_task(async function() {
 });
 
 async function performTest() {
-  const [host, , doc] = await createHost();
+  const { host, doc } = await createHost();
   const graph = new FlameGraph(doc.body, 1);
   await graph.ready();
 

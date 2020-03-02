@@ -25,7 +25,7 @@ function getTooltipContent(doc) {
 }
 
 add_task(async function() {
-  const [host, , doc] = await createHost("window", TEST_URI);
+  const { host, doc } = await createHost("window", TEST_URI);
 
   // Creating a window host is not correctly waiting when DevTools run in content frame
   // See Bug 1571421.

@@ -25,7 +25,7 @@ add_task(async function() {
   // Force the toolbox to be 200px high;
   await pushPref("devtools.toolbox.footer.height", 200);
 
-  const [, win, doc] = await createHost("bottom", TEST_URI);
+  const { win, doc } = await createHost("bottom", TEST_URI);
 
   const originalTop = win.screenTop;
   const originalLeft = win.screenLeft;

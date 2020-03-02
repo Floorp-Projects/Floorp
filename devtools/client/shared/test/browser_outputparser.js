@@ -24,7 +24,7 @@ async function performTest() {
 
   const OutputParser = require("devtools/client/shared/output-parser");
 
-  const [host, , doc] = await createHost(
+  const { host, doc } = await createHost(
     "bottom",
     "data:text/html," + "<h1>browser_outputParser.js</h1><div></div>"
   );
