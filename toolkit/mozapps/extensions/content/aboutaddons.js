@@ -1281,6 +1281,7 @@ class AddonPageHeader extends HTMLElement {
       );
     }
     this.addEventListener("click", this);
+    this.addEventListener("mousedown", this);
     // Use capture since the event is actually triggered on the internal
     // panel-list and it doesn't bubble.
     this.pageOptionsMenu.addEventListener("shown", this, true);
@@ -1289,6 +1290,7 @@ class AddonPageHeader extends HTMLElement {
 
   disconnectedCallback() {
     this.removeEventListener("click", this);
+    this.removeEventListener("mousedown", this);
     this.pageOptionsMenu.removeEventListener("shown", this, true);
     this.pageOptionsMenu.removeEventListener("hidden", this, true);
   }
@@ -1319,17 +1321,24 @@ class AddonPageHeader extends HTMLElement {
   }
 
   handleEvent(e) {
+    let { backButton, pageOptionsMenu, pageOptionsMenuButton } = this;
     if (e.type === "click") {
-      let action = e.target.getAttribute("action");
-      switch (action) {
-        case "go-back":
+      switch (e.target) {
+        case backButton:
           window.history.back();
           break;
-        case "page-options":
-          this.pageOptionsMenu.toggle(e);
+        case pageOptionsMenuButton:
+          if (e.mozInputSource == MouseEvent.MOZ_SOURCE_KEYBOARD) {
+            this.pageOptionsMenu.toggle(e);
+          }
           break;
       }
-    } else if (e.type == "shown" || e.type == "hidden") {
+    } else if (e.type == "mousedown" && e.target == pageOptionsMenuButton) {
+      this.pageOptionsMenu.toggle(e);
+    } else if (
+      e.target == pageOptionsMenu.panel &&
+      (e.type == "shown" || e.type == "hidden")
+    ) {
       this.pageOptionsMenuButton.setAttribute(
         "aria-expanded",
         this.pageOptionsMenu.open
