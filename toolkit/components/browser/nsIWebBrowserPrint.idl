@@ -46,13 +46,6 @@ interface nsIWebBrowserPrint : nsISupports
   readonly attribute nsIPrintSettings currentPrintSettings;
 
   /**
-   * The "name" of the document that is to be printed.  This is the document's
-   * title, unless that's empty, in which case it is a sanitized version of the
-   * document's URL.
-   */
-  readonly attribute AString documentName;
-
-  /**
    * Returns whether it is in Print mode
    */
   readonly attribute boolean doingPrint;
