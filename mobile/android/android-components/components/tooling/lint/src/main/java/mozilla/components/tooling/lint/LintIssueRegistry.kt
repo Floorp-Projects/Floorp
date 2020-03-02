@@ -16,6 +16,7 @@ class LintIssueRegistry : IssueRegistry() {
     override val issues: List<Issue> = listOf(
         LintLogChecks.ISSUE_LOG_USAGE,
         AndroidSrcXmlDetector.ISSUE_XML_SRC_USAGE,
-        TextViewAndroidSrcXmlDetector.ISSUE_XML_SRC_USAGE
+        TextViewAndroidSrcXmlDetector.ISSUE_XML_SRC_USAGE,
+        ImageViewAndroidTintXmlDetector.ISSUE_XML_SRC_USAGE
     )
 }
