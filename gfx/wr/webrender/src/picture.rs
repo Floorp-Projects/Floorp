@@ -114,7 +114,7 @@ use crate::intern::ItemUid;
 use crate::internal_types::{FastHashMap, FastHashSet, PlaneSplitter, Filter, PlaneSplitAnchor, TextureSource};
 use crate::frame_builder::{FrameBuildingContext, FrameBuildingState, PictureState, PictureContext};
 use crate::gpu_cache::{GpuCache, GpuCacheAddress, GpuCacheHandle};
-use crate::gpu_types::UvRectKind;
+use crate::gpu_types::{UvRectKind, ZBufferId};
 use plane_split::{Clipper, Polygon, Splitter};
 use crate::prim_store::{SpaceMapper, PrimitiveVisibilityMask, PointKey, PrimitiveTemplateKind};
 use crate::prim_store::{SpaceSnapper, PictureIndex, PrimitiveInstance, PrimitiveInstanceKind};
@@ -495,6 +495,16 @@ struct TilePostUpdateContext<'a> {
 
     /// A list of the external surfaces that are present on this slice
     external_surfaces: &'a [ExternalSurfaceDescriptor],
+
+    /// Pre-allocated z-id to assign to opaque tiles during post_update. We
+    /// use a different z-id for opaque/alpha tiles, so that compositor
+    /// surfaces (such as videos) can have a z-id between these values,
+    /// which allows compositor surfaces to occlude opaque tiles, but not
+    /// alpha tiles.
+    z_id_opaque: ZBufferId,
+
+    /// Pre-allocated z-id to assign to alpha tiles during post_update
+    z_id_alpha: ZBufferId,
 }
 
 // Mutable state passed to picture cache tiles during post_update
@@ -856,6 +866,14 @@ pub struct Tile {
     invalidation_reason: Option<InvalidationReason>,
     /// If true, this tile has one or more compositor surfaces affecting it.
     pub has_compositor_surface: bool,
+    /// The local space valid rect for any primitives found prior to the first compositor
+    /// surface that affects this tile.
+    bg_local_valid_rect: PictureRect,
+    /// The local space valid rect for any primitives found after the first compositor
+    /// surface that affects this tile.
+    fg_local_valid_rect: PictureRect,
+    /// z-buffer id for this tile, which is one of z_id_opaque or z_id_alpha, depending on tile opacity
+    pub z_id: ZBufferId,
 }
 
 impl Tile {
@@ -882,6 +900,9 @@ impl Tile {
             background_color: None,
             invalidation_reason: None,
             has_compositor_surface: false,
+            bg_local_valid_rect: PictureRect::zero(),
+            fg_local_valid_rect: PictureRect::zero(),
+            z_id: ZBufferId::invalid(),
         }
     }
 
@@ -999,6 +1020,8 @@ impl Tile {
             ),
             ctx.tile_size,
         );
+        self.bg_local_valid_rect = PictureRect::zero();
+        self.fg_local_valid_rect = PictureRect::zero();
         self.invalidation_reason  = None;
         self.has_compositor_surface = false;
 
@@ -1063,8 +1086,17 @@ impl Tile {
             // Incorporate the bounding rect of the primitive in the local valid rect
             // for this tile. This is used to minimize the size of the scissor rect
             // during rasterization and the draw rect during composition of partial tiles.
-            self.current_descriptor.local_valid_rect =
-                self.current_descriptor.local_valid_rect.union(&info.prim_clip_rect);
+
+            // Once we have encountered 1+ compositor surfaces affecting this tile, include
+            // this bounding rect in the foreground. Otherwise, include in the background rect.
+            // This allows us to determine if we found any primitives that are on top of the
+            // compositor surface(s) for this tile. If so, we need to draw the tile with alpha
+            // blending as an overlay.
+            if self.has_compositor_surface {
+                self.fg_local_valid_rect = self.fg_local_valid_rect.union(&info.prim_clip_rect);
+            } else {
+                self.bg_local_valid_rect = self.bg_local_valid_rect.union(&info.prim_clip_rect);
+            }
         }
 
         // Include any image keys this tile depends on.
@@ -1159,6 +1191,11 @@ impl Tile {
             return false;
         }
 
+        // Calculate the overall valid rect for this tile, including both the foreground
+        // and background local valid rects.
+        self.current_descriptor.local_valid_rect =
+            self.bg_local_valid_rect.union(&self.fg_local_valid_rect);
+
         // TODO(gw): In theory, the local tile rect should always have an
         //           intersection with the overall picture rect. In practice,
         //           due to some accuracy issues with how fract_offset (and
@@ -1216,17 +1253,27 @@ impl Tile {
         let mut is_opaque = ctx.backdrop.rect.contains_rect(&clipped_rect);
 
         if self.has_compositor_surface {
-            // TODO(gw): This will almost always select over blend, due to the
-            //           background rectangle. In future, we can optimize this
-            //           case to only check items that come _after_ the compositor
-            //           surface z_id? A better option might be to tweak the z_id
-            //           values so that the alpha pixels get z-rejected?
+            // If we found primitive(s) that are ordered _after_ the first compositor
+            // surface, _and_ intersect with any compositor surface, then we will need
+            // to draw this tile with alpha blending, as an overlay to the compositor surface.
+            let fg_world_valid_rect = ctx.pic_to_world_mapper
+                .map(&self.fg_local_valid_rect)
+                .expect("bug: map fg local valid rect");
+            let fg_device_valid_rect = fg_world_valid_rect * ctx.global_device_pixel_scale;
+
             for surface in ctx.external_surfaces {
-                if surface.device_rect.intersects(&self.device_valid_rect) {
+                if surface.device_rect.intersects(&fg_device_valid_rect) {
                     is_opaque = false;
                     break;
                 }
             }
+        }
+
+        // Set the correct z_id for this tile based on opacity
+        if is_opaque {
+            self.z_id = ctx.z_id_opaque;
+        } else {
+            self.z_id = ctx.z_id_alpha;
         }
 
         if is_opaque != self.is_opaque {
@@ -2188,6 +2235,8 @@ pub struct TileCacheInstance {
     /// List of external surfaces that have been promoted from primitives
     /// in this tile cache.
     pub external_surfaces: Vec<ExternalSurfaceDescriptor>,
+    /// z-buffer ID assigned to opaque tiles in this slice
+    pub z_id_opaque: ZBufferId,
 }
 
 impl TileCacheInstance {
@@ -2241,6 +2290,7 @@ impl TileCacheInstance {
             device_position: DevicePoint::zero(),
             tile_size_override: None,
             external_surfaces: Vec::new(),
+            z_id_opaque: ZBufferId::invalid(),
         }
     }
 
@@ -2291,6 +2341,11 @@ impl TileCacheInstance {
         self.surface_index = surface_index;
         self.local_rect = pic_rect;
         self.local_clip_rect = PictureRect::max_rect();
+
+        // Opaque surfaces get the first z_id. Compositor surfaces then get
+        // allocated a z_id each. After all compositor surfaces are added,
+        // then we allocate a z_id for alpha tiles.
+        self.z_id_opaque = frame_state.composite_state.z_generator.next();
 
         // Reset the opaque rect + subpixel mode, as they are calculated
         // during the prim dependency checks.
@@ -2671,7 +2726,7 @@ impl TileCacheInstance {
         color_bindings: &ColorBindingStorage,
         image_instances: &ImageInstanceStorage,
         surface_stack: &[SurfaceIndex],
-        composite_state: &CompositeState,
+        composite_state: &mut CompositeState,
     ) -> bool {
         // This primitive exists on the last element on the current surface stack.
         let prim_surface_index = *surface_stack.last().unwrap();
@@ -2945,8 +3000,10 @@ impl TileCacheInstance {
                         let device_rect = (world_rect * frame_context.global_device_pixel_scale).round();
                         let clip_rect = (world_clip_rect * frame_context.global_device_pixel_scale).round();
 
+                        // Each compositor surface allocates a unique z-id
                         self.external_surfaces.push(ExternalSurfaceDescriptor {
                             local_rect: prim_info.prim_clip_rect,
+                            world_rect,
                             image_keys: prim_data.kind.yuv_key,
                             image_rendering: prim_data.kind.image_rendering,
                             device_rect,
@@ -2954,6 +3011,7 @@ impl TileCacheInstance {
                             yuv_color_space: prim_data.kind.color_space,
                             yuv_format: prim_data.kind.format,
                             yuv_rescale: prim_data.kind.color_depth.rescaling_factor(),
+                            z_id: composite_state.z_generator.next(),
                         });
                     }
                 } else {
@@ -3160,11 +3218,24 @@ impl TileCacheInstance {
                     .map(&backdrop_rect)
                     .expect("bug: unable to map backdrop to world space");
 
+                // Since we register the entire backdrop rect, use the opaque z-id for the
+                // picture cache slice.
                 frame_state.composite_state.register_occluder(
-                    self.slice,
+                    self.z_id_opaque,
                     world_backdrop_rect,
                 );
             }
+        }
+
+        // Register any external compositor surfaces as potential occluders. This
+        // is especially useful when viewing video in full-screen mode, as it is
+        // able to occlude every background tile (avoiding allocation, rasterizion
+        // and compositing).
+        for external_surface in &self.external_surfaces {
+            frame_state.composite_state.register_occluder(
+                external_surface.z_id,
+                external_surface.world_rect,
+            );
         }
 
         // Detect if the picture cache was scrolled or scaled. In this case,
@@ -3224,6 +3295,9 @@ impl TileCacheInstance {
             frame_context.spatial_tree,
         );
 
+        // All compositor surfaces have allocated a z_id, so reserve a z_id for alpha tiles.
+        let z_id_alpha = frame_state.composite_state.z_generator.next();
+
         let ctx = TilePostUpdateContext {
             pic_to_world_mapper,
             global_device_pixel_scale: frame_context.global_device_pixel_scale,
@@ -3235,6 +3309,8 @@ impl TileCacheInstance {
             current_tile_size: self.current_tile_size,
             local_rect: self.local_rect,
             external_surfaces: &self.external_surfaces,
+            z_id_opaque: self.z_id_opaque,
+            z_id_alpha,
         };
 
         let mut state = TilePostUpdateState {
@@ -4538,7 +4614,7 @@ impl PicturePrimitive {
                             // then mark it as not visible and skip drawing. When it's not occluded
                             // it will fail this test, and get rasterized by the render task setup
                             // code below.
-                            if frame_state.composite_state.is_tile_occluded(tile_cache.slice, device_draw_rect) {
+                            if frame_state.composite_state.is_tile_occluded(tile.z_id, device_draw_rect) {
                                 // If this tile has an allocated native surface, free it, since it's completely
                                 // occluded. We will need to re-allocate this surface if it becomes visible,
                                 // but that's likely to be rare (e.g. when there is no content display list

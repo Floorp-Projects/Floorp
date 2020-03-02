@@ -2174,7 +2174,7 @@ impl PrimitiveStore {
                             &self.color_bindings,
                             &self.images,
                             &frame_state.surface_stack,
-                            &frame_state.composite_state,
+                            &mut frame_state.composite_state,
                         ) {
                             prim_instance.visibility_info = PrimitiveVisibilityIndex::INVALID;
                             // Ensure the primitive clip is popped - perhaps we can use
