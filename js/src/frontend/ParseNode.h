@@ -1555,26 +1555,15 @@ class NumericLiteral : public ParseNode {
 };
 
 class BigIntLiteral : public ParseNode {
-  // BigIntLiterals hold onto a CompilationInfo reference to avoid
-  // having to plumb CompilationInfo through FoldConstants.
-  struct Deferred {
-    CompilationInfo& compilationInfo;
-    BigIntIndex index;
-  };
-  mozilla::Variant<Deferred, BigIntBox*> data_;
-
-  BigIntBox* box() const { return data_.as<BigIntBox*>(); }
+  CompilationInfo& compilationInfo_;
+  BigIntIndex index_;
 
  public:
-  BigIntLiteral(BigIntBox* bibox, const TokenPos& pos)
-      : ParseNode(ParseNodeKind::BigIntExpr, pos), data_(bibox) {}
-
-  explicit BigIntLiteral(BigIntIndex index, CompilationInfo& compilationInfo,
-                         const TokenPos& pos)
+  BigIntLiteral(BigIntIndex index, CompilationInfo& compilationInfo,
+                const TokenPos& pos)
       : ParseNode(ParseNodeKind::BigIntExpr, pos),
-        data_(Deferred{compilationInfo, index}) {}
-
-  bool isDeferred() { return data_.is<Deferred>(); }
+        compilationInfo_(compilationInfo),
+        index_(index) {}
 
   static bool test(const ParseNode& node) {
     return node.isKind(ParseNodeKind::BigIntExpr);
@@ -1591,11 +1580,7 @@ class BigIntLiteral : public ParseNode {
   void dumpImpl(GenericPrinter& out, int indent);
 #endif
 
-  BigIntIndex index() { return data_.as<Deferred>().index; }
-
-  // Get the contained BigInt value: Assumes it was created with one,
-  // and cannot be used when deferred allocation mode is enabled.
-  BigInt* value();
+  BigIntIndex index() { return index_; }
 
   // Get the contained BigIntValue, or parse it from the creation data
   // Can be used when deferred allocation mode is enabled.
