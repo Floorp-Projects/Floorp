@@ -1721,6 +1721,7 @@ class Extension extends ExtensionData {
       this.policy.allowedOrigins = this.whiteListedHosts;
 
       this.cachePermissions();
+      this.updatePermissions();
     });
 
     this.on("remove-permissions", (ignoreEvent, permissions) => {
@@ -1742,6 +1743,7 @@ class Extension extends ExtensionData {
       this.policy.allowedOrigins = this.whiteListedHosts;
 
       this.cachePermissions();
+      this.updatePermissions();
     });
     /* eslint-enable mozilla/balanced-listeners */
   }
@@ -2113,6 +2115,13 @@ class Extension extends ExtensionData {
     return super.initLocale(locale);
   }
 
+  /**
+   * Update site permissions as necessary.
+   *
+   * @param {string|undefined} reason
+   *        If provided, this is a BOOTSTRAP_REASON string.  If reason is undefined,
+   *        addon permissions are being added or removed that may effect the site permissions.
+   */
   updatePermissions(reason) {
     const { principal } = this;
 

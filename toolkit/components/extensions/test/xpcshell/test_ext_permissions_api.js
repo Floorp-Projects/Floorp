@@ -70,3 +70,55 @@ add_task(async function test_api_on_permissions_changed() {
   });
   await extension.unload();
 });
+
+add_task(async function test_geo_permissions() {
+  async function background() {
+    const permObj = { permissions: ["geolocation"] };
+    browser.test.onMessage.addListener(async msg => {
+      if (msg === "request") {
+        await browser.permissions.request(permObj);
+      } else if (msg === "remove") {
+        await browser.permissions.remove(permObj);
+      }
+      let result = await browser.permissions.contains(permObj);
+      browser.test.sendMessage("done", result);
+    });
+  }
+
+  let extension = ExtensionTestUtils.loadExtension({
+    background,
+    manifest: {
+      optional_permissions: ["geolocation"],
+    },
+    useAddonManager: "permanent",
+  });
+  await extension.startup();
+
+  let policy = WebExtensionPolicy.getByID(extension.id);
+  let principal = policy.extension.principal;
+  equal(
+    Services.perms.testPermissionFromPrincipal(principal, "geo"),
+    Services.perms.UNKNOWN_ACTION,
+    "geolocation not allowed on install"
+  );
+
+  await withHandlingUserInput(extension, async () => {
+    extension.sendMessage("request");
+    ok(await extension.awaitMessage("done"), "permission granted");
+    equal(
+      Services.perms.testPermissionFromPrincipal(principal, "geo"),
+      Services.perms.ALLOW_ACTION,
+      "geolocation allowed after requested"
+    );
+
+    extension.sendMessage("remove");
+    ok(!(await extension.awaitMessage("done")), "permission revoked");
+
+    equal(
+      Services.perms.testPermissionFromPrincipal(principal, "geo"),
+      Services.perms.UNKNOWN_ACTION,
+      "geolocation not allowed after removed"
+    );
+  });
+  await extension.unload();
+});
