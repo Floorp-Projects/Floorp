@@ -1428,13 +1428,15 @@ WSRunScanner::WSPoint WSRunScanner::GetNextCharPoint(
     const EditorDOMPointBase<PT, CT>& aPoint) const {
   MOZ_ASSERT(aPoint.IsSetAndValid());
 
-  int32_t idx = mNodeArray.IndexOf(aPoint.GetContainer());
-  if (idx == -1) {
+  size_t index = aPoint.IsInTextNode()
+                     ? mNodeArray.IndexOf(aPoint.GetContainer())
+                     : decltype(mNodeArray)::NoIndex;
+  if (index == decltype(mNodeArray)::NoIndex) {
     // Use range comparisons to get next text node which is in mNodeArray.
-    return GetNextCharPointInternal(aPoint);
+    return LookForNextCharPointWithinAllTextNodes(aPoint);
   }
   // Use WSPoint version of GetNextCharPoint()
-  return GetNextCharPoint(WSPoint(mNodeArray[idx], aPoint.Offset(), 0));
+  return GetNextCharPoint(WSPoint(mNodeArray[index], aPoint.Offset(), 0));
 }
 
 template <typename PT, typename CT>
@@ -1442,13 +1444,15 @@ WSRunScanner::WSPoint WSRunScanner::GetPreviousCharPoint(
     const EditorDOMPointBase<PT, CT>& aPoint) const {
   MOZ_ASSERT(aPoint.IsSetAndValid());
 
-  int32_t idx = mNodeArray.IndexOf(aPoint.GetContainer());
-  if (idx == -1) {
+  size_t index = aPoint.IsInTextNode()
+                     ? mNodeArray.IndexOf(aPoint.GetContainer())
+                     : decltype(mNodeArray)::NoIndex;
+  if (index == decltype(mNodeArray)::NoIndex) {
     // Use range comparisons to get previous text node which is in mNodeArray.
-    return GetPreviousCharPointInternal(aPoint);
+    return LookForPreviousCharPointWithinAllTextNodes(aPoint);
   }
   // Use WSPoint version of GetPreviousCharPoint()
-  return GetPreviousCharPoint(WSPoint(mNodeArray[idx], aPoint.Offset(), 0));
+  return GetPreviousCharPoint(WSPoint(mNodeArray[index], aPoint.Offset(), 0));
 }
 
 WSRunScanner::WSPoint WSRunScanner::GetNextCharPoint(
@@ -1682,7 +1686,7 @@ char16_t WSRunScanner::GetCharAt(Text* aTextNode, int32_t aOffset) const {
 }
 
 template <typename PT, typename CT>
-WSRunScanner::WSPoint WSRunScanner::GetNextCharPointInternal(
+WSRunScanner::WSPoint WSRunScanner::LookForNextCharPointWithinAllTextNodes(
     const EditorDOMPointBase<PT, CT>& aPoint) const {
   // Note: only to be called if aPoint.GetContainer() is not a ws node.
 
@@ -1732,7 +1736,7 @@ WSRunScanner::WSPoint WSRunScanner::GetNextCharPointInternal(
 }
 
 template <typename PT, typename CT>
-WSRunScanner::WSPoint WSRunScanner::GetPreviousCharPointInternal(
+WSRunScanner::WSPoint WSRunScanner::LookForPreviousCharPointWithinAllTextNodes(
     const EditorDOMPointBase<PT, CT>& aPoint) const {
   // Note: only to be called if aNode is not a ws node.
 

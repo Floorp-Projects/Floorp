@@ -531,19 +531,19 @@ class MOZ_STACK_CLASS WSRunScanner {
   WSPoint GetNextCharPoint(const WSPoint& aPoint) const;
 
   /**
-   * GetNextCharPointInternal() and GetPreviousCharPointInternal() are
-   * helper methods of GetNextCharPoint(const EditorRawDOMPoint&) and
-   * GetPreviousCharPoint(const EditorRawDOMPoint&).  When the container
-   * isn't in mNodeArray, they call one of these methods.  Then, these
-   * methods look for nearest text node in mNodeArray from aPoint.
-   * Then, will call GetNextCharPoint(const WSPoint&) or
+   * LookForNextCharPointWithinAllTextNodes() and
+   * LookForPreviousCharPointWithinAllTextNodes() are helper methods of
+   * GetNextCharPoint(const EditorRawDOMPoint&) and GetPreviousCharPoint(const
+   * EditorRawDOMPoint&).  When the container isn't in mNodeArray, they call one
+   * of these methods.  Then, these methods look for nearest text node in
+   * mNodeArray from aPoint. Then, will call GetNextCharPoint(const WSPoint&) or
    * GetPreviousCharPoint(const WSPoint&) and returns its result.
    */
   template <typename PT, typename CT>
-  WSPoint GetNextCharPointInternal(
+  WSPoint LookForNextCharPointWithinAllTextNodes(
       const EditorDOMPointBase<PT, CT>& aPoint) const;
   template <typename PT, typename CT>
-  WSPoint GetPreviousCharPointInternal(
+  WSPoint LookForPreviousCharPointWithinAllTextNodes(
       const EditorDOMPointBase<PT, CT>& aPoint) const;
 
   nsresult GetWSNodes();
