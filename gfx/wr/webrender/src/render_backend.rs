@@ -27,7 +27,7 @@ use crate::debug_server;
 use crate::frame_builder::{FrameBuilder, FrameBuilderConfig};
 use crate::glyph_rasterizer::{FontInstance};
 use crate::gpu_cache::GpuCache;
-use crate::hit_test::{HitTest, HitTester};
+use crate::hit_test::{HitTest, HitTester, SharedHitTester};
 use crate::intern::DataStore;
 use crate::internal_types::{DebugOutput, FastHashMap, FastHashSet, RenderedDocument, ResultMsg};
 use malloc_size_of::{MallocSizeOf, MallocSizeOfOps};
@@ -359,7 +359,10 @@ struct Document {
 
     /// A data structure to allow hit testing against rendered frames. This is updated
     /// every time we produce a fully rendered frame.
-    hit_tester: Option<HitTester>,
+    hit_tester: Option<Arc<HitTester>>,
+    /// To avoid synchronous messaging we update a shared hit-tester that other threads
+    /// can query.
+    shared_hit_tester: Arc<SharedHitTester>,
 
     /// Properties that are resolved during frame building and can be changed at any time
     /// without requiring the scene to be re-built.
@@ -415,6 +418,7 @@ impl Document {
             frame_builder: FrameBuilder::new(),
             output_pipelines: FastHashSet::default(),
             hit_tester: None,
+            shared_hit_tester: Arc::new(SharedHitTester::new()),
             dynamic_properties: SceneProperties::new(),
             frame_is_valid: false,
             hit_tester_is_valid: false,
@@ -486,6 +490,9 @@ impl Document {
                 };
 
                 tx.send(result).unwrap();
+            }
+            FrameMsg::RequestHitTester(tx) => {
+                tx.send(self.shared_hit_tester.clone()).unwrap();
             }
             FrameMsg::SetPan(pan) => {
                 if self.view.pan != pan {
@@ -573,7 +580,11 @@ impl Document {
                 debug_flags,
                 tile_cache_logger,
             );
-            self.hit_tester = Some(self.scene.create_hit_tester(&self.data_stores.clip));
+
+            let hit_tester = Arc::new(self.scene.create_hit_tester(&self.data_stores.clip));
+            self.hit_tester = Some(Arc::clone(&hit_tester));
+            self.shared_hit_tester.update(hit_tester);
+
             frame
         };
 
@@ -593,13 +604,15 @@ impl Document {
         let accumulated_scale_factor = self.view.accumulated_scale_factor();
         let pan = self.view.pan.to_f32() / accumulated_scale_factor;
 
-            self.scene.spatial_tree.update_tree(
-                pan,
-                accumulated_scale_factor,
-                &self.dynamic_properties,
-            );
+        self.scene.spatial_tree.update_tree(
+            pan,
+            accumulated_scale_factor,
+            &self.dynamic_properties,
+        );
 
-        self.hit_tester = Some(self.scene.create_hit_tester(&self.data_stores.clip));
+        let hit_tester = Arc::new(self.scene.create_hit_tester(&self.data_stores.clip));
+        self.hit_tester = Some(Arc::clone(&hit_tester));
+        self.shared_hit_tester.update(hit_tester);
         self.hit_tester_is_valid = true;
     }
 
@@ -926,6 +939,25 @@ impl RenderBackend {
                                     );
                                 }
 
+                                // If there are any additions or removals of clip modes
+                                // during the scene build, apply them to the data store now.
+                                // This needs to happen before we build the hit tester.
+                                if let Some(updates) = txn.interner_updates.take() {
+                                    #[cfg(feature = "capture")]
+                                    {
+                                        if self.debug_flags.contains(DebugFlags::TILE_CACHE_LOGGING_DBG) {
+                                            self.tile_cache_logger.serialize_updates(&updates);
+                                        }
+                                    }
+                                    doc.data_stores.apply_updates(updates, &mut profile_counters);
+                                }
+
+
+                                // Build the hit tester while the APZ lock is held so that its content
+                                // is in sync with the gecko APZ tree.
+                                if !doc.hit_tester_is_valid {
+                                    doc.rebuild_hit_tester();
+                                }
                                 if let Some(ref tx) = result_tx {
                                     let (resume_tx, resume_rx) = channel();
                                     tx.send(SceneSwapResult::Complete(resume_tx)).unwrap();
@@ -956,7 +988,6 @@ impl RenderBackend {
                             self.update_document(
                                 txn.document_id,
                                 txn.resource_updates.take(),
-                                txn.interner_updates.take(),
                                 txn.frame_ops.take(),
                                 txn.notifications.take(),
                                 txn.render_frame,
@@ -1418,7 +1449,6 @@ impl RenderBackend {
                 self.update_document(
                     txn.document_id,
                     txn.resource_updates.take(),
-                    None,
                     txn.frame_ops.take(),
                     txn.notifications.take(),
                     txn.render_frame,
@@ -1462,7 +1492,6 @@ impl RenderBackend {
                 self.update_document(
                     document_id,
                     Vec::default(),
-                    None,
                     Vec::default(),
                     Vec::default(),
                     false,
@@ -1478,7 +1507,6 @@ impl RenderBackend {
         &mut self,
         document_id: DocumentId,
         resource_updates: Vec<ResourceUpdate>,
-        interner_updates: Option<InternerUpdates>,
         mut frame_ops: Vec<FrameMsg>,
         mut notifications: Vec<NotificationRequest>,
         mut render_frame: bool,
@@ -1503,18 +1531,6 @@ impl RenderBackend {
         let requires_frame_build = self.requires_frame_build();
         let doc = self.documents.get_mut(&document_id).unwrap();
         doc.has_built_scene |= has_built_scene;
-
-        // If there are any additions or removals of clip modes
-        // during the scene build, apply them to the data store now.
-        if let Some(updates) = interner_updates {
-            #[cfg(feature = "capture")]
-            {
-                if self.debug_flags.contains(DebugFlags::TILE_CACHE_LOGGING_DBG) {
-                    self.tile_cache_logger.serialize_updates(&updates);
-                }
-            }
-            doc.data_stores.apply_updates(updates, profile_counters);
-        }
 
         // TODO: this scroll variable doesn't necessarily mean we scrolled. It is only used
         // for something wrench specific and we should remove it.
@@ -1698,7 +1714,10 @@ impl RenderBackend {
         report.gpu_cache_metadata = self.gpu_cache.size_of(ops);
         for doc in self.documents.values() {
             report.clip_stores += doc.scene.clip_store.size_of(ops);
-            report.hit_testers += doc.hit_tester.size_of(ops);
+            report.hit_testers += match &doc.hit_tester {
+                Some(hit_tester) => hit_tester.size_of(ops),
+                None => 0,
+            };
 
             doc.data_stores.report_memory(ops, &mut report)
         }
@@ -1910,6 +1929,7 @@ impl RenderBackend {
                 output_pipelines: FastHashSet::default(),
                 dynamic_properties: SceneProperties::new(),
                 hit_tester: None,
+                shared_hit_tester: Arc::new(SharedHitTester::new()),
                 frame_is_valid: false,
                 hit_tester_is_valid: false,
                 rendered_frame_is_valid: false,

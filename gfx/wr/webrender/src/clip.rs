@@ -753,7 +753,7 @@ impl ClipStore {
         spatial_node_index: SpatialNodeIndex,
         clip_chains: &[ClipChainId],
         spatial_tree: &SpatialTree,
-        clip_data_store: &mut ClipDataStore,
+        clip_data_store: &ClipDataStore,
     ) {
         self.active_clip_node_info.clear();
         self.active_local_clip_rect = None;

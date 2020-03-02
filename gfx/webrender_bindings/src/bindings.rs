@@ -972,6 +972,65 @@ impl AsyncPropertySampler for SamplerCallback {
     }
 }
 
+// cbindgen's parser currently does not handle the dyn keyword.
+// We work around it by wrapping the referece counted pointer into
+// a struct and boxing it.
+//
+// See https://github.com/eqrion/cbindgen/issues/385
+//
+// Once this is fixed we should be able to pass `*mut dyn ApiHitTester`
+// and avoid the extra indirection.
+pub struct WrHitTester {
+    ptr: Arc<dyn ApiHitTester>,
+}
+
+#[no_mangle]
+pub extern "C" fn wr_api_request_hit_tester(
+    dh: &DocumentHandle,
+) -> *mut WrHitTester {
+    let hit_tester = dh.api.request_hit_tester(dh.document_id);
+    Box::into_raw(Box::new(WrHitTester { ptr: hit_tester }))
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn wr_hit_tester_clone(hit_tester: *mut WrHitTester) -> *mut WrHitTester {
+    let new_ref = Arc::clone(&(*hit_tester).ptr);
+    Box::into_raw(Box::new(WrHitTester { ptr: new_ref }))
+}
+
+
+#[no_mangle]
+pub extern "C" fn wr_hit_tester_hit_test(
+    hit_tester: &WrHitTester,
+    point: WorldPoint,
+    out_pipeline_id: &mut WrPipelineId,
+    out_scroll_id: &mut u64,
+    out_hit_info: &mut u16
+) -> bool {
+    let result = hit_tester.ptr.hit_test(
+        None,
+        point,
+        HitTestFlags::empty()
+    );
+
+    for item in &result.items {
+        // For now we should never be getting results back for which the tag is
+        // 0 (== CompositorHitTestInvisibleToHit). In the future if we allow this,
+        // we'll want to |continue| on the loop in this scenario.
+        debug_assert!(item.tag.1 != 0);
+        *out_pipeline_id = item.pipeline;
+        *out_scroll_id = item.tag.0;
+        *out_hit_info = item.tag.1;
+        return true;
+    }
+    return false;
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn wr_hit_tester_delete(hit_tester: *mut WrHitTester) {
+    let _ = Box::from_raw(hit_tester);
+}
+
 extern "C" {
     fn gecko_profiler_register_thread(name: *const ::std::os::raw::c_char);
     fn gecko_profiler_unregister_thread();
