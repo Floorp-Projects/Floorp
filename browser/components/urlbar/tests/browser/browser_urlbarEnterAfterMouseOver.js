@@ -17,7 +17,7 @@ async function promiseAutoComplete(inputText) {
   gURLBar.focus();
   gURLBar.value = inputText.slice(0, -1);
   EventUtils.sendString(inputText.slice(-1));
-  await promiseSearchComplete();
+  await UrlbarTestUtils.promiseSearchComplete(window);
 }
 
 function assertSelected(index) {

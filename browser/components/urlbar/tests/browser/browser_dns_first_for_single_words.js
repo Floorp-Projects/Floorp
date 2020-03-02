@@ -24,7 +24,11 @@ add_task(async function test() {
         Assert.ok(url.startsWith("http"), "Should pass an url");
       }
     });
-    await promiseAutocompleteResultPopup(str);
+    await UrlbarTestUtils.promiseAutocompleteResultPopup({
+      window,
+      waitForFocus: SimpleTest.waitForFocus,
+      value: str,
+    });
     EventUtils.synthesizeKey("KEY_Enter");
     sandbox.restore();
   }

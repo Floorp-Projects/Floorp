@@ -42,8 +42,12 @@ add_task(async function() {
     gBrowser,
     "about:mozilla"
   );
-  await promiseAutocompleteResultPopup("keyword a");
-  await waitForAutocompleteResultAt(1);
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    waitForFocus: SimpleTest.waitForFocus,
+    value: "keyword a",
+  });
+  await UrlbarTestUtils.waitForAutocompleteResultAt(window, 1);
 
   // First item should already be selected
   Assert.equal(
@@ -69,7 +73,7 @@ add_task(async function() {
   );
 
   EventUtils.sendString("b");
-  await promiseSearchComplete();
+  await UrlbarTestUtils.promiseSearchComplete(window);
 
   Assert.equal(
     gURLBar.value,

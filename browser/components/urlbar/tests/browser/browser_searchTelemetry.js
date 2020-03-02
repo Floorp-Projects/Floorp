@@ -38,7 +38,11 @@ add_task(async function heuristicResultMouse() {
   await compareCounts(async function() {
     let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
     gURLBar.focus();
-    await promiseAutocompleteResultPopup("heuristicResult");
+    await UrlbarTestUtils.promiseAutocompleteResultPopup({
+      window,
+      waitForFocus: SimpleTest.waitForFocus,
+      value: "heuristicResult",
+    });
     let result = await UrlbarTestUtils.getDetailsOfResultAt(window, 0);
     Assert.equal(
       result.type,
@@ -57,7 +61,11 @@ add_task(async function heuristicResultKeyboard() {
   await compareCounts(async function() {
     let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
     gURLBar.focus();
-    await promiseAutocompleteResultPopup("heuristicResult");
+    await UrlbarTestUtils.promiseAutocompleteResultPopup({
+      window,
+      waitForFocus: SimpleTest.waitForFocus,
+      value: "heuristicResult",
+    });
     let result = await UrlbarTestUtils.getDetailsOfResultAt(window, 0);
     Assert.equal(
       result.type,
@@ -75,7 +83,11 @@ add_task(async function searchSuggestionMouse() {
   await compareCounts(async function() {
     let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
     gURLBar.focus();
-    await promiseAutocompleteResultPopup("searchSuggestion");
+    await UrlbarTestUtils.promiseAutocompleteResultPopup({
+      window,
+      waitForFocus: SimpleTest.waitForFocus,
+      value: "searchSuggestion",
+    });
     let idx = await getFirstSuggestionIndex();
     Assert.greaterOrEqual(idx, 0, "there should be a first suggestion");
     let loadPromise = BrowserTestUtils.browserLoaded(tab.linkedBrowser);
@@ -93,7 +105,11 @@ add_task(async function searchSuggestionKeyboard() {
   await compareCounts(async function() {
     let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
     gURLBar.focus();
-    await promiseAutocompleteResultPopup("searchSuggestion");
+    await UrlbarTestUtils.promiseAutocompleteResultPopup({
+      window,
+      waitForFocus: SimpleTest.waitForFocus,
+      value: "searchSuggestion",
+    });
     let idx = await getFirstSuggestionIndex();
     Assert.greaterOrEqual(idx, 0, "there should be a first suggestion");
     let loadPromise = BrowserTestUtils.browserLoaded(tab.linkedBrowser);

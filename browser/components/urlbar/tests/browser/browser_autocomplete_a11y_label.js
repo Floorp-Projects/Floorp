@@ -55,7 +55,11 @@ add_task(async function switchToTab() {
     "about:about"
   );
 
-  await promiseAutocompleteResultPopup("% about");
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    waitForFocus: SimpleTest.waitForFocus,
+    value: "% about",
+  });
   let result = await UrlbarTestUtils.getDetailsOfResultAt(window, 1);
   Assert.equal(
     result.type,
@@ -89,7 +93,11 @@ add_task(async function searchSuggestions() {
     Services.prefs.setBoolPref(SUGGEST_URLBAR_PREF, suggestionsEnabled);
   });
 
-  await promiseAutocompleteResultPopup("foo");
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    waitForFocus: SimpleTest.waitForFocus,
+    value: "foo",
+  });
   let length = await UrlbarTestUtils.getResultCount(window);
   // Don't assume that the search doesn't match history or bookmarks left around
   // by earlier tests.

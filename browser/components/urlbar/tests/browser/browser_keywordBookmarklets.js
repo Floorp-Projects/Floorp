@@ -31,7 +31,11 @@ add_task(async function setup() {
     },
     async function() {
       info("Search keyword, then press enter");
-      await promiseAutocompleteResultPopup("bm");
+      await UrlbarTestUtils.promiseAutocompleteResultPopup({
+        window,
+        waitForFocus: SimpleTest.waitForFocus,
+        value: "bm",
+      });
       let result = await UrlbarTestUtils.getDetailsOfResultAt(window, 0);
       Assert.equal(result.title, "javascript:'x' ", "Check title");
       EventUtils.synthesizeKey("KEY_Enter");
@@ -39,14 +43,22 @@ add_task(async function setup() {
     },
     async function() {
       info("Search keyword with searchstring, then press enter");
-      await promiseAutocompleteResultPopup("bm a");
+      await UrlbarTestUtils.promiseAutocompleteResultPopup({
+        window,
+        waitForFocus: SimpleTest.waitForFocus,
+        value: "bm a",
+      });
       let result = await UrlbarTestUtils.getDetailsOfResultAt(window, 0);
       Assert.equal(result.title, "javascript:'ax' ", "Check title");
       EventUtils.synthesizeKey("KEY_Enter");
       return "ax";
     },
     async function() {
-      await promiseAutocompleteResultPopup("bm");
+      await UrlbarTestUtils.promiseAutocompleteResultPopup({
+        window,
+        waitForFocus: SimpleTest.waitForFocus,
+        value: "bm",
+      });
       let result = await UrlbarTestUtils.getDetailsOfResultAt(window, 0);
       Assert.equal(result.title, "javascript:'x' ", "Check title");
       let element = UrlbarTestUtils.getSelectedRow(window);
@@ -55,7 +67,11 @@ add_task(async function setup() {
     },
     async function() {
       info("Search keyword with searchstring, then click");
-      await promiseAutocompleteResultPopup("bm a");
+      await UrlbarTestUtils.promiseAutocompleteResultPopup({
+        window,
+        waitForFocus: SimpleTest.waitForFocus,
+        value: "bm a",
+      });
       let result = await UrlbarTestUtils.getDetailsOfResultAt(window, 0);
       Assert.equal(result.title, "javascript:'ax' ", "Check title");
       let element = UrlbarTestUtils.getSelectedRow(window);

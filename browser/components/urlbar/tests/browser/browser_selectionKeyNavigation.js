@@ -19,7 +19,12 @@ add_task(async function init() {
 });
 
 add_task(async function downKey() {
-  await promiseAutocompleteResultPopup("exam", window, true);
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    waitForFocus: SimpleTest.waitForFocus,
+    value: "exam",
+    fireInputEvent: true,
+  });
   Assert.equal(
     UrlbarTestUtils.getSelectedRowIndex(window),
     0,
@@ -43,7 +48,12 @@ add_task(async function downKey() {
 });
 
 add_task(async function upKey() {
-  await promiseAutocompleteResultPopup("exam", window, true);
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    waitForFocus: SimpleTest.waitForFocus,
+    value: "exam",
+    fireInputEvent: true,
+  });
   Assert.equal(
     UrlbarTestUtils.getSelectedRowIndex(window),
     0,
@@ -70,7 +80,12 @@ add_task(async function upKey() {
 });
 
 add_task(async function pageDownKey() {
-  await promiseAutocompleteResultPopup("exam", window, true);
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    waitForFocus: SimpleTest.waitForFocus,
+    value: "exam",
+    fireInputEvent: true,
+  });
   Assert.equal(
     UrlbarTestUtils.getSelectedRowIndex(window),
     0,
@@ -93,7 +108,12 @@ add_task(async function pageDownKey() {
 });
 
 add_task(async function pageUpKey() {
-  await promiseAutocompleteResultPopup("exam", window, true);
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    waitForFocus: SimpleTest.waitForFocus,
+    value: "exam",
+    fireInputEvent: true,
+  });
   Assert.equal(
     UrlbarTestUtils.getSelectedRowIndex(window),
     0,
@@ -116,7 +136,12 @@ add_task(async function pageUpKey() {
 });
 
 add_task(async function pageDownKeyShowsView() {
-  await promiseAutocompleteResultPopup("exam", window, true);
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    waitForFocus: SimpleTest.waitForFocus,
+    value: "exam",
+    fireInputEvent: true,
+  });
   await UrlbarTestUtils.promisePopupClose(window);
   EventUtils.synthesizeKey("KEY_PageDown");
   await UrlbarTestUtils.promiseSearchComplete(window);
@@ -125,7 +150,12 @@ add_task(async function pageDownKeyShowsView() {
 });
 
 add_task(async function pageUpKeyShowsView() {
-  await promiseAutocompleteResultPopup("exam", window, true);
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    waitForFocus: SimpleTest.waitForFocus,
+    value: "exam",
+    fireInputEvent: true,
+  });
   await UrlbarTestUtils.promisePopupClose(window);
   EventUtils.synthesizeKey("KEY_PageUp");
   await UrlbarTestUtils.promiseSearchComplete(window);

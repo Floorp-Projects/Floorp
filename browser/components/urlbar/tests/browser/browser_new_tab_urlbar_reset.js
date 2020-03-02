@@ -13,7 +13,11 @@ add_task(async function() {
     "about:blank",
     false
   );
-  await promiseAutocompleteResultPopup("m");
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    waitForFocus: SimpleTest.waitForFocus,
+    value: "m",
+  });
   assertOpen();
 
   let tab2 = await BrowserTestUtils.openNewForegroundTab(
@@ -21,7 +25,11 @@ add_task(async function() {
     "about:blank",
     false
   );
-  await promiseAutocompleteResultPopup("m");
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    waitForFocus: SimpleTest.waitForFocus,
+    value: "m",
+  });
   assertOpen();
 
   BrowserTestUtils.removeTab(tab);

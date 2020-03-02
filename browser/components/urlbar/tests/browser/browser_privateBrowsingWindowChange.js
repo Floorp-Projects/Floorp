@@ -29,7 +29,12 @@ add_task(async function() {
     "Check privatebrowsing page has not been loaded yet"
   );
   info("Search in urlbar");
-  await promiseAutocompleteResultPopup(urlbarTestValue, win, true);
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window: win,
+    waitForFocus: SimpleTest.waitForFocus,
+    value: urlbarTestValue,
+    fireInputEvent: true,
+  });
   info("waiting for about:privatebrowsing load");
   await promise;
 

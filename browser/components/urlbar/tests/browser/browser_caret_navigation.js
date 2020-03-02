@@ -9,7 +9,11 @@
  */
 
 add_task(async function() {
-  await promiseAutocompleteResultPopup("This is a generic sentence");
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    waitForFocus: SimpleTest.waitForFocus,
+    value: "This is a generic sentence",
+  });
   await UrlbarTestUtils.promisePopupClose(window);
 
   const INITIAL_SELECTION_START = 3;

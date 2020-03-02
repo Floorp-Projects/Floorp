@@ -35,7 +35,11 @@ function sendDelete() {
 }
 
 async function testDelete() {
-  await promiseAutocompleteResultPopup("bug1105244");
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    waitForFocus: SimpleTest.waitForFocus,
+    value: "bug1105244",
+  });
 
   // move to the start.
   sendHome();

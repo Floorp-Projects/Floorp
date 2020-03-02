@@ -45,7 +45,11 @@ add_task(async function() {
 
   // The first autocomplete result has the action searchengine, while
   // the second result is the "search favicon" element.
-  await promiseAutocompleteResultPopup("foo");
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    waitForFocus: SimpleTest.waitForFocus,
+    value: "foo",
+  });
   let result = await UrlbarTestUtils.getDetailsOfResultAt(window, 1);
 
   Assert.equal(result.type, UrlbarUtils.RESULT_TYPE.SEARCH);
