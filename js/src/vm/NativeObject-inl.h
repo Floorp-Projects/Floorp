@@ -14,6 +14,7 @@
 #include "builtin/TypedObject.h"
 #include "gc/Allocator.h"
 #include "gc/GCTrace.h"
+#include "gc/MaybeRooted.h"
 #include "js/Result.h"
 #include "proxy/Proxy.h"
 #include "vm/JSContext.h"

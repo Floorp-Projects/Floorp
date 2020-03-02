@@ -14,6 +14,7 @@
 
 #include "jsnum.h"
 
+#include "gc/MaybeRooted.h"
 #include "vm/Runtime.h"
 #include "vm/StringType.h"
 

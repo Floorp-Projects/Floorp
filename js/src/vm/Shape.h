@@ -24,6 +24,7 @@
 
 #include "gc/Barrier.h"
 #include "gc/FreeOp.h"
+#include "gc/MaybeRooted.h"
 #include "gc/Rooting.h"
 #include "js/HashTable.h"
 #include "js/MemoryMetrics.h"

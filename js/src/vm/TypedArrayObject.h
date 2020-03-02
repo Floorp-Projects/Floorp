@@ -12,6 +12,7 @@
 #include "mozilla/TextUtils.h"
 
 #include "gc/Barrier.h"
+#include "gc/MaybeRooted.h"
 #include "js/Class.h"
 #include "js/Result.h"
 #include "vm/ArrayBufferObject.h"

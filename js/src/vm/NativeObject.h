@@ -18,6 +18,7 @@
 
 #include "gc/Barrier.h"
 #include "gc/Marking.h"
+#include "gc/MaybeRooted.h"
 #include "gc/ZoneAllocator.h"
 #include "js/Value.h"
 #include "vm/JSObject.h"

@@ -14,6 +14,7 @@
 
 #include "gc/Allocator.h"
 #include "gc/Marking.h"
+#include "gc/MaybeRooted.h"
 #include "gc/StoreBuffer.h"
 #include "js/UniquePtr.h"
 #include "vm/JSContext.h"
