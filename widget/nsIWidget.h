@@ -834,6 +834,10 @@ class nsIWidget : public nsISupports {
    */
   virtual void SetSizeMode(nsSizeMode aMode) = 0;
 
+  virtual int32_t GetWorkspaceID() = 0;
+
+  virtual void MoveToWorkspace(int32_t workspaceID) = 0;
+
   /**
    * Suppress animations that are applied to a window by OS.
    */

@@ -168,6 +168,8 @@ class nsBaseWidget : public nsIWidget, public nsSupportsWeakReference {
 
   virtual void SetSizeMode(nsSizeMode aMode) override;
   virtual nsSizeMode SizeMode() override { return mSizeMode; }
+  virtual int32_t GetWorkspaceID() override;
+  virtual void MoveToWorkspace(int32_t workspaceID) override;
   virtual bool IsTiled() const override { return mIsTiled; }
 
   virtual bool IsFullyOccluded() const override { return mIsFullyOccluded; }
