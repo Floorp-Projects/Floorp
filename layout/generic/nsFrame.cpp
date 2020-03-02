@@ -3474,7 +3474,7 @@ void nsIFrame::BuildDisplayListForStackingContext(
     // to get correct positioning during merging.
     if ((insertBackdropRoot || aBuilder->ContainsBlendMode()) &&
         aBuilder->IsRetainingDisplayList()) {
-      if (!aBuilder->GetDirtyRect().Contains(aBuilder->GetVisibleRect())) {
+      if (aBuilder->IsPartialUpdate()) {
         aBuilder->SetPartialBuildFailed(true);
       } else {
         aBuilder->SetDisablePartialUpdates(true);
