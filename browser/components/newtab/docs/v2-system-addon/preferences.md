@@ -1,4 +1,4 @@
-# Preferences in Activity Stream
+# Preferences
 
 ## Preference branch
 
@@ -10,7 +10,7 @@ preference as it is displayed in `about:config` will be `browser.newtabpage.acti
 ## Defining new preferences
 
 All preferences for Activity Stream should be defined in the `PREFS_CONFIG` Array
-found in [lib/ActivityStream.jsm](../../system-addon/lib/ActivityStream.jsm).
+found in `lib/ActivityStream.jsm`.
 The configuration object should have a `name` (the name of the pref), a `title`
 that describes the functionality of the pref, and a `value`, the default value
 of the pref. Optionally a `getValue` function can be provided to dynamically
@@ -44,7 +44,7 @@ You can see an example in [this patch](https://github.com/mozilla/activity-strea
 
 ## Reading, setting, and observing preferences from `.jsm`s
 
-To read/set/observe Activity Stream preferences, construct a `Prefs` instance found in [lib/ActivityStreamPrefs.jsm](../../system-addon/lib/ActivityStreamPrefs.jsm).
+To read/set/observe Activity Stream preferences, construct a `Prefs` instance found in `lib/ActivityStreamPrefs.jsm`.
 
 ```js
 // Import Prefs
@@ -74,7 +74,7 @@ prefs.observe("foo", aCallback);
 prefs.ignore("foo", aCallback);
 ```
 
-See [toolkit/modules/Preferences.jsm](https://dxr.mozilla.org/mozilla-central/source/toolkit/modules/Preferences.jsm)
+See [toolkit/modules/Preferences.jsm](https://searchfox.mozilla.org/mozilla-central/source/toolkit/modules/Preferences.jsm)
 for more information about what methods are available.
 
 ## Discovery Stream Preferences

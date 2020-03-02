@@ -1,5 +1,0 @@
-#!/bin/sh -x
-
-# bootstrap an activity-stream repo
-ln -s ../../hooks/pre-commit .git/hooks/pre-commit
-ln -s ../../hooks/post-commit .git/hooks/post-commit
