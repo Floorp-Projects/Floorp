@@ -1,4 +1,4 @@
-# Adding/Changing Telemetry Checklist
+# Telemetry checklist
 
 Adding telemetry generally involves a few steps:
 
