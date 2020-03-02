@@ -41,6 +41,7 @@
 #include "mozilla/HTMLEditor.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/TextEditor.h"
+#include "mozilla/dom/AncestorIterator.h"
 #include "mozilla/dom/BrowserChild.h"
 #include "mozilla/dom/DocumentType.h"
 #include "mozilla/dom/Element.h"
@@ -1155,24 +1156,20 @@ Accessible* DocAccessible::GetAccessibleOrContainer(
     return nullptr;
   }
 
-  nsINode* currNode = nullptr;
-  if (aNode->IsShadowRoot()) {
+  nsINode* start = aNode;
+  if (auto* shadowRoot = dom::ShadowRoot::FromNode(aNode)) {
     // This can happen, for example, when called within
     // SelectionManager::ProcessSelectionChanged due to focusing a direct
     // child of a shadow root.
     // GetFlattenedTreeParent works on children of a shadow root, but not the
     // shadow root itself.
-    const dom::ShadowRoot* shadowRoot = dom::ShadowRoot::FromNode(aNode);
-    currNode = shadowRoot->GetHost();
-    if (!currNode) {
+    start = shadowRoot->GetHost();
+    if (!start) {
       return nullptr;
     }
-  } else {
-    currNode = aNode;
   }
 
-  MOZ_ASSERT(currNode);
-  for (; currNode; currNode = currNode->GetFlattenedTreeParentNode()) {
+  for (nsINode* currNode : dom::InclusiveFlatTreeAncestors(*start)) {
     // No container if is inside of aria-hidden subtree.
     if (aNoContainerIfPruned && currNode->IsElement() &&
         aria::HasDefinedARIAHidden(currNode->AsElement())) {
