@@ -268,6 +268,13 @@ class DisplayToolbar internal constructor(
     }
 
     /**
+     *  Sets a lambda to be invoked when the menu is dismissed
+     */
+    fun setMenuDismissAction(onDismiss: () -> Unit) {
+        views.menu.setMenuDismissAction(onDismiss)
+    }
+
+    /**
      * List of indicators that should be displayed next to the URL.
      */
     var indicators: List<Indicators> = listOf(Indicators.SECURITY)

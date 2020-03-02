@@ -22,6 +22,9 @@ permalink: /changelog/
 
 * **feature-accounts-push**
   * Add known prefix to FxA push scope.
+  
+* **browser-toolbar**
+  * Add the possibility to listen to menu dismissal through `setMenuDismissAction` in `DisplayToolbar`
 
 # 34.0.0
 
