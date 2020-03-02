@@ -367,6 +367,8 @@ static const char* DefTypeName(LDefinition::Type type) {
       return "simd128int";
     case LDefinition::SIMD128FLOAT:
       return "simd128float";
+    case LDefinition::STACKRESULTS:
+      return "stackresults";
 #  ifdef JS_NUNBOX32
     case LDefinition::TYPE:
       return "t";
