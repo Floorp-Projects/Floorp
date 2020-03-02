@@ -231,7 +231,7 @@ class DocumentOrShadowRoot {
   // with them.
   template <typename Callback>
   void EnumerateUniqueAdoptedStyleSheetsBackToFront(Callback aCallback) {
-    AdoptedStyleSheetSet set(mAdoptedStyleSheets.Length());
+    StyleSheetSet set(mAdoptedStyleSheets.Length());
     for (StyleSheet* sheet : Reversed(mAdoptedStyleSheets)) {
       if (MOZ_UNLIKELY(!set.EnsureInserted(sheet))) {
         continue;
@@ -241,7 +241,7 @@ class DocumentOrShadowRoot {
   }
 
  protected:
-  using AdoptedStyleSheetSet = nsTHashtable<nsPtrHashKey<const StyleSheet>>;
+  using StyleSheetSet = nsTHashtable<nsPtrHashKey<const StyleSheet>>;
   void RemoveSheetFromStylesIfApplicable(StyleSheet&);
   void ClearAdoptedStyleSheets();
 
