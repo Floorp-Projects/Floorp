@@ -386,8 +386,8 @@
 
 .urlbarView-title-separator::before {
   content: "\2014";
-  color: var(--urlbar-separator-color);
   margin: 0 .4em;
+  opacity: 0.6;
 }
 
 .urlbarView-title:empty + .urlbarView-tags:empty + .urlbarView-title-separator {
