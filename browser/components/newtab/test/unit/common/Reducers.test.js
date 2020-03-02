@@ -1521,6 +1521,18 @@ describe("Reducers", () => {
           .bookmarkTitle
       );
     });
+    describe("PREF_CHANGED", () => {
+      it("should set isCollectionDismissible", () => {
+        const state = DiscoveryStream(undefined, {
+          type: at.PREF_CHANGED,
+          data: {
+            name: "discoverystream.isCollectionDismissible",
+            value: true,
+          },
+        });
+        assert.equal(state.isCollectionDismissible, true);
+      });
+    });
   });
   describe("Search", () => {
     it("should return INITIAL_STATE by default", () => {

@@ -1298,6 +1298,8 @@ pref("browser.newtabpage.activity-stream.discoverystream.region-stories-config",
 pref("browser.newtabpage.activity-stream.discoverystream.region-spocs-config", "US");
 // List of regions that get the 7 row layout.
 pref("browser.newtabpage.activity-stream.discoverystream.region-layout-config", "US,CA");
+// Allows Pocket story collections to be dismissed.
+pref("browser.newtabpage.activity-stream.discoverystream.isCollectionDismissible", false);
 // Switch between different versions of the recommendation provider.
 pref("browser.newtabpage.activity-stream.discoverystream.personalization.version", 1);
 // Configurable keys used by personalization version 2.
