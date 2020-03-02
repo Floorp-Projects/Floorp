@@ -306,8 +306,8 @@ def test_task_regexes():
         'test-linux64/opt-browser-screenshots-1',
         'test-linux64/opt-browser-screenshots-e10s-1',
         'test-linux64/opt-marionette',
-        'test-linux64/opt-mochitest',
-        'test-linux64/debug-mochitest-e10s',
+        'test-linux64/opt-mochitest-plain',
+        'test-linux64/debug-mochitest-plain-e10s',
         'test-linux64/opt-mochitest-a11y',
         'test-linux64/opt-mochitest-browser',
         'test-linux64/opt-mochitest-browser-chrome',
@@ -320,7 +320,6 @@ def test_task_regexes():
         'test-linux64/opt-mochitest-gpu-e10s',
         'test-linux64/opt-mochitest-media-e10s-1',
         'test-linux64/opt-mochitest-media-e10s-11',
-        'test-linux64/opt-mochitest-plain',
         'test-linux64/opt-mochitest-screenshots-1',
         'test-linux64/opt-reftest',
         'test-linux64/debug-reftest-e10s-1',
@@ -356,10 +355,8 @@ def test_task_regexes():
             'test-linux64/opt-mochitest-media-e10s-1',
         ],
         'mochitest-plain': [
-            'test-linux64/opt-mochitest',
-            'test-linux64/debug-mochitest-e10s',
-            # this isn't a real task but the regex would match it if it were
             'test-linux64/opt-mochitest-plain',
+            'test-linux64/debug-mochitest-plain-e10s',
         ],
         'mochitest-plain-gpu': [
             'test-linux64/opt-mochitest-gpu',
