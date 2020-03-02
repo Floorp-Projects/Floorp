@@ -401,22 +401,12 @@ ObjectBox::ObjectBox(JSObject* obj, TraceListNode* traceLink,
     : TraceListNode(obj, traceLink, type), emitLink(nullptr) {}
 
 BigInt* BigIntLiteral::getOrCreate(JSContext* cx) {
-  if (data_.is<BigIntBox*>()) {
-    return value();
-  }
-  Deferred& deferred = data_.as<Deferred>();
-  return deferred.compilationInfo.bigIntData[deferred.index].createBigInt(cx);
+  return compilationInfo_.bigIntData[index_].createBigInt(cx);
 }
 
 bool BigIntLiteral::isZero() {
-  if (data_.is<BigIntBox*>()) {
-    return box()->value()->isZero();
-  }
-  Deferred& deferred = data_.as<Deferred>();
-  return deferred.compilationInfo.bigIntData[deferred.index].isZero();
+  return compilationInfo_.bigIntData[index_].isZero();
 }
-
-BigInt* BigIntLiteral::value() { return box()->value(); }
 
 JSAtom* BigIntLiteral::toAtom(JSContext* cx) {
   RootedBigInt bi(cx, getOrCreate(cx));
