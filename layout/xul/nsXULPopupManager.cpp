@@ -1585,64 +1585,36 @@ bool nsXULPopupManager::MayShowPopup(nsMenuPopupFrame* aPopup) {
   }
 
   // if the popup was just rolled up, don't reopen it
-  if (mozilla::widget::nsAutoRollup::GetLastRollup() == aPopup->GetContent()) {
+  if (mozilla::widget::nsAutoRollup::GetLastRollup() == aPopup->GetContent())
+    return false;
+
+  nsCOMPtr<nsIDocShellTreeItem> dsti = aPopup->PresContext()->GetDocShell();
+  nsCOMPtr<nsIBaseWindow> baseWin = do_QueryInterface(dsti);
+  if (!baseWin) return false;
+
+  nsCOMPtr<nsIDocShellTreeItem> root;
+  dsti->GetInProcessRootTreeItem(getter_AddRefs(root));
+  if (!root) {
     return false;
   }
 
-  nsCOMPtr<nsIDocShell> docShell = aPopup->PresContext()->GetDocShell();
+  nsCOMPtr<nsPIDOMWindowOuter> rootWin = root->GetWindow();
 
-  nsCOMPtr<nsIBaseWindow> baseWin = do_QueryInterface(docShell);
-  if (!baseWin) {
-    return false;
-  }
+  // chrome shells can always open popups, but other types of shells can only
+  // open popups when they are focused and visible
+  if (dsti->ItemType() != nsIDocShellTreeItem::typeChrome) {
+    // only allow popups in active windows
+    nsIFocusManager* fm = nsFocusManager::GetFocusManager();
+    if (!fm || !rootWin) return false;
 
-  if (XRE_IsParentProcess()) {
-    nsCOMPtr<nsIDocShellTreeItem> root;
-    docShell->GetInProcessRootTreeItem(getter_AddRefs(root));
-    if (!root) {
-      return false;
-    }
+    nsCOMPtr<mozIDOMWindowProxy> activeWindow;
+    fm->GetActiveWindow(getter_AddRefs(activeWindow));
+    if (activeWindow != rootWin) return false;
 
-    nsCOMPtr<nsPIDOMWindowOuter> rootWin = root->GetWindow();
-
-    // chrome shells can always open popups, but other types of shells can only
-    // open popups when they are focused and visible
-    if (docShell->ItemType() != nsIDocShellTreeItem::typeChrome) {
-      // only allow popups in active windows
-      nsFocusManager* fm = nsFocusManager::GetFocusManager();
-      if (!fm || !rootWin) {
-        return false;
-      }
-
-      nsCOMPtr<nsPIDOMWindowOuter> activeWindow = fm->GetActiveWindow();
-      if (activeWindow != rootWin) {
-        return false;
-      }
-
-      // only allow popups in visible frames
-      bool visible;
-      baseWin->GetVisibility(&visible);
-      if (!visible) {
-        return false;
-      }
-    }
-  } else {
     // only allow popups in visible frames
     bool visible;
     baseWin->GetVisibility(&visible);
-    if (!visible) {
-      return false;
-    }
-
-    nsFocusManager* fm = nsFocusManager::GetFocusManager();
-    BrowsingContext* bc = docShell->GetBrowsingContext();
-    if (!fm || !bc) {
-      return false;
-    }
-
-    if (fm->GetActiveBrowsingContext() != bc->Top()) {
-      return false;
-    }
+    if (!visible) return false;
   }
 
   // platforms respond differently when an popup is opened in a minimized
@@ -1654,7 +1626,6 @@ bool nsXULPopupManager::MayShowPopup(nsMenuPopupFrame* aPopup) {
   }
 
 #ifdef XP_MACOSX
-  nsCOMPtr<nsPIDOMWindowOuter> rootWin = root->GetWindow();
   if (rootWin) {
     auto globalWin = nsGlobalWindowOuter::Cast(rootWin.get());
     if (globalWin->IsInModalState()) {
