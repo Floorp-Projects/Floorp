@@ -139,7 +139,7 @@ class PropertiesView extends Component {
     const { object } = member;
 
     // Select the right clicked row
-    this.selectRow(evt.currentTarget);
+    this.selectRow({ props: { member } });
 
     // if data exists and can be copied, then show the contextmenu
     if (typeof object === "object") {
