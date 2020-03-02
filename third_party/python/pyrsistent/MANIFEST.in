@@ -1,0 +1,5 @@
+include *.rst
+include tests/*_test.py
+include tests/memory_profiling.py
+include CHANGES.txt
+include LICENCE.mit
