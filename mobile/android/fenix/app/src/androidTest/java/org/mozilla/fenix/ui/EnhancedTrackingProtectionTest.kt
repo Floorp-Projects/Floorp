@@ -8,7 +8,6 @@ import androidx.test.platform.app.InstrumentationRegistry
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
@@ -74,7 +73,6 @@ class EnhancedTrackingProtectionTest {
         }
     }
 
-    @Ignore("Disabled for investigation into failure - https://github.com/mozilla-mobile/fenix/issues/7907")
     @Test
     fun testStrictVisitContentNotification() {
         val trackingProtectionTest =
@@ -88,7 +86,6 @@ class EnhancedTrackingProtectionTest {
         }.closeNotificationPopup {}
     }
 
-    @Ignore("Disabled for investigation into failure - https://github.com/mozilla-mobile/fenix/issues/7907")
     @Test
     fun testStrictVisitContentShield() {
         val trackingProtectionTest =
@@ -106,7 +103,6 @@ class EnhancedTrackingProtectionTest {
         }
     }
 
-    @Ignore("Disabled for investigation into failure - https://github.com/mozilla-mobile/fenix/issues/7907")
     @Test
     fun testStrictVisitProtectionSheet() {
         val trackingProtectionTest =
@@ -126,7 +122,6 @@ class EnhancedTrackingProtectionTest {
         }
     }
 
-    @Ignore("Disabled for investigation into failure - https://github.com/mozilla-mobile/fenix/issues/7907")
     @Test
     fun testStrictVisitDisable() {
         val trackingProtectionTest =
@@ -150,12 +145,14 @@ class EnhancedTrackingProtectionTest {
         // Verify that Enhanced Tracking Protection remains globally enabled
         navigationToolbar {
         }.openThreeDotMenu {
+            verifyThreeDotMenuExists()
+            verifySettingsButton()
         }.openSettings {
+            verifyEnhancedTrackingProtectionButton()
             verifyEnhancedTrackingProtectionValue("On")
         }
     }
 
-    @Ignore("Disabled for investigation into failure - https://github.com/mozilla-mobile/fenix/issues/7907")
     @Test
     fun testStrictVisitDisableExceptionToggle() {
         val trackingProtectionTest =
@@ -188,7 +185,6 @@ class EnhancedTrackingProtectionTest {
         }
     }
 
-    @Ignore("Disabled for investigation into failure - https://github.com/mozilla-mobile/fenix/issues/7907")
     @Test
     fun testStrictVisitSheetDetails() {
         val trackingProtectionTest =

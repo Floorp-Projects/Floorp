@@ -195,6 +195,7 @@ private fun assertPrivacyHeading() {
 }
 
 private fun assertEnhancedTrackingProtectionButton() {
+    mDevice.wait(Until.findObject(By.text("Privacy and Security")), waitingTime)
     onView(ViewMatchers.withId(R.id.recycler_view)).perform(
         RecyclerViewActions.scrollTo<RecyclerView.ViewHolder>(
             ViewMatchers.hasDescendant(ViewMatchers.withText("Enhanced Tracking Protection"))
@@ -202,8 +203,10 @@ private fun assertEnhancedTrackingProtectionButton() {
     ).check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 }
 
-private fun assertEnhancedTrackingProtectionValue(state: String) =
+private fun assertEnhancedTrackingProtectionValue(state: String) {
+    mDevice.wait(Until.findObject(By.text("Enhanced Tracking Protection")), waitingTime)
     onView(ViewMatchers.withText(state)).check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+}
 
 private fun assertLoginsButton() {
     TestHelper.scrollToElementByText("Logins and passwords")

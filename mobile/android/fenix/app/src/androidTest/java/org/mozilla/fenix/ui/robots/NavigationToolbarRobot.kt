@@ -65,7 +65,7 @@ class NavigationToolbarRobot {
         }
 
         fun openThreeDotMenu(interact: ThreeDotMenuMainRobot.() -> Unit): ThreeDotMenuMainRobot.Transition {
-            mDevice.waitNotNull(Until.findObject(By.descContains("Menu")), waitingTime)
+            mDevice.waitNotNull(Until.findObject(By.res("org.mozilla.fenix.debug:id/mozac_browser_toolbar_menu")), waitingTime)
             threeDotButton().click()
 
             ThreeDotMenuMainRobot().interact()
@@ -146,7 +146,7 @@ private fun assertNoHistoryBookmarks() {
 private fun dismissOnboardingButton() = onView(withId(R.id.close_onboarding))
 private fun urlBar() = onView(withId(R.id.toolbar))
 private fun awesomeBar() = onView(withId(R.id.mozac_browser_toolbar_edit_url_view))
-private fun threeDotButton() = onView(withContentDescription("Menu"))
+private fun threeDotButton() = onView(withId(R.id.mozac_browser_toolbar_menu))
 private fun newTab() = onView(withContentDescription("Add tab"))
 private fun fillLinkButton() = onView(withId(R.id.fill_link_from_clipboard))
 private fun clearAddressBar() = onView(withId(R.id.mozac_browser_toolbar_clear_view))

@@ -7,20 +7,21 @@
 package org.mozilla.fenix.ui.robots
 
 import androidx.recyclerview.widget.RecyclerView
-import androidx.test.espresso.contrib.RecyclerViewActions
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions
 import androidx.test.espresso.assertion.ViewAssertions
 import androidx.test.espresso.assertion.ViewAssertions.matches
+import androidx.test.espresso.contrib.RecyclerViewActions
 import androidx.test.espresso.matcher.ViewMatchers
+import androidx.test.espresso.matcher.ViewMatchers.Visibility
 import androidx.test.espresso.matcher.ViewMatchers.hasDescendant
 import androidx.test.espresso.matcher.ViewMatchers.hasFocus
+import androidx.test.espresso.matcher.ViewMatchers.isCompletelyDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withResourceName
 import androidx.test.espresso.matcher.ViewMatchers.withText
-import androidx.test.espresso.matcher.ViewMatchers.Visibility
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiDevice
@@ -86,7 +87,10 @@ class ThreeDotMenuMainRobot {
         private val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
 
         fun openSettings(interact: SettingsRobot.() -> Unit): SettingsRobot.Transition {
-            settingsButton().click()
+            onView(allOf(withResourceName("text"), withText(R.string.browser_menu_settings)))
+                .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+                .check(matches(isCompletelyDisplayed()))
+                .perform(ViewActions.click())
 
             SettingsRobot().interact()
             return SettingsRobot.Transition()
@@ -236,55 +240,50 @@ private fun threeDotMenuRecyclerViewExists() {
     onView(withId(R.id.mozac_browser_menu_recyclerView)).check(matches(isDisplayed()))
 }
 
-private fun settingsButton() = onView(
-    allOf(
-        withText(R.string.settings),
-        withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)
-    )
-)
-
+private fun settingsButton() = onView(allOf(withResourceName("text"), withText(R.string.browser_menu_settings)))
 private fun assertSettingsButton() = settingsButton()
-    .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+    .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+    .check(matches(isCompletelyDisplayed()))
 
 private fun libraryButton() = onView(allOf(withText(R.string.browser_menu_your_library)))
 private fun assertLibraryButton() = libraryButton()
-    .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+    .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
 private fun historyButton() = onView(allOf(withText(R.string.library_history)))
 private fun assertHistoryButton() = historyButton()
-    .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+    .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
 private fun bookmarksButton() = onView(allOf(withText(R.string.library_bookmarks)))
 private fun assertBookmarksButton() = bookmarksButton()
-    .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+    .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
 private fun helpButton() = onView(allOf(withText(R.string.browser_menu_help)))
 private fun assertHelpButton() = helpButton()
-    .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+    .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
 private fun forwardButton() = onView(ViewMatchers.withContentDescription("Forward"))
 private fun assertForwardButton() = forwardButton()
-    .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+    .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
 private fun addBookmarkButton() = onView(ViewMatchers.withContentDescription("Bookmark"))
 private fun assertAddBookmarkButton() = addBookmarkButton()
-    .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+    .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
 private fun editBookmarkButton() = onView(ViewMatchers.withContentDescription("Edit bookmark"))
 private fun assertEditBookmarkButton() = editBookmarkButton()
-    .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+    .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
 private fun refreshButton() = onView(ViewMatchers.withContentDescription("Refresh"))
 private fun assertRefreshButton() = refreshButton()
-    .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+    .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
 private fun closeAllTabsButton() = onView(allOf(withText("Close all tabs")))
 private fun assertCloseAllTabsButton() = closeAllTabsButton()
-    .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+    .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
 private fun shareTabButton() = onView(allOf(withText("Share tabs")))
 private fun assertShareTabButton() = shareTabButton()
-    .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+    .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
 private fun shareButton() = onView(ViewMatchers.withContentDescription("Share"))
 private fun assertShareButton() = shareButton()
@@ -299,15 +298,15 @@ private fun browserViewSaveCollectionButton() = onView(
 
 private fun saveCollectionButton() = onView(allOf(withText("Save to collection")))
 private fun assertSaveCollectionButton() = saveCollectionButton()
-    .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+    .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
 private fun addNewCollectionButton() = onView(allOf(withText("Add new collection")))
 private fun assertaddNewCollectionButton() = addNewCollectionButton()
-    .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+    .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
 private fun collectionNameTextField() = onView(allOf(withResourceName("name_collection_edittext")))
 private fun assertCollectionNameTextField() = collectionNameTextField()
-    .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+    .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
 private fun findInPageButton() = onView(allOf(withText("Find in page")))
 private fun assertFindInPageButton() = findInPageButton()
@@ -320,7 +319,7 @@ private fun SendToDeviceTitle() =
     onView(allOf(withText("SEND TO DEVICE"), withResourceName("accountHeaderText")))
 
 private fun assertSendToDeviceTitle() = SendToDeviceTitle()
-    .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+    .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
 private fun ShareALinkTitle() =
     onView(allOf(withText("ALL ACTIONS"), withResourceName("apps_link_header")))
@@ -330,17 +329,17 @@ private fun assertShareALinkTitle() = ShareALinkTitle()
 private fun whatsNewButton() = onView(
     allOf(
         withText("What’s New"),
-        withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)
+        withEffectiveVisibility(Visibility.VISIBLE)
     )
 )
 
 private fun assertWhatsNewButton() = whatsNewButton()
-    .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+    .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
 private fun readerViewToggle() = onView(allOf(withText(R.string.browser_menu_read)))
 private fun assertReaderViewToggle(visible: Boolean) = readerViewToggle()
     .check(
-        if (visible) matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)) else ViewAssertions.doesNotExist()
+        if (visible) matches(withEffectiveVisibility(Visibility.VISIBLE)) else ViewAssertions.doesNotExist()
     )
 
 private fun readerViewAppearanceToggle() =
@@ -348,7 +347,7 @@ private fun readerViewAppearanceToggle() =
 
 private fun assertReaderViewAppearanceButton(visible: Boolean) = readerViewAppearanceToggle()
     .check(
-        if (visible) matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)) else ViewAssertions.doesNotExist()
+        if (visible) matches(withEffectiveVisibility(Visibility.VISIBLE)) else ViewAssertions.doesNotExist()
     )
 
 private fun addToFirefoxHomeButton() =

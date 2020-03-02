@@ -6,18 +6,16 @@
 
 package org.mozilla.fenix.ui.robots
 
-import android.view.View
+import androidx.preference.R
+import androidx.recyclerview.widget.RecyclerView
 import androidx.test.espresso.Espresso.onView
-import androidx.test.espresso.UiController
-import androidx.test.espresso.ViewAction
 import androidx.test.espresso.assertion.ViewAssertions.matches
+import androidx.test.espresso.contrib.RecyclerViewActions
 import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.espresso.matcher.ViewMatchers.withResourceName
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.UiDevice
 import org.hamcrest.CoreMatchers
-import org.hamcrest.Matcher
-import org.mozilla.fenix.helpers.TestHelper
 import org.mozilla.fenix.helpers.click
 import org.mozilla.fenix.helpers.isChecked
 
@@ -46,23 +44,14 @@ class SettingsSubMenuEnhancedTrackingProtectionRobot {
         fun openExceptions(
             interact: SettingsSubMenuEnhancedTrackingProtectionExceptionsRobot.() -> Unit
         ): SettingsSubMenuEnhancedTrackingProtectionExceptionsRobot.Transition {
-            TestHelper.scrollToElementByText("Exceptions")
-            openExceptions().perform(
-                object : ViewAction {
-                    override fun getConstraints(): Matcher<View> {
-                        // do not check constraints, check if enabled
-                        return ViewMatchers.isEnabled()
-                    }
 
-                    override fun getDescription(): String {
-                        return "Exceptions"
-                    }
-
-                    override fun perform(uiController: UiController?, view: View) {
-                        view.performClick()
-                    }
-                }
+            onView(ViewMatchers.withId(R.id.recycler_view)).perform(
+                RecyclerViewActions.scrollTo<RecyclerView.ViewHolder>(
+                    ViewMatchers.hasDescendant(ViewMatchers.withText("Exceptions"))
+                )
             )
+
+            openExceptions().click()
 
             SettingsSubMenuEnhancedTrackingProtectionExceptionsRobot().interact()
             return SettingsSubMenuEnhancedTrackingProtectionExceptionsRobot.Transition()
@@ -84,9 +73,16 @@ private fun assertEnhancedTrackingProtectionOptions() {
 
     onView(ViewMatchers.withText("Strict (Default)"))
         .check(matches(ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
-    val summaryText =
+    val strictText =
         "Stronger tracking protection and faster performance, but some sites may not work properly."
-    onView(ViewMatchers.withText(summaryText))
+    onView(ViewMatchers.withText(strictText))
+        .check(matches(ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+
+    onView(ViewMatchers.withText("Custom"))
+        .check(matches(ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+    val customText =
+        "Choose which trackers and scripts to block"
+    onView(ViewMatchers.withText(customText))
         .check(matches(ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
 }
 
