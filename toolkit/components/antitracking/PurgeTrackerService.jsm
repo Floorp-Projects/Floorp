@@ -62,7 +62,7 @@ PurgeTrackerService.prototype = {
     }
     let host;
     try {
-      host = principal.asciiHost;
+      host = principal.URI.asciiHost;
     } catch (error) {
       return false;
     }
