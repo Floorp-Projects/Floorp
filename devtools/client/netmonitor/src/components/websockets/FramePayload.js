@@ -52,9 +52,9 @@ const Accordion = createFactory(
 const RawData = createFactory(
   require("devtools/client/netmonitor/src/components/websockets/RawData")
 );
-loader.lazyGetter(this, "JSONPreview", function() {
+loader.lazyGetter(this, "PropertiesView", function() {
   return createFactory(
-    require("devtools/client/netmonitor/src/components/JSONPreview")
+    require("devtools/client/netmonitor/src/components/request-details/PropertiesView")
   );
 });
 
@@ -266,17 +266,11 @@ class FramePayload extends Component {
        */
       items.unshift({
         className: "formattedData",
-        component: JSONPreview,
+        component: PropertiesView,
         componentProps: {
           object: this.state.formattedData,
-          columns: [
-            {
-              id: "value",
-              width: "100%",
-            },
-          ],
         },
-        header: `${this.state.formattedDataTitle}`,
+        header: this.state.formattedDataTitle,
         id: "ws-frame-formattedData",
         opened: true,
       });
