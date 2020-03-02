@@ -10,6 +10,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.core.content.pm.PackageInfoCompat
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.DividerItemDecoration
@@ -20,6 +21,7 @@ import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.requireComponents
+import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.lib.Do
 import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.settings.about.AboutItemType.LICENSING_INFO
@@ -36,6 +38,8 @@ import org.mozilla.geckoview.BuildConfig as GeckoViewBuildConfig
 class AboutFragment : Fragment(), AboutPageListener {
     private lateinit var appName: String
     private val aboutPageAdapter: AboutPageAdapter = AboutPageAdapter(this)
+    private var secretDebugMenuClicks = 0
+    private var lastDebugMenuToast: Toast? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -47,6 +51,11 @@ class AboutFragment : Fragment(), AboutPageListener {
         activity?.title = getString(R.string.preferences_about, appName)
 
         return rootView
+    }
+
+    override fun onResume() {
+        super.onResume()
+        secretDebugMenuClicks = 0
     }
 
     @ExperimentalCoroutinesApi
@@ -61,6 +70,34 @@ class AboutFragment : Fragment(), AboutPageListener {
                     DividerItemDecoration.VERTICAL
                 )
             )
+        }
+
+        // 5 taps on the logo activate the "secret" debug menu.
+        wordmark.setOnClickListener {
+            // Because the user will mostly likely tap the logo in rapid succession,
+            // we ensure only 1 toast is shown at any given time.
+            lastDebugMenuToast?.let { toast -> toast.cancel() }
+            secretDebugMenuClicks += 1
+            when (secretDebugMenuClicks) {
+                in 2 until SECRET_DEBUG_MENU_CLICKS -> {
+                    val clicksLeft = SECRET_DEBUG_MENU_CLICKS - secretDebugMenuClicks
+                    val toast = Toast.makeText(
+                        context,
+                        getString(R.string.about_debug_menu_toast_progress, clicksLeft),
+                        Toast.LENGTH_SHORT
+                    )
+                    toast.show()
+                    lastDebugMenuToast = toast
+                }
+                SECRET_DEBUG_MENU_CLICKS -> {
+                    Toast.makeText(
+                        context,
+                        getString(R.string.about_debug_menu_toast_done),
+                        Toast.LENGTH_LONG
+                    ).show()
+                    requireContext().settings().showSecretDebugMenuThisSession = true
+                }
+            }
         }
 
         populateAboutHeader()
@@ -183,5 +220,7 @@ class AboutFragment : Fragment(), AboutPageListener {
 
     companion object {
         private const val ABOUT_LICENSE_URL = "about:license"
+        // Number of clicks on the app logo to enable the "secret" debug menu.
+        private const val SECRET_DEBUG_MENU_CLICKS = 5
     }
 }

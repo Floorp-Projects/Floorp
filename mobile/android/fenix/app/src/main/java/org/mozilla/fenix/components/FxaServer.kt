@@ -7,6 +7,7 @@ import android.content.Context
 import mozilla.components.service.fxa.ServerConfig
 import mozilla.components.service.fxa.ServerConfig.Server
 import org.mozilla.fenix.FeatureFlags
+import org.mozilla.fenix.ext.settings
 
 /**
  * Utility to configure Firefox Account servers.
@@ -24,6 +25,11 @@ object FxaServer {
     }
 
     fun config(context: Context): ServerConfig {
-        return ServerConfig(Server.RELEASE, CLIENT_ID, redirectUrl(context))
+        val serverOverride = context.settings().overrideFxAServer
+        val tokenServerOverride = context.settings().overrideSyncTokenServer.ifEmpty { null }
+        if (serverOverride.isEmpty()) {
+            return ServerConfig(Server.RELEASE, CLIENT_ID, redirectUrl(context), tokenServerOverride)
+        }
+        return ServerConfig(serverOverride, CLIENT_ID, redirectUrl(context), tokenServerOverride)
     }
 }

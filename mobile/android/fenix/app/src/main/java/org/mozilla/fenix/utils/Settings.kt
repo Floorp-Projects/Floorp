@@ -187,6 +187,8 @@ class Settings private constructor(
                 (trackingProtectionOnboardingCount < trackingProtectionOnboardingMaximumCount &&
                 !trackingProtectionOnboardingShownThisSession)
 
+    var showSecretDebugMenuThisSession = false
+
     val shouldShowSecurityPinWarningSync: Boolean
         get() = loginsSecureWarningSyncCount < showLoginsSecureWarningSyncMaxCount
 
@@ -596,5 +598,15 @@ class Settings private constructor(
     var openLinksInExternalApp by booleanPreference(
         appContext.getPreferenceKey(R.string.pref_key_open_links_in_external_app),
         default = false
+    )
+
+    var overrideFxAServer by stringPreference(
+        appContext.getPreferenceKey(R.string.pref_key_override_fxa_server),
+        default = ""
+    )
+
+    var overrideSyncTokenServer by stringPreference(
+        appContext.getPreferenceKey(R.string.pref_key_override_sync_tokenserver),
+        default = ""
     )
 }

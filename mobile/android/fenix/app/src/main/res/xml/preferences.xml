@@ -29,6 +29,20 @@
             android:key="@string/pref_key_account_auth_error"/>
     </androidx.preference.PreferenceCategory>
 
+    <androidx.preference.EditTextPreference
+        android:key="@string/pref_key_override_fxa_server"
+        android:title="@string/preferences_override_fxa_server"
+        android:inputType="textUri"
+        app:iconSpaceReserved="false"
+        app:isPreferenceVisible="false"/>
+
+    <androidx.preference.EditTextPreference
+        android:key="@string/pref_key_override_sync_tokenserver"
+        android:title="@string/preferences_override_sync_tokenserver"
+        android:inputType="textUri"
+        app:iconSpaceReserved="false"
+        app:isPreferenceVisible="false"/>
+
     <androidx.preference.PreferenceCategory
         android:title="@string/preferences_category_general"
         app:iconSpaceReserved="false">

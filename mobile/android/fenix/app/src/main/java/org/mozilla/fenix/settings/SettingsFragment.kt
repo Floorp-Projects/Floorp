@@ -10,6 +10,8 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import androidx.appcompat.content.res.AppCompatResources
+import android.os.Handler
+import android.widget.Toast
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavDirections
 import androidx.navigation.findNavController
@@ -45,6 +47,7 @@ import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.showToolbar
 import org.mozilla.fenix.settings.account.AccountAuthErrorPreference
 import org.mozilla.fenix.settings.account.AccountPreference
+import kotlin.system.exitProcess
 
 @Suppress("LargeClass", "TooManyFunctions")
 class SettingsFragment : PreferenceFragmentCompat() {
@@ -300,6 +303,29 @@ class SettingsFragment : PreferenceFragmentCompat() {
             requireComponents.core.engine.settings.remoteDebuggingEnabled = newValue
             true
         }
+
+        val preferenceFxAOverride =
+            findPreference<Preference>(getPreferenceKey(R.string.pref_key_override_fxa_server))
+        val preferenceSyncOverride =
+            findPreference<Preference>(getPreferenceKey(R.string.pref_key_override_sync_tokenserver))
+
+        val syncFxAOverrideUpdater = object : StringSharedPreferenceUpdater() {
+            override fun onPreferenceChange(preference: Preference, newValue: Any?): Boolean {
+                return super.onPreferenceChange(preference, newValue).also {
+                    updateFxASyncOverrideMenu()
+                    Toast.makeText(
+                        context,
+                        getString(R.string.toast_override_fxa_sync_server_done),
+                        Toast.LENGTH_LONG
+                    ).show()
+                    Handler().postDelayed({
+                        exitProcess(0)
+                    }, FXA_SYNC_OVERRIDE_EXIT_DELAY)
+                }
+            }
+        }
+        preferenceFxAOverride?.onPreferenceChangeListener = syncFxAOverrideUpdater
+        preferenceSyncOverride?.onPreferenceChangeListener = syncFxAOverrideUpdater
     }
 
     private fun navigateFromSettings(directions: NavDirections) {
@@ -342,6 +368,8 @@ class SettingsFragment : PreferenceFragmentCompat() {
 
         val accountManager = requireComponents.backgroundServices.accountManager
         val account = accountManager.authenticatedAccount()
+
+        updateFxASyncOverrideMenu()
 
         // Signed-in, no problems.
         if (account != null && !accountManager.accountNeedsReauth()) {
@@ -388,7 +416,31 @@ class SettingsFragment : PreferenceFragmentCompat() {
         }
     }
 
+    private fun updateFxASyncOverrideMenu() {
+        val preferenceFxAOverride =
+            findPreference<Preference>(getPreferenceKey(R.string.pref_key_override_fxa_server))
+        val preferenceSyncOverride =
+            findPreference<Preference>(getPreferenceKey(R.string.pref_key_override_sync_tokenserver))
+        val settings = requireContext().settings()
+        val show = settings.overrideFxAServer.isNotEmpty() ||
+                settings.overrideSyncTokenServer.isNotEmpty() ||
+                settings.showSecretDebugMenuThisSession
+        // Only enable changes to these prefs when the user isn't connected to an account.
+        val enabled = requireComponents.backgroundServices.accountManager.authenticatedAccount() == null
+        preferenceFxAOverride?.apply {
+            isVisible = show
+            isEnabled = enabled
+            summary = settings.overrideFxAServer.ifEmpty { null }
+        }
+        preferenceSyncOverride?.apply {
+            isVisible = show
+            isEnabled = enabled
+            summary = settings.overrideSyncTokenServer.ifEmpty { null }
+        }
+    }
+
     companion object {
         private const val SCROLL_INDICATOR_DELAY = 10L
+        private const val FXA_SYNC_OVERRIDE_EXIT_DELAY = 2000L
     }
 }
