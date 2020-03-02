@@ -33,6 +33,10 @@ add_task(async function setup() {
     SearchUtils.BROWSER_SEARCH_PREF + "separatePrivateDefault",
     true
   );
+  Services.prefs.setBoolPref(
+    SearchUtils.BROWSER_SEARCH_PREF + "separatePrivateDefault.ui.enabled",
+    true
+  );
   // Even though we don't use the distro bits to begin with, we still have
   // to set the pref now, as this gets cached.
   Services.prefs.getDefaultBranch("distribution.").setCharPref("id", "test");
