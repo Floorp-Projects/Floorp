@@ -19,13 +19,6 @@
 // allocates. This makes it safe to use in the profiler's "critical section".
 class ProfileBuffer final {
  public:
-  // Opaque type containing a block index, which should not be modified outside
-  // of BlocksRingBuffer.
-  // TODO: Eventually, all uint64_t values should be replaced with BlockIndex,
-  // because external users should only store and compare them, but not do other
-  // arithmetic operations (that uint64_t supports).
-  using BlockIndex = mozilla::BlocksRingBuffer::BlockIndex;
-
   // ProfileBuffer constructor
   // @param aBuffer The empty BlocksRingBuffer to use as buffer manager.
   // @param aCapacity The capacity of the buffer.
@@ -105,11 +98,11 @@ class ProfileBuffer final {
       // BlocksRingBuffer cannot be out-of-session when sampler is running.
       MOZ_ASSERT(aReader);
       for (mozilla::BlocksRingBuffer::EntryReader er : *aReader) {
-        if (er.CurrentBlockIndex().ConvertToU64() > aPosition) {
+        if (er.CurrentBlockIndex().ConvertToProfileBufferIndex() > aPosition) {
           // Passed the block. (We need a precise position.)
           return;
         }
-        if (er.CurrentBlockIndex().ConvertToU64() == aPosition) {
+        if (er.CurrentBlockIndex().ConvertToProfileBufferIndex() == aPosition) {
           MOZ_RELEASE_ASSERT(er.RemainingBytes() <= sizeof(entry));
           er.Read(&entry, er.RemainingBytes());
           return;
@@ -134,14 +127,15 @@ class ProfileBuffer final {
   // Add |aEntry| to the provided BlocksRingBuffer.
   // `static` because it may be used to add an entry to a `BlocksRingBuffer`
   // that is not attached to a `ProfileBuffer`.
-  static BlockIndex AddEntry(mozilla::BlocksRingBuffer& aBlocksRingBuffer,
-                             const ProfileBufferEntry& aEntry);
+  static mozilla::ProfileBufferBlockIndex AddEntry(
+      mozilla::BlocksRingBuffer& aBlocksRingBuffer,
+      const ProfileBufferEntry& aEntry);
 
   // Add a sample start (ThreadId) entry for aThreadId to the provided
   // BlocksRingBuffer. Returns the position of the entry.
   // `static` because it may be used to add an entry to a `BlocksRingBuffer`
   // that is not attached to a `ProfileBuffer`.
-  static BlockIndex AddThreadIdEntry(
+  static mozilla::ProfileBufferBlockIndex AddThreadIdEntry(
       mozilla::BlocksRingBuffer& aBlocksRingBuffer, int aThreadId);
 
   // The circular-ring storage in which this ProfileBuffer stores its data.
@@ -162,10 +156,10 @@ class ProfileBuffer final {
   //   `BufferRangeEnd()` -- but note that these reads may fail by the time you
   //   request them, as old entries get overwritten by new ones.
   uint64_t BufferRangeStart() const {
-    return mEntries.GetState().mRangeStart.ConvertToU64();
+    return mEntries.GetState().mRangeStart.ConvertToProfileBufferIndex();
   }
   uint64_t BufferRangeEnd() const {
-    return mEntries.GetState().mRangeEnd.ConvertToU64();
+    return mEntries.GetState().mRangeEnd.ConvertToProfileBufferIndex();
   }
 
  private:
