@@ -51,10 +51,8 @@ job-defaults:
                 windows.*:
                     - unittests/win_unittest.py
 
-mochitest:
+mochitest-plain:
     description: "Mochitest plain run"
-    suite:
-        name: mochitest-plain
     treeherder-symbol: M()
     loopback-video: true
     tier:
