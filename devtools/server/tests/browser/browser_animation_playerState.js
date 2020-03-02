@@ -92,11 +92,7 @@ async function playerStateIsCorrect(walker, animations) {
   is(properties.length, 1, "Length of animated properties is correct");
   let keyframes = properties[0].values;
   is(keyframes.length, 2, "Transition length of keyframe is correct");
-  is(
-    keyframes[0].easing,
-    "linear",
-    "Transition keyframes's easing is correct"
-  );
+  is(keyframes[0].easing, "linear", "Transition keyframes's easing is correct");
 
   info("Checking the state of one of multiple animations on a node");
 
