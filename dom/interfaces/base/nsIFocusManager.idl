@@ -54,11 +54,6 @@ interface nsIFocusManager : nsISupports
   attribute mozIDOMWindowProxy activeWindow;
 
   /**
-   * Setter for activeWindow with CallerType
-   */
-  [noscript] void SetActiveWindowWithCallerType(in mozIDOMWindowProxy aWindow, in CallerType aCallerType);
-
-  /**
    * The child window within the activeWindow that is focused. This will
    * always be activeWindow, a child window of activeWindow or null if no
    * child window is focused. Setting the focusedWindow changes the focused
