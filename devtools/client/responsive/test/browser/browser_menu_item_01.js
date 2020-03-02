@@ -31,27 +31,36 @@ add_task(async function() {
   await startup(window);
 
   ok(!isMenuChecked(), "RDM menu item is unchecked by default");
+});
 
-  const tab = await addTab(TEST_URL);
+let tab2;
 
-  ok(!isMenuChecked(), "RDM menu item is unchecked for new tab");
+addRDMTaskWithPreAndPost(
+  TEST_URL,
+  function pre_task() {
+    ok(!isMenuChecked(), "RDM menu item is unchecked for new tab");
+  },
+  async function task({ browser }) {
+    ok(isMenuChecked(), "RDM menu item is checked with RDM open");
 
-  await openRDM(tab);
+    tab2 = await addTab(TEST_URL);
 
-  ok(isMenuChecked(), "RDM menu item is checked with RDM open");
+    ok(!isMenuChecked(), "RDM menu item is unchecked for new tab");
 
-  const tab2 = await addTab(TEST_URL);
+    const tab = gBrowser.getTabForBrowser(browser);
+    await activateTab(tab);
 
-  ok(!isMenuChecked(), "RDM menu item is unchecked for new tab");
+    ok(
+      isMenuChecked(),
+      "RDM menu item is checked for the tab where RDM is open"
+    );
+  },
+  function post_task() {
+    ok(!isMenuChecked(), "RDM menu item is unchecked after RDM is closed");
+  },
+  { usingBrowserUI: true }
+);
 
-  await activateTab(tab);
-
-  ok(isMenuChecked(), "RDM menu item is checked for the tab where RDM is open");
-
-  await closeRDM(tab);
-
-  ok(!isMenuChecked(), "RDM menu item is unchecked after RDM is closed");
-
-  await removeTab(tab);
+add_task(async function() {
   await removeTab(tab2);
 });
