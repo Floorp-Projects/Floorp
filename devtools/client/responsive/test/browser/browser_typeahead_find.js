@@ -9,75 +9,66 @@
  * within RDM content. It does this by simulating keystrokes while
  * various elements in the RDM content are focused.
 
- * The test currently does not work due to two reasons:
- * 1) The simulated key events do not behave the same as real key events.
- *    Specifically, when this test is run on an un-patched build, it
- *    fails to trigger typeaheadfind when the input element is focused.
- * 2) In order to test that typeahead find has or has not occurred, this
- *    test checks the values held by the findBar associated with the
- *    tab that contains the RDM pane. That findBar has no values, though
- *    they appear correctly when the steps are run interactively. This
- *    indicates that some other findBar is receiving the typeaheadfind
- *    characters.
+ * The test currently does not work due to hitting the assert in
+ * Bug 516128.
  */
 
 const TEST_URL =
   "data:text/html;charset=utf-8," +
   '<body id="body"><input id="input" type="text"/><p>text</body>';
 
-addRDMTask(TEST_URL, async function({ ui, manager }) {
-  // Turn on the pref that allows meta viewport support.
-  await pushPref("accessibility.typeaheadfind", true);
+addRDMTask(
+  TEST_URL,
+  async function({ ui, manager }) {
+    // Turn on the pref that allows meta viewport support.
+    await pushPref("accessibility.typeaheadfind", true);
 
-  const store = ui.toolWindow.store;
+    const browser = ui.getViewportBrowser();
 
-  // Wait until the viewport has been added.
-  await waitUntilState(store, state => state.viewports.length == 1);
+    info("--- Starting test output ---");
 
-  const browser = ui.getViewportBrowser();
+    const expected = [
+      {
+        id: "body",
+        findTriggered: true,
+      },
+      {
+        id: "input",
+        findTriggered: false,
+      },
+    ];
 
-  info("--- Starting test output ---");
+    for (const e of expected) {
+      await SpecialPowers.spawn(browser, [{ e }], async function(args) {
+        const { e: values } = args;
+        const element = content.document.getElementById(values.id);
 
-  const expected = [
-    {
-      id: "body",
-      findTriggered: true,
-    },
-    {
-      id: "input",
-      findTriggered: false,
-    },
-  ];
+        // Set focus on the desired element.
+        element.focus();
+      });
 
-  for (const e of expected) {
-    await SpecialPowers.spawn(browser, [{ e }], async function(args) {
-      const { e: values } = args;
-      const element = content.document.getElementById(values.id);
+      // Press the 'T' key and see if find is triggered.
+      await BrowserTestUtils.synthesizeKey("t", {}, browser);
 
-      // Set focus on the desired element.
-      element.focus();
-    });
+      const findBar = await gBrowser.getFindBar();
 
-    // Press the 'T' key and see if find is triggered.
-    await BrowserTestUtils.synthesizeKey("t", {}, browser);
+      const findIsTriggered = findBar._findField.value == "t";
+      is(
+        findIsTriggered,
+        e.findTriggered,
+        "Text input with focused element " +
+          e.id +
+          " should " +
+          (e.findTriggered ? "" : "not ") +
+          "trigger find."
+      );
+      findBar._findField.value = "";
 
-    const findBar = await gBrowser.getFindBar();
-
-    const findIsTriggered = findBar._findField.value == "t";
-    is(
-      findIsTriggered,
-      e.findTriggered,
-      "Text input with focused element " +
-        e.id +
-        " should " +
-        (e.findTriggered ? "" : "not ") +
-        "trigger find."
-    );
-    findBar._findField.value = "";
-
-    await SpecialPowers.spawn(browser, [], async function() {
-      // Clear focus.
-      content.document.activeElement.blur();
-    });
-  }
-});
+      await SpecialPowers.spawn(browser, [], async function() {
+        // Clear focus.
+        content.document.activeElement.blur();
+      });
+    }
+  },
+  { usingBrowserUI: true }
+);

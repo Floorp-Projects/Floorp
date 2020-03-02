@@ -12,31 +12,38 @@
 // monitor, so we can not use a data:uri with inline styles here.
 const TEST_URI = `${URL_ROOT}doc_toolbox_rule_view.html`;
 
-add_task(async function() {
-  const tab = await addTab(TEST_URI);
+addRDMTaskWithPreAndPost(
+  TEST_URI,
+  async function pre_task() {
+    info("Open the rule-view and select the test node before opening RDM");
+    const ruleViewValues = await openRuleView();
+    const { inspector, view } = ruleViewValues;
+    await selectNode("div", inspector);
 
-  info("Open the rule-view and select the test node before opening RDM");
-  const { inspector, testActor, view } = await openRuleView();
-  await selectNode("div", inspector);
+    is(numberOfRules(view), 2, "Rule view has two rules.");
 
-  is(numberOfRules(view), 2, "Rule view has two rules.");
+    return ruleViewValues;
+  },
+  async function task({ preTaskValue }) {
+    const { inspector, testActor, view } = preTaskValue;
 
-  info("Open RDM");
-  await openRDM(tab);
+    info("Reload the current page");
+    const onNewRoot = inspector.once("new-root");
+    const onRuleViewRefreshed = inspector.once("rule-view-refreshed");
+    await testActor.reload();
+    await onNewRoot;
+    await inspector.markup._waitForChildren();
+    await onRuleViewRefreshed;
 
-  info("Reload the current page");
-  const onNewRoot = inspector.once("new-root");
-  const onRuleViewRefreshed = inspector.once("rule-view-refreshed");
-  await testActor.reload();
-  await onNewRoot;
-  await inspector.markup._waitForChildren();
-  await onRuleViewRefreshed;
-
-  is(numberOfRules(view), 2, "Rule view still has two rules and is not empty.");
-
-  await closeRDM(tab);
-  await removeTab(tab);
-});
+    is(
+      numberOfRules(view),
+      2,
+      "Rule view still has two rules and is not empty."
+    );
+  },
+  null,
+  { usingBrowserUI: true }
+);
 
 function numberOfRules(ruleView) {
   return ruleView.element.querySelectorAll(".ruleview-code").length;
