@@ -434,6 +434,7 @@ class Decoder {
  protected:
   friend class AutoRecordDecoderTelemetry;
   friend class DecoderTestHelper;
+  friend class nsBMPDecoder;
   friend class nsICODecoder;
   friend class PalettedSurfaceSink;
   friend class SurfaceSink;
