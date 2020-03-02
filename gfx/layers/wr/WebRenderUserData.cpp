@@ -6,6 +6,7 @@
 
 #include "WebRenderUserData.h"
 
+#include "mozilla/layers/AnimationHelper.h"
 #include "mozilla/layers/CompositorBridgeChild.h"
 #include "mozilla/layers/ImageClient.h"
 #include "mozilla/layers/WebRenderBridgeChild.h"
@@ -335,6 +336,11 @@ WebRenderImageData* WebRenderFallbackData::PaintIntoImage() {
 
   return mImageData.get();
 }
+
+WebRenderAPZAnimationData::WebRenderAPZAnimationData(
+    RenderRootStateManager* aManager, nsDisplayItem* aItem)
+    : WebRenderUserData(aManager, aItem),
+      mAnimationId(AnimationHelper::GetNextCompositorAnimationsId()) {}
 
 WebRenderAnimationData::WebRenderAnimationData(RenderRootStateManager* aManager,
                                                nsDisplayItem* aItem)

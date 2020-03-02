@@ -78,6 +78,7 @@ class WebRenderUserData {
   enum class UserDataType {
     eImage,
     eFallback,
+    eAPZAnimation,
     eAnimation,
     eCanvas,
     eRemote,
@@ -218,6 +219,20 @@ class WebRenderFallbackData : public WebRenderUserData {
   // when we render directly into a texture on the content side.
   RefPtr<WebRenderImageData> mImageData;
   bool mInvalid;
+};
+
+class WebRenderAPZAnimationData : public WebRenderUserData {
+ public:
+  WebRenderAPZAnimationData(RenderRootStateManager* aManager,
+                            nsDisplayItem* aItem);
+  virtual ~WebRenderAPZAnimationData() = default;
+
+  UserDataType GetType() override { return UserDataType::eAPZAnimation; }
+  static UserDataType Type() { return UserDataType::eAPZAnimation; }
+  uint64_t GetAnimationId() { return mAnimationId; }
+
+ private:
+  uint64_t mAnimationId;
 };
 
 class WebRenderAnimationData : public WebRenderUserData {
