@@ -5,7 +5,6 @@ http://creativecommons.org/publicdomain/zero/1.0/ */
 
 // Tests the device selector button and the menu items.
 
-const Types = require("devtools/client/responsive/types");
 const MenuItem = require("devtools/client/shared/components/menu/MenuItem");
 
 const FIREFOX_ICON =
@@ -37,38 +36,36 @@ const TEST_DEVICES = [
 
 addDeviceForTest(FIREFOX_DEVICE);
 
-addRDMTask(URL_ROOT, async function({ ui }) {
-  // Wait until the viewport has been added and the device list has been loaded
-  await waitUntilState(
-    ui.toolWindow.store,
-    state =>
-      state.viewports.length == 1 &&
-      state.devices.listState == Types.loadableState.LOADED
-  );
+addRDMTask(
+  URL_ROOT,
+  async function({ ui }) {
+    const deviceSelector = ui.toolWindow.document.getElementById(
+      "device-selector"
+    );
 
-  const deviceSelector = ui.toolWindow.document.getElementById(
-    "device-selector"
-  );
+    for (const testDevice of TEST_DEVICES) {
+      info(`Check "${name}" device`);
+      await testMenuItems(ui.toolWindow, deviceSelector, menuItems => {
+        const menuItem = findMenuItem(menuItems, testDevice.name);
+        ok(menuItem, "The menu item is on the list");
+        const label = menuItem.querySelector(".iconic > .label");
+        const backgroundImage = ui.toolWindow.getComputedStyle(
+          label,
+          "::before"
+        ).backgroundImage;
+        const icon = testDevice.hasIcon ? FIREFOX_ICON : DUMMY_ICON;
+        is(backgroundImage, icon, "The icon is correct");
+      });
 
-  for (const testDevice of TEST_DEVICES) {
-    info(`Check "${name}" device`);
-    await testMenuItems(ui.toolWindow, deviceSelector, menuItems => {
-      const menuItem = findMenuItem(menuItems, testDevice.name);
-      ok(menuItem, "The menu item is on the list");
-      const label = menuItem.querySelector(".iconic > .label");
-      const backgroundImage = ui.toolWindow.getComputedStyle(label, "::before")
-        .backgroundImage;
-      const icon = testDevice.hasIcon ? FIREFOX_ICON : DUMMY_ICON;
+      info("Check device selector button");
+      await selectDevice(ui, testDevice.name);
+      const backgroundImage = ui.toolWindow.getComputedStyle(
+        deviceSelector,
+        "::before"
+      ).backgroundImage;
+      const icon = testDevice.hasIcon ? FIREFOX_ICON : "none";
       is(backgroundImage, icon, "The icon is correct");
-    });
-
-    info("Check device selector button");
-    await selectDevice(ui, testDevice.name);
-    const backgroundImage = ui.toolWindow.getComputedStyle(
-      deviceSelector,
-      "::before"
-    ).backgroundImage;
-    const icon = testDevice.hasIcon ? FIREFOX_ICON : "none";
-    is(backgroundImage, icon, "The icon is correct");
-  }
-});
+    }
+  },
+  { usingBrowserUI: true, waitForDeviceList: true }
+);
