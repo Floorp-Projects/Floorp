@@ -16,6 +16,7 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.geckoview.*
+import org.mozilla.geckoview.test.rule.GeckoSessionTestRule
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.RejectedPromiseException
 import org.mozilla.geckoview.test.util.Callbacks
 import java.math.BigInteger
@@ -151,6 +152,39 @@ class WebPushTest : BaseSessionTest() {
         sessionRule.runtime.webPushController.onPushEvent(delegate!!.storedSubscription!!.scope, testPayload.toByteArray(Charsets.UTF_8))
 
         assertThat("Push data should match", p.value as String, equalTo(testPayload))
+    }
+
+    private fun sendNotification() {
+        val notificationResult = GeckoResult<Void>()
+        val runtime = sessionRule.runtime
+        val register = {  delegate: WebNotificationDelegate -> runtime.webNotificationDelegate = delegate}
+        val unregister = { _: WebNotificationDelegate -> runtime.webNotificationDelegate = null }
+
+        val expectedTitle = "The title"
+        val expectedBody = "The body"
+
+        sessionRule.addExternalDelegateDuringNextWait(WebNotificationDelegate::class, register,
+                unregister, object : WebNotificationDelegate {
+            @GeckoSessionTestRule.AssertCalled
+            override fun onShowNotification(notification: WebNotification) {
+                assertThat("Title should match", notification.title, equalTo(expectedTitle))
+                assertThat("Body should match", notification.text, equalTo(expectedBody))
+                notificationResult.complete(null)
+            }
+        })
+
+        val testPayload = JSONObject()
+        testPayload.put("title", expectedTitle)
+        testPayload.put("body", expectedBody)
+
+        sessionRule.runtime.webPushController.onPushEvent(delegate!!.storedSubscription!!.scope, testPayload.toString().toByteArray(Charsets.UTF_8))
+        sessionRule.waitForResult(notificationResult)
+    }
+
+    @Test
+    fun pushEventWithNotification() {
+        subscribe()
+        sendNotification()
     }
 
     @Test

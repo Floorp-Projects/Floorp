@@ -11,6 +11,11 @@ self.addEventListener("push", async function(e) {
   clients.forEach(function(client) {
     client.postMessage({ type: "push", payload: e.data.text() });
   });
+
+  try {
+    const { title, body } = e.data.json();
+    self.registration.showNotification(title, { body });
+  } catch (e) {}
 });
 
 self.addEventListener("pushsubscriptionchange", async function(e) {
