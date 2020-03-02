@@ -47,6 +47,7 @@ class FFmpegDataDecoder<LIBAV_VER>
   virtual void InitCodecContext() {}
   AVFrame* PrepareFrame();
   MediaResult InitDecoder();
+  MediaResult AllocateExtraData();
   MediaResult DoDecode(MediaRawData* aSample, bool* aGotFrame,
                        DecodedData& aOutResults);
 
@@ -67,10 +68,10 @@ class FFmpegDataDecoder<LIBAV_VER>
   virtual bool NeedParser() const { return false; }
   virtual int ParserFlags() const { return PARSER_FLAG_COMPLETE_FRAMES; }
 
-  static StaticMutex sMonitor;
   const RefPtr<TaskQueue> mTaskQueue;
   MozPromiseHolder<DecodePromise> mPromise;
   media::TimeUnit mLastInputDts;
+  static StaticMutex sMonitor;
 };
 
 }  // namespace mozilla

@@ -41,6 +41,32 @@ FFmpegDataDecoder<LIBAV_VER>::~FFmpegDataDecoder() {
   }
 }
 
+MediaResult FFmpegDataDecoder<LIBAV_VER>::AllocateExtraData() {
+  if (mExtraData) {
+    mCodecContext->extradata_size = mExtraData->Length();
+    // FFmpeg may use SIMD instructions to access the data which reads the
+    // data in 32 bytes block. Must ensure we have enough data to read.
+    uint32_t padding_size =
+#if LIBAVCODEC_VERSION_MAJOR >= 58
+        AV_INPUT_BUFFER_PADDING_SIZE;
+#else
+        FF_INPUT_BUFFER_PADDING_SIZE;
+#endif
+    mCodecContext->extradata = static_cast<uint8_t*>(
+        mLib->av_malloc(mExtraData->Length() + padding_size));
+    if (!mCodecContext->extradata) {
+      return MediaResult(NS_ERROR_OUT_OF_MEMORY,
+                         RESULT_DETAIL("Couldn't init ffmpeg extradata"));
+    }
+    memcpy(mCodecContext->extradata, mExtraData->Elements(),
+           mExtraData->Length());
+  } else {
+    mCodecContext->extradata_size = 0;
+  }
+
+  return NS_OK;
+}
+
 MediaResult FFmpegDataDecoder<LIBAV_VER>::InitDecoder() {
   FFMPEG_LOG("Initialising FFmpeg decoder.");
 
@@ -67,27 +93,10 @@ MediaResult FFmpegDataDecoder<LIBAV_VER>::InitDecoder() {
   mCodecContext->opaque = this;
 
   InitCodecContext();
-
-  if (mExtraData) {
-    mCodecContext->extradata_size = mExtraData->Length();
-    // FFmpeg may use SIMD instructions to access the data which reads the
-    // data in 32 bytes block. Must ensure we have enough data to read.
-    uint32_t padding_size =
-#if LIBAVCODEC_VERSION_MAJOR >= 58
-        AV_INPUT_BUFFER_PADDING_SIZE;
-#else
-        FF_INPUT_BUFFER_PADDING_SIZE;
-#endif
-    mCodecContext->extradata = static_cast<uint8_t*>(
-        mLib->av_malloc(mExtraData->Length() + padding_size));
-    if (!mCodecContext->extradata) {
-      return MediaResult(NS_ERROR_OUT_OF_MEMORY,
-                         RESULT_DETAIL("Couldn't init ffmpeg extradata"));
-    }
-    memcpy(mCodecContext->extradata, mExtraData->Elements(),
-           mExtraData->Length());
-  } else {
-    mCodecContext->extradata_size = 0;
+  MediaResult ret = AllocateExtraData();
+  if (NS_FAILED(ret)) {
+    mLib->av_freep(&mCodecContext);
+    return ret;
   }
 
 #if LIBAVCODEC_VERSION_MAJOR < 57
@@ -97,7 +106,6 @@ MediaResult FFmpegDataDecoder<LIBAV_VER>::InitDecoder() {
 #endif
 
   if (mLib->avcodec_open2(mCodecContext, codec, nullptr) < 0) {
-    mLib->avcodec_close(mCodecContext);
     mLib->av_freep(&mCodecContext);
     return MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
                        RESULT_DETAIL("Couldn't initialise ffmpeg decoder"));
