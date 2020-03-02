@@ -6942,13 +6942,11 @@ bool nsDisplayOwnLayer::CreateWebRenderCommands(
     // APZ is enabled and this is a scroll thumb or zooming layer, so we need
     // to create and set an animation id. That way APZ can adjust the position/
     // zoom of this content asynchronously as needed.
-    RefPtr<WebRenderAnimationData> animationData =
+    RefPtr<WebRenderAPZAnimationData> animationData =
         aManager->CommandBuilder()
-            .CreateOrRecycleWebRenderUserData<WebRenderAnimationData>(
+            .CreateOrRecycleWebRenderUserData<WebRenderAPZAnimationData>(
                 this, aBuilder.GetRenderRoot());
-    AnimationInfo& animationInfo = animationData->GetAnimationInfo();
-    animationInfo.EnsureAnimationsId();
-    mWrAnimationId = animationInfo.GetCompositorAnimationsId();
+    mWrAnimationId = animationData->GetAnimationId();
 
     prop.emplace();
     prop->id = mWrAnimationId;
