@@ -24,6 +24,15 @@
       width: 100px;
     }
 
+    .div-marker {
+      display: list-item;
+      list-style-position: inside;
+    }
+
+    .div-marker::marker {
+      content: "div-marker";
+    }
+
     @keyframes body {
       from {
         opacity: 0;
@@ -58,5 +67,25 @@
   <body>
     <div class="div-before"></div>
     <div class="div-after"></div>
+    <div class="div-marker"></div>
+
+    <script>
+    "use strict";
+
+    // The reason why we currently run the animation on `::marker` with Web Animations API
+    // instead of CSS Animations is because it requires `layout.css.marker.restricted`
+    // pref change.
+    document.querySelector(".div-marker").animate(
+      {
+        color: ["black", "lime"],
+      },
+      {
+        id: "div-marker",
+        duration: 10000,
+        iterations: Infinity,
+        pseudoElement: "::marker",
+      }
+    );
+    </script>
   </body>
 </html>
