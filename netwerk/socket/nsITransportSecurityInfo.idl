@@ -88,4 +88,20 @@ interface nsITransportSecurityInfo : nsISupports {
 
     [notxpcom, noscript]
     bool DeserializeFromIPC([const] in IpcMessagePtr aMsg, in PickleIteratorPtr aIter);
+
+    /* negotiatedNPN is '' if no NPN list was provided by the client,
+     * or if the server did not select any protocol choice from that
+     * list. That also includes the case where the server does not
+     * implement NPN.
+     *
+     * If negotiatedNPN is read before NPN has progressed to the point
+     * where this information is available NS_ERROR_NOT_CONNECTED is
+     * raised.
+     */
+    readonly attribute ACString negotiatedNPN;
+
+    /**
+     * True iff the connection was resumed using the resumption token.
+     */
+    readonly attribute boolean resumed;
 };

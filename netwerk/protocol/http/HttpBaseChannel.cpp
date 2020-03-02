@@ -56,7 +56,6 @@
 #include "nsIObserverService.h"
 #include "nsIPrincipal.h"
 #include "nsIProtocolProxyService.h"
-#include "nsISSLSocketControl.h"
 #include "nsIScriptError.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsISecurityConsoleMessage.h"
@@ -64,6 +63,7 @@
 #include "nsIStorageStream.h"
 #include "nsIStreamConverterService.h"
 #include "nsITimedChannel.h"
+#include "nsITransportSecurityInfo.h"
 #include "nsIURIMutator.h"
 #include "nsMimeTypes.h"
 #include "nsNetCID.h"
@@ -1958,10 +1958,11 @@ HttpBaseChannel::SetIsMainDocumentChannel(bool aValue) {
 NS_IMETHODIMP
 HttpBaseChannel::GetProtocolVersion(nsACString& aProtocolVersion) {
   nsresult rv;
-  nsCOMPtr<nsISSLSocketControl> ssl = do_QueryInterface(mSecurityInfo, &rv);
+  nsCOMPtr<nsITransportSecurityInfo> info =
+      do_QueryInterface(mSecurityInfo, &rv);
   nsAutoCString protocol;
-  if (NS_SUCCEEDED(rv) && ssl &&
-      NS_SUCCEEDED(ssl->GetNegotiatedNPN(protocol)) && !protocol.IsEmpty()) {
+  if (NS_SUCCEEDED(rv) && info &&
+      NS_SUCCEEDED(info->GetNegotiatedNPN(protocol)) && !protocol.IsEmpty()) {
     // The negotiated protocol was not empty so we can use it.
     aProtocolVersion = protocol;
     return NS_OK;

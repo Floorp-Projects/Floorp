@@ -438,6 +438,7 @@ bool nsHttpConnection::EnsureNPNComplete(nsresult& aOut0RTTWriteHandshakeValue,
 
   nsresult rv = NS_OK;
   nsCOMPtr<nsISupports> securityInfo;
+  nsCOMPtr<nsITransportSecurityInfo> info;
   nsCOMPtr<nsISSLSocketControl> ssl;
   nsAutoCString negotiatedNPN;
   // This is neede for telemetry
@@ -451,13 +452,16 @@ bool nsHttpConnection::EnsureNPNComplete(nsresult& aOut0RTTWriteHandshakeValue,
   ssl = do_QueryInterface(securityInfo, &rv);
   if (NS_FAILED(rv)) goto npnComplete;
 
+  info = do_QueryInterface(securityInfo, &rv);
+  if (NS_FAILED(rv)) goto npnComplete;
+
   if (!m0RTTChecked) {
     // We reuse m0RTTChecked. We want to send this status only once.
     mTransaction->OnTransportStatus(mSocketTransport,
                                     NS_NET_STATUS_TLS_HANDSHAKE_STARTING, 0);
   }
 
-  rv = ssl->GetNegotiatedNPN(negotiatedNPN);
+  rv = info->GetNegotiatedNPN(negotiatedNPN);
   if (!m0RTTChecked && (rv == NS_ERROR_NOT_CONNECTED) &&
       !mConnInfo->UsingProxy()) {
     // There is no ALPN info (yet!). We need to consider doing 0RTT. We
@@ -481,7 +485,7 @@ bool nsHttpConnection::EnsureNPNComplete(nsresult& aOut0RTTWriteHandshakeValue,
       }
 
       // Check NegotiatedNPN first.
-      rv = ssl->GetNegotiatedNPN(negotiatedNPN);
+      rv = info->GetNegotiatedNPN(negotiatedNPN);
       if (rv == NS_ERROR_NOT_CONNECTED) {
         rvEarlyAlpn = ssl->GetAlpnEarlySelection(mEarlyNegotiatedALPN);
       }

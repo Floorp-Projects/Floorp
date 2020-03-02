@@ -20,17 +20,13 @@ class CommonSocketControl : public mozilla::psm::TransportSecurityInfo,
 
   uint32_t GetProviderFlags() const { return mProviderFlags; }
   void SetSSLVersionUsed(int16_t version) { mSSLVersionUsed = version; }
-  void SetResumed(bool aResumed) { mResumed = aResumed; }
 
  protected:
   ~CommonSocketControl() = default;
-  nsCString mNegotiatedNPN;
-  bool mNPNCompleted;
   bool mHandshakeCompleted;
   bool mJoined;
   bool mSentClientCert;
   bool mFailedVerification;
-  mozilla::Atomic<bool, mozilla::Relaxed> mResumed;
   uint16_t mSSLVersionUsed;
   uint32_t mProviderFlags;
 };
