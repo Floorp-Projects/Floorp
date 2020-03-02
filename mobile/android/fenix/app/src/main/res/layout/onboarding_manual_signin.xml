@@ -17,9 +17,9 @@
         android:layout_height="wrap_content"
         android:layout_marginBottom="14dp"
         android:drawablePadding="12dp"
-        android:drawableTint="@color/white_color"
         android:textAppearance="@style/Header16TextStyle"
         android:textColor="@color/neutral_text"
+        app:drawableTint="@color/white_color"
         tools:text="@string/onboarding_firefox_account_header" />
 
     <Button
