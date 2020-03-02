@@ -2091,10 +2091,6 @@ void nsWindow::DispatchHitTest(const WidgetTouchEvent& aEvent) {
     hittest.mInputSource = MouseEvent_Binding::MOZ_SOURCE_TOUCH;
     nsEventStatus status;
     DispatchEvent(&hittest, status);
-
-    if (mAPZEventState && hittest.mHitCluster) {
-      mAPZEventState->ProcessClusterHit();
-    }
   }
 }
 
