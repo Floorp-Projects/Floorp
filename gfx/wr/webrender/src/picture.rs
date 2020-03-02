@@ -69,7 +69,7 @@
 //! content will all be squashed into a single slice, in order to save GPU memory
 //! and compositing performance.
 //!
-//! ## Overlay Tiles
+//! ## Compositor Surfaces
 //!
 //! Sometimes, a primitive would prefer to exist as a native compositor surface.
 //! This allows a large and/or regularly changing primitive (such as a video, or
@@ -79,12 +79,12 @@
 //! Since drawing a primitive as a compositor surface alters the ordering of
 //! primitives in a tile, we use 'overlay tiles' to ensure correctness. If a
 //! tile has a compositor surface, _and_ that tile has primitives that overlap
-//! the compositor surface rect, the tile switches to be drawn in overlay mode.
+//! the compositor surface rect, the tile switches to be drawn in alpha mode.
 //!
 //! We rely on only promoting compositor surfaces that are opaque primitives.
 //! With this assumption, the tile(s) that intersect the compositor surface get
 //! a 'cutout' in the rectangle where the compositor surface exists (not the
-//! entire tile), allowing that tile to be drawn as an overlay after the
+//! entire tile), allowing that tile to be drawn as an alpha tile after the
 //! compositor surface.
 //!
 //! Tiles are only drawn in overlay mode if there is content that exists on top
@@ -492,6 +492,9 @@ struct TilePostUpdateContext<'a> {
 
     /// The local rect of the overall picture cache
     local_rect: PictureRect,
+
+    /// A list of the external surfaces that are present on this slice
+    external_surfaces: &'a [ExternalSurfaceDescriptor],
 }
 
 // Mutable state passed to picture cache tiles during post_update
@@ -1210,7 +1213,21 @@ impl Tile {
         let clipped_rect = self.current_descriptor.local_valid_rect
             .intersection(&ctx.local_clip_rect)
             .unwrap_or_else(PictureRect::zero);
-        let is_opaque = ctx.backdrop.rect.contains_rect(&clipped_rect);
+        let mut is_opaque = ctx.backdrop.rect.contains_rect(&clipped_rect);
+
+        if self.has_compositor_surface {
+            // TODO(gw): This will almost always select over blend, due to the
+            //           background rectangle. In future, we can optimize this
+            //           case to only check items that come _after_ the compositor
+            //           surface z_id? A better option might be to tweak the z_id
+            //           values so that the alpha pixels get z-rejected?
+            for surface in ctx.external_surfaces {
+                if surface.device_rect.intersects(&self.device_valid_rect) {
+                    is_opaque = false;
+                    break;
+                }
+            }
+        }
 
         if is_opaque != self.is_opaque {
             // If opacity changed, the native compositor surface and all tiles get invalidated.
@@ -3217,6 +3234,7 @@ impl TileCacheInstance {
             color_bindings: &self.color_bindings,
             current_tile_size: self.current_tile_size,
             local_rect: self.local_rect,
+            external_surfaces: &self.external_surfaces,
         };
 
         let mut state = TilePostUpdateState {
