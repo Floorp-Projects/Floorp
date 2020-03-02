@@ -34,6 +34,13 @@
       // Description from content of h2.
       testDescr("p", "heading");
 
+      // Description from aria-description attribute
+      testDescr("p2", "I describe");
+
+      // Description from contents of h2 when both aria-describedby and
+      // aria-description are present
+      testDescr("p3", "heading");
+
       // From table summary (caption is used as a name)
       testDescr("table1", "summary");
 
@@ -91,6 +98,8 @@
 
   <h2 id="heading">heading</h2>
   <p id="p" aria-describedby="heading" role="button">click me</p>
+  <p id="p2" aria-description="I describe" role="button">click me</p>
+  <p id="p3" aria-description="I do not describe" aria-describedby="heading" role="button">click me</p>
 
   <table id="table1" summary="summary">
     <caption>caption</caption>

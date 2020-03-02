@@ -1068,6 +1068,11 @@ class Accessible : public nsISupports {
   void ARIAName(nsString& aName) const;
 
   /**
+   * Returns the accessible description specified by ARIA.
+   */
+  void ARIADescription(nsString& aDescription) const;
+
+  /**
    * Returns the accessible name specified for this control using XUL
    * <label control="id" ...>.
    */
