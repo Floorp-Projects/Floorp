@@ -34,10 +34,13 @@ import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.feature.tab.collections.TabCollection
 import mozilla.components.feature.tabs.TabsUseCases
 import org.junit.After
+import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
+import org.junit.runner.RunWith
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
+import org.mozilla.fenix.TestApplication
 import org.mozilla.fenix.browser.BrowserAnimator
 import org.mozilla.fenix.browser.BrowserFragment
 import org.mozilla.fenix.browser.BrowserFragmentDirections
@@ -51,12 +54,17 @@ import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.nav
+import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.toTab
 import org.mozilla.fenix.home.Tab
 import org.mozilla.fenix.settings.deletebrowsingdata.deleteAndQuit
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
 
 @ExperimentalCoroutinesApi
 @UseExperimental(ObsoleteCoroutinesApi::class)
+@RunWith(RobolectricTestRunner::class)
+@Config(application = TestApplication::class)
 class DefaultBrowserToolbarControllerTest {
 
     private val mainThreadSurrogate = newSingleThreadContext("UI thread")
@@ -126,6 +134,12 @@ class DefaultBrowserToolbarControllerTest {
         every { browserAnimator.captureEngineViewAndDrawStatically(capture(onComplete)) } answers { onComplete.captured.invoke() }
     }
 
+    @After
+    fun tearDown() {
+        Dispatchers.resetMain() // reset main dispatcher to the original Main dispatcher
+        mainThreadSurrogate.close()
+    }
+
     @Test
     fun handleBrowserToolbarPaste() {
         every { currentSession.id } returns "1"
@@ -164,10 +178,41 @@ class DefaultBrowserToolbarControllerTest {
         }
     }
 
-    @After
-    fun tearDown() {
-        Dispatchers.resetMain() // reset main dispatcher to the original Main dispatcher
-        mainThreadSurrogate.close()
+    @Test
+    fun `handle BrowserMenu dismissed with all options available`() = runBlockingTest {
+        val itemList: List<ToolbarMenu.Item> = listOf(
+            ToolbarMenu.Item.AddToHomeScreen,
+            ToolbarMenu.Item.ReaderMode(true),
+            ToolbarMenu.Item.OpenInApp
+        )
+
+        val activity = HomeActivity()
+
+        controller = DefaultBrowserToolbarController(
+            activity = activity,
+            navController = navController,
+            browsingModeManager = browsingModeManager,
+            findInPageLauncher = findInPageLauncher,
+            engineView = engineView,
+            browserAnimator = browserAnimator,
+            customTabSession = null,
+            getSupportUrl = getSupportUrl,
+            openInFenixIntent = openInFenixIntent,
+            scope = this,
+            swipeRefresh = swipeRefreshLayout,
+            tabCollectionStorage = tabCollectionStorage,
+            topSiteStorage = topSiteStorage,
+            bookmarkTapped = mockk(),
+            readerModeController = mockk(),
+            sessionManager = mockk(),
+            store = mockk()
+        )
+
+        controller.handleBrowserMenuDismissed(itemList)
+
+        assertEquals(true, activity.settings().installPwaOpened)
+        assertEquals(true, activity.settings().readerModeOpened)
+        assertEquals(true, activity.settings().openInAppOpened)
     }
 
     @Test

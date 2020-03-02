@@ -127,7 +127,7 @@ class ReaderViewTest {
         }.close { }
 
         readerViewRobot {
-            verifyReaderViewDetected(true)
+            verifyReaderViewDetected(false)
         }
     }
 

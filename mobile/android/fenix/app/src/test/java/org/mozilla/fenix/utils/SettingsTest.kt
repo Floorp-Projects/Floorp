@@ -295,6 +295,45 @@ class SettingsTest {
     }
 
     @Test
+    fun shouldSetReaderModeOpened() {
+        // When
+        // Then
+        assertFalse(settings.readerModeOpened)
+
+        // When
+        settings.readerModeOpened = true
+
+        // Then
+        assertTrue(settings.readerModeOpened)
+    }
+
+    @Test
+    fun shouldSetOpenInAppOpened() {
+        // When
+        // Then
+        assertFalse(settings.openInAppOpened)
+
+        // When
+        settings.openInAppOpened = true
+
+        // Then
+        assertTrue(settings.openInAppOpened)
+    }
+
+    @Test
+    fun shouldSetInstallPwaOpened() {
+        // When
+        // Then
+        assertFalse(settings.installPwaOpened)
+
+        // When
+        settings.installPwaOpened = true
+
+        // Then
+        assertTrue(settings.installPwaOpened)
+    }
+
+    @Test
     fun shouldUseTrackingProtectionStrict() {
         // When
         // Then
