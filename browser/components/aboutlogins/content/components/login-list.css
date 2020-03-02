@@ -24,15 +24,14 @@
 #login-sort {
   background-color: transparent;
   margin-inline-start: 0;
-  padding-inline-start: 0;
-  padding-inline-end: 16px;
+  padding-inline: 0 16px;
   min-height: initial;
   font: inherit;
   font-weight: 600;
   color: var(--in-content-text-color) !important;
 }
 
-#login-sort:hover {
+#login-sort:hover:not([disabled]) {
   background-color: var(--in-content-button-background);
 }
 
@@ -86,8 +85,7 @@
 }
 
 ol {
-  margin-top: 0;
-  margin-bottom: 0;
+  margin-block: 0;
   padding-inline-start: 0;
   overflow: hidden auto;
   flex-grow: 1;
@@ -106,9 +104,8 @@ ol {
 .login-list-item {
   display: flex;
   align-items: center;
-  padding: 10px;
-  padding-inline-end: 18px;
-  padding-inline-start: 12px;
+  padding-block: 10px;
+  padding-inline: 12px 18px;
   border-inline-start: 4px solid transparent;
   border-bottom: 1px solid var(--in-content-border-color);
   user-select: none;
