@@ -24,6 +24,7 @@ class FilteredNodeIterator : public Iter {
   }
 
   FilteredNodeIterator& begin() { return *this; }
+  using Iter::end;
 
   void operator++() {
     Iter::operator++();
@@ -31,13 +32,12 @@ class FilteredNodeIterator : public Iter {
   }
 
   using Iter::operator!=;
+
   T* operator*() {
     nsINode* node = Iter::operator*();
     MOZ_ASSERT(!node || T::FromNode(node));
     return static_cast<T*>(node);
   }
-
-  FilteredNodeIterator end() { return FilteredNodeIterator(); }
 
  private:
   void EnsureValid() {
