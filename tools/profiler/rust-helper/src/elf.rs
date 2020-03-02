@@ -4,8 +4,8 @@
 
 use compact_symbol_table::CompactSymbolTable;
 use goblin::elf;
-use object::SymbolKind;
 use object::read::{ElfFile, Object};
+use object::SymbolKind;
 use std::cmp;
 use std::collections::HashMap;
 use uuid::Uuid;
