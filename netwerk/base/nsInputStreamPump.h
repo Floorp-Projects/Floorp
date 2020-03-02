@@ -98,6 +98,9 @@ class nsInputStreamPump final : public nsIInputStreamPump,
   bool mCloseWhenDone;
   bool mRetargeting;
   bool mAsyncStreamIsBuffered;
+  // Indicate whether nsInputStreamPump is used completely off main thread.
+  // If true, OnStateStop() is executed off main thread.
+  bool mOffMainThread;
   // Protects state/member var accesses across multiple threads.
   mozilla::RecursiveMutex mMutex;
 };
