@@ -36,7 +36,11 @@ add_task(async function test() {
   gBrowser.removeCurrentTab({ skipPermitUnload: true });
 
   info("Search for the decoded string.");
-  await promiseAutocompleteResultPopup(decoded);
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    waitForFocus: SimpleTest.waitForFocus,
+    value: decoded,
+  });
   Assert.equal(
     UrlbarTestUtils.getResultCount(window),
     2,
@@ -46,7 +50,11 @@ add_task(async function test() {
   Assert.equal(result.url, encodeURI(TEST_URL), "Check result url");
 
   info("Search for the encoded string.");
-  await promiseAutocompleteResultPopup(encodeURIComponent(decoded));
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    waitForFocus: SimpleTest.waitForFocus,
+    value: encodeURIComponent(decoded),
+  });
   Assert.equal(
     UrlbarTestUtils.getResultCount(window),
     2,

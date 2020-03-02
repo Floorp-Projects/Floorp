@@ -12,8 +12,12 @@ add_task(async function test_windowSwitch() {
     gBrowser,
     "about:mozilla"
   );
-  await promiseAutocompleteResultPopup("www.mozilla.org");
-  await waitForAutocompleteResultAt(0);
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    waitForFocus: SimpleTest.waitForFocus,
+    value: "www.mozilla.org",
+  });
+  await UrlbarTestUtils.waitForAutocompleteResultAt(window, 0);
 
   gURLBar.focus();
   gURLBar.inputField.setSelectionRange(4, 4);

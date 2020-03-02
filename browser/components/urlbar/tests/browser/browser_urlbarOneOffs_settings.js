@@ -38,8 +38,15 @@ async function selectSettings(activateFn) {
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "about:blank" },
     async browser => {
-      await promiseAutocompleteResultPopup("example.com");
-      await waitForAutocompleteResultAt(gMaxResults - 1);
+      await UrlbarTestUtils.promiseAutocompleteResultPopup({
+        window,
+        waitForFocus: SimpleTest.waitForFocus,
+        value: "example.com",
+      });
+      await UrlbarTestUtils.waitForAutocompleteResultAt(
+        window,
+        gMaxResults - 1
+      );
 
       await UrlbarTestUtils.promisePopupClose(window, async () => {
         let prefPaneLoaded = TestUtils.topicObserved(

@@ -111,7 +111,11 @@ add_task(async function() {
       );
     }
 
-    await promiseAutocompleteResultPopup(testcase.input);
+    await UrlbarTestUtils.promiseAutocompleteResultPopup({
+      window,
+      waitForFocus: SimpleTest.waitForFocus,
+      value: testcase.input,
+    });
 
     Assert.greaterOrEqual(
       UrlbarTestUtils.getResultCount(window),

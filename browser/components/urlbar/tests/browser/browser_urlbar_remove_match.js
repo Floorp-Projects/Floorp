@@ -15,7 +15,11 @@ add_task(async function test_remove_history() {
     "history"
   );
 
-  await promiseAutocompleteResultPopup("from_urlbar");
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    waitForFocus: SimpleTest.waitForFocus,
+    value: "from_urlbar",
+  });
 
   let result = await UrlbarTestUtils.getDetailsOfResultAt(window, 1);
   Assert.equal(result.url, TEST_URL, "Found the expected result");
@@ -56,7 +60,11 @@ add_task(async function test_remove_bookmark_doesnt() {
     await PlacesUtils.bookmarks.eraseEverything();
   });
 
-  await promiseAutocompleteResultPopup("from_urlbar");
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    waitForFocus: SimpleTest.waitForFocus,
+    value: "from_urlbar",
+  });
   let result = await UrlbarTestUtils.getDetailsOfResultAt(window, 1);
   Assert.equal(result.url, TEST_URL, "Found the expected result");
 

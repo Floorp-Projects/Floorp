@@ -77,7 +77,11 @@ add_task(async function test_remotetab_opens() {
   await BrowserTestUtils.withNewTab(
     { url: "about:robots", gBrowser },
     async function() {
-      await promiseAutocompleteResultPopup("Test Remote");
+      await UrlbarTestUtils.promiseAutocompleteResultPopup({
+        window,
+        waitForFocus: SimpleTest.waitForFocus,
+        value: "Test Remote",
+      });
 
       // There should be two items in the pop-up, the first is the default search
       // suggestion, the second is the remote tab.

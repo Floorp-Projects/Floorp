@@ -25,25 +25,50 @@ add_task(async function init() {
 
 add_task(async function tabWithSearchString() {
   info("Tab with a search string");
-  await promiseAutocompleteResultPopup("exam", window, true);
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    waitForFocus: SimpleTest.waitForFocus,
+    value: "exam",
+    fireInputEvent: true,
+  });
   await expectTabThroughResults();
   info("Reverse Tab with a search string");
-  await promiseAutocompleteResultPopup("exam", window, true);
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    waitForFocus: SimpleTest.waitForFocus,
+    value: "exam",
+    fireInputEvent: true,
+  });
   await expectTabThroughResults({ reverse: true });
 });
 
 add_task(async function tabNoSearchString() {
   info("Tab without a search string");
-  await promiseAutocompleteResultPopup("", window, true);
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    waitForFocus: SimpleTest.waitForFocus,
+    value: "",
+    fireInputEvent: true,
+  });
   await expectTabThroughToolbar();
   info("Reverse Tab without a search string");
-  await promiseAutocompleteResultPopup("", window, true);
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    waitForFocus: SimpleTest.waitForFocus,
+    value: "",
+    fireInputEvent: true,
+  });
   await expectTabThroughToolbar({ reverse: true });
 });
 
 add_task(async function tabAfterBlur() {
   info("Tab after closing the view");
-  await promiseAutocompleteResultPopup("exam", window, true);
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    waitForFocus: SimpleTest.waitForFocus,
+    value: "exam",
+    fireInputEvent: true,
+  });
   await UrlbarTestUtils.promisePopupClose(window);
   await expectTabThroughToolbar();
 });
@@ -88,7 +113,12 @@ add_task(async function tabNoSearchStringKeyboardFocus() {
 
 add_task(async function tabRetainedResultMouseFocus() {
   info("Tab after retained results with mouse focus");
-  await promiseAutocompleteResultPopup("exam", window, true);
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    waitForFocus: SimpleTest.waitForFocus,
+    value: "exam",
+    fireInputEvent: true,
+  });
   await UrlbarTestUtils.promisePopupClose(window);
   await UrlbarTestUtils.promisePopupOpen(window, () => {
     EventUtils.synthesizeMouseAtCenter(gURLBar.inputField, {});
@@ -99,7 +129,12 @@ add_task(async function tabRetainedResultMouseFocus() {
 
 add_task(async function tabRetainedResultsKeyboardFocus() {
   info("Tab after retained results with keyboard focus");
-  await promiseAutocompleteResultPopup("exam", window, true);
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    waitForFocus: SimpleTest.waitForFocus,
+    value: "exam",
+    fireInputEvent: true,
+  });
   await UrlbarTestUtils.promisePopupClose(window);
   await UrlbarTestUtils.promisePopupOpen(window, () => {
     EventUtils.synthesizeKey("l", { accelKey: true });
@@ -113,7 +148,12 @@ add_task(async function tabNoOpenViewOnFocus() {
   await SpecialPowers.pushPrefEnv({
     set: [["browser.urlbar.openViewOnFocus", false]],
   });
-  await promiseAutocompleteResultPopup("exam", window, true);
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    waitForFocus: SimpleTest.waitForFocus,
+    value: "exam",
+    fireInputEvent: true,
+  });
   await UrlbarTestUtils.promisePopupClose(window);
   EventUtils.synthesizeMouseAtCenter(gURLBar.inputField, {});
   await expectTabThroughToolbar();

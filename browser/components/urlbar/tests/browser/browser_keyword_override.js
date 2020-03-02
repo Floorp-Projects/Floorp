@@ -23,7 +23,11 @@ add_task(async function() {
     await PlacesUtils.bookmarks.remove(bm);
   });
 
-  await promiseAutocompleteResultPopup("keyword search");
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    waitForFocus: SimpleTest.waitForFocus,
+    value: "keyword search",
+  });
   let result = await UrlbarTestUtils.getDetailsOfResultAt(window, 0);
 
   info("Before override");

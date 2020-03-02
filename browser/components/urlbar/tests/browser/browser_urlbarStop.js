@@ -41,7 +41,12 @@ add_task(async function() {
 });
 
 async function typeAndSubmitAndStop(url) {
-  await promiseAutocompleteResultPopup(url, window, true);
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    waitForFocus: SimpleTest.waitForFocus,
+    value: url,
+    fireInputEvent: true,
+  });
   is(
     gURLBar.value,
     BrowserUtils.trimURL(url),

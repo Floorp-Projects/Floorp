@@ -8,7 +8,11 @@
  */
 
 async function promise_first_result(inputText) {
-  await promiseAutocompleteResultPopup(inputText);
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    waitForFocus: SimpleTest.waitForFocus,
+    value: inputText,
+  });
 
   return UrlbarTestUtils.getDetailsOfResultAt(window, 0);
 }

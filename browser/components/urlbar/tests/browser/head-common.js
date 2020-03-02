@@ -71,24 +71,3 @@ async function withHttpServer(
     server = null;
   }
 }
-
-function promiseSearchComplete(win = window, dontAnimate = false) {
-  return UrlbarTestUtils.promiseSearchComplete(win, dontAnimate);
-}
-
-function promiseAutocompleteResultPopup(
-  value,
-  win = window,
-  fireInputEvent = false
-) {
-  return UrlbarTestUtils.promiseAutocompleteResultPopup({
-    window: win,
-    waitForFocus,
-    value,
-    fireInputEvent,
-  });
-}
-
-async function waitForAutocompleteResultAt(index) {
-  return UrlbarTestUtils.waitForAutocompleteResultAt(window, index);
-}

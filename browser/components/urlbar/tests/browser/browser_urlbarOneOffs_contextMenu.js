@@ -62,7 +62,11 @@ async function searchInTab(checkFn) {
   await Services.search.setDefault(originalEngine);
 
   await BrowserTestUtils.withNewTab({ gBrowser }, async testBrowser => {
-    await promiseAutocompleteResultPopup("foo");
+    await UrlbarTestUtils.promiseAutocompleteResultPopup({
+      window,
+      waitForFocus: SimpleTest.waitForFocus,
+      value: "foo",
+    });
 
     let contextMenu = oneOffSearchButtons.querySelector(
       ".search-one-offs-context-menu"
@@ -144,7 +148,11 @@ add_task(async function switchDefaultEngine() {
   await Services.search.setDefault(originalEngine);
 
   await BrowserTestUtils.withNewTab({ gBrowser }, async () => {
-    await promiseAutocompleteResultPopup("foo");
+    await UrlbarTestUtils.promiseAutocompleteResultPopup({
+      window,
+      waitForFocus: SimpleTest.waitForFocus,
+      value: "foo",
+    });
 
     let contextMenu = oneOffSearchButtons.querySelector(
       ".search-one-offs-context-menu"

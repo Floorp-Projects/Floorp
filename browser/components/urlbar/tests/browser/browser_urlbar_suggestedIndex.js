@@ -39,7 +39,11 @@ add_task(async function suggestedIndex() {
   }
   await PlacesTestUtils.addVisits(urls);
 
-  await promiseAutocompleteResultPopup("foo");
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    waitForFocus: SimpleTest.waitForFocus,
+    value: "foo",
+  });
 
   Assert.equal(
     UrlbarTestUtils.getResultCount(window),
@@ -87,7 +91,11 @@ add_task(async function suggestedIndex_append() {
 
   await PlacesTestUtils.addVisits("http://example.com/bar");
 
-  await promiseAutocompleteResultPopup("bar");
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    waitForFocus: SimpleTest.waitForFocus,
+    value: "bar",
+  });
 
   Assert.equal(
     UrlbarTestUtils.getResultCount(window),
