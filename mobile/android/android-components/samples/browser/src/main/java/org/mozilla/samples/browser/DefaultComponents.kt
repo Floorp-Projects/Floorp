@@ -261,6 +261,8 @@ open class DefaultComponents(private val applicationContext: Context) {
                 sessionManager.selectedSessionOrThrow.desktopMode
             }) { checked ->
                 sessionUseCases.requestDesktopSite(checked)
+            }.apply {
+                visible = { sessionManager.selectedSession != null }
             }
         )
         items.add(
