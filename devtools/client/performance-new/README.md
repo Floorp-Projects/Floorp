@@ -8,6 +8,8 @@ This project contains TypeScript types in JSDoc comments. To run the type checke
 
 ## Overall Architecture
 
+Note: this architecture is in flux right now, check out [Bug 1597371](https://bugzilla.mozilla.org/show_bug.cgi?id=1597371) for more details. The docs below will need updating once the migration is complete, but as of the time of this writing the migration is partway done.
+
 The performance panel is split into two different modes. There is the DevTools panel mode, and the browser menu bar "popup" mode. The UI is implemented for both in `devtools/client/performance-new`, and many codepaths are shared. Both use the same React/Redux setup, but then each are configured with slightly different workflows. These are documented below.
 
 ### DevTools Panel
