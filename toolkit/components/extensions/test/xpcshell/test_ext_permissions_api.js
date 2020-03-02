@@ -48,6 +48,7 @@ add_task(async function test_api_on_permissions_changed() {
   let optional_permissions = [
     "downloads",
     "cookies",
+    "privacy",
     "webRequest",
     "webNavigation",
     "browserSettings",
@@ -162,6 +163,48 @@ add_task(async function test_browserSetting_permissions() {
     extension.sendMessage("remove");
     await extension.awaitMessage("done");
     ok(cacheIsEnabled(), "setting is reset after remove");
+  });
+  await extension.unload();
+});
+
+add_task(async function test_privacy_permissions() {
+  async function background() {
+    const permObj = { permissions: ["privacy"] };
+    browser.test.onMessage.addListener(async msg => {
+      if (msg === "request") {
+        await browser.permissions.request(permObj);
+        await browser.privacy.websites.trackingProtectionMode.set({
+          value: "always",
+        });
+      } else if (msg === "remove") {
+        await browser.permissions.remove(permObj);
+      }
+      browser.test.sendMessage("done");
+    });
+  }
+
+  function hasSetting() {
+    return Services.prefs.getBoolPref("privacy.trackingprotection.enabled");
+  }
+
+  let extension = ExtensionTestUtils.loadExtension({
+    background,
+    manifest: {
+      optional_permissions: ["privacy"],
+    },
+    useAddonManager: "permanent",
+  });
+  await extension.startup();
+  ok(!hasSetting(), "setting is not set after startup");
+
+  await withHandlingUserInput(extension, async () => {
+    extension.sendMessage("request");
+    await extension.awaitMessage("done");
+    ok(hasSetting(), "setting was set after request");
+
+    extension.sendMessage("remove");
+    await extension.awaitMessage("done");
+    ok(!hasSetting(), "setting is reset after remove");
   });
   await extension.unload();
 });
