@@ -773,7 +773,6 @@ class nsFrameSelection final {
   // Table selection support.
   static nsITableCellLayout* GetCellLayout(nsIContent* aCellContent);
 
-  nsresult SelectBlockOfCells(nsIContent* aStartNode, nsIContent* aEndNode);
   nsresult SelectRowOrColumn(nsIContent* aCellContent,
                              mozilla::TableSelectionMode aTarget);
 
@@ -803,6 +802,9 @@ class nsFrameSelection final {
     // not return null, then the first node in the returned range is a cell
     // (according to GetFirstCellNodeInRange).
     nsRange* GetNextCellRange(const mozilla::dom::Selection& aNormalSelection);
+
+    nsresult SelectBlockOfCells(nsIContent* aStartCell, nsIContent* aEndCell,
+                                mozilla::dom::Selection& aNormalSelection);
 
     // TODO: mark as `MOZ_CAN_RUN_SCRIPT`.
     nsresult UnselectCells(nsIContent* aTable, int32_t aStartRowIndex,
