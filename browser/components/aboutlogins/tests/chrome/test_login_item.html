@@ -87,6 +87,8 @@ add_task(async function test_set_login() {
 
   ok(!gLoginItem.dataset.editing, "loginItem should not be in 'edit' mode");
   ok(!gLoginItem.dataset.isNewLogin, "loginItem should not be in 'isNewLogin' mode");
+  ok(isHidden(gLoginItem._originInput), "Origin input should be hidden when not in edit mode");
+  ok(!isHidden(gLoginItem._originDisplayInput), "Origin display link should be visible when not in edit mode");
   let originLink = gLoginItem.shadowRoot.querySelector("a[name='origin']");
   is(originLink.getAttribute("href"), TEST_LOGIN_1.origin, "origin should be populated");
   let usernameInput = gLoginItem.shadowRoot.querySelector("input[name='username']");
@@ -158,7 +160,9 @@ add_task(async function test_edit_login() {
   ok(!gLoginItem.dataset.isNewLogin, "loginItem should not be in 'isNewLogin' mode");
   let deleteButton = gLoginItem.shadowRoot.querySelector(".delete-button");
   ok(!deleteButton.disabled, "Delete button should be enabled when editing a login");
-  is(gLoginItem.shadowRoot.querySelector("input[name='origin']").value, TEST_LOGIN_1.origin, "origin should be populated");
+  ok(isHidden(gLoginItem._originInput), "Origin input should be hidden in edit mode");
+  ok(!isHidden(gLoginItem._originDisplayInput), "Origin display link should be visible in edit mode");
+  is(gLoginItem.shadowRoot.querySelector("a[name='origin']").getAttribute("href"), TEST_LOGIN_1.origin, "origin should be populated");
   is(usernameInput.value, TEST_LOGIN_1.username, "username should be populated");
   is(
     document.l10n.getAttributes(usernameInput).id,
@@ -250,6 +254,8 @@ add_task(async function test_set_login_empty() {
   ok(gLoginItem.dataset.isNewLogin, "loginItem should be in 'isNewLogin' mode");
   let deleteButton = gLoginItem.shadowRoot.querySelector(".delete-button");
   ok(deleteButton.disabled, "Delete button should be disabled when creating a login");
+  ok(!isHidden(gLoginItem._originInput), "Origin input should be visible in new login edit mode");
+  ok(isHidden(gLoginItem._originDisplayInput), "Origin display should be hidden in new login edit mode");
   is(gLoginItem.shadowRoot.querySelector("input[name='origin']").value, "", "origin should be empty");
   is(gLoginItem.shadowRoot.querySelector("input[name='username']").value, "", "username should be empty");
   is(gLoginItem._passwordInput.value, "", "password should be empty");
