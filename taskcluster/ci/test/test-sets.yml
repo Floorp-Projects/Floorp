@@ -346,7 +346,7 @@ linux1804-tests:
     - gtest
     - jsreftest
     - jittest
-    - mochitest
+    - mochitest-plain
     - mochitest-a11y
     - mochitest-browser-chrome
     - mochitest-chrome
@@ -373,7 +373,7 @@ linux1804-qr-tests:
     - gtest
     - jittest
     - jsreftest
-    - mochitest
+    - mochitest-plain
     - mochitest-a11y
     - mochitest-chrome
     - mochitest-gpu
@@ -394,7 +394,7 @@ linux1804-ccov-tests:
     - gtest
     - jittest
     - jsreftest
-    - mochitest
+    - mochitest-plain
     - mochitest-a11y
     - mochitest-browser-chrome
     - mochitest-chrome
@@ -426,7 +426,7 @@ linux-talos-flex:
 
 windows-qr-tests:
     - crashtest
-    - mochitest
+    - mochitest-plain
     - mochitest-browser-chrome
     - mochitest-gpu
     - mochitest-media
@@ -447,7 +447,7 @@ windows-tests:
     - jittest
     - jsreftest
     - marionette
-    - mochitest
+    - mochitest-plain
     - mochitest-a11y
     - mochitest-browser-chrome
     - mochitest-chrome
@@ -491,7 +491,7 @@ windows-aarch64-tests:
     - crashtest
     - gtest
     - marionette
-    - mochitest
+    - mochitest-plain
     - mochitest-a11y
     - mochitest-browser-chrome
     - mochitest-chrome
@@ -541,7 +541,7 @@ macosx1014-64-tests:
     - jittest
     - jsreftest
     - marionette
-    - mochitest
+    - mochitest-plain
     - mochitest-a11y
     - mochitest-browser-chrome
     - mochitest-chrome
@@ -595,7 +595,7 @@ android-x86_64-tests:
     - crashtest
     - geckoview-junit
     - gtest
-    - mochitest
+    - mochitest-plain
     - mochitest-gpu
     - mochitest-media
     # - mochitest-webgl1-core # Harness issues?
@@ -1007,5 +1007,5 @@ android-hw-arm7-browsertime:
     - browsertime-benchmark-speedometer
 
 linux-tsan-tests:
-    - mochitest
+    - mochitest-plain
     - xpcshell
