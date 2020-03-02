@@ -41,11 +41,6 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // this value.  See UnifiedComplete.
   ["autoFill.stddevMultiplier", [0.0, "getFloatPref"]],
 
-  // If true, this optimizes for replacing the full URL rather than editing
-  // part of it. This also copies the urlbar value to the selection clipboard
-  // on systems that support it.
-  ["clickSelectsAll", false],
-
   // Whether using `ctrl` when hitting return/enter in the URL bar
   // (or clicking 'go') should prefix 'www.' and suffix
   // browser.fixup.alternate.suffix to the URL bar value prior to
@@ -65,11 +60,6 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // layout information that we can't get before the first paint. (Or we could
   // but this would mean flushing layout.)
   ["disableExtendForTests", false],
-
-  // If true, this optimizes for replacing the full URL rather than selecting a
-  // portion of it. This also copies the urlbar value to the selection
-  // clipboard on systems that support it.
-  ["doubleClickSelectsAll", false],
 
   // Whether telemetry events should be recorded.
   ["eventTelemetry.enabled", false],

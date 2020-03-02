@@ -73,7 +73,6 @@ add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["browser.urlbar.autoFill", true],
-      ["browser.urlbar.clickSelectsAll", true],
       ["browser.urlbar.openViewOnFocus", true],
     ],
   });

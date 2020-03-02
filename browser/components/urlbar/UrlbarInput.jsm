@@ -1692,19 +1692,16 @@ class UrlbarInput {
 
   /**
    * Determines if we should select all the text in the Urlbar based on the
-   * clickSelectsAll pref, Urlbar state, and whether the selection is empty.
-   * @param {boolean} [ignoreClickSelectsAllPref]
-   *        If true, the browser.urlbar.clickSelectsAll pref will be ignored.
+   *  Urlbar state, and whether the selection is empty.
    */
-  _maybeSelectAll(ignoreClickSelectsAllPref = false) {
+  _maybeSelectAll() {
     if (
       !this._preventClickSelectsAll &&
-      (ignoreClickSelectsAllPref || UrlbarPrefs.get("clickSelectsAll")) &&
       this._compositionState != UrlbarUtils.COMPOSITION.COMPOSING &&
       this.document.activeElement == this.inputField &&
       this.inputField.selectionStart == this.inputField.selectionEnd
     ) {
-      this.editor.selectAll();
+      this.select();
     }
   }
 
@@ -1785,9 +1782,7 @@ class UrlbarInput {
       return;
     }
 
-    // If the user right clicks, we select all regardless of the value of
-    // the browser.urlbar.clickSelectsAll pref.
-    this._maybeSelectAll(/* ignoreClickSelectsAllPref */ event.button == 2);
+    this._maybeSelectAll();
   }
 
   _on_focus(event) {
@@ -1800,7 +1795,7 @@ class UrlbarInput {
     if (this.focusedViaMousedown) {
       this.view.autoOpen({ event });
     } else if (this.inputField.hasAttribute("refocused-by-panel")) {
-      this._maybeSelectAll(true);
+      this._maybeSelectAll();
     }
 
     this._updateUrlTooltip();
@@ -1849,10 +1844,7 @@ class UrlbarInput {
           this.selectionStart = this.selectionEnd = 0;
         }
 
-        if (event.detail == 2 && UrlbarPrefs.get("doubleClickSelectsAll")) {
-          this.editor.selectAll();
-          event.preventDefault();
-        } else if (event.target.id == SEARCH_BUTTON_ID) {
+        if (event.target.id == SEARCH_BUTTON_ID) {
           this._preventClickSelectsAll = true;
           this.search(UrlbarTokenizer.RESTRICT.SEARCH);
         } else {

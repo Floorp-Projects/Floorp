@@ -66,11 +66,27 @@ function drag(target, fromX, fromY, toX, toY) {
   return promise;
 }
 
-add_task(async function setup() {
-  SpecialPowers.pushPrefEnv({
-    set: [["browser.urlbar.clickSelectsAll", true]],
-  });
+function resetPrimarySelection(val = "") {
+  if (Services.clipboard.supportsSelectionClipboard()) {
+    // Reset the clipboard.
+    clipboardHelper.copyStringToClipboard(
+      val,
+      Services.clipboard.kSelectionClipboard
+    );
+  }
+}
 
+function checkPrimarySelection(expectedVal = "") {
+  if (Services.clipboard.supportsSelectionClipboard()) {
+    let primaryAsText = SpecialPowers.getClipboardData(
+      "text/unicode",
+      SpecialPowers.Ci.nsIClipboard.kSelectionClipboard
+    );
+    Assert.equal(primaryAsText, expectedVal);
+  }
+}
+
+add_task(async function setup() {
   // On macOS, we must "warm up" the Urlbar to get the first test to pass.
   gURLBar.value = "";
   await click(gURLBar.inputField);
@@ -78,6 +94,7 @@ add_task(async function setup() {
 });
 
 add_task(async function leftClickSelectsAll() {
+  resetPrimarySelection();
   gURLBar.value = exampleSearch;
   await click(gURLBar.inputField);
   Assert.equal(
@@ -91,9 +108,11 @@ add_task(async function leftClickSelectsAll() {
     "The entire search term should be selected."
   );
   gURLBar.blur();
+  checkPrimarySelection();
 });
 
 add_task(async function leftClickSelectsUrl() {
+  resetPrimarySelection();
   gURLBar.value = exampleUrl;
   await click(gURLBar.inputField);
   Assert.equal(gURLBar.selectionStart, 0, "The entire url should be selected.");
@@ -103,40 +122,17 @@ add_task(async function leftClickSelectsUrl() {
     "The entire url should be selected."
   );
   gURLBar.blur();
-});
-
-// Test to ensure that the doubleClickSelectsAll pref does not interfere with
-// single click behaviour (Double CSA itself is tested in
-// urlbar/tests/browser_doubleClickSelectsAll.js).
-add_task(async function bothPrefsEnabled() {
-  Services.prefs.setBoolPref("browser.urlbar.doubleClickSelectsAll", true);
-  gURLBar.value = exampleSearch;
-  await click(gURLBar.inputField);
-  Assert.equal(
-    gURLBar.selectionStart,
-    0,
-    "The entire search term should be selected."
-  );
-  Assert.equal(
-    gURLBar.selectionEnd,
-    exampleSearch.length,
-    "The entire search term should be selected."
-  );
-  gURLBar.blur();
-  Services.prefs.clearUserPref("browser.urlbar.doubleClickSelectsAll");
+  checkPrimarySelection();
 });
 
 add_task(async function rightClickSelectsAll() {
-  // The text should be selected even when the pref is disabled.
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.urlbar.clickSelectsAll", false]],
-  });
-
   gURLBar.inputField.focus();
   gURLBar.value = exampleUrl;
 
   // Remove the selection so the focus() call above doesn't influence the test.
   gURLBar.selectionStart = gURLBar.selectionEnd = 0;
+
+  resetPrimarySelection();
 
   await openContextMenu(gURLBar.inputField);
 
@@ -146,6 +142,8 @@ add_task(async function rightClickSelectsAll() {
     exampleUrl.length,
     "The entire URL should be selected."
   );
+
+  checkPrimarySelection();
 
   let contextMenu = gURLBar.querySelector("moz-input-box").menupopup;
 
@@ -184,6 +182,7 @@ add_task(async function rightClickSelectsAll() {
 
   gURLBar.querySelector("moz-input-box").menupopup.hidePopup();
   gURLBar.blur();
+  checkPrimarySelection(gURLBar.value);
   await SpecialPowers.popPrefEnv();
 });
 
@@ -193,6 +192,8 @@ add_task(async function contextMenuDoesNotCancelSelection() {
 
   gURLBar.selectionStart = 3;
   gURLBar.selectionEnd = 7;
+
+  resetPrimarySelection();
 
   await openContextMenu(gURLBar.inputField);
 
@@ -209,9 +210,11 @@ add_task(async function contextMenuDoesNotCancelSelection() {
 
   gURLBar.querySelector("moz-input-box").menupopup.hidePopup();
   gURLBar.blur();
+  checkPrimarySelection();
 });
 
 add_task(async function dragSelect() {
+  resetPrimarySelection();
   gURLBar.value = exampleSearch.repeat(10);
   // Drags from an artibrary offset of 30 to test for bug 1562145: that the
   // selection does not start at the beginning.
@@ -222,7 +225,12 @@ add_task(async function dragSelect() {
     "Selection should not start at the beginning of the string."
   );
 
+  let selectedVal = gURLBar.value.substring(
+    gURLBar.selectionStart,
+    gURLBar.selectionEnd
+  );
   gURLBar.blur();
+  checkPrimarySelection(selectedVal);
 });
 
 /**
@@ -230,6 +238,7 @@ add_task(async function dragSelect() {
  * Urlbar is dragged following a selectsAll event then a blur.
  */
 add_task(async function dragAfterSelectAll() {
+  resetPrimarySelection();
   gURLBar.value = exampleSearch.repeat(10);
   await click(gURLBar.inputField);
   Assert.equal(
@@ -244,6 +253,7 @@ add_task(async function dragAfterSelectAll() {
   );
 
   gURLBar.blur();
+  checkPrimarySelection();
 
   // The offset of 30 is arbitrary.
   await drag(gURLBar.inputField, 30, 0, 60, 0);
@@ -257,6 +267,10 @@ add_task(async function dragAfterSelectAll() {
     gURLBar.selectionEnd,
     exampleSearch.repeat(10).length,
     "Only part of the search term should be selected."
+  );
+
+  checkPrimarySelection(
+    gURLBar.value.substring(gURLBar.selectionStart, gURLBar.selectionEnd)
   );
 });
 
