@@ -6570,6 +6570,24 @@ void nsGlobalWindowInner::Restore() {
   }
 }
 
+int32_t nsGlobalWindowInner::GetWorkspaceID() {
+  nsCOMPtr<nsIWidget> widget = GetMainWidget();
+
+  if (widget) {
+    return widget->GetWorkspaceID();
+  }
+
+  return 0;
+}
+
+void nsGlobalWindowInner::MoveToWorkspace(int32_t workspaceID) {
+  nsCOMPtr<nsIWidget> widget = GetMainWidget();
+
+  if (widget) {
+    widget->MoveToWorkspace(workspaceID);
+  }
+}
+
 void nsGlobalWindowInner::GetAttention(ErrorResult& aResult) {
   return GetAttentionWithCycleCount(-1, aResult);
 }
