@@ -774,6 +774,13 @@
   value: 2
   mirror: always
 
+# A percentage limit for media content type in the disk cache. When some entries
+# need to be evicted and media is over the limit, it's evicted first.
+- name: browser.cache.disk.content_type_media_limit
+  type: RelaxedAtomicInt32
+  value: 50
+  mirror: always
+
 - name: browser.contentblocking.database.enabled
   type: bool
   value: false
