@@ -140,12 +140,17 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, nscolor& aColor) {
       aColor = mSystemColors.textColorPrimary;
       break;
     case ColorID::TextSelectBackground:
+      /* matched to action_accent in java codebase */
+      aColor = NS_RGBA(10, 132, 255, 153);
+      break;
+    case ColorID::TextSelectForeground:
+      aColor = NS_RGB(0, 0, 0);
+      break;
     case ColorID::IMESelectedRawTextBackground:
     case ColorID::IMESelectedConvertedTextBackground:
       // still used
       aColor = mSystemColors.textColorHighlight;
       break;
-    case ColorID::TextSelectForeground:
     case ColorID::IMESelectedRawTextForeground:
     case ColorID::IMESelectedConvertedTextForeground:
       // still used
