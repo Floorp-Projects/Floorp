@@ -66,6 +66,19 @@ bool WarpBuilder::startNewBlock(size_t stackDepth, jsbytecode* pc,
   return true;
 }
 
+bool WarpBuilder::resumeAfter(MInstruction* ins, BytecodeLocation loc) {
+  MOZ_ASSERT(ins->isEffectful());
+
+  MResumePoint* resumePoint = MResumePoint::New(
+      alloc(), ins->block(), loc.toRawBytecode(), MResumePoint::ResumeAfter);
+  if (!resumePoint) {
+    return false;
+  }
+
+  ins->setResumePoint(resumePoint);
+  return true;
+}
+
 bool WarpBuilder::build() {
   if (!buildPrologue()) {
     return false;
@@ -341,4 +354,53 @@ bool WarpBuilder::build_SetLocal(BytecodeLocation loc) {
 bool WarpBuilder::build_InitLexical(BytecodeLocation loc) {
   current->setLocal(loc.local());
   return true;
+}
+
+bool WarpBuilder::build_ToNumeric(BytecodeLocation loc) {
+  MDefinition* value = current->pop();
+  MToNumeric* ins = MToNumeric::New(alloc(), value, /* types = */ nullptr);
+  current->add(ins);
+  current->push(ins);
+  return resumeAfter(ins, loc);
+}
+
+bool WarpBuilder::buildUnaryOp(BytecodeLocation loc) {
+  MDefinition* value = current->pop();
+  MInstruction* ins = MUnaryCache::New(alloc(), value);
+  current->add(ins);
+  current->push(ins);
+  return resumeAfter(ins, loc);
+}
+
+bool WarpBuilder::build_Inc(BytecodeLocation loc) { return buildUnaryOp(loc); }
+
+bool WarpBuilder::build_Dec(BytecodeLocation loc) { return buildUnaryOp(loc); }
+
+bool WarpBuilder::buildCompareOp(BytecodeLocation loc) {
+  MDefinition* right = current->pop();
+  MDefinition* left = current->pop();
+  MInstruction* ins = MBinaryCache::New(alloc(), left, right, MIRType::Boolean);
+  current->add(ins);
+  current->push(ins);
+  return resumeAfter(ins, loc);
+}
+
+bool WarpBuilder::build_Eq(BytecodeLocation loc) { return buildCompareOp(loc); }
+
+bool WarpBuilder::build_Ne(BytecodeLocation loc) { return buildCompareOp(loc); }
+
+bool WarpBuilder::build_Lt(BytecodeLocation loc) { return buildCompareOp(loc); }
+
+bool WarpBuilder::build_Le(BytecodeLocation loc) { return buildCompareOp(loc); }
+
+bool WarpBuilder::build_Gt(BytecodeLocation loc) { return buildCompareOp(loc); }
+
+bool WarpBuilder::build_Ge(BytecodeLocation loc) { return buildCompareOp(loc); }
+
+bool WarpBuilder::build_StrictEq(BytecodeLocation loc) {
+  return buildCompareOp(loc);
+}
+
+bool WarpBuilder::build_StrictNe(BytecodeLocation loc) {
+  return buildCompareOp(loc);
 }
