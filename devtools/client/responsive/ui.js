@@ -519,10 +519,7 @@ class ResponsiveUI {
         if (this.isBrowserUIEnabled) {
           // Get the current device size and update to that size, which
           // will pick up changes to the zoom.
-          const {
-            width,
-            height,
-          } = this.rdmFrame.contentWindow.getViewportSize();
+          const { width, height } = this.getViewportSize();
           this.updateViewportSize(width, height);
         } else {
           const zoom = tab.linkedBrowser.fullZoom;
@@ -708,7 +705,7 @@ class ResponsiveUI {
       deltaY = 0;
     }
 
-    const viewportSize = this.rdmFrame.contentWindow.getViewportSize();
+    const viewportSize = this.getViewportSize();
 
     let width = Math.round(viewportSize.width + deltaX);
     let height = Math.round(viewportSize.height + deltaY);
@@ -1100,13 +1097,30 @@ class ResponsiveUI {
     // on the <browser> because we'll need to use this for the alert dialog as well.
     this.browserStackEl.style.setProperty("--rdm-width", `${scaledWidth}px`);
     this.browserStackEl.style.setProperty("--rdm-height", `${scaledHeight}px`);
+
+    // This is a bit premature, but we emit a content-resize event here. It
+    // would be preferrable to wait until the viewport is actually resized,
+    // but the "resize" event is not triggered by this style change. The
+    // content-resize message is only used by tests, and if needed those tests
+    // can use the testing function setViewportSizeAndAwaitReflow to ensure
+    // the viewport has had time to reach this size.
+    this.emit("content-resize", {
+      width,
+      height,
+    });
   }
 
   /**
    * Helper for tests. Assumes a single viewport for now.
    */
   getViewportSize() {
-    return this.toolWindow.getViewportSize();
+    // The getViewportSize function is loaded in index.js, and might not be
+    // available yet.
+    if (this.toolWindow.getViewportSize) {
+      return this.toolWindow.getViewportSize();
+    }
+
+    return { width: 0, height: 0 };
   }
 
   /**
@@ -1120,6 +1134,7 @@ class ResponsiveUI {
     }
 
     const { width, height } = size;
+    this.rdmFrame.contentWindow.setViewportSize({ width, height });
     this.updateViewportSize(width, height);
   }
 
