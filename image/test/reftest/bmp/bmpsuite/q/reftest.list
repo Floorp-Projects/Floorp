@@ -19,11 +19,12 @@ fuzzy(0-1,0-926) == pal1p1.bmp pal1p1.png
 # BMP: bihsize=40, 127 x 64, bpp=2, compression=0, colors=4
 # "A paletted image with 2 bits/pixel. Usually only 1, 4, and 8 are allowed,
 # but 2 is legal on Windows CE."
-# [We reject it. So does Chromium.]
+# [We reject it. Chromium accepts it.]
 == wrapper.html?pal2.bmp about:blank
 
 # BMP: bihsize=40, 127 x 64, bpp=2, compression=0, colors=4
 # "Same as pal2.bmp, but with a color palette instead of grayscale palette."
+# [We reject it. Chromium accepts it.]
 == wrapper.html?pal2color.bmp about:blank
 
 # BMP: bihsize=40, 127 x 64, bpp=4, compression=2, colors=13
@@ -79,9 +80,7 @@ fuzzy(0-1,0-996) == pal8os2-hs.bmp pal8.png
 # BMP: bihsize=12, 127 x 64, bpp=8, compression=0, colors=0
 # "An OS/2v1 with a less-than-full-sized palette. Probably not valid, but such
 # files have been seen in the wild."
-# [We reject it. Chromium accepts it but draws nothing. Rejecting seems
-# preferable given that the color and pixel data must overlap, which can only
-# lead to rubbish results.]
+# [We reject it. Chromium accepts it.]
 fuzzy(0-245,0-8128) == wrapper.html?pal8os2sp.bmp about:blank
 
 # BMP: bihsize=64, 127 x 64, bpp=8, compression=0, colors=252
@@ -172,14 +171,20 @@ fuzzy(10-10,6597-6597) == rgb24prof2.bmp rgb24.png
 # "My attempt to make BMP files with embedded JPEG and PNG images. These are
 # not likely to be supported by much of anything (they’re intended for 
 # printers)."
-# [We reject them. So does Chromium.]
+# [We reject them. Chromium accepts them.]
 == wrapper.html?rgb24jpeg.bmp about:blank
 == wrapper.html?rgb24png.bmp about:blank
+
+# BMP: bihsize=64, 127 x 64, bpp=24, compression=4, colors=0
+# "An OS/2v2 bitmap with RLE24 compression. This image uses a limited number
+# of colors, just to make it more compressible."
+# [We reject it. Chromium accepts it.]
+== wrapper.html?rgb24rle24.bmp about:blank
 
 # BMP: bihsize=52, 127 x 64, bpp=32, compression=3, colors=0
 # "Similar to g/rgb32bf.bmp, but with a 52-byte “BITMAPV2INFOHEADER”. This is
 # an uncommon version of BMP, and I can’t confirm that this file is correct."
-# [We reject them. So does Chromium.]
+# [We reject it. Chromium accepts it.]
 == wrapper.html?rgb32h52.bmp about:blank
 
 # BMP: bihsize=124, 127 x 64, bpp=32, compression=3, colors=0
@@ -210,7 +215,12 @@ fuzzy(0-1,0-753) == rgb32-7187.bmp rgb32-7187.png
 # possible that this file is not correctly formed. The color channels are in an
 # unusual order, to prevent viewers from passing this test by making a lucky
 # guess."
-== rgba32.bmp rgba32.png
+== rgba32-1.bmp rgba32.png
+
+# BMP: bihsize=124, 127 x 64, bpp=32, compression=3, colors=0
+# "Same as rgba32-1.bmp, but with the color channels in an unusual order, to
+# prevent viewers from passing this test by making a lucky guess."
+== rgba32-2.bmp rgba32.png
 
 # BMP: bihsize=124, 127 x 64, bpp=32, compression=3, colors=0
 # "A 32 bits/pixel image, with 10 bits for red, 10 for green, 10 for blue, and
@@ -230,11 +240,12 @@ fuzzy(0-1,0-1554) == rgba32-61754.bmp rgba32-61754.png
 # BMP: bihsize=40, 127 x 64, bpp=32, compression=6, colors=0
 # "An image of type BI_ALPHABITFIELDS. Supposedly, this was used on Windows CE.
 # I don’t know whether it is constructed correctly."
-# [We reject it. So does Chromium.]
+# [We reject it. Chromium accepts it.]
 == wrapper.html?rgba32abf.bmp about:blank
 
 # BMP: bihsize=56, 127 x 64, bpp=32, compression=3, colors=0
 # "Similar to q/rgba32.bmp, but with a 56-byte “BITMAPV3INFOHEADER”. This is an
 # uncommon version of BMP, and I can’t confirm that this file is correct."
+# [We reject it. Chromium accepts it.]
 == wrapper.html?rgba32h56.bmp about:blank
 
