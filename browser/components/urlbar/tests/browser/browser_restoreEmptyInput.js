@@ -12,7 +12,12 @@ add_task(async function test() {
     await PlacesUtils.history.clear();
   });
 
-  await promiseAutocompleteResultPopup("", window, true);
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    waitForFocus: SimpleTest.waitForFocus,
+    value: "",
+    fireInputEvent: true,
+  });
 
   Assert.equal(
     UrlbarTestUtils.getSelectedRowIndex(window),

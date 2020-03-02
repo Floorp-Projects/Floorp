@@ -62,7 +62,12 @@ add_task(async function search_test() {
   await withHttpServer(serverInfo, async server => {
     let connectionNumber = server.connectionNumber;
     info("Searching for 'foo'");
-    await promiseAutocompleteResultPopup("foo", window, true);
+    await UrlbarTestUtils.promiseAutocompleteResultPopup({
+      window,
+      waitForFocus: SimpleTest.waitForFocus,
+      value: "foo",
+      fireInputEvent: true,
+    });
     // Check if the first result is with type "searchengine"
     let details = await UrlbarTestUtils.getDetailsOfResultAt(window, 0);
     Assert.equal(
@@ -94,8 +99,13 @@ add_task(async function popup_mousedown_test() {
     }/`;
     info(`Searching for '${searchString}'`);
 
-    await promiseAutocompleteResultPopup(searchString, window, true);
-    let listitem = await waitForAutocompleteResultAt(1);
+    await UrlbarTestUtils.promiseAutocompleteResultPopup({
+      window,
+      waitForFocus: SimpleTest.waitForFocus,
+      value: searchString,
+      fireInputEvent: true,
+    });
+    let listitem = await UrlbarTestUtils.waitForAutocompleteResultAt(window, 1);
     let details = await UrlbarTestUtils.getDetailsOfResultAt(window, 1);
     Assert.equal(
       details.url,
@@ -130,7 +140,12 @@ add_task(async function test_autofill() {
     let searchString = serverInfo.host;
     info(`Searching for '${searchString}'`);
 
-    await promiseAutocompleteResultPopup(searchString, window, true);
+    await UrlbarTestUtils.promiseAutocompleteResultPopup({
+      window,
+      waitForFocus: SimpleTest.waitForFocus,
+      value: searchString,
+      fireInputEvent: true,
+    });
     let details = await UrlbarTestUtils.getDetailsOfResultAt(window, 0);
     let completeValue = `${serverInfo.scheme}://${serverInfo.host}:${
       serverInfo.port
@@ -158,7 +173,12 @@ add_task(async function test_autofill_privateContext() {
     let searchString = serverInfo.host;
     info(`Searching for '${searchString}'`);
 
-    await promiseAutocompleteResultPopup(searchString, privateWin, true);
+    await UrlbarTestUtils.promiseAutocompleteResultPopup({
+      window: privateWin,
+      waitForFocus: SimpleTest.waitForFocus,
+      value: searchString,
+      fireInputEvent: true,
+    });
     let details = await UrlbarTestUtils.getDetailsOfResultAt(privateWin, 0);
     let completeValue = `${serverInfo.scheme}://${serverInfo.host}:${
       serverInfo.port
@@ -176,7 +196,12 @@ add_task(async function test_no_heuristic_result() {
   await withHttpServer(serverInfo, async server => {
     let connectionNumber = server.connectionNumber;
     info(`Searching for the empty string`);
-    await promiseAutocompleteResultPopup("", window, true);
+    await UrlbarTestUtils.promiseAutocompleteResultPopup({
+      window,
+      waitForFocus: SimpleTest.waitForFocus,
+      value: "",
+      fireInputEvent: true,
+    });
     ok(UrlbarTestUtils.getResultCount(window) > 0, "Has results");
     let result = await UrlbarTestUtils.getSelectedRow(window);
     Assert.strictEqual(result, null, `Should have no selection`);

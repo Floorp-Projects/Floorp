@@ -41,14 +41,22 @@ add_task(async function() {
     await PlacesUtils.history.clear();
   });
 
-  await promiseAutocompleteResultPopup("moz");
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    waitForFocus: SimpleTest.waitForFocus,
+    value: "moz",
+  });
   Assert.equal(
     gURLBar.value,
     "moz",
     "Preselected search keyword result shouldn't automatically add a space"
   );
 
-  await promiseAutocompleteResultPopup("moz open a search");
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    waitForFocus: SimpleTest.waitForFocus,
+    value: "moz open a search",
+  });
   let result = await UrlbarTestUtils.getDetailsOfResultAt(window, 0);
   Assert.equal(result.image, ICON_URI, "Should have the correct image");
 

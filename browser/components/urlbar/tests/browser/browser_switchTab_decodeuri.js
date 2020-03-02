@@ -18,7 +18,11 @@ add_task(async function test_switchtab_decodeuri() {
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
 
   info("Wait for autocomplete");
-  await promiseAutocompleteResultPopup("dummy_page");
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    waitForFocus: SimpleTest.waitForFocus,
+    value: "dummy_page",
+  });
 
   info("Select autocomplete popup entry");
   EventUtils.synthesizeKey("KEY_ArrowDown");

@@ -22,7 +22,11 @@ add_task(async function() {
     await PlacesUtils.history.clear();
   });
 
-  await promiseAutocompleteResultPopup("http://example.com");
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    waitForFocus: SimpleTest.waitForFocus,
+    value: "http://example.com",
+  });
 
   const initialIndex = UrlbarTestUtils.getSelectedRowIndex(window);
 
@@ -47,7 +51,7 @@ add_task(async function() {
 
   info("Press backspace");
   EventUtils.synthesizeKey("KEY_Backspace");
-  await promiseSearchComplete();
+  await UrlbarTestUtils.promiseSearchComplete(window);
 
   let editedValue = gURLBar.value;
   Assert.equal(

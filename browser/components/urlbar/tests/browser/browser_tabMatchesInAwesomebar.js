@@ -179,7 +179,11 @@ function ensure_opentabs_match_db() {
 
 async function checkAutocompleteResults(expected) {
   info("Searching open pages.");
-  await promiseAutocompleteResultPopup(RESTRICT_TOKEN_OPENPAGE);
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    waitForFocus: SimpleTest.waitForFocus,
+    value: RESTRICT_TOKEN_OPENPAGE,
+  });
 
   let resultCount = UrlbarTestUtils.getResultCount(window);
   for (let i = 0; i < resultCount; i++) {

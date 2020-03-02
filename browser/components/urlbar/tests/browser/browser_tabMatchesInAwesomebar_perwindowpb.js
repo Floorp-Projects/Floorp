@@ -84,7 +84,11 @@ async function runTest(aSourceWindow, aDestWindow, aExpectSwitch, aCallback) {
 
   // Wait for the Awesomebar popup to appear.
   let searchString = TEST_URL;
-  await promiseAutocompleteResultPopup(searchString, aDestWindow);
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window: aDestWindow,
+    waitForFocus: SimpleTest.waitForFocus,
+    value: searchString,
+  });
 
   info(`awesomebar popup appeared. aExpectSwitch: ${aExpectSwitch}`);
   // Make sure the last match is selected.

@@ -52,8 +52,12 @@ add_task(async function() {
   });
   await PlacesTestUtils.addVisits(visits);
 
-  await promiseAutocompleteResultPopup("example.com/autocomplete");
-  await waitForAutocompleteResultAt(maxResults - 1);
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    waitForFocus: SimpleTest.waitForFocus,
+    value: "example.com/autocomplete",
+  });
+  await UrlbarTestUtils.waitForAutocompleteResultAt(window, maxResults - 1);
 
   Assert.equal(
     UrlbarTestUtils.getResultCount(window),

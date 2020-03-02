@@ -48,7 +48,11 @@ add_task(async function mainTest() {
     await BrowserTestUtils.withNewTab("about:blank", async () => {
       // Do an initial search.  There should be 4 results: heuristic, open tab,
       // and the two suggestions.
-      await promiseAutocompleteResultPopup("amp");
+      await UrlbarTestUtils.promiseAutocompleteResultPopup({
+        window,
+        waitForFocus: SimpleTest.waitForFocus,
+        value: "amp",
+      });
       await TestUtils.waitForCondition(() => {
         return (
           UrlbarTestUtils.getResultCount(window) ==
@@ -75,7 +79,7 @@ add_task(async function mainTest() {
 
       // Wait for the new search to complete.  It should be canceled due to the
       // selection change, but it should still complete.
-      await promiseSearchComplete();
+      await UrlbarTestUtils.promiseSearchComplete(window);
 
       // To make absolutely sure the suggestions don't appear after the search
       // completes, wait a bit.

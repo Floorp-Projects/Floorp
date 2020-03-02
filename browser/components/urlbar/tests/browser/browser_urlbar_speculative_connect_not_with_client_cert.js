@@ -185,7 +185,12 @@ add_task(
     let searchString = host.substr(1, 4);
     let completeValue = uri;
     info(`Searching for '${searchString}'`);
-    await promiseAutocompleteResultPopup(searchString, window, true);
+    await UrlbarTestUtils.promiseAutocompleteResultPopup({
+      window,
+      waitForFocus: SimpleTest.waitForFocus,
+      value: searchString,
+      fireInputEvent: true,
+    });
     let listitem = await UrlbarTestUtils.waitForAutocompleteResultAt(window, 1);
     let details = await UrlbarTestUtils.getDetailsOfResultAt(window, 1);
     info(`The url of the second item is ${details.url}`);

@@ -47,7 +47,7 @@ add_task(async function history() {
   await UrlbarTestUtils.promisePopupOpen(window, () => {
     EventUtils.synthesizeKey("KEY_ArrowDown");
   });
-  await waitForAutocompleteResultAt(gMaxResults - 1);
+  await UrlbarTestUtils.waitForAutocompleteResultAt(window, gMaxResults - 1);
 
   assertState(-1, -1, "");
 
@@ -76,8 +76,13 @@ add_task(async function() {
   // Use a typed value that returns the visits added above but that doesn't
   // trigger autofill since that would complicate the test.
   let typedValue = "browser_urlbarOneOffs";
-  await promiseAutocompleteResultPopup(typedValue, window, true);
-  await waitForAutocompleteResultAt(gMaxResults - 1);
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    waitForFocus: SimpleTest.waitForFocus,
+    value: typedValue,
+    fireInputEvent: true,
+  });
+  await UrlbarTestUtils.waitForAutocompleteResultAt(window, gMaxResults - 1);
   let heuristicResult = await UrlbarTestUtils.getDetailsOfResultAt(window, 0);
   assertState(0, -1, typedValue);
 
@@ -164,7 +169,11 @@ add_task(async function() {
 // with One-Off Engine" when a one-off is selected.
 add_task(async function searchWith() {
   let typedValue = "foo";
-  await promiseAutocompleteResultPopup(typedValue);
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    waitForFocus: SimpleTest.waitForFocus,
+    value: typedValue,
+  });
   let result = await UrlbarTestUtils.getDetailsOfResultAt(window, 0);
   assertState(0, -1, typedValue);
 
@@ -202,7 +211,11 @@ add_task(async function oneOffClick() {
   // We are explicitly using something that looks like a url, to make the test
   // stricter. Even if it looks like a url, we should search.
   let typedValue = "foo.bar";
-  await promiseAutocompleteResultPopup(typedValue);
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    waitForFocus: SimpleTest.waitForFocus,
+    value: typedValue,
+  });
   await UrlbarTestUtils.getDetailsOfResultAt(window, 0);
   assertState(0, -1, typedValue);
 
@@ -225,7 +238,12 @@ add_task(async function oneOffReturn() {
   // We are explicitly using something that looks like a url, to make the test
   // stricter. Even if it looks like a url, we should search.
   let typedValue = "foo.bar";
-  await promiseAutocompleteResultPopup(typedValue, window, true);
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    waitForFocus: SimpleTest.waitForFocus,
+    value: typedValue,
+    fireInputEvent: true,
+  });
   await UrlbarTestUtils.getDetailsOfResultAt(window, 0);
   assertState(0, -1, typedValue);
 
@@ -256,7 +274,12 @@ add_task(async function hiddenOneOffs() {
   });
 
   let typedValue = "foo";
-  await promiseAutocompleteResultPopup(typedValue, window, true);
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    waitForFocus: SimpleTest.waitForFocus,
+    value: typedValue,
+    fireInputEvent: true,
+  });
   await UrlbarTestUtils.getDetailsOfResultAt(window, 0);
   assertState(0, -1);
   Assert.equal(
@@ -273,7 +296,12 @@ add_task(async function hiddenOneOffs() {
 // alias.
 add_task(async function hiddenWhenUsingSearchAlias() {
   let typedValue = "@example";
-  await promiseAutocompleteResultPopup(typedValue, window, true);
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    waitForFocus: SimpleTest.waitForFocus,
+    value: typedValue,
+    fireInputEvent: true,
+  });
   await UrlbarTestUtils.getDetailsOfResultAt(window, 0);
   Assert.equal(
     UrlbarTestUtils.getOneOffSearchButtonsVisible(window),
@@ -283,7 +311,12 @@ add_task(async function hiddenWhenUsingSearchAlias() {
   await hidePopup();
 
   typedValue = "not an engine alias";
-  await promiseAutocompleteResultPopup(typedValue, window, true);
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    waitForFocus: SimpleTest.waitForFocus,
+    value: typedValue,
+    fireInputEvent: true,
+  });
   await UrlbarTestUtils.getDetailsOfResultAt(window, 0);
   Assert.equal(
     UrlbarTestUtils.getOneOffSearchButtonsVisible(window),

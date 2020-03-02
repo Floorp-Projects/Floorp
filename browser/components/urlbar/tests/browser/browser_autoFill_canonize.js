@@ -9,7 +9,11 @@ async function test_autocomplete(data) {
   let { desc, typed, autofilled, modified, waitForUrl, keys } = data;
   info(desc);
 
-  await promiseAutocompleteResultPopup(typed);
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    waitForFocus: SimpleTest.waitForFocus,
+    value: typed,
+  });
   Assert.equal(gURLBar.value, autofilled, "autofilled value is as expected");
 
   let promiseLoad = BrowserTestUtils.waitForDocLoadAndStopIt(

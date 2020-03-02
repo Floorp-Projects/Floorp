@@ -37,7 +37,7 @@ async function promiseSearch(searchtext) {
   gURLBar.focus();
   gURLBar.inputField.value = searchtext.substr(0, searchtext.length - 1);
   EventUtils.sendString(searchtext.substr(-1, 1));
-  await promiseSearchComplete();
+  await UrlbarTestUtils.promiseSearchComplete(window);
 }
 
 async function promiseTestResult(test) {

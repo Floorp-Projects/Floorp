@@ -33,7 +33,11 @@ add_task(async function prepare() {
 add_task(async function clickSuggestion() {
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
   gURLBar.focus();
-  await promiseAutocompleteResultPopup("foo");
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    waitForFocus: SimpleTest.waitForFocus,
+    value: "foo",
+  });
   let [idx, suggestion, engineName] = await promiseFirstSuggestion();
   Assert.equal(
     engineName,
@@ -59,7 +63,11 @@ async function testPressEnterOnSuggestion(
 ) {
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
   gURLBar.focus();
-  await promiseAutocompleteResultPopup("foo");
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    waitForFocus: SimpleTest.waitForFocus,
+    value: "foo",
+  });
   let [idx, suggestion, engineName] = await promiseFirstSuggestion();
   Assert.equal(
     engineName,
@@ -96,7 +104,11 @@ add_task(async function ctrlEnterOnSuggestion() {
 
 add_task(async function copySuggestionText() {
   gURLBar.focus();
-  await promiseAutocompleteResultPopup("foo");
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    waitForFocus: SimpleTest.waitForFocus,
+    value: "foo",
+  });
   let [idx, suggestion] = await promiseFirstSuggestion();
   for (let i = 0; i < idx; ++i) {
     EventUtils.synthesizeKey("KEY_ArrowDown");

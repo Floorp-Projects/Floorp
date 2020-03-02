@@ -52,7 +52,12 @@ add_task(async function viewContainsStaleRows() {
   // Search for "x" and wait for the search to finish.  All the "x" results
   // added above should be in the view.  (Actually one fewer will be in the
   // view due to the heuristic result, but that's not important.)
-  await promiseAutocompleteResultPopup("x", window, true);
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    waitForFocus: SimpleTest.waitForFocus,
+    value: "x",
+    fireInputEvent: true,
+  });
 
   // Below we'll do a search for "xx".  Get the row that will show the last
   // result in that search.
@@ -178,7 +183,12 @@ add_task(async function staleReplacedWithFresh() {
   gURLBar.focus();
 
   // Search for "tes" and wait for the search to finish.
-  await promiseAutocompleteResultPopup("tes", window, true);
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    waitForFocus: SimpleTest.waitForFocus,
+    value: "tes",
+    fireInputEvent: true,
+  });
 
   // Sanity check the results.  They should be:
   //

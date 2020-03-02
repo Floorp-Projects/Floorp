@@ -17,7 +17,11 @@ add_task(async function() {
     await PlacesUtils.history.clear();
   });
 
-  await promiseAutocompleteResultPopup("textruns");
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    waitForFocus: SimpleTest.waitForFocus,
+    value: "textruns",
+  });
   let result = await UrlbarTestUtils.getDetailsOfResultAt(window, 1);
   Assert.equal(
     result.displayed.title.length,
