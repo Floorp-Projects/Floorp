@@ -4948,7 +4948,12 @@ AttachDecision CallIRGenerator::tryAttachIsSuspendedGenerator() {
   return AttachDecision::Attach;
 }
 
-AttachDecision CallIRGenerator::tryAttachFunCall() {
+AttachDecision CallIRGenerator::tryAttachFunCall(HandleFunction calleeFunc) {
+  MOZ_ASSERT(calleeFunc->isNative());
+  if (calleeFunc->native() != fun_call) {
+    return AttachDecision::NoAction;
+  }
+
   if (!thisval_.isObject() || !thisval_.toObject().is<JSFunction>()) {
     return AttachDecision::NoAction;
   }
@@ -4998,7 +5003,12 @@ AttachDecision CallIRGenerator::tryAttachFunCall() {
   return AttachDecision::Attach;
 }
 
-AttachDecision CallIRGenerator::tryAttachFunApply() {
+AttachDecision CallIRGenerator::tryAttachFunApply(HandleFunction calleeFunc) {
+  MOZ_ASSERT(calleeFunc->isNative());
+  if (calleeFunc->native() != fun_apply) {
+    return AttachDecision::NoAction;
+  }
+
   if (argc_ != 2) {
     return AttachDecision::NoAction;
   }
@@ -5073,15 +5083,7 @@ AttachDecision CallIRGenerator::tryAttachSpecialCaseCallNative(
   MOZ_ASSERT(mode_ == ICState::Mode::Specialized);
   MOZ_ASSERT(callee->isNative());
 
-  // Check for fun_call and fun_apply.
-  if (op_ == JSOp::FunCall && callee->native() == fun_call) {
-    return tryAttachFunCall();
-  }
-  if (op_ == JSOp::FunApply && callee->native() == fun_apply) {
-    return tryAttachFunApply();
-  }
-
-  // Other functions are only optimized for normal calls.
+  // Special case functions are only optimized for normal calls.
   if (op_ != JSOp::Call && op_ != JSOp::CallIgnoresRv) {
     return AttachDecision::NoAction;
   }
@@ -5551,6 +5553,12 @@ AttachDecision CallIRGenerator::tryAttachStub() {
 
   // Check for native-function optimizations.
   if (calleeFunc->isNative()) {
+    if (op_ == JSOp::FunCall) {
+        return tryAttachFunCall(calleeFunc);
+    }
+    if (op_ == JSOp::FunApply) {
+        return tryAttachFunApply(calleeFunc);
+    }
     return tryAttachCallNative(calleeFunc);
   }
 
