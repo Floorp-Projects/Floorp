@@ -401,7 +401,6 @@ class LDefinition {
     MUST_REUSE_INPUT
   };
 
-  // This should be kept in sync with LIR.cpp's TypeChars.
   enum Type {
     GENERAL,     // Generic, integer or pointer-width data (GPR).
     INT32,       // int32 data (GPR).
@@ -411,6 +410,7 @@ class LDefinition {
     DOUBLE,      // 64-bit floating-point value (FPU).
     SIMD128INT,  // 128-bit SIMD integer vector (FPU).
     SIMD128FLOAT,  // 128-bit SIMD floating point vector (FPU).
+    STACKRESULTS,  // A variable-size stack allocation that may contain objects.
 #ifdef JS_NUNBOX32
     // A type virtual register must be followed by a payload virtual
     // register, as both will be tracked as a single gcthing.
@@ -547,6 +547,8 @@ class LDefinition {
       case MIRType::Int64:
         return LDefinition::GENERAL;
 #endif
+      case MIRType::StackResults:
+        return LDefinition::STACKRESULTS;
       case MIRType::Int8x16:
       case MIRType::Int16x8:
       case MIRType::Int32x4:

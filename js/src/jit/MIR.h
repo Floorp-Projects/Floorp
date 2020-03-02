@@ -11862,6 +11862,91 @@ class MWasmRegister64Result : public MWasmResultBase<Register64> {
   TRIVIAL_NEW_WRAPPERS
 };
 
+class MWasmStackResultArea : public MNullaryInstruction {
+ public:
+  class StackResult {
+    // Offset in bytes from lowest address of stack result area.
+    uint32_t offset_;
+    MIRType type_;
+
+   public:
+    StackResult() : type_(MIRType::Undefined) {}
+    StackResult(uint32_t offset, MIRType type) : offset_(offset), type_(type) {}
+
+    bool initialized() const { return type_ != MIRType::Undefined; }
+    uint32_t offset() const {
+      MOZ_ASSERT(initialized());
+      return offset_;
+    }
+    MIRType type() const {
+      MOZ_ASSERT(initialized());
+      return type_;
+    }
+    uint32_t endOffset() const { return offset() + MIRTypeToSize(type()); }
+  };
+
+ private:
+  FixedList<StackResult> results_;
+
+  explicit MWasmStackResultArea() : MNullaryInstruction(classOpcode) {
+    setResultType(MIRType::StackResults);
+  }
+
+  void assertInitialized() const {
+    MOZ_ASSERT(results_.length() != 0);
+#ifdef DEBUG
+    for (size_t i = 0; i < results_.length(); i++) {
+      MOZ_ASSERT(results_[i].initialized());
+    }
+#endif
+  }
+
+ public:
+  INSTRUCTION_HEADER(WasmStackResultArea)
+  TRIVIAL_NEW_WRAPPERS
+
+  MOZ_MUST_USE bool init(TempAllocator& alloc, size_t stackResultCount) {
+    MOZ_ASSERT(results_.length() == 0);
+    MOZ_ASSERT(stackResultCount > 0);
+    return results_.init(alloc, stackResultCount);
+  }
+
+  size_t resultCount() const { return results_.length(); }
+  const StackResult& result(size_t n) const {
+    MOZ_ASSERT(results_[n].initialized());
+    return results_[n];
+  }
+  void initResult(size_t n, const StackResult& loc) {
+    MOZ_ASSERT(!results_[n].initialized());
+    MOZ_ASSERT((n == 0) == (loc.offset() == 0));
+    MOZ_ASSERT_IF(n > 0, loc.offset() >= result(n - 1).endOffset());
+    results_[n] = loc;
+  }
+
+  uint32_t byteSize() const {
+    assertInitialized();
+    return result(resultCount() - 1).endOffset();
+  }
+};
+
+class MWasmStackResult : public MUnaryInstruction, public NoTypePolicy::Data {
+  uint32_t resultIdx_;
+
+  const MWasmStackResultArea::StackResult& result() const {
+    return resultArea()->toWasmStackResultArea()->result(resultIdx_);
+  }
+
+  MWasmStackResult(MWasmStackResultArea* resultArea, size_t idx)
+      : MUnaryInstruction(classOpcode, resultArea), resultIdx_(idx) {
+    setResultType(result().type());
+  }
+
+ public:
+  INSTRUCTION_HEADER(WasmStackResult)
+  TRIVIAL_NEW_WRAPPERS
+  NAMED_OPERANDS((0, resultArea))
+};
+
 class MWasmCall final : public MVariadicInstruction, public NoTypePolicy::Data {
   wasm::CallSiteDesc desc_;
   wasm::CalleeDesc callee_;

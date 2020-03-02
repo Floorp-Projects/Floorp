@@ -184,8 +184,6 @@ bool GenerateStackmapEntriesForTrapExit(const ArgTypeVector& args,
   }
 
   for (ABIArgIter i(args); !i.done(); i++) {
-    MOZ_ASSERT((i.mirType() == MIRType::Pointer) ==
-               args.isSyntheticStackResultPointerArg(i.index()));
     if (!i->argInRegister() || i.mirType() != MIRType::RefOrNull) {
       continue;
     }
