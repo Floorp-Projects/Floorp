@@ -152,8 +152,34 @@ FFmpegLibWrapper::LinkResult FFmpegLibWrapper::Link() {
                            AV_FUNC_AVUTIL_57 | AV_FUNC_AVUTIL_58))
   AV_FUNC_OPTION(av_frame_get_colorspace, AV_FUNC_AVUTIL_ALL)
   AV_FUNC_OPTION(av_frame_get_color_range, AV_FUNC_AVUTIL_ALL)
+#ifdef MOZ_WAYLAND
+  AV_FUNC_OPTION(avcodec_get_hw_config, AV_FUNC_58)
+  AV_FUNC_OPTION(av_hwdevice_ctx_create, AV_FUNC_58)
+  AV_FUNC_OPTION(av_buffer_ref, AV_FUNC_AVUTIL_58)
+  AV_FUNC_OPTION(av_buffer_unref, AV_FUNC_AVUTIL_58)
+  AV_FUNC_OPTION(av_hwframe_transfer_get_formats, AV_FUNC_58)
+  AV_FUNC_OPTION(av_hwdevice_ctx_create_derived, AV_FUNC_58)
+  AV_FUNC_OPTION(av_hwframe_ctx_alloc, AV_FUNC_58)
+  AV_FUNC_OPTION(av_dict_set, AV_FUNC_58)
+  AV_FUNC_OPTION(av_dict_free, AV_FUNC_58)
+#endif
 #undef AV_FUNC
 #undef AV_FUNC_OPTION
+
+#ifdef MOZ_WAYLAND
+#  define VA_FUNC_OPTION(func)                                    \
+    if (!(func = (decltype(func))PR_FindSymbol(mVALib, #func))) { \
+      FFMPEG_LOG("Couldn't load function " #func);                \
+      func = (decltype(func)) nullptr;                            \
+    }
+
+  // mVALib is optional and may not be present.
+  if (mVALib) {
+    VA_FUNC_OPTION(vaExportSurfaceHandle)
+    VA_FUNC_OPTION(vaSyncSurface)
+  }
+#  undef VA_FUNC_OPTION
+#endif
 
   avcodec_register_all();
   if (MOZ_LOG_TEST(sPDMLog, LogLevel::Debug)) {
@@ -184,7 +210,26 @@ void FFmpegLibWrapper::Unlink() {
     PR_UnloadLibrary(mAVCodecLib);
   }
 #endif
+#ifdef MOZ_WAYLAND
+  if (mVALib) {
+    PR_UnloadLibrary(mVALib);
+  }
+#endif
   PodZero(this);
 }
+
+#ifdef MOZ_WAYLAND
+bool FFmpegLibWrapper::IsVAAPIAvailable() {
+#  define VA_FUNC_LOADED(func) (func != nullptr)
+  return VA_FUNC_LOADED(avcodec_get_hw_config) &&
+         VA_FUNC_LOADED(av_hwdevice_ctx_create) &&
+         VA_FUNC_LOADED(av_buffer_ref) && VA_FUNC_LOADED(av_buffer_unref) &&
+         VA_FUNC_LOADED(av_hwframe_transfer_get_formats) &&
+         VA_FUNC_LOADED(av_hwdevice_ctx_create_derived) &&
+         VA_FUNC_LOADED(av_hwframe_ctx_alloc) && VA_FUNC_LOADED(av_dict_set) &&
+         VA_FUNC_LOADED(av_dict_free) &&
+         VA_FUNC_LOADED(vaExportSurfaceHandle) && VA_FUNC_LOADED(vaSyncSurface);
+}
+#endif
 
 }  // namespace mozilla
