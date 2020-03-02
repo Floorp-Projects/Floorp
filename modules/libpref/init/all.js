@@ -864,6 +864,8 @@ pref("devtools.performance.recording.threads", "[\"GeckoMain\",\"Compositor\",\"
 // the host machine. This is used in order to look up symbol information from
 // build artifacts of local builds.
 pref("devtools.performance.recording.objdirs", "[]");
+// The popup will display some introductory text the first time it is displayed.
+pref("devtools.performance.popup.intro-displayed", false);
 
 // view source
 pref("view_source.editor.path", "");

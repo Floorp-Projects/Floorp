@@ -368,6 +368,11 @@ export interface PerformancePref {
    * and update it elsewhere.
    */
   PopupEnabled: "devtools.performance.popup.enabled";
+  /**
+   * The profiler popup has some introductory text explaining what it is the first
+   * time that you open it. After that, it is not displayed by default.
+   */
+  PopupIntroDisplayed: "devtools.performance.popup.intro-displayed";
 }
 
 /**
