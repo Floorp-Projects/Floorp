@@ -45,6 +45,7 @@ const {
   getRecordingPreferencesFromBrowser,
   setRecordingPreferencesOnBrowser,
   getSymbolsFromThisBrowser,
+  presets,
 } = ChromeUtils.import(
   "resource://devtools/client/performance-new/popup/background.jsm.js"
 );
@@ -83,6 +84,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       perfFront: perfFrontInterface,
       receiveProfile,
       supportedFeatures,
+      presets,
       // Get the preferences from the current browser
       recordingPreferences: getRecordingPreferencesFromBrowser(),
       // In the popup, the preferences are stored directly on the current browser.

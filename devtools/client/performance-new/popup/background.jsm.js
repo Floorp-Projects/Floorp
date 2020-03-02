@@ -25,9 +25,9 @@ const { AppConstants } = ChromeUtils.import(
  * @typedef {import("../@types/perf").PopupBackgroundFeatures} PopupBackgroundFeatures
  * @typedef {import("../@types/perf").SymbolTableAsTuple} SymbolTableAsTuple
  * @typedef {import("../@types/perf").PerformancePref} PerformancePref
- * @typedef {import("../@types/perf").PresetDefinitions} PresetDefinitions
  * @typedef {import("../@types/perf").ProfilerWebChannel} ProfilerWebChannel
  * @typedef {import("../@types/perf").MessageFromFrontend} MessageFromFrontend
+ * @typedef {import("../@types/perf").Presets} Presets
  */
 
 /** @type {PerformancePref["Entries"]} */
@@ -114,6 +114,38 @@ const lazyProfilerMenuButton = requireLazy(() =>
     "resource://devtools/client/performance-new/popup/menu-button.jsm.js"
   ))
 );
+
+/** @type {Presets} */
+const presets = {
+  "web-developer": {
+    label: "Web Developer",
+    description:
+      "Recommended preset for most web app debugging, with low overhead.",
+    entries: 10000000,
+    interval: 1,
+    features: ["js"],
+    threads: ["GeckoMain", "Compositor", "Renderer", "DOM Worker"],
+    duration: 0,
+  },
+  "firefox-platform": {
+    label: "Firefox Platform",
+    description: "Recommended preset for internal Firefox platform debugging.",
+    entries: 10000000,
+    interval: 1,
+    features: ["js", "leaf", "stackwalk"],
+    threads: ["GeckoMain", "Compositor", "Renderer"],
+    duration: 0,
+  },
+  "firefox-front-end": {
+    label: "Firefox Front-End",
+    description: "Recommended preset for internal Firefox front-end debugging.",
+    entries: 10000000,
+    interval: 1,
+    features: ["js", "leaf", "stackwalk"],
+    threads: ["GeckoMain", "Compositor", "Renderer", "DOM Worker"],
+    duration: 0,
+  },
+};
 
 /**
  * This Map caches the symbols from the shared libraries.
@@ -310,8 +342,6 @@ function getRecordingPreferencesFromBrowser() {
  * @return {RecordingStateFromPreferences | null}
  */
 function getRecordingPrefsFromPreset(presetName, objdirs) {
-  const { presets } = lazyRecordingUtils();
-
   if (presetName === "custom") {
     return null;
   }
@@ -400,6 +430,8 @@ let _defaultPrefsForOlderFirefox;
  * NOTE: We don't need that function anymore, because have recording default
  * values in the all.js file since Firefox 72. But we still keep this to support
  * older Firefox versions. See Bug 1603415.
+ *
+ * @return {RecordingStateFromPreferences}
  */
 function getDefaultRecordingPreferencesForOlderFirefox() {
   if (!_defaultPrefsForOlderFirefox) {
@@ -492,6 +524,7 @@ function handleWebChannelMessage(channel, id, message, target) {
 /** @type {any} */ (this).module = { exports: {} };
 
 module.exports = {
+  presets,
   captureProfile,
   startProfiler,
   stopProfiler,

@@ -12,7 +12,6 @@ const {
 const {
   getEnvironmentVariable,
 } = require("devtools/client/performance-new/browser");
-const { presets } = require("devtools/shared/performance-new/recording-utils");
 
 /**
  * @typedef {import("../@types/perf").Action} Action
@@ -21,6 +20,7 @@ const { presets } = require("devtools/shared/performance-new/recording-utils");
  * @typedef {import("../@types/perf").SymbolTableAsTuple} SymbolTableAsTuple
  * @typedef {import("../@types/perf").RecordingState} RecordingState
  * @typedef {import("../@types/perf").InitializeStoreValues} InitializeStoreValues
+ * @typedef {import("../@types/perf").Presets} Presets
  */
 
 /**
@@ -142,10 +142,11 @@ exports.changeThreads = threads =>
 
 /**
  * Change the preset.
+ * @param {Presets} presets
  * @param {string} presetName
  * @return {ThunkAction<void>}
  */
-exports.changePreset = presetName =>
+exports.changePreset = (presets, presetName) =>
   _dispatchAndUpdatePreferences({
     type: "CHANGE_PRESET",
     presetName,
