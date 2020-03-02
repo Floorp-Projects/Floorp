@@ -3525,8 +3525,7 @@ EditActionResult HTMLEditor::TryToJoinBlocksWithTransaction(
         advanced,
         "Failed to advance offset to after child of rightBlock, "
         "leftBlock is a descendant of the child");
-    nsresult rv =
-        WSRunObject::Scrub(*this, EditorDOMPoint::AtEndOf(*leftBlock));
+    nsresult rv = WSRunObject::Scrub(*this, EditorDOMPoint::AtEndOf(leftBlock));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return EditActionIgnored(rv);
     }
@@ -3552,7 +3551,7 @@ EditActionResult HTMLEditor::TryToJoinBlocksWithTransaction(
 
     // Do br adjustment.
     RefPtr<Element> invisibleBRElement =
-        GetInvisibleBRElementAt(EditorDOMPoint::AtEndOf(*leftBlock));
+        GetInvisibleBRElementAt(EditorDOMPoint::AtEndOf(leftBlock));
     EditActionResult ret(NS_OK);
     if (NS_WARN_IF(mergeListElements)) {
       // Since 2002, here was the following comment:
@@ -3767,7 +3766,7 @@ EditActionResult HTMLEditor::TryToJoinBlocksWithTransaction(
   }
   // Do br adjustment.
   RefPtr<Element> invisibleBRElement =
-      GetInvisibleBRElementAt(EditorDOMPoint::AtEndOf(*leftBlock));
+      GetInvisibleBRElementAt(EditorDOMPoint::AtEndOf(leftBlock));
   EditActionResult ret(NS_OK);
   if (mergeListElements ||
       leftBlock->NodeInfo()->NameAtom() == rightBlock->NodeInfo()->NameAtom()) {
@@ -10760,7 +10759,7 @@ nsresult HTMLEditor::MoveSelectedContentsToDivElementToMakeItAbsolutePosition(
         }
         createdListElement = CreateNodeWithTransaction(
             MOZ_KnownLive(*ULOrOLOrDLTagName),
-            EditorDOMPoint::AtEndOf(*targetDivElement));
+            EditorDOMPoint::AtEndOf(targetDivElement));
         if (NS_WARN_IF(Destroyed())) {
           return NS_ERROR_EDITOR_DESTROYED;
         }
@@ -10824,7 +10823,7 @@ nsresult HTMLEditor::MoveSelectedContentsToDivElementToMakeItAbsolutePosition(
         // XXX So, createdListElement may be set to a non-list element.
         createdListElement = CreateNodeWithTransaction(
             MOZ_KnownLive(*containerName),
-            EditorDOMPoint::AtEndOf(*targetDivElement));
+            EditorDOMPoint::AtEndOf(targetDivElement));
         if (NS_WARN_IF(Destroyed())) {
           return NS_ERROR_EDITOR_DESTROYED;
         }
