@@ -1584,7 +1584,7 @@ template <class S>
 void RecordedEvent::ReadPatternData(S& aStream,
                                     PatternStorage& aPattern) const {
   ReadElementConstrained(aStream, aPattern.mType, PatternType::COLOR,
-                         PatternType::RADIAL_GRADIENT);
+                         kHighestPatternType);
 
   switch (aPattern.mType) {
     case PatternType::COLOR: {
