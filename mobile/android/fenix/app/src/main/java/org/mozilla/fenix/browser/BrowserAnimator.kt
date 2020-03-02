@@ -41,17 +41,34 @@ class BrowserAnimator(
     private val unwrappedSwipeRefresh: View?
         get() = swipeRefresh.get()
 
+    private val browserInValueAnimator = ValueAnimator.ofFloat(0f, END_ANIMATOR_VALUE).apply {
+        addUpdateListener {
+            unwrappedSwipeRefresh?.scaleX = STARTING_XY_SCALE + XY_SCALE_MULTIPLIER * it.animatedFraction
+            unwrappedSwipeRefresh?.scaleY = STARTING_XY_SCALE + XY_SCALE_MULTIPLIER * it.animatedFraction
+            unwrappedSwipeRefresh?.alpha = it.animatedFraction
+        }
+
+        doOnEnd {
+            unwrappedEngineView?.asView()?.visibility = View.VISIBLE
+            unwrappedSwipeRefresh?.background = null
+            arguments.putBoolean(SHOULD_ANIMATE_FLAG, false)
+        }
+
+        interpolator = DecelerateInterpolator()
+        duration = ANIMATION_DURATION
+    }
+
     /**
-     * Triggers the browser animation to run if necessary (based on the SHOULD_ANIMATE_FLAG). Also
+     * Triggers the *in* browser animation to run if necessary (based on the SHOULD_ANIMATE_FLAG). Also
      * removes the flag from the bundle so it is not played on future entries into the fragment.
      */
-    fun beginAnimationIfNecessary() {
+    fun beginAnimateInIfNecessary() {
         val shouldAnimate = arguments.getBoolean(SHOULD_ANIMATE_FLAG, false)
         if (shouldAnimate) {
             viewLifeCycleScope?.launch(Dispatchers.Main) {
                 delay(ANIMATION_DELAY)
                 captureEngineViewAndDrawStatically {
-                    animateBrowserEngine(unwrappedSwipeRefresh)
+                    browserInValueAnimator.start()
                 }
             }
         } else {
@@ -62,26 +79,15 @@ class BrowserAnimator(
     }
 
     /**
-     * Details exactly how the browserEngine animation should look and plays it.
+     * Triggers the *out* browser animation to run.
      */
-    private fun animateBrowserEngine(browserEngine: View?) {
-        val valueAnimator = ValueAnimator.ofFloat(0f, END_ANIMATOR_VALUE)
-
-        valueAnimator.addUpdateListener {
-            browserEngine?.scaleX = STARTING_XY_SCALE + XY_SCALE_MULTIPLIER * it.animatedFraction
-            browserEngine?.scaleY = STARTING_XY_SCALE + XY_SCALE_MULTIPLIER * it.animatedFraction
-            browserEngine?.alpha = it.animatedFraction
+    fun beginAnimateOut() {
+        viewLifeCycleScope?.launch(Dispatchers.Main) {
+            captureEngineViewAndDrawStatically {
+                unwrappedEngineView?.asView()?.visibility = View.GONE
+                browserInValueAnimator.reverse()
+            }
         }
-
-        valueAnimator.doOnEnd {
-            unwrappedEngineView?.asView()?.visibility = View.VISIBLE
-            unwrappedSwipeRefresh?.background = null
-            arguments.putBoolean(SHOULD_ANIMATE_FLAG, false)
-        }
-
-        valueAnimator.interpolator = DecelerateInterpolator()
-        valueAnimator.duration = ANIMATION_DURATION
-        valueAnimator.start()
     }
 
     /**

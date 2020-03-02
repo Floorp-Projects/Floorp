@@ -58,6 +58,7 @@
     <fragment
         android:id="@+id/homeFragment"
         android:name="org.mozilla.fenix.home.HomeFragment"
+        app:enterAnim="@anim/zoom_out_fade"
         tools:layout="@layout/fragment_home">
         <action
             android:id="@+id/action_homeFragment_to_turnOnSyncFragment"
@@ -76,7 +77,7 @@
             android:id="@+id/action_homeFragment_to_browserFragment"
             app:destination="@id/browserFragment"
             app:exitAnim="@anim/zoom_in_fade"
-            app:popEnterAnim="@anim/fade_in" />
+            app:popEnterAnim="@anim/zoom_out_fade" />
         <action
             android:id="@+id/action_homeFragment_to_libraryFragment"
             app:destination="@id/libraryFragment" />

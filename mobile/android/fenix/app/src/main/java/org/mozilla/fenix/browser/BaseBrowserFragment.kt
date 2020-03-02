@@ -168,7 +168,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
             swipeRefresh = WeakReference(swipeRefresh),
             arguments = arguments!!
         ).apply {
-            beginAnimationIfNecessary()
+            beginAnimateInIfNecessary()
         }
 
         return getSessionById()?.also { session ->

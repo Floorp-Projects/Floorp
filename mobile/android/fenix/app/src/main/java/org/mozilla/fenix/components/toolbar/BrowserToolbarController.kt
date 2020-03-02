@@ -14,6 +14,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
@@ -300,7 +301,11 @@ class DefaultBrowserToolbarController(
     }
 
     private fun animateTabAndNavigateHome() {
-        browserAnimator.captureEngineViewAndDrawStatically {
+        scope.launch {
+            browserAnimator.beginAnimateOut()
+            // Delay for a short amount of time so the browser has time to start animating out
+            // before we transition the fragment. This makes the animation feel smoother
+            delay(ANIMATION_DELAY)
             if (!navController.popBackStack(R.id.homeFragment, false)) {
                 val directions = BrowserFragmentDirections.actionBrowserFragmentToHomeFragment()
                 navController.nav(
@@ -356,8 +361,7 @@ class DefaultBrowserToolbarController(
     }
 
     companion object {
-        @VisibleForTesting
-        const val TAB_ITEM_TRANSITION_NAME = "tab_item"
+        const val ANIMATION_DELAY = 50L
         internal const val TELEMETRY_BROWSER_IDENTIFIER = "browserMenu"
     }
 }
