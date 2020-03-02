@@ -619,7 +619,7 @@ module.exports = connect(
     recording: getRecordingState(state),
     requestFilterTypes: state.filters.requestFilterTypes,
     networkThrottling: state.networkThrottling,
-    networkActionBarOpen: state.search.panelOpen,
+    networkActionBarOpen: state.ui.networkActionOpen,
     networkActionBarSelectedPanel: state.ui.selectedActionBarTabId || "",
     selectedRequest: getSelectedRequest(state),
   }),
