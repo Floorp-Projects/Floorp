@@ -32,21 +32,6 @@ struct StyleTransition;
  *****************************************************************************/
 
 namespace mozilla {
-
-struct ElementPropertyTransition : public dom::KeyframeEffect {
-  ElementPropertyTransition(dom::Document* aDocument,
-                            OwningAnimationTarget&& aTarget,
-                            TimingParams&& aTiming,
-                            const KeyframeEffectParams& aEffectOptions)
-      : dom::KeyframeEffect(aDocument, std::move(aTarget), std::move(aTiming),
-                            aEffectOptions) {}
-
-  ElementPropertyTransition* AsTransition() override { return this; }
-  const ElementPropertyTransition* AsTransition() const override {
-    return this;
-  }
-};
-
 namespace dom {
 
 class CSSTransition final : public Animation {
