@@ -33,24 +33,8 @@ SharedPlanarYCbCrImage::SharedPlanarYCbCrImage(ImageClient* aCompositable)
   MOZ_COUNT_CTOR(SharedPlanarYCbCrImage);
 }
 
-SharedPlanarYCbCrImage::SharedPlanarYCbCrImage(
-    TextureClientRecycleAllocator* aRecycleAllocator)
-    : mRecycleAllocator(aRecycleAllocator) {}
-
 SharedPlanarYCbCrImage::~SharedPlanarYCbCrImage() {
   MOZ_COUNT_DTOR(SharedPlanarYCbCrImage);
-}
-
-TextureClientRecycleAllocator* SharedPlanarYCbCrImage::RecycleAllocator() {
-  static const uint32_t MAX_POOLED_VIDEO_COUNT = 5;
-
-  if (!mRecycleAllocator && mCompositable) {
-    // Initialize TextureClientRecycler
-    mCompositable->GetTextureClientRecycler()->SetMaxPoolSize(
-        MAX_POOLED_VIDEO_COUNT);
-    mRecycleAllocator = mCompositable->GetTextureClientRecycler();
-  }
-  return mRecycleAllocator;
 }
 
 size_t SharedPlanarYCbCrImage::SizeOfExcludingThis(
@@ -110,12 +94,19 @@ bool SharedPlanarYCbCrImage::IsValid() const {
 
 bool SharedPlanarYCbCrImage::Allocate(PlanarYCbCrData& aData) {
   MOZ_ASSERT(!mTextureClient, "This image already has allocated data");
+  static const uint32_t MAX_POOLED_VIDEO_COUNT = 5;
 
-  TextureFlags flags =
-      mCompositable ? mCompositable->GetTextureFlags() : TextureFlags::DEFAULT;
+  if (!mCompositable->HasTextureClientRecycler()) {
+    // Initialize TextureClientRecycler
+    mCompositable->GetTextureClientRecycler()->SetMaxPoolSize(
+        MAX_POOLED_VIDEO_COUNT);
+  }
+
   {
-    YCbCrTextureClientAllocationHelper helper(aData, flags);
-    mTextureClient = RecycleAllocator()->CreateOrRecycle(helper);
+    YCbCrTextureClientAllocationHelper helper(aData,
+                                              mCompositable->GetTextureFlags());
+    mTextureClient =
+        mCompositable->GetTextureClientRecycler()->CreateOrRecycle(helper);
   }
 
   if (!mTextureClient) {
