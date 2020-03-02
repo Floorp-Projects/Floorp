@@ -690,7 +690,11 @@ class nsFrameSelection final {
   void StartBatchChanges();
 
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
-  void EndBatchChanges(int16_t aReason = nsISelectionListener::NO_REASON);
+  /**
+   * @param aReasons potentially multiple of the reasons defined in
+   * nsISelectionListener.idl
+   */
+  void EndBatchChanges(int16_t aReasons = nsISelectionListener::NO_REASON);
 
   mozilla::PresShell* GetPresShell() const { return mPresShell; }
 
@@ -716,13 +720,32 @@ class nsFrameSelection final {
 
   bool AdjustForMaintainedSelection(nsIContent* aContent, int32_t aOffset);
 
-  // post and pop reasons for notifications. we may stack these later
-  void PostReason(int16_t aReason) { mSelectionChangeReasons = aReason; }
-  int16_t PopReason() {
+  /**
+   * @param aReasons potentially multiple of the reasons defined in
+   * nsISelectionListener.idl.
+   */
+  void SetChangeReasons(int16_t aReasons) {
+    mSelectionChangeReasons = aReasons;
+  }
+
+  /**
+   * @param aReasons potentially multiple of the reasons defined in
+   * nsISelectionListener.idl.
+   */
+  void AddChangeReasons(int16_t aReasons) {
+    mSelectionChangeReasons |= aReasons;
+  }
+
+  /**
+   * @return potentially multiple of the reasons defined in
+   * nsISelectionListener.idl.
+   */
+  int16_t PopChangeReasons() {
     int16_t retval = mSelectionChangeReasons;
     mSelectionChangeReasons = nsISelectionListener::NO_REASON;
     return retval;
   }
+
   bool IsUserSelectionReason() const {
     return (mSelectionChangeReasons &
             (nsISelectionListener::DRAG_REASON |
