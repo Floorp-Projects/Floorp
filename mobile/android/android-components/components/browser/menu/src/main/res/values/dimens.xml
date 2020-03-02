@@ -28,8 +28,8 @@
     <!-- BrowserMenuCategory -->
     <dimen name="mozac_browser_menu_category_text_size">14sp</dimen>
     <dimen name="mozac_browser_menu_category_layout_height">40dp</dimen>
-    <dimen name="mozac_browser_menu_category_padding_start">24dp</dimen>
-    <dimen name="mozac_browser_menu_category_padding_end">24dp</dimen>
+    <dimen name="mozac_browser_menu_category_padding_start">16dp</dimen>
+    <dimen name="mozac_browser_menu_category_padding_end">16dp</dimen>
     <!-- BrowserMenuCategory -->
 
     <!--BrowserMenuCheckbox -->
