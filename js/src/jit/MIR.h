@@ -3983,8 +3983,12 @@ class MInt64ToFloatingPoint : public MUnaryInstruction,
 class MToNumeric : public MUnaryInstruction, public BoxInputsPolicy::Data {
   MToNumeric(MDefinition* arg, TemporaryTypeSet* types)
       : MUnaryInstruction(classOpcode, arg) {
-    MOZ_ASSERT(!IsNumericType(arg->type()),
-               "Unboxable definitions don't need ToNumeric");
+    if (!JitOptions.warpBuilder) {
+      // Note: unlike IonBuilder, WarpBuilder always adds MToNumeric and relies
+      // on specializing it later on.
+      MOZ_ASSERT(!IsNumericType(arg->type()),
+                 "Unboxable definitions don't need ToNumeric");
+    }
     setResultType(MIRType::Value);
     // Although `types' is always Int32|Double|BigInt, we have to compute it in
     // IonBuilder to know whether emitting an MToNumeric is needed, so we just
@@ -3996,10 +4000,7 @@ class MToNumeric : public MUnaryInstruction, public BoxInputsPolicy::Data {
 
  public:
   INSTRUCTION_HEADER(ToNumeric)
-  static MToNumeric* New(TempAllocator& alloc, MDefinition* arg,
-                         TemporaryTypeSet* types) {
-    return new (alloc) MToNumeric(arg, types);
-  }
+  TRIVIAL_NEW_WRAPPERS
 
   void computeRange(TempAllocator& alloc) override;
   bool congruentTo(const MDefinition* ins) const override {
