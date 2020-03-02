@@ -56,6 +56,8 @@ TransportSecurityInfo::TransportSecurityInfo()
       mHaveCertErrorBits(false),
       mCanceled(false),
       mMutex("TransportSecurityInfo::mMutex"),
+      mNPNCompleted(false),
+      mResumed(false),
       mSecurityState(nsIWebProgressListener::STATE_IS_INSECURE),
       mErrorCode(0),
       mPort(0) {}
@@ -191,7 +193,7 @@ TransportSecurityInfo::Write(nsIObjectOutputStream* aStream) {
   // Re-purpose mErrorMessageCached to represent serialization version
   // If string doesn't match exact version it will be treated as older
   // serialization.
-  rv = aStream->WriteWStringZ(NS_ConvertUTF8toUTF16("3").get());
+  rv = aStream->WriteWStringZ(NS_ConvertUTF8toUTF16("4").get());
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -252,6 +254,21 @@ TransportSecurityInfo::Write(nsIObjectOutputStream* aStream) {
   }
 
   rv = aStream->WriteBoolean(mIsDelegatedCredential);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  rv = aStream->WriteBoolean(mNPNCompleted);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  rv = aStream->WriteStringZ(mNegotiatedNPN.get());
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  rv = aStream->WriteBoolean(mResumed);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -515,7 +532,7 @@ TransportSecurityInfo::Read(nsIObjectInputStream* aStream) {
 
   // moved from nsISSLStatus
   if (!serVersion.EqualsASCII("1") && !serVersion.EqualsASCII("2") &&
-      !serVersion.EqualsASCII("3")) {
+      !serVersion.EqualsASCII("3") && !serVersion.EqualsASCII("4")) {
     // nsISSLStatus may be present
     rv = ReadSSLStatus(aStream);
     CHILD_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv),
@@ -591,7 +608,7 @@ TransportSecurityInfo::Read(nsIObjectInputStream* aStream) {
                             "Deserialization should not fail");
     NS_ENSURE_SUCCESS(rv, rv);
 
-    if (!serVersion.EqualsASCII("3")) {
+    if (!serVersion.EqualsASCII("3") && !serVersion.EqualsASCII("4")) {
       // The old data structure of certList(nsIX509CertList) presents
       rv = ReadCertList(aStream, mSucceededCertChain);
       CHILD_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv),
@@ -609,7 +626,7 @@ TransportSecurityInfo::Read(nsIObjectInputStream* aStream) {
     }
   }
   // END moved from nsISSLStatus
-  if (!serVersion.EqualsASCII("3")) {
+  if (!serVersion.EqualsASCII("3") && !serVersion.EqualsASCII("4")) {
     // The old data structure of certList(nsIX509CertList) presents
     rv = ReadCertList(aStream, mFailedCertChain);
     CHILD_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv),
@@ -627,8 +644,33 @@ TransportSecurityInfo::Read(nsIObjectInputStream* aStream) {
   }
 
   // mIsDelegatedCredential added in bug 1562773
-  if (serVersion.EqualsASCII("2") || serVersion.EqualsASCII("3")) {
+  if (serVersion.EqualsASCII("2") || serVersion.EqualsASCII("3") ||
+      serVersion.EqualsASCII("4")) {
     rv = aStream->ReadBoolean(&mIsDelegatedCredential);
+    CHILD_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv),
+                            "Deserialization should not fail");
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+  }
+
+  // mNPNCompleted, mNegotiatedNPN, mResumed added in bug 1584104
+  if (serVersion.EqualsASCII("4")) {
+    rv = aStream->ReadBoolean(&mNPNCompleted);
+    CHILD_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv),
+                            "Deserialization should not fail");
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+
+    rv = aStream->ReadCString(mNegotiatedNPN);
+    CHILD_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv),
+                            "Deserialization should not fail");
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+
+    rv = aStream->ReadBoolean(&mResumed);
     CHILD_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv),
                             "Deserialization should not fail");
     if (NS_FAILED(rv)) {
@@ -664,6 +706,9 @@ void TransportSecurityInfo::SerializeToIPC(IPC::Message* aMsg) {
   WriteParam(aMsg, mSucceededCertChain);
   WriteParam(aMsg, mFailedCertChain);
   WriteParam(aMsg, mIsDelegatedCredential);
+  WriteParam(aMsg, mNPNCompleted);
+  WriteParam(aMsg, mNegotiatedNPN);
+  WriteParam(aMsg, mResumed);
 }
 
 bool TransportSecurityInfo::DeserializeFromIPC(const IPC::Message* aMsg,
@@ -689,7 +734,10 @@ bool TransportSecurityInfo::DeserializeFromIPC(const IPC::Message* aMsg,
       !ReadParam(aMsg, aIter, &mSignatureSchemeName) ||
       !ReadParam(aMsg, aIter, &mSucceededCertChain) ||
       !ReadParam(aMsg, aIter, &mFailedCertChain) ||
-      !ReadParam(aMsg, aIter, &mIsDelegatedCredential)) {
+      !ReadParam(aMsg, aIter, &mIsDelegatedCredential) ||
+      !ReadParam(aMsg, aIter, &mNPNCompleted) ||
+      !ReadParam(aMsg, aIter, &mNegotiatedNPN) ||
+      !ReadParam(aMsg, aIter, &mResumed)) {
     return false;
   }
 
@@ -1089,6 +1137,27 @@ TransportSecurityInfo::GetIsDelegatedCredential(bool* aIsDelegCred) {
   }
   *aIsDelegCred = mIsDelegatedCredential;
   return NS_OK;
+}
+
+NS_IMETHODIMP
+TransportSecurityInfo::GetNegotiatedNPN(nsACString& aNegotiatedNPN) {
+  if (!mNPNCompleted) {
+    return NS_ERROR_NOT_CONNECTED;
+  }
+
+  aNegotiatedNPN = mNegotiatedNPN;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+TransportSecurityInfo::GetResumed(bool* aResumed) {
+  *aResumed = mResumed;
+  return NS_OK;
+}
+
+void TransportSecurityInfo::SetResumed(bool aResumed) {
+  MutexAutoLock lock(mMutex);
+  mResumed = aResumed;
 }
 
 }  // namespace psm
