@@ -2,35 +2,16 @@ W3C CSS Test Suite Directory
 ----------------------------
 
 This directory is for tests that are sync'ed with the official
-W3C CSS test suites at https://github.com/w3c/web-platform-tests/.
- 
+W3C CSS test suites at https://github.com/web-platform-tests/wpt.
+
 submitted/ is for tests that are to be submitted to W3C.
 This directory is sync'ed automatically with the
-contributors/mozilla/submitted/mozilla-central-reftests/
-directory in the CSSWG repository. The master copy is Mozilla's.
-
-received/ is for tests that are received from W3C.
-This directory is sync'ed semi-automatically with the approved/
-directory in the CSSWG repository. The master copy is CSSWG's.
-Don't make changes here; they'll be overwritten by the next sync.
-
-import-tests.py automatically imports a selection of CSSWG tests
-from a clone of the https://github.com/w3c/web-platform-tests Git
-repository.
-
-Note that this will remove everything in the received/ directory when run,
-so don't store anything in there.
-
-failures.list is a list of reftests that fail in mozilla's
-implementation of a given css module. Since the tests in are
-checked-in to the mozilla tree after import, they are run in
-the same manner as all other reftests in the tree. Thus, these
-tests are marked as fails() when included in the reftest.list
-file, so that new imports will not reawaken old oranges.
+css/vendor-imports/mozilla/mozilla-central-reftests
+directory in the wpt repository. The master copy is Mozilla's.
 
 Legal Stuff
 -----------
- 
+
 These files are copyright by W3C and/or the author listed in the test
 file. They are available under the BSD 3-clause license; see LICENSE
 or http://www.w3.org/Consortium/Legal/2008/03-bsd-license.html
