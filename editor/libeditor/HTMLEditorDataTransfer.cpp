@@ -372,7 +372,7 @@ nsresult HTMLEditor::DoInsertHTMLWithContext(
   // Remove invisible `<br>` element at the point because if there is a `<br>`
   // element at end of what we paste, it will make the existing invisible
   // `<br>` element visible.
-  WSRunObject wsObj(this, pointToInsert);
+  WSRunObject wsObj(*this, pointToInsert);
   if (wsObj.GetEndReasonContent() &&
       wsObj.GetEndReasonContent()->IsHTMLElement(nsGkAtoms::br) &&
       !IsVisibleBRElement(wsObj.GetEndReasonContent())) {

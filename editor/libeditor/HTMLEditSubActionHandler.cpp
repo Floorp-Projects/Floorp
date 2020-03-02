@@ -499,7 +499,7 @@ nsresult HTMLEditor::OnEndHandlingTopLevelEditSubActionInternal() {
             return NS_ERROR_FAILURE;
           }
         }
-        rv = WSRunObject(this, pointToAdjust).AdjustWhitespace();
+        rv = WSRunObject(*this, pointToAdjust).AdjustWhitespace();
         if (NS_WARN_IF(Destroyed())) {
           return NS_ERROR_EDITOR_DESTROYED;
         }
@@ -515,7 +515,7 @@ nsresult HTMLEditor::OnEndHandlingTopLevelEditSubActionInternal() {
           return NS_ERROR_FAILURE;
         }
         WSRunObject(
-            this,
+            *this,
             TopLevelEditSubActionDataRef().mSelectedRange->StartRawPoint())
             .AdjustWhitespace();
         if (NS_WARN_IF(Destroyed())) {
@@ -525,7 +525,7 @@ nsresult HTMLEditor::OnEndHandlingTopLevelEditSubActionInternal() {
         // from start
         if (TopLevelEditSubActionDataRef().mSelectedRange->IsCollapsed()) {
           WSRunObject(
-              this,
+              *this,
               TopLevelEditSubActionDataRef().mSelectedRange->EndRawPoint())
               .AdjustWhitespace();
           if (NS_WARN_IF(Destroyed())) {
@@ -1368,7 +1368,7 @@ EditActionResult HTMLEditor::HandleInsertText(
     if (!compositionEndPoint.IsSet()) {
       compositionEndPoint = compositionStartPoint;
     }
-    WSRunObject wsObj(this, compositionStartPoint, compositionEndPoint);
+    WSRunObject wsObj(*this, compositionStartPoint, compositionEndPoint);
     nsresult rv = wsObj.InsertText(*document, aInsertionString);
     if (NS_WARN_IF(Destroyed())) {
       return EditActionHandled(NS_ERROR_EDITOR_DESTROYED);
@@ -1505,7 +1505,7 @@ EditActionResult HTMLEditor::HandleInsertText(
         }
 
         nsDependentSubstring subStr(insertionString, oldPos, subStrLen);
-        WSRunObject wsObj(this, currentPoint);
+        WSRunObject wsObj(*this, currentPoint);
 
         // is it a tab?
         if (subStr.Equals(tabStr)) {
@@ -1934,7 +1934,7 @@ nsresult HTMLEditor::InsertBRElement(const EditorDOMPoint& aPointToBreak) {
     }
   } else {
     EditorDOMPoint pointToBreak(aPointToBreak);
-    WSRunObject wsObj(this, pointToBreak);
+    WSRunObject wsObj(*this, pointToBreak);
     brElementIsAfterBlock =
         wsObj.ScanPreviousVisibleNodeOrBlockBoundaryFrom(pointToBreak)
             .ReachedBlockBoundary();
@@ -2392,7 +2392,7 @@ EditActionResult HTMLEditor::HandleDeleteAroundCollapsedSelection(
   }
 
   // What's in the direction we are deleting?
-  WSRunObject wsObj(this, startPoint);
+  WSRunObject wsObj(*this, startPoint);
   WSScanResult scanFromStartPointResult =
       aDirectionAndAmount == nsIEditor::eNext
           ? wsObj.ScanNextVisibleNodeOrBlockBoundaryFrom(startPoint)
@@ -2536,7 +2536,7 @@ EditActionResult HTMLEditor::HandleDeleteCollapsedSelectionAtTextNode(
   }
   nsCOMPtr<nsINode> textNodeForDeletion = aPointToDelete.GetContainer();
   nsresult rv = WSRunObject::PrepareToDeleteRange(
-      this, address_of(textNodeForDeletion), &startOffset,
+      *this, address_of(textNodeForDeletion), &startOffset,
       address_of(textNodeForDeletion), &endOffset);
   if (NS_WARN_IF(Destroyed())) {
     return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
@@ -2696,7 +2696,7 @@ EditActionResult HTMLEditor::HandleDeleteCollapsedSelectionAtAtomicContent(
 
       // Delete the <br>
       nsresult rv = WSRunObject::PrepareToDeleteNode(
-          this, MOZ_KnownLive(forwardScanFromCaretResult.BRElementPtr()));
+          *this, MOZ_KnownLive(forwardScanFromCaretResult.BRElementPtr()));
       if (NS_WARN_IF(Destroyed())) {
         return EditActionHandled(NS_ERROR_EDITOR_DESTROYED);
       }
@@ -2718,7 +2718,7 @@ EditActionResult HTMLEditor::HandleDeleteCollapsedSelectionAtAtomicContent(
   // Found break or image, or hr.
   // XXX Oddly, this requires `MOZ_KnownLive()` for `&aAtomicContent` here...
   nsresult rv =
-      WSRunObject::PrepareToDeleteNode(this, MOZ_KnownLive(&aAtomicContent));
+      WSRunObject::PrepareToDeleteNode(*this, MOZ_KnownLive(&aAtomicContent));
   if (NS_WARN_IF(Destroyed())) {
     return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
   }
@@ -3021,7 +3021,7 @@ EditActionResult HTMLEditor::HandleDeleteNonCollapsedSelection(
     nsCOMPtr<nsINode> endNode = firstRangeEnd.GetContainer();
     int32_t endOffset = firstRangeEnd.Offset();
     nsresult rv = WSRunObject::PrepareToDeleteRange(
-        this, address_of(startNode), &startOffset, address_of(endNode),
+        *this, address_of(startNode), &startOffset, address_of(endNode),
         &endOffset);
     if (NS_WARN_IF(Destroyed())) {
       return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
@@ -3365,7 +3365,7 @@ nsresult HTMLEditor::InsertBRElementIfHardLineIsEmptyAndEndsWithBlockBoundary(
     return NS_OK;
   }
 
-  WSRunObject wsObj(this, aPointToInsert);
+  WSRunObject wsObj(*this, aPointToInsert);
   // If the point is not start of a hard line, we don't need to put a `<br>`
   // element here.
   if (!wsObj.StartsFromHardLineBreak()) {
@@ -8004,8 +8004,8 @@ nsresult HTMLEditor::HandleInsertParagraphInHeadingElement(Element& aHeader,
 
   // Get ws code to adjust any ws
   nsCOMPtr<nsINode> node = &aNode;
-  nsresult rv =
-      WSRunObject::PrepareToSplitAcrossBlocks(this, address_of(node), &aOffset);
+  nsresult rv = WSRunObject::PrepareToSplitAcrossBlocks(*this, address_of(node),
+                                                        &aOffset);
   if (NS_WARN_IF(Destroyed())) {
     return NS_ERROR_EDITOR_DESTROYED;
   }
@@ -8320,7 +8320,7 @@ nsresult HTMLEditor::SplitParagraph(
   nsCOMPtr<nsINode> selNode = aStartOfRightNode.GetContainer();
   int32_t selOffset = aStartOfRightNode.Offset();
   nsresult rv = WSRunObject::PrepareToSplitAcrossBlocks(
-      this, address_of(selNode), &selOffset);
+      *this, address_of(selNode), &selOffset);
   if (NS_WARN_IF(Destroyed())) {
     return NS_ERROR_EDITOR_DESTROYED;
   }
@@ -8519,7 +8519,7 @@ nsresult HTMLEditor::HandleInsertParagraphInListItemElement(Element& aListItem,
   // adjust any ws.
   nsCOMPtr<nsINode> selNode = &aNode;
   nsresult rv = WSRunObject::PrepareToSplitAcrossBlocks(
-      this, address_of(selNode), &aOffset);
+      *this, address_of(selNode), &aOffset);
   if (NS_WARN_IF(Destroyed())) {
     return NS_ERROR_EDITOR_DESTROYED;
   }
