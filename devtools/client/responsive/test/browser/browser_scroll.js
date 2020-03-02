@@ -8,45 +8,38 @@ http://creativecommons.org/publicdomain/zero/1.0/ */
  * behaves correctly, both with and without touch simulation enabled.
  */
 
-const Types = require("devtools/client/responsive/types");
-
 const TEST_URL =
   "data:text/html;charset=utf-8," +
   '<head><meta name="viewport" content="width=100, height=100"/></head>' +
   '<div style="background:blue; width:200px; height:200px"></div>';
 
-addRDMTask(TEST_URL, async function({ ui, manager }) {
-  // Wait until the viewport has been added and the device list has been loaded
-  const { store } = ui.toolWindow;
-  await waitUntilState(
-    store,
-    state =>
-      state.viewports.length == 1 &&
-      state.devices.listState == Types.loadableState.LOADED
-  );
+addRDMTask(
+  TEST_URL,
+  async function({ ui, manager }) {
+    await setViewportSize(ui, manager, 50, 50);
+    const browser = ui.getViewportBrowser();
 
-  await setViewportSize(ui, manager, 50, 50);
-  const browser = ui.getViewportBrowser();
+    for (const mv in [true, false]) {
+      const reloadNeeded = await ui.updateTouchSimulation(mv);
+      if (reloadNeeded) {
+        info("Reload is needed -- waiting for it.");
+        const reload = waitForViewportLoad(ui);
+        browser.reload();
+        await reload;
+      }
+      info("Setting focus on the browser.");
+      browser.focus();
 
-  for (const mv in [true, false]) {
-    const reloadNeeded = await ui.updateTouchSimulation(mv);
-    if (reloadNeeded) {
-      info("Reload is needed -- waiting for it.");
-      const reload = waitForViewportLoad(ui);
-      browser.reload();
-      await reload;
+      await SpecialPowers.spawn(browser, [], () => {
+        content.scrollTo(0, 0);
+      });
+
+      info("Testing scroll behavior with touch simulation " + mv + ".");
+      await testScrollingOfContent(ui);
     }
-    info("Setting focus on the browser.");
-    browser.focus();
-
-    await SpecialPowers.spawn(browser, [], () => {
-      content.scrollTo(0, 0);
-    });
-
-    info("Testing scroll behavior with touch simulation " + mv + ".");
-    await testScrollingOfContent(ui);
-  }
-});
+  },
+  { usingBrowserUI: true }
+);
 
 async function testScrollingOfContent(ui) {
   let scroll;
