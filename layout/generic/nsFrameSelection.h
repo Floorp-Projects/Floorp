@@ -842,6 +842,7 @@ class nsFrameSelection final {
     nsCOMPtr<nsIContent> mUnselectCellOnMouseUp;
     mozilla::TableSelectionMode mMode = mozilla::TableSelectionMode::None;
     int32_t mSelectedCellIndex = 0;
+    bool mDragSelectingCells = false;
   };
 
   TableSelection mTableSelection;
@@ -880,7 +881,6 @@ class nsFrameSelection final {
   bool mDelayedMouseEventIsShift = false;
 
   bool mChangesDuringBatching = false;
-  bool mDragSelectingCells = false;
   bool mDragState = false;  // for drag purposes
   bool mDesiredPosSet = false;
   bool mAccessibleCaretEnabled = false;
