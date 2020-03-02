@@ -810,7 +810,7 @@ export default class LoginItem extends HTMLElement {
   _updateOriginDisplayState() {
     // Switches between the origin input and anchor tag depending
     // if a new login is being created.
-    if (this.dataset.editing) {
+    if (this.dataset.isNewLogin) {
       this._originDisplayInput.replaceWith(this._originInput);
     } else {
       this._originInput.replaceWith(this._originDisplayInput);
