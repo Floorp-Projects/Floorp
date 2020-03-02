@@ -228,6 +228,18 @@ GeneratedFile('TelemetryProcessData.h',
               py2=True,
               inputs=processes_files)
 
+# Ensure that the GeckoView metrics file parses correctly prior to it
+# being released in Android components. This triggers glean_parser by
+# pretending to generate a file named 'glean_checks'.
+# While this currently only applies to Android, in the medium-term it
+# is going to generate code for Firefox as well (project FOG).
+# Prior art for this was in bug 1063728, within SpiderMonkey tests.
+GeneratedFile(
+    'glean_checks',
+    script='build_scripts/run_glean_parser.py',
+    py2=False,
+    inputs=['geckoview/streaming/metrics.yaml'])
+
 # Add support for GeckoView: please note that building GeckoView
 # implies having an Android build. The packaging step decides
 # which files to include. As a consequence, we can simply only
