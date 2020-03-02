@@ -65,8 +65,8 @@ class TabbedBrowsingTest {
             verifyOpenTabsHeader()
             verifyNoTabsOpenedText()
             verifyNoTabsOpenedHeader()
-            verifyNoCollectionsText()
-            verifyNoCollectionsHeader()
+            verifyNoCollectionsTextIsNotShown()
+            verifyNoCollectionsHeaderIsNotShown()
             verifyAddTabButton()
         }
 
@@ -83,6 +83,8 @@ class TabbedBrowsingTest {
                 TestAssetHelper.waitingTime
             )
             verifyExistingTabList()
+            verifyNoCollectionsHeader()
+            verifyNoCollectionsText()
 
         }.openTabsListThreeDotMenu {
             verifyCloseAllTabsButton()
@@ -153,8 +155,8 @@ class TabbedBrowsingTest {
             verifyShareTabButton()
             verifySaveCollection()
         }.closeAllTabs {
-            verifyNoCollectionsHeader()
-            verifyNoCollectionsText()
+            verifyNoCollectionsHeaderIsNotShown()
+            verifyNoCollectionsTextIsNotShown()
             verifyNoTabsOpenedHeader()
             verifyNoTabsOpenedText()
         }

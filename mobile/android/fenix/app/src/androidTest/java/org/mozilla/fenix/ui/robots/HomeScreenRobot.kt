@@ -55,6 +55,9 @@ class HomeScreenRobot {
     fun verifyCollectionsHeader() = assertCollectionsHeader()
     fun verifyNoCollectionsHeader() = assertNoCollectionsHeader()
     fun verifyNoCollectionsText() = assertNoCollectionsText()
+    fun verifyNoCollectionsHeaderIsNotShown() = assertNoCollectionsHeaderIsNotVisible()
+    fun verifyCollectionsHeaderIsNotShown() = assertCollectionsHeaderIsNotVisible()
+    fun verifyNoCollectionsTextIsNotShown() = assertNoCollectionsTextIsNotVisible()
     fun verifyNoTabsOpenedHeader() = assertNoTabsOpenedHeader()
     fun verifyHomeWordmark() = assertHomeWordmark()
     fun verifyHomeToolbar() = assertHomeToolbar()
@@ -322,13 +325,29 @@ private fun assertNoCollectionsHeader() =
     onView(allOf(withText("No collections")))
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
+private fun assertNoCollectionsHeaderIsNotVisible() =
+    onView(allOf(withText("No collections")))
+        .check(doesNotExist())
+
+private fun assertCollectionsHeaderIsNotVisible() =
+    onView(allOf(withText("Collections")))
+        .check(doesNotExist())
+
 private fun assertNoCollectionsText() =
+        onView(
+            allOf(
+                withText("Collect the things that matter to you. To start, save open tabs to a new collection.")
+            )
+        )
+            .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+
+private fun assertNoCollectionsTextIsNotVisible() =
     onView(
         allOf(
             withText("Collect the things that matter to you. To start, save open tabs to a new collection.")
         )
     )
-        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+        .check(doesNotExist())
 
 private fun assertHomeComponent() = onView(ViewMatchers.withResourceName("sessionControlRecyclerView"))
     .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))

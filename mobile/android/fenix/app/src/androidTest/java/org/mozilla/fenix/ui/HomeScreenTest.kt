@@ -46,9 +46,9 @@ class HomeScreenTest {
             verifyAddTabButton()
             verifyNoTabsOpenedHeader()
             verifyNoTabsOpenedText()
-            verifyCollectionsHeader()
-            verifyNoCollectionsHeader()
-            verifyNoCollectionsText()
+            verifyCollectionsHeaderIsNotShown()
+            verifyNoCollectionsHeaderIsNotShown()
+            verifyNoCollectionsTextIsNotShown()
             verifyHomeToolbar()
             verifyHomeComponent()
         }
