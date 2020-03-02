@@ -429,13 +429,6 @@ void Decoder::PostSize(int32_t aWidth, int32_t aHeight,
   MOZ_ASSERT(mOutputSize->width <= aWidth && mOutputSize->height <= aHeight,
              "Output size will result in upscaling");
 
-  // Create a downscaler if we need to downscale. This is used by legacy
-  // decoders that haven't been converted to use SurfacePipe yet.
-  // XXX(seth): Obviously, we'll remove this once all decoders use SurfacePipe.
-  if (mOutputSize->width < aWidth || mOutputSize->height < aHeight) {
-    mDownscaler.emplace(*mOutputSize);
-  }
-
   // Record this notification.
   mProgress |= FLAG_SIZE_AVAILABLE;
 }
