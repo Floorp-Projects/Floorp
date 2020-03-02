@@ -44,6 +44,7 @@ const TLS_VERSIONS = [
 
 // Add settings objects for supported APIs to the preferences manager.
 ExtensionPreferencesManager.addSetting("network.networkPredictionEnabled", {
+  permission: "privacy",
   prefNames: [
     "network.predictor.enabled",
     "network.prefetch-next",
@@ -62,6 +63,7 @@ ExtensionPreferencesManager.addSetting("network.networkPredictionEnabled", {
 });
 
 ExtensionPreferencesManager.addSetting("network.peerConnectionEnabled", {
+  permission: "privacy",
   prefNames: ["media.peerconnection.enabled"],
 
   setCallback(value) {
@@ -70,6 +72,7 @@ ExtensionPreferencesManager.addSetting("network.peerConnectionEnabled", {
 });
 
 ExtensionPreferencesManager.addSetting("network.webRTCIPHandlingPolicy", {
+  permission: "privacy",
   prefNames: [
     "media.peerconnection.ice.default_address_only",
     "media.peerconnection.ice.no_host",
@@ -108,6 +111,7 @@ ExtensionPreferencesManager.addSetting("network.webRTCIPHandlingPolicy", {
 });
 
 ExtensionPreferencesManager.addSetting("services.passwordSavingEnabled", {
+  permission: "privacy",
   prefNames: ["signon.rememberSignons"],
 
   setCallback(value) {
@@ -116,6 +120,7 @@ ExtensionPreferencesManager.addSetting("services.passwordSavingEnabled", {
 });
 
 ExtensionPreferencesManager.addSetting("websites.cookieConfig", {
+  permission: "privacy",
   prefNames: ["network.cookie.cookieBehavior", "network.cookie.lifetimePolicy"],
 
   setCallback(value) {
@@ -129,6 +134,7 @@ ExtensionPreferencesManager.addSetting("websites.cookieConfig", {
 });
 
 ExtensionPreferencesManager.addSetting("websites.firstPartyIsolate", {
+  permission: "privacy",
   prefNames: ["privacy.firstparty.isolate"],
 
   setCallback(value) {
@@ -137,6 +143,7 @@ ExtensionPreferencesManager.addSetting("websites.firstPartyIsolate", {
 });
 
 ExtensionPreferencesManager.addSetting("websites.hyperlinkAuditingEnabled", {
+  permission: "privacy",
   prefNames: ["browser.send_pings"],
 
   setCallback(value) {
@@ -145,6 +152,7 @@ ExtensionPreferencesManager.addSetting("websites.hyperlinkAuditingEnabled", {
 });
 
 ExtensionPreferencesManager.addSetting("websites.referrersEnabled", {
+  permission: "privacy",
   prefNames: ["network.http.sendRefererHeader"],
 
   // Values for network.http.sendRefererHeader:
@@ -156,6 +164,7 @@ ExtensionPreferencesManager.addSetting("websites.referrersEnabled", {
 });
 
 ExtensionPreferencesManager.addSetting("websites.resistFingerprinting", {
+  permission: "privacy",
   prefNames: ["privacy.resistFingerprinting"],
 
   setCallback(value) {
@@ -164,6 +173,7 @@ ExtensionPreferencesManager.addSetting("websites.resistFingerprinting", {
 });
 
 ExtensionPreferencesManager.addSetting("websites.trackingProtectionMode", {
+  permission: "privacy",
   prefNames: [
     "privacy.trackingprotection.enabled",
     "privacy.trackingprotection.pbmode.enabled",
@@ -194,6 +204,7 @@ ExtensionPreferencesManager.addSetting("websites.trackingProtectionMode", {
 });
 
 ExtensionPreferencesManager.addSetting("network.tlsVersionRestriction", {
+  permission: "privacy",
   prefNames: [TLS_MIN_PREF, TLS_MAX_PREF],
 
   setCallback(value) {
@@ -227,6 +238,19 @@ ExtensionPreferencesManager.addSetting("network.tlsVersionRestriction", {
 
 this.privacy = class extends ExtensionAPI {
   getAPI(context) {
+    let { extension } = context;
+
+    // eslint-disable-next-line mozilla/balanced-listeners
+    extension.on("remove-permissions", (ignoreEvent, permissions) => {
+      if (!permissions.permissions.includes("privacy")) {
+        return;
+      }
+      ExtensionPreferencesManager.removeSettingsForPermission(
+        extension.id,
+        "privacy"
+      );
+    });
+
     return {
       privacy: {
         network: {
