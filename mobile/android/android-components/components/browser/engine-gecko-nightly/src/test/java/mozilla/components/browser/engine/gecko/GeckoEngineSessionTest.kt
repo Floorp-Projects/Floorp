@@ -475,18 +475,18 @@ class GeckoEngineSessionTest {
         val actualState: GeckoSession.SessionState = mock()
         val state = GeckoEngineSessionState(actualState)
 
-        engineSession.restoreState(state)
+        assertTrue(engineSession.restoreState(state))
         verify(geckoSession).restoreState(any())
     }
 
     @Test
-    fun `restoreState does nothing for null state`() {
+    fun `restoreState returns false for null state`() {
         val engineSession = GeckoEngineSession(mock(),
             geckoSessionProvider = geckoSessionProvider)
 
         val state = GeckoEngineSessionState(null)
 
-        engineSession.restoreState(state)
+        assertFalse(engineSession.restoreState(state))
         verify(geckoSession, never()).restoreState(any())
     }
 

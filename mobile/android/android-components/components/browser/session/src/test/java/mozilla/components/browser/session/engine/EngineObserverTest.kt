@@ -49,7 +49,7 @@ class EngineObserverTest {
             override fun goForward() {}
             override fun reload() {}
             override fun stopLoading() {}
-            override fun restoreState(state: EngineSessionState) {}
+            override fun restoreState(state: EngineSessionState): Boolean { return false }
             override fun enableTrackingProtection(policy: TrackingProtectionPolicy) {}
             override fun disableTrackingProtection() {}
             override fun toggleDesktopMode(enable: Boolean, reload: Boolean) {
@@ -99,7 +99,7 @@ class EngineObserverTest {
             override fun goForward() {}
             override fun stopLoading() {}
             override fun reload() {}
-            override fun restoreState(state: EngineSessionState) {}
+            override fun restoreState(state: EngineSessionState): Boolean { return false }
             override fun enableTrackingProtection(policy: TrackingProtectionPolicy) {}
             override fun disableTrackingProtection() {}
             override fun toggleDesktopMode(enable: Boolean, reload: Boolean) {}
@@ -138,7 +138,7 @@ class EngineObserverTest {
             override fun goForward() {}
             override fun stopLoading() {}
             override fun reload() {}
-            override fun restoreState(state: EngineSessionState) {}
+            override fun restoreState(state: EngineSessionState): Boolean { return false }
             override fun enableTrackingProtection(policy: TrackingProtectionPolicy) {
                 notifyObservers { onTrackerBlockingEnabledChange(true) }
             }
