@@ -80,12 +80,14 @@ class RecordingButton extends PureComponent {
       onClick,
       additionalMessage,
       isPrimary,
-      pageContext,
+      // pageContext,
       additionalButton,
     } = buttonSettings;
 
     const nbsp = "\u00A0";
-    const showAdditionalMessage = pageContext === "popup" && additionalMessage;
+    const showAdditionalMessage = false;
+    // TODO - Bug 1615431 - This feature needs to be migrated to about:profiling.
+    // const showAdditionalMessage = pageContext === "aboutprofiling" && additionalMessage;
     const buttonClass = isPrimary ? "primary" : "default";
 
     return div(

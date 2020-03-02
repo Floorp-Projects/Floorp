@@ -616,7 +616,6 @@ class Settings extends PureComponent {
     switch (pageContext) {
       case "aboutprofiling":
         return "Buffer Settings";
-      case "popup":
       case "devtools":
         return "Recording Settings";
       default:
@@ -723,7 +722,6 @@ function _handleToggle() {
  */
 function renderSection(id, title, pageContext, children) {
   switch (pageContext) {
-    case "popup":
     case "devtools":
       // Render the section with a dropdown summary.
       return details(

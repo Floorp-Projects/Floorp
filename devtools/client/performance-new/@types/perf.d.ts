@@ -97,7 +97,7 @@ export type RecordingState =
 // We are currently migrating to a new UX workflow with about:profiling.
 // This type provides an easy way to change the implementation based
 // on context.
-export type PageContext = "popup" | "devtools" | "aboutprofiling";
+export type PageContext = "devtools" | "aboutprofiling";
 
 export interface State {
   recordingState: RecordingState;
