@@ -2485,12 +2485,15 @@ nsresult nsFrameSelection::AddCellsToSelection(nsIContent* aTableContent,
                                                int32_t aEndRowIndex,
                                                int32_t aEndColumnIndex) {
   int8_t index = GetIndexFromSelectionType(SelectionType::eNormal);
-  if (!mDomSelections[index]) return NS_ERROR_NULL_POINTER;
+  if (!mDomSelections[index]) {
+    return NS_ERROR_NULL_POINTER;
+  }
 
   nsTableWrapperFrame* tableFrame =
       do_QueryFrame(aTableContent->GetPrimaryFrame());
-  if (!tableFrame)  // Check that |table| is a table.
+  if (!tableFrame) {  // Check that |table| is a table.
     return NS_ERROR_FAILURE;
+  }
 
   nsresult result = NS_OK;
   uint32_t row = aStartRowIndex;
@@ -2506,23 +2509,31 @@ nsresult nsFrameSelection::AddCellsToSelection(nsIContent* aTableContent,
         uint32_t origCol = cellFrame->ColIndex();
         if (origRow == row && origCol == col && !cellFrame->IsSelected()) {
           result = SelectCellElement(cellFrame->GetContent());
-          if (NS_FAILED(result)) return result;
+          if (NS_FAILED(result)) {
+            return result;
+          }
         }
       }
       // Done when we reach end column
-      if (col == static_cast<uint32_t>(aEndColumnIndex)) break;
+      if (col == static_cast<uint32_t>(aEndColumnIndex)) {
+        break;
+      }
 
-      if (aStartColumnIndex < aEndColumnIndex)
+      if (aStartColumnIndex < aEndColumnIndex) {
         col++;
-      else
+      } else {
         col--;
+      }
     }
-    if (row == static_cast<uint32_t>(aEndRowIndex)) break;
+    if (row == static_cast<uint32_t>(aEndRowIndex)) {
+      break;
+    }
 
-    if (aStartRowIndex < aEndRowIndex)
+    if (aStartRowIndex < aEndRowIndex) {
       row++;
-    else
+    } else {
       row--;
+    }
   }
   return result;
 }
