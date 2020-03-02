@@ -20,6 +20,10 @@ const TEST_DATA = [
     expectedTargetLabel: "::after",
     expectedAnimationNameLabel: "div-after",
   },
+  {
+    expectedTargetLabel: "::marker",
+    expectedAnimationNameLabel: "div-marker",
+  },
 ];
 
 add_task(async function() {
