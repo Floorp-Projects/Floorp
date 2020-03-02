@@ -2572,28 +2572,33 @@ const SiteSpecificBrowserUI = {
   },
 
   removeSSBFromMenu(ssb) {
-    let button = document.getElementById("ssb-button-" + ssb.id);
-    if (!button) {
+    let container = document.getElementById("ssb-button-" + ssb.id);
+    if (!container) {
       return;
     }
 
-    if (!button.nextElementSibling && !button.previousElementSibling) {
+    if (!container.nextElementSibling && !container.previousElementSibling) {
       document.getElementById("appMenu-ssb-button").hidden = true;
     }
 
+    let button = container.querySelector(".ssb-launch");
     let uri = button.getAttribute("image");
     if (uri) {
       URL.revokeObjectURL(uri);
     }
 
-    button.remove();
+    container.remove();
   },
 
   addSSBToMenu(ssb) {
+    let container = document.createXULElement("toolbaritem");
+    container.id = `ssb-button-${ssb.id}`;
+    container.className = "toolbaritem-menu-buttons";
+
     let menu = document.createXULElement("toolbarbutton");
-    menu.id = "ssb-button-" + ssb.id;
-    menu.className = "subviewbutton subviewbutton-iconic";
+    menu.className = "ssb-launch subviewbutton subviewbutton-iconic";
     menu.setAttribute("label", ssb.name);
+    menu.setAttribute("flex", "1");
 
     ssb.getScaledIcon(16 * devicePixelRatio).then(
       icon => {
@@ -2610,7 +2615,18 @@ const SiteSpecificBrowserUI = {
       ssb.launch();
     });
 
-    this.panelBody.append(menu);
+    let uninstall = document.createXULElement("toolbarbutton");
+    uninstall.className = "ssb-uninstall subviewbutton subviewbutton-iconic";
+    // Hardcoded for now. Localization tracked in bug 1602528.
+    uninstall.setAttribute("tooltiptext", "Uninstall");
+
+    uninstall.addEventListener("command", () => {
+      ssb.uninstall();
+    });
+
+    container.append(menu);
+    container.append(uninstall);
+    this.panelBody.append(container);
     document.getElementById("appMenu-ssb-button").hidden = false;
   },
 

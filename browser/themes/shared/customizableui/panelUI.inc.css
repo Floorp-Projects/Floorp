@@ -1185,7 +1185,23 @@ panelview .toolbarbutton-1,
   transform: scaleX(-1);
 }
 
-#appMenu-popup .toolbaritem-combined-buttons {
+/* A menu item with some buttons at the end. */
+.toolbaritem-menu-buttons {
+  /* Use the same margin at the start as at the end (other margin set below). */
+  margin-inline-start: 8px;
+}
+
+.toolbaritem-menu-buttons > .subviewbutton {
+  min-width: auto;
+  padding-inline: 5px;
+}
+
+.toolbaritem-menu-buttons > .subviewbutton-iconic:not([flex]) > .toolbarbutton-text {
+  display: none;
+}
+
+.toolbaritem-combined-buttons,
+.toolbaritem-menu-buttons {
   -moz-box-align: center;
   -moz-box-orient: horizontal;
   border: 0;
