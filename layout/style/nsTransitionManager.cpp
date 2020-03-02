@@ -356,11 +356,18 @@ void CSSTransition::UpdateStartValueFromReplacedTransition() {
 void CSSTransition::SetEffectFromStyle(dom::AnimationEffect* aEffect) {
   Animation::SetEffectNoUpdate(aEffect);
 
-  // Initialize transition property.
-  ElementPropertyTransition* pt = aEffect ? aEffect->AsTransition() : nullptr;
-  if (eCSSProperty_UNKNOWN == mTransitionProperty && pt) {
-    mTransitionProperty = pt->TransitionProperty();
-    mTransitionToValue = pt->ToValue();
+  // Initialize transition property and to value.
+  //
+  // Typically this should only be called with a KeyframeEffect representing
+  // a simple transition, but just to be sure we check the effect has the
+  // expected shape first.
+  const KeyframeEffect* keyframeEffect = aEffect->AsKeyframeEffect();
+  if (MOZ_LIKELY(keyframeEffect && keyframeEffect->Properties().Length() == 1 &&
+                 keyframeEffect->Properties()[0].mSegments.Length() == 1)) {
+    mTransitionProperty = keyframeEffect->Properties()[0].mProperty;
+    mTransitionToValue = keyframeEffect->Properties()[0].mSegments[0].mToValue;
+  } else {
+    MOZ_ASSERT_UNREACHABLE("Transition effect has unexpected shape");
   }
 }
 
@@ -768,7 +775,7 @@ bool nsTransitionManager::ConsiderInitiatingTransition(
 
     duration *= valuePortion;
 
-    startForReversingTest = oldPT->ToValue();
+    startForReversingTest = oldTransition->ToValue();
     reversePortion = valuePortion;
   }
 
