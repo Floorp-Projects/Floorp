@@ -27,4 +27,8 @@ open class BrowserInteractor(
     override fun onBrowserToolbarMenuItemTapped(item: ToolbarMenu.Item) {
         browserToolbarController.handleToolbarItemInteraction(item)
     }
+
+    override fun onBrowserMenuDismissed(lowPrioHighlightItems: List<ToolbarMenu.Item>) {
+        browserToolbarController.handleBrowserMenuDismissed(lowPrioHighlightItems)
+    }
 }

@@ -49,6 +49,7 @@ interface BrowserToolbarController {
     fun handleToolbarItemInteraction(item: ToolbarMenu.Item)
     fun handleToolbarClick()
     fun handleTabCounterClick()
+    fun handleBrowserMenuDismissed(lowPrioHighlightItems: List<ToolbarMenu.Item>)
 }
 
 @Suppress("LargeClass")
@@ -119,6 +120,17 @@ class DefaultBrowserToolbarController(
 
     override fun handleTabCounterClick() {
         animateTabAndNavigateHome()
+    }
+
+    override fun handleBrowserMenuDismissed(lowPrioHighlightItems: List<ToolbarMenu.Item>) {
+        lowPrioHighlightItems.forEach {
+            when (it) {
+                ToolbarMenu.Item.AddToHomeScreen -> activity.settings().installPwaOpened = true
+                is ToolbarMenu.Item.ReaderMode -> activity.settings().readerModeOpened = true
+                ToolbarMenu.Item.OpenInApp -> activity.settings().openInAppOpened = true
+                else -> {}
+            }
+        }
     }
 
     @ExperimentalCoroutinesApi

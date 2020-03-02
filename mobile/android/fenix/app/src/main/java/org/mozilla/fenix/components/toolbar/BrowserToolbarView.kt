@@ -16,8 +16,10 @@ import androidx.core.view.isVisible
 import androidx.lifecycle.LifecycleOwner
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.extensions.LayoutContainer
-import kotlinx.android.synthetic.main.browser_toolbar_popup_window.view.*
-import kotlinx.android.synthetic.main.component_browser_top_toolbar.view.*
+import kotlinx.android.synthetic.main.browser_toolbar_popup_window.view.copy
+import kotlinx.android.synthetic.main.browser_toolbar_popup_window.view.paste
+import kotlinx.android.synthetic.main.browser_toolbar_popup_window.view.paste_and_go
+import kotlinx.android.synthetic.main.component_browser_top_toolbar.view.app_bar
 import mozilla.components.browser.domains.autocomplete.ShippedDomainsProvider
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.toolbar.BrowserToolbar
@@ -39,6 +41,7 @@ interface BrowserToolbarViewInteractor {
     fun onBrowserToolbarClicked()
     fun onBrowserToolbarMenuItemTapped(item: ToolbarMenu.Item)
     fun onTabCounterClicked()
+    fun onBrowserMenuDismissed(lowPrioHighlightItems: List<ToolbarMenu.Item>)
 }
 
 class BrowserToolbarView(
@@ -173,8 +176,9 @@ class BrowserToolbarView(
                 display.hint = context.getString(R.string.search_hint)
             }
 
-            val menuToolbar = if (isCustomTabSession) {
-                CustomTabToolbarMenu(
+            val menuToolbar: ToolbarMenu
+            if (isCustomTabSession) {
+                menuToolbar = CustomTabToolbarMenu(
                     this,
                     sessionManager,
                     customTabSession?.id,
@@ -184,7 +188,7 @@ class BrowserToolbarView(
                     }
                 )
             } else {
-                DefaultToolbarMenu(
+                menuToolbar = DefaultToolbarMenu(
                     context = this,
                     hasAccountProblem = components.backgroundServices.accountManager.accountNeedsReauth(),
                     shouldReverseItems = !shouldUseBottomToolbar,
@@ -193,6 +197,10 @@ class BrowserToolbarView(
                     sessionManager = sessionManager,
                     bookmarksStorage = bookmarkStorage
                 )
+                view.display.setMenuDismissAction {
+                    interactor.onBrowserMenuDismissed(menuToolbar.getLowPrioHighlightItems())
+                    view.invalidateActions()
+                }
             }
 
             toolbarIntegration = if (customTabSession != null) {

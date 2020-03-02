@@ -132,6 +132,34 @@ class DefaultToolbarMenu(
         BrowserMenuItemToolbar(listOf(bookmark, share, forward, refresh))
     }
 
+    internal fun getLowPrioHighlightItems(): List<ToolbarMenu.Item> {
+        val lowPrioHighlightItems: MutableList<ToolbarMenu.Item> = mutableListOf()
+        if (shouldShowAddToHomescreen() && addToHomescreen.isHighlighted()) {
+            lowPrioHighlightItems.add(ToolbarMenu.Item.AddToHomeScreen)
+        }
+        if (shouldShowReaderMode() && readerMode.isHighlighted()) {
+            lowPrioHighlightItems.add(ToolbarMenu.Item.ReaderMode(false))
+        }
+        if (shouldShowOpenInApp() && openInApp.isHighlighted()) {
+            lowPrioHighlightItems.add(ToolbarMenu.Item.OpenInApp)
+        }
+        return lowPrioHighlightItems
+    }
+
+    // Predicates that need to be repeatedly called as the session changes
+    private fun shouldShowAddToHomescreen(): Boolean =
+        session != null && context.components.useCases.webAppUseCases.isPinningSupported()
+
+    private fun shouldShowReaderMode(): Boolean = session?.readerable ?: false
+
+    private fun shouldShowOpenInApp(): Boolean = session?.let { session ->
+        val appLink = context.components.useCases.appLinksUseCases.appLinkRedirect
+        appLink(session.url).hasExternalApp()
+    } ?: false
+
+    private fun shouldShowReaderAppearance(): Boolean = session?.readerMode ?: false
+    // End of predicates //
+
     private val menuItems by lazy {
         // Predicates that are called once, during screen init
         val shouldShowSaveToCollection = (context.asActivity() as? HomeActivity)
@@ -142,16 +170,6 @@ class DefaultToolbarMenu(
             ReleaseChannel.FenixProduction,
             ReleaseChannel.FennecProduction
         )
-
-        // Predicates that need to be repeatedly called as the session changes
-        fun shouldShowAddToHomescreen(): Boolean =
-            session != null && context.components.useCases.webAppUseCases.isPinningSupported()
-        fun shouldShowReaderMode(): Boolean = session?.readerable ?: false
-        fun shouldShowOpenInApp(): Boolean = session?.let { session ->
-            val appLink = context.components.useCases.appLinksUseCases.appLinkRedirect
-            appLink(session.url).hasExternalApp()
-        } ?: false
-        fun shouldShowReaderAppearance(): Boolean = session?.readerMode ?: false
 
         val menuItems = listOfNotNull(
             library,
