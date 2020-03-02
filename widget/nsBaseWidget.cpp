@@ -642,6 +642,12 @@ void nsBaseWidget::SetSizeMode(nsSizeMode aMode) {
   mSizeMode = aMode;
 }
 
+int32_t nsBaseWidget::GetWorkspaceID() { return 0; }
+
+void nsBaseWidget::MoveToWorkspace(int32_t workspaceID) {
+  // Noop.
+}
+
 //-------------------------------------------------------------------------
 //
 // Get this component cursor

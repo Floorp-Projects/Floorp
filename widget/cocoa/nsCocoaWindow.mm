@@ -104,8 +104,18 @@ enum NSWindowTitleVisibility { NSWindowTitleVisible = 0, NSWindowTitleHidden = 1
 extern "C" {
 // CGSPrivate.h
 typedef NSInteger CGSConnection;
+typedef NSUInteger CGSSpaceID;
 typedef NSInteger CGSWindow;
 typedef NSUInteger CGSWindowFilterRef;
+typedef enum {
+  kCGSSpaceIncludesCurrent = 1 << 0,
+  kCGSSpaceIncludesOthers = 1 << 1,
+  kCGSSpaceIncludesUser = 1 << 2,
+
+  kCGSAllSpacesMask = kCGSSpaceIncludesCurrent | kCGSSpaceIncludesOthers | kCGSSpaceIncludesUser
+} CGSSpaceMask;
+static NSString* const CGSSpaceIDKey = @"ManagedSpaceID";
+static NSString* const CGSSpacesKey = @"Spaces";
 extern CGSConnection _CGSDefaultConnection(void);
 extern CGError CGSSetWindowShadowAndRimParameters(const CGSConnection cid, CGSWindow wid,
                                                   float standardDeviation, float density,
@@ -1187,6 +1197,163 @@ void nsCocoaWindow::SetSizeMode(nsSizeMode aMode) {
   } else if (aMode == nsSizeMode_Fullscreen) {
     if (!mInFullScreenMode) MakeFullScreen(true);
   }
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
+}
+
+// The (work)space switching implementation below was inspired by Phoenix:
+// https://github.com/kasper/phoenix/tree/d6c877f62b30a060dff119d8416b0934f76af534
+// License: MIT.
+
+// Runtime `CGSGetActiveSpace` library function feature detection.
+typedef CGSSpaceID (*CGSGetActiveSpaceFunc)(CGSConnection cid);
+static CGSGetActiveSpaceFunc GetCGSGetActiveSpaceFunc() {
+  static CGSGetActiveSpaceFunc func = nullptr;
+  static bool lookedUpFunc = false;
+  if (!lookedUpFunc) {
+    func = (CGSGetActiveSpaceFunc)dlsym(RTLD_DEFAULT, "CGSGetActiveSpace");
+    lookedUpFunc = true;
+  }
+  return func;
+}
+// Runtime `CGSCopyManagedDisplaySpaces` library function feature detection.
+typedef CFArrayRef (*CGSCopyManagedDisplaySpacesFunc)(CGSConnection cid);
+static CGSCopyManagedDisplaySpacesFunc GetCGSCopyManagedDisplaySpacesFunc() {
+  static CGSCopyManagedDisplaySpacesFunc func = nullptr;
+  static bool lookedUpFunc = false;
+  if (!lookedUpFunc) {
+    func = (CGSCopyManagedDisplaySpacesFunc)dlsym(RTLD_DEFAULT, "CGSCopyManagedDisplaySpaces");
+    lookedUpFunc = true;
+  }
+  return func;
+}
+// Runtime `CGSCopySpacesForWindows` library function feature detection.
+typedef CFArrayRef (*CGSCopySpacesForWindowsFunc)(CGSConnection cid, CGSSpaceMask mask,
+                                                  CFArrayRef windowIDs);
+static CGSCopySpacesForWindowsFunc GetCGSCopySpacesForWindowsFunc() {
+  static CGSCopySpacesForWindowsFunc func = nullptr;
+  static bool lookedUpFunc = false;
+  if (!lookedUpFunc) {
+    func = (CGSCopySpacesForWindowsFunc)dlsym(RTLD_DEFAULT, "CGSCopySpacesForWindows");
+    lookedUpFunc = true;
+  }
+  return func;
+}
+// Runtime `CGSAddWindowsToSpaces` library function feature detection.
+typedef void (*CGSAddWindowsToSpacesFunc)(CGSConnection cid, CFArrayRef windowIDs,
+                                          CFArrayRef spaceIDs);
+static CGSAddWindowsToSpacesFunc GetCGSAddWindowsToSpacesFunc() {
+  static CGSAddWindowsToSpacesFunc func = nullptr;
+  static bool lookedUpFunc = false;
+  if (!lookedUpFunc) {
+    func = (CGSAddWindowsToSpacesFunc)dlsym(RTLD_DEFAULT, "CGSAddWindowsToSpaces");
+    lookedUpFunc = true;
+  }
+  return func;
+}
+// Runtime `CGSRemoveWindowsFromSpaces` library function feature detection.
+typedef void (*CGSRemoveWindowsFromSpacesFunc)(CGSConnection cid, CFArrayRef windowIDs,
+                                               CFArrayRef spaceIDs);
+static CGSRemoveWindowsFromSpacesFunc GetCGSRemoveWindowsFromSpacesFunc() {
+  static CGSRemoveWindowsFromSpacesFunc func = nullptr;
+  static bool lookedUpFunc = false;
+  if (!lookedUpFunc) {
+    func = (CGSRemoveWindowsFromSpacesFunc)dlsym(RTLD_DEFAULT, "CGSRemoveWindowsFromSpaces");
+    lookedUpFunc = true;
+  }
+  return func;
+}
+
+int32_t nsCocoaWindow::GetWorkspaceID() {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
+  CGSSpaceID sid = 0;
+
+  if (!nsCocoaFeatures::OnElCapitanOrLater()) {
+    return sid;
+  }
+
+  CGSCopySpacesForWindowsFunc CopySpacesForWindows = GetCGSCopySpacesForWindowsFunc();
+  if (!CopySpacesForWindows) {
+    return sid;
+  }
+
+  CGSConnection cid = _CGSDefaultConnection();
+  // Fetch all spaces that this window belongs to (in order).
+  NSArray<NSNumber*>* spaceIDs = CFBridgingRelease(CopySpacesForWindows(
+      cid, kCGSAllSpacesMask, (__bridge CFArrayRef) @[ @([mWindow windowNumber]) ]));
+  if ([spaceIDs count]) {
+    // When spaces are found, return the first one.
+    // We don't support a single window painted across multiple places for now.
+    sid = [spaceIDs[0] integerValue];
+  } else {
+    // Fall back to the workspace that's currently active, which is '1' in the
+    // common case.
+    CGSGetActiveSpaceFunc GetActiveSpace = GetCGSGetActiveSpaceFunc();
+    if (GetActiveSpace) {
+      sid = GetActiveSpace(cid);
+    }
+  }
+
+  return sid;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
+}
+
+void nsCocoaWindow::MoveToWorkspace(int32_t workspaceID) {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
+  if (!nsCocoaFeatures::OnElCapitanOrLater()) {
+    return;
+  }
+
+  CGSConnection cid = _CGSDefaultConnection();
+  int32_t currentSpace = GetWorkspaceID();
+  // If an empty workspace ID is passed in (not valid on OSX), or when the
+  // window is already on this workspace, we don't need to do anything.
+  if (!workspaceID || workspaceID == currentSpace) {
+    return;
+  }
+
+  CGSCopyManagedDisplaySpacesFunc CopyManagedDisplaySpaces = GetCGSCopyManagedDisplaySpacesFunc();
+  CGSAddWindowsToSpacesFunc AddWindowsToSpaces = GetCGSAddWindowsToSpacesFunc();
+  CGSRemoveWindowsFromSpacesFunc RemoveWindowsFromSpaces = GetCGSRemoveWindowsFromSpacesFunc();
+  if (!CopyManagedDisplaySpaces || !AddWindowsToSpaces || !RemoveWindowsFromSpaces) {
+    return;
+  }
+
+  // Fetch an ordered list of all known spaces.
+  NSArray* displaySpacesInfo = CFBridgingRelease(CopyManagedDisplaySpaces(cid));
+  // When we found the space we're looking for, we can bail out of the loop
+  // early, which this local variable is used for.
+  BOOL found = false;
+  for (NSDictionary<NSString*, id>* spacesInfo in displaySpacesInfo) {
+    NSArray<NSNumber*>* sids = [spacesInfo[CGSSpacesKey] valueForKey:CGSSpaceIDKey];
+    for (NSNumber* sid in sids) {
+      // If we found our space in the list, we're good to go and can jump out of
+      // this loop.
+      if ((int)[sid integerValue] == workspaceID) {
+        found = true;
+        break;
+      }
+    }
+    if (found) {
+      break;
+    }
+  }
+
+  // We were unable to find the space to correspond with the workspaceID as
+  // requested, so let's bail out.
+  if (!found) {
+    return;
+  }
+
+  // First we add the window to the appropriate space.
+  AddWindowsToSpaces(cid, (__bridge CFArrayRef) @[ @([mWindow windowNumber]) ],
+                     (__bridge CFArrayRef) @[ @(workspaceID) ]);
+  // Then we remove the window from the active space.
+  RemoveWindowsFromSpaces(cid, (__bridge CFArrayRef) @[ @([mWindow windowNumber]) ],
+                          (__bridge CFArrayRef) @[ @(currentSpace) ]);
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }

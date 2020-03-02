@@ -3859,6 +3859,10 @@ var SessionStoreInternal = {
     } else if (winData.sidebar) {
       delete winData.sidebar;
     }
+    let workspaceID = aWindow.getWorkspaceID();
+    if (workspaceID) {
+      winData.workspaceID = workspaceID;
+    }
   },
 
   /**
@@ -4100,6 +4104,10 @@ var SessionStoreInternal = {
     // We're not returning from this before we end up calling restoreTabs
     // for this window, so make sure we send the SSWindowStateBusy event.
     this._setWindowStateBusy(aWindow);
+
+    if (winData.workspaceID) {
+      aWindow.moveToWorkspace(winData.workspaceID);
+    }
 
     if (!winData.tabs) {
       winData.tabs = [];
