@@ -76,7 +76,7 @@ add_task(async function() {
     }
 
     resumedState.push(
-      subject.securityInfo.QueryInterface(Ci.nsISSLSocketControl).resumed
+      subject.securityInfo.QueryInterface(Ci.nsITransportSecurityInfo).resumed
     );
     hashKeys.push(
       subject.QueryInterface(Ci.nsIHttpChannelInternal).connectionInfoHashKey
