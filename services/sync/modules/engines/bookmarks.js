@@ -89,6 +89,9 @@ const BUFFERED_BOOKMARK_VALIDATOR_VERSION = 2;
 // bookmark merge.
 const BUFFERED_BOOKMARK_APPLY_TIMEOUT_MS = 5 * 60 * 60 * 1000; // 5 minutes
 
+// The default frecency value to use when not known.
+const FRECENCY_UNKNOWN = -1;
+
 function isSyncedRootNode(node) {
   return (
     node.root == "bookmarksMenuFolder" ||
@@ -1070,10 +1073,19 @@ BaseBookmarksStore.prototype = {
 
     // Add in the bookmark's frecency if we have something.
     if (record.bmkUri != null) {
-      let frecency = await PlacesSyncUtils.history.fetchURLFrecency(
-        record.bmkUri
-      );
-      if (frecency != -1) {
+      let frecency = FRECENCY_UNKNOWN;
+      try {
+        frecency = await PlacesSyncUtils.history.fetchURLFrecency(
+          record.bmkUri
+        );
+      } catch (ex) {
+        this._log.warn(
+          `Failed to fetch frecency for ${record.id}; assuming default`,
+          ex
+        );
+        this._log.trace("Record {id} has invalid URL ${bmkUri}", record);
+      }
+      if (frecency != FRECENCY_UNKNOWN) {
         index += frecency;
       }
     }
