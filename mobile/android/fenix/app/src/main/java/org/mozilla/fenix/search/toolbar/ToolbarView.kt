@@ -22,6 +22,7 @@ import kotlinx.android.extensions.LayoutContainer
 import mozilla.components.browser.domains.autocomplete.ShippedDomainsProvider
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.browser.toolbar.behavior.BrowserToolbarBottomBehavior
+import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.storage.HistoryStorage
 import mozilla.components.feature.toolbar.ToolbarAutocompleteFeature
 import mozilla.components.support.ktx.android.content.getColorFromAttr
@@ -63,7 +64,8 @@ class ToolbarView(
     private val container: ViewGroup,
     private val interactor: ToolbarInteractor,
     private val historyStorage: HistoryStorage?,
-    private val isPrivate: Boolean
+    private val isPrivate: Boolean,
+    engine: Engine
 ) : LayoutContainer {
 
     override val containerView: View?
@@ -137,7 +139,11 @@ class ToolbarView(
             })
         }
 
-        ToolbarAutocompleteFeature(view).apply {
+        val engineForSpeculativeConnects = if (!isPrivate) engine else null
+        ToolbarAutocompleteFeature(
+            view,
+            engineForSpeculativeConnects
+        ).apply {
             addDomainProvider(ShippedDomainsProvider().also { it.initialize(view.context) })
             historyStorage?.also(::addHistoryStorageProvider)
         }

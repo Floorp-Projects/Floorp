@@ -141,6 +141,7 @@ class AwesomeBarView(
         val draw = getDrawable(context, R.drawable.ic_link)!!
         draw.colorFilter = createBlendModeColorFilterCompat(primaryTextColor, SRC_IN)
 
+        val engineForSpeculativeConnects = if (!isBrowsingModePrivate()) components.core.engine else null
         sessionProvider =
             SessionSuggestionProvider(
                 context.resources,
@@ -154,14 +155,16 @@ class AwesomeBarView(
             HistoryStorageSuggestionProvider(
                 components.core.historyStorage,
                 loadUrlUseCase,
-                components.core.icons
+                components.core.icons,
+                engineForSpeculativeConnects
             )
 
         bookmarksStorageSuggestionProvider =
             BookmarksStorageSuggestionProvider(
                 components.core.bookmarksStorage,
                 loadUrlUseCase,
-                components.core.icons
+                components.core.icons,
+                engineForSpeculativeConnects
             )
 
         val searchDrawable = getDrawable(context, R.drawable.ic_search)!!
@@ -176,7 +179,8 @@ class AwesomeBarView(
                 mode = SearchSuggestionProvider.Mode.MULTIPLE_SUGGESTIONS,
                 limit = 3,
                 icon = searchDrawable.toBitmap(),
-                showDescription = false
+                showDescription = false,
+                engine = engineForSpeculativeConnects
             )
 
         shortcutsEnginePickerProvider =
@@ -344,6 +348,8 @@ class AwesomeBarView(
             val draw = getDrawable(context, R.drawable.ic_search)
             draw?.colorFilter = createBlendModeColorFilterCompat(primaryTextColor, SRC_IN)
 
+            val engineForSpeculativeConnects = if (!isBrowsingModePrivate()) components.core.engine else null
+
             SearchSuggestionProvider(
                 components.search.provider.installedSearchEngines(context).list.find { it.name == engine.name }
                     ?: components.search.provider.getDefaultEngine(context),
@@ -351,7 +357,8 @@ class AwesomeBarView(
                 components.core.client,
                 limit = 3,
                 mode = SearchSuggestionProvider.Mode.MULTIPLE_SUGGESTIONS,
-                icon = draw?.toBitmap()
+                icon = draw?.toBitmap(),
+                engine = engineForSpeculativeConnects
             )
         }
     }

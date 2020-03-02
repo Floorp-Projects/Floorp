@@ -12,6 +12,7 @@ import mozilla.components.browser.domains.autocomplete.DomainAutocompleteProvide
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.browser.toolbar.display.DisplayToolbar
+import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.storage.HistoryStorage
 import mozilla.components.feature.toolbar.ToolbarAutocompleteFeature
 import mozilla.components.feature.toolbar.ToolbarFeature
@@ -72,7 +73,8 @@ class DefaultToolbarIntegration(
     sessionManager: SessionManager,
     sessionId: String? = null,
     isPrivate: Boolean,
-    interactor: BrowserToolbarViewInteractor
+    interactor: BrowserToolbarViewInteractor,
+    engine: Engine
 ) : ToolbarIntegration(
     context = context,
     toolbar = toolbar,
@@ -135,7 +137,11 @@ class DefaultToolbarIntegration(
         }
         toolbar.addBrowserAction(tabsAction)
 
-        ToolbarAutocompleteFeature(toolbar).apply {
+        val engineForSpeculativeConnects = if (!isPrivate) engine else null
+        ToolbarAutocompleteFeature(
+            toolbar,
+            engineForSpeculativeConnects
+        ).apply {
             addDomainProvider(domainAutocompleteProvider)
             if (context.settings().shouldShowHistorySuggestions) {
                 addHistoryStorageProvider(historyStorage)

@@ -127,7 +127,8 @@ class SearchFragment : Fragment(), UserInteractionHandler {
             view.toolbar_component_wrapper,
             searchInteractor,
             historyStorageProvider(),
-            (activity as HomeActivity).browsingModeManager.mode.isPrivate
+            (activity as HomeActivity).browsingModeManager.mode.isPrivate,
+            requireComponents.core.engine
         )
 
         val urlView = toolbarView.view
@@ -307,6 +308,10 @@ class SearchFragment : Fragment(), UserInteractionHandler {
         fill_link_from_clipboard.visibility = visibility
         divider_line.visibility = visibility
         clipboard_url.text = clipboardUrl
+
+        if (clipboardUrl != null && !((activity as HomeActivity).browsingModeManager.mode.isPrivate)) {
+            requireComponents.core.engine.speculativeConnect(clipboardUrl)
+        }
     }
 
     override fun onRequestPermissionsResult(

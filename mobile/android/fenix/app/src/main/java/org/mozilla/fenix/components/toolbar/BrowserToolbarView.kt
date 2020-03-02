@@ -213,7 +213,8 @@ class BrowserToolbarView(
                     components.core.sessionManager,
                     sessionId = null,
                     isPrivate = sessionManager.selectedSession?.private ?: false,
-                    interactor = interactor
+                    interactor = interactor,
+                    engine = components.core.engine
                 )
             }
         }
