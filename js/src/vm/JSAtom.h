@@ -9,6 +9,7 @@
 
 #include "mozilla/Maybe.h"
 
+#include "gc/MaybeRooted.h"
 #include "gc/Rooting.h"
 #include "js/TypeDecls.h"
 #include "js/Utility.h"

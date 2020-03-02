@@ -153,12 +153,6 @@ JS_FOR_EACH_PUBLIC_TAGGED_GC_POINTER_TYPE(DECLARE_IS_HEAP_CONSTRUCTIBLE_TYPE)
 template <typename T, typename Wrapper>
 class PersistentRootedBase : public MutableWrappedPtrOperations<T, Wrapper> {};
 
-template <typename T>
-class FakeRooted;
-
-template <typename T>
-class FakeMutableHandle;
-
 namespace gc {
 struct Cell;
 template <typename T>
@@ -1485,16 +1479,6 @@ struct DefineComparisonOps<JS::MutableHandle<T>> : mozilla::TrueType {
 template <typename T>
 struct DefineComparisonOps<JS::PersistentRooted<T>> : mozilla::TrueType {
   static const T& get(const JS::PersistentRooted<T>& v) { return v.get(); }
-};
-
-template <typename T>
-struct DefineComparisonOps<js::FakeRooted<T>> : mozilla::TrueType {
-  static const T& get(const js::FakeRooted<T>& v) { return v.get(); }
-};
-
-template <typename T>
-struct DefineComparisonOps<js::FakeMutableHandle<T>> : mozilla::TrueType {
-  static const T& get(const js::FakeMutableHandle<T>& v) { return v.get(); }
 };
 
 } /* namespace detail */
