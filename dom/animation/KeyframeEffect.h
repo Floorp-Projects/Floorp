@@ -101,8 +101,6 @@ struct AnimationProperty {
                              const dom::Element* aElement);
 };
 
-struct ElementPropertyTransition;
-
 namespace dom {
 
 class Animation;
