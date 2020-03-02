@@ -2118,7 +2118,12 @@ nsresult nsFrameSelection::HandleTableSelection(nsINode* aParentContent,
         printf(" Dragged into a new column or row\n");
 #endif
         // Continue dragging row or column selection
-        return SelectRowOrColumn(childContent, mTableSelection.mMode);
+        const RefPtr<Selection> selection = mDomSelections[index];
+        if (!selection) {
+          return NS_ERROR_NULL_POINTER;
+        }
+
+        return mTableSelection.SelectRowOrColumn(childContent, *selection);
       }
       if (mTableSelection.mMode == TableSelectionMode::Cell) {
 #ifdef DEBUG_TABLE_SELECTION
@@ -2145,7 +2150,12 @@ nsresult nsFrameSelection::HandleTableSelection(nsINode* aParentContent,
             else
               mTableSelection.mMode = TableSelectionMode::Column;
 
-            return SelectRowOrColumn(childContent, mTableSelection.mMode);
+            const RefPtr<Selection> selection = mDomSelections[index];
+            if (!selection) {
+              return NS_ERROR_NULL_POINTER;
+            }
+
+            return mTableSelection.SelectRowOrColumn(childContent, *selection);
           }
         }
 
@@ -2247,7 +2257,13 @@ nsresult nsFrameSelection::HandleTableSelection(nsINode* aParentContent,
         mDomSelections[index]->RemoveAllRanges(IgnoreErrors());
         // Always do this AFTER RemoveAllRanges
         mTableSelection.mMode = aTarget;
-        return SelectRowOrColumn(childContent, aTarget);
+
+        const RefPtr<Selection> selection = mDomSelections[index];
+        if (!selection) {
+          return NS_ERROR_NULL_POINTER;
+        }
+
+        return mTableSelection.SelectRowOrColumn(childContent, *selection);
       }
     } else {
 #ifdef DEBUG_TABLE_SELECTION
@@ -2592,8 +2608,10 @@ nsresult nsFrameSelection::RestrictCellsToSelection(nsIContent* aTable,
                                        aEndColumnIndex, true, *selection);
 }
 
-nsresult nsFrameSelection::SelectRowOrColumn(nsIContent* aCellContent,
-                                             TableSelectionMode aTarget) {
+nsresult nsFrameSelection::TableSelection::SelectRowOrColumn(
+    nsIContent* aCellContent, Selection& aNormalSelection) {
+  MOZ_ASSERT(aNormalSelection.Type() == SelectionType::eNormal);
+
   if (!aCellContent) {
     return NS_ERROR_NULL_POINTER;
   }
@@ -2624,10 +2642,10 @@ nsresult nsFrameSelection::SelectRowOrColumn(nsIContent* aCellContent,
 
   // Be sure we start at proper beginning
   // (This allows us to select row or col given ANY cell!)
-  if (aTarget == TableSelectionMode::Row) {
+  if (mMode == TableSelectionMode::Row) {
     colIndex = 0;
   }
-  if (aTarget == TableSelectionMode::Column) {
+  if (mMode == TableSelectionMode::Column) {
     rowIndex = 0;
   }
 
@@ -2647,7 +2665,7 @@ nsresult nsFrameSelection::SelectRowOrColumn(nsIContent* aCellContent,
     lastCell = std::move(curCellContent);
 
     // Move to next cell in cellmap, skipping spanned locations
-    if (aTarget == TableSelectionMode::Row) {
+    if (mMode == TableSelectionMode::Row) {
       colIndex += tableFrame->GetEffectiveRowSpanAt(rowIndex, colIndex);
     } else {
       rowIndex += tableFrame->GetEffectiveRowSpanAt(rowIndex, colIndex);
@@ -2658,27 +2676,20 @@ nsresult nsFrameSelection::SelectRowOrColumn(nsIContent* aCellContent,
   // This will replace existing selection,
   //  but allow unselecting by dragging out of selected region
   if (firstCell && lastCell) {
-    if (!mTableSelection.mStartSelectedCell) {
+    if (!mStartSelectedCell) {
       // We are starting a new block, so select the first cell
-      result = SelectCellElement(firstCell);
+      result = ::SelectCellElement(firstCell, aNormalSelection);
       if (NS_FAILED(result)) {
         return result;
       }
-      mTableSelection.mStartSelectedCell = firstCell;
+      mStartSelectedCell = firstCell;
     }
 
-    const int8_t index = GetIndexFromSelectionType(SelectionType::eNormal);
-    const RefPtr<Selection> selection = mDomSelections[index];
-    if (!selection) {
-      return NS_ERROR_NULL_POINTER;
-    }
-
-    result = mTableSelection.SelectBlockOfCells(
-        mTableSelection.mStartSelectedCell, lastCell, *selection);
+    result = SelectBlockOfCells(mStartSelectedCell, lastCell, aNormalSelection);
 
     // This gets set to the cell at end of row/col,
     //   but we need it to be the cell under cursor
-    mTableSelection.mEndSelectedCell = aCellContent;
+    mEndSelectedCell = aCellContent;
     return result;
   }
 
@@ -2709,7 +2720,7 @@ nsresult nsFrameSelection::SelectRowOrColumn(nsIContent* aCellContent,
       if (NS_FAILED(result)) return result;
     }
     // Move to next row or column in cellmap, skipping spanned locations
-    if (aTarget == TableSelectionMode::Row)
+    if (mMode == TableSelectionMode::Row)
       colIndex += actualColSpan;
     else
       rowIndex += actualRowSpan;
