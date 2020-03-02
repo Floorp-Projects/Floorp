@@ -5120,12 +5120,7 @@ void nsGlobalWindowOuter::FocusOuter(CallerType aCallerType) {
     // if there is no parent, this must be a toplevel window, so raise the
     // window if canFocus is true. If this is a child process, the raise
     // window request will get forwarded to the parent by the puppet widget.
-    DebugOnly<nsresult> rv =
-        fm->SetActiveWindowWithCallerType(this, aCallerType);
-    MOZ_ASSERT(NS_SUCCEEDED(rv),
-               "SetActiveWindowWithCallerType only fails if passed null or a "
-               "non-toplevel "
-               "window, which is not the case here.");
+    fm->RaiseWindow(this, aCallerType);
   }
 }
 
