@@ -45,20 +45,15 @@ class ShadowIncludingTreeIterator {
   // it goes.
   ShadowIncludingTreeIterator& begin() { return *this; }
 
-  ShadowIncludingTreeIterator end() { return ShadowIncludingTreeIterator(); }
+  std::nullptr_t end() const { return nullptr; }
 
-  bool operator!=(const ShadowIncludingTreeIterator& aOther) {
-    return mCurrent != aOther.mCurrent;
-  }
+  bool operator!=(std::nullptr_t) const { return !!mCurrent; }
 
   void operator++() { Next(); }
 
   nsINode* operator*() { return mCurrent; }
 
  private:
-  // Constructor used only for end() to represent a drained iterator.
-  ShadowIncludingTreeIterator() : mCurrent(nullptr) {}
-
   void Next() {
     MOZ_ASSERT(mCurrent, "Don't call Next() after we have no current node");
 

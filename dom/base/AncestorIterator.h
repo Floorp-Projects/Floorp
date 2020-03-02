@@ -38,17 +38,14 @@ namespace dom {
     explicit Inclusive##name_(const nsINode& aNode)                      \
         : mCurrent(const_cast<nsINode*>(&aNode)) {}                      \
     Self& begin() { return *this; }                                      \
-    Self end() { return {}; }                                            \
-    bool operator!=(const Self& aOther) const {                          \
-      return mCurrent != aOther.mCurrent;                                \
-    }                                                                    \
+    std::nullptr_t end() const { return nullptr; }                       \
+    bool operator!=(std::nullptr_t) const { return !!mCurrent; }         \
     void operator++() { mCurrent = mCurrent->method_(); }                \
     nsINode* operator*() { return mCurrent; }                            \
                                                                          \
     MUTATION_GUARD(Inclusive##name_)                                     \
                                                                          \
    protected:                                                            \
-    Inclusive##name_() : mCurrent(nullptr) {}                            \
     explicit Inclusive##name_(nsINode* aCurrent) : mCurrent(aCurrent) {} \
     nsINode* mCurrent;                                                   \
   };                                                                     \
