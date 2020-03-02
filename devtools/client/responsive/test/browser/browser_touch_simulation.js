@@ -8,19 +8,23 @@
 const TEST_URL = `${URL_ROOT}touch.html`;
 const PREF_DOM_META_VIEWPORT_ENABLED = "dom.meta-viewport.enabled";
 
-addRDMTask(TEST_URL, async function({ ui }) {
-  reloadOnTouchChange(true);
+addRDMTask(
+  TEST_URL,
+  async function({ ui }) {
+    reloadOnTouchChange(true);
 
-  await waitBootstrap(ui);
-  await testWithNoTouch(ui);
-  await toggleTouchSimulation(ui);
-  await testWithTouch(ui);
-  await testWithMetaViewportEnabled(ui);
-  await testWithMetaViewportDisabled(ui);
-  testTouchButton(ui);
+    await waitBootstrap(ui);
+    await testWithNoTouch(ui);
+    await toggleTouchSimulation(ui);
+    await testWithTouch(ui);
+    await testWithMetaViewportEnabled(ui);
+    await testWithMetaViewportDisabled(ui);
+    testTouchButton(ui);
 
-  reloadOnTouchChange(false);
-});
+    reloadOnTouchChange(false);
+  },
+  { usingBrowserUI: true }
+);
 
 async function testWithNoTouch(ui) {
   await SpecialPowers.spawn(ui.getViewportBrowser(), [], async function() {
@@ -341,8 +345,5 @@ function testTouchButton(ui) {
 }
 
 async function waitBootstrap(ui) {
-  const { store } = ui.toolWindow;
-
-  await waitUntilState(store, state => state.viewports.length == 1);
   await waitForFrameLoad(ui, TEST_URL);
 }
