@@ -12,6 +12,7 @@
 #include "mozilla/EditorDOMPoint.h"  // for EditorDOMPoint
 #include "mozilla/HTMLEditor.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/Tuple.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/HTMLBRElement.h"
 #include "mozilla/dom/Text.h"
@@ -810,30 +811,20 @@ class MOZ_STACK_CLASS WSRunObject final : public WSRunScanner {
   nsresult InsertNBSPAndRemoveFollowingASCIIWhitespaces(WSPoint aPoint);
 
   /**
-   * GetASCIIWhitespacesBounds() retrieves whitespaces before and/or after the
-   * point specified by aNode and aOffset.
+   * GetASCIIWhitespacesBounds() returns a range from start of whitespaces
+   * and end of whitespaces if the character at aPoint is an ASCII whitespace.
+   * Note that the end is next character of the last whitespace.
    *
    * @param aDir            Specify eBefore if you want to scan text backward.
    *                        Specify eAfter if you want to scan text forward.
    *                        Specify eBoth if you want to scan text to both
    *                        direction.
    * @param aPoint          The point to start to scan whitespaces from.
-   * @param outStartNode    [out] The container of first ASCII whitespace.
-   *                              If there is no whitespaces, returns nullptr.
-   * @param outStartOffset  [out] The offset of first ASCII whitespace in
-   *                              outStartNode.
-   * @param outEndNode      [out] The container of last ASCII whitespace.
-   *                              If there is no whitespaces, returns nullptr.
-   * @param outEndOffset    [out] The offset of last ASCII whitespace in
-   *                              outEndNode.
+   * @return                Start and end of the expanded range.
    */
   template <typename PT, typename CT>
-  void GetASCIIWhitespacesBounds(int16_t aDir,
-                                 const EditorDOMPointBase<PT, CT>& aPoint,
-                                 dom::Text** outStartNode,
-                                 int32_t* outStartOffset,
-                                 dom::Text** outEndNode,
-                                 int32_t* outEndOffset) const;
+  Tuple<EditorDOMPoint, EditorDOMPoint> GetASCIIWhitespacesBounds(
+      int16_t aDir, const EditorDOMPointBase<PT, CT>& aPoint) const;
 
   MOZ_CAN_RUN_SCRIPT nsresult CheckTrailingNBSPOfRun(WSFragment* aRun);
 
