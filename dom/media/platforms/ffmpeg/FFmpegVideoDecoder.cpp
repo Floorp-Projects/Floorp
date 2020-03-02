@@ -11,6 +11,11 @@
 #include "MediaInfo.h"
 #include "VPXDecoder.h"
 #include "mozilla/layers/KnowsCompositor.h"
+#ifdef MOZ_WAYLAND_USE_VAAPI
+#  include "gfxPlatformGtk.h"
+#  include "mozilla/layers/WaylandDMABUFSurfaceImage.h"
+#  include "H264.h"
+#endif
 
 #include "libavutil/pixfmt.h"
 #if LIBAVCODEC_VERSION_MAJOR < 54
@@ -28,6 +33,14 @@
 #include "mozilla/TaskQueue.h"
 #include "nsThreadUtils.h"
 #include "prsystem.h"
+
+// Forward declare from va.h
+#ifdef MOZ_WAYLAND_USE_VAAPI
+typedef int VAStatus;
+#  define VA_EXPORT_SURFACE_READ_ONLY 0x0001
+#  define VA_EXPORT_SURFACE_SEPARATE_LAYERS 0x0004
+#  define VA_STATUS_SUCCESS 0x00000000
+#endif
 
 typedef mozilla::layers::Image Image;
 typedef mozilla::layers::PlanarYCbCrImage PlanarYCbCrImage;
@@ -88,6 +101,129 @@ static AVPixelFormat ChoosePixelFormat(AVCodecContext* aCodecContext,
   return AV_PIX_FMT_NONE;
 }
 
+#ifdef MOZ_WAYLAND_USE_VAAPI
+static AVPixelFormat ChooseVAAPIPixelFormat(AVCodecContext* aCodecContext,
+                                            const AVPixelFormat* aFormats) {
+  FFMPEG_LOG("Choosing FFmpeg pixel format for VA-API video decoding.");
+  for (; *aFormats > -1; aFormats++) {
+    switch (*aFormats) {
+      case AV_PIX_FMT_VAAPI_VLD:
+        FFMPEG_LOG("Requesting pixel format VAAPI_VLD\n");
+        return AV_PIX_FMT_VAAPI_VLD;
+      default:
+        break;
+    }
+  }
+
+  NS_WARNING("FFmpeg does not share any supported pixel formats.");
+  return AV_PIX_FMT_NONE;
+}
+
+VAAPIFrameHolder::VAAPIFrameHolder(FFmpegLibWrapper* aLib,
+                                   AVBufferRef* aVAAPIDeviceContext,
+                                   AVBufferRef* aAVHWFramesContext,
+                                   AVBufferRef* aHWFrame)
+    : mLib(aLib),
+      mVAAPIDeviceContext(mLib->av_buffer_ref(aVAAPIDeviceContext)),
+      mAVHWFramesContext(mLib->av_buffer_ref(aAVHWFramesContext)),
+      mHWFrame(mLib->av_buffer_ref(aHWFrame)){};
+
+VAAPIFrameHolder::~VAAPIFrameHolder() {
+  mLib->av_buffer_unref(&mHWFrame);
+  mLib->av_buffer_unref(&mAVHWFramesContext);
+  mLib->av_buffer_unref(&mVAAPIDeviceContext);
+}
+
+AVCodec* FFmpegVideoDecoder<LIBAV_VER>::FindVAAPICodec() {
+  if (mCodecID != AV_CODEC_ID_H264) {
+    return nullptr;
+  }
+
+  AVCodec* decoder = mLib->avcodec_find_decoder(mCodecID);
+  for (int i = 0;; i++) {
+    const AVCodecHWConfig* config = mLib->avcodec_get_hw_config(decoder, i);
+    if (!config) {
+      break;
+    }
+    if (config->methods & AV_CODEC_HW_CONFIG_METHOD_HW_DEVICE_CTX &&
+        config->device_type == AV_HWDEVICE_TYPE_VAAPI) {
+      return decoder;
+    }
+  }
+
+  FFMPEG_LOG("Decoder does not support VAAPI device type");
+  return nullptr;
+}
+
+bool FFmpegVideoDecoder<LIBAV_VER>::CreateVAAPIDeviceContext() {
+  AVDictionary* opts = nullptr;
+  mLib->av_dict_set(&opts, "connection_type", "drm", 0);
+  bool ret =
+      (mLib->av_hwdevice_ctx_create(
+           &mVAAPIDeviceContext, AV_HWDEVICE_TYPE_VAAPI, NULL, NULL, 0) == 0);
+  mLib->av_dict_free(&opts);
+  if (!ret) {
+    return false;
+  }
+
+  mCodecContext->hw_device_ctx = mLib->av_buffer_ref(mVAAPIDeviceContext);
+  return true;
+}
+
+MediaResult FFmpegVideoDecoder<LIBAV_VER>::InitVAAPIDecoder() {
+  FFMPEG_LOG("Initialising VA-API FFmpeg decoder");
+  MOZ_ASSERT(mCodecID == AV_CODEC_ID_H264);
+
+  if (!mLib->IsVAAPIAvailable()) {
+    FFMPEG_LOG("libva library is missing");
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  if (!gfxPlatformGtk::GetPlatform()->UseWaylandHardwareVideoDecoding()) {
+    FFMPEG_LOG("VA-API FFmpeg is disabled by platform");
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  AVCodec* codec = FindVAAPICodec();
+  if (!codec) {
+    FFMPEG_LOG("Couldn't find ffmpeg VA-API decoder");
+    return NS_ERROR_DOM_MEDIA_FATAL_ERR;
+  }
+
+  if (!(mCodecContext = mLib->avcodec_alloc_context3(codec))) {
+    FFMPEG_LOG("Couldn't init VA-API ffmpeg context");
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  mCodecContext->opaque = this;
+
+  InitVAAPICodecContext();
+
+  if (!CreateVAAPIDeviceContext()) {
+    mLib->av_freep(mCodecContext);
+    FFMPEG_LOG("Failed to create VA-API device context");
+    return NS_ERROR_DOM_MEDIA_FATAL_ERR;
+  }
+
+  MediaResult ret = AllocateExtraData();
+  if (NS_FAILED(ret)) {
+    mLib->av_buffer_unref(&mVAAPIDeviceContext);
+    mLib->av_freep(mCodecContext);
+    return ret;
+  }
+
+  if (mLib->avcodec_open2(mCodecContext, codec, nullptr) < 0) {
+    mLib->av_buffer_unref(&mVAAPIDeviceContext);
+    mLib->av_freep(mCodecContext);
+    FFMPEG_LOG("Couldn't initialise VA-API decoder");
+    return NS_ERROR_DOM_MEDIA_FATAL_ERR;
+  }
+
+  FFMPEG_LOG("VA-API FFmpeg init successful");
+  return NS_OK;
+}
+
+#endif
+
 FFmpegVideoDecoder<LIBAV_VER>::PtsCorrectionContext::PtsCorrectionContext()
     : mNumFaultyPts(0),
       mNumFaultyDts(0),
@@ -127,6 +263,9 @@ FFmpegVideoDecoder<LIBAV_VER>::FFmpegVideoDecoder(
     KnowsCompositor* aAllocator, ImageContainer* aImageContainer,
     bool aLowLatency)
     : FFmpegDataDecoder(aLib, aTaskQueue, GetCodecId(aConfig.mMimeType)),
+#ifdef MOZ_WAYLAND_USE_VAAPI
+      mVAAPIDeviceContext(nullptr),
+#endif
       mImageAllocator(aAllocator),
       mImageContainer(aImageContainer),
       mInfo(aConfig),
@@ -138,12 +277,23 @@ FFmpegVideoDecoder<LIBAV_VER>::FFmpegVideoDecoder(
 }
 
 RefPtr<MediaDataDecoder::InitPromise> FFmpegVideoDecoder<LIBAV_VER>::Init() {
-  MediaResult rv = InitDecoder();
-  if (NS_FAILED(rv)) {
-    return InitPromise::CreateAndReject(rv, __func__);
+  MediaResult rv;
+
+#ifdef MOZ_WAYLAND_USE_VAAPI
+  if (mCodecID == AV_CODEC_ID_H264) {
+    rv = InitVAAPIDecoder();
+    if (NS_SUCCEEDED(rv)) {
+      return InitPromise::CreateAndResolve(TrackInfo::kVideoTrack, __func__);
+    }
+  }
+#endif
+
+  rv = InitDecoder();
+  if (NS_SUCCEEDED(rv)) {
+    return InitPromise::CreateAndResolve(TrackInfo::kVideoTrack, __func__);
   }
 
-  return InitPromise::CreateAndResolve(TrackInfo::kVideoTrack, __func__);
+  return InitPromise::CreateAndReject(rv, __func__);
 }
 
 void FFmpegVideoDecoder<LIBAV_VER>::InitCodecContext() {
@@ -179,6 +329,16 @@ void FFmpegVideoDecoder<LIBAV_VER>::InitCodecContext() {
   // FFmpeg will call back to this to negotiate a video pixel format.
   mCodecContext->get_format = ChoosePixelFormat;
 }
+
+#ifdef MOZ_WAYLAND_USE_VAAPI
+void FFmpegVideoDecoder<LIBAV_VER>::InitVAAPICodecContext() {
+  mCodecContext->width = mInfo.mImage.width;
+  mCodecContext->height = mInfo.mImage.height;
+  mCodecContext->thread_count = 1;
+  mCodecContext->get_format = ChooseVAAPIPixelFormat;
+  mCodecContext->extra_hw_frames = H264::ComputeMaxRefFrames(mInfo.mExtraData);
+}
+#endif
 
 MediaResult FFmpegVideoDecoder<LIBAV_VER>::DoDecode(
     MediaRawData* aSample, uint8_t* aData, int aSize, bool* aGotFrame,
@@ -225,8 +385,19 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::DoDecode(
       return MediaResult(NS_ERROR_DOM_MEDIA_DECODE_ERR,
                          RESULT_DETAIL("avcodec_receive_frame error: %d", res));
     }
-    MediaResult rv = CreateImage(mFrame->pkt_pos, mFrame->pkt_pts,
-                                 mFrame->pkt_duration, aResults);
+
+    MediaResult rv;
+#  ifdef MOZ_WAYLAND_USE_VAAPI
+    if (mVAAPIDeviceContext) {
+      MOZ_ASSERT(mFrame->format == AV_PIX_FMT_VAAPI_VLD);
+      rv = CreateImageVAAPI(mFrame->pkt_pos, mFrame->pkt_pts,
+                            mFrame->pkt_duration, aResults);
+    } else
+#  endif
+    {
+      rv = CreateImage(mFrame->pkt_pos, mFrame->pkt_pts, mFrame->pkt_duration,
+                       aResults);
+    }
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -299,6 +470,26 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::DoDecode(
 #endif
 }
 
+gfx::YUVColorSpace FFmpegVideoDecoder<LIBAV_VER>::GetFrameColorSpace() {
+  if (mLib->av_frame_get_colorspace) {
+    switch (mLib->av_frame_get_colorspace(mFrame)) {
+#if LIBAVCODEC_VERSION_MAJOR >= 55
+      case AVCOL_SPC_BT2020_NCL:
+      case AVCOL_SPC_BT2020_CL:
+        return gfx::YUVColorSpace::BT2020;
+#endif
+      case AVCOL_SPC_BT709:
+        return gfx::YUVColorSpace::BT709;
+      case AVCOL_SPC_SMPTE170M:
+      case AVCOL_SPC_BT470BG:
+        return gfx::YUVColorSpace::BT601;
+      default:
+        break;
+    }
+  }
+  return DefaultColorSpace({mFrame->width, mFrame->height});
+}
+
 MediaResult FFmpegVideoDecoder<LIBAV_VER>::CreateImage(
     int64_t aOffset, int64_t aPts, int64_t aDuration,
     MediaDataDecoder::DecodedData& aResults) {
@@ -365,31 +556,7 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::CreateImage(
     }
 #endif
   }
-  if (mLib->av_frame_get_colorspace) {
-    switch (mLib->av_frame_get_colorspace(mFrame)) {
-#if LIBAVCODEC_VERSION_MAJOR >= 55
-      case AVCOL_SPC_BT2020_NCL:
-      case AVCOL_SPC_BT2020_CL:
-        b.mYUVColorSpace = gfx::YUVColorSpace::BT2020;
-        break;
-#endif
-      case AVCOL_SPC_BT709:
-        b.mYUVColorSpace = gfx::YUVColorSpace::BT709;
-        break;
-      case AVCOL_SPC_SMPTE170M:
-      case AVCOL_SPC_BT470BG:
-        b.mYUVColorSpace = gfx::YUVColorSpace::BT601;
-        break;
-      case AVCOL_SPC_UNSPECIFIED:
-        b.mYUVColorSpace = gfx::YUVColorSpace::UNKNOWN;
-        break;
-      default:
-        break;
-    }
-  }
-  if (b.mYUVColorSpace == gfx::YUVColorSpace::UNKNOWN) {
-    b.mYUVColorSpace = DefaultColorSpace({mFrame->width, mFrame->height});
-  }
+  b.mYUVColorSpace = GetFrameColorSpace();
 
   if (mLib->av_frame_get_color_range) {
     auto range = mLib->av_frame_get_color_range(mFrame);
@@ -410,6 +577,82 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::CreateImage(
   aResults.AppendElement(std::move(v));
   return NS_OK;
 }
+
+#ifdef MOZ_WAYLAND_USE_VAAPI
+static void VAAPIFrameReleaseCallback(VAAPIFrameHolder* aVAAPIFrameHolder) {
+  auto frameHolder = static_cast<VAAPIFrameHolder*>(aVAAPIFrameHolder);
+  delete frameHolder;
+}
+
+MediaResult FFmpegVideoDecoder<LIBAV_VER>::CreateImageVAAPI(
+    int64_t aOffset, int64_t aPts, int64_t aDuration,
+    MediaDataDecoder::DecodedData& aResults) {
+  FFMPEG_LOG("Got one VAAPI frame output with pts=%" PRId64 " dts=%" PRId64
+             " duration=%" PRId64 " opaque=%" PRId64,
+             aPts, mFrame->pkt_dts, aDuration, mCodecContext->reordered_opaque);
+
+  AVHWDeviceContext* device_ctx = (AVHWDeviceContext*)mVAAPIDeviceContext->data;
+  AVVAAPIDeviceContext* VAAPIDeviceContext =
+      (AVVAAPIDeviceContext*)device_ctx->hwctx;
+  VADRMPRIMESurfaceDescriptor va_desc;
+
+  VASurfaceID surface_id = (VASurfaceID)(uintptr_t)mFrame->data[3];
+
+  VAStatus vas = mLib->vaExportSurfaceHandle(
+      VAAPIDeviceContext->display, surface_id,
+      VA_SURFACE_ATTRIB_MEM_TYPE_DRM_PRIME_2,
+      VA_EXPORT_SURFACE_READ_ONLY | VA_EXPORT_SURFACE_SEPARATE_LAYERS,
+      &va_desc);
+  if (vas != VA_STATUS_SUCCESS) {
+    return MediaResult(
+        NS_ERROR_OUT_OF_MEMORY,
+        RESULT_DETAIL("Unable to get frame by vaExportSurfaceHandle()"));
+  }
+  vas = mLib->vaSyncSurface(VAAPIDeviceContext->display, surface_id);
+  if (vas != VA_STATUS_SUCCESS) {
+    NS_WARNING("vaSyncSurface() failed.");
+  }
+
+  va_desc.width = mFrame->width;
+  va_desc.height = mFrame->height;
+
+  RefPtr<WaylandDMABufSurfaceNV12> surface =
+      WaylandDMABufSurfaceNV12::CreateNV12Surface(va_desc);
+  if (!surface) {
+    return MediaResult(
+        NS_ERROR_OUT_OF_MEMORY,
+        RESULT_DETAIL("Unable to allocate WaylandDMABufSurfaceNV12."));
+  }
+
+  surface->SetYUVColorSpace(GetFrameColorSpace());
+
+  // mFrame->buf[0] is a reference to H264 VASurface for this mFrame.
+  // We need create WaylandDMABUFSurfaceImage on top of it,
+  // create EGLImage/Texture on top of it and render it by GL.
+
+  // FFmpeg tends to reuse the particual VASurface for another frame
+  // even when the mFrame is not released. To keep VASurface as is
+  // we explicitly reference it and keep until WaylandDMABUFSurfaceImage
+  // is live.
+  RefPtr<layers::Image> im = new layers::WaylandDMABUFSurfaceImage(
+      surface, VAAPIFrameReleaseCallback,
+      new VAAPIFrameHolder(mLib, mVAAPIDeviceContext,
+                           mCodecContext->hw_frames_ctx, mFrame->buf[0]));
+
+  RefPtr<VideoData> vp = VideoData::CreateFromImage(
+      mInfo.mDisplay, aOffset, TimeUnit::FromMicroseconds(aPts),
+      TimeUnit::FromMicroseconds(aDuration), im, !!mFrame->key_frame,
+      TimeUnit::FromMicroseconds(-1));
+
+  if (!vp) {
+    return MediaResult(NS_ERROR_OUT_OF_MEMORY,
+                       RESULT_DETAIL("image allocation error"));
+  }
+
+  aResults.AppendElement(std::move(vp));
+  return NS_OK;
+}
+#endif
 
 RefPtr<MediaDataDecoder::FlushPromise>
 FFmpegVideoDecoder<LIBAV_VER>::ProcessFlush() {
@@ -441,6 +684,15 @@ AVCodecID FFmpegVideoDecoder<LIBAV_VER>::GetCodecId(
 #endif
 
   return AV_CODEC_ID_NONE;
+}
+
+void FFmpegVideoDecoder<LIBAV_VER>::ProcessShutdown() {
+#ifdef MOZ_WAYLAND_USE_VAAPI
+  if (mVAAPIDeviceContext) {
+    mLib->av_buffer_unref(&mVAAPIDeviceContext);
+  }
+#endif
+  FFmpegDataDecoder<LIBAV_VER>::ProcessShutdown();
 }
 
 }  // namespace mozilla
