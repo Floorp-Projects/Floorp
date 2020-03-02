@@ -18,6 +18,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1545410
 <iframe id="iframe" srcdoc='<html><body><div id="WACViewPanel_EditingElement" spellcheck="false" class="FireFox usehover WACEditing EditMode EditingSurfaceBody" style="overflow: visible; visibility: visible;" contenteditable="true"></div></body></html>'></iframe>
 <script>
 SimpleTest.waitForExplicitFinish();
+let waitForCheckKeyPressEventModelEvent = new Promise(resolve => {
+  SpecialPowers.addSystemEventListener(document.querySelector("iframe").contentDocument, "CheckKeyPressEventModel", resolve, {once: true});
+});
 SimpleTest.waitForFocus(async function doTests() {
   await SpecialPowers.pushPrefEnv({
     set: [
@@ -26,6 +29,7 @@ SimpleTest.waitForFocus(async function doTests() {
   });
 
   let iframe = document.getElementById("iframe");
+  await waitForCheckKeyPressEventModelEvent;
   iframe.contentDocument.body.firstChild.focus();
   let keypressEvent;
   iframe.contentDocument.body.addEventListener("keypress", aEvent => keypressEvent = aEvent, {once: true});
