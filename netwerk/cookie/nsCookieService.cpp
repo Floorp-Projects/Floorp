@@ -51,6 +51,7 @@
 #include "nsIInputStream.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsNetCID.h"
+#include "mozilla/dom/nsMixedContentBlocker.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/storage.h"
 #include "mozilla/AutoRestore.h"
@@ -3055,7 +3056,8 @@ void nsCookieService::GetCookiesForURI(
   // check if aHostURI is using an https secure protocol.
   // if it isn't, then we can't send a secure cookie over the connection.
   // if SchemeIs fails, assume an insecure connection, to be on the safe side
-  bool isSecure = aHostURI->SchemeIs("https");
+  bool potentiallyTurstworthy =
+      nsMixedContentBlocker::IsPotentiallyTrustworthyOrigin(aHostURI);
 
   nsCookie* cookie;
   int64_t currentTimeInUsec = PR_Now();
@@ -3077,7 +3079,7 @@ void nsCookieService::GetCookiesForURI(
     if (!DomainMatches(cookie, hostFromURI)) continue;
 
     // if the cookie is secure and the host scheme isn't, we can't send it
-    if (cookie->IsSecure() && !isSecure) continue;
+    if (cookie->IsSecure() && !potentiallyTurstworthy) continue;
 
     if (aIsSameSiteForeign && !ProcessSameSiteCookieForForeignRequest(
                                   aChannel, cookie, aIsSafeTopLevelNav)) {
@@ -3229,10 +3231,11 @@ bool nsCookieService::CanSetCookie(nsIURI* aHostURI, const nsCookieKey& aKey,
   // 1 = nonsecure and "https:"
   // 2 = secure and "http:"
   // 3 = secure and "https:"
-  bool isHTTPS = aHostURI->SchemeIs("https");
-  Telemetry::Accumulate(
-      Telemetry::COOKIE_SCHEME_SECURITY,
-      ((aCookieData.isSecure()) ? 0x02 : 0x00) | ((isHTTPS) ? 0x01 : 0x00));
+  bool potentiallyTurstworthy =
+      nsMixedContentBlocker::IsPotentiallyTrustworthyOrigin(aHostURI);
+  Telemetry::Accumulate(Telemetry::COOKIE_SCHEME_SECURITY,
+                        ((aCookieData.isSecure()) ? 0x02 : 0x00) |
+                            ((potentiallyTurstworthy) ? 0x01 : 0x00));
 
   // Collect telemetry on how often are first- and third-party cookies set
   // from HTTPS origins:
@@ -3253,7 +3256,7 @@ bool nsCookieService::CanSetCookie(nsIURI* aHostURI, const nsCookieKey& aKey,
     }
     Telemetry::Accumulate(Telemetry::COOKIE_SCHEME_HTTPS,
                           (isThirdParty ? 0x04 : 0x00) |
-                              (isHTTPS ? 0x02 : 0x00) |
+                              (potentiallyTurstworthy ? 0x02 : 0x00) |
                               (aCookieData.isSecure() ? 0x01 : 0x00));
   }
 
@@ -3303,7 +3306,7 @@ bool nsCookieService::CanSetCookie(nsIURI* aHostURI, const nsCookieKey& aKey,
   }
 
   // magic prefix checks. MUST be run after CheckDomain() and CheckPath()
-  if (!CheckPrefixes(aCookieData, isHTTPS)) {
+  if (!CheckPrefixes(aCookieData, potentiallyTurstworthy)) {
     COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, savedCookieHeader,
                       "failed the prefix tests");
     return newCookie;
@@ -3337,7 +3340,7 @@ bool nsCookieService::CanSetCookie(nsIURI* aHostURI, const nsCookieKey& aKey,
   // If the new cookie is non-https and wants to set secure flag,
   // browser have to ignore this new cookie.
   // (draft-ietf-httpbis-cookie-alone section 3.1)
-  if (aCookieData.isSecure() && !isHTTPS) {
+  if (aCookieData.isSecure() && !potentiallyTurstworthy) {
     COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, aCookieHeader,
                       "non-https cookie can't set secure flag");
     return newCookie;
