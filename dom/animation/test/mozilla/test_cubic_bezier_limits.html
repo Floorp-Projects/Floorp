@@ -105,7 +105,7 @@ test(function(t) {
   div.style.transition = 'margin-left 100s cubic-bezier(0, 1e+39, 0, 0)';
   flushComputedStyle(div);
   div.style.marginLeft = '0px';
-  assert_equals(div.getAnimations()[0].effect.getKeyframes()[0].easing,
+  assert_equals(div.getAnimations()[0].effect.getTiming().easing,
     'cubic-bezier(0, ' + max_float + ', 0, 0)',
     'y1 control point for CSS transition on upper boundary');
   div.style.transition = '';
@@ -114,7 +114,7 @@ test(function(t) {
   div.style.transition = 'margin-left 100s cubic-bezier(0, 0, 0, 1e+39)';
   flushComputedStyle(div);
   div.style.marginLeft = '0px';
-  assert_equals(div.getAnimations()[0].effect.getKeyframes()[0].easing,
+  assert_equals(div.getAnimations()[0].effect.getTiming().easing,
     'cubic-bezier(0, 0, 0, ' + max_float + ')',
     'y2 control point for CSS transition on upper boundary');
   div.style.transition = '';
@@ -123,7 +123,7 @@ test(function(t) {
   div.style.transition = 'margin-left 100s cubic-bezier(0, -1e+39, 0, 0)';
   flushComputedStyle(div);
   div.style.marginLeft = '0px';
-  assert_equals(div.getAnimations()[0].effect.getKeyframes()[0].easing,
+  assert_equals(div.getAnimations()[0].effect.getTiming().easing,
     'cubic-bezier(0, ' + '-' + max_float + ', 0, 0)',
     'y1 control point for CSS transition on lower boundary');
   div.style.transition = '';
@@ -132,7 +132,7 @@ test(function(t) {
   div.style.transition = 'margin-left 100s cubic-bezier(0, 0, 0, -1e+39)';
   flushComputedStyle(div);
   div.style.marginLeft = '0px';
-  assert_equals(div.getAnimations()[0].effect.getKeyframes()[0].easing,
+  assert_equals(div.getAnimations()[0].effect.getTiming().easing,
     'cubic-bezier(0, 0, 0, ' + '-' + max_float + ')',
     'y2 control point for CSS transition on lower boundary');
 
