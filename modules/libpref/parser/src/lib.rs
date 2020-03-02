@@ -218,17 +218,17 @@ const C_KEYWD: CharKind = CharKind::Keyword;
 const C_QUOTE: CharKind = CharKind::Quote;
 const C_SLASH: CharKind = CharKind::Slash;
 const C_DIGIT: CharKind = CharKind::Digit;
-const C_HASH: CharKind = CharKind::Hash;
-const C_CR: CharKind = CharKind::CR;
+const C_HASH_: CharKind = CharKind::Hash;
+const C_CR___: CharKind = CharKind::CR;
 const C______: CharKind = CharKind::Other;
 
 #[rustfmt::skip]
 const CHAR_KINDS: [CharKind; 256] = [
 /*         0        1        2        3        4        5        6        7        8        9    */
 /*   0+ */ C_SINGL, C______, C______, C______, C______, C______, C______, C______, C______, C_SPCNL,
-/*  10+ */ C_SPCNL, C_SPCNL, C_SPCNL, C_CR   , C______, C______, C______, C______, C______, C______,
+/*  10+ */ C_SPCNL, C_SPCNL, C_SPCNL, C_CR___, C______, C______, C______, C______, C______, C______,
 /*  20+ */ C______, C______, C______, C______, C______, C______, C______, C______, C______, C______,
-/*  30+ */ C______, C______, C_SPCNL, C______, C_QUOTE, C_HASH , C______, C______, C______, C_QUOTE,
+/*  30+ */ C______, C______, C_SPCNL, C______, C_QUOTE, C_HASH_, C______, C______, C______, C_QUOTE,
 /*  40+ */ C_SINGL, C_SINGL, C______, C_SINGL, C_SINGL, C_SINGL, C______, C_SLASH, C_DIGIT, C_DIGIT,
 /*  50+ */ C_DIGIT, C_DIGIT, C_DIGIT, C_DIGIT, C_DIGIT, C_DIGIT, C_DIGIT, C_DIGIT, C______, C_SINGL,
 /*  60+ */ C______, C______, C______, C______, C______, C_KEYWD, C_KEYWD, C_KEYWD, C_KEYWD, C_KEYWD,
