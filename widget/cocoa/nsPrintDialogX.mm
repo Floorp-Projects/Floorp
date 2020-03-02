@@ -50,6 +50,21 @@ nsPrintDialogServiceX::Show(nsPIDOMWindowOuter* aParent, nsIPrintSettings* aSett
   settingsX->SetPrinterNameFromPrintInfo();
   printSettingsSvc->InitPrintSettingsFromPrefs(settingsX, true, nsIPrintSettings::kInitSaveAll);
 
+  // Set the print job title
+  nsAutoString docName;
+  nsresult rv = aSettings->GetTitle(docName);
+  if (NS_SUCCEEDED(rv)) {
+    nsAutoString adjustedTitle;
+    PrintTarget::AdjustPrintJobNameForIPP(docName, adjustedTitle);
+    CFStringRef cfTitleString = CFStringCreateWithCharacters(
+        NULL, reinterpret_cast<const UniChar*>(adjustedTitle.BeginReading()),
+        adjustedTitle.Length());
+    if (cfTitleString) {
+      ::PMPrintSettingsSetJobName(settingsX->GetPMPrintSettings(), cfTitleString);
+      CFRelease(cfTitleString);
+    }
+  }
+
   NSPrintInfo* printInfo = settingsX->GetCocoaPrintInfo();
 
   // Put the print info into the current print operation, since that's where
