@@ -227,7 +227,7 @@ struct MOZ_RAII AutoPrepareFocusRange {
       return;
     }
 
-    int16_t reason = aSelection->mFrameSelection->mSelectionChangeReason;
+    int16_t reason = aSelection->mFrameSelection->mSelectionChangeReasons;
     bool isAnchorRelativeOp =
         (reason & (nsISelectionListener::DRAG_REASON |
                    nsISelectionListener::MOUSEDOWN_REASON |
@@ -683,14 +683,14 @@ nsresult nsFrameSelection::MoveCaret(nsDirection aDirection,
                     caretStyle == 2 && aAmount <= eSelectLine;
   if (doCollapse) {
     if (aDirection == eDirPrevious) {
-      PostReason(nsISelectionListener::COLLAPSETOSTART_REASON);
+      SetChangeReasons(nsISelectionListener::COLLAPSETOSTART_REASON);
       mHint = CARET_ASSOCIATE_AFTER;
     } else {
-      PostReason(nsISelectionListener::COLLAPSETOEND_REASON);
+      SetChangeReasons(nsISelectionListener::COLLAPSETOEND_REASON);
       mHint = CARET_ASSOCIATE_BEFORE;
     }
   } else {
-    PostReason(nsISelectionListener::KEYPRESS_REASON);
+    SetChangeReasons(nsISelectionListener::KEYPRESS_REASON);
   }
 
   AutoPrepareFocusRange prep(sel, false);
@@ -1135,8 +1135,8 @@ nsresult nsFrameSelection::HandleClick(nsIContent* aNewFocus,
   // Don't take focus when dragging off of a table
   if (!mTableSelection.mDragSelectingCells) {
     BidiLevelFromClick(aNewFocus, aContentOffset);
-    PostReason(nsISelectionListener::MOUSEDOWN_REASON +
-               nsISelectionListener::DRAG_REASON);
+    SetChangeReasons(nsISelectionListener::MOUSEDOWN_REASON +
+                     nsISelectionListener::DRAG_REASON);
     if ((aFocusMode == FocusMode::kExtendSelection) &&
         AdjustForMaintainedSelection(aNewFocus, aContentOffset))
       return NS_OK;  // shift clicked to maintained selection. rejected.
@@ -1416,7 +1416,7 @@ void nsFrameSelection::SetDragState(bool aState) {
   if (!mDragState) {
     mTableSelection.mDragSelectingCells = false;
     // Notify that reason is mouse up.
-    PostReason(nsISelectionListener::MOUSEUP_REASON);
+    SetChangeReasons(nsISelectionListener::MOUSEUP_REASON);
     // Be aware, the Selection instance may be destroyed after this call.
     NotifySelectionListeners(SelectionType::eNormal);
   }
@@ -1969,7 +1969,7 @@ nsresult nsFrameSelection::SelectAll() {
     if (!rootContent) return NS_ERROR_FAILURE;
   }
   int32_t numChildren = rootContent->GetChildCount();
-  PostReason(nsISelectionListener::NO_REASON);
+  SetChangeReasons(nsISelectionListener::NO_REASON);
   int8_t index = GetIndexFromSelectionType(SelectionType::eNormal);
   AutoPrepareFocusRange prep(mDomSelections[index], false);
   return TakeFocus(rootContent, 0, numChildren, CARET_ASSOCIATE_BEFORE,
@@ -1980,13 +1980,12 @@ nsresult nsFrameSelection::SelectAll() {
 
 void nsFrameSelection::StartBatchChanges() { mBatching++; }
 
-void nsFrameSelection::EndBatchChanges(int16_t aReason) {
+void nsFrameSelection::EndBatchChanges(int16_t aReasons) {
   mBatching--;
   NS_ASSERTION(mBatching >= 0, "Bad mBatching");
 
   if (mBatching == 0 && mChangesDuringBatching) {
-    int16_t postReason = PopReason() | aReason;
-    PostReason(postReason);
+    AddChangeReasons(aReasons);
     mChangesDuringBatching = false;
     // Be aware, the Selection instance may be destroyed after this call.
     NotifySelectionListeners(SelectionType::eNormal);
@@ -2863,7 +2862,7 @@ void nsFrameSelection::SetAncestorLimiter(nsIContent* aLimiter) {
     if (!IsValidSelectionPoint(mDomSelections[index]->GetFocusNode())) {
       ClearNormalSelection();
       if (mAncestorLimiter) {
-        PostReason(nsISelectionListener::NO_REASON);
+        SetChangeReasons(nsISelectionListener::NO_REASON);
         nsCOMPtr<nsIContent> limiter(mAncestorLimiter);
         TakeFocus(limiter, 0, 0, CARET_ASSOCIATE_BEFORE,
                   FocusMode::kCollapseToNewPoint);
