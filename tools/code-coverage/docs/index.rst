@@ -1,6 +1,5 @@
-{{ApiRef}}
-
-.. _What_is_Code_Coverage:
+Code coverage
+=============
 
 What is Code Coverage?
 ----------------------
@@ -24,7 +23,6 @@ As a conclusion, we can use code coverage to find areas that need (more)
 tests, but we cannot use it to confirm that certain areas are well
 tested.
 
-.. _Firefox_Code_Coverage_reports:
 
 Firefox Code Coverage reports
 -----------------------------
@@ -41,7 +39,6 @@ found at https://coverage.moz.tools/#view=zero. You can use this to find
 areas of code that should be tested, or code that is no longer used
 (dead code, which could be removed).
 
-.. _CC_Code_Coverage_on_Firefox:
 
 C/C++ Code Coverage on Firefox
 ------------------------------
@@ -50,7 +47,6 @@ There are several ways to get C/C++ coverage information for
 mozilla-central, including creating your own coverage builds. The next
 sections describe the available options.
 
-.. _Generate_Code_Coverage_report_from_a_try_build_or_any_other_CI_build:
 
 Generate Code Coverage report from a try build (or any other CI build)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -61,14 +57,13 @@ builds to show up).
 
 E.g. for a try build:
 
-::
+.. code:: shell
 
    ./mach try fuzzy -q 'linux64-ccov'
 
 There are two options now, you can either generate the report locally or
 use a one-click loaner.
 
-.. _Generate_report_using_a_one-click_loaner:
 
 Generate report using a one-click loaner
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -78,7 +73,7 @@ Select the B job on Treeherder and get a one-click loaner.
 In the loaner, download and execute the script
 https://github.com/mozilla/code-coverage/blob/master/report/firefox_code_coverage/codecoverage.py:
 
-::
+.. code:: shell
 
    wget https://raw.githubusercontent.com/mozilla/code-coverage/master/report/firefox_code_coverage/codecoverage.py
    python codecoverage.py
@@ -87,7 +82,6 @@ This command will automatically generate a HTML report of the code
 coverage information in the **report** subdirectory in your current
 working directory.
 
-.. _Generate_report_locally:
 
 Generate report locally
 ^^^^^^^^^^^^^^^^^^^^^^^
@@ -101,7 +95,7 @@ Given a treeherder linux64-ccov build (with its branch, e.g.
 \`mozilla-central\` or \`try`, and revision, the tip commit hash of your
 push), run the following command:
 
-::
+.. code:: shell
 
    python codecoverage.py PATH/TO/MOZILLA/SRC/DIR/ BRANCH REVISION
 
@@ -110,7 +104,6 @@ the treeherder build and generate an HTML report of the code coverage
 information. The report will be stored in the **report** subdirectory in
 your current working directory.
 
-.. _Creating_your_own_Coverage_Build:
 
 Creating your own Coverage Build
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -119,7 +112,7 @@ On Linux, Windows and Mac OS X it is straightforward to generate an
 instrumented build using GCC or Clang. Adding the following lines to
 your ``.mozconfig`` file should be sufficient:
 
-.. code:: brush:
+.. code:: shell
 
    # Enable code coverage
    ac_add_options --enable-coverage
@@ -146,7 +139,6 @@ data, we recommend using the
 visualize gcov results. You can also use the same process explained
 earlier for CI builds.
 
-.. _Debugging_Failing_Tests_on_the_Try_Server:
 
 Debugging Failing Tests on the Try Server
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -161,13 +153,13 @@ coverage data, open the file
 `taskcluster/taskgraph/transforms/tests.py <https://dxr.mozilla.org/mozilla-central/source/taskcluster/taskgraph/transforms/tests.py#516>`__
 and add the following line,
 
-::
+.. code:: python
 
    test['mozharness'].setdefault('extra-options', []).append('--disable-ccov-upload')
 
 right after this line of code:
 
-::
+.. code:: python
 
    test['mozharness'].setdefault('extra-options', []).append('--code-coverage')
 
@@ -175,7 +167,6 @@ Now when you push to try to debug some failing tests, or anything else,
 there will not be any code coverage artifacts uploaded from the build
 machines or from the test machines.
 
-.. _JS_Debugger_Per_Test_Code_Coverage_on_Firefox:
 
 JS Debugger Per Test Code Coverage on Firefox
 ---------------------------------------------
@@ -183,7 +174,6 @@ JS Debugger Per Test Code Coverage on Firefox
 There are two ways to get javascript per test code coverage information
 for mozilla-central. The next sections describe these options.
 
-.. _Generate_Per_Test_Code_Coverage_from_a_try_build_or_any_other_treeherder_build:
 
 Generate Per Test Code Coverage from a try build (or any other treeherder build)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -191,7 +181,7 @@ Generate Per Test Code Coverage from a try build (or any other treeherder build)
 To spin a code coverage build, you need to select the linux64-jsdcov
 platform. E.g. for a try build:
 
-::
+.. code:: shell
 
    ./mach try fuzzy -q 'linux64-jsdcov'
 
@@ -199,7 +189,6 @@ This produces JavaScript Object Notation (JSON) files that can be
 downloaded from the treeherder testing machines and processed or
 analyzed locally.
 
-.. _Generate_Per_Test_Code_Coverage_Locally:
 
 Generate Per Test Code Coverage Locally
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -209,7 +198,7 @@ add an extra argument called ``--jscov-dir-prefix`` which accepts a
 directory as it's input and stores the resulting data in that directory.
 For example, to collect code coverage for the entire Mochitest suite:
 
-::
+.. code:: shell
 
    ./mach mochitest --jscov-dir-prefix /PATH/TO/COVERAGE/DIR/
 
