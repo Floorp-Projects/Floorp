@@ -228,15 +228,16 @@ class CacheIndexEntry : public PLDHashEntryHdr {
   uint16_t GetOnStopTime() const { return mRec->mOnStopTime; }
 
   void SetContentType(uint8_t aType) { mRec->mContentType = aType; }
-  uint8_t GetContentType() const {
-    if (mRec->mContentType >= nsICacheEntry::CONTENT_TYPE_LAST) {
+  uint8_t GetContentType() const { return GetContentType(mRec.get()); }
+  static uint8_t GetContentType(CacheIndexRecord* aRec) {
+    if (aRec->mContentType >= nsICacheEntry::CONTENT_TYPE_LAST) {
       LOG(
           ("CacheIndexEntry::GetContentType() - Found invalid content type "
            "[hash=%08x%08x%08x%08x%08x, contentType=%u]",
-           LOGSHA1(mRec->mHash), mRec->mContentType));
+           LOGSHA1(aRec->mHash), aRec->mContentType));
       return nsICacheEntry::CONTENT_TYPE_UNKNOWN;
     }
-    return mRec->mContentType;
+    return aRec->mContentType;
   }
 
   // Sets filesize in kilobytes.

@@ -1254,6 +1254,25 @@ nsresult CacheIndex::GetEntryForEviction(bool aIgnoreEmptyEntries,
     return NS_ERROR_NOT_AVAILABLE;
   }
 
+  if (index->mIndexStats.Size() == 0) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  int32_t mediaUsage =
+      round(static_cast<double>(index->mIndexStats.SizeByType(
+                nsICacheEntry::CONTENT_TYPE_MEDIA)) *
+            100.0 / static_cast<double>(index->mIndexStats.Size()));
+  int32_t mediaUsageLimit =
+      StaticPrefs::browser_cache_disk_content_type_media_limit();
+  bool evictMedia = false;
+  if (mediaUsage > mediaUsageLimit) {
+    LOG(
+        ("CacheIndex::GetEntryForEviction() - media content type is over the "
+         "limit [mediaUsage=%d, mediaUsageLimit=%d]",
+         mediaUsage, mediaUsageLimit));
+    evictMedia = true;
+  }
+
   SHA1Sum::Hash hash;
   CacheIndexRecord* foundRecord = nullptr;
   uint32_t skipped = 0;
@@ -1267,6 +1286,11 @@ nsresult CacheIndex::GetEntryForEviction(bool aIgnoreEmptyEntries,
     memcpy(&hash, rec->mHash, sizeof(SHA1Sum::Hash));
 
     ++skipped;
+
+    if (evictMedia && CacheIndexEntry::GetContentType(rec) !=
+                          nsICacheEntry::CONTENT_TYPE_MEDIA) {
+      continue;
+    }
 
     if (IsForcedValidEntry(&hash)) {
       continue;
@@ -1290,9 +1314,10 @@ nsresult CacheIndex::GetEntryForEviction(bool aIgnoreEmptyEntries,
   *aCnt = skipped;
 
   LOG(
-      ("CacheIndex::GetEntryForEviction() - returning entry from frecency "
-       "array [hash=%08x%08x%08x%08x%08x, cnt=%u, frecency=%u]",
-       LOGSHA1(&hash), *aCnt, foundRecord->mFrecency));
+      ("CacheIndex::GetEntryForEviction() - returning entry "
+       "[hash=%08x%08x%08x%08x%08x, cnt=%u, frecency=%u, contentType=%u]",
+       LOGSHA1(&hash), *aCnt, foundRecord->mFrecency,
+       CacheIndexEntry::GetContentType(foundRecord)));
 
   memcpy(aHash, &hash, sizeof(SHA1Sum::Hash));
 
