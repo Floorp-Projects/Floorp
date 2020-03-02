@@ -765,10 +765,6 @@ class nsFrameSelection final {
   // so remember to use nsCOMPtr when needed.
   MOZ_CAN_RUN_SCRIPT
   nsresult NotifySelectionListeners(mozilla::SelectionType aSelectionType);
-  // Update the selection cache on repaint when the
-  // selection being repainted is not empty.
-  nsresult UpdateSelectionCacheOnRepaintSelection(
-      mozilla::dom::Selection* aSel);
 
   // Table selection support.
   static nsITableCellLayout* GetCellLayout(nsIContent* aCellContent);

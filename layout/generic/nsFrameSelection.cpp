@@ -2895,6 +2895,7 @@ void nsFrameSelection::DisconnectFromPresShell() {
   mPresShell = nullptr;
 }
 
+#ifdef XP_MACOSX
 /**
  * See Bug 1288453.
  *
@@ -2914,8 +2915,7 @@ void nsFrameSelection::DisconnectFromPresShell() {
  * If the current selection is empty. The current selection cache
  * would be cleared by AutoCopyListener::OnSelectionChange().
  */
-nsresult nsFrameSelection::UpdateSelectionCacheOnRepaintSelection(
-    Selection* aSel) {
+static nsresult UpdateSelectionCacheOnRepaintSelection(Selection* aSel) {
   PresShell* presShell = aSel->GetPresShell();
   if (!presShell) {
     return NS_OK;
@@ -2929,6 +2929,7 @@ nsresult nsFrameSelection::UpdateSelectionCacheOnRepaintSelection(
 
   return NS_OK;
 }
+#endif  // XP_MACOSX
 
 // mozilla::AutoCopyListener
 
