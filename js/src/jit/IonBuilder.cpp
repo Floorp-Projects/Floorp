@@ -3056,25 +3056,6 @@ AbortReasonOr<Ok> IonBuilder::visitTestBackedge(JSOp op, bool* restarted) {
   return visitBackEdge(restarted);
 }
 
-// Returns true iff the MTest added for |op| has a true-target corresponding
-// with the join point in the bytecode.
-static bool TestTrueTargetIsJoinPoint(JSOp op) {
-  switch (op) {
-    case JSOp::IfNe:
-    case JSOp::Or:
-    case JSOp::Case:
-      return true;
-
-    case JSOp::IfEq:
-    case JSOp::And:
-    case JSOp::Coalesce:
-      return false;
-
-    default:
-      MOZ_CRASH("Unexpected op");
-  }
-}
-
 AbortReasonOr<Ok> IonBuilder::visitTest(JSOp op, bool* restarted) {
   MOZ_ASSERT(op == JSOp::IfEq || op == JSOp::IfNe || op == JSOp::And ||
              op == JSOp::Or || op == JSOp::Case);

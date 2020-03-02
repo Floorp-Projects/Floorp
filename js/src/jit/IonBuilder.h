@@ -12,12 +12,12 @@
 
 #include "mozilla/Maybe.h"
 
-#include "ds/InlineTable.h"
 #include "jit/BaselineInspector.h"
 #include "jit/BytecodeAnalysis.h"
 #include "jit/IonAnalysis.h"
 #include "jit/IonOptimizationLevels.h"
 #include "jit/MIR.h"
+#include "jit/MIRBuilderShared.h"
 #include "jit/MIRGenerator.h"
 #include "jit/MIRGraph.h"
 #include "jit/TIOracle.h"
@@ -96,76 +96,6 @@ using CallTargets = Vector<JSFunction*, 6, JitAllocPolicy>;
 // See IonBuilder::visitTry for more information.
 //
 // Finally-blocks are currently not supported by Ion.
-
-// PendingEdge is used whenever a block is terminated with a forward branch in
-// the bytecode. When IonBuilder reaches the jump target it uses this
-// information to link the block to the jump target's block.
-class PendingEdge {
- public:
-  enum class Kind : uint8_t {
-    // MTest true-successor.
-    TestTrue,
-
-    // MTest false-successor.
-    TestFalse,
-
-    // MGoto successor.
-    Goto,
-
-    // MGotoWithFake second successor.
-    GotoWithFake,
-  };
-
- private:
-  MBasicBlock* block_;
-  Kind kind_;
-  JSOp testOp_ = JSOp::Undefined;
-
-  PendingEdge(MBasicBlock* block, Kind kind, JSOp testOp = JSOp::Undefined)
-      : block_(block), kind_(kind), testOp_(testOp) {}
-
- public:
-  static PendingEdge NewTestTrue(MBasicBlock* block, JSOp op) {
-    return PendingEdge(block, Kind::TestTrue, op);
-  }
-  static PendingEdge NewTestFalse(MBasicBlock* block, JSOp op) {
-    return PendingEdge(block, Kind::TestFalse, op);
-  }
-  static PendingEdge NewGoto(MBasicBlock* block) {
-    return PendingEdge(block, Kind::Goto);
-  }
-  static PendingEdge NewGotoWithFake(MBasicBlock* block) {
-    return PendingEdge(block, Kind::GotoWithFake);
-  }
-
-  MBasicBlock* block() const { return block_; }
-  Kind kind() const { return kind_; }
-
-  JSOp testOp() const {
-    MOZ_ASSERT(kind_ == Kind::TestTrue || kind_ == Kind::TestFalse);
-    return testOp_;
-  }
-};
-
-// PendingEdgesMap maps a bytecode instruction to a Vector of PendingEdges
-// targeting it. We use InlineMap<> for this because most of the time there are
-// only a few pending edges but there can be many when switch-statements are
-// involved.
-using PendingEdges = Vector<PendingEdge, 2, SystemAllocPolicy>;
-using PendingEdgesMap =
-    InlineMap<jsbytecode*, PendingEdges, 8, PointerHasher<jsbytecode*>,
-              SystemAllocPolicy>;
-
-// LoopState stores information about a loop that's being compiled to MIR.
-class LoopState {
-  MBasicBlock* header_ = nullptr;
-
- public:
-  explicit LoopState(MBasicBlock* header) : header_(header) {}
-
-  MBasicBlock* header() const { return header_; }
-};
-using LoopStateStack = Vector<LoopState, 4, JitAllocPolicy>;
 
 class MOZ_STACK_CLASS IonBuilder {
  public:
