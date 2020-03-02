@@ -2485,7 +2485,7 @@ nsresult nsFrameSelection::AddCellsToSelection(nsIContent* aTableContent,
                                                int32_t aStartColumnIndex,
                                                int32_t aEndRowIndex,
                                                int32_t aEndColumnIndex) {
-  int8_t index = GetIndexFromSelectionType(SelectionType::eNormal);
+  const int8_t index = GetIndexFromSelectionType(SelectionType::eNormal);
   if (!mDomSelections[index]) {
     return NS_ERROR_NULL_POINTER;
   }
@@ -2509,7 +2509,11 @@ nsresult nsFrameSelection::AddCellsToSelection(nsIContent* aTableContent,
         uint32_t origRow = cellFrame->RowIndex();
         uint32_t origCol = cellFrame->ColIndex();
         if (origRow == row && origCol == col && !cellFrame->IsSelected()) {
-          result = SelectCellElement(cellFrame->GetContent());
+          const RefPtr<Selection> selection = mDomSelections[index];
+          if (!selection) {
+            return NS_ERROR_NULL_POINTER;
+          }
+          result = ::SelectCellElement(cellFrame->GetContent(), *selection);
           if (NS_FAILED(result)) {
             return result;
           }
