@@ -2127,9 +2127,8 @@ void Selection::CollapseToStart(ErrorResult& aRv) {
   }
 
   if (mFrameSelection) {
-    int16_t reason = mFrameSelection->PopReason() |
-                     nsISelectionListener::COLLAPSETOSTART_REASON;
-    mFrameSelection->PostReason(reason);
+    mFrameSelection->AddChangeReasons(
+        nsISelectionListener::COLLAPSETOSTART_REASON);
   }
   nsINode* container = firstRange->GetStartContainer();
   if (!container) {
@@ -2164,9 +2163,8 @@ void Selection::CollapseToEnd(ErrorResult& aRv) {
   }
 
   if (mFrameSelection) {
-    int16_t reason = mFrameSelection->PopReason() |
-                     nsISelectionListener::COLLAPSETOEND_REASON;
-    mFrameSelection->PostReason(reason);
+    mFrameSelection->AddChangeReasons(
+        nsISelectionListener::COLLAPSETOEND_REASON);
   }
   nsINode* container = lastRange->GetEndContainer();
   if (!container) {
@@ -2593,7 +2591,7 @@ void Selection::SelectAllChildren(nsINode& aNode, ErrorResult& aRv) {
   }
 
   if (mFrameSelection) {
-    mFrameSelection->PostReason(nsISelectionListener::SELECTALL_REASON);
+    mFrameSelection->AddChangeReasons(nsISelectionListener::SELECTALL_REASON);
   }
 
   // Chrome moves focus when aNode is outside of active editing host.
@@ -3060,7 +3058,7 @@ nsresult Selection::NotifySelectionListeners() {
   AutoTArray<nsCOMPtr<nsISelectionListener>, 5> selectionListeners(
       mSelectionListeners);
 
-  int16_t reason = frameSelection->PopReason();
+  int16_t reason = frameSelection->PopChangeReasons();
 
   if (mNotifyAutoCopy) {
     AutoCopyListener::OnSelectionChange(doc, *this, reason);
