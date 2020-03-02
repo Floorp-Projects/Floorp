@@ -9434,6 +9434,7 @@ function reportRemoteSubframesEnabledTelemetry() {
 if (AppConstants.NIGHTLY_BUILD) {
   var FissionTestingUI = {
     init() {
+      // Handle the Fission/Non-Fission testing UI.
       let autostart = Services.prefs.getBoolPref("fission.autostart");
       if (!autostart) {
         return;
@@ -9446,6 +9447,33 @@ if (AppConstants.NIGHTLY_BUILD) {
 
       newFissionWindow.hidden = gFissionBrowser;
       newNonFissionWindow.hidden = !gFissionBrowser;
+
+      if (!Cu.isInAutomation) {
+        // We don't want to display the warning in automation as it messes with many tests
+        // that rely on a specific state of the screen at the end of startup.
+        this.checkFissionWithoutWebRender();
+      }
+    },
+
+    // Display a warning if we're attempting to use Fission without WebRender
+    checkFissionWithoutWebRender() {
+      let isFissionEnabled = Services.prefs.getBoolPref("fission.autostart");
+      if (!isFissionEnabled) {
+        return;
+      }
+
+      let isWebRenderEnabled = Services.prefs.getBoolPref("gfx.webrender.all");
+
+      if (isWebRenderEnabled) {
+        return;
+      }
+      // Note: Test is hardcoded in English. This is a Nightly-locked warning, so we can afford to.
+      window.gNotificationBox.appendNotification(
+        "You are running with Fission enabled but without WebRender. This combination is untested, so use at your own risk.",
+        "warning-fission-without-webrender-notification",
+        "chrome://global/skin/icons/question-16.png",
+        window.gNotificationBox.PRIORITY_WARNING_LOW
+      );
     },
   };
 }
