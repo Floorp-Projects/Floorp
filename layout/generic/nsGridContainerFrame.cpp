@@ -7842,7 +7842,10 @@ nsFrameState nsGridContainerFrame::ComputeSelfSubgridBits() const {
     }
   }
 
-  // skip our scroll frame and such if we have it
+  // Skip our scroll frame and such if we have it.
+  // This will store the outermost frame that shares our content node:
+  const nsIFrame* outerFrame = this;
+  // ...and this will store that frame's parent:
   auto* parent = GetParent();
   while (parent && parent->GetContent() == GetContent()) {
     // If we find our containing frame has 'contain:layout/paint' we can't be
@@ -7852,13 +7855,15 @@ nsFrameState nsGridContainerFrame::ComputeSelfSubgridBits() const {
     if (parentDisplay->IsContainLayout() || parentDisplay->IsContainPaint()) {
       return nsFrameState(0);
     }
+    outerFrame = parent;
     parent = parent->GetParent();
   }
   nsFrameState bits = nsFrameState(0);
   const nsGridContainerFrame* gridParent = do_QueryFrame(parent);
   if (gridParent) {
     // NOTE: our NS_FRAME_OUT_OF_FLOW isn't set yet so we check our style.
-    bool isOutOfFlow = StyleDisplay()->IsAbsolutelyPositionedStyle();
+    bool isOutOfFlow =
+        outerFrame->StyleDisplay()->IsAbsolutelyPositionedStyle();
     const auto* pos = StylePosition();
     bool isColSubgrid = pos->mGridTemplateColumns.IsSubgrid();
     // OOF subgrids don't create tracks in the parent, so we need to check that
