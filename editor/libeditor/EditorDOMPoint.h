@@ -13,6 +13,7 @@
 #include "mozilla/dom/Text.h"
 #include "nsAtom.h"
 #include "nsCOMPtr.h"
+#include "nsCRT.h"
 #include "nsGkAtoms.h"
 #include "nsIContent.h"
 #include "nsINode.h"
@@ -67,6 +68,7 @@ class EditorDOMPointBase;
 typedef EditorDOMPointBase<nsCOMPtr<nsINode>, nsCOMPtr<nsIContent>>
     EditorDOMPoint;
 typedef EditorDOMPointBase<nsINode*, nsIContent*> EditorRawDOMPoint;
+typedef EditorDOMPointBase<RefPtr<dom::Text>, nsIContent*> EditorDOMPointInText;
 
 template <typename ParentType, typename ChildType>
 class EditorDOMPointBase final {
@@ -156,12 +158,30 @@ class EditorDOMPointBase final {
     return nsIContent::FromNodeOrNull(mParent);
   }
 
+  MOZ_NEVER_INLINE_DEBUG nsIContent* ContainerAsContent() const {
+    MOZ_ASSERT(mParent);
+    MOZ_ASSERT(mParent->IsContent());
+    return mParent->AsContent();
+  }
+
   dom::Element* GetContainerAsElement() const {
     return dom::Element::FromNodeOrNull(mParent);
   }
 
+  MOZ_NEVER_INLINE_DEBUG dom::Element* ContainerAsElement() const {
+    MOZ_ASSERT(mParent);
+    MOZ_ASSERT(mParent->IsElement());
+    return mParent->AsElement();
+  }
+
   dom::Text* GetContainerAsText() const {
     return dom::Text::FromNodeOrNull(mParent);
+  }
+
+  MOZ_NEVER_INLINE_DEBUG dom::Text* ContainerAsText() const {
+    MOZ_ASSERT(mParent);
+    MOZ_ASSERT(IsInTextNode());
+    return mParent->AsText();
   }
 
   /**
@@ -187,6 +207,11 @@ class EditorDOMPointBase final {
   bool CanContainerHaveChildren() const {
     return mParent && mParent->IsContainerNode();
   }
+
+  /**
+   * IsContainerEmpty() returns true if it has no children or its text is empty.
+   */
+  bool IsContainerEmpty() const { return mParent && !mParent->Length(); }
 
   /**
    * IsInDataNode() returns true if the container node is a data node including
@@ -289,6 +314,44 @@ class EditorDOMPointBase final {
     // Fix child node now.
     const_cast<SelfType*>(this)->EnsureChild();
     return mChild ? mChild->GetPreviousSibling() : mParent->GetLastChild();
+  }
+
+  /**
+   * Simple accessors of the character in dom::Text so that when you call
+   * these methods, you need to guarantee that the container is a dom::Text.
+   */
+  MOZ_NEVER_INLINE_DEBUG char16_t Char() const {
+    MOZ_ASSERT(IsSetAndValid());
+    MOZ_ASSERT(!IsEndOfContainer());
+    return ContainerAsText()->TextFragment().CharAt(mOffset.value());
+  }
+  MOZ_NEVER_INLINE_DEBUG bool IsCharASCIISpace() const {
+    return nsCRT::IsAsciiSpace(Char());
+  }
+  MOZ_NEVER_INLINE_DEBUG bool IsCharNBSP() const { return Char() == 0x00A0; }
+
+  MOZ_NEVER_INLINE_DEBUG char16_t PreviousChar() const {
+    MOZ_ASSERT(IsSetAndValid());
+    MOZ_ASSERT(!IsStartOfContainer());
+    return ContainerAsText()->TextFragment().CharAt(mOffset.value() - 1);
+  }
+  MOZ_NEVER_INLINE_DEBUG bool IsPreviousCharASCIISpace() const {
+    return nsCRT::IsAsciiSpace(PreviousChar());
+  }
+  MOZ_NEVER_INLINE_DEBUG bool IsPreviousCharNBSP() const {
+    return PreviousChar() == 0x00A0;
+  }
+
+  MOZ_NEVER_INLINE_DEBUG char16_t NextChar() const {
+    MOZ_ASSERT(IsSetAndValid());
+    MOZ_ASSERT(!IsAtLastContent() && !IsEndOfContainer());
+    return ContainerAsText()->TextFragment().CharAt(mOffset.value() + 1);
+  }
+  MOZ_NEVER_INLINE_DEBUG bool IsNextCharASCIISpace() const {
+    return nsCRT::IsAsciiSpace(NextChar());
+  }
+  MOZ_NEVER_INLINE_DEBUG bool IsNextCharNBSP() const {
+    return NextChar() == 0x00A0;
   }
 
   uint32_t Offset() const {
@@ -408,6 +471,24 @@ class EditorDOMPointBase final {
       const StrongPtr<ContainerType>& aContainer) {
     MOZ_ASSERT(aContainer.get());
     return After(*aContainer.get());
+  }
+
+  /**
+   * NextPoint() and PreviousPoint() returns next/previous DOM point in
+   * the container.
+   */
+  MOZ_NEVER_INLINE_DEBUG SelfType NextPoint() const {
+    NS_ASSERTION(!IsEndOfContainer(), "Should not be at end of the container");
+    SelfType result(*this);
+    result.AdvanceOffset();
+    return result;
+  }
+  MOZ_NEVER_INLINE_DEBUG SelfType PreviousPoint() const {
+    NS_ASSERTION(!IsStartOfContainer(),
+                 "Should not be at start of the container");
+    SelfType result(*this);
+    result.RewindOffset();
+    return result;
   }
 
   /**
@@ -580,7 +661,7 @@ class EditorDOMPointBase final {
       }
       NS_WARNING_ASSERTION(!mOffset.isSome() || mParent->GetChildAt_Deprecated(
                                                     mOffset.value()) == mChild,
-                           "If mOffset and mChild are mismatched");
+                           "mOffset and mChild are mismatched");
       return false;
     }
     MOZ_ASSERT(mOffset.isSome());
@@ -609,11 +690,39 @@ class EditorDOMPointBase final {
       }
       NS_WARNING_ASSERTION(!mOffset.isSome() || mParent->GetChildAt_Deprecated(
                                                     mOffset.value()) == mChild,
-                           "If mOffset and mChild are mismatched");
+                           "mOffset and mChild are mismatched");
       return false;
     }
     MOZ_ASSERT(mOffset.isSome());
     return mOffset.value() == mParent->Length();
+  }
+
+  /**
+   * IsAtLastContent() returns true when it refers last child of the container
+   * or last character offset of text node.
+   */
+  bool IsAtLastContent() const {
+    if (NS_WARN_IF(!mParent)) {
+      return false;
+    }
+    if (mParent->IsContainerNode()) {
+      return mOffset.value() == mParent->Length() - 1;
+    }
+    if (mIsChildInitialized) {
+      if (mChild && mChild == mParent->GetLastChild()) {
+        NS_WARNING_ASSERTION(
+            !mOffset.isSome() || mOffset.value() == mParent->Length() - 1,
+            "If mOffset was initialized, it should be length - 1 of the "
+            "container");
+        return true;
+      }
+      NS_WARNING_ASSERTION(!mOffset.isSome() || mParent->GetChildAt_Deprecated(
+                                                    mOffset.value()) == mChild,
+                           "mOffset and mChild are mismatched");
+      return false;
+    }
+    MOZ_ASSERT(mOffset.isSome());
+    return mOffset.value() == mParent->Length() - 1;
   }
 
   bool IsBRElementAtEndOfContainer() const {
