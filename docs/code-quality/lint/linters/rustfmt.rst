@@ -1,7 +1,7 @@
 Rustfmt
 =======
 
-`rustfmt`_ is the tool for Rust coding style.
+`rustfmt <https://github.com/rust-lang/rustfmt>`__ is the tool for Rust coding style.
 
 Run Locally
 -----------
