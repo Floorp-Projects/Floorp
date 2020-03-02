@@ -1,12 +1,12 @@
 ESLint
 ======
 
-`ESLint`_ is a popular linter for JavaScript.
+`ESLint <http://eslint.org/>`__ is a popular linter for JavaScript.
 
 Run Locally
 -----------
 
-The mozlint integration of `ESLint`_ can be run using mach:
+The mozlint integration of `ESLint <http://eslint.org/>`__ can be run using mach:
 
 .. parsed-literal::
 
@@ -19,13 +19,13 @@ ESLint.
 Configuration
 -------------
 
-The `ESLint`_ mozilla-central integration uses a blacklist to exclude certain directories from being
+The ESLint mozilla-central integration uses a blacklist to exclude certain directories from being
 linted. This lives in ``topsrcdir/.eslintignore``. If you don't wish your directory to be linted, it
 must be added here.
 
 The global configuration file lives in ``topsrcdir/.eslintrc``. This global configuration can be
 overridden by including an ``.eslintrc`` in the appropriate subdirectory. For an overview of the
-supported configuration, see `ESLint's documentation`_.
+supported configuration, see `ESLint's documentation <http://eslint.org/docs/user-guide/configuring>`__.
 
 
 Autofix
@@ -51,10 +51,6 @@ ESLint Plugin SpiderMonkey JS
 
 In addition to default ESLint rules, there is an extra processor for SpiderMonkey
 code :doc:`Mozilla ESLint SpiderMonkey JS <eslint-plugin-spidermonkey-js>`.
-
-
-.. _ESLint: http://eslint.org/
-.. _ESLint's documentation: http://eslint.org/docs/user-guide/configuring
 
 
 .. toctree::

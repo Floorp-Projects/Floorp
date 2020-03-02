@@ -1,7 +1,7 @@
 Codespell
 =========
 
-`codespell`_ is a popular tool to look for typical typos in the source code.
+`codespell <https://github.com/codespell-project/codespell/>`__ is a popular tool to look for typical typos in the source code.
 
 It is enabled mostly for the documentation and English locale files.
 
@@ -27,7 +27,6 @@ Autofix
 
 Codespell provides a ``--fix`` option. It is based on the ``-w`` option provided by upstream.
 
-.. _codespell: https://github.com/codespell-project/codespell/
 
 Sources
 -------

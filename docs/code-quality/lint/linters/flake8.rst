@@ -1,12 +1,12 @@
 Flake8
 ======
 
-`Flake8`_ is a popular lint wrapper for python. Under the hood, it runs three other tools and
+`Flake8 <https://flake8.readthedocs.io/en/latest/>`__ is a popular lint wrapper for python. Under the hood, it runs three other tools and
 combines their results:
 
-* `pep8`_ for checking style
-* `pyflakes`_ for checking syntax
-* `mccabe`_ for checking complexity
+* `pep8 <http://pep8.readthedocs.io/en/latest/>`__ for checking style
+* `pyflakes <https://github.com/pyflakes/pyflakes>`__ for checking syntax
+* `mccabe <https://github.com/pycqa/mccabe>`__ for checking complexity
 
 
 Run Locally
@@ -38,14 +38,14 @@ be re-defined.
 .. warning::
 
     Only ``.flake8`` files that live in a directory that is explicitly included in the ``include``
-    directive will be considered. See `bug 1277851`_ for more details.
+    directive will be considered. See `bug 1277851 <https://bugzilla.mozilla.org/show_bug.cgi?id=1277851>`__ for more details.
 
-For an overview of the supported configuration, see `flake8's documentation`_.
+For an overview of the supported configuration, see `flake8's documentation <https://flake8.readthedocs.io/en/latest/config.html>`__.
 
 Autofix
 -------
 
-The flake8 linter provides a ``--fix`` option. It is based on `autopep8`_.
+The flake8 linter provides a ``--fix`` option. It is based on `autopep8 <https://github.com/hhatto/autopep8>`__.
 Please note that autopep8 does NOT fix all issues reported by flake8.
 
 
@@ -54,12 +54,3 @@ Sources
 
 * `Configuration (YAML) <https://searchfox.org/mozilla-central/source/tools/lint/flake8.yml>`_
 * `Source <https://searchfox.org/mozilla-central/source/tools/lint/python/flake8.py>`_
-
-
-.. _Flake8: https://flake8.readthedocs.io/en/latest/
-.. _pep8: http://pep8.readthedocs.io/en/latest/
-.. _pyflakes: https://github.com/pyflakes/pyflakes
-.. _mccabe: https://github.com/pycqa/mccabe
-.. _bug 1277851: https://bugzilla.mozilla.org/show_bug.cgi?id=1277851
-.. _flake8's documentation: https://flake8.readthedocs.io/en/latest/config.html
-.. _autopep8: https://github.com/hhatto/autopep8
