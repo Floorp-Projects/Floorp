@@ -146,23 +146,15 @@ class LoginsFragment : PreferenceFragmentCompat(), AccountObserver {
     override fun onAuthenticationProblems() = updateSyncPreferenceNeedsReauth()
 
     val isHardwareAvailable: Boolean by lazy {
-        // Temporary fix for certain devices that can't use the current biometrics library
-        // https://github.com/mozilla-mobile/fenix/issues/7603
-        when {
-            Build.MANUFACTURER.toLowerCase().contains("oneplus") -> {
-                false
-            }
-            Build.VERSION.SDK_INT >= M -> {
-                context?.let {
-                    val bm = BiometricManager.from(it)
-                    val canAuthenticate = bm.canAuthenticate()
-                    !(canAuthenticate == BiometricManager.BIOMETRIC_ERROR_NO_HARDWARE ||
-                            canAuthenticate == BiometricManager.BIOMETRIC_ERROR_HW_UNAVAILABLE)
-                } ?: false
-            }
-            else -> {
-                false
-            }
+        if (Build.VERSION.SDK_INT >= M) {
+            context?.let {
+                val bm = BiometricManager.from(it)
+                val canAuthenticate = bm.canAuthenticate()
+                !(canAuthenticate == BiometricManager.BIOMETRIC_ERROR_NO_HARDWARE ||
+                        canAuthenticate == BiometricManager.BIOMETRIC_ERROR_HW_UNAVAILABLE)
+            } ?: false
+        } else {
+            false
         }
     }
 
