@@ -127,14 +127,50 @@ void DocumentOrShadowRoot::SetAdoptedStyleSheets(
   auto* shadow = ShadowRoot::FromNode(AsNode());
   MOZ_ASSERT((mKind == Kind::ShadowRoot) == !!shadow);
 
-  ClearAdoptedStyleSheets();
+  StyleSheetSet set(aAdoptedStyleSheets.Length());
+  size_t commonPrefix = 0;
+
+  // Find the index at which the new array differs from the old array.
+  // We don't want to do extra work for the sheets that both arrays have.
+  size_t min =
+      std::min(aAdoptedStyleSheets.Length(), mAdoptedStyleSheets.Length());
+  for (size_t i = 0; i < min; ++i) {
+    if (aAdoptedStyleSheets[i] != mAdoptedStyleSheets[i]) {
+      break;
+    }
+    ++commonPrefix;
+    set.PutEntry(mAdoptedStyleSheets[i]);
+  }
+
+  // Try to truncate the sheets to a common prefix.
+  // If the prefix contains duplicates of sheets that we are removing,
+  // we are just going to re-build everything from scratch.
+  if (commonPrefix != mAdoptedStyleSheets.Length()) {
+    StyleSheetSet removedSet(mAdoptedStyleSheets.Length() - commonPrefix);
+    for (size_t i = mAdoptedStyleSheets.Length(); i != commonPrefix; --i) {
+      RefPtr<StyleSheet> sheetToRemove = mAdoptedStyleSheets.PopLastElement();
+      if (MOZ_UNLIKELY(set.Contains(sheetToRemove))) {
+        // Fixing duplicate sheets would require insertions/removals from the
+        // style set. We may as well just rebuild the whole thing from scratch.
+        set.Clear();
+        // Note that setting this to zero means we'll continue the loop until
+        // all the sheets are cleared.
+        commonPrefix = 0;
+      }
+      if (MOZ_LIKELY(removedSet.EnsureInserted(sheetToRemove))) {
+        RemoveSheetFromStylesIfApplicable(*sheetToRemove);
+        sheetToRemove->RemoveAdopter(*this);
+      }
+    }
+    mAdoptedStyleSheets.TruncateLength(commonPrefix);
+  }
 
   // 3. Set the adopted style sheets to the new sheets
   mAdoptedStyleSheets.SetCapacity(aAdoptedStyleSheets.Length());
 
-  AdoptedStyleSheetSet set(aAdoptedStyleSheets.Length());
-  for (const OwningNonNull<StyleSheet>& sheet : aAdoptedStyleSheets) {
-    if (MOZ_UNLIKELY(!set.EnsureInserted(sheet.get()))) {
+  // Only add sheets that are not already in the common prefix.
+  for (const auto& sheet : MakeSpan(aAdoptedStyleSheets).From(commonPrefix)) {
+    if (MOZ_UNLIKELY(!set.EnsureInserted(sheet))) {
       // The idea is that this case is rare, so we pay the price of removing the
       // old sheet from the styles and append it later rather than the other way
       // around.
