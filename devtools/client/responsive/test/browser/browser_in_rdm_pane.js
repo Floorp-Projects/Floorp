@@ -31,5 +31,5 @@ addRDMTask(
       "After RDM is opened, document should have inRDMPane set to true."
     );
   },
-  true
+  { usingBrowserUI: true }
 );

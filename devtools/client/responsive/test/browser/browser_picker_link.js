@@ -21,7 +21,7 @@ addRDMTask(
     // XXX: Using toggleTouchSimulation waits for browser loaded, which is not
     // fired here?
     info("Toggle Touch simulation");
-    const { document } = ui.getBrowserWindow();
+    const { document } = ui.toolWindow;
     const touchButton = document.getElementById("touch-simulation-button");
     const changed = once(ui, "touch-simulation-changed");
     touchButton.click();
@@ -42,15 +42,14 @@ addRDMTask(
     info("Click and pick the link");
     await pickElement(inspector, ui, ".picker-link");
 
-    // Wait for 2 seconds to allow the page to start navigation.
+    // Wait until page to start navigation.
     await wait(2000);
     ok(
       !hasNavigated,
       "The page should not have navigated when picking the <a> element"
     );
-  }
-  // XXX: Enable testing against new browser UI.
-  // true
+  },
+  { usingBrowserUI: true }
 );
 
 /**

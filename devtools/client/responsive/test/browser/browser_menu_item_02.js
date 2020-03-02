@@ -12,7 +12,7 @@ const isMenuCheckedFor = ({ document }) => {
   return menu.getAttribute("checked") === "true";
 };
 
-add_task(async function() {
+addRDMTask(async function() {
   const window1 = await BrowserTestUtils.openNewBrowserWindow();
   const { gBrowser } = window1;
 
