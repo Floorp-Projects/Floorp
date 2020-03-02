@@ -1065,6 +1065,20 @@ TEST(TestCookie, TestCookieMain)
   GetACookie(cookieService, "http://www.notsamesite.com", nullptr, cookie);
   EXPECT_TRUE(CheckResult(cookie.get(), MUST_BE_NULL));
 
+  static const char* secureURIs[] = {
+      "http://localhost", "http://localhost:1234", "http://127.0.0.1",
+      "http://127.0.0.2", "http://127.1.0.1",      "http://[::1]",
+      // TODO bug 1220810 "http://xyzzy.localhost"
+  };
+
+  uint32_t numSecureURIs = sizeof(secureURIs) / sizeof(const char*);
+  for (uint32_t i = 0; i < numSecureURIs; ++i) {
+    SetACookie(cookieService, secureURIs[i], nullptr, "test=basic; secure",
+               nullptr);
+    GetACookie(cookieService, secureURIs[i], nullptr, cookie);
+    EXPECT_TRUE(CheckResult(cookie.get(), MUST_EQUAL, "test=basic"));
+  }
+
   // XXX the following are placeholders: add these tests please!
   // *** "noncompliant cookie" tests
   // *** IP address tests
