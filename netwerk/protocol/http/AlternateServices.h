@@ -203,6 +203,7 @@ class AltSvcCache {
   nsresult GetAltSvcCacheKeys(nsTArray<nsCString>& value);
 
  private:
+  void EnsureStorageInited();
   already_AddRefed<AltSvcMapping> LookupMapping(const nsCString& key,
                                                 bool privateBrowsing);
   RefPtr<DataStorage> mStorage;

@@ -19,6 +19,7 @@
 #include "nsIWellKnownOpportunisticUtils.h"
 #include "mozilla/StaticPrefs_network.h"
 #include "mozilla/dom/PContent.h"
+#include "mozilla/SyncRunnable.h"
 
 /* RFC 7838 Alternative Services
    http://httpwg.org/http-extensions/opsec.html
@@ -863,6 +864,45 @@ TransactionObserver::OnStopRequest(nsIRequest* aRequest, nsresult code) {
   return NS_OK;
 }
 
+void AltSvcCache::EnsureStorageInited() {
+  if (mStorage) {
+    return;
+  }
+
+  auto initTask = [&]() {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    // DataStorage gives synchronous access to a memory based hash table
+    // that is backed by disk where those writes are done asynchronously
+    // on another thread
+    mStorage = DataStorage::Get(DataStorageClass::AlternateServices);
+    if (!mStorage) {
+      LOG(("AltSvcCache::EnsureStorageInited WARN NO STORAGE\n"));
+      return;
+    }
+
+    if (NS_FAILED(mStorage->Init(nullptr))) {
+      mStorage = nullptr;
+    }
+
+    mStorageEpoch = NowInSeconds();
+  };
+
+  if (NS_IsMainThread()) {
+    initTask();
+    return;
+  }
+
+  nsCOMPtr<nsIEventTarget> main = GetMainThreadEventTarget();
+  if (!main) {
+    return;
+  }
+
+  SyncRunnable::DispatchToThread(
+      main, new SyncRunnable(NS_NewRunnableFunction(
+                "AltSvcCache::EnsureStorageInited", initTask)));
+}
+
 already_AddRefed<AltSvcMapping> AltSvcCache::LookupMapping(
     const nsCString& key, bool privateBrowsing) {
   LOG(("AltSvcCache::LookupMapping %p %s\n", this, key.get()));
@@ -1042,24 +1082,9 @@ already_AddRefed<AltSvcMapping> AltSvcCache::GetAltServiceMapping(
     const nsACString& scheme, const nsACString& host, int32_t port,
     bool privateBrowsing, bool isolated, const nsACString& topWindowOrigin,
     const OriginAttributes& originAttributes) {
-  bool isHTTPS;
-  MOZ_ASSERT(NS_IsMainThread());
-  if (!mStorage) {
-    // DataStorage gives synchronous access to a memory based hash table
-    // that is backed by disk where those writes are done asynchronously
-    // on another thread
-    mStorage = DataStorage::Get(DataStorageClass::AlternateServices);
-    if (mStorage) {
-      if (NS_FAILED(mStorage->Init(nullptr))) {
-        mStorage = nullptr;
-      }
-    }
-    if (!mStorage) {
-      LOG(("AltSvcCache::GetAltServiceMapping WARN NO STORAGE\n"));
-    }
-    mStorageEpoch = NowInSeconds();
-  }
+  EnsureStorageInited();
 
+  bool isHTTPS;
   if (NS_FAILED(SchemeIsHTTPS(scheme, isHTTPS))) {
     return nullptr;
   }
