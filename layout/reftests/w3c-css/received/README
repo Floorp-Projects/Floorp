@@ -1,5 +1,0 @@
-W3C CSS Test Suite Import Directory
------------------------------------
-
-This directory contains reftests pulled from the CSSWG test repository
-using ../import-tests.py .
