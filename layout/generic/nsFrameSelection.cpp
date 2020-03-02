@@ -2595,23 +2595,33 @@ nsresult nsFrameSelection::RestrictCellsToSelection(nsIContent* aTable,
 
 nsresult nsFrameSelection::SelectRowOrColumn(nsIContent* aCellContent,
                                              TableSelectionMode aTarget) {
-  if (!aCellContent) return NS_ERROR_NULL_POINTER;
+  if (!aCellContent) {
+    return NS_ERROR_NULL_POINTER;
+  }
 
   nsIContent* table = GetParentTable(aCellContent);
-  if (!table) return NS_ERROR_NULL_POINTER;
+  if (!table) {
+    return NS_ERROR_NULL_POINTER;
+  }
 
   // Get table and cell layout interfaces to access
   // cell data based on cellmap location
   // Frames are not ref counted, so don't use an nsCOMPtr
   nsTableWrapperFrame* tableFrame = do_QueryFrame(table->GetPrimaryFrame());
-  if (!tableFrame) return NS_ERROR_FAILURE;
+  if (!tableFrame) {
+    return NS_ERROR_FAILURE;
+  }
   nsITableCellLayout* cellLayout = GetCellLayout(aCellContent);
-  if (!cellLayout) return NS_ERROR_FAILURE;
+  if (!cellLayout) {
+    return NS_ERROR_FAILURE;
+  }
 
   // Get location of target cell:
   int32_t rowIndex, colIndex;
   nsresult result = cellLayout->GetCellIndexes(rowIndex, colIndex);
-  if (NS_FAILED(result)) return result;
+  if (NS_FAILED(result)) {
+    return result;
+  }
 
   // Be sure we start at proper beginning
   // (This allows us to select row or col given ANY cell!)
@@ -2627,9 +2637,13 @@ nsresult nsFrameSelection::SelectRowOrColumn(nsIContent* aCellContent,
     // Loop through all cells in column or row to find first and last
     nsCOMPtr<nsIContent> curCellContent =
         tableFrame->GetCellAt(rowIndex, colIndex);
-    if (!curCellContent) break;
+    if (!curCellContent) {
+      break;
+    }
 
-    if (!firstCell) firstCell = curCellContent;
+    if (!firstCell) {
+      firstCell = curCellContent;
+    }
 
     lastCell = std::move(curCellContent);
 
@@ -2648,7 +2662,9 @@ nsresult nsFrameSelection::SelectRowOrColumn(nsIContent* aCellContent,
     if (!mTableSelection.mStartSelectedCell) {
       // We are starting a new block, so select the first cell
       result = SelectCellElement(firstCell);
-      if (NS_FAILED(result)) return result;
+      if (NS_FAILED(result)) {
+        return result;
+      }
       mTableSelection.mStartSelectedCell = firstCell;
     }
 
