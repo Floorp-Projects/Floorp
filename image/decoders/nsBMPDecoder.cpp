@@ -102,6 +102,7 @@
 #include "mozilla/Likely.h"
 
 #include "RasterImage.h"
+#include "SurfacePipeFactory.h"
 #include <algorithm>
 
 using namespace mozilla::gfx;
@@ -136,7 +137,7 @@ using namespace bmp;
 /// the next pixel.
 static void SetPixel(uint32_t*& aDecoded, uint8_t aRed, uint8_t aGreen,
                      uint8_t aBlue, uint8_t aAlpha = 0xFF) {
-  *aDecoded++ = gfxPackedPixel(aAlpha, aRed, aGreen, aBlue);
+  *aDecoded++ = gfxPackedPixelNoPreMultiply(aAlpha, aRed, aGreen, aBlue);
 }
 
 static void SetPixel(uint32_t*& aDecoded, uint8_t idx,
@@ -246,10 +247,6 @@ nsresult nsBMPDecoder::FinishInternal() {
       mCurrentPos = 0;
       FinishRow();
     }
-
-    // Invalidate.
-    nsIntRect r(0, 0, mH.mWidth, AbsoluteHeight());
-    PostInvalidation(r);
 
     MOZ_ASSERT_IF(mDoesHaveTransparency, mMayHaveTransparency);
 
@@ -382,28 +379,19 @@ bool BitFields::IsR8G8B8() const {
          mAlpha.mMask == 0x0;
 }
 
-uint32_t* nsBMPDecoder::RowBuffer() {
-  if (mDownscaler) {
-    return reinterpret_cast<uint32_t*>(mDownscaler->RowBuffer()) + mCurrentPos;
-  }
+uint32_t* nsBMPDecoder::RowBuffer() { return mRowBuffer.get() + mCurrentPos; }
 
-  // Convert from row (1..mHeight) to absolute line (0..mHeight-1).
-  int32_t line = (mH.mHeight < 0) ? -mH.mHeight - mCurrentRow : mCurrentRow - 1;
-  int32_t offset = line * mH.mWidth + mCurrentPos;
-  return reinterpret_cast<uint32_t*>(mImageData) + offset;
+void nsBMPDecoder::ClearRowBufferRemainder() {
+  int32_t len = mH.mWidth - mCurrentPos;
+  memset(RowBuffer(), mMayHaveTransparency ? 0 : 0xFF, len * sizeof(uint32_t));
 }
 
 void nsBMPDecoder::FinishRow() {
-  if (mDownscaler) {
-    mDownscaler->CommitRow();
-
-    if (mDownscaler->HasInvalidation()) {
-      DownscalerInvalidRect invalidRect = mDownscaler->TakeInvalidRect();
-      PostInvalidation(invalidRect.mOriginalSizeRect,
-                       Some(invalidRect.mTargetSizeRect));
-    }
-  } else {
-    PostInvalidation(IntRect(0, mCurrentRow, mH.mWidth, 1));
+  mPipe.WriteBuffer(mRowBuffer.get());
+  Maybe<SurfaceInvalidRect> invalidRect = mPipe.TakeInvalidRect();
+  if (invalidRect) {
+    PostInvalidation(invalidRect->mInputSpaceRect,
+                     Some(invalidRect->mOutputSpaceRect));
   }
   mCurrentRow--;
 }
@@ -655,27 +643,37 @@ LexerTransition<nsBMPDecoder::State> nsBMPDecoder::ReadBitfields(
     mBytesPerColor = (mH.mBIHSize == InfoHeaderLength::WIN_V2) ? 3 : 4;
   }
 
-  MOZ_ASSERT(!mImageData, "Already have a buffer allocated?");
-  nsresult rv = AllocateFrame(OutputSize(), mMayHaveTransparency
-                                                ? SurfaceFormat::OS_RGBA
-                                                : SurfaceFormat::OS_RGBX);
-  if (NS_FAILED(rv)) {
+  SurfaceFormat format;
+  SurfacePipeFlags pipeFlags = SurfacePipeFlags();
+
+  if (mMayHaveTransparency) {
+    format = SurfaceFormat::OS_RGBA;
+    if (!(GetSurfaceFlags() & SurfaceFlags::NO_PREMULTIPLY_ALPHA)) {
+      pipeFlags |= SurfacePipeFlags::PREMULTIPLY_ALPHA;
+    }
+  } else {
+    format = SurfaceFormat::OS_RGBX;
+  }
+
+  if (mH.mHeight >= 0) {
+    // BMPs store their rows in reverse order, so we may need to flip.
+    pipeFlags |= SurfacePipeFlags::FLIP_VERTICALLY;
+  }
+
+  mRowBuffer.reset(new (fallible) uint32_t[mH.mWidth]);
+  if (!mRowBuffer) {
     return Transition::TerminateFailure();
   }
-  MOZ_ASSERT(mImageData, "Should have a buffer now");
 
-  if (mDownscaler) {
-    // BMPs store their rows in reverse order, so the downscaler needs to
-    // reverse them again when writing its output. Unless the height is
-    // negative!
-    rv = mDownscaler->BeginFrame(Size(), Nothing(), mImageData,
-                                 mMayHaveTransparency,
-                                 /* aFlipVertically = */ mH.mHeight >= 0);
-    if (NS_FAILED(rv)) {
-      return Transition::TerminateFailure();
-    }
+  Maybe<SurfacePipe> pipe = SurfacePipeFactory::CreateSurfacePipe(
+      this, Size(), OutputSize(), FullFrame(), format, format, Nothing(),
+      mTransform, pipeFlags);
+  if (!pipe) {
+    return Transition::TerminateFailure();
   }
 
+  mPipe = std::move(*pipe);
+  ClearRowBufferRemainder();
   return Transition::To(State::COLOR_TABLE, mNumColors * mBytesPerColor);
 }
 
@@ -825,29 +823,20 @@ LexerTransition<nsBMPDecoder::State> nsBMPDecoder::ReadPixelRow(
             // it's actually an ARGB image. Which means every pixel we've seen
             // so far has been fully transparent. So we go back and redo them.
 
-            // Tell the Downscaler to go back to the start.
-            if (mDownscaler) {
-              mDownscaler->ResetForNextProgressivePass();
-            }
+            // Tell the SurfacePipe to go back to the start.
+            mPipe.ResetToFirstRow();
 
             // Redo the complete rows we've already done.
             MOZ_ASSERT(mCurrentPos == 0);
             int32_t currentRow = mCurrentRow;
             mCurrentRow = AbsoluteHeight();
+            ClearRowBufferRemainder();
             while (mCurrentRow > currentRow) {
-              dst = RowBuffer();
-              for (int32_t i = 0; i < mH.mWidth; i++) {
-                SetPixel(dst, 0, 0, 0, 0);
-              }
               FinishRow();
             }
 
-            // Redo the part of this row we've already done.
-            dst = RowBuffer();
-            int32_t n = mH.mWidth - lpos;
-            for (int32_t i = 0; i < n; i++) {
-              SetPixel(dst, 0, 0, 0, 0);
-            }
+            // Reset the row pointer back to where we started.
+            dst = RowBuffer() + (mH.mWidth - lpos);
 
             MOZ_ASSERT(mMayHaveTransparency);
             mDoesHaveTransparency = true;
@@ -929,6 +918,7 @@ LexerTransition<nsBMPDecoder::State> nsBMPDecoder::ReadRLESegment(
   }
 
   if (byte2 == RLE::ESCAPE_EOL) {
+    ClearRowBufferRemainder();
     mCurrentPos = 0;
     FinishRow();
     return mCurrentRow == 0
@@ -966,11 +956,9 @@ LexerTransition<nsBMPDecoder::State> nsBMPDecoder::ReadRLEDelta(
   MOZ_ASSERT(mMayHaveTransparency);
   mDoesHaveTransparency = true;
 
-  if (mDownscaler) {
-    // Clear the skipped pixels. (This clears to the end of the row,
-    // which is perfect if there's a Y delta and harmless if not).
-    mDownscaler->ClearRestOfRow(/* aStartingAtCol = */ mCurrentPos);
-  }
+  // Clear the skipped pixels. (This clears to the end of the row,
+  // which is perfect if there's a Y delta and harmless if not).
+  ClearRowBufferRemainder();
 
   // Handle the XDelta.
   mCurrentPos += uint8_t(aData[0]);
@@ -980,16 +968,15 @@ LexerTransition<nsBMPDecoder::State> nsBMPDecoder::ReadRLEDelta(
 
   // Handle the Y Delta.
   int32_t yDelta = std::min<int32_t>(uint8_t(aData[1]), mCurrentRow);
-  mCurrentRow -= yDelta;
-
-  if (mDownscaler && yDelta > 0) {
+  if (yDelta > 0) {
     // Commit the current row (the first of the skipped rows).
-    mDownscaler->CommitRow();
+    FinishRow();
 
-    // Clear and commit the remaining skipped rows.
+    // Clear and commit the remaining skipped rows. We want to be careful not
+    // to change mCurrentPos here.
+    memset(mRowBuffer.get(), 0, mH.mWidth * sizeof(uint32_t));
     for (int32_t line = 1; line < yDelta; line++) {
-      mDownscaler->ClearRow();
-      mDownscaler->CommitRow();
+      FinishRow();
     }
   }
 

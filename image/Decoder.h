@@ -13,7 +13,6 @@
 #include "mozilla/RefPtr.h"
 #include "AnimationParams.h"
 #include "DecoderFlags.h"
-#include "Downscaler.h"
 #include "ImageMetadata.h"
 #include "Orientation.h"
 #include "SourceBuffer.h"
@@ -558,8 +557,6 @@ class Decoder {
       RawAccessFrameRef&& aPreviousFrame);
 
  protected:
-  Maybe<Downscaler> mDownscaler;
-
   /// Color management profile from the ICCP chunk in the image.
   qcms_profile* mInProfile;
 

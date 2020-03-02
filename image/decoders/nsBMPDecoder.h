@@ -11,6 +11,7 @@
 #include "Decoder.h"
 #include "gfxColor.h"
 #include "StreamingLexer.h"
+#include "SurfacePipe.h"
 #include "mozilla/UniquePtr.h"
 
 namespace mozilla {
@@ -179,6 +180,7 @@ class nsBMPDecoder : public Decoder {
   int32_t AbsoluteHeight() const { return abs(mH.mHeight); }
 
   uint32_t* RowBuffer();
+  void ClearRowBufferRemainder();
 
   void FinishRow();
 
@@ -194,7 +196,11 @@ class nsBMPDecoder : public Decoder {
   LexerTransition<State> ReadRLEDelta(const char* aData);
   LexerTransition<State> ReadRLEAbsolute(const char* aData, size_t aLength);
 
+  SurfacePipe mPipe;
+
   StreamingLexer<State> mLexer;
+
+  UniquePtr<uint32_t[]> mRowBuffer;
 
   bmp::Header mH;
 
