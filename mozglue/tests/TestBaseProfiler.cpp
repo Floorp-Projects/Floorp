@@ -663,15 +663,6 @@ void TestModuloBuffer() {
   printf("TestModuloBuffer done\n");
 }
 
-// Backdoor into value of BlockIndex, only for unit-testing.
-static uint64_t ExtractBlockIndex(const BlocksRingBuffer::BlockIndex bi) {
-  uint64_t index;
-  static_assert(sizeof(bi) == sizeof(index),
-                "BlockIndex expected to only contain a uint64_t");
-  memcpy(&index, &bi, sizeof(index));
-  return index;
-};
-
 void TestBlocksRingBufferAPI() {
   printf("TestBlocksRingBufferAPI...\n");
 
@@ -691,8 +682,10 @@ void TestBlocksRingBufferAPI() {
 #define VERIFY_START_END_PUSHED_CLEARED(aStart, aEnd, aPushed, aCleared)  \
   {                                                                       \
     BlocksRingBuffer::State state = rb.GetState();                        \
-    MOZ_RELEASE_ASSERT(ExtractBlockIndex(state.mRangeStart) == (aStart)); \
-    MOZ_RELEASE_ASSERT(ExtractBlockIndex(state.mRangeEnd) == (aEnd));     \
+    MOZ_RELEASE_ASSERT(state.mRangeStart.ConvertToProfileBufferIndex() == \
+                       (aStart));                                         \
+    MOZ_RELEASE_ASSERT(state.mRangeEnd.ConvertToProfileBufferIndex() ==   \
+                       (aEnd));                                           \
     MOZ_RELEASE_ASSERT(state.mPushedBlockCount == (aPushed));             \
     MOZ_RELEASE_ASSERT(state.mClearedBlockCount == (aCleared));           \
   }
@@ -702,7 +695,7 @@ void TestBlocksRingBufferAPI() {
     // - 1 byte for the LEB128 size of 4
     // - 4 bytes for the number.
     // E.g., if we have entries with `123` and `456`:
-    //   .-- Index 0 reserved for empty BlockIndex, nothing there.
+    //   .-- Index 0 reserved for empty ProfileBufferBlockIndex, nothing there.
     //   | .-- first readable block at index 1
     //   | |.-- first block at index 1
     //   | ||.-- 1 byte for the entry size, which is `4` (32 bits)
@@ -716,18 +709,21 @@ void TestBlocksRingBufferAPI() {
     //   - S[4 |   int(123)   ] [4 |   int(456)   ]E
 
     // Empty buffer to start with.
-    // Start&end indices still at 1 (0 is reserved for the default BlockIndex{}
-    // that cannot point at a valid entry), nothing cleared.
+    // Start&end indices still at 1 (0 is reserved for the default
+    // ProfileBufferBlockIndex{} that cannot point at a valid entry), nothing
+    // cleared.
     VERIFY_START_END_PUSHED_CLEARED(1, 1, 0, 0);
 
-    // Default BlockIndex.
-    BlocksRingBuffer::BlockIndex bi0;
+    // Default ProfileBufferBlockIndex.
+    ProfileBufferBlockIndex bi0;
     if (bi0) {
-      MOZ_RELEASE_ASSERT(false, "if (BlockIndex{}) should fail test");
+      MOZ_RELEASE_ASSERT(false,
+                         "if (ProfileBufferBlockIndex{}) should fail test");
     }
     if (!bi0) {
     } else {
-      MOZ_RELEASE_ASSERT(false, "if (!BlockIndex{}) should succeed test");
+      MOZ_RELEASE_ASSERT(false,
+                         "if (!ProfileBufferBlockIndex{}) should succeed test");
     }
     MOZ_RELEASE_ASSERT(!bi0);
     MOZ_RELEASE_ASSERT(bi0 == bi0);
@@ -737,29 +733,29 @@ void TestBlocksRingBufferAPI() {
     MOZ_RELEASE_ASSERT(!(bi0 < bi0));
     MOZ_RELEASE_ASSERT(!(bi0 > bi0));
 
-    // Default BlockIndex can be used, but returns no valid entry.
+    // Default ProfileBufferBlockIndex can be used, but returns no valid entry.
     rb.ReadAt(bi0, [](Maybe<BlocksRingBuffer::EntryReader>&& aMaybeReader) {
       MOZ_RELEASE_ASSERT(aMaybeReader.isNothing());
     });
 
     // Push `1` directly.
-    MOZ_RELEASE_ASSERT(ExtractBlockIndex(rb.PutObject(uint32_t(1))) == 1);
+    MOZ_RELEASE_ASSERT(
+        rb.PutObject(uint32_t(1)).ConvertToProfileBufferIndex() == 1);
     //   0   1   2   3   4   5   6   7   8   9  10  11  12  13  14  15
     //   - S[4 |    int(1)    ]E
     VERIFY_START_END_PUSHED_CLEARED(1, 6, 1, 0);
 
-    // Push `2` through ReserveAndPut, check output BlockIndex.
+    // Push `2` through ReserveAndPut, check output ProfileBufferBlockIndex.
     auto bi2 = rb.ReserveAndPut([]() { return sizeof(uint32_t); },
                                 [](BlocksRingBuffer::EntryWriter* aEW) {
                                   MOZ_RELEASE_ASSERT(!!aEW);
                                   aEW->WriteObject(uint32_t(2));
                                   return aEW->CurrentBlockIndex();
                                 });
-    static_assert(
-        std::is_same<decltype(bi2), BlocksRingBuffer::BlockIndex>::value,
-        "All index-returning functions should return a "
-        "BlocksRingBuffer::BlockIndex");
-    MOZ_RELEASE_ASSERT(ExtractBlockIndex(bi2) == 6);
+    static_assert(std::is_same<decltype(bi2), ProfileBufferBlockIndex>::value,
+                  "All index-returning functions should return a "
+                  "ProfileBufferBlockIndex");
+    MOZ_RELEASE_ASSERT(bi2.ConvertToProfileBufferIndex() == 6);
     //   0   1   2   3   4   5   6   7   8   9  10  11  12  13  14  15
     //   - S[4 |    int(1)    ] [4 |    int(2)    ]E
     VERIFY_START_END_PUSHED_CLEARED(1, 11, 2, 0);
@@ -779,15 +775,16 @@ void TestBlocksRingBufferAPI() {
       MOZ_RELEASE_ASSERT(aMaybeReader.isNothing());
     });
 
-    // BlockIndex tests.
+    // ProfileBufferBlockIndex tests.
     if (bi2) {
     } else {
-      MOZ_RELEASE_ASSERT(false,
-                         "if (non-default-BlockIndex) should succeed test");
+      MOZ_RELEASE_ASSERT(
+          false,
+          "if (non-default-ProfileBufferBlockIndex) should succeed test");
     }
     if (!bi2) {
-      MOZ_RELEASE_ASSERT(false,
-                         "if (!non-default-BlockIndex) should fail test");
+      MOZ_RELEASE_ASSERT(
+          false, "if (!non-default-ProfileBufferBlockIndex) should fail test");
     }
 
     MOZ_RELEASE_ASSERT(!!bi2);
@@ -832,7 +829,7 @@ void TestBlocksRingBufferAPI() {
         rb.Put(sizeof(uint32_t), [&](BlocksRingBuffer::EntryWriter* aEW) {
           MOZ_RELEASE_ASSERT(!!aEW);
           aEW->WriteObject(uint32_t(3));
-          return float(ExtractBlockIndex(aEW->CurrentBlockIndex()));
+          return float(aEW->CurrentBlockIndex().ConvertToProfileBufferIndex());
         });
     static_assert(std::is_same<decltype(put3), float>::value,
                   "Expect float as returned by callback.");
@@ -865,9 +862,9 @@ void TestBlocksRingBufferAPI() {
     });
     MOZ_RELEASE_ASSERT(count == 3);
 
-    // Push `4`, store its BlockIndex for later.
+    // Push `4`, store its ProfileBufferBlockIndex for later.
     // This will wrap around, and clear the first entry.
-    BlocksRingBuffer::BlockIndex bi4 = rb.PutObject(uint32_t(4));
+    ProfileBufferBlockIndex bi4 = rb.PutObject(uint32_t(4));
     // Before:
     //   0   1   2   3   4   5   6   7   8   9  10  11  12  13  14  15 (16)
     //   - S[4 |    int(1)    ] [4 |    int(2)    ] [4 |    int(3)    ]E
@@ -927,10 +924,12 @@ void TestBlocksRingBufferAPI() {
       MOZ_RELEASE_ASSERT(!!aReader);
       // begin() and end() should be at the range edges (verified above).
       MOZ_RELEASE_ASSERT(
-          ExtractBlockIndex(aReader->begin().CurrentBlockIndex()) == 11);
+          aReader->begin().CurrentBlockIndex().ConvertToProfileBufferIndex() ==
+          11);
       MOZ_RELEASE_ASSERT(
-          ExtractBlockIndex(aReader->end().CurrentBlockIndex()) == 26);
-      // Null BlockIndex clamped to the beginning.
+          aReader->end().CurrentBlockIndex().ConvertToProfileBufferIndex() ==
+          26);
+      // Null ProfileBufferBlockIndex clamped to the beginning.
       MOZ_RELEASE_ASSERT(aReader->At(bi0) == aReader->begin());
       // Cleared block index clamped to the beginning.
       MOZ_RELEASE_ASSERT(aReader->At(bi2) == aReader->begin());
@@ -939,7 +938,8 @@ void TestBlocksRingBufferAPI() {
                          aReader->begin());
       // bi5 at expected position.
       MOZ_RELEASE_ASSERT(
-          ExtractBlockIndex(aReader->At(bi5).CurrentBlockIndex()) == 21);
+          aReader->At(bi5).CurrentBlockIndex().ConvertToProfileBufferIndex() ==
+          21);
       // bi6 at expected position at the end.
       MOZ_RELEASE_ASSERT(aReader->At(bi6) == aReader->end());
       // At(end) same as end().
@@ -1069,7 +1069,7 @@ void TestBlocksRingBufferUnderlyingBufferChanges() {
   BlocksRingBuffer rb(BlocksRingBuffer::ThreadSafety::WithMutex);
 
   // Block index to read at. Initially "null", but may be changed below.
-  BlocksRingBuffer::BlockIndex bi;
+  ProfileBufferBlockIndex bi;
 
   // Test all rb APIs when rb is out-of-session and therefore doesn't have an
   // underlying buffer.
@@ -1088,10 +1088,11 @@ void TestBlocksRingBufferUnderlyingBufferChanges() {
       ++ran;
     });
     MOZ_RELEASE_ASSERT(ran == 1);
-    // `PutFrom` won't do anything, and returns the null BlockIndex.
+    // `PutFrom` won't do anything, and returns the null
+    // ProfileBufferBlockIndex.
     MOZ_RELEASE_ASSERT(rb.PutFrom(&ran, sizeof(ran)) ==
-                       BlocksRingBuffer::BlockIndex{});
-    MOZ_RELEASE_ASSERT(rb.PutObject(ran) == BlocksRingBuffer::BlockIndex{});
+                       ProfileBufferBlockIndex{});
+    MOZ_RELEASE_ASSERT(rb.PutObject(ran) == ProfileBufferBlockIndex{});
     // `Read()` functions run the callback with `Nothing`.
     ran = 0;
     rb.Read([&](BlocksRingBuffer::Reader* aReader) {
@@ -1100,7 +1101,7 @@ void TestBlocksRingBufferUnderlyingBufferChanges() {
     });
     MOZ_RELEASE_ASSERT(ran == 1);
     ran = 0;
-    rb.ReadAt(BlocksRingBuffer::BlockIndex{},
+    rb.ReadAt(ProfileBufferBlockIndex{},
               [&](Maybe<BlocksRingBuffer::EntryReader>&& aMaybeEntryReader) {
                 MOZ_RELEASE_ASSERT(aMaybeEntryReader.isNothing());
                 ++ran;
@@ -1164,8 +1165,8 @@ void TestBlocksRingBufferUnderlyingBufferChanges() {
                 });
     MOZ_RELEASE_ASSERT(ran == 1);
     MOZ_RELEASE_ASSERT(rb.PutFrom(&ran, sizeof(ran)) !=
-                       BlocksRingBuffer::BlockIndex{});
-    MOZ_RELEASE_ASSERT(rb.PutObject(ran) != BlocksRingBuffer::BlockIndex{});
+                       ProfileBufferBlockIndex{});
+    MOZ_RELEASE_ASSERT(rb.PutObject(ran) != ProfileBufferBlockIndex{});
     ran = 0;
     rb.Read([&](BlocksRingBuffer::Reader* aReader) {
       MOZ_RELEASE_ASSERT(!!aReader);
@@ -1180,7 +1181,7 @@ void TestBlocksRingBufferUnderlyingBufferChanges() {
     });
     MOZ_RELEASE_ASSERT(ran >= 3);
     ran = 0;
-    rb.ReadAt(BlocksRingBuffer::BlockIndex{},
+    rb.ReadAt(ProfileBufferBlockIndex{},
               [&](Maybe<BlocksRingBuffer::EntryReader>&& aMaybeEntryReader) {
                 MOZ_RELEASE_ASSERT(aMaybeEntryReader.isNothing());
                 ++ran;
@@ -1276,11 +1277,14 @@ void TestBlocksRingBufferThreading() {
       printf(
           "Reader: range=%llu..%llu (%llu bytes) pushed=%llu cleared=%llu "
           "(alive=%llu)\n",
-          static_cast<unsigned long long>(ExtractBlockIndex(state.mRangeStart)),
-          static_cast<unsigned long long>(ExtractBlockIndex(state.mRangeEnd)),
-          static_cast<unsigned long long>(ExtractBlockIndex(state.mRangeEnd)) -
+          static_cast<unsigned long long>(
+              state.mRangeStart.ConvertToProfileBufferIndex()),
+          static_cast<unsigned long long>(
+              state.mRangeEnd.ConvertToProfileBufferIndex()),
+          static_cast<unsigned long long>(
+              state.mRangeEnd.ConvertToProfileBufferIndex()) -
               static_cast<unsigned long long>(
-                  ExtractBlockIndex(state.mRangeStart)),
+                  state.mRangeStart.ConvertToProfileBufferIndex()),
           static_cast<unsigned long long>(state.mPushedBlockCount),
           static_cast<unsigned long long>(state.mClearedBlockCount),
           static_cast<unsigned long long>(state.mPushedBlockCount -
@@ -1386,11 +1390,11 @@ void TestBlocksRingBufferSerialization() {
   });
 
   rb.Clear();
-  // Write an int and store its BlockIndex.
-  BlocksRingBuffer::BlockIndex blockIndex = rb.PutObject(123);
+  // Write an int and store its ProfileBufferBlockIndex.
+  ProfileBufferBlockIndex blockIndex = rb.PutObject(123);
   // It should be non-0.
-  MOZ_RELEASE_ASSERT(blockIndex != BlocksRingBuffer::BlockIndex{});
-  // Write that BlockIndex.
+  MOZ_RELEASE_ASSERT(blockIndex != ProfileBufferBlockIndex{});
+  // Write that ProfileBufferBlockIndex.
   rb.PutObject(blockIndex);
   rb.Read([&](BlocksRingBuffer::Reader* aR) {
     BlocksRingBuffer::BlockIterator it = aR->begin();
@@ -1399,7 +1403,7 @@ void TestBlocksRingBufferSerialization() {
     MOZ_RELEASE_ASSERT((*it).ReadObject<int>() == 123);
     ++it;
     MOZ_RELEASE_ASSERT(it != itEnd);
-    MOZ_RELEASE_ASSERT((*it).ReadObject<BlocksRingBuffer::BlockIndex>() ==
+    MOZ_RELEASE_ASSERT((*it).ReadObject<ProfileBufferBlockIndex>() ==
                        blockIndex);
     ++it;
     MOZ_RELEASE_ASSERT(it == itEnd);

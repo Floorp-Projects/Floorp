@@ -11,6 +11,7 @@
 #include "mozilla/BaseProfilerDetail.h"
 #include "mozilla/ModuloBuffer.h"
 #include "mozilla/Pair.h"
+#include "mozilla/ProfileBufferIndex.h"
 #include "mozilla/Unused.h"
 
 #include "mozilla/Maybe.h"
@@ -66,17 +67,14 @@ namespace mozilla {
 // Different type of objects may be deserialized from an entry, see
 // `Deserializer` for more information.
 //
-// The caller may retrieve the `BlockIndex` corresponding to an entry
-// (`BlockIndex` is an opaque type preventing the user from modifying it). That
-// index may later be used to get back to that particular entry if it still
-// exists.
+// The caller may retrieve the `ProfileBufferBlockIndex` corresponding to an
+// entry (`ProfileBufferBlockIndex` is an opaque type preventing the user from
+// modifying it). That index may later be used to get back to that particular
+// entry if it still exists.
 class BlocksRingBuffer {
-  // Near-infinite index type, not expecting overflow.
-  using Index = uint64_t;
-
  public:
   // Using ModuloBuffer as underlying circular byte buffer.
-  using Buffer = ModuloBuffer<uint32_t, Index>;
+  using Buffer = ModuloBuffer<uint32_t, ProfileBufferIndex>;
   using Byte = Buffer::Byte;
   using BufferWriter = Buffer::Writer;
   using BufferReader = Buffer::Reader;
@@ -112,60 +110,6 @@ class BlocksRingBuffer {
   //   }
   template <typename T>
   struct Deserializer;
-
-  // Externally-opaque class encapsulating a block index.
-  // User may get these from some BlocksRingBuffer functions, to later use them
-  // to access previous blocks using `GetEntryAt(BlockIndex)` functions.
-  class BlockIndex {
-   public:
-    // Default constructor with internal 0 value, for which BlocksRingBuffer
-    // guarantees that it is before any valid entries. All public APIs should
-    // fail gracefully, doing nothing and/or returning Nothing. It may be used
-    // to initialize a BlockIndex variable that will be overwritten with a real
-    // value (e.g., from `ReadObject()`, `CurrentBlockIndex()`, etc.).
-    BlockIndex() : mBlockIndex(0) {}
-
-    // Explicit conversion to bool, works in `if/while()` tests.
-    // Only returns false for default `BlockIndex{}` value.
-    explicit operator bool() const { return mBlockIndex != 0; }
-
-    // Comparison over the wide `Index` range, ignoring wrapping of the
-    // containing ring buffer.
-    bool operator==(const BlockIndex& aRhs) const {
-      return mBlockIndex == aRhs.mBlockIndex;
-    }
-    bool operator!=(const BlockIndex& aRhs) const {
-      return mBlockIndex != aRhs.mBlockIndex;
-    }
-    bool operator<(const BlockIndex& aRhs) const {
-      return mBlockIndex < aRhs.mBlockIndex;
-    }
-    bool operator<=(const BlockIndex& aRhs) const {
-      return mBlockIndex <= aRhs.mBlockIndex;
-    }
-    bool operator>(const BlockIndex& aRhs) const {
-      return mBlockIndex > aRhs.mBlockIndex;
-    }
-    bool operator>=(const BlockIndex& aRhs) const {
-      return mBlockIndex >= aRhs.mBlockIndex;
-    }
-
-    // Temporary escape hatches to let legacy code access block indices.
-    // TODO: Remove this when legacy code has been modernized.
-    uint64_t ConvertToU64() const { return uint64_t(mBlockIndex); }
-    static BlockIndex ConvertFromU64(uint64_t aIndex) {
-      return BlockIndex(Index(aIndex));
-    }
-
-   private:
-    // Only BlocksRingBuffer internal functions and serializers can convert
-    // between `BlockIndex` and `Index`.
-    friend class BlocksRingBuffer;
-    explicit BlockIndex(Index aBlockIndex) : mBlockIndex(aBlockIndex) {}
-    explicit operator Index() const { return mBlockIndex; }
-
-    Index mBlockIndex;
-  };
 
   enum class ThreadSafety { WithoutMutex, WithMutex };
 
@@ -262,10 +206,10 @@ class BlocksRingBuffer {
   // Snapshot of the buffer state.
   struct State {
     // Index to the first block.
-    BlockIndex mRangeStart;
+    ProfileBufferBlockIndex mRangeStart;
 
     // Index past the last block. Equals mRangeStart if empty.
-    BlockIndex mRangeEnd;
+    ProfileBufferBlockIndex mRangeEnd;
 
     // Number of blocks that have been pushed into this buffer.
     uint64_t mPushedBlockCount = 0;
@@ -320,8 +264,8 @@ class BlocksRingBuffer {
     }
 #endif  // DEBUG
 
-    // All BufferReader (aka ModuloBuffer<uint32_t, Index>::Reader) APIs are
-    // available to read data from this entry.
+    // All BufferReader (aka ModuloBuffer<uint32_t, ProfileBufferIndex>::Reader)
+    // APIs are available to read data from this entry.
     // Note that there are no bound checks! So this should not be used with
     // external untrusted data.
 
@@ -368,25 +312,31 @@ class BlocksRingBuffer {
     }
 
     // Can be used as reference to come back to this entry with GetEntryAt().
-    BlockIndex CurrentBlockIndex() const {
-      return BlockIndex(mEntryStart - BufferReader::ULEB128Size(mEntryBytes));
+    ProfileBufferBlockIndex CurrentBlockIndex() const {
+      return ProfileBufferBlockIndex::CreateFromProfileBufferIndex(
+          mEntryStart - BufferReader::ULEB128Size(mEntryBytes));
     }
 
     // Index past the end of this block, which is the start of the next block.
-    BlockIndex NextBlockIndex() const {
-      return BlockIndex(mEntryStart + mEntryBytes);
+    ProfileBufferBlockIndex NextBlockIndex() const {
+      return ProfileBufferBlockIndex::CreateFromProfileBufferIndex(mEntryStart +
+                                                                   mEntryBytes);
     }
 
     // Index of the first block in the whole buffer.
-    BlockIndex BufferRangeStart() const { return mRing.mFirstReadIndex; }
+    ProfileBufferBlockIndex BufferRangeStart() const {
+      return mRing.mFirstReadIndex;
+    }
 
     // Index past the last block in the whole buffer.
-    BlockIndex BufferRangeEnd() const { return mRing.mNextWriteIndex; }
+    ProfileBufferBlockIndex BufferRangeEnd() const {
+      return mRing.mNextWriteIndex;
+    }
 
-    // Get another entry based on a {Current,Next}BlockIndex(). This may fail if
-    // the buffer has already looped around and cleared that block, or for the
-    // one-past-the-end index.
-    Maybe<EntryReader> GetEntryAt(BlockIndex aBlockIndex) {
+    // Get another entry based on a {Current,Next}ProfileBufferBlockIndex().
+    // This may fail if the buffer has already looped around and cleared that
+    // block, or for the one-past-the-end index.
+    Maybe<EntryReader> GetEntryAt(ProfileBufferBlockIndex aBlockIndex) {
       // Don't accept a not-yet-written index.
       MOZ_ASSERT(aBlockIndex <= BufferRangeEnd());
       if (aBlockIndex >= BufferRangeStart() && aBlockIndex < BufferRangeEnd()) {
@@ -400,7 +350,7 @@ class BlocksRingBuffer {
 
     // Get the next entry. This may fail if this is already the last entry.
     Maybe<EntryReader> GetNextEntry() {
-      const BlockIndex nextBlockIndex = NextBlockIndex();
+      const ProfileBufferBlockIndex nextBlockIndex = NextBlockIndex();
       if (nextBlockIndex < BufferRangeEnd()) {
         return Some(EntryReader(mRing, nextBlockIndex));
       }
@@ -411,9 +361,10 @@ class BlocksRingBuffer {
     // Only a BlocksRingBuffer can instantiate an EntryReader.
     friend class BlocksRingBuffer;
 
-    explicit EntryReader(const BlocksRingBuffer& aRing, BlockIndex aBlockIndex)
+    explicit EntryReader(const BlocksRingBuffer& aRing,
+                         ProfileBufferBlockIndex aBlockIndex)
         : BufferReader(aRing.mMaybeUnderlyingBuffer->mBuffer.ReaderAt(
-              Index(aBlockIndex))),
+              aBlockIndex.ConvertToProfileBufferIndex())),
           mRing(aRing),
           mEntryBytes(BufferReader::ReadULEB128<Length>()),
           mEntryStart(CurrentIndex()) {
@@ -426,7 +377,7 @@ class BlocksRingBuffer {
     // BlocksRingBuffer functions, for this reference to stay valid.
     const BlocksRingBuffer& mRing;
     const Length mEntryBytes;
-    const Index mEntryStart;
+    const ProfileBufferIndex mEntryStart;
   };
 
   class Reader;
@@ -470,28 +421,34 @@ class BlocksRingBuffer {
     }
 
     // Can be used as reference to come back to this entry with `GetEntryAt()`.
-    BlockIndex CurrentBlockIndex() const { return mBlockIndex; }
+    ProfileBufferBlockIndex CurrentBlockIndex() const { return mBlockIndex; }
 
     // Index past the end of this block, which is the start of the next block.
-    BlockIndex NextBlockIndex() const {
+    ProfileBufferBlockIndex NextBlockIndex() const {
       MOZ_ASSERT(!IsAtEnd());
-      BufferReader reader =
-          mRing->mMaybeUnderlyingBuffer->mBuffer.ReaderAt(Index(mBlockIndex));
+      BufferReader reader = mRing->mMaybeUnderlyingBuffer->mBuffer.ReaderAt(
+          mBlockIndex.ConvertToProfileBufferIndex());
       Length entrySize = reader.ReadULEB128<Length>();
-      return BlockIndex(reader.CurrentIndex() + entrySize);
+      return ProfileBufferBlockIndex::CreateFromProfileBufferIndex(
+          reader.CurrentIndex() + entrySize);
     }
 
     // Index of the first block in the whole buffer.
-    BlockIndex BufferRangeStart() const { return mRing->mFirstReadIndex; }
+    ProfileBufferBlockIndex BufferRangeStart() const {
+      return mRing->mFirstReadIndex;
+    }
 
     // Index past the last block in the whole buffer.
-    BlockIndex BufferRangeEnd() const { return mRing->mNextWriteIndex; }
+    ProfileBufferBlockIndex BufferRangeEnd() const {
+      return mRing->mNextWriteIndex;
+    }
 
    private:
     // Only a Reader can instantiate a BlockIterator.
     friend class Reader;
 
-    BlockIterator(const BlocksRingBuffer& aRing, BlockIndex aBlockIndex)
+    BlockIterator(const BlocksRingBuffer& aRing,
+                  ProfileBufferBlockIndex aBlockIndex)
         : mRing(WrapNotNull(&aRing)), mBlockIndex(aBlockIndex) {
       // No BlockIterator should live outside of a mutexed call.
       mRing->mMutex.AssertCurrentThreadOwns();
@@ -501,7 +458,7 @@ class BlocksRingBuffer {
     // This BlockIterator should only live inside one of the thread-safe
     // BlocksRingBuffer functions, for this reference to stay valid.
     NotNull<const BlocksRingBuffer*> mRing;
-    BlockIndex mBlockIndex;
+    ProfileBufferBlockIndex mBlockIndex;
   };
 
   // Class that can create `BlockIterator`s (e.g., for range-for), or just
@@ -521,10 +478,14 @@ class BlocksRingBuffer {
 #endif  // DEBUG
 
     // Index of the first block in the whole buffer.
-    BlockIndex BufferRangeStart() const { return mRing.mFirstReadIndex; }
+    ProfileBufferBlockIndex BufferRangeStart() const {
+      return mRing.mFirstReadIndex;
+    }
 
     // Index past the last block in the whole buffer.
-    BlockIndex BufferRangeEnd() const { return mRing.mNextWriteIndex; }
+    ProfileBufferBlockIndex BufferRangeEnd() const {
+      return mRing.mNextWriteIndex;
+    }
 
     // Iterators to the first and past-the-last blocks.
     // Compatible with range-for (see `ForEach` below as example).
@@ -535,13 +496,13 @@ class BlocksRingBuffer {
     // there is no actual block there!
     BlockIterator end() const { return BlockIterator(mRing, BufferRangeEnd()); }
 
-    // Get a `BlockIterator` at the given `BlockIndex`, clamped to the stored
-    // range. Note that a `BlockIterator` at the `end()` should not be
-    // dereferenced, as there is no actual block there!
-    BlockIterator At(BlockIndex aBlockIndex) const {
+    // Get a `BlockIterator` at the given `ProfileBufferBlockIndex`, clamped to
+    // the stored range. Note that a `BlockIterator` at the `end()` should not
+    // be dereferenced, as there is no actual block there!
+    BlockIterator At(ProfileBufferBlockIndex aBlockIndex) const {
       if (aBlockIndex < BufferRangeStart()) {
-        // Anything before the range (including null BlockIndex) is clamped at
-        // the beginning.
+        // Anything before the range (including null ProfileBufferBlockIndex) is
+        // clamped at the beginning.
         return begin();
       }
       // Otherwise we at least expect the index to be valid (pointing exactly at
@@ -601,12 +562,13 @@ class BlocksRingBuffer {
   }
 
   // Call `aCallback(Maybe<BlocksRingBuffer::EntryReader>&&)` on the entry at
-  // the given BlockIndex; The `Maybe` will be `Nothing` if out-of-session, or
-  // if that entry doesn't exist anymore, or if we've reached just past the
-  // last entry. Return whatever `aCallback` returns. Callback should not
-  // store `EntryReader`, because it may become invalid after this call.
+  // the given ProfileBufferBlockIndex; The `Maybe` will be `Nothing` if
+  // out-of-session, or if that entry doesn't exist anymore, or if we've reached
+  // just past the last entry. Return whatever `aCallback` returns. Callback
+  // should not store `EntryReader`, because it may become invalid after this
+  // call.
   template <typename Callback>
-  auto ReadAt(BlockIndex aBlockIndex, Callback&& aCallback) const {
+  auto ReadAt(ProfileBufferBlockIndex aBlockIndex, Callback&& aCallback) const {
     baseprofiler::detail::BaseProfilerMaybeAutoLock lock(mMutex);
     MOZ_ASSERT(aBlockIndex <= mNextWriteIndex);
     Maybe<EntryReader> maybeEntryReader;
@@ -638,8 +600,8 @@ class BlocksRingBuffer {
     }
 #endif  // DEBUG
 
-    // All BufferWriter (aka ModuloBuffer<uint32_t, Index>::Writer) APIs are
-    // available to read/write data from/to this entry.
+    // All BufferWriter (aka ModuloBuffer<uint32_t, ProfileBufferIndex>::Writer)
+    // APIs are available to read/write data from/to this entry.
     // Note that there are no bound checks! So this should not be used with
     // external data.
 
@@ -676,25 +638,31 @@ class BlocksRingBuffer {
     }
 
     // Can be used as reference to come back to this entry with `GetEntryAt()`.
-    BlockIndex CurrentBlockIndex() const {
-      return BlockIndex(mEntryStart - BufferWriter::ULEB128Size(mEntryBytes));
+    ProfileBufferBlockIndex CurrentBlockIndex() const {
+      return ProfileBufferBlockIndex::CreateFromProfileBufferIndex(
+          mEntryStart - BufferWriter::ULEB128Size(mEntryBytes));
     }
 
     // Index past the end of this block, which will be the start of the next
     // block to be written.
-    BlockIndex BlockEndIndex() const {
-      return BlockIndex(mEntryStart + mEntryBytes);
+    ProfileBufferBlockIndex BlockEndIndex() const {
+      return ProfileBufferBlockIndex::CreateFromProfileBufferIndex(mEntryStart +
+                                                                   mEntryBytes);
     }
 
     // Index of the first block in the whole buffer.
-    BlockIndex BufferRangeStart() const { return mRing.mFirstReadIndex; }
+    ProfileBufferBlockIndex BufferRangeStart() const {
+      return mRing.mFirstReadIndex;
+    }
 
     // Index past the last block in the whole buffer.
-    BlockIndex BufferRangeEnd() const { return mRing.mNextWriteIndex; }
+    ProfileBufferBlockIndex BufferRangeEnd() const {
+      return mRing.mNextWriteIndex;
+    }
 
     // Get another entry based on a {Current,Next}BlockIndex(). This may fail if
     // the buffer has already looped around and cleared that block.
-    Maybe<EntryReader> GetEntryAt(BlockIndex aBlockIndex) {
+    Maybe<EntryReader> GetEntryAt(ProfileBufferBlockIndex aBlockIndex) {
       // Don't accept a not-yet-written index.
       MOZ_RELEASE_ASSERT(aBlockIndex < BufferRangeEnd());
       if (aBlockIndex >= BufferRangeStart()) {
@@ -717,10 +685,10 @@ class BlocksRingBuffer {
              static_cast<Length>(BufferWriter::ULEB128Size(aEntryBytes));
     }
 
-    EntryWriter(BlocksRingBuffer& aRing, BlockIndex aBlockIndex,
+    EntryWriter(BlocksRingBuffer& aRing, ProfileBufferBlockIndex aBlockIndex,
                 Length aEntryBytes)
         : BufferWriter(aRing.mMaybeUnderlyingBuffer->mBuffer.WriterAt(
-              Index(aBlockIndex))),
+              aBlockIndex.ConvertToProfileBufferIndex())),
           mRing(aRing),
           mEntryBytes(aEntryBytes),
           mEntryStart([&]() {
@@ -737,7 +705,7 @@ class BlocksRingBuffer {
     // BlocksRingBuffer functions, for this reference to stay valid.
     BlocksRingBuffer& mRing;
     const Length mEntryBytes;
-    const Index mEntryStart;
+    const ProfileBufferIndex mEntryStart;
   };
 
   // Main function to write entries.
@@ -763,16 +731,20 @@ class BlocksRingBuffer {
         const Length blockBytes =
             EntryWriter::BlockSizeForEntrySize(entryBytes);
         // We will put this new block at the end of the current buffer.
-        const BlockIndex blockIndex = mNextWriteIndex;
+        const ProfileBufferBlockIndex blockIndex = mNextWriteIndex;
         // Compute the end of this new block...
-        const Index blockEnd = Index(blockIndex) + blockBytes;
+        const ProfileBufferIndex blockEnd =
+            blockIndex.ConvertToProfileBufferIndex() + blockBytes;
         // ... which is where the following block will go.
-        mNextWriteIndex = BlockIndex(blockEnd);
-        while (blockEnd > Index(mFirstReadIndex) + bufferBytes) {
+        mNextWriteIndex =
+            ProfileBufferBlockIndex::CreateFromProfileBufferIndex(blockEnd);
+        while (blockEnd >
+               mFirstReadIndex.ConvertToProfileBufferIndex() + bufferBytes) {
           // About to trample on an old block.
           EntryReader reader = ReaderInBlockAt(mFirstReadIndex);
           mMaybeUnderlyingBuffer->mClearedBlockCount += 1;
-          MOZ_ASSERT(reader.CurrentIndex() <= Index(reader.NextBlockIndex()));
+          MOZ_ASSERT(reader.CurrentIndex() <=
+                     reader.NextBlockIndex().ConvertToProfileBufferIndex());
           // Move the buffer reading start past this cleared block.
           mFirstReadIndex = reader.NextBlockIndex();
         }
@@ -798,22 +770,22 @@ class BlocksRingBuffer {
   }
 
   // Add a new entry copied from the given buffer, return block index.
-  BlockIndex PutFrom(const void* aSrc, Length aBytes) {
+  ProfileBufferBlockIndex PutFrom(const void* aSrc, Length aBytes) {
     return ReserveAndPut([aBytes]() { return aBytes; },
                          [&](EntryWriter* aEntryWriter) {
                            if (MOZ_LIKELY(aEntryWriter)) {
                              aEntryWriter->Write(aSrc, aBytes);
                              return aEntryWriter->CurrentBlockIndex();
                            }
-                           // Out-of-session, return "empty" BlockIndex.
-                           return BlockIndex{};
+                           // Out-of-session, return "empty" index.
+                           return ProfileBufferBlockIndex{};
                          });
   }
 
   // Add a new single entry with *all* given object (using a Serializer for
   // each), return block index.
   template <typename... Ts>
-  BlockIndex PutObjects(const Ts&... aTs) {
+  ProfileBufferBlockIndex PutObjects(const Ts&... aTs) {
     static_assert(sizeof...(Ts) > 0,
                   "PutObjects must be given at least one object.");
     return ReserveAndPut([&]() { return SumBytes(aTs...); },
@@ -822,40 +794,42 @@ class BlocksRingBuffer {
                              aEntryWriter->WriteObjects(aTs...);
                              return aEntryWriter->CurrentBlockIndex();
                            }
-                           // Out-of-session, return "empty" BlockIndex.
-                           return BlockIndex{};
+                           // Out-of-session, return "empty" index.
+                           return ProfileBufferBlockIndex{};
                          });
   }
 
   // Add a new entry copied from the given object, return block index.
   template <typename T>
-  BlockIndex PutObject(const T& aOb) {
+  ProfileBufferBlockIndex PutObject(const T& aOb) {
     return PutObjects(aOb);
   }
 
   // Append the contents of another BlocksRingBuffer to this one.
-  BlockIndex AppendContents(const BlocksRingBuffer& aSrc) {
+  ProfileBufferBlockIndex AppendContents(const BlocksRingBuffer& aSrc) {
     baseprofiler::detail::BaseProfilerMaybeAutoLock lock(mMutex);
 
     if (MOZ_UNLIKELY(!mMaybeUnderlyingBuffer)) {
       // We are out-of-session, could not append contents.
-      return BlockIndex{};
+      return ProfileBufferBlockIndex{};
     }
 
     baseprofiler::detail::BaseProfilerMaybeAutoLock srcLock(aSrc.mMutex);
 
     if (MOZ_UNLIKELY(!aSrc.mMaybeUnderlyingBuffer)) {
       // The other BRB is out-of-session, nothing to copy, we're done.
-      return BlockIndex{};
+      return ProfileBufferBlockIndex{};
     }
 
-    const Index srcStartIndex = Index(aSrc.mFirstReadIndex);
-    const Index srcEndIndex = Index(aSrc.mNextWriteIndex);
+    const ProfileBufferIndex srcStartIndex =
+        aSrc.mFirstReadIndex.ConvertToProfileBufferIndex();
+    const ProfileBufferIndex srcEndIndex =
+        aSrc.mNextWriteIndex.ConvertToProfileBufferIndex();
     const Length bytesToCopy = static_cast<Length>(srcEndIndex - srcStartIndex);
 
     if (MOZ_UNLIKELY(bytesToCopy == 0)) {
       // The other BRB is empty, nothing to copy, we're done.
-      return BlockIndex{};
+      return ProfileBufferBlockIndex{};
     }
 
     const Length bufferBytes =
@@ -865,17 +839,21 @@ class BlocksRingBuffer {
                        "Entry would wrap and overwrite itself");
 
     // We will put all copied blocks at the end of the current buffer.
-    const Index dstStartIndex = Index(mNextWriteIndex);
+    const ProfileBufferIndex dstStartIndex =
+        mNextWriteIndex.ConvertToProfileBufferIndex();
     // Compute where the copy will end...
-    const Index dstEndIndex = dstStartIndex + bytesToCopy;
+    const ProfileBufferIndex dstEndIndex = dstStartIndex + bytesToCopy;
     // ... which is where the following block will go.
-    mNextWriteIndex = BlockIndex(dstEndIndex);
+    mNextWriteIndex =
+        ProfileBufferBlockIndex::CreateFromProfileBufferIndex(dstEndIndex);
 
-    while (dstEndIndex > Index(mFirstReadIndex) + bufferBytes) {
+    while (dstEndIndex >
+           mFirstReadIndex.ConvertToProfileBufferIndex() + bufferBytes) {
       // About to trample on an old block.
       EntryReader reader = ReaderInBlockAt(mFirstReadIndex);
       mMaybeUnderlyingBuffer->mClearedBlockCount += 1;
-      MOZ_ASSERT(reader.CurrentIndex() <= Index(reader.NextBlockIndex()));
+      MOZ_ASSERT(reader.CurrentIndex() <=
+                 reader.NextBlockIndex().ConvertToProfileBufferIndex());
       // Move the buffer reading start past this cleared block.
       mFirstReadIndex = reader.NextBlockIndex();
     }
@@ -895,9 +873,9 @@ class BlocksRingBuffer {
       *writer = *reader;
     }
     MOZ_ASSERT(writer == mMaybeUnderlyingBuffer->mBuffer.WriterAt(
-                             Index(mNextWriteIndex)));
+                             mNextWriteIndex.ConvertToProfileBufferIndex()));
 
-    return BlockIndex(dstStartIndex);
+    return ProfileBufferBlockIndex::CreateFromProfileBufferIndex(dstStartIndex);
   }
 
   // Clear all entries: Move read index to the end so that these entries cannot
@@ -909,7 +887,7 @@ class BlocksRingBuffer {
 
   // Clear all entries strictly before aBlockIndex, and move read index to the
   // end so that these entries cannot be read anymore.
-  void ClearBefore(BlockIndex aBlockIndex) {
+  void ClearBefore(ProfileBufferBlockIndex aBlockIndex) {
     baseprofiler::detail::BaseProfilerMaybeAutoLock lock(mMutex);
     if (!mMaybeUnderlyingBuffer) {
       return;
@@ -948,11 +926,12 @@ class BlocksRingBuffer {
       return;
     }
     using ULL = unsigned long long;
-    printf("start=%llu (%llu) end=%llu (%llu) - ", ULL(Index(mFirstReadIndex)),
-           ULL(Index(mFirstReadIndex) &
+    printf("start=%llu (%llu) end=%llu (%llu) - ",
+           ULL(mFirstReadIndex.ConvertToProfileBufferIndex()),
+           ULL(mFirstReadIndex.ConvertToProfileBufferIndex() &
                (mMaybeUnderlyingBuffer->mBuffer.BufferLength().Value() - 1)),
-           ULL(Index(mNextWriteIndex)),
-           ULL(Index(mNextWriteIndex) &
+           ULL(mNextWriteIndex.ConvertToProfileBufferIndex()),
+           ULL(mNextWriteIndex.ConvertToProfileBufferIndex() &
                (mMaybeUnderlyingBuffer->mBuffer.BufferLength().Value() - 1)));
     mMaybeUnderlyingBuffer->mBuffer.Dump();
   }
@@ -963,7 +942,7 @@ class BlocksRingBuffer {
   // (Not just in range, but points exactly at the start of a block.)
   // Slow, so avoid it for internal checks; this is more to check what callers
   // provide us.
-  void AssertBlockIndexIsValid(BlockIndex aBlockIndex) const {
+  void AssertBlockIndexIsValid(ProfileBufferBlockIndex aBlockIndex) const {
 #ifdef DEBUG
     mMutex.AssertCurrentThreadOwns();
     MOZ_ASSERT(aBlockIndex >= mFirstReadIndex);
@@ -972,8 +951,8 @@ class BlocksRingBuffer {
 #  if 1
     // Quick check that this looks like a valid block start.
     // Read the entry size at the start of the block.
-    BufferReader br =
-        mMaybeUnderlyingBuffer->mBuffer.ReaderAt(Index(aBlockIndex));
+    BufferReader br = mMaybeUnderlyingBuffer->mBuffer.ReaderAt(
+        aBlockIndex.ConvertToProfileBufferIndex());
     Length entryBytes = br.ReadULEB128<Length>();
     MOZ_ASSERT(entryBytes > 0, "Empty entries are not allowed");
     MOZ_ASSERT(
@@ -981,9 +960,9 @@ class BlocksRingBuffer {
                          BufferReader::ULEB128Size(entryBytes),
         "Entry would wrap and overwrite itself");
     // The end of the block should be inside the live buffer range.
-    MOZ_ASSERT(Index(aBlockIndex) + BufferReader::ULEB128Size(entryBytes) +
-                   entryBytes <=
-               Index(mNextWriteIndex));
+    MOZ_ASSERT(aBlockIndex.ConvertToProfileBufferIndex() +
+                   BufferReader::ULEB128Size(entryBytes) + entryBytes <=
+               mNextWriteIndex.ConvertToProfileBufferIndex());
 #  else
     // Slow check that the index is really the start of the block.
     // This kills performances, as it reads from the first index until
@@ -1002,7 +981,7 @@ class BlocksRingBuffer {
   // or is just past-the-end. (Not just in range, but points exactly at the
   // start of a block.) Slow, so avoid it for internal checks; this is more to
   // check what callers provide us.
-  void AssertBlockIndexIsValidOrEnd(BlockIndex aBlockIndex) const {
+  void AssertBlockIndexIsValidOrEnd(ProfileBufferBlockIndex aBlockIndex) const {
 #ifdef DEBUG
     mMutex.AssertCurrentThreadOwns();
     if (aBlockIndex == mNextWriteIndex) {
@@ -1013,7 +992,7 @@ class BlocksRingBuffer {
   }
 
   // Create a reader for the block starting at aBlockIndex.
-  EntryReader ReaderInBlockAt(BlockIndex aBlockIndex) const {
+  EntryReader ReaderInBlockAt(ProfileBufferBlockIndex aBlockIndex) const {
     mMutex.AssertCurrentThreadOwns();
     MOZ_ASSERT(aBlockIndex >= mFirstReadIndex);
     MOZ_ASSERT(aBlockIndex < mNextWriteIndex);
@@ -1032,7 +1011,7 @@ class BlocksRingBuffer {
         mMaybeUnderlyingBuffer->mPushedBlockCount;
     // Move read index to write index, so there's effectively no more entries
     // that can be read. (Not setting both to 0, in case user is keeping
-    // `BlockIndex`'es to old entries.)
+    // `ProfileBufferBlockIndex`'es to old entries.)
     mFirstReadIndex = mNextWriteIndex;
   }
 
@@ -1100,15 +1079,17 @@ class BlocksRingBuffer {
   Maybe<UnderlyingBuffer> mMaybeUnderlyingBuffer;
 
   // Index to the first block to be read (or cleared). Initialized to 1 because
-  // 0 is reserved for the "empty" BlockIndex value. Kept between sessions, so
-  // that stored indices from one session will be gracefully denied in future
-  // sessions.
-  BlockIndex mFirstReadIndex = BlockIndex(Index(1));
-  // Index where the next new block should be allocated. Initialized to 1
-  // because 0 is reserved for the "empty" BlockIndex value. Kept between
+  // 0 is reserved for the "empty" ProfileBufferBlockIndex value. Kept between
   // sessions, so that stored indices from one session will be gracefully denied
   // in future sessions.
-  BlockIndex mNextWriteIndex = BlockIndex(Index(1));
+  ProfileBufferBlockIndex mFirstReadIndex =
+      ProfileBufferBlockIndex::CreateFromProfileBufferIndex(1);
+  // Index where the next new block should be allocated. Initialized to 1
+  // because 0 is reserved for the "empty" ProfileBufferBlockIndex value. Kept
+  // between sessions, so that stored indices from one session will be
+  // gracefully denied in future sessions.
+  ProfileBufferBlockIndex mNextWriteIndex =
+      ProfileBufferBlockIndex::CreateFromProfileBufferIndex(1);
 };
 
 // ============================================================================
@@ -1201,28 +1182,29 @@ struct BlocksRingBuffer::Deserializer<T&&>
     : public BlocksRingBuffer::Deserializer<T> {};
 
 // ----------------------------------------------------------------------------
-// BlockIndex
+// ProfileBufferBlockIndex
 
-// BlockIndex, serialized as the underlying value.
+// ProfileBufferBlockIndex, serialized as the underlying value.
 template <>
-struct BlocksRingBuffer::Serializer<BlocksRingBuffer::BlockIndex> {
-  static constexpr Length Bytes(const BlockIndex& aBlockIndex) {
-    return sizeof(BlockIndex);
+struct BlocksRingBuffer::Serializer<ProfileBufferBlockIndex> {
+  static constexpr Length Bytes(const ProfileBufferBlockIndex& aBlockIndex) {
+    return sizeof(ProfileBufferBlockIndex);
   }
 
-  static void Write(EntryWriter& aEW, const BlockIndex& aBlockIndex) {
+  static void Write(EntryWriter& aEW,
+                    const ProfileBufferBlockIndex& aBlockIndex) {
     aEW.Write(&aBlockIndex, sizeof(aBlockIndex));
   }
 };
 
 template <>
-struct BlocksRingBuffer::Deserializer<BlocksRingBuffer::BlockIndex> {
-  static void ReadInto(EntryReader& aER, BlockIndex& aBlockIndex) {
+struct BlocksRingBuffer::Deserializer<ProfileBufferBlockIndex> {
+  static void ReadInto(EntryReader& aER, ProfileBufferBlockIndex& aBlockIndex) {
     aER.Read(&aBlockIndex, sizeof(aBlockIndex));
   }
 
-  static BlockIndex Read(EntryReader& aER) {
-    BlockIndex blockIndex;
+  static ProfileBufferBlockIndex Read(EntryReader& aER) {
+    ProfileBufferBlockIndex blockIndex;
     ReadInto(aER, blockIndex);
     return blockIndex;
   }
@@ -1826,8 +1808,8 @@ struct BlocksRingBuffer::Serializer<BlocksRingBuffer> {
       // Out-of-session, we only need 1 byte to store a length of 0.
       return ULEB128Size<Length>(0);
     }
-    const auto start = Index(aBuffer.mFirstReadIndex);
-    const auto end = Index(aBuffer.mNextWriteIndex);
+    const auto start = aBuffer.mFirstReadIndex.ConvertToProfileBufferIndex();
+    const auto end = aBuffer.mNextWriteIndex.ConvertToProfileBufferIndex();
     const auto len = end - start;
     if (len == 0) {
       // In-session but empty, also store a length of 0.
@@ -1845,8 +1827,8 @@ struct BlocksRingBuffer::Serializer<BlocksRingBuffer> {
       aEW.WriteULEB128<Length>(0);
       return;
     }
-    const auto start = Index(aBuffer.mFirstReadIndex);
-    const auto end = Index(aBuffer.mNextWriteIndex);
+    const auto start = aBuffer.mFirstReadIndex.ConvertToProfileBufferIndex();
+    const auto end = aBuffer.mNextWriteIndex.ConvertToProfileBufferIndex();
     MOZ_ASSERT(end - start <= std::numeric_limits<Length>::max());
     const auto len = static_cast<Length>(end - start);
     if (len == 0) {
@@ -1891,10 +1873,12 @@ struct BlocksRingBuffer::Deserializer<BlocksRingBuffer> {
       MOZ_ASSERT(aBuffer.BufferLength()->Value() >= len);
     }
     // Read start and end indices.
-    const auto start = aER.ReadObject<BlocksRingBuffer::Index>();
-    aBuffer.mFirstReadIndex = BlocksRingBuffer::BlockIndex(start);
-    const auto end = aER.ReadObject<BlocksRingBuffer::Index>();
-    aBuffer.mNextWriteIndex = BlocksRingBuffer::BlockIndex(end);
+    const auto start = aER.ReadObject<ProfileBufferIndex>();
+    aBuffer.mFirstReadIndex =
+        ProfileBufferBlockIndex::CreateFromProfileBufferIndex(start);
+    const auto end = aER.ReadObject<ProfileBufferIndex>();
+    aBuffer.mNextWriteIndex =
+        ProfileBufferBlockIndex::CreateFromProfileBufferIndex(end);
     MOZ_ASSERT(end - start == len);
     // Copy bytes into the buffer.
     auto writer = aBuffer.mMaybeUnderlyingBuffer->mBuffer.WriterAt(start);
