@@ -493,4 +493,37 @@ class TextInputDelegateTest : BaseSessionTest() {
         ic.deleteSurroundingText(6, 0)
         assertTextAndSelectionAt("Can clear text", ic, "", 0)
     }
+
+    @WithDisplay(width = 512, height = 512) // Child process updates require having a display.
+    @Test fun sendDummpyKeyboardEvent() {
+        // unnecessary for designmode
+        assumeThat("Not in designmode", id, not(equalTo("#designmode")))
+
+        mainSession.textInput.view = View(InstrumentationRegistry.getInstrumentation().targetContext)
+
+        mainSession.loadTestPath(INPUTS_PATH)
+        mainSession.waitForPageStop()
+
+        textContent = ""
+        mainSession.evaluateJS("document.querySelector('$id').focus()")
+        mainSession.waitUntilCalled(GeckoSession.TextInputDelegate::class, "restartInput")
+
+        val ic = mainSession.textInput.onCreateInputConnection(EditorInfo())!!
+        ic.commitText("a", 1)
+
+        // Dispatching keydown, input and keyup
+        val promise =
+            mainSession.evaluatePromiseJS("""
+                new Promise(r => window.addEventListener('keydown', () => {
+                                     window.addEventListener('input',() => {
+                                         window.addEventListener('keyup', r, { once: true }) },
+                                         { once: true }) },
+                                     { once: true}))""")
+        ic.beginBatchEdit();
+        ic.setSelection(0, 1)
+        ic.setComposingText("", 1)
+        ic.endBatchEdit()
+        promise.value
+        assertText("empty text", ic, "")
+    }
 }
