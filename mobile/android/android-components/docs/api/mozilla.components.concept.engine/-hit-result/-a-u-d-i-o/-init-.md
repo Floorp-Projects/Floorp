@@ -2,7 +2,7 @@
 
 # &lt;init&gt;
 
-`AUDIO(src: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`)`
+`AUDIO(src: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, title: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`? = null)`
 
 If the HTML element was of type 'HTMLAudioElement'.
 

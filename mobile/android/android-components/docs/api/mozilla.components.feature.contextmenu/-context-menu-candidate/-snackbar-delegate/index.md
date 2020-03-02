@@ -2,7 +2,7 @@
 
 # SnackbarDelegate
 
-`interface SnackbarDelegate` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/contextmenu/src/main/java/mozilla/components/feature/contextmenu/ContextMenuCandidate.kt#L260)
+`interface SnackbarDelegate` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/contextmenu/src/main/java/mozilla/components/feature/contextmenu/ContextMenuCandidate.kt#L279)
 
 Delegate to display a snackbar.
 
