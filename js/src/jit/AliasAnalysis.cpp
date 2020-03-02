@@ -97,9 +97,10 @@ static inline const MDefinition* MaybeUnwrap(const MDefinition* object) {
 // Get the object of any load/store. Returns nullptr if not tied to
 // an object.
 static inline const MDefinition* GetObject(const MDefinition* ins) {
-  if (!ins->getAliasSet().isStore() && !ins->getAliasSet().isLoad()) {
+  if (ins->getAliasSet().isNone()) {
     return nullptr;
   }
+  MOZ_ASSERT(ins->getAliasSet().isStore() || ins->getAliasSet().isLoad());
 
   // Note: only return the object if that object owns that property.
   // I.e. the property isn't on the prototype chain.
