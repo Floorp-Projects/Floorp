@@ -12,35 +12,39 @@ const checkToolbox = async function(tab, location) {
   ok(!!gDevTools.getToolbox(target), `Toolbox exists ${location}`);
 };
 
-add_task(async function() {
-  const tab = await addTab(TEST_URL);
+addRDMTask(
+  "",
+  async function() {
+    const tab = await addTab(TEST_URL);
 
-  info("Open toolbox outside RDM");
-  {
-    const { toolbox, inspector } = await openInspector();
-    inspector.walker.once("new-root", () => {
-      ok(false, "Inspector saw new root, would reboot!");
-    });
-    await checkToolbox(tab, "outside RDM");
-    await openRDM(tab);
-    await checkToolbox(tab, "after opening RDM");
-    await closeRDM(tab);
-    await checkToolbox(tab, tab.linkedBrowser, "after closing RDM");
-    await toolbox.destroy();
-  }
+    info("Open toolbox outside RDM");
+    {
+      const { toolbox, inspector } = await openInspector();
+      inspector.walker.once("new-root", () => {
+        ok(false, "Inspector saw new root, would reboot!");
+      });
+      await checkToolbox(tab, "outside RDM");
+      await openRDM(tab);
+      await checkToolbox(tab, "after opening RDM");
+      await closeRDM(tab);
+      await checkToolbox(tab, tab.linkedBrowser, "after closing RDM");
+      await toolbox.destroy();
+    }
 
-  info("Open toolbox inside RDM");
-  {
-    const { ui } = await openRDM(tab);
-    const { toolbox, inspector } = await openInspector();
-    inspector.walker.once("new-root", () => {
-      ok(false, "Inspector saw new root, would reboot!");
-    });
-    await checkToolbox(tab, ui.getViewportBrowser(), "inside RDM");
-    await closeRDM(tab);
-    await checkToolbox(tab, tab.linkedBrowser, "after closing RDM");
-    await toolbox.destroy();
-  }
+    info("Open toolbox inside RDM");
+    {
+      const { ui } = await openRDM(tab);
+      const { toolbox, inspector } = await openInspector();
+      inspector.walker.once("new-root", () => {
+        ok(false, "Inspector saw new root, would reboot!");
+      });
+      await checkToolbox(tab, ui.getViewportBrowser(), "inside RDM");
+      await closeRDM(tab);
+      await checkToolbox(tab, tab.linkedBrowser, "after closing RDM");
+      await toolbox.destroy();
+    }
 
-  await removeTab(tab);
-});
+    await removeTab(tab);
+  },
+  { usingBrowserUI: true, onlyPrefAndTask: true }
+);
