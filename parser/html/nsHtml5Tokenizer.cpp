@@ -1896,7 +1896,7 @@ stateloop:
               }
             }
           }
-          P::completedNamedCharacterReference(mViewSource);
+          P::completedNamedCharacterReference(mViewSource.get());
           const char16_t* val = nsHtml5NamedCharacters::VALUES[candidate];
           if (!val[1]) {
             emitOrAppendOne(val, returnState);
