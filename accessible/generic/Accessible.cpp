@@ -166,14 +166,13 @@ ENameValueFlag Accessible::Name(nsString& aName) const {
 void Accessible::Description(nsString& aDescription) {
   // There are 4 conditions that make an accessible have no accDescription:
   // 1. it's a text node; or
-  // 2. It has no DHTML describedby property
+  // 2. It has no ARIA describedby or description property
   // 3. it doesn't have an accName; or
   // 4. its title attribute already equals to its accName nsAutoString name;
 
   if (!HasOwnContent() || mContent->IsText()) return;
 
-  nsTextEquivUtils::GetTextEquivFromIDRefs(this, nsGkAtoms::aria_describedby,
-                                           aDescription);
+  ARIADescription(aDescription);
 
   if (aDescription.IsEmpty()) {
     NativeDescription(aDescription);
@@ -1962,6 +1961,22 @@ void Accessible::ARIAName(nsString& aName) const {
       mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::aria_label,
                                      aName)) {
     aName.CompressWhitespace();
+  }
+}
+
+// Accessible protected
+void Accessible::ARIADescription(nsString& aDescription) const {
+  // aria-describedby takes precedence over aria-description
+  nsresult rv = nsTextEquivUtils::GetTextEquivFromIDRefs(
+      this, nsGkAtoms::aria_describedby, aDescription);
+  if (NS_SUCCEEDED(rv)) {
+    aDescription.CompressWhitespace();
+  }
+
+  if (aDescription.IsEmpty() && mContent->IsElement() &&
+      mContent->AsElement()->GetAttr(
+          kNameSpaceID_None, nsGkAtoms::aria_description, aDescription)) {
+    aDescription.CompressWhitespace();
   }
 }
 

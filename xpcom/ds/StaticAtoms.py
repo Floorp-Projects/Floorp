@@ -118,6 +118,7 @@ STATIC_ATOMS = [
     Atom("aria_controls", "aria-controls"),
     Atom("aria_current", "aria-current"),
     Atom("aria_describedby", "aria-describedby"),
+    Atom("aria_description", "aria-description"),
     Atom("aria_disabled", "aria-disabled"),
     Atom("aria_dropeffect", "aria-dropeffect"),
     Atom("aria_expanded", "aria-expanded"),
