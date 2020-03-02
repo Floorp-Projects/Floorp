@@ -68,16 +68,12 @@
 }
 
 - (NSArray*)accessibilityActionNames {
-  // if we're expired, we don't support any attributes.
+  // if we're expired, we don't support any actions.
   if (![self getGeckoAccessible] && ![self getProxyAccessible]) return [NSArray array];
 
-  static NSArray* actionNames = nil;
-
-  if (!actionNames) {
-    actionNames = [[NSArray alloc] initWithObjects:NSAccessibilityPressAction, nil];
-  }
-
-  return actionNames;
+  // Always advertise press action first.
+  return [@[ NSAccessibilityPressAction ]
+      arrayByAddingObjectsFromArray:[super accessibilityActionNames]];
 }
 
 - (void)accessibilityPerformAction:(NSString*)action {
