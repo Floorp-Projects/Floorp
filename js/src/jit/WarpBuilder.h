@@ -49,6 +49,17 @@ namespace jit {
   _(GetLocal)               \
   _(SetLocal)               \
   _(InitLexical)            \
+  _(ToNumeric)              \
+  _(Inc)                    \
+  _(Dec)                    \
+  _(Eq)                     \
+  _(Ne)                     \
+  _(Lt)                     \
+  _(Le)                     \
+  _(Gt)                     \
+  _(Ge)                     \
+  _(StrictEq)               \
+  _(StrictNe)               \
   _(Return)                 \
   _(RetRval)
 
@@ -74,11 +85,13 @@ class MOZ_STACK_CLASS WarpBuilder {
 
   BytecodeSite* newBytecodeSite(jsbytecode* pc);
 
-  bool startNewBlock(size_t stackDepth, jsbytecode* pc,
-                     MBasicBlock* maybePredecessor = nullptr);
+  MOZ_MUST_USE bool startNewBlock(size_t stackDepth, jsbytecode* pc,
+                                  MBasicBlock* maybePredecessor = nullptr);
 
   bool hasTerminatedBlock() const { return current == nullptr; }
   void setTerminatedBlock() { current = nullptr; }
+
+  MOZ_MUST_USE bool resumeAfter(MInstruction* ins, BytecodeLocation loc);
 
   MConstant* constant(const Value& v);
   void pushConstant(const Value& v);
@@ -87,7 +100,10 @@ class MOZ_STACK_CLASS WarpBuilder {
   MOZ_MUST_USE bool buildBody();
   MOZ_MUST_USE bool buildEpilogue();
 
-#define BUILD_OP(OP) bool build_##OP(BytecodeLocation loc);
+  MOZ_MUST_USE bool buildUnaryOp(BytecodeLocation loc);
+  MOZ_MUST_USE bool buildCompareOp(BytecodeLocation loc);
+
+#define BUILD_OP(OP) MOZ_MUST_USE bool build_##OP(BytecodeLocation loc);
   WARP_OPCODE_LIST(BUILD_OP)
 #undef BUILD_OP
 
