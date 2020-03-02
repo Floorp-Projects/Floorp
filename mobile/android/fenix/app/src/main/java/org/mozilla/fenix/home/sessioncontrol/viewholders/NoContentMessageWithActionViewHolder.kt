@@ -36,11 +36,13 @@ class NoContentMessageWithActionViewHolder(
         with(view.context) {
 
             if (buttonIcon != 0 || buttonText != 0) {
-                view.button_layout.isVisible = true
-                view.button_icon.setImageDrawable(getDrawable(buttonIcon))
-                view.button_text.text = getString(buttonText)
-                view.button_layout.setOnClickListener {
-                    listener?.invoke()
+                view.add_tab_button.apply {
+                    isVisible = true
+                    setIcon(getDrawable(buttonIcon))
+                    text = getString(buttonText)
+                    setOnClickListener {
+                        listener?.invoke()
+                    }
                 }
             }
         }

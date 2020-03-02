@@ -36,42 +36,21 @@
         android:textStyle="normal"
         tools:text="@tools:sample/lorem" />
 
-    <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/button_layout"
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/add_tab_button"
+        style="@style/ThemeIndependentMaterialGreyButton"
         android:layout_width="match_parent"
-        android:layout_height="36dp"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
         android:layout_marginTop="6dp"
-        android:layout_marginBottom="4dp"
-        android:background="@drawable/button_background_grey"
-        android:clickable="true"
-        android:focusable="true"
+        android:paddingStart="0dp"
+        android:paddingEnd="12dp"
+        android:textColor="?primaryText"
+        android:textSize="14sp"
         android:visibility="gone"
-        tools:visibility="visible">
-
-        <ImageView
-            android:id="@+id/button_icon"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_margin="5dp"
-            android:importantForAccessibility="no"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toStartOf="@id/button_text"
-            app:layout_constraintTop_toTopOf="parent"
-            tools:srcCompat="@drawable/ic_new" />
-
-        <TextView
-            android:id="@+id/button_text"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:importantForAccessibility="no"
-            android:textColor="?primaryText"
-            android:textSize="14sp"
-            android:textStyle="bold"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            tools:text="@string/home_screen_shortcut_open_new_tab_2" />
-    </androidx.constraintlayout.widget.ConstraintLayout>
-
+        app:iconGravity="textStart"
+        app:iconTint="?primaryText"
+        tools:icon="@drawable/ic_new"
+        tools:text="@string/home_screen_shortcut_open_new_tab_2"
+        tools:visibility="visible" />
 </LinearLayout>
