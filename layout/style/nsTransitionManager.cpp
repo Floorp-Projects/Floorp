@@ -62,11 +62,11 @@ double ElementPropertyTransition::CurrentValuePortion() const {
 
   MOZ_ASSERT(!computedTiming.mProgress.IsNull(),
              "Got a null progress for a fill mode of 'both'");
-  MOZ_ASSERT(mKeyframes.Length() == 2,
-             "Should have two animation keyframes for a transition");
-  return ComputedTimingFunction::GetPortion(mKeyframes[0].mTimingFunction,
-                                            computedTiming.mProgress.Value(),
-                                            computedTiming.mBeforeFlag);
+
+  // 'transition-timing-function' corresponds to the effect timing.
+  // The transition keyframes have a linear timing function so we
+  // can ignore them for the purposes of calculating the value portion.
+  return computedTiming.mProgress.Value();
 }
 
 void ElementPropertyTransition::UpdateStartValueFromReplacedTransition() {
@@ -547,18 +547,12 @@ static Keyframe& AppendKeyframe(double aOffset, nsCSSPropertyID aProperty,
   return frame;
 }
 
-static nsTArray<Keyframe> GetTransitionKeyframes(
-    nsCSSPropertyID aProperty, AnimationValue&& aStartValue,
-    AnimationValue&& aEndValue, const nsTimingFunction& aTimingFunction) {
+static nsTArray<Keyframe> GetTransitionKeyframes(nsCSSPropertyID aProperty,
+                                                 AnimationValue&& aStartValue,
+                                                 AnimationValue&& aEndValue) {
   nsTArray<Keyframe> keyframes(2);
 
-  Keyframe& fromFrame =
-      AppendKeyframe(0.0, aProperty, std::move(aStartValue), keyframes);
-  if (!aTimingFunction.IsLinear()) {
-    fromFrame.mTimingFunction.emplace();
-    fromFrame.mTimingFunction->Init(aTimingFunction);
-  }
-
+  AppendKeyframe(0.0, aProperty, std::move(aStartValue), keyframes);
   AppendKeyframe(1.0, aProperty, std::move(aEndValue), keyframes);
 
   return keyframes;
@@ -685,9 +679,6 @@ bool nsTransitionManager::ConsiderInitiatingTransition(
     return false;
   }
 
-  const nsTimingFunction& tf =
-      aStyleDisplay.GetTransitionTimingFunction(transitionIdx);
-
   AnimationValue startForReversingTest = startValue;
   double reversePortion = 1.0;
 
@@ -737,13 +728,19 @@ bool nsTransitionManager::ConsiderInitiatingTransition(
       duration, delay, 1.0 /* iteration count */,
       dom::PlaybackDirection::Normal, dom::FillMode::Backwards);
 
+  const nsTimingFunction& tf =
+      aStyleDisplay.GetTransitionTimingFunction(transitionIdx);
+  if (!tf.IsLinear()) {
+    timing.SetTimingFunction(Some(ComputedTimingFunction(tf)));
+  }
+
   KeyframeEffectParams effectOptions;
   RefPtr<ElementPropertyTransition> pt = new ElementPropertyTransition(
       aElement->OwnerDoc(), OwningAnimationTarget(aElement, aPseudoType),
       std::move(timing), startForReversingTest, reversePortion, effectOptions);
 
   pt->SetKeyframes(GetTransitionKeyframes(aProperty, std::move(startValue),
-                                          std::move(endValue), tf),
+                                          std::move(endValue)),
                    &aNewStyle);
 
   RefPtr<CSSTransition> animation =
