@@ -185,4 +185,21 @@ add_task(async function test_trailhead_branches() {
     // Unexpected selectors:
     ["#trailheadDialog", ".trailheadCards"]
   );
+
+  // Test trailhead default join-supercharge branch renders
+  // correct when separate about welcome pref is false
+  await test_trailhead_branch(
+    "join-supercharge",
+    // Expected selectors:
+    [
+      ".trailhead.welcomeCohort",
+      "h1[data-l10n-id=onboarding-welcome-header]",
+      "button[data-l10n-id=onboarding-firefox-monitor-button]",
+      "h3[data-l10n-id=onboarding-welcome-form-header]",
+      "p[data-l10n-id=onboarding-benefit-sync-text]",
+      "p[data-l10n-id=onboarding-benefit-monitor-text]",
+      "p[data-l10n-id=onboarding-benefit-lockwise-text]",
+    ],
+    ["h2[data-l10n-id=onboarding-fullpage-welcome-subheader]"]
+  );
 });
