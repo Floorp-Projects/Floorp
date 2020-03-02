@@ -58,6 +58,12 @@ AddonTestUtils.createAppInfo(
   "42"
 );
 
+// Allow telemetry probes which may otherwise be disabled for some applications (e.g. Thunderbird)
+Services.prefs.setBoolPref(
+  "toolkit.telemetry.testing.overrideProductsCheck",
+  true
+);
+
 /**
  * Load engines from test data located in particular folders.
  *
