@@ -188,7 +188,7 @@
   skin/classic/browser/fullscreen-exit.svg            (../shared/icons/fullscreen-exit.svg)
   skin/classic/browser/history.svg                    (../shared/icons/history.svg)
   skin/classic/browser/home.svg                       (../shared/icons/home.svg)
-#ifndef XP_LINUX
+#ifndef MOZ_WIDGET_GTK
   skin/classic/browser/import-export.svg              (../shared/icons/import-export.svg)
 #endif
   skin/classic/browser/library.svg                    (../shared/icons/library.svg)
@@ -221,7 +221,7 @@
   skin/classic/browser/sidebars.svg                   (../shared/icons/sidebars.svg)
   skin/classic/browser/sidebars-right.svg             (../shared/icons/sidebars-right.svg)
   skin/classic/browser/sign-out.svg                   (../shared/icons/sign-out.svg)
-#ifndef XP_LINUX
+#ifndef MOZ_WIDGET_GTK
   skin/classic/browser/sort.svg                       (../shared/icons/sort.svg)
 #endif
   skin/classic/browser/stop.svg                       (../shared/icons/stop.svg)
