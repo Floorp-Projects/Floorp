@@ -206,6 +206,12 @@ class nsFocusManager final : public nsIFocusManager,
    */
   void ActivateRemoteFrameIfNeeded(mozilla::dom::Element&);
 
+  /**
+   * Raises the top-level window aWindow at the widget level.
+   */
+  void RaiseWindow(nsPIDOMWindowOuter* aWindow,
+                   mozilla::dom::CallerType aCallerType);
+
   static uint32_t FocusOptionsToFocusManagerFlags(
       const mozilla::dom::FocusOptions& aOptions);
 
@@ -446,12 +452,6 @@ class nsFocusManager final : public nsIFocusManager,
   MOZ_CAN_RUN_SCRIPT
   void ScrollIntoView(mozilla::PresShell* aPresShell, nsIContent* aContent,
                       uint32_t aFlags);
-
-  /**
-   * Raises the top-level window aWindow at the widget level.
-   */
-  void RaiseWindow(nsPIDOMWindowOuter* aWindow,
-                   mozilla::dom::CallerType aCallerType);
 
   /**
    * Updates the caret positon and visibility to match the focus.
