@@ -313,20 +313,6 @@ class nsFrameSelection final {
    */
   nsresult SelectCellElement(nsIContent* aCell);
 
- private:
-  /**
-   * Add cells to the selection inside of the given cells range.
-   *
-   * @param  aTable             [in] HTML table element
-   * @param  aStartRowIndex     [in] row index where the cells range starts
-   * @param  aStartColumnIndex  [in] column index where the cells range starts
-   * @param  aEndRowIndex       [in] row index where the cells range ends
-   * @param  aEndColumnIndex    [in] column index where the cells range ends
-   */
-  nsresult AddCellsToSelection(nsIContent* aTable, int32_t aStartRowIndex,
-                               int32_t aStartColumnIndex, int32_t aEndRowIndex,
-                               int32_t aEndColumnIndex);
-
  public:
   /**
    * Remove cells from selection inside of the given cell range.
