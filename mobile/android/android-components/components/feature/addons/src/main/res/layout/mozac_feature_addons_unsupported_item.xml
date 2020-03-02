@@ -4,22 +4,22 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:gravity="center_vertical"
     android:orientation="horizontal"
     android:padding="16dp">
 
-    <ImageView
+    <androidx.appcompat.widget.AppCompatImageView
         android:id="@+id/add_on_icon"
         android:layout_width="48dp"
         android:layout_height="48dp"
         android:importantForAccessibility="no"
         android:scaleType="fitCenter"
         app:srcCompat="@drawable/mozac_ic_extensions"
-        android:tint="?android:attr/textColorPrimary" />
+        app:tint="?android:attr/textColorPrimary" />
 
     <RelativeLayout
         android:layout_width="wrap_content"
@@ -31,14 +31,14 @@
             android:id="@+id/add_on_name"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_toStartOf="@+id/add_on_remove_button"
             android:layout_centerVertical="true"
-            android:textSize="18sp"
+            android:layout_toStartOf="@+id/add_on_remove_button"
             android:ellipsize="end"
             android:maxLines="1"
+            android:textSize="18sp"
             tools:text="uBlock Origin" />
 
-        <ImageButton
+        <androidx.appcompat.widget.AppCompatImageButton
             android:id="@+id/add_on_remove_button"
             android:layout_width="48dp"
             android:layout_height="48dp"
@@ -46,7 +46,7 @@
             android:layout_centerVertical="true"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:contentDescription="@string/mozac_feature_addons_remove"
-            app:srcCompat="@drawable/mozac_ic_delete"
-            android:tint="?android:attr/textColorPrimary" />
+            app:tint="?android:attr/textColorPrimary"
+            app:srcCompat="@drawable/mozac_ic_delete" />
     </RelativeLayout>
 </LinearLayout>

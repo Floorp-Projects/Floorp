@@ -26,12 +26,12 @@
         android:paddingBottom="8dp"
         android:orientation="horizontal">
 
-        <ImageView
+        <androidx.appcompat.widget.AppCompatImageView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:contentDescription="@string/mozac_feature_addons_remove"
             android:layout_gravity="center_vertical"
-            android:tint="@android:color/darker_gray"
+            app:tint="@android:color/darker_gray"
             app:srcCompat="@drawable/mozac_ic_close"/>
 
         <LinearLayout
