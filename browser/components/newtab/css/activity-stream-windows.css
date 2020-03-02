@@ -2970,6 +2970,8 @@ main {
       background: rgba(12, 12, 13, 0.2); }
       [lwt-newtab-brighttext] .ds-dismiss .ds-dismiss-button:hover {
         background: rgba(12, 12, 13, 0.5); }
+        [lwt-newtab-brighttext] .ds-dismiss .ds-dismiss-button:hover .icon {
+          fill: #F9F9FA; }
       .ds-dismiss .ds-dismiss-button:hover .icon {
         fill: #2A2A2E; }
     .ds-dismiss .ds-dismiss-button:active {
