@@ -145,9 +145,16 @@ Document* StyleSheet::GetAssociatedDocument() const {
 
 dom::DocumentOrShadowRoot* StyleSheet::GetAssociatedDocumentOrShadowRoot()
     const {
-  // FIXME(nordzilla) This will not work for children of adtoped sheets.
-  // https://bugzilla.mozilla.org/show_bug.cgi?id=1613748
-  return IsConstructed() ? mConstructorDocument : mDocumentOrShadowRoot;
+  if (mDocumentOrShadowRoot) {
+    return mDocumentOrShadowRoot;
+  }
+  for (auto* sheet = this; sheet; sheet = sheet->mParent) {
+    MOZ_ASSERT(!sheet->mDocumentOrShadowRoot);
+    if (sheet->IsConstructed()) {
+      return sheet->mConstructorDocument;
+    }
+  }
+  return nullptr;
 }
 
 Document* StyleSheet::GetComposedDoc() const {
