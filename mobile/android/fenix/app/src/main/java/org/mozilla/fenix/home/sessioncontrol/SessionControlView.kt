@@ -50,29 +50,54 @@ private fun normalModeAdapterItems(
 
     items.add(AdapterItem.TabHeader(false, tabs.isNotEmpty()))
 
-    if (tabs.isNotEmpty()) {
-        items.addAll(tabs.reversed().map(AdapterItem::TabItem))
-        items.add(AdapterItem.SaveTabGroup)
-    } else {
-        items.add(noTabMessage)
-    }
-
-    items.add(AdapterItem.CollectionHeader)
-    if (collections.isNotEmpty()) {
-        // If the collection is expanded, we want to add all of its tabs beneath it in the adapter
-        collections.map {
-            AdapterItem.CollectionItem(it, expandedCollections.contains(it.id), tabs.isNotEmpty())
-        }.forEach {
-            items.add(it)
-            if (it.expanded) {
-                items.addAll(collectionTabItems(it.collection))
-            }
+    when {
+        tabs.isNotEmpty() && collections.isNotEmpty() -> {
+            showTabs(items, tabs)
+            showCollections(collections, expandedCollections, tabs, items)
         }
-    } else {
-        items.add(noCollectionMessage)
+
+        tabs.isNotEmpty() && collections.isEmpty() -> {
+            showTabs(items, tabs)
+            items.add(noCollectionMessage)
+        }
+
+        tabs.isEmpty() && collections.isNotEmpty() -> {
+            items.add(noTabMessage)
+            showCollections(collections, expandedCollections, tabs, items)
+        }
+
+        tabs.isEmpty() && collections.isEmpty() -> {
+            items.add(noTabMessage)
+        }
     }
 
     return items
+}
+
+private fun showTabs(
+    items: MutableList<AdapterItem>,
+    tabs: List<Tab>
+) {
+    items.addAll(tabs.reversed().map(AdapterItem::TabItem))
+    items.add(AdapterItem.SaveTabGroup)
+}
+
+private fun showCollections(
+    collections: List<TabCollection>,
+    expandedCollections: Set<Long>,
+    tabs: List<Tab>,
+    items: MutableList<AdapterItem>
+) {
+    // If the collection is expanded, we want to add all of its tabs beneath it in the adapter
+    items.add(AdapterItem.CollectionHeader)
+    collections.map {
+        AdapterItem.CollectionItem(it, expandedCollections.contains(it.id), tabs.isNotEmpty())
+    }.forEach {
+        items.add(it)
+        if (it.expanded) {
+            items.addAll(collectionTabItems(it.collection))
+        }
+    }
 }
 
 private fun privateModeAdapterItems(tabs: List<Tab>): List<AdapterItem> {
