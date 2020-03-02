@@ -127,15 +127,14 @@ void FileInfo::Cleanup() {
 }
 
 /* static */
-nsCOMPtr<nsIFile> FileInfo::GetFileForFileInfo(FileInfo* aFileInfo) {
-  FileManager* const fileManager = aFileInfo->Manager();
+nsCOMPtr<nsIFile> FileInfo::GetFileForFileInfo(const FileInfo& aFileInfo) {
+  FileManager* const fileManager = aFileInfo.Manager();
   const nsCOMPtr<nsIFile> directory = fileManager->GetDirectory();
   if (NS_WARN_IF(!directory)) {
     return nullptr;
   }
 
-  nsCOMPtr<nsIFile> file =
-      FileManager::GetFileForId(directory, aFileInfo->Id());
+  nsCOMPtr<nsIFile> file = FileManager::GetFileForId(directory, aFileInfo.Id());
   if (NS_WARN_IF(!file)) {
     return nullptr;
   }
