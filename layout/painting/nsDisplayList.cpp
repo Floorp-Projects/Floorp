@@ -435,13 +435,9 @@ static void AddAnimationForProperty(nsIFrame* aFrame,
   // since after generating the new transition other requestAnimationFrame
   // callbacks may run that introduce further lag between the main thread and
   // the compositor.
-  if (aAnimation->AsCSSTransition() && aAnimation->GetEffect() &&
-      aAnimation->GetEffect()->AsTransition()) {
-    // We update startValue from the replaced transition only if the effect is
-    // an ElementPropertyTransition.
-    aAnimation->GetEffect()
-        ->AsTransition()
-        ->UpdateStartValueFromReplacedTransition();
+  CSSTransition* cssTransition = aAnimation->AsCSSTransition();
+  if (cssTransition) {
+    cssTransition->UpdateStartValueFromReplacedTransition();
   }
 
   animation->originTime() =

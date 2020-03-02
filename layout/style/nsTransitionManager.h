@@ -93,20 +93,6 @@ struct ElementPropertyTransition : public dom::KeyframeEffect {
   // at the current time.  (The input to the transition timing function
   // has time units, the output has value units.)
   double CurrentValuePortion() const;
-
-  // For a new transition interrupting an existing transition on the
-  // compositor, update the start value to match the value of the replaced
-  // transitions at the current time.
-  void UpdateStartValueFromReplacedTransition();
-
-  struct ReplacedTransitionProperties {
-    TimeDuration mStartTime;
-    double mPlaybackRate;
-    TimingParams mTiming;
-    Maybe<ComputedTimingFunction> mTimingFunction;
-    AnimationValue mFromValue, mToValue;
-  };
-  Maybe<ReplacedTransitionProperties> mReplacedTransition;
 };
 
 namespace dom {
@@ -197,12 +183,29 @@ class CSSTransition final : public Animation {
   // because the animation on the compositor may be running ahead while
   // main-thread is busy.
   static Nullable<TimeDuration> GetCurrentTimeAt(
-      const DocumentTimeline& aTimeline, const TimeStamp& aBaseTime,
+      const AnimationTimeline& aTimeline, const TimeStamp& aBaseTime,
       const TimeDuration& aStartTime, double aPlaybackRate);
 
   void MaybeQueueCancelEvent(const StickyTimeDuration& aActiveTime) override {
     QueueEvents(aActiveTime);
   }
+
+  struct ReplacedTransitionProperties {
+    TimeDuration mStartTime;
+    double mPlaybackRate;
+    TimingParams mTiming;
+    Maybe<ComputedTimingFunction> mTimingFunction;
+    AnimationValue mFromValue, mToValue;
+  };
+  void SetReplacedTransition(
+      ReplacedTransitionProperties&& aReplacedTransition) {
+    mReplacedTransition.emplace(std::move(aReplacedTransition));
+  }
+
+  // For a new transition interrupting an existing transition on the
+  // compositor, update the start value to match the value of the replaced
+  // transitions at the current time.
+  void UpdateStartValueFromReplacedTransition();
 
  protected:
   virtual ~CSSTransition() {
@@ -261,6 +264,8 @@ class CSSTransition final : public Animation {
   // using the Web Animations API.
   nsCSSPropertyID mTransitionProperty;
   AnimationValue mTransitionToValue;
+
+  Maybe<ReplacedTransitionProperties> mReplacedTransition;
 };
 
 }  // namespace dom
