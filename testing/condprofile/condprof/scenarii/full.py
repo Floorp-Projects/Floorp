@@ -19,6 +19,9 @@ class Builder:
         # see Bug 1608604 - on GV we get OOM killed if we do too much...
         if "gecko" in self.platform:
             self.max_urls = max(self.max_urls, 30)
+        # see Bug 1619107 - we have stability issues with Fennec @ bitbar
+        elif "fennec" in self.platform:
+            self.max_urls = max(self.max_urls, 5)
         elif self.mobile:
             self.max_urls = max(self.max_urls, 150)
 
