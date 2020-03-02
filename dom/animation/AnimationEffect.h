@@ -18,6 +18,9 @@
 #include "nsWrapperCache.h"
 
 namespace mozilla {
+
+struct ElementPropertyTransition;
+
 namespace dom {
 
 class Animation;
@@ -33,6 +36,11 @@ class AnimationEffect : public nsISupports, public nsWrapperCache {
   AnimationEffect(Document* aDocument, TimingParams&& aTiming);
 
   virtual KeyframeEffect* AsKeyframeEffect() { return nullptr; }
+
+  virtual ElementPropertyTransition* AsTransition() { return nullptr; }
+  virtual const ElementPropertyTransition* AsTransition() const {
+    return nullptr;
+  }
 
   nsISupports* GetParentObject() const { return ToSupports(mDocument); }
 
