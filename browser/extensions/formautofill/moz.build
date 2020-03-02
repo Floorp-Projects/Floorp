@@ -16,17 +16,17 @@ FINAL_TARGET_FILES.features['formautofill@mozilla.org'] += [
   'schema.json',
 ]
 
-if CONFIG['OS_ARCH'] == 'Linux':
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk':
     FINAL_TARGET_FILES.features['formautofill@mozilla.org'].chrome.res += [
         'skin/linux/autocomplete-item.css',
         'skin/linux/editDialog.css',
     ]
-elif CONFIG['OS_ARCH'] == 'Darwin':
+elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     FINAL_TARGET_FILES.features['formautofill@mozilla.org'].chrome.res += [
         'skin/osx/autocomplete-item.css',
         'skin/osx/editDialog.css',
     ]
-elif CONFIG['OS_ARCH'] == 'WINNT':
+elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     FINAL_TARGET_FILES.features['formautofill@mozilla.org'].chrome.res += [
         'skin/windows/autocomplete-item.css',
         'skin/windows/editDialog.css',
