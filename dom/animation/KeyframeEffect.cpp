@@ -253,36 +253,6 @@ void KeyframeEffect::SetKeyframes(nsTArray<Keyframe>&& aKeyframes,
   }
 }
 
-void KeyframeEffect::ReplaceTransitionStartValue(AnimationValue&& aStartValue) {
-  if (!aStartValue.mServo) {
-    return;
-  }
-
-  // A typical transition should have a single property and a single segment.
-  //
-  // (And for atypical transitions, that is, those updated by script, we don't
-  // apply the replacing behavior.)
-  if (mProperties.Length() != 1 || mProperties[0].mSegments.Length() != 1) {
-    return;
-  }
-
-  // Likewise, check that the keyframes are of the expected shape.
-  if (mKeyframes.Length() != 2 || mKeyframes[0].mPropertyValues.Length() != 1) {
-    return;
-  }
-
-  // Check that the value we are about to substitute in is actually for the
-  // same property.
-  if (Servo_AnimationValue_GetPropertyId(aStartValue.mServo) !=
-      mProperties[0].mProperty) {
-    return;
-  }
-
-  mKeyframes[0].mPropertyValues[0].mServoDeclarationBlock =
-      Servo_AnimationValue_Uncompute(aStartValue.mServo).Consume();
-  mProperties[0].mSegments[0].mFromValue = std::move(aStartValue);
-}
-
 static bool IsEffectiveProperty(const EffectSet& aEffects,
                                 nsCSSPropertyID aProperty) {
   return !aEffects.PropertiesWithImportantRules().HasProperty(aProperty) ||

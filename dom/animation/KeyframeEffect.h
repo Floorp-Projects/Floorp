@@ -101,6 +101,8 @@ struct AnimationProperty {
                              const dom::Element* aElement);
 };
 
+struct ElementPropertyTransition;
+
 namespace dom {
 
 class Animation;
@@ -184,10 +186,6 @@ class KeyframeEffect : public AnimationEffect {
                     ErrorResult& aRv);
   void SetKeyframes(nsTArray<Keyframe>&& aKeyframes,
                     const ComputedStyle* aStyle);
-
-  // Replace the start value of the transition. This is used for updating
-  // transitions running on the compositor.
-  void ReplaceTransitionStartValue(AnimationValue&& aStartValue);
 
   // Returns the set of properties affected by this effect regardless of
   // whether any of these properties is overridden by an !important rule.

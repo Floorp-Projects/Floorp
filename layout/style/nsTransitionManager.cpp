@@ -45,6 +45,78 @@ using mozilla::dom::Nullable;
 using namespace mozilla;
 using namespace mozilla::css;
 
+double ElementPropertyTransition::CurrentValuePortion() const {
+  MOZ_ASSERT(!GetLocalTime().IsNull(),
+             "Getting the value portion of an animation that's not being "
+             "sampled");
+
+  // Transitions use a fill mode of 'backwards' so GetComputedTiming will
+  // never return a null time progress due to being *before* the animation
+  // interval. However, it might be possible that we're behind on flushing
+  // causing us to get called *after* the animation interval. So, just in
+  // case, we override the fill mode to 'both' to ensure the progress
+  // is never null.
+  TimingParams timingToUse = SpecifiedTiming();
+  timingToUse.SetFill(dom::FillMode::Both);
+  ComputedTiming computedTiming = GetComputedTiming(&timingToUse);
+
+  MOZ_ASSERT(!computedTiming.mProgress.IsNull(),
+             "Got a null progress for a fill mode of 'both'");
+  MOZ_ASSERT(mKeyframes.Length() == 2,
+             "Should have two animation keyframes for a transition");
+  return ComputedTimingFunction::GetPortion(mKeyframes[0].mTimingFunction,
+                                            computedTiming.mProgress.Value(),
+                                            computedTiming.mBeforeFlag);
+}
+
+void ElementPropertyTransition::UpdateStartValueFromReplacedTransition() {
+  if (!mReplacedTransition) {
+    return;
+  }
+  MOZ_ASSERT(nsCSSProps::PropHasFlags(TransitionProperty(),
+                                      CSSPropFlags::CanAnimateOnCompositor),
+             "The transition property should be able to be run on the "
+             "compositor");
+  MOZ_ASSERT(mTarget, "We should have a valid target at this moment");
+
+  dom::DocumentTimeline* timeline = mTarget.mElement->OwnerDoc()->Timeline();
+  ComputedTiming computedTiming = GetComputedTimingAt(
+      dom::CSSTransition::GetCurrentTimeAt(*timeline, TimeStamp::Now(),
+                                           mReplacedTransition->mStartTime,
+                                           mReplacedTransition->mPlaybackRate),
+      mReplacedTransition->mTiming, mReplacedTransition->mPlaybackRate);
+
+  if (!computedTiming.mProgress.IsNull()) {
+    double valuePosition = ComputedTimingFunction::GetPortion(
+        mReplacedTransition->mTimingFunction, computedTiming.mProgress.Value(),
+        computedTiming.mBeforeFlag);
+
+    MOZ_ASSERT(
+        mProperties.Length() == 1 && mProperties[0].mSegments.Length() == 1,
+        "The transition should have one property and one segment");
+    MOZ_ASSERT(mKeyframes.Length() == 2,
+               "Transitions should have exactly two animation keyframes");
+    MOZ_ASSERT(mKeyframes[0].mPropertyValues.Length() == 1,
+               "Transitions should have exactly one property in their first "
+               "frame");
+
+    const AnimationValue& replacedFrom = mReplacedTransition->mFromValue;
+    const AnimationValue& replacedTo = mReplacedTransition->mToValue;
+    AnimationValue startValue;
+    startValue.mServo =
+        Servo_AnimationValues_Interpolate(replacedFrom.mServo,
+                                          replacedTo.mServo, valuePosition)
+            .Consume();
+    if (startValue.mServo) {
+      mKeyframes[0].mPropertyValues[0].mServoDeclarationBlock =
+          Servo_AnimationValue_Uncompute(startValue.mServo).Consume();
+      mProperties[0].mSegments[0].mFromValue = std::move(startValue);
+    }
+  }
+
+  mReplacedTransition.reset();
+}
+
 ////////////////////////// CSSTransition ////////////////////////////
 
 JSObject* CSSTransition::WrapObject(JSContext* aCx,
@@ -269,7 +341,7 @@ bool CSSTransition::HasLowerCompositeOrderThan(
 
 /* static */
 Nullable<TimeDuration> CSSTransition::GetCurrentTimeAt(
-    const AnimationTimeline& aTimeline, const TimeStamp& aBaseTime,
+    const dom::DocumentTimeline& aTimeline, const TimeStamp& aBaseTime,
     const TimeDuration& aStartTime, double aPlaybackRate) {
   Nullable<TimeDuration> result;
 
@@ -282,93 +354,14 @@ Nullable<TimeDuration> CSSTransition::GetCurrentTimeAt(
   return result;
 }
 
-double CSSTransition::CurrentValuePortion() const {
-  if (!GetEffect()) {
-    return 0.0;
-  }
-
-  // Transitions use a fill mode of 'backwards' so GetComputedTiming will
-  // never return a null time progress due to being *before* the animation
-  // interval. However, it might be possible that we're behind on flushing
-  // causing us to get called *after* the animation interval. So, just in
-  // case, we override the fill mode to 'both' to ensure the progress
-  // is never null.
-  TimingParams timingToUse = GetEffect()->SpecifiedTiming();
-  timingToUse.SetFill(dom::FillMode::Both);
-  ComputedTiming computedTiming = GetEffect()->GetComputedTiming(&timingToUse);
-
-  if (computedTiming.mProgress.IsNull()) {
-    return 0.0;
-  }
-
-  // 'transition-timing-function' corresponds to the effect timing while
-  // the transition keyframes have a linear timing function so we can ignore
-  // them for the purposes of calculating the value portion.
-  return computedTiming.mProgress.Value();
-}
-
-void CSSTransition::UpdateStartValueFromReplacedTransition() {
-  MOZ_ASSERT(nsCSSProps::PropHasFlags(mTransitionProperty,
-                                      CSSPropFlags::CanAnimateOnCompositor),
-             "The transition property should be able to be run on the "
-             "compositor");
-  MOZ_ASSERT(mTimeline,
-             "Should have a timeline if we are replacing transition start "
-             "values");
-
-  if (!mReplacedTransition) {
-    return;
-  }
-
-  if (!mEffect) {
-    return;
-  }
-
-  KeyframeEffect* keyframeEffect = mEffect->AsKeyframeEffect();
-  if (!keyframeEffect) {
-    return;
-  }
-
-  ComputedTiming computedTiming = AnimationEffect::GetComputedTimingAt(
-      CSSTransition::GetCurrentTimeAt(*mTimeline, TimeStamp::Now(),
-                                      mReplacedTransition->mStartTime,
-                                      mReplacedTransition->mPlaybackRate),
-      mReplacedTransition->mTiming, mReplacedTransition->mPlaybackRate);
-
-  if (!computedTiming.mProgress.IsNull()) {
-    double valuePosition = ComputedTimingFunction::GetPortion(
-        mReplacedTransition->mTimingFunction, computedTiming.mProgress.Value(),
-        computedTiming.mBeforeFlag);
-
-    const AnimationValue& replacedFrom = mReplacedTransition->mFromValue;
-    const AnimationValue& replacedTo = mReplacedTransition->mToValue;
-    AnimationValue startValue;
-    startValue.mServo =
-        Servo_AnimationValues_Interpolate(replacedFrom.mServo,
-                                          replacedTo.mServo, valuePosition)
-            .Consume();
-
-    keyframeEffect->ReplaceTransitionStartValue(std::move(startValue));
-  }
-
-  mReplacedTransition.reset();
-}
-
 void CSSTransition::SetEffectFromStyle(dom::AnimationEffect* aEffect) {
   Animation::SetEffectNoUpdate(aEffect);
 
-  // Initialize transition property and to value.
-  //
-  // Typically this should only be called with a KeyframeEffect representing
-  // a simple transition, but just to be sure we check the effect has the
-  // expected shape first.
-  const KeyframeEffect* keyframeEffect = aEffect->AsKeyframeEffect();
-  if (MOZ_LIKELY(keyframeEffect && keyframeEffect->Properties().Length() == 1 &&
-                 keyframeEffect->Properties()[0].mSegments.Length() == 1)) {
-    mTransitionProperty = keyframeEffect->Properties()[0].mProperty;
-    mTransitionToValue = keyframeEffect->Properties()[0].mSegments[0].mToValue;
-  } else {
-    MOZ_ASSERT_UNREACHABLE("Transition effect has unexpected shape");
+  // Initialize transition property.
+  ElementPropertyTransition* pt = aEffect ? aEffect->AsTransition() : nullptr;
+  if (eCSSProperty_UNKNOWN == mTransitionProperty && pt) {
+    mTransitionProperty = pt->TransitionProperty();
+    mTransitionToValue = pt->ToValue();
   }
 }
 
@@ -554,12 +547,18 @@ static Keyframe& AppendKeyframe(double aOffset, nsCSSPropertyID aProperty,
   return frame;
 }
 
-static nsTArray<Keyframe> GetTransitionKeyframes(nsCSSPropertyID aProperty,
-                                                 AnimationValue&& aStartValue,
-                                                 AnimationValue&& aEndValue) {
+static nsTArray<Keyframe> GetTransitionKeyframes(
+    nsCSSPropertyID aProperty, AnimationValue&& aStartValue,
+    AnimationValue&& aEndValue, const nsTimingFunction& aTimingFunction) {
   nsTArray<Keyframe> keyframes(2);
 
-  AppendKeyframe(0.0, aProperty, std::move(aStartValue), keyframes);
+  Keyframe& fromFrame =
+      AppendKeyframe(0.0, aProperty, std::move(aStartValue), keyframes);
+  if (!aTimingFunction.IsLinear()) {
+    fromFrame.mTimingFunction.emplace();
+    fromFrame.mTimingFunction->Init(aTimingFunction);
+  }
+
   AppendKeyframe(1.0, aProperty, std::move(aEndValue), keyframes);
 
   return keyframes;
@@ -567,52 +566,6 @@ static nsTArray<Keyframe> GetTransitionKeyframes(nsCSSPropertyID aProperty,
 
 static bool IsTransitionable(nsCSSPropertyID aProperty) {
   return Servo_Property_IsTransitionable(aProperty);
-}
-
-static Maybe<CSSTransition::ReplacedTransitionProperties>
-GetReplacedTransitionProperties(const CSSTransition* aTransition,
-                                const DocumentTimeline* aTimelineToMatch) {
-  Maybe<CSSTransition::ReplacedTransitionProperties> result;
-
-  // Transition needs to be currently running on the compositor to be
-  // replaceable.
-  if (!aTransition || !aTransition->HasCurrentEffect() ||
-      !aTransition->IsRunningOnCompositor() ||
-      aTransition->GetStartTime().IsNull()) {
-    return result;
-  }
-
-  // Transition needs to be running on the same timeline.
-  if (aTransition->GetTimeline() != aTimelineToMatch) {
-    return result;
-  }
-
-  // The transition needs to have a keyframe effect.
-  const KeyframeEffect* keyframeEffect =
-      aTransition->GetEffect() ? aTransition->GetEffect()->AsKeyframeEffect()
-                               : nullptr;
-  if (!keyframeEffect) {
-    return result;
-  }
-
-  // The keyframe effect needs to be a simple transition of the original
-  // transition property (i.e. not replaced with something else).
-  if (keyframeEffect->Properties().Length() != 1 ||
-      keyframeEffect->Properties()[0].mSegments.Length() != 1 ||
-      keyframeEffect->Properties()[0].mProperty !=
-          aTransition->TransitionProperty()) {
-    return result;
-  }
-
-  const AnimationPropertySegment& segment =
-      keyframeEffect->Properties()[0].mSegments[0];
-
-  result.emplace(CSSTransition::ReplacedTransitionProperties(
-      {aTransition->GetStartTime().Value(), aTransition->PlaybackRate(),
-       keyframeEffect->SpecifiedTiming(), segment.mTimingFunction,
-       segment.mFromValue, segment.mToValue}));
-
-  return result;
 }
 
 bool nsTransitionManager::ConsiderInitiatingTransition(
@@ -668,15 +621,17 @@ bool nsTransitionManager::ConsiderInitiatingTransition(
                        startValue.IsInterpolableWith(aProperty, endValue);
 
   bool haveCurrentTransition = false;
-  size_t currentIndex = nsTArray<KeyframeEffect>::NoIndex;
-  const CSSTransition* oldTransition = nullptr;
+  size_t currentIndex = nsTArray<ElementPropertyTransition>::NoIndex;
+  const ElementPropertyTransition* oldPT = nullptr;
   if (aElementTransitions) {
     OwningCSSTransitionPtrArray& animations = aElementTransitions->mAnimations;
     for (size_t i = 0, i_end = animations.Length(); i < i_end; ++i) {
       if (animations[i]->TransitionProperty() == aProperty) {
         haveCurrentTransition = true;
         currentIndex = i;
-        oldTransition = animations[i];
+        oldPT = animations[i]->GetEffect()
+                    ? animations[i]->GetEffect()->AsTransition()
+                    : nullptr;
         break;
       }
     }
@@ -713,7 +668,7 @@ bool nsTransitionManager::ConsiderInitiatingTransition(
       OwningCSSTransitionPtrArray& animations =
           aElementTransitions->mAnimations;
       animations[currentIndex]->CancelFromStyle(PostRestyleMode::IfNeeded);
-      oldTransition = nullptr;  // Clear pointer so it doesn't dangle
+      oldPT = nullptr;  // Clear pointer so it doesn't dangle
       animations.RemoveElementAt(currentIndex);
       EffectSet* effectSet = EffectSet::GetEffectSet(aElement, aPseudoType);
       if (effectSet) {
@@ -730,19 +685,25 @@ bool nsTransitionManager::ConsiderInitiatingTransition(
     return false;
   }
 
+  const nsTimingFunction& tf =
+      aStyleDisplay.GetTransitionTimingFunction(transitionIdx);
+
   AnimationValue startForReversingTest = startValue;
   double reversePortion = 1.0;
 
   // If the new transition reverses an existing one, we'll need to
   // handle the timing differently.
+  // FIXME: Move mStartForReversingTest, mReversePortion to CSSTransition,
+  //        and set the timing function on transitions as an effect-level
+  //        easing (rather than keyframe-level easing). (Bug 1292001)
   if (haveCurrentTransition &&
       aElementTransitions->mAnimations[currentIndex]->HasCurrentEffect() &&
-      oldTransition && oldTransition->StartForReversingTest() == endValue) {
+      oldPT && oldPT->mStartForReversingTest == endValue) {
     // Compute the appropriate negative transition-delay such that right
     // now we'd end up at the current position.
     double valuePortion =
-        oldTransition->CurrentValuePortion() * oldTransition->ReversePortion() +
-        (1.0 - oldTransition->ReversePortion());
+        oldPT->CurrentValuePortion() * oldPT->mReversePortion +
+        (1.0 - oldPT->mReversePortion);
     // A timing function with negative y1 (or y2!) might make
     // valuePortion negative.  In this case, we still want to apply our
     // reversing logic based on relative distances, not make duration
@@ -768,7 +729,7 @@ bool nsTransitionManager::ConsiderInitiatingTransition(
 
     duration *= valuePortion;
 
-    startForReversingTest = oldTransition->ToValue();
+    startForReversingTest = oldPT->ToValue();
     reversePortion = valuePortion;
   }
 
@@ -776,21 +737,14 @@ bool nsTransitionManager::ConsiderInitiatingTransition(
       duration, delay, 1.0 /* iteration count */,
       dom::PlaybackDirection::Normal, dom::FillMode::Backwards);
 
-  const nsTimingFunction& tf =
-      aStyleDisplay.GetTransitionTimingFunction(transitionIdx);
-  if (!tf.IsLinear()) {
-    timing.SetTimingFunction(Some(ComputedTimingFunction(tf)));
-  }
-
   KeyframeEffectParams effectOptions;
-  RefPtr<KeyframeEffect> keyframeEffect = new KeyframeEffect(
+  RefPtr<ElementPropertyTransition> pt = new ElementPropertyTransition(
       aElement->OwnerDoc(), OwningAnimationTarget(aElement, aPseudoType),
-      std::move(timing), effectOptions);
+      std::move(timing), startForReversingTest, reversePortion, effectOptions);
 
-  keyframeEffect->SetKeyframes(
-      GetTransitionKeyframes(aProperty, std::move(startValue),
-                             std::move(endValue)),
-      &aNewStyle);
+  pt->SetKeyframes(GetTransitionKeyframes(aProperty, std::move(startValue),
+                                          std::move(endValue), tf),
+                   &aNewStyle);
 
   RefPtr<CSSTransition> animation =
       new CSSTransition(mPresContext->Document()->GetScopeObject());
@@ -798,9 +752,7 @@ bool nsTransitionManager::ConsiderInitiatingTransition(
   animation->SetTimelineNoUpdate(timeline);
   animation->SetCreationSequence(
       mPresContext->RestyleManager()->GetAnimationGeneration());
-  animation->SetEffectFromStyle(keyframeEffect);
-  animation->SetReverseParameters(std::move(startForReversingTest),
-                                  reversePortion);
+  animation->SetEffectFromStyle(pt);
   animation->PlayFromStyle();
 
   if (!aElementTransitions) {
@@ -834,15 +786,19 @@ bool nsTransitionManager::ConsiderInitiatingTransition(
     // start value of the transition using TimeStamp::Now(). This allows us to
     // avoid a large jump when starting a new transition when the main thread
     // lags behind the compositor.
-    auto replacedTransitionProperties =
-        GetReplacedTransitionProperties(oldTransition, timeline);
-    if (replacedTransitionProperties) {
-      animation->SetReplacedTransition(
-          std::move(replacedTransitionProperties.ref()));
+    if (oldPT && oldPT->IsCurrent() && oldPT->IsRunningOnCompositor() &&
+        !oldPT->GetAnimation()->GetStartTime().IsNull() &&
+        timeline == oldPT->GetAnimation()->GetTimeline()) {
+      const AnimationPropertySegment& segment =
+          oldPT->Properties()[0].mSegments[0];
+      pt->mReplacedTransition.emplace(
+          ElementPropertyTransition::ReplacedTransitionProperties(
+              {oldPT->GetAnimation()->GetStartTime().Value(),
+               oldPT->GetAnimation()->PlaybackRate(), oldPT->SpecifiedTiming(),
+               segment.mTimingFunction, segment.mFromValue, segment.mToValue}));
     }
-
     animations[currentIndex]->CancelFromStyle(PostRestyleMode::IfNeeded);
-    oldTransition = nullptr;  // Clear pointer so it doesn't dangle
+    oldPT = nullptr;  // Clear pointer so it doesn't dangle
     animations[currentIndex] = animation;
   } else {
     if (!animations.AppendElement(animation)) {
