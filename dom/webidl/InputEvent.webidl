@@ -39,9 +39,17 @@ partial interface InputEvent
 {
   [NeedsCallerType, Pref="dom.inputevent.datatransfer.enabled"]
   readonly attribute DataTransfer? dataTransfer;
+  // Enable `getTargetRanges()` only when `beforeinput` event is enabled
+  // because this may be used for feature detection of `beforeinput` event
+  // support (due to Chrome not supporting `onbeforeinput` attribute).
+  [Pref="dom.input_events.beforeinput.enabled"]
+  sequence<StaticRange> getTargetRanges();
 };
 
 partial dictionary InputEventInit
 {
+  [Pref="dom.inputevent.datatransfer.enabled"]
   DataTransfer? dataTransfer = null;
+  [Pref="dom.input_events.beforeinput.enabled"]
+  sequence<StaticRange> targetRanges = [];
 };
