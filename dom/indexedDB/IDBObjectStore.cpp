@@ -653,7 +653,7 @@ class ValueDeserializationHelper {
     if (!blob) {
       MOZ_ASSERT(aFile.mFileInfo);
       const nsCOMPtr<nsIFile> file =
-          FileInfo::GetFileForFileInfo(*aFile.mFileInfo);
+          FileInfo::GetFileForFileInfo(aFile.mFileInfo);
       if (!file) {
         return false;
       }
