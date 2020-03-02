@@ -111,7 +111,7 @@ this.VideoControlsWidget = class {
    * toggle. Those requirements currently are:
    *
    * 1. The video must be 45 seconds in length or longer.
-   * 2. Neither the width or the height of the video can be less than 160px.
+   * 2. Neither the width or the height of the video can be less than 140px.
    * 3. The video must have audio.
    * 4. The video must not a MediaStream video (Bug 1592539)
    *
@@ -135,7 +135,7 @@ this.VideoControlsWidget = class {
       return false;
     }
 
-    const MIN_VIDEO_DIMENSION = 160; // pixels
+    const MIN_VIDEO_DIMENSION = 140; // pixels
     if (
       someVideo.videoWidth < MIN_VIDEO_DIMENSION ||
       someVideo.videoHeight < MIN_VIDEO_DIMENSION
