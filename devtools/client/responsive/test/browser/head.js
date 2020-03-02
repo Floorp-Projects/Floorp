@@ -652,7 +652,7 @@ async function testUserAgentFromBrowser(browser, expected) {
 }
 
 function testViewportDimensions(ui, w, h) {
-  const viewport = ui.toolWindow.document.querySelector(".viewport-content");
+  const viewport = ui.viewportElement;
 
   is(
     ui.toolWindow.getComputedStyle(viewport).getPropertyValue("width"),

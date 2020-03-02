@@ -117,12 +117,6 @@ class ResponsiveUI {
     EventEmitter.decorate(this);
   }
 
-  get toolWindow() {
-    return this.isBrowserUIEnabled
-      ? this.rdmFrame.contentWindow
-      : this._toolWindow;
-  }
-
   get isBrowserUIEnabled() {
     if (!this._isBrowserUIEnabled) {
       this._isBrowserUIEnabled = Services.prefs.getBoolPref(
@@ -131,6 +125,22 @@ class ResponsiveUI {
     }
 
     return this._isBrowserUIEnabled;
+  }
+
+  get toolWindow() {
+    return this.isBrowserUIEnabled
+      ? this.rdmFrame.contentWindow
+      : this._toolWindow;
+  }
+
+  get docShell() {
+    return this.toolWindow.docShell;
+  }
+
+  get viewportElement() {
+    return this.isBrowserUIEnabled
+      ? this.browserStackEl.querySelector("browser")
+      : this._toolWindow.document.querySelector(".viewport-content");
   }
 
   get currentTarget() {
