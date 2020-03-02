@@ -1227,12 +1227,10 @@ impl BatchBuilder {
                                     .map(&prim_info.combined_local_clip_rect)
                                     .expect("bug: unable to map clip rect");
                                 let device_clip_rect = (world_clip_rect * ctx.global_device_pixel_scale).round();
-                                let z_id = composite_state.z_generator.next();
 
                                 composite_state.push_surface(
                                     tile_cache,
                                     device_clip_rect,
-                                    z_id,
                                     ctx.global_device_pixel_scale,
                                     ctx.resource_cache,
                                     gpu_cache,
