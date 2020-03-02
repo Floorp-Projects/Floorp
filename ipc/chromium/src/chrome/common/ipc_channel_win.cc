@@ -265,7 +265,11 @@ bool Channel::ChannelImpl::Connect() {
   MessageLoopForIO::current()->RegisterIOHandler(pipe_, this);
 
   // Check to see if there is a client connected to our pipe...
-  if (waiting_connect_) ProcessConnection();
+  if (waiting_connect_) {
+    if (!ProcessConnection()) {
+      return false;
+    }
+  }
 
   if (!input_state_.is_pending) {
     // Complete setup asynchronously. By not setting input_state_.is_pending
@@ -303,6 +307,9 @@ bool Channel::ChannelImpl::ProcessConnection() {
     case ERROR_PIPE_CONNECTED:
       waiting_connect_ = false;
       break;
+    case ERROR_NO_DATA:
+      // The pipe is being closed.
+      return false;
     default:
       NOTREACHED();
       return false;
