@@ -1218,7 +1218,7 @@ class ActivePS {
 #ifdef MOZ_BASE_PROFILER
   // Optional startup profile thread array from BaseProfiler.
   UniquePtr<char[]> mBaseProfileThreads;
-  BlocksRingBuffer::BlockIndex mGeckoIndexWhenBaseProfileAdded;
+  ProfileBufferBlockIndex mGeckoIndexWhenBaseProfileAdded;
 #endif
 
   struct ExitProfile {
@@ -3200,19 +3200,22 @@ void SamplerThread::Run() {
             if (NS_WARN_IF(state.mClearedBlockCount !=
                            previousState.mClearedBlockCount)) {
               LOG("Stack sample too big for local storage, needed %u bytes",
-                  unsigned(state.mRangeEnd.ConvertToU64() -
-                           previousState.mRangeEnd.ConvertToU64()));
+                  unsigned(
+                      state.mRangeEnd.ConvertToProfileBufferIndex() -
+                      previousState.mRangeEnd.ConvertToProfileBufferIndex()));
               // There *must* be a CompactStack after a TimeBeforeCompactStack,
               // even an empty one.
               CorePS::CoreBlocksRingBuffer().PutObjects(
                   ProfileBufferEntry::Kind::CompactStack,
                   UniquePtr<BlocksRingBuffer>(nullptr));
-            } else if (state.mRangeEnd.ConvertToU64() -
-                           previousState.mRangeEnd.ConvertToU64() >=
+            } else if (state.mRangeEnd.ConvertToProfileBufferIndex() -
+                           previousState.mRangeEnd
+                               .ConvertToProfileBufferIndex() >=
                        CorePS::CoreBlocksRingBuffer().BufferLength()->Value()) {
               LOG("Stack sample too big for profiler storage, needed %u bytes",
-                  unsigned(state.mRangeEnd.ConvertToU64() -
-                           previousState.mRangeEnd.ConvertToU64()));
+                  unsigned(
+                      state.mRangeEnd.ConvertToProfileBufferIndex() -
+                      previousState.mRangeEnd.ConvertToProfileBufferIndex()));
               // There *must* be a CompactStack after a TimeBeforeCompactStack,
               // even an empty one.
               CorePS::CoreBlocksRingBuffer().PutObjects(

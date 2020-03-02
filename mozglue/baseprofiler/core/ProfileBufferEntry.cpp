@@ -372,8 +372,9 @@ class EntryGetter {
  public:
   explicit EntryGetter(BlocksRingBuffer::Reader& aReader,
                        uint64_t aInitialReadPos = 0)
-      : mBlockIt(aReader.At(
-            BlocksRingBuffer::BlockIndex::ConvertFromU64(aInitialReadPos))),
+      : mBlockIt(
+            aReader.At(ProfileBufferBlockIndex::CreateFromProfileBufferIndex(
+                aInitialReadPos))),
         mBlockItEnd(aReader.end()) {
     if (!ReadLegacyOrEnd()) {
       // Find and read the next non-legacy entry.
@@ -400,11 +401,13 @@ class EntryGetter {
     }
   }
 
-  ProfileBuffer::BlockIndex CurBlockIndex() const {
+  ProfileBufferBlockIndex CurBlockIndex() const {
     return mBlockIt.CurrentBlockIndex();
   }
 
-  uint64_t CurPos() const { return CurBlockIndex().ConvertToU64(); }
+  uint64_t CurPos() const {
+    return CurBlockIndex().ConvertToProfileBufferIndex();
+  }
 
  private:
   // Try to read the entry at the current `mBlockIt` position.
@@ -1351,7 +1354,7 @@ bool ProfileBuffer::DuplicateLastSample(int aThreadId,
 }
 
 void ProfileBuffer::DiscardSamplesBeforeTime(double aTime) {
-  const BlockIndex firstBlockToKeep =
+  const ProfileBufferBlockIndex firstBlockToKeep =
       mEntries.Read([&](BlocksRingBuffer::Reader* aReader) {
         MOZ_ASSERT(aReader,
                    "BlocksRingBuffer cannot be out-of-session when sampler is "
@@ -1359,7 +1362,7 @@ void ProfileBuffer::DiscardSamplesBeforeTime(double aTime) {
 
         EntryGetter e(*aReader);
 
-        const BlockIndex bufferStartPos = e.CurBlockIndex();
+        const ProfileBufferBlockIndex bufferStartPos = e.CurBlockIndex();
         for (;;) {
           // This block skips entries until we find the start of the next
           // sample. This is useful in three situations.
@@ -1384,7 +1387,7 @@ void ProfileBuffer::DiscardSamplesBeforeTime(double aTime) {
           }
 
           MOZ_RELEASE_ASSERT(e.Get().IsThreadId());
-          const BlockIndex sampleStartPos = e.CurBlockIndex();
+          const ProfileBufferBlockIndex sampleStartPos = e.CurBlockIndex();
           e.Next();
 
           if (e.Has() && e.Get().IsTime()) {

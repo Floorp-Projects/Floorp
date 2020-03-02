@@ -567,8 +567,9 @@ class EntryGetter {
  public:
   explicit EntryGetter(BlocksRingBuffer::Reader& aReader,
                        uint64_t aInitialReadPos = 0)
-      : mBlockIt(aReader.At(
-            BlocksRingBuffer::BlockIndex::ConvertFromU64(aInitialReadPos))),
+      : mBlockIt(
+            aReader.At(ProfileBufferBlockIndex::CreateFromProfileBufferIndex(
+                aInitialReadPos))),
         mBlockItEnd(aReader.end()) {
     if (!ReadLegacyOrEnd()) {
       // Find and read the next non-legacy entry.
@@ -597,11 +598,13 @@ class EntryGetter {
 
   BlocksRingBuffer::BlockIterator Iterator() const { return mBlockIt; }
 
-  ProfileBuffer::BlockIndex CurBlockIndex() const {
+  ProfileBufferBlockIndex CurBlockIndex() const {
     return mBlockIt.CurrentBlockIndex();
   }
 
-  uint64_t CurPos() const { return CurBlockIndex().ConvertToU64(); }
+  uint64_t CurPos() const {
+    return CurBlockIndex().ConvertToProfileBufferIndex();
+  }
 
  private:
   // Try to read the entry at the current `mBlockIt` position.
@@ -1037,7 +1040,7 @@ void ProfileBuffer::StreamSamplesToJSON(SpliceableJSONWriter& aWriter,
               EntryGetter stackEntryGetter(*aReader);
               if (stackEntryGetter.Has()) {
                 ReadStack(stackEntryGetter,
-                          er.CurrentBlockIndex().ConvertToU64(),
+                          er.CurrentBlockIndex().ConvertToProfileBufferIndex(),
                           unresponsiveDuration);
               }
             });
@@ -1739,54 +1742,55 @@ bool ProfileBuffer::DuplicateLastSample(int aThreadId,
 }
 
 void ProfileBuffer::DiscardSamplesBeforeTime(double aTime) {
-  const BlockIndex firstBlockToKeep = mEntries.Read([&](BlocksRingBuffer::
-                                                            Reader* aReader) {
-    MOZ_ASSERT(
-        aReader,
-        "BlocksRingBuffer cannot be out-of-session when sampler is running");
+  const ProfileBufferBlockIndex firstBlockToKeep =
+      mEntries.Read([&](BlocksRingBuffer::Reader* aReader) {
+        MOZ_ASSERT(aReader,
+                   "BlocksRingBuffer cannot be out-of-session when sampler is "
+                   "running");
 
-    EntryGetter e(*aReader);
+        EntryGetter e(*aReader);
 
-    const BlockIndex bufferStartPos = e.CurBlockIndex();
-    for (;;) {
-      // This block skips entries until we find the start of the next
-      // sample. This is useful in three situations.
-      //
-      // - The circular buffer overwrites old entries, so when we start
-      //   parsing we might be in the middle of a sample, and we must skip
-      //   forward to the start of the next sample.
-      //
-      // - We skip samples that don't have an appropriate ThreadId or Time.
-      //
-      // - We skip range Pause, Resume, CollectionStart, Marker, and
-      //   CollectionEnd entries between samples.
-      while (e.Has()) {
-        if (e.Get().IsThreadId()) {
-          break;
+        const ProfileBufferBlockIndex bufferStartPos = e.CurBlockIndex();
+        for (;;) {
+          // This block skips entries until we find the start of the next
+          // sample. This is useful in three situations.
+          //
+          // - The circular buffer overwrites old entries, so when we start
+          //   parsing we might be in the middle of a sample, and we must skip
+          //   forward to the start of the next sample.
+          //
+          // - We skip samples that don't have an appropriate ThreadId or Time.
+          //
+          // - We skip range Pause, Resume, CollectionStart, Marker, and
+          //   CollectionEnd entries between samples.
+          while (e.Has()) {
+            if (e.Get().IsThreadId()) {
+              break;
+            }
+            e.Next();
+          }
+
+          if (!e.Has()) {
+            return bufferStartPos;
+          }
+
+          MOZ_RELEASE_ASSERT(e.Get().IsThreadId());
+          const ProfileBufferBlockIndex sampleStartPos = e.CurBlockIndex();
+          e.Next();
+
+          if (e.Has() &&
+              (e.Get().IsTime() || e.Get().IsTimeBeforeCompactStack())) {
+            double sampleTime = e.Get().GetDouble();
+
+            if (sampleTime >= aTime) {
+              // This is the first sample within the window of time that we want
+              // to keep. Throw away all samples before sampleStartPos and
+              // return.
+              return sampleStartPos;
+            }
+          }
         }
-        e.Next();
-      }
-
-      if (!e.Has()) {
-        return bufferStartPos;
-      }
-
-      MOZ_RELEASE_ASSERT(e.Get().IsThreadId());
-      const BlockIndex sampleStartPos = e.CurBlockIndex();
-      e.Next();
-
-      if (e.Has() && (e.Get().IsTime() || e.Get().IsTimeBeforeCompactStack())) {
-        double sampleTime = e.Get().GetDouble();
-
-        if (sampleTime >= aTime) {
-          // This is the first sample within the window of time that we want
-          // to keep. Throw away all samples before sampleStartPos and
-          // return.
-          return sampleStartPos;
-        }
-      }
-    }
-  });
+      });
   mEntries.ClearBefore(firstBlockToKeep);
 }
 
