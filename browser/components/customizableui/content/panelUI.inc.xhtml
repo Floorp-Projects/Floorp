@@ -645,7 +645,87 @@
       <vbox id="PanelUI-developerItems" class="panel-subview-body"/>
     </panelview>
 
-    <panelview id="PanelUI-profiler" flex="1"/>
+    <panelview id="PanelUI-profiler" flex="1" descriptionheightworkaround="true">
+      <vbox id="PanelUI-profiler-container">
+        <vbox id="PanelUI-profiler-header" animationready="false">
+          <hbox id="PanelUI-profiler-header-bar">
+            <label flex="1" value="Firefox Profiler" />
+            <vbox class="PanelUI-profiler-toolbarbutton-container">
+              <toolbarbutton id="PanelUI-profiler-info-button"
+                            class="panel-info-button"
+                            aria-label="Reveal more information">
+                <image/>
+              </toolbarbutton>
+            </vbox>
+          </hbox>
+          <hbox id="PanelUI-profiler-info">
+            <vbox>
+              <hbox id="PanelUI-profiler-info-graphic" flex="1">
+                <spacer flex="1" />
+                <vbox>
+                  <spacer flex="1" />
+                  <image class="PanelUI-profiler-info-icon" />
+                </vbox>
+              </hbox>
+              <label value="Record, analyze, share" />
+              <description>
+                Collaborate on performance issues by publishing profiles to share with your team.
+              </description>
+              <hbox>
+                <button id="PanelUI-profiler-learn-more" tabindex="-1">Learn more</button>
+                <space flex="1" />
+              </hbox>
+            </vbox>
+          </hbox>
+        </vbox>
+        <vbox id="PanelUI-profiler-content">
+          <label class="PanelUI-profiler-content-label"
+                 value="Settings" />
+          <menulist id="PanelUI-profiler-presets"
+            flex="1"
+            value="custom">
+            <menupopup id="PanelUI-profiler-presets-menupopup" presetsbuilt="false">
+              <!-- The rest of the values get dynamically inserted. The "presetsbuilt"
+                   attribute will get updated to "true" once the presets have been
+                   built. -->
+              <menuitem label="Custom" value="custom"/>
+            </menupopup>
+          </menulist>
+          <!-- The following description gets inserted dynamically. -->
+          <description id="PanelUI-profiler-content-description" />
+          <hbox id="PanelUI-profiler-content-custom">
+            <button id="PanelUI-profiler-content-custom-button">
+              Edit Settings…
+            </button>
+          </hbox>
+          <hbox id="PanelUI-profiler-inactive" class="PanelUI-profiler-buttons">
+            <spacer flex="1" />
+            <vbox>
+              <button label="Start Recording"
+                      id="PanelUI-profiler-startRecording"
+                      class="PanelUI-profiler-button PanelUI-profiler-button-primary"
+                      />
+              <label class="PanelUI-profiler-shortcut">^⇧1</label>
+            </vbox>
+            <spacer flex="1" />
+          </hbox>
+          <hbox id="PanelUI-profiler-active" class="PanelUI-profiler-buttons">
+            <vbox flex="1">
+              <button label="Discard"
+                      class="PanelUI-profiler-button"
+                      id="PanelUI-profiler-stopAndDiscard" />
+              <label class="PanelUI-profiler-shortcut">^⇧1</label>
+            </vbox>
+            <vbox flex="1">
+              <button label="Capture"
+                      class="PanelUI-profiler-button PanelUI-profiler-button-primary"
+                      id="PanelUI-profiler-stopAndCapture" />
+              <label class="PanelUI-profiler-shortcut">^⇧2</label>
+            </vbox>
+          </hbox>
+        </vbox>
+      </vbox>
+    </panelview>
 
     <panelview id="PanelUI-characterEncodingView" flex="1">
       <vbox class="panel-subview-body">
