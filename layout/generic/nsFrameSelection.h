@@ -717,17 +717,18 @@ class nsFrameSelection final {
   bool AdjustForMaintainedSelection(nsIContent* aContent, int32_t aOffset);
 
   // post and pop reasons for notifications. we may stack these later
-  void PostReason(int16_t aReason) { mSelectionChangeReason = aReason; }
+  void PostReason(int16_t aReason) { mSelectionChangeReasons = aReason; }
   int16_t PopReason() {
-    int16_t retval = mSelectionChangeReason;
-    mSelectionChangeReason = nsISelectionListener::NO_REASON;
+    int16_t retval = mSelectionChangeReasons;
+    mSelectionChangeReasons = nsISelectionListener::NO_REASON;
     return retval;
   }
   bool IsUserSelectionReason() const {
-    return (mSelectionChangeReason & (nsISelectionListener::DRAG_REASON |
-                                      nsISelectionListener::MOUSEDOWN_REASON |
-                                      nsISelectionListener::MOUSEUP_REASON |
-                                      nsISelectionListener::KEYPRESS_REASON)) !=
+    return (mSelectionChangeReasons &
+            (nsISelectionListener::DRAG_REASON |
+             nsISelectionListener::MOUSEDOWN_REASON |
+             nsISelectionListener::MOUSEUP_REASON |
+             nsISelectionListener::KEYPRESS_REASON)) !=
            nsISelectionListener::NO_REASON;
   }
 
@@ -840,8 +841,9 @@ class nsFrameSelection final {
   nsCOMPtr<nsIContent> mAncestorLimiter;
 
   mozilla::PresShell* mPresShell = nullptr;
-  // Reason for notifications of selection changing.
-  int16_t mSelectionChangeReason = nsISelectionListener::NO_REASON;
+  // Reasons for notifications of selection changing.
+  // Can be multiple of the reasons defined in nsISelectionListener.idl.
+  int16_t mSelectionChangeReasons = nsISelectionListener::NO_REASON;
   // For visual display purposes.
   int16_t mDisplaySelection = nsISelectionController::SELECTION_OFF;
 
