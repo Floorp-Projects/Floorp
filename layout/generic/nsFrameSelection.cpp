@@ -2062,7 +2062,9 @@ nsresult nsFrameSelection::HandleTableSelection(nsINode* aParentContent,
   // we can be sure that anchorNode's offset always points to the
   // selected cell
   const int8_t index = GetIndexFromSelectionType(SelectionType::eNormal);
-  if (!mDomSelections[index]) return NS_ERROR_NULL_POINTER;
+  if (!mDomSelections[index]) {
+    return NS_ERROR_NULL_POINTER;
+  }
 
   mDomSelections[index]->SetDirection(eDirNext);
 
@@ -2099,9 +2101,13 @@ nsresult nsFrameSelection::HandleTableSelection(nsINode* aParentContent,
           // Also check if cell is in same row/col
           result = GetCellIndexes(mTableSelection.mEndSelectedCell,
                                   startRowIndex, startColIndex);
-          if (NS_FAILED(result)) return result;
+          if (NS_FAILED(result)) {
+            return result;
+          }
           result = GetCellIndexes(childContent, curRowIndex, curColIndex);
-          if (NS_FAILED(result)) return result;
+          if (NS_FAILED(result)) {
+            return result;
+          }
 
 #ifdef DEBUG_TABLE_SELECTION
           printf(
@@ -2112,8 +2118,9 @@ nsresult nsFrameSelection::HandleTableSelection(nsINode* aParentContent,
           if ((mTableSelection.mMode == TableSelectionMode::Row &&
                startRowIndex == curRowIndex) ||
               (mTableSelection.mMode == TableSelectionMode::Column &&
-               startColIndex == curColIndex))
+               startColIndex == curColIndex)) {
             return NS_OK;
+          }
         }
 #ifdef DEBUG_TABLE_SELECTION
         printf(" Dragged into a new column or row\n");
@@ -2137,19 +2144,24 @@ nsresult nsFrameSelection::HandleTableSelection(nsINode* aParentContent,
         if (mTableSelection.mStartSelectedCell && aMouseEvent->IsShift()) {
           result = GetCellIndexes(mTableSelection.mStartSelectedCell,
                                   startRowIndex, startColIndex);
-          if (NS_FAILED(result)) return result;
+          if (NS_FAILED(result)) {
+            return result;
+          }
           result = GetCellIndexes(childContent, curRowIndex, curColIndex);
-          if (NS_FAILED(result)) return result;
+          if (NS_FAILED(result)) {
+            return result;
+          }
 
           if (startRowIndex == curRowIndex || startColIndex == curColIndex) {
             // Force new selection block
             mTableSelection.mStartSelectedCell = nullptr;
             mDomSelections[index]->RemoveAllRanges(IgnoreErrors());
 
-            if (startRowIndex == curRowIndex)
+            if (startRowIndex == curRowIndex) {
               mTableSelection.mMode = TableSelectionMode::Row;
-            else
+            } else {
               mTableSelection.mMode = TableSelectionMode::Column;
+            }
 
             const RefPtr<Selection> selection = mDomSelections[index];
             if (!selection) {
@@ -2192,7 +2204,9 @@ nsresult nsFrameSelection::HandleTableSelection(nsINode* aParentContent,
 
           // Check if new cell is already selected
           nsIFrame* cellFrame = childContent->GetPrimaryFrame();
-          if (!cellFrame) return NS_ERROR_NULL_POINTER;
+          if (!cellFrame) {
+            return NS_ERROR_NULL_POINTER;
+          }
           isSelected = cellFrame->IsSelected();
         } else {
           // No cells selected -- remove non-cell selection
@@ -2338,7 +2352,9 @@ nsresult nsFrameSelection::HandleTableSelection(nsINode* aParentContent,
           // Strong reference, because sometimes we want to remove
           // this range, and then we might be the only owner.
           RefPtr<nsRange> range = mDomSelections[index]->GetRangeAt(i);
-          if (!range) return NS_ERROR_NULL_POINTER;
+          if (!range) {
+            return NS_ERROR_NULL_POINTER;
+          }
 
           nsINode* container = range->GetStartContainer();
           if (!container) {
@@ -2353,7 +2369,9 @@ nsresult nsFrameSelection::HandleTableSelection(nsINode* aParentContent,
           }
 
           // We're done if we didn't find parent of a previously-selected cell
-          if (!previousCellParent) break;
+          if (!previousCellParent) {
+            break;
+          }
 
           if (previousCellParent == aParentContent &&
               offset == aContentOffset) {
