@@ -453,7 +453,8 @@ impl BitsRequest {
                 Pretask,
             ));
         }
-        self.cancel_action.set(CancelAction::InProgress(maybe_status));
+        self.cancel_action
+            .set(CancelAction::InProgress(maybe_status));
 
         let task: Box<CancelTask> = Box::new(CancelTask::new(
             RefPtr::new(self),
@@ -489,7 +490,8 @@ impl BitsRequest {
             // after the job had already failed. Keep the original error codes.
             if let Some(status) = maybe_status {
                 self.download_status_nsresult.set(status);
-                self.download_status_error_type.set(Some(BitsStateCancelled));
+                self.download_status_error_type
+                    .set(Some(BitsStateCancelled));
             }
         }
 
