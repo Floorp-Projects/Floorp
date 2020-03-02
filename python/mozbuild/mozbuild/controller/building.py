@@ -605,7 +605,7 @@ class BuildProgressFooter(Footer):
 
     def __init__(self, terminal, monitor):
         Footer.__init__(self, terminal)
-        self.tiers = monitor.tiers.tier_status.viewitems()
+        self.tiers = six.viewitems(monitor.tiers.tier_status)
 
     def draw(self):
         """Draws this footer in the terminal."""
@@ -1165,7 +1165,7 @@ class BuildDriver(MozbuildObject):
                     # tree builds because they aren't reliable there. This
                     # could potentially be fixed if the build monitor were more
                     # intelligent about encountering undefined state.
-                    no_build_status = b'1' if make_dir is not None else b''
+                    no_build_status = '1' if make_dir is not None else ''
                     tgt_env = dict(append_env or {})
                     tgt_env['NO_BUILDSTATUS_MESSAGES'] = no_build_status
                     status = self._run_make(
@@ -1366,7 +1366,7 @@ class BuildDriver(MozbuildObject):
         # Only print build status messages when we have an active
         # monitor.
         if not buildstatus_messages:
-            append_env['NO_BUILDSTATUS_MESSAGES'] = b'1'
+            append_env['NO_BUILDSTATUS_MESSAGES'] = '1'
         status = self._run_client_mk(target='configure',
                                      line_handler=line_handler,
                                      append_env=append_env)
@@ -1458,16 +1458,16 @@ class BuildDriver(MozbuildObject):
             mozconfig_make_lines.append(arg)
 
         if mozconfig['make_flags']:
-            mozconfig_make_lines.append(b'MOZ_MAKE_FLAGS=%s' %
-                                        b' '.join(mozconfig['make_flags']))
+            mozconfig_make_lines.append('MOZ_MAKE_FLAGS=%s' %
+                                        ' '.join(mozconfig['make_flags']))
         objdir = mozpath.normsep(self.topobjdir)
-        mozconfig_make_lines.append(b'MOZ_OBJDIR=%s' % objdir)
-        mozconfig_make_lines.append(b'OBJDIR=%s' % objdir)
+        mozconfig_make_lines.append('MOZ_OBJDIR=%s' % objdir)
+        mozconfig_make_lines.append('OBJDIR=%s' % objdir)
 
         if mozconfig['path']:
-            mozconfig_make_lines.append(b'FOUND_MOZCONFIG=%s' %
+            mozconfig_make_lines.append('FOUND_MOZCONFIG=%s' %
                                         mozpath.normsep(mozconfig['path']))
-            mozconfig_make_lines.append(b'export FOUND_MOZCONFIG')
+            mozconfig_make_lines.append('export FOUND_MOZCONFIG')
 
         # The .mozconfig.mk file only contains exported variables and lines with
         # UPLOAD_EXTRA_FILES.
@@ -1475,22 +1475,22 @@ class BuildDriver(MozbuildObject):
             line for line in mozconfig_make_lines
             # Bug 1418122 investigate why UPLOAD_EXTRA_FILES is special and
             # remove it.
-            if line.startswith(b'export ') or b'UPLOAD_EXTRA_FILES' in line
+            if line.startswith('export ') or 'UPLOAD_EXTRA_FILES' in line
         ]
 
         mozconfig_client_mk = os.path.join(self.topobjdir,
                                            '.mozconfig-client-mk')
         with FileAvoidWrite(mozconfig_client_mk) as fh:
-            fh.write(b'\n'.join(mozconfig_make_lines))
+            fh.write('\n'.join(mozconfig_make_lines))
 
         mozconfig_mk = os.path.join(self.topobjdir, '.mozconfig.mk')
         with FileAvoidWrite(mozconfig_mk) as fh:
-            fh.write(b'\n'.join(mozconfig_filtered_lines))
+            fh.write('\n'.join(mozconfig_filtered_lines))
 
         # Copy the original mozconfig to the objdir.
         mozconfig_objdir = os.path.join(self.topobjdir, '.mozconfig')
         if mozconfig['path']:
-            with open(mozconfig['path'], 'rb') as ifh:
+            with open(mozconfig['path'], 'r') as ifh:
                 with FileAvoidWrite(mozconfig_objdir) as ofh:
                     ofh.write(ifh.read())
         else:
