@@ -446,6 +446,51 @@ bool WarpBuilder::build_Inc(BytecodeLocation loc) { return buildUnaryOp(loc); }
 
 bool WarpBuilder::build_Dec(BytecodeLocation loc) { return buildUnaryOp(loc); }
 
+bool WarpBuilder::build_Neg(BytecodeLocation loc) { return buildUnaryOp(loc); }
+
+bool WarpBuilder::build_BitNot(BytecodeLocation loc) {
+  return buildUnaryOp(loc);
+}
+
+bool WarpBuilder::buildBinaryOp(BytecodeLocation loc) {
+  MDefinition* right = current->pop();
+  MDefinition* left = current->pop();
+  MInstruction* ins = MBinaryCache::New(alloc(), left, right, MIRType::Value);
+  current->add(ins);
+  current->push(ins);
+  return resumeAfter(ins, loc);
+}
+
+bool WarpBuilder::build_Add(BytecodeLocation loc) { return buildBinaryOp(loc); }
+
+bool WarpBuilder::build_Sub(BytecodeLocation loc) { return buildBinaryOp(loc); }
+
+bool WarpBuilder::build_Mul(BytecodeLocation loc) { return buildBinaryOp(loc); }
+
+bool WarpBuilder::build_Div(BytecodeLocation loc) { return buildBinaryOp(loc); }
+
+bool WarpBuilder::build_Mod(BytecodeLocation loc) { return buildBinaryOp(loc); }
+
+bool WarpBuilder::build_BitAnd(BytecodeLocation loc) {
+  return buildBinaryOp(loc);
+}
+
+bool WarpBuilder::build_BitOr(BytecodeLocation loc) {
+  return buildBinaryOp(loc);
+}
+
+bool WarpBuilder::build_BitXor(BytecodeLocation loc) {
+  return buildBinaryOp(loc);
+}
+
+bool WarpBuilder::build_Lsh(BytecodeLocation loc) { return buildBinaryOp(loc); }
+
+bool WarpBuilder::build_Rsh(BytecodeLocation loc) { return buildBinaryOp(loc); }
+
+bool WarpBuilder::build_Ursh(BytecodeLocation loc) {
+  return buildBinaryOp(loc);
+}
+
 bool WarpBuilder::buildCompareOp(BytecodeLocation loc) {
   MDefinition* right = current->pop();
   MDefinition* left = current->pop();
