@@ -1108,15 +1108,6 @@ int32_t nsPrintJob::GetPrintPreviewNumPages() {
   return numPages;
 }
 
-nsresult nsPrintJob::GetDocumentName(nsAString& aDocName) {
-  nsAutoString docURLStr;
-  GetDocumentTitleAndURL(mPrt->mPrintObject->mDocument, aDocName, docURLStr);
-  if (aDocName.IsEmpty() && !docURLStr.IsEmpty()) {
-    aDocName = docURLStr;
-  }
-  return NS_OK;
-}
-
 //----------------------------------------------------------------------------------
 nsresult nsPrintJob::GetGlobalPrintSettings(
     nsIPrintSettings** aGlobalPrintSettings) {

@@ -3707,11 +3707,6 @@ nsDocumentViewer::GetCurrentPrintSettings(
 }
 
 NS_IMETHODIMP
-nsDocumentViewer::GetDocumentName(nsAString& aDocName) {
-  return mPrintJob->GetDocumentName(aDocName);
-}
-
-NS_IMETHODIMP
 nsDocumentViewer::Cancel() {
   NS_ENSURE_TRUE(mPrintJob, NS_ERROR_FAILURE);
   return mPrintJob->Cancel();
