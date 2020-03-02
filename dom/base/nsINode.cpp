@@ -102,6 +102,7 @@
 #include "nsChildContentList.h"
 #include "mozilla/dom/NodeBinding.h"
 #include "mozilla/dom/BindingDeclarations.h"
+#include "mozilla/dom/AncestorIterator.h"
 #include "xpcprivate.h"
 
 #include "XPathGenerator.h"
@@ -116,14 +117,11 @@ using namespace mozilla::dom;
 bool nsINode::IsInclusiveDescendantOf(const nsINode* aNode) const {
   MOZ_ASSERT(aNode, "The node is nullptr.");
 
-  const nsINode* node = this;
-  do {
+  for (nsINode* node : InclusiveAncestors(*this)) {
     if (node == aNode) {
       return true;
     }
-    node = node->GetParentNode();
-  } while (node);
-
+  }
   return false;
 }
 
@@ -382,11 +380,8 @@ nsIContent* nsINode::GetTextEditorRootContent(TextEditor** aTextEditor) {
   if (aTextEditor) {
     *aTextEditor = nullptr;
   }
-  for (nsINode* node = this; node; node = node->GetParentNode()) {
-    if (!node->IsElement() || !node->IsHTMLElement()) continue;
-
-    RefPtr<TextEditor> textEditor =
-        static_cast<nsGenericHTMLElement*>(node)->GetTextEditorInternal();
+  for (auto* element : InclusiveAncestorsOfType<nsGenericHTMLElement>(*this)) {
+    RefPtr<TextEditor> textEditor = element->GetTextEditorInternal();
     if (!textEditor) {
       continue;
     }
@@ -868,20 +863,13 @@ void nsINode::GetBaseURIFromJS(nsAString& aURI, CallerType aCallerType,
 nsIURI* nsINode::GetBaseURIObject() const { return GetBaseURI(true); }
 
 void nsINode::LookupPrefix(const nsAString& aNamespaceURI, nsAString& aPrefix) {
-  Element* element = GetNameSpaceElement();
-  if (element) {
+  if (Element* nsElement = GetNameSpaceElement()) {
     // XXX Waiting for DOM spec to list error codes.
 
     // Trace up the content parent chain looking for the namespace
     // declaration that defines the aNamespaceURI namespace. Once found,
     // return the prefix (i.e. the attribute localName).
-    for (nsIContent* content = element; content;
-         content = content->GetParent()) {
-      if (!content->IsElement()) {
-        continue;
-      }
-
-      Element* element = content->AsElement();
+    for (Element* element : InclusiveAncestorsOfType<Element>(*nsElement)) {
       uint32_t attrCount = element->GetAttrCount();
 
       for (uint32_t i = 0; i < attrCount; ++i) {
