@@ -73,6 +73,12 @@ void InputEvent::GetInputType(nsAString& aInputType) {
   }
 }
 
+void InputEvent::GetTargetRanges(nsTArray<RefPtr<StaticRange>>& aTargetRanges) {
+  MOZ_ASSERT(aTargetRanges.IsEmpty());
+  MOZ_ASSERT(mEvent->AsEditorInputEvent());
+  aTargetRanges.AppendElements(mEvent->AsEditorInputEvent()->mTargetRanges);
+}
+
 bool InputEvent::IsComposing() {
   return mEvent->AsEditorInputEvent()->mIsComposing;
 }
@@ -93,6 +99,7 @@ already_AddRefed<InputEvent> InputEvent::Constructor(
   }
   internalEvent->mData = aParam.mData;
   internalEvent->mDataTransfer = aParam.mDataTransfer;
+  internalEvent->mTargetRanges = aParam.mTargetRanges;
   internalEvent->mIsComposing = aParam.mIsComposing;
   e->SetTrusted(trusted);
   e->SetComposed(aParam.mComposed);
