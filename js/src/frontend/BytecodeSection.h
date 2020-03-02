@@ -84,10 +84,7 @@ struct MOZ_STACK_CLASS GCThingList {
   }
   MOZ_MUST_USE bool append(BigIntLiteral* literal, uint32_t* index) {
     *index = vector.length();
-    if (literal->isDeferred()) {
-      return vector.append(mozilla::AsVariant(literal->index()));
-    }
-    return vector.append(mozilla::AsVariant(JS::GCCellPtr(literal->value())));
+    return vector.append(mozilla::AsVariant(literal->index()));
   }
   MOZ_MUST_USE bool append(RegExpLiteral* literal, uint32_t* index) {
     *index = vector.length();
