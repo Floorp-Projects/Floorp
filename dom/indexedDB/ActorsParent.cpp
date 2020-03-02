@@ -34,7 +34,6 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Result.h"
-#include "mozilla/ResultExtensions.h"
 #include "mozilla/SnappyCompressOutputStream.h"
 #include "mozilla/SnappyUncompressInputStream.h"
 #include "mozilla/StaticPtr.h"
@@ -6195,6 +6194,8 @@ class Database::UnmapBlobCallback final
  * op is holding a reference to us.
  */
 class DatabaseFile final : public PBackgroundIDBDatabaseFileParent {
+  friend class Database;
+
   // mBlobImpl's ownership lifecycle:
   // - Initialized on the background thread at creation time.  Then
   //   responsibility is handed off to the connection thread.
@@ -6202,13 +6203,13 @@ class DatabaseFile final : public PBackgroundIDBDatabaseFileParent {
   //   the blob to disk by an add/put operation.
   // - Cleared on the connection thread once the file has successfully been
   //   written to disk.
-  InitializedOnce<const RefPtr<BlobImpl>> mBlobImpl;
-  const RefPtr<FileInfo> mFileInfo;
+  RefPtr<BlobImpl> mBlobImpl;
+  RefPtr<FileInfo> mFileInfo;
 
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(mozilla::dom::indexedDB::DatabaseFile);
 
-  const RefPtr<FileInfo>& GetFileInfo() const {
+  FileInfo* GetFileInfo() const {
     AssertIsOnBackgroundThread();
 
     return mFileInfo;
@@ -6231,27 +6232,24 @@ class DatabaseFile final : public PBackgroundIDBDatabaseFileParent {
   void WriteSucceededClearBlobImpl() {
     MOZ_ASSERT(!IsOnBackgroundThread());
 
-    MOZ_ASSERT(*mBlobImpl);
-    mBlobImpl.reset();
+    mBlobImpl = nullptr;
   }
 
- public:
+ private:
   // Called when sending to the child.
-  explicit DatabaseFile(FileInfo* aFileInfo)
-      : mBlobImpl{nullptr}, mFileInfo(aFileInfo) {
+  explicit DatabaseFile(FileInfo* aFileInfo) : mFileInfo(aFileInfo) {
     AssertIsOnBackgroundThread();
-    MOZ_ASSERT(mFileInfo);
+    MOZ_ASSERT(aFileInfo);
   }
 
   // Called when receiving from the child.
   DatabaseFile(BlobImpl* aBlobImpl, FileInfo* aFileInfo)
       : mBlobImpl(aBlobImpl), mFileInfo(aFileInfo) {
     AssertIsOnBackgroundThread();
-    MOZ_ASSERT(*mBlobImpl);
-    MOZ_ASSERT(mFileInfo);
+    MOZ_ASSERT(aBlobImpl);
+    MOZ_ASSERT(aFileInfo);
   }
 
- private:
   ~DatabaseFile() override = default;
 
   void ActorDestroy(ActorDestroyReason aWhy) override {
@@ -6269,7 +6267,7 @@ nsCOMPtr<nsIInputStream> DatabaseFile::GetInputStream(ErrorResult& rv) const {
   }
 
   nsCOMPtr<nsIInputStream> inputStream;
-  (*mBlobImpl)->CreateInputStream(getter_AddRefs(inputStream), rv);
+  mBlobImpl->CreateInputStream(getter_AddRefs(inputStream), rv);
   if (rv.Failed()) {
     return nullptr;
   }
@@ -6655,22 +6653,24 @@ class VersionChangeTransaction final
 };
 
 class MutableFile : public BackgroundMutableFileParentBase {
-  const RefPtr<Database> mDatabase;
-  const RefPtr<FileInfo> mFileInfo;
+  RefPtr<Database> mDatabase;
+  RefPtr<FileInfo> mFileInfo;
 
  public:
   static MOZ_MUST_USE RefPtr<MutableFile> Create(nsIFile* aFile,
                                                  Database* aDatabase,
                                                  FileInfo* aFileInfo);
 
-  const Database& GetDatabase() const {
+  Database* GetDatabase() const {
     AssertIsOnBackgroundThread();
+    MOZ_ASSERT(mDatabase);
 
-    return *mDatabase;
+    return mDatabase;
   }
 
-  const RefPtr<FileInfo>& GetFileInfo() const {
+  FileInfo* GetFileInfo() const {
     AssertIsOnBackgroundThread();
+    MOZ_ASSERT(mFileInfo);
 
     return mFileInfo;
   }
@@ -7162,7 +7162,7 @@ class DatabaseOp : public DatabaseOperationBase,
 class CreateFileOp final : public DatabaseOp {
   const CreateFileParams mParams;
 
-  InitializedOnce<const RefPtr<FileInfo>, LazyInit::Allow> mFileInfo;
+  RefPtr<FileInfo> mFileInfo;
 
  public:
   CreateFileOp(Database* aDatabase, const DatabaseRequestParams& aParams);
@@ -7408,7 +7408,7 @@ class ObjectStoreAddOrPutRequestOp final : public NormalTransactionOp {
 
   typedef mozilla::dom::quota::PersistenceType PersistenceType;
 
-  class StoredFileInfo;
+  struct StoredFileInfo;
   class SCInputStream;
 
   const ObjectStoreAddPutParams mParams;
@@ -7446,190 +7446,50 @@ class ObjectStoreAddOrPutRequestOp final : public NormalTransactionOp {
   void Cleanup() override;
 };
 
-class ObjectStoreAddOrPutRequestOp::StoredFileInfo final {
-  InitializedOnceMustBeTrue<const RefPtr<FileInfo>> mFileInfo;
-  // Either nothing, a file actor or a non-Blob-backed inputstream to write to
-  // disk.
-  using FileActorOrInputStream =
-      Variant<Nothing, RefPtr<DatabaseFile>, nsCOMPtr<nsIInputStream>>;
-  InitializedOnce<const FileActorOrInputStream> mFileActorOrInputStream;
-#ifdef DEBUG
+struct ObjectStoreAddOrPutRequestOp::StoredFileInfo final {
+  const RefPtr<FileInfo> mFileInfo;
+  const RefPtr<DatabaseFile> mFileActor;
+  // A non-Blob-backed inputstream to write to disk.  If null, mFileActor may
+  // still have a stream for us to write.
+  const nsCOMPtr<nsIInputStream> mInputStream;
   const StructuredCloneFile::FileType mType;
-#endif
 
-  void AssertInvariants() const {
-    // The only allowed types are eStructuredClone, eBlob and eMutableFile.
-    MOZ_ASSERT(StructuredCloneFile::eStructuredClone == mType ||
-               StructuredCloneFile::eBlob == mType ||
-               StructuredCloneFile::eMutableFile == mType);
-
-    // mFileInfo and a file actor in mFileActorOrInputStream are present until
-    // the object is moved away, but an inputStream in mFileActorOrInputStream
-    // can be released early.
-    MOZ_ASSERT_IF(static_cast<bool>(mFileActorOrInputStream) &&
-                      mFileActorOrInputStream->is<RefPtr<DatabaseFile>>(),
-                  static_cast<bool>(mFileInfo));
-
-    if (mFileInfo) {
-      // In a non-moved StoredFileInfo, then one of the following is true:
-      // - This was an overflow structured clone (eStructuredClone) and
-      //   storedFileInfo.mFileActorOrInputStream CAN be a non-nullptr input
-      //   stream (but that might have been release by ReleaseInputStream).
-      MOZ_ASSERT_IF(
-          StructuredCloneFile::eStructuredClone == mType,
-          !mFileActorOrInputStream ||
-              (mFileActorOrInputStream->is<nsCOMPtr<nsIInputStream>>() &&
-               mFileActorOrInputStream->as<nsCOMPtr<nsIInputStream>>()));
-
-      // - This is a reference to a Blob (eBlob) that may or may not have
-      //   already been written to disk.  storedFileInfo.mFileActorOrInputStream
-      //   MUST be a non-null file actor, but its GetInputStream may return
-      //   nullptr (so don't assert on that).
-      MOZ_ASSERT_IF(StructuredCloneFile::eBlob == mType,
-                    mFileActorOrInputStream->is<RefPtr<DatabaseFile>>() &&
-                        mFileActorOrInputStream->as<RefPtr<DatabaseFile>>());
-
-      // - It's a mutable file (eMutableFile).  No writing will be performed,
-      // and storedFileInfo.mFileActorOrInputStream is Nothing.
-      MOZ_ASSERT_IF(StructuredCloneFile::eMutableFile == mType,
-                    mFileActorOrInputStream->is<Nothing>());
-    }
-  }
-
-  StoredFileInfo(RefPtr<FileInfo> aFileInfo)
-      : mFileInfo{std::move(aFileInfo)}, mFileActorOrInputStream {
-    Nothing {}
-  }
-#ifdef DEBUG
-  , mType { StructuredCloneFile::eMutableFile }
-#endif
-  {
+  StoredFileInfo(RefPtr<FileInfo> aFileInfo, RefPtr<DatabaseFile> aFileActor,
+                 const StructuredCloneFile::FileType aType)
+      : mFileInfo{std::move(aFileInfo)},
+        mFileActor{std::move(aFileActor)},
+        mType{aType} {
     AssertIsOnBackgroundThread();
-    AssertInvariants();
+    MOZ_ASSERT(StructuredCloneFile::eStructuredClone != mType);
 
-    MOZ_COUNT_CTOR(ObjectStoreAddOrPutRequestOp::StoredFileInfo);
-  }
-
-  StoredFileInfo(RefPtr<FileInfo> aFileInfo, RefPtr<DatabaseFile> aFileActor)
-      : mFileInfo{std::move(aFileInfo)}, mFileActorOrInputStream {
-    std::move(aFileActor)
-  }
-#ifdef DEBUG
-  , mType { StructuredCloneFile::eBlob }
-#endif
-  {
-    AssertIsOnBackgroundThread();
-    AssertInvariants();
+    MOZ_ASSERT(mFileInfo);
 
     MOZ_COUNT_CTOR(ObjectStoreAddOrPutRequestOp::StoredFileInfo);
   }
 
   StoredFileInfo(RefPtr<FileInfo> aFileInfo,
                  nsCOMPtr<nsIInputStream> aInputStream)
-      : mFileInfo{std::move(aFileInfo)}, mFileActorOrInputStream {
-    std::move(aInputStream)
-  }
-#ifdef DEBUG
-  , mType { StructuredCloneFile::eStructuredClone }
-#endif
-  {
+      : mFileInfo{std::move(aFileInfo)},
+        mInputStream{std::move(aInputStream)},
+        mType{StructuredCloneFile::eStructuredClone} {
     AssertIsOnBackgroundThread();
-    AssertInvariants();
+
+    MOZ_ASSERT(mFileInfo);
+    MOZ_ASSERT(mInputStream);
 
     MOZ_COUNT_CTOR(ObjectStoreAddOrPutRequestOp::StoredFileInfo);
   }
 
- public:
-  StoredFileInfo(StoredFileInfo&&) = default;
-
-  static StoredFileInfo CreateForMutableFile(RefPtr<FileInfo> aFileInfo) {
-    return {std::move(aFileInfo)};
-  }
-  static StoredFileInfo CreateForBlob(RefPtr<FileInfo> aFileInfo,
-                                      RefPtr<DatabaseFile> aFileActor) {
-    return {std::move(aFileInfo), std::move(aFileActor)};
-  }
-  static StoredFileInfo CreateForStructuredClone(
-      RefPtr<FileInfo> aFileInfo, nsCOMPtr<nsIInputStream> aInputStream) {
-    return {std::move(aFileInfo), std::move(aInputStream)};
-  }
-
-#if defined(DEBUG) || defined(NS_BUILD_REFCNT_LOGGING)
   ~StoredFileInfo() {
     AssertIsOnBackgroundThread();
-    AssertInvariants();
 
     MOZ_COUNT_DTOR(ObjectStoreAddOrPutRequestOp::StoredFileInfo);
   }
-#endif
-
-  bool IsValid() const { return static_cast<bool>(mFileInfo); }
-
-  const FileInfo& FileInfo() const { return **mFileInfo; }
-
-  bool ShouldCompress() const {
-    // Must not be called after moving.
-    MOZ_ASSERT(IsValid());
-
-    // Compression is only necessary for eStructuredClone, i.e. when
-    // mFileActorOrInputStream stored an input stream. However, this is only
-    // called after GetInputStream, when mFileActorOrInputStream has been
-    // cleared, which is only possible for this type.
-    const bool res = !mFileActorOrInputStream;
-    MOZ_ASSERT(res == (StructuredCloneFile::eStructuredClone == mType));
-    return res;
-  }
-
-  void NotifyWriteSucceeded() const {
-    MOZ_ASSERT(IsValid());
-
-    // For eBlob, clear the blob implementation.
-    if (mFileActorOrInputStream &&
-        mFileActorOrInputStream->is<RefPtr<DatabaseFile>>()) {
-      mFileActorOrInputStream->as<RefPtr<DatabaseFile>>()
-          ->WriteSucceededClearBlobImpl();
-    }
-
-    // For the other types, no action is necessary.
-  }
-
-  using InputStreamResult = mozilla::Result<nsCOMPtr<nsIInputStream>, nsresult>;
-  InputStreamResult GetInputStream() {
-    if (!mFileActorOrInputStream) {
-      MOZ_ASSERT(StructuredCloneFile::eStructuredClone == mType);
-      return nsCOMPtr<nsIInputStream>{};
-    }
-
-    // For the different cases, see also the comments in AssertInvariants.
-    return mFileActorOrInputStream->match(
-        [](const Nothing&) -> InputStreamResult {
-          return nsCOMPtr<nsIInputStream>{};
-        },
-        [](const RefPtr<DatabaseFile>& databaseActor) -> InputStreamResult {
-          ErrorResult rv;
-          auto inputStream = databaseActor->GetInputStream(rv);
-          if (NS_WARN_IF(rv.Failed())) {
-            return Err(rv.StealNSResult());
-          }
-
-          return inputStream;
-        },
-        [this](
-            const nsCOMPtr<nsIInputStream>& inputStream) -> InputStreamResult {
-          auto res = inputStream;
-          // reset() clears the inputStream parameter, so we needed to make a
-          // copy before
-          mFileActorOrInputStream.reset();
-          AssertInvariants();
-          return res;
-        });
-  }
 
   void Serialize(nsString& aText) const {
-    AssertInvariants();
-    MOZ_ASSERT(IsValid());
+    MOZ_ASSERT(mFileInfo);
 
-    const int64_t id = (*mFileInfo)->Id();
+    const int64_t id = mFileInfo->Id();
 
     switch (mType) {
       case StructuredCloneFile::eBlob:
@@ -9117,9 +8977,9 @@ class MOZ_STACK_CLASS FileHelper final {
 
   nsresult Init();
 
-  MOZ_MUST_USE nsCOMPtr<nsIFile> GetFile(const FileInfo& aFileInfo);
+  MOZ_MUST_USE nsCOMPtr<nsIFile> GetFile(FileInfo* aFileInfo);
 
-  MOZ_MUST_USE nsCOMPtr<nsIFile> GetJournalFile(const FileInfo& aFileInfo);
+  MOZ_MUST_USE nsCOMPtr<nsIFile> GetJournalFile(FileInfo* aFileInfo);
 
   nsresult CreateFileFromStream(nsIFile* aFile, nsIFile* aJournalFile,
                                 nsIInputStream* aInputStream, bool aCompress);
@@ -13842,7 +13702,7 @@ Database::AllocPBackgroundIDBDatabaseFileParent(const IPCBlob& aIPCBlob) {
     actor = new DatabaseFile(fileInfo);
   } else {
     // This is a blob we haven't seen before.
-    fileInfo = mFileManager->CreateFileInfo();
+    fileInfo = mFileManager->GetNewFileInfo();
     MOZ_ASSERT(fileInfo);
 
     actor = new DatabaseFile(blobImpl, fileInfo);
@@ -14760,8 +14620,13 @@ bool TransactionBase::VerifyRequestParams(
           return false;
         }
 
-        const Database& database = mutableFile->GetDatabase();
-        if (NS_WARN_IF(database.Id() != mDatabase->Id())) {
+        Database* database = mutableFile->GetDatabase();
+        if (NS_WARN_IF(!database)) {
+          ASSERT_UNLESS_FUZZING();
+          return false;
+        }
+
+        if (NS_WARN_IF(database->Id() != mDatabase->Id())) {
           ASSERT_UNLESS_FUZZING();
           return false;
         }
@@ -16414,7 +16279,7 @@ RefPtr<FileInfo> FileManager::GetFileInfo(int64_t aId) const {
   return fileInfo;
 }
 
-RefPtr<FileInfo> FileManager::CreateFileInfo() {
+RefPtr<FileInfo> FileManager::GetNewFileInfo() {
   MOZ_ASSERT(!IndexedDatabaseManager::IsClosed());
 
   // TODO: We cannot simply change this to RefPtr<FileInfo>, because
@@ -19285,7 +19150,7 @@ nsresult DatabaseOperationBase::GetStructuredCloneReadInfoFromExternalBlob(
   MOZ_ASSERT(file.mType == StructuredCloneFile::eStructuredClone);
 
   const nsCOMPtr<nsIFile> nativeFile =
-      FileInfo::GetFileForFileInfo(*file.mFileInfo);
+      FileInfo::GetFileForFileInfo(file.mFileInfo);
   if (NS_WARN_IF(!nativeFile)) {
     return NS_ERROR_FAILURE;
   }
@@ -20046,7 +19911,7 @@ PBackgroundParent* MutableFile::GetBackgroundParent() const {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(!IsActorDestroyed());
 
-  return GetDatabase().GetBackgroundParent();
+  return GetDatabase()->GetBackgroundParent();
 }
 
 already_AddRefed<nsISupports> MutableFile::CreateStream(bool aReadOnly) {
@@ -23299,14 +23164,14 @@ CreateFileOp::CreateFileOp(Database* aDatabase,
 }
 
 nsresult CreateFileOp::CreateMutableFile(RefPtr<MutableFile>* aMutableFile) {
-  nsCOMPtr<nsIFile> file = FileInfo::GetFileForFileInfo(**mFileInfo);
+  nsCOMPtr<nsIFile> file = FileInfo::GetFileForFileInfo(mFileInfo);
   if (NS_WARN_IF(!file)) {
     IDB_REPORT_INTERNAL_ERR();
     return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
   }
 
   RefPtr<MutableFile> mutableFile =
-      MutableFile::Create(file, mDatabase, *mFileInfo);
+      MutableFile::Create(file, mDatabase, mFileInfo);
   if (NS_WARN_IF(!mutableFile)) {
     IDB_REPORT_INTERNAL_ERR();
     return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
@@ -23338,13 +23203,13 @@ nsresult CreateFileOp::DoDatabaseWork() {
 
   FileManager* fileManager = mDatabase->GetFileManager();
 
-  mFileInfo.init(fileManager->CreateFileInfo());
-  if (NS_WARN_IF(!*mFileInfo)) {
+  mFileInfo = fileManager->GetNewFileInfo();
+  if (NS_WARN_IF(!mFileInfo)) {
     IDB_REPORT_INTERNAL_ERR();
     return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
   }
 
-  const int64_t fileId = (*mFileInfo)->Id();
+  const int64_t fileId = mFileInfo->Id();
 
   const auto journalDirectory = fileManager->EnsureJournalDirectory();
   if (NS_WARN_IF(!journalDirectory)) {
@@ -25032,8 +24897,8 @@ bool ObjectStoreAddOrPutRequestOp::Init(TransactionBase* aTransaction) {
               file.get_PBackgroundIDBDatabaseFileParent());
           MOZ_ASSERT(fileActor);
 
-          mStoredFileInfos.EmplaceBack(StoredFileInfo::CreateForBlob(
-              fileActor->GetFileInfo(), fileActor));
+          mStoredFileInfos.EmplaceBack(fileActor->GetFileInfo(), fileActor,
+                                       StructuredCloneFile::eBlob);
           break;
         }
 
@@ -25045,8 +24910,8 @@ bool ObjectStoreAddOrPutRequestOp::Init(TransactionBase* aTransaction) {
               file.get_PBackgroundMutableFileParent());
           MOZ_ASSERT(mutableFileActor);
 
-          mStoredFileInfos.EmplaceBack(StoredFileInfo::CreateForMutableFile(
-              mutableFileActor->GetFileInfo()));
+          mStoredFileInfos.EmplaceBack(mutableFileActor->GetFileInfo(), nullptr,
+                                       StructuredCloneFile::eMutableFile);
 
           break;
         }
@@ -25058,9 +24923,9 @@ bool ObjectStoreAddOrPutRequestOp::Init(TransactionBase* aTransaction) {
   }
 
   if (mDataOverThreshold) {
-    mStoredFileInfos.EmplaceBack(StoredFileInfo::CreateForStructuredClone(
-        aTransaction->GetDatabase()->GetFileManager()->CreateFileInfo(),
-        MakeRefPtr<SCInputStream>(mParams.cloneInfo().data().data)));
+    mStoredFileInfos.EmplaceBack(
+        aTransaction->GetDatabase()->GetFileManager()->GetNewFileInfo(),
+        MakeRefPtr<SCInputStream>(mParams.cloneInfo().data().data));
   }
 
   return true;
@@ -25249,14 +25114,29 @@ nsresult ObjectStoreAddOrPutRequestOp::DoDatabaseWork(
     nsAutoString fileIds;
 
     for (auto& storedFileInfo : mStoredFileInfos) {
-      MOZ_ASSERT(storedFileInfo.IsValid());
+      MOZ_ASSERT(storedFileInfo.mFileInfo);
 
-      auto inputStreamOrErr = storedFileInfo.GetInputStream();
-      if (inputStreamOrErr.isErr()) {
-        return inputStreamOrErr.unwrapErr();
+      // If there is a StoredFileInfo, then one of the following is true:
+      // - This was an overflow structured clone and storedFileInfo.mInputStream
+      //   MUST be non-null.
+      // - This is a reference to a Blob that may or may not have already been
+      //   written to disk.  storedFileInfo.mFileActor MUST be non-null, but
+      //   its GetInputStream may return null (so don't assert on them).
+      // - It's a mutable file.  No writing will be performed.
+      MOZ_ASSERT(storedFileInfo.mInputStream || storedFileInfo.mFileActor ||
+                 storedFileInfo.mType == StructuredCloneFile::eMutableFile);
+
+      // Check for an explicit stream, like a structured clone stream.
+      nsCOMPtr<nsIInputStream> inputStream =
+          std::move(storedFileInfo.mInputStream);
+      // Check for a blob-backed stream otherwise.
+      if (!inputStream && storedFileInfo.mFileActor) {
+        ErrorResult streamRv;
+        inputStream = storedFileInfo.mFileActor->GetInputStream(streamRv);
+        if (NS_WARN_IF(streamRv.Failed())) {
+          return streamRv.StealNSResult();
+        }
       }
-
-      const auto inputStream = inputStreamOrErr.unwrap();
 
       if (inputStream) {
         if (fileHelper.isNothing()) {
@@ -25272,7 +25152,7 @@ nsresult ObjectStoreAddOrPutRequestOp::DoDatabaseWork(
           }
         }
 
-        const FileInfo& fileInfo = storedFileInfo.FileInfo();
+        const RefPtr<FileInfo>& fileInfo = storedFileInfo.mFileInfo;
 
         const auto file = fileHelper->GetFile(fileInfo);
         if (NS_WARN_IF(!file)) {
@@ -25286,7 +25166,8 @@ nsresult ObjectStoreAddOrPutRequestOp::DoDatabaseWork(
           return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
         }
 
-        const bool compress = storedFileInfo.ShouldCompress();
+        bool compress =
+            storedFileInfo.mType == StructuredCloneFile::eStructuredClone;
 
         rv = fileHelper->CreateFileFromStream(file, journalFile, inputStream,
                                               compress);
@@ -25304,7 +25185,9 @@ nsresult ObjectStoreAddOrPutRequestOp::DoDatabaseWork(
           return rv;
         }
 
-        storedFileInfo.NotifyWriteSucceeded();
+        if (storedFileInfo.mFileActor) {
+          storedFileInfo.mFileActor->WriteSucceededClearBlobImpl();
+        }
       }
 
       if (!fileIds.IsEmpty()) {
@@ -27527,23 +27410,25 @@ nsresult FileHelper::Init() {
   return NS_OK;
 }
 
-nsCOMPtr<nsIFile> FileHelper::GetFile(const FileInfo& aFileInfo) {
+nsCOMPtr<nsIFile> FileHelper::GetFile(FileInfo* aFileInfo) {
   MOZ_ASSERT(!IsOnBackgroundThread());
+  MOZ_ASSERT(aFileInfo);
   MOZ_ASSERT(mFileManager);
   MOZ_ASSERT(mFileDirectory);
 
-  const int64_t fileId = aFileInfo.Id();
+  const int64_t fileId = aFileInfo->Id();
   MOZ_ASSERT(fileId > 0);
 
   return mFileManager->GetFileForId(mFileDirectory, fileId);
 }
 
-nsCOMPtr<nsIFile> FileHelper::GetJournalFile(const FileInfo& aFileInfo) {
+nsCOMPtr<nsIFile> FileHelper::GetJournalFile(FileInfo* aFileInfo) {
   MOZ_ASSERT(!IsOnBackgroundThread());
+  MOZ_ASSERT(aFileInfo);
   MOZ_ASSERT(mFileManager);
   MOZ_ASSERT(mJournalDirectory);
 
-  const int64_t fileId = aFileInfo.Id();
+  const int64_t fileId = aFileInfo->Id();
   MOZ_ASSERT(fileId > 0);
 
   return mFileManager->GetFileForId(mJournalDirectory, fileId);

@@ -57,7 +57,7 @@ class FileInfo final {
 
   int64_t Id() const { return mFileId; }
 
-  static nsCOMPtr<nsIFile> GetFileForFileInfo(const FileInfo& aFileInfo);
+  static nsCOMPtr<nsIFile> GetFileForFileInfo(FileInfo* aFileInfo);
 
  private:
   void UpdateReferences(
