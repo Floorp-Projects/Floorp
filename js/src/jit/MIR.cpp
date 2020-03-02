@@ -2374,6 +2374,14 @@ bool MPhi::checkForTypeChange(TempAllocator& alloc, MDefinition* ins,
   MIRType resultType = this->type();
   TemporaryTypeSet* resultTypeSet = this->resultTypeSet();
 
+  if (JitOptions.warpBuilder) {
+    // WarpBuilder does not specialize phis during MIR building and does not
+    // rely on MIR type information.
+    MOZ_ASSERT(resultType == MIRType::Value);
+    MOZ_ASSERT(!resultTypeSet);
+    return true;
+  }
+
   if (!MergeTypes(alloc, &resultType, &resultTypeSet, ins->type(),
                   ins->resultTypeSet())) {
     return false;
