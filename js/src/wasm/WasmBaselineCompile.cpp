@@ -1076,12 +1076,14 @@ int32_t BaseLocalIter::pushLocal(size_t nbytes) {
 void BaseLocalIter::settle() {
   if (!argsIter_.done()) {
     mirType_ = argsIter_.mirType();
+    MIRType concreteType = mirType_;
     switch (mirType_) {
-      case MIRType::Pointer:
+      case MIRType::StackResults:
         // The pointer to stack results is handled like any other argument:
         // either addressed in place if it is passed on the stack, or we spill
         // it in the frame if it's in a register.
         MOZ_ASSERT(args_.isSyntheticStackResultPointerArg(index_));
+        concreteType = MIRType::Pointer;
         [[fallthrough]];
       case MIRType::Int32:
       case MIRType::Int64:
@@ -1089,7 +1091,7 @@ void BaseLocalIter::settle() {
       case MIRType::Float32:
       case MIRType::RefOrNull:
         if (argsIter_->argInRegister()) {
-          frameOffset_ = pushLocal(MIRTypeToSize(mirType_));
+          frameOffset_ = pushLocal(MIRTypeToSize(concreteType));
         } else {
           frameOffset_ = -(argsIter_->offsetFromArgBase() + sizeof(Frame));
         }
@@ -1097,7 +1099,7 @@ void BaseLocalIter::settle() {
       default:
         MOZ_CRASH("Argument type");
     }
-    if (mirType_ == MIRType::Pointer) {
+    if (mirType_ == MIRType::StackResults) {
       stackResultPointerOffset_ = frameOffset();
       // Advance past the synthetic stack result pointer argument and fall
       // through to the next case.

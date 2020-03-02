@@ -448,13 +448,14 @@ enum class MIRType : uint8_t {
   // Types above are specialized.
   Value,
   ObjectOrNull,
-  None,         // Invalid, used as a placeholder.
-  Slots,        // A slots vector
-  Elements,     // An elements vector
-  Pointer,      // An opaque pointer that receives no special treatment
-  RefOrNull,    // Wasm Ref/AnyRef/NullRef: a raw JSObject* or a raw (void*)0
-  Shape,        // A Shape pointer.
-  ObjectGroup,  // An ObjectGroup pointer.
+  None,          // Invalid, used as a placeholder.
+  Slots,         // A slots vector
+  Elements,      // An elements vector
+  Pointer,       // An opaque pointer that receives no special treatment
+  RefOrNull,     // Wasm Ref/AnyRef/NullRef: a raw JSObject* or a raw (void*)0
+  StackResults,  // Wasm multi-value stack result area, which may contain refs
+  Shape,         // A Shape pointer.
+  ObjectGroup,   // An ObjectGroup pointer.
   Last = ObjectGroup,
   // Representing both SIMD.IntBxN and SIMD.UintBxN.
   Int8x16 = Int32 | (4 << VECTOR_SCALE_SHIFT),
@@ -601,6 +602,8 @@ static inline const char* StringFromMIRType(MIRType type) {
       return "Pointer";
     case MIRType::RefOrNull:
       return "RefOrNull";
+    case MIRType::StackResults:
+      return "StackResults";
     case MIRType::Shape:
       return "Shape";
     case MIRType::ObjectGroup:

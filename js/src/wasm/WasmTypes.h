@@ -1212,7 +1212,7 @@ class ArgTypeVector {
   jit::MIRType operator[](size_t i) const {
     MOZ_ASSERT(i < length());
     if (isSyntheticStackResultPointerArg(i)) {
-      return jit::MIRType::Pointer;
+      return jit::MIRType::StackResults;
     }
     return ToMIRType(args_[naturalIndex(i)]);
   }

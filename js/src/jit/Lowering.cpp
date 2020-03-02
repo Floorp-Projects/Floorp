@@ -4436,6 +4436,14 @@ void LIRGenerator::visitWasmRegister64Result(MWasmRegister64Result* ins) {
   add(lir, ins);
 }
 
+void LIRGenerator::visitWasmStackResultArea(MWasmStackResultArea* ins) {
+  MOZ_CRASH("unimplemented");
+}
+
+void LIRGenerator::visitWasmStackResult(MWasmStackResult* ins) {
+  MOZ_CRASH("unimplemented");
+}
+
 void LIRGenerator::visitWasmCall(MWasmCall* ins) {
   bool needsBoundsCheck = true;
   if (ins->callee().isTable()) {

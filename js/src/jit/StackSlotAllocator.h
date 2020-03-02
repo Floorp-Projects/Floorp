@@ -91,6 +91,8 @@ class StackSlotAllocator {
       case LDefinition::SIMD128INT:
       case LDefinition::SIMD128FLOAT:
         return 16;
+      case LDefinition::STACKRESULTS:
+        MOZ_CRASH("Stack results area must be allocated manually");
     }
     MOZ_CRASH("Unknown slot type");
   }

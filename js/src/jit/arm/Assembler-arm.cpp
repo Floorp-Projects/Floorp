@@ -48,6 +48,7 @@ ABIArg ABIArgGenerator::softNext(MIRType type) {
     case MIRType::Int32:
     case MIRType::Pointer:
     case MIRType::RefOrNull:
+    case MIRType::StackResults:
       if (intRegIndex_ == NumIntArgRegs) {
         current_ = ABIArg(stackOffset_);
         stackOffset_ += sizeof(uint32_t);
@@ -109,6 +110,7 @@ ABIArg ABIArgGenerator::hardNext(MIRType type) {
     case MIRType::Int32:
     case MIRType::Pointer:
     case MIRType::RefOrNull:
+    case MIRType::StackResults:
       if (intRegIndex_ == NumIntArgRegs) {
         current_ = ABIArg(stackOffset_);
         stackOffset_ += sizeof(uint32_t);
