@@ -207,7 +207,7 @@ already_AddRefed<Element> WSRunObject::InsertBreak(
       // run to nbsp.
       WSPoint thePoint = GetNextCharPoint(pointToInsert);
       if (thePoint.mTextNode && nsCRT::IsAsciiSpace(thePoint.mChar)) {
-        WSPoint prevPoint = GetPreviousCharPoint(thePoint);
+        WSPoint prevPoint = GetPreviousCharPointFromPointInText(thePoint);
         if (!prevPoint.mTextNode ||
             (prevPoint.mTextNode && !nsCRT::IsAsciiSpace(prevPoint.mChar))) {
           // We are at start of non-nbsps.  Convert to a single nbsp.
@@ -1435,8 +1435,8 @@ WSRunScanner::WSPoint WSRunScanner::GetNextCharPoint(
     // Use range comparisons to get next text node which is in mNodeArray.
     return LookForNextCharPointWithinAllTextNodes(aPoint);
   }
-  // Use WSPoint version of GetNextCharPoint()
-  return GetNextCharPoint(WSPoint(mNodeArray[index], aPoint.Offset(), 0));
+  return GetNextCharPointFromPointInText(
+      WSPoint(mNodeArray[index], aPoint.Offset(), 0));
 }
 
 template <typename PT, typename CT>
@@ -1451,11 +1451,11 @@ WSRunScanner::WSPoint WSRunScanner::GetPreviousCharPoint(
     // Use range comparisons to get previous text node which is in mNodeArray.
     return LookForPreviousCharPointWithinAllTextNodes(aPoint);
   }
-  // Use WSPoint version of GetPreviousCharPoint()
-  return GetPreviousCharPoint(WSPoint(mNodeArray[index], aPoint.Offset(), 0));
+  return GetPreviousCharPointFromPointInText(
+      WSPoint(mNodeArray[index], aPoint.Offset(), 0));
 }
 
-WSRunScanner::WSPoint WSRunScanner::GetNextCharPoint(
+WSRunScanner::WSPoint WSRunScanner::GetNextCharPointFromPointInText(
     const WSPoint& aPoint) const {
   MOZ_ASSERT(aPoint.mTextNode);
 
@@ -1464,8 +1464,8 @@ WSRunScanner::WSPoint WSRunScanner::GetNextCharPoint(
   outPoint.mOffset = 0;
   outPoint.mChar = 0;
 
-  int32_t idx = mNodeArray.IndexOf(aPoint.mTextNode);
-  if (idx == -1) {
+  size_t index = mNodeArray.IndexOf(aPoint.mTextNode);
+  if (index == decltype(mNodeArray)::NoIndex) {
     // Can't find point, but it's not an error
     return outPoint;
   }
@@ -1476,18 +1476,18 @@ WSRunScanner::WSPoint WSRunScanner::GetNextCharPoint(
     return outPoint;
   }
 
-  int32_t numNodes = mNodeArray.Length();
-  if (idx + 1 < numNodes) {
-    outPoint.mTextNode = mNodeArray[idx + 1];
-    MOZ_ASSERT(outPoint.mTextNode);
-    outPoint.mOffset = 0;
-    outPoint.mChar = GetCharAt(outPoint.mTextNode, 0);
+  if (index + 1 == mNodeArray.Length()) {
+    return outPoint;
   }
 
+  outPoint.mTextNode = mNodeArray[index + 1];
+  MOZ_ASSERT(outPoint.mTextNode);
+  outPoint.mOffset = 0;
+  outPoint.mChar = GetCharAt(outPoint.mTextNode, 0);
   return outPoint;
 }
 
-WSRunScanner::WSPoint WSRunScanner::GetPreviousCharPoint(
+WSRunScanner::WSPoint WSRunScanner::GetPreviousCharPointFromPointInText(
     const WSPoint& aPoint) const {
   MOZ_ASSERT(aPoint.mTextNode);
 
@@ -1496,8 +1496,8 @@ WSRunScanner::WSPoint WSRunScanner::GetPreviousCharPoint(
   outPoint.mOffset = 0;
   outPoint.mChar = 0;
 
-  int32_t idx = mNodeArray.IndexOf(aPoint.mTextNode);
-  if (idx == -1) {
+  size_t index = mNodeArray.IndexOf(aPoint.mTextNode);
+  if (index == decltype(mNodeArray)::NoIndex) {
     // Can't find point, but it's not an error
     return outPoint;
   }
@@ -1509,14 +1509,14 @@ WSRunScanner::WSPoint WSRunScanner::GetPreviousCharPoint(
     return outPoint;
   }
 
-  if (idx) {
-    outPoint.mTextNode = mNodeArray[idx - 1];
+  if (!index) {
+    return outPoint;
+  }
 
-    uint32_t len = outPoint.mTextNode->TextLength();
-    if (len) {
-      outPoint.mOffset = len - 1;
-      outPoint.mChar = GetCharAt(outPoint.mTextNode, len - 1);
-    }
+  outPoint.mTextNode = mNodeArray[index - 1];
+  if (uint32_t len = outPoint.mTextNode->TextLength()) {
+    outPoint.mOffset = len - 1;
+    outPoint.mChar = GetCharAt(outPoint.mTextNode, len - 1);
   }
   return outPoint;
 }
@@ -1597,7 +1597,7 @@ void WSRunObject::GetASCIIWhitespacesBounds(
 
       // Scan ahead to end of ASCII ws
       for (; nsCRT::IsAsciiSpace(point.mChar) && point.mTextNode;
-           point = GetNextCharPoint(point)) {
+           point = GetNextCharPointFromPointInText(point)) {
         endNode = point.mTextNode;
         // endOffset is _after_ ws
         point.mOffset++;
@@ -1619,7 +1619,7 @@ void WSRunObject::GetASCIIWhitespacesBounds(
 
       // Scan back to start of ASCII ws
       for (; nsCRT::IsAsciiSpace(point.mChar) && point.mTextNode;
-           point = GetPreviousCharPoint(point)) {
+           point = GetPreviousCharPointFromPointInText(point)) {
         startNode = point.mTextNode;
         startOffset = point.mOffset;
       }
@@ -1726,13 +1726,13 @@ WSRunScanner::WSPoint WSRunScanner::LookForNextCharPointWithinAllTextNodes(
     // index of the last node.
     Text* textNode = mNodeArray[curNum - 1];
     WSPoint point(textNode, textNode->TextLength(), 0);
-    return GetNextCharPoint(point);
+    return GetNextCharPointFromPointInText(point);
   }
 
   // The char after the point is the first character of our range.
   Text* textNode = mNodeArray[curNum];
   WSPoint point(textNode, 0, 0);
-  return GetNextCharPoint(point);
+  return GetNextCharPointFromPointInText(point);
 }
 
 template <typename PT, typename CT>
@@ -1778,7 +1778,7 @@ WSRunScanner::WSPoint WSRunScanner::LookForPreviousCharPointWithinAllTextNodes(
     // character.
     Text* textNode = mNodeArray[curNum - 1];
     WSPoint point(textNode, textNode->TextLength(), 0);
-    return GetPreviousCharPoint(point);
+    return GetPreviousCharPointFromPointInText(point);
   }
 
   // We can just ask the current node for the point immediately before it,
@@ -1786,7 +1786,7 @@ WSRunScanner::WSPoint WSRunScanner::LookForPreviousCharPointWithinAllTextNodes(
   // appropriate character
   Text* textNode = mNodeArray[curNum];
   WSPoint point(textNode, 0, 0);
-  return GetPreviousCharPoint(point);
+  return GetPreviousCharPointFromPointInText(point);
 }
 
 nsresult WSRunObject::CheckTrailingNBSPOfRun(WSFragment* aRun) {
@@ -1813,7 +1813,7 @@ nsresult WSRunObject::CheckTrailingNBSPOfRun(WSFragment* aRun) {
   if (thePoint.mTextNode && thePoint.mChar == kNBSP) {
     // now check that what is to the left of it is compatible with replacing
     // nbsp with space
-    WSPoint prevPoint = GetPreviousCharPoint(thePoint);
+    WSPoint prevPoint = GetPreviousCharPointFromPointInText(thePoint);
     if (prevPoint.mTextNode) {
       if (!nsCRT::IsAsciiSpace(prevPoint.mChar)) {
         leftCheck = true;
@@ -1870,7 +1870,7 @@ nsresult WSRunObject::CheckTrailingNBSPOfRun(WSFragment* aRun) {
 
         // Refresh thePoint, prevPoint
         thePoint = GetPreviousCharPoint(aRun->EndPoint());
-        prevPoint = GetPreviousCharPoint(thePoint);
+        prevPoint = GetPreviousCharPointFromPointInText(thePoint);
         rightCheck = true;
       }
     }
@@ -1941,7 +1941,7 @@ nsresult WSRunObject::ReplacePreviousNBSPIfUnncessary(
   bool canConvert = false;
   WSPoint thePoint = GetPreviousCharPoint(aPoint);
   if (thePoint.mTextNode && thePoint.mChar == kNBSP) {
-    WSPoint prevPoint = GetPreviousCharPoint(thePoint);
+    WSPoint prevPoint = GetPreviousCharPointFromPointInText(thePoint);
     if (prevPoint.mTextNode) {
       if (!nsCRT::IsAsciiSpace(prevPoint.mChar)) {
         // If previous character is a NBSP and its previous character isn't
@@ -1997,7 +1997,7 @@ nsresult WSRunObject::CheckLeadingNBSP(WSFragment* aRun, nsINode* aNode,
     WSPoint tmp = thePoint;
     // we want to be after thePoint
     tmp.mOffset++;
-    WSPoint nextPoint = GetNextCharPoint(tmp);
+    WSPoint nextPoint = GetNextCharPointFromPointInText(tmp);
     if (nextPoint.mTextNode) {
       if (!nsCRT::IsAsciiSpace(nextPoint.mChar)) {
         canConvert = true;

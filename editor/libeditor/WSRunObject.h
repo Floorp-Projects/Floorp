@@ -523,12 +523,13 @@ class MOZ_STACK_CLASS WSRunScanner {
                              bool aForward) const;
 
   /**
-   * GetNextCharPoint() returns next character's point of aPoint.  If there is
-   * no character after aPoint, mTextNode is set to nullptr.
+   * GetNextCharPoint() and GetNextCharPointFromPointInText() return next
+   * character's point of aPoint.  If there is no character after aPoint,
+   * mTextNode is set to nullptr.
    */
   template <typename PT, typename CT>
   WSPoint GetNextCharPoint(const EditorDOMPointBase<PT, CT>& aPoint) const;
-  WSPoint GetNextCharPoint(const WSPoint& aPoint) const;
+  WSPoint GetNextCharPointFromPointInText(const WSPoint& aPoint) const;
 
   /**
    * LookForNextCharPointWithinAllTextNodes() and
@@ -536,8 +537,8 @@ class MOZ_STACK_CLASS WSRunScanner {
    * GetNextCharPoint(const EditorRawDOMPoint&) and GetPreviousCharPoint(const
    * EditorRawDOMPoint&).  When the container isn't in mNodeArray, they call one
    * of these methods.  Then, these methods look for nearest text node in
-   * mNodeArray from aPoint. Then, will call GetNextCharPoint(const WSPoint&) or
-   * GetPreviousCharPoint(const WSPoint&) and returns its result.
+   * mNodeArray from aPoint. Then, will call GetNextCharPointFromPointInText()
+   * or GetPreviousCharPointFromPointInText() and returns its result.
    */
   template <typename PT, typename CT>
   WSPoint LookForNextCharPointWithinAllTextNodes(
@@ -569,12 +570,13 @@ class MOZ_STACK_CLASS WSRunScanner {
                             nsINode* aBlockParent) const;
 
   /**
-   * GetPreviousCharPoint() returns previous character's point of of aPoint.
-   * If there is no character before aPoint, mTextNode is set to nullptr.
+   * GetPreviousCharPoint() and GetPreviousCharPointFromPointInText() return
+   * previous character's point of of aPoint. If there is no character before
+   * aPoint, mTextNode is set to nullptr.
    */
   template <typename PT, typename CT>
   WSPoint GetPreviousCharPoint(const EditorDOMPointBase<PT, CT>& aPoint) const;
-  WSPoint GetPreviousCharPoint(const WSPoint& aPoint) const;
+  WSPoint GetPreviousCharPointFromPointInText(const WSPoint& aPoint) const;
 
   char16_t GetCharAt(dom::Text* aTextNode, int32_t aOffset) const;
 
