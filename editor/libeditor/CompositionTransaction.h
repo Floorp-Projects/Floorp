@@ -6,7 +6,9 @@
 #ifndef CompositionTransaction_h
 #define CompositionTransaction_h
 
-#include "mozilla/EditTransactionBase.h"   // base class
+#include "mozilla/EditTransactionBase.h"  // base class
+
+#include "mozilla/EditorDOMPoint.h"        // EditorDOMPointInText
 #include "nsCycleCollectionParticipant.h"  // various macros
 #include "nsString.h"                      // mStringToInsert
 
@@ -36,8 +38,8 @@ class Text;
 class CompositionTransaction final : public EditTransactionBase {
  protected:
   CompositionTransaction(EditorBase& aEditorBase,
-                         const nsAString& aStringToInsert, dom::Text& aTextNode,
-                         uint32_t aOffset);
+                         const nsAString& aStringToInsert,
+                         const EditorDOMPointInText& aPointToInsert);
 
  public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IMETEXTTXN_IID)
@@ -52,13 +54,11 @@ class CompositionTransaction final : public EditTransactionBase {
    *                            be different from actual composition string.
    *                            E.g., password editor can hide the character
    *                            with a different character.
-   * @param aTextNode           The text node which will have aStringToInsert.
-   * @param aOffset             The offset in aTextNode where aStringToInsert
-   *                            will be inserted.
+   * @param aPointToInsert      The insertion point.
    */
   static already_AddRefed<CompositionTransaction> Create(
       EditorBase& aEditorBase, const nsAString& aStringToInsert,
-      dom::Text& aTextNode, uint32_t aOffset);
+      const EditorDOMPointInText& aPointToInsert);
 
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(CompositionTransaction,
                                            EditTransactionBase)
