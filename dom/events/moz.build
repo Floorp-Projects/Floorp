@@ -50,6 +50,7 @@ EXPORTS.mozilla += [
     'GlobalKeyListener.h',
     'IMEContentObserver.h',
     'IMEStateManager.h',
+    'InputEventOptions.h',
     'InputTypeList.h',
     'InternalMutationEvent.h',
     'JSEventHandler.h',
