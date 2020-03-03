@@ -118,7 +118,7 @@ class DOMIntersectionObserver final : public nsISupports,
 
   nsISupports* GetParentObject() const { return mOwner; }
 
-  Element* GetRoot() const { return mRoot; }
+  nsINode* GetRoot() const { return mRoot; }
 
   void GetRootMargin(DOMString& aRetVal);
   void GetThresholds(nsTArray<double>& aRetVal);
@@ -151,7 +151,7 @@ class DOMIntersectionObserver final : public nsISupports,
   RefPtr<Document> mDocument;
   Variant<RefPtr<dom::IntersectionCallback>, NativeIntersectionObserverCallback>
       mCallback;
-  RefPtr<Element> mRoot;
+  RefPtr<nsINode> mRoot;
   StyleRect<LengthPercentage> mRootMargin;
   nsTArray<double> mThresholds;
 
