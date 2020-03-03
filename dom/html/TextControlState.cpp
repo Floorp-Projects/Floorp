@@ -31,6 +31,7 @@
 #include "nsTextNode.h"
 #include "nsIController.h"
 #include "mozilla/AutoRestore.h"
+#include "mozilla/InputEventOptions.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/dom/Event.h"
@@ -2899,7 +2900,7 @@ bool TextControlState::SetValueWithoutTextEditor(
       DebugOnly<nsresult> rvIgnored = nsContentUtils::DispatchInputEvent(
           MOZ_KnownLive(aHandlingSetValue.GetTextControlElement()),
           eEditorBeforeInput, EditorInputType::eInsertReplacementText, nullptr,
-          nsContentUtils::InputEventOptions(inputEventData), &status);
+          InputEventOptions(inputEventData), &status);
       NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
                            "Failed to dispatch beforeinput event");
       if (status == nsEventStatus_eConsumeNoDefault) {
@@ -2985,7 +2986,7 @@ bool TextControlState::SetValueWithoutTextEditor(
       DebugOnly<nsresult> rvIgnored = nsContentUtils::DispatchInputEvent(
           MOZ_KnownLive(aHandlingSetValue.GetTextControlElement()),
           eEditorInput, EditorInputType::eInsertReplacementText, nullptr,
-          nsContentUtils::InputEventOptions(inputEventData));
+          InputEventOptions(inputEventData));
       NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
                            "Failed to dispatch input event");
     }

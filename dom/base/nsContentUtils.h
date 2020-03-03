@@ -132,10 +132,16 @@ class TextEditor;
 
 enum class StorageAccess;
 
+struct InputEventOptions;
+
 namespace dom {
+class BrowserChild;
+class BrowserParent;
 class BrowsingContext;
 class BrowsingContextGroup;
+class ContentChild;
 class ContentFrameMessageManager;
+class ContentParent;
 struct CustomElementDefinition;
 class DataTransfer;
 class DocumentFragment;
@@ -149,11 +155,8 @@ struct LifecycleCallbackArgs;
 struct LifecycleAdoptedCallbackArgs;
 class MessageBroadcaster;
 class NodeInfo;
-class ContentChild;
-class ContentParent;
-class BrowserChild;
 class Selection;
-class BrowserParent;
+class StaticRange;
 class WorkerPrivate;
 }  // namespace dom
 
@@ -1492,28 +1495,12 @@ class nsContentUtils {
    *                            value.  Note that this can be nullptr only
    *                            when the dispatching event is not cancelable.
    */
-  MOZ_CAN_RUN_SCRIPT
-  static nsresult DispatchInputEvent(Element* aEventTarget) {
-    return DispatchInputEvent(aEventTarget, mozilla::eEditorInput,
-                              mozilla::EditorInputType::eUnknown, nullptr,
-                              InputEventOptions());
-  }
-  struct MOZ_STACK_CLASS InputEventOptions final {
-    InputEventOptions() = default;
-    explicit InputEventOptions(const nsAString& aData)
-        : mData(aData), mDataTransfer(nullptr) {}
-    explicit InputEventOptions(mozilla::dom::DataTransfer* aDataTransfer);
-
-    nsString mData;
-    mozilla::dom::DataTransfer* mDataTransfer;
-  };
-  MOZ_CAN_RUN_SCRIPT
-  static nsresult DispatchInputEvent(Element* aEventTarget,
-                                     mozilla::EventMessage aEventMessage,
-                                     mozilla::EditorInputType aEditorInputType,
-                                     mozilla::TextEditor* aTextEditor,
-                                     const InputEventOptions& aOptions,
-                                     nsEventStatus* aEventStatus = nullptr);
+  MOZ_CAN_RUN_SCRIPT static nsresult DispatchInputEvent(Element* aEventTarget);
+  MOZ_CAN_RUN_SCRIPT static nsresult DispatchInputEvent(
+      Element* aEventTarget, mozilla::EventMessage aEventMessage,
+      mozilla::EditorInputType aEditorInputType,
+      mozilla::TextEditor* aTextEditor, mozilla::InputEventOptions&& aOptions,
+      nsEventStatus* aEventStatus = nullptr);
 
   /**
    * This method creates and dispatches a untrusted event.

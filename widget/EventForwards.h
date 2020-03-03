@@ -209,6 +209,26 @@ inline bool IsDataTransferAvailableOnHTMLEditor(EditorInputType aInputType) {
 }
 
 /**
+ * MayHaveTargetRangesOnHTMLEditor() returns true if "beforeinput" event whose
+ * whose inputType is aInputType on HTMLEditor may return non-empty static
+ * range array from getTargetRanges().
+ * Note that TextEditor always sets empty array.  Therefore, there is no
+ * method for TextEditor.
+ */
+inline bool MayHaveTargetRangesOnHTMLEditor(EditorInputType aInputType) {
+  switch (aInputType) {
+    // Explicitly documented by the specs.
+    case EditorInputType::eHistoryRedo:
+    case EditorInputType::eHistoryUndo:
+    // Not documented, but other browsers use empty array.
+    case EditorInputType::eFormatSetBlockTextDirection:
+      return false;
+    default:
+      return true;
+  }
+}
+
+/**
  * IsCancelableBeforeInputEvent() returns true if `beforeinput` event for
  * aInputType should be cancelable.
  *
