@@ -736,7 +736,7 @@ nsSize nsImageBoxFrame::GetXULMinSize(nsBoxLayoutState& aState) {
   DISPLAY_MIN_SIZE(this, size);
   AddBorderAndPadding(size);
   bool widthSet, heightSet;
-  nsIFrame::AddXULMinSize(aState, this, size, widthSet, heightSet);
+  nsIFrame::AddXULMinSize(this, size, widthSet, heightSet);
   return size;
 }
 
