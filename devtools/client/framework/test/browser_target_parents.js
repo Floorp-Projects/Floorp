@@ -36,7 +36,7 @@ add_task(async function() {
   const client = await setupDebuggerClient();
   const mainRoot = client.mainRoot;
 
-  const { processes } = await mainRoot.listProcesses();
+  const processes = await mainRoot.listProcesses();
 
   // Assert that concurrent calls to getTarget resolves the same target and that it is already attached
   // With that, we were chasing a precise race, where a second call to ProcessDescriptor.getTarget()
