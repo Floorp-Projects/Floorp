@@ -34,6 +34,7 @@ HOST_SOURCES += [
     'NonMemMovableTemplateArgChecker.cpp',
     'NonParamInsideFunctionDeclChecker.cpp',
     'NonTrivialTypeInFfiChecker.cpp',
+    'NoPrincipalGetURI.cpp',
     'NoUsingNamespaceMozillaJavaChecker.cpp',
     'OverrideBaseCallChecker.cpp',
     'OverrideBaseCallUsageChecker.cpp',
