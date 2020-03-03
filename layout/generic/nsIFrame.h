@@ -3848,8 +3848,8 @@ class nsIFrame : public nsQueryFrame {
 
   static bool AddXULPrefSize(nsIFrame* aBox, nsSize& aSize, bool& aWidth,
                              bool& aHeightSet);
-  static bool AddXULMinSize(nsBoxLayoutState& aState, nsIFrame* aBox,
-                            nsSize& aSize, bool& aWidth, bool& aHeightSet);
+  static bool AddXULMinSize(nsIFrame* aBox, nsSize& aSize, bool& aWidth,
+                            bool& aHeightSet);
   static bool AddXULMaxSize(nsIFrame* aBox, nsSize& aSize, bool& aWidth,
                             bool& aHeightSet);
   static bool AddXULFlex(nsIFrame* aBox, nscoord& aFlex);

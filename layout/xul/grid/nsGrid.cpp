@@ -796,7 +796,7 @@ nscoord nsGrid::GetMinRowHeight(nsBoxLayoutState& aState, int32_t aIndex,
   if (box) {
     bool widthSet, heightSet;
     nsSize cssSize(-1, -1);
-    nsIFrame::AddXULMinSize(aState, box, cssSize, widthSet, heightSet);
+    nsIFrame::AddXULMinSize(box, cssSize, widthSet, heightSet);
 
     row->mMin = GET_HEIGHT(cssSize, aIsHorizontal);
 
