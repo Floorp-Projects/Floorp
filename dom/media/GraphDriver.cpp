@@ -269,6 +269,14 @@ OfflineClockDriver::OfflineClockDriver(GraphInterface* aGraphInterface,
 
 OfflineClockDriver::~OfflineClockDriver() {}
 
+void OfflineClockDriver::RunThread() {
+  nsCOMPtr<nsIThreadInternal> threadInternal = do_QueryInterface(mThread);
+  nsCOMPtr<nsIThreadObserver> observer = do_QueryInterface(Graph());
+  threadInternal->SetObserver(observer);
+
+  ThreadedDriver::RunThread();
+}
+
 MediaTime OfflineClockDriver::GetIntervalForIteration() {
   return MillisecondsToMediaTime(mSlice);
 }
