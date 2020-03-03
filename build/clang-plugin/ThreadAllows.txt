@@ -82,6 +82,7 @@ TestThreadsMain
 Testing Thread
 Timer Thread
 ToastBgThread
+TRR Background
 URL Classifier
 Update Watcher
 VsyncIOThread
