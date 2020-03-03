@@ -26,7 +26,7 @@ xul|scrollbar[orient="vertical"] {
 }
 
 xul|scrollbar[orient="vertical"] xul|thumb {
-  -moz-appearance: scrollbarthumb-vertical !important;
+  -moz-appearance: none !important;
   max-width: 2px !important;
   min-width: 2px !important;
 }
@@ -37,7 +37,7 @@ xul|scrollbar[orient="horizontal"] {
 }
 
 xul|scrollbar[orient="horizontal"] xul|thumb {
-  -moz-appearance: scrollbarthumb-horizontal !important;
+  -moz-appearance: none !important;
   max-height: 2px !important;
   min-height: 2px !important;
 }
