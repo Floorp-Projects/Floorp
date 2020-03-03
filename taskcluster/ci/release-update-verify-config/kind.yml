@@ -60,15 +60,7 @@ job-defaults:
                     by-platform:
                         win64-aarch64.*: "67.0b2"
                         default: "56.0b3"
-                release(-rc)?:
-                    by-platform:
-                        linux-.*: "57.0"
-                        linux64-.*: "57.0"
-                        macosx64-.*: "57.0"
-                        win32-.*: "56.0"
-                        win64(?!-aarch64)-.*: "56.0"
-                        win64-aarch64.*: "67.0"
-                        default: null
+                release(-rc)?: "72.0.2"
                 esr68: "68.0esr"
                 default: "default"
 
