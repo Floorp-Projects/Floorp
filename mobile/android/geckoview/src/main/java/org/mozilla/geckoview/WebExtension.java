@@ -409,6 +409,9 @@ public class WebExtension {
          * tab. In case WebExtension can close the tab, it should close passed GeckoSession and
          * return GeckoResult.ALLOW or GeckoResult.DENY in case tab cannot be closed.
          *
+         * See also: <a href="https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/tabs/remove">
+         *     WebExtensions/API/tabs/remove</a>
+         *
          * @param source An instance of {@link WebExtension} or null if extension was not registered
          *               with GeckoRuntime.registerWebextension
          * @param session An instance of {@link GeckoSession} to be closed.
@@ -419,6 +422,167 @@ public class WebExtension {
         default GeckoResult<AllowOrDeny> onCloseTab(@Nullable WebExtension source,
                                                     @NonNull GeckoSession session)  {
             return GeckoResult.DENY;
+        }
+
+        /**
+         * Called when tabs.update is invoked. The uri is provided for informational purposes,
+         * there's no need to call <code>loadURI</code> on it. The page will be loaded if
+         * this method returns GeckoResult.ALLOW.
+         *
+         * See also: <a href="https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/tabs/update">
+         *     WebExtensions/API/tabs/update</a>
+         *
+         * @param extension The extension that requested to update the tab.
+         * @param session The {@link GeckoSession} instance that needs to be updated.
+         * @param details {@link UpdateTabDetails} instance that describes what
+         *                needs to be updated for this tab.
+         * @return <code>GeckoResult.ALLOW</code> if the tab will be updated,
+         *         <code>GeckoResult.DENY</code> otherwise.
+         */
+        @UiThread
+        @NonNull
+        default GeckoResult<AllowOrDeny> onUpdateTab(final @NonNull WebExtension extension,
+                                                     final @NonNull GeckoSession session,
+                                                     final @NonNull UpdateTabDetails details) {
+            return GeckoResult.DENY;
+        }
+    }
+
+    /**
+     * Provides details about upating a tab with <code>tabs.update</code>.
+     *
+     * Whenever a field is not passed in by the extension that value will be <code>null</code>.
+     *
+     * See also: <a href="https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/tabs/update">
+     *  WebExtensions/API/tabs/update
+     * </a>.
+     */
+    public static class UpdateTabDetails {
+        /**
+         * Whether the tab should become active. If <code>true</code>,
+         * non-active highlighted tabs should stop being highlighted. If
+         * <code>false</code>, does nothing.
+         */
+        @Nullable
+        public final Boolean active;
+        /**
+         * Whether the tab should be discarded automatically by the app when
+         * resources are low.
+         */
+        @Nullable
+        public final Boolean autoDiscardable;
+        /**
+         * If <code>true</code> and the tab is not highlighted, it should become
+         * active by default.
+         */
+        @Nullable
+        public final Boolean highlighted;
+        /**
+         * Whether the tab should be muted.
+         */
+        @Nullable
+        public final Boolean muted;
+        /**
+         * Whether the tab should be pinned.
+         */
+        @Nullable
+        public final Boolean pinned;
+        /**
+         * The url that the tab will be navigated to. This url is provided just
+         * for informational purposes, there is no need to call
+         * <code>loadUri</code> on it. The corresponding {@link GeckoSession} will be
+         * navigated to the right URL after returning
+         * <code>GeckoResult.ALLOW</code> from {@link SessionTabDelegate#onUpdateTab}
+         */
+        @Nullable
+        public final String url;
+
+        /** For testing. */
+        protected UpdateTabDetails() {
+            active = null;
+            autoDiscardable = null;
+            highlighted = null;
+            muted = null;
+            pinned = null;
+            url = null;
+        }
+
+        /* package */ UpdateTabDetails(final GeckoBundle bundle) {
+            active = bundle.getBooleanObject("active");
+            autoDiscardable = bundle.getBooleanObject("autoDiscardable");
+            highlighted = bundle.getBooleanObject("highlighted");
+            muted = bundle.getBooleanObject("muted");
+            pinned = bundle.getBooleanObject("pinned");
+            url = bundle.getString("url");
+        }
+    }
+
+    /**
+     * Provides details about creating a tab with <code>tabs.create</code>.
+     * See also: <a href="https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/tabs/create">
+     *  WebExtensions/API/tabs/create
+     * </a>.
+     *
+     * Whenever a field is not passed in by the extension that value will be <code>null</code>.
+     */
+    public static class CreateTabDetails {
+        /**
+         * Whether the tab should become active. If <code>true</code>,
+         * non-active highlighted tabs should stop being highlighted. If
+         * <code>false</code>, does nothing.
+         */
+        @Nullable
+        public final Boolean active;
+        /**
+         * Whether the tab is created and made visible in the tab bar
+         * without any content loaded into memory, a state known as
+         * discarded. The tab’s content should be loaded when the tab is
+         * activated.
+         */
+        @Nullable
+        public final Boolean discarded;
+        /**
+         * The position the tab should take in the window.
+         */
+        @Nullable
+        public final Integer index;
+        /**
+         * If true, open this tab in Reader Mode.
+         */
+        @Nullable
+        public final Boolean openInReaderMode;
+        /**
+         * Whether the tab should be pinned.
+         */
+        @Nullable
+        public final Boolean pinned;
+        /**
+         * The url that the tab will be navigated to. This url is provided just
+         * for informational purposes, there is no need to call
+         * <code>loadUri</code> on it. The corresponding {@link GeckoSession} will be
+         * navigated to the right URL after returning
+         * <code>GeckoResult.ALLOW</code> from {@link TabDelegate#onNewTab}
+         */
+        @Nullable
+        public final String url;
+
+        /** For testing. */
+        protected CreateTabDetails() {
+            active = null;
+            discarded = null;
+            index = null;
+            openInReaderMode = null;
+            pinned = null;
+            url = null;
+        }
+
+        /* package */ CreateTabDetails(final GeckoBundle bundle) {
+            active = bundle.getBooleanObject("active");
+            discarded = bundle.getBooleanObject("discarded");
+            index = bundle.getInteger("index");
+            openInReaderMode = bundle.getBooleanObject("openInReaderMode");
+            pinned = bundle.getBooleanObject("pinned");
+            url = bundle.getString("url");
         }
     }
 
@@ -433,10 +597,8 @@ public class WebExtension {
          * that GeckoView will use to load the requested page on. If the returned value
          * is null the page will not be opened.
          *
-         * @param source An instance of {@link WebExtension} or null if extension was not registered
-         *               with GeckoRuntime.registerWebextension
-         * @param uri The URI to be loaded. This is provided for informational purposes only,
-         *            do not call {@link GeckoSession#loadUri} on it.
+         * @param source An instance of {@link WebExtension}
+         * @param createDetails Information about this tab.
          * @return A {@link GeckoResult} which holds the returned GeckoSession. May be null, in
          *        which case the request for a new tab by the extension will fail.
          *        The implementation of onNewTab is responsible for maintaining a reference
@@ -444,7 +606,8 @@ public class WebExtension {
          */
         @UiThread
         @Nullable
-        default GeckoResult<GeckoSession> onNewTab(@Nullable WebExtension source, @Nullable String uri) {
+        default GeckoResult<GeckoSession> onNewTab(@NonNull WebExtension source,
+                                                   @NonNull CreateTabDetails createDetails) {
             return null;
         }
     }
@@ -700,6 +863,7 @@ public class WebExtension {
                 mEventDispatcher.registerUiThreadListener(
                         this,
                         "GeckoView:WebExtension:NewTab",
+                        "GeckoView:WebExtension:UpdateTab",
                         "GeckoView:WebExtension:CloseTab"
                 );
                 mTabDelegateRegistered = true;
