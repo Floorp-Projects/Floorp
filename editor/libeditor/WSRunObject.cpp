@@ -432,7 +432,7 @@ nsresult WSRunObject::DeleteWSBackward() {
   // Caller's job to ensure that previous char is really ws.  If it is normal
   // ws, we need to delete the whole run.
   if (atPreviousCharOfStart.IsCharASCIISpace()) {
-    EditorDOMPoint start, end;
+    EditorDOMPointInText start, end;
     Tie(start, end) =
         GetASCIIWhitespacesBounds(eBoth, atPreviousCharOfStart.NextPoint());
 
@@ -496,7 +496,7 @@ nsresult WSRunObject::DeleteWSForward() {
   // Caller's job to ensure that next char is really ws.  If it is normal ws,
   // we need to delete the whole run.
   if (atNextCharOfStart.IsCharASCIISpace()) {
-    EditorDOMPoint start, end;
+    EditorDOMPointInText start, end;
     Tie(start, end) =
         GetASCIIWhitespacesBounds(eBoth, atNextCharOfStart.NextPoint());
     // Adjust surrounding ws
@@ -1290,10 +1290,9 @@ nsresult WSRunObject::PrepareToDeleteRangePriv(WSRunObject* aEndObject) {
       if (atPreviousCharOfStart.IsSet() &&
           !atPreviousCharOfStart.IsEndOfContainer() &&
           atPreviousCharOfStart.IsCharASCIISpace()) {
-        EditorDOMPoint start, end;
+        EditorDOMPointInText start, end;
         Tie(start, end) = GetASCIIWhitespacesBounds(eBoth, mScanStartPoint);
-        nsresult rv = InsertNBSPAndRemoveFollowingASCIIWhitespaces(
-            EditorDOMPointInText(start.ContainerAsText(), start.Offset()));
+        nsresult rv = InsertNBSPAndRemoveFollowingASCIIWhitespaces(start);
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return rv;
         }
@@ -1336,10 +1335,9 @@ nsresult WSRunObject::PrepareToSplitAcrossBlocksPriv() {
     if (atPreviousCharOfStart.IsSet() &&
         !atPreviousCharOfStart.IsEndOfContainer() &&
         atPreviousCharOfStart.IsCharASCIISpace()) {
-      EditorDOMPoint start, end;
+      EditorDOMPointInText start, end;
       Tie(start, end) = GetASCIIWhitespacesBounds(eBoth, mScanStartPoint);
-      nsresult rv = InsertNBSPAndRemoveFollowingASCIIWhitespaces(
-          EditorDOMPointInText(start.ContainerAsText(), start.Offset()));
+      nsresult rv = InsertNBSPAndRemoveFollowingASCIIWhitespaces(start);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
@@ -1529,11 +1527,9 @@ nsresult WSRunObject::InsertNBSPAndRemoveFollowingASCIIWhitespaces(
 
   // First, insert an NBSP.
   AutoTransactionsConserveSelection dontChangeMySelection(mHTMLEditor);
-  nsresult rv =
-      MOZ_KnownLive(mHTMLEditor)
-          .InsertTextIntoTextNodeWithTransaction(
-              nsDependentSubstring(&kNBSP, 1),
-              MOZ_KnownLive(*aPoint.ContainerAsText()), aPoint.Offset(), true);
+  nsresult rv = MOZ_KnownLive(mHTMLEditor)
+                    .InsertTextIntoTextNodeWithTransaction(
+                        nsDependentSubstring(&kNBSP, 1), aPoint, true);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -1550,7 +1546,7 @@ nsresult WSRunObject::InsertNBSPAndRemoveFollowingASCIIWhitespaces(
   }
 
   // Next, find range of whitespaces it will be replaced.
-  EditorDOMPoint start, end;
+  EditorDOMPointInText start, end;
   Tie(start, end) = GetASCIIWhitespacesBounds(eAfter, aPoint.NextPoint());
 
   // Finally, delete that replaced ws, if any
@@ -1565,11 +1561,12 @@ nsresult WSRunObject::InsertNBSPAndRemoveFollowingASCIIWhitespaces(
 }
 
 template <typename PT, typename CT>
-Tuple<EditorDOMPoint, EditorDOMPoint> WSRunObject::GetASCIIWhitespacesBounds(
+Tuple<EditorDOMPointInText, EditorDOMPointInText>
+WSRunObject::GetASCIIWhitespacesBounds(
     int16_t aDir, const EditorDOMPointBase<PT, CT>& aPoint) const {
   MOZ_ASSERT(aPoint.IsSet());
 
-  EditorDOMPoint start, end;
+  EditorDOMPointInText start, end;
 
   if (aDir & eAfter) {
     EditorDOMPointInText atNextChar = GetNextCharPoint(aPoint);
@@ -1855,9 +1852,7 @@ nsresult WSRunObject::CheckTrailingNBSPOfRun(WSFragment* aRun) {
       nsresult rv =
           MOZ_KnownLive(mHTMLEditor)
               .InsertTextIntoTextNodeWithTransaction(
-                  NS_LITERAL_STRING(" "),
-                  MOZ_KnownLive(*atPreviousCharOfEndOfRun.ContainerAsText()),
-                  atPreviousCharOfEndOfRun.Offset(), true);
+                  NS_LITERAL_STRING(" "), atPreviousCharOfEndOfRun, true);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
@@ -1888,7 +1883,7 @@ nsresult WSRunObject::CheckTrailingNBSPOfRun(WSFragment* aRun) {
       // editor softwraps at this point, the spaces won't be split across lines,
       // which looks ugly and is bad for the moose.
       MOZ_ASSERT(!atPreviousCharOfPreviousCharOfEndOfRun.IsEndOfContainer());
-      EditorDOMPoint start, end;
+      EditorDOMPointInText start, end;
       Tie(start, end) = GetASCIIWhitespacesBounds(
           eBoth, atPreviousCharOfPreviousCharOfEndOfRun.NextPoint());
 
@@ -1913,9 +1908,7 @@ nsresult WSRunObject::CheckTrailingNBSPOfRun(WSFragment* aRun) {
         AutoTransactionsConserveSelection dontChangeMySelection(mHTMLEditor);
         nsresult rv = MOZ_KnownLive(mHTMLEditor)
                           .InsertTextIntoTextNodeWithTransaction(
-                              nsDependentSubstring(&kNBSP, 1),
-                              MOZ_KnownLive(*start.ContainerAsText()),
-                              start.Offset(), true);
+                              nsDependentSubstring(&kNBSP, 1), start, true);
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return rv;
         }
@@ -1967,9 +1960,7 @@ nsresult WSRunObject::ReplacePreviousNBSPIfUnncessary(
   AutoTransactionsConserveSelection dontChangeMySelection(mHTMLEditor);
   nsresult rv = MOZ_KnownLive(mHTMLEditor)
                     .InsertTextIntoTextNodeWithTransaction(
-                        NS_LITERAL_STRING(" "),
-                        MOZ_KnownLive(*atPreviousChar.ContainerAsText()),
-                        atPreviousChar.Offset(), true);
+                        NS_LITERAL_STRING(" "), atPreviousChar, true);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -2024,9 +2015,7 @@ nsresult WSRunObject::CheckLeadingNBSP(WSFragment* aRun, nsINode* aNode,
     AutoTransactionsConserveSelection dontChangeMySelection(mHTMLEditor);
     nsresult rv = MOZ_KnownLive(mHTMLEditor)
                       .InsertTextIntoTextNodeWithTransaction(
-                          NS_LITERAL_STRING(" "),
-                          MOZ_KnownLive(*atNextChar.ContainerAsText()),
-                          atNextChar.Offset(), true);
+                          NS_LITERAL_STRING(" "), atNextChar, true);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }

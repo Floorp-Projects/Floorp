@@ -20,18 +20,19 @@ using namespace dom;
 
 // static
 already_AddRefed<InsertTextTransaction> InsertTextTransaction::Create(
-    EditorBase& aEditorBase, const nsAString& aStringToInsert, Text& aTextNode,
-    uint32_t aOffset) {
-  RefPtr<InsertTextTransaction> transaction = new InsertTextTransaction(
-      aEditorBase, aStringToInsert, aTextNode, aOffset);
+    EditorBase& aEditorBase, const nsAString& aStringToInsert,
+    const EditorDOMPointInText& aPointToInsert) {
+  MOZ_ASSERT(aPointToInsert.IsSetAndValid());
+  RefPtr<InsertTextTransaction> transaction =
+      new InsertTextTransaction(aEditorBase, aStringToInsert, aPointToInsert);
   return transaction.forget();
 }
 
-InsertTextTransaction::InsertTextTransaction(EditorBase& aEditorBase,
-                                             const nsAString& aStringToInsert,
-                                             Text& aTextNode, uint32_t aOffset)
-    : mTextNode(&aTextNode),
-      mOffset(aOffset),
+InsertTextTransaction::InsertTextTransaction(
+    EditorBase& aEditorBase, const nsAString& aStringToInsert,
+    const EditorDOMPointInText& aPointToInsert)
+    : mTextNode(aPointToInsert.ContainerAsText()),
+      mOffset(aPointToInsert.Offset()),
       mStringToInsert(aStringToInsert),
       mEditorBase(&aEditorBase) {}
 

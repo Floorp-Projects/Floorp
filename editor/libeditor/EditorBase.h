@@ -1370,16 +1370,14 @@ class EditorBase : public nsIEditor,
    * aOffset of aTextNode with transaction.
    *
    * @param aStringToInsert     String to be inserted.
-   * @param aTextNode           Text node to contain aStringToInsert.
-   * @param aOffset             Offset at insertion point in aTextNode.
+   * @param aPointToInsert      The insertion point.
    * @param aSuppressIME        true if it's not a part of IME composition.
    *                            E.g., adjusting whitespaces during composition.
    *                            false, otherwise.
    */
-  MOZ_CAN_RUN_SCRIPT
-  nsresult InsertTextIntoTextNodeWithTransaction(
-      const nsAString& aStringToInsert, Text& aTextNode, int32_t aOffset,
-      bool aSuppressIME = false);
+  MOZ_CAN_RUN_SCRIPT nsresult InsertTextIntoTextNodeWithTransaction(
+      const nsAString& aStringToInsert,
+      const EditorDOMPointInText& aPointToInsert, bool aSuppressIME = false);
 
   /**
    * SetTextNodeWithoutTransaction() is optimized path to set new value to

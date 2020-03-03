@@ -23,43 +23,43 @@ using namespace dom;
 
 // static
 already_AddRefed<CompositionTransaction> CompositionTransaction::Create(
-    EditorBase& aEditorBase, const nsAString& aStringToInsert, Text& aTextNode,
-    uint32_t aOffset) {
+    EditorBase& aEditorBase, const nsAString& aStringToInsert,
+    const EditorDOMPointInText& aPointToInsert) {
+  MOZ_ASSERT(aPointToInsert.IsSetAndValid());
+
   TextComposition* composition = aEditorBase.GetComposition();
   MOZ_RELEASE_ASSERT(composition);
   // XXX Actually, we get different text node and offset from editor in some
   //     cases.  If composition stores text node, we should use it and offset
   //     in it.
-  Text* textNode = composition->GetContainerTextNode();
-  uint32_t offset;
-  if (textNode) {
-    offset = composition->XPOffsetInTextNode();
+  EditorDOMPointInText pointToInsert;
+  if (Text* textNode = composition->GetContainerTextNode()) {
+    pointToInsert.Set(textNode, composition->XPOffsetInTextNode());
     NS_WARNING_ASSERTION(
-        &aTextNode == composition->GetContainerTextNode(),
+        pointToInsert.GetContainerAsText() ==
+            composition->GetContainerTextNode(),
         "The editor tries to insert composition string into different node");
     NS_WARNING_ASSERTION(
-        aOffset == composition->XPOffsetInTextNode(),
+        pointToInsert.Offset() == composition->XPOffsetInTextNode(),
         "The editor tries to insert composition string into different offset");
   } else {
-    textNode = &aTextNode;
-    offset = aOffset;
+    pointToInsert = aPointToInsert;
   }
-  RefPtr<CompositionTransaction> transaction = new CompositionTransaction(
-      aEditorBase, aStringToInsert, *textNode, offset);
+  RefPtr<CompositionTransaction> transaction =
+      new CompositionTransaction(aEditorBase, aStringToInsert, pointToInsert);
   // XXX Now, it might be better to modify the text node information of
   //     the TextComposition instance in DoTransaction() because updating
   //     the information before changing actual DOM tree is pretty odd.
-  composition->OnCreateCompositionTransaction(aStringToInsert, textNode,
-                                              offset);
+  composition->OnCreateCompositionTransaction(
+      aStringToInsert, pointToInsert.ContainerAsText(), pointToInsert.Offset());
   return transaction.forget();
 }
 
-CompositionTransaction::CompositionTransaction(EditorBase& aEditorBase,
-                                               const nsAString& aStringToInsert,
-                                               Text& aTextNode,
-                                               uint32_t aOffset)
-    : mTextNode(&aTextNode),
-      mOffset(aOffset),
+CompositionTransaction::CompositionTransaction(
+    EditorBase& aEditorBase, const nsAString& aStringToInsert,
+    const EditorDOMPointInText& aPointToInsert)
+    : mTextNode(aPointToInsert.ContainerAsText()),
+      mOffset(aPointToInsert.Offset()),
       mReplaceLength(aEditorBase.GetComposition()->XPLengthInTextNode()),
       mRanges(aEditorBase.GetComposition()->GetRanges()),
       mStringToInsert(aStringToInsert),
