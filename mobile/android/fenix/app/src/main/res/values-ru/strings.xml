@@ -1006,11 +1006,11 @@
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">Что блокируется строгой защитой от отслеживания</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
-    <string name="preference_enhanced_tracking_protection_custom">Настраиваемая</string>
+    <string name="preference_enhanced_tracking_protection_custom">Персональная</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_custom_description">Выберите, какие трекеры и скрипты необходимо блокировать</string>
     <!--  Accessibility text for the Strict protection information icon  -->
-    <string name="preference_enhanced_tracking_protection_custom_info_button">Что блокируется настраиваемой защитой от отслеживания</string>
+    <string name="preference_enhanced_tracking_protection_custom_info_button">Что блокируется персональной защитой от отслеживания</string>
     <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
     <!-- Preference for enhanced tracking protection for the custom protection settings for cookies-->
     <string name="preference_enhanced_tracking_protection_custom_cookies">Куки</string>
@@ -1227,7 +1227,7 @@
     <string name="search_add_custom_engine_learn_more_label">Подробнее</string>
 
     <!-- Accessibility description for the form in which details about the custom search engine are entered -->
-    <string name="search_add_custom_engine_form_description">Информация о настраиваемой поисковой системе</string>
+    <string name="search_add_custom_engine_form_description">Информация о персональной поисковой системе</string>
     <!-- Accessibility description for the 'Learn more' link -->
     <string name="search_add_custom_engine_learn_more_description">Ссылка &quot;Узнать больше&quot;</string>
 

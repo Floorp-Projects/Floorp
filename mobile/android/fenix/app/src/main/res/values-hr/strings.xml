@@ -24,7 +24,7 @@
     <string name="private_browsing_title">Nalaziš se u privatnoj sesiji</string>
     <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="private_browsing_placeholder_description">%1$s%1$s uklanja tvoju povijest pretraživanja i pregledavanja kad izađeš iz aplikacije ili kad zatvoriš sve kartice i prozore privatnog pregledavanja. Ovo te ne čini anonimnim prema web stranicama ili tvom pružatelju internet usluga, ali znatno smanjuje mogućnost praćenja i olakšava da zadržiš privatnim ono što radiš na internetu od ostalih osoba koje koriste ovo računalo.</string>
+    <string name="private_browsing_placeholder_description">%1$s uklanja tvoju povijest pretraživanja i pregledavanja kad izađeš iz aplikacije ili kad zatvoriš sve kartice i prozore privatnog pregledavanja. Ovo te ne čini anonimnim prema web stranicama ili tvom pružatelju internet usluga, ali znatno smanjuje mogućnost praćenja i olakšava da zadržiš privatnim ono što radiš na internetu od ostalih osoba koje koriste ovaj uređaj.</string>
     <string name="private_browsing_common_myths">Česti mitovi o privatnom pregledavanju</string>
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">Izbriši sesiju</string>
@@ -1218,7 +1218,7 @@
     <!-- Text shown when a user leaves out the required template string -->
     <string name="search_add_custom_engine_error_missing_template">Pazi da traženi niz odgovara formatu primjera</string>
     <!-- Text shown when we aren't able to validate the custom search query. The first parameter is the url of the custom search engine -->
-    <string name="search_add_custom_engine_error_cannot_reach">Greška prilikom povezivanja s &quot;%s&quot;</string>
+    <string name="search_add_custom_engine_error_cannot_reach">Greška prilikom povezivanja s „%s”</string>
     <!-- Text shown when a user creates a new search engine -->
     <string name="search_add_custom_engine_success_message">%s je stvorena</string>
     <!-- Text shown when a user successfully edits a custom search engine -->

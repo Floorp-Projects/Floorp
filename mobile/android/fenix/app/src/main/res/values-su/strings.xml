@@ -76,6 +76,12 @@
     <!-- Preference description for tracking protection exceptions -->
     <string name="preferences_tracking_protection_exceptions_description">Kilung Palacakan pikeun ieu loka ayeuna pareum</string>
 
+    <!-- Preference for pairing -->
+    <string name="preferences_sync_pair">Pinday sandi papasangan dina Firefox déstop</string>
+
+    <!-- Pairing Feature strings -->
+    <!-- Instructions on how to access pairing -->
+    <string name="pair_instructions"><![CDATA[Anjangan <b>firefox.com/pair</b> maké Firefox dina komputer anjeun pikeun muka sandi QR anjeun.]]></string>
     <!-- Button to cancel pairing -->
     <string name="pair_cancel">Bolay</string>
 
@@ -181,6 +187,13 @@
     <!-- Preference for showing a list of websites that the default configurations won't apply to them -->
     <string name="preference_exceptions">Iwal</string>
 
+    <!-- QR code scanner prompt which appears after scanning a code, but before navigating to it
+        First parameter is the name of the app, second parameter is the URL or text scanned-->
+    <string name="qr_scanner_confirmation_dialog_message">Idinan %1$s muka %2$s</string>
+    <!-- QR code scanner prompt dialog positive option to allow navigation to scanned link -->
+    <string name="qr_scanner_dialog_positive">IDINAN</string>
+    <!-- QR code scanner prompt dialog positive option to deny navigation to scanned link -->
+    <string name="qr_scanner_dialog_negative">HULAG</string>
     <!-- Tab collection deletion prompt dialog option to cancel deleting the collection -->
     <string name="tab_collection_dialog_negative">Bolay</string>
 
@@ -193,6 +206,8 @@
     <!-- Text for the cancel button for the data deletion dialog -->
     <string name="delete_browsing_data_prompt_cancel">Bolay</string>
 
+    <!-- Title of QR Pairing Fragment -->
+    <string name="sync_scan_code">Pinday sandi</string>
     <!-- Option to cancel signing out shown in confirmation dialog to sign out of account -->
     <string name="sign_out_cancel">Bolay</string>
 
@@ -203,6 +218,9 @@
 
     <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_description">Meungpeuk réréméh anu dipaké ku maskapé jaringan iklan jeung analitika pikeun ngumpulkeun data langlangan anjeun di loka anu kaanjangan.</string>
+
+    <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_tracking_content_description">Eureunan iklan, pidéo, jeung kontén lianna anu ngandung sandi palacak. Bisa mangaruhan fungsionalitas sababaraha raramatloka.</string>
 
     <!-- Cancel button text for the Add to Homescreen dialog -->
     <string name="add_to_homescreen_cancel">Bolay</string>

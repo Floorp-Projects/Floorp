@@ -915,6 +915,10 @@
     <string name="enhanced_tracking_protection_allowed">Tillatne</string>
     <!-- Category of trackers (social media trackers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_social_media_trackers_title">Sporing via sosiale medium</string>
+    <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cryptominers_title">Kryptominarar</string>
+    <!-- Category of trackers (fingerprinters) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_fingerprinters_title">Fingerprinters</string>
     <!-- Category of trackers (tracking content) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_title">Sporingsinnhald</string>
     <!-- About page Your rights link text -->
@@ -1057,7 +1061,7 @@
     <string name="search_add_custom_engine_error_empty_name">Skriv inn namn på søkjemotor</string>
 
     <!-- Description text followed by a list of things migrating (e.g. Bookmarks, History). Placeholder replaced with app name-->
-    <string name="migration_description">Ein heilt nyutforma nettlesar ventarpå deg! Du får både forbetra yting og nye funksjonar, slik at du får meir ut av nettet.\n\n Gjer vel og vent medan vi oppdaterer %s med dine</string>
+    <string name="migration_description">Ein heilt nyutforma nettlesar ventarpå deg! Du får både forbetra yting og nye funksjonar, slik at du får meir ut av nettet.\n\n Vent medan vi oppdaterer %s med dine</string>
 
     <!-- Text on the enabled button. Placeholder replaced with app name-->
     <string name="migration_update_app_button">Start %s</string>

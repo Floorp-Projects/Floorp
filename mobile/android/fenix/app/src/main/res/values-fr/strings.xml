@@ -907,7 +907,7 @@
     <!-- text for the toolbar position card header
         In English this is an idiom for "choose a side as in an argument or fight"
         but it is ok to make this more literally about "choosing a position in a physical space -->
-    <string name="onboarding_toolbar_position_header">Prendre position</string>
+    <string name="onboarding_toolbar_position_header">Prenez position</string>
     <!-- text for the toolbar position card description -->
     <string name="onboarding_toolbar_position_description">Essayez la navigation à une main avec la barre d’outils inférieure ou déplacez-la vers le haut.</string>
     <!-- text for the private browsing onboarding card header -->

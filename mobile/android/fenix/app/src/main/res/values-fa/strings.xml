@@ -423,4 +423,834 @@
     <!-- Tab menu item to share the tab -->
     <string name="tab_share">به اشتراک گذاری زبانه</string>
 
-    </resources>
+    <!-- Button in the current session menu. Deletes the session when pressed -->
+    <string name="current_session_delete">حذف</string>
+    <!-- Button in the current session menu. Saves the session when pressed -->
+    <string name="current_session_save">ذخیره</string>
+    <!-- Button in the current session menu. Opens the share menu when pressed -->
+    <string name="current_session_share">اشتراک‌گذاری</string>
+    <!-- Content description (not visible, for screen readers etc.): Title icon for current session menu -->
+    <string name="current_session_image">تصویر نشست جاری</string>
+    <!-- Button to save the current set of tabs into a collection -->
+    <string name="save_to_collection">افزودن به مجموعه</string>
+    <!-- Text for the menu button to delete a collection -->
+    <string name="collection_delete">حذف مجموعه</string>
+    <!-- Text for the menu button to rename a collection -->
+    <string name="collection_rename">تغییر نام مجموعه</string>
+    <!-- Text for the button to open tabs of the selected collection -->
+    <string name="collection_open_tabs">زبانه‌های باز</string>
+    <!-- Text for the menu button to remove a top site -->
+    <string name="remove_top_site">حذف</string>
+
+    <!-- History -->
+    <!-- Text for the button to clear all history -->
+    <string name="history_delete_all">حذف تاریخچه</string>
+    <!-- Text for the dialog to confirm clearing all history -->
+    <string name="history_delete_all_dialog">آیا مطمئن هستید می‌خواهید تاریخچه مرور خود را پاک کنید؟</string>
+    <!-- Text for positive action to delete history in deleting history dialog -->
+    <string name="history_clear_dialog">پاک کردن</string>
+    <!-- Text for the button to delete a single history item -->
+    <string name="history_delete_item">حذف</string>
+    <!-- History multi select title in app bar
+    The first parameter is the number of bookmarks selected -->
+    <string name="history_multi_select_title">%1$d انتخاب شد</string>
+    <!-- Text for the button to clear selected history items. The first parameter
+        is a digit showing the number of items you have selected -->
+    <string name="history_delete_some">حذف %1$d مورد</string>
+    <!-- Text for the header that groups the history for last 24 hours -->
+    <string name="history_24_hours">24 ساعت گذشته</string>
+    <!-- Text for the header that groups the history the past 7 days -->
+    <string name="history_7_days">7 روز گذشته</string>
+    <!-- Text for the header that groups the history the past 30 days -->
+    <string name="history_30_days">30 روز گذشته</string>
+    <!-- Text for the header that groups the history older than the last month -->
+    <string name="history_older">‏‏قدیمی‌تر</string>
+    <!-- Text shown when no history exists -->
+    <string name="history_empty_message">هیچ تاریخیچه‌ای در اینجا نیست</string>
+
+    <!-- Crashes -->
+    <!-- Title text displayed on the tab crash page. This first parameter is the name of the application (For example: Fenix) -->
+    <string name="tab_crash_title_2">متاسفیم. %1$s نمی‌تواند این صفحه را بار کند.</string>
+
+    <!-- Description text displayed on the tab crash page -->
+    <string name="tab_crash_description">می توانید این برگه را در زیر بازیابی یا بسته کنید.</string>
+    <!-- Send crash report checkbox text on the tab crash page -->
+    <string name="tab_crash_send_report">ارسال گزارش خرابی ها به موزیلا</string>
+    <!-- Close tab button text on the tab crash page -->
+    <string name="tab_crash_close">بستن زبانه</string>
+    <!-- Restore tab button text on the tab crash page -->
+    <string name="tab_crash_restore">بازآوری زبانه‌</string>
+
+    <!-- Content Description for session item menu button -->
+    <string name="content_description_session_menu">گزینه‌های جلسه</string>
+
+    <!-- Content Description for session item share button -->
+    <string name="content_description_session_share">اشتراک گذاری جلسه</string>
+
+    <!-- Bookmarks -->
+    <!-- Content description for bookmarks library menu -->
+    <string name="bookmark_menu_content_description">منوی نشانک‌</string>
+    <!-- Screen title for editing bookmarks -->
+    <string name="bookmark_edit">ویرایش نشانک</string>
+    <!-- Screen title for selecting a bookmarks folder -->
+    <string name="bookmark_select_folder">انتخاب پوشه</string>
+    <!-- Screen title for adding a bookmarks folder -->
+    <string name="bookmark_add_folder">افزودن پوشه</string>
+    <!-- deprecated: Snackbar title shown after a bookmark has been created. -->
+    <string name="bookmark_created_snackbar">نشانک ایجاد شد.</string>
+    <!-- Snackbar title shown after a bookmark has been created. -->
+    <string name="bookmark_saved_snackbar">نشانک ذخیره شد!</string>
+    <!-- Snackbar edit button shown after a bookmark has been created. -->
+    <string name="edit_bookmark_snackbar_action">ویرایش</string>
+    <!-- Bookmark overflow menu edit button -->
+    <string name="bookmark_menu_edit_button">ویرایش</string>
+    <!-- Bookmark overflow menu select button -->
+    <string name="bookmark_menu_select_button">انتخاب</string>
+    <!-- Bookmark overflow menu copy button -->
+    <string name="bookmark_menu_copy_button">رونوشت برداشتن</string>
+    <!-- Bookmark overflow menu share button -->
+    <string name="bookmark_menu_share_button">اشتراک‌گذاری</string>
+    <!-- Bookmark overflow menu open in new tab button -->
+    <string name="bookmark_menu_open_in_new_tab_button">باز کردن در زبانهٔ جدید</string>
+    <!-- Bookmark overflow menu open in private tab button -->
+    <string name="bookmark_menu_open_in_private_tab_button">باز کردن در زبانه خصوصی</string>
+    <!-- Bookmark overflow menu delete button -->
+    <string name="bookmark_menu_delete_button">حذف</string>
+    <!--Bookmark overflow menu save button -->
+    <string name="bookmark_menu_save_button">ذخیره</string>
+    <!-- Bookmark multi select title in app bar
+     The first parameter is the number of bookmarks selected -->
+    <string name="bookmarks_multi_select_title">%1$d انتخاب شد</string>
+    <!-- Bookmark editing screen title -->
+    <string name="edit_bookmark_fragment_title">ویرایش نشانک</string>
+    <!-- Bookmark folder editing screen title -->
+    <string name="edit_bookmark_folder_fragment_title">ویرایش پوشه</string>
+    <!-- Bookmark sign in button message -->
+    <string name="bookmark_sign_in_button">برای همگام‌سازی نشانک‌ها وارد شوید</string>
+    <!-- Bookmark URL editing field label -->
+    <string name="bookmark_url_label">نشانی اینترنتی</string>
+    <!-- Bookmark FOLDER editing field label -->
+    <string name="bookmark_folder_label">پوشه</string>
+    <!-- Bookmark NAME editing field label -->
+    <string name="bookmark_name_label">نام</string>
+    <!-- Bookmark add folder screen title -->
+    <string name="bookmark_add_folder_fragment_label">افزودن پوشه</string>
+    <!-- Bookmark select folder screen title -->
+    <string name="bookmark_select_folder_fragment_label">انتخاب پوشه</string>
+    <!-- Bookmark editing error missing title -->
+    <string name="bookmark_empty_title_error">باید یک عنوان داشته باشد</string>
+    <!-- Bookmark editing error missing or improper URL -->
+    <string name="bookmark_invalid_url_error">نشانی معتبر نیست</string>
+    <!-- Bookmark screen message for empty bookmarks folder -->
+    <string name="bookmarks_empty_message">در اینجا هیچ نشانک وجود ندارد</string>
+    <!-- Bookmark snackbar message on deletion
+     The first parameter is the host part of the URL of the bookmark deleted, if any -->
+    <string name="bookmark_deletion_snackbar_message">%1$sحذف شد</string>
+    <!-- Bookmark snackbar message on deleting multiple bookmarks -->
+    <string name="bookmark_deletion_multiple_snackbar_message">حذف نشانک‌های انتخاب شده</string>
+    <!-- Bookmark undo button for deletion snackbar action -->
+    <string name="bookmark_undo_deletion">برگردان</string>
+
+    <!-- Site Permissions -->
+    <!-- Site permissions preferences header -->
+    <string name="permissions_header">مجوزها</string>
+    <!-- Button label that take the user to the Android App setting -->
+    <string name="phone_feature_go_to_settings">برو به تنظیمات</string>
+    <!-- Content description (not visible, for screen readers etc.): Quick settings sheet
+        to give users access to site specific information / settings. For example:
+        Secure settings status and a button to modify site permissions -->
+    <string name="quick_settings_sheet">برگه تنظیمات سریع</string>
+    <!-- Label that indicates that this option it the recommended one -->
+    <string name="phone_feature_recommended">پیشنهاد شده</string>
+    <!-- button that allows editing site permissions settings -->
+    <string name="quick_settings_sheet_manage_site_permissions">مدیریت مجوزهای پایگاه اینترنتی</string>
+    <!-- Button label for clearing all the information of site permissions-->
+    <string name="clear_permissions">پاک کردن مجوزها</string>
+    <!-- Button label for clearing a site permission-->
+    <string name="clear_permission">پاک کردن مجوز</string>
+    <!-- Button label for clearing all the information on all sites-->
+    <string name="clear_permissions_on_all_sites">مجوزها را در همه سایتها پاک کنید</string>
+    <!-- Preference for altering video and audio autoplay for all websites -->
+    <string name="preference_browser_feature_autoplay">پخش خودکار</string>
+    <!-- Preference for altering the camera access for all websites -->
+    <string name="preference_phone_feature_camera">دوربین</string>
+    <!-- Preference for altering the microphone access for all websites -->
+    <string name="preference_phone_feature_microphone">میکروفون</string>
+    <!-- Preference for altering the location access for all websites -->
+    <string name="preference_phone_feature_location">مکان</string>
+    <!-- Preference for altering the notification access for all websites -->
+    <string name="preference_phone_feature_notification">اعلان‌</string>
+    <!-- Label that indicates that a permission must be asked always -->
+    <string name="preference_option_phone_feature_ask_to_allow">درخواست برای اجازه دادن</string>
+    <!-- Label that indicates that a permission must be blocked -->
+    <string name="preference_option_phone_feature_blocked">مسدود شده</string>
+    <!-- Label that indicates that a permission must be allowed -->
+    <string name="preference_option_phone_feature_allowed">اجازه داده شده</string>
+    <!--Label that indicates a permission is by the Android OS-->
+    <string name="phone_feature_blocked_by_android">مسدود شده توسط اندروید</string>
+    <!-- Preference for showing a list of websites that the default configurations won't apply to them -->
+    <string name="preference_exceptions">استثناها</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to on -->
+    <string name="tracking_protection_on">روشن</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to off -->
+    <string name="tracking_protection_off">خاموش</string>
+    <!-- Label that indicates video and audio autoplay is blocked -->
+    <string name="preference_option_autoplay_blocked">فیلم و صدا مسدود شده</string>
+    <!-- Label that indicates video and audio autoplay is allowed -->
+    <string name="preference_option_autoplay_allowed">فیلم و صدا اجازه داده شده</string>
+    <!-- Summary of delete browsing data on quit preference if it is set to on -->
+    <string name="delete_browsing_data_quit_on">روشن</string>
+    <!-- Summary of delete browsing data on quit preference if it is set to off -->
+    <string name="delete_browsing_data_quit_off">خاموش</string>
+
+    <!-- Collections -->
+    <!-- Label to describe what collections are to a new user without any collections -->
+    <string name="collections_description">چیزهایی که برای شما مهم است را جمع‌آوری کنید. برای شروع،‌ زبانه های باز را داخل مجموعه ذخیره‌سازی کنید.</string>
+    <!-- Collections header on home fragment -->
+    <string name="collections_header">مجموعه‌ها</string>
+    <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
+    <string name="collection_menu_button_content_description">فهرست مجموعه</string>
+    <!-- No Open Tabs Message Header -->
+    <string name="no_collections_header">بدون مجموعه</string>
+    <!-- No Open Tabs Message Description -->
+    <string name="no_collections_description">مجموعه‌های شما در اینجا نشان داده می شود.</string>
+    <!-- Title for the "select tabs" step of the collection creator -->
+    <string name="create_collection_select_tabs">انتخاب زبانه‌ها</string>
+
+    <!-- Title for the "select collection" step of the collection creator -->
+    <string name="create_collection_select_collection">انتخاب مجموعه</string>
+    <!-- Title for the "name collection" step of the collection creator -->
+    <string name="create_collection_name_collection">نام گذاری مجموعه</string>
+    <!-- Button to add new collection for the "select collection" step of the collection creator -->
+    <string name="create_collection_add_new_collection">افزودن مجموعه جدید</string>
+    <!-- Button to select all tabs in the "select tabs" step of the collection creator -->
+    <string name="create_collection_select_all">انتخاب همه</string>
+    <!-- Button to deselect all tabs in the "select tabs" step of the collection creator -->
+    <string name="create_collection_deselect_all">عدم انتخاب همه</string>
+    <!-- Text to prompt users to select the tabs to save in the "select tabs" step of the collection creator -->
+    <string name="create_collection_save_to_collection_empty">انتخاب زبانه برای ذخیره</string>
+    <!-- Text to show users how many tabs they have selected in the "select tabs" step of the collection creator.
+     %d is a placeholder for the number of tabs selected. -->
+    <string name="create_collection_save_to_collection_tabs_selected">%d زبانه انتخاب شد</string>
+    <!-- Text to show users they have one tab selected in the "select tabs" step of the collection creator.
+    %d is a placeholder for the number of tabs selected. -->
+    <string name="create_collection_save_to_collection_tab_selected">%d زبانه انتخاب شده</string>
+    <!-- Text shown in snackbar when multiple tabs have been saved in a collection -->
+    <string name="create_collection_tabs_saved">زبانه‌‌ها ذخیره شد!</string>
+    <!-- Text shown in snackbar when one tab has been saved in a collection -->
+    <string name="create_collection_tab_saved">زبانه‌ ذخیره شد!</string>
+    <!-- Content description (not visible, for screen readers etc.): button to close the collection creator -->
+    <string name="create_collection_close">بستن</string>
+    <!-- Button to save currently selected tabs in the "select tabs" step of the collection creator-->
+    <string name="create_collection_save">ذخیره</string>
+
+    <!-- Default name for a new collection in "name new collection" step of the collection creator. %d is a placeholder for the number of collections-->
+    <string name="create_collection_default_name">مجموعه %d</string>
+
+    <!-- Share -->
+    <!-- Share screen header -->
+    <string name="share_header">ارسال و اشتراک‌گذاری</string>
+    <!-- Share screen header -->
+    <string name="share_header_2">اشتراک‌گذاری</string>
+    <!-- Content description (not visible, for screen readers etc.):
+        "Share" button. Opens the share menu when pressed. -->
+    <string name="share_button_content_description">اشتراک‌گذاری</string>
+    <!-- Sub-header in the dialog to share a link to another app -->
+    <string name="share_link_subheader">اشتراک‌گذاری یک پیوند</string>
+    <!-- Sub-header in the dialog to share a link to another sync device -->
+    <string name="share_device_subheader">ارسال به دستگاه</string>
+    <!-- Sub-header in the dialog to share a link to an app from the full list -->
+    <string name="share_link_all_apps_subheader">همه عمل‌ها</string>
+    <!-- Sub-header in the dialog to share a link to an app from the most-recent sorted list -->
+    <string name="share_link_recent_apps_subheader">به تازگی استفاده شده</string>
+    <!-- An option from the share dialog to sign into sync -->
+    <string name="sync_sign_in">برای همگام‌سازی وارد شوید</string>
+    <!-- An option from the share dialog to send link to all other sync devices -->
+    <string name="sync_send_to_all">ارسال به همه دستگاه‌ها</string>
+    <!-- An option from the share dialog to reconnect to sync -->
+    <string name="sync_reconnect">اتصال مجدد برای همگام‌سازی</string>
+    <!-- Text displayed when sync is offline and cannot be accessed -->
+    <string name="sync_offline">برون‌خط</string>
+    <!-- An option to connect additional devices -->
+    <string name="sync_connect_device">اتصال یک دستگاه دیگر</string>
+    <!-- The dialog text shown when additional devices are not available -->
+    <string name="sync_connect_device_dialog">برای ارسال یک برگه ، حداقل در یک دستگاه دیگر به Firefox وارد شوید.</string>
+    <!-- Confirmation dialog button -->
+    <string name="sync_confirmation_button">گرفتم</string>
+    <!-- Share error message -->
+    <string name="share_error_snackbar">امکان به اشتراک گذاری به این برنامه وجود ندارد</string>
+    <!-- Add new device screen title -->
+    <string name="sync_add_new_device_title">ارسال به دستگاه</string>
+    <!-- Text for the warning message on the Add new device screen -->
+    <string name="sync_add_new_device_message">هیچ دستگاهی متصل نیست</string>
+    <!-- Text for the button to learn about sending tabs -->
+    <string name="sync_add_new_device_learn_button">در مورد ارسال زبانه‌ها بیشتر بدانید…</string>
+    <!-- Text for the button to connect another device -->
+    <string name="sync_add_new_device_connect_button">اتصال به دستگاه دیگر…</string>
+
+    <!-- Notifications -->
+    <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active. -->
+    <string name="notification_pbm_channel_name">نشستِ مرور ناشناس</string>
+    <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
+    <string name="notification_pbm_delete_text">زبانه های خصوصی را حذف کنید</string>
+    <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
+    <string name="notification_pbm_delete_text_2">بستن زبانه‌های خصوصی</string>
+    <!-- Notification action to open Fenix and resume the current browsing session. -->
+    <string name="notification_pbm_action_open">باز کردن</string>
+    <!-- Notification action to delete all current private browsing sessions AND switch to Fenix (bring it to the foreground) -->
+    <string name="notification_pbm_action_delete_and_open">حذف و باز کنید</string>
+    <!-- Name of the "Powered by Fenix" notification channel. Displayed in the "App notifications" system settings for the app -->
+    <string name="notification_powered_by_channel_name">قدرت گرفته توسط</string>
+    <!-- Text shown in snackbar when user deletes a collection -->
+    <string name="snackbar_collection_deleted">مجموعه حذف شده</string>
+    <!-- Text shown in snackbar when user renames a collection -->
+    <string name="snackbar_collection_renamed">مجموعه تغییرنام یافته</string>
+    <!-- Text shown in snackbar when user deletes a tab -->
+    <string name="snackbar_tab_deleted">زبانه حذف شده</string>
+    <!-- Text shown in snackbar when user deletes all tabs -->
+    <string name="snackbar_tabs_deleted">زبانه‌های حذف شده</string>
+    <!-- Text shown in snackbar when user closes a tab -->
+    <string name="snackbar_tab_closed">زبانه بسته شده</string>
+    <!-- Text shown in snackbar when user closes all tabs -->
+    <string name="snackbar_tabs_closed">زبانه‌های بسته شده</string>
+    <!-- Text shown in snackbar when user adds a site to top sites -->
+    <string name="snackbar_added_to_top_sites">به سایت های برتر اضافه شد!</string>
+    <!-- Text shown in snackbar when user closes a private tab -->
+    <string name="snackbar_private_tab_closed">زبانه خصوصی بسته شد</string>
+    <!-- Text shown in snackbar when user closes all private tabs -->
+    <string name="snackbar_private_tabs_closed">زبانه‌های خصوصی بسته شدند</string>
+    <!-- Text shown in snackbar when user deletes all private tabs -->
+    <string name="snackbar_private_tabs_deleted">زبانه‌های خصوصی حذف شدند</string>
+    <!-- Text shown in snackbar to undo deleting a tab, top site or collection -->
+    <string name="snackbar_deleted_undo">برگردان</string>
+    <!-- Text shown in snackbar when user removes a top site -->
+    <string name="snackbar_top_site_removed">سایت حذف شد</string>
+    <!-- Text for action to undo deleting a tab or collection shown in a11y dialog -->
+    <string name="a11y_dialog_deleted_undo">برگردان</string>
+    <!-- Text for action to confirm deleting a tab or collection shown in a11y dialog -->
+    <string name="a11y_dialog_deleted_confirm">تایید</string>
+    <!-- QR code scanner prompt which appears after scanning a code, but before navigating to it
+        First parameter is the name of the app, second parameter is the URL or text scanned-->
+    <string name="qr_scanner_confirmation_dialog_message">به %1$s اجازه دهید%2$s باز کند</string>
+    <!-- QR code scanner prompt dialog positive option to allow navigation to scanned link -->
+    <string name="qr_scanner_dialog_positive">اجازه دادن</string>
+    <!-- QR code scanner prompt dialog positive option to deny navigation to scanned link -->
+    <string name="qr_scanner_dialog_negative">ردکردن</string>
+    <!-- Tab collection deletion prompt dialog message. Placeholder will be replaced with the collection name -->
+    <string name="tab_collection_dialog_message">آیا در خصوص حذف کردن%1$s مطئنید؟</string>
+    <!-- Tab collection deletion prompt dialog option to delete the collection -->
+    <string name="tab_collection_dialog_positive">حذف</string>
+    <!-- Tab collection deletion prompt dialog option to cancel deleting the collection -->
+    <string name="tab_collection_dialog_negative">انصراف</string>
+
+    <!-- Text displayed in a notification when the user enters full screen mode -->
+    <string name="full_screen_notification">ورود به حالت تمام صفحه</string>
+    <!-- Message for copying the URL via long press on the toolbar -->
+    <string name="url_copied">رونوشت آدرس</string>
+
+    <!-- Sample text for accessibility font size -->
+    <string name="accessibility_text_size_sample_text_1">این نمونه متن است. در اینجا آمده است تا نشان دهیم که با بزرگنمایی یا کاهش اندازه با این تنظیم ، متن چگونه ظاهر می شود.</string>
+    <!-- Summary for Accessibility Text Size Scaling Preference -->
+    <string name="preference_accessibility_text_size_summary">متن را در وب سایت ها بزرگتر یا کوچکتر کنید</string>
+    <!-- Title for Accessibility Text Size Scaling Preference -->
+    <string name="preference_accessibility_font_size_title">اندازه قلم</string>
+
+    <!-- Title for Accessibility Text Automatic Size Scaling Preference -->
+    <string name="preference_accessibility_auto_size">اندازه قلم خودکار</string>
+    <!-- Summary for Accessibility Text Automatic Size Scaling Preference -->
+    <string name="preference_accessibility_auto_size_summary">اندازه قلم با تنظیمات Android شما مطابقت دارد. مدیریت اندازه قلم را در اینجا غیرفعال کنید.</string>
+
+    <!-- Title for the Delete browsing data preference -->
+    <string name="preferences_delete_browsing_data">داده مرور را حذف کنید</string>
+    <!-- Title for the tabs item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_tabs_title">زبانه‌های باز</string>
+    <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
+    <string name="preferences_delete_browsing_data_tabs_subtitle">زبانه‌های %d</string>
+    <!-- Title for the data and history items in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_browsing_data_title">مرور تاریخ و داده های سایت</string>
+    <!-- Subtitle for the data and history items in delete browsing data, parameter will be replaced with the
+        number of history items the user has -->
+    <string name="preferences_delete_browsing_data_browsing_data_subtitle">%d نشانی‌ها</string>
+    <!-- Title for history items in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_browsing_history_title">تاریخچه</string>
+    <!-- Subtitle for the history items in delete browsing data, parameter will be replaced with the
+        number of history pages the user has -->
+    <string name="preferences_delete_browsing_data_browsing_history_subtitle">%d صفحه‌ها</string>
+    <!-- Title for the cookies item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cookies">کوکی‌ها</string>
+    <!-- Subtitle for the cookies item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cookies_subtitle">از بیشتر سایتها خارج خواهید شد</string>
+    <!-- Title for the cached images and files item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cached_files">تصاویر و پرونده های ذخیره شده</string>
+    <!-- Subtitle for the cached images and files item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cached_files_subtitle">فضای ذخیره سازی را آزاد می کند</string>
+    <!-- Title for the site permissions item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_site_permissions">مجوزهای سایت</string>
+    <!-- Text for the button to delete browsing data -->
+    <string name="preferences_delete_browsing_data_button">داده مرور را حذف کنید</string>
+    <!-- Title for the Delete browsing data on quit preference -->
+    <string name="preferences_delete_browsing_data_on_quit">داده‌های مرور را در هنگام خروج حذف کنید</string>
+    <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
+    <string name="preference_summary_delete_browsing_data_on_quit">هنگام انتخاب &quot;ترک&quot; از فهرست اصلی ، داده های مرور را بطور خودکار حذف می کند</string>
+    <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
+    <string name="preference_summary_delete_browsing_data_on_quit_2">هنگام انتخاب  \&quot;ترک\&quot; از فهرست اصلی ، داده های مرور را بطور خودکار حذف می کند</string>
+    <!-- Category for history items to delete on quit in delete browsing data on quit -->
+    <string name="preferences_delete_browsing_data_on_quit_browsing_history">تاریخچه مرور</string>
+    <!-- Action item in menu for the Delete browsing data on quit feature -->
+    <string name="delete_browsing_data_on_quit_action">خروج</string>
+
+    <!-- Dialog message to the user asking to delete browsing data. -->
+    <string name="delete_browsing_data_prompt_message">با این کار همه داده های مرور شما حذف می شود.</string>
+    <!-- Dialog message to the user asking to delete browsing data. Parameter will be replaced by app name. -->
+    <string name="delete_browsing_data_prompt_message_3">%s اطلاعات مرور شده انتخاب شده را حذف می کند.</string>
+    <!-- Text for the cancel button for the data deletion dialog -->
+    <string name="delete_browsing_data_prompt_cancel">انصراف</string>
+    <!-- Text for the allow button for the data deletion dialog -->
+    <string name="delete_browsing_data_prompt_allow">حذف</string>
+    <!-- Text for the snackbar confirmation that the data was deleted -->
+    <string name="preferences_delete_browsing_data_snackbar">مرور داده حذف شد</string>
+    <!-- Text for the snackbar to show the user that the deletion of browsing data is in progress -->
+    <string name="deleting_browsing_data_in_progress">در حال حذف اطلاعات…</string>
+
+    <!-- Onboarding -->
+    <!-- Text for onboarding welcome message
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_header">به %s خوش‌ آمدید!</string>
+    <!-- text for the Firefox Accounts section header -->
+    <string name="onboarding_fxa_section_header">پیش از این حساب داشته‌اید؟</string>
+    <!-- text for the Firefox Preview feature section header
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_feature_section_header">با %s آشنا شوید</string>
+    <!-- text for the "What's New" onboarding card header -->
+    <string name="onboarding_whats_new_header1">موارد جدید را ببینید</string>
+    <!-- text for the "what's new" onboarding card description
+    The first parameter is the short name of the app (e.g. Firefox) -->
+    <string name="onboarding_whats_new_description">در مورد طراحی مجدد %s سؤالی دارید؟ آیا می خواهید بدانید چه چیزی تغییر کرده است؟</string>
+    <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
+    <string name="onboarding_whats_new_description_linktext">پاسخ را از اینجا دریافت کنید</string>
+    <!-- text for the firefox account onboarding card header
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_firefox_account_header">نهایت استفاده از %s ببرید.</string>
+    <!-- text for the firefox account onboarding card header when we detect you're already signed in to
+        another Firefox browser. (The word `Firefox` should not be translated)
+        The first parameter is the email of the detected user's account -->
+    <string name="onboarding_firefox_account_auto_signin_header_2">شما به عنوان%s در یک مرورگر دیگر Firefox در این تلفن وارد شده اید. آیا می خواهید با این حساب وارد شوید؟</string>
+    <!-- text for the button to confirm automatic sign-in -->
+    <string name="onboarding_firefox_account_auto_signin_confirm">بله،‌ من را وارد کن</string>
+    <!-- text for the automatic sign-in button while signing in is in process -->
+    <string name="onboarding_firefox_account_signing_in">در حال ورود به…</string>
+    <!-- text for the button to manually sign into Firefox account. The word "Firefox" should not be translated -->
+    <string name="onboarding_firefox_account_sign_in">واردشدن به فایرفاکس</string>
+    <!-- text for the button to stay signed out when presented with an option to automatically sign-in. -->
+    <string name="onboarding_firefox_account_stay_signed_out">از سیستم خارج شوید</string>
+    <!-- text to display in the snackbar once account is signed-in -->
+    <string name="onboarding_firefox_account_sync_is_on">همگام سازی روشن است</string>
+    <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
+    <string name="onboarding_firefox_account_automatic_signin_failed">ورود شکست خورد</string>
+    <!-- text for the tracking protection onboarding card header -->
+    <string name="onboarding_tracking_protection_header">از خودت محافظت کن</string>
+    <!-- text for the tracking protection card description
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_tracking_protection_description1">%s به شما کمک می کند تا وب سایت ها ردیاب شما را متوقف کنند.</string>
+    <!-- text for tracking protection radio button option for standard level of blocking -->
+    <string name="onboarding_tracking_protection_standard_button">استاندارد</string>
+    <!-- text for standard blocking option button description -->
+    <string name="onboarding_tracking_protection_standard_button_description">تعداد کمتر ردیاب را مسدود می کند اما به صفحات اجازه می دهد تا به طور عادی بارگیری شوند</string>
+    <!-- text for tracking protection radio button option for strict level of blocking -->
+    <string name="onboarding_tracking_protection_strict_button">سختگیرانه (توصیه می‌شود)</string>
+    <!-- text for strict blocking option button description -->
+    <string name="onboarding_tracking_protection_strict_button_description">ردیاب های بیشتری را برای محافظت و عملکرد بهتر مسدود می کند ، اما ممکن است باعث شود برخی سایت ها به درستی کار نکنند</string>
+    <!-- text for the toolbar position card header
+        In English this is an idiom for "choose a side as in an argument or fight"
+        but it is ok to make this more literally about "choosing a position in a physical space -->
+    <string name="onboarding_toolbar_position_header">یک موضع بگیرید</string>
+
+    <!-- text for the toolbar position card description -->
+    <string name="onboarding_toolbar_position_description">مرور یک دست را با نوار ابزار پایین امتحان کنید یا آن را به بالا منتقل کنید.</string>
+    <!-- text for the private browsing onboarding card header -->
+    <string name="onboarding_private_browsing_header">مرور ناشناس</string>
+    <!-- text for the private browsing onboarding card description
+    The first parameter is an icon that represents private browsing -->
+    <string name="onboarding_private_browsing_description1">یک بار یک برگه خصوصی را باز کنید: روی نماد %s ضربه بزنید.</string>
+    <!-- text for the private browsing onboarding card description, explaining how to always using private browsing -->
+    <string name="onboarding_private_browsing_always_description">هر بار برگه خصوصی را باز کنید: تنظیمات مرور خصوصی خود را به روز کنید.</string>
+    <!-- text for the private browsing onbording card button, that launches settings -->
+    <string name="onboarding_private_browsing_button">باز‌کردن تنظیمات</string>
+    <!-- text for the privacy notice onboarding card header -->
+    <string name="onboarding_privacy_notice_header">حریم‌ خصوصی شما</string>
+    <!-- text for the privacy notice onboarding card description
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_privacy_notice_description">ما%s طراحی کرده ایم تا بتوانیم بر آنچه به اشتراک می گذارید کنترل کنید
+        آنلاین و آنچه را با ما به اشتراک می گذارید.</string>
+    <!-- Text for the button to read the privacy notice -->
+    <string name="onboarding_privacy_notice_read_button">اعلامیه حریم خصوصی ما را بخوانید</string>
+
+    <!-- text for the button to finish onboarding -->
+    <string name="onboarding_finish">شروع مرور</string>
+
+    <!-- Onboarding theme -->
+    <!-- text for the theme picker onboarding card header -->
+    <string name="onboarding_theme_picker_header">انتخاب زمینه</string>
+    <!-- text for the theme picker onboarding card description -->
+    <string name="onboarding_theme_picker_description1">با فعال کردن حالت تاریک مقداری از باتری و بینایی خود را ذخیره کنید.</string>
+    <!-- Automatic theme setting (will follow device setting) -->
+    <string name="onboarding_theme_automatic_title">خودکار</string>
+    <!-- Summary of automatic theme setting (will follow device setting) -->
+    <string name="onboarding_theme_automatic_summary">با تنظیمات دستگاه شما سازگار است</string>
+    <!-- Theme setting for dark mode -->
+    <string name="onboarding_theme_dark_title">زمینه تاریک</string>
+    <!-- Theme setting for light mode -->
+    <string name="onboarding_theme_light_title">زمینه روشن</string>
+
+    <!-- Text shown in snackbar when multiple tabs have been sent to device -->
+    <string name="sync_sent_tabs_snackbar">زبانه‌ها ارسال شد!</string>
+    <!-- Text shown in snackbar when one tab has been sent to device  -->
+    <string name="sync_sent_tab_snackbar">زبانه‌ ارسال شد!</string>
+    <!-- Text shown in snackbar when sharing tabs failed  -->
+    <string name="sync_sent_tab_error_snackbar">امکان ارسال وجود ندارد</string>
+    <!-- Text shown in snackbar for the "retry" action that the user has after sharing tabs failed -->
+    <string name="sync_sent_tab_error_snackbar_action">تلاش مجدد</string>
+    <!-- Title of QR Pairing Fragment -->
+    <string name="sync_scan_code">اسکن کد</string>
+    <!-- Instructions on how to access pairing -->
+    <string name="sign_in_instructions"><![CDATA[در رایانه خود Firefox را باز کرده و به <b> https://firefox.com/pair </b> بروید]]></string>
+    <!-- Text shown for sign in pairing when ready -->
+    <string name="sign_in_ready_for_scan">آماده برای اسکن</string>
+    <!-- Text shown for settings option for sign with pairing -->
+    <string name="sign_in_with_camera">با دوربین خود وارد سیستم شوید</string>
+    <!-- Text shown for settings option for sign with email -->
+    <string name="sign_in_with_email">به جای آن از ایمیل استفاده کنید</string>
+    <!-- Text shown in confirmation dialog to sign out of account -->
+    <string name="sign_out_confirmation_message">فایرفاکس همگام سازی با حساب شما را متوقف خواهد کرد، ولی هیچ کدوم از اطلاعات شما بر روی این مرورگر حذف نخواهد شد.</string>
+    <!-- Option to continue signing out of account shown in confirmation dialog to sign out of account -->
+    <string name="sign_out_disconnect">قطع ارتباط</string>
+    <!-- Option to cancel signing out shown in confirmation dialog to sign out of account -->
+    <string name="sign_out_cancel">انصراف</string>
+    <!-- Error message snackbar shown after the user tried to select a default folder which cannot be altered -->
+    <string name="bookmark_cannot_edit_root">نمی توان پوشه های پیش فرض را ویرایش کرد</string>
+
+    <!-- Enhanced Tracking Protection -->
+    <!-- Link displayed in enhanced tracking protection panel to access tracking protection settings -->
+    <string name="etp_settings">تنظیمات حفاظتی</string>
+    <!-- Preference title for enhanced tracking protection settings -->
+    <string name="preference_enhanced_tracking_protection">بهینه سازی محافظت از دنبال کنندگان</string>
+    <!-- Title for the description of enhanced tracking protection -->
+    <string name="preference_enhanced_tracking_protection_explanation_title">بدون دنبال شدن مرور کنید</string>
+    <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
+    <string name="preference_enhanced_tracking_protection_explanation">داده‌های خود را نزد خود نگه دارید.%s شما را از بسیاری از متداول‌ ترین ردیاب‌هایی که شما را به صورت آنلاین دنبال می‌کنند محافظت می‌کند.</string>
+    <!-- Text displayed that links to website about enhanced tracking protection -->
+    <string name="preference_enhanced_tracking_protection_explanation_learn_more">بیشتر بدانید</string>
+    <!-- Preference for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_option">استاندارد</string>
+    <!-- Preference for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard">استاندارد (توصیه می شود)</string>
+    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_description">تنظیم شده برای محافظت و کارایی.</string>
+    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_description_2">صفحات به طور عادی بارگیری می شوند ، اما تعداد کمتر ردیاب را مسدود می کنند.</string>
+    <!--  Accessibility text for the Standard protection information icon  -->
+    <string name="preference_enhanced_tracking_protection_standard_info_button">آنچه توسط حفاظت ردیابی استاندارد مسدود شده است</string>
+    <!-- Preference for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict">سخت گیرانه</string>
+    <!-- Preference for enhanced tracking protection for the strict protection settings, default setting -->
+    <string name="preference_enhanced_tracking_protection_strict_default">سخت‌گیرانه (پیش فرض)</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict_default_description">محافظت از ردیابی قوی تر و عملکرد سریع تر ، اما برخی از سایت ها ممکن است به درستی کار نکنند.</string>
+    <!-- Preference for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict_recommended">سختگیرانه (توصیه می‌شود)</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict_description">ارائه محافظت قوی تر ممکن است باعث خرابی ها در پایگاه اینترنتی شود.</string>
+    <!--  Accessibility text for the Strict protection information icon  -->
+    <string name="preference_enhanced_tracking_protection_strict_info_button">آنچه توسط حفاظت ردیابی سخت‌گیرانه مسدود شده است</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom">سفارشی</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom_description">کدام ردیاب و اسکریپت را مسدود کنید</string>
+    <!--  Accessibility text for the Strict protection information icon  -->
+    <string name="preference_enhanced_tracking_protection_custom_info_button">آنچه توسط حفاظت ردیابی سفارشی مسدود شده است</string>
+    <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
+    <!-- Preference for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies">کوکی‌ها</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_1">ردیاب های متقابل و رسانه های اجتماعی</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_2">کوکی‌ها از وب‌سایت‌های مشاهده نشده</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_3">تمام کوکی‌های متفرقه (ممکن است باعث از کار افتادن سایت‌ها شود)</string>
+
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_4">تمام کوکی‌ها (باعث خرابی وب‌سایت‌ها خواهد شد)</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings for tracking content -->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content">محتوای ردیابی</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content_1">تمام زبانه‌ها</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content_2">تنها در پنجره‌های ناشناس باز کن</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content_3">فقط در برگه های سفارشی باز کردن</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom_cryptominers">استخراج کننده‌های رمزارزها</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom_fingerprinters">برداشت کنندگاه اثر انگشت</string>
+    <string name="enhanced_tracking_protection_blocked">مسدود شده</string>
+    <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
+    <string name="enhanced_tracking_protection_allowed">اجازه داده شده</string>
+    <!-- Category of trackers (social media trackers) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_social_media_trackers_title">ردیاب‌های شبکه‌های اجتماعی</string>
+    <!-- Description of social media trackers that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_social_media_trackers_description">توانایی شبکه های اجتماعی را برای ردیابی فعالیت مرور شما در وب محدود می کند.</string>
+    <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_title">کوکی‌هایِ ردیابِ بین-سایتی</string>
+    <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_description">کوکی هایی را که شبکه های تبلیغاتی و شرکتهای تحلیلی از آنها استفاده می کنند ، برای گردآوری داده های مرور شما در بسیاری از سایتها مسدود می کند.</string>
+    <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cryptominers_title">استخراج کننده‌های رمزارزها</string>
+    <!-- Description of cryptominers that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cryptominers_description">از دسترسی اسکریپت های مخرب برای دسترسی به دستگاه شما به ارز دیجیتال جلوگیری می کند.</string>
+    <!-- Category of trackers (fingerprinters) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_fingerprinters_title">اثرات انگشت</string>
+    <!-- Description of fingerprinters that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_fingerprinters_description">جمع آوری داده های قابل شناسایی منحصر به فرد در مورد دستگاه شما که می تواند برای اهداف ردیابی استفاده شود ، متوقف می شود.</string>
+    <!-- Category of trackers (tracking content) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_tracking_content_title">محتوای ردیابی</string>
+    <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_tracking_content_description">از بارگیری که حاوی کد رهگیری است ، خارج از تبلیغات ، فیلم ها و سایر مطالب متوقف می شود. ممکن است بر عملکرد وب سایت تأثیر بگذارد.</string>
+    <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
+    <string name="etp_onboarding_message_2">هنگام محافظت از رنگ بنفش ،%s در حال ردگیری ردیاب ها در این سایت است. روی آن ضربه بزنید تا ببینید چه چیزی مسدود شده است.</string>
+    <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
+    <string name="etp_panel_on">محافظت برای این سایت فعال است</string>
+    <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
+    <string name="etp_panel_off">محافظت برای این سایت فعال نیست</string>
+    <!-- Header for exceptions list for which sites enhanced tracking protection is always off -->
+    <string name="enhanced_tracking_protection_exceptions">محاظفت در برابر دنبال شدن برای این پایگاه اینترنتی خاموش شده است</string>
+    <!-- About page Your rights link text -->
+    <string name="about_your_rights">حقوق شما</string>
+    <!-- About page link text to open open source licenses screen -->
+    <string name="about_open_source_licenses">کتابخانه های منبع بازی که ما استفاده می کنیم</string>
+    <!-- About page link text to open what's new link -->
+    <string name="about_whats_new">چه چیزی در%s جدید است</string>
+    <!-- Open source licenses page title
+    The first parameter is the app name -->
+    <string name="open_source_licenses_title">%s | کتابخانه های OSS</string>
+
+    <!-- About page link text to open support link -->
+    <string name="about_support">پشتیبانی</string>
+    <!-- About page link text to open privacy notice link -->
+    <string name="about_privacy_notice">اطلاعیه حریم‌شخصی</string>
+    <!-- About page link text to open know your rights link -->
+    <string name="about_know_your_rights">حقوق خود را بدانید</string>
+    <!-- About page link text to open licensing information link -->
+    <string name="about_licensing_information">اطلاعات مجوز</string>
+    <!-- About page link text to open a screen with libraries that are used -->
+    <string name="about_other_open_source_libraries">کتابخانه هایی که از آنها استفاده می کنیم</string>
+
+    <!-- Content description of the tab counter toolbar button when one tab is open -->
+    <string name="tab_counter_content_description_one_tab">1زبانه</string>
+    <!-- Content description of the tab counter toolbar button when multiple tabs are open. First parameter will be replaced with the number of tabs (always more than one) -->
+    <string name="tab_counter_content_description_multi_tab">زبانه‌های %d</string>
+
+    <!-- Browser long press popup menu -->
+    <!-- Copy the current url -->
+    <string name="browser_toolbar_long_press_popup_copy">نسخه‌برداری</string>
+    <!-- Paste & go the text in the clipboard. '&amp;' is replaced with the ampersand symbol: & -->
+    <string name="browser_toolbar_long_press_popup_paste_and_go">جایگذاری و ثبت</string>
+    <!-- Paste the text in the clipboard -->
+    <string name="browser_toolbar_long_press_popup_paste">جایگذاری</string>
+    <!-- Snackbar message shown after an URL has been copied to clipboard. -->
+    <string name="browser_toolbar_url_copied_to_clipboard_snackbar">آدرس به کلیپ‌بورد ریخته شد</string>
+
+    <!-- Title text for the Add To Homescreen dialog -->
+    <string name="add_to_homescreen_title">افزودن به صفحه‌ی خانه</string>
+    <!-- Cancel button text for the Add to Homescreen dialog -->
+    <string name="add_to_homescreen_cancel">انصراف</string>
+    <!-- Add button text for the Add to Homescreen dialog -->
+    <string name="add_to_homescreen_add">افزودن</string>
+    <!-- Placeholder text for the TextView in the Add to Homescreen dialog -->
+    <string name="add_to_homescreen_text_placeholder">نام میانبر</string>
+
+    <!-- Preference for managing the settings for logins and passwords in Fenix -->
+    <string name="preferences_passwords_logins_and_passwords">ورودها و گذرواژه‌ها</string>
+    <!-- Preference for managing the saving of logins and passwords in Fenix -->
+    <string name="preferences_passwords_save_logins">ذخیره ورودها و گذرواژه‌ها</string>
+    <!-- Preference option for asking to save passwords in Fenix -->
+    <string name="preferences_passwords_save_logins_ask_to_save">درخواست برای ذخیره‌ سازی</string>
+    <!-- Preference option for never saving passwords in Fenix -->
+    <string name="preferences_passwords_save_logins_never_save">هرگز ذخیره نکن</string>
+    <!-- Preference for autofilling saved logins in Fenix -->
+    <string name="preferences_passwords_autofill">تکمیل خودکار</string>
+    <!-- Preference for syncing saved logins in Fenix -->
+    <string name="preferences_passwords_sync_logins">همگام‌سازی ورود‌ها</string>
+    <!-- Syncing saved logins in Fenix is on -->
+    <string name="preferences_passwords_sync_logins_on">روشن</string>
+    <!-- Syncing saved logins in Fenix is off -->
+    <string name="preferences_passwords_sync_logins_off">خاموش</string>
+    <!-- Syncing saved logins in Fenix needs reconnect to sync -->
+    <string name="preferences_passwords_sync_logins_reconnect">اتصال مجدد</string>
+    <!-- Syncing saved logins in Fenix needs login -->
+    <string name="preferences_passwords_sync_logins_sign_in">برای همگام‌سازی وارد شوید</string>
+    <!-- Preference to access list of saved logins -->
+    <string name="preferences_passwords_saved_logins">ورودهای ذخیره شده</string>
+    <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
+    <string name="preferences_passwords_saved_logins_description_empty_text">ورود به سیستم ذخیره شده یا همگام سازی با%s در اینجا نشان داده می شود.</string>
+    <!-- Preference to access list of saved logins -->
+    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link">در مورد همگام‌سازی بیشتر بدانید.</string>
+    <!-- Preference to access list of login exceptions that we never save logins for -->
+    <string name="preferences_passwords_exceptions">استثناها</string>
+
+    <!-- Empty description of list of login exceptions that we never save logins for -->
+    <string name="preferences_passwords_exceptions_description_empty">ورود و گذرواژه‌های ذخیره نشده در اینجا نشان داده خواهد شد.</string>
+    <!-- Description of list of login exceptions that we never save logins for -->
+    <string name="preferences_passwords_exceptions_description">ورود به سیستم و کلمه عبور برای این سایت ها ذخیره نمی شود.</string>
+    <!-- Hint for search box in logins list -->
+    <string name="preferences_passwords_saved_logins_search">جست‌وجو در اطلاعات ورودها</string>
+    <!-- Option to sort logins list A-Z, alphabetically -->
+    <string name="preferences_passwords_saved_logins_alphabetically">الفبایی</string>
+    <!-- Option to sort logins list by most recently used -->
+    <string name="preferences_passwords_saved_logins_recently_used">به تازگی استفاده شده</string>
+    <!-- The header for the site that a login is for -->
+    <string name="preferences_passwords_saved_logins_site">پایگاه</string>
+    <!-- The header for the username for a login -->
+    <string name="preferences_passwords_saved_logins_username">نام کاربری</string>
+    <!-- The header for the password for a login -->
+    <string name="preferences_passwords_saved_logins_password">گذرواژه</string>
+    <!-- Message displayed in security prompt to reenter a secret pin to access saved logins -->
+    <string name="preferences_passwords_saved_logins_enter_pin">دوباره پین خود را وارد کنید</string>
+    <!-- Message displayed in security prompt to access saved logins -->
+    <string name="preferences_passwords_saved_logins_enter_pin_description">برای مشاهده ورود به سیستم ذخیره شده قفل را باز کنید</string>
+    <!-- Message displayed when a connection is insecure and we detect the user is entering a password -->
+    <string name="logins_insecure_connection_warning">این اتصال امن نیست. اطلاعاتی که اینجا وارد می‌شوند ممکن است در معرض خطر باشند.</string>
+    <!-- Learn more link that will link to a page with more information displayed when a connection is insecure and we detect the user is entering a password -->
+    <string name="logins_insecure_connection_warning_learn_more">بیشتر بدانید</string>
+    <!-- Prompt message displayed when Fenix detects a user has entered a password and user decides if Fenix should save it. The first parameter is the name of the application (For example: Fenix)  -->
+    <string name="logins_doorhanger_save">آیا می خواهید%s  ورود به سیستم ذخیره کنید؟</string>
+    <!-- Positive confirmation that Fenix should save the new or updated login -->
+    <string name="logins_doorhanger_save_confirmation">ذخیره</string>
+    <!-- Negative confirmation that Fenix should not save the new or updated login -->
+    <string name="logins_doorhanger_save_dont_save">ذخیره نشود</string>
+    <!-- Shown in snackbar to tell user that the password has been copied -->
+    <string name="logins_password_copied">گذرواژه به کلیپ‌بورد ریخته شد</string>
+
+    <!-- Shown in snackbar to tell user that the username has been copied -->
+    <string name="logins_username_copied">نام کاربری به کلیپ بورد ریخته شد</string>
+    <!-- Shown in snackbar to tell user that the site has been copied -->
+    <string name="logins_site_copied">آدرس به داخل کلیپ بورد ریخته شد</string>
+    <!-- Content Description (for screenreaders etc) read for the button to copy a password in logins-->
+    <string name="saved_logins_copy_password">رونوشت گذرواژه</string>
+    <!-- Content Description (for screenreaders etc) read for the button to copy a username in logins -->
+    <string name="saved_login_copy_username">رونوشت نام کاربری</string>
+    <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
+    <string name="saved_login_copy_site">رونوشت از سایت</string>
+    <!-- Content Description (for screenreaders etc) read for the button to reveal a password in logins -->
+    <string name="saved_login_reveal_password">نمایش گذرواژه</string>
+    <!-- Content Description (for screenreaders etc) read for the button to hide a password in logins -->
+    <string name="saved_login_hide_password">پنهان کردن گذرواژه</string>
+    <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their logins -->
+    <string name="logins_biometric_prompt_message">بازکردن برای دیدن ورود‌های ذخیره شده</string>
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_title">ورود‌ها و گذرواژه های خود را امن کنید</string>
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_message">در صورت دسترسی شخص دیگری از دستگاه شما ، یک الگوی قفل دستگاه ، PIN یا رمز عبور را تنظیم کنید تا از ورود و گذرواژه‌های ذخیره شده خود در دسترس نباشید.</string>
+    <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_later">بعدا</string>
+    <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_set_up_now">همین الان راه اندازی کنید</string>
+    <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their logins -->
+    <string name="logins_biometric_prompt_message_pin">بازکردن دستگاه</string>
+    <!-- Title for Accessibility Force Enable Zoom Preference -->
+    <string name="preference_accessibility_force_enable_zoom">بزرگنمایی در همه وب سایت ها</string>
+    <!-- Summary for Accessibility Force Enable Zoom Preference -->
+    <string name="preference_accessibility_force_enable_zoom_summary">حتی در وب سایت هایی که از این حرکت جلوگیری می کنند ، می توانید خرج کردن و بزرگنمایی را فعال کنید.</string>
+
+    <!-- Title of the Add search engine screen -->
+    <string name="search_engine_add_custom_search_engine_title">افزودن موتور جست‌وجو</string>
+    <!-- Title of the Edit search engine screen -->
+    <string name="search_engine_edit_custom_search_engine_title">ویرایش موتور جست‌وجو</string>
+    <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
+    <string name="search_engine_add_button_content_description">افزودن</string>
+    <!-- Content description (not visible, for screen readers etc.): Title for the button to save a search engine in the action bar -->
+    <string name="search_engine_add_custom_search_engine_edit_button_content_description">ذخیره</string>
+    <!-- Text for the menu button to edit a search engine -->
+    <string name="search_engine_edit">ویرایش</string>
+    <!-- Text for the menu button to delete a search engine -->
+    <string name="search_engine_delete">حذف</string>
+
+    <!-- Text for the button to create a custom search engine on the Add search engine screen -->
+    <string name="search_add_custom_engine_label_other">دیگر</string>
+    <!-- Placeholder text shown in the Search Engine Name TextField before a user enters text -->
+    <string name="search_add_custom_engine_name_hint">نام</string>
+    <!-- Placeholder text shown in the Search String TextField before a user enters text -->
+    <string name="search_add_custom_engine_search_string_hint">رشته جست‌و‌جو برای استفاده</string>
+    <!-- Description text for the Search String TextField. The %s is part of the string -->
+    <string name="search_add_custom_engine_search_string_example">درخواست را با “%s” جایگزین کنید. مثال: \nhttps://www.google.com/search?q=%s</string>
+    <!-- Text for the button to learn more about adding a custom search engine -->
+    <string name="search_add_custom_engine_learn_more_label">بیشتر بدانید</string>
+    <!-- Accessibility description for the form in which details about the custom search engine are entered -->
+    <string name="search_add_custom_engine_form_description">جزئیات موتور جست‌وجو سفارشی</string>
+    <!-- Accessibility description for the 'Learn more' link -->
+    <string name="search_add_custom_engine_learn_more_description">در مورد پیوند بیشتر بدانید</string>
+
+    <!-- Text shown when a user leaves the name field empty -->
+    <string name="search_add_custom_engine_error_empty_name">نام موتور جست‌وجو را وارد کنید</string>
+
+    <!-- Text shown when a user tries to add a search engine that already exists -->
+    <string name="search_add_custom_engine_error_existing_name">موتور جستجو با نام“%s” از قبل موجود است.</string>
+    <!-- Text shown when a user leaves the search string field empty -->
+    <string name="search_add_custom_engine_error_empty_search_string">یک رشته جست‌وجو وارد کنید</string>
+    <!-- Text shown when a user leaves out the required template string -->
+    <string name="search_add_custom_engine_error_missing_template">بررسی کنید که رشته جست‌وجو با شکل و قالب نمونه ارائه شده مطابقت دارد</string>
+    <!-- Text shown when we aren't able to validate the custom search query. The first parameter is the url of the custom search engine -->
+    <string name="search_add_custom_engine_error_cannot_reach">خطایی در اتصال به “%s”</string>
+    <!-- Text shown when a user creates a new search engine -->
+    <string name="search_add_custom_engine_success_message">%s ایجاد شد</string>
+    <!-- Text shown when a user successfully edits a custom search engine -->
+    <string name="search_edit_custom_engine_success_message">%s ذخیره شد</string>
+    <!-- Text shown when a user successfully deletes a custom search engine -->
+    <string name="search_delete_search_engine_success_message">%s پاک شد</string>
+
+    <!-- Title text shown for the migration screen to the new browser. Placeholder replaced with app name -->
+    <string name="migration_title">به %s جدید خوش آمدید</string>
+
+    <!-- Description text followed by a list of things migrating (e.g. Bookmarks, History). Placeholder replaced with app name-->
+    <string name="migration_description">یک مرورگر کاملا مجددا طراحی شده ، با عملکرد و ویژگی های بهبود یافته برای کمک به شما در انجام هر چه بیشتر فعالیت آنلاین ، در انتظار است. \ n \ n لطفاً صبر کنید تا %s را با شما به روز کنیم</string>
+    <!-- Text on the disabled button while in progress. Placeholder replaced with app name -->
+    <string name="migration_updating_app_button_text">به روزرسانی %s…</string>
+    <!-- Text on the enabled button. Placeholder replaced with app name-->
+    <string name="migration_update_app_button">شروع %s</string>
+    <!-- Accessibility description text for a completed migration item -->
+    <string name="migration_icon_description">مهاجرت تکمیل شد</string>
+    <!--Text on list of migrated items (e.g. Settings, History, etc.)-->
+    <string name="migration_text_passwords">گذرواژه‌ها</string>
+
+    <!-- Heading for the instructions to allow a permission -->
+    <string name="phone_feature_blocked_intro">برای اجازه دادن به آن:</string>
+    <!-- First step for the allowing a permission -->
+    <string name="phone_feature_blocked_step_settings">1. به تنظیمات Android بروید</string>
+    <!-- Second step for the allowing a permission -->
+    <string name="phone_feature_blocked_step_permissions"><![CDATA[2. بر روی <b>مجوزها</b> ضربه بزنید]]></string>
+    <!-- Third step for the allowing a permission (Fore example: Camera) -->
+    <string name="phone_feature_blocked_step_feature"><![CDATA[3. تغییر <b>%1$s</b> را به ON تغییر دهید]]></string>
+
+    <!-- Label that indicates a site is using a secure connection -->
+    <string name="quick_settings_sheet_secure_connection">اتصال امن</string>
+    <!-- Label that indicates a site is using a insecure connection -->
+    <string name="quick_settings_sheet_insecure_connection">ارتباط نا امن</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for all sites-->
+    <string name="confirm_clear_permissions_on_all_sites">آیا مطمئن هستید که می خواهید همه مجوزها را در همه سایت ها پاک کنید؟</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for a site-->
+    <string name="confirm_clear_permissions_site">آیا مطمئن هستید که می خواهید همه مجوزها را در این سایت پاک کنید؟</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to set default value a permission for a site-->
+    <string name="confirm_clear_permission_site">آیا مطمئن هستید که می خواهید این مجوز را برای این سایت پاک کنید؟</string>
+    <!-- label shown when there are not site exceptions to show in the site exception settings -->
+    <string name="no_site_exceptions">هیچ سایتی استثنائی وجود ندارد</string>
+    <!-- Label for the Pocket default top site -->
+    <string name="pocket_top_articles">مقالات برتر</string>
+    <!-- Bookmark deletion confirmation -->
+    <string name="bookmark_deletion_confirmation">آیا از حذف این نشانک مطمئن هستید؟</string>
+    <!-- Browser menu button that adds a top site to the home fragment -->
+    <string name="browser_menu_add_to_top_sites">اضافه کردن به سایت های برتر</string>
+    <!-- text shown before the issuer name to indicate who its verified by, parameter is the name of
+     the certificate authority that verified the ticket-->
+    <string name="certificate_info_verified_by">تایید شده توسط:%1$s</string>
+    <!-- Login overflow menu delete button -->
+    <string name="login_menu_delete_button">حذف</string>
+</resources>

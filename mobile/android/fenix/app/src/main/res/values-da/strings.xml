@@ -1141,7 +1141,7 @@
     <!-- Title of warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_title">Gør dine logins og adgangskoder sikre</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_message">Indstil en pinkode, en adgangskode eller et låsemønster på din enhed for at forhindre, at andre mennesker får adgang til dine gemte logins og adgangskoder, hvis de har adgang til dine enhed.</string>
+    <string name="logins_warning_dialog_message">Indstil en pinkode, en adgangskode eller et låsemønster på din enhed for at forhindre, at andre mennesker får adgang til dine gemte logins og adgangskoder, hvis de har adgang til din enhed.</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_later">Senere</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->

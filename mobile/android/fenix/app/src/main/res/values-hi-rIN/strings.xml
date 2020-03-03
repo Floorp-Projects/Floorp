@@ -10,6 +10,8 @@
     <!-- Shortcut action to open new private tab -->
     <string name="home_screen_shortcut_open_new_private_tab_2">नई निजी टैब</string>
 
+    <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
+    <string name="browser_menu_stop">रोकें</string>
     <!-- Content description (not visible, for screen readers etc.): Bookmark the current page -->
     <string name="browser_menu_bookmark">बुकमार्क</string>
     <!-- Content description (not visible, for screen readers etc.): Un-bookmark the current page -->
@@ -20,9 +22,73 @@
     <string name="browser_menu_help">सहायता</string>
     <!-- Browser menu button that opens the settings menu -->
     <string name="browser_menu_settings">सेटिंग</string>
+    <!-- Browser menu button that opens a user's library -->
+    <string name="browser_menu_your_library">आपकी लाइब्रेरी</string>
+    <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
+    <string name="browser_menu_add_to_homescreen">मुख्य स्क्रीन में जोड़ें</string>
+    <!-- Browser menu button that opens the find in page menu -->
+    <string name="browser_menu_find_in_page">पृष्ठ में ढूँढें</string>
     <!-- Browser menu button that creates a private tab -->
     <string name="browser_menu_private_tab">निजी टैब</string>
     <!-- Browser menu button that creates a new tab -->
     <string name="browser_menu_new_tab">नया टैब</string>
+
+    <!-- Browser menu button that open a share menu to share the current site -->
+    <string name="browser_menu_share">साझा करें</string>
+
+    <!-- Content description for search icon -->
+    <string name="a11y_search_icon_content_description">खोजें</string>
+
+    <!-- Button in the search view that lets a user search by using a shortcut -->
+    <string name="search_shortcuts_button">शॉर्टकट</string>
+    <!-- Search suggestion onboarding hint Learn more link text -->
+    <string name="search_suggestions_onboarding_learn_more_link">अधिक जानें</string>
+
+    <!-- Search Widget -->
+    <!-- Text preview for smaller sized widgets -->
+    <string name="search_widget_text_short">खोजें</string>
+
+    <!-- Preferences -->
+    <!-- Title for the settings page-->
+    <string name="settings">सेटिंग</string>
+    <!-- Preference category for general settings -->
+    <string name="preferences_category_general">सामान्य</string>
+    <!-- Preference for settings related to Search -->
+    <string name="preferences_search">खोजें</string>
+    <!-- Preference linking to help about Fenix -->
+    <string name="preferences_help">सहायता</string>
+    <!-- Preference for giving feedback about Fenix -->
+    <string name="preferences_feedback">प्रतिक्रिया दें</string>
+    <!-- Preference linking to the your rights SUMO page -->
+    <string name="preferences_your_rights">आपका अधिकार</string>
+    <!-- Preference for settings related to saved passwords -->
+    <string name="preferences_passwords">पासवर्ड</string>
+    <!-- Preference for private browsing options -->
+    <string name="preferences_private_browsing_options">निजी ब्राउज़िंग</string>
+    <!-- Preference category for account information -->
+    <string name="preferences_category_account">खाता</string>
+    <!-- Preference shown on banner to sign into account -->
+    <string name="preferences_sign_in">साइन इन करें</string>
+    <!-- Preference for changing default theme to dark or light mode -->
+    <string name="preferences_theme">थीम</string>
+    <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
+    <string name="preferences_account_default_name">Firefox खाता</string>
+    <!-- Preference for language -->
+    <string name="preferences_language">भाषा</string>
+
+    <!-- Preference for syncing history -->
+    <string name="preferences_sync_history">इतिहास</string>
+    <!-- Preference displays and allows changing current FxA device name -->
+    <string name="preferences_sync_device_name">डिवाइस का नाम</string>
+
+    <!-- Text displayed when there are no exceptions, with learn more link that brings users to a tracking protection SUMO page -->
+    <string name="exceptions_empty_message_learn_more_link">अधिक जानें</string>
+
+    <!-- Menu Item Label for Search in Library -->
+    <string name="library_search">खोजें</string>
+    <!-- Library Page Title -->
+    <string name="library_title">लाइब्रे‌री</string>
+    <!-- Settings Page Title -->
+    <string name="settings_title">सेटिंग</string>
 
     </resources>

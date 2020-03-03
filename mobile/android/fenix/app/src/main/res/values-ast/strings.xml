@@ -47,7 +47,7 @@
     <!-- Browser menu button that sends a user to help articles -->
     <string name="browser_menu_help">Ayuda</string>
     <!-- Browser menu button that sends a to a the what's new article -->
-    <string name="browser_menu_whats_new">Qué hai nuevo</string>
+    <string name="browser_menu_whats_new">Novedaes</string>
     <!-- Browser menu button that opens the settings menu -->
     <string name="browser_menu_settings">Axustes</string>
     <!-- Browser menu button that opens a user's library -->
@@ -56,7 +56,7 @@
     <string name="browser_menu_desktop_site">Sitiu d\'escritoriu</string>
 
     <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
-    <string name="browser_menu_add_to_homescreen">Amiestar a la pantalla d\'aniciu</string>
+    <string name="browser_menu_add_to_homescreen">Amestar a la pantalla d\'aniciu</string>
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
     <string name="browser_menu_install_on_homescreen">Instalar</string>
     <!-- Browser menu button that opens the find in page menu -->
@@ -271,7 +271,7 @@
     <string name="preference_dark_theme">Escuridá</string>
 
     <!-- Preference for using following device theme -->
-    <string name="preference_follow_device_theme">Siguir la llingua del preséu</string>
+    <string name="preference_follow_device_theme">Siguir l\'estilu del preséu</string>
 
     <!-- Library -->
     <!-- Option in Library to open Sessions page -->
@@ -299,6 +299,18 @@
     <!-- Open tabs menu item to close all tabs -->
     <string name="tabs_menu_close_all_tabs">Zarrar toles llingüetes</string>
 
+    <!-- Open tabs menu item to share all tabs -->
+    <string name="tabs_menu_share_tabs">Compartir les llingüetes</string>
+    <!-- Open tabs menu item to save tabs to collection -->
+    <string name="tabs_menu_save_to_collection">Guardar nuna coleición</string>
+    <!-- Button in the current session menu. Deletes the session when pressed -->
+    <string name="current_session_delete">Desaniciar</string>
+    <!-- Button in the current session menu. Saves the session when pressed -->
+    <string name="current_session_save">Guardar</string>
+    <!-- Button in the current session menu. Opens the share menu when pressed -->
+    <string name="current_session_share">Compartir</string>
+    <!-- Button to save the current set of tabs into a collection -->
+    <string name="save_to_collection">Guardar nuna coleición</string>
     <!-- Text for the menu button to delete a collection -->
     <string name="collection_delete">Desaniciar la coleición</string>
     <!-- Text for the menu button to rename a collection -->
@@ -325,6 +337,9 @@
     <!-- Crashes -->
     <!-- Title text displayed on the tab crash page. This first parameter is the name of the application (For example: Fenix) -->
     <string name="tab_crash_title_2">Perdona pero %1$s nun pue cargar esa páxina.</string>
+
+    <!-- Description text displayed on the tab crash page -->
+    <string name="tab_crash_description">Pues tentar de restaurar o zarrar esta llingüeta embaxo.</string>
 
     <!-- Screen title for adding a bookmarks folder -->
     <string name="bookmark_add_folder">Amiestu d\'una carpeta</string>
@@ -460,6 +475,8 @@
     <string name="sync_connect_device">Coneutar otru preséu</string>
     <!-- Confirmation dialog button -->
     <string name="sync_confirmation_button">¡Entendílo!</string>
+    <!-- Share error message -->
+    <string name="share_error_snackbar">Nun pue compartise con esta aplicación</string>
     <!-- Add new device screen title -->
     <string name="sync_add_new_device_title">Unviu a un preséu</string>
     <!-- Text for the warning message on the Add new device screen -->
@@ -512,12 +529,17 @@
     <!-- Summary for Accessibility Text Size Scaling Preference -->
     <string name="preference_accessibility_text_size_summary">Agranda o apequeña\'l testu de los sitios web</string>
 
+    <!-- Title for Accessibility Text Size Scaling Preference -->
+    <string name="preference_accessibility_font_size_title">Tamañu de la fonte</string>
+
     <!-- Title for the Delete browsing data preference -->
     <string name="preferences_delete_browsing_data">Desaniciu de los datos de restolar</string>
     <!-- Title for the tabs item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_tabs_title">Llingüetes abiertes</string>
     <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
     <string name="preferences_delete_browsing_data_tabs_subtitle">%d llingüetes</string>
+    <!-- Title for the data and history items in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_browsing_data_title">Historial de restolar y datos de sitios</string>
     <!-- Subtitle for the data and history items in delete browsing data, parameter will be replaced with the
         number of history items the user has -->
     <string name="preferences_delete_browsing_data_browsing_data_subtitle">%d direiciones</string>
@@ -635,6 +657,8 @@
     <string name="preference_enhanced_tracking_protection_strict">Estricta</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict_default_description">La proteición ye mayor y el rindimientu ameyora pero dalgunos sitios quiciabes nun carguen afayadizamente.</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom">Personalizar</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_custom_description">Escueyes los rastrexadores y scripts a bloquiar</string>
     <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
@@ -645,9 +669,9 @@
     <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
     <string name="preference_enhanced_tracking_protection_custom_tracking_content_1">En toles llingüetes</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
-    <string name="preference_enhanced_tracking_protection_custom_tracking_content_2">Namái nes llingüetes privaes</string>
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content_2">Namás nes llingüetes privaes</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
-    <string name="preference_enhanced_tracking_protection_custom_tracking_content_3">Namái nes llingüetes personalizaes</string>
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content_3">Namás nes llingüetes personalizaes</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
     <string name="preference_enhanced_tracking_protection_custom_cryptominers">Criptomineros</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
@@ -657,6 +681,8 @@
     <string name="enhanced_tracking_protection_allowed">Permítese</string>
     <!-- Category of trackers (social media trackers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_social_media_trackers_title">Rastrexadores de redes sociales</string>
+    <!-- Description of social media trackers that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_social_media_trackers_description">Llenda l\'habilidá que tienen les redes sociales de rastrexar la to actividá de restolar pela rede.</string>
     <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_description">Bloquia les cookies que les redes d\'anuncios y compañes d\'analís usen p\'atropar los tos datos de restolar en milenta sitios.</string>
     <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
@@ -675,7 +701,7 @@
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
     <string name="etp_panel_off">La proteición ta DESACTIVADA nesti sitiu</string>
     <!-- About page link text to open what's new link -->
-    <string name="about_whats_new">Qué hai nuevo en %s</string>
+    <string name="about_whats_new">Novedaes de %s</string>
 
     <!-- About page link text to open support link -->
     <string name="about_support">Sofitu</string>

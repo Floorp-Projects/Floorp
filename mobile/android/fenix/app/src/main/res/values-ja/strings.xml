@@ -668,7 +668,7 @@
     <string name="create_collection_save">保存</string>
 
     <!-- Default name for a new collection in "name new collection" step of the collection creator. %d is a placeholder for the number of collections-->
-    <string name="create_collection_default_name">Collection %d</string>
+    <string name="create_collection_default_name">コレクション %d</string>
 
     <!-- Share -->
     <!-- Share screen header -->
@@ -851,6 +851,11 @@
     <string name="onboarding_feature_section_header">%s を知ろう</string>
     <!-- text for the "What's New" onboarding card header -->
     <string name="onboarding_whats_new_header1">新機能の紹介</string>
+    <!-- text for the "what's new" onboarding card description
+    The first parameter is the short name of the app (e.g. Firefox) -->
+    <string name="onboarding_whats_new_description">再設計された %s について、どこが新しくなったのか知りたいですか？</string>
+    <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
+    <string name="onboarding_whats_new_description_linktext">その答えはこちらにあります</string>
     <!-- text for the firefox account onboarding card header
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_firefox_account_header">%s を最大限に活用しよう。</string>
@@ -872,10 +877,17 @@
     <string name="onboarding_firefox_account_automatic_signin_failed">ログインに失敗しました</string>
     <!-- text for the tracking protection onboarding card header -->
     <string name="onboarding_tracking_protection_header">自己防衛しよう</string>
+    <!-- text for the tracking protection card description
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_tracking_protection_description1">%s がウェブサイトによるオンラインでのユーザー追跡を止めるのに役立ちます。</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button">標準</string>
+    <!-- text for standard blocking option button description -->
+    <string name="onboarding_tracking_protection_standard_button_description">ブロックするトラッカーの数は少なくなりますが、ページを正常に読み込めます</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_button">厳格 (推奨)</string>
+    <!-- text for strict blocking option button description -->
+    <string name="onboarding_tracking_protection_strict_button_description">ユーザー保護とパフォーマンス向上のために、より多くのトラッカーをブロックしますが、一部のサイトが正常に動作しない可能性があります。</string>
     <!-- text for the toolbar position card header
         In English this is an idiom for "choose a side as in an argument or fight"
         but it is ok to make this more literally about "choosing a position in a physical space -->

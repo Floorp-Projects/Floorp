@@ -591,6 +591,8 @@
     <string name="sync_sign_in">התחברות אל Sync</string>
     <!-- An option from the share dialog to send link to all other sync devices -->
     <string name="sync_send_to_all">שליחה לכל המכשירים</string>
+    <!-- An option from the share dialog to reconnect to sync -->
+    <string name="sync_reconnect">התחברות מחדש אל Sync</string>
     <!-- Text displayed when sync is offline and cannot be accessed -->
     <string name="sync_offline">לא־מקוון</string>
     <!-- An option to connect additional devices -->
@@ -743,8 +745,12 @@
     <string name="onboarding_firefox_account_signing_in">בתהליך התחברות…</string>
     <!-- text for the button to manually sign into Firefox account. The word "Firefox" should not be translated -->
     <string name="onboarding_firefox_account_sign_in">התחברות אל Firefox</string>
+    <!-- text to display in the snackbar once account is signed-in -->
+    <string name="onboarding_firefox_account_sync_is_on">הסנכרון פעיל</string>
     <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
     <string name="onboarding_firefox_account_automatic_signin_failed">ההתחברות נכשלה</string>
+    <!-- text for the tracking protection onboarding card header -->
+    <string name="onboarding_tracking_protection_header">הגנת מעקב</string>
     <!-- text for the tracking protection card description
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_tracking_protection_description1">‏%s עוזר למנוע מאתרים לעקוב אחריך ברשת.</string>

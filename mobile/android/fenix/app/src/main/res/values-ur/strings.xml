@@ -183,13 +183,17 @@
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">تخصیص کریں</string>
     <!-- Preference description for banner about signing in -->
-    <string name="preferences_sign_in_description">اپنے Firefox Account کے ساتھ بک مارکس ، تاریخ اور بہت کچھ sync کریں</string>
+    <string name="preferences_sign_in_description">اپنے Firefox Account کے ساتھ بک مارکس ، سابقات اور بہت کچھ sync کریں</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
     <string name="preferences_account_default_name">Firefox اکاؤنٹ</string>
     <!-- Preference for language -->
     <string name="preferences_language">زبان</string>
+    <!-- Preference linking to the privacy notice -->
+    <string name="preferences_privacy_link">رازداری کا نوٹس</string>
     <!-- Preference category for developer tools -->
     <string name="developer_tools_category">تخلیق کار ٹول</string>
+    <!-- Preference for developers -->
+    <string name="preferences_remote_debugging">USB کے ذریعے بعید ٹھیک کاری</string>
     <!-- Preference title for switch preference to suggest bookmarks when searching -->
     <string name="preferences_search_bookmarks">بک مارک تلاش کریں</string>
     <!-- Preference for account settings -->
@@ -219,6 +223,18 @@
     <!-- Label indicating that sync is in progress -->
     <string name="sync_syncing_in_progress">sync ہو رہا ہے…</string>
 
+    <!--  The body for these is the URL of the tab received  -->
+    <string name="fxa_tab_received_notification_name">ٹیب حاصل ہوا</string>
+    <!-- When multiple tabs have been received -->
+    <string name="fxa_tabs_received_notification_name">ٹیب حاصل ہوا</string>
+    <!-- %s is the device name -->
+    <string name="fxa_tab_received_from_notification_name">%s سے ٹیب</string>
+
+    <!-- Advanced Preferences -->
+    <!-- Preference for tracking protection settings -->
+    <string name="preferences_tracking_protection_settings">سراغ کاری حفاظت</string>
+    <!-- Preference switch for tracking protection -->
+    <string name="preferences_tracking_protection">سراغ کاری حفاظت</string>
     <!-- Preference for tracking protection exceptions -->
     <string name="preferences_tracking_protection_exceptions">استثنيات</string>
     <!-- Button in Exceptions Preference to turn on tracking protection for all sites (remove all exceptions) -->
@@ -230,6 +246,9 @@
     <string name="preferences_telemetry">ٹیلیمیٹری</string>
     <!-- Title for experiments preferences -->
     <string name="preference_experiments">تجربات</string>
+
+    <!-- Preference switch for crash reporter -->
+    <string name="preferences_crash_reporter">کریش رپورٹر</string>
 
     <!-- Turn On Sync Preferences -->
     <!-- Header of the Turn on Sync preference view -->
@@ -256,6 +275,9 @@
     <!-- Preference for using dark theme -->
     <string name="preference_dark_theme">گہرا</string>
 
+    <!-- Library -->
+    <!-- Option in Library to open Sessions page -->
+    <string name="library_sessions">سیشن</string>
     <!-- Option in Library to open Screenshots page -->
     <string name="library_screenshots">اسکرین شاٹس</string>
     <!-- Option in Library to open Downloads page -->
@@ -287,6 +309,8 @@
     <!-- Title for the list of tabs -->
     <string name="tab_header_label">ٹیبس کھولیں</string>
     <!-- Title for the list of tabs in the current private session -->
+    <string name="tabs_header_private_title">نجی سیشن</string>
+    <!-- Title for the list of tabs in the current private session -->
     <string name="tabs_header_private_tabs_title">نجی ٹیبس</string>
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
     <string name="add_tab">ٹيب کا اضافہ کريں</string>
@@ -294,6 +318,10 @@
     <string name="close_tab">ٹیب بند کر دیں</string>
     <!-- Open tabs menu item to close all tabs -->
     <string name="tabs_menu_close_all_tabs">تمام ٹیبز بند کریں</string>
+    <!-- Open tabs menu item to save tabs to collection -->
+    <string name="tabs_menu_save_to_collection">مجموعہ میں محفوظ کریں</string>
+    <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
+    <string name="tab_menu">ٹیب مینو</string>
     <!-- Button in the current session menu. Deletes the session when pressed -->
     <string name="current_session_delete">مٹائیں</string>
     <!-- Button in the current session menu. Saves the session when pressed -->
@@ -301,6 +329,18 @@
     <!-- Button in the current session menu. Opens the share menu when pressed -->
     <string name="current_session_share">شیئر کریں</string>
 
+    <!-- Button to save the current set of tabs into a collection -->
+    <string name="save_to_collection">مجموعہ میں محفوظ کریں</string>
+    <!-- Text for the button to open tabs of the selected collection -->
+    <string name="collection_open_tabs">ٹیب کھولیں</string>
+    <!-- Text for the menu button to remove a top site -->
+    <string name="remove_top_site">ہٹائیں</string>
+
+    <!-- History -->
+    <!-- Text for the button to clear all history -->
+    <string name="history_delete_all">سابقات حذف کریں</string>
+    <!-- Text for the dialog to confirm clearing all history -->
+    <string name="history_delete_all_dialog">کیا آپ کو یقین ہے کہ آپ اپنے سابقات صاف کرنا چاہتے ہیں؟</string>
     <!-- Text for positive action to delete history in deleting history dialog -->
     <string name="history_clear_dialog">صاف کریں</string>
     <!-- Text for the button to delete a single history item -->
@@ -315,8 +355,10 @@
     <!-- Text for the header that groups the history older than the last month -->
     <string name="history_older">‏‏زیادہ پرانا</string>
     <!-- Text shown when no history exists -->
-    <string name="history_empty_message">یہاں کوئی تاریخ نہیں ہے</string>
+    <string name="history_empty_message">یہاں کوئی سابقات نہیں ہے</string>
 
+    <!-- Send crash report checkbox text on the tab crash page -->
+    <string name="tab_crash_send_report">تباہی کی رپورٹ Mozilla کو ارسال کریں</string>
     <!-- Close tab button text on the tab crash page -->
     <string name="tab_crash_close">ٹیب بند کر دیں</string>
     <!-- Restore tab button text on the tab crash page -->
@@ -410,6 +452,8 @@
 
     <!-- Preference for altering the location access for all websites -->
     <string name="preference_phone_feature_location">مقام</string>
+    <!-- Preference for altering the notification access for all websites -->
+    <string name="preference_phone_feature_notification">اعلانات</string>
     <!-- Label that indicates that a permission must be asked always -->
     <string name="preference_option_phone_feature_ask_to_allow">اجازت کے لئے پوچھیں</string>
 
@@ -456,10 +500,37 @@
     <!-- Button to deselect all tabs in the "select tabs" step of the collection creator -->
     <string name="create_collection_deselect_all">متخب کو ہٹایں</string>
 
+    <!-- Content description (not visible, for screen readers etc.): button to close the collection creator -->
+    <string name="create_collection_close">بند کریں</string>
+    <!-- Button to save currently selected tabs in the "select tabs" step of the collection creator-->
+    <string name="create_collection_save">محفوظ کریں</string>
+
+    <!-- Share screen header -->
+    <string name="share_header_2">شیئر</string>
+    <!-- Content description (not visible, for screen readers etc.):
+        "Share" button. Opens the share menu when pressed. -->
+    <string name="share_button_content_description">شیئر کریں</string>
+    <!-- Sub-header in the dialog to share a link to another app -->
+    <string name="share_link_subheader">ایک لنک شیئر کریں</string>
+    <!-- Sub-header in the dialog to share a link to another sync device -->
+    <string name="share_device_subheader">آلہ پر بھیجیں</string>
+    <!-- Sub-header in the dialog to share a link to an app from the most-recent sorted list -->
+    <string name="share_link_recent_apps_subheader">حال ہی میں استعمال کی گئی</string>
+    <!-- An option from the share dialog to send link to all other sync devices -->
+    <string name="sync_send_to_all">‏تمام آلات پر ارسال کریں</string>
+    <!-- Text displayed when sync is offline and cannot be accessed -->
+    <string name="sync_offline">آف لائن</string>
+    <!-- An option to connect additional devices -->
+    <string name="sync_connect_device">ایک اور آلہ جوڑیں</string>
+    <!-- Text for the button to connect another device -->
+    <string name="sync_add_new_device_connect_button">ایک اور آلہ جوڑیں…</string>
+
     <!-- Notifications -->
     <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active. -->
     <string name="notification_pbm_channel_name">نجی برائوزنگ سیشن</string>
 
+    <!-- Notification action to open Fenix and resume the current browsing session. -->
+    <string name="notification_pbm_action_open">کھولیں</string>
     <!-- Text shown in snackbar when user closes a tab -->
     <string name="snackbar_tab_closed">ٹیب بند ہے</string>
 
@@ -469,6 +540,8 @@
     <string name="snackbar_private_tab_closed">نجی ٹیب بند ہوگئیں</string>
     <!-- Text shown in snackbar when user closes all private tabs -->
     <string name="snackbar_private_tabs_closed">نجی ٹیبز بند ہوگئیں</string>
+    <!-- Text for action to confirm deleting a tab or collection shown in a11y dialog -->
+    <string name="a11y_dialog_deleted_confirm">تصدیق کریں</string>
     <!-- Tab collection deletion prompt dialog option to delete the collection -->
     <string name="tab_collection_dialog_positive">مٹائیں</string>
     <!-- Tab collection deletion prompt dialog option to cancel deleting the collection -->
@@ -478,8 +551,12 @@
     <!-- Title for Accessibility Text Size Scaling Preference -->
     <string name="preference_accessibility_font_size_title">حرف کا سائز</string>
 
+    <!-- Title for the tabs item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_tabs_title">ٹیب کھولیں</string>
+    <!-- Title for history items in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_browsing_history_title">سابقات</string>
     <!-- Title for the cookies item in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_cookies">کوکیس</string>
+    <string name="preferences_delete_browsing_data_cookies">کوکیز</string>
     <!-- Text for the button to delete browsing data -->
     <string name="preferences_delete_browsing_data_button">براؤزنگ کا ڈیٹا مٹائیں</string>
     <!-- Title for the Delete browsing data on quit preference -->
@@ -508,6 +585,8 @@
     <string name="onboarding_firefox_account_automatic_signin_failed">سائن ان کرنے میں ناکام</string>
     <!-- text for the tracking protection onboarding card header -->
     <string name="onboarding_tracking_protection_header">خود کی حفاظت کریں</string>
+    <!-- text for tracking protection radio button option for standard level of blocking -->
+    <string name="onboarding_tracking_protection_standard_button">معیاری</string>
     <!-- text for the private browsing onboarding card header -->
     <string name="onboarding_private_browsing_header">رازداری سے براؤز کریں</string>
 
@@ -529,6 +608,9 @@
 
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">مزید سیکھیں</string>
+    <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
+    <!-- Preference for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies">کوکیز</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings for tracking content -->
     <string name="preference_enhanced_tracking_protection_custom_tracking_content">ٹریکنگ مواد</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
@@ -545,6 +627,8 @@
     <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
     <string name="enhanced_tracking_protection_allowed">‏‏اجازت شدہ</string>
 
+    <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_title">کراس-سائٹ ٹریکنگ کوکیز</string>
     <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cryptominers_title">کریپٹومینر</string>
     <!-- Category of trackers (fingerprinters) that can be blocked by Enhanced Tracking Protection -->
@@ -552,8 +636,16 @@
     <!-- Category of trackers (tracking content) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_title">ٹریکنگ مواد</string>
 
+    <!-- About page Your rights link text -->
+    <string name="about_your_rights">آپ کے حقوق</string>
+
     <!-- About page link text to open support link -->
     <string name="about_support">معاونت</string>
+
+    <!-- About page link text to open privacy notice link -->
+    <string name="about_privacy_notice">رازداری کا نوٹس</string>
+    <!-- About page link text to open know your rights link -->
+    <string name="about_know_your_rights">اپنے حقوق جانیں</string>
 
     <!-- Content description of the tab counter toolbar button when one tab is open -->
     <string name="tab_counter_content_description_one_tab">1 ٹیب</string>
@@ -575,6 +667,10 @@
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords">لاگ ان اور پاس ورڈ</string>
+    <!-- Preference option for never saving passwords in Fenix -->
+    <string name="preferences_passwords_save_logins_never_save">کبھِی بھی محفوظ مت کریں</string>
+    <!-- Preference for autofilling saved logins in Fenix -->
+    <string name="preferences_passwords_autofill">آٹوفل</string>
     <!-- Syncing saved logins in Fenix is on -->
     <string name="preferences_passwords_sync_logins_on">آن</string>
     <!-- Syncing saved logins in Fenix is off -->

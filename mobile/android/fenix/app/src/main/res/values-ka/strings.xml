@@ -1,0 +1,1263 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- App name for private browsing mode, only the "Private" portion should be localized. -->
+    <string name="app_name_private_2">პირადი Firefox Preview</string>
+    <!-- App name for private browsing mode, only the "Private" portion should be localized. -->
+    <string name="app_name_private_3">Firefox Preview (პირადი)</string>
+    <!-- Home Fragment -->
+    <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
+    <string name="content_description_menu">დამატებითი პარამეტრები</string>
+    <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
+    <string name="content_description_private_browsing_button">პირადი თვალიერების ჩართვა</string>
+    <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
+    <string name="content_description_disable_private_browsing_button">პირადი თვალიერების გამორთვა</string>
+    <!-- Placeholder text shown in the search bar before a user enters text -->
+    <string name="search_hint">მოძებნეთ ან შეიყვანეთ მისამართი</string>
+    <!-- No Open Tabs Message Header -->
+    <string name="no_open_tabs_header_2">გახსნილი ჩანართები არაა</string>
+    <!-- No Open Tabs Message Description -->
+    <string name="no_open_tabs_description">თქვენი გახსნილი ჩანართები გამოჩნდება აქ.</string>
+
+    <!-- Private Browsing -->
+    <!-- Title for private session option -->
+    <string name="private_browsing_title">იმყოფებით პირად ფანჯარაში</string>
+    <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="private_browsing_placeholder_description">%1$s გაასუფთავებს თქვენ მიერ მოძიებული და მონახულებული გვერდების ისტორიას პროგრამიდან გამოსვლისას ან ყველა პირადი ჩანართისა და ფანჯრის დახურვისას. მართალია, ეს არ ფარავს თქვენს ვინაობას საიტებისა და ინტერნეტმომსახურების მომწოდებლისგან, თუმცა დაგეხმარებათ დაიცვათ პირადი მონაცემები კომპიუტერის სხვა მომხმარებლებისგან.</string>
+    <string name="private_browsing_common_myths">არასწორი წარმოდგენები პირადი თვალიერების რეჟიმზე</string>
+    <!-- Delete session button to erase your history in a private session -->
+    <string name="private_browsing_delete_session">სეანსის წაშლა</string>
+
+    <!-- Private mode shortcut "contextual feature recommender" (CFR) -->
+    <!-- Text for the main message -->
+    <string name="cfr_message">დაამატეთ მალსახმობი, პირადი ჩანართების მთავარი ეკრანიდან გახსნისთვის.</string>
+    <!-- Text for the positive button -->
+    <string name="cfr_pos_button_text">მალსახმობის დამატება</string>
+    <!-- Text for the negative button -->
+    <string name="cfr_neg_button_text">არა, გმადლობთ</string>
+
+    <!-- Home screen icons - Long press shortcuts -->
+    <!-- Shortcut action to open new tab -->
+    <string name="home_screen_shortcut_open_new_tab_2">ახალი ჩანართი</string>
+    <!-- Shortcut action to open new private tab -->
+    <string name="home_screen_shortcut_open_new_private_tab_2">ახალი პირადი ჩანართი</string>
+
+    <!-- Browser Fragment -->
+    <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
+    <string name="browser_tabs_button">გახსნილი ჩანართები</string>
+    <!-- Content description (not visible, for screen readers etc.): Navigate backward (browsing history) -->
+    <string name="browser_menu_back">წინა</string>
+    <!-- Content description (not visible, for screen readers etc.): Navigate forward (browsing history) -->
+    <string name="browser_menu_forward">მომდევნო</string>
+    <!-- Content description (not visible, for screen readers etc.): Refresh current website -->
+    <string name="browser_menu_refresh">განახლება</string>
+    <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
+    <string name="browser_menu_stop">შეჩერება</string>
+    <!-- Content description (not visible, for screen readers etc.): Bookmark the current page -->
+    <string name="browser_menu_bookmark">ჩანიშვნა</string>
+    <!-- Content description (not visible, for screen readers etc.): Un-bookmark the current page -->
+    <string name="browser_menu_edit_bookmark">სანიშნის ჩასწორება</string>
+    <!-- Browser menu button that opens the addon manager -->
+    <string name="browser_menu_addon_manager">დამატებების მმართველი</string>
+    <!-- Text displayed when there are no add-ons to be shown -->
+    <string name="no_add_ons">დამატებები არ არის</string>
+    <!-- Browser menu button that sends a user to help articles -->
+    <string name="browser_menu_help">დახმარება</string>
+    <!-- Browser menu button that sends a to a the what's new article -->
+    <string name="browser_menu_whats_new">რა სიახლეებია</string>
+    <!-- Browser menu button that opens the settings menu -->
+    <string name="browser_menu_settings">პარამეტრები</string>
+    <!-- Browser menu button that opens a user's library -->
+    <string name="browser_menu_your_library">თქვენი ბიბლიოთეკა</string>
+    <!-- Browser menu toggle that requests a desktop site -->
+    <string name="browser_menu_desktop_site">სრული საიტი</string>
+    <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
+    <string name="browser_menu_add_to_homescreen">მთავარ ეკრანზე დამატება</string>
+    <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
+    <string name="browser_menu_install_on_homescreen">დაყენება</string>
+    <!-- Browser menu button that opens the find in page menu -->
+    <string name="browser_menu_find_in_page">პოვნა გვერდზე</string>
+    <!-- Browser menu button that creates a private tab -->
+    <string name="browser_menu_private_tab">პირადი ჩანართი</string>
+    <!-- Browser menu button that creates a new tab -->
+    <string name="browser_menu_new_tab">ახალი ჩანართი</string>
+    <!-- Browser menu button that saves the current tab to a collection -->
+    <string name="browser_menu_save_to_collection">კრებულში შენახვა</string>
+    <!-- Browser menu button that opens a dialog to report issues with the current site -->
+    <string name="browser_menu_report_issue">მოხსენება საიტზე</string>
+    <!-- Browser menu button that open a share menu to share the current site -->
+    <string name="browser_menu_share">გაზიარება</string>
+    <!-- Share menu title, displayed when a user is sharing their current site -->
+    <string name="menu_share_with">გაზიარება…</string>
+    <!-- Browser menu button shown in custom tabs that opens the current tab in Fenix
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="browser_menu_open_in_fenix">გახსნის %1$s</string>
+    <!-- Browser menu text shown in custom tabs to indicate this is a Fenix tab
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="browser_menu_powered_by">უზრუნველყოფს %1$s</string>
+    <!-- Browser menu text shown in custom tabs to indicate this is a Fenix tab
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="browser_menu_powered_by2">უზრუნველყოფს %1$s</string>
+    <!-- Browser menu button to put the the current page in reader mode -->
+    <string name="browser_menu_read">კითხვის რეჟიმი</string>
+    <!-- Browser menu button to open the current page in an external app -->
+    <string name="browser_menu_open_app_link">გახსნა პროგრამით</string>
+    <!-- Browser menu button to configure reader mode appearance e.g. the used font type and size -->
+    <string name="browser_menu_read_appearance">იერსახე</string>
+
+    <!-- Locale Settings Fragment -->
+    <!-- Content description for tick mark on selected language -->
+    <string name="a11y_selected_locale_content_description">შერჩეული ენა</string>
+    <!-- Content description for search icon -->
+    <string name="a11y_search_icon_content_description">ძიება</string>
+    <!-- Text for default locale item -->
+    <string name="default_locale_text">მოწყობილობის ენის მიხედვით</string>
+    <!-- Placeholder text shown in the search bar before a user enters text -->
+    <string name="locale_search_hint">ძიების ენა</string>
+
+    <!-- Search Fragment -->
+    <!-- Button in the search view that lets a user search by scanning a QR code -->
+    <string name="search_scan_button">წაკითხვა</string>
+    <!-- Button in the search view that lets a user search by using a shortcut -->
+    <string name="search_shortcuts_button">მალსახმობები</string>
+    <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
+    <string name="search_shortcuts_engine_settings">საძიებო სისტემის პარამეტრები</string>
+    <!-- DEPRECATED: Header displayed when selecting a shortcut search engine -->
+    <string name="search_shortcuts_search_with">ძიება</string>
+
+    <!-- Header displayed when selecting a shortcut search engine -->
+    <string name="search_shortcuts_search_with_2">ძიებისთვის გამოიყენეთ:</string>
+    <!-- Button in the search view that lets a user navigate to the site in their clipboard -->
+    <string name="awesomebar_clipboard_title">ბმულის შევსება აღებული ასლით</string>
+    <!-- Button in the search suggestions onboarding that allows search suggestions in private sessions -->
+    <string name="search_suggestions_onboarding_allow_button">დაშვება</string>
+    <!-- Button in the search suggestions onboarding that does not allow search suggestions in private sessions -->
+    <string name="search_suggestions_onboarding_do_not_allow_button">აკრძალვა</string>
+    <!-- Search suggestion onboarding hint title text -->
+    <string name="search_suggestions_onboarding_title">გსურთ ძიების შემოთავაზებები პირად ფანჯრებში?</string>
+    <!-- Search suggestion onboarding hint description text, first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="search_suggestions_onboarding_text">%s გაუზიარებს საძიებო სისტემას, მისამართების ველში აკრეფილ ტექსტს.</string>
+    <!-- Search suggestion onboarding hint Learn more link text -->
+    <string name="search_suggestions_onboarding_learn_more_link">ვრცლად</string>
+
+    <!-- Search Widget -->
+    <!-- Text preview for smaller sized widgets -->
+    <string name="search_widget_text_short">ძიება</string>
+    <!-- Text preview for larger sized widgets -->
+    <string name="search_widget_text_long">ძიება ვებსივრცეში</string>
+
+    <!-- Preferences -->
+    <!-- Title for the settings page-->
+    <string name="settings">პარამეტრები</string>
+    <!-- Preference category for basic settings -->
+    <string name="preferences_category_basics">ძირითადი</string>
+    <!-- Preference category for general settings -->
+    <string name="preferences_category_general">მთავარი</string>
+    <!-- Preference category for all links about Fenix -->
+    <string name="preferences_category_about">შესახებ</string>
+    <!-- Preference for settings related to changing the default search engine -->
+    <string name="preferences_default_search_engine">ნაგულისხმევი საძიებო სისტემა</string>
+    <!-- Preference for settings related to Search -->
+    <string name="preferences_search">ძიება</string>
+
+    <!-- Preference for settings related to Search address bar -->
+    <string name="preferences_search_address_bar">მისამართების ველი</string>
+    <!-- Preference linking to help about Fenix -->
+    <string name="preferences_help">დახმარება</string>
+    <!-- Preference link to rating Fenix on the Play Store -->
+    <string name="preferences_rate">შეაფასეთ Google Play-ზე</string>
+    <!-- Preference for giving feedback about Fenix -->
+    <string name="preferences_feedback">გამოხმაურება</string>
+    <!-- Preference linking to about page for Fenix
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="preferences_about">%1$s – შესახებ</string>
+    <!-- Preference linking to the your rights SUMO page -->
+    <string name="preferences_your_rights">თქვენი უფლებები</string>
+    <!-- Preference for settings related to saved passwords -->
+    <string name="preferences_passwords">პაროლები</string>
+    <!-- Preference for settings related to saved credit cards and addresses -->
+    <string name="preferences_credit_cards_addresses">საკრედიტო ბარათები და მისამართები</string>
+
+    <!-- Preference for settings related to changing the default browser -->
+    <string name="preferences_set_as_default_browser">ნაგულისხმევ ბრაუზერად დაყენება</string>
+    <!-- Preference category for advanced settings -->
+    <string name="preferences_category_advanced">დამატებითი</string>
+    <!-- Preference category for privacy settings -->
+    <string name="preferences_category_privacy">პირადულობა</string>
+    <!-- Preference category for privacy and security settings -->
+    <string name="preferences_category_privacy_security">პირადულობა და უსაფრთხოება</string>
+    <!-- Preference for advanced site permissions -->
+    <string name="preferences_site_permissions">საიტის ნებართვები</string>
+    <!-- Preference for private browsing options -->
+    <string name="preferences_private_browsing_options">პირადი თვალიერება</string>
+    <!-- Preference for opening links in a private tab-->
+    <string name="preferences_open_links_in_a_private_tab">ბმულის პირად ჩანართში გახსნა</string>
+    <!-- Preference for adding private browsing shortcut -->
+    <string name="preferences_add_private_browsing_shortcut">პირადი თვალიერების მალსახმობის დამატება</string>
+    <!-- Preference for accessibility -->
+    <string name="preferences_accessibility">ხელმისაწვდომობა</string>
+    <!-- Preference category for account information -->
+    <string name="preferences_category_account">ანგარიში</string>
+    <!-- Preference shown on banner to sign into account -->
+    <string name="preferences_sign_in">შესვლა</string>
+    <!-- Preference for changing where the toolbar is positioned -->
+    <string name="preferences_toolbar">ხელსაწყოთა ზოლი</string>
+    <!-- Preference for changing default theme to dark or light mode -->
+    <string name="preferences_theme">თემა</string>
+    <!-- Preference for settings related to visual options -->
+    <string name="preferences_customize">მორგება</string>
+    <!-- Preference description for banner about signing in -->
+    <string name="preferences_sign_in_description">დაასინქრონეთ სანიშნების, პაროლები და ა. შ. თქვენი Firefox-ანგარიშით.</string>
+    <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
+    <string name="preferences_account_default_name">Firefox-ანგარიში</string>
+    <!-- Preference text for account title when there was an error syncing FxA -->
+    <string name="preferences_account_sync_error">ხელახლა დაკავშირება სინქრონიზაციის აღსადგენად</string>
+    <!-- Preference for language -->
+    <string name="preferences_language">ენა</string>
+    <!-- Preference for data choices -->
+    <string name="preferences_data_choices">მონაცემთა შერჩევა</string>
+    <!-- Preference for data collection -->
+    <string name="preferences_data_collection">მონაცემთა კრებული</string>
+    <!-- Preference linking to the privacy notice -->
+    <string name="preferences_privacy_link">პირადულობის განაცხადი</string>
+    <!-- Preference category for developer tools -->
+    <string name="developer_tools_category">შემმუშავებლის ხელსაწყოები</string>
+    <!-- Preference for developers -->
+    <string name="preferences_remote_debugging">დაშორებული გამართვა USB-ით</string>
+
+    <!-- Preference title for switch preference to show search shortcuts -->
+    <string name="preferences_show_search_shortcuts">ძიების მალსახმობები</string>
+    <!-- Preference title for switch preference to show search suggestions -->
+    <string name="preferences_show_search_suggestions">ძიების შემოთავაზების ჩვენება</string>
+    <!-- Preference title for switch preference to show search suggestions also in private mode -->
+    <string name="preferences_show_search_suggestions_in_private">ჩვენება პირად ფანჯრებში</string>
+    <!-- Preference title for switch preference to show a clipboard suggestion when searching -->
+    <string name="preferences_show_clipboard_suggestions">აღებული ასლის შემოთავაზებები</string>
+    <!-- Preference title for switch preference to suggest browsing history when searching -->
+    <string name="preferences_search_browsing_history">ძიება დათვალიერების ისტორიაში</string>
+    <!-- Preference title for switch preference to suggest bookmarks when searching -->
+    <string name="preferences_search_bookmarks">სანიშნების ძიება</string>
+    <!-- Preference for account settings -->
+    <string name="preferences_account_settings">ანგარიშის პარამეტრები</string>
+    <!-- Preference for open links in third party apps -->
+    <string name="preferences_open_links_in_apps">ბმულების გახსნა პროგრამებში</string>
+    <!-- Preference for add_ons -->
+    <string name="preferences_addons">დამატებები</string>
+
+    <!-- Account Preferences -->
+    <!-- Preference for triggering sync -->
+    <string name="preferences_sync_now">დასინქრონება ახლავე</string>
+    <!-- Preference category for sync -->
+    <string name="preferences_sync_category">აირჩიეთ, რა დასინქრონდეს</string>
+    <!-- Preference for syncing history -->
+    <string name="preferences_sync_history">ისტორია</string>
+    <!-- Preference for syncing bookmarks -->
+    <string name="preferences_sync_bookmarks">სანიშნები</string>
+    <!-- Preference for syncing logins -->
+    <string name="preferences_sync_logins">ანგარიშები</string>
+    <!-- Preference for signing out -->
+    <string name="preferences_sign_out">გამოსვლა</string>
+    <!-- Preference displays and allows changing current FxA device name -->
+    <string name="preferences_sync_device_name">მოწყობილობის სახელი</string>
+    <!-- Text shown when user enters empty device name -->
+    <string name="empty_device_name_error">სახელი ცარიელი ვერ იქნება.</string>
+    <!-- Label indicating that sync is in progress -->
+    <string name="sync_syncing_in_progress">სინქრონდება…</string>
+    <!-- Label summary indicating that sync failed. The first parameter is the date stamp showing last time it succeeded -->
+    <string name="sync_failed_summary">სინქრონიზაცია ვერ მოხერხდა. ბოლო წარმატებული: %s</string>
+    <!-- Label summary showing never synced -->
+    <string name="sync_failed_never_synced_summary">სინქრონიზაცია ვერ მოხერხდა. ბოლო დასინქრონება: არასდროს</string>
+    <!-- Label summary the date we last synced. The first parameter is date stamp showing last time synced -->
+    <string name="sync_last_synced_summary">ბოლო დასინქრონება: %s</string>
+    <!-- Label summary showing never synced -->
+    <string name="sync_never_synced_summary">ბოლო დასინქრონება: არასდროს</string>
+    <!-- Text for displaying the default device name.
+        The first parameter is the application name, the second is the device manufacturer name
+        and the third is the device model. -->
+    <string name="default_device_name">%s %s %s-ზე</string>
+
+    <!-- Send Tab -->
+    <!-- Name of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
+    <string name="fxa_received_tab_channel_name">მიღებული ჩანართები</string>
+
+    <!-- Description of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
+    <string name="fxa_received_tab_channel_description">შეტყობინებები ჩანართებისთვის მიღებული სხვა Firefox-მოწყობილობებიდან.</string>
+    <!--  The body for these is the URL of the tab received  -->
+    <string name="fxa_tab_received_notification_name">მიღებული ჩანართი</string>
+    <!-- When multiple tabs have been received -->
+    <string name="fxa_tabs_received_notification_name">მიღებული ჩანართი</string>
+    <!-- %s is the device name -->
+    <string name="fxa_tab_received_from_notification_name">ჩანართები %s-იდან</string>
+
+    <!-- Advanced Preferences -->
+    <!-- Preference for tracking protection settings -->
+    <string name="preferences_tracking_protection_settings">თვალთვალისგან დაცვა</string>
+    <!-- Preference switch for tracking protection -->
+    <string name="preferences_tracking_protection">თვალთვალისგან დაცვა</string>
+    <!-- Preference switch description for tracking protection -->
+    <string name="preferences_tracking_protection_description">შეზღუდეთ შიგთავსი და სკრიპტები, რომლებიც თვალს გადევნებთ ინტერნეტში</string>
+    <!-- Preference for tracking protection exceptions -->
+    <string name="preferences_tracking_protection_exceptions">გამონაკლისები</string>
+    <!-- Preference description for tracking protection exceptions -->
+    <string name="preferences_tracking_protection_exceptions_description">თვალთვალისგან დაცვა გამორთულია ამ საიტებზე</string>
+    <!-- Button in Exceptions Preference to turn on tracking protection for all sites (remove all exceptions) -->
+    <string name="preferences_tracking_protection_exceptions_turn_on_for_all">ჩართვა ყველა საიტზე</string>
+    <!-- Text displayed when there are no exceptions -->
+    <string name="exceptions_empty_message_description">გამონაკლისებით შეძლებთ, გამორთოთ თვალთვალისგან დაცვა შერჩეულ საიტებზე.</string>
+    <!-- Text displayed when there are no exceptions, with learn more link that brings users to a tracking protection SUMO page -->
+    <string name="exceptions_empty_message_learn_more_link">ვრცლად</string>
+
+    <!-- Description in Quick Settings that tells user tracking protection is off globally for all sites, and links to Settings to turn it on -->
+    <string name="preferences_tracking_protection_turned_off_globally">გამორთულია სრულად, ჩასართავად გადადით პარამეტრებში.</string>
+
+    <!-- Preference switch for Telemetry -->
+    <string name="preferences_telemetry">გაზომვები</string>
+    <!-- Preference switch for usage and technical data collection -->
+    <string name="preference_usage_data">გამოყენების და ტექნიკური მონაცემები</string>
+    <!-- Preference description for usage and technical data collection -->
+    <string name="preferences_usage_data_description">გაუზიარებს წარმადობის, გამოყენების, აპრატურისა და მორგების მონაცემებს Mozilla-ს, რომ %1$s გახდეს უკეთესი</string>
+
+    <!-- Preference switch for marketing data collection -->
+    <string name="preferences_marketing_data">მარკეტინგული მონაცემები</string>
+    <!-- Preference description for marketing data collection, parameter is the app name (e.g. Firefox) -->
+    <string name="preferences_marketing_data_description">გაუზიარებს მონაცემებს, თუ რომელი შესაძლებლობებით მოგწონთ %1$s ყველაზე მეტად, Leanplum-ს, მობილურის მარკეტინგის მომსახურების ჩვენს მომწოდებელს.</string>
+    <!-- Title for experiments preferences -->
+    <string name="preference_experiments">კვლევები</string>
+    <!-- Summary for experiments preferences -->
+    <string name="preference_experiments_summary">საშუალებას აძლევს Mozilla-ს დაამატოს საცდელი შესაძლებლობები და აღრიცხოს მათი მონაცემები</string>
+    <!-- Preference switch for crash reporter -->
+    <string name="preferences_crash_reporter">გათიშვების მომხსენებელი</string>
+    <!-- Preference switch for Mozilla location service -->
+    <string name="preferences_mozilla_location_service">Mozilla-ს მდებარეობის მომსახურება</string>
+    <!-- Preference switch for app health report. The first parameter is the name of the application (For example: Fenix) -->
+    <string name="preferences_fenix_health_report">%s სიჯანსაღის მოხსენება</string>
+
+    <!-- Turn On Sync Preferences -->
+    <!-- Header of the Turn on Sync preference view -->
+    <string name="preferences_sync">სინქრონიზაციის ჩართვა</string>
+    <!-- Preference for pairing -->
+    <string name="preferences_sync_pair">წააკითხეთ მიერთების კოდი კომპიუტერის Firefox-ში</string>
+    <!-- Preference for account login -->
+    <string name="preferences_sync_sign_in">შესვლა</string>
+    <!-- Preference for reconnecting to FxA sync -->
+    <string name="preferences_sync_sign_in_to_reconnect">შესვლა ხელახლა დასაკავშირებლად</string>
+    <!-- Preference for removing FxA account -->
+    <string name="preferences_sync_remove_account">ანგარიშის მოცილება</string>
+
+    <!-- Pairing Feature strings -->
+    <!-- Instructions on how to access pairing -->
+    <string name="pair_instructions"><![CDATA[გახსენით <b>firefox.com/pair</b> Firefox-ში თქვენს კომპიუტერზე QR-კოდის მისაღებად.]]></string>
+    <!-- Button to open camera for pairing -->
+    <string name="pair_open_camera">ჩართეთ კამერა</string>
+    <!-- Button to cancel pairing -->
+    <string name="pair_cancel">გაუქმება</string>
+
+    <!-- Toolbar Preferences -->
+    <!-- Preference for using top toolbar -->
+    <string name="preference_top_toolbar">ზემოთ</string>
+    <!-- Preference for using bottom toolbar -->
+    <string name="preference_bottom_toolbar">ქვემოთ</string>
+
+    <!-- Theme Preferences -->
+    <!-- Preference for using light theme -->
+    <string name="preference_light_theme">ნათელი</string>
+    <!-- Preference for using dark theme -->
+    <string name="preference_dark_theme">მუქი</string>
+    <!-- Preference for using using dark or light theme automatically set by battery -->
+    <string name="preference_auto_battery_theme">ბატარეის დამზოგის მიხედვით</string>
+    <!-- Preference for using following device theme -->
+    <string name="preference_follow_device_theme">მოწყობილობის თემის მიხედვით</string>
+
+    <!-- Library -->
+    <!-- Option in Library to open Sessions page -->
+    <string name="library_sessions">სეანსები</string>
+    <!-- Option in Library to open Screenshots page -->
+    <string name="library_screenshots">ეკრანის სურათები</string>
+    <!-- Option in Library to open Downloads page -->
+    <string name="library_downloads">ჩამოტვირთვები</string>
+    <!-- Option in library to open Bookmarks page -->
+    <string name="library_bookmarks">სანიშნები</string>
+    <!-- Option in library to open Desktop Bookmarks root page -->
+    <string name="library_desktop_bookmarks_root">კომპიუტერის სანიშნები</string>
+    <!-- Option in library to open Desktop Bookmarks "menu" page -->
+    <string name="library_desktop_bookmarks_menu">სანიშნების მენიუ</string>
+    <!-- Option in library to open Desktop Bookmarks "toolbar" page -->
+    <string name="library_desktop_bookmarks_toolbar">სანიშნების ხელსაწყოთა ზოლი</string>
+    <!-- Option in library to open Desktop Bookmarks "unfiled" page -->
+    <string name="library_desktop_bookmarks_unfiled">სხვა სანიშნეები</string>
+    <!-- Option in Library to open History page -->
+    <string name="library_history">ისტორია</string>
+    <!-- Option in Library to open Reading List -->
+    <string name="library_reading_list">წასაკითხთა სია</string>
+    <!-- Menu Item Label for Search in Library -->
+    <string name="library_search">ძიება</string>
+    <!-- Library Page Title -->
+    <string name="library_title">ბიბლიოთეკა</string>
+    <!-- Settings Page Title -->
+    <string name="settings_title">პარამეტრები</string>
+    <!-- Content description (not visible, for screen readers etc.): "Menu icon for items on a history item" -->
+    <string name="content_description_history_menu">ისტორიის ჩანაწერების მენიუ</string>
+    <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
+    <string name="content_description_close_button">დახურვა</string>
+
+    <!-- Sessions -->
+    <!-- Title for the list of tabs -->
+    <string name="tab_header_label">გახსნილი ჩანართები</string>
+    <!-- Title for the list of tabs in the current private session -->
+    <string name="tabs_header_private_title">პირადი სეანსი</string>
+    <!-- Title for the list of tabs in the current private session -->
+    <string name="tabs_header_private_tabs_title">პირადი ჩანართები</string>
+    <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
+    <string name="add_tab">ჩანართის დამატება</string>
+    <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
+    <string name="close_tab">ჩანართის დახურვა</string>
+    <!-- Content description (not visible, for screen readers etc.): Close tab <title> button. First parameter is tab title  -->
+    <string name="close_tab_title">დაიხუროს ჩანართი %s</string>
+    <!-- Content description (not visible, for screen readers etc.): Opens the open tabs menu when pressed -->
+    <string name="open_tabs_menu">ჩანართების მენიუს გახსნა</string>
+    <!-- Open tabs menu item to close all tabs -->
+    <string name="tabs_menu_close_all_tabs">ყველა ჩანართის დახურვა</string>
+    <!-- Open tabs menu item to share all tabs -->
+    <string name="tabs_menu_share_tabs">ჩანართების გაზიარება</string>
+    <!-- Open tabs menu item to save tabs to collection -->
+    <string name="tabs_menu_save_to_collection">კრებულში შენახვა</string>
+    <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
+    <string name="tab_menu">ჩანართის მენიუ</string>
+    <!-- Tab menu item to share the tab -->
+    <string name="tab_share">ჩანართის გაზიარება</string>
+    <!-- Button in the current session menu. Deletes the session when pressed -->
+    <string name="current_session_delete">წაშლა</string>
+    <!-- Button in the current session menu. Saves the session when pressed -->
+    <string name="current_session_save">შენახვა</string>
+    <!-- Button in the current session menu. Opens the share menu when pressed -->
+    <string name="current_session_share">გაზიარება</string>
+    <!-- Content description (not visible, for screen readers etc.): Title icon for current session menu -->
+    <string name="current_session_image">მიმდინარე სეანსის გამოსახულება</string>
+    <!-- Button to save the current set of tabs into a collection -->
+    <string name="save_to_collection">კრებულში შენახვა</string>
+    <!-- Text for the menu button to delete a collection -->
+    <string name="collection_delete">კრებულის წაშლა</string>
+    <!-- Text for the menu button to rename a collection -->
+    <string name="collection_rename">კრებულის გადარქმევა</string>
+    <!-- Text for the button to open tabs of the selected collection -->
+    <string name="collection_open_tabs">ჩანართების გახსნა</string>
+    <!-- Text for the menu button to remove a top site -->
+    <string name="remove_top_site">მოცილება</string>
+
+    <!-- History -->
+    <!-- Text for the button to clear all history -->
+    <string name="history_delete_all">ისტორიის წაშლა</string>
+
+    <!-- Text for the dialog to confirm clearing all history -->
+    <string name="history_delete_all_dialog">ნამდვილად გსურთ ისტორიის გასუფთავება?</string>
+    <!-- Text for positive action to delete history in deleting history dialog -->
+    <string name="history_clear_dialog">გასუფთავება</string>
+    <!-- Text for the button to delete a single history item -->
+    <string name="history_delete_item">წაშლა</string>
+    <!-- History multi select title in app bar
+    The first parameter is the number of bookmarks selected -->
+    <string name="history_multi_select_title">შერჩეულია %1$d</string>
+    <!-- Text for the button to clear selected history items. The first parameter
+        is a digit showing the number of items you have selected -->
+    <string name="history_delete_some">%1$d ჩანაწერის წაშლა</string>
+    <!-- Text for the header that groups the history for last 24 hours -->
+    <string name="history_24_hours">ბოლო 24 საათი</string>
+    <!-- Text for the header that groups the history the past 7 days -->
+    <string name="history_7_days">ბოლო 7 დღე</string>
+    <!-- Text for the header that groups the history the past 30 days -->
+    <string name="history_30_days">ბოლო 30 დღე</string>
+    <!-- Text for the header that groups the history older than the last month -->
+    <string name="history_older">უფრო ძველი</string>
+    <!-- Text shown when no history exists -->
+    <string name="history_empty_message">ისტორია არაა</string>
+
+    <!-- Crashes -->
+    <!-- Title text displayed on the tab crash page. This first parameter is the name of the application (For example: Fenix) -->
+    <string name="tab_crash_title_2">ვწუხვართ. %1$s ვერ ტვირთავს ამ გვერდს.</string>
+    <!-- Description text displayed on the tab crash page -->
+    <string name="tab_crash_description">შეგიძლიათ სცადოთ ამ ჩანართის აღდგენა ან დახურვა ქვემოთ.</string>
+    <!-- Send crash report checkbox text on the tab crash page -->
+    <string name="tab_crash_send_report">გათიშვის მოხსენების გადაგზავნა Mozilla-სთვის</string>
+    <!-- Close tab button text on the tab crash page -->
+    <string name="tab_crash_close">ჩანართის დახურვა</string>
+    <!-- Restore tab button text on the tab crash page -->
+    <string name="tab_crash_restore">ჩანართის აღდგენა</string>
+
+    <!-- Content Description for session item menu button -->
+    <string name="content_description_session_menu">სეანსის პარამეტრები</string>
+
+    <!-- Content Description for session item share button -->
+    <string name="content_description_session_share">სეანსის გაზიარება</string>
+
+    <!-- Bookmarks -->
+    <!-- Content description for bookmarks library menu -->
+    <string name="bookmark_menu_content_description">სანიშნების მენიუ</string>
+    <!-- Screen title for editing bookmarks -->
+    <string name="bookmark_edit">სანიშნის ჩასწორება</string>
+    <!-- Screen title for selecting a bookmarks folder -->
+    <string name="bookmark_select_folder">საქაღალდის მითითება</string>
+    <!-- Screen title for adding a bookmarks folder -->
+    <string name="bookmark_add_folder">საქაღალდის დამატება</string>
+    <!-- deprecated: Snackbar title shown after a bookmark has been created. -->
+    <string name="bookmark_created_snackbar">სანიშნი შექმნილია.</string>
+    <!-- Snackbar title shown after a bookmark has been created. -->
+    <string name="bookmark_saved_snackbar">ჩანიშნულია!</string>
+    <!-- Snackbar edit button shown after a bookmark has been created. -->
+    <string name="edit_bookmark_snackbar_action">ჩასწორება</string>
+    <!-- Bookmark overflow menu edit button -->
+    <string name="bookmark_menu_edit_button">ჩასწორება</string>
+    <!-- Bookmark overflow menu select button -->
+    <string name="bookmark_menu_select_button">შერჩევა</string>
+    <!-- Bookmark overflow menu copy button -->
+    <string name="bookmark_menu_copy_button">ასლი</string>
+    <!-- Bookmark overflow menu share button -->
+    <string name="bookmark_menu_share_button">გაზიარება</string>
+    <!-- Bookmark overflow menu open in new tab button -->
+    <string name="bookmark_menu_open_in_new_tab_button">ახალ ჩანართში გახსნა</string>
+    <!-- Bookmark overflow menu open in private tab button -->
+    <string name="bookmark_menu_open_in_private_tab_button">პირად ჩანართში გახსნა</string>
+
+    <!-- Bookmark overflow menu delete button -->
+    <string name="bookmark_menu_delete_button">წაშლა</string>
+    <!--Bookmark overflow menu save button -->
+    <string name="bookmark_menu_save_button">შენახვა</string>
+
+    <!-- Bookmark multi select title in app bar
+     The first parameter is the number of bookmarks selected -->
+    <string name="bookmarks_multi_select_title">შერჩეულია %1$d</string>
+    <!-- Bookmark editing screen title -->
+    <string name="edit_bookmark_fragment_title">სანიშნის ჩასწორება</string>
+    <!-- Bookmark folder editing screen title -->
+    <string name="edit_bookmark_folder_fragment_title">საქაღალდის ჩასწორება</string>
+    <!-- Bookmark sign in button message -->
+    <string name="bookmark_sign_in_button">შედით დასინქრონებული სანიშნეების სანახავად</string>
+    <!-- Bookmark URL editing field label -->
+    <string name="bookmark_url_label">URL-ბმული</string>
+    <!-- Bookmark FOLDER editing field label -->
+    <string name="bookmark_folder_label">საქაღალდე</string>
+    <!-- Bookmark NAME editing field label -->
+    <string name="bookmark_name_label">სახელი</string>
+    <!-- Bookmark add folder screen title -->
+    <string name="bookmark_add_folder_fragment_label">საქაღალდის დამატება</string>
+    <!-- Bookmark select folder screen title -->
+    <string name="bookmark_select_folder_fragment_label">საქაღალდის მითითება</string>
+    <!-- Bookmark editing error missing title -->
+    <string name="bookmark_empty_title_error">უნდა ჰქონდეს სათაური</string>
+    <!-- Bookmark editing error missing or improper URL -->
+    <string name="bookmark_invalid_url_error">არამართებული URL</string>
+    <!-- Bookmark screen message for empty bookmarks folder -->
+    <string name="bookmarks_empty_message">სანიშნები არაა აქ</string>
+    <!-- Bookmark snackbar message on deletion
+     The first parameter is the host part of the URL of the bookmark deleted, if any -->
+    <string name="bookmark_deletion_snackbar_message">წაიშალა %1$s</string>
+    <!-- Bookmark snackbar message on deleting multiple bookmarks -->
+    <string name="bookmark_deletion_multiple_snackbar_message">იშლება მითითებული სანიშნები</string>
+    <!-- Bookmark undo button for deletion snackbar action -->
+    <string name="bookmark_undo_deletion">დაბრუნება</string>
+
+    <!-- Site Permissions -->
+    <!-- Site permissions preferences header -->
+    <string name="permissions_header">ნებართვები</string>
+    <!-- Button label that take the user to the Android App setting -->
+    <string name="phone_feature_go_to_settings">პარამეტრებზე გადასვლა</string>
+    <!-- Content description (not visible, for screen readers etc.): Quick settings sheet
+        to give users access to site specific information / settings. For example:
+        Secure settings status and a button to modify site permissions -->
+    <string name="quick_settings_sheet">სწრაფი პარამეტრების არე</string>
+    <!-- Label that indicates that this option it the recommended one -->
+    <string name="phone_feature_recommended">სასურველი</string>
+    <!-- button that allows editing site permissions settings -->
+    <string name="quick_settings_sheet_manage_site_permissions">საიტის ნებართვების მართვა...</string>
+    <!-- Button label for clearing all the information of site permissions-->
+    <string name="clear_permissions">ნებართვების გასუფთავება</string>
+    <!-- Button label for clearing a site permission-->
+    <string name="clear_permission">ნებართვის გასუფთავება</string>
+    <!-- Button label for clearing all the information on all sites-->
+    <string name="clear_permissions_on_all_sites">ყველა საიტის ნებართვის გასუფთავება</string>
+    <!-- Preference for altering video and audio autoplay for all websites -->
+    <string name="preference_browser_feature_autoplay">თვითგაშვება</string>
+    <!-- Preference for altering the camera access for all websites -->
+    <string name="preference_phone_feature_camera">კამერა</string>
+    <!-- Preference for altering the microphone access for all websites -->
+    <string name="preference_phone_feature_microphone">მიკროფონი</string>
+    <!-- Preference for altering the location access for all websites -->
+    <string name="preference_phone_feature_location">მდებარეობა</string>
+    <!-- Preference for altering the notification access for all websites -->
+    <string name="preference_phone_feature_notification">შეტყობინება</string>
+    <!-- Label that indicates that a permission must be asked always -->
+    <string name="preference_option_phone_feature_ask_to_allow">კითხვა ყოველ ჯერზე</string>
+    <!-- Label that indicates that a permission must be blocked -->
+    <string name="preference_option_phone_feature_blocked">შეზღუდული</string>
+    <!-- Label that indicates that a permission must be allowed -->
+    <string name="preference_option_phone_feature_allowed">დაშვებული</string>
+    <!--Label that indicates a permission is by the Android OS-->
+    <string name="phone_feature_blocked_by_android">ზღუდავს Android</string>
+    <!-- Preference for showing a list of websites that the default configurations won't apply to them -->
+    <string name="preference_exceptions">გამონაკლისები</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to on -->
+    <string name="tracking_protection_on">ჩართ.</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to off -->
+    <string name="tracking_protection_off">გამორთ.</string>
+    <!-- Label that indicates video and audio autoplay is blocked -->
+    <string name="preference_option_autoplay_blocked">ვიდეო და ხმა შეზღუდულია</string>
+    <!-- Label that indicates video and audio autoplay is allowed -->
+    <string name="preference_option_autoplay_allowed">ვიდეო და ხმა დაშვებულია</string>
+    <!-- Summary of delete browsing data on quit preference if it is set to on -->
+    <string name="delete_browsing_data_quit_on">ჩართ.</string>
+    <!-- Summary of delete browsing data on quit preference if it is set to off -->
+    <string name="delete_browsing_data_quit_off">გამორთ.</string>
+
+    <!-- Collections -->
+    <!-- Label to describe what collections are to a new user without any collections -->
+    <string name="collections_description">შეკრიბეთ რაც მნიშვნელოვანია თქვენთვის. დასაწყებად, შეინახეთ გახსნილი ჩანართები ახალ კრებულში.</string>
+
+    <!-- Collections header on home fragment -->
+    <string name="collections_header">კრებულები</string>
+    <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
+    <string name="collection_menu_button_content_description">კრებულის მენიუ</string>
+    <!-- No Open Tabs Message Header -->
+    <string name="no_collections_header">კრებულები არაა</string>
+    <!-- No Open Tabs Message Description -->
+    <string name="no_collections_description">თქვენი კრებულები გამოჩნდება აქ.</string>
+    <!-- Title for the "select tabs" step of the collection creator -->
+    <string name="create_collection_select_tabs">ჩანართების შერჩევა</string>
+    <!-- Title for the "select collection" step of the collection creator -->
+    <string name="create_collection_select_collection">კრებულის შერჩევა</string>
+    <!-- Title for the "name collection" step of the collection creator -->
+    <string name="create_collection_name_collection">კრებულის სახელი</string>
+    <!-- Button to add new collection for the "select collection" step of the collection creator -->
+    <string name="create_collection_add_new_collection">ახალი კრებულის დამატება</string>
+    <!-- Button to select all tabs in the "select tabs" step of the collection creator -->
+    <string name="create_collection_select_all">ყველას შერჩევა</string>
+    <!-- Button to deselect all tabs in the "select tabs" step of the collection creator -->
+    <string name="create_collection_deselect_all">მონიშვნის გაუქმება</string>
+    <!-- Text to prompt users to select the tabs to save in the "select tabs" step of the collection creator -->
+    <string name="create_collection_save_to_collection_empty">ჩანართების შერჩევა შესანახად</string>
+    <!-- Text to show users how many tabs they have selected in the "select tabs" step of the collection creator.
+     %d is a placeholder for the number of tabs selected. -->
+    <string name="create_collection_save_to_collection_tabs_selected">%d ჩანართია შერჩეული</string>
+    <!-- Text to show users they have one tab selected in the "select tabs" step of the collection creator.
+    %d is a placeholder for the number of tabs selected. -->
+    <string name="create_collection_save_to_collection_tab_selected">%d ჩანართია შერჩეული</string>
+    <!-- Text shown in snackbar when multiple tabs have been saved in a collection -->
+    <string name="create_collection_tabs_saved">ჩანართები შენახულია!</string>
+    <!-- Text shown in snackbar when one tab has been saved in a collection -->
+    <string name="create_collection_tab_saved">ჩანართი შენახულია!</string>
+    <!-- Content description (not visible, for screen readers etc.): button to close the collection creator -->
+    <string name="create_collection_close">დახურვა</string>
+    <!-- Button to save currently selected tabs in the "select tabs" step of the collection creator-->
+    <string name="create_collection_save">შენახვა</string>
+
+    <!-- Default name for a new collection in "name new collection" step of the collection creator. %d is a placeholder for the number of collections-->
+    <string name="create_collection_default_name">კრებული %d</string>
+
+    <!-- Share -->
+    <!-- Share screen header -->
+    <string name="share_header">გაგზავნა და გაზიარება</string>
+    <!-- Share screen header -->
+    <string name="share_header_2">გაზიარება</string>
+    <!-- Content description (not visible, for screen readers etc.):
+        "Share" button. Opens the share menu when pressed. -->
+    <string name="share_button_content_description">გაზიარება</string>
+    <!-- Sub-header in the dialog to share a link to another app -->
+    <string name="share_link_subheader">ბმულის გაზიარება</string>
+    <!-- Sub-header in the dialog to share a link to another sync device -->
+    <string name="share_device_subheader">მოწყობილობაზე გაგზავნა</string>
+    <!-- Sub-header in the dialog to share a link to an app from the full list -->
+    <string name="share_link_all_apps_subheader">ყველა მოქმედება</string>
+    <!-- Sub-header in the dialog to share a link to an app from the most-recent sorted list -->
+    <string name="share_link_recent_apps_subheader">ბოლოს გამოყენებული</string>
+    <!-- An option from the share dialog to sign into sync -->
+    <string name="sync_sign_in">სინქრონიზაციაში შესვლა</string>
+    <!-- An option from the share dialog to send link to all other sync devices -->
+    <string name="sync_send_to_all">ყველა მოწყობილობაზე გაგზავნა</string>
+    <!-- An option from the share dialog to reconnect to sync -->
+    <string name="sync_reconnect">ხელახლა დაკავშირება სინქრონიზაციასთან</string>
+    <!-- Text displayed when sync is offline and cannot be accessed -->
+    <string name="sync_offline">კავშირგარეშე</string>
+    <!-- An option to connect additional devices -->
+    <string name="sync_connect_device">სხვა მოწყობილობის დაკავშირება</string>
+    <!-- The dialog text shown when additional devices are not available -->
+    <string name="sync_connect_device_dialog">ჩანართის გასაგზავნად, შედით Firefox-ში, სულ მცირე, კიდევ ერთი სხვა მოწყობილობიდან.</string>
+    <!-- Confirmation dialog button -->
+    <string name="sync_confirmation_button">გასაგებია</string>
+    <!-- Share error message -->
+    <string name="share_error_snackbar">ამ პროგრამასთან გაზიარება შეუძლებელია</string>
+    <!-- Add new device screen title -->
+    <string name="sync_add_new_device_title">მოწყობილობაზე გაგზავნა</string>
+    <!-- Text for the warning message on the Add new device screen -->
+    <string name="sync_add_new_device_message">მოწყობილობები არაა დაკავშირებული</string>
+    <!-- Text for the button to learn about sending tabs -->
+    <string name="sync_add_new_device_learn_button">ვრცლად, ჩანართების გაგზავნის შესახებ…</string>
+    <!-- Text for the button to connect another device -->
+    <string name="sync_add_new_device_connect_button">სხვა მოწყობილობის დაკავშირება…</string>
+
+    <!-- Notifications -->
+    <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active. -->
+    <string name="notification_pbm_channel_name">პირადი დათვალიერების რეჟიმი</string>
+    <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
+    <string name="notification_pbm_delete_text">პირადი ჩანართების წაშლა</string>
+    <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
+    <string name="notification_pbm_delete_text_2">პირადი ჩანართების დახურვა</string>
+    <!-- Notification action to open Fenix and resume the current browsing session. -->
+    <string name="notification_pbm_action_open">გახსნა</string>
+    <!-- Notification action to delete all current private browsing sessions AND switch to Fenix (bring it to the foreground) -->
+    <string name="notification_pbm_action_delete_and_open">წაშლა და გახსნა</string>
+    <!-- Name of the "Powered by Fenix" notification channel. Displayed in the "App notifications" system settings for the app -->
+    <string name="notification_powered_by_channel_name">უზრუნველყოფს</string>
+
+    <!-- Text shown in snackbar when user deletes a collection -->
+    <string name="snackbar_collection_deleted">კრებული წაიშალა</string>
+    <!-- Text shown in snackbar when user renames a collection -->
+    <string name="snackbar_collection_renamed">კრებულს გადაერქვა</string>
+    <!-- Text shown in snackbar when user deletes a tab -->
+    <string name="snackbar_tab_deleted">ჩანართი წაიშალა</string>
+    <!-- Text shown in snackbar when user deletes all tabs -->
+    <string name="snackbar_tabs_deleted">ჩანართები წაიშალა</string>
+    <!-- Text shown in snackbar when user closes a tab -->
+    <string name="snackbar_tab_closed">ჩანართი დაიხურა</string>
+    <!-- Text shown in snackbar when user closes all tabs -->
+    <string name="snackbar_tabs_closed">ჩანართები დაიხურა</string>
+    <!-- Text shown in snackbar when user adds a site to top sites -->
+    <string name="snackbar_added_to_top_sites">დაემატა რჩეულ საიტებში!</string>
+    <!-- Text shown in snackbar when user closes a private tab -->
+    <string name="snackbar_private_tab_closed">პირადი ჩანართი დაიხურა</string>
+    <!-- Text shown in snackbar when user closes all private tabs -->
+    <string name="snackbar_private_tabs_closed">პირადი ჩანართები დაიხურა</string>
+    <!-- Text shown in snackbar when user deletes all private tabs -->
+    <string name="snackbar_private_tabs_deleted">პირადი ჩანართები წაიშალა</string>
+    <!-- Text shown in snackbar to undo deleting a tab, top site or collection -->
+    <string name="snackbar_deleted_undo">დაბრუნება</string>
+    <!-- Text shown in snackbar when user removes a top site -->
+    <string name="snackbar_top_site_removed">საიტი მოცილდა</string>
+    <!-- Text for action to undo deleting a tab or collection shown in a11y dialog -->
+    <string name="a11y_dialog_deleted_undo">დაბრუნება</string>
+    <!-- Text for action to confirm deleting a tab or collection shown in a11y dialog -->
+    <string name="a11y_dialog_deleted_confirm">დადასტურება</string>
+    <!-- QR code scanner prompt which appears after scanning a code, but before navigating to it
+        First parameter is the name of the app, second parameter is the URL or text scanned-->
+    <string name="qr_scanner_confirmation_dialog_message">ნებართვა, რომ %1$s გახსნის %2$s</string>
+    <!-- QR code scanner prompt dialog positive option to allow navigation to scanned link -->
+    <string name="qr_scanner_dialog_positive">დაშვება</string>
+    <!-- QR code scanner prompt dialog positive option to deny navigation to scanned link -->
+    <string name="qr_scanner_dialog_negative">უარყოფა</string>
+    <!-- Tab collection deletion prompt dialog message. Placeholder will be replaced with the collection name -->
+    <string name="tab_collection_dialog_message">ნამდვილად გსურთ, წაიშალოს %1$s?</string>
+    <!-- Tab collection deletion prompt dialog option to delete the collection -->
+    <string name="tab_collection_dialog_positive">წაშლა</string>
+    <!-- Tab collection deletion prompt dialog option to cancel deleting the collection -->
+    <string name="tab_collection_dialog_negative">გაუქმება</string>
+    <!-- Text displayed in a notification when the user enters full screen mode -->
+    <string name="full_screen_notification">სრულ ეკრანზე გაშლა</string>
+    <!-- Message for copying the URL via long press on the toolbar -->
+    <string name="url_copied">URL-ს ასლი აღებულია</string>
+    <!-- Sample text for accessibility font size -->
+    <string name="accessibility_text_size_sample_text_1">ეს ტექსტი ნიმუშია. იგი აჩვენებს, თუ როგორ გამოჩნდება ნაწერი, ამ პარამეტრით ზომის გაზრდისას ან შემცირებისას.</string>
+    <!-- Summary for Accessibility Text Size Scaling Preference -->
+    <string name="preference_accessibility_text_size_summary">გაზარდეთ ან შეამცირეთ ტექსტის ზომა საიტებზე</string>
+    <!-- Title for Accessibility Text Size Scaling Preference -->
+    <string name="preference_accessibility_font_size_title">შრიფტის ზომა</string>
+
+    <!-- Title for Accessibility Text Automatic Size Scaling Preference -->
+    <string name="preference_accessibility_auto_size">შრიფტის ავტომატური ზომა</string>
+    <!-- Summary for Accessibility Text Automatic Size Scaling Preference -->
+    <string name="preference_accessibility_auto_size_summary">შრიფტის ზომის განსაზღვრა Android-პარამეტრებით. გათიშეთ ზომის შესაცვლელად.</string>
+
+    <!-- Title for the Delete browsing data preference -->
+    <string name="preferences_delete_browsing_data">დათვალიერების მონაცემების წაშლა</string>
+    <!-- Title for the tabs item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_tabs_title">გახსნილი ჩანართები</string>
+    <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
+    <string name="preferences_delete_browsing_data_tabs_subtitle">%d ჩანართი</string>
+    <!-- Title for the data and history items in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_browsing_data_title">დათვალიერების ისტორია და საიტის მონაცემები</string>
+    <!-- Subtitle for the data and history items in delete browsing data, parameter will be replaced with the
+        number of history items the user has -->
+    <string name="preferences_delete_browsing_data_browsing_data_subtitle">%d მისამართი</string>
+    <!-- Title for history items in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_browsing_history_title">ისტორია</string>
+    <!-- Subtitle for the history items in delete browsing data, parameter will be replaced with the
+        number of history pages the user has -->
+    <string name="preferences_delete_browsing_data_browsing_history_subtitle">%d გვერდი</string>
+    <!-- Title for the cookies item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cookies">ფუნთუშები</string>
+    <!-- Subtitle for the cookies item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cookies_subtitle">გამოხვალთ ანგარიშებიდან საიტების უმრაველსობაზე</string>
+    <!-- Title for the cached images and files item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cached_files">შენახული სურათებისა და ფაილების ასლები</string>
+    <!-- Subtitle for the cached images and files item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cached_files_subtitle">გაათავისუფლებს მეხსიერებაზე ადგილს</string>
+    <!-- Title for the site permissions item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_site_permissions">საიტის ნებართვები</string>
+    <!-- Text for the button to delete browsing data -->
+    <string name="preferences_delete_browsing_data_button">დათვალიერების მონაცემების წაშლა</string>
+    <!-- Title for the Delete browsing data on quit preference -->
+    <string name="preferences_delete_browsing_data_on_quit">დათვალიერების მონაცემების წაშლა გამოსვლისას</string>
+
+    <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
+    <string name="preference_summary_delete_browsing_data_on_quit">წაიშლება დათვალიერებული გვერდების მონაცემები მთავარი მენიუში „გამოსვლის“ არჩევისას</string>
+    <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
+    <string name="preference_summary_delete_browsing_data_on_quit_2">წაიშლება დათვალიერებული გვერდების მონაცემები მთავარი მენიუში „გამოსვლის“ არჩევისას</string>
+    <!-- Category for history items to delete on quit in delete browsing data on quit -->
+    <string name="preferences_delete_browsing_data_on_quit_browsing_history">დათვალიერების ისტორია</string>
+    <!-- Action item in menu for the Delete browsing data on quit feature -->
+    <string name="delete_browsing_data_on_quit_action">გამოსვლა</string>
+
+    <!-- Dialog message to the user asking to delete browsing data. -->
+    <string name="delete_browsing_data_prompt_message">სრულად გაასუფთავებს დათვალიერების მონაცემებს.</string>
+    <!-- Dialog message to the user asking to delete browsing data. Parameter will be replaced by app name. -->
+    <string name="delete_browsing_data_prompt_message_3">%s წაშლის დათვალიერების მითითებულ მონაცემებს</string>
+    <!-- Text for the cancel button for the data deletion dialog -->
+    <string name="delete_browsing_data_prompt_cancel">გაუქმება</string>
+    <!-- Text for the allow button for the data deletion dialog -->
+    <string name="delete_browsing_data_prompt_allow">წაშლა</string>
+    <!-- Text for the snackbar confirmation that the data was deleted -->
+    <string name="preferences_delete_browsing_data_snackbar">დათვალიერების მონაცემები წაშლილია</string>
+    <!-- Text for the snackbar to show the user that the deletion of browsing data is in progress -->
+    <string name="deleting_browsing_data_in_progress">იშლება დათვალიერების მონაცემები…</string>
+
+    <!-- Onboarding -->
+    <!-- Text for onboarding welcome message
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_header">მოგესალმებათ %s!</string>
+    <!-- text for the Firefox Accounts section header -->
+    <string name="onboarding_fxa_section_header">უკვე გაქვთ ანგარიში?</string>
+    <!-- text for the Firefox Preview feature section header
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_feature_section_header">გაიცანით %s</string>
+    <!-- text for the "What's New" onboarding card header -->
+    <string name="onboarding_whats_new_header1">იხილეთ სიახლეები</string>
+    <!-- text for the "what's new" onboarding card description
+    The first parameter is the short name of the app (e.g. Firefox) -->
+    <string name="onboarding_whats_new_description">გაინტერესებთ როგორ შეიცვალა %s გარეგნულად? გსურთ გაეცნოთ ცვლილებებს?</string>
+    <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
+    <string name="onboarding_whats_new_description_linktext">მიიღეთ პასუხები აქ</string>
+    <!-- text for the firefox account onboarding card header
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_firefox_account_header">სრულყოფილად გამოიყენეთ %s.</string>
+    <!-- text for the firefox account onboarding card header when we detect you're already signed in to
+        another Firefox browser. (The word `Firefox` should not be translated)
+        The first parameter is the email of the detected user's account -->
+    <string name="onboarding_firefox_account_auto_signin_header_2">თქვენ შესული ხართ, როგორც %s სხვა Firefox-ბრაუზერზე ამ ტელეფონში. გსურთ ამ ანგარიშით შესვლა?</string>
+    <!-- text for the button to confirm automatic sign-in -->
+    <string name="onboarding_firefox_account_auto_signin_confirm">დიახ, შევალ</string>
+    <!-- text for the automatic sign-in button while signing in is in process -->
+    <string name="onboarding_firefox_account_signing_in">შესვლა…</string>
+    <!-- text for the button to manually sign into Firefox account. The word "Firefox" should not be translated -->
+    <string name="onboarding_firefox_account_sign_in">შესვლა Firefox-ში</string>
+    <!-- text for the button to stay signed out when presented with an option to automatically sign-in. -->
+    <string name="onboarding_firefox_account_stay_signed_out">შესვლის გარეშე</string>
+    <!-- text to display in the snackbar once account is signed-in -->
+    <string name="onboarding_firefox_account_sync_is_on">სინქრონიზაცია ჩართულია</string>
+    <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
+    <string name="onboarding_firefox_account_automatic_signin_failed">შესვლა ვერ მოხერხდა</string>
+    <!-- text for the tracking protection onboarding card header -->
+    <string name="onboarding_tracking_protection_header">დაიცავით თავი</string>
+    <!-- text for the tracking protection card description
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_tracking_protection_description1">%s დაგეხმარებათ აირიდოთ თვალთვალი ვებსაიტებისგან.</string>
+    <!-- text for tracking protection radio button option for standard level of blocking -->
+    <string name="onboarding_tracking_protection_standard_button">ჩვეულებრივი</string>
+
+    <!-- text for standard blocking option button description -->
+    <string name="onboarding_tracking_protection_standard_button_description">შეიზღუდება ნაკლები მეთვალყურე, მაგრამ გვერდები ჩვეულებრივ გაიხსნება</string>
+    <!-- text for tracking protection radio button option for strict level of blocking -->
+    <string name="onboarding_tracking_protection_strict_button">მკაცრი (სასურველი)</string>
+    <!-- text for strict blocking option button description -->
+    <string name="onboarding_tracking_protection_strict_button_description">შეიზღუდება მეტი მეთვალყურე უკეთესი დაცვისა და სიჩქარისთვის, მაგრამ შესაძლოა ზოგიერთი საიტის გაუმართაობა გამოიწვიოს</string>
+    <!-- text for the toolbar position card header
+        In English this is an idiom for "choose a side as in an argument or fight"
+        but it is ok to make this more literally about "choosing a position in a physical space -->
+    <string name="onboarding_toolbar_position_header">გააკეთეთ არჩევანი</string>
+    <!-- text for the toolbar position card description -->
+    <string name="onboarding_toolbar_position_description">სცადეთ ცალი ხელით დათვალიერება ქვედა ხელსაწყოთა ზოლით ან გადაიტანეთ ზემოთ.</string>
+    <!-- text for the private browsing onboarding card header -->
+    <string name="onboarding_private_browsing_header">პირადული ინტერნეტი</string>
+    <!-- text for the private browsing onboarding card description
+    The first parameter is an icon that represents private browsing -->
+    <string name="onboarding_private_browsing_description1">გახსენით პირადი ჩანართი ერთჯერადად: შეეხეთ %s ხატულას.</string>
+    <!-- text for the private browsing onboarding card description, explaining how to always using private browsing -->
+    <string name="onboarding_private_browsing_always_description">გახსენით პირადი ჩანართი ყოველ ჯერზე: მიუთითეთ პარამეტრებიდან.</string>
+    <!-- text for the private browsing onbording card button, that launches settings -->
+    <string name="onboarding_private_browsing_button">პარამეტრების გახსნა</string>
+    <!-- text for the privacy notice onboarding card header -->
+    <string name="onboarding_privacy_notice_header">თქვენი პირადულობა</string>
+    <!-- text for the privacy notice onboarding card description
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_privacy_notice_description">%s შექმნილია ისე, რომ თავად წყვეტდეთ რას გააზიარებთ
+        ინტერნეტში და რას გაგვიზიარებთ ჩვენ.</string>
+    <!-- Text for the button to read the privacy notice -->
+    <string name="onboarding_privacy_notice_read_button">გაეცანით პირადულობის განაცხადს</string>
+
+    <!-- text for the button to finish onboarding -->
+    <string name="onboarding_finish">დაიწყეთ გვერდების მონახულება</string>
+
+    <!-- Onboarding theme -->
+    <!-- text for the theme picker onboarding card header -->
+    <string name="onboarding_theme_picker_header">შეარჩიეთ თქვენი გაფორმება</string>
+
+    <!-- text for the theme picker onboarding card description -->
+    <string name="onboarding_theme_picker_description1">დაზოგეთ ბატარეა და საკუთარი მხედველობა, მუქი რეჟიმით.</string>
+    <!-- Automatic theme setting (will follow device setting) -->
+    <string name="onboarding_theme_automatic_title">თვითშერჩევა</string>
+    <!-- Summary of automatic theme setting (will follow device setting) -->
+    <string name="onboarding_theme_automatic_summary">მოწყობილობის პარამეტრების მიხედვით</string>
+    <!-- Theme setting for dark mode -->
+    <string name="onboarding_theme_dark_title">მუქი თემა</string>
+    <!-- Theme setting for light mode -->
+    <string name="onboarding_theme_light_title">ნათელი თემა</string>
+
+    <!-- Text shown in snackbar when multiple tabs have been sent to device -->
+    <string name="sync_sent_tabs_snackbar">ჩანართები გაიგზავნა!</string>
+    <!-- Text shown in snackbar when one tab has been sent to device  -->
+    <string name="sync_sent_tab_snackbar">ჩანართი გაიგზავნა!</string>
+    <!-- Text shown in snackbar when sharing tabs failed  -->
+    <string name="sync_sent_tab_error_snackbar">გაგზავნა ვერ ხერხდება</string>
+    <!-- Text shown in snackbar for the "retry" action that the user has after sharing tabs failed -->
+    <string name="sync_sent_tab_error_snackbar_action">გამეორება</string>
+    <!-- Title of QR Pairing Fragment -->
+    <string name="sync_scan_code">კოდის წაკითხვა</string>
+    <!-- Instructions on how to access pairing -->
+    <string name="sign_in_instructions"><![CDATA[გახსენით კომპიუტერში Firefox და იხილეთ <b>https://firefox.com/pair</b>]]></string>
+    <!-- Text shown for sign in pairing when ready -->
+    <string name="sign_in_ready_for_scan">მზადაა წასაკითხად</string>
+    <!-- Text shown for settings option for sign with pairing -->
+    <string name="sign_in_with_camera">შედით კამერის დახმარებით</string>
+    <!-- Text shown for settings option for sign with email -->
+    <string name="sign_in_with_email">ელფოსტის გამოყენება სანაცვლოდ</string>
+    <!-- Text shown in confirmation dialog to sign out of account -->
+    <string name="sign_out_confirmation_message">Firefox შეწყვეტს ამ ანგარიშის სინქრონიზაციას, მაგრამ ამ მოწყობილობიდან დათვალიერების მონაცემები არ წაიშლება.</string>
+    <!-- Option to continue signing out of account shown in confirmation dialog to sign out of account -->
+    <string name="sign_out_disconnect">გამოთიშვა</string>
+    <!-- Option to cancel signing out shown in confirmation dialog to sign out of account -->
+    <string name="sign_out_cancel">გაუქმება</string>
+    <!-- Error message snackbar shown after the user tried to select a default folder which cannot be altered -->
+    <string name="bookmark_cannot_edit_root">ნაგულისხმევი საქაღალდეების ჩასწორება ვერ ხერხდება</string>
+
+    <!-- Enhanced Tracking Protection -->
+    <!-- Link displayed in enhanced tracking protection panel to access tracking protection settings -->
+    <string name="etp_settings">დაცვის პარამეტრები</string>
+    <!-- Preference title for enhanced tracking protection settings -->
+    <string name="preference_enhanced_tracking_protection">თვალთვალისგან გაძლიერებული დაცვა</string>
+    <!-- Title for the description of enhanced tracking protection -->
+    <string name="preference_enhanced_tracking_protection_explanation_title">მოინახულეთ გვერდები მეთვალყურეების გარეშე</string>
+    <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
+    <string name="preference_enhanced_tracking_protection_explanation">დატოვეთ თქვენი მონაცემები პირადი. %s აგარიდებთ ცნობილი მეთვალყურეების უმეტესობას, რომლებიც თან დაგყვებათ ინტერნეტში.</string>
+    <!-- Text displayed that links to website about enhanced tracking protection -->
+    <string name="preference_enhanced_tracking_protection_explanation_learn_more">ვრცლად</string>
+
+    <!-- Preference for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_option">ჩვეულებრივი</string>
+    <!-- Preference for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard">ჩვეულებრივი (სასურველი)</string>
+    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_description">წონასწორული, უსაფრთხოებასა და წარმადობას შორის.</string>
+    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_description_2">გვერდები ჩაიტვირთება ჩვეულებრივ, მაგრამ ნაკლები მეთვალყურე იზღუდება.</string>
+    <!--  Accessibility text for the Standard protection information icon  -->
+    <string name="preference_enhanced_tracking_protection_standard_info_button">რა იზღუდება თვალთვალისგან ჩვეულებრივი დაცვით</string>
+    <!-- Preference for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict">მკაცრი</string>
+    <!-- Preference for enhanced tracking protection for the strict protection settings, default setting -->
+    <string name="preference_enhanced_tracking_protection_strict_default">მკაცრი (ნაგულისხმევი)</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict_default_description">მეტად მძლავრი დაცვა თვალთვალისგან და მეტი სისწრაფე, მაგრამ საიტების ნაწილმა, შესაძლოა გაუმართავად იმუშაოს.</string>
+    <!-- Preference for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict_recommended">მკაცრი (სასურველი)</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict_description">მძლავრი დაცვა, თუმცა გამოიწვევს საიტების ან შიგთავსის ნაწილის გაუმართაობას.</string>
+    <!--  Accessibility text for the Strict protection information icon  -->
+    <string name="preference_enhanced_tracking_protection_strict_info_button">რა იზღუდება თვალთვალისგან მკაცრი დაცვით</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom">მორგებული</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom_description">აირჩიეთ, რომელი მეთვალყურე საშუალებები შეიზღუდოს</string>
+    <!--  Accessibility text for the Strict protection information icon  -->
+    <string name="preference_enhanced_tracking_protection_custom_info_button">რა იზღუდება თვალთვალისგან მორგებული დაცვით</string>
+    <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
+    <!-- Preference for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies">ფუნთუშები</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_1">საიტთაშორისი და სოციალური ქსელის მეთვალყურეები</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_2">ფუნთუშები, მოუნახულებელი საიტებიდან</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_3">ყველა გარეშე ფუნთუშა (იწვევს ზოგი საიტის გაუმართაობას)</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_4">ყველა ფუნთუშა (იწვევს ზოგი საიტის გაუმართაობას)</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings for tracking content -->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content">მეთვალყურე შიგთავსი</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content_1">ყველა ჩანართში</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content_2">მხოლოდ პირად ჩანართებში</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content_3">მხოლოდ მორგებულ ჩანართებში</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom_cryptominers">კრიპტოგამომმუშავებლები</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom_fingerprinters">მომხმარებლის ამომცნობები</string>
+
+    <string name="enhanced_tracking_protection_blocked">შეზღუდული</string>
+    <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
+    <string name="enhanced_tracking_protection_allowed">დაშვებული</string>
+    <!-- Category of trackers (social media trackers) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_social_media_trackers_title">სოციალური ქსელის მეთვალყურეები</string>
+    <!-- Description of social media trackers that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_social_media_trackers_description">უზღუდავს სოციალურ ქსელებს, ვებსივრცეში თქვენს საქმიანობაზე თვალის მიდევნების საშუალებას.</string>
+    <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_title">საიტთაშორისი მეთვალყურე ფუნთუშები</string>
+    <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_description">ზღუდავს ფუნთუშებს, რომლებსაც სარეკლამო და ანალიტიკური კომპანიები იყენებენ თქვენზე მონაცემების ერთიანად აღრიცხვისთვის ბევრ საიტზე.</string>
+    <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cryptominers_title">კრიპტოგამომმუშავებლები</string>
+    <!-- Description of cryptominers that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cryptominers_description">ხელს უშლის მავნე კოდებს, თქვენი მოწყობილობის მეშვეობით, ციფრული ვალუტის გამომუშავებაში.</string>
+    <!-- Category of trackers (fingerprinters) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_fingerprinters_title">მომხმარებლის ამომცნობები</string>
+
+    <!-- Description of fingerprinters that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_fingerprinters_description">შეაჩერებს იმ მონაცემების აღრიცხვას, რომელთა მეშვეობითაც შესაძლებელია თქვენი სხვებისგან გამორჩევა თვალის სადევნებლად.</string>
+    <!-- Category of trackers (tracking content) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_tracking_content_title">მეთვალყურე შიგთავსი</string>
+    <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_tracking_content_description">აჩერებს გარეშე რეკლამების, ვიდეოებისა და სხვა მეთვალყურე კოდის შემცველი შიგთავსის ჩატვირთვას. შეიძლება გავლენა იქონიოს ვებგვერდის ზოგიერთ შესაძლებლობაზე.</string>
+    <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
+    <string name="etp_onboarding_message_2">%s ზღუდავს მეთვალყურეებს საიტზე, როცა ფარი იისფერია. შეეხეთ, რომ იხილოთ რა იზღუდება.</string>
+    <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
+    <string name="etp_panel_on">დაცვა ჩართულია ამ საიტზე</string>
+    <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
+    <string name="etp_panel_off">დაცვა გამორთულია ამ საიტზე</string>
+    <!-- Header for exceptions list for which sites enhanced tracking protection is always off -->
+    <string name="enhanced_tracking_protection_exceptions">თვალთვალისგან გაძლიერებული დაცვა გამორთულია ამ საიტებზე</string>
+    <!-- About page Your rights link text -->
+    <string name="about_your_rights">თქვენი უფლებები</string>
+    <!-- About page link text to open open source licenses screen -->
+    <string name="about_open_source_licenses">ღია წყაროს ბიბლიოთეკები, რომელთაც ვიყენებთ</string>
+    <!-- About page link text to open what's new link -->
+    <string name="about_whats_new">რა სიახლეებითაა %s</string>
+    <!-- Open source licenses page title
+    The first parameter is the app name -->
+    <string name="open_source_licenses_title">%s | OSS-ბიბლიოთეკები</string>
+
+    <!-- About page link text to open support link -->
+    <string name="about_support">მხარდაჭერა</string>
+    <!-- About page link text to open privacy notice link -->
+    <string name="about_privacy_notice">პირადულობის განაცხადი</string>
+    <!-- About page link text to open know your rights link -->
+    <string name="about_know_your_rights">გაეცანით თქვენს უფლებებს</string>
+    <!-- About page link text to open licensing information link -->
+    <string name="about_licensing_information">ლიცენზიის შესახებ</string>
+    <!-- About page link text to open a screen with libraries that are used -->
+    <string name="about_other_open_source_libraries">ბიბლიოთეკები, რომელთაც ვიყენებთ</string>
+
+    <!-- Content description of the tab counter toolbar button when one tab is open -->
+    <string name="tab_counter_content_description_one_tab">1 ჩანართი</string>
+    <!-- Content description of the tab counter toolbar button when multiple tabs are open. First parameter will be replaced with the number of tabs (always more than one) -->
+    <string name="tab_counter_content_description_multi_tab">%d ჩანართი</string>
+
+    <!-- Browser long press popup menu -->
+    <!-- Copy the current url -->
+    <string name="browser_toolbar_long_press_popup_copy">ასლი</string>
+    <!-- Paste & go the text in the clipboard. '&amp;' is replaced with the ampersand symbol: & -->
+    <string name="browser_toolbar_long_press_popup_paste_and_go">ჩასმა და გადასვლა</string>
+    <!-- Paste the text in the clipboard -->
+    <string name="browser_toolbar_long_press_popup_paste">ჩასმა</string>
+    <!-- Snackbar message shown after an URL has been copied to clipboard. -->
+    <string name="browser_toolbar_url_copied_to_clipboard_snackbar">URL-ს ასლი აღებულია</string>
+
+    <!-- Title text for the Add To Homescreen dialog -->
+    <string name="add_to_homescreen_title">მთავარ ეკრანზე დამატება</string>
+    <!-- Cancel button text for the Add to Homescreen dialog -->
+    <string name="add_to_homescreen_cancel">გაუქმება</string>
+    <!-- Add button text for the Add to Homescreen dialog -->
+    <string name="add_to_homescreen_add">დამატება</string>
+    <!-- Placeholder text for the TextView in the Add to Homescreen dialog -->
+    <string name="add_to_homescreen_text_placeholder">მალსახმობის სახელი</string>
+
+    <!-- Preference for managing the settings for logins and passwords in Fenix -->
+    <string name="preferences_passwords_logins_and_passwords">ანგარიშები და პაროლები</string>
+    <!-- Preference for managing the saving of logins and passwords in Fenix -->
+    <string name="preferences_passwords_save_logins">ანგარიშების მონაცემების შენახვა</string>
+    <!-- Preference option for asking to save passwords in Fenix -->
+    <string name="preferences_passwords_save_logins_ask_to_save">შეკითხვა შენახვისას</string>
+    <!-- Preference option for never saving passwords in Fenix -->
+    <string name="preferences_passwords_save_logins_never_save">არასოდეს შეინახოს</string>
+    <!-- Preference for autofilling saved logins in Fenix -->
+    <string name="preferences_passwords_autofill">თვითშევსება</string>
+    <!-- Preference for syncing saved logins in Fenix -->
+    <string name="preferences_passwords_sync_logins">ანგარიშების დასინქრონება</string>
+    <!-- Syncing saved logins in Fenix is on -->
+    <string name="preferences_passwords_sync_logins_on">ჩართ.</string>
+    <!-- Syncing saved logins in Fenix is off -->
+    <string name="preferences_passwords_sync_logins_off">გამორთ.</string>
+    <!-- Syncing saved logins in Fenix needs reconnect to sync -->
+    <string name="preferences_passwords_sync_logins_reconnect">ხელახლა დაკავშირება</string>
+    <!-- Syncing saved logins in Fenix needs login -->
+    <string name="preferences_passwords_sync_logins_sign_in">სინქრონიზაციაში შესვლა</string>
+    <!-- Preference to access list of saved logins -->
+    <string name="preferences_passwords_saved_logins">შენახული შესვლები</string>
+    <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
+    <string name="preferences_passwords_saved_logins_description_empty_text">შენახულ ან დასინქრონებულ ანგარიშებს %s გამოაჩენს აქ.</string>
+    <!-- Preference to access list of saved logins -->
+    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link">ვრცლად, სინქრონიზაციაზე.</string>
+    <!-- Preference to access list of login exceptions that we never save logins for -->
+    <string name="preferences_passwords_exceptions">გამონაკლისები</string>
+    <!-- Empty description of list of login exceptions that we never save logins for -->
+    <string name="preferences_passwords_exceptions_description_empty">შეუნახავი ანგარიშები და პაროლები გამოჩნდება აქ.</string>
+
+    <!-- Description of list of login exceptions that we never save logins for -->
+    <string name="preferences_passwords_exceptions_description">ანგარიშის მონაცემები არ შეინახება ამ საიტებისთვის.</string>
+    <!-- Hint for search box in logins list -->
+    <string name="preferences_passwords_saved_logins_search">ანგარიშების ძიება</string>
+    <!-- Option to sort logins list A-Z, alphabetically -->
+    <string name="preferences_passwords_saved_logins_alphabetically">ანბანური</string>
+    <!-- Option to sort logins list by most recently used -->
+    <string name="preferences_passwords_saved_logins_recently_used">ბოლოს გამოყენებული</string>
+    <!-- The header for the site that a login is for -->
+    <string name="preferences_passwords_saved_logins_site">საიტი</string>
+    <!-- The header for the username for a login -->
+    <string name="preferences_passwords_saved_logins_username">მომხმარებელი</string>
+    <!-- The header for the password for a login -->
+    <string name="preferences_passwords_saved_logins_password">პაროლი</string>
+    <!-- Message displayed in security prompt to reenter a secret pin to access saved logins -->
+    <string name="preferences_passwords_saved_logins_enter_pin">ხელახლა მიუთითეთ PIN</string>
+    <!-- Message displayed in security prompt to access saved logins -->
+    <string name="preferences_passwords_saved_logins_enter_pin_description">გახსენით შენახული ანგარიშების სანახავად</string>
+    <!-- Message displayed when a connection is insecure and we detect the user is entering a password -->
+    <string name="logins_insecure_connection_warning">კავშირი დაუცველია. აქ შეყვანილი შესვლის მონაცემები შეიძლება მოიპარონ.</string>
+    <!-- Learn more link that will link to a page with more information displayed when a connection is insecure and we detect the user is entering a password -->
+    <string name="logins_insecure_connection_warning_learn_more">ვრცლად</string>
+    <!-- Prompt message displayed when Fenix detects a user has entered a password and user decides if Fenix should save it. The first parameter is the name of the application (For example: Fenix)  -->
+    <string name="logins_doorhanger_save">%s დაიმახსოვრებს ამ მონაცემებს, გნებავთ?</string>
+    <!-- Positive confirmation that Fenix should save the new or updated login -->
+    <string name="logins_doorhanger_save_confirmation">შენახვა</string>
+    <!-- Negative confirmation that Fenix should not save the new or updated login -->
+    <string name="logins_doorhanger_save_dont_save">შენახვის გარეშე</string>
+    <!-- Shown in snackbar to tell user that the password has been copied -->
+    <string name="logins_password_copied">პაროლის ასლი აღებულია</string>
+    <!-- Shown in snackbar to tell user that the username has been copied -->
+    <string name="logins_username_copied">მომხმარებლის ასლი აღებულია</string>
+    <!-- Shown in snackbar to tell user that the site has been copied -->
+    <string name="logins_site_copied">საიტის ასლი აღებულია</string>
+
+    <!-- Content Description (for screenreaders etc) read for the button to copy a password in logins-->
+    <string name="saved_logins_copy_password">პაროლის ასლი</string>
+    <!-- Content Description (for screenreaders etc) read for the button to copy a username in logins -->
+    <string name="saved_login_copy_username">მომხმარებლის ასლი</string>
+    <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
+    <string name="saved_login_copy_site">საიტის ასლი</string>
+    <!-- Content Description (for screenreaders etc) read for the button to reveal a password in logins -->
+    <string name="saved_login_reveal_password">პაროლის გამოჩენა</string>
+    <!-- Content Description (for screenreaders etc) read for the button to hide a password in logins -->
+    <string name="saved_login_hide_password">პაროლის დამალვა</string>
+    <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their logins -->
+    <string name="logins_biometric_prompt_message">გახსენით შენახული ანგარიშების სანახავად</string>
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_title">დაიცავით თქვენი ანგარიშების მონაცემები</string>
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_message">დააყენეთ მოწყობილობის ჩასაკეტი ნიმუში, PIN ან პაროლი, თქვენი შენახული ანგარიშების მონაცემებთან, უცხო პირების წვდომის აღსაკვეთათ.</string>
+    <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_later">მოგვიანებით</string>
+    <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_set_up_now">დაყენება ახლავე</string>
+    <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their logins -->
+    <string name="logins_biometric_prompt_message_pin">გახსენით თქვენი მოწყობილობა</string>
+    <!-- Title for Accessibility Force Enable Zoom Preference -->
+    <string name="preference_accessibility_force_enable_zoom">ზომის ცვლილება ყველა საიტზე</string>
+    <!-- Summary for Accessibility Force Enable Zoom Preference -->
+    <string name="preference_accessibility_force_enable_zoom_summary">მოახლოებისა და დაშორების ჩართვა იმ საიტებზეც კი, რომლებზეც აკრძალულია.</string>
+
+    <!-- Title of the Add search engine screen -->
+    <string name="search_engine_add_custom_search_engine_title">საძიებო სისტემის დამატება</string>
+    <!-- Title of the Edit search engine screen -->
+    <string name="search_engine_edit_custom_search_engine_title">საძიებო სისტემის ჩასწორება</string>
+    <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
+    <string name="search_engine_add_button_content_description">დამატება</string>
+    <!-- Content description (not visible, for screen readers etc.): Title for the button to save a search engine in the action bar -->
+    <string name="search_engine_add_custom_search_engine_edit_button_content_description">შენახვა</string>
+    <!-- Text for the menu button to edit a search engine -->
+    <string name="search_engine_edit">ჩასწორება</string>
+    <!-- Text for the menu button to delete a search engine -->
+    <string name="search_engine_delete">წაშლა</string>
+
+    <!-- Text for the button to create a custom search engine on the Add search engine screen -->
+    <string name="search_add_custom_engine_label_other">სხვა</string>
+    <!-- Placeholder text shown in the Search Engine Name TextField before a user enters text -->
+    <string name="search_add_custom_engine_name_hint">სახელი</string>
+    <!-- Placeholder text shown in the Search String TextField before a user enters text -->
+    <string name="search_add_custom_engine_search_string_hint">საძიებო ფრაზა</string>
+    <!-- Description text for the Search String TextField. The %s is part of the string -->
+    <string name="search_add_custom_engine_search_string_example">შეცვალეთ „%s“ საძიებო ტექსტით. მაგალითი:\nhttps://www.google.com/search?q=%s</string>
+    <!-- Text for the button to learn more about adding a custom search engine -->
+    <string name="search_add_custom_engine_learn_more_label">ვრცლად</string>
+
+    <!-- Accessibility description for the form in which details about the custom search engine are entered -->
+    <string name="search_add_custom_engine_form_description">მორგებული საძიებო სისტემის შესახებ</string>
+    <!-- Accessibility description for the 'Learn more' link -->
+    <string name="search_add_custom_engine_learn_more_description">დაწვრილებითი ინფორმაციის ბმული</string>
+
+    <!-- Text shown when a user leaves the name field empty -->
+    <string name="search_add_custom_engine_error_empty_name">შეიყვანეთ საძიებო სისტემის სახელი</string>
+    <!-- Text shown when a user tries to add a search engine that already exists -->
+    <string name="search_add_custom_engine_error_existing_name">საძიებო სისტემა დასახელებით „%s“ უკვე არსებობს.</string>
+    <!-- Text shown when a user leaves the search string field empty -->
+    <string name="search_add_custom_engine_error_empty_search_string">შეიყვანეთ საძიებო ფრაზა</string>
+    <!-- Text shown when a user leaves out the required template string -->
+    <string name="search_add_custom_engine_error_missing_template">შეამოწმეთ, შეესაბამება თუ არა საძიებო ფრაზა მოცემულ ფორმატს</string>
+    <!-- Text shown when we aren't able to validate the custom search query. The first parameter is the url of the custom search engine -->
+    <string name="search_add_custom_engine_error_cannot_reach">შეცდომა კავშირისას – „%s“</string>
+    <!-- Text shown when a user creates a new search engine -->
+    <string name="search_add_custom_engine_success_message">შეიქმნა %s</string>
+    <!-- Text shown when a user successfully edits a custom search engine -->
+    <string name="search_edit_custom_engine_success_message">შენახულია %s</string>
+    <!-- Text shown when a user successfully deletes a custom search engine -->
+    <string name="search_delete_search_engine_success_message">წაიშალა %s</string>
+
+    <!-- Title text shown for the migration screen to the new browser. Placeholder replaced with app name -->
+    <string name="migration_title">მოგესალმებათ ახალთახალი %s</string>
+    <!-- Description text followed by a list of things migrating (e.g. Bookmarks, History). Placeholder replaced with app name-->
+    <string name="migration_description">სრულად განახლებული ბრაუზერი გელოდებათ, გაუმჯობესებული სიჩქარითა და შესაძლებლობებით, რომ უკეთ შეძლოთ ინტერნეტით სარგებლობა.\n\nგთხოვთ, მოითმინოთ სანამ %s განახლდება და გადმოვა თქვენი</string>
+    <!-- Text on the disabled button while in progress. Placeholder replaced with app name -->
+    <string name="migration_updating_app_button_text">ახლდება %s…</string>
+    <!-- Text on the enabled button. Placeholder replaced with app name-->
+    <string name="migration_update_app_button">გაეშვას %s</string>
+    <!-- Accessibility description text for a completed migration item -->
+    <string name="migration_icon_description">გადმოტანა დასრულებულია</string>
+    <!--Text on list of migrated items (e.g. Settings, History, etc.)-->
+    <string name="migration_text_passwords">პაროლები</string>
+
+    <!-- Heading for the instructions to allow a permission -->
+    <string name="phone_feature_blocked_intro">დასაშვებად:</string>
+    <!-- First step for the allowing a permission -->
+    <string name="phone_feature_blocked_step_settings">1. გადადით Android-პარამეტრებში</string>
+    <!-- Second step for the allowing a permission -->
+    <string name="phone_feature_blocked_step_permissions"><![CDATA[2. შეეხეთ <b>ნებართვებს</b>]]></string>
+
+    <!-- Third step for the allowing a permission (Fore example: Camera) -->
+    <string name="phone_feature_blocked_step_feature"><![CDATA[3. გადართეთ <b>%1$s</b> ჩართულზე]]></string>
+
+    <!-- Label that indicates a site is using a secure connection -->
+    <string name="quick_settings_sheet_secure_connection">დაცული კავშირი</string>
+    <!-- Label that indicates a site is using a insecure connection -->
+    <string name="quick_settings_sheet_insecure_connection">დაუცველი კავშირი</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for all sites-->
+    <string name="confirm_clear_permissions_on_all_sites">ნამდვილად გსურთ ყველა ნებართვის გასუფთავება თითოეულ საიტზე?</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for a site-->
+    <string name="confirm_clear_permissions_site">ნამდვილად გსურთ ყველა ნებართვის გასუფთავება ამ საიტზე?</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to set default value a permission for a site-->
+    <string name="confirm_clear_permission_site">ნამდვილად გსურთ ამ ნებართვის წაშლა ამ საიტზე?</string>
+    <!-- label shown when there are not site exceptions to show in the site exception settings -->
+    <string name="no_site_exceptions">გამონაკლისები არ არის</string>
+    <!-- Label for the Pocket default top site -->
+    <string name="pocket_top_articles">საუკეთესო სტატიები</string>
+    <!-- Bookmark deletion confirmation -->
+    <string name="bookmark_deletion_confirmation">ნამდვილად გსურთ, ამ სანიშნის წაშლა?</string>
+    <!-- Browser menu button that adds a top site to the home fragment -->
+    <string name="browser_menu_add_to_top_sites">დამატება რჩეულ საიტებში</string>
+    <!-- text shown before the issuer name to indicate who its verified by, parameter is the name of
+     the certificate authority that verified the ticket-->
+    <string name="certificate_info_verified_by">დამმოწმებელი: %1$s</string>
+    <!-- Login overflow menu delete button -->
+    <string name="login_menu_delete_button">წაშლა</string>
+</resources>

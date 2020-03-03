@@ -113,6 +113,11 @@
     <string name="preferences_search_address_bar">Γραμμή διευθύνσεων</string>
     <!-- Preference linking to help about Fenix -->
     <string name="preferences_help">Βοήθεια</string>
+    <!-- Preference for giving feedback about Fenix -->
+    <string name="preferences_feedback">Αποστολή σχολίων</string>
+    <!-- Preference linking to about page for Fenix
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="preferences_about">Σχετικά με το %1$s</string>
     <!-- Preference for settings related to saved credit cards and addresses -->
     <string name="preferences_credit_cards_addresses">Πιστωτικές κάρτες και διευθύνσεις</string>
     <!-- Preference category for privacy settings -->
@@ -132,6 +137,22 @@
     <!-- Preference for changing where the toolbar is positioned -->
     <string name="preferences_toolbar">Γραμμή εργαλείων</string>
 
+    <!-- Preference for changing default theme to dark or light mode -->
+    <string name="preferences_theme">Θέμα</string>
+    <!-- Preference for settings related to visual options -->
+    <string name="preferences_customize">Προσαρμογή</string>
+    <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
+    <string name="preferences_account_default_name">Λογαριασμός Firefox</string>
+    <!-- Preference for language -->
+    <string name="preferences_language">Γλώσσα</string>
+    <!-- Preference for data choices -->
+    <string name="preferences_data_choices">Επιλογές δεδομένων</string>
+    <!-- Preference for data collection -->
+    <string name="preferences_data_collection">Συλλογή δεδομένων</string>
+    <!-- Preference linking to the privacy notice -->
+    <string name="preferences_privacy_link">Σημείωση απορρήτου</string>
+    <!-- Preference category for developer tools -->
+    <string name="developer_tools_category">Εργαλεία προγραμματιστή</string>
     <!-- Preference for add_ons -->
     <string name="preferences_addons">Πρόσθετα</string>
 
@@ -168,6 +189,9 @@
 
     <!-- Preference for account login -->
     <string name="preferences_sync_sign_in">Σύνδεση</string>
+
+    <!-- Preference for removing FxA account -->
+    <string name="preferences_sync_remove_account">Αφαίρεση λογαριασμού</string>
 
     <!-- Button to open camera for pairing -->
     <string name="pair_open_camera">Άνοιγμα κάμερας</string>
@@ -316,6 +340,12 @@
     <!-- Summary of delete browsing data on quit preference if it is set to off -->
     <string name="delete_browsing_data_quit_off">Ανενεργό</string>
 
+    <!-- Collections header on home fragment -->
+    <string name="collections_header">Συλλογές</string>
+    <!-- No Open Tabs Message Header -->
+    <string name="no_collections_header">Καμία συλλογή</string>
+    <!-- Button to add new collection for the "select collection" step of the collection creator -->
+    <string name="create_collection_add_new_collection">Προσθήκη νέας συλλογής</string>
     <!-- Button to select all tabs in the "select tabs" step of the collection creator -->
     <string name="create_collection_select_all">Επιλογή όλων</string>
     <!-- Content description (not visible, for screen readers etc.): button to close the collection creator -->
@@ -337,5 +367,47 @@
     <string name="notification_pbm_action_open">Άνοιγμα</string>
     <!-- Notification action to delete all current private browsing sessions AND switch to Fenix (bring it to the foreground) -->
     <string name="notification_pbm_action_delete_and_open">Διαγραφή και άνοιγμα</string>
+
+    <!-- Text shown in snackbar to undo deleting a tab, top site or collection -->
+    <string name="snackbar_deleted_undo">ΑΝΑΙΡΕΣΗ</string>
+    <!-- Text for action to undo deleting a tab or collection shown in a11y dialog -->
+    <string name="a11y_dialog_deleted_undo">Αναίρεση</string>
+    <!-- Text for action to confirm deleting a tab or collection shown in a11y dialog -->
+    <string name="a11y_dialog_deleted_confirm">Επιβεβαίωση</string>
+    <!-- QR code scanner prompt dialog positive option to allow navigation to scanned link -->
+    <string name="qr_scanner_dialog_positive">ΑΠΟΔΟΧΗ</string>
+    <!-- QR code scanner prompt dialog positive option to deny navigation to scanned link -->
+    <string name="qr_scanner_dialog_negative">ΑΡΝΗΣΗ</string>
+    <!-- Tab collection deletion prompt dialog option to delete the collection -->
+    <string name="tab_collection_dialog_positive">Διαγραφή</string>
+    <!-- Tab collection deletion prompt dialog option to cancel deleting the collection -->
+    <string name="tab_collection_dialog_negative">Ακύρωση</string>
+
+    <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
+    <string name="preferences_delete_browsing_data_tabs_subtitle">%d καρτέλες</string>
+    <!-- Subtitle for the data and history items in delete browsing data, parameter will be replaced with the
+        number of history items the user has -->
+    <string name="preferences_delete_browsing_data_browsing_data_subtitle">%d διευθύνσεις</string>
+    <!-- Title for history items in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_browsing_history_title">Ιστορικό</string>
+    <!-- Subtitle for the history items in delete browsing data, parameter will be replaced with the
+        number of history pages the user has -->
+    <string name="preferences_delete_browsing_data_browsing_history_subtitle">%d σελίδες</string>
+    <!-- Title for the cookies item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cookies">Cookies</string>
+    <!-- Action item in menu for the Delete browsing data on quit feature -->
+    <string name="delete_browsing_data_on_quit_action">Έξοδος</string>
+
+    <!-- Text for the cancel button for the data deletion dialog -->
+    <string name="delete_browsing_data_prompt_cancel">Ακύρωση</string>
+    <!-- Text for the allow button for the data deletion dialog -->
+    <string name="delete_browsing_data_prompt_allow">Διαγραφή</string>
+
+    <!-- text for the automatic sign-in button while signing in is in process -->
+    <string name="onboarding_firefox_account_signing_in">Σύνδεση…</string>
+    <!-- text for the button to manually sign into Firefox account. The word "Firefox" should not be translated -->
+    <string name="onboarding_firefox_account_sign_in">Σύνδεση στο Firefox</string>
+    <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
+    <string name="onboarding_firefox_account_automatic_signin_failed">Αποτυχία σύνδεσης</string>
 
     </resources>

@@ -823,6 +823,8 @@
     <string name="onboarding_feature_section_header">ทำความรู้จัก %s</string>
     <!-- text for the "What's New" onboarding card header -->
     <string name="onboarding_whats_new_header1">ดูว่ามีอะไรใหม่</string>
+    <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
+    <string name="onboarding_whats_new_description_linktext">พบคำตอบได้ที่นี่</string>
     <!-- text for the firefox account onboarding card header
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_firefox_account_header">รับประโยชน์สูงสุดจาก %s</string>
@@ -844,12 +846,21 @@
     <string name="onboarding_firefox_account_automatic_signin_failed">ไม่สามารถเข้าสู่ระบบ</string>
     <!-- text for the tracking protection onboarding card header -->
     <string name="onboarding_tracking_protection_header">ปกป้องตัวคุณเอง</string>
+    <!-- text for the tracking protection card description
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_tracking_protection_description1">%s ช่วยหยุดเว็บไซต์จากการติดตามคุณออนไลน์</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button">มาตรฐาน</string>
+    <!-- text for standard blocking option button description -->
+    <string name="onboarding_tracking_protection_standard_button_description">ปิดกันตัวติดตามน้อยลง แต่อนุญาตให้โหลดหน้าได้ตามปกติ</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_button">เข้มงวด (แนะนำ)</string>
+    <!-- text for strict blocking option button description -->
+    <string name="onboarding_tracking_protection_strict_button_description">ปิดกันตัวติดตามมากขึ้นเพื่อการปกป้องและประสิทธิภาพที่ดีกว่า แต่ก็อาจทำให้บางไซต์ทำงานไม่สมบูรณ์</string>
     <!-- text for the private browsing onboarding card header -->
     <string name="onboarding_private_browsing_header">เรียกดูอย่างเป็นส่วนตัว</string>
+    <!-- text for the private browsing onbording card button, that launches settings -->
+    <string name="onboarding_private_browsing_button">เปิดการตั้งค่า</string>
     <!-- text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header">ความเป็นส่วนตัวของคุณ</string>
     <!-- text for the privacy notice onboarding card description
@@ -1206,6 +1217,8 @@
     <string name="confirm_clear_permissions_site">คุณแน่ใจหรือไม่ว่าต้องการล้างสิทธิอนุญาตทั้งหมดสำหรับไซต์นี้?</string>
     <!-- Confirmation message for a dialog confirming if the user wants to set default value a permission for a site-->
     <string name="confirm_clear_permission_site">คุณแน่ใจหรือไม่ว่าต้องการล้างสิทธิอนุญาตนี้สำหรับไซต์นี้?</string>
+    <!-- Label for the Pocket default top site -->
+    <string name="pocket_top_articles">สุดยอดบทความ</string>
     <!-- Bookmark deletion confirmation -->
     <string name="bookmark_deletion_confirmation">คุณแน่ใจหรือไม่ว่าต้องการลบที่คั่นหน้านี้?</string>
     <!-- Browser menu button that adds a top site to the home fragment -->
