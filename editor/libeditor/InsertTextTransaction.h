@@ -6,7 +6,9 @@
 #ifndef InsertTextTransaction_h
 #define InsertTextTransaction_h
 
-#include "mozilla/EditTransactionBase.h"   // base class
+#include "mozilla/EditTransactionBase.h"  // base class
+
+#include "mozilla/EditorDOMPoint.h"        // EditorDOMPointInText
 #include "nsCycleCollectionParticipant.h"  // various macros
 #include "nsID.h"                          // NS_DECLARE_STATIC_IID_ACCESSOR
 #include "nsISupportsImpl.h"               // NS_DECL_ISUPPORTS_INHERITED
@@ -36,22 +38,20 @@ class Text;
 class InsertTextTransaction final : public EditTransactionBase {
  protected:
   InsertTextTransaction(EditorBase& aEditorBase,
-                        const nsAString& aStringToInsert, dom::Text& aTextNode,
-                        uint32_t aOffset);
+                        const nsAString& aStringToInsert,
+                        const EditorDOMPointInText& aPointToInsert);
 
  public:
   /**
    * Creates new InsertTextTransaction instance.  This never returns nullptr.
    *
    * @param aEditorBase     The editor which manages the transaction.
-   * @param aTextNode       The text content node to be inserted
-   *                        aStringToInsert.
-   * @param aOffset         The offset in aTextNode to do the insertion.
+   * @param aPointToInsert  The insertion point.
    * @param aStringToInsert The new string to insert.
    */
   static already_AddRefed<InsertTextTransaction> Create(
       EditorBase& aEditorBase, const nsAString& aStringToInsert,
-      dom::Text& aTextNode, uint32_t aOffset);
+      const EditorDOMPointInText& aPointToInsert);
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_INSERTTEXTTXN_IID)
 

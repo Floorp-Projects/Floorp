@@ -812,7 +812,7 @@ class MOZ_STACK_CLASS WSRunObject final : public WSRunScanner {
    * @return                Start and end of the expanded range.
    */
   template <typename PT, typename CT>
-  Tuple<EditorDOMPoint, EditorDOMPoint> GetASCIIWhitespacesBounds(
+  Tuple<EditorDOMPointInText, EditorDOMPointInText> GetASCIIWhitespacesBounds(
       int16_t aDir, const EditorDOMPointBase<PT, CT>& aPoint) const;
 
   MOZ_CAN_RUN_SCRIPT nsresult CheckTrailingNBSPOfRun(WSFragment* aRun);
