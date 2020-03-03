@@ -108,6 +108,10 @@
   visibility: visible;
 }
 
+.source-tab.active .source-icon {
+  background-color: currentColor;
+}
+
 .source-tab .close-btn:hover,
 .source-tab .close-btn:focus {
   color: var(--theme-selection-color);
