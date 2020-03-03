@@ -45,11 +45,10 @@
         android:layout_marginTop="6dp"
         android:paddingStart="0dp"
         android:paddingEnd="12dp"
-        android:textColor="?primaryText"
         android:textSize="14sp"
         android:visibility="gone"
         app:iconGravity="textStart"
-        app:iconTint="?primaryText"
+        app:iconTint="@color/button_text_color"
         tools:icon="@drawable/ic_new"
         tools:text="@string/home_screen_shortcut_open_new_tab_2"
         tools:visibility="visible" />
