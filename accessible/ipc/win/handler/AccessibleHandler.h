@@ -288,6 +288,7 @@ class AccessibleHandler final : public mscom::Handler,
   long mCachedNTextAttribRuns;
   IARelationData* mCachedRelations;
   long mCachedNRelations;
+  bool mIsEmulatedWindow;
 };
 
 inline static BSTR CopyBSTR(BSTR aSrc) {
