@@ -1665,7 +1665,7 @@ nsSize nsXULScrollFrame::GetXULMinSize(nsBoxLayoutState& aState) {
 
   AddBorderAndPadding(min);
   bool widthSet, heightSet;
-  nsIFrame::AddXULMinSize(this, min, widthSet, heightSet);
+  nsIFrame::AddXULMinSize(aState, this, min, widthSet, heightSet);
   return min;
 }
 
