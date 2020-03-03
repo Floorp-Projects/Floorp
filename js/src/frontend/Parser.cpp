@@ -1743,7 +1743,7 @@ bool PerHandlerParser<SyntaxParseHandler>::finishFunction(
     return false;
   }
 
-  funbox->functionCreationData()->lazyScriptData =
+  funbox->functionCreationData().get().lazyScriptData =
       mozilla::Some(std::move(data));
   return true;
 }
@@ -1760,7 +1760,7 @@ bool ParserBase::publishDeferredFunctions(FunctionTree* root) {
         return true;
       }
 
-      Handle<FunctionCreationData> fcd = funbox->functionCreationDataHandle();
+      MutableHandle<FunctionCreationData> fcd = funbox->functionCreationData();
       RootedFunction fun(parser->cx_, AllocNewFunction(parser->cx_, fcd));
       if (!fun) {
         return false;
@@ -1769,7 +1769,7 @@ bool ParserBase::publishDeferredFunctions(FunctionTree* root) {
       funbox->initializeFunction(fun);
 
       mozilla::Maybe<LazyScriptCreationData> data =
-          std::move(funbox->functionCreationData()->lazyScriptData);
+          std::move(fcd.get().lazyScriptData);
       if (!data) {
         return true;
       }

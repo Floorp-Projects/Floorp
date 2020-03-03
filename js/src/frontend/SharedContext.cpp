@@ -183,8 +183,8 @@ FunctionBox::FunctionBox(JSContext* cx, TraceListNode* traceListHead,
                          FunctionAsyncKind asyncKind, size_t index)
     : FunctionBox(cx, traceListHead, toStringStart, compilationInfo, directives,
                   extraWarnings, generatorKind, asyncKind,
-                  compilationInfo.funcData[index].atom,
-                  compilationInfo.funcData[index].flags) {
+                  compilationInfo.funcData[index].get().atom,
+                  compilationInfo.funcData[index].get().flags) {
   funcDataIndex_.emplace(index);
 }
 
@@ -333,10 +333,9 @@ ModuleSharedContext::ModuleSharedContext(JSContext* cx, ModuleObject* module,
   hasModuleGoal_ = true;
 }
 
-FunctionCreationData* FunctionBox::functionCreationData() const {
+MutableHandle<FunctionCreationData> FunctionBox::functionCreationData() const {
   MOZ_ASSERT(hasFunctionCreationIndex());
-  FunctionCreationData* fcd = &compilationInfo_.funcData[*funcDataIndex_];
-  return fcd;
+  return compilationInfo_.funcData[*funcDataIndex_];
 }
 
 }  // namespace frontend
