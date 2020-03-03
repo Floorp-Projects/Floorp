@@ -5,6 +5,7 @@
 package org.mozilla.fenix.addons
 
 import android.os.Bundle
+import android.view.Gravity
 import android.view.View
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
@@ -32,6 +33,7 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getRootView
 import org.mozilla.fenix.ext.showToolbar
+import org.mozilla.fenix.theme.ThemeManager
 
 /**
  * Fragment use for managing add-ons.
@@ -162,6 +164,19 @@ class AddonsManagementFragment : Fragment(R.layout.fragment_add_ons_management),
         if (!isInstallationInProgress && !hasExistingPermissionDialogFragment()) {
             val dialog = PermissionsDialogFragment.newInstance(
                 addon = addon,
+                promptsStyling = PermissionsDialogFragment.PromptsStyling(
+                    gravity = Gravity.BOTTOM,
+                    shouldWidthMatchParent = true,
+                    positiveButtonBackgroundColor = ThemeManager.resolveAttribute(
+                        R.attr.accent,
+                        requireContext()
+                    ),
+                    positiveButtonTextColor = ThemeManager.resolveAttribute(
+                        R.attr.contrastText,
+                        requireContext()
+                    ),
+                    positiveButtonRadius = (resources.getDimensionPixelSize(R.dimen.tab_corner_radius)).toFloat()
+                ),
                 onPositiveButtonClicked = onPositiveButtonClicked
             )
             dialog.show(parentFragmentManager, PERMISSIONS_DIALOG_FRAGMENT_TAG)
