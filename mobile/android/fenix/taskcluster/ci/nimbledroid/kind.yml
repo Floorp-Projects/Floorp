@@ -25,11 +25,12 @@ job-defaults:
                       key: api_key
                       path: .nimbledroid_token
                 default: []
-        pre-commands:
+        dummy-secrets:
             by-level:
               '3': []
               default:
-                - [echo, '--', '>', .nimbledroid_token]
+                - content: "faketoken"
+                  path: .nimbledroid_token
     run-on-tasks-for: []
     treeherder:
         kind: test

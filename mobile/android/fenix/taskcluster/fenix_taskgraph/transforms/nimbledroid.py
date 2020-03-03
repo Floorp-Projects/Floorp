@@ -18,7 +18,7 @@ transforms = TransformSequence()
 @transforms.add
 def resolve_keys(config, tasks):
     for task in tasks:
-        for key in ("run.secrets", "run.pre-commands"):
+        for key in ("run.secrets", "run.dummy-secrets"):
             resolve_keyed_by(
                 task,
                 key,

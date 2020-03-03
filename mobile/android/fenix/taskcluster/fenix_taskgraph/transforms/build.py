@@ -32,6 +32,7 @@ def add_variant_config(config, tasks):
 def add_shippable_secrets(config, tasks):
     for task in tasks:
         secrets = task["run"].setdefault("secrets", [])
+        dummy_secrets = task["run"].setdefault("dummy-secrets", [])
 
         if task.pop("include-shippable-secrets", False) and config.params["level"] == "3":
             build_type = task["attributes"]["build-type"]
@@ -50,15 +51,16 @@ def add_shippable_secrets(config, tasks):
                 ('mls', '.mls_token'),
             )])
         else:
-            task["run"]["pre-gradlew"] = [[
-                "echo", '"{}"'.format(fake_value), ">", target_file
-            ] for fake_value, target_file in (
-                ("--", ".adjust_token"),
-                ("", ".digital_asset_links_token"),
-                ("-:-", ".leanplum_token"),
-                ("", ".mls_token"),
+            dummy_secrets.extend([{
+                "content": fake_value,
+                "path": target_file,
+            } for fake_value, target_file in (
+                ("faketoken", ".adjust_token"),
+                ("faketoken", ".digital_asset_links_token"),
+                ("fake:token", ".leanplum_token"),  # : is used by leanplum
+                ("faketoken", ".mls_token"),
                 ("https://fake@sentry.prod.mozaws.net/368", ".sentry_token"),
-            )]
+            )])
 
         yield task
 
