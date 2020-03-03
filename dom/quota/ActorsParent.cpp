@@ -1241,8 +1241,10 @@ class FinalizeOriginEvictionOp : public OriginOperationBase {
   virtual void UnblockOpen() override;
 };
 
-class NormalOriginOperationBase : public OriginOperationBase,
-                                  public OpenDirectoryListener {
+class NormalOriginOperationBase
+    : public OriginOperationBase,
+      public OpenDirectoryListener,
+      public SupportsCheckedUnsafePtr<CheckIf<DiagnosticAssertEnabled>> {
   RefPtr<DirectoryLock> mDirectoryLock;
 
  protected:
@@ -1947,8 +1949,33 @@ StaticRefPtr<QuotaManager> gInstance;
 bool gCreateFailed = false;
 mozilla::Atomic<bool> gShutdown(false);
 
+typedef nsTArray<CheckedUnsafePtr<NormalOriginOperationBase>>
+    NormalOriginOpArray;
+StaticAutoPtr<NormalOriginOpArray> gNormalOriginOps;
+
 // Constants for temporary storage limit computing.
 static const uint32_t kDefaultChunkSizeKB = 10 * 1024;
+
+void RegisterNormalOriginOp(NormalOriginOperationBase* aNormalOriginOp) {
+  AssertIsOnBackgroundThread();
+
+  if (!gNormalOriginOps) {
+    gNormalOriginOps = new NormalOriginOpArray();
+  }
+
+  gNormalOriginOps->AppendElement(aNormalOriginOp);
+}
+
+void UnregisterNormalOriginOp(NormalOriginOperationBase* aNormalOriginOp) {
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(gNormalOriginOps);
+
+  gNormalOriginOps->RemoveElement(aNormalOriginOp);
+
+  if (gNormalOriginOps->IsEmpty()) {
+    gNormalOriginOps = nullptr;
+  }
+}
 
 class StorageOperationBase {
  protected:
@@ -4008,6 +4035,8 @@ void QuotaManager::Shutdown() {
     NS_WARNING("Failed to cancel shutdown timer!");
   }
 
+  MOZ_ALWAYS_TRUE(SpinEventLoopUntil([&]() { return !gNormalOriginOps; }));
+
   // NB: It's very important that runnable is destroyed on this thread
   // (i.e. after we join the IO thread) because we can't release the
   // QuotaManager on the IO thread. This should probably use
@@ -4188,6 +4217,7 @@ void QuotaManager::UpdateOriginAccessTime(PersistenceType aPersistenceType,
                                           const nsACString& aOrigin) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(aPersistenceType != PERSISTENCE_TYPE_PERSISTENT);
+  MOZ_ASSERT(!IsShuttingDown());
 
   MutexAutoLock lock(mQuotaMutex);
 
@@ -4210,6 +4240,8 @@ void QuotaManager::UpdateOriginAccessTime(PersistenceType aPersistenceType,
 
     RefPtr<SaveOriginAccessTimeOp> op =
         new SaveOriginAccessTimeOp(aPersistenceType, aOrigin, timestamp);
+
+    RegisterNormalOriginOp(op);
 
     op->RunImmediately();
   }
@@ -8378,6 +8410,8 @@ void NormalOriginOperationBase::UnblockOpen() {
     mDirectoryLock = nullptr;
   }
 
+  UnregisterNormalOriginOp(this);
+
   AdvanceState();
 }
 
@@ -8640,6 +8674,10 @@ PQuotaUsageRequestParent* Quota::AllocPQuotaUsageRequestParent(
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aParams.type() != UsageRequestParams::T__None);
 
+  if (NS_WARN_IF(QuotaManager::IsShuttingDown())) {
+    return nullptr;
+  }
+
 #ifdef DEBUG
   // Always verify parameters in DEBUG builds!
   bool trustParams = false;
@@ -8669,6 +8707,8 @@ PQuotaUsageRequestParent* Quota::AllocPQuotaUsageRequestParent(
 
   MOZ_ASSERT(actor);
 
+  RegisterNormalOriginOp(actor);
+
   // Transfer ownership to IPDL.
   return actor.forget().take();
 }
@@ -8678,6 +8718,7 @@ mozilla::ipc::IPCResult Quota::RecvPQuotaUsageRequestConstructor(
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aActor);
   MOZ_ASSERT(aParams.type() != UsageRequestParams::T__None);
+  MOZ_ASSERT(!QuotaManager::IsShuttingDown());
 
   auto* op = static_cast<QuotaUsageRequestBase*>(aActor);
 
@@ -8701,6 +8742,10 @@ PQuotaRequestParent* Quota::AllocPQuotaRequestParent(
     const RequestParams& aParams) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aParams.type() != RequestParams::T__None);
+
+  if (NS_WARN_IF(QuotaManager::IsShuttingDown())) {
+    return nullptr;
+  }
 
 #ifdef DEBUG
   // Always verify parameters in DEBUG builds!
@@ -8776,6 +8821,8 @@ PQuotaRequestParent* Quota::AllocPQuotaRequestParent(
 
   MOZ_ASSERT(actor);
 
+  RegisterNormalOriginOp(actor);
+
   // Transfer ownership to IPDL.
   return actor.forget().take();
 }
@@ -8785,6 +8832,7 @@ mozilla::ipc::IPCResult Quota::RecvPQuotaRequestConstructor(
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aActor);
   MOZ_ASSERT(aParams.type() != RequestParams::T__None);
+  MOZ_ASSERT(!QuotaManager::IsShuttingDown());
 
   auto* op = static_cast<QuotaRequestBase*>(aActor);
 
