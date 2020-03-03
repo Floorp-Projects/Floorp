@@ -1820,8 +1820,7 @@ void MacroAssembler::loadJitCodeMaybeNoArgCheck(Register func, Register dest) {
 #ifdef DEBUG
   {
     Label ok;
-    int32_t flags =
-        FunctionFlags::INTERPRETED | FunctionFlags::INTERPRETED_LAZY;
+    int32_t flags = FunctionFlags::BASESCRIPT;
     branchTestFunctionFlags(func, flags, Assembler::NonZero, &ok);
     assumeUnreachable("Function has no BaseScript!");
     bind(&ok);
@@ -2883,7 +2882,7 @@ void MacroAssembler::loadFunctionLength(Register func, Register funFlags,
     // These flags should already have been checked by caller.
     Label ok;
     uint32_t FlagsToCheck =
-        FunctionFlags::INTERPRETED_LAZY | FunctionFlags::RESOLVED_LENGTH;
+        FunctionFlags::SELFHOSTLAZY | FunctionFlags::RESOLVED_LENGTH;
     branchTest32(Assembler::Zero, funFlags, Imm32(FlagsToCheck), &ok);
     assumeUnreachable("The function flags should already have been checked.");
     bind(&ok);
@@ -2896,7 +2895,7 @@ void MacroAssembler::loadFunctionLength(Register func, Register funFlags,
   Label isInterpreted, isBound, lengthLoaded;
   branchTest32(Assembler::NonZero, funFlags, Imm32(FunctionFlags::BOUND_FUN),
                &isBound);
-  branchTest32(Assembler::NonZero, funFlags, Imm32(FunctionFlags::INTERPRETED),
+  branchTest32(Assembler::NonZero, funFlags, Imm32(FunctionFlags::BASESCRIPT),
                &isInterpreted);
   {
     // Load the length property of a native function.

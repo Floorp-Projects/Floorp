@@ -66,11 +66,10 @@ class FunctionFlags {
 
     // An interpreted function has or may-have bytecode and an environment. Only
     // one of these flags may be used at a time. As a memory optimization, the
-    // SELF_HOSTED and INTERPRETED_LAZY flags together indicate there is no
-    // js::BaseScript at all and we must clone from the self-hosted realm in
-    // order to get bytecode.
-    INTERPRETED = 1 << 5,
-    INTERPRETED_LAZY = 1 << 6,
+    // SELFHOSTLAZY flag indicates there is no js::BaseScript at all and we must
+    // clone from the self-hosted realm in order to get bytecode.
+    BASESCRIPT = 1 << 5,
+    SELFHOSTLAZY = 1 << 6,
 
     // Function may be called as a constructor. This corresponds in the spec as
     // having a [[Construct]] internal method.
@@ -121,15 +120,15 @@ class FunctionFlags {
     ASMJS_CTOR = CONSTRUCTOR | ASMJS_KIND,
     ASMJS_LAMBDA_CTOR = CONSTRUCTOR | LAMBDA | ASMJS_KIND,
     WASM = WASM_KIND,
-    INTERPRETED_NORMAL = INTERPRETED | CONSTRUCTOR | NORMAL_KIND,
-    INTERPRETED_CLASS_CTOR = INTERPRETED | CONSTRUCTOR | CLASSCONSTRUCTOR_KIND,
-    INTERPRETED_GENERATOR_OR_ASYNC = INTERPRETED | NORMAL_KIND,
-    INTERPRETED_LAMBDA = INTERPRETED | LAMBDA | CONSTRUCTOR | NORMAL_KIND,
-    INTERPRETED_LAMBDA_ARROW = INTERPRETED | LAMBDA | ARROW_KIND,
-    INTERPRETED_LAMBDA_GENERATOR_OR_ASYNC = INTERPRETED | LAMBDA | NORMAL_KIND,
-    INTERPRETED_GETTER = INTERPRETED | GETTER_KIND,
-    INTERPRETED_SETTER = INTERPRETED | SETTER_KIND,
-    INTERPRETED_METHOD = INTERPRETED | METHOD_KIND,
+    INTERPRETED_NORMAL = BASESCRIPT | CONSTRUCTOR | NORMAL_KIND,
+    INTERPRETED_CLASS_CTOR = BASESCRIPT | CONSTRUCTOR | CLASSCONSTRUCTOR_KIND,
+    INTERPRETED_GENERATOR_OR_ASYNC = BASESCRIPT | NORMAL_KIND,
+    INTERPRETED_LAMBDA = BASESCRIPT | LAMBDA | CONSTRUCTOR | NORMAL_KIND,
+    INTERPRETED_LAMBDA_ARROW = BASESCRIPT | LAMBDA | ARROW_KIND,
+    INTERPRETED_LAMBDA_GENERATOR_OR_ASYNC = BASESCRIPT | LAMBDA | NORMAL_KIND,
+    INTERPRETED_GETTER = BASESCRIPT | GETTER_KIND,
+    INTERPRETED_SETTER = BASESCRIPT | SETTER_KIND,
+    INTERPRETED_METHOD = BASESCRIPT | METHOD_KIND,
 
     // Flags that XDR ignores. See also: js::BaseScript::MutableFlags.
     MUTABLE_FLAGS = RESOLVED_NAME | RESOLVED_LENGTH | NEW_SCRIPT_CLEARED,
@@ -156,8 +155,7 @@ class FunctionFlags {
   explicit FunctionFlags(uint16_t flags) : flags_(flags) {}
   MOZ_IMPLICIT FunctionFlags(Flags f) : flags_(f) {}
 
-  static_assert((INTERPRETED | INTERPRETED_LAZY) ==
-                    js::JS_FUNCTION_INTERPRETED_BITS,
+  static_assert((BASESCRIPT | SELFHOSTLAZY) == js::JS_FUNCTION_INTERPRETED_BITS,
                 "jsfriendapi.h's FunctionFlags::INTERPRETED-alike is wrong");
   static_assert(((FunctionKindLimit - 1) << FUNCTION_KIND_SHIFT) <=
                     FUNCTION_KIND_MASK,
@@ -184,7 +182,7 @@ class FunctionFlags {
 
   /* A function can be classified as either native (C++) or interpreted (JS): */
   bool isInterpreted() const {
-    return hasFlags(INTERPRETED) || hasFlags(INTERPRETED_LAZY);
+    return hasFlags(BASESCRIPT) || hasFlags(SELFHOSTLAZY);
   }
   bool isNative() const { return !isInterpreted(); }
 
@@ -229,7 +227,6 @@ class FunctionFlags {
     return hasFlags(HAS_BOUND_FUNCTION_NAME_PREFIX);
   }
   bool isLambda() const { return hasFlags(LAMBDA); }
-  bool isInterpretedLazy() const { return hasFlags(INTERPRETED_LAZY); }
 
   bool isNamedLambda(JSAtom* atom) const {
     return isLambda() && atom && !hasInferredName() && !hasGuessedAtom();
@@ -239,13 +236,8 @@ class FunctionFlags {
   // For live JSFunctions the pointer values will always be non-null, but due
   // to partial initialization the GC (and other features that scan the heap
   // directly) may still return a null pointer.
-  bool hasScript() const { return hasFlags(INTERPRETED); }
-  bool hasLazyScript() const {
-    return isInterpretedLazy() && !isSelfHostedOrIntrinsic();
-  }
-  bool hasSelfHostedLazyScript() const {
-    return isInterpretedLazy() && isSelfHostedOrIntrinsic();
-  }
+  bool hasBaseScript() const { return hasFlags(BASESCRIPT); }
+  bool hasSelfHostedLazyScript() const { return hasFlags(SELFHOSTLAZY); }
 
   // Arrow functions store their lexical new.target in the first extended slot.
   bool isArrow() const { return kind() == Arrow; }
@@ -326,10 +318,10 @@ class FunctionFlags {
     setFlags(HAS_BOUND_FUNCTION_NAME_PREFIX);
   }
 
-  void setInterpretedLazy() { setFlags(INTERPRETED_LAZY); }
-  void clearInterpretedLazy() { clearFlags(INTERPRETED_LAZY); }
-  void setInterpreted() { setFlags(INTERPRETED); }
-  void clearInterpreted() { clearFlags(INTERPRETED); }
+  void setSelfHostedLazy() { setFlags(SELFHOSTLAZY); }
+  void clearSelfHostedLazy() { clearFlags(SELFHOSTLAZY); }
+  void setBaseScript() { setFlags(BASESCRIPT); }
+  void clearBaseScript() { clearFlags(BASESCRIPT); }
 
   void setWasmJitEntry() { setFlags(WASM_JIT_ENTRY); }
 
@@ -489,9 +481,7 @@ class JSFunction : public js::NativeObject {
   bool hasSelfHostedLazyScript() const {
     return flags_.hasSelfHostedLazyScript();
   }
-  bool hasBaseScript() const {
-    return flags_.hasScript() || flags_.hasLazyScript();
-  }
+  bool hasBaseScript() const { return flags_.hasBaseScript(); }
 
   bool hasBytecode() const {
     MOZ_ASSERT(!isIncomplete());
@@ -820,24 +810,21 @@ class JSFunction : public js::NativeObject {
 
   void initLazyScript(js::LazyScript* lazy) {
     MOZ_ASSERT(isInterpreted());
-    flags_.clearInterpreted();
-    flags_.setInterpretedLazy();
     u.scripted.s.script_ = lazy;
   }
 
   // Release the lazyScript() pointer while triggering barriers.
   void clearLazyScript() {
     js::LazyScript::writeBarrierPre(lazyScript());
-    flags_.clearInterpretedLazy();
-    flags_.setInterpreted();
     u.scripted.s.script_ = nullptr;
     MOZ_ASSERT(isIncomplete());
   }
 
   void initSelfHostedLazyScript(js::SelfHostedLazyScript* lazy) {
+    MOZ_ASSERT(isSelfHostedBuiltin());
     MOZ_ASSERT(isInterpreted());
-    flags_.clearInterpreted();
-    flags_.setInterpretedLazy();
+    flags_.clearBaseScript();
+    flags_.setSelfHostedLazy();
     u.scripted.s.selfHostedLazy_ = lazy;
     MOZ_ASSERT(hasSelfHostedLazyScript());
   }
@@ -845,8 +832,8 @@ class JSFunction : public js::NativeObject {
   void clearSelfHostedLazyScript() {
     // Note: The selfHostedLazy_ field is not a GC-thing pointer so we don't
     // need to trigger barriers.
-    flags_.clearInterpretedLazy();
-    flags_.setInterpreted();
+    flags_.clearSelfHostedLazy();
+    flags_.setBaseScript();
     u.scripted.s.script_ = nullptr;
     MOZ_ASSERT(isIncomplete());
   }

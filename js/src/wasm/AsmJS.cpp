@@ -1427,7 +1427,7 @@ class MOZ_STACK_CLASS JS_HAZ_ROOTED ModuleValidatorShared {
   MOZ_MUST_USE bool initDummyFunction() {
     // This flows into FunctionBox, so must be tenured.
     dummyFunction_ = NewScriptedFunction(
-        cx_, 0, FunctionFlags::INTERPRETED, nullptr,
+        cx_, 0, FunctionFlags::BASESCRIPT, nullptr,
         /* proto = */ nullptr, gc::AllocKind::FUNCTION, TenuredObject);
     if (!dummyFunction_) {
       return false;

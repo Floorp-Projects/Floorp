@@ -598,9 +598,9 @@ class FunctionBox : public ObjectBox, public SharedContext {
   bool isMethod() const { return flags_.isMethod(); }
   bool isClassConstructor() const { return flags_.isClassConstructor(); }
 
-  bool isInterpreted() const { return flags_.isInterpreted(); }
+  bool isInterpreted() const { return flags_.hasBaseScript(); }
   void setIsInterpreted(bool interpreted) {
-    flags_.setFlags(FunctionFlags::INTERPRETED, interpreted);
+    flags_.setFlags(FunctionFlags::BASESCRIPT, interpreted);
   }
 
   void initLazyScript(LazyScript* script) {
