@@ -25,8 +25,9 @@ class SocketProcessChild final
     : public PSocketProcessChild,
       public mozilla::ipc::ChildToParentStreamActorManager {
  public:
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(SocketProcessChild)
+
   SocketProcessChild();
-  ~SocketProcessChild();
 
   static SocketProcessChild* GetSingleton();
 
@@ -78,6 +79,12 @@ class SocketProcessChild final
   AllocPInputChannelThrottleQueueChild(const uint32_t& aMeanBytesPerSecond,
                                        const uint32_t& aMaxBytesPerSecond);
 
+  bool IsShuttingDown() { return mShuttingDown; }
+
+ protected:
+  friend class SocketProcessImpl;
+  ~SocketProcessChild();
+
  private:
   // Mapping of content process id and the SocketProcessBridgeParent.
   // This table keeps SocketProcessBridgeParent alive in socket process.
@@ -87,6 +94,8 @@ class SocketProcessChild final
 #ifdef MOZ_GECKO_PROFILER
   RefPtr<ChildProfilerController> mProfilerController;
 #endif
+
+  bool mShuttingDown;
 };
 
 }  // namespace net
