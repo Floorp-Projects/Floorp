@@ -2013,6 +2013,14 @@ mozilla::ipc::IPCResult BrowserChild::RecvUpdateEpoch(const uint32_t& aEpoch) {
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult BrowserChild::RecvUpdateSHistory(
+    const bool& aImmediately) {
+  if (mSessionStoreListener) {
+    mSessionStoreListener->UpdateSHistoryChanges(aImmediately);
+  }
+  return IPC_OK();
+}
+
 // In case handling repeated keys takes much time, we skip firing new ones.
 bool BrowserChild::SkipRepeatedKeyEvent(const WidgetKeyboardEvent& aEvent) {
   if (mRepeatedKeyEventTime.IsNull() || !aEvent.CanSkipInRemoteProcess() ||
@@ -3938,8 +3946,9 @@ bool BrowserChild::UpdateSessionStore(uint32_t aFlushId, bool aIsFinal) {
 
   Unused << SendSessionStoreUpdate(
       docShellCaps, privatedMode, positions, positionDescendants, inputs,
-      idVals, xPathVals, origins, keys, values, isFullStorage, aFlushId,
-      aIsFinal, mSessionStoreListener->GetEpoch());
+      idVals, xPathVals, origins, keys, values, isFullStorage,
+      store->GetAndClearSHistoryChanged(), aFlushId, aIsFinal,
+      mSessionStoreListener->GetEpoch());
   return true;
 }
 
