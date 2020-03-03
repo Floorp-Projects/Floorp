@@ -40,6 +40,8 @@
     <dimen name="tp_onboarding_x_offset">-4dp</dimen>
     <dimen name="tp_onboarding_triangle_height">16dp</dimen>
 
+    <dimen name="tab_counter_box_width_height">24dp</dimen>
+
     <!--Quick Settings-->
     <dimen name="quicksettings_item_height">28dp</dimen>
     <dimen name="tracking_protection_item_height">48dp</dimen>

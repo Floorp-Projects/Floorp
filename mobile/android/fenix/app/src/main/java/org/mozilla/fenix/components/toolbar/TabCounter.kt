@@ -11,10 +11,9 @@ import android.graphics.Typeface
 import android.util.AttributeSet
 import android.util.TypedValue
 import android.view.LayoutInflater
-import android.view.ViewTreeObserver
 import android.widget.RelativeLayout
 import kotlinx.android.synthetic.main.mozac_ui_tabcounter_layout.view.*
-import mozilla.components.ui.tabcounter.R
+import org.mozilla.fenix.R
 import java.text.NumberFormat
 
 open class TabCounter @JvmOverloads constructor(
@@ -25,7 +24,6 @@ open class TabCounter @JvmOverloads constructor(
 
     private val animationSet: AnimatorSet
     private var count: Int = 0
-    private var currentTextRatio: Float = 0.toFloat()
 
     init {
         val inflater = LayoutInflater.from(context)
@@ -165,7 +163,7 @@ open class TabCounter @JvmOverloads constructor(
             counter_text, "alpha",
             ANIM_TEXT_FADEIN_FROM, ANIM_TEXT_FADEIN_TO
         ).setDuration(ANIM_TEXT_FADEIN_DURATION)
-        fadeIn.startDelay = (ANIM_TEXT_FADEIN_DELAY).toLong() // delay 6 frames after fadeOut
+        fadeIn.startDelay = (ANIM_TEXT_FADEIN_DELAY) // delay 6 frames after fadeOut
 
         // Move down on y-axis, from 0 to 4.4 in 66ms, with fadeIn (57~61, 4 frames).
         val moveDown = ObjectAnimator.ofFloat(
@@ -199,26 +197,14 @@ open class TabCounter @JvmOverloads constructor(
             ONE_DIGIT_SIZE_RATIO
         }
 
-        if (newRatio != currentTextRatio) {
-            currentTextRatio = newRatio
-            counter_text.viewTreeObserver.addOnGlobalLayoutListener(object :
-                ViewTreeObserver.OnGlobalLayoutListener {
-                override fun onGlobalLayout() {
-                    counter_text.viewTreeObserver.removeOnGlobalLayoutListener(this)
-                    val sizeInPixel = (counter_box.width * newRatio).toInt()
-                    if (sizeInPixel > 0) {
-                        // Only apply the size when we calculate a valid value.
-                        counter_text.setTextSize(TypedValue.COMPLEX_UNIT_PX, sizeInPixel.toFloat())
-                        counter_text.setTypeface(null, Typeface.BOLD)
-                        counter_text.setPadding(0, 0, 0, 0)
-                    }
-                }
-            })
-        }
+        val counterBoxWidth = context.resources.getDimensionPixelSize(R.dimen.tab_counter_box_width_height)
+        val textSize = newRatio * counterBoxWidth
+        counter_text.setTextSize(TypedValue.COMPLEX_UNIT_PX, textSize)
+        counter_text.setTypeface(null, Typeface.BOLD)
+        counter_text.setPadding(0, 0, 0, 0)
     }
 
     companion object {
-
         internal const val MAX_VISIBLE_TABS = 99
 
         internal const val SO_MANY_TABS_OPEN = "∞"
@@ -226,7 +212,6 @@ open class TabCounter @JvmOverloads constructor(
 
         internal const val ONE_DIGIT_SIZE_RATIO = 0.5f
         internal const val TWO_DIGITS_SIZE_RATIO = 0.4f
-        internal const val ONE_DIGIT_PADDING = 2F
         internal const val TWO_DIGIT_PADDING = 3F
         internal const val TWO_DIGITS_TAB_COUNT_THRESHOLD = 10
 

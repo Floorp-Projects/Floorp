@@ -17,8 +17,8 @@
 
         <ImageView
             android:id="@+id/counter_box"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
+            android:layout_width="@dimen/tab_counter_box_width_height"
+            android:layout_height="@dimen/tab_counter_box_width_height"
             android:importantForAccessibility="no"
             app:srcCompat="@drawable/ic_tabs"/>
 
@@ -28,6 +28,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
+            android:textAlignment="center"
             android:textColor="?primaryText"
             android:textSize="12sp"
             android:textStyle="bold"
