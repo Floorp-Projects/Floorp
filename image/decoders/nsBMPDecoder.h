@@ -19,41 +19,19 @@ namespace image {
 
 namespace bmp {
 
-struct CalRgbEndpoint {
-  uint32_t mGamma;
-  uint32_t mX;
-  uint32_t mY;
-  uint32_t mZ;
-};
-
 /// This struct contains the fields from the file header and info header that
 /// we use during decoding. (Excluding bitfields fields, which are kept in
 /// BitFields.)
 struct Header {
-  uint32_t mDataOffset;       // Offset to raster data.
-  uint32_t mBIHSize;          // Header size.
-  int32_t mWidth;             // Image width.
-  int32_t mHeight;            // Image height.
-  uint16_t mBpp;              // Bits per pixel.
-  uint32_t mCompression;      // See struct Compression for valid values.
-  uint32_t mImageSize;        // (compressed) image size. Can be 0 if
-                              // mCompression==0.
-  uint32_t mNumColors;        // Used colors.
-  InfoColorSpace mCsType;     // Color space type.
-  InfoColorIntent mCsIntent;  // Color space intent.
-
-  union {
-    struct {
-      CalRgbEndpoint mRed;
-      CalRgbEndpoint mGreen;
-      CalRgbEndpoint mBlue;
-    } mCalibrated;
-
-    struct {
-      uint32_t mOffset;
-      uint32_t mLength;
-    } mProfile;
-  } mColorSpace;
+  uint32_t mDataOffset;   // Offset to raster data.
+  uint32_t mBIHSize;      // Header size.
+  int32_t mWidth;         // Image width.
+  int32_t mHeight;        // Image height.
+  uint16_t mBpp;          // Bits per pixel.
+  uint32_t mCompression;  // See struct Compression for valid values.
+  uint32_t mImageSize;    // (compressed) image size. Can be 0 if
+                          // mCompression==0.
+  uint32_t mNumColors;    // Used colors.
 
   Header()
       : mDataOffset(0),
@@ -63,9 +41,7 @@ struct Header {
         mBpp(0),
         mCompression(0),
         mImageSize(0),
-        mNumColors(0),
-        mCsType(InfoColorSpace::SRGB),
-        mCsIntent(InfoColorIntent::IMAGES) {}
+        mNumColors(0) {}
 };
 
 /// An entry in the color table.
@@ -182,10 +158,6 @@ class nsBMPDecoder : public Decoder {
     INFO_HEADER_SIZE,
     INFO_HEADER_REST,
     BITFIELDS,
-    SKIP_TO_COLOR_PROFILE,
-    FOUND_COLOR_PROFILE,
-    COLOR_PROFILE,
-    ALLOCATE_SURFACE,
     COLOR_TABLE,
     GAP,
     AFTER_GAP,
@@ -212,16 +184,10 @@ class nsBMPDecoder : public Decoder {
 
   void FinishRow();
 
-  void PrepareCalibratedColorProfile();
-  void PrepareColorProfileTransform();
-
   LexerTransition<State> ReadFileHeader(const char* aData, size_t aLength);
   LexerTransition<State> ReadInfoHeaderSize(const char* aData, size_t aLength);
   LexerTransition<State> ReadInfoHeaderRest(const char* aData, size_t aLength);
   LexerTransition<State> ReadBitfields(const char* aData, size_t aLength);
-  LexerTransition<State> SeekColorProfile(size_t aLength);
-  LexerTransition<State> ReadColorProfile(const char* aData, size_t aLength);
-  LexerTransition<State> AllocateSurface();
   LexerTransition<State> ReadColorTable(const char* aData, size_t aLength);
   LexerTransition<State> SkipGap();
   LexerTransition<State> AfterGap();
@@ -233,9 +199,6 @@ class nsBMPDecoder : public Decoder {
   SurfacePipe mPipe;
 
   StreamingLexer<State> mLexer;
-
-  // Iterator to save return point.
-  Maybe<SourceBufferIterator> mReturnIterator;
 
   UniquePtr<uint32_t[]> mRowBuffer;
 
