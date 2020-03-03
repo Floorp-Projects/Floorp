@@ -5816,7 +5816,6 @@ bool IonBuilder::ensureArrayIteratorPrototypeNextNotModified() {
 
 AbortReasonOr<Ok> IonBuilder::jsop_optimize_spreadcall() {
   MDefinition* arr = current->peek(-1);
-  arr->setImplicitlyUsedUnchecked();
 
   // Assuming optimization isn't available doesn't affect correctness.
   // TODO: Investigate dynamic checks.
@@ -5873,6 +5872,7 @@ AbortReasonOr<Ok> IonBuilder::jsop_optimize_spreadcall() {
     current->add(ins);
     current->push(ins);
   } else {
+    arr->setImplicitlyUsedUnchecked();
     pushConstant(BooleanValue(false));
   }
   return Ok();
@@ -12799,6 +12799,9 @@ AbortReasonOr<Ok> IonBuilder::jsop_checkreturn() {
 
   if (returnValue->type() == MIRType::Undefined &&
       !thisValue->mightBeMagicType()) {
+    // The return value mustn't be optimized out, otherwise baseline may see the
+    // optimized-out magic value when it re-executes this op after a bailout.
+    returnValue->setImplicitlyUsedUnchecked();
     thisValue->setImplicitlyUsedUnchecked();
     current->setSlot(info().returnValueSlot(), thisValue);
     return Ok();
