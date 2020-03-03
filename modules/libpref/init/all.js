@@ -2310,14 +2310,6 @@ pref("security.cert_pinning.process_headers_from_non_builtin_roots", false);
 // Default: false
 pref("security.cert_pinning.hpkp.enabled", false);
 
-// If set to true strict checks will happen on the triggering principal for loads.
-// Android is disabled at the moment pending Bug 1504968
-#if !defined(RELEASE_OR_BETA) && !defined(ANDROID)
-  pref("security.strict_security_checks.enabled", true);
-#else
-  pref("security.strict_security_checks.enabled", false);
-#endif
-
 // Remote settings preferences
 pref("services.settings.poll_interval", 86400); // 24H
 pref("services.settings.server", "https://firefox.settings.services.mozilla.com/v1");
