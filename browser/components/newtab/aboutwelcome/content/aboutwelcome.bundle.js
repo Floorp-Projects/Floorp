@@ -113,6 +113,24 @@ __webpack_require__.r(__webpack_exports__);
 
 
 class AboutWelcome extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureComponent {
+  constructor(props) {
+    super(props);
+    this.state = {
+      metricsFlowUri: null
+    };
+    this.fetchFxAFlowUri = this.fetchFxAFlowUri.bind(this);
+  }
+
+  async fetchFxAFlowUri() {
+    this.setState({
+      metricsFlowUri: await window.AWGetFxAMetricsFlowURI()
+    });
+  }
+
+  componentDidMount() {
+    this.fetchFxAFlowUri();
+  }
+
   render() {
     const {
       props
@@ -126,6 +144,7 @@ class AboutWelcome extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureComp
       subtitle: props.subtitle
     }), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_components_FxCards__WEBPACK_IMPORTED_MODULE_3__["FxCards"], {
       cards: props.cards,
+      metricsFlowUri: this.state.metricsFlowUri,
       sendTelemetry: window.AWSendEventTelemetry
     })));
   }
@@ -200,6 +219,58 @@ function _extends() { _extends = Object.assign || function (target) { for (var i
 
 
 class FxCards extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureComponent {
+  constructor(props) {
+    super(props);
+    this.state = {
+      flowParams: null
+    };
+    this.fetchFxAFlowParams = this.fetchFxAFlowParams.bind(this);
+    this.onCardAction = this.onCardAction.bind(this);
+  }
+
+  componentDidUpdate() {
+    this.fetchFxAFlowParams();
+  }
+
+  componentDidMount() {
+    this.fetchFxAFlowParams();
+  }
+
+  async fetchFxAFlowParams() {
+    if (this.state.flowParams || !this.props.metricsFlowUri) {
+      return;
+    }
+
+    let flowParams;
+
+    try {
+      const response = await fetch(this.props.metricsFlowUri, {
+        credentials: "omit"
+      });
+
+      if (response.status === 200) {
+        const {
+          deviceId,
+          flowId,
+          flowBeginTime
+        } = await response.json();
+        flowParams = {
+          deviceId,
+          flowId,
+          flowBeginTime
+        };
+      } else {
+        console.error("Non-200 response", response); // eslint-disable-line no-console
+      }
+    } catch (e) {
+      flowParams = null;
+    }
+
+    this.setState({
+      flowParams
+    });
+  }
+
   onCardAction(action) {
     let {
       type,
@@ -210,6 +281,13 @@ class FxCards extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureComponent
     if (action.type === "OPEN_URL") {
       let url = new URL(action.data.args);
       Object(_asrouter_templates_FirstRun_addUtmParams__WEBPACK_IMPORTED_MODULE_1__["addUtmParams"])(url, UTMTerm);
+
+      if (action.addFlowParams) {
+        url.searchParams.append("device_id", this.state.flowParams.deviceId);
+        url.searchParams.append("flow_id", this.state.flowParams.flowId);
+        url.searchParams.append("flow_begin_time", this.state.flowParams.flowBeginTime);
+      }
+
       data = { ...data,
         args: url.toString()
       };
