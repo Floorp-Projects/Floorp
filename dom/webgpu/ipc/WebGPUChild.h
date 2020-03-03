@@ -79,11 +79,9 @@ class WebGPUChild final : public PWebGPUChild {
       RawId aSelfId, const dom::GPUComputePipelineDescriptor& aDesc);
   void DestroyComputePipeline(RawId aId);
 
-  RawId DeviceCreateRenderPipeline(
-      RawId aSelfId, const dom::GPURenderPipelineDescriptor& aDesc);
-  void DestroyRenderPipeline(RawId aId);
-
   void QueueSubmit(RawId aSelfId, const nsTArray<RawId>& aCommandBufferIds);
+
+  void DestroyRenderPipeline(RawId aId);
 
  private:
   virtual ~WebGPUChild();
