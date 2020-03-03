@@ -76,7 +76,7 @@
     "react-transition-group": "^2.2.1",
     "reselect": "^4.0.0",
     "svg-inline-react": "^3.0.0",
-    "wasmparser": "^0.7.0",
+    "wasmparser": "^0.10.0",
     "whatwg-url": "^7.0.0"
   },
   "private": true,
