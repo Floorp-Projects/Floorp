@@ -612,11 +612,12 @@ MOZ_MUST_USE bool js::ReadableStreamTee(
  *      ReadableStreamPipeTo ( source, dest, preventClose, preventAbort,
  *                             preventCancel, signal )
  */
-JSObject* js::ReadableStreamPipeTo(JSContext* cx,
-                                   Handle<ReadableStream*> unwrappedSource,
-                                   Handle<WritableStream*> unwrappedDest,
-                                   bool preventClose, bool preventAbort,
-                                   bool preventCancel, Handle<Value> signal) {
+PromiseObject* js::ReadableStreamPipeTo(JSContext* cx,
+                                        Handle<ReadableStream*> unwrappedSource,
+                                        Handle<WritableStream*> unwrappedDest,
+                                        bool preventClose, bool preventAbort,
+                                        bool preventCancel,
+                                        Handle<Value> signal) {
   JS_ReportErrorASCII(cx, "XXX ceci n'est pas une pipe");
   return nullptr;
 }
