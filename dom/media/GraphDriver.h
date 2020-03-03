@@ -79,7 +79,7 @@ namespace dom {
 enum class AudioContextOperation;
 }
 
-struct GraphInterface {
+struct GraphInterface : public nsISupports {
   /**
    * Object returned from OneIteration() instructing the iterating GraphDriver
    * what to do.
@@ -173,8 +173,6 @@ struct GraphInterface {
       mResult.as<SwitchDriver>().Switched();
     }
   };
-
-  NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
 
   /* Called on the graph thread when there is new output data for listeners.
    * This is the mixed audio output of this MediaTrackGraph. */
