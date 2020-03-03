@@ -74,6 +74,7 @@ permalink: /changelog/
 * **concept-engine**
   * ⚠️ **This is a breaking change**: remove deprecated GeckoView setting `allowAutoplayMedia`
     * This should now be controlled for individual sites via `SitePermissionsRules`
+  * Fixed a bug that would cause `TrackingProtectionPolicyForSessionTypes` to lose some information during transformations.
 
 * **feature-downloads**
   * ⚠️ **This is a breaking change**: `customTabId` is renamed to `tabId`.

@@ -25,6 +25,7 @@ import org.mockito.Mockito.verifyNoMoreInteractions
 import org.mockito.Mockito.verifyZeroInteractions
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy.TrackingCategory
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy.CookiePolicy
+import java.lang.reflect.Modifier
 
 class EngineSessionTest {
     private val unknownHitResult = HitResult.UNKNOWN("file://foobar")
@@ -690,6 +691,38 @@ class EngineSessionTest {
         assertTrue(strictPolicy.contains(TrackingCategory.TEST))
         assertTrue(strictPolicy.contains(TrackingCategory.CRYPTOMINING))
         assertFalse(strictPolicy.contains(TrackingCategory.CONTENT))
+    }
+
+    @Test
+    fun `TrackingSessionPolicies retain all expected fields during privacy transformations`() {
+        val strict = TrackingProtectionPolicy.strict()
+        val default = TrackingProtectionPolicy.recommended()
+        val custom = TrackingProtectionPolicy.select(
+            trackingCategories = emptyArray(),
+            cookiePolicy = CookiePolicy.ACCEPT_ONLY_FIRST_PARTY,
+            strictSocialTrackingProtection = true
+        )
+        val changedFields = listOf("useForPrivateSessions", "useForRegularSessions")
+
+        fun checkSavedFields(expect: TrackingProtectionPolicy, actual: TrackingProtectionPolicy) {
+            TrackingProtectionPolicy::class.java.declaredMethods
+                .filter { method -> changedFields.all { !method.name.toLowerCase().contains(it.toLowerCase()) } }
+                .filter { it.parameterCount == 0 } // Only keep getters
+                .filter { it.modifiers and Modifier.PUBLIC != 0 }
+                .filter { it.modifiers and Modifier.STATIC == 0 }
+                .forEach {
+                    assertEquals(it.invoke(expect), it.invoke(actual))
+                }
+        }
+
+        listOf(
+            strict,
+            default,
+            custom
+        ).forEach {
+            checkSavedFields(it, it.forPrivateSessionsOnly())
+            checkSavedFields(it, it.forRegularSessionsOnly())
+        }
     }
 }
 
