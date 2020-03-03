@@ -54,6 +54,7 @@ USE_LIBS += [
 
 OS_LIBS += [
     'rpcrt4',
+    'oleacc',
 ]
 
 RCINCLUDE = 'AccessibleHandler.rc'
