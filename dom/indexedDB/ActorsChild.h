@@ -603,10 +603,9 @@ class BackgroundRequestChild final : public BackgroundRequestChildBase,
 
   void HandleResponse(const nsTArray<Key>& aResponse);
 
-  void HandleResponse(const SerializedStructuredCloneReadInfo& aResponse);
+  void HandleResponse(SerializedStructuredCloneReadInfo&& aResponse);
 
-  void HandleResponse(
-      const nsTArray<SerializedStructuredCloneReadInfo>& aResponse);
+  void HandleResponse(nsTArray<SerializedStructuredCloneReadInfo>&& aResponse);
 
   void HandleResponse(JS::Handle<JS::Value> aResponse);
 
@@ -623,7 +622,7 @@ class BackgroundRequestChild final : public BackgroundRequestChildBase,
   // IPDL methods are only called by IPDL.
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
-  mozilla::ipc::IPCResult Recv__delete__(const RequestResponse& aResponse);
+  mozilla::ipc::IPCResult Recv__delete__(RequestResponse&& aResponse);
 
   mozilla::ipc::IPCResult RecvPreprocess(const PreprocessParams& aParams);
 };
