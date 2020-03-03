@@ -380,9 +380,6 @@ fn application_when_ignoring_colors(
     // Here we check backplate status to decide if ignoring background-image
     // is the right decision.
     match *declaration {
-        // If we've got multiple declarations in the same block, they'll
-        // get overridden at parse time. We should probably adjust this
-        // to turn Ignored decls into `none`. See 1619701
         PropertyDeclaration::BackgroundColor(ref color) => {
             if color.is_transparent() {
                 return DeclarationApplication::Apply;
@@ -408,19 +405,11 @@ fn application_when_ignoring_colors(
         // special case along with the 'ignored_when_colors_disabled=True' mako line
         // for the "background-image" property.
         #[cfg(feature = "gecko")]
-        PropertyDeclaration::BackgroundImage(ref bkg) => {
-            use crate::values::generics::image::Image;
-            // We should only allow images to be rendered in HCM if the backplate pref
-            // is enabled, and if all the images applied to the background are from URLs.
-            // If one or more background images aren't from URL's (ie. gradients)
-            // we should ignore all background-image styling.
+        PropertyDeclaration::BackgroundImage(..) => {
             if static_prefs::pref!("browser.display.permit_backplate") {
-                if bkg.0.iter().all(|image| matches!(*image, Image::Url(..))) {
-                    return DeclarationApplication::Apply;
-                }
-                return DeclarationApplication::Ignore;
+                DeclarationApplication::Apply
             } else {
-                return DeclarationApplication::Ignore;
+                DeclarationApplication::Ignore
             }
         },
         _ => DeclarationApplication::Ignore,
