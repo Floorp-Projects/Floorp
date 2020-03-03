@@ -12,6 +12,7 @@
 #include "nsDNSPrefetch.h"
 #include "nsEscape.h"
 #include "nsHttpTransaction.h"
+#include "nsICancelable.h"
 #include "nsIHttpPushListener.h"
 #include "nsIProtocolProxyService2.h"
 #include "nsIOService.h"
@@ -34,6 +35,7 @@ NS_INTERFACE_MAP_BEGIN(SimpleHttpChannel)
   NS_INTERFACE_MAP_ENTRY(nsISupportsPriority)
   NS_INTERFACE_MAP_ENTRY(nsIClassOfService)
   NS_INTERFACE_MAP_ENTRY(nsIProxiedChannel)
+  NS_INTERFACE_MAP_ENTRY(nsIProtocolProxyCallback)
   NS_INTERFACE_MAP_ENTRY(nsIStreamListener)
   NS_INTERFACE_MAP_ENTRY(nsIRequestObserver)
   NS_INTERFACE_MAP_ENTRY(nsITransportEventSink)
@@ -45,7 +47,8 @@ NS_INTERFACE_MAP_END_INHERITING(HttpBaseChannel)
 SimpleHttpChannel::SimpleHttpChannel()
     : HttpAsyncAborter<SimpleHttpChannel>(this),
       mTopWindowOriginComputed(false),
-      mPushedStreamId(0) {
+      mPushedStreamId(0),
+      mCurrentEventTarget(GetCurrentThreadEventTarget()) {
   LOG(("SimpleHttpChannel ctor [this=%p]\n", this));
 }
 
@@ -64,6 +67,15 @@ SimpleHttpChannel::Cancel(nsresult status) {
 
   mCanceled = true;
   mStatus = status;
+  if (mProxyRequest) {
+    nsCOMPtr<nsICancelable> proxyRequet;
+    proxyRequet.swap(mProxyRequest);
+    NS_DispatchToMainThread(
+        NS_NewRunnableFunction(
+            "CancelProxyRequest",
+            [proxyRequet, status]() { proxyRequet->Cancel(status); }),
+        NS_DISPATCH_NORMAL);
+  }
   CancelNetworkRequest(status);
   return NS_OK;
 }
@@ -147,12 +159,126 @@ SimpleHttpChannel::AsyncOpen(nsIStreamListener* aListener) {
 
   mAsyncOpenTime = TimeStamp::Now();
 
+  rv = MaybeResolveProxyAndBeginConnect();
+  if (NS_FAILED(rv)) {
+    Unused << AsyncAbort(rv);
+  }
+
+  return NS_OK;
+}
+
+nsresult SimpleHttpChannel::MaybeResolveProxyAndBeginConnect() {
+  nsresult rv;
+
+  // The common case for HTTP channels is to begin proxy resolution and return
+  // at this point. The only time we know mProxyInfo already is if we're
+  // proxying a non-http protocol like ftp. We don't need to discover proxy
+  // settings if we are never going to make a network connection.
+  if (!mProxyInfo &&
+      !(mLoadFlags & (nsICachingChannel::LOAD_ONLY_FROM_CACHE |
+                      nsICachingChannel::LOAD_NO_NETWORK_IO)) &&
+      NS_SUCCEEDED(ResolveProxy())) {
+    return NS_OK;
+  }
+
   rv = BeginConnect();
   if (NS_FAILED(rv)) {
     Unused << AsyncAbort(rv);
   }
 
   return NS_OK;
+}
+
+nsresult SimpleHttpChannel::ResolveProxy() {
+  LOG(("SimpleHttpChannel::ResolveProxy [this=%p]\n", this));
+  if (!NS_IsMainThread()) {
+    return NS_DispatchToMainThread(
+        NewRunnableMethod("SimpleHttpChannel::ResolveProxy", this,
+                          &SimpleHttpChannel::ResolveProxy),
+        NS_DISPATCH_NORMAL);
+  }
+
+  MOZ_ASSERT(NS_IsMainThread());
+
+  nsresult rv;
+
+  nsCOMPtr<nsIProtocolProxyService> pps =
+      do_GetService(NS_PROTOCOLPROXYSERVICE_CONTRACTID, &rv);
+  if (NS_SUCCEEDED(rv)) {
+    // using the nsIProtocolProxyService2 allows a minor performance
+    // optimization, but if an add-on has only provided the original interface
+    // then it is ok to use that version.
+    nsCOMPtr<nsIProtocolProxyService2> pps2 = do_QueryInterface(pps);
+    if (pps2) {
+      rv = pps2->AsyncResolve2(this, mProxyResolveFlags, this, nullptr,
+                               getter_AddRefs(mProxyRequest));
+    } else {
+      rv = pps->AsyncResolve(static_cast<nsIChannel*>(this), mProxyResolveFlags,
+                             this, nullptr, getter_AddRefs(mProxyRequest));
+    }
+  }
+
+  if (NS_FAILED(rv)) {
+    if (!mCurrentEventTarget->IsOnCurrentThread()) {
+      mCurrentEventTarget->Dispatch(
+          NewRunnableMethod<nsresult>("SimpleHttpChannel::AsyncAbort", this,
+                                      &SimpleHttpChannel::AsyncAbort, rv),
+          NS_DISPATCH_NORMAL);
+    }
+  }
+
+  return rv;
+}
+
+NS_IMETHODIMP
+SimpleHttpChannel::OnProxyAvailable(nsICancelable* request, nsIChannel* channel,
+                                    nsIProxyInfo* pi, nsresult status) {
+  LOG(("SimpleHttpChannel::OnProxyAvailable [this=%p pi=%p status=%" PRIx32
+       " mStatus=%" PRIx32 "]\n",
+       this, pi, static_cast<uint32_t>(status),
+       static_cast<uint32_t>(static_cast<nsresult>(mStatus))));
+
+  if (!mCurrentEventTarget->IsOnCurrentThread()) {
+    RefPtr<SimpleHttpChannel> self = this;
+    nsCOMPtr<nsICancelable> req = request;
+    nsCOMPtr<nsIChannel> chan = channel;
+    nsCOMPtr<nsIProxyInfo> info = pi;
+    return mCurrentEventTarget->Dispatch(
+        NS_NewRunnableFunction("SimpleHttpChannel::OnProxyAvailable",
+                               [self, req, chan, info, status]() {
+                                 self->OnProxyAvailable(req, chan, info,
+                                                        status);
+                               }),
+        NS_DISPATCH_NORMAL);
+  }
+
+  MOZ_ASSERT(mCurrentEventTarget->IsOnCurrentThread());
+
+  mProxyRequest = nullptr;
+
+  nsresult rv;
+
+  // If status is a failure code, then it means that we failed to resolve
+  // proxy info.  That is a non-fatal error assuming it wasn't because the
+  // request was canceled.  We just failover to DIRECT when proxy resolution
+  // fails (failure can mean that the PAC URL could not be loaded).
+
+  if (NS_SUCCEEDED(status)) mProxyInfo = pi;
+
+  if (!gHttpHandler->Active()) {
+    LOG(
+        ("nsHttpChannel::OnProxyAvailable [this=%p] "
+         "Handler no longer active.\n",
+         this));
+    rv = NS_ERROR_NOT_AVAILABLE;
+  } else {
+    rv = BeginConnect();
+  }
+
+  if (NS_FAILED(rv)) {
+    Unused << AsyncAbort(rv);
+  }
+  return rv;
 }
 
 const nsCString& SimpleHttpChannel::GetTopWindowOrigin() {
@@ -307,6 +433,10 @@ nsresult SimpleHttpChannel::BeginConnect() {
              static_cast<uint32_t>(rv), this));
       }
     }
+  }
+
+  if (mCanceled) {
+    return mStatus;
   }
 
   MaybeStartDNSPrefetch();
@@ -502,7 +632,7 @@ nsresult SimpleHttpChannel::SetupTransaction() {
 
   rv = mTransaction->Init(
       mCaps, mConnectionInfo, &mRequestHead, mUploadStream, mReqContentLength,
-      mUploadStreamHasHeaders, GetCurrentThreadEventTarget(), callbacks, this,
+      mUploadStreamHasHeaders, mCurrentEventTarget, callbacks, this,
       mTopLevelOuterContentWindowId, HttpTrafficCategory::eInvalid,
       mRequestContext, mClassOfService, mInitialRwin, mResponseTimeoutEnabled,
       mChannelId, nullptr, std::move(pushCallback), mTransWithPushedStream,
