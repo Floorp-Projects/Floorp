@@ -189,6 +189,8 @@ SimpleTest.waitForFocus(async () => {
                `data of "beforeinput" event should be "${test.input.before}" when setUserInput("${test.input.before}") is called before ${tag} gets focus`);
             is(beforeInputEvents[0].dataTransfer, null,
                `dataTransfer of "beforeinput" event should be null when setUserInput("${test.input.before}") is called before ${tag} gets focus`);
+            is(beforeInputEvents[0].getTargetRanges().length, 0,
+               `getTargetRanges() of "beforeinput" event should return empty array when setUserInput("${test.input.before}") is called before ${tag} gets focus`);
           }
           ok(inputEvents[0] instanceof InputEvent,
              `"input" event should be dispatched with InputEvent interface when setUserInput("${test.input.before}") is called before ${tag} gets focus`);
@@ -198,6 +200,8 @@ SimpleTest.waitForFocus(async () => {
              `data of "input" event should be "${test.input.before}" when setUserInput("${test.input.before}") is called before ${tag} gets focus`);
           is(inputEvents[0].dataTransfer, null,
              `dataTransfer of "input" event should be null when setUserInput("${test.input.before}") is called before ${tag} gets focus`);
+          is(inputEvents[0].getTargetRanges().length, 0,
+             `getTargetRanges() of "input" event should return empty array when setUserInput("${test.input.before}") is called before ${tag} gets focus`);
         }
       } else {
         ok(inputEvents[0] instanceof Event && !(inputEvents[0] instanceof UIEvent),
@@ -271,6 +275,8 @@ SimpleTest.waitForFocus(async () => {
                `data of "beforeinput" should be "${test.input.after}" when setUserInput("${test.input.after}") is called after ${tag} gets focus`);
             is(beforeInputEvents[0].dataTransfer, null,
                `dataTransfer of "beforeinput" should be null when setUserInput("${test.input.after}") is called after ${tag} gets focus`);
+            is(beforeInputEvents[0].getTargetRanges().length, 0,
+               `getTargetRanges() of "beforeinput" should return empty array when setUserInput("${test.input.after}") is called after ${tag} gets focus`);
           }
           ok(inputEvents[0] instanceof InputEvent,
              `"input" event should be dispatched with InputEvent interface when setUserInput("${test.input.after}") is called after ${tag} gets focus`);
@@ -280,6 +286,8 @@ SimpleTest.waitForFocus(async () => {
              `data of "input" event should be "${test.input.after}" when setUserInput("${test.input.after}") is called after ${tag} gets focus`);
           is(inputEvents[0].dataTransfer, null,
              `dataTransfer of "input" event should be null when setUserInput("${test.input.after}") is called after ${tag} gets focus`);
+          is(inputEvents[0].getTargetRanges().length, 0,
+             `getTargetRanges() of "input" event should return empty array when setUserInput("${test.input.after}") is called after ${tag} gets focus`);
         }
       } else {
         ok(inputEvents[0] instanceof Event && !(inputEvents[0] instanceof UIEvent),

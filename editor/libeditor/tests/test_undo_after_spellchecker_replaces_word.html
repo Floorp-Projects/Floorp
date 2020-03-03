@@ -33,7 +33,7 @@ SimpleTest.waitForFocus(async () => {
 
       aElement.focus();
 
-      function checkInputEvent(aEvent, aInputType, aData, aDataTransfer, aDescriptionInner) {
+      function checkInputEvent(aEvent, aInputType, aData, aDataTransfer, aTargetRanges, aDescriptionInner) {
         ok(aEvent instanceof InputEvent,
            `${aDescription}"${aEvent.type}" event should be dispatched with InputEvent interface ${aDescriptionInner}`);
         is(aEvent.cancelable, aEvent.type === "beforeinput" && aInputType !== "",
@@ -53,6 +53,26 @@ SimpleTest.waitForFocus(async () => {
                `${aDescription}dataTransfer of "${aEvent.type}" event should have ${item.data} as ${item.type} ${aDescriptionInner}`);
           }
         }
+        let targetRanges = aEvent.getTargetRanges();
+        if (aTargetRanges.length === 0) {
+          is(targetRanges.length, 0,
+             `${aDescription}getTargetRange() of "${aEvent.type}" event should return empty array ${aDescriptionInner}`);
+        } else {
+          is(targetRanges.length, aTargetRanges.length,
+             `${aDescription}getTargetRange() of "${aEvent.type}" event should return static range array ${aDescriptionInner}`);
+          if (targetRanges.length == aTargetRanges.length) {
+            for (let i = 0; i < targetRanges.length; i++) {
+              is(targetRanges[i].startContainer, aTargetRanges[i].startContainer,
+                 `${aDescription}startContainer of getTargetRanges()[${i}] of "${aEvent.type}" event does not match ${aDescriptionInner}`);
+              is(targetRanges[i].startOffset, aTargetRanges[i].startOffset,
+                 `${aDescription}startOffset of getTargetRanges()[${i}] of "${aEvent.type}" event does not match ${aDescriptionInner}`);
+              is(targetRanges[i].endContainer, aTargetRanges[i].endContainer,
+                 `${aDescription}endContainer of getTargetRanges()[${i}] of "${aEvent.type}" event does not match ${aDescriptionInner}`);
+              is(targetRanges[i].endOffset, aTargetRanges[i].endOffset,
+                 `${aDescription}endOffset of getTargetRanges()[${i}] of "${aEvent.type}" event does not match ${aDescriptionInner}`);
+            }
+          }
+        }
       }
 
       let beforeInputEvents = [];
@@ -67,7 +87,6 @@ SimpleTest.waitForFocus(async () => {
       function getValue() {
         return aElement === textarea ? aElement.value : aElement.innerHTML;
       }
-
 
       SpecialPowers.Cu.import(
         "resource://testing-common/AsyncSpellCheckTestHelper.jsm")
@@ -89,19 +108,21 @@ SimpleTest.waitForFocus(async () => {
           is(beforeInputEvents.length, 1,
              `${aDescription}Only one "beforeinput" event should be fired when replacing a word with spellchecker`);
           if (aElement === textarea) {
-            checkInputEvent(beforeInputEvents[0], "insertReplacementText", "aux", null,
+            checkInputEvent(beforeInputEvents[0], "insertReplacementText", "aux", null, [],
                             "when replacing a word with spellchecker");
           } else {
             checkInputEvent(beforeInputEvents[0], "insertReplacementText", null, [{type: "text/plain", data: "aux"}],
+                            [{startContainer: aRootElement.firstChild, startOffset: 4,
+                              endContainer: aRootElement.firstChild, endOffset: 7}],
                             "when replacing a word with spellchecker");
           }
           is(inputEvents.length, 1,
              `${aDescription}Only one "input" event should be fired when replacing a word with spellchecker`);
           if (aElement === textarea) {
-            checkInputEvent(inputEvents[0], "insertReplacementText", "aux", null,
+            checkInputEvent(inputEvents[0], "insertReplacementText", "aux", null, [],
                             "when replacing a word with spellchecker");
           } else {
-            checkInputEvent(inputEvents[0], "insertReplacementText", null, [{type: "text/plain", data: "aux"}],
+            checkInputEvent(inputEvents[0], "insertReplacementText", null, [{type: "text/plain", data: "aux"}], [],
                             "when replacing a word with spellchecker");
           }
 
@@ -112,11 +133,11 @@ SimpleTest.waitForFocus(async () => {
              `${aDescription}'abx' should be restored by undo`);
           is(beforeInputEvents.length, 1,
              `${aDescription}Only one "beforeinput" event should be fired when undoing the replacing word`);
-          checkInputEvent(beforeInputEvents[0], "historyUndo", null, null,
+          checkInputEvent(beforeInputEvents[0], "historyUndo", null, null, [],
                           "when undoing the replacing word");
           is(inputEvents.length, 1,
              `${aDescription}Only one "input" event should be fired when undoing the replacing word`);
-          checkInputEvent(inputEvents[0], "historyUndo", null, null,
+          checkInputEvent(inputEvents[0], "historyUndo", null, null, [],
                           "when undoing the replacing word");
 
           beforeInputEvents = [];
@@ -126,11 +147,11 @@ SimpleTest.waitForFocus(async () => {
              `${aDescription}'aux' should be restored by redo`);
           is(beforeInputEvents.length, 1,
              `${aDescription}Only one "beforeinput" event should be fired when redoing the replacing word`);
-          checkInputEvent(beforeInputEvents[0], "historyRedo", null, null,
+          checkInputEvent(beforeInputEvents[0], "historyRedo", null, null, [],
                           "when redoing the replacing word");
           is(inputEvents.length, 1,
              `${aDescription}Only one "input" event should be fired when redoing the replacing word`);
-          checkInputEvent(inputEvents[0], "historyRedo", null, null,
+          checkInputEvent(inputEvents[0], "historyRedo", null, null, [],
                           "when redoing the replacing word");
 
           aElement.removeEventListener("beforeinput", onBeforeInput);

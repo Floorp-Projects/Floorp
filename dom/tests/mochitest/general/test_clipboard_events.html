@@ -236,6 +236,7 @@ add_task(async function test_input_oncut() {
       is(beforeInputEvents[0].cancelable, true, '"beforeinput" event for "deleteByCut" should be cancelable');
       is(beforeInputEvents[0].data, null, '"data" of "beforeinput" event for "deleteByCut" should be null');
       is(beforeInputEvents[0].dataTransfer, null, '"dataTransfer" of "beforeinput" event for "deleteByCut" should be null');
+      is(beforeInputEvents[0].getTargetRanges().length, 0, 'getTargetRanges() of "beforeinput" event for "deleteByCut" should return empty array');
     }
     is(inputEvents.length, 1, '"input" event should be fired once by cut');
     if (inputEvents.length > 0) {
@@ -243,6 +244,7 @@ add_task(async function test_input_oncut() {
       is(inputEvents[0].cancelable, false, '"input" event for "deleteByCut" should not be cancelable');
       is(inputEvents[0].data, null, '"data" of "input" event for "deleteByCut" should be null');
       is(inputEvents[0].dataTransfer, null, '"dataTransfer" of "input" event for "deleteByCut" should be null');
+      is(inputEvents[0].getTargetRanges().length, 0, 'getTargetRanges() of "input" event for "deleteByCut" should return empty array');
     }
     is(contentInput.value, "",
       "cut on plaintext editor emptied editor");
@@ -278,6 +280,7 @@ add_task(async function test_input_onpaste() {
       is(beforeInputEvents[0].cancelable, true, '"beforeinput" event for "insertFromPaste" should be cancelable');
       is(beforeInputEvents[0].data, clipboardInitialValue, `"data" of "beforeinput" event for "insertFromPaste" should be "${clipboardInitialValue}"`);
       is(beforeInputEvents[0].dataTransfer, null, '"dataTransfer" of "beforeinput" event for "insertFromPaste" should be null');
+      is(beforeInputEvents[0].getTargetRanges().length, 0, 'getTargetRanges() of "beforeinput" event for "insertFromPaste" should return empty array');
     }
     is(inputEvents.length, 1, '"input" event should be fired once by paste');
     if (inputEvents.length > 0) {
@@ -285,6 +288,7 @@ add_task(async function test_input_onpaste() {
       is(inputEvents[0].cancelable, false, '"input" event for "insertFromPaste" should not be cancelable');
       is(inputEvents[0].data, clipboardInitialValue, `"data" of "input" event for "insertFromPaste" should be "${clipboardInitialValue}"`);
       is(inputEvents[0].dataTransfer, null, '"dataTransfer" of "input" event for "insertFromPaste" should be null');
+      is(inputEvents[0].getTargetRanges().length, 0, 'getTargetRanges() of "input" event for "insertFromPaste" should return empty array');
     }
     is(contentInput.value, clipboardInitialValue,
       "paste on plaintext editor did modify editor value");
@@ -374,6 +378,7 @@ add_task(async function test_input_oncut_beforeinput_abort() {
       is(beforeInputEvents[0].cancelable, true, '"beforeinput" event for "deleteByCut" should be cancelable');
       is(beforeInputEvents[0].data, null, '"data" of "beforeinput" event for "deleteByCut" should be null');
       is(beforeInputEvents[0].dataTransfer, null, '"dataTransfer" of "beforeinput" event for "deleteByCut" should be null');
+      is(beforeInputEvents[0].getTargetRanges().length, 0, 'getTargetRanges() of "beforeinput" event for "deleteByCut" should return empty array');
     }
     todo_is(inputEvents.length, 0, '"input" event should not be fired by cut if "beforeinput" event is canceled');
     todo_is(contentInput.value, "INPUT TEXT",
@@ -440,6 +445,7 @@ add_task(async function test_input_onpaste_beforeinput_abort() {
       is(beforeInputEvents[0].cancelable, true, '"beforeinput" event for "insertFromPaste" should be cancelable');
       is(beforeInputEvents[0].data, clipboardInitialValue, `"data" of "beforeinput" event for "insertFromPaste" should be "${clipboardInitialValue}"`);
       is(beforeInputEvents[0].dataTransfer, null, '"dataTransfer" of "beforeinput" event for "insertFromPaste" should be null');
+      is(beforeInputEvents[0].getTargetRanges().length, 0, 'getTargetRanges() of "beforeinput" event for "insertFromPaste" should return empty array');
     }
     todo_is(inputEvents.length, 0, '"input" event should not be fired by paste when "beforeinput" is canceled');
     todo_is(contentInput.value, "INPUT TEXT",

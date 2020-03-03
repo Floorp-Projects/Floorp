@@ -62,11 +62,13 @@ function paste(str) {
     is(beforeInputEvent.inputType, "insertFromPaste", 'inputType of "beforeinput" event should be "insertFromPaste"');
     is(beforeInputEvent.data, str, `data of "beforeinput" event should be "${str}"`);
     is(beforeInputEvent.dataTransfer, null, 'dataTransfer of "beforeinput" event should be null on <textarea>');
+    is(beforeInputEvent.getTargetRanges().length, 0, 'getTargetRanges() of "beforeinput" event should return empty array on <textarea>');
   }
   is(inputEvent.type, "input", '"input" event should be fired');
   is(inputEvent.inputType, "insertFromPaste", '"inputType of "input" event should be "insertFromPaste"');
   is(inputEvent.data, str, `data of "input" event should be "${str}"`);
   is(inputEvent.dataTransfer, null, 'dataTransfer of "input" event should be null on <textarea>');
+  is(inputEvent.getTargetRanges().length, 0, 'getTargetRanges() of "input" event should return empty array on <textarea>');
 }
 
 function runOnFocus() {

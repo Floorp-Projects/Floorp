@@ -52,6 +52,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=851780
        `data of "beforeinput" event should be ${expectedData} ${aDescription}`);
     is(aEvent.dataTransfer, null,
        `dataTransfer of "beforeinput" event should be null ${aDescription}`);
+    is(aEvent.getTargetRanges().length, 0,
+       `getTargetRanges() of "beforeinput" event should return empty array ${aDescription}`);
     is(aEvent.cancelable, expectedBeforeInputCancelable,
        `"beforeinput" event for "${expectedInputType}" should ${expectedBeforeInputCancelable ? "be" : "not be"} cancelable ${aDescription}`);
     is(aEvent.bubbles, true,

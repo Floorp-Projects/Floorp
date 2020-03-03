@@ -108,6 +108,28 @@ SimpleTest.waitForFocus(async () => {
            `data of "${aEvent.type}" event should be null ${aDescription}`);
         is(aEvent.dataTransfer, null,
            `data of "${aEvent.type}" event should be null ${aDescription}`);
+        let targetRanges = aEvent.getTargetRanges();
+        if (aEvent.type === "beforeinput") {
+          let selection = document.getSelection();
+          is(targetRanges.length, selection.rangeCount,
+             `getTargetRanges() of "beforeinput" event for position changing of absolute position should return selection ranges ${aDescription}`);
+          if (targetRanges.length === selection.rangeCount) {
+            for (let i = 0; i < selection.rangeCount; i++) {
+              let range = selection.getRangeAt(i);
+              is(targetRanges[i].startContainer, range.startContainer,
+                 `startContainer of getTargetRanges()[${i}] of "beforeinput" event for position changing of absolute position does not match ${aDescription}`);
+              is(targetRanges[i].startOffset, range.startOffset,
+                 `startOffset of getTargetRanges()[${i}] of "beforeinput" event for position changing of absolute position does not match ${aDescription}`);
+              is(targetRanges[i].endContainer, range.endContainer,
+                 `endContainer of getTargetRanges()[${i}] of "beforeinput" event for position changing of absolute position does not match ${aDescription}`);
+              is(targetRanges[i].endOffset, range.endOffset,
+                 `endOffset of getTargetRanges()[${i}] of "beforeinput" event for position changing of absolute position does not match ${aDescription}`);
+            }
+          }
+        } else {
+          is(targetRanges.length, 0,
+             `getTargetRanges() of "${aEvent.type}" event for position changing of absolute position should return empty array ${aDescription}`);
+        }
       }
 
       content.addEventListener("beforeinput", onInput);
