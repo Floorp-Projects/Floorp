@@ -417,7 +417,8 @@ nsJSEnvironmentObserver::Observe(nsISupports* aSubject, const char* aTopic,
     }
     MOZ_ASSERT(!sIsCompactingOnUserInactive);
   } else if (!nsCRT::strcmp(aTopic, "quit-application") ||
-             !nsCRT::strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) {
+             !nsCRT::strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID) ||
+             !nsCRT::strcmp(aTopic, "content-child-will-shutdown")) {
     sShuttingDown = true;
     KillTimers();
   }
@@ -2665,6 +2666,7 @@ void nsJSContext::EnsureStatics() {
   obs->AddObserver(observer, "user-interaction-active", false);
   obs->AddObserver(observer, "quit-application", false);
   obs->AddObserver(observer, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false);
+  obs->AddObserver(observer, "content-child-will-shutdown", false);
 
   sIsInitialized = true;
 }
