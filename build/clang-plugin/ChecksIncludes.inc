@@ -20,6 +20,7 @@
 #include "MustReturnFromCallerChecker.h"
 #include "MustUseChecker.h"
 #include "NaNExprChecker.h"
+#include "NoPrincipalGetURI.h"
 #include "NeedsNoVTableTypeChecker.h"
 #include "NoAddRefReleaseOnReturnChecker.h"
 #include "NoAutoTypeChecker.h"

@@ -159,6 +159,21 @@ AST_MATCHER(BinaryOperator, isInWhitelistForNaNExpr) {
   return false;
 }
 
+AST_MATCHER(CallExpr, isInWhiteListForPrincipalGetUri) {
+  const auto Whitelist = {"nsIPrincipal.h", "BasePrincipal.cpp",
+                          "ContentPrincipal.cpp"};
+  SourceLocation Loc = Node.getBeginLoc();
+  StringRef Filename =
+      getFilename(Finder->getASTContext().getSourceManager(), Loc);
+
+  for (auto Exclusion : Whitelist) {
+    if (Filename.find(Exclusion) != std::string::npos) {
+      return true;
+    }
+  }
+  return false;
+}
+
 /// This matcher will match a list of files which contain NS_NewNamedThread
 /// code or names of existing threads that we would like to ignore.
 AST_MATCHER(CallExpr, isInAllowlistForThreads) {
