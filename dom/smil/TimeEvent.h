@@ -47,7 +47,7 @@ class TimeEvent final : public Event {
   TimeEvent* AsTimeEvent() final { return this; }
 
  private:
-  ~TimeEvent() {}
+  ~TimeEvent() = default;
 
   nsCOMPtr<nsPIDOMWindowOuter> mView;
   int32_t mDetail;
