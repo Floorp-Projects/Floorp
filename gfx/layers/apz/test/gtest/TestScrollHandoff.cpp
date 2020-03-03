@@ -184,6 +184,7 @@ class APZScrollHandoffTester : public APZCTreeManagerTester {
   }
 };
 
+#ifndef MOZ_WIDGET_ANDROID  // Currently fails on Android
 // Here we test that if the processing of a touch block is deferred while we
 // wait for content to send a prevent-default message, overscroll is still
 // handed off correctly when the block is processed.
@@ -211,7 +212,9 @@ TEST_F(APZScrollHandoffTester, DeferredInputEventProcessing) {
   EXPECT_EQ(50, childApzc->GetFrameMetrics().GetScrollOffset().y);
   EXPECT_EQ(10, rootApzc->GetFrameMetrics().GetScrollOffset().y);
 }
+#endif
 
+#ifndef MOZ_WIDGET_ANDROID  // Currently fails on Android
 // Here we test that if the layer structure changes in between two input
 // blocks being queued, and the first block is only processed after the second
 // one has been queued, overscroll handoff for the first block follows
@@ -264,7 +267,9 @@ TEST_F(APZScrollHandoffTester, LayerStructureChangesWhileEventsArePending) {
   EXPECT_EQ(10, rootApzc->GetFrameMetrics().GetScrollOffset().y);
   EXPECT_EQ(-10, middleApzc->GetFrameMetrics().GetScrollOffset().y);
 }
+#endif
 
+#ifndef MOZ_WIDGET_ANDROID  // Currently fails on Android
 // Test that putting a second finger down on an APZC while a down-chain APZC
 // is overscrolled doesn't result in being stuck in overscroll.
 TEST_F(APZScrollHandoffTester, StuckInOverscroll_Bug1073250) {
@@ -306,7 +311,9 @@ TEST_F(APZScrollHandoffTester, StuckInOverscroll_Bug1073250) {
   EXPECT_FALSE(child->IsOverscrolled());
   EXPECT_FALSE(rootApzc->IsOverscrolled());
 }
+#endif
 
+#ifndef MOZ_WIDGET_ANDROID  // Currently fails on Android
 // This is almost exactly like StuckInOverscroll_Bug1073250, except the
 // APZC receiving the input events for the first touch block is the child
 // (and thus not the same APZC that overscrolls, which is the parent).
@@ -349,7 +356,9 @@ TEST_F(APZScrollHandoffTester, StuckInOverscroll_Bug1231228) {
   EXPECT_FALSE(child->IsOverscrolled());
   EXPECT_FALSE(rootApzc->IsOverscrolled());
 }
+#endif
 
+#ifndef MOZ_WIDGET_ANDROID  // Currently fails on Android
 TEST_F(APZScrollHandoffTester, StuckInOverscroll_Bug1240202a) {
   // Enable overscrolling.
   SCOPED_GFX_PREF_BOOL("apz.overscroll.enabled", true);
@@ -382,7 +391,9 @@ TEST_F(APZScrollHandoffTester, StuckInOverscroll_Bug1240202a) {
   EXPECT_FALSE(child->IsOverscrolled());
   EXPECT_FALSE(rootApzc->IsOverscrolled());
 }
+#endif
 
+#ifndef MOZ_WIDGET_ANDROID  // Currently fails on Android
 TEST_F(APZScrollHandoffTester, StuckInOverscroll_Bug1240202b) {
   // Enable overscrolling.
   SCOPED_GFX_PREF_BOOL("apz.overscroll.enabled", true);
@@ -432,7 +443,9 @@ TEST_F(APZScrollHandoffTester, StuckInOverscroll_Bug1240202b) {
   EXPECT_FALSE(child->IsOverscrolled());
   EXPECT_FALSE(rootApzc->IsOverscrolled());
 }
+#endif
 
+#ifndef MOZ_WIDGET_ANDROID  // Currently fails on Android
 TEST_F(APZScrollHandoffTester, OpposingConstrainedAxes_Bug1201098) {
   // Enable overscrolling.
   SCOPED_GFX_PREF_BOOL("apz.overscroll.enabled", true);
@@ -448,7 +461,9 @@ TEST_F(APZScrollHandoffTester, OpposingConstrainedAxes_Bug1201098) {
   EXPECT_TRUE(childApzc->IsOverscrolled());
   EXPECT_FALSE(rootApzc->IsOverscrolled());
 }
+#endif
 
+#ifndef MOZ_WIDGET_ANDROID  // Currently fails on Android
 // Test that flinging in a direction where one component of the fling goes into
 // overscroll but the other doesn't, results in just the one component being
 // handed off to the parent, while the original APZC continues flinging in the
@@ -476,7 +491,9 @@ TEST_F(APZScrollHandoffTester, PartialFlingHandoff) {
   child->AssertStateIsFling();
   parent->AssertStateIsFling();
 }
+#endif
 
+#ifndef MOZ_WIDGET_ANDROID  // Currently fails on Android
 // Here we test that if two flings are happening simultaneously, overscroll
 // is handed off correctly for each.
 TEST_F(APZScrollHandoffTester, SimultaneousFlings) {
@@ -511,7 +528,9 @@ TEST_F(APZScrollHandoffTester, SimultaneousFlings) {
   child2->AssertStateIsReset();
   parent2->AssertStateIsFling();
 }
+#endif
 
+#ifndef MOZ_WIDGET_ANDROID  // Currently fails on Android
 TEST_F(APZScrollHandoffTester, Scrollgrab) {
   SCOPED_GFX_PREF_BOOL("apz.allow_immediate_handoff", true);
 
@@ -528,7 +547,9 @@ TEST_F(APZScrollHandoffTester, Scrollgrab) {
   EXPECT_EQ(20, rootApzc->GetFrameMetrics().GetScrollOffset().y);
   EXPECT_EQ(15, childApzc->GetFrameMetrics().GetScrollOffset().y);
 }
+#endif
 
+#ifndef MOZ_WIDGET_ANDROID  // Currently fails on Android
 TEST_F(APZScrollHandoffTester, ScrollgrabFling) {
   SCOPED_GFX_PREF_BOOL("apz.allow_immediate_handoff", true);
   SCOPED_GFX_PREF_FLOAT("apz.fling_min_velocity_threshold", 0.0f);
@@ -545,7 +566,9 @@ TEST_F(APZScrollHandoffTester, ScrollgrabFling) {
   rootApzc->AssertStateIsFling();
   childApzc->AssertStateIsReset();
 }
+#endif
 
+#ifndef MOZ_WIDGET_ANDROID  // Currently fails on Android
 TEST_F(APZScrollHandoffTester, ScrollgrabFlingAcceleration1) {
   SCOPED_GFX_PREF_BOOL("apz.allow_immediate_handoff", true);
   SCOPED_GFX_PREF_FLOAT("apz.fling_min_velocity_threshold", 0.0f);
@@ -553,7 +576,9 @@ TEST_F(APZScrollHandoffTester, ScrollgrabFlingAcceleration1) {
   CreateScrollgrabLayerTree(true /* make parent scrollable */);
   TestFlingAcceleration();
 }
+#endif
 
+#ifndef MOZ_WIDGET_ANDROID  // Currently fails on Android
 TEST_F(APZScrollHandoffTester, ScrollgrabFlingAcceleration2) {
   SCOPED_GFX_PREF_BOOL("apz.allow_immediate_handoff", true);
   SCOPED_GFX_PREF_FLOAT("apz.fling_min_velocity_threshold", 0.0f);
@@ -561,6 +586,7 @@ TEST_F(APZScrollHandoffTester, ScrollgrabFlingAcceleration2) {
   CreateScrollgrabLayerTree(false /* do not make parent scrollable */);
   TestFlingAcceleration();
 }
+#endif
 
 TEST_F(APZScrollHandoffTester, ImmediateHandoffDisallowed_Pan) {
   SCOPED_GFX_PREF_BOOL("apz.allow_immediate_handoff", false);
@@ -587,6 +613,7 @@ TEST_F(APZScrollHandoffTester, ImmediateHandoffDisallowed_Pan) {
   EXPECT_EQ(10, parentApzc->GetFrameMetrics().GetScrollOffset().y);
 }
 
+#ifndef MOZ_WIDGET_ANDROID  // Currently fails on Android
 TEST_F(APZScrollHandoffTester, ImmediateHandoffDisallowed_Fling) {
   SCOPED_GFX_PREF_BOOL("apz.allow_immediate_handoff", false);
   SCOPED_GFX_PREF_FLOAT("apz.fling_min_velocity_threshold", 0.0f);
@@ -623,6 +650,7 @@ TEST_F(APZScrollHandoffTester, ImmediateHandoffDisallowed_Fling) {
   // Verify that the parent scrolled from the fling.
   EXPECT_GT(parentApzc->GetFrameMetrics().GetScrollOffset().y, 10);
 }
+#endif
 
 TEST_F(APZScrollHandoffTester, CrossApzcAxisLock_NoTouchAction) {
   SCOPED_GFX_PREF_BOOL("layout.css.touch_action.enabled", false);

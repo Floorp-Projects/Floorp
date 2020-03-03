@@ -5,22 +5,18 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 UNIFIED_SOURCES += [
+    'TestBasic.cpp',
     'TestEventRegions.cpp',
+    'TestGestureDetector.cpp',
     'TestHitTesting.cpp',
     'TestInputQueue.cpp',
     'TestPanning.cpp',
+    'TestPinching.cpp',
+    'TestScrollHandoff.cpp',
     'TestSnapping.cpp',
+    'TestSnappingOnMomentum.cpp',
     'TestTreeManager.cpp',
 ]
-
-if CONFIG['OS_TARGET'] != 'Android':
-    UNIFIED_SOURCES += [
-        'TestBasic.cpp',
-        'TestGestureDetector.cpp',
-        'TestPinching.cpp',
-        'TestScrollHandoff.cpp',
-        'TestSnappingOnMomentum.cpp',
-    ]
 
 include('/ipc/chromium/chromium-config.mozbuild')
 

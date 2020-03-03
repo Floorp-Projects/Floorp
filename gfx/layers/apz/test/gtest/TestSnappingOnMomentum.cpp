@@ -12,6 +12,7 @@
 
 class APZCSnappingOnMomentumTester : public APZCTreeManagerTester {};
 
+#ifndef MOZ_WIDGET_ANDROID  // Currently fails on Android
 TEST_F(APZCSnappingOnMomentumTester, Snap_On_Momentum) {
   SCOPED_GFX_VAR(UseWebRender, bool, false);
 
@@ -74,3 +75,4 @@ TEST_F(APZCSnappingOnMomentumTester, Snap_On_Momentum) {
               AsyncPanZoomController::AsyncTransformConsumer::eForHitTesting)
           .y);
 }
+#endif
