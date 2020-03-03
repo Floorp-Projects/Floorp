@@ -38,6 +38,7 @@ import java.io.File
 class AppLinksUseCasesTest {
 
     private val appUrl = "https://example.com"
+    private val appIntent = "intent://example.com"
     private val appPackage = "com.example.app"
     private val browserPackage = "com.browser"
     private val testBrowserPackage = "com.current.browser"
@@ -109,7 +110,7 @@ class AppLinksUseCasesTest {
     }
 
     @Test
-    fun `Will not redirect app link if browser option set to false`() {
+    fun `Will not redirect app link if browser option set to false and scheme is supported`() {
         val context = createContext(appUrl to appPackage)
         val subject = AppLinksUseCases(context, { false }, browserPackageNames = emptySet())
 
@@ -117,6 +118,18 @@ class AppLinksUseCasesTest {
         assertFalse(redirect.isRedirect())
 
         val menuRedirect = subject.appLinkRedirect(appUrl)
+        assertTrue(menuRedirect.isRedirect())
+    }
+
+    @Test
+    fun `Will redirect app link if browser option set to false and scheme is not supported`() {
+        val context = createContext(appIntent to appPackage)
+        val subject = AppLinksUseCases(context, { false }, browserPackageNames = emptySet())
+
+        val redirect = subject.interceptedAppLinkRedirect(appIntent)
+        assertTrue(redirect.isRedirect())
+
+        val menuRedirect = subject.appLinkRedirect(appIntent)
         assertTrue(menuRedirect.isRedirect())
     }
 
@@ -241,7 +254,7 @@ class AppLinksUseCasesTest {
         var failedToLaunch = false
         val failedAction = { failedToLaunch = true }
         `when`(context.startActivity(any())).thenThrow(ActivityNotFoundException("failed"))
-        subject.openAppLink(redirect.appIntent, failedAction)
+        subject.openAppLink(redirect.appIntent, failedToLaunchAction = failedAction)
 
         verify(context).startActivity(any())
         assert(failedToLaunch)

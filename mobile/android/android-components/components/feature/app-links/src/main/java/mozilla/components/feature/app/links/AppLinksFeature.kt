@@ -54,7 +54,7 @@ class AppLinksFeature(
             }
 
             val doOpenApp = {
-                useCases.openAppLink(appIntent, failedToLaunchAction)
+                useCases.openAppLink(appIntent, failedToLaunchAction = failedToLaunchAction)
             }
 
             if (!session.private || fragmentManager == null) {

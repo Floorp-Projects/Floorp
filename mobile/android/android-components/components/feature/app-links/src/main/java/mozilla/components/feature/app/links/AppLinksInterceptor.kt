@@ -11,6 +11,7 @@ import android.net.Uri
 import androidx.annotation.VisibleForTesting
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.request.RequestInterceptor
+import mozilla.components.feature.app.links.AppLinksUseCases.Companion.ENGINE_SUPPORTED_SCHEMES
 
 /**
  * This feature implements use cases for detecting and handling redirects to external apps. The user
@@ -42,9 +43,7 @@ import mozilla.components.concept.engine.request.RequestInterceptor
 class AppLinksInterceptor(
     private val context: Context,
     private val interceptLinkClicks: Boolean = false,
-    // list of scheme from https://searchfox.org/mozilla-central/source/netwerk/build/components.conf
-    private val engineSupportedSchemes: Set<String> = setOf("about", "data", "file", "ftp", "http",
-        "https", "moz-extension", "moz-safe-about", "resource", "view-source", "ws", "wss"),
+    private val engineSupportedSchemes: Set<String> = ENGINE_SUPPORTED_SCHEMES,
     private val alwaysDeniedSchemes: Set<String> = setOf("javascript", "about"),
     private val launchInApp: () -> Boolean = { false },
     private val useCases: AppLinksUseCases = AppLinksUseCases(context, launchInApp),
@@ -80,6 +79,7 @@ class AppLinksInterceptor(
         val result = handleRedirect(redirect, uri, hasUserGesture)
         if (redirect.isRedirect()) {
             if (launchFromInterceptor && result is RequestInterceptor.InterceptionResponse.AppIntent) {
+                result.appIntent.flags = result.appIntent.flags or Intent.FLAG_ACTIVITY_NEW_TASK
                 useCases.openAppLink(result.appIntent)
             }
 
