@@ -2805,8 +2805,7 @@ mozilla::ipc::IPCResult BrowserParent::RecvSessionStoreUpdate(
     const nsTArray<CollectedInputDataValue>& aXPathVals,
     nsTArray<nsCString>&& aOrigins, nsTArray<nsString>&& aKeys,
     nsTArray<nsString>&& aValues, const bool aIsFullStorage,
-    const bool aNeedCollectSHistory, const uint32_t& aFlushId,
-    const bool& aIsFinal, const uint32_t& aEpoch) {
+    const uint32_t& aFlushId, const bool& aIsFinal, const uint32_t& aEpoch) {
   UpdateSessionStoreData data;
   if (aDocShellCaps.isSome()) {
     data.mDocShellCaps.Construct() = aDocShellCaps.value();
@@ -2863,8 +2862,8 @@ mozilla::ipc::IPCResult BrowserParent::RecvSessionStoreUpdate(
   bool ok = ToJSValue(jsapi.cx(), data, &dataVal);
   NS_ENSURE_TRUE(ok, IPC_OK());
 
-  nsresult rv = funcs->UpdateSessionStore(
-      mFrameElement, aFlushId, aIsFinal, aEpoch, dataVal, aNeedCollectSHistory);
+  nsresult rv = funcs->UpdateSessionStore(mFrameElement, aFlushId, aIsFinal,
+                                          aEpoch, dataVal);
   NS_ENSURE_SUCCESS(rv, IPC_OK());
 
   return IPC_OK();
