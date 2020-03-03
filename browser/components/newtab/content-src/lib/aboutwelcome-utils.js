@@ -5,11 +5,13 @@
 export const AboutWelcomeUtils = {
   handleUserAction(action) {
     switch (action.type) {
+      case "OPEN_AWESOME_BAR":
+      case "OPEN_PRIVATE_BROWSER_WINDOW":
+      case "SHOW_MIGRATION_WIZARD":
+        window.AWSendToParent(action.type);
+        break;
       case "OPEN_URL":
         window.open(action.data.args);
-        break;
-      case "SHOW_MIGRATION_WIZARD":
-        window.AWSendToParent("SHOW_MIGRATION_WIZARD");
         break;
     }
   },
@@ -27,8 +29,11 @@ export const DEFAULT_WELCOME_CONTENT = {
   title: {
     string_id: "onboarding-welcome-header",
   },
-  subtitle: {
-    string_id: "onboarding-fullpage-welcome-subheader",
+  startButton: {
+    string_id: "onboarding-start-browsing-button-label",
+    action: {
+      type: "OPEN_AWESOME_BAR",
+    },
   },
   cards: [
     {
@@ -86,21 +91,26 @@ export const DEFAULT_WELCOME_CONTENT = {
       blockOnClick: false,
     },
     {
-      id: "TRAILHEAD_CARD_11",
-      template: "onboarding",
-      bundled: 3,
-      order: 0,
       content: {
-        title: { string_id: "onboarding-import-browser-settings-title" },
-        text: { string_id: "onboarding-import-browser-settings-text" },
-        icon: "import",
+        title: {
+          string_id: "onboarding-browse-privately-title",
+        },
+        text: {
+          string_id: "onboarding-browse-privately-text",
+        },
+        icon: "private",
         primary_button: {
-          label: { string_id: "onboarding-import-browser-settings-button" },
-          action: { type: "SHOW_MIGRATION_WIZARD" },
+          label: {
+            string_id: "onboarding-browse-privately-button",
+          },
+          action: {
+            type: "OPEN_PRIVATE_BROWSER_WINDOW",
+          },
         },
       },
-      targeting: "trailheadTriplet == 'dynamic_chrome'",
-      trigger: { id: "showOnboarding" },
+      id: "TRAILHEAD_CARD_4",
+      order: 3,
+      blockOnClick: true,
     },
   ],
 };
