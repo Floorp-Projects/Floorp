@@ -203,7 +203,7 @@ class MOZ_STACK_CLASS ResultHelper final : public IDBRequest::ResultCallback {
     IDBCursor* mCursor;
     IDBMutableFile* mMutableFile;
     StructuredCloneReadInfo* mStructuredClone;
-    const nsTArray<StructuredCloneReadInfo>* mStructuredCloneArray;
+    nsTArray<StructuredCloneReadInfo>* mStructuredCloneArray;
     const Key* mKey;
     const nsTArray<Key>* mKeyArray;
     const JS::Value* mJSVal;
@@ -266,7 +266,7 @@ class MOZ_STACK_CLASS ResultHelper final : public IDBRequest::ResultCallback {
   }
 
   ResultHelper(IDBRequest* aRequest, IDBTransaction* aTransaction,
-               const nsTArray<StructuredCloneReadInfo>* aResult)
+               nsTArray<StructuredCloneReadInfo>* aResult)
       : mRequest(aRequest),
         mAutoTransaction(aTransaction),
         mResultType(ResultTypeStructuredCloneArray) {
@@ -339,10 +339,11 @@ class MOZ_STACK_CLASS ResultHelper final : public IDBRequest::ResultCallback {
         return GetResult(aCx, mResult.mMutableFile, aResult);
 
       case ResultTypeStructuredClone:
-        return GetResult(aCx, mResult.mStructuredClone, aResult);
+        return GetResult(aCx, std::move(*mResult.mStructuredClone), aResult);
 
       case ResultTypeStructuredCloneArray:
-        return GetResult(aCx, mResult.mStructuredCloneArray, aResult);
+        return GetResult(aCx, std::move(*mResult.mStructuredCloneArray),
+                         aResult);
 
       case ResultTypeKey:
         return GetResult(aCx, mResult.mKey, aResult);
@@ -387,9 +388,10 @@ class MOZ_STACK_CLASS ResultHelper final : public IDBRequest::ResultCallback {
     return NS_OK;
   }
 
-  nsresult GetResult(JSContext* aCx, StructuredCloneReadInfo* aCloneInfo,
+  nsresult GetResult(JSContext* aCx, StructuredCloneReadInfo&& aCloneInfo,
                      JS::MutableHandle<JS::Value> aResult) {
-    const bool ok = IDBObjectStore::DeserializeValue(aCx, *aCloneInfo, aResult);
+    const bool ok =
+        IDBObjectStore::DeserializeValue(aCx, std::move(aCloneInfo), aResult);
 
     if (NS_WARN_IF(!ok)) {
       return NS_ERROR_DOM_DATA_CLONE_ERR;
@@ -399,7 +401,7 @@ class MOZ_STACK_CLASS ResultHelper final : public IDBRequest::ResultCallback {
   }
 
   nsresult GetResult(JSContext* aCx,
-                     const nsTArray<StructuredCloneReadInfo>* aCloneInfos,
+                     nsTArray<StructuredCloneReadInfo>&& aCloneInfos,
                      JS::MutableHandle<JS::Value> aResult) {
     JS::Rooted<JSObject*> array(aCx, JS::NewArrayObject(aCx, 0));
     if (NS_WARN_IF(!array)) {
@@ -407,8 +409,8 @@ class MOZ_STACK_CLASS ResultHelper final : public IDBRequest::ResultCallback {
       return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
     }
 
-    if (!aCloneInfos->IsEmpty()) {
-      const uint32_t count = aCloneInfos->Length();
+    if (!aCloneInfos.IsEmpty()) {
+      const uint32_t count = aCloneInfos.Length();
 
       if (NS_WARN_IF(!JS::SetArrayLength(aCx, array, count))) {
         IDB_REPORT_INTERNAL_ERR();
@@ -416,12 +418,11 @@ class MOZ_STACK_CLASS ResultHelper final : public IDBRequest::ResultCallback {
       }
 
       for (uint32_t index = 0; index < count; index++) {
-        auto& cloneInfo =
-            const_cast<StructuredCloneReadInfo&>(aCloneInfos->ElementAt(index));
+        auto& cloneInfo = aCloneInfos.ElementAt(index);
 
         JS::Rooted<JS::Value> value(aCx);
 
-        const nsresult rv = GetResult(aCx, &cloneInfo, &value);
+        const nsresult rv = GetResult(aCx, std::move(cloneInfo), &value);
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return rv;
         }
