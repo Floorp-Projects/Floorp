@@ -2991,11 +2991,21 @@ impl TileCacheInstance {
                         let device_rect = (world_rect * frame_context.global_device_pixel_scale).round();
                         let clip_rect = (world_clip_rect * frame_context.global_device_pixel_scale).round();
 
+                        // Build dependency for each YUV plane, with current image generation for
+                        // later detection of when the composited surface has changed.
+                        let mut image_dependencies = [ImageDependency::INVALID; 3];
+                        for (key, dep) in prim_data.kind.yuv_key.iter().cloned().zip(image_dependencies.iter_mut()) {
+                            *dep = ImageDependency {
+                                key,
+                                generation: resource_cache.get_image_generation(key),
+                            }
+                        }
+
                         // Each compositor surface allocates a unique z-id
                         self.external_surfaces.push(ExternalSurfaceDescriptor {
                             local_rect: prim_info.prim_clip_rect,
                             world_rect,
-                            image_keys: prim_data.kind.yuv_key,
+                            image_dependencies,
                             image_rendering: prim_data.kind.image_rendering,
                             device_rect,
                             clip_rect,
@@ -5844,8 +5854,15 @@ struct PrimitiveComparisonKey {
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct ImageDependency {
-    key: ImageKey,
-    generation: ImageGeneration,
+    pub key: ImageKey,
+    pub generation: ImageGeneration,
+}
+
+impl ImageDependency {
+    pub const INVALID: ImageDependency = ImageDependency {
+        key: ImageKey::DUMMY,
+        generation: ImageGeneration::INVALID,
+    };
 }
 
 /// A helper struct to compare a primitive and all its sub-dependencies.
