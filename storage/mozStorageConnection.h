@@ -240,6 +240,19 @@ class Connection final : public mozIStorageConnection,
   inline bool connectionReady() { return mDBConn != nullptr; }
 
   /**
+   * Indicates if this database connection has an open transaction. Because
+   * multiple threads can execute statements on the same connection, this method
+   * requires proof that the caller is holding `sharedDBMutex`.
+   *
+   * Per the SQLite docs, `sqlite3_get_autocommit` returns 0 if autocommit mode
+   * is disabled. `BEGIN` disables autocommit mode, and `COMMIT`, `ROLLBACK`, or
+   * an automatic rollback re-enables it.
+   */
+  inline bool transactionInProgress(const SQLiteMutexAutoLock& aProofOfLock) {
+    return mDBConn ? !sqlite3_get_autocommit(mDBConn) : false;
+  }
+
+  /**
    * Indicates if this database connection supports the given operation.
    *
    * @param  aOperationType
@@ -400,12 +413,6 @@ class Connection final : public mozIStorageConnection,
    * Stores the default behavior for all transactions run on this connection.
    */
   mozilla::Atomic<int32_t> mDefaultTransactionType;
-
-  /**
-   * Tracks if we have a transaction in progress or not.  Access protected by
-   * sharedDBMutex.
-   */
-  bool mTransactionInProgress;
 
   /**
    * Used to trigger cleanup logic only the first time our refcount hits 1.  We
