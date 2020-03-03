@@ -15,6 +15,7 @@
 #include "frontend/SharedContext.h"
 #include "frontend/Stencil.h"
 #include "frontend/UsedNameTracker.h"
+#include "js/GCVector.h"
 #include "js/RealmOptions.h"
 #include "js/SourceText.h"
 #include "js/Vector.h"
@@ -49,7 +50,11 @@ struct MOZ_RAII CompilationInfo {
   // ensure correct destruction.
   Vector<RegExpCreationData> regExpData;
   Vector<BigIntCreationData> bigIntData;
-  Vector<FunctionCreationData> funcData;
+
+  // A rooted vector to ensure tracing. While not strictly
+  // necessary because of the AutoKeepAtoms above, good
+  // practice neverthless.
+  JS::RootedVector<FunctionCreationData> funcData;
 
   // A rooted list of scopes created during this parse.
   //
