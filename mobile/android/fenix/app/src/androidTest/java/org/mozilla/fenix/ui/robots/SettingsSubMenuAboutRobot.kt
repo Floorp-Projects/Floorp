@@ -76,11 +76,13 @@ private fun assertVersionNumber() {
         "${mozilla.components.Build.version}, ${mozilla.components.Build.gitHash}"
     val geckoVersion =
         org.mozilla.geckoview.BuildConfig.MOZ_APP_VERSION + "-" + org.mozilla.geckoview.BuildConfig.MOZ_APP_BUILDID
+    val asVersion = mozilla.components.Build.applicationServicesVersion
 
     onView(withId(R.id.about_text))
         .check(matches(withText(containsString(buildNVersion))))
         .check(matches(withText(containsString(componentsVersion))))
         .check(matches(withText(containsString(geckoVersion))))
+        .check(matches(withText(containsString(asVersion))))
 }
 
 private fun assertProductCompany() {
@@ -94,6 +96,7 @@ private fun assertCurrentTimestamp() {
 }
 
 private fun assertWhatIsNewInFirefoxPreview() {
+    TestHelper.scrollToElementByText("What’s new in Firefox Preview")
     onView(withText("What’s new in Firefox Preview"))
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
         .perform(click())
@@ -112,6 +115,7 @@ private fun assertWhatIsNewInFirefoxPreview() {
 }
 
 private fun assertSupport() {
+    TestHelper.scrollToElementByText("Support")
     onView(withText("Support"))
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
         .perform(click())
@@ -131,6 +135,7 @@ private fun assertSupport() {
 }
 
 private fun assertPrivacyNotice() {
+    TestHelper.scrollToElementByText("Privacy Notice")
     onView(withText("Privacy notice"))
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
         .perform(click())
