@@ -103,6 +103,11 @@ class PrioritizedEventQueue final : public AbstractEventQueue {
   EventQueuePriority SelectQueue(bool aUpdateState,
                                  const MutexAutoLock& aProofOfLock);
 
+  void IndirectlyQueueRunnable(already_AddRefed<nsIRunnable>&& aEvent,
+                               EventQueuePriority aPriority,
+                               const MutexAutoLock& aProofOfLock,
+                               mozilla::TimeDuration* aDelay);
+
   UniquePtr<EventQueue> mHighQueue;
   UniquePtr<EventQueueSized<32>> mInputQueue;
   UniquePtr<EventQueue> mMediumHighQueue;
