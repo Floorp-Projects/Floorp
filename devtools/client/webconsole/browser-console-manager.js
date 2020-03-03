@@ -136,7 +136,8 @@ class BrowserConsoleManager {
 
     this._devToolsClient = new DevToolsClient(DevToolsServer.connectPipe());
     await this._devToolsClient.connect();
-    return this._devToolsClient.mainRoot.getMainProcess();
+    const descriptor = await this._devToolsClient.mainRoot.getMainProcess();
+    return descriptor.getTarget();
   }
 
   async openWindow() {

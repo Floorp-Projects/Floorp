@@ -108,7 +108,8 @@ var connect = async function() {
   await gClient.connect();
 
   appendStatusMessage("Get root form for toolbox");
-  const mainProcessTargetFront = await gClient.mainRoot.getMainProcess();
+  const mainProcessDescriptor = await gClient.mainRoot.getMainProcess();
+  const mainProcessTargetFront = await mainProcessDescriptor.getTarget();
   await openToolbox(mainProcessTargetFront);
 };
 

@@ -18,7 +18,8 @@ add_task(async function() {
 
   const client = await createLocalClient();
   const mainRoot = client.mainRoot;
-  const mainProcess = await mainRoot.getMainProcess();
+  const targetDescriptor = await mainRoot.getMainProcess();
+  const mainProcess = await targetDescriptor.getTarget();
 
   // Assert the limited behavior of this API with fission preffed off
   await pushPref("devtools.browsertoolbox.fission", false);

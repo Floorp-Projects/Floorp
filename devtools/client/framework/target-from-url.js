@@ -124,7 +124,8 @@ async function _targetFromURL(client, id, type, chrome) {
       if (isNaN(id)) {
         id = 0;
       }
-      front = await client.mainRoot.getProcess(id);
+      const frontDescriptor = await client.mainRoot.getProcess(id);
+      front = await frontDescriptor.getTarget(id);
     } catch (ex) {
       if (ex.error == "noProcess") {
         throw new Error(`targetFromURL, process with id '${id}' doesn't exist`);

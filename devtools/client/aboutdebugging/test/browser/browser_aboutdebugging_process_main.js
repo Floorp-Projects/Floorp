@@ -44,7 +44,11 @@ async function testMainProcessTarget(name, description) {
     name: RUNTIME_APP_NAME,
   });
   usbRuntime.getMainProcess = () => {
-    return { actorID: 0 };
+    return {
+      getTarget: () => {
+        return { actorID: 0 };
+      },
+    };
   };
   mocks.emitUSBUpdate();
 

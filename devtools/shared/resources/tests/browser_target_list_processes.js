@@ -21,7 +21,8 @@ add_task(async function() {
 
   const client = await createLocalClient();
   const mainRoot = client.mainRoot;
-  const mainProcess = await mainRoot.getMainProcess();
+  const targetDescriptor = await mainRoot.getMainProcess();
+  const mainProcess = await targetDescriptor.getTarget();
 
   const targetList = new TargetList(mainRoot, mainProcess);
   await targetList.startListening();

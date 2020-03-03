@@ -44,7 +44,8 @@ async function testBrowserListFrames(tabTarget) {
   // Now, we can test against the entire browser. getMainProcess will return
   // a target for the parentProcess, and will be able to enumerate over all
   // the tabs, the remote iframe, and the pair of frames, one nested inside the other.
-  const target = await tabTarget.client.mainRoot.getMainProcess();
+  const targetDescriptor = await tabTarget.client.mainRoot.getMainProcess();
+  const target = await targetDescriptor.getTarget();
   await getFrames(target, tabTarget);
 }
 

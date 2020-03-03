@@ -220,23 +220,28 @@ class RootFront extends FrontClassWithSpec(rootSpec) {
   }
 
   /**
-   * Fetch the ParentProcessTargetActor for the main process.
+   * Fetch the ProcessDescriptorFront for the main process.
    *
-   * `getProcess` requests allows to fetch the target actor for any process
-   * and the main process is having the process ID zero.
+   * `getProcess` requests allows to fetch the descriptor for any process and
+   * the main process is having the process ID zero.
    */
   getMainProcess() {
     return this.getProcess(0);
   }
 
+  /**
+   * Retrieve the target descriptor for the provided id.
+   *
+   * @return {ProcessDescriptorFront} the process descriptor front for the
+   *         provided id.
+   */
   async getProcess(id) {
     const { form, processDescriptor } = await super.getProcess(id);
     // Backward compatibility: FF74 or older servers will return the
     // process descriptor as the "form" property of the response.
     // Once FF75 is merged to release we can always expect `processDescriptor`
     // to be defined.
-    const processDescriptorFront = processDescriptor || form;
-    return processDescriptorFront.getTarget();
+    return processDescriptor || form;
   }
 
   /**

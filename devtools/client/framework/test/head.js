@@ -25,7 +25,7 @@ function toggleAllTools(state) {
   }
 }
 
-function getParentProcessActors(callback) {
+async function getParentProcessActors(callback) {
   const { DevToolsServer } = require("devtools/server/devtools-server");
   const { DevToolsClient } = require("devtools/shared/client/devtools-client");
 
@@ -33,17 +33,16 @@ function getParentProcessActors(callback) {
   DevToolsServer.registerAllActors();
   DevToolsServer.allowChromeProcess = true;
 
-  const client = new DevToolsClient(DevToolsServer.connectPipe());
-  client
-    .connect()
-    .then(() => client.mainRoot.getMainProcess())
-    .then(front => {
-      callback(client, front);
-    });
-
   SimpleTest.registerCleanupFunction(() => {
     DevToolsServer.destroy();
   });
+
+  const client = new DevToolsClient(DevToolsServer.connectPipe());
+  await client.connect();
+  const mainProcessDescriptor = await client.mainRoot.getMainProcess();
+  const mainProcessTargetFront = await mainProcessDescriptor.getTarget();
+
+  callback(client, mainProcessTargetFront);
 }
 
 function getSourceActor(aSources, aURL) {

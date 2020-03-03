@@ -52,7 +52,8 @@ add_task(async function() {
   const [type] = await gClient.connect();
   is(type, "browser", "Root actor should identify itself as a browser.");
 
-  const front = await gClient.mainRoot.getMainProcess();
+  const descriptorFront = await gClient.mainRoot.getMainProcess();
+  const front = await descriptorFront.getTarget();
   await front.attach();
   const [, threadFront] = await front.attachThread();
   gThreadFront = threadFront;
