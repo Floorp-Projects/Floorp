@@ -101,7 +101,7 @@ const PREF_URLBAR_DEFAULTS = new Map([
   ["openintab", false],
 
   // Whether to open the urlbar view when the input field is focused by the user.
-  ["openViewOnFocus", false],
+  ["openViewOnFocus", true],
 
   // When true, URLs in the user's history that look like search result pages
   // are styled to look like search engine results instead of the usual history
@@ -149,18 +149,18 @@ const PREF_URLBAR_DEFAULTS = new Map([
   ["usepreloadedtopurls.expire_days", 14],
 
   // Whether the quantum bar displays design update 1.
-  ["update1", false],
+  ["update1", true],
 
   // If true, we show actionable tips in the Urlbar when the user is searching
   // for those actions.
-  ["update1.interventions", false],
+  ["update1.interventions", true],
 
   // If true, we strip https:// instead of http:// from URLs in the results view.
-  ["update1.view.stripHttps", false],
+  ["update1.view.stripHttps", true],
 
   // If true, we show new users and those about to start an organic search a tip
   // encouraging them to use the Urlbar.
-  ["update1.searchTips", false],
+  ["update1.searchTips", true],
 
   // Whether the urlbar displays a permanent search button in design update 2.
   ["update2.searchButton", false],
