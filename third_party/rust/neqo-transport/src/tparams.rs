@@ -14,39 +14,34 @@ use neqo_crypto::ext::{ExtensionHandler, ExtensionHandlerResult, ExtensionWriter
 use neqo_crypto::{HandshakeMessage, ZeroRttCheckResult, ZeroRttChecker};
 use std::cell::RefCell;
 use std::collections::HashMap;
-use std::convert::TryInto;
 use std::rc::Rc;
 
 struct PreferredAddress {
     // TODO(ekr@rtfm.com): Implement.
 }
 
-pub mod tp_constants {
-    pub type TransportParameterId = u16;
-    macro_rules! tpids {
+pub type TransportParameterId = u64;
+macro_rules! tpids {
         { $($n:ident = $v:expr),+ $(,)? } => {
             $(pub const $n: TransportParameterId = $v as TransportParameterId;)+
         };
     }
-    tpids! {
-        ORIGINAL_CONNECTION_ID = 0,
-        IDLE_TIMEOUT = 1,
-        STATELESS_RESET_TOKEN = 2,
-        MAX_PACKET_SIZE = 3,
-        INITIAL_MAX_DATA = 4,
-        INITIAL_MAX_STREAM_DATA_BIDI_LOCAL = 5,
-        INITIAL_MAX_STREAM_DATA_BIDI_REMOTE = 6,
-        INITIAL_MAX_STREAM_DATA_UNI = 7,
-        INITIAL_MAX_STREAMS_BIDI = 8,
-        INITIAL_MAX_STREAMS_UNI = 9,
-        ACK_DELAY_EXPONENT = 10,
-        MAX_ACK_DELAY = 11,
-        DISABLE_MIGRATION = 12,
-        PREFERRED_ADDRESS = 13,
-    }
+tpids! {
+    ORIGINAL_CONNECTION_ID = 0,
+    IDLE_TIMEOUT = 1,
+    STATELESS_RESET_TOKEN = 2,
+    MAX_PACKET_SIZE = 3,
+    INITIAL_MAX_DATA = 4,
+    INITIAL_MAX_STREAM_DATA_BIDI_LOCAL = 5,
+    INITIAL_MAX_STREAM_DATA_BIDI_REMOTE = 6,
+    INITIAL_MAX_STREAM_DATA_UNI = 7,
+    INITIAL_MAX_STREAMS_BIDI = 8,
+    INITIAL_MAX_STREAMS_UNI = 9,
+    ACK_DELAY_EXPONENT = 10,
+    MAX_ACK_DELAY = 11,
+    DISABLE_MIGRATION = 12,
+    PREFERRED_ADDRESS = 13,
 }
-
-use self::tp_constants::*;
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum TransportParameter {
@@ -56,41 +51,41 @@ pub enum TransportParameter {
 }
 
 impl TransportParameter {
-    fn encode(&self, enc: &mut Encoder, tipe: u16) {
-        enc.encode_uint(2, tipe);
+    fn encode(&self, enc: &mut Encoder, tp: TransportParameterId) {
+        enc.encode_varint(tp);
         match self {
             Self::Bytes(a) => {
-                enc.encode_vec(2, a);
+                enc.encode_vvec(a);
             }
             Self::Integer(a) => {
-                enc.encode_vec_with(2, |enc_inner| {
+                enc.encode_vvec_with(|enc_inner| {
                     enc_inner.encode_varint(*a);
                 });
             }
             Self::Empty => {
-                enc.encode_uint(2, 0_u64);
+                enc.encode_varint(0_u64);
             }
         };
     }
 
-    fn decode(dec: &mut Decoder) -> Res<Option<(u16, Self)>> {
-        let tipe = match dec.decode_uint(2) {
-            Some(v) => v.try_into()?,
-            _ => return Err(Error::NoMoreData),
-        };
-        let content = match dec.decode_vec(2) {
+    fn decode(dec: &mut Decoder) -> Res<Option<(TransportParameterId, Self)>> {
+        let tp = match dec.decode_varint() {
             Some(v) => v,
             _ => return Err(Error::NoMoreData),
         };
-        qtrace!("TP {:x} length {:x}", tipe, content.len());
+        let content = match dec.decode_vvec() {
+            Some(v) => v,
+            _ => return Err(Error::NoMoreData),
+        };
+        qtrace!("TP {:x} length {:x}", tp, content.len());
         let mut d = Decoder::from(content);
-        let tp = match tipe {
-            ORIGINAL_CONNECTION_ID => Self::Bytes(d.decode_remainder().to_vec()), // TODO(mt) unnecessary copy
+        let value = match tp {
+            ORIGINAL_CONNECTION_ID => Self::Bytes(d.decode_remainder().to_vec()),
             STATELESS_RESET_TOKEN => {
                 if d.remaining() != 16 {
                     return Err(Error::TransportParameterError);
                 }
-                Self::Bytes(d.decode_remainder().to_vec()) // TODO(mt) unnecessary copy
+                Self::Bytes(d.decode_remainder().to_vec())
             }
             IDLE_TIMEOUT
             | INITIAL_MAX_DATA
@@ -121,40 +116,35 @@ impl TransportParameter {
         if d.remaining() > 0 {
             return Err(Error::TooMuchData);
         }
-        qtrace!("TP decoded; type {:x} val {:?}", tipe, tp);
-        Ok(Some((tipe, tp)))
+        qtrace!("TP decoded; type {:x} val {:?}", tp, value);
+        Ok(Some((tp, value)))
     }
 }
 
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct TransportParameters {
-    params: HashMap<u16, TransportParameter>,
+    params: HashMap<TransportParameterId, TransportParameter>,
 }
 
 impl TransportParameters {
     /// Set a value.
-    pub fn set(&mut self, k: u16, v: TransportParameter) {
+    pub fn set(&mut self, k: TransportParameterId, v: TransportParameter) {
         self.params.insert(k, v);
     }
 
     /// Clear a key.
-    pub fn remove(&mut self, k: u16) {
+    pub fn remove(&mut self, k: TransportParameterId) {
         self.params.remove(&k);
     }
 
     /// Decode is a static function that parses transport parameters
     /// using the provided decoder.
-    pub fn decode(d: &mut Decoder) -> Res<Self> {
+    pub(crate) fn decode(d: &mut Decoder) -> Res<Self> {
         let mut tps = Self::default();
         qtrace!("Parsed fixed TP header");
 
-        let params = match d.decode_vec(2) {
-            Some(v) => v,
-            _ => return Err(Error::TransportParameterError),
-        };
-        let mut d2 = Decoder::from(params);
-        while d2.remaining() > 0 {
-            match TransportParameter::decode(&mut d2) {
+        while d.remaining() > 0 {
+            match TransportParameter::decode(d) {
                 Ok(Some((tipe, tp))) => {
                     tps.set(tipe, tp);
                 }
@@ -165,17 +155,15 @@ impl TransportParameters {
         Ok(tps)
     }
 
-    pub fn encode(&self, enc: &mut Encoder) {
-        enc.encode_vec_with(2, |mut enc_inner| {
-            for (tipe, tp) in &self.params {
-                tp.encode(&mut enc_inner, *tipe);
-            }
-        });
+    pub(crate) fn encode(&self, enc: &mut Encoder) {
+        for (tipe, tp) in &self.params {
+            tp.encode(enc, *tipe);
+        }
     }
 
     // Get an integer type or a default.
-    pub fn get_integer(&self, tipe: u16) -> u64 {
-        let default = match tipe {
+    pub fn get_integer(&self, tp: TransportParameterId) -> u64 {
+        let default = match tp {
             IDLE_TIMEOUT
             | INITIAL_MAX_DATA
             | INITIAL_MAX_STREAM_DATA_BIDI_LOCAL
@@ -188,7 +176,7 @@ impl TransportParameters {
             MAX_ACK_DELAY => 25,
             _ => panic!("Transport parameter not known or not an Integer"),
         };
-        match self.params.get(&tipe) {
+        match self.params.get(&tp) {
             None => default,
             Some(TransportParameter::Integer(x)) => *x,
             _ => panic!("Internal error"),
@@ -196,8 +184,8 @@ impl TransportParameters {
     }
 
     // Get an integer type or a default.
-    pub fn set_integer(&mut self, tipe: u16, value: u64) {
-        match tipe {
+    pub fn set_integer(&mut self, tp: TransportParameterId, value: u64) {
+        match tp {
             IDLE_TIMEOUT
             | INITIAL_MAX_DATA
             | INITIAL_MAX_STREAM_DATA_BIDI_LOCAL
@@ -208,38 +196,38 @@ impl TransportParameters {
             | MAX_PACKET_SIZE
             | ACK_DELAY_EXPONENT
             | MAX_ACK_DELAY => {
-                self.set(tipe, TransportParameter::Integer(value));
+                self.set(tp, TransportParameter::Integer(value));
             }
             _ => panic!("Transport parameter not known"),
         }
     }
 
-    pub fn get_bytes(&self, tipe: u16) -> Option<Vec<u8>> {
-        match tipe {
+    pub fn get_bytes(&self, tp: TransportParameterId) -> Option<Vec<u8>> {
+        match tp {
             ORIGINAL_CONNECTION_ID | STATELESS_RESET_TOKEN => {}
             _ => panic!("Transport parameter not known or not type bytes"),
         }
 
-        match self.params.get(&tipe) {
+        match self.params.get(&tp) {
             None => None,
             Some(TransportParameter::Bytes(x)) => Some(x.to_vec()),
             _ => panic!("Internal error"),
         }
     }
 
-    pub fn set_bytes(&mut self, tipe: u16, value: Vec<u8>) {
-        match tipe {
+    pub fn set_bytes(&mut self, tp: TransportParameterId, value: Vec<u8>) {
+        match tp {
             ORIGINAL_CONNECTION_ID | STATELESS_RESET_TOKEN => {
-                self.set(tipe, TransportParameter::Bytes(value));
+                self.set(tp, TransportParameter::Bytes(value));
             }
             _ => panic!("Transport parameter not known or not type bytes"),
         }
     }
 
-    pub fn set_empty(&mut self, tipe: u16) {
-        match tipe {
+    pub fn set_empty(&mut self, tp: TransportParameterId) {
+        match tp {
             DISABLE_MIGRATION => {
-                self.set(tipe, TransportParameter::Empty);
+                self.set(tp, TransportParameter::Empty);
             }
             _ => panic!("Transport parameter not known or not type empty"),
         }
@@ -248,7 +236,7 @@ impl TransportParameters {
     /// Return true if the remembered transport parameters are OK for 0-RTT.
     /// Generally this means that any value that is currently in effect is greater than
     /// or equal to the promised value.
-    pub fn ok_for_0rtt(&self, remembered: &Self) -> bool {
+    pub(crate) fn ok_for_0rtt(&self, remembered: &Self) -> bool {
         for (k, v_rem) in &remembered.params {
             // Skip checks for these, which don't affect 0-RTT.
             if matches!(
@@ -277,16 +265,16 @@ impl TransportParameters {
         true
     }
 
-    fn was_sent(&self, tipe: u16) -> bool {
-        self.params.contains_key(&tipe)
+    fn was_sent(&self, tp: TransportParameterId) -> bool {
+        self.params.contains_key(&tp)
     }
 }
 
 #[derive(Default, Debug)]
 pub struct TransportParametersHandler {
-    pub local: TransportParameters,
-    pub remote: Option<TransportParameters>,
-    pub remote_0rtt: Option<TransportParameters>,
+    pub(crate) local: TransportParameters,
+    pub(crate) remote: Option<TransportParameters>,
+    pub(crate) remote_0rtt: Option<TransportParameters>,
 }
 
 impl TransportParametersHandler {
@@ -337,7 +325,7 @@ impl ExtensionHandler for TransportParametersHandler {
 }
 
 #[derive(Debug)]
-pub struct TpZeroRttChecker {
+pub(crate) struct TpZeroRttChecker {
     handler: Rc<RefCell<TransportParametersHandler>>,
 }
 
@@ -481,11 +469,5 @@ mod tests {
             // A value that is rememebered, but not current is not OK.
             assert!(!tps_b.ok_for_0rtt(&tps_a));
         }
-    }
-
-    #[test]
-    fn test_apple_tps() {
-        let enc = Encoder::from_hex("0049000100011e00020010449aeef472626f18a5bba2d51ae473be0003000244b0000400048015f9000005000480015f900006000480015f90000700048004000000080001080009000108");
-        let tps2 = TransportParameters::decode(&mut enc.as_decoder()).unwrap();
     }
 }
