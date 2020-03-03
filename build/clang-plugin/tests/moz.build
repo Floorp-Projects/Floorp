@@ -38,6 +38,7 @@ SOURCES += [
     'TestNonParameterChecker.cpp',
     'TestNonTemporaryClass.cpp',
     'TestNonTrivialTypeInFfi.cpp',
+    'TestNoPrincipalGetUri.cpp',
     'TestNoRefcountedInsideLambdas.cpp',
     'TestNoUsingNamespaceMozillaJava.cpp',
     'TestOverrideBaseCall.cpp',
