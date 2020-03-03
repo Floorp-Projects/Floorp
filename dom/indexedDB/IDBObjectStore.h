@@ -112,7 +112,7 @@ class IDBObjectStore final : public nsISupports, public nsWrapperCache {
   static void ClearCloneReadInfo(StructuredCloneReadInfo& aReadInfo);
 
   static bool DeserializeValue(JSContext* aCx,
-                               StructuredCloneReadInfo& aCloneReadInfo,
+                               StructuredCloneReadInfo&& aCloneReadInfo,
                                JS::MutableHandle<JS::Value> aValue);
 
   static nsresult DeserializeUpgradeValueToFileIds(

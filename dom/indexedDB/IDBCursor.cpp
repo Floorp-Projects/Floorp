@@ -306,12 +306,13 @@ void IDBTypedCursor<CursorType>::GetValue(JSContext* const aCx,
       }
 
       JS::Rooted<JS::Value> val(aCx);
-      if (NS_WARN_IF(
-              !IDBObjectStore::DeserializeValue(aCx, mData.mCloneInfo, &val))) {
+      if (NS_WARN_IF(!IDBObjectStore::DeserializeValue(
+              aCx, std::move(mData.mCloneInfo), &val))) {
         aRv.Throw(NS_ERROR_DOM_DATA_CLONE_ERR);
         return;
       }
 
+      // XXX This seems redundant, sine mData.mCloneInfo is moved above.
       IDBObjectStore::ClearCloneReadInfo(mData.mCloneInfo);
 
       mCachedValue = val;
