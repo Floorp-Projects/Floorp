@@ -42,6 +42,7 @@
     <attr name="fillLinkFromClipboard" format="reference"/>
     <attr name="syncDisconnected" format="reference" />
     <attr name="syncDisconnectedBackground" format="reference" />
+    <attr name="swipeDeleteBackground" format="reference" />
 
     <declare-styleable name="LibraryListItem">
         <attr name="listItemTitle" format="reference" />

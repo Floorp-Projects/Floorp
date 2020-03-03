@@ -36,6 +36,7 @@
     <color name="fill_link_from_clipboard_light_theme">@color/accent_light_theme</color>
     <color name="sync_disconnected_icon_fill_light_theme">#C45A27</color>
     <color name="sync_disconnected_background_light_theme">#FFFDE2</color>
+    <color name="swipe_delete_background_light_theme">#E0E0E6</color>
 
     <!-- Dark theme color palette -->
     <color name="primary_text_dark_theme">#FBFBFE</color>
@@ -68,6 +69,7 @@
     <color name="fill_link_from_clipboard_dark_theme">@color/accent_on_dark_background_normal_theme</color>
     <color name="sync_disconnected_icon_fill_dark_theme">#FFF36E</color>
     <color name="sync_disconnected_background_dark_theme">#5B5846</color>
+    <color name="swipe_delete_background_dark_theme">#4A4A55</color>
 
     <!-- Private theme color palette -->
     <color name="primary_text_private_theme">#FBFBFE</color>
@@ -98,6 +100,7 @@
     <color name="menu_category_private_theme">@color/primary_text_private_theme</color>
     <color name="sync_disconnected_icon_fill_private_theme">#C45A27</color>
     <color name="sync_disconnected_background_private_theme">#5B5846</color>
+    <color name="swipe_delete_background_private_theme">#312A65</color>
 
     <!-- Normal theme colors for light mode -->
     <color name="primary_text_normal_theme">@color/primary_text_light_theme</color>
@@ -127,6 +130,7 @@
     <color name="menu_category_normal_theme">@color/accent_light_theme</color>
     <color name="sync_disconnected_icon_fill_normal_theme">@color/sync_disconnected_icon_fill_light_theme</color>
     <color name="sync_disconnected_background_normal_theme">@color/sync_disconnected_background_light_theme</color>
+    <color name="swipe_delete_background_normal_theme">@color/swipe_delete_background_light_theme</color>
 
     <!-- Bookmark buttons -->
     <color name="bookmark_favicon_background">#DFDFE3</color>
