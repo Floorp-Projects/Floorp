@@ -10,6 +10,7 @@
 #include "mozilla/net/DNS.h"
 #include "nsHttpHandler.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/Telemetry.h"
 #include "ASpdySession.h"  // because of SoftStreamError()
 #include "nsIOService.h"
 #include "nsISSLSocketControl.h"
@@ -325,6 +326,7 @@ nsresult Http3Session::ProcessEvents(uint32_t count, uint32_t* countWritten,
         LOG(("Http3Session::ProcessEvents - ConnectionClosing"));
         if (NS_SUCCEEDED(mError) && !IsClosing()) {
           mError = NS_ERROR_NET_HTTP3_PROTOCOL_ERROR;
+          CloseConnectionTelemetry(event.connection_closing.error, true);
         }
         CloseInternal(false);
         break;
@@ -332,6 +334,7 @@ nsresult Http3Session::ProcessEvents(uint32_t count, uint32_t* countWritten,
         LOG(("Http3Session::ProcessEvents - ConnectionClosed"));
         if (NS_SUCCEEDED(mError) && !IsClosing()) {
           mError = NS_ERROR_NET_HTTP3_PROTOCOL_ERROR;
+          CloseConnectionTelemetry(event.connection_closed.error, false);
         }
         mIsClosedByNeqo = true;
         // We need to return here and let HttpConnectionUDP close the session.
@@ -643,7 +646,7 @@ nsresult Http3Session::SendRequestBody(uint64_t aStreamId, const char* buf,
                                            count, countRead);
 }
 
-void Http3Session::ResetRecvd(uint64_t aStreamId, Http3AppError aError) {
+void Http3Session::ResetRecvd(uint64_t aStreamId, uint64_t aError) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   RefPtr<Http3Stream> stream = mStreamIdHash.Get(aStreamId);
   if (!stream) {
@@ -654,13 +657,13 @@ void Http3Session::ResetRecvd(uint64_t aStreamId, Http3AppError aError) {
 
   // We only handle some of Http3 error as epecial, the res are just equivalent
   // to cancel.
-  if (aError.tag == Http3AppError::Tag::VersionFallback) {
+  if (aError == HTTP3_APP_ERROR_VERSION_FALLBACK) {
     // We will restart the request and the alt-svc will be removed
     // automatically.
     // Also disable spdy we want http/1.1.
     stream->Transaction()->DisableSpdy();
     CloseStream(stream, NS_ERROR_NET_RESET);
-  } else if (aError.tag == Http3AppError::Tag::RequestRejected) {
+  } else if (aError == HTTP3_APP_ERROR_REQUEST_REJECTED) {
     // This request was rejected because server is probably busy or going away.
     // We can restart the request using alt-svc. Without calling
     // DoNotRemoveAltSvc the alt-svc route will be removed.
@@ -818,6 +821,11 @@ void Http3Session::Close(nsresult aReason) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   mError = aReason;
   CloseInternal(true);
+
+  // If necko closes connection, this will map to "closing" key and 37 in the
+  // graph.
+  Telemetry::Accumulate(Telemetry::HTTP3_CONNECTTION_CLOSE_CODE,
+                        NS_LITERAL_CSTRING("closing"), 37);
 
   if (mCleanShutdown || mIsClosedByNeqo) {
     // It is network-tear-down or neqo is state CLOSED(it does not need to send
@@ -1220,6 +1228,60 @@ void Http3Session::SetSecInfo() {
     mSocketControl->SetInfo(secInfo.cipher, secInfo.version, secInfo.group,
                             secInfo.signature_scheme);
   }
+}
+
+void Http3Session::CloseConnectionTelemetry(CloseError& aError, bool aClosing) {
+  uint64_t value = 0;
+
+  switch (aError.tag) {
+    case CloseError::Tag::QuicTransportError:
+      // Transport error have values from 0 to 12.
+      // (https://tools.ietf.org/html/draft-ietf-quic-transport-24#section-20)
+      // We will map this error to 0-12.
+      // 13 wil capture error codes between and including 13 and 0x0ff. This
+      // error codes are not define by the spec but who know peer may sent them.
+      // CryptoAlerts have value 0x100 + alert code. For now we will map them
+      // to 14. (https://tools.ietf.org/html/draft-ietf-quic-tls-24#section-4.9)
+      // (telemetry does not allow more than 100 bucket and to easily map alerts
+      // we need 256. If we find problem with too many alerts we could map
+      // them.)
+      if (aError.quic_transport_error._0 <= 12) {
+        value = aError.quic_transport_error._0;
+      } else if (aError.quic_transport_error._0 < 0x100) {
+        value = 13;
+      } else {
+        value = 14;
+      }
+      break;
+    case CloseError::Tag::Http3AppError:
+      if (aError.http3_app_error._0 <= 0x110) {
+        // Http3 error codes are 0x100-0x110.
+        // (https://tools.ietf.org/html/draft-ietf-quic-http-24#section-8.1)
+        // The will be mapped to 15-31.
+        value = (aError.http3_app_error._0 - 0x100) + 15;
+      } else if (aError.http3_app_error._0 < 0x200) {
+        // Error codes between 0x111 and 0x1ff are not defined and will be
+        // mapped int 32
+        value = 32;  // 0x11 + 15
+      } else if (aError.http3_app_error._0 < 0x203) {
+        // Error codes between 0x200 and 0x202 are related to qpack.
+        // (https://tools.ietf.org/html/draft-ietf-quic-qpack-11#section-6)
+        // They will be mapped to 33-35
+        value = aError.http3_app_error._0 - 0x200 + 33;
+      } else {
+        value = 36;
+      }
+  }
+
+  // A connection may be closed in two ways: client side closes connection or
+  // server side. In former case http3 state will first change to closing state
+  // in the later case itt will change to closed. In tthis way we can
+  // distinguish which side is closing connecttion first. If necko closes
+  // connection, this will map to "closing" key and 37 in the graph.
+  Telemetry::Accumulate(
+      Telemetry::HTTP3_CONNECTTION_CLOSE_CODE,
+      aClosing ? NS_LITERAL_CSTRING("closing") : NS_LITERAL_CSTRING("closed"),
+      value);
 }
 
 }  // namespace net

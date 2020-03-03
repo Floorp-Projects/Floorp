@@ -2465,13 +2465,18 @@ nsresult nsHttpChannel::ProcessResponse() {
 
   if (Telemetry::CanRecordPrereleaseData()) {
     // how often do we see something like Alt-Svc: "443:quic,p=1"
+    // and Alt-Svc: "h3-****"
     nsAutoCString alt_service;
     Unused << mResponseHead->GetHeader(nsHttp::Alternate_Service, alt_service);
-    bool saw_quic =
-        (!alt_service.IsEmpty() && PL_strstr(alt_service.get(), "quic"))
-            ? true
-            : false;
-    Telemetry::Accumulate(Telemetry::HTTP_SAW_QUIC_ALT_PROTOCOL, saw_quic);
+    uint32_t saw_quic = 0;
+    if (!alt_service.IsEmpty()) {
+      if (PL_strstr(alt_service.get(), "h3-")) {
+        saw_quic = 1;
+      } else if (PL_strstr(alt_service.get(), "quic")) {
+        saw_quic = 2;
+      }
+    }
+    Telemetry::Accumulate(Telemetry::HTTP_SAW_QUIC_ALT_PROTOCOL_2, saw_quic);
 
     // Gather data on how many URLS get redirected
     switch (httpStatus) {
