@@ -261,26 +261,23 @@ nsresult FileReader::DoReadData(uint64_t aCount) {
 
   if (mDataFormat == FILE_AS_BINARY) {
     // Continuously update our binary string as data comes in
-    CheckedInt<uint64_t> size = mResult.Length();
+    CheckedInt<uint64_t> size{mResult.Length()};
     size += aCount;
 
     if (!size.isValid() || size.value() > UINT32_MAX || size.value() > mTotal) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    uint32_t oldLen = mResult.Length();
-    MOZ_ASSERT(oldLen == mDataLen, "unexpected mResult length");
+    uint32_t lenBeforeRead = mResult.Length();
+    MOZ_ASSERT(lenBeforeRead == mDataLen, "unexpected mResult length");
 
-    char16_t* dest = nullptr;
-    mResult.GetMutableData(&dest, size.value(), fallible);
-    NS_ENSURE_TRUE(dest, NS_ERROR_OUT_OF_MEMORY);
-
-    dest += oldLen;
+    mResult.SetLength(lenBeforeRead + aCount);
+    char16_t* currentPos = mResult.BeginWriting() + lenBeforeRead;
 
     if (NS_InputStreamIsBuffered(mAsyncStream)) {
-      nsresult rv = mAsyncStream->ReadSegments(ReadFuncBinaryString, dest,
+      nsresult rv = mAsyncStream->ReadSegments(ReadFuncBinaryString, currentPos,
                                                aCount, &bytesRead);
-      NS_ENSURE_SUCCESS(rv, rv);
+      NS_ENSURE_SUCCESS(rv, NS_OK);
     } else {
       while (aCount > 0) {
         char tmpBuffer[4096];
@@ -293,22 +290,22 @@ nsresult FileReader::DoReadData(uint64_t aCount) {
           rv = NS_OK;
         }
 
-        NS_ENSURE_SUCCESS(rv, rv);
+        NS_ENSURE_SUCCESS(rv, NS_OK);
 
         if (read == 0) {
           // The stream finished too early.
           return NS_ERROR_OUT_OF_MEMORY;
         }
 
-        PopulateBufferForBinaryString(dest, tmpBuffer, read);
+        PopulateBufferForBinaryString(currentPos, tmpBuffer, read);
 
-        dest += read;
+        currentPos += read;
         aCount -= read;
         bytesRead += read;
       }
     }
 
-    MOZ_ASSERT(size.value() == oldLen + bytesRead);
+    MOZ_ASSERT(size.value() == lenBeforeRead + bytesRead);
     mResult.Truncate(size.value());
   } else {
     CheckedInt<uint64_t> size = mDataLen;
