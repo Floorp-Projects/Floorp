@@ -2,7 +2,7 @@
 
 # BookmarksStorageSuggestionProvider
 
-`class BookmarksStorageSuggestionProvider : `[`SuggestionProvider`](../../mozilla.components.concept.awesomebar/-awesome-bar/-suggestion-provider/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/awesomebar/src/main/java/mozilla/components/feature/awesomebar/provider/BookmarksStorageSuggestionProvider.kt#L21)
+`class BookmarksStorageSuggestionProvider : `[`SuggestionProvider`](../../mozilla.components.concept.awesomebar/-awesome-bar/-suggestion-provider/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/awesomebar/src/main/java/mozilla/components/feature/awesomebar/provider/BookmarksStorageSuggestionProvider.kt#L31)
 
 A [AwesomeBar.SuggestionProvider](../../mozilla.components.concept.awesomebar/-awesome-bar/-suggestion-provider/index.md) implementation that provides suggestions based on the bookmarks
 stored in the [BookmarksStorage](../../mozilla.components.concept.storage/-bookmarks-storage/index.md).
@@ -11,7 +11,7 @@ stored in the [BookmarksStorage](../../mozilla.components.concept.storage/-bookm
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `BookmarksStorageSuggestionProvider(bookmarksStorage: `[`BookmarksStorage`](../../mozilla.components.concept.storage/-bookmarks-storage/index.md)`, loadUrlUseCase: `[`LoadUrlUseCase`](../../mozilla.components.feature.session/-session-use-cases/-load-url-use-case/index.md)`, icons: `[`BrowserIcons`](../../mozilla.components.browser.icons/-browser-icons/index.md)`? = null)`<br>A [AwesomeBar.SuggestionProvider](../../mozilla.components.concept.awesomebar/-awesome-bar/-suggestion-provider/index.md) implementation that provides suggestions based on the bookmarks stored in the [BookmarksStorage](../../mozilla.components.concept.storage/-bookmarks-storage/index.md). |
+| [&lt;init&gt;](-init-.md) | `BookmarksStorageSuggestionProvider(bookmarksStorage: `[`BookmarksStorage`](../../mozilla.components.concept.storage/-bookmarks-storage/index.md)`, loadUrlUseCase: `[`LoadUrlUseCase`](../../mozilla.components.feature.session/-session-use-cases/-load-url-use-case/index.md)`, icons: `[`BrowserIcons`](../../mozilla.components.browser.icons/-browser-icons/index.md)`? = null, engine: `[`Engine`](../../mozilla.components.concept.engine/-engine/index.md)`? = null)`<br>A [AwesomeBar.SuggestionProvider](../../mozilla.components.concept.awesomebar/-awesome-bar/-suggestion-provider/index.md) implementation that provides suggestions based on the bookmarks stored in the [BookmarksStorage](../../mozilla.components.concept.storage/-bookmarks-storage/index.md). |
 
 ### Properties
 

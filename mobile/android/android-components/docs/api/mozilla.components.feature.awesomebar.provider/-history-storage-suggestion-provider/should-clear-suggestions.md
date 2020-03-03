@@ -2,7 +2,7 @@
 
 # shouldClearSuggestions
 
-`val shouldClearSuggestions: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/awesomebar/src/main/java/mozilla/components/feature/awesomebar/provider/HistoryStorageSuggestionProvider.kt#L40)
+`val shouldClearSuggestions: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/awesomebar/src/main/java/mozilla/components/feature/awesomebar/provider/HistoryStorageSuggestionProvider.kt#L57)
 
 Overrides [SuggestionProvider.shouldClearSuggestions](../../mozilla.components.concept.awesomebar/-awesome-bar/-suggestion-provider/should-clear-suggestions.md)
 

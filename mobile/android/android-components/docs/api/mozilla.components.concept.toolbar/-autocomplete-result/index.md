@@ -2,7 +2,7 @@
 
 # AutocompleteResult
 
-`data class AutocompleteResult` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/toolbar/src/main/java/mozilla/components/concept/toolbar/AutocompleteDelegate.kt#L31)
+`data class AutocompleteResult` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/toolbar/src/main/java/mozilla/components/concept/toolbar/AutocompleteDelegate.kt#L34)
 
 Describes an autocompletion result.
 
