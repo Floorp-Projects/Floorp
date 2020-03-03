@@ -728,7 +728,8 @@ class InlineTypedObject : public TypedObject {
   // Start of the inline data, which immediately follows the shape and type.
   uint8_t data_[1];
 
-  static const size_t MaximumSize =
+ public:
+  static const size_t MaxInlineBytes =
       JSObject::MAX_BYTE_SIZE - sizeof(TypedObject);
 
  protected:
@@ -737,10 +738,10 @@ class InlineTypedObject : public TypedObject {
  public:
   static inline gc::AllocKind allocKindForTypeDescriptor(TypeDescr* descr);
 
-  static bool canAccommodateSize(size_t size) { return size <= MaximumSize; }
+  static bool canAccommodateSize(size_t size) { return size <= MaxInlineBytes; }
 
   static bool canAccommodateType(TypeDescr* type) {
-    return type->size() <= MaximumSize;
+    return type->size() <= MaxInlineBytes;
   }
 
   uint8_t* inlineTypedMem(const JS::AutoRequireNoGC&) const {

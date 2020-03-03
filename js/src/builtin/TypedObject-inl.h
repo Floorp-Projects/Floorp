@@ -15,7 +15,7 @@
 js::gc::AllocKind js::InlineTypedObject::allocKindForTypeDescriptor(
     TypeDescr* descr) {
   size_t nbytes = descr->size();
-  MOZ_ASSERT(nbytes <= MaximumSize);
+  MOZ_ASSERT(nbytes <= MaxInlineBytes);
 
   return gc::GetGCObjectKindForBytes(nbytes + sizeof(TypedObject));
 }
