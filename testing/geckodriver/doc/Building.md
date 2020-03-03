@@ -18,7 +18,7 @@ since mach in this case does not have a compile environment:
 	% cd testing/geckodriver
 	% cargo build
 	…
-	   Compiling geckodriver v0.21.0 (file:///home/ato/src/gecko/testing/geckodriver)
+	   Compiling geckodriver v0.21.0 (file:///code/gecko/testing/geckodriver)
 	…
 	    Finished dev [optimized + debuginfo] target(s) in 7.83s
 
