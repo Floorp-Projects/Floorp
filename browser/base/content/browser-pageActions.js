@@ -742,7 +742,9 @@ var BrowserPageActions = {
    * @param  node (DOM node, required)
    *         A button DOM node, either one that's shown in the page action panel
    *         or the urlbar.
-   * @return (PageAction.Action) The node's related action, or null if none.
+   * @return (PageAction.Action) If the node has a related action and the action
+   *         is not a separator, then the action is returned.  Otherwise null is
+   *         returned.
    */
   actionForNode(node) {
     if (!node) {
@@ -764,7 +766,7 @@ var BrowserPageActions = {
         action = PageActions.actionForID(actionID);
       }
     }
-    return action;
+    return action && !action.__isSeparator ? action : null;
   },
 
   /**

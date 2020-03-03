@@ -1775,6 +1775,43 @@ add_task(async function contextMenu() {
   gURLBar.focus();
 });
 
+// The context menu shouldn't open on separators in the panel.
+add_task(async function contextMenuOnSeparator() {
+  // Open the panel and get the bookmark separator.
+  await promiseOpenPageActionPanel();
+  let separator = BrowserPageActions.panelButtonNodeForActionID(
+    PageActions.ACTION_ID_BOOKMARK_SEPARATOR
+  );
+  Assert.ok(separator, "The bookmark separator should be in the panel");
+
+  // Context-click it.  popupshowing should be fired, but by the time the event
+  // reaches this listener, preventDefault should have been called on it.
+  let showingPromise = BrowserTestUtils.waitForEvent(
+    document.getElementById("pageActionContextMenu"),
+    "popupshowing",
+    false
+  );
+  EventUtils.synthesizeMouseAtCenter(separator, {
+    type: "contextmenu",
+    button: 2,
+  });
+  let event = await showingPromise;
+  Assert.ok(
+    event.defaultPrevented,
+    "defaultPrevented should be true on popupshowing event"
+  );
+
+  // Click the main button to hide the main panel.
+  EventUtils.synthesizeMouseAtCenter(BrowserPageActions.mainButtonNode, {});
+  await promisePageActionPanelHidden();
+
+  // urlbar tests that run after this one can break if the mouse is left over
+  // the area where the urlbar popup appears, which seems to happen due to the
+  // above synthesized mouse events.  Move it over the urlbar.
+  EventUtils.synthesizeMouseAtCenter(gURLBar.inputField, { type: "mousemove" });
+  gURLBar.focus();
+});
+
 // Tests transient actions.
 add_task(async function transient() {
   let initialActionsInPanel = PageActions.actionsInPanel(window);
