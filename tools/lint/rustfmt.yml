@@ -18,6 +18,7 @@ rust:
         - xpcom/
     exclude:
         - dom/media/gtest/
+        - dom/webauthn/libudev-sys/
         - gfx/wr/direct-composition/
         - gfx/wr/peek-poke/
         - gfx/wr/webrender_build/

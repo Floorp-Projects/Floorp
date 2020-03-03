@@ -4,6 +4,7 @@ clippy:
     include:
         - build/workspace-hack/
         - dom/media/gtest/
+        - dom/webauthn/libudev-sys/
         - gfx/webrender_bindings/
         - gfx/wr/direct-composition/
         - gfx/wr/example-compositor/compositor-windows/
