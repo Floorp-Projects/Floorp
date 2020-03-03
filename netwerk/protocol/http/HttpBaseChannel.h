@@ -621,6 +621,7 @@ class HttpBaseChannel : public nsHashPropertyBag,
   nsCOMPtr<nsIStreamListener> mListener;
   // An instance of nsHTTPCompressConv
   nsCOMPtr<nsIStreamListener> mCompressListener;
+  nsCOMPtr<nsIEventTarget> mCurrentThread;
 
  private:
   // Proxy release all members above on main thread.
