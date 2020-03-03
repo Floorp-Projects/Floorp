@@ -353,7 +353,7 @@ class Warnings(MachCommandBase):
             dirpath = None
 
         type_counts = database.type_counts(dirpath)
-        sorted_counts = sorted(type_counts.iteritems(),
+        sorted_counts = sorted(type_counts.items(),
                                key=operator.itemgetter(1))
 
         total = 0
