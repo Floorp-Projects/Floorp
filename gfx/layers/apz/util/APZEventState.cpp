@@ -471,15 +471,6 @@ void APZEventState::ProcessAPZStateChange(ViewID aViewId,
   }
 }
 
-void APZEventState::ProcessClusterHit() {
-  // If we hit a cluster of links then we shouldn't activate any of them,
-  // as we will be showing the zoomed view. (This is only called on Fennec).
-#ifndef MOZ_WIDGET_ANDROID
-  MOZ_ASSERT(false);
-#endif
-  mActiveElementManager->ClearActivation();
-}
-
 bool APZEventState::SendPendingTouchPreventedResponse(bool aPreventDefault) {
   if (mPendingTouchPreventedResponse) {
     APZES_LOG("Sending response %d for pending guid: %s\n", aPreventDefault,
