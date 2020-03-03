@@ -1427,6 +1427,10 @@ bitflags! {
         const INVALIDATION_DBG = 1 << 28;
         /// Log tile cache to memory for later saving as part of wr-capture
         const TILE_CACHE_LOGGING_DBG   = 1 << 29;
+        /// For debugging, force-disable automatic scaling of establishes_raster_root
+        /// pictures that are too large (ie go back to old behavior that prevents those
+        /// large pictures from establishing a raster root).
+        const DISABLE_RASTER_ROOT_SCALING = 1 << 30;
     }
 }
 

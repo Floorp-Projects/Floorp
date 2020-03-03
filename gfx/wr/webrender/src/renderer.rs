@@ -3799,8 +3799,8 @@ impl Renderer {
         // composite operation in this batch.
         let (readback_rect, readback_layer) = readback.get_target_rect();
         let (backdrop_rect, _) = backdrop.get_target_rect();
-        let backdrop_screen_origin = match backdrop.kind {
-            RenderTaskKind::Picture(ref task_info) => task_info.content_origin,
+        let (backdrop_screen_origin, backdrop_scale) = match backdrop.kind {
+            RenderTaskKind::Picture(ref task_info) => (task_info.content_origin, task_info.device_pixel_scale),
             _ => panic!("bug: composite on non-picture?"),
         };
         let source_screen_origin = match source.kind {
@@ -3818,8 +3818,10 @@ impl Renderer {
             false,
         );
 
+        let source_in_backdrop_space = source_screen_origin.to_f32() * backdrop_scale.0;
+
         let mut src = DeviceIntRect::new(
-            source_screen_origin + (backdrop_rect.origin - backdrop_screen_origin),
+            (source_in_backdrop_space + (backdrop_rect.origin - backdrop_screen_origin).to_f32()).to_i32(),
             readback_rect.size,
         );
         let mut dest = readback_rect.to_i32();
