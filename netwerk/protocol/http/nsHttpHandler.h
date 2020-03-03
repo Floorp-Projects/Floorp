@@ -53,6 +53,8 @@ class nsHttpConnection;
 class nsHttpConnectionInfo;
 class HttpTransactionShell;
 class AltSvcMapping;
+class SimpleHttpChannel;
+class TRR;
 
 /*
  * FRAMECHECK_LAX - no check
@@ -501,6 +503,17 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
   // thread. Updates mSpeculativeConnectEnabled when done.
   void MaybeEnableSpeculativeConnect();
 
+  // We only allow TRR and SimpleHttpChannel itself to create SimpleHttpChannel.
+  friend class SimpleHttpChannel;
+  friend class TRR;
+  nsresult CreateSimpleHttpChannel(nsIURI* uri, nsIProxyInfo* givenProxyInfo,
+                                   uint32_t proxyResolveFlags, nsIURI* proxyURI,
+                                   nsILoadInfo* aLoadInfo, nsIChannel** result);
+  nsresult SetupChannelInternal(HttpBaseChannel* aChannel, nsIURI* uri,
+                                nsIProxyInfo* givenProxyInfo,
+                                uint32_t proxyResolveFlags, nsIURI* proxyURI,
+                                nsILoadInfo* aLoadInfo, nsIChannel** result);
+
  private:
   // cached services
   nsMainThreadPtrHandle<nsIIOService> mIOService;
@@ -773,7 +786,7 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
 
   // State for generating channelIds
   uint32_t mProcessId;
-  uint32_t mNextChannelId;
+  Atomic<uint32_t, Relaxed> mNextChannelId;
 
   // The last time any of the active tab page load optimization took place.
   // This is accessed on multiple threads, hence a lock is needed.
