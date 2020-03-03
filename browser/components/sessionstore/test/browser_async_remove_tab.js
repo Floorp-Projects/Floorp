@@ -32,26 +32,12 @@ function restoreClosedTabWithValue(rval) {
   return ss.undoCloseTab(window, index);
 }
 
-function promiseNewLocationAndHistoryEntryReplaced(tab, snippet) {
-  let browser = tab.linkedBrowser;
-
-  if (Services.prefs.getBoolPref("fission.sessionHistoryInParent", false)) {
-    SpecialPowers.spawn(browser, [snippet], async function(codeSnippet) {
-      // Need to define 'webNavigation' for 'codeSnippet'
-      // eslint-disable-next-line no-unused-vars
-      let webNavigation = docShell.QueryInterface(Ci.nsIWebNavigation);
-      // Evaluate the snippet that changes the location.
-      // eslint-disable-next-line no-eval
-      eval(codeSnippet);
-    });
-    return promiseOnHistoryReplaceEntry(tab);
-  }
-
+function promiseNewLocationAndHistoryEntryReplaced(browser, snippet) {
   return SpecialPowers.spawn(browser, [snippet], async function(codeSnippet) {
     let webNavigation = docShell.QueryInterface(Ci.nsIWebNavigation);
     let shistory = webNavigation.sessionHistory.legacySHistory;
 
-    // Evaluate the snippet that changes the location.
+    // Evaluate the snippet that the changes the location.
     // eslint-disable-next-line no-eval
     eval(codeSnippet);
 
@@ -135,7 +121,7 @@ add_task(async function save_worthy_tabs_remote_final() {
   let snippet =
     'webNavigation.loadURI("https://example.com/",\
     {triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal()})';
-  await promiseNewLocationAndHistoryEntryReplaced(tab, snippet);
+  await promiseNewLocationAndHistoryEntryReplaced(browser, snippet);
 
   // Remotness shouldn't have changed.
   ok(browser.isRemoteBrowser, "browser is still remote");
@@ -178,10 +164,11 @@ add_task(async function save_worthy_tabs_nonremote_final() {
 
 add_task(async function dont_save_empty_tabs_final() {
   let { tab, r } = await createTabWithRandomValue("https://example.com/");
+  let browser = tab.linkedBrowser;
 
   // Replace the current page with an about:blank entry.
   let snippet = 'content.location.replace("about:blank")';
-  await promiseNewLocationAndHistoryEntryReplaced(tab, snippet);
+  await promiseNewLocationAndHistoryEntryReplaced(browser, snippet);
 
   // Remove the tab before the update arrives.
   let promise = promiseRemoveTabAndSessionState(tab);

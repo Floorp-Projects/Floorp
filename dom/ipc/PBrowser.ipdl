@@ -614,14 +614,12 @@ parent:
                              CollectedInputDataValue[] aXPathVals,
                              nsCString[] aOrigins, nsString[] aKeys,
                              nsString[] aValues, bool aIsFullStorage,
-                             bool aNeedCollectSHistory, uint32_t aFlushId,
-                             bool aIsFinal, uint32_t aEpoch);
+                             uint32_t aFlushId, bool aIsFinal, uint32_t aEpoch);
 
 child:
     async NativeSynthesisResponse(uint64_t aObserverId, nsCString aResponse);
     async FlushTabState(uint32_t aFlushId, bool aIsFinal);
     async UpdateEpoch(uint32_t aEpoch);
-    async UpdateSHistory(bool aImmediately);
 
 parent:
 
