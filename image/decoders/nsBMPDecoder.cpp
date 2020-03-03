@@ -103,7 +103,6 @@
 
 #include "RasterImage.h"
 #include "SurfacePipeFactory.h"
-#include "gfxPlatform.h"
 #include <algorithm>
 
 using namespace mozilla::gfx;
@@ -132,32 +131,6 @@ struct RLE {
 }  // namespace bmp
 
 using namespace bmp;
-
-static double FixedPoint2Dot30_To_Double(uint32_t aFixed) {
-  constexpr double factor = 1.0 / 1073741824.0;  // 2^-30
-  return double(aFixed) * factor;
-}
-
-static float FixedPoint16Dot16_To_Float(uint32_t aFixed) {
-  constexpr double factor = 1.0 / 65536.0;  // 2^-16
-  return double(aFixed) * factor;
-}
-
-static float CalRbgEndpointToQcms(const CalRgbEndpoint& aIn,
-                                  qcms_CIE_xyY& aOut) {
-  aOut.x = FixedPoint2Dot30_To_Double(aIn.mX);
-  aOut.y = FixedPoint2Dot30_To_Double(aIn.mY);
-  aOut.Y = FixedPoint2Dot30_To_Double(aIn.mZ);
-  return FixedPoint16Dot16_To_Float(aIn.mGamma);
-}
-
-static void ReadCalRgbEndpoint(const char* aData, uint32_t aEndpointOffset,
-                               uint32_t aGammaOffset, CalRgbEndpoint& aOut) {
-  aOut.mX = LittleEndian::readUint32(aData + aEndpointOffset);
-  aOut.mY = LittleEndian::readUint32(aData + aEndpointOffset + 4);
-  aOut.mZ = LittleEndian::readUint32(aData + aEndpointOffset + 8);
-  aOut.mGamma = LittleEndian::readUint32(aData + aGammaOffset);
-}
 
 /// Sets the pixel data in aDecoded to the given values.
 /// @param aDecoded pointer to pixel to be set, will be incremented to point to
@@ -427,45 +400,35 @@ LexerResult nsBMPDecoder::DoDecode(SourceBufferIterator& aIterator,
                                    IResumable* aOnResume) {
   MOZ_ASSERT(!HasError(), "Shouldn't call DoDecode after error!");
 
-  return mLexer.Lex(
-      aIterator, aOnResume,
-      [=](State aState, const char* aData, size_t aLength) {
-        switch (aState) {
-          case State::FILE_HEADER:
-            return ReadFileHeader(aData, aLength);
-          case State::INFO_HEADER_SIZE:
-            return ReadInfoHeaderSize(aData, aLength);
-          case State::INFO_HEADER_REST:
-            return ReadInfoHeaderRest(aData, aLength);
-          case State::BITFIELDS:
-            return ReadBitfields(aData, aLength);
-          case State::SKIP_TO_COLOR_PROFILE:
-            return Transition::ContinueUnbuffered(State::SKIP_TO_COLOR_PROFILE);
-          case State::FOUND_COLOR_PROFILE:
-            return Transition::To(State::COLOR_PROFILE,
-                                  mH.mColorSpace.mProfile.mLength);
-          case State::COLOR_PROFILE:
-            return ReadColorProfile(aData, aLength);
-          case State::ALLOCATE_SURFACE:
-            return AllocateSurface();
-          case State::COLOR_TABLE:
-            return ReadColorTable(aData, aLength);
-          case State::GAP:
-            return SkipGap();
-          case State::AFTER_GAP:
-            return AfterGap();
-          case State::PIXEL_ROW:
-            return ReadPixelRow(aData);
-          case State::RLE_SEGMENT:
-            return ReadRLESegment(aData);
-          case State::RLE_DELTA:
-            return ReadRLEDelta(aData);
-          case State::RLE_ABSOLUTE:
-            return ReadRLEAbsolute(aData, aLength);
-          default:
-            MOZ_CRASH("Unknown State");
-        }
-      });
+  return mLexer.Lex(aIterator, aOnResume,
+                    [=](State aState, const char* aData, size_t aLength) {
+                      switch (aState) {
+                        case State::FILE_HEADER:
+                          return ReadFileHeader(aData, aLength);
+                        case State::INFO_HEADER_SIZE:
+                          return ReadInfoHeaderSize(aData, aLength);
+                        case State::INFO_HEADER_REST:
+                          return ReadInfoHeaderRest(aData, aLength);
+                        case State::BITFIELDS:
+                          return ReadBitfields(aData, aLength);
+                        case State::COLOR_TABLE:
+                          return ReadColorTable(aData, aLength);
+                        case State::GAP:
+                          return SkipGap();
+                        case State::AFTER_GAP:
+                          return AfterGap();
+                        case State::PIXEL_ROW:
+                          return ReadPixelRow(aData);
+                        case State::RLE_SEGMENT:
+                          return ReadRLESegment(aData);
+                        case State::RLE_DELTA:
+                          return ReadRLEDelta(aData);
+                        case State::RLE_ABSOLUTE:
+                          return ReadRLEAbsolute(aData, aLength);
+                        default:
+                          MOZ_CRASH("Unknown State");
+                      }
+                    });
 }
 
 LexerTransition<nsBMPDecoder::State> nsBMPDecoder::ReadFileHeader(
@@ -533,43 +496,6 @@ LexerTransition<nsBMPDecoder::State> nsBMPDecoder::ReadInfoHeaderRest(
     // We ignore the xppm (aData + 20) and yppm (aData + 24) fields.
     mH.mNumColors = aLength >= 32 ? LittleEndian::readUint32(aData + 28) : 0;
     // We ignore the important_colors (aData + 36) field.
-
-    // Read color management properties we may need later.
-    mH.mCsType =
-        aLength >= 56
-            ? static_cast<InfoColorSpace>(LittleEndian::readUint32(aData + 52))
-            : InfoColorSpace::SRGB;
-    mH.mCsIntent = aLength >= 108 ? static_cast<InfoColorIntent>(
-                                        LittleEndian::readUint32(aData + 104))
-                                  : InfoColorIntent::IMAGES;
-
-    switch (mH.mCsType) {
-      case InfoColorSpace::CALIBRATED_RGB:
-        if (aLength >= 104) {
-          ReadCalRgbEndpoint(aData, 56, 92, mH.mColorSpace.mCalibrated.mRed);
-          ReadCalRgbEndpoint(aData, 68, 96, mH.mColorSpace.mCalibrated.mGreen);
-          ReadCalRgbEndpoint(aData, 80, 100, mH.mColorSpace.mCalibrated.mBlue);
-        } else {
-          mH.mCsType = InfoColorSpace::SRGB;
-        }
-        break;
-      case InfoColorSpace::PROFILE_EMBEDDED:
-        if (aLength >= 116) {
-          mH.mColorSpace.mProfile.mOffset =
-              LittleEndian::readUint32(aData + 108);
-          mH.mColorSpace.mProfile.mLength =
-              LittleEndian::readUint32(aData + 112);
-        } else {
-          mH.mCsType = InfoColorSpace::SRGB;
-        }
-        break;
-      case InfoColorSpace::PROFILE_LINKED:
-      case InfoColorSpace::SRGB:
-      case InfoColorSpace::WINDOWS:
-      default:
-        // Nothing to be done at this time.
-        break;
-    }
 
     // For WinBMPv4, WinBMPv5 and (possibly) OS2-BMPv2 there are additional
     // fields in the info header which we ignore, with the possible exception
@@ -717,156 +643,6 @@ LexerTransition<nsBMPDecoder::State> nsBMPDecoder::ReadBitfields(
     mBytesPerColor = (mH.mBIHSize == InfoHeaderLength::WIN_V2) ? 3 : 4;
   }
 
-  auto cmsMode = gfxPlatform::GetCMSMode();
-  if (GetSurfaceFlags() & SurfaceFlags::NO_COLORSPACE_CONVERSION) {
-    cmsMode = eCMSMode_Off;
-  }
-
-  if (cmsMode != eCMSMode_Off) {
-    switch (mH.mCsType) {
-      case InfoColorSpace::PROFILE_EMBEDDED:
-        return SeekColorProfile(aLength);
-      case InfoColorSpace::CALIBRATED_RGB:
-        PrepareCalibratedColorProfile();
-        break;
-      case InfoColorSpace::SRGB:
-      case InfoColorSpace::WINDOWS:
-        MOZ_LOG(sBMPLog, LogLevel::Debug, ("using sRGB color profile\n"));
-        if (mColors) {
-          // We will transform the color table instead of the output pixels.
-          mTransform = gfxPlatform::GetCMSRGBTransform();
-        } else {
-          mTransform = gfxPlatform::GetCMSOSRGBATransform();
-        }
-        break;
-      case InfoColorSpace::PROFILE_LINKED:
-      default:
-        // Not supported, no color management.
-        MOZ_LOG(sBMPLog, LogLevel::Debug, ("color space type not provided\n"));
-        break;
-    }
-  }
-
-  return Transition::To(State::ALLOCATE_SURFACE, 0);
-}
-
-void nsBMPDecoder::PrepareCalibratedColorProfile() {
-  // BMP does not define a white point. Use the same as sRGB. This matches what
-  // Chrome does as well.
-  qcms_CIE_xyY white_point = qcms_white_point_sRGB();
-
-  qcms_CIE_xyYTRIPLE primaries;
-  float redGamma =
-      CalRbgEndpointToQcms(mH.mColorSpace.mCalibrated.mRed, primaries.red);
-  float greenGamma =
-      CalRbgEndpointToQcms(mH.mColorSpace.mCalibrated.mGreen, primaries.green);
-  float blueGamma =
-      CalRbgEndpointToQcms(mH.mColorSpace.mCalibrated.mBlue, primaries.blue);
-
-  // Explicitly verify the profile because sometimes the values from the BMP
-  // header are just garbage.
-  mInProfile = qcms_profile_create_rgb_with_gamma_set(
-      white_point, primaries, redGamma, greenGamma, blueGamma);
-  if (mInProfile && qcms_profile_is_bogus(mInProfile)) {
-    // Bad profile, just use sRGB instead. Release the profile here, so that
-    // our destructor doesn't assume we are the owner for the transform.
-    qcms_profile_release(mInProfile);
-    mInProfile = nullptr;
-  }
-
-  if (mInProfile) {
-    MOZ_LOG(sBMPLog, LogLevel::Debug, ("using calibrated RGB color profile\n"));
-    PrepareColorProfileTransform();
-  } else {
-    MOZ_LOG(sBMPLog, LogLevel::Debug,
-            ("failed to create calibrated RGB color profile, using sRGB\n"));
-    if (mColors) {
-      // We will transform the color table instead of the output pixels.
-      mTransform = gfxPlatform::GetCMSRGBTransform();
-    } else {
-      mTransform = gfxPlatform::GetCMSOSRGBATransform();
-    }
-  }
-}
-
-void nsBMPDecoder::PrepareColorProfileTransform() {
-  if (!mInProfile || !gfxPlatform::GetCMSOutputProfile()) {
-    return;
-  }
-
-  qcms_data_type inType;
-  qcms_data_type outType;
-  if (mColors) {
-    // We will transform the color table instead of the output pixels.
-    inType = QCMS_DATA_RGB_8;
-    outType = QCMS_DATA_RGB_8;
-  } else {
-    inType = gfxPlatform::GetCMSOSRGBAType();
-    outType = inType;
-  }
-
-  qcms_intent intent;
-  switch (mH.mCsIntent) {
-    case InfoColorIntent::BUSINESS:
-      intent = QCMS_INTENT_SATURATION;
-      break;
-    case InfoColorIntent::GRAPHICS:
-      intent = QCMS_INTENT_RELATIVE_COLORIMETRIC;
-      break;
-    case InfoColorIntent::ABS_COLORIMETRIC:
-      intent = QCMS_INTENT_ABSOLUTE_COLORIMETRIC;
-      break;
-    case InfoColorIntent::IMAGES:
-    default:
-      intent = QCMS_INTENT_PERCEPTUAL;
-      break;
-  }
-
-  mTransform = qcms_transform_create(
-      mInProfile, inType, gfxPlatform::GetCMSOutputProfile(), outType, intent);
-  if (!mTransform) {
-    MOZ_LOG(sBMPLog, LogLevel::Debug,
-            ("failed to create color profile transform\n"));
-  }
-}
-
-LexerTransition<nsBMPDecoder::State> nsBMPDecoder::SeekColorProfile(
-    size_t aLength) {
-  // The offset needs to be at least after the color table.
-  uint32_t offset = mH.mColorSpace.mProfile.mOffset;
-  if (offset <= mH.mBIHSize + aLength + mNumColors * mBytesPerColor ||
-      mH.mColorSpace.mProfile.mLength == 0) {
-    return Transition::To(State::ALLOCATE_SURFACE, 0);
-  }
-
-  // We have already read the header and bitfields.
-  offset -= mH.mBIHSize + aLength;
-
-  // We need to skip ahead to search for the embedded color profile. We want
-  // to return to this point once we read it.
-  mReturnIterator = mLexer.Clone(*mIterator, SIZE_MAX);
-  if (!mReturnIterator) {
-    return Transition::TerminateFailure();
-  }
-
-  return Transition::ToUnbuffered(State::FOUND_COLOR_PROFILE,
-                                  State::SKIP_TO_COLOR_PROFILE, offset);
-}
-
-LexerTransition<nsBMPDecoder::State> nsBMPDecoder::ReadColorProfile(
-    const char* aData, size_t aLength) {
-  mInProfile = qcms_profile_from_memory(aData, aLength);
-  if (mInProfile) {
-    MOZ_LOG(sBMPLog, LogLevel::Debug, ("using embedded color profile\n"));
-    PrepareColorProfileTransform();
-  }
-
-  // Jump back to where we left off.
-  mIterator = std::move(mReturnIterator);
-  return Transition::To(State::ALLOCATE_SURFACE, 0);
-}
-
-LexerTransition<nsBMPDecoder::State> nsBMPDecoder::AllocateSurface() {
   SurfaceFormat format;
   SurfacePipeFlags pipeFlags = SurfacePipeFlags();
 
@@ -889,13 +665,9 @@ LexerTransition<nsBMPDecoder::State> nsBMPDecoder::AllocateSurface() {
     return Transition::TerminateFailure();
   }
 
-  // Only give the color transform to the SurfacePipe if we are not transforming
-  // the color table in advance.
-  qcms_transform* transform = mColors ? nullptr : mTransform;
-
   Maybe<SurfacePipe> pipe = SurfacePipeFactory::CreateSurfacePipe(
       this, Size(), OutputSize(), FullFrame(), format, format, Nothing(),
-      transform, pipeFlags);
+      mTransform, pipeFlags);
   if (!pipe) {
     return Transition::TerminateFailure();
   }
@@ -917,14 +689,6 @@ LexerTransition<nsBMPDecoder::State> nsBMPDecoder::ReadColorTable(
     mColors[i].mGreen = uint8_t(aData[1]);
     mColors[i].mRed = uint8_t(aData[2]);
     aData += mBytesPerColor;
-  }
-
-  // If we have a color table and a transform, we can avoid transforming each
-  // pixel by doing the table in advance. We color manage every entry in the
-  // table, even if it is smaller in case the BMP is malformed and overruns
-  // its stated color range.
-  if (mColors && mTransform) {
-    qcms_transform_data(mTransform, mColors.get(), mColors.get(), 256);
   }
 
   // If we are decoding a BMP from the clipboard, we did not know the data

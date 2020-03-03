@@ -151,15 +151,16 @@ fuzzy(0-1,0-2203) == rgba16-5551.bmp rgba16-5551.png
 
 # BMP: bihsize=124, 127 x 64, bpp=24, compression=0, colors=0
 # "My attempt to make a BMP file with an embedded color profile."
-fuzzy(1-1,28-28) == rgb24prof.bmp rgb24.png
+# [We support it, though we don't do anything with the color profile. Chromium
+# also handles it.]
+== rgb24prof.bmp rgb24.png
 
 # BMP: bihsize=124, 127 x 64, bpp=24, compression=0, colors=0
 # "This image tries to test whether color profiles are fully supported. It has
 # the red and green channels swapped, and an embedded color profile that tries
 # to swap them back. Support for this is uncommon."
-# [The image is significantly closer to the desired output than without color
-# management, but we seem to handle the profile wrong in QCMS. See bug 1619332.]
-fuzzy(10-10,6597-6597) == rgb24prof2.bmp rgb24.png
+# [We don't match rgb24.png as per bmpsuite, but we do match Chrome.]
+== rgb24prof2.bmp rgb24prof2.png
 
 # BMP: bihsize=124, 127 x 64, bpp=24, compression=0, colors=0
 # "My attempt to make a BMP file with a linked color profile."
