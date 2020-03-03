@@ -319,16 +319,20 @@ nsresult AsyncExecuteStatements::notifyComplete() {
 
   // Handle our transaction, if we have one
   if (mHasTransaction) {
+    SQLiteMutexAutoLock lockedScope(mDBMutex);
     if (mState == COMPLETED) {
-      nsresult rv = mConnection->commitTransactionInternal(mNativeConnection);
+      nsresult rv = mConnection->commitTransactionInternal(lockedScope,
+                                                           mNativeConnection);
       if (NS_FAILED(rv)) {
         mState = ERROR;
+        // We cannot hold the DB mutex while calling notifyError.
+        SQLiteMutexAutoUnlock unlockedScope(mDBMutex);
         (void)notifyError(mozIStorageError::ERROR,
                           "Transaction failed to commit");
       }
     } else {
-      DebugOnly<nsresult> rv =
-          mConnection->rollbackTransactionInternal(mNativeConnection);
+      DebugOnly<nsresult> rv = mConnection->rollbackTransactionInternal(
+          lockedScope, mNativeConnection);
       NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Transaction failed to rollback");
     }
     mHasTransaction = false;
@@ -486,16 +490,20 @@ AsyncExecuteStatements::Run() {
   }
   if (mState == CANCELED) return notifyComplete();
 
-  if (statementsNeedTransaction() && mConnection->getAutocommit()) {
-    if (NS_SUCCEEDED(mConnection->beginTransactionInternal(
-            mNativeConnection, mozIStorageConnection::TRANSACTION_IMMEDIATE))) {
-      mHasTransaction = true;
-    }
+  if (statementsNeedTransaction()) {
+    SQLiteMutexAutoLock lockedScope(mDBMutex);
+    if (!mConnection->transactionInProgress(lockedScope)) {
+      if (NS_SUCCEEDED(mConnection->beginTransactionInternal(
+              lockedScope, mNativeConnection,
+              mozIStorageConnection::TRANSACTION_IMMEDIATE))) {
+        mHasTransaction = true;
+      }
 #ifdef DEBUG
-    else {
-      NS_WARNING("Unable to create a transaction for async execution.");
-    }
+      else {
+        NS_WARNING("Unable to create a transaction for async execution.");
+      }
 #endif
+    }
   }
 
   // Execute each statement, giving the callback results if it returns any.

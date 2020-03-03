@@ -125,6 +125,21 @@ impl Conn {
         Transaction::new(self, behavior)
     }
 
+    /// Indicates if a transaction is currently open on this connection.
+    /// Attempting to open a new transaction when one is already in progress
+    /// will fail with a "cannot start a transaction within a transaction"
+    /// error.
+    ///
+    /// Note that this is `true` even if the transaction was started by another
+    /// caller, like `Sqlite.jsm` or `mozStorageTransaction` from C++. See the
+    /// explanation above `mozIStorageConnection.transactionInProgress` for why
+    /// this matters.
+    pub fn transaction_in_progress(&self) -> Result<bool> {
+        let mut in_progress = false;
+        unsafe { self.handle.GetTransactionInProgress(&mut in_progress) }.to_result()?;
+        Ok(in_progress)
+    }
+
     /// Opens a transaction with the requested behavior.
     pub fn transaction_with_behavior(
         &mut self,
