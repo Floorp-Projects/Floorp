@@ -391,6 +391,13 @@ Command GetInternalCommand(const char* aCommandName,
 
 namespace mozilla {
 
+template <class T>
+class OwningNonNull;
+
+namespace dom {
+class StaticRange;
+}
+
 #define NS_EVENT_CLASS(aPrefix, aName) class aPrefix##aName;
 #define NS_ROOT_EVENT_CLASS(aPrefix, aName) NS_EVENT_CLASS(aPrefix, aName)
 
@@ -425,6 +432,8 @@ struct TextRange;
 
 class EditCommands;
 class TextRangeArray;
+
+typedef nsTArray<OwningNonNull<dom::StaticRange>> OwningNonNullStaticRangeArray;
 
 // FontRange.h
 struct FontRange;

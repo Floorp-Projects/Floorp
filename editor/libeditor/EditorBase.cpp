@@ -61,7 +61,8 @@
 #include "mozilla/dom/EventTarget.h"    // for EventTarget
 #include "mozilla/dom/HTMLBodyElement.h"
 #include "mozilla/dom/HTMLBRElement.h"
-#include "mozilla/dom/Selection.h"  // for Selection, etc.
+#include "mozilla/dom/Selection.h"    // for Selection, etc.
+#include "mozilla/dom/StaticRange.h"  // for StaticRange
 #include "mozilla/dom/Text.h"
 #include "mozilla/dom/Event.h"
 #include "nsAString.h"                // for nsAString::Length, etc.
@@ -5757,6 +5758,11 @@ void EditorBase::AutoEditActionDataSetter::InitializeDataTransferWithClipboard(
                        true /* is external */, aClipboardType);
 }
 
+void EditorBase::AutoEditActionDataSetter::AppendTargetRange(
+    StaticRange& aTargetRange) {
+  mTargetRanges.AppendElement(aTargetRange);
+}
+
 nsresult EditorBase::AutoEditActionDataSetter::MaybeDispatchBeforeInputEvent() {
   MOZ_ASSERT(!HasTriedToDispatchBeforeInputEvent(),
              "We've already handled beforeinput event");
@@ -5799,11 +5805,37 @@ nsresult EditorBase::AutoEditActionDataSetter::MaybeDispatchBeforeInputEvent() {
     return NS_ERROR_FAILURE;
   }
   OwningNonNull<TextEditor> textEditor = *mEditorBase.AsTextEditor();
+  EditorInputType inputType = ToInputType(mEditAction);
+  // If mTargetRanges has not been initialized yet, it means that we may need
+  // to set it to selection ranges.
+  if (textEditor->AsHTMLEditor() && mTargetRanges.IsEmpty() &&
+      MayHaveTargetRangesOnHTMLEditor(inputType)) {
+    if (uint32_t rangeCount = textEditor->SelectionRefPtr()->RangeCount()) {
+      mTargetRanges.SetCapacity(rangeCount);
+      for (uint32_t i = 0; i < rangeCount; i++) {
+        nsRange* range = textEditor->SelectionRefPtr()->GetRangeAt(i);
+        if (NS_WARN_IF(!range) || NS_WARN_IF(!range->IsPositioned())) {
+          continue;
+        }
+        // Now, we need to fix the offset of target range because it may
+        // be referred after modifying the DOM tree and range boundaries
+        // of `range` may have not computed offset yet.
+        RefPtr<StaticRange> targetRange = StaticRange::Create(
+            range->GetStartContainer(), range->StartOffset(),
+            range->GetEndContainer(), range->EndOffset(), IgnoreErrors());
+        if (NS_WARN_IF(!targetRange) ||
+            NS_WARN_IF(!targetRange->IsPositioned())) {
+          continue;
+        }
+        mTargetRanges.AppendElement(std::move(targetRange));
+      }
+    }
+  }
   nsEventStatus status = nsEventStatus_eIgnore;
   nsresult rv = nsContentUtils::DispatchInputEvent(
-      targetElement, eEditorBeforeInput, ToInputType(mEditAction), textEditor,
-      mDataTransfer ? InputEventOptions(mDataTransfer)
-                    : InputEventOptions(mData),
+      targetElement, eEditorBeforeInput, inputType, textEditor,
+      mDataTransfer ? InputEventOptions(mDataTransfer, std::move(mTargetRanges))
+                    : InputEventOptions(mData, std::move(mTargetRanges)),
       &status);
   if (NS_WARN_IF(mEditorBase.Destroyed())) {
     return NS_ERROR_EDITOR_DESTROYED;
