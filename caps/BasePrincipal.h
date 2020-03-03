@@ -148,7 +148,8 @@ class BasePrincipal : public nsJSPrincipals {
                                   nsACString& _retval) override;
   NS_IMETHOD GetAsciiHost(nsACString& aAsciiHost) override;
   NS_IMETHOD GetLocalStorageQuotaKey(nsACString& aRes) override;
-
+  NS_IMETHOD AllowsRelaxStrictFileOriginPolicy(nsIURI* aURI,
+                                               bool* aRes) override;
   nsresult ToJSON(nsACString& aJSON);
   static already_AddRefed<BasePrincipal> FromJSON(const nsACString& aJSON);
   // Method populates a passed Json::Value with serializable fields
