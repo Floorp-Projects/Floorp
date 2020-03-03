@@ -267,7 +267,7 @@ class ReferrerInfo : public nsIReferrerInfo {
   NS_DECL_NSISERIALIZABLE
 
  private:
-  virtual ~ReferrerInfo() {}
+  virtual ~ReferrerInfo() = default;
 
   ReferrerInfo(const ReferrerInfo& rhs);
 
