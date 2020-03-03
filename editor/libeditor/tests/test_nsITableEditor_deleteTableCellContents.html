@@ -23,6 +23,7 @@ SimpleTest.waitForFocus(async () => {
 
   let editor = document.getElementById("content");
   let selection = document.getSelection();
+  let selectionRanges = [];
 
   function checkInputEvent(aEvent, aDescription) {
     ok(aEvent instanceof InputEvent,
@@ -37,12 +38,38 @@ SimpleTest.waitForFocus(async () => {
        `data of "${aEvent.type}" event should be null ${aDescription}`);
     is(aEvent.dataTransfer, null,
        `dataTransfer of "${aEvent.type}" event should be null ${aDescription}`);
- }
+    let targetRanges = aEvent.getTargetRanges();
+    if (aEvent.type === "beforeinput") {
+      is(targetRanges.length, selectionRanges.length,
+         `getTargetRanges() of "beforeinput" event should return selection ranges ${aDescription}`);
+      if (targetRanges.length === selectionRanges.length) {
+        for (let i = 0; i < selectionRanges.length; i++) {
+          is(targetRanges[i].startContainer, selectionRanges[i].startContainer,
+             `startContainer of getTargetRanges()[${i}] of "beforeinput" event does not match ${aDescription}`);
+          is(targetRanges[i].startOffset, selectionRanges[i].startOffset,
+             `startOffset of getTargetRanges()[${i}] of "beforeinput" event does not match ${aDescription}`);
+          is(targetRanges[i].endContainer, selectionRanges[i].endContainer,
+             `endContainer of getTargetRanges()[${i}] of "beforeinput" event does not match ${aDescription}`);
+          is(targetRanges[i].endOffset, selectionRanges[i].endOffset,
+             `endOffset of getTargetRanges()[${i}] of "beforeinput" event does not match ${aDescription}`);
+        }
+      }
+    } else {
+      is(targetRanges.length, 0,
+         `getTargetRanges() of "${aEvent.type}" event should return empty array ${aDescription}`);
+    }
+  }
 
   let beforeInputEvents = [];
   let inputEvents = [];
   function onBeforeInput(aEvent) {
     beforeInputEvents.push(aEvent);
+    selectionRanges = [];
+    for (let i = 0; i < selection.rangeCount; i++) {
+      let range = selection.getRangeAt(i);
+      selectionRanges.push({startContainer: range.startContainer, startOffset: range.startOffset,
+                            endContainer: range.endContainer, endOffset: range.endOffset});
+    }
   }
   function onInput(aEvent) {
     inputEvents.push(aEvent);

@@ -20,7 +20,7 @@
 
 SimpleTest.waitForExplicitFinish();
 
-function checkInputEvent(aEvent, aExpectedTarget, aInputType, aData, aDataTransfer, aDescription) {
+function checkInputEvent(aEvent, aExpectedTarget, aInputType, aData, aDataTransfer, aTargetRanges, aDescription) {
   ok(aEvent instanceof InputEvent, `${aDescription}: "${aEvent.type}" event should be dispatched with InputEvent interface`);
   is(aEvent.cancelable, aEvent.type === "beforeinput", `${aDescription}: "${aEvent.type}" event should be ${aEvent.type === "beforeinput" ? "" : "never "}cancelable`);
   is(aEvent.bubbles, true, `${aDescription}: "${aEvent.type}" event should always bubble`);
@@ -39,6 +39,26 @@ function checkInputEvent(aEvent, aExpectedTarget, aInputType, aData, aDataTransf
       } else {
         is(aEvent.dataTransfer.getData(dataTransfer.type), dataTransfer.data,
            `${description}: dataTransfer of "${aEvent.type}" event should have "${dataTransfer.data}" whose type is "${dataTransfer.type}"`);
+      }
+    }
+  }
+  let targetRanges = aEvent.getTargetRanges();
+  if (aTargetRanges.length === 0) {
+    is(targetRanges.length, 0,
+       `${aDescription}: getTargetRange() of "${aEvent.type}" event should return empty array`);
+  } else {
+    is(targetRanges.length, aTargetRanges.length,
+       `${aDescription}: getTargetRange() of "${aEvent.type}" event should return static range array`);
+    if (targetRanges.length == aTargetRanges.length) {
+      for (let i = 0; i < targetRanges.length; i++) {
+        is(targetRanges[i].startContainer, aTargetRanges[i].startContainer,
+           `${aDescription}: startContainer of getTargetRanges()[${i}] of "${aEvent.type}" event does not match`);
+        is(targetRanges[i].startOffset, aTargetRanges[i].startOffset,
+           `${aDescription}: startOffset of getTargetRanges()[${i}] of "${aEvent.type}" event does not match`);
+        is(targetRanges[i].endContainer, aTargetRanges[i].endContainer,
+           `${aDescription}: endContainer of getTargetRanges()[${i}] of "${aEvent.type}" event does not match`);
+        is(targetRanges[i].endOffset, aTargetRanges[i].endOffset,
+           `${aDescription}: endOffset of getTargetRanges()[${i}] of "${aEvent.type}" event does not match`);
       }
     }
   }
@@ -97,7 +117,7 @@ async function doTest() {
   // Don't define variables which are used by multiple tests below.  Otherwise,
   // it's definitely troublesome to comment out unnecessary tests for debug.
   // For same reason, don't use multiline comment.
-  let description, span, b, input, otherInput, textarea, otherTextarea, contenteditable, otherContenteditable, onDrop, onDragStart;
+  let description, selectionContainers, span, b, lastTextNode, input, otherInput, textarea, otherTextarea, contenteditable, otherContenteditable, onDrop, onDragStart;
 
   // -------- Test dragging regular text
   description = "dragging part of non-editable <span> element";
@@ -250,10 +270,10 @@ async function doTest() {
        `${description}: <input>.value should be modified`);
     is(beforeinputEvents.length, 1,
        `${description}: one "beforeinput" event should be fired on <input>`);
-    checkInputEvent(beforeinputEvents[0], input, "insertFromDrop", span.textContent.substring(2, 5), null, description);
+    checkInputEvent(beforeinputEvents[0], input, "insertFromDrop", span.textContent.substring(2, 5), null, [], description);
     is(inputEvents.length, 1,
        `${description}: one "input" event should be fired on <input>`);
-    checkInputEvent(inputEvents[0], input, "insertFromDrop", span.textContent.substring(2, 5), null, description);
+    checkInputEvent(inputEvents[0], input, "insertFromDrop", span.textContent.substring(2, 5), null, [], description);
     is(dragEvents.length, 1,
        `${description}: only one "drop" event should be fired on <input>`);
     document.removeEventListener("drop", onDrop);
@@ -359,11 +379,11 @@ async function doTest() {
        `${description}: The text/plain data should be inserted`);
     is(beforeinputEvents.length, 1,
        `${description}: only one "beforeinput" events should be fired on <input> element`);
-    checkInputEvent(beforeinputEvents[0], input, "insertFromDrop", "Some Plain Text", null,
+    checkInputEvent(beforeinputEvents[0], input, "insertFromDrop", "Some Plain Text", null, [],
                     description);
     is(inputEvents.length, 1,
        `${description}: only one "input" events should be fired on <input> element`);
-    checkInputEvent(inputEvents[0], input, "insertFromDrop", "Some Plain Text", null,
+    checkInputEvent(inputEvents[0], input, "insertFromDrop", "Some Plain Text", null, [],
                     description);
     window.removeEventListener("dragstart", onDragStart, {capture: true});
 
@@ -390,7 +410,7 @@ async function doTest() {
     is(beforeinputEvents.length, 1,
        `${description}: one "beforeinput" event should be fired when dropping "text/x-moz-text-internal" data into <input> element`);
     // But unfortunately, on <input> and <textarea>, dataTransfer won't be set...
-    checkInputEvent(beforeinputEvents[0], input, "insertFromDrop", "", null, description);
+    checkInputEvent(beforeinputEvents[0], input, "insertFromDrop", "", null, [], description);
     is(inputEvents.length, 0,
        `${description}: no "input" event should be fired when dropping "text/x-moz-text-internal" data into <input> element`);
     window.removeEventListener("dragstart", onDragStart, {capture: true});
@@ -400,8 +420,8 @@ async function doTest() {
     container.innerHTML = `<div contenteditable>Some <b>bold</b> text</div><input type="${inputType}">`;
     contenteditable = document.querySelector("div#container > div");
     input = document.querySelector("div#container > input");
-    selection.setBaseAndExtent(contenteditable.firstChild, 2,
-                               contenteditable.firstChild.nextSibling.nextSibling, 2);
+    selectionContainers = [contenteditable.firstChild, contenteditable.firstChild.nextSibling.nextSibling];
+    selection.setBaseAndExtent(selectionContainers[0], 2, selectionContainers[1], 2);
     beforeinputEvents = [];
     inputEvents = [];
     dragEvents = [];
@@ -423,12 +443,15 @@ async function doTest() {
        `${description}: <input>.value should be modified`);
     is(beforeinputEvents.length, 2,
             `${description}: 2 "beforeinput" events should be fired on contenteditable and <input>`);
-    checkInputEvent(beforeinputEvents[0], contenteditable, "deleteByDrag", null, null, description);
-    checkInputEvent(beforeinputEvents[1], input, "insertFromDrop", "me bold t", null, description);
+    checkInputEvent(beforeinputEvents[0], contenteditable, "deleteByDrag", null, null,
+                    [{startContainer: selectionContainers[0], startOffset: 2,
+                      endContainer: selectionContainers[1], endOffset: 2}],
+                    description);
+    checkInputEvent(beforeinputEvents[1], input, "insertFromDrop", "me bold t", null, [], description);
     is(inputEvents.length, 2,
             `${description}: 2 "input" events should be fired on contenteditable and <input>`);
-    checkInputEvent(inputEvents[0], contenteditable, "deleteByDrag", null, null, description);
-    checkInputEvent(inputEvents[1], input, "insertFromDrop", "me bold t", null, description);
+    checkInputEvent(inputEvents[0], contenteditable, "deleteByDrag", null, null, [], description);
+    checkInputEvent(inputEvents[1], input, "insertFromDrop", "me bold t", null, [], description);
     is(dragEvents.length, 1,
        `${description}: only one "drop" event should be fired on <textarea>`);
     document.removeEventListener("drop", onDrop);
@@ -438,8 +461,8 @@ async function doTest() {
     container.innerHTML = `<div contenteditable>Some <b>bold</b> text</div><input type="${inputType}">`;
     contenteditable = document.querySelector("div#container > div");
     input = document.querySelector("div#container > input");
-    selection.setBaseAndExtent(contenteditable.firstChild, 2,
-                               contenteditable.firstChild.nextSibling.nextSibling, 2);
+    selectionContainers = [contenteditable.firstChild, contenteditable.firstChild.nextSibling.nextSibling];
+    selection.setBaseAndExtent(selectionContainers[0], 2, selectionContainers[1], 2);
     beforeinputEvents = [];
     inputEvents = [];
     dragEvents = [];
@@ -462,11 +485,14 @@ async function doTest() {
        `${description}: <input>.value should be modified`);
     is(beforeinputEvents.length, 2,
             `${description}: 2 "beforeinput" events should be fired on contenteditable and <input>`);
-    checkInputEvent(beforeinputEvents[0], contenteditable, "deleteByDrag", null, null, description);
-    checkInputEvent(beforeinputEvents[1], input, "insertFromDrop", "me bold t", null, description);
+    checkInputEvent(beforeinputEvents[0], contenteditable, "deleteByDrag", null, null,
+                    [{startContainer: selectionContainers[0], startOffset: 2,
+                      endContainer: selectionContainers[1], endOffset: 2}],
+                    description);
+    checkInputEvent(beforeinputEvents[1], input, "insertFromDrop", "me bold t", null, [], description);
     is(inputEvents.length, 1,
             `${description}: only one "input" event should be fired on <input>`);
-    checkInputEvent(inputEvents[0], input, "insertFromDrop", "me bold t", null, description);
+    checkInputEvent(inputEvents[0], input, "insertFromDrop", "me bold t", null, [], description);
     is(dragEvents.length, 1,
        `${description}: only one "drop" event should be fired on <input>`);
     document.removeEventListener("drop", onDrop);
@@ -477,8 +503,8 @@ async function doTest() {
     container.innerHTML = "<div contenteditable>Some <b>bold</b> text</div><input>";
     contenteditable = document.querySelector("div#container > div");
     input = document.querySelector("div#container > input");
-    selection.setBaseAndExtent(contenteditable.firstChild, 2,
-                               contenteditable.firstChild.nextSibling.nextSibling, 2);
+    selectionContainers = [contenteditable.firstChild, contenteditable.firstChild.nextSibling.nextSibling];
+    selection.setBaseAndExtent(selectionContainers[0], 2, selectionContainers[1], 2);
     beforeinputEvents = [];
     inputEvents = [];
     dragEvents = [];
@@ -501,11 +527,14 @@ async function doTest() {
        `${description}: <input>.value shouldn't be modified`);
     is(beforeinputEvents.length, 2,
             `${description}: 2 "beforeinput" events should be fired on contenteditable and <input>`);
-    checkInputEvent(beforeinputEvents[0], contenteditable, "deleteByDrag", null, null, description);
-    checkInputEvent(beforeinputEvents[1], input, "insertFromDrop", "me bold t", null, description);
+    checkInputEvent(beforeinputEvents[0], contenteditable, "deleteByDrag", null, null,
+                    [{startContainer: selectionContainers[0], startOffset: 2,
+                      endContainer: selectionContainers[1], endOffset: 2}],
+                    description);
+    checkInputEvent(beforeinputEvents[1], input, "insertFromDrop", "me bold t", null, [], description);
     is(inputEvents.length, 1,
             `${description}: only one "input" event should be fired on contenteditable`);
-    checkInputEvent(inputEvents[0], contenteditable, "deleteByDrag", null, null, description);
+    checkInputEvent(inputEvents[0], contenteditable, "deleteByDrag", null, null, [], description);
     is(dragEvents.length, 1,
        `${description}: only one "drop" event should be fired on <input>`);
     document.removeEventListener("drop", onDrop);
@@ -544,10 +573,10 @@ async function doTest() {
        `${description}: <input>.value should be modified`);
     is(beforeinputEvents.length, 1,
        `${description}: one "beforeinput" event should be fired on <input>`);
-    checkInputEvent(beforeinputEvents[0], input, "insertFromDrop", span.textContent.substring(2, 5), null, description);
+    checkInputEvent(beforeinputEvents[0], input, "insertFromDrop", span.textContent.substring(2, 5), null, [], description);
     is(inputEvents.length, 1,
        `${description}: one "input" event should be fired on <input>`);
-    checkInputEvent(inputEvents[0], input, "insertFromDrop", span.textContent.substring(2, 5), null, description);
+    checkInputEvent(inputEvents[0], input, "insertFromDrop", span.textContent.substring(2, 5), null, [], description);
     is(dragEvents.length, 1,
        `${description}: only one "drop" event should be fired on <input>`);
     document.removeEventListener("drop", onDrop);
@@ -574,11 +603,14 @@ async function doTest() {
      `${description}: only one "beforeinput" events should be fired on contenteditable element`);
   checkInputEvent(beforeinputEvents[0], contenteditable, "insertFromDrop", null,
                   [{todo: true, type: "text/plain", data: "Sample Text"}],
+                  [{startContainer: contenteditable, startOffset: 0,
+                    endContainer: contenteditable, endOffset: 0}],
                   description);
   is(inputEvents.length, 1,
      `${description}: only one "input" events should be fired on contenteditable element`);
   checkInputEvent(inputEvents[0], contenteditable, "insertFromDrop", null,
                   [{todo: true, type: "text/plain", data: "Sample Text"}],
+                  [],
                   description);
   window.removeEventListener("dragstart", onDragStart, {capture: true});
 
@@ -603,11 +635,14 @@ async function doTest() {
      `${description}: only one "beforeinput" events should be fired on contenteditable element`);
   checkInputEvent(beforeinputEvents[0], contenteditable, "insertFromDrop", null,
                   [{todo: true, type: "text/html", data: "Sample <i>Italic</i> Text"}],
+                  [{startContainer: contenteditable, startOffset: 0,
+                    endContainer: contenteditable, endOffset: 0}],
                   description);
   is(inputEvents.length, 1,
      `${description}: only one "input" events should be fired on contenteditable element`);
   checkInputEvent(inputEvents[0], contenteditable, "insertFromDrop", null,
                   [{todo: true, type: "text/html", data: "Sample <i>Italic</i> Text"}],
+                  [],
                   description);
   window.removeEventListener("dragstart", onDragStart, {capture: true});
 
@@ -638,10 +673,10 @@ async function doTest() {
      `${description}: <textarea>.value should be modified`);
   is(beforeinputEvents.length, 1,
      `${description}: one "beforeinput" event should be fired on <textarea>`);
-  checkInputEvent(beforeinputEvents[0], textarea, "insertFromDrop", span.textContent.substring(2, 5), null, description);
+  checkInputEvent(beforeinputEvents[0], textarea, "insertFromDrop", span.textContent.substring(2, 5), null, [], description);
   is(inputEvents.length, 1,
      `${description}: one "input" event should be fired on <textarea>`);
-  checkInputEvent(inputEvents[0], textarea, "insertFromDrop", span.textContent.substring(2, 5), null, description);
+  checkInputEvent(inputEvents[0], textarea, "insertFromDrop", span.textContent.substring(2, 5), null, [], description);
   is(dragEvents.length, 1,
      `${description}: only one "drop" event should be fired on <textarea>`);
   document.removeEventListener("drop", onDrop);
@@ -652,8 +687,8 @@ async function doTest() {
   container.innerHTML = "<div contenteditable>Some <b>bold</b> text</div><textarea></textarea>";
   contenteditable = document.querySelector("div#container > div");
   textarea = document.querySelector("div#container > textarea");
-  selection.setBaseAndExtent(contenteditable.firstChild, 2,
-                             contenteditable.firstChild.nextSibling.nextSibling, 2);
+  selectionContainers = [contenteditable.firstChild, contenteditable.firstChild.nextSibling.nextSibling];
+  selection.setBaseAndExtent(selectionContainers[0], 2, selectionContainers[1], 2);
   beforeinputEvents = [];
   inputEvents = [];
   dragEvents = [];
@@ -675,12 +710,15 @@ async function doTest() {
      `${description}: <textarea>.value should be modified`);
   is(beforeinputEvents.length, 2,
      `${description}: 2 "beforeinput" events should be fired on contenteditable and <textarea>`);
-  checkInputEvent(beforeinputEvents[0], contenteditable, "deleteByDrag", null, null, description);
-  checkInputEvent(beforeinputEvents[1], textarea, "insertFromDrop", "me bold t", null, description);
+  checkInputEvent(beforeinputEvents[0], contenteditable, "deleteByDrag", null, null,
+                  [{startContainer: selectionContainers[0], startOffset: 2,
+                    endContainer: selectionContainers[1], endOffset: 2}],
+                  description);
+  checkInputEvent(beforeinputEvents[1], textarea, "insertFromDrop", "me bold t", null, [], description);
   is(inputEvents.length, 2,
      `${description}: 2 "input" events should be fired on contenteditable and <textarea>`);
-  checkInputEvent(inputEvents[0], contenteditable, "deleteByDrag", null, null, description);
-  checkInputEvent(inputEvents[1], textarea, "insertFromDrop", "me bold t", null, description);
+  checkInputEvent(inputEvents[0], contenteditable, "deleteByDrag", null, null, [], description);
+  checkInputEvent(inputEvents[1], textarea, "insertFromDrop", "me bold t", null, [], description);
   is(dragEvents.length, 1,
      `${description}: only one "drop" event should be fired on <textarea>`);
   document.removeEventListener("drop", onDrop);
@@ -690,8 +728,8 @@ async function doTest() {
   container.innerHTML = "<div contenteditable>Some <b>bold</b> text</div><textarea></textarea>";
   contenteditable = document.querySelector("div#container > div");
   textarea = document.querySelector("div#container > textarea");
-  selection.setBaseAndExtent(contenteditable.firstChild, 2,
-                             contenteditable.firstChild.nextSibling.nextSibling, 2);
+  selectionContainers = [contenteditable.firstChild, contenteditable.firstChild.nextSibling.nextSibling];
+  selection.setBaseAndExtent(selectionContainers[0], 2, selectionContainers[1], 2);
   beforeinputEvents = [];
   inputEvents = [];
   dragEvents = [];
@@ -714,11 +752,14 @@ async function doTest() {
      `${description}: <textarea>.value should be modified`);
   is(beforeinputEvents.length, 2,
      `${description}: 2 "beforeinput" events should be fired on contenteditable and <textarea>`);
-  checkInputEvent(beforeinputEvents[0], contenteditable, "deleteByDrag", null, null, description);
-  checkInputEvent(beforeinputEvents[1], textarea, "insertFromDrop", "me bold t", null, description);
+  checkInputEvent(beforeinputEvents[0], contenteditable, "deleteByDrag", null, null,
+                  [{startContainer: selectionContainers[0], startOffset: 2,
+                    endContainer: selectionContainers[1], endOffset: 2}],
+                  description);
+  checkInputEvent(beforeinputEvents[1], textarea, "insertFromDrop", "me bold t", null, [], description);
   is(inputEvents.length, 1,
      `${description}: only one "input" event should be fired on <textarea>`);
-  checkInputEvent(inputEvents[0], textarea, "insertFromDrop", "me bold t", null, description);
+  checkInputEvent(inputEvents[0], textarea, "insertFromDrop", "me bold t", null, [], description);
   is(dragEvents.length, 1,
      `${description}: only one "drop" event should be fired on <textarea>`);
   document.removeEventListener("drop", onDrop);
@@ -729,8 +770,8 @@ async function doTest() {
   container.innerHTML = "<div contenteditable>Some <b>bold</b> text</div><textarea></textarea>";
   contenteditable = document.querySelector("div#container > div");
   textarea = document.querySelector("div#container > textarea");
-  selection.setBaseAndExtent(contenteditable.firstChild, 2,
-                             contenteditable.firstChild.nextSibling.nextSibling, 2);
+  selectionContainers = [contenteditable.firstChild, contenteditable.firstChild.nextSibling.nextSibling];
+  selection.setBaseAndExtent(selectionContainers[0], 2, selectionContainers[1], 2);
   beforeinputEvents = [];
   inputEvents = [];
   dragEvents = [];
@@ -753,11 +794,14 @@ async function doTest() {
      `${description}: <textarea>.value shouldn't be modified`);
   is(beforeinputEvents.length, 2,
      `${description}: 2 "beforeinput" events should be fired on contenteditable and <textarea>`);
-  checkInputEvent(beforeinputEvents[0], contenteditable, "deleteByDrag", null, null, description);
-  checkInputEvent(beforeinputEvents[1], textarea, "insertFromDrop", "me bold t", null, description);
+  checkInputEvent(beforeinputEvents[0], contenteditable, "deleteByDrag", null, null,
+                  [{startContainer: selectionContainers[0], startOffset: 2,
+                    endContainer: selectionContainers[1], endOffset: 2}],
+                  description);
+  checkInputEvent(beforeinputEvents[1], textarea, "insertFromDrop", "me bold t", null, [], description);
   is(inputEvents.length, 1,
      `${description}: only one "input" event should be fired on contenteditable`);
-  checkInputEvent(inputEvents[0], contenteditable, "deleteByDrag", null, null, description);
+  checkInputEvent(inputEvents[0], contenteditable, "deleteByDrag", null, null, [], description);
   is(dragEvents.length, 1,
      `${description}: only one "drop" event should be fired on <textarea>`);
   document.removeEventListener("drop", onDrop);
@@ -769,7 +813,9 @@ async function doTest() {
   contenteditable = document.querySelector("div#container > div");
   b = document.querySelector("div#container > div > b");
   span = document.querySelector("div#container > div > span");
-  selection.setBaseAndExtent(b.firstChild, 1, b.firstChild, 3);
+  lastTextNode = span.firstChild;
+  selectionContainers = [b.firstChild, b.firstChild];
+  selection.setBaseAndExtent(selectionContainers[0], 1, selectionContainers[1], 3);
   beforeinputEvents = [];
   inputEvents = [];
   dragEvents = [];
@@ -791,16 +837,24 @@ async function doTest() {
      `${description}: dragged range should be removed from contenteditable`);
   is(beforeinputEvents.length, 2,
      `${description}: 2 "beforeinput" events should be fired on contenteditable`);
-  checkInputEvent(beforeinputEvents[0], contenteditable, "deleteByDrag", null, null, description);
+  checkInputEvent(beforeinputEvents[0], contenteditable, "deleteByDrag", null, null,
+                  [{startContainer: selectionContainers[0], startOffset: 1,
+                    endContainer: selectionContainers[1], endOffset: 3}],
+                  description);
   checkInputEvent(beforeinputEvents[1], contenteditable, "insertFromDrop", null,
                   [{type: "text/html", data: "<b>ol</b>"},
-                   {type: "text/plain", data: "ol"}], description);
+                   {type: "text/plain", data: "ol"}],
+                  [{startContainer: lastTextNode, startOffset: 4,
+                    endContainer: lastTextNode, endOffset: 4}], // XXX unexpected
+                  description);
   is(inputEvents.length, 2,
      `${description}: 2 "input" events should be fired on contenteditable`);
-  checkInputEvent(inputEvents[0], contenteditable, "deleteByDrag", null, null, description);
+  checkInputEvent(inputEvents[0], contenteditable, "deleteByDrag", null, null, [], description);
   checkInputEvent(inputEvents[1], contenteditable, "insertFromDrop", null,
                   [{type: "text/html", data: "<b>ol</b>"},
-                   {type: "text/plain", data: "ol"}], description);
+                   {type: "text/plain", data: "ol"}],
+                  [],
+                  description);
   is(dragEvents.length, 1,
      `${description}: only one "drop" event should be fired on contenteditable`);
   document.removeEventListener("drop", onDrop);
@@ -811,7 +865,9 @@ async function doTest() {
   contenteditable = document.querySelector("div#container > div");
   b = document.querySelector("div#container > div > b");
   span = document.querySelector("div#container > div > span");
-  selection.setBaseAndExtent(b.firstChild, 1, b.firstChild, 3);
+  lastTextNode = span.firstChild;
+  selectionContainers = [b.firstChild, b.firstChild];
+  selection.setBaseAndExtent(selectionContainers[0], 1, selectionContainers[1], 3);
   beforeinputEvents = [];
   inputEvents = [];
   dragEvents = [];
@@ -834,15 +890,23 @@ async function doTest() {
      `${description}: dragged range shouldn't be removed from contenteditable`);
   is(beforeinputEvents.length, 2,
      `${description}: 2 "beforeinput" events should be fired on contenteditable`);
-  checkInputEvent(beforeinputEvents[0], contenteditable, "deleteByDrag", null, null, description);
+  checkInputEvent(beforeinputEvents[0], contenteditable, "deleteByDrag", null, null,
+                  [{startContainer: selectionContainers[0], startOffset: 1,
+                    endContainer: selectionContainers[1], endOffset: 3}],
+                  description);
   checkInputEvent(beforeinputEvents[1], contenteditable, "insertFromDrop", null,
                   [{type: "text/html", data: "<b>ol</b>"},
-                   {type: "text/plain", data: "ol"}], description);
+                   {type: "text/plain", data: "ol"}],
+                  [{startContainer: lastTextNode, startOffset: 4,
+                    endContainer: lastTextNode, endOffset: 4}], // XXX unexpected
+                  description);
   is(inputEvents.length, 1,
      `${description}: only one "input" event should be fired on contenteditable`);
   checkInputEvent(inputEvents[0], contenteditable, "insertFromDrop", null,
                   [{type: "text/html", data: "<b>ol</b>"},
-                   {type: "text/plain", data: "ol"}], description);
+                   {type: "text/plain", data: "ol"}],
+                  [],
+                  description);
   is(dragEvents.length, 1,
      `${description}: only one "drop" event should be fired on contenteditable`);
   document.removeEventListener("drop", onDrop);
@@ -854,7 +918,9 @@ async function doTest() {
   contenteditable = document.querySelector("div#container > div");
   b = document.querySelector("div#container > div > b");
   span = document.querySelector("div#container > div > span");
-  selection.setBaseAndExtent(b.firstChild, 1, b.firstChild, 3);
+  lastTextNode = span.firstChild;
+  selectionContainers = [b.firstChild, b.firstChild];
+  selection.setBaseAndExtent(selectionContainers[0], 1, selectionContainers[1], 3);
   beforeinputEvents = [];
   inputEvents = [];
   dragEvents = [];
@@ -875,13 +941,19 @@ async function doTest() {
      `${description}: dragged range should be removed from contenteditable`);
   is(beforeinputEvents.length, 2,
      `${description}: 2 "beforeinput" events should be fired on contenteditable`);
-  checkInputEvent(beforeinputEvents[0], contenteditable, "deleteByDrag", null, null, description);
+  checkInputEvent(beforeinputEvents[0], contenteditable, "deleteByDrag", null, null,
+                  [{startContainer: selectionContainers[0], startOffset: 1,
+                    endContainer: selectionContainers[1], endOffset: 3}],
+                  description);
   checkInputEvent(beforeinputEvents[1], contenteditable, "insertFromDrop", null,
                   [{type: "text/html", data: "<b>ol</b>"},
-                   {type: "text/plain", data: "ol"}], description);
+                   {type: "text/plain", data: "ol"}],
+                  [{startContainer: lastTextNode, startOffset: 4,
+                    endContainer: lastTextNode, endOffset: 4}],
+                  description);
   is(inputEvents.length, 1,
      `${description}: only one "input" event should be fired on contenteditable`);
-  checkInputEvent(inputEvents[0], contenteditable, "deleteByDrag", null, null, description);
+  checkInputEvent(inputEvents[0], contenteditable, "deleteByDrag", null, null, [], description);
   is(dragEvents.length, 1,
      `${description}: only one "drop" event should be fired on contenteditable`);
   document.removeEventListener("drop", onDrop);
@@ -894,6 +966,7 @@ async function doTest() {
   contenteditable = document.querySelector("div#container > div");
   b = document.querySelector("div#container > div > b");
   span = document.querySelector("div#container > div > span");
+  lastTextNode = span.firstChild;
   selection.setBaseAndExtent(b.firstChild, 1, b.firstChild, 3);
   beforeinputEvents = [];
   inputEvents = [];
@@ -919,12 +992,17 @@ async function doTest() {
      `${description}: only 1 "beforeinput" events should be fired on contenteditable`);
   checkInputEvent(beforeinputEvents[0], contenteditable, "insertFromDrop", null,
                   [{type: "text/html", data: "<b>ol</b>"},
-                   {type: "text/plain", data: "ol"}], description);
+                   {type: "text/plain", data: "ol"}],
+                  [{startContainer: lastTextNode, startOffset: 4,
+                    endContainer: lastTextNode, endOffset: 4}],  // XXX unexpected
+                  description);
   is(inputEvents.length, 1,
      `${description}: only 1 "input" events should be fired on contenteditable`);
   checkInputEvent(inputEvents[0], contenteditable, "insertFromDrop", null,
                   [{type: "text/html", data: "<b>ol</b>"},
-                   {type: "text/plain", data: "ol"}], description);
+                   {type: "text/plain", data: "ol"}],
+                  [],
+                  description);
   is(dragEvents.length, 1,
      `${description}: only one "drop" event should be fired on contenteditable`);
   document.removeEventListener("drop", onDrop);
@@ -935,7 +1013,8 @@ async function doTest() {
   contenteditable = document.querySelector("div#container > div");
   b = document.querySelector("div#container > div > b");
   otherContenteditable = document.querySelector("div#container > div ~ div");
-  selection.setBaseAndExtent(b.firstChild, 1, b.firstChild, 3);
+  selectionContainers = [b.firstChild, b.firstChild];
+  selection.setBaseAndExtent(selectionContainers[0], 1, selectionContainers[1], 3);
   beforeinputEvents = [];
   inputEvents = [];
   dragEvents = [];
@@ -957,16 +1036,24 @@ async function doTest() {
      `${description}: dragged content should be inserted into other contenteditable`);
   is(beforeinputEvents.length, 2,
      `${description}: 2 "beforeinput" events should be fired on contenteditable`);
-  checkInputEvent(beforeinputEvents[0], contenteditable, "deleteByDrag", null, null, description);
+  checkInputEvent(beforeinputEvents[0], contenteditable, "deleteByDrag", null, null,
+                  [{startContainer: selectionContainers[0], startOffset: 1,
+                    endContainer: selectionContainers[1], endOffset: 3}],
+                  description);
   checkInputEvent(beforeinputEvents[1], otherContenteditable, "insertFromDrop", null,
                   [{type: "text/html", data: "<b>ol</b>"},
-                   {type: "text/plain", data: "ol"}], description);
+                   {type: "text/plain", data: "ol"}],
+                  [{startContainer: otherContenteditable, startOffset: 0,
+                    endContainer: otherContenteditable, endOffset: 0}],
+                  description);
   is(inputEvents.length, 2,
      `${description}: 2 "input" events should be fired on contenteditable`);
-  checkInputEvent(inputEvents[0], contenteditable, "deleteByDrag", null, null, description);
+  checkInputEvent(inputEvents[0], contenteditable, "deleteByDrag", null, null, [], description);
   checkInputEvent(inputEvents[1], otherContenteditable, "insertFromDrop", null,
                   [{type: "text/html", data: "<b>ol</b>"},
-                   {type: "text/plain", data: "ol"}], description);
+                   {type: "text/plain", data: "ol"}],
+                  [],
+                  description);
   is(dragEvents.length, 1,
      `${description}: only one "drop" event should be fired on other contenteditable`);
   document.removeEventListener("drop", onDrop);
@@ -977,7 +1064,8 @@ async function doTest() {
   contenteditable = document.querySelector("div#container > div");
   b = document.querySelector("div#container > div > b");
   otherContenteditable = document.querySelector("div#container > div ~ div");
-  selection.setBaseAndExtent(b.firstChild, 1, b.firstChild, 3);
+  selectionContainers = [b.firstChild, b.firstChild];
+  selection.setBaseAndExtent(selectionContainers[0], 1, selectionContainers[1], 3);
   beforeinputEvents = [];
   inputEvents = [];
   dragEvents = [];
@@ -1000,15 +1088,23 @@ async function doTest() {
      `${description}: dragged content should be inserted into other contenteditable`);
   is(beforeinputEvents.length, 2,
      `${description}: 2 "beforeinput" events should be fired on contenteditable`);
-  checkInputEvent(beforeinputEvents[0], contenteditable, "deleteByDrag", null, null, description);
+  checkInputEvent(beforeinputEvents[0], contenteditable, "deleteByDrag", null, null,
+                  [{startContainer: selectionContainers[0], startOffset: 1,
+                    endContainer: selectionContainers[1], endOffset: 3}],
+                  description);
   checkInputEvent(beforeinputEvents[1], otherContenteditable, "insertFromDrop", null,
                   [{type: "text/html", data: "<b>ol</b>"},
-                   {type: "text/plain", data: "ol"}], description);
+                   {type: "text/plain", data: "ol"}],
+                  [{startContainer: otherContenteditable, startOffset: 0,
+                    endContainer: otherContenteditable, endOffset: 0}],
+                  description);
   is(inputEvents.length, 1,
      `${description}: only one "input" event should be fired on other contenteditable`);
   checkInputEvent(inputEvents[0], otherContenteditable, "insertFromDrop", null,
                   [{type: "text/html", data: "<b>ol</b>"},
-                   {type: "text/plain", data: "ol"}], description);
+                   {type: "text/plain", data: "ol"}],
+                  [],
+                  description);
   is(dragEvents.length, 1,
      `${description}: only one "drop" event should be fired on other contenteditable`);
   document.removeEventListener("drop", onDrop);
@@ -1020,7 +1116,8 @@ async function doTest() {
   contenteditable = document.querySelector("div#container > div");
   b = document.querySelector("div#container > div > b");
   otherContenteditable = document.querySelector("div#container > div ~ div");
-  selection.setBaseAndExtent(b.firstChild, 1, b.firstChild, 3);
+  selectionContainers = [b.firstChild, b.firstChild];
+  selection.setBaseAndExtent(selectionContainers[0], 1, selectionContainers[1], 3);
   beforeinputEvents = [];
   inputEvents = [];
   dragEvents = [];
@@ -1043,13 +1140,19 @@ async function doTest() {
      `${description}: dragged content shouldn't be inserted into other contenteditable`);
   is(beforeinputEvents.length, 2,
      `${description}: 2 "beforeinput" events should be fired on contenteditable`);
-  checkInputEvent(beforeinputEvents[0], contenteditable, "deleteByDrag", null, null, description);
+  checkInputEvent(beforeinputEvents[0], contenteditable, "deleteByDrag", null, null,
+                  [{startContainer: selectionContainers[0], startOffset: 1,
+                    endContainer: selectionContainers[1], endOffset: 3}],
+                  description);
   checkInputEvent(beforeinputEvents[1], otherContenteditable, "insertFromDrop", null,
                   [{type: "text/html", data: "<b>ol</b>"},
-                   {type: "text/plain", data: "ol"}], description);
+                   {type: "text/plain", data: "ol"}],
+                  [{startContainer: otherContenteditable, startOffset: 0,
+                    endContainer: otherContenteditable, endOffset: 0}],
+                  description);
   is(inputEvents.length, 1,
      `${description}: only one "input" event should be fired on contenteditable`);
-  checkInputEvent(inputEvents[0], contenteditable, "deleteByDrag", null, null, description);
+  checkInputEvent(inputEvents[0], contenteditable, "deleteByDrag", null, null, [], description);
   is(dragEvents.length, 1,
      `${description}: only one "drop" event should be fired on other contenteditable`);
   document.removeEventListener("drop", onDrop);
@@ -1086,12 +1189,17 @@ async function doTest() {
      `${description}: only one "beforeinput" events should be fired on other contenteditable`);
   checkInputEvent(beforeinputEvents[0], otherContenteditable, "insertFromDrop", null,
                   [{type: "text/html", data: "<b>ol</b>"},
-                   {type: "text/plain", data: "ol"}], description);
+                   {type: "text/plain", data: "ol"}],
+                  [{startContainer: otherContenteditable, startOffset: 0,
+                    endContainer: otherContenteditable, endOffset: 0}],
+                  description);
   is(inputEvents.length, 1,
      `${description}: only one "input" events should be fired on other contenteditable`);
   checkInputEvent(inputEvents[0], otherContenteditable, "insertFromDrop", null,
                   [{type: "text/html", data: "<b>ol</b>"},
-                   {type: "text/plain", data: "ol"}], description);
+                   {type: "text/plain", data: "ol"}],
+                  [],
+                  description);
   is(dragEvents.length, 1,
      `${description}: only one "drop" event should be fired on other contenteditable`);
   document.removeEventListener("drop", onDrop);
@@ -1103,7 +1211,8 @@ async function doTest() {
   otherContenteditable = document.querySelector("div#container > div > div > p");
   b = document.querySelector("div#container > div > div > p > b");
   contenteditable.focus();
-  selection.setBaseAndExtent(b.firstChild, 1, b.firstChild, 3);
+  selectionContainers = [b.firstChild, b.firstChild];
+  selection.setBaseAndExtent(selectionContainers[0], 1, selectionContainers[1], 3);
   beforeinputEvents = [];
   inputEvents = [];
   dragEvents = [];
@@ -1123,16 +1232,24 @@ async function doTest() {
      `${description}: dragged range should be moved from nested contenteditable to the contenteditable`);
   is(beforeinputEvents.length, 2,
      `${description}: 2 "beforeinput" events should be fired on contenteditable`);
-  checkInputEvent(beforeinputEvents[0], otherContenteditable, "deleteByDrag", null, null, description);
+  checkInputEvent(beforeinputEvents[0], otherContenteditable, "deleteByDrag", null, null,
+                  [{startContainer: selectionContainers[0], startOffset: 1,
+                    endContainer: selectionContainers[1], endOffset: 3}],
+                  description);
   checkInputEvent(beforeinputEvents[1], contenteditable, "insertFromDrop", null,
                   [{type: "text/html", data: "<b>ol</b>"},
-                   {type: "text/plain", data: "ol"}], description);
+                   {type: "text/plain", data: "ol"}],
+                  [{startContainer: contenteditable.firstChild, startOffset: 0,
+                    endContainer: contenteditable.firstChild, endOffset: 0}],
+                  description);
   is(inputEvents.length, 2,
      `${description}: 2 "input" events should be fired on contenteditable`);
-  checkInputEvent(inputEvents[0], otherContenteditable, "deleteByDrag", null, null, description);
+  checkInputEvent(inputEvents[0], otherContenteditable, "deleteByDrag", null, null, [], description);
   checkInputEvent(inputEvents[1], contenteditable, "insertFromDrop", null,
                   [{type: "text/html", data: "<b>ol</b>"},
-                   {type: "text/plain", data: "ol"}], description);
+                   {type: "text/plain", data: "ol"}],
+                  [],
+                  description);
   is(dragEvents.length, 1,
      `${description}: only one "drop" event should be fired on contenteditable`);
   document.removeEventListener("drop", onDrop);
@@ -1144,7 +1261,8 @@ async function doTest() {
   otherContenteditable = document.querySelector("div#container > div > div > p");
   b = document.querySelector("div#container > div > div > p > b");
   contenteditable.focus();
-  selection.setBaseAndExtent(b.firstChild, 1, b.firstChild, 3);
+  selectionContainers = [b.firstChild, b.firstChild];
+  selection.setBaseAndExtent(selectionContainers[0], 1, selectionContainers[1], 3);
   beforeinputEvents = [];
   inputEvents = [];
   dragEvents = [];
@@ -1165,15 +1283,23 @@ async function doTest() {
      `${description}: dragged range should be copied from nested contenteditable to the contenteditable`);
   is(beforeinputEvents.length, 2,
      `${description}: 2 "beforeinput" events should be fired on contenteditable`);
-  checkInputEvent(beforeinputEvents[0], otherContenteditable, "deleteByDrag", null, null, description);
+  checkInputEvent(beforeinputEvents[0], otherContenteditable, "deleteByDrag", null, null,
+                  [{startContainer: selectionContainers[0], startOffset: 1,
+                    endContainer: selectionContainers[1], endOffset: 3}],
+                  description);
   checkInputEvent(beforeinputEvents[1], contenteditable, "insertFromDrop", null,
                   [{type: "text/html", data: "<b>ol</b>"},
-                   {type: "text/plain", data: "ol"}], description);
+                   {type: "text/plain", data: "ol"}],
+                  [{startContainer: contenteditable.firstChild, startOffset: 0,
+                    endContainer: contenteditable.firstChild, endOffset: 0}],
+                  description);
   is(inputEvents.length, 1,
      `${description}: only one "input" event should be fired on contenteditable`);
   checkInputEvent(inputEvents[0], contenteditable, "insertFromDrop", null,
                   [{type: "text/html", data: "<b>ol</b>"},
-                   {type: "text/plain", data: "ol"}], description);
+                   {type: "text/plain", data: "ol"}],
+                  [],
+                  description);
   is(dragEvents.length, 1,
      `${description}: only one "drop" event should be fired on contenteditable`);
   document.removeEventListener("drop", onDrop);
@@ -1186,7 +1312,8 @@ async function doTest() {
   otherContenteditable = document.querySelector("div#container > div > div > p");
   b = document.querySelector("div#container > div > div > p > b");
   contenteditable.focus();
-  selection.setBaseAndExtent(b.firstChild, 1, b.firstChild, 3);
+  selectionContainers = [b.firstChild, b.firstChild];
+  selection.setBaseAndExtent(selectionContainers[0], 1, selectionContainers[1], 3);
   beforeinputEvents = [];
   inputEvents = [];
   dragEvents = [];
@@ -1207,13 +1334,19 @@ async function doTest() {
      `${description}: dragged range should be removed from nested contenteditable`);
   is(beforeinputEvents.length, 2,
      `${description}: 2 "beforeinput" events should be fired on contenteditable`);
-  checkInputEvent(beforeinputEvents[0], otherContenteditable, "deleteByDrag", null, null, description);
+  checkInputEvent(beforeinputEvents[0], otherContenteditable, "deleteByDrag", null, null,
+                  [{startContainer: selectionContainers[0], startOffset: 1,
+                    endContainer: selectionContainers[1], endOffset: 3}],
+                  description);
   checkInputEvent(beforeinputEvents[1], contenteditable, "insertFromDrop", null,
                   [{type: "text/html", data: "<b>ol</b>"},
-                   {type: "text/plain", data: "ol"}], description);
+                   {type: "text/plain", data: "ol"}],
+                  [{startContainer: contenteditable.firstChild, startOffset: 0,
+                    endContainer: contenteditable.firstChild, endOffset: 0}],
+                  description);
   is(inputEvents.length, 1,
      `${description}: only one "input" event should be fired on nested contenteditable`);
-  checkInputEvent(inputEvents[0], otherContenteditable, "deleteByDrag", null, null, description);
+  checkInputEvent(inputEvents[0], otherContenteditable, "deleteByDrag", null, null, [], description);
   is(dragEvents.length, 1,
      `${description}: only one "drop" event should be fired on contenteditable`);
   document.removeEventListener("drop", onDrop);
@@ -1248,12 +1381,17 @@ async function doTest() {
      `${description}: only one "beforeinput" events should be fired on contenteditable`);
   checkInputEvent(beforeinputEvents[0], contenteditable, "insertFromDrop", null,
                   [{type: "text/html", data: "<b>ol</b>"},
-                   {type: "text/plain", data: "ol"}], description);
+                   {type: "text/plain", data: "ol"}],
+                  [{startContainer: contenteditable.firstChild, startOffset: 0,
+                    endContainer: contenteditable.firstChild, endOffset: 0}],
+                  description);
   is(inputEvents.length, 1,
      `${description}: only one "input" events should be fired on contenteditable`);
   checkInputEvent(inputEvents[0], contenteditable, "insertFromDrop", null,
                   [{type: "text/html", data: "<b>ol</b>"},
-                   {type: "text/plain", data: "ol"}], description);
+                   {type: "text/plain", data: "ol"}],
+                  [],
+                  description);
   is(dragEvents.length, 1,
      `${description}: only one "drop" event should be fired on contenteditable`);
   document.removeEventListener("drop", onDrop);
@@ -1265,7 +1403,8 @@ async function doTest() {
   b = document.querySelector("div#container > div > p > b");
   otherContenteditable = document.querySelector("div#container > div > div > p");
   contenteditable.focus();
-  selection.setBaseAndExtent(b.firstChild, 1, b.firstChild, 3);
+  selectionContainers = [b.firstChild, b.firstChild];
+  selection.setBaseAndExtent(selectionContainers[0], 1, selectionContainers[1], 3);
   beforeinputEvents = [];
   inputEvents = [];
   dragEvents = [];
@@ -1285,16 +1424,24 @@ async function doTest() {
      `${description}: dragged range should be moved from contenteditable to nested contenteditable`);
   is(beforeinputEvents.length, 2,
      `${description}: 2 "beforeinput" events should be fired on contenteditable and nested contenteditable`);
-  checkInputEvent(beforeinputEvents[0], contenteditable, "deleteByDrag", null, null, description);
+  checkInputEvent(beforeinputEvents[0], contenteditable, "deleteByDrag", null, null,
+                  [{startContainer: selectionContainers[0], startOffset: 1,
+                    endContainer: selectionContainers[1], endOffset: 3}],
+                  description);
   checkInputEvent(beforeinputEvents[1], otherContenteditable, "insertFromDrop", null,
                   [{type: "text/html", data: "<b>ol</b>"},
-                   {type: "text/plain", data: "ol"}], description);
+                   {type: "text/plain", data: "ol"}],
+                  [{startContainer: otherContenteditable, startOffset: 0,
+                    endContainer: otherContenteditable, endOffset: 0}],
+                  description);
   is(inputEvents.length, 2,
      `${description}: 2 "input" events should be fired on contenteditable and nested contenteditable`);
-  checkInputEvent(inputEvents[0], contenteditable, "deleteByDrag", null, null, description);
+  checkInputEvent(inputEvents[0], contenteditable, "deleteByDrag", null, null, [], description);
   checkInputEvent(inputEvents[1], otherContenteditable, "insertFromDrop", null,
                   [{type: "text/html", data: "<b>ol</b>"},
-                   {type: "text/plain", data: "ol"}], description);
+                   {type: "text/plain", data: "ol"}],
+                  [],
+                  description);
   is(dragEvents.length, 1,
      `${description}: only one "drop" event should be fired on contenteditable`);
   document.removeEventListener("drop", onDrop);
@@ -1306,7 +1453,8 @@ async function doTest() {
   b = document.querySelector("div#container > div > p > b");
   otherContenteditable = document.querySelector("div#container > div > div > p");
   contenteditable.focus();
-  selection.setBaseAndExtent(b.firstChild, 1, b.firstChild, 3);
+  selectionContainers = [b.firstChild, b.firstChild];
+  selection.setBaseAndExtent(selectionContainers[0], 1, selectionContainers[1], 3);
   beforeinputEvents = [];
   inputEvents = [];
   dragEvents = [];
@@ -1327,15 +1475,23 @@ async function doTest() {
      `${description}: dragged range should be copied from contenteditable to nested contenteditable`);
   is(beforeinputEvents.length, 2,
      `${description}: 2 "beforeinput" events should be fired on contenteditable and nested contenteditable`);
-  checkInputEvent(beforeinputEvents[0], contenteditable, "deleteByDrag", null, null, description);
+  checkInputEvent(beforeinputEvents[0], contenteditable, "deleteByDrag", null, null,
+                  [{startContainer: selectionContainers[0], startOffset: 1,
+                    endContainer: selectionContainers[1], endOffset: 3}],
+                  description);
   checkInputEvent(beforeinputEvents[1], otherContenteditable, "insertFromDrop", null,
                   [{type: "text/html", data: "<b>ol</b>"},
-                   {type: "text/plain", data: "ol"}], description);
+                   {type: "text/plain", data: "ol"}],
+                  [{startContainer: otherContenteditable, startOffset: 0,
+                    endContainer: otherContenteditable, endOffset: 0}],
+                  description);
   is(inputEvents.length, 1,
      `${description}: only one "input" event should be fired on contenteditable and nested contenteditable`);
   checkInputEvent(inputEvents[0], otherContenteditable, "insertFromDrop", null,
                   [{type: "text/html", data: "<b>ol</b>"},
-                   {type: "text/plain", data: "ol"}], description);
+                   {type: "text/plain", data: "ol"}],
+                  [],
+                  description);
   is(dragEvents.length, 1,
      `${description}: only one "drop" event should be fired on contenteditable`);
   document.removeEventListener("drop", onDrop);
@@ -1348,7 +1504,8 @@ async function doTest() {
   b = document.querySelector("div#container > div > p > b");
   otherContenteditable = document.querySelector("div#container > div > div > p");
   contenteditable.focus();
-  selection.setBaseAndExtent(b.firstChild, 1, b.firstChild, 3);
+  selectionContainers = [b.firstChild, b.firstChild];
+  selection.setBaseAndExtent(selectionContainers[0], 1, selectionContainers[1], 3);
   beforeinputEvents = [];
   inputEvents = [];
   dragEvents = [];
@@ -1369,13 +1526,19 @@ async function doTest() {
      `${description}: dragged range should be removed from contenteditable`);
   is(beforeinputEvents.length, 2,
      `${description}: 2 "beforeinput" events should be fired on contenteditable and nested contenteditable`);
-  checkInputEvent(beforeinputEvents[0], contenteditable, "deleteByDrag", null, null, description);
+  checkInputEvent(beforeinputEvents[0], contenteditable, "deleteByDrag", null, null,
+                  [{startContainer: selectionContainers[0], startOffset: 1,
+                    endContainer: selectionContainers[1], endOffset: 3}],
+                  description);
   checkInputEvent(beforeinputEvents[1], otherContenteditable, "insertFromDrop", null,
                   [{type: "text/html", data: "<b>ol</b>"},
-                   {type: "text/plain", data: "ol"}], description);
+                   {type: "text/plain", data: "ol"}],
+                  [{startContainer: otherContenteditable, startOffset: 0,
+                    endContainer: otherContenteditable, endOffset: 0}],
+                  description);
   is(inputEvents.length, 1,
      `${description}: only one "input" event should be fired on contenteditable`);
-  checkInputEvent(inputEvents[0], contenteditable, "deleteByDrag", null, null, description);
+  checkInputEvent(inputEvents[0], contenteditable, "deleteByDrag", null, null, [], description);
   is(dragEvents.length, 1,
      `${description}: only one "drop" event should be fired on contenteditable`);
   document.removeEventListener("drop", onDrop);
@@ -1411,12 +1574,17 @@ async function doTest() {
      `${description}: only one "beforeinput" events should be fired on contenteditable`);
   checkInputEvent(beforeinputEvents[0], otherContenteditable, "insertFromDrop", null,
                   [{type: "text/html", data: "<b>ol</b>"},
-                   {type: "text/plain", data: "ol"}], description);
+                   {type: "text/plain", data: "ol"}],
+                  [{startContainer: otherContenteditable, startOffset: 0,
+                    endContainer: otherContenteditable, endOffset: 0}],
+                  description);
   is(inputEvents.length, 1,
      `${description}: only one "input" events should be fired on contenteditable`);
   checkInputEvent(inputEvents[0], otherContenteditable, "insertFromDrop", null,
                   [{type: "text/html", data: "<b>ol</b>"},
-                   {type: "text/plain", data: "ol"}], description);
+                   {type: "text/plain", data: "ol"}],
+                  [],
+                  description);
   is(dragEvents.length, 1,
      `${description}: only one "drop" event should be fired on contenteditable`);
   document.removeEventListener("drop", onDrop);
@@ -1449,14 +1617,19 @@ async function doTest() {
      `${description}: dragged content should be inserted into contenteditable`);
   is(beforeinputEvents.length, 2,
      `${description}: 2 "beforeinput" events should be fired on <input> and contenteditable`);
-  checkInputEvent(beforeinputEvents[0], input, "deleteByDrag", null, null, description);
+  checkInputEvent(beforeinputEvents[0], input, "deleteByDrag", null, null, [], description);
   checkInputEvent(beforeinputEvents[1], contenteditable, "insertFromDrop", null,
-                  [{type: "text/plain", data: "e Tex"}], description);
+                  [{type: "text/plain", data: "e Tex"}],
+                  [{startContainer: contenteditable, startOffset: 0,
+                    endContainer: contenteditable, endOffset: 0}],
+                  description);
   is(inputEvents.length, 2,
      `${description}: 2 "input" events should be fired on <input> and contenteditable`);
-  checkInputEvent(inputEvents[0], input, "deleteByDrag", null, null, description);
+  checkInputEvent(inputEvents[0], input, "deleteByDrag", null, null, [], description);
   checkInputEvent(inputEvents[1], contenteditable, "insertFromDrop", null,
-                  [{type: "text/plain", data: "e Tex"}], description);
+                  [{type: "text/plain", data: "e Tex"}],
+                  [],
+                  description);
   is(dragEvents.length, 1,
      `${description}: only one "drop" event should be fired on other contenteditable`);
   document.removeEventListener("drop", onDrop);
@@ -1490,13 +1663,18 @@ async function doTest() {
      `${description}: dragged content should be inserted into contenteditable`);
   is(beforeinputEvents.length, 2,
      `${description}: 2 "beforeinput" events should be fired on <input> and contenteditable`);
-  checkInputEvent(beforeinputEvents[0], input, "deleteByDrag", null, null, description);
+  checkInputEvent(beforeinputEvents[0], input, "deleteByDrag", null, null, [], description);
   checkInputEvent(beforeinputEvents[1], contenteditable, "insertFromDrop", null,
-                  [{type: "text/plain", data: "e Tex"}], description);
+                  [{type: "text/plain", data: "e Tex"}],
+                  [{startContainer: contenteditable, startOffset: 0,
+                    endContainer: contenteditable, endOffset: 0}],
+                  description);
   is(inputEvents.length, 1,
      `${description}: only one "input" events should be fired on contenteditable`);
   checkInputEvent(inputEvents[0], contenteditable, "insertFromDrop", null,
-                  [{type: "text/plain", data: "e Tex"}], description);
+                  [{type: "text/plain", data: "e Tex"}],
+                  [],
+                  description);
   is(dragEvents.length, 1,
      `${description}: only one "drop" event should be fired on other contenteditable`);
   document.removeEventListener("drop", onDrop);
@@ -1531,12 +1709,15 @@ async function doTest() {
      `${description}: dragged content shouldn't be inserted into contenteditable`);
   is(beforeinputEvents.length, 2,
      `${description}: 2 "beforeinput" events should be fired on <input> and contenteditable`);
-  checkInputEvent(beforeinputEvents[0], input, "deleteByDrag", null, null, description);
+  checkInputEvent(beforeinputEvents[0], input, "deleteByDrag", null, null, [], description);
   checkInputEvent(beforeinputEvents[1], contenteditable, "insertFromDrop", null,
-                  [{type: "text/plain", data: "e Tex"}], description);
+                  [{type: "text/plain", data: "e Tex"}],
+                  [{startContainer: contenteditable, startOffset: 0,
+                    endContainer: contenteditable, endOffset: 0}],
+                  description);
   is(inputEvents.length, 1,
      `${description}: only one "input" event should be fired on <input>`);
-  checkInputEvent(inputEvents[0], input, "deleteByDrag", null, null, description);
+  checkInputEvent(inputEvents[0], input, "deleteByDrag", null, null, [], description);
   is(dragEvents.length, 1,
      `${description}: only one "drop" event should be fired on other contenteditable`);
   document.removeEventListener("drop", onDrop);
@@ -1572,11 +1753,16 @@ async function doTest() {
   is(beforeinputEvents.length, 1,
      `${description}: only one "beforeinput" events should be fired on contenteditable`);
   checkInputEvent(beforeinputEvents[0], contenteditable, "insertFromDrop", null,
-                  [{type: "text/plain", data: "e Tex"}], description);
+                  [{type: "text/plain", data: "e Tex"}],
+                  [{startContainer: contenteditable, startOffset: 0,
+                    endContainer: contenteditable, endOffset: 0}],
+                  description);
   is(inputEvents.length, 1,
      `${description}: only one "input" events should be fired on contenteditable`);
   checkInputEvent(inputEvents[0], contenteditable, "insertFromDrop", null,
-                  [{type: "text/plain", data: "e Tex"}], description);
+                  [{type: "text/plain", data: "e Tex"}],
+                  [],
+                  description);
   is(dragEvents.length, 1,
      `${description}: only one "drop" event should be fired on other contenteditable`);
   document.removeEventListener("drop", onDrop);
@@ -1611,14 +1797,19 @@ async function doTest() {
      `${description}: dragged content should be inserted into contenteditable`);
   is(beforeinputEvents.length, 2,
      `${description}: 2 "beforeinput" events should be fired on <input> and contenteditable`);
-  checkInputEvent(beforeinputEvents[0], textarea, "deleteByDrag", null, null, description);
+  checkInputEvent(beforeinputEvents[0], textarea, "deleteByDrag", null, null, [], description);
   checkInputEvent(beforeinputEvents[1], contenteditable, "insertFromDrop", null,
-                  [{type: "text/plain", data: `e1${kNativeLF}Li`}], description);
+                  [{type: "text/plain", data: `e1${kNativeLF}Li`}],
+                  [{startContainer: contenteditable, startOffset: 0,
+                    endContainer: contenteditable, endOffset: 0}],
+                  description);
   is(inputEvents.length, 2,
      `${description}: 2 "input" events should be fired on <input> and contenteditable`);
-  checkInputEvent(inputEvents[0], textarea, "deleteByDrag", null, null, description);
+  checkInputEvent(inputEvents[0], textarea, "deleteByDrag", null, null, [], description);
   checkInputEvent(inputEvents[1], contenteditable, "insertFromDrop", null,
-                  [{type: "text/plain", data: `e1${kNativeLF}Li`}], description);
+                  [{type: "text/plain", data: `e1${kNativeLF}Li`}],
+                  [],
+                  description);
   is(dragEvents.length, 1,
      `${description}: only one "drop" event should be fired on other contenteditable`);
   document.removeEventListener("drop", onDrop);
@@ -1655,11 +1846,16 @@ async function doTest() {
   is(beforeinputEvents.length, 1,
      `${description}: only one "beforeinput" events should be fired on contenteditable`);
   checkInputEvent(beforeinputEvents[0], contenteditable, "insertFromDrop", null,
-                  [{type: "text/plain", data: `e1${kNativeLF}Li`}], description);
+                  [{type: "text/plain", data: `e1${kNativeLF}Li`}],
+                  [{startContainer: contenteditable, startOffset: 0,
+                    endContainer: contenteditable, endOffset: 0}],
+                  description);
   is(inputEvents.length, 1,
      `${description}: only one "input" events should be fired on contenteditable`);
   checkInputEvent(inputEvents[0], contenteditable, "insertFromDrop", null,
-                  [{type: "text/plain", data: `e1${kNativeLF}Li`}], description);
+                  [{type: "text/plain", data: `e1${kNativeLF}Li`}],
+                  [],
+                  description);
   is(dragEvents.length, 1,
      `${description}: only one "drop" event should be fired on other contenteditable`);
   document.removeEventListener("drop", onDrop);
@@ -1692,12 +1888,12 @@ async function doTest() {
      `${description}: dragged content should be inserted into other <input>`);
   is(beforeinputEvents.length, 2,
      `${description}: 2 "beforeinput" events should be fired on <input> and other <input>`);
-  checkInputEvent(beforeinputEvents[0], input, "deleteByDrag", null, null, description);
-  checkInputEvent(beforeinputEvents[1], otherInput, "insertFromDrop", "e Tex", null, description);
+  checkInputEvent(beforeinputEvents[0], input, "deleteByDrag", null, null, [], description);
+  checkInputEvent(beforeinputEvents[1], otherInput, "insertFromDrop", "e Tex", null, [], description);
   is(inputEvents.length, 2,
      `${description}: 2 "input" events should be fired on <input> and other <input>`);
-  checkInputEvent(inputEvents[0], input, "deleteByDrag", null, null, description);
-  checkInputEvent(inputEvents[1], otherInput, "insertFromDrop", "e Tex", null, description);
+  checkInputEvent(inputEvents[0], input, "deleteByDrag", null, null, [], description);
+  checkInputEvent(inputEvents[1], otherInput, "insertFromDrop", "e Tex", null, [], description);
   is(dragEvents.length, 1,
      `${description}: only one "drop" event should be fired on other <input>`);
   document.removeEventListener("drop", onDrop);
@@ -1731,11 +1927,11 @@ async function doTest() {
      `${description}: dragged content should be inserted into other <input>`);
   is(beforeinputEvents.length, 2,
      `${description}: 2 "beforeinput" events should be fired on <input> and other <input>`);
-  checkInputEvent(beforeinputEvents[0], input, "deleteByDrag", null, null, description);
-  checkInputEvent(beforeinputEvents[1], otherInput, "insertFromDrop", "e Tex", null, description);
+  checkInputEvent(beforeinputEvents[0], input, "deleteByDrag", null, null, [], description);
+  checkInputEvent(beforeinputEvents[1], otherInput, "insertFromDrop", "e Tex", null, [], description);
   is(inputEvents.length, 1,
      `${description}: only one "input" events should be fired on other <input>`);
-  checkInputEvent(inputEvents[0], otherInput, "insertFromDrop", "e Tex", null, description);
+  checkInputEvent(inputEvents[0], otherInput, "insertFromDrop", "e Tex", null, [], description);
   is(dragEvents.length, 1,
      `${description}: only one "drop" event should be fired on other <input>`);
   document.removeEventListener("drop", onDrop);
@@ -1770,11 +1966,11 @@ async function doTest() {
      `${description}: dragged content shouldn't be inserted into other <input>`);
   is(beforeinputEvents.length, 2,
      `${description}: 2 "beforeinput" events should be fired on <input> and other <input>`);
-  checkInputEvent(beforeinputEvents[0], input, "deleteByDrag", null, null, description);
-  checkInputEvent(beforeinputEvents[1], otherInput, "insertFromDrop", "e Tex", null, description);
+  checkInputEvent(beforeinputEvents[0], input, "deleteByDrag", null, null, [], description);
+  checkInputEvent(beforeinputEvents[1], otherInput, "insertFromDrop", "e Tex", null, [], description);
   is(inputEvents.length, 1,
      `${description}: only one "input" event should be fired on <input>`);
-  checkInputEvent(inputEvents[0], input, "deleteByDrag", null, null, description);
+  checkInputEvent(inputEvents[0], input, "deleteByDrag", null, null, [], description);
   is(dragEvents.length, 1,
      `${description}: only one "drop" event should be fired on other <input>`);
   document.removeEventListener("drop", onDrop);
@@ -1809,10 +2005,10 @@ async function doTest() {
      `${description}: dragged content should be inserted into other <input>`);
   is(beforeinputEvents.length, 1,
      `${description}: only one "beforeinput" events should be fired on  other <input>`);
-  checkInputEvent(beforeinputEvents[0], otherInput, "insertFromDrop", "e Tex", null, description);
+  checkInputEvent(beforeinputEvents[0], otherInput, "insertFromDrop", "e Tex", null, [], description);
   is(inputEvents.length, 1,
      `${description}: only one "input" events should be fired on  other <input>`);
-  checkInputEvent(inputEvents[0], otherInput, "insertFromDrop", "e Tex", null, description);
+  checkInputEvent(inputEvents[0], otherInput, "insertFromDrop", "e Tex", null, [], description);
   is(dragEvents.length, 1,
      `${description}: only one "drop" event should be fired on other <input>`);
   document.removeEventListener("drop", onDrop);
@@ -1845,12 +2041,12 @@ async function doTest() {
      `${description}: dragged content should be inserted into <textarea>`);
   is(beforeinputEvents.length, 2,
      `${description}: 2 "beforeinput" events should be fired on <input> and <textarea>`);
-  checkInputEvent(beforeinputEvents[0], input, "deleteByDrag", null, null, description);
-  checkInputEvent(beforeinputEvents[1], textarea, "insertFromDrop", "e Tex", null, description);
+  checkInputEvent(beforeinputEvents[0], input, "deleteByDrag", null, null, [], description);
+  checkInputEvent(beforeinputEvents[1], textarea, "insertFromDrop", "e Tex", null, [], description);
   is(inputEvents.length, 2,
      `${description}: 2 "input" events should be fired on <input> and <textarea>`);
-  checkInputEvent(inputEvents[0], input, "deleteByDrag", null, null, description);
-  checkInputEvent(inputEvents[1], textarea, "insertFromDrop", "e Tex", null, description);
+  checkInputEvent(inputEvents[0], input, "deleteByDrag", null, null, [], description);
+  checkInputEvent(inputEvents[1], textarea, "insertFromDrop", "e Tex", null, [], description);
   is(dragEvents.length, 1,
      `${description}: only one "drop" event should be fired on <textarea>`);
   document.removeEventListener("drop", onDrop);
@@ -1884,11 +2080,11 @@ async function doTest() {
      `${description}: dragged content should be inserted into <textarea>`);
   is(beforeinputEvents.length, 2,
      `${description}: 2 "beforeinput" events should be fired on <input> and <textarea>`);
-  checkInputEvent(beforeinputEvents[0], input, "deleteByDrag", null, null, description);
-  checkInputEvent(beforeinputEvents[1], textarea, "insertFromDrop", "e Tex", null, description);
+  checkInputEvent(beforeinputEvents[0], input, "deleteByDrag", null, null, [], description);
+  checkInputEvent(beforeinputEvents[1], textarea, "insertFromDrop", "e Tex", null, [], description);
   is(inputEvents.length, 1,
      `${description}: only one "input" event should be fired on <textarea>`);
-  checkInputEvent(inputEvents[0], textarea, "insertFromDrop", "e Tex", null, description);
+  checkInputEvent(inputEvents[0], textarea, "insertFromDrop", "e Tex", null, [], description);
   is(dragEvents.length, 1,
      `${description}: only one "drop" event should be fired on <textarea>`);
   document.removeEventListener("drop", onDrop);
@@ -1923,11 +2119,11 @@ async function doTest() {
      `${description}: dragged content shouldn't be inserted into <textarea>`);
   is(beforeinputEvents.length, 2,
      `${description}: 2 "beforeinput" events should be fired on <input> and <textarea>`);
-  checkInputEvent(beforeinputEvents[0], input, "deleteByDrag", null, null, description);
-  checkInputEvent(beforeinputEvents[1], textarea, "insertFromDrop", "e Tex", null, description);
+  checkInputEvent(beforeinputEvents[0], input, "deleteByDrag", null, null, [], description);
+  checkInputEvent(beforeinputEvents[1], textarea, "insertFromDrop", "e Tex", null, [], description);
   is(inputEvents.length, 1,
      `${description}: only one "input" event should be fired on <input>`);
-  checkInputEvent(inputEvents[0], input, "deleteByDrag", null, null, description);
+  checkInputEvent(inputEvents[0], input, "deleteByDrag", null, null, [], description);
   is(dragEvents.length, 1,
      `${description}: only one "drop" event should be fired on <textarea>`);
   document.removeEventListener("drop", onDrop);
@@ -1962,10 +2158,10 @@ async function doTest() {
      `${description}: dragged content should be inserted into <textarea>`);
   is(beforeinputEvents.length, 1,
      `${description}: only one "beforeinput" events should be fired on  <textarea>`);
-  checkInputEvent(beforeinputEvents[0], textarea, "insertFromDrop", "e Tex", null, description);
+  checkInputEvent(beforeinputEvents[0], textarea, "insertFromDrop", "e Tex", null, [], description);
   is(inputEvents.length, 1,
      `${description}: only one "input" events should be fired on  <textarea>`);
-  checkInputEvent(inputEvents[0], textarea, "insertFromDrop", "e Tex", null, description);
+  checkInputEvent(inputEvents[0], textarea, "insertFromDrop", "e Tex", null, [], description);
   is(dragEvents.length, 1,
      `${description}: only one "drop" event should be fired on <textarea>`);
   document.removeEventListener("drop", onDrop);
@@ -1998,12 +2194,12 @@ async function doTest() {
      `${description}: dragged content should be inserted into <input>`);
   is(beforeinputEvents.length, 2,
      `${description}: 2 "beforeinput" events should be fired on <textarea> and <input>`);
-  checkInputEvent(beforeinputEvents[0], textarea, "deleteByDrag", null, null, description);
-  checkInputEvent(beforeinputEvents[1], input, "insertFromDrop", `e1${kNativeLF}Li`, null, description);
+  checkInputEvent(beforeinputEvents[0], textarea, "deleteByDrag", null, null, [], description);
+  checkInputEvent(beforeinputEvents[1], input, "insertFromDrop", `e1${kNativeLF}Li`, null, [], description);
   is(inputEvents.length, 2,
      `${description}: 2 "input" events should be fired on <textarea> and <input>`);
-  checkInputEvent(inputEvents[0], textarea, "deleteByDrag", null, null, description);
-  checkInputEvent(inputEvents[1], input, "insertFromDrop", `e1${kNativeLF}Li`, null, description);
+  checkInputEvent(inputEvents[0], textarea, "deleteByDrag", null, null, [], description);
+  checkInputEvent(inputEvents[1], input, "insertFromDrop", `e1${kNativeLF}Li`, null, [], description);
   is(dragEvents.length, 1,
      `${description}: only one "drop" event should be fired on <textarea>`);
   document.removeEventListener("drop", onDrop);
@@ -2037,11 +2233,11 @@ async function doTest() {
      `${description}: dragged content should be inserted into <input>`);
   is(beforeinputEvents.length, 2,
      `${description}: 2 "beforeinput" events should be fired on <textarea> and <input>`);
-  checkInputEvent(beforeinputEvents[0], textarea, "deleteByDrag", null, null, description);
-  checkInputEvent(beforeinputEvents[1], input, "insertFromDrop", `e1${kNativeLF}Li`, null, description);
+  checkInputEvent(beforeinputEvents[0], textarea, "deleteByDrag", null, null, [], description);
+  checkInputEvent(beforeinputEvents[1], input, "insertFromDrop", `e1${kNativeLF}Li`, null, [], description);
   is(inputEvents.length, 1,
      `${description}: only one "input" event should be fired on <input>`);
-  checkInputEvent(inputEvents[0], input, "insertFromDrop", `e1${kNativeLF}Li`, null, description);
+  checkInputEvent(inputEvents[0], input, "insertFromDrop", `e1${kNativeLF}Li`, null, [], description);
   is(dragEvents.length, 1,
      `${description}: only one "drop" event should be fired on <textarea>`);
   document.removeEventListener("drop", onDrop);
@@ -2076,11 +2272,11 @@ async function doTest() {
      `${description}: dragged content shouldn't be inserted into <input>`);
   is(beforeinputEvents.length, 2,
      `${description}: 2 "beforeinput" events should be fired on <textarea> and <input>`);
-  checkInputEvent(beforeinputEvents[0], textarea, "deleteByDrag", null, null, description);
-  checkInputEvent(beforeinputEvents[1], input, "insertFromDrop", `e1${kNativeLF}Li`, null, description);
+  checkInputEvent(beforeinputEvents[0], textarea, "deleteByDrag", null, null, [], description);
+  checkInputEvent(beforeinputEvents[1], input, "insertFromDrop", `e1${kNativeLF}Li`, null, [], description);
   is(inputEvents.length, 1,
      `${description}: only one "input" event should be fired on <textarea>`);
-  checkInputEvent(inputEvents[0], textarea, "deleteByDrag", null, null, description);
+  checkInputEvent(inputEvents[0], textarea, "deleteByDrag", null, null, [], description);
   is(dragEvents.length, 1,
      `${description}: only one "drop" event should be fired on <textarea>`);
   document.removeEventListener("drop", onDrop);
@@ -2115,10 +2311,10 @@ async function doTest() {
      `${description}: dragged content should be inserted into <input>`);
   is(beforeinputEvents.length, 1,
      `${description}: only one "beforeinput" events should be fired on <input>`);
-  checkInputEvent(beforeinputEvents[0], input, "insertFromDrop", `e1${kNativeLF}Li`, null, description);
+  checkInputEvent(beforeinputEvents[0], input, "insertFromDrop", `e1${kNativeLF}Li`, null, [], description);
   is(inputEvents.length, 1,
      `${description}: only one "input" events should be fired on <input>`);
-  checkInputEvent(inputEvents[0], input, "insertFromDrop", `e1${kNativeLF}Li`, null, description);
+  checkInputEvent(inputEvents[0], input, "insertFromDrop", `e1${kNativeLF}Li`, null, [], description);
   is(dragEvents.length, 1,
      `${description}: only one "drop" event should be fired on <textarea>`);
   document.removeEventListener("drop", onDrop);
@@ -2151,12 +2347,12 @@ async function doTest() {
      `${description}: dragged content should be inserted into other <textarea>`);
   is(beforeinputEvents.length, 2,
      `${description}: 2 "beforeinput" events should be fired on <textarea> and other <textarea>`);
-  checkInputEvent(beforeinputEvents[0], textarea, "deleteByDrag", null, null, description);
-  checkInputEvent(beforeinputEvents[1], otherTextarea, "insertFromDrop", `e1${kNativeLF}Li`, null, description);
+  checkInputEvent(beforeinputEvents[0], textarea, "deleteByDrag", null, null, [], description);
+  checkInputEvent(beforeinputEvents[1], otherTextarea, "insertFromDrop", `e1${kNativeLF}Li`, null, [], description);
   is(inputEvents.length, 2,
      `${description}: 2 "input" events should be fired on <textarea> and other <textarea>`);
-  checkInputEvent(inputEvents[0], textarea, "deleteByDrag", null, null, description);
-  checkInputEvent(inputEvents[1], otherTextarea, "insertFromDrop", `e1${kNativeLF}Li`, null, description);
+  checkInputEvent(inputEvents[0], textarea, "deleteByDrag", null, null, [], description);
+  checkInputEvent(inputEvents[1], otherTextarea, "insertFromDrop", `e1${kNativeLF}Li`, null, [], description);
   is(dragEvents.length, 1,
      `${description}: only one "drop" event should be fired on <textarea>`);
   document.removeEventListener("drop", onDrop);
@@ -2190,11 +2386,11 @@ async function doTest() {
      `${description}: dragged content should be inserted into other <textarea>`);
   is(beforeinputEvents.length, 2,
      `${description}: 2 "beforeinput" events should be fired on <textarea> and other <textarea>`);
-  checkInputEvent(beforeinputEvents[0], textarea, "deleteByDrag", null, null, description);
-  checkInputEvent(beforeinputEvents[1], otherTextarea, "insertFromDrop", `e1${kNativeLF}Li`, null, description);
+  checkInputEvent(beforeinputEvents[0], textarea, "deleteByDrag", null, null, [], description);
+  checkInputEvent(beforeinputEvents[1], otherTextarea, "insertFromDrop", `e1${kNativeLF}Li`, null, [], description);
   is(inputEvents.length, 1,
      `${description}: only one "input" event should be fired on other <textarea>`);
-  checkInputEvent(inputEvents[0], otherTextarea, "insertFromDrop", `e1${kNativeLF}Li`, null, description);
+  checkInputEvent(inputEvents[0], otherTextarea, "insertFromDrop", `e1${kNativeLF}Li`, null, [], description);
   is(dragEvents.length, 1,
      `${description}: only one "drop" event should be fired on <textarea>`);
   document.removeEventListener("drop", onDrop);
@@ -2229,11 +2425,11 @@ async function doTest() {
      `${description}: dragged content shouldn't be inserted into other <textarea>`);
   is(beforeinputEvents.length, 2,
      `${description}: 2 "beforeinput" events should be fired on <textarea> and other <textarea>`);
-  checkInputEvent(beforeinputEvents[0], textarea, "deleteByDrag", null, null, description);
-  checkInputEvent(beforeinputEvents[1], otherTextarea, "insertFromDrop", `e1${kNativeLF}Li`, null, description);
+  checkInputEvent(beforeinputEvents[0], textarea, "deleteByDrag", null, null, [], description);
+  checkInputEvent(beforeinputEvents[1], otherTextarea, "insertFromDrop", `e1${kNativeLF}Li`, null, [], description);
   is(inputEvents.length, 1,
      `${description}: only one "input" event should be fired on <textarea>`);
-  checkInputEvent(inputEvents[0], textarea, "deleteByDrag", null, null, description);
+  checkInputEvent(inputEvents[0], textarea, "deleteByDrag", null, null, [], description);
   is(dragEvents.length, 1,
      `${description}: only one "drop" event should be fired on <textarea>`);
   document.removeEventListener("drop", onDrop);
@@ -2268,10 +2464,10 @@ async function doTest() {
      `${description}: dragged content should be inserted into other <textarea>`);
   is(beforeinputEvents.length, 1,
      `${description}: only one "beforeinput" events should be fired on other <textarea>`);
-  checkInputEvent(beforeinputEvents[0], otherTextarea, "insertFromDrop", `e1${kNativeLF}Li`, null, description);
+  checkInputEvent(beforeinputEvents[0], otherTextarea, "insertFromDrop", `e1${kNativeLF}Li`, null, [], description);
   is(inputEvents.length, 1,
      `${description}: only one "input" events should be fired on other <textarea>`);
-  checkInputEvent(inputEvents[0], otherTextarea, "insertFromDrop", `e1${kNativeLF}Li`, null, description);
+  checkInputEvent(inputEvents[0], otherTextarea, "insertFromDrop", `e1${kNativeLF}Li`, null, [], description);
   is(dragEvents.length, 1,
      `${description}: only one "drop" event should be fired on <textarea>`);
   document.removeEventListener("drop", onDrop);
@@ -2281,8 +2477,8 @@ async function doTest() {
   container.innerHTML = '<div contenteditable><div>Line1</div><div>Line2</div></div><input>';
   contenteditable = document.querySelector("div#container > div");
   input = document.querySelector("div#container > input");
-  selection.setBaseAndExtent(contenteditable.firstChild.firstChild, 3,
-                             contenteditable.firstChild.nextSibling.firstChild, 2);
+  selectionContainers = [contenteditable.firstChild.firstChild, contenteditable.firstChild.nextSibling.firstChild];
+  selection.setBaseAndExtent(selectionContainers[0], 3, selectionContainers[1], 2);
   beforeinputEvents = [];
   inputEvents = [];
   dragEvents = [];
@@ -2304,12 +2500,15 @@ async function doTest() {
      `${description}: dragged range should be inserted into <input>`);
   is(beforeinputEvents.length, 2,
      `${description}: 2 "beforeinput" events should be fired on <input> and contenteditable`);
-  checkInputEvent(beforeinputEvents[0], contenteditable, "deleteByDrag", null, null, description);
-  checkInputEvent(beforeinputEvents[1], input, "insertFromDrop", `e1${kNativeLF}Li`, null, description);
+  checkInputEvent(beforeinputEvents[0], contenteditable, "deleteByDrag", null, null,
+                  [{startContainer: selectionContainers[0], startOffset: 3,
+                    endContainer: selectionContainers[1], endOffset: 2}],
+                  description);
+  checkInputEvent(beforeinputEvents[1], input, "insertFromDrop", `e1${kNativeLF}Li`, null, [], description);
   is(inputEvents.length, 2,
      `${description}: 2 "input" events should be fired on <input> and contenteditable`);
-  checkInputEvent(inputEvents[0], contenteditable, "deleteByDrag", null, null, description);
-  checkInputEvent(inputEvents[1], input, "insertFromDrop", `e1${kNativeLF}Li`, null, description);
+  checkInputEvent(inputEvents[0], contenteditable, "deleteByDrag", null, null, [], description);
+  checkInputEvent(inputEvents[1], input, "insertFromDrop", `e1${kNativeLF}Li`, null, [], description);
   is(dragEvents.length, 1,
      `${description}: only one "drop" event should be fired on other contenteditable`);
   document.removeEventListener("drop", onDrop);
@@ -2343,10 +2542,10 @@ async function doTest() {
      `${description}: dragged range should be inserted into <input>`);
   is(beforeinputEvents.length, 1,
      `${description}: only one "beforeinput" events should be fired on contenteditable`);
-  checkInputEvent(beforeinputEvents[0], input, "insertFromDrop", `e1${kNativeLF}Li`, null, description);
+  checkInputEvent(beforeinputEvents[0], input, "insertFromDrop", `e1${kNativeLF}Li`, null, [], description);
   is(inputEvents.length, 1,
      `${description}: only one "input" events should be fired on contenteditable`);
-  checkInputEvent(inputEvents[0], input, "insertFromDrop", `e1${kNativeLF}Li`, null, description);
+  checkInputEvent(inputEvents[0], input, "insertFromDrop", `e1${kNativeLF}Li`, null, [], description);
   is(dragEvents.length, 1,
      `${description}: only one "drop" event should be fired on other contenteditable`);
   document.removeEventListener("drop", onDrop);
@@ -2356,8 +2555,8 @@ async function doTest() {
   container.innerHTML = '<div contenteditable><div>Line1</div><div>Line2</div></div><textarea></textarea>';
   contenteditable = document.querySelector("div#container > div");
   textarea = document.querySelector("div#container > textarea");
-  selection.setBaseAndExtent(contenteditable.firstChild.firstChild, 3,
-                             contenteditable.firstChild.nextSibling.firstChild, 2);
+  selectionContainers = [contenteditable.firstChild.firstChild, contenteditable.firstChild.nextSibling.firstChild];
+  selection.setBaseAndExtent(selectionContainers[0], 3, selectionContainers[1], 2);
   beforeinputEvents = [];
   inputEvents = [];
   dragEvents = [];
@@ -2379,12 +2578,15 @@ async function doTest() {
      `${description}: dragged range should be inserted into <textarea>`);
   is(beforeinputEvents.length, 2,
      `${description}: 2 "beforeinput" events should be fired on <textarea> and contenteditable`);
-  checkInputEvent(beforeinputEvents[0], contenteditable, "deleteByDrag", null, null, description);
-  checkInputEvent(beforeinputEvents[1], textarea, "insertFromDrop", `e1${kNativeLF}Li`, null, description);
+  checkInputEvent(beforeinputEvents[0], contenteditable, "deleteByDrag", null, null,
+                  [{startContainer: selectionContainers[0], startOffset: 3,
+                    endContainer: selectionContainers[1], endOffset: 2}],
+                  description);
+  checkInputEvent(beforeinputEvents[1], textarea, "insertFromDrop", `e1${kNativeLF}Li`, null, [], description);
   is(inputEvents.length, 2,
      `${description}: 2 "input" events should be fired on <textarea> and contenteditable`);
-  checkInputEvent(inputEvents[0], contenteditable, "deleteByDrag", null, null, description);
-  checkInputEvent(inputEvents[1], textarea, "insertFromDrop", `e1${kNativeLF}Li`, null, description);
+  checkInputEvent(inputEvents[0], contenteditable, "deleteByDrag", null, null, [], description);
+  checkInputEvent(inputEvents[1], textarea, "insertFromDrop", `e1${kNativeLF}Li`, null, [], description);
   is(dragEvents.length, 1,
      `${description}: only one "drop" event should be fired on other contenteditable`);
   document.removeEventListener("drop", onDrop);
@@ -2418,10 +2620,10 @@ async function doTest() {
      `${description}: dragged range should be inserted into <textarea>`);
   is(beforeinputEvents.length, 1,
      `${description}: only one "beforeinput" events should be fired on contenteditable`);
-  checkInputEvent(beforeinputEvents[0], textarea, "insertFromDrop", `e1${kNativeLF}Li`, null, description);
+  checkInputEvent(beforeinputEvents[0], textarea, "insertFromDrop", `e1${kNativeLF}Li`, null, [], description);
   is(inputEvents.length, 1,
      `${description}: only one "input" events should be fired on contenteditable`);
-  checkInputEvent(inputEvents[0], textarea, "insertFromDrop", `e1${kNativeLF}Li`, null, description);
+  checkInputEvent(inputEvents[0], textarea, "insertFromDrop", `e1${kNativeLF}Li`, null, [], description);
   is(dragEvents.length, 1,
      `${description}: only one "drop" event should be fired on other contenteditable`);
   document.removeEventListener("drop", onDrop);

@@ -38,7 +38,7 @@ SimpleTest.waitForFocus(async () => {
     inputEvents.push(event);
   }
 
-  function checkInputEvent(aEvent, aInputType, aDescription) {
+  function checkInputEvent(aEvent, aInputType, aTargetRanges, aDescription) {
     ok(aEvent, `aEvent is null (${aDescription})`);
     ok(aEvent instanceof InputEvent,
        `"${aEvent.type}" event should be dispatched with InputEvent interface (${aDescription})`);
@@ -52,6 +52,26 @@ SimpleTest.waitForFocus(async () => {
        `data of "${aEvent.type}" event should be null ${aDescription}`);
     is(aEvent.dataTransfer, null,
        `dataTransfer of "${aEvent.type}" event should be null ${aDescription}`);
+    let targetRanges = aEvent.getTargetRanges();
+    if (aTargetRanges.length === 0) {
+      is(targetRanges.length, 0,
+         `getTargetRange() of "${aEvent.type}" event should return empty array: ${aDescription}`);
+    } else {
+      is(targetRanges.length, aTargetRanges.length,
+         `getTargetRange() of "${aEvent.type}" event should return static range array: ${aDescription}`);
+      if (targetRanges.length == aTargetRanges.length) {
+        for (let i = 0; i < targetRanges.length; i++) {
+          is(targetRanges[i].startContainer, aTargetRanges[i].startContainer,
+             `startContainer of getTargetRanges()[${i}] of "${aEvent.type}" event does not match: ${aDescription}`);
+          is(targetRanges[i].startOffset, aTargetRanges[i].startOffset,
+             `startOffset of getTargetRanges()[${i}] of "${aEvent.type}" event does not match: ${aDescription}`);
+          is(targetRanges[i].endContainer, aTargetRanges[i].endContainer,
+             `endContainer of getTargetRanges()[${i}] of "${aEvent.type}" event does not match: ${aDescription}`);
+          is(targetRanges[i].endOffset, aTargetRanges[i].endOffset,
+             `endOffset of getTargetRanges()[${i}] of "${aEvent.type}" event does not match: ${aDescription}`);
+        }
+      }
+    }
   }
 
   input.focus();
@@ -69,7 +89,7 @@ SimpleTest.waitForFocus(async () => {
   input.removeEventListener("input", onInput);
   is(input.value, "abcdef", "nsIEditor.insertLineBreak() should do nothing on single line editor");
   is(beforeInputEvents.length, 1, 'nsIEditor.insertLineBreak() should cause a "beforeinput" event on single line editor');
-  checkInputEvent(beforeInputEvents[0], "insertLineBreak", "on single line editor");
+  checkInputEvent(beforeInputEvents[0], "insertLineBreak", [], "on single line editor");
   is(inputEvents.length, 0, 'nsIEditor.insertLineBreak() should not cause "input" event on single line editor');
 
   textarea.focus();
@@ -83,9 +103,9 @@ SimpleTest.waitForFocus(async () => {
   textarea.removeEventListener("input", onInput);
   is(textarea.value, "abc\ndef", "nsIEditor.insertLineBreak() should insert \\n into multi-line editor");
   is(beforeInputEvents.length, 1, 'nsIEditor.insertLineBreak() should cause "beforeinput" event once on multi-line editor');
-  checkInputEvent(beforeInputEvents[0], "insertLineBreak", "on multi-line editor");
+  checkInputEvent(beforeInputEvents[0], "insertLineBreak", [], "on multi-line editor");
   is(inputEvents.length, 1, 'nsIEditor.insertLineBreak() should cause "input" event once on multi-line editor');
-  checkInputEvent(inputEvents[0], "insertLineBreak", "on multi-line editor");
+  checkInputEvent(inputEvents[0], "insertLineBreak", [], "on multi-line editor");
 
   // Note that despite of the name, insertLineBreak() should insert paragraph separator in HTMLEditor.
 
@@ -94,7 +114,8 @@ SimpleTest.waitForFocus(async () => {
   contenteditable.innerHTML = "abcdef";
   contenteditable.focus();
   contenteditable.scrollTop;
-  selection.collapse(contenteditable.firstChild, 3);
+  let selectionContainer = contenteditable.firstChild;
+  selection.collapse(selectionContainer, 3);
   beforeInputEvents = [];
   inputEvents = [];
   contenteditable.addEventListener("beforeinput", onBeforeInput);
@@ -106,15 +127,19 @@ SimpleTest.waitForFocus(async () => {
      'nsIEditor.insertLineBreak() should insert <br> element into text node when defaultParagraphSeparator is "br"');
   is(beforeInputEvents.length, 1,
      'nsIEditor.insertLineBreak() should cause "beforeinput" event once on contenteditable which has only text node when defaultParagraphSeparator is "br"');
-  checkInputEvent(beforeInputEvents[0], "insertParagraph", 'on HTMLEditor (when defaultParagraphSeparator is "br")');
+  checkInputEvent(beforeInputEvents[0], "insertParagraph",
+                  [{startContainer: selectionContainer, startOffset: 3,
+                    endContainer: selectionContainer, endOffset: 3}],
+                  'on HTMLEditor (when defaultParagraphSeparator is "br")');
   is(inputEvents.length, 1,
      'nsIEditor.insertLineBreak() should cause "input" event once on contenteditable which has only text node when defaultParagraphSeparator is "br"');
-  checkInputEvent(inputEvents[0], "insertParagraph", 'on HTMLEditor (when defaultParagraphSeparator is "br")');
+  checkInputEvent(inputEvents[0], "insertParagraph", [], 'on HTMLEditor (when defaultParagraphSeparator is "br")');
 
   contenteditable.innerHTML = "<p>abcdef</p>";
   contenteditable.focus();
   contenteditable.scrollTop;
-  selection.collapse(contenteditable.firstChild.firstChild, 3);
+  selectionContainer = contenteditable.firstChild.firstChild;
+  selection.collapse(selectionContainer, 3);
   beforeInputEvents = [];
   inputEvents = [];
   contenteditable.addEventListener("beforeinput", onBeforeInput);
@@ -126,15 +151,19 @@ SimpleTest.waitForFocus(async () => {
      'nsIEditor.insertLineBreak() should add <p> element after <p> element even when defaultParagraphSeparator is "br"');
   is(beforeInputEvents.length, 1,
      'nsIEditor.insertLineBreak() should cause "beforeinput" event once on contenteditable which has <p> element when defaultParagraphSeparator is "br"');
-  checkInputEvent(beforeInputEvents[0], "insertParagraph", 'in <p> element on HTMLEditor (when defaultParagraphSeparator is "br")');
+  checkInputEvent(beforeInputEvents[0], "insertParagraph",
+                  [{startContainer: selectionContainer, startOffset: 3,
+                    endContainer: selectionContainer, endOffset: 3}],
+                  'in <p> element on HTMLEditor (when defaultParagraphSeparator is "br")');
   is(inputEvents.length, 1,
      'nsIEditor.insertLineBreak() should cause "input" event once on contenteditable which has <p> element when defaultParagraphSeparator is "br"');
-  checkInputEvent(inputEvents[0], "insertParagraph", 'in <p> element on HTMLEditor (when defaultParagraphSeparator is "br")');
+  checkInputEvent(inputEvents[0], "insertParagraph", [], 'in <p> element on HTMLEditor (when defaultParagraphSeparator is "br")');
 
   contenteditable.innerHTML = "<div>abcdef</div>";
   contenteditable.focus();
   contenteditable.scrollTop;
-  selection.collapse(contenteditable.firstChild.firstChild, 3);
+  selectionContainer = contenteditable.firstChild.firstChild;
+  selection.collapse(selectionContainer, 3);
   beforeInputEvents = [];
   inputEvents = [];
   contenteditable.addEventListener("beforeinput", onBeforeInput);
@@ -146,15 +175,19 @@ SimpleTest.waitForFocus(async () => {
      'nsIEditor.insertLineBreak() should insert <br> element into <div> element when defaultParagraphSeparator is "br"');
   is(beforeInputEvents.length, 1,
      'nsIEditor.insertLineBreak() should cause "beforeinput" event once on contenteditable which has <div> element when defaultParagraphSeparator is "br"');
-  checkInputEvent(beforeInputEvents[0], "insertParagraph", 'in <div> element on HTMLEditor (when defaultParagraphSeparator is "br")');
+  checkInputEvent(beforeInputEvents[0], "insertParagraph",
+                  [{startContainer: selectionContainer, startOffset: 3,
+                    endContainer: selectionContainer, endOffset: 3}],
+                  'in <div> element on HTMLEditor (when defaultParagraphSeparator is "br")');
   is(inputEvents.length, 1,
      'nsIEditor.insertLineBreak() should cause "input" event once on contenteditable which has <div> element when defaultParagraphSeparator is "br"');
-  checkInputEvent(inputEvents[0], "insertParagraph", 'in <div> element on HTMLEditor (when defaultParagraphSeparator is "br")');
+  checkInputEvent(inputEvents[0], "insertParagraph", [], 'in <div> element on HTMLEditor (when defaultParagraphSeparator is "br")');
 
   contenteditable.innerHTML = "<pre>abcdef</pre>";
   contenteditable.focus();
   contenteditable.scrollTop;
-  selection.collapse(contenteditable.firstChild.firstChild, 3);
+  selectionContainer = contenteditable.firstChild.firstChild;
+  selection.collapse(selectionContainer, 3);
   beforeInputEvents = [];
   inputEvents = [];
   contenteditable.addEventListener("beforeinput", onBeforeInput);
@@ -166,17 +199,21 @@ SimpleTest.waitForFocus(async () => {
      'nsIEditor.insertLineBreak() should insert <br> element into <pre> element when defaultParagraphSeparator is "br"');
   is(beforeInputEvents.length, 1,
      'nsIEditor.insertLineBreak() should cause "beforeinput" event once on contenteditable which has <pre> element when defaultParagraphSeparator is "br"');
-  checkInputEvent(beforeInputEvents[0], "insertParagraph", 'in <pre> element on HTMLEditor (when defaultParagraphSeparator is "br")');
+  checkInputEvent(beforeInputEvents[0], "insertParagraph",
+                  [{startContainer: selectionContainer, startOffset: 3,
+                    endContainer: selectionContainer, endOffset: 3}],
+                  'in <pre> element on HTMLEditor (when defaultParagraphSeparator is "br")');
   is(inputEvents.length, 1,
      'nsIEditor.insertLineBreak() should cause "input" event once on contenteditable which has <pre> element when defaultParagraphSeparator is "br"');
-  checkInputEvent(inputEvents[0], "insertParagraph", 'in <pre> element on HTMLEditor (when defaultParagraphSeparator is "br")');
+  checkInputEvent(inputEvents[0], "insertParagraph", [], 'in <pre> element on HTMLEditor (when defaultParagraphSeparator is "br")');
 
   document.execCommand("defaultParagraphSeparator", false, "p");
 
   contenteditable.innerHTML = "abcdef";
   contenteditable.focus();
   contenteditable.scrollTop;
-  selection.collapse(contenteditable.firstChild, 3);
+  selectionContainer = contenteditable.firstChild;
+  selection.collapse(selectionContainer, 3);
   beforeInputEvents = [];
   inputEvents = [];
   contenteditable.addEventListener("beforeinput", onBeforeInput);
@@ -188,15 +225,19 @@ SimpleTest.waitForFocus(async () => {
      'nsIEditor.insertLineBreak() should create <p> elements when there is only text node and defaultParagraphSeparator is "p"');
   is(beforeInputEvents.length, 1,
      'nsIEditor.insertLineBreak() should cause "beforeinput" event once on contenteditable which has only text node when defaultParagraphSeparator is "p"');
-  checkInputEvent(beforeInputEvents[0], "insertParagraph", 'on HTMLEditor (when defaultParagraphSeparator is "p")');
+  checkInputEvent(beforeInputEvents[0], "insertParagraph",
+                  [{startContainer: selectionContainer, startOffset: 3,
+                    endContainer: selectionContainer, endOffset: 3}],
+                  'on HTMLEditor (when defaultParagraphSeparator is "p")');
   is(inputEvents.length, 1,
      'nsIEditor.insertLineBreak() should cause "input" event once on contenteditable which has only text node when defaultParagraphSeparator is "p"');
-  checkInputEvent(inputEvents[0], "insertParagraph", 'on HTMLEditor (when defaultParagraphSeparator is "p")');
+  checkInputEvent(inputEvents[0], "insertParagraph", [], 'on HTMLEditor (when defaultParagraphSeparator is "p")');
 
   contenteditable.innerHTML = "<p>abcdef</p>";
   contenteditable.focus();
   contenteditable.scrollTop;
-  selection.collapse(contenteditable.firstChild.firstChild, 3);
+  selectionContainer = contenteditable.firstChild.firstChild;
+  selection.collapse(selectionContainer, 3);
   beforeInputEvents = [];
   inputEvents = [];
   contenteditable.addEventListener("beforeinput", onBeforeInput);
@@ -208,15 +249,19 @@ SimpleTest.waitForFocus(async () => {
      'nsIEditor.insertLineBreak() should add <p> element after <p> element when defaultParagraphSeparator is "p"');
   is(beforeInputEvents.length, 1,
      'nsIEditor.insertLineBreak() should cause "beforeinput" event once on contenteditable which has <p> element when defaultParagraphSeparator is "p"');
-  checkInputEvent(beforeInputEvents[0], "insertParagraph", 'in <p> element on HTMLEditor (when defaultParagraphSeparator is "p")');
+  checkInputEvent(beforeInputEvents[0], "insertParagraph",
+                  [{startContainer: selectionContainer, startOffset: 3,
+                    endContainer: selectionContainer, endOffset: 3}],
+                  'in <p> element on HTMLEditor (when defaultParagraphSeparator is "p")');
   is(inputEvents.length, 1,
      'nsIEditor.insertLineBreak() should cause "input" event once on contenteditable which has <p> element when defaultParagraphSeparator is "p"');
-  checkInputEvent(inputEvents[0], "insertParagraph", 'in <p> element on HTMLEditor (when defaultParagraphSeparator is "p")');
+  checkInputEvent(inputEvents[0], "insertParagraph", [], 'in <p> element on HTMLEditor (when defaultParagraphSeparator is "p")');
 
   contenteditable.innerHTML = "<div>abcdef</div>";
   contenteditable.focus();
   contenteditable.scrollTop;
-  selection.collapse(contenteditable.firstChild.firstChild, 3);
+  selectionContainer = contenteditable.firstChild.firstChild;
+  selection.collapse(selectionContainer, 3);
   beforeInputEvents = [];
   inputEvents = [];
   contenteditable.addEventListener("beforeinput", onBeforeInput);
@@ -228,15 +273,19 @@ SimpleTest.waitForFocus(async () => {
      'nsIEditor.insertLineBreak() should add <div> element after <div> element even when defaultParagraphSeparator is "p"');
   is(beforeInputEvents.length, 1,
      'nsIEditor.insertLineBreak() should cause "beforeinput" event once on contenteditable which has <div> element when defaultParagraphSeparator is "p"');
-  checkInputEvent(beforeInputEvents[0], "insertParagraph", 'in <div> element on HTMLEditor (when defaultParagraphSeparator is "p")');
+  checkInputEvent(beforeInputEvents[0], "insertParagraph",
+                  [{startContainer: selectionContainer, startOffset: 3,
+                    endContainer: selectionContainer, endOffset: 3}],
+                  'in <div> element on HTMLEditor (when defaultParagraphSeparator is "p")');
   is(inputEvents.length, 1,
      'nsIEditor.insertLineBreak() should cause "input" event once on contenteditable which has <div> element when defaultParagraphSeparator is "p"');
-  checkInputEvent(inputEvents[0], "insertParagraph", 'in <div> element on HTMLEditor (when defaultParagraphSeparator is "p")');
+  checkInputEvent(inputEvents[0], "insertParagraph", [], 'in <div> element on HTMLEditor (when defaultParagraphSeparator is "p")');
 
   contenteditable.innerHTML = "<pre>abcdef</pre>";
   contenteditable.focus();
   contenteditable.scrollTop;
-  selection.collapse(contenteditable.firstChild.firstChild, 3);
+  selectionContainer = contenteditable.firstChild.firstChild;
+  selection.collapse(selectionContainer, 3);
   beforeInputEvents = [];
   inputEvents = [];
   contenteditable.addEventListener("beforeinput", onBeforeInput);
@@ -248,17 +297,21 @@ SimpleTest.waitForFocus(async () => {
      'nsIEditor.insertLineBreak() should insert <br> element into <pre> element when defaultParagraphSeparator is "p"');
   is(beforeInputEvents.length, 1,
      'nsIEditor.insertLineBreak() should cause "beforeinput" event once on contenteditable which has <pre> element when defaultParagraphSeparator is "p"');
-  checkInputEvent(beforeInputEvents[0], "insertParagraph", 'in <pre> element on HTMLEditor (when defaultParagraphSeparator is "p")');
+  checkInputEvent(beforeInputEvents[0], "insertParagraph",
+                  [{startContainer: selectionContainer, startOffset: 3,
+                    endContainer: selectionContainer, endOffset: 3}],
+                  'in <pre> element on HTMLEditor (when defaultParagraphSeparator is "p")');
   is(inputEvents.length, 1,
      'nsIEditor.insertLineBreak() should cause "input" event once on contenteditable which has <pre> element when defaultParagraphSeparator is "p"');
-  checkInputEvent(inputEvents[0], "insertParagraph", 'in <pre> element on HTMLEditor (when defaultParagraphSeparator is "p")');
+  checkInputEvent(inputEvents[0], "insertParagraph", [], 'in <pre> element on HTMLEditor (when defaultParagraphSeparator is "p")');
 
   document.execCommand("defaultParagraphSeparator", false, "div");
 
   contenteditable.innerHTML = "abcdef";
   contenteditable.focus();
   contenteditable.scrollTop;
-  selection.collapse(contenteditable.firstChild, 3);
+  selectionContainer = contenteditable.firstChild;
+  selection.collapse(selectionContainer, 3);
   beforeInputEvents = [];
   inputEvents = [];
   contenteditable.addEventListener("beforeinput", onBeforeInput);
@@ -270,15 +323,19 @@ SimpleTest.waitForFocus(async () => {
      'nsIEditor.insertLineBreak() should create <div> elements when there is only text node and defaultParagraphSeparator is "div"');
   is(beforeInputEvents.length, 1,
      'nsIEditor.insertLineBreak() should cause "beforeinput" event once on contenteditable which has only text node when defaultParagraphSeparator is "div"');
-  checkInputEvent(beforeInputEvents[0], "insertParagraph", 'on HTMLEditor (when defaultParagraphSeparator is "div")');
+  checkInputEvent(beforeInputEvents[0], "insertParagraph",
+                  [{startContainer: selectionContainer, startOffset: 3,
+                    endContainer: selectionContainer, endOffset: 3}],
+                  'on HTMLEditor (when defaultParagraphSeparator is "div")');
   is(inputEvents.length, 1,
      'nsIEditor.insertLineBreak() should cause "input" event once on contenteditable which has only text node when defaultParagraphSeparator is "div"');
-  checkInputEvent(inputEvents[0], "insertParagraph", 'on HTMLEditor (when defaultParagraphSeparator is "div")');
+  checkInputEvent(inputEvents[0], "insertParagraph", [], 'on HTMLEditor (when defaultParagraphSeparator is "div")');
 
   contenteditable.innerHTML = "<p>abcdef</p>";
   contenteditable.focus();
   contenteditable.scrollTop;
-  selection.collapse(contenteditable.firstChild.firstChild, 3);
+  selectionContainer = contenteditable.firstChild.firstChild;
+  selection.collapse(selectionContainer, 3);
   beforeInputEvents = [];
   inputEvents = [];
   contenteditable.addEventListener("beforeinput", onBeforeInput);
@@ -290,15 +347,19 @@ SimpleTest.waitForFocus(async () => {
      'nsIEditor.insertLineBreak() should add <p> element after <p> element even when defaultParagraphSeparator is "div"');
   is(beforeInputEvents.length, 1,
      'nsIEditor.insertLineBreak() should cause "beforeinput" event once on contenteditable which has <p> element when defaultParagraphSeparator is "div"');
-  checkInputEvent(beforeInputEvents[0], "insertParagraph", 'in <p> element on HTMLEditor (when defaultParagraphSeparator is "div")');
+  checkInputEvent(beforeInputEvents[0], "insertParagraph",
+                  [{startContainer: selectionContainer, startOffset: 3,
+                    endContainer: selectionContainer, endOffset: 3}],
+                  'in <p> element on HTMLEditor (when defaultParagraphSeparator is "div")');
   is(inputEvents.length, 1,
      'nsIEditor.insertLineBreak() should cause "input" event once on contenteditable which has <p> element when defaultParagraphSeparator is "div"');
-  checkInputEvent(inputEvents[0], "insertParagraph", 'in <p> element on HTMLEditor (when defaultParagraphSeparator is "div")');
+  checkInputEvent(inputEvents[0], "insertParagraph", [], 'in <p> element on HTMLEditor (when defaultParagraphSeparator is "div")');
 
   contenteditable.innerHTML = "<div>abcdef</div>";
   contenteditable.focus();
   contenteditable.scrollTop;
-  selection.collapse(contenteditable.firstChild.firstChild, 3);
+  selectionContainer = contenteditable.firstChild.firstChild;
+  selection.collapse(selectionContainer, 3);
   beforeInputEvents = [];
   inputEvents = [];
   contenteditable.addEventListener("beforeinput", onBeforeInput);
@@ -310,15 +371,19 @@ SimpleTest.waitForFocus(async () => {
      'nsIEditor.insertLineBreak() should add <div> element after <div> element when defaultParagraphSeparator is "div"');
   is(beforeInputEvents.length, 1,
      'nsIEditor.insertLineBreak() should cause "beforeinput" event once on contenteditable which has <div> element when defaultParagraphSeparator is "div"');
-  checkInputEvent(beforeInputEvents[0], "insertParagraph", 'in <div> element on HTMLEditor (when defaultParagraphSeparator is "div")');
+  checkInputEvent(beforeInputEvents[0], "insertParagraph",
+                  [{startContainer: selectionContainer, startOffset: 3,
+                    endContainer: selectionContainer, endOffset: 3}],
+                  'in <div> element on HTMLEditor (when defaultParagraphSeparator is "div")');
   is(inputEvents.length, 1,
      'nsIEditor.insertLineBreak() should cause "input" event once on contenteditable which has <div> element when defaultParagraphSeparator is "div"');
-  checkInputEvent(inputEvents[0], "insertParagraph", 'in <div> element on HTMLEditor (when defaultParagraphSeparator is "div")');
+  checkInputEvent(inputEvents[0], "insertParagraph", [], 'in <div> element on HTMLEditor (when defaultParagraphSeparator is "div")');
 
   contenteditable.innerHTML = "<pre>abcdef</pre>";
   contenteditable.focus();
   contenteditable.scrollTop;
-  selection.collapse(contenteditable.firstChild.firstChild, 3);
+  selectionContainer = contenteditable.firstChild.firstChild;
+  selection.collapse(selectionContainer, 3);
   beforeInputEvents = [];
   inputEvents = [];
   contenteditable.addEventListener("beforeinput", onBeforeInput);
@@ -330,10 +395,13 @@ SimpleTest.waitForFocus(async () => {
      'nsIEditor.insertLineBreak() should insert <br> element into <pre> element when defaultParagraphSeparator is "div"');
   is(beforeInputEvents.length, 1,
      'nsIEditor.insertLineBreak() should cause "beforeinput" event once on contenteditable which has <pre> element when defaultParagraphSeparator is "div"');
-  checkInputEvent(beforeInputEvents[0], "insertParagraph", 'in <pre> element on HTMLEditor (when defaultParagraphSeparator is "div")');
+  checkInputEvent(beforeInputEvents[0], "insertParagraph",
+                  [{startContainer: selectionContainer, startOffset: 3,
+                    endContainer: selectionContainer, endOffset: 3}],
+                  'in <pre> element on HTMLEditor (when defaultParagraphSeparator is "div")');
   is(inputEvents.length, 1,
      'nsIEditor.insertLineBreak() should cause "input" event once on contenteditable which has <pre> element when defaultParagraphSeparator is "div"');
-  checkInputEvent(inputEvents[0], "insertParagraph", 'in <pre> element on HTMLEditor (when defaultParagraphSeparator is "div")');
+  checkInputEvent(inputEvents[0], "insertParagraph", [], 'in <pre> element on HTMLEditor (when defaultParagraphSeparator is "div")');
 
   SimpleTest.finish();
 });

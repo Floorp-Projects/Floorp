@@ -99,6 +99,23 @@ SimpleTest.waitForFocus(async function() {
            'data of "beforeinput" event for position changing of absolute position should be null');
         is(aEvent.dataTransfer, null,
            'dataTransfer of "beforeinput" event for position changing of absolute position should be null');
+        let targetRanges = aEvent.getTargetRanges();
+        let selection = document.getSelection();
+        is(targetRanges.length, selection.rangeCount,
+           'getTargetRanges() of "beforeinput" event for position changing of absolute position should return selection ranges');
+        if (targetRanges.length === selection.rangeCount) {
+          for (let i = 0; i < selection.rangeCount; i++) {
+            let range = selection.getRangeAt(i);
+            is(targetRanges[i].startContainer, range.startContainer,
+               `startContainer of getTargetRanges()[${i}] of "beforeinput" event for position changing of absolute position does not match`);
+            is(targetRanges[i].startOffset, range.startOffset,
+               `startOffset of getTargetRanges()[${i}] of "beforeinput" event for position changing of absolute position does not match`);
+            is(targetRanges[i].endContainer, range.endContainer,
+               `endContainer of getTargetRanges()[${i}] of "beforeinput" event for position changing of absolute position does not match`);
+            is(targetRanges[i].endOffset, range.endOffset,
+               `endOffset of getTargetRanges()[${i}] of "beforeinput" event for position changing of absolute position does not match`);
+          }
+        }
       }
       function onInput(aEvent) {
         inputFired = true;
@@ -118,6 +135,8 @@ SimpleTest.waitForFocus(async function() {
            'data of "input" event for position changing of absolute position should be null');
         is(aEvent.dataTransfer, null,
            'dataTransfer of "input" event for position changing of absolute position should be null');
+        is(aEvent.getTargetRanges().length, 0,
+           'getTargetRanges() of "input" event for position changing of absolute position should return empty array');
       }
 
       content.addEventListener("beforeinput", onBeforeInput);

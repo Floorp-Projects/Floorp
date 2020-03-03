@@ -83,6 +83,8 @@ async function confirmClear(selector) {
          'data value of "beforeinput" should be empty string');
       is(event.dataTransfer, null,
          'dataTransfer value of "beforeinput" should be null');
+      is(event.getTargetRanges().length, 0,
+         'getTargetRanges() of "beforeinput" event should return empty array');
     }, {once: true});
     element.addEventListener("input", (event) => {
       ok(beforeInputFired, `"beforeinput" event should've been fired before "input" on <${element.tagName} type="${element.type}">`);
@@ -98,6 +100,8 @@ async function confirmClear(selector) {
          'data value of "input" should be empty string');
       is(event.dataTransfer, null,
          'dataTransfer value of "input" should be null');
+      is(event.getTargetRanges().length, 0,
+         'getTargetRanges() of "input" should return empty array');
       resolve();
     }, {once: true})
   });

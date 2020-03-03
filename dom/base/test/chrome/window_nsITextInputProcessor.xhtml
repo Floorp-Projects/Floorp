@@ -70,6 +70,7 @@ function checkInputEvent(aEvent, aCancelable, aIsComposing, aInputType, aData, a
   is(aEvent.inputType, aInputType, `${aDescription}inputType of "${aEvent.type}" event should be "${aInputType}"`);
   is(aEvent.data, aData, `${aDescription}data of "${aEvent.type}" event should be "${aData}"`);
   is(aEvent.dataTransfer, null, `${aDescription}dataTransfer of "${aEvent.type}" event should be null`);
+  is(aEvent.getTargetRanges().length, 0, `${aDescription}getTargetRanges() of "${aEvent.type}" event should return empty array`);
 }
 
 const kIsMac = (navigator.platform.indexOf("Mac") == 0);

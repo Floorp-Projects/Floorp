@@ -469,6 +469,7 @@ function runTest() {
         is(event.inputType, "insertReplacementText", `${testNum} inputType of "beforeinput" event should be "insertReplacementText"`);
         is(event.data, "Google", `${testNum} data of "beforeinput" event should be "Google"`);
         is(event.dataTransfer, null, `${testNum} dataTransfer of "beforeinput" event should be null`);
+        is(event.getTargetRanges().length, 0, `${testNum} getTargetRanges() of "beforeinput" event should be empty array`);
       }, {once: true});
       let inputFired = false;
       input.addEventListener("input", function(event) {
@@ -480,6 +481,7 @@ function runTest() {
         is(event.inputType, "insertReplacementText", `${testNum} inputType of "input" event should be "insertReplacementText"`);
         is(event.data, "Google", `${testNum} data of "input" event should be "Google"`);
         is(event.dataTransfer, null, `${testNum} dataTransfer of "input" event should be null`);
+        is(event.getTargetRanges().length, 0, `${testNum} getTargetRanges() of "input" event should be empty array`);
         checkForm("Google");
       }, {once: true});
 
