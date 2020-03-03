@@ -350,7 +350,7 @@ class AudioCallbackDriver::FallbackWrapper : public GraphInterface {
                               mStateComputedTime);
   }
 
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(FallbackWrapper, override);
+  NS_DECL_THREADSAFE_ISUPPORTS
 
   /* Proxied SystemClockDriver methods */
   void SetState(GraphTime aIterationStart, GraphTime aIterationEnd,
@@ -474,6 +474,8 @@ class AudioCallbackDriver::FallbackWrapper : public GraphInterface {
   GraphTime mIterationEnd;
   GraphTime mStateComputedTime;
 };
+
+NS_IMPL_ISUPPORTS0(AudioCallbackDriver::FallbackWrapper)
 
 AudioCallbackDriver::AudioCallbackDriver(
     GraphInterface* aGraphInterface, GraphDriver* aPreviousDriver,
