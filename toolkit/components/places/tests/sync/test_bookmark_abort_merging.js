@@ -5,6 +5,46 @@ var { AsyncShutdown } = ChromeUtils.import(
   "resource://gre/modules/AsyncShutdown.jsm"
 );
 
+add_task(async function test_transaction_in_progress() {
+  let buf = await openMirror("transaction_in_progress");
+
+  await storeRecords(buf, [
+    {
+      id: "menu",
+      parentid: "places",
+      type: "folder",
+      children: ["bookmarkAAAA"],
+    },
+    {
+      id: "bookmarkAAAA",
+      parentid: "menu",
+      type: "bookmark",
+      title: "A",
+      bmkUri: "http://example.com/a",
+    },
+  ]);
+
+  // This transaction should block merging until the transaction is committed.
+  info("Open transaction on Places connection");
+  await buf.db.execute("BEGIN EXCLUSIVE");
+
+  await Assert.rejects(
+    buf.apply(),
+    ex => ex.name == "MergeConflictError",
+    "Should not merge when a transaction is in progress"
+  );
+
+  info("Commit open transaction");
+  await buf.db.execute("COMMIT");
+
+  info("Merging should succeed after committing");
+  await buf.apply();
+
+  await buf.finalize();
+  await PlacesUtils.bookmarks.eraseEverything();
+  await PlacesSyncUtils.bookmarks.reset();
+});
+
 add_task(async function test_abort_store() {
   let buf = await openMirror("abort_store");
 
