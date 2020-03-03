@@ -289,8 +289,9 @@ class RemoteSettingsClient extends EventEmitter {
   async getLastModified() {
     let timestamp = -1;
     try {
-      const collection = await this.openCollection();
-      timestamp = await collection.db.getLastModified();
+      const kintoCollection = await this.openCollection();
+      timestamp = await kintoCollection.db.getLastModified();
+      await kintoCollection.db.close();
     } catch (err) {
       console.warn(
         `Error retrieving the getLastModified timestamp from ${
@@ -380,6 +381,8 @@ class RemoteSettingsClient extends EventEmitter {
       });
     }
 
+    await kintoCollection.db.close();
+
     // Filter the records based on `this.filterFunc` results.
     return this._filterEntries(data);
   }
@@ -433,6 +436,7 @@ class RemoteSettingsClient extends EventEmitter {
     const startedAt = new Date();
     let reportStatus = null;
     let thrownError = null;
+    let kintoCollection = null;
     try {
       // If network is offline, we can't synchronize.
       if (Utils.isOffline) {
@@ -440,7 +444,7 @@ class RemoteSettingsClient extends EventEmitter {
       }
 
       // Synchronize remote data into a local DB using Kinto.
-      const kintoCollection = await this.openCollection();
+      kintoCollection = await this.openCollection();
       let collectionLastModified = await kintoCollection.db.getLastModified();
 
       // If there is no data currently in the collection, attempt to import
@@ -640,6 +644,9 @@ class RemoteSettingsClient extends EventEmitter {
       }
       throw e;
     } finally {
+      if (kintoCollection) {
+        await kintoCollection.db.close();
+      }
       const durationMilliseconds = new Date() - startedAt;
       // No error was reported, this is a success!
       if (reportStatus === null) {
