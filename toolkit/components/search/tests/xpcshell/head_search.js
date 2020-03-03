@@ -433,7 +433,7 @@ async function withGeoServer(
   let defaultBranch = Services.prefs.getDefaultBranch(
     SearchUtils.BROWSER_SEARCH_PREF
   );
-  let originalURL = defaultBranch.getCharPref(PREF_SEARCH_URL);
+  let originalURL = defaultBranch.getCharPref(PREF_SEARCH_URL, "");
   defaultBranch.setCharPref(PREF_SEARCH_URL, url);
   // Set a bogus user value so that running the test ensures we ignore it.
   Services.prefs.setCharPref(
