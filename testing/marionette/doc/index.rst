@@ -61,9 +61,8 @@ Communication
 The mailing list for Marionette discussion is
 tools-marionette@lists.mozilla.org (`subscribe`_, `archive`_).
 
-If you prefer real-time chat, there is often someone in the #interop IRC
-channel on irc.mozilla.org.  Don’t ask if you may ask a question; just go ahead
-and ask, and please wait for an answer as we might not be in your timezone.
+If you prefer real-time chat, ask your questions
+on `#interop:mozilla.org <https://chat.mozilla.org/#/room/#interop:mozilla.org>`__.
 
 .. _subscribe: https://lists.mozilla.org/listinfo/tools-marionette
 .. _archive: https://lists.mozilla.org/pipermail/tools-marionette/
