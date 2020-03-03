@@ -1041,7 +1041,7 @@ void IDBObjectStore::ClearCloneReadInfo(StructuredCloneReadInfo& aReadInfo) {
 
 // static
 bool IDBObjectStore::DeserializeValue(JSContext* aCx,
-                                      StructuredCloneReadInfo& aCloneReadInfo,
+                                      StructuredCloneReadInfo&& aCloneReadInfo,
                                       JS::MutableHandle<JS::Value> aValue) {
   MOZ_ASSERT(aCx);
 
