@@ -13,6 +13,11 @@ ChromeUtils.defineModuleGetter(
 );
 ChromeUtils.defineModuleGetter(
   this,
+  "DownloadPaths",
+  "resource://gre/modules/DownloadPaths.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
   "ExtensionControlledPopup",
   "resource:///modules/ExtensionControlledPopup.jsm"
 );
@@ -1310,10 +1315,29 @@ this.tabs = class extends ExtensionAPI {
             return Promise.reject({ message: "Not supported on Mac OS X" });
           }
 
+          let filename;
+          if (
+            pageSettings.toFileName !== null &&
+            pageSettings.toFileName != ""
+          ) {
+            filename = pageSettings.toFileName;
+          } else if (activeTab.linkedBrowser.contentTitle != "") {
+            filename = activeTab.linkedBrowser.contentTitle;
+          } else {
+            let url = new URL(activeTab.linkedBrowser.currentURI.spec);
+            let path = decodeURIComponent(url.pathname);
+            path = path.replace(/\/$/, "");
+            filename = path.split("/").pop();
+            if (filename == "") {
+              filename = url.hostname;
+            }
+          }
+          filename = DownloadPaths.sanitize(filename);
+
           picker.init(activeTab.ownerGlobal, title, Ci.nsIFilePicker.modeSave);
           picker.appendFilter("PDF", "*.pdf");
           picker.defaultExtension = "pdf";
-          picker.defaultString = activeTab.linkedBrowser.contentTitle + ".pdf";
+          picker.defaultString = filename;
 
           return new Promise(resolve => {
             picker.open(function(retval) {

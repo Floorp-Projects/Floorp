@@ -3,6 +3,7 @@
 "use strict";
 
 async function testReturnStatus(expectedStatus) {
+  // Test that tabs.saveAsPDF() returns the correct status
   let tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
     "http://example.net/"
@@ -43,7 +44,8 @@ async function testReturnStatus(expectedStatus) {
   }
 
   MockFilePicker.displayDirectory = saveDir;
-  MockFilePicker.showCallback = function(fp) {
+
+  MockFilePicker.showCallback = fp => {
     MockFilePicker.setFiles([saveFile]);
     MockFilePicker.filterIndex = 0; // *.* - all file extensions
   };
@@ -58,11 +60,11 @@ async function testReturnStatus(expectedStatus) {
     background: async function() {
       let pageSettings = {};
 
-      let status = await browser.tabs.saveAsPDF(pageSettings);
-
       let expected = chrome.runtime.getManifest().description;
 
-      browser.test.assertEq(expected, status, "saveAsPDF " + expected);
+      let status = await browser.tabs.saveAsPDF(pageSettings);
+
+      browser.test.assertEq(expected, status, "Got expected status");
 
       browser.test.notifyPass("tabs.saveAsPDF");
     },
@@ -78,7 +80,7 @@ async function testReturnStatus(expectedStatus) {
       encoding: "utf-8",
       bytes: 4,
     });
-    is(text, "%PDF", "Got correct magic number");
+    is(text, "%PDF", "Got correct magic number - %PDF");
   }
 
   MockFilePicker.cleanup();
@@ -110,4 +112,96 @@ add_task(async function testSaveAsPDF_not_saved() {
 
 add_task(async function testSaveAsPDF_not_replaced() {
   await testReturnStatus("not_replaced");
+});
+
+async function testFileName(expectedFileName) {
+  // Test that tabs.saveAsPDF() saves with the correct filename
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "http://example.net/"
+  );
+
+  let saveDir = FileUtils.getDir(
+    "TmpD",
+    [`testSaveDir-${Math.random()}`],
+    true
+  );
+
+  let saveFile = saveDir.clone();
+  saveFile.append(expectedFileName);
+  if (saveFile.exists()) {
+    saveFile.remove(false);
+  }
+
+  let MockFilePicker = SpecialPowers.MockFilePicker;
+  MockFilePicker.init(window);
+
+  MockFilePicker.returnValue = MockFilePicker.returnOK;
+
+  MockFilePicker.displayDirectory = saveDir;
+
+  MockFilePicker.showCallback = fp => {
+    is(
+      fp.defaultString,
+      expectedFileName,
+      "Got expected FilePicker defaultString"
+    );
+
+    is(fp.defaultExtension, "pdf", "Got expected FilePicker defaultExtension");
+
+    let file = saveDir.clone();
+    file.append(fp.defaultString);
+    MockFilePicker.setFiles([file]);
+  };
+
+  let manifest = {
+    description: expectedFileName,
+  };
+
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: manifest,
+
+    background: async function() {
+      let pageSettings = {};
+
+      let expected = chrome.runtime.getManifest().description;
+
+      if (expected == "definedFileName") {
+        pageSettings.toFileName = expected;
+      }
+
+      let status = await browser.tabs.saveAsPDF(pageSettings);
+
+      browser.test.assertEq("saved", status, "Got expected status");
+
+      browser.test.notifyPass("tabs.saveAsPDF");
+    },
+  });
+
+  await extension.startup();
+  await extension.awaitFinish("tabs.saveAsPDF");
+  await extension.unload();
+
+  // Check that first four bytes of saved PDF file are "%PDF"
+  let text = await OS.File.read(saveFile.path, {
+    encoding: "utf-8",
+    bytes: 4,
+  });
+  is(text, "%PDF", "Got correct magic number - %PDF");
+
+  MockFilePicker.cleanup();
+
+  saveDir.remove(true);
+
+  BrowserTestUtils.removeTab(tab);
+}
+
+add_task(async function testSaveAsPDF_defined_filename() {
+  await testFileName("definedFileName");
+});
+
+add_task(async function testSaveAsPDF_undefined_filename() {
+  // If pageSettings.toFileName is undefined, the expected filename will be
+  // the test page title "mochitest index /" with the "/" replaced by "_".
+  await testFileName("mochitest index _");
 });
