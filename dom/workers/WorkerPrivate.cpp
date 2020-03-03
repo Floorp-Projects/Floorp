@@ -1330,7 +1330,12 @@ nsresult WorkerPrivate::SetCSPFromHeaderValues(
   // is a SystemPrincipal) then we fall back and use the
   // base URI as selfURI for CSP.
   nsCOMPtr<nsIURI> selfURI;
-  mLoadInfo.mPrincipal->GetURI(getter_AddRefs(selfURI));
+  // Its not recommended to use the BasePrincipal to get the URI
+  // but in this case we need to make an exception
+  auto* basePrin = BasePrincipal::Cast(mLoadInfo.mPrincipal);
+  if (basePrin) {
+    basePrin->GetURI(getter_AddRefs(selfURI));
+  }
   if (!selfURI) {
     selfURI = mLoadInfo.mBaseURI;
   }
