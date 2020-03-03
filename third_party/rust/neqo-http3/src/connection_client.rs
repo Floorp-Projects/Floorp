@@ -709,6 +709,18 @@ mod tests {
         0x43, 0xd3, 0xc1,
     ];
 
+    const HTTP_HEADER_FRAME_0: &[u8] = &[0x01, 0x06, 0x00, 0x00, 0xd9, 0x54, 0x01, 0x30];
+
+    // The response header from HTTP_HEADER_FRAME (0x01, 0x06, 0x00, 0x00, 0xd9, 0x54, 0x01, 0x30) are
+    // decoded into:
+    fn check_response_header_0(header: Vec<Header>) {
+        let expected_response_header_1 = vec![
+            (String::from(":status"), String::from("200")),
+            (String::from("content-length"), String::from("0")),
+        ];
+        assert_eq!(header, expected_response_header_1);
+    }
+
     const HTTP_RESPONSE_1: &[u8] = &[
         // headers
         0x01, 0x06, 0x00, 0x00, 0xd9, 0x54, 0x01, 0x37, // the first data frame
@@ -2317,11 +2329,10 @@ mod tests {
             .encoder
             .encode_header_block(&headers, request_stream_id);
         let hframe = HFrame::Headers {
-            len: encoded_headers.len() as u64,
+            header_block: encoded_headers.to_vec(),
         };
         let mut d = Encoder::default();
         hframe.encode(&mut d);
-        d.encode(&encoded_headers);
         let d_frame = HFrame::Data { len: 3 };
         d_frame.encode(&mut d);
         d.encode(&[0x61, 0x62, 0x63]);
@@ -2362,6 +2373,60 @@ mod tests {
             }
         }
         assert!(recv_header && recv_data);
+    }
+
+    #[test]
+    fn test_read_frames_header_blocked_with_fin_after_headers() {
+        let (mut hconn, mut server, request_stream_id) = connect_and_send_request(true);
+
+        server.encoder.set_max_capacity(100).unwrap();
+        server.encoder.set_max_blocked_streams(100).unwrap();
+
+        let headers = vec![
+            (String::from(":status"), String::from("200")),
+            (String::from("my-header"), String::from("my-header")),
+            (String::from("content-length"), String::from("0")),
+        ];
+        let encoded_headers = server
+            .encoder
+            .encode_header_block(&headers, request_stream_id);
+        let hframe = HFrame::Headers {
+            header_block: encoded_headers.to_vec(),
+        };
+        let mut d = Encoder::default();
+        hframe.encode(&mut d);
+
+        let _ = server.conn.stream_send(request_stream_id, &d[..]);
+        server.conn.stream_close_send(request_stream_id).unwrap();
+
+        // Send response before sending encoder instructions.
+        let out = server.conn.process(None, now());
+        let _out = hconn.process(out.dgram(), now());
+
+        let header_ready_event = |e| matches!(e, Http3ClientEvent::HeaderReady { .. });
+        assert!(!hconn.events().any(header_ready_event));
+
+        // Send encoder instructions to unblock the stream.
+        server.encoder.send(&mut server.conn).unwrap();
+
+        let out = server.conn.process(None, now());
+        let _out = hconn.process(out.dgram(), now());
+        let _out = hconn.process(None, now());
+
+        let mut recv_header = false;
+        // Now the stream is unblocked. After headers we will receive a fin.
+        while let Some(e) = hconn.next_event() {
+            if let Http3ClientEvent::HeaderReady { stream_id } = e {
+                assert_eq!(stream_id, request_stream_id);
+                let (h, fin) = hconn.read_response_headers(stream_id).unwrap();
+                assert_eq!(h, headers);
+                assert_eq!(fin, true);
+                recv_header = true;
+            } else {
+                panic!("event {:?}", e);
+            }
+        }
+        assert!(recv_header);
     }
 
     fn check_control_qpack_request_streams_resumption(
@@ -2906,5 +2971,172 @@ mod tests {
             Http3State::Closing(CloseError::Application(265)),
             ENCODER_STREAM_DATA_WITH_CAP_INSTRUCTION,
         );
+    }
+
+    #[test]
+    fn test_trailers_with_fin_after_headers() {
+        // Make a new connection.
+        let (mut client, mut server, request_stream_id) = connect_and_send_request(true);
+
+        // Send HEADER frame.
+        let _ = server
+            .conn
+            .stream_send(request_stream_id, HTTP_HEADER_FRAME_0);
+
+        let out = server.conn.process(None, now());
+        client.process(out.dgram(), now());
+
+        // Check response headers.
+        let mut response_headers = false;
+        while let Some(e) = client.next_event() {
+            if let Http3ClientEvent::HeaderReady { stream_id } = e {
+                assert_eq!(stream_id, request_stream_id);
+                let (h, fin) = client.read_response_headers(stream_id).unwrap();
+                check_response_header_0(h);
+                assert_eq!(fin, false);
+                response_headers = true;
+            }
+        }
+        assert!(response_headers);
+
+        // Send trailers
+        let _ = server
+            .conn
+            .stream_send(request_stream_id, HTTP_HEADER_FRAME_0);
+        server.conn.stream_close_send(request_stream_id).unwrap();
+
+        let out = server.conn.process(None, now());
+        client.process(out.dgram(), now());
+
+        let events: Vec<Http3ClientEvent> = client.events().collect();
+
+        // We already had HeaderReady
+        let header_ready: fn(&Http3ClientEvent) -> _ =
+            |e| matches!(*e, Http3ClientEvent::HeaderReady { .. });
+        assert!(!events.clone().iter().any(header_ready));
+
+        // Check that we have a DataReady event. Reading from the stream will return fin=true.
+        let data_readable: fn(&Http3ClientEvent) -> _ =
+            |e| matches!(*e, Http3ClientEvent::DataReadable { .. });
+        assert!(events.iter().any(data_readable));
+        let mut buf = [0u8; 100];
+        let (len, fin) = client
+            .read_response_data(now(), request_stream_id, &mut buf)
+            .unwrap();
+        assert_eq!(0, len);
+        assert_eq!(fin, true)
+    }
+
+    #[test]
+    fn test_trailers_with_later_fin_after_headers() {
+        // Make a new connection.
+        let (mut client, mut server, request_stream_id) = connect_and_send_request(true);
+
+        // Send HEADER frame.
+        let _ = server
+            .conn
+            .stream_send(request_stream_id, HTTP_HEADER_FRAME_0);
+
+        let out = server.conn.process(None, now());
+        client.process(out.dgram(), now());
+
+        // Check response headers.
+        let mut response_headers = false;
+        while let Some(e) = client.next_event() {
+            if let Http3ClientEvent::HeaderReady { stream_id } = e {
+                assert_eq!(stream_id, request_stream_id);
+                let (h, fin) = client.read_response_headers(stream_id).unwrap();
+                check_response_header_0(h);
+                assert_eq!(fin, false);
+                response_headers = true;
+            }
+        }
+        assert!(response_headers);
+
+        // Send trailers
+        let _ = server
+            .conn
+            .stream_send(request_stream_id, HTTP_HEADER_FRAME_0);
+
+        let out = server.conn.process(None, now());
+        client.process(out.dgram(), now());
+
+        // Check that we do not have a DataReady event.
+        let data_readable = |e| matches!(e, Http3ClientEvent::DataReadable { .. });
+        assert!(!client.events().any(data_readable));
+
+        server.conn.stream_close_send(request_stream_id).unwrap();
+
+        let out = server.conn.process(None, now());
+        client.process(out.dgram(), now());
+
+        let events: Vec<Http3ClientEvent> = client.events().collect();
+
+        // We already had HeaderReady
+        let header_ready: fn(&Http3ClientEvent) -> _ =
+            |e| matches!(*e, Http3ClientEvent::HeaderReady { .. });
+        assert!(!events.clone().iter().any(header_ready));
+
+        // Check that we have a DataReady event. Reading from the stream will return fin=true.
+        let data_readable: fn(&Http3ClientEvent) -> _ =
+            |e| matches!(*e, Http3ClientEvent::DataReadable { .. });
+        assert!(events.iter().any(data_readable));
+        let mut buf = [0u8; 100];
+        let (len, fin) = client
+            .read_response_data(now(), request_stream_id, &mut buf)
+            .unwrap();
+        assert_eq!(0, len);
+        assert_eq!(fin, true);
+    }
+
+    #[test]
+    fn test_data_after_trailers_after_headers() {
+        // Make a new connection.
+        let (mut client, mut server, request_stream_id) = connect_and_send_request(true);
+
+        // Send HEADER frame.
+        let _ = server
+            .conn
+            .stream_send(request_stream_id, HTTP_HEADER_FRAME_0);
+
+        let out = server.conn.process(None, now());
+        client.process(out.dgram(), now());
+
+        // Check response headers.
+        let mut response_headers = false;
+        while let Some(e) = client.next_event() {
+            if let Http3ClientEvent::HeaderReady { stream_id } = e {
+                assert_eq!(stream_id, request_stream_id);
+                let (h, fin) = client.read_response_headers(stream_id).unwrap();
+                check_response_header_0(h);
+                assert_eq!(fin, false);
+                response_headers = true;
+            }
+        }
+        assert!(response_headers);
+
+        // Send trailers
+        let _ = server
+            .conn
+            .stream_send(request_stream_id, HTTP_HEADER_FRAME_0);
+
+        let out = server.conn.process(None, now());
+        client.process(out.dgram(), now());
+        // Check that we do not have a DataReady event.
+        let data_readable = |e| matches!(e, Http3ClientEvent::DataReadable { .. });
+        assert!(!client.events().any(data_readable));
+
+        // Send Data frame.
+        let _ = server.conn.stream_send(
+            request_stream_id,
+            &[
+                // data frame
+                0x0, 0x3, 0x61, 0x62, 0x63,
+            ],
+        );
+
+        let out = server.conn.process(None, now());
+        client.process(out.dgram(), now());
+        assert_closed(&client, Error::HttpFrameUnexpected);
     }
 }
