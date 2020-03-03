@@ -168,15 +168,15 @@ class MediaEncoder {
   nsresult GetEncodedData(nsTArray<nsTArray<uint8_t>>* aOutputBufs);
 
   /**
-   * Return true if MediaEncoder has been shutdown. Reasons are encoding
+   * Asserts that Shutdown() has been called. Reasons are encoding
    * complete, encounter an error, or being canceled by its caller.
    */
-  bool IsShutdown();
+  void AssertShutdownCalled() { MOZ_ASSERT(mShutdownPromise); }
 
   /**
    * Cancels the encoding and shuts down the encoder using Shutdown().
    */
-  RefPtr<GenericNonExclusivePromise> Cancel();
+  RefPtr<GenericNonExclusivePromise::AllPromiseType> Cancel();
 
   bool HasError();
 
@@ -239,7 +239,7 @@ class MediaEncoder {
    * Shuts down the MediaEncoder and cleans up track encoders.
    * Listeners will be notified of the shutdown unless we were Cancel()ed first.
    */
-  RefPtr<GenericNonExclusivePromise> Shutdown();
+  RefPtr<GenericNonExclusivePromise::AllPromiseType> Shutdown();
 
   /**
    * Sets mError to true, notifies listeners of the error if mError changed,
@@ -282,9 +282,8 @@ class MediaEncoder {
   bool mInitialized;
   bool mCompleted;
   bool mError;
-  bool mShutdown;
   // Set when shutdown starts.
-  RefPtr<GenericNonExclusivePromise> mShutdownPromise;
+  RefPtr<GenericNonExclusivePromise::AllPromiseType> mShutdownPromise;
   // Get duration from create encoder, for logging purpose
   double GetEncodeTimeStamp() {
     TimeDuration decodeTime;
