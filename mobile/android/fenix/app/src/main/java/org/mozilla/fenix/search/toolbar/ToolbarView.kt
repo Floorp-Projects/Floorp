@@ -159,6 +159,10 @@ class ToolbarView(
                 view.setSearchTerms(searchState.session?.searchTerms.orEmpty())
             }
 
+            // We must trigger an onTextChanged so when search terms are set when transitioning to `editMode`
+            // we have the most up to date text
+            interactor.onTextChanged(view.url.toString())
+
             view.editMode()
             isInitialized = true
         }

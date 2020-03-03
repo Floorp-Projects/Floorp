@@ -81,11 +81,13 @@ class DefaultSearchController(
     override fun handleTextChanged(text: String) {
         // Display the search shortcuts on each entry of the search fragment (see #5308)
         val textMatchesCurrentUrl = store.state.session?.url ?: "" == text
+        val textMatchesCurrentSearch = store.state.session?.searchTerms ?: "" == text
 
         store.dispatch(SearchFragmentAction.UpdateQuery(text))
         store.dispatch(
             SearchFragmentAction.ShowSearchShortcutEnginePicker(
-                (textMatchesCurrentUrl || text.isEmpty()) && context.settings().shouldShowSearchShortcuts
+                (textMatchesCurrentUrl || textMatchesCurrentSearch || text.isEmpty()) &&
+                    context.settings().shouldShowSearchShortcuts
             )
         )
         store.dispatch(
