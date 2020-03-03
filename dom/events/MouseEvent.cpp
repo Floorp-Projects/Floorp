@@ -320,10 +320,6 @@ float MouseEvent::MozPressure() const {
   return mEvent->AsMouseEventBase()->mPressure;
 }
 
-bool MouseEvent::HitCluster() const {
-  return mEvent->AsMouseEventBase()->mHitCluster;
-}
-
 uint16_t MouseEvent::MozInputSource() const {
   return mEvent->AsMouseEventBase()->mInputSource;
 }
