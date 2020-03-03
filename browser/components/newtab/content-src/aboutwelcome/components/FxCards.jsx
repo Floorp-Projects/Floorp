@@ -8,6 +8,46 @@ import { OnboardingCard } from "../../asrouter/templates/OnboardingMessage/Onboa
 import { AboutWelcomeUtils } from "../../lib/aboutwelcome-utils";
 
 export class FxCards extends React.PureComponent {
+  constructor(props) {
+    super(props);
+
+    this.state = { flowParams: null };
+
+    this.fetchFxAFlowParams = this.fetchFxAFlowParams.bind(this);
+    this.onCardAction = this.onCardAction.bind(this);
+  }
+
+  componentDidUpdate() {
+    this.fetchFxAFlowParams();
+  }
+
+  componentDidMount() {
+    this.fetchFxAFlowParams();
+  }
+
+  async fetchFxAFlowParams() {
+    if (this.state.flowParams || !this.props.metricsFlowUri) {
+      return;
+    }
+
+    let flowParams;
+    try {
+      const response = await fetch(this.props.metricsFlowUri, {
+        credentials: "omit",
+      });
+      if (response.status === 200) {
+        const { deviceId, flowId, flowBeginTime } = await response.json();
+        flowParams = { deviceId, flowId, flowBeginTime };
+      } else {
+        console.error("Non-200 response", response); // eslint-disable-line no-console
+      }
+    } catch (e) {
+      flowParams = null;
+    }
+
+    this.setState({ flowParams });
+  }
+
   onCardAction(action) {
     let { type, data } = action;
     let UTMTerm = "utm_term_separate_welcome";
@@ -15,6 +55,16 @@ export class FxCards extends React.PureComponent {
     if (action.type === "OPEN_URL") {
       let url = new URL(action.data.args);
       addUtmParams(url, UTMTerm);
+
+      if (action.addFlowParams) {
+        url.searchParams.append("device_id", this.state.flowParams.deviceId);
+        url.searchParams.append("flow_id", this.state.flowParams.flowId);
+        url.searchParams.append(
+          "flow_begin_time",
+          this.state.flowParams.flowBeginTime
+        );
+      }
+
       data = { ...data, args: url.toString() };
     }
 

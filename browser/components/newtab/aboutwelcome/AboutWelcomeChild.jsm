@@ -45,6 +45,10 @@ class AboutWelcomeChild extends JSWindowActorChild {
       defineAs: "AWGetStartupData",
     });
 
+    Cu.exportFunction(this.AWGetFxAMetricsFlowURI.bind(this), window, {
+      defineAs: "AWGetFxAMetricsFlowURI",
+    });
+
     Cu.exportFunction(this.AWSendEventTelemetry.bind(this), window, {
       defineAs: "AWSendEventTelemetry",
     });
@@ -54,6 +58,12 @@ class AboutWelcomeChild extends JSWindowActorChild {
     });
   }
 
+  wrapPromise(promise) {
+    return new this.contentWindow.Promise((resolve, reject) =>
+      promise.then(resolve, reject)
+    );
+  }
+
   /**
    * Send initial data to page including experiment information
    */
@@ -61,6 +71,10 @@ class AboutWelcomeChild extends JSWindowActorChild {
     // TODO: Fetch this from Experiments
     const experimentData = {};
     return Cu.cloneInto(experimentData, this.contentWindow);
+  }
+
+  AWGetFxAMetricsFlowURI() {
+    return this.wrapPromise(this.sendQuery("AWPage:FXA_METRICS_FLOW_URI"));
   }
 
   /**

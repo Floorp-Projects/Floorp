@@ -12,6 +12,7 @@ const { XPCOMUtils } = ChromeUtils.import(
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   MigrationUtils: "resource:///modules/MigrationUtils.jsm",
+  FxAccounts: "resource://gre/modules/FxAccounts.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(this, "log", () => {
@@ -38,9 +39,13 @@ class AboutWelcomeParent extends JSWindowActorParent {
           MigrationUtils.MIGRATION_ENTRYPOINT_NEWTAB,
         ]);
         break;
+      case "AWPage:FXA_METRICS_FLOW_URI":
+        return FxAccounts.config.promiseMetricsFlowURI("aboutwelcome");
       default:
         log.debug(`Unexpected event ${type} was not handled.`);
     }
+
+    return undefined;
   }
 
   /**
@@ -55,9 +60,10 @@ class AboutWelcomeParent extends JSWindowActorParent {
     if (this.manager.rootFrameLoader) {
       browser = this.manager.rootFrameLoader.ownerElement;
       window = browser.ownerGlobal;
-      this.onContentMessage(name, data, browser, window);
-    } else {
-      log.warn(`Not handling ${name} because the browser doesn't exist.`);
+      return this.onContentMessage(name, data, browser, window);
     }
+
+    log.warn(`Not handling ${name} because the browser doesn't exist.`);
+    return null;
   }
 }
