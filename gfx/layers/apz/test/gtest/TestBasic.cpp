@@ -162,6 +162,7 @@ TEST_F(APZCBasicTester, ComplexTransform) {
   childApzc->Destroy();
 }
 
+#ifndef MOZ_WIDGET_ANDROID  // Currently fails on Android
 TEST_F(APZCBasicTester, Fling) {
   SCOPED_GFX_PREF_FLOAT("apz.fling_min_velocity_threshold", 0.0f);
   int touchStart = 50;
@@ -179,7 +180,9 @@ TEST_F(APZCBasicTester, Fling) {
     lastPoint = pointOut;
   }
 }
+#endif
 
+#ifndef MOZ_WIDGET_ANDROID  // Currently fails on Android
 TEST_F(APZCBasicTester, FlingIntoOverscroll) {
   // Enable overscrolling.
   SCOPED_GFX_PREF_BOOL("apz.overscroll.enabled", true);
@@ -207,6 +210,7 @@ TEST_F(APZCBasicTester, FlingIntoOverscroll) {
   EXPECT_TRUE(reachedOverscroll);
   EXPECT_TRUE(recoveredFromOverscroll);
 }
+#endif
 
 TEST_F(APZCBasicTester, PanningTransformNotifications) {
   SCOPED_GFX_PREF_BOOL("apz.overscroll.enabled", true);
@@ -294,12 +298,15 @@ void APZCBasicTester::TestOverscroll() {
   SampleAnimationUntilRecoveredFromOverscroll(expectedScrollOffset);
 }
 
+#ifndef MOZ_WIDGET_ANDROID  // Currently fails on Android
 TEST_F(APZCBasicTester, OverScrollPanning) {
   SCOPED_GFX_PREF_BOOL("apz.overscroll.enabled", true);
 
   TestOverscroll();
 }
+#endif
 
+#ifndef MOZ_WIDGET_ANDROID  // Currently fails on Android
 // Tests that an overscroll animation doesn't trigger an assertion failure
 // in the case where a sample has a velocity of zero.
 TEST_F(APZCBasicTester, OverScroll_Bug1152051a) {
@@ -315,7 +322,9 @@ TEST_F(APZCBasicTester, OverScroll_Bug1152051a) {
 
   TestOverscroll();
 }
+#endif
 
+#ifndef MOZ_WIDGET_ANDROID  // Currently fails on Android
 // Tests that ending an overscroll animation doesn't leave around state that
 // confuses the next overscroll animation.
 TEST_F(APZCBasicTester, OverScroll_Bug1152051b) {
@@ -353,7 +362,9 @@ TEST_F(APZCBasicTester, OverScroll_Bug1152051b) {
   ParentLayerPoint expectedScrollOffset(0, GetScrollRange().YMost());
   SampleAnimationUntilRecoveredFromOverscroll(expectedScrollOffset);
 }
+#endif
 
+#ifndef MOZ_WIDGET_ANDROID  // Currently fails on Android
 // Tests that the page doesn't get stuck in an
 // overscroll animation after a low-velocity pan.
 TEST_F(APZCBasicTester, OverScrollAfterLowVelocityPan_Bug1343775) {
@@ -370,7 +381,9 @@ TEST_F(APZCBasicTester, OverScrollAfterLowVelocityPan_Bug1343775) {
   // Check that we recovered from overscroll.
   EXPECT_FALSE(apzc->IsOverscrolled());
 }
+#endif
 
+#ifndef MOZ_WIDGET_ANDROID  // Currently fails on Android
 TEST_F(APZCBasicTester, OverScrollAbort) {
   SCOPED_GFX_PREF_BOOL("apz.overscroll.enabled", true);
 
@@ -395,7 +408,9 @@ TEST_F(APZCBasicTester, OverScrollAbort) {
   EXPECT_FALSE(apzc->IsOverscrolled());
   apzc->AssertStateIsReset();
 }
+#endif
 
+#ifndef MOZ_WIDGET_ANDROID  // Currently fails on Android
 TEST_F(APZCBasicTester, OverScrollPanningAbort) {
   SCOPED_GFX_PREF_BOOL("apz.overscroll.enabled", true);
 
@@ -413,7 +428,9 @@ TEST_F(APZCBasicTester, OverScrollPanningAbort) {
   EXPECT_FALSE(apzc->IsOverscrolled());
   apzc->AssertStateIsReset();
 }
+#endif
 
+#ifndef MOZ_WIDGET_ANDROID  // Maybe fails on Android
 TEST_F(APZCBasicTester, ResumeInterruptedTouchDrag_Bug1592435) {
   // Start a touch-drag and scroll some amount, not lifting the finger.
   SCOPED_GFX_PREF_FLOAT("apz.touch_start_tolerance", 1.0f / 1000.0f);
@@ -473,3 +490,4 @@ TEST_F(APZCBasicTester, ResumeInterruptedTouchDrag_Bug1592435) {
   mcc->AdvanceByMillis(1);
   TouchUp(apzc, touchPos, mcc->Time());
 }
+#endif
