@@ -229,7 +229,7 @@ nsSize nsBox::GetXULMinSize(nsBoxLayoutState& aState) {
 
   AddBorderAndPadding(min);
   bool widthSet, heightSet;
-  nsIFrame::AddXULMinSize(this, min, widthSet, heightSet);
+  nsIFrame::AddXULMinSize(aState, this, min, widthSet, heightSet);
   return min;
 }
 
@@ -421,30 +421,28 @@ static nscoord GetScrollbarWidthNoTheme(nsIFrame* aBox) {
   }
 }
 
-bool nsIFrame::AddXULMinSize(nsIFrame* aBox,
+bool nsIFrame::AddXULMinSize(nsBoxLayoutState& aState, nsIFrame* aBox,
                              nsSize& aSize, bool& aWidthSet, bool& aHeightSet) {
   aWidthSet = false;
   aHeightSet = false;
 
   bool canOverride = true;
 
-  nsPresContext* pc = aBox->PresContext();
-
   // See if a native theme wants to supply a minimum size.
   const nsStyleDisplay* display = aBox->StyleDisplay();
   if (display->HasAppearance()) {
-    nsITheme* theme = pc->GetTheme();
-    if (theme && theme->ThemeSupportsWidget(pc, aBox,
+    nsITheme* theme = aState.PresContext()->GetTheme();
+    if (theme && theme->ThemeSupportsWidget(aState.PresContext(), aBox,
                                             display->mAppearance)) {
       LayoutDeviceIntSize size;
-      theme->GetMinimumWidgetSize(pc, aBox,
+      theme->GetMinimumWidgetSize(aState.PresContext(), aBox,
                                   display->mAppearance, &size, &canOverride);
       if (size.width) {
-        aSize.width = pc->DevPixelsToAppUnits(size.width);
+        aSize.width = aState.PresContext()->DevPixelsToAppUnits(size.width);
         aWidthSet = true;
       }
       if (size.height) {
-        aSize.height = pc->DevPixelsToAppUnits(size.height);
+        aSize.height = aState.PresContext()->DevPixelsToAppUnits(size.height);
         aHeightSet = true;
       }
     } else {

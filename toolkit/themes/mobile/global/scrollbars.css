@@ -20,7 +20,10 @@ xul|scrollbar {
   display: block;
 }
 
+/* Scrollbar code will reset the margin to the correct side depending on
+   where layout actually puts the scrollbar */
 xul|scrollbar[orient="vertical"] {
+  margin-left: -6px;
   min-width: 6px;
   max-width: 6px;
 }
@@ -32,6 +35,7 @@ xul|scrollbar[orient="vertical"] xul|thumb {
 }
 
 xul|scrollbar[orient="horizontal"] {
+  margin-top: -6px;
   min-height: 6px;
   max-height: 6px;
 }

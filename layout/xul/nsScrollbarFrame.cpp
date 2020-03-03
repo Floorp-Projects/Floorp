@@ -163,47 +163,39 @@ nsIScrollbarMediator* nsScrollbarFrame::GetScrollbarMediator() {
 }
 
 nsresult nsScrollbarFrame::GetXULMargin(nsMargin& aMargin) {
+  nsresult rv = NS_ERROR_FAILURE;
   aMargin.SizeTo(0, 0, 0, 0);
 
-  const bool overlayScrollbars =
-      !!LookAndFeel::GetInt(LookAndFeel::eIntID_UseOverlayScrollbars);
-
-  const bool horizontal = IsXULHorizontal();
-  bool didSetMargin = false;
-
-  if (overlayScrollbars) {
-    nsSize minSize;
-    bool widthSet = false;
-    bool heightSet = false;
-    AddXULMinSize(this, minSize, widthSet, heightSet);
-    if (horizontal) {
-      if (heightSet) {
-        aMargin.top = -minSize.height;
-        didSetMargin = true;
+  if (LookAndFeel::GetInt(LookAndFeel::eIntID_UseOverlayScrollbars) != 0) {
+    nsPresContext* presContext = PresContext();
+    nsITheme* theme = presContext->GetTheme();
+    if (theme && theme->ThemeSupportsWidget(presContext, this,
+                                            StyleAppearance::Scrollbar)) {
+      LayoutDeviceIntSize size;
+      bool isOverridable;
+      theme->GetMinimumWidgetSize(presContext, this, StyleAppearance::Scrollbar,
+                                  &size, &isOverridable);
+      if (IsXULHorizontal()) {
+        aMargin.top = -presContext->DevPixelsToAppUnits(size.height);
+      } else {
+        aMargin.left = -presContext->DevPixelsToAppUnits(size.width);
       }
-    } else {
-      if (widthSet) {
-        aMargin.left = -minSize.width;
-        didSetMargin = true;
-      }
+      rv = NS_OK;
     }
   }
 
-  if (!didSetMargin) {
-    DebugOnly<nsresult> rv = nsBox::GetXULMargin(aMargin);
-    // TODO(emilio): Should probably not be fallible, it's not like anybody
-    // cares about the return value anyway.
-    MOZ_ASSERT(NS_SUCCEEDED(rv), "nsBox::GetXULMargin can't really fail");
+  if (NS_FAILED(rv)) {
+    rv = nsBox::GetXULMargin(aMargin);
   }
 
-  if (!horizontal) {
+  if (NS_SUCCEEDED(rv) && !IsXULHorizontal()) {
     nsIScrollbarMediator* scrollFrame = GetScrollbarMediator();
     if (scrollFrame && !scrollFrame->IsScrollbarOnRight()) {
       std::swap(aMargin.left, aMargin.right);
     }
   }
 
-  return NS_OK;
+  return rv;
 }
 
 void nsScrollbarFrame::SetIncrementToLine(int32_t aDirection) {
