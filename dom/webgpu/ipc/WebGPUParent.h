@@ -81,6 +81,8 @@ class WebGPUParent final : public PWebGPUParent {
       RawId aSelfId, const SerialComputePipelineDescriptor& aDesc,
       RawId aNewId);
   ipc::IPCResult RecvComputePipelineDestroy(RawId aSelfId);
+  ipc::IPCResult RecvDeviceCreateRenderPipeline(
+      RawId aSelfId, const SerialRenderPipelineDescriptor& aDesc, RawId aNewId);
   ipc::IPCResult RecvRenderPipelineDestroy(RawId aSelfId);
   ipc::IPCResult RecvShutdown();
 

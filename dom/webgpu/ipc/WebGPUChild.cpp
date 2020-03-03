@@ -348,13 +348,21 @@ void WebGPUChild::DestroyShaderModule(RawId aId) {
   ffi::wgpu_client_kill_shader_module_id(mClient, aId);
 }
 
+static SerialProgrammableStageDescriptor ConvertProgrammableStageDescriptor(
+    const dom::GPUProgrammableStageDescriptor& aDesc) {
+  SerialProgrammableStageDescriptor stage = {};
+  stage.mModule = aDesc.mModule->mId;
+  stage.mEntryPoint = aDesc.mEntryPoint;
+  return stage;
+}
+
 RawId WebGPUChild::DeviceCreateComputePipeline(
     RawId aSelfId, const dom::GPUComputePipelineDescriptor& aDesc) {
   RawId id = ffi::wgpu_client_make_compute_pipeline_id(mClient, aSelfId);
-  SerialProgrammableStageDescriptor stage = {};
-  stage.mModule = aDesc.mComputeStage.mModule->mId;
-  stage.mEntryPoint = aDesc.mComputeStage.mEntryPoint;
-  SerialComputePipelineDescriptor desc = {aDesc.mLayout->mId, stage};
+  const SerialComputePipelineDescriptor desc = {
+      aDesc.mLayout->mId,
+      ConvertProgrammableStageDescriptor(aDesc.mComputeStage),
+  };
   if (!SendDeviceCreateComputePipeline(aSelfId, desc, id)) {
     MOZ_CRASH("IPC failure");
   }
@@ -366,17 +374,140 @@ void WebGPUChild::DestroyComputePipeline(RawId aId) {
   ffi::wgpu_client_kill_compute_pipeline_id(mClient, aId);
 }
 
+static ffi::WGPURasterizationStateDescriptor ConvertRasterizationDescriptor(
+    const dom::GPURasterizationStateDescriptor& aDesc) {
+  ffi::WGPURasterizationStateDescriptor desc = {};
+  desc.front_face = ffi::WGPUFrontFace(aDesc.mFrontFace);
+  desc.cull_mode = ffi::WGPUCullMode(aDesc.mCullMode);
+  desc.depth_bias = aDesc.mDepthBias;
+  desc.depth_bias_slope_scale = aDesc.mDepthBiasSlopeScale;
+  desc.depth_bias_clamp = aDesc.mDepthBiasClamp;
+  return desc;
+}
+
+static ffi::WGPUBlendDescriptor ConvertBlendDescriptor(
+    const dom::GPUBlendDescriptor& aDesc) {
+  ffi::WGPUBlendDescriptor desc = {};
+  desc.src_factor = ffi::WGPUBlendFactor(aDesc.mSrcFactor);
+  desc.dst_factor = ffi::WGPUBlendFactor(aDesc.mDstFactor);
+  desc.operation = ffi::WGPUBlendOperation(aDesc.mOperation);
+  return desc;
+}
+
+static ffi::WGPUColorStateDescriptor ConvertColorDescriptor(
+    const dom::GPUColorStateDescriptor& aDesc) {
+  ffi::WGPUColorStateDescriptor desc = {};
+  desc.format = ffi::WGPUTextureFormat(aDesc.mFormat);
+  const ffi::WGPUBlendDescriptor no_blend = {
+      ffi::WGPUBlendFactor_One,
+      ffi::WGPUBlendFactor_Zero,
+      ffi::WGPUBlendOperation_Add,
+  };
+  desc.alpha_blend = aDesc.mAlpha.WasPassed()
+                         ? ConvertBlendDescriptor(aDesc.mAlpha.Value())
+                         : no_blend;
+  desc.color_blend = aDesc.mColor.WasPassed()
+                         ? ConvertBlendDescriptor(aDesc.mColor.Value())
+                         : no_blend;
+  desc.write_mask = aDesc.mWriteMask;
+  return desc;
+}
+
+static ffi::WGPUStencilStateFaceDescriptor ConvertStencilFaceDescriptor(
+    const dom::GPUStencilStateFaceDescriptor& aDesc) {
+  ffi::WGPUStencilStateFaceDescriptor desc = {};
+  desc.compare = ffi::WGPUCompareFunction(aDesc.mCompare);
+  desc.fail_op = ffi::WGPUStencilOperation(aDesc.mFailOp);
+  desc.depth_fail_op = ffi::WGPUStencilOperation(aDesc.mDepthFailOp);
+  desc.pass_op = ffi::WGPUStencilOperation(aDesc.mPassOp);
+  return desc;
+}
+
+static ffi::WGPUDepthStencilStateDescriptor ConvertDepthStencilDescriptor(
+    const dom::GPUDepthStencilStateDescriptor& aDesc) {
+  ffi::WGPUDepthStencilStateDescriptor desc = {};
+  desc.format = ffi::WGPUTextureFormat(aDesc.mFormat);
+  desc.depth_write_enabled = aDesc.mDepthWriteEnabled;
+  desc.depth_compare = ffi::WGPUCompareFunction(aDesc.mDepthCompare);
+  desc.stencil_front = ConvertStencilFaceDescriptor(aDesc.mStencilFront);
+  desc.stencil_back = ConvertStencilFaceDescriptor(aDesc.mStencilBack);
+  desc.stencil_read_mask = aDesc.mStencilReadMask;
+  desc.stencil_write_mask = aDesc.mStencilWriteMask;
+  return desc;
+}
+
+static ffi::WGPUVertexAttributeDescriptor ConvertVertexAttributeDescriptor(
+    const dom::GPUVertexAttributeDescriptor& aDesc) {
+  ffi::WGPUVertexAttributeDescriptor desc = {};
+  desc.offset = aDesc.mOffset;
+  desc.format = ffi::WGPUVertexFormat(aDesc.mFormat);
+  desc.shader_location = aDesc.mShaderLocation;
+  return desc;
+}
+
+static SerialVertexBufferDescriptor ConvertVertexBufferDescriptor(
+    const dom::GPUVertexBufferDescriptor& aDesc) {
+  SerialVertexBufferDescriptor desc = {};
+  desc.mStride = aDesc.mStride;
+  desc.mStepMode = ffi::WGPUInputStepMode(aDesc.mStepMode);
+  for (const auto& vat : aDesc.mAttributeSet) {
+    desc.mAttributes.AppendElement(ConvertVertexAttributeDescriptor(vat));
+  }
+  return desc;
+}
+
+RawId WebGPUChild::DeviceCreateRenderPipeline(
+    RawId aSelfId, const dom::GPURenderPipelineDescriptor& aDesc) {
+  RawId id = ffi::wgpu_client_make_render_pipeline_id(mClient, aSelfId);
+  SerialRenderPipelineDescriptor desc = {};
+  desc.mLayout = aDesc.mLayout->mId;
+  desc.mVertexStage = ConvertProgrammableStageDescriptor(aDesc.mVertexStage);
+  if (aDesc.mFragmentStage.WasPassed()) {
+    desc.mFragmentStage =
+        ConvertProgrammableStageDescriptor(aDesc.mFragmentStage.Value());
+  }
+  desc.mPrimitiveTopology =
+      ffi::WGPUPrimitiveTopology(aDesc.mPrimitiveTopology);
+  if (aDesc.mRasterizationState.WasPassed()) {
+    desc.mRasterizationState =
+        Some(ConvertRasterizationDescriptor(aDesc.mRasterizationState.Value()));
+  }
+  for (const auto& color_state : aDesc.mColorStates) {
+    desc.mColorStates.AppendElement(ConvertColorDescriptor(color_state));
+  }
+  if (aDesc.mDepthStencilState.WasPassed()) {
+    desc.mDepthStencilState =
+        Some(ConvertDepthStencilDescriptor(aDesc.mDepthStencilState.Value()));
+  }
+  desc.mVertexInput.mIndexFormat =
+      ffi::WGPUIndexFormat(aDesc.mVertexInput.mIndexFormat);
+  for (const auto& vertex_desc : aDesc.mVertexInput.mVertexBuffers) {
+    SerialVertexBufferDescriptor vb_desc = {};
+    if (!vertex_desc.IsNull()) {
+      vb_desc = ConvertVertexBufferDescriptor(vertex_desc.Value());
+    }
+    desc.mVertexInput.mVertexBuffers.AppendElement(vb_desc);
+  }
+  desc.mSampleCount = aDesc.mSampleCount;
+  desc.mSampleMask = aDesc.mSampleMask;
+  desc.mAlphaToCoverageEnabled = aDesc.mAlphaToCoverageEnabled;
+  if (!SendDeviceCreateRenderPipeline(aSelfId, desc, id)) {
+    MOZ_CRASH("IPC failure");
+  }
+  return id;
+}
+
+void WebGPUChild::DestroyRenderPipeline(RawId aId) {
+  SendRenderPipelineDestroy(aId);
+  ffi::wgpu_client_kill_render_pipeline_id(mClient, aId);
+}
+
 void WebGPUChild::QueueSubmit(RawId aSelfId,
                               const nsTArray<RawId>& aCommandBufferIds) {
   SendQueueSubmit(aSelfId, aCommandBufferIds);
   for (const auto& cur : aCommandBufferIds) {
     ffi::wgpu_client_kill_encoder_id(mClient, cur);
   }
-}
-
-void WebGPUChild::DestroyRenderPipeline(RawId aId) {
-  SendRenderPipelineDestroy(aId);
-  ffi::wgpu_client_kill_render_pipeline_id(mClient, aId);
 }
 
 }  // namespace webgpu
