@@ -2664,15 +2664,11 @@ void BackgroundRequestChild::HandleResponse(const nsTArray<Key>& aResponse) {
 }
 
 void BackgroundRequestChild::HandleResponse(
-    const SerializedStructuredCloneReadInfo& aResponse) {
+    SerializedStructuredCloneReadInfo&& aResponse) {
   AssertIsOnOwningThread();
 
-  // XXX Fix this somehow...
-  auto& serializedCloneInfo =
-      const_cast<SerializedStructuredCloneReadInfo&>(aResponse);
-
   auto cloneReadInfo = DeserializeStructuredCloneReadInfo(
-      std::move(serializedCloneInfo), mTransaction->Database());
+      std::move(aResponse), mTransaction->Database());
 
   if (cloneReadInfo.mHasPreprocessInfo) {
     UniquePtr<JSStructuredCloneData> cloneData = GetNextCloneData();
@@ -2685,7 +2681,7 @@ void BackgroundRequestChild::HandleResponse(
 }
 
 void BackgroundRequestChild::HandleResponse(
-    const nsTArray<SerializedStructuredCloneReadInfo>& aResponse) {
+    nsTArray<SerializedStructuredCloneReadInfo>&& aResponse) {
   AssertIsOnOwningThread();
 
   nsTArray<StructuredCloneReadInfo> cloneReadInfos;
@@ -2696,14 +2692,11 @@ void BackgroundRequestChild::HandleResponse(
     cloneReadInfos.SetCapacity(count);
 
     std::transform(
-        aResponse.begin(), aResponse.end(), MakeBackInserter(cloneReadInfos),
-        [database = mTransaction->Database(), this](
-            const SerializedStructuredCloneReadInfo& constSerializedCloneInfo) {
-          // XXX Fix the need for the const_cast somehow...
-          auto& serializedCloneInfo =
-              const_cast<SerializedStructuredCloneReadInfo&>(
-                  constSerializedCloneInfo);
-
+        std::make_move_iterator(aResponse.begin()),
+        std::make_move_iterator(aResponse.end()),
+        MakeBackInserter(cloneReadInfos),
+        [database = mTransaction->Database(),
+         this](SerializedStructuredCloneReadInfo&& serializedCloneInfo) {
           auto cloneReadInfo = DeserializeStructuredCloneReadInfo(
               std::move(serializedCloneInfo), database);
 
@@ -2819,7 +2812,7 @@ void BackgroundRequestChild::ActorDestroy(ActorDestroyReason aWhy) {
 }
 
 mozilla::ipc::IPCResult BackgroundRequestChild::Recv__delete__(
-    const RequestResponse& aResponse) {
+    RequestResponse&& aResponse) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mRequest);
   MOZ_ASSERT(mTransaction);
@@ -2845,7 +2838,8 @@ mozilla::ipc::IPCResult BackgroundRequestChild::Recv__delete__(
         break;
 
       case RequestResponse::TObjectStoreGetResponse:
-        HandleResponse(aResponse.get_ObjectStoreGetResponse().cloneInfo());
+        HandleResponse(
+            std::move(aResponse.get_ObjectStoreGetResponse().cloneInfo()));
         break;
 
       case RequestResponse::TObjectStoreGetKeyResponse:
@@ -2853,7 +2847,8 @@ mozilla::ipc::IPCResult BackgroundRequestChild::Recv__delete__(
         break;
 
       case RequestResponse::TObjectStoreGetAllResponse:
-        HandleResponse(aResponse.get_ObjectStoreGetAllResponse().cloneInfos());
+        HandleResponse(
+            std::move(aResponse.get_ObjectStoreGetAllResponse().cloneInfos()));
         break;
 
       case RequestResponse::TObjectStoreGetAllKeysResponse:
@@ -2870,7 +2865,7 @@ mozilla::ipc::IPCResult BackgroundRequestChild::Recv__delete__(
         break;
 
       case RequestResponse::TIndexGetResponse:
-        HandleResponse(aResponse.get_IndexGetResponse().cloneInfo());
+        HandleResponse(std::move(aResponse.get_IndexGetResponse().cloneInfo()));
         break;
 
       case RequestResponse::TIndexGetKeyResponse:
@@ -2878,7 +2873,8 @@ mozilla::ipc::IPCResult BackgroundRequestChild::Recv__delete__(
         break;
 
       case RequestResponse::TIndexGetAllResponse:
-        HandleResponse(aResponse.get_IndexGetAllResponse().cloneInfos());
+        HandleResponse(
+            std::move(aResponse.get_IndexGetAllResponse().cloneInfos()));
         break;
 
       case RequestResponse::TIndexGetAllKeysResponse:
