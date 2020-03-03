@@ -58,17 +58,27 @@ void PrioritizedEventQueue::PutEvent(already_AddRefed<nsIRunnable>&& aEvent,
     case EventQueuePriority::Normal:
       mNormalQueue->PutEvent(event.forget(), priority, aProofOfLock, aDelay);
       break;
-    case EventQueuePriority::DeferredTimers:
-      MOZ_ASSERT(NS_IsMainThread(),
-                 "Should only queue deferred timers on main thread");
-      mDeferredTimersQueue->PutEvent(event.forget(), priority, aProofOfLock,
-                                     aDelay);
+    case EventQueuePriority::DeferredTimers: {
+      if (NS_IsMainThread()) {
+        mDeferredTimersQueue->PutEvent(event.forget(), priority, aProofOfLock,
+                                       aDelay);
+      } else {
+        // We don't want to touch our idle queues from off the main
+        // thread.  Queue it indirectly.
+        IndirectlyQueueRunnable(event.forget(), priority, aProofOfLock, aDelay);
+      }
       break;
-    case EventQueuePriority::Idle:
-      MOZ_ASSERT(NS_IsMainThread(),
-                 "Should only queue idle runnables on main thread");
-      mIdleQueue->PutEvent(event.forget(), priority, aProofOfLock, aDelay);
+    }
+    case EventQueuePriority::Idle: {
+      if (NS_IsMainThread()) {
+        mIdleQueue->PutEvent(event.forget(), priority, aProofOfLock, aDelay);
+      } else {
+        // We don't want to touch our idle queues from off the main
+        // thread.  Queue it indirectly.
+        IndirectlyQueueRunnable(event.forget(), priority, aProofOfLock, aDelay);
+      }
       break;
+    }
     case EventQueuePriority::Count:
       MOZ_CRASH("EventQueuePriority::Count isn't a valid priority");
       break;
@@ -139,6 +149,20 @@ EventQueuePriority PrioritizedEventQueue::SelectQueue(
       mInputQueueState != STATE_DISABLED && mInputQueueState != STATE_SUSPEND);
 
   return queue;
+}
+
+void PrioritizedEventQueue::IndirectlyQueueRunnable(
+    already_AddRefed<nsIRunnable>&& aEvent, EventQueuePriority aPriority,
+    const MutexAutoLock& aProofOfLock, mozilla::TimeDuration* aDelay) {
+  nsCOMPtr<nsIRunnable> event(aEvent);
+
+  nsCOMPtr<nsIRunnable> mainThreadRunnable = NS_NewRunnableFunction(
+      "idle runnable shim",
+      [event = std::move(event), priority = aPriority]() mutable {
+        NS_DispatchToCurrentThreadQueue(event.forget(), priority);
+      });
+  mNormalQueue->PutEvent(mainThreadRunnable.forget(),
+                         EventQueuePriority::Normal, aProofOfLock, aDelay);
 }
 
 // The delay returned is the queuing delay a hypothetical Input event would
