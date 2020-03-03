@@ -92,7 +92,7 @@ public class WebExtension {
         /**
          * Set this flag if you want to enable content scripts messaging.
          * To listen to such messages you can use
-         * {@link GeckoSession#setMessageDelegate}.
+         * {@link SessionController#setMessageDelegate}.
          */
         public static final long ALLOW_CONTENT_MESSAGING = 1 << 0;
 
@@ -180,7 +180,7 @@ public class WebExtension {
      * for the native app specified in <code>nativeApp</code>.
      *
      * For messages from content scripts, set a session-specific message
-     * delegate using {@link GeckoSession#setMessageDelegate}.
+     * delegate using {@link SessionController#setMessageDelegate}.
      *
      * See also
      *  <a href="https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/Native_messaging">
@@ -219,7 +219,7 @@ public class WebExtension {
      *                  <code>runtime.sendNativeMessage</code> and
      *                  <code>runtime.connectNative</code>.
      *
-     * @see GeckoSession#setMessageDelegate
+     * @see SessionController#setMessageDelegate
      */
     @UiThread
     public void setMessageDelegate(final @Nullable MessageDelegate messageDelegate,
@@ -422,6 +422,97 @@ public class WebExtension {
             result = 31 * result + (webExtensionId != null ? webExtensionId.hashCode() : 0);
             result = 31 * result + (nativeApp != null ? nativeApp.hashCode() : 0);
             return result;
+        }
+    }
+
+    // Public wrapper for Listener
+    public static class SessionController {
+        private final Listener mListener;
+
+        /* package */ void setRuntime(final GeckoRuntime runtime) {
+            mListener.runtime = runtime;
+        }
+
+        /* package */ SessionController(final GeckoSession session) {
+            mListener = new Listener(session);
+        }
+
+        /**
+         * Defines a message delegate for a Native App.
+         *
+         * If a delegate is already present, this delegate will replace the
+         * existing one.
+         *
+         * This message delegate will be responsible for handling messaging between
+         * a WebExtension content script running on the {@link GeckoSession}.
+         *
+         * Note: To receive messages from content scripts, the WebExtension needs
+         * to explicitely allow it in {@link WebExtension#WebExtension} by setting
+         * {@link Flags#ALLOW_CONTENT_MESSAGING}.
+         *
+         * @param webExtension {@link WebExtension} that this delegate receives
+         *                     messages from.
+         *
+         * @param delegate {@link MessageDelegate} that will receive messages from
+         *                                         this session.
+         * @param nativeApp which native app id this message delegate will handle
+         *                  messaging for.
+         * @see WebExtension#setMessageDelegate
+         */
+        @AnyThread
+        public void setMessageDelegate(final @NonNull WebExtension webExtension,
+                                       final @Nullable WebExtension.MessageDelegate delegate,
+                                       final @NonNull String nativeApp) {
+            mListener.setMessageDelegate(webExtension, delegate, nativeApp);
+        }
+
+        /**
+         * Get the message delegate for <code>nativeApp</code>.
+         *
+         * @param extension {@link WebExtension} that this delegate receives messages from.
+         * @param nativeApp identifier for the native app
+         * @return The {@link MessageDelegate} attached to the
+         *         <code>nativeApp</code>.  <code>null</code> if no delegate is
+         *         present.
+         */
+        @AnyThread
+        public @Nullable WebExtension.MessageDelegate getMessageDelegate(
+                final @NonNull WebExtension extension,
+                final @NonNull String nativeApp) {
+            return mListener.getMessageDelegate(extension, nativeApp);
+        }
+
+        /**
+         * Set the Action delegate for this session.
+         *
+         * This delegate will receive page and browser action overrides specific to
+         * this session.  The default Action will be received by the delegate set
+         * by {@link WebExtension#setActionDelegate}.
+         *
+         * @param extension the {@link WebExtension} object this delegate will
+         *                     receive updates for
+         * @param delegate the {@link ActionDelegate} that will receive updates.
+         * @see WebExtension.Action
+         */
+        @AnyThread
+        public void setActionDelegate(final @NonNull WebExtension extension,
+                                      final @Nullable ActionDelegate delegate) {
+            mListener.setActionDelegate(extension, delegate);
+        }
+
+        /**
+         * Get the Action delegate for this session.
+         *
+         * @param extension {@link WebExtension} that this delegates receive
+         *                     updates for.
+         * @return {@link ActionDelegate} for this
+         *         session
+         */
+        @AnyThread
+        @Nullable
+        public ActionDelegate getActionDelegate(
+                final @NonNull WebExtension extension) {
+            return mListener.getActionDelegate(extension);
         }
     }
 
@@ -769,7 +860,7 @@ public class WebExtension {
      * {@link Action#withDefault}.
      *
      * Tab specific overrides can be obtained by registering a delegate using
-     * {@link GeckoSession#setWebExtensionActionDelegate}, while default values
+     * {@link SessionController#setActionDelegate}, while default values
      * can be obtained by registering a delegate using
      * {@link #setActionDelegate}.
      *
@@ -1030,7 +1121,7 @@ public class WebExtension {
      * This delegate will receive the default action when registered with
      * {@link WebExtension#setActionDelegate}. To receive
      * {@link GeckoSession}-specific overrides you can use
-     * {@link GeckoSession#setWebExtensionActionDelegate}.
+     * {@link SessionController#setActionDelegate}.
      */
     public interface ActionDelegate {
         /**
@@ -1180,7 +1271,7 @@ public class WebExtension {
      * changes.
      *
      * To listen for {@link GeckoSession}-specific updates, use
-     * {@link GeckoSession#setWebExtensionActionDelegate}
+     * {@link SessionController#setActionDelegate}
      *
      * @param delegate {@link ActionDelegate} that will receive updates.
      */

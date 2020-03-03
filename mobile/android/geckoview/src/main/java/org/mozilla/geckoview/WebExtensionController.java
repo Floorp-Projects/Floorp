@@ -972,7 +972,8 @@ public class WebExtensionController {
         WebExtension.MessageDelegate delegate = null;
 
         if (sender.session != null) {
-            delegate = sender.session.getMessageDelegate(sender.webExtension, nativeApp);
+            delegate = sender.session.getWebExtensionController()
+                    .getMessageDelegate(sender.webExtension, nativeApp);
         } else if (sender.environmentType == WebExtension.MessageSender.ENV_TYPE_EXTENSION) {
             delegate = mListener.getMessageDelegate(sender.webExtension, nativeApp);
         }
@@ -1101,7 +1102,7 @@ public class WebExtensionController {
             return mListener.getActionDelegate(extension);
         }
 
-        return session.getWebExtensionActionDelegate(extension);
+        return session.getWebExtensionController().getActionDelegate(extension);
     }
 
     private void actionUpdate(final GeckoBundle message, final GeckoSession session,
