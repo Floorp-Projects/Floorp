@@ -1995,9 +1995,12 @@ main {
   margin: 26px 0 0;
   inset-inline-end: 25px; }
 
+.ds-dismiss.ds-dismiss-ds-collection.hovering {
+  background: var(--newtab-element-hover-color); }
+
 .ds-collection-card-grid {
-  padding: 10px 25px;
-  margin: 0 0 50px; }
+  padding: 10px 25px 25px;
+  margin: 0 0 20px; }
   .ds-collection-card-grid .story-footer {
     display: none; }
   .ds-collection-card-grid .ds-header {
@@ -2947,8 +2950,7 @@ main {
 .ds-dismiss {
   position: relative;
   border-radius: 8px;
-  transition-delay: 100ms;
-  transition-duration: 200ms;
+  transition-duration: 250ms;
   transition-property: background; }
   .ds-dismiss:hover .ds-dismiss-button {
     opacity: 1; }
