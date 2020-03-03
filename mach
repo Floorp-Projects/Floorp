@@ -85,7 +85,6 @@ py2commands="
     valgrind-test
     visualmetrics
     warnings-list
-    warnings-summary
     watch
     web-platform-tests
     web-platform-tests-update
