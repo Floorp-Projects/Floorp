@@ -29,6 +29,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
+import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.robolectric.Robolectric
 import org.robolectric.Shadows.shadowOf
@@ -132,7 +133,7 @@ class CrashReporterTest {
     }
 
     @Test
-    fun `CrashReporter will show prompt for native crash and with setup Prompt-ONLY_NATIVE_CRASH`() {
+    fun `CrashReporter will show prompt for fatal native crash and with setup Prompt-ONLY_NATIVE_CRASH`() {
         val service: CrashReporterService = mock()
         val telemetryService: CrashReporterService = mock()
 
@@ -143,7 +144,12 @@ class CrashReporterTest {
             scope = scope
         ).install(testContext))
 
-        val crash: Crash.NativeCodeCrash = mock()
+        val crash = Crash.NativeCodeCrash(
+            "dump.path",
+            true,
+            "extras.path",
+            isFatal = true,
+            breadcrumbs = arrayListOf())
 
         reporter.onCrash(testContext, crash)
 
@@ -453,6 +459,57 @@ class CrashReporterTest {
         assertEquals(true, receivedCrash.minidumpSuccess)
         assertEquals("extras.path", receivedCrash.extrasPath)
         assertEquals(false, receivedCrash.isFatal)
+    }
+
+    @Test
+    fun `CrashReporter sends telemetry but don't send native crash if the crash is non-fatal and nonFatalPendingIntent is not null`() {
+        val service: CrashReporterService = mock()
+        val telemetryService: CrashReporterService = mock()
+
+        val reporter = spy(CrashReporter(
+            services = listOf(service),
+            telemetryServices = listOf(telemetryService),
+            shouldPrompt = CrashReporter.Prompt.NEVER,
+            nonFatalCrashIntent = mock(),
+            scope = scope
+        ).install(testContext))
+
+        val nativeCrash = Crash.NativeCodeCrash(
+            "dump.path",
+            true,
+            "extras.path",
+            isFatal = false,
+            breadcrumbs = arrayListOf())
+        reporter.onCrash(testContext, nativeCrash)
+
+        verify(reporter, never()).sendCrashReport(testContext, nativeCrash)
+        verify(reporter, times(1)).sendCrashTelemetry(testContext, nativeCrash)
+        verify(reporter, never()).showPrompt(any(), eq(nativeCrash))
+    }
+
+    @Test
+    fun `CrashReporter sends telemetry and crash if the crash is non-fatal and nonFatalPendingIntent is null`() {
+        val service: CrashReporterService = mock()
+        val telemetryService: CrashReporterService = mock()
+
+        val reporter = spy(CrashReporter(
+            services = listOf(service),
+            telemetryServices = listOf(telemetryService),
+            shouldPrompt = CrashReporter.Prompt.NEVER,
+            scope = scope
+        ).install(testContext))
+
+        val nativeCrash = Crash.NativeCodeCrash(
+            "dump.path",
+            true,
+            "extras.path",
+            isFatal = false,
+            breadcrumbs = arrayListOf())
+        reporter.onCrash(testContext, nativeCrash)
+
+        verify(reporter, times(1)).sendCrashReport(testContext, nativeCrash)
+        verify(reporter, times(1)).sendCrashTelemetry(testContext, nativeCrash)
+        verify(reporter, never()).showPrompt(any(), eq(nativeCrash))
     }
 
     @Test
