@@ -89,14 +89,20 @@ tasks:
                   else:
                       $if: 'tasks_for in ["cron", "action"]'
                       then: '${ownTaskId}'
+              pullRequestAction:
+                  $if: 'tasks_for == "github-pull-request"'
+                  then: ${event.action}
+                  else: 'UNDEFINED'
               releaseAction:
                   $if: 'tasks_for == "github-release"'
                   then: ${event.action}
                   else: 'UNDEFINED'
           in:
-              $if: 'tasks_for in ["github-pull-request", "action", "cron"]
-              || (tasks_for == "github-push" && head_branch[:10] != "refs/tags/")
-              || (tasks_for == "github-release" && releaseAction == "published")'
+              $if: >
+                tasks_for in ["action", "cron"]
+                || (tasks_for == "github-pull-request" && pullRequestAction in ["opened", "reopened", "edited", "synchronize"])
+                || (tasks_for == "github-push" && head_branch[:10] != "refs/tags/")
+                || (tasks_for == "github-release" && releaseAction == "published")
               then:
                   $let:
                       level:
