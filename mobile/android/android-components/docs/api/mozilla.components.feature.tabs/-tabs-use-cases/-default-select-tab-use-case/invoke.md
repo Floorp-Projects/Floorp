@@ -10,9 +10,9 @@ Marks the provided session as selected.
 
 ### Parameters
 
-`session` - The session to select.`fun invoke(tabId: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/tabs/src/main/java/mozilla/components/feature/tabs/TabsUseCases.kt#L48)
+`session` - The session to select.`fun invoke(tabId: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/tabs/src/main/java/mozilla/components/feature/tabs/TabsUseCases.kt#L51)
 
 Overrides [SelectTabUseCase.invoke](../-select-tab-use-case/invoke.md)
 
-Select [Session](../../../mozilla.components.browser.session/-session/index.md) with the given [tabId](../-select-tab-use-case/invoke.md#mozilla.components.feature.tabs.TabsUseCases.SelectTabUseCase$invoke(kotlin.String)/tabId).
+Marks the tab with the provided [tabId](invoke.md#mozilla.components.feature.tabs.TabsUseCases.DefaultSelectTabUseCase$invoke(kotlin.String)/tabId) as selected.
 
