@@ -79,6 +79,11 @@ namespace jit {
   _(LoopHead)               \
   _(IfEq)                   \
   _(IfNe)                   \
+  _(And)                    \
+  _(Or)                     \
+  _(Case)                   \
+  _(Default)                \
+  _(Coalesce)               \
   _(Goto)                   \
   _(Return)                 \
   _(RetRval)
