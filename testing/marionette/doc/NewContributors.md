@@ -17,11 +17,11 @@ Accounts, communication
 -----------------------
 
   1. Set up a [Bugzilla] account (and, if you like, a [Mozillians] profile).
-     Please include your IRC nickname in both of these accounts so we can work
+     Please include your Matrix nickname in both of these accounts so we can work
      with you more easily. For example, Eve Smith would set the Bugzilla name
-     to "Eve Smith (:esmith)", where "esmith" is the IRC nick.
+     to "Eve Smith (:esmith)", where "esmith" is the Matrix nick.
 
-  2. For a direct communication with us it will be beneficial to setup [IRC].
+  2. For a direct communication with us it will be beneficial to setup [Matrix].
      Make sure to also register your nickname as described in the linked document.
 
   3. Join our #interop channel, and introduce yourself to the team. :ato,
@@ -29,20 +29,17 @@ Accounts, communication
      We're nice, I promise, but we might not answer right away due to different
      time zones, time off, etc. So please be patient.
 
-  4. When you want to ask a question on IRC, just go ahead an ask it even if
+  4. When you want to ask a question on Matrix, just go ahead an ask it even if
      no one appears to be around/responding.
      Provide lots of detail so that we have a better chance of helping you.
      If you don't get an answer right away, check again in a few hours --
      someone may have answered you in the mean time.
 
-  5. You can view IRC logs on [logbot] to check if anyone has answered your
-     question while you were offline.
-
-  6. If you're having trouble reaching us over IRC, you are welcome to send an
+  5. If you're having trouble reaching us over Matrix, you are welcome to send an
      email to our [mailing list](index.html#communication) instead. It's a good
-     idea to include your IRC nick in your email message.
+     idea to include your Matrix nick in your email message.
 
-[IRC]: https://developer.mozilla.org/en-US/docs/Mozilla/QA/Getting_Started_with_IRC
+[Matrix]: https://chat.mozilla.org
 [Bugzilla]: https://bugzilla.mozilla.org/
 [Mozillians]: https://mozillians.org/
 [logbot]: https://mozilla.logbot.info/ateam/
