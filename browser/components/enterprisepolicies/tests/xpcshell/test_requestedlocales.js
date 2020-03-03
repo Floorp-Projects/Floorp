@@ -45,3 +45,24 @@ add_task(async function test_requested_locale_string() {
   await localePromise;
   Services.locale.requestedLocales = originalLocales;
 });
+
+add_task(async function test_system_locale_string() {
+  let originalLocales = Services.locale.requestedLocales;
+
+  let localePromise = promiseLocaleChanged("und");
+  Services.locale.requestedLocales = ["und"];
+  await localePromise;
+
+  let systemLocale = Cc["@mozilla.org/intl/ospreferences;1"].getService(
+    Ci.mozIOSPreferences
+  ).systemLocale;
+  localePromise = promiseLocaleChanged(systemLocale);
+
+  await setupPolicyEngineWithJson({
+    policies: {
+      RequestedLocales: "",
+    },
+  });
+  await localePromise;
+  Services.locale.requestedLocales = originalLocales;
+});
