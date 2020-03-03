@@ -31,6 +31,7 @@
 #include <utility>
 
 #include "js/GCAnnotations.h"
+#include "js/ErrorReport.h"
 #include "js/Value.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
@@ -72,6 +73,13 @@ uint16_t constexpr ErrorFormatNumArgs[] = {
 // Table of whether various error messages want a context arg.
 bool constexpr ErrorFormatHasContext[] = {
 #define MSG_DEF(_name, _argc, _has_context, _exn, _str) _has_context,
+#include "mozilla/dom/Errors.msg"
+#undef MSG_DEF
+};
+
+// Table of the kinds of exceptions error messages will produce.
+JSExnType constexpr ErrorExceptionType[] = {
+#define MSG_DEF(_name, _argc, _has_context, _exn, _str) _exn,
 #include "mozilla/dom/Errors.msg"
 #undef MSG_DEF
 };
@@ -289,6 +297,8 @@ class TErrorResult {
   template <dom::ErrNum errorNumber, typename... Ts>
   void MOZ_MUST_RETURN_FROM_CALLER_IF_THIS_IS_ARG
   ThrowTypeError(Ts&&... messageArgs) {
+    static_assert(dom::ErrorExceptionType[errorNumber] == JSEXN_TYPEERR,
+                  "Throwing a non-TypeError via ThrowTypeError");
     ThrowErrorWithMessage<errorNumber>(NS_ERROR_INTERNAL_ERRORRESULT_TYPEERROR,
                                        std::forward<Ts>(messageArgs)...);
   }
@@ -311,6 +321,8 @@ class TErrorResult {
   template <dom::ErrNum errorNumber, typename... Ts>
   void MOZ_MUST_RETURN_FROM_CALLER_IF_THIS_IS_ARG
   ThrowRangeError(Ts&&... messageArgs) {
+    static_assert(dom::ErrorExceptionType[errorNumber] == JSEXN_RANGEERR,
+                  "Throwing a non-RangeError via ThrowRangeError");
     ThrowErrorWithMessage<errorNumber>(NS_ERROR_INTERNAL_ERRORRESULT_RANGEERROR,
                                        std::forward<Ts>(messageArgs)...);
   }

@@ -118,7 +118,7 @@ already_AddRefed<DOMIntersectionObserver> DOMIntersectionObserver::Constructor(
     observer->mThresholds.SetCapacity(thresholds.Length());
     for (const auto& thresh : thresholds) {
       if (thresh < 0.0 || thresh > 1.0) {
-        aRv.ThrowTypeError<dom::MSG_THRESHOLD_RANGE_ERROR>();
+        aRv.ThrowRangeError<dom::MSG_THRESHOLD_RANGE_ERROR>();
         return nullptr;
       }
       observer->mThresholds.AppendElement(thresh);
@@ -127,7 +127,7 @@ already_AddRefed<DOMIntersectionObserver> DOMIntersectionObserver::Constructor(
   } else {
     double thresh = aOptions.mThreshold.GetAsDouble();
     if (thresh < 0.0 || thresh > 1.0) {
-      aRv.ThrowTypeError<dom::MSG_THRESHOLD_RANGE_ERROR>();
+      aRv.ThrowRangeError<dom::MSG_THRESHOLD_RANGE_ERROR>();
       return nullptr;
     }
     observer->mThresholds.AppendElement(thresh);
