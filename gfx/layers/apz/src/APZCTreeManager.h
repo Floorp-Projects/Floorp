@@ -793,7 +793,8 @@ class APZCTreeManager : public IAPZCTreeManager, public APZInputBridge {
    */
   bool mUsingAsyncZoomContainer;
 
-  /** A lock that protects mApzcMap, mScrollThumbInfo, and mFixedPositionInfo.
+  /** A lock that protects mApzcMap, mScrollThumbInfo, mRootScrollbarInfo, and
+   * mFixedPositionInfo.
    */
   mutable mozilla::Mutex mMapLock;
   /**
@@ -844,6 +845,32 @@ class APZCTreeManager : public IAPZCTreeManager, public APZInputBridge {
    * mMapLock must be acquired while accessing or modifying mScrollThumbInfo.
    */
   std::vector<ScrollThumbInfo> mScrollThumbInfo;
+
+  /**
+   * A helper structure to store all the information needed to compute the
+   * async transform for a scrollthumb on the sampler thread.
+   */
+  struct RootScrollbarInfo {
+    uint64_t mScrollbarAnimationId;
+    ScrollDirection mScrollDirection;
+
+    RootScrollbarInfo(const uint64_t& aScrollbarAnimationId,
+                      const ScrollDirection aScrollDirection)
+        : mScrollbarAnimationId(aScrollbarAnimationId),
+          mScrollDirection(aScrollDirection) {}
+  };
+  /**
+   * If this APZCTreeManager is being used with WebRender, this vector gets
+   * populated during a layers update. It holds a package of information needed
+   * to compute and set the async transforms on root scrollbars. This
+   * information is extracted from the HitTestingTreeNodes for the WebRender
+   * case because accessing the HitTestingTreeNodes requires holding the tree
+   * lock which we cannot do on the WR sampler thread. mRootScrollbarInfo,
+   * however, can be accessed while just holding the mMapLock which is safe to
+   * do on the sampler thread.
+   * mMapLock must be acquired while accessing or modifying mRootScrollbarInfo.
+   */
+  std::vector<RootScrollbarInfo> mRootScrollbarInfo;
 
   /**
    * A helper structure to store all the information needed to compute the

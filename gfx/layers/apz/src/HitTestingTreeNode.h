@@ -116,6 +116,7 @@ class HitTestingTreeNode {
                         const ScrollbarData& aScrollbarData);
   bool MatchesScrollDragMetrics(const AsyncDragMetrics& aDragMetrics) const;
   bool IsScrollbarNode() const;  // Scroll thumb or scrollbar container layer.
+  bool IsScrollbarContainerNode() const;  // Scrollbar container layer.
   // This can only be called if IsScrollbarNode() is true
   ScrollDirection GetScrollbarDirection() const;
   bool IsScrollThumbNode() const;  // Scroll thumb container layer.

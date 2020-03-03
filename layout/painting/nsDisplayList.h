@@ -6115,6 +6115,7 @@ class nsDisplayOwnLayer : public nsDisplayWrapList {
   nsDisplayOwnLayerFlags GetFlags() { return mFlags; }
   bool IsScrollThumbLayer() const;
   bool IsScrollbarContainer() const;
+  bool IsRootScrollbarContainerWithDynamicToolbar() const;
   bool IsZoomingLayer() const;
   bool IsFixedPositionLayer() const;
 
