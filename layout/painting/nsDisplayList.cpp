@@ -6917,6 +6917,17 @@ bool nsDisplayOwnLayer::IsScrollbarContainer() const {
          layers::ScrollbarLayerType::Container;
 }
 
+bool nsDisplayOwnLayer::IsRootScrollbarContainerWithDynamicToolbar() const {
+  if (!IsScrollbarContainer()) {
+    return false;
+  }
+
+  return mFrame->PresContext()->IsRootContentDocumentCrossProcess() &&
+         mFrame->PresContext()->HasDynamicToolbar() &&
+         mScrollbarData.mTargetViewId ==
+             nsLayoutUtils::ScrollIdForRootScrollFrame(mFrame->PresContext());
+}
+
 bool nsDisplayOwnLayer::IsZoomingLayer() const {
   return GetType() == DisplayItemType::TYPE_ASYNC_ZOOM;
 }
@@ -6952,7 +6963,8 @@ bool nsDisplayOwnLayer::CreateWebRenderCommands(
   Maybe<wr::WrAnimationProperty> prop;
   bool needsProp =
       aManager->LayerManager()->AsyncPanZoomEnabled() &&
-      (IsScrollThumbLayer() || IsZoomingLayer() || IsFixedPositionLayer());
+      (IsScrollThumbLayer() || IsZoomingLayer() || IsFixedPositionLayer() ||
+       IsRootScrollbarContainerWithDynamicToolbar());
 
   if (needsProp) {
     // APZ is enabled and this is a scroll thumb or zooming layer, so we need
@@ -7010,7 +7022,15 @@ bool nsDisplayOwnLayer::UpdateScrollData(
     return true;
   }
 
+  MOZ_ASSERT(IsScrollbarContainer() || IsScrollThumbLayer());
+
   aLayerData->SetScrollbarData(mScrollbarData);
+
+  if (IsRootScrollbarContainerWithDynamicToolbar()) {
+    aLayerData->SetScrollbarAnimationId(mWrAnimationId);
+    return true;
+  }
+
   if (IsScrollThumbLayer()) {
     aLayerData->SetScrollbarAnimationId(mWrAnimationId);
     LayoutDeviceRect bounds = LayoutDeviceIntRect::FromAppUnits(

@@ -518,7 +518,7 @@ class ScrollFrameHelper : public nsIReflowCallback {
   // This is mOuter->GetSize(), except when mOuter has been sized to reflect
   // a virtual (layout) viewport in which case this returns the outer size
   // used to size the physical (visual) viewport.
-  nsSize TrueOuterSize() const;
+  nsSize TrueOuterSize(nsDisplayListBuilder* aBuilder) const;
 
   already_AddRefed<Element> MakeScrollbar(dom::NodeInfo* aNodeInfo,
                                           bool aVertical,
