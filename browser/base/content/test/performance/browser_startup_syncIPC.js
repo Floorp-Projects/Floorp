@@ -174,13 +174,13 @@ const startupPhases = {
     },
     {
       name: "PAPZInputBridge::Msg_ProcessUnhandledEvent",
-      condition: WIN && WEBRENDER,
+      condition: WIN,
       ignoreIfUnused: true, // intermittently occurs in "before becoming idle"
       maxCount: 1,
     },
     {
       name: "PAPZInputBridge::Msg_ReceiveMouseInputEvent",
-      condition: WIN && WEBRENDER,
+      condition: WIN,
       ignoreIfUnused: true, // intermittently occurs in "before becoming idle"
       maxCount: 1,
     },
