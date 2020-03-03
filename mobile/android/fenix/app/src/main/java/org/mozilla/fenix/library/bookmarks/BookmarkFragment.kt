@@ -166,8 +166,6 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), UserInteractionHan
                 } else {
                     inflater.inflate(R.menu.bookmarks_select_multi, menu)
                 }
-
-                menu.findItem(R.id.share_bookmark_multi_select)?.isVisible = mode.selectedItems.size == 1
             }
         }
     }
@@ -196,10 +194,12 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), UserInteractionHan
                 true
             }
             R.id.share_bookmark_multi_select -> {
-                val bookmark = bookmarkStore.state.mode.selectedItems.first()
+                val shareTabs = bookmarkStore.state.mode.selectedItems.map {
+                    ShareData(url = it.url, title = it.title)
+                }
                 navigate(
                     BookmarkFragmentDirections.actionBookmarkFragmentToShareFragment(
-                        data = arrayOf(ShareData(url = bookmark.url, title = bookmark.title))
+                        data = shareTabs.toTypedArray()
                     )
                 )
                 true
