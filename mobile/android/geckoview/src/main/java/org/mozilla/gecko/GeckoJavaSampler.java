@@ -16,7 +16,7 @@ import org.mozilla.gecko.annotation.WrapForJNI;
 public class GeckoJavaSampler {
     private static final String LOGTAG = "JavaSampler";
     private static Thread sSamplingThread;
-    private static SamplingThread sSamplingRunnable;
+    private static SamplingRunnable sSamplingRunnable;
     private static Thread sMainThread;
 
     // Use the same timer primitive as the profiler
@@ -54,7 +54,7 @@ public class GeckoJavaSampler {
         public String className;
     }
 
-    private static class SamplingThread implements Runnable {
+    private static class SamplingRunnable implements Runnable {
         private final int mInterval;
         private final int mSampleCount;
 
@@ -64,7 +64,7 @@ public class GeckoJavaSampler {
         private Sample[] mSamples;
         private int mSamplePos;
 
-        public SamplingThread(final int aInterval, final int aSampleCount) {
+        public SamplingRunnable(final int aInterval, final int aSampleCount) {
             // If we sample faster then 10ms we get to many missed samples
             mInterval = Math.max(10, aInterval);
             mSampleCount = aSampleCount;
@@ -152,7 +152,7 @@ public class GeckoJavaSampler {
             if (sSamplingRunnable != null) {
                 return;
             }
-            sSamplingRunnable = new SamplingThread(aInterval, aSamples);
+            sSamplingRunnable = new SamplingRunnable(aInterval, aSamples);
             sSamplingThread = new Thread(sSamplingRunnable, "Java Sampler");
             sSamplingThread.start();
         }
