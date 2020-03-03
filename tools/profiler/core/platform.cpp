@@ -4196,7 +4196,11 @@ static void locked_profiler_start(PSLockRef aLock, PowerOfTwo32 aCapacity,
     if (javaInterval < 10) {
       javaInterval = 10;
     }
-    java::GeckoJavaSampler::Start(javaInterval, 1000);
+    // Send the interval-relative entry count, but we have 100000 hard cap in
+    // the java code, it can't be more than that.
+    java::GeckoJavaSampler::Start(
+        javaInterval, std::round((double)(capacity.Value()) * interval /
+                                 (double)(javaInterval)));
   }
 #endif
 
