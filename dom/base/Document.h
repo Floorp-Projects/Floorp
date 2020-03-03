@@ -5172,6 +5172,8 @@ class MOZ_RAII IgnoreOpensDuringUnload final {
   Document* mDoc;
 };
 
+bool IsInActiveTab(Document* aDoc);
+
 }  // namespace dom
 }  // namespace mozilla
 
