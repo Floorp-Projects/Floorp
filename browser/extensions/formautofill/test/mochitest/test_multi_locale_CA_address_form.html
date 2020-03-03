@@ -59,6 +59,8 @@ function checkElementFilled(element, expectedvalue) {
            'data value of "beforeinput" event should be same as expected value');
         is(event.dataTransfer, null,
            'dataTransfer value of "beforeinput" event should be null');
+        is(event.getTargetRanges().length, 0,
+           'getTargetRanges() of "beforeinput" event should return empty array');
         is(event.cancelable, true,
            `"beforeinput" event should be cancelable on ${element.name}`);
         is(event.bubbles, true,
@@ -78,6 +80,8 @@ function checkElementFilled(element, expectedvalue) {
              "data value should be same as expected value");
           is(event.dataTransfer, null,
              "dataTransfer value should be null");
+          is(event.getTargetRanges().length, 0,
+             'getTargetRanges() should return empty array');
           is(element.value, expectedvalue,
              'value of the element should be modified at "input" event');
         } else {

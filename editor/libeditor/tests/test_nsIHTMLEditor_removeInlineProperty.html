@@ -27,8 +27,15 @@ SimpleTest.waitForFocus(async () => {
   let description, condition;
   let beforeInputEvents = [];
   let inputEvents = [];
+  let selectionRanges = [];
   function onBeforeInput(aEvent) {
     beforeInputEvents.push(aEvent);
+    selectionRanges = [];
+    for (let i = 0; i < selection.rangeCount; i++) {
+      let range = selection.getRangeAt(i);
+      selectionRanges.push({startContainer: range.startContainer, startOffset: range.startOffset,
+                            endContainer: range.endContainer, endOffset: range.endOffset});
+    }
   }
   function onInput(aEvent) {
     inputEvents.push(aEvent);
@@ -51,6 +58,25 @@ SimpleTest.waitForFocus(async () => {
     is(aEvent.inputType, aInputType, `${aDescription}inputType of "${aEvent.type}" event should be ${aInputType}`);
     is(aEvent.data, null, `${aDescription}data of "${aEvent.type}" event should be null`);
     is(aEvent.dataTransfer, null, `${aDescription}dataTransfer of "${aEvent.type}" event should be null`);
+    let targetRanges = aEvent.getTargetRanges();
+    if (aEvent.type === "beforeinput") {
+      is(targetRanges.length, selectionRanges.length,
+         `${aDescription}getTargetRanges() of "${aEvent.type}" event should return selection ranges`);
+      if (targetRanges.length === selectionRanges.length) {
+        for (let i = 0; i < selectionRanges.length; i++) {
+          is(targetRanges[i].startContainer, selectionRanges[i].startContainer,
+             `${aDescription}startContainer of getTargetRanges()[${i}] of "beforeinput" event does not match`);
+          is(targetRanges[i].startOffset, selectionRanges[i].startOffset,
+             `${aDescription}startOffset of getTargetRanges()[${i}] of "beforeinput" event does not match`);
+          is(targetRanges[i].endContainer, selectionRanges[i].endContainer,
+             `${aDescription}endContainer of getTargetRanges()[${i}] of "beforeinput" event does not match`);
+          is(targetRanges[i].endOffset, selectionRanges[i].endOffset,
+             `${aDescription}endOffset of getTargetRanges()[${i}] of "beforeinput" event does not match`);
+        }
+      }
+    } else {
+      is(targetRanges.length, 0, `${aDescription}getTargetRanges() of "${aEvent.type}" event should return empty array`);
+    }
   }
 
   function selectFromTextSiblings(aNode) {

@@ -184,6 +184,13 @@ nsDoTestsForEditorWithAutoComplete.prototype = {
             events[i].type
           }" event should be null`
         );
+        this._is(
+          events[i].getTargetRanges().length,
+          0,
+          `${this._description}, ${aTest.description}: getTargetRanges() of "${
+            events[i].type
+          }" event should return empty array`
+        );
       }
     }
   },

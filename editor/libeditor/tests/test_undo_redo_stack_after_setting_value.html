@@ -49,6 +49,8 @@ SimpleTest.waitForFocus(async () => {
          `data of "${aEvent.type}" event should be ${aData} ${aDescription}`);
       is(aEvent.dataTransfer, null,
          `dataTransfer of "${aEvent.type}" should be null ${aDescription}`);
+      is(aEvent.getTargetRanges().length, 0,
+         `getTargetRanges() of "${aEvent.type}" should return empty array ${aDescription}`);
     }
 
     let beforeInputEvents = [];

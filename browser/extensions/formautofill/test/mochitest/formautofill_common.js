@@ -167,6 +167,11 @@ async function triggerAutofillAndCheckProfile(profile) {
               'dataTransfer of "beforeinput" should be null'
             );
             is(
+              event.getTargetRanges().length,
+              0,
+              'getTargetRanges() of "beforeinput" should return empty array'
+            );
+            is(
               event.cancelable,
               true,
               `"beforeinput" event should be cancelable on ${element.tagName}`
@@ -212,6 +217,11 @@ async function triggerAutofillAndCheckProfile(profile) {
               );
               is(event.data, String(value), `data value should be "${value}"`);
               is(event.dataTransfer, null, "dataTransfer should be null");
+              is(
+                event.getTargetRanges().length,
+                0,
+                "getTargetRanges() should return empty array"
+              );
             } else {
               ok(
                 !beforeInputFired,
