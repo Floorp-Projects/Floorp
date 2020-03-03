@@ -635,6 +635,7 @@ package org.mozilla.geckoview {
     method @AnyThread public void readFromParcel(@NonNull Parcel);
     method @UiThread public void releaseDisplay(@NonNull GeckoDisplay);
     method @AnyThread public void reload();
+    method @AnyThread public void reload(int);
     method @AnyThread public void restoreState(@NonNull GeckoSession.SessionState);
     method @AnyThread public void setActive(boolean);
     method @UiThread public void setAutofillDelegate(@Nullable Autofill.Delegate);
