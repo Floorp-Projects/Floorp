@@ -466,6 +466,7 @@ Connection::Connection(Service* aService, int aFlags,
       mAsyncExecutionThreadShuttingDown(false),
       mConnectionClosed(false),
       mDefaultTransactionType(mozIStorageConnection::TRANSACTION_DEFERRED),
+      mTransactionInProgress(false),
       mDestroying(false),
       mProgressHandler(nullptr),
       mFlags(aFlags),
@@ -1912,13 +1913,13 @@ Connection::GetTransactionInProgress(bool* _inProgress) {
   if (!connectionReady()) {
     return NS_ERROR_NOT_INITIALIZED;
   }
-  nsresult rv = ensureOperationSupported(ASYNCHRONOUS);
+  nsresult rv = ensureOperationSupported(SYNCHRONOUS);
   if (NS_FAILED(rv)) {
     return rv;
   }
 
   SQLiteMutexAutoLock lockedScope(sharedDBMutex);
-  *_inProgress = transactionInProgress(lockedScope);
+  *_inProgress = mTransactionInProgress;
   return NS_OK;
 }
 
@@ -1964,9 +1965,7 @@ Connection::BeginTransaction() {
 nsresult Connection::beginTransactionInternal(sqlite3* aNativeConnection,
                                               int32_t aTransactionType) {
   SQLiteMutexAutoLock lockedScope(sharedDBMutex);
-  if (transactionInProgress(lockedScope)) {
-    return NS_ERROR_FAILURE;
-  }
+  if (mTransactionInProgress) return NS_ERROR_FAILURE;
   nsresult rv;
   switch (aTransactionType) {
     case TRANSACTION_DEFERRED:
@@ -1981,6 +1980,7 @@ nsresult Connection::beginTransactionInternal(sqlite3* aNativeConnection,
     default:
       return NS_ERROR_ILLEGAL_VALUE;
   }
+  if (NS_SUCCEEDED(rv)) mTransactionInProgress = true;
   return rv;
 }
 
@@ -1999,11 +1999,10 @@ Connection::CommitTransaction() {
 
 nsresult Connection::commitTransactionInternal(sqlite3* aNativeConnection) {
   SQLiteMutexAutoLock lockedScope(sharedDBMutex);
-  if (!transactionInProgress(lockedScope)) {
-    return NS_ERROR_UNEXPECTED;
-  }
+  if (!mTransactionInProgress) return NS_ERROR_UNEXPECTED;
   nsresult rv =
       convertResultCode(executeSql(aNativeConnection, "COMMIT TRANSACTION"));
+  if (NS_SUCCEEDED(rv)) mTransactionInProgress = false;
   return rv;
 }
 
@@ -2022,12 +2021,11 @@ Connection::RollbackTransaction() {
 
 nsresult Connection::rollbackTransactionInternal(sqlite3* aNativeConnection) {
   SQLiteMutexAutoLock lockedScope(sharedDBMutex);
-  if (!transactionInProgress(lockedScope)) {
-    return NS_ERROR_UNEXPECTED;
-  }
+  if (!mTransactionInProgress) return NS_ERROR_UNEXPECTED;
 
   nsresult rv =
       convertResultCode(executeSql(aNativeConnection, "ROLLBACK TRANSACTION"));
+  if (NS_SUCCEEDED(rv)) mTransactionInProgress = false;
   return rv;
 }
 
