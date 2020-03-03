@@ -2278,12 +2278,6 @@ pref("devtools.debugger.features.map-await-expression", true);
 
 pref("devtools.debugger.features.async-live-stacks", true);
 
-#ifdef defined(NIGHTLY_BUILD) || defined(MOZ_DEV_EDITION)
-pref("devtools.debugger.features.async-captured-stacks", true);
-#else
-pref("devtools.debugger.features.async-captured-stacks", false);
-#endif
-
 // Disable autohide for DevTools popups and tooltips.
 // This is currently not exposed by any UI to avoid making
 // about:devtools-toolbox tabs unusable by mistake.
