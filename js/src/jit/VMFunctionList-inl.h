@@ -224,7 +224,6 @@ namespace jit {
   _(OperatorInI, js::jit::OperatorInI)                                         \
   _(OptimizeSpreadCall, js::OptimizeSpreadCall)                                \
   _(PopLexicalEnv, js::jit::PopLexicalEnv)                                     \
-  _(PopVarEnv, js::jit::PopVarEnv)                                             \
   _(PowValues, js::PowValues)                                                  \
   _(ProcessCallSiteObjOperation, js::ProcessCallSiteObjOperation)              \
   _(ProxyGetProperty, js::ProxyGetProperty)                                    \

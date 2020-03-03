@@ -1197,11 +1197,6 @@ bool PushVarEnv(JSContext* cx, BaselineFrame* frame, HandleScope scope) {
   return frame->pushVarEnvironment(cx, scope);
 }
 
-bool PopVarEnv(JSContext* cx, BaselineFrame* frame) {
-  frame->popOffEnvironmentChain<VarEnvironmentObject>();
-  return true;
-}
-
 bool EnterWith(JSContext* cx, BaselineFrame* frame, HandleValue val,
                Handle<WithScope*> templ) {
   return EnterWithOperation(cx, frame, val, templ);
