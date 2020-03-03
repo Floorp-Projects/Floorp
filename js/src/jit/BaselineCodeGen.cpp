@@ -5066,16 +5066,6 @@ bool BaselineCodeGen<Handler>::emit_PushVarEnv() {
 }
 
 template <typename Handler>
-bool BaselineCodeGen<Handler>::emit_PopVarEnv() {
-  prepareVMCall();
-  masm.loadBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
-  pushArg(R0.scratchReg());
-
-  using Fn = bool (*)(JSContext*, BaselineFrame*);
-  return callVM<Fn, jit::PopVarEnv>();
-}
-
-template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_EnterWith() {
   // Pop "with" object to R0.
   frame.popRegsAndSync(1);

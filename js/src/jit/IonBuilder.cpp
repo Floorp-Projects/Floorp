@@ -2475,7 +2475,6 @@ AbortReasonOr<Ok> IonBuilder::inspectOpcode(JSOp op, bool* restarted) {
 
     // Environments (bug 1366470)
     case JSOp::PushVarEnv:
-    case JSOp::PopVarEnv:
 
     // Compound assignment
     case JSOp::GetBoundName:
