@@ -383,8 +383,7 @@ function remoteSettingsFunction() {
         if (!client) {
           return null;
         }
-        const kintoCol = await client.openCollection();
-        const localTimestamp = await kintoCol.db.getLastModified();
+        const localTimestamp = await client.getLastModified();
         const lastCheck = Services.prefs.getIntPref(
           client.lastCheckTimePref,
           0
