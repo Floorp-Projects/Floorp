@@ -151,6 +151,12 @@ struct APZCTreeManager::TreeBuildingState {
   // position animation id (which indicates that they need to be sampled for
   // WebRender on the sampler thread).
   std::vector<HitTestingTreeNode*> mFixedPositionNodesWithAnimationId;
+
+  // This is populated with all the HitTestingTreeNodes that are scrollbar
+  // containers for the root viewport and have a scrollthumb animation id
+  // (which indicates that they need to be sampled for WebRender on the sampler
+  // thread).
+  std::vector<HitTestingTreeNode*> mRootScrollbars;
 };
 
 class APZCTreeManager::CheckerboardFlushObserver : public nsIObserver {
@@ -469,9 +475,15 @@ APZCTreeManager::UpdateHitTestingTreeImpl(const ScrollNode& aRoot,
           // Note also that when webrender is enabled, a "valid" animation id
           // is always nonzero, so we don't need to worry about handling the
           // case where WR is enabled and the animation id is zero.
-          if (node->IsScrollThumbNode() && node->GetScrollbarAnimationId()) {
-            state.mScrollThumbs.push_back(node);
+          if (node->GetScrollbarAnimationId()) {
+            if (node->IsScrollThumbNode()) {
+              state.mScrollThumbs.push_back(node);
+            } else if (node->IsScrollbarContainerNode()) {
+              // Only scrollbar containers for the root have an animation id.
+              state.mRootScrollbars.push_back(node);
+            }
           }
+
           // GetFixedPositionAnimationId is only set when webrender is enabled.
           if (node->GetFixedPositionAnimationId().isSome()) {
             state.mFixedPositionNodesWithAnimationId.push_back(node);
@@ -620,6 +632,16 @@ APZCTreeManager::UpdateHitTestingTreeImpl(const ScrollNode& aRoot,
           *(thumb->GetScrollbarAnimationId()), thumb->GetTransform(),
           thumb->GetScrollbarData(), targetGuid, target->GetTransform(),
           target->IsAncestorOf(thumb));
+    }
+
+    mRootScrollbarInfo.clear();
+    // For non-webrender, and platforms without a dynamic toolbar,
+    // state.mRootScrollbarsWithAnimationId will be empty so this will be a
+    // no-op.
+    for (const HitTestingTreeNode* scrollbar : state.mRootScrollbars) {
+      MOZ_ASSERT(scrollbar->IsScrollbarContainerNode());
+      mRootScrollbarInfo.emplace_back(*(scrollbar->GetScrollbarAnimationId()),
+                                      scrollbar->GetScrollbarDirection());
     }
 
     mFixedPositionInfo.clear();
@@ -783,6 +805,23 @@ void APZCTreeManager::SampleForWebRender(wr::TransactionWrapper& aTxn,
             });
     transforms.AppendElement(
         wr::ToWrTransformProperty(info.mThumbAnimationId, transform));
+  }
+
+  // Move the root scrollbar in response to the dynamic toolbar transition.
+  for (const RootScrollbarInfo& info : mRootScrollbarInfo) {
+    // We only care about the horizontal scrollbar.
+    if (info.mScrollDirection == ScrollDirection::eHorizontal) {
+      ScreenPoint translation =
+          AsyncCompositionManager::ComputeFixedMarginsOffset(
+              mCompositorFixedLayerMargins, SideBits::eBottom, ScreenMargin());
+
+      LayerToParentLayerMatrix4x4 transform =
+          LayerToParentLayerMatrix4x4::Translation(ViewAs<ParentLayerPixel>(
+              translation, PixelCastJustification::ScreenIsParentLayerForRoot));
+
+      transforms.AppendElement(
+          wr::ToWrTransformProperty(info.mScrollbarAnimationId, transform));
+    }
   }
 
   for (const FixedPositionInfo& info : mFixedPositionInfo) {

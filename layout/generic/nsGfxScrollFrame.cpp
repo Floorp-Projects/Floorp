@@ -3165,7 +3165,8 @@ void ScrollFrameHelper::AppendScrollPartsTo(nsDisplayListBuilder* aBuilder,
   // viewport scrollbars. They would create layerization problems. This wouldn't
   // normally be an issue but themes can add overflow areas to scrollbar parts.
   if (mIsRoot) {
-    nsRect scrollPartsClip(aBuilder->ToReferenceFrame(mOuter), TrueOuterSize());
+    nsRect scrollPartsClip(aBuilder->ToReferenceFrame(mOuter),
+                           TrueOuterSize(aBuilder));
     clipState.ClipContentDescendants(scrollPartsClip);
   }
 
@@ -5770,11 +5771,26 @@ class MOZ_RAII AutoMinimumScaleSizeChangeDetector final {
   bool mPreviousIsUsingMinimumScaleSize;
 };
 
-nsSize ScrollFrameHelper::TrueOuterSize() const {
+nsSize ScrollFrameHelper::TrueOuterSize(nsDisplayListBuilder* aBuilder) const {
   if (RefPtr<MobileViewportManager> manager =
           mOuter->PresShell()->GetMobileViewportManager()) {
+    LayoutDeviceIntSize displaySize = manager->DisplaySize();
+
+    MOZ_ASSERT(aBuilder);
+    // In case of WebRender, we expand the outer size to include the dynamic
+    // toolbar area here.
+    // In case of non WebRender, we expand the size dynamically in
+    // MoveScrollbarForLayerMargin in AsyncCompositionManager.cpp.
+    LayerManager* layerManager = aBuilder->GetWidgetLayerManager();
+    if (layerManager &&
+        layerManager->GetBackendType() == layers::LayersBackend::LAYERS_WR) {
+      displaySize.height += ViewAs<LayoutDevicePixel>(
+          mOuter->PresContext()->GetDynamicToolbarMaxHeight(),
+          PixelCastJustification::LayoutDeviceIsScreenForBounds);
+    }
+
     return LayoutDeviceSize::ToAppUnits(
-        manager->DisplaySize(), mOuter->PresContext()->AppUnitsPerDevPixel());
+        displaySize, mOuter->PresContext()->AppUnitsPerDevPixel());
   }
   return mOuter->GetSize();
 }

@@ -117,6 +117,11 @@ bool HitTestingTreeNode::IsScrollbarNode() const {
   return mScrollbarData.mScrollbarLayerType != layers::ScrollbarLayerType::None;
 }
 
+bool HitTestingTreeNode::IsScrollbarContainerNode() const {
+  return mScrollbarData.mScrollbarLayerType ==
+         layers::ScrollbarLayerType::Container;
+}
+
 ScrollDirection HitTestingTreeNode::GetScrollbarDirection() const {
   MOZ_ASSERT(IsScrollbarNode());
   MOZ_ASSERT(mScrollbarData.mDirection.isSome());
