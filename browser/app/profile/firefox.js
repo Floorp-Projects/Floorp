@@ -308,25 +308,21 @@ pref("browser.urlbar.openintab", false);
 pref("browser.urlbar.usepreloadedtopurls.enabled", false);
 pref("browser.urlbar.usepreloadedtopurls.expire_days", 14);
 
-#ifdef EARLY_BETA_OR_EARLIER
-  // Whether the quantum bar displays design update 1.
-  pref("browser.urlbar.update1", true);
-  // If true, we show actionable tips in the Urlbar when the user is searching
-  // for those actions.
-  pref("browser.urlbar.update1.interventions", true);
-  // If true, we show new users and those about to start an organic search a tip
-  // encouraging them to use the Urlbar.
-  pref("browser.urlbar.update1.searchTips", true);
-  // Whether the urlbar should strip https from urls in the view.
-  pref("browser.urlbar.update1.view.stripHttps", true);
-  pref("browser.urlbar.openViewOnFocus", true);
-#else
-  pref("browser.urlbar.update1", false);
-  pref("browser.urlbar.update1.interventions", false);
-  pref("browser.urlbar.update1.searchTips", false);
-  pref("browser.urlbar.update1.view.stripHttps", false);
-  pref("browser.urlbar.openViewOnFocus", false);
-#endif
+// Whether the quantum bar displays design update 1.
+pref("browser.urlbar.update1", true);
+
+// If true, we show actionable tips in the Urlbar when the user is searching
+// for those actions.
+pref("browser.urlbar.update1.interventions", true);
+
+// If true, we show new users and those about to start an organic search a tip
+// encouraging them to use the Urlbar.
+pref("browser.urlbar.update1.searchTips", true);
+
+// Whether the urlbar should strip https from urls in the view.
+pref("browser.urlbar.update1.view.stripHttps", true);
+
+pref("browser.urlbar.openViewOnFocus", true);
 
 // Whether we expand the font size when when the urlbar is
 // focused in design update 2.
