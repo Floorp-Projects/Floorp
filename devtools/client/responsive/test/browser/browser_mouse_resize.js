@@ -42,7 +42,6 @@ addRDMTask(
       [0, -10],
       ui
     );
-  }
-  // XXX: Enable testing against new browser UI.
-  // true
+  },
+  { usingBrowserUI: true, waitForDeviceList: true }
 );
