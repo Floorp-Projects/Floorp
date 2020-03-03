@@ -53,30 +53,15 @@ nsresult nsBox::EndXULLayout(nsBoxLayoutState& aState) {
   return SyncLayout(aState);
 }
 
-bool nsBox::gGotTheme = false;
-StaticRefPtr<nsITheme> nsBox::gTheme;
-
 nsBox::nsBox(ComputedStyle* aStyle, nsPresContext* aPresContext, ClassID aID)
     : nsIFrame(aStyle, aPresContext, aID) {
   MOZ_COUNT_CTOR(nsBox);
-  if (!gGotTheme) {
-    gTheme = do_GetNativeTheme();
-    if (gTheme) {
-      gGotTheme = true;
-    }
-  }
 }
 
 nsBox::~nsBox() {
   // NOTE:  This currently doesn't get called for |nsBoxToBlockAdaptor|
   // objects, so don't rely on putting anything here.
   MOZ_COUNT_DTOR(nsBox);
-}
-
-/* static */
-void nsBox::Shutdown() {
-  gGotTheme = false;
-  gTheme = nullptr;
 }
 
 nsresult nsBox::XULRelayoutChildAtOrdinal(nsIFrame* aChild) { return NS_OK; }
@@ -142,14 +127,15 @@ nsresult nsBox::GetXULBorder(nsMargin& aMargin) {
   aMargin.SizeTo(0, 0, 0, 0);
 
   const nsStyleDisplay* disp = StyleDisplay();
-  if (disp->HasAppearance() && gTheme) {
+  if (disp->HasAppearance()) {
     // Go to the theme for the border.
-    nsPresContext* context = PresContext();
-    if (gTheme->ThemeSupportsWidget(context, this, disp->mAppearance)) {
-      LayoutDeviceIntMargin margin = gTheme->GetWidgetBorder(
-          context->DeviceContext(), this, disp->mAppearance);
+    nsPresContext* pc = PresContext();
+    nsITheme* theme = pc->GetTheme();
+    if (theme && theme->ThemeSupportsWidget(pc, this, disp->mAppearance)) {
+      LayoutDeviceIntMargin margin =
+          theme->GetWidgetBorder(pc->DeviceContext(), this, disp->mAppearance);
       aMargin =
-          LayoutDevicePixel::ToAppUnits(margin, context->AppUnitsPerDevPixel());
+          LayoutDevicePixel::ToAppUnits(margin, pc->AppUnitsPerDevPixel());
       return NS_OK;
     }
   }
@@ -161,16 +147,17 @@ nsresult nsBox::GetXULBorder(nsMargin& aMargin) {
 
 nsresult nsBox::GetXULPadding(nsMargin& aPadding) {
   const nsStyleDisplay* disp = StyleDisplay();
-  if (disp->HasAppearance() && gTheme) {
+  if (disp->HasAppearance()) {
     // Go to the theme for the padding.
-    nsPresContext* context = PresContext();
-    if (gTheme->ThemeSupportsWidget(context, this, disp->mAppearance)) {
+    nsPresContext* pc = PresContext();
+    nsITheme* theme = pc->GetTheme();
+    if (theme && theme->ThemeSupportsWidget(pc, this, disp->mAppearance)) {
       LayoutDeviceIntMargin padding;
-      bool useThemePadding = gTheme->GetWidgetPadding(
-          context->DeviceContext(), this, disp->mAppearance, &padding);
+      bool useThemePadding = theme->GetWidgetPadding(
+          pc->DeviceContext(), this, disp->mAppearance, &padding);
       if (useThemePadding) {
-        aPadding = LayoutDevicePixel::ToAppUnits(
-            padding, context->AppUnitsPerDevPixel());
+        aPadding =
+            LayoutDevicePixel::ToAppUnits(padding, pc->AppUnitsPerDevPixel());
         return NS_OK;
       }
     }
