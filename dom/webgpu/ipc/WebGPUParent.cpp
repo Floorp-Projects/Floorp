@@ -297,7 +297,7 @@ ipc::IPCResult WebGPUParent::RecvShaderModuleDestroy(RawId aSelfId) {
 
 ipc::IPCResult WebGPUParent::RecvDeviceCreateComputePipeline(
     RawId aSelfId, const SerialComputePipelineDescriptor& aDesc, RawId aNewId) {
-  const NS_LossyConvertUTF16toASCII entryPoint(aDesc.mComputeStage.mEntryPoint);
+  NS_LossyConvertUTF16toASCII entryPoint(aDesc.mComputeStage.mEntryPoint);
   ffi::WGPUComputePipelineDescriptor desc = {};
   desc.layout = aDesc.mLayout;
   desc.compute_stage.module = aDesc.mComputeStage.mModule;
@@ -309,62 +309,6 @@ ipc::IPCResult WebGPUParent::RecvDeviceCreateComputePipeline(
 
 ipc::IPCResult WebGPUParent::RecvComputePipelineDestroy(RawId aSelfId) {
   ffi::wgpu_server_compute_pipeline_destroy(mContext, aSelfId);
-  return IPC_OK();
-}
-
-ipc::IPCResult WebGPUParent::RecvDeviceCreateRenderPipeline(
-    RawId aSelfId, const SerialRenderPipelineDescriptor& aDesc, RawId aNewId) {
-  const NS_LossyConvertUTF16toASCII vsEntryPoint(
-      aDesc.mVertexStage.mEntryPoint);
-  const NS_LossyConvertUTF16toASCII fsEntryPoint(
-      aDesc.mFragmentStage.mEntryPoint);
-  size_t totalAttributes = 0;
-  for (const auto& vertexBuffer : aDesc.mVertexInput.mVertexBuffers) {
-    totalAttributes += vertexBuffer.mAttributes.Length();
-  }
-  nsTArray<ffi::WGPUVertexBufferDescriptor> vertexBuffers(
-      aDesc.mVertexInput.mVertexBuffers.Length());
-  nsTArray<ffi::WGPUVertexAttributeDescriptor> vertexAttributes(
-      totalAttributes);
-
-  ffi::WGPURenderPipelineDescriptor desc = {};
-  ffi::WGPUProgrammableStageDescriptor fragmentDesc = {};
-  desc.layout = aDesc.mLayout;
-  desc.vertex_stage.module = aDesc.mVertexStage.mModule;
-  desc.vertex_stage.entry_point = vsEntryPoint.get();
-  if (aDesc.mFragmentStage.mModule != 0) {
-    fragmentDesc.module = aDesc.mFragmentStage.mModule;
-    fragmentDesc.entry_point = fsEntryPoint.get();
-    desc.fragment_stage = &fragmentDesc;
-  }
-  desc.primitive_topology = aDesc.mPrimitiveTopology;
-  if (aDesc.mRasterizationState.isSome()) {
-    desc.rasterization_state = aDesc.mRasterizationState.ptr();
-  }
-  desc.color_states = aDesc.mColorStates.Elements();
-  desc.color_states_length = aDesc.mColorStates.Length();
-  if (aDesc.mDepthStencilState.isSome()) {
-    desc.depth_stencil_state = aDesc.mDepthStencilState.ptr();
-  }
-  totalAttributes = 0;
-  for (const auto& vertexBuffer : aDesc.mVertexInput.mVertexBuffers) {
-    ffi::WGPUVertexBufferDescriptor vb = {};
-    vb.stride = vertexBuffer.mStride;
-    vb.step_mode = vertexBuffer.mStepMode;
-    vb.attributes = vertexAttributes.Elements() + totalAttributes;
-    vb.attributes_length = vertexBuffer.mAttributes.Length();
-    for (const auto& attribute : vertexBuffer.mAttributes) {
-      vertexAttributes.AppendElement(attribute);
-    }
-  }
-  desc.vertex_input.index_format = aDesc.mVertexInput.mIndexFormat;
-  desc.vertex_input.vertex_buffers = vertexBuffers.Elements();
-  desc.vertex_input.vertex_buffers_length = vertexBuffers.Length();
-  desc.sample_count = aDesc.mSampleCount;
-  desc.sample_mask = aDesc.mSampleMask;
-  desc.alpha_to_coverage_enabled = aDesc.mAlphaToCoverageEnabled;
-  ffi::wgpu_server_device_create_render_pipeline(mContext, aSelfId, &desc,
-                                                 aNewId);
   return IPC_OK();
 }
 

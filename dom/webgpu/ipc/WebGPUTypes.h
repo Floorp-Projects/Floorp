@@ -8,11 +8,12 @@
 
 #include <cstdint>
 #include "nsTArray.h"
-#include "mozilla/Maybe.h"
-#include "mozilla/webgpu/ffi/wgpu.h"
 
 namespace mozilla {
 namespace webgpu {
+namespace ffi {
+struct WGPUBindGroupLayoutBinding;
+}  // namespace ffi
 
 typedef uint64_t RawId;
 typedef uint64_t BufferAddress;
@@ -53,31 +54,6 @@ struct SerialProgrammableStageDescriptor {
 struct SerialComputePipelineDescriptor {
   RawId mLayout;
   SerialProgrammableStageDescriptor mComputeStage;
-};
-
-struct SerialVertexBufferDescriptor {
-  ffi::WGPUBufferAddress mStride;
-  ffi::WGPUInputStepMode mStepMode;
-  nsTArray<ffi::WGPUVertexAttributeDescriptor> mAttributes;
-};
-
-struct SerialVertexInputDescriptor {
-  ffi::WGPUIndexFormat mIndexFormat;
-  nsTArray<SerialVertexBufferDescriptor> mVertexBuffers;
-};
-
-struct SerialRenderPipelineDescriptor {
-  RawId mLayout;
-  SerialProgrammableStageDescriptor mVertexStage;
-  SerialProgrammableStageDescriptor mFragmentStage;
-  ffi::WGPUPrimitiveTopology mPrimitiveTopology;
-  Maybe<ffi::WGPURasterizationStateDescriptor> mRasterizationState;
-  nsTArray<ffi::WGPUColorStateDescriptor> mColorStates;
-  Maybe<ffi::WGPUDepthStencilStateDescriptor> mDepthStencilState;
-  SerialVertexInputDescriptor mVertexInput;
-  uint32_t mSampleCount;
-  uint32_t mSampleMask;
-  bool mAlphaToCoverageEnabled;
 };
 
 }  // namespace webgpu
