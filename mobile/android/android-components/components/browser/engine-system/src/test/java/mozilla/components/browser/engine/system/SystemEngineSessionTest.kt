@@ -206,18 +206,20 @@ class SystemEngineSessionTest {
     @Test
     fun restoreState() {
         val engineSession = spy(SystemEngineSession(testContext))
-        val webView = mock<WebView>()
+        val webView = spy(WebView(testContext))
 
         try {
             engineSession.restoreState(mock())
             fail("Expected IllegalArgumentException")
         } catch (e: IllegalArgumentException) {}
-        engineSession.restoreState(SystemEngineSessionState(Bundle()))
+        assertFalse(engineSession.restoreState(SystemEngineSessionState(Bundle())))
         verify(webView, never()).restoreState(any(Bundle::class.java))
 
         engineSession.webView = webView
+        engineSession.webView.loadUrl("http://example.com")
+        val state = engineSession.saveState()
 
-        engineSession.restoreState(SystemEngineSessionState(Bundle()))
+        assertTrue(engineSession.restoreState(state))
         verify(webView).restoreState(any(Bundle::class.java))
     }
 

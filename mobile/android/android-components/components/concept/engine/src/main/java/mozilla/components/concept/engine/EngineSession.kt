@@ -453,8 +453,10 @@ abstract class EngineSession(
      * Restores the engine state as provided by [saveState].
      *
      * @param state state retrieved from [saveState]
+     * @return true if the engine session has successfully been restored with the provided state,
+     * false otherwise.
      */
-    abstract fun restoreState(state: EngineSessionState)
+    abstract fun restoreState(state: EngineSessionState): Boolean
 
     /**
      * Enables tracking protection for this engine session.

@@ -152,16 +152,17 @@ class GeckoEngineSession(
     /**
      * See [EngineSession.restoreState]
      */
-    override fun restoreState(state: EngineSessionState) {
+    override fun restoreState(state: EngineSessionState): Boolean {
         if (state !is GeckoEngineSessionState) {
             throw IllegalStateException("Can only restore from GeckoEngineSessionState")
         }
 
         if (state.actualState == null) {
-            return
+            return false
         }
 
         geckoSession.restoreState(state.actualState)
+        return true
     }
 
     /**

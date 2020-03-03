@@ -273,20 +273,21 @@ class LegacySessionManager(
         getEngineSession(session)?.let { return it }
 
         return engine.createSession(session.private).apply {
+            var restored = false
             session.engineSessionHolder.engineSessionState?.let { state ->
-                restoreState(state)
+                restored = restoreState(state)
                 session.engineSessionHolder.engineSessionState = null
             }
 
-            link(session, this)
+            link(session, this, restored)
         }
     }
 
-    fun link(session: Session, engineSession: EngineSession) {
+    private fun link(session: Session, engineSession: EngineSession, restored: Boolean = false) {
         val parent = values.find { it.id == session.parentId }?.let {
             this.getEngineSession(it)
         }
-        engineSessionLinker.link(session, engineSession, parent)
+        engineSessionLinker.link(session, engineSession, parent, restored)
 
         if (session == selectedSession) {
             engineSession.markActiveForWebExtensions(true)

@@ -40,14 +40,21 @@ class SessionManager(
         /**
          * Links the provided [Session] and [EngineSession].
          */
-        fun link(session: Session, engineSession: EngineSession, parentEngineSession: EngineSession?) {
+        fun link(
+            session: Session,
+            engineSession: EngineSession,
+            parentEngineSession: EngineSession?,
+            sessionRestored: Boolean = false
+        ) {
             unlink(session)
 
             session.engineSessionHolder.apply {
                 this.engineSession = engineSession
                 this.engineObserver = EngineObserver(session, store).also { observer ->
                     engineSession.register(observer)
-                    engineSession.loadUrl(session.url, parentEngineSession)
+                    if (!sessionRestored) {
+                        engineSession.loadUrl(session.url, parentEngineSession)
+                    }
                 }
             }
 
