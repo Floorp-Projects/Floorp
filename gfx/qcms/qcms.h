@@ -129,6 +129,13 @@ typedef struct
 	qcms_CIE_xyY blue;
 } qcms_CIE_xyYTRIPLE;
 
+qcms_profile* qcms_profile_create_rgb_with_gamma_set(
+                qcms_CIE_xyY white_point,
+                qcms_CIE_xyYTRIPLE primaries,
+                float redGamma,
+                float blueGamma,
+                float greenGamma);
+
 qcms_profile* qcms_profile_create_rgb_with_gamma(
                 qcms_CIE_xyY white_point,
                 qcms_CIE_xyYTRIPLE primaries,
@@ -152,7 +159,10 @@ void qcms_data_from_path(const char *path, void **mem, size_t *size);
 qcms_profile* qcms_profile_from_unicode_path(const wchar_t *path);
 void qcms_data_from_unicode_path(const wchar_t *path, void **mem, size_t *size);
 #endif
+
+qcms_CIE_xyY qcms_white_point_sRGB(void);
 qcms_profile* qcms_profile_sRGB(void);
+
 void qcms_profile_release(qcms_profile *profile);
 
 bool qcms_profile_is_bogus(qcms_profile *profile);
