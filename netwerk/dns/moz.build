@@ -82,6 +82,7 @@ GeneratedFile('etld_data.inc', script='prepare_tlds.py',
 # need to include etld_data.inc
 LOCAL_INCLUDES += [
     '/netwerk/base',
+    '/netwerk/protocol/http',
 ]
 
 USE_LIBS += ['icu']
