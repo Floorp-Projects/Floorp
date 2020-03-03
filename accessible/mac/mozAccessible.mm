@@ -302,7 +302,7 @@ static inline NSMutableArray* ConvertToNSArray(nsTArray<ProxyAccessible*>& aArra
 
   if ([attribute isEqualToString:NSAccessibilityDOMIdentifierAttribute]) {
     nsAutoString id;
-    if (accWrap)
+    if (accWrap && accWrap->GetContent())
       nsCoreUtils::GetID(accWrap->GetContent(), id);
     else
       proxy->DOMNodeID(id);
