@@ -321,10 +321,7 @@ class SitePermissionsFeature(
 
     private fun PermissionRequest.toSitePermissions(
         status: SitePermissions.Status,
-        initialSitePermission: SitePermissions = SitePermissions(
-            host,
-            savedAt = System.currentTimeMillis()
-        ),
+        initialSitePermission: SitePermissions = getInitialSitePermissions(this),
         permissions: List<Permission> = this.permissions
     ): SitePermissions {
         var sitePermissions = initialSitePermission
@@ -332,6 +329,12 @@ class SitePermissionsFeature(
             sitePermissions = updateSitePermissionsStatus(status, permission, sitePermissions)
         }
         return sitePermissions
+    }
+
+    internal fun getInitialSitePermissions(request: PermissionRequest): SitePermissions {
+        val rules = sitePermissionsRules
+        return rules?.toSitePermissions(request.host, savedAt = System.currentTimeMillis())
+                ?: SitePermissions(request.host, savedAt = System.currentTimeMillis())
     }
 
     private fun PermissionRequest.isForAutoplay() =

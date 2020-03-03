@@ -34,6 +34,8 @@ import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.grantPermission
 import mozilla.components.support.test.robolectric.testContext
+import mozilla.components.support.test.whenever
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
@@ -911,6 +913,35 @@ class SitePermissionsFeatureTest {
         sitePermissionFeature.start()
         verify(mockFragmentManager).beginTransaction()
         verify(transaction).remove(fragment)
+    }
+
+    @Test
+    fun `getInitialSitePermissions - WHEN sitePermissionsRules is present the function MUST use the sitePermissionsRules values to create a SitePermissions object`() {
+
+        val rules = SitePermissionsRules(
+                location = SitePermissionsRules.Action.BLOCKED,
+                camera = SitePermissionsRules.Action.ASK_TO_ALLOW,
+                notification = SitePermissionsRules.Action.ASK_TO_ALLOW,
+                microphone = SitePermissionsRules.Action.BLOCKED,
+                autoplayAudible = SitePermissionsRules.Action.BLOCKED,
+                autoplayInaudible = SitePermissionsRules.Action.ALLOWED
+        )
+
+        sitePermissionFeature.sitePermissionsRules = rules
+
+        val mockPermissionRequest: PermissionRequest = mock {
+            whenever(uri).thenReturn(" http://mozilla.org")
+        }
+
+        val sitePermissions = sitePermissionFeature.getInitialSitePermissions(mockPermissionRequest)
+
+        assertEquals("mozilla.org", sitePermissions.origin)
+        assertEquals(BLOCKED, sitePermissions.location)
+        assertEquals(NO_DECISION, sitePermissions.camera)
+        assertEquals(NO_DECISION, sitePermissions.notification)
+        assertEquals(BLOCKED, sitePermissions.microphone)
+        assertEquals(BLOCKED, sitePermissions.autoplayAudible)
+        assertEquals(ALLOWED, sitePermissions.autoplayInaudible)
     }
 
     private fun mockFragmentManager(): FragmentManager {
