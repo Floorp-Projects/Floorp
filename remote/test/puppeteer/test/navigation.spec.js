@@ -99,15 +99,20 @@ module.exports.addTests = function({testRunner, expect, puppeteer, CHROME}) {
     it('should fail when navigating to bad SSL', async({page, httpsServer}) => {
       // Make sure that network events do not emit 'undefined'.
       // @see https://crbug.com/750469
-      page.on('request', request => expect(request).toBeTruthy());
-      page.on('requestfinished', request => expect(request).toBeTruthy());
-      page.on('requestfailed', request => expect(request).toBeTruthy());
+      const requests =  [];
+      page.on('request', request => requests.push(request));
+      page.on('requestfinished', request => requests.push(request));
+      page.on('requestfailed', request => requests.push(request));
       let error = null;
       await page.goto(httpsServer.EMPTY_PAGE).catch(e => error = e);
       if (CHROME)
         expect(error.message).toContain('net::ERR_CERT_AUTHORITY_INVALID');
       else
         expect(error.message).toContain('SSL_ERROR_UNKNOWN');
+      expect(requests.length).toBe(3);
+      for (const request of requests) {
+        expect(request).toBeTruthy();
+      }
     });
     it('should fail when navigating to bad SSL after redirects', async({page, server, httpsServer}) => {
       server.setRedirect('/redirect/1.html', '/redirect/2.html');

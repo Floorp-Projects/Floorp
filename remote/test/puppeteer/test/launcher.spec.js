@@ -85,7 +85,7 @@ module.exports.addTests = function({testRunner, expect, defaultBrowserOptions, p
       });
     });
     describe('Browser.close', function() {
-      it('should terminate network waiters', async({context, server}) => {
+      it_fails_ffox('should terminate network waiters', async({context, server}) => {
         const browser = await puppeteer.launch(defaultBrowserOptions);
         const remote = await puppeteer.connect({browserWSEndpoint: browser.wsEndpoint()});
         const newPage = await remote.newPage();
@@ -102,7 +102,7 @@ module.exports.addTests = function({testRunner, expect, defaultBrowserOptions, p
       });
     });
     describe('Puppeteer.launch', function() {
-      it('should reject all promises when browser is closed', async() => {
+      it_fails_ffox('should reject all promises when browser is closed', async() => {
         const browser = await puppeteer.launch(defaultBrowserOptions);
         const page = await browser.newPage();
         let error = null;
@@ -117,7 +117,7 @@ module.exports.addTests = function({testRunner, expect, defaultBrowserOptions, p
         await puppeteer.launch(options).catch(e => waitError = e);
         expect(waitError.message).toContain('Failed to launch');
       });
-      it('userDataDir option', async({server}) => {
+      it_fails_ffox('userDataDir option', async({server}) => {
         const userDataDir = await mkdtempAsync(TMP_FOLDER);
         const options = Object.assign({userDataDir}, defaultBrowserOptions);
         const browser = await puppeteer.launch(options);
@@ -129,7 +129,7 @@ module.exports.addTests = function({testRunner, expect, defaultBrowserOptions, p
         // This might throw. See https://github.com/puppeteer/puppeteer/issues/2778
         await rmAsync(userDataDir).catch(e => {});
       });
-      it('userDataDir argument', async({server}) => {
+      it_fails_ffox('userDataDir argument', async({server}) => {
         const userDataDir = await mkdtempAsync(TMP_FOLDER);
         const options = Object.assign({}, defaultBrowserOptions);
         if (CHROME) {
@@ -151,7 +151,7 @@ module.exports.addTests = function({testRunner, expect, defaultBrowserOptions, p
         // This might throw. See https://github.com/puppeteer/puppeteer/issues/2778
         await rmAsync(userDataDir).catch(e => {});
       });
-      it('userDataDir option should restore state', async({server}) => {
+      it_fails_ffox('userDataDir option should restore state', async({server}) => {
         const userDataDir = await mkdtempAsync(TMP_FOLDER);
         const options = Object.assign({userDataDir}, defaultBrowserOptions);
         const browser = await puppeteer.launch(options);
@@ -234,7 +234,7 @@ module.exports.addTests = function({testRunner, expect, defaultBrowserOptions, p
         expect(spawnargs.indexOf(defaultArgs[2])).toBe(-1);
         await browser.close();
       });
-      it('should have default URL when launching browser', async function() {
+      it_fails_ffox('should have default URL when launching browser', async function() {
         const browser = await puppeteer.launch(defaultBrowserOptions);
         const pages = (await browser.pages()).map(page => page.url());
         expect(pages).toEqual(['about:blank']);
@@ -252,7 +252,7 @@ module.exports.addTests = function({testRunner, expect, defaultBrowserOptions, p
         expect(page.url()).toBe(server.EMPTY_PAGE);
         await browser.close();
       });
-      it('should set the default viewport', async() => {
+      it_fails_ffox('should set the default viewport', async() => {
         const options = Object.assign({}, defaultBrowserOptions, {
           defaultViewport: {
             width: 456,
@@ -265,7 +265,7 @@ module.exports.addTests = function({testRunner, expect, defaultBrowserOptions, p
         expect(await page.evaluate('window.innerHeight')).toBe(789);
         await browser.close();
       });
-      it('should disable the default viewport', async() => {
+      it_fails_ffox('should disable the default viewport', async() => {
         const options = Object.assign({}, defaultBrowserOptions, {
           defaultViewport: null
         });
@@ -289,7 +289,7 @@ module.exports.addTests = function({testRunner, expect, defaultBrowserOptions, p
       });
     });
     describe('Puppeteer.connect', function() {
-      it('should be able to connect multiple times to the same browser', async({server}) => {
+      it_fails_ffox('should be able to connect multiple times to the same browser', async({server}) => {
         const originalBrowser = await puppeteer.launch(defaultBrowserOptions);
         const browser = await puppeteer.connect({
           browserWSEndpoint: originalBrowser.wsEndpoint()
@@ -302,7 +302,7 @@ module.exports.addTests = function({testRunner, expect, defaultBrowserOptions, p
         expect(await secondPage.evaluate(() => 7 * 6)).toBe(42, 'original browser should still work');
         await originalBrowser.close();
       });
-      it('should be able to close remote browser', async({server}) => {
+      it_fails_ffox('should be able to close remote browser', async({server}) => {
         const originalBrowser = await puppeteer.launch(defaultBrowserOptions);
         const remoteBrowser = await puppeteer.connect({
           browserWSEndpoint: originalBrowser.wsEndpoint()
@@ -401,7 +401,7 @@ module.exports.addTests = function({testRunner, expect, defaultBrowserOptions, p
   });
 
   describe('Browser.Events.disconnected', function() {
-    it('should be emitted when: browser gets closed, disconnected or underlying websocket gets closed', async() => {
+    it_fails_ffox('should be emitted when: browser gets closed, disconnected or underlying websocket gets closed', async() => {
       const originalBrowser = await puppeteer.launch(defaultBrowserOptions);
       const browserWSEndpoint = originalBrowser.wsEndpoint();
       const remoteBrowser1 = await puppeteer.connect({browserWSEndpoint});

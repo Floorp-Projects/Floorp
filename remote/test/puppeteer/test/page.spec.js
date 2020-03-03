@@ -95,7 +95,7 @@ module.exports.addTests = function({testRunner, expect, headless, puppeteer, CHR
   });
 
   describe('Async stacks', () => {
-    it('should work', async({page, server}) => {
+    it_fails_ffox('should work', async({page, server}) => {
       server.setRoute('/empty.html', (req, res) => {
         res.statusCode = 204;
         res.end();
