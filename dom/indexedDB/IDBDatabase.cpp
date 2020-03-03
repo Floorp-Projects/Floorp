@@ -1144,12 +1144,12 @@ nsresult IDBDatabase::RenameObjectStore(int64_t aObjectStoreId,
   // Find the matched object store spec and check if 'aName' is already used by
   // another object store.
 
-  for (const auto& objSpec : objectStores) {
+  for (auto& objSpec : objectStores) {
     const bool idIsCurrent = objSpec.metadata().id() == aObjectStoreId;
 
     if (idIsCurrent) {
       MOZ_ASSERT(!foundObjectStoreSpec);
-      foundObjectStoreSpec = const_cast<ObjectStoreSpec*>(&objSpec);
+      foundObjectStoreSpec = &objSpec;
     }
 
     if (objSpec.metadata().name() == aName) {
