@@ -124,7 +124,7 @@ class Http3Session final : public nsAHttpTransaction,
 
   void SetupTimer(uint64_t aTimeout);
 
-  void ResetRecvd(uint64_t aStreamId, Http3AppError aError);
+  void ResetRecvd(uint64_t aStreamId, uint64_t aError);
 
   void QueueStream(Http3Stream* stream);
   void RemoveStreamFromQueues(Http3Stream*);
@@ -132,6 +132,8 @@ class Http3Session final : public nsAHttpTransaction,
 
   void CallCertVerification();
   void SetSecInfo();
+
+  void CloseConnectionTelemetry(CloseError& aError, bool aClosing);
 
   RefPtr<NeqoHttp3Conn> mHttp3Connection;
   RefPtr<nsAHttpConnection> mConnection;

@@ -312,118 +312,20 @@ pub extern "C" fn neqo_htttp3conn_send_request_body(
     }
 }
 
-// This error codes are not used currently, they will be used for telemetry.
-#[repr(C)]
-pub enum Http3AppError {
-    NoError,
-    WrongSettingsDirection,
-    PushRefused,
-    InternalError,
-    PushAlreadyInCache,
-    RequestCancelled,
-    IncompleteRequest,
-    ConnectError,
-    ExcessiveLoad,
-    VersionFallback,
-    WrongStream,
-    LimitExceeded,
-    DuplicatePush,
-    UnknownStreamType,
-    WrongStreamCount,
-    ClosedCriticalStream,
-    WrongStreamDirection,
-    EarlyResponse,
-    MissingSettings,
-    UnexpectedFrame,
-    RequestRejected,
-    GeneralProtocolError,
-    MalformedFrame(u64),
-    DecompressionFailed,
-    EncoderStreamError,
-    DecoderStreamError,
-}
-
-impl From<u64> for Http3AppError {
-    fn from(error: u64) -> Http3AppError {
-        match error {
-            0 => Http3AppError::NoError,
-            1 => Http3AppError::WrongSettingsDirection,
-            2 => Http3AppError::PushRefused,
-            3 => Http3AppError::InternalError,
-            4 => Http3AppError::PushAlreadyInCache,
-            5 => Http3AppError::RequestCancelled,
-            6 => Http3AppError::IncompleteRequest,
-            7 => Http3AppError::ConnectError,
-            8 => Http3AppError::ExcessiveLoad,
-            9 => Http3AppError::VersionFallback,
-            10 => Http3AppError::WrongStream,
-            11 => Http3AppError::LimitExceeded,
-            12 => Http3AppError::DuplicatePush,
-            13 => Http3AppError::UnknownStreamType,
-            14 => Http3AppError::WrongStreamCount,
-            15 => Http3AppError::ClosedCriticalStream,
-            16 => Http3AppError::WrongStreamDirection,
-            17 => Http3AppError::EarlyResponse,
-            18 => Http3AppError::MissingSettings,
-            19 => Http3AppError::UnexpectedFrame,
-            20 => Http3AppError::RequestRejected,
-            0xff => Http3AppError::GeneralProtocolError,
-            0x100..=0x1ff => Http3AppError::MalformedFrame(error - 0x100),
-            0x200 => Http3AppError::DecompressionFailed,
-            0x201 => Http3AppError::EncoderStreamError,
-            0x202 => Http3AppError::DecoderStreamError,
-            _ => Http3AppError::InternalError,
-        }
-    }
-}
-
-#[repr(C)]
-pub enum QuicTransportError {
-    NoError,
-    InternalError,
-    ServerBusy,
-    FlowControlError,
-    StreamLimitError,
-    StreamStateError,
-    FinalSizeError,
-    FrameEncodingError,
-    TransportParameterError,
-    ProtocolViolation,
-    InvalidMigration,
-    CryptoAlert(u8),
-}
-
-impl From<u64> for QuicTransportError {
-    fn from(error: u64) -> QuicTransportError {
-        match error {
-            0 => QuicTransportError::NoError,
-            1 => QuicTransportError::InternalError,
-            2 => QuicTransportError::ServerBusy,
-            3 => QuicTransportError::FlowControlError,
-            4 => QuicTransportError::StreamLimitError,
-            5 => QuicTransportError::StreamStateError,
-            6 => QuicTransportError::FinalSizeError,
-            7 => QuicTransportError::FrameEncodingError,
-            8 => QuicTransportError::TransportParameterError,
-            10 => QuicTransportError::ProtocolViolation,
-            12 => QuicTransportError::InvalidMigration,
-            0x100..=0x1ff => QuicTransportError::CryptoAlert((error & 0xff) as u8),
-            _ => QuicTransportError::InternalError,
-        }
-    }
-}
-
+// This is only used for telemetry. Therefore we only return error code
+// numbers and do not label them. Recording telemetry is easier with a
+// number.
 #[repr(C)]
 pub enum CloseError {
-    QuicTransportError(QuicTransportError),
-    Http3AppError(Http3AppError),
+    QuicTransportError(u64),
+    Http3AppError(u64),
 }
 
 impl From<neqo_transport::CloseError> for CloseError {
     fn from(error: neqo_transport::CloseError) -> CloseError {
         match error {
-            neqo_transport::CloseError::Transport(c) => CloseError::QuicTransportError(c.into()),
-            neqo_transport::CloseError::Application(c) => CloseError::Http3AppError(c.into()),
+            neqo_transport::CloseError::Transport(c) => CloseError::QuicTransportError(c),
+            neqo_transport::CloseError::Application(c) => CloseError::Http3AppError(c),
         }
     }
 }
@@ -473,7 +375,7 @@ pub enum Http3Event {
     /// Peer reset the stream.
     Reset {
         stream_id: u64,
-        error: Http3AppError,
+        error: u64,
     },
     /// A new push stream
     NewPushStream {
@@ -526,7 +428,7 @@ impl From<Http3ClientEvent> for Http3Event {
             }
             Http3ClientEvent::Reset { stream_id, error } => Http3Event::Reset {
                 stream_id,
-                error: error.into(),
+                error,
             },
             Http3ClientEvent::NewPushStream { stream_id } => {
                 Http3Event::NewPushStream { stream_id }
