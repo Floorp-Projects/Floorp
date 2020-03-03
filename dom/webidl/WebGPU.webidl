@@ -122,7 +122,7 @@ interface GPUDevice {
 
     GPUShaderModule createShaderModule(GPUShaderModuleDescriptor descriptor);
     GPUComputePipeline createComputePipeline(GPUComputePipelineDescriptor descriptor);
-    //GPURenderPipeline createRenderPipeline(GPURenderPipelineDescriptor descriptor);
+    GPURenderPipeline createRenderPipeline(GPURenderPipelineDescriptor descriptor);
 
     [NewObject]
     GPUCommandEncoder createCommandEncoder(optional GPUCommandEncoderDescriptor descriptor = {});
