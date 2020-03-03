@@ -192,7 +192,7 @@ nsSize nsTreeBodyFrame::GetXULMinSize(nsBoxLayoutState& aBoxLayoutState) {
 
   AddBorderAndPadding(min);
   bool widthSet, heightSet;
-  nsIFrame::AddXULMinSize(aBoxLayoutState, this, min, widthSet, heightSet);
+  nsIFrame::AddXULMinSize(this, min, widthSet, heightSet);
 
   return min;
 }

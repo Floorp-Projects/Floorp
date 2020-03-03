@@ -1080,7 +1080,7 @@ nsSize nsTextBoxFrame::GetXULMinSize(nsBoxLayoutState& aBoxLayoutState) {
 
   AddBorderAndPadding(size);
   bool widthSet, heightSet;
-  nsIFrame::AddXULMinSize(aBoxLayoutState, this, size, widthSet, heightSet);
+  nsIFrame::AddXULMinSize(this, size, widthSet, heightSet);
 
   return size;
 }

@@ -10408,7 +10408,7 @@ nsSize nsFrame::GetXULMinSize(nsBoxLayoutState& aState) {
   // get our size in CSS.
   bool widthSet, heightSet;
   bool completelyRedefined =
-      nsIFrame::AddXULMinSize(aState, this, size, widthSet, heightSet);
+      nsIFrame::AddXULMinSize(this, size, widthSet, heightSet);
 
   // Refresh our caches with new sizes.
   if (!completelyRedefined) {
