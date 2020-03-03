@@ -60,14 +60,17 @@ public class GeckoJavaSampler {
 
         private boolean mPauseSampler;
         private boolean mStopSampler;
+        private boolean mBufferOverflowed = false;
 
         private Sample[] mSamples;
         private int mSamplePos;
 
         public SamplingRunnable(final int aInterval, final int aSampleCount) {
-            // If we sample faster then 10ms we get to many missed samples
+            // If we sample faster then 10ms we get too many missed samples
             mInterval = Math.max(10, aInterval);
-            mSampleCount = aSampleCount;
+            // Setting a limit of 100000 for now to make sure we are not
+            // allocating too much.
+            mSampleCount = Math.min(aSampleCount, 100000);
         }
 
         @Override
@@ -94,7 +97,13 @@ public class GeckoJavaSampler {
                     if (!mPauseSampler) {
                         StackTraceElement[] bt = sMainThread.getStackTrace();
                         mSamples[mSamplePos] = new Sample(bt);
-                        mSamplePos = (mSamplePos + 1) % mSamples.length;
+                        mSamplePos += 1;
+                        if (mSamplePos == mSampleCount) {
+                            // Sample array is full now, go back to start of
+                            // the array and override old samples
+                            mSamplePos = 0;
+                            mBufferOverflowed = true;
+                        }
                     }
                     if (mStopSampler) {
                         break;
@@ -104,15 +113,22 @@ public class GeckoJavaSampler {
         }
 
         private Sample getSample(final int aSampleId) {
-            if (aSampleId < mSamples.length && mSamples[aSampleId] != null) {
-                int startPos = 0;
-                if (mSamples[mSamplePos] != null) {
-                    startPos = mSamplePos;
-                }
-                int readPos = (startPos + aSampleId) % mSamples.length;
-                return mSamples[readPos];
+            if (aSampleId >= mSampleCount) {
+                // Return early because there is no more sample left.
+                return null;
             }
-            return null;
+
+            int samplePos = aSampleId;
+            if (mBufferOverflowed) {
+                // This is a circular buffer and the buffer is overflowed. Start
+                // of the buffer is mSamplePos now. Calculate the real index.
+                samplePos = (samplePos + mSamplePos) % mSampleCount;
+            }
+
+            // Since the array elements are initialized to null, it will return
+            // null whenever we access to an element that's not been written yet.
+            // We want it to return null in that case, so it's okay.
+            return mSamples[samplePos];
         }
     }
 
