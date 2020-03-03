@@ -11,6 +11,7 @@ using SerialBindGroupLayoutDescriptor from "mozilla/webgpu/WebGPUTypes.h";
 using SerialPipelineLayoutDescriptor from "mozilla/webgpu/WebGPUTypes.h";
 using SerialBindGroupDescriptor from "mozilla/webgpu/WebGPUTypes.h";
 using SerialComputePipelineDescriptor from "mozilla/webgpu/WebGPUTypes.h";
+using SerialRenderPipelineDescriptor from "mozilla/webgpu/WebGPUTypes.h";
 using dom::GPURequestAdapterOptions from "mozilla/dom/WebGPUBinding.h";
 using dom::GPUDeviceDescriptor from "mozilla/dom/WebGPUBinding.h";
 using dom::GPUBufferDescriptor from "mozilla/dom/WebGPUBinding.h";
@@ -69,6 +70,7 @@ parent:
   async ShaderModuleDestroy(RawId selfId);
   async DeviceCreateComputePipeline(RawId selfId, SerialComputePipelineDescriptor desc, RawId newId);
   async ComputePipelineDestroy(RawId selfId);
+  async DeviceCreateRenderPipeline(RawId selfId, SerialRenderPipelineDescriptor desc, RawId newId);
   async RenderPipelineDestroy(RawId selfId);
   async Shutdown();
 
