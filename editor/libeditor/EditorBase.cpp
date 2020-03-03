@@ -36,6 +36,7 @@
 #include "mozilla/FlushType.h"                // for FlushType::Frames
 #include "mozilla/IMEContentObserver.h"       // for IMEContentObserver
 #include "mozilla/IMEStateManager.h"          // for IMEStateManager
+#include "mozilla/InputEventOptions.h"        // for InputEventOptions
 #include "mozilla/InternalMutationEvent.h"  // for NS_EVENT_BITS_MUTATION_CHARACTERDATAMODIFIED
 #include "mozilla/mozalloc.h"               // for operator new, etc.
 #include "mozilla/mozInlineSpellChecker.h"  // for mozInlineSpellChecker
@@ -2184,8 +2185,8 @@ void EditorBase::DispatchInputEvent() {
   RefPtr<DataTransfer> dataTransfer = GetInputEventDataTransfer();
   DebugOnly<nsresult> rvIgnored = nsContentUtils::DispatchInputEvent(
       targetElement, eEditorInput, ToInputType(GetEditAction()), textEditor,
-      dataTransfer ? nsContentUtils::InputEventOptions(dataTransfer)
-                   : nsContentUtils::InputEventOptions(GetInputEventData()));
+      dataTransfer ? InputEventOptions(dataTransfer)
+                   : InputEventOptions(GetInputEventData()));
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
                        "Failed to dispatch input event");
 }
@@ -5801,8 +5802,8 @@ nsresult EditorBase::AutoEditActionDataSetter::MaybeDispatchBeforeInputEvent() {
   nsEventStatus status = nsEventStatus_eIgnore;
   nsresult rv = nsContentUtils::DispatchInputEvent(
       targetElement, eEditorBeforeInput, ToInputType(mEditAction), textEditor,
-      mDataTransfer ? nsContentUtils::InputEventOptions(mDataTransfer)
-                    : nsContentUtils::InputEventOptions(mData),
+      mDataTransfer ? InputEventOptions(mDataTransfer)
+                    : InputEventOptions(mData),
       &status);
   if (NS_WARN_IF(mEditorBase.Destroyed())) {
     return NS_ERROR_EDITOR_DESTROYED;
