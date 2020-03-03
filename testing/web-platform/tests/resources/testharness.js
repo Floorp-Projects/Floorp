@@ -638,11 +638,37 @@ policies and contribution forms [3].
         });
     }
 
+    /**
+     * Make a copy of a Promise in the current realm.
+     *
+     * @param {Promise} promise the given promise that may be from a different
+     *                          realm
+     * @returns {Promise}
+     *
+     * An arbitrary promise provided by the caller may have originated in
+     * another frame that have since navigated away, rendering the frame's
+     * document inactive. Such a promise cannot be used with `await` or
+     * Promise.resolve(), as microtasks associated with it may be prevented
+     * from being run. See https://github.com/whatwg/html/issues/5319 for a
+     * particular case.
+     *
+     * In functions we define here, there is an expectation from the caller
+     * that the promise is from the current realm, that can always be used with
+     * `await`, etc. We therefore create a new promise in this realm that
+     * inherit the value and status from the given promise.
+     */
+
+    function bring_promise_to_current_realm(promise) {
+        return new Promise(promise.then.bind(promise));
+    }
+
     function promise_rejects_js(test, constructor, promise, description) {
-        return promise.then(test.unreached_func("Should have rejected: " + description)).catch(function(e) {
-            assert_throws_js_impl(constructor, function() { throw e },
-                                  description, "promise_rejects_js");
-        });
+        return bring_promise_to_current_realm(promise)
+            .then(test.unreached_func("Should have rejected: " + description))
+            .catch(function(e) {
+                assert_throws_js_impl(constructor, function() { throw e },
+                                      description, "promise_rejects_js");
+            });
     }
 
     /**
@@ -678,17 +704,21 @@ policies and contribution forms [3].
             assert(maybeDescription === undefined,
                    "Too many args pased to no-constructor version of promise_rejects_dom");
         }
-        return promise.then(test.unreached_func("Should have rejected: " + description)).catch(function(e) {
-            assert_throws_dom_impl(type, function() { throw e }, description,
-                                   "promise_rejects_dom", constructor);
-        });
+        return bring_promise_to_current_realm(promise)
+            .then(test.unreached_func("Should have rejected: " + description))
+            .catch(function(e) {
+                assert_throws_dom_impl(type, function() { throw e }, description,
+                                       "promise_rejects_dom", constructor);
+            });
     }
 
     function promise_rejects_exactly(test, exception, promise, description) {
-        return promise.then(test.unreached_func("Should have rejected: " + description)).catch(function(e) {
-            assert_throws_exactly_impl(exception, function() { throw e },
-                                       description, "promise_rejects_exactly");
-        });
+        return bring_promise_to_current_realm(promise)
+            .then(test.unreached_func("Should have rejected: " + description))
+            .catch(function(e) {
+                assert_throws_exactly_impl(exception, function() { throw e },
+                                           description, "promise_rejects_exactly");
+            });
     }
 
     /**
