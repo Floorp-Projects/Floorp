@@ -75,30 +75,6 @@ interface mozIStorageAsyncConnection : nsISupports {
   readonly attribute int32_t variableLimit;
 
   /**
-   * Returns true if a transaction is active on this connection.
-   *
-   * Note that this is true if a transaction is active on the connection,
-   * regardless of how it was opened. There are several ways to open one:
-   *
-   * 1. Explicitly calling `beginTransaction` on a `mozIStorageConnection`.
-   * 2. Calling `executeSimpleSQL("BEGIN")` or
-   *    `createStatement("BEGIN").execute()` on a `mozIStorageConnection`.
-   * 3. Executing an async statement, like
-   *    `createAsyncStatement("BEGIN").executeAsync(...)`. This is what
-   *    `Sqlite.jsm` does under the hood.
-   *
-   * Because of this, it's important *not* to use this attribute to decide
-   * whether to *commit* the active transaction, because the caller that opened
-   * it may not expect that. This is why both `mozStorageTransaction` and
-   * `Sqlite.jsm` use an internal variable (`mHasTransaction` for the former;
-   * `_hasInProgressTransaction` for the latter) to check if their transaction
-   * is already in progress, instead of just checking this attribute before
-   * committing. Otherwise, mozStorage might accidentally commit (or roll back!)
-   * a transaction started by `Sqlite.jsm`, and vice versa.
-   */
-  readonly attribute boolean transactionInProgress;
-
-  /**
    * Close this database connection, allowing all pending statements
    * to complete first.
    *

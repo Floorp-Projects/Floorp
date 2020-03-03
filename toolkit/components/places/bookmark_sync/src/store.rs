@@ -450,9 +450,6 @@ impl<'s> dogear::Store for Store<'s> {
         // Apply the merged tree and stage outgoing items. This transaction
         // blocks writes from the main connection until it's committed, so we
         // try to do as little work as possible within it.
-        if self.db.transaction_in_progress()? {
-            return Err(Error::StorageBusy);
-        }
         let tx = self.db.transaction()?;
         if self.total_sync_changes != total_sync_changes() {
             return Err(Error::MergeConflict);

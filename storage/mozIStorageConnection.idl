@@ -175,6 +175,11 @@ interface mozIStorageConnection : mozIStorageAsyncConnection {
   //// Transactions
 
   /**
+   * Returns true if a transaction is active on this connection.
+   */
+  readonly attribute boolean transactionInProgress;
+
+  /**
    * Begin a new transaction. If a transaction is active, throws an error.
    */
   void beginTransaction();
