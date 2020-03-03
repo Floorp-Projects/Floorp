@@ -246,7 +246,7 @@ export type DevToolsClient = {
   mainRoot: {
     traits: any,
     getFront: string => Promise<*>,
-    listProcesses: () => Promise<{ processes: ProcessDescriptor }>,
+    listProcesses: () => Promise<Array<ProcessDescriptor>>,
     listAllWorkerTargets: () => Promise<*>,
     listServiceWorkerRegistrations: () => Promise<*>,
     getWorker: any => Promise<*>,
