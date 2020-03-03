@@ -11,6 +11,7 @@ import mozilla.components.browser.search.SearchEngine
 import mozilla.components.browser.search.SearchEngineManager
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
+import mozilla.components.concept.engine.Engine
 import mozilla.components.feature.awesomebar.R
 import mozilla.components.feature.search.SearchUseCases
 import mozilla.components.lib.fetch.httpurlconnection.HttpURLConnectionClient
@@ -31,6 +32,7 @@ import org.mockito.Mockito.doNothing
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
+import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 
 private const val GOOGLE_MOCK_RESPONSE = "[\"firefox\",[\"firefox\",\"firefox for mac\",\"firefox quantum\",\"firefox update\",\"firefox esr\",\"firefox focus\",\"firefox addons\",\"firefox extensions\",\"firefox nightly\",\"firefox clear cache\"]]"
@@ -503,6 +505,76 @@ class SearchSuggestionProviderTest {
                 assertNull(suggestions[0].description)
                 assertNull(suggestions[1].description)
                 assertNull(suggestions[2].description)
+            } finally {
+                server.shutdown()
+            }
+        }
+    }
+
+    @Test
+    fun `Provider calls speculativeConnect for URL of highest scored suggestion in MULTIPLE mode`() {
+        runBlocking {
+            val server = MockWebServer()
+            server.enqueue(MockResponse().setBody(GOOGLE_MOCK_RESPONSE))
+            server.start()
+
+            val searchEngine: SearchEngine = mock()
+            doReturn(server.url("/").toString()).`when`(searchEngine).buildSuggestionsURL("fire")
+            doReturn(true).`when`(searchEngine).canProvideSearchSuggestions
+            doReturn("google").`when`(searchEngine).name
+            doReturn("/searchurl?fire").`when`(searchEngine).buildSearchUrl("fire")
+
+            val searchEngineManager: SearchEngineManager = mock()
+            doReturn(searchEngine).`when`(searchEngineManager).getDefaultSearchEngineAsync(any(), any())
+
+            val engine: Engine = mock()
+            val provider = SearchSuggestionProvider(
+                searchEngine,
+                mock(),
+                HttpURLConnectionClient(),
+                mode = SearchSuggestionProvider.Mode.MULTIPLE_SUGGESTIONS,
+                engine = engine,
+                limit = 3,
+                showDescription = false
+            )
+
+            try {
+                val suggestions = provider.onInputChanged("fire")
+                assertEquals(3, suggestions.size)
+                assertEquals("fire", suggestions[0].title)
+                verify(engine, times(1)).speculativeConnect("/searchurl?fire")
+            } finally {
+                server.shutdown()
+            }
+        }
+    }
+
+    @Test
+    fun `Provider calls speculativeConnect for URL of highest scored chip in SINGLE mode`() {
+        runBlocking {
+            val server = MockWebServer()
+            server.enqueue(MockResponse().setBody(GOOGLE_MOCK_RESPONSE))
+            server.start()
+
+            val searchEngine: SearchEngine = mock()
+            doReturn(server.url("/").toString()).`when`(searchEngine).buildSuggestionsURL("fire")
+            doReturn(true).`when`(searchEngine).canProvideSearchSuggestions
+            doReturn("google").`when`(searchEngine).name
+            doReturn("/searchurl?fire").`when`(searchEngine).buildSearchUrl("fire")
+
+            val searchEngineManager: SearchEngineManager = mock()
+            doReturn(searchEngine).`when`(searchEngineManager).getDefaultSearchEngineAsync(any(), any())
+            val engine: Engine = mock()
+            val provider = SearchSuggestionProvider(testContext, searchEngineManager, mock(), HttpURLConnectionClient(), engine = engine)
+
+            try {
+                val suggestions = provider.onInputChanged("fire")
+                assertEquals(1, suggestions.size)
+
+                val suggestion = suggestions[0]
+                assertEquals(11, suggestion.chips.size)
+                assertEquals("fire", suggestion.chips[0].title)
+                verify(engine, times(1)).speculativeConnect("/searchurl?fire")
             } finally {
                 server.shutdown()
             }

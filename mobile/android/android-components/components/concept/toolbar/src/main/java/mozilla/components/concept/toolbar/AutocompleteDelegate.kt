@@ -11,8 +11,11 @@ package mozilla.components.concept.toolbar
 interface AutocompleteDelegate {
     /**
      * @param result Apply result of autocompletion.
+     * @param onApplied a lambda/callback invoked if (and only if) the result has been
+     * applied. A result may be discarded by implementations because it is stale or
+     * the autocomplete request has been cancelled.
      */
-    fun applyAutocompleteResult(result: AutocompleteResult)
+    fun applyAutocompleteResult(result: AutocompleteResult, onApplied: () -> Unit = { })
 
     /**
      * Autocompletion was invoked and no match was returned.

@@ -6,16 +6,22 @@ package mozilla.components.feature.awesomebar.provider
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.runBlocking
+import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.storage.BookmarkInfo
 import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.concept.storage.BookmarkNodeType
 import mozilla.components.concept.storage.BookmarksStorage
+import mozilla.components.support.test.eq
 import mozilla.components.support.test.mock
 import mozilla.components.support.utils.StorageUtils.levenshteinDistance
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.ArgumentMatchers.anyString
+import org.mockito.Mockito.never
+import org.mockito.Mockito.times
+import org.mockito.Mockito.verify
 import java.util.UUID
 
 @RunWith(AndroidJUnit4::class)
@@ -86,6 +92,23 @@ class BookmarksStorageSuggestionProviderTest {
     fun `Provider suggestion should get cleared when text changes`() {
         val provider = BookmarksStorageSuggestionProvider(mock(), mock())
         assertTrue(provider.shouldClearSuggestions)
+    }
+
+    @Test
+    fun `provider calls speculative connect for URL of first suggestion`() = runBlocking {
+        val engine: Engine = mock()
+        val provider = BookmarksStorageSuggestionProvider(bookmarks, mock(), engine = engine)
+
+        var suggestions = provider.onInputChanged("")
+        assertTrue(suggestions.isEmpty())
+        verify(engine, never()).speculativeConnect(anyString())
+
+        val id = bookmarks.addItem("Mobile", newItem.url!!, newItem.title!!, null)
+        suggestions = provider.onInputChanged("moz")
+        assertEquals(1, suggestions.size)
+        assertEquals(id, suggestions[0].id)
+        assertEquals("http://www.mozilla.org", suggestions[0].description)
+        verify(engine, times(1)).speculativeConnect(eq(suggestions[0].description!!))
     }
 
     @SuppressWarnings

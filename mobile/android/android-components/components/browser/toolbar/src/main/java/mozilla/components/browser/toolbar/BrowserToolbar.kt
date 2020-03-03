@@ -465,7 +465,7 @@ private class AsyncAutocompleteDelegate(
     override val coroutineContext: CoroutineContext,
     private val logger: Logger = Logger("AsyncAutocompleteDelegate")
 ) : AutocompleteDelegate, CoroutineScope {
-    override fun applyAutocompleteResult(result: AutocompleteResult) {
+    override fun applyAutocompleteResult(result: AutocompleteResult, onApplied: () -> Unit) {
         // Bail out if we were cancelled already.
         if (!parentScope.isActive) {
             logger.debug("Autocomplete request cancelled. Discarding results.")
@@ -483,6 +483,7 @@ private class AsyncAutocompleteDelegate(
                         totalItems = result.totalItems
                     )
                 )
+                onApplied()
             } else {
                 logger.debug("Discarding stale autocomplete result.")
             }
