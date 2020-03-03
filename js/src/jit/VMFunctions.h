@@ -1015,7 +1015,6 @@ MOZ_MUST_USE bool DebugLeaveLexicalEnv(JSContext* cx, BaselineFrame* frame,
 
 MOZ_MUST_USE bool PushVarEnv(JSContext* cx, BaselineFrame* frame,
                              HandleScope scope);
-MOZ_MUST_USE bool PopVarEnv(JSContext* cx, BaselineFrame* frame);
 
 MOZ_MUST_USE bool InitBaselineFrameForOsr(BaselineFrame* frame,
                                           InterpreterFrame* interpFrame,

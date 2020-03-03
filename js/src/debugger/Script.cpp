@@ -1635,7 +1635,6 @@ static bool BytecodeIsEffectful(JSOp op) {
     case JSOp::SpreadSuperCall:
     case JSOp::SuperCall:
     case JSOp::PushVarEnv:
-    case JSOp::PopVarEnv:
     case JSOp::GetBoundName:
     case JSOp::Exception:
     case JSOp::IsGenClosing:

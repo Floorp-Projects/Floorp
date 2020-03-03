@@ -3959,22 +3959,6 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
     }
     END_CASE(PushVarEnv)
 
-    CASE(PopVarEnv) {
-#ifdef DEBUG
-      Scope* scope = script->lookupScope(REGS.pc);
-      MOZ_ASSERT(scope);
-      MOZ_ASSERT(scope->is<VarScope>());
-      MOZ_ASSERT(scope->as<VarScope>().hasEnvironment());
-#endif
-
-      if (MOZ_UNLIKELY(cx->realm()->isDebuggee())) {
-        DebugEnvironments::onPopVar(cx, REGS.fp(), REGS.pc);
-      }
-
-      REGS.fp()->popOffEnvironmentChain<VarEnvironmentObject>();
-    }
-    END_CASE(PopVarEnv)
-
     CASE(Generator) {
       MOZ_ASSERT(!cx->isExceptionPending());
       MOZ_ASSERT(REGS.stackDepth() == 0);

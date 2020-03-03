@@ -1032,7 +1032,6 @@ class DebugEnvironments {
   // have stack-allocated locals.
   static void onPopCall(JSContext* cx, AbstractFramePtr frame);
   static void onPopVar(JSContext* cx, const EnvironmentIter& ei);
-  static void onPopVar(JSContext* cx, AbstractFramePtr frame, jsbytecode* pc);
   static void onPopLexical(JSContext* cx, const EnvironmentIter& ei);
   static void onPopLexical(JSContext* cx, AbstractFramePtr frame,
                            jsbytecode* pc);

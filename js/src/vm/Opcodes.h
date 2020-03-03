@@ -3099,6 +3099,9 @@
      *
      * See `JSOp::PushLexicalEnv` for the fine print.
      *
+     * There is no corresponding `JSOp::PopVarEnv` operation, because a
+     * `VarEnvironmentObject` is never popped from the environment chain.
+     *
      * Implements: Places in the spec where the VariableEnvironment is set:
      *
      * -   The bit in [PerformEval][1] where, in strict direct eval, the new
@@ -3107,9 +3110,7 @@
      *
      * -   The weird scoping rules for functions with default parameter
      *     expressions, as specified in [FunctionDeclarationInstantiation][2]
-     *     step 28 ("NOTE: A separate Environment Record is needed...") and
-     *     [IteratorBindingInitialization for *FormalParameter* and
-     *     *FormalRestParameter*][3].
+     *     step 28 ("NOTE: A separate Environment Record is needed...").
      *
      * Note: The spec also pushes a new VariableEnvironment on entry to every
      * function, but the VM takes care of that as part of pushing the stack
@@ -3118,7 +3119,6 @@
      *
      * [1]: https://tc39.es/ecma262/#sec-performeval
      * [2]: https://tc39.es/ecma262/#sec-functiondeclarationinstantiation
-     * [3]: https://tc39.es/ecma262/#sec-function-definitions-runtime-semantics-iteratorbindinginitialization
      *
      *   Category: Variables and scopes
      *   Type: Entering and leaving environments
@@ -3126,17 +3126,6 @@
      *   Stack: =>
      */ \
     MACRO(PushVarEnv, push_var_env, NULL, 5, 0, 0, JOF_SCOPE) \
-    /*
-     * Pop a `VarEnvironmentObject` from the environment chain.
-     *
-     * See `JSOp::PushLexicalEnv` for the fine print.
-     *
-     *   Category: Variables and scopes
-     *   Type: Entering and leaving environments
-     *   Operands:
-     *   Stack: =>
-     */ \
-    MACRO(PopVarEnv, pop_var_env, NULL, 1, 0, 0, JOF_BYTE) \
     /*
      * Push a `WithEnvironmentObject` wrapping ToObject(`val`) to the
      * environment chain.
@@ -3516,6 +3505,7 @@
  * a power of two.  Use this macro to do so.
  */
 #define FOR_EACH_TRAILING_UNUSED_OPCODE(MACRO) \
+  MACRO(239)                                   \
   MACRO(240)                                   \
   MACRO(241)                                   \
   MACRO(242)                                   \

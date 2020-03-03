@@ -2911,19 +2911,6 @@ void DebugEnvironments::onPopLexical(JSContext* cx, const EnvironmentIter& ei) {
   onPopGeneric<LexicalEnvironmentObject, LexicalScope>(cx, ei);
 }
 
-void DebugEnvironments::onPopVar(JSContext* cx, AbstractFramePtr frame,
-                                 jsbytecode* pc) {
-  cx->check(frame);
-
-  DebugEnvironments* envs = cx->realm()->debugEnvs();
-  if (!envs) {
-    return;
-  }
-
-  EnvironmentIter ei(cx, frame, pc);
-  onPopVar(cx, ei);
-}
-
 void DebugEnvironments::onPopVar(JSContext* cx, const EnvironmentIter& ei) {
   if (ei.scope().is<EvalScope>()) {
     onPopGeneric<VarEnvironmentObject, EvalScope>(cx, ei);
