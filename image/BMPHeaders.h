@@ -31,6 +31,21 @@ struct InfoHeaderLength {
   };
 };
 
+enum class InfoColorSpace : uint32_t {
+  CALIBRATED_RGB = 0x00000000,
+  SRGB = 0x73524742,
+  WINDOWS = 0x57696E20,
+  LINKED = 0x4C494E4B,
+  EMBEDDED = 0x4D424544,
+};
+
+enum class InfoColorIntent : uint32_t {
+  BUSINESS = 0x00000001,
+  GRAPHICS = 0x00000002,
+  IMAGES = 0x00000004,
+  ABS_COLORIMETRIC = 0x00000008,
+};
+
 }  // namespace bmp
 }  // namespace image
 }  // namespace mozilla

@@ -903,10 +903,12 @@ static struct curveType *curve_from_gamma(float gamma)
 
 //XXX: should this also be taking a black_point?
 /* similar to CGColorSpaceCreateCalibratedRGB */
-qcms_profile* qcms_profile_create_rgb_with_gamma(
+qcms_profile* qcms_profile_create_rgb_with_gamma_set(
 		qcms_CIE_xyY white_point,
 		qcms_CIE_xyYTRIPLE primaries,
-		float gamma)
+		float redGamma,
+		float greenGamma,
+		float blueGamma)
 {
 	qcms_profile* profile = qcms_profile_create();
 	if (!profile)
@@ -918,9 +920,9 @@ qcms_profile* qcms_profile_create_rgb_with_gamma(
 		return INVALID_PROFILE;
 	}
 
-	profile->redTRC = curve_from_gamma(gamma);
-	profile->blueTRC = curve_from_gamma(gamma);
-	profile->greenTRC = curve_from_gamma(gamma);
+	profile->redTRC = curve_from_gamma(redGamma);
+	profile->blueTRC = curve_from_gamma(blueGamma);
+	profile->greenTRC = curve_from_gamma(greenGamma);
 
 	if (!profile->redTRC || !profile->blueTRC || !profile->greenTRC) {
 		qcms_profile_release(profile);
@@ -931,6 +933,14 @@ qcms_profile* qcms_profile_create_rgb_with_gamma(
 	profile->color_space = RGB_SIGNATURE;
         profile->pcs = XYZ_SIGNATURE;
 	return profile;
+}
+
+qcms_profile* qcms_profile_create_rgb_with_gamma(
+		qcms_CIE_xyY white_point,
+		qcms_CIE_xyYTRIPLE primaries,
+		float gamma)
+{
+	return qcms_profile_create_rgb_with_gamma_set(white_point, primaries, gamma, gamma, gamma);
 }
 
 qcms_profile* qcms_profile_create_rgb_with_table(
@@ -1016,6 +1026,11 @@ static qcms_CIE_xyY white_point_from_temp(int temp_K)
 	return white_point;
 }
 
+qcms_CIE_xyY qcms_white_point_sRGB(void)
+{
+	return white_point_from_temp(6504);
+}
+
 qcms_profile* qcms_profile_sRGB(void)
 {
 	qcms_profile *profile;
@@ -1028,7 +1043,7 @@ qcms_profile* qcms_profile_sRGB(void)
 	};
 	qcms_CIE_xyY D65;
 
-	D65 = white_point_from_temp(6504);
+	D65 = qcms_white_point_sRGB();
 
 	table = build_sRGB_gamma_table(1024);
 
