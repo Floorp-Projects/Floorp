@@ -140,28 +140,19 @@ class OfflineDestinationNodeEngine final : public AudioNodeEngine {
     return true;
   }
 
-  void FireOfflineCompletionEvent(AudioDestinationNode* aNode) {
-    AudioContext* context = aNode->Context();
-    context->Shutdown();
-    // Shutdown drops self reference, but the context is still referenced by
-    // aNode, which is strongly referenced by the runnable that called
-    // AudioDestinationNode::FireOfflineCompletionEvent.
-
+  already_AddRefed<AudioBuffer> CreateAudioBuffer(AudioContext* aContext) {
+    MOZ_ASSERT(NS_IsMainThread());
     // Create the input buffer
     ErrorResult rv;
     RefPtr<AudioBuffer> renderedBuffer =
-        AudioBuffer::Create(context->GetOwner(), mNumberOfChannels, mLength,
+        AudioBuffer::Create(aContext->GetOwner(), mNumberOfChannels, mLength,
                             mSampleRate, mBuffer.forget(), rv);
     if (rv.Failed()) {
       rv.SuppressException();
-      return;
+      return nullptr;
     }
 
-    aNode->ResolvePromise(renderedBuffer);
-
-    context->Dispatch(do_AddRef(new OnCompleteTask(context, renderedBuffer)));
-
-    context->OnStateChanged(nullptr, AudioContextState::Closed);
+    return renderedBuffer.forget();
   }
 
   size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override {
@@ -436,9 +427,23 @@ void AudioDestinationNode::NotifyMainThreadTrackEnded() {
 }
 
 void AudioDestinationNode::FireOfflineCompletionEvent() {
+  AudioContext* context = Context();
+  context->Shutdown();
+  // Shutdown drops self reference, but the context is still referenced by
+  // aNode, which is strongly referenced by the runnable that called
+  // AudioDestinationNode::FireOfflineCompletionEvent.
+
   OfflineDestinationNodeEngine* engine =
       static_cast<OfflineDestinationNodeEngine*>(Track()->Engine());
-  engine->FireOfflineCompletionEvent(this);
+  RefPtr<AudioBuffer> renderedBuffer = engine->CreateAudioBuffer(context);
+  if (!renderedBuffer) {
+    return;
+  }
+  ResolvePromise(renderedBuffer);
+
+  context->Dispatch(do_AddRef(new OnCompleteTask(context, renderedBuffer)));
+
+  context->OnStateChanged(nullptr, AudioContextState::Closed);
 }
 
 void AudioDestinationNode::ResolvePromise(AudioBuffer* aRenderedBuffer) {
