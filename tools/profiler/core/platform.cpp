@@ -2337,7 +2337,8 @@ static UniquePtr<ProfileBuffer> CollectJavaThreadProfileData(
 
   int sampleId = 0;
   while (true) {
-    double sampleTime = java::GeckoJavaSampler::GetSampleTime(0, sampleId);
+    // Gets the data from the java main thread only.
+    double sampleTime = java::GeckoJavaSampler::GetSampleTime(sampleId);
     if (sampleTime == 0.0) {
       break;
     }
@@ -2348,7 +2349,7 @@ static UniquePtr<ProfileBuffer> CollectJavaThreadProfileData(
     int frameId = 0;
     while (true) {
       jni::String::LocalRef frameName =
-          java::GeckoJavaSampler::GetFrameName(0, sampleId, frameId++);
+          java::GeckoJavaSampler::GetFrameName(sampleId, frameId++);
       if (!frameName) {
         break;
       }
