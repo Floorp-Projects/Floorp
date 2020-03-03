@@ -606,7 +606,8 @@ nsSize nsBoxFrame::GetXULMinSize(nsBoxLayoutState& aBoxLayoutState) {
 
   // if the size was not completely redefined in CSS then ask our children
   bool widthSet, heightSet;
-  if (!nsIFrame::AddXULMinSize(this, size, widthSet, heightSet)) {
+  if (!nsIFrame::AddXULMinSize(aBoxLayoutState, this, size, widthSet,
+                               heightSet)) {
     if (mLayoutManager) {
       nsSize layoutSize = mLayoutManager->GetXULMinSize(this, aBoxLayoutState);
       if (!widthSet) size.width = layoutSize.width;
