@@ -6794,7 +6794,7 @@
     "products": ["firefox"],
     "alert_emails": ["mconley@mozilla.com", "hkirschner@mozilla.com"],
     "bug_numbers": [1340842],
-    "expires_in_version": "76",
+    "expires_in_version": "80",
     "kind": "exponential",
     "high": 10000,
     "n_buckets": 50,
