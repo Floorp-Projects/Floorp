@@ -13523,11 +13523,12 @@ void CodeGenerator::visitFinishBoundFunctionInit(
   // Get the function flags.
   masm.load16ZeroExtend(Address(target, JSFunction::offsetOfFlags()), temp1);
 
-  // Functions with lazy scripts don't store their length.
-  // If the length or name property is resolved, it might be shadowed.
+  // Functions with a SelfHostedLazyScript must be compiled with the slow-path
+  // before the function length is known. If the length or name property is
+  // resolved, it might be shadowed.
   masm.branchTest32(
       Assembler::NonZero, temp1,
-      Imm32(FunctionFlags::INTERPRETED_LAZY | FunctionFlags::RESOLVED_NAME |
+      Imm32(FunctionFlags::SELFHOSTLAZY | FunctionFlags::RESOLVED_NAME |
             FunctionFlags::RESOLVED_LENGTH),
       slowPath);
 
