@@ -14,6 +14,7 @@ import mozilla.components.browser.search.SearchEngine
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.support.test.robolectric.testContext
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Before
 import org.junit.Test
@@ -117,6 +118,18 @@ class DefaultSearchControllerTest {
     }
 
     @Test
+    fun `show search shortcuts when setting enabled AND query equals url`() {
+        val text = "mozilla.org"
+        every { session?.url } returns "mozilla.org"
+
+        assertEquals(text, session?.url)
+
+        controller.handleTextChanged(text)
+
+        verify { store.dispatch(SearchFragmentAction.ShowSearchShortcutEnginePicker(true)) }
+    }
+
+    @Test
     fun `do not show search shortcuts when setting enabled AND query non-empty`() {
         val text = "mozilla"
 
@@ -126,7 +139,7 @@ class DefaultSearchControllerTest {
     }
 
     @Test
-    fun `do not show search shortcuts when setting disabled AND query empty`() {
+    fun `do not show search shortcuts when setting disabled AND query empty AND url not matching query`() {
         testContext.settings().preferences
             .edit()
             .putBoolean(testContext.getString(R.string.pref_key_show_search_shortcuts), false)
