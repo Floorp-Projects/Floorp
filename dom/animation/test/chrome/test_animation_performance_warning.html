@@ -1626,6 +1626,27 @@ function testImportantRuleOverride() {
      'compositor because any of the properties has important rules');
 }
 
+function testCurrentColor() {
+  if (SpecialPowers.DOMWindowUtils.layerManagerType == 'WebRender') {
+    return; // skip this test until bug 1510030 landed.
+  }
+  promise_test(async t => {
+    const animation = addDivAndAnimate(t, { class: 'compositable' },
+                                       { backgroundColor: [ 'currentColor',
+                                                            'red' ] },
+                                       100 * MS_PER_SEC);
+    await waitForPaints();
+
+    assert_animation_property_state_equals(
+      animation.effect.getProperties(),
+      [ { property: 'background-color',
+          runningOnCompositor: false,
+          warning: 'CompositorAnimationWarningHasCurrentColor'
+      } ]);
+  }, 'Background color animations with `current-color` don\'t run on the '
+     + 'compositor');
+}
+
 function start() {
   var bundleService = SpecialPowers.Cc['@mozilla.org/intl/stringbundle;1']
     .getService(SpecialPowers.Ci.nsIStringBundleService);
@@ -1645,6 +1666,7 @@ function start() {
   testTooLargeFrame();
   testTransformSVG();
   testImportantRuleOverride();
+  testCurrentColor();
 
   promise_test(async t => {
     var div = addDiv(t, { class: 'compositable',

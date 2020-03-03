@@ -443,6 +443,9 @@ class KeyframeEffect : public AnimationEffect {
   // if our properties haven't changed.
   bool mNeedsStyleData = false;
 
+  // True if there is any current-color for background color in this keyframes.
+  bool mHasCurrentColor = false;
+
   // The non-animated values for properties in this effect that contain at
   // least one animation value that is composited with the underlying value
   // (i.e. it uses the additive or accumulate composite mode).
