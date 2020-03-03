@@ -597,7 +597,8 @@ class WebExtensionTest : BaseSessionTest() {
         } else {
             webExtension = WebExtension(MESSAGING_CONTENT, uuid,
                     WebExtension.Flags.ALLOW_CONTENT_MESSAGING, controller)
-            sessionRule.session.setMessageDelegate(webExtension, messageDelegate, "browser")
+            sessionRule.session.webExtensionController
+                    .setMessageDelegate(webExtension, messageDelegate, "browser")
         }
 
         return webExtension
@@ -900,7 +901,8 @@ class WebExtensionTest : BaseSessionTest() {
 
         messaging = WebExtension("resource://android/assets/web_extensions/messaging-iframe/",
                 "{${UUID.randomUUID()}}", WebExtension.Flags.ALLOW_CONTENT_MESSAGING, controller)
-        sessionRule.session.setMessageDelegate(messaging, messageDelegate, "browser")
+        sessionRule.session.webExtensionController
+                .setMessageDelegate(messaging, messageDelegate, "browser")
 
         sessionRule.waitForResult(sessionRule.runtime.registerWebExtension(messaging))
         sessionRule.waitForResult(portTopLevel)
@@ -938,7 +940,8 @@ class WebExtensionTest : BaseSessionTest() {
                 controller)
 
         sessionRule.waitForResult(sessionRule.runtime.registerWebExtension(extension))
-        mainSession.setMessageDelegate(extension, messageDelegate, "browser")
+        mainSession.webExtensionController
+                .setMessageDelegate(extension, messageDelegate, "browser")
 
         mainSession.loadUri("http://example.com")
 

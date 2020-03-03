@@ -596,7 +596,6 @@ package org.mozilla.geckoview {
     method @AnyThread @NonNull public SessionFinder getFinder();
     method @AnyThread @Nullable public GeckoSession.HistoryDelegate getHistoryDelegate();
     method @AnyThread @Nullable public GeckoSession.MediaDelegate getMediaDelegate();
-    method @AnyThread @Nullable public WebExtension.MessageDelegate getMessageDelegate(@NonNull WebExtension, @NonNull String);
     method @UiThread @Nullable public GeckoSession.NavigationDelegate getNavigationDelegate();
     method @UiThread @NonNull public OverscrollEdgeEffect getOverscrollEdgeEffect();
     method @UiThread public void getPageToScreenMatrix(@NonNull Matrix);
@@ -611,7 +610,7 @@ package org.mozilla.geckoview {
     method @UiThread public void getSurfaceBounds(@NonNull Rect);
     method @AnyThread @NonNull public SessionTextInput getTextInput();
     method @AnyThread @NonNull public GeckoResult<String> getUserAgent();
-    method @AnyThread @Nullable public WebExtension.ActionDelegate getWebExtensionActionDelegate(@NonNull WebExtension);
+    method @UiThread @NonNull public WebExtension.SessionController getWebExtensionController();
     method @AnyThread public void goBack();
     method @AnyThread public void goForward();
     method @AnyThread public void gotoHistoryIndex(int);
@@ -644,14 +643,12 @@ package org.mozilla.geckoview {
     method @AnyThread public void setFocused(boolean);
     method @AnyThread public void setHistoryDelegate(@Nullable GeckoSession.HistoryDelegate);
     method @AnyThread public void setMediaDelegate(@Nullable GeckoSession.MediaDelegate);
-    method @AnyThread public void setMessageDelegate(@NonNull WebExtension, @Nullable WebExtension.MessageDelegate, @NonNull String);
     method @UiThread public void setNavigationDelegate(@Nullable GeckoSession.NavigationDelegate);
     method @UiThread public void setPermissionDelegate(@Nullable GeckoSession.PermissionDelegate);
     method @UiThread public void setProgressDelegate(@Nullable GeckoSession.ProgressDelegate);
     method @AnyThread public void setPromptDelegate(@Nullable GeckoSession.PromptDelegate);
     method @UiThread public void setScrollDelegate(@Nullable GeckoSession.ScrollDelegate);
     method @UiThread public void setSelectionActionDelegate(@Nullable GeckoSession.SelectionActionDelegate);
-    method @AnyThread public void setWebExtensionActionDelegate(@NonNull WebExtension, @Nullable WebExtension.ActionDelegate);
     method @AnyThread public void stop();
     method @UiThread protected void setShouldPinOnScreen(boolean);
     field public static final Parcelable.Creator<GeckoSession> CREATOR;
@@ -1575,6 +1572,13 @@ package org.mozilla.geckoview {
   @UiThread public static interface WebExtension.PortDelegate {
     method @NonNull default public void onDisconnect(@NonNull WebExtension.Port);
     method default public void onPortMessage(@NonNull Object, @NonNull WebExtension.Port);
+  }
+
+  public static class WebExtension.SessionController {
+    method @AnyThread @Nullable public WebExtension.ActionDelegate getActionDelegate(@NonNull WebExtension);
+    method @AnyThread @Nullable public WebExtension.MessageDelegate getMessageDelegate(@NonNull WebExtension, @NonNull String);
+    method @AnyThread public void setActionDelegate(@NonNull WebExtension, @Nullable WebExtension.ActionDelegate);
+    method @AnyThread public void setMessageDelegate(@NonNull WebExtension, @Nullable WebExtension.MessageDelegate, @NonNull String);
   }
 
   public static class WebExtension.SignedStateFlags {
