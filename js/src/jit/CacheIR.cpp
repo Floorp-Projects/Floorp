@@ -423,11 +423,11 @@ static NativeGetPropCacheability IsCacheableGetPropCall(JSObject* obj,
     return CanAttachNativeGetter;
   }
 
-  if (getter.hasScript() || getter.isNativeWithJitEntry()) {
+  if (getter.hasBytecode() || getter.isNativeWithJitEntry()) {
     return CanAttachScriptedGetter;
   }
 
-  if (getter.isInterpretedLazy()) {
+  if (getter.isInterpreted()) {
     return CanAttachTemporarilyUnoptimizable;
   }
 
@@ -1793,7 +1793,7 @@ AttachDecision GetPropIRGenerator::tryAttachFunction(HandleObject obj,
     }
 
     // Lazy functions don't store the length.
-    if (fun->isInterpretedLazy()) {
+    if (!fun->hasBytecode()) {
       return AttachDecision::NoAction;
     }
 
@@ -2592,7 +2592,7 @@ static bool NeedEnvironmentShapeGuard(JSObject* envObj) {
   // conditions. In that case, we pessimistically create the guard.
   CallObject* callObj = &envObj->as<CallObject>();
   JSFunction* fun = &callObj->callee();
-  if (!fun->hasScript() || fun->baseScript()->funHasExtensibleScope()) {
+  if (!fun->hasBytecode() || fun->baseScript()->funHasExtensibleScope()) {
     return true;
   }
 
@@ -3583,7 +3583,7 @@ static bool IsCacheableSetPropCallScripted(
     return true;
   }
 
-  if (!setter.hasScript()) {
+  if (!setter.hasBytecode()) {
     if (isTemporarilyUnoptimizable) {
       *isTemporarilyUnoptimizable = true;
     }

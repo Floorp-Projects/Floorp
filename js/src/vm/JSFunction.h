@@ -423,11 +423,11 @@ class JSFunction : public js::NativeObject {
 
   /* Call objects must be created for each invocation of this function. */
   bool needsCallObject() const {
-    MOZ_ASSERT(!isInterpretedLazy());
-
     if (isNative()) {
       return false;
     }
+
+    MOZ_ASSERT(hasBytecode());
 
     // Note: this should be kept in sync with
     // FunctionBox::needsCallObjectRegardlessOfBindings().
@@ -481,18 +481,22 @@ class JSFunction : public js::NativeObject {
   }
 
   bool isLambda() const { return flags_.isLambda(); }
-  bool isInterpretedLazy() const { return flags_.isInterpretedLazy(); }
 
   // These methods determine which of the u.scripted.s union arms are active.
   // For live JSFunctions the pointer values will always be non-null, but due
   // to partial initialization the GC (and other features that scan the heap
   // directly) may still return a null pointer.
-  bool hasScript() const { return flags_.hasScript(); }
-  bool hasLazyScript() const { return flags_.hasLazyScript(); }
   bool hasSelfHostedLazyScript() const {
     return flags_.hasSelfHostedLazyScript();
   }
-  bool hasBaseScript() const { return hasScript() || hasLazyScript(); }
+  bool hasBaseScript() const {
+    return flags_.hasScript() || flags_.hasLazyScript();
+  }
+
+  bool hasBytecode() const {
+    MOZ_ASSERT(!isIncomplete());
+    return hasBaseScript() && baseScript()->hasBytecode();
+  }
 
   // Arrow functions store their lexical new.target in the first extended slot.
   bool isArrow() const { return flags_.isArrow(); }
@@ -516,14 +520,15 @@ class JSFunction : public js::NativeObject {
   bool isIntrinsic() const { return flags_.isIntrinsic(); }
 
   bool hasJitScript() const {
-    if (!hasScript()) {
+    if (!hasBaseScript()) {
       return false;
     }
 
     return baseScript()->hasJitScript();
   }
   bool hasJitEntry() const {
-    return hasScript() || isInterpretedLazy() || isNativeWithJitEntry();
+    return hasBaseScript() || hasSelfHostedLazyScript() ||
+           isNativeWithJitEntry();
   }
 
   /* Compound attributes: */
@@ -704,7 +709,7 @@ class JSFunction : public js::NativeObject {
     MOZ_ASSERT(fun->isInterpreted());
     MOZ_ASSERT(cx);
 
-    if (fun->hasLazyScript()) {
+    if (fun->hasBaseScript() && !fun->hasBytecode()) {
       if (!delazifyLazilyInterpretedFunction(cx, fun)) {
         return nullptr;
       }
@@ -719,7 +724,7 @@ class JSFunction : public js::NativeObject {
 
   JSScript* existingScript() {
     MOZ_ASSERT(isInterpreted());
-    if (isInterpretedLazy()) {
+    if (!hasBytecode()) {
       JSFunction* canonicalFunction = baseScript()->function();
       JSScript* script = canonicalFunction->nonLazyScript();
 
@@ -748,13 +753,13 @@ class JSFunction : public js::NativeObject {
   bool isIncomplete() const { return isInterpreted() && !u.scripted.s.script_; }
 
   JSScript* nonLazyScript() const {
-    MOZ_ASSERT(hasScript());
+    MOZ_ASSERT(hasBaseScript());
     MOZ_ASSERT(u.scripted.s.script_);
     return static_cast<JSScript*>(u.scripted.s.script_);
   }
 
   js::LazyScript* lazyScript() const {
-    MOZ_ASSERT(hasLazyScript());
+    MOZ_ASSERT(hasBaseScript());
     MOZ_ASSERT(u.scripted.s.script_);
     return static_cast<js::LazyScript*>(u.scripted.s.script_);
   }
@@ -811,7 +816,6 @@ class JSFunction : public js::NativeObject {
     MOZ_ASSERT_IF(script, realm() == script->realm());
 
     u.scripted.s.script_ = script;
-    MOZ_ASSERT(hasScript());
   }
 
   void initLazyScript(js::LazyScript* lazy) {
@@ -819,7 +823,6 @@ class JSFunction : public js::NativeObject {
     flags_.clearInterpreted();
     flags_.setInterpretedLazy();
     u.scripted.s.script_ = lazy;
-    MOZ_ASSERT(hasLazyScript());
   }
 
   // Release the lazyScript() pointer while triggering barriers.
@@ -850,8 +853,8 @@ class JSFunction : public js::NativeObject {
 
   // Transform from lazy to non-lazy mode.
   void setUnlazifiedScript(JSScript* script) {
-    MOZ_ASSERT(isInterpretedLazy());
-    if (hasLazyScript()) {
+    MOZ_ASSERT(isInterpreted() && !hasBytecode());
+    if (hasBaseScript()) {
       if (!lazyScript()->maybeScript()) {
         lazyScript()->initScript(script);
       }

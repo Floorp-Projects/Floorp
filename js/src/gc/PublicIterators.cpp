@@ -90,11 +90,14 @@ static void TraverseInnerLazyScriptsForLazyScript(
     if (!gcThing.is<JSObject>()) {
       continue;
     }
+    JSObject* obj = &gcThing.as<JSObject>();
 
-    JSFunction* fun = &gcThing.as<JSObject>().as<JSFunction>();
+    MOZ_ASSERT(obj->is<JSFunction>(),
+               "All objects in lazy scripts should be functions");
+    JSFunction* fun = &obj->as<JSFunction>();
 
-    if (!fun->isInterpretedLazy()) {
-      return;
+    if (!fun->hasBaseScript() || fun->hasBytecode()) {
+      continue;
     }
 
     LazyScript* lazyScript = fun->lazyScript();
