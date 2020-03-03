@@ -43,6 +43,8 @@ class nsDNSPrefetch final : public nsIDNSListener {
   nsresult PrefetchMedium(bool refreshDNS = false);
   nsresult PrefetchLow(bool refreshDNS = false);
 
+  static void PrefChanged(const char* aPref, void* aClosure);
+
  private:
   nsCString mHostname;
   bool mIsHttps;
