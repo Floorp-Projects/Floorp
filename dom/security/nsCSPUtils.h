@@ -431,8 +431,8 @@ class nsCSPSrcVisitor {
   virtual bool visitHashSrc(const nsCSPHashSrc& src) = 0;
 
  protected:
-  explicit nsCSPSrcVisitor(){};
-  virtual ~nsCSPSrcVisitor(){};
+  explicit nsCSPSrcVisitor() = default;
+  virtual ~nsCSPSrcVisitor() = default;
 };
 
 /* =============== nsCSPDirective ============= */
