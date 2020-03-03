@@ -80,4 +80,4 @@ platform(linux) allow_sacrificing_subpixel_aa(true) == text-fixed-slice.yaml tex
 # most pixels are off by a small amount, but a few pixels on the edge vary by a lot, pushing up the fuzzy max-diff;
 # the main goal of the test is that everything is in the same place, at the same scale, clipped the same way,
 # despite 4x on-the-fly scale change.
-skip_on(android) fuzzy(115,23498) == raster_root_C_8192.yaml raster_root_C_ref.yaml
+skip_on(android) fuzzy(115,23500) == raster_root_C_8192.yaml raster_root_C_ref.yaml

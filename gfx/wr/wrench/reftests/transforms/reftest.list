@@ -45,5 +45,5 @@ platform(linux,mac) fuzzy(1,74) == border-scale-4.yaml border-scale-4.png
 # Compare ~8K raster root (>MAX_SURFACE_SIZE) with ~2K raster root. fuzzy due to lerping on edges.
 skip_on(android) fuzzy(93,3692) == raster_root_A_8192.yaml raster_root_A_ref.yaml
 # Same as large-raster-root.yaml but resulting in a 10302×100 raster root (= >4096) vs 4000x100 in ref:
-skip_on(android) fuzzy(29,333) == raster_root_B_8192.yaml raster_root_B_ref.yaml
+skip_on(android) fuzzy(60,917) == raster_root_B_8192.yaml raster_root_B_ref.yaml
 
