@@ -975,7 +975,7 @@ browser[tabmodalPromptShowing] {
 }
 
 #statuspanel[type=overLink] {
-  transition: opacity 120ms ease-out;
+  transition: opacity 120ms ease-out, visibility 120ms;
 }
 
 #statuspanel[type=overLink] > #statuspanel-inner {
@@ -985,10 +985,11 @@ browser[tabmodalPromptShowing] {
 #statuspanel[inactive] {
   transition: none;
   opacity: 0;
+  visibility: hidden;
 }
 
 #statuspanel[inactive][previoustype=overLink] {
-  transition: opacity 200ms ease-out;
+  transition: opacity 200ms ease-out, visibility 200ms;
 }
 
 #statuspanel-inner {
