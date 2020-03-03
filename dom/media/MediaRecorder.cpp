@@ -1239,7 +1239,7 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
 
   void MediaEncoderShutdown() {
     MOZ_ASSERT(mEncoderThread->IsCurrentThreadIn());
-    MOZ_ASSERT(mEncoder->IsShutdown());
+    mEncoder->AssertShutdownCalled();
 
     mMainThread->Dispatch(NewRunnableMethod<nsresult>(
         "MediaRecorder::Session::MediaEncoderShutdown->DoSessionEndTask", this,
