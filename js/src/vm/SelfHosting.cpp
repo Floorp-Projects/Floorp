@@ -3063,7 +3063,7 @@ bool JSRuntime::createLazySelfHostedFunctionClone(
     funName = selfHostedFun->explicitName();
   }
 
-  fun.set(NewScriptedFunction(cx, nargs, FunctionFlags::INTERPRETED, funName,
+  fun.set(NewScriptedFunction(cx, nargs, FunctionFlags::BASESCRIPT, funName,
                               proto, gc::AllocKind::FUNCTION_EXTENDED,
                               newKind));
   if (!fun) {
