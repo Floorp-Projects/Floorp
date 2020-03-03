@@ -323,11 +323,10 @@ add_task(async function test_new_remote_window_flags() {
 
 /**
  * Opens a window with some chrome flags specified, which should not affect
- * scrollbars flag which always be true.
+ * scrollbars flag which defaults to true when not disabled explicitly.
  */
 add_task(async function test_scrollbars_flag() {
-  const SCRIPT =
-    'window.open("about:blank", "_blank", "toolbar=0,scrollbars=0");';
+  const SCRIPT = 'window.open("about:blank", "_blank", "toolbar=0");';
   const SCRIPT_PAGE = `data:text/html,<script>${SCRIPT}</script>`;
 
   let newWinPromise = BrowserTestUtils.waitForNewWindow();
@@ -342,13 +341,13 @@ add_task(async function test_scrollbars_flag() {
       let parentChromeFlags = getParentChromeFlags(win);
       Assert.ok(
         parentChromeFlags & Ci.nsIWebBrowserChrome.CHROME_SCROLLBARS,
-        "Always have scrollbars even when disabled explicitly"
+        "Should have scrollbars when not disabled explicitly"
       );
 
       let contentChromeFlags = await getContentChromeFlags(win);
       Assert.ok(
         contentChromeFlags & Ci.nsIWebBrowserChrome.CHROME_SCROLLBARS,
-        "Always have scrollbars even when disabled explicitly"
+        "Should have scrollbars when not disabled explicitly"
       );
 
       await BrowserTestUtils.closeWindow(win);
