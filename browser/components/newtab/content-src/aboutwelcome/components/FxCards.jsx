@@ -50,7 +50,7 @@ export class FxCards extends React.PureComponent {
 
   onCardAction(action) {
     let { type, data } = action;
-    let UTMTerm = "utm_term_separate_welcome";
+    let UTMTerm = "about_welcome";
 
     if (action.type === "OPEN_URL") {
       let url = new URL(action.data.args);

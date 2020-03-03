@@ -34,6 +34,12 @@ class AboutWelcomeParent extends JSWindowActorParent {
   onContentMessage(type, data, browser, window) {
     log.debug(`Received content event: ${type}`);
     switch (type) {
+      case "AWPage:OPEN_AWESOME_BAR":
+        window.gURLBar.search("");
+        break;
+      case "AWPage:OPEN_PRIVATE_BROWSER_WINDOW":
+        window.OpenBrowserWindow({ private: true });
+        break;
       case "AWPage:SHOW_MIGRATION_WIZARD":
         MigrationUtils.showMigrationWizard(window, [
           MigrationUtils.MIGRATION_ENTRYPOINT_NEWTAB,
