@@ -375,6 +375,10 @@ void EventSourceImpl::CloseInternal() {
     return;
   }
 
+  // Ensure EventSourceImpl itself alive until the cleanup is completed, since
+  // it's possible to only be held by WorkerRef.
+  RefPtr<EventSourceImpl> kungFuDeathGrip = this;
+
   // Invoke CleanupOnMainThread before cleaning any members. It will call
   // ShutDown, which is supposed to be called before cleaning any members.
   if (NS_IsMainThread()) {
