@@ -28,9 +28,13 @@ AccessibleWrap::~AccessibleWrap() {}
 mozAccessible* AccessibleWrap::GetNativeObject() {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
-  if (!mNativeInited && !mNativeObject && !IsDefunct() && !AncestorIsFlat()) {
-    uintptr_t accWrap = reinterpret_cast<uintptr_t>(this);
-    mNativeObject = [[GetNativeType() alloc] initWithAccessible:accWrap];
+  if (!mNativeInited && !mNativeObject) {
+    // We don't creat OSX accessibles for xul tooltips, defunct accessibles,
+    // or pruned children.
+    if (!IsXULTooltip() && !IsDefunct() && !AncestorIsFlat()) {
+      uintptr_t accWrap = reinterpret_cast<uintptr_t>(this);
+      mNativeObject = [[GetNativeType() alloc] initWithAccessible:accWrap];
+    }
   }
 
   mNativeInited = true;
