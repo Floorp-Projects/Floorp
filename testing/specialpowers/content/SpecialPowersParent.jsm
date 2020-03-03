@@ -6,6 +6,9 @@
 
 var EXPORTED_SYMBOLS = ["SpecialPowersParent"];
 
+const { AppConstants } = ChromeUtils.import(
+  "resource://gre/modules/AppConstants.jsm"
+);
 var { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
@@ -964,6 +967,11 @@ class SpecialPowersParent extends JSWindowActorParent {
             // Unfortunately ext-backgroundPage.js emits an event with the same
             // name, but without the extension object as parameter.
             return;
+          }
+          if (AppConstants.platform === "android") {
+            // We need a way to notify the embedding layer that a new extension
+            // has been installed, so that the java layer can be updated too.
+            Services.obs.notifyObservers(null, "testing-installed-addon", id);
           }
           // ext is always the "real" Extension object, even when "extension"
           // is a MockExtension.

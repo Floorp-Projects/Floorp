@@ -32,6 +32,12 @@ exclude: true
 - ⚠️ Moved [`ActionDelegate`][75.6] and [`MessageDelegate`][75.7] to
   [`SessionController`][75.8].
   ([bug 1616625]({{bugzilla}}1616625))
+- Added [`SessionTabDelegate`][75.9] to [`SessionController`][75.8] and
+  [`TabDelegate`][75.10] to [`WebExtension`][69.5] which receive respectively
+  calls for the session and the runtime. `TabDelegate` is also now
+  per-`WebExtension` object instead of being global.  The existing global
+  [`TabDelegate`][75.11] is now deprecated and will be removed in GeckoView 77.
+  ([bug 1616625]({{bugzilla}}1616625))
 
 [75.1]: {{javadoc_uri}}/GeckoRuntimeSettings.Builder.html#useMultiprocess-boolean-
 [75.2]: {{javadoc_uri}}/WebExtensionController.DebuggerDelegate.html#onExtensionListUpdated--
@@ -41,6 +47,9 @@ exclude: true
 [75.6]: {{javadoc_uri}}/WebExtension.ActionDelegate.html
 [75.7]: {{javadoc_uri}}/WebExtension.MessageDelegate.html
 [75.8]: {{javadoc_uri}}/WebExtension.SessionController.html
+[75.9]: {{javadoc_uri}}/WebExtension.SessionTabDelegate.html
+[75.10]: {{javadoc_uri}}/WebExtension.TabDelegate.html
+[75.11]: {{javadoc_uri}}/WebExtensionRuntime.TabDelegate.html
 
 ## v74
 - Added [`WebExtensionController.enable`][74.1] and [`disable`][74.2] to
@@ -604,4 +613,4 @@ exclude: true
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: e5d6af21f89f4159bc89d9c308f2d97be6424b1f
+[api-version]: 5f39aa0f1916565230a07c0e7113fe202f6a94a0
