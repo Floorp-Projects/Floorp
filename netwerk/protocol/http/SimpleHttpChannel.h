@@ -10,6 +10,7 @@
 
 #include "HttpBaseChannel.h"
 #include "nsIDNSListener.h"
+#include "nsIProtocolProxyCallback.h"
 #include "nsIStreamListener.h"
 #include "nsWeakReference.h"
 
@@ -35,6 +36,7 @@ class SimpleHttpChannel : public HttpBaseChannel,
                           public nsIStreamListener,
                           public nsITransportEventSink,
                           public nsIProxiedChannel,
+                          public nsIProtocolProxyCallback,
                           public nsSupportsWeakReference {
  public:
   NS_DECL_ISUPPORTS_INHERITED
@@ -43,6 +45,7 @@ class SimpleHttpChannel : public HttpBaseChannel,
   NS_DECL_NSISTREAMLISTENER
   NS_DECL_NSITRANSPORTEVENTSINK
   NS_DECL_NSIPROXIEDCHANNEL
+  NS_DECL_NSIPROTOCOLPROXYCALLBACK
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_SIMPLEHTTPCHANNEL_IID)
 
   // nsIRequest
@@ -116,6 +119,8 @@ class SimpleHttpChannel : public HttpBaseChannel,
 
   void MaybeStartDNSPrefetch();
   void DoNotifyListener();
+  nsresult MaybeResolveProxyAndBeginConnect();
+  nsresult ResolveProxy();
 
   // True only when we have computed the value of the top window origin.
   bool mTopWindowOriginComputed;
@@ -132,6 +137,8 @@ class SimpleHttpChannel : public HttpBaseChannel,
   RefPtr<HttpTransactionShell> mTransaction;
   uint32_t mPushedStreamId;
   RefPtr<HttpTransactionShell> mTransWithPushedStream;
+  nsCOMPtr<nsICancelable> mProxyRequest;
+  nsCOMPtr<nsIEventTarget> mCurrentEventTarget;
 
   friend class HttpAsyncAborter<SimpleHttpChannel>;
   friend class nsHttpHandler;
