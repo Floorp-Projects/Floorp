@@ -48,29 +48,6 @@ class TrustedWebActivityIntentProcessorTest {
     }
 
     @Test
-    fun `matches checks if intent is a trusted web activity intent`() {
-        val processor = TrustedWebActivityIntentProcessor(mock(), mock(), mock(), mock(), apiKey, mock())
-
-        assertFalse(processor.matches(Intent(ACTION_VIEW_PWA)))
-        assertFalse(processor.matches(Intent(ACTION_VIEW)))
-        assertFalse(processor.matches(
-            Intent(ACTION_VIEW).apply { putExtra(EXTRA_LAUNCH_AS_TRUSTED_WEB_ACTIVITY, true) }
-        ))
-        assertFalse(processor.matches(
-            Intent(ACTION_VIEW).apply {
-                putExtra(EXTRA_LAUNCH_AS_TRUSTED_WEB_ACTIVITY, false)
-                putExtra(EXTRA_SESSION, null as Bundle?)
-            }
-        ))
-        assertTrue(processor.matches(
-            Intent(ACTION_VIEW).apply {
-                putExtra(EXTRA_LAUNCH_AS_TRUSTED_WEB_ACTIVITY, true)
-                putExtra(EXTRA_SESSION, null as Bundle?)
-            }
-        ))
-    }
-
-    @Test
     fun `process checks if intent action is not valid`() = runBlockingTest {
         val processor = TrustedWebActivityIntentProcessor(mock(), mock(), mock(), mock(), apiKey, mock())
 

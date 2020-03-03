@@ -15,6 +15,9 @@ permalink: /changelog/
 * **feature-awesomebar**
   *  ⚠️ **This is a breaking change**: Refactored component to use `browser-state` instead of `browser-session`. Feature and `SuggestionProvider` implementations may require a `BrowserStore` instance instead of a `SessionManager` now.
 
+* **feature-intent**
+  * ⚠️ **This is a breaking change**: Removed `IntentProcessor.matches()` method from interface. Calling `process()` and examining the boolean return value is enough to know whether an `Intent` matched.
+
 * **feature-downloads**
   * Fixed APK downloads not prompting to install when the notification is clicked.
 

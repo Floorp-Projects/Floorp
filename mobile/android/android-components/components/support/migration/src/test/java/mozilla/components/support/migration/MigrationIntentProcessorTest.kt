@@ -16,19 +16,6 @@ import org.junit.Test
 
 class MigrationIntentProcessorTest {
     @Test
-    fun `matches against all view action intents`() = runBlockingTest {
-        val store = MigrationStore()
-        val processor = MigrationIntentProcessor(store)
-        val intent: Intent = mock()
-
-        assertFalse(processor.matches(intent))
-
-        store.dispatch(MigrationAction.Started).joinBlocking()
-
-        assertTrue(processor.matches(intent))
-    }
-
-    @Test
     fun `process updates intent`() = runBlockingTest {
         val store = MigrationStore()
         val processor = MigrationIntentProcessor(store)
