@@ -232,6 +232,8 @@ class AudioContext final : public DOMEventTargetHelper,
   // calling from inner window, so we won't need to return promise for caller.
   void SuspendFromChrome();
   void ResumeFromChrome();
+  // Called on completion of offline rendering:
+  void OfflineClose();
 
   already_AddRefed<AudioBufferSourceNode> CreateBufferSource();
 
