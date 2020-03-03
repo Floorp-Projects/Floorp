@@ -430,12 +430,22 @@ class WindowsDllInterceptor final
       // injected DLLs do the same and interfere with our stuff.
       bool needs10BytePatch = (mModule == ::GetModuleHandleW(L"ntdll.dll"));
 
-      // CloseHandle on Windows 8 only accomodates 10-byte patches.
       bool isWin8Or81 = IsWin8OrLater() && (!IsWin10OrLater());
-      needs10BytePatch |= isWin8Or81 &&
-                          (mModule == ::GetModuleHandleW(L"kernel32.dll")) &&
+      bool isWin8 = IsWin8OrLater() && (!IsWin8Point1OrLater());
+
+      bool isKernel32Dll = (mModule == ::GetModuleHandleW(L"kernel32.dll"));
+
+      // CloseHandle on Windows 8/8.1 only accomodates 10-byte patches.
+      needs10BytePatch |= isWin8Or81 && isKernel32Dll &&
                           (reinterpret_cast<void*>(aProc) ==
                            reinterpret_cast<void*>(&CloseHandle));
+
+      // CreateFileA and DuplicateHandle on Windows 8 require 10-byte patches.
+      needs10BytePatch |= isWin8 && isKernel32Dll &&
+                          ((reinterpret_cast<void*>(aProc) ==
+                            reinterpret_cast<void*>(&::CreateFileA)) ||
+                           (reinterpret_cast<void*>(aProc) ==
+                            reinterpret_cast<void*>(&::DuplicateHandle)));
 
       if (needs10BytePatch) {
         flags |= DetourFlags::eEnable10BytePatch;
