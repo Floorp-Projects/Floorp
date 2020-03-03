@@ -31,6 +31,32 @@ extern mozilla::LazyLogModule gAudioChannelLog;
 namespace mozilla {
 namespace dom {
 
+namespace {
+class OnCompleteTask final : public Runnable {
+ public:
+  OnCompleteTask(AudioContext* aAudioContext, AudioBuffer* aRenderedBuffer)
+      : Runnable("dom::OfflineDestinationNodeEngine::OnCompleteTask"),
+        mAudioContext(aAudioContext),
+        mRenderedBuffer(aRenderedBuffer) {}
+
+  NS_IMETHOD Run() override {
+    OfflineAudioCompletionEventInit param;
+    param.mRenderedBuffer = mRenderedBuffer;
+
+    RefPtr<OfflineAudioCompletionEvent> event =
+        OfflineAudioCompletionEvent::Constructor(
+            mAudioContext, NS_LITERAL_STRING("complete"), param);
+    mAudioContext->DispatchTrustedEvent(event);
+
+    return NS_OK;
+  }
+
+ private:
+  RefPtr<AudioContext> mAudioContext;
+  RefPtr<AudioBuffer> mRenderedBuffer;
+};
+}  // anonymous namespace
+
 class OfflineDestinationNodeEngine final : public AudioNodeEngine {
  public:
   explicit OfflineDestinationNodeEngine(AudioDestinationNode* aNode)
@@ -113,30 +139,6 @@ class OfflineDestinationNodeEngine final : public AudioNodeEngine {
     // associated with the same AudioContext.
     return true;
   }
-
-  class OnCompleteTask final : public Runnable {
-   public:
-    OnCompleteTask(AudioContext* aAudioContext, AudioBuffer* aRenderedBuffer)
-        : Runnable("dom::OfflineDestinationNodeEngine::OnCompleteTask"),
-          mAudioContext(aAudioContext),
-          mRenderedBuffer(aRenderedBuffer) {}
-
-    NS_IMETHOD Run() override {
-      OfflineAudioCompletionEventInit param;
-      param.mRenderedBuffer = mRenderedBuffer;
-
-      RefPtr<OfflineAudioCompletionEvent> event =
-          OfflineAudioCompletionEvent::Constructor(
-              mAudioContext, NS_LITERAL_STRING("complete"), param);
-      mAudioContext->DispatchTrustedEvent(event);
-
-      return NS_OK;
-    }
-
-   private:
-    RefPtr<AudioContext> mAudioContext;
-    RefPtr<AudioBuffer> mRenderedBuffer;
-  };
 
   void FireOfflineCompletionEvent(AudioDestinationNode* aNode) {
     AudioContext* context = aNode->Context();
