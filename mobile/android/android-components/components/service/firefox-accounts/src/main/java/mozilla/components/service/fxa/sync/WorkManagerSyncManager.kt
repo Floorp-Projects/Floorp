@@ -23,7 +23,6 @@ import androidx.work.WorkerParameters
 import mozilla.appservices.syncmanager.SyncParams
 import mozilla.appservices.syncmanager.SyncServiceStatus
 import mozilla.appservices.syncmanager.SyncManager as RustSyncManager
-import mozilla.components.concept.sync.LockableStore
 import mozilla.components.concept.sync.SyncableStore
 import mozilla.components.service.fxa.FxaDeviceSettingsCache
 import mozilla.components.service.fxa.SyncAuthInfoCache
@@ -302,31 +301,7 @@ class WorkManagerSyncWorker(
             return Result.success()
         }
 
-        // We need a password storage encryption key, if password storage is configured to be synced. It needs to be
-        // unlocked for the duration of a sync.
-        val passwordStore = syncableStores.entries.find { it.key == SyncEngine.Passwords }?.value as? LockableStore
-        val passwordsKey = if (passwordStore == null) {
-            null
-        } else {
-            val ks = GlobalSyncableStoreProvider.getKeyStorage()
-            require(ks != null) {
-                "GlobalSyncableStoreProvider must be configured with a key storage instance when syncing passwords"
-            }
-
-            ks.getString(SyncEngine.Passwords.nativeName) ?: throw IllegalStateException(
-                "Key for SyncEngine.Passwords must be present in the key storage if password sync is enabled"
-            )
-        }
-
-        // Issue tracking moving locking/unlocking of storage layers to RustSyncManager:
-        // https://github.com/mozilla/application-services/issues/2102
-        return if (passwordStore != null) {
-            // We need to keep the store unlocked for the duration of the sync, as well as when we interact with
-            // setLogins API method.
-            passwordStore.unlocked(passwordsKey!!) { doSync(syncableStores) }
-        } else {
-            doSync(syncableStores)
-        }
+        return doSync(syncableStores)
     }
 
     @Suppress("LongMethod", "ComplexMethod")

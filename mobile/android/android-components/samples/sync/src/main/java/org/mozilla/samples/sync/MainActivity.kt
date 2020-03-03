@@ -11,7 +11,6 @@ import android.widget.TextView
 import android.widget.Toast
 import kotlinx.android.synthetic.main.activity_main.syncStatus
 import androidx.appcompat.app.AppCompatActivity
-import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -46,8 +45,7 @@ import mozilla.components.service.fxa.FxaAuthData
 import mozilla.components.service.fxa.SyncEngine
 import mozilla.components.service.fxa.sync.SyncReason
 import mozilla.components.service.fxa.toAuthType
-import mozilla.components.service.sync.logins.AsyncLoginsStorageAdapter
-import mozilla.components.service.sync.logins.SyncableLoginsStore
+import mozilla.components.service.sync.logins.SyncableLoginsStorage
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.base.log.sink.AndroidLogSink
 import mozilla.components.support.rusthttp.RustHttpConfig
@@ -72,25 +70,14 @@ class MainActivity :
 
     private val securePreferences by lazy { SecureAbove22Preferences(this, "key_store") }
 
-    private val passwordsStorage by lazy {
-        val passwordsEncryptionKey = securePreferences.getString(SyncEngine.Passwords.nativeName)
+    private val passwordsEncryptionKey by lazy {
+        securePreferences.getString(SyncEngine.Passwords.nativeName)
             ?: generateEncryptionKey(PASSWORDS_ENCRYPTION_KEY_STRENGTH).also {
                 securePreferences.putString(SyncEngine.Passwords.nativeName, it)
             }
-
-        SyncableLoginsStore(
-            AsyncLoginsStorageAdapter.forDatabase(this.getDatabasePath("logins.sqlite").absolutePath)
-        ) {
-            CompletableDeferred(passwordsEncryptionKey)
-        }
     }
 
-    private fun initializeSyncProviders() {
-        GlobalSyncableStoreProvider.configureStore(SyncEngine.History to historyStorage)
-        GlobalSyncableStoreProvider.configureStore(SyncEngine.Bookmarks to bookmarksStorage)
-        GlobalSyncableStoreProvider.configureStore(SyncEngine.Passwords to passwordsStorage)
-        GlobalSyncableStoreProvider.configureKeyStorage(securePreferences)
-    }
+    private val passwordsStorage by lazy { SyncableLoginsStorage(this, passwordsEncryptionKey) }
 
     private val accountManager by lazy {
         FxaAccountManager(
@@ -126,8 +113,6 @@ class MainActivity :
         RustHttpConfig.setClient(lazy { HttpURLConnectionClient() })
 
         Log.addSink(AndroidLogSink())
-
-        initializeSyncProviders()
 
         setContentView(R.layout.activity_main)
 
@@ -185,8 +170,14 @@ class MainActivity :
         // Observe incoming device commands.
         accountManager.registerForAccountEvents(accountEventsObserver, owner = this, autoPause = true)
 
-        // Now that our account state observer is registered, we can kick off the account manager.
-        launch { accountManager.initAsync().await() }
+        launch {
+            GlobalSyncableStoreProvider.configureStore(SyncEngine.History to historyStorage)
+            GlobalSyncableStoreProvider.configureStore(SyncEngine.Bookmarks to bookmarksStorage)
+            GlobalSyncableStoreProvider.configureStore(SyncEngine.Passwords to passwordsStorage)
+
+            // Now that our account state observer is registered, we can kick off the account manager.
+            accountManager.initAsync().await()
+        }
 
         findViewById<View>(R.id.buttonSync).setOnClickListener {
             accountManager.syncNowAsync(SyncReason.User)

@@ -13,26 +13,22 @@ import mozilla.appservices.logins.InvalidRecordException
 import mozilla.components.concept.storage.Login
 import mozilla.components.concept.storage.LoginValidationDelegate
 import mozilla.components.concept.storage.LoginValidationDelegate.Result
-import mozilla.components.lib.dataprotect.SecureAbove22Preferences
+import mozilla.components.concept.storage.LoginsStorage
 
 /**
  * A delegate that will check against [storage] to see if a given Login can be persisted, and return
  * information about why it can or cannot.
  */
 class DefaultLoginValidationDelegate(
-    private val storage: AsyncLoginsStorage,
-    keyStore: SecureAbove22Preferences,
+    private val storage: LoginsStorage,
     private val scope: CoroutineScope = CoroutineScope(IO)
 ) : LoginValidationDelegate {
-
-    private val password = { scope.async { keyStore.getString(PASSWORDS_KEY)!! } }
 
     @Suppress("ComplexMethod") // This method is not actually complex
     override fun validateCanPersist(login: Login): Deferred<Result> {
         return scope.async {
             try {
-                storage.ensureUnlocked(password().await()).await()
-                storage.ensureValid(login.toServerPassword()).await()
+                storage.ensureValid(login)
                 Result.CanBeCreated
             } catch (e: InvalidRecordException) {
                 when (e.reason) {
@@ -44,9 +40,6 @@ class DefaultLoginValidationDelegate(
                     // TODO in what ways can the login fields be illegal? represent these in the UI
                     InvalidLoginReason.ILLEGAL_FIELD_VALUE -> Result.Error.GeckoError(e)
                 }
-            } finally {
-                @Suppress("DeferredResultUnused") // No action needed
-                storage.lock()
             }
         }
     }

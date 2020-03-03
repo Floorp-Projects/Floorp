@@ -13,7 +13,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import mozilla.components.concept.storage.Login
 import mozilla.components.concept.storage.LoginStorageDelegate
-import mozilla.components.lib.dataprotect.SecureAbove22Preferences
+import mozilla.components.concept.storage.LoginsStorage
 import mozilla.components.support.base.log.logger.Logger
 
 /**
@@ -21,8 +21,6 @@ import mozilla.components.support.base.log.logger.Logger
  */
 @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
 enum class Operation { CREATE, UPDATE }
-
-internal const val PASSWORDS_KEY = "passwords"
 
 /**
  * [LoginStorageDelegate] implementation.
@@ -55,13 +53,11 @@ internal const val PASSWORDS_KEY = "passwords"
  *     - If [CREATE], [loginStorage] generates a new guid for it
  */
 class GeckoLoginStorageDelegate(
-    private val loginStorage: AsyncLoginsStorage,
-    keyStore: SecureAbove22Preferences,
+    private val loginStorage: LoginsStorage,
     private val isAutofillEnabled: () -> Boolean = { false },
     private val scope: CoroutineScope = CoroutineScope(Dispatchers.IO)
 ) : LoginStorageDelegate {
 
-    private val password = { scope.async { keyStore.getString(PASSWORDS_KEY)!! } }
     private val logger = Logger("GeckoLoginStorageDelegate")
 
     override fun onLoginUsed(login: Login) {
@@ -69,37 +65,30 @@ class GeckoLoginStorageDelegate(
         // If the guid is null, we have no way of associating the login with any record in the DB
         if (guid == null || guid.isEmpty()) return
         scope.launch {
-            loginStorage.withUnlocked(password) {
-                loginStorage.touch(guid).await()
-            }
+            loginStorage.touch(guid)
         }
     }
 
     override fun onLoginFetch(domain: String): Deferred<List<Login>> {
         if (!isAutofillEnabled()) return CompletableDeferred(listOf())
         return scope.async {
-            loginStorage.withUnlocked(password) {
-                loginStorage.getByBaseDomain(domain).await()
-                    .map { it.toLogin() }
-            }
+            loginStorage.getByBaseDomain(domain)
         }
     }
 
     @Synchronized
     override fun onLoginSave(login: Login) {
         scope.launch {
-            loginStorage.withUnlocked(password) {
-                val existingLogin = login.guid?.let { loginStorage.get(it) }?.await()
+            val existingLogin = login.guid?.let { loginStorage.get(it) }
 
-                when (getPersistenceOperation(login, existingLogin)) {
-                    Operation.UPDATE -> {
-                        existingLogin?.let { loginStorage.update(it.mergeWithLogin(login)).await() }
-                    }
-                    Operation.CREATE -> {
-                        // If an existing Login was autofilled, we want to clear its guid to
-                        // avoid updating its record
-                        loginStorage.add(login.copy(guid = "").toServerPassword()).await()
-                    }
+            when (getPersistenceOperation(login, existingLogin)) {
+                Operation.UPDATE -> {
+                    existingLogin?.let { loginStorage.update(it.mergeWithLogin(login)) }
+                }
+                Operation.CREATE -> {
+                    // If an existing Login was autofilled, we want to clear its guid to
+                    // avoid updating its record
+                    loginStorage.add(login.copy(guid = ""))
                 }
             }
         }
@@ -110,9 +99,9 @@ class GeckoLoginStorageDelegate(
      * on the saved [ServerPassword] and new [Login].
      */
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    fun getPersistenceOperation(newLogin: Login, savedLogin: ServerPassword?): Operation = when {
+    fun getPersistenceOperation(newLogin: Login, savedLogin: Login?): Operation = when {
         newLogin.guid.isNullOrEmpty() || savedLogin == null -> Operation.CREATE
-        newLogin.guid != savedLogin.id -> {
+        newLogin.guid != savedLogin.guid -> {
             logger.debug(
                 "getPersistenceOperation called with a non-null `savedLogin` with" +
                         " a guid that does not match `newLogin`. This is unexpected. Falling back to create " +
@@ -132,24 +121,24 @@ class GeckoLoginStorageDelegate(
  * back to values from [this].
  */
 @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-fun ServerPassword.mergeWithLogin(login: Login): ServerPassword {
+fun Login.mergeWithLogin(login: Login): Login {
     infix fun String?.orUseExisting(other: String?) =
         if (this?.isNotEmpty() == true) this else other
 
     infix fun String?.orUseExisting(other: String) = if (this?.isNotEmpty() == true) this else other
 
-    val hostname = login.origin orUseExisting hostname
+    val origin = login.origin orUseExisting origin
     val username = login.username orUseExisting username
     val password = login.password orUseExisting password
     val httpRealm = login.httpRealm orUseExisting httpRealm
-    val formSubmitUrl = login.formActionOrigin orUseExisting formSubmitURL
+    val formActionOrigin = login.formActionOrigin orUseExisting formActionOrigin
 
     return copy(
-        hostname = hostname,
+        origin = origin,
         username = username,
         password = password,
         httpRealm = httpRealm,
-        formSubmitURL = formSubmitUrl
+        formActionOrigin = formActionOrigin
     )
 }
 
@@ -164,10 +153,14 @@ fun Login.toServerPassword() = ServerPassword(
     hostname = origin,
     formSubmitURL = formActionOrigin,
     httpRealm = httpRealm,
+    timesUsed = timesUsed,
+    timeCreated = timeCreated,
+    timeLastUsed = timeLastUsed,
+    timePasswordChanged = timePasswordChanged,
     // usernameField & passwordField are allowed to be empty when
     // information is not available
-    usernameField = "",
-    passwordField = ""
+    usernameField = usernameField ?: "",
+    passwordField = passwordField ?: ""
 )
 
 /**
@@ -179,5 +172,11 @@ fun ServerPassword.toLogin() = Login(
     formActionOrigin = formSubmitURL,
     httpRealm = httpRealm,
     username = username,
-    password = password
+    password = password,
+    timesUsed = timesUsed,
+    timeCreated = timeCreated,
+    timeLastUsed = timeLastUsed,
+    timePasswordChanged = timePasswordChanged,
+    usernameField = usernameField,
+    passwordField = passwordField
 )
