@@ -442,8 +442,7 @@ static nsresult GetTableSelectionType(const nsRange* aRange,
   return NS_OK;
 }
 
-// static
-nsresult Selection::GetTableCellLocationFromRange(
+MOZ_CAN_RUN_SCRIPT static nsresult GetTableCellLocationFromRange(
     const nsRange* aRange, TableSelectionMode* aSelectionType, int32_t* aRow,
     int32_t* aCol) {
   if (!aRange || !aSelectionType || !aRow || !aCol) {
