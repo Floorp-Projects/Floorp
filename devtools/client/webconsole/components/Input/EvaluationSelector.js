@@ -121,7 +121,8 @@ class EvaluationSelector extends Component {
         menuId: "webconsole-input-evaluationsButton",
         toolboxDoc: toolbox ? toolbox.doc : doc,
         label: this.getLabel(),
-        className: "devtools-button devtools-dropdown-button",
+        className:
+          "webconsole-evaluation-selector-button devtools-button devtools-dropdown-button",
         title: l10n.getStr("webconsole.input.selector.tooltip"),
       },
       // We pass the children in a function so we don't require the MenuItem and MenuList
