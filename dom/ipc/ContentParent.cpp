@@ -1717,7 +1717,11 @@ void ContentParent::ActorDestroy(ActorDestroyReason why) {
         // if mCreatedPairedMinidumps is true, we've already generated
         // parent/child dumps for desktop crashes.
         if (!mCreatedPairedMinidumps) {
-          mCrashReporter->GenerateCrashReport(OtherPid());
+          if (mCrashReporter->GenerateCrashReport(OtherPid())) {
+            // Propagate `isLikelyOOM`.
+            Unused << props->SetPropertyAsBool(NS_LITERAL_STRING("isLikelyOOM"),
+                                               mCrashReporter->IsLikelyOOM());
+          }
         }
 
         if (mCrashReporter->HasMinidump()) {
