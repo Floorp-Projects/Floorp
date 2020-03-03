@@ -7944,6 +7944,21 @@ void nsIFrame::ListGeneric(nsACString& aTo, const char* aPrefix,
   if (IBprevsibling) {
     aTo += nsPrintfCString(" IBSplitPrevSibling=%p", IBprevsibling);
   }
+  if (nsLayoutUtils::FontSizeInflationEnabled(PresContext())) {
+    if (HasAnyStateBits(NS_FRAME_FONT_INFLATION_FLOW_ROOT)) {
+      aTo += nsPrintfCString(" FFR");
+      if (nsFontInflationData* data =
+              nsFontInflationData::FindFontInflationDataFor(this)) {
+        aTo += nsPrintfCString(",enabled=%s,UIS=%s",
+                               data->InflationEnabled() ? "yes" : "no",
+                               ToString(data->UsableISize()).c_str());
+      }
+    }
+    if (HasAnyStateBits(NS_FRAME_FONT_INFLATION_CONTAINER)) {
+      aTo += nsPrintfCString(" FIC");
+    }
+    aTo += nsPrintfCString(" FI=%f", nsLayoutUtils::FontSizeInflationFor(this));
+  }
   aTo += nsPrintfCString(" %s", ToString(mRect).c_str());
 
   mozilla::WritingMode wm = GetWritingMode();
