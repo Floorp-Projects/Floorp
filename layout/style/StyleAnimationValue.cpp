@@ -65,6 +65,11 @@ nscolor AnimationValue::GetColor(nscolor aForegroundColor) const {
   return Servo_AnimationValue_GetColor(mServo, aForegroundColor);
 }
 
+bool AnimationValue::IsCurrentColor() const {
+  MOZ_ASSERT(mServo);
+  return Servo_AnimationValue_IsCurrentColor(mServo);
+}
+
 const StyleTranslate& AnimationValue::GetTranslateProperty() const {
   MOZ_ASSERT(mServo);
   return *Servo_AnimationValue_GetTranslate(mServo);

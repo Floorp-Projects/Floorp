@@ -79,6 +79,10 @@ struct AnimationValue {
   // Currently only background-color is supported.
   nscolor GetColor(nscolor aForegroundColor) const;
 
+  // Returns true if this AnimationValue is current-color.
+  // Currently only background-color is supported.
+  bool IsCurrentColor() const;
+
   // Return a transform list for the transform property.
   const mozilla::StyleTransform& GetTransformProperty() const;
   const mozilla::StyleScale& GetScaleProperty() const;
