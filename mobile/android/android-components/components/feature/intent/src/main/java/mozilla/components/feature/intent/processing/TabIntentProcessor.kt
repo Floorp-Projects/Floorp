@@ -101,15 +101,6 @@ class TabIntentProcessor(
         }
     }
 
-    override fun matches(intent: Intent): Boolean {
-        val safeIntent = SafeIntent(intent)
-        return safeIntent.action == ACTION_VIEW ||
-            safeIntent.action == ACTION_SEND ||
-            safeIntent.action == ACTION_NDEF_DISCOVERED ||
-            safeIntent.action == ACTION_SEARCH ||
-            safeIntent.action == ACTION_WEB_SEARCH
-    }
-
     /**
      * Processes the given intent by invoking the registered handler.
      *

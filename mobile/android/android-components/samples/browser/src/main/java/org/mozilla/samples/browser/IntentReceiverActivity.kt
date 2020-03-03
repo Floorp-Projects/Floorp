@@ -28,25 +28,19 @@ class IntentReceiverActivity : Activity() {
             // LauncherActivity is started with the "excludeFromRecents" flag (set in manifest). We
             // do not want to propagate this flag from the launcher activity to the browser.
             intent.flags = intent.flags and Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS.inv()
-            intentProcessors.any { it.process(intent) }
 
-            setBrowserActivity(intent)
+            val processor = intentProcessors.firstOrNull { it.process(intent) }
+
+            val activityClass = if (processor in components.externalAppIntentProcessors) {
+                ExternalAppBrowserActivity::class
+            } else {
+                BrowserActivity::class
+            }
+
+            intent.setClassName(applicationContext, activityClass.java.name)
 
             finish()
             startActivity(intent)
         }
-    }
-
-    /**
-     * Sets the activity that this [intent] will launch.
-     */
-    private fun setBrowserActivity(intent: Intent) {
-        val className = if (components.externalAppIntentProcessors.any { it.matches(intent) }) {
-            ExternalAppBrowserActivity::class
-        } else {
-            BrowserActivity::class
-        }
-
-        intent.setClassName(applicationContext, className.java.name)
     }
 }

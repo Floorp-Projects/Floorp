@@ -47,7 +47,7 @@ class TrustedWebActivityIntentProcessor(
     private val verifier = OriginVerifierFeature(httpClient, packageManager, apiKey) { store.dispatch(it) }
     private val scope = MainScope()
 
-    override fun matches(intent: Intent): Boolean {
+    private fun matches(intent: Intent): Boolean {
         val safeIntent = intent.toSafeIntent()
         return safeIntent.action == ACTION_VIEW && isTrustedWebActivityIntent(safeIntent)
     }

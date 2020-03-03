@@ -30,15 +30,6 @@ import org.mockito.Mockito.`when`
 @RunWith(AndroidJUnit4::class)
 @ExperimentalCoroutinesApi
 class WebAppIntentProcessorTest {
-
-    @Test
-    fun `matches checks if intent action is ACTION_VIEW_PWA`() {
-        val processor = WebAppIntentProcessor(mock(), mock(), mock())
-
-        assertTrue(processor.matches(Intent(ACTION_VIEW_PWA)))
-        assertFalse(processor.matches(Intent(ACTION_VIEW)))
-    }
-
     @Test
     fun `process checks if intent action is not valid`() = runBlockingTest {
         val processor = WebAppIntentProcessor(mock(), mock(), mock())

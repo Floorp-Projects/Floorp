@@ -15,12 +15,6 @@ import mozilla.components.support.migration.state.MigrationStore
  * ⚠️ When using this processor, ensure this is the first processor to be invoked if there are multiple.
  */
 class MigrationIntentProcessor(private val store: MigrationStore) : IntentProcessor {
-
-    /**
-     * Matches itself with all intents in order to ensure processing all of incoming intents.
-     */
-    override fun matches(intent: Intent): Boolean = store.state.progress == MigrationProgress.MIGRATING
-
     /**
      * Processes all incoming intents if a migration is in progress.
      *

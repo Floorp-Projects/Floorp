@@ -10,12 +10,6 @@ import android.content.Intent
  * Processor for Android intents which should trigger session-related actions.
  */
 interface IntentProcessor {
-
-    /**
-     * Returns true if this intent processor will handle the intent.
-     */
-    fun matches(intent: Intent): Boolean
-
     /**
      * Processes the given [Intent].
      *

@@ -26,7 +26,7 @@ class CustomTabIntentProcessor(
     private val isPrivate: Boolean = false
 ) : IntentProcessor {
 
-    override fun matches(intent: Intent): Boolean {
+    private fun matches(intent: Intent): Boolean {
         val safeIntent = intent.toSafeIntent()
         return safeIntent.action == ACTION_VIEW && isCustomTabIntent(safeIntent)
     }
