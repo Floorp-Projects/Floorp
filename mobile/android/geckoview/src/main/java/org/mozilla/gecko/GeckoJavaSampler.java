@@ -8,10 +8,11 @@ package org.mozilla.gecko;
 import android.os.Looper;
 import android.os.SystemClock;
 import android.util.Log;
-import android.util.SparseArray;
 
 import org.mozilla.gecko.annotation.WrapForJNI;
 
+// Bug 1618560: Currently we only profile the Java Main Thread. Ideally we should
+// be able to profile multiple threads.
 public class GeckoJavaSampler {
     private static final String LOGTAG = "JavaSampler";
     private static Thread sSamplingThread;
@@ -60,7 +61,7 @@ public class GeckoJavaSampler {
         private boolean mPauseSampler;
         private boolean mStopSampler;
 
-        private final SparseArray<Sample[]> mSamples = new SparseArray<Sample[]>();
+        private Sample[] mSamples;
         private int mSamplePos;
 
         public SamplingThread(final int aInterval, final int aSampleCount) {
@@ -72,7 +73,7 @@ public class GeckoJavaSampler {
         @Override
         public void run() {
             synchronized (GeckoJavaSampler.class) {
-                mSamples.put(0, new Sample[mSampleCount]);
+                mSamples = new Sample[mSampleCount];
                 mSamplePos = 0;
 
                 // Find the main thread
@@ -92,8 +93,8 @@ public class GeckoJavaSampler {
                 synchronized (GeckoJavaSampler.class) {
                     if (!mPauseSampler) {
                         StackTraceElement[] bt = sMainThread.getStackTrace();
-                        mSamples.get(0)[mSamplePos] = new Sample(bt);
-                        mSamplePos = (mSamplePos + 1) % mSamples.get(0).length;
+                        mSamples[mSamplePos] = new Sample(bt);
+                        mSamplePos = (mSamplePos + 1) % mSamples.length;
                     }
                     if (mStopSampler) {
                         break;
@@ -102,36 +103,26 @@ public class GeckoJavaSampler {
             }
         }
 
-        private Sample getSample(final int aThreadId, final int aSampleId) {
-            if (aThreadId < mSamples.size() && aSampleId < mSamples.get(aThreadId).length &&
-                mSamples.get(aThreadId)[aSampleId] != null) {
+        private Sample getSample(final int aSampleId) {
+            if (aSampleId < mSamples.length && mSamples[aSampleId] != null) {
                 int startPos = 0;
-                if (mSamples.get(aThreadId)[mSamplePos] != null) {
+                if (mSamples[mSamplePos] != null) {
                     startPos = mSamplePos;
                 }
-                int readPos = (startPos + aSampleId) % mSamples.get(aThreadId).length;
-                return mSamples.get(aThreadId)[readPos];
+                int readPos = (startPos + aSampleId) % mSamples.length;
+                return mSamples[readPos];
             }
             return null;
         }
     }
 
-
-    @WrapForJNI
-    public synchronized static String getThreadName(final int aThreadId) {
-        if (aThreadId == 0 && sMainThread != null) {
-            return sMainThread.getName();
-        }
-        return null;
-    }
-
-    private synchronized static Sample getSample(final int aThreadId, final int aSampleId) {
-        return sSamplingRunnable.getSample(aThreadId, aSampleId);
+    private synchronized static Sample getSample(final int aSampleId) {
+        return sSamplingRunnable.getSample(aSampleId);
     }
 
     @WrapForJNI
-    public synchronized static double getSampleTime(final int aThreadId, final int aSampleId) {
-        Sample sample = getSample(aThreadId, aSampleId);
+    public synchronized static double getSampleTime(final int aSampleId) {
+        Sample sample = getSample(aSampleId);
         if (sample != null) {
             if (sample.mJavaTime != 0) {
                 return (sample.mJavaTime -
@@ -143,8 +134,8 @@ public class GeckoJavaSampler {
     }
 
     @WrapForJNI
-    public synchronized static String getFrameName(final int aThreadId, final int aSampleId, final int aFrameId) {
-        Sample sample = getSample(aThreadId, aSampleId);
+    public synchronized static String getFrameName(final int aSampleId, final int aFrameId) {
+        Sample sample = getSample(aSampleId);
         if (sample != null && aFrameId < sample.mFrames.length) {
             Frame frame = sample.mFrames[aFrameId];
             if (frame == null) {
