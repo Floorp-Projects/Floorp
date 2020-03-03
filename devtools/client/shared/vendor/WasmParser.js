@@ -224,7 +224,22 @@ var OperatorCode;
     OperatorCode[OperatorCode["i64_trunc_u_sat_f32"] = 64517] = "i64_trunc_u_sat_f32";
     OperatorCode[OperatorCode["i64_trunc_s_sat_f64"] = 64518] = "i64_trunc_s_sat_f64";
     OperatorCode[OperatorCode["i64_trunc_u_sat_f64"] = 64519] = "i64_trunc_u_sat_f64";
-    OperatorCode[OperatorCode["atomic_wake"] = 65024] = "atomic_wake";
+    OperatorCode[OperatorCode["memory_init"] = 64520] = "memory_init";
+    OperatorCode[OperatorCode["data_drop"] = 64521] = "data_drop";
+    OperatorCode[OperatorCode["memory_copy"] = 64522] = "memory_copy";
+    OperatorCode[OperatorCode["memory_fill"] = 64523] = "memory_fill";
+    OperatorCode[OperatorCode["table_init"] = 64524] = "table_init";
+    OperatorCode[OperatorCode["elem_drop"] = 64525] = "elem_drop";
+    OperatorCode[OperatorCode["table_copy"] = 64526] = "table_copy";
+    OperatorCode[OperatorCode["table_grow"] = 64527] = "table_grow";
+    OperatorCode[OperatorCode["table_size"] = 64528] = "table_size";
+    OperatorCode[OperatorCode["table_fill"] = 64529] = "table_fill";
+    OperatorCode[OperatorCode["table_get"] = 37] = "table_get";
+    OperatorCode[OperatorCode["table_set"] = 38] = "table_set";
+    OperatorCode[OperatorCode["ref_null"] = 208] = "ref_null";
+    OperatorCode[OperatorCode["ref_is_null"] = 209] = "ref_is_null";
+    OperatorCode[OperatorCode["ref_func"] = 210] = "ref_func";
+    OperatorCode[OperatorCode["atomic_notify"] = 65024] = "atomic_notify";
     OperatorCode[OperatorCode["i32_atomic_wait"] = 65025] = "i32_atomic_wait";
     OperatorCode[OperatorCode["i64_atomic_wait"] = 65026] = "i64_atomic_wait";
     OperatorCode[OperatorCode["i32_atomic_load"] = 65040] = "i32_atomic_load";
@@ -433,15 +448,15 @@ var OperatorCode;
 })(OperatorCode = exports.OperatorCode || (exports.OperatorCode = {}));
 ;
 exports.OperatorCodeNames = [
-    "unreachable", "nop", "block", "loop", "if", "else", undefined, undefined, undefined, undefined, undefined, "end", "br", "br_if", "br_table", "return", "call", "call_indirect", undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, "drop", "select", undefined, undefined, undefined, undefined, "get_local", "set_local", "tee_local", "get_global", "set_global", undefined, undefined, undefined, "i32.load", "i64.load", "f32.load", "f64.load", "i32.load8_s", "i32.load8_u", "i32.load16_s", "i32.load16_u", "i64.load8_s", "i64.load8_u", "i64.load16_s", "i64.load16_u", "i64.load32_s", "i64.load32_u", "i32.store", "i64.store", "f32.store", "f64.store", "i32.store8", "i32.store16", "i64.store8", "i64.store16", "i64.store32", "current_memory", "grow_memory", "i32.const", "i64.const", "f32.const", "f64.const", "i32.eqz", "i32.eq", "i32.ne", "i32.lt_s", "i32.lt_u", "i32.gt_s", "i32.gt_u", "i32.le_s", "i32.le_u", "i32.ge_s", "i32.ge_u", "i64.eqz", "i64.eq", "i64.ne", "i64.lt_s", "i64.lt_u", "i64.gt_s", "i64.gt_u", "i64.le_s", "i64.le_u", "i64.ge_s", "i64.ge_u", "f32.eq", "f32.ne", "f32.lt", "f32.gt", "f32.le", "f32.ge", "f64.eq", "f64.ne", "f64.lt", "f64.gt", "f64.le", "f64.ge", "i32.clz", "i32.ctz", "i32.popcnt", "i32.add", "i32.sub", "i32.mul", "i32.div_s", "i32.div_u", "i32.rem_s", "i32.rem_u", "i32.and", "i32.or", "i32.xor", "i32.shl", "i32.shr_s", "i32.shr_u", "i32.rotl", "i32.rotr", "i64.clz", "i64.ctz", "i64.popcnt", "i64.add", "i64.sub", "i64.mul", "i64.div_s", "i64.div_u", "i64.rem_s", "i64.rem_u", "i64.and", "i64.or", "i64.xor", "i64.shl", "i64.shr_s", "i64.shr_u", "i64.rotl", "i64.rotr", "f32.abs", "f32.neg", "f32.ceil", "f32.floor", "f32.trunc", "f32.nearest", "f32.sqrt", "f32.add", "f32.sub", "f32.mul", "f32.div", "f32.min", "f32.max", "f32.copysign", "f64.abs", "f64.neg", "f64.ceil", "f64.floor", "f64.trunc", "f64.nearest", "f64.sqrt", "f64.add", "f64.sub", "f64.mul", "f64.div", "f64.min", "f64.max", "f64.copysign", "i32.wrap/i64", "i32.trunc_s/f32", "i32.trunc_u/f32", "i32.trunc_s/f64", "i32.trunc_u/f64", "i64.extend_s/i32", "i64.extend_u/i32", "i64.trunc_s/f32", "i64.trunc_u/f32", "i64.trunc_s/f64", "i64.trunc_u/f64", "f32.convert_s/i32", "f32.convert_u/i32", "f32.convert_s/i64", "f32.convert_u/i64", "f32.demote/f64", "f64.convert_s/i32", "f64.convert_u/i32", "f64.convert_s/i64", "f64.convert_u/i64", "f64.promote/f32", "i32.reinterpret/f32", "i64.reinterpret/f64", "f32.reinterpret/i32", "f64.reinterpret/i64", "i32.extend8_s", "i32.extend16_s", "i64.extend8_s", "i64.extend16_s", "i64.extend32_s", undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined
+    "unreachable", "nop", "block", "loop", "if", "else", undefined, undefined, undefined, undefined, undefined, "end", "br", "br_if", "br_table", "return", "call", "call_indirect", undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, "drop", "select", undefined, undefined, undefined, undefined, "get_local", "set_local", "tee_local", "get_global", "set_global", "get_table", "set_table", undefined, "i32.load", "i64.load", "f32.load", "f64.load", "i32.load8_s", "i32.load8_u", "i32.load16_s", "i32.load16_u", "i64.load8_s", "i64.load8_u", "i64.load16_s", "i64.load16_u", "i64.load32_s", "i64.load32_u", "i32.store", "i64.store", "f32.store", "f64.store", "i32.store8", "i32.store16", "i64.store8", "i64.store16", "i64.store32", "current_memory", "grow_memory", "i32.const", "i64.const", "f32.const", "f64.const", "i32.eqz", "i32.eq", "i32.ne", "i32.lt_s", "i32.lt_u", "i32.gt_s", "i32.gt_u", "i32.le_s", "i32.le_u", "i32.ge_s", "i32.ge_u", "i64.eqz", "i64.eq", "i64.ne", "i64.lt_s", "i64.lt_u", "i64.gt_s", "i64.gt_u", "i64.le_s", "i64.le_u", "i64.ge_s", "i64.ge_u", "f32.eq", "f32.ne", "f32.lt", "f32.gt", "f32.le", "f32.ge", "f64.eq", "f64.ne", "f64.lt", "f64.gt", "f64.le", "f64.ge", "i32.clz", "i32.ctz", "i32.popcnt", "i32.add", "i32.sub", "i32.mul", "i32.div_s", "i32.div_u", "i32.rem_s", "i32.rem_u", "i32.and", "i32.or", "i32.xor", "i32.shl", "i32.shr_s", "i32.shr_u", "i32.rotl", "i32.rotr", "i64.clz", "i64.ctz", "i64.popcnt", "i64.add", "i64.sub", "i64.mul", "i64.div_s", "i64.div_u", "i64.rem_s", "i64.rem_u", "i64.and", "i64.or", "i64.xor", "i64.shl", "i64.shr_s", "i64.shr_u", "i64.rotl", "i64.rotr", "f32.abs", "f32.neg", "f32.ceil", "f32.floor", "f32.trunc", "f32.nearest", "f32.sqrt", "f32.add", "f32.sub", "f32.mul", "f32.div", "f32.min", "f32.max", "f32.copysign", "f64.abs", "f64.neg", "f64.ceil", "f64.floor", "f64.trunc", "f64.nearest", "f64.sqrt", "f64.add", "f64.sub", "f64.mul", "f64.div", "f64.min", "f64.max", "f64.copysign", "i32.wrap/i64", "i32.trunc_s/f32", "i32.trunc_u/f32", "i32.trunc_s/f64", "i32.trunc_u/f64", "i64.extend_s/i32", "i64.extend_u/i32", "i64.trunc_s/f32", "i64.trunc_u/f32", "i64.trunc_s/f64", "i64.trunc_u/f64", "f32.convert_s/i32", "f32.convert_u/i32", "f32.convert_s/i64", "f32.convert_u/i64", "f32.demote/f64", "f64.convert_s/i32", "f64.convert_u/i32", "f64.convert_s/i64", "f64.convert_u/i64", "f64.promote/f32", "i32.reinterpret/f32", "i64.reinterpret/f64", "f32.reinterpret/i32", "f64.reinterpret/i64", "i32.extend8_s", "i32.extend16_s", "i64.extend8_s", "i64.extend16_s", "i64.extend32_s", undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, "ref.null", "ref.is_null", "ref.func", undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined
 ];
-["i32.trunc_s:sat/f32", "i32.trunc_u:sat/f32", "i32.trunc_s:sat/f64", "i32.trunc_u:sat/f64", "i64.trunc_s:sat/f32", "i64.trunc_u:sat/f32", "i64.trunc_s:sat/f64", "i64.trunc_u:sat/f64"].forEach(function (s, i) {
+["i32.trunc_s:sat/f32", "i32.trunc_u:sat/f32", "i32.trunc_s:sat/f64", "i32.trunc_u:sat/f64", "i64.trunc_s:sat/f32", "i64.trunc_u:sat/f32", "i64.trunc_s:sat/f64", "i64.trunc_u:sat/f64", "memory.init", "data.drop", "memory.copy", "memory.fill", "table.init", "elem.drop", "table.copy", "table.grow", "table.size", "table.fill"].forEach(function (s, i) {
     exports.OperatorCodeNames[0xfc00 | i] = s;
 });
 ["v128.load", "v128.store", "v128.const", "v8x16.shuffle", "i8x16.splat", "i8x16.extract_lane_s", "i8x16.extract_lane_u", "i8x16.replace_lane", "i16x8.splat", "i16x8.extract_lane_s", "i16x8.extract_lane_u", "i16x8.replace_lane", "i32x4.splat", "i32x4.extract_lane", "i32x4.replace_lane", "i64x2.splat", "i64x2.extract_lane", "i64x2.replace_lane", "f32x4.splat", "f32x4.extract_lane", "f32x4.replace_lane", "f64x2.splat", "f64x2.extract_lane", "f64x2.replace_lane", "i8x16.eq", "i8x16.ne", "i8x16.lt_s", "i8x16.lt_u", "i8x16.gt_s", "i8x16.gt_u", "i8x16.le_s", "i8x16.le_u", "i8x16.ge_s", "i8x16.ge_u", "i16x8.eq", "i16x8.ne", "i16x8.lt_s", "i16x8.lt_u", "i16x8.gt_s", "i16x8.gt_u", "i16x8.le_s", "i16x8.le_u", "i16x8.ge_s", "i16x8.ge_u", "i32x4.eq", "i32x4.ne", "i32x4.lt_s", "i32x4.lt_u", "i32x4.gt_s", "i32x4.gt_u", "i32x4.le_s", "i32x4.le_u", "i32x4.ge_s", "i32x4.ge_u", undefined, null, null, null, null, null, null, null, null, null, "f32x4.eq", "f32x4.ne", "f32x4.lt", "f32x4.gt", "f32x4.le", "f32x4.ge", "f64x2.eq", "f64x2.ne", "f64x2.lt", "f64x2.gt", "f64x2.le", "f64x2.ge", "v128.not", "v128.and", "v128.or", "v128.xor", "v128.bitselect", "i8x16.neg", "i8x16.any_true", "i8x16.all_true", "i8x16.shl", "i8x16.shr_s", "i8x16.shr_u", "i8x16.add", "i8x16.add_saturate_s", "i8x16.add_saturate_u", "i8x16.sub", "i8x16.sub_saturate_s", "i8x16.sub_saturate_u", "i8x16.mul", null, null, null, null, "i16x8.neg", "i16x8.any_true", "i16x8.all_true", "i16x8.shl", "i16x8.shr_s", "i16x8.shr_u", "i16x8.add", "i16x8.add_saturate_s", "i16x8.add_saturate_u", "i16x8.sub", "i16x8.sub_saturate_s", "i16x8.sub_saturate_u", "i16x8.mul", null, null, null, null, "i32x4.neg", "i32x4.any_true", "i32x4.all_true", "i32x4.shl", "i32x4.shr_s", "i32x4.shr_u", "i32x4.add", null, null, "i32x4.sub", null, null, "i32x4.mul", null, null, null, null, "i64x2.neg", "i64x2.any_true", "i64x2.all_true", "i64x2.shl", "i64x2.shr_s", "i64x2.shr_u", "i64x2.add", null, null, "i64x2.sub", null, null, null, null, null, null, null, "f32x4.abs", "f32x4.neg", "f32x4.sqrt", null, null, "f32x4.add", "f32x4.sub", "f32x4.mul", "f32x4.div", "f32x4.min", "f32x4.max", "f64x2.abs", "f64x2.neg", "f64x2.sqrt", null, null, "f64x2.add", "f64x2.sub", "f64x2.mul", "f64x2.div", "f64x2.min", "f64x2.max", "i32x4.trunc_s/f32x4:sat", "i32x4.trunc_u/f32x4:sat", "i64x2.trunc_s/f64x2:sat", "i64x2.trunc_u/f64x2:sat", "f32x4.convert_s/i32x4", "f32x4.convert_u/i32x4", "f64x2.convert_s/i64x2", "f64x2.convert_u/i64x2"].forEach(function (s, i) {
     exports.OperatorCodeNames[0xfd00 | i] = s;
 });
-["atomic.wake", "i32.atomic.wait", "i64.atomic.wait", undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, "i32.atomic.load", "i64.atomic.load", "i32.atomic.load8_u", "i32.atomic.load16_u", "i64.atomic.load8_u", "i64.atomic.load16_u", "i64.atomic.load32_u", "i32.atomic.store", "i64.atomic.store", "i32.atomic.store8", "i32.atomic.store16", "i64.atomic.store8", "i64.atomic.store16", "i64.atomic.store32", "i32.atomic.rmw.add", "i64.atomic.rmw.add", "i32.atomic.rmw8_u.add", "i32.atomic.rmw16_u.add", "i64.atomic.rmw8_u.add", "i64.atomic.rmw16_u.add", "i64.atomic.rmw32_u.add", "i32.atomic.rmw.sub", "i64.atomic.rmw.sub", "i32.atomic.rmw8_u.sub", "i32.atomic.rmw16_u.sub", "i64.atomic.rmw8_u.sub", "i64.atomic.rmw16_u.sub", "i64.atomic.rmw32_u.sub", "i32.atomic.rmw.and", "i64.atomic.rmw.and", "i32.atomic.rmw8_u.and", "i32.atomic.rmw16_u.and", "i64.atomic.rmw8_u.and", "i64.atomic.rmw16_u.and", "i64.atomic.rmw32_u.and", "i32.atomic.rmw.or", "i64.atomic.rmw.or", "i32.atomic.rmw8_u.or", "i32.atomic.rmw16_u.or", "i64.atomic.rmw8_u.or", "i64.atomic.rmw16_u.or", "i64.atomic.rmw32_u.or", "i32.atomic.rmw.xor", "i64.atomic.rmw.xor", "i32.atomic.rmw8_u.xor", "i32.atomic.rmw16_u.xor", "i64.atomic.rmw8_u.xor", "i64.atomic.rmw16_u.xor", "i64.atomic.rmw32_u.xor", "i32.atomic.rmw.xchg", "i64.atomic.rmw.xchg", "i32.atomic.rmw8_u.xchg", "i32.atomic.rmw16_u.xchg", "i64.atomic.rmw8_u.xchg", "i64.atomic.rmw16_u.xchg", "i64.atomic.rmw32_u.xchg", "i32.atomic.rmw.cmpxchg", "i64.atomic.rmw.cmpxchg", "i32.atomic.rmw8_u.cmpxchg", "i32.atomic.rmw16_u.cmpxchg", "i64.atomic.rmw8_u.cmpxchg", "i64.atomic.rmw16_u.cmpxchg", "i64.atomic.rmw32_u.cmpxchg"].forEach(function (s, i) {
+["atomic.notify", "i32.atomic.wait", "i64.atomic.wait", undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, "i32.atomic.load", "i64.atomic.load", "i32.atomic.load8_u", "i32.atomic.load16_u", "i64.atomic.load8_u", "i64.atomic.load16_u", "i64.atomic.load32_u", "i32.atomic.store", "i64.atomic.store", "i32.atomic.store8", "i32.atomic.store16", "i64.atomic.store8", "i64.atomic.store16", "i64.atomic.store32", "i32.atomic.rmw.add", "i64.atomic.rmw.add", "i32.atomic.rmw8_u.add", "i32.atomic.rmw16_u.add", "i64.atomic.rmw8_u.add", "i64.atomic.rmw16_u.add", "i64.atomic.rmw32_u.add", "i32.atomic.rmw.sub", "i64.atomic.rmw.sub", "i32.atomic.rmw8_u.sub", "i32.atomic.rmw16_u.sub", "i64.atomic.rmw8_u.sub", "i64.atomic.rmw16_u.sub", "i64.atomic.rmw32_u.sub", "i32.atomic.rmw.and", "i64.atomic.rmw.and", "i32.atomic.rmw8_u.and", "i32.atomic.rmw16_u.and", "i64.atomic.rmw8_u.and", "i64.atomic.rmw16_u.and", "i64.atomic.rmw32_u.and", "i32.atomic.rmw.or", "i64.atomic.rmw.or", "i32.atomic.rmw8_u.or", "i32.atomic.rmw16_u.or", "i64.atomic.rmw8_u.or", "i64.atomic.rmw16_u.or", "i64.atomic.rmw32_u.or", "i32.atomic.rmw.xor", "i64.atomic.rmw.xor", "i32.atomic.rmw8_u.xor", "i32.atomic.rmw16_u.xor", "i64.atomic.rmw8_u.xor", "i64.atomic.rmw16_u.xor", "i64.atomic.rmw32_u.xor", "i32.atomic.rmw.xchg", "i64.atomic.rmw.xchg", "i32.atomic.rmw8_u.xchg", "i32.atomic.rmw16_u.xchg", "i64.atomic.rmw8_u.xchg", "i64.atomic.rmw16_u.xchg", "i64.atomic.rmw32_u.xchg", "i32.atomic.rmw.cmpxchg", "i64.atomic.rmw.cmpxchg", "i32.atomic.rmw8_u.cmpxchg", "i32.atomic.rmw16_u.cmpxchg", "i64.atomic.rmw8_u.cmpxchg", "i64.atomic.rmw16_u.cmpxchg", "i64.atomic.rmw32_u.cmpxchg"].forEach(function (s, i) {
     exports.OperatorCodeNames[0xfe00 | i] = s;
 });
 var ExternalKind;
@@ -453,12 +468,14 @@ var ExternalKind;
 })(ExternalKind = exports.ExternalKind || (exports.ExternalKind = {}));
 var Type;
 (function (Type) {
+    Type[Type["unspecified"] = 0] = "unspecified";
     Type[Type["i32"] = -1] = "i32";
     Type[Type["i64"] = -2] = "i64";
     Type[Type["f32"] = -3] = "f32";
     Type[Type["f64"] = -4] = "f64";
     Type[Type["v128"] = -5] = "v128";
     Type[Type["anyfunc"] = -16] = "anyfunc";
+    Type[Type["anyref"] = -17] = "anyref";
     Type[Type["func"] = -32] = "func";
     Type[Type["empty_block_type"] = -64] = "empty_block_type";
 })(Type = exports.Type || (exports.Type = {}));
@@ -526,6 +543,13 @@ var BinaryReaderState;
     BinaryReaderState[BinaryReaderState["RELOC_SECTION_ENTRY"] = 42] = "RELOC_SECTION_ENTRY";
     BinaryReaderState[BinaryReaderState["SOURCE_MAPPING_URL"] = 43] = "SOURCE_MAPPING_URL";
 })(BinaryReaderState = exports.BinaryReaderState || (exports.BinaryReaderState = {}));
+var SegmentFlags;
+(function (SegmentFlags) {
+    SegmentFlags[SegmentFlags["IsPassive"] = 1] = "IsPassive";
+    SegmentFlags[SegmentFlags["HasTableIndex"] = 2] = "HasTableIndex";
+    SegmentFlags[SegmentFlags["FunctionsAsElements"] = 4] = "FunctionsAsElements";
+})(SegmentFlags = exports.SegmentFlags || (exports.SegmentFlags = {}));
+exports.NULL_FUNCTION_INDEX = 0xFFFFFFFF;
 var DataRange = /** @class */ (function () {
     function DataRange(start, end) {
         this.start = start;
@@ -946,13 +970,22 @@ var BinaryReader = /** @class */ (function () {
             this.state = 20 /* ELEMENT_SECTION_ENTRY */;
             return false;
         }
-        var tableIndex = this.readVarUint32();
+        var flags = this.readVarUint7();
+        var tableIndex = 0;
+        if (flags & 2 /* HasTableIndex */) {
+            tableIndex = this.readVarUint32();
+        }
         this.state = 33 /* BEGIN_ELEMENT_SECTION_ENTRY */;
         this.result = { index: tableIndex };
         this._sectionEntriesLeft--;
+        this._segmentFlags = flags;
         return true;
     };
     BinaryReader.prototype.readElementEntryBody = function () {
+        var funcType = 0 /* unspecified */;
+        if (this._segmentFlags & (1 /* IsPassive */ | 2 /* HasTableIndex */)) {
+            funcType = this.readVarInt7();
+        }
         if (!this.hasVarIntBytes())
             return false;
         var pos = this._pos;
@@ -964,14 +997,39 @@ var BinaryReader = /** @class */ (function () {
         }
         var elements = new Uint32Array(numElemements);
         for (var i = 0; i < numElemements; i++) {
-            if (!this.hasVarIntBytes()) {
-                this._pos = pos;
-                return false;
+            if (this._segmentFlags & 4 /* FunctionsAsElements */) {
+                // Read initializer expression, which must either be null ref or func ref
+                var operator = this.readUint8();
+                if (operator == 208 /* ref_null */) {
+                    elements[i] = exports.NULL_FUNCTION_INDEX;
+                }
+                else if (operator == 210 /* ref_func */) {
+                    elements[i] = this.readVarInt32();
+                }
+                else {
+                    this.error = new Error('Invalid initializer expression for element');
+                    return true;
+                }
+                operator = this.readUint8();
+                if (operator != 11 /* end */) {
+                    this.error = new Error('Expected end of initializer expression for element');
+                    return true;
+                }
             }
-            elements[i] = this.readVarUint32();
+            else {
+                if (!this.hasVarIntBytes()) {
+                    this._pos = pos;
+                    return false;
+                }
+                elements[i] = this.readVarUint32();
+            }
         }
         this.state = 34 /* ELEMENT_SECTION_ENTRY_BODY */;
-        this.result = { elements: elements };
+        this.result = {
+            elements: elements,
+            elementType: funcType,
+            asElements: !!(this._segmentFlags & 4 /* FunctionsAsElements */)
+        };
         return true;
     };
     BinaryReader.prototype.readDataEntry = function () {
@@ -982,9 +1040,14 @@ var BinaryReader = /** @class */ (function () {
         if (!this.hasVarIntBytes()) {
             return false;
         }
+        this._segmentFlags = this.readVarUint32();
+        var index = 0;
+        if (this._segmentFlags == 2 /* HasTableIndex */) {
+            index = this.readVarUint32();
+        }
         this.state = 36 /* BEGIN_DATA_SECTION_ENTRY */;
         this.result = {
-            index: this.readVarUint32()
+            index: index
         };
         this._sectionEntriesLeft--;
         return true;
@@ -1190,6 +1253,7 @@ var BinaryReader = /** @class */ (function () {
     };
     BinaryReader.prototype.readCodeOperator_0xfc = function () {
         var code = this._data[this._pos++] | 0xfc00;
+        var reserved, segmentIndex, destinationIndex, tableIndex;
         switch (code) {
             case 64512 /* i32_trunc_s_sat_f32 */:
             case 64513 /* i32_trunc_u_sat_f32 */:
@@ -1200,6 +1264,35 @@ var BinaryReader = /** @class */ (function () {
             case 64518 /* i64_trunc_s_sat_f64 */:
             case 64519 /* i64_trunc_u_sat_f64 */:
                 break;
+            case 64522 /* memory_copy */:
+                // Currently memory index must be zero.
+                reserved = this.readVarUint1();
+                reserved = this.readVarUint1();
+                break;
+            case 64523 /* memory_fill */:
+                reserved = this.readVarUint1();
+                break;
+            case 64524 /* table_init */:
+                segmentIndex = this.readVarUint32() >>> 0;
+                tableIndex = this.readVarUint32() >>> 0;
+                break;
+            case 64526 /* table_copy */:
+                tableIndex = this.readVarUint32() >>> 0;
+                destinationIndex = this.readVarUint32() >>> 0;
+                break;
+            case 64527 /* table_grow */:
+            case 64528 /* table_size */:
+            case 64529 /* table_fill */:
+                tableIndex = this.readVarUint32() >>> 0;
+                break;
+            case 64520 /* memory_init */:
+                segmentIndex = this.readVarUint32() >>> 0;
+                reserved = this.readVarUint1();
+                break;
+            case 64521 /* data_drop */:
+            case 64525 /* elem_drop */:
+                segmentIndex = this.readVarUint32() >>> 0;
+                break;
             default:
                 this.error = new Error("Unknown operator: " + code);
                 this.state = -1 /* ERROR */;
@@ -1207,8 +1300,9 @@ var BinaryReader = /** @class */ (function () {
         }
         this.result = { code: code,
             blockType: undefined, brDepth: undefined, brTable: undefined,
-            funcIndex: undefined, typeIndex: undefined, localIndex: undefined,
+            funcIndex: undefined, typeIndex: undefined, tableIndex: tableIndex, localIndex: undefined,
             globalIndex: undefined, memoryAddress: undefined, literal: undefined,
+            segmentIndex: segmentIndex, destinationIndex: destinationIndex,
             lines: undefined, lineIndex: undefined, };
         return true;
     };
@@ -1390,6 +1484,7 @@ var BinaryReader = /** @class */ (function () {
             blockType: undefined, brDepth: undefined, brTable: undefined,
             funcIndex: undefined, typeIndex: undefined, localIndex: undefined,
             globalIndex: undefined, memoryAddress: memoryAddress, literal: literal,
+            segmentIndex: undefined, destinationIndex: undefined,
             lines: lines, lineIndex: lineIndex, };
         return true;
     };
@@ -1402,7 +1497,7 @@ var BinaryReader = /** @class */ (function () {
         var code = this._data[this._pos++] | 0xfe00;
         var memoryAddress;
         switch (code) {
-            case 65024 /* atomic_wake */:
+            case 65024 /* atomic_notify */:
             case 65025 /* i32_atomic_wait */:
             case 65026 /* i64_atomic_wait */:
             case 65040 /* i32_atomic_load */:
@@ -1479,6 +1574,7 @@ var BinaryReader = /** @class */ (function () {
             blockType: undefined, brDepth: undefined, brTable: undefined,
             funcIndex: undefined, typeIndex: undefined, localIndex: undefined,
             globalIndex: undefined, memoryAddress: memoryAddress, literal: undefined,
+            segmentIndex: undefined, destinationIndex: undefined,
             lines: undefined, lineIndex: undefined, };
         return true;
     };
@@ -1501,7 +1597,7 @@ var BinaryReader = /** @class */ (function () {
             return false;
         }
         var code = this._data[this._pos++];
-        var blockType, brDepth, brTable, funcIndex, typeIndex, localIndex, globalIndex, memoryAddress, literal, reserved;
+        var blockType, brDepth, brTable, funcIndex, typeIndex, tableIndex, localIndex, globalIndex, memoryAddress, literal, reserved;
         switch (code) {
             case 2 /* block */:
             case 3 /* loop */:
@@ -1520,7 +1616,7 @@ var BinaryReader = /** @class */ (function () {
                     return false;
                 }
                 brTable = [];
-                for (var i = 0; i <= tableCount; i++) {
+                for (var i = 0; i <= tableCount; i++) { // including default
                     if (!this.hasVarIntBytes()) {
                         this._pos = pos;
                         return false;
@@ -1529,6 +1625,7 @@ var BinaryReader = /** @class */ (function () {
                 }
                 break;
             case 16 /* call */:
+            case 210 /* ref_func */:
                 funcIndex = this.readVarUint32() >>> 0;
                 break;
             case 17 /* call_indirect */:
@@ -1543,6 +1640,10 @@ var BinaryReader = /** @class */ (function () {
             case 35 /* get_global */:
             case 36 /* set_global */:
                 globalIndex = this.readVarUint32() >>> 0;
+                break;
+            case 37 /* table_get */:
+            case 38 /* table_set */:
+                tableIndex = this.readVarUint32() >>> 0;
                 break;
             case 40 /* i32_load */:
             case 41 /* i64_load */:
@@ -1740,6 +1841,8 @@ var BinaryReader = /** @class */ (function () {
             case 194 /* i64_extend8_s */:
             case 195 /* i64_extend16_s */:
             case 196 /* i64_extend32_s */:
+            case 208 /* ref_null */:
+            case 209 /* ref_is_null */:
                 break;
             default:
                 this.error = new Error("Unknown operator: " + code);
@@ -1747,9 +1850,10 @@ var BinaryReader = /** @class */ (function () {
                 return true;
         }
         this.result = { code: code,
-            blockType: blockType, brDepth: brDepth, brTable: brTable,
+            blockType: blockType, brDepth: brDepth, brTable: brTable, tableIndex: tableIndex,
             funcIndex: funcIndex, typeIndex: typeIndex, localIndex: localIndex,
             globalIndex: globalIndex, memoryAddress: memoryAddress, literal: literal,
+            segmentIndex: undefined, destinationIndex: undefined,
             lines: undefined, lineIndex: undefined, };
         return true;
     };
@@ -2008,7 +2112,12 @@ var BinaryReader = /** @class */ (function () {
             case 35 /* END_ELEMENT_SECTION_ENTRY */:
                 return this.readElementEntry();
             case 33 /* BEGIN_ELEMENT_SECTION_ENTRY */:
-                return this.readInitExpressionBody();
+                if (this._segmentFlags & 1 /* IsPassive */) {
+                    return this.readElementEntryBody();
+                }
+                else {
+                    return this.readInitExpressionBody();
+                }
             case 34 /* ELEMENT_SECTION_ENTRY_BODY */:
                 this.state = 35 /* END_ELEMENT_SECTION_ENTRY */;
                 this.result = null;
@@ -2017,7 +2126,12 @@ var BinaryReader = /** @class */ (function () {
             case 38 /* END_DATA_SECTION_ENTRY */:
                 return this.readDataEntry();
             case 36 /* BEGIN_DATA_SECTION_ENTRY */:
-                return this.readInitExpressionBody();
+                if (this._segmentFlags & 1 /* IsPassive */) {
+                    return this.readDataEntryBody();
+                }
+                else {
+                    return this.readInitExpressionBody();
+                }
             case 37 /* DATA_SECTION_ENTRY_BODY */:
                 this.state = 38 /* END_DATA_SECTION_ENTRY */;
                 this.result = null;
@@ -2113,7 +2227,7 @@ if (typeof TextDecoder !== 'undefined') {
             return function (b) { return utf8Decoder.decode(b); };
         }();
     }
-    catch (_) { }
+    catch (_) { /* ignore */ }
 }
 if (!exports.bytesToString) {
     exports.bytesToString = function (b) {
