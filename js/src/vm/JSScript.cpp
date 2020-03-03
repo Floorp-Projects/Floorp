@@ -277,7 +277,6 @@ XDRResult LazyScript::XDRScriptData(XDRState<mode>* xdr,
         }
         MOZ_TRY(XDRInterpretedFunction(xdr, nullptr, sourceObject, &func));
         if (mode == XDR_DECODE) {
-          MOZ_ASSERT(func->isInterpretedLazy());
           func->setEnclosingLazyScript(lazy);
 
           elem = JS::GCCellPtr(func);
@@ -4454,11 +4453,10 @@ bool JSScript::fullyInitFromStencil(JSContext* cx, HandleScript script,
   // Link JSFunction to this JSScript.
   if (stencil.isFunction) {
     JSFunction* fun = stencil.functionBox->function();
-    if (fun->isInterpretedLazy()) {
-      fun->setUnlazifiedScript(script);
-    } else {
-      MOZ_ASSERT(fun->isIncomplete());
+    if (fun->isIncomplete()) {
       fun->initScript(script);
+    } else {
+      fun->setUnlazifiedScript(script);
     }
   }
 
@@ -4863,7 +4861,9 @@ static JSObject* CloneScriptObject(JSContext* cx, PrivateScriptData* srcData,
       return innerFun;
     }
 
-    if (innerFun->isInterpretedLazy()) {
+    if (!innerFun->hasBytecode()) {
+      MOZ_ASSERT(!innerFun->isSelfHostedOrIntrinsic(),
+                 "Cannot enter realm of self-hosted functions");
       AutoRealm ar(cx, innerFun);
       if (!JSFunction::getOrCreateScript(cx, innerFun)) {
         return nullptr;
@@ -5090,10 +5090,11 @@ JSScript* js::CloneScriptIntoFunction(
   }
 
   // Finally set the script after all the fallible operations.
-  if (fun->isInterpretedLazy()) {
-    fun->setUnlazifiedScript(dst);
-  } else {
+  if (fun->isIncomplete()) {
     fun->initScript(dst);
+  } else {
+    MOZ_ASSERT(fun->hasSelfHostedLazyScript());
+    fun->setUnlazifiedScript(dst);
   }
 
   if (coverage::IsLCovEnabled()) {
@@ -5514,7 +5515,6 @@ LazyScript* LazyScript::Create(
     JSFunction* fun = funbox->function();
     *iter++ = JS::GCCellPtr(fun);
 
-    MOZ_ASSERT(fun->isInterpretedLazy());
     fun->setEnclosingLazyScript(lazy);
   }
 

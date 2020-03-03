@@ -3111,7 +3111,7 @@ bool JSRuntime::cloneSelfHostedFunctionScript(JSContext* cx,
                                sourceObject)) {
     return false;
   }
-  MOZ_ASSERT(targetFun->hasScript());
+  MOZ_ASSERT(targetFun->hasBytecode());
 
   MOZ_ASSERT(sourceFun->nargs() == targetFun->nargs());
   MOZ_ASSERT(sourceScript->hasRest() == targetFun->baseScript()->hasRest());

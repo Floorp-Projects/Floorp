@@ -1106,8 +1106,8 @@ static bool IsLazyFunction(JSContext* cx, unsigned argc, Value* vp) {
     JS_ReportErrorASCII(cx, "The first argument should be a function.");
     return false;
   }
-  args.rval().setBoolean(
-      args[0].toObject().as<JSFunction>().isInterpretedLazy());
+  JSFunction* fun = &args[0].toObject().as<JSFunction>();
+  args.rval().setBoolean(fun->isInterpreted() && !fun->hasBytecode());
   return true;
 }
 
@@ -1123,7 +1123,7 @@ static bool IsRelazifiableFunction(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   JSFunction* fun = &args[0].toObject().as<JSFunction>();
-  args.rval().setBoolean(fun->hasScript() &&
+  args.rval().setBoolean(fun->hasBytecode() &&
                          fun->nonLazyScript()->maybeLazyScript() &&
                          fun->nonLazyScript()->isRelazifiable());
   return true;

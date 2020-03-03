@@ -3637,15 +3637,17 @@ JS_PUBLIC_API JSScript* JS_GetFunctionScript(JSContext* cx,
   if (fun->isNative()) {
     return nullptr;
   }
-  if (fun->isInterpretedLazy()) {
-    AutoRealm ar(cx, fun);
-    JSScript* script = JSFunction::getOrCreateScript(cx, fun);
-    if (!script) {
-      MOZ_CRASH();
-    }
-    return script;
+
+  if (fun->hasBytecode()) {
+    return fun->nonLazyScript();
   }
-  return fun->nonLazyScript();
+
+  AutoRealm ar(cx, fun);
+  JSScript* script = JSFunction::getOrCreateScript(cx, fun);
+  if (!script) {
+    MOZ_CRASH();
+  }
+  return script;
 }
 
 JS_PUBLIC_API JSString* JS_DecompileScript(JSContext* cx, HandleScript script) {

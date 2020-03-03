@@ -819,6 +819,10 @@ JSFunction* FrameIter::callee(JSContext* cx) const {
 bool FrameIter::matchCallee(JSContext* cx, JS::Handle<JSFunction*> fun) const {
   Rooted<JSFunction*> currentCallee(cx, calleeTemplate());
 
+  // The more bizarre cases should already be excluded by an earlier check of
+  // IsSloppyNormalFunction.
+  MOZ_ASSERT(fun->hasBaseScript());
+
   // As we do not know if the calleeTemplate is the real function, or the
   // template from which it would be cloned, we compare properties which are
   // stable across the cloning of JSFunctions.
@@ -834,9 +838,7 @@ bool FrameIter::matchCallee(JSContext* cx, JS::Handle<JSFunction*> fun) const {
   Rooted<JSObject*> global(cx, &fun->global());
   bool useSameScript =
       CanReuseScriptForClone(fun->realm(), currentCallee, global);
-  if (useSameScript &&
-      (currentCallee->hasScript() != fun->hasScript() ||
-       currentCallee->nonLazyScript() != fun->nonLazyScript())) {
+  if (useSameScript && (currentCallee->baseScript() != fun->baseScript())) {
     return false;
   }
 

@@ -1095,8 +1095,8 @@ void MConstant::printOpcode(GenericPrinter& out) const {
         } else {
           out.put("unnamed function");
         }
-        if (fun->hasScript()) {
-          JSScript* script = fun->nonLazyScript();
+        if (fun->hasBaseScript()) {
+          BaseScript* script = fun->baseScript();
           out.printf(" (%s:%u)", script->filename() ? script->filename() : "",
                      script->lineno());
         }
