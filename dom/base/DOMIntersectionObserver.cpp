@@ -12,6 +12,7 @@
 #include "mozilla/PresShell.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/ServoBindings.h"
+#include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/dom/BrowserChild.h"
 #include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/DocumentInlines.h"
@@ -91,7 +92,20 @@ already_AddRefed<DOMIntersectionObserver> DOMIntersectionObserver::Constructor(
   RefPtr<DOMIntersectionObserver> observer =
       new DOMIntersectionObserver(window.forget(), aCb);
 
-  observer->mRoot = aOptions.mRoot;
+  if (!aOptions.mRoot.IsNull()) {
+    if (aOptions.mRoot.Value().IsElement()) {
+      observer->mRoot = aOptions.mRoot.Value().GetAsElement();
+    } else {
+      MOZ_ASSERT(aOptions.mRoot.Value().IsDocument());
+      if (!StaticPrefs::
+              dom_IntersectionObserverExplicitDocumentRoot_enabled()) {
+        aRv.ThrowTypeError<dom::MSG_DOES_NOT_IMPLEMENT_INTERFACE>(
+            u"'root' member of IntersectionObserverInit", u"Element");
+        return nullptr;
+      }
+      observer->mRoot = aOptions.mRoot.Value().GetAsDocument();
+    }
+  }
 
   if (!observer->SetRootMargin(aOptions.mRootMargin)) {
     aRv.ThrowSyntaxError("rootMargin must be specified in pixels or percent.");
@@ -257,7 +271,7 @@ enum class BrowsingContextOrigin { Similar, Different, Unknown };
 // contexts" is gone, but this is still in the spec, see
 // https://github.com/w3c/IntersectionObserver/issues/161
 static BrowsingContextOrigin SimilarOrigin(const Element& aTarget,
-                                           const Element* aRoot) {
+                                           const nsINode* aRoot) {
   if (!aRoot) {
     return BrowsingContextOrigin::Unknown;
   }
@@ -466,10 +480,10 @@ void DOMIntersectionObserver::Update(Document* aDocument,
   // document.
   nsRect rootRect;
   nsIFrame* rootFrame = nullptr;
-  Element* root = mRoot;
+  nsINode* root = mRoot;
   Maybe<nsRect> remoteDocumentVisibleRect;
-  if (mRoot) {
-    if ((rootFrame = mRoot->GetPrimaryFrame())) {
+  if (mRoot && mRoot->IsElement()) {
+    if ((rootFrame = mRoot->AsElement()->GetPrimaryFrame())) {
       nsRect rootRectRelativeToRootFrame;
       if (rootFrame->IsScrollFrame()) {
         // rootRectRelativeToRootFrame should be the content rect of rootFrame,
@@ -485,21 +499,26 @@ void DOMIntersectionObserver::Update(Document* aDocument,
       rootRect = nsLayoutUtils::TransformFrameRectToAncestor(
           rootFrame, rootRectRelativeToRootFrame, containingBlock);
     }
-  } else if (Document* topLevelDocument = GetTopLevelDocument(*aDocument)) {
-    if (PresShell* presShell = topLevelDocument->GetPresShell()) {
-      rootFrame = presShell->GetRootScrollFrame();
-      if (rootFrame) {
-        root = rootFrame->GetContent()->AsElement();
-        nsIScrollableFrame* scrollFrame = do_QueryFrame(rootFrame);
-        rootRect = scrollFrame->GetScrollPortRect();
+  } else {
+    MOZ_ASSERT(!mRoot || mRoot->IsDocument());
+    Document* rootDocument =
+        mRoot ? mRoot->AsDocument() : GetTopLevelDocument(*aDocument);
+    if (rootDocument) {
+      if (PresShell* presShell = rootDocument->GetPresShell()) {
+        rootFrame = presShell->GetRootScrollFrame();
+        if (rootFrame) {
+          root = rootFrame->GetContent()->AsElement();
+          nsIScrollableFrame* scrollFrame = do_QueryFrame(rootFrame);
+          rootRect = scrollFrame->GetScrollPortRect();
+        }
       }
+    } else if (Maybe<OopIframeMetrics> metrics =
+                   GetOopIframeMetrics(*aDocument)) {
+      // `implicit root` case in an out-of-process iframe.
+      rootFrame = metrics->mInProcessRootFrame;
+      rootRect = metrics->mInProcessRootRect;
+      remoteDocumentVisibleRect = Some(metrics->mRemoteDocumentVisibleRect);
     }
-  } else if (Maybe<OopIframeMetrics> metrics =
-                 GetOopIframeMetrics(*aDocument)) {
-    // `implicit root` case in an out-of-process iframe.
-    rootFrame = metrics->mInProcessRootFrame;
-    rootRect = metrics->mInProcessRootRect;
-    remoteDocumentVisibleRect = Some(metrics->mRemoteDocumentVisibleRect);
   }
 
   nsMargin rootMargin;  // This root margin is NOT applied in `implicit root`
