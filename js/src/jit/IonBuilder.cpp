@@ -445,15 +445,23 @@ IonBuilder::InliningDecision IonBuilder::canInlineTarget(JSFunction* target,
     // example when the newTarget.prototype lookup may be effectful.
     if (!target->constructorNeedsUninitializedThis() &&
         callInfo.getNewTarget() != callInfo.fun()) {
-      return DontInline(inlineScript, "Constructing with different newTarget");
+      JSFunction* newTargetFun =
+          getSingleCallTarget(callInfo.getNewTarget()->resultTypeSet());
+      if (!newTargetFun) {
+        return DontInline(inlineScript, "Constructing with unknown newTarget");
+      }
+      if (!newTargetFun->hasNonConfigurablePrototypeDataProperty()) {
+        return DontInline(inlineScript,
+                          "Constructing with effectful newTarget.prototype");
+      }
+    } else {
+      // At this point, the target is either a function that requires an
+      // uninitialized-this (bound function or derived class constructor) or a
+      // scripted constructor with a non-configurable .prototype data property
+      // (self-hosted built-in constructor, non-self-hosted scripted function).
+      MOZ_ASSERT(target->constructorNeedsUninitializedThis() ||
+                 target->hasNonConfigurablePrototypeDataProperty());
     }
-
-    // At this point, the target is either a function that requires an
-    // uninitialized-this (bound function or derived class constructor) or a
-    // scripted constructor with a non-configurable .prototype data property
-    // (self-hosted built-in constructor, non-self-hosted scripted function).
-    MOZ_ASSERT(target->constructorNeedsUninitializedThis() ||
-               target->hasNonConfigurablePrototypeDataProperty());
   }
 
   if (!callInfo.constructing() && target->isClassConstructor()) {
@@ -5556,12 +5564,10 @@ MDefinition* IonBuilder::createThis(JSFunction* target, MDefinition* callee,
     return constant(MagicValue(JS_UNINITIALIZED_LEXICAL));
   }
 
-  // We must not have an effectful .prototype lookup.
-  MOZ_ASSERT_IF(inlining, callee == newTarget);
-  MOZ_ASSERT_IF(inlining,
-                target->hasNonConfigurablePrototypeDataProperty());
-
   if (callee == newTarget) {
+    // We must not have an effectful .prototype lookup when inlining.
+    MOZ_ASSERT_IF(inlining, target->hasNonConfigurablePrototypeDataProperty());
+
     // Try baking in the prototype.
     if (MDefinition* createThis = createThisScriptedSingleton(target)) {
       return createThis;
@@ -5581,6 +5587,8 @@ MDefinition* IonBuilder::createThis(JSFunction* target, MDefinition* callee,
     return createThisScripted(callee, newTarget);
   }
 
+  // The .prototype lookup may be effectful, so we can't inline the call.
+  MOZ_ASSERT(!inlining);
   return createThisSlow(callee, newTarget, inlining);
 }
 
