@@ -19,6 +19,7 @@
 #include "nsIMemoryReporter.h"
 #include "nsINamed.h"
 #include "nsIRunnable.h"
+#include "nsIThreadInternal.h"
 #include "nsITimer.h"
 #include "AsyncLogger.h"
 
@@ -93,11 +94,13 @@ class MessageBlock {
 class MediaTrackGraphImpl : public MediaTrackGraph,
                             public GraphInterface,
                             public nsIMemoryReporter,
+                            public nsIThreadObserver,
                             public nsITimerCallback,
                             public nsINamed {
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIMEMORYREPORTER
+  NS_DECL_NSITHREADOBSERVER
   NS_DECL_NSITIMERCALLBACK
   NS_DECL_NSINAMED
 
