@@ -142,7 +142,7 @@ pub struct PictureTask {
     pub uv_rect_handle: GpuCacheHandle,
     pub surface_spatial_node_index: SpatialNodeIndex,
     uv_rect_kind: UvRectKind,
-    device_pixel_scale: DevicePixelScale,
+    pub device_pixel_scale: DevicePixelScale,
     /// A bitfield that describes which dirty regions should be included
     /// in batches built for this picture task.
     pub vis_mask: PrimitiveVisibilityMask,

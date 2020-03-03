@@ -38,16 +38,18 @@ void mix_blend_brush_vs(
     V_OP = prim_user_data.x;
 
     PictureTask src_task = fetch_picture_task(prim_user_data.z);
-    vec2 src_uv = device_pos +
+    vec2 src_device_pos = vi.world_pos.xy * (src_task.device_pixel_scale / max(0.0, vi.world_pos.w));
+    vec2 src_uv = src_device_pos +
                   src_task.common_data.task_rect.p0 -
                   src_task.content_origin;
     V_SRC_UV = src_uv / texture_size;
     V_SRC_LAYER = src_task.common_data.texture_layer_index;
 
     RenderTaskCommonData backdrop_task = fetch_render_task_common_data(prim_user_data.y);
+    float src_to_backdrop_scale = pic_task.device_pixel_scale / src_task.device_pixel_scale;
     vec2 backdrop_uv = device_pos +
                        backdrop_task.task_rect.p0 -
-                       src_task.content_origin;
+                       src_task.content_origin * src_to_backdrop_scale;
     V_BACKDROP_UV = backdrop_uv / texture_size;
     V_BACKDROP_LAYER = backdrop_task.texture_layer_index;
 }
