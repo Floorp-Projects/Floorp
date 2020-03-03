@@ -668,6 +668,8 @@ class Accessible : public nsISupports {
 
   bool IsXULTabpanels() const { return mType == eXULTabpanelsType; }
 
+  bool IsXULTooltip() const { return mType == eXULTooltipType; }
+
   bool IsXULTree() const { return mType == eXULTreeType; }
   XULTreeAccessible* AsXULTree();
 

@@ -59,6 +59,7 @@ enum AccType {
   eXULLabelType,
   eXULListItemType,
   eXULTabpanelsType,
+  eXULTooltipType,
   eXULTreeType,
 
   eLastAccType = eXULTreeType
