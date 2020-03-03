@@ -6,6 +6,7 @@ package mozilla.components.browser.engine.gecko
 
 import android.content.Context
 import android.util.AttributeSet
+import androidx.annotation.VisibleForTesting
 import mozilla.components.browser.engine.gecko.integration.LocaleSettingUpdater
 import mozilla.components.browser.engine.gecko.mediaquery.from
 import mozilla.components.browser.engine.gecko.mediaquery.toGeckoValue
@@ -35,6 +36,7 @@ import mozilla.components.concept.engine.webextension.WebExtensionRuntime
 import mozilla.components.concept.engine.webnotifications.WebNotificationDelegate
 import mozilla.components.concept.engine.webpush.WebPushDelegate
 import mozilla.components.concept.engine.webpush.WebPushHandler
+import mozilla.components.support.utils.ThreadUtils
 import org.json.JSONObject
 import org.mozilla.geckoview.AllowOrDeny
 import org.mozilla.geckoview.ContentBlocking
@@ -61,6 +63,7 @@ class GeckoEngine(
 ) : Engine, WebExtensionRuntime {
     private val executor by lazy { executorProvider.invoke() }
     private val localeUpdater = LocaleSettingUpdater(context, runtime)
+    @VisibleForTesting internal var speculativeSession: GeckoEngineSession? = null
 
     private var webExtensionDelegate: WebExtensionDelegate? = null
     private val webExtensionActionHandler = object : ActionHandler {
@@ -131,10 +134,21 @@ class GeckoEngine(
     }
 
     /**
-     * Creates a new Gecko-based EngineSession.
+     * See [Engine.createSession].
      */
     override fun createSession(private: Boolean): EngineSession {
-        return GeckoEngineSession(runtime, private, defaultSettings)
+        ThreadUtils.assertOnUiThread()
+        val speculativeSession = this.speculativeSession?.let { speculativeSession ->
+            if (speculativeSession.geckoSession.settings.usePrivateMode == private) {
+                speculativeSession
+            } else {
+                speculativeSession.close()
+                null
+            }.also {
+                this.speculativeSession = null
+            }
+        }
+        return speculativeSession ?: GeckoEngineSession(runtime, private, defaultSettings)
     }
 
     /**
@@ -142,6 +156,17 @@ class GeckoEngine(
      */
     override fun createSessionState(json: JSONObject): EngineSessionState {
         return GeckoEngineSessionState.fromJSON(json)
+    }
+
+    /**
+     * See [Engine.speculativeCreateSession].
+     */
+    override fun speculativeCreateSession(private: Boolean) {
+        ThreadUtils.assertOnUiThread()
+        if (this.speculativeSession?.geckoSession?.settings?.usePrivateMode != private) {
+            this.speculativeSession?.geckoSession?.close()
+            this.speculativeSession = GeckoEngineSession(runtime, private, defaultSettings)
+        }
     }
 
     /**
