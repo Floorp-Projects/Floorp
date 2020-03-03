@@ -49,6 +49,8 @@ namespace jit {
   _(GetLocal)               \
   _(SetLocal)               \
   _(InitLexical)            \
+  _(GetArg)                 \
+  _(SetArg)                 \
   _(ToNumeric)              \
   _(Inc)                    \
   _(Dec)                    \

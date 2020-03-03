@@ -11,6 +11,7 @@
 #include "jit/MIRGraph.h"
 #include "jit/WarpOracle.h"
 
+#include "jit/JitScript-inl.h"
 #include "vm/BytecodeIterator-inl.h"
 #include "vm/BytecodeLocation-inl.h"
 
@@ -424,6 +425,68 @@ bool WarpBuilder::build_SetLocal(BytecodeLocation loc) {
 bool WarpBuilder::build_InitLexical(BytecodeLocation loc) {
   current->setLocal(loc.local());
   return true;
+}
+
+bool WarpBuilder::build_GetArg(BytecodeLocation loc) {
+  uint32_t arg = loc.arg();
+  if (info().argsObjAliasesFormals()) {
+    MDefinition* argsObj = current->argumentsObject();
+    auto* getArg = MGetArgumentsObjectArg::New(alloc(), argsObj, arg);
+    current->add(getArg);
+    current->push(getArg);
+  } else {
+    current->pushArg(arg);
+  }
+  return true;
+}
+
+bool WarpBuilder::build_SetArg(BytecodeLocation loc) {
+  MOZ_ASSERT(script_->jitScript()->modifiesArguments());
+
+  uint32_t arg = loc.arg();
+  MDefinition* val = current->peek(-1);
+
+  if (!info().argumentsAliasesFormals()) {
+    MOZ_ASSERT(!info().argsObjAliasesFormals());
+
+    // |arguments| is never referenced within this function. No arguments object
+    // is created in this case, so we don't need to worry about synchronizing
+    // the argument values when writing to them.
+    MOZ_ASSERT_IF(!info().hasArguments(), !info().needsArgsObj());
+
+    // The arguments object doesn't map to the actual argument values, so we
+    // also don't need to worry about synchronizing them.
+    // Directly writing to a positional formal parameter is only possible when
+    // the |arguments| contents are never observed, otherwise we can't
+    // reconstruct the original parameter values when we access them through
+    // |arguments[i]|. AnalyzeArgumentsUsage ensures this is handled correctly.
+    MOZ_ASSERT_IF(info().hasArguments(), !info().hasMappedArgsObj());
+
+    current->setArg(arg);
+    return true;
+  }
+
+  MOZ_ASSERT(info().hasArguments() && info().hasMappedArgsObj(),
+             "arguments aliases formals when an arguments binding is present "
+             "and the arguments object is mapped");
+
+  // TODO: double check corresponding IonBuilder code when supporting the
+  // arguments analysis in WarpBuilder.
+
+  MOZ_ASSERT(info().needsArgsObj(),
+             "unexpected JSOp::SetArg with lazy arguments");
+
+  MOZ_ASSERT(
+      info().argsObjAliasesFormals(),
+      "argsObjAliasesFormals() is true iff a mapped arguments object is used");
+
+  // If an arguments object is in use, and it aliases formals, then all SetArgs
+  // must go through the arguments object.
+  MDefinition* argsObj = current->argumentsObject();
+  current->add(MPostWriteBarrier::New(alloc(), argsObj, val));
+  auto* ins = MSetArgumentsObjectArg::New(alloc(), argsObj, arg, val);
+  current->add(ins);
+  return resumeAfter(ins, loc);
 }
 
 bool WarpBuilder::build_ToNumeric(BytecodeLocation loc) {
