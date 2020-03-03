@@ -17,8 +17,6 @@ class nsBox : public nsIFrame {
  public:
   friend class nsIFrame;
 
-  static void Shutdown();
-
   virtual nsSize GetXULPrefSize(nsBoxLayoutState& aBoxLayoutState) override;
   virtual nsSize GetXULMinSize(nsBoxLayoutState& aBoxLayoutState) override;
   virtual nsSize GetXULMaxSize(nsBoxLayoutState& aBoxLayoutState) override;
@@ -81,9 +79,6 @@ class nsBox : public nsIFrame {
   nsresult BeginXULLayout(nsBoxLayoutState& aState);
   NS_IMETHOD DoXULLayout(nsBoxLayoutState& aBoxLayoutState);
   nsresult EndXULLayout(nsBoxLayoutState& aState);
-
-  static bool gGotTheme;
-  static mozilla::StaticRefPtr<nsITheme> gTheme;
 };
 
 #endif
