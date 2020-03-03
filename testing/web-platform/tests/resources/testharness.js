@@ -2808,24 +2808,8 @@ policies and contribution forms [3].
         var message_port;
 
         if (is_service_worker(worker)) {
-            if (window.MessageChannel) {
-                // The ServiceWorker's implicit MessagePort is currently not
-                // reliably accessible from the ServiceWorkerGlobalScope due to
-                // Blink setting MessageEvent.source to null for messages sent
-                // via ServiceWorker.postMessage(). Until that's resolved,
-                // create an explicit MessageChannel and pass one end to the
-                // worker.
-                var message_channel = new MessageChannel();
-                message_port = message_channel.port1;
-                message_port.start();
-                worker.postMessage({type: "connect"}, [message_channel.port2]);
-            } else {
-                // If MessageChannel is not available, then try the
-                // ServiceWorker.postMessage() approach using MessageEvent.source
-                // on the other end.
-                message_port = navigator.serviceWorker;
-                worker.postMessage({type: "connect"});
-            }
+            message_port = navigator.serviceWorker;
+            worker.postMessage({type: "connect"});
         } else if (is_shared_worker(worker)) {
             message_port = worker.port;
             message_port.start();
