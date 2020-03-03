@@ -18,8 +18,7 @@ use std::mem;
 #[derive(PartialEq, Debug)]
 enum TransactionRecvState {
     WaitingForHeaders,
-    ReadingHeaders { buf: Vec<u8>, offset: usize },
-    BlockedDecodingHeaders { buf: Vec<u8>, fin: bool },
+    DecodingHeaders { header_block: Vec<u8>, fin: bool },
     WaitingForData,
     ReadingData { remaining_data_len: usize },
     Closed,
@@ -55,13 +54,12 @@ impl TransactionServer {
 
     pub fn set_response(&mut self, headers: &[Header], data: Vec<u8>, encoder: &mut QPackEncoder) {
         qdebug!([self], "Encoding headers");
-        let encoded_headers = encoder.encode_header_block(&headers, self.stream_id);
+        let header_block = encoder.encode_header_block(&headers, self.stream_id);
         let hframe = HFrame::Headers {
-            len: encoded_headers.len() as u64,
+            header_block: header_block.to_vec(),
         };
         let mut d = Encoder::default();
         hframe.encode(&mut d);
-        d.encode(&encoded_headers);
         if !data.is_empty() {
             qdebug!([self], "Encoding data");
             let d_frame = HFrame::Data {
@@ -74,8 +72,8 @@ impl TransactionServer {
         self.send_state = TransactionSendState::SendingResponse { buf: d.into() };
     }
 
-    fn recv_frame_header(&mut self, conn: &mut Connection) -> Res<(Option<HFrame>, bool)> {
-        qtrace!([self], "receiving frame header");
+    fn recv_frame(&mut self, conn: &mut Connection) -> Res<(Option<HFrame>, bool)> {
+        qtrace!([self], "receiving a frame");
         let fin = self.frame_reader.receive(conn, self.stream_id)?;
         if !self.frame_reader.done() {
             Ok((None, fin))
@@ -83,92 +81,6 @@ impl TransactionServer {
             qinfo!([self], "A new frame has been received.");
             Ok((Some(self.frame_reader.get_frame()?), fin))
         }
-    }
-
-    fn read_headers_frame_body(
-        &mut self,
-        conn: &mut Connection,
-        decoder: &mut QPackDecoder,
-    ) -> Res<bool> {
-        let label = if ::log::log_enabled!(::log::Level::Debug) {
-            format!("{}", self)
-        } else {
-            String::new()
-        };
-        if let TransactionRecvState::ReadingHeaders {
-            ref mut buf,
-            ref mut offset,
-        } = self.recv_state
-        {
-            let (amount, fin) = conn.stream_recv(self.stream_id, &mut buf[*offset..])?;
-            qdebug!([label], "read_headers: read {} bytes fin={}.", amount, fin);
-            *offset += amount as usize;
-            if *offset < buf.len() {
-                if fin {
-                    // Malformed frame
-                    return Err(Error::HttpFrameError);
-                }
-                return Ok(true);
-            }
-
-            // we have read the headers, try decoding them.
-            qinfo!(
-                [label],
-                "read_headers: read all headers, try decoding them."
-            );
-            match decoder.decode_header_block(buf, self.stream_id)? {
-                Some(headers) => {
-                    self.conn_events.headers(self.stream_id, headers, fin);
-                    if fin {
-                        self.recv_state = TransactionRecvState::Closed;
-                    } else {
-                        self.recv_state = TransactionRecvState::WaitingForData;
-                    }
-                    Ok(fin)
-                }
-                None => {
-                    let mut tmp: Vec<u8> = Vec::new();
-                    mem::swap(&mut tmp, buf);
-                    self.recv_state =
-                        TransactionRecvState::BlockedDecodingHeaders { buf: tmp, fin };
-                    Ok(true)
-                }
-            }
-        } else {
-            panic!("This is only called when recv_state is ReadingHeaders.");
-        }
-    }
-
-    fn handle_frame_in_state_waiting_for_headers(&mut self, frame: HFrame, fin: bool) -> Res<()> {
-        qdebug!([self], "A new frame has been received: {:?}", frame);
-        match frame {
-            HFrame::Headers { len } => self.handle_headers_frame(len, fin),
-            _ => Err(Error::HttpFrameUnexpected),
-        }
-    }
-
-    fn handle_frame_in_state_waiting_for_data(&mut self, frame: HFrame, fin: bool) -> Res<()> {
-        qdebug!([self], "A new frame has been received: {:?}", frame);
-        match frame {
-            HFrame::Data { len } => self.handle_data_frame(len, fin),
-            _ => Err(Error::HttpFrameUnexpected),
-        }
-    }
-
-    fn handle_headers_frame(&mut self, len: u64, fin: bool) -> Res<()> {
-        qinfo!([self], "A new header frame len={} fin={}", len, fin);
-        if len == 0 {
-            self.conn_events.headers(self.stream_id, Vec::new(), fin);
-        } else {
-            if fin {
-                return Err(Error::HttpFrameError);
-            }
-            self.recv_state = TransactionRecvState::ReadingHeaders {
-                buf: vec![0; len as usize],
-                offset: 0,
-            };
-        }
-        Ok(())
     }
 
     fn handle_data_frame(&mut self, len: u64, fin: bool) -> Res<()> {
@@ -233,57 +145,75 @@ impl Http3Transaction for TransactionServer {
             );
             match self.recv_state {
                 TransactionRecvState::WaitingForHeaders => {
-                    let (f, fin) = self.recv_frame_header(conn)?;
-                    match f {
-                        None => {
-                            if fin {
-                                self.conn_events.headers(self.stream_id, Vec::new(), true);
-                                self.recv_state = TransactionRecvState::Closed;
-                            }
+                    match self.recv_frame(conn)? {
+                        (None, true) => {
+                            // Stream has been closed without any data, just ignore it.
+                            self.recv_state = TransactionRecvState::Closed;
                             return Ok(());
                         }
-                        Some(new_f) => {
-                            self.handle_frame_in_state_waiting_for_headers(new_f, fin)?;
-                            if fin {
-                                self.recv_state = TransactionRecvState::Closed;
-                                return Ok(());
-                            }
-                        }
-                    }
-                }
-                TransactionRecvState::ReadingHeaders { .. } => {
-                    if self.read_headers_frame_body(conn, decoder)? {
-                        break Ok(());
-                    }
-                }
-                TransactionRecvState::BlockedDecodingHeaders { ref mut buf, fin } => {
-                    match decoder.decode_header_block(buf, self.stream_id)? {
-                        Some(headers) => {
-                            self.conn_events.headers(self.stream_id, headers, fin);
-                            if fin {
-                                return Ok(());
-                            }
-                        }
-                        None => {
-                            qinfo!([self], "decoding header is blocked.");
+                        (None, false) => {
+                            // We do not have a complete frame.
                             return Ok(());
                         }
+                        (Some(HFrame::Headers { header_block }), fin) => {
+                            if !header_block.is_empty() {
+                                // Next step decoding headers.
+                                self.recv_state =
+                                    TransactionRecvState::DecodingHeaders { header_block, fin };
+                            } else {
+                                self.conn_events.headers(self.stream_id, Vec::new(), fin);
+                                if fin {
+                                    self.recv_state = TransactionRecvState::Closed;
+                                    return Ok(());
+                                } else {
+                                    self.recv_state = TransactionRecvState::WaitingForData;
+                                }
+                            }
+                        }
+                        // server can only receive a Header frame at this point.
+                        _ => {
+                            return Err(Error::HttpFrameUnexpected);
+                        }
                     }
                 }
+                TransactionRecvState::DecodingHeaders {
+                    ref mut header_block,
+                    fin,
+                } => match decoder.decode_header_block(header_block, self.stream_id)? {
+                    Some(headers) => {
+                        self.conn_events.headers(self.stream_id, headers, fin);
+                        if fin {
+                            self.recv_state = TransactionRecvState::Closed;
+                            return Ok(());
+                        } else {
+                            self.recv_state = TransactionRecvState::WaitingForData;
+                        }
+                    }
+                    None => {
+                        qinfo!([self], "decoding header is blocked.");
+                        return Ok(());
+                    }
+                },
                 TransactionRecvState::WaitingForData => {
-                    let (f, fin) = self.recv_frame_header(conn)?;
-                    match f {
-                        None => {
-                            if fin {
-                                self.conn_events.data(self.stream_id, Vec::new(), true);
-                            }
+                    match self.recv_frame(conn)? {
+                        (None, true) => {
+                            // Inform the app tthat tthe stream is done.
+                            self.conn_events.data(self.stream_id, Vec::new(), true);
+                            self.recv_state = TransactionRecvState::Closed;
                             return Ok(());
                         }
-                        Some(new_f) => {
-                            self.handle_frame_in_state_waiting_for_data(new_f, fin)?;
+                        (None, false) => {
+                            // Still reading a frame.
+                            return Ok(());
+                        }
+                        (Some(HFrame::Data { len }), fin) => {
+                            self.handle_data_frame(len, fin)?;
                             if fin {
                                 return Ok(());
                             }
+                        }
+                        _ => {
+                            return Err(Error::HttpFrameUnexpected);
                         }
                     };
                 }
