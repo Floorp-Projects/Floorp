@@ -1006,17 +1006,41 @@ FilePickerDelegate.prototype = {
       if (!result || !result.files || !result.files.length) {
         aFilePickerShownCallback.done(Ci.nsIFilePicker.returnCancel);
       } else {
-        this._files = result.files;
-        aFilePickerShownCallback.done(Ci.nsIFilePicker.returnOK);
+        this._resolveFiles(result.files, aFilePickerShownCallback);
       }
     });
   },
 
+  async _resolveFiles(aFiles, aCallback) {
+    const fileData = [];
+
+    try {
+      for (const file of aFiles) {
+        const domFile = await this._getDOMFile(file);
+        fileData.push({
+          file,
+          domFile,
+        });
+      }
+    } catch (ex) {
+      warn`Error resolving files from file picker: ${ex}`;
+      aCallback.done(Ci.nsIFilePicker.returnCancel);
+      return;
+    }
+
+    this._fileData = fileData;
+    aCallback.done(Ci.nsIFilePicker.returnOK);
+  },
+
   get file() {
-    if (!this._files) {
+    if (!this._fileData) {
       throw Cr.NS_ERROR_NOT_AVAILABLE;
     }
-    return new FileUtils.File(this._files[0]);
+    const fileData = this._fileData[0];
+    if (!fileData) {
+      return null;
+    }
+    return new FileUtils.File(fileData.file);
   },
 
   get fileURL() {
@@ -1024,15 +1048,15 @@ FilePickerDelegate.prototype = {
   },
 
   *_getEnumerator(aDOMFile) {
-    if (!this._files) {
+    if (!this._fileData) {
       throw Cr.NS_ERROR_NOT_AVAILABLE;
     }
 
-    for (let file of this._files) {
+    for (const fileData of this._fileData) {
       if (aDOMFile) {
-        yield this._getDOMFile(file);
+        yield fileData.domFile;
       }
-      yield new FileUtils.File(file);
+      yield new FileUtils.File(fileData.file);
     }
   },
 
@@ -1048,10 +1072,10 @@ FilePickerDelegate.prototype = {
   },
 
   get domFileOrDirectory() {
-    if (!this._files) {
+    if (!this._fileData) {
       throw Cr.NS_ERROR_NOT_AVAILABLE;
     }
-    return this._getDOMFile(this._files[0]);
+    return this._fileData[0] ? this._fileData[0].domFile : null;
   },
 
   get domFileOrDirectoryEnumerator() {
