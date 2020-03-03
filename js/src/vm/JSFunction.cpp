@@ -653,10 +653,9 @@ XDRResult js::XDRInterpretedFunction(XDRState<mode>* xdr,
 
     // Sanity check the flags. We should have cleared the mutable flags already
     // and we do not support self-hosted-lazy, bound or wasm functions.
-    constexpr uint16_t UnsupportedFlags = FunctionFlags::MUTABLE_FLAGS |
-                                          FunctionFlags::SELFHOSTLAZY |
-                                          FunctionFlags::BOUND_FUN |
-                                          FunctionFlags::WASM_JIT_ENTRY;
+    constexpr uint16_t UnsupportedFlags =
+        FunctionFlags::MUTABLE_FLAGS | FunctionFlags::SELFHOSTLAZY |
+        FunctionFlags::BOUND_FUN | FunctionFlags::WASM_JIT_ENTRY;
     if ((flags & UnsupportedFlags) != 0) {
       return xdr->fail(JS::TranscodeResult_Failure_BadDecode);
     }
