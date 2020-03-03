@@ -19,6 +19,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/Range.h"
 #include "mozilla/Span.h"
 #include "mozilla/WinHeaderOnlyUtils.h"
 #include "mozilla/interceptor/MMPolicies.h"
@@ -523,14 +524,14 @@ class MOZ_RAII PEHeaders final {
     return reinterpret_cast<T>(absAddress);
   }
 
-  Maybe<Span<const uint8_t>> GetBounds() const {
+  Maybe<Range<const uint8_t>> GetBounds() const {
     if (!mImageLimit) {
       return Nothing();
     }
 
     auto base = reinterpret_cast<const uint8_t*>(mMzHeader);
     DWORD imageSize = mPeHeader->OptionalHeader.SizeOfImage;
-    return Some(MakeSpan(base, imageSize));
+    return Some(Range(base, imageSize));
   }
 
   PIMAGE_IMPORT_DESCRIPTOR GetImportDirectory() {
@@ -623,8 +624,14 @@ class MOZ_RAII PEHeaders final {
     return nullptr;
   }
 
+  /**
+   * If |aBoundaries| is given, this method checks whether each IAT entry is
+   * within the given range, and if any entry is out of the range, we return
+   * Nothing().
+   */
   Maybe<Span<IMAGE_THUNK_DATA>> GetIATThunksForModule(
-      const char* aModuleNameASCII) {
+      const char* aModuleNameASCII,
+      const Range<const uint8_t>* aBoundaries = nullptr) {
     PIMAGE_IMPORT_DESCRIPTOR impDesc = GetImportDescriptor(aModuleNameASCII);
     if (!impDesc) {
       return Nothing();
@@ -639,6 +646,15 @@ class MOZ_RAII PEHeaders final {
     // Find the length by iterating through the table until we find a null entry
     PIMAGE_THUNK_DATA curIatThunk = firstIatThunk;
     while (IsValid(curIatThunk)) {
+      if (aBoundaries) {
+        auto iatEntry =
+            reinterpret_cast<const uint8_t*>(curIatThunk->u1.Function);
+        if (iatEntry < aBoundaries->begin().get() ||
+            iatEntry >= aBoundaries->end().get()) {
+          return Nothing();
+        }
+      }
+
       ++curIatThunk;
     }
 
