@@ -482,23 +482,23 @@ nsresult Selection::GetTableCellLocationFromRange(
   return cellLayout->GetCellIndexes(*aRow, *aCol);
 }
 
-nsresult Selection::MaybeAddTableCellRange(nsRange* aRange, bool* aDidAddRange,
+nsresult Selection::MaybeAddTableCellRange(nsRange& aRange, bool* aDidAddRange,
                                            int32_t* aOutIndex) {
-  if (!aDidAddRange || !aOutIndex) return NS_ERROR_NULL_POINTER;
+  if (!aDidAddRange || !aOutIndex) {
+    return NS_ERROR_NULL_POINTER;
+  }
 
   *aDidAddRange = false;
   *aOutIndex = -1;
 
   if (!mFrameSelection) return NS_OK;
 
-  if (!aRange) return NS_ERROR_NULL_POINTER;
-
   nsresult result;
 
   // Get if we are adding a cell selection and the row, col of cell if we are
   int32_t newRow, newCol;
   TableSelectionMode tableMode;
-  result = GetTableCellLocationFromRange(aRange, &tableMode, &newRow, &newCol);
+  result = GetTableCellLocationFromRange(&aRange, &tableMode, &newRow, &newCol);
   if (NS_FAILED(result)) return result;
 
   // If not adding a cell range, we are done here
@@ -517,7 +517,7 @@ nsresult Selection::MaybeAddTableCellRange(nsRange* aRange, bool* aDidAddRange,
   }
 
   *aDidAddRange = true;
-  return AddRangesForSelectableNodes(aRange, aOutIndex);
+  return AddRangesForSelectableNodes(&aRange, aOutIndex);
 }
 
 Selection::Selection(nsFrameSelection* aFrameSelection)
@@ -1857,7 +1857,7 @@ void Selection::AddRangeAndSelectFramesAndNotifyListeners(nsRange& aRange,
   // and returns NS_OK if range doesn't contain just one table cell
   bool didAddRange;
   int32_t rangeIndex;
-  nsresult result = MaybeAddTableCellRange(range, &didAddRange, &rangeIndex);
+  nsresult result = MaybeAddTableCellRange(*range, &didAddRange, &rangeIndex);
   if (NS_FAILED(result)) {
     aRv.Throw(result);
     return;
