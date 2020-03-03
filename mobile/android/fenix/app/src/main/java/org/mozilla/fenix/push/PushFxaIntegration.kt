@@ -6,6 +6,7 @@ package org.mozilla.fenix.push
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import mozilla.components.concept.sync.AccountObserver
 import mozilla.components.concept.sync.AuthType
@@ -100,8 +101,10 @@ internal class OneTimePushMessageObserver(
                 }
             }
 
-            // Remove ourselves when we're done.
-            pushFeature.unregister(this)
+            MainScope().launch {
+                // Remove ourselves when we're done.
+                pushFeature.unregister(this@OneTimePushMessageObserver)
+            }
         }
     }
 }
@@ -122,6 +125,8 @@ internal class OneTimeMessageDeliveryObserver(
             it.processRawEventAsync(String(message))
         }
 
-        lazyAccount.value.unregister(this)
+        MainScope().launch {
+            lazyAccount.value.unregister(this@OneTimeMessageDeliveryObserver)
+        }
     }
 }
