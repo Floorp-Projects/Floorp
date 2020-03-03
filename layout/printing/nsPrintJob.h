@@ -126,10 +126,6 @@ class nsPrintJob final : public nsIObserver,
   bool GetIsPrintPreview() { return mIsDoingPrintPreview; }
   bool GetIsCreatingPrintPreview() { return mIsCreatingPrintPreview; }
 
-  // This enum tells indicates what the default should be for the title
-  // if the title from the document is null
-  enum eDocTitleDefault { eDocTitleDefBlank, eDocTitleDefURLDoc };
-
   nsresult GetSeqFrameAndCountPages(nsIFrame*& aSeqFrame, int32_t& aCount);
 
   void TurnScriptingOn(bool aDoTurnOn);
@@ -211,9 +207,24 @@ class nsPrintJob final : public nsIObserver,
   // get the currently infocus frame for the document viewer
   already_AddRefed<nsPIDOMWindowOuter> FindFocusedDOMWindow() const;
 
-  void GetDisplayTitleAndURL(const mozilla::UniquePtr<nsPrintObject>& aPO,
-                             nsAString& aTitle, nsAString& aURLStr,
-                             eDocTitleDefault aDefType);
+  /// Customizes the behaviour of GetDisplayTitleAndURL.
+  enum class DocTitleDefault : uint32_t { eDocURLElseFallback, eFallback };
+
+  /**
+   * Gets the title and URL of the document for display in save-to-PDF dialogs,
+   * print spooler lists and page headers/footers.  This will get the title/URL
+   * from the PrintSettings, if set, otherwise it will get them from the
+   * document.
+   *
+   * For the title specifically, if a value is not provided by the settings
+   * object or the document then, if eDocURLElseFallback is passed, the document
+   * URL will be returned as the title if it's non-empty (which should always be
+   * the case).  Otherwise a non-empty fallback title will be returned.
+   */
+  static void GetDisplayTitleAndURL(mozilla::dom::Document& aDoc,
+                                    nsIPrintSettings* aSettings,
+                                    DocTitleDefault aTitleDefault,
+                                    nsAString& aTitle, nsAString& aURLStr);
 
   MOZ_CAN_RUN_SCRIPT nsresult
   CommonPrint(bool aIsPrintPreview, nsIPrintSettings* aPrintSettings,
@@ -281,8 +292,6 @@ class nsPrintJob final : public nsIObserver,
   RefPtr<nsPrintData> mPrtPreview;
 
   nsPagePrintTimer* mPagePrintTimer = nullptr;
-
-  nsString mFallbackDocTitle;
 
   float mScreenDPI = 115.0f;
   int32_t mLoadCounter = 0;
