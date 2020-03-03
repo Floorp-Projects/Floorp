@@ -50,7 +50,7 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
             )
             .addSessionProvider(
                 resources,
-                components.sessionManager,
+                components.store,
                 components.tabsUseCases.selectTab
             )
             .addSearchProvider(
@@ -59,7 +59,8 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
                 components.searchUseCases.defaultSearch,
                 fetchClient = components.client,
                 mode = SearchSuggestionProvider.Mode.MULTIPLE_SUGGESTIONS,
-                engine = components.engine)
+                engine = components.engine
+            )
             .addClipboardProvider(
                 requireContext(),
                 components.sessionUseCases.loadUrl,

@@ -10,7 +10,7 @@ import android.view.View
 import mozilla.components.browser.icons.BrowserIcons
 import mozilla.components.browser.search.SearchEngine
 import mozilla.components.browser.search.SearchEngineManager
-import mozilla.components.browser.session.SessionManager
+import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.awesomebar.AwesomeBar
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineView
@@ -54,10 +54,10 @@ class AwesomeBarFeature(
      */
     fun addSessionProvider(
         resources: Resources,
-        sessionManager: SessionManager,
+        store: BrowserStore,
         selectTabUseCase: TabsUseCases.SelectTabUseCase
     ): AwesomeBarFeature {
-        val provider = SessionSuggestionProvider(resources, sessionManager, selectTabUseCase, icons)
+        val provider = SessionSuggestionProvider(resources, store, selectTabUseCase, icons)
         awesomeBar.addProviders(provider)
         return this
     }

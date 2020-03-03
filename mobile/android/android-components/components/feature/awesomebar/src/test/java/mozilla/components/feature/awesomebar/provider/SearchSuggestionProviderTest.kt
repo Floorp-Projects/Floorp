@@ -9,8 +9,6 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.search.SearchEngine
 import mozilla.components.browser.search.SearchEngineManager
-import mozilla.components.browser.session.Session
-import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.engine.Engine
 import mozilla.components.feature.awesomebar.R
 import mozilla.components.feature.search.SearchUseCases
@@ -23,15 +21,13 @@ import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
-import org.junit.Assert.assertTrue
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.anyString
-import org.mockito.Mockito.doNothing
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.never
-import org.mockito.Mockito.spy
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 
@@ -40,7 +36,6 @@ private const val GOOGLE_MOCK_RESPONSE_WITH_DUPLICATES = "[\"firefox\",[\"firefo
 
 @RunWith(AndroidJUnit4::class)
 class SearchSuggestionProviderTest {
-
     @Test
     fun `Provider returns suggestion with chips based on search engine suggestion`() {
         runBlocking {
@@ -57,12 +52,7 @@ class SearchSuggestionProviderTest {
             val searchEngineManager: SearchEngineManager = mock()
             doReturn(searchEngine).`when`(searchEngineManager).getDefaultSearchEngineAsync(any(), any())
 
-            val useCase = spy(SearchUseCases(
-                testContext,
-                searchEngineManager,
-                SessionManager(mock()).apply { add(Session("https://www.mozilla.org")) }
-            ).defaultSearch)
-            doNothing().`when`(useCase).invoke(anyString(), any<Session>(), any<SearchEngine>())
+            val useCase: SearchUseCases.SearchUseCase = mock()
 
             val provider =
                 SearchSuggestionProvider(searchEngine, useCase, HttpURLConnectionClient())
@@ -86,11 +76,11 @@ class SearchSuggestionProviderTest {
                 assertEquals("firefox nightly", suggestion.chips[9].title)
                 assertEquals("firefox clear cache", suggestion.chips[10].title)
 
-                verify(useCase, never()).invoke(anyString(), any<Session>(), any<SearchEngine>())
+                verify(useCase, never()).invoke(anyString(), any())
 
                 suggestion.onChipClicked!!.invoke(suggestion.chips[6])
 
-                verify(useCase).invoke(eq("firefox focus"), any<Session>(), any<SearchEngine>())
+                verify(useCase).invoke(eq("firefox focus"), any())
             } finally {
                 server.shutdown()
             }
@@ -113,12 +103,7 @@ class SearchSuggestionProviderTest {
             val searchEngineManager: SearchEngineManager = mock()
             doReturn(searchEngine).`when`(searchEngineManager).getDefaultSearchEngineAsync(any(), any())
 
-            val useCase = spy(SearchUseCases(
-                testContext,
-                searchEngineManager,
-                SessionManager(mock()).apply { add(Session("https://www.mozilla.org")) }
-            ).defaultSearch)
-            doNothing().`when`(useCase).invoke(anyString(), any<Session>(), any<SearchEngine>())
+            val useCase: SearchUseCases.SearchUseCase = mock()
 
             val provider = SearchSuggestionProvider(
                 searchEngine,
@@ -146,11 +131,11 @@ class SearchSuggestionProviderTest {
                 assertEquals("firefox nightly", suggestions[9].title)
                 assertEquals("firefox clear cache", suggestions[10].title)
 
-                verify(useCase, never()).invoke(anyString(), any<Session>(), any<SearchEngine>())
+                verify(useCase, never()).invoke(anyString(), any())
 
                 suggestions[6].onSuggestionClicked!!.invoke()
 
-                verify(useCase).invoke(eq("firefox focus"), any<Session>(), any<SearchEngine>())
+                verify(useCase).invoke(eq("firefox focus"), any())
             } finally {
                 server.shutdown()
             }
@@ -173,12 +158,7 @@ class SearchSuggestionProviderTest {
             val searchEngineManager: SearchEngineManager = mock()
             doReturn(searchEngine).`when`(searchEngineManager).getDefaultSearchEngineAsync(any(), any())
 
-            val useCase = spy(SearchUseCases(
-                testContext,
-                searchEngineManager,
-                SessionManager(mock()).apply { add(Session("https://www.mozilla.org")) }
-            ).defaultSearch)
-            doNothing().`when`(useCase).invoke(anyString(), any<Session>(), any<SearchEngine>())
+            val useCase: SearchUseCases.SearchUseCase = mock()
 
             val provider = SearchSuggestionProvider(
                 searchEngine,
@@ -222,12 +202,7 @@ class SearchSuggestionProviderTest {
             val searchEngineManager: SearchEngineManager = mock()
             doReturn(searchEngine).`when`(searchEngineManager).getDefaultSearchEngineAsync(any(), any())
 
-            val useCase = spy(SearchUseCases(
-                testContext,
-                searchEngineManager,
-                SessionManager(mock()).apply { add(Session("https://www.mozilla.org")) }
-            ).defaultSearch)
-            doNothing().`when`(useCase).invoke(anyString(), any<Session>(), any<SearchEngine>())
+            val useCase: SearchUseCases.SearchUseCase = mock()
 
             val provider =
                 SearchSuggestionProvider(searchEngine, useCase, HttpURLConnectionClient(), limit = 5)
@@ -353,12 +328,7 @@ class SearchSuggestionProviderTest {
             val searchEngineManager: SearchEngineManager = mock()
             doReturn(searchEngine).`when`(searchEngineManager).getDefaultSearchEngineAsync(any(), any())
 
-            val useCase = spy(SearchUseCases(
-                testContext,
-                searchEngineManager,
-                SessionManager(mock()).apply { add(Session("https://www.mozilla.org")) }
-            ).defaultSearch)
-            doNothing().`when`(useCase).invoke(anyString(), any<Session>(), any<SearchEngine>())
+            val useCase: SearchUseCases.SearchUseCase = mock()
 
             val provider =
                 SearchSuggestionProvider(searchEngine, useCase, HttpURLConnectionClient())
@@ -387,12 +357,7 @@ class SearchSuggestionProviderTest {
             val searchEngineManager: SearchEngineManager = mock()
             doReturn(searchEngine).`when`(searchEngineManager).getDefaultSearchEngineAsync(any(), any())
 
-            val useCase = spy(SearchUseCases(
-                testContext,
-                searchEngineManager,
-                SessionManager(mock()).apply { add(Session("https://www.mozilla.org")) }
-            ).defaultSearch)
-            doNothing().`when`(useCase).invoke(anyString(), any<Session>(), any<SearchEngine>())
+            val useCase: SearchUseCases.SearchUseCase = mock()
 
             val provider =
                 SearchSuggestionProvider(searchEngine, useCase, HttpURLConnectionClient())
@@ -426,12 +391,7 @@ class SearchSuggestionProviderTest {
             val searchEngineManager: SearchEngineManager = mock()
             doReturn(searchEngine).`when`(searchEngineManager).getDefaultSearchEngineAsync(any(), any())
 
-            val useCase = spy(SearchUseCases(
-                    testContext,
-                    searchEngineManager,
-                    SessionManager(mock()).apply { add(Session("https://www.mozilla.org")) }
-            ).defaultSearch)
-            doNothing().`when`(useCase).invoke(anyString(), any<Session>(), any<SearchEngine>())
+            val useCase: SearchUseCases.SearchUseCase = mock()
 
             val provider = SearchSuggestionProvider(
                     searchEngine,
@@ -476,12 +436,7 @@ class SearchSuggestionProviderTest {
             val searchEngineManager: SearchEngineManager = mock()
             doReturn(searchEngine).`when`(searchEngineManager).getDefaultSearchEngineAsync(any(), any())
 
-            val useCase = spy(SearchUseCases(
-                    testContext,
-                    searchEngineManager,
-                    SessionManager(mock()).apply { add(Session("https://www.mozilla.org")) }
-            ).defaultSearch)
-            doNothing().`when`(useCase).invoke(anyString(), any<Session>(), any<SearchEngine>())
+            val useCase: SearchUseCases.SearchUseCase = mock()
 
             val provider = SearchSuggestionProvider(
                     searchEngine,

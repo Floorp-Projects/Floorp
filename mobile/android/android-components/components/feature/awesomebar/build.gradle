@@ -28,8 +28,8 @@ dependencies {
     implementation project(':concept-toolbar')
     implementation project(':concept-storage')
 
-    implementation project(':browser-session')
     implementation project(':browser-search')
+    implementation project(':browser-state')
     implementation project(':browser-icons')
 
     implementation project(':feature-tabs')

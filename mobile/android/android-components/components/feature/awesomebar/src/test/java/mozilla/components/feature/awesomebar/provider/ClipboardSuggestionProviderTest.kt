@@ -10,11 +10,8 @@ import android.content.Context
 import android.graphics.Bitmap
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.runBlocking
-import mozilla.components.browser.session.Session
-import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.awesomebar.AwesomeBar
 import mozilla.components.concept.engine.Engine
-import mozilla.components.concept.engine.EngineSession
 import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.support.test.any
 import mozilla.components.support.test.eq
@@ -28,9 +25,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.anyString
-import org.mockito.Mockito.`when`
 import org.mockito.Mockito.never
-import org.mockito.Mockito.spy
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 
@@ -162,13 +157,7 @@ class ClipboardSuggestionProviderTest {
             )
         )
 
-        val selectedEngineSession: EngineSession = mock()
-        val selectedSession: Session = mock()
-        val sessionManager: SessionManager = mock()
-        `when`(sessionManager.selectedSession).thenReturn(selectedSession)
-        `when`(sessionManager.getOrCreateEngineSession(selectedSession)).thenReturn(selectedEngineSession)
-
-        val useCase = spy(SessionUseCases(sessionManager).loadUrl)
+        val useCase: SessionUseCases.LoadUrlUseCase = mock()
 
         val provider = ClipboardSuggestionProvider(testContext, useCase, requireEmptyText = false)
 
@@ -178,12 +167,12 @@ class ClipboardSuggestionProviderTest {
 
         val suggestion = suggestions.first()
 
-        verify(useCase, never()).invoke(any(), any(), any())
+        verify(useCase, never()).invoke(any(), any())
 
         assertNotNull(suggestion.onSuggestionClicked)
         suggestion.onSuggestionClicked!!.invoke()
 
-        verify(useCase).invoke(eq("https://www.mozilla.org"), any(), any())
+        verify(useCase).invoke(eq("https://www.mozilla.org"), any())
     }
 
     @Test

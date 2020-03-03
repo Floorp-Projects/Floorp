@@ -45,10 +45,13 @@ class TabsUseCases(
             sessionManager.select(session)
         }
 
+        /**
+         * Marks the tab with the provided [tabId] as selected.
+         */
         override fun invoke(tabId: String) {
             val session = sessionManager.findSessionById(tabId)
             if (session != null) {
-                invoke(session)
+                sessionManager.select(session)
             }
         }
     }
