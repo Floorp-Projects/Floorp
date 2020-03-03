@@ -12817,7 +12817,21 @@ AbortReasonOr<Ok> IonBuilder::jsop_superfun() {
 
   do {
     TemporaryTypeSet* calleeTypes = callee->resultTypeSet();
-    JSObject* calleeObj = calleeTypes ? calleeTypes->maybeSingleton() : nullptr;
+    if (!calleeTypes) {
+      break;
+    }
+
+    TemporaryTypeSet::ObjectKey* calleeKey = calleeTypes->maybeSingleObject();
+    if (!calleeKey) {
+      break;
+    }
+
+    JSObject* calleeObj;
+    if (calleeKey->isSingleton()) {
+      calleeObj = calleeKey->singleton();
+    } else {
+      calleeObj = calleeKey->group()->maybeInterpretedFunction();
+    }
     if (!calleeObj) {
       break;
     }
@@ -12834,7 +12848,6 @@ AbortReasonOr<Ok> IonBuilder::jsop_superfun() {
     }
 
     // Add a constraint to ensure we're notified when the prototype changes.
-    TypeSet::ObjectKey* calleeKey = TypeSet::ObjectKey::get(calleeObj);
     if (!calleeKey->hasStableClassAndProto(constraints())) {
       break;
     }
