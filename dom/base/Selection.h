@@ -721,17 +721,13 @@ class Selection final : public nsSupportsWeakReference,
    */
   void SelectFramesInAllRanges(nsPresContext* aPresContext);
 
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY
-  static nsresult GetTableCellLocationFromRange(
-      const nsRange* aRange, TableSelectionMode* aSelectionType, int32_t* aRow,
-      int32_t* aCol);
-
   /**
    * @param aOutIndex points to the index of the range in mRanges. If
    *                  aDidAddRange is true, it is in [0, mRanges.Length()).
    */
-  nsresult MaybeAddTableCellRange(nsRange& aRange, bool* aDidAddRange,
-                                  int32_t* aOutIndex);
+  MOZ_CAN_RUN_SCRIPT nsresult MaybeAddTableCellRange(nsRange& aRange,
+                                                     bool* aDidAddRange,
+                                                     int32_t* aOutIndex);
 
   /**
    * Binary searches the given sorted array of ranges for the insertion point
