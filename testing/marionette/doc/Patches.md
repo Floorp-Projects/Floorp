@@ -2,8 +2,8 @@ Submitting patches
 ==================
 
 You can submit patches by using [Phabricator]. Walk through its documentation
-in how to set it up, and uploading patches for review. Available reviewers are
-_ato_, _automatedtester_, or _whimboo_.
+in how to set it up, and uploading patches for review. Don't worry about which
+person to select for reviewing your code. It will be done automatically.
 
 Please also make sure to follow the [commit creation guidelines].
 
