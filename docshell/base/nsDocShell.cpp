@@ -348,7 +348,6 @@ nsDocShell::nsDocShell(BrowsingContext* aBrowsingContext,
       mAllowContentRetargeting(true),
       mAllowContentRetargetingOnChildren(true),
       mUseErrorPages(false),
-      mUseStrictSecurityChecks(false),
       mObserveErrorPages(true),
       mCSSErrorReportingEnabled(false),
       mAllowAuth(mItemType == typeContent),
@@ -671,12 +670,8 @@ nsDocShell::LoadURI(nsDocShellLoadState* aLoadState, bool aSetNavigating) {
       "Should not have these flags set");
 
   if (!aLoadState->TriggeringPrincipal()) {
-#ifndef ANDROID
     MOZ_ASSERT(false, "LoadURI must have a triggering principal");
-#endif
-    if (mUseStrictSecurityChecks) {
-      return NS_ERROR_FAILURE;
-    }
+    return NS_ERROR_FAILURE;
   }
 
   bool oldIsNavigating = mIsNavigating;
@@ -4182,8 +4177,8 @@ nsDocShell::Reload(uint32_t aReloadFlags) {
       loadInfo->GetResultPrincipalURI(getter_AddRefs(resultPrincipalURI));
     }
 
-    MOZ_ASSERT(triggeringPrincipal, "Need a valid triggeringPrincipal");
-    if (mUseStrictSecurityChecks && !triggeringPrincipal) {
+    if (!triggeringPrincipal) {
+      MOZ_ASSERT(false, "Reload needs a valid triggeringPrincipal");
       return NS_ERROR_FAILURE;
     }
 
@@ -4421,9 +4416,6 @@ nsDocShell::Create() {
 
   NS_ENSURE_TRUE(Preferences::GetRootBranch(), NS_ERROR_FAILURE);
   mCreated = true;
-
-  mUseStrictSecurityChecks = Preferences::GetBool(
-      "security.strict_security_checks.enabled", mUseStrictSecurityChecks);
 
   // Should we use XUL error pages instead of alerts if possible?
   mUseErrorPages = StaticPrefs::browser_xul_error_pages_enabled();
@@ -8753,7 +8745,8 @@ nsresult nsDocShell::InternalLoad(nsDocShellLoadState* aLoadState,
   MOZ_ASSERT(aLoadState->TriggeringPrincipal(),
              "need a valid TriggeringPrincipal");
 
-  if (mUseStrictSecurityChecks && !aLoadState->TriggeringPrincipal()) {
+  if (!aLoadState->TriggeringPrincipal()) {
+    MOZ_ASSERT(false, "InternalLoad needs a valid triggeringPrincipal");
     return NS_ERROR_FAILURE;
   }
   if (mBrowsingContext->PendingInitialization()) {
@@ -9833,13 +9826,8 @@ nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
     }
   }
 
-  // Getting the right triggeringPrincipal needs to be updated and is only
-  // ready for use once bug 1182569 landed. Until then, we cannot rely on
-  // the triggeringPrincipal for TYPE_DOCUMENT loads.
-  MOZ_ASSERT(aLoadState->TriggeringPrincipal(),
-             "Need a valid triggeringPrincipal");
-
-  if (mUseStrictSecurityChecks && !aLoadState->TriggeringPrincipal()) {
+  if (!aLoadState->TriggeringPrincipal()) {
+    MOZ_ASSERT(false, "DoURILoad needs a valid triggeringPrincipal");
     return NS_ERROR_FAILURE;
   }
 
