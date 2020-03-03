@@ -1809,8 +1809,13 @@ nsresult nsHttpConnectionMgr::DispatchTransaction(nsConnectionEntry* ent,
     rv = conn->Activate(trans, caps, priority);
     MOZ_ASSERT(NS_SUCCEEDED(rv), "SPDY Cannot Fail Dispatch");
     if (NS_SUCCEEDED(rv) && !trans->GetPendingTime().IsNull()) {
-      AccumulateTimeDelta(Telemetry::TRANSACTION_WAIT_TIME_SPDY,
-                          trans->GetPendingTime(), TimeStamp::Now());
+      if (conn->UsingSpdy()) {
+        AccumulateTimeDelta(Telemetry::TRANSACTION_WAIT_TIME_SPDY,
+                            trans->GetPendingTime(), TimeStamp::Now());
+      } else {
+        AccumulateTimeDelta(Telemetry::TRANSACTION_WAIT_TIME_HTTP3,
+                            trans->GetPendingTime(), TimeStamp::Now());
+      }
       trans->SetPendingTime(false);
     }
     return rv;
