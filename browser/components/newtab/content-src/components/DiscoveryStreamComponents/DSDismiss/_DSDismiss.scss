@@ -23,6 +23,7 @@
     inset-inline-end: 0;
     top: 0;
     border-radius: 50%;
+    background-color: transparent;
 
     .icon {
       @include dark-theme-only {
