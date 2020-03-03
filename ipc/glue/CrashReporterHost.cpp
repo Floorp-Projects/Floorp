@@ -235,19 +235,5 @@ void CrashReporterHost::AddAnnotation(CrashReporter::Annotation aKey,
   mExtraAnnotations[aKey] = aValue;
 }
 
-bool CrashReporterHost::IsLikelyOOM() {
-  // The data is only populated during the call to `FinalizeCrashReport()`.
-  MOZ_ASSERT(mFinalized);
-
-  // If `OOMAllocationSize` was set, we know that the crash happened
-  // because an allocation failed (`malloc` returned `nullptr`).
-  //
-  // As Unix systems generally allow `malloc` to return a non-null value
-  // even when no virtual memory is available, this doesn't cover all
-  // cases of OOM under Unix (far from it).
-  return mExtraAnnotations[CrashReporter::Annotation::OOMAllocationSize]
-             .Length() > 0;
-}
-
 }  // namespace ipc
 }  // namespace mozilla
