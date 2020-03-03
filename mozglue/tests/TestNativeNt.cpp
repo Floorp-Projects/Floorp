@@ -207,7 +207,18 @@ int wmain(int argc, wchar_t* argv[]) {
     return 1;
   }
 
-  iatThunks = k32headers.GetIATThunksForModule("ntdll.dll");
+  PEHeaders ntdllheaders(::GetModuleHandleW(L"ntdll.dll"));
+
+  auto ntdllBoundaries = ntdllheaders.GetBounds();
+  if (!ntdllBoundaries) {
+    printf(
+        "TEST-FAILED | NativeNt | "
+        "Unable to obtain the boundaries of ntdll.dll\n");
+    return 1;
+  }
+
+  iatThunks =
+      k32headers.GetIATThunksForModule("ntdll.dll", ntdllBoundaries.ptr());
   if (!iatThunks) {
     printf(
         "TEST-FAILED | NativeNt | Unable to find the IAT thunk for "

@@ -89,8 +89,23 @@ static LauncherVoidResultWithLineInfo InitializeDllBlocklistOOPInternal(
     return importDirRestored;
   }
 
+  mozilla::nt::PEHeaders ntdllImage(::GetModuleHandleW(L"ntdll.dll"));
+  if (!ntdllImage) {
+    return LAUNCHER_ERROR_FROM_WIN32(ERROR_BAD_EXE_FORMAT);
+  }
+
+  auto ntdllBoundaries = ntdllImage.GetBounds();
+  if (!ntdllBoundaries) {
+    return LAUNCHER_ERROR_FROM_WIN32(ERROR_BAD_EXE_FORMAT);
+  }
+
+  // Before copying IAT into a new process, we check each IAT entry is within
+  // the image of ntdll.dll or not.  Since no functions exported from ntdll.dll
+  // is forwarded, if we find an entry outside the boundary, it should be
+  // modified by an external program and we cannot copy IAT because the address
+  // will be invalid in a different process.
   Maybe<Span<IMAGE_THUNK_DATA> > ntdllThunks =
-      ourExeImage.GetIATThunksForModule("ntdll.dll");
+      ourExeImage.GetIATThunksForModule("ntdll.dll", ntdllBoundaries.ptr());
   if (!ntdllThunks) {
     return LAUNCHER_ERROR_FROM_WIN32(ERROR_INVALID_DATA);
   }
