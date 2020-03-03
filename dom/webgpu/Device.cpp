@@ -12,12 +12,10 @@
 
 #include "Adapter.h"
 #include "Buffer.h"
-#include "ComputePipeline.h"
-#include "Queue.h"
-#include "RenderPipeline.h"
 #include "Sampler.h"
 #include "Texture.h"
 #include "TextureView.h"
+#include "Queue.h"
 #include "ipc/WebGPUChild.h"
 
 namespace mozilla {
@@ -184,13 +182,6 @@ already_AddRefed<ComputePipeline> Device::CreateComputePipeline(
     const dom::GPUComputePipelineDescriptor& aDesc) {
   RawId id = mBridge->DeviceCreateComputePipeline(mId, aDesc);
   RefPtr<ComputePipeline> object = new ComputePipeline(this, id);
-  return object.forget();
-}
-
-already_AddRefed<RenderPipeline> Device::CreateRenderPipeline(
-    const dom::GPURenderPipelineDescriptor& aDesc) {
-  RawId id = mBridge->DeviceCreateRenderPipeline(mId, aDesc);
-  RefPtr<RenderPipeline> object = new RenderPipeline(this, id);
   return object.forget();
 }
 
