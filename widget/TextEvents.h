@@ -1196,8 +1196,6 @@ class WidgetSelectionEvent : public WidgetGUIEvent {
  * mozilla::InternalEditorInputEvent
  ******************************************************************************/
 
-typedef nsTArray<OwningNonNull<dom::StaticRange>> OwningNonNullStaticRangeArray;
-
 class InternalEditorInputEvent : public InternalUIEvent {
  private:
   InternalEditorInputEvent()

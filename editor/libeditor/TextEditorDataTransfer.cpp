@@ -12,6 +12,7 @@
 #include "mozilla/dom/DataTransfer.h"
 #include "mozilla/dom/DragEvent.h"
 #include "mozilla/dom/Selection.h"
+#include "mozilla/dom/StaticRange.h"
 #include "nsAString.h"
 #include "nsCOMPtr.h"
 #include "nsComponentManagerUtils.h"
@@ -463,6 +464,15 @@ nsresult TextEditor::OnDrop(DragEvent* aDropEvent) {
     }
   } else {
     editActionData.InitializeDataTransfer(dataTransfer);
+    RefPtr<StaticRange> targetRange = StaticRange::Create(
+        droppedAt.GetContainer(), droppedAt.Offset(), droppedAt.GetContainer(),
+        droppedAt.Offset(), IgnoreErrors());
+    NS_WARNING_ASSERTION(targetRange && targetRange->IsPositioned(),
+                         "Why did we fail to create collapsed static range at "
+                         "dropped position?");
+    if (targetRange && targetRange->IsPositioned()) {
+      editActionData.AppendTargetRange(*targetRange);
+    }
     nsresult rv = editActionData.MaybeDispatchBeforeInputEvent();
     if (rv == NS_ERROR_EDITOR_ACTION_CANCELED || NS_WARN_IF(NS_FAILED(rv))) {
       return EditorBase::ToGenericNSResult(rv);

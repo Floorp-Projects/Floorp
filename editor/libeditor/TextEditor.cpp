@@ -28,6 +28,7 @@
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Selection.h"
+#include "mozilla/dom/StaticRange.h"
 #include "nsAString.h"
 #include "nsCRT.h"
 #include "nsCaret.h"
@@ -645,6 +646,12 @@ nsresult TextEditor::DeleteSelectionAsAction(EDirection aDirection,
     }
   }
 
+  // TODO: If we're an HTMLEditor instance, we need to compute delete ranges
+  //       here.  However, it means that we need to pick computation codes
+  //       which are in `HandleDeleteSelection()`, its helper methods and
+  //       `WSRunObject` so that we need to redesign `HandleDeleteSelection()`
+  //       in bug 1618457.
+
   nsresult rv = editActionData.MaybeDispatchBeforeInputEvent();
   if (rv == NS_ERROR_EDITOR_ACTION_CANCELED || NS_WARN_IF(NS_FAILED(rv))) {
     return EditorBase::ToGenericNSResult(rv);
@@ -926,6 +933,7 @@ nsresult TextEditor::DeleteSelectionAndPrepareToCreateNode() {
 nsresult TextEditor::SetTextAsAction(const nsAString& aString,
                                      nsIPrincipal* aPrincipal) {
   MOZ_ASSERT(aString.FindChar(nsCRT::CR) == kNotFound);
+  MOZ_ASSERT(!AsHTMLEditor());
 
   AutoEditActionDataSetter editActionData(*this, EditAction::eSetText,
                                           aPrincipal);
@@ -947,12 +955,43 @@ nsresult TextEditor::ReplaceTextAsAction(const nsAString& aString,
 
   AutoEditActionDataSetter editActionData(*this, EditAction::eReplaceText,
                                           aPrincipal);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
   if (!AsHTMLEditor()) {
     editActionData.SetData(aString);
   } else {
     editActionData.InitializeDataTransfer(aString);
+    RefPtr<StaticRange> targetRange;
+    if (aReplaceRange) {
+      // Compute offset of the range before dispatching `beforeinput` event
+      // because it may be referred after the DOM tree is changed and the
+      // range may have not computed the offset yet.
+      targetRange = StaticRange::Create(
+          aReplaceRange->GetStartContainer(), aReplaceRange->StartOffset(),
+          aReplaceRange->GetEndContainer(), aReplaceRange->EndOffset(),
+          IgnoreErrors());
+      NS_WARNING_ASSERTION(targetRange && targetRange->IsPositioned(),
+                           "The aReplaceRange isn't valid");
+    } else {
+      Element* editingHost = AsHTMLEditor()->GetActiveEditingHost();
+      NS_WARNING_ASSERTION(editingHost,
+                           "No active editing host, no target ranges");
+      if (editingHost) {
+        targetRange = StaticRange::Create(
+            editingHost, 0, editingHost, editingHost->Length(), IgnoreErrors());
+        NS_WARNING_ASSERTION(targetRange && targetRange->IsPositioned(),
+                             "Failed to create static range to replace all "
+                             "contents in editing host");
+      }
+    }
+    if (targetRange && targetRange->IsPositioned()) {
+      editActionData.AppendTargetRange(*targetRange);
+    }
   }
-  nsresult rv = editActionData.CanHandleAndMaybeDispatchBeforeInputEvent();
+
+  nsresult rv = editActionData.MaybeDispatchBeforeInputEvent();
   if (rv == NS_ERROR_EDITOR_ACTION_CANCELED || NS_WARN_IF(NS_FAILED(rv))) {
     return EditorBase::ToGenericNSResult(rv);
   }
@@ -1159,6 +1198,23 @@ nsresult TextEditor::OnCompositionChange(
                EditorInputType::eInsertCompositionText);
     MOZ_ASSERT(!aCompositionChangeEvent.mData.IsVoid());
     editActionData.SetData(aCompositionChangeEvent.mData);
+  }
+
+  // If we're an `HTMLEditor` and this is second or later composition change,
+  // we should set target range to the range of composition string.
+  // Otherwise, set target ranges to selection ranges (will be done by
+  // editActionData itself before dispatching `beforeinput` event).
+  if (AsHTMLEditor() && mComposition->GetContainerTextNode()) {
+    RefPtr<StaticRange> targetRange = StaticRange::Create(
+        mComposition->GetContainerTextNode(),
+        mComposition->XPOffsetInTextNode(),
+        mComposition->GetContainerTextNode(),
+        mComposition->XPEndOffsetInTextNode(), IgnoreErrors());
+    NS_WARNING_ASSERTION(targetRange && targetRange->IsPositioned(),
+                         "mComposition has broken range information");
+    if (targetRange && targetRange->IsPositioned()) {
+      editActionData.AppendTargetRange(*targetRange);
+    }
   }
 
   // TODO: We need to use different EditAction value for beforeinput event

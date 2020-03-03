@@ -9,6 +9,7 @@
 #include "mozilla/Assertions.h"          // for MOZ_ASSERT, etc.
 #include "mozilla/EditAction.h"          // for EditAction and EditSubAction
 #include "mozilla/EditorDOMPoint.h"      // for EditorDOMPoint
+#include "mozilla/EventForwards.h"       // for InputEventTargetRanges
 #include "mozilla/Maybe.h"               // for Maybe
 #include "mozilla/OwningNonNull.h"       // for OwningNonNull
 #include "mozilla/PresShell.h"           // for PresShell
@@ -928,6 +929,13 @@ class EditorBase : public nsIEditor,
         SettingDataTransfer aSettingDataTransfer, int32_t aClipboardType);
     dom::DataTransfer* GetDataTransfer() const { return mDataTransfer; }
 
+    /**
+     * AppendTargetRange() appends aTargetRange to target ranges.  This should
+     * be used only by edit action handlers which do not want to set target
+     * ranges to selection ranges.
+     */
+    void AppendTargetRange(dom::StaticRange& aTargetRange);
+
     void Abort() { mAborted = true; }
     bool IsAborted() const { return mAborted; }
 
@@ -1105,6 +1113,9 @@ class EditorBase : public nsIEditor,
 
     // The dataTransfer should be set to InputEvent.dataTransfer.
     RefPtr<dom::DataTransfer> mDataTransfer;
+
+    // They are used for result of InputEvent.getTargetRanges() of beforeinput.
+    OwningNonNullStaticRangeArray mTargetRanges;
 
     // Start point where spell checker should check from.  This is used only
     // by TextEditor.
