@@ -13,6 +13,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/dom/MemoryReportRequest.h"
 #include "mozilla/ipc/CrashReporterClient.h"
+#include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ipc/FileDescriptorSetChild.h"
 #include "mozilla/ipc/IPCStreamAlloc.h"
 #include "mozilla/ipc/ProcessChild.h"
@@ -40,9 +41,9 @@ namespace net {
 
 using namespace ipc;
 
-static SocketProcessChild* sSocketProcessChild;
+SocketProcessChild* sSocketProcessChild;
 
-SocketProcessChild::SocketProcessChild() {
+SocketProcessChild::SocketProcessChild() : mShuttingDown(false) {
   LOG(("CONSTRUCT SocketProcessChild::SocketProcessChild\n"));
   nsDebugImpl::SetMultiprocessMode("Socket");
 
@@ -93,6 +94,7 @@ bool SocketProcessChild::Init(base::ProcessId aParentPid,
     return false;
   }
 
+  BackgroundChild::Startup();
   SetThisProcessName("Socket Process");
 #if defined(XP_MACOSX)
   // Close all current connections to the WindowServer. This ensures that the
@@ -105,6 +107,8 @@ bool SocketProcessChild::Init(base::ProcessId aParentPid,
 
 void SocketProcessChild::ActorDestroy(ActorDestroyReason aWhy) {
   LOG(("SocketProcessChild::ActorDestroy\n"));
+
+  mShuttingDown = true;
 
   if (AbnormalShutdown == aWhy) {
     NS_WARNING("Shutting down Socket process early due to a crash!");

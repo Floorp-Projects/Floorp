@@ -7,6 +7,7 @@
 #define mozilla_net_SocketProcessParent_h
 
 #include "mozilla/UniquePtr.h"
+#include "mozilla/ipc/BackgroundParent.h"
 #include "mozilla/ipc/CrashReporterHelper.h"
 #include "mozilla/ipc/InputStreamUtils.h"
 #include "mozilla/net/PSocketProcessParent.h"
@@ -92,6 +93,9 @@ class SocketProcessParent final
       const HttpActivityArgs& aArgs, const uint32_t& aActivityType,
       const uint32_t& aActivitySubtype, const PRTime& aTimestamp,
       const uint64_t& aExtraSizeData, const nsCString& aExtraStringData);
+
+  mozilla::ipc::IPCResult RecvInitBackground(
+      Endpoint<PBackgroundParent>&& aEndpoint);
 
  private:
   SocketProcessHost* mHost;

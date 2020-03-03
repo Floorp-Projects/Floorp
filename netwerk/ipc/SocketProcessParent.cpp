@@ -226,6 +226,16 @@ mozilla::ipc::IPCResult SocketProcessParent::RecvObserveHttpActivity(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult SocketProcessParent::RecvInitBackground(
+    Endpoint<PBackgroundParent>&& aEndpoint) {
+  LOG(("SocketProcessParent::RecvInitBackground\n"));
+  if (!ipc::BackgroundParent::Alloc(nullptr, std::move(aEndpoint))) {
+    return IPC_FAIL(this, "BackgroundParent::Alloc failed");
+  }
+
+  return IPC_OK();
+}
+
 // To ensure that IPDL is finished before SocketParent gets deleted.
 class DeferredDeleteSocketProcessParent : public Runnable {
  public:
