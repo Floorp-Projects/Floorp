@@ -896,7 +896,7 @@ const JSClass IDBObjectStore::sDummyPropJSClass = {
 };
 
 IDBObjectStore::IDBObjectStore(IDBTransaction* aTransaction,
-                               const ObjectStoreSpec* aSpec)
+                               ObjectStoreSpec* aSpec)
     : mTransaction(aTransaction),
       mCachedKeyPath(JS::UndefinedValue()),
       mSpec(aSpec),
@@ -918,7 +918,7 @@ IDBObjectStore::~IDBObjectStore() {
 
 // static
 RefPtr<IDBObjectStore> IDBObjectStore::Create(IDBTransaction* aTransaction,
-                                              const ObjectStoreSpec& aSpec) {
+                                              ObjectStoreSpec& aSpec) {
   MOZ_ASSERT(aTransaction);
   aTransaction->AssertIsOnOwningThread();
 
@@ -2136,7 +2136,7 @@ RefPtr<IDBIndex> IDBObjectStore::CreateIndex(
     return nullptr;
   }
 
-  auto& indexes = const_cast<nsTArray<IndexMetadata>&>(mSpec->indexes());
+  const auto& indexes = mSpec->indexes();
   const auto end = indexes.cend();
   const auto foundIt = std::find_if(
       indexes.cbegin(), end,
@@ -2192,10 +2192,9 @@ RefPtr<IDBIndex> IDBObjectStore::CreateIndex(
     locale = IndexedDatabaseManager::GetLocale();
   }
 
-  IndexMetadata* const metadata = indexes.AppendElement(
-      IndexMetadata(transaction->NextIndexId(), nsString(aName), keyPath,
-                    locale, aOptionalParameters.mUnique,
-                    aOptionalParameters.mMultiEntry, autoLocale));
+  IndexMetadata* const metadata = mSpec->indexes().EmplaceBack(
+      transaction->NextIndexId(), nsString(aName), keyPath, locale,
+      aOptionalParameters.mUnique, aOptionalParameters.mMultiEntry, autoLocale);
 
   if (oldMetadataElements && oldMetadataElements != indexes.Elements()) {
     MOZ_ASSERT(indexes.Length() > 1);
@@ -2239,7 +2238,7 @@ void IDBObjectStore::DeleteIndex(const nsAString& aName, ErrorResult& aRv) {
     return;
   }
 
-  auto& metadataArray = const_cast<nsTArray<IndexMetadata>&>(mSpec->indexes());
+  const auto& metadataArray = mSpec->indexes();
 
   const auto endMetadata = metadataArray.cend();
   const auto foundMetadataIt = std::find_if(
@@ -2271,7 +2270,7 @@ void IDBObjectStore::DeleteIndex(const nsAString& aName, ErrorResult& aRv) {
     }
   }
 
-  metadataArray.RemoveElementAt(foundMetadataIt.GetIndex());
+  mSpec->indexes().RemoveElementAt(foundMetadataIt.GetIndex());
 
   RefreshSpec(/* aMayDelete */ false);
 
@@ -2427,18 +2426,13 @@ void IDBObjectStore::RefreshSpec(bool aMayDelete) {
   AssertIsOnOwningThread();
   MOZ_ASSERT_IF(mDeletedSpec, mSpec == mDeletedSpec.get());
 
-  const DatabaseSpec* dbSpec = mTransaction->Database()->Spec();
-  MOZ_ASSERT(dbSpec);
-
-  const nsTArray<ObjectStoreSpec>& objectStores = dbSpec->objectStores();
-
-  const auto foundIt = std::find_if(objectStores.cbegin(), objectStores.cend(),
-                                    [id = Id()](const auto& objSpec) {
-                                      return objSpec.metadata().id() == id;
-                                    });
-  const bool found = foundIt != objectStores.cend();
-  if (found) {
-    mSpec = &*foundIt;
+  auto* const foundObjectStoreSpec =
+      mTransaction->Database()->LookupModifiableObjectStoreSpec(
+          [id = Id()](const auto& objSpec) {
+            return objSpec.metadata().id() == id;
+          });
+  if (foundObjectStoreSpec) {
+    mSpec = foundObjectStoreSpec;
 
     for (auto& index : mIndexes) {
       index->RefreshMetadata(aMayDelete);
@@ -2449,9 +2443,9 @@ void IDBObjectStore::RefreshSpec(bool aMayDelete) {
     }
   }
 
-  MOZ_ASSERT_IF(!aMayDelete && !mDeletedSpec, found);
+  MOZ_ASSERT_IF(!aMayDelete && !mDeletedSpec, foundObjectStoreSpec);
 
-  if (found) {
+  if (foundObjectStoreSpec) {
     MOZ_ASSERT(mSpec != mDeletedSpec.get());
     mDeletedSpec = nullptr;
   } else {
