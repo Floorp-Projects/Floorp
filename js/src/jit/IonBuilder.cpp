@@ -443,7 +443,8 @@ IonBuilder::InliningDecision IonBuilder::canInlineTarget(JSFunction* target,
 
     // Don't inline if creating |this| for this target is complicated, for
     // example when the newTarget.prototype lookup may be effectful.
-    if (callInfo.getNewTarget() != callInfo.fun()) {
+    if (!target->constructorNeedsUninitializedThis() &&
+        callInfo.getNewTarget() != callInfo.fun()) {
       return DontInline(inlineScript, "Constructing with different newTarget");
     }
 
@@ -5532,13 +5533,8 @@ MDefinition* IonBuilder::createThis(JSFunction* target, MDefinition* callee,
   // JIT entry.
   MOZ_ASSERT_IF(target, !target->isNativeWithJitEntry());
 
-  if (inlining) {
-    // We must not have an effectful .prototype lookup.
-    MOZ_ASSERT(callee == newTarget);
-    MOZ_ASSERT(target);
-    MOZ_ASSERT(target->constructorNeedsUninitializedThis() ||
-               target->hasNonConfigurablePrototypeDataProperty());
-  }
+  // Can't inline without a known target function.
+  MOZ_ASSERT_IF(inlining, target);
 
   // Create |this| for unknown target.
   if (!target) {
@@ -5559,6 +5555,11 @@ MDefinition* IonBuilder::createThis(JSFunction* target, MDefinition* callee,
   if (target->constructorNeedsUninitializedThis()) {
     return constant(MagicValue(JS_UNINITIALIZED_LEXICAL));
   }
+
+  // We must not have an effectful .prototype lookup.
+  MOZ_ASSERT_IF(inlining, callee == newTarget);
+  MOZ_ASSERT_IF(inlining,
+                target->hasNonConfigurablePrototypeDataProperty());
 
   if (callee == newTarget) {
     // Try baking in the prototype.
