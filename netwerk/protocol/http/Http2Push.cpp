@@ -194,10 +194,7 @@ bool Http2PushedStream::TryOnPush() {
   mDeferCleanupOnPush = true;
   mResourceUrl = Origin() + Path();
   RefPtr<Http2PushedStreamWrapper> stream = new Http2PushedStreamWrapper(this);
-  RefPtr<nsHttpTransaction> transaction = trans;
-  NS_DispatchToMainThread(NS_NewRunnableFunction(
-      "net::nsHttpTransaction::OnPush",
-      [transaction, stream]() { transaction->OnPush(stream); }));
+  trans->OnPush(stream);
   return true;
 }
 
