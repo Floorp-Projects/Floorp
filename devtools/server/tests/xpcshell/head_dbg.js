@@ -99,7 +99,8 @@ async function createTargetForMainProcess() {
   const client = new DevToolsClient(DevToolsServer.connectPipe());
   await client.connect();
 
-  return client.mainRoot.getMainProcess();
+  const mainProcessDescriptor = await client.mainRoot.getMainProcess();
+  return mainProcessDescriptor.getTarget();
 }
 
 /**

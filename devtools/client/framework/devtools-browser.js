@@ -367,7 +367,8 @@ var gDevToolsBrowser = (exports.gDevToolsBrowser = {
     const client = new DevToolsClient(transport);
 
     await client.connect();
-    const target = await client.mainRoot.getProcess(processId);
+    const targetDescriptor = await client.mainRoot.getProcess(processId);
+    const target = await targetDescriptor.getTarget();
     // Ensure closing the connection in order to cleanup
     // the devtools client and also the server created in the
     // content process

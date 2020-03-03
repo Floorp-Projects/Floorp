@@ -36,7 +36,8 @@ add_task(async function() {
   );
 
   // Even though we have no tabs, getMainProcess gives us the chrome debugger.
-  const front = await client.mainRoot.getMainProcess();
+  const targetDescriptor = await client.mainRoot.getMainProcess();
+  const front = await targetDescriptor.getTarget();
   const [, threadFront] = await front.attachThread();
 
   // tell the thread to do the initial resume. This would cause the

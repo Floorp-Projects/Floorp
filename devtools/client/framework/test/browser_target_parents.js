@@ -55,7 +55,8 @@ add_task(async function() {
   const client = await setupDebuggerClient();
   const mainRoot = client.mainRoot;
 
-  const mainProcess = await mainRoot.getMainProcess();
+  const mainProcessDescriptor = await mainRoot.getMainProcess();
+  const mainProcess = await mainProcessDescriptor.getTarget();
   const { frames } = await mainProcess.listRemoteFrames();
 
   await testGetTargetWithConcurrentCalls(frames, frameTarget => {

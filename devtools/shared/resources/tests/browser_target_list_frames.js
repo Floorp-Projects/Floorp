@@ -34,7 +34,8 @@ add_task(async function() {
 async function testBrowserFrames(mainRoot) {
   info("Test TargetList against frames via the parent process target");
 
-  const target = await mainRoot.getMainProcess();
+  const targetDescriptor = await mainRoot.getMainProcess();
+  const target = await targetDescriptor.getTarget();
   const targetList = new TargetList(mainRoot, target);
   await targetList.startListening();
 

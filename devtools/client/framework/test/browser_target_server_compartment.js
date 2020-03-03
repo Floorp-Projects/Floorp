@@ -104,7 +104,8 @@ async function testMainProcess() {
     Services.obs.addObserver(observe, "devtools-thread-instantiated");
   });
 
-  const target = await client.mainRoot.getMainProcess();
+  const targetDescriptor = await client.mainRoot.getMainProcess();
+  const target = await targetDescriptor.getTarget();
   await target.attach();
 
   const [, threadFront] = await target.attachThread();

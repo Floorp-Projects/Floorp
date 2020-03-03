@@ -84,7 +84,8 @@ async function initBrowserToolboxTask({
 
   ok(true, "Connected");
 
-  const target = await client.mainRoot.getMainProcess();
+  const descriptorFront = await client.mainRoot.getMainProcess();
+  const target = await descriptorFront.getTarget();
   const consoleFront = await target.getFront("console");
   const preferenceFront = await client.mainRoot.getFront("preference");
 

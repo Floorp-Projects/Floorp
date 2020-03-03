@@ -271,7 +271,8 @@ function requestProcesses() {
     const clientWrapper = getCurrentClient(getState().runtimes);
 
     try {
-      const mainProcessFront = await clientWrapper.getMainProcess();
+      const mainProcessDescriptorFront = await clientWrapper.getMainProcess();
+      const mainProcessFront = await mainProcessDescriptorFront.getTarget();
       dispatch({
         type: REQUEST_PROCESSES_SUCCESS,
         mainProcess: {
