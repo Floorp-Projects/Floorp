@@ -762,6 +762,9 @@ class ResponsiveUI {
     this.lastScreenY = 0;
     this.ignoreX = false;
     this.ignoreY = false;
+
+    // Used by tests.
+    this.emit("viewport-resize-dragend");
   }
 
   onResizeViewport(event) {

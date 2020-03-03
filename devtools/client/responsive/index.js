@@ -204,7 +204,7 @@ window.clearDeviceAssociation = () => {
  */
 window.getViewportBrowser = () => {
   const browser = document.querySelector("iframe.browser");
-  if (!browser.messageManager) {
+  if (browser && !browser.messageManager) {
     Object.defineProperty(browser, "messageManager", {
       get() {
         return this.frameLoader.messageManager;
