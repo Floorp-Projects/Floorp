@@ -38,6 +38,13 @@ exclude: true
   per-`WebExtension` object instead of being global.  The existing global
   [`TabDelegate`][75.11] is now deprecated and will be removed in GeckoView 77.
   ([bug 1616625]({{bugzilla}}1616625))
+- Added [`SessionTabDelegate#onUpdateTab`][75.12] which is called whenever an
+  extension calls `tabs.update` on the corresponding `GeckoSession`.
+  [`TabDelegate#onCreateTab`][75.13] now takes a [`CreateTabDetails`][75.14]
+  object which contains additional information about the newly created tab
+  (including the `url` which used to be passed in directly).
+  ([bug 1616625]({{bugzilla}}1616625))
+
 
 [75.1]: {{javadoc_uri}}/GeckoRuntimeSettings.Builder.html#useMultiprocess-boolean-
 [75.2]: {{javadoc_uri}}/WebExtensionController.DebuggerDelegate.html#onExtensionListUpdated--
@@ -50,6 +57,9 @@ exclude: true
 [75.9]: {{javadoc_uri}}/WebExtension.SessionTabDelegate.html
 [75.10]: {{javadoc_uri}}/WebExtension.TabDelegate.html
 [75.11]: {{javadoc_uri}}/WebExtensionRuntime.TabDelegate.html
+[75.12]: {{javadoc_uri}}/WebExtension.SessionTabDelegate.html#onUpdateTab-org.mozilla.geckoview.WebExtension-org.mozilla.geckoview.GeckoSession-org.mozilla.geckoview.WebExtension.UpdateTabDetails-
+[75.13]: {{javadoc_uri}}/WebExtension.TabDelegate.html#onNewTab-org.mozilla.geckoview.WebExtension-org.mozilla.geckoview.WebExtension.CreateTabDetails-
+[75.14]: {{javadoc_uri}}/WebExtension.CreateTabDetails.html
 
 ## v74
 - Added [`WebExtensionController.enable`][74.1] and [`disable`][74.2] to
@@ -613,4 +623,4 @@ exclude: true
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: 5f39aa0f1916565230a07c0e7113fe202f6a94a0
+[api-version]: 8b880533b33a0ad178f88ade00aaae5897625ef9

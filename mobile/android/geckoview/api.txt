@@ -1491,6 +1491,16 @@ package org.mozilla.geckoview {
     field public static final int VULNERABLE_UPDATE_AVAILABLE = 4;
   }
 
+  public static class WebExtension.CreateTabDetails {
+    ctor protected CreateTabDetails();
+    field @Nullable public final Boolean active;
+    field @Nullable public final Boolean discarded;
+    field @Nullable public final Integer index;
+    field @Nullable public final Boolean openInReaderMode;
+    field @Nullable public final Boolean pinned;
+    field @Nullable public final String url;
+  }
+
   public static class WebExtension.DisabledFlags {
     ctor public DisabledFlags();
     field public static final int APP = 8;
@@ -1587,6 +1597,7 @@ package org.mozilla.geckoview {
 
   public static interface WebExtension.SessionTabDelegate {
     method @UiThread @NonNull default public GeckoResult<AllowOrDeny> onCloseTab(@Nullable WebExtension, @NonNull GeckoSession);
+    method @UiThread @NonNull default public GeckoResult<AllowOrDeny> onUpdateTab(@NonNull WebExtension, @NonNull GeckoSession, @NonNull WebExtension.UpdateTabDetails);
   }
 
   public static class WebExtension.SignedStateFlags {
@@ -1600,7 +1611,17 @@ package org.mozilla.geckoview {
   }
 
   public static interface WebExtension.TabDelegate {
-    method @UiThread @Nullable default public GeckoResult<GeckoSession> onNewTab(@Nullable WebExtension, @Nullable String);
+    method @UiThread @Nullable default public GeckoResult<GeckoSession> onNewTab(@NonNull WebExtension, @NonNull WebExtension.CreateTabDetails);
+  }
+
+  public static class WebExtension.UpdateTabDetails {
+    ctor protected UpdateTabDetails();
+    field @Nullable public final Boolean active;
+    field @Nullable public final Boolean autoDiscardable;
+    field @Nullable public final Boolean highlighted;
+    field @Nullable public final Boolean muted;
+    field @Nullable public final Boolean pinned;
+    field @Nullable public final String url;
   }
 
   public class WebExtensionController {
