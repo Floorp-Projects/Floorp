@@ -639,12 +639,10 @@ var gMainPane = {
       });
       setEventListener("showUpdateHistory", "command", gMainPane.showUpdates);
 
-      let updateDisabled =
-        Services.policies && !Services.policies.isAllowed("appUpdate");
-      if (updateDisabled || UpdateUtils.appUpdateAutoSettingIsLocked()) {
+      if (Services.policies && !Services.policies.isAllowed("appUpdate")) {
         document.getElementById("updateAllowDescription").hidden = true;
-        document.getElementById("updateSettingsContainer").hidden = true;
-        if (updateDisabled && AppConstants.MOZ_MAINTENANCE_SERVICE) {
+        document.getElementById("updateRadioGroup").hidden = true;
+        if (AppConstants.MOZ_MAINTENANCE_SERVICE) {
           document.getElementById("useService").hidden = true;
         }
       } else {
