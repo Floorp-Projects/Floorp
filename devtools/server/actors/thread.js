@@ -840,6 +840,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
 
       frame.onStep = onStep;
       frame.onPop = onPop;
+      frame.waitingOnStep = true;
       return undefined;
     };
   },
@@ -1025,19 +1026,25 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
       steppingType = "next";
     }
 
+    // If there are no more frames on the stack, use "step" mode so that we will
+    // pause on the next script to execute.
+    const stepFrame = this._getNextStepFrame(frame);
+    if (!stepFrame) {
+      steppingType = "step";
+    }
+
     const { onEnterFrame, onPop, onStep } = this._makeSteppingHooks({
       steppingType,
       completion,
     });
 
-    // Make sure there is still a frame on the stack if we are to continue
-    // stepping.
-    const stepFrame = this._getNextStepFrame(frame);
+    if (steppingType === "step") {
+      this.dbg.onEnterFrame = onEnterFrame;
+    }
+
     if (stepFrame) {
       switch (steppingType) {
         case "step":
-          this.dbg.onEnterFrame = onEnterFrame;
-        // Fall through.
         case "break":
         case "next":
           if (stepFrame.script) {
