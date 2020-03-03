@@ -163,22 +163,12 @@ var UpdateUtils = {
    * has selected "Automatically install updates" in about:preferences.
    *
    * On Windows, this setting is shared across all profiles for the installation
-   * and is read asynchronously from the file. On other operating systems, this
+   * and is read asynchrnously from the file. On other operating systems, this
    * setting is stored in a pref and is thus a per-profile setting.
    *
    * @return A Promise that resolves with a boolean.
    */
   getAppUpdateAutoEnabled() {
-    if (Services.policies) {
-      if (!Services.policies.isAllowed("app-auto-updates-off")) {
-        // We aren't allowed to turn off auto-update - it is forced on.
-        return Promise.resolve(true);
-      }
-      if (!Services.policies.isAllowed("app-auto-updates-on")) {
-        // We aren't allowed to turn on auto-update - it is forced off.
-        return Promise.resolve(false);
-      }
-    }
     if (AppConstants.platform != "win") {
       // On platforms other than Windows the setting is stored in a preference.
       let prefValue = Services.prefs.getBoolPref(
@@ -240,7 +230,7 @@ var UpdateUtils = {
         // Fallthrough for if the value could not be read or migrated.
         return DEFAULT_APP_UPDATE_AUTO;
       })
-      .then(maybeUpdateAutoConfigChanged);
+      .then(maybeUpdateAutoConfigChanged.bind(this));
     updateAutoIOPromise = readPromise;
     return readPromise;
   },
@@ -252,12 +242,8 @@ var UpdateUtils = {
    * in about:preferences.
    *
    * On Windows, this setting is shared across all profiles for the installation
-   * and is written asynchronously to the file. On other operating systems, this
+   * and is written asynchrnously to the file. On other operating systems, this
    * setting is stored in a pref and is thus a per-profile setting.
-   *
-   * If this method is called when the setting is locked, the returned promise
-   * will reject. The lock status can be determined with
-   * UpdateUtils.appUpdateAutoSettingIsLocked()
    *
    * @param  enabled If set to true, automatic download and installation of
    *                 updates will be enabled. If set to false, this will be
@@ -271,20 +257,11 @@ var UpdateUtils = {
    *         this operation simply sets a pref.
    */
   setAppUpdateAutoEnabled(enabledValue) {
-    if (this.appUpdateAutoSettingIsLocked()) {
-      return Promise.reject(
-        "setAppUpdateAutoEnabled: Unable to change value of setting because " +
-          "it is locked by policy"
-      );
-    }
     if (AppConstants.platform != "win") {
       // Only in Windows do we store the update config in the update directory
       let prefValue = !!enabledValue;
       Services.prefs.setBoolPref(PREF_APP_UPDATE_AUTO, prefValue);
-      // Rather than call maybeUpdateAutoConfigChanged, a pref observer has
-      // been connected to PREF_APP_UPDATE_AUTO. This allows us to catch direct
-      // changes to the pref (which Firefox shouldn't be doing, but the user
-      // might do in about:config).
+      maybeUpdateAutoConfigChanged(prefValue);
       return Promise.resolve(prefValue);
     }
     // Justification for the empty catch statement below:
@@ -312,24 +289,9 @@ var UpdateUtils = {
           throw e;
         }
       })
-      .then(maybeUpdateAutoConfigChanged);
+      .then(maybeUpdateAutoConfigChanged.bind(this));
     updateAutoIOPromise = writePromise;
     return writePromise;
-  },
-
-  /**
-   * This function should be used to determine if the automatic application
-   * update setting is locked by an enterprise policy
-   *
-   * @return true if the automatic update setting is currently locked.
-   *         Otherwise, false.
-   */
-  appUpdateAutoSettingIsLocked() {
-    return (
-      Services.policies &&
-      (!Services.policies.isAllowed("app-auto-updates-off") ||
-        !Services.policies.isAllowed("app-auto-updates-on"))
-    );
   },
 };
 
@@ -360,7 +322,11 @@ async function writeUpdateAutoConfig(enabledValue) {
 // Notifies observers if the value of app.update.auto has changed and returns
 // the value for app.update.auto.
 function maybeUpdateAutoConfigChanged(newValue) {
-  if (newValue !== updateAutoSettingCachedVal) {
+  // Don't notify on the first read when updateAutoSettingCachedVal is null.
+  if (
+    updateAutoSettingCachedVal !== null &&
+    newValue != updateAutoSettingCachedVal
+  ) {
     updateAutoSettingCachedVal = newValue;
     Services.obs.notifyObservers(
       null,
@@ -369,18 +335,6 @@ function maybeUpdateAutoConfigChanged(newValue) {
     );
   }
   return newValue;
-}
-// On non-Windows platforms, the Update Auto Config is still stored as a pref.
-// On those platforms, the best way to notify observers of this setting is
-// just to propagate it from a pref observer
-if (AppConstants.platform != "win") {
-  Services.prefs.addObserver(
-    PREF_APP_UPDATE_AUTO,
-    async (subject, topic, data) => {
-      let value = await UpdateUtils.getAppUpdateAutoEnabled();
-      maybeUpdateAutoConfigChanged(value);
-    }
-  );
 }
 
 /* Get the distribution pref values, from defaults only */
