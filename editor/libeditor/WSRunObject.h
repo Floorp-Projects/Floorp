@@ -689,16 +689,14 @@ class MOZ_STACK_CLASS WSRunObject final : public WSRunScanner {
       HTMLEditor& aHTMLEditor, dom::Element& aLeftBlockElement,
       dom::Element& aRightBlockElement);
 
-  // PrepareToDeleteRange fixes up ws before {aStartNode,aStartOffset}
-  // and after {aEndNode,aEndOffset} in preperation for content
-  // in that range to be deleted.  Note that the nodes and offsets
-  // are adjusted in response to any dom changes we make while
+  // PrepareToDeleteRange fixes up ws before aStartPoint and after aEndPoint in
+  // preperation for content in that range to be deleted.  Note that the nodes
+  // and offsets are adjusted in response to any dom changes we make while
   // adjusting ws.
-  // example of fixup: trailingws before {aStartNode,aStartOffset}
-  //                   needs to be removed.
+  // example of fixup: trailingws before aStartPoint needs to be removed.
   MOZ_CAN_RUN_SCRIPT static nsresult PrepareToDeleteRange(
-      HTMLEditor& aHTMLEditor, nsCOMPtr<nsINode>* aStartNode,
-      int32_t* aStartOffset, nsCOMPtr<nsINode>* aEndNode, int32_t* aEndOffset);
+      HTMLEditor& aHTMLEditor, EditorDOMPoint* aStartPoint,
+      EditorDOMPoint* aEndPoint);
 
   // PrepareToDeleteNode fixes up ws before and after aContent in preparation
   // for aContent to be deleted.  Example of fixup: trailingws before
