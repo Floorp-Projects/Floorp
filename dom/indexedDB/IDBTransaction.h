@@ -275,7 +275,7 @@ class IDBTransaction final
   }
 
   MOZ_MUST_USE RefPtr<IDBObjectStore> CreateObjectStore(
-      const indexedDB::ObjectStoreSpec& aSpec);
+      indexedDB::ObjectStoreSpec& aSpec);
 
   void DeleteObjectStore(int64_t aObjectStoreId);
 

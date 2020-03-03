@@ -10,6 +10,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/IDBTransactionBinding.h"
 #include "mozilla/dom/StorageTypeBinding.h"
+#include "mozilla/dom/indexedDB/PBackgroundIDBSharedTypes.h"
 #include "mozilla/dom/quota/PersistenceType.h"
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/UniquePtr.h"
@@ -43,7 +44,6 @@ class StringOrStringSequence;
 
 namespace indexedDB {
 class BackgroundDatabaseChild;
-class DatabaseSpec;
 class PBackgroundIDBDatabaseFileChild;
 }  // namespace indexedDB
 
@@ -214,6 +214,14 @@ class IDBDatabase final : public DOMEventTargetHelper {
   }
 
   const DatabaseSpec* Spec() const { return mSpec.get(); }
+
+  template <typename Pred>
+  indexedDB::ObjectStoreSpec* LookupModifiableObjectStoreSpec(Pred&& aPred) {
+    auto& objectStores = mSpec->objectStores();
+    const auto foundIt =
+        std::find_if(objectStores.begin(), objectStores.end(), aPred);
+    return foundIt != objectStores.end() ? &*foundIt : nullptr;
+  }
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(IDBDatabase, DOMEventTargetHelper)
