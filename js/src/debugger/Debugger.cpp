@@ -2549,7 +2549,7 @@ bool DebugAPI::onSingleStep(JSContext* cx) {
         // it had better be suspended.
         MOZ_ASSERT(genObj.isSuspended());
 
-        if (genObj.callee().hasScript() &&
+        if (genObj.callee().hasBaseScript() &&
             genObj.callee().baseScript() == trappingScript &&
             !frameObj.getReservedSlot(DebuggerFrame::ONSTEP_HANDLER_SLOT)
                  .isUndefined()) {

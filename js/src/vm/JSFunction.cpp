@@ -595,13 +595,13 @@ XDRResult js::XDRInterpretedFunction(XDRState<mode>* xdr,
       xdrFlags |= IsAsync;
     }
 
-    if (fun->isInterpretedLazy()) {
+    if (fun->hasBytecode()) {
+      // Encode the script.
+      script = fun->nonLazyScript();
+    } else {
       // Encode a lazy script.
       xdrFlags |= IsLazy;
       lazy = fun->lazyScript();
-    } else {
-      // Encode the script.
-      script = fun->nonLazyScript();
     }
 
     if (fun->displayAtom()) {
@@ -1262,11 +1262,18 @@ bool JSFunction::isDerivedClassConstructor() const {
 bool JSFunction::getLength(JSContext* cx, HandleFunction fun,
                            uint16_t* length) {
   MOZ_ASSERT(!fun->isBoundFunction());
-  if (fun->isInterpretedLazy() && !getOrCreateScript(cx, fun)) {
+
+  if (fun->isNative()) {
+    *length = fun->nargs();
+    return true;
+  }
+
+  JSScript* script = getOrCreateScript(cx, fun);
+  if (!script) {
     return false;
   }
 
-  *length = fun->isNative() ? fun->nargs() : fun->nonLazyScript()->funLength();
+  *length = script->funLength();
   return true;
 }
 
@@ -1570,7 +1577,6 @@ static bool DelazifyCanonicalScriptedFunction(JSContext* cx,
 #if defined(JS_BUILD_BINAST)
     if (!frontend::CompileLazyBinASTFunction(
             cx, lazy, ss->binASTSource() + sourceStart, sourceLength)) {
-      MOZ_ASSERT(fun->isInterpretedLazy());
       MOZ_ASSERT(fun->baseScript() == lazy);
       MOZ_ASSERT(!lazy->hasScript());
       return false;
@@ -1595,7 +1601,6 @@ static bool DelazifyCanonicalScriptedFunction(JSContext* cx,
       if (!frontend::CompileLazyFunction(cx, lazy, units.get(), sourceLength)) {
         // The frontend shouldn't fail after linking the function and the
         // non-lazy script together.
-        MOZ_ASSERT(fun->isInterpretedLazy());
         MOZ_ASSERT(fun->baseScript() == lazy);
         MOZ_ASSERT(!lazy->hasScript());
         return false;
@@ -1613,7 +1618,6 @@ static bool DelazifyCanonicalScriptedFunction(JSContext* cx,
       if (!frontend::CompileLazyFunction(cx, lazy, units.get(), sourceLength)) {
         // The frontend shouldn't fail after linking the function and the
         // non-lazy script together.
-        MOZ_ASSERT(fun->isInterpretedLazy());
         MOZ_ASSERT(fun->baseScript() == lazy);
         MOZ_ASSERT(!lazy->hasScript());
         return false;
@@ -1654,7 +1658,7 @@ static bool DelazifyCanonicalScriptedFunction(JSContext* cx,
 /* static */
 bool JSFunction::delazifyLazilyInterpretedFunction(JSContext* cx,
                                                    HandleFunction fun) {
-  MOZ_ASSERT(fun->hasLazyScript());
+  MOZ_ASSERT(fun->hasBaseScript());
   MOZ_ASSERT(cx->compartment() == fun->compartment());
 
   // The function must be same-compartment but might be cross-realm. Make sure
@@ -1709,12 +1713,7 @@ bool JSFunction::delazifySelfHostedLazyFunction(JSContext* cx,
 }
 
 void JSFunction::maybeRelazify(JSRuntime* rt) {
-  // Try to relazify functions with a non-lazy script. Note: functions can be
-  // marked as interpreted despite having no script yet at some points when
-  // parsing.
-  if (isIncomplete()) {
-    return;
-  }
+  MOZ_ASSERT(!isIncomplete(), "Cannot relazify incomplete functions");
 
   // Don't relazify functions in compartments that are active.
   Realm* realm = this->realm();
@@ -1767,7 +1766,7 @@ void JSFunction::maybeRelazify(JSRuntime* rt) {
   LazyScript* lazy = script->maybeLazyScript();
   if (lazy) {
     u.scripted.s.script_ = lazy;
-    MOZ_ASSERT(hasLazyScript());
+    MOZ_ASSERT(hasBaseScript());
   } else {
     // Lazy self-hosted builtins point to a SelfHostedLazyScript that may be
     // called from JIT scripted calls.
@@ -2038,8 +2037,6 @@ bool JSFunction::isBuiltinFunctionConstructor() {
 }
 
 bool JSFunction::needsExtraBodyVarEnvironment() const {
-  MOZ_ASSERT(!isInterpretedLazy());
-
   if (isNative()) {
     return false;
   }
@@ -2052,8 +2049,6 @@ bool JSFunction::needsExtraBodyVarEnvironment() const {
 }
 
 bool JSFunction::needsNamedLambdaEnvironment() const {
-  MOZ_ASSERT(!isInterpretedLazy());
-
   if (!isNamedLambda()) {
     return false;
   }
@@ -2124,7 +2119,7 @@ JSFunction* js::NewFunctionWithProto(
   }
 
   // Disallow flags that require special union arms to be initialized.
-  MOZ_ASSERT(!flags.isInterpretedLazy());
+  MOZ_ASSERT(!flags.hasSelfHostedLazyScript());
   MOZ_ASSERT(!flags.isWasmWithJitEntry());
 
   /* Initialize all function members. */
@@ -2283,10 +2278,10 @@ JSFunction* js::CloneFunctionReuseScript(JSContext* cx, HandleFunction fun,
     return nullptr;
   }
 
-  if (fun->hasScript()) {
+  if (fun->hasBytecode()) {
     clone->initScript(fun->nonLazyScript());
     clone->initEnvironment(enclosingEnv);
-  } else if (fun->hasLazyScript()) {
+  } else if (fun->hasBaseScript()) {
     MOZ_ASSERT(fun->compartment() == clone->compartment());
     LazyScript* lazy = fun->lazyScript();
     clone->initLazyScript(lazy);

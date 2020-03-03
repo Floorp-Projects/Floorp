@@ -3909,18 +3909,24 @@ static bool RemoveReferencedNames(JSContext* cx, HandleScript script,
     if (!gcThing.is<JSObject>()) {
       continue;
     }
-
     JSObject* obj = &gcThing.as<JSObject>();
-    if (obj->is<JSFunction>() && obj->as<JSFunction>().isInterpreted()) {
-      fun = &obj->as<JSFunction>();
-      innerScript = JSFunction::getOrCreateScript(cx, fun);
-      if (!innerScript) {
-        return false;
-      }
 
-      if (!RemoveReferencedNames(cx, innerScript, remainingNames)) {
-        return false;
-      }
+    if (!obj->is<JSFunction>()) {
+      continue;
+    }
+    fun = &obj->as<JSFunction>();
+
+    if (!fun->isInterpreted()) {
+      continue;
+    }
+
+    innerScript = JSFunction::getOrCreateScript(cx, fun);
+    if (!innerScript) {
+      return false;
+    }
+
+    if (!RemoveReferencedNames(cx, innerScript, remainingNames)) {
+      return false;
     }
   }
 
@@ -3984,15 +3990,24 @@ static bool AnalyzeEntrainedVariablesInScript(JSContext* cx,
     if (!gcThing.is<JSObject>()) {
       continue;
     }
-
     JSObject* obj = &gcThing.as<JSObject>();
-    if (obj->is<JSFunction>() && obj->as<JSFunction>().isInterpreted()) {
-      fun = &obj->as<JSFunction>();
-      innerInnerScript = JSFunction::getOrCreateScript(cx, fun);
-      if (!innerInnerScript ||
-          !AnalyzeEntrainedVariablesInScript(cx, script, innerInnerScript)) {
-        return false;
-      }
+
+    if (!obj->is<JSFunction>()) {
+      continue;
+    }
+    fun = &obj->as<JSFunction>();
+
+    if (!fun->isInterpreted()) {
+      continue;
+    }
+
+    innerInnerScript = JSFunction::getOrCreateScript(cx, fun);
+    if (!innerInnerScript) {
+      return false;
+    }
+
+    if (!AnalyzeEntrainedVariablesInScript(cx, script, innerInnerScript)) {
+      return false;
     }
   }
 
@@ -4017,13 +4032,13 @@ bool js::AnalyzeEntrainedVariables(JSContext* cx, HandleScript script) {
     if (!gcThing.is<JSObject>()) {
       continue;
     }
-
     JSObject* obj = &gcThing.as<JSObject>();
+
     if (!obj->is<JSFunction>()) {
       continue;
     }
-
     fun = &obj->as<JSFunction>();
+
     if (!fun->isInterpreted()) {
       continue;
     }

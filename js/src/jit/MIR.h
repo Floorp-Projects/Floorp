@@ -6768,10 +6768,7 @@ struct LambdaFunctionInfo {
     if (!roots.append(fun_)) {
       return false;
     }
-    if (fun_->hasScript()) {
-      return roots.append(fun_->nonLazyScript());
-    }
-    return roots.append(fun_->lazyScript());
+    return roots.append(fun_->baseScript());
   }
 
  private:

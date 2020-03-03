@@ -197,7 +197,7 @@ bool Instance::callImport(JSContext* cx, uint32_t funcImportIndex,
   void* jitExitCode = codeBase(tier) + fi.jitExitCodeOffset();
 
   // Test if the function is JIT compiled.
-  if (!importFun->hasScript()) {
+  if (!importFun->hasBytecode()) {
     return true;
   }
 

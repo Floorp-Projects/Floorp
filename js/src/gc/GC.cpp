@@ -3761,7 +3761,13 @@ static void RelazifyFunctions(Zone* zone, AllocKind kind) {
   for (auto i = zone->cellIterUnsafe<JSObject>(kind, empty); !i.done();
        i.next()) {
     JSFunction* fun = &i->as<JSFunction>();
-    if (fun->hasScript()) {
+    // When iterating over the GC-heap, we may encounter function objects that
+    // are incomplete (missing a BaseScript when we expect one). We must check
+    // for this case before we can call JSFunction::hasBytecode().
+    if (fun->isIncomplete()) {
+      continue;
+    }
+    if (fun->hasBytecode()) {
       fun->maybeRelazify(rt);
     }
   }

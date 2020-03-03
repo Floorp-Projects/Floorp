@@ -2972,15 +2972,14 @@ static bool GenerateLcovInfo(JSContext* cx, JS::Realm* realm,
       if (!gcThing.is<JSObject>()) {
         continue;
       }
-
-      // Only continue on JSFunction objects.
       JSObject* obj = &gcThing.as<JSObject>();
+
       if (!obj->is<JSFunction>()) {
         continue;
       }
       fun = &obj->as<JSFunction>();
 
-      // Let's skip wasm for now.
+      // Ignore asm.js functions
       if (!fun->isInterpreted()) {
         continue;
       }

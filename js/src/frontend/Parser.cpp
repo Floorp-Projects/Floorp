@@ -2148,7 +2148,6 @@ JSFunction* AllocNewFunction(JSContext* cx,
 
   if (data.isSelfHosting) {
     fun->setIsSelfHostedBuiltin();
-    MOZ_ASSERT(fun->hasScript());
   }
 
   if (data.typeForScriptedFunction) {

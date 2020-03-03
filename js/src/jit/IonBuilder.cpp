@@ -431,7 +431,7 @@ IonBuilder::InliningDecision IonBuilder::canInlineTarget(JSFunction* target,
     }
   }
 
-  if (!target->hasScript()) {
+  if (!target->hasBytecode()) {
     return DontInline(nullptr, "Lazy script");
   }
 
@@ -4129,7 +4129,7 @@ class AutoAccumulateReturns {
 
 IonBuilder::InliningResult IonBuilder::inlineScriptedCall(CallInfo& callInfo,
                                                           JSFunction* target) {
-  MOZ_ASSERT(target->hasScript());
+  MOZ_ASSERT(target->hasBytecode());
   MOZ_ASSERT(IsIonInlinableOp(JSOp(*pc)));
 
   MBasicBlock::BackupPoint backup(current);
@@ -5381,7 +5381,7 @@ JSObject* IonBuilder::getSingletonPrototype(JSFunction* target) {
 }
 
 MDefinition* IonBuilder::createThisScriptedSingleton(JSFunction* target) {
-  if (!target->hasScript()) {
+  if (!target->hasBytecode()) {
     return nullptr;
   }
 
@@ -5441,7 +5441,7 @@ MDefinition* IonBuilder::createThisScriptedBaseline(MDefinition* callee) {
   // Try to inline |this| creation based on Baseline feedback.
 
   JSFunction* target = inspector->getSingleCallee(pc);
-  if (!target || !target->hasScript()) {
+  if (!target || !target->hasBytecode()) {
     return nullptr;
   }
 
@@ -6194,7 +6194,7 @@ bool IonBuilder::testNeedsArgumentCheck(JSFunction* target,
   // callee. Since typeset accumulates and can't decrease that means we don't
   // need to check the arguments anymore.
 
-  if (!target->hasScript()) {
+  if (!target->hasBytecode()) {
     return true;
   }
 

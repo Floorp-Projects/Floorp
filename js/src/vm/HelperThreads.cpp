@@ -1816,13 +1816,19 @@ UniquePtr<ParseTask> GlobalHelperThreadState::finishParseTaskCommon(
           continue;
         }
         JSObject* obj = &gcThing.as<JSObject>();
+
         if (!obj->is<JSFunction>()) {
           continue;
         }
         JSFunction* fun = &obj->as<JSFunction>();
-        if (!fun->hasScript()) {
+
+        // Ignore asm.js functions
+        if (!fun->isInterpreted()) {
           continue;
         }
+
+        MOZ_ASSERT(fun->hasBytecode(),
+                   "No lazy scripts exist when collecting coverage");
         if (!workList.append(fun->nonLazyScript())) {
           return nullptr;
         }

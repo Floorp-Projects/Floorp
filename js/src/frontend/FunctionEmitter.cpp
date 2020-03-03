@@ -123,7 +123,6 @@ bool FunctionEmitter::emitLazy() {
 bool FunctionEmitter::emitAgain() {
   MOZ_ASSERT(state_ == State::Start);
   MOZ_ASSERT(funbox_->wasEmitted);
-  MOZ_ASSERT_IF(fun_->hasScript(), fun_->nonLazyScript());
 
   //                [stack]
 
