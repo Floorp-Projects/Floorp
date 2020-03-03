@@ -1522,6 +1522,7 @@ def ubsan(options):
     default_checks = [
         'bool',
         'bounds',
+        'enum',
         'integer-divide-by-zero',
         'object-size',
         'pointer-overflow',
