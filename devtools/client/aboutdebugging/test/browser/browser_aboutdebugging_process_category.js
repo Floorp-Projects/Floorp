@@ -22,7 +22,11 @@ add_task(async function() {
     name: RUNTIME_APP_NAME,
   });
   usbRuntime.getMainProcess = () => {
-    return { actorID: 0 };
+    return {
+      getTarget: () => {
+        return { actorID: 0 };
+      },
+    };
   };
   mocks.emitUSBUpdate();
 

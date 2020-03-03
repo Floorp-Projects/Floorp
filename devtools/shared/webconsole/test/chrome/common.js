@@ -59,7 +59,8 @@ var _attachConsole = async function(listeners, attachToTab, attachToWorker) {
     // ParentProcessTarget / WorkerTarget / FrameTarget
     let target, worker;
     if (!attachToTab) {
-      target = await client.mainRoot.getMainProcess();
+      const targetDescriptor = await client.mainRoot.getMainProcess();
+      target = await targetDescriptor.getTarget();
     } else {
       target = await client.mainRoot.getTab();
       if (attachToWorker) {
