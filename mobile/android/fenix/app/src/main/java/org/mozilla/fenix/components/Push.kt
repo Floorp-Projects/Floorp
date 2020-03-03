@@ -3,6 +3,7 @@ package org.mozilla.fenix.components
 import android.content.Context
 import mozilla.components.feature.push.AutoPushFeature
 import mozilla.components.feature.push.PushConfig
+import mozilla.components.lib.crash.CrashReporter
 import mozilla.components.support.base.log.logger.Logger
 import org.mozilla.fenix.R
 
@@ -10,13 +11,14 @@ import org.mozilla.fenix.R
  * Component group for push services. These components use services that strongly depend on
  * push messaging (e.g. WebPush, SendTab).
  */
-class Push(context: Context) {
+class Push(context: Context, crashReporter: CrashReporter) {
     val feature by lazy {
         pushConfig?.let { config ->
             AutoPushFeature(
                 context = context,
                 service = pushService,
-                config = config
+                config = config,
+                crashReporter = crashReporter
             )
         }
     }

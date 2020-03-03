@@ -79,5 +79,5 @@ class Components(private val context: Context) {
     val clipboardHandler by lazy { ClipboardHandler(context) }
     val migrationStore by lazy { MigrationStore() }
     val performance by lazy { PerformanceComponent() }
-    val push by lazy { Push(context) }
+    val push by lazy { Push(context, analytics.crashReporter) }
 }
