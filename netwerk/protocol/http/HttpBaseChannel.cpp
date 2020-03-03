@@ -385,6 +385,7 @@ nsresult HttpBaseChannel::Init(nsIURI* aURI, uint32_t aCaps,
       !type.EqualsLiteral("unknown"))
     mProxyInfo = aProxyInfo;
 
+  mCurrentThread = GetCurrentThreadEventTarget();
   return rv;
 }
 
@@ -2983,7 +2984,8 @@ HttpBaseChannel::SetNewListener(nsIStreamListener* aListener,
 //-----------------------------------------------------------------------------
 
 void HttpBaseChannel::ReleaseListeners() {
-  MOZ_ASSERT(NS_IsMainThread(), "Should only be called on the main thread.");
+  MOZ_ASSERT(mCurrentThread->IsOnCurrentThread(),
+             "Should only be called on the current thread");
 
   mListener = nullptr;
   mCallbacks = nullptr;
