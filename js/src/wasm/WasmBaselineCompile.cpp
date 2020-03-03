@@ -11730,8 +11730,15 @@ bool BaseCompiler::emitStructSet() {
     }
     case ValType::Ref: {
       masm.computeEffectiveAddress(Address(rp, offs), valueAddr);
+
+      // Bug 1617908.  Ensure that if a TypedObject is not inline, then its
+      // underlying ArrayBuffer also is not inline, or the barrier logic fails.
+      static_assert(InlineTypedObject::MaxInlineBytes >=
+                    ArrayBufferObject::MaxInlineBytes);
+
       // emitBarrieredStore consumes valueAddr
-      if (!emitBarrieredStore(Some(rp), valueAddr, rr)) {
+      if (!emitBarrieredStore(structType.isInline_ ? Some(rp) : Nothing(),
+                              valueAddr, rr)) {
         return false;
       }
       freeRef(rr);
