@@ -433,16 +433,9 @@ class FunctionBox : public ObjectBox, public SharedContext {
   JSAtom* explicitName_;
   FunctionFlags flags_;
 
-  FunctionCreationData* functionCreationData() const;
+  MutableHandle<FunctionCreationData> functionCreationData() const;
 
   bool hasFunctionCreationIndex() const { return funcDataIndex_.isSome(); }
-
-  Handle<FunctionCreationData> functionCreationDataHandle() {
-    // This is safe because the FunctionCreationData are marked
-    // via CompilationInfo -> funcData.
-    FunctionCreationData* fcd = functionCreationData();
-    return Handle<FunctionCreationData>::fromMarkedLocation(fcd);
-  }
 
   FunctionBox(JSContext* cx, TraceListNode* traceListHead, JSFunction* fun,
               uint32_t toStringStart, CompilationInfo& compilationInfo,
@@ -453,7 +446,7 @@ class FunctionBox : public ObjectBox, public SharedContext {
               uint32_t toStringStart, CompilationInfo& compilationInfo,
               Directives directives, bool extraWarnings,
               GeneratorKind generatorKind, FunctionAsyncKind asyncKind,
-              size_t index);
+              size_t functionIndex);
 
 #ifdef DEBUG
   bool atomsAreKept();
@@ -574,7 +567,7 @@ class FunctionBox : public ObjectBox, public SharedContext {
     if (hasObject()) {
       return function()->isLambda();
     }
-    return functionCreationData()->flags.isLambda();
+    return functionCreationData().get().flags.isLambda();
   }
 
   bool hasRest() const { return hasRest_; }
@@ -622,14 +615,14 @@ class FunctionBox : public ObjectBox, public SharedContext {
     MOZ_ASSERT_IF(hasObject(), function()->allowSuperProperty());
     MOZ_ASSERT_IF(!hasObject(), functionCreationDataIndex().isSome());
     MOZ_ASSERT_IF(!hasObject(),
-                  functionCreationData()->flags.allowSuperProperty());
+                  functionCreationData().get().flags.allowSuperProperty());
     needsHomeObject_ = true;
   }
   void setDerivedClassConstructor() {
     MOZ_ASSERT_IF(hasObject(), function()->isClassConstructor());
     MOZ_ASSERT_IF(!hasObject(), functionCreationDataIndex().isSome());
     MOZ_ASSERT_IF(!hasObject(),
-                  functionCreationData()->flags.isClassConstructor());
+                  functionCreationData().get().flags.isClassConstructor());
     isDerivedClassConstructor_ = true;
   }
 
@@ -688,8 +681,8 @@ class FunctionBox : public ObjectBox, public SharedContext {
       function()->baseScript()->setFieldInitializers(fi);
       return;
     }
-    MOZ_ASSERT(functionCreationData()->lazyScriptData);
-    functionCreationData()->lazyScriptData->fieldInitializers.emplace(fi);
+    MOZ_ASSERT(functionCreationData().get().lazyScriptData);
+    functionCreationData().get().lazyScriptData->fieldInitializers.emplace(fi);
   }
 
   bool setTypeForScriptedFunction(JSContext* cx, bool singleton) {
@@ -697,7 +690,7 @@ class FunctionBox : public ObjectBox, public SharedContext {
       RootedFunction fun(cx, function());
       return JSFunction::setTypeForScriptedFunction(cx, fun, singleton);
     }
-    functionCreationData()->typeForScriptedFunction.emplace(singleton);
+    functionCreationData().get().typeForScriptedFunction.emplace(singleton);
     return true;
   }
 
@@ -708,21 +701,21 @@ class FunctionBox : public ObjectBox, public SharedContext {
       function()->setInferredName(atom);
       return;
     }
-    functionCreationData()->setInferredName(atom);
+    functionCreationData().get().setInferredName(atom);
   }
 
   JSAtom* inferredName() const {
     if (hasObject()) {
       return function()->inferredName();
     }
-    return functionCreationData()->inferredName();
+    return functionCreationData().get().inferredName();
   }
 
   bool hasInferredName() const {
     if (hasObject()) {
       return function()->hasInferredName();
     }
-    return functionCreationData()->hasInferredName();
+    return functionCreationData().get().hasInferredName();
   }
 
   void trace(JSTracer* trc) override;
