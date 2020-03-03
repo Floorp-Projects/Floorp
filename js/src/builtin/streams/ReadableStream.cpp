@@ -368,10 +368,10 @@ static bool ReadableStream_pipeTo(JSContext* cx, unsigned argc, Value* vp) {
   // second argument destructuring pattern.  But as |ToBoolean| is infallible
   // and has no observable side effects, we may as well do step 3 here too.
   bool preventClose, preventAbort, preventCancel;
-  Rooted<Value> signal(cx);
+  Rooted<Value> signalVal(cx);
   {
     // (P)(Re)use the |signal| root.
-    auto& v = signal;
+    auto& v = signalVal;
 
     if (!GetProperty(cx, options, cx->names().preventClose, &v)) {
       return false;
@@ -388,7 +388,7 @@ static bool ReadableStream_pipeTo(JSContext* cx, unsigned argc, Value* vp) {
     }
     preventCancel = JS::ToBoolean(v);
   }
-  if (!GetProperty(cx, options, cx->names().signal, &signal)) {
+  if (!GetProperty(cx, options, cx->names().signal, &signalVal)) {
     return false;
   }
 
@@ -416,7 +416,23 @@ static bool ReadableStream_pipeTo(JSContext* cx, unsigned argc, Value* vp) {
   // Step 4: If signal is not undefined, and signal is not an instance of the
   //         AbortSignal interface, return a promise rejected with a TypeError
   //         exception.
-  // XXX jwalden need some hooks for this, or something
+  Rooted<JSObject*> signal(cx, nullptr);
+  do {
+    if (signalVal.isUndefined()) {
+      break;
+    }
+
+    if (signalVal.isObject()) {
+      // XXX jwalden need some JSAPI hooks to detect AbortSignal instances, or
+      //             something
+
+      signal = &signalVal.toObject();
+    }
+
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_READABLESTREAM_PIPETO_BAD_SIGNAL);
+    return ReturnPromiseRejectedWithPendingError(cx, args);
+  } while (false);
 
   // Step 5: If ! IsReadableStreamLocked(this) is true, return a promise
   //         rejected with a TypeError exception.
