@@ -27,11 +27,11 @@ add_task(async function test_update_preferences_ui() {
   );
 
   await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
-    let updateRadioGroup = content.document.getElementById("updateRadioGroup");
+    let setting = content.document.getElementById("updateSettingsContainer");
     is(
-      updateRadioGroup.hidden,
+      setting.hidden,
       true,
-      "Update choices should be diabled when app update is locked by policy"
+      "Update choices should be disabled when app update is locked by policy"
     );
   });
 
