@@ -272,7 +272,6 @@ function requestProcesses() {
 
     try {
       const mainProcessFront = await clientWrapper.getMainProcess();
-
       dispatch({
         type: REQUEST_PROCESSES_SUCCESS,
         mainProcess: {

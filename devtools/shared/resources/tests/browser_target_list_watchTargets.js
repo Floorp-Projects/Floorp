@@ -174,7 +174,7 @@ async function testWatchTargets(mainRoot) {
 async function testContentProcessTarget(mainRoot) {
   info("Test TargetList watchTargets with a content process target");
 
-  const { processes } = await mainRoot.listProcesses();
+  const processes = await mainRoot.listProcesses();
   const target = await processes[1].getTarget();
   const targetList = new TargetList(mainRoot, target);
 

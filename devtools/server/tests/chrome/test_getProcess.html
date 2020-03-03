@@ -61,8 +61,8 @@ function runTests() {
       ok(true, "Received processListChanged event");
       getProcess();
     });
-    client.mainRoot.listProcesses().then(response => {
-      processCount = response.processes.length;
+    client.mainRoot.listProcesses().then(processes => {
+      processCount = processes.length;
       // Create a remote iframe to spawn a new process
       createRemoteIframe();
     });
@@ -77,13 +77,13 @@ function runTests() {
   }
 
   function getProcess() {
-    client.mainRoot.listProcesses().then(response => {
-      ok(response.processes.length >= 2, "Got at least the parent process and one child");
-      is(response.processes.length, processCount + 1,
+    client.mainRoot.listProcesses().then(processes => {
+      ok(processes.length >= 2, "Got at least the parent process and one child");
+      is(processes.length, processCount + 1,
          "Got one additional process on the second call to listProcesses");
 
       // Connect to the first content processe available
-      const content = response.processes.filter(p => (!p.isParent))[0];
+      const content =processes.filter(p => (!p.isParent))[0];
 
       client.mainRoot.getProcess(content.id).then(async front => {
         const targetForm = front.targetForm;
