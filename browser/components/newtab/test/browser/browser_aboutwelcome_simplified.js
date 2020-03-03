@@ -69,11 +69,12 @@ add_task(async function test_Separate_About_Welcome_branches() {
       "h1[data-l10n-id=onboarding-welcome-header]",
       "button[data-l10n-id=onboarding-data-sync-button2]",
       "button[data-l10n-id=onboarding-firefox-monitor-button]",
-      "button[data-l10n-id=onboarding-import-browser-settings-button",
+      "button[data-l10n-id=onboarding-browse-privately-button",
     ],
     // Unexpected selectors:
     [
       ".trailhead.welcomeCohort",
+      ".welcome-subtitle",
       "h3[data-l10n-id=onboarding-welcome-form-header]",
       "p[data-l10n-id=onboarding-benefit-sync-text]",
       "p[data-l10n-id=onboarding-benefit-monitor-text]",
@@ -81,3 +82,37 @@ add_task(async function test_Separate_About_Welcome_branches() {
     ]
   );
 });
+
+/**
+ * Test click of StartBrowsing button on simplified about:welcome
+ * page changes focus to location bar
+ */
+test_newtab(
+  {
+    async before({ pushPrefs }) {
+      await pushPrefs(["browser.aboutwelcome.enabled", true]);
+    },
+    test: async function test_startBrowsing() {
+      await ContentTaskUtils.waitForCondition(
+        () =>
+          content.document.querySelector(
+            "button[data-l10n-id=onboarding-start-browsing-button-label]"
+          ),
+        "Wait for start browsing button to load"
+      );
+
+      const startBrowsingButton = content.document.querySelector(
+        "button[data-l10n-id=onboarding-start-browsing-button-label]"
+      );
+
+      startBrowsingButton.click();
+    },
+    after() {
+      ok(
+        gURLBar.focused,
+        "Start Browsing click should move focus to awesome bar"
+      );
+    },
+  },
+  "about:welcome"
+);

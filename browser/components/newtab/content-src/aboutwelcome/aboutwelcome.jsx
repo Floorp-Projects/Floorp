@@ -6,13 +6,17 @@ import React from "react";
 import ReactDOM from "react-dom";
 import { HeroText } from "./components/HeroText";
 import { FxCards } from "./components/FxCards";
-import { DEFAULT_WELCOME_CONTENT } from "../lib/aboutwelcome-utils";
+import {
+  AboutWelcomeUtils,
+  DEFAULT_WELCOME_CONTENT,
+} from "../lib/aboutwelcome-utils";
 
 class AboutWelcome extends React.PureComponent {
   constructor(props) {
     super(props);
     this.state = { metricsFlowUri: null };
     this.fetchFxAFlowUri = this.fetchFxAFlowUri.bind(this);
+    this.handleStartBtnClick = this.handleStartBtnClick.bind(this);
   }
 
   async fetchFxAFlowUri() {
@@ -21,6 +25,10 @@ class AboutWelcome extends React.PureComponent {
 
   componentDidMount() {
     this.fetchFxAFlowUri();
+  }
+
+  handleStartBtnClick() {
+    AboutWelcomeUtils.handleUserAction(this.props.startButton.action);
   }
 
   render() {
@@ -34,6 +42,13 @@ class AboutWelcome extends React.PureComponent {
             metricsFlowUri={this.state.metricsFlowUri}
             sendTelemetry={window.AWSendEventTelemetry}
           />
+          {props.startButton && props.startButton.string_id && (
+            <button
+              className="start-button"
+              data-l10n-id={props.startButton.string_id}
+              onClick={this.handleStartBtnClick}
+            />
+          )}
         </div>
       </div>
     );

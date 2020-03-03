@@ -132,9 +132,11 @@ function addContentHelpers() {
  *     test   {Function} The test to run in the about:newtab content task taking
  *                       an arg from "before" and returns a result to "after"
  *     after  {Function} Optional. Runs after and with the result of "test"
+ * @param browserURL {optional String}
+ *   {String} This parameter is used to explicitly specify URL opened in new tab
  */
 // eslint-disable-next-line no-unused-vars
-function test_newtab(testInfo) {
+function test_newtab(testInfo, browserURL = "about:newtab") {
   // Extract any test parts or default to just the single content task
   let { before, test: contentTask, after } = testInfo;
   if (!before) {
@@ -165,7 +167,7 @@ function test_newtab(testInfo) {
     // Open about:newtab without using the default load listener
     let tab = await BrowserTestUtils.openNewForegroundTab(
       gBrowser,
-      "about:newtab",
+      browserURL,
       false
     );
 

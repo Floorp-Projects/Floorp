@@ -2,7 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 body {
-  --grey-subtitle: $grey-60; }
+  --grey-subtitle: #4A4A4F;
+  --welcome-button-box-shadow-color: rgba(10, 132, 255, 0.3);
+  --welcome-button-box-shadow-inset-color: #0A84FF;
+  --welcome-button-text-color: #FFF;
+  --welcome-button-background-hover-color: #003EAA;
+  --welcome-button-background-active-color: #002275; }
 
 .welcome-container {
   background: var(--trailhead-cards-background-color); }
@@ -20,3 +25,23 @@ body {
   margin: 6px 0 0;
   color: var(--grey-subtitle);
   line-height: 42px; }
+
+.start-button {
+  border: 0;
+  font-size: 15px;
+  font-family: inherit;
+  margin-inline-start: 12px;
+  margin: 30px 0 25px;
+  padding: 7px 12px;
+  white-space: nowrap;
+  background-color: var(--newtab-button-primary-color);
+  color: var(--welcome-button-text-color);
+  cursor: pointer;
+  border-radius: 4px; }
+  .start-button:focus {
+    background: var(--welcome-button-background-hover-color);
+    box-shadow: 0 0 0 1px var(--welcome-button-box-shadow-inset-color) inset, 0 0 0 1px var(--welcome-button-box-shadow-inset-color), 0 0 0 4px var(--welcome-button-box-shadow-color); }
+  .start-button:hover {
+    background: var(--welcome-button-background-hover-color); }
+  .start-button:active {
+    background: var(--welcome-button-background-active-color); }
