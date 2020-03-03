@@ -598,6 +598,14 @@ const ExpectComparisonTo = {
         actualStr = compositorStr === "" ? computedStr : compositorStr;
         break;
 
+      case RunningOn.TodoCompositor:
+        todo(
+          compositorStr !== "",
+          desc + ": should be animating on compositor"
+        );
+        actualStr = compositorStr !== "" ? computedStr : compositorStr;
+        break;
+
       default:
         if (compositorStr !== "") {
           ok(false, desc + ": should NOT be animating on compositor");

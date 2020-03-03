@@ -755,6 +755,22 @@ pub extern "C" fn Servo_AnimationValue_GetColor(
 }
 
 #[no_mangle]
+pub extern "C" fn Servo_AnimationValue_IsCurrentColor(
+    value: &RawServoAnimationValue,
+) -> bool {
+    let value = AnimationValue::as_arc(&value);
+    match **value {
+        AnimationValue::BackgroundColor(color) => {
+            color.is_currentcolor()
+        },
+        _ => {
+            debug_assert!(false, "Other color properties are not supported yet");
+            false
+        },
+    }
+}
+
+#[no_mangle]
 pub extern "C" fn Servo_AnimationValue_GetOpacity(value: &RawServoAnimationValue) -> f32 {
     let value = AnimationValue::as_arc(&value);
     if let AnimationValue::Opacity(opacity) = **value {

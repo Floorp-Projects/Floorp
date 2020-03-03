@@ -2425,12 +2425,12 @@ addAsyncAnimTest(async function() {
   gDiv.style.backgroundColor = "rgb(0, 255, 0)";
   await waitForPaintsFlushed();
 
-  omta_is("background-color", "rgb(255, 0, 0)", RunningOn.Compositor,
+  omta_todo_is("background-color", "rgb(255, 0, 0)", RunningOn.ToDoCompositor,
           "background-color transition starting with current-color runs on " +
           "compositor thread");
 
   advance_clock(5000);
-  omta_is("background-color", "rgb(128, 128, 0)", RunningOn.Compositor,
+  omta_todo_is("background-color", "rgb(128, 128, 0)", RunningOn.ToDoCompositor,
           "background-color on compositor at 5s");
 
   done_div();
@@ -2450,20 +2450,20 @@ addAsyncAnimTest(async function() {
 
   await waitForPaintsFlushed();
 
-  omta_is("background-color", "rgb(255, 0, 0)", RunningOn.Compositor,
+  omta_todo_is("background-color", "rgb(255, 0, 0)", RunningOn.ToDoCompositor,
           "background-color animation starting with current-color runs on " +
           "compositor thread");
 
   advance_clock(500);
 
-  omta_is("background-color", "rgb(128, 128, 0)", RunningOn.Compositor,
+  omta_todo_is("background-color", "rgb(128, 128, 0)", RunningOn.ToDoCompositor,
           "background-color on compositor at 5s");
 
   // Change the parent's color in the middle of the animation.
   parent.style.color = "rgb(0, 0, 255)";
   await waitForPaintsFlushed();
 
-  omta_is("background-color", "rgb(0, 128, 128)", RunningOn.Compositor,
+  omta_todo_is("background-color", "rgb(0, 128, 128)", RunningOn.ToDoCompositor,
           "background-color on compositor is reflected by the parent's " +
           "color change");
 
@@ -2491,13 +2491,13 @@ addAsyncAnimTest(async function() {
   gDiv.animate({ backgroundColor: [ "currentColor", "rgb(0, 255, 0)" ] }, 1000);
   await waitForPaintsFlushed();
 
-  omta_is("background-color", "rgb(255, 0, 0)", RunningOn.Compositor,
+  omta_todo_is("background-color", "rgb(255, 0, 0)", RunningOn.ToDoCompositor,
           "background-color animation starting with current-color runs on " +
           "compositor thread");
 
   advance_clock(500);
 
-  omta_is("background-color", "rgb(128, 128, 0)", RunningOn.Compositor,
+  omta_todo_is("background-color", "rgb(128, 128, 0)", RunningOn.ToDoCompositor,
           "background-color on compositor at 5s");
 
   gDiv.setAttribute("href", window.top.location.href);
@@ -2507,7 +2507,7 @@ addAsyncAnimTest(async function() {
   // `omta_is` checks that the result on the compositor equals to the value by
   // getComputedValue() but getComputedValue lies for visited link values so
   // we use getOMTAStyle directly instead.
-  is(SpecialPowers.DOMWindowUtils.getOMTAStyle(gDiv, "background-color"),
+  todo_is(SpecialPowers.DOMWindowUtils.getOMTAStyle(gDiv, "background-color"),
      "rgb(0, 128, 128)",
      "background-color on <a> element after the link is visited");
 
