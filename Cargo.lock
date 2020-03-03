@@ -2121,10 +2121,12 @@ dependencies = [
 
 [[package]]
 name = "libudev-sys"
-version = "0.1.3"
+version = "0.1.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3c8469b4a23b962c1396b9b451dda50ef5b283e8dd309d69033475fa9b334324"
 dependencies = [
- "lazy_static",
  "libc",
+ "pkg-config",
 ]
 
 [[package]]
