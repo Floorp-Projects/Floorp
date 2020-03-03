@@ -783,7 +783,12 @@ bool WarpBuilder::buildTestOp(BytecodeLocation loc) {
     std::swap(target1, target2);
   }
 
-  MDefinition* value = current->pop();
+  // JSOp::And and JSOp::Or inspect the top stack value but don't pop it.
+  // Also note that JSOp::Case must pop a second value on the true-branch (the
+  // input to the switch-statement). This conditional pop happens in
+  // build_JumpTarget.
+  bool mustKeepCondition = (op == JSOp::And || op == JSOp::Or);
+  MDefinition* value = mustKeepCondition ? current->peek(-1) : current->pop();
 
   // If this op always branches to the same location we treat this as a
   // JSOp::Goto.
@@ -840,6 +845,43 @@ bool WarpBuilder::buildTestBackedge(BytecodeLocation loc) {
 bool WarpBuilder::build_IfEq(BytecodeLocation loc) { return buildTestOp(loc); }
 
 bool WarpBuilder::build_IfNe(BytecodeLocation loc) { return buildTestOp(loc); }
+
+bool WarpBuilder::build_And(BytecodeLocation loc) { return buildTestOp(loc); }
+
+bool WarpBuilder::build_Or(BytecodeLocation loc) { return buildTestOp(loc); }
+
+bool WarpBuilder::build_Case(BytecodeLocation loc) { return buildTestOp(loc); }
+
+bool WarpBuilder::build_Default(BytecodeLocation loc) {
+  current->pop();
+  return buildForwardGoto(loc.getJumpTarget());
+}
+
+bool WarpBuilder::build_Coalesce(BytecodeLocation loc) {
+  BytecodeLocation target1 = loc.next();
+  BytecodeLocation target2 = loc.getJumpTarget();
+  MOZ_ASSERT(target2 > target1);
+
+  MDefinition* value = current->peek(-1);
+
+  MInstruction* isNullOrUndefined = MIsNullOrUndefined::New(alloc(), value);
+  current->add(isNullOrUndefined);
+
+  current->end(MTest::New(alloc(), isNullOrUndefined, /* ifTrue = */ nullptr,
+                          /* ifFalse = */ nullptr));
+
+  if (!addPendingEdge(PendingEdge::NewTestTrue(current, JSOp::Coalesce),
+                      target1)) {
+    return false;
+  }
+  if (!addPendingEdge(PendingEdge::NewTestFalse(current, JSOp::Coalesce),
+                      target2)) {
+    return false;
+  }
+
+  setTerminatedBlock();
+  return true;
+}
 
 bool WarpBuilder::buildBackedge() {
   MOZ_ASSERT(loopDepth_ > 0);
