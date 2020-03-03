@@ -3942,13 +3942,15 @@ nsDisplayBackgroundImage::nsDisplayBackgroundImage(
       mAssociatedImage(false) {
   MOZ_COUNT_CTOR(nsDisplayBackgroundImage);
 
-  if (mBackgroundStyle && mBackgroundStyle != aFrame->Style()) {
-    MOZ_ASSERT(aFrame->IsCanvasFrame() || aFrame->IsTableCellFrame());
-    auto& layer = mBackgroundStyle->StyleBackground()->mImage.mLayers[mLayer];
-    if (aFrame->AssociateImage(layer.mImage)) {
-      mAssociatedImage = true;
-    }
-  }
+  // If we have the same background style as our frame we know we're not going
+  // to need to associate our image to the frame. nsFrame::DidSetComputedStyle
+  // would've done that for us already.
+  //
+  // We need to check this here because the style frame pointer of the frame may
+  // change (and doesn't have to invalidate the display item unless background
+  // styles change).
+  mTriedToAssociateImage =
+      !(mBackgroundStyle && mBackgroundStyle != mFrame->Style());
 
   mBounds = GetBoundsInternal(aInitData.builder, aFrameForBounds);
   if (mShouldFixToViewport) {
@@ -4534,6 +4536,8 @@ bool nsDisplayBackgroundImage::CreateWebRenderCommands(
     mozilla::wr::IpcResourceUpdateQueue& aResources,
     const StackingContextHelper& aSc, RenderRootStateManager* aManager,
     nsDisplayListBuilder* aDisplayListBuilder) {
+  AssociateImageIfNeeded();
+
   if (!CanBuildWebRenderDisplayItems(aManager->LayerManager(),
                                      aDisplayListBuilder)) {
     return false;
@@ -4679,6 +4683,17 @@ bool nsDisplayBackgroundImage::RenderingMightDependOnPositioningAreaSizeChange()
   return false;
 }
 
+void nsDisplayBackgroundImage::AssociateImageIfNeeded() {
+  if (mTriedToAssociateImage) {
+    return;
+  }
+  mTriedToAssociateImage = true;
+  auto& layer = mBackgroundStyle->StyleBackground()->mImage.mLayers[mLayer];
+  if (mFrame->AssociateImage(layer.mImage)) {
+    mAssociatedImage = true;
+  }
+}
+
 void nsDisplayBackgroundImage::Paint(nsDisplayListBuilder* aBuilder,
                                      gfxContext* aCtx) {
   PaintInternal(aBuilder, aCtx, GetPaintRect(), &mBounds);
@@ -4688,6 +4703,7 @@ void nsDisplayBackgroundImage::PaintInternal(nsDisplayListBuilder* aBuilder,
                                              gfxContext* aCtx,
                                              const nsRect& aBounds,
                                              nsRect* aClipRect) {
+  AssociateImageIfNeeded();
   gfxContext* ctx = aCtx;
   StyleGeometryBox clip =
       mBackgroundStyle->StyleBackground()->mImage.mLayers[mLayer].mClip;
