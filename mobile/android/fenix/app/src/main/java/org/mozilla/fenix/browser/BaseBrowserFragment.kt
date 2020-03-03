@@ -124,6 +124,9 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
     private var browserInitialized: Boolean = false
     private var initUIJob: Job? = null
 
+    // We need this so we don't accidentally remove all external sessions on back press
+    private var sessionRemoved = false
+
     @CallSuper
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -417,7 +420,9 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
                             engineView.setDynamicToolbarMaxHeight(toolbarHeight)
                         }
                     }
-                    if (!FeatureFlags.dynamicBottomToolbar) { updateLayoutMargins(inFullScreen) }
+                    if (!FeatureFlags.dynamicBottomToolbar) {
+                        updateLayoutMargins(inFullScreen)
+                    }
                 },
                 owner = this,
                 view = view
@@ -553,10 +558,11 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
 
     @CallSuper
     override fun onBackPressed(): Boolean {
-        return findInPageIntegration.onBackPressed() ||
-            fullScreenFeature.onBackPressed() ||
-            sessionFeature.onBackPressed() ||
-            removeSessionIfNeeded()
+        return sessionRemoved ||
+                findInPageIntegration.onBackPressed() ||
+                fullScreenFeature.onBackPressed() ||
+                sessionFeature.onBackPressed() ||
+                removeSessionIfNeeded()
     }
 
     /**
@@ -612,6 +618,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
             val sessionManager = requireComponents.core.sessionManager
             if (session.source == Session.Source.ACTION_VIEW) {
                 sessionManager.remove(session)
+                sessionRemoved = true
                 activity?.onBackPressed()
             } else {
                 val isLastSession =
