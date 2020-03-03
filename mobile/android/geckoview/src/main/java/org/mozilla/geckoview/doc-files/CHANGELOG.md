@@ -28,10 +28,13 @@ exclude: true
   [`GeckoSession.PermissionDelegate#PERMISSION_AUTOPLAY_INAUDIBLE`][73.13] to
   control autoplay.
   ([bug 1614894]({{bugzilla}}1614894))
+- Added [`GeckoSession.reload(int flags)`][75.4] That takes a [load flag][75.5] parameter.
 
 [75.1]: {{javadoc_uri}}/GeckoRuntimeSettings.Builder.html#useMultiprocess-boolean-
 [75.2]: {{javadoc_uri}}/WebExtensionController.DebuggerDelegate.html#onExtensionListUpdated--
 [75.3]: {{javadoc_uri}}/GeckoRuntimeSettings.Builder.html#autoplayDefault-boolean-
+[75.4]: {{javadoc_uri}}/GeckoSession.html#reload-int-
+[75.5]: {{javadoc_uri}}/GeckoSession.html#LOAD_FLAGS_NONE
 
 ## v74
 - Added [`WebExtensionController.enable`][74.1] and [`disable`][74.2] to
@@ -595,4 +598,4 @@ exclude: true
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: 898e8783e858824b7af7e4e9763bf5aaa54c0b0c
+[api-version]: 9377e7566adf997b0bb5b50bdc6ded12a0d01ee4

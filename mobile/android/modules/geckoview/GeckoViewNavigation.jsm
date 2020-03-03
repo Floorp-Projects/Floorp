@@ -38,6 +38,36 @@ const createReferrerInfo = aReferrer => {
   return new ReferrerInfo(Ci.nsIReferrerInfo.EMPTY, true, referrerUri);
 };
 
+function convertFlags(aFlags) {
+  if (!aFlags) {
+    return Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
+  }
+  let navFlags = Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
+  // These need to match the values in GeckoSession.LOAD_FLAGS_*
+  if (aFlags & (1 << 0)) {
+    navFlags |= Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_CACHE;
+  }
+  if (aFlags & (1 << 1)) {
+    navFlags |= Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_PROXY;
+  }
+  if (aFlags & (1 << 2)) {
+    navFlags |= Ci.nsIWebNavigation.LOAD_FLAGS_FROM_EXTERNAL;
+  }
+  if (aFlags & (1 << 3)) {
+    navFlags |= Ci.nsIWebNavigation.LOAD_FLAGS_ALLOW_POPUPS;
+  }
+  if (aFlags & (1 << 4)) {
+    navFlags |= Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_CLASSIFIER;
+  }
+  if (aFlags & (1 << 5)) {
+    navFlags |= Ci.nsIWebNavigation.LOAD_FLAGS_FORCE_ALLOW_DATA_URI;
+  }
+  if (aFlags & (1 << 6)) {
+    navFlags |= Ci.nsIWebNavigation.LOAD_FLAGS_REPLACE_HISTORY;
+  }
+  return navFlags;
+}
+
 // Handles navigation requests between Gecko and a GeckoView.
 // Handles GeckoView:GoBack and :GoForward requests dispatched by
 // GeckoView.goBack and .goForward.
@@ -103,36 +133,7 @@ class GeckoViewNavigation extends GeckoViewModule {
       case "GeckoView:LoadUri":
         const { uri, referrerUri, referrerSessionId, flags, headers } = aData;
 
-        let navFlags = 0;
-
-        // These need to match the values in GeckoSession.LOAD_FLAGS_*
-        if (flags & (1 << 0)) {
-          navFlags |= Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_CACHE;
-        }
-
-        if (flags & (1 << 1)) {
-          navFlags |= Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_PROXY;
-        }
-
-        if (flags & (1 << 2)) {
-          navFlags |= Ci.nsIWebNavigation.LOAD_FLAGS_FROM_EXTERNAL;
-        }
-
-        if (flags & (1 << 3)) {
-          navFlags |= Ci.nsIWebNavigation.LOAD_FLAGS_ALLOW_POPUPS;
-        }
-
-        if (flags & (1 << 4)) {
-          navFlags |= Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_CLASSIFIER;
-        }
-
-        if (flags & (1 << 5)) {
-          navFlags |= Ci.nsIWebNavigation.LOAD_FLAGS_FORCE_ALLOW_DATA_URI;
-        }
-
-        if (flags & (1 << 6)) {
-          navFlags |= Ci.nsIWebNavigation.LOAD_FLAGS_REPLACE_HISTORY;
-        }
+        const navFlags = convertFlags(flags);
 
         let triggeringPrincipal, referrerInfo, csp;
         let parsedUri;
@@ -236,7 +237,7 @@ class GeckoViewNavigation extends GeckoViewModule {
         // do anything to differentiate reloads (i.e normal vs skip caches)
         // So whenever we add more reload methods, please make sure the
         // telemetry probe is adjusted
-        this.browser.reload();
+        this.browser.reload(convertFlags(aData.flags));
         break;
       case "GeckoView:Stop":
         this.browser.stop();
