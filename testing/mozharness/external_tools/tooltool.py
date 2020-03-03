@@ -23,6 +23,7 @@
 # 'manifest.tt'
 
 from __future__ import print_function
+from __future__ import absolute_import
 
 import base64
 import calendar
@@ -60,9 +61,7 @@ HAWK_VER = 1
 PY3 = sys.version_info[0] == 3
 
 if PY3:
-    open_attrs = dict(mode='w', encoding='utf-8')
     six_binary_type = bytes
-    six_text_type = str
     unicode = str  # Silence `pyflakes` from reporting `undefined name 'unicode'` in Python 3.
     import urllib.request as urllib2
     from http.client import HTTPSConnection, HTTPConnection
@@ -70,9 +69,7 @@ if PY3:
     from urllib.request import Request
     from urllib.error import HTTPError, URLError
 else:
-    open_attrs = dict(mode='wb')
     six_binary_type = str
-    six_text_type = unicode
     import urllib2
     from httplib import HTTPSConnection, HTTPConnection
     from urllib2 import Request, HTTPError, URLError
@@ -88,20 +85,8 @@ def request_has_data(req):
     return req.has_data()
 
 
-def to_binary(val):
-    if isinstance(val, six_text_type):
-        return val.encode('utf-8')
-    return val
-
-
-def to_text(val):
-    if isinstance(val, six_binary_type):
-        return val.decode('utf-8')
-    return val
-
-
 def get_hexdigest(val):
-    return hashlib.sha512(to_binary(val)).hexdigest()
+    return hashlib.sha512(val).hexdigest()
 
 
 class FileRecordJSONEncoderException(Exception):
@@ -198,7 +183,8 @@ def calculate_payload_hash(algorithm, payload, content_type):  # pragma: no cove
     ]
 
     p_hash = hashlib.new(algorithm)
-    p_hash.update(''.join(parts))
+    for p in parts:
+        p_hash.update(p)
 
     log.debug('calculating payload hash from:\n{parts}'.format(parts=pprint.pformat(parts)))
 
@@ -292,9 +278,13 @@ def make_taskcluster_header(credentials, req):
 
     content_hash = None
     if request_has_data(req):
+        if PY3:
+            data = req.data
+        else:
+            data = req.get_data()
         content_hash = calculate_payload_hash(  # pragma: no cover
             algorithm,
-            req.get_data(),
+            data,
             # maybe we should detect this from req.headers but we anyway expect json
             content_type='application/json',
         )
@@ -695,8 +685,12 @@ def add_files(manifest_file, algorithm, filenames, version, visibility, unpack):
     for old_fr in old_manifest.file_records:
         if old_fr.filename not in new_filenames:
             new_manifest.file_records.append(old_fr)
-    with open(manifest_file, **open_attrs) as output:
-        new_manifest.dump(output, fmt='json')
+    if PY3:
+        with open(manifest_file, mode="w") as output:
+            new_manifest.dump(output, fmt='json')
+    else:
+        with open(manifest_file, mode="wb") as output:
+            new_manifest.dump(output, fmt='json')
     return all_files_added
 
 
@@ -730,15 +724,13 @@ def fetch_file(base_urls, file_record, grabchunk=1024 * 4, auth_file=None, regio
             _authorize(req, auth_file)
             f = urllib2.urlopen(req)
             log.debug("opened %s for reading" % url)
-            with open(temp_path, **open_attrs) as out:
+            with open(temp_path, mode="wb") as out:
                 k = True
                 size = 0
                 while k:
                     # TODO: print statistics as file transfers happen both for info and to stop
                     # buildbot timeouts
                     indata = f.read(grabchunk)
-                    if PY3:
-                        indata = to_text(indata)
                     out.write(indata)
                     size += len(indata)
                     if len(indata) == 0:
@@ -1034,10 +1026,9 @@ def _send_batch(base_url, auth_file, batch, region):
     url = urljoin(base_url, 'upload')
     if region is not None:
         url += "?region=" + region
+    data = json.dumps(batch)
     if PY3:
-        data = to_binary(json.dumps(batch))
-    else:
-        data = json.dumps(batch)
+        data = data.encode("utf-8")
     req = Request(url, data, {'Content-Type': 'application/json'})
     _authorize(req, auth_file)
     try:
@@ -1180,6 +1171,40 @@ def upload(manifest, message, base_urls, auth_file, region):
     return success
 
 
+def send_operation_on_file(data, base_urls, digest, auth_file):
+    url = base_urls[0]
+    url = urljoin(url, 'file/sha512/' + digest)
+
+    data = json.dumps(data)
+
+    req = Request(url, data, {'Content-Type': 'application/json'})
+    req.get_method = lambda: 'PATCH'
+
+    _authorize(req, auth_file)
+
+    try:
+        urllib2.urlopen(req)
+    except (URLError, HTTPError) as e:
+        _log_api_error(e)
+        return False
+    return True
+
+
+def change_visibility(base_urls, digest, visibility, auth_file):
+    data = [{
+        "op": "set_visibility",
+        "visibility": visibility,
+    }]
+    return send_operation_on_file(data, base_urls, digest, visibility, auth_file)
+
+
+def delete_instances(base_urls, digest, auth_file):
+    data = [{
+        "op": "delete_instances",
+    }]
+    return send_operation_on_file(data, base_urls, digest, auth_file)
+
+
 def process_command(options, args):
     """ I know how to take a list of program arguments and
     start doing the right thing with them"""
@@ -1221,6 +1246,28 @@ def process_command(options, args):
             options.get('base_url'),
             options.get('auth_file'),
             options.get('region'))
+    elif cmd == 'change-visibility':
+        if not options.get('digest'):
+            log.critical('change-visibility command requires a digest option')
+            return False
+        if not options.get('visibility'):
+            log.critical('change-visibility command requires a visibility option')
+            return False
+        return change_visibility(
+            options.get('base_url'),
+            options.get('digest'),
+            options.get('visibility'),
+            options.get('auth_file'),
+        )
+    elif cmd == 'delete':
+        if not options.get('digest'):
+            log.critical('change-visibility command requires a digest option')
+            return False
+        return delete_instances(
+            options.get('base_url'),
+            options.get('digest'),
+            options.get('auth_file'),
+        )
     else:
         log.critical('command "%s" is not implemented' % cmd)
         return False
@@ -1239,6 +1286,9 @@ def main(argv, _skip_logging=False):
     parser.add_option('-d', '--algorithm', default='sha512',
                       dest='algorithm', action='store',
                       help='hashing algorithm to use (only sha512 is allowed)')
+    parser.add_option('--digest', default=None,
+                      dest='digest', action='store',
+                      help='digest hash to change visibility for')
     parser.add_option('--visibility', default=None,
                       dest='visibility', choices=['internal', 'public'],
                       help='Visibility level of this file; "internal" is for '
@@ -1278,18 +1328,21 @@ def main(argv, _skip_logging=False):
 
     (options_obj, args) = parser.parse_args(argv[1:])
 
+    if not options_obj.base_url:
+        tooltool_host = os.environ.get('TOOLTOOL_HOST', 'tooltool.mozilla-releng.net')
+        taskcluster_proxy_url = os.environ.get('TASKCLUSTER_PROXY_URL')
+        if taskcluster_proxy_url:
+            tooltool_url = '{}/{}'.format(taskcluster_proxy_url, tooltool_host)
+        else:
+            tooltool_url = 'https://{}'.format(tooltool_host)
 
-    tooltool_host = os.environ.get('TOOLTOOL_HOST', 'tooltool.mozilla-releng.net')
-    taskcluster_proxy_url = os.environ.get('TASKCLUSTER_PROXY_URL')
-    if taskcluster_proxy_url:
-        tooltool_url = '{}/{}'.format(taskcluster_proxy_url, tooltool_host)
-    else:
-        tooltool_url = 'https://{}'.format(tooltool_host)
+        options_obj.base_url = [tooltool_url]
 
     # ensure all URLs have a trailing slash
     def add_slash(url):
         return url if url.endswith('/') else (url + '/')
-    options_obj.base_url = [add_slash(tooltool_url)]
+    options_obj.base_url = [add_slash(u) for u in options_obj.base_url]
+
     # expand ~ in --authentication-file
     if options_obj.auth_file:
         options_obj.auth_file = os.path.expanduser(options_obj.auth_file)
