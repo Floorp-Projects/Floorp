@@ -257,8 +257,8 @@ class ProviderSearchTips extends UrlbarProvider {
       // engaged with the urlbar while the tip was showing. We treat both as the
       // user's acknowledgment of the tip, and we don't show tips again in any
       // session. Set the shown count to the max.
-      Services.prefs.setIntPref(
-        `browser.urlbar.tipShownCount.${this.showedTipTypeInCurrentEngagement}`,
+      UrlbarPrefs.set(
+        `tipShownCount.${this.showedTipTypeInCurrentEngagement}`,
         MAX_SHOWN_COUNT
       );
     }
@@ -346,10 +346,7 @@ class ProviderSearchTips extends UrlbarProvider {
     this.disableTipsForCurrentSession = true;
 
     // Store the new shown count.
-    Services.prefs.setIntPref(
-      `browser.urlbar.tipShownCount.${tip}`,
-      shownCount + 1
-    );
+    UrlbarPrefs.set(`tipShownCount.${tip}`, shownCount + 1);
 
     // Start a search.
     let window = BrowserWindowTracker.getTopWindow();
