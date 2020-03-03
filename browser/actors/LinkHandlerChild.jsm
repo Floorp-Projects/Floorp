@@ -15,8 +15,8 @@ ChromeUtils.defineModuleGetter(
 );
 
 class LinkHandlerChild extends JSWindowActorChild {
-  constructor(dispatcher) {
-    super(dispatcher);
+  constructor() {
+    super();
 
     this.seenTabIcon = false;
     this._iconLoader = null;
