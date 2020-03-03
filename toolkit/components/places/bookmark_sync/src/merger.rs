@@ -184,20 +184,11 @@ impl MergeTask {
             result: AtomicRefCell::new(Err(error::Error::DidNotRun)),
         })
     }
+}
 
-    fn merge(&self) -> error::Result<store::ApplyStatus> {
+impl Task for MergeTask {
+    fn run(&self) {
         let mut db = self.db.clone();
-        if db.transaction_in_progress()? {
-            // If a transaction is already open, we can avoid an unnecessary
-            // merge, since we won't be able to apply the merged tree back to
-            // Places. This is common, especially if the user makes lots of
-            // changes at once. In that case, our merge task might run in the
-            // middle of a `Sqlite.jsm` transaction, and fail when we try to
-            // open our own transaction in `Store::apply`. Since the local
-            // tree might be in an inconsistent state, we can't safely update
-            // Places.
-            return Err(error::Error::StorageBusy);
-        }
         let log = Logger::new(self.max_log_level, self.logger.clone());
         let driver = Driver::new(log, self.progress.clone());
         let mut store = store::Store::new(
@@ -208,16 +199,10 @@ impl MergeTask {
             self.remote_time_millis,
             &self.weak_uploads,
         );
-        store.validate()?;
-        store.prepare()?;
-        let status = store.merge_with_driver(&driver, &*self.controller)?;
-        Ok(status)
-    }
-}
-
-impl Task for MergeTask {
-    fn run(&self) {
-        *self.result.borrow_mut() = self.merge();
+        *self.result.borrow_mut() = store
+            .validate()
+            .and_then(|_| store.prepare())
+            .and_then(|_| store.merge_with_driver(&driver, &*self.controller));
     }
 
     fn done(&self) -> Result<(), nsresult> {
