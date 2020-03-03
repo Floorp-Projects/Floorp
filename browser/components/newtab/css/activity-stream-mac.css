@@ -2966,7 +2966,8 @@ main {
     position: absolute;
     inset-inline-end: 0;
     top: 0;
-    border-radius: 50%; }
+    border-radius: 50%;
+    background-color: transparent; }
     .ds-dismiss .ds-dismiss-button .icon {
       fill: #737373; }
       [lwt-newtab-brighttext] .ds-dismiss .ds-dismiss-button .icon {
