@@ -2009,15 +2009,12 @@ bool nsNativeThemeGTK::WidgetAppearanceDependsOnWindowFocus(
   }
 }
 
-already_AddRefed<nsITheme> do_GetNativeTheme() {
+already_AddRefed<nsITheme> do_GetNativeThemeDoNotUseDirectly() {
   static nsCOMPtr<nsITheme> inst;
 
   if (!inst) {
     if (gfxPlatform::IsHeadless()) {
       inst = new HeadlessThemeGTK();
-    } else if (XRE_IsContentProcess() &&
-               StaticPrefs::widget_disable_native_theme_for_content()) {
-      inst = new nsNativeBasicTheme();
     } else {
       inst = new nsNativeThemeGTK();
     }
