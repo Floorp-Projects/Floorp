@@ -17,6 +17,7 @@
 #include "mozilla/EditAction.h"
 #include "mozilla/EditorDOMPoint.h"
 #include "mozilla/EditorUtils.h"
+#include "mozilla/InternalMutationEvent.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/OwningNonNull.h"
 #include "mozilla/Preferences.h"
@@ -2505,48 +2506,56 @@ EditActionResult HTMLEditor::HandleDeleteCollapsedSelectionAtTextNode(
   MOZ_ASSERT(aPointToDelete.IsInTextNode());
 
   OwningNonNull<Text> visibleTextNode = *aPointToDelete.GetContainerAsText();
-  int32_t startOffset = aPointToDelete.Offset();
-  int32_t endOffset = startOffset + 1;
+  EditorDOMPoint startToDelete, endToDelete;
   if (aDirectionAndAmount == nsIEditor::ePrevious) {
-    if (!startOffset) {
+    if (aPointToDelete.IsStartOfContainer()) {
       return EditActionResult(NS_ERROR_UNEXPECTED);
     }
-    startOffset--;
-    endOffset--;
+    startToDelete = aPointToDelete.PreviousPoint();
+    endToDelete = aPointToDelete;
     // Bug 1068979: delete both codepoints if surrogate pair
-    if (startOffset > 0) {
+    if (!startToDelete.IsStartOfContainer()) {
       const nsTextFragment* text = &visibleTextNode->TextFragment();
-      if (text->IsLowSurrogateFollowingHighSurrogateAt(startOffset)) {
-        startOffset--;
+      if (text->IsLowSurrogateFollowingHighSurrogateAt(
+              startToDelete.Offset())) {
+        startToDelete.RewindOffset();
       }
     }
   } else {
     RefPtr<nsRange> range = SelectionRefPtr()->GetRangeAt(0);
-    if (NS_WARN_IF(!range)) {
+    if (NS_WARN_IF(!range) ||
+        NS_WARN_IF(range->GetStartContainer() !=
+                   aPointToDelete.GetContainer()) ||
+        NS_WARN_IF(range->GetEndContainer() != aPointToDelete.GetContainer())) {
       return EditActionResult(NS_ERROR_FAILURE);
     }
-
-    NS_ASSERTION(range->GetStartContainer() == aPointToDelete.GetContainer(),
-                 "selection start not in the text node");
-    NS_ASSERTION(range->GetEndContainer() == aPointToDelete.GetContainer(),
-                 "selection end not in the text node");
-
-    startOffset = range->StartOffset();
-    endOffset = range->EndOffset();
+    startToDelete = range->StartRef();
+    endToDelete = range->EndRef();
   }
-  nsCOMPtr<nsINode> textNodeForDeletion = aPointToDelete.GetContainer();
-  nsresult rv = WSRunObject::PrepareToDeleteRange(
-      *this, address_of(textNodeForDeletion), &startOffset,
-      address_of(textNodeForDeletion), &endOffset);
+  nsresult rv =
+      WSRunObject::PrepareToDeleteRange(*this, &startToDelete, &endToDelete);
   if (NS_WARN_IF(Destroyed())) {
     return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
   }
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return EditActionResult(rv);
   }
-  rv = DeleteTextWithTransaction(visibleTextNode,
-                                 std::min(startOffset, endOffset),
-                                 DeprecatedAbs(endOffset - startOffset));
+  if (MaybeHasMutationEventListeners(
+          NS_EVENT_BITS_MUTATION_NODEREMOVED |
+          NS_EVENT_BITS_MUTATION_NODEREMOVEDFROMDOCUMENT |
+          NS_EVENT_BITS_MUTATION_ATTRMODIFIED |
+          NS_EVENT_BITS_MUTATION_CHARACTERDATAMODIFIED) &&
+      (NS_WARN_IF(!startToDelete.IsSetAndValid()) ||
+       NS_WARN_IF(!startToDelete.IsInTextNode()) ||
+       NS_WARN_IF(!endToDelete.IsSetAndValid()) ||
+       NS_WARN_IF(!endToDelete.IsInTextNode()) ||
+       NS_WARN_IF(startToDelete.ContainerAsText() != visibleTextNode) ||
+       NS_WARN_IF(endToDelete.ContainerAsText() != visibleTextNode) ||
+       NS_WARN_IF(startToDelete.Offset() <= endToDelete.Offset()))) {
+    return EditActionHandled(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
+  }
+  rv = DeleteTextWithTransaction(visibleTextNode, startToDelete.Offset(),
+                                 endToDelete.Offset() - startToDelete.Offset());
   if (NS_WARN_IF(Destroyed())) {
     return EditActionHandled(NS_ERROR_EDITOR_DESTROYED);
   }
@@ -3016,24 +3025,22 @@ EditActionResult HTMLEditor::HandleDeleteNonCollapsedSelection(
   // surrounding whitespace in preparation to delete selection.
   if (!IsPlaintextEditor()) {
     AutoTransactionsConserveSelection dontChangeMySelection(*this);
-    nsCOMPtr<nsINode> startNode = firstRangeStart.GetContainer();
-    int32_t startOffset = firstRangeStart.Offset();
-    nsCOMPtr<nsINode> endNode = firstRangeEnd.GetContainer();
-    int32_t endOffset = firstRangeEnd.Offset();
-    nsresult rv = WSRunObject::PrepareToDeleteRange(
-        *this, address_of(startNode), &startOffset, address_of(endNode),
-        &endOffset);
+    nsresult rv = WSRunObject::PrepareToDeleteRange(*this, &firstRangeStart,
+                                                    &firstRangeEnd);
     if (NS_WARN_IF(Destroyed())) {
       return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
     }
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return EditActionResult(rv);
     }
-    firstRangeStart.Set(startNode, startOffset);
-    firstRangeEnd.Set(endNode, endOffset);
-    if (NS_WARN_IF(!firstRangeStart.IsSet()) ||
-        NS_WARN_IF(!firstRangeEnd.IsSet())) {
-      return EditActionResult(NS_ERROR_FAILURE);
+    if (MaybeHasMutationEventListeners(
+            NS_EVENT_BITS_MUTATION_NODEREMOVED |
+            NS_EVENT_BITS_MUTATION_NODEREMOVEDFROMDOCUMENT |
+            NS_EVENT_BITS_MUTATION_ATTRMODIFIED |
+            NS_EVENT_BITS_MUTATION_CHARACTERDATAMODIFIED) &&
+        (NS_WARN_IF(!firstRangeStart.IsSetAndValid()) ||
+         NS_WARN_IF(!firstRangeEnd.IsSetAndValid()))) {
+      return EditActionHandled(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
     }
   }
 
