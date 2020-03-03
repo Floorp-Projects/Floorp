@@ -2,6 +2,9 @@
 
 set -xe
 
+# Thunderbird Snap builds will set this to "thunderbird"
+: PRODUCT                       "${PRODUCT:=firefox}"
+
 # Required env variables
 test "$VERSION"
 test "$BUILD_NUMBER"
@@ -25,17 +28,21 @@ rm -rf "$SOURCE_DEST" && mkdir -p "$SOURCE_DEST"
 CURL="curl --location --retry 10 --retry-delay 10"
 
 # Download and extract en-US linux64 binary
-$CURL -o "${WORKSPACE}/firefox.tar.bz2" \
-    "${CANDIDATES_DIR}/${VERSION}-candidates/build${BUILD_NUMBER}/linux-x86_64/en-US/firefox-${VERSION}.tar.bz2"
-tar -C "$SOURCE_DEST" -xf "${WORKSPACE}/firefox.tar.bz2" --strip-components=1
-
-# Get Ubuntu configuration
-PARTNER_CONFIG_DIR="$WORKSPACE/partner_config"
-git clone https://github.com/mozilla-partners/canonical.git "$PARTNER_CONFIG_DIR"
+$CURL -o "${WORKSPACE}/${PRODUCT}.tar.bz2" \
+    "${CANDIDATES_DIR}/${VERSION}-candidates/build${BUILD_NUMBER}/linux-x86_64/en-US/${PRODUCT}-${VERSION}.tar.bz2"
+tar -C "$SOURCE_DEST" -xf "${WORKSPACE}/${PRODUCT}.tar.bz2" --strip-components=1
 
 DISTRIBUTION_DIR="$SOURCE_DEST/distribution"
-mv "$PARTNER_CONFIG_DIR/desktop/ubuntu/distribution" "$DISTRIBUTION_DIR"
-cp -v "$SCRIPT_DIRECTORY/firefox.desktop" "$DISTRIBUTION_DIR"
+if [[ "$PRODUCT" == "firefox" ]]; then
+    # Get Ubuntu configuration
+    PARTNER_CONFIG_DIR="$WORKSPACE/partner_config"
+    git clone https://github.com/mozilla-partners/canonical.git "$PARTNER_CONFIG_DIR"
+    mv "$PARTNER_CONFIG_DIR/desktop/ubuntu/distribution" "$DISTRIBUTION_DIR"
+else
+    mkdir -p "$DISTRIBUTION_DIR"
+fi
+
+cp -v "$SCRIPT_DIRECTORY/${PRODUCT}.desktop" "$DISTRIBUTION_DIR"
 
 # Add a group policy file to disable app updates, as those are handled by snapd
 cp -v "$SCRIPT_DIRECTORY/policies.json" "$DISTRIBUTION_DIR"
@@ -46,7 +53,7 @@ locales=$(python3 "$SCRIPT_DIRECTORY/extract_locales_from_l10n_json.py" "${WORKS
 
 mkdir -p "$DISTRIBUTION_DIR/extensions"
 for locale in $locales; do
-    $CURL -o "$SOURCE_DEST/distribution/extensions/langpack-${locale}@firefox.mozilla.org.xpi" \
+    $CURL -o "$SOURCE_DEST/distribution/extensions/langpack-${locale}@${PRODUCT}.mozilla.org.xpi" \
         "$CANDIDATES_DIR/${VERSION}-candidates/build${BUILD_NUMBER}/linux-x86_64/xpi/${locale}.xpi"
 done
 
@@ -58,7 +65,7 @@ for i in *.deb; do
 done
 
 # Generate snapcraft manifest
-sed -e "s/@VERSION@/${VERSION}/g" -e "s/@BUILD_NUMBER@/${BUILD_NUMBER}/g" snapcraft.yaml.in > "${WORKSPACE}/snapcraft.yaml"
+sed -e "s/@VERSION@/${VERSION}/g" -e "s/@BUILD_NUMBER@/${BUILD_NUMBER}/g" ${PRODUCT}.snapcraft.yaml.in > "${WORKSPACE}/snapcraft.yaml"
 cp -v "$SCRIPT_DIRECTORY/mimeapps.list" "$WORKSPACE"
 cd "${WORKSPACE}"
 
