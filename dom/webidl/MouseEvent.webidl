@@ -115,6 +115,8 @@ partial interface MouseEvent
                         optional EventTarget? relatedTargetArg = null,
                         optional float pressure = 0,
                         optional unsigned short inputSourceArg = 0);
+  [ChromeOnly]
+  readonly attribute boolean hitCluster; // True when touch occurs in a cluster of links
 
 };
 
