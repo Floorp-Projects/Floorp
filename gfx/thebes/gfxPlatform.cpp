@@ -606,6 +606,8 @@ static void WebRenderDebugPrefChangeCallback(const char* aPrefName, void*) {
                       wr::DebugFlags::DISABLE_GRADIENT_PRIMS)
   GFX_WEBRENDER_DEBUG(".obscure-images", wr::DebugFlags::OBSCURE_IMAGES)
   GFX_WEBRENDER_DEBUG(".glyph-flashing", wr::DebugFlags::GLYPH_FLASHING)
+  GFX_WEBRENDER_DEBUG(".disable-raster-root-scaling",
+                      wr::DebugFlags::DISABLE_RASTER_ROOT_SCALING)
 #undef GFX_WEBRENDER_DEBUG
 
   gfx::gfxVars::SetWebRenderDebugFlags(flags.bits);

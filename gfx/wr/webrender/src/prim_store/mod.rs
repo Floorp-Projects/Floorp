@@ -2968,6 +2968,10 @@ impl PrimitiveStore {
                 let raster_space = pic.get_raster_space(frame_context.spatial_tree);
                 let surface = &frame_state.surfaces[pic_context.surface_index.0];
                 let prim_info = &scratch.prim_info[prim_instance.visibility_info.0 as usize];
+                let root_scaling_factor = match pic.raster_config {
+                    Some(ref raster_config) => raster_config.root_scaling_factor,
+                    None => 1.0
+                };
 
                 run.request_resources(
                     prim_offset,
@@ -2978,6 +2982,7 @@ impl PrimitiveStore {
                     surface,
                     prim_spatial_node_index,
                     raster_space,
+                    root_scaling_factor,
                     &pic_context.subpixel_mode,
                     frame_state.resource_cache,
                     frame_state.gpu_cache,

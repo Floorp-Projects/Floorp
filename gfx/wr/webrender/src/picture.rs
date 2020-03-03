@@ -3602,6 +3602,13 @@ pub struct RasterConfig {
     pub surface_index: SurfaceIndex,
     /// Whether this picture establishes a rasterization root.
     pub establishes_raster_root: bool,
+    /// Scaling factor applied to fit within MAX_SURFACE_SIZE when
+    /// establishing a raster root.
+    /// Most code doesn't need to know about it, since it is folded
+    /// into device_pixel_scale when the rendertask is set up.
+    /// However e.g. text rasterization uses it to ensure consistent
+    /// on-screen font size.
+    pub root_scaling_factor: f32,
 }
 
 bitflags! {
@@ -4316,14 +4323,14 @@ impl PicturePrimitive {
         };
 
         match self.raster_config {
-            Some(ref raster_config) => {
+            Some(ref mut raster_config) => {
                 let pic_rect = PictureRect::from_untyped(&self.precise_local_rect.to_untyped());
 
-                let device_pixel_scale = frame_state
+                let mut device_pixel_scale = frame_state
                     .surfaces[raster_config.surface_index.0]
                     .device_pixel_scale;
 
-                let (clipped, unclipped) = match get_raster_rects(
+                let (mut clipped, mut unclipped) = match get_raster_rects(
                     pic_rect,
                     &map_pic_to_raster,
                     &map_raster_to_world,
@@ -4337,11 +4344,68 @@ impl PicturePrimitive {
                 };
                 let transform = map_pic_to_raster.get_transform();
 
+                /// If the picture (raster_config) establishes a raster root,
+                /// its requested resolution won't be clipped by the parent or
+                /// viewport; so we need to make sure the requested resolution is
+                /// "reasonable", ie. <= MAX_SURFACE_SIZE.  If not, scale the
+                /// picture down until it fits that limit.  This results in a new
+                /// device_rect, a new unclipped rect, and a new device_pixel_scale.
+                ///
+                /// Since the adjusted device_pixel_scale is passed into the
+                /// RenderTask (and then the shader via RenderTaskData) this mostly
+                /// works transparently, reusing existing support for variable DPI
+                /// support.  The on-the-fly scaling can be seen as on-the-fly,
+                /// per-task DPI adjustment.  Logical pixels are unaffected.
+                ///
+                /// The scaling factor is returned to the caller; blur radius, 
+                /// font size, etc. need to be scaled accordingly.
+                fn adjust_scale_for_max_surface_size(
+                    raster_config: &RasterConfig,
+                    pic_rect: PictureRect,
+                    map_pic_to_raster: &SpaceMapper<PicturePixel, RasterPixel>,
+                    map_raster_to_world: &SpaceMapper<RasterPixel, WorldPixel>,
+                    clipped_prim_bounding_rect: WorldRect,
+                    device_pixel_scale : &mut DevicePixelScale,
+                    device_rect: &mut DeviceIntRect,
+                    unclipped: &mut DeviceRect) -> Option<f32>
+                {
+                    if raster_config.establishes_raster_root &&
+                        (device_rect.size.width  > (MAX_SURFACE_SIZE as i32) ||
+                        device_rect.size.height > (MAX_SURFACE_SIZE as i32))
+                    {
+                        // round_out will grow by 1 integer pixel if origin is on a
+                        // fractional position, so keep that margin for error with -1:
+                        let scale = (MAX_SURFACE_SIZE as f32 - 1.0) /
+                                    (i32::max(device_rect.size.width, device_rect.size.height) as f32);
+                        *device_pixel_scale = *device_pixel_scale * Scale::new(scale);
+                        let new_device_rect = device_rect.to_f32() * Scale::new(scale);
+                        *device_rect = new_device_rect.round_out().try_cast::<i32>().unwrap();
+
+                        *unclipped = match get_raster_rects(
+                            pic_rect,
+                            &map_pic_to_raster,
+                            &map_raster_to_world,
+                            clipped_prim_bounding_rect,
+                            *device_pixel_scale
+                        ) {
+                            Some(info) => info.1,
+                            None => {
+                                return None
+                            }
+                        };
+                        Some(scale)
+                    }
+                    else
+                    {
+                        None
+                    }
+                }
+
                 let dep_info = match raster_config.composite_mode {
                     PictureCompositeMode::Filter(Filter::Blur(blur_radius)) => {
                         let blur_std_deviation = blur_radius * device_pixel_scale.0;
                         let scale_factors = scale_factors(&transform);
-                        let blur_std_deviation = DeviceSize::new(
+                        let mut blur_std_deviation = DeviceSize::new(
                             blur_std_deviation * scale_factors.0,
                             blur_std_deviation * scale_factors.1
                         );
@@ -4374,7 +4438,7 @@ impl PicturePrimitive {
                             clipped
                         };
 
-                        let original_size = device_rect.size;
+                        let mut original_size = device_rect.size;
 
                         // Adjust the size to avoid introducing sampling errors during the down-scaling passes.
                         // what would be even better is to rasterize the picture at the down-scaled size
@@ -4383,6 +4447,16 @@ impl PicturePrimitive {
                             device_rect.size,
                             blur_std_deviation,
                         );
+
+                        if let Some(scale) = adjust_scale_for_max_surface_size(
+                                                raster_config, pic_rect, &map_pic_to_raster, &map_raster_to_world,
+                                                clipped_prim_bounding_rect,
+                                                &mut device_pixel_scale, &mut device_rect, &mut unclipped)
+                        {
+                            blur_std_deviation = blur_std_deviation * scale;
+                            original_size = (original_size.to_f32() * scale).try_cast::<i32>().unwrap();
+                            raster_config.root_scaling_factor = scale;
+                        }
 
                         let uv_rect_kind = calculate_uv_rect_kind(
                             &pic_rect,
@@ -4445,6 +4519,15 @@ impl PicturePrimitive {
                             device_rect.size,
                             DeviceSize::new(max_std_deviation, max_std_deviation),
                         );
+
+                        if let Some(scale) = adjust_scale_for_max_surface_size(
+                            raster_config, pic_rect, &map_pic_to_raster, &map_raster_to_world,
+                            clipped_prim_bounding_rect,
+                            &mut device_pixel_scale, &mut device_rect, &mut unclipped)
+                        {
+                            // std_dev adjusts automatically from using device_pixel_scale
+                            raster_config.root_scaling_factor = scale;
+                        }
 
                         let uv_rect_kind = calculate_uv_rect_kind(
                             &pic_rect,
@@ -4536,6 +4619,15 @@ impl PicturePrimitive {
                         Some((render_task_id, render_task_id))
                     }
                     PictureCompositeMode::Filter(..) => {
+
+                        if let Some(scale) = adjust_scale_for_max_surface_size(
+                            raster_config, pic_rect, &map_pic_to_raster, &map_raster_to_world,
+                            clipped_prim_bounding_rect,
+                            &mut device_pixel_scale, &mut clipped, &mut unclipped)
+                        {
+                            raster_config.root_scaling_factor = scale;
+                        }
+
                         let uv_rect_kind = calculate_uv_rect_kind(
                             &pic_rect,
                             &transform,
@@ -4561,6 +4653,14 @@ impl PicturePrimitive {
                         Some((render_task_id, render_task_id))
                     }
                     PictureCompositeMode::ComponentTransferFilter(..) => {
+                        if let Some(scale) = adjust_scale_for_max_surface_size(
+                            raster_config, pic_rect, &map_pic_to_raster, &map_raster_to_world,
+                            clipped_prim_bounding_rect,
+                            &mut device_pixel_scale, &mut clipped, &mut unclipped)
+                        {
+                            raster_config.root_scaling_factor = scale;
+                        }
+
                         let uv_rect_kind = calculate_uv_rect_kind(
                             &pic_rect,
                             &transform,
@@ -4856,6 +4956,14 @@ impl PicturePrimitive {
                     }
                     PictureCompositeMode::MixBlend(..) |
                     PictureCompositeMode::Blit(_) => {
+                        if let Some(scale) = adjust_scale_for_max_surface_size(
+                            raster_config, pic_rect, &map_pic_to_raster, &map_raster_to_world,
+                            clipped_prim_bounding_rect,
+                            &mut device_pixel_scale, &mut clipped, &mut unclipped)
+                        {
+                            raster_config.root_scaling_factor = scale;
+                        }
+
                         let uv_rect_kind = calculate_uv_rect_kind(
                             &pic_rect,
                             &transform,
@@ -4881,6 +4989,15 @@ impl PicturePrimitive {
                         Some((render_task_id, render_task_id))
                     }
                     PictureCompositeMode::SvgFilter(ref primitives, ref filter_datas) => {
+
+                        if let Some(scale) = adjust_scale_for_max_surface_size(
+                            raster_config, pic_rect, &map_pic_to_raster, &map_raster_to_world,
+                            clipped_prim_bounding_rect,
+                            &mut device_pixel_scale, &mut clipped, &mut unclipped)
+                        {
+                            raster_config.root_scaling_factor = scale;
+                        }
+
                         let uv_rect_kind = calculate_uv_rect_kind(
                             &pic_rect,
                             &transform,
@@ -5325,6 +5442,7 @@ impl PicturePrimitive {
                 composite_mode,
                 establishes_raster_root,
                 surface_index: state.push_surface(surface),
+                root_scaling_factor: 1.0,
             });
         }
 
@@ -5477,7 +5595,9 @@ impl PicturePrimitive {
             // Check if any of the surfaces can't be rasterized in local space but want to.
             if raster_config.establishes_raster_root
                 && (surface_rect.size.width > MAX_SURFACE_SIZE
-                    || surface_rect.size.height > MAX_SURFACE_SIZE) {
+                    || surface_rect.size.height > MAX_SURFACE_SIZE)
+                && frame_context.debug_flags.contains(DebugFlags::DISABLE_RASTER_ROOT_SCALING)
+            {
                 raster_config.establishes_raster_root = false;
                 state.are_raster_roots_assigned = false;
             }
