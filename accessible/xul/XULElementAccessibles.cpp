@@ -133,7 +133,9 @@ uint64_t XULLabelTextLeafAccessible::NativeState() const {
 
 XULTooltipAccessible::XULTooltipAccessible(nsIContent* aContent,
                                            DocAccessible* aDoc)
-    : LeafAccessible(aContent, aDoc) {}
+    : LeafAccessible(aContent, aDoc) {
+  mType = eXULTooltipType;
+}
 
 uint64_t XULTooltipAccessible::NativeState() const {
   return LeafAccessible::NativeState() | states::READONLY;
