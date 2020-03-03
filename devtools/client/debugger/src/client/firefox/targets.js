@@ -135,7 +135,7 @@ async function listWorkerTargets(args: Args) {
 
 async function getAllProcessTargets(args) {
   const { devToolsClient } = args;
-  const { processes } = await devToolsClient.mainRoot.listProcesses();
+  const processes = await devToolsClient.mainRoot.listProcesses();
   return Promise.all(
     processes
       .filter(descriptor => !descriptor.isParent)

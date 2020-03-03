@@ -540,11 +540,7 @@ exports.RootActor = protocol.ActorClassWithSpec(rootSpec, {
       this._processDescriptorActorPool.destroy();
     }
     this._processDescriptorActorPool = pool;
-    // extract the values in the processActors map
-    const processActors = [...this._processDescriptorActorPool.poolChildren()];
-    return {
-      processes: processActors.map(actor => actor.form()),
-    };
+    return [...this._processDescriptorActorPool.poolChildren()];
   },
 
   onProcessListChanged: function() {
@@ -578,7 +574,7 @@ exports.RootActor = protocol.ActorClassWithSpec(rootSpec, {
       processDescriptor = new ProcessDescriptorActor(this.conn, options);
       this._processDescriptorActorPool.manage(processDescriptor);
     }
-    return { form: processDescriptor.form() };
+    return { processDescriptor };
   },
 
   /**
@@ -703,22 +699,22 @@ exports.RootActor = protocol.ActorClassWithSpec(rootSpec, {
       this._frameDescriptorActorPool
     );
     if (frameDescriptor) {
-      return frameDescriptor.form();
+      return frameDescriptor;
     }
+
     // if the descriptor cannot be found in the frames, it is probably
     // the main process, which is a process descriptor
-
     if (this._isParentBrowsingContext(id)) {
-      const parentProcessDescriptor = this._getParentProcessDescriptor();
-      return parentProcessDescriptor.form();
+      return this._getParentProcessDescriptor();
     }
+
     const context = BrowsingContext.get(id);
     const newFrameDescriptor = new FrameDescriptorActor(this.conn, context);
     if (!this._frameDescriptorActorPool) {
       this._frameDescriptorActorPool = new Pool(this.conn);
     }
     this._frameDescriptorActorPool.manage(newFrameDescriptor);
-    return newFrameDescriptor.form();
+    return newFrameDescriptor;
   },
 
   protocolDescription: function() {

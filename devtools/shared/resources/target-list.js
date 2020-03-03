@@ -27,7 +27,7 @@ class LegacyImplementationProcesses {
   }
 
   async _processListChanged() {
-    const { processes } = await this.rootFront.listProcesses();
+    const processes = await this.rootFront.listProcesses();
     // Process the new list to detect the ones being destroyed
     // Force destroyed the descriptor as well as the target
     for (const descriptor of this.descriptors) {
