@@ -21,22 +21,30 @@ module.exports.addTests = function({testRunner, expect}) {
 
   describe('Page.Events.Dialog', function() {
     it('should fire', async({page, server}) => {
+      let type, defaultValue, message;
       page.on('dialog', dialog => {
-        expect(dialog.type()).toBe('alert');
-        expect(dialog.defaultValue()).toBe('');
-        expect(dialog.message()).toBe('yo');
+        type = dialog.type();
+        defaultValue = dialog.defaultValue();
+        message = dialog.message();
         dialog.accept();
       });
       await page.evaluate(() => alert('yo'));
+      expect(type).toBe('alert');
+      expect(defaultValue).toBe('');
+      expect(message).toBe('yo');
     });
-    it_fails_ffox('should allow accepting prompts', async({page, server}) => {
+    it('should allow accepting prompts', async({page, server}) => {
+      let type, defaultValue, message;
       page.on('dialog', dialog => {
-        expect(dialog.type()).toBe('prompt');
-        expect(dialog.defaultValue()).toBe('yes.');
-        expect(dialog.message()).toBe('question?');
+        type = dialog.type();
+        defaultValue = dialog.defaultValue();
+        message = dialog.message();
         dialog.accept('answer!');
       });
       const result = await page.evaluate(() => prompt('question?', 'yes.'));
+      expect(type).toBe('prompt');
+      expect(defaultValue).toBe('yes.');
+      expect(message).toBe('question?');
       expect(result).toBe('answer!');
     });
     it('should dismiss the prompt', async({page, server}) => {
