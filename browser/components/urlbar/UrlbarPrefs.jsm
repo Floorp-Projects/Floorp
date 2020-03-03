@@ -24,8 +24,8 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 const PREF_URLBAR_BRANCH = "browser.urlbar.";
 
 // Prefs are defined as [pref name, default value] or [pref name, [default
-// value, type]].  In the former case, the getter method name is inferred from
-// the typeof the default value.
+// value, nsIPrefBranch getter method name]].  In the former case, the getter
+// method name is inferred from the typeof the default value.
 const PREF_URLBAR_DEFAULTS = new Map([
   // "Autofill" is the name of the feature that automatically completes domains
   // and URLs that the user has visited as the user is typing them in the urlbar
@@ -39,7 +39,7 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // Affects the frecency threshold of the autofill algorithm.  The threshold is
   // the mean of all origin frecencies plus one standard deviation multiplied by
   // this value.  See UnifiedComplete.
-  ["autoFill.stddevMultiplier", [0.0, "float"]],
+  ["autoFill.stddevMultiplier", [0.0, "getFloatPref"]],
 
   // Whether using `ctrl` when hitting return/enter in the URL bar
   // (or clicking 'go') should prefix 'www.' and suffix
@@ -184,9 +184,8 @@ const SUGGEST_PREF_TO_BEHAVIOR = {
 
 const PREF_TYPES = new Map([
   ["boolean", "Bool"],
-  ["float", "Float"],
-  ["number", "Int"],
   ["string", "Char"],
+  ["number", "Int"],
 ]);
 
 // Buckets for result insertion.
@@ -235,9 +234,6 @@ class Preferences {
 
   /**
    * Returns the value for the preference with the given name.
-   * For preferences in the "browser.urlbar."" branch, the passed-in name
-   * should be relative to the branch. It's also possible to get prefs from the
-   * PREF_OTHER_DEFAULTS Map, specifying their full name.
    *
    * @param {string} pref
    *        The name of the preference to get.
@@ -248,24 +244,6 @@ class Preferences {
       this._map.set(pref, this._getPrefValue(pref));
     }
     return this._map.get(pref);
-  }
-
-  /**
-   * Sets the value for the preference with the given name.
-   * For preferences in the "browser.urlbar."" branch, the passed-in name
-   * should be relative to the branch. It's also possible to set prefs from the
-   * PREF_OTHER_DEFAULTS Map, specifying their full name.
-   *
-   * @param {string} pref
-   *        The name of the preference to set.
-   * @param {*} value The preference value.
-   */
-  set(pref, value) {
-    let { defaultValue, setter } = this._getPrefDescriptor(pref);
-    if (typeof value != typeof defaultValue) {
-      throw new Error(`Invalid value type ${typeof value} for pref ${pref}`);
-    }
-    setter(pref, value);
   }
 
   /**
@@ -299,8 +277,25 @@ class Preferences {
    * @returns {*} The raw preference value.
    */
   _readPref(pref) {
-    let { defaultValue, getter } = this._getPrefDescriptor(pref);
-    return getter(pref, defaultValue);
+    let prefs = Services.prefs.getBranch(PREF_URLBAR_BRANCH);
+    let def = PREF_URLBAR_DEFAULTS.get(pref);
+    if (def === undefined) {
+      prefs = Services.prefs;
+      def = PREF_OTHER_DEFAULTS.get(pref);
+    }
+    if (def === undefined) {
+      throw new Error("Trying to access an unknown pref " + pref);
+    }
+    let getterName;
+    if (!Array.isArray(def)) {
+      getterName = `get${PREF_TYPES.get(typeof def)}Pref`;
+    } else {
+      if (def.length != 2) {
+        throw new Error("Malformed pref def: " + pref);
+      }
+      [def, getterName] = def;
+    }
+    return prefs[getterName](pref, def);
   }
 
   /**
@@ -379,44 +374,6 @@ class Preferences {
       }
     }
     return this._readPref(pref);
-  }
-
-  /**
-   * Returns a descriptor of the given preference.
-   * @param {string} pref The preference to examine.
-   * @returns {object} An object describing the pref with the following shape:
-   *          { defaultValue, getter, setter }
-   */
-  _getPrefDescriptor(pref) {
-    let branch = Services.prefs.getBranch(PREF_URLBAR_BRANCH);
-    let defaultValue = PREF_URLBAR_DEFAULTS.get(pref);
-    if (defaultValue === undefined) {
-      branch = Services.prefs;
-      defaultValue = PREF_OTHER_DEFAULTS.get(pref);
-    }
-    if (defaultValue === undefined) {
-      throw new Error("Trying to access an unknown pref " + pref);
-    }
-
-    let type;
-    if (!Array.isArray(defaultValue)) {
-      type = PREF_TYPES.get(typeof defaultValue);
-    } else {
-      if (defaultValue.length != 2) {
-        throw new Error("Malformed pref def: " + pref);
-      }
-      [defaultValue, type] = defaultValue;
-      type = PREF_TYPES.get(type);
-    }
-    if (!type) {
-      throw new Error("Unknown pref type: " + pref);
-    }
-    return {
-      defaultValue,
-      getter: branch[`get${type}Pref`],
-      // Float prefs are stored as Char.
-      setter: branch[`set${type == "Float" ? "Char" : type}Pref`],
-    };
   }
 }
 
