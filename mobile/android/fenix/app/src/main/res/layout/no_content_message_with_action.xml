@@ -37,7 +37,7 @@
         tools:text="@tools:sample/lorem" />
 
     <com.google.android.material.button.MaterialButton
-        android:id="@+id/add_tab_button"
+        android:id="@+id/add_new_tab_button"
         style="@style/ThemeIndependentMaterialGreyButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

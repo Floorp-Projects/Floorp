@@ -36,7 +36,7 @@ class NoContentMessageWithActionViewHolder(
         with(view.context) {
 
             if (buttonIcon != 0 || buttonText != 0) {
-                view.add_tab_button.apply {
+                view.add_new_tab_button.apply {
                     isVisible = true
                     setIcon(getDrawable(buttonIcon))
                     text = getString(buttonText)
