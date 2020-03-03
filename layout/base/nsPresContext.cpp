@@ -82,6 +82,7 @@
 #include "mozilla/GlobalStyleSheetCache.h"
 #include "mozilla/ServoBindings.h"
 #include "mozilla/StaticPrefs_layout.h"
+#include "mozilla/StaticPrefs_widget.h"
 #include "mozilla/StaticPrefs_zoom.h"
 #include "mozilla/StyleSheet.h"
 #include "mozilla/StyleSheetInlines.h"
@@ -1275,7 +1276,12 @@ void nsPresContext::RecordInteractionTime(InteractionType aType,
 
 nsITheme* nsPresContext::GetTheme() {
   if (!sNoTheme && !mTheme) {
-    mTheme = do_GetNativeTheme();
+    if (StaticPrefs::widget_disable_native_theme_for_content() &&
+        (!IsChrome() || XRE_IsContentProcess())) {
+      mTheme = do_GetBasicNativeThemeDoNotUseDirectly();
+    } else {
+      mTheme = do_GetNativeThemeDoNotUseDirectly();
+    }
     if (!mTheme) sNoTheme = true;
   }
 

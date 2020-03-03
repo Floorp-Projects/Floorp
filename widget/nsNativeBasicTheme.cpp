@@ -6,6 +6,7 @@
 #include "nsNativeBasicTheme.h"
 
 #include "mozilla/StaticPrefs_layout.h"
+#include "mozilla/ClearOnShutdown.h"
 #include "nsComboboxControlFrame.h"
 #include "nsCSSRendering.h"
 #include "nsDateTimeControlFrame.h"
@@ -889,3 +890,12 @@ bool nsNativeBasicTheme::ThemeDrawsFocusForWidget(StyleAppearance aAppearance) {
 }
 
 bool nsNativeBasicTheme::ThemeNeedsComboboxDropmarker() { return true; }
+
+already_AddRefed<nsITheme> do_GetBasicNativeThemeDoNotUseDirectly() {
+  static StaticRefPtr<nsITheme> gInstance;
+  if (MOZ_UNLIKELY(!gInstance)) {
+    gInstance = new nsNativeBasicTheme();
+    ClearOnShutdown(&gInstance);
+  }
+  return do_AddRef(gInstance);
+}
