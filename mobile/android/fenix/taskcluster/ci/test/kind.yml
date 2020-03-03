@@ -12,6 +12,8 @@ transforms:
 job-defaults:
     description: Test Fenix
     include-pull-request-number: false
+    attributes:
+        retrigger: true
     run:
         using: gradlew
         use-caches: false

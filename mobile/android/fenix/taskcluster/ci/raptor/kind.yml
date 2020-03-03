@@ -18,6 +18,8 @@ only-for-abis:
     - arm64-v8a
 
 job-defaults:
+    attributes:
+        retrigger: true
     dependencies:
         geckoview-nightly: geckoview-nightly
         linux64-minidump-stackwalk: toolchain-linux64-minidump-stackwalk

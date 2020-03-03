@@ -9,11 +9,15 @@ transforms:
     - taskgraph.transforms.job:transforms
     - taskgraph.transforms.task:transforms
 
+job-defaults:
+    attributes:
+        code-review: true
+        retrigger: true
+
 jobs:
     x86-debug:
         attributes:
             build-type: debug
-            code-review: true
         dependencies:
             signing: signing-debug
             signing-android-test: signing-android-test-debug
