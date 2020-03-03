@@ -63,8 +63,8 @@ XPCOMUtils.defineLazyGetter(this, "gToggleOverrides", () => {
  * hovering.
  */
 class PictureInPictureToggleChild extends JSWindowActorChild {
-  constructor(dispatcher) {
-    super(dispatcher);
+  constructor() {
+    super();
     // We need to maintain some state about various things related to the
     // Picture-in-Picture toggles - however, for now, the same
     // PictureInPictureToggleChild might be re-used for different documents.

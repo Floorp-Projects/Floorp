@@ -9,8 +9,8 @@ var EXPORTED_SYMBOLS = ["UAWidgetsChild"];
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 class UAWidgetsChild extends JSWindowActorChild {
-  constructor(dispatcher) {
-    super(dispatcher);
+  constructor() {
+    super();
 
     this.widgets = new WeakMap();
     this.prefsCache = new Map();
