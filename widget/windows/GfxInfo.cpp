@@ -1179,7 +1179,11 @@ static bool OnlyAllowFeatureOnWhitelistedVendor(int32_t aFeature) {
     case nsIGfxInfo::FEATURE_DIRECT3D_11_ANGLE:
       return false;
     default:
+#ifdef NIGHTLY_BUILD
+      return false;
+#else
       return true;
+#endif
   }
 }
 
