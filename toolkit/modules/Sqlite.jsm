@@ -595,7 +595,7 @@ ConnectionData.prototype = Object.freeze({
   },
 
   get transactionInProgress() {
-    return this._open && this._hasInProgressTransaction;
+    return this._open && this._dbConn.transactionInProgress;
   },
 
   executeTransaction(func, type) {
@@ -1544,6 +1544,11 @@ OpenedConnection.prototype = Object.freeze({
 
   /**
    * Whether a transaction is currently in progress.
+   *
+   * Note that this is true if a transaction is active on the connection,
+   * regardless of whether it was started by `Sqlite.jsm` or another consumer.
+   * See the explanation above `mozIStorageConnection.transactionInProgress` for
+   * why this distinction matters.
    */
   get transactionInProgress() {
     return this._connectionData.transactionInProgress;
