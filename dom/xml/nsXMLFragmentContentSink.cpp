@@ -120,7 +120,7 @@ nsXMLFragmentContentSink::nsXMLFragmentContentSink() : mParseError(false) {
   mRunsToCompletion = true;
 }
 
-nsXMLFragmentContentSink::~nsXMLFragmentContentSink() {}
+nsXMLFragmentContentSink::~nsXMLFragmentContentSink() = default;
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsXMLFragmentContentSink)
   NS_INTERFACE_MAP_ENTRY(nsIFragmentContentSink)

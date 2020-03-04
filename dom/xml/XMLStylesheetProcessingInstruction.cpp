@@ -29,7 +29,8 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(
   tmp->nsStyleLinkElement::Unlink();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
-XMLStylesheetProcessingInstruction::~XMLStylesheetProcessingInstruction() {}
+XMLStylesheetProcessingInstruction::~XMLStylesheetProcessingInstruction() =
+    default;
 
 // nsIContent
 

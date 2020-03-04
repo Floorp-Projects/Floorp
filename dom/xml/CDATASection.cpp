@@ -11,7 +11,7 @@
 namespace mozilla {
 namespace dom {
 
-CDATASection::~CDATASection() {}
+CDATASection::~CDATASection() = default;
 
 JSObject* CDATASection::WrapNode(JSContext* aCx,
                                  JS::Handle<JSObject*> aGivenProto) {
