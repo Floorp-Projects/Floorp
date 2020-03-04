@@ -27,7 +27,8 @@ add_task(async function() {
   await selectNode("#testid", inspector);
 
   const ruleEditor = getRuleViewRuleEditor(view, 1);
-  const propEditor = ruleEditor.rule.textProps[1].editor;
+  const propEditor = getTextProperty(view, 1, { "background-color": "blue" })
+    .editor;
 
   await focusEditableField(view, propEditor.valueSpan);
 
@@ -42,10 +43,6 @@ add_task(async function() {
   await sendKeysAndWaitForFocus(view, ruleEditor.element, ["RETURN"]);
   await onRuleViewChanged;
 
-  isnot(
-    ruleEditor.rule.textProps[1].editor.nameSpan.style.display,
-    "none",
-    "The name span is visible"
-  );
+  isnot(propEditor.nameSpan.style.display, "none", "The name span is visible");
   is(ruleEditor.rule.textProps.length, 2, "Correct number of props");
 });

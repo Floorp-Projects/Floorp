@@ -20,8 +20,7 @@ add_task(async function() {
   const { inspector, view } = await openRuleView();
   await selectNode("#testid", inspector);
 
-  const rule = getRuleViewRuleEditor(view, 1).rule;
-  const prop = rule.textProps[0];
+  const prop = getTextProperty(view, 1, { "background-color": "blue" });
 
   info("Disabling a property");
   await togglePropStatus(view, prop);
@@ -33,13 +32,13 @@ add_task(async function() {
   });
   is(newValue, "", "background-color should have been unset.");
 
-  await testEditDisableProperty(view, rule, prop, "name", "VK_ESCAPE");
-  await testEditDisableProperty(view, rule, prop, "value", "VK_ESCAPE");
-  await testEditDisableProperty(view, rule, prop, "value", "VK_TAB");
-  await testEditDisableProperty(view, rule, prop, "value", "VK_RETURN");
+  await testEditDisableProperty(view, prop, "name", "VK_ESCAPE");
+  await testEditDisableProperty(view, prop, "value", "VK_ESCAPE");
+  await testEditDisableProperty(view, prop, "value", "VK_TAB");
+  await testEditDisableProperty(view, prop, "value", "VK_RETURN");
 });
 
-async function testEditDisableProperty(view, rule, prop, fieldType, commitKey) {
+async function testEditDisableProperty(view, prop, fieldType, commitKey) {
   const field =
     fieldType === "name" ? prop.editor.nameSpan : prop.editor.valueSpan;
 

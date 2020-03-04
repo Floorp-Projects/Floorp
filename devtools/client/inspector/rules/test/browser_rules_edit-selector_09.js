@@ -76,8 +76,7 @@ async function testAddImportantProperty(view) {
   is(textProp.priority, "important", 'Text prop has an "important" priority.');
   ok(!textProp.overridden, "Property should not be overridden");
 
-  const ruleEditor = getRuleViewRuleEditor(view, 1);
-  const prop = ruleEditor.rule.textProps[0];
+  const prop = getTextProperty(view, 1, { color: "black" });
   ok(
     !prop.overridden,
     "Existing property on matched rule should not be overridden"

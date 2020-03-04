@@ -24,7 +24,7 @@ add_task(async function() {
 
 async function testEditPropertyAndCancel(inspector, view) {
   const ruleEditor = getRuleViewRuleEditor(view, 1);
-  const propEditor = ruleEditor.rule.textProps[0].editor;
+  const propEditor = getTextProperty(view, 1, { margin: "0" }).editor;
 
   info("Test editor is created when clicking on property name");
   await focusEditableField(view, propEditor.nameSpan);
