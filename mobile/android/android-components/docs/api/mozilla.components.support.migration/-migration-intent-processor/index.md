@@ -18,7 +18,6 @@ An [IntentProcessor](../../mozilla.components.feature.intent.processing/-intent-
 
 | Name | Summary |
 |---|---|
-| [matches](matches.md) | `fun matches(intent: <ERROR CLASS>): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Matches itself with all intents in order to ensure processing all of incoming intents. |
 | [process](process.md) | `suspend fun process(intent: <ERROR CLASS>): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Processes all incoming intents if a migration is in progress. |
 
 ### Extension Functions

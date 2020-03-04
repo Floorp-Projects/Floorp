@@ -2,7 +2,7 @@
 
 # Builder
 
-`class Builder` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/FennecMigrator.kt#L235)
+`class Builder` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/FennecMigrator.kt#L234)
 
 Data migration builder. Allows configuring which migrations to run, their versions and relative order.
 
@@ -22,7 +22,7 @@ Data migration builder. Allows configuring which migrations to run, their versio
 | [migrateFxa](migrate-fxa.md) | `fun migrateFxa(accountManager: `[`FxaAccountManager`](../../../mozilla.components.service.fxa.manager/-fxa-account-manager/index.md)`, version: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)` = Migration.FxA.currentVersion): `[`Builder`](./index.md)<br>Enable FxA state migration. |
 | [migrateGecko](migrate-gecko.md) | `fun migrateGecko(version: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)` = Migration.Gecko.currentVersion): `[`Builder`](./index.md)<br>Enables the migration of Gecko internal files. |
 | [migrateHistory](migrate-history.md) | `fun migrateHistory(storage: `[`PlacesHistoryStorage`](../../../mozilla.components.browser.storage.sync/-places-history-storage/index.md)`, version: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)` = Migration.History.currentVersion): `[`Builder`](./index.md)<br>Enable history migration. |
-| [migrateLogins](migrate-logins.md) | `fun migrateLogins(storage: `[`AsyncLoginsStorage`](../../../mozilla.components.service.sync.logins/-async-logins-storage/index.md)`, storageKey: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, version: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)` = Migration.Logins.currentVersion): `[`Builder`](./index.md)<br>Enable logins migration. |
+| [migrateLogins](migrate-logins.md) | `fun migrateLogins(storage: `[`SyncableLoginsStorage`](../../../mozilla.components.service.sync.logins/-syncable-logins-storage/index.md)`, version: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)` = Migration.Logins.currentVersion): `[`Builder`](./index.md)<br>Enable logins migration. |
 | [migrateOpenTabs](migrate-open-tabs.md) | `fun migrateOpenTabs(sessionManager: `[`SessionManager`](../../../mozilla.components.browser.session/-session-manager/index.md)`, version: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)` = Migration.OpenTabs.currentVersion): `[`Builder`](./index.md)<br>Enable open tabs migration. |
 | [migrateSearchEngine](migrate-search-engine.md) | `fun migrateSearchEngine(searchEngineManager: `[`SearchEngineManager`](../../../mozilla.components.browser.search/-search-engine-manager/index.md)`, version: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)` = Migration.SearchEngine.currentVersion): `[`Builder`](./index.md)<br>Enable default search engine migration. |
 | [migrateSettings](migrate-settings.md) | `fun migrateSettings(version: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)` = Migration.Settings.currentVersion): `[`Builder`](./index.md)<br>Enable all Fennec - Fenix common settings migration. |

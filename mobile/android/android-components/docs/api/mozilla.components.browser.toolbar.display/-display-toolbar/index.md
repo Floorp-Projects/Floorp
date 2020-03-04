@@ -71,6 +71,7 @@ Progress (optional):
 
 | Name | Summary |
 |---|---|
+| [setMenuDismissAction](set-menu-dismiss-action.md) | `fun setMenuDismissAction(onDismiss: () -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Sets a lambda to be invoked when the menu is dismissed |
 | [setOnSiteSecurityClickedListener](set-on-site-security-clicked-listener.md) | `fun setOnSiteSecurityClickedListener(listener: () -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Sets a listener to be invoked when the site security indicator icon is clicked. |
 | [setOnTrackingProtectionClickedListener](set-on-tracking-protection-clicked-listener.md) | `fun setOnTrackingProtectionClickedListener(listener: () -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Sets a listener to be invoked when the site tracking protection indicator icon is clicked. |
 | [setOnUrlLongClickListener](set-on-url-long-click-listener.md) | `fun setOnUrlLongClickListener(handler: (<ERROR CLASS>) -> `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Set a LongClickListener to the urlView of the toolbar. |

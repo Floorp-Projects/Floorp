@@ -6,12 +6,10 @@
 
 | Name | Summary |
 |---|---|
-| [AsyncLoginsStorage](-async-logins-storage/index.md) | `interface AsyncLoginsStorage : `[`AutoCloseable`](https://developer.android.com/reference/java/lang/AutoCloseable.html)<br>An interface equivalent to the LoginsStorage interface, but where operations are asynchronous. |
-| [AsyncLoginsStorageAdapter](-async-logins-storage-adapter/index.md) | `open class AsyncLoginsStorageAdapter<T : LoginsStorage> : `[`AsyncLoginsStorage`](-async-logins-storage/index.md)`, `[`AutoCloseable`](https://developer.android.com/reference/java/lang/AutoCloseable.html)<br>A helper class to wrap a synchronous [LoginsStorage](#) implementation and make it asynchronous. |
 | [DefaultLoginValidationDelegate](-default-login-validation-delegate/index.md) | `class DefaultLoginValidationDelegate : `[`LoginValidationDelegate`](../mozilla.components.concept.storage/-login-validation-delegate/index.md)<br>A delegate that will check against [storage](#) to see if a given Login can be persisted, and return information about why it can or cannot. |
 | [GeckoLoginStorageDelegate](-gecko-login-storage-delegate/index.md) | `class GeckoLoginStorageDelegate : `[`LoginStorageDelegate`](../mozilla.components.concept.storage/-login-storage-delegate/index.md)<br>[LoginStorageDelegate](../mozilla.components.concept.storage/-login-storage-delegate/index.md) implementation. |
 | [Operation](-operation/index.md) | `enum class Operation`<br>A type of persistence operation, either 'create' or 'update'. |
-| [SyncableLoginsStore](-syncable-logins-store/index.md) | `data class SyncableLoginsStore : `[`LockableStore`](../mozilla.components.concept.sync/-lockable-store/index.md)<br>Wraps [AsyncLoginsStorage](-async-logins-storage/index.md) instance along with a lazy encryption key. |
+| [SyncableLoginsStorage](-syncable-logins-storage/index.md) | `class SyncableLoginsStorage : `[`LoginsStorage`](../mozilla.components.concept.storage/-logins-storage/index.md)`, `[`SyncableStore`](../mozilla.components.concept.sync/-syncable-store/index.md)`, `[`AutoCloseable`](https://developer.android.com/reference/java/lang/AutoCloseable.html)<br>An implementation of [LoginsStorage](../mozilla.components.concept.storage/-logins-storage/index.md) backed by application-services' `logins` library. Synchronization support is provided both directly (via [sync](-syncable-logins-storage/sync.md)) when only syncing this storage layer, or via [getHandle](-syncable-logins-storage/get-handle.md) when syncing multiple stores. Use the latter in conjunction with [FxaAccountManager](#). |
 
 ### Type Aliases
 
@@ -25,7 +23,7 @@
 | [NoSuchRecordException](-no-such-record-exception.md) | `typealias NoSuchRecordException = NoSuchRecordException`<br>This is thrown if `update()` is performed with a record whose ID does not exist. |
 | [RequestFailedException](-request-failed-exception.md) | `typealias RequestFailedException = RequestFailedException`<br>This error is emitted if a request to a sync server failed. |
 | [ServerPassword](-server-password.md) | `typealias ServerPassword = ServerPassword`<br>Raw password data that is stored by the storage implementation. |
-| [SyncAuthInvalidException](-sync-auth-invalid-exception.md) | `typealias SyncAuthInvalidException = SyncAuthInvalidException`<br>This indicates that the authentication information (e.g. the [SyncUnlockInfo](-sync-unlock-info.md)) provided to [AsyncLoginsStorage.sync](-async-logins-storage/sync.md) is invalid. This often indicates that it's stale and should be refreshed with FxA (however, care should be taken not to get into a loop refreshing this information). |
+| [SyncAuthInvalidException](-sync-auth-invalid-exception.md) | `typealias SyncAuthInvalidException = SyncAuthInvalidException`<br>This indicates that the authentication information (e.g. the [SyncUnlockInfo](-sync-unlock-info.md)) provided to [AsyncLoginsStorage.sync](#) is invalid. This often indicates that it's stale and should be refreshed with FxA (however, care should be taken not to get into a loop refreshing this information). |
 | [SyncTelemetryPing](-sync-telemetry-ping.md) | `typealias SyncTelemetryPing = SyncTelemetryPing`<br>The telemetry ping from a successful sync |
 | [SyncUnlockInfo](-sync-unlock-info.md) | `typealias SyncUnlockInfo = SyncUnlockInfo`<br>This type contains the set of information required to successfully connect to the server and sync. |
 
@@ -35,9 +33,16 @@
 |---|---|
 | [mozilla.appservices.logins.ServerPassword](mozilla.appservices.logins.-server-password/index.md) |  |
 
+### Properties
+
+| Name | Summary |
+|---|---|
+| [DB_NAME](-d-b_-n-a-m-e.md) | `const val DB_NAME: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
+
 ### Functions
 
 | Name | Summary |
 |---|---|
 | [into](into.md) | `fun `[`SyncAuthInfo`](../mozilla.components.concept.sync/-sync-auth-info/index.md)`.into(): `[`SyncUnlockInfo`](-sync-unlock-info.md)<br>Conversion from a generic AuthInfo type into a type 'logins' lib uses at the interface boundary. |
+| [mergeWithLogin](merge-with-login.md) | `fun `[`Login`](../mozilla.components.concept.storage/-login/index.md)`.mergeWithLogin(login: `[`Login`](../mozilla.components.concept.storage/-login/index.md)`): `[`Login`](../mozilla.components.concept.storage/-login/index.md)<br>Will use values from [this](merge-with-login/-this-.md) if they are 1) non-null and 2) non-empty.  Otherwise, will fall back to values from [this](merge-with-login/-this-.md). |
 | [toServerPassword](to-server-password.md) | `fun `[`Login`](../mozilla.components.concept.storage/-login/index.md)`.toServerPassword(): `[`ServerPassword`](-server-password.md)<br>Converts an Android Components [Login](../mozilla.components.concept.storage/-login/index.md) to an Application Services [ServerPassword](-server-password.md) |

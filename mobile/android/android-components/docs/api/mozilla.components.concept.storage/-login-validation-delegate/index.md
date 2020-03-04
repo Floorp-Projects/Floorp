@@ -2,7 +2,7 @@
 
 # LoginValidationDelegate
 
-`interface LoginValidationDelegate` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/storage/src/main/java/mozilla/components/concept/storage/LoginsStorage.kt#L50)
+`interface LoginValidationDelegate` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/storage/src/main/java/mozilla/components/concept/storage/LoginsStorage.kt#L182)
 
 Provides a method for checking whether or not a given login can be stored.
 

@@ -2,7 +2,7 @@
 
 # CanBeCreated
 
-`object CanBeCreated : `[`Result`](index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/storage/src/main/java/mozilla/components/concept/storage/LoginsStorage.kt#L61)
+`object CanBeCreated : `[`Result`](index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/storage/src/main/java/mozilla/components/concept/storage/LoginsStorage.kt#L193)
 
 Indicates that the [Login](../../-login/index.md) does not currently exist in the storage, and a new entry
 with its information can be made.

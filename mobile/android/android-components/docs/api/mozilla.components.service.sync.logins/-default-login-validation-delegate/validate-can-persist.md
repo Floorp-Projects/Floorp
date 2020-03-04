@@ -2,7 +2,7 @@
 
 # validateCanPersist
 
-`fun validateCanPersist(login: `[`Login`](../../mozilla.components.concept.storage/-login/index.md)`): Deferred<`[`Result`](../../mozilla.components.concept.storage/-login-validation-delegate/-result/index.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/sync-logins/src/main/java/mozilla/components/service/sync/logins/DefaultLoginValidationDelegate.kt#L31)
+`fun validateCanPersist(login: `[`Login`](../../mozilla.components.concept.storage/-login/index.md)`): Deferred<`[`Result`](../../mozilla.components.concept.storage/-login-validation-delegate/-result/index.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/sync-logins/src/main/java/mozilla/components/service/sync/logins/DefaultLoginValidationDelegate.kt#L28)
 
 Overrides [LoginValidationDelegate.validateCanPersist](../../mozilla.components.concept.storage/-login-validation-delegate/validate-can-persist.md)
 

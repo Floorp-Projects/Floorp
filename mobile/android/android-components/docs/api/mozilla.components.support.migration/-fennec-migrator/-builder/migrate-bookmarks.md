@@ -2,7 +2,7 @@
 
 # migrateBookmarks
 
-`fun migrateBookmarks(storage: `[`PlacesBookmarksStorage`](../../../mozilla.components.browser.storage.sync/-places-bookmarks-storage/index.md)`, topSiteStorage: `[`TopSiteStorage`](../../../mozilla.components.feature.top.sites/-top-site-storage/index.md)`? = null, version: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)` = Migration.Bookmarks.currentVersion): `[`Builder`](index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/FennecMigrator.kt#L284)
+`fun migrateBookmarks(storage: `[`PlacesBookmarksStorage`](../../../mozilla.components.browser.storage.sync/-places-bookmarks-storage/index.md)`, topSiteStorage: `[`TopSiteStorage`](../../../mozilla.components.feature.top.sites/-top-site-storage/index.md)`? = null, version: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)` = Migration.Bookmarks.currentVersion): `[`Builder`](index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/FennecMigrator.kt#L283)
 
 Enable bookmarks migration. Must be called after [migrateHistory](migrate-history.md).
 Optionally, enable top sites migration, if [topSiteStorage](migrate-bookmarks.md#mozilla.components.support.migration.FennecMigrator.Builder$migrateBookmarks(mozilla.components.browser.storage.sync.PlacesBookmarksStorage, mozilla.components.feature.top.sites.TopSiteStorage, kotlin.Int)/topSiteStorage) is specified.

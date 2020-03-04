@@ -2,7 +2,7 @@
 
 # SyncStatusObserver
 
-`interface SyncStatusObserver` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/sync/SyncManager.kt#L52)
+`interface SyncStatusObserver` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/sync/SyncManager.kt#L51)
 
 An interface for consumers that wish to observer "sync lifecycle" events.
 

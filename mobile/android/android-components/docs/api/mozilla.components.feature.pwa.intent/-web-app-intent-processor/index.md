@@ -16,7 +16,6 @@ Processor for intents which trigger actions related to web apps.
 
 | Name | Summary |
 |---|---|
-| [matches](matches.md) | `fun matches(intent: <ERROR CLASS>): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Returns true if this intent should launch a progressive web app. |
 | [process](process.md) | `suspend fun process(intent: <ERROR CLASS>): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Processes the given [Intent](#) by creating a [Session](../../mozilla.components.browser.session/-session/index.md) with a corresponding web app manifest. |
 
 ### Companion Object Properties
