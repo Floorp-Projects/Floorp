@@ -18,11 +18,13 @@ class GradlewBuild(object):
 
     def test(self, identifier):
         self.adbrun.launch()
+
         # Change path accordingly to go to root folder to run gradlew
         os.chdir('../../../../../../../..')
         args = './gradlew ' + 'app:connectedGeckoNightlyDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=org.mozilla.fenix.syncintegration.SyncIntegrationTest#{}'.format(identifier)
 
         self.logger.info('Running: {}'.format(' '.join(args)))
+
         try:
             out = subprocess.check_output(
                 args, shell=True)
@@ -30,6 +32,9 @@ class GradlewBuild(object):
             out = e.output
             raise
         finally:
+            #Set the path correctly
+            testsPath = "app/src/androidTest/java/org/mozilla/fenix/syncintegration/"
+            os.chdir(testsPath)
+
             with open(self.log, 'w') as f:
                 f.writelines(out)
-

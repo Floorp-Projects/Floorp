@@ -27,7 +27,7 @@ pipeline {
                      allowMissing: false,
                      alwaysLinkToLastBuild: true,
                      keepAll: true,
-                     reportDir: '/Users/synctesting/.jenkins/workspace/fenix/app/src/androidTest/java/org/mozilla/fenix/syncintegration/results',
+                     reportDir: 'app/src/androidTest/java/org/mozilla/fenix/syncintegration/results',
                      reportFiles: 'index.html',
                      reportName: 'HTML Report'])
                  }
