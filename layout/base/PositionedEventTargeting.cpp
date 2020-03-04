@@ -415,7 +415,7 @@ nsIFrame* FindFrameTargetedByInputEvent(
       aRootFrame);
 
   const EventRadiusPrefs* prefs = GetPrefsFor(aEvent->mClass);
-  if (!prefs || !prefs->mEnabled) {
+  if (!prefs || !prefs->mEnabled || EventRetargetSuppression::IsActive()) {
     PET_LOG("Retargeting disabled\n");
     return target;
   }
@@ -508,5 +508,13 @@ nsIFrame* FindFrameTargetedByInputEvent(
   }
   return target;
 }
+
+uint32_t EventRetargetSuppression::sSuppressionCount = 0;
+
+EventRetargetSuppression::EventRetargetSuppression() { sSuppressionCount++; }
+
+EventRetargetSuppression::~EventRetargetSuppression() { sSuppressionCount--; }
+
+bool EventRetargetSuppression::IsActive() { return sSuppressionCount > 0; }
 
 }  // namespace mozilla
