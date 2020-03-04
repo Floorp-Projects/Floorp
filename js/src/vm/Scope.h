@@ -28,7 +28,8 @@ namespace js {
 
 namespace frontend {
 class ScopeCreationData;
-};
+class EnvironmentShapeCreationData;
+};  // namespace frontend
 
 class BaseScopeData;
 class ModuleObject;
@@ -312,7 +313,7 @@ class Scope : public js::gc::TenuredCell {
 
   Shape* environmentShape() const { return environmentShape_; }
 
-  static bool hasEnvironment(ScopeKind kind, Shape* environmentShape) {
+  static bool hasEnvironment(ScopeKind kind, bool environmentShape) {
     switch (kind) {
       case ScopeKind::With:
       case ScopeKind::Global:
@@ -320,7 +321,7 @@ class Scope : public js::gc::TenuredCell {
         return true;
       default:
         // If there's a shape, an environment must be created for this scope.
-        return environmentShape != nullptr;
+        return environmentShape;
     }
   }
 
@@ -437,11 +438,12 @@ class LexicalScope : public Scope {
                                       uint32_t firstFrameSlot,
                                       HandleScope enclosing);
 
+  template <typename ShapeType>
   static bool prepareForScopeCreation(JSContext* cx, ScopeKind kind,
                                       uint32_t firstFrameSlot,
                                       Handle<AbstractScope> enclosing,
                                       MutableHandle<UniquePtr<Data>> data,
-                                      MutableHandleShape envShape);
+                                      ShapeType envShape);
 
   Data& data() { return *static_cast<Data*>(data_); }
 
@@ -553,16 +555,22 @@ class FunctionScope : public Scope {
     void trace(JSTracer* trc);
   };
 
+  template <typename ShapeType>
   static bool prepareForScopeCreation(JSContext* cx,
                                       MutableHandle<UniquePtr<Data>> data,
                                       bool hasParameterExprs,
                                       IsFieldInitializer isFieldInitializer,
                                       bool needsEnvironment, HandleFunction fun,
-                                      MutableHandleShape envShape);
+                                      ShapeType envShape);
 
   static bool updateEnvShapeIfRequired(JSContext* cx, MutableHandleShape shape,
                                        bool needsEnvironment,
                                        bool hasParameterExprs);
+
+  static bool updateEnvShapeIfRequired(
+      JSContext* cx,
+      MutableHandle<frontend::EnvironmentShapeCreationData> shape,
+      bool needsEnvironment, bool hasParameterExprs);
 
   static FunctionScope* clone(JSContext* cx, Handle<FunctionScope*> scope,
                               HandleFunction fun, HandleScope enclosing);
@@ -650,15 +658,20 @@ class VarScope : public Scope {
                                   uint32_t firstFrameSlot,
                                   bool needsEnvironment, HandleScope enclosing);
 
+  template <typename ShapeType>
   static bool prepareForScopeCreation(JSContext* cx, ScopeKind kind,
                                       MutableHandle<UniquePtr<Data>> data,
                                       uint32_t firstFrameSlot,
                                       bool needsEnvironment,
-                                      MutableHandleShape envShape);
+                                      ShapeType envShape);
 
   static bool updateEnvShapeIfRequired(JSContext* cx,
                                        MutableHandleShape envShape,
                                        bool needsEnvironment);
+  static bool updateEnvShapeIfRequired(
+      JSContext* cx,
+      MutableHandle<frontend::EnvironmentShapeCreationData> envShape,
+      bool needsEnvironment);
   Data& data() { return *static_cast<Data*>(data_); }
 
   const Data& data() const { return *static_cast<Data*>(data_); }
@@ -826,14 +839,18 @@ class EvalScope : public Scope {
                                    MutableHandle<UniquePtr<Data>> data,
                                    HandleScope enclosing);
 
+  template <typename ShapeType>
   static bool prepareForScopeCreation(JSContext* cx, ScopeKind scopeKind,
                                       MutableHandle<UniquePtr<Data>> data,
-                                      MutableHandleShape envShape);
+                                      ShapeType envShape);
 
   static bool updateEnvShapeIfRequired(JSContext* cx,
                                        MutableHandleShape envShape,
                                        ScopeKind scopeKind);
-
+  static bool updateEnvShapeIfRequired(
+      JSContext* cx,
+      MutableHandle<frontend::EnvironmentShapeCreationData> envShape,
+      ScopeKind scopeKind);
   Data& data() { return *static_cast<Data*>(data_); }
 
   const Data& data() const { return *static_cast<Data*>(data_); }
@@ -921,14 +938,17 @@ class ModuleScope : public Scope {
                                      MutableHandle<UniquePtr<Data>> data,
                                      Handle<ModuleObject*> module,
                                      HandleScope enclosing);
-
+  template <typename ShapeType>
   static bool prepareForScopeCreation(JSContext* cx,
                                       MutableHandle<UniquePtr<Data>> data,
                                       HandleModuleObject module,
-                                      MutableHandleShape envShape);
+                                      ShapeType envShape);
 
   static bool updateEnvShapeIfRequired(JSContext* cx,
                                        MutableHandleShape envShape);
+  static bool updateEnvShapeIfRequired(
+      JSContext* cx,
+      MutableHandle<frontend::EnvironmentShapeCreationData> envShape);
 
   Data& data() { return *static_cast<Data*>(data_); }
 
@@ -1255,7 +1275,7 @@ class BindingIter {
 
   BindingIter(EvalScope::Data& data, bool strict) { init(data, strict); }
 
-  explicit BindingIter(const BindingIter& bi) = default;
+  MOZ_IMPLICIT BindingIter(const BindingIter& bi) = default;
 
   bool done() const { return index_ == length_; }
 
@@ -1519,6 +1539,13 @@ class MutableWrappedPtrOperations<ScopeIter, Wrapper>
  public:
   void operator++(int) { iter().operator++(1); }
 };
+
+Shape* CreateEnvironmentShape(JSContext* cx, BindingIter& bi,
+                              const JSClass* cls, uint32_t numSlots,
+                              uint32_t baseShapeFlags);
+
+Shape* EmptyEnvironmentShape(JSContext* cx, const JSClass* cls,
+                             uint32_t numSlots, uint32_t baseShapeFlags);
 
 }  // namespace js
 

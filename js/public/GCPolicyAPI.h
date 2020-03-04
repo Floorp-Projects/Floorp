@@ -200,6 +200,9 @@ struct GCPolicy<mozilla::UniquePtr<T, D>> {
   }
 };
 
+template <>
+struct GCPolicy<mozilla::Nothing> : public IgnoreGCPolicy<mozilla::Nothing> {};
+
 // GCPolicy<Maybe<T>> forwards tracing/sweeping to GCPolicy<T*> if
 // when the Maybe<T> is full.
 template <typename T>

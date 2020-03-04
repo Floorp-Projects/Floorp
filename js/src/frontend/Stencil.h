@@ -21,6 +21,7 @@
 #include "gc/AllocKind.h"                // gc::AllocKind
 #include "gc/Barrier.h"                  // HeapPtr, GCPtrAtom
 #include "gc/Rooting.h"  // HandleAtom, HandleModuleObject, HandleScriptSourceObject, MutableHandleScope
+#include "js/GCVariant.h"    // GC Support for mozilla::Variant
 #include "js/RegExpFlags.h"  // JS::RegExpFlags
 #include "js/RootingAPI.h"   // Handle
 #include "js/UniquePtr.h"    // UniquePtr
@@ -228,6 +229,57 @@ class BigIntCreationData {
 
 using BigIntIndex = TypedIndex<BigIntCreationData>;
 
+class EnvironmentShapeCreationData {
+  // Data used to call CreateEnvShapeData
+  struct CreateEnvShapeData {
+    BindingIter freshBi;
+    const JSClass* cls;
+    uint32_t nextEnvironmentSlot;
+    uint32_t baseShapeFlags;
+
+    void trace(JSTracer* trc) { freshBi.trace(trc); }
+  };
+
+  // Data used to call EmptyEnvironmentShape
+  struct EmptyEnvShapeData {
+    const JSClass* cls;
+    uint32_t baseShapeFlags;
+    void trace(JSTracer* trc){
+        // Rather than having to expose this type as public to provide
+        // an IgnoreGCPolicy, just have an empty trace.
+    };
+  };
+
+  // Three different paths to creating an environment shape: Either we produce
+  // nullptr directly (represented by storing Nothing in the variant), or we
+  // call CreateEnvironmentShape, or we call EmptyEnvironmentShape.
+  mozilla::Variant<mozilla::Nothing, CreateEnvShapeData, EmptyEnvShapeData>
+      data_ = mozilla::AsVariant(mozilla::Nothing());
+
+ public:
+  explicit operator bool() const { return !data_.is<mozilla::Nothing>(); }
+
+  // Setup for calling CreateEnvironmentShape
+  void set(const BindingIter& freshBi, const JSClass* cls,
+           uint32_t nextEnvironmentSlot, uint32_t baseShapeFlags) {
+    data_ = mozilla::AsVariant(
+        CreateEnvShapeData{freshBi, cls, nextEnvironmentSlot, baseShapeFlags});
+  }
+
+  // Setup for calling EmptyEnviornmentShape
+  void set(const JSClass* cls, uint32_t shapeFlags) {
+    data_ = mozilla::AsVariant(EmptyEnvShapeData{cls, shapeFlags});
+  }
+
+  // Reifiy this into an actual shape.
+  MOZ_MUST_USE bool createShape(JSContext* cx, MutableHandleShape shape);
+
+  void trace(JSTracer* trc) {
+    using DataGCPolicy = JS::GCPolicy<decltype(data_)>;
+    DataGCPolicy::trace(trc, &data_, "data_");
+  }
+};
+
 class ScopeCreationData {
   friend class js::AbstractScope;
   friend class js::GCMarker;
@@ -238,9 +290,8 @@ class ScopeCreationData {
   // The kind determines data_.
   ScopeKind kind_;
 
-  // If there are any aliased bindings, the shape for the
-  // EnvironmentObject. Otherwise nullptr.
-  HeapPtr<Shape*> environmentShape_ = {};
+  // Data to reify an environment shape at creation time.
+  EnvironmentShapeCreationData environmentShape_;
 
   // Once we've produced a scope from a scope creation data, there may still be
   // AbstractScopes refering to this ScopeCreationData, and if reification is
@@ -258,14 +309,14 @@ class ScopeCreationData {
   UniquePtr<BaseScopeData> data_;
 
  public:
-  ScopeCreationData(JSContext* cx, ScopeKind kind,
-                    Handle<AbstractScope> enclosing,
-                    UniquePtr<BaseScopeData> data = {},
-                    Shape* environmentShape = nullptr,
-                    frontend::FunctionBox* funbox = nullptr)
+  ScopeCreationData(
+      JSContext* cx, ScopeKind kind, Handle<AbstractScope> enclosing,
+      Handle<frontend::EnvironmentShapeCreationData> environmentShape,
+      UniquePtr<BaseScopeData> data = {},
+      frontend::FunctionBox* funbox = nullptr)
       : enclosing_(enclosing),
         kind_(kind),
-        environmentShape_(environmentShape),
+        environmentShape_(environmentShape),  // Copied
         funbox_(funbox),
         data_(std::move(data)) {}
 
@@ -314,7 +365,9 @@ class ScopeCreationData {
                      Handle<AbstractScope> enclosing, ScopeIndex* index);
 
   bool hasEnvironment() const {
-    return Scope::hasEnvironment(kind(), environmentShape_);
+    // Check if scope kind alone means we have an env shape, and
+    // otherwise check if we have one created.
+    return Scope::hasEnvironment(kind(), !!environmentShape_);
   }
 
   // Valid for functions;
