@@ -838,9 +838,9 @@ ImgDrawResult nsCSSRendering::PaintBorderWithStyleBorder(
   // passed in ComputedStyle may be different!  Always use |aStyle|!
   const nsStyleDisplay* displayData = aStyle->StyleDisplay();
   if (displayData->HasAppearance()) {
-    nsITheme* theme = aPresContext->GetTheme();
-    if (theme && theme->ThemeSupportsWidget(aPresContext, aForFrame,
-                                            displayData->mAppearance)) {
+    nsITheme* theme = aPresContext->Theme();
+    if (theme->ThemeSupportsWidget(aPresContext, aForFrame,
+                                   displayData->mAppearance)) {
       return ImgDrawResult::SUCCESS;  // Let the theme handle it.
     }
   }
@@ -926,9 +926,9 @@ nsCSSRendering::CreateNullBorderRendererWithStyleBorder(
     bool* aOutBorderIsEmpty, Sides aSkipSides) {
   const nsStyleDisplay* displayData = aStyle->StyleDisplay();
   if (displayData->HasAppearance()) {
-    nsITheme* theme = aPresContext->GetTheme();
-    if (theme && theme->ThemeSupportsWidget(aPresContext, aForFrame,
-                                            displayData->mAppearance)) {
+    nsITheme* theme = aPresContext->Theme();
+    if (theme->ThemeSupportsWidget(aPresContext, aForFrame,
+                                   displayData->mAppearance)) {
       return Nothing();
     }
   }
@@ -1020,9 +1020,9 @@ Maybe<nsCSSBorderRenderer> nsCSSRendering::CreateBorderRendererForOutline(
   StyleBorderStyle outlineStyle;
   if (ourOutline->mOutlineStyle.IsAuto()) {
     if (StaticPrefs::layout_css_outline_style_auto_enabled()) {
-      nsITheme* theme = aPresContext->GetTheme();
-      if (theme && theme->ThemeSupportsWidget(aPresContext, aForFrame,
-                                              StyleAppearance::FocusOutline)) {
+      nsITheme* theme = aPresContext->Theme();
+      if (theme->ThemeSupportsWidget(aPresContext, aForFrame,
+                                     StyleAppearance::FocusOutline)) {
         theme->DrawWidgetBackground(aRenderingContext, aForFrame,
                                     StyleAppearance::FocusOutline, innerRect,
                                     aDirtyRect);
@@ -1529,9 +1529,9 @@ void nsCSSRendering::PaintBoxShadowOuter(nsPresContext* aPresContext,
       nsRect nativeRect = aDirtyRect;
       nativeRect.MoveBy(-shadowOffset);
       nativeRect.IntersectRect(frameRect, nativeRect);
-      aPresContext->GetTheme()->DrawWidgetBackground(shadowContext, aForFrame,
-                                                     styleDisplay->mAppearance,
-                                                     aFrameArea, nativeRect);
+      aPresContext->Theme()->DrawWidgetBackground(shadowContext, aForFrame,
+                                                  styleDisplay->mAppearance,
+                                                  aFrameArea, nativeRect);
 
       blurringArea.DoPaint();
       aRenderingContext.Restore();
@@ -1874,9 +1874,9 @@ bool nsCSSRendering::CanBuildWebRenderDisplayItemsForStyleImageLayer(
   // We cannot draw native themed backgrounds
   const nsStyleDisplay* displayData = aFrame->StyleDisplay();
   if (displayData->HasAppearance()) {
-    nsITheme* theme = aPresCtx.GetTheme();
-    if (theme && theme->ThemeSupportsWidget(&aPresCtx, aFrame,
-                                            displayData->mAppearance)) {
+    nsITheme* theme = aPresCtx.Theme();
+    if (theme->ThemeSupportsWidget(&aPresCtx, aFrame,
+                                   displayData->mAppearance)) {
       return false;
     }
   }
@@ -2448,9 +2448,9 @@ ImgDrawResult nsCSSRendering::PaintStyleImageLayerWithSC(
   // XXXzw this ignores aParams.bgClipRect.
   const nsStyleDisplay* displayData = aParams.frame->StyleDisplay();
   if (displayData->HasAppearance()) {
-    nsITheme* theme = aParams.presCtx.GetTheme();
-    if (theme && theme->ThemeSupportsWidget(&aParams.presCtx, aParams.frame,
-                                            displayData->mAppearance)) {
+    nsITheme* theme = aParams.presCtx.Theme();
+    if (theme->ThemeSupportsWidget(&aParams.presCtx, aParams.frame,
+                                   displayData->mAppearance)) {
       nsRect drawing(aParams.borderArea);
       theme->GetWidgetOverflow(aParams.presCtx.DeviceContext(), aParams.frame,
                                displayData->mAppearance, &drawing);

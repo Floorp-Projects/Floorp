@@ -507,9 +507,8 @@ static nsChangeHint ChangeForContentStateChange(const Element& aElement,
     auto* disp = primaryFrame->StyleDisplay();
     if (disp->HasAppearance()) {
       nsPresContext* pc = primaryFrame->PresContext();
-      nsITheme* theme = pc->GetTheme();
-      if (theme &&
-          theme->ThemeSupportsWidget(pc, primaryFrame, disp->mAppearance)) {
+      nsITheme* theme = pc->Theme();
+      if (theme->ThemeSupportsWidget(pc, primaryFrame, disp->mAppearance)) {
         bool repaint = false;
         theme->WidgetStateChanged(primaryFrame, disp->mAppearance, nullptr,
                                   &repaint, nullptr);
@@ -3373,9 +3372,9 @@ void RestyleManager::AttributeChanged(Element* aElement, int32_t aNameSpaceID,
     // See if we have appearance information for a theme.
     const nsStyleDisplay* disp = primaryFrame->StyleDisplay();
     if (disp->HasAppearance()) {
-      nsITheme* theme = PresContext()->GetTheme();
-      if (theme && theme->ThemeSupportsWidget(PresContext(), primaryFrame,
-                                              disp->mAppearance)) {
+      nsITheme* theme = PresContext()->Theme();
+      if (theme->ThemeSupportsWidget(PresContext(), primaryFrame,
+                                     disp->mAppearance)) {
         bool repaint = false;
         theme->WidgetStateChanged(primaryFrame, disp->mAppearance, aAttribute,
                                   &repaint, aOldValue);

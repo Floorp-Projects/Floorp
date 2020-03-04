@@ -130,8 +130,8 @@ nsresult nsBox::GetXULBorder(nsMargin& aMargin) {
   if (disp->HasAppearance()) {
     // Go to the theme for the border.
     nsPresContext* pc = PresContext();
-    nsITheme* theme = pc->GetTheme();
-    if (theme && theme->ThemeSupportsWidget(pc, this, disp->mAppearance)) {
+    nsITheme* theme = pc->Theme();
+    if (theme->ThemeSupportsWidget(pc, this, disp->mAppearance)) {
       LayoutDeviceIntMargin margin =
           theme->GetWidgetBorder(pc->DeviceContext(), this, disp->mAppearance);
       aMargin =
@@ -150,8 +150,8 @@ nsresult nsBox::GetXULPadding(nsMargin& aPadding) {
   if (disp->HasAppearance()) {
     // Go to the theme for the padding.
     nsPresContext* pc = PresContext();
-    nsITheme* theme = pc->GetTheme();
-    if (theme && theme->ThemeSupportsWidget(pc, this, disp->mAppearance)) {
+    nsITheme* theme = pc->Theme();
+    if (theme->ThemeSupportsWidget(pc, this, disp->mAppearance)) {
       LayoutDeviceIntMargin padding;
       bool useThemePadding = theme->GetWidgetPadding(
           pc->DeviceContext(), this, disp->mAppearance, &padding);
@@ -420,9 +420,8 @@ bool nsIFrame::AddXULMinSize(nsIFrame* aBox,
   // See if a native theme wants to supply a minimum size.
   const nsStyleDisplay* display = aBox->StyleDisplay();
   if (display->HasAppearance()) {
-    nsITheme* theme = pc->GetTheme();
-    if (theme && theme->ThemeSupportsWidget(pc, aBox,
-                                            display->mAppearance)) {
+    nsITheme* theme = pc->Theme();
+    if (theme->ThemeSupportsWidget(pc, aBox, display->mAppearance)) {
       LayoutDeviceIntSize size;
       theme->GetMinimumWidgetSize(pc, aBox,
                                   display->mAppearance, &size, &canOverride);

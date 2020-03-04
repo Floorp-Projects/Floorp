@@ -1303,9 +1303,9 @@ UniquePtr<FlexItem> nsFlexContainerFrame::GenerateFlexItemForChild(
   if (aChildFrame->IsThemed(disp)) {
     LayoutDeviceIntSize widgetMinSize;
     bool canOverride = true;
-    PresContext()->GetTheme()->GetMinimumWidgetSize(
-        PresContext(), aChildFrame, disp->mAppearance, &widgetMinSize,
-        &canOverride);
+    PresContext()->Theme()->GetMinimumWidgetSize(PresContext(), aChildFrame,
+                                                 disp->mAppearance,
+                                                 &widgetMinSize, &canOverride);
 
     nscoord widgetMainMinSize = PresContext()->DevPixelsToAppUnits(
         aAxisTracker.MainComponent(widgetMinSize));
