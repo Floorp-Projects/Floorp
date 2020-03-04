@@ -745,9 +745,7 @@ MeasuringToolHighlighter.prototype = {
     // Changes the resizing cursors in case the measuring box is mirrored
     const isMirrored =
       (coords.w < 0 || coords.h < 0) && !(coords.w < 0 && coords.h < 0);
-    this.getElement("tool").classList[isMirrored ? "add" : "remove"](
-      "mirrored"
-    );
+    this.getElement("tool").classList.toggle("mirrored", isMirrored);
 
     this.showLabel("size");
   },
