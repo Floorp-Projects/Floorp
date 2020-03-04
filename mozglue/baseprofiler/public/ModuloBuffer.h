@@ -13,6 +13,7 @@
 #include "mozilla/PowerOfTwo.h"
 #include "mozilla/UniquePtr.h"
 
+#include <functional>
 #include <iterator>
 #include <limits>
 #include <type_traits>
